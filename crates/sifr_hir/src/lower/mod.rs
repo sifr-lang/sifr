@@ -25,6 +25,7 @@ mod diagnostics;
 mod expressions;
 mod imports;
 mod statements;
+mod type_bounds;
 mod typing_and_functions;
 
 use classes::*;
@@ -32,6 +33,7 @@ use diagnostics::*;
 use expressions::*;
 use imports::*;
 use statements::*;
+use type_bounds::*;
 use typing_and_functions::*;
 
 /// Errors produced during lowering.
@@ -440,71 +442,6 @@ fn infer_type_var_bindings(param_ty: &Type, arg_ty: &Type, bindings: &mut HashMa
         }
         _ => {}
     }
-}
-
-fn lookup_named_type(name: &str, ctx: &LowerCtx) -> Option<Type> {
-    match name {
-        "int" => Some(Type::Int),
-        "float" => Some(Type::Float),
-        "bool" => Some(Type::Bool),
-        "str" => Some(Type::Str),
-        "None" => Some(Type::None),
-        "bigint" => Some(Type::BigInt),
-        _ => ctx
-            .scope
-            .lookup_type_alias(name)
-            .cloned()
-            .or_else(|| ctx.class_types.get(name).cloned()),
-    }
-}
-
-fn current_owner_typevar_specs<'a>(ctx: &'a LowerCtx, tv_name: &str) -> Option<&'a [String]> {
-    let owner = ctx.current_owner.as_ref()?;
-    ctx.type_param_bounds
-        .get(owner)?
-        .get(tv_name)
-        .map(|specs| specs.as_slice())
-}
-
-fn typevar_satisfies_spec(tv_name: &str, target_spec: &str, ctx: &LowerCtx) -> bool {
-    current_owner_typevar_specs(ctx, tv_name)
-        .is_some_and(|specs| specs.iter().any(|spec| spec == target_spec))
-}
-
-/// Check if a type satisfies a named bound (hard requirement).
-fn type_satisfies_bound(ty: &Type, bound: &str, ctx: &LowerCtx) -> bool {
-    if let Type::TypeVar(tv_name) = ty {
-        return typevar_satisfies_spec(tv_name, bound, ctx);
-    }
-    match bound {
-        "Comparable" => matches!(
-            ty,
-            Type::Int | Type::Float | Type::Str | Type::Bool | Type::BigInt
-        ),
-        "Addable" => matches!(ty, Type::Int | Type::Float | Type::Str | Type::BigInt),
-        "Hashable" => matches!(
-            ty,
-            Type::Int
-                | Type::Str
-                | Type::Bool
-                | Type::BigInt
-                | Type::None
-                | Type::Enum { .. }
-                | Type::LiteralStr(_)
-                | Type::LiteralInt(_)
-                | Type::LiteralBool(_)
-        ),
-        _ => lookup_named_type(bound, ctx).is_some_and(|bound_ty| ty.is_assignable_to(&bound_ty)),
-    }
-}
-
-/// Check if a type satisfies a TypeVar constraints entry (`TypeVar("T", A, B)` / `T: (A, B)`).
-fn type_satisfies_constraint(ty: &Type, constraint_name: &str, ctx: &LowerCtx) -> bool {
-    let encoded = encode_typevar_constraint(constraint_name);
-    if let Type::TypeVar(tv_name) = ty {
-        return typevar_satisfies_spec(tv_name, &encoded, ctx);
-    }
-    lookup_named_type(constraint_name, ctx).is_some_and(|target_ty| ty.is_assignable_to(&target_ty))
 }
 
 /// Result of lowering, including the HIR module and any diagnostics.

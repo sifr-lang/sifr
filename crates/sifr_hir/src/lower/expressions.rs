@@ -3568,4 +3568,37 @@ mod tests {
             .message
             .contains("tuple pattern expects 3 element(s), subject has 2")));
     }
+
+    #[test]
+    fn test_protocol_bound_forwarding_accepts_conforming_typevar() {
+        let result = lower_source(
+            "class Runner(Protocol):\n    def run(self) -> int:\n        pass\n\nclass Job:\n    def run(self) -> int:\n        return 1\n\ndef use_runner[T: Runner](x: T) -> T:\n    return x\n\ndef relay_runner[U: Runner](x: U) -> U:\n    return use_runner(x)\n\ndef main():\n    j: Job = relay_runner(Job())\n    print(j.run())\n",
+        );
+        assert!(result.is_ok());
+    }
+
+    #[test]
+    fn test_protocol_bound_forwarding_rejects_unknown_bound() {
+        let result = lower_source(
+            "def take_missing[T: MissingBound](x: T) -> T:\n    return x\n\ndef relay_missing[U: MissingBound](x: U) -> U:\n    return take_missing(x)\n\ndef main():\n    print(1)\n",
+        );
+        assert!(result.is_err());
+        let errors = result.unwrap_err();
+        assert!(errors.iter().any(|e| {
+            e.message
+                .contains("does not implement protocol 'MissingBound'")
+        }));
+    }
+
+    #[test]
+    fn test_protocol_bound_forwarding_rejects_non_conforming_typevar() {
+        let result = lower_source(
+            "class Readable(Protocol):\n    def read(self) -> str:\n        pass\n\nclass Closable(Protocol):\n    def close(self) -> None:\n        pass\n\ndef take_readable[T: Readable](x: T) -> T:\n    return x\n\ndef relay_bad[U: Closable](x: U) -> U:\n    return take_readable(x)\n\ndef main():\n    print(1)\n",
+        );
+        assert!(result.is_err());
+        let errors = result.unwrap_err();
+        assert!(errors
+            .iter()
+            .any(|e| e.message.contains("does not implement protocol 'Readable'")));
+    }
 }

@@ -1,0 +1,12 @@
+# Test: unknown protocol bounds are rejected when forwarding TypeVars through generic calls
+
+def take_missing[T: MissingBound](x: T) -> T:
+    return x
+
+def relay_missing[U: MissingBound](x: U) -> U:
+    return take_missing(x)
+
+def main():
+    print(1)
+
+# expect-error: does not implement protocol 'MissingBound'

@@ -1,0 +1,13 @@
+# Test: forwarding a TypeVar through protocol-bounded generics with explicit conformance
+
+def keep_comparable[T: Comparable](x: T) -> T:
+    return x
+
+def relay_comparable[U: Comparable](x: U) -> U:
+    return keep_comparable(x)
+
+def main():
+    n: int = relay_comparable(7)
+    s: str = relay_comparable("ok")
+    assert str(n) == '7'
+    assert str(s) == 'ok'
