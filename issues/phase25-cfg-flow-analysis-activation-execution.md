@@ -63,10 +63,28 @@ Loop per part: Work -> Validate -> PR -> Review -> Merge -> Mark Done
 - [ ] Open PR, review, and merge
 
 ## Part 1: milestone_25_1 CFG Integration Contract
+status: done (2026-03-06, PR #883)
+
+- [x] Canonical CFG entrypoints implemented in `sifr_hir`
+- [x] Selected active analysis query consumes CFG truth
+- [x] Positive-path validation recorded
+- [x] Negative-path validation recorded
+- [x] Run milestone demo
+- [x] Run full local suite
+- [x] Open PR, review, and merge
+- [x] Mark part complete in phase doc and this checklist
+
+Validation evidence:
+- Positive path: `cargo test -q -p sifr_hir cfg::tests::` -> pass.
+- Positive path: `cargo run -q -p sifr -- run demos/m25_1_cfg_integration_contract_demo/main.sifr` -> prints `m25_1 cfg integration contract demo:` then `41` and `0`.
+- Positive path: `/Users/yaseralnajjar/work/sifr/codebase/scripts/run_all_tests.sh` -> pass.
+- Negative path: `cargo run -q -p sifr -- run demos/m25_1_cfg_integration_contract_demo/negative_cases/reachable_type_error/main.sifr` -> exits `1` with `type error: return type mismatch: expected 'int', got 'None | int'`.
+
+## Part 2: milestone_25_2 CFG Validity Invariants
 status: in_progress
 
-- [ ] Canonical CFG entrypoints implemented in `sifr_hir`
-- [ ] Selected active analysis query consumes CFG truth
+- [ ] CFG invariants implemented and fail-fast enforced
+- [ ] Deterministic repeat-run coverage added
 - [ ] Positive-path validation recorded
 - [ ] Negative-path validation recorded
 - [ ] Run milestone demo
@@ -75,10 +93,10 @@ status: in_progress
 - [ ] Mark part complete in phase doc and this checklist
 
 Validation evidence:
-- Positive path: `cargo test -q -p sifr_hir cfg::tests::` -> pass.
-- Positive path: `cargo run -q -p sifr -- run demos/m25_1_cfg_integration_contract_demo/main.sifr` -> prints `m25_1 cfg integration contract demo:` then `41` and `0`.
+- Positive path: `cargo test -q -p sifr_hir cfg::tests::control_flow_graph_` -> pass.
+- Positive path: `cargo run -q -p sifr -- run demos/m25_2_cfg_validity_invariants_demo/main.sifr` -> prints `m25_2 cfg validity invariants demo:` then `4`.
 - Positive path: `/Users/yaseralnajjar/work/sifr/codebase/scripts/run_all_tests.sh` -> pass.
-- Negative path: `cargo run -q -p sifr -- run demos/m25_1_cfg_integration_contract_demo/negative_cases/reachable_type_error/main.sifr` -> exits `1` with `type error: return type mismatch: expected 'int', got 'None | int'`.
+- Negative path: `cargo run -q -p sifr -- run demos/m25_2_cfg_validity_invariants_demo/negative_cases/reachable_type_error/main.sifr` -> exits `1` with `type error: return type mismatch: expected 'int', got 'str'`.
 
 ## PR Log
-- Part 1: pending
+- Part 1: https://github.com/yaseralnajjar/sifr/pull/883

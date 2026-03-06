@@ -50,6 +50,27 @@ pub struct ControlFlowGraph {
     top_level_stmt_nodes: Vec<CfgBlockId>,
 }
 
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct CfgInvariantError {
+    message: String,
+}
+
+impl CfgInvariantError {
+    fn new(message: impl Into<String>) -> Self {
+        Self {
+            message: message.into(),
+        }
+    }
+}
+
+impl std::fmt::Display for CfgInvariantError {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.write_str(&self.message)
+    }
+}
+
+impl std::error::Error for CfgInvariantError {}
+
 impl ControlFlowGraph {
     pub fn blocks(&self) -> &[CfgBlock] {
         &self.blocks
@@ -82,6 +103,114 @@ impl ControlFlowGraph {
             }
         }
         reachable
+    }
+
+    pub fn shape_fingerprint(&self) -> String {
+        let mut fingerprint = String::new();
+        fingerprint.push_str(&format!("entry:{};exit:{};", self.entry, self.exit));
+        for block in &self.blocks {
+            fingerprint.push_str(&format!(
+                "b{}:{:?}:{:?}:",
+                block.id, block.label, block.top_level_stmt_index
+            ));
+            match &block.terminator {
+                CfgTerminator::Goto(target) => {
+                    fingerprint.push_str(&format!("goto:{target};"));
+                }
+                CfgTerminator::Branch(targets) => {
+                    fingerprint.push_str("branch:");
+                    for target in targets {
+                        fingerprint.push_str(&format!("{target},"));
+                    }
+                    fingerprint.push(';');
+                }
+                CfgTerminator::Return { ty, has_value } => {
+                    fingerprint.push_str(&format!(
+                        "return:{}:{};",
+                        ty.display_name(),
+                        has_value
+                    ));
+                }
+                CfgTerminator::Raise => {
+                    fingerprint.push_str("raise;");
+                }
+                CfgTerminator::Exit => {
+                    fingerprint.push_str("exit;");
+                }
+            }
+        }
+        fingerprint
+    }
+
+    pub fn validate(&self) -> Result<(), CfgInvariantError> {
+        if self.blocks.is_empty() {
+            return Err(CfgInvariantError::new("cfg has no blocks"));
+        }
+        if self.entry >= self.blocks.len() {
+            return Err(CfgInvariantError::new(format!(
+                "entry block id {} is out of range for {} blocks",
+                self.entry,
+                self.blocks.len()
+            )));
+        }
+        if self.exit >= self.blocks.len() {
+            return Err(CfgInvariantError::new(format!(
+                "exit block id {} is out of range for {} blocks",
+                self.exit,
+                self.blocks.len()
+            )));
+        }
+        for (idx, block) in self.blocks.iter().enumerate() {
+            if block.id != idx {
+                return Err(CfgInvariantError::new(format!(
+                    "block id mismatch at index {idx}: found id {}, expected {}",
+                    block.id, idx
+                )));
+            }
+            if let CfgTerminator::Branch(targets) = &block.terminator {
+                if targets.len() < 2 {
+                    return Err(CfgInvariantError::new(format!(
+                        "branch terminator in block {} is incomplete ({} target(s))",
+                        block.id,
+                        targets.len()
+                    )));
+                }
+            }
+            for &target in block.terminator.successors() {
+                if target >= self.blocks.len() {
+                    return Err(CfgInvariantError::new(format!(
+                        "block {} has invalid successor {} (max {})",
+                        block.id,
+                        target,
+                        self.blocks.len().saturating_sub(1)
+                    )));
+                }
+            }
+        }
+        let mut seen_top = vec![false; self.top_level_stmt_nodes.len()];
+        for (idx, &block_id) in self.top_level_stmt_nodes.iter().enumerate() {
+            if block_id >= self.blocks.len() {
+                return Err(CfgInvariantError::new(format!(
+                    "top-level stmt {} maps to invalid block id {}",
+                    idx, block_id
+                )));
+            }
+            let mapped = self.blocks[block_id].top_level_stmt_index;
+            if mapped != Some(idx) {
+                return Err(CfgInvariantError::new(format!(
+                    "top-level stmt {} maps to block {} with mismatched marker {:?}",
+                    idx, block_id, mapped
+                )));
+            }
+            if seen_top[idx] {
+                return Err(CfgInvariantError::new(format!(
+                    "duplicate mapping for top-level stmt {}",
+                    idx
+                )));
+            }
+            seen_top[idx] = true;
+        }
+        Ok(())
     }
 }
 
@@ -176,16 +305,7 @@ impl CfgBuilder {
         id
     }
 
-    fn set_terminator(&mut self, block_id: CfgBlockId, mut terminator: CfgTerminator) {
-        if let CfgTerminator::Branch(targets) = &mut terminator {
-            let mut deduped = Vec::with_capacity(targets.len());
-            for target in targets.iter().copied() {
-                if !deduped.contains(&target) {
-                    deduped.push(target);
-                }
-            }
-            *targets = deduped;
-        }
+    fn set_terminator(&mut self, block_id: CfgBlockId, terminator: CfgTerminator) {
         self.blocks[block_id].terminator = terminator;
     }
 
@@ -400,7 +520,11 @@ fn stmt_label(stmt: &HirStmt) -> &'static str {
 pub fn build_control_flow_graph(stmts: &[HirStmt]) -> ControlFlowGraph {
     let mut builder = CfgBuilder::new(stmts.len());
     let root_entry = builder.build_stmt_list(stmts, builder.exit, None, true);
-    builder.finish(root_entry)
+    let cfg = builder.finish(root_entry);
+    if let Err(err) = cfg.validate() {
+        panic!("internal compiler error: invalid control-flow graph: {err}");
+    }
+    cfg
 }
 
 pub fn flow_facts(stmts: &[HirStmt]) -> FlowFacts {
@@ -519,5 +643,74 @@ mod tests {
 
         let facts = flow_facts(&stmts);
         assert_eq!(facts.reachable_return_types(), &[Type::Int]);
+    }
+
+    #[test]
+    fn control_flow_graph_validate_accepts_valid_graph() {
+        let stmts = vec![HirStmt::If {
+            condition: HirExpr::BoolLiteral(true),
+            then_body: vec![HirStmt::Return {
+                value: Some(HirExpr::IntLiteral(1)),
+            }],
+            elif_clauses: vec![],
+            else_body: Some(vec![HirStmt::Return {
+                value: Some(HirExpr::IntLiteral(2)),
+            }]),
+        }];
+        let cfg = build_control_flow_graph(&stmts);
+        assert!(cfg.validate().is_ok());
+    }
+
+    #[test]
+    fn control_flow_graph_validate_rejects_invalid_edge() {
+        let mut cfg = build_control_flow_graph(&[HirStmt::Expr {
+            expr: HirExpr::IntLiteral(1),
+        }]);
+        cfg.blocks[0].terminator = CfgTerminator::Goto(usize::MAX);
+        let err = cfg.validate().expect_err("invalid edge should fail validation");
+        assert!(err.to_string().contains("invalid successor"));
+    }
+
+    #[test]
+    fn control_flow_graph_shape_is_deterministic_across_rebuilds() {
+        let stmts = vec![
+            HirStmt::While {
+                condition: HirExpr::BoolLiteral(true),
+                body: vec![HirStmt::If {
+                    condition: HirExpr::BoolLiteral(true),
+                    then_body: vec![HirStmt::Continue],
+                    elif_clauses: vec![],
+                    else_body: Some(vec![HirStmt::Break]),
+                }],
+                else_body: Some(vec![HirStmt::Return {
+                    value: Some(HirExpr::IntLiteral(7)),
+                }]),
+            },
+            HirStmt::TryExcept {
+                body: vec![HirStmt::Return {
+                    value: Some(HirExpr::IntLiteral(9)),
+                }],
+                handlers: vec![crate::HirExceptHandler {
+                    error_type: Some("Error".to_string()),
+                    error_resolved_type: None,
+                    name: Some("e".to_string()),
+                    body: vec![HirStmt::Raise {
+                        value: HirExpr::Call {
+                            func: "ValueError".to_string(),
+                            args: vec![HirExpr::StringLiteral("bad".to_string())],
+                            ty: Type::Unknown,
+                        },
+                    }],
+                }],
+                body_error_types: vec!["Error".to_string()],
+            },
+        ];
+
+        let cfg_one = build_control_flow_graph(&stmts);
+        let cfg_two = build_control_flow_graph(&stmts);
+        let facts_one = flow_facts(&stmts);
+        let facts_two = flow_facts(&stmts);
+        assert_eq!(cfg_one.shape_fingerprint(), cfg_two.shape_fingerprint());
+        assert_eq!(facts_one, facts_two);
     }
 }
