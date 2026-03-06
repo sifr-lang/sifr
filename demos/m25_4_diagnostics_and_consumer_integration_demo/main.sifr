@@ -1,0 +1,16 @@
+# m25_4 diagnostics and consumer integration demo
+# Reachability-aware return inference should ignore unreachable return tails.
+
+def inferred(flag: bool):
+    if flag:
+        return 1
+    return 2
+    return 'never'
+
+def consume(n: int) -> int:
+    return n + 1
+
+def main():
+    print('m25_4 diagnostics and consumer integration demo:')
+    print(consume(inferred(True)))
+    print(consume(inferred(False)))

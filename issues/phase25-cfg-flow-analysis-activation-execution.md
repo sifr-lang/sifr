@@ -99,10 +99,28 @@ Validation evidence:
 - Negative path: `cargo run -q -p sifr -- run demos/m25_2_cfg_validity_invariants_demo/negative_cases/reachable_type_error/main.sifr` -> exits `1` with `type error: return type mismatch: expected 'int', got 'str'`.
 
 ## Part 3: milestone_25_3 Canonical Flow Truth Queries
+status: done (2026-03-06, PR #885)
+
+- [x] Reachability and always-exits queries are CFG-backed and canonical
+- [x] Tree-walk fallback logic removed for correctness-critical flow facts
+- [x] Positive-path validation recorded
+- [x] Negative-path validation recorded
+- [x] Run milestone demo
+- [x] Run full local suite
+- [x] Open PR, review, and merge
+- [x] Mark part complete in phase doc and this checklist
+
+Validation evidence:
+- Positive path: `cargo test -q -p sifr_codegen hir_analysis::queries::tests::` -> pass.
+- Positive path: `cargo run -q -p sifr -- run demos/m25_3_canonical_flow_truth_queries_demo/main.sifr` -> prints `m25_3 canonical flow truth queries demo:` then `5` and `77`.
+- Positive path: `/Users/yaseralnajjar/work/sifr/codebase/scripts/run_all_tests.sh` -> pass.
+- Negative path: `cargo run -q -p sifr -- run demos/m25_3_canonical_flow_truth_queries_demo/negative_cases/reachable_type_error/main.sifr` -> exits `1` with `type error: return type mismatch: expected 'int', got 'str'`.
+
+## Part 4: milestone_25_4 Diagnostics and Consumer Integration
 status: in_progress
 
-- [ ] Reachability and always-exits queries are CFG-backed and canonical
-- [ ] Tree-walk fallback logic removed for correctness-critical flow facts
+- [ ] Lowering/codegen decision points consume CFG flow facts
+- [ ] Control-flow diagnostics consume CFG-derived reachability facts
 - [ ] Positive-path validation recorded
 - [ ] Negative-path validation recorded
 - [ ] Run milestone demo
@@ -111,11 +129,12 @@ status: in_progress
 - [ ] Mark part complete in phase doc and this checklist
 
 Validation evidence:
-- Positive path: `cargo test -q -p sifr_codegen hir_analysis::queries::tests::` -> pass.
-- Positive path: `cargo run -q -p sifr -- run demos/m25_3_canonical_flow_truth_queries_demo/main.sifr` -> prints `m25_3 canonical flow truth queries demo:` then `5` and `77`.
+- Positive path: `cargo test -q -p sifr_hir` -> pass.
+- Positive path: `cargo run -q -p sifr -- run demos/m25_4_diagnostics_and_consumer_integration_demo/main.sifr` -> prints `m25_4 diagnostics and consumer integration demo:` then `2` and `3` (with deterministic unreachable warning).
 - Positive path: `/Users/yaseralnajjar/work/sifr/codebase/scripts/run_all_tests.sh` -> pass.
-- Negative path: `cargo run -q -p sifr -- run demos/m25_3_canonical_flow_truth_queries_demo/negative_cases/reachable_type_error/main.sifr` -> exits `1` with `type error: return type mismatch: expected 'int', got 'str'`.
+- Negative path: `cargo run -q -p sifr -- run demos/m25_4_diagnostics_and_consumer_integration_demo/negative_cases/reachable_type_error/main.sifr` -> exits `1` with `type error: return type mismatch: expected 'int', got 'str'`.
 
 ## PR Log
 - Part 1: https://github.com/yaseralnajjar/sifr/pull/883
 - Part 2: https://github.com/yaseralnajjar/sifr/pull/884
+- Part 3: https://github.com/yaseralnajjar/sifr/pull/885
