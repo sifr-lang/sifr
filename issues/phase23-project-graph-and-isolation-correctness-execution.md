@@ -42,7 +42,7 @@ Loop per part: Work -> Validate -> PR -> Review -> Merge -> Mark Done
 - [x] Add milestone 23.3 positive demo
 - [x] Add milestone 23.3 negative regression case
 - [x] Run milestone demo + targeted tests + full local suite
-- [ ] Open PR, review, and merge
+- [x] Open PR, review, and merge
 
 ### Part 4: milestone_23_4 Invocation-Scoped Temp Workspace Isolation
 - [ ] Replace fixed temp workspaces with per-invocation isolated directories
@@ -102,7 +102,7 @@ Validation evidence:
 - Negative path: `cargo run -q -p sifr -- run demos/m23_2_deterministic_module_graph_cycle_diagnostics_demo/negative_cases/module_cycle/main.sifr` -> exits `1` with canonical cycle diagnostic `a -> b -> c -> a`.
 
 ## Part 3: milestone_23_3 Project/Test Discovery Parity Contract
-status: validating (pending PR)
+status: done (2026-03-06, PR #867)
 
 - [x] Shared project/test discovery contract factored and reused
 - [x] Graph-membership parity checks added for equivalent import closures
@@ -110,8 +110,8 @@ status: validating (pending PR)
 - [x] Negative-path validation recorded
 - [x] Run milestone demo
 - [x] Run full local suite
-- [ ] Open PR, review, and merge
-- [ ] Mark part complete in phase doc and this checklist
+- [x] Open PR, review, and merge
+- [x] Mark part complete in phase doc and this checklist
 
 Validation evidence:
 - Positive path: `cargo test -q -p sifr_driver test_discover_test_root_modules_is_deterministic` -> pass.
@@ -132,6 +132,7 @@ status: pending
 ## PR Log
 - Part 1: https://github.com/yaseralnajjar/sifr/pull/863
 - Part 2: https://github.com/yaseralnajjar/sifr/pull/865
+- Part 3: https://github.com/yaseralnajjar/sifr/pull/867
 
 ## Reviewer Follow-up
 - pending
