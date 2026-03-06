@@ -1,0 +1,15 @@
+# m25_1 cfg integration contract demo
+# Validates that CFG-backed always-exits detection is active in lowering.
+
+def pick_value(maybe: int | None) -> int:
+    if maybe is None:
+        if True:
+            return 0
+        else:
+            return 1
+    return maybe
+
+def main():
+    print('m25_1 cfg integration contract demo:')
+    print(pick_value(41))
+    print(pick_value(None))

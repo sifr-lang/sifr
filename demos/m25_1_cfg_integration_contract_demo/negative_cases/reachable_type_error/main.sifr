@@ -1,0 +1,10 @@
+# m25_1 negative case
+# Reachable non-exiting branch must still fail narrowing-sensitive return checks.
+
+def pick_value(maybe: int | None) -> int:
+    if maybe is None:
+        print('missing value')
+    return maybe
+
+def main():
+    print(pick_value(None))
