@@ -1,19 +1,19 @@
 # Phase 22 Execution Checklist (Frontend Mode Parity Hardening)
 
-Status: in_progress (2026-03-06)
+Status: completed (2026-03-06)
 Owner: phase_22 execution loop
 Reference phase doc: `.cursor/plans/main/phases/22_frontend_mode_parity_hardening.md`
 
 Loop per part: Work -> Validate -> PR -> Review -> Merge -> Mark Done
 
 ## Global Gates (apply to every part)
-- [ ] Scope remains constrained to the current part definition-of-done
-- [ ] Root cause addressed (no superficial workaround/fallback)
-- [ ] Milestone quality-contract checks include at least one positive-path and one negative-path validation
-- [ ] Full local suite passes: `/Users/yaseralnajjar/work/sifr/codebase/scripts/run_all_tests.sh`
-- [ ] Milestone demo runs successfully before opening each part PR
-- [ ] PR opened, reviewed, and merged before starting next part
-- [ ] Roadmap/phase/issues docs updated with latest status and merged PR links
+- [x] Scope remains constrained to the current part definition-of-done
+- [x] Root cause addressed (no superficial workaround/fallback)
+- [x] Milestone quality-contract checks include at least one positive-path and one negative-path validation
+- [x] Full local suite passes: `/Users/yaseralnajjar/work/sifr/codebase/scripts/run_all_tests.sh`
+- [x] Milestone demo runs successfully before opening each part PR
+- [x] PR opened, reviewed, and merged before starting next part
+- [x] Roadmap/phase/issues docs updated with latest status and merged PR links
 
 ## Full Phase 22 To-Do Plan
 
@@ -115,15 +115,15 @@ Validation evidence:
 - Negative path: `cargo run -q -p sifr -- check demos/m22_3_cross_mode_diagnostic_exit_contract_demo/negative_cases/helper_type_error/main.sifr` -> exits `1` with `type error: [helper] return type mismatch: expected 'int', got 'str'`.
 
 ## Part 4: milestone_22_4 Parity Regression Matrix
-status: in_progress
+status: done (2026-03-06, PR #859)
 
 - [x] Parity matrix implemented and wired into local validation
 - [x] Positive-path validation recorded
 - [x] Negative-path validation recorded
 - [x] Run milestone demo
 - [x] Run full local suite
-- [ ] Open PR, review, and merge
-- [ ] Mark part complete in phase doc and this checklist
+- [x] Open PR, review, and merge
+- [x] Mark part complete in phase doc and this checklist
 
 Validation evidence:
 - Positive path: `bash scripts/run_frontend_mode_parity_matrix.sh` -> pass.
@@ -139,7 +139,7 @@ Validation evidence:
 - Part 1: https://github.com/yaseralnajjar/sifr/pull/856
 - Part 2: https://github.com/yaseralnajjar/sifr/pull/857
 - Part 3: https://github.com/yaseralnajjar/sifr/pull/858
-- Part 4: pending
+- Part 4: https://github.com/yaseralnajjar/sifr/pull/859
 
 ## Reviewer Follow-up
 - External review pass 1 output: pending
