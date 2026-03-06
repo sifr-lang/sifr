@@ -1,0 +1,10 @@
+# m25_5 negative case
+# Reachable type mismatch must fail with stable diagnostics across modes.
+
+def safe(seed: int) -> int:
+    if seed > 0:
+        return seed
+    return 'bad'
+
+def main():
+    print(safe(0))
