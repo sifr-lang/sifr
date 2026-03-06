@@ -1,0 +1,24 @@
+# m24_1 canonical traversal layer contract demo
+# Exercises loop-else, try/except, and match arms in one executable flow.
+
+def normalize(n: int) -> int:
+    match n:
+        case value if value > 0:
+            return value
+        case _:
+            return 0
+
+def compute(values: list[int]) -> int:
+    total: int = 0
+    for value in values:
+        try:
+            total = total + normalize(value)
+        except Error as e:
+            total = total + 100
+    else:
+        total = total + 1
+    return total
+
+def main():
+    print('m24_1 canonical traversal layer contract demo:')
+    print(compute([3, 2, -1]))

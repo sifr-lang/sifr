@@ -24,6 +24,7 @@ mod field_analysis_helpers;
 mod function_emitter;
 mod generic_bounds_helpers;
 mod helpers;
+mod hir_analysis;
 mod intrinsic_method_emitters;
 mod intrinsics;
 mod ir_imports;
