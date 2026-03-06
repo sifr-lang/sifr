@@ -1,0 +1,10 @@
+from typing import TypeVar
+
+T = TypeVar("T", int, str)
+
+def echo(x: T) -> T:
+    return x
+
+def main():
+    bad: float = echo(1.5)
+    print(bad)

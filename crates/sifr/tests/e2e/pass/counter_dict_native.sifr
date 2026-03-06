@@ -5,7 +5,7 @@ from sifr.collections import Counter, from_list
 def main():
     # Build from list
     words: list[str] = ["hello", "world", "hello", "sifr", "hello", "world"]
-    c: Counter = from_list(words)
+    c: Counter[str] = from_list(words)
 
     # Get counts
     assert str(c.get("hello")) == '3'
@@ -23,4 +23,3 @@ def main():
     # Most common top-1 (clear winner: hello with 3)
     top: list[str] = c.most_common(1)
     assert str(top) == '["hello"]'
-

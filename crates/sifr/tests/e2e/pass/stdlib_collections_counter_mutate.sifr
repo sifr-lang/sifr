@@ -3,7 +3,7 @@ from sifr.collections import Counter, from_list
 
 def main():
     # Create Counter
-    c: Counter = from_list(["x", "y", "x"])
+    c: Counter[str] = from_list(["x", "y", "x"])
 
     # Check initial counts
     assert str(c.get("x")) == '2'
@@ -19,4 +19,3 @@ def main():
     c.increment("z")
     assert str(c.get("z")) == '1'
     assert str(c.total()) == '5'
-

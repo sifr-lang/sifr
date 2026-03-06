@@ -3,7 +3,7 @@ from sifr.collections import Counter, from_list
 
 def main():
     # Create Counter from a list of strings
-    c: Counter = from_list(["apple", "banana", "apple", "cherry", "banana", "apple"])
+    c: Counter[str] = from_list(["apple", "banana", "apple", "cherry", "banana", "apple"])
 
     # Get count for a specific key
     assert str(c.get("apple")) == '3'
@@ -28,4 +28,3 @@ def main():
     c.increment("cherry")
     c.increment("cherry")
     assert str(c.get("cherry")) == '3'
-

@@ -72,6 +72,8 @@ struct LowerCtx {
     warnings: Vec<String>,
     /// Whether we're currently inside a class method (tracks `self` type)
     current_class: Option<String>,
+    /// Current function/method owner name while lowering a body.
+    current_owner: Option<String>,
     /// The parent class name of the current class (for `super()` resolution)
     current_parent_class: Option<String>,
     /// Whether we're inside a try block (auto-unwrap Result values)
@@ -91,6 +93,9 @@ struct LowerCtx {
     generic_functions: HashMap<String, Vec<String>>,
     /// Map of owner (function or class name) -> (`type_var_name` -> protocol bounds)
     type_param_bounds: HashMap<String, HashMap<String, Vec<String>>>,
+    /// Global `TypeVar(...)` declaration bounds/constraints by declared type variable name.
+    /// Constraints are encoded with `TYPEVAR_CONSTRAINT_PREFIX`.
+    declared_type_var_bounds: HashMap<String, Vec<String>>,
     /// Whether _sifr.* intrinsic imports are allowed (true for stdlib .sifr files)
     allow_intrinsic_imports: bool,
     /// Set of parameter names that are immutably borrowed (&T) in the current function.
@@ -112,6 +117,7 @@ impl LowerCtx {
             reveal_types: Vec::new(),
             warnings: Vec::new(),
             current_class: None,
+            current_owner: None,
             current_parent_class: None,
             in_try_block: false,
             try_block_error_types: std::collections::HashSet::new(),
@@ -121,6 +127,7 @@ impl LowerCtx {
             type_vars: std::collections::HashSet::new(),
             generic_functions: HashMap::new(),
             type_param_bounds: HashMap::new(),
+            declared_type_var_bounds: HashMap::new(),
             allow_intrinsic_imports: false,
             borrowed_params: std::collections::HashSet::new(),
             class_declared_type_params: HashMap::new(),
@@ -142,6 +149,109 @@ impl LowerCtx {
     fn in_loop(&self) -> bool {
         self.loop_depth > 0
     }
+}
+
+const TYPEVAR_CONSTRAINT_PREFIX: &str = "__constraint__:";
+
+fn encode_typevar_constraint(name: &str) -> String {
+    format!("{TYPEVAR_CONSTRAINT_PREFIX}{name}")
+}
+
+fn decode_typevar_constraint(encoded: &str) -> Option<&str> {
+    encoded.strip_prefix(TYPEVAR_CONSTRAINT_PREFIX)
+}
+
+/// Parse a TypeVar bound/constraint expression from PEP 695 syntax.
+/// `T: Bound` is treated as a hard bound; `T: (A, B)` is treated as constraints.
+fn parse_typevar_bound_expr(expr: &Expr, ctx: &mut LowerCtx) -> Vec<String> {
+    match expr {
+        Expr::Name(name) => vec![name.id.clone()],
+        Expr::Tuple(tuple) => {
+            let mut specs = Vec::new();
+            for elt in &tuple.elts {
+                if let Expr::Name(name) = elt {
+                    specs.push(encode_typevar_constraint(&name.id));
+                } else {
+                    ctx.error("TypeVar constraints must be simple type names".to_string());
+                }
+            }
+            specs
+        }
+        _ => {
+            ctx.error("TypeVar bound must be a type name or tuple of type names".to_string());
+            Vec::new()
+        }
+    }
+}
+
+/// Parse `TypeVar(...)` declaration bounds/constraints.
+/// Supports:
+/// - `TypeVar("T")`
+/// - `TypeVar("T", int, str)` (constraints)
+/// - `TypeVar("T", bound=Comparable)`
+/// - `TypeVar("T", constraints=(int, str))`
+fn parse_typevar_declaration_specs(call: &ExprCall, ctx: &mut LowerCtx) -> Vec<String> {
+    let mut specs = Vec::new();
+    let mut saw_bound = false;
+    let mut saw_constraints = false;
+
+    // Positional constraints after the first argument (`name`).
+    for arg in call.arguments.args.iter().skip(1) {
+        saw_constraints = true;
+        match arg {
+            Expr::Name(name) => specs.push(encode_typevar_constraint(&name.id)),
+            _ => ctx.error("TypeVar positional constraints must be simple type names".to_string()),
+        }
+    }
+
+    for kw in &call.arguments.keywords {
+        let Some(arg_name) = &kw.arg else {
+            continue;
+        };
+        match arg_name.as_str() {
+            "bound" => {
+                saw_bound = true;
+                match &kw.value {
+                    Expr::Name(name) => specs.push(name.id.clone()),
+                    _ => {
+                        ctx.error("TypeVar bound must be a simple type name".to_string());
+                    }
+                }
+            }
+            "constraints" => {
+                saw_constraints = true;
+                match &kw.value {
+                    Expr::Tuple(tuple) => {
+                        for elt in &tuple.elts {
+                            if let Expr::Name(name) = elt {
+                                specs.push(encode_typevar_constraint(&name.id));
+                            } else {
+                                ctx.error(
+                                    "TypeVar constraints must be simple type names".to_string(),
+                                );
+                            }
+                        }
+                    }
+                    Expr::Name(name) => {
+                        specs.push(encode_typevar_constraint(&name.id));
+                    }
+                    _ => {
+                        ctx.error(
+                            "TypeVar constraints must be a type name or tuple of type names"
+                                .to_string(),
+                        );
+                    }
+                }
+            }
+            _ => {}
+        }
+    }
+
+    if saw_bound && saw_constraints {
+        ctx.error("TypeVar cannot declare both 'bound' and 'constraints'".to_string());
+    }
+
+    specs
 }
 
 /// Collect all `TypeVar` names used in a type.
@@ -167,6 +277,29 @@ fn collect_type_vars(ty: &Type, vars: &mut Vec<String>) {
                 collect_type_vars(m, vars);
             }
         }
+        Type::Result(ok, err) => {
+            collect_type_vars(ok, vars);
+            collect_type_vars(err, vars);
+        }
+        Type::Function(ft) => {
+            for (_, param_ty, _) in &ft.params {
+                collect_type_vars(param_ty, vars);
+            }
+            collect_type_vars(&ft.return_type, vars);
+        }
+        Type::Class {
+            fields, methods, ..
+        } => {
+            for (_, field_ty) in fields {
+                collect_type_vars(field_ty, vars);
+            }
+            for (_, method_ft) in methods {
+                for (_, param_ty, _) in &method_ft.params {
+                    collect_type_vars(param_ty, vars);
+                }
+                collect_type_vars(&method_ft.return_type, vars);
+            }
+        }
         Type::Callable(params, _, ret) => {
             for p in params {
                 collect_type_vars(p, vars);
@@ -179,6 +312,28 @@ fn collect_type_vars(ty: &Type, vars: &mut Vec<String>) {
 
 /// Substitute type variables in a type with concrete types.
 fn substitute_type_vars(ty: &Type, bindings: &HashMap<String, Type>) -> Type {
+    fn substitute_function_type(
+        ft: &FunctionType,
+        bindings: &HashMap<String, Type>,
+    ) -> FunctionType {
+        let params = ft
+            .params
+            .iter()
+            .map(|(name, ty, convention)| {
+                (
+                    name.clone(),
+                    substitute_type_vars(ty, bindings),
+                    *convention,
+                )
+            })
+            .collect();
+        let return_type = Box::new(substitute_type_vars(&ft.return_type, bindings));
+        FunctionType {
+            params,
+            return_type,
+        }
+    }
+
     match ty {
         Type::TypeVar(name) => bindings.get(name).cloned().unwrap_or_else(|| ty.clone()),
         Type::List(elem) => Type::List(Box::new(substitute_type_vars(elem, bindings))),
@@ -207,6 +362,35 @@ fn substitute_type_vars(ty: &Type, bindings: &HashMap<String, Type>) -> Type {
             conventions.clone(),
             Box::new(substitute_type_vars(ret, bindings)),
         ),
+        Type::Result(ok, err) => Type::Result(
+            Box::new(substitute_type_vars(ok, bindings)),
+            Box::new(substitute_type_vars(err, bindings)),
+        ),
+        Type::Function(ft) => Type::Function(substitute_function_type(ft, bindings)),
+        Type::Class {
+            name,
+            fields,
+            methods,
+            parent_class,
+        } => Type::Class {
+            name: name.clone(),
+            fields: fields
+                .iter()
+                .map(|(field_name, field_ty)| {
+                    (field_name.clone(), substitute_type_vars(field_ty, bindings))
+                })
+                .collect(),
+            methods: methods
+                .iter()
+                .map(|(method_name, method_ft)| {
+                    (
+                        method_name.clone(),
+                        substitute_function_type(method_ft, bindings),
+                    )
+                })
+                .collect(),
+            parent_class: parent_class.clone(),
+        },
         _ => ty.clone(),
     }
 }
@@ -234,15 +418,63 @@ fn infer_type_var_bindings(param_ty: &Type, arg_ty: &Type, bindings: &mut HashMa
                 infer_type_var_bindings(p, a, bindings);
             }
         }
+        (Type::Result(p_ok, p_err), Type::Result(a_ok, a_err)) => {
+            infer_type_var_bindings(p_ok, a_ok, bindings);
+            infer_type_var_bindings(p_err, a_err, bindings);
+        }
+        (
+            Type::Class {
+                name: p_name,
+                fields: p_fields,
+                ..
+            },
+            Type::Class {
+                name: a_name,
+                fields: a_fields,
+                ..
+            },
+        ) if p_name == a_name && p_fields.len() == a_fields.len() => {
+            for ((_, p_ty), (_, a_ty)) in p_fields.iter().zip(a_fields.iter()) {
+                infer_type_var_bindings(p_ty, a_ty, bindings);
+            }
+        }
         _ => {}
     }
 }
 
-/// Check if a concrete type satisfies a protocol bound.
-fn type_satisfies_bound(ty: &Type, bound: &str) -> bool {
-    // TypeVars are not concrete — bounds are checked when they're instantiated
-    if matches!(ty, Type::TypeVar(_)) {
-        return true;
+fn lookup_named_type(name: &str, ctx: &LowerCtx) -> Option<Type> {
+    match name {
+        "int" => Some(Type::Int),
+        "float" => Some(Type::Float),
+        "bool" => Some(Type::Bool),
+        "str" => Some(Type::Str),
+        "None" => Some(Type::None),
+        "bigint" => Some(Type::BigInt),
+        _ => ctx
+            .scope
+            .lookup_type_alias(name)
+            .cloned()
+            .or_else(|| ctx.class_types.get(name).cloned()),
+    }
+}
+
+fn current_owner_typevar_specs<'a>(ctx: &'a LowerCtx, tv_name: &str) -> Option<&'a [String]> {
+    let owner = ctx.current_owner.as_ref()?;
+    ctx.type_param_bounds
+        .get(owner)?
+        .get(tv_name)
+        .map(|specs| specs.as_slice())
+}
+
+fn typevar_satisfies_spec(tv_name: &str, target_spec: &str, ctx: &LowerCtx) -> bool {
+    current_owner_typevar_specs(ctx, tv_name)
+        .is_some_and(|specs| specs.iter().any(|spec| spec == target_spec))
+}
+
+/// Check if a type satisfies a named bound (hard requirement).
+fn type_satisfies_bound(ty: &Type, bound: &str, ctx: &LowerCtx) -> bool {
+    if let Type::TypeVar(tv_name) = ty {
+        return typevar_satisfies_spec(tv_name, bound, ctx);
     }
     match bound {
         "Comparable" => matches!(
@@ -262,8 +494,17 @@ fn type_satisfies_bound(ty: &Type, bound: &str) -> bool {
                 | Type::LiteralInt(_)
                 | Type::LiteralBool(_)
         ),
-        _ => true,
+        _ => lookup_named_type(bound, ctx).is_some_and(|bound_ty| ty.is_assignable_to(&bound_ty)),
     }
+}
+
+/// Check if a type satisfies a TypeVar constraints entry (`TypeVar("T", A, B)` / `T: (A, B)`).
+fn type_satisfies_constraint(ty: &Type, constraint_name: &str, ctx: &LowerCtx) -> bool {
+    let encoded = encode_typevar_constraint(constraint_name);
+    if let Type::TypeVar(tv_name) = ty {
+        return typevar_satisfies_spec(tv_name, &encoded, ctx);
+    }
+    lookup_named_type(constraint_name, ctx).is_some_and(|target_ty| ty.is_assignable_to(&target_ty))
 }
 
 /// Result of lowering, including the HIR module and any diagnostics.
@@ -371,6 +612,10 @@ fn lower_module_impl(
                             if func_name.id.as_str() == "TypeVar" {
                                 // Register this name as a type variable
                                 ctx.type_vars.insert(name.id.clone());
+                                let specs = parse_typevar_declaration_specs(call, &mut ctx);
+                                if !specs.is_empty() {
+                                    ctx.declared_type_var_bounds.insert(name.id.clone(), specs);
+                                }
                             }
                         }
                     }
@@ -433,16 +678,15 @@ fn lower_module_impl(
                         ctx.type_vars.insert(name.clone());
                         pep695_type_vars.push(name.clone());
                         if let Some(ref bound) = tv.bound {
-                            let bound_name = match bound.as_ref() {
-                                Expr::Name(n) => n.id.clone(),
-                                _ => continue,
-                            };
-                            ctx.type_param_bounds
-                                .entry(func.name.to_string())
-                                .or_default()
-                                .entry(name)
-                                .or_default()
-                                .push(bound_name);
+                            let specs = parse_typevar_bound_expr(bound, &mut ctx);
+                            if !specs.is_empty() {
+                                ctx.type_param_bounds
+                                    .entry(func.name.to_string())
+                                    .or_default()
+                                    .entry(name)
+                                    .or_default()
+                                    .extend(specs);
+                            }
                         }
                     }
                 }
@@ -466,6 +710,25 @@ fn lower_module_impl(
             if !func_type_vars.is_empty() {
                 ctx.generic_functions
                     .insert(func.name.to_string(), func_type_vars);
+            }
+
+            // Apply globally declared `TypeVar(...)` bounds/constraints to this function's
+            // referenced type variables.
+            if let Some(type_vars) = ctx
+                .generic_functions
+                .get(func.name.to_string().as_str())
+                .cloned()
+            {
+                for tv_name in &type_vars {
+                    if let Some(specs) = ctx.declared_type_var_bounds.get(tv_name) {
+                        ctx.type_param_bounds
+                            .entry(func.name.to_string())
+                            .or_default()
+                            .entry(tv_name.clone())
+                            .or_default()
+                            .extend(specs.clone());
+                    }
+                }
             }
 
             // Collect default values for parameters
@@ -515,109 +778,164 @@ fn lower_module_impl(
                 continue;
             }
             let Some(ref module) = import_from.module else {
-                ctx.error("unsupported bare relative import; use 'from <module> import ...'".to_string());
+                ctx.error(
+                    "unsupported bare relative import; use 'from <module> import ...'".to_string(),
+                );
                 continue;
             };
             let module_name = module.to_string();
             let is_absolute_import = import_from.level == 0;
-                let names: Vec<String> = import_from
-                    .names
-                    .iter()
-                    .map(|alias| alias.name.to_string())
-                    .collect();
-                // Collect aliases: (original_name, local_alias)
-                let aliases: Vec<(String, String)> = import_from
-                    .names
-                    .iter()
-                    .filter_map(|alias| {
-                        alias
-                            .asname
-                            .as_ref()
-                            .map(|asname| (alias.name.to_string(), asname.to_string()))
-                    })
-                    .collect();
+            let names: Vec<String> = import_from
+                .names
+                .iter()
+                .map(|alias| alias.name.to_string())
+                .collect();
+            // Collect aliases: (original_name, local_alias)
+            let aliases: Vec<(String, String)> = import_from
+                .names
+                .iter()
+                .filter_map(|alias| {
+                    alias
+                        .asname
+                        .as_ref()
+                        .map(|asname| (alias.name.to_string(), asname.to_string()))
+                })
+                .collect();
 
-                // Build a mapping from original name -> local name (alias or original)
-                let local_name_for = |original: &str| -> String {
-                    aliases
-                        .iter()
-                        .find(|(orig, _)| orig == original)
-                        .map(|(_, alias)| alias.clone())
-                        .unwrap_or_else(|| original.to_string())
-                };
+            // Build a mapping from original name -> local name (alias or original)
+            let local_name_for = |original: &str| -> String {
+                aliases
+                    .iter()
+                    .find(|(orig, _)| orig == original)
+                    .map(|(_, alias)| alias.clone())
+                    .unwrap_or_else(|| original.to_string())
+            };
 
-                // Skip typing imports (TypeVar, Callable, etc.) - they are handled at the type level
-                if is_absolute_import && module_name == "typing" {
+            // Skip typing imports (TypeVar, Callable, etc.) - they are handled at the type level
+            if is_absolute_import && module_name == "typing" {
+                continue;
+            }
+
+            // Skip enum imports (Enum is a built-in base class in Sifr)
+            if is_absolute_import && module_name == "enum" {
+                continue;
+            }
+
+            // Block user imports of _sifr.* (internal intrinsics)
+            // Stdlib .sifr files are allowed to import from _sifr.*
+            if is_absolute_import && module_name.starts_with("_sifr.") {
+                if !ctx.allow_intrinsic_imports {
+                    ctx.error(format!("cannot import from '{module_name}' — _sifr.* modules are internal compiler intrinsics"));
                     continue;
                 }
-
-                // Skip enum imports (Enum is a built-in base class in Sifr)
-                if is_absolute_import && module_name == "enum" {
-                    continue;
-                }
-
-                // Block user imports of _sifr.* (internal intrinsics)
-                // Stdlib .sifr files are allowed to import from _sifr.*
-                if is_absolute_import && module_name.starts_with("_sifr.") {
-                    if !ctx.allow_intrinsic_imports {
-                        ctx.error(format!("cannot import from '{module_name}' — _sifr.* modules are internal compiler intrinsics"));
-                        continue;
+                // Resolve intrinsic imports for stdlib .sifr files
+                if let Some(intrinsic_module) = crate::stdlib::get_intrinsic_module(&module_name) {
+                    for name in &names {
+                        let local = local_name_for(name);
+                        if let Some(ft) = intrinsic_module.functions.get(name) {
+                            ctx.functions.insert(local, ft.clone());
+                        } else if let Some(const_ty) = intrinsic_module.constants.get(name) {
+                            ctx.scope.define(local, const_ty.clone());
+                        } else {
+                            ctx.error(format!(
+                                "intrinsic module '{module_name}' has no member '{name}'"
+                            ));
+                        }
                     }
-                    // Resolve intrinsic imports for stdlib .sifr files
-                    if let Some(intrinsic_module) =
-                        crate::stdlib::get_intrinsic_module(&module_name)
-                    {
-                        for name in &names {
-                            let local = local_name_for(name);
-                            if let Some(ft) = intrinsic_module.functions.get(name) {
-                                ctx.functions.insert(local, ft.clone());
-                            } else if let Some(const_ty) = intrinsic_module.constants.get(name) {
-                                ctx.scope.define(local, const_ty.clone());
-                            } else {
-                                ctx.error(format!(
-                                    "intrinsic module '{module_name}' has no member '{name}'"
-                                ));
+                    imports.push(HirImport {
+                        module: module_name,
+                        names,
+                        aliases,
+                    });
+                    continue;
+                }
+                ctx.error(format!("unknown intrinsic module '{module_name}'"));
+                continue;
+            }
+
+            // Check if this is a stdlib import (sifr.*)
+            // All sifr.* modules are now .sifr files compiled in the stdlib phase.
+            // Resolve from pre-compiled stdlib modules (via externals).
+            if is_absolute_import && module_name.starts_with("sifr.") {
+                // Check if there's a pre-compiled stdlib .sifr module in externals
+                let stdlib_module_key = module_name.clone();
+                let has_module = externals.functions.contains_key(&stdlib_module_key)
+                    || externals.classes.contains_key(&stdlib_module_key)
+                    || externals.constants.contains_key(&stdlib_module_key);
+                if has_module {
+                    // Resolve each imported name from the stdlib module
+                    for name in &names {
+                        let local = local_name_for(name);
+                        let mut found = false;
+                        // Check functions
+                        if let Some(module_fns) = externals.functions.get(&stdlib_module_key) {
+                            if let Some(ft) = module_fns.get(name) {
+                                ctx.functions.insert(local.clone(), ft.clone());
+                                found = true;
+                                // Import generic function info and bounds
+                                if let Some(module_gf) =
+                                    externals.generic_functions.get(&stdlib_module_key)
+                                {
+                                    if let Some(type_vars) = module_gf.get(name) {
+                                        ctx.generic_functions
+                                            .insert(local.clone(), type_vars.clone());
+                                    }
+                                }
+                                if let Some(module_bounds) =
+                                    externals.type_param_bounds.get(&stdlib_module_key)
+                                {
+                                    if let Some(owner_bounds) = module_bounds.get(name) {
+                                        ctx.type_param_bounds
+                                            .insert(local.clone(), owner_bounds.clone());
+                                    }
+                                }
                             }
                         }
-                        imports.push(HirImport {
-                            module: module_name,
-                            names,
-                            aliases,
-                        });
-                        continue;
-                    }
-                    ctx.error(format!("unknown intrinsic module '{module_name}'"));
-                    continue;
-                }
-
-                // Check if this is a stdlib import (sifr.*)
-                // All sifr.* modules are now .sifr files compiled in the stdlib phase.
-                // Resolve from pre-compiled stdlib modules (via externals).
-                if is_absolute_import && module_name.starts_with("sifr.") {
-                    // Check if there's a pre-compiled stdlib .sifr module in externals
-                    let stdlib_module_key = module_name.clone();
-                    let has_module = externals.functions.contains_key(&stdlib_module_key)
-                        || externals.classes.contains_key(&stdlib_module_key)
-                        || externals.constants.contains_key(&stdlib_module_key);
-                    if has_module {
-                        // Resolve each imported name from the stdlib module
-                        for name in &names {
-                            let local = local_name_for(name);
-                            let mut found = false;
-                            // Check functions
-                            if let Some(module_fns) = externals.functions.get(&stdlib_module_key) {
-                                if let Some(ft) = module_fns.get(name) {
-                                    ctx.functions.insert(local.clone(), ft.clone());
-                                    found = true;
-                                    // Import generic function info and bounds
-                                    if let Some(module_gf) =
-                                        externals.generic_functions.get(&stdlib_module_key)
+                        // Check classes
+                        if !found {
+                            if let Some(module_classes) = externals.classes.get(&stdlib_module_key)
+                            {
+                                if let Some(class_ty) = module_classes.get(name) {
+                                    ctx.class_types.insert(local.clone(), class_ty.clone());
+                                    if let Some(module_class_type_params) =
+                                        externals.class_type_params.get(&stdlib_module_key)
                                     {
-                                        if let Some(type_vars) = module_gf.get(name) {
-                                            ctx.generic_functions
-                                                .insert(local.clone(), type_vars.clone());
+                                        if let Some(type_params) =
+                                            module_class_type_params.get(name)
+                                        {
+                                            ctx.class_declared_type_params
+                                                .insert(local.clone(), type_params.clone());
+                                            if !type_params.is_empty() {
+                                                ctx.generic_functions
+                                                    .insert(local.clone(), type_params.clone());
+                                            }
                                         }
                                     }
+                                    // Register as error type if flagged in external defs
+                                    if externals.error_types.contains(name) {
+                                        ctx.error_types.insert(local.clone());
+                                    }
+                                    // Register constructor: prefer `new` method params if available
+                                    if let Type::Class {
+                                        fields, methods, ..
+                                    } = class_ty
+                                    {
+                                        let ft = if let Some((_, new_ft)) =
+                                            methods.iter().find(|(n, _)| n == "new")
+                                        {
+                                            let params: Vec<(String, Type)> = new_ft
+                                                .params
+                                                .iter()
+                                                .map(|(n, t, _)| (n.clone(), t.clone()))
+                                                .collect();
+                                            FunctionType::new(params, class_ty.clone())
+                                        } else {
+                                            let params: Vec<(String, Type)> = fields.clone();
+                                            FunctionType::new(params, class_ty.clone())
+                                        };
+                                        ctx.functions.insert(local.clone(), ft);
+                                    }
+                                    // Import class type parameter bounds
                                     if let Some(module_bounds) =
                                         externals.type_param_bounds.get(&stdlib_module_key)
                                     {
@@ -626,180 +944,131 @@ fn lower_module_impl(
                                                 .insert(local.clone(), owner_bounds.clone());
                                         }
                                     }
+                                    found = true;
                                 }
-                            }
-                            // Check classes
-                            if !found {
-                                if let Some(module_classes) =
-                                    externals.classes.get(&stdlib_module_key)
-                                {
-                                    if let Some(class_ty) = module_classes.get(name) {
-                                        ctx.class_types.insert(local.clone(), class_ty.clone());
-                                        if let Some(module_class_type_params) =
-                                            externals.class_type_params.get(&stdlib_module_key)
-                                        {
-                                            if let Some(type_params) =
-                                                module_class_type_params.get(name)
-                                            {
-                                                ctx.class_declared_type_params
-                                                    .insert(local.clone(), type_params.clone());
-                                            }
-                                        }
-                                        // Register as error type if flagged in external defs
-                                        if externals.error_types.contains(name) {
-                                            ctx.error_types.insert(local.clone());
-                                        }
-                                        // Register constructor: prefer `new` method params if available
-                                        if let Type::Class {
-                                            fields, methods, ..
-                                        } = class_ty
-                                        {
-                                            let ft = if let Some((_, new_ft)) =
-                                                methods.iter().find(|(n, _)| n == "new")
-                                            {
-                                                let params: Vec<(String, Type)> = new_ft
-                                                    .params
-                                                    .iter()
-                                                    .map(|(n, t, _)| (n.clone(), t.clone()))
-                                                    .collect();
-                                                FunctionType::new(params, class_ty.clone())
-                                            } else {
-                                                let params: Vec<(String, Type)> = fields.clone();
-                                                FunctionType::new(params, class_ty.clone())
-                                            };
-                                            ctx.functions.insert(local.clone(), ft);
-                                        }
-                                        // Import class type parameter bounds
-                                        if let Some(module_bounds) =
-                                            externals.type_param_bounds.get(&stdlib_module_key)
-                                        {
-                                            if let Some(owner_bounds) = module_bounds.get(name) {
-                                                ctx.type_param_bounds
-                                                    .insert(local.clone(), owner_bounds.clone());
-                                            }
-                                        }
-                                        found = true;
-                                    }
-                                }
-                            }
-                            // Check constants
-                            if !found {
-                                if let Some(module_consts) =
-                                    externals.constants.get(&stdlib_module_key)
-                                {
-                                    if let Some(const_ty) = module_consts.get(name) {
-                                        ctx.scope.define(local, const_ty.clone());
-                                        found = true;
-                                    }
-                                }
-                            }
-                            if !found {
-                                ctx.error(format!("module '{module_name}' has no member '{name}'"));
                             }
                         }
-                        imports.push(HirImport {
-                            module: module_name,
-                            names,
-                            aliases,
-                        });
-                        continue;
+                        // Check constants
+                        if !found {
+                            if let Some(module_consts) = externals.constants.get(&stdlib_module_key)
+                            {
+                                if let Some(const_ty) = module_consts.get(name) {
+                                    ctx.scope.define(local, const_ty.clone());
+                                    found = true;
+                                }
+                            }
+                        }
+                        if !found {
+                            ctx.error(format!("module '{module_name}' has no member '{name}'"));
+                        }
                     }
-                    // Module doesn't exist in stdlib — emit clear error at the import site
-                    ctx.error(format!("unknown stdlib module '{module_name}'"));
+                    imports.push(HirImport {
+                        module: module_name,
+                        names,
+                        aliases,
+                    });
+                    continue;
+                }
+                // Module doesn't exist in stdlib — emit clear error at the import site
+                ctx.error(format!("unknown stdlib module '{module_name}'"));
+                continue;
+            }
+
+            // Check if the local module exists in externals before resolving
+            let has_local_module = externals.functions.contains_key(&module_name)
+                || externals.classes.contains_key(&module_name)
+                || externals.constants.contains_key(&module_name);
+            if !has_local_module {
+                ctx.error(format!("unknown module '{module_name}'"));
+                continue;
+            }
+
+            // Resolve imported names from external definitions (local modules)
+            for name in &names {
+                let local = local_name_for(name);
+                // Check if it's a private name
+                if name.starts_with('_') {
+                    ctx.error(format!(
+                        "cannot import private name '{name}' from module '{module_name}'"
+                    ));
                     continue;
                 }
 
-                // Check if the local module exists in externals before resolving
-                let has_local_module = externals.functions.contains_key(&module_name)
-                    || externals.classes.contains_key(&module_name)
-                    || externals.constants.contains_key(&module_name);
-                if !has_local_module {
-                    ctx.error(format!("unknown module '{module_name}'"));
-                    continue;
+                let mut found = false;
+                // Look up in external functions
+                if let Some(module_fns) = externals.functions.get(&module_name) {
+                    if let Some(ft) = module_fns.get(name) {
+                        ctx.functions.insert(local.clone(), ft.clone());
+                        found = true;
+                    }
                 }
-
-                // Resolve imported names from external definitions (local modules)
-                for name in &names {
-                    let local = local_name_for(name);
-                    // Check if it's a private name
-                    if name.starts_with('_') {
-                        ctx.error(format!(
-                            "cannot import private name '{name}' from module '{module_name}'"
-                        ));
-                        continue;
-                    }
-
-                    let mut found = false;
-                    // Look up in external functions
-                    if let Some(module_fns) = externals.functions.get(&module_name) {
-                        if let Some(ft) = module_fns.get(name) {
-                            ctx.functions.insert(local.clone(), ft.clone());
-                            found = true;
-                        }
-                    }
-                    // Look up in external classes
-                    if !found {
-                        if let Some(module_classes) = externals.classes.get(&module_name) {
-                            if let Some(class_ty) = module_classes.get(name) {
-                                ctx.class_types.insert(local.clone(), class_ty.clone());
-                                if let Some(module_class_type_params) =
-                                    externals.class_type_params.get(&module_name)
-                                {
-                                    if let Some(type_params) = module_class_type_params.get(name) {
-                                        ctx.class_declared_type_params
+                // Look up in external classes
+                if !found {
+                    if let Some(module_classes) = externals.classes.get(&module_name) {
+                        if let Some(class_ty) = module_classes.get(name) {
+                            ctx.class_types.insert(local.clone(), class_ty.clone());
+                            if let Some(module_class_type_params) =
+                                externals.class_type_params.get(&module_name)
+                            {
+                                if let Some(type_params) = module_class_type_params.get(name) {
+                                    ctx.class_declared_type_params
+                                        .insert(local.clone(), type_params.clone());
+                                    if !type_params.is_empty() {
+                                        ctx.generic_functions
                                             .insert(local.clone(), type_params.clone());
                                     }
                                 }
-                                // Register as error type if flagged in external defs
-                                if externals.error_types.contains(name) {
-                                    ctx.error_types.insert(local.clone());
-                                }
-                                // Register the constructor: prefer `new` method params if available,
-                                // otherwise fall back to field-based constructor
-                                if let Type::Class {
-                                    fields, methods, ..
-                                } = class_ty
+                            }
+                            // Register as error type if flagged in external defs
+                            if externals.error_types.contains(name) {
+                                ctx.error_types.insert(local.clone());
+                            }
+                            // Register the constructor: prefer `new` method params if available,
+                            // otherwise fall back to field-based constructor
+                            if let Type::Class {
+                                fields, methods, ..
+                            } = class_ty
+                            {
+                                let ft = if let Some((_, new_ft)) =
+                                    methods.iter().find(|(n, _)| n == "new")
                                 {
-                                    let ft = if let Some((_, new_ft)) =
-                                        methods.iter().find(|(n, _)| n == "new")
-                                    {
-                                        // Use the actual __init__ parameters
-                                        let params: Vec<(String, Type)> = new_ft
-                                            .params
-                                            .iter()
-                                            .map(|(n, t, _)| (n.clone(), t.clone()))
-                                            .collect();
-                                        FunctionType::new(params, class_ty.clone())
-                                    } else {
-                                        // No __init__ — default constructor from fields
-                                        let params: Vec<(String, Type)> = fields.clone();
-                                        FunctionType::new(params, class_ty.clone())
-                                    };
-                                    ctx.functions.insert(local.clone(), ft);
-                                }
-                                found = true;
+                                    // Use the actual __init__ parameters
+                                    let params: Vec<(String, Type)> = new_ft
+                                        .params
+                                        .iter()
+                                        .map(|(n, t, _)| (n.clone(), t.clone()))
+                                        .collect();
+                                    FunctionType::new(params, class_ty.clone())
+                                } else {
+                                    // No __init__ — default constructor from fields
+                                    let params: Vec<(String, Type)> = fields.clone();
+                                    FunctionType::new(params, class_ty.clone())
+                                };
+                                ctx.functions.insert(local.clone(), ft);
                             }
+                            found = true;
                         }
-                    }
-                    // Look up in external constants
-                    if !found {
-                        if let Some(module_consts) = externals.constants.get(&module_name) {
-                            if let Some(const_ty) = module_consts.get(name) {
-                                ctx.scope.define(local.clone(), const_ty.clone());
-                                found = true;
-                            }
-                        }
-                    }
-                    if !found {
-                        ctx.error(format!("module '{module_name}' has no member '{name}'"));
                     }
                 }
+                // Look up in external constants
+                if !found {
+                    if let Some(module_consts) = externals.constants.get(&module_name) {
+                        if let Some(const_ty) = module_consts.get(name) {
+                            ctx.scope.define(local.clone(), const_ty.clone());
+                            found = true;
+                        }
+                    }
+                }
+                if !found {
+                    ctx.error(format!("module '{module_name}' has no member '{name}'"));
+                }
+            }
 
-                imports.push(HirImport {
-                    module: module_name,
-                    names,
-                    aliases,
-                });
+            imports.push(HirImport {
+                module: module_name,
+                names,
+                aliases,
+            });
         } else if let Stmt::Import(import_stmt) = stmt {
             for alias in &import_stmt.names {
                 let module_name = alias.name.to_string();

@@ -1,0 +1,13 @@
+# Test: unknown TypeVar bound is rejected (no default-allow fallback)
+from typing import TypeVar
+
+T = TypeVar("T", bound=MissingBound)
+
+def identity(x: T) -> T:
+    return x
+
+def main():
+    value: int = identity(1)
+    print(value)
+
+# expect-error: does not implement protocol 'MissingBound'

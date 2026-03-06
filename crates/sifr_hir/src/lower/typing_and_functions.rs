@@ -642,7 +642,9 @@ pub(super) fn lower_function(func: &StmtFunctionDef, ctx: &mut LowerCtx) -> Opti
     }
 
     // Lower body
+    let previous_owner = ctx.current_owner.replace(func.name.to_string());
     let body = lower_stmts(&func.body, &ft, ctx);
+    ctx.current_owner = previous_owner;
 
     ctx.borrowed_params.clear();
 

@@ -2,12 +2,12 @@
 def identity[T](x: T) -> T:
     return x
 
-def first[T](items: list[T]) -> T:
+def first[T](items: list[T]) -> T | None:
     return items[0]
 
 def main():
     assert str(identity(42)) == '42'
     assert str(identity("hello")) == 'hello'
     nums: list[int] = [10, 20, 30]
-    assert str(first(nums)) == '10'
-
+    first_num: int | None = first(nums)
+    assert str(first_num) == '10'

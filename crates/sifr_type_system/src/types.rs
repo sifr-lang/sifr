@@ -656,8 +656,8 @@ impl Type {
             (Self::Protocol { name: a, .. }, Self::Protocol { name: b, .. }) => a == b,
             // Newtype: same name means same newtype (nominal)
             (Self::Newtype { name: a, .. }, Self::Newtype { name: b, .. }) => a == b,
-            // TypeVar: a type variable is compatible with any type (for generic instantiation)
-            (Self::TypeVar(_), _) | (_, Self::TypeVar(_)) => true,
+            // TypeVar: only assignable to the same type parameter name.
+            (Self::TypeVar(a), Self::TypeVar(b)) => a == b,
             // Callable: compatible if param and return types match
             (Self::Callable(params_a, _, ret_a), Self::Callable(params_b, _, ret_b)) => {
                 params_a.len() == params_b.len()
@@ -734,6 +734,14 @@ mod tests {
         assert!(Type::Any.is_assignable_to(&Type::Int));
         assert!(Type::Int.is_assignable_to(&Type::Any));
         assert!(Type::Never.is_assignable_to(&Type::Int));
+    }
+
+    #[test]
+    fn test_typevar_assignability_is_strict() {
+        assert!(Type::TypeVar("T".to_string()).is_assignable_to(&Type::TypeVar("T".to_string())));
+        assert!(!Type::TypeVar("T".to_string()).is_assignable_to(&Type::TypeVar("U".to_string())));
+        assert!(!Type::TypeVar("T".to_string()).is_assignable_to(&Type::Int));
+        assert!(!Type::Int.is_assignable_to(&Type::TypeVar("T".to_string())));
     }
 
     #[test]
