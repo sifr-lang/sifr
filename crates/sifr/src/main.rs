@@ -6,7 +6,9 @@
 //!   sifr check <file.sifr>    Type-check only
 //!   sifr emit <file.sifr>     Show generated Rust code
 use clap::{Parser, Subcommand};
-use sifr_driver::{build, build_project, check, compile, run_tests, CompileError, CompileResult};
+use sifr_driver::{
+    build, build_project, check, check_project, compile, run_tests, CompileError, CompileResult,
+};
 use sifr_python_ast::Stmt;
 use sifr_python_parser::parse_module;
 use std::io::{self, Write};
@@ -186,8 +188,7 @@ fn cmd_run(file: &Path) {
 }
 
 fn cmd_check(file: &Path) {
-    let source = read_source(file);
-    let errors = check(&source);
+    let errors = check_entrypoint(file);
 
     if errors.is_empty() {
         let _ = writeln!(io::stderr(), "no errors found");
@@ -237,6 +238,16 @@ fn compile_entrypoint(file: &Path, output: &Path) -> Result<PathBuf, Vec<Compile
         CompilationMode::SingleFile => {
             let source = read_source(file);
             build(&source, output)
+        }
+    }
+}
+
+fn check_entrypoint(file: &Path) -> Vec<CompileError> {
+    match resolve_compilation_mode(file) {
+        CompilationMode::Project => check_project(file),
+        CompilationMode::SingleFile => {
+            let source = read_source(file);
+            check(&source)
         }
     }
 }
@@ -501,8 +512,11 @@ mod tests {
     fn test_resolve_compilation_mode_single_file_for_bare_relative_import() {
         let dir = mktemp_dir("relative_import_bare");
         let main = dir.join("main.sifr");
-        std::fs::write(&main, "from . import value\n\ndef main():\n    print(value)\n")
-            .expect("main file should be written");
+        std::fs::write(
+            &main,
+            "from . import value\n\ndef main():\n    print(value)\n",
+        )
+        .expect("main file should be written");
 
         assert_eq!(resolve_compilation_mode(&main), CompilationMode::SingleFile);
         let _ = std::fs::remove_dir_all(dir);
@@ -565,8 +579,11 @@ mod tests {
     fn test_compile_entrypoint_error_consistency_for_bare_relative_import() {
         let dir = mktemp_dir("entrypoint_bare_relative");
         let main = dir.join("main.sifr");
-        std::fs::write(&main, "from . import helper\n\ndef main():\n    print(helper)\n")
-            .expect("main file should be written");
+        std::fs::write(
+            &main,
+            "from . import helper\n\ndef main():\n    print(helper)\n",
+        )
+        .expect("main file should be written");
 
         let run_out = mktemp_dir("run_path_bare_relative");
         let build_out = mktemp_dir("build_path_bare_relative");
@@ -608,6 +625,58 @@ mod tests {
             .any(|m| m.contains("unsupported relative import level 2")));
 
         let _ = std::fs::remove_dir_all(run_out);
+        let _ = std::fs::remove_dir_all(build_out);
+        let _ = std::fs::remove_dir_all(dir);
+    }
+
+    #[test]
+    fn test_check_entrypoint_project_mode_resolves_local_imports() {
+        let dir = mktemp_dir("check_entrypoint_project_imports");
+        let main = dir.join("main.sifr");
+        let helper = dir.join("helper.sifr");
+        std::fs::write(
+            &main,
+            "from helper import value\n\ndef main():\n    print(value())\n",
+        )
+        .expect("main file should be written");
+        std::fs::write(&helper, "def value() -> int:\n    return 42\n")
+            .expect("helper file should be written");
+
+        let errors = check_entrypoint(&main);
+        assert!(
+            errors.is_empty(),
+            "project-aware check should succeed for valid local imports: {errors:?}"
+        );
+
+        let _ = std::fs::remove_dir_all(dir);
+    }
+
+    #[test]
+    fn test_check_entrypoint_project_mode_error_parity_with_compile_entrypoint() {
+        let dir = mktemp_dir("check_entrypoint_error_parity");
+        let main = dir.join("main.sifr");
+        let helper = dir.join("helper.sifr");
+        std::fs::write(
+            &main,
+            "from helper import value\n\ndef main():\n    print(value())\n",
+        )
+        .expect("main file should be written");
+        std::fs::write(&helper, "def value() -> int:\n    return \"bad\"\n")
+            .expect("helper file should be written");
+
+        let check_errors = check_entrypoint(&main);
+        let build_out = mktemp_dir("check_entrypoint_build_out");
+        let build_errors = compile_entrypoint(&main, &build_out)
+            .err()
+            .expect("build path should fail for helper type mismatch");
+
+        let check_messages: Vec<String> = check_errors.into_iter().map(|e| e.to_string()).collect();
+        let build_messages: Vec<String> = build_errors.into_iter().map(|e| e.to_string()).collect();
+        assert_eq!(check_messages, build_messages);
+        assert!(check_messages
+            .iter()
+            .any(|m| m.contains("[helper] return type mismatch")));
+
         let _ = std::fs::remove_dir_all(build_out);
         let _ = std::fs::remove_dir_all(dir);
     }

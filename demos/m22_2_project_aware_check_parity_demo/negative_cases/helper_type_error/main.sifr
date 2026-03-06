@@ -1,0 +1,6 @@
+# negative path: project-aware check must fail on frontend type errors in imported modules.
+
+from helper import area_like
+
+def main():
+    print(area_like(3.0))
