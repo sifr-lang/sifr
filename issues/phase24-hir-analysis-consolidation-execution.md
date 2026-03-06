@@ -167,7 +167,15 @@ Validation evidence:
 - Part 5: https://github.com/yaseralnajjar/sifr/pull/880
 
 ## Reviewer Follow-up
-- External review pass 1 output: pending
+- External review pass 1 output: `reviews/phase24-review.md` (2026-03-06, APPROVED with notes)
+- Pass 1 remediation scope:
+  - add canonical traversal short-circuit control (`TraversalControl`) with `_until` walkers;
+  - migrate predicate-style query APIs to short-circuit traversal once a match is found;
+  - add module-level query/traversal extension workflow docs in `hir_analysis/mod.rs`.
+- Pass 1 remediation validation evidence:
+  - `cargo test -q -p sifr_codegen hir_analysis::traversal::tests::` -> pass.
+  - `cargo test -q -p sifr_codegen hir_analysis::queries::tests::` -> pass.
+  - `/Users/yaseralnajjar/work/sifr/codebase/scripts/run_all_tests.sh` -> pass.
 - Remediation PR (pass 1): pending
 - External review pass 2 output: pending
 - Remediation PR (pass 2): pending
