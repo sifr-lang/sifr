@@ -161,7 +161,7 @@ Validation evidence:
 - Full suite: `/Users/yaseralnajjar/work/sifr/codebase/scripts/run_all_tests.sh` -> pass (401 pass tests completed).
 
 ## External Review Pass 2
-status: done (2026-03-07, review file: `reviews/phase26-production-grade-review.md`, PR #TBD)
+status: done (2026-03-07, review file: `reviews/phase26-production-grade-review.md`, PR #896)
 
 - [x] Spawn external reviewer app for production-grade phase 26 audit
 - [x] Wait for review output file
@@ -180,4 +180,4 @@ Validated reviewer notes and actions:
 - Part 3: https://github.com/yaseralnajjar/sifr/pull/893
 - Part 4: https://github.com/yaseralnajjar/sifr/pull/894
 - External review pass 1: https://github.com/yaseralnajjar/sifr/pull/895
-- External review pass 2: pending
+- External review pass 2: https://github.com/yaseralnajjar/sifr/pull/896
