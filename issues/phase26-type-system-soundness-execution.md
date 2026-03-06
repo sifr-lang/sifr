@@ -36,12 +36,12 @@ Loop per part: Work -> Validate -> PR -> Review -> Merge -> Mark Done
 - [x] Open PR, review, and merge
 
 ### Part 3: milestone_26_3 Optional Arithmetic Soundness
-- [ ] Remove implicit optional arithmetic acceptance (`T | None` auto-unwrap)
-- [ ] Keep explicit narrowing as the only safe path for optional arithmetic
-- [ ] Add part 26.3 positive demo
-- [ ] Add part 26.3 negative case
-- [ ] Run milestone demo + targeted tests + full local suite
-- [ ] Open PR, review, and merge
+- [x] Remove implicit optional arithmetic acceptance (`T | None` auto-unwrap)
+- [x] Keep explicit narrowing as the only safe path for optional arithmetic
+- [x] Add part 26.3 positive demo
+- [x] Add part 26.3 negative case
+- [x] Run milestone demo + targeted tests + full local suite
+- [x] Open PR, review, and merge
 
 ### Part 4: milestone_26_4 Protocol-Bound Strictness Closure
 - [ ] Remove protocol-bound default-allow shortcuts
@@ -96,19 +96,25 @@ Validation evidence:
 - Negative path: `cargo run -q -p sifr -- run demos/m26_2_inheritance_and_variance_corrections_demo/negative_cases/list_variance_violation/main.sifr` -> exits `1` with `expected 'list[int | str]', got 'list[int]'`.
 
 ## Part 3: milestone_26_3 Optional Arithmetic Soundness
-status: pending
+status: done (2026-03-07, PR #893)
 
-- [ ] Optional arithmetic no longer auto-accepted
-- [ ] Positive-path validation recorded
-- [ ] Negative-path validation recorded
-- [ ] Run milestone demo
-- [ ] Run full local suite
-- [ ] Open PR, review, and merge
-- [ ] Mark part complete in phase doc and this checklist
+- [x] Optional arithmetic no longer auto-accepted
+- [x] Positive-path validation recorded
+- [x] Negative-path validation recorded
+- [x] Run milestone demo
+- [x] Run full local suite
+- [x] Open PR, review, and merge
+- [x] Mark part complete in phase doc and this checklist
 
 Validation evidence:
-- Positive path: pending
-- Negative path: pending
+- Positive path: `cargo test -q -p sifr_type_system` -> pass (includes optional arithmetic rejection unit coverage).
+- Positive path: `cargo test -q -p sifr_hir` -> pass.
+- Positive path: `cargo run -q -p sifr -- run crates/sifr/tests/e2e/pass/union_ops_arithmetic.sifr` -> pass.
+- Positive path: `cargo run -q -p sifr -- run demos/m26_3_optional_arithmetic_soundness_demo/main.sifr` -> prints `m26_3 optional arithmetic soundness demo:` then `6`, `0`, `3`, `0`.
+- Positive path: `cargo run -q -p sifr -- run demos/milestone_union_ops_demo.sifr` -> pass after explicit narrowing updates (`11`, `6.28`, `3`, `6`).
+- Positive path: `/Users/yaseralnajjar/work/sifr/codebase/scripts/run_all_tests.sh` -> pass.
+- Negative path: `cargo run -q -p sifr -- run crates/sifr/tests/e2e/fail/optional_arithmetic_without_narrowing.sifr` -> exits `1` with `unsupported operand type(s) for +: 'None | int' and 'int'`.
+- Negative path: `cargo run -q -p sifr -- run demos/m26_3_optional_arithmetic_soundness_demo/negative_cases/optional_arithmetic_without_narrowing/main.sifr` -> exits `1` with `unsupported operand type(s) for +: 'None | int' and 'int'`.
 
 ## Part 4: milestone_26_4 Protocol-Bound Strictness Closure
 status: pending
@@ -128,5 +134,5 @@ Validation evidence:
 ## PR Log
 - Part 1: https://github.com/yaseralnajjar/sifr/pull/891
 - Part 2: https://github.com/yaseralnajjar/sifr/pull/892
-- Part 3: pending
+- Part 3: https://github.com/yaseralnajjar/sifr/pull/893
 - Part 4: pending

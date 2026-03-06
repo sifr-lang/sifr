@@ -58,10 +58,6 @@ pub fn type_check_binary_op(left: &Type, op: &str, right: &Type) -> Result<Type,
                     return Ok(Type::List(l_elem.clone()));
                 }
             }
-            // Union type unwrapping: T|None + T -> T (auto-unwrap)
-            if let Some(result) = try_unwrap_union_binary(left, op, right) {
-                return Ok(result);
-            }
             Err(TypeError {
                 message: format!(
                     "unsupported operand type(s) for +: '{}' and '{}'",
@@ -100,10 +96,6 @@ pub fn type_check_binary_op(left: &Type, op: &str, right: &Type) -> Result<Type,
                     }
                 }
             }
-            // Union type unwrapping
-            if let Some(result) = try_unwrap_union_binary(left, op, right) {
-                return Ok(result);
-            }
             Err(TypeError {
                 message: format!(
                     "unsupported operand type(s) for {op}: '{}' and '{}'",
@@ -124,9 +116,6 @@ pub fn type_check_binary_op(left: &Type, op: &str, right: &Type) -> Result<Type,
             // Division always returns float in Sifr (like Python 3)
             if left.is_numeric() && right.is_numeric() {
                 return Ok(Type::Float);
-            }
-            if let Some(result) = try_unwrap_union_binary(left, op, right) {
-                return Ok(result);
             }
             Err(TypeError {
                 message: format!(
@@ -152,9 +141,6 @@ pub fn type_check_binary_op(left: &Type, op: &str, right: &Type) -> Result<Type,
             if left.is_numeric() && right.is_numeric() {
                 return Ok(Type::Float);
             }
-            if let Some(result) = try_unwrap_union_binary(left, op, right) {
-                return Ok(result);
-            }
             Err(TypeError {
                 message: format!(
                     "unsupported operand type(s) for {op}: '{}' and '{}'",
@@ -178,9 +164,6 @@ pub fn type_check_binary_op(left: &Type, op: &str, right: &Type) -> Result<Type,
             }
             if left.is_numeric() && right.is_numeric() {
                 return Ok(Type::Float);
-            }
-            if let Some(result) = try_unwrap_union_binary(left, op, right) {
-                return Ok(result);
             }
             Err(TypeError {
                 message: format!(
@@ -453,28 +436,6 @@ pub fn type_check_bool_op(left: &Type, op: &str, right: &Type) -> Result<Type, T
     }
 }
 
-/// Try to unwrap union types (T|None) for binary operations.
-/// If either side is a union containing None, unwrap to the non-None type and retry.
-fn try_unwrap_union_binary(left: &Type, op: &str, right: &Type) -> Option<Type> {
-    let left_unwrapped = if union_contains_none(left) {
-        Some(remove_none_from_union(left))
-    } else {
-        None
-    };
-    let right_unwrapped = if union_contains_none(right) {
-        Some(remove_none_from_union(right))
-    } else {
-        None
-    };
-    let l = left_unwrapped.as_ref().unwrap_or(left);
-    let r = right_unwrapped.as_ref().unwrap_or(right);
-    if left_unwrapped.is_some() || right_unwrapped.is_some() {
-        type_check_binary_op(l, op, r).ok()
-    } else {
-        None
-    }
-}
-
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -536,6 +497,16 @@ mod tests {
         assert!(type_check_binary_op(&Type::Str, "-", &Type::Str).is_err());
         assert!(type_check_binary_op(&Type::Int, "+", &Type::Str).is_err());
         assert!(type_check_binary_op(&Type::Bool, "+", &Type::Bool).is_err());
+    }
+
+    #[test]
+    fn test_optional_arithmetic_requires_narrowing() {
+        let optional_int = Type::Union(vec![Type::None, Type::Int]);
+        assert!(type_check_binary_op(&optional_int, "+", &Type::Int).is_err());
+        assert!(type_check_binary_op(&Type::Int, "+", &optional_int).is_err());
+        assert!(type_check_binary_op(&optional_int, "-", &Type::Int).is_err());
+        assert!(type_check_binary_op(&optional_int, "*", &Type::Int).is_err());
+        assert!(type_check_binary_op(&optional_int, "/", &Type::Int).is_err());
     }
 
     #[test]

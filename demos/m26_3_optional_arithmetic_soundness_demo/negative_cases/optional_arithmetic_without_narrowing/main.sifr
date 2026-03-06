@@ -1,0 +1,5 @@
+def unsafe_add_one(x: int | None) -> int:
+    return x + 1
+
+def main():
+    print(unsafe_add_one(5))

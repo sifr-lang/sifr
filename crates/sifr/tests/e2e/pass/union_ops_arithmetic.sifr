@@ -1,12 +1,18 @@
-# Test: arithmetic on T|None
+# Test: arithmetic on T|None requires explicit narrowing
 
 def add_one(x: int | None) -> int:
+    if x is None:
+        return 0
     return x + 1
 
 def sub_one(x: int | None) -> int:
+    if x is None:
+        return 0
     return x - 1
 
 def main():
     v: int | None = 5
     assert str(add_one(v)) == '6'
     assert str(sub_one(v)) == '4'
+    assert str(add_one(None)) == '0'
+    assert str(sub_one(None)) == '0'

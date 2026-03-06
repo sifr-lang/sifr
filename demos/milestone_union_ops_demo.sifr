@@ -2,15 +2,19 @@
 # Milestone 14: Union Type Operations Demo
 # ============================================================
 # Demonstrates:
-# 1. Arithmetic on T|None (auto-unwrap)
+# 1. Arithmetic on T|None with explicit narrowing
 # 2. len() on union/optional types
 # 3. list + list concatenation
 
-# --- 1. Arithmetic on T|None ---
+# --- 1. Arithmetic on T|None with explicit narrowing ---
 def increment(x: int | None) -> int:
+    if x is None:
+        return 0
     return x + 1
 
 def double(x: float | None) -> float:
+    if x is None:
+        return 0.0
     return x * 2.0
 
 # --- 2. len() on union types ---

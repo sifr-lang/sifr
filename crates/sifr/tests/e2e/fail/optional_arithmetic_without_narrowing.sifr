@@ -1,0 +1,10 @@
+# Test: optional arithmetic is rejected without explicit narrowing
+
+def add_one(x: int | None) -> int:
+    return x + 1
+
+def main():
+    value: int = add_one(5)
+    print(value)
+
+# expect-error: unsupported operand type(s) for +: 'None | int' and 'int'
