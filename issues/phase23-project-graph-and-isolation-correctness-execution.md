@@ -51,7 +51,7 @@ Loop per part: Work -> Validate -> PR -> Review -> Merge -> Mark Done
 - [x] Add milestone 23.4 positive demo
 - [x] Add milestone 23.4 negative regression case
 - [x] Run milestone demo + targeted tests + full local suite
-- [ ] Open PR, review, and merge
+- [x] Open PR, review, and merge
 
 ### Part 5: milestone_23_5 Graph and Isolation Regression Matrix
 - [ ] Add regression matrix for import closure, unrelated siblings, deterministic ordering, cycle errors, and parallel workspace isolation
@@ -124,7 +124,7 @@ Validation evidence:
 - Negative path: `cargo run -q -p sifr -- test demos/m23_3_project_test_discovery_parity_contract_demo/negative_cases/reachable_parse_error` -> exits `1` with reachable helper parse error.
 
 ## Part 4: milestone_23_4 Invocation-Scoped Temp Workspace Isolation
-status: validating (pending PR)
+status: done (2026-03-06, PR #869)
 
 - [x] Per-invocation isolated workspaces implemented for `run` and `test`
 - [x] Parallel isolation regressions added and passing
@@ -132,8 +132,8 @@ status: validating (pending PR)
 - [x] Negative-path validation recorded
 - [x] Run milestone demo
 - [x] Run full local suite
-- [ ] Open PR, review, and merge
-- [ ] Mark part complete in phase doc and this checklist
+- [x] Open PR, review, and merge
+- [x] Mark part complete in phase doc and this checklist
 
 Validation evidence:
 - Positive path: `cargo test -q -p sifr test_invocation_workspace_create_returns_unique_paths` -> pass.
@@ -153,6 +153,7 @@ status: pending
 - Part 1: https://github.com/yaseralnajjar/sifr/pull/863
 - Part 2: https://github.com/yaseralnajjar/sifr/pull/865
 - Part 3: https://github.com/yaseralnajjar/sifr/pull/867
+- Part 4: https://github.com/yaseralnajjar/sifr/pull/869
 
 ## Reviewer Follow-up
 - pending
