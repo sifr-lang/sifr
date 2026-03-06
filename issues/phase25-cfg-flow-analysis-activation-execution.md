@@ -162,3 +162,10 @@ Validation evidence:
 - Part 3: https://github.com/yaseralnajjar/sifr/pull/885
 - Part 4: https://github.com/yaseralnajjar/sifr/pull/886
 - Part 5: https://github.com/yaseralnajjar/sifr/pull/887
+
+## Reviewer Follow-up
+- External review pass 1 output: `reviews/phase25-review.md` (2026-03-06, APPROVED with notes)
+- Pass 1 remediation scope:
+  - document synthetic CFG blocks explicitly in `CfgBlockLabel::Synthetic` comments for architecture clarity.
+- Pass 1 remediation validation evidence:
+  - `cargo test -q -p sifr_hir cfg::tests::` -> pass.
