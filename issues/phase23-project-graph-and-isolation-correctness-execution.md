@@ -186,4 +186,4 @@ Validation evidence:
 - Pass-2 triage outcome:
   - Reviewer confirmed production-grade readiness with no blocking defects.
   - Applied actionable hardening: documented multi-level relative import exclusion in closure discovery and added retry-based workspace allocation for collision-proof temp isolation.
-- Remediation PR (pass 2): pending
+- Remediation PR (pass 2): https://github.com/yaseralnajjar/sifr/pull/874
