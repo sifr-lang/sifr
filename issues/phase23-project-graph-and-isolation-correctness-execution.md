@@ -36,12 +36,12 @@ Loop per part: Work -> Validate -> PR -> Review -> Merge -> Mark Done
 - [x] Open PR, review, and merge
 
 ### Part 3: milestone_23_3 Project/Test Discovery Parity Contract
-- [ ] Introduce one shared discovery contract for project and test paths
-- [ ] Align module membership decisions for equivalent imports across `build`/`run`/`check` and `test`
-- [ ] Add parity-focused regression tests for project/test discovery behavior
-- [ ] Add milestone 23.3 positive demo
-- [ ] Add milestone 23.3 negative regression case
-- [ ] Run milestone demo + targeted tests + full local suite
+- [x] Introduce one shared discovery contract for project and test paths
+- [x] Align module membership decisions for equivalent imports across `build`/`run`/`check` and `test`
+- [x] Add parity-focused regression tests for project/test discovery behavior
+- [x] Add milestone 23.3 positive demo
+- [x] Add milestone 23.3 negative regression case
+- [x] Run milestone demo + targeted tests + full local suite
 - [ ] Open PR, review, and merge
 
 ### Part 4: milestone_23_4 Invocation-Scoped Temp Workspace Isolation
@@ -102,7 +102,26 @@ Validation evidence:
 - Negative path: `cargo run -q -p sifr -- run demos/m23_2_deterministic_module_graph_cycle_diagnostics_demo/negative_cases/module_cycle/main.sifr` -> exits `1` with canonical cycle diagnostic `a -> b -> c -> a`.
 
 ## Part 3: milestone_23_3 Project/Test Discovery Parity Contract
-status: pending
+status: validating (pending PR)
+
+- [x] Shared project/test discovery contract factored and reused
+- [x] Graph-membership parity checks added for equivalent import closures
+- [x] Positive-path validation recorded
+- [x] Negative-path validation recorded
+- [x] Run milestone demo
+- [x] Run full local suite
+- [ ] Open PR, review, and merge
+- [ ] Mark part complete in phase doc and this checklist
+
+Validation evidence:
+- Positive path: `cargo test -q -p sifr_driver test_discover_test_root_modules_is_deterministic` -> pass.
+- Positive path: `cargo test -q -p sifr_driver test_project_and_test_discovery_share_import_closure_membership` -> pass.
+- Positive path: `cargo run -q -p sifr -- run demos/m23_3_project_test_discovery_parity_contract_demo/main.sifr` -> prints `m23_3 project/test discovery parity contract demo:` and `42`.
+- Positive path: `cargo run -q -p sifr -- test demos/m23_3_project_test_discovery_parity_contract_demo` -> passes `test_value`.
+- Positive path: `/Users/yaseralnajjar/work/sifr/codebase/scripts/run_all_tests.sh` -> pass.
+- Negative path: `cargo test -q -p sifr_driver test_project_and_test_discovery_parity_reports_reachable_parse_errors` -> pass.
+- Negative path: `cargo run -q -p sifr -- run demos/m23_3_project_test_discovery_parity_contract_demo/negative_cases/reachable_parse_error/main.sifr` -> exits `1` with reachable helper parse error.
+- Negative path: `cargo run -q -p sifr -- test demos/m23_3_project_test_discovery_parity_contract_demo/negative_cases/reachable_parse_error` -> exits `1` with reachable helper parse error.
 
 ## Part 4: milestone_23_4 Invocation-Scoped Temp Workspace Isolation
 status: pending
