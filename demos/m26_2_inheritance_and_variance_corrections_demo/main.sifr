@@ -1,0 +1,34 @@
+# m26_2 inheritance and variance corrections demo
+# Demonstrates transitive inheritance assignability and explicit mutable invariance.
+
+class Entity:
+    id: int
+
+    def __init__(self, id: int):
+        self.id = id
+
+class Person(Entity):
+    name: str
+
+    def __init__(self, id: int, name: str):
+        super().__init__(id)
+        self.name = name
+
+class Employee(Person):
+    level: int
+
+    def __init__(self, id: int, name: str, level: int):
+        super().__init__(id, name)
+        self.level = level
+
+def sum_items(values: list[int]) -> int:
+    total: int = 0
+    for value in values:
+        total = total + value
+    return total
+
+def main():
+    print('m26_2 inheritance and variance corrections demo:')
+    emp: Employee = Employee(11, 'Lin', 4)
+    print(emp.name)
+    print(sum_items([1, 2, 3]))

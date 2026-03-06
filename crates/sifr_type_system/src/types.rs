@@ -551,6 +551,36 @@ impl Type {
 
     /// Check if a value of type `self` can be assigned to a target of type `target`.
     pub fn is_assignable_to(&self, target: &Type) -> bool {
+        fn contains_any(ty: &Type) -> bool {
+            match ty {
+                Type::Any => true,
+                Type::List(elem) | Type::Set(elem) => contains_any(elem),
+                Type::Dict(key, value) => contains_any(key) || contains_any(value),
+                Type::Tuple(elems) | Type::Union(elems) | Type::Intersection(elems) => {
+                    elems.iter().any(contains_any)
+                }
+                Type::Callable(params, _, ret) => {
+                    params.iter().any(contains_any) || contains_any(ret)
+                }
+                Type::Result(ok, err) => contains_any(ok) || contains_any(err),
+                Type::Alias(_, inner) => contains_any(inner),
+                Type::Function(ft) => {
+                    ft.params.iter().any(|(_, ty, _)| contains_any(ty))
+                        || contains_any(&ft.return_type)
+                }
+                Type::Class {
+                    fields, methods, ..
+                } => {
+                    fields.iter().any(|(_, ty)| contains_any(ty))
+                        || methods.iter().any(|(_, ft)| {
+                            ft.params.iter().any(|(_, ty, _)| contains_any(ty))
+                                || contains_any(&ft.return_type)
+                        })
+                }
+                _ => false,
+            }
+        }
+
         // Resolve aliases
         let source = self.resolve_alias();
         let target_resolved = target.resolve_alias();
@@ -592,12 +622,14 @@ impl Type {
                 return true;
             }
         }
-        // Structural subtyping for collections
+        // Mutable collections are invariant in their element/key/value types.
+        // Explicit `Any` inside the collection type remains an escape hatch.
         match (source, target_resolved) {
-            (Self::List(a), Self::List(b)) => a.is_assignable_to(b),
-            (Self::Set(a), Self::Set(b)) => a.is_assignable_to(b),
+            (Self::List(a), Self::List(b)) => a == b || contains_any(a) || contains_any(b),
+            (Self::Set(a), Self::Set(b)) => a == b || contains_any(a) || contains_any(b),
             (Self::Dict(ak, av), Self::Dict(bk, bv)) => {
-                ak.is_assignable_to(bk) && av.is_assignable_to(bv)
+                (ak == bk || contains_any(ak) || contains_any(bk))
+                    && (av == bv || contains_any(av) || contains_any(bv))
             }
             (Self::Tuple(a), Self::Tuple(b)) => {
                 a.len() == b.len() && a.iter().zip(b.iter()).all(|(x, y)| x.is_assignable_to(y))
@@ -614,13 +646,9 @@ impl Type {
                 if a == b {
                     return true;
                 }
-                // Child class is assignable to parent class
-                if let Some(ref parent) = parent_a {
-                    if parent == b {
-                        return true;
-                    }
-                    // Grandparent: if target is "Error", any class with a parent is an error class
-                    if b == "Error" {
+                // `parent_class` stores the inheritance chain as `Parent|Grandparent|...`.
+                if let Some(ref chain) = parent_a {
+                    if chain.split('|').any(|ancestor| ancestor == b) {
                         return true;
                     }
                 }
@@ -776,6 +804,67 @@ mod tests {
         let list_str = Type::List(Box::new(Type::Str));
         assert!(list_int.is_assignable_to(&list_int2));
         assert!(!list_int.is_assignable_to(&list_str));
+
+        // Mutable collections are invariant.
+        let list_int_or_str = Type::List(Box::new(Type::Union(vec![Type::Int, Type::Str])));
+        assert!(!list_int.is_assignable_to(&list_int_or_str));
+
+        let dict_int_int = Type::Dict(Box::new(Type::Int), Box::new(Type::Int));
+        let dict_int_union = Type::Dict(
+            Box::new(Type::Int),
+            Box::new(Type::Union(vec![Type::Int, Type::Str])),
+        );
+        assert!(!dict_int_int.is_assignable_to(&dict_int_union));
+    }
+
+    #[test]
+    fn test_class_assignability_supports_transitive_inheritance_chain() {
+        let base = Type::Class {
+            name: "Base".to_string(),
+            fields: vec![],
+            methods: vec![],
+            parent_class: None,
+        };
+        let mid = Type::Class {
+            name: "Mid".to_string(),
+            fields: vec![],
+            methods: vec![],
+            parent_class: Some("Base".to_string()),
+        };
+        let leaf = Type::Class {
+            name: "Leaf".to_string(),
+            fields: vec![],
+            methods: vec![],
+            parent_class: Some("Mid|Base".to_string()),
+        };
+
+        assert!(leaf.is_assignable_to(&mid));
+        assert!(leaf.is_assignable_to(&base));
+    }
+
+    #[test]
+    fn test_error_assignability_requires_actual_error_ancestry() {
+        let error = Type::Class {
+            name: "Error".to_string(),
+            fields: vec![],
+            methods: vec![],
+            parent_class: None,
+        };
+        let non_error_child = Type::Class {
+            name: "Widget".to_string(),
+            fields: vec![],
+            methods: vec![],
+            parent_class: Some("BaseThing".to_string()),
+        };
+        let real_error_child = Type::Class {
+            name: "ValueError".to_string(),
+            fields: vec![],
+            methods: vec![],
+            parent_class: Some("Error".to_string()),
+        };
+
+        assert!(!non_error_child.is_assignable_to(&error));
+        assert!(real_error_child.is_assignable_to(&error));
     }
 
     #[test]

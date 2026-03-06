@@ -154,11 +154,13 @@ pub(super) fn collect_class_type(class_def: &StmtClassDef, ctx: &mut LowerCtx) {
 
     // Inherit parent fields and methods for single inheritance
     let parent_class_name = get_parent_class(class_def);
+    let mut parent_class_chain: Option<String> = None;
     if let Some(ref parent_name) = parent_class_name {
         if let Some(parent_ty) = ctx.class_types.get(parent_name).cloned() {
             if let Type::Class {
                 fields: parent_fields,
                 methods: parent_methods,
+                parent_class: parent_parent_chain,
                 ..
             } = parent_ty
             {
@@ -170,6 +172,13 @@ pub(super) fn collect_class_type(class_def: &StmtClassDef, ctx: &mut LowerCtx) {
                 for (mname, mft) in &parent_methods {
                     methods.push((mname.clone(), mft.clone()));
                 }
+                parent_class_chain = Some(if let Some(chain) = parent_parent_chain {
+                    format!("{parent_name}|{chain}")
+                } else {
+                    parent_name.clone()
+                });
+            } else {
+                ctx.error(format!("parent type '{parent_name}' is not a class"));
             }
         } else {
             ctx.error(format!("parent class '{parent_name}' not defined"));
@@ -184,7 +193,7 @@ pub(super) fn collect_class_type(class_def: &StmtClassDef, ctx: &mut LowerCtx) {
             name: class_name.clone(),
             fields: vec![],
             methods: vec![],
-            parent_class: None,
+            parent_class: parent_class_chain.clone(),
         },
     );
 
@@ -281,7 +290,7 @@ pub(super) fn collect_class_type(class_def: &StmtClassDef, ctx: &mut LowerCtx) {
         name: class_name.clone(),
         fields: fields.clone(),
         methods: methods.clone(),
-        parent_class: None,
+        parent_class: parent_class_chain.clone(),
     };
 
     // Update the constructor function to return the class type

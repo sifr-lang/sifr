@@ -27,13 +27,13 @@ Loop per part: Work -> Validate -> PR -> Review -> Merge -> Mark Done
 - [x] Open PR, review, and merge
 
 ### Part 2: milestone_26_2 Inheritance and Variance Corrections
-- [ ] Implement transitive inheritance assignability (multi-level)
-- [ ] Remove inheritance special-case hacks
-- [ ] Enforce invariance for mutable collections (`list`, `set`, `dict`)
-- [ ] Add part 26.2 positive demo
-- [ ] Add part 26.2 negative case
-- [ ] Run milestone demo + targeted tests + full local suite
-- [ ] Open PR, review, and merge
+- [x] Implement transitive inheritance assignability (multi-level)
+- [x] Remove inheritance special-case hacks
+- [x] Enforce invariance for mutable collections (`list`, `set`, `dict`)
+- [x] Add part 26.2 positive demo
+- [x] Add part 26.2 negative case
+- [x] Run milestone demo + targeted tests + full local suite
+- [x] Open PR, review, and merge
 
 ### Part 3: milestone_26_3 Optional Arithmetic Soundness
 - [ ] Remove implicit optional arithmetic acceptance (`T | None` auto-unwrap)
@@ -74,21 +74,26 @@ Validation evidence:
 - Negative path: `cargo run -q -p sifr -- run demos/m26_1_typevar_constraint_enforcement_demo/negative_cases/typevar_constraint_violation/main.sifr` -> exits `1` with `type 'float' does not satisfy constraints (int, str) required by type parameter 'T'`.
 
 ## Part 2: milestone_26_2 Inheritance and Variance Corrections
-status: pending
+status: done (2026-03-06, PR #TBD)
 
-- [ ] Multi-level inheritance assignability implemented
-- [ ] Invariance on mutable collections implemented
-- [ ] Inheritance hacks removed
-- [ ] Positive-path validation recorded
-- [ ] Negative-path validation recorded
-- [ ] Run milestone demo
-- [ ] Run full local suite
-- [ ] Open PR, review, and merge
-- [ ] Mark part complete in phase doc and this checklist
+- [x] Multi-level inheritance assignability implemented
+- [x] Invariance on mutable collections implemented
+- [x] Inheritance hacks removed
+- [x] Positive-path validation recorded
+- [x] Negative-path validation recorded
+- [x] Run milestone demo
+- [x] Run full local suite
+- [x] Open PR, review, and merge
+- [x] Mark part complete in phase doc and this checklist
 
 Validation evidence:
-- Positive path: pending
-- Negative path: pending
+- Positive path: `cargo test -q -p sifr_type_system` -> pass (includes transitive inheritance and invariance unit coverage).
+- Positive path: `cargo test -q -p sifr_hir` -> pass.
+- Positive path: `cargo run -q -p sifr -- run crates/sifr/tests/e2e/pass/inheritance_transitive_assignability.sifr` -> pass.
+- Positive path: `cargo run -q -p sifr -- run demos/m26_2_inheritance_and_variance_corrections_demo/main.sifr` -> prints `m26_2 inheritance and variance corrections demo:` then `Lin`, `6`.
+- Positive path: `/Users/yaseralnajjar/work/sifr/codebase/scripts/run_all_tests.sh` -> pass.
+- Negative path: `cargo run -q -p sifr -- run crates/sifr/tests/e2e/fail/mutable_list_variance_invariant.sifr` -> exits `1` with `expected 'list[int | str]', got 'list[int]'`.
+- Negative path: `cargo run -q -p sifr -- run demos/m26_2_inheritance_and_variance_corrections_demo/negative_cases/list_variance_violation/main.sifr` -> exits `1` with `expected 'list[int | str]', got 'list[int]'`.
 
 ## Part 3: milestone_26_3 Optional Arithmetic Soundness
 status: pending
