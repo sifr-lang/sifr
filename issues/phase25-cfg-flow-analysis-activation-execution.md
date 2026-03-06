@@ -1,19 +1,19 @@
 # Phase 25 Execution Checklist (CFG/Flow Analysis Activation)
 
-Status: in_progress (started 2026-03-06)
+Status: completed (started 2026-03-06, completed 2026-03-06)
 Owner: phase_25 execution loop
 Reference phase doc: `.cursor/plans/main/phases/25_cfg_flow_analysis_activation.md`
 
 Loop per part: Work -> Validate -> PR -> Review -> Merge -> Mark Done
 
 ## Global Gates (apply to every part)
-- [ ] Scope remains constrained to the current part definition-of-done
-- [ ] Root cause addressed (no superficial workaround/fallback)
-- [ ] Milestone quality-contract checks include at least one positive-path and one negative-path validation
-- [ ] Full local suite passes: `/Users/yaseralnajjar/work/sifr/codebase/scripts/run_all_tests.sh`
-- [ ] Milestone demo runs successfully before opening each part PR
-- [ ] PR opened, reviewed, and merged before starting next part
-- [ ] Roadmap/phase/issues docs updated with latest status and merged PR links
+- [x] Scope remains constrained to the current part definition-of-done
+- [x] Root cause addressed (no superficial workaround/fallback)
+- [x] Milestone quality-contract checks include at least one positive-path and one negative-path validation
+- [x] Full local suite passes: `/Users/yaseralnajjar/work/sifr/codebase/scripts/run_all_tests.sh`
+- [x] Milestone demo runs successfully before opening each part PR
+- [x] PR opened, reviewed, and merged before starting next part
+- [x] Roadmap/phase/issues docs updated with latest status and merged PR links
 
 ## Full Phase 25 To-Do Plan
 
@@ -135,17 +135,17 @@ Validation evidence:
 - Negative path: `cargo run -q -p sifr -- run demos/m25_4_diagnostics_and_consumer_integration_demo/negative_cases/reachable_type_error/main.sifr` -> exits `1` with `type error: return type mismatch: expected 'int', got 'str'`.
 
 ## Part 5: milestone_25_5 Regression and Determinism Matrix
-status: in_progress
+status: done (2026-03-06, PR #887)
 
-- [ ] Focused regression matrix added (nested branching, loop exits, early return/raise, unreachable blocks)
-- [ ] Deterministic repeat-run checks for CFG graph shape and query results added
-- [ ] Matrix wired into local validation gate
-- [ ] Positive-path validation recorded
-- [ ] Negative-path validation recorded
-- [ ] Run milestone demo
-- [ ] Run full local suite
-- [ ] Open PR, review, and merge
-- [ ] Mark part complete in phase doc and this checklist
+- [x] Focused regression matrix added (nested branching, loop exits, early return/raise, unreachable blocks)
+- [x] Deterministic repeat-run checks for CFG graph shape and query results added
+- [x] Matrix wired into local validation gate
+- [x] Positive-path validation recorded
+- [x] Negative-path validation recorded
+- [x] Run milestone demo
+- [x] Run full local suite
+- [x] Open PR, review, and merge
+- [x] Mark part complete in phase doc and this checklist
 
 Validation evidence:
 - Positive path: `bash scripts/run_phase25_cfg_flow_activation_matrix.sh` -> pass.
@@ -161,3 +161,4 @@ Validation evidence:
 - Part 2: https://github.com/yaseralnajjar/sifr/pull/884
 - Part 3: https://github.com/yaseralnajjar/sifr/pull/885
 - Part 4: https://github.com/yaseralnajjar/sifr/pull/886
+- Part 5: https://github.com/yaseralnajjar/sifr/pull/887
