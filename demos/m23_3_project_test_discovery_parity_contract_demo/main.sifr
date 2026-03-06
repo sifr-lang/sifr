@@ -1,0 +1,8 @@
+# m23_3 project/test discovery parity contract demo
+# Project and test discovery should include the same support modules for equivalent roots.
+
+from helper import value
+
+def main():
+    print('m23_3 project/test discovery parity contract demo:')
+    print(value())

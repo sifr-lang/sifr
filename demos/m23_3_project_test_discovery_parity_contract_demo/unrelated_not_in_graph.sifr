@@ -1,0 +1,2 @@
+# This file is intentionally invalid and must be excluded from both project and test closures.
+def broken(:
