@@ -2,7 +2,13 @@ use super::*;
 
 pub(super) fn lower_stmts(stmts: &[Stmt], func_type: &FunctionType, ctx: &mut LowerCtx) -> Vec<HirStmt> {
     let mut result = Vec::new();
-    for stmt in stmts {
+    for (index, stmt) in stmts.iter().enumerate() {
+        if crate::cfg::flow_facts(&result).always_exits() {
+            ctx.warn(format!(
+                "unreachable statement at block index {index} was ignored"
+            ));
+            continue;
+        }
         // Handle chained assignment (x = y = z = 0) by expanding into multiple statements
         if let Stmt::Assign(assign) = stmt {
             if assign.targets.len() > 1 {
@@ -1558,50 +1564,7 @@ pub(super) fn then_body_always_exits(stmts: &[HirStmt]) -> bool {
 
 /// Collect all return types from a list of HIR statements (recursively).
 pub(super) fn collect_return_types(stmts: &[HirStmt]) -> Vec<Type> {
-    let mut types = Vec::new();
-    for stmt in stmts {
-        match stmt {
-            HirStmt::Return { value: Some(expr) } => {
-                types.push(expr.ty().clone());
-            }
-            HirStmt::Return { value: None } => {
-                types.push(Type::None);
-            }
-            HirStmt::If {
-                then_body,
-                elif_clauses,
-                else_body,
-                ..
-            } => {
-                types.extend(collect_return_types(then_body));
-                for (_, body) in elif_clauses {
-                    types.extend(collect_return_types(body));
-                }
-                if let Some(body) = else_body {
-                    types.extend(collect_return_types(body));
-                }
-            }
-            HirStmt::While {
-                body, else_body, ..
-            } => {
-                types.extend(collect_return_types(body));
-                if let Some(eb) = else_body {
-                    types.extend(collect_return_types(eb));
-                }
-            }
-            HirStmt::For { body, .. } => {
-                types.extend(collect_return_types(body));
-            }
-            HirStmt::TryExcept { body, handlers, .. } => {
-                types.extend(collect_return_types(body));
-                for handler in handlers {
-                    types.extend(collect_return_types(&handler.body));
-                }
-            }
-            _ => {}
-        }
-    }
-    types
+    crate::cfg::flow_facts(stmts).reachable_return_types().to_vec()
 }
 
 /// Detect a narrowing condition from an if-test expression.

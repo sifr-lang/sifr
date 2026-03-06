@@ -1,0 +1,10 @@
+# m25_4 negative case
+# Reachable frontend diagnostics should remain deterministic and strict.
+
+def inferred(flag: bool) -> int:
+    if flag:
+        return 1
+    return 'bad'
+
+def main():
+    print(inferred(False))
