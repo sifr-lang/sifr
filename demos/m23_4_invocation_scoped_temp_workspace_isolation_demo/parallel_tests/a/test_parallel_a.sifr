@@ -1,0 +1,4 @@
+from helper import value
+
+def test_parallel_a():
+    assert value() == 11

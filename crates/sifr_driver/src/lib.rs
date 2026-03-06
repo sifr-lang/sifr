@@ -1174,6 +1174,46 @@ fn discover_test_root_modules(test_dir: &Path) -> BTreeMap<String, PathBuf> {
     test_files_by_module
 }
 
+fn create_invocation_workspace(prefix: &str) -> Result<PathBuf, Vec<CompileError>> {
+    let unique = format!(
+        "sifr_{}_{}_{}",
+        prefix,
+        std::process::id(),
+        std::time::SystemTime::now()
+            .duration_since(std::time::UNIX_EPOCH)
+            .unwrap_or_default()
+            .as_nanos()
+    );
+    let workspace = std::env::temp_dir().join(unique);
+    std::fs::create_dir_all(&workspace).map_err(|e| {
+        vec![CompileError {
+            message: format!(
+                "failed to create invocation workspace '{}': {}",
+                workspace.display(),
+                e
+            ),
+            phase: CompilePhase::Build,
+        }]
+    })?;
+    Ok(workspace)
+}
+
+struct InvocationWorkspaceGuard {
+    workspace: PathBuf,
+}
+
+impl InvocationWorkspaceGuard {
+    fn new(workspace: PathBuf) -> Self {
+        Self { workspace }
+    }
+}
+
+impl Drop for InvocationWorkspaceGuard {
+    fn drop(&mut self) {
+        let _ = std::fs::remove_dir_all(&self.workspace);
+    }
+}
+
 fn module_source_path(project_dir: &Path, module_name: &str) -> PathBuf {
     project_dir.join(format!("{module_name}.sifr"))
 }
@@ -1614,7 +1654,8 @@ pub fn run_tests(test_dir: &Path) -> Result<bool, Vec<CompileError>> {
     }
 
     // Build and run with cargo test
-    let project_dir = std::env::temp_dir().join("sifr_test_runner");
+    let project_dir = create_invocation_workspace("test_runner")?;
+    let _workspace_guard = InvocationWorkspaceGuard::new(project_dir.clone());
     let src_dir = project_dir.join("src");
     std::fs::create_dir_all(&src_dir).map_err(|e| {
         vec![CompileError {
@@ -1719,6 +1760,7 @@ fn generate_test_runner_cargo_toml(
 mod tests {
     use super::*;
     use std::sync::atomic::{AtomicUsize, Ordering};
+    use std::sync::{Arc, Barrier};
 
     fn parse_suite(source: &str) -> Vec<sifr_python_ast::Stmt> {
         let parsed = parse_module(source).unwrap_or_else(|e| panic!("parse failed: {e}"));
@@ -1965,6 +2007,20 @@ def main():
         assert_eq!(first.len(), 1);
         assert_eq!(second.len(), 1);
         assert_eq!(second[0].message, "sentinel stdlib cache error");
+    }
+
+    #[test]
+    fn test_create_invocation_workspace_returns_unique_paths() {
+        let first = create_invocation_workspace("workspace_unique")
+            .expect("first workspace should be created");
+        let second = create_invocation_workspace("workspace_unique")
+            .expect("second workspace should be created");
+        assert_ne!(first, second);
+        assert!(first.exists());
+        assert!(second.exists());
+
+        let _ = std::fs::remove_dir_all(first);
+        let _ = std::fs::remove_dir_all(second);
     }
 
     #[test]
@@ -2647,6 +2703,68 @@ def test_import_parity():
         assert!(result, "sifr test run should succeed");
 
         let _ = std::fs::remove_dir_all(&test_dir);
+    }
+
+    #[test]
+    fn test_run_tests_parallel_invocations_are_isolated() {
+        fn make_test_dir(label: &str, expected: i64) -> PathBuf {
+            let unique = format!(
+                "sifr_test_parallel_isolation_{label}_{}_{}",
+                std::process::id(),
+                std::time::SystemTime::now()
+                    .duration_since(std::time::UNIX_EPOCH)
+                    .expect("time should move forward")
+                    .as_nanos()
+            );
+            let test_dir = std::env::temp_dir().join(unique);
+            std::fs::create_dir_all(&test_dir).expect("test dir should be created");
+            std::fs::write(
+                test_dir.join("helper.sifr"),
+                format!("def value() -> int:\n    return {expected}\n"),
+            )
+            .expect("helper should be written");
+            std::fs::write(
+                test_dir.join("test_parallel.sifr"),
+                format!(
+                    "from helper import value\n\ndef test_value():\n    assert value() == {expected}\n"
+                ),
+            )
+            .expect("test module should be written");
+            test_dir
+        }
+
+        let first_dir = make_test_dir("first", 11);
+        let second_dir = make_test_dir("second", 22);
+        let barrier = Arc::new(Barrier::new(3));
+
+        let first_barrier = Arc::clone(&barrier);
+        let first_path = first_dir.clone();
+        let first = std::thread::spawn(move || {
+            first_barrier.wait();
+            run_tests(&first_path)
+        });
+
+        let second_barrier = Arc::clone(&barrier);
+        let second_path = second_dir.clone();
+        let second = std::thread::spawn(move || {
+            second_barrier.wait();
+            run_tests(&second_path)
+        });
+
+        barrier.wait();
+        let first_result = first.join().expect("first thread should join");
+        let second_result = second.join().expect("second thread should join");
+        assert!(
+            matches!(first_result, Ok(true)),
+            "first parallel run_tests invocation should pass: {first_result:?}"
+        );
+        assert!(
+            matches!(second_result, Ok(true)),
+            "second parallel run_tests invocation should pass: {second_result:?}"
+        );
+
+        let _ = std::fs::remove_dir_all(&first_dir);
+        let _ = std::fs::remove_dir_all(&second_dir);
     }
 
     #[test]

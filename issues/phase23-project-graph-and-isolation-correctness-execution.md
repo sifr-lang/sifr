@@ -45,12 +45,12 @@ Loop per part: Work -> Validate -> PR -> Review -> Merge -> Mark Done
 - [x] Open PR, review, and merge
 
 ### Part 4: milestone_23_4 Invocation-Scoped Temp Workspace Isolation
-- [ ] Replace fixed temp workspaces with per-invocation isolated directories
-- [ ] Ensure parallel `run`/`test` invocations cannot overwrite each other's artifacts
-- [ ] Add isolation/parallel-safety regression tests
-- [ ] Add milestone 23.4 positive demo
-- [ ] Add milestone 23.4 negative regression case
-- [ ] Run milestone demo + targeted tests + full local suite
+- [x] Replace fixed temp workspaces with per-invocation isolated directories
+- [x] Ensure parallel `run`/`test` invocations cannot overwrite each other's artifacts
+- [x] Add isolation/parallel-safety regression tests
+- [x] Add milestone 23.4 positive demo
+- [x] Add milestone 23.4 negative regression case
+- [x] Run milestone demo + targeted tests + full local suite
 - [ ] Open PR, review, and merge
 
 ### Part 5: milestone_23_5 Graph and Isolation Regression Matrix
@@ -124,7 +124,27 @@ Validation evidence:
 - Negative path: `cargo run -q -p sifr -- test demos/m23_3_project_test_discovery_parity_contract_demo/negative_cases/reachable_parse_error` -> exits `1` with reachable helper parse error.
 
 ## Part 4: milestone_23_4 Invocation-Scoped Temp Workspace Isolation
-status: pending
+status: validating (pending PR)
+
+- [x] Per-invocation isolated workspaces implemented for `run` and `test`
+- [x] Parallel isolation regressions added and passing
+- [x] Positive-path validation recorded
+- [x] Negative-path validation recorded
+- [x] Run milestone demo
+- [x] Run full local suite
+- [ ] Open PR, review, and merge
+- [ ] Mark part complete in phase doc and this checklist
+
+Validation evidence:
+- Positive path: `cargo test -q -p sifr test_invocation_workspace_create_returns_unique_paths` -> pass.
+- Positive path: `cargo test -q -p sifr_driver test_create_invocation_workspace_returns_unique_paths` -> pass.
+- Positive path: `cargo test -q -p sifr_driver test_run_tests_parallel_invocations_are_isolated` -> pass.
+- Positive path: `cargo run -q -p sifr -- run demos/m23_4_invocation_scoped_temp_workspace_isolation_demo/main.sifr` -> prints `m23_4 invocation-scoped temp workspace isolation demo:` and `44`.
+- Positive path: parallel invocations from demo fixtures:
+  - concurrent `sifr run` on `parallel_runs/a/main.sifr` and `parallel_runs/b/main.sifr` each complete with isolated outputs (`parallel-run-a`, `parallel-run-b`).
+  - concurrent `sifr test` on `parallel_tests/a` and `parallel_tests/b` each complete successfully.
+- Positive path: `/Users/yaseralnajjar/work/sifr/codebase/scripts/run_all_tests.sh` -> pass.
+- Negative path: `cargo run -q -p sifr -- run demos/m23_4_invocation_scoped_temp_workspace_isolation_demo/negative_cases/reachable_parse_error/main.sifr` -> exits `1` with reachable helper parse error.
 
 ## Part 5: milestone_23_5 Graph and Isolation Regression Matrix
 status: pending

@@ -1,0 +1,6 @@
+# negative path: reachable parse errors still fail with isolated workspaces.
+
+from helper import value
+
+def main():
+    print(value())
