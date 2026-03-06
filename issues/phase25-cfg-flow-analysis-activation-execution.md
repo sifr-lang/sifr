@@ -117,10 +117,29 @@ Validation evidence:
 - Negative path: `cargo run -q -p sifr -- run demos/m25_3_canonical_flow_truth_queries_demo/negative_cases/reachable_type_error/main.sifr` -> exits `1` with `type error: return type mismatch: expected 'int', got 'str'`.
 
 ## Part 4: milestone_25_4 Diagnostics and Consumer Integration
+status: done (2026-03-06, PR #886)
+
+- [x] Lowering/codegen decision points consume CFG flow facts
+- [x] Control-flow diagnostics consume CFG-derived reachability facts
+- [x] Positive-path validation recorded
+- [x] Negative-path validation recorded
+- [x] Run milestone demo
+- [x] Run full local suite
+- [x] Open PR, review, and merge
+- [x] Mark part complete in phase doc and this checklist
+
+Validation evidence:
+- Positive path: `cargo test -q -p sifr_hir` -> pass.
+- Positive path: `cargo run -q -p sifr -- run demos/m25_4_diagnostics_and_consumer_integration_demo/main.sifr` -> prints `m25_4 diagnostics and consumer integration demo:` then `2` and `3` (with deterministic unreachable warning).
+- Positive path: `/Users/yaseralnajjar/work/sifr/codebase/scripts/run_all_tests.sh` -> pass.
+- Negative path: `cargo run -q -p sifr -- run demos/m25_4_diagnostics_and_consumer_integration_demo/negative_cases/reachable_type_error/main.sifr` -> exits `1` with `type error: return type mismatch: expected 'int', got 'str'`.
+
+## Part 5: milestone_25_5 Regression and Determinism Matrix
 status: in_progress
 
-- [ ] Lowering/codegen decision points consume CFG flow facts
-- [ ] Control-flow diagnostics consume CFG-derived reachability facts
+- [ ] Focused regression matrix added (nested branching, loop exits, early return/raise, unreachable blocks)
+- [ ] Deterministic repeat-run checks for CFG graph shape and query results added
+- [ ] Matrix wired into local validation gate
 - [ ] Positive-path validation recorded
 - [ ] Negative-path validation recorded
 - [ ] Run milestone demo
@@ -129,12 +148,16 @@ status: in_progress
 - [ ] Mark part complete in phase doc and this checklist
 
 Validation evidence:
-- Positive path: `cargo test -q -p sifr_hir` -> pass.
-- Positive path: `cargo run -q -p sifr -- run demos/m25_4_diagnostics_and_consumer_integration_demo/main.sifr` -> prints `m25_4 diagnostics and consumer integration demo:` then `2` and `3` (with deterministic unreachable warning).
-- Positive path: `/Users/yaseralnajjar/work/sifr/codebase/scripts/run_all_tests.sh` -> pass.
-- Negative path: `cargo run -q -p sifr -- run demos/m25_4_diagnostics_and_consumer_integration_demo/negative_cases/reachable_type_error/main.sifr` -> exits `1` with `type error: return type mismatch: expected 'int', got 'str'`.
+- Positive path: `bash scripts/run_phase25_cfg_flow_activation_matrix.sh` -> pass.
+- Positive path: `cargo run -q -p sifr -- run demos/m25_5_cfg_flow_activation_regression_matrix_demo/main.sifr` -> prints `m25_5 cfg flow activation regression matrix demo:` then `8`, `42`, `9`.
+- Positive path: `cargo test -q -p sifr_hir cfg::tests::cfg_repeat_run_matrix_is_deterministic -- --nocapture` -> pass.
+- Positive path: `/Users/yaseralnajjar/work/sifr/codebase/scripts/run_all_tests.sh` -> pass (includes phase-25 matrix gate).
+- Negative path: `cargo run -q -p sifr -- run demos/m25_5_cfg_flow_activation_regression_matrix_demo/negative_cases/reachable_type_error/main.sifr` -> exits `1` with `type error: return type mismatch: expected 'int', got 'str'`.
+- Negative path: matrix row `negative_reachable_type_error_parity` asserts identical diagnostics across `check/build/run`.
+- Negative path: matrix row `negative_diagnostic_stability` asserts repeated diagnostics are byte-identical.
 
 ## PR Log
 - Part 1: https://github.com/yaseralnajjar/sifr/pull/883
 - Part 2: https://github.com/yaseralnajjar/sifr/pull/884
 - Part 3: https://github.com/yaseralnajjar/sifr/pull/885
+- Part 4: https://github.com/yaseralnajjar/sifr/pull/886

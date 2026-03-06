@@ -713,4 +713,74 @@ mod tests {
         assert_eq!(cfg_one.shape_fingerprint(), cfg_two.shape_fingerprint());
         assert_eq!(facts_one, facts_two);
     }
+
+    #[test]
+    fn cfg_repeat_run_matrix_is_deterministic() {
+        let corpus: Vec<Vec<HirStmt>> = vec![
+            vec![HirStmt::If {
+                condition: HirExpr::BoolLiteral(true),
+                then_body: vec![HirStmt::Return {
+                    value: Some(HirExpr::IntLiteral(1)),
+                }],
+                elif_clauses: vec![(
+                    HirExpr::BoolLiteral(false),
+                    vec![HirStmt::Raise {
+                        value: HirExpr::Call {
+                            func: "ValueError".to_string(),
+                            args: vec![HirExpr::StringLiteral("bad".to_string())],
+                            ty: Type::Unknown,
+                        },
+                    }],
+                )],
+                else_body: Some(vec![HirStmt::Return {
+                    value: Some(HirExpr::IntLiteral(2)),
+                }]),
+            }],
+            vec![HirStmt::For {
+                target: "n".to_string(),
+                target_ty: Type::Int,
+                iter: HirExpr::RangeLiteral {
+                    start: Box::new(HirExpr::IntLiteral(0)),
+                    end: Box::new(HirExpr::IntLiteral(5)),
+                    step: None,
+                    ty: Type::List(Box::new(Type::Int)),
+                },
+                body: vec![
+                    HirStmt::If {
+                        condition: HirExpr::BoolLiteral(true),
+                        then_body: vec![HirStmt::Continue],
+                        elif_clauses: vec![],
+                        else_body: Some(vec![HirStmt::Break]),
+                    },
+                    HirStmt::Expr {
+                        expr: HirExpr::IntLiteral(9),
+                    },
+                ],
+                else_body: Some(vec![HirStmt::Return {
+                    value: Some(HirExpr::IntLiteral(7)),
+                }]),
+            }],
+            vec![
+                HirStmt::Raise {
+                    value: HirExpr::Call {
+                        func: "ValueError".to_string(),
+                        args: vec![HirExpr::StringLiteral("x".to_string())],
+                        ty: Type::Unknown,
+                    },
+                },
+                HirStmt::Return {
+                    value: Some(HirExpr::IntLiteral(99)),
+                },
+            ],
+        ];
+
+        for stmts in corpus {
+            let cfg_first = build_control_flow_graph(&stmts);
+            let cfg_second = build_control_flow_graph(&stmts);
+            let facts_first = flow_facts(&stmts);
+            let facts_second = flow_facts(&stmts);
+            assert_eq!(cfg_first.shape_fingerprint(), cfg_second.shape_fingerprint());
+            assert_eq!(facts_first, facts_second);
+        }
+    }
 }

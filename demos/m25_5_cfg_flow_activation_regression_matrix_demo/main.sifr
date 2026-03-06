@@ -1,0 +1,39 @@
+# m25_5 cfg flow activation regression matrix demo
+# Covers nested branching, loop exits, early return/raise, and unreachable tails.
+
+def evaluate(seed: int) -> int:
+    total = 0
+    for n in range(seed):
+        if n == 1:
+            continue
+        if n == 6:
+            break
+        if n % 2 == 0:
+            total += n
+        else:
+            total += 1
+    return total
+
+def safe(seed: int) -> int:
+    try:
+        value = evaluate(seed)
+        if value > 3:
+            return value
+        raise ValueError('too small')
+    except ValueError as e:
+        return 42
+
+def unreachable_tail() -> int:
+    return 9
+    return 10
+
+def test_cfg_flow_matrix():
+    assert safe(8) == 8
+    assert safe(3) == 42
+    assert unreachable_tail() == 9
+
+def main():
+    print('m25_5 cfg flow activation regression matrix demo:')
+    print(safe(8))
+    print(safe(3))
+    print(unreachable_tail())

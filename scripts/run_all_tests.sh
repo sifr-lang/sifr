@@ -72,5 +72,8 @@ bash "${SCRIPT_DIR}/run_phase23_graph_isolation_matrix.sh"
 echo "Running phase 24 HIR analysis consolidation matrix"
 bash "${SCRIPT_DIR}/run_phase24_hir_analysis_consolidation_matrix.sh"
 
+echo "Running phase 25 CFG/flow activation matrix"
+bash "${SCRIPT_DIR}/run_phase25_cfg_flow_activation_matrix.sh"
+
 echo "Running e2e pass suite"
 bash "${SCRIPT_DIR}/run_e2e_pass.sh" --profile "${PROFILE}" "${FORWARD_ARGS[@]}"
