@@ -54,12 +54,12 @@ Loop per part: Work -> Validate -> PR -> Review -> Merge -> Mark Done
 - [x] Open PR, review, and merge
 
 ### Part 5: milestone_23_5 Graph and Isolation Regression Matrix
-- [ ] Add regression matrix for import closure, unrelated siblings, deterministic ordering, cycle errors, and parallel workspace isolation
-- [ ] Include both single-file and multi-file corpus fixtures
-- [ ] Wire matrix into local validation so regressions fail before merge
-- [ ] Add milestone 23.5 positive demo
-- [ ] Add milestone 23.5 negative regression case
-- [ ] Run milestone demo + targeted tests + full local suite
+- [x] Add regression matrix for import closure, unrelated siblings, deterministic ordering, cycle errors, and parallel workspace isolation
+- [x] Include both single-file and multi-file corpus fixtures
+- [x] Wire matrix into local validation so regressions fail before merge
+- [x] Add milestone 23.5 positive demo
+- [x] Add milestone 23.5 negative regression case
+- [x] Run milestone demo + targeted tests + full local suite
 - [ ] Open PR, review, and merge
 
 ## Part 1: milestone_23_1 Import-Closure Discovery
@@ -147,7 +147,27 @@ Validation evidence:
 - Negative path: `cargo run -q -p sifr -- run demos/m23_4_invocation_scoped_temp_workspace_isolation_demo/negative_cases/reachable_parse_error/main.sifr` -> exits `1` with reachable helper parse error.
 
 ## Part 5: milestone_23_5 Graph and Isolation Regression Matrix
-status: pending
+status: validating (pending PR)
+
+- [x] Phase-23 graph/isolation regression matrix script added
+- [x] Single-file and multi-file fixtures added and exercised
+- [x] Matrix wired into `scripts/run_all_tests.sh`
+- [x] Positive-path validation recorded
+- [x] Negative-path validation recorded
+- [x] Run milestone demo
+- [x] Run full local suite
+- [ ] Open PR, review, and merge
+- [ ] Mark part complete in phase doc and this checklist
+
+Validation evidence:
+- Positive path: `bash scripts/run_phase23_graph_isolation_matrix.sh` -> pass.
+- Positive path: `cargo run -q -p sifr -- run demos/m23_5_graph_isolation_regression_matrix_demo/main.sifr` -> prints `m23_5 graph and isolation regression matrix demo:` and `55`.
+- Positive path: matrix `single_file_layout_smoke` row validates single-file `check/build/run` success on `demos/m23_5_graph_isolation_regression_matrix_demo/single_file/main.sifr`.
+- Positive path: matrix `multi_file_import_closure_and_test` row validates multi-file `check/build/run/test` success on `demos/m23_5_graph_isolation_regression_matrix_demo`.
+- Positive path: matrix `parallel_invocation_isolation` row validates concurrent `run` and concurrent `test` invocations are isolated and successful.
+- Positive path: `/Users/yaseralnajjar/work/sifr/codebase/scripts/run_all_tests.sh` -> pass (includes phase-23 matrix gate).
+- Negative path: `cargo run -q -p sifr -- run demos/m23_5_graph_isolation_regression_matrix_demo/negative_cases/module_cycle/main.sifr` -> exits `1` with canonical cycle diagnostic.
+- Negative path: matrix `reachable_parse_error_contract` row validates `check/build/run/test` failures for reachable parse errors.
 
 ## PR Log
 - Part 1: https://github.com/yaseralnajjar/sifr/pull/863

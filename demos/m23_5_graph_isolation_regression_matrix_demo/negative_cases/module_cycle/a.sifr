@@ -1,0 +1,4 @@
+from b import value_b
+
+def value_a() -> int:
+    return value_b()

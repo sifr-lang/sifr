@@ -1,0 +1,7 @@
+# m23_5 graph and isolation regression matrix demo
+
+from helper import value
+
+def main():
+    print('m23_5 graph and isolation regression matrix demo:')
+    print(value())

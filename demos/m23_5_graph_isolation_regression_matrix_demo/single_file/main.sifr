@@ -1,0 +1,4 @@
+# single-file fixture for matrix coverage
+
+def main():
+    print('single-file-m23_5')
