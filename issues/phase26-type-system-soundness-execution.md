@@ -74,7 +74,7 @@ Validation evidence:
 - Negative path: `cargo run -q -p sifr -- run demos/m26_1_typevar_constraint_enforcement_demo/negative_cases/typevar_constraint_violation/main.sifr` -> exits `1` with `type 'float' does not satisfy constraints (int, str) required by type parameter 'T'`.
 
 ## Part 2: milestone_26_2 Inheritance and Variance Corrections
-status: done (2026-03-06, PR #TBD)
+status: done (2026-03-06, PR #892)
 
 - [x] Multi-level inheritance assignability implemented
 - [x] Invariance on mutable collections implemented
@@ -127,6 +127,6 @@ Validation evidence:
 
 ## PR Log
 - Part 1: https://github.com/yaseralnajjar/sifr/pull/891
-- Part 2: pending
+- Part 2: https://github.com/yaseralnajjar/sifr/pull/892
 - Part 3: pending
 - Part 4: pending
