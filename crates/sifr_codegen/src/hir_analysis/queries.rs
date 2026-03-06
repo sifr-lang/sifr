@@ -1,4 +1,4 @@
-use crate::hir_analysis::traversal::{self, TraversalConfig};
+use crate::hir_analysis::traversal::{self, TraversalConfig, TraversalControl};
 use crate::ModuleFuncSignatures;
 use sifr_hir::{HirExpr, HirPattern, HirStmt};
 use sifr_type_system::{ParamConvention, Type};
@@ -112,130 +112,132 @@ pub(crate) fn block_control_flow_effect(stmts: &[HirStmt]) -> ControlFlowEffect 
 }
 
 pub(crate) fn body_contains_return(stmts: &[HirStmt]) -> bool {
-    let found = std::cell::Cell::new(false);
     let mut on_stmt = |stmt: &HirStmt| {
         if matches!(stmt, HirStmt::Return { .. }) {
-            found.set(true);
+            return TraversalControl::Stop;
         }
+        TraversalControl::Continue
     };
-    let mut on_expr = |_expr: &HirExpr| {};
-    traversal::walk_stmts(
-        stmts,
-        TraversalConfig::LOCAL_SCOPE_ONLY,
-        &mut on_stmt,
-        &mut on_expr,
-    );
-    found.get()
+    let mut on_expr = |_expr: &HirExpr| TraversalControl::Continue;
+    matches!(
+        traversal::walk_stmts_until(
+            stmts,
+            TraversalConfig::LOCAL_SCOPE_ONLY,
+            &mut on_stmt,
+            &mut on_expr,
+        ),
+        TraversalControl::Stop
+    )
 }
 
 pub(crate) fn try_body_has_value_return(stmts: &[HirStmt]) -> bool {
-    let found = std::cell::Cell::new(false);
     let mut on_stmt = |stmt: &HirStmt| {
         if let HirStmt::Return { value: Some(val) } = stmt {
             if !matches!(val, HirExpr::NoneLiteral) {
-                found.set(true);
+                return TraversalControl::Stop;
             }
         }
+        TraversalControl::Continue
     };
-    let mut on_expr = |_expr: &HirExpr| {};
-    traversal::walk_stmts(
-        stmts,
-        TraversalConfig::LOCAL_SCOPE_ONLY,
-        &mut on_stmt,
-        &mut on_expr,
-    );
-    found.get()
+    let mut on_expr = |_expr: &HirExpr| TraversalControl::Continue;
+    matches!(
+        traversal::walk_stmts_until(
+            stmts,
+            TraversalConfig::LOCAL_SCOPE_ONLY,
+            &mut on_stmt,
+            &mut on_expr,
+        ),
+        TraversalControl::Stop
+    )
 }
 
 pub(crate) fn body_contains_yield(stmts: &[HirStmt]) -> bool {
-    let found = std::cell::Cell::new(false);
     let mut on_stmt = |stmt: &HirStmt| {
         if matches!(stmt, HirStmt::Yield { .. }) {
-            found.set(true);
+            return TraversalControl::Stop;
         }
+        TraversalControl::Continue
     };
-    let mut on_expr = |_expr: &HirExpr| {};
-    traversal::walk_stmts(
-        stmts,
-        TraversalConfig::LOCAL_SCOPE_ONLY,
-        &mut on_stmt,
-        &mut on_expr,
-    );
-    found.get()
+    let mut on_expr = |_expr: &HirExpr| TraversalControl::Continue;
+    matches!(
+        traversal::walk_stmts_until(
+            stmts,
+            TraversalConfig::LOCAL_SCOPE_ONLY,
+            &mut on_stmt,
+            &mut on_expr,
+        ),
+        TraversalControl::Stop
+    )
 }
 
 pub(crate) fn body_calls_function(stmts: &[HirStmt], func_name: &str) -> bool {
-    let mut found = false;
-    let mut on_stmt = |_stmt: &HirStmt| {};
+    let mut on_stmt = |_stmt: &HirStmt| TraversalControl::Continue;
     let mut on_expr = |expr: &HirExpr| {
-        if found {
-            return;
-        }
         if let HirExpr::Call { func, .. } = expr {
             if func == func_name {
-                found = true;
+                return TraversalControl::Stop;
             }
         }
+        TraversalControl::Continue
     };
-    traversal::walk_stmts(
-        stmts,
-        TraversalConfig::LOCAL_SCOPE_ONLY,
-        &mut on_stmt,
-        &mut on_expr,
-    );
-    found
+    matches!(
+        traversal::walk_stmts_until(
+            stmts,
+            TraversalConfig::LOCAL_SCOPE_ONLY,
+            &mut on_stmt,
+            &mut on_expr,
+        ),
+        TraversalControl::Stop
+    )
 }
 
 pub(crate) fn expr_calls_function(expr: &HirExpr, func_name: &str) -> bool {
-    let mut found = false;
-    traversal::walk_expr(expr, &mut |node| {
-        if found {
-            return;
-        }
-        if let HirExpr::Call { func, .. } = node {
-            if func == func_name {
-                found = true;
+    matches!(
+        traversal::walk_expr_until(expr, &mut |node| {
+            if let HirExpr::Call { func, .. } = node {
+                if func == func_name {
+                    return TraversalControl::Stop;
+                }
             }
-        }
-    });
-    found
+            TraversalControl::Continue
+        }),
+        TraversalControl::Stop
+    )
 }
 
 pub(crate) fn expr_references_var(expr: &HirExpr, var_name: &str) -> bool {
-    let mut found = false;
-    traversal::walk_expr(expr, &mut |node| {
-        if found {
-            return;
-        }
-        if let HirExpr::Name { name, .. } = node {
-            if name == var_name {
-                found = true;
+    matches!(
+        traversal::walk_expr_until(expr, &mut |node| {
+            if let HirExpr::Name { name, .. } = node {
+                if name == var_name {
+                    return TraversalControl::Stop;
+                }
             }
-        }
-    });
-    found
+            TraversalControl::Continue
+        }),
+        TraversalControl::Stop
+    )
 }
 
 pub(crate) fn stmts_reference_var(stmts: &[HirStmt], var_name: &str) -> bool {
-    let mut found = false;
-    let mut on_stmt = |_stmt: &HirStmt| {};
+    let mut on_stmt = |_stmt: &HirStmt| TraversalControl::Continue;
     let mut on_expr = |expr: &HirExpr| {
-        if found {
-            return;
-        }
         if let HirExpr::Name { name, .. } = expr {
             if name == var_name {
-                found = true;
+                return TraversalControl::Stop;
             }
         }
+        TraversalControl::Continue
     };
-    traversal::walk_stmts(
-        stmts,
-        TraversalConfig::LOCAL_SCOPE_ONLY,
-        &mut on_stmt,
-        &mut on_expr,
-    );
-    found
+    matches!(
+        traversal::walk_stmts_until(
+            stmts,
+            TraversalConfig::LOCAL_SCOPE_ONLY,
+            &mut on_stmt,
+            &mut on_expr,
+        ),
+        TraversalControl::Stop
+    )
 }
 
 pub(crate) fn collect_mutated_vars(
@@ -400,7 +402,8 @@ pub(crate) fn collect_typevar_operator_requirements(
             ty,
         } = expr
         {
-            let left_is_tp = matches!(left.ty(), Type::TypeVar(ref name) if name == type_param_name);
+            let left_is_tp =
+                matches!(left.ty(), Type::TypeVar(ref name) if name == type_param_name);
             let right_is_tp =
                 matches!(right.ty(), Type::TypeVar(ref name) if name == type_param_name);
             let result_is_tp = matches!(ty, Type::TypeVar(ref name) if name == type_param_name);
