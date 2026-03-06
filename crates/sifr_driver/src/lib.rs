@@ -597,7 +597,9 @@ struct FrontendModuleDiagnostics {
 
 #[derive(Clone, Copy)]
 enum FrontendDiagnosticStyle {
+    /// Preserve raw frontend diagnostic messages (single-file mode).
     Bare,
+    /// Prefix diagnostics with `[module]` for multi-module/project contexts.
     ModulePrefixed,
 }
 
