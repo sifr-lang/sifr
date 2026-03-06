@@ -117,7 +117,7 @@ Validation evidence:
 - Negative path: `cargo run -q -p sifr -- run demos/m26_3_optional_arithmetic_soundness_demo/negative_cases/optional_arithmetic_without_narrowing/main.sifr` -> exits `1` with `unsupported operand type(s) for +: 'None | int' and 'int'`.
 
 ## Part 4: milestone_26_4 Protocol-Bound Strictness Closure
-status: done (2026-03-07, PR #TBD)
+status: done (2026-03-07, PR #894)
 
 - [x] Protocol-bound validation is strict and explicit
 - [x] Positive-path validation recorded
@@ -141,4 +141,4 @@ Validation evidence:
 - Part 1: https://github.com/yaseralnajjar/sifr/pull/891
 - Part 2: https://github.com/yaseralnajjar/sifr/pull/892
 - Part 3: https://github.com/yaseralnajjar/sifr/pull/893
-- Part 4: pending
+- Part 4: https://github.com/yaseralnajjar/sifr/pull/894
