@@ -28,13 +28,13 @@ Loop per part: Work -> Validate -> PR -> Review -> Merge -> Mark Done
 - [x] Open PR, review, and merge
 
 ### Part 2: milestone_24_2 Semantic Query Layer Standardization
-- [ ] Build reusable semantic query APIs on top of traversal (return/yield/function-call/defined-variable/references/mutation)
-- [ ] Migrate emitter/lowering consumers to query APIs instead of local recursive matching
-- [ ] Add query-layer regression tests (positive + negative)
-- [ ] Add milestone 24.2 positive demo
-- [ ] Add milestone 24.2 negative regression case
-- [ ] Run milestone demo + targeted tests + full local suite
-- [ ] Open PR, review, and merge
+- [x] Build reusable semantic query APIs on top of traversal (return/yield/function-call/defined-variable/references/mutation)
+- [x] Migrate emitter/lowering consumers to query APIs instead of local recursive matching
+- [x] Add query-layer regression tests (positive + negative)
+- [x] Add milestone 24.2 positive demo
+- [x] Add milestone 24.2 negative regression case
+- [x] Run milestone demo + targeted tests + full local suite
+- [x] Open PR, review, and merge
 
 ### Part 3: milestone_24_3 Control-Flow Effect Query Unification
 - [ ] Introduce canonical control-flow effect model/query API
@@ -84,18 +84,22 @@ Validation evidence:
 - Negative path: `cargo run -q -p sifr -- run demos/m24_1_canonical_traversal_layer_contract_demo/negative_cases/reachable_type_error/main.sifr` -> exits `1` with `type error: return type mismatch: expected 'int', got 'str'`.
 
 ## Part 2: milestone_24_2 Semantic Query Layer Standardization
-status: pending
+status: done (2026-03-06, PR #877)
 
-- [ ] Query layer implemented and adopted by consumers
-- [ ] Positive-path validation recorded
-- [ ] Negative-path validation recorded
-- [ ] Run milestone demo
-- [ ] Run full local suite
-- [ ] Open PR, review, and merge
-- [ ] Mark part complete in phase doc and this checklist
+- [x] Query layer implemented and adopted by consumers
+- [x] Positive-path validation recorded
+- [x] Negative-path validation recorded
+- [x] Run milestone demo
+- [x] Run full local suite
+- [x] Open PR, review, and merge
+- [x] Mark part complete in phase doc and this checklist
 
 Validation evidence:
-- Pending.
+- Positive path: `cargo test -q -p sifr_codegen hir_analysis::queries::tests::` -> pass.
+- Positive path: `cargo test -q -p sifr_codegen` -> pass.
+- Positive path: `cargo run -q -p sifr -- run demos/m24_2_semantic_query_layer_standardization_demo/main.sifr` -> prints `m24_2 semantic query layer standardization demo:` and `0`.
+- Positive path: `/Users/yaseralnajjar/work/sifr/codebase/scripts/run_all_tests.sh` -> pass.
+- Negative path: `cargo run -q -p sifr -- run demos/m24_2_semantic_query_layer_standardization_demo/negative_cases/recursive_call_typo/main.sifr` -> exits `1` with `type error: undefined function: 'reccurse'`.
 
 ## Part 3: milestone_24_3 Control-Flow Effect Query Unification
 status: pending
@@ -142,7 +146,7 @@ Validation evidence:
 
 ## PR Log
 - Part 1: https://github.com/yaseralnajjar/sifr/pull/875
-- Part 2: pending
+- Part 2: https://github.com/yaseralnajjar/sifr/pull/877
 - Part 3: pending
 - Part 4: pending
 - Part 5: pending
