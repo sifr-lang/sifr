@@ -1106,14 +1106,8 @@ fn collect_project_hir_modules(
     )
 }
 
-/// Compile a multi-file project and build a native binary.
-/// `main_file` is the path to the main .sifr file. Other .sifr files in the same
-/// directory are compiled as modules.
-pub fn build_project(main_file: &Path, output_dir: &Path) -> Result<PathBuf, Vec<CompileError>> {
-    let project_dir = main_file.parent().unwrap_or(Path::new("."));
-
-    // Discover all .sifr files in the project directory
-    let mut sifr_files: Vec<PathBuf> = Vec::new();
+fn discover_project_sifr_files(project_dir: &Path) -> Vec<PathBuf> {
+    let mut sifr_files = Vec::new();
     if let Ok(entries) = std::fs::read_dir(project_dir) {
         for entry in entries.flatten() {
             let path = entry.path();
@@ -1123,8 +1117,11 @@ pub fn build_project(main_file: &Path, output_dir: &Path) -> Result<PathBuf, Vec
         }
     }
     sifr_files.sort();
+    sifr_files
+}
 
-    // Read all source files with deterministic ordering from sorted file paths.
+fn read_project_sources(project_dir: &Path) -> Result<Vec<(String, String)>, Vec<CompileError>> {
+    let sifr_files = discover_project_sifr_files(project_dir);
     let mut sources: Vec<(String, String)> = Vec::with_capacity(sifr_files.len());
     for file in &sifr_files {
         let module_name = file.file_stem().unwrap().to_string_lossy().to_string();
@@ -1136,10 +1133,14 @@ pub fn build_project(main_file: &Path, output_dir: &Path) -> Result<PathBuf, Vec
         })?;
         sources.push((module_name, source));
     }
+    Ok(sources)
+}
 
-    // Phase 1: Parse all modules
+fn parse_project_sources(
+    sources: &[(String, String)],
+) -> Result<HashMap<String, Vec<sifr_python_ast::Stmt>>, Vec<CompileError>> {
     let mut parsed_modules: HashMap<String, Vec<sifr_python_ast::Stmt>> = HashMap::new();
-    for (module_name, source) in &sources {
+    for (module_name, source) in sources {
         let parsed = match parse_module(source) {
             Ok(parsed) => {
                 if !parsed.is_valid() {
@@ -1164,12 +1165,40 @@ pub fn build_project(main_file: &Path, output_dir: &Path) -> Result<PathBuf, Vec
         };
         parsed_modules.insert(module_name.clone(), parsed.into_suite());
     }
+    Ok(parsed_modules)
+}
 
-    // Phase 1.5: Compile embedded stdlib .sifr files
+fn analyze_project_frontend(main_file: &Path) -> Result<ProjectLowering, Vec<CompileError>> {
+    let project_dir = main_file.parent().unwrap_or(Path::new("."));
+    let sources = read_project_sources(project_dir)?;
+    let parsed_modules = parse_project_sources(&sources)?;
     let stdlib_compiled = compile_stdlib()?;
+    collect_project_hir_modules(&parsed_modules, stdlib_compiled.defs)
+}
 
-    // Phase 2: Lower modules with stdlib + local external definitions.
-    let project_lowering = collect_project_hir_modules(&parsed_modules, stdlib_compiled.defs)?;
+fn emit_project_frontend_diagnostics(project_lowering: &ProjectLowering) {
+    for module_name in &project_lowering.compile_order {
+        let Some(diag) = project_lowering
+            .module_diagnostics
+            .get(module_name.as_str())
+        else {
+            continue;
+        };
+        for message in &diag.reveal_types {
+            write_stderr_line(message);
+        }
+        for warning in &diag.warnings {
+            write_stderr_line(warning);
+        }
+    }
+}
+
+/// Compile a multi-file project and build a native binary.
+/// `main_file` is the path to the main .sifr file. Other .sifr files in the same
+/// directory are compiled as modules.
+pub fn build_project(main_file: &Path, output_dir: &Path) -> Result<PathBuf, Vec<CompileError>> {
+    let project_lowering = analyze_project_frontend(main_file)?;
+    emit_project_frontend_diagnostics(&project_lowering);
     let hir_modules = project_lowering.hir_modules;
     let compile_order = project_lowering.compile_order;
 
@@ -1267,6 +1296,17 @@ pub fn build_project(main_file: &Path, output_dir: &Path) -> Result<PathBuf, Vec
         .join(binary_name);
 
     Ok(binary_path)
+}
+
+/// Type-check a multi-file project entrypoint without code generation.
+pub fn check_project(main_file: &Path) -> Vec<CompileError> {
+    match analyze_project_frontend(main_file) {
+        Ok(project_lowering) => {
+            emit_project_frontend_diagnostics(&project_lowering);
+            vec![]
+        }
+        Err(errors) => errors,
+    }
 }
 
 /// Compile and build a native binary.
@@ -2198,6 +2238,94 @@ def test_import_parity():
         assert!(result, "sifr test run should succeed");
 
         let _ = std::fs::remove_dir_all(&test_dir);
+    }
+
+    #[test]
+    fn test_check_project_resolves_valid_local_imports() {
+        let unique = format!(
+            "sifr_check_project_{}_{}",
+            std::process::id(),
+            std::time::SystemTime::now()
+                .duration_since(std::time::UNIX_EPOCH)
+                .expect("time should move forward")
+                .as_nanos()
+        );
+        let dir = std::env::temp_dir().join(unique);
+        std::fs::create_dir_all(&dir).expect("project dir should be created");
+        std::fs::write(
+            dir.join("main.sifr"),
+            r#"
+from helper import area
+
+def main():
+    print(area(2.0))
+"#,
+        )
+        .expect("main module should be written");
+        std::fs::write(
+            dir.join("helper.sifr"),
+            r#"
+from sifr.math import pi
+
+def area(radius: float) -> float:
+    return pi * radius * radius
+"#,
+        )
+        .expect("helper module should be written");
+
+        let errors = check_project(&dir.join("main.sifr"));
+        assert!(
+            errors.is_empty(),
+            "check_project should succeed: {errors:?}"
+        );
+
+        let _ = std::fs::remove_dir_all(&dir);
+    }
+
+    #[test]
+    fn test_check_project_error_messages_match_build_project() {
+        let unique = format!(
+            "sifr_check_project_error_parity_{}_{}",
+            std::process::id(),
+            std::time::SystemTime::now()
+                .duration_since(std::time::UNIX_EPOCH)
+                .expect("time should move forward")
+                .as_nanos()
+        );
+        let dir = std::env::temp_dir().join(unique);
+        std::fs::create_dir_all(&dir).expect("project dir should be created");
+        std::fs::write(
+            dir.join("main.sifr"),
+            r#"
+from helper import broken
+
+def main():
+    print(broken())
+"#,
+        )
+        .expect("main module should be written");
+        std::fs::write(
+            dir.join("helper.sifr"),
+            r#"
+def broken() -> int:
+    return "bad"
+"#,
+        )
+        .expect("helper module should be written");
+
+        let check_errors = check_project(&dir.join("main.sifr"));
+        let build_errors = build_project(&dir.join("main.sifr"), &dir.join("build_out"))
+            .err()
+            .expect("build_project should fail with same frontend error");
+
+        let check_messages: Vec<String> = check_errors.into_iter().map(|e| e.to_string()).collect();
+        let build_messages: Vec<String> = build_errors.into_iter().map(|e| e.to_string()).collect();
+        assert_eq!(check_messages, build_messages);
+        assert!(build_messages
+            .iter()
+            .any(|m| m.contains("[helper] return type mismatch")));
+
+        let _ = std::fs::remove_dir_all(&dir);
     }
 
     #[test]

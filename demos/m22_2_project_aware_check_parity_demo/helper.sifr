@@ -1,0 +1,4 @@
+from sifr.math import pi
+
+def area_like(r: float) -> float:
+    return pi * r
