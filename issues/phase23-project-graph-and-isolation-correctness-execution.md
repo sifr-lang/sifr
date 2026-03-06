@@ -1,6 +1,6 @@
 # Phase 23 Execution Checklist (Project Graph and Isolation Correctness)
 
-Status: in_progress
+Status: completed (2026-03-06)
 Owner: phase_23 execution loop
 Reference phase doc: `.cursor/plans/main/phases/23_project_graph_and_isolation_correctness.md`
 
@@ -60,7 +60,7 @@ Loop per part: Work -> Validate -> PR -> Review -> Merge -> Mark Done
 - [x] Add milestone 23.5 positive demo
 - [x] Add milestone 23.5 negative regression case
 - [x] Run milestone demo + targeted tests + full local suite
-- [ ] Open PR, review, and merge
+- [x] Open PR, review, and merge
 
 ## Part 1: milestone_23_1 Import-Closure Discovery
 status: done (2026-03-06, PR #863)
@@ -147,7 +147,7 @@ Validation evidence:
 - Negative path: `cargo run -q -p sifr -- run demos/m23_4_invocation_scoped_temp_workspace_isolation_demo/negative_cases/reachable_parse_error/main.sifr` -> exits `1` with reachable helper parse error.
 
 ## Part 5: milestone_23_5 Graph and Isolation Regression Matrix
-status: validating (pending PR)
+status: done (2026-03-06, PR #871)
 
 - [x] Phase-23 graph/isolation regression matrix script added
 - [x] Single-file and multi-file fixtures added and exercised
@@ -156,8 +156,8 @@ status: validating (pending PR)
 - [x] Negative-path validation recorded
 - [x] Run milestone demo
 - [x] Run full local suite
-- [ ] Open PR, review, and merge
-- [ ] Mark part complete in phase doc and this checklist
+- [x] Open PR, review, and merge
+- [x] Mark part complete in phase doc and this checklist
 
 Validation evidence:
 - Positive path: `bash scripts/run_phase23_graph_isolation_matrix.sh` -> pass.
@@ -174,6 +174,7 @@ Validation evidence:
 - Part 2: https://github.com/yaseralnajjar/sifr/pull/865
 - Part 3: https://github.com/yaseralnajjar/sifr/pull/867
 - Part 4: https://github.com/yaseralnajjar/sifr/pull/869
+- Part 5: https://github.com/yaseralnajjar/sifr/pull/871
 
 ## Reviewer Follow-up
 - pending
