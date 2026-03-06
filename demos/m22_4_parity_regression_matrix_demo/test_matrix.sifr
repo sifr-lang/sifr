@@ -1,0 +1,4 @@
+from helper import value
+
+def test_matrix_fixture():
+    assert value(1) == 8

@@ -1,0 +1,6 @@
+from sifr.math import floor
+
+BASE: int = 5
+
+def value(x: int) -> int:
+    return BASE + floor(2.9) + x
