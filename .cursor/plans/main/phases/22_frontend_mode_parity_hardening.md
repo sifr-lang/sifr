@@ -38,6 +38,14 @@ Eliminate semantic drift between `check`, `build`, `run`, and `test` by enforcin
 - Definition of done:
   - Diagnostics/exit behavior is documented and regression-locked for all frontend modes.
 
+#### Frontend Failure Contract (milestone_22_3)
+- Frontend failures in `check`, `build`, `run`, and `test` exit with code `1`.
+- Frontend errors render via the shared `CompileError` formatter (`{phase}: {message}`) with no mode-specific suffixes.
+- For equivalent frontend failures in `check`/`build`/`run`, diagnostic line content must be byte-identical.
+- Diagnostic ordering is deterministic:
+  - project modes use module compile order from the shared dependency graph;
+  - test mode input discovery is lexicographically ordered by `.sifr` path before parse/lower.
+
 ### milestone_22_4: Parity Regression Matrix
 - Scope:
   - Add an explicit parity matrix that runs the same representative corpus through `check`, `build`, `run`, and `test` frontend paths.

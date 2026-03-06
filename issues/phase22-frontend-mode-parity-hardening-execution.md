@@ -73,15 +73,15 @@ Validation evidence:
 - Negative path: `cargo run -q -p sifr -- run demos/m22_1_canonical_frontend_entry_path_demo/negative_cases/type_error_dependency/main.sifr` -> exits `1` with `type error: [helper] return type mismatch: expected 'int', got 'str'`.
 
 ## Part 2: milestone_22_2 Project-Aware `check` Parity
-status: in_progress
+status: done (2026-03-06, PR #857)
 
 - [x] Project-aware `check` implementation complete
 - [x] Positive-path validation recorded
 - [x] Negative-path validation recorded
 - [x] Run milestone demo
 - [x] Run full local suite
-- [ ] Open PR, review, and merge
-- [ ] Mark part complete in phase doc and this checklist
+- [x] Open PR, review, and merge
+- [x] Mark part complete in phase doc and this checklist
 
 Validation evidence:
 - Positive path: `cargo test -q -p sifr_driver test_check_project_resolves_valid_local_imports` -> pass.
@@ -94,18 +94,25 @@ Validation evidence:
 - Negative path: `cargo run -q -p sifr -- check demos/m22_2_project_aware_check_parity_demo/negative_cases/helper_type_error/main.sifr` -> exits `1` with `type error: [helper] return type mismatch: expected 'float', got 'str'`.
 
 ## Part 3: milestone_22_3 Cross-Mode Diagnostic and Exit Contract
-status: pending
+status: in_progress
 
-- [ ] Diagnostic/exit/ordering contract implemented and documented
-- [ ] Positive-path validation recorded
-- [ ] Negative-path validation recorded
-- [ ] Run milestone demo
-- [ ] Run full local suite
+- [x] Diagnostic/exit/ordering contract implemented and documented
+- [x] Positive-path validation recorded
+- [x] Negative-path validation recorded
+- [x] Run milestone demo
+- [x] Run full local suite
 - [ ] Open PR, review, and merge
 - [ ] Mark part complete in phase doc and this checklist
 
 Validation evidence:
-- Pending.
+- Positive path: `cargo test -q -p sifr_driver test_run_tests_reports_deterministic_parse_error_order` -> pass.
+- Positive path: `cargo test -q -p sifr_driver test_run_tests_frontend_type_errors_use_single_path_prefix` -> pass.
+- Positive path: `cargo test -q -p sifr test_frontend_error_messages_match_across_check_build_and_run_paths` -> pass.
+- Positive path: `cargo run -q -p sifr -- run demos/m22_3_cross_mode_diagnostic_exit_contract_demo/main.sifr` -> prints `m22_3 cross-mode diagnostic and exit contract demo:` and `42`.
+- Positive path: manual contract check (`check/build/run`) on `demos/m22_3_cross_mode_diagnostic_exit_contract_demo/negative_cases/helper_type_error/main.sifr` -> `check_exit=1`, `build_exit=1`, `run_exit=1`, and `check_build_err_diff=0`, `check_run_err_diff=0`.
+- Positive path: manual contract check (`test`) on synthetic parse-error fixtures -> `test_exit=1` and first error references lexicographically first file (`a_bad.sifr`).
+- Positive path: `/Users/yaseralnajjar/work/sifr/codebase/scripts/run_all_tests.sh` -> pass.
+- Negative path: `cargo run -q -p sifr -- check demos/m22_3_cross_mode_diagnostic_exit_contract_demo/negative_cases/helper_type_error/main.sifr` -> exits `1` with `type error: [helper] return type mismatch: expected 'int', got 'str'`.
 
 ## Part 4: milestone_22_4 Parity Regression Matrix
 status: pending
@@ -123,7 +130,7 @@ Validation evidence:
 
 ## PR Log
 - Part 1: https://github.com/yaseralnajjar/sifr/pull/856
-- Part 2: pending
+- Part 2: https://github.com/yaseralnajjar/sifr/pull/857
 - Part 3: pending
 - Part 4: pending
 

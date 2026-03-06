@@ -680,4 +680,38 @@ mod tests {
         let _ = std::fs::remove_dir_all(build_out);
         let _ = std::fs::remove_dir_all(dir);
     }
+
+    #[test]
+    fn test_frontend_error_messages_match_across_check_build_and_run_paths() {
+        let dir = mktemp_dir("frontend_error_mode_parity");
+        let main = dir.join("main.sifr");
+        let helper = dir.join("helper.sifr");
+        std::fs::write(
+            &main,
+            "from helper import value\n\ndef main():\n    print(value())\n",
+        )
+        .expect("main file should be written");
+        std::fs::write(&helper, "def value() -> int:\n    return \"bad\"\n")
+            .expect("helper file should be written");
+
+        let check_errors = check_entrypoint(&main);
+        let run_out = mktemp_dir("frontend_parity_run_out");
+        let build_out = mktemp_dir("frontend_parity_build_out");
+        let run_errors = compile_entrypoint(&main, &run_out)
+            .err()
+            .expect("run path should fail on helper type error");
+        let build_errors = compile_entrypoint(&main, &build_out)
+            .err()
+            .expect("build path should fail on helper type error");
+
+        let check_messages: Vec<String> = check_errors.into_iter().map(|e| e.to_string()).collect();
+        let run_messages: Vec<String> = run_errors.into_iter().map(|e| e.to_string()).collect();
+        let build_messages: Vec<String> = build_errors.into_iter().map(|e| e.to_string()).collect();
+        assert_eq!(check_messages, run_messages);
+        assert_eq!(run_messages, build_messages);
+
+        let _ = std::fs::remove_dir_all(run_out);
+        let _ = std::fs::remove_dir_all(build_out);
+        let _ = std::fs::remove_dir_all(dir);
+    }
 }
