@@ -1,0 +1,4 @@
+from z_provider import value
+
+def fetch() -> int:
+    return value() + 1
