@@ -153,4 +153,4 @@ Validation evidence:
   - Reviewer confirmed production-grade readiness with no blocking defects.
   - Applied the actionable recommendation by documenting `FrontendDiagnosticStyle` variants inline for long-term contract clarity.
   - Broader matrix-expansion suggestions were retained as future advisory work outside phase 22 scope.
-- Remediation PR (pass 2): pending
+- Remediation PR (pass 2): https://github.com/yaseralnajjar/sifr/pull/861
