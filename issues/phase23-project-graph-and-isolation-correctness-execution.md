@@ -33,7 +33,7 @@ Loop per part: Work -> Validate -> PR -> Review -> Merge -> Mark Done
 - [x] Add milestone 23.2 positive demo
 - [x] Add milestone 23.2 negative regression case
 - [x] Run milestone demo + targeted tests + full local suite
-- [ ] Open PR, review, and merge
+- [x] Open PR, review, and merge
 
 ### Part 3: milestone_23_3 Project/Test Discovery Parity Contract
 - [ ] Introduce one shared discovery contract for project and test paths
@@ -83,7 +83,7 @@ Validation evidence:
 - Negative path: `cargo run -q -p sifr -- run demos/m23_1_import_closure_discovery_demo/negative_cases/reachable_dependency_parse_error/main.sifr` -> exits `1` with parse error for `[helper]`.
 
 ## Part 2: milestone_23_2 Deterministic Module Graph and Cycle Diagnostics
-status: validating (pending PR)
+status: done (2026-03-06, PR #865)
 
 - [x] Deterministic module order hardening implemented
 - [x] Canonical stable cycle diagnostics implemented
@@ -91,8 +91,8 @@ status: validating (pending PR)
 - [x] Negative-path validation recorded
 - [x] Run milestone demo
 - [x] Run full local suite
-- [ ] Open PR, review, and merge
-- [ ] Mark part complete in phase doc and this checklist
+- [x] Open PR, review, and merge
+- [x] Mark part complete in phase doc and this checklist
 
 Validation evidence:
 - Positive path: `cargo test -q -p sifr_driver test_compute_module_compile_order_is_deterministic_across_hashmap_insertion_order` -> pass.
@@ -112,6 +112,7 @@ status: pending
 
 ## PR Log
 - Part 1: https://github.com/yaseralnajjar/sifr/pull/863
+- Part 2: https://github.com/yaseralnajjar/sifr/pull/865
 
 ## Reviewer Follow-up
 - pending
