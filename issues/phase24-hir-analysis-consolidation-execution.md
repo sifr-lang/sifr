@@ -18,14 +18,14 @@ Loop per part: Work -> Validate -> PR -> Review -> Merge -> Mark Done
 ## Full Phase 24 To-Do Plan
 
 ### Part 1: milestone_24_1 Canonical Traversal Layer Contract
-- [ ] Establish one canonical traversal layer as the only recursive descent over `HirStmt`/`HirExpr` for analysis use-cases
-- [ ] Document traversal invariants and HIR-variant extension rules
-- [ ] Migrate analysis recursion entrypoints to canonical traversal APIs
-- [ ] Add traversal-layer regression tests (positive + negative)
-- [ ] Add milestone 24.1 positive demo
-- [ ] Add milestone 24.1 negative regression case
-- [ ] Run milestone demo + targeted tests + full local suite
-- [ ] Open PR, review, and merge
+- [x] Establish one canonical traversal layer as the only recursive descent over `HirStmt`/`HirExpr` for analysis use-cases
+- [x] Document traversal invariants and HIR-variant extension rules
+- [x] Migrate analysis recursion entrypoints to canonical traversal APIs
+- [x] Add traversal-layer regression tests (positive + negative)
+- [x] Add milestone 24.1 positive demo
+- [x] Add milestone 24.1 negative regression case
+- [x] Run milestone demo + targeted tests + full local suite
+- [x] Open PR, review, and merge
 
 ### Part 2: milestone_24_2 Semantic Query Layer Standardization
 - [ ] Build reusable semantic query APIs on top of traversal (return/yield/function-call/defined-variable/references/mutation)
@@ -65,19 +65,23 @@ Loop per part: Work -> Validate -> PR -> Review -> Merge -> Mark Done
 - [ ] Open PR, review, and merge
 
 ## Part 1: milestone_24_1 Canonical Traversal Layer Contract
-status: pending
+status: done (2026-03-06, PR #875)
 
-- [ ] Canonical traversal contract implemented
-- [ ] Invariants and extension rules documented
-- [ ] Positive-path validation recorded
-- [ ] Negative-path validation recorded
-- [ ] Run milestone demo
-- [ ] Run full local suite
-- [ ] Open PR, review, and merge
-- [ ] Mark part complete in phase doc and this checklist
+- [x] Canonical traversal contract implemented
+- [x] Invariants and extension rules documented
+- [x] Positive-path validation recorded
+- [x] Negative-path validation recorded
+- [x] Run milestone demo
+- [x] Run full local suite
+- [x] Open PR, review, and merge
+- [x] Mark part complete in phase doc and this checklist
 
 Validation evidence:
-- Pending.
+- Positive path: `cargo test -q -p sifr_codegen walk_stmts_` -> pass (`walk_stmts_covers_try_handlers_loop_else_and_match_patterns`, `walk_stmts_respects_nested_function_scope_boundary`).
+- Positive path: `cargo test -q -p sifr_codegen` -> pass.
+- Positive path: `cargo run -q -p sifr -- run demos/m24_1_canonical_traversal_layer_contract_demo/main.sifr` -> prints `m24_1 canonical traversal layer contract demo:` and `6`.
+- Positive path: `/Users/yaseralnajjar/work/sifr/codebase/scripts/run_all_tests.sh` -> pass.
+- Negative path: `cargo run -q -p sifr -- run demos/m24_1_canonical_traversal_layer_contract_demo/negative_cases/reachable_type_error/main.sifr` -> exits `1` with `type error: return type mismatch: expected 'int', got 'str'`.
 
 ## Part 2: milestone_24_2 Semantic Query Layer Standardization
 status: pending
@@ -137,7 +141,7 @@ Validation evidence:
 - Pending.
 
 ## PR Log
-- Part 1: pending
+- Part 1: https://github.com/yaseralnajjar/sifr/pull/875
 - Part 2: pending
 - Part 3: pending
 - Part 4: pending
