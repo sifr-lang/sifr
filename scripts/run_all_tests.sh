@@ -69,5 +69,8 @@ bash "${SCRIPT_DIR}/run_frontend_mode_parity_matrix.sh"
 echo "Running phase 23 graph/isolation matrix"
 bash "${SCRIPT_DIR}/run_phase23_graph_isolation_matrix.sh"
 
+echo "Running phase 24 HIR analysis consolidation matrix"
+bash "${SCRIPT_DIR}/run_phase24_hir_analysis_consolidation_matrix.sh"
+
 echo "Running e2e pass suite"
 bash "${SCRIPT_DIR}/run_e2e_pass.sh" --profile "${PROFILE}" "${FORWARD_ARGS[@]}"

@@ -1,0 +1,5 @@
+from helper import evaluate
+
+def test_evaluate_paths():
+    assert evaluate(0) == 45
+    assert evaluate(10) == 20
