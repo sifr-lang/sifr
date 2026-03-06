@@ -137,6 +137,37 @@ fn read_source(file: &Path) -> String {
     }
 }
 
+struct InvocationWorkspace {
+    path: PathBuf,
+}
+
+impl InvocationWorkspace {
+    fn create(prefix: &str) -> io::Result<Self> {
+        let unique = format!(
+            "{}_{}_{}",
+            prefix,
+            process::id(),
+            std::time::SystemTime::now()
+                .duration_since(std::time::UNIX_EPOCH)
+                .unwrap_or_default()
+                .as_nanos()
+        );
+        let path = std::env::temp_dir().join(unique);
+        std::fs::create_dir_all(&path)?;
+        Ok(Self { path })
+    }
+
+    fn path(&self) -> &Path {
+        &self.path
+    }
+}
+
+impl Drop for InvocationWorkspace {
+    fn drop(&mut self) {
+        let _ = std::fs::remove_dir_all(&self.path);
+    }
+}
+
 fn cmd_build(file: &Path, output: &Path) {
     let result = compile_entrypoint(file, output);
 
@@ -158,8 +189,14 @@ fn cmd_build(file: &Path, output: &Path) {
 }
 
 fn cmd_run(file: &Path) {
-    let temp_dir = std::env::temp_dir().join("sifr_run");
-    let result = compile_entrypoint(file, &temp_dir);
+    let workspace = match InvocationWorkspace::create("sifr_run") {
+        Ok(workspace) => workspace,
+        Err(e) => {
+            let _ = writeln!(io::stderr(), "error: could not create run workspace: {e}");
+            process::exit(1);
+        }
+    };
+    let result = compile_entrypoint(file, workspace.path());
 
     match result {
         Ok(binary_path) => {
@@ -268,6 +305,17 @@ mod tests {
         let dir = std::env::temp_dir().join(unique);
         std::fs::create_dir_all(&dir).expect("temp dir should be created");
         dir
+    }
+
+    #[test]
+    fn test_invocation_workspace_create_returns_unique_paths() {
+        let first = InvocationWorkspace::create("sifr_run_workspace")
+            .expect("first workspace should exist");
+        let second = InvocationWorkspace::create("sifr_run_workspace")
+            .expect("second workspace should exist");
+        assert_ne!(first.path(), second.path());
+        assert!(first.path().exists());
+        assert!(second.path().exists());
     }
 
     #[test]

@@ -1,0 +1,7 @@
+# m23_4 invocation-scoped temp workspace isolation demo
+
+from helper import value
+
+def main():
+    print('m23_4 invocation-scoped temp workspace isolation demo:')
+    print(value())
