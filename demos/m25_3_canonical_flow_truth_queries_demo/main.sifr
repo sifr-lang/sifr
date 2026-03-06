@@ -1,0 +1,16 @@
+# m25_3 canonical flow truth queries demo
+# Exercises CFG-backed always-exits and reachability truth in canonical query consumers.
+
+def classify(flag: bool) -> int:
+    try:
+        if flag:
+            return 5
+        raise ValueError('bad value')
+        return 11
+    except ValueError as e:
+        return 77
+
+def main():
+    print('m25_3 canonical flow truth queries demo:')
+    print(classify(True))
+    print(classify(False))

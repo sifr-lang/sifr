@@ -1,6 +1,6 @@
 use crate::hir_analysis::traversal::{self, TraversalConfig, TraversalControl};
 use crate::ModuleFuncSignatures;
-use sifr_hir::{HirExpr, HirPattern, HirStmt};
+use sifr_hir::{cfg, HirExpr, HirPattern, HirStmt};
 use sifr_type_system::{ParamConvention, Type};
 use std::cell::RefCell;
 use std::collections::{HashMap, HashSet};
@@ -36,119 +36,39 @@ impl ControlFlowEffect {
     }
 }
 
-fn merge_branch_effects(effects: &[ControlFlowEffect]) -> ControlFlowEffect {
-    if effects.iter().any(|effect| !effect.always_exits()) {
-        return ControlFlowEffect::FallsThrough;
-    }
-    if effects
-        .iter()
-        .all(|effect| matches!(effect, ControlFlowEffect::AlwaysReturns))
-    {
-        return ControlFlowEffect::AlwaysReturns;
-    }
-    if effects
-        .iter()
-        .all(|effect| matches!(effect, ControlFlowEffect::AlwaysRaises))
-    {
-        return ControlFlowEffect::AlwaysRaises;
-    }
-    ControlFlowEffect::AlwaysExits
-}
-
-pub(crate) fn stmt_control_flow_effect(stmt: &HirStmt) -> ControlFlowEffect {
-    match stmt {
-        HirStmt::Return { .. } => ControlFlowEffect::AlwaysReturns,
-        HirStmt::Raise { .. } => ControlFlowEffect::AlwaysRaises,
-        HirStmt::If {
-            then_body,
-            elif_clauses,
-            else_body,
-            ..
-        } => {
-            let Some(else_body) = else_body else {
-                return ControlFlowEffect::FallsThrough;
-            };
-            let mut branch_effects = Vec::with_capacity(2 + elif_clauses.len());
-            branch_effects.push(block_control_flow_effect(then_body));
-            for (_, body) in elif_clauses {
-                branch_effects.push(block_control_flow_effect(body));
-            }
-            branch_effects.push(block_control_flow_effect(else_body));
-            merge_branch_effects(&branch_effects)
+impl From<cfg::FlowExitEffect> for ControlFlowEffect {
+    fn from(effect: cfg::FlowExitEffect) -> Self {
+        match effect {
+            cfg::FlowExitEffect::FallsThrough => Self::FallsThrough,
+            cfg::FlowExitEffect::AlwaysReturns => Self::AlwaysReturns,
+            cfg::FlowExitEffect::AlwaysRaises => Self::AlwaysRaises,
+            cfg::FlowExitEffect::AlwaysExits => Self::AlwaysExits,
         }
-        HirStmt::Match { arms, .. } => {
-            if arms.is_empty() {
-                return ControlFlowEffect::FallsThrough;
-            }
-            let mut arm_effects = Vec::with_capacity(arms.len());
-            for arm in arms {
-                arm_effects.push(block_control_flow_effect(&arm.body));
-            }
-            merge_branch_effects(&arm_effects)
-        }
-        HirStmt::TryExcept { body, handlers, .. } => {
-            if handlers.is_empty() {
-                return ControlFlowEffect::FallsThrough;
-            }
-            let mut branch_effects = Vec::with_capacity(1 + handlers.len());
-            branch_effects.push(block_control_flow_effect(body));
-            for handler in handlers {
-                branch_effects.push(block_control_flow_effect(&handler.body));
-            }
-            merge_branch_effects(&branch_effects)
-        }
-        _ => ControlFlowEffect::FallsThrough,
     }
 }
 
 pub(crate) fn block_control_flow_effect(stmts: &[HirStmt]) -> ControlFlowEffect {
-    for stmt in stmts {
-        let effect = stmt_control_flow_effect(stmt);
-        if effect.always_exits() {
-            return effect;
-        }
-    }
-    ControlFlowEffect::FallsThrough
+    ControlFlowEffect::from(cfg::flow_facts(stmts).exit_effect())
+}
+
+pub(crate) fn reachable_top_level_stmt_indices(stmts: &[HirStmt]) -> Vec<usize> {
+    cfg::flow_facts(stmts)
+        .reachable_top_level_stmt_indices()
+        .to_vec()
+}
+
+pub(crate) fn unreachable_top_level_stmt_indices(stmts: &[HirStmt]) -> Vec<usize> {
+    cfg::flow_facts(stmts)
+        .unreachable_top_level_stmt_indices()
+        .to_vec()
 }
 
 pub(crate) fn body_contains_return(stmts: &[HirStmt]) -> bool {
-    let mut on_stmt = |stmt: &HirStmt| {
-        if matches!(stmt, HirStmt::Return { .. }) {
-            return TraversalControl::Stop;
-        }
-        TraversalControl::Continue
-    };
-    let mut on_expr = |_expr: &HirExpr| TraversalControl::Continue;
-    matches!(
-        traversal::walk_stmts_until(
-            stmts,
-            TraversalConfig::LOCAL_SCOPE_ONLY,
-            &mut on_stmt,
-            &mut on_expr,
-        ),
-        TraversalControl::Stop
-    )
+    cfg::flow_facts(stmts).has_reachable_return()
 }
 
 pub(crate) fn try_body_has_value_return(stmts: &[HirStmt]) -> bool {
-    let mut on_stmt = |stmt: &HirStmt| {
-        if let HirStmt::Return { value: Some(val) } = stmt {
-            if !matches!(val, HirExpr::NoneLiteral) {
-                return TraversalControl::Stop;
-            }
-        }
-        TraversalControl::Continue
-    };
-    let mut on_expr = |_expr: &HirExpr| TraversalControl::Continue;
-    matches!(
-        traversal::walk_stmts_until(
-            stmts,
-            TraversalConfig::LOCAL_SCOPE_ONLY,
-            &mut on_stmt,
-            &mut on_expr,
-        ),
-        TraversalControl::Stop
-    )
+    cfg::flow_facts(stmts).has_reachable_value_return()
 }
 
 pub(crate) fn body_contains_yield(stmts: &[HirStmt]) -> bool {
@@ -710,6 +630,54 @@ mod tests {
 
         assert_eq!(effect, ControlFlowEffect::AlwaysExits);
         assert!(effect.always_exits());
+    }
+
+    #[test]
+    fn reachable_stmt_indices_omit_unreachable_tail_after_return() {
+        let stmts = vec![
+            HirStmt::Return {
+                value: Some(HirExpr::IntLiteral(1)),
+            },
+            HirStmt::Expr {
+                expr: HirExpr::IntLiteral(2),
+            },
+        ];
+        assert_eq!(reachable_top_level_stmt_indices(&stmts), vec![0]);
+        assert_eq!(unreachable_top_level_stmt_indices(&stmts), vec![1]);
+    }
+
+    #[test]
+    fn body_contains_return_ignores_unreachable_return() {
+        let stmts = vec![
+            HirStmt::Raise {
+                value: HirExpr::Call {
+                    func: "ValueError".to_string(),
+                    args: vec![HirExpr::StringLiteral("bad".to_string())],
+                    ty: Type::Unknown,
+                },
+            },
+            HirStmt::Return {
+                value: Some(HirExpr::IntLiteral(1)),
+            },
+        ];
+        assert!(!body_contains_return(&stmts));
+    }
+
+    #[test]
+    fn try_body_has_value_return_ignores_unreachable_value_return() {
+        let stmts = vec![
+            HirStmt::Raise {
+                value: HirExpr::Call {
+                    func: "ValueError".to_string(),
+                    args: vec![HirExpr::StringLiteral("bad".to_string())],
+                    ty: Type::Unknown,
+                },
+            },
+            HirStmt::Return {
+                value: Some(HirExpr::IntLiteral(99)),
+            },
+        ];
+        assert!(!try_body_has_value_return(&stmts));
     }
 
     #[test]
