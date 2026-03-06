@@ -47,13 +47,13 @@ Loop per part: Work -> Validate -> PR -> Review -> Merge -> Mark Done
 - [x] Open PR, review, and merge
 
 ### Part 4: milestone_24_4 Analysis/Emission Boundary Hardening
-- [ ] Enforce strict analysis/emission boundaries: analysis computes facts, emitters consume facts
-- [ ] Remove emitter-local analysis branching where canonical queries exist
-- [ ] Add boundary-hardening regressions (positive + negative)
-- [ ] Add milestone 24.4 positive demo
-- [ ] Add milestone 24.4 negative regression case
-- [ ] Run milestone demo + targeted tests + full local suite
-- [ ] Open PR, review, and merge
+- [x] Enforce strict analysis/emission boundaries: analysis computes facts, emitters consume facts
+- [x] Remove emitter-local analysis branching where canonical queries exist
+- [x] Add boundary-hardening regressions (positive + negative)
+- [x] Add milestone 24.4 positive demo
+- [x] Add milestone 24.4 negative regression case
+- [x] Run milestone demo + targeted tests + full local suite
+- [x] Open PR, review, and merge
 
 ### Part 5: milestone_24_5 Consolidation Regression Matrix
 - [ ] Add consolidation regression matrix for nested conditionals, loop exits, early returns/raises, and mixed blocks
@@ -121,18 +121,23 @@ Validation evidence:
 - Negative path: `cargo run -q -p sifr -- run demos/m24_3_control_flow_effect_query_unification_demo/negative_cases/reachable_type_error/main.sifr` -> exits `1` with `type error: return type mismatch: expected 'int', got 'str'`.
 
 ## Part 4: milestone_24_4 Analysis/Emission Boundary Hardening
-status: pending
+status: done (2026-03-06, PR #879)
 
-- [ ] Boundary hardening complete across affected modules
-- [ ] Positive-path validation recorded
-- [ ] Negative-path validation recorded
-- [ ] Run milestone demo
-- [ ] Run full local suite
-- [ ] Open PR, review, and merge
-- [ ] Mark part complete in phase doc and this checklist
+- [x] Boundary hardening complete across affected modules
+- [x] Positive-path validation recorded
+- [x] Negative-path validation recorded
+- [x] Run milestone demo
+- [x] Run full local suite
+- [x] Open PR, review, and merge
+- [x] Mark part complete in phase doc and this checklist
 
 Validation evidence:
-- Pending.
+- Positive path: `cargo test -q -p sifr_codegen collect_typevar_operator_requirements` -> pass.
+- Positive path: `cargo test -q -p sifr_codegen collect_let_declared_types` -> pass.
+- Positive path: `cargo test -q -p sifr_codegen` -> pass.
+- Positive path: `cargo run -q -p sifr -- run demos/m24_4_analysis_emission_boundary_hardening_demo/main.sifr` -> prints `m24_4 analysis/emission boundary hardening demo:` and `33`.
+- Positive path: `/Users/yaseralnajjar/work/sifr/codebase/scripts/run_all_tests.sh` -> pass.
+- Negative path: `cargo run -q -p sifr -- run demos/m24_4_analysis_emission_boundary_hardening_demo/negative_cases/reachable_type_error/main.sifr` -> exits `1` with `type error: return type mismatch: expected 'int | str', got 'list[int]'`.
 
 ## Part 5: milestone_24_5 Consolidation Regression Matrix
 status: pending
@@ -152,7 +157,7 @@ Validation evidence:
 - Part 1: https://github.com/yaseralnajjar/sifr/pull/875
 - Part 2: https://github.com/yaseralnajjar/sifr/pull/877
 - Part 3: https://github.com/yaseralnajjar/sifr/pull/878
-- Part 4: pending
+- Part 4: https://github.com/yaseralnajjar/sifr/pull/879
 - Part 5: pending
 
 ## Reviewer Follow-up
