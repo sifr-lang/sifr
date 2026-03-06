@@ -380,6 +380,65 @@ pub(crate) fn collect_locally_defined_vars(stmts: &[HirStmt]) -> HashSet<String>
     defined
 }
 
+#[derive(Debug, Clone, Copy, Default, PartialEq, Eq)]
+pub(crate) struct TypeVarOpRequirements {
+    pub needs_add: bool,
+    pub needs_sub: bool,
+}
+
+pub(crate) fn collect_typevar_operator_requirements(
+    stmts: &[HirStmt],
+    type_param_name: &str,
+) -> TypeVarOpRequirements {
+    let mut requirements = TypeVarOpRequirements::default();
+    let mut on_stmt = |_stmt: &HirStmt| {};
+    let mut on_expr = |expr: &HirExpr| {
+        if let HirExpr::BinOp {
+            left,
+            op,
+            right,
+            ty,
+        } = expr
+        {
+            let left_is_tp = matches!(left.ty(), Type::TypeVar(ref name) if name == type_param_name);
+            let right_is_tp =
+                matches!(right.ty(), Type::TypeVar(ref name) if name == type_param_name);
+            let result_is_tp = matches!(ty, Type::TypeVar(ref name) if name == type_param_name);
+            if left_is_tp || right_is_tp || result_is_tp {
+                match op.as_str() {
+                    "+" => requirements.needs_add = true,
+                    "-" => requirements.needs_sub = true,
+                    _ => {}
+                }
+            }
+        }
+    };
+    traversal::walk_stmts(
+        stmts,
+        TraversalConfig::LOCAL_SCOPE_ONLY,
+        &mut on_stmt,
+        &mut on_expr,
+    );
+    requirements
+}
+
+pub(crate) fn collect_let_declared_types(stmts: &[HirStmt]) -> Vec<Type> {
+    let mut declared = Vec::new();
+    let mut on_stmt = |stmt: &HirStmt| {
+        if let HirStmt::Let { ty, .. } = stmt {
+            declared.push(ty.clone());
+        }
+    };
+    let mut on_expr = |_expr: &HirExpr| {};
+    traversal::walk_stmts(
+        stmts,
+        TraversalConfig::LOCAL_SCOPE_ONLY,
+        &mut on_stmt,
+        &mut on_expr,
+    );
+    declared
+}
+
 fn collect_capture_pattern_names(pattern: &HirPattern, defined: &mut HashSet<String>) {
     match pattern {
         HirPattern::Capture { name, .. } => {
@@ -648,5 +707,62 @@ mod tests {
 
         assert_eq!(effect, ControlFlowEffect::AlwaysExits);
         assert!(effect.always_exits());
+    }
+
+    #[test]
+    fn collect_typevar_operator_requirements_detects_add_and_sub() {
+        let stmts = vec![
+            HirStmt::Expr {
+                expr: HirExpr::BinOp {
+                    left: Box::new(HirExpr::Name {
+                        name: "a".to_string(),
+                        ty: Type::TypeVar("T".to_string()),
+                    }),
+                    op: "+".to_string(),
+                    right: Box::new(HirExpr::Name {
+                        name: "b".to_string(),
+                        ty: Type::TypeVar("T".to_string()),
+                    }),
+                    ty: Type::TypeVar("T".to_string()),
+                },
+            },
+            HirStmt::Expr {
+                expr: HirExpr::BinOp {
+                    left: Box::new(HirExpr::Name {
+                        name: "a".to_string(),
+                        ty: Type::TypeVar("T".to_string()),
+                    }),
+                    op: "-".to_string(),
+                    right: Box::new(HirExpr::Name {
+                        name: "b".to_string(),
+                        ty: Type::TypeVar("T".to_string()),
+                    }),
+                    ty: Type::TypeVar("T".to_string()),
+                },
+            },
+        ];
+
+        let req = collect_typevar_operator_requirements(&stmts, "T");
+        assert!(req.needs_add);
+        assert!(req.needs_sub);
+    }
+
+    #[test]
+    fn collect_let_declared_types_covers_nested_blocks() {
+        let stmts = vec![HirStmt::If {
+            condition: HirExpr::BoolLiteral(true),
+            then_body: vec![HirStmt::Let {
+                name: "x".to_string(),
+                ty: Type::Union(vec![Type::Int, Type::Str]),
+                value: HirExpr::IntLiteral(1),
+                is_mutable: true,
+            }],
+            elif_clauses: vec![],
+            else_body: None,
+        }];
+
+        let declared = collect_let_declared_types(&stmts);
+        assert_eq!(declared.len(), 1);
+        assert!(matches!(declared[0], Type::Union(_)));
     }
 }

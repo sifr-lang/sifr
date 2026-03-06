@@ -1,0 +1,15 @@
+# m24_4 analysis/emission boundary hardening demo
+# Demonstrates stable emission while semantic facts are supplied by canonical analysis queries.
+
+def summarize(values: list[int]) -> int:
+    total: int = 0
+    for value in values:
+        if value > 10:
+            total = total + value
+        else:
+            total = total + 1
+    return total
+
+def main():
+    print('m24_4 analysis/emission boundary hardening demo:')
+    print(summarize([3, 12, 20]))
