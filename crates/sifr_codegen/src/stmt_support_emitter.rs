@@ -60,40 +60,6 @@ enum HandlerMatchCondition {
     Expr(RustExpr),
 }
 
-fn body_always_exits_stmt(stmts: &[HirStmt]) -> bool {
-    let Some(last) = stmts.last() else {
-        return false;
-    };
-    match last {
-        HirStmt::Return { .. } | HirStmt::Raise { .. } => true,
-        HirStmt::If {
-            then_body,
-            elif_clauses,
-            else_body,
-            ..
-        } => {
-            body_always_exits_stmt(then_body)
-                && elif_clauses
-                    .iter()
-                    .all(|(_, body)| body_always_exits_stmt(body))
-                && else_body
-                    .as_ref()
-                    .is_some_and(|body| body_always_exits_stmt(body))
-        }
-        HirStmt::Match { arms, .. } => {
-            !arms.is_empty() && arms.iter().all(|arm| body_always_exits_stmt(&arm.body))
-        }
-        HirStmt::TryExcept { body, handlers, .. } => {
-            body_always_exits_stmt(body)
-                && !handlers.is_empty()
-                && handlers
-                    .iter()
-                    .all(|handler| body_always_exits_stmt(&handler.body))
-        }
-        _ => false,
-    }
-}
-
 impl RustEmitter {
     fn uses_debug_display_format_for_ir(ty: &Type) -> bool {
         match crate::resolve_alias_type_for_plain_call(ty) {
@@ -2671,13 +2637,18 @@ impl RustEmitter {
 
         let mut lowered_block = Vec::new();
         for stmt in stmts {
-            let (lowered_stmts, skip_rewrite) = if let Some(lowered_stmts) =
+            let maybe_simple_lowered = if self.try_closure_depth == 0 {
                 crate::try_lower_simple_stmt_with_scope_result(
                     stmt,
                     &self.mutated_vars,
                     &self.borrowed_params,
                     &scope_ctx,
-                )? {
+                )?
+            } else {
+                None
+            };
+
+            let (lowered_stmts, skip_rewrite) = if let Some(lowered_stmts) = maybe_simple_lowered {
                 (lowered_stmts, false)
             } else if let HirStmt::Let {
                 name, ty, value, ..
@@ -4339,10 +4310,10 @@ impl RustEmitter {
         let err_ty = select_try_error_type(handlers);
         let capture_returns = queries::body_contains_return(body) && self.current_return_type.is_some();
         let direct_return_capture = capture_returns
-            && body_always_exits_stmt(body)
-            && handlers
-                .iter()
-                .all(|handler| body_always_exits_stmt(&handler.body));
+            && queries::block_control_flow_effect(body).always_exits()
+            && handlers.iter().all(|handler| {
+                queries::block_control_flow_effect(&handler.body).always_exits()
+            });
         let ok_ty = if capture_returns {
             if let Some(return_ty) = self.current_return_type.as_ref() {
                 if direct_return_capture {

@@ -1,0 +1,11 @@
+# m24_3 negative case
+# Reachable branch return mismatch should still be rejected.
+
+def classify(flag: bool) -> int:
+    if flag:
+        return 1
+    else:
+        return 'bad'
+
+def main():
+    print(classify(False))

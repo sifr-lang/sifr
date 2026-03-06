@@ -160,11 +160,7 @@ pub(super) fn find_union_variant(members: &[Type], arg_ty: &Type) -> Option<Stri
 /// Check if a block of HIR statements always exits (return, break, continue).
 /// Used for early-return narrowing in codegen.
 pub(super) fn codegen_body_always_exits(stmts: &[HirStmt]) -> bool {
-    if let Some(last) = stmts.last() {
-        matches!(last, HirStmt::Return { .. })
-    } else {
-        false
-    }
+    queries::block_control_flow_effect(stmts).always_exits()
 }
 
 /// Detect `x is None` pattern. Returns the variable name.
