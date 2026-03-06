@@ -1,0 +1,14 @@
+# m24_2 semantic query layer standardization demo
+# Validates canonical query behavior for call detection and local-scope analysis.
+
+def main():
+    def recurse(n: int) -> int:
+        for i in [1]:
+            pass
+        else:
+            if n > 0:
+                return recurse(n - 1)
+        return 0
+
+    print('m24_2 semantic query layer standardization demo:')
+    print(recurse(4))

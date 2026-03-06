@@ -1,4 +1,4 @@
-use crate::helpers::body_contains_return_stmt;
+use crate::hir_analysis::queries;
 use crate::{RustEmitter, RustExpr, RustStmt};
 use sifr_hir::{HirExceptHandler, HirExpr, HirFStringPart, HirStmt};
 use sifr_type_system::{ParamConvention, Type};
@@ -3348,7 +3348,7 @@ impl RustEmitter {
             let Some(lowered_value) = self.lower_rendered_expr_for_ir(value)? else {
                 return Ok(None);
             };
-            let binding = if crate::helpers::stmts_reference_var(body, var)
+            let binding = if queries::stmts_reference_var(body, var)
                 || items
                     .iter()
                     .any(|(other_var, _, _)| other_var != var && other_var.contains(var))
@@ -4008,7 +4008,7 @@ impl RustEmitter {
                         return Ok(false);
                     };
                     if remaining_variants.len() == 1 {
-                        let else_mutated = crate::helpers::collect_mutated_vars(else_body);
+                        let else_mutated = queries::collect_mutated_vars(else_body, None);
                         let else_binding = if else_mutated.contains(&var_name) {
                             format!("mut {var_name}")
                         } else {
@@ -4037,7 +4037,7 @@ impl RustEmitter {
                 };
 
                 for (variant_name, body) in branch_specs.iter().rev() {
-                    let mutated = crate::helpers::collect_mutated_vars(body);
+                    let mutated = queries::collect_mutated_vars(body, None);
                     let binding = if mutated.contains(&var_name) {
                         format!("mut {var_name}")
                     } else {
@@ -4070,7 +4070,7 @@ impl RustEmitter {
                 needed_variants.extend(other_variants.iter().map(|(variant, _)| variant.clone()));
                 let enum_name = self.resolve_union_enum_name(&enum_name, &needed_variants);
 
-                let then_mutated = crate::helpers::collect_mutated_vars(then_body);
+                let then_mutated = queries::collect_mutated_vars(then_body, None);
                 let then_binding = if then_mutated.contains(&var_name) {
                     format!("mut {var_name}")
                 } else {
@@ -4088,7 +4088,7 @@ impl RustEmitter {
                 }];
 
                 if let Some(else_body) = else_body {
-                    let else_mutated = crate::helpers::collect_mutated_vars(else_body);
+                    let else_mutated = queries::collect_mutated_vars(else_body, None);
                     let else_binding = if else_mutated.contains(&var_name) {
                         format!("mut {var_name}")
                     } else {
@@ -4337,7 +4337,7 @@ impl RustEmitter {
             return Ok(None);
         }
         let err_ty = select_try_error_type(handlers);
-        let capture_returns = body_contains_return_stmt(body) && self.current_return_type.is_some();
+        let capture_returns = queries::body_contains_return(body) && self.current_return_type.is_some();
         let direct_return_capture = capture_returns
             && body_always_exits_stmt(body)
             && handlers

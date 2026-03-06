@@ -1,0 +1,10 @@
+# m24_2 negative case
+# Reachable typo inside recursive path must fail during semantic analysis.
+
+def main():
+    def recurse(n: int) -> int:
+        if n > 0:
+            return reccurse(n - 1)
+        return 0
+
+    print(recurse(1))
