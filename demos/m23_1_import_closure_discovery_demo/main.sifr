@@ -1,0 +1,8 @@
+# m23_1 import-closure discovery demo
+# Only modules reachable from this entrypoint should participate in frontend analysis.
+
+from helper import compute
+
+def main():
+    print('m23_1 import-closure discovery demo:')
+    print(compute(6))
