@@ -1,0 +1,10 @@
+# m25_2 negative case
+# Reachable return type mismatch remains a hard failure.
+
+def compute(flag: bool) -> int:
+    if flag:
+        return 1
+    return 'bad'
+
+def main():
+    print(compute(False))

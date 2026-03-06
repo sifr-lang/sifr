@@ -1,0 +1,16 @@
+# m25_2 cfg validity invariants demo
+# Exercises branch/loop CFG construction paths under invariant-checked build.
+
+def compute(limit: int) -> int:
+    total = 0
+    for n in range(limit):
+        if n == 2:
+            continue
+        if n == 4:
+            break
+        total += n
+    return total
+
+def main():
+    print('m25_2 cfg validity invariants demo:')
+    print(compute(8))
