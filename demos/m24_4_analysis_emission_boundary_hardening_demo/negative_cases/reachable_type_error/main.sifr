@@ -1,0 +1,11 @@
+# m24_4 negative case
+# Reachable branch with a non-union member return must fail type checking.
+
+def bad(flag: bool) -> int | str:
+    if flag:
+        return 1
+    else:
+        return [1]
+
+def main():
+    print(bad(False))

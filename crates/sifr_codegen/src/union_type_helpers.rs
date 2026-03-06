@@ -2,7 +2,7 @@ use crate::{
     sifr_type_to_rust_type, RustEmitter, RustEnumVariant, RustExpr, RustItem, RustLiteral,
     RustMatchArm, RustParam, RustStmt, RustType, Visibility,
 };
-use sifr_hir::{HirModule, HirStmt};
+use sifr_hir::HirModule;
 use sifr_type_system::ParamConvention;
 use sifr_type_system::Type;
 
@@ -31,8 +31,9 @@ impl RustEmitter {
             }
             // Check return type
             self.register_union_type(&func.return_type);
-            // Check body statements
-            self.collect_union_types_in_stmts(&func.body);
+            for ty in crate::hir_analysis::queries::collect_let_declared_types(&func.body) {
+                self.register_union_type(&ty);
+            }
         }
         // Also scan class method bodies and register their signatures
         for class in &module.classes {
@@ -63,7 +64,9 @@ impl RustEmitter {
                     self.register_union_type(&param.ty);
                 }
                 self.register_union_type(&method.return_type);
-                self.collect_union_types_in_stmts(&method.body);
+                for ty in crate::hir_analysis::queries::collect_let_declared_types(&method.body) {
+                    self.register_union_type(&ty);
+                }
             }
             if !has_constructor {
                 // Classes without an explicit `new` still get an auto-generated constructor.
@@ -85,45 +88,6 @@ impl RustEmitter {
                         },
                     ),
                 );
-            }
-        }
-    }
-
-    fn collect_union_types_in_stmts(&mut self, stmts: &[HirStmt]) {
-        for stmt in stmts {
-            match stmt {
-                HirStmt::Let { ty, .. } => self.register_union_type(ty),
-                HirStmt::If {
-                    then_body,
-                    elif_clauses,
-                    else_body,
-                    ..
-                } => {
-                    self.collect_union_types_in_stmts(then_body);
-                    for (_, body) in elif_clauses {
-                        self.collect_union_types_in_stmts(body);
-                    }
-                    if let Some(body) = else_body {
-                        self.collect_union_types_in_stmts(body);
-                    }
-                }
-                HirStmt::While {
-                    body, else_body, ..
-                } => {
-                    self.collect_union_types_in_stmts(body);
-                    if let Some(eb) = else_body {
-                        self.collect_union_types_in_stmts(eb);
-                    }
-                }
-                HirStmt::For {
-                    body, else_body, ..
-                } => {
-                    self.collect_union_types_in_stmts(body);
-                    if let Some(eb) = else_body {
-                        self.collect_union_types_in_stmts(eb);
-                    }
-                }
-                _ => {}
             }
         }
     }
