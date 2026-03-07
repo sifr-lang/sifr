@@ -103,7 +103,7 @@ and stop depending on output matching via harness comments.
   - [x] Part 5a: convert remaining `# expect-stdout` in pass fixtures to assertions
   - [x] Part 5b: convert remaining `# expect-stderr` in runtime fixtures to explicit failure assertions
   - [x] Part 5c: remove `# expect-error` markers from compile-fail fixtures and negative demo cases
-  - [x] Part 5d: add compile-time `assertRaises`/`assertError` assertion helpers for `Result` error assertions and migrate remaining runtime-fail fixtures away from `assert_true(False)` guards
+  - [x] Part 5d: use `assert_err` directly for Result error assertions and migrate remaining runtime-fail fixtures away from `assert_true(False)` guards
 
 ### Current Mechanical Conversion Status
 
@@ -126,8 +126,8 @@ All manual mismatch buckets are resolved for the current repo snapshot. No remai
 - Notes: remaining assertions were explicit behavior checks, including list-accumulation patterns and file-backed log capture where stdout was used only for diagnostics.
 
 - Part 5d follow-up changes:
-  - Added `assertRaises` and `assertError` helpers in `lib/sifr/test.sifr` (wrapping `assert_err`).
-  - Migrated `crates/sifr/tests/e2e/runtime_fail/assert_err_failure.sifr` to `assertRaises`.
+  - Removed the `assertRaises`/`assertError` wrappers and used `assert_err` directly.
+  - Migrated `crates/sifr/tests/e2e/runtime_fail/assert_err_failure.sifr` to `assert_err`.
   - Replaced runtime-panic fixtures `decimal_division_by_zero_runtime.sifr` and `bigdecimal_division_by_zero_runtime.sifr` with direct panic-triggering expressions.
   - Updated compile-fail harness in `crates/sifr/tests/e2e.rs` to assert expected diagnostic codes (`SIFR-*`) instead of message substrings.
 
