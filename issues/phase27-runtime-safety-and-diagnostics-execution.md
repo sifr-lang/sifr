@@ -215,7 +215,7 @@ Validation evidence:
 - Follow-ups: [`phase27-panic-followups.md`](./phase27-panic-followups.md)
 
 ## Part 7: milestone_27_1 Remediation -- Zero `unwrap` in Emitted Runtime Code
-status: in progress (2026-03-07)
+status: done (2026-03-07, PR #908)
 
 - [x] Remove remaining generated `unwrap` emitters in statement lowering and intrinsic/index lowering paths
 - [x] Remove generated lock `unwrap` by emitting poison-recovery (`unwrap_or_else(|e| e.into_inner())`) in runtime lock helpers
@@ -223,7 +223,7 @@ status: in progress (2026-03-07)
 - [x] Add emitted-code safety gate over full pass fixture corpus (`.unwrap(` / `.expect(` forbidden)
 - [x] Run milestone demo
 - [x] Run full local suite
-- [ ] Open PR, review, and merge
+- [x] Open PR, review, and merge
 
 Validation evidence:
 - Positive path: `cargo run -q -p sifr -- run demos/m27_1_remove_data_dependent_unwrap_expect_demo/main.sifr` -> prints expected demo output.
@@ -239,6 +239,7 @@ Validation evidence:
 - Part 4: https://github.com/yaseralnajjar/sifr/pull/900
 - Part 5: https://github.com/yaseralnajjar/sifr/pull/901
 - Part 6: https://github.com/yaseralnajjar/sifr/pull/902
+- Part 7: https://github.com/yaseralnajjar/sifr/pull/908
 
 ## External Review Passes
 - Reviewer pass 1 prompt output: `reviews/phase27-review.md`
@@ -247,3 +248,11 @@ Validation evidence:
 - Review pass 2 remediation PR: https://github.com/yaseralnajjar/sifr/pull/905
 - Reviewer pass 3 prompt output: `reviews/phase27-production-grade-review-3.md`
 - Review pass 3 outcome: no additional critical/required fixes identified; no code remediation required
+- Reviewer pass 4 (goal verification 1) prompt output: `reviews/phase27-unwrap-goal-review-1.md`
+- Reviewer pass 4 outcome: phase goal verified (`.unwrap(` / `.expect(` absent in emitted runtime paths)
+- Reviewer pass 5 (goal verification 2) prompt output: `reviews/phase27-unwrap-goal-review-2.md`
+- Reviewer pass 5 outcome: phase goal re-verified independently; no additional fixes required
+- Reviewer pass 6 (production-grade 1) prompt output: `reviews/phase27-production-grade-review-4.md`
+- Reviewer pass 6 outcome: production-grade with low-severity, out-of-scope diagnostic observation; no phase-27 remediation required
+- Reviewer pass 7 (production-grade 2) prompt output: `reviews/phase27-production-grade-review-5.md`
+- Reviewer pass 7 outcome: production-grade approved; no actionable issues
