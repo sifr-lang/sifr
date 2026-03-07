@@ -1,0 +1,5 @@
+summary: 2 error(s), 0 warning(s), 0 note(s), 0 help item(s)
+error [SIFR-TYPE-0001] undefined function: 'add' (x1)
+  url: https://sifr.dev/docs/errors/SIFR-TYPE-0001
+error [SIFR-TYPE-0001] unknown module 'missing_math_utils' (x1)
+  url: https://sifr.dev/docs/errors/SIFR-TYPE-0001

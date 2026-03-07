@@ -1,6 +1,6 @@
 # Phase 29: Verification Hardening
 
-status: planned
+status: in_progress
 
 ## Objective
 Establish a production-grade compiler verification system that is deterministic, locally enforceable, reviewable, and issue-traceable through explicit suite taxonomy, baseline governance, regression corpus discipline, fuzz/property operations, curated real-world validation, and flake control.
@@ -271,7 +271,7 @@ Minimum suite kinds:
 - Milestone demos:
   - `cargo run -q -p sifr -- run demos/<milestone_demo>.sifr`
 - Baseline bless/accept command:
-  - `<define in this phase>`
+  - `python3 /Users/yaseralnajjar/work/sifr/codebase/scripts/run_verification_hardening.py --profile full --bless`
 - Curated OSS gate runner:
   - `<define in this phase>`
 

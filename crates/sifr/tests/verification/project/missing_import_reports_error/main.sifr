@@ -1,0 +1,9 @@
+from missing_math_utils import add
+
+
+def main() -> int:
+    print(str(add(1, 2)))
+    return 0
+
+
+main()

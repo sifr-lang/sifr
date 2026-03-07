@@ -1,0 +1,3 @@
+# verification diagnostics fixture: invalid decimal literal must surface deterministic diagnostics.
+def subject():
+    value: decimal = Decimal("12.34.56")

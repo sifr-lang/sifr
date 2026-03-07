@@ -1,0 +1,5 @@
+OFFSET: int = 3
+
+
+def add_with_offset(left: int, right: int) -> int:
+    return left + right + OFFSET

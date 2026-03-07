@@ -1,0 +1,47 @@
+{
+  "schema_version": 1,
+  "suites": [
+    {
+      "name": "diagnostics",
+      "owner": "compiler/diagnostics",
+      "blocking": true,
+      "cases": [
+        {
+          "id": "decimal_invalid_literal",
+          "entry": "crates/sifr/tests/verification/diagnostics/decimal_invalid_literal/main.sifr",
+          "command": "check",
+          "expect_exit_code": 1,
+          "diagnostic_formats": [
+            "human",
+            "json",
+            "compact"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "project",
+      "owner": "compiler/frontend",
+      "blocking": true,
+      "cases": [
+        {
+          "id": "multi_module_run",
+          "entry": "crates/sifr/tests/verification/project/multi_module_run/main.sifr",
+          "command": "run",
+          "expect_exit_code": 0
+        },
+        {
+          "id": "missing_import_reports_error",
+          "entry": "crates/sifr/tests/verification/project/missing_import_reports_error/main.sifr",
+          "command": "check",
+          "expect_exit_code": 1,
+          "diagnostic_formats": [
+            "human",
+            "json",
+            "compact"
+          ]
+        }
+      ]
+    }
+  ]
+}
