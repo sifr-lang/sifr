@@ -1,8 +1,10 @@
 def main():
     items: list[int] = [1, 2, 3, 4, 5]
     v1: int | None = items[-1]
+    assert v1 is not None
     if v1 is not None:
         assert str(v1) == '5'
     v2: int | None = items[-2]
+    assert v2 is not None
     if v2 is not None:
         assert str(v2) == '4'
