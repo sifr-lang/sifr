@@ -1,0 +1,4 @@
+def main():
+    d: decimal = Decimal("1.0")
+    b: bigdecimal = BigDecimal("2.0")
+    x: decimal = d + b

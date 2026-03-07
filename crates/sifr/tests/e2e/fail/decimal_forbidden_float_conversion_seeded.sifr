@@ -1,0 +1,4 @@
+def main():
+    d: decimal = Decimal(1.5)
+
+# expect-error: [E2505]
