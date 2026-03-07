@@ -12,6 +12,7 @@ sifr_python_ast = { workspace = true }
 sifr_hir = { workspace = true }
 sifr_codegen = { workspace = true }
 sifr_type_system = { workspace = true }
+serde = { workspace = true }
 
 [dev-dependencies]
 

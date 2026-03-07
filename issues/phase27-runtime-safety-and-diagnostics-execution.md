@@ -41,16 +41,16 @@ Loop per part: Work -> Validate -> PR -> Review -> Merge -> Mark Done
 - [x] Add demo: `demos/m27_3_defaults_and_panic_to_diagnostic_conversion_demo`
 - [x] Add negative case
 - [x] Run milestone demo + targeted tests + full local suite
-- [ ] Open PR, review, and merge
+- [x] Open PR, review, and merge
 
 ### Part 4: milestone_27_4 Span and Diagnostic Schema Quality
-- [ ] Introduce canonical structured diagnostic schema (`code`, `severity`, `message`, `url`, spans, children, help, suggestions)
-- [ ] Implement `Severity = Error | Warning | Note | Help`
-- [ ] Implement suggestion kinds: `DidYouMean | ReplaceText | InsertText | DeleteText`
-- [ ] Add stable human/json renderers with json as lossless schema rendering
-- [ ] Add demo: `demos/m27_4_span_and_diagnostic_schema_quality_demo`
-- [ ] Add negative case
-- [ ] Run milestone demo + targeted tests + full local suite
+- [x] Introduce canonical structured diagnostic schema (`code`, `severity`, `message`, `url`, spans, children, help, suggestions)
+- [x] Implement `Severity = Error | Warning | Note | Help`
+- [x] Implement suggestion kinds: `DidYouMean | ReplaceText | InsertText | DeleteText`
+- [x] Add stable human/json renderers with json as lossless schema rendering
+- [x] Add demo: `demos/m27_4_span_and_diagnostic_schema_quality_demo`
+- [x] Add negative case
+- [x] Run milestone demo + targeted tests + full local suite
 - [ ] Open PR, review, and merge
 
 ### Part 5: milestone_27_5 Bounded Multi-Error Recovery
@@ -113,7 +113,7 @@ Validation evidence:
 - Negative path: `cargo run -q -p sifr -- run demos/m27_2_indexing_and_semantics_parity_fixes_demo/negative_cases/invalid_index_type/main.sifr` -> exits `1` with `type error: cannot index type 'list[int]' with 'str'`.
 
 ## Part 3: milestone_27_3 Defaults and Panic-to-Diagnostic Conversion
-status: done (2026-03-07, PR: pending)
+status: done (2026-03-07, PR #899)
 
 - [x] Non-literal defaults (collection literals) preserved for function/class defaults
 - [x] Unsupported default expressions produce deterministic diagnostics (no silent drop)
@@ -122,7 +122,7 @@ status: done (2026-03-07, PR: pending)
 - [x] Negative-path validation recorded
 - [x] Run milestone demo
 - [x] Run full local suite
-- [ ] Open PR, review, and merge
+- [x] Open PR, review, and merge
 - [x] Mark part progress in this checklist
 
 Validation evidence:
@@ -134,7 +134,32 @@ Validation evidence:
 - Negative path: `cargo run -q -p sifr -- run demos/m27_3_defaults_and_panic_to_diagnostic_conversion_demo/negative_cases/unsupported_default_call_expression/main.sifr` -> exits `1` with `type error: function 'pick': unsupported default argument expression for parameter 'x'`.
 - Negative path: `cargo run -q -p sifr -- run crates/sifr/tests/e2e/fail/unsupported_default_expr_call.sifr` -> exits `1` with deterministic unsupported-default diagnostic.
 
+## Part 4: milestone_27_4 Span and Diagnostic Schema Quality
+status: done (2026-03-07, PR: pending)
+
+- [x] Canonical structured diagnostic schema introduced for CLI-facing diagnostics with stable fields (`code`, `severity`, `message`, `url`, `primary_span`, `related_spans`, `children`, `help`, `suggestions`)
+- [x] Severity enum implemented exactly as `Error | Warning | Note | Help`
+- [x] Structured suggestion kinds implemented exactly as `DidYouMean | ReplaceText | InsertText | DeleteText`
+- [x] Stable `human` and `json` diagnostic renderers implemented (`json` emits the canonical schema)
+- [x] Positive-path validation recorded
+- [x] Negative-path validation recorded
+- [x] Run milestone demo
+- [x] Run full local suite
+- [ ] Open PR, review, and merge
+- [x] Mark part progress in this checklist
+
+Validation evidence:
+- Positive path: `cargo test -q -p sifr_driver compile_error_to_diagnostic` -> pass.
+- Positive path: `cargo test -q -p sifr_driver compile_errors_to_diagnostics_preserves_order` -> pass.
+- Positive path: `cargo test -q -p sifr` -> pass.
+- Positive path: `cargo run -q -p sifr -- run demos/m27_4_span_and_diagnostic_schema_quality_demo/main.sifr` -> prints `m27_4 diagnostic schema quality demo`.
+- Positive path: `cargo run -q -p sifr -- --diagnostic-format json check /tmp/.../ok.sifr` -> prints `[]`.
+- Positive path: `/Users/yaseralnajjar/work/sifr/codebase/scripts/run_all_tests.sh` -> pass (403 pass tests completed).
+- Negative path: `cargo run -q -p sifr -- --diagnostic-format json check demos/m27_4_span_and_diagnostic_schema_quality_demo/negative_cases/type_error_json_diagnostic/main.sifr` -> exits `1` and emits canonical json diagnostic with stable `code`, `severity`, and `url`.
+- Negative path: `cargo run -q -p sifr -- --diagnostic-format json check /tmp/.../parse_error.sifr` -> exits `1` and emits canonical parse diagnostic with stable parser code/url.
+
 ## PR Log
 - Part 1: https://github.com/yaseralnajjar/sifr/pull/897
 - Part 2: https://github.com/yaseralnajjar/sifr/pull/898
-- Part 3: pending
+- Part 3: https://github.com/yaseralnajjar/sifr/pull/899
+- Part 4: pending
