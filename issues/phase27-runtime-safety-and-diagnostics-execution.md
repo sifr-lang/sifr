@@ -214,6 +214,24 @@ Validation evidence:
 - Inventory: [`phase27-panic-inventory.md`](./phase27-panic-inventory.md)
 - Follow-ups: [`phase27-panic-followups.md`](./phase27-panic-followups.md)
 
+## Part 7: milestone_27_1 Remediation -- Zero `unwrap` in Emitted Runtime Code
+status: in progress (2026-03-07)
+
+- [x] Remove remaining generated `unwrap` emitters in statement lowering and intrinsic/index lowering paths
+- [x] Remove generated lock `unwrap` by emitting poison-recovery (`unwrap_or_else(|e| e.into_inner())`) in runtime lock helpers
+- [x] Replace `Result::unwrap` in `os.disk_usage` emission with explicit non-panicking lowering
+- [x] Add emitted-code safety gate over full pass fixture corpus (`.unwrap(` / `.expect(` forbidden)
+- [x] Run milestone demo
+- [x] Run full local suite
+- [ ] Open PR, review, and merge
+
+Validation evidence:
+- Positive path: `cargo run -q -p sifr -- run demos/m27_1_remove_data_dependent_unwrap_expect_demo/main.sifr` -> prints expected demo output.
+- Positive path: `cargo test -q -p sifr_codegen` -> pass.
+- Positive path: `cargo test -q -p sifr test_emit_pass_fixtures_do_not_include_unwrap_or_expect` -> pass.
+- Positive path: emitted sweep over pass fixtures (`403` files) -> `WITH_UNWRAP=0`, `WITH_EXPECT=0`.
+- Positive path: `/Users/yaseralnajjar/work/sifr/codebase/scripts/run_all_tests.sh` -> pass.
+
 ## PR Log
 - Part 1: https://github.com/yaseralnajjar/sifr/pull/897
 - Part 2: https://github.com/yaseralnajjar/sifr/pull/898

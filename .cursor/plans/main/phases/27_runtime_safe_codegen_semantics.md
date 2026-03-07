@@ -13,6 +13,7 @@ Ensure generated runtime code does not encode avoidable panic behavior for norma
   - Replace generated data-dependent unwrap/expect with explicit safe propagation.
 - Definition of done:
   - User-facing generated paths avoid data-dependent unwrap/expect panics.
+  - Emitted-code sweep over `crates/sifr/tests/e2e/pass/*.sifr` contains zero `.unwrap(` and zero `.expect(` in generated Rust.
 
 ### milestone_27_2: Indexing and Semantics Parity Fixes
 - Scope:

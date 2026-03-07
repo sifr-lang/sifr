@@ -488,11 +488,7 @@ impl RustEmitter {
                         if crate::helpers::is_option_type(ty) {
                             return Some(option_expr);
                         }
-                        return Some(crate::RustExpr::MethodCall {
-                            receiver: Box::new(crate::RustExpr::Paren(Box::new(option_expr))),
-                            method: "unwrap".to_string(),
-                            args: vec![],
-                        });
+                        return Some(option_expr);
                     }
                 }
                 match self.try_lower_structured_index_expr(object, index, ty) {
@@ -1529,11 +1525,13 @@ impl RustEmitter {
         for (idx, ((param_ty, convention), arg)) in param_info.iter().zip(args.iter()).enumerate() {
             let resolved_param = crate::resolve_alias_type_for_plain_call(param_ty);
             let mut lowered_arg = self.try_lower_registry_expr_strict(arg)?;
-            if let Some(aligned_callable) = self.try_build_registry_callable_convention_alignment_expr(
-                arg,
-                resolved_param,
-                lowered_arg.clone(),
-            ) {
+            if let Some(aligned_callable) = self
+                .try_build_registry_callable_convention_alignment_expr(
+                    arg,
+                    resolved_param,
+                    lowered_arg.clone(),
+                )
+            {
                 lowered_arg = aligned_callable;
             }
 

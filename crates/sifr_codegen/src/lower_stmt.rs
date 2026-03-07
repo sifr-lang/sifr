@@ -816,6 +816,12 @@ fn append_recursive_capture_args_to_stmts(
             RustStmt::Let { value, .. } | RustStmt::LetPattern { value, .. } => {
                 append_recursive_capture_args_to_expr(value, fn_name, capture_names);
             }
+            RustStmt::LetElse {
+                value, else_body, ..
+            } => {
+                append_recursive_capture_args_to_expr(value, fn_name, capture_names);
+                append_recursive_capture_args_to_stmts(else_body, fn_name, capture_names);
+            }
             RustStmt::Assign { target, value } | RustStmt::AugAssign { target, value, .. } => {
                 append_recursive_capture_args_to_expr(target, fn_name, capture_names);
                 append_recursive_capture_args_to_expr(value, fn_name, capture_names);
@@ -1995,8 +2001,6 @@ fn try_lower_simple_if_stmt(
     if elif_clauses.is_empty() && maybe_else_body.is_none() && codegen_body_always_exits(then_body)
     {
         if let Some(option_var) = detect_is_none_var(condition) {
-            let lowered_cond =
-                try_lower_simple_condition_test_expr(condition, bindings.borrowed_params)?;
             let lowered_then_body = try_lower_simple_stmt_block(
                 then_body,
                 in_loop_with_else,
@@ -2004,23 +2008,11 @@ fn try_lower_simple_if_stmt(
                 bindings.borrowed_params,
                 ctx,
             )?;
-            return Some(vec![
-                RustStmt::If {
-                    cond: lowered_cond,
-                    then_body: lowered_then_body,
-                    else_body: None,
-                },
-                RustStmt::Let {
-                    mutable: false,
-                    name: option_var.clone(),
-                    ty: None,
-                    value: RustExpr::MethodCall {
-                        receiver: Box::new(RustExpr::Ident(option_var)),
-                        method: "unwrap".to_string(),
-                        args: vec![],
-                    },
-                },
-            ]);
+            return Some(vec![RustStmt::LetElse {
+                pattern: format!("Some({option_var})"),
+                value: RustExpr::Ident(option_var),
+                else_body: lowered_then_body,
+            }]);
         }
     }
 
@@ -2574,10 +2566,7 @@ fn build_list_get_mut_block_stmt(
             mutable: false,
             name: "__idx_norm".to_string(),
             ty: None,
-            value: build_normalized_list_index_i64_expr(
-                receiver.clone(),
-                "__idx_raw",
-            ),
+            value: build_normalized_list_index_i64_expr(receiver.clone(), "__idx_raw"),
         },
         RustStmt::If {
             cond: RustExpr::BinOp {
@@ -2677,10 +2666,7 @@ fn try_lower_simple_delete_stmt(object: &HirExpr, index: &HirExpr) -> Option<Vec
                 mutable: false,
                 name: "__idx_norm".to_string(),
                 ty: None,
-                value: build_normalized_list_index_i64_expr(
-                    receiver.clone(),
-                    "__idx_raw",
-                ),
+                value: build_normalized_list_index_i64_expr(receiver.clone(), "__idx_raw"),
             },
             RustStmt::If {
                 cond: RustExpr::BinOp {
@@ -3024,13 +3010,6 @@ fn try_lower_simple_return_stmt(
                 args: vec![lowered],
             }))]);
         }
-    }
-    if is_option_like_type(value.ty()) && !matches!(value.ty(), Type::None) {
-        return Some(vec![RustStmt::Return(Some(RustExpr::MethodCall {
-            receiver: Box::new(try_lower_name_ident_expr(value)?),
-            method: "unwrap".to_string(),
-            args: vec![],
-        }))]);
     }
     Some(vec![RustStmt::Return(Some(try_lower_leaf_or_name_expr(
         value,
@@ -5238,7 +5217,7 @@ mod tests {
     }
 
     #[test]
-    fn lowers_return_option_name_with_unwrap_in_plain_context() {
+    fn lowers_return_option_name_in_plain_context_without_unwrap() {
         let stmt = HirStmt::Return {
             value: Some(HirExpr::Name {
                 name: "maybe_x".to_string(),
@@ -5261,13 +5240,7 @@ mod tests {
         assert_eq!(lowered.len(), 1);
         assert!(matches!(
             &lowered[0],
-            RustStmt::Return(Some(RustExpr::MethodCall {
-                receiver,
-                ref method,
-                ref args,
-            })) if method == "unwrap"
-                && args.is_empty()
-                && matches!(receiver.as_ref(), RustExpr::Ident(name) if name == "maybe_x")
+            RustStmt::Return(Some(RustExpr::Ident(name))) if name == "maybe_x"
         ));
     }
 
@@ -6348,7 +6321,7 @@ mod tests {
     }
 
     #[test]
-    fn lowers_option_is_none_if_with_exiting_body_and_post_unwrap_without_rawcode() {
+    fn lowers_option_is_none_if_with_exiting_body_to_let_else_without_unwrap() {
         let if_stmt = HirStmt::If {
             condition: HirExpr::Compare {
                 left: Box::new(HirExpr::Name {
@@ -6381,21 +6354,17 @@ mod tests {
         )
         .expect("if with exiting body lowered");
 
-        assert_eq!(lowered.len(), 2);
+        assert_eq!(lowered.len(), 1);
         assert!(matches!(
             lowered[0],
-            RustStmt::If {
-                cond: RustExpr::MethodCall { .. },
-                ..
+            RustStmt::LetElse {
+                pattern: ref p,
+                value: RustExpr::Ident(ref name),
+                ref else_body,
             }
-        ));
-        assert!(matches!(
-            lowered[1],
-            RustStmt::Let {
-                ref name,
-                value: RustExpr::MethodCall { ref method, .. },
-                ..
-            } if name == "maybe_x" && method == "unwrap"
+            if p == "Some(maybe_x)"
+                && name == "maybe_x"
+                && !else_body.is_empty()
         ));
     }
 

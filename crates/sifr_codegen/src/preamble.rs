@@ -418,11 +418,7 @@ pub fn build_file_handle_struct_items() -> Vec<RustItem> {
                             },
                         },
                         RustStmt::Expr(RustExpr::MethodCall {
-                            receiver: Box::new(RustExpr::MethodCall {
-                                receiver: Box::new(file_handles_lock_expr()),
-                                method: "unwrap".to_string(),
-                                args: vec![],
-                            }),
+                            receiver: Box::new(file_handles_lock_expr()),
                             method: "remove".to_string(),
                             args: vec![RustExpr::Ref {
                                 mutable: false,
@@ -495,9 +491,24 @@ pub fn build_logging_items() -> Vec<RustItem> {
 
 fn file_handles_lock_expr() -> RustExpr {
     RustExpr::MethodCall {
-        receiver: Box::new(RustExpr::Ident("__SIFR_FILE_HANDLES".to_string())),
-        method: "lock".to_string(),
-        args: vec![],
+        receiver: Box::new(RustExpr::MethodCall {
+            receiver: Box::new(RustExpr::Ident("__SIFR_FILE_HANDLES".to_string())),
+            method: "lock".to_string(),
+            args: vec![],
+        }),
+        method: "unwrap_or_else".to_string(),
+        args: vec![RustExpr::Closure {
+            params: vec![RustParam::Named {
+                name: "__err".to_string(),
+                ty: RustType::Named("_".to_string()),
+            }],
+            body: Box::new(RustExpr::MethodCall {
+                receiver: Box::new(RustExpr::Ident("__err".to_string())),
+                method: "into_inner".to_string(),
+                args: vec![],
+            }),
+            is_move: false,
+        }],
     }
 }
 
@@ -525,11 +536,7 @@ fn file_handle_read_method() -> RustItem {
                 mutable: true,
                 name: "__handles".to_string(),
                 ty: None,
-                value: RustExpr::MethodCall {
-                    receiver: Box::new(file_handles_lock_expr()),
-                    method: "unwrap".to_string(),
-                    args: vec![],
-                },
+                value: file_handles_lock_expr(),
             },
             RustStmt::Match {
                 expr: RustExpr::MethodCall {
@@ -648,11 +655,7 @@ fn file_handle_write_method() -> RustItem {
                 mutable: true,
                 name: "__handles".to_string(),
                 ty: None,
-                value: RustExpr::MethodCall {
-                    receiver: Box::new(file_handles_lock_expr()),
-                    method: "unwrap".to_string(),
-                    args: vec![],
-                },
+                value: file_handles_lock_expr(),
             },
             RustStmt::Match {
                 expr: RustExpr::MethodCall {
@@ -751,11 +754,7 @@ fn file_handle_readline_method() -> RustItem {
                 mutable: true,
                 name: "__handles".to_string(),
                 ty: None,
-                value: RustExpr::MethodCall {
-                    receiver: Box::new(file_handles_lock_expr()),
-                    method: "unwrap".to_string(),
-                    args: vec![],
-                },
+                value: file_handles_lock_expr(),
             },
             RustStmt::Match {
                 expr: RustExpr::MethodCall {
@@ -921,11 +920,7 @@ fn file_handle_read_bytes_method() -> RustItem {
                 mutable: true,
                 name: "__handles".to_string(),
                 ty: None,
-                value: RustExpr::MethodCall {
-                    receiver: Box::new(file_handles_lock_expr()),
-                    method: "unwrap".to_string(),
-                    args: vec![],
-                },
+                value: file_handles_lock_expr(),
             },
             RustStmt::Match {
                 expr: RustExpr::MethodCall {
@@ -1068,11 +1063,7 @@ fn file_handle_write_bytes_method() -> RustItem {
                 mutable: true,
                 name: "__handles".to_string(),
                 ty: None,
-                value: RustExpr::MethodCall {
-                    receiver: Box::new(file_handles_lock_expr()),
-                    method: "unwrap".to_string(),
-                    args: vec![],
-                },
+                value: file_handles_lock_expr(),
             },
             RustStmt::Match {
                 expr: RustExpr::MethodCall {
@@ -1202,11 +1193,7 @@ fn file_handle_readlines_method() -> RustItem {
                 mutable: true,
                 name: "__handles".to_string(),
                 ty: None,
-                value: RustExpr::MethodCall {
-                    receiver: Box::new(file_handles_lock_expr()),
-                    method: "unwrap".to_string(),
-                    args: vec![],
-                },
+                value: file_handles_lock_expr(),
             },
             RustStmt::Match {
                 expr: RustExpr::MethodCall {
@@ -1418,9 +1405,7 @@ mod tests {
             RustExpr::MacroCall { args, .. }
             | RustExpr::Vec(args)
             | RustExpr::Tuple(args)
-            | RustExpr::Array(args) => {
-                args.iter().map(count_raw_in_expr).sum()
-            }
+            | RustExpr::Array(args) => args.iter().map(count_raw_in_expr).sum(),
             RustExpr::FormatMacro { args, .. } => args.iter().map(count_raw_in_expr).sum(),
             RustExpr::BinOp { left, right, .. } => {
                 count_raw_in_expr(left) + count_raw_in_expr(right)
@@ -1478,6 +1463,9 @@ mod tests {
                 ty.as_ref().map(count_raw_in_type).unwrap_or(0) + count_raw_in_expr(value)
             }
             RustStmt::LetPattern { value, .. } => count_raw_in_expr(value),
+            RustStmt::LetElse {
+                value, else_body, ..
+            } => count_raw_in_expr(value) + else_body.iter().map(count_raw_in_stmt).sum::<usize>(),
             RustStmt::Assign { target, value } | RustStmt::AugAssign { target, value, .. } => {
                 count_raw_in_expr(target) + count_raw_in_expr(value)
             }

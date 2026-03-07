@@ -228,6 +228,18 @@ impl RustEmitter {
                 pattern,
                 value: self.rewrite_stdlib_constant_idents_in_expr(value),
             },
+            crate::RustStmt::LetElse {
+                pattern,
+                value,
+                else_body,
+            } => crate::RustStmt::LetElse {
+                pattern,
+                value: self.rewrite_stdlib_constant_idents_in_expr(value),
+                else_body: else_body
+                    .into_iter()
+                    .map(|stmt| self.rewrite_stdlib_constant_idents_in_stmt(stmt))
+                    .collect(),
+            },
             crate::RustStmt::Assign { target, value } => crate::RustStmt::Assign {
                 target: self.rewrite_stdlib_constant_idents_in_expr(target),
                 value: self.rewrite_stdlib_constant_idents_in_expr(value),

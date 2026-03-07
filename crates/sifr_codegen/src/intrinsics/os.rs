@@ -433,157 +433,157 @@ pub(super) fn lower_disk_usage(args: &[RustExpr]) -> Option<RustExpr> {
                         args: vec![],
                     },
                 }],
-                expr: Some(Box::new(RustExpr::If {
-                    cond: Box::new(RustExpr::MethodCall {
-                        receiver: Box::new(RustExpr::Ident("__out".to_string())),
-                        method: "is_ok".to_string(),
-                        args: vec![],
-                    }),
-                    then_expr: Box::new(RustExpr::Block {
-                        stmts: vec![
-                            RustStmt::Let {
-                                mutable: false,
-                                name: "__o".to_string(),
-                                ty: None,
-                                value: RustExpr::MethodCall {
+                expr: Some(Box::new(RustExpr::Block {
+                    stmts: vec![
+                        RustStmt::Let {
+                            mutable: false,
+                            name: "__s".to_string(),
+                            ty: None,
+                            value: RustExpr::MethodCall {
+                                receiver: Box::new(RustExpr::MethodCall {
                                     receiver: Box::new(RustExpr::Ident("__out".to_string())),
-                                    method: "unwrap".to_string(),
+                                    method: "as_ref".to_string(),
                                     args: vec![],
-                                },
-                            },
-                            RustStmt::Let {
-                                mutable: false,
-                                name: "__s".to_string(),
-                                ty: None,
-                                value: from_utf8_lossy(RustExpr::Field {
-                                    expr: Box::new(RustExpr::Ident("__o".to_string())),
-                                    field: "stdout".to_string(),
                                 }),
+                                method: "map_or".to_string(),
+                                args: vec![
+                                    RustExpr::Literal(RustLiteral::Str(String::new())),
+                                    RustExpr::Closure {
+                                        params: vec![RustParam::Named {
+                                            name: "__o".to_string(),
+                                            ty: RustType::Named("_".to_string()),
+                                        }],
+                                        body: Box::new(RustExpr::MethodCall {
+                                            receiver: Box::new(from_utf8_lossy(RustExpr::Field {
+                                                expr: Box::new(RustExpr::Ident("__o".to_string())),
+                                                field: "stdout".to_string(),
+                                            })),
+                                            method: "to_string".to_string(),
+                                            args: vec![],
+                                        }),
+                                        is_move: false,
+                                    },
+                                ],
                             },
-                            RustStmt::Let {
+                        },
+                        RustStmt::Let {
+                            mutable: false,
+                            name: "__lines".to_string(),
+                            ty: None,
+                            value: RustExpr::MethodCall {
+                                receiver: Box::new(RustExpr::MethodCall {
+                                    receiver: Box::new(RustExpr::Ident("__s".to_string())),
+                                    method: "lines".to_string(),
+                                    args: vec![],
+                                }),
+                                method: "collect::<Vec<&str>>".to_string(),
+                                args: vec![],
+                            },
+                        },
+                    ],
+                    expr: Some(Box::new(RustExpr::If {
+                        cond: Box::new(RustExpr::BinOp {
+                            left: Box::new(RustExpr::MethodCall {
+                                receiver: Box::new(RustExpr::Ident("__lines".to_string())),
+                                method: "len".to_string(),
+                                args: vec![],
+                            }),
+                            op: ">=".to_string(),
+                            right: Box::new(int(2)),
+                        }),
+                        then_expr: Box::new(RustExpr::Block {
+                            stmts: vec![RustStmt::Let {
                                 mutable: false,
-                                name: "__lines".to_string(),
+                                name: "__parts".to_string(),
                                 ty: None,
                                 value: RustExpr::MethodCall {
                                     receiver: Box::new(RustExpr::MethodCall {
-                                        receiver: Box::new(RustExpr::Ident("__s".to_string())),
-                                        method: "lines".to_string(),
+                                        receiver: Box::new(RustExpr::Index {
+                                            expr: Box::new(RustExpr::Ident("__lines".to_string())),
+                                            index: Box::new(int(1)),
+                                        }),
+                                        method: "split_whitespace".to_string(),
                                         args: vec![],
                                     }),
                                     method: "collect::<Vec<&str>>".to_string(),
                                     args: vec![],
                                 },
-                            },
-                        ],
-                        expr: Some(Box::new(RustExpr::If {
-                            cond: Box::new(RustExpr::BinOp {
-                                left: Box::new(RustExpr::MethodCall {
-                                    receiver: Box::new(RustExpr::Ident("__lines".to_string())),
-                                    method: "len".to_string(),
-                                    args: vec![],
-                                }),
-                                op: ">=".to_string(),
-                                right: Box::new(int(2)),
-                            }),
-                            then_expr: Box::new(RustExpr::Block {
-                                stmts: vec![RustStmt::Let {
-                                    mutable: false,
-                                    name: "__parts".to_string(),
-                                    ty: None,
-                                    value: RustExpr::MethodCall {
-                                        receiver: Box::new(RustExpr::MethodCall {
-                                            receiver: Box::new(RustExpr::Index {
-                                                expr: Box::new(RustExpr::Ident(
-                                                    "__lines".to_string(),
-                                                )),
-                                                index: Box::new(int(1)),
-                                            }),
-                                            method: "split_whitespace".to_string(),
-                                            args: vec![],
-                                        }),
-                                        method: "collect::<Vec<&str>>".to_string(),
+                            }],
+                            expr: Some(Box::new(RustExpr::If {
+                                cond: Box::new(RustExpr::BinOp {
+                                    left: Box::new(RustExpr::MethodCall {
+                                        receiver: Box::new(RustExpr::Ident("__parts".to_string())),
+                                        method: "len".to_string(),
                                         args: vec![],
-                                    },
-                                }],
-                                expr: Some(Box::new(RustExpr::If {
-                                    cond: Box::new(RustExpr::BinOp {
-                                        left: Box::new(RustExpr::MethodCall {
-                                            receiver: Box::new(RustExpr::Ident(
-                                                "__parts".to_string(),
-                                            )),
-                                            method: "len".to_string(),
-                                            args: vec![],
-                                        }),
-                                        op: ">=".to_string(),
-                                        right: Box::new(int(4)),
                                     }),
-                                    then_expr: Box::new(RustExpr::Block {
-                                        stmts: vec![
-                                            RustStmt::Let {
-                                                mutable: false,
-                                                name: "__total".to_string(),
-                                                ty: None,
-                                                value: RustExpr::BinOp {
-                                                    left: Box::new(parse_i64_or_zero(
-                                                        RustExpr::Index {
-                                                            expr: Box::new(RustExpr::Ident(
-                                                                "__parts".to_string(),
-                                                            )),
-                                                            index: Box::new(int(1)),
-                                                        },
-                                                    )),
-                                                    op: "*".to_string(),
-                                                    right: Box::new(int(1024)),
-                                                },
+                                    op: ">=".to_string(),
+                                    right: Box::new(int(4)),
+                                }),
+                                then_expr: Box::new(RustExpr::Block {
+                                    stmts: vec![
+                                        RustStmt::Let {
+                                            mutable: false,
+                                            name: "__total".to_string(),
+                                            ty: None,
+                                            value: RustExpr::BinOp {
+                                                left: Box::new(parse_i64_or_zero(
+                                                    RustExpr::Index {
+                                                        expr: Box::new(RustExpr::Ident(
+                                                            "__parts".to_string(),
+                                                        )),
+                                                        index: Box::new(int(1)),
+                                                    },
+                                                )),
+                                                op: "*".to_string(),
+                                                right: Box::new(int(1024)),
                                             },
-                                            RustStmt::Let {
-                                                mutable: false,
-                                                name: "__used".to_string(),
-                                                ty: None,
-                                                value: RustExpr::BinOp {
-                                                    left: Box::new(parse_i64_or_zero(
-                                                        RustExpr::Index {
-                                                            expr: Box::new(RustExpr::Ident(
-                                                                "__parts".to_string(),
-                                                            )),
-                                                            index: Box::new(int(2)),
-                                                        },
-                                                    )),
-                                                    op: "*".to_string(),
-                                                    right: Box::new(int(1024)),
-                                                },
+                                        },
+                                        RustStmt::Let {
+                                            mutable: false,
+                                            name: "__used".to_string(),
+                                            ty: None,
+                                            value: RustExpr::BinOp {
+                                                left: Box::new(parse_i64_or_zero(
+                                                    RustExpr::Index {
+                                                        expr: Box::new(RustExpr::Ident(
+                                                            "__parts".to_string(),
+                                                        )),
+                                                        index: Box::new(int(2)),
+                                                    },
+                                                )),
+                                                op: "*".to_string(),
+                                                right: Box::new(int(1024)),
                                             },
-                                            RustStmt::Let {
-                                                mutable: false,
-                                                name: "__free".to_string(),
-                                                ty: None,
-                                                value: RustExpr::BinOp {
-                                                    left: Box::new(parse_i64_or_zero(
-                                                        RustExpr::Index {
-                                                            expr: Box::new(RustExpr::Ident(
-                                                                "__parts".to_string(),
-                                                            )),
-                                                            index: Box::new(int(3)),
-                                                        },
-                                                    )),
-                                                    op: "*".to_string(),
-                                                    right: Box::new(int(1024)),
-                                                },
+                                        },
+                                        RustStmt::Let {
+                                            mutable: false,
+                                            name: "__free".to_string(),
+                                            ty: None,
+                                            value: RustExpr::BinOp {
+                                                left: Box::new(parse_i64_or_zero(
+                                                    RustExpr::Index {
+                                                        expr: Box::new(RustExpr::Ident(
+                                                            "__parts".to_string(),
+                                                        )),
+                                                        index: Box::new(int(3)),
+                                                    },
+                                                )),
+                                                op: "*".to_string(),
+                                                right: Box::new(int(1024)),
                                             },
-                                        ],
-                                        expr: Some(Box::new(RustExpr::Vec(vec![
-                                            RustExpr::Ident("__total".to_string()),
-                                            RustExpr::Ident("__used".to_string()),
-                                            RustExpr::Ident("__free".to_string()),
-                                        ]))),
-                                    }),
-                                    else_expr: Some(Box::new(zero_usage_vec())),
-                                })),
-                            }),
-                            else_expr: Some(Box::new(zero_usage_vec())),
-                        })),
-                    }),
-                    else_expr: Some(Box::new(zero_usage_vec())),
+                                        },
+                                    ],
+                                    expr: Some(Box::new(RustExpr::Vec(vec![
+                                        RustExpr::Ident("__total".to_string()),
+                                        RustExpr::Ident("__used".to_string()),
+                                        RustExpr::Ident("__free".to_string()),
+                                    ]))),
+                                }),
+                                else_expr: Some(Box::new(zero_usage_vec())),
+                            })),
+                        }),
+                        else_expr: Some(Box::new(zero_usage_vec())),
+                    })),
                 })),
             }),
             else_expr: Some(Box::new(zero_usage_vec())),

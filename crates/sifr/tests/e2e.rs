@@ -2003,6 +2003,72 @@ fn test_codegen_corpus_subset_parity() {
 }
 
 #[test]
+fn test_emit_pass_fixtures_do_not_include_unwrap_or_expect() {
+    let pass_dir = Path::new("tests/e2e/pass");
+    if !pass_dir.exists() {
+        return;
+    }
+
+    let mut failures = Vec::new();
+    let mut total = 0usize;
+
+    for path in read_dir_file_paths_sorted(pass_dir) {
+        if path.extension().and_then(|ext| ext.to_str()) != Some("sifr") {
+            continue;
+        }
+
+        let source = match std::fs::read_to_string(&path) {
+            Ok(source) => source,
+            Err(err) => {
+                failures.push(format!(
+                    "FAIL [{}]: unable to read fixture: {}",
+                    path.display(),
+                    err
+                ));
+                continue;
+            }
+        };
+
+        let (rust_source, _, _) = match compile_source_with_metadata(&source) {
+            Ok(result) => result,
+            Err(errors) => {
+                failures.push(format!(
+                    "FAIL [{}]: compilation failed:\n  {}",
+                    path.display(),
+                    errors.join("\n  ")
+                ));
+                continue;
+            }
+        };
+
+        let mut forbidden = Vec::new();
+        if rust_source.contains(".unwrap(") {
+            forbidden.push(".unwrap(");
+        }
+        if rust_source.contains(".expect(") {
+            forbidden.push(".expect(");
+        }
+        if !forbidden.is_empty() {
+            failures.push(format!(
+                "FAIL [{}]: emitted forbidden runtime patterns: {}",
+                path.display(),
+                forbidden.join(", ")
+            ));
+        }
+        total += 1;
+    }
+
+    assert!(total > 0, "no pass fixtures were checked");
+    if !failures.is_empty() {
+        panic!(
+            "{} emitted-code safety failure(s):\n\n{}",
+            failures.len(),
+            failures.join("\n\n")
+        );
+    }
+}
+
+#[test]
 fn test_codegen_structured_lowering_ratio_gate_stmt_expr_corpus() {
     let pass_dir = Path::new("tests/e2e/pass");
     let corpus = ["codegen_structured_ratio_gate"];

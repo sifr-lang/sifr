@@ -304,6 +304,22 @@ impl Renderer {
                     Self::render_expr_string(value)
                 ));
             }
+            RustStmt::LetElse {
+                pattern,
+                value,
+                else_body,
+            } => {
+                self.emit_line(&format!(
+                    "let {pattern} = {} else {{",
+                    Self::render_expr_string(value)
+                ));
+                self.indent();
+                for stmt in else_body {
+                    self.render_stmt(stmt);
+                }
+                self.dedent();
+                self.emit_line("};");
+            }
             RustStmt::Assign { target, value } => {
                 self.emit_line(&format!(
                     "{} = {};",
@@ -935,7 +951,6 @@ impl Renderer {
             self.emit_line("},");
         }
     }
-
 }
 
 impl Default for Renderer {
