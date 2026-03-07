@@ -75,6 +75,19 @@ Add first-class `decimal` and `bigdecimal` types with deterministic, exact base-
 - Comparison operators supported for both types: `==`, `!=`, `<`, `<=`, `>`, `>=`.
 - Operator semantics must enforce the explicit conversion/mixing policy above (no hidden coercions).
 
+### Stdlib/API surface (final)
+- Phase 28 scope explicitly includes user-facing decimal APIs beyond core operators.
+- Required `decimal` and `bigdecimal` methods (or equivalent built-ins) in this phase:
+  - `quantize(...)`
+  - `sqrt(...)`
+  - `round(...)`
+  - `abs(...)`
+  - `is_zero()`
+  - `is_finite()`
+  - stable string formatting for deterministic serialization/display
+- API behavior must be deterministic and must honor explicit context/rounding policy.
+- Any deferred API for Python `decimal` parity must be listed explicitly in the phase checklist issue with owner and follow-up phase/issue link.
+
 ### Decimal context defaults (final)
 - `decimal` (`rust_decimal`) is fixed-precision by representation for financial workloads; no hidden global context mutation.
 - `bigdecimal` (`bigdecimal`) is arbitrary precision with explicit context APIs.
@@ -120,10 +133,12 @@ Add first-class `decimal` and `bigdecimal` types with deterministic, exact base-
   - Implement `decimal` arithmetic/comparison using `rust_decimal` with deterministic behavior.
   - Implement `bigdecimal` arithmetic/comparison using `bigdecimal`.
   - Implement the full operator coverage contract (`+`, `-`, `*`, `/`, `//`, `%`, `**`, unary ops, comparisons) for both types.
+  - Implement required decimal API surface in this phase (`quantize`, `sqrt`, `round`, `abs`, `is_zero`, `is_finite`, deterministic formatting).
   - Implement default `bigdecimal` context (precision=28, rounding=HALF_EVEN).
   - Enforce panic-free invalid-operation handling in user paths.
 - Definition of done:
   - `decimal` and `bigdecimal` arithmetic are deterministic across repeated runs.
+  - Required decimal API surface is available and contract-tested for both types.
   - No user-path data-dependent `unwrap`/`expect`/`panic!`.
 
 ### milestone_28_3: Conversion and Boundary Contracts
@@ -172,6 +187,8 @@ Add first-class `decimal` and `bigdecimal` types with deterministic, exact base-
     - exact `BigDecimal` string construction
     - int/bigint construction for both types
     - rounding boundaries
+    - `quantize` and `sqrt` behavior boundaries (success/failure/rounding context)
+    - API determinism for `round`, `abs`, `is_zero`, `is_finite`, and formatting
     - `decimal <-> bigdecimal` cross-conversion pass/fail boundaries
     - conversion failures
     - repeated-run determinism
@@ -207,6 +224,7 @@ Add first-class `decimal` and `bigdecimal` types with deterministic, exact base-
 - All milestone DoDs are satisfied.
 - `decimal` and `bigdecimal` semantics are deterministic, panic-safe, and fully contract-tested.
 - Construction/mixing/conversion/context behavior is documented and enforced by tests.
+- Required decimal API surface is implemented and regression-locked.
 - Decimal diagnostics are stable and regression-locked.
 - Any waiver is explicit, time-bounded, owner-assigned, and issue-linked.
 
