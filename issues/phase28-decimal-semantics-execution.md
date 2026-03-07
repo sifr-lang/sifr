@@ -171,6 +171,6 @@ Validation evidence:
 
 ## External Review Passes
 - Reviewer pass 1 prompt output: `reviews/phase-28-review.md`
-- Reviewer pass 1 remediation PR: pending
-- Reviewer pass 2 prompt output: pending
+- Reviewer pass 1 remediation PR: merged https://github.com/yaseralnajjar/sifr/pull/915
+- Reviewer pass 2 prompt output: `reviews/phase-28-production-grade-review.md`
 - Reviewer pass 2 remediation PR: pending
