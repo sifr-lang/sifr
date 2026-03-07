@@ -1,4 +1,4 @@
-# expect-error: not a valid error type in Result
+# expect-error: SIFR-TYPE-0001: `str` is not a valid error type in Result — use a class extending Error, e.g. `Result[int, ValueError]`
 
 def broken() -> Result[int, str]:
     return 42

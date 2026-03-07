@@ -1,5 +1,4 @@
+# expect-error: [SIFR-TYPE-0001] [E2505] Decimal(float_value) is not allowed; use Decimal("...") for exact construction
 def main():
     x: decimal = Decimal(1.25)
     print(x)
-
-# expect-error: [E2505]

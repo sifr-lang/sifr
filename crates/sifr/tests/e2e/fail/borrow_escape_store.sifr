@@ -1,4 +1,4 @@
-# expect-error: cannot store borrowed parameter
+# expect-error: SIFR-TYPE-0001: cannot store borrowed parameter `items`: it is borrowed by default -- use `own items` to take ownership, or store `items.clone()`
 # Test: storing a borrowed parameter into a local variable should produce a compile error.
 # The parameter `items` is borrowed by default (&Vec<i64>),
 # so it cannot be stored (would escape the borrow).

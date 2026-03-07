@@ -1,4 +1,4 @@
-# expect-error: given both positionally and as keyword
+# expect-error: SIFR-TYPE-0001: function 'greet': argument 'name' given both positionally and as keyword
 def greet(name: str, greeting: str) -> str:
     return f"{greeting}, {name}!"
 

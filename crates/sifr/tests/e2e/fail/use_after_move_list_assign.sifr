@@ -1,4 +1,4 @@
-# expect-error: moved value
+# expect-error: SIFR-TYPE-0001: use of moved value: 'l1'
 def main():
     l1: list[int] = [1, 2, 3]
     l2: list[int] = l1

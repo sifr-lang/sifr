@@ -1,5 +1,4 @@
+# expect-error: [SIFR-TYPE-0001] [E2507] decimal.quantize() scale argument must be 'int', got 'str'
 def main():
     d: decimal = Decimal("1.23")
     x: decimal = d.quantize("2")
-
-# expect-error: [E2507] decimal.quantize() scale argument must be 'int', got 'str'

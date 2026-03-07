@@ -71,6 +71,18 @@ struct FixtureCase {
     _expected_errors: Vec<String>,
 }
 
+#[derive(Clone, Debug, PartialEq, Eq)]
+struct CompileFailureExpectation {
+    code: String,
+    message_contains: Option<String>,
+}
+
+#[derive(Clone, Debug)]
+struct CompiledFailure {
+    code: String,
+    message: String,
+}
+
 #[derive(Clone, Debug)]
 struct CompiledCase {
     fixture: FixtureCase,
@@ -518,13 +530,116 @@ impl CompiledCase {
     }
 }
 
-fn compile_source(source: &str) -> Result<String, Vec<String>> {
+fn compile_source(source: &str) -> Result<String, Vec<CompiledFailure>> {
     match sifr_driver::compile(source) {
         sifr_driver::CompileResult::Success { rust_source } => Ok(rust_source),
         sifr_driver::CompileResult::Errors { errors } => {
-            Err(errors.iter().map(|error| error.message.clone()).collect())
+            let diagnostics = sifr_driver::compile_errors_to_diagnostics(&errors);
+            let mut failures = Vec::new();
+            for diagnostic in diagnostics {
+                let message = diagnostic.message.clone();
+                failures.push(CompiledFailure {
+                    code: diagnostic.code,
+                    message: message.clone(),
+                });
+                if let Some(message_code) = diagnostic_error_code(&message) {
+                    failures.push(CompiledFailure {
+                        code: message_code,
+                        message,
+                    });
+                }
+            }
+            Err(failures)
         }
     }
+}
+
+fn parse_expected_error(raw: &str) -> Option<CompileFailureExpectation> {
+    let normalized = raw.trim();
+    if normalized.is_empty() {
+        return None;
+    }
+
+    let (raw_code, raw_message) = if let Some(inner) = normalized.strip_prefix('[') {
+        let end = inner.find(']')?;
+        let code = inner[..end].trim();
+        let message = inner[end + 1..]
+            .trim()
+            .trim_start_matches(':')
+            .trim()
+            .to_string();
+        (code, message)
+    } else {
+        let split = normalized
+            .find(|character: char| character == ':' || character.is_whitespace());
+        match split {
+            Some(index) => {
+                let (code, raw_message) = normalized.split_at(index);
+                let message = raw_message
+                    .trim_start_matches(':')
+                    .trim_start()
+                    .trim_start_matches('-')
+                    .trim()
+                    .to_string();
+                (code, message)
+            }
+            None => (normalized, String::new()),
+        }
+    };
+
+    let code = normalize_error_code(raw_code);
+    let is_valid = is_diagnostic_code(&code) || is_message_error_code(&code);
+    is_valid.then_some(CompileFailureExpectation {
+        code,
+        message_contains: (!raw_message.is_empty()).then_some(raw_message),
+    })
+}
+
+fn is_diagnostic_code(raw: &str) -> bool {
+    if !raw.starts_with("SIFR-") || raw.len() <= 8 {
+        return false;
+    }
+
+    let suffix = &raw[5..];
+    if let Some((prefix, code)) = suffix.split_once('-') {
+        prefix
+            .chars()
+            .all(|character| character.is_ascii_alphanumeric())
+            && code.len() == 4
+            && code.chars().all(|character| character.is_ascii_digit())
+    } else {
+        false
+    }
+}
+
+fn is_message_error_code(raw: &str) -> bool {
+    raw.starts_with('E')
+        && raw.len() > 1
+        && raw[1..].chars().all(|character| character.is_ascii_digit())
+}
+
+fn normalize_error_code(raw: &str) -> String {
+    let trimmed = raw.trim();
+    if let Some(inner) = trimmed.strip_prefix('[').and_then(|value| value.strip_suffix(']')) {
+        inner.to_string()
+    } else {
+        trimmed.to_string()
+    }
+}
+
+fn compile_failures_to_messages(failures: &[CompiledFailure]) -> Vec<String> {
+    failures
+        .iter()
+        .map(|f| format!("{}: {}", f.code, f.message))
+        .collect()
+}
+
+fn diagnostic_error_code(message: &str) -> Option<String> {
+    let start = message.find('[')?;
+    let remainder = &message[start + 1..];
+    let end = remainder.find(']')?;
+    let code = &remainder[..end];
+    is_message_error_code(code).then(|| code.to_string())
 }
 
 fn compile_source_with_metadata(
@@ -2206,14 +2321,34 @@ fn test_e2e_fail() {
                 );
             }
             Err(errors) => {
-                let all = errors.join("\n");
                 for expected in &expected {
+                    let expected = parse_expected_error(expected).unwrap_or_else(|| {
+                        panic!(
+                            "FAIL {} expected marker '{}' is invalid; use SIFR-XXXX-XXXX or Exxxx",
+                            path.display(),
+                            expected
+                        )
+                    });
+
+                    let matched = errors.iter().any(|failure| {
+                        failure.code == expected.code
+                            && match expected.message_contains.as_ref() {
+                                Some(message) => failure.message.contains(message),
+                                None => true,
+                            }
+                    });
+
                     assert!(
-                        all.contains(expected),
-                        "FAIL {} expected error containing '{}' but got:\n{}",
+                        matched,
+                        "FAIL {} expected diagnostic code '{}'{} but got:\n{}",
                         path.display(),
-                        expected,
-                        all
+                        expected.code,
+                        expected
+                            .message_contains
+                            .as_ref()
+                            .map(|message| format!(" with message containing {:?}", message))
+                            .unwrap_or_default(),
+                        compile_failures_to_messages(&errors).join("\n")
                     );
                 }
                 failures += 1;
@@ -2363,8 +2498,9 @@ fn test_expectation_parsing_contract() {
         "# expect-stdout: b",
         "# expect-stderr: err-1",
         "# expect-stderr: err-2",
-        "# expect-error: issue-1",
-        "# expect-error: issue-2",
+        "# expect-error: SIFR-PARSE-0001",
+        "# expect-error: SIFR-TYPE-0001",
+        "# expect-error: [E2507]",
     ]
     .join("\n");
 
@@ -2375,7 +2511,28 @@ fn test_expectation_parsing_contract() {
     );
     assert_eq!(
         extract_expect_errors(&source),
-        vec!["issue-1".to_string(), "issue-2".to_string()]
+        vec![
+            "SIFR-PARSE-0001".to_string(),
+            "SIFR-TYPE-0001".to_string(),
+            "[E2507]".to_string()
+        ]
+    );
+}
+
+#[test]
+fn test_expected_error_contract_with_messages() {
+    let parsed = parse_expected_error("SIFR-TYPE-0001: assignment to immutability").unwrap();
+    assert_eq!(parsed.code, "SIFR-TYPE-0001");
+    assert_eq!(
+        parsed.message_contains.unwrap(),
+        "assignment to immutability"
+    );
+
+    let parsed = parse_expected_error("[E2507] decimal.round() scale must be between 0 and 28, got 29").unwrap();
+    assert_eq!(parsed.code, "E2507");
+    assert_eq!(
+        parsed.message_contains.unwrap(),
+        "decimal.round() scale must be between 0 and 28, got 29"
     );
 }
 

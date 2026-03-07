@@ -1,4 +1,4 @@
-# expect-error: cannot borrow 'items' as mutable more than once
+# expect-error: SIFR-TYPE-0001: cannot borrow 'items' as mutable more than once in the same call to 'swap'
 def swap(mut a: list[int], mut b: list[int]):
     pass
 

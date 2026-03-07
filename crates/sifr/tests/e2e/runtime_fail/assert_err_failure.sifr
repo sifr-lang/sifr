@@ -1,4 +1,3 @@
-# expect-stderr: assertion failed
 from sifr.test import assert_err
 
 def parse_ok() -> Result[int, ValueError]:

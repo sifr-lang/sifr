@@ -1,3 +1,4 @@
+# expect-error: SIFR-TYPE-0001: unsupported operand type(s) for +: 'None | int' and 'int'
 # Test: optional arithmetic is rejected without explicit narrowing
 
 def add_one(x: int | None) -> int:
@@ -6,5 +7,3 @@ def add_one(x: int | None) -> int:
 def main():
     value: int = add_one(5)
     print(value)
-
-# expect-error: unsupported operand type(s) for +: 'None | int' and 'int'

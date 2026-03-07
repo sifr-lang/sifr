@@ -1,8 +1,7 @@
+# expect-error: SIFR-TYPE-0001: function 'sqrt' expects at most 1 argument(s), got 2
 # Test that calling a stdlib function with wrong number of arguments fails
 from sifr.math import sqrt
 
 def main():
     x: float = sqrt(1.0, 2.0)
     print(x)
-
-# expect-error: function 'sqrt' expects at most 1 argument(s), got 2

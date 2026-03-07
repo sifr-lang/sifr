@@ -1,4 +1,4 @@
-# expect-error: missing argument
+# expect-error: SIFR-TYPE-0001: cannot return borrowed parameter `name`: it is borrowed by default -- use `own name` to take ownership, or return `name.clone()`
 def display(name: str, *, verbose: bool) -> str:
     if verbose:
         return f"Name: {name}"

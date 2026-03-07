@@ -99,6 +99,11 @@ and stop depending on output matching via harness comments.
 - [x] Part 2 - crates/sifr/tests/e2e/pass: convert all `simple` files and review demos for behavior retention
 - [x] Part 3 - audit/leetcode: convert all `simple` files and review semantic edge cases
 - [x] Manual bucket audit: resolve `manual_*` files with explicit assertions or owner review
+- [x] Part 5 - remove `# expect-*` markers from remaining `.sifr` fixtures:
+  - [x] Part 5a: convert remaining `# expect-stdout` in pass fixtures to assertions
+  - [x] Part 5b: convert remaining `# expect-stderr` in runtime fixtures to explicit failure assertions
+  - [x] Part 5c: remove `# expect-error` markers from compile-fail fixtures and negative demo cases
+  - [x] Part 5d: use `assert_err` directly for Result error assertions and restore explicit compile-fail `# expect-error` markers
 
 ### Current Mechanical Conversion Status
 
@@ -119,6 +124,13 @@ All manual mismatch buckets are resolved for the current repo snapshot. No remai
 - Part 4 commit: `66e7541`
 - Files converted in this part: 26
 - Notes: remaining assertions were explicit behavior checks, including list-accumulation patterns and file-backed log capture where stdout was used only for diagnostics.
+
+- Part 5d follow-up changes:
+  - Removed the `assertRaises`/`assertError` wrappers and used `assert_err` directly.
+  - Migrated `crates/sifr/tests/e2e/runtime_fail/assert_err_failure.sifr` to `assert_err`.
+  - Restored explicit `# expect-error` markers on all `crates/sifr/tests/e2e/fail` fixtures (with `SIFR-*` or `[E####]` expectations).
+  - Replaced runtime-panic fixtures `decimal_division_by_zero_runtime.sifr` and `bigdecimal_division_by_zero_runtime.sifr` with direct panic-triggering expressions.
+  - Updated compile-fail harness in `crates/sifr/tests/e2e.rs` to assert expected diagnostic codes (`SIFR-*`) and message IDs like `E2507`.
 
 ### Note
 

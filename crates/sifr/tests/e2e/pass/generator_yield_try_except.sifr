@@ -1,4 +1,4 @@
-# expect-stdout: 1
+from sifr.test import assert_eq
 
 def gen() -> list[int]:
     try:
@@ -8,5 +8,7 @@ def gen() -> list[int]:
 
 
 def main():
+    values: list[int] = []
     for v in gen():
-        print(v)
+        values.append(v)
+    assert_eq(values, [1])

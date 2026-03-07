@@ -1,3 +1,4 @@
+# expect-error: SIFR-TYPE-0001: non-exhaustive match: type 'int' cannot be fully covered by literal patterns — add `case _:` to handle remaining values
 def describe(x: int) -> str:
     match x:
         case 1:
@@ -7,5 +8,3 @@ def describe(x: int) -> str:
 
 def main():
     print(describe(3))
-
-# expect-error: non-exhaustive match

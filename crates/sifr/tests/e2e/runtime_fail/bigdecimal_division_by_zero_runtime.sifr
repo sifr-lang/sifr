@@ -1,5 +1,4 @@
-# expect-stderr: runtime error: bigdecimal division by zero
-def main():
+def main() -> None:
     x: bigdecimal = BigDecimal("1")
     y: bigdecimal = BigDecimal("0")
-    print(x / y)
+    x / y

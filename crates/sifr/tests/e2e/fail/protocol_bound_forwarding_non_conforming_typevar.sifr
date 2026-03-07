@@ -1,3 +1,4 @@
+# expect-error: SIFR-TYPE-0001: type 'U' does not implement protocol 'Readable' required by type parameter 'T'
 # Test: forwarding TypeVars must preserve protocol conformance requirements
 
 class Readable(Protocol):
@@ -16,5 +17,3 @@ def relay_bad[U: Closable](x: U) -> U:
 
 def main():
     print(1)
-
-# expect-error: does not implement protocol 'Readable'

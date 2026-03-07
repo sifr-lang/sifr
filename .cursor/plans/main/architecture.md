@@ -949,9 +949,8 @@ def main():
 **Test file format (fail tests):**
 
 ```python
-# expect-error: [type-mismatch]
 def main():
-    x: int = "hello"
+    x: int = "hello"  # expected to fail at compile-time
 ```
 
 ### Layer 4: CPython Parity and Safety Tests (milestone_ergonomics+)

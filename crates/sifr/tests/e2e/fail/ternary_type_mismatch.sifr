@@ -1,3 +1,3 @@
-# expect-error: incompatible types
+# expect-error: SIFR-TYPE-0001: if expression branches have incompatible types: 'str' and 'int'
 def main():
     x: str = "yes" if True else 42

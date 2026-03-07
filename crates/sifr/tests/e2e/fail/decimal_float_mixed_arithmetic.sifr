@@ -1,6 +1,5 @@
+# expect-error: [SIFR-TYPE-0001] [E2503] cannot mix 'float' with decimal numeric types in arithmetic
 def main():
     d: decimal = Decimal("1.0")
     x: decimal = d + 1.0
     print(x)
-
-# expect-error: [E2503]

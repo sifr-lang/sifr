@@ -1,11 +1,12 @@
-# expect-stdout: empty
+from sifr.test import assert_eq
 
-def iterate(xs: list[int]) -> None:
+def iterate(xs: list[int]) -> str:
     while xs:
         break
     else:
-        print('empty')
+        return "empty"
+    return ""
 
 
 def main():
-    iterate([])
+    assert_eq(iterate([]), "empty")

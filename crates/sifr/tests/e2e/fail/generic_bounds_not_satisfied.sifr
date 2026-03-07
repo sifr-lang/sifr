@@ -1,3 +1,4 @@
+# expect-error: SIFR-TYPE-0001: type 'Blob' does not implement protocol 'Comparable' required by type parameter 'T'
 # Test: calling a function with Comparable bound using a non-comparable type
 from sifr.bisect import bisect_left
 
@@ -8,5 +9,3 @@ def main():
     items: list[Blob] = [Blob(1), Blob(2), Blob(3)]
     idx: int = bisect_left(items, Blob(2))
     print(idx)
-
-# expect-error: does not implement protocol 'Comparable'

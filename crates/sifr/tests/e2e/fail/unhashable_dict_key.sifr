@@ -1,4 +1,4 @@
-# expect-error: hash() argument must be hashable
+# expect-error: SIFR-TYPE-0001: hash() argument must be hashable, got 'Measurement'
 
 class Measurement:
     value: float
