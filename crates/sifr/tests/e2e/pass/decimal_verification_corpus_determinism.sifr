@@ -1,0 +1,64 @@
+from sifr.json import json_dumps
+
+def main():
+    d: decimal = Decimal("-7.5")
+    bd: bigdecimal = BigDecimal("-7.5")
+
+    assert str(d // Decimal("2")) == '-4'
+    assert str(d % Decimal("2")) == '0.5'
+
+    assert str(bd // BigDecimal("2")) == '-4.000000000000000000000000000'
+    assert str(bd % BigDecimal("2")) == '0.5000000000000000000000000000'
+
+    assert str(Decimal("4").sqrt()) == 'Ok(2)'
+    assert str(BigDecimal("4").sqrt()).startswith('Ok(')
+
+    assert str(Decimal("-3.25").abs()) == '3.25'
+    assert str(BigDecimal("-3.25").abs()).startswith('3.25')
+    assert str(Decimal("0").is_zero()) == 'true'
+    assert str(BigDecimal("0").is_zero()) == 'true'
+    assert str(Decimal("1").is_finite()) == 'true'
+    assert str(BigDecimal("1").is_finite()) == 'true'
+
+    try:
+        i_from_decimal: int = int(Decimal("-1.9"))
+        i_from_bigdecimal: int = int(BigDecimal("-1.9"))
+        assert str(i_from_decimal) == '-1'
+        assert str(i_from_bigdecimal) == '-1'
+    except DecimalConversionError as e:
+        assert False
+
+    assert str(bigint(Decimal("-1.9"))) == '-1'
+    assert str(bigint(BigDecimal("-1.9"))) == '-1'
+
+    bd_from_decimal: bigdecimal = BigDecimal(Decimal("12.3400"))
+    assert str(bd_from_decimal) == '12.3400'
+
+    try:
+        d_from_bigdecimal: decimal = Decimal(BigDecimal("7.5000"))
+        assert str(d_from_bigdecimal) == '7.5000'
+    except DecimalConversionError as e:
+        assert False
+
+    assert json_dumps(Decimal("1.2300")) == '"1.2300"'
+    assert json_dumps(BigDecimal("1.2300")) == '"1.2300"'
+
+    baseline_tmp_d: decimal = Decimal("1.2345") * Decimal("3.0")
+    baseline_d: str = str(baseline_tmp_d.quantize(3))
+    baseline_bd: str = str((BigDecimal("1.2345678901234567890123456789") + BigDecimal("0")).round(6))
+
+    i: int = 0
+    while i < 30:
+        current_tmp_d: decimal = Decimal("1.2345") * Decimal("3.0")
+        current_d: str = str(current_tmp_d.quantize(3))
+        current_bd: str = str((BigDecimal("1.2345678901234567890123456789") + BigDecimal("0")).round(6))
+        assert current_d == baseline_d
+        assert current_bd == baseline_bd
+        i = i + 1
+
+    try:
+        out_of_range: int = int(BigDecimal("999999999999999999999999999999999999"))
+        _ = out_of_range
+        assert False
+    except DecimalConversionError as e:
+        assert e.message == 'bigdecimal value out of range for int'

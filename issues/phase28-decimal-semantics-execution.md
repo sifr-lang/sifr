@@ -122,7 +122,7 @@ Validation evidence:
 - Full suite: `/Users/yaseralnajjar/work/sifr/codebase/scripts/run_all_tests.sh` -> pass (406 pass e2e fixtures, 0 failures).
 
 ## Part 4: milestone_28_4 Decimal Diagnostics Contract
-status: done (2026-03-07, PR pending)
+status: done (2026-03-07, merged)
 
 - [x] Reserve and enforce diagnostics `E2501-E2508`
 - [x] Add precise, stable decimal diagnostics for constructors/mixing/conversion/context issues
@@ -130,7 +130,7 @@ status: done (2026-03-07, PR pending)
 - [x] Add demo: `demos/m28_4_decimal_diagnostics_contract_demo/main.sifr`
 - [x] Add negative cases
 - [x] Run milestone demo + targeted tests + full local suite
-- [ ] Open PR, review, and merge
+- [x] Open PR, review, and merge
 
 Validation evidence:
 - Positive path: `cargo run -q -p sifr -- run demos/m28_4_decimal_diagnostics_contract_demo/main.sifr` -> prints `m28_4 decimal diagnostics contract demo` and `diagnostic range E2501-E2508 is reserved and enforced`.
@@ -143,11 +143,30 @@ Validation evidence:
 - Negative path: `cargo run -q -p sifr -- run crates/sifr/tests/e2e/fail/bigdecimal_round_requires_int_scale.sifr` -> exits `1` with `[E2508]`.
 - Full suite: `/Users/yaseralnajjar/work/sifr/codebase/scripts/run_all_tests.sh` -> pass (406 pass e2e fixtures, 0 failures).
 
+## Part 5: milestone_28_5 Verification Corpus and Determinism Gates
+status: done (2026-03-07, PR pending)
+
+- [x] Expand pass/fail decimal corpus with deterministic coverage
+- [x] Add repeated-run determinism checks and negative seeded cases
+- [x] Add end-to-end milestone demo using both decimal types
+- [x] Run milestone demo + targeted tests + full local suite
+- [ ] Open PR, review, and merge
+
+Validation evidence:
+- Positive path: `cargo run -q -p sifr -- run demos/m28_5_verification_corpus_and_determinism_gates_demo/main.sifr` -> prints `m28_5 verification corpus and determinism gates demo` and `deterministic decimal and bigdecimal corpus checks passed`.
+- Negative path: `cargo run -q -p sifr -- run demos/m28_5_verification_corpus_and_determinism_gates_demo/negative_cases/forbidden_float_conversion/main.sifr` -> exits `1` with `[E2505]`.
+- Negative path: `cargo run -q -p sifr -- run demos/m28_5_verification_corpus_and_determinism_gates_demo/negative_cases/forbidden_mixed_arithmetic/main.sifr` -> exits `1` with `[E2504]`.
+- Positive path: `cargo run -q -p sifr -- run crates/sifr/tests/e2e/pass/decimal_verification_corpus_determinism.sifr` -> pass.
+- Negative path: `cargo run -q -p sifr -- run crates/sifr/tests/e2e/fail/decimal_forbidden_float_conversion_seeded.sifr` -> exits `1` with `[E2505]`.
+- Negative path: `cargo run -q -p sifr -- run crates/sifr/tests/e2e/fail/decimal_forbidden_mixed_arithmetic_seeded.sifr` -> exits `1` with `[E2504]`.
+- Determinism check: `cargo run -q -p sifr -- run demos/m28_5_verification_corpus_and_determinism_gates_demo/main.sifr > /tmp/m28_5_run1.txt && cargo run -q -p sifr -- run demos/m28_5_verification_corpus_and_determinism_gates_demo/main.sifr > /tmp/m28_5_run2.txt && diff -u /tmp/m28_5_run1.txt /tmp/m28_5_run2.txt` -> no diff.
+- Full suite: `/Users/yaseralnajjar/work/sifr/codebase/scripts/run_all_tests.sh` -> pass (407 pass e2e fixtures, 0 failures).
+
 ## PR Log
 - Part 1: merged https://github.com/yaseralnajjar/sifr/pull/910
 - Part 2: merged https://github.com/yaseralnajjar/sifr/pull/911
 - Part 3: merged https://github.com/yaseralnajjar/sifr/pull/912
-- Part 4: pending
+- Part 4: merged https://github.com/yaseralnajjar/sifr/pull/913
 - Part 5: pending
 
 ## External Review Passes
