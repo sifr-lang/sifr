@@ -823,11 +823,9 @@ impl RustEmitter {
                 if crate::helpers::is_option_type(result_ty) {
                     return Ok(Some(option_expr));
                 }
-                return Ok(Some(crate::RustExpr::MethodCall {
-                    receiver: Box::new(crate::RustExpr::Paren(Box::new(option_expr))),
-                    method: "unwrap".to_string(),
-                    args: vec![],
-                }));
+                return Err(crate::CodegenError::new(
+                    "internal codegen invariant violated: index on optional list/dict/str produced non-optional result type",
+                ));
             }
 
             let Some(lowered_expr) = build_inner_index(lowered_object) else {
@@ -837,11 +835,9 @@ impl RustEmitter {
             {
                 return Ok(Some(lowered_expr));
             }
-            Ok(Some(crate::RustExpr::MethodCall {
-                receiver: Box::new(crate::RustExpr::Paren(Box::new(lowered_expr))),
-                method: "unwrap".to_string(),
-                args: vec![],
-            }))
+            Err(crate::CodegenError::new(
+                "internal codegen invariant violated: list/dict/str index produced non-optional result type",
+            ))
         })();
 
         if suppress_self_field_clone && self.pending_self_field_clone_suppression > 0 {
@@ -922,4 +918,3 @@ fn is_ident(name: &str) -> bool {
     }
     chars.all(|ch| ch == '_' || ch.is_ascii_alphanumeric())
 }
-

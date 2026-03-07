@@ -177,7 +177,7 @@ mod tests {
         .expect("option len lowers");
         assert_eq!(
             render_expr(&option_len.expr),
-            "opt.as_ref().unwrap().len() as i64"
+            "opt.as_ref().map_or(0 as usize, |v| v.len()) as i64"
         );
 
         let generic_len = lower_method(

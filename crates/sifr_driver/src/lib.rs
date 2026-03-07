@@ -1835,6 +1835,40 @@ def main():
     }
 
     #[test]
+    fn test_compile_indexing_path_does_not_emit_unwrap_in_main_body() {
+        let source = r#"
+def main():
+    items: list[int] = [10, 20, 30]
+    value: int | None = items[1]
+    if value is not None:
+        print(value)
+"#;
+        match compile_with_metadata(source) {
+            CompileResultFull::Success { rust_source, .. } => {
+                let main_start = rust_source
+                    .find("fn main()")
+                    .expect("generated Rust must contain fn main()");
+                let main_body = &rust_source[main_start..];
+                assert!(
+                    main_body.contains(".get("),
+                    "main body should use safe get()-based indexing"
+                );
+                assert!(
+                    !main_body.contains(".unwrap("),
+                    "main body must not rely on data-dependent unwrap for indexing"
+                );
+                assert!(
+                    !main_body.contains(".expect("),
+                    "main body must not rely on data-dependent expect for indexing"
+                );
+            }
+            CompileResultFull::Errors { errors } => {
+                panic!("compilation failed: {:?}", errors);
+            }
+        }
+    }
+
+    #[test]
     fn test_type_mismatch_error() {
         let source = r#"
 def main():

@@ -1,0 +1,6 @@
+# negative path: method calls on optional values without narrowing must fail
+# with a user-facing diagnostic (no runtime unwrap path).
+
+def main():
+    values: list[int] | None = [1, 2, 3]
+    _ = values.len()
