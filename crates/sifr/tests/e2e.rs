@@ -588,7 +588,8 @@ fn parse_expected_error(raw: &str) -> Option<CompileFailureExpectation> {
     };
 
     let code = normalize_error_code(raw_code);
-    is_expect_error_code(&code).then_some(CompileFailureExpectation {
+    let is_valid = is_diagnostic_code(&code) || is_message_error_code(&code);
+    is_valid.then_some(CompileFailureExpectation {
         code,
         message_contains: (!raw_message.is_empty()).then_some(raw_message),
     })
@@ -626,17 +627,11 @@ fn normalize_error_code(raw: &str) -> String {
     }
 }
 
-fn is_expect_error_code(raw: &str) -> bool {
-    let normalized = normalize_error_code(raw);
-    is_diagnostic_code(&normalized) || is_message_error_code(&normalized)
-}
-
 fn compile_failures_to_messages(failures: &[CompiledFailure]) -> Vec<String> {
-    let mut messages = Vec::new();
-    for failure in failures {
-        messages.push(format!("{}: {}", failure.code, failure.message));
-    }
-    messages
+    failures
+        .iter()
+        .map(|f| format!("{}: {}", f.code, f.message))
+        .collect()
 }
 
 fn diagnostic_error_code(message: &str) -> Option<String> {
