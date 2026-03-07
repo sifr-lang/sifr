@@ -29,12 +29,20 @@ Establish and enforce compiler-focused performance budgets (compile-time, compil
 ### milestone_35_4: Shared Analysis Query Architecture and Cache Contracts
 - Scope:
   - Introduce the canonical reusable frontend analysis/query API for parse/lower/type-check/diagnostics.
+  - Define the minimum required API surface explicitly:
+    - create/load one project or compilation context
+    - parse one module or project input set
+    - lower parsed modules through the canonical frontend pipeline
+    - type-check and collect canonical diagnostics
+    - inspect module/project graph state needed by CLI and adapter consumers
+    - request per-module and whole-project analysis results without reimplementing semantics
   - Define dependency-tracked query/cache architecture at module granularity.
   - Define deterministic invalidation rules and cache-consistency guarantees for local loops.
   - Make the compiler CLI consume the same analysis/query ownership model that future tooling must use.
 - Definition of done:
   - Shared analysis/query design and cache contracts are explicit, deterministic, and regression-covered.
   - The anti-split-brain foundation is in place before standalone tooling surfaces begin.
+  - The minimum API surface is documented clearly enough that Phase 36 can consume it without inventing new semantics-bearing entrypoints.
 
 ## Quality Contract
 - Entry criteria: Phase 34 is completed and generated-code quality gates are enforced.
@@ -50,7 +58,7 @@ Establish and enforce compiler-focused performance budgets (compile-time, compil
   - `milestone_35_1` (Baseline Benchmark Suite): validation goals cover: Define compiler benchmark suites for `check`, `build`, and incremental local loops. Include negative-path goals that catch regressions against these guarantees.
   - `milestone_35_2` (Budget and Threshold Policy): validation goals cover: Set compiler regression thresholds and waiver process. Include negative-path goals that catch regressions against these guarantees.
   - `milestone_35_3` (Enforcement Integration): validation goals cover: Add local and CI gates for benchmark regressions. Include negative-path goals that catch regressions against these guarantees.
-  - `milestone_35_4` (Shared Analysis Query Architecture and Cache Contracts): validation goals cover: Introduce the canonical reusable frontend analysis/query API for parse/lower/type-check/diagnostics; Define dependency-tracked query/cache architecture at module granularity; Define deterministic invalidation rules and cache-consistency guarantees for local loops; Make the compiler CLI consume the same analysis/query ownership model that future tooling must use. Include negative-path goals that catch regressions against these guarantees.
+  - `milestone_35_4` (Shared Analysis Query Architecture and Cache Contracts): validation goals cover: Introduce the canonical reusable frontend analysis/query API for parse/lower/type-check/diagnostics; Define the minimum required API surface for project context creation, parse, lower, type-check, diagnostics, graph inspection, and analysis queries; Define dependency-tracked query/cache architecture at module granularity; Define deterministic invalidation rules and cache-consistency guarantees for local loops; Make the compiler CLI consume the same analysis/query ownership model that future tooling must use. Include negative-path goals that catch regressions against these guarantees.
   - Exit-gate evidence explicitly demonstrates: Performance regressions are systematically detected and controlled, and the canonical shared analysis/query foundation is established.
 
 ## Exit Gate

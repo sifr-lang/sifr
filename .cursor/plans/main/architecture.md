@@ -610,10 +610,10 @@ Sifr compiles to Rust source code, which is then compiled by `rustc`. This creat
 - `**rustc` error translation:** when `rustc` emits an error on generated code, the driver translates it back to `.sifr` coordinates using the span map. If translation fails (e.g., error in compiler-generated boilerplate), the raw `rustc` error is shown with a note: "This error originated in the Rust compilation step."
 - **Generation vs rendering separation:** semantic phases construct diagnostics; renderer layers convert them to `human`, `json`, and `compact` presentation formats. Output mode selection must not change diagnostic ownership or semantics.
 - **JSON renderer contract:** `json` output is the lossless machine-readable format and must preserve the shared diagnostic model fields without human-only lossy reformatting.
-- **Compact renderer contract:** `compact` is a token-efficient summary format inspired by `rtk` grouping/truncation patterns but implemented in Sifr. It must:
+- **Compact renderer contract:** `compact` is a token-efficient summary format inspired by the grouping/truncation strategy used in the sibling `rtk` repository at `/Users/yaseralnajjar/work/sifr/rtk`, but implemented in Sifr and fully specified here. Implementers can read `rtk` to build or validate the renderer. It must:
   - show a one-line severity summary first
   - group repeated diagnostics by `(severity, code, canonical message)`
-  - list a bounded number of representative locations per group
+  - list at most 5 representative locations per group
   - include one bounded help line when present
   - include the documentation URL once per group
   - emit truncation lines such as `... +N more` instead of flooding the terminal
@@ -622,6 +622,7 @@ Sifr compiles to Rust source code, which is then compiled by `rustc`. This creat
 - **Multi-file rendering:** errors that span multiple `.sifr` files show each file's relevant snippet with labeled spans. Uses `miette` or `ariadne` for rich terminal rendering with colors, underlines, and related notes.
 - **Diagnostic ownership:** the Sifr compiler should catch as many errors as possible before invoking `rustc`. Over time, the set of errors that reach `rustc` should shrink to near-zero as the type checker and borrow checker mature.
 - **No split-brain rule:** `sifr_driver`, future editor integrations, and automation-facing adapters must consume diagnostics through the canonical frontend API. They may render or transport diagnostics differently, but they may not reimplement parse/lower/type-check logic or semantic diagnostic derivation.
+- **Canonical frontend API minimum surface:** the shared frontend/query API established in Phase 35 must expose one canonical project/context handle plus reusable entrypoints for: parse, lower, type-check, collect diagnostics, inspect project/module graph state, and request per-module/per-project analysis results. CLI, editor, and automation adapters may wrap this API, but they must not bypass it for semantic analysis.
 
 **Milestone responsibilities:**
 
