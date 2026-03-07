@@ -1,0 +1,9 @@
+# m27_5 bounded multi-error recovery demo
+#
+# Positive path: multiple independent diagnostics are emitted deterministically
+# during `sifr check`.
+
+def main():
+    a: int = "a"
+    b: int = "b"
+    c: bool = 1

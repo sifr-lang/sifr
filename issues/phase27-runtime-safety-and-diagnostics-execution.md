@@ -51,15 +51,15 @@ Loop per part: Work -> Validate -> PR -> Review -> Merge -> Mark Done
 - [x] Add demo: `demos/m27_4_span_and_diagnostic_schema_quality_demo`
 - [x] Add negative case
 - [x] Run milestone demo + targeted tests + full local suite
-- [ ] Open PR, review, and merge
+- [x] Open PR, review, and merge
 
 ### Part 5: milestone_27_5 Bounded Multi-Error Recovery
-- [ ] Enforce caps: `50` top-level diagnostics, duplicate cap `5`, compact representative locations `5`
-- [ ] Add deterministic ordering and duplicate-group summarization `... +N more similar diagnostics`
-- [ ] Add recovery matrix regression coverage
-- [ ] Add demo: `demos/m27_5_bounded_multi_error_recovery_demo`
-- [ ] Add negative case
-- [ ] Run milestone demo + targeted tests + full local suite
+- [x] Enforce caps: `50` top-level diagnostics, duplicate cap `5`, compact representative locations `5`
+- [x] Add deterministic ordering and duplicate-group summarization `... +N more similar diagnostics`
+- [x] Add recovery matrix regression coverage
+- [x] Add demo: `demos/m27_5_bounded_multi_error_recovery_demo`
+- [x] Add negative case
+- [x] Run milestone demo + targeted tests + full local suite
 - [ ] Open PR, review, and merge
 
 ### Part 6: milestone_27_6 Stability Contract Finalization
@@ -135,7 +135,7 @@ Validation evidence:
 - Negative path: `cargo run -q -p sifr -- run crates/sifr/tests/e2e/fail/unsupported_default_expr_call.sifr` -> exits `1` with deterministic unsupported-default diagnostic.
 
 ## Part 4: milestone_27_4 Span and Diagnostic Schema Quality
-status: done (2026-03-07, PR: pending)
+status: done (2026-03-07, PR #900)
 
 - [x] Canonical structured diagnostic schema introduced for CLI-facing diagnostics with stable fields (`code`, `severity`, `message`, `url`, `primary_span`, `related_spans`, `children`, `help`, `suggestions`)
 - [x] Severity enum implemented exactly as `Error | Warning | Note | Help`
@@ -145,7 +145,7 @@ status: done (2026-03-07, PR: pending)
 - [x] Negative-path validation recorded
 - [x] Run milestone demo
 - [x] Run full local suite
-- [ ] Open PR, review, and merge
+- [x] Open PR, review, and merge
 - [x] Mark part progress in this checklist
 
 Validation evidence:
@@ -158,8 +158,30 @@ Validation evidence:
 - Negative path: `cargo run -q -p sifr -- --diagnostic-format json check demos/m27_4_span_and_diagnostic_schema_quality_demo/negative_cases/type_error_json_diagnostic/main.sifr` -> exits `1` and emits canonical json diagnostic with stable `code`, `severity`, and `url`.
 - Negative path: `cargo run -q -p sifr -- --diagnostic-format json check /tmp/.../parse_error.sifr` -> exits `1` and emits canonical parse diagnostic with stable parser code/url.
 
+## Part 5: milestone_27_5 Bounded Multi-Error Recovery
+status: done (2026-03-07, PR: pending)
+
+- [x] Recovery hard limits enforced (`50` top-level diagnostics, `5` per duplicate group, summary tail)
+- [x] Deterministic grouping/ordering implemented via canonical key ordering
+- [x] Duplicate summarization uses exact suffix `... +N more similar diagnostics`
+- [x] Positive-path validation recorded
+- [x] Negative-path validation recorded
+- [x] Run milestone demo
+- [x] Run full local suite
+- [ ] Open PR, review, and merge
+- [x] Mark part progress in this checklist
+
+Validation evidence:
+- Positive path: `cargo test -q -p sifr_driver apply_diagnostic_recovery_limits` -> pass (2 tests).
+- Positive path: `cargo run -q -p sifr -- check demos/m27_5_bounded_multi_error_recovery_demo/main.sifr` -> emits multiple deterministic diagnostics in one invocation.
+- Positive path: `cargo run -q -p sifr -- --diagnostic-format json check demos/m27_5_bounded_multi_error_recovery_demo/negative_cases/repeated_type_errors/main.sifr` -> emits bounded json diagnostics with grouped summary tail.
+- Positive path: `/Users/yaseralnajjar/work/sifr/codebase/scripts/run_all_tests.sh` -> pass (403 pass tests completed).
+- Negative path: `cargo run -q -p sifr -- check demos/m27_5_bounded_multi_error_recovery_demo/negative_cases/repeated_type_errors/main.sifr` -> exits `1` and includes `type error: ... +3 more similar diagnostics`.
+- Negative path: repeated diagnostics above cap are truncated to 5 representatives per group with summary record.
+
 ## PR Log
 - Part 1: https://github.com/yaseralnajjar/sifr/pull/897
 - Part 2: https://github.com/yaseralnajjar/sifr/pull/898
 - Part 3: https://github.com/yaseralnajjar/sifr/pull/899
-- Part 4: pending
+- Part 4: https://github.com/yaseralnajjar/sifr/pull/900
+- Part 5: pending

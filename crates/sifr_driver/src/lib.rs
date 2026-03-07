@@ -677,6 +677,63 @@ pub fn compile_errors_to_diagnostics(errors: &[CompileError]) -> Vec<CompilerDia
     errors.iter().map(CompileError::to_diagnostic).collect()
 }
 
+const MAX_TOP_LEVEL_DIAGNOSTICS: usize = 50;
+const MAX_SIMILAR_DIAGNOSTICS_PER_GROUP: usize = 5;
+
+fn severity_rank(severity: Severity) -> u8 {
+    match severity {
+        Severity::Error => 0,
+        Severity::Warning => 1,
+        Severity::Note => 2,
+        Severity::Help => 3,
+    }
+}
+
+pub fn apply_diagnostic_recovery_limits(
+    diagnostics: &[CompilerDiagnostic],
+) -> Vec<CompilerDiagnostic> {
+    let mut grouped: BTreeMap<(u8, String, String, Option<String>), Vec<CompilerDiagnostic>> =
+        BTreeMap::new();
+    for diagnostic in diagnostics {
+        let key = (
+            severity_rank(diagnostic.severity),
+            diagnostic.code.clone(),
+            diagnostic.message.clone(),
+            diagnostic
+                .primary_span
+                .as_ref()
+                .and_then(|span| span.file.clone()),
+        );
+        grouped.entry(key).or_default().push(diagnostic.clone());
+    }
+
+    let mut bounded = Vec::new();
+    for ((_severity_rank, _code, _message, _file), group) in grouped {
+        let retained = group.len().min(MAX_SIMILAR_DIAGNOSTICS_PER_GROUP);
+        for diagnostic in group.iter().take(retained) {
+            bounded.push(diagnostic.clone());
+        }
+        if group.len() > MAX_SIMILAR_DIAGNOSTICS_PER_GROUP {
+            let mut summary = group[0].clone();
+            summary.message = format!(
+                "... +{} more similar diagnostics",
+                group.len() - MAX_SIMILAR_DIAGNOSTICS_PER_GROUP
+            );
+            summary.primary_span = None;
+            summary.related_spans.clear();
+            summary.children.clear();
+            summary.help = None;
+            summary.suggestions.clear();
+            bounded.push(summary);
+        }
+    }
+
+    if bounded.len() > MAX_TOP_LEVEL_DIAGNOSTICS {
+        bounded.truncate(MAX_TOP_LEVEL_DIAGNOSTICS);
+    }
+    bounded
+}
+
 impl std::fmt::Display for CompileError {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         let phase = match self.phase {
@@ -1994,6 +2051,54 @@ mod tests {
         assert_eq!(diagnostics[1].message, "second");
         assert_eq!(diagnostics[0].code, "SIFR-TYPE-0001");
         assert_eq!(diagnostics[1].code, "SIFR-CODEGEN-0001");
+    }
+
+    #[test]
+    fn test_apply_diagnostic_recovery_limits_summarizes_similar_diagnostics() {
+        let mut diagnostics = Vec::new();
+        for idx in 0..8 {
+            diagnostics.push(CompilerDiagnostic {
+                code: "SIFR-TYPE-0001".to_string(),
+                severity: Severity::Error,
+                message: "type mismatch: expected 'int', got 'str'".to_string(),
+                url: "https://sifr.dev/docs/errors/SIFR-TYPE-0001".to_string(),
+                primary_span: Some(DiagnosticSpan {
+                    file: Some("main.sifr".to_string()),
+                    line: Some(idx + 1),
+                    column: Some(1),
+                }),
+                related_spans: Vec::new(),
+                children: Vec::new(),
+                help: None,
+                suggestions: Vec::new(),
+            });
+        }
+        let bounded = apply_diagnostic_recovery_limits(&diagnostics);
+        assert_eq!(bounded.len(), 6);
+        assert!(bounded
+            .iter()
+            .take(5)
+            .all(|d| d.message == "type mismatch: expected 'int', got 'str'"));
+        assert_eq!(bounded[5].message, "... +3 more similar diagnostics");
+    }
+
+    #[test]
+    fn test_apply_diagnostic_recovery_limits_caps_top_level_diagnostics() {
+        let diagnostics: Vec<CompilerDiagnostic> = (0..60)
+            .map(|idx| CompilerDiagnostic {
+                code: format!("SIFR-TYPE-{:04}", idx),
+                severity: Severity::Error,
+                message: format!("error {idx}"),
+                url: "https://sifr.dev/docs/errors/SIFR-TYPE-0001".to_string(),
+                primary_span: None,
+                related_spans: Vec::new(),
+                children: Vec::new(),
+                help: None,
+                suggestions: Vec::new(),
+            })
+            .collect();
+        let bounded = apply_diagnostic_recovery_limits(&diagnostics);
+        assert_eq!(bounded.len(), 50);
     }
 
     fn parse_suite(source: &str) -> Vec<sifr_python_ast::Stmt> {

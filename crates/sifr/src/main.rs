@@ -7,8 +7,8 @@
 //!   sifr emit <file.sifr>     Show generated Rust code
 use clap::{Parser, Subcommand, ValueEnum};
 use sifr_driver::{
-    build, build_project, check, check_project, compile, compile_errors_to_diagnostics, run_tests,
-    CompileError, CompileResult,
+    apply_diagnostic_recovery_limits, build, build_project, check, check_project, compile,
+    compile_errors_to_diagnostics, run_tests, CompileError, CompileResult,
 };
 use sifr_python_ast::Stmt;
 use sifr_python_parser::parse_module;
@@ -194,27 +194,45 @@ impl Drop for InvocationWorkspace {
 }
 
 fn render_compile_errors(errors: &[CompileError], format: DiagnosticFormat) {
+    let diagnostics = apply_diagnostic_recovery_limits(&compile_errors_to_diagnostics(errors));
     match format {
         DiagnosticFormat::Human => {
-            for error in errors {
-                let _ = writeln!(io::stderr(), "{error}");
+            for diagnostic in diagnostics {
+                let label = if diagnostic.code.starts_with("SIFR-PARSE-") {
+                    "parse error"
+                } else if diagnostic.code.starts_with("SIFR-TYPE-") {
+                    "type error"
+                } else if diagnostic.code.starts_with("SIFR-CODEGEN-") {
+                    "codegen error"
+                } else if diagnostic.code.starts_with("SIFR-BUILD-") {
+                    "build error"
+                } else {
+                    match diagnostic.severity {
+                        sifr_driver::Severity::Error => "error",
+                        sifr_driver::Severity::Warning => "warning",
+                        sifr_driver::Severity::Note => "note",
+                        sifr_driver::Severity::Help => "help",
+                    }
+                };
+                let _ = writeln!(
+                    io::stderr(),
+                    "{label}: {message}",
+                    message = diagnostic.message
+                );
             }
         }
-        DiagnosticFormat::Json => {
-            let diagnostics = compile_errors_to_diagnostics(errors);
-            match serde_json::to_string_pretty(&diagnostics) {
-                Ok(json) => {
-                    let _ = writeln!(io::stderr(), "{json}");
-                }
-                Err(e) => {
-                    let _ = writeln!(
-                        io::stderr(),
-                        "build error: failed to serialize diagnostics as json: {e}"
-                    );
-                    process::exit(2);
-                }
+        DiagnosticFormat::Json => match serde_json::to_string_pretty(&diagnostics) {
+            Ok(json) => {
+                let _ = writeln!(io::stderr(), "{json}");
             }
-        }
+            Err(e) => {
+                let _ = writeln!(
+                    io::stderr(),
+                    "build error: failed to serialize diagnostics as json: {e}"
+                );
+                process::exit(2);
+            }
+        },
     }
 }
 
