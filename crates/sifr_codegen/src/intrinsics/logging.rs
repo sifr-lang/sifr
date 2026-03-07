@@ -9,8 +9,19 @@ fn global_log_level_lock_expr() -> RustExpr {
             method: "lock".to_string(),
             args: vec![],
         }),
-        method: "unwrap".to_string(),
-        args: vec![],
+        method: "unwrap_or_else".to_string(),
+        args: vec![RustExpr::Closure {
+            params: vec![crate::RustParam::Named {
+                name: "__err".to_string(),
+                ty: crate::RustType::Named("_".to_string()),
+            }],
+            body: Box::new(RustExpr::MethodCall {
+                receiver: Box::new(RustExpr::Ident("__err".to_string())),
+                method: "into_inner".to_string(),
+                args: vec![],
+            }),
+            is_move: false,
+        }],
     }
 }
 

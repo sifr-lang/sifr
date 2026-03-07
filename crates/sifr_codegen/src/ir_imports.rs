@@ -108,6 +108,14 @@ fn collect_stmt(stmt: &RustStmt, needs: &mut IrImportNeeds) {
             collect_expr(value, needs);
         }
         RustStmt::LetPattern { value, .. } => collect_expr(value, needs),
+        RustStmt::LetElse {
+            value, else_body, ..
+        } => {
+            collect_expr(value, needs);
+            for stmt in else_body {
+                collect_stmt(stmt, needs);
+            }
+        }
         RustStmt::Assign { target, value } | RustStmt::AugAssign { target, value, .. } => {
             collect_expr(target, needs);
             collect_expr(value, needs);
@@ -500,5 +508,4 @@ mod tests {
         assert!(!needs.runtime.needs_mutex);
         assert!(!needs.runtime.needs_bigint);
     }
-
 }

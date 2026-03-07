@@ -88,6 +88,11 @@ pub enum RustStmt {
         pattern: String,
         value: RustExpr,
     },
+    LetElse {
+        pattern: String,
+        value: RustExpr,
+        else_body: Vec<RustStmt>,
+    },
     Assign {
         target: RustExpr,
         value: RustExpr,
@@ -502,5 +507,4 @@ mod tests {
             _ => unreachable!("constructed as Paren"),
         }
     }
-
 }
