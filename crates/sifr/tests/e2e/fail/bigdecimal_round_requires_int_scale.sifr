@@ -1,3 +1,4 @@
+# expect-error: [SIFR-TYPE-0001] [E2508] bigdecimal.round() scale argument must be 'int', got 'str'
 def main():
     d: bigdecimal = BigDecimal("1.23")
     x: bigdecimal = d.round("2")

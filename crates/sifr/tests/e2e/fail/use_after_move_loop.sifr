@@ -1,3 +1,4 @@
+# expect-error: SIFR-TYPE-0001: value 's' is moved inside loop body; it would be unavailable on subsequent iterations
 def consume(own s: str) -> int:
     return len(s)
 

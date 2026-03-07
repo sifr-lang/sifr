@@ -1,3 +1,4 @@
+# expect-error: SIFR-TYPE-0001: match guard must be a bool expression, got 'int'
 def classify(x: int) -> str:
     match x:
         case n if n + 1:

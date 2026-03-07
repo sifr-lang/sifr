@@ -1,3 +1,4 @@
+# expect-error: SIFR-TYPE-0001: unused Result value of type 'Result[int, ValueError]' must be used. Use 'let _ = expr' to explicitly discard
 
 def fallible() -> Result[int, ValueError]:
     return 42

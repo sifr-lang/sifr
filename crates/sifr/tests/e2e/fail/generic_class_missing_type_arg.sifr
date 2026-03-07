@@ -1,3 +1,4 @@
+# expect-error: SIFR-TYPE-0001: unknown generic type: 'UnknownType'
 # Test: using unknown generic type in annotation
 def main():
     x: UnknownType[int] = 42

@@ -1,3 +1,4 @@
+# expect-error: SIFR-TYPE-0001: module 'sifr.math' has no member 'nonexistent_func'
 # Test that importing a nonexistent function from a valid stdlib module fails
 from sifr.math import nonexistent_func
 

@@ -1,3 +1,4 @@
+# expect-error: SIFR-TYPE-0001: type 'int' does not implement protocol 'MissingBound' required by type parameter 'T'
 # Test: unknown TypeVar bound is rejected (no default-allow fallback)
 from typing import TypeVar
 

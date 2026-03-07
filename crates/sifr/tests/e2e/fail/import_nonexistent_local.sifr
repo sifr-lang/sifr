@@ -1,3 +1,4 @@
+# expect-error: SIFR-TYPE-0001: undefined function: 'bar'
 # Test that importing from a nonexistent local module fails
 from mymodule import bar
 

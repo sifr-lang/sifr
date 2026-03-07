@@ -1,3 +1,4 @@
+# expect-error: [E2507] decimal.round() scale must be between 0 and 28, got 29
 def main():
     d: decimal = Decimal("1.2345")
     x: decimal = d.round(29)

@@ -1,3 +1,4 @@
+# expect-error: SIFR-TYPE-0001: type 'PlainClass' does not implement the ContextManager protocol (missing __enter__ and __exit__ methods)
 # Test that using a non-context-manager type in with produces a compile error
 class PlainClass:
     value: int

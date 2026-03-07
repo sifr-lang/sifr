@@ -1,3 +1,4 @@
+# expect-error: SIFR-TYPE-0001: cannot return borrowed parameter `items`: it is borrowed by default -- use `own items` to take ownership, or return `items.clone()`
 # Test: returning a borrowed parameter should produce a compile error.
 # The parameter `items` is borrowed by default (&Vec<i64>),
 # so it cannot be returned (would escape the borrow).

@@ -1,3 +1,4 @@
+# expect-error: SIFR-TYPE-0001: cannot mix 'int' and 'bigint' in arithmetic; use bigint() or int() to convert explicitly
 def main():
     x: int = 42
     y: bigint = bigint(100)

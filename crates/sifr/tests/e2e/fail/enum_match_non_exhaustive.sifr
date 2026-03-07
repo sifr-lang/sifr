@@ -1,3 +1,4 @@
+# expect-error: SIFR-TYPE-0001: non-exhaustive match: enum 'Color' has uncovered variants: BLUE — add matching case(s) or `case _:`
 from enum import Enum
 
 class Color(Enum):

@@ -1,3 +1,4 @@
+# expect-error: SIFR-TYPE-0001: non-exhaustive match: type 'None | str' has uncovered variants: None — add matching case(s) or `case _:`
 def describe(x: str | None) -> str:
     match x:
         case str():

@@ -1,3 +1,4 @@
+# expect-error: SIFR-TYPE-0001: argument 1 ('values') of function 'accepts_mixed': expected 'list[int | str]', got 'list[int]'
 # Test: mutable list variance is invariant (list[int] is not list[int | str])
 
 def accepts_mixed(values: list[int | str]) -> int:

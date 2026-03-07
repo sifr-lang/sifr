@@ -1,3 +1,4 @@
+# expect-error: SIFR-TYPE-0001: function 'pick': missing argument 'x' with no default value
 def seed() -> int:
     return 7
 

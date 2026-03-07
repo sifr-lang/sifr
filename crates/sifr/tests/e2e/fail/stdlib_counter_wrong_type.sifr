@@ -1,3 +1,4 @@
+# expect-error: SIFR-TYPE-0001: argument 1 ('counts') of function 'Counter': expected 'dict[T, int]', got 'int'
 # Test: passing wrong type to Counter constructor
 from sifr.collections import Counter
 

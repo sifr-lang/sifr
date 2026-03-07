@@ -1,3 +1,4 @@
+# expect-error: SIFR-TYPE-0001: type 'Point' does not implement protocol 'Comparable' required by type parameter 'T'
 # Test: passing wrong type to a bounded generic function
 from sifr.bisect import bisect_left
 

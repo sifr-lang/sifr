@@ -1,3 +1,4 @@
+# expect-error: SIFR-TYPE-0001: class 'Point' has no field 'z' — available fields: x, y
 class Point:
     x: int
     y: int

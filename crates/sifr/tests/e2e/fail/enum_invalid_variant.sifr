@@ -1,3 +1,4 @@
+# expect-error: SIFR-TYPE-0001: undefined variable: 'Color'
 # Test: accessing a non-existent enum variant
 from enum import Enum
 

@@ -1,3 +1,4 @@
+# expect-error: SIFR-TYPE-0001: use of moved value: 's1'
 def main():
     s1: str = "hello"
     s2: str = s1

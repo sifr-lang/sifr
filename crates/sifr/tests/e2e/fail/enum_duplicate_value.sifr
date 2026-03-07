@@ -1,3 +1,4 @@
+# expect-error: SIFR-TYPE-0001: enum 'Status' has duplicate value 200: variants 'OK' and 'SUCCESS'
 # Test: enum with duplicate integer values
 from enum import Enum
 

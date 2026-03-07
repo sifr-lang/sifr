@@ -1,3 +1,4 @@
+# expect-error: SIFR-TYPE-0001: type 'U' does not implement protocol 'MissingBound' required by type parameter 'T'
 # Test: unknown protocol bounds are rejected when forwarding TypeVars through generic calls
 
 def take_missing[T: MissingBound](x: T) -> T:
