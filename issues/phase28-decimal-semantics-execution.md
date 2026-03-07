@@ -144,13 +144,13 @@ Validation evidence:
 - Full suite: `/Users/yaseralnajjar/work/sifr/codebase/scripts/run_all_tests.sh` -> pass (406 pass e2e fixtures, 0 failures).
 
 ## Part 5: milestone_28_5 Verification Corpus and Determinism Gates
-status: done (2026-03-07, PR pending)
+status: done (2026-03-07, merged)
 
 - [x] Expand pass/fail decimal corpus with deterministic coverage
 - [x] Add repeated-run determinism checks and negative seeded cases
 - [x] Add end-to-end milestone demo using both decimal types
 - [x] Run milestone demo + targeted tests + full local suite
-- [ ] Open PR, review, and merge
+- [x] Open PR, review, and merge
 
 Validation evidence:
 - Positive path: `cargo run -q -p sifr -- run demos/m28_5_verification_corpus_and_determinism_gates_demo/main.sifr` -> prints `m28_5 verification corpus and determinism gates demo` and `deterministic decimal and bigdecimal corpus checks passed`.
@@ -167,10 +167,10 @@ Validation evidence:
 - Part 2: merged https://github.com/yaseralnajjar/sifr/pull/911
 - Part 3: merged https://github.com/yaseralnajjar/sifr/pull/912
 - Part 4: merged https://github.com/yaseralnajjar/sifr/pull/913
-- Part 5: pending
+- Part 5: merged https://github.com/yaseralnajjar/sifr/pull/914
 
 ## External Review Passes
-- Reviewer pass 1 prompt output: pending
+- Reviewer pass 1 prompt output: `reviews/phase-28-review.md`
 - Reviewer pass 1 remediation PR: pending
 - Reviewer pass 2 prompt output: pending
 - Reviewer pass 2 remediation PR: pending
