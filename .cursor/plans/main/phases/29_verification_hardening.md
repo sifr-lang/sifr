@@ -32,6 +32,7 @@ This phase does not own:
 - stdlib parity governance (Phase 30)
 - broad compatibility taxonomy, scorecards, and remediation waves (Phase 31)
 - generated-code quality closure (Phase 34)
+- incremental cache/query correctness, invalidation contracts, and local-loop cache architecture (Phase 35)
 - performance thresholds and benchmark governance (Phase 35)
 - tooling parity (Phase 36)
 - release governance (Phase 39)
@@ -67,6 +68,7 @@ Minimum suite kinds:
   - `property` and `fuzz-smoke` manifest/corpus metadata
   - baseline artifact naming and storage conventions
 - Diagnostic suites must define one canonical way to represent expected codes, messages, spans, and renderer output.
+- If diagnostics include structured suggestions, the conventions must distinguish between suggestion rendering validation and suggestion-application validation.
 - Baseline-backed suites must define where expected artifacts live and how they are associated with source fixtures.
 - The chosen conventions must favor reviewability, deterministic diffs, and low ambiguity over author convenience.
 
@@ -124,6 +126,11 @@ Minimum suite kinds:
 - The phase must also define a broader non-blocking ecosystem lane separately from the curated gate.
 - The curated gate is a hard verification gate.
 - The broader lane is for compatibility signal and backlog generation, not merge blocking.
+
+## Incremental Boundary Note
+- This phase may verify repeatability and deterministic behavior of the canonical local validation entrypoints, including edit-run workflows exercised by owned suites.
+- This phase does not define compiler cache/query invalidation correctness, dirty-rebuild guarantees, or incremental architecture contracts.
+- Phase 35 owns deterministic invalidation rules, cache-consistency guarantees, and shared analysis/query architecture.
 
 ## Determinism and Flake Contract
 - Repeat runs with identical inputs must produce identical canonical results.
@@ -187,6 +194,10 @@ Minimum suite kinds:
   - Add repeat-run and sequential-vs-parallel equivalence checks where applicable.
   - Define rerun/quarantine policy for flakes.
   - Require machine-readable artifacts from all hardening gates.
+  - Make the suggestion contract explicit:
+    - if suggestions are part of the stable diagnostic contract, suggestion rendering must be baseline-validated
+    - if automated suggestion application is part of the stable contract, add application validation
+    - if automated application is not part of the stable contract, record that explicitly and do not require autofix execution in this phase
   - If structured suggestions or autofixes are already part of the stable compiler contract, add suggestion-application validation:
     - emit suggestion
     - apply suggestion
@@ -196,7 +207,8 @@ Minimum suite kinds:
   - Hardening gates scale deterministically.
   - Flaky tests are never silently accepted as green.
   - Gate results can be triaged mechanically from structured artifacts.
-  - Suggestion/autofix validation exists if suggestions are part of the stable contract.
+  - Suggestion rendering is baseline-validated whenever suggestions are part of the stable contract.
+  - Suggestion/autofix application validation exists if automated application is part of the stable contract; otherwise the non-application boundary is documented explicitly.
 
 ## Quality Contract
 
