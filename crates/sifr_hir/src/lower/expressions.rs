@@ -687,11 +687,7 @@ pub(super) fn lower_call(call: &ExprCall, ctx: &mut LowerCtx) -> Option<HirExpr>
                     return None;
                 }
             }
-            Type::Int
-            | Type::LiteralInt(_)
-            | Type::BigInt
-            | Type::Decimal
-            | Type::BigDecimal => {}
+            Type::Int | Type::LiteralInt(_) | Type::BigInt | Type::Decimal | Type::BigDecimal => {}
             Type::Float => {
                 ctx.error(
                     "[E2506] BigDecimal(float_value) is not allowed; use BigDecimal(\"...\") for exact construction"
@@ -2804,6 +2800,9 @@ pub(super) fn resolve_method_type(
                 ctx.error(format!("type 'bigint' has no method '{method}'"));
                 None
             }
+        }
+        Type::Decimal | Type::BigDecimal => {
+            resolve_decimal_method_type(object_ty, method, args, ctx)
         }
         _ => {
             ctx.error(format!(

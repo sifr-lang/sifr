@@ -420,8 +420,8 @@ pub fn generate_rust_with_stdlib(module: &HirModule, stdlib_code: &StdlibCode) -
         body_import_needs.runtime.needs_bigint || stdlib_import_needs.runtime.needs_bigint;
     let needs_decimal =
         body_import_needs.runtime.needs_decimal || stdlib_import_needs.runtime.needs_decimal;
-    let needs_bigdecimal = body_import_needs.runtime.needs_bigdecimal
-        || stdlib_import_needs.runtime.needs_bigdecimal;
+    let needs_bigdecimal =
+        body_import_needs.runtime.needs_bigdecimal || stdlib_import_needs.runtime.needs_bigdecimal;
     let needs_mutex = needs_file_handles
         || needs_logging
         || body_import_needs.runtime.needs_mutex
@@ -851,8 +851,12 @@ edition = "2021"
                 }
             }
             "rust_decimal" => {
-                if !deps.contains(&"rust_decimal = \"1\"".to_string()) {
-                    deps.push("rust_decimal = \"1\"".to_string());
+                if !deps.contains(
+                    &"rust_decimal = { version = \"1\", features = [\"maths\"] }".to_string(),
+                ) {
+                    deps.push(
+                        "rust_decimal = { version = \"1\", features = [\"maths\"] }".to_string(),
+                    );
                 }
             }
             "bigdecimal" => {

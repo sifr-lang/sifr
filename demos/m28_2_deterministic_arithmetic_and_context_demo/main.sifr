@@ -1,0 +1,21 @@
+def main():
+    print("m28_2 deterministic arithmetic and context demo")
+
+    cash: decimal = Decimal("10.00")
+    fee: decimal = Decimal("3.00")
+    print(cash // fee)
+    print(cash % fee)
+    print(Decimal("2.5").round(0))
+    print(Decimal("2.5").quantize(0))
+
+    precise: bigdecimal = BigDecimal("1.234567890123456789012345678901")
+    print(precise + BigDecimal("0"))
+    print(BigDecimal("-1.9") // BigDecimal("1"))
+    print(BigDecimal("-1.9") % BigDecimal("1"))
+    print(BigDecimal("2.5").round(0))
+    print(BigDecimal("2.5").quantize(0))
+
+    print(Decimal("-4").sqrt())
+    print(BigDecimal("-4").sqrt())
+
+main()

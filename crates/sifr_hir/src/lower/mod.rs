@@ -21,6 +21,7 @@ use sifr_type_system::{
 use std::collections::HashMap;
 
 mod classes;
+mod decimal_methods;
 mod diagnostics;
 mod expressions;
 mod imports;
@@ -29,6 +30,7 @@ mod type_bounds;
 mod typing_and_functions;
 
 use classes::*;
+use decimal_methods::*;
 use diagnostics::*;
 use expressions::*;
 use imports::*;

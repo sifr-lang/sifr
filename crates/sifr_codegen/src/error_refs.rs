@@ -246,6 +246,8 @@ fn collect_expr_error_refs(
     referenced: &mut HashSet<String>,
     builtin_error_classes: &[&str],
 ) {
+    collect_type_error_refs(expr.ty(), referenced, builtin_error_classes);
+
     match expr {
         HirExpr::Call { func, args, .. } => {
             if builtin_error_classes.contains(&func.as_str()) {

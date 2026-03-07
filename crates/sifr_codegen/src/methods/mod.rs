@@ -1,6 +1,7 @@
 //! Method registry and dispatch for incremental IR rollout.
 
 mod common;
+mod decimal;
 mod deque;
 mod dict;
 mod list;
@@ -62,6 +63,18 @@ pub(crate) fn lower_method_with_context(
         (Type::Str, "ljust") => string::lower_ljust(object, args),
         (Type::Str, "rjust") => string::lower_rjust(object, args),
         (Type::Str, "zfill") => string::lower_zfill(object, args),
+        (Type::Decimal, "quantize") => decimal::lower_decimal_quantize(object, args),
+        (Type::Decimal, "sqrt") => decimal::lower_decimal_sqrt(object, args),
+        (Type::Decimal, "round") => decimal::lower_decimal_round(object, args),
+        (Type::Decimal, "abs") => decimal::lower_decimal_abs(object, args),
+        (Type::Decimal, "is_zero") => decimal::lower_decimal_is_zero(object, args),
+        (Type::Decimal, "is_finite") => decimal::lower_decimal_is_finite(args),
+        (Type::BigDecimal, "quantize") => decimal::lower_bigdecimal_quantize(object, args),
+        (Type::BigDecimal, "sqrt") => decimal::lower_bigdecimal_sqrt(object, args),
+        (Type::BigDecimal, "round") => decimal::lower_bigdecimal_round(object, args),
+        (Type::BigDecimal, "abs") => decimal::lower_bigdecimal_abs(object, args),
+        (Type::BigDecimal, "is_zero") => decimal::lower_bigdecimal_is_zero(object, args),
+        (Type::BigDecimal, "is_finite") => decimal::lower_bigdecimal_is_finite(args),
         (Type::List(_), "append") if is_deque_data_field => deque::lower_append(object, args),
         (Type::List(_), "appendleft") if is_deque_data_field => {
             deque::lower_appendleft(object, args)
@@ -557,5 +570,52 @@ mod tests {
         )
         .expect("ir append");
         assert_eq!(render_expr(&ir.expr), "xs.push(v)");
+    }
+
+    #[test]
+    fn lowers_decimal_and_bigdecimal_methods_via_registry() {
+        let decimal_quantize =
+            lower_method(&Type::Decimal, "quantize", "d", &["scale".to_string()])
+                .expect("decimal quantize lowers");
+        assert!(render_expr(&decimal_quantize.expr).contains("round_dp_with_strategy"));
+
+        let decimal_sqrt =
+            lower_method(&Type::Decimal, "sqrt", "d", &[]).expect("decimal sqrt lowers");
+        assert!(render_expr(&decimal_sqrt.expr).contains("map_or_else"));
+        assert!(render_expr(&decimal_sqrt.expr).contains("DecimalConversionError"));
+
+        let decimal_round =
+            lower_method(&Type::Decimal, "round", "d", &[]).expect("decimal round lowers");
+        assert!(render_expr(&decimal_round.expr).contains("round_dp_with_strategy"));
+
+        let decimal_is_zero =
+            lower_method(&Type::Decimal, "is_zero", "d", &[]).expect("decimal is_zero lowers");
+        assert_eq!(render_expr(&decimal_is_zero.expr), "d.is_zero()");
+
+        let decimal_is_finite =
+            lower_method(&Type::Decimal, "is_finite", "d", &[]).expect("decimal is_finite lowers");
+        assert_eq!(render_expr(&decimal_is_finite.expr), "true");
+
+        let big_quantize =
+            lower_method(&Type::BigDecimal, "quantize", "bd", &["digits".to_string()])
+                .expect("bigdecimal quantize lowers");
+        assert!(render_expr(&big_quantize.expr).contains("round_decimal_ref"));
+
+        let big_sqrt =
+            lower_method(&Type::BigDecimal, "sqrt", "bd", &[]).expect("bigdecimal sqrt lowers");
+        assert!(render_expr(&big_sqrt.expr).contains("sqrt_with_context"));
+        assert!(render_expr(&big_sqrt.expr).contains("DecimalConversionError"));
+
+        let big_round =
+            lower_method(&Type::BigDecimal, "round", "bd", &[]).expect("bigdecimal round lowers");
+        assert!(render_expr(&big_round.expr).contains("with_scale_round"));
+
+        let big_is_zero =
+            lower_method(&Type::BigDecimal, "is_zero", "bd", &[]).expect("bigdecimal is_zero");
+        assert_eq!(render_expr(&big_is_zero.expr), "bd == BigDecimal::from(0)");
+
+        let big_is_finite =
+            lower_method(&Type::BigDecimal, "is_finite", "bd", &[]).expect("bigdecimal is_finite");
+        assert_eq!(render_expr(&big_is_finite.expr), "true");
     }
 }
