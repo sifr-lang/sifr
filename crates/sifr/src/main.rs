@@ -292,11 +292,15 @@ fn compact_location_label(span: &sifr_driver::DiagnosticSpan) -> String {
 }
 
 fn render_compact_diagnostics(diagnostics: &[CompilerDiagnostic]) -> String {
-    let mut grouped: BTreeMap<(u8, String, String), Vec<&CompilerDiagnostic>> = BTreeMap::new();
+    let mut grouped: BTreeMap<(u8, String, bool, String), Vec<&CompilerDiagnostic>> =
+        BTreeMap::new();
     for diagnostic in diagnostics {
+        let is_summary_group = diagnostic.message.starts_with("... +")
+            && diagnostic.message.ends_with("more similar diagnostics");
         let key = (
             severity_rank(diagnostic.severity),
             diagnostic.code.clone(),
+            is_summary_group,
             diagnostic.message.clone(),
         );
         grouped.entry(key).or_default().push(diagnostic);
@@ -306,7 +310,7 @@ fn render_compact_diagnostics(diagnostics: &[CompilerDiagnostic]) -> String {
     output.push_str(&compact_severity_summary(diagnostics));
     output.push('\n');
 
-    for ((_severity_rank, code, message), group) in grouped {
+    for ((_severity_rank, code, _is_summary_group, message), group) in grouped {
         let severity = group[0].severity;
         output.push_str(&format!(
             "{} [{code}] {message} (x{})\n",
@@ -1179,5 +1183,94 @@ mod tests {
             })
             .sum();
         assert_eq!(grouped_total, diagnostics.len());
+    }
+
+    #[test]
+    fn test_compact_renderer_snapshot_repeated_diagnostics_summary_group_last() {
+        let mut diagnostics = Vec::new();
+        for _ in 0..5 {
+            diagnostics.push(CompilerDiagnostic {
+                code: "SIFR-TYPE-0001".to_string(),
+                severity: Severity::Error,
+                message: "type mismatch: expected 'int', got 'str'".to_string(),
+                url: "https://sifr.dev/docs/errors/SIFR-TYPE-0001".to_string(),
+                primary_span: None,
+                related_spans: Vec::new(),
+                children: Vec::new(),
+                help: None,
+                suggestions: Vec::new(),
+            });
+        }
+        diagnostics.push(CompilerDiagnostic {
+            code: "SIFR-TYPE-0001".to_string(),
+            severity: Severity::Error,
+            message: "... +3 more similar diagnostics".to_string(),
+            url: "https://sifr.dev/docs/errors/SIFR-TYPE-0001".to_string(),
+            primary_span: None,
+            related_spans: Vec::new(),
+            children: Vec::new(),
+            help: None,
+            suggestions: Vec::new(),
+        });
+
+        let expected = concat!(
+            "summary: 6 error(s), 0 warning(s), 0 note(s), 0 help item(s)\n",
+            "error [SIFR-TYPE-0001] type mismatch: expected 'int', got 'str' (x5)\n",
+            "  url: https://sifr.dev/docs/errors/SIFR-TYPE-0001\n",
+            "error [SIFR-TYPE-0001] ... +3 more similar diagnostics (x1)\n",
+            "  url: https://sifr.dev/docs/errors/SIFR-TYPE-0001\n",
+        );
+        assert_eq!(render_compact_diagnostics(&diagnostics), expected);
+    }
+
+    #[test]
+    fn test_compact_renderer_snapshot_multi_severity_group_order() {
+        let diagnostics = vec![
+            CompilerDiagnostic {
+                code: "SIFR-TYPE-0001".to_string(),
+                severity: Severity::Warning,
+                message: "unused value".to_string(),
+                url: "https://sifr.dev/docs/errors/SIFR-TYPE-0001".to_string(),
+                primary_span: None,
+                related_spans: Vec::new(),
+                children: Vec::new(),
+                help: Some("remove the assignment".to_string()),
+                suggestions: Vec::new(),
+            },
+            CompilerDiagnostic {
+                code: "SIFR-PARSE-0001".to_string(),
+                severity: Severity::Error,
+                message: "parse failure".to_string(),
+                url: "https://sifr.dev/docs/errors/SIFR-PARSE-0001".to_string(),
+                primary_span: None,
+                related_spans: Vec::new(),
+                children: Vec::new(),
+                help: None,
+                suggestions: Vec::new(),
+            },
+            CompilerDiagnostic {
+                code: "SIFR-CODEGEN-0001".to_string(),
+                severity: Severity::Help,
+                message: "consider adding a type annotation".to_string(),
+                url: "https://sifr.dev/docs/errors/SIFR-CODEGEN-0001".to_string(),
+                primary_span: None,
+                related_spans: Vec::new(),
+                children: Vec::new(),
+                help: None,
+                suggestions: Vec::new(),
+            },
+        ];
+
+        let expected = concat!(
+            "summary: 1 error(s), 1 warning(s), 0 note(s), 1 help item(s)\n",
+            "error [SIFR-PARSE-0001] parse failure (x1)\n",
+            "  url: https://sifr.dev/docs/errors/SIFR-PARSE-0001\n",
+            "warning [SIFR-TYPE-0001] unused value (x1)\n",
+            "  help: remove the assignment\n",
+            "  url: https://sifr.dev/docs/errors/SIFR-TYPE-0001\n",
+            "help [SIFR-CODEGEN-0001] consider adding a type annotation (x1)\n",
+            "  url: https://sifr.dev/docs/errors/SIFR-CODEGEN-0001\n",
+        );
+        assert_eq!(render_compact_diagnostics(&diagnostics), expected);
     }
 }
