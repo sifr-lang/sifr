@@ -1,6 +1,6 @@
 # Phase 27 Execution Checklist (Runtime Safety and Diagnostics Contract)
 
-Status: in_progress (started 2026-03-07)
+Status: done (started 2026-03-07, completed 2026-03-07)
 Owner: phase_27 execution loop
 Reference phase docs:
 - `.cursor/plans/main/phases/27_runtime_safe_codegen_semantics.md`
@@ -70,7 +70,7 @@ Loop per part: Work -> Validate -> PR -> Review -> Merge -> Mark Done
 - [x] Add demo: `demos/m27_6_stability_contract_finalization_demo`
 - [x] Add negative case
 - [x] Run milestone demo + targeted tests + full local suite
-- [ ] Open PR, review, and merge
+- [x] Open PR, review, and merge
 
 ## Part 1: milestone_27_1 Remove Data-Dependent `unwrap/expect`
 status: done (2026-03-07, PR #897)
@@ -180,7 +180,7 @@ Validation evidence:
 - Negative path: repeated diagnostics above cap are truncated to 5 representatives per group with summary record.
 
 ## Part 6: milestone_27_6 Stability Contract Finalization
-status: done (2026-03-07, PR: pending)
+status: done (2026-03-07, PR #902)
 
 - [x] Exit code contract `0|1|2|3` enforced by CLI command flow and panic/error boundaries
 - [x] Stable CLI format contract implemented: `--diagnostic-format human|json|compact`
@@ -196,7 +196,7 @@ status: done (2026-03-07, PR: pending)
 - [x] Negative-path validation recorded
 - [x] Run milestone demo
 - [x] Run full local suite
-- [ ] Open PR, review, and merge
+- [x] Open PR, review, and merge
 - [x] Mark part progress in this checklist
 
 Validation evidence:
@@ -220,4 +220,4 @@ Validation evidence:
 - Part 3: https://github.com/yaseralnajjar/sifr/pull/899
 - Part 4: https://github.com/yaseralnajjar/sifr/pull/900
 - Part 5: https://github.com/yaseralnajjar/sifr/pull/901
-- Part 6: pending
+- Part 6: https://github.com/yaseralnajjar/sifr/pull/902
