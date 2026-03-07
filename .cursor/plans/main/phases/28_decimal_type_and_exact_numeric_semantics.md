@@ -49,8 +49,8 @@ Add first-class `decimal` and `bigdecimal` types with deterministic, exact base-
   - `BigDecimal(int_value)` (exact)
   - `BigDecimal(bigint_value)` (exact)
 - Cross-decimal conversion:
-  - `BigDecimal(decimal_value)` is explicit and exact.
-  - `Decimal(bigdecimal_value)` is explicit and fallible (must be checked; no implicit narrowing).
+  - `BigDecimal(decimal_value)` is explicit and exact, returning `bigdecimal`.
+  - `Decimal(bigdecimal_value)` is explicit and fallible, returning `Result[decimal, DecimalConversionError]` (must be checked; no implicit narrowing).
 - Disallowed constructors/conversions:
   - `Decimal(float_value)` (disallowed)
   - `BigDecimal(float_value)` (disallowed)
@@ -74,6 +74,9 @@ Add first-class `decimal` and `bigdecimal` types with deterministic, exact base-
 - Unary operators supported for both types: unary `+`, unary `-`.
 - Comparison operators supported for both types: `==`, `!=`, `<`, `<=`, `>`, `>=`.
 - Operator semantics must enforce the explicit conversion/mixing policy above (no hidden coercions).
+- Operator protocol hooks for implementation alignment:
+  - Binary arithmetic dunder mapping: `__add__`, `__sub__`, `__mul__`, `__truediv__`, `__floordiv__`, `__mod__`, `__pow__`.
+  - Comparison dunder mapping: `__eq__` and ordering via `__lt__` contract.
 
 ### Stdlib/API surface (final)
 - Phase 28 scope explicitly includes user-facing decimal APIs beyond core operators.
@@ -151,8 +154,8 @@ Add first-class `decimal` and `bigdecimal` types with deterministic, exact base-
     - `bigint <-> bigdecimal`
     - `str <-> bigdecimal`
   - Implement explicit cross-decimal conversions:
-    - `decimal -> bigdecimal` (exact)
-    - `bigdecimal -> decimal` (fallible, checked)
+    - `decimal -> bigdecimal` via `BigDecimal(decimal_value)` (exact)
+    - `bigdecimal -> decimal` via `Decimal(bigdecimal_value)` (fallible `Result`, checked)
   - Explicitly ban all `float -> decimal` and `float -> bigdecimal` paths in compiler and stdlib.
   - Define JSON/model boundary contract:
     - `decimal` and `bigdecimal` serialize as string by default to preserve precision.
