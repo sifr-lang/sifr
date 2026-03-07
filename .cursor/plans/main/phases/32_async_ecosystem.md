@@ -138,6 +138,9 @@ status: pending
 
 ## Quality Contract
 - Entry criteria: Phase 31 is completed and codegen architecture from Phase 14 remains intact.
+- Phase 27 non-regression baseline is required at phase start and must remain green through completion.
+- Phase 27 non-regression invariants that must hold in this phase include: no user-triggerable panic paths; no data-dependent emitted `.unwrap()` / `.expect()` / `panic!` in user runtime paths; stable diagnostic contract (codes, severity, spans, URLs, suggestions, schema); canonical/lossless `json` diagnostics with `human` and `compact` as renderer views only; enforced recovery limits with deterministic ordering; and enforced exit-code and CLI stability contracts (`0/1/2/3`, and unknown `--diagnostic-format` exits `2` before semantic work).
+- Any milestone that regresses these invariants is incomplete, even if its local scope passes.
 - Exit criteria: Async runtime core, typed serialization core, sync primitives, and advanced async features are all delivered with regression coverage.
 - Milestone quality checks:
   - No fallback, migration, or legacy compatibility code is allowed; implement the canonical architecture directly with clean code only.
@@ -152,3 +155,7 @@ status: pending
   - `milestone_32_3` (Async Synchronization Primitives): validation goals cover `sifr.sync.Lock`, `sifr.sync.Channel`, and `sifr.sync.Semaphore` semantics plus Send/Sync enforcement at spawn boundaries. Include negative-path goals that catch regressions against these guarantees.
   - `milestone_32_4` (Advanced Async Features): validation goals cover `async with` context manager flow, async generator semantics, and async comprehension compilation behavior. Include negative-path goals that catch regressions against these guarantees.
   - Exit-gate evidence explicitly demonstrates: Async runtime core, typed serialization core, sync primitives, and advanced async features are all delivered with regression coverage.
+
+## Exit Gate
+- Async runtime core, typed serialization core, sync primitives, and advanced async features are all delivered with regression coverage.
+- Phase 27 non-regression contract remains green: panic-free user paths, no emitted data-dependent unwrap/expect/panic, and stable diagnostics/renderer/exit-code behavior.

@@ -35,6 +35,9 @@ Close the reliability track by proving stdlib behavioral and complexity parity b
 
 ## Quality Contract
 - Entry criteria: Phase 29 is completed and verification hardening is active.
+- Phase 27 non-regression baseline is required at phase start and must remain green through completion.
+- Phase 27 non-regression invariants that must hold in this phase include: no user-triggerable panic paths; no data-dependent emitted `.unwrap()` / `.expect()` / `panic!` in user runtime paths; stable diagnostic contract (codes, severity, spans, URLs, suggestions, schema); canonical/lossless `json` diagnostics with `human` and `compact` as renderer views only; enforced recovery limits with deterministic ordering; and enforced exit-code and CLI stability contracts (`0/1/2/3`, and unknown `--diagnostic-format` exits `2` before semantic work).
+- Any milestone that regresses these invariants is incomplete, even if its local scope passes.
 - Exit criteria: Reliability claims are backed by stdlib parity evidence with explicit parity governance.
 - Milestone quality checks:
   - No fallback, migration, or legacy compatibility code is allowed; implement the canonical architecture directly with clean code only.
@@ -51,3 +54,4 @@ Close the reliability track by proving stdlib behavioral and complexity parity b
 
 ## Exit Gate
 - Reliability claims are backed by stdlib parity evidence with explicit parity governance.
+- Phase 27 non-regression contract remains green: panic-free user paths, no emitted data-dependent unwrap/expect/panic, and stable diagnostics/renderer/exit-code behavior.

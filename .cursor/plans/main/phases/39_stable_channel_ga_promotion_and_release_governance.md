@@ -28,6 +28,9 @@ Promote stable channel only after reliability/parity/performance evidence is com
 
 ## Quality Contract
 - Entry criteria: Phase 38 is completed and release-facing documentation is canonical.
+- Phase 27 non-regression baseline is required at phase start and must remain green through completion.
+- Phase 27 non-regression invariants that must hold in this phase include: no user-triggerable panic paths; no data-dependent emitted `.unwrap()` / `.expect()` / `panic!` in user runtime paths; stable diagnostic contract (codes, severity, spans, URLs, suggestions, schema); canonical/lossless `json` diagnostics with `human` and `compact` as renderer views only; enforced recovery limits with deterministic ordering; and enforced exit-code and CLI stability contracts (`0/1/2/3`, and unknown `--diagnostic-format` exits `2` before semantic work).
+- Any milestone that regresses these invariants is incomplete, even if its local scope passes.
 - Exit criteria: Stable GA promotion is policy-driven, auditable, and reversible.
 - Milestone quality checks:
   - No fallback, migration, or legacy compatibility code is allowed; implement the canonical architecture directly with clean code only.
@@ -44,3 +47,4 @@ Promote stable channel only after reliability/parity/performance evidence is com
 
 ## Exit Gate
 - Stable GA promotion is policy-driven, auditable, and reversible.
+- Phase 27 non-regression contract remains green: panic-free user paths, no emitted data-dependent unwrap/expect/panic, and stable diagnostics/renderer/exit-code behavior.

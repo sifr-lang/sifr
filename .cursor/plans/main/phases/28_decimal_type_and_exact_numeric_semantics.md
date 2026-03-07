@@ -114,6 +114,9 @@ Add a first-class `Decimal` type with deterministic, exact base-10 arithmetic se
 ### Entry criteria
 - Phase 27 exit gate is satisfied and recorded.
 - Decimal policy (construction, mixing, conversions, defaults) is approved.
+- Phase 27 non-regression baseline is required at phase start and must remain green through completion.
+- Phase 27 non-regression invariants that must hold in this phase include: no user-triggerable panic paths; no data-dependent emitted `.unwrap()` / `.expect()` / `panic!` in user runtime paths; stable diagnostic contract (codes, severity, spans, URLs, suggestions, schema); canonical/lossless `json` diagnostics with `human` and `compact` as renderer views only; enforced recovery limits with deterministic ordering; and enforced exit-code and CLI stability contracts (`0/1/2/3`, and unknown `--diagnostic-format` exits `2` before semantic work).
+- Any milestone that regresses these invariants is incomplete, even if its local scope passes.
 
 ### Milestone quality checks
 - Local validation gates pass before merge.
@@ -132,3 +135,4 @@ Add a first-class `Decimal` type with deterministic, exact base-10 arithmetic se
 
 ## Exit Gate
 `Decimal` is first-class, deterministic, panic-safe, and production-ready across compiler, generated code, stdlib, and model/serialization boundaries with no float-to-decimal path.
+Phase 27 non-regression contract remains green: panic-free user paths, no emitted data-dependent unwrap/expect/panic, and stable diagnostics/renderer/exit-code behavior.

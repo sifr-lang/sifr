@@ -58,6 +58,9 @@ Guarantee that emitted Rust is production-grade in safety, determinism, tooling 
 ### Entry criteria
 - Phase 33 exit gate is satisfied.
 - Initial generated-code corpus seed is defined.
+- Phase 27 non-regression baseline is required at phase start and must remain green through completion.
+- Phase 27 non-regression invariants that must hold in this phase include: no user-triggerable panic paths; no data-dependent emitted `.unwrap()` / `.expect()` / `panic!` in user runtime paths; stable diagnostic contract (codes, severity, spans, URLs, suggestions, schema); canonical/lossless `json` diagnostics with `human` and `compact` as renderer views only; enforced recovery limits with deterministic ordering; and enforced exit-code and CLI stability contracts (`0/1/2/3`, and unknown `--diagnostic-format` exits `2` before semantic work).
+- Any milestone that regresses these invariants is incomplete, even if its local scope passes.
 
 ### Milestone quality checks
 - Local validation gates pass for each milestone before merge.
@@ -93,3 +96,4 @@ Guarantee that emitted Rust is production-grade in safety, determinism, tooling 
 
 ## Exit Gate
 Generated Rust satisfies all Phase 34 quality guarantees with zero critical violations, determinism is verified across repeated runs, and required demos pass quality gates.
+Phase 27 non-regression contract remains green: panic-free user paths, no emitted data-dependent unwrap/expect/panic, and stable diagnostics/renderer/exit-code behavior.
