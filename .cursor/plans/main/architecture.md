@@ -167,10 +167,11 @@ sifr/
   crates/
     sifr_python_ast/        (vendored fork of ruff_python_ast -- may diverge for sifr syntax)
     sifr_python_parser/     (vendored fork of ruff_python_parser -- may diverge for sifr syntax)
+    sifr_frontend/          (canonical parse/lower/type-check/diagnostics query facade shared by CLI and tooling)
     sifr_hir/               (High-level IR: typed AST after name resolution + type checking)
     sifr_type_system/       (type definitions, inference, checking, subtyping)
     sifr_codegen/           (Rust source code generation from HIR via structured Rust IR)
-    sifr_driver/            (orchestrates the pipeline, error reporting)
+    sifr_driver/            (CLI/project orchestration, rendering, rustc invocation)
     sifr/                   (CLI binary: sifr build, sifr check, sifr run)
 
   # Git dependencies from ruff v0.4.10 (not vendored):
@@ -184,6 +185,7 @@ New crates added per milestone as needed:
 
 - milestone_core_stdlib/milestone_ext_collections: `sifr_std` (standard library wrappers, extended collections)
 - milestone_ffi: FFI codegen extensions in `sifr_codegen`
+- Phase 35 shared analysis/query architecture: `sifr_frontend` (canonical frontend API and query/database ownership)
 - milestone_dev_tooling: `sifr_lsp` (language server), `sifr_fmt` (formatter), `sifr_lint` (linter)
 - milestone_ecosystem: `sifr_registry` (package registry client)
 
@@ -592,18 +594,23 @@ Sifr compiles to Rust source code, which is then compiled by `rustc`. This creat
 **Contract:**
 
 - **Stable Sifr diagnostic codes:** every Sifr compiler diagnostic has a stable code (e.g., `S0001: type-mismatch`, `S0002: move-after-use`, `S0003: unused-variable`). Each code is owned by a specific compiler phase (parser, type checker, borrow checker, codegen).
+- **Canonical diagnostic object:** parser, lowering, type checking, borrow checking, and codegen all emit one structured `Diagnostic` model with `code`, `severity`, `message`, `primary_span`, `related_spans`, `help`, and optional fix suggestions.
 - **Span mapping:** the codegen phase maintains a mapping from generated Rust line/column positions to original `.sifr` line/column positions. All compiler errors shown to users reference `.sifr` source locations, never generated Rust locations.
 - `**rustc` error translation:** when `rustc` emits an error on generated code, the driver translates it back to `.sifr` coordinates using the span map. If translation fails (e.g., error in compiler-generated boilerplate), the raw `rustc` error is shown with a note: "This error originated in the Rust compilation step."
+- **Generation vs rendering separation:** semantic phases construct diagnostics; renderer layers convert them to `human`, `json`, and other presentation formats. Output mode selection must not change diagnostic ownership or semantics.
 - **Suppression policy:** `rustc` warnings on generated code are suppressed by default (generated code includes `#[allow(warnings)]`). Only `rustc` errors are surfaced to the user.
 - **Multi-file rendering:** errors that span multiple `.sifr` files show each file's relevant snippet with labeled spans. Uses `miette` or `ariadne` for rich terminal rendering with colors, underlines, and related notes.
 - **Diagnostic ownership:** the Sifr compiler should catch as many errors as possible before invoking `rustc`. Over time, the set of errors that reach `rustc` should shrink to near-zero as the type checker and borrow checker mature.
+- **No split-brain rule:** `sifr_driver`, future editor integrations, and automation-facing adapters must consume diagnostics through the canonical frontend API. They may render or transport diagnostics differently, but they may not reimplement parse/lower/type-check logic or semantic diagnostic derivation.
 
 **Milestone responsibilities:**
 
 - milestone_core_language-milestone_type_system: basic span tracking (single-file, Sifr-native errors only)
 - milestone_imports: multi-file span tracking (import errors reference both files)
+- Phase 27 diagnostics contract: structured diagnostic schema, stable renderers, and recovery policy
+- Phase 35 shared analysis/query architecture: canonical query/database-backed frontend API consumed by CLI and tooling
 - milestone_ffi: FFI-related `rustc` error translation (extern crate mismatches)
-- milestone_dev_tooling: LSP diagnostic integration (real-time diagnostics in editor)
+- milestone_dev_tooling (Phase 36): CLI migration, parity validation, and thin tooling adapter boundaries
 
 ### 12. Standard Protocol Primitives
 

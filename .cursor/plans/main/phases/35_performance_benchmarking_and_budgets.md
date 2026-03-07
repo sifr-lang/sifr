@@ -1,7 +1,7 @@
-# Phase 35: Performance Benchmarking and Budgets
+# Phase 35: Performance Benchmarking, Shared Analysis Query Architecture, and Budgets
 
 ## Objective
-Establish and enforce compiler-focused performance budgets (compile-time, compiler memory, and check/build latency), including incremental/query architecture and cache-invalidation contracts.
+Establish and enforce compiler-focused performance budgets (compile-time, compiler memory, and check/build latency), while defining the canonical reusable analysis/query architecture and cache-invalidation contracts consumed by both CLI and future tooling.
 
 ## Depends on
 - Phase 34
@@ -26,16 +26,19 @@ Establish and enforce compiler-focused performance budgets (compile-time, compil
 - Definition of done:
   - Regressions fail gates unless approved waiver exists.
 
-### milestone_35_4: Incremental Query Architecture and Cache Contracts
+### milestone_35_4: Shared Analysis Query Architecture and Cache Contracts
 - Scope:
+  - Introduce the canonical reusable frontend analysis/query API for parse/lower/type-check/diagnostics.
   - Define dependency-tracked query/cache architecture at module granularity.
   - Define deterministic invalidation rules and cache-consistency guarantees for local loops.
+  - Make the compiler CLI consume the same analysis/query ownership model that future tooling must use.
 - Definition of done:
-  - Incremental/query design and cache contracts are explicit, deterministic, and regression-covered.
+  - Shared analysis/query design and cache contracts are explicit, deterministic, and regression-covered.
+  - The anti-split-brain foundation is in place before standalone tooling surfaces begin.
 
 ## Quality Contract
 - Entry criteria: Phase 34 is completed and generated-code quality gates are enforced.
-- Exit criteria: Performance regressions are systematically detected and controlled.
+- Exit criteria: Performance regressions are systematically detected and controlled, and the canonical shared analysis/query foundation is established.
 - Milestone quality checks:
   - No fallback, migration, or legacy compatibility code is allowed; implement the canonical architecture directly with clean code only.
   - No lazy or partial fixes are allowed; each milestone must resolve root causes completely, even when that requires significant rework.
@@ -47,8 +50,8 @@ Establish and enforce compiler-focused performance budgets (compile-time, compil
   - `milestone_35_1` (Baseline Benchmark Suite): validation goals cover: Define compiler benchmark suites for `check`, `build`, and incremental local loops. Include negative-path goals that catch regressions against these guarantees.
   - `milestone_35_2` (Budget and Threshold Policy): validation goals cover: Set compiler regression thresholds and waiver process. Include negative-path goals that catch regressions against these guarantees.
   - `milestone_35_3` (Enforcement Integration): validation goals cover: Add local and CI gates for benchmark regressions. Include negative-path goals that catch regressions against these guarantees.
-  - `milestone_35_4` (Incremental Query Architecture and Cache Contracts): validation goals cover: Define dependency-tracked query/cache architecture at module granularity; Define deterministic invalidation rules and cache-consistency guarantees for local loops. Include negative-path goals that catch regressions against these guarantees.
-  - Exit-gate evidence explicitly demonstrates: Performance regressions are systematically detected and controlled.
+  - `milestone_35_4` (Shared Analysis Query Architecture and Cache Contracts): validation goals cover: Introduce the canonical reusable frontend analysis/query API for parse/lower/type-check/diagnostics; Define dependency-tracked query/cache architecture at module granularity; Define deterministic invalidation rules and cache-consistency guarantees for local loops; Make the compiler CLI consume the same analysis/query ownership model that future tooling must use. Include negative-path goals that catch regressions against these guarantees.
+  - Exit-gate evidence explicitly demonstrates: Performance regressions are systematically detected and controlled, and the canonical shared analysis/query foundation is established.
 
 ## Exit Gate
-- Performance regressions are systematically detected and controlled.
+- Performance regressions are systematically detected and controlled, and the canonical shared analysis/query foundation is established.

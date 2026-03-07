@@ -24,6 +24,7 @@ This roadmap is the authoritative execution plan for the current hardening and e
 - Local testing runs in parallel profiles (`quick`, `full`, `stress`) with deterministic output.
 - Every bug fix includes a regression test before phase closure.
 - `check` remains hard-separated from codegen/runtime.
+- Parse/lower/type-check/semantic-diagnostic logic must flow through one canonical frontend API; tool-specific semantic reimplementation is forbidden.
 - No user-triggerable compiler panics.
 - No data-dependent emitted `.unwrap()`/`.expect()` in generated user runtime paths.
 - Scoped fix-back (`N+1` discovering defect in `N`) is allowed only if minimal, documented, regression-tested, and revalidated.
@@ -58,8 +59,8 @@ This roadmap is the authoritative execution plan for the current hardening and e
 | 32 | Async and Ecosystem Foundation | planned | [32_async_ecosystem.md](./phases/32_async_ecosystem.md) | Async runtime and ecosystem primitives |
 | 33 | Preview Distribution and Release Automation (`alpha`/`beta`) | planned | [33_preview_distribution_and_release_automation.md](./phases/33_preview_distribution_and_release_automation.md) | Early adopter channels and release automation |
 | 34 | Generated Code Quality and Production Readiness | planned | [34_generated_code_quality_and_production_readiness.md](./phases/34_generated_code_quality_and_production_readiness.md) | Deterministic, lint-clean, production-safe generated Rust |
-| 35 | Performance Benchmarking and Budgets | planned | [35_performance_benchmarking_and_budgets.md](./phases/35_performance_benchmarking_and_budgets.md) | Performance budgets with incremental/query and cache contracts |
-| 36 | Developer Tooling and Ecosystem Hooks | planned | [36_developer_tooling_and_ecosystem_hooks.md](./phases/36_developer_tooling_and_ecosystem_hooks.md) | Anti-split-brain tooling contract and parity matrix |
+| 35 | Performance Benchmarking and Shared Analysis Query Architecture | planned | [35_performance_benchmarking_and_budgets.md](./phases/35_performance_benchmarking_and_budgets.md) | Performance budgets plus a canonical reusable analysis/query foundation |
+| 36 | Developer Tooling and Ecosystem Hooks | planned | [36_developer_tooling_and_ecosystem_hooks.md](./phases/36_developer_tooling_and_ecosystem_hooks.md) | CLI/tooling convergence, renderer parity, and anti-split-brain validation before standalone tooling surfaces |
 | 37 | Package Management | draft | [37_package_management.md](./phases/37_package_management.md) | Deterministic dependency and lockfile workflows |
 | 38 | Docs and Documentation | draft | [38_docs_and_documentation.md](./phases/38_docs_and_documentation.md) | Canonical versioned docs and local docs quality gates |
 | 39 | Stable Channel GA Promotion and Release Governance | planned | [39_stable_channel_ga_promotion_and_release_governance.md](./phases/39_stable_channel_ga_promotion_and_release_governance.md) | Governed stable release promotion and rollback policy |
@@ -89,8 +90,8 @@ flowchart LR
     p31 --> p32["Phase 32\nAsync and Ecosystem"]
     p32 --> p33["Phase 33\nPreview Distribution"]
     p33 --> p34["Phase 34\nGenerated Code Quality"]
-    p34 --> p35["Phase 35\nPerformance + Incremental Query"]
-    p35 --> p36["Phase 36\nTooling Anti-Split-Brain"]
+    p34 --> p35["Phase 35\nPerformance + Shared Analysis Query"]
+    p35 --> p36["Phase 36\nCLI/Tooling Convergence"]
     p36 --> p37["Phase 37\nPackage Management"]
     p37 --> p38["Phase 38\nDocs and Documentation"]
     p38 --> p39["Phase 39\nStable GA Governance"]
