@@ -847,6 +847,18 @@ pub(super) fn lower_call(call: &ExprCall, ctx: &mut LowerCtx) -> Option<HirExpr>
                         parent_class: None,
                     });
             Type::Result(Box::new(Type::Float), Box::new(parse_error_ty))
+        } else if arg_ty == Type::Decimal {
+            ctx.error(
+                "[E2505] float(decimal_value) is not allowed; decimal values are exact and cannot be converted to float"
+                    .to_string(),
+            );
+            return None;
+        } else if arg_ty == Type::BigDecimal {
+            ctx.error(
+                "[E2506] float(bigdecimal_value) is not allowed; bigdecimal values are exact and cannot be converted to float"
+                    .to_string(),
+            );
+            return None;
         } else {
             Type::Float
         };
