@@ -761,7 +761,9 @@ fn generate_cargo_toml(
                 deps.insert("num-traits = \"0.2\"".to_string());
             }
             "rust_decimal" => {
-                deps.insert("rust_decimal = \"1\"".to_string());
+                deps.insert(
+                    "rust_decimal = { version = \"1\", features = [\"maths\"] }".to_string(),
+                );
             }
             "bigdecimal" => {
                 deps.insert("bigdecimal = \"0.4\"".to_string());

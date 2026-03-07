@@ -1,0 +1,25 @@
+def main():
+    d: decimal = Decimal("-1.9")
+    one_d: decimal = Decimal("1")
+
+    assert str(d // one_d) == '-2'
+    assert str(d % one_d) == '0.1'
+    assert str(Decimal("2.5").round(0)) == '2'
+    assert str(Decimal("2.5").quantize(0)) == '2'
+    assert str(Decimal("4").sqrt()) == 'Ok(2)'
+    assert str(Decimal("-4").sqrt()) == 'Err(DecimalConversionError { message: "decimal.sqrt() is undefined for negative values" })'
+    assert str(Decimal("1").is_zero()) == 'false'
+    assert str(Decimal("1").is_finite()) == 'true'
+
+    bd: bigdecimal = BigDecimal("-1.9")
+    one_bd: bigdecimal = BigDecimal("1")
+
+    assert str(bd // one_bd) == '-2.000000000000000000000000000'
+    assert str(bd % one_bd) == '0.1000000000000000000000000000'
+    assert str(BigDecimal("2.5").round(0)) == '2.000000000000000000000000000'
+    assert str(BigDecimal("2.5").quantize(0)) == '2.000000000000000000000000000'
+    assert str(BigDecimal("1.234567890123456789012345678901") + BigDecimal("0")) == '1.234567890123456789012345679'
+    assert str(BigDecimal("1").is_zero()) == 'false'
+    assert str(BigDecimal("1").is_finite()) == 'true'
+    assert str(BigDecimal("4").sqrt()).startswith('Ok(')
+    assert str(BigDecimal("-4").sqrt()) == 'Err(DecimalConversionError { message: "bigdecimal.sqrt() is undefined for negative values" })'

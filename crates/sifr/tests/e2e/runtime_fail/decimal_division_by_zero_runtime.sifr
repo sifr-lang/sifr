@@ -1,0 +1,5 @@
+# expect-stderr: runtime error: decimal division failed (division by zero or overflow)
+def main():
+    x: decimal = Decimal("1")
+    y: decimal = Decimal("0")
+    print(x / y)

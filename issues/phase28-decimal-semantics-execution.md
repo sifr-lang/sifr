@@ -62,7 +62,7 @@ Loop per part: Work -> Validate -> PR -> Review -> Merge -> Mark Done
 - [ ] Open PR, review, and merge
 
 ## Part 1: milestone_28_1 Type-System, Parser, and HIR Integration
-status: done (2026-03-07, PR pending)
+status: done (2026-03-07, merged)
 
 - [x] Decimal/bigdecimal types added across type system and codegen mapping
 - [x] Constructor validation and mixed-numeric policy enforced
@@ -70,7 +70,7 @@ status: done (2026-03-07, PR pending)
 - [x] Negative-path validation recorded
 - [x] Run milestone demo
 - [x] Run full local suite
-- [ ] Open PR, review, and merge
+- [x] Open PR, review, and merge
 - [x] Mark part progress in this checklist
 
 Validation evidence:
@@ -83,8 +83,28 @@ Validation evidence:
 - Negative path: `cargo run -q -p sifr -- run crates/sifr/tests/e2e/fail/bigdecimal_constructor_non_literal_string.sifr` -> exits `1` with `[E2502]`.
 - Full suite: `/Users/yaseralnajjar/work/sifr/codebase/scripts/run_all_tests.sh` -> pass (404 pass e2e fixtures, 0 failures).
 
+## Part 2: milestone_28_2 Deterministic Arithmetic and Context Semantics
+status: done (2026-03-07, PR pending)
+
+- [x] Implement arithmetic/comparison lowering for decimal and bigdecimal operators
+- [x] Implement required methods: `quantize`, `sqrt`, `round`, `abs`, `is_zero`, `is_finite`
+- [x] Add deterministic formatting contract coverage
+- [x] Add demo: `demos/m28_2_deterministic_arithmetic_and_context_demo/main.sifr`
+- [x] Add negative cases
+- [x] Run milestone demo + targeted tests + full local suite
+- [ ] Open PR, review, and merge
+
+Validation evidence:
+- Positive path: `cargo run -q -p sifr -- run demos/m28_2_deterministic_arithmetic_and_context_demo/main.sifr` -> prints deterministic decimal/bigdecimal outputs including floor-division/modulo and context-rounded `bigdecimal` values.
+- Negative path: `cargo run -q -p sifr -- run demos/m28_2_deterministic_arithmetic_and_context_demo/negative_cases/decimal_division_by_zero/main.sifr` -> exits `1` with `runtime error: decimal division failed (division by zero or overflow)` (panic-free path).
+- Positive path: `cargo run -q -p sifr -- run crates/sifr/tests/e2e/pass/decimal_arithmetic_context_methods.sifr` -> pass.
+- Negative path: `cargo run -q -p sifr -- run crates/sifr/tests/e2e/fail/decimal_quantize_requires_int_scale.sifr` -> exits `1` with `decimal.quantize() scale argument must be 'int'`.
+- Negative path: `cargo run -q -p sifr -- run crates/sifr/tests/e2e/fail/bigdecimal_round_requires_int_scale.sifr` -> exits `1` with `bigdecimal.round() scale argument must be 'int'`.
+- Negative path: `cargo run -q -p sifr -- run crates/sifr/tests/e2e/runtime_fail/bigdecimal_division_by_zero_runtime.sifr` -> exits `1` with `runtime error: bigdecimal division by zero`.
+- Full suite: `/Users/yaseralnajjar/work/sifr/codebase/scripts/run_all_tests.sh` -> pass (405 pass e2e fixtures, 0 failures).
+
 ## PR Log
-- Part 1: pending
+- Part 1: merged https://github.com/yaseralnajjar/sifr/pull/910
 - Part 2: pending
 - Part 3: pending
 - Part 4: pending
