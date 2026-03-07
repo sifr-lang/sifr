@@ -65,6 +65,7 @@ This document defines the canonical suite taxonomy for compiler verification har
 - Policy and manifests live under `verification/fuzz_property/`.
 - Seeds and deterministic generation rules are version-controlled.
 - Each run emits machine-readable case outcomes and seed provenance.
+- Operational policy: `docs/verification/fuzz_property_policy.md`.
 
 ### OSS-Curated and Ecosystem-Broader
 - Manifests live under `verification/oss/`.

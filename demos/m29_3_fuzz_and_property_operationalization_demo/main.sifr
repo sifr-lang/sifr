@@ -1,0 +1,6 @@
+# m29_3 demo: fuzz and property operationalization contracts.
+
+def main():
+    print("m29_3 fuzz and property operationalization demo")
+    print("property suite enforces deterministic repeated compiler outcomes")
+    print("fuzz-smoke suite runs deterministic seeded mutations with panic-signal checks")

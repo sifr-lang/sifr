@@ -1,0 +1,25 @@
+{
+  "schema_version": 1,
+  "entries": [
+    {
+      "id": "PROP-0001",
+      "entry": "verification/fuzz_property/seeds/invalid_import_seed.sifr",
+      "command": "check",
+      "diagnostic_format": "json",
+      "expect_exit_code": 1,
+      "repeat_runs": 2,
+      "assert_no_panic": true,
+      "note": "Invalid import diagnostics must be deterministic across repeated checks."
+    },
+    {
+      "id": "PROP-0002",
+      "entry": "verification/fuzz_property/seeds/valid_control_flow_seed.sifr",
+      "command": "check",
+      "diagnostic_format": "json",
+      "expect_exit_code": 0,
+      "repeat_runs": 2,
+      "assert_no_panic": true,
+      "note": "Valid control-flow program must remain deterministically accepted."
+    }
+  ]
+}
