@@ -54,3 +54,6 @@ Close known type-soundness holes before stable release promotion.
 
 ## Exit Gate
 - Critical type-system soundness issues are resolved and regression-covered.
+
+## Post-Phase Follow-Ups
+- Multiple TypeVar bounds/intersection bounds (`T: A & B`) are not part of Phase 26 scope and remain an enhancement item. Track in `issues/phase26-followup-multiple-bounds-gap.md`.

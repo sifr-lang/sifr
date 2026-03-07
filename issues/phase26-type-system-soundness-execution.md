@@ -150,6 +150,7 @@ status: done (2026-03-07, review file: `reviews/phase26-review.md`, PR #895)
 Validated reviewer notes and actions:
 - Accepted: additional regression coverage for optional arithmetic narrowing across more complex control-flow joins.
 - Not in-scope for this pass: feature-gap suggestions (multiple bounds, protocol inheritance, short-circuit narrowing semantics beyond current language support).
+- Multiple-bounds follow-up documented at `issues/phase26-followup-multiple-bounds-gap.md`.
 
 Fixes implemented:
 - Added positive e2e coverage: `crates/sifr/tests/e2e/pass/optional_arithmetic_narrowing_complex_flow.sifr`.
