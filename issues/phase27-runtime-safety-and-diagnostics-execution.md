@@ -221,3 +221,9 @@ Validation evidence:
 - Part 4: https://github.com/yaseralnajjar/sifr/pull/900
 - Part 5: https://github.com/yaseralnajjar/sifr/pull/901
 - Part 6: https://github.com/yaseralnajjar/sifr/pull/902
+
+## External Review Passes
+- Reviewer pass 1 prompt output: `reviews/phase27-review.md`
+- Review pass 1 remediation PR: https://github.com/yaseralnajjar/sifr/pull/904
+- Reviewer pass 2 prompt output: `reviews/phase27-production-grade-review.md`
+- Review pass 2 remediation PR: https://github.com/yaseralnajjar/sifr/pull/905
