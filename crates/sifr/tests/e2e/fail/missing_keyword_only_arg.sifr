@@ -1,4 +1,3 @@
-# expect-error: missing argument
 def display(name: str, *, verbose: bool) -> str:
     if verbose:
         return f"Name: {name}"

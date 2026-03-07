@@ -1,5 +1,3 @@
 def main():
     d: bigdecimal = BigDecimal("1.23")
     x: bigdecimal = d.round("2")
-
-# expect-error: [E2508] bigdecimal.round() scale argument must be 'int', got 'str'

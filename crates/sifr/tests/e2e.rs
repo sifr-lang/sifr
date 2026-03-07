@@ -522,9 +522,17 @@ fn compile_source(source: &str) -> Result<String, Vec<String>> {
     match sifr_driver::compile(source) {
         sifr_driver::CompileResult::Success { rust_source } => Ok(rust_source),
         sifr_driver::CompileResult::Errors { errors } => {
-            Err(errors.iter().map(|error| error.message.clone()).collect())
+            let diagnostics = sifr_driver::compile_errors_to_diagnostics(&errors);
+            Err(diagnostics
+                .iter()
+                .map(|diagnostic| diagnostic.code.clone())
+                .collect::<Vec<_>>())
         }
     }
+}
+
+fn is_diagnostic_code(raw: &str) -> bool {
+    raw.starts_with("SIFR-") && raw.len() == 13 && raw[5..].chars().all(|ch| ch.is_ascii_alphanumeric() || ch == '-')
 }
 
 fn compile_source_with_metadata(
@@ -2206,14 +2214,19 @@ fn test_e2e_fail() {
                 );
             }
             Err(errors) => {
-                let all = errors.join("\n");
                 for expected in &expected {
                     assert!(
-                        all.contains(expected),
-                        "FAIL {} expected error containing '{}' but got:\n{}",
+                        is_diagnostic_code(expected),
+                        "FAIL {} expected marker '{}' does not look like a diagnostic code",
+                        path.display(),
+                        expected
+                    );
+                    assert!(
+                        errors.iter().any(|actual| actual == expected),
+                        "FAIL {} expected diagnostic code '{}' but got {:?}",
                         path.display(),
                         expected,
-                        all
+                        errors
                     );
                 }
                 failures += 1;
@@ -2363,8 +2376,8 @@ fn test_expectation_parsing_contract() {
         "# expect-stdout: b",
         "# expect-stderr: err-1",
         "# expect-stderr: err-2",
-        "# expect-error: issue-1",
-        "# expect-error: issue-2",
+        "# expect-error: SIFR-PARSE-0001",
+        "# expect-error: SIFR-TYPE-0001",
     ]
     .join("\n");
 
@@ -2375,7 +2388,10 @@ fn test_expectation_parsing_contract() {
     );
     assert_eq!(
         extract_expect_errors(&source),
-        vec!["issue-1".to_string(), "issue-2".to_string()]
+        vec![
+            "SIFR-PARSE-0001".to_string(),
+            "SIFR-TYPE-0001".to_string()
+        ]
     );
 }
 

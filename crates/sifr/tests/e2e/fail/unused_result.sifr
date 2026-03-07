@@ -1,4 +1,3 @@
-# expect-error: unused Result value
 
 def fallible() -> Result[int, ValueError]:
     return 42

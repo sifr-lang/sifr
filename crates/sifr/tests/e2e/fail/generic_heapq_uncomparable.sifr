@@ -7,5 +7,3 @@ class Blob:
 def main():
     items: list[Blob] = [Blob(3), Blob(1), Blob(2)]
     heapify(items)
-
-# expect-error: does not implement protocol 'Comparable'

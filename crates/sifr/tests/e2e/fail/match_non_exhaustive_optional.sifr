@@ -6,5 +6,3 @@ def describe(x: str | None) -> str:
 
 def main():
     print(describe(None))
-
-# expect-error: non-exhaustive

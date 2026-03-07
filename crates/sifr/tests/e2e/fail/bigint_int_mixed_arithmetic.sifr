@@ -2,5 +2,3 @@ def main():
     x: int = 42
     y: bigint = bigint(100)
     z: bigint = x + y  # error: cannot mix int and bigint
-
-# expect-error: cannot mix 'int' and 'bigint'

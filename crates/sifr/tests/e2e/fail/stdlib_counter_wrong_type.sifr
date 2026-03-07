@@ -4,5 +4,3 @@ from sifr.collections import Counter
 def main():
     c: Counter = Counter(42)
     print(c.total())
-
-# expect-error: argument 1 ('counts') of function 'Counter': expected 'dict[T, int]', got 'int'

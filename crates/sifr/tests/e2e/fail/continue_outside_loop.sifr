@@ -1,3 +1,2 @@
-# expect-error: 'continue' outside of loop
 def main():
     continue

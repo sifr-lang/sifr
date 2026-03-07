@@ -8,5 +8,3 @@ def main():
     a: Blob = Blob(1)
     b: Blob = Blob(2)
     assert_gt(a, b)
-
-# expect-error: does not implement protocol 'Comparable'

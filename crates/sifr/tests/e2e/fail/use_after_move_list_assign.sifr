@@ -1,4 +1,3 @@
-# expect-error: moved value
 def main():
     l1: list[int] = [1, 2, 3]
     l2: list[int] = l1

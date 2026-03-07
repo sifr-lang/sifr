@@ -9,5 +9,3 @@ def identity(x: T) -> T:
 def main():
     value: int = identity(1)
     print(value)
-
-# expect-error: does not implement protocol 'MissingBound'

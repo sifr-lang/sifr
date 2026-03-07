@@ -67,6 +67,12 @@ def assert_err[T](own value: Result[T, Error]) -> None:
     except Error as e:
         pass
 
+def assertRaises[T](own value: Result[T, Error]) -> None:
+    assert_err(value)
+
+def assertError[T](own value: Result[T, Error]) -> None:
+    assert_err(value)
+
 # Reusable vector helpers for CPython parity tests.
 def assert_vector_eq(actual: list[str], expected: list[str]) -> None:
     assert_eq(len(actual), len(expected))

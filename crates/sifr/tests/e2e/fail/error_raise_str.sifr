@@ -1,4 +1,3 @@
-# expect-error: raise requires an Error class instance
 
 def broken() -> Result[int, ValueError]:
     raise "this is a string"

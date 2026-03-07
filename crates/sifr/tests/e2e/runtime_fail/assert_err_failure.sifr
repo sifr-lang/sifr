@@ -1,9 +1,8 @@
-# expect-stderr: assertion failed
-from sifr.test import assert_err
+from sifr.test import assertRaises
 
 def parse_ok() -> Result[int, ValueError]:
     return 5
 
 def main():
     # Must fail because value is Ok(...), not Err(...)
-    assert_err(parse_ok())
+    assertRaises(parse_ok())

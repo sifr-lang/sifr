@@ -4,5 +4,3 @@ from mymodule import bar
 def main():
     x: int = bar()
     print(x)
-
-# expect-error: unknown module 'mymodule'

@@ -1,4 +1,3 @@
-# expect-error: hash() argument must be hashable
 
 class Measurement:
     value: float

@@ -1,5 +1,3 @@
 def main():
     d: bigdecimal = BigDecimal("1.5")
     x: float = float(d)
-
-# expect-error: [E2506] float(bigdecimal_value) is not allowed

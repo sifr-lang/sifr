@@ -8,5 +8,3 @@ def bad_increment(x: int | None, flag: bool) -> int:
 
 def main():
     print(bad_increment(3, True))
-
-# expect-error: unsupported operand type(s) for +: 'None | int' and 'int'

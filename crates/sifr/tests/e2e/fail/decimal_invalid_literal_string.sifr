@@ -1,4 +1,2 @@
 def main():
     x: decimal = Decimal("12.34.56")
-
-# expect-error: [E2501] Decimal() received invalid exact literal

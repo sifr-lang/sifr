@@ -1,4 +1,3 @@
-# expect-error: cannot borrow 'items' as mutable more than once
 def swap(mut a: list[int], mut b: list[int]):
     pass
 

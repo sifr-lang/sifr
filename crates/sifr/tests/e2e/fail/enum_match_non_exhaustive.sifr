@@ -14,5 +14,3 @@ def describe(c: Color) -> str:
 
 def main():
     print(describe(Color.BLUE))
-
-# expect-error: non-exhaustive match

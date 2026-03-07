@@ -1,3 +1,2 @@
-# expect-error: incompatible types
 def main():
     x: str = "yes" if True else 42

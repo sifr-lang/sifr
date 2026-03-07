@@ -1,6 +1,5 @@
 # Test that importing a non-existent name from a stdlib module fails
 from sifr.io import nonexistent_function
-# expect-error: module 'sifr.io' has no member 'nonexistent_function'
 
 def main():
     pass

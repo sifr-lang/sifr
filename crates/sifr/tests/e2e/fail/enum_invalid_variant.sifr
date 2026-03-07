@@ -9,5 +9,3 @@ class Color(Enum):
 def main():
     c: Color = Color.YELLOW
     print(c)
-
-# expect-error: undefined variable

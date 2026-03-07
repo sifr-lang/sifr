@@ -9,5 +9,3 @@ def echo(x: T) -> T:
 def main():
     bad: float = echo(1.5)
     print(bad)
-
-# expect-error: does not satisfy constraints

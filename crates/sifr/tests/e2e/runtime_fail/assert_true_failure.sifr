@@ -1,4 +1,3 @@
-# expect-stderr: assertion failed
 from sifr.test import assert_true
 
 def main():

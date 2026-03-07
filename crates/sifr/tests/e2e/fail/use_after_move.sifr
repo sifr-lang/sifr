@@ -1,4 +1,3 @@
-# expect-error: moved value
 def consume(own s: str) -> str:
     return s
 

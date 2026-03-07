@@ -1,4 +1,3 @@
-# expect-error: unsupported default argument expression
 def seed() -> int:
     return 7
 

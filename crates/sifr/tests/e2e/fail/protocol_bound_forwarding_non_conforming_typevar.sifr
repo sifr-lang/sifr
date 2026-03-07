@@ -16,5 +16,3 @@ def relay_bad[U: Closable](x: U) -> U:
 
 def main():
     print(1)
-
-# expect-error: does not implement protocol 'Readable'

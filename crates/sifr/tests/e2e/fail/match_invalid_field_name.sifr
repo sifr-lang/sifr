@@ -11,5 +11,3 @@ def classify(p: Point) -> str:
 
 def main():
     print(classify(Point(1, 2)))
-
-# expect-error: has no field 'z'

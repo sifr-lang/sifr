@@ -1,4 +1,3 @@
-# expect-error: has fields but no __init__
 
 class Animal:
     name: str

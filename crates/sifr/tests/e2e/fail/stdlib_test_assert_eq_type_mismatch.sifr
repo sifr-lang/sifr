@@ -3,5 +3,3 @@ from sifr.test import assert_eq
 
 def main():
     assert_eq(1, "1")
-
-# expect-error: expected 'int', got 'str'

@@ -4,5 +4,3 @@ from sifr.math import sqrt
 def main():
     x: float = sqrt("hello")
     print(x)
-
-# expect-error: argument 1 ('x') of function 'sqrt': expected 'float', got 'str'

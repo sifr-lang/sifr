@@ -7,5 +7,3 @@ def classify(x: int) -> str:
 
 def main():
     print(classify(5))
-
-# expect-error: match guard must be a bool

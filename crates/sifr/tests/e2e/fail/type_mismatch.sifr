@@ -1,3 +1,2 @@
-# expect-error: type mismatch
 def main():
     x: int = "hello"

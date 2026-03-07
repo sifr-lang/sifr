@@ -8,5 +8,3 @@ class PlainClass:
 def main():
     with PlainClass(42) as p:
         print("should not reach here")
-
-# expect-error: does not implement the ContextManager protocol

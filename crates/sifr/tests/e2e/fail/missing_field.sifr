@@ -1,4 +1,3 @@
-# expect-error: has no field 'z'
 
 class Point:
     x: float

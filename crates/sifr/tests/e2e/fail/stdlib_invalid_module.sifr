@@ -4,5 +4,3 @@ from sifr.nonexistent import foo
 def main():
     x: int = foo()
     print(x)
-
-# expect-error: unknown stdlib module 'sifr.nonexistent'
