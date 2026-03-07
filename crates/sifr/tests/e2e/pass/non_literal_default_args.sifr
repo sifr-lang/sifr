@@ -1,0 +1,20 @@
+class Config:
+    numbers: list[int] = [1, 2]
+    settings: dict[str, int] = {"ok": 1}
+
+def with_default_list(own values: list[int] = [1]) -> list[int]:
+    values.append(5)
+    return values
+
+def main():
+    first: list[int] = with_default_list()
+    second: list[int] = with_default_list()
+    assert str(first) == '[1, 5]'
+    assert str(second) == '[1, 5]'
+
+    cfg: Config = Config()
+    assert str(cfg.numbers) == '[1, 2]'
+    maybe_ok: int | None = cfg.settings["ok"]
+    assert maybe_ok is not None
+    if maybe_ok is not None:
+        assert str(maybe_ok) == '1'

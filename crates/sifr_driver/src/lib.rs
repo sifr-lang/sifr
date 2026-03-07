@@ -17,8 +17,10 @@ use sifr_hir::{
 use sifr_python_ast::Stmt;
 use sifr_python_parser::parse_module;
 use sifr_type_system::{FunctionType, ParamConvention, Type};
+use std::any::Any;
 use std::collections::{BTreeMap, BTreeSet, HashMap, HashSet};
 use std::io::Write;
+use std::panic::{catch_unwind, AssertUnwindSafe};
 use std::path::{Path, PathBuf};
 use std::process::Command;
 use std::sync::OnceLock;
@@ -168,6 +170,30 @@ fn write_stderr_line(message: &str) {
 fn write_stderr(message: &str) {
     let mut stderr = std::io::stderr().lock();
     let _ = write!(stderr, "{message}");
+}
+
+fn panic_payload_message(payload: Box<dyn Any + Send>) -> String {
+    if let Some(msg) = payload.downcast_ref::<&str>() {
+        return (*msg).to_string();
+    }
+    if let Some(msg) = payload.downcast_ref::<String>() {
+        return msg.clone();
+    }
+    "non-string panic payload".to_string()
+}
+
+fn run_codegen_with_boundary<T>(
+    context: impl Into<String>,
+    f: impl FnOnce() -> T,
+) -> Result<T, CompileError> {
+    let context = context.into();
+    match catch_unwind(AssertUnwindSafe(f)) {
+        Ok(value) => Ok(value),
+        Err(payload) => Err(CompileError {
+            message: format!("{context}: {}", panic_payload_message(payload)),
+            phase: CompilePhase::Codegen,
+        }),
+    }
 }
 
 fn intrinsic_constant_rust_expr(module: &str, name: &str) -> Option<&'static str> {
@@ -387,8 +413,18 @@ fn compile_stdlib_uncached() -> Result<StdlibCompiled, Vec<CompileError>> {
                 generator_functions: stdlib_code.generator_functions.clone(),
                 generic_classes: stdlib_code.generic_classes.clone(),
             };
-            let codegen_result =
-                sifr_codegen::generate_rust_with_stdlib(&result.module, &codegen_stdlib);
+            let codegen_result = run_codegen_with_boundary(
+                format!(
+                    "internal compiler panic during stdlib code generation for '{module_name}'"
+                ),
+                || sifr_codegen::generate_rust_with_stdlib(&result.module, &codegen_stdlib),
+            )
+            .map_err(|e| {
+                vec![CompileError {
+                    message: format!("[stdlib:{module_name}] {}", e.message),
+                    phase: e.phase,
+                }]
+            })?;
             stdlib_code
                 .module_rust_code
                 .insert((*module_name).to_string(), codegen_result.rust_source);
@@ -683,8 +719,17 @@ pub fn compile_with_metadata(source: &str) -> CompileResultFull {
     emit_frontend_diagnostics(&frontend.lowering_result);
 
     // Phase 3: Generate Rust code with stdlib code
-    let codegen_result =
-        generate_rust_with_stdlib(&frontend.lowering_result.module, &frontend.stdlib.code);
+    let codegen_result = match run_codegen_with_boundary(
+        "internal compiler panic during single-file code generation",
+        || generate_rust_with_stdlib(&frontend.lowering_result.module, &frontend.stdlib.code),
+    ) {
+        Ok(result) => result,
+        Err(error) => {
+            return CompileResultFull::Errors {
+                errors: vec![error],
+            };
+        }
+    };
 
     CompileResultFull::Success {
         rust_source: codegen_result.rust_source,
@@ -1390,7 +1435,11 @@ pub fn build_project(main_file: &Path, output_dir: &Path) -> Result<PathBuf, Vec
                 .map(|module| (module_name.as_str(), module))
         })
         .collect();
-    let rust_files = generate_rust_multi(&module_refs);
+    let rust_files = run_codegen_with_boundary(
+        "internal compiler panic during project code generation",
+        || generate_rust_multi(&module_refs),
+    )
+    .map_err(|e| vec![e])?;
 
     // Phase 4: Build the Rust project
     let project_path = output_dir.join("sifr_output");
@@ -1616,7 +1665,11 @@ pub fn run_tests(test_dir: &Path) -> Result<bool, Vec<CompileError>> {
                 .map(|module| (name.as_str(), module))
         })
         .collect();
-    let support_rust_files = generate_rust_multi(&support_module_refs);
+    let support_rust_files = run_codegen_with_boundary(
+        "internal compiler panic during support-module code generation",
+        || generate_rust_multi(&support_module_refs),
+    )
+    .map_err(|e| vec![e])?;
 
     // Compile each test file and combine into a single Rust test binary
     let mut all_rust_code = String::new();
@@ -1625,7 +1678,14 @@ pub fn run_tests(test_dir: &Path) -> Result<bool, Vec<CompileError>> {
 
     for module_name in &support_module_names {
         if let Some(module) = project_lowering.hir_modules.get(module_name) {
-            let support_codegen = generate_rust_with_metadata(module);
+            let support_codegen = run_codegen_with_boundary(
+                format!(
+                    "internal compiler panic during support-module code generation for '{}'",
+                    module_name
+                ),
+                || generate_rust_with_metadata(module),
+            )
+            .map_err(|e| vec![e])?;
             all_stdlib_modules.extend(support_codegen.used_stdlib_modules);
             all_required_crates.extend(support_codegen.required_crates);
         }
@@ -1664,7 +1724,14 @@ pub fn run_tests(test_dir: &Path) -> Result<bool, Vec<CompileError>> {
         };
 
         // Generate Rust code in test mode
-        let codegen_result = generate_rust_test(&lowering_result.module);
+        let codegen_result = run_codegen_with_boundary(
+            format!(
+                "internal compiler panic during test-module code generation for '{}'",
+                test_file.display()
+            ),
+            || generate_rust_test(&lowering_result.module),
+        )
+        .map_err(|e| vec![e])?;
         all_rust_code.push_str("// Tests from: ");
         all_rust_code.push_str(&test_file.file_name().unwrap().to_string_lossy());
         all_rust_code.push('\n');
@@ -1782,6 +1849,28 @@ mod tests {
     use super::*;
     use std::sync::atomic::{AtomicUsize, Ordering};
     use std::sync::{Arc, Barrier};
+
+    #[test]
+    fn test_run_codegen_with_boundary_reports_string_panic_as_codegen_error() {
+        let err = run_codegen_with_boundary("panic boundary test", || {
+            panic!("boom");
+        })
+        .expect_err("panic should be converted into a codegen error");
+        assert!(matches!(err.phase, CompilePhase::Codegen));
+        assert!(err.message.contains("panic boundary test: boom"));
+    }
+
+    #[test]
+    fn test_run_codegen_with_boundary_reports_non_string_payload() {
+        let err = run_codegen_with_boundary("panic boundary test", || {
+            std::panic::panic_any(42_u8);
+        })
+        .expect_err("panic should be converted into a codegen error");
+        assert!(matches!(err.phase, CompilePhase::Codegen));
+        assert!(err
+            .message
+            .contains("panic boundary test: non-string panic payload"));
+    }
 
     fn parse_suite(source: &str) -> Vec<sifr_python_ast::Stmt> {
         let parsed = parse_module(source).unwrap_or_else(|e| panic!("parse failed: {e}"));

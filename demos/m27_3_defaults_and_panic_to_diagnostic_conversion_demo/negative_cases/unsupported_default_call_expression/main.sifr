@@ -1,0 +1,10 @@
+# negative path: unsupported default call-expression should emit a deterministic diagnostic.
+
+def seed() -> int:
+    return 7
+
+def pick(x: int = seed()) -> int:
+    return x
+
+def main():
+    print(pick())

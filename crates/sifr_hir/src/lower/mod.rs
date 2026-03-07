@@ -674,6 +674,12 @@ fn lower_module_impl(
                 if let Some(ref default_expr) = param.default {
                     if let Some(hir_default) = lower_expr_simple(default_expr) {
                         defaults.push((i, hir_default));
+                    } else {
+                        ctx.error(format!(
+                            "function '{}': unsupported default argument expression for parameter '{}'",
+                            func.name,
+                            param.parameter.name
+                        ));
                     }
                 }
             }
@@ -683,6 +689,12 @@ fn lower_module_impl(
                 if let Some(ref default_expr) = param.default {
                     if let Some(hir_default) = lower_expr_simple(default_expr) {
                         defaults.push((regular_count + i, hir_default));
+                    } else {
+                        ctx.error(format!(
+                            "function '{}': unsupported default argument expression for parameter '{}'",
+                            func.name,
+                            param.parameter.name
+                        ));
                     }
                 }
             }

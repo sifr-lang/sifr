@@ -33,14 +33,14 @@ Loop per part: Work -> Validate -> PR -> Review -> Merge -> Mark Done
 - [x] Add demo: `demos/m27_2_indexing_and_semantics_parity_fixes_demo`
 - [x] Add negative case
 - [x] Run milestone demo + targeted tests + full local suite
-- [ ] Open PR, review, and merge
+- [x] Open PR, review, and merge
 
 ### Part 3: milestone_27_3 Defaults and Panic-to-Diagnostic Conversion
-- [ ] Lock non-literal default argument behavior with positive/negative regressions
-- [ ] Add panic boundary and convert user-triggerable panic surfaces to diagnostics
-- [ ] Add demo: `demos/m27_3_defaults_and_panic_to_diagnostic_conversion_demo`
-- [ ] Add negative case
-- [ ] Run milestone demo + targeted tests + full local suite
+- [x] Lock non-literal default argument behavior with positive/negative regressions
+- [x] Add panic boundary and convert user-triggerable panic surfaces to diagnostics
+- [x] Add demo: `demos/m27_3_defaults_and_panic_to_diagnostic_conversion_demo`
+- [x] Add negative case
+- [x] Run milestone demo + targeted tests + full local suite
 - [ ] Open PR, review, and merge
 
 ### Part 4: milestone_27_4 Span and Diagnostic Schema Quality
@@ -92,7 +92,7 @@ Validation evidence:
 - Negative path: `cargo run -q -p sifr -- run demos/m27_1_remove_data_dependent_unwrap_expect_demo/negative_cases/option_method_without_narrowing/main.sifr` -> exits `1` with `type error: type 'None | list[int]' has no method 'len'`.
 
 ## Part 2: milestone_27_2 Indexing and Semantics Parity Fixes
-status: done (2026-03-07, PR: pending)
+status: done (2026-03-07, PR #898)
 
 - [x] Negative indexing parity fixed across list mutation/delete and nested mutation paths
 - [x] Strong read/mutation negative-index regressions added
@@ -100,7 +100,7 @@ status: done (2026-03-07, PR: pending)
 - [x] Negative-path validation recorded
 - [x] Run milestone demo
 - [x] Run full local suite
-- [ ] Open PR, review, and merge
+- [x] Open PR, review, and merge
 - [x] Mark part progress in this checklist
 
 Validation evidence:
@@ -112,6 +112,29 @@ Validation evidence:
 - Positive path: `/Users/yaseralnajjar/work/sifr/codebase/scripts/run_all_tests.sh` -> pass (402 pass tests completed).
 - Negative path: `cargo run -q -p sifr -- run demos/m27_2_indexing_and_semantics_parity_fixes_demo/negative_cases/invalid_index_type/main.sifr` -> exits `1` with `type error: cannot index type 'list[int]' with 'str'`.
 
+## Part 3: milestone_27_3 Defaults and Panic-to-Diagnostic Conversion
+status: done (2026-03-07, PR: pending)
+
+- [x] Non-literal defaults (collection literals) preserved for function/class defaults
+- [x] Unsupported default expressions produce deterministic diagnostics (no silent drop)
+- [x] Driver codegen panic boundary converts panics into `CompilePhase::Codegen` diagnostics
+- [x] Positive-path validation recorded
+- [x] Negative-path validation recorded
+- [x] Run milestone demo
+- [x] Run full local suite
+- [ ] Open PR, review, and merge
+- [x] Mark part progress in this checklist
+
+Validation evidence:
+- Positive path: `cargo test -q -p sifr_hir` -> pass.
+- Positive path: `cargo test -q -p sifr_driver run_codegen_with_boundary_reports` -> pass (2 tests).
+- Positive path: `cargo run -q -p sifr -- run crates/sifr/tests/e2e/pass/non_literal_default_args.sifr` -> pass.
+- Positive path: `cargo run -q -p sifr -- run demos/m27_3_defaults_and_panic_to_diagnostic_conversion_demo/main.sifr` -> prints `m27_3 defaults and panic-to-diagnostic conversion demo:` then `[1, 9]`, `[1, 9]`, `[1, 2]`.
+- Positive path: `/Users/yaseralnajjar/work/sifr/codebase/scripts/run_all_tests.sh` -> pass (403 pass tests completed).
+- Negative path: `cargo run -q -p sifr -- run demos/m27_3_defaults_and_panic_to_diagnostic_conversion_demo/negative_cases/unsupported_default_call_expression/main.sifr` -> exits `1` with `type error: function 'pick': unsupported default argument expression for parameter 'x'`.
+- Negative path: `cargo run -q -p sifr -- run crates/sifr/tests/e2e/fail/unsupported_default_expr_call.sifr` -> exits `1` with deterministic unsupported-default diagnostic.
+
 ## PR Log
 - Part 1: https://github.com/yaseralnajjar/sifr/pull/897
-- Part 2: pending
+- Part 2: https://github.com/yaseralnajjar/sifr/pull/898
+- Part 3: pending

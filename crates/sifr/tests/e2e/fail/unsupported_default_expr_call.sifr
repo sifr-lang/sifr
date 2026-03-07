@@ -1,0 +1,9 @@
+# expect-error: unsupported default argument expression
+def seed() -> int:
+    return 7
+
+def pick(x: int = seed()) -> int:
+    return x
+
+def main():
+    print(pick())
