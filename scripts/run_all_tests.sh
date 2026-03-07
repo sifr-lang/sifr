@@ -77,3 +77,6 @@ bash "${SCRIPT_DIR}/run_phase25_cfg_flow_activation_matrix.sh"
 
 echo "Running e2e pass suite"
 bash "${SCRIPT_DIR}/run_e2e_pass.sh" --profile "${PROFILE}" "${FORWARD_ARGS[@]}"
+
+echo "Running phase 29 verification hardening suites"
+python3 "${SCRIPT_DIR}/run_verification_hardening.py" --profile "${PROFILE}"

@@ -1,0 +1,24 @@
+[
+  {
+    "code": "SIFR-TYPE-0001",
+    "severity": "Error",
+    "message": "undefined function: 'add'",
+    "url": "https://sifr.dev/docs/errors/SIFR-TYPE-0001",
+    "primary_span": null,
+    "related_spans": [],
+    "children": [],
+    "help": null,
+    "suggestions": []
+  },
+  {
+    "code": "SIFR-TYPE-0001",
+    "severity": "Error",
+    "message": "unknown module 'missing_math_utils'",
+    "url": "https://sifr.dev/docs/errors/SIFR-TYPE-0001",
+    "primary_span": null,
+    "related_spans": [],
+    "children": [],
+    "help": null,
+    "suggestions": []
+  }
+]

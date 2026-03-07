@@ -1,0 +1,6 @@
+from math_utils import add_with_offset
+
+
+def main():
+    print("verification project baseline")
+    print(str(add_with_offset(7, 5)))

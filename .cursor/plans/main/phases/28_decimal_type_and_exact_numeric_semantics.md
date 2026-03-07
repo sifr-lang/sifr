@@ -1,6 +1,6 @@
 # Phase 28: Decimal Types and Exact Numeric Semantics
 
-status: in_progress
+status: completed
 
 ## Objective
 Add first-class `decimal` and `bigdecimal` types with deterministic, exact base-10 arithmetic semantics for financial and precision-critical workloads.
