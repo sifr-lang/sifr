@@ -1,5 +1,9 @@
 # Phase 30: Reliability Parity (Stdlib)
 
+status: draft
+
+> Note: Needs more planning before execution (breakdown into waves for milestone 1)
+
 ## Objective
 Close the reliability track by proving stdlib behavioral and complexity parity before feature expansion.
 
