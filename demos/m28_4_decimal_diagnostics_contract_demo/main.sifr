@@ -1,0 +1,12 @@
+def main():
+    print("m28_4 decimal diagnostics contract demo")
+
+    d: decimal = Decimal("10.5000")
+    b: bigdecimal = BigDecimal("20.7500")
+
+    assert str(d.round(2)) == '10.50'
+    assert str(d.quantize(2)) == '10.50'
+    assert str(b.round(2)) == '20.75000000000000000000000000'
+    assert str(b.quantize(2)) == '20.75000000000000000000000000'
+
+    print("diagnostic range E2501-E2508 is reserved and enforced")

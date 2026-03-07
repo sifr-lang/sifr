@@ -104,7 +104,7 @@ Validation evidence:
 - Full suite: `/Users/yaseralnajjar/work/sifr/codebase/scripts/run_all_tests.sh` -> pass (405 pass e2e fixtures, 0 failures).
 
 ## Part 3: milestone_28_3 Conversion and Boundary Contracts
-status: done (2026-03-07, PR pending)
+status: done (2026-03-07, merged)
 
 - [x] Implement explicit conversion contracts (`int`/`bigint`/`str`/cross-decimal)
 - [x] Enforce explicit ban on `float -> decimal|bigdecimal` paths
@@ -112,7 +112,7 @@ status: done (2026-03-07, PR pending)
 - [x] Add demo: `demos/m28_3_conversion_and_boundary_contracts_demo/main.sifr`
 - [x] Add negative cases
 - [x] Run milestone demo + targeted tests + full local suite
-- [ ] Open PR, review, and merge
+- [x] Open PR, review, and merge
 
 Validation evidence:
 - Positive path: `cargo run -q -p sifr -- run demos/m28_3_conversion_and_boundary_contracts_demo/main.sifr` -> prints `m28_3 conversion and boundary contracts demo`, truncation-toward-zero outputs for `int(decimal|bigdecimal)` and `bigint(decimal|bigdecimal)`, JSON dumps as quoted strings for both decimal types, and catches out-of-range conversion with `DecimalConversionError`.
@@ -121,10 +121,32 @@ Validation evidence:
 - Negative path: `cargo run -q -p sifr -- run crates/sifr/tests/e2e/fail/bigdecimal_constructor_float.sifr` -> exits `1` with `[E2506]`.
 - Full suite: `/Users/yaseralnajjar/work/sifr/codebase/scripts/run_all_tests.sh` -> pass (406 pass e2e fixtures, 0 failures).
 
+## Part 4: milestone_28_4 Decimal Diagnostics Contract
+status: done (2026-03-07, PR pending)
+
+- [x] Reserve and enforce diagnostics `E2501-E2508`
+- [x] Add precise, stable decimal diagnostics for constructors/mixing/conversion/context issues
+- [x] Add regression locks for stable diagnostic content
+- [x] Add demo: `demos/m28_4_decimal_diagnostics_contract_demo/main.sifr`
+- [x] Add negative cases
+- [x] Run milestone demo + targeted tests + full local suite
+- [ ] Open PR, review, and merge
+
+Validation evidence:
+- Positive path: `cargo run -q -p sifr -- run demos/m28_4_decimal_diagnostics_contract_demo/main.sifr` -> prints `m28_4 decimal diagnostics contract demo` and `diagnostic range E2501-E2508 is reserved and enforced`.
+- Negative path: `cargo run -q -p sifr -- run demos/m28_4_decimal_diagnostics_contract_demo/negative_cases/decimal_round_scale_out_of_range/main.sifr` -> exits `1` with `[E2507]`.
+- Negative path: `cargo run -q -p sifr -- run crates/sifr/tests/e2e/fail/decimal_invalid_literal_string.sifr` -> exits `1` with `[E2501]`.
+- Negative path: `cargo run -q -p sifr -- run crates/sifr/tests/e2e/fail/bigdecimal_invalid_literal_string.sifr` -> exits `1` with `[E2502]`.
+- Negative path: `cargo run -q -p sifr -- run crates/sifr/tests/e2e/fail/decimal_round_scale_out_of_range.sifr` -> exits `1` with `[E2507]`.
+- Negative path: `cargo run -q -p sifr -- run crates/sifr/tests/e2e/fail/bigdecimal_quantize_negative_scale_context.sifr` -> exits `1` with `[E2508]`.
+- Negative path: `cargo run -q -p sifr -- run crates/sifr/tests/e2e/fail/decimal_quantize_requires_int_scale.sifr` -> exits `1` with `[E2507]`.
+- Negative path: `cargo run -q -p sifr -- run crates/sifr/tests/e2e/fail/bigdecimal_round_requires_int_scale.sifr` -> exits `1` with `[E2508]`.
+- Full suite: `/Users/yaseralnajjar/work/sifr/codebase/scripts/run_all_tests.sh` -> pass (406 pass e2e fixtures, 0 failures).
+
 ## PR Log
 - Part 1: merged https://github.com/yaseralnajjar/sifr/pull/910
 - Part 2: merged https://github.com/yaseralnajjar/sifr/pull/911
-- Part 3: pending
+- Part 3: merged https://github.com/yaseralnajjar/sifr/pull/912
 - Part 4: pending
 - Part 5: pending
 

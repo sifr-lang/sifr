@@ -1,4 +1,7 @@
 use super::*;
+use bigdecimal::BigDecimal;
+use rust_decimal::Decimal;
+use std::str::FromStr;
 
 pub(super) fn lower_expr(expr: &Expr, ctx: &mut LowerCtx) -> Option<HirExpr> {
     match expr {
@@ -79,6 +82,26 @@ pub(super) fn lower_name(name: &ExprName, ctx: &mut LowerCtx) -> Option<HirExpr>
 
     ctx.error(format!("undefined variable: '{var_name}'"));
     None
+}
+
+fn validate_decimal_string_literal(value: &str, ctx: &mut LowerCtx) -> Option<()> {
+    if Decimal::from_str_exact(value).is_err() {
+        ctx.error(format!(
+            "[E2501] Decimal() received invalid exact literal '{value}'"
+        ));
+        return None;
+    }
+    Some(())
+}
+
+fn validate_bigdecimal_string_literal(value: &str, ctx: &mut LowerCtx) -> Option<()> {
+    if BigDecimal::from_str(value).is_err() {
+        ctx.error(format!(
+            "[E2502] BigDecimal() received invalid decimal literal '{value}'"
+        ));
+        return None;
+    }
+    Some(())
 }
 
 /// Map a binary operator to its corresponding dunder method name.
@@ -630,7 +653,9 @@ pub(super) fn lower_call(call: &ExprCall, ctx: &mut LowerCtx) -> Option<HirExpr>
             });
         let result_ty = match arg_ty {
             Type::Str => {
-                if !matches!(call.arguments.args[0], Expr::StringLiteral(_)) {
+                if let Expr::StringLiteral(lit) = &call.arguments.args[0] {
+                    validate_decimal_string_literal(lit.value.to_str(), ctx)?;
+                } else {
                     ctx.error(
                         "[E2501] Decimal() string construction requires a string literal"
                             .to_string(),
@@ -679,7 +704,9 @@ pub(super) fn lower_call(call: &ExprCall, ctx: &mut LowerCtx) -> Option<HirExpr>
         let arg_ty = arg.ty().clone();
         match arg_ty {
             Type::Str => {
-                if !matches!(call.arguments.args[0], Expr::StringLiteral(_)) {
+                if let Expr::StringLiteral(lit) = &call.arguments.args[0] {
+                    validate_bigdecimal_string_literal(lit.value.to_str(), ctx)?;
+                } else {
                     ctx.error(
                         "[E2502] BigDecimal() string construction requires a string literal"
                             .to_string(),
