@@ -1,0 +1,13 @@
+# m27_6 stability contract finalization demo
+#
+# Positive path:
+# - `sifr check` succeeds with exit code 0
+# - all stable diagnostic formats are accepted:
+#   `--diagnostic-format human|json|compact`
+
+def sum2(a: int, b: int) -> int:
+    return a + b
+
+
+def main():
+    print(sum2(20, 22))

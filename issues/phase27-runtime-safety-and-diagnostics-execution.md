@@ -60,16 +60,16 @@ Loop per part: Work -> Validate -> PR -> Review -> Merge -> Mark Done
 - [x] Add demo: `demos/m27_5_bounded_multi_error_recovery_demo`
 - [x] Add negative case
 - [x] Run milestone demo + targeted tests + full local suite
-- [ ] Open PR, review, and merge
+- [x] Open PR, review, and merge
 
 ### Part 6: milestone_27_6 Stability Contract Finalization
-- [ ] Enforce exit code contract `0|1|2|3`
-- [ ] Implement `--diagnostic-format human|json|compact` stability behavior and unknown-format exit `2`
-- [ ] Lock compact renderer grouping/truncation invariants and snapshot stability
-- [ ] Add checked-in panic inventory and convert remaining user-triggerable panic paths
-- [ ] Add demo: `demos/m27_6_stability_contract_finalization_demo`
-- [ ] Add negative case
-- [ ] Run milestone demo + targeted tests + full local suite
+- [x] Enforce exit code contract `0|1|2|3`
+- [x] Implement `--diagnostic-format human|json|compact` stability behavior and unknown-format exit `2`
+- [x] Lock compact renderer grouping/truncation invariants and snapshot stability
+- [x] Add checked-in panic inventory and convert remaining user-triggerable panic paths
+- [x] Add demo: `demos/m27_6_stability_contract_finalization_demo`
+- [x] Add negative case
+- [x] Run milestone demo + targeted tests + full local suite
 - [ ] Open PR, review, and merge
 
 ## Part 1: milestone_27_1 Remove Data-Dependent `unwrap/expect`
@@ -159,7 +159,7 @@ Validation evidence:
 - Negative path: `cargo run -q -p sifr -- --diagnostic-format json check /tmp/.../parse_error.sifr` -> exits `1` and emits canonical parse diagnostic with stable parser code/url.
 
 ## Part 5: milestone_27_5 Bounded Multi-Error Recovery
-status: done (2026-03-07, PR: pending)
+status: done (2026-03-07, PR #901)
 
 - [x] Recovery hard limits enforced (`50` top-level diagnostics, `5` per duplicate group, summary tail)
 - [x] Deterministic grouping/ordering implemented via canonical key ordering
@@ -168,7 +168,7 @@ status: done (2026-03-07, PR: pending)
 - [x] Negative-path validation recorded
 - [x] Run milestone demo
 - [x] Run full local suite
-- [ ] Open PR, review, and merge
+- [x] Open PR, review, and merge
 - [x] Mark part progress in this checklist
 
 Validation evidence:
@@ -179,9 +179,45 @@ Validation evidence:
 - Negative path: `cargo run -q -p sifr -- check demos/m27_5_bounded_multi_error_recovery_demo/negative_cases/repeated_type_errors/main.sifr` -> exits `1` and includes `type error: ... +3 more similar diagnostics`.
 - Negative path: repeated diagnostics above cap are truncated to 5 representatives per group with summary record.
 
+## Part 6: milestone_27_6 Stability Contract Finalization
+status: done (2026-03-07, PR: pending)
+
+- [x] Exit code contract `0|1|2|3` enforced by CLI command flow and panic/error boundaries
+- [x] Stable CLI format contract implemented: `--diagnostic-format human|json|compact`
+- [x] Unknown diagnostic-format values fail with exit code `2` before semantic work
+- [x] Compact renderer invariants implemented:
+  - first line severity summary
+  - grouping by `(severity, code, canonical message)`
+  - max 5 representative locations per group with `... +N more` truncation
+  - max one help line and one docs URL line per group
+- [x] Compact output is renderer-only over canonical diagnostics (no semantic ownership changes)
+- [x] Checked-in panic inventory and explicit follow-up owners/issues for remaining invariant panics
+- [x] Positive-path validation recorded
+- [x] Negative-path validation recorded
+- [x] Run milestone demo
+- [x] Run full local suite
+- [ ] Open PR, review, and merge
+- [x] Mark part progress in this checklist
+
+Validation evidence:
+- Positive path: `cargo test -q -p sifr` -> pass (includes new stability contract tests).
+- Positive path: `cargo test -q -p sifr test_compile_error_exit_code_contract_user_vs_internal` -> pass.
+- Positive path: `cargo test -q -p sifr test_run_with_panic_boundary_converts_panic_to_internal_compile_error` -> pass.
+- Positive path: `cargo test -q -p sifr test_compact_renderer_invariants_summary_grouping_and_bounds` -> pass.
+- Positive path: `cargo run -q -p sifr -- --diagnostic-format human check demos/m27_6_stability_contract_finalization_demo/main.sifr` -> exits `0`.
+- Positive path: `cargo run -q -p sifr -- --diagnostic-format json check demos/m27_6_stability_contract_finalization_demo/main.sifr` -> prints `[]`, exits `0`.
+- Positive path: `cargo run -q -p sifr -- --diagnostic-format compact check demos/m27_6_stability_contract_finalization_demo/main.sifr` -> prints zero-summary line, exits `0`.
+- Positive path: `/Users/yaseralnajjar/work/sifr/codebase/scripts/run_all_tests.sh` -> pass (403 pass tests completed).
+- Negative path: `cargo run -q -p sifr -- --diagnostic-format unknown check demos/m27_6_stability_contract_finalization_demo/negative_cases/unknown_diagnostic_format/main.sifr` -> exits `2` with clap format validation error.
+- Negative path: `cargo run -q -p sifr -- --diagnostic-format compact check demos/m27_6_stability_contract_finalization_demo/negative_cases/compact_grouping_contract/main.sifr` -> exits `1`; compact output emits grouped diagnostics with truncation (`... +3 more`).
+- Negative path: `cargo run -q -p sifr -- --diagnostic-format json check demos/m27_6_stability_contract_finalization_demo/negative_cases/compact_grouping_contract/main.sifr` -> exits `1`; canonical bounded diagnostic list is emitted in json.
+- Inventory: [`phase27-panic-inventory.md`](./phase27-panic-inventory.md)
+- Follow-ups: [`phase27-panic-followups.md`](./phase27-panic-followups.md)
+
 ## PR Log
 - Part 1: https://github.com/yaseralnajjar/sifr/pull/897
 - Part 2: https://github.com/yaseralnajjar/sifr/pull/898
 - Part 3: https://github.com/yaseralnajjar/sifr/pull/899
 - Part 4: https://github.com/yaseralnajjar/sifr/pull/900
-- Part 5: pending
+- Part 5: https://github.com/yaseralnajjar/sifr/pull/901
+- Part 6: pending

@@ -610,6 +610,12 @@ Sifr compiles to Rust source code, which is then compiled by `rustc`. This creat
 - `**rustc` error translation:** when `rustc` emits an error on generated code, the driver translates it back to `.sifr` coordinates using the span map. If translation fails (e.g., error in compiler-generated boilerplate), the raw `rustc` error is shown with a note: "This error originated in the Rust compilation step."
 - **Generation vs rendering separation:** semantic phases construct diagnostics; renderer layers convert them to `human`, `json`, and `compact` presentation formats. Output mode selection must not change diagnostic ownership or semantics.
 - **JSON renderer contract:** `json` output is the lossless machine-readable format and must preserve the shared diagnostic model fields without human-only lossy reformatting.
+- **CLI diagnostic-format contract:** the stable renderer flag surface is `--diagnostic-format human|json|compact`. Unknown values fail fast with exit code `2` before semantic compilation work starts.
+- **CLI exit-code contract:** compiler commands return exactly:
+  - `0` success (including warning-only outcomes)
+  - `1` user-facing compile/check/test diagnostics
+  - `2` CLI usage/configuration error
+  - `3` internal compiler failure after panic/error boundary handling
 - **Compact renderer contract:** `compact` is a token-efficient summary format inspired by the grouping/truncation strategy used in the sibling `rtk` repository at `/Users/yaseralnajjar/work/sifr/rtk`, but implemented in Sifr and fully specified here. Implementers can read `rtk` to build or validate the renderer. It must:
   - show a one-line severity summary first
   - group repeated diagnostics by `(severity, code, canonical message)`
