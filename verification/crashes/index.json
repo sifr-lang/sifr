@@ -1,0 +1,25 @@
+{
+  "schema_version": 1,
+  "entries": [
+    {
+      "id": "CR-0001",
+      "issue": "issues/phase27-panic-followups.md#open-items",
+      "owner": "phase_29_verification_hardening",
+      "status": "unresolved",
+      "root_cause_category": "cfg-invariant-panic-path",
+      "source_reference": "crates/sifr_hir/src/cfg.rs",
+      "promotion_target_suite": "fixedbugs",
+      "note": "Track HIR CFG invariant panic conversion into typed diagnostics. Promote to fixedbugs with minimized reproducer when resolved."
+    },
+    {
+      "id": "CR-0002",
+      "issue": "issues/phase27-panic-followups.md#open-items",
+      "owner": "phase_29_verification_hardening",
+      "status": "unresolved",
+      "root_cause_category": "parser-invariant-unwrap-audit",
+      "source_reference": "crates/sifr_python_parser/src/lexer.rs",
+      "promotion_target_suite": "fixedbugs",
+      "note": "Track parser invariant unwrap/expect audit and conversion where feasible; promote to fixedbugs when reproducible issue is fixed."
+    }
+  ]
+}

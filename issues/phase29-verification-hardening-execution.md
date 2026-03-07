@@ -19,14 +19,14 @@ Loop per part: Work -> Validate -> PR -> Review -> Merge -> Mark Done
 ## Full Phase 29 To-Do Plan
 
 ### Part 1: milestone_29_1 Suite Taxonomy and Baseline Governance
-- [ ] Define canonical suite taxonomy and per-suite contracts
-- [ ] Add baseline-backed verification for diagnostics and project behavior
-- [ ] Define canonical checked-in artifacts and normalization rules
-- [ ] Define one canonical bless/accept workflow
-- [ ] Add demo: `demos/m29_1_suite_taxonomy_and_baseline_governance_demo/main.sifr`
-- [ ] Add positive and negative validations for diagnostics/project baseline checks
-- [ ] Run milestone demo + full local suite
-- [ ] Open PR, review, and merge
+- [x] Define canonical suite taxonomy and per-suite contracts
+- [x] Add baseline-backed verification for diagnostics and project behavior
+- [x] Define canonical checked-in artifacts and normalization rules
+- [x] Define one canonical bless/accept workflow
+- [x] Add demo: `demos/m29_1_suite_taxonomy_and_baseline_governance_demo/main.sifr`
+- [x] Add positive and negative validations for diagnostics/project baseline checks
+- [x] Run milestone demo + full local suite
+- [x] Open PR, review, and merge
 
 ### Part 2: milestone_29_2 Fixedbugs and Crashes Corpus
 - [ ] Require resolved compiler bugs in scope to land in `fixedbugs`
@@ -66,7 +66,7 @@ Loop per part: Work -> Validate -> PR -> Review -> Merge -> Mark Done
 - [ ] Open PR, review, and merge
 
 ## Part 1: milestone_29_1 Suite Taxonomy and Baseline Governance
-status: done (2026-03-08, pending PR link)
+status: done (2026-03-08, PR #920)
 
 - [x] Canonical suite taxonomy and contract docs added
 - [x] Baseline-backed diagnostics and project suites added
@@ -75,7 +75,7 @@ status: done (2026-03-08, pending PR link)
 - [x] Negative-path validation recorded
 - [x] Run milestone demo
 - [x] Run full local suite
-- [ ] Open PR, review, and merge
+- [x] Open PR, review, and merge
 - [x] Mark part progress in this checklist
 
 Validation evidence:
@@ -85,8 +85,29 @@ Validation evidence:
 - Positive path: `/Users/yaseralnajjar/work/sifr/codebase/scripts/run_all_tests.sh` -> pass.
 - Negative path: project case `missing_import_reports_error` in `verification/suites/manifest.json` is expected-fail and baseline-locked across `human|json|compact` diagnostics with exit code `1`.
 
+## Part 2: milestone_29_2 Fixedbugs and Crashes Corpus
+status: done (2026-03-08, pending PR link)
+
+- [x] Require resolved compiler bugs in scope to land in `fixedbugs`
+- [x] Add issue-linked metadata and root-cause traceability
+- [x] Define `crashes` sentinel policy and promotion rules
+- [x] Positive-path validation recorded
+- [x] Negative-path validation recorded
+- [x] Run milestone demo
+- [x] Run full local suite
+- [ ] Open PR, review, and merge
+- [x] Mark part progress in this checklist
+
+Validation evidence:
+- Positive path: `cargo run -q -p sifr -- run demos/m29_2_fixedbugs_and_crashes_corpus_demo/main.sifr` -> prints fixedbugs/crashes corpus contract lines and exits `0`.
+- Positive path: `python3 scripts/run_verification_hardening.py --profile full` -> `verification ok: variants=12, failures=0, blocking_failures=0` (includes `fixedbugs` and `crashes` suites).
+- Positive path: `/Users/yaseralnajjar/work/sifr/codebase/scripts/run_all_tests.sh` -> pass with `fixedbugs` and `crashes` enforced via `scripts/run_verification_hardening.py`.
+- Negative path: fixedbugs regression `FB-0002` executes `crates/sifr/tests/e2e/fail/unsupported_default_expr_call.sifr` with expected `check` exit code `1` and fails the hardening gate if it regresses to success.
+- Negative path: crash sentinels require valid metadata and existing `source_reference`; missing fields/path would fail `crashes` suite metadata validation.
+
 ## PR Log
-- Pending
+- Part 1: merged https://github.com/yaseralnajjar/sifr/pull/920
+- Part 2: pending
 
 ## External Review Passes
 - Pending

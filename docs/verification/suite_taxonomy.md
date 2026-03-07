@@ -45,6 +45,7 @@ This document defines the canonical suite taxonomy for compiler verification har
 
 ### Fixedbugs
 - Fixture root: `crates/sifr/tests/verification/fixedbugs/<case_id>/`.
+- Index source of truth: `verification/fixedbugs/index.json`.
 - Required metadata:
   - issue or finding id
   - root-cause category
@@ -53,6 +54,7 @@ This document defines the canonical suite taxonomy for compiler verification har
 
 ### Crashes
 - Sentinel root: `crates/sifr/tests/verification/crashes/<case_id>/`.
+- Index source of truth: `verification/crashes/index.json`.
 - Required metadata:
   - issue id
   - crash or sentinel classification
@@ -74,3 +76,4 @@ This document defines the canonical suite taxonomy for compiler verification har
 - Canonical manifest: `verification/suites/manifest.json`.
 - Suite runners must not hardcode fixture lists outside this manifest.
 - Manifest updates are review artifacts and follow normal PR review.
+- Corpus lifecycle and promotion rules: `docs/verification/regression_corpus_policy.md`.
