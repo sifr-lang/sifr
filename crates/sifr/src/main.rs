@@ -8,11 +8,14 @@
 use clap::{Parser, Subcommand, ValueEnum};
 use sifr_driver::{
     apply_diagnostic_recovery_limits, build, build_project, check, check_project, compile,
-    compile_errors_to_diagnostics, run_tests, CompileError, CompileResult,
+    compile_errors_to_diagnostics, run_tests, CompileError, CompilePhase, CompileResult,
+    CompilerDiagnostic, Severity,
 };
 use sifr_python_ast::Stmt;
 use sifr_python_parser::parse_module;
+use std::collections::{BTreeMap, BTreeSet};
 use std::io::{self, Write};
+use std::panic::{catch_unwind, AssertUnwindSafe};
 use std::path::{Path, PathBuf};
 use std::process;
 
@@ -68,6 +71,7 @@ enum Commands {
 enum DiagnosticFormat {
     Human,
     Json,
+    Compact,
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -76,10 +80,19 @@ enum CompilationMode {
     Project,
 }
 
+const EXIT_SUCCESS: i32 = 0;
+const EXIT_USER_DIAGNOSTIC: i32 = 1;
+const EXIT_USAGE_OR_CONFIG: i32 = 2;
+const EXIT_INTERNAL_COMPILER_FAILURE: i32 = 3;
+const MAX_COMPACT_REPRESENTATIVE_LOCATIONS: usize = 5;
+
 fn main() {
     let cli = Cli::parse();
-    let diagnostic_format = cli.diagnostic_format;
+    process::exit(run_cli(cli));
+}
 
+fn run_cli(cli: Cli) -> i32 {
+    let diagnostic_format = cli.diagnostic_format;
     match cli.command {
         Commands::Build { file, output } => cmd_build(&file, &output, diagnostic_format),
         Commands::Run { file } => cmd_run(&file, diagnostic_format),
@@ -144,7 +157,7 @@ fn read_source(file: &Path) -> String {
                 "error: could not read file '{}': {e}",
                 file.display()
             );
-            process::exit(1);
+            process::exit(EXIT_USAGE_OR_CONFIG);
         }
     }
 }
@@ -193,7 +206,153 @@ impl Drop for InvocationWorkspace {
     }
 }
 
-fn render_compile_errors(errors: &[CompileError], format: DiagnosticFormat) {
+fn severity_rank(severity: Severity) -> u8 {
+    match severity {
+        Severity::Error => 0,
+        Severity::Warning => 1,
+        Severity::Note => 2,
+        Severity::Help => 3,
+    }
+}
+
+fn severity_label(severity: Severity) -> &'static str {
+    match severity {
+        Severity::Error => "error",
+        Severity::Warning => "warning",
+        Severity::Note => "note",
+        Severity::Help => "help",
+    }
+}
+
+fn panic_payload_message(payload: Box<dyn std::any::Any + Send>) -> String {
+    if let Some(msg) = payload.downcast_ref::<&str>() {
+        return (*msg).to_string();
+    }
+    if let Some(msg) = payload.downcast_ref::<String>() {
+        return msg.clone();
+    }
+    "non-string panic payload".to_string()
+}
+
+fn run_with_panic_boundary<T>(
+    context: impl Into<String>,
+    phase: CompilePhase,
+    f: impl FnOnce() -> T,
+) -> Result<T, CompileError> {
+    let context = context.into();
+    match catch_unwind(AssertUnwindSafe(f)) {
+        Ok(value) => Ok(value),
+        Err(payload) => Err(CompileError {
+            message: format!("{context}: {}", panic_payload_message(payload)),
+            phase,
+        }),
+    }
+}
+
+fn is_internal_compile_error(error: &CompileError) -> bool {
+    error.message.starts_with("internal compiler panic during ")
+}
+
+fn compile_error_exit_code(errors: &[CompileError]) -> i32 {
+    if errors.iter().any(is_internal_compile_error) {
+        EXIT_INTERNAL_COMPILER_FAILURE
+    } else {
+        EXIT_USER_DIAGNOSTIC
+    }
+}
+
+fn compact_severity_summary(diagnostics: &[CompilerDiagnostic]) -> String {
+    let mut error_count = 0usize;
+    let mut warning_count = 0usize;
+    let mut note_count = 0usize;
+    let mut help_count = 0usize;
+    for diagnostic in diagnostics {
+        match diagnostic.severity {
+            Severity::Error => error_count += 1,
+            Severity::Warning => warning_count += 1,
+            Severity::Note => note_count += 1,
+            Severity::Help => help_count += 1,
+        }
+    }
+    format!(
+        "summary: {error_count} error(s), {warning_count} warning(s), {note_count} note(s), {help_count} help item(s)"
+    )
+}
+
+fn compact_location_label(span: &sifr_driver::DiagnosticSpan) -> String {
+    match (&span.file, span.line, span.column) {
+        (Some(file), Some(line), Some(column)) => format!("{file}:{line}:{column}"),
+        (Some(file), Some(line), None) => format!("{file}:{line}"),
+        (Some(file), None, _) => file.clone(),
+        (None, Some(line), Some(column)) => format!("<unknown>:{line}:{column}"),
+        (None, Some(line), None) => format!("<unknown>:{line}"),
+        (None, None, Some(column)) => format!("<unknown>:0:{column}"),
+        (None, None, None) => "<unknown>".to_string(),
+    }
+}
+
+fn render_compact_diagnostics(diagnostics: &[CompilerDiagnostic]) -> String {
+    let mut grouped: BTreeMap<(u8, String, String), Vec<&CompilerDiagnostic>> = BTreeMap::new();
+    for diagnostic in diagnostics {
+        let key = (
+            severity_rank(diagnostic.severity),
+            diagnostic.code.clone(),
+            diagnostic.message.clone(),
+        );
+        grouped.entry(key).or_default().push(diagnostic);
+    }
+
+    let mut output = String::new();
+    output.push_str(&compact_severity_summary(diagnostics));
+    output.push('\n');
+
+    for ((_severity_rank, code, message), group) in grouped {
+        let severity = group[0].severity;
+        output.push_str(&format!(
+            "{} [{code}] {message} (x{})\n",
+            severity_label(severity),
+            group.len()
+        ));
+
+        let mut locations: BTreeSet<String> = BTreeSet::new();
+        for diagnostic in &group {
+            if let Some(span) = &diagnostic.primary_span {
+                locations.insert(compact_location_label(span));
+            }
+        }
+
+        let rendered_locations = locations
+            .iter()
+            .take(MAX_COMPACT_REPRESENTATIVE_LOCATIONS)
+            .collect::<Vec<_>>();
+        for location in rendered_locations {
+            output.push_str(&format!("  at {location}\n"));
+        }
+        if locations.len() > MAX_COMPACT_REPRESENTATIVE_LOCATIONS {
+            output.push_str(&format!(
+                "  ... +{} more\n",
+                locations.len() - MAX_COMPACT_REPRESENTATIVE_LOCATIONS
+            ));
+        }
+
+        if let Some(help) = group
+            .iter()
+            .find_map(|diagnostic| diagnostic.help.as_deref())
+        {
+            output.push_str(&format!("  help: {help}\n"));
+        }
+        if let Some(url) = group
+            .iter()
+            .find_map(|diagnostic| (!diagnostic.url.is_empty()).then_some(diagnostic.url.as_str()))
+        {
+            output.push_str(&format!("  url: {url}\n"));
+        }
+    }
+
+    output
+}
+
+fn render_compile_errors(errors: &[CompileError], format: DiagnosticFormat) -> i32 {
     let diagnostics = apply_diagnostic_recovery_limits(&compile_errors_to_diagnostics(errors));
     match format {
         DiagnosticFormat::Human => {
@@ -230,14 +389,26 @@ fn render_compile_errors(errors: &[CompileError], format: DiagnosticFormat) {
                     io::stderr(),
                     "build error: failed to serialize diagnostics as json: {e}"
                 );
-                process::exit(2);
+                return EXIT_INTERNAL_COMPILER_FAILURE;
             }
         },
+        DiagnosticFormat::Compact => {
+            let compact_output = render_compact_diagnostics(&diagnostics);
+            let _ = write!(io::stderr(), "{compact_output}");
+        }
     }
+    compile_error_exit_code(errors)
 }
 
-fn cmd_build(file: &Path, output: &Path, diagnostic_format: DiagnosticFormat) {
-    let result = compile_entrypoint(file, output);
+fn cmd_build(file: &Path, output: &Path, diagnostic_format: DiagnosticFormat) -> i32 {
+    let result = match run_with_panic_boundary(
+        "internal compiler panic during build command execution",
+        CompilePhase::Build,
+        || compile_entrypoint(file, output),
+    ) {
+        Ok(result) => result,
+        Err(internal) => return render_compile_errors(&[internal], diagnostic_format),
+    };
 
     match result {
         Ok(binary_path) => {
@@ -246,23 +417,28 @@ fn cmd_build(file: &Path, output: &Path, diagnostic_format: DiagnosticFormat) {
                 "compiled successfully: {}",
                 binary_path.display()
             );
+            EXIT_SUCCESS
         }
-        Err(errors) => {
-            render_compile_errors(&errors, diagnostic_format);
-            process::exit(1);
-        }
+        Err(errors) => render_compile_errors(&errors, diagnostic_format),
     }
 }
 
-fn cmd_run(file: &Path, diagnostic_format: DiagnosticFormat) {
+fn cmd_run(file: &Path, diagnostic_format: DiagnosticFormat) -> i32 {
     let workspace = match InvocationWorkspace::create("sifr_run") {
         Ok(workspace) => workspace,
         Err(e) => {
             let _ = writeln!(io::stderr(), "error: could not create run workspace: {e}");
-            process::exit(1);
+            return EXIT_USAGE_OR_CONFIG;
         }
     };
-    let result = compile_entrypoint(file, workspace.path());
+    let result = match run_with_panic_boundary(
+        "internal compiler panic during run command compilation",
+        CompilePhase::Build,
+        || compile_entrypoint(file, workspace.path()),
+    ) {
+        Ok(result) => result,
+        Err(internal) => return render_compile_errors(&[internal], diagnostic_format),
+    };
 
     match result {
         Ok(binary_path) => {
@@ -270,7 +446,7 @@ fn cmd_run(file: &Path, diagnostic_format: DiagnosticFormat) {
                 .output()
                 .unwrap_or_else(|e| {
                     let _ = writeln!(io::stderr(), "error: could not run binary: {e}");
-                    process::exit(1);
+                    process::exit(EXIT_USAGE_OR_CONFIG);
                 });
 
             // Forward stdout and stderr
@@ -278,18 +454,23 @@ fn cmd_run(file: &Path, diagnostic_format: DiagnosticFormat) {
             std::io::stderr().write_all(&output.stderr).ok();
 
             if !output.status.success() {
-                process::exit(output.status.code().unwrap_or(1));
+                return EXIT_USER_DIAGNOSTIC;
             }
+            EXIT_SUCCESS
         }
-        Err(errors) => {
-            render_compile_errors(&errors, diagnostic_format);
-            process::exit(1);
-        }
+        Err(errors) => render_compile_errors(&errors, diagnostic_format),
     }
 }
 
-fn cmd_check(file: &Path, diagnostic_format: DiagnosticFormat) {
-    let errors = check_entrypoint(file);
+fn cmd_check(file: &Path, diagnostic_format: DiagnosticFormat) -> i32 {
+    let errors = match run_with_panic_boundary(
+        "internal compiler panic during check command execution",
+        CompilePhase::TypeCheck,
+        || check_entrypoint(file),
+    ) {
+        Ok(errors) => errors,
+        Err(internal) => return render_compile_errors(&[internal], diagnostic_format),
+    };
 
     if errors.is_empty() {
         match diagnostic_format {
@@ -299,38 +480,57 @@ fn cmd_check(file: &Path, diagnostic_format: DiagnosticFormat) {
             DiagnosticFormat::Json => {
                 let _ = writeln!(io::stdout(), "[]");
             }
-        }
-    } else {
-        render_compile_errors(&errors, diagnostic_format);
-        process::exit(1);
-    }
-}
-
-fn cmd_test(dir: &Path, diagnostic_format: DiagnosticFormat) {
-    match run_tests(dir) {
-        Ok(success) => {
-            if !success {
-                process::exit(1);
+            DiagnosticFormat::Compact => {
+                let _ = writeln!(
+                    io::stderr(),
+                    "summary: 0 error(s), 0 warning(s), 0 note(s), 0 help item(s)"
+                );
             }
         }
-        Err(errors) => {
-            render_compile_errors(&errors, diagnostic_format);
-            process::exit(1);
-        }
+        EXIT_SUCCESS
+    } else {
+        render_compile_errors(&errors, diagnostic_format)
     }
 }
 
-fn cmd_emit(file: &Path, diagnostic_format: DiagnosticFormat) {
+fn cmd_test(dir: &Path, diagnostic_format: DiagnosticFormat) -> i32 {
+    let run_result = match run_with_panic_boundary(
+        "internal compiler panic during test command execution",
+        CompilePhase::Build,
+        || run_tests(dir),
+    ) {
+        Ok(result) => result,
+        Err(internal) => return render_compile_errors(&[internal], diagnostic_format),
+    };
+    match run_result {
+        Ok(success) => {
+            if !success {
+                EXIT_USER_DIAGNOSTIC
+            } else {
+                EXIT_SUCCESS
+            }
+        }
+        Err(errors) => render_compile_errors(&errors, diagnostic_format),
+    }
+}
+
+fn cmd_emit(file: &Path, diagnostic_format: DiagnosticFormat) -> i32 {
     let source = read_source(file);
 
-    match compile(&source) {
+    let compile_result = match run_with_panic_boundary(
+        "internal compiler panic during emit command execution",
+        CompilePhase::Codegen,
+        || compile(&source),
+    ) {
+        Ok(result) => result,
+        Err(internal) => return render_compile_errors(&[internal], diagnostic_format),
+    };
+    match compile_result {
         CompileResult::Success { rust_source } => {
             let _ = write!(io::stdout(), "{rust_source}");
+            EXIT_SUCCESS
         }
-        CompileResult::Errors { errors } => {
-            render_compile_errors(&errors, diagnostic_format);
-            process::exit(1);
-        }
+        CompileResult::Errors { errors } => render_compile_errors(&errors, diagnostic_format),
     }
 }
 
@@ -826,5 +1026,158 @@ mod tests {
         let _ = std::fs::remove_dir_all(run_out);
         let _ = std::fs::remove_dir_all(build_out);
         let _ = std::fs::remove_dir_all(dir);
+    }
+
+    #[test]
+    fn test_compile_error_exit_code_contract_user_vs_internal() {
+        let user_error = CompileError {
+            message: "type mismatch".to_string(),
+            phase: CompilePhase::TypeCheck,
+        };
+        assert_eq!(compile_error_exit_code(&[user_error]), EXIT_USER_DIAGNOSTIC);
+
+        let internal_error = CompileError {
+            message: "internal compiler panic during single-file code generation: boom".to_string(),
+            phase: CompilePhase::Codegen,
+        };
+        assert_eq!(
+            compile_error_exit_code(&[internal_error]),
+            EXIT_INTERNAL_COMPILER_FAILURE
+        );
+    }
+
+    #[test]
+    fn test_diagnostic_format_cli_rejects_unknown_value_with_usage_exit_code() {
+        let parse_result = Cli::try_parse_from([
+            "sifr",
+            "--diagnostic-format",
+            "not-a-format",
+            "check",
+            "main.sifr",
+        ]);
+        match parse_result {
+            Ok(_) => panic!("unknown diagnostic format should fail"),
+            Err(error) => assert_eq!(error.exit_code(), EXIT_USAGE_OR_CONFIG),
+        }
+    }
+
+    #[test]
+    fn test_diagnostic_format_cli_accepts_compact_value() {
+        let parse_result = Cli::try_parse_from([
+            "sifr",
+            "--diagnostic-format",
+            "compact",
+            "check",
+            "main.sifr",
+        ]);
+        assert!(parse_result.is_ok(), "compact format should parse");
+    }
+
+    #[test]
+    fn test_run_with_panic_boundary_converts_panic_to_internal_compile_error() {
+        let error = run_with_panic_boundary(
+            "internal compiler panic during test boundary",
+            CompilePhase::Build,
+            || -> usize { panic!("boom") },
+        )
+        .expect_err("panic should convert to compile error");
+        assert!(error
+            .message
+            .contains("internal compiler panic during test boundary: boom"));
+        assert_eq!(
+            compile_error_exit_code(&[error]),
+            EXIT_INTERNAL_COMPILER_FAILURE
+        );
+    }
+
+    #[test]
+    fn test_compact_renderer_invariants_summary_grouping_and_bounds() {
+        let mut diagnostics = Vec::new();
+        for idx in 0..8 {
+            diagnostics.push(CompilerDiagnostic {
+                code: "SIFR-TYPE-0001".to_string(),
+                severity: Severity::Error,
+                message: "type mismatch: expected 'int', got 'str'".to_string(),
+                url: "https://sifr.dev/docs/errors/SIFR-TYPE-0001".to_string(),
+                primary_span: Some(sifr_driver::DiagnosticSpan {
+                    file: Some("main.sifr".to_string()),
+                    line: Some(idx + 1),
+                    column: Some(1),
+                }),
+                related_spans: Vec::new(),
+                children: Vec::new(),
+                help: Some("fix assignment type".to_string()),
+                suggestions: Vec::new(),
+            });
+        }
+        let compact = render_compact_diagnostics(&diagnostics);
+        let mut lines = compact.lines();
+        let first_line = lines.next().expect("compact output should have first line");
+        assert!(
+            first_line.starts_with("summary: "),
+            "first line should be severity summary, got: {first_line}"
+        );
+        assert!(compact.contains("error [SIFR-TYPE-0001]"));
+        assert!(compact.contains(" (x8)"));
+        assert_eq!(compact.matches("help: ").count(), 1);
+        assert_eq!(
+            compact
+                .matches("url: https://sifr.dev/docs/errors/SIFR-TYPE-0001")
+                .count(),
+            1
+        );
+        assert_eq!(compact.matches("  at main.sifr:").count(), 5);
+        assert!(compact.contains("  ... +3 more"));
+    }
+
+    #[test]
+    fn test_compact_renderer_never_drops_or_invents_relative_to_json_count() {
+        let diagnostics = vec![
+            CompilerDiagnostic {
+                code: "SIFR-TYPE-0001".to_string(),
+                severity: Severity::Error,
+                message: "mismatch one".to_string(),
+                url: "https://sifr.dev/docs/errors/SIFR-TYPE-0001".to_string(),
+                primary_span: None,
+                related_spans: Vec::new(),
+                children: Vec::new(),
+                help: None,
+                suggestions: Vec::new(),
+            },
+            CompilerDiagnostic {
+                code: "SIFR-TYPE-0001".to_string(),
+                severity: Severity::Error,
+                message: "mismatch one".to_string(),
+                url: "https://sifr.dev/docs/errors/SIFR-TYPE-0001".to_string(),
+                primary_span: None,
+                related_spans: Vec::new(),
+                children: Vec::new(),
+                help: None,
+                suggestions: Vec::new(),
+            },
+            CompilerDiagnostic {
+                code: "SIFR-PARSE-0001".to_string(),
+                severity: Severity::Error,
+                message: "parse fail".to_string(),
+                url: "https://sifr.dev/docs/errors/SIFR-PARSE-0001".to_string(),
+                primary_span: None,
+                related_spans: Vec::new(),
+                children: Vec::new(),
+                help: None,
+                suggestions: Vec::new(),
+            },
+        ];
+        let compact = render_compact_diagnostics(&diagnostics);
+        let grouped_total: usize = compact
+            .lines()
+            .filter_map(|line| {
+                let marker = " (x";
+                let start = line.find(marker)?;
+                let rest = &line[(start + marker.len())..];
+                let end = rest.find(')')?;
+                rest[..end].parse::<usize>().ok()
+            })
+            .sum();
+        assert_eq!(grouped_total, diagnostics.len());
     }
 }
