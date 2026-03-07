@@ -29,13 +29,13 @@ Loop per part: Work -> Validate -> PR -> Review -> Merge -> Mark Done
 - [x] Open PR, review, and merge
 
 ### Part 2: milestone_29_2 Fixedbugs and Crashes Corpus
-- [ ] Require resolved compiler bugs in scope to land in `fixedbugs`
-- [ ] Add issue-linked metadata and root-cause traceability contract
-- [ ] Define and enforce `crashes` sentinel policy and promotion rules
-- [ ] Add demo: `demos/m29_2_fixedbugs_and_crashes_corpus_demo/main.sifr`
-- [ ] Add positive and negative validations for corpus metadata/policy checks
-- [ ] Run milestone demo + full local suite
-- [ ] Open PR, review, and merge
+- [x] Require resolved compiler bugs in scope to land in `fixedbugs`
+- [x] Add issue-linked metadata and root-cause traceability contract
+- [x] Define and enforce `crashes` sentinel policy and promotion rules
+- [x] Add demo: `demos/m29_2_fixedbugs_and_crashes_corpus_demo/main.sifr`
+- [x] Add positive and negative validations for corpus metadata/policy checks
+- [x] Run milestone demo + full local suite
+- [x] Open PR, review, and merge
 
 ### Part 3: milestone_29_3 Fuzz and Property Operationalization
 - [ ] Define fuzz targets/property suites and seed corpora manifests
@@ -86,7 +86,7 @@ Validation evidence:
 - Negative path: project case `missing_import_reports_error` in `verification/suites/manifest.json` is expected-fail and baseline-locked across `human|json|compact` diagnostics with exit code `1`.
 
 ## Part 2: milestone_29_2 Fixedbugs and Crashes Corpus
-status: done (2026-03-08, pending PR link)
+status: done (2026-03-08, PR #921)
 
 - [x] Require resolved compiler bugs in scope to land in `fixedbugs`
 - [x] Add issue-linked metadata and root-cause traceability
@@ -95,7 +95,7 @@ status: done (2026-03-08, pending PR link)
 - [x] Negative-path validation recorded
 - [x] Run milestone demo
 - [x] Run full local suite
-- [ ] Open PR, review, and merge
+- [x] Open PR, review, and merge
 - [x] Mark part progress in this checklist
 
 Validation evidence:
@@ -105,9 +105,31 @@ Validation evidence:
 - Negative path: fixedbugs regression `FB-0002` executes `crates/sifr/tests/e2e/fail/unsupported_default_expr_call.sifr` with expected `check` exit code `1` and fails the hardening gate if it regresses to success.
 - Negative path: crash sentinels require valid metadata and existing `source_reference`; missing fields/path would fail `crashes` suite metadata validation.
 
+## Part 3: milestone_29_3 Fuzz and Property Operationalization
+status: done (2026-03-08, pending PR link)
+
+- [x] Define fuzz targets, property suites, and seed corpora manifests
+- [x] Define reproducibility, deduplication, minimization, and triage rules
+- [x] Separate local smoke fuzz/property gates from sustained non-blocking lane
+- [x] Positive-path validation recorded
+- [x] Negative-path validation recorded
+- [x] Run milestone demo
+- [x] Run full local suite
+- [ ] Open PR, review, and merge
+- [x] Mark part progress in this checklist
+
+Validation evidence:
+- Positive path: `cargo run -q -p sifr -- run demos/m29_3_fuzz_and_property_operationalization_demo/main.sifr` -> prints property/fuzz operationalization contract lines and exits `0`.
+- Positive path: `python3 scripts/run_verification_hardening.py --profile full --suite property --suite fuzz-smoke` -> `verification ok: variants=39, failures=0, blocking_failures=0`.
+- Positive path: `bash scripts/run_smoke_fuzz_property.sh` -> pass for legacy smoke tests plus phase-29 property/fuzz-smoke suite runner invocation.
+- Positive path: `/Users/yaseralnajjar/work/sifr/codebase/scripts/run_all_tests.sh` -> pass with `property` and `fuzz-smoke` suites active in canonical hardening gate.
+- Negative path: property entry `PROP-0001` enforces deterministic failing diagnostics for invalid import seed (`expect_exit_code=1`) and would fail on drift (`exit-code|stdout|stderr`).
+- Negative path: fuzz-smoke suite fails on panic signals or non-allowed exit codes and enforces minimum deduplicated case count (`min_unique_cases`).
+
 ## PR Log
 - Part 1: merged https://github.com/yaseralnajjar/sifr/pull/920
-- Part 2: pending
+- Part 2: merged https://github.com/yaseralnajjar/sifr/pull/921
+- Part 3: pending
 
 ## External Review Passes
 - Pending
