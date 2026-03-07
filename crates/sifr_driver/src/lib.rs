@@ -787,12 +787,9 @@ enum FrontendDiagnosticStyle {
     ModulePrefixed,
 }
 
-fn compile_frontend(source: &str) -> Result<FrontendCompiled, Vec<CompileError>> {
-    // Phase 0: Compile embedded stdlib .sifr files
-    let stdlib_compiled = compile_stdlib()?;
-
-    // Phase 1: Parse
-    let parsed = match parse_module(source) {
+/// Parse source into an AST suite using compiler diagnostics.
+pub fn parse_source(source: &str) -> Result<Vec<sifr_python_ast::Stmt>, Vec<CompileError>> {
+    match parse_module(source) {
         Ok(parsed) => {
             if !parsed.is_valid() {
                 let errors: Vec<CompileError> = parsed
@@ -805,19 +802,25 @@ fn compile_frontend(source: &str) -> Result<FrontendCompiled, Vec<CompileError>>
                     .collect();
                 return Err(errors);
             }
-            parsed
+            Ok(parsed.into_suite())
         }
-        Err(e) => {
-            return Err(vec![CompileError {
-                message: format!("failed to parse: {e}"),
-                phase: CompilePhase::Parse,
-            }]);
-        }
-    };
+        Err(e) => Err(vec![CompileError {
+            message: format!("failed to parse: {e}"),
+            phase: CompilePhase::Parse,
+        }]),
+    }
+}
+
+fn compile_frontend(source: &str) -> Result<FrontendCompiled, Vec<CompileError>> {
+    // Phase 0: Compile embedded stdlib .sifr files
+    let stdlib_compiled = compile_stdlib()?;
+
+    // Phase 1: Parse
+    let parsed_suite = parse_source(source)?;
 
     // Phase 2: Lower through the same module-orchestration path used by project/test modes.
     let mut parsed_modules = HashMap::new();
-    parsed_modules.insert("main".to_string(), parsed.into_suite());
+    parsed_modules.insert("main".to_string(), parsed_suite);
     let mut project_lowering = compile_frontend_modules(
         &parsed_modules,
         stdlib_compiled.defs.clone(),
@@ -857,6 +860,22 @@ fn emit_frontend_diagnostics(lowering_result: &LoweringResult) {
     }
 }
 
+/// Lower and type-check source into canonical HIR lowering output.
+pub fn lower_source(source: &str) -> Result<LoweringResult, Vec<CompileError>> {
+    compile_frontend(source).map(|frontend| frontend.lowering_result)
+}
+
+/// Type-check source and return compiler diagnostics for failures.
+pub fn type_check_source(source: &str) -> Vec<CompileError> {
+    match lower_source(source) {
+        Ok(lowering_result) => {
+            emit_frontend_diagnostics(&lowering_result);
+            vec![]
+        }
+        Err(errors) => errors,
+    }
+}
+
 /// Compile Sifr source code to Rust source code, returning stdlib metadata.
 pub fn compile_with_metadata(source: &str) -> CompileResultFull {
     let frontend = match compile_frontend(source) {
@@ -889,13 +908,7 @@ pub fn compile_with_metadata(source: &str) -> CompileResultFull {
 
 /// Type-check only (no code generation).
 pub fn check(source: &str) -> Vec<CompileError> {
-    match compile_frontend(source) {
-        Ok(frontend) => {
-            emit_frontend_diagnostics(&frontend.lowering_result);
-            vec![]
-        }
-        Err(errors) => errors,
-    }
+    type_check_source(source)
 }
 
 fn lower_frontend_module(
@@ -2051,6 +2064,42 @@ mod tests {
         assert_eq!(diagnostics[1].message, "second");
         assert_eq!(diagnostics[0].code, "SIFR-TYPE-0001");
         assert_eq!(diagnostics[1].code, "SIFR-CODEGEN-0001");
+    }
+
+    #[test]
+    fn test_parse_source_returns_suite_for_valid_program() {
+        let suite = parse_source("def main():\n    x: int = 1\n")
+            .expect("parse_source should return a suite for valid source");
+        assert!(!suite.is_empty());
+    }
+
+    #[test]
+    fn test_parse_source_returns_parse_error_for_invalid_program() {
+        let errors = parse_source("def main(:\n").expect_err("invalid source should fail parsing");
+        assert!(!errors.is_empty());
+        assert!(matches!(errors[0].phase, CompilePhase::Parse));
+    }
+
+    #[test]
+    fn test_lower_source_and_type_check_source_surface_type_errors() {
+        let errors = match lower_source("def main():\n    x: int = \"bad\"\n") {
+            Ok(_) => panic!("type mismatch should fail lowering/type-check"),
+            Err(errors) => errors,
+        };
+        assert!(!errors.is_empty());
+        assert!(errors
+            .iter()
+            .all(|error| matches!(error.phase, CompilePhase::TypeCheck)));
+
+        let check_errors = type_check_source("def main():\n    x: int = \"bad\"\n");
+        assert_eq!(errors.len(), check_errors.len());
+        assert_eq!(
+            errors.iter().map(ToString::to_string).collect::<Vec<_>>(),
+            check_errors
+                .iter()
+                .map(ToString::to_string)
+                .collect::<Vec<_>>()
+        );
     }
 
     #[test]
