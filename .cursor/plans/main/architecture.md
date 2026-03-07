@@ -593,11 +593,31 @@ Sifr compiles to Rust source code, which is then compiled by `rustc`. This creat
 
 **Contract:**
 
-- **Stable Sifr diagnostic codes:** every Sifr compiler diagnostic has a stable code (e.g., `S0001: type-mismatch`, `S0002: move-after-use`, `S0003: unused-variable`). Each code is owned by a specific compiler phase (parser, type checker, borrow checker, codegen).
-- **Canonical diagnostic object:** parser, lowering, type checking, borrow checking, and codegen all emit one structured `Diagnostic` model with `code`, `severity`, `message`, `primary_span`, `related_spans`, `help`, and optional fix suggestions.
+- **Stable Sifr diagnostic codes:** every top-level Sifr compiler diagnostic has a stable code owned by a specific compiler phase (parser, type checker, borrow checker, codegen). Error codes use `E####` and warning codes use `W####`. `Note` and `Help` entries attach to a parent diagnostic instead of defining separate top-level codes.
+- **Deterministic documentation URL:** every top-level diagnostic exposes `url = "https://sifr.dev/docs/errors/<CODE>"`. This URL is part of the stable contract and must render in `human`, `json`, and `compact` outputs.
+- **Canonical severity enum:** the shared diagnostic model uses exactly four severities matching rustc's user-facing hierarchy:
+  - `Error` -- blocks compilation or the active command
+  - `Warning` -- non-blocking but actionable
+  - `Note` -- contextual information attached to a diagnostic
+  - `Help` -- actionable remediation text attached to a diagnostic
+- **Canonical diagnostic object:** parser, lowering, type checking, borrow checking, and codegen all emit one structured `Diagnostic` model with at least: `code`, `severity`, `message`, `url`, `primary_span`, `related_spans`, `children`, `help`, and optional fix suggestions.
+- **Canonical suggestion kinds:** suggestion payloads are structured and not free-form strings only. The shared model must distinguish at least:
+  - `DidYouMean` -- typo or symbol suggestion
+  - `ReplaceText` -- replace span with new text
+  - `InsertText` -- insert text at span/position
+  - `DeleteText` -- remove text for invalid construct
 - **Span mapping:** the codegen phase maintains a mapping from generated Rust line/column positions to original `.sifr` line/column positions. All compiler errors shown to users reference `.sifr` source locations, never generated Rust locations.
 - `**rustc` error translation:** when `rustc` emits an error on generated code, the driver translates it back to `.sifr` coordinates using the span map. If translation fails (e.g., error in compiler-generated boilerplate), the raw `rustc` error is shown with a note: "This error originated in the Rust compilation step."
-- **Generation vs rendering separation:** semantic phases construct diagnostics; renderer layers convert them to `human`, `json`, and other presentation formats. Output mode selection must not change diagnostic ownership or semantics.
+- **Generation vs rendering separation:** semantic phases construct diagnostics; renderer layers convert them to `human`, `json`, and `compact` presentation formats. Output mode selection must not change diagnostic ownership or semantics.
+- **JSON renderer contract:** `json` output is the lossless machine-readable format and must preserve the shared diagnostic model fields without human-only lossy reformatting.
+- **Compact renderer contract:** `compact` is a token-efficient summary format inspired by `rtk` grouping/truncation patterns but implemented in Sifr. It must:
+  - show a one-line severity summary first
+  - group repeated diagnostics by `(severity, code, canonical message)`
+  - list a bounded number of representative locations per group
+  - include one bounded help line when present
+  - include the documentation URL once per group
+  - emit truncation lines such as `... +N more` instead of flooding the terminal
+  - avoid source snippets, color escapes, and duplicated child-note spam
 - **Suppression policy:** `rustc` warnings on generated code are suppressed by default (generated code includes `#[allow(warnings)]`). Only `rustc` errors are surfaced to the user.
 - **Multi-file rendering:** errors that span multiple `.sifr` files show each file's relevant snippet with labeled spans. Uses `miette` or `ariadne` for rich terminal rendering with colors, underlines, and related notes.
 - **Diagnostic ownership:** the Sifr compiler should catch as many errors as possible before invoking `rustc`. Over time, the set of errors that reach `rustc` should shrink to near-zero as the type checker and borrow checker mature.

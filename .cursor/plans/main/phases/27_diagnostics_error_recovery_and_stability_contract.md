@@ -11,26 +11,43 @@ Deliver production-quality diagnostics with recovery and explicit stability guar
 ### milestone_27_4: Span and Diagnostic Schema Quality
 - Scope:
   - Introduce one canonical structured diagnostic model shared by parser/lowering/type-check/codegen.
+  - Define the canonical `Severity` enum exactly as `Error | Warning | Note | Help`.
   - Thread precise spans through frontend/codegen errors.
-  - Standardize stable diagnostic codes, severities, related-span labels, help text, and optional fix-suggestion fields.
-  - Define stable diagnostic renderers for at least `human` and `json` output modes without changing semantic ownership.
+  - Standardize stable diagnostic codes, related-span labels, help text, deterministic documentation URLs, and structured fix-suggestion fields.
+  - Require every top-level diagnostic to expose `url = "https://sifr.dev/docs/errors/<CODE>"`.
+  - Define the canonical structured diagnostic schema with at least: `code`, `severity`, `message`, `url`, `primary_span`, `related_spans`, `children`, `help`, and optional structured suggestions.
+  - Define structured suggestion kinds with at least: `DidYouMean`, `ReplaceText`, `InsertText`, `DeleteText`.
+  - Define stable diagnostic renderers for `human` and `json` output modes without changing semantic ownership.
+  - Require `json` mode to be the lossless machine-readable rendering of the canonical diagnostic schema.
 - Definition of done:
-  - Diagnostics include accurate source locations, stable codes, and a stable structured schema consumed by all compiler modes.
+  - Diagnostics include accurate source locations, stable codes, stable URLs, and a stable structured schema consumed by all compiler modes.
+  - The severity enum and structured suggestion kinds are implemented exactly as specified in this phase.
 
 ### milestone_27_5: Bounded Multi-Error Recovery
 - Scope:
   - Add parser/type-check recovery to report multiple actionable errors.
   - Control error cascades with bounded recovery policy.
   - Define diagnostic prioritization and deduplication rules so recovery does not produce noisy duplicate cascades.
+  - Define stable ordering rules for recovered diagnostics so repeated runs emit the same grouped results.
 - Definition of done:
   - Compiler reports multiple useful errors without crash storms or unbounded duplicate cascades.
+  - Recovered diagnostics are emitted in deterministic order.
 
 ### milestone_27_6: Stability Contract Finalization
 - Scope:
   - Define documented exit codes, CLI flag stability/versioning, diagnostic-text policy, and output-format stability policy.
+  - Define the stable CLI contract for `--diagnostic-format human|json|compact`.
+  - Define compact-renderer invariants inspired by `rtk` token-efficient grouping:
+    - first line is a severity summary
+    - diagnostics are grouped by `(severity, code, canonical message)`
+    - each group prints a bounded list of representative locations
+    - each group prints at most one help line and one documentation URL line
+    - truncation uses `... +N more`
+    - compact mode never invents or drops diagnostics relative to `json`
   - Convert remaining user-triggerable panics to diagnostics.
 - Definition of done:
   - Stability policy is explicit and enforced by tests/docs.
+  - `human`, `json`, and `compact` are stable contracts with documented equivalence boundaries.
 
 ## Quality Contract
 - Entry criteria: Phase 26 is completed and runtime-safe codegen invariants are active.
@@ -43,9 +60,9 @@ Deliver production-quality diagnostics with recovery and explicit stability guar
   - Validation evidence must be recorded in the phase execution checklist issue before merge.
   - Validation evidence for every milestone must include at least one positive-path case and one negative-path case mapped to the milestone validation planning goals.
 - Validation planning goals:
-  - `milestone_27_4` (Span and Diagnostic Schema Quality): validation goals cover: Introduce one canonical structured diagnostic model shared by parser/lowering/type-check/codegen; Thread precise spans through frontend/codegen errors; Standardize stable diagnostic codes, severities, related-span labels, help text, and optional fix-suggestion fields; Define stable `human` and `json` renderers without changing semantic ownership. Include negative-path goals that catch regressions against these guarantees.
-  - `milestone_27_5` (Bounded Multi-Error Recovery): validation goals cover: Add parser/type-check recovery to report multiple actionable errors; Control error cascades with bounded recovery policy; Define prioritization and deduplication rules for recovery output. Include negative-path goals that catch regressions against these guarantees.
-  - `milestone_27_6` (Stability Contract Finalization): validation goals cover: Define documented exit codes, CLI flag stability/versioning, diagnostic-text policy, and output-format stability policy; Convert remaining user-triggerable panics to diagnostics. Include negative-path goals that catch regressions against these guarantees.
+  - `milestone_27_4` (Span and Diagnostic Schema Quality): validation goals cover: Introduce one canonical structured diagnostic model shared by parser/lowering/type-check/codegen; Define the canonical `Severity` enum exactly as `Error | Warning | Note | Help`; Thread precise spans through frontend/codegen errors; Standardize stable diagnostic codes, related-span labels, help text, deterministic documentation URLs, and structured suggestion kinds; Require every top-level diagnostic to expose `https://sifr.dev/docs/errors/<CODE>`; Define stable `human` and lossless `json` renderers without changing semantic ownership. Include negative-path goals that catch regressions against these guarantees.
+  - `milestone_27_5` (Bounded Multi-Error Recovery): validation goals cover: Add parser/type-check recovery to report multiple actionable errors; Control error cascades with bounded recovery policy; Define prioritization, deduplication, and stable ordering rules for recovery output. Include negative-path goals that catch regressions against these guarantees.
+  - `milestone_27_6` (Stability Contract Finalization): validation goals cover: Define documented exit codes, CLI flag stability/versioning, diagnostic-text policy, and output-format stability policy; Define the stable CLI contract for `--diagnostic-format human|json|compact`; Define compact-renderer invariants inspired by `rtk` grouping/truncation without changing semantics; Convert remaining user-triggerable panics to diagnostics. Include negative-path goals that catch regressions against these guarantees.
   - Exit-gate evidence explicitly demonstrates: Compiler diagnostics are stable, span-accurate, recovery-capable, and panic-free on user input.
 
 ## Exit Gate
