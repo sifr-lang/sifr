@@ -1,52 +1,292 @@
 # Phase 29: Verification Hardening
 
+status: planned
+
 ## Objective
-Scale validation breadth and depth so reliability claims are continuously provable.
+Establish a production-grade compiler verification system that is deterministic, locally enforceable, reviewable, and issue-traceable through explicit suite taxonomy, baseline governance, regression corpus discipline, fuzz/property operations, curated real-world validation, and flake control.
 
 ## Depends on
 - Phase 28
 
+## Non-goals
+- Stdlib behavioral and complexity parity closure.
+- Broad compatibility remediation across large external corpora.
+- Generated Rust lint/format/static-analysis closure.
+- Compiler performance budget governance.
+- Tooling/LSP/editor parity.
+- Release governance and stable-channel promotion policy.
+
+## Scope
+This phase owns the compiler verification foundation:
+- compiler-facing suite taxonomy
+- baseline/snapshot governance for compiler outputs
+- issue-linked regression corpus
+- known-failure sentinel policy
+- fuzz/property operating model
+- curated real-world blocking gate
+- broader ecosystem non-blocking lane definition
+- deterministic sharding, rerun, and flake policy
+- machine-readable validation artifacts
+
+This phase does not own:
+- stdlib parity governance (Phase 30)
+- broad compatibility taxonomy, scorecards, and remediation waves (Phase 31)
+- generated-code quality closure (Phase 34)
+- performance thresholds and benchmark governance (Phase 35)
+- tooling parity (Phase 36)
+- release governance (Phase 39)
+
+## Verification Taxonomy
+The phase must define explicit suite kinds with contracts, ownership, and required artifacts.
+
+Minimum suite kinds:
+- `diagnostics`
+  - compiler diagnostics, exit codes, renderer behavior, and structured suggestions where applicable
+- `project`
+  - multi-file and multi-module compiler behavior
+- `fixedbugs`
+  - permanent issue-linked regressions for resolved compiler bugs
+- `crashes`
+  - known unresolved compiler crashes or sentinel failures kept visible until fixed
+- `property`
+  - invariant-based generator tests for compiler internals
+- `fuzz-smoke`
+  - deterministic local fuzz smoke gate over curated corpora
+- `oss-curated`
+  - small pinned representative real-world project gate that blocks merges
+- `ecosystem-broader`
+  - larger non-blocking compatibility lane for signal only
+
+## Baseline Governance Contract
+- Compiler-facing outputs that are part of the user contract must support checked-in baselines.
+- Baseline-backed artifacts in this phase include:
+  - diagnostic renderer output
+  - exit-code behavior
+  - selected multi-file/project outputs
+  - machine-readable result summaries
+- The phase must define one canonical bless/accept workflow for updating baselines.
+- Normalization rules must be explicit for:
+  - absolute paths
+  - temporary directories
+  - machine-specific noise
+  - nondeterministic ordering where unavoidable
+- Baseline updates are review artifacts and must never be treated as incidental side effects.
+
+## Regression Corpus Contract
+- Every resolved compiler bug in scope must land with permanent regression coverage.
+- Each regression artifact must be linked to:
+  - issue or finding identifier
+  - root-cause category
+  - suite location
+  - brief note when context is not obvious
+- Known unresolved compiler crashes or sentinel failures must remain visible in `crashes`.
+- When a crash or sentinel case is fixed, it must be promoted into `fixedbugs` or another normal suite with issue linkage preserved.
+
+## Fuzz and Property Contract
+- Fuzz targets and property suites must be explicit and version-controlled.
+- Seed corpora must be:
+  - reproducible
+  - reviewable
+  - deduplicated against already-known failures where possible
+- Every fuzz-found issue must follow a defined workflow:
+  - reproduce
+  - minimize
+  - classify
+  - link issue
+  - promote to regression after fix
+- This phase distinguishes:
+  - local deterministic smoke fuzz/property gates
+  - longer-running sustained fuzzing that may run outside the default blocking local flow
+
+## Curated Real-World Validation Contract
+- The blocking real-world gate must use a small pinned representative corpus.
+- Each corpus entry must define:
+  - pinned revision
+  - rationale
+  - owner
+  - required commands (`check`, `build`, `run`, `test` as applicable)
+  - timeout policy
+  - expected result classification
+- The phase must also define a broader non-blocking ecosystem lane separately from the curated gate.
+- The curated gate is a hard verification gate.
+- The broader lane is for compatibility signal and backlog generation, not merge blocking.
+
+## Determinism and Flake Contract
+- Repeat runs with identical inputs must produce identical canonical results.
+- Sequential and parallel runs must agree on pass/fail outcomes and canonical artifacts for the suites this phase owns.
+- The phase must define:
+  - deterministic sharding strategy
+  - rerun protocol
+  - quarantine policy
+  - re-enable criteria
+  - reporting requirements for flaky tests
+- A test that fails and then passes on rerun is tracked explicitly and is not silently treated as clean.
+
 ## Milestones
 
-### milestone_29_1: Regression Matrix Expansion
+### milestone_29_1: Suite Taxonomy and Baseline Governance
 - Scope:
-  - Ensure each fixed bug has dedicated regression coverage.
-  - Expand cross-phase regression suites.
+  - Define canonical suite taxonomy and per-suite contracts.
+  - Add baseline-backed verification for diagnostics and project behavior.
+  - Define canonical checked-in artifacts and normalization rules.
+  - Define one canonical bless/accept workflow.
 - Definition of done:
-  - Regression matrix maps directly to resolved findings.
+  - Compiler-facing suites are explicitly categorized and documented.
+  - Baseline-backed outputs are deterministic and reviewable.
+  - Diagnostics and project behavior are governed by checked-in verification artifacts.
 
-### milestone_29_2: Fuzz and Property Scale-Out
+### milestone_29_2: Fixedbugs and Crashes Corpus
 - Scope:
-  - Move from smoke fuzz/property checks to sustained coverage.
-  - Track and triage fuzz findings systematically.
+  - Require every resolved compiler bug in scope to land in `fixedbugs`.
+  - Add issue-linked metadata and root-cause traceability.
+  - Define `crashes` sentinel policy for unresolved failures.
+  - Define promotion rule from `crashes` to normal regression suites.
 - Definition of done:
-  - Fuzz/property suite is part of standard hardening gates.
+  - Issue -> root cause -> test mapping exists for resolved bugs in scope.
+  - Known unresolved crashes remain visible and intentionally tracked.
+  - Regression corpus acts as institutional memory rather than ad hoc coverage.
 
-### milestone_29_3: Real-World E2E Parallel Gate
+### milestone_29_3: Fuzz and Property Operationalization
 - Scope:
-  - Validate representative multi-module real-world projects end-to-end (`check/build/run/test`).
+  - Define fuzz targets, property suites, and seed corpora for highest-value compiler surfaces.
+  - Define reproducibility, deduplication, minimization, and triage rules.
+  - Separate local smoke fuzz/property gates from longer-running sustained lanes.
 - Definition of done:
-  - E2E suites pass deterministically in local parallel mode.
+  - Fuzz/property checks are part of standard hardening gates.
+  - Every fuzz-found issue follows a documented triage path.
+  - Minimized reproducible cases are required before closure.
+  - Local fuzz/property runs are reproducible enough for routine engineering use.
+
+### milestone_29_4: Curated OSS Gate and Broader Ecosystem Lane
+- Scope:
+  - Build a small pinned curated real-world/project corpus that blocks merges.
+  - Define a separate broader non-blocking ecosystem lane.
+  - Require structured result classification and reproducible execution.
+- Definition of done:
+  - Curated gate is version-controlled, pinned, and locally reproducible.
+  - Broader ecosystem lane is explicitly non-blocking and separately classified.
+  - Results are structured and comparable over time.
+
+### milestone_29_5: Deterministic Scale, Flake Control, and Structured Evidence
+- Scope:
+  - Define deterministic sharding and per-suite runtime expectations.
+  - Add repeat-run and sequential-vs-parallel equivalence checks where applicable.
+  - Define rerun/quarantine policy for flakes.
+  - Require machine-readable artifacts from all hardening gates.
+  - If structured suggestions or autofixes are already part of the stable compiler contract, add suggestion-application validation:
+    - emit suggestion
+    - apply suggestion
+    - compare against expected transformed source
+    - require recompile success
+- Definition of done:
+  - Hardening gates scale deterministically.
+  - Flaky tests are never silently accepted as green.
+  - Gate results can be triaged mechanically from structured artifacts.
+  - Suggestion/autofix validation exists if suggestions are part of the stable contract.
 
 ## Quality Contract
-- Entry criteria: Phase 28 is completed and decimal numeric semantics contract is in place.
-- Phase 27 non-regression baseline is required at phase start and must remain green through completion.
-- Phase 27 non-regression invariants that must hold in this phase include: no user-triggerable panic paths; no data-dependent emitted `.unwrap()` / `.expect()` / `panic!` in user runtime paths; stable diagnostic contract (codes, severity, spans, URLs, suggestions, schema); canonical/lossless `json` diagnostics with `human` and `compact` as renderer views only; enforced recovery limits with deterministic ordering; and enforced exit-code and CLI stability contracts (`0/1/2/3`, and unknown `--diagnostic-format` exits `2` before semantic work).
-- Any milestone that regresses these invariants is incomplete, even if its local scope passes.
-- Exit criteria: Reliability hardening is broad, deterministic, and locally enforceable.
-- Milestone quality checks:
-  - No fallback, migration, or legacy compatibility code is allowed; implement the canonical architecture directly with clean code only.
-  - No lazy or partial fixes are allowed; each milestone must resolve root causes completely, even when that requires significant rework.
-  - All implementations must be production-grade compiler code: strict typing, deterministic behavior, explicit invariants, and unforgiving correctness standards, with architecture cleaned up toward the target design.
-  - Every milestone in this phase must satisfy the scope and definition-of-done already documented in this file.
-  - Validation evidence must be recorded in the phase execution checklist issue before merge.
-  - Validation evidence for every milestone must include at least one positive-path case and one negative-path case mapped to the milestone validation planning goals.
-- Validation planning goals:
-  - `milestone_29_1` (Regression Matrix Expansion): validation goals cover: Ensure each fixed bug has dedicated regression coverage; Expand cross-phase regression suites. Include negative-path goals that catch regressions against these guarantees.
-  - `milestone_29_2` (Fuzz and Property Scale-Out): validation goals cover: Move from smoke fuzz/property checks to sustained coverage; Track and triage fuzz findings systematically. Include negative-path goals that catch regressions against these guarantees.
-  - `milestone_29_3` (Real-World E2E Parallel Gate): validation goals cover: Validate representative multi-module real-world projects end-to-end (`check/build/run/test`). Include negative-path goals that catch regressions against these guarantees.
-  - Exit-gate evidence explicitly demonstrates: Reliability hardening is broad, deterministic, and locally enforceable.
+
+### Entry criteria
+- Phase 28 exit gate is satisfied.
+- Phase 27 non-regression baseline is green at phase start.
+- Phase 16 local-first validation platform remains the authoritative execution foundation.
+
+### Phase-wide invariants
+- No user-triggerable panic paths.
+- No data-dependent emitted `.unwrap()` / `.expect()` / `panic!` in user runtime paths.
+- Stable diagnostic contract:
+  - codes
+  - severity
+  - spans
+  - URLs
+  - suggestions
+  - schema
+- Canonical and lossless `json` diagnostics remain authoritative.
+- `human` and `compact` remain renderer views over the same diagnostic model.
+- Recovery ordering remains deterministic.
+- Exit-code and CLI contract remain stable.
+
+### Milestone quality checks
+- No fallback, migration, or legacy compatibility code is allowed; implement the canonical architecture directly with clean code only.
+- No lazy or partial fixes are allowed; each milestone must resolve root causes completely, even when that requires significant rework.
+- Every suite introduced in this phase has:
+  - explicit purpose
+  - deterministic contract
+  - owner
+  - machine-readable output
+- Every fixed bug in scope lands with permanent regression coverage.
+- Every unresolved crash tracked by this phase has issue linkage.
+- Every corpus introduced in this phase is version-controlled and reproducible.
+- Validation evidence is recorded in the phase execution checklist issue before merge.
+- Every milestone includes at least one positive-path and one negative-path validation case.
+- No milestone is complete if its outputs are not reviewable and reproducible locally.
+
+### Validation planning goals
+- `milestone_29_1` (Suite Taxonomy and Baseline Governance): validation goals cover: Define canonical suite taxonomy and per-suite contracts; Add baseline-backed verification for diagnostics and project behavior; Define canonical checked-in artifacts, normalization rules, and a bless/accept workflow. Include negative-path goals that catch regressions against these guarantees.
+- `milestone_29_2` (Fixedbugs and Crashes Corpus): validation goals cover: Require every resolved compiler bug in scope to land in `fixedbugs`; Add issue-linked metadata and root-cause traceability; Define `crashes` sentinel policy and promotion rules. Include negative-path goals that catch regressions against these guarantees.
+- `milestone_29_3` (Fuzz and Property Operationalization): validation goals cover: Define fuzz targets, property suites, and seed corpora for highest-value compiler surfaces; Define reproducibility, deduplication, minimization, and triage rules; Separate local smoke fuzz/property gates from longer-running sustained lanes. Include negative-path goals that catch regressions against these guarantees.
+- `milestone_29_4` (Curated OSS Gate and Broader Ecosystem Lane): validation goals cover: Build a small pinned curated real-world/project corpus that blocks merges; Define a separate broader non-blocking ecosystem lane; Require structured result classification and reproducible execution. Include negative-path goals that catch regressions against these guarantees.
+- `milestone_29_5` (Deterministic Scale, Flake Control, and Structured Evidence): validation goals cover: Define deterministic sharding and per-suite runtime expectations; Add repeat-run and sequential-vs-parallel equivalence checks; Define rerun/quarantine policy for flakes; Require machine-readable artifacts from all hardening gates; Add suggestion/autofix validation if suggestions are part of the stable contract. Include negative-path goals that catch regressions against these guarantees.
+- Exit-gate evidence explicitly demonstrates: Verification hardening is a concrete compiler verification system rather than an informal collection of tests.
+
+## Local Validation Commands
+- Full local suite:
+  - `/Users/yaseralnajjar/work/sifr/codebase/scripts/run_all_tests.sh`
+- Quick hardening gate:
+  - `/Users/yaseralnajjar/work/sifr/codebase/scripts/run_all_tests.sh --profile quick`
+- Full hardening gate:
+  - `/Users/yaseralnajjar/work/sifr/codebase/scripts/run_all_tests.sh --profile full`
+- Stress/determinism gate:
+  - `/Users/yaseralnajjar/work/sifr/codebase/scripts/run_all_tests.sh --profile stress`
+- Determinism recheck:
+  - `/Users/yaseralnajjar/work/sifr/codebase/scripts/check_e2e_report_determinism.sh`
+- Fuzz/property smoke runner:
+  - `/Users/yaseralnajjar/work/sifr/codebase/scripts/run_smoke_fuzz_property.sh`
+- Milestone demos:
+  - `cargo run -q -p sifr -- run demos/<milestone_demo>.sifr`
+- Baseline bless/accept command:
+  - `<define in this phase>`
+- Curated OSS gate runner:
+  - `<define in this phase>`
+
+## Required Policies
+The phase must define and keep current:
+- suite taxonomy policy
+- baseline/bless policy
+- normalization policy
+- fixedbugs policy
+- crashes/sentinel policy
+- fuzz triage and minimization policy
+- curated OSS gate policy
+- broader ecosystem lane policy
+- deterministic sharding policy
+- rerun/quarantine/flake policy
+- machine-readable artifact schema and retention policy
+
+## Required Artifacts
+- suite taxonomy document
+- baseline governance document
+- normalization rules
+- fixedbugs index
+- crashes/sentinel index
+- fuzz target and corpus manifest
+- curated OSS corpus manifest with pinned revisions
+- broader ecosystem lane definition
+- deterministic sharding and flake policy
+- structured gate result schema
+- exit-gate evidence summary
+
+## Exit Criteria
+- Compiler verification suites are explicit, deterministic, and locally enforceable.
+- Baseline-backed compiler outputs are governed by a bless/accept workflow.
+- Resolved compiler bugs in scope are preserved in a permanent regression corpus.
+- Known unresolved crashes are visible and intentionally tracked.
+- Fuzz/property operations are active and documented.
+- Curated OSS gate is reproducible and blocking.
+- Broader ecosystem lane is defined separately and non-blocking.
+- Sharding, rerun, and flake rules are active and enforced.
+- Hardening gates emit structured machine-readable evidence.
 
 ## Exit Gate
-- Reliability hardening is broad, deterministic, and locally enforceable.
-- Phase 27 non-regression contract remains green: panic-free user paths, no emitted data-dependent unwrap/expect/panic, and stable diagnostics/renderer/exit-code behavior.
+Verification hardening is a concrete compiler verification system rather than an informal collection of tests: suites are explicit, baselines are governed, regressions are issue-linked, curated real-world validation is active, fuzz/property operations are defined, deterministic scaling and flake control are enforced, and results are mechanically triageable.
+Phase 27 non-regression contract remains green: panic-free user paths, no emitted data-dependent unwrap/expect/panic, and stable diagnostics/renderer/exit-code behavior.
