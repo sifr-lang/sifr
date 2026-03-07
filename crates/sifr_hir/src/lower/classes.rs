@@ -211,6 +211,11 @@ pub(super) fn collect_class_type(class_def: &StmtClassDef, ctx: &mut LowerCtx) {
                     if let Some(ref default_expr) = ann.value {
                         if let Some(hir_default) = lower_expr_simple(default_expr) {
                             field_defaults.push((field_idx, hir_default));
+                        } else {
+                            ctx.error(format!(
+                                "class '{class_name}': unsupported default expression for field '{}'",
+                                name.id
+                            ));
                         }
                     }
                 }
@@ -244,6 +249,11 @@ pub(super) fn collect_class_type(class_def: &StmtClassDef, ctx: &mut LowerCtx) {
                         if let Some(ref default_expr) = param.default {
                             if let Some(hir_default) = lower_expr_simple(default_expr) {
                                 defaults.push((i, hir_default));
+                            } else {
+                                ctx.error(format!(
+                                    "class '{class_name}.__init__': unsupported default argument expression for parameter '{}'",
+                                    param.parameter.name
+                                ));
                             }
                         }
                     }
@@ -838,6 +848,101 @@ pub(super) fn lower_expr_simple(expr: &Expr) -> Option<HirExpr> {
             } else {
                 None
             }
+        }
+        Expr::List(list) => {
+            let mut elements = Vec::new();
+            let mut elem_ty: Option<Type> = None;
+            for elt in &list.elts {
+                let lowered = lower_expr_simple(elt)?;
+                let lowered_ty = lowered.ty().clone();
+                if let Some(ref expected) = elem_ty {
+                    if !lowered_ty.is_assignable_to(expected) {
+                        return None;
+                    }
+                } else {
+                    elem_ty = Some(lowered_ty);
+                }
+                elements.push(lowered);
+            }
+            Some(HirExpr::ListLiteral {
+                elements,
+                ty: Type::List(Box::new(elem_ty.unwrap_or(Type::Any))),
+            })
+        }
+        Expr::Set(set) => {
+            let mut elements = Vec::new();
+            let mut elem_ty: Option<Type> = None;
+            for elt in &set.elts {
+                let lowered = lower_expr_simple(elt)?;
+                let lowered_ty = lowered.ty().clone();
+                if let Some(ref expected) = elem_ty {
+                    if !lowered_ty.is_assignable_to(expected) {
+                        return None;
+                    }
+                } else {
+                    elem_ty = Some(lowered_ty);
+                }
+                elements.push(lowered);
+            }
+            Some(HirExpr::SetLiteral {
+                elements,
+                ty: Type::Set(Box::new(elem_ty.unwrap_or(Type::Any))),
+            })
+        }
+        Expr::Dict(dict) => {
+            let mut keys = Vec::new();
+            let mut values = Vec::new();
+            let mut key_ty: Option<Type> = None;
+            let mut val_ty: Option<Type> = None;
+
+            for item in &dict.items {
+                let key_expr = item.key.as_ref()?;
+                let lowered_key = lower_expr_simple(key_expr)?;
+                let lowered_val = lower_expr_simple(&item.value)?;
+                let lowered_key_ty = lowered_key.ty().clone();
+                let lowered_val_ty = lowered_val.ty().clone();
+
+                if let Some(ref expected) = key_ty {
+                    if !lowered_key_ty.is_assignable_to(expected) {
+                        return None;
+                    }
+                } else {
+                    key_ty = Some(lowered_key_ty);
+                }
+
+                if let Some(ref expected) = val_ty {
+                    if !lowered_val_ty.is_assignable_to(expected) {
+                        return None;
+                    }
+                } else {
+                    val_ty = Some(lowered_val_ty);
+                }
+
+                keys.push(lowered_key);
+                values.push(lowered_val);
+            }
+
+            Some(HirExpr::DictLiteral {
+                keys,
+                values,
+                ty: Type::Dict(
+                    Box::new(key_ty.unwrap_or(Type::Any)),
+                    Box::new(val_ty.unwrap_or(Type::Any)),
+                ),
+            })
+        }
+        Expr::Tuple(tuple) => {
+            let mut elements = Vec::new();
+            let mut element_types = Vec::new();
+            for elt in &tuple.elts {
+                let lowered = lower_expr_simple(elt)?;
+                element_types.push(lowered.ty().clone());
+                elements.push(lowered);
+            }
+            Some(HirExpr::TupleLiteral {
+                elements,
+                ty: Type::Tuple(element_types),
+            })
         }
         _ => None,
     }
