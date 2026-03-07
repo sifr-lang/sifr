@@ -84,7 +84,7 @@ Validation evidence:
 - Full suite: `/Users/yaseralnajjar/work/sifr/codebase/scripts/run_all_tests.sh` -> pass (404 pass e2e fixtures, 0 failures).
 
 ## Part 2: milestone_28_2 Deterministic Arithmetic and Context Semantics
-status: done (2026-03-07, PR pending)
+status: done (2026-03-07, merged)
 
 - [x] Implement arithmetic/comparison lowering for decimal and bigdecimal operators
 - [x] Implement required methods: `quantize`, `sqrt`, `round`, `abs`, `is_zero`, `is_finite`
@@ -92,7 +92,7 @@ status: done (2026-03-07, PR pending)
 - [x] Add demo: `demos/m28_2_deterministic_arithmetic_and_context_demo/main.sifr`
 - [x] Add negative cases
 - [x] Run milestone demo + targeted tests + full local suite
-- [ ] Open PR, review, and merge
+- [x] Open PR, review, and merge
 
 Validation evidence:
 - Positive path: `cargo run -q -p sifr -- run demos/m28_2_deterministic_arithmetic_and_context_demo/main.sifr` -> prints deterministic decimal/bigdecimal outputs including floor-division/modulo and context-rounded `bigdecimal` values.
@@ -103,9 +103,27 @@ Validation evidence:
 - Negative path: `cargo run -q -p sifr -- run crates/sifr/tests/e2e/runtime_fail/bigdecimal_division_by_zero_runtime.sifr` -> exits `1` with `runtime error: bigdecimal division by zero`.
 - Full suite: `/Users/yaseralnajjar/work/sifr/codebase/scripts/run_all_tests.sh` -> pass (405 pass e2e fixtures, 0 failures).
 
+## Part 3: milestone_28_3 Conversion and Boundary Contracts
+status: done (2026-03-07, PR pending)
+
+- [x] Implement explicit conversion contracts (`int`/`bigint`/`str`/cross-decimal)
+- [x] Enforce explicit ban on `float -> decimal|bigdecimal` paths
+- [x] Add conversion boundary tests and deterministic behavior checks
+- [x] Add demo: `demos/m28_3_conversion_and_boundary_contracts_demo/main.sifr`
+- [x] Add negative cases
+- [x] Run milestone demo + targeted tests + full local suite
+- [ ] Open PR, review, and merge
+
+Validation evidence:
+- Positive path: `cargo run -q -p sifr -- run demos/m28_3_conversion_and_boundary_contracts_demo/main.sifr` -> prints `m28_3 conversion and boundary contracts demo`, truncation-toward-zero outputs for `int(decimal|bigdecimal)` and `bigint(decimal|bigdecimal)`, JSON dumps as quoted strings for both decimal types, and catches out-of-range conversion with `DecimalConversionError`.
+- Negative path: `cargo run -q -p sifr -- run demos/m28_3_conversion_and_boundary_contracts_demo/negative_cases/forbidden_bigdecimal_float_constructor/main.sifr` -> exits `1` with `[E2506]`.
+- Positive path: `cargo run -q -p sifr -- run crates/sifr/tests/e2e/pass/decimal_conversion_boundary_contracts.sifr` -> pass.
+- Negative path: `cargo run -q -p sifr -- run crates/sifr/tests/e2e/fail/bigdecimal_constructor_float.sifr` -> exits `1` with `[E2506]`.
+- Full suite: `/Users/yaseralnajjar/work/sifr/codebase/scripts/run_all_tests.sh` -> pass (406 pass e2e fixtures, 0 failures).
+
 ## PR Log
 - Part 1: merged https://github.com/yaseralnajjar/sifr/pull/910
-- Part 2: pending
+- Part 2: merged https://github.com/yaseralnajjar/sifr/pull/911
 - Part 3: pending
 - Part 4: pending
 - Part 5: pending

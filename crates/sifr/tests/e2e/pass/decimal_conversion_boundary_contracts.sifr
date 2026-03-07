@@ -1,0 +1,37 @@
+from sifr.json import json_dumps
+
+def main():
+    d: decimal = Decimal("-1.9")
+    bd: bigdecimal = BigDecimal("-1.9")
+
+    try:
+        i_from_decimal: int = int(d)
+        i_from_bigdecimal: int = int(bd)
+        assert str(i_from_decimal) == '-1'
+        assert str(i_from_bigdecimal) == '-1'
+    except DecimalConversionError as e:
+        assert False
+
+    bi_from_decimal: bigint = bigint(d)
+    bi_from_bigdecimal: bigint = bigint(bd)
+    assert str(bi_from_decimal) == '-1'
+    assert str(bi_from_bigdecimal) == '-1'
+
+    bd_from_decimal: bigdecimal = BigDecimal(Decimal("12.3400"))
+    assert str(bd_from_decimal) == '12.3400'
+
+    try:
+        d_from_bigdecimal: decimal = Decimal(BigDecimal("7.5000"))
+        assert str(d_from_bigdecimal) == '7.5000'
+    except DecimalConversionError as e:
+        assert False
+
+    assert json_dumps(Decimal("1.2300")) == '"1.2300"'
+    assert json_dumps(BigDecimal("1.2300")) == '"1.2300"'
+
+    try:
+        out_of_range: int = int(BigDecimal("999999999999999999999999999999999999"))
+        _ = out_of_range
+        assert False
+    except DecimalConversionError as e:
+        assert e.message == 'bigdecimal value out of range for int'

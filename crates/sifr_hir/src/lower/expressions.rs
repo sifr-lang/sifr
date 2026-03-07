@@ -726,6 +726,7 @@ pub(super) fn lower_call(call: &ExprCall, ctx: &mut LowerCtx) -> Option<HirExpr>
         // int(int) -> int (identity)
         // int(bool) -> int (True=1, False=0)
         // int(bigint) -> Result[int, OverflowError] (may overflow i64)
+        // int(decimal|bigdecimal) -> Result[int, DecimalConversionError] (truncate toward zero)
         let result_ty = if arg_ty == Type::Str {
             let parse_error_ty =
                 ctx.class_types
@@ -750,6 +751,11 @@ pub(super) fn lower_call(call: &ExprCall, ctx: &mut LowerCtx) -> Option<HirExpr>
                         parent_class: None,
                     });
             Type::Result(Box::new(Type::Int), Box::new(overflow_error_ty))
+        } else if matches!(arg_ty, Type::Decimal | Type::BigDecimal) {
+            Type::Result(
+                Box::new(Type::Int),
+                Box::new(decimal_conversion_error_type(ctx)),
+            )
         } else {
             Type::Int
         };
@@ -760,7 +766,7 @@ pub(super) fn lower_call(call: &ExprCall, ctx: &mut LowerCtx) -> Option<HirExpr>
         });
     }
 
-    // bigint(n) — convert int to bigint (always succeeds)
+    // bigint(n) — convert int|bigint|decimal|bigdecimal to bigint
     if func_name == "bigint" {
         if call.arguments.args.len() != 1 {
             ctx.error(format!(
@@ -771,9 +777,12 @@ pub(super) fn lower_call(call: &ExprCall, ctx: &mut LowerCtx) -> Option<HirExpr>
         }
         let arg = lower_expr(&call.arguments.args[0], ctx)?;
         let arg_ty = arg.ty().clone();
-        if arg_ty != Type::Int && arg_ty != Type::BigInt {
+        if !matches!(
+            arg_ty,
+            Type::Int | Type::LiteralInt(_) | Type::BigInt | Type::Decimal | Type::BigDecimal
+        ) {
             ctx.error(format!(
-                "bigint() requires an int argument, got '{}'",
+                "bigint() requires int, bigint, decimal, or bigdecimal argument, got '{}'",
                 arg_ty.display_name()
             ));
             return None;

@@ -852,16 +852,20 @@ edition = "2021"
             }
             "rust_decimal" => {
                 if !deps.contains(
-                    &"rust_decimal = { version = \"1\", features = [\"maths\"] }".to_string(),
+                    &"rust_decimal = { version = \"1\", features = [\"maths\", \"serde-with-str\"] }".to_string(),
                 ) {
                     deps.push(
-                        "rust_decimal = { version = \"1\", features = [\"maths\"] }".to_string(),
+                        "rust_decimal = { version = \"1\", features = [\"maths\", \"serde-with-str\"] }".to_string(),
                     );
                 }
             }
             "bigdecimal" => {
-                if !deps.contains(&"bigdecimal = \"0.4\"".to_string()) {
-                    deps.push("bigdecimal = \"0.4\"".to_string());
+                if !deps.contains(
+                    &"bigdecimal = { version = \"0.4\", features = [\"serde\"] }".to_string(),
+                ) {
+                    deps.push(
+                        "bigdecimal = { version = \"0.4\", features = [\"serde\"] }".to_string(),
+                    );
                 }
             }
             _ => {}
