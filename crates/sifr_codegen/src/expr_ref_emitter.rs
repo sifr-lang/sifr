@@ -18,7 +18,9 @@ fn uses_debug_display_format(ty: &Type) -> bool {
         | Type::Newtype { .. }
         | Type::TypeVar(_)
         | Type::Enum { .. }
-        | Type::BigInt => false,
+        | Type::BigInt
+        | Type::Decimal
+        | Type::BigDecimal => false,
         Type::List(_)
         | Type::Dict(_, _)
         | Type::Set(_)

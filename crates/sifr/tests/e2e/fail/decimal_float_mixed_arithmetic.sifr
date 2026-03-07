@@ -1,0 +1,6 @@
+def main():
+    d: decimal = Decimal("1.0")
+    x: decimal = d + 1.0
+    print(x)
+
+# expect-error: [E2503]

@@ -1,0 +1,9 @@
+def main():
+    d: decimal = Decimal("10.25")
+    b: bigdecimal = BigDecimal("2.75")
+
+    d2: decimal = d + 2
+    b2: bigdecimal = b + bigint(5)
+
+    assert d2 == Decimal("12.25")
+    assert b2 == BigDecimal("7.75")

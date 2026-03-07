@@ -1031,6 +1031,8 @@ fn is_reserved_builtin_call_func(func: &str) -> bool {
             | "repr"
             | "int"
             | "bigint"
+            | "Decimal"
+            | "BigDecimal"
             | "float"
             | "bool"
             | "min"

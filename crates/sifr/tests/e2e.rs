@@ -479,6 +479,12 @@ fn infer_dependencies(
     if rust_source.contains("blake2::") {
         crates.insert("blake2".to_string());
     }
+    if rust_source.contains("rust_decimal::") || rust_source.contains("use rust_decimal") {
+        crates.insert("rust_decimal".to_string());
+    }
+    if rust_source.contains("bigdecimal::") || rust_source.contains("use bigdecimal") {
+        crates.insert("bigdecimal".to_string());
+    }
 
     (modules, crates)
 }
@@ -753,6 +759,12 @@ fn generate_cargo_toml(
             }
             "num-traits" => {
                 deps.insert("num-traits = \"0.2\"".to_string());
+            }
+            "rust_decimal" => {
+                deps.insert("rust_decimal = \"1\"".to_string());
+            }
+            "bigdecimal" => {
+                deps.insert("bigdecimal = \"0.4\"".to_string());
             }
             _ => {}
         }

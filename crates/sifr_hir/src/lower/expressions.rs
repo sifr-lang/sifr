@@ -607,6 +607,113 @@ pub(super) fn lower_call(call: &ExprCall, ctx: &mut LowerCtx) -> Option<HirExpr>
         });
     }
 
+    // Decimal("...") / Decimal(int|bigint|bigdecimal)
+    if func_name == "Decimal" {
+        if call.arguments.args.len() != 1 {
+            ctx.error(format!(
+                "[E2505] Decimal() takes exactly 1 argument, got {}",
+                call.arguments.args.len()
+            ));
+            return None;
+        }
+        let arg = lower_expr(&call.arguments.args[0], ctx)?;
+        let arg_ty = arg.ty().clone();
+        let decimal_conversion_error_ty = ctx
+            .class_types
+            .get("DecimalConversionError")
+            .cloned()
+            .unwrap_or(Type::Class {
+                name: "DecimalConversionError".to_string(),
+                fields: vec![("message".to_string(), Type::Str)],
+                methods: vec![],
+                parent_class: None,
+            });
+        let result_ty = match arg_ty {
+            Type::Str => {
+                if !matches!(call.arguments.args[0], Expr::StringLiteral(_)) {
+                    ctx.error(
+                        "[E2501] Decimal() string construction requires a string literal"
+                            .to_string(),
+                    );
+                    return None;
+                }
+                Type::Decimal
+            }
+            Type::Int | Type::LiteralInt(_) | Type::Decimal => Type::Decimal,
+            Type::BigInt | Type::BigDecimal => Type::Result(
+                Box::new(Type::Decimal),
+                Box::new(decimal_conversion_error_ty),
+            ),
+            Type::Float => {
+                ctx.error(
+                    "[E2505] Decimal(float_value) is not allowed; use Decimal(\"...\") for exact construction"
+                        .to_string(),
+                );
+                return None;
+            }
+            _ => {
+                ctx.error(format!(
+                    "[E2505] Decimal() requires str, int, bigint, decimal, or bigdecimal argument, got '{}'",
+                    arg_ty.display_name()
+                ));
+                return None;
+            }
+        };
+        return Some(HirExpr::Call {
+            func: "Decimal".to_string(),
+            args: vec![arg],
+            ty: result_ty,
+        });
+    }
+
+    // BigDecimal("...") / BigDecimal(int|bigint|decimal)
+    if func_name == "BigDecimal" {
+        if call.arguments.args.len() != 1 {
+            ctx.error(format!(
+                "[E2506] BigDecimal() takes exactly 1 argument, got {}",
+                call.arguments.args.len()
+            ));
+            return None;
+        }
+        let arg = lower_expr(&call.arguments.args[0], ctx)?;
+        let arg_ty = arg.ty().clone();
+        match arg_ty {
+            Type::Str => {
+                if !matches!(call.arguments.args[0], Expr::StringLiteral(_)) {
+                    ctx.error(
+                        "[E2502] BigDecimal() string construction requires a string literal"
+                            .to_string(),
+                    );
+                    return None;
+                }
+            }
+            Type::Int
+            | Type::LiteralInt(_)
+            | Type::BigInt
+            | Type::Decimal
+            | Type::BigDecimal => {}
+            Type::Float => {
+                ctx.error(
+                    "[E2506] BigDecimal(float_value) is not allowed; use BigDecimal(\"...\") for exact construction"
+                        .to_string(),
+                );
+                return None;
+            }
+            _ => {
+                ctx.error(format!(
+                    "[E2506] BigDecimal() requires str, int, bigint, decimal, or bigdecimal argument, got '{}'",
+                    arg_ty.display_name()
+                ));
+                return None;
+            }
+        }
+        return Some(HirExpr::Call {
+            func: "BigDecimal".to_string(),
+            args: vec![arg],
+            ty: Type::BigDecimal,
+        });
+    }
+
     // Special handling for int() conversion
     if func_name == "int" {
         if call.arguments.args.len() != 1 {

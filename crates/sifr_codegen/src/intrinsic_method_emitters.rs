@@ -19,7 +19,9 @@ fn registry_uses_debug_display_format(ty: &Type) -> bool {
         | Type::Newtype { .. }
         | Type::TypeVar(_)
         | Type::Enum { .. }
-        | Type::BigInt => false,
+        | Type::BigInt
+        | Type::Decimal
+        | Type::BigDecimal => false,
         Type::List(_)
         | Type::Dict(_, _)
         | Type::Set(_)
@@ -73,6 +75,7 @@ fn registry_can_construct_error_from_message(ty_name: &str) -> bool {
             | "IOError"
             | "RegexError"
             | "HashlibError"
+            | "DecimalConversionError"
     )
 }
 
@@ -1455,6 +1458,139 @@ impl RustEmitter {
                 ])),
                 args: vec![self.try_lower_registry_expr_strict(&args[0])?],
             }),
+            "Decimal" if args.len() == 1 => {
+                let lowered = self.try_lower_registry_expr_strict(&args[0])?;
+                match crate::resolve_alias_type_for_plain_call(args[0].ty()) {
+                    Type::Int | Type::LiteralInt(_) => Some(crate::RustExpr::FnCall {
+                        func: Box::new(crate::RustExpr::Path(vec![
+                            "Decimal".to_string(),
+                            "from".to_string(),
+                        ])),
+                        args: vec![lowered],
+                    }),
+                    Type::Decimal => Some(lowered),
+                    Type::Str | Type::LiteralStr(_) => Some(crate::RustExpr::MethodCall {
+                        receiver: Box::new(crate::RustExpr::FnCall {
+                            func: Box::new(crate::RustExpr::Path(vec![
+                                "Decimal".to_string(),
+                                "from_str_exact".to_string(),
+                            ])),
+                            args: vec![crate::RustExpr::MethodCall {
+                                receiver: Box::new(crate::RustExpr::Paren(Box::new(lowered))),
+                                method: "as_str".to_string(),
+                                args: vec![],
+                            }],
+                        }),
+                        method: "unwrap_or_else".to_string(),
+                        args: vec![crate::RustExpr::Closure {
+                            params: vec![crate::RustParam::Named {
+                                name: "__e".to_string(),
+                                ty: crate::RustType::Named("_".to_string()),
+                            }],
+                            body: Box::new(crate::RustExpr::MacroCall {
+                                name: "unreachable".to_string(),
+                                args: vec![],
+                            }),
+                            is_move: false,
+                        }],
+                    }),
+                    Type::BigInt | Type::BigDecimal => Some(crate::RustExpr::MethodCall {
+                        receiver: Box::new(crate::RustExpr::MethodCall {
+                            receiver: Box::new(crate::RustExpr::FnCall {
+                                func: Box::new(crate::RustExpr::Path(vec![
+                                    "Decimal".to_string(),
+                                    "from_str_exact".to_string(),
+                                ])),
+                                args: vec![crate::RustExpr::MethodCall {
+                                    receiver: Box::new(crate::RustExpr::MethodCall {
+                                        receiver: Box::new(crate::RustExpr::Paren(Box::new(
+                                            lowered,
+                                        ))),
+                                        method: "to_string".to_string(),
+                                        args: vec![],
+                                    }),
+                                    method: "as_str".to_string(),
+                                    args: vec![],
+                                }],
+                            }),
+                            method: "map_err".to_string(),
+                            args: vec![crate::RustExpr::Closure {
+                                params: vec![crate::RustParam::Named {
+                                    name: "e".to_string(),
+                                    ty: crate::RustType::Named("_".to_string()),
+                                }],
+                                body: Box::new(crate::RustExpr::StructInit {
+                                    name: "DecimalConversionError".to_string(),
+                                    fields: vec![(
+                                        "message".to_string(),
+                                        crate::RustExpr::MethodCall {
+                                            receiver: Box::new(crate::RustExpr::Ident(
+                                                "e".to_string(),
+                                            )),
+                                            method: "to_string".to_string(),
+                                            args: vec![],
+                                        },
+                                    )],
+                                }),
+                                is_move: false,
+                            }],
+                        }),
+                        method: "map".to_string(),
+                        args: vec![crate::RustExpr::Closure {
+                            params: vec![crate::RustParam::Named {
+                                name: "__v".to_string(),
+                                ty: crate::RustType::Named("_".to_string()),
+                            }],
+                            body: Box::new(crate::RustExpr::Ident("__v".to_string())),
+                            is_move: false,
+                        }],
+                    }),
+                    _ => None,
+                }
+            }
+            "BigDecimal" if args.len() == 1 => {
+                let lowered = self.try_lower_registry_expr_strict(&args[0])?;
+                match crate::resolve_alias_type_for_plain_call(args[0].ty()) {
+                    Type::Int | Type::LiteralInt(_) | Type::BigInt => Some(crate::RustExpr::FnCall {
+                        func: Box::new(crate::RustExpr::Path(vec![
+                            "BigDecimal".to_string(),
+                            "from".to_string(),
+                        ])),
+                        args: vec![lowered],
+                    }),
+                    Type::Decimal | Type::Str | Type::LiteralStr(_) => {
+                        let source = match crate::resolve_alias_type_for_plain_call(args[0].ty()) {
+                            Type::Decimal => crate::RustExpr::MethodCall {
+                                receiver: Box::new(crate::RustExpr::Paren(Box::new(lowered))),
+                                method: "to_string".to_string(),
+                                args: vec![],
+                            },
+                            _ => lowered,
+                        };
+                        Some(crate::RustExpr::MethodCall {
+                            receiver: Box::new(crate::RustExpr::MethodCall {
+                                receiver: Box::new(crate::RustExpr::Paren(Box::new(source))),
+                                method: "parse::<BigDecimal>".to_string(),
+                                args: vec![],
+                            }),
+                            method: "unwrap_or_else".to_string(),
+                            args: vec![crate::RustExpr::Closure {
+                                params: vec![crate::RustParam::Named {
+                                    name: "__e".to_string(),
+                                    ty: crate::RustType::Named("_".to_string()),
+                                }],
+                                body: Box::new(crate::RustExpr::MacroCall {
+                                    name: "unreachable".to_string(),
+                                    args: vec![],
+                                }),
+                                is_move: false,
+                            }],
+                        })
+                    }
+                    Type::BigDecimal => Some(lowered),
+                    _ => None,
+                }
+            }
             "str" if args.len() == 1 => {
                 let lowered = self.try_lower_registry_expr_strict(&args[0])?;
                 let call_return_ty = if let HirExpr::Call { func, .. } = &args[0] {

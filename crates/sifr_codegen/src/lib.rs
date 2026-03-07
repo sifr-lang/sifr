@@ -99,6 +99,7 @@ const BUILTIN_ERROR_CLASSES: &[&str] = &[
     "ZeroDivisionError",
     "RuntimeError",
     "NotImplementedError",
+    "DecimalConversionError",
 ];
 
 const IO_ERROR_SUBCLASSES: &[&str] = &[
@@ -417,6 +418,10 @@ pub fn generate_rust_with_stdlib(module: &HirModule, stdlib_code: &StdlibCode) -
         || stdlib_import_needs.collections.needs_vecdeque;
     let needs_bigint =
         body_import_needs.runtime.needs_bigint || stdlib_import_needs.runtime.needs_bigint;
+    let needs_decimal =
+        body_import_needs.runtime.needs_decimal || stdlib_import_needs.runtime.needs_decimal;
+    let needs_bigdecimal = body_import_needs.runtime.needs_bigdecimal
+        || stdlib_import_needs.runtime.needs_bigdecimal;
     let needs_mutex = needs_file_handles
         || needs_logging
         || body_import_needs.runtime.needs_mutex
@@ -448,6 +453,18 @@ pub fn generate_rust_with_stdlib(module: &HirModule, stdlib_code: &StdlibCode) -
         import_items.push(RustItem::Use(vec![
             "num_bigint".to_string(),
             "BigInt".to_string(),
+        ]));
+    }
+    if needs_decimal {
+        import_items.push(RustItem::Use(vec![
+            "rust_decimal".to_string(),
+            "Decimal".to_string(),
+        ]));
+    }
+    if needs_bigdecimal {
+        import_items.push(RustItem::Use(vec![
+            "bigdecimal".to_string(),
+            "BigDecimal".to_string(),
         ]));
     }
     if needs_mutex {
@@ -518,6 +535,12 @@ pub fn generate_rust_with_stdlib(module: &HirModule, stdlib_code: &StdlibCode) -
             if needs_bigint {
                 crates.insert("num-bigint".to_string());
                 crates.insert("num-traits".to_string());
+            }
+            if needs_decimal {
+                crates.insert("rust_decimal".to_string());
+            }
+            if needs_bigdecimal {
+                crates.insert("bigdecimal".to_string());
             }
             crates
         },
@@ -601,6 +624,18 @@ pub fn generate_rust_multi(modules: &[(&str, &HirModule)]) -> HashMap<String, St
             import_items.push(RustItem::Use(vec![
                 "num_bigint".to_string(),
                 "BigInt".to_string(),
+            ]));
+        }
+        if import_needs.runtime.needs_decimal {
+            import_items.push(RustItem::Use(vec![
+                "rust_decimal".to_string(),
+                "Decimal".to_string(),
+            ]));
+        }
+        if import_needs.runtime.needs_bigdecimal {
+            import_items.push(RustItem::Use(vec![
+                "bigdecimal".to_string(),
+                "BigDecimal".to_string(),
             ]));
         }
 
@@ -813,6 +848,16 @@ edition = "2021"
             "num-traits" => {
                 if !deps.contains(&"num-traits = \"0.2\"".to_string()) {
                     deps.push("num-traits = \"0.2\"".to_string());
+                }
+            }
+            "rust_decimal" => {
+                if !deps.contains(&"rust_decimal = \"1\"".to_string()) {
+                    deps.push("rust_decimal = \"1\"".to_string());
+                }
+            }
+            "bigdecimal" => {
+                if !deps.contains(&"bigdecimal = \"0.4\"".to_string()) {
+                    deps.push("bigdecimal = \"0.4\"".to_string());
                 }
             }
             _ => {}

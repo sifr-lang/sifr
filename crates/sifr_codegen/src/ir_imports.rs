@@ -18,6 +18,8 @@ pub(crate) struct IrCollectionImportNeeds {
 pub(crate) struct IrRuntimeImportNeeds {
     pub(crate) needs_mutex: bool,
     pub(crate) needs_bigint: bool,
+    pub(crate) needs_decimal: bool,
+    pub(crate) needs_bigdecimal: bool,
 }
 
 pub(crate) fn collect_import_needs_from_items(items: &[RustItem]) -> IrImportNeeds {
@@ -424,6 +426,8 @@ fn mark_symbol(symbol: &str, needs: &mut IrImportNeeds) {
         "VecDeque" => needs.collections.needs_vecdeque = true,
         "Mutex" => needs.runtime.needs_mutex = true,
         "BigInt" => needs.runtime.needs_bigint = true,
+        "Decimal" => needs.runtime.needs_decimal = true,
+        "BigDecimal" => needs.runtime.needs_bigdecimal = true,
         _ => {}
     }
 }
@@ -477,6 +481,8 @@ mod tests {
         assert!(needs.collections.needs_vecdeque);
         assert!(needs.runtime.needs_mutex);
         assert!(needs.runtime.needs_bigint);
+        assert!(!needs.runtime.needs_decimal);
+        assert!(!needs.runtime.needs_bigdecimal);
     }
 
     #[test]
@@ -507,5 +513,7 @@ mod tests {
         assert!(!needs.collections.needs_vecdeque);
         assert!(!needs.runtime.needs_mutex);
         assert!(!needs.runtime.needs_bigint);
+        assert!(!needs.runtime.needs_decimal);
+        assert!(!needs.runtime.needs_bigdecimal);
     }
 }

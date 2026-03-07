@@ -109,7 +109,9 @@ fn collect_type_error_refs(
         | Type::LiteralBool(_)
         | Type::Unknown
         | Type::TypeVar(_)
-        | Type::BigInt => {}
+        | Type::BigInt
+        | Type::Decimal
+        | Type::BigDecimal => {}
     }
 }
 

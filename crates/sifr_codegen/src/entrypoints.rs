@@ -86,6 +86,18 @@ pub fn generate_rust_test(module: &HirModule) -> CodegenResult {
             "BigInt".to_string(),
         ]));
     }
+    if import_needs.runtime.needs_decimal {
+        import_items.push(RustItem::Use(vec![
+            "rust_decimal".to_string(),
+            "Decimal".to_string(),
+        ]));
+    }
+    if import_needs.runtime.needs_bigdecimal {
+        import_items.push(RustItem::Use(vec![
+            "bigdecimal".to_string(),
+            "BigDecimal".to_string(),
+        ]));
+    }
 
     let mut file_items: Vec<RustItem> = Vec::new();
     file_items.extend(import_items);
@@ -113,6 +125,12 @@ pub fn generate_rust_test(module: &HirModule) -> CodegenResult {
             if emitter.runtime_needs.needs_bigint || import_needs.runtime.needs_bigint {
                 crates.insert("num-bigint".to_string());
                 crates.insert("num-traits".to_string());
+            }
+            if import_needs.runtime.needs_decimal {
+                crates.insert("rust_decimal".to_string());
+            }
+            if import_needs.runtime.needs_bigdecimal {
+                crates.insert("bigdecimal".to_string());
             }
             crates
         },

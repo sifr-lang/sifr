@@ -224,7 +224,7 @@ pub(super) fn detect_is_none_union_var(expr: &HirExpr) -> Option<IsNoneUnionMatc
 
 pub(super) fn is_hashable_type_codegen(ty: &Type) -> bool {
     match ty {
-        Type::Int | Type::Bool | Type::Str | Type::None | Type::BigInt => true,
+        Type::Int | Type::Bool | Type::Str | Type::None | Type::BigInt | Type::Decimal => true,
         Type::Float => false,
         _ => false,
     }
@@ -489,7 +489,7 @@ pub(super) fn body_contains_yield_inner(stmts: &[HirStmt]) -> bool {
 /// Check if a type needs .`clone()` when accessed from &self (non-Copy types).
 pub(super) fn needs_clone_for_type(ty: &Type) -> bool {
     match ty {
-        Type::Int | Type::Float | Type::Bool | Type::None => false,
+        Type::Int | Type::Float | Type::Bool | Type::None | Type::Decimal => false,
         Type::LiteralInt(_) | Type::LiteralBool(_) => false,
         Type::Str | Type::LiteralStr(_) => true, // String is not Copy
         Type::List(_) | Type::Dict(_, _) => true,
@@ -498,6 +498,7 @@ pub(super) fn needs_clone_for_type(ty: &Type) -> bool {
         Type::Newtype { .. } => true,
         Type::TypeVar(_) => true, // Generic type params have T: Clone bound, so .clone() is safe
         Type::BigInt => true,     // num_bigint::BigInt is not Copy
+        Type::BigDecimal => true,
         _ => false,
     }
 }

@@ -200,6 +200,8 @@ fn type_sort_key(ty: &Type) -> (u8, String) {
         Type::Callable(..) => (24, String::new()),
         Type::Enum { name, .. } => (25, name.clone()),
         Type::BigInt => (26, String::new()),
+        Type::Decimal => (27, String::new()),
+        Type::BigDecimal => (28, String::new()),
     }
 }
 

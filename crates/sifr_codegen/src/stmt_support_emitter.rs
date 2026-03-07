@@ -51,6 +51,7 @@ fn can_construct_error_from_message_for_ir(ty_name: &str) -> bool {
             | "IOError"
             | "RegexError"
             | "HashlibError"
+            | "DecimalConversionError"
     )
 }
 
@@ -77,7 +78,9 @@ impl RustEmitter {
             | Type::Newtype { .. }
             | Type::TypeVar(_)
             | Type::Enum { .. }
-            | Type::BigInt => false,
+            | Type::BigInt
+            | Type::Decimal
+            | Type::BigDecimal => false,
             Type::List(_)
             | Type::Dict(_, _)
             | Type::Set(_)
@@ -1922,6 +1925,12 @@ impl RustEmitter {
                 if matches!(resolved_right_ty, Type::BigInt) {
                     lowered_right = crate::RustExpr::Clone(Box::new(lowered_right));
                 }
+                if matches!(resolved_left_ty, Type::BigDecimal) {
+                    lowered_left = crate::RustExpr::Clone(Box::new(lowered_left));
+                }
+                if matches!(resolved_right_ty, Type::BigDecimal) {
+                    lowered_right = crate::RustExpr::Clone(Box::new(lowered_right));
+                }
             }
             if matches!(
                 resolved_result_ty,
@@ -1949,6 +1958,114 @@ impl RustEmitter {
                             ty: crate::RustType::F64,
                         };
                     }
+                }
+            }
+
+            if matches!(resolved_result_ty, Type::Decimal) {
+                let lower_bigint_to_decimal = |value: crate::RustExpr| crate::RustExpr::MethodCall {
+                    receiver: Box::new(crate::RustExpr::FnCall {
+                        func: Box::new(crate::RustExpr::Path(vec![
+                            "Decimal".to_string(),
+                            "from_str_exact".to_string(),
+                        ])),
+                        args: vec![crate::RustExpr::MethodCall {
+                            receiver: Box::new(crate::RustExpr::MethodCall {
+                                receiver: Box::new(crate::RustExpr::Paren(Box::new(value))),
+                                method: "to_string".to_string(),
+                                args: vec![],
+                            }),
+                            method: "as_str".to_string(),
+                            args: vec![],
+                        }],
+                    }),
+                    method: "unwrap_or_else".to_string(),
+                    args: vec![crate::RustExpr::Closure {
+                        params: vec![crate::RustParam::Named {
+                            name: "__e".to_string(),
+                            ty: crate::RustType::Named("_".to_string()),
+                        }],
+                        body: Box::new(crate::RustExpr::MacroCall {
+                            name: "unreachable".to_string(),
+                            args: vec![],
+                        }),
+                        is_move: false,
+                    }],
+                };
+                if matches!(resolved_left_ty, Type::Int | Type::LiteralInt(_)) {
+                    lowered_left = crate::RustExpr::FnCall {
+                        func: Box::new(crate::RustExpr::Path(vec![
+                            "Decimal".to_string(),
+                            "from".to_string(),
+                        ])),
+                        args: vec![lowered_left],
+                    };
+                } else if matches!(resolved_left_ty, Type::BigInt) {
+                    lowered_left = lower_bigint_to_decimal(lowered_left);
+                }
+                if matches!(resolved_right_ty, Type::Int | Type::LiteralInt(_)) {
+                    lowered_right = crate::RustExpr::FnCall {
+                        func: Box::new(crate::RustExpr::Path(vec![
+                            "Decimal".to_string(),
+                            "from".to_string(),
+                        ])),
+                        args: vec![lowered_right],
+                    };
+                } else if matches!(resolved_right_ty, Type::BigInt) {
+                    lowered_right = lower_bigint_to_decimal(lowered_right);
+                }
+            }
+
+            if matches!(resolved_result_ty, Type::BigDecimal) {
+                let lower_decimal_to_bigdecimal = |value: crate::RustExpr| crate::RustExpr::MethodCall {
+                    receiver: Box::new(crate::RustExpr::MethodCall {
+                        receiver: Box::new(crate::RustExpr::MethodCall {
+                            receiver: Box::new(crate::RustExpr::Paren(Box::new(value))),
+                            method: "to_string".to_string(),
+                            args: vec![],
+                        }),
+                        method: "parse::<BigDecimal>".to_string(),
+                        args: vec![],
+                    }),
+                    method: "unwrap_or_else".to_string(),
+                    args: vec![crate::RustExpr::Closure {
+                        params: vec![crate::RustParam::Named {
+                            name: "__e".to_string(),
+                            ty: crate::RustType::Named("_".to_string()),
+                        }],
+                        body: Box::new(crate::RustExpr::MacroCall {
+                            name: "unreachable".to_string(),
+                            args: vec![],
+                        }),
+                        is_move: false,
+                    }],
+                };
+                if matches!(
+                    resolved_left_ty,
+                    Type::Int | Type::LiteralInt(_) | Type::BigInt
+                ) {
+                    lowered_left = crate::RustExpr::FnCall {
+                        func: Box::new(crate::RustExpr::Path(vec![
+                            "BigDecimal".to_string(),
+                            "from".to_string(),
+                        ])),
+                        args: vec![lowered_left],
+                    };
+                } else if matches!(resolved_left_ty, Type::Decimal) {
+                    lowered_left = lower_decimal_to_bigdecimal(lowered_left);
+                }
+                if matches!(
+                    resolved_right_ty,
+                    Type::Int | Type::LiteralInt(_) | Type::BigInt
+                ) {
+                    lowered_right = crate::RustExpr::FnCall {
+                        func: Box::new(crate::RustExpr::Path(vec![
+                            "BigDecimal".to_string(),
+                            "from".to_string(),
+                        ])),
+                        args: vec![lowered_right],
+                    };
+                } else if matches!(resolved_right_ty, Type::Decimal) {
+                    lowered_right = lower_decimal_to_bigdecimal(lowered_right);
                 }
             }
 

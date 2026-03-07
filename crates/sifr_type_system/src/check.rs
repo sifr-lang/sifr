@@ -4,10 +4,50 @@ use crate::types::Type;
 use crate::union::{remove_none_from_union, union_contains_none};
 use crate::TypeError;
 
+fn is_decimal_type(ty: &Type) -> bool {
+    matches!(ty, Type::Decimal)
+}
+
+fn is_bigdecimal_type(ty: &Type) -> bool {
+    matches!(ty, Type::BigDecimal)
+}
+
+fn is_decimal_family_type(ty: &Type) -> bool {
+    is_decimal_type(ty) || is_bigdecimal_type(ty)
+}
+
+fn is_integral_numeric_type(ty: &Type) -> bool {
+    matches!(ty, Type::Int | Type::LiteralInt(_) | Type::BigInt)
+}
+
 /// Type-check a binary operation (e.g., `a + b`, `a - b`).
 ///
 /// Returns the result type or an error.
 pub fn type_check_binary_op(left: &Type, op: &str, right: &Type) -> Result<Type, TypeError> {
+    if (is_decimal_type(left) && is_bigdecimal_type(right))
+        || (is_bigdecimal_type(left) && is_decimal_type(right))
+    {
+        return Err(TypeError {
+            message: "[E2504] cannot mix 'decimal' and 'bigdecimal' in arithmetic; use explicit Decimal(...) or BigDecimal(...) conversion".to_string(),
+            kind: crate::TypeErrorKind::InvalidOperator {
+                op: op.to_string(),
+                ty: Box::new(left.clone()),
+            },
+        });
+    }
+
+    if (left == &Type::Float && is_decimal_family_type(right))
+        || (right == &Type::Float && is_decimal_family_type(left))
+    {
+        return Err(TypeError {
+            message: "[E2503] cannot mix 'float' with decimal numeric types in arithmetic".to_string(),
+            kind: crate::TypeErrorKind::InvalidOperator {
+                op: op.to_string(),
+                ty: Box::new(left.clone()),
+            },
+        });
+    }
+
     // Mixed int/bigint arithmetic is a compile error (except bigint ** int which is allowed)
     let is_bigint_pow_int = left == &Type::BigInt && right == &Type::Int && op == "**";
     if !is_bigint_pow_int {
@@ -37,6 +77,23 @@ pub fn type_check_binary_op(left: &Type, op: &str, right: &Type) -> Result<Type,
 
     match op {
         "+" => {
+            // Decimal-family arithmetic
+            if is_decimal_type(left) && is_decimal_type(right) {
+                return Ok(Type::Decimal);
+            }
+            if is_bigdecimal_type(left) && is_bigdecimal_type(right) {
+                return Ok(Type::BigDecimal);
+            }
+            if (is_decimal_type(left) && is_integral_numeric_type(right))
+                || (is_decimal_type(right) && is_integral_numeric_type(left))
+            {
+                return Ok(Type::Decimal);
+            }
+            if (is_bigdecimal_type(left) && is_integral_numeric_type(right))
+                || (is_bigdecimal_type(right) && is_integral_numeric_type(left))
+            {
+                return Ok(Type::BigDecimal);
+            }
             // BigInt arithmetic
             if left == &Type::BigInt && right == &Type::BigInt {
                 return Ok(Type::BigInt);
@@ -71,6 +128,23 @@ pub fn type_check_binary_op(left: &Type, op: &str, right: &Type) -> Result<Type,
             })
         }
         "-" | "*" => {
+            // Decimal-family arithmetic
+            if is_decimal_type(left) && is_decimal_type(right) {
+                return Ok(Type::Decimal);
+            }
+            if is_bigdecimal_type(left) && is_bigdecimal_type(right) {
+                return Ok(Type::BigDecimal);
+            }
+            if (is_decimal_type(left) && is_integral_numeric_type(right))
+                || (is_decimal_type(right) && is_integral_numeric_type(left))
+            {
+                return Ok(Type::Decimal);
+            }
+            if (is_bigdecimal_type(left) && is_integral_numeric_type(right))
+                || (is_bigdecimal_type(right) && is_integral_numeric_type(left))
+            {
+                return Ok(Type::BigDecimal);
+            }
             // BigInt arithmetic
             if left == &Type::BigInt && right == &Type::BigInt {
                 return Ok(Type::BigInt);
@@ -109,6 +183,23 @@ pub fn type_check_binary_op(left: &Type, op: &str, right: &Type) -> Result<Type,
             })
         }
         "/" => {
+            // Decimal-family arithmetic
+            if is_decimal_type(left) && is_decimal_type(right) {
+                return Ok(Type::Decimal);
+            }
+            if is_bigdecimal_type(left) && is_bigdecimal_type(right) {
+                return Ok(Type::BigDecimal);
+            }
+            if (is_decimal_type(left) && is_integral_numeric_type(right))
+                || (is_decimal_type(right) && is_integral_numeric_type(left))
+            {
+                return Ok(Type::Decimal);
+            }
+            if (is_bigdecimal_type(left) && is_integral_numeric_type(right))
+                || (is_bigdecimal_type(right) && is_integral_numeric_type(left))
+            {
+                return Ok(Type::BigDecimal);
+            }
             // BigInt division returns BigInt (floor division semantics for bigint)
             if left == &Type::BigInt && right == &Type::BigInt {
                 return Ok(Type::BigInt);
@@ -130,6 +221,23 @@ pub fn type_check_binary_op(left: &Type, op: &str, right: &Type) -> Result<Type,
             })
         }
         "//" | "%" => {
+            // Decimal-family arithmetic
+            if is_decimal_type(left) && is_decimal_type(right) {
+                return Ok(Type::Decimal);
+            }
+            if is_bigdecimal_type(left) && is_bigdecimal_type(right) {
+                return Ok(Type::BigDecimal);
+            }
+            if (is_decimal_type(left) && is_integral_numeric_type(right))
+                || (is_decimal_type(right) && is_integral_numeric_type(left))
+            {
+                return Ok(Type::Decimal);
+            }
+            if (is_bigdecimal_type(left) && is_integral_numeric_type(right))
+                || (is_bigdecimal_type(right) && is_integral_numeric_type(left))
+            {
+                return Ok(Type::BigDecimal);
+            }
             // BigInt floor division and modulo
             if left == &Type::BigInt && right == &Type::BigInt {
                 return Ok(Type::BigInt);
@@ -154,6 +262,13 @@ pub fn type_check_binary_op(left: &Type, op: &str, right: &Type) -> Result<Type,
             })
         }
         "**" => {
+            // Decimal-family exponentiation (integral exponents only in this phase)
+            if is_decimal_type(left) && is_integral_numeric_type(right) {
+                return Ok(Type::Decimal);
+            }
+            if is_bigdecimal_type(left) && is_integral_numeric_type(right) {
+                return Ok(Type::BigDecimal);
+            }
             // BigInt power: bigint ** bigint -> bigint, bigint ** int -> bigint
             if left == &Type::BigInt && (right == &Type::BigInt || right == &Type::Int) {
                 return Ok(Type::BigInt);
@@ -227,6 +342,29 @@ pub fn type_check_binary_op(left: &Type, op: &str, right: &Type) -> Result<Type,
 
 /// Type-check a comparison operation (e.g., `a == b`, `a < b`).
 pub fn type_check_comparison(left: &Type, op: &str, right: &Type) -> Result<Type, TypeError> {
+    if (is_decimal_type(left) && is_bigdecimal_type(right))
+        || (is_bigdecimal_type(left) && is_decimal_type(right))
+    {
+        return Err(TypeError {
+            message: "[E2504] cannot compare 'decimal' and 'bigdecimal' without explicit conversion".to_string(),
+            kind: crate::TypeErrorKind::TypeMismatch {
+                expected: Box::new(left.clone()),
+                actual: Box::new(right.clone()),
+            },
+        });
+    }
+    if (left == &Type::Float && is_decimal_family_type(right))
+        || (right == &Type::Float && is_decimal_family_type(left))
+    {
+        return Err(TypeError {
+            message: "[E2503] cannot compare 'float' with decimal numeric types".to_string(),
+            kind: crate::TypeErrorKind::TypeMismatch {
+                expected: Box::new(left.clone()),
+                actual: Box::new(right.clone()),
+            },
+        });
+    }
+
     match op {
         "==" | "!=" => {
             // Block mixed int/bigint equality comparisons
