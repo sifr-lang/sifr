@@ -762,11 +762,13 @@ fn generate_cargo_toml(
             }
             "rust_decimal" => {
                 deps.insert(
-                    "rust_decimal = { version = \"1\", features = [\"maths\"] }".to_string(),
+                    "rust_decimal = { version = \"1\", features = [\"maths\", \"serde-with-str\"] }".to_string(),
                 );
             }
             "bigdecimal" => {
-                deps.insert("bigdecimal = \"0.4\"".to_string());
+                deps.insert(
+                    "bigdecimal = { version = \"0.4\", features = [\"serde\"] }".to_string(),
+                );
             }
             _ => {}
         }

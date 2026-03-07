@@ -1,0 +1,36 @@
+from sifr.json import json_dumps
+
+def main():
+    print("m28_3 conversion and boundary contracts demo")
+
+    d: decimal = Decimal("-1.9")
+    bd: bigdecimal = BigDecimal("-1.9")
+
+    try:
+        i_from_decimal: int = int(d)
+        i_from_bigdecimal: int = int(bd)
+        print(i_from_decimal)
+        print(i_from_bigdecimal)
+    except DecimalConversionError as e:
+        print("unexpected conversion failure: " + e.message)
+
+    print(bigint(d))
+    print(bigint(bd))
+
+    bd_from_decimal: bigdecimal = BigDecimal(Decimal("12.3400"))
+    print(bd_from_decimal)
+
+    try:
+        d_from_bigdecimal: decimal = Decimal(BigDecimal("7.5000"))
+        print(d_from_bigdecimal)
+    except DecimalConversionError as e:
+        print("unexpected decimal conversion failure: " + e.message)
+
+    print(json_dumps(Decimal("1.2300")))
+    print(json_dumps(BigDecimal("1.2300")))
+
+    try:
+        out_of_range: int = int(BigDecimal("999999999999999999999999999999999999"))
+        print(out_of_range)
+    except DecimalConversionError as e:
+        print("caught conversion error: " + e.message)
