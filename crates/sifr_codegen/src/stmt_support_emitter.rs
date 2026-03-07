@@ -1608,15 +1608,9 @@ impl RustEmitter {
                             }],
                         }));
                     }
-                    return Ok(Some(crate::RustExpr::MethodCall {
-                        receiver: Box::new(crate::RustExpr::MethodCall {
-                            receiver: Box::new(nth_expr),
-                            method: "unwrap".to_string(),
-                            args: vec![],
-                        }),
-                        method: "to_string".to_string(),
-                        args: vec![],
-                    }));
+                    return Err(crate::CodegenError::new(
+                        "internal codegen invariant violated: string index produced non-optional result type",
+                    ));
                 }
                 Type::Tuple(_) => {
                     let HirExpr::IntLiteral(idx) = index.as_ref() else {
@@ -1934,19 +1928,12 @@ impl RustEmitter {
                 Type::Int | Type::Float | Type::LiteralInt(_) | Type::TypeVar(_) | Type::BigInt
             ) {
                 if Self::option_inner_type_for_ir(ty).is_none() {
-                    if Self::option_inner_type_for_ir(left.ty()).is_some() {
-                        lowered_left = crate::RustExpr::MethodCall {
-                            receiver: Box::new(crate::RustExpr::Paren(Box::new(lowered_left))),
-                            method: "unwrap".to_string(),
-                            args: vec![],
-                        };
-                    }
-                    if Self::option_inner_type_for_ir(right.ty()).is_some() {
-                        lowered_right = crate::RustExpr::MethodCall {
-                            receiver: Box::new(crate::RustExpr::Paren(Box::new(lowered_right))),
-                            method: "unwrap".to_string(),
-                            args: vec![],
-                        };
+                    if Self::option_inner_type_for_ir(left.ty()).is_some()
+                        || Self::option_inner_type_for_ir(right.ty()).is_some()
+                    {
+                        return Err(crate::CodegenError::new(
+                            "internal codegen invariant violated: numeric expression kept optional operand in non-optional context",
+                        ));
                     }
                 }
                 if matches!(resolved_result_ty, Type::Float) {
@@ -2495,9 +2482,6 @@ impl RustEmitter {
         let Some(lowered_object) = self.lower_stmt_expr_for_ir(object)? else {
             return Ok(None);
         };
-        let Some(lowered_index) = self.lower_stmt_expr_for_ir(index)? else {
-            return Ok(None);
-        };
 
         let lowered = match object_ty {
             Type::Tuple(elements) => {
@@ -2515,53 +2499,13 @@ impl RustEmitter {
                     field: idx.to_string(),
                 }
             }
-            Type::Dict(_, _) => {
-                let lowered_key = if matches!(index, HirExpr::StringLiteral(_)) {
-                    lowered_index
-                } else {
-                    crate::RustExpr::Ref {
-                        mutable: false,
-                        expr: Box::new(crate::RustExpr::Paren(Box::new(lowered_index))),
-                    }
-                };
-                crate::RustExpr::Clone(Box::new(crate::RustExpr::Index {
-                    expr: Box::new(lowered_object),
-                    index: Box::new(lowered_key),
-                }))
+            Type::Dict(_, _) | Type::List(_) | Type::Str => {
+                return Err(crate::CodegenError::new(
+                    "internal codegen invariant violated: non-optional list/dict/str index return reached codegen",
+                ));
             }
-            Type::List(_) => crate::RustExpr::Clone(Box::new(crate::RustExpr::Index {
-                expr: Box::new(lowered_object),
-                index: Box::new(crate::RustExpr::Cast {
-                    expr: Box::new(lowered_index),
-                    ty: crate::RustType::Named("usize".to_string()),
-                }),
-            })),
-            Type::Str => crate::RustExpr::MethodCall {
-                receiver: Box::new(crate::RustExpr::MethodCall {
-                    receiver: Box::new(crate::RustExpr::MethodCall {
-                        receiver: Box::new(lowered_object),
-                        method: "chars".to_string(),
-                        args: vec![],
-                    }),
-                    method: "nth".to_string(),
-                    args: vec![crate::RustExpr::Cast {
-                        expr: Box::new(lowered_index),
-                        ty: crate::RustType::Named("usize".to_string()),
-                    }],
-                }),
-                method: "unwrap".to_string(),
-                args: vec![],
-            },
             _ => return Ok(None),
         };
-
-        if matches!(object_ty, Type::Str) {
-            return Ok(Some(crate::RustExpr::MethodCall {
-                receiver: Box::new(lowered),
-                method: "to_string".to_string(),
-                args: vec![],
-            }));
-        }
         Ok(Some(lowered))
     }
 

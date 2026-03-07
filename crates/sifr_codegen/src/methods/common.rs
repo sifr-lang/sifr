@@ -48,16 +48,29 @@ pub(super) fn lower_option_len(object: &RustExpr, args: &[RustExpr]) -> Option<R
     Some(RustExpr::Cast {
         expr: Box::new(RustExpr::MethodCall {
             receiver: Box::new(RustExpr::MethodCall {
-                receiver: Box::new(RustExpr::MethodCall {
-                    receiver: Box::new(object.clone()),
-                    method: "as_ref".to_string(),
-                    args: vec![],
-                }),
-                method: "unwrap".to_string(),
+                receiver: Box::new(object.clone()),
+                method: "as_ref".to_string(),
                 args: vec![],
             }),
-            method: "len".to_string(),
-            args: vec![],
+            method: "map_or".to_string(),
+            args: vec![
+                RustExpr::Cast {
+                    expr: Box::new(RustExpr::Literal(RustLiteral::Int(0))),
+                    ty: RustType::Named("usize".to_string()),
+                },
+                RustExpr::Closure {
+                    params: vec![crate::RustParam::Named {
+                        name: "v".to_string(),
+                        ty: RustType::Named("_".to_string()),
+                    }],
+                    body: Box::new(RustExpr::MethodCall {
+                        receiver: Box::new(RustExpr::Ident("v".to_string())),
+                        method: "len".to_string(),
+                        args: vec![],
+                    }),
+                    is_move: false,
+                },
+            ],
         }),
         ty: RustType::I64,
     })
