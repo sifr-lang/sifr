@@ -94,6 +94,10 @@ pub enum Type {
     /// Arbitrary-precision integer (`bigint` in Sifr, `num_bigint::BigInt` in Rust)
     /// Unlike `int` (i64), `bigint` never overflows — it grows as needed.
     BigInt,
+    /// Fixed-precision decimal (`decimal` in Sifr, `rust_decimal::Decimal` in Rust)
+    Decimal,
+    /// Arbitrary-precision decimal (`bigdecimal` in Sifr, `bigdecimal::BigDecimal` in Rust)
+    BigDecimal,
 }
 
 /// Represents a function's type signature.
@@ -172,7 +176,13 @@ impl Type {
     /// - `Function` is `Copy` (function pointers).
     pub fn ownership(&self) -> OwnershipKind {
         match self {
-            Self::Int | Self::Float | Self::Bool | Self::None | Self::Never | Self::Range => {
+            Self::Int
+            | Self::Float
+            | Self::Bool
+            | Self::None
+            | Self::Never
+            | Self::Range
+            | Self::Decimal => {
                 OwnershipKind::Copy
             }
             Self::LiteralInt(_) | Self::LiteralBool(_) => OwnershipKind::Copy,
@@ -192,7 +202,8 @@ impl Type {
             Self::TypeVar(_) => OwnershipKind::Move, // conservative: treat as Move
             Self::Callable(..) => OwnershipKind::Copy, // function pointers are Copy
             Self::Enum { .. } => OwnershipKind::Copy, // enums are Copy (repr(i64))
-            Self::BigInt => OwnershipKind::Move,     // heap-allocated, not Copy
+            Self::BigInt => OwnershipKind::Move, // heap-allocated, not Copy
+            Self::BigDecimal => OwnershipKind::Move,
             // Union/Intersection: Move if any member is Move
             Self::Union(members) | Self::Intersection(members) => {
                 if members.iter().any(|m| m.ownership() == OwnershipKind::Move) {
@@ -257,6 +268,8 @@ impl Type {
             }
             Self::Enum { name, .. } => name.clone(),
             Self::BigInt => "bigint".to_string(),
+            Self::Decimal => "decimal".to_string(),
+            Self::BigDecimal => "bigdecimal".to_string(),
         }
     }
 
@@ -315,6 +328,8 @@ impl Type {
             Self::TypeVar(name) => name.clone(), // Generic type parameter name (e.g., T)
             Self::Enum { name, .. } => name.clone(), // Enum type maps to its Rust enum name
             Self::BigInt => "BigInt".to_string(),
+            Self::Decimal => "Decimal".to_string(),
+            Self::BigDecimal => "BigDecimal".to_string(),
             Self::Callable(params, conventions, ret) => {
                 let param_types: Vec<String> = params
                     .iter()
@@ -428,14 +443,21 @@ impl Type {
             Type::Callable(..) => "Fn".to_string(),
             Type::Enum { name, .. } => name.clone(),
             Type::BigInt => "BigInt".to_string(),
+            Type::Decimal => "Decimal".to_string(),
+            Type::BigDecimal => "BigDecimal".to_string(),
         }
     }
 
-    /// Check if this type is a numeric type (int or float).
+    /// Check if this type is a numeric type.
     pub fn is_numeric(&self) -> bool {
         matches!(
             self,
-            Self::Int | Self::Float | Self::LiteralInt(_) | Self::BigInt
+            Self::Int
+                | Self::Float
+                | Self::LiteralInt(_)
+                | Self::BigInt
+                | Self::Decimal
+                | Self::BigDecimal
         )
     }
 

@@ -35,6 +35,8 @@ pub fn resolve_type_annotation(name: &str) -> Option<Type> {
         "Unknown" => Some(Type::Unknown),
         "Never" => Some(Type::Never),
         "bigint" => Some(Type::BigInt),
+        "decimal" => Some(Type::Decimal),
+        "bigdecimal" => Some(Type::BigDecimal),
         _ => None,
     }
 }
@@ -62,6 +64,8 @@ mod tests {
         assert_eq!(resolve_type_annotation("Any"), Some(Type::Any));
         assert_eq!(resolve_type_annotation("Unknown"), Some(Type::Unknown));
         assert_eq!(resolve_type_annotation("Never"), Some(Type::Never));
+        assert_eq!(resolve_type_annotation("decimal"), Some(Type::Decimal));
+        assert_eq!(resolve_type_annotation("bigdecimal"), Some(Type::BigDecimal));
         assert_eq!(resolve_type_annotation("unknown"), None);
     }
 }

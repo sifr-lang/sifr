@@ -1699,7 +1699,12 @@ fn try_lower_union_class_match_pattern(
 fn is_copy_capture_type(ty: &Type) -> bool {
     matches!(
         resolve_alias_type(ty),
-        Type::Int | Type::LiteralInt(_) | Type::Float | Type::Bool | Type::LiteralBool(_)
+        Type::Int
+            | Type::LiteralInt(_)
+            | Type::Float
+            | Type::Bool
+            | Type::LiteralBool(_)
+            | Type::Decimal
     )
 }
 
