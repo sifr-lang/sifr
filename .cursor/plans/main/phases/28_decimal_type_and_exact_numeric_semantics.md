@@ -29,6 +29,12 @@ Add first-class `decimal` and `bigdecimal` types with deterministic, exact base-
   - `x: decimal = 1.5` invalid
   - `y: bigdecimal = 1.5` invalid
 
+### Type/constructor naming contract (final)
+- Type annotations use lowercase keywords: `decimal`, `bigdecimal`.
+- Canonical constructors are built-in callables: `Decimal(...)`, `BigDecimal(...)`.
+- Parser behavior is unchanged: both constructors parse as ordinary call expressions.
+- Constructor argument validation and invalid-decimal diagnostics are semantic checks in HIR/type checking, not parser syntax errors.
+
 ### Python Decimal compatibility profiles (final)
 - Finance profile: Python `Decimal` semantics map to Sifr `decimal`, backed by Rust `rust_decimal::Decimal`.
 - Arbitrary-precision profile: Python `Decimal` semantics map to Sifr `bigdecimal`, backed by Rust `bigdecimal::BigDecimal`.
@@ -63,6 +69,12 @@ Add first-class `decimal` and `bigdecimal` types with deterministic, exact base-
 - Any arithmetic/comparison mixing `float` with `bigdecimal` is rejected unless explicitly redesigned in a future phase.
 - No fallback conversion paths.
 
+### Operator coverage (final)
+- Arithmetic operators supported for `decimal` and `bigdecimal`: `+`, `-`, `*`, `/`, `//`, `%`, `**`.
+- Unary operators supported for both types: unary `+`, unary `-`.
+- Comparison operators supported for both types: `==`, `!=`, `<`, `<=`, `>`, `>=`.
+- Operator semantics must enforce the explicit conversion/mixing policy above (no hidden coercions).
+
 ### Decimal context defaults (final)
 - `decimal` (`rust_decimal`) is fixed-precision by representation for financial workloads; no hidden global context mutation.
 - `bigdecimal` (`bigdecimal`) is arbitrary precision with explicit context APIs.
@@ -71,27 +83,43 @@ Add first-class `decimal` and `bigdecimal` types with deterministic, exact base-
   - Default rounding mode: `HALF_EVEN`
 - Context overrides are explicit (no hidden global mutation semantics in user code).
 
+### Ownership and parameter conventions (final)
+- `decimal` is `Copy` in the Sifr ownership model.
+- `bigdecimal` is `Move` in the Sifr ownership model.
+- Default parameter conventions follow ownership rules:
+  - `decimal` defaults to by-value (`own`) parameters.
+  - `bigdecimal` defaults to borrowed parameters unless explicitly marked `own`.
+
 ### Runtime implementation (final)
 - `decimal` maps to `rust_decimal::Decimal` (finance-oriented fixed precision).
 - `bigdecimal` maps to `bigdecimal::BigDecimal` (arbitrary precision).
+- Codegen must emit required imports/usages for both runtime types when referenced.
+- Codegen must surface `rust_decimal` and `bigdecimal` through explicit `required_crates` metadata so Cargo dependency generation stays deterministic.
 - Any crate change requires ADR + benchmark + compatibility sign-off.
 
 ## Milestones
 
 ### milestone_28_1: Type-System, Parser, and HIR Integration
 - Scope:
+  - Keep parser grammar unchanged; use existing generic call-expression parsing for `Decimal(...)` and `BigDecimal(...)`.
   - Add `decimal` and `bigdecimal` to core type enum and type rendering.
+  - Define rendering contract:
+    - Source/display names: `decimal`, `bigdecimal`
+    - Rust type names: `Decimal`, `BigDecimal`
   - Add parsing/lowering for `Decimal("...")`, `Decimal(int)`, `Decimal(bigint)`.
   - Add parsing/lowering for `BigDecimal("...")`, `BigDecimal(int)`, `BigDecimal(bigint)`.
+  - Add built-in call lowering/type-check paths for `Decimal(...)` and `BigDecimal(...)` (constructor arity/type validation + diagnostics).
   - Enforce constructor validity rules and mixed-numeric policy in type checking.
 - Definition of done:
   - `decimal` and `bigdecimal` are first-class through parser -> HIR -> type checker -> codegen.
+  - Ownership behavior is defined and enforced (`decimal`=`Copy`, `bigdecimal`=`Move`).
   - Invalid construction or forbidden mixed usage fails with stable diagnostics.
 
 ### milestone_28_2: Deterministic Arithmetic and Context Semantics
 - Scope:
   - Implement `decimal` arithmetic/comparison using `rust_decimal` with deterministic behavior.
   - Implement `bigdecimal` arithmetic/comparison using `bigdecimal`.
+  - Implement the full operator coverage contract (`+`, `-`, `*`, `/`, `//`, `%`, `**`, unary ops, comparisons) for both types.
   - Implement default `bigdecimal` context (precision=28, rounding=HALF_EVEN).
   - Enforce panic-free invalid-operation handling in user paths.
 - Definition of done:
@@ -136,7 +164,10 @@ Add first-class `decimal` and `bigdecimal` types with deterministic, exact base-
 
 ### milestone_28_5: Verification Corpus and Determinism Gates
 - Scope:
-  - Add decimal corpus covering:
+  - Add decimal corpus in:
+    - `crates/sifr/tests/e2e/pass`
+    - `crates/sifr/tests/e2e/fail`
+  - Corpus coverage:
     - exact `Decimal` string construction
     - exact `BigDecimal` string construction
     - int/bigint construction for both types
@@ -144,6 +175,8 @@ Add first-class `decimal` and `bigdecimal` types with deterministic, exact base-
     - `decimal <-> bigdecimal` cross-conversion pass/fail boundaries
     - conversion failures
     - repeated-run determinism
+  - Add/update milestone demo:
+    - `demos/<milestone_demo>.sifr` exercises both `decimal` and `bigdecimal` end-to-end.
   - Add negative seeded cases for nondeterminism, forbidden mixed-type arithmetic, and forbidden float-conversion paths.
 - Definition of done:
   - Decimal corpus is reproducible and version-controlled.
@@ -160,10 +193,14 @@ Add first-class `decimal` and `bigdecimal` types with deterministic, exact base-
 
 ### Milestone quality checks
 - Local validation gates pass before merge.
+- Full local suite passes:
+  - `/Users/yaseralnajjar/work/sifr/codebase/scripts/run_all_tests.sh`
 - Generated Rust for decimal corpus compiles with `-D warnings`.
 - No emitted `todo!`/`unimplemented!` in production `decimal`/`bigdecimal` paths.
 - No data-dependent emitted `.unwrap()`/`.expect()`/`panic!` in user runtime `decimal`/`bigdecimal` paths.
 - Determinism checks pass across repeated runs.
+- Milestone demo command runs successfully:
+  - `cargo run -q -p sifr -- run demos/<milestone_demo>.sifr`
 - Validation evidence is recorded in the phase checklist issue.
 
 ### Exit criteria
