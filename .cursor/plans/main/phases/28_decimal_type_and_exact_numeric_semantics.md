@@ -51,6 +51,10 @@ Add first-class `decimal` and `bigdecimal` types with deterministic, exact base-
 - Cross-decimal conversion:
   - `BigDecimal(decimal_value)` is explicit and exact, returning `bigdecimal`.
   - `Decimal(bigdecimal_value)` is explicit and fallible, returning `Result[decimal, DecimalConversionError]` (must be checked; no implicit narrowing).
+- Integer-target conversion semantics (Python parity):
+  - `int(decimal_value)` and `int(bigdecimal_value)` are explicit and truncate toward zero (Python-compatible), returning `Result[int, DecimalConversionError]` for out-of-range or invalid values.
+  - `bigint(decimal_value)` and `bigint(bigdecimal_value)` are explicit and truncate toward zero (Python-compatible), with no implicit rounding.
+  - Truncating conversions are intentionally explicit; there are no implicit lossy integer conversions.
 - Disallowed constructors/conversions:
   - `Decimal(float_value)` (disallowed)
   - `BigDecimal(float_value)` (disallowed)
@@ -58,6 +62,14 @@ Add first-class `decimal` and `bigdecimal` types with deterministic, exact base-
   - `BigDecimal.from_float(...)` (disallowed)
   - Any implicit `float -> decimal` conversion (disallowed)
   - Any implicit `float -> bigdecimal` conversion (disallowed)
+
+### DecimalConversionError contract (final)
+- `DecimalConversionError` is a required built-in error type for fallible decimal conversions.
+- Required failure categories:
+  - out-of-range target representation (for example, conversion result cannot fit target `int`/`decimal`)
+  - inexact narrowing (for example, `bigdecimal -> decimal` cannot be represented exactly)
+  - invalid value conversion (for example, unsupported non-finite values if encountered at boundaries)
+- Diagnostics must preserve stable codes and messages for each category.
 
 ### Numeric mixing policy (final)
 - `int + decimal` -> `decimal` (allowed, exact)
@@ -74,6 +86,8 @@ Add first-class `decimal` and `bigdecimal` types with deterministic, exact base-
 - Unary operators supported for both types: unary `+`, unary `-`.
 - Comparison operators supported for both types: `==`, `!=`, `<`, `<=`, `>`, `>=`.
 - Operator semantics must enforce the explicit conversion/mixing policy above (no hidden coercions).
+- `//` follows Python floor-division semantics (toward negative infinity), not truncation toward zero.
+  - Example parity rule: `Decimal("-1.9") // Decimal("1") == Decimal("-2")`.
 - Operator protocol hooks for implementation alignment:
   - Binary arithmetic dunder mapping: `__add__`, `__sub__`, `__mul__`, `__truediv__`, `__floordiv__`, `__mod__`, `__pow__`.
   - Comparison dunder mapping: `__eq__` and ordering via `__lt__` contract.
@@ -146,13 +160,16 @@ Add first-class `decimal` and `bigdecimal` types with deterministic, exact base-
 
 ### milestone_28_3: Conversion and Boundary Contracts
 - Scope:
-  - Implement explicit exact conversions:
+  - Implement explicit conversions:
     - `int <-> decimal`
     - `bigint <-> decimal`
     - `str <-> decimal`
     - `int <-> bigdecimal`
     - `bigint <-> bigdecimal`
     - `str <-> bigdecimal`
+  - Enforce Python-compatible integer-target conversion behavior:
+    - `int(decimal|bigdecimal)` truncates toward zero and is fallible on range/invalid target values.
+    - `bigint(decimal|bigdecimal)` truncates toward zero and is explicit.
   - Implement explicit cross-decimal conversions:
     - `decimal -> bigdecimal` via `BigDecimal(decimal_value)` (exact)
     - `bigdecimal -> decimal` via `Decimal(bigdecimal_value)` (fallible `Result`, checked)
@@ -160,7 +177,7 @@ Add first-class `decimal` and `bigdecimal` types with deterministic, exact base-
   - Define JSON/model boundary contract:
     - `decimal` and `bigdecimal` serialize as string by default to preserve precision.
 - Definition of done:
-  - Conversions are explicit, exact, deterministic, and test-covered.
+  - Conversions are explicit, deterministic, and test-covered, with Python-compatible truncation/floor semantics where specified.
   - Any float-to-decimal attempt fails with clear diagnostics.
   - Any float-to-bigdecimal attempt fails with clear diagnostics.
 
@@ -189,7 +206,9 @@ Add first-class `decimal` and `bigdecimal` types with deterministic, exact base-
     - exact `Decimal` string construction
     - exact `BigDecimal` string construction
     - int/bigint construction for both types
+    - `int(decimal|bigdecimal)` and `bigint(decimal|bigdecimal)` truncation-toward-zero behavior, including negative values
     - rounding boundaries
+    - `//` floor-division behavior boundaries (including negative operands)
     - `quantize` and `sqrt` behavior boundaries (success/failure/rounding context)
     - API determinism for `round`, `abs`, `is_zero`, `is_finite`, and formatting
     - `decimal <-> bigdecimal` cross-conversion pass/fail boundaries
