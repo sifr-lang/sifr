@@ -1,0 +1,5 @@
+def main():
+    d: decimal = Decimal("1.2345")
+    x: decimal = d.round(29)
+
+# expect-error: [E2507]

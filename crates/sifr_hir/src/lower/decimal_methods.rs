@@ -1,5 +1,53 @@
 use super::*;
 
+const DECIMAL_MAX_SCALE: i64 = 28;
+
+fn decimal_diag_code(receiver_name: &str) -> &'static str {
+    match receiver_name {
+        "decimal" => "E2507",
+        "bigdecimal" => "E2508",
+        _ => "E2508",
+    }
+}
+
+fn literal_scale_value(arg: &HirExpr) -> Option<i64> {
+    match arg {
+        HirExpr::IntLiteral(v) => Some(*v),
+        HirExpr::UnaryOp { op, operand, .. } if op == "-" => match operand.as_ref() {
+            HirExpr::IntLiteral(v) => v.checked_neg(),
+            _ => None,
+        },
+        _ => match arg.ty() {
+            Type::LiteralInt(v) => Some(*v),
+            _ => None,
+        },
+    }
+}
+
+fn validate_decimal_context_scale(
+    receiver_name: &str,
+    method: &str,
+    arg: &HirExpr,
+    ctx: &mut LowerCtx,
+) -> Option<()> {
+    let Some(scale) = literal_scale_value(arg) else {
+        return Some(());
+    };
+    if receiver_name == "decimal" && !(0..=DECIMAL_MAX_SCALE).contains(&scale) {
+        ctx.error(format!(
+            "[E2507] decimal.{method}() scale must be between 0 and {DECIMAL_MAX_SCALE}, got {scale}"
+        ));
+        return None;
+    }
+    if receiver_name == "bigdecimal" && scale < 0 {
+        ctx.error(format!(
+            "[E2508] bigdecimal.{method}() scale must be >= 0 for default context, got {scale}"
+        ));
+        return None;
+    }
+    Some(())
+}
+
 pub(super) fn decimal_conversion_error_type(ctx: &LowerCtx) -> Type {
     ctx.class_types
         .get("DecimalConversionError")
@@ -18,20 +66,22 @@ pub(super) fn validate_decimal_scale_argument(
     args: &[HirExpr],
     ctx: &mut LowerCtx,
 ) -> Option<()> {
+    let diag_code = decimal_diag_code(receiver_name);
     if args.len() != 1 {
         ctx.error(format!(
-            "{receiver_name}.{method}() takes exactly 1 argument, got {}",
+            "[{diag_code}] {receiver_name}.{method}() takes exactly 1 argument, got {}",
             args.len()
         ));
         return None;
     }
     if !matches!(args[0].ty(), Type::Int | Type::LiteralInt(_)) {
         ctx.error(format!(
-            "{receiver_name}.{method}() scale argument must be 'int', got '{}'",
+            "[{diag_code}] {receiver_name}.{method}() scale argument must be 'int', got '{}'",
             args[0].ty().display_name()
         ));
         return None;
     }
+    validate_decimal_context_scale(receiver_name, method, &args[0], ctx)?;
     Some(())
 }
 
@@ -60,17 +110,20 @@ pub(super) fn resolve_decimal_method_type(
             "round" => {
                 if args.len() > 1 {
                     ctx.error(format!(
-                        "decimal.round() takes at most 1 argument, got {}",
+                        "[E2507] decimal.round() takes at most 1 argument, got {}",
                         args.len()
                     ));
                     return None;
                 }
                 if args.len() == 1 && !matches!(args[0].ty(), Type::Int | Type::LiteralInt(_)) {
                     ctx.error(format!(
-                        "decimal.round() scale argument must be 'int', got '{}'",
+                        "[E2507] decimal.round() scale argument must be 'int', got '{}'",
                         args[0].ty().display_name()
                     ));
                     return None;
+                }
+                if args.len() == 1 {
+                    validate_decimal_context_scale("decimal", "round", &args[0], ctx)?;
                 }
                 Some(Type::Decimal)
             }
@@ -111,17 +164,20 @@ pub(super) fn resolve_decimal_method_type(
             "round" => {
                 if args.len() > 1 {
                     ctx.error(format!(
-                        "bigdecimal.round() takes at most 1 argument, got {}",
+                        "[E2508] bigdecimal.round() takes at most 1 argument, got {}",
                         args.len()
                     ));
                     return None;
                 }
                 if args.len() == 1 && !matches!(args[0].ty(), Type::Int | Type::LiteralInt(_)) {
                     ctx.error(format!(
-                        "bigdecimal.round() scale argument must be 'int', got '{}'",
+                        "[E2508] bigdecimal.round() scale argument must be 'int', got '{}'",
                         args[0].ty().display_name()
                     ));
                     return None;
+                }
+                if args.len() == 1 {
+                    validate_decimal_context_scale("bigdecimal", "round", &args[0], ctx)?;
                 }
                 Some(Type::BigDecimal)
             }

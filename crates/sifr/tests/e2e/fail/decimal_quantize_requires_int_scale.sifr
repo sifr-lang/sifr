@@ -2,4 +2,4 @@ def main():
     d: decimal = Decimal("1.23")
     x: decimal = d.quantize("2")
 
-# expect-error: decimal.quantize() scale argument must be 'int', got 'str'
+# expect-error: [E2507] decimal.quantize() scale argument must be 'int', got 'str'
