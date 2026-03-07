@@ -182,9 +182,7 @@ impl Type {
             | Self::None
             | Self::Never
             | Self::Range
-            | Self::Decimal => {
-                OwnershipKind::Copy
-            }
+            | Self::Decimal => OwnershipKind::Copy,
             Self::LiteralInt(_) | Self::LiteralBool(_) => OwnershipKind::Copy,
             Self::Function(_) => OwnershipKind::Copy,
             Self::Str
@@ -202,7 +200,7 @@ impl Type {
             Self::TypeVar(_) => OwnershipKind::Move, // conservative: treat as Move
             Self::Callable(..) => OwnershipKind::Copy, // function pointers are Copy
             Self::Enum { .. } => OwnershipKind::Copy, // enums are Copy (repr(i64))
-            Self::BigInt => OwnershipKind::Move, // heap-allocated, not Copy
+            Self::BigInt => OwnershipKind::Move,     // heap-allocated, not Copy
             Self::BigDecimal => OwnershipKind::Move,
             // Union/Intersection: Move if any member is Move
             Self::Union(members) | Self::Intersection(members) => {
@@ -607,6 +605,7 @@ impl Type {
         let source = self.resolve_alias();
         let target_resolved = target.resolve_alias();
 
+        // Same-type nominal assignability, including Decimal/BigDecimal exact numeric types.
         if source == target_resolved {
             return true;
         }
@@ -784,6 +783,14 @@ mod tests {
         assert!(Type::Any.is_assignable_to(&Type::Int));
         assert!(Type::Int.is_assignable_to(&Type::Any));
         assert!(Type::Never.is_assignable_to(&Type::Int));
+    }
+
+    #[test]
+    fn test_decimal_assignability_contract() {
+        assert!(Type::Decimal.is_assignable_to(&Type::Decimal));
+        assert!(Type::BigDecimal.is_assignable_to(&Type::BigDecimal));
+        assert!(!Type::Decimal.is_assignable_to(&Type::BigDecimal));
+        assert!(!Type::BigDecimal.is_assignable_to(&Type::Decimal));
     }
 
     #[test]
