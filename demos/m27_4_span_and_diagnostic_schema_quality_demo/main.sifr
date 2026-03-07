@@ -1,0 +1,7 @@
+# m27_4 span and diagnostic schema quality demo
+#
+# Positive path: source compiles successfully while the CLI can render diagnostics
+# in either human or json formats using the canonical schema.
+
+def main():
+    print("m27_4 diagnostic schema quality demo")

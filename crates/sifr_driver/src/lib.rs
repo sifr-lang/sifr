@@ -6,6 +6,7 @@
 //! Stdlib `.sifr` files are embedded in the compiler binary via `include_str!`.
 //! They are compiled before user code (two-phase compilation).
 
+use serde::Serialize;
 use sifr_codegen::{
     generate_project, generate_project_with_deps_and_crates, generate_rust_multi,
     generate_rust_test, generate_rust_with_metadata, generate_rust_with_stdlib, StdlibCode,
@@ -584,6 +585,96 @@ pub enum CompilePhase {
     TypeCheck,
     Codegen,
     Build,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize)]
+pub enum Severity {
+    Error,
+    Warning,
+    Note,
+    Help,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize)]
+pub enum SuggestionKind {
+    DidYouMean,
+    ReplaceText,
+    InsertText,
+    DeleteText,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize)]
+pub struct DiagnosticSpan {
+    pub file: Option<String>,
+    pub line: Option<u32>,
+    pub column: Option<u32>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize)]
+pub struct RelatedSpan {
+    pub label: String,
+    pub span: DiagnosticSpan,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize)]
+pub struct DiagnosticChild {
+    pub severity: Severity,
+    pub message: String,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize)]
+pub struct DiagnosticSuggestion {
+    pub kind: SuggestionKind,
+    pub message: String,
+    pub replacement: Option<String>,
+    pub span: Option<DiagnosticSpan>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize)]
+pub struct CompilerDiagnostic {
+    pub code: String,
+    pub severity: Severity,
+    pub message: String,
+    pub url: String,
+    pub primary_span: Option<DiagnosticSpan>,
+    pub related_spans: Vec<RelatedSpan>,
+    pub children: Vec<DiagnosticChild>,
+    pub help: Option<String>,
+    pub suggestions: Vec<DiagnosticSuggestion>,
+}
+
+impl CompileError {
+    fn diagnostic_code(&self) -> &'static str {
+        match self.phase {
+            CompilePhase::Parse => "SIFR-PARSE-0001",
+            CompilePhase::TypeCheck => "SIFR-TYPE-0001",
+            CompilePhase::Codegen => "SIFR-CODEGEN-0001",
+            CompilePhase::Build => "SIFR-BUILD-0001",
+        }
+    }
+
+    fn diagnostic_severity(&self) -> Severity {
+        Severity::Error
+    }
+
+    pub fn to_diagnostic(&self) -> CompilerDiagnostic {
+        let code = self.diagnostic_code().to_string();
+        CompilerDiagnostic {
+            url: format!("https://sifr.dev/docs/errors/{code}"),
+            code,
+            severity: self.diagnostic_severity(),
+            message: self.message.clone(),
+            primary_span: None,
+            related_spans: Vec::new(),
+            children: Vec::new(),
+            help: None,
+            suggestions: Vec::new(),
+        }
+    }
+}
+
+pub fn compile_errors_to_diagnostics(errors: &[CompileError]) -> Vec<CompilerDiagnostic> {
+    errors.iter().map(CompileError::to_diagnostic).collect()
 }
 
 impl std::fmt::Display for CompileError {
@@ -1870,6 +1961,39 @@ mod tests {
         assert!(err
             .message
             .contains("panic boundary test: non-string panic payload"));
+    }
+
+    #[test]
+    fn test_compile_error_to_diagnostic_has_stable_code_and_url() {
+        let err = CompileError {
+            message: "unexpected token".to_string(),
+            phase: CompilePhase::Parse,
+        };
+        let diag = err.to_diagnostic();
+        assert_eq!(diag.code, "SIFR-PARSE-0001");
+        assert_eq!(diag.severity, Severity::Error);
+        assert_eq!(diag.url, "https://sifr.dev/docs/errors/SIFR-PARSE-0001");
+        assert_eq!(diag.message, "unexpected token");
+    }
+
+    #[test]
+    fn test_compile_errors_to_diagnostics_preserves_order() {
+        let errors = vec![
+            CompileError {
+                message: "first".to_string(),
+                phase: CompilePhase::TypeCheck,
+            },
+            CompileError {
+                message: "second".to_string(),
+                phase: CompilePhase::Codegen,
+            },
+        ];
+        let diagnostics = compile_errors_to_diagnostics(&errors);
+        assert_eq!(diagnostics.len(), 2);
+        assert_eq!(diagnostics[0].message, "first");
+        assert_eq!(diagnostics[1].message, "second");
+        assert_eq!(diagnostics[0].code, "SIFR-TYPE-0001");
+        assert_eq!(diagnostics[1].code, "SIFR-CODEGEN-0001");
     }
 
     fn parse_suite(source: &str) -> Vec<sifr_python_ast::Stmt> {

@@ -5,9 +5,10 @@
 //!   sifr run <file.sifr>      Compile and run
 //!   sifr check <file.sifr>    Type-check only
 //!   sifr emit <file.sifr>     Show generated Rust code
-use clap::{Parser, Subcommand};
+use clap::{Parser, Subcommand, ValueEnum};
 use sifr_driver::{
-    build, build_project, check, check_project, compile, run_tests, CompileError, CompileResult,
+    build, build_project, check, check_project, compile, compile_errors_to_diagnostics, run_tests,
+    CompileError, CompileResult,
 };
 use sifr_python_ast::Stmt;
 use sifr_python_parser::parse_module;
@@ -22,6 +23,10 @@ use std::process;
     about = "The Sifr programming language compiler"
 )]
 struct Cli {
+    /// Diagnostic output format
+    #[arg(long, value_enum, default_value_t = DiagnosticFormat::Human)]
+    diagnostic_format: DiagnosticFormat,
+
     #[command(subcommand)]
     command: Commands,
 }
@@ -59,6 +64,12 @@ enum Commands {
     },
 }
 
+#[derive(Clone, Copy, Debug, PartialEq, Eq, ValueEnum)]
+enum DiagnosticFormat {
+    Human,
+    Json,
+}
+
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 enum CompilationMode {
     SingleFile,
@@ -67,13 +78,14 @@ enum CompilationMode {
 
 fn main() {
     let cli = Cli::parse();
+    let diagnostic_format = cli.diagnostic_format;
 
     match cli.command {
-        Commands::Build { file, output } => cmd_build(&file, &output),
-        Commands::Run { file } => cmd_run(&file),
-        Commands::Check { file } => cmd_check(&file),
-        Commands::Emit { file } => cmd_emit(&file),
-        Commands::Test { dir } => cmd_test(&dir),
+        Commands::Build { file, output } => cmd_build(&file, &output, diagnostic_format),
+        Commands::Run { file } => cmd_run(&file, diagnostic_format),
+        Commands::Check { file } => cmd_check(&file, diagnostic_format),
+        Commands::Emit { file } => cmd_emit(&file, diagnostic_format),
+        Commands::Test { dir } => cmd_test(&dir, diagnostic_format),
     }
 }
 
@@ -181,7 +193,32 @@ impl Drop for InvocationWorkspace {
     }
 }
 
-fn cmd_build(file: &Path, output: &Path) {
+fn render_compile_errors(errors: &[CompileError], format: DiagnosticFormat) {
+    match format {
+        DiagnosticFormat::Human => {
+            for error in errors {
+                let _ = writeln!(io::stderr(), "{error}");
+            }
+        }
+        DiagnosticFormat::Json => {
+            let diagnostics = compile_errors_to_diagnostics(errors);
+            match serde_json::to_string_pretty(&diagnostics) {
+                Ok(json) => {
+                    let _ = writeln!(io::stderr(), "{json}");
+                }
+                Err(e) => {
+                    let _ = writeln!(
+                        io::stderr(),
+                        "build error: failed to serialize diagnostics as json: {e}"
+                    );
+                    process::exit(2);
+                }
+            }
+        }
+    }
+}
+
+fn cmd_build(file: &Path, output: &Path, diagnostic_format: DiagnosticFormat) {
     let result = compile_entrypoint(file, output);
 
     match result {
@@ -193,15 +230,13 @@ fn cmd_build(file: &Path, output: &Path) {
             );
         }
         Err(errors) => {
-            for error in &errors {
-                let _ = writeln!(io::stderr(), "{error}");
-            }
+            render_compile_errors(&errors, diagnostic_format);
             process::exit(1);
         }
     }
 }
 
-fn cmd_run(file: &Path) {
+fn cmd_run(file: &Path, diagnostic_format: DiagnosticFormat) {
     let workspace = match InvocationWorkspace::create("sifr_run") {
         Ok(workspace) => workspace,
         Err(e) => {
@@ -229,28 +264,31 @@ fn cmd_run(file: &Path) {
             }
         }
         Err(errors) => {
-            for error in &errors {
-                let _ = writeln!(io::stderr(), "{error}");
-            }
+            render_compile_errors(&errors, diagnostic_format);
             process::exit(1);
         }
     }
 }
 
-fn cmd_check(file: &Path) {
+fn cmd_check(file: &Path, diagnostic_format: DiagnosticFormat) {
     let errors = check_entrypoint(file);
 
     if errors.is_empty() {
-        let _ = writeln!(io::stderr(), "no errors found");
-    } else {
-        for error in &errors {
-            let _ = writeln!(io::stderr(), "{error}");
+        match diagnostic_format {
+            DiagnosticFormat::Human => {
+                let _ = writeln!(io::stderr(), "no errors found");
+            }
+            DiagnosticFormat::Json => {
+                let _ = writeln!(io::stdout(), "[]");
+            }
         }
+    } else {
+        render_compile_errors(&errors, diagnostic_format);
         process::exit(1);
     }
 }
 
-fn cmd_test(dir: &Path) {
+fn cmd_test(dir: &Path, diagnostic_format: DiagnosticFormat) {
     match run_tests(dir) {
         Ok(success) => {
             if !success {
@@ -258,15 +296,13 @@ fn cmd_test(dir: &Path) {
             }
         }
         Err(errors) => {
-            for error in &errors {
-                let _ = writeln!(io::stderr(), "{error}");
-            }
+            render_compile_errors(&errors, diagnostic_format);
             process::exit(1);
         }
     }
 }
 
-fn cmd_emit(file: &Path) {
+fn cmd_emit(file: &Path, diagnostic_format: DiagnosticFormat) {
     let source = read_source(file);
 
     match compile(&source) {
@@ -274,9 +310,7 @@ fn cmd_emit(file: &Path) {
             let _ = write!(io::stdout(), "{rust_source}");
         }
         CompileResult::Errors { errors } => {
-            for error in &errors {
-                let _ = writeln!(io::stderr(), "{error}");
-            }
+            render_compile_errors(&errors, diagnostic_format);
             process::exit(1);
         }
     }
