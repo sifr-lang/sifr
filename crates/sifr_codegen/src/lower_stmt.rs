@@ -2566,24 +2566,65 @@ fn build_list_get_mut_block_stmt(
     RustStmt::Block(vec![
         RustStmt::Let {
             mutable: false,
-            name: "__idx".to_string(),
+            name: "__idx_raw".to_string(),
             ty: None,
-            value: RustExpr::Cast {
-                expr: Box::new(lowered_index),
-                ty: RustType::Named("usize".to_string()),
-            },
+            value: lowered_index,
         },
-        RustStmt::IfLet {
-            pattern: "Some(__elem)".to_string(),
-            expr: RustExpr::MethodCall {
-                receiver: Box::new(receiver),
-                method: "get_mut".to_string(),
-                args: vec![RustExpr::Ident("__idx".to_string())],
+        RustStmt::Let {
+            mutable: false,
+            name: "__idx_norm".to_string(),
+            ty: None,
+            value: build_normalized_list_index_i64_expr(
+                receiver.clone(),
+                "__idx_raw",
+            ),
+        },
+        RustStmt::If {
+            cond: RustExpr::BinOp {
+                left: Box::new(RustExpr::Ident("__idx_norm".to_string())),
+                op: ">=".to_string(),
+                right: Box::new(RustExpr::Literal(RustLiteral::Int(0))),
             },
-            then_body: vec![then_body_stmt],
+            then_body: vec![RustStmt::IfLet {
+                pattern: "Some(__elem)".to_string(),
+                expr: RustExpr::MethodCall {
+                    receiver: Box::new(receiver),
+                    method: "get_mut".to_string(),
+                    args: vec![RustExpr::Cast {
+                        expr: Box::new(RustExpr::Ident("__idx_norm".to_string())),
+                        ty: RustType::Named("usize".to_string()),
+                    }],
+                },
+                then_body: vec![then_body_stmt],
+                else_body: None,
+            }],
             else_body: None,
         },
     ])
+}
+
+fn build_normalized_list_index_i64_expr(receiver: RustExpr, raw_index_name: &str) -> RustExpr {
+    let raw_ident = || RustExpr::Ident(raw_index_name.to_string());
+    RustExpr::If {
+        cond: Box::new(RustExpr::BinOp {
+            left: Box::new(raw_ident()),
+            op: "<".to_string(),
+            right: Box::new(RustExpr::Literal(RustLiteral::Int(0))),
+        }),
+        then_expr: Box::new(RustExpr::BinOp {
+            left: Box::new(RustExpr::Cast {
+                expr: Box::new(RustExpr::MethodCall {
+                    receiver: Box::new(receiver),
+                    method: "len".to_string(),
+                    args: vec![],
+                }),
+                ty: RustType::I64,
+            }),
+            op: "+".to_string(),
+            right: Box::new(raw_ident()),
+        }),
+        else_expr: Some(Box::new(raw_ident())),
+    }
 }
 
 fn build_dict_subscript_assign_stmt(
@@ -2625,19 +2666,59 @@ fn try_lower_simple_delete_stmt(object: &HirExpr, index: &HirExpr) -> Option<Vec
     let receiver = try_lower_name_ident_expr(object)?;
     let lowered_index = try_lower_leaf_or_name_expr(index)?;
     match resolve_alias_type(object.ty()) {
-        Type::List(_) => Some(vec![RustStmt::Let {
-            mutable: false,
-            name: "_".to_string(),
-            ty: None,
-            value: RustExpr::MethodCall {
-                receiver: Box::new(receiver),
-                method: "remove".to_string(),
-                args: vec![RustExpr::Cast {
-                    expr: Box::new(lowered_index),
-                    ty: RustType::Named("usize".to_string()),
-                }],
+        Type::List(_) => Some(vec![RustStmt::Block(vec![
+            RustStmt::Let {
+                mutable: false,
+                name: "__idx_raw".to_string(),
+                ty: None,
+                value: lowered_index,
             },
-        }]),
+            RustStmt::Let {
+                mutable: false,
+                name: "__idx_norm".to_string(),
+                ty: None,
+                value: build_normalized_list_index_i64_expr(
+                    receiver.clone(),
+                    "__idx_raw",
+                ),
+            },
+            RustStmt::If {
+                cond: RustExpr::BinOp {
+                    left: Box::new(RustExpr::BinOp {
+                        left: Box::new(RustExpr::Ident("__idx_norm".to_string())),
+                        op: ">=".to_string(),
+                        right: Box::new(RustExpr::Literal(RustLiteral::Int(0))),
+                    }),
+                    op: "&&".to_string(),
+                    right: Box::new(RustExpr::BinOp {
+                        left: Box::new(RustExpr::Cast {
+                            expr: Box::new(RustExpr::Ident("__idx_norm".to_string())),
+                            ty: RustType::Named("usize".to_string()),
+                        }),
+                        op: "<".to_string(),
+                        right: Box::new(RustExpr::MethodCall {
+                            receiver: Box::new(receiver.clone()),
+                            method: "len".to_string(),
+                            args: vec![],
+                        }),
+                    }),
+                },
+                then_body: vec![RustStmt::Let {
+                    mutable: false,
+                    name: "_".to_string(),
+                    ty: None,
+                    value: RustExpr::MethodCall {
+                        receiver: Box::new(receiver),
+                        method: "remove".to_string(),
+                        args: vec![RustExpr::Cast {
+                            expr: Box::new(RustExpr::Ident("__idx_norm".to_string())),
+                            ty: RustType::Named("usize".to_string()),
+                        }],
+                    },
+                }],
+                else_body: None,
+            },
+        ])]),
         Type::Dict(_, _) => Some(vec![RustStmt::Let {
             mutable: false,
             name: "_".to_string(),
@@ -2673,40 +2754,78 @@ fn try_lower_simple_nested_subscript_assign_stmt(
     Some(vec![RustStmt::Block(vec![
         RustStmt::Let {
             mutable: false,
-            name: "__oi".to_string(),
+            name: "__oi_raw".to_string(),
             ty: None,
-            value: RustExpr::Cast {
-                expr: Box::new(try_lower_leaf_or_name_expr(outer_index)?),
-                ty: RustType::Named("usize".to_string()),
-            },
+            value: try_lower_leaf_or_name_expr(outer_index)?,
         },
         RustStmt::Let {
             mutable: false,
-            name: "__ii".to_string(),
+            name: "__oi_norm".to_string(),
             ty: None,
-            value: RustExpr::Cast {
-                expr: Box::new(try_lower_leaf_or_name_expr(inner_index)?),
-                ty: RustType::Named("usize".to_string()),
-            },
+            value: build_normalized_list_index_i64_expr(
+                RustExpr::Ident(object.to_string()),
+                "__oi_raw",
+            ),
         },
-        RustStmt::IfLet {
-            pattern: "Some(__row)".to_string(),
-            expr: RustExpr::MethodCall {
-                receiver: Box::new(RustExpr::Ident(object.to_string())),
-                method: "get_mut".to_string(),
-                args: vec![RustExpr::Ident("__oi".to_string())],
+        RustStmt::If {
+            cond: RustExpr::BinOp {
+                left: Box::new(RustExpr::Ident("__oi_norm".to_string())),
+                op: ">=".to_string(),
+                right: Box::new(RustExpr::Literal(RustLiteral::Int(0))),
             },
             then_body: vec![RustStmt::IfLet {
-                pattern: "Some(__elem)".to_string(),
+                pattern: "Some(__row)".to_string(),
                 expr: RustExpr::MethodCall {
-                    receiver: Box::new(RustExpr::Ident("__row".to_string())),
+                    receiver: Box::new(RustExpr::Ident(object.to_string())),
                     method: "get_mut".to_string(),
-                    args: vec![RustExpr::Ident("__ii".to_string())],
+                    args: vec![RustExpr::Cast {
+                        expr: Box::new(RustExpr::Ident("__oi_norm".to_string())),
+                        ty: RustType::Named("usize".to_string()),
+                    }],
                 },
-                then_body: vec![RustStmt::Assign {
-                    target: RustExpr::Deref(Box::new(RustExpr::Ident("__elem".to_string()))),
-                    value: try_lower_leaf_or_name_expr(value)?,
-                }],
+                then_body: vec![
+                    RustStmt::Let {
+                        mutable: false,
+                        name: "__ii_raw".to_string(),
+                        ty: None,
+                        value: try_lower_leaf_or_name_expr(inner_index)?,
+                    },
+                    RustStmt::Let {
+                        mutable: false,
+                        name: "__ii_norm".to_string(),
+                        ty: None,
+                        value: build_normalized_list_index_i64_expr(
+                            RustExpr::Ident("__row".to_string()),
+                            "__ii_raw",
+                        ),
+                    },
+                    RustStmt::If {
+                        cond: RustExpr::BinOp {
+                            left: Box::new(RustExpr::Ident("__ii_norm".to_string())),
+                            op: ">=".to_string(),
+                            right: Box::new(RustExpr::Literal(RustLiteral::Int(0))),
+                        },
+                        then_body: vec![RustStmt::IfLet {
+                            pattern: "Some(__elem)".to_string(),
+                            expr: RustExpr::MethodCall {
+                                receiver: Box::new(RustExpr::Ident("__row".to_string())),
+                                method: "get_mut".to_string(),
+                                args: vec![RustExpr::Cast {
+                                    expr: Box::new(RustExpr::Ident("__ii_norm".to_string())),
+                                    ty: RustType::Named("usize".to_string()),
+                                }],
+                            },
+                            then_body: vec![RustStmt::Assign {
+                                target: RustExpr::Deref(Box::new(RustExpr::Ident(
+                                    "__elem".to_string(),
+                                ))),
+                                value: try_lower_leaf_or_name_expr(value)?,
+                            }],
+                            else_body: None,
+                        }],
+                        else_body: None,
+                    },
+                ],
                 else_body: None,
             }],
             else_body: None,
@@ -3221,35 +3340,49 @@ mod tests {
         let RustStmt::Block(stmts) = &lowered[0] else {
             panic!("expected block-lowered attribute list subscript assignment");
         };
-        assert_eq!(stmts.len(), 2);
+        assert_eq!(stmts.len(), 3);
         assert!(matches!(
-            &stmts[1],
-            RustStmt::IfLet {
-                pattern,
-                expr: RustExpr::MethodCall {
-                    receiver,
-                    method,
-                    args,
-                },
+            &stmts[2],
+            RustStmt::If {
                 then_body,
                 else_body: None,
-            } if pattern == "Some(__elem)"
-                && method == "get_mut"
-                && matches!(
-                    receiver.as_ref(),
-                    RustExpr::Field { expr, field }
-                        if matches!(expr.as_ref(), RustExpr::Ident(name) if name == "self")
-                        && field == "items"
-                )
-                && matches!(args.first(), Some(RustExpr::Ident(name)) if name == "__idx")
-                && matches!(
-                    then_body.first(),
-                    Some(RustStmt::Assign {
-                        target: RustExpr::Deref(target),
-                        value: RustExpr::Ident(rhs),
-                    }) if matches!(target.as_ref(), RustExpr::Ident(name) if name == "__elem")
-                        && rhs == "v"
-                )
+                ..
+            } if matches!(
+                then_body.first(),
+                Some(RustStmt::IfLet {
+                    pattern,
+                    expr: RustExpr::MethodCall {
+                        receiver,
+                        method,
+                        args,
+                    },
+                    then_body,
+                    else_body: None,
+                }) if pattern == "Some(__elem)"
+                    && method == "get_mut"
+                    && matches!(
+                        receiver.as_ref(),
+                        RustExpr::Field { expr, field }
+                            if matches!(expr.as_ref(), RustExpr::Ident(name) if name == "self")
+                            && field == "items"
+                    )
+                    && matches!(
+                        args.first(),
+                        Some(RustExpr::Cast {
+                            expr: idx,
+                            ty: RustType::Named(usize_ty),
+                        }) if matches!(idx.as_ref(), RustExpr::Ident(name) if name == "__idx_norm")
+                            && usize_ty == "usize"
+                    )
+                    && matches!(
+                        then_body.first(),
+                        Some(RustStmt::Assign {
+                            target: RustExpr::Deref(target),
+                            value: RustExpr::Ident(rhs),
+                        }) if matches!(target.as_ref(), RustExpr::Ident(name) if name == "__elem")
+                            && rhs == "v"
+                    )
+            )
         ));
     }
 
@@ -3375,44 +3508,53 @@ mod tests {
         let RustStmt::Block(stmts) = &lowered[0] else {
             panic!("expected block-lowered list subscript assignment");
         };
-        assert_eq!(stmts.len(), 2);
+        assert_eq!(stmts.len(), 3);
         assert!(matches!(
             stmts[0],
             RustStmt::Let {
                 mutable: false,
                 ref name,
-                value: RustExpr::Cast {
-                    expr: ref inner,
-                    ty: RustType::Named(ref usize_ty),
-                },
+                value: RustExpr::Ident(ref inner),
                 ..
-            } if name == "__idx"
-                && usize_ty == "usize"
-                && matches!(inner.as_ref(), RustExpr::Ident(idx) if idx == "i")
+            } if name == "__idx_raw" && inner == "i"
         ));
         assert!(matches!(
-            stmts[1],
-            RustStmt::IfLet {
-                ref pattern,
-                expr: RustExpr::MethodCall {
-                    receiver: ref recv,
-                    ref method,
-                    ref args,
-                },
-                then_body: ref body,
+            stmts[2],
+            RustStmt::If {
+                then_body: ref outer_then,
                 else_body: None,
-            } if pattern == "Some(__elem)"
-                && method == "get_mut"
-                && matches!(recv.as_ref(), RustExpr::Ident(name) if name == "items")
-                && matches!(args.first(), Some(RustExpr::Ident(name)) if name == "__idx")
-                && matches!(
-                    body.first(),
-                    Some(RustStmt::Assign {
-                        target: RustExpr::Deref(target),
-                        value: RustExpr::Ident(rhs),
-                    }) if matches!(target.as_ref(), RustExpr::Ident(name) if name == "__elem")
-                        && rhs == "v"
-                )
+                ..
+            } if matches!(
+                outer_then.first(),
+                Some(RustStmt::IfLet {
+                    pattern,
+                    expr: RustExpr::MethodCall {
+                        receiver: recv,
+                        method,
+                        args,
+                    },
+                    then_body: body,
+                    else_body: None,
+                }) if pattern == "Some(__elem)"
+                    && method == "get_mut"
+                    && matches!(recv.as_ref(), RustExpr::Ident(name) if name == "items")
+                    && matches!(
+                        args.first(),
+                        Some(RustExpr::Cast {
+                            expr: inner,
+                            ty: RustType::Named(usize_ty),
+                        }) if matches!(inner.as_ref(), RustExpr::Ident(name) if name == "__idx_norm")
+                            && usize_ty == "usize"
+                    )
+                    && matches!(
+                        body.first(),
+                        Some(RustStmt::Assign {
+                            target: RustExpr::Deref(target),
+                            value: RustExpr::Ident(rhs),
+                        }) if matches!(target.as_ref(), RustExpr::Ident(name) if name == "__elem")
+                            && rhs == "v"
+                    )
+            )
         ));
     }
 
@@ -3496,25 +3638,36 @@ mod tests {
         assert_eq!(lowered.len(), 1);
         assert!(matches!(
             lowered[0],
-            RustStmt::Let {
-                mutable: false,
-                ref name,
-                value: RustExpr::MethodCall {
-                    receiver: ref recv,
-                    ref method,
-                    ref args,
-                },
-                ..
-            } if name == "_"
-                && method == "remove"
-                && matches!(recv.as_ref(), RustExpr::Ident(obj) if obj == "items")
-                && matches!(
-                    args.first(),
-                    Some(RustExpr::Cast {
-                        expr: inner,
-                        ty: RustType::Named(usize_ty),
-                    }) if matches!(inner.as_ref(), RustExpr::Ident(idx) if idx == "i")
-                        && usize_ty == "usize"
+            RustStmt::Block(ref stmts)
+                if matches!(
+                    stmts.get(2),
+                    Some(RustStmt::If {
+                        then_body,
+                        else_body: None,
+                        ..
+                    }) if matches!(
+                        then_body.first(),
+                        Some(RustStmt::Let {
+                            mutable: false,
+                            name,
+                            value: RustExpr::MethodCall {
+                                receiver: recv,
+                                method,
+                                args,
+                            },
+                            ..
+                        }) if name == "_"
+                            && method == "remove"
+                            && matches!(recv.as_ref(), RustExpr::Ident(obj) if obj == "items")
+                            && matches!(
+                                args.first(),
+                                Some(RustExpr::Cast {
+                                    expr: inner,
+                                    ty: RustType::Named(usize_ty),
+                                }) if matches!(inner.as_ref(), RustExpr::Ident(idx) if idx == "__idx_norm")
+                                    && usize_ty == "usize"
+                            )
+                    )
                 )
         ));
     }
@@ -3601,61 +3754,84 @@ mod tests {
             &stmts[0],
             RustStmt::Let {
                 ref name,
-                value: RustExpr::Cast { expr, ty: RustType::Named(ref usize_ty), .. },
+                value: RustExpr::Ident(ref idx),
                 ..
-            } if name == "__oi"
-                && usize_ty == "usize"
-                && matches!(expr.as_ref(), RustExpr::Ident(idx) if idx == "i")
+            } if name == "__oi_raw" && idx == "i"
         ));
         assert!(matches!(
             &stmts[1],
             RustStmt::Let {
                 ref name,
-                value: RustExpr::Cast { expr, ty: RustType::Named(ref usize_ty), .. },
+                value: RustExpr::If { .. },
                 ..
-            } if name == "__ii"
-                && usize_ty == "usize"
-                && matches!(expr.as_ref(), RustExpr::Ident(idx) if idx == "j")
+            } if name == "__oi_norm"
         ));
         assert!(matches!(
             &stmts[2],
-            RustStmt::IfLet {
-                ref pattern,
-                expr: RustExpr::MethodCall {
-                    receiver: ref recv,
-                    ref method,
-                    ref args,
-                },
-                then_body: ref outer_body,
+            RustStmt::If {
+                then_body: ref outer_then,
                 else_body: None,
-            } if pattern == "Some(__row)"
-                && method == "get_mut"
-                && matches!(recv.as_ref(), RustExpr::Ident(name) if name == "matrix")
-                && matches!(args.first(), Some(RustExpr::Ident(name)) if name == "__oi")
+                ..
+            } if matches!(
+                outer_then.first(),
+                Some(RustStmt::IfLet {
+                    pattern,
+                    expr: RustExpr::MethodCall {
+                        receiver: recv,
+                        method,
+                        args,
+                    },
+                    then_body: outer_body,
+                    else_body: None,
+                }) if pattern == "Some(__row)"
+                    && method == "get_mut"
+                    && matches!(recv.as_ref(), RustExpr::Ident(name) if name == "matrix")
+                    && matches!(
+                        args.first(),
+                        Some(RustExpr::Cast {
+                            expr,
+                            ty: RustType::Named(usize_ty),
+                        }) if matches!(expr.as_ref(), RustExpr::Ident(name) if name == "__oi_norm")
+                            && usize_ty == "usize"
+                    )
                 && matches!(
-                    outer_body.first(),
-                    Some(RustStmt::IfLet {
-                        pattern: inner_pattern,
-                        expr: RustExpr::MethodCall {
-                            receiver: inner_recv,
-                            method: inner_method,
-                            args: inner_args,
-                        },
-                        then_body: inner_then,
-                        else_body: None,
-                    }) if inner_pattern == "Some(__elem)"
-                        && inner_method == "get_mut"
-                        && matches!(inner_recv.as_ref(), RustExpr::Ident(name) if name == "__row")
-                        && matches!(inner_args.first(), Some(RustExpr::Ident(name)) if name == "__ii")
-                        && matches!(
-                            inner_then.first(),
-                            Some(RustStmt::Assign {
-                                target: RustExpr::Deref(target),
-                                value: RustExpr::Ident(rhs),
-                            }) if matches!(target.as_ref(), RustExpr::Ident(name) if name == "__elem")
-                                && rhs == "v"
-                        )
+                    outer_body.last(),
+                    Some(RustStmt::If {
+                        then_body: inner_outer_then,
+                        ..
+                    }) if matches!(
+                        inner_outer_then.first(),
+                        Some(RustStmt::IfLet {
+                            pattern: inner_pattern,
+                            expr: RustExpr::MethodCall {
+                                receiver: inner_recv,
+                                method: inner_method,
+                                args: inner_args,
+                            },
+                            then_body: inner_then,
+                            else_body: None,
+                        }) if inner_pattern == "Some(__elem)"
+                            && inner_method == "get_mut"
+                            && matches!(inner_recv.as_ref(), RustExpr::Ident(name) if name == "__row")
+                            && matches!(
+                                inner_args.first(),
+                                Some(RustExpr::Cast {
+                                    expr,
+                                    ty: RustType::Named(usize_ty),
+                                }) if matches!(expr.as_ref(), RustExpr::Ident(name) if name == "__ii_norm")
+                                    && usize_ty == "usize"
+                            )
+                            && matches!(
+                                inner_then.first(),
+                                Some(RustStmt::Assign {
+                                    target: RustExpr::Deref(target),
+                                    value: RustExpr::Ident(rhs),
+                                }) if matches!(target.as_ref(), RustExpr::Ident(name) if name == "__elem")
+                                    && rhs == "v"
+                            )
+                    )
                 )
+            )
         ));
     }
 
@@ -3696,21 +3872,24 @@ mod tests {
         let RustStmt::Block(stmts) = &lowered[0] else {
             panic!("expected block-lowered list subscript augassign");
         };
-        assert_eq!(stmts.len(), 2);
+        assert_eq!(stmts.len(), 3);
         assert!(matches!(
-            &stmts[1],
-            RustStmt::IfLet {
+            &stmts[2],
+            RustStmt::If {
                 then_body,
                 ..
             } if matches!(
                 then_body.first(),
-                Some(RustStmt::AugAssign {
-                    target: RustExpr::Deref(target),
-                    op,
-                    value: RustExpr::Ident(rhs),
-                }) if matches!(target.as_ref(), RustExpr::Ident(name) if name == "__elem")
-                    && op == "+"
-                    && rhs == "delta"
+                Some(RustStmt::IfLet { then_body, .. }) if matches!(
+                    then_body.first(),
+                    Some(RustStmt::AugAssign {
+                        target: RustExpr::Deref(target),
+                        op,
+                        value: RustExpr::Ident(rhs),
+                    }) if matches!(target.as_ref(), RustExpr::Ident(name) if name == "__elem")
+                        && op == "+"
+                        && rhs == "delta"
+                )
             )
         ));
     }
@@ -3740,19 +3919,22 @@ mod tests {
                 panic!("expected block-lowered list subscript bitwise/shift augassign");
             };
             assert!(matches!(
-                &stmts[1],
-                RustStmt::IfLet {
+                &stmts[2],
+                RustStmt::If {
                     then_body,
                     ..
                 } if matches!(
                     then_body.first(),
-                    Some(RustStmt::AugAssign {
-                        target: RustExpr::Deref(target),
-                        op,
-                        value: RustExpr::Ident(rhs),
-                    }) if matches!(target.as_ref(), RustExpr::Ident(name) if name == "__elem")
-                        && op == expected
-                        && rhs == "rhs"
+                    Some(RustStmt::IfLet { then_body, .. }) if matches!(
+                        then_body.first(),
+                        Some(RustStmt::AugAssign {
+                            target: RustExpr::Deref(target),
+                            op,
+                            value: RustExpr::Ident(rhs),
+                        }) if matches!(target.as_ref(), RustExpr::Ident(name) if name == "__elem")
+                            && op == expected
+                            && rhs == "rhs"
+                    )
                 )
             ));
         }
@@ -3870,19 +4052,22 @@ mod tests {
             panic!("expected block-lowered list subscript floor-div augassign");
         };
         assert!(matches!(
-            &stmts[1],
-            RustStmt::IfLet {
+            &stmts[2],
+            RustStmt::If {
                 then_body,
                 ..
             } if matches!(
                 then_body.first(),
-                Some(RustStmt::Assign {
-                    target: RustExpr::Deref(target),
-                    value: RustExpr::BinOp { left, op, right },
-                }) if matches!(target.as_ref(), RustExpr::Ident(name) if name == "__elem")
-                    && matches!(left.as_ref(), RustExpr::Deref(inner) if matches!(inner.as_ref(), RustExpr::Ident(name) if name == "__elem"))
-                    && op == "/"
-                    && matches!(right.as_ref(), RustExpr::Ident(name) if name == "d")
+                Some(RustStmt::IfLet { then_body, .. }) if matches!(
+                    then_body.first(),
+                    Some(RustStmt::Assign {
+                        target: RustExpr::Deref(target),
+                        value: RustExpr::BinOp { left, op, right },
+                    }) if matches!(target.as_ref(), RustExpr::Ident(name) if name == "__elem")
+                        && matches!(left.as_ref(), RustExpr::Deref(inner) if matches!(inner.as_ref(), RustExpr::Ident(name) if name == "__elem"))
+                        && op == "/"
+                        && matches!(right.as_ref(), RustExpr::Ident(name) if name == "d")
+                )
             )
         ));
     }
@@ -3905,25 +4090,28 @@ mod tests {
             panic!("expected block-lowered list subscript power augassign");
         };
         assert!(matches!(
-            &stmts[1],
-            RustStmt::IfLet {
+            &stmts[2],
+            RustStmt::If {
                 then_body,
                 ..
             } if matches!(
                 then_body.first(),
-                Some(RustStmt::Assign {
-                    target: RustExpr::Deref(target),
-                    value: RustExpr::MethodCall { receiver, method, args },
-                }) if matches!(target.as_ref(), RustExpr::Ident(name) if name == "__elem")
-                    && matches!(receiver.as_ref(), RustExpr::Ident(name) if name == "__elem")
-                    && method == "pow"
-                    && matches!(
-                        args.first(),
-                        Some(RustExpr::Cast {
-                            expr,
-                            ty: RustType::Named(name),
-                        }) if matches!(expr.as_ref(), RustExpr::Ident(v) if v == "p") && name == "u32"
-                    )
+                Some(RustStmt::IfLet { then_body, .. }) if matches!(
+                    then_body.first(),
+                    Some(RustStmt::Assign {
+                        target: RustExpr::Deref(target),
+                        value: RustExpr::MethodCall { receiver, method, args },
+                    }) if matches!(target.as_ref(), RustExpr::Ident(name) if name == "__elem")
+                        && matches!(receiver.as_ref(), RustExpr::Ident(name) if name == "__elem")
+                        && method == "pow"
+                        && matches!(
+                            args.first(),
+                            Some(RustExpr::Cast {
+                                expr,
+                                ty: RustType::Named(name),
+                            }) if matches!(expr.as_ref(), RustExpr::Ident(v) if v == "p") && name == "u32"
+                        )
+                )
             )
         ));
     }

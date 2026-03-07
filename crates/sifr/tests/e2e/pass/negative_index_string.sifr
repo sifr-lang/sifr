@@ -1,8 +1,10 @@
 def main():
     s: str = "hello"
     c1: str | None = s[-1]
+    assert c1 is not None
     if c1 is not None:
         assert str(c1) == 'o'
     c2: str | None = s[-2]
+    assert c2 is not None
     if c2 is not None:
         assert str(c2) == 'l'

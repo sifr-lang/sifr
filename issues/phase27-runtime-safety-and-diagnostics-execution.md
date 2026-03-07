@@ -14,8 +14,8 @@ Loop per part: Work -> Validate -> PR -> Review -> Merge -> Mark Done
 - [x] Milestone quality-contract checks include at least one positive-path and one negative-path validation
 - [x] Full local suite passes: `/Users/yaseralnajjar/work/sifr/codebase/scripts/run_all_tests.sh`
 - [x] Milestone demo runs successfully before opening each part PR
-- [ ] PR opened, reviewed, and merged before starting next part
-- [ ] Roadmap/phase/issues docs updated with latest status and merged PR links
+- [x] PR opened, reviewed, and merged before starting next part
+- [x] Roadmap/phase/issues docs updated with latest status and merged PR links
 
 ## Full Phase 27 To-Do Plan
 
@@ -25,14 +25,14 @@ Loop per part: Work -> Validate -> PR -> Review -> Merge -> Mark Done
 - [x] Add demo: `demos/m27_1_remove_data_dependent_unwrap_expect_demo`
 - [x] Add negative case for unsafe optional method usage
 - [x] Run milestone demo + targeted tests + full local suite
-- [ ] Open PR, review, and merge
+- [x] Open PR, review, and merge
 
 ### Part 2: milestone_27_2 Indexing and Semantics Parity Fixes
-- [ ] Fix negative indexing parity across read/mutation/index-derived flows
-- [ ] Add strict negative-index regressions that fail if values silently degrade to `None`
-- [ ] Add demo: `demos/m27_2_indexing_and_semantics_parity_fixes_demo`
-- [ ] Add negative case
-- [ ] Run milestone demo + targeted tests + full local suite
+- [x] Fix negative indexing parity across read/mutation/index-derived flows
+- [x] Add strict negative-index regressions that fail if values silently degrade to `None`
+- [x] Add demo: `demos/m27_2_indexing_and_semantics_parity_fixes_demo`
+- [x] Add negative case
+- [x] Run milestone demo + targeted tests + full local suite
 - [ ] Open PR, review, and merge
 
 ### Part 3: milestone_27_3 Defaults and Panic-to-Diagnostic Conversion
@@ -73,14 +73,14 @@ Loop per part: Work -> Validate -> PR -> Review -> Merge -> Mark Done
 - [ ] Open PR, review, and merge
 
 ## Part 1: milestone_27_1 Remove Data-Dependent `unwrap/expect`
-status: done (2026-03-07, PR: pending)
+status: done (2026-03-07, PR #897)
 
 - [x] Generated data-dependent unwrap/expect removed from option-len and non-optional index fallback paths
 - [x] Positive-path validation recorded
 - [x] Negative-path validation recorded
 - [x] Run milestone demo
 - [x] Run full local suite
-- [ ] Open PR, review, and merge
+- [x] Open PR, review, and merge
 - [x] Mark part progress in this checklist
 
 Validation evidence:
@@ -91,5 +91,27 @@ Validation evidence:
 - Positive path: `/Users/yaseralnajjar/work/sifr/codebase/scripts/run_all_tests.sh` -> pass (401 pass tests completed).
 - Negative path: `cargo run -q -p sifr -- run demos/m27_1_remove_data_dependent_unwrap_expect_demo/negative_cases/option_method_without_narrowing/main.sifr` -> exits `1` with `type error: type 'None | list[int]' has no method 'len'`.
 
+## Part 2: milestone_27_2 Indexing and Semantics Parity Fixes
+status: done (2026-03-07, PR: pending)
+
+- [x] Negative indexing parity fixed across list mutation/delete and nested mutation paths
+- [x] Strong read/mutation negative-index regressions added
+- [x] Positive-path validation recorded
+- [x] Negative-path validation recorded
+- [x] Run milestone demo
+- [x] Run full local suite
+- [ ] Open PR, review, and merge
+- [x] Mark part progress in this checklist
+
+Validation evidence:
+- Positive path: `cargo test -q -p sifr_codegen` -> pass.
+- Positive path: `cargo run -q -p sifr -- run crates/sifr/tests/e2e/pass/negative_index_list.sifr` -> pass (now asserts non-`None` for `[-1]` and `[-2]`).
+- Positive path: `cargo run -q -p sifr -- run crates/sifr/tests/e2e/pass/negative_index_string.sifr` -> pass (now asserts non-`None` for `[-1]` and `[-2]`).
+- Positive path: `cargo run -q -p sifr -- run crates/sifr/tests/e2e/pass/negative_index_mutations.sifr` -> pass (`[-1]` assignment/augassign/delete semantics validated).
+- Positive path: `cargo run -q -p sifr -- run demos/m27_2_indexing_and_semantics_parity_fixes_demo/main.sifr` -> prints `m27_2 indexing and semantics parity fixes demo:` then `[1, 7]`.
+- Positive path: `/Users/yaseralnajjar/work/sifr/codebase/scripts/run_all_tests.sh` -> pass (402 pass tests completed).
+- Negative path: `cargo run -q -p sifr -- run demos/m27_2_indexing_and_semantics_parity_fixes_demo/negative_cases/invalid_index_type/main.sifr` -> exits `1` with `type error: cannot index type 'list[int]' with 'str'`.
+
 ## PR Log
-- Part 1: pending
+- Part 1: https://github.com/yaseralnajjar/sifr/pull/897
+- Part 2: pending

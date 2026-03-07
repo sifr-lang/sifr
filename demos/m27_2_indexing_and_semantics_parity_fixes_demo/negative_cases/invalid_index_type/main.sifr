@@ -1,0 +1,5 @@
+# negative path: invalid index type must fail with a deterministic diagnostic.
+
+def main():
+    items: list[int] = [1, 2, 3]
+    _ = items["0"]
