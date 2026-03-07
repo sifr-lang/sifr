@@ -57,6 +57,19 @@ Minimum suite kinds:
 - `ecosystem-broader`
   - larger non-blocking compatibility lane for signal only
 
+## Test Case Format Conventions
+- The phase must define canonical fixture and baseline conventions for every suite kind it introduces.
+- At minimum, the conventions must cover:
+  - `diagnostics` fixture layout and expected-output representation
+  - `fixedbugs` issue-link format and required metadata
+  - `crashes` sentinel format and promotion-to-regression rules
+  - `oss-curated` corpus manifest format, including pinned revisions and command metadata
+  - `property` and `fuzz-smoke` manifest/corpus metadata
+  - baseline artifact naming and storage conventions
+- Diagnostic suites must define one canonical way to represent expected codes, messages, spans, and renderer output.
+- Baseline-backed suites must define where expected artifacts live and how they are associated with source fixtures.
+- The chosen conventions must favor reviewability, deterministic diffs, and low ambiguity over author convenience.
+
 ## Baseline Governance Contract
 - Compiler-facing outputs that are part of the user contract must support checked-in baselines.
 - Baseline-backed artifacts in this phase include:
@@ -64,6 +77,7 @@ Minimum suite kinds:
   - exit-code behavior
   - selected multi-file/project outputs
   - machine-readable result summaries
+- Critical generated-output baselines may be maintained here as verification artifacts; Phase 34 owns generated-code quality closure and acceptance thresholds.
 - The phase must define one canonical bless/accept workflow for updating baselines.
 - Normalization rules must be explicit for:
   - absolute paths
@@ -248,6 +262,8 @@ Minimum suite kinds:
   - `<define in this phase>`
 - Curated OSS gate runner:
   - `<define in this phase>`
+
+All suite kinds introduced in this phase must be invocable through the canonical local validation entrypoints and must emit structured machine-readable results.
 
 ## Required Policies
 The phase must define and keep current:
