@@ -375,6 +375,31 @@ Validation evidence:
 - Review pass 1 status: approved (`reviews/phase-30-part-11-fnmatch-review.md`); reviewer findings were validated as either out-of-scope intentional-diff items or pre-existing non-module blockers, so no part-11 code remediation was required.
 - Review pass 2 status: approved (`reviews/phase-30-part-11-fnmatch-review-2.md`); production-grade confirmation reported no blocking issues and no additional module-scope remediation was required.
 
+## Part 12: `re`
+status: in_progress (2026-03-08)
+
+- [x] Define module parity scope and CPython references
+- [x] Port/expand CPython-derived parity fixtures (canonical vector format)
+- [x] Fix root-cause implementation gaps
+- [x] Record parity classification (`parity` / `intentional-diff` / `unsupported`)
+- [x] Run module demo
+- [x] Run targeted module tests
+- [x] Run full local suite
+- [ ] Open PR, review, and merge
+- [ ] External reviewer pass 1 remediation completed (if findings)
+- [ ] External reviewer pass 2 remediation completed (if findings)
+- [ ] Mark part progress in this checklist
+
+Validation evidence:
+- Positive path: `cargo run -q -p sifr -- run demos/m30_1c_re_parity_demo/main.sifr` -> prints `m30_1c re parity demo: pass`.
+- Positive path: `cargo run -q -p sifr -- run crates/sifr/tests/e2e/pass/cpython_re_subset.sifr` -> pass.
+- Positive path: `cargo run -q -p sifr -- run crates/sifr/tests/e2e/pass/cpython_re.sifr` -> pass.
+- Positive path: `cargo run -q -p sifr -- run crates/sifr/tests/e2e/pass/stdlib_re.sifr` -> pass.
+- Positive path: `cargo run -q -p sifr -- run crates/sifr/tests/e2e/pass/stdlib_re_expanded.sifr` -> pass.
+- Positive path: `cargo run -q -p sifr -- run crates/sifr/tests/e2e/pass/re_flags_ignorecase.sifr` -> pass.
+- Positive path: `/Users/yaseralnajjar/work/sifr/codebase/scripts/run_all_tests.sh` -> pass (`verification ok: variants=64, failures=0, blocking_failures=0, non_blocking_failures=0`).
+- Negative path: canonical bool vectors in `cpython_re_subset.sifr` validate invalid-pattern rejection (`"("`) with panic-free typed `RegexError` handling.
+
 ## Module Part Template (repeat per module)
 
 ### Part N: <module>
