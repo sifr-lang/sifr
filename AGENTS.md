@@ -62,7 +62,7 @@ See `.cursor/plans/main/architecture.md` for full architectural detail.
 ## Key conventions
 
 - **Workspace lints**: Clippy pedantic enabled. `unsafe_code`, `print_stdout`, `print_stderr`, `dbg_macro` are warned.
-- **HIR modularity guardrails**: HIR lowering is decomposed into small, focused files — a monolithic `lower.rs` or `stdlib.rs` is banned. Enforced by `check_hir_maintainability_guardrails.py`.
+- **No monolithic files**: All crates should be decomposed into small, focused files — monolithic files are banned. HIR lowering has automated guardrails enforced by `check_hir_maintainability_guardrails.py`.
 - **Snapshot testing**: Uses `insta` for e2e and unit test snapshots. E2E fixtures are discovered lexicographically, expectations follow declaration order.
 - **No panics in user paths**: No data-dependent `.unwrap()` or `.expect()` in generated runtime code. `assert!` is only for programmer invariants.
 
