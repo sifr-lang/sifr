@@ -11,7 +11,10 @@ whitespace: str = " \t\n\r"
 printable: str = "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ!\"#$%&'()*+,-./:;<=>?@[\\]^_`{|}~ \t\n\r"
 
 def capwords(s: str) -> str:
-    words: list[str] = s.split(" ")
+    # Mirror CPython-like whitespace handling for the supported subset by
+    # normalizing common whitespace classes to spaces before splitting.
+    normalized: str = s.replace("\t", " ").replace("\n", " ").replace("\r", " ")
+    words: list[str] = normalized.split(" ")
     result: str = ""
     first: bool = True
     for word in words:
