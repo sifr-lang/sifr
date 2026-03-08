@@ -487,6 +487,32 @@ Validation evidence:
 - Review pass 1 status: approved (`reviews/phase-30-part-15-json-review.md`); reviewer concern about `unwrap_or_default` was validated as non-blocking because `unwrap_or_default` is panic-free and returns default on serialization failure, so no module-scope remediation was required.
 - Review pass 2 status: approved (`reviews/phase-30-part-15-json-review-2.md`) with no blockers; module is production-grade for approved scope with no additional remediation required.
 
+## Part 16: `datetime`
+status: in_progress (2026-03-08)
+
+- [x] Define module parity scope and CPython references
+- [x] Port/expand CPython-derived parity fixtures (canonical vector format)
+- [x] Fix root-cause implementation gaps
+- [x] Record parity classification (`parity` / `intentional-diff` / `unsupported`)
+- [x] Run module demo
+- [x] Run targeted module tests
+- [x] Run full local suite
+- [ ] Open PR, review, and merge
+- [ ] External reviewer pass 1 remediation completed (if findings)
+- [ ] External reviewer pass 2 remediation completed (if findings)
+- [ ] Mark part progress in this checklist
+
+Validation evidence:
+- Positive path: `cargo run -q -p sifr -- run demos/m30_1d_datetime_parity_demo/main.sifr` -> prints `m30_1d datetime parity demo: pass`.
+- Positive path: `cargo run -q -p sifr -- run crates/sifr/tests/e2e/pass/cpython_datetime_subset.sifr` -> pass.
+- Positive path: `cargo run -q -p sifr -- run crates/sifr/tests/e2e/pass/cpython_datetime.sifr` -> pass.
+- Positive path: `cargo run -q -p sifr -- run crates/sifr/tests/e2e/pass/stdlib_datetime.sifr` -> pass.
+- Positive path: `cargo run -q -p sifr -- run crates/sifr/tests/e2e/pass/stdlib_datetime_class.sifr` -> pass.
+- Positive path: `cargo run -q -p sifr -- run crates/sifr/tests/e2e/pass/datetime_now_object.sifr` -> pass.
+- Positive path: `cargo run -q -p sifr -- run crates/sifr/tests/e2e/pass/datetime_time_class.sifr` -> pass.
+- Positive path: `/Users/yaseralnajjar/work/sifr/codebase/scripts/run_all_tests.sh` -> pass (`verification ok: variants=64, failures=0, blocking_failures=0, non_blocking_failures=0`).
+- Negative path: canonical bool vectors in `cpython_datetime_subset.sifr` validate out-of-range `from_timestamp(...)` rejection with panic-free typed `ValueError` behavior.
+
 ## Module Part Template (repeat per module)
 
 ### Part N: <module>

@@ -1,0 +1,53 @@
+# Adapted CPython datetime subset for sifr.datetime (canonical vector format)
+from sifr.datetime import timedelta, datetime, date, time, timezone, now, from_timestamp
+from sifr.test import assert_bool_vector_eq
+
+def main():
+    expected: list[bool] = [
+        True, True, True, True, True, True, True,
+        True, True, True, True, True, True
+    ]
+    actual: list[bool] = []
+
+    td0: timedelta = timedelta(1, 0)
+    td1: timedelta = timedelta(0, 3600)
+    td_sum: timedelta = td0 + td1
+    td_diff: timedelta = td0 - td1
+    actual.append(td0.total_seconds() == 86400)
+    actual.append(td_sum.total_seconds() == 90000)
+    actual.append(td_diff.total_seconds() == 82800)
+    actual.append(timedelta(1, 0) == timedelta(0, 86400))
+
+    dt: datetime = datetime(2024, 1, 15, 10, 30, 0)
+    actual.append(dt.isoformat() == "2024-01-15T10:30:00")
+    actual.append(dt.timestamp() > 0)
+
+    d: date = date(2024, 1, 15)
+    actual.append(d.isoformat() == "2024-01-15")
+    t: time = time(10, 30, 45)
+    actual.append(t.isoformat() == "10:30:45")
+
+    actual.append(str(timezone(9000)) == "UTC+02:30")
+    actual.append(str(timezone(0)) == "UTC")
+
+    current: datetime = now()
+    actual.append(current.year > 2020 and current.month >= 1 and current.month <= 12 and current.day >= 1 and current.day <= 31)
+
+    epoch_ok: bool = False
+    try:
+        ts0: str = from_timestamp(0.0)
+        epoch_ok = ts0 == "1970-01-01T00:00:00"
+    except ValueError as e:
+        _ = str(e.message)
+    actual.append(epoch_ok)
+
+    invalid_ts_rejected: bool = False
+    try:
+        _bad: str = from_timestamp(100000000000000000000.0)
+        _ = _bad
+    except ValueError as e:
+        invalid_ts_rejected = len(e.message) > 0
+    actual.append(invalid_ts_rejected)
+
+    assert_bool_vector_eq(actual, expected)
+    assert str("cpython_datetime_subset: pass") == "cpython_datetime_subset: pass"
