@@ -61,6 +61,7 @@ In particular:
   - Execute parity work one module at a time within related waves.
   - Maintain per-module parity classification for every non-parity behavior.
   - Where CPython provides canonical upstream data fixtures or vector corpora that materially improve coverage, port or consume them directly as part of module parity work.
+  - For numeric modules, explicitly document floating-point comparison policy, special-value handling (`NaN`, infinities, signed zero where relevant), and the strategy for large upstream corpora (full port, filtered subset, or generated projection).
 - Definition of done:
   - Each in-scope module has reviewer-approved CPython-derived parity coverage.
   - Every covered mismatch is classified as `parity`, `intentional-diff`, or `unsupported`.
@@ -71,6 +72,7 @@ In particular:
   - Add API-level scaling and resource checks for stabilized Phase 30 modules.
   - Compare asymptotic behavior to CPython-relevant reference behavior.
   - Track constant-factor deltas explicitly.
+  - Define repeatable local complexity test patterns per API class, including input-size sweeps, measurement normalization rules, and acceptance criteria for asymptotic and constant-factor outcomes.
   - Keep this work limited to stdlib API-facing complexity and resource behavior; compiler performance benchmarking and budget governance remain owned by Phase 35.
 - Definition of done:
   - Complexity and resource checks exist for in-scope modules whose behavioral parity work is complete.
@@ -111,6 +113,8 @@ In particular:
   - `heapq`
 - Why:
   - Shared numerical correctness and deterministic algorithmic behavior.
+- Wave-specific handling notes:
+  - Numeric parity work in this wave must document float comparison rules, special-value treatment, and any approved subsetting strategy for large upstream vector corpora before reviewer sign-off.
 - CPython references:
   - `math`: `/Users/yaseralnajjar/work/sifr/cpython/Modules/mathmodule.c`, `/Users/yaseralnajjar/work/sifr/cpython/Lib/test/test_math.py`, `/Users/yaseralnajjar/work/sifr/cpython/Lib/test/mathdata/math_testcases.txt`
   - `statistics`: `/Users/yaseralnajjar/work/sifr/cpython/Lib/statistics.py`, `/Users/yaseralnajjar/work/sifr/cpython/Lib/test/test_statistics.py`
