@@ -82,8 +82,8 @@ status: in_progress (2026-03-08)
 - [x] Run module demo
 - [x] Run targeted module tests
 - [x] Run full local suite
-- [ ] Open PR, review, and merge
-- [ ] External reviewer pass 1 remediation completed (if findings)
+- [x] Open PR, review, and merge
+- [x] External reviewer pass 1 remediation completed (if findings)
 - [ ] External reviewer pass 2 remediation completed (if findings)
 - [ ] Mark part progress in this checklist
 
@@ -96,6 +96,8 @@ Validation evidence:
 - Positive path: `cargo test -q -p sifr_codegen lowers_env_intrinsics_via_registry` -> pass.
 - Positive path: `/Users/yaseralnajjar/work/sifr/codebase/scripts/run_all_tests.sh` -> pass (`verification ok: variants=64, failures=0, blocking_failures=0, non_blocking_failures=0`).
 - Negative path: invalid key vectors (`""`, `"A=B"`) in `crates/sifr/tests/e2e/pass/cpython_env_subset.sifr` and `demos/m30_1a_env_parity_demo/main.sifr` validate panic-free no-op/`None` behavior.
+- PR: merged https://github.com/yaseralnajjar/sifr/pull/929
+- Review pass 1 note validation: reviewer-mentioned determinism failure (`DET-0002`) was validated as non-reproducible in local gate output for this part; no env-scope remediation required.
 
 ## Module Part Template (repeat per module)
 
@@ -119,7 +121,8 @@ Validation evidence:
 - Negative path:
 
 ## PR Log
-- (pending)
+- Part 1 implementation: merged https://github.com/yaseralnajjar/sifr/pull/929
 
 ## External Review Passes
-- (pending)
+- Reviewer pass 1 request output: `reviews/phase-30-part-1-env-review.md`
+- Reviewer pass 1 remediation status: done (2026-03-08, no code changes required)
