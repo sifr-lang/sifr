@@ -42,7 +42,7 @@ Loop per part: Work -> Validate -> PR -> Review -> Merge -> External review pass
 
 ### wave_30_1d: Core Containers and Structured Data
 13. [x] `collections`
-14. [ ] `itertools`
+14. [x] `itertools`
 15. [ ] `json`
 16. [ ] `datetime`
 
@@ -434,7 +434,7 @@ Validation evidence:
 - Review pass 2 status: approved (`reviews/phase-30-part-13-collections-review-2.md`) with no blockers; module is production-grade for approved scope with no additional remediation required.
 
 ## Part 14: `itertools`
-status: in_progress (2026-03-08)
+status: done (2026-03-08, PR #985)
 
 - [x] Define module parity scope and CPython references
 - [x] Port/expand CPython-derived parity fixtures (canonical vector format)
@@ -445,8 +445,8 @@ status: in_progress (2026-03-08)
 - [x] Run full local suite
 - [x] Open PR, review, and merge
 - [x] External reviewer pass 1 remediation completed (if findings)
-- [ ] External reviewer pass 2 remediation completed (if findings)
-- [ ] Mark part progress in this checklist
+- [x] External reviewer pass 2 remediation completed (if findings)
+- [x] Mark part progress in this checklist
 
 Validation evidence:
 - Positive path: `cargo run -q -p sifr -- run demos/m30_1d_itertools_parity_demo/main.sifr` -> prints `m30_1d itertools parity demo: pass`.
@@ -459,6 +459,7 @@ Validation evidence:
 - Negative path: canonical bool vectors in `cpython_itertools_subset.sifr` validate `batched(..., 0)` rejection with panic-free typed `ValueError` behavior.
 - PR: merged https://github.com/yaseralnajjar/sifr/pull/985
 - Review pass 1 status: approved (`reviews/phase-30-part-14-itertools-review.md`) with no blocking issues; no additional part-14 remediation was required for approved scope.
+- Review pass 2 status: approved (`reviews/phase-30-part-14-itertools-review-2.md`) with no blockers; module is production-grade for approved scope with no additional remediation required.
 
 ## Module Part Template (repeat per module)
 
@@ -532,6 +533,7 @@ Validation evidence:
 - Part 13 review pass 1 tracking: merged https://github.com/yaseralnajjar/sifr/pull/982
 - Part 13 review pass 2 tracking: merged https://github.com/yaseralnajjar/sifr/pull/983
 - Part 14 implementation: merged https://github.com/yaseralnajjar/sifr/pull/985
+- Part 14 review pass 1 tracking: merged https://github.com/yaseralnajjar/sifr/pull/986
 
 ## External Review Passes
 - Reviewer pass 1 request output: `reviews/phase-30-part-1-env-review.md`
@@ -588,6 +590,8 @@ Validation evidence:
 - Reviewer pass 2 remediation status (`collections`): done (2026-03-08, approved for production use; no module-scope remediation required)
 - Reviewer pass 1 request output (`itertools`): `reviews/phase-30-part-14-itertools-review.md`
 - Reviewer pass 1 remediation status (`itertools`): done (2026-03-08, approved with no blocking issues; no additional module-scope remediation required)
+- Reviewer pass 2 request output (`itertools`): `reviews/phase-30-part-14-itertools-review-2.md`
+- Reviewer pass 2 remediation status (`itertools`): done (2026-03-08, approved for production use; no module-scope remediation required)
 
 ## Wave Closure Review Cycles
 
