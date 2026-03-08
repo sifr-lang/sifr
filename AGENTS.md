@@ -1,5 +1,82 @@
 # AGENTS.md
 
+## What is Sifr?
+
+Sifr is a compiled language with Python syntax that compiles to Rust, producing native binaries. It enforces static typing, safe error handling (Result/Option instead of exceptions), and ownership semantics at compile time. Core guarantee: "if it compiles, it works" — no user-triggerable runtime panics.
+
+## Build & test commands
+
+```bash
+# Build the compiler
+cargo build --release
+
+# Compile and run a .sifr file
+cargo run -q -p sifr -- run demos/<file>.sifr
+
+# Other CLI modes
+cargo run -q -p sifr -- build <file>.sifr   # Build native binary
+cargo run -q -p sifr -- check <file>.sifr   # Type-check only
+cargo run -q -p sifr -- emit <file>.sifr    # Show generated Rust code
+
+# Unit tests only (skips slow e2e pass suite)
+cargo test -p sifr -- --skip test_e2e_pass
+
+# Single test
+cargo test -p sifr -- <test_name>
+
+# E2E pass suite only
+scripts/run_e2e_pass.sh
+
+# Linting
+cargo clippy --workspace -- -D warnings
+cargo fmt --check
+python3 scripts/check_hir_maintainability_guardrails.py
+```
+
+## Local validation (authoritative gate — run before PRs)
+
+Before considering any task done, run local validation on your changes:
+
+```bash
+scripts/run_all_tests.sh --profile quick      # Fast signal — use for PRs
+scripts/run_all_tests.sh                      # Full profile — default
+```
+
+CI mirrors these exact scripts — no CI-only behavior. Do not wait on CI; validate locally first.
+
+## Compiler pipeline
+
+Which crate to touch for a given task:
+
+```
+Source (.sifr)
+  → sifr_python_parser / sifr_python_ast   (vendored from ruff v0.4.10, may diverge)
+  → sifr_hir                                (name resolution, type checking, ownership tracking)
+  → sifr_codegen                             (HIR → Rust IR → syn AST → prettyplease output)
+  → sifr_driver                              (orchestration, rustc invocation)
+  → sifr                                     (CLI binary: build/run/check/emit/test)
+```
+
+See `.cursor/plans/main/architecture.md` for full architectural detail.
+
+## Key conventions
+
+- **Workspace lints**: Clippy pedantic enabled. `unsafe_code`, `print_stdout`, `print_stderr`, `dbg_macro` are warned.
+- **No monolithic files**: All crates should be decomposed into small, focused files — monolithic files are banned. HIR lowering has automated guardrails enforced by `check_hir_maintainability_guardrails.py`.
+- **Snapshot testing**: Uses `insta` for e2e and unit test snapshots. E2E fixtures are discovered lexicographically, expectations follow declaration order.
+- **No panics in user paths**: No data-dependent `.unwrap()` or `.expect()` in generated runtime code. `assert!` is only for programmer invariants.
+
+## Workspace structure
+
+- `crates/` — Rust workspace (see pipeline above)
+- `demos/` — Milestone demo files (*.sifr) showcasing language features
+- `scripts/` — Build/test automation
+- `verification/` — E2E test infrastructure
+- `.cursor/plans/main/architecture.md` — Comprehensive compiler architecture doc
+- `.cursor/plans/main/roadmap.md` — Phase execution roadmap
+- `.cursor/plans/main/phases/` — Per-phase execution plans
+- `docs/` — CLI semantics contract, HIR guardrails, verification policies
+
 ## Core expectations
 
 - Solve root causes, not superficial symptoms.
@@ -28,13 +105,6 @@ Update corresponding docs after each item is completed (as applicable):
 - Roadmap: `.cursor/plans/main/roadmap.md`
 - Phases: `.cursor/plans/main/phases/`
 - Issues: `issues/`
-
-## Local validation commands
-
-- Full local test suite:
-  - `/Users/yaseralnajjar/work/sifr/codebase/scripts/run_all_tests.sh`
-- Milestone demos:
-  - `cargo run -q -p sifr -- run demos/<milestone_demo>.sifr`
 
 ## Safety rules
 

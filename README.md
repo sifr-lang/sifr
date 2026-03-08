@@ -86,23 +86,23 @@ def main():
 ```bash
 git clone https://github.com/yaseralnajjar/sifr.git
 cd sifr
-cargo build -release
+cargo build --release
 ```
 
 ### Compile and run a `.sifr` file
 
 ```bash
 # Compile and run in one step
-cargo run - run hello.sifr
+cargo run -- run hello.sifr
 
 # Or build a native binary
-cargo run - build hello.sifr
+cargo run -- build hello.sifr
 
 # Type-check without compiling
-cargo run - check hello.sifr
+cargo run -- check hello.sifr
 
 # View the generated Rust code
-cargo run - emit hello.sifr
+cargo run -- emit hello.sifr
 ```
 
 ### Run the test suite

@@ -38,3 +38,4 @@ demos/**/*.exe
 
 # Claude worktrees
 .claude/worktrees/*
+\!CLAUDE.md
