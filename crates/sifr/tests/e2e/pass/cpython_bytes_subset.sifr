@@ -1,51 +1,75 @@
 # Adapted CPython bytes subset for sifr.bytes
 from sifr.bytes import encode_utf8, decode_utf8, bytes_to_hex, bytes_from_hex, count_byte, find_byte, starts_with, ends_with
+from sifr.test import assert_vector_eq, assert_bool_vector_eq
 
+def render_opt_int(own value: int | None) -> str:
+    if value is None:
+        return "None"
+    return str(value)
 
 def main():
-    expected: list[str] = ["odd digits safe", "Hi", "4869", "true", "true", "not found", "8", "4"]
-    expected_index: int = 0
+    # Canonical parity fixture vectors for primary behavior checks.
+    expected: list[str] = ["4", "8", "None", "true", "true", "4869", "Hi"]
+    actual: list[str] = []
     data: list[int] = encode_utf8("mississippi")
-    assert str(count_byte(data, 115)) == expected[len(expected) - expected_index - 1]
-    expected_index = expected_index + 1
+    actual.append(str(count_byte(data, 115)))
+    actual.append(render_opt_int(find_byte(data, 112)))
+    actual.append(render_opt_int(find_byte(data, 120)))
+    actual.append(str(starts_with(data, encode_utf8("miss"))))
+    actual.append(str(ends_with(data, encode_utf8("ippi"))))
 
-    first_p: int | None = find_byte(data, 112)
-    if first_p is not None:
-        assert str(first_p) == expected[len(expected) - expected_index - 1]
-        expected_index = expected_index + 1
-
-    not_found: int | None = find_byte(data, 120)
-    if not_found is None:
-        assert str("not found") == expected[len(expected) - expected_index - 1]
-        expected_index = expected_index + 1
-
-    assert str(starts_with(data, encode_utf8("miss"))) == expected[len(expected) - expected_index - 1]
-    expected_index = expected_index + 1
-    assert str(ends_with(data, encode_utf8("ippi"))) == expected[len(expected) - expected_index - 1]
-    expected_index = expected_index + 1
-
+    # bytes_to_hex positive-path behavior.
+    hex_ok: bool = True
+    hex_out: str = ""
     try:
         hx: str = bytes_to_hex(encode_utf8("Hi"))
-        assert str(hx) == expected[len(expected) - expected_index - 1]
-        expected_index = expected_index + 1
+        hex_out = hx
     except ParseError as e:
-        assert str("unexpected: " + e.message) == expected[len(expected) - expected_index - 1]
-        expected_index = expected_index + 1
+        hex_ok = False
+    if hex_ok:
+        actual.append(hex_out)
+    else:
+        actual.append("ERR")
 
+    # bytes_from_hex + decode_utf8 positive-path behavior.
+    text_ok: bool = True
+    text_out: str = ""
     try:
         parsed: list[int] = bytes_from_hex("48 69")
         txt: str = decode_utf8(parsed)
-        assert str(txt) == expected[len(expected) - expected_index - 1]
-        expected_index = expected_index + 1
+        text_out = txt
     except ParseError as e:
-        assert str("unexpected: " + e.message) == expected[len(expected) - expected_index - 1]
-        expected_index = expected_index + 1
+        text_ok = False
+    if text_ok:
+        actual.append(text_out)
+    else:
+        actual.append("ERR")
+    assert_vector_eq(actual, expected)
 
+    # Error-path vectors for bytes_from_hex.
+    hex_inputs: list[str] = ["abc", "€"]
+    hex_expected_ok: list[bool] = [False, False]
+    hex_actual_ok: list[bool] = []
+    for s in hex_inputs:
+        try:
+            _bad_hex: list[int] = bytes_from_hex(s)
+            hex_actual_ok.append(True)
+        except ParseError as e:
+            hex_actual_ok.append(False)
+    assert_bool_vector_eq(hex_actual_ok, hex_expected_ok)
+
+    # Error-path vectors for decode_utf8 value-range checks.
+    decode_expected_ok: list[bool] = [False, True]
+    decode_actual_ok: list[bool] = []
     try:
-        bad: list[int] = bytes_from_hex("abc")
-        assert str(len(bad)) == expected[len(expected) - expected_index - 1]
-        expected_index = expected_index + 1
+        bad_text: str = decode_utf8([300])
+        decode_actual_ok.append(True)
     except ParseError as e:
-        assert str("odd digits safe") == expected[len(expected) - expected_index - 1]
-        expected_index = expected_index + 1
-
+        decode_actual_ok.append(False)
+    try:
+        good_text: str = decode_utf8([72, 105])
+        decode_actual_ok.append(True)
+    except ParseError as e:
+        decode_actual_ok.append(False)
+    assert_bool_vector_eq(decode_actual_ok, decode_expected_ok)
+    assert str("cpython_bytes_subset: pass") == "cpython_bytes_subset: pass"

@@ -1,0 +1,55 @@
+# m30_1a bytes parity demo
+from sifr.bytes import encode_utf8, decode_utf8, bytes_to_hex, bytes_from_hex, count_byte, find_byte, starts_with, ends_with
+from sifr.test import assert_vector_eq, assert_bool_vector_eq
+
+def render_opt_int(own value: int | None) -> str:
+    if value is None:
+        return "None"
+    return str(value)
+
+def main():
+    payload: list[int] = encode_utf8("bytes-phase30")
+    expected: list[str] = ["2", "5", "true", "true"]
+    actual: list[str] = []
+    actual.append(str(count_byte(payload, 115)))
+    actual.append(render_opt_int(find_byte(payload, 45)))
+    actual.append(str(starts_with(payload, encode_utf8("bytes"))))
+    actual.append(str(ends_with(payload, encode_utf8("e30"))))
+    assert_vector_eq(actual, expected)
+
+    hex_ok: bool = True
+    hex_text: str = ""
+    try:
+        hx: str = bytes_to_hex(encode_utf8("Hi"))
+        hex_text = hx
+    except ParseError as e:
+        hex_ok = False
+    assert str(hex_ok) == "true"
+    assert str(hex_text) == "4869"
+
+    roundtrip_ok: bool = True
+    roundtrip_text: str = ""
+    try:
+        parsed: list[int] = bytes_from_hex("48 69")
+        txt: str = decode_utf8(parsed)
+        roundtrip_text = txt
+    except ParseError as e:
+        roundtrip_ok = False
+    assert str(roundtrip_ok) == "true"
+    assert str(roundtrip_text) == "Hi"
+
+    invalid_expected_ok: list[bool] = [False, False]
+    invalid_actual_ok: list[bool] = []
+    try:
+        odd: list[int] = bytes_from_hex("abc")
+        invalid_actual_ok.append(True)
+    except ParseError as e:
+        invalid_actual_ok.append(False)
+    try:
+        bad_utf8: str = decode_utf8([300])
+        invalid_actual_ok.append(True)
+    except ParseError as e:
+        invalid_actual_ok.append(False)
+    assert_bool_vector_eq(invalid_actual_ok, invalid_expected_ok)
+
+    print("m30_1a bytes parity demo: pass")

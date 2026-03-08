@@ -24,7 +24,7 @@ Loop per part: Work -> Validate -> PR -> Review -> Merge -> External review pass
 
 ### wave_30_1a: Binary and Encoding Foundations
 1. [x] `env`
-2. [ ] `bytes`
+2. [x] `bytes`
 3. [ ] `base64`
 4. [ ] `hashlib`
 
@@ -99,6 +99,31 @@ Validation evidence:
 - PR: merged https://github.com/yaseralnajjar/sifr/pull/929
 - Review pass 1 note validation: reviewer-mentioned determinism failure (`DET-0002`) was validated as non-reproducible in local gate output for this part; no env-scope remediation required.
 - Review pass 2 remediation: renamed invalid-key fixture vector names for clearer semantics (`invalid_*_lookup_found`) and revalidated module demo + CPython fixture.
+
+## Part 2: `bytes`
+status: in_progress (2026-03-08)
+
+- [x] Define module parity scope and CPython references
+- [x] Port/expand CPython-derived parity fixtures (canonical vector format)
+- [x] Fix root-cause implementation gaps
+- [x] Record parity classification (`parity` / `intentional-diff` / `unsupported`)
+- [x] Run module demo
+- [x] Run targeted module tests
+- [x] Run full local suite
+- [ ] Open PR, review, and merge
+- [ ] External reviewer pass 1 remediation completed (if findings)
+- [ ] External reviewer pass 2 remediation completed (if findings)
+- [ ] Mark part progress in this checklist
+
+Validation evidence:
+- Positive path: `cargo run -q -p sifr -- run demos/m30_1a_bytes_parity_demo/main.sifr` -> prints `m30_1a bytes parity demo: pass`.
+- Positive path: `cargo run -q -p sifr -- run crates/sifr/tests/e2e/pass/cpython_bytes_subset.sifr` -> pass.
+- Positive path: `cargo run -q -p sifr -- run crates/sifr/tests/e2e/pass/stdlib_bytes.sifr` -> pass.
+- Positive path: `cargo run -q -p sifr -- run crates/sifr/tests/e2e/pass/stdlib_bytes_safety.sifr` -> pass.
+- Positive path: `cargo run -q -p sifr -- run demos/m2_bytes_demo.sifr` -> prints expected bytes API flow and `range-safe`.
+- Positive path: `cargo test -q -p sifr_codegen lowers_bytes_intrinsics_via_registry` -> pass.
+- Positive path: `/Users/yaseralnajjar/work/sifr/codebase/scripts/run_all_tests.sh` -> pass (`verification ok: variants=64, failures=0, blocking_failures=0, non_blocking_failures=0`).
+- Negative path: canonical bool vectors in `cpython_bytes_subset.sifr` validate odd-hex and non-ASCII hex parse errors plus decode out-of-range byte rejection (`[300]`).
 
 ## Module Part Template (repeat per module)
 
