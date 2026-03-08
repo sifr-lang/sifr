@@ -1,0 +1,40 @@
+from sifr.csv import parse_row, format_csv, reader, writer, reader_from_path, writer_to_path
+from sifr.test import assert_bool_vector_eq
+
+
+def main():
+    expected: list[bool] = [True, True, True, True, True, True]
+    actual: list[bool] = []
+
+    parsed: list[str] = parse_row("a,b,c")
+    actual.append(str(parsed) == "[\"a\", \"b\", \"c\"]")
+
+    actual.append(format_csv([["1", "2"], ["3", "4"]]) == "1,2\n3,4")
+
+    r: reader = reader("name,age\nalice,30")
+    actual.append(str(r.rows()) == "[[\"name\", \"age\"], [\"alice\", \"30\"]]")
+
+    w: writer = writer()
+    w.writerow(["alice", "30"])
+    actual.append(w.getvalue() == "alice,30")
+
+    path: str = "/tmp/sifr_m30_1e_csv_demo.csv"
+    csv_file_ok: bool = False
+    try:
+        _wf: None = writer_to_path(path, [["h1", "h2"], ["v1", "v2"]])
+        rf: reader = reader_from_path(path)
+        csv_file_ok = str(rf.rows()) == "[[\"h1\", \"h2\"], [\"v1\", \"v2\"]]"
+    except IOError as e:
+        _ = str(e.message)
+    actual.append(csv_file_ok)
+
+    missing_rejected: bool = False
+    try:
+        _missing: reader = reader_from_path("/tmp/sifr_m30_1e_csv_demo_missing.csv")
+    except IOError as e:
+        _ = str(e.message)
+        missing_rejected = True
+    actual.append(missing_rejected)
+
+    assert_bool_vector_eq(actual, expected)
+    print("m30_1e csv parity demo: pass")

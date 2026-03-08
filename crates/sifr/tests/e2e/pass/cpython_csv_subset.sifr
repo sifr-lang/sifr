@@ -1,0 +1,55 @@
+# Adapted CPython csv subset for sifr.csv (canonical bool-vector format)
+from sifr.csv import parse_row, parse_csv, format_row, format_csv
+from sifr.csv import reader, writer, DictReader, DictWriter, reader_from_path, writer_to_path
+from sifr.test import assert_bool_vector_eq
+
+
+def main():
+    expected: list[bool] = [True, True, True, True, True, True, True, True, True, True]
+    actual: list[bool] = []
+
+    row: list[str] = parse_row("a,b,c")
+    actual.append(str(row) == "[\"a\", \"b\", \"c\"]")
+
+    rows: list[list[str]] = parse_csv("x,y\n1,2\n")
+    actual.append(str(rows) == "[[\"x\", \"y\"], [\"1\", \"2\"]]")
+
+    actual.append(format_row(["u", "v", "w"]) == "u,v,w")
+    actual.append(format_csv([["1", "2"], ["3", "4"]]) == "1,2\n3,4")
+
+    r: reader = reader("name,age\nalice,30\nbob,25")
+    actual.append(str(r.rows()) == "[[\"name\", \"age\"], [\"alice\", \"30\"], [\"bob\", \"25\"]]")
+
+    w: writer = writer()
+    w.writerow(["alice", "30"])
+    w.writerows([["bob", "25"], ["carol", "27"]])
+    actual.append(w.getvalue() == "alice,30\nbob,25\ncarol,27")
+
+    dr: DictReader = DictReader("name,age\nalice,30")
+    actual.append(str(dr.fieldnames()) == "[\"name\", \"age\"]")
+
+    dw: DictWriter = DictWriter(["name", "age"])
+    dw.writeheader()
+    dw.writerow({"name": "alice", "age": "30"})
+    actual.append(dw.getvalue() == "name,age\nalice,30")
+
+    path: str = "/tmp/sifr_cpython_csv_subset.csv"
+    file_roundtrip_ok: bool = False
+    try:
+        _w: None = writer_to_path(path, [["h1", "h2"], ["v1", "v2"]])
+        rr: reader = reader_from_path(path)
+        file_roundtrip_ok = str(rr.rows()) == "[[\"h1\", \"h2\"], [\"v1\", \"v2\"]]"
+    except IOError as e:
+        _ = str(e.message)
+    actual.append(file_roundtrip_ok)
+
+    missing_path_rejected: bool = False
+    try:
+        _missing_reader: reader = reader_from_path("/tmp/sifr_cpython_csv_subset_missing.csv")
+    except IOError as e:
+        _ = str(e.message)
+        missing_path_rejected = True
+    actual.append(missing_path_rejected)
+
+    assert_bool_vector_eq(actual, expected)
+    assert str("cpython_csv_subset: pass") == "cpython_csv_subset: pass"
