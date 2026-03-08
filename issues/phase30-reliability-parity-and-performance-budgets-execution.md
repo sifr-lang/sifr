@@ -43,7 +43,7 @@ Loop per part: Work -> Validate -> PR -> Review -> Merge -> External review pass
 ### wave_30_1d: Core Containers and Structured Data
 13. [x] `collections`
 14. [x] `itertools`
-15. [ ] `json`
+15. [x] `json`
 16. [ ] `datetime`
 
 ### wave_30_1e: File, Path, and Filesystem Surface
@@ -462,7 +462,7 @@ Validation evidence:
 - Review pass 2 status: approved (`reviews/phase-30-part-14-itertools-review-2.md`) with no blockers; module is production-grade for approved scope with no additional remediation required.
 
 ## Part 15: `json`
-status: in_progress (2026-03-08)
+status: done (2026-03-08, PR #989)
 
 - [x] Define module parity scope and CPython references
 - [x] Port/expand CPython-derived parity fixtures (canonical vector format)
@@ -473,8 +473,8 @@ status: in_progress (2026-03-08)
 - [x] Run full local suite
 - [x] Open PR, review, and merge
 - [x] External reviewer pass 1 remediation completed (if findings)
-- [ ] External reviewer pass 2 remediation completed (if findings)
-- [ ] Mark part progress in this checklist
+- [x] External reviewer pass 2 remediation completed (if findings)
+- [x] Mark part progress in this checklist
 
 Validation evidence:
 - Positive path: `cargo run -q -p sifr -- run demos/m30_1d_json_parity_demo/main.sifr` -> prints `m30_1d json parity demo: pass`.
@@ -485,6 +485,7 @@ Validation evidence:
 - Negative path: canonical bool vectors in `cpython_json_subset.sifr` validate invalid JSON parse rejection (`"{"`, `"tru"`) with panic-free typed `JSONDecodeError` handling.
 - PR: merged https://github.com/yaseralnajjar/sifr/pull/989
 - Review pass 1 status: approved (`reviews/phase-30-part-15-json-review.md`); reviewer concern about `unwrap_or_default` was validated as non-blocking because `unwrap_or_default` is panic-free and returns default on serialization failure, so no module-scope remediation was required.
+- Review pass 2 status: approved (`reviews/phase-30-part-15-json-review-2.md`) with no blockers; module is production-grade for approved scope with no additional remediation required.
 
 ## Module Part Template (repeat per module)
 
@@ -561,6 +562,7 @@ Validation evidence:
 - Part 14 review pass 1 tracking: merged https://github.com/yaseralnajjar/sifr/pull/986
 - Part 14 review pass 2 tracking: merged https://github.com/yaseralnajjar/sifr/pull/987
 - Part 15 implementation: merged https://github.com/yaseralnajjar/sifr/pull/989
+- Part 15 review pass 1 tracking: merged https://github.com/yaseralnajjar/sifr/pull/990
 
 ## External Review Passes
 - Reviewer pass 1 request output: `reviews/phase-30-part-1-env-review.md`
@@ -621,6 +623,8 @@ Validation evidence:
 - Reviewer pass 2 remediation status (`itertools`): done (2026-03-08, approved for production use; no module-scope remediation required)
 - Reviewer pass 1 request output (`json`): `reviews/phase-30-part-15-json-review.md`
 - Reviewer pass 1 remediation status (`json`): done (2026-03-08, approved with observations; `unwrap_or_default` concern validated as panic-free and non-blocking for approved primitive subset)
+- Reviewer pass 2 request output (`json`): `reviews/phase-30-part-15-json-review-2.md`
+- Reviewer pass 2 remediation status (`json`): done (2026-03-08, approved for production use; no module-scope remediation required)
 
 ## Wave Closure Review Cycles
 
