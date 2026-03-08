@@ -101,7 +101,7 @@ Validation evidence:
 - Review pass 2 remediation: renamed invalid-key fixture vector names for clearer semantics (`invalid_*_lookup_found`) and revalidated module demo + CPython fixture.
 
 ## Part 2: `bytes`
-status: in_progress (2026-03-08)
+status: done (2026-03-08, PR #939)
 
 - [x] Define module parity scope and CPython references
 - [x] Port/expand CPython-derived parity fixtures (canonical vector format)
@@ -112,8 +112,8 @@ status: in_progress (2026-03-08)
 - [x] Run full local suite
 - [x] Open PR, review, and merge
 - [x] External reviewer pass 1 remediation completed (if findings)
-- [ ] External reviewer pass 2 remediation completed (if findings)
-- [ ] Mark part progress in this checklist
+- [x] External reviewer pass 2 remediation completed (if findings)
+- [x] Mark part progress in this checklist
 
 Validation evidence:
 - Positive path: `cargo run -q -p sifr -- run demos/m30_1a_bytes_parity_demo/main.sifr` -> prints `m30_1a bytes parity demo: pass`.
@@ -126,6 +126,7 @@ Validation evidence:
 - Negative path: canonical bool vectors in `cpython_bytes_subset.sifr` validate odd-hex and non-ASCII hex parse errors plus decode out-of-range byte rejection (`[300]`).
 - PR: merged https://github.com/yaseralnajjar/sifr/pull/939
 - Review pass 1 status: approved with observations; no code remediation required for bytes scope.
+- Review pass 2 status: approved; no code remediation required for bytes scope.
 
 ## Module Part Template (repeat per module)
 
@@ -159,6 +160,7 @@ Validation evidence:
 - Milestone production-grade closure cycle: merged https://github.com/yaseralnajjar/sifr/pull/936
 - Phase completion closure cycle: merged https://github.com/yaseralnajjar/sifr/pull/937
 - Part 2 implementation: merged https://github.com/yaseralnajjar/sifr/pull/939
+- Part 2 review pass 1 tracking: merged https://github.com/yaseralnajjar/sifr/pull/940
 
 ## External Review Passes
 - Reviewer pass 1 request output: `reviews/phase-30-part-1-env-review.md`
@@ -167,6 +169,8 @@ Validation evidence:
 - Reviewer pass 2 remediation status: done (2026-03-08, naming clarity updates applied to env demo/fixture)
 - Reviewer pass 1 request output (`bytes`): `reviews/phase-30-part-2-bytes-review.md`
 - Reviewer pass 1 remediation status (`bytes`): done (2026-03-08, no code changes required)
+- Reviewer pass 2 request output (`bytes`): `reviews/phase-30-part-2-bytes-review-2.md`
+- Reviewer pass 2 remediation status (`bytes`): done (2026-03-08, no code changes required)
 
 ## Wave Closure Review Cycles
 
