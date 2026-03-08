@@ -1,0 +1,9 @@
+def score(own values: list[int]) -> int:
+    total: int = 0
+    i: int = 0
+    while i < len(values):
+        current: int | None = values[i]
+        if current is not None:
+            total = total + current
+        i = i + 1
+    return total

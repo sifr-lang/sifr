@@ -1,0 +1,5 @@
+FEE: int = 2
+
+
+def total_with_fee(left: int, right: int) -> int:
+    return left + right + FEE
