@@ -32,7 +32,7 @@ Loop per part: Work -> Validate -> PR -> Review -> Merge -> External review pass
 5. [x] `math`
 6. [x] `statistics`
 7. [x] `bisect`
-8. [ ] `heapq`
+8. [x] `heapq`
 
 ### wave_30_1c: Text and Pattern Processing
 9. [ ] `string`
@@ -266,7 +266,7 @@ Validation evidence:
 - Review pass 2 status: approved for production use; no additional module-scope remediation required.
 
 ## Part 8: `heapq`
-status: in_progress (2026-03-08)
+status: done (2026-03-08, PR #958)
 
 - [x] Define module parity scope and CPython references
 - [x] Port/expand CPython-derived parity fixtures (canonical vector format)
@@ -277,8 +277,8 @@ status: in_progress (2026-03-08)
 - [x] Run full local suite
 - [x] Open PR, review, and merge
 - [x] External reviewer pass 1 remediation completed (if findings)
-- [ ] External reviewer pass 2 remediation completed (if findings)
-- [ ] Mark part progress in this checklist
+- [x] External reviewer pass 2 remediation completed (if findings)
+- [x] Mark part progress in this checklist
 
 Validation evidence:
 - Positive path: `cargo run -q -p sifr -- run demos/m30_1b_heapq_parity_demo/main.sifr` -> prints `m30_1b heapq parity demo: pass`.
@@ -293,6 +293,7 @@ Validation evidence:
 - Negative path: canonical bool vectors in `cpython_heapq_subset.sifr` validate empty `heappop`/`heapreplace` safety adaptation (`None`) and non-mutating helper semantics for `heappushpop`.
 - PR: merged https://github.com/yaseralnajjar/sifr/pull/958
 - Review pass 1 status: approved with observations; no module-scope remediation required.
+- Review pass 2 remediation: removed unused `_swap` dead code from `lib/sifr/heapq.sifr`; revalidated heapq demo/fixtures and full local suite.
 
 ## Module Part Template (repeat per module)
 
@@ -345,6 +346,7 @@ Validation evidence:
 - Part 7 review pass 1 tracking: merged https://github.com/yaseralnajjar/sifr/pull/956
 - Part 7 review pass 2 tracking: merged https://github.com/yaseralnajjar/sifr/pull/957
 - Part 8 implementation: merged https://github.com/yaseralnajjar/sifr/pull/958
+- Part 8 review pass 1 tracking: merged https://github.com/yaseralnajjar/sifr/pull/959
 
 ## External Review Passes
 - Reviewer pass 1 request output: `reviews/phase-30-part-1-env-review.md`
@@ -377,6 +379,8 @@ Validation evidence:
 - Reviewer pass 2 remediation status (`bisect`): done (2026-03-08, approved for production use; no additional module-scope remediation required)
 - Reviewer pass 1 request output (`heapq`): `reviews/phase-30-part-8-heapq-review.md`
 - Reviewer pass 1 remediation status (`heapq`): done (2026-03-08, approved with observations; no additional module-scope remediation required)
+- Reviewer pass 2 request output (`heapq`): `reviews/phase-30-part-8-heapq-review-2.md`
+- Reviewer pass 2 remediation status (`heapq`): done (2026-03-08, removed unused `_swap` dead code and revalidated full suite)
 
 ## Wave Closure Review Cycles
 
