@@ -208,6 +208,31 @@ Validation evidence:
 - Review pass 1 remediation: added explicit `factorial(-1)` and typed `dist([], [])` semantic coverage in canonical fixture; no module runtime code changes required.
 - Review pass 2 status: approved for production use with optional future enhancements only; no additional module-scope changes required.
 
+## Part 6: `statistics`
+status: in_progress (2026-03-08)
+
+- [x] Define module parity scope and CPython references
+- [x] Port/expand CPython-derived parity fixtures (canonical vector format)
+- [x] Fix root-cause implementation gaps
+- [x] Record parity classification (`parity` / `intentional-diff` / `unsupported`)
+- [x] Run module demo
+- [x] Run targeted module tests
+- [x] Run full local suite
+- [ ] Open PR, review, and merge
+- [ ] External reviewer pass 1 remediation completed (if findings)
+- [ ] External reviewer pass 2 remediation completed (if findings)
+- [ ] Mark part progress in this checklist
+
+Validation evidence:
+- Positive path: `cargo run -q -p sifr -- run demos/m30_1b_statistics_parity_demo/main.sifr` -> prints `m30_1b statistics parity demo: pass`.
+- Positive path: `cargo run -q -p sifr -- run crates/sifr/tests/e2e/pass/cpython_statistics_subset.sifr` -> pass.
+- Positive path: `cargo run -q -p sifr -- run crates/sifr/tests/e2e/pass/cpython_statistics.sifr` -> pass.
+- Positive path: `cargo run -q -p sifr -- run crates/sifr/tests/e2e/pass/stdlib_statistics_new.sifr` -> pass.
+- Positive path: `cargo run -q -p sifr -- run crates/sifr/tests/e2e/pass/stdlib_statistics_extended.sifr` -> pass.
+- Positive path: `cargo run -q -p sifr -- run crates/sifr/tests/e2e/pass/error_stdlib_statistics.sifr` -> pass.
+- Positive path: `/Users/yaseralnajjar/work/sifr/codebase/scripts/run_all_tests.sh` -> pass (`verification ok: variants=64, failures=0, blocking_failures=0, non_blocking_failures=0`).
+- Negative path: canonical bool vectors in `cpython_statistics_subset.sifr` validate empty/invalid dataset error adaptation for central tendency, spread, harmonic/geometric mean, correlation, and linear-regression paths.
+
 ## Module Part Template (repeat per module)
 
 ### Part N: <module>
@@ -251,6 +276,7 @@ Validation evidence:
 - Part 4 review pass 2 tracking: merged https://github.com/yaseralnajjar/sifr/pull/947
 - Part 5 implementation: merged https://github.com/yaseralnajjar/sifr/pull/948
 - Part 5 review pass 1 remediation: merged https://github.com/yaseralnajjar/sifr/pull/949
+- Part 5 review pass 2 tracking: merged https://github.com/yaseralnajjar/sifr/pull/950
 
 ## External Review Passes
 - Reviewer pass 1 request output: `reviews/phase-30-part-1-env-review.md`
