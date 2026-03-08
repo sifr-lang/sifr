@@ -385,8 +385,8 @@ status: in_progress (2026-03-08)
 - [x] Run module demo
 - [x] Run targeted module tests
 - [x] Run full local suite
-- [ ] Open PR, review, and merge
-- [ ] External reviewer pass 1 remediation completed (if findings)
+- [x] Open PR, review, and merge
+- [x] External reviewer pass 1 remediation completed (if findings)
 - [ ] External reviewer pass 2 remediation completed (if findings)
 - [ ] Mark part progress in this checklist
 
@@ -399,6 +399,8 @@ Validation evidence:
 - Positive path: `cargo run -q -p sifr -- run crates/sifr/tests/e2e/pass/re_flags_ignorecase.sifr` -> pass.
 - Positive path: `/Users/yaseralnajjar/work/sifr/codebase/scripts/run_all_tests.sh` -> pass (`verification ok: variants=64, failures=0, blocking_failures=0, non_blocking_failures=0`).
 - Negative path: canonical bool vectors in `cpython_re_subset.sifr` validate invalid-pattern rejection (`"("`) with panic-free typed `RegexError` handling.
+- PR: merged https://github.com/yaseralnajjar/sifr/pull/974
+- Review pass 1 status: approved (`reviews/phase-30-part-12-re-review.md`) with non-blocking observations only; no additional part-12 code remediation was required for approved scope.
 
 ## Module Part Template (repeat per module)
 
@@ -463,6 +465,7 @@ Validation evidence:
 - Part 11 implementation: merged https://github.com/yaseralnajjar/sifr/pull/970
 - Part 11 review pass 1 tracking: merged https://github.com/yaseralnajjar/sifr/pull/971
 - Part 11 review pass 2 tracking: merged https://github.com/yaseralnajjar/sifr/pull/972
+- Part 12 implementation: merged https://github.com/yaseralnajjar/sifr/pull/974
 
 ## External Review Passes
 - Reviewer pass 1 request output: `reviews/phase-30-part-1-env-review.md`
@@ -509,6 +512,8 @@ Validation evidence:
 - Reviewer pass 1 remediation status (`fnmatch`): done (2026-03-08, approved with observations; no module-scope remediation required for approved wildcard subset)
 - Reviewer pass 2 request output (`fnmatch`): `reviews/phase-30-part-11-fnmatch-review-2.md`
 - Reviewer pass 2 remediation status (`fnmatch`): done (2026-03-08, approved for production use; no module-scope remediation required)
+- Reviewer pass 1 request output (`re`): `reviews/phase-30-part-12-re-review.md`
+- Reviewer pass 1 remediation status (`re`): done (2026-03-08, approved with non-blocking observations; no additional module-scope remediation required)
 
 ## Wave Closure Review Cycles
 
