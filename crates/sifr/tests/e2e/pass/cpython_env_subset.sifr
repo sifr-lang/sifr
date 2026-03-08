@@ -1,28 +1,49 @@
 # Adapted CPython env subset for sifr.env safety model
-from sifr.env import env_get, env_set, env_unset, getenv, keys, values, items
+from sifr.env import env_get, env_set, env_unset, getenv, getenv_opt, keys, values, items
+from sifr.test import assert_vector_eq, assert_bool_vector_eq
+
+def has_equals_pair(own pairs: list[str]) -> bool:
+    has_equals: bool = False
+    for pair in pairs:
+        for ch in pair:
+            if ch == "=":
+                has_equals = True
+    return has_equals
 
 def main():
-    env_unset("SIFR_ENV_PORT")
-    env_set("SIFR_ENV_PORT", "v")
+    # Keep this fixture deterministic.
+    env_unset("SIFR_ENV_P30_VALUE")
+    env_unset("SIFR_ENV_P30_MISSING")
+    env_set("SIFR_ENV_P30_VALUE", "v")
 
-    v1: str | None = env_get("SIFR_ENV_PORT")
-    if v1 is not None:
-        assert str(v1) == 'v'
-    assert str(getenv("SIFR_ENV_PORT", "d")) == 'v'
+    # Canonical parity fixture vectors: inputs, expected, actual.
+    inputs: list[str] = ["SIFR_ENV_P30_VALUE", "SIFR_ENV_P30_MISSING"]
+    expected: list[str] = ["v", "fallback"]
+    actual: list[str] = []
+    for key in inputs:
+        with_default: str = getenv(key, "fallback")
+        actual.append(with_default)
+    assert_vector_eq(actual, expected)
 
-    env_unset("SIFR_ENV_PORT")
-    assert str(getenv("SIFR_ENV_PORT", "d")) == 'd'
+    # Error-path fixture vectors using expected_ok/actual_ok.
+    expected_ok: list[bool] = [True, False]
+    actual_ok: list[bool] = []
+    for key in inputs:
+        without_default: str | None = getenv_opt(key)
+        actual_ok.append(without_default is not None)
+    assert_bool_vector_eq(actual_ok, expected_ok)
 
     # Safety adaptation: invalid names are ignored instead of panicking.
-    env_set("", "x")
-    bad_empty: str | None = env_get("")
-    if bad_empty is None:
-        assert str("empty-key-safe") == 'empty-key-safe'
-
-    env_set("A=B", "x")
-    bad_eq: str | None = env_get("A=B")
-    if bad_eq is None:
-        assert str("equals-key-safe") == 'equals-key-safe'
+    invalid_inputs: list[str] = ["", "A=B"]
+    invalid_expected_ok: list[bool] = [False, False]
+    invalid_actual_ok: list[bool] = []
+    for bad_key in invalid_inputs:
+        set_key: str = bad_key + ""
+        lookup_key: str = bad_key + ""
+        env_set(set_key, "blocked")
+        blocked: str | None = env_get(lookup_key)
+        invalid_actual_ok.append(blocked is not None)
+    assert_bool_vector_eq(invalid_actual_ok, invalid_expected_ok)
 
     k: list[str] = keys()
     v: list[str] = values()
@@ -30,11 +51,5 @@ def main():
 
     assert str(len(k) == len(v)) == 'true'
     assert str(len(k) == len(it)) == 'true'
-
-    has_equals_pair: bool = False
-    for pair in it:
-        for ch in pair:
-            if ch == "=":
-                has_equals_pair = True
-    assert str(has_equals_pair) == 'true'
-
+    assert str(has_equals_pair(it)) == 'true'
+    assert str("cpython_env_subset: pass") == 'cpython_env_subset: pass'
