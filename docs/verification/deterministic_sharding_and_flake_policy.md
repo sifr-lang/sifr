@@ -47,3 +47,4 @@ Each quarantine entry (when present) must include:
 - `reenable_criteria`
 
 Quarantine is temporary and must be re-evaluated with explicit re-enable criteria.
+`verification/flake/quarantine.json` includes a concrete template entry to keep the format operational.

@@ -33,12 +33,13 @@ Each crash sentinel entry must include:
 - `status` (`unresolved|promoted`)
 - `root_cause_category`
 - `source_reference` (must exist)
+- `reproducer_fixture` (must exist and remain minimized)
 - `promotion_target_suite` (currently `fixedbugs`)
 - `note`
 
 Execution contract:
 - Crash sentinels are machine-validated by `scripts/run_verification_hardening.py`.
-- Invalid metadata or missing source references fail the hardening gate.
+- Invalid metadata or missing `source_reference`/`reproducer_fixture` paths fail the hardening gate.
 - Unresolved sentinels remain visible and blocking until resolved or explicitly promoted.
 
 ## Promotion Rule (`crashes` -> `fixedbugs`)

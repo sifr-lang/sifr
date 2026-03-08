@@ -1,0 +1,7 @@
+# CR-0002 minimized sentinel fixture.
+# Intent: preserve a minimal parser-edge shape for invariant unwrap/expect audit investigations.
+
+def main():
+    text: str = "seed"
+    if len(text) > 0:
+        print(text)

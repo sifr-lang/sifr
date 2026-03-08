@@ -562,6 +562,7 @@ def run_crashes_suite(
         "status",
         "root_cause_category",
         "source_reference",
+        "reproducer_fixture",
         "promotion_target_suite",
         "note",
     )
@@ -571,6 +572,7 @@ def run_crashes_suite(
         mismatches = required_missing(entry, required)
         status_raw = entry.get("status")
         source_ref = entry.get("source_reference")
+        reproducer_ref = entry.get("reproducer_fixture")
         promotion_target = entry.get("promotion_target_suite")
 
         if status_raw not in {"unresolved", "promoted"}:
@@ -579,6 +581,8 @@ def run_crashes_suite(
             result["unresolved_count"] += 1
         if not isinstance(source_ref, str) or not (repo_root / source_ref).is_file():
             mismatches.append("source_reference")
+        if not isinstance(reproducer_ref, str) or not (repo_root / reproducer_ref).is_file():
+            mismatches.append("reproducer_fixture")
         if promotion_target != "fixedbugs":
             mismatches.append("promotion_target_suite")
         if status_raw == "promoted":
@@ -599,6 +603,7 @@ def run_crashes_suite(
                 "status": status_raw,
                 "root_cause_category": entry.get("root_cause_category"),
                 "source_reference": source_ref,
+                "reproducer_fixture": reproducer_ref,
                 "promotion_target_suite": promotion_target,
                 "variants": [
                     {
