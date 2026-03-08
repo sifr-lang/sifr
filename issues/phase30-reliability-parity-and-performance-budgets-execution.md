@@ -265,6 +265,33 @@ Validation evidence:
 - Review pass 1 status: approved with observations; no module-scope remediation required.
 - Review pass 2 status: approved for production use; no additional module-scope remediation required.
 
+## Part 8: `heapq`
+status: in_progress (2026-03-08)
+
+- [x] Define module parity scope and CPython references
+- [x] Port/expand CPython-derived parity fixtures (canonical vector format)
+- [x] Fix root-cause implementation gaps
+- [x] Record parity classification (`parity` / `intentional-diff` / `unsupported`)
+- [x] Run module demo
+- [x] Run targeted module tests
+- [x] Run full local suite
+- [ ] Open PR, review, and merge
+- [ ] External reviewer pass 1 remediation completed (if findings)
+- [ ] External reviewer pass 2 remediation completed (if findings)
+- [ ] Mark part progress in this checklist
+
+Validation evidence:
+- Positive path: `cargo run -q -p sifr -- run demos/m30_1b_heapq_parity_demo/main.sifr` -> prints `m30_1b heapq parity demo: pass`.
+- Positive path: `cargo run -q -p sifr -- run crates/sifr/tests/e2e/pass/cpython_heapq_subset.sifr` -> pass.
+- Positive path: `cargo run -q -p sifr -- run crates/sifr/tests/e2e/pass/cpython_heapq.sifr` -> pass.
+- Positive path: `cargo run -q -p sifr -- run crates/sifr/tests/e2e/pass/stdlib_heapq.sifr` -> pass.
+- Positive path: `cargo run -q -p sifr -- run crates/sifr/tests/e2e/pass/generic_heapq_float.sifr` -> pass.
+- Positive path: `cargo run -q -p sifr -- run crates/sifr/tests/e2e/pass/generic_heapq_bigint.sifr` -> pass.
+- Positive path: `cargo run -q -p sifr -- run crates/sifr/tests/e2e/pass/generic_heapq_nlargest.sifr` -> pass.
+- Positive path: `cargo run -q -p sifr -- run crates/sifr/tests/e2e/pass/heapq_mut_param.sifr` -> pass.
+- Positive path: `/Users/yaseralnajjar/work/sifr/codebase/scripts/run_all_tests.sh` -> pass (`verification ok: variants=64, failures=0, blocking_failures=0, non_blocking_failures=0`).
+- Negative path: canonical bool vectors in `cpython_heapq_subset.sifr` validate empty `heappop`/`heapreplace` safety adaptation (`None`) and non-mutating helper semantics for `heappushpop`.
+
 ## Module Part Template (repeat per module)
 
 ### Part N: <module>
