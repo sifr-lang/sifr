@@ -246,8 +246,8 @@ status: in_progress (2026-03-08)
 - [x] Run module demo
 - [x] Run targeted module tests
 - [x] Run full local suite
-- [ ] Open PR, review, and merge
-- [ ] External reviewer pass 1 remediation completed (if findings)
+- [x] Open PR, review, and merge
+- [x] External reviewer pass 1 remediation completed (if findings)
 - [ ] External reviewer pass 2 remediation completed (if findings)
 - [ ] Mark part progress in this checklist
 
@@ -261,6 +261,8 @@ Validation evidence:
 - Positive path: `cargo run -q -p sifr -- run crates/sifr/tests/e2e/pass/stdlib_bisect_generic.sifr` -> pass.
 - Positive path: `/Users/yaseralnajjar/work/sifr/codebase/scripts/run_all_tests.sh` -> pass (`verification ok: variants=64, failures=0, blocking_failures=0, non_blocking_failures=0`).
 - Negative path: no exception/error-path surface is in approved bisect subset; fixture vectors assert boundary safety for empty inputs and duplicate insertion semantics.
+- PR: merged https://github.com/yaseralnajjar/sifr/pull/955
+- Review pass 1 status: approved with observations; no module-scope remediation required.
 
 ## Module Part Template (repeat per module)
 
@@ -308,6 +310,8 @@ Validation evidence:
 - Part 5 review pass 2 tracking: merged https://github.com/yaseralnajjar/sifr/pull/950
 - Part 6 implementation: merged https://github.com/yaseralnajjar/sifr/pull/951
 - Part 6 review pass 1 remediation: merged https://github.com/yaseralnajjar/sifr/pull/953
+- Part 6 review pass 2 tracking: merged https://github.com/yaseralnajjar/sifr/pull/954
+- Part 7 implementation: merged https://github.com/yaseralnajjar/sifr/pull/955
 
 ## External Review Passes
 - Reviewer pass 1 request output: `reviews/phase-30-part-1-env-review.md`
@@ -334,6 +338,8 @@ Validation evidence:
 - Reviewer pass 1 remediation status (`statistics`): done (2026-03-08, approved with observations; `mode`/`multimode` counting optimized to O(n))
 - Reviewer pass 2 request output (`statistics`): `reviews/phase-30-part-6-statistics-review-2.md`
 - Reviewer pass 2 remediation status (`statistics`): done (2026-03-08, approved for production use; no additional module-scope remediation required)
+- Reviewer pass 1 request output (`bisect`): `reviews/phase-30-part-7-bisect-review.md`
+- Reviewer pass 1 remediation status (`bisect`): done (2026-03-08, approved with observations; no additional module-scope remediation required)
 
 ## Wave Closure Review Cycles
 
