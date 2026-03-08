@@ -2,6 +2,7 @@
 
 Status: open (documented 2026-03-08)
 Context: ad hoc planning phase captured in `issues/` before any roadmap-phase promotion
+Execution readiness: planning-ready; promote into an execution checklist issue before implementation begins
 
 ## Objective
 Unify the compiler's build internals around one rooted-entrypoint compilation model, ensure dependency metadata is complete for both single-file and multi-file builds, and remove the current project-build manifest gap while preserving the existing CLI semantics contract.
@@ -159,8 +160,6 @@ A milestone is complete only when the reviewer explicitly confirms all of the fo
 
 ## Local Validation Commands
 - Baseline revalidation at execution start:
-  - `/Users/yaseralnajjar/work/sifr/codebase/scripts/run_all_tests.sh`
-- Full local suite:
   - `/Users/yaseralnajjar/work/sifr/codebase/scripts/run_all_tests.sh`
 - Quick local suite:
   - `/Users/yaseralnajjar/work/sifr/codebase/scripts/run_all_tests.sh --profile quick`
