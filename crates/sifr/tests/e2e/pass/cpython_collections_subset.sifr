@@ -1,0 +1,60 @@
+# Adapted CPython collections subset for sifr.collections (canonical vector format)
+from sifr.collections import Counter, from_list, deque, new_set, set_from_list, set_add, set_contains, set_remove, set_len, set_union, set_intersection
+from sifr.test import assert_bool_vector_eq
+
+def main():
+    expected: list[bool] = [
+        True, True, True, True, True, True, True, True, True,
+        True, True, True, True, True, True, True, True, True, True
+    ]
+    actual: list[bool] = []
+
+    empty_set: list[int] = new_set()
+    actual.append(set_len(empty_set) == 0)
+
+    s: list[int] = set_from_list([1, 2, 2, 3])
+    actual.append(set_len(s) == 3)
+    actual.append(set_contains(s, 2))
+    missing_four: bool = not set_contains(s, 4)
+    actual.append(missing_four)
+
+    s_added: list[int] = set_add(s, 4)
+    actual.append(set_len(s_added) == 4)
+    s_dup: list[int] = set_add(s_added, 4)
+    actual.append(set_len(s_dup) == 4)
+    s_removed: list[int] = set_remove(s_dup, 2)
+    removed_two: bool = not set_contains(s_removed, 2)
+    actual.append(removed_two)
+    actual.append(set_len(s_removed) == 3)
+
+    u: list[int] = set_union(set_from_list([1, 2, 2, 3]), set_from_list([3, 4, 5]))
+    inter: list[int] = set_intersection(set_from_list([1, 2, 2, 3]), set_from_list([3, 5]))
+    actual.append(set_len(u) == 5)
+    actual.append(set_len(inter) == 1)
+
+    c: Counter[str] = from_list(["a", "b", "a", "c", "a", "b"])
+    actual.append(c.get("a") == 3)
+    actual.append(c.total() == 6)
+    actual.append(str(c.most_common(2)) == "[\"a\", \"b\"]")
+    c.increment("b")
+    actual.append(c.get("b") == 3)
+
+    c.update(from_list(["b", "d"]))
+    actual.append(c.get("b") == 4 and c.get("d") == 1)
+    c.subtract(from_list(["a", "d"]))
+    actual.append(c.get("a") == 2 and c.get("d") == 0)
+    actual.append(len(c.elements()) == c.total())
+
+    d: deque[int] = deque(3)
+    d.append(1)
+    d.append(2)
+    d.append(3)
+    d.append(4)
+    actual.append(d.len() == 3 and d.popleft() == 2)
+    _ = d.pop()
+    _ = d.pop()
+    empty_pop_is_none: bool = d.pop() is None
+    actual.append(empty_pop_is_none)
+
+    assert_bool_vector_eq(actual, expected)
+    assert str("cpython_collections_subset: pass") == "cpython_collections_subset: pass"
