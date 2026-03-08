@@ -1,0 +1,36 @@
+from sifr.json import loads, json_dumps
+from sifr.test import assert_bool_vector_eq
+
+def main():
+    expected: list[bool] = [True, True, True, True, True, True]
+    actual: list[bool] = []
+
+    parse_obj_ok: bool = False
+    parse_arr_ok: bool = False
+    roundtrip_ok: bool = False
+    try:
+        parsed_obj: str = loads("{\"name\":\"sifr\"}")
+        parsed_arr: str = loads("[1,2,3]")
+        parsed_roundtrip: str = loads(json_dumps(7))
+        parse_obj_ok = parsed_obj == "{\"name\":\"sifr\"}"
+        parse_arr_ok = parsed_arr == "[1,2,3]"
+        roundtrip_ok = parsed_roundtrip == "7"
+    except JSONDecodeError as e:
+        _ = str(e.message)
+    actual.append(parse_obj_ok)
+    actual.append(parse_arr_ok)
+    actual.append(roundtrip_ok)
+
+    actual.append(json_dumps("hello") == "\"hello\"")
+    actual.append(json_dumps(False) == "false")
+
+    invalid_rejected: bool = False
+    try:
+        _bad: str = loads("{")
+        _ = _bad
+    except JSONDecodeError as e:
+        invalid_rejected = len(e.message) > 0
+    actual.append(invalid_rejected)
+
+    assert_bool_vector_eq(actual, expected)
+    print("m30_1d json parity demo: pass")

@@ -1,0 +1,69 @@
+# Adapted CPython json subset for sifr.json (canonical vector format)
+from sifr.json import loads, json_dumps
+from sifr.test import assert_bool_vector_eq
+
+def main():
+    expected: list[bool] = [
+        True, True, True, True, True, True,
+        True, True, True, True, True, True
+    ]
+    actual: list[bool] = []
+
+    obj_ok: bool = False
+    arr_ok: bool = False
+    num_ok: bool = False
+    bool_ok: bool = False
+    null_ok: bool = False
+    str_ok: bool = False
+    try:
+        obj: str = loads("{\"a\":1}")
+        arr: str = loads("[1,2,3]")
+        num: str = loads("42")
+        bval: str = loads("true")
+        nval: str = loads("null")
+        sval: str = loads("\"hi\"")
+        obj_ok = obj == "{\"a\":1}"
+        arr_ok = arr == "[1,2,3]"
+        num_ok = num == "42"
+        bool_ok = bval == "true"
+        null_ok = nval == "null"
+        str_ok = sval == "\"hi\""
+    except JSONDecodeError as e:
+        _ = str(e.message)
+    actual.append(obj_ok)
+    actual.append(arr_ok)
+    actual.append(num_ok)
+    actual.append(bool_ok)
+    actual.append(null_ok)
+    actual.append(str_ok)
+
+    actual.append(json_dumps("hello") == "\"hello\"")
+    actual.append(json_dumps(42) == "42")
+    actual.append(json_dumps(True) == "true")
+
+    roundtrip_ok: bool = False
+    try:
+        rt: str = loads(json_dumps(42))
+        roundtrip_ok = rt == "42"
+    except JSONDecodeError as e:
+        _ = str(e.message)
+    actual.append(roundtrip_ok)
+
+    invalid_open_brace_rejected: bool = False
+    try:
+        _bad1: str = loads("{")
+        _ = _bad1
+    except JSONDecodeError as e:
+        invalid_open_brace_rejected = len(e.message) > 0
+    actual.append(invalid_open_brace_rejected)
+
+    invalid_literal_rejected: bool = False
+    try:
+        _bad2: str = loads("tru")
+        _ = _bad2
+    except JSONDecodeError as e:
+        invalid_literal_rejected = len(e.message) > 0
+    actual.append(invalid_literal_rejected)
+
+    assert_bool_vector_eq(actual, expected)
+    assert str("cpython_json_subset: pass") == "cpython_json_subset: pass"
