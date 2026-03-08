@@ -1,0 +1,75 @@
+# m30_1a base64 parity demo
+from sifr.base64 import (
+    b64encode, b64decode,
+    standard_b64encode, standard_b64decode,
+    urlsafe_b64encode, urlsafe_b64decode,
+    b16encode, b16decode
+)
+from sifr.test import assert_vector_eq, assert_bool_vector_eq
+
+def main():
+    expected: list[str] = ["Zm9v", "foo", "Zm9v", "foo", "aGVsbG8=", "hello", "4869", "Hi"]
+    actual: list[str] = []
+
+    actual.append(b64encode("foo"))
+    d1: str = ""
+    try:
+        out1: str = b64decode("Zm9v")
+        d1 = out1
+    except ParseError as e:
+        assert str("unexpected: " + e.message) == "m30_1a base64 parity demo: pass"
+    actual.append(d1)
+
+    actual.append(standard_b64encode("foo"))
+    d2: str = ""
+    try:
+        out2: str = standard_b64decode("Zm9v")
+        d2 = out2
+    except ParseError as e:
+        assert str("unexpected: " + e.message) == "m30_1a base64 parity demo: pass"
+    actual.append(d2)
+
+    u: str = urlsafe_b64encode("hello")
+    u_for_actual: str = u + ""
+    d3: str = ""
+    try:
+        out3: str = urlsafe_b64decode(u)
+        d3 = out3
+    except ParseError as e:
+        assert str("unexpected: " + e.message) == "m30_1a base64 parity demo: pass"
+    actual.append(u_for_actual)
+    actual.append(d3)
+
+    h_encoded: str = ""
+    try:
+        out4: str = b16encode("Hi")
+        h_encoded = out4
+    except ParseError as e:
+        assert str("unexpected: " + e.message) == "m30_1a base64 parity demo: pass"
+    h_for_actual: str = h_encoded + ""
+    h2: str = ""
+    try:
+        out5: str = b16decode(h_encoded)
+        h2 = out5
+    except ParseError as e:
+        assert str("unexpected: " + e.message) == "m30_1a base64 parity demo: pass"
+    actual.append(h_for_actual)
+    actual.append(h2)
+
+    assert_vector_eq(actual, expected)
+
+    expected_ok: list[bool] = [False, True]
+    actual_ok: list[bool] = []
+    try:
+        bad: str = b64decode("not base64!!!")
+        actual_ok.append(True)
+    except ParseError as e:
+        actual_ok.append(False)
+    try:
+        good: str = b64decode("Zm9v")
+        actual_ok.append(True)
+    except ParseError as e:
+        actual_ok.append(False)
+    assert_bool_vector_eq(actual_ok, expected_ok)
+
+    print("m30_1a base64 parity demo: pass")

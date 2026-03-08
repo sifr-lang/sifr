@@ -25,7 +25,7 @@ Loop per part: Work -> Validate -> PR -> Review -> Merge -> External review pass
 ### wave_30_1a: Binary and Encoding Foundations
 1. [x] `env`
 2. [x] `bytes`
-3. [ ] `base64`
+3. [x] `base64`
 4. [ ] `hashlib`
 
 ### wave_30_1b: Numeric and Ordered-Collection Semantics
@@ -128,6 +128,28 @@ Validation evidence:
 - Review pass 1 status: approved with observations; no code remediation required for bytes scope.
 - Review pass 2 status: approved; no code remediation required for bytes scope.
 
+## Part 3: `base64`
+status: in_progress (2026-03-08)
+
+- [x] Define module parity scope and CPython references
+- [x] Port/expand CPython-derived parity fixtures (canonical vector format)
+- [x] Fix root-cause implementation gaps
+- [x] Record parity classification (`parity` / `intentional-diff` / `unsupported`)
+- [x] Run module demo
+- [x] Run targeted module tests
+- [x] Run full local suite
+- [ ] Open PR, review, and merge
+- [ ] External reviewer pass 1 remediation completed (if findings)
+- [ ] External reviewer pass 2 remediation completed (if findings)
+- [ ] Mark part progress in this checklist
+
+Validation evidence:
+- Positive path: `cargo run -q -p sifr -- run demos/m30_1a_base64_parity_demo/main.sifr` -> prints `m30_1a base64 parity demo: pass`.
+- Positive path: `cargo run -q -p sifr -- run crates/sifr/tests/e2e/pass/cpython_base64_subset.sifr` -> pass.
+- Positive path: `cargo run -q -p sifr -- run crates/sifr/tests/e2e/pass/cpython_base64_rfc4648_vectors.sifr` -> pass.
+- Positive path: `/Users/yaseralnajjar/work/sifr/codebase/scripts/run_all_tests.sh` -> pass (`verification ok: variants=64, failures=0, blocking_failures=0, non_blocking_failures=0`).
+- Negative path: canonical bool vectors in `cpython_base64_subset.sifr` validate `b64decode` parse-failure signaling for invalid payloads and success-path decode for valid payloads.
+
 ## Module Part Template (repeat per module)
 
 ### Part N: <module>
@@ -161,6 +183,8 @@ Validation evidence:
 - Phase completion closure cycle: merged https://github.com/yaseralnajjar/sifr/pull/937
 - Part 2 implementation: merged https://github.com/yaseralnajjar/sifr/pull/939
 - Part 2 review pass 1 tracking: merged https://github.com/yaseralnajjar/sifr/pull/940
+- Part 2 review pass 2 tracking: merged https://github.com/yaseralnajjar/sifr/pull/941
+- Phase production-grade closure cycle: merged https://github.com/yaseralnajjar/sifr/pull/938
 
 ## External Review Passes
 - Reviewer pass 1 request output: `reviews/phase-30-part-1-env-review.md`

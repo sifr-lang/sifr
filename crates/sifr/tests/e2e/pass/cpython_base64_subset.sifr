@@ -8,90 +8,121 @@ from sifr.base64 import (
     b16encode, b16decode,
     encodebytes, decodebytes
 )
-
+from sifr.test import assert_vector_eq, assert_bool_vector_eq
 
 def main():
-    expected: list[str] = ["invalid-safe", "bar", "YmFy", "Hi", "4869", "hello", "true", "hello", "true", "hello", "true", "foo", "Zm9v", "foo", "Zm9v"]
-    expected_index: int = 0
-    assert str(b64encode("foo")) == expected[len(expected) - expected_index - 1]
-    expected_index = expected_index + 1
-    try:
-        d1: str = b64decode("Zm9v")
-        assert str(d1) == expected[len(expected) - expected_index - 1]
-        expected_index = expected_index + 1
-    except ParseError as e:
-        assert str("unexpected: " + e.message) == expected[len(expected) - expected_index - 1]
-        expected_index = expected_index + 1
+    expected: list[str] = ["Zm9v", "foo", "Zm9v", "foo", "true", "hello", "true", "hello", "true", "hello", "4869", "Hi", "YmFy", "bar"]
+    actual: list[str] = []
 
-    assert str(standard_b64encode("foo")) == expected[len(expected) - expected_index - 1]
-    expected_index = expected_index + 1
+    actual.append(b64encode("foo"))
+    d1_ok: bool = True
+    d1: str = ""
     try:
-        d2: str = standard_b64decode("Zm9v")
-        assert str(d2) == expected[len(expected) - expected_index - 1]
-        expected_index = expected_index + 1
+        out: str = b64decode("Zm9v")
+        d1 = out
     except ParseError as e:
-        assert str("unexpected: " + e.message) == expected[len(expected) - expected_index - 1]
-        expected_index = expected_index + 1
+        d1_ok = False
+    if d1_ok:
+        actual.append(d1)
+    else:
+        actual.append("ERR")
+
+    actual.append(standard_b64encode("foo"))
+    d2_ok: bool = True
+    d2: str = ""
+    try:
+        out2: str = standard_b64decode("Zm9v")
+        d2 = out2
+    except ParseError as e:
+        d2_ok = False
+    if d2_ok:
+        actual.append(d2)
+    else:
+        actual.append("ERR")
 
     u: str = urlsafe_b64encode("hello")
-    assert str(len(u) > 0) == expected[len(expected) - expected_index - 1]
-    expected_index = expected_index + 1
+    actual.append(str(len(u) > 0))
+    ud_ok: bool = True
+    ud: str = ""
     try:
-        ud: str = urlsafe_b64decode(u)
-        assert str(ud) == expected[len(expected) - expected_index - 1]
-        expected_index = expected_index + 1
+        out3: str = urlsafe_b64decode(u)
+        ud = out3
     except ParseError as e:
-        assert str("unexpected: " + e.message) == expected[len(expected) - expected_index - 1]
-        expected_index = expected_index + 1
+        ud_ok = False
+    if ud_ok:
+        actual.append(ud)
+    else:
+        actual.append("ERR")
 
     b32: str = b32encode("hello")
-    assert str(len(b32) > 0) == expected[len(expected) - expected_index - 1]
-    expected_index = expected_index + 1
+    actual.append(str(len(b32) > 0))
+    b32d_ok: bool = True
+    b32d: str = ""
     try:
-        b32d: str = b32decode(b32)
-        assert str(b32d) == expected[len(expected) - expected_index - 1]
-        expected_index = expected_index + 1
+        out4: str = b32decode(b32)
+        b32d = out4
     except ParseError as e:
-        assert str("unexpected: " + e.message) == expected[len(expected) - expected_index - 1]
-        expected_index = expected_index + 1
+        b32d_ok = False
+    if b32d_ok:
+        actual.append(b32d)
+    else:
+        actual.append("ERR")
 
     b32h: str = b32hexencode("hello")
-    assert str(len(b32h) > 0) == expected[len(expected) - expected_index - 1]
-    expected_index = expected_index + 1
+    actual.append(str(len(b32h) > 0))
+    b32hd_ok: bool = True
+    b32hd: str = ""
     try:
-        b32hd: str = b32hexdecode(b32h)
-        assert str(b32hd) == expected[len(expected) - expected_index - 1]
-        expected_index = expected_index + 1
+        out5: str = b32hexdecode(b32h)
+        b32hd = out5
     except ParseError as e:
-        assert str("unexpected: " + e.message) == expected[len(expected) - expected_index - 1]
-        expected_index = expected_index + 1
+        b32hd_ok = False
+    if b32hd_ok:
+        actual.append(b32hd)
+    else:
+        actual.append("ERR")
 
+    b16_ok: bool = True
+    b16: str = ""
+    b16d: str = ""
     try:
         h: str = b16encode("Hi")
-        assert str(h) == expected[len(expected) - expected_index - 1]
-        expected_index = expected_index + 1
+        b16 = h + ""
         hd: str = b16decode(h)
-        assert str(hd) == expected[len(expected) - expected_index - 1]
-        expected_index = expected_index + 1
+        b16d = hd
     except ParseError as e:
-        assert str("unexpected: " + e.message) == expected[len(expected) - expected_index - 1]
-        expected_index = expected_index + 1
+        b16_ok = False
+    if b16_ok:
+        actual.append(b16)
+        actual.append(b16d)
+    else:
+        actual.append("ERR")
+        actual.append("ERR")
 
-    assert str(encodebytes("bar")) == expected[len(expected) - expected_index - 1]
-    expected_index = expected_index + 1
+    actual.append(encodebytes("bar"))
+    d3_ok: bool = True
+    d3: str = ""
     try:
-        d3: str = decodebytes("YmFy")
-        assert str(d3) == expected[len(expected) - expected_index - 1]
-        expected_index = expected_index + 1
+        out6: str = decodebytes("YmFy")
+        d3 = out6
     except ParseError as e:
-        assert str("unexpected: " + e.message) == expected[len(expected) - expected_index - 1]
-        expected_index = expected_index + 1
+        d3_ok = False
+    if d3_ok:
+        actual.append(d3)
+    else:
+        actual.append("ERR")
 
-    try:
-        bad: str = b64decode("not base64!!!")
-        assert str(bad) == expected[len(expected) - expected_index - 1]
-        expected_index = expected_index + 1
-    except ParseError as e:
-        assert str("invalid-safe") == expected[len(expected) - expected_index - 1]
-        expected_index = expected_index + 1
+    assert_vector_eq(actual, expected)
 
+    # Error-path fixture vectors.
+    decode_inputs: list[str] = ["not base64!!!", "YmFy"]
+    expected_ok: list[bool] = [False, True]
+    actual_ok: list[bool] = []
+    for payload in decode_inputs:
+        try:
+            out7: str = b64decode(payload)
+            actual_ok.append(True)
+        except ParseError as e:
+            actual_ok.append(False)
+    assert_bool_vector_eq(actual_ok, expected_ok)
+    assert str("cpython_base64_subset: pass") == "cpython_base64_subset: pass"
