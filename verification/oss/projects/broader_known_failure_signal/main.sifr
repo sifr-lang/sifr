@@ -1,0 +1,5 @@
+from unknown_ecosystem_module import value
+
+
+def main():
+    print(str(value))

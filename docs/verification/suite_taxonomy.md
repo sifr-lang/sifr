@@ -71,6 +71,7 @@ This document defines the canonical suite taxonomy for compiler verification har
 - Manifests live under `verification/oss/`.
 - `oss-curated` entries must include pinned revision, owner, rationale, commands, timeout, and expected class.
 - `ecosystem-broader` is explicitly non-blocking and emits signal-only reports.
+- Operational policy: `docs/verification/oss_gate_policy.md`.
 
 ## Manifest Source of Truth
 

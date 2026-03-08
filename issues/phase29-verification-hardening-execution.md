@@ -38,13 +38,13 @@ Loop per part: Work -> Validate -> PR -> Review -> Merge -> Mark Done
 - [x] Open PR, review, and merge
 
 ### Part 3: milestone_29_3 Fuzz and Property Operationalization
-- [ ] Define fuzz targets/property suites and seed corpora manifests
-- [ ] Implement deterministic local smoke gate for fuzz/property suites
-- [ ] Define triage/minimization/reproducibility workflow and artifacts
-- [ ] Add demo: `demos/m29_3_fuzz_and_property_operationalization_demo/main.sifr`
-- [ ] Add positive and negative validations for deterministic smoke gates
-- [ ] Run milestone demo + full local suite
-- [ ] Open PR, review, and merge
+- [x] Define fuzz targets/property suites and seed corpora manifests
+- [x] Implement deterministic local smoke gate for fuzz/property suites
+- [x] Define triage/minimization/reproducibility workflow and artifacts
+- [x] Add demo: `demos/m29_3_fuzz_and_property_operationalization_demo/main.sifr`
+- [x] Add positive and negative validations for deterministic smoke gates
+- [x] Run milestone demo + full local suite
+- [x] Open PR, review, and merge
 
 ### Part 4: milestone_29_4 Curated OSS Gate and Broader Ecosystem Lane
 - [ ] Add pinned curated OSS gate manifest with owners/rationale/commands/timeouts
@@ -106,7 +106,7 @@ Validation evidence:
 - Negative path: crash sentinels require valid metadata and existing `source_reference`; missing fields/path would fail `crashes` suite metadata validation.
 
 ## Part 3: milestone_29_3 Fuzz and Property Operationalization
-status: done (2026-03-08, pending PR link)
+status: done (2026-03-08, PR #922)
 
 - [x] Define fuzz targets, property suites, and seed corpora manifests
 - [x] Define reproducibility, deduplication, minimization, and triage rules
@@ -115,7 +115,7 @@ status: done (2026-03-08, pending PR link)
 - [x] Negative-path validation recorded
 - [x] Run milestone demo
 - [x] Run full local suite
-- [ ] Open PR, review, and merge
+- [x] Open PR, review, and merge
 - [x] Mark part progress in this checklist
 
 Validation evidence:
@@ -126,10 +126,31 @@ Validation evidence:
 - Negative path: property entry `PROP-0001` enforces deterministic failing diagnostics for invalid import seed (`expect_exit_code=1`) and would fail on drift (`exit-code|stdout|stderr`).
 - Negative path: fuzz-smoke suite fails on panic signals or non-allowed exit codes and enforces minimum deduplicated case count (`min_unique_cases`).
 
+## Part 4: milestone_29_4 Curated OSS Gate and Broader Ecosystem Lane
+status: done (2026-03-08, pending PR link)
+
+- [x] Build pinned curated OSS gate with owner/rationale/commands/timeout metadata
+- [x] Separate broader non-blocking ecosystem lane with explicit classification
+- [x] Enforce structured reproducible execution through canonical verification runner
+- [x] Positive-path validation recorded
+- [x] Negative-path validation recorded
+- [x] Run milestone demo
+- [x] Run full local suite
+- [ ] Open PR, review, and merge
+- [x] Mark part progress in this checklist
+
+Validation evidence:
+- Positive path: `cargo run -q -p sifr -- run demos/m29_4_curated_oss_gate_and_ecosystem_lane_demo/main.sifr` -> prints curated-vs-broader lane contract lines and exits `0`.
+- Positive path: `python3 scripts/run_verification_hardening.py --profile full --suite oss-curated --suite ecosystem-broader` -> `verification ok: variants=7, failures=0, blocking_failures=0, non_blocking_failures=0`.
+- Positive path: `/Users/yaseralnajjar/work/sifr/codebase/scripts/run_all_tests.sh` -> pass with `oss-curated` and `ecosystem-broader` suites active in canonical hardening gate.
+- Negative path: curated project `OSS-CURATED-0002` initially failed (`unexpected-exit`) due list-borrow codegen mismatch; fixture was corrected (`own` parameter + safe option narrowing) and gate revalidated.
+- Negative path: `ecosystem-broader` suite is marked `blocking=false`; mismatches remain signal-only and are reported in machine-readable artifacts without merge blocking.
+
 ## PR Log
 - Part 1: merged https://github.com/yaseralnajjar/sifr/pull/920
 - Part 2: merged https://github.com/yaseralnajjar/sifr/pull/921
-- Part 3: pending
+- Part 3: merged https://github.com/yaseralnajjar/sifr/pull/922
+- Part 4: pending
 
 ## External Review Passes
 - Pending

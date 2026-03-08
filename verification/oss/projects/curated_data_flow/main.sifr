@@ -1,0 +1,7 @@
+from metrics import score
+
+
+def main():
+    values: list[int] = [3, 5, 7]
+    print("oss curated data flow")
+    print(str(score(values)))

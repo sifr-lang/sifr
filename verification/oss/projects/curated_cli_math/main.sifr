@@ -1,0 +1,6 @@
+from billing import total_with_fee
+
+
+def main():
+    print("oss curated cli math")
+    print(str(total_with_fee(12, 8)))

@@ -96,7 +96,16 @@ def load_text(path: Path) -> str:
 
 def should_run_suite(profile: str, suite_name: str) -> bool:
     if profile == "quick":
-        return suite_name in {"diagnostics", "project", "fixedbugs", "crashes"}
+        return suite_name in {
+            "diagnostics",
+            "project",
+            "fixedbugs",
+            "crashes",
+            "property",
+            "fuzz-smoke",
+            "oss-curated",
+            "ecosystem-broader",
+        }
     return True
 
 
@@ -106,6 +115,7 @@ def run_variant(
     command_name: str,
     entry: Path,
     diagnostic_format: str | None,
+    timeout_secs: int | None = None,
 ) -> tuple[int, str, str, float, list[str]]:
     args = ["cargo", "run", "-q", "-p", "sifr", "--"]
     if diagnostic_format is not None:
@@ -113,15 +123,24 @@ def run_variant(
     args.extend([command_name, str(entry)])
 
     started = time.perf_counter()
-    proc = subprocess.run(
-        args,
-        cwd=repo_root,
-        text=True,
-        capture_output=True,
-        check=False,
-    )
+    try:
+        proc = subprocess.run(
+            args,
+            cwd=repo_root,
+            text=True,
+            capture_output=True,
+            check=False,
+            timeout=timeout_secs,
+        )
+        exit_code = proc.returncode
+        stdout = proc.stdout
+        stderr = proc.stderr
+    except subprocess.TimeoutExpired as timeout_error:
+        exit_code = 124
+        stdout = timeout_error.stdout or ""
+        stderr = (timeout_error.stderr or "") + f"\ncommand timed out after {timeout_secs} seconds"
     elapsed_ms = (time.perf_counter() - started) * 1000.0
-    return proc.returncode, proc.stdout, proc.stderr, elapsed_ms, args
+    return exit_code, stdout, stderr, elapsed_ms, args
 
 
 def canonicalize_output(
@@ -971,6 +990,175 @@ def run_fuzz_smoke_suite(
     return result
 
 
+def run_oss_suite(
+    *,
+    suite: dict[str, Any],
+    repo_root: Path,
+    runner_name: str,
+) -> dict[str, Any]:
+    suite_name = suite["name"]
+    index_raw = suite.get("index")
+    if not isinstance(index_raw, str):
+        raise SystemExit(f"suite '{suite_name}' missing string 'index'")
+    index_path = repo_root / index_raw
+    entries = load_index(index_path)
+    if not entries:
+        raise SystemExit(f"suite '{suite_name}' has empty index: {index_path}")
+    print(f"  suite={suite_name} owner={suite.get('owner', 'unknown')} entries={len(entries)}")
+
+    result = {
+        "name": suite_name,
+        "owner": suite.get("owner", "unknown"),
+        "blocking": bool(suite.get("blocking", False)),
+        "runner": runner_name,
+        "index": str(index_path.relative_to(repo_root)),
+        "cases": [],
+        "failed_cases": 0,
+        "total_variants": 0,
+        "total_failures": 0,
+    }
+
+    allowed_classifications = {"pass", "known-failure", "investigate"}
+
+    for entry in entries:
+        case_id = str(entry.get("id", "<missing-id>"))
+        case_result = {
+            "id": case_id,
+            "project_root": entry.get("project_root"),
+            "pinned_revision": entry.get("pinned_revision"),
+            "expected_result_classification": entry.get("expected_result_classification"),
+            "variants": [],
+        }
+
+        mismatches = required_missing(
+            entry,
+            (
+                "id",
+                "project_root",
+                "pinned_revision",
+                "owner",
+                "rationale",
+                "expected_result_classification",
+            ),
+        )
+        classification = entry.get("expected_result_classification")
+        if classification not in allowed_classifications:
+            mismatches.append("expected_result_classification")
+
+        project_root_raw = entry.get("project_root")
+        commands = entry.get("commands")
+        project_root = repo_root / str(project_root_raw) if isinstance(project_root_raw, str) else None
+        if project_root is None or not project_root.is_dir():
+            mismatches.append("project_root")
+        if not isinstance(commands, list) or not commands:
+            mismatches.append("commands")
+
+        case_failed = False
+        if mismatches:
+            result["total_variants"] += 1
+            result["total_failures"] += 1
+            result["failed_cases"] += 1
+            case_result["variants"].append(
+                {
+                    "label": "metadata",
+                    "status": "fail",
+                    "mismatches": sorted(set(mismatches)),
+                }
+            )
+            result["cases"].append(case_result)
+            continue
+
+        assert project_root is not None
+        for idx, command_meta in enumerate(commands, start=1):
+            if not isinstance(command_meta, dict):
+                result["total_variants"] += 1
+                result["total_failures"] += 1
+                case_failed = True
+                case_result["variants"].append(
+                    {
+                        "label": f"command-{idx}",
+                        "status": "fail",
+                        "mismatches": ["command-metadata"],
+                    }
+                )
+                continue
+
+            command_name = command_meta.get("command")
+            entrypoint_raw = command_meta.get("entrypoint")
+            expected_exit = command_meta.get("expect_exit_code")
+            timeout_secs = command_meta.get("timeout_secs")
+
+            command_mismatches: list[str] = []
+            if command_name not in {"check", "run", "build", "test"}:
+                command_mismatches.append("command")
+            if not isinstance(entrypoint_raw, str) or not entrypoint_raw:
+                command_mismatches.append("entrypoint")
+            if not isinstance(expected_exit, int):
+                command_mismatches.append("expect_exit_code")
+            if not isinstance(timeout_secs, int) or timeout_secs < 1:
+                command_mismatches.append("timeout_secs")
+
+            entrypoint_path = project_root / str(entrypoint_raw) if isinstance(entrypoint_raw, str) else None
+            if entrypoint_path is None or not entrypoint_path.is_file():
+                command_mismatches.append("entrypoint")
+
+            if command_mismatches:
+                result["total_variants"] += 1
+                result["total_failures"] += 1
+                case_failed = True
+                case_result["variants"].append(
+                    {
+                        "label": f"command-{idx}",
+                        "status": "fail",
+                        "mismatches": sorted(set(command_mismatches)),
+                    }
+                )
+                continue
+
+            assert entrypoint_path is not None
+            assert isinstance(timeout_secs, int)
+            exit_code, stdout, stderr, elapsed_ms, argv = run_variant(
+                repo_root=repo_root,
+                command_name=str(command_name),
+                entry=entrypoint_path,
+                diagnostic_format=None,
+                timeout_secs=timeout_secs,
+            )
+            stdout_norm = normalize_string(stdout, repo_root)
+            stderr_norm = normalize_string(stderr, repo_root)
+
+            variant_mismatches: list[str] = []
+            if exit_code != expected_exit:
+                variant_mismatches.append("unexpected-exit")
+            if contains_internal_panic(stdout_norm + stderr_norm):
+                variant_mismatches.append("panic-signal")
+
+            result["total_variants"] += 1
+            status = "pass" if not variant_mismatches else "fail"
+            if variant_mismatches:
+                case_failed = True
+                result["total_failures"] += 1
+
+            case_result["variants"].append(
+                {
+                    "label": f"{command_name}-{idx}",
+                    "status": status,
+                    "mismatches": variant_mismatches,
+                    "argv": argv,
+                    "expected_exit_code": expected_exit,
+                    "actual_exit_code": exit_code,
+                    "duration_ms": round(elapsed_ms, 3),
+                    "timeout_secs": timeout_secs,
+                }
+            )
+
+        if case_failed:
+            result["failed_cases"] += 1
+        result["cases"].append(case_result)
+
+    return result
+
+
 def main() -> int:
     args = parse_args()
     repo_root = Path(__file__).resolve().parent.parent
@@ -1011,6 +1199,7 @@ def main() -> int:
     total_variants = 0
     total_failures = 0
     blocking_failures = 0
+    non_blocking_failures = 0
 
     print("Running phase-29 verification suites")
     print(f"  profile={args.profile}")
@@ -1050,6 +1239,18 @@ def main() -> int:
                 suite=suite,
                 repo_root=repo_root,
             )
+        elif runner == "oss-curated":
+            suite_result = run_oss_suite(
+                suite=suite,
+                repo_root=repo_root,
+                runner_name="oss-curated",
+            )
+        elif runner == "ecosystem-broader":
+            suite_result = run_oss_suite(
+                suite=suite,
+                repo_root=repo_root,
+                runner_name="ecosystem-broader",
+            )
         else:
             raise SystemExit(
                 f"unsupported runner '{runner}' for suite '{suite.get('name', '<unknown>')}'"
@@ -1057,9 +1258,13 @@ def main() -> int:
 
         run_results.append(suite_result)
         total_variants += int(suite_result.get("total_variants", 0))
-        total_failures += int(suite_result.get("total_failures", 0))
-        if int(suite_result.get("failed_cases", 0)) > 0 and bool(suite_result.get("blocking")):
-            blocking_failures += int(suite_result.get("failed_cases", 0))
+        suite_failures = int(suite_result.get("total_failures", 0))
+        total_failures += suite_failures
+        if suite_failures > 0:
+            if bool(suite_result.get("blocking")):
+                blocking_failures += suite_failures
+            else:
+                non_blocking_failures += suite_failures
 
     result_payload = {
         "schema_version": 1,
@@ -1072,6 +1277,7 @@ def main() -> int:
             "total_variants": total_variants,
             "total_failures": total_failures,
             "blocking_failures": blocking_failures,
+            "non_blocking_failures": non_blocking_failures,
         },
     }
     result_json_path.parent.mkdir(parents=True, exist_ok=True)
@@ -1082,10 +1288,10 @@ def main() -> int:
     else:
         print(f"result_json={result_json_path.relative_to(repo_root)}")
 
-    if total_failures > 0 and not args.bless:
+    if blocking_failures > 0 and not args.bless:
         print(
             f"verification failed: variants={total_variants}, failures={total_failures}, "
-            f"blocking_failures={blocking_failures}",
+            f"blocking_failures={blocking_failures}, non_blocking_failures={non_blocking_failures}",
             file=sys.stderr,
         )
         print("actual outputs written under target/verification/actual", file=sys.stderr)
@@ -1093,7 +1299,7 @@ def main() -> int:
 
     print(
         f"verification ok: variants={total_variants}, failures={total_failures}, "
-        f"blocking_failures={blocking_failures}"
+        f"blocking_failures={blocking_failures}, non_blocking_failures={non_blocking_failures}"
     )
     return 0
 
