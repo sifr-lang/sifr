@@ -1,0 +1,48 @@
+# Adapted CPython itertools subset for sifr.itertools (canonical vector format)
+from sifr.itertools import chain, repeat, take, flatten, pairwise, batched, islice, accumulate, compress, dropwhile, takewhile, filterfalse, zip_longest, count_from, cycle
+from sifr.test import assert_bool_vector_eq
+
+def lt3(x: int) -> bool:
+    return x < 3
+
+def main():
+    expected: list[bool] = [
+        True, True, True, True, True, True, True, True,
+        True, True, True, True, True, True, True, True
+    ]
+    actual: list[bool] = []
+
+    actual.append(str(chain([1, 2], [3, 4])) == "[1, 2, 3, 4]")
+    actual.append(str(repeat(7, 3)) == "[7, 7, 7]")
+    actual.append(str(take(2, [10, 20, 30])) == "[10, 20]")
+    actual.append(str(flatten([[1], [2, 3], []])) == "[1, 2, 3]")
+    actual.append(str(pairwise([1, 2, 3])) == "[[1, 2], [2, 3]]")
+
+    batched_ok: bool = False
+    try:
+        bat: list[list[int]] = batched([1, 2, 3, 4, 5], 2)
+        batched_ok = str(bat) == "[[1, 2], [3, 4], [5]]"
+    except ValueError as e:
+        _ = str(e.message)
+    actual.append(batched_ok)
+
+    actual.append(str(islice([10, 20, 30, 40], 3)) == "[10, 20, 30]")
+    actual.append(str(accumulate([1, 2, 3, 4])) == "[1, 3, 6, 10]")
+    actual.append(str(compress([1, 2, 3], [True, False, True])) == "[1, 3]")
+    actual.append(str(dropwhile(lt3, [1, 2, 3, 1])) == "[3, 1]")
+    actual.append(str(takewhile(lt3, [1, 2, 3, 1])) == "[1, 2]")
+    actual.append(str(filterfalse(lt3, [1, 2, 3, 1])) == "[3]")
+    actual.append(str(zip_longest([1, 2], [9], 0)) == "[[1, 9], [2, 0]]")
+    actual.append(str(count_from(5, 2, 4)) == "[5, 7, 9, 11]")
+    actual.append(str(cycle([1, 2, 3], 5)) == "[1, 2, 3, 1, 2]")
+
+    invalid_batch_rejected: bool = False
+    try:
+        _bad: list[list[int]] = batched([1, 2], 0)
+        _ = _bad
+    except ValueError as e:
+        invalid_batch_rejected = len(e.message) > 0
+    actual.append(invalid_batch_rejected)
+
+    assert_bool_vector_eq(actual, expected)
+    assert str("cpython_itertools_subset: pass") == "cpython_itertools_subset: pass"
