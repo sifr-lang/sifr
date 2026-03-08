@@ -332,8 +332,8 @@ status: in_progress (2026-03-08)
 - [x] Run module demo
 - [x] Run targeted module tests
 - [x] Run full local suite
-- [ ] Open PR, review, and merge
-- [ ] External reviewer pass 1 remediation completed (if findings)
+- [x] Open PR, review, and merge
+- [x] External reviewer pass 1 remediation completed (if findings)
 - [ ] External reviewer pass 2 remediation completed (if findings)
 - [ ] Mark part progress in this checklist
 
@@ -345,6 +345,8 @@ Validation evidence:
 - Positive path: `cargo run -q -p sifr -- run crates/sifr/tests/e2e/pass/edge_case_safety.sifr` -> pass.
 - Positive path: `/Users/yaseralnajjar/work/sifr/codebase/scripts/run_all_tests.sh` -> pass (`verification ok: variants=64, failures=0, blocking_failures=0, non_blocking_failures=0`).
 - Negative path: canonical bool vectors in `cpython_textwrap_subset.sifr` validate width guards for `wrap`/`fill` and safe behavior for empty-input wrapping and non-content line handling in `indent`.
+- PR: merged https://github.com/yaseralnajjar/sifr/pull/967
+- Review pass 1 remediation: parity matrix classification corrected to `intentional-diff` for deterministic whitespace normalization contract and `dedent` magic-number sentinel removed; revalidated demo + full suite.
 
 ## Module Part Template (repeat per module)
 
@@ -403,6 +405,8 @@ Validation evidence:
 - Wave production-grade closure cycle (wave_30_1b): merged https://github.com/yaseralnajjar/sifr/pull/962
 - Part 9 implementation: merged https://github.com/yaseralnajjar/sifr/pull/963
 - Part 9 review pass 1 remediation: merged https://github.com/yaseralnajjar/sifr/pull/964
+- Part 9 review pass 2 tracking: merged https://github.com/yaseralnajjar/sifr/pull/965
+- Part 10 implementation: merged https://github.com/yaseralnajjar/sifr/pull/967
 
 ## External Review Passes
 - Reviewer pass 1 request output: `reviews/phase-30-part-1-env-review.md`
@@ -441,6 +445,8 @@ Validation evidence:
 - Reviewer pass 1 remediation status (`string`): done (2026-03-08, approved with observation; whitespace parity remediated to include vertical-tab/form-feed)
 - Reviewer pass 2 request output (`string`): `reviews/phase-30-part-9-string-review-2.md`
 - Reviewer pass 2 remediation status (`string`): done (2026-03-08, approved for production use; no additional module-scope remediation required)
+- Reviewer pass 1 request output (`textwrap`): `reviews/phase-30-part-10-textwrap-review.md`
+- Reviewer pass 1 remediation status (`textwrap`): done (2026-03-08, approved with observations; parity classification aligned to intentional-diff and dedent sentinel cleanup applied)
 
 ## Wave Closure Review Cycles
 
