@@ -275,8 +275,8 @@ status: in_progress (2026-03-08)
 - [x] Run module demo
 - [x] Run targeted module tests
 - [x] Run full local suite
-- [ ] Open PR, review, and merge
-- [ ] External reviewer pass 1 remediation completed (if findings)
+- [x] Open PR, review, and merge
+- [x] External reviewer pass 1 remediation completed (if findings)
 - [ ] External reviewer pass 2 remediation completed (if findings)
 - [ ] Mark part progress in this checklist
 
@@ -291,6 +291,8 @@ Validation evidence:
 - Positive path: `cargo run -q -p sifr -- run crates/sifr/tests/e2e/pass/heapq_mut_param.sifr` -> pass.
 - Positive path: `/Users/yaseralnajjar/work/sifr/codebase/scripts/run_all_tests.sh` -> pass (`verification ok: variants=64, failures=0, blocking_failures=0, non_blocking_failures=0`).
 - Negative path: canonical bool vectors in `cpython_heapq_subset.sifr` validate empty `heappop`/`heapreplace` safety adaptation (`None`) and non-mutating helper semantics for `heappushpop`.
+- PR: merged https://github.com/yaseralnajjar/sifr/pull/958
+- Review pass 1 status: approved with observations; no module-scope remediation required.
 
 ## Module Part Template (repeat per module)
 
@@ -341,6 +343,8 @@ Validation evidence:
 - Part 6 review pass 2 tracking: merged https://github.com/yaseralnajjar/sifr/pull/954
 - Part 7 implementation: merged https://github.com/yaseralnajjar/sifr/pull/955
 - Part 7 review pass 1 tracking: merged https://github.com/yaseralnajjar/sifr/pull/956
+- Part 7 review pass 2 tracking: merged https://github.com/yaseralnajjar/sifr/pull/957
+- Part 8 implementation: merged https://github.com/yaseralnajjar/sifr/pull/958
 
 ## External Review Passes
 - Reviewer pass 1 request output: `reviews/phase-30-part-1-env-review.md`
@@ -371,6 +375,8 @@ Validation evidence:
 - Reviewer pass 1 remediation status (`bisect`): done (2026-03-08, approved with observations; no additional module-scope remediation required)
 - Reviewer pass 2 request output (`bisect`): `reviews/phase-30-part-7-bisect-review-2.md`
 - Reviewer pass 2 remediation status (`bisect`): done (2026-03-08, approved for production use; no additional module-scope remediation required)
+- Reviewer pass 1 request output (`heapq`): `reviews/phase-30-part-8-heapq-review.md`
+- Reviewer pass 1 remediation status (`heapq`): done (2026-03-08, approved with observations; no additional module-scope remediation required)
 
 ## Wave Closure Review Cycles
 
