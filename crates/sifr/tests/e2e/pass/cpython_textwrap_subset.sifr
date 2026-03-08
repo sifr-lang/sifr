@@ -1,0 +1,54 @@
+# Adapted CPython textwrap subset for sifr.textwrap (canonical vector format)
+from sifr.textwrap import wrap, fill, dedent, indent, shorten
+from sifr.test import assert_bool_vector_eq
+
+def main():
+    expected: list[bool] = [
+        True, True, True, True, True, True,
+        True, True, True, True, True, True,
+    ]
+    actual: list[bool] = []
+
+    try:
+        wrap_lines: list[str] = wrap("Hello\tthere,\nhow are\ryou", 12)
+        actual.append(str(wrap_lines) == "[\"Hello there,\", \"how are you\"]")
+    except ValueError as e:
+        actual.append(False)
+
+    try:
+        fill_text: str = fill("Hello\tthere,\nhow are\ryou", 12)
+        actual.append(fill_text == "Hello there,\nhow are you")
+    except ValueError as e:
+        actual.append(False)
+
+    actual.append(dedent("  A\n  B") == "A\nB")
+    actual.append(dedent("") == "")
+    actual.append(indent("A\nB", ">> ") == ">> A\n>> B")
+    actual.append(indent("A\n  \nB", ">> ") == ">> A\n  \n>> B")
+
+    actual.append(shorten("hello world here", 16) == "hello world [...]")
+    actual.append(shorten("hello\tworld\there", 16) == "hello world [...]")
+    actual.append(shorten("", 6) == "")
+
+    wrap_err: bool = False
+    try:
+        _bad_w: list[str] = wrap("x", 0)
+    except ValueError as e:
+        wrap_err = e.message == "wrap: width must be > 0"
+    actual.append(wrap_err)
+
+    fill_err: bool = False
+    try:
+        _bad_f: str = fill("x", 0)
+    except ValueError as e:
+        fill_err = e.message == "fill: width must be > 0"
+    actual.append(fill_err)
+
+    try:
+        wrap_empty_lines: list[str] = wrap("", 6)
+        actual.append(str(wrap_empty_lines) == "[]")
+    except ValueError as e:
+        actual.append(False)
+
+    assert_bool_vector_eq(actual, expected)
+    assert str("cpython_textwrap_subset: pass") == "cpython_textwrap_subset: pass"

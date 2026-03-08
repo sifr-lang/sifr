@@ -322,6 +322,30 @@ Validation evidence:
 - Review pass 1 remediation: expanded `string.whitespace`/`printable` to include vertical-tab/form-feed and aligned `capwords` normalization to full CPython whitespace class subset; revalidated demo + full suite.
 - Review pass 2 status: approved for production use with full whitespace parity; no additional module-scope remediation required.
 
+## Part 10: `textwrap`
+status: in_progress (2026-03-08)
+
+- [x] Define module parity scope and CPython references
+- [x] Port/expand CPython-derived parity fixtures (canonical vector format)
+- [x] Fix root-cause implementation gaps
+- [x] Record parity classification (`parity` / `intentional-diff` / `unsupported`)
+- [x] Run module demo
+- [x] Run targeted module tests
+- [x] Run full local suite
+- [ ] Open PR, review, and merge
+- [ ] External reviewer pass 1 remediation completed (if findings)
+- [ ] External reviewer pass 2 remediation completed (if findings)
+- [ ] Mark part progress in this checklist
+
+Validation evidence:
+- Positive path: `cargo run -q -p sifr -- run demos/m30_1c_textwrap_parity_demo/main.sifr` -> prints `m30_1c textwrap parity demo: pass`.
+- Positive path: `cargo run -q -p sifr -- run crates/sifr/tests/e2e/pass/cpython_textwrap_subset.sifr` -> pass.
+- Positive path: `cargo run -q -p sifr -- run crates/sifr/tests/e2e/pass/cpython_textwrap.sifr` -> pass.
+- Positive path: `cargo run -q -p sifr -- run crates/sifr/tests/e2e/pass/stdlib_textwrap.sifr` -> pass.
+- Positive path: `cargo run -q -p sifr -- run crates/sifr/tests/e2e/pass/edge_case_safety.sifr` -> pass.
+- Positive path: `/Users/yaseralnajjar/work/sifr/codebase/scripts/run_all_tests.sh` -> pass (`verification ok: variants=64, failures=0, blocking_failures=0, non_blocking_failures=0`).
+- Negative path: canonical bool vectors in `cpython_textwrap_subset.sifr` validate width guards for `wrap`/`fill` and safe behavior for empty-input wrapping and non-content line handling in `indent`.
+
 ## Module Part Template (repeat per module)
 
 ### Part N: <module>

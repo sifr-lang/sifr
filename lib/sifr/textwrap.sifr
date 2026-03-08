@@ -1,7 +1,26 @@
 # sifr.textwrap — Text wrapping and filling (pure Sifr)
 
+def _normalize_whitespace(text: str) -> str:
+    return text.replace("\t", " ").replace("\n", " ").replace("\r", " ").replace("\v", " ").replace("\f", " ")
+
+def _has_non_whitespace(text: str) -> bool:
+    i: int = 0
+    while i < len(text):
+        ch: str | None = text[i]
+        if ch is not None:
+            if ch != " ":
+                if ch != "\t":
+                    if ch != "\n":
+                        if ch != "\r":
+                            if ch != "\v":
+                                if ch != "\f":
+                                    return True
+        i = i + 1
+    return False
+
 def _wrap_impl(text: str, width: int) -> list[str]:
-    words: list[str] = text.split(" ")
+    normalized: str = _normalize_whitespace(text)
+    words: list[str] = normalized.split(" ")
     result: list[str] = []
     current: str = ""
     for word in words:
@@ -75,14 +94,15 @@ def indent(text: str, prefix: str) -> str:
         if not first:
             result = result + "\n"
         first = False
-        if len(line) > 0:
+        if _has_non_whitespace(line):
             result = result + prefix + line
         else:
             result = result + line
     return result
 
 def shorten(text: str, width: int) -> str:
-    words: list[str] = text.split(" ")
+    normalized: str = _normalize_whitespace(text)
+    words: list[str] = normalized.split(" ")
     result: str = ""
     for word in words:
         if len(word) == 0:
