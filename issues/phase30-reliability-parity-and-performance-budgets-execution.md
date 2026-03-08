@@ -153,6 +153,30 @@ Validation evidence:
 - Review pass 1 status: approved; no code remediation required for base64 scope.
 - Review pass 2 note validation: explicit wrapper-export and re-raise simplification suggestions were validated against current intrinsic lowering and Result typing; no safe production-grade code change was warranted for this module scope.
 
+## Part 4: `hashlib`
+status: in_progress (2026-03-08)
+
+- [x] Define module parity scope and CPython references
+- [x] Port/expand CPython-derived parity fixtures (canonical vector format)
+- [x] Fix root-cause implementation gaps
+- [x] Record parity classification (`parity` / `intentional-diff` / `unsupported`)
+- [x] Run module demo
+- [x] Run targeted module tests
+- [x] Run full local suite
+- [ ] Open PR, review, and merge
+- [ ] External reviewer pass 1 remediation completed (if findings)
+- [ ] External reviewer pass 2 remediation completed (if findings)
+- [ ] Mark part progress in this checklist
+
+Validation evidence:
+- Positive path: `cargo run -q -p sifr -- run demos/m30_1a_hashlib_parity_demo/main.sifr` -> prints `m30_1a hashlib parity demo: pass`.
+- Positive path: `cargo run -q -p sifr -- run crates/sifr/tests/e2e/pass/cpython_hashlib_api_subset.sifr` -> pass.
+- Positive path: `cargo run -q -p sifr -- run crates/sifr/tests/e2e/pass/cpython_hashlib_object_model_subset.sifr` -> pass.
+- Positive path: `cargo run -q -p sifr -- run crates/sifr/tests/e2e/pass/stdlib_hashlib_intrinsics.sifr` -> pass.
+- Positive path: `cargo run -q -p sifr -- run demos/m5_hashlib_demo.sifr` -> expected object-model flow prints.
+- Positive path: `/Users/yaseralnajjar/work/sifr/codebase/scripts/run_all_tests.sh` -> pass (`verification ok: variants=64, failures=0, blocking_failures=0, non_blocking_failures=0`).
+- Negative path: canonical bool vectors in `cpython_hashlib_api_subset.sifr` and `cpython_hashlib_object_model_subset.sifr` validate unsupported constructor/error adaptation (`ValueError`/`HashlibError`) behavior.
+
 ## Module Part Template (repeat per module)
 
 ### Part N: <module>
@@ -190,6 +214,7 @@ Validation evidence:
 - Phase production-grade closure cycle: merged https://github.com/yaseralnajjar/sifr/pull/938
 - Part 3 implementation: merged https://github.com/yaseralnajjar/sifr/pull/942
 - Part 3 review pass 1 tracking: merged https://github.com/yaseralnajjar/sifr/pull/943
+- Part 3 review pass 2 tracking: merged https://github.com/yaseralnajjar/sifr/pull/944
 
 ## External Review Passes
 - Reviewer pass 1 request output: `reviews/phase-30-part-1-env-review.md`

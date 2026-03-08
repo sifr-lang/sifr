@@ -1,0 +1,61 @@
+# m30_1a hashlib parity demo
+from sifr.hashlib import (
+    sha256, md5,
+    sha256_obj, md5_obj, copy_hash,
+    new, algorithms_guaranteed, file_digest,
+    HashObject, HashlibError
+)
+from sifr.io import write_text
+from sifr.test import assert_vector_eq, assert_bool_vector_eq
+
+def contains(values: list[str], needle: str) -> bool:
+    for v in values:
+        if v == needle:
+            return True
+    return False
+
+def main():
+    expected: list[str] = ["true", "true", "true", "true", "true", "5d41402abc4b2a76b9719d911017c592", "8e6537b695ff181bc341e32d8b8970485ac3513408e5eb1e8ba9fc5af1cd3f57"]
+    actual: list[str] = []
+
+    h = sha256_obj("")
+    h.update("a")
+    h.update("bc")
+    actual.append(str(h.hexdigest() == sha256("abc")))
+    actual.append(str(h.digest() == h.hexdigest()))
+
+    c = copy_hash(h)
+    c.update("x")
+    actual.append(str(c.hexdigest() == sha256("abcx")))
+
+    m = md5_obj("hello")
+    actual.append(str(m.hexdigest() == md5("hello")))
+    actual.append(str(contains(algorithms_guaranteed(), "sha256")))
+    actual.append(m.hexdigest())
+
+    _ = write_text("tmp_m30_1a_hashlib_demo.txt", "file-data")
+    fd_ok: bool = True
+    fd: str = ""
+    try:
+        out: str = file_digest("tmp_m30_1a_hashlib_demo.txt", "sha256")
+        fd = out
+    except HashlibError as e:
+        fd_ok = False
+    if fd_ok:
+        actual.append(fd)
+    else:
+        actual.append("ERR")
+
+    assert_vector_eq(actual, expected)
+
+    expected_ok: list[bool] = [False]
+    actual_ok: list[bool] = []
+    try:
+        bad: HashObject = new("sha3_256", "")
+        _ = str(bad.name)
+        actual_ok.append(True)
+    except ValueError as e:
+        actual_ok.append(False)
+    assert_bool_vector_eq(actual_ok, expected_ok)
+
+    print("m30_1a hashlib parity demo: pass")
