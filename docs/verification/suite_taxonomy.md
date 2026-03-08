@@ -59,6 +59,7 @@ This document defines the canonical suite taxonomy for compiler verification har
   - issue id
   - crash or sentinel classification
   - current status (`unresolved` or `promoted`)
+  - minimized `reproducer_fixture` path
   - promotion target once fixed
 
 ### Property and Fuzz-Smoke

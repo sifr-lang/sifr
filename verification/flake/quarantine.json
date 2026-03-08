@@ -1,4 +1,13 @@
 {
   "schema_version": 1,
-  "entries": []
+  "entries": [
+    {
+      "suite": "determinism-scale",
+      "case_id": "DET-0002",
+      "reason": "Example template entry demonstrating quarantine record format.",
+      "owner": "compiler/hardening",
+      "added_on": "2026-03-08",
+      "reenable_criteria": "Remove once deterministic sequential-vs-parallel equivalence is stable for 14 consecutive days."
+    }
+  ]
 }
