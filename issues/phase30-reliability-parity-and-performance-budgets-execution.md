@@ -413,8 +413,8 @@ status: in_progress (2026-03-08)
 - [x] Run module demo
 - [x] Run targeted module tests
 - [x] Run full local suite
-- [ ] Open PR, review, and merge
-- [ ] External reviewer pass 1 remediation completed (if findings)
+- [x] Open PR, review, and merge
+- [x] External reviewer pass 1 remediation completed (if findings)
 - [ ] External reviewer pass 2 remediation completed (if findings)
 - [ ] Mark part progress in this checklist
 
@@ -429,6 +429,8 @@ Validation evidence:
 - Positive path: `cargo run -q -p sifr -- run crates/sifr/tests/e2e/pass/stdlib_collections_deque.sifr` -> pass.
 - Positive path: `/Users/yaseralnajjar/work/sifr/codebase/scripts/run_all_tests.sh` -> pass (`verification ok: variants=64, failures=0, blocking_failures=0, non_blocking_failures=0`).
 - Negative path: canonical bool vectors in `cpython_collections_subset.sifr` validate empty deque pop (`None`) and absent-key counter lookups (`0`) with panic-free behavior.
+- PR: merged https://github.com/yaseralnajjar/sifr/pull/981
+- Review pass 1 status: approved (`reviews/phase-30-part-13-collections-review.md`) with non-blocking observations only; no additional part-13 code remediation was required for approved scope.
 
 ## Module Part Template (repeat per module)
 
@@ -498,6 +500,7 @@ Validation evidence:
 - Part 12 review pass 2 tracking: merged https://github.com/yaseralnajjar/sifr/pull/976
 - Wave completion closure cycle (wave_30_1c): merged https://github.com/yaseralnajjar/sifr/pull/978
 - Wave production-grade closure cycle (wave_30_1c): merged https://github.com/yaseralnajjar/sifr/pull/979
+- Part 13 implementation: merged https://github.com/yaseralnajjar/sifr/pull/981
 
 ## External Review Passes
 - Reviewer pass 1 request output: `reviews/phase-30-part-1-env-review.md`
@@ -548,6 +551,8 @@ Validation evidence:
 - Reviewer pass 1 remediation status (`re`): done (2026-03-08, approved with non-blocking observations; no additional module-scope remediation required)
 - Reviewer pass 2 request output (`re`): `reviews/phase-30-part-12-re-review-2.md`
 - Reviewer pass 2 remediation status (`re`): done (2026-03-08, approved for production use; no module-scope remediation required)
+- Reviewer pass 1 request output (`collections`): `reviews/phase-30-part-13-collections-review.md`
+- Reviewer pass 1 remediation status (`collections`): done (2026-03-08, approved with non-blocking observations; no additional module-scope remediation required)
 
 ## Wave Closure Review Cycles
 
