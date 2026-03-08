@@ -38,7 +38,7 @@ Loop per part: Work -> Validate -> PR -> Review -> Merge -> External review pass
 9. [x] `string`
 10. [x] `textwrap`
 11. [x] `fnmatch`
-12. [ ] `re`
+12. [x] `re`
 
 ### wave_30_1d: Core Containers and Structured Data
 13. [ ] `collections`
@@ -376,7 +376,7 @@ Validation evidence:
 - Review pass 2 status: approved (`reviews/phase-30-part-11-fnmatch-review-2.md`); production-grade confirmation reported no blocking issues and no additional module-scope remediation was required.
 
 ## Part 12: `re`
-status: in_progress (2026-03-08)
+status: done (2026-03-08, PR #974)
 
 - [x] Define module parity scope and CPython references
 - [x] Port/expand CPython-derived parity fixtures (canonical vector format)
@@ -387,8 +387,8 @@ status: in_progress (2026-03-08)
 - [x] Run full local suite
 - [x] Open PR, review, and merge
 - [x] External reviewer pass 1 remediation completed (if findings)
-- [ ] External reviewer pass 2 remediation completed (if findings)
-- [ ] Mark part progress in this checklist
+- [x] External reviewer pass 2 remediation completed (if findings)
+- [x] Mark part progress in this checklist
 
 Validation evidence:
 - Positive path: `cargo run -q -p sifr -- run demos/m30_1c_re_parity_demo/main.sifr` -> prints `m30_1c re parity demo: pass`.
@@ -401,6 +401,7 @@ Validation evidence:
 - Negative path: canonical bool vectors in `cpython_re_subset.sifr` validate invalid-pattern rejection (`"("`) with panic-free typed `RegexError` handling.
 - PR: merged https://github.com/yaseralnajjar/sifr/pull/974
 - Review pass 1 status: approved (`reviews/phase-30-part-12-re-review.md`) with non-blocking observations only; no additional part-12 code remediation was required for approved scope.
+- Review pass 2 status: approved (`reviews/phase-30-part-12-re-review-2.md`) with no blockers; module is production-grade for approved scope with no additional remediation required.
 
 ## Module Part Template (repeat per module)
 
@@ -466,6 +467,7 @@ Validation evidence:
 - Part 11 review pass 1 tracking: merged https://github.com/yaseralnajjar/sifr/pull/971
 - Part 11 review pass 2 tracking: merged https://github.com/yaseralnajjar/sifr/pull/972
 - Part 12 implementation: merged https://github.com/yaseralnajjar/sifr/pull/974
+- Part 12 review pass 1 tracking: merged https://github.com/yaseralnajjar/sifr/pull/975
 
 ## External Review Passes
 - Reviewer pass 1 request output: `reviews/phase-30-part-1-env-review.md`
@@ -514,6 +516,8 @@ Validation evidence:
 - Reviewer pass 2 remediation status (`fnmatch`): done (2026-03-08, approved for production use; no module-scope remediation required)
 - Reviewer pass 1 request output (`re`): `reviews/phase-30-part-12-re-review.md`
 - Reviewer pass 1 remediation status (`re`): done (2026-03-08, approved with non-blocking observations; no additional module-scope remediation required)
+- Reviewer pass 2 request output (`re`): `reviews/phase-30-part-12-re-review-2.md`
+- Reviewer pass 2 remediation status (`re`): done (2026-03-08, approved for production use; no module-scope remediation required)
 
 ## Wave Closure Review Cycles
 
