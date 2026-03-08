@@ -348,6 +348,7 @@ Validation evidence:
 - Part 8 implementation: merged https://github.com/yaseralnajjar/sifr/pull/958
 - Part 8 review pass 1 tracking: merged https://github.com/yaseralnajjar/sifr/pull/959
 - Part 8 review pass 2 tracking: merged https://github.com/yaseralnajjar/sifr/pull/960
+- Wave completion closure cycle (wave_30_1b): merged https://github.com/yaseralnajjar/sifr/pull/961
 
 ## External Review Passes
 - Reviewer pass 1 request output: `reviews/phase-30-part-1-env-review.md`
@@ -393,11 +394,11 @@ status: reviewed (2026-03-08), wave_30_1b closure approved
 - Action taken: `wave_30_1b` marked complete; phase execution remains `in_progress` pending subsequent waves and milestones.
 
 ### Wave production-grade check
-status: reviewed (2026-03-08), closure deferred
+status: reviewed (2026-03-08), wave_30_1b production-grade approved
 
-- Reviewer output: `reviews/phase-30-wave-production-grade-review.md`
-- Reviewer verdict: `env` module is production-grade, but wave closure is not approved because 27 modules are still pending.
-- Action taken: no code remediation required for `env`; continue module-by-module execution before wave closure claim.
+- Reviewer output: `reviews/phase-30-wave-production-grade-review-2.md`
+- Reviewer verdict: `wave_30_1b` is production-grade (`math`, `statistics`, `bisect`, `heapq` all approved with no blockers).
+- Action taken: marked `wave_30_1b` production-grade complete; continue with `wave_30_1c` while phase/milestone closure remains pending.
 
 ## Milestone Closure Review Cycles
 
