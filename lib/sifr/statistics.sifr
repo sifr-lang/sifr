@@ -138,68 +138,62 @@ def median_high(data: list[float]) -> Result[float, StatisticsError]:
 def mode(data: list[int]) -> Result[int, StatisticsError]:
     if len(data) == 0:
         raise StatisticsError("mode requires at least one data point")
+    counts: dict[int, int] = {}
+    for val in data:
+        existing: int | None = counts[val]
+        if existing is not None:
+            counts[val] = existing + 1
+        else:
+            counts[val] = 1
     best: int = 0
+    best_set: bool = False
     best_count: int = 0
-    i: int = 0
-    while i < len(data):
-        val: int | None = data[i]
-        if val is not None:
-            count: int = 0
-            j: int = 0
-            while j < len(data):
-                other: int | None = data[j]
-                if other is not None:
-                    if other == val:
-                        count = count + 1
-                j = j + 1
-            if count > best_count:
-                best_count = count
-                best = val
-        i = i + 1
-    return best
+    for val2 in data:
+        count2: int | None = counts[val2]
+        count2_val: int = 0
+        if count2 is not None:
+            count2_val = count2
+        if count2_val > best_count:
+            best_count = count2_val
+            best = val2
+            best_set = True
+    if best_set:
+        return best
+    raise StatisticsError("mode: no mode found")
 
 def multimode(data: list[int]) -> Result[list[int], StatisticsError]:
     if len(data) == 0:
         raise StatisticsError("multimode requires at least one data point")
+    counts: dict[int, int] = {}
+    for val in data:
+        existing: int | None = counts[val]
+        if existing is not None:
+            counts[val] = existing + 1
+        else:
+            counts[val] = 1
     max_count: int = 0
-    i: int = 0
-    while i < len(data):
-        val: int | None = data[i]
-        if val is not None:
-            count: int = 0
-            j: int = 0
-            while j < len(data):
-                other: int | None = data[j]
-                if other is not None:
-                    if other == val:
-                        count = count + 1
-                j = j + 1
-            if count > max_count:
-                max_count = count
-        i = i + 1
+    for val2 in data:
+        count2: int | None = counts[val2]
+        count2_val: int = 0
+        if count2 is not None:
+            count2_val = count2
+        if count2_val > max_count:
+            max_count = count2_val
     result: list[int] = []
-    seen: list[int] = []
-    i = 0
-    while i < len(data):
-        val2: int | None = data[i]
-        if val2 is not None:
-            already: bool = False
-            for s in seen:
-                if s == val2:
-                    already = True
-            if not already:
-                count2: int = 0
-                j2: int = 0
-                while j2 < len(data):
-                    other2: int | None = data[j2]
-                    if other2 is not None:
-                        if other2 == val2:
-                            count2 = count2 + 1
-                    j2 = j2 + 1
-                if count2 == max_count:
-                    result.append(val2)
-                    seen.append(val2)
-        i = i + 1
+    seen: dict[int, bool] = {}
+    for val3 in data:
+        already_opt: bool | None = seen[val3]
+        already: bool = False
+        if already_opt is not None:
+            already = already_opt
+        if not already:
+            count3: int | None = counts[val3]
+            count3_val: int = 0
+            if count3 is not None:
+                count3_val = count3
+            if count3_val == max_count:
+                result.append(val3)
+            seen[val3] = True
     return result
 
 def quantiles(data: list[float], n: int) -> Result[list[float], StatisticsError]:

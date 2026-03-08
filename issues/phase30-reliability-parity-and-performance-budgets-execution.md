@@ -218,8 +218,8 @@ status: in_progress (2026-03-08)
 - [x] Run module demo
 - [x] Run targeted module tests
 - [x] Run full local suite
-- [ ] Open PR, review, and merge
-- [ ] External reviewer pass 1 remediation completed (if findings)
+- [x] Open PR, review, and merge
+- [x] External reviewer pass 1 remediation completed (if findings)
 - [ ] External reviewer pass 2 remediation completed (if findings)
 - [ ] Mark part progress in this checklist
 
@@ -232,6 +232,8 @@ Validation evidence:
 - Positive path: `cargo run -q -p sifr -- run crates/sifr/tests/e2e/pass/error_stdlib_statistics.sifr` -> pass.
 - Positive path: `/Users/yaseralnajjar/work/sifr/codebase/scripts/run_all_tests.sh` -> pass (`verification ok: variants=64, failures=0, blocking_failures=0, non_blocking_failures=0`).
 - Negative path: canonical bool vectors in `cpython_statistics_subset.sifr` validate empty/invalid dataset error adaptation for central tendency, spread, harmonic/geometric mean, correlation, and linear-regression paths.
+- PR: merged https://github.com/yaseralnajjar/sifr/pull/951
+- Review pass 1 remediation: replaced `mode`/`multimode` O(n²) nested counting with O(n) dictionary counting while preserving deterministic first-seen ordering; revalidated full suite.
 
 ## Module Part Template (repeat per module)
 
@@ -277,6 +279,7 @@ Validation evidence:
 - Part 5 implementation: merged https://github.com/yaseralnajjar/sifr/pull/948
 - Part 5 review pass 1 remediation: merged https://github.com/yaseralnajjar/sifr/pull/949
 - Part 5 review pass 2 tracking: merged https://github.com/yaseralnajjar/sifr/pull/950
+- Part 6 implementation: merged https://github.com/yaseralnajjar/sifr/pull/951
 
 ## External Review Passes
 - Reviewer pass 1 request output: `reviews/phase-30-part-1-env-review.md`
@@ -299,6 +302,8 @@ Validation evidence:
 - Reviewer pass 1 remediation status (`math`): done (2026-03-08, approved with observations; fixture hardening added for factorial/dist semantics)
 - Reviewer pass 2 request output (`math`): `reviews/phase-30-part-5-math-review-2.md`
 - Reviewer pass 2 remediation status (`math`): done (2026-03-08, approved for production use; no additional code remediation required)
+- Reviewer pass 1 request output (`statistics`): `reviews/phase-30-part-6-statistics-review.md`
+- Reviewer pass 1 remediation status (`statistics`): done (2026-03-08, approved with observations; `mode`/`multimode` counting optimized to O(n))
 
 ## Wave Closure Review Cycles
 
