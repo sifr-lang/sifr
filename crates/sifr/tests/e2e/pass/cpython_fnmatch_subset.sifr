@@ -1,0 +1,37 @@
+# Adapted CPython fnmatch subset for sifr.fnmatch (canonical vector format)
+from sifr.fnmatch import fnmatch, fnmatchcase, fnmatch_filter
+from sifr.test import assert_bool_vector_eq
+
+def main():
+    expected: list[bool] = [
+        True, True, True, True, True, True,
+        True, True, True, True, True, True,
+        True
+    ]
+    actual: list[bool] = []
+
+    actual.append(fnmatch("abc", "abc"))
+    actual.append(fnmatch("abc", "a*"))
+    actual.append(fnmatch("abc", "*c"))
+    actual.append(fnmatch("abc", "???"))
+    no_ab_match: bool = not fnmatch("abc", "ab")
+    empty_qmark_match: bool = not fnmatch("", "?")
+    actual.append(no_ab_match)
+    actual.append(empty_qmark_match)
+
+    actual.append(fnmatchcase("AbC", "AbC"))
+    no_case_fold_match: bool = not fnmatchcase("AbC", "abc")
+    uppercase_pattern_miss: bool = not fnmatchcase("ABC", "a*")
+    actual.append(no_case_fold_match)
+    actual.append(uppercase_pattern_miss)
+
+    names: list[str] = ["Python", "Ruby", "Perl", "Tcl"]
+    actual.append(str(fnmatch_filter(names, "P*")) == "[\"Python\", \"Perl\"]")
+    actual.append(str(fnmatch_filter(names, "R*")) == "[\"Ruby\"]")
+    actual.append(str(fnmatch_filter(names, "X*")) == "[]")
+
+    files: list[str] = ["a.py", "b.txt", "c.py", "d.rs"]
+    actual.append(str(fnmatch_filter(files, "*.py")) == "[\"a.py\", \"c.py\"]")
+
+    assert_bool_vector_eq(actual, expected)
+    assert str("cpython_fnmatch_subset: pass") == "cpython_fnmatch_subset: pass"
