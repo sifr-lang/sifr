@@ -15,12 +15,12 @@ def main():
     assert str(without_default is None) == "true"
     assert str(getenv("SIFR_M30_ENV_DEMO", "fallback")) == "fallback"
 
-    invalid_expected_ok: list[bool] = [False, False]
-    invalid_actual_ok: list[bool] = []
+    invalid_expected_lookup_found: list[bool] = [False, False]
+    invalid_actual_lookup_found: list[bool] = []
     env_set("", "x")
-    invalid_actual_ok.append(env_get("") is not None)
+    invalid_actual_lookup_found.append(env_get("") is not None)
     env_set("A=B", "x")
-    invalid_actual_ok.append(env_get("A=B") is not None)
-    assert_bool_vector_eq(invalid_actual_ok, invalid_expected_ok)
+    invalid_actual_lookup_found.append(env_get("A=B") is not None)
+    assert_bool_vector_eq(invalid_actual_lookup_found, invalid_expected_lookup_found)
 
     print("m30_1a env parity demo: pass")

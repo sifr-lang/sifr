@@ -23,7 +23,7 @@ Loop per part: Work -> Validate -> PR -> Review -> Merge -> External review pass
 ## Full Phase 30 To-Do Plan (Module-by-Module)
 
 ### wave_30_1a: Binary and Encoding Foundations
-1. [ ] `env`
+1. [x] `env`
 2. [ ] `bytes`
 3. [ ] `base64`
 4. [ ] `hashlib`
@@ -73,7 +73,7 @@ Loop per part: Work -> Validate -> PR -> Review -> Merge -> External review pass
 - [ ] Enforce no module closes with undocumented mismatch status
 
 ## Part 1: `env`
-status: in_progress (2026-03-08)
+status: done (2026-03-08, PR #929)
 
 - [x] Define module parity scope and CPython references
 - [x] Port/expand CPython-derived parity fixtures (canonical vector format)
@@ -84,8 +84,8 @@ status: in_progress (2026-03-08)
 - [x] Run full local suite
 - [x] Open PR, review, and merge
 - [x] External reviewer pass 1 remediation completed (if findings)
-- [ ] External reviewer pass 2 remediation completed (if findings)
-- [ ] Mark part progress in this checklist
+- [x] External reviewer pass 2 remediation completed (if findings)
+- [x] Mark part progress in this checklist
 
 Validation evidence:
 - Positive path: `cargo run -q -p sifr -- run demos/m30_1a_env_parity_demo/main.sifr` -> prints `phase30` and `m30_1a env parity demo: pass`.
@@ -98,6 +98,7 @@ Validation evidence:
 - Negative path: invalid key vectors (`""`, `"A=B"`) in `crates/sifr/tests/e2e/pass/cpython_env_subset.sifr` and `demos/m30_1a_env_parity_demo/main.sifr` validate panic-free no-op/`None` behavior.
 - PR: merged https://github.com/yaseralnajjar/sifr/pull/929
 - Review pass 1 note validation: reviewer-mentioned determinism failure (`DET-0002`) was validated as non-reproducible in local gate output for this part; no env-scope remediation required.
+- Review pass 2 remediation: renamed invalid-key fixture vector names for clearer semantics (`invalid_*_lookup_found`) and revalidated module demo + CPython fixture.
 
 ## Module Part Template (repeat per module)
 
@@ -122,7 +123,10 @@ Validation evidence:
 
 ## PR Log
 - Part 1 implementation: merged https://github.com/yaseralnajjar/sifr/pull/929
+- Part 1 review pass 1 tracking: merged https://github.com/yaseralnajjar/sifr/pull/930
 
 ## External Review Passes
 - Reviewer pass 1 request output: `reviews/phase-30-part-1-env-review.md`
 - Reviewer pass 1 remediation status: done (2026-03-08, no code changes required)
+- Reviewer pass 2 request output: `reviews/phase-30-part-1-env-review-2.md`
+- Reviewer pass 2 remediation status: done (2026-03-08, naming clarity updates applied to env demo/fixture)
