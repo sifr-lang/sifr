@@ -1,0 +1,103 @@
+# Adapted CPython io subset for sifr.io (canonical bool-vector format)
+from sifr.io import read_text, write_text, exists, append_text
+from sifr.os import remove_file
+from sifr.test import assert_bool_vector_eq
+
+
+def main():
+    expected: list[bool] = [True, True, True, True, True, True, True, True, True, True, True, True]
+    actual: list[bool] = []
+
+    path: str = "/tmp/sifr_cpython_io_subset.txt"
+    io_roundtrip_ok: bool = False
+    append_roundtrip_ok: bool = False
+    try:
+        _w: None = write_text(path, "alpha\nbeta")
+        original: str = read_text(path)
+        io_roundtrip_ok = original == "alpha\nbeta"
+        _a: None = append_text(path, "\ngamma")
+        appended: str = read_text(path)
+        append_roundtrip_ok = appended == "alpha\nbeta\ngamma"
+    except IOError as e:
+        _ = str(e.message)
+    actual.append(io_roundtrip_ok)
+    actual.append(append_roundtrip_ok)
+
+    actual.append(exists(path))
+    missing_path_absent: bool = not exists("/tmp/sifr_cpython_io_subset_missing.txt")
+    actual.append(missing_path_absent)
+
+    lines_len_ok: bool = False
+    first_line_ok: bool = False
+    last_line_ok: bool = False
+    try:
+        f = open(path, "r")
+        lines: list[str] = f.readlines()
+        f.close()
+        lines_len_ok = len(lines) == 3
+        first_line_ok = lines[0] == "alpha"
+        last_line_ok = lines[2] == "gamma"
+    except IOError as e:
+        _ = str(e.message)
+    actual.append(lines_len_ok)
+    actual.append(first_line_ok)
+    actual.append(last_line_ok)
+
+    missing_open_rejected: bool = False
+    try:
+        _missing = open("/tmp/sifr_cpython_io_subset_missing.txt", "r")
+    except IOError as e:
+        _ = str(e.message)
+        missing_open_rejected = True
+    actual.append(missing_open_rejected)
+
+    invalid_mode_rejected: bool = False
+    try:
+        _bad = open(path, "q")
+    except IOError as e:
+        _ = str(e.message)
+        invalid_mode_rejected = True
+    actual.append(invalid_mode_rejected)
+
+    binary_path: str = "/tmp/sifr_cpython_io_subset_bytes.bin"
+    binary_roundtrip_ok: bool = False
+    try:
+        bw = open(binary_path, "wb")
+        _wb: None = bw.write_bytes([97, 98, 99])
+        bw.close()
+        br = open(binary_path, "rb")
+        payload: list[int] = br.read_bytes()
+        br.close()
+        binary_roundtrip_ok = str(payload) == "[97, 98, 99]"
+    except IOError as e:
+        _ = str(e.message)
+    actual.append(binary_roundtrip_ok)
+
+    ctx_path: str = "/tmp/sifr_cpython_io_subset_ctx.txt"
+    ctx_roundtrip_ok: bool = False
+    try:
+        with open(ctx_path, "w") as out:
+            _out: None = out.write("ctx")
+        ctx_data: str = read_text(ctx_path)
+        ctx_roundtrip_ok = ctx_data == "ctx"
+    except IOError as e:
+        _ = str(e.message)
+    actual.append(ctx_roundtrip_ok)
+
+    missing_read_path: str = "/tmp/sifr_cpython_io_subset_missing_read.txt"
+    if exists(missing_read_path):
+        try:
+            _rm: None = remove_file(missing_read_path)
+        except IOError as e:
+            _ = str(e.message)
+
+    missing_read_rejected: bool = False
+    try:
+        _missing_data: str = read_text(missing_read_path)
+    except IOError as e:
+        _ = str(e.message)
+        missing_read_rejected = True
+    actual.append(missing_read_rejected)
+
+    assert_bool_vector_eq(actual, expected)
+    assert str("cpython_io_subset: pass") == "cpython_io_subset: pass"
