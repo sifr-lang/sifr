@@ -1,0 +1,48 @@
+from sifr.io import read_text, write_text, exists, append_text
+from sifr.test import assert_bool_vector_eq
+
+
+def main():
+    expected: list[bool] = [True, True, True, True, True, True]
+    actual: list[bool] = []
+
+    path: str = "/tmp/sifr_m30_1e_io_demo.txt"
+    text_roundtrip_ok: bool = False
+    try:
+        _w: None = write_text(path, "hello")
+        _a: None = append_text(path, "\nworld")
+        content: str = read_text(path)
+        text_roundtrip_ok = content == "hello\nworld"
+    except IOError as e:
+        _ = str(e.message)
+    actual.append(text_roundtrip_ok)
+    actual.append(exists(path))
+
+    first_ok: bool = False
+    second_ok: bool = False
+    eof_ok: bool = False
+    try:
+        f = open(path, "r")
+        first: str | None = f.readline()
+        second: str | None = f.readline()
+        third: str | None = f.readline()
+        f.close()
+        first_ok = str(first) == "hello"
+        second_ok = str(second) == "world"
+        eof_ok = third is None
+    except IOError as e:
+        _ = str(e.message)
+    actual.append(first_ok)
+    actual.append(second_ok)
+    actual.append(eof_ok)
+
+    missing_rejected: bool = False
+    try:
+        _ = open("/tmp/sifr_m30_1e_io_demo_missing.txt", "r")
+    except IOError as e:
+        _ = str(e.message)
+        missing_rejected = True
+    actual.append(missing_rejected)
+
+    assert_bool_vector_eq(actual, expected)
+    print("m30_1e io parity demo: pass")
