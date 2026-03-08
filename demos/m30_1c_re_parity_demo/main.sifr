@@ -1,0 +1,39 @@
+from sifr.re import re_match, re_find, re_replace, re_findall, re_split, search_flags, IGNORECASE
+from sifr.test import assert_bool_vector_eq
+
+def main():
+    expected: list[bool] = [True, True, True, True, True, True]
+    actual: list[bool] = []
+
+    match_ok: bool = False
+    find_ok: bool = False
+    replace_ok: bool = False
+    findall_ok: bool = False
+    split_ok: bool = False
+    case_fold_ok: bool = False
+
+    try:
+        m: bool = re_match("[0-9]+", "42 bottles")
+        match_ok = m
+        found_num: str | None = re_find("[0-9]+", "id=9000")
+        find_ok = str(found_num) == "9000"
+        replaced: str = re_replace("\\s+", "-", "hello   world")
+        replace_ok = replaced == "hello-world"
+        all_alpha: list[str] = re_findall("[a-z]+", "ab 12 cd")
+        findall_ok = str(all_alpha) == "[\"ab\", \"cd\"]"
+        split_parts: list[str] = re_split(":+", "a:b::c")
+        split_ok = str(split_parts) == "[\"a\", \"b\", \"c\"]"
+        case_fold: str | None = search_flags("hello", "HELLO", IGNORECASE)
+        case_fold_ok = case_fold is not None
+    except RegexError as e:
+        _ = str(e.message)
+
+    actual.append(match_ok)
+    actual.append(find_ok)
+    actual.append(replace_ok)
+    actual.append(findall_ok)
+    actual.append(split_ok)
+    actual.append(case_fold_ok)
+
+    assert_bool_vector_eq(actual, expected)
+    print("m30_1c re parity demo: pass")

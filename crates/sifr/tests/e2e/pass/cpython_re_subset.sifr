@@ -1,0 +1,97 @@
+# Adapted CPython re subset for sifr.re (canonical vector format)
+from sifr.re import re_match, re_find, re_replace, re_findall, re_split, search_flags, fullmatch, compile, IGNORECASE
+from sifr.test import assert_bool_vector_eq
+
+def main():
+    expected: list[bool] = [
+        True, True, True, True, True, True, True,
+        True, True, True, True, True, True, True
+    ]
+    actual: list[bool] = []
+
+    prefix_match: bool = False
+    exact_match_fail: bool = False
+    try:
+        m_prefix: bool = re_match("a+", "aaab")
+        m_exact: bool = re_match("^abc$", "abcd")
+        prefix_match = m_prefix
+        exact_match_fail = not m_exact
+    except RegexError as e:
+        _ = str(e.message)
+    actual.append(prefix_match)
+    exact_miss: bool = exact_match_fail
+    actual.append(exact_miss)
+
+    found_digits_ok: bool = False
+    missing_digits_ok: bool = False
+    try:
+        found_digits: str | None = re_find("\\d+", "abc123def")
+        found_digits_ok = str(found_digits) == "123"
+        missing_digits: str | None = re_find("\\d+", "abcdef")
+        missing_digits_ok = missing_digits is None
+    except RegexError as e:
+        _ = str(e.message)
+    actual.append(found_digits_ok)
+    actual.append(missing_digits_ok)
+
+    replace_ok: bool = False
+    findall_ok: bool = False
+    split_ok: bool = False
+    try:
+        replaced: str = re_replace("\\d+", "N", "a1b22c333")
+        replace_ok = replaced == "aNbNcN"
+        all_hits: list[str] = re_findall("\\d+", "x1y22z333")
+        findall_ok = str(all_hits) == "[\"1\", \"22\", \"333\"]"
+        split_parts: list[str] = re_split(":+", "a:b::c")
+        split_ok = str(split_parts) == "[\"a\", \"b\", \"c\"]"
+    except RegexError as e:
+        _ = str(e.message)
+    actual.append(replace_ok)
+    actual.append(findall_ok)
+    actual.append(split_ok)
+
+    case_insensitive_ok: bool = False
+    case_sensitive_ok: bool = False
+    try:
+        case_insensitive: str | None = search_flags("hello", "HELLO world", IGNORECASE)
+        case_insensitive_ok = case_insensitive is not None
+        case_sensitive: str | None = search_flags("hello", "HELLO world", 0)
+        case_sensitive_ok = case_sensitive is None
+    except RegexError as e:
+        _ = str(e.message)
+    actual.append(case_insensitive_ok)
+    actual.append(case_sensitive_ok)
+
+    fullmatch_ok: bool = False
+    fullmatch_fail: bool = False
+    try:
+        fm_ok: bool = fullmatch("\\d+", "12345")
+        fm_bad: bool = fullmatch("\\d+", "123a")
+        fullmatch_ok = fm_ok
+        fullmatch_fail = not fm_bad
+    except RegexError as e:
+        _ = str(e.message)
+    actual.append(fullmatch_ok)
+    fullmatch_miss: bool = fullmatch_fail
+    actual.append(fullmatch_miss)
+
+    pat = compile("h.llo")
+    actual.append(pat.pattern() == "h.llo")
+    pattern_match_ok: bool = False
+    try:
+        pm: bool = pat.is_match("hello")
+        pattern_match_ok = pm
+    except RegexError as e:
+        _ = str(e.message)
+    actual.append(pattern_match_ok)
+
+    invalid_pattern_rejected: bool = False
+    try:
+        _m: bool = re_match("(", "abc")
+        _ = _m
+    except RegexError as e:
+        invalid_pattern_rejected = len(e.message) > 0
+    actual.append(invalid_pattern_rejected)
+
+    assert_bool_vector_eq(actual, expected)
+    assert str("cpython_re_subset: pass") == "cpython_re_subset: pass"
