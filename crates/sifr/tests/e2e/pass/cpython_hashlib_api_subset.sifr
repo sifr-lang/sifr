@@ -1,7 +1,7 @@
-# Adapted CPython hashlib API subset for sifr.hashlib PR5-B
+# Adapted CPython hashlib API subset for sifr.hashlib
 from sifr.hashlib import new, sha256, algorithms_guaranteed, algorithms_available, file_digest, HashlibError, HashObject
 from sifr.io import write_text
-from sifr.test import assert_eq, assert_true
+from sifr.test import assert_vector_eq, assert_bool_vector_eq
 
 def contains(values: list[str], needle: str) -> bool:
     for v in values:
@@ -10,41 +10,62 @@ def contains(values: list[str], needle: str) -> bool:
     return False
 
 def main():
+    expected: list[str] = ["true", "true", "true", "ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad", "8e6537b695ff181bc341e32d8b8970485ac3513408e5eb1e8ba9fc5af1cd3f57"]
+    actual: list[str] = []
+
     guaranteed: list[str] = algorithms_guaranteed()
     available: list[str] = algorithms_available()
-    assert_true(contains(guaranteed, "sha256"))
-    assert_true(contains(guaranteed, "md5"))
-    assert_eq(len(guaranteed), len(available))
+    actual.append(str(contains(guaranteed, "sha256")))
+    actual.append(str(contains(guaranteed, "md5")))
+    actual.append(str(len(guaranteed) == len(available)))
 
+    new_ok: bool = True
+    new_hex: str = ""
     try:
         h: HashObject = new("sha256", "abc")
-        assert_eq(h.hexdigest(), sha256("abc"))
+        new_hex = h.hexdigest()
     except ValueError as e:
-        assert str("unexpected new error: " + e.message) == 'unsupported new: pass'
-        assert False
+        new_ok = False
+    if new_ok:
+        actual.append(new_hex)
+    else:
+        actual.append("ERR")
 
-    try:
-        h_bad: HashObject = new("sha3_256", "")
-        assert str(h_bad.name) == 'file_digest unsupported: pass'
-        assert False
-    except ValueError as e:
-        _ = str("unsupported new: pass")
     try:
         _ = write_text("tmp_hashlib_api_subset.txt", "file-data")
     except IOError as e:
         _ = str("unexpected write error: " + e.message)
         assert False
 
+    fd_ok: bool = True
+    fd_hex: str = ""
     try:
         digest: str = file_digest("tmp_hashlib_api_subset.txt", "sha256")
-        assert_eq(digest, sha256("file-data"))
+        fd_hex = digest
     except HashlibError as e:
-        _ = str("unexpected file_digest error: " + e.message)
-        assert False
+        fd_ok = False
+    if fd_ok:
+        actual.append(fd_hex)
+    else:
+        actual.append("ERR")
+
+    assert_vector_eq(actual, expected)
+
+    # Error-path fixture vectors.
+    expected_ok: list[bool] = [False, False]
+    actual_ok: list[bool] = []
+    try:
+        bad_new: HashObject = new("sha3_256", "")
+        _ = str(bad_new.name)
+        actual_ok.append(True)
+    except ValueError as e:
+        actual_ok.append(False)
 
     try:
         bad_digest: str = file_digest("tmp_hashlib_api_subset.txt", "sha3_256")
         _ = str(bad_digest)
-        assert False
+        actual_ok.append(True)
     except HashlibError as e:
-        _ = str("file_digest unsupported: pass")
+        actual_ok.append(False)
+    assert_bool_vector_eq(actual_ok, expected_ok)
+    assert str(sha256("abc")) == "ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad"
