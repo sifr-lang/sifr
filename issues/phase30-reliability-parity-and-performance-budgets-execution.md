@@ -30,7 +30,7 @@ Loop per part: Work -> Validate -> PR -> Review -> Merge -> External review pass
 
 ### wave_30_1b: Numeric and Ordered-Collection Semantics
 5. [x] `math`
-6. [ ] `statistics`
+6. [x] `statistics`
 7. [ ] `bisect`
 8. [ ] `heapq`
 
@@ -209,7 +209,7 @@ Validation evidence:
 - Review pass 2 status: approved for production use with optional future enhancements only; no additional module-scope changes required.
 
 ## Part 6: `statistics`
-status: in_progress (2026-03-08)
+status: done (2026-03-08, PR #951)
 
 - [x] Define module parity scope and CPython references
 - [x] Port/expand CPython-derived parity fixtures (canonical vector format)
@@ -220,8 +220,8 @@ status: in_progress (2026-03-08)
 - [x] Run full local suite
 - [x] Open PR, review, and merge
 - [x] External reviewer pass 1 remediation completed (if findings)
-- [ ] External reviewer pass 2 remediation completed (if findings)
-- [ ] Mark part progress in this checklist
+- [x] External reviewer pass 2 remediation completed (if findings)
+- [x] Mark part progress in this checklist
 
 Validation evidence:
 - Positive path: `cargo run -q -p sifr -- run demos/m30_1b_statistics_parity_demo/main.sifr` -> prints `m30_1b statistics parity demo: pass`.
@@ -234,6 +234,7 @@ Validation evidence:
 - Negative path: canonical bool vectors in `cpython_statistics_subset.sifr` validate empty/invalid dataset error adaptation for central tendency, spread, harmonic/geometric mean, correlation, and linear-regression paths.
 - PR: merged https://github.com/yaseralnajjar/sifr/pull/951
 - Review pass 1 remediation: replaced `mode`/`multimode` O(n²) nested counting with O(n) dictionary counting while preserving deterministic first-seen ordering; revalidated full suite.
+- Review pass 2 status: approved for production use; no additional module-scope code remediation required.
 
 ## Module Part Template (repeat per module)
 
@@ -280,6 +281,7 @@ Validation evidence:
 - Part 5 review pass 1 remediation: merged https://github.com/yaseralnajjar/sifr/pull/949
 - Part 5 review pass 2 tracking: merged https://github.com/yaseralnajjar/sifr/pull/950
 - Part 6 implementation: merged https://github.com/yaseralnajjar/sifr/pull/951
+- Part 6 review pass 1 remediation: merged https://github.com/yaseralnajjar/sifr/pull/953
 
 ## External Review Passes
 - Reviewer pass 1 request output: `reviews/phase-30-part-1-env-review.md`
@@ -304,6 +306,8 @@ Validation evidence:
 - Reviewer pass 2 remediation status (`math`): done (2026-03-08, approved for production use; no additional code remediation required)
 - Reviewer pass 1 request output (`statistics`): `reviews/phase-30-part-6-statistics-review.md`
 - Reviewer pass 1 remediation status (`statistics`): done (2026-03-08, approved with observations; `mode`/`multimode` counting optimized to O(n))
+- Reviewer pass 2 request output (`statistics`): `reviews/phase-30-part-6-statistics-review-2.md`
+- Reviewer pass 2 remediation status (`statistics`): done (2026-03-08, approved for production use; no additional module-scope remediation required)
 
 ## Wave Closure Review Cycles
 
