@@ -16,12 +16,14 @@ Contracts:
 - reproducible local results (same inputs -> same outcome)
 - no internal compiler panic signals in stderr/stdout
 - machine-readable result artifacts emitted through `target/verification/hardening-results.json`
+- mutation operators include import lines, string/numeric literals, and function signature shapes in addition to line-level edits
 
 ## Seed Corpus Rules
 
 - Seed files are version-controlled under `verification/fuzz_property/seeds/`.
 - Seed updates require reviewable diffs and manifest updates.
 - Duplicate equivalent seeds should be removed; dedup decisions are captured in PR notes.
+- Seed corpus must cover control flow, import paths, callable signatures, and string/numeric literal shapes.
 
 ## Triage and Minimization Workflow
 

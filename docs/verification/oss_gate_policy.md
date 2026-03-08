@@ -15,6 +15,11 @@ Contract per entry:
 - timeout policy
 - expected result classification
 
+Pinned revision contract:
+- format must be `local-main@<git-sha-prefix>`
+- `<git-sha-prefix>` must match the latest commit that touched `project_root`
+- mismatches fail fast in the suite as `pinned_revision_mismatch`
+
 Execution:
 - suite name `oss-curated`
 - runner: `scripts/run_verification_hardening.py`

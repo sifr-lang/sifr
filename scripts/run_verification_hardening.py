@@ -20,6 +20,10 @@ TMP_PATTERNS = (
     re.compile(r"/tmp/[^\s\"']+"),
     re.compile(r"/var/folders/[^\s\"']+"),
 )
+LOCAL_PINNED_REVISION_PATTERN = re.compile(r"^local-main@([0-9a-f]{7,40})$")
+STRING_LITERAL_PATTERN = re.compile(r"(\"[^\n\"]*\"|'[^\n']*')")
+INTEGER_LITERAL_PATTERN = re.compile(r"(?<![A-Za-z0-9_])\d+(?![A-Za-z0-9_])")
+FUNCTION_SIGNATURE_PATTERN = re.compile(r"^\s*def\s+\w+\s*\(")
 
 
 def parse_args() -> argparse.Namespace:
@@ -207,6 +211,25 @@ def required_missing(entry: dict[str, Any], keys: tuple[str, ...]) -> list[str]:
         if not isinstance(value, str) or not value.strip():
             missing.append(key)
     return missing
+
+
+def latest_project_revision(repo_root: Path, project_root: str) -> str | None:
+    try:
+        proc = subprocess.run(
+            ["git", "log", "-n", "1", "--format=%H", "--", project_root],
+            cwd=repo_root,
+            text=True,
+            capture_output=True,
+            check=False,
+        )
+    except OSError:
+        return None
+    if proc.returncode != 0:
+        return None
+    revision = proc.stdout.strip()
+    if not re.fullmatch(r"[0-9a-f]{40}", revision):
+        return None
+    return revision
 
 
 def baseline_case_result(
@@ -803,7 +826,7 @@ def deterministic_mutations(seed_source: str, iterations: int, random_seed: int)
         if not lines:
             lines = ["print(\"seed\")"]
         candidate = list(lines)
-        op = rng.randint(0, 4)
+        op = rng.randint(0, 8)
         if op == 0:
             insert_line = rng.choice(
                 [
@@ -829,6 +852,56 @@ def deterministic_mutations(seed_source: str, iterations: int, random_seed: int)
         elif op == 4 and candidate:
             idx = rng.randrange(len(candidate))
             candidate[idx] = candidate[idx].replace("int", "str", 1)
+        elif op == 5:
+            import_line = rng.choice(
+                [
+                    "from typing import Callable",
+                    "from missing_mutation_module import bad",
+                    "from helper import value",
+                ]
+            )
+            idx = rng.randint(0, len(candidate))
+            candidate.insert(idx, import_line)
+        elif op == 6 and candidate:
+            idx = rng.randrange(len(candidate))
+            line = candidate[idx]
+            if STRING_LITERAL_PATTERN.search(line):
+                candidate[idx] = STRING_LITERAL_PATTERN.sub('"mutated"', line, count=1)
+            else:
+                candidate.insert(rng.randint(0, len(candidate)), 'label: str = "mutated"')
+        elif op == 7 and candidate:
+            idx = rng.randrange(len(candidate))
+            line = candidate[idx]
+            if INTEGER_LITERAL_PATTERN.search(line):
+                replacement = str(rng.choice([0, 1, 2, 7, 42, 99, 1000]))
+                candidate[idx] = INTEGER_LITERAL_PATTERN.sub(replacement, line, count=1)
+            else:
+                candidate.insert(rng.randint(0, len(candidate)), "counter: int = 42")
+        elif op == 8:
+            signature = rng.choice(
+                [
+                    "def fuzz_helper(value: int) -> int:",
+                    "def fuzz_helper(value: str) -> str:",
+                ]
+            )
+            if candidate:
+                signature_indices = [
+                    idx for idx, line in enumerate(candidate) if FUNCTION_SIGNATURE_PATTERN.search(line)
+                ]
+                if signature_indices:
+                    idx = rng.choice(signature_indices)
+                    replacement = signature.replace("fuzz_helper", f"fuzz_helper_{rng.randint(0, 9)}")
+                    candidate[idx] = replacement
+                else:
+                    insert_at = rng.randint(0, len(candidate))
+                    body = (
+                        "    return value + 1"
+                        if "-> int" in signature
+                        else '    return value + "_mut"'
+                    )
+                    candidate[insert_at:insert_at] = [signature, body]
+            else:
+                candidate.extend([signature, "    return value"])
         corpus.append("\n".join(candidate).strip() + "\n")
     return corpus
 
@@ -1048,6 +1121,7 @@ def run_oss_suite(
     }
 
     allowed_classifications = {"pass", "known-failure", "investigate"}
+    pinned_revision_cache: dict[str, str | None] = {}
 
     for entry in entries:
         case_id = str(entry.get("id", "<missing-id>"))
@@ -1075,6 +1149,7 @@ def run_oss_suite(
             mismatches.append("expected_result_classification")
 
         project_root_raw = entry.get("project_root")
+        pinned_revision_raw = entry.get("pinned_revision")
         commands = entry.get("commands")
         project_root = repo_root / str(project_root_raw) if isinstance(project_root_raw, str) else None
         if project_root is None or not project_root.is_dir():
@@ -1098,6 +1173,66 @@ def run_oss_suite(
             continue
 
         assert project_root is not None
+        assert isinstance(project_root_raw, str)
+        assert isinstance(pinned_revision_raw, str)
+        pinned_match = LOCAL_PINNED_REVISION_PATTERN.fullmatch(pinned_revision_raw)
+        if pinned_match is None:
+            result["total_variants"] += 1
+            result["total_failures"] += 1
+            result["failed_cases"] += 1
+            case_result["variants"].append(
+                {
+                    "label": "pinned-revision",
+                    "status": "fail",
+                    "mismatches": ["pinned_revision_format"],
+                }
+            )
+            result["cases"].append(case_result)
+            continue
+        expected_sha = pinned_match.group(1)
+        latest_sha = pinned_revision_cache.get(project_root_raw)
+        if project_root_raw not in pinned_revision_cache:
+            latest_sha = latest_project_revision(repo_root, project_root_raw)
+            pinned_revision_cache[project_root_raw] = latest_sha
+        if latest_sha is None:
+            result["total_variants"] += 1
+            result["total_failures"] += 1
+            result["failed_cases"] += 1
+            case_result["variants"].append(
+                {
+                    "label": "pinned-revision",
+                    "status": "fail",
+                    "mismatches": ["pinned_revision_unresolvable"],
+                }
+            )
+            result["cases"].append(case_result)
+            continue
+        if not latest_sha.startswith(expected_sha):
+            result["total_variants"] += 1
+            result["total_failures"] += 1
+            result["failed_cases"] += 1
+            case_result["variants"].append(
+                {
+                    "label": "pinned-revision",
+                    "status": "fail",
+                    "mismatches": ["pinned_revision_mismatch"],
+                    "expected_pinned_revision": pinned_revision_raw,
+                    "latest_project_revision": f"local-main@{latest_sha[:len(expected_sha)]}",
+                }
+            )
+            result["cases"].append(case_result)
+            continue
+        result["total_variants"] += 1
+        case_result["variants"].append(
+            {
+                "label": "pinned-revision",
+                "status": "pass",
+                "mismatches": [],
+                "expected_pinned_revision": pinned_revision_raw,
+                "latest_project_revision": f"local-main@{latest_sha[:len(expected_sha)]}",
+            }
+        )
+
         for idx, command_meta in enumerate(commands, start=1):
             if not isinstance(command_meta, dict):
                 result["total_variants"] += 1

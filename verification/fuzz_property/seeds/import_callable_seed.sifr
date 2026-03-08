@@ -1,0 +1,13 @@
+from typing import Callable
+
+
+def twice(value: int, func: Callable[[int], int]) -> int:
+    return func(func(value))
+
+
+def inc(value: int) -> int:
+    return value + 1
+
+
+def main():
+    print(str(twice(5, inc)))

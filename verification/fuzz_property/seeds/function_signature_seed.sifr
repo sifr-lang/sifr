@@ -1,0 +1,7 @@
+def combine(left: int, right: int) -> int:
+    return left + right
+
+
+def main():
+    total: int = combine(4, 6)
+    print(str(total))

@@ -4,7 +4,10 @@
   "seed_files": [
     "verification/fuzz_property/seeds/invalid_import_seed.sifr",
     "verification/fuzz_property/seeds/valid_control_flow_seed.sifr",
-    "verification/fuzz_property/seeds/type_mismatch_seed.sifr"
+    "verification/fuzz_property/seeds/type_mismatch_seed.sifr",
+    "verification/fuzz_property/seeds/function_signature_seed.sifr",
+    "verification/fuzz_property/seeds/import_callable_seed.sifr",
+    "verification/fuzz_property/seeds/string_numeric_literals_seed.sifr"
   ],
   "iterations": 32,
   "random_seed": 1349393279,
