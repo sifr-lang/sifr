@@ -18,10 +18,6 @@ cargo run -q -p sifr -- build <file>.sifr   # Build native binary
 cargo run -q -p sifr -- check <file>.sifr   # Type-check only
 cargo run -q -p sifr -- emit <file>.sifr    # Show generated Rust code
 
-# Full local validation (authoritative gate — run before PRs)
-scripts/run_all_tests.sh                      # Default: full profile
-scripts/run_all_tests.sh --profile quick      # Fast signal for PRs
-
 # Unit tests only (skips slow e2e pass suite)
 cargo test -p sifr -- --skip test_e2e_pass
 
@@ -37,7 +33,20 @@ cargo fmt --check
 python3 scripts/check_hir_maintainability_guardrails.py
 ```
 
-## Compiler pipeline (crate architecture)
+## Local validation (authoritative gate — run before PRs)
+
+Before considering any task done, run local validation on your changes:
+
+```bash
+scripts/run_all_tests.sh --profile quick      # Fast signal — use for PRs
+scripts/run_all_tests.sh                      # Full profile — default
+```
+
+CI mirrors these exact scripts — no CI-only behavior. Do not wait on CI; validate locally first.
+
+## Compiler pipeline
+
+Which crate to touch for a given task:
 
 ```
 Source (.sifr)
@@ -48,25 +57,24 @@ Source (.sifr)
   → sifr                                     (CLI binary: build/run/check/emit/test)
 ```
 
-`sifr_type_system` is used by `sifr_hir` for type definitions, inference, subtyping, and narrowing.
+See `.cursor/plans/main/architecture.md` for full architectural detail.
 
 ## Key conventions
 
 - **Workspace lints**: Clippy pedantic enabled. `unsafe_code`, `print_stdout`, `print_stderr`, `dbg_macro` are warned.
-- **HIR modularity guardrails**: The `sifr_hir/src/lower/` directory is decomposed into specific files (imports, diagnostics, classes, typing_and_functions, statements, expressions). A monolithic `lower.rs` or `stdlib.rs` is banned — enforced by `check_hir_maintainability_guardrails.py`.
+- **HIR modularity guardrails**: HIR lowering is decomposed into small, focused files — a monolithic `lower.rs` or `stdlib.rs` is banned. Enforced by `check_hir_maintainability_guardrails.py`.
 - **Snapshot testing**: Uses `insta` for e2e and unit test snapshots. E2E fixtures are discovered lexicographically, expectations follow declaration order.
 - **No panics in user paths**: No data-dependent `.unwrap()` or `.expect()` in generated runtime code. `assert!` is only for programmer invariants.
-- **Local-first validation**: `scripts/run_all_tests.sh` is the authoritative gate. CI mirrors these exact scripts — no CI-only behavior.
 
 ## Workspace structure
 
-- `crates/` — 7-crate Rust workspace (see pipeline above)
+- `crates/` — Rust workspace (see pipeline above)
 - `demos/` — Milestone demo files (*.sifr) showcasing language features
 - `scripts/` — Build/test automation
 - `verification/` — E2E test infrastructure
 - `.cursor/plans/main/architecture.md` — Comprehensive compiler architecture doc
 - `.cursor/plans/main/roadmap.md` — Phase execution roadmap
-- `.cursor/plans/main/phases/` — Per-phase execution plans (phases 15–41)
+- `.cursor/plans/main/phases/` — Per-phase execution plans
 - `docs/` — CLI semantics contract, HIR guardrails, verification policies
 
 ## Core expectations
