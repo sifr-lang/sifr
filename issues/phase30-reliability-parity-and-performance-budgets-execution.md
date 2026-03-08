@@ -469,6 +469,8 @@ Validation evidence:
 - Part 12 implementation: merged https://github.com/yaseralnajjar/sifr/pull/974
 - Part 12 review pass 1 tracking: merged https://github.com/yaseralnajjar/sifr/pull/975
 - Part 12 review pass 2 tracking: merged https://github.com/yaseralnajjar/sifr/pull/976
+- Wave completion closure cycle (wave_30_1c): merged https://github.com/yaseralnajjar/sifr/pull/978
+- Wave production-grade closure cycle (wave_30_1c): merged https://github.com/yaseralnajjar/sifr/pull/979
 
 ## External Review Passes
 - Reviewer pass 1 request output: `reviews/phase-30-part-1-env-review.md`
