@@ -129,7 +129,7 @@ Validation evidence:
 - Review pass 2 status: approved; no code remediation required for bytes scope.
 
 ## Part 3: `base64`
-status: in_progress (2026-03-08)
+status: done (2026-03-08, PR #942)
 
 - [x] Define module parity scope and CPython references
 - [x] Port/expand CPython-derived parity fixtures (canonical vector format)
@@ -139,9 +139,9 @@ status: in_progress (2026-03-08)
 - [x] Run targeted module tests
 - [x] Run full local suite
 - [x] Open PR, review, and merge
-- [ ] External reviewer pass 1 remediation completed (if findings)
-- [ ] External reviewer pass 2 remediation completed (if findings)
-- [ ] Mark part progress in this checklist
+- [x] External reviewer pass 1 remediation completed (if findings)
+- [x] External reviewer pass 2 remediation completed (if findings)
+- [x] Mark part progress in this checklist
 
 Validation evidence:
 - Positive path: `cargo run -q -p sifr -- run demos/m30_1a_base64_parity_demo/main.sifr` -> prints `m30_1a base64 parity demo: pass`.
@@ -150,6 +150,8 @@ Validation evidence:
 - Positive path: `/Users/yaseralnajjar/work/sifr/codebase/scripts/run_all_tests.sh` -> pass (`verification ok: variants=64, failures=0, blocking_failures=0, non_blocking_failures=0`).
 - Negative path: canonical bool vectors in `cpython_base64_subset.sifr` validate `b64decode` parse-failure signaling for invalid payloads and success-path decode for valid payloads.
 - PR: merged https://github.com/yaseralnajjar/sifr/pull/942
+- Review pass 1 status: approved; no code remediation required for base64 scope.
+- Review pass 2 note validation: explicit wrapper-export and re-raise simplification suggestions were validated against current intrinsic lowering and Result typing; no safe production-grade code change was warranted for this module scope.
 
 ## Module Part Template (repeat per module)
 
@@ -187,6 +189,7 @@ Validation evidence:
 - Part 2 review pass 2 tracking: merged https://github.com/yaseralnajjar/sifr/pull/941
 - Phase production-grade closure cycle: merged https://github.com/yaseralnajjar/sifr/pull/938
 - Part 3 implementation: merged https://github.com/yaseralnajjar/sifr/pull/942
+- Part 3 review pass 1 tracking: merged https://github.com/yaseralnajjar/sifr/pull/943
 
 ## External Review Passes
 - Reviewer pass 1 request output: `reviews/phase-30-part-1-env-review.md`
@@ -199,6 +202,8 @@ Validation evidence:
 - Reviewer pass 2 remediation status (`bytes`): done (2026-03-08, no code changes required)
 - Reviewer pass 1 request output (`base64`): `reviews/phase-30-part-3-base64-review.md`
 - Reviewer pass 1 remediation status (`base64`): done (2026-03-08, reviewer approved with no code changes required)
+- Reviewer pass 2 request output (`base64`): `reviews/phase-30-part-3-base64-review-2.md`
+- Reviewer pass 2 remediation status (`base64`): done (2026-03-08, reviewer notes validated; no safe module-scope code change required)
 
 ## Wave Closure Review Cycles
 
