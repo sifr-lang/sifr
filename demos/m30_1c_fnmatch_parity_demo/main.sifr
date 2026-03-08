@@ -1,0 +1,20 @@
+from sifr.fnmatch import fnmatch, fnmatchcase, fnmatch_filter
+from sifr.test import assert_bool_vector_eq
+
+def main():
+    expected: list[bool] = [True, True, True, True, True, True]
+    actual: list[bool] = []
+
+    actual.append(fnmatch("hello.txt", "*.txt"))
+    non_txt_match: bool = not fnmatch("hello.py", "*.txt")
+    actual.append(non_txt_match)
+    actual.append(fnmatch("abc", "a?c"))
+    case_sensitive_miss: bool = not fnmatchcase("AbC", "abc")
+    actual.append(case_sensitive_miss)
+
+    names: list[str] = ["main.py", "notes.txt", "lib.py"]
+    actual.append(str(fnmatch_filter(names, "*.py")) == "[\"main.py\", \"lib.py\"]")
+    actual.append(str(fnmatch_filter(names, "README*")) == "[]")
+
+    assert_bool_vector_eq(actual, expected)
+    print("m30_1c fnmatch parity demo: pass")
