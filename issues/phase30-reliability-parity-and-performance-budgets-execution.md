@@ -41,7 +41,7 @@ Loop per part: Work -> Validate -> PR -> Review -> Merge -> External review pass
 12. [x] `re`
 
 ### wave_30_1d: Core Containers and Structured Data
-13. [ ] `collections`
+13. [x] `collections`
 14. [ ] `itertools`
 15. [ ] `json`
 16. [ ] `datetime`
@@ -404,7 +404,7 @@ Validation evidence:
 - Review pass 2 status: approved (`reviews/phase-30-part-12-re-review-2.md`) with no blockers; module is production-grade for approved scope with no additional remediation required.
 
 ## Part 13: `collections`
-status: in_progress (2026-03-08)
+status: done (2026-03-08, PR #981)
 
 - [x] Define module parity scope and CPython references
 - [x] Port/expand CPython-derived parity fixtures (canonical vector format)
@@ -415,8 +415,8 @@ status: in_progress (2026-03-08)
 - [x] Run full local suite
 - [x] Open PR, review, and merge
 - [x] External reviewer pass 1 remediation completed (if findings)
-- [ ] External reviewer pass 2 remediation completed (if findings)
-- [ ] Mark part progress in this checklist
+- [x] External reviewer pass 2 remediation completed (if findings)
+- [x] Mark part progress in this checklist
 
 Validation evidence:
 - Positive path: `cargo run -q -p sifr -- run demos/m30_1d_collections_parity_demo/main.sifr` -> prints `m30_1d collections parity demo: pass`.
@@ -431,6 +431,7 @@ Validation evidence:
 - Negative path: canonical bool vectors in `cpython_collections_subset.sifr` validate empty deque pop (`None`) and absent-key counter lookups (`0`) with panic-free behavior.
 - PR: merged https://github.com/yaseralnajjar/sifr/pull/981
 - Review pass 1 status: approved (`reviews/phase-30-part-13-collections-review.md`) with non-blocking observations only; no additional part-13 code remediation was required for approved scope.
+- Review pass 2 status: approved (`reviews/phase-30-part-13-collections-review-2.md`) with no blockers; module is production-grade for approved scope with no additional remediation required.
 
 ## Module Part Template (repeat per module)
 
@@ -501,6 +502,7 @@ Validation evidence:
 - Wave completion closure cycle (wave_30_1c): merged https://github.com/yaseralnajjar/sifr/pull/978
 - Wave production-grade closure cycle (wave_30_1c): merged https://github.com/yaseralnajjar/sifr/pull/979
 - Part 13 implementation: merged https://github.com/yaseralnajjar/sifr/pull/981
+- Part 13 review pass 1 tracking: merged https://github.com/yaseralnajjar/sifr/pull/982
 
 ## External Review Passes
 - Reviewer pass 1 request output: `reviews/phase-30-part-1-env-review.md`
@@ -553,6 +555,8 @@ Validation evidence:
 - Reviewer pass 2 remediation status (`re`): done (2026-03-08, approved for production use; no module-scope remediation required)
 - Reviewer pass 1 request output (`collections`): `reviews/phase-30-part-13-collections-review.md`
 - Reviewer pass 1 remediation status (`collections`): done (2026-03-08, approved with non-blocking observations; no additional module-scope remediation required)
+- Reviewer pass 2 request output (`collections`): `reviews/phase-30-part-13-collections-review-2.md`
+- Reviewer pass 2 remediation status (`collections`): done (2026-03-08, approved for production use; no module-scope remediation required)
 
 ## Wave Closure Review Cycles
 
