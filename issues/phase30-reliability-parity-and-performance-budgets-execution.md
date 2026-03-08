@@ -443,8 +443,8 @@ status: in_progress (2026-03-08)
 - [x] Run module demo
 - [x] Run targeted module tests
 - [x] Run full local suite
-- [ ] Open PR, review, and merge
-- [ ] External reviewer pass 1 remediation completed (if findings)
+- [x] Open PR, review, and merge
+- [x] External reviewer pass 1 remediation completed (if findings)
 - [ ] External reviewer pass 2 remediation completed (if findings)
 - [ ] Mark part progress in this checklist
 
@@ -457,6 +457,8 @@ Validation evidence:
 - Positive path: `cargo run -q -p sifr -- run crates/sifr/tests/e2e/pass/stdlib_itertools_new.sifr` -> pass.
 - Positive path: `/Users/yaseralnajjar/work/sifr/codebase/scripts/run_all_tests.sh` -> pass (`verification ok: variants=64, failures=0, blocking_failures=0, non_blocking_failures=0`).
 - Negative path: canonical bool vectors in `cpython_itertools_subset.sifr` validate `batched(..., 0)` rejection with panic-free typed `ValueError` behavior.
+- PR: merged https://github.com/yaseralnajjar/sifr/pull/985
+- Review pass 1 status: approved (`reviews/phase-30-part-14-itertools-review.md`) with no blocking issues; no additional part-14 remediation was required for approved scope.
 
 ## Module Part Template (repeat per module)
 
@@ -529,6 +531,7 @@ Validation evidence:
 - Part 13 implementation: merged https://github.com/yaseralnajjar/sifr/pull/981
 - Part 13 review pass 1 tracking: merged https://github.com/yaseralnajjar/sifr/pull/982
 - Part 13 review pass 2 tracking: merged https://github.com/yaseralnajjar/sifr/pull/983
+- Part 14 implementation: merged https://github.com/yaseralnajjar/sifr/pull/985
 
 ## External Review Passes
 - Reviewer pass 1 request output: `reviews/phase-30-part-1-env-review.md`
@@ -583,6 +586,8 @@ Validation evidence:
 - Reviewer pass 1 remediation status (`collections`): done (2026-03-08, approved with non-blocking observations; no additional module-scope remediation required)
 - Reviewer pass 2 request output (`collections`): `reviews/phase-30-part-13-collections-review-2.md`
 - Reviewer pass 2 remediation status (`collections`): done (2026-03-08, approved for production use; no module-scope remediation required)
+- Reviewer pass 1 request output (`itertools`): `reviews/phase-30-part-14-itertools-review.md`
+- Reviewer pass 1 remediation status (`itertools`): done (2026-03-08, approved with no blocking issues; no additional module-scope remediation required)
 
 ## Wave Closure Review Cycles
 
