@@ -44,7 +44,7 @@ Loop per part: Work -> Validate -> PR -> Review -> Merge -> External review pass
 13. [x] `collections`
 14. [x] `itertools`
 15. [x] `json`
-16. [ ] `datetime`
+16. [x] `datetime`
 
 ### wave_30_1e: File, Path, and Filesystem Surface
 17. [ ] `io`
@@ -488,7 +488,7 @@ Validation evidence:
 - Review pass 2 status: approved (`reviews/phase-30-part-15-json-review-2.md`) with no blockers; module is production-grade for approved scope with no additional remediation required.
 
 ## Part 16: `datetime`
-status: in_progress (2026-03-08)
+status: done (2026-03-08, PR #993)
 
 - [x] Define module parity scope and CPython references
 - [x] Port/expand CPython-derived parity fixtures (canonical vector format)
@@ -499,8 +499,8 @@ status: in_progress (2026-03-08)
 - [x] Run full local suite
 - [x] Open PR, review, and merge
 - [x] External reviewer pass 1 remediation completed (if findings)
-- [ ] External reviewer pass 2 remediation completed (if findings)
-- [ ] Mark part progress in this checklist
+- [x] External reviewer pass 2 remediation completed (if findings)
+- [x] Mark part progress in this checklist
 
 Validation evidence:
 - Positive path: `cargo run -q -p sifr -- run demos/m30_1d_datetime_parity_demo/main.sifr` -> prints `m30_1d datetime parity demo: pass`.
@@ -514,6 +514,7 @@ Validation evidence:
 - Negative path: canonical bool vectors in `cpython_datetime_subset.sifr` validate out-of-range `from_timestamp(...)` rejection with panic-free typed `ValueError` behavior.
 - PR: merged https://github.com/yaseralnajjar/sifr/pull/993
 - Review pass 1 remediation: fixed `datetime.timestamp()` pre-epoch year handling in `lib/sifr/datetime.sifr` and added regression coverage (`1969-12-31T23:59:59 -> -1`) in `cpython_datetime_subset.sifr`; revalidated targeted datetime fixtures and full suite.
+- Review pass 2 status: approved (`reviews/phase-30-part-16-datetime-review-2.md`) with no blockers; module is production-grade for approved scope with no additional remediation required.
 
 ## Module Part Template (repeat per module)
 
@@ -593,6 +594,7 @@ Validation evidence:
 - Part 15 review pass 1 tracking: merged https://github.com/yaseralnajjar/sifr/pull/990
 - Part 15 review pass 2 tracking: merged https://github.com/yaseralnajjar/sifr/pull/991
 - Part 16 implementation: merged https://github.com/yaseralnajjar/sifr/pull/993
+- Part 16 review pass 1 remediation: merged https://github.com/yaseralnajjar/sifr/pull/994
 
 ## External Review Passes
 - Reviewer pass 1 request output: `reviews/phase-30-part-1-env-review.md`
@@ -657,6 +659,8 @@ Validation evidence:
 - Reviewer pass 2 remediation status (`json`): done (2026-03-08, approved for production use; no module-scope remediation required)
 - Reviewer pass 1 request output (`datetime`): `reviews/phase-30-part-16-datetime-review.md`
 - Reviewer pass 1 remediation status (`datetime`): done (2026-03-08, reviewer-found pre-epoch `timestamp()` bug remediated and revalidated)
+- Reviewer pass 2 request output (`datetime`): `reviews/phase-30-part-16-datetime-review-2.md`
+- Reviewer pass 2 remediation status (`datetime`): done (2026-03-09, approved for production use; no additional module-scope remediation required)
 
 ## Wave Closure Review Cycles
 
