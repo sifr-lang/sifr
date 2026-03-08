@@ -1,0 +1,28 @@
+from sifr.bisect import bisect_left, bisect_right, insort_left, insort_right
+from sifr.test import assert_bool_vector_eq
+
+def main():
+    expected: list[bool] = [True, True, True, True, True, True, True, True]
+    actual: list[bool] = []
+
+    data: list[int] = [1, 2, 2, 3, 5]
+    actual.append(bisect_left(data, 2) == 1)
+    actual.append(bisect_right(data, 2) == 3)
+    actual.append(bisect_left(data, 4) == 4)
+    actual.append(bisect_right(data, 4) == 4)
+
+    left_mut: list[int] = [1, 3, 3, 5]
+    insort_left(left_mut, 3)
+    actual.append(str(left_mut) == "[1, 3, 3, 3, 5]")
+
+    right_mut: list[int] = [1, 3, 3, 5]
+    insort_right(right_mut, 3)
+    actual.append(str(right_mut) == "[1, 3, 3, 3, 5]")
+
+    empty: list[int] = []
+    actual.append(bisect_left(empty, 10) == 0)
+    insort_right(empty, 10)
+    actual.append(str(empty) == "[10]")
+
+    assert_bool_vector_eq(actual, expected)
+    print("m30_1b bisect parity demo: pass")

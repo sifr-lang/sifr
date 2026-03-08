@@ -1,0 +1,55 @@
+# Adapted CPython bisect subset for sifr.bisect (canonical vector format)
+from sifr.bisect import (
+    bisect_left, bisect_right,
+    insort_left, insort_right,
+    insort_left_copy, insort_right_copy
+)
+from sifr.test import assert_bool_vector_eq
+
+def main():
+    expected: list[bool] = [
+        True, True, True, True, True, True,
+        True, True, True, True, True, True,
+        True, True, True, True, True
+    ]
+    actual: list[bool] = []
+
+    empty: list[int] = []
+    actual.append(bisect_left(empty, 7) == 0)
+    actual.append(bisect_right(empty, 7) == 0)
+
+    one: list[int] = [4]
+    actual.append(bisect_left(one, 4) == 0)
+    actual.append(bisect_right(one, 4) == 1)
+
+    dups: list[int] = [1, 2, 2, 3, 3, 3, 4]
+    actual.append(bisect_left(dups, 2) == 1)
+    actual.append(bisect_right(dups, 2) == 3)
+    actual.append(bisect_left(dups, 3) == 3)
+    actual.append(bisect_right(dups, 3) == 6)
+
+    floats: list[float] = [1.0, 2.5, 2.5, 4.0]
+    actual.append(bisect_left(floats, 2.5) == 1)
+    actual.append(bisect_right(floats, 2.5) == 3)
+
+    ins_mut: list[int] = [1, 3, 3, 5]
+    insort_left(ins_mut, 3)
+    actual.append(str(ins_mut) == "[1, 3, 3, 3, 5]")
+    insort_right(ins_mut, 3)
+    actual.append(str(ins_mut) == "[1, 3, 3, 3, 3, 5]")
+
+    ins_empty: list[int] = []
+    insort_right(ins_empty, 10)
+    actual.append(str(ins_empty) == "[10]")
+
+    src: list[int] = [1, 3, 5]
+    left_copy: list[int] = insort_left_copy(src, 2)
+    actual.append(str(src) == "[1, 3, 5]")
+    actual.append(str(left_copy) == "[1, 2, 3, 5]")
+
+    right_copy: list[int] = insort_right_copy(src, 3)
+    actual.append(str(src) == "[1, 3, 5]")
+    actual.append(str(right_copy) == "[1, 3, 3, 5]")
+
+    assert_bool_vector_eq(actual, expected)
+    assert str("cpython_bisect_subset: pass") == "cpython_bisect_subset: pass"
