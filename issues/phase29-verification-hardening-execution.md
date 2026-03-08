@@ -1,6 +1,6 @@
 # Phase 29 Execution Checklist (Verification Hardening)
 
-Status: in_progress (started 2026-03-08)
+Status: done (started 2026-03-08, completed 2026-03-08)
 Owner: phase_29 execution loop
 Reference phase docs:
 - `.cursor/plans/main/phases/29_verification_hardening.md`
@@ -8,13 +8,13 @@ Reference phase docs:
 Loop per part: Work -> Validate -> PR -> Review -> Merge -> Mark Done
 
 ## Global Gates (apply to every part)
-- [ ] Scope remains constrained to the current part definition-of-done
-- [ ] Root cause addressed (no superficial workaround/fallback)
-- [ ] Milestone quality-contract checks include at least one positive-path and one negative-path validation
-- [ ] Full local suite passes: `/Users/yaseralnajjar/work/sifr/codebase/scripts/run_all_tests.sh`
-- [ ] Milestone demo runs successfully before opening each part PR
-- [ ] PR opened, reviewed, and merged before starting next part
-- [ ] Roadmap/phase/issues docs updated with latest status and merged PR links
+- [x] Scope remains constrained to the current part definition-of-done
+- [x] Root cause addressed (no superficial workaround/fallback)
+- [x] Milestone quality-contract checks include at least one positive-path and one negative-path validation
+- [x] Full local suite passes: `/Users/yaseralnajjar/work/sifr/codebase/scripts/run_all_tests.sh`
+- [x] Milestone demo runs successfully before opening each part PR
+- [x] PR opened, reviewed, and merged before starting next part
+- [x] Roadmap/phase/issues docs updated with latest status and merged PR links
 
 ## Full Phase 29 To-Do Plan
 
@@ -147,7 +147,7 @@ Validation evidence:
 - Negative path: `ecosystem-broader` suite is marked `blocking=false`; mismatches remain signal-only and are reported in machine-readable artifacts without merge blocking.
 
 ## Part 5: milestone_29_5 Deterministic Scale, Flake Control, and Structured Evidence
-status: done (2026-03-08, pending PR link)
+status: done (2026-03-08, PR #924)
 
 - [x] Define deterministic suite sharding strategy and CLI controls (`--shard-total`, `--shard-index`)
 - [x] Add rerun tracking contract (`--rerun-failures`) and quarantine metadata validation
@@ -158,7 +158,7 @@ status: done (2026-03-08, pending PR link)
 - [x] Negative-path validation recorded
 - [x] Run milestone demo
 - [x] Run full local suite
-- [ ] Open PR, review, and merge
+- [x] Open PR, review, and merge
 - [x] Mark part progress in this checklist
 
 Validation evidence:
@@ -175,7 +175,8 @@ Validation evidence:
 - Part 2: merged https://github.com/yaseralnajjar/sifr/pull/921
 - Part 3: merged https://github.com/yaseralnajjar/sifr/pull/922
 - Part 4: merged https://github.com/yaseralnajjar/sifr/pull/923
-- Part 5: pending
+- Part 5: merged https://github.com/yaseralnajjar/sifr/pull/924
 
 ## External Review Passes
-- Pending
+- Reviewer pass 1 request: `reviews/phase-29-review.md` (requested via talk-to-claude external app)
+- Reviewer pass 1 status: unavailable (no output file produced after repeated polling/retry cycle, up to max wait window)
