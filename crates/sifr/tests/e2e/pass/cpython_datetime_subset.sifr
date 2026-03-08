@@ -5,7 +5,7 @@ from sifr.test import assert_bool_vector_eq
 def main():
     expected: list[bool] = [
         True, True, True, True, True, True, True,
-        True, True, True, True, True, True
+        True, True, True, True, True, True, True
     ]
     actual: list[bool] = []
 
@@ -21,6 +21,8 @@ def main():
     dt: datetime = datetime(2024, 1, 15, 10, 30, 0)
     actual.append(dt.isoformat() == "2024-01-15T10:30:00")
     actual.append(dt.timestamp() > 0)
+    pre_epoch: datetime = datetime(1969, 12, 31, 23, 59, 59)
+    actual.append(pre_epoch.timestamp() == -1)
 
     d: date = date(2024, 1, 15)
     actual.append(d.isoformat() == "2024-01-15")
