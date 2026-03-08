@@ -2,7 +2,8 @@
 from sifr.test import assert_vector_eq, assert_bool_vector_eq
 from sifr.math import (
     cbrt, exp2, fma, fmax, fmin, isnormal, issubnormal,
-    remainder, signbit, sumprod, log, log_base, isclose, isnan, e, nan
+    remainder, signbit, sumprod, log, log_base, isclose, isnan, e, nan,
+    factorial, dist
 )
 
 def main():
@@ -15,7 +16,8 @@ def main():
         "true", "true", "true",
         "true", "true", "true",
         "true", "true", "true",
-        "true", "true", "true"
+        "true", "true", "true",
+        "true", "true"
     ]
     actual: list[str] = []
 
@@ -68,7 +70,11 @@ def main():
 
     p: list[float] = [1.0, 2.0, 3.0]
     q: list[float] = [4.0, 5.0, 6.0]
+    empty_a: list[float] = []
+    empty_b: list[float] = []
     actual.append(str(sumprod(p, q) == 32.0))
+    actual.append(str(factorial(-1) == 0))
+    actual.append(str(dist(empty_a, empty_b) == 0.0))
     assert_vector_eq(actual, expected)
 
     # Negative-path semantic vectors.

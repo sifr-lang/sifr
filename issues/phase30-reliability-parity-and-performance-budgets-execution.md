@@ -190,8 +190,8 @@ status: in_progress (2026-03-08)
 - [x] Run module demo
 - [x] Run targeted module tests
 - [x] Run full local suite
-- [ ] Open PR, review, and merge
-- [ ] External reviewer pass 1 remediation completed (if findings)
+- [x] Open PR, review, and merge
+- [x] External reviewer pass 1 remediation completed (if findings)
 - [ ] External reviewer pass 2 remediation completed (if findings)
 - [ ] Mark part progress in this checklist
 
@@ -204,6 +204,8 @@ Validation evidence:
 - Positive path: `cargo run -q -p sifr -- run demos/m4_math_demo.sifr` -> expected numeric parity flow prints.
 - Positive path: `/Users/yaseralnajjar/work/sifr/codebase/scripts/run_all_tests.sh` -> pass (`verification ok: variants=64, failures=0, blocking_failures=0, non_blocking_failures=0`).
 - Negative path: mismatched-dimension `dist(...)` and invalid-tolerance `isclose(...)` semantic checks are asserted in canonical vectors (`cpython_math_semantic_corrections_subset.sifr`, `cpython_math_missing_surface_subset.sifr`).
+- PR: merged https://github.com/yaseralnajjar/sifr/pull/948
+- Review pass 1 remediation: added explicit `factorial(-1)` and typed `dist([], [])` semantic coverage in canonical fixture; no module runtime code changes required.
 
 ## Module Part Template (repeat per module)
 
@@ -246,6 +248,7 @@ Validation evidence:
 - Part 4 implementation: merged https://github.com/yaseralnajjar/sifr/pull/945
 - Part 4 review pass 1 tracking: merged https://github.com/yaseralnajjar/sifr/pull/946
 - Part 4 review pass 2 tracking: merged https://github.com/yaseralnajjar/sifr/pull/947
+- Part 5 implementation: merged https://github.com/yaseralnajjar/sifr/pull/948
 
 ## External Review Passes
 - Reviewer pass 1 request output: `reviews/phase-30-part-1-env-review.md`
@@ -264,6 +267,8 @@ Validation evidence:
 - Reviewer pass 1 remediation status (`hashlib`): done (2026-03-08, reviewer approved with observations; no code changes required)
 - Reviewer pass 2 request output (`hashlib`): `reviews/phase-30-part-4-hashlib-review-2.md`
 - Reviewer pass 2 remediation status (`hashlib`): done (2026-03-08, reviewer approved with tracked observations; no code changes required)
+- Reviewer pass 1 request output (`math`): `reviews/phase-30-part-5-math-review.md`
+- Reviewer pass 1 remediation status (`math`): done (2026-03-08, approved with observations; fixture hardening added for factorial/dist semantics)
 
 ## Wave Closure Review Cycles
 
