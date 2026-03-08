@@ -35,15 +35,15 @@ def main():
 
     # Safety adaptation: invalid names are ignored instead of panicking.
     invalid_inputs: list[str] = ["", "A=B"]
-    invalid_expected_ok: list[bool] = [False, False]
-    invalid_actual_ok: list[bool] = []
+    invalid_expected_lookup_found: list[bool] = [False, False]
+    invalid_actual_lookup_found: list[bool] = []
     for bad_key in invalid_inputs:
         set_key: str = bad_key + ""
         lookup_key: str = bad_key + ""
         env_set(set_key, "blocked")
         blocked: str | None = env_get(lookup_key)
-        invalid_actual_ok.append(blocked is not None)
-    assert_bool_vector_eq(invalid_actual_ok, invalid_expected_ok)
+        invalid_actual_lookup_found.append(blocked is not None)
+    assert_bool_vector_eq(invalid_actual_lookup_found, invalid_expected_lookup_found)
 
     k: list[str] = keys()
     v: list[str] = values()
