@@ -10,7 +10,7 @@ def main():
     expected: list[bool] = [
         True, True, True, True, True, True,
         True, True, True, True, True, True,
-        True, True, True, True
+        True, True, True, True, True
     ]
     actual: list[bool] = []
 
@@ -20,6 +20,7 @@ def main():
     actual.append(capwords("hello\tworld") == "Hello World")
     actual.append(capwords("hello\nworld") == "Hello World")
     actual.append(capwords("one\r\ntwo\tthree") == "One Two Three")
+    actual.append(capwords("one\vtwo\fthree") == "One Two Three")
 
     actual.append(ascii_lowercase == "abcdefghijklmnopqrstuvwxyz")
     actual.append(ascii_uppercase == "ABCDEFGHIJKLMNOPQRSTUVWXYZ")
@@ -28,7 +29,7 @@ def main():
     actual.append(hexdigits == "0123456789abcdefABCDEF")
     actual.append(octdigits == "01234567")
     actual.append(len(punctuation) == 32)
-    actual.append(len(whitespace) == 4)
+    actual.append(len(whitespace) == 6)
     actual.append(len(printable) > 90)
     actual.append(capwords("") == "")
 

@@ -7,13 +7,13 @@ digits: str = "0123456789"
 hexdigits: str = "0123456789abcdefABCDEF"
 octdigits: str = "01234567"
 punctuation: str = "!\"#$%&'()*+,-./:;<=>?@[\\]^_`{|}~"
-whitespace: str = " \t\n\r"
-printable: str = "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ!\"#$%&'()*+,-./:;<=>?@[\\]^_`{|}~ \t\n\r"
+whitespace: str = " \t\n\r\v\f"
+printable: str = "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ!\"#$%&'()*+,-./:;<=>?@[\\]^_`{|}~ \t\n\r\v\f"
 
 def capwords(s: str) -> str:
     # Mirror CPython-like whitespace handling for the supported subset by
     # normalizing common whitespace classes to spaces before splitting.
-    normalized: str = s.replace("\t", " ").replace("\n", " ").replace("\r", " ")
+    normalized: str = s.replace("\t", " ").replace("\n", " ").replace("\r", " ").replace("\v", " ").replace("\f", " ")
     words: list[str] = normalized.split(" ")
     result: str = ""
     first: bool = True

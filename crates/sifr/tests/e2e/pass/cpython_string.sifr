@@ -39,10 +39,9 @@ def main():
 
     # --- More constant checks ---
     assert_eq(len(punctuation), 32)
-    assert_eq(len(whitespace), 4)
+    assert_eq(len(whitespace), 6)
     assert_eq(len(ascii_lowercase), 26)
     assert_eq(len(ascii_uppercase), 26)
     assert_true(len(printable) > 90)
 
     assert str("cpython_string: all 30 assertions passed") == 'cpython_string: all 30 assertions passed'
-

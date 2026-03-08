@@ -305,8 +305,8 @@ status: in_progress (2026-03-08)
 - [x] Run module demo
 - [x] Run targeted module tests
 - [x] Run full local suite
-- [ ] Open PR, review, and merge
-- [ ] External reviewer pass 1 remediation completed (if findings)
+- [x] Open PR, review, and merge
+- [x] External reviewer pass 1 remediation completed (if findings)
 - [ ] External reviewer pass 2 remediation completed (if findings)
 - [ ] Mark part progress in this checklist
 
@@ -317,7 +317,9 @@ Validation evidence:
 - Positive path: `cargo run -q -p sifr -- run crates/sifr/tests/e2e/pass/stdlib_string.sifr` -> pass.
 - Positive path: `cargo run -q -p sifr -- run crates/sifr/tests/e2e/pass/stdlib_string_capwords.sifr` -> pass.
 - Positive path: `/Users/yaseralnajjar/work/sifr/codebase/scripts/run_all_tests.sh` -> pass (`verification ok: variants=64, failures=0, blocking_failures=0, non_blocking_failures=0`).
-- Negative path: no exception/error-path surface is in approved `string` subset; canonical vectors validate whitespace normalization semantics for `capwords` across tabs/newlines/carriage returns.
+- Negative path: no exception/error-path surface is in approved `string` subset; canonical vectors validate whitespace normalization semantics for `capwords` across tabs/newlines/carriage returns/vertical tabs/form feeds.
+- PR: merged https://github.com/yaseralnajjar/sifr/pull/963
+- Review pass 1 remediation: expanded `string.whitespace`/`printable` to include vertical-tab/form-feed and aligned `capwords` normalization to full CPython whitespace class subset; revalidated demo + full suite.
 
 ## Module Part Template (repeat per module)
 
@@ -373,6 +375,8 @@ Validation evidence:
 - Part 8 review pass 1 tracking: merged https://github.com/yaseralnajjar/sifr/pull/959
 - Part 8 review pass 2 tracking: merged https://github.com/yaseralnajjar/sifr/pull/960
 - Wave completion closure cycle (wave_30_1b): merged https://github.com/yaseralnajjar/sifr/pull/961
+- Wave production-grade closure cycle (wave_30_1b): merged https://github.com/yaseralnajjar/sifr/pull/962
+- Part 9 implementation: merged https://github.com/yaseralnajjar/sifr/pull/963
 
 ## External Review Passes
 - Reviewer pass 1 request output: `reviews/phase-30-part-1-env-review.md`
@@ -407,6 +411,8 @@ Validation evidence:
 - Reviewer pass 1 remediation status (`heapq`): done (2026-03-08, approved with observations; no additional module-scope remediation required)
 - Reviewer pass 2 request output (`heapq`): `reviews/phase-30-part-8-heapq-review-2.md`
 - Reviewer pass 2 remediation status (`heapq`): done (2026-03-08, removed unused `_swap` dead code and revalidated full suite)
+- Reviewer pass 1 request output (`string`): `reviews/phase-30-part-9-string-review.md`
+- Reviewer pass 1 remediation status (`string`): done (2026-03-08, approved with observation; whitespace parity remediated to include vertical-tab/form-feed)
 
 ## Wave Closure Review Cycles
 

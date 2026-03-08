@@ -2,17 +2,18 @@ from sifr.string import capwords, ascii_lowercase, digits, whitespace
 from sifr.test import assert_bool_vector_eq
 
 def main():
-    expected: list[bool] = [True, True, True, True, True, True, True]
+    expected: list[bool] = [True, True, True, True, True, True, True, True]
     actual: list[bool] = []
 
     actual.append(capwords("hello world") == "Hello World")
     actual.append(capwords("hello\tworld") == "Hello World")
     actual.append(capwords("hello\nworld") == "Hello World")
+    actual.append(capwords("one\vtwo\fthree") == "One Two Three")
     actual.append(capwords("  one   two  ") == "One Two")
 
     actual.append(ascii_lowercase == "abcdefghijklmnopqrstuvwxyz")
     actual.append(digits == "0123456789")
-    actual.append(len(whitespace) == 4)
+    actual.append(len(whitespace) == 6)
 
     assert_bool_vector_eq(actual, expected)
     print("m30_1c string parity demo: pass")
