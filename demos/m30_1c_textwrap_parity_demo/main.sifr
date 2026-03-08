@@ -1,0 +1,31 @@
+from sifr.textwrap import wrap, fill, dedent, indent, shorten
+from sifr.test import assert_bool_vector_eq
+
+def main():
+    expected: list[bool] = [True, True, True, True, True, True]
+    actual: list[bool] = []
+
+    try:
+        lines: list[str] = wrap("alpha\tbeta\ngamma", 10)
+        actual.append(str(lines) == "[\"alpha beta\", \"gamma\"]")
+    except ValueError as e:
+        actual.append(False)
+
+    try:
+        filled: str = fill("alpha\tbeta\ngamma", 10)
+        actual.append(filled == "alpha beta\ngamma")
+    except ValueError as e:
+        actual.append(False)
+
+    actual.append(dedent("  x\n  y") == "x\ny")
+    actual.append(indent("x\n \ny", ">> ") == ">> x\n \n>> y")
+    actual.append(shorten("alpha beta gamma", 16) == "alpha beta [...]")
+
+    try:
+        wrap_empty: list[str] = wrap("", 5)
+        actual.append(str(wrap_empty) == "[]")
+    except ValueError as e:
+        actual.append(False)
+
+    assert_bool_vector_eq(actual, expected)
+    print("m30_1c textwrap parity demo: pass")
