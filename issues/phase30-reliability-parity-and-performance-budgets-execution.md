@@ -110,8 +110,8 @@ status: in_progress (2026-03-08)
 - [x] Run module demo
 - [x] Run targeted module tests
 - [x] Run full local suite
-- [ ] Open PR, review, and merge
-- [ ] External reviewer pass 1 remediation completed (if findings)
+- [x] Open PR, review, and merge
+- [x] External reviewer pass 1 remediation completed (if findings)
 - [ ] External reviewer pass 2 remediation completed (if findings)
 - [ ] Mark part progress in this checklist
 
@@ -124,6 +124,8 @@ Validation evidence:
 - Positive path: `cargo test -q -p sifr_codegen lowers_bytes_intrinsics_via_registry` -> pass.
 - Positive path: `/Users/yaseralnajjar/work/sifr/codebase/scripts/run_all_tests.sh` -> pass (`verification ok: variants=64, failures=0, blocking_failures=0, non_blocking_failures=0`).
 - Negative path: canonical bool vectors in `cpython_bytes_subset.sifr` validate odd-hex and non-ASCII hex parse errors plus decode out-of-range byte rejection (`[300]`).
+- PR: merged https://github.com/yaseralnajjar/sifr/pull/939
+- Review pass 1 status: approved with observations; no code remediation required for bytes scope.
 
 ## Module Part Template (repeat per module)
 
@@ -156,12 +158,15 @@ Validation evidence:
 - Milestone completion closure cycle: merged https://github.com/yaseralnajjar/sifr/pull/935
 - Milestone production-grade closure cycle: merged https://github.com/yaseralnajjar/sifr/pull/936
 - Phase completion closure cycle: merged https://github.com/yaseralnajjar/sifr/pull/937
+- Part 2 implementation: merged https://github.com/yaseralnajjar/sifr/pull/939
 
 ## External Review Passes
 - Reviewer pass 1 request output: `reviews/phase-30-part-1-env-review.md`
 - Reviewer pass 1 remediation status: done (2026-03-08, no code changes required)
 - Reviewer pass 2 request output: `reviews/phase-30-part-1-env-review-2.md`
 - Reviewer pass 2 remediation status: done (2026-03-08, naming clarity updates applied to env demo/fixture)
+- Reviewer pass 1 request output (`bytes`): `reviews/phase-30-part-2-bytes-review.md`
+- Reviewer pass 1 remediation status (`bytes`): done (2026-03-08, no code changes required)
 
 ## Wave Closure Review Cycles
 
