@@ -26,7 +26,7 @@ Loop per part: Work -> Validate -> PR -> Review -> Merge -> External review pass
 1. [x] `env`
 2. [x] `bytes`
 3. [x] `base64`
-4. [ ] `hashlib`
+4. [x] `hashlib`
 
 ### wave_30_1b: Numeric and Ordered-Collection Semantics
 5. [ ] `math`
@@ -154,7 +154,7 @@ Validation evidence:
 - Review pass 2 note validation: explicit wrapper-export and re-raise simplification suggestions were validated against current intrinsic lowering and Result typing; no safe production-grade code change was warranted for this module scope.
 
 ## Part 4: `hashlib`
-status: in_progress (2026-03-08)
+status: done (2026-03-08, PR #945)
 
 - [x] Define module parity scope and CPython references
 - [x] Port/expand CPython-derived parity fixtures (canonical vector format)
@@ -164,9 +164,9 @@ status: in_progress (2026-03-08)
 - [x] Run targeted module tests
 - [x] Run full local suite
 - [x] Open PR, review, and merge
-- [ ] External reviewer pass 1 remediation completed (if findings)
-- [ ] External reviewer pass 2 remediation completed (if findings)
-- [ ] Mark part progress in this checklist
+- [x] External reviewer pass 1 remediation completed (if findings)
+- [x] External reviewer pass 2 remediation completed (if findings)
+- [x] Mark part progress in this checklist
 
 Validation evidence:
 - Positive path: `cargo run -q -p sifr -- run demos/m30_1a_hashlib_parity_demo/main.sifr` -> prints `m30_1a hashlib parity demo: pass`.
@@ -178,6 +178,7 @@ Validation evidence:
 - Negative path: canonical bool vectors in `cpython_hashlib_api_subset.sifr` and `cpython_hashlib_object_model_subset.sifr` validate unsupported constructor/error adaptation (`ValueError`/`HashlibError`) behavior.
 - PR: merged https://github.com/yaseralnajjar/sifr/pull/945
 - Review pass 1 status: approved with observations (intrinsic-coverage/safety-test notes); no module-scope code remediation required.
+- Review pass 2 status: approved with same tracked observations; no safe module-scope code remediation required.
 
 ## Module Part Template (repeat per module)
 
@@ -218,6 +219,7 @@ Validation evidence:
 - Part 3 review pass 1 tracking: merged https://github.com/yaseralnajjar/sifr/pull/943
 - Part 3 review pass 2 tracking: merged https://github.com/yaseralnajjar/sifr/pull/944
 - Part 4 implementation: merged https://github.com/yaseralnajjar/sifr/pull/945
+- Part 4 review pass 1 tracking: merged https://github.com/yaseralnajjar/sifr/pull/946
 
 ## External Review Passes
 - Reviewer pass 1 request output: `reviews/phase-30-part-1-env-review.md`
@@ -234,6 +236,8 @@ Validation evidence:
 - Reviewer pass 2 remediation status (`base64`): done (2026-03-08, reviewer notes validated; no safe module-scope code change required)
 - Reviewer pass 1 request output (`hashlib`): `reviews/phase-30-part-4-hashlib-review.md`
 - Reviewer pass 1 remediation status (`hashlib`): done (2026-03-08, reviewer approved with observations; no code changes required)
+- Reviewer pass 2 request output (`hashlib`): `reviews/phase-30-part-4-hashlib-review-2.md`
+- Reviewer pass 2 remediation status (`hashlib`): done (2026-03-08, reviewer approved with tracked observations; no code changes required)
 
 ## Wave Closure Review Cycles
 
