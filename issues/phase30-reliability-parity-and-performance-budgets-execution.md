@@ -359,8 +359,8 @@ status: in_progress (2026-03-08)
 - [x] Run module demo
 - [x] Run targeted module tests
 - [x] Run full local suite
-- [ ] Open PR, review, and merge
-- [ ] External reviewer pass 1 remediation completed (if findings)
+- [x] Open PR, review, and merge
+- [x] External reviewer pass 1 remediation completed (if findings)
 - [ ] External reviewer pass 2 remediation completed (if findings)
 - [ ] Mark part progress in this checklist
 
@@ -371,6 +371,8 @@ Validation evidence:
 - Positive path: `cargo run -q -p sifr -- run crates/sifr/tests/e2e/pass/stdlib_fnmatch.sifr` -> pass.
 - Positive path: `/Users/yaseralnajjar/work/sifr/codebase/scripts/run_all_tests.sh` -> pass (`verification ok: variants=64, failures=0, blocking_failures=0, non_blocking_failures=0`).
 - Negative path: no exception/error-path surface is in approved `fnmatch` subset; canonical vectors validate mismatch and empty-result behaviors for wildcard patterns.
+- PR: merged https://github.com/yaseralnajjar/sifr/pull/970
+- Review pass 1 status: approved (`reviews/phase-30-part-11-fnmatch-review.md`); reviewer findings were validated as either out-of-scope intentional-diff items or pre-existing non-module blockers, so no part-11 code remediation was required.
 
 ## Module Part Template (repeat per module)
 
@@ -432,6 +434,7 @@ Validation evidence:
 - Part 9 review pass 2 tracking: merged https://github.com/yaseralnajjar/sifr/pull/965
 - Part 10 implementation: merged https://github.com/yaseralnajjar/sifr/pull/967
 - Part 10 review pass 1 remediation: merged https://github.com/yaseralnajjar/sifr/pull/968
+- Part 11 implementation: merged https://github.com/yaseralnajjar/sifr/pull/970
 
 ## External Review Passes
 - Reviewer pass 1 request output: `reviews/phase-30-part-1-env-review.md`
@@ -474,6 +477,8 @@ Validation evidence:
 - Reviewer pass 1 remediation status (`textwrap`): done (2026-03-08, approved with observations; parity classification aligned to intentional-diff and dedent sentinel cleanup applied)
 - Reviewer pass 2 request output (`textwrap`): `reviews/phase-30-part-10-textwrap-review-2.md`
 - Reviewer pass 2 remediation status (`textwrap`): done (2026-03-08, approved for production use; no additional module-scope remediation required)
+- Reviewer pass 1 request output (`fnmatch`): `reviews/phase-30-part-11-fnmatch-review.md`
+- Reviewer pass 1 remediation status (`fnmatch`): done (2026-03-08, approved with observations; no module-scope remediation required for approved wildcard subset)
 
 ## Wave Closure Review Cycles
 
