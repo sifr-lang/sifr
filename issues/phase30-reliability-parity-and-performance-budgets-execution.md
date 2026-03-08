@@ -163,7 +163,7 @@ status: in_progress (2026-03-08)
 - [x] Run module demo
 - [x] Run targeted module tests
 - [x] Run full local suite
-- [ ] Open PR, review, and merge
+- [x] Open PR, review, and merge
 - [ ] External reviewer pass 1 remediation completed (if findings)
 - [ ] External reviewer pass 2 remediation completed (if findings)
 - [ ] Mark part progress in this checklist
@@ -176,6 +176,8 @@ Validation evidence:
 - Positive path: `cargo run -q -p sifr -- run demos/m5_hashlib_demo.sifr` -> expected object-model flow prints.
 - Positive path: `/Users/yaseralnajjar/work/sifr/codebase/scripts/run_all_tests.sh` -> pass (`verification ok: variants=64, failures=0, blocking_failures=0, non_blocking_failures=0`).
 - Negative path: canonical bool vectors in `cpython_hashlib_api_subset.sifr` and `cpython_hashlib_object_model_subset.sifr` validate unsupported constructor/error adaptation (`ValueError`/`HashlibError`) behavior.
+- PR: merged https://github.com/yaseralnajjar/sifr/pull/945
+- Review pass 1 status: approved with observations (intrinsic-coverage/safety-test notes); no module-scope code remediation required.
 
 ## Module Part Template (repeat per module)
 
@@ -215,6 +217,7 @@ Validation evidence:
 - Part 3 implementation: merged https://github.com/yaseralnajjar/sifr/pull/942
 - Part 3 review pass 1 tracking: merged https://github.com/yaseralnajjar/sifr/pull/943
 - Part 3 review pass 2 tracking: merged https://github.com/yaseralnajjar/sifr/pull/944
+- Part 4 implementation: merged https://github.com/yaseralnajjar/sifr/pull/945
 
 ## External Review Passes
 - Reviewer pass 1 request output: `reviews/phase-30-part-1-env-review.md`
@@ -229,6 +232,8 @@ Validation evidence:
 - Reviewer pass 1 remediation status (`base64`): done (2026-03-08, reviewer approved with no code changes required)
 - Reviewer pass 2 request output (`base64`): `reviews/phase-30-part-3-base64-review-2.md`
 - Reviewer pass 2 remediation status (`base64`): done (2026-03-08, reviewer notes validated; no safe module-scope code change required)
+- Reviewer pass 1 request output (`hashlib`): `reviews/phase-30-part-4-hashlib-review.md`
+- Reviewer pass 1 remediation status (`hashlib`): done (2026-03-08, reviewer approved with observations; no code changes required)
 
 ## Wave Closure Review Cycles
 
