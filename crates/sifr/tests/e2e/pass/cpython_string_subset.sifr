@@ -1,0 +1,36 @@
+# Adapted CPython string subset for sifr.string (canonical vector format)
+from sifr.string import (
+    capwords,
+    ascii_lowercase, ascii_uppercase, ascii_letters,
+    digits, hexdigits, octdigits, punctuation, whitespace, printable
+)
+from sifr.test import assert_bool_vector_eq
+
+def main():
+    expected: list[bool] = [
+        True, True, True, True, True, True,
+        True, True, True, True, True, True,
+        True, True, True, True
+    ]
+    actual: list[bool] = []
+
+    actual.append(capwords("hello world") == "Hello World")
+    actual.append(capwords("hello   world") == "Hello World")
+    actual.append(capwords("  hello  world  ") == "Hello World")
+    actual.append(capwords("hello\tworld") == "Hello World")
+    actual.append(capwords("hello\nworld") == "Hello World")
+    actual.append(capwords("one\r\ntwo\tthree") == "One Two Three")
+
+    actual.append(ascii_lowercase == "abcdefghijklmnopqrstuvwxyz")
+    actual.append(ascii_uppercase == "ABCDEFGHIJKLMNOPQRSTUVWXYZ")
+    actual.append(len(ascii_letters) == 52)
+    actual.append(digits == "0123456789")
+    actual.append(hexdigits == "0123456789abcdefABCDEF")
+    actual.append(octdigits == "01234567")
+    actual.append(len(punctuation) == 32)
+    actual.append(len(whitespace) == 4)
+    actual.append(len(printable) > 90)
+    actual.append(capwords("") == "")
+
+    assert_bool_vector_eq(actual, expected)
+    assert str("cpython_string_subset: pass") == "cpython_string_subset: pass"
