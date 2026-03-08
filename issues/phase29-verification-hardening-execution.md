@@ -176,7 +176,17 @@ Validation evidence:
 - Part 3: merged https://github.com/yaseralnajjar/sifr/pull/922
 - Part 4: merged https://github.com/yaseralnajjar/sifr/pull/923
 - Part 5: merged https://github.com/yaseralnajjar/sifr/pull/924
+- External review pass 1 remediation: merged https://github.com/yaseralnajjar/sifr/pull/926
+- External review pass 2 remediation: merged https://github.com/yaseralnajjar/sifr/pull/927
 
 ## External Review Passes
 - Reviewer pass 1 request: `reviews/phase-29-review.md` (requested via talk-to-claude external app)
-- Reviewer pass 1 status: unavailable (no output file produced after repeated polling/retry cycle, up to max wait window)
+- Reviewer pass 1 remediation: done (2026-03-08, PR #926)
+  - fixed determinism script execute permission for DET-0002
+  - required and validated crash `reproducer_fixture` metadata and added minimized fixtures
+  - operationalized quarantine metadata format with concrete template entry
+- Reviewer pass 2 request: `reviews/phase-29-production-grade-review.md` (requested via talk-to-claude external app)
+- Reviewer pass 2 remediation: done (2026-03-08, PR #927)
+  - added pinned-revision validation (`local-main@<sha>`) against latest commit touching `project_root`
+  - refreshed OSS manifest pinned revisions to current project revision (`local-main@f6ababa5`)
+  - expanded fuzz-smoke seed corpus and deterministic mutation operator coverage
