@@ -1,0 +1,6 @@
+# m29_5 demo: deterministic scale, flake control, and structured evidence.
+
+def main():
+    print("m29_5 deterministic scale and flake control demo")
+    print("determinism-scale suite checks repeat-run and sequential-vs-parallel equivalence")
+    print("flake policy tracks rerun transitions and quarantine metadata")

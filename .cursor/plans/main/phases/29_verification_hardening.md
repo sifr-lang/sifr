@@ -273,7 +273,9 @@ Minimum suite kinds:
 - Baseline bless/accept command:
   - `python3 /Users/yaseralnajjar/work/sifr/codebase/scripts/run_verification_hardening.py --profile full --bless`
 - Curated OSS gate runner:
-  - `<define in this phase>`
+  - `python3 /Users/yaseralnajjar/work/sifr/codebase/scripts/run_verification_hardening.py --profile full --suite oss-curated`
+- Sequential-vs-parallel equivalence check:
+  - `/Users/yaseralnajjar/work/sifr/codebase/scripts/check_e2e_sequential_parallel_equivalence.sh --profile quick`
 
 All suite kinds introduced in this phase must be invocable through the canonical local validation entrypoints and must emit structured machine-readable results.
 

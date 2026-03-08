@@ -47,22 +47,22 @@ Loop per part: Work -> Validate -> PR -> Review -> Merge -> Mark Done
 - [x] Open PR, review, and merge
 
 ### Part 4: milestone_29_4 Curated OSS Gate and Broader Ecosystem Lane
-- [ ] Add pinned curated OSS gate manifest with owners/rationale/commands/timeouts
-- [ ] Implement blocking curated gate execution path
-- [ ] Define broader non-blocking ecosystem lane and structured result classification
-- [ ] Add demo: `demos/m29_4_curated_oss_gate_and_ecosystem_lane_demo/main.sifr`
-- [ ] Add positive and negative validations for curated/broader lanes
-- [ ] Run milestone demo + full local suite
-- [ ] Open PR, review, and merge
+- [x] Add pinned curated OSS gate manifest with owners/rationale/commands/timeouts
+- [x] Implement blocking curated gate execution path
+- [x] Define broader non-blocking ecosystem lane and structured result classification
+- [x] Add demo: `demos/m29_4_curated_oss_gate_and_ecosystem_lane_demo/main.sifr`
+- [x] Add positive and negative validations for curated/broader lanes
+- [x] Run milestone demo + full local suite
+- [x] Open PR, review, and merge
 
 ### Part 5: milestone_29_5 Deterministic Scale, Flake Control, and Structured Evidence
-- [ ] Define deterministic sharding strategy and per-suite runtime expectations
-- [ ] Add rerun policy, quarantine contract, and re-enable criteria
-- [ ] Emit machine-readable artifacts from hardening gates
-- [ ] Make suggestion/autofix boundary explicit and enforce chosen contract in verification
-- [ ] Add demo: `demos/m29_5_deterministic_scale_flake_control_and_structured_evidence_demo/main.sifr`
-- [ ] Add positive and negative validations for shard/rerun/flake and artifact contracts
-- [ ] Run milestone demo + full local suite
+- [x] Define deterministic sharding strategy and per-suite runtime expectations
+- [x] Add rerun policy, quarantine contract, and re-enable criteria
+- [x] Emit machine-readable artifacts from hardening gates
+- [x] Make suggestion/autofix boundary explicit and enforce chosen contract in verification
+- [x] Add demo: `demos/m29_5_deterministic_scale_flake_control_and_structured_evidence_demo/main.sifr`
+- [x] Add positive and negative validations for shard/rerun/flake and artifact contracts
+- [x] Run milestone demo + full local suite
 - [ ] Open PR, review, and merge
 
 ## Part 1: milestone_29_1 Suite Taxonomy and Baseline Governance
@@ -127,7 +127,7 @@ Validation evidence:
 - Negative path: fuzz-smoke suite fails on panic signals or non-allowed exit codes and enforces minimum deduplicated case count (`min_unique_cases`).
 
 ## Part 4: milestone_29_4 Curated OSS Gate and Broader Ecosystem Lane
-status: done (2026-03-08, pending PR link)
+status: done (2026-03-08, PR #923)
 
 - [x] Build pinned curated OSS gate with owner/rationale/commands/timeout metadata
 - [x] Separate broader non-blocking ecosystem lane with explicit classification
@@ -136,7 +136,7 @@ status: done (2026-03-08, pending PR link)
 - [x] Negative-path validation recorded
 - [x] Run milestone demo
 - [x] Run full local suite
-- [ ] Open PR, review, and merge
+- [x] Open PR, review, and merge
 - [x] Mark part progress in this checklist
 
 Validation evidence:
@@ -146,11 +146,36 @@ Validation evidence:
 - Negative path: curated project `OSS-CURATED-0002` initially failed (`unexpected-exit`) due list-borrow codegen mismatch; fixture was corrected (`own` parameter + safe option narrowing) and gate revalidated.
 - Negative path: `ecosystem-broader` suite is marked `blocking=false`; mismatches remain signal-only and are reported in machine-readable artifacts without merge blocking.
 
+## Part 5: milestone_29_5 Deterministic Scale, Flake Control, and Structured Evidence
+status: done (2026-03-08, pending PR link)
+
+- [x] Define deterministic suite sharding strategy and CLI controls (`--shard-total`, `--shard-index`)
+- [x] Add rerun tracking contract (`--rerun-failures`) and quarantine metadata validation
+- [x] Add determinism-scale suite (repeat-run + sequential-vs-parallel equivalence checks)
+- [x] Emit structured machine-readable artifacts with shard/rerun/quarantine metadata
+- [x] Keep suggestion/autofix boundary explicit (`suggestions` baseline-validated, autofix application deferred)
+- [x] Positive-path validation recorded
+- [x] Negative-path validation recorded
+- [x] Run milestone demo
+- [x] Run full local suite
+- [ ] Open PR, review, and merge
+- [x] Mark part progress in this checklist
+
+Validation evidence:
+- Positive path: `cargo run -q -p sifr -- run demos/m29_5_deterministic_scale_flake_control_and_structured_evidence_demo/main.sifr` -> prints deterministic-scale/flake contract lines and exits `0`.
+- Positive path: `bash scripts/check_e2e_sequential_parallel_equivalence.sh --profile quick` -> confirms identical report signature between sequential and parallel e2e runs.
+- Positive path: `python3 scripts/run_verification_hardening.py --profile full --suite determinism-scale` -> `verification ok: variants=2, failures=0, blocking_failures=0, non_blocking_failures=0`.
+- Positive path: sharding check `python3 scripts/run_verification_hardening.py --profile full --suite diagnostics --suite project --shard-total 2 --shard-index 0` and `--shard-index 1` -> deterministic suite partitioning with stable outcomes.
+- Positive path: `/Users/yaseralnajjar/work/sifr/codebase/scripts/run_all_tests.sh` -> pass with determinism-scale included in canonical hardening gate.
+- Negative path: determinism/flake runner paths mark suite failures as blocking and execute rerun attempts; fail->pass transitions are recorded in `flake_events` instead of being silently treated as clean.
+- Negative path: quarantine metadata file `verification/flake/quarantine.json` is schema-validated; malformed entries or unknown suites fail the hardening gate.
+
 ## PR Log
 - Part 1: merged https://github.com/yaseralnajjar/sifr/pull/920
 - Part 2: merged https://github.com/yaseralnajjar/sifr/pull/921
 - Part 3: merged https://github.com/yaseralnajjar/sifr/pull/922
-- Part 4: pending
+- Part 4: merged https://github.com/yaseralnajjar/sifr/pull/923
+- Part 5: pending
 
 ## External Review Passes
 - Pending

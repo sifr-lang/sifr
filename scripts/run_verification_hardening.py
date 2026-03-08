@@ -51,6 +51,29 @@ def parse_args() -> argparse.Namespace:
         default="target/verification/hardening-results.json",
         help="Path for machine-readable run result summary.",
     )
+    parser.add_argument(
+        "--shard-total",
+        type=int,
+        default=1,
+        help="Deterministic suite-level shard count.",
+    )
+    parser.add_argument(
+        "--shard-index",
+        type=int,
+        default=0,
+        help="Deterministic suite-level shard index (0-based).",
+    )
+    parser.add_argument(
+        "--rerun-failures",
+        type=int,
+        default=1,
+        help="Number of rerun attempts for failed suites (flake tracking only).",
+    )
+    parser.add_argument(
+        "--quarantine-file",
+        default="verification/flake/quarantine.json",
+        help="Path to quarantine metadata file.",
+    )
     return parser.parse_args()
 
 
@@ -105,6 +128,7 @@ def should_run_suite(profile: str, suite_name: str) -> bool:
             "fuzz-smoke",
             "oss-curated",
             "ecosystem-broader",
+            "determinism-scale",
         }
     return True
 
@@ -1159,11 +1183,208 @@ def run_oss_suite(
     return result
 
 
+def run_external_command(
+    *,
+    repo_root: Path,
+    argv: list[str],
+    timeout_secs: int | None,
+) -> tuple[int, str, str, float]:
+    started = time.perf_counter()
+    try:
+        proc = subprocess.run(
+            argv,
+            cwd=repo_root,
+            text=True,
+            capture_output=True,
+            check=False,
+            timeout=timeout_secs,
+        )
+        exit_code = proc.returncode
+        stdout = proc.stdout
+        stderr = proc.stderr
+    except subprocess.TimeoutExpired as timeout_error:
+        exit_code = 124
+        stdout = timeout_error.stdout or ""
+        stderr = (timeout_error.stderr or "") + f"\ncommand timed out after {timeout_secs} seconds"
+    elapsed_ms = (time.perf_counter() - started) * 1000.0
+    return exit_code, stdout, stderr, elapsed_ms
+
+
+def run_determinism_scale_suite(
+    *,
+    suite: dict[str, Any],
+    repo_root: Path,
+) -> dict[str, Any]:
+    suite_name = suite["name"]
+    index_raw = suite.get("index")
+    if not isinstance(index_raw, str):
+        raise SystemExit(f"suite '{suite_name}' missing string 'index'")
+    index_path = repo_root / index_raw
+    entries = load_index(index_path)
+    if not entries:
+        raise SystemExit(f"suite '{suite_name}' has empty index: {index_path}")
+    print(f"  suite={suite_name} owner={suite.get('owner', 'unknown')} entries={len(entries)}")
+
+    result = {
+        "name": suite_name,
+        "owner": suite.get("owner", "unknown"),
+        "blocking": bool(suite.get("blocking", False)),
+        "runner": "determinism-scale",
+        "index": str(index_path.relative_to(repo_root)),
+        "cases": [],
+        "failed_cases": 0,
+        "total_variants": 0,
+        "total_failures": 0,
+    }
+
+    for entry in entries:
+        case_id = str(entry.get("id", "<missing-id>"))
+        description = entry.get("description")
+        command_raw = entry.get("command")
+        expected_exit = entry.get("expect_exit_code")
+        timeout_secs = entry.get("timeout_secs")
+        mismatches = []
+
+        if not isinstance(description, str) or not description:
+            mismatches.append("description")
+        if not isinstance(command_raw, list) or not command_raw or not all(
+            isinstance(token, str) and token for token in command_raw
+        ):
+            mismatches.append("command")
+        if not isinstance(expected_exit, int):
+            mismatches.append("expect_exit_code")
+        if not isinstance(timeout_secs, int) or timeout_secs < 1:
+            mismatches.append("timeout_secs")
+
+        case_result = {
+            "id": case_id,
+            "description": description,
+            "variants": [],
+        }
+        case_failed = False
+
+        if mismatches:
+            result["total_variants"] += 1
+            result["total_failures"] += 1
+            result["failed_cases"] += 1
+            case_result["variants"].append(
+                {
+                    "label": "metadata",
+                    "status": "fail",
+                    "mismatches": sorted(set(mismatches)),
+                }
+            )
+            result["cases"].append(case_result)
+            continue
+
+        assert isinstance(command_raw, list)
+        assert isinstance(timeout_secs, int)
+        exit_code, stdout, stderr, elapsed_ms = run_external_command(
+            repo_root=repo_root,
+            argv=command_raw,
+            timeout_secs=timeout_secs,
+        )
+        stdout_norm = normalize_string(stdout, repo_root)
+        stderr_norm = normalize_string(stderr, repo_root)
+        variant_mismatches: list[str] = []
+        if exit_code != expected_exit:
+            variant_mismatches.append("unexpected-exit")
+        if contains_internal_panic(stdout_norm + stderr_norm):
+            variant_mismatches.append("panic-signal")
+
+        status = "pass" if not variant_mismatches else "fail"
+        result["total_variants"] += 1
+        if variant_mismatches:
+            case_failed = True
+            result["total_failures"] += 1
+        case_result["variants"].append(
+            {
+                "label": "command",
+                "status": status,
+                "mismatches": variant_mismatches,
+                "argv": command_raw,
+                "expected_exit_code": expected_exit,
+                "actual_exit_code": exit_code,
+                "duration_ms": round(elapsed_ms, 3),
+                "timeout_secs": timeout_secs,
+            }
+        )
+
+        result["cases"].append(case_result)
+        if case_failed:
+            result["failed_cases"] += 1
+
+    return result
+
+
+def deterministic_suite_shard(name: str, shard_total: int) -> int:
+    if shard_total <= 1:
+        return 0
+    digest = hashlib.sha256(name.encode("utf-8")).hexdigest()
+    return int(digest[:16], 16) % shard_total
+
+
+def load_quarantine_metadata(path: Path, suites: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    if not path.is_file():
+        raise SystemExit(f"quarantine file not found: {path}")
+    payload = json.loads(path.read_text(encoding="utf-8"))
+    entries = payload.get("entries", [])
+    if not isinstance(entries, list):
+        raise SystemExit(f"invalid quarantine file '{path}': 'entries' must be a list")
+    suite_names = {suite.get("name") for suite in suites}
+    validated: list[dict[str, Any]] = []
+    for entry in entries:
+        if not isinstance(entry, dict):
+            raise SystemExit(f"invalid quarantine entry in '{path}': expected object")
+        missing = required_missing(
+            entry,
+            (
+                "suite",
+                "case_id",
+                "reason",
+                "owner",
+                "added_on",
+                "reenable_criteria",
+            ),
+        )
+        if missing:
+            raise SystemExit(
+                f"invalid quarantine entry in '{path}': missing fields {', '.join(sorted(set(missing)))}"
+            )
+        if entry.get("suite") not in suite_names:
+            raise SystemExit(
+                f"invalid quarantine entry in '{path}': unknown suite '{entry.get('suite')}'"
+            )
+        validated.append(entry)
+    return validated
+
+
+def failed_case_ids(suite_result: dict[str, Any]) -> set[str]:
+    failed: set[str] = set()
+    for case in suite_result.get("cases", []):
+        if not isinstance(case, dict):
+            continue
+        case_id = case.get("id")
+        variants = case.get("variants", [])
+        if isinstance(case_id, str) and isinstance(variants, list):
+            if any(isinstance(variant, dict) and variant.get("status") == "fail" for variant in variants):
+                failed.add(case_id)
+    return failed
+
+
 def main() -> int:
     args = parse_args()
+    if args.shard_total < 1:
+        raise SystemExit("--shard-total must be >= 1")
+    if args.shard_index < 0 or args.shard_index >= args.shard_total:
+        raise SystemExit("--shard-index must satisfy 0 <= shard-index < shard-total")
+    if args.rerun_failures < 0:
+        raise SystemExit("--rerun-failures must be >= 0")
+
     repo_root = Path(__file__).resolve().parent.parent
     manifest_path = (repo_root / args.manifest).resolve()
     result_json_path = (repo_root / args.result_json).resolve()
+    quarantine_path = (repo_root / args.quarantine_file).resolve()
     actual_root = repo_root / "target/verification/actual"
     actual_root.mkdir(parents=True, exist_ok=True)
 
@@ -1195,6 +1416,14 @@ def main() -> int:
     if not selected_suites:
         raise SystemExit("no verification suites selected")
 
+    selected_suites = [
+        suite
+        for suite in selected_suites
+        if deterministic_suite_shard(str(suite.get("name")), args.shard_total) == args.shard_index
+    ]
+
+    quarantine_entries = load_quarantine_metadata(quarantine_path, suites)
+
     run_results: list[dict[str, Any]] = []
     total_variants = 0
     total_failures = 0
@@ -1205,56 +1434,99 @@ def main() -> int:
     print(f"  profile={args.profile}")
     print(f"  manifest={manifest_path.relative_to(repo_root)}")
     print(f"  bless={'yes' if args.bless else 'no'}")
+    print(f"  shard={args.shard_index}/{args.shard_total}")
+    print(f"  rerun_failures={args.rerun_failures}")
+    print(f"  quarantine_entries={len(quarantine_entries)}")
 
     fixedbug_ids = collect_fixedbug_ids(repo_root, selected_suites)
 
-    for suite in selected_suites:
+    def execute_suite_once(suite: dict[str, Any]) -> dict[str, Any]:
         runner = str(suite.get("runner", "baseline"))
         if runner == "baseline":
-            suite_result = run_baseline_suite(
+            return run_baseline_suite(
                 suite=suite,
                 args=args,
                 repo_root=repo_root,
                 actual_root=actual_root,
             )
-        elif runner == "fixedbugs":
-            suite_result = run_fixedbugs_suite(
+        if runner == "fixedbugs":
+            return run_fixedbugs_suite(
                 suite=suite,
                 repo_root=repo_root,
                 actual_root=actual_root,
             )
-        elif runner == "crashes":
-            suite_result = run_crashes_suite(
+        if runner == "crashes":
+            return run_crashes_suite(
                 suite=suite,
                 repo_root=repo_root,
                 fixedbug_ids=fixedbug_ids,
             )
-        elif runner == "property":
-            suite_result = run_property_suite(
+        if runner == "property":
+            return run_property_suite(
                 suite=suite,
                 repo_root=repo_root,
             )
-        elif runner == "fuzz-smoke":
-            suite_result = run_fuzz_smoke_suite(
+        if runner == "fuzz-smoke":
+            return run_fuzz_smoke_suite(
                 suite=suite,
                 repo_root=repo_root,
             )
-        elif runner == "oss-curated":
-            suite_result = run_oss_suite(
+        if runner == "oss-curated":
+            return run_oss_suite(
                 suite=suite,
                 repo_root=repo_root,
                 runner_name="oss-curated",
             )
-        elif runner == "ecosystem-broader":
-            suite_result = run_oss_suite(
+        if runner == "ecosystem-broader":
+            return run_oss_suite(
                 suite=suite,
                 repo_root=repo_root,
                 runner_name="ecosystem-broader",
             )
-        else:
-            raise SystemExit(
-                f"unsupported runner '{runner}' for suite '{suite.get('name', '<unknown>')}'"
+        if runner == "determinism-scale":
+            return run_determinism_scale_suite(
+                suite=suite,
+                repo_root=repo_root,
             )
+        raise SystemExit(f"unsupported runner '{runner}' for suite '{suite.get('name', '<unknown>')}'")
+
+    for suite in selected_suites:
+        suite_result = execute_suite_once(suite)
+        suite_name = str(suite.get("name"))
+        suite_quarantine = [entry for entry in quarantine_entries if entry.get("suite") == suite_name]
+        if suite_quarantine:
+            suite_result["quarantine_entries"] = suite_quarantine
+
+        if not args.bless and args.rerun_failures > 0 and int(suite_result.get("total_failures", 0)) > 0:
+            initial_failed = failed_case_ids(suite_result)
+            rerun_attempts: list[dict[str, Any]] = []
+            flake_events: list[dict[str, Any]] = []
+            previous_failed = set(initial_failed)
+            for attempt in range(1, args.rerun_failures + 1):
+                rerun_result = execute_suite_once(suite)
+                rerun_failed = failed_case_ids(rerun_result)
+                transitioned = sorted(previous_failed.difference(rerun_failed))
+                rerun_attempt = {
+                    "attempt": attempt,
+                    "failed_case_count": len(rerun_failed),
+                    "failed_cases": sorted(rerun_failed),
+                    "total_failures": int(rerun_result.get("total_failures", 0)),
+                }
+                if transitioned:
+                    rerun_attempt["flaky_fail_to_pass_cases"] = transitioned
+                    flake_events.append(
+                        {
+                            "attempt": attempt,
+                            "flaky_fail_to_pass_cases": transitioned,
+                        }
+                    )
+                rerun_attempts.append(rerun_attempt)
+                previous_failed = rerun_failed
+                if not rerun_failed:
+                    break
+            suite_result["rerun_attempts"] = rerun_attempts
+            if flake_events:
+                suite_result["flake_events"] = flake_events
 
         run_results.append(suite_result)
         total_variants += int(suite_result.get("total_variants", 0))
@@ -1271,6 +1543,11 @@ def main() -> int:
         "profile": args.profile,
         "bless": args.bless,
         "manifest": str(manifest_path.relative_to(repo_root)),
+        "shard_total": args.shard_total,
+        "shard_index": args.shard_index,
+        "rerun_failures": args.rerun_failures,
+        "quarantine_file": str(quarantine_path.relative_to(repo_root)),
+        "quarantine_entry_count": len(quarantine_entries),
         "generated_at_unix_secs": int(time.time()),
         "suites": run_results,
         "summary": {
