@@ -57,9 +57,10 @@ def fill(text: str, width: int) -> Result[str, ValueError]:
 
 def dedent(text: str) -> str:
     lines: list[str] = text.split("\n")
-    min_indent: int = 9999
+    min_indent: int = 0
+    have_indent: bool = False
     for line in lines:
-        if len(line) > 0:
+        if _has_non_whitespace(line):
             spaces: int = 0
             j: int = 0
             done: bool = False
@@ -72,7 +73,10 @@ def dedent(text: str) -> str:
                         else:
                             done = True
                 j = j + 1
-            if spaces < min_indent:
+            if not have_indent:
+                min_indent = spaces
+                have_indent = True
+            elif spaces < min_indent:
                 min_indent = spaces
     result: str = ""
     first: bool = True
@@ -80,10 +84,13 @@ def dedent(text: str) -> str:
         if not first:
             result = result + "\n"
         first = False
-        if len(line2) > min_indent:
-            result = result + line2[min_indent:]
+        if have_indent:
+            if len(line2) > min_indent:
+                result = result + line2[min_indent:]
+            else:
+                result = result + line2
         else:
-            result = result + line2
+            result = result + line2[min_indent:]
     return result
 
 def indent(text: str, prefix: str) -> str:
