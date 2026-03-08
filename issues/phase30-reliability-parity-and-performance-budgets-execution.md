@@ -31,7 +31,7 @@ Loop per part: Work -> Validate -> PR -> Review -> Merge -> External review pass
 ### wave_30_1b: Numeric and Ordered-Collection Semantics
 5. [x] `math`
 6. [x] `statistics`
-7. [ ] `bisect`
+7. [x] `bisect`
 8. [ ] `heapq`
 
 ### wave_30_1c: Text and Pattern Processing
@@ -237,7 +237,7 @@ Validation evidence:
 - Review pass 2 status: approved for production use; no additional module-scope code remediation required.
 
 ## Part 7: `bisect`
-status: in_progress (2026-03-08)
+status: done (2026-03-08, PR #955)
 
 - [x] Define module parity scope and CPython references
 - [x] Port/expand CPython-derived parity fixtures (canonical vector format)
@@ -248,8 +248,8 @@ status: in_progress (2026-03-08)
 - [x] Run full local suite
 - [x] Open PR, review, and merge
 - [x] External reviewer pass 1 remediation completed (if findings)
-- [ ] External reviewer pass 2 remediation completed (if findings)
-- [ ] Mark part progress in this checklist
+- [x] External reviewer pass 2 remediation completed (if findings)
+- [x] Mark part progress in this checklist
 
 Validation evidence:
 - Positive path: `cargo run -q -p sifr -- run demos/m30_1b_bisect_parity_demo/main.sifr` -> prints `m30_1b bisect parity demo: pass`.
@@ -263,6 +263,7 @@ Validation evidence:
 - Negative path: no exception/error-path surface is in approved bisect subset; fixture vectors assert boundary safety for empty inputs and duplicate insertion semantics.
 - PR: merged https://github.com/yaseralnajjar/sifr/pull/955
 - Review pass 1 status: approved with observations; no module-scope remediation required.
+- Review pass 2 status: approved for production use; no additional module-scope remediation required.
 
 ## Module Part Template (repeat per module)
 
@@ -312,6 +313,7 @@ Validation evidence:
 - Part 6 review pass 1 remediation: merged https://github.com/yaseralnajjar/sifr/pull/953
 - Part 6 review pass 2 tracking: merged https://github.com/yaseralnajjar/sifr/pull/954
 - Part 7 implementation: merged https://github.com/yaseralnajjar/sifr/pull/955
+- Part 7 review pass 1 tracking: merged https://github.com/yaseralnajjar/sifr/pull/956
 
 ## External Review Passes
 - Reviewer pass 1 request output: `reviews/phase-30-part-1-env-review.md`
@@ -340,6 +342,8 @@ Validation evidence:
 - Reviewer pass 2 remediation status (`statistics`): done (2026-03-08, approved for production use; no additional module-scope remediation required)
 - Reviewer pass 1 request output (`bisect`): `reviews/phase-30-part-7-bisect-review.md`
 - Reviewer pass 1 remediation status (`bisect`): done (2026-03-08, approved with observations; no additional module-scope remediation required)
+- Reviewer pass 2 request output (`bisect`): `reviews/phase-30-part-7-bisect-review-2.md`
+- Reviewer pass 2 remediation status (`bisect`): done (2026-03-08, approved for production use; no additional module-scope remediation required)
 
 ## Wave Closure Review Cycles
 
