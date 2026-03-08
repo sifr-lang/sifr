@@ -37,7 +37,7 @@ Loop per part: Work -> Validate -> PR -> Review -> Merge -> External review pass
 ### wave_30_1c: Text and Pattern Processing
 9. [x] `string`
 10. [x] `textwrap`
-11. [ ] `fnmatch`
+11. [x] `fnmatch`
 12. [ ] `re`
 
 ### wave_30_1d: Core Containers and Structured Data
@@ -350,7 +350,7 @@ Validation evidence:
 - Review pass 2 status: approved for production use; no additional module-scope remediation required.
 
 ## Part 11: `fnmatch`
-status: in_progress (2026-03-08)
+status: done (2026-03-08, PR #970)
 
 - [x] Define module parity scope and CPython references
 - [x] Port/expand CPython-derived parity fixtures (canonical vector format)
@@ -361,8 +361,8 @@ status: in_progress (2026-03-08)
 - [x] Run full local suite
 - [x] Open PR, review, and merge
 - [x] External reviewer pass 1 remediation completed (if findings)
-- [ ] External reviewer pass 2 remediation completed (if findings)
-- [ ] Mark part progress in this checklist
+- [x] External reviewer pass 2 remediation completed (if findings)
+- [x] Mark part progress in this checklist
 
 Validation evidence:
 - Positive path: `cargo run -q -p sifr -- run demos/m30_1c_fnmatch_parity_demo/main.sifr` -> prints `m30_1c fnmatch parity demo: pass`.
@@ -373,6 +373,7 @@ Validation evidence:
 - Negative path: no exception/error-path surface is in approved `fnmatch` subset; canonical vectors validate mismatch and empty-result behaviors for wildcard patterns.
 - PR: merged https://github.com/yaseralnajjar/sifr/pull/970
 - Review pass 1 status: approved (`reviews/phase-30-part-11-fnmatch-review.md`); reviewer findings were validated as either out-of-scope intentional-diff items or pre-existing non-module blockers, so no part-11 code remediation was required.
+- Review pass 2 status: approved (`reviews/phase-30-part-11-fnmatch-review-2.md`); production-grade confirmation reported no blocking issues and no additional module-scope remediation was required.
 
 ## Module Part Template (repeat per module)
 
@@ -435,6 +436,7 @@ Validation evidence:
 - Part 10 implementation: merged https://github.com/yaseralnajjar/sifr/pull/967
 - Part 10 review pass 1 remediation: merged https://github.com/yaseralnajjar/sifr/pull/968
 - Part 11 implementation: merged https://github.com/yaseralnajjar/sifr/pull/970
+- Part 11 review pass 1 tracking: merged https://github.com/yaseralnajjar/sifr/pull/971
 
 ## External Review Passes
 - Reviewer pass 1 request output: `reviews/phase-30-part-1-env-review.md`
@@ -479,6 +481,8 @@ Validation evidence:
 - Reviewer pass 2 remediation status (`textwrap`): done (2026-03-08, approved for production use; no additional module-scope remediation required)
 - Reviewer pass 1 request output (`fnmatch`): `reviews/phase-30-part-11-fnmatch-review.md`
 - Reviewer pass 1 remediation status (`fnmatch`): done (2026-03-08, approved with observations; no module-scope remediation required for approved wildcard subset)
+- Reviewer pass 2 request output (`fnmatch`): `reviews/phase-30-part-11-fnmatch-review-2.md`
+- Reviewer pass 2 remediation status (`fnmatch`): done (2026-03-08, approved for production use; no module-scope remediation required)
 
 ## Wave Closure Review Cycles
 
