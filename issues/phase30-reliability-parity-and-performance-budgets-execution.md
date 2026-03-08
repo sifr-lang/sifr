@@ -347,6 +347,7 @@ Validation evidence:
 - Part 7 review pass 2 tracking: merged https://github.com/yaseralnajjar/sifr/pull/957
 - Part 8 implementation: merged https://github.com/yaseralnajjar/sifr/pull/958
 - Part 8 review pass 1 tracking: merged https://github.com/yaseralnajjar/sifr/pull/959
+- Part 8 review pass 2 tracking: merged https://github.com/yaseralnajjar/sifr/pull/960
 
 ## External Review Passes
 - Reviewer pass 1 request output: `reviews/phase-30-part-1-env-review.md`
@@ -385,11 +386,11 @@ Validation evidence:
 ## Wave Closure Review Cycles
 
 ### Wave completion check
-status: reviewed (2026-03-08), closure deferred
+status: reviewed (2026-03-08), wave_30_1b closure approved
 
-- Reviewer output: `reviews/phase-30-wave-completion-review.md`
-- Reviewer verdict: only `wave_30_1a/env` is complete; remaining modules across waves `30_1a`-`30_1f` are pending.
-- Action taken: phase execution remains `in_progress`; wave closure cannot be claimed yet.
+- Reviewer output: `reviews/phase-30-wave-completion-review-2.md`
+- Reviewer verdict: `wave_30_1b` completion criteria are met (`math`, `statistics`, `bisect`, `heapq` all complete with review pass 1 + pass 2 sign-off and merged PRs).
+- Action taken: `wave_30_1b` marked complete; phase execution remains `in_progress` pending subsequent waves and milestones.
 
 ### Wave production-grade check
 status: reviewed (2026-03-08), closure deferred
