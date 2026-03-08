@@ -433,6 +433,31 @@ Validation evidence:
 - Review pass 1 status: approved (`reviews/phase-30-part-13-collections-review.md`) with non-blocking observations only; no additional part-13 code remediation was required for approved scope.
 - Review pass 2 status: approved (`reviews/phase-30-part-13-collections-review-2.md`) with no blockers; module is production-grade for approved scope with no additional remediation required.
 
+## Part 14: `itertools`
+status: in_progress (2026-03-08)
+
+- [x] Define module parity scope and CPython references
+- [x] Port/expand CPython-derived parity fixtures (canonical vector format)
+- [x] Fix root-cause implementation gaps
+- [x] Record parity classification (`parity` / `intentional-diff` / `unsupported`)
+- [x] Run module demo
+- [x] Run targeted module tests
+- [x] Run full local suite
+- [ ] Open PR, review, and merge
+- [ ] External reviewer pass 1 remediation completed (if findings)
+- [ ] External reviewer pass 2 remediation completed (if findings)
+- [ ] Mark part progress in this checklist
+
+Validation evidence:
+- Positive path: `cargo run -q -p sifr -- run demos/m30_1d_itertools_parity_demo/main.sifr` -> prints `m30_1d itertools parity demo: pass`.
+- Positive path: `cargo run -q -p sifr -- run crates/sifr/tests/e2e/pass/cpython_itertools_subset.sifr` -> pass.
+- Positive path: `cargo run -q -p sifr -- run crates/sifr/tests/e2e/pass/cpython_itertools.sifr` -> pass.
+- Positive path: `cargo run -q -p sifr -- run crates/sifr/tests/e2e/pass/stdlib_itertools.sifr` -> pass.
+- Positive path: `cargo run -q -p sifr -- run crates/sifr/tests/e2e/pass/stdlib_itertools_extended.sifr` -> pass.
+- Positive path: `cargo run -q -p sifr -- run crates/sifr/tests/e2e/pass/stdlib_itertools_new.sifr` -> pass.
+- Positive path: `/Users/yaseralnajjar/work/sifr/codebase/scripts/run_all_tests.sh` -> pass (`verification ok: variants=64, failures=0, blocking_failures=0, non_blocking_failures=0`).
+- Negative path: canonical bool vectors in `cpython_itertools_subset.sifr` validate `batched(..., 0)` rejection with panic-free typed `ValueError` behavior.
+
 ## Module Part Template (repeat per module)
 
 ### Part N: <module>
