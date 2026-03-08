@@ -29,7 +29,7 @@ Loop per part: Work -> Validate -> PR -> Review -> Merge -> External review pass
 4. [x] `hashlib`
 
 ### wave_30_1b: Numeric and Ordered-Collection Semantics
-5. [ ] `math`
+5. [x] `math`
 6. [ ] `statistics`
 7. [ ] `bisect`
 8. [ ] `heapq`
@@ -181,7 +181,7 @@ Validation evidence:
 - Review pass 2 status: approved with same tracked observations; no safe module-scope code remediation required.
 
 ## Part 5: `math`
-status: in_progress (2026-03-08)
+status: done (2026-03-08, PR #948)
 
 - [x] Define module parity scope and CPython references
 - [x] Port/expand CPython-derived parity fixtures (canonical vector format)
@@ -192,8 +192,8 @@ status: in_progress (2026-03-08)
 - [x] Run full local suite
 - [x] Open PR, review, and merge
 - [x] External reviewer pass 1 remediation completed (if findings)
-- [ ] External reviewer pass 2 remediation completed (if findings)
-- [ ] Mark part progress in this checklist
+- [x] External reviewer pass 2 remediation completed (if findings)
+- [x] Mark part progress in this checklist
 
 Validation evidence:
 - Float policy: approved subset uses tolerance-bounded boolean vector checks (`assert_vector_eq` over `"true"/"false"` predicates) instead of fragile exact float literals; special values (`NaN`, infinities, signed zero) are asserted explicitly.
@@ -206,6 +206,7 @@ Validation evidence:
 - Negative path: mismatched-dimension `dist(...)` and invalid-tolerance `isclose(...)` semantic checks are asserted in canonical vectors (`cpython_math_semantic_corrections_subset.sifr`, `cpython_math_missing_surface_subset.sifr`).
 - PR: merged https://github.com/yaseralnajjar/sifr/pull/948
 - Review pass 1 remediation: added explicit `factorial(-1)` and typed `dist([], [])` semantic coverage in canonical fixture; no module runtime code changes required.
+- Review pass 2 status: approved for production use with optional future enhancements only; no additional module-scope changes required.
 
 ## Module Part Template (repeat per module)
 
@@ -249,6 +250,7 @@ Validation evidence:
 - Part 4 review pass 1 tracking: merged https://github.com/yaseralnajjar/sifr/pull/946
 - Part 4 review pass 2 tracking: merged https://github.com/yaseralnajjar/sifr/pull/947
 - Part 5 implementation: merged https://github.com/yaseralnajjar/sifr/pull/948
+- Part 5 review pass 1 remediation: merged https://github.com/yaseralnajjar/sifr/pull/949
 
 ## External Review Passes
 - Reviewer pass 1 request output: `reviews/phase-30-part-1-env-review.md`
@@ -269,6 +271,8 @@ Validation evidence:
 - Reviewer pass 2 remediation status (`hashlib`): done (2026-03-08, reviewer approved with tracked observations; no code changes required)
 - Reviewer pass 1 request output (`math`): `reviews/phase-30-part-5-math-review.md`
 - Reviewer pass 1 remediation status (`math`): done (2026-03-08, approved with observations; fixture hardening added for factorial/dist semantics)
+- Reviewer pass 2 request output (`math`): `reviews/phase-30-part-5-math-review-2.md`
+- Reviewer pass 2 remediation status (`math`): done (2026-03-08, approved for production use; no additional code remediation required)
 
 ## Wave Closure Review Cycles
 
