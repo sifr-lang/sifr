@@ -36,7 +36,7 @@ Loop per part: Work -> Validate -> PR -> Review -> Merge -> External review pass
 
 ### wave_30_1c: Text and Pattern Processing
 9. [x] `string`
-10. [ ] `textwrap`
+10. [x] `textwrap`
 11. [ ] `fnmatch`
 12. [ ] `re`
 
@@ -323,7 +323,7 @@ Validation evidence:
 - Review pass 2 status: approved for production use with full whitespace parity; no additional module-scope remediation required.
 
 ## Part 10: `textwrap`
-status: in_progress (2026-03-08)
+status: done (2026-03-08, PR #967)
 
 - [x] Define module parity scope and CPython references
 - [x] Port/expand CPython-derived parity fixtures (canonical vector format)
@@ -334,8 +334,8 @@ status: in_progress (2026-03-08)
 - [x] Run full local suite
 - [x] Open PR, review, and merge
 - [x] External reviewer pass 1 remediation completed (if findings)
-- [ ] External reviewer pass 2 remediation completed (if findings)
-- [ ] Mark part progress in this checklist
+- [x] External reviewer pass 2 remediation completed (if findings)
+- [x] Mark part progress in this checklist
 
 Validation evidence:
 - Positive path: `cargo run -q -p sifr -- run demos/m30_1c_textwrap_parity_demo/main.sifr` -> prints `m30_1c textwrap parity demo: pass`.
@@ -347,6 +347,7 @@ Validation evidence:
 - Negative path: canonical bool vectors in `cpython_textwrap_subset.sifr` validate width guards for `wrap`/`fill` and safe behavior for empty-input wrapping and non-content line handling in `indent`.
 - PR: merged https://github.com/yaseralnajjar/sifr/pull/967
 - Review pass 1 remediation: parity matrix classification corrected to `intentional-diff` for deterministic whitespace normalization contract and `dedent` magic-number sentinel removed; revalidated demo + full suite.
+- Review pass 2 status: approved for production use; no additional module-scope remediation required.
 
 ## Module Part Template (repeat per module)
 
@@ -407,6 +408,7 @@ Validation evidence:
 - Part 9 review pass 1 remediation: merged https://github.com/yaseralnajjar/sifr/pull/964
 - Part 9 review pass 2 tracking: merged https://github.com/yaseralnajjar/sifr/pull/965
 - Part 10 implementation: merged https://github.com/yaseralnajjar/sifr/pull/967
+- Part 10 review pass 1 remediation: merged https://github.com/yaseralnajjar/sifr/pull/968
 
 ## External Review Passes
 - Reviewer pass 1 request output: `reviews/phase-30-part-1-env-review.md`
@@ -447,6 +449,8 @@ Validation evidence:
 - Reviewer pass 2 remediation status (`string`): done (2026-03-08, approved for production use; no additional module-scope remediation required)
 - Reviewer pass 1 request output (`textwrap`): `reviews/phase-30-part-10-textwrap-review.md`
 - Reviewer pass 1 remediation status (`textwrap`): done (2026-03-08, approved with observations; parity classification aligned to intentional-diff and dedent sentinel cleanup applied)
+- Reviewer pass 2 request output (`textwrap`): `reviews/phase-30-part-10-textwrap-review-2.md`
+- Reviewer pass 2 remediation status (`textwrap`): done (2026-03-08, approved for production use; no additional module-scope remediation required)
 
 ## Wave Closure Review Cycles
 
