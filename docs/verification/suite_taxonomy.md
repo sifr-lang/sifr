@@ -79,3 +79,5 @@ This document defines the canonical suite taxonomy for compiler verification har
 - Suite runners must not hardcode fixture lists outside this manifest.
 - Manifest updates are review artifacts and follow normal PR review.
 - Corpus lifecycle and promotion rules: `docs/verification/regression_corpus_policy.md`.
+- Deterministic sharding + flake policy: `docs/verification/deterministic_sharding_and_flake_policy.md`.
+- Structured artifact schema + retention: `docs/verification/artifact_schema_and_retention.md`.

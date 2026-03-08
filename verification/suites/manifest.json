@@ -86,6 +86,13 @@
       "owner": "compiler/verification",
       "blocking": false,
       "index": "verification/oss/ecosystem_broader_manifest.json"
+    },
+    {
+      "name": "determinism-scale",
+      "runner": "determinism-scale",
+      "owner": "compiler/hardening",
+      "blocking": true,
+      "index": "verification/determinism/manifest.json"
     }
   ]
 }
