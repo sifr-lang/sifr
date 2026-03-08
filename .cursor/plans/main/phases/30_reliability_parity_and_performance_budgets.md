@@ -17,9 +17,11 @@ Phase 30 uses CPython as the behavioral reference model, but parity must always 
 - Work is grouped into related stdlib waves, but execution is strictly one module or stdlib at a time.
 - Only one target module may be in active parity work at any given time.
 - A module must complete the full implementation and review cycle before the next module begins.
+- `CPython-derived parity tests` means transformed into the canonical Sifr parity fixture format and safety-adapted assertions, not mechanically copied from CPython `unittest` sources.
+- The canonical baseline parity fixture format is documented in `audit/stdlib/cpython_parity_fixture_format.md` and must be reused unless a module-specific extension is explicitly justified.
 - The per-module execution cycle is:
   1. define the parity scope and module to-do list from CPython references
-  2. port or expand CPython-derived parity tests for the module
+  2. port or expand CPython-derived parity tests for the module using the canonical Sifr parity fixture format
   3. fix root-cause implementation gaps in Sifr
   4. validate locally with positive-path and negative-path coverage
   5. classify every observed mismatch as `parity`, `intentional-diff`, or `unsupported`
@@ -49,6 +51,7 @@ In particular:
 - parity tests must validate the Sifr-safe adaptation rather than blindly copying CPython exception assertions
 - no module may introduce panic-based control flow or user-triggerable runtime crash behavior
 - any divergence from CPython required by Sifr safety must be recorded as `intentional-diff` with rationale
+- platform-dependent CPython behavior must be classified explicitly as `parity`, `intentional-diff`, or `unsupported`; implicit host-specific skips are not sufficient
 
 ## Milestones
 
@@ -57,6 +60,7 @@ In particular:
   - Port and maintain CPython-derived parity suites for in-scope stdlib modules.
   - Execute parity work one module at a time within related waves.
   - Maintain per-module parity classification for every non-parity behavior.
+  - Where CPython provides canonical upstream data fixtures or vector corpora that materially improve coverage, port or consume them directly as part of module parity work.
 - Definition of done:
   - Each in-scope module has reviewer-approved CPython-derived parity coverage.
   - Every covered mismatch is classified as `parity`, `intentional-diff`, or `unsupported`.
@@ -67,6 +71,7 @@ In particular:
   - Add API-level scaling and resource checks for stabilized Phase 30 modules.
   - Compare asymptotic behavior to CPython-relevant reference behavior.
   - Track constant-factor deltas explicitly.
+  - Keep this work limited to stdlib API-facing complexity and resource behavior; compiler performance benchmarking and budget governance remain owned by Phase 35.
 - Definition of done:
   - Complexity and resource checks exist for in-scope modules whose behavioral parity work is complete.
   - Asymptotic mismatches are fixed or explicitly waived.
@@ -189,6 +194,7 @@ In particular:
   - Every module must complete the reviewer sign-off cycle before the next module begins.
   - Every module must include positive-path and negative-path validation.
   - Every module must explicitly validate safe adaptation behavior where CPython would raise.
+  - Modules with parsing-heavy, numeric-edge, or panic-risk surfaces must reuse the Phase 29 property and fuzz machinery as part of module sign-off.
   - No user-triggerable runtime panic is allowed in any completed module.
   - Validation evidence must be recorded in the phase execution checklist issue before merge.
 - Validation planning goals:
