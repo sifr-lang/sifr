@@ -180,6 +180,31 @@ Validation evidence:
 - Review pass 1 status: approved with observations (intrinsic-coverage/safety-test notes); no module-scope code remediation required.
 - Review pass 2 status: approved with same tracked observations; no safe module-scope code remediation required.
 
+## Part 5: `math`
+status: in_progress (2026-03-08)
+
+- [x] Define module parity scope and CPython references
+- [x] Port/expand CPython-derived parity fixtures (canonical vector format)
+- [x] Fix root-cause implementation gaps
+- [x] Record parity classification (`parity` / `intentional-diff` / `unsupported`)
+- [x] Run module demo
+- [x] Run targeted module tests
+- [x] Run full local suite
+- [ ] Open PR, review, and merge
+- [ ] External reviewer pass 1 remediation completed (if findings)
+- [ ] External reviewer pass 2 remediation completed (if findings)
+- [ ] Mark part progress in this checklist
+
+Validation evidence:
+- Float policy: approved subset uses tolerance-bounded boolean vector checks (`assert_vector_eq` over `"true"/"false"` predicates) instead of fragile exact float literals; special values (`NaN`, infinities, signed zero) are asserted explicitly.
+- Positive path: `cargo run -q -p sifr -- run demos/m30_1b_math_parity_demo/main.sifr` -> prints `m30_1b math parity demo: pass`.
+- Positive path: `cargo run -q -p sifr -- run crates/sifr/tests/e2e/pass/cpython_math_semantic_corrections_subset.sifr` -> pass.
+- Positive path: `cargo run -q -p sifr -- run crates/sifr/tests/e2e/pass/cpython_math_missing_surface_subset.sifr` -> pass.
+- Positive path: `cargo run -q -p sifr -- run crates/sifr/tests/e2e/pass/stdlib_math_intrinsics.sifr` -> pass.
+- Positive path: `cargo run -q -p sifr -- run demos/m4_math_demo.sifr` -> expected numeric parity flow prints.
+- Positive path: `/Users/yaseralnajjar/work/sifr/codebase/scripts/run_all_tests.sh` -> pass (`verification ok: variants=64, failures=0, blocking_failures=0, non_blocking_failures=0`).
+- Negative path: mismatched-dimension `dist(...)` and invalid-tolerance `isclose(...)` semantic checks are asserted in canonical vectors (`cpython_math_semantic_corrections_subset.sifr`, `cpython_math_missing_surface_subset.sifr`).
+
 ## Module Part Template (repeat per module)
 
 ### Part N: <module>
@@ -220,6 +245,7 @@ Validation evidence:
 - Part 3 review pass 2 tracking: merged https://github.com/yaseralnajjar/sifr/pull/944
 - Part 4 implementation: merged https://github.com/yaseralnajjar/sifr/pull/945
 - Part 4 review pass 1 tracking: merged https://github.com/yaseralnajjar/sifr/pull/946
+- Part 4 review pass 2 tracking: merged https://github.com/yaseralnajjar/sifr/pull/947
 
 ## External Review Passes
 - Reviewer pass 1 request output: `reviews/phase-30-part-1-env-review.md`

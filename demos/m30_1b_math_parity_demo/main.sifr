@@ -1,0 +1,44 @@
+# m30_1b math parity demo
+from sifr.math import (
+    cbrt, exp2, fma, log_base, isclose,
+    sumprod, isnormal, issubnormal, remainder,
+    dist, fsum, nextafter, ulp, inf, isnan
+)
+from sifr.test import assert_vector_eq, assert_bool_vector_eq
+
+def main():
+    expected: list[str] = [
+        "true", "true", "true", "true", "true",
+        "true", "true", "true", "true", "true",
+        "true", "true", "true"
+    ]
+    actual: list[str] = []
+
+    actual.append(str(cbrt(27.0) == 3.0))
+    actual.append(str(exp2(3.0) == 8.0))
+    actual.append(str(fma(2.0, 3.0, 4.0) == 10.0))
+    actual.append(str(log_base(32.0, 2.0) == 5.0))
+    actual.append(str(isclose(1e-9, 0.0, 0.9, 1e-8)))
+
+    p: list[float] = [1.0, 2.0, 3.0]
+    q: list[float] = [4.0, 5.0, 6.0]
+    actual.append(str(sumprod(p, q) == 32.0))
+
+    tiny_subnormal: float = 2.2250738585072014e-308 / 2.0
+    actual.append(str(isnormal(1.0)))
+    actual.append(str(issubnormal(tiny_subnormal)))
+    actual.append(str(remainder(5.5, 2.0) < 0.0))
+    actual.append(str(isnan(dist([1.0, 2.0], [1.0]))))
+    actual.append(str(fsum([1e100, 1.0, -1e100]) == 1.0))
+    actual.append(str(nextafter(1.0, inf) > 1.0))
+    actual.append(str(ulp(1.0) > 0.0))
+    assert_vector_eq(actual, expected)
+
+    expected_false: list[bool] = [False, False]
+    actual_false: list[bool] = [
+        isclose(1.0, 1.0, -0.1, 0.0),
+        isclose(1.0, 1.0, 0.1, -0.1)
+    ]
+    assert_bool_vector_eq(actual_false, expected_false)
+
+    print("m30_1b math parity demo: pass")
