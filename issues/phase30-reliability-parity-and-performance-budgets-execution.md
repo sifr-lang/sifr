@@ -516,6 +516,37 @@ Validation evidence:
 - Review pass 1 remediation: fixed `datetime.timestamp()` pre-epoch year handling in `lib/sifr/datetime.sifr` and added regression coverage (`1969-12-31T23:59:59 -> -1`) in `cpython_datetime_subset.sifr`; revalidated targeted datetime fixtures and full suite.
 - Review pass 2 status: approved (`reviews/phase-30-part-16-datetime-review-2.md`) with no blockers; module is production-grade for approved scope with no additional remediation required.
 
+## Part 17: `io`
+status: in_review (2026-03-09, implementation merged in PR #999)
+
+- [x] Define module parity scope and CPython references
+- [x] Port/expand CPython-derived parity fixtures (canonical vector format)
+- [x] Fix root-cause implementation gaps
+- [x] Record parity classification (`parity` / `intentional-diff` / `unsupported`)
+- [x] Run module demo
+- [x] Run targeted module tests
+- [x] Run full local suite
+- [x] Open PR, review, and merge
+- [x] External reviewer pass 1 remediation completed (if findings)
+- [ ] External reviewer pass 2 remediation completed (if findings)
+- [ ] Mark part progress in this checklist
+
+Validation evidence:
+- Positive path: `cargo run -q -p sifr -- run demos/m30_1e_io_parity_demo/main.sifr` -> prints `m30_1e io parity demo: pass`.
+- Positive path: `cargo run -q -p sifr -- run crates/sifr/tests/e2e/pass/cpython_io_subset.sifr` -> pass.
+- Positive path: `cargo run -q -p sifr -- run crates/sifr/tests/e2e/pass/stdlib_io.sifr` -> pass.
+- Positive path: `cargo run -q -p sifr -- run crates/sifr/tests/e2e/pass/io_safety_error_paths.sifr` -> pass.
+- Positive path: `cargo run -q -p sifr -- run crates/sifr/tests/e2e/pass/open_read.sifr` -> pass.
+- Positive path: `cargo run -q -p sifr -- run crates/sifr/tests/e2e/pass/open_write.sifr` -> pass.
+- Positive path: `cargo run -q -p sifr -- run crates/sifr/tests/e2e/pass/open_readline.sifr` -> pass.
+- Positive path: `cargo run -q -p sifr -- run crates/sifr/tests/e2e/pass/open_context_manager.sifr` -> pass.
+- Positive path: `cargo run -q -p sifr -- run crates/sifr/tests/e2e/pass/open_binary_read.sifr` -> pass.
+- Positive path: `cargo run -q -p sifr -- run crates/sifr/tests/e2e/pass/open_binary_write.sifr` -> pass.
+- Positive path: `/Users/yaseralnajjar/work/sifr/codebase/scripts/run_all_tests.sh` -> pass (`verification ok: variants=64, failures=0, blocking_failures=0, non_blocking_failures=0`).
+- Negative path: canonical bool vectors in `cpython_io_subset.sifr` validate panic-free typed `IOError` adaptation for missing-file open/read and invalid mode rejection.
+- PR: merged https://github.com/yaseralnajjar/sifr/pull/999
+- Review pass 1 status: approved (`reviews/phase-30-part-17-io-review.md`) with non-blocking observations only; no additional module-scope remediation was required for approved scope.
+
 ## Module Part Template (repeat per module)
 
 ### Part N: <module>
@@ -605,6 +636,8 @@ Validation evidence:
 - Part 15 closeout log sync: merged https://github.com/yaseralnajjar/sifr/pull/992
 - Part 16 closeout log sync: merged https://github.com/yaseralnajjar/sifr/pull/996
 - Wave completion closure cycle (wave_30_1d): merged https://github.com/yaseralnajjar/sifr/pull/997
+- Wave production-grade closure cycle (wave_30_1d): merged https://github.com/yaseralnajjar/sifr/pull/998
+- Part 17 implementation: merged https://github.com/yaseralnajjar/sifr/pull/999
 
 ## External Review Passes
 - Reviewer pass 1 request output: `reviews/phase-30-part-1-env-review.md`
@@ -671,6 +704,8 @@ Validation evidence:
 - Reviewer pass 1 remediation status (`datetime`): done (2026-03-08, reviewer-found pre-epoch `timestamp()` bug remediated and revalidated)
 - Reviewer pass 2 request output (`datetime`): `reviews/phase-30-part-16-datetime-review-2.md`
 - Reviewer pass 2 remediation status (`datetime`): done (2026-03-09, approved for production use; no additional module-scope remediation required)
+- Reviewer pass 1 request output (`io`): `reviews/phase-30-part-17-io-review.md`
+- Reviewer pass 1 remediation status (`io`): done (2026-03-09, approved with non-blocking observations; no module-scope remediation required for approved scope)
 
 ## Wave Closure Review Cycles
 
