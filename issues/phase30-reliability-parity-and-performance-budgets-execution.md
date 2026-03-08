@@ -461,6 +461,29 @@ Validation evidence:
 - Review pass 1 status: approved (`reviews/phase-30-part-14-itertools-review.md`) with no blocking issues; no additional part-14 remediation was required for approved scope.
 - Review pass 2 status: approved (`reviews/phase-30-part-14-itertools-review-2.md`) with no blockers; module is production-grade for approved scope with no additional remediation required.
 
+## Part 15: `json`
+status: in_progress (2026-03-08)
+
+- [x] Define module parity scope and CPython references
+- [x] Port/expand CPython-derived parity fixtures (canonical vector format)
+- [x] Fix root-cause implementation gaps
+- [x] Record parity classification (`parity` / `intentional-diff` / `unsupported`)
+- [x] Run module demo
+- [x] Run targeted module tests
+- [x] Run full local suite
+- [ ] Open PR, review, and merge
+- [ ] External reviewer pass 1 remediation completed (if findings)
+- [ ] External reviewer pass 2 remediation completed (if findings)
+- [ ] Mark part progress in this checklist
+
+Validation evidence:
+- Positive path: `cargo run -q -p sifr -- run demos/m30_1d_json_parity_demo/main.sifr` -> prints `m30_1d json parity demo: pass`.
+- Positive path: `cargo run -q -p sifr -- run crates/sifr/tests/e2e/pass/cpython_json_subset.sifr` -> pass.
+- Positive path: `cargo run -q -p sifr -- run crates/sifr/tests/e2e/pass/cpython_json.sifr` -> pass.
+- Positive path: `cargo run -q -p sifr -- run crates/sifr/tests/e2e/pass/stdlib_json.sifr` -> pass.
+- Positive path: `/Users/yaseralnajjar/work/sifr/codebase/scripts/run_all_tests.sh` -> pass (`verification ok: variants=64, failures=0, blocking_failures=0, non_blocking_failures=0`).
+- Negative path: canonical bool vectors in `cpython_json_subset.sifr` validate invalid JSON parse rejection (`"{"`, `"tru"`) with panic-free typed `JSONDecodeError` handling.
+
 ## Module Part Template (repeat per module)
 
 ### Part N: <module>
