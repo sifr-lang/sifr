@@ -1,0 +1,108 @@
+# Adapted CPython logging subset for sifr.logging (canonical bool-vector format)
+from sifr.logging import getLogger, basicConfig, FileHandler, Formatter
+from sifr.logging import Logger, DEBUG, INFO, WARNING, ERROR, CRITICAL, NOTSET
+from sifr.logging import log_info, log_warn, log_error, log_debug
+from sifr.io import write_text, read_text, exists
+from sifr.os import mkdir, run_command
+from sifr.tempfile import mktemp_path
+from sifr.test import assert_bool_vector_eq
+
+
+def main():
+    expected: list[bool] = [True, True, True, True, True, True, True, True]
+    actual: list[bool] = []
+
+    base: str = mktemp_path("sifr_cpython_logging_subset_")
+    app_log: str = base + "/app.log"
+    root_log: str = base + "/root.log"
+    child_log: str = base + "/child.log"
+    handler_log: str = base + "/handler.log"
+    missing_logger_log: str = base + "/missing/logger.log"
+    missing_handler_log: str = base + "/missing2/handler.log"
+
+    app_flow_ok: bool = False
+    basic_config_ok: bool = False
+    handler_ok: bool = False
+    try:
+        _mk: None = mkdir(base)
+        _w_app: None = write_text(app_log, "")
+        _w_root: None = write_text(root_log, "")
+        _w_child: None = write_text(child_log, "")
+        _w_handler: None = write_text(handler_log, "")
+
+        logger: Logger = getLogger("app")
+        logger.set_file(app_log)
+        logger.set_level(INFO)
+        logger.info("hello")
+        logger.warning("watch")
+        logger.error("boom")
+        logger.debug("hidden")
+        app_content: str = read_text(app_log)
+        app_flow_ok = app_content == "[INFO] app: hello\n[WARNING] app: watch\n[ERROR] app: boom\n"
+
+        root: Logger = basicConfig(WARNING)
+        root.set_file(root_log)
+        root.info("skip")
+        root.warning("root-warn")
+
+        child: Logger = getLogger("child")
+        child.set_file(child_log)
+        child.info("skip-child")
+        child.error("child-error")
+        root_content: str = read_text(root_log)
+        child_content: str = read_text(child_log)
+        basic_config_ok = root_content == "[WARNING] root: root-warn\n" and child_content == "[ERROR] child: child-error\n"
+
+        handler: FileHandler = FileHandler(handler_log + "")
+        handler.set_formatter(Formatter("%(name)s|%(levelname)s|%(message)s"))
+        handler.emit("INFO", "svc", "hi")
+        handler_content: str = read_text(handler_log)
+        handler_ok = handler_content == "svc|INFO|hi\n"
+    except IOError as e:
+        _ = str(e.message)
+    actual.append(app_flow_ok)
+    actual.append(basic_config_ok)
+    actual.append(handler_ok)
+
+    constants_ok: bool = DEBUG == 10 and INFO == 20 and WARNING == 30 and ERROR == 40 and CRITICAL == 50 and NOTSET == 0
+    actual.append(constants_ok)
+
+    helper_ok: bool = True
+    log_info("subset info")
+    log_warn("subset warn")
+    log_error("subset error")
+    log_debug("subset debug")
+    actual.append(helper_ok)
+
+    missing_logger_safe: bool = False
+    try:
+        missing_logger: Logger = getLogger("missing")
+        missing_logger.set_file(missing_logger_log)
+        missing_logger.error("should fail")
+        missing_logger_safe = not exists(missing_logger_log)
+    except IOError as e:
+        _ = str(e.message)
+        missing_logger_safe = False
+    actual.append(missing_logger_safe)
+
+    missing_handler_safe: bool = False
+    try:
+        bad_handler: FileHandler = FileHandler(missing_handler_log + "")
+        bad_handler.emit("INFO", "svc", "should fail")
+        missing_handler_safe = not exists(missing_handler_log)
+    except IOError as e:
+        _ = str(e.message)
+        missing_handler_safe = False
+    actual.append(missing_handler_safe)
+
+    cleanup_ok: bool = False
+    try:
+        _cleanup: str = run_command("rm -rf " + base)
+        cleanup_ok = not exists(base)
+    except IOError as e:
+        _ = str(e.message)
+        cleanup_ok = not exists(base)
+    actual.append(cleanup_ok)
+
+    assert_bool_vector_eq(actual, expected)
+    assert str("cpython_logging_subset: pass") == "cpython_logging_subset: pass"
