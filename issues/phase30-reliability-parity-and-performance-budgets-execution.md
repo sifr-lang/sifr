@@ -50,7 +50,7 @@ Loop per part: Work -> Validate -> PR -> Review -> Merge -> External review pass
 17. [x] `io`
 18. [x] `csv`
 19. [x] `os`
-20. [ ] `pathlib`
+20. [x] `pathlib`
 21. [ ] `glob`
 22. [ ] `tempfile`
 23. [ ] `shutil`
@@ -604,7 +604,7 @@ Validation evidence:
 - Review pass 2 status: approved (`reviews/phase-30-part-19-os-review-r2.md`) with no blockers; module is production-grade for approved scope with no additional remediation required.
 
 ## Part 20: `pathlib`
-status: in_review (2026-03-09, implementation merged, reviewer pass 1 complete)
+status: done (2026-03-09, PR #1008)
 
 - [x] Define module parity scope and CPython references
 - [x] Port/expand CPython-derived parity fixtures (canonical vector format)
@@ -615,8 +615,8 @@ status: in_review (2026-03-09, implementation merged, reviewer pass 1 complete)
 - [x] Run full local suite
 - [x] Open PR, review, and merge
 - [x] External reviewer pass 1 remediation completed (if findings)
-- [ ] External reviewer pass 2 remediation completed (if findings)
-- [ ] Mark part progress in this checklist
+- [x] External reviewer pass 2 remediation completed (if findings)
+- [x] Mark part progress in this checklist
 
 Validation evidence:
 - Positive path: `cargo run -q -p sifr -- run demos/m30_1e_pathlib_parity_demo/main.sifr` -> prints `m30_1e pathlib parity demo: pass`.
@@ -632,6 +632,7 @@ Validation evidence:
 - Root-cause fix: `sifr.pathlib` now requests the `regex` crate during codegen dependency synthesis, eliminating unresolved-crate failures when `Path.glob`/`Path.rglob` are used from pathlib modules.
 - PR: merged https://github.com/yaseralnajjar/sifr/pull/1008
 - Review pass 1 status: approved (`reviews/phase-30-part-20-pathlib-review.md`) with no blocking issues; minor observations (`Path.__str__` ergonomics and broader glob metachar support) were validated as out-of-scope for the approved subset and require no additional module-scope remediation.
+- Review pass 2 status: approved (`reviews/phase-30-part-20-pathlib-review-2.md`) with no blockers; production-grade re-review validated no unresolved correctness or safety issues for approved scope.
 
 ## Module Part Template (repeat per module)
 
@@ -733,6 +734,7 @@ Validation evidence:
 - Part 19 review pass 1 tracking: merged https://github.com/yaseralnajjar/sifr/pull/1006
 - Part 19 review pass 2 tracking: merged https://github.com/yaseralnajjar/sifr/pull/1007
 - Part 20 implementation: merged https://github.com/yaseralnajjar/sifr/pull/1008
+- Part 20 review pass 1 tracking: merged https://github.com/yaseralnajjar/sifr/pull/1009
 
 ## External Review Passes
 - Reviewer pass 1 request output: `reviews/phase-30-part-1-env-review.md`
@@ -792,6 +794,8 @@ Validation evidence:
 - Reviewer pass 2 request output (`itertools`): `reviews/phase-30-part-14-itertools-review-2.md`
 - Reviewer pass 1 request output (`pathlib`): `reviews/phase-30-part-20-pathlib-review.md`
 - Reviewer pass 1 remediation status (`pathlib`): done (2026-03-09, approved for production use with minor non-blocking observations; no module-scope remediation required for approved subset)
+- Reviewer pass 2 request output (`pathlib`): `reviews/phase-30-part-20-pathlib-review-2.md`
+- Reviewer pass 2 remediation status (`pathlib`): done (2026-03-09, approved for production use; no module-scope remediation required for approved subset)
 - Reviewer pass 2 remediation status (`itertools`): done (2026-03-08, approved for production use; no module-scope remediation required)
 - Reviewer pass 1 request output (`json`): `reviews/phase-30-part-15-json-review.md`
 - Reviewer pass 1 remediation status (`json`): done (2026-03-08, approved with observations; `unwrap_or_default` concern validated as panic-free and non-blocking for approved primitive subset)
