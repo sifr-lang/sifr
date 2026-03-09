@@ -1,0 +1,99 @@
+# Adapted CPython shutil subset for sifr.shutil (canonical bool-vector format)
+from sifr.shutil import copy, move_file, rmtree, which, disk_usage
+from sifr.io import write_text, read_text, exists
+from sifr.os import mkdir, run_command
+from sifr.tempfile import mktemp_path
+from sifr.test import assert_bool_vector_eq
+
+
+def main():
+    expected: list[bool] = [True, True, True, True, True, True, True, True, True]
+    actual: list[bool] = []
+
+    base: str = mktemp_path("sifr_cpython_shutil_subset_")
+    src: str = base + "/src.txt"
+    copied: str = base + "/copied.txt"
+    moved: str = base + "/moved.txt"
+    subdir: str = base + "/subdir"
+    nested: str = subdir + "/nested.txt"
+
+    copy_ok: bool = False
+    move_ok: bool = False
+    rmtree_ok: bool = False
+    try:
+        _mk: None = mkdir(base)
+        _w: None = write_text(src, "alpha")
+        _cp: None = copy(src, copied)
+        copied_content_ok: bool = False
+        try:
+            copied_content: str = read_text(copied)
+            copied_content_ok = copied_content == "alpha"
+        except IOError as e:
+            _ = str(e.message)
+            copied_content_ok = False
+        copy_ok = exists(src) and exists(copied) and copied_content_ok
+
+        _mv: None = move_file(copied, moved)
+        move_ok = exists(moved) and (not exists(copied))
+
+        _mk_sub: None = mkdir(subdir)
+        _w_nested: None = write_text(nested, "nested")
+        _rm_tree: None = rmtree(subdir)
+        rmtree_ok = not exists(subdir)
+    except IOError as e:
+        _ = str(e.message)
+    actual.append(copy_ok)
+    actual.append(move_ok)
+    actual.append(rmtree_ok)
+
+    which_ok: bool = False
+    sh_path: str | None = which("sh")
+    if sh_path is not None:
+        which_ok = len(sh_path) > 0
+    actual.append(which_ok)
+
+    usage: list[int] = disk_usage(base + "")
+    usage_ok: bool = False
+    if len(usage) == 3:
+        total: int | None = usage[0]
+        used: int | None = usage[1]
+        free: int | None = usage[2]
+        if total is not None and used is not None and free is not None:
+            usage_ok = total > 0 and used >= 0 and free >= 0
+    actual.append(usage_ok)
+
+    missing_copy_rejected: bool = False
+    try:
+        _bad_copy: None = copy(base + "/missing_src.txt", base + "/missing_dst.txt")
+    except IOError as e:
+        _ = str(e.message)
+        missing_copy_rejected = True
+    actual.append(missing_copy_rejected)
+
+    missing_move_rejected: bool = False
+    try:
+        _bad_move: None = move_file(base + "/missing_move_src.txt", base + "/missing_move_dst.txt")
+    except IOError as e:
+        _ = str(e.message)
+        missing_move_rejected = True
+    actual.append(missing_move_rejected)
+
+    missing_rmtree_rejected: bool = False
+    try:
+        _bad_tree: None = rmtree(base + "/missing_tree")
+    except IOError as e:
+        _ = str(e.message)
+        missing_rmtree_rejected = True
+    actual.append(missing_rmtree_rejected)
+
+    cleaned: bool = False
+    try:
+        _cleanup: str = run_command("rm -rf " + base)
+        cleaned = not exists(base)
+    except IOError as e:
+        _ = str(e.message)
+        cleaned = not exists(base)
+    actual.append(cleaned)
+
+    assert_bool_vector_eq(actual, expected)
+    assert str("cpython_shutil_subset: pass") == "cpython_shutil_subset: pass"

@@ -690,6 +690,31 @@ Validation evidence:
 - Review pass 1 status: reviewer output in `reviews/phase-30-part-22-tempfile-review.md`; validated out-of-scope claims (`suffix`/`dir`/descriptor parity and full object API surface), and applied actionable remediation (negative-path evidence + explicit API-shape intentional-diff documentation).
 - Review pass 2 status: approved (`reviews/phase-30-part-22-tempfile-review-2.md`) with no blocking correctness/safety issues; note about `path + ""` copy was validated as non-actionable because current lowering needs a stable pre-`try` path copy to avoid move-after-try borrow failures.
 
+## Part 23: `shutil`
+status: in_review (2026-03-09, implementation ready)
+
+- [x] Define module parity scope and CPython references
+- [x] Port/expand CPython-derived parity fixtures (canonical vector format)
+- [x] Fix root-cause implementation gaps
+- [x] Record parity classification (`parity` / `intentional-diff` / `unsupported`)
+- [x] Run module demo
+- [x] Run targeted module tests
+- [x] Run full local suite
+- [ ] Open PR, review, and merge
+- [ ] External reviewer pass 1 remediation completed (if findings)
+- [ ] External reviewer pass 2 remediation completed (if findings)
+- [ ] Mark part progress in this checklist
+
+Validation evidence:
+- Positive path: `cargo run -q -p sifr -- run demos/m30_1e_shutil_parity_demo/main.sifr` -> prints `m30_1e shutil parity demo: pass`.
+- Positive path: `cargo run -q -p sifr -- run crates/sifr/tests/e2e/pass/cpython_shutil_subset.sifr` -> pass.
+- Positive path: `cargo run -q -p sifr -- run crates/sifr/tests/e2e/pass/stdlib_shutil.sifr` -> pass.
+- Positive path: `cargo run -q -p sifr -- run crates/sifr/tests/e2e/pass/stdlib_shutil_intrinsics.sifr` -> pass.
+- Positive path: `/Users/yaseralnajjar/work/sifr/codebase/scripts/run_all_tests.sh` -> pass (`verification ok: variants=64, failures=0, blocking_failures=0, non_blocking_failures=0`).
+- Negative path: canonical bool vectors in `cpython_shutil_subset.sifr` and `demos/m30_1e_shutil_parity_demo/main.sifr` validate panic-free typed `IOError` adaptation for missing source/tree paths in `copy`, `move_file`, and `rmtree`.
+- Root-cause fix: `move_file` now lowers to `rename` directly for deterministic single-step move semantics in approved scope, eliminating prior two-step copy/remove partial-state risk.
+- Parity governance update: `verification/stdlib/phase30_parity_matrix.md` now includes explicit `shutil` parity and intentional-diff rows (name adaptation `move_file`, subset option matrix boundary, and `disk_usage` list-shape adaptation).
+
 ## Module Part Template (repeat per module)
 
 ### Part N: <module>
@@ -798,6 +823,7 @@ Validation evidence:
 - Part 21 closeout log sync: merged https://github.com/yaseralnajjar/sifr/pull/1015
 - Part 22 implementation: merged https://github.com/yaseralnajjar/sifr/pull/1016
 - Part 22 review pass 1 remediation: merged https://github.com/yaseralnajjar/sifr/pull/1017
+- Part 22 review pass 2 tracking: merged https://github.com/yaseralnajjar/sifr/pull/1018
 
 ## External Review Passes
 - Reviewer pass 1 request output: `reviews/phase-30-part-1-env-review.md`
