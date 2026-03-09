@@ -50,10 +50,11 @@ class reader:
             return None
         row: list[str] = []
         pos: int = self._pos
-        for i, v in enumerate(self._rows):
-            if i == pos:
-                for cell in v:
-                    row.append(cell)
+        next_row: list[str] | None = self._rows[pos]
+        if next_row is None:
+            return None
+        for cell in next_row:
+            row.append(cell)
         self._pos = pos + 1
         return row
 
@@ -78,31 +79,17 @@ class writer:
         self._rows = []
 
     def writerow(self, row: list[str]) -> None:
-        new_rows: list[list[str]] = []
-        for existing in self._rows:
-            copy_e: list[str] = []
-            for v in existing:
-                copy_e.append(v)
-            new_rows.append(copy_e)
         copy: list[str] = []
         for v in row:
             copy.append(v)
-        new_rows.append(copy)
-        self._rows = new_rows
+        self._rows.append(copy)
 
     def writerows(self, rows: list[list[str]]) -> None:
-        new_rows: list[list[str]] = []
-        for existing in self._rows:
-            copy_e: list[str] = []
-            for v in existing:
-                copy_e.append(v)
-            new_rows.append(copy_e)
         for row in rows:
             copy: list[str] = []
             for v in row:
                 copy.append(v)
-            new_rows.append(copy)
-        self._rows = new_rows
+            self._rows.append(copy)
 
     def getvalue(self) -> str:
         return format_csv(self._rows)
@@ -142,9 +129,11 @@ class DictReader:
         for row in self._rows:
             d: dict[str, str] = {}
             for i, key in enumerate(self._headers):
-                for j, val in enumerate(row):
-                    if i == j:
-                        d[key + ""] = val + ""
+                val: str | None = row[i]
+                if val is not None:
+                    d[key] = val
+                else:
+                    d[key] = ""
             result.append(d)
         return result
 
@@ -162,34 +151,20 @@ class DictWriter:
         self._rows = []
 
     def writeheader(self) -> None:
-        new_rows: list[list[str]] = []
-        for existing in self._rows:
-            copy_e: list[str] = []
-            for v in existing:
-                copy_e.append(v)
-            new_rows.append(copy_e)
         copy: list[str] = []
         for h in self._headers:
             copy.append(h)
-        new_rows.append(copy)
-        self._rows = new_rows
+        self._rows.append(copy)
 
     def writerow(self, row: dict[str, str]) -> None:
-        new_rows: list[list[str]] = []
-        for existing in self._rows:
-            copy_e: list[str] = []
-            for v in existing:
-                copy_e.append(v)
-            new_rows.append(copy_e)
         data: list[str] = []
         for key in self._headers:
-            val: str | None = row[key + ""]
+            val: str | None = row[key]
             if val is not None:
-                data.append(val + "")
+                data.append(val)
             else:
                 data.append("")
-        new_rows.append(data)
-        self._rows = new_rows
+        self._rows.append(data)
 
     def getvalue(self) -> str:
         return format_csv(self._rows)
