@@ -1,0 +1,54 @@
+# Adapted CPython tempfile subset for sifr.tempfile (canonical bool-vector format)
+from sifr.tempfile import mktemp_path, mkstemp, mkdtemp
+from sifr.io import exists, read_text
+from sifr.os import run_command
+from sifr.pathlib import basename
+from sifr.test import assert_bool_vector_eq
+
+
+def main():
+    expected: list[bool] = [True, True, True, True, True, True, True, True]
+    actual: list[bool] = []
+
+    p0: str = mktemp_path("sifr_tmp_preview_")
+    try:
+        p1: str = mkstemp("sifr_tmp_file_")
+        p2: str = mkstemp("sifr_tmp_file_")
+        d1: str = mkdtemp("sifr_tmp_dir_")
+        empty_prefix_path: str = mkstemp("")
+
+        actual.append(exists(p1))
+        actual.append(exists(p2))
+        actual.append(exists(d1))
+        actual.append(p1 != p2)
+
+        preview_name: str = basename(p0)
+        file_name: str = basename(p1)
+        dir_name: str = basename(d1)
+        preview_has_prefix: bool = len(preview_name) > len("sifr_tmp_preview_") and preview_name[0:len("sifr_tmp_preview_")] == "sifr_tmp_preview_"
+        file_has_prefix: bool = len(file_name) > len("sifr_tmp_file_") and file_name[0:len("sifr_tmp_file_")] == "sifr_tmp_file_"
+        dir_has_prefix: bool = len(dir_name) > len("sifr_tmp_dir_") and dir_name[0:len("sifr_tmp_dir_")] == "sifr_tmp_dir_"
+        actual.append(preview_has_prefix and file_has_prefix and dir_has_prefix)
+
+        file_content_is_empty: bool = False
+        try:
+            file_content: str = read_text(p1)
+            file_content_is_empty = file_content == ""
+        except IOError as e:
+            _ = str(e.message)
+            file_content_is_empty = False
+        actual.append(file_content_is_empty)
+        actual.append(exists(empty_prefix_path))
+
+        _c1: str = run_command("rm -f " + p1)
+        _c2: str = run_command("rm -f " + p2)
+        _c3: str = run_command("rm -f " + empty_prefix_path)
+        _c4: str = run_command("rm -rf " + d1)
+        cleaned: bool = (not exists(p1)) and (not exists(p2)) and (not exists(empty_prefix_path)) and (not exists(d1))
+        actual.append(cleaned)
+    except IOError as e:
+        _ = str(e.message)
+        actual = [False, False, False, False, False, False, False, False]
+
+    assert_bool_vector_eq(actual, expected)
+    assert str("cpython_tempfile_subset: pass") == "cpython_tempfile_subset: pass"
