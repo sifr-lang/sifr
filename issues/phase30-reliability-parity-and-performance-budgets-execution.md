@@ -635,7 +635,7 @@ Validation evidence:
 - Review pass 2 status: approved (`reviews/phase-30-part-20-pathlib-review-2.md`) with no blockers; production-grade re-review validated no unresolved correctness or safety issues for approved scope.
 
 ## Part 21: `glob`
-status: in_review (2026-03-09, implementation ready)
+status: in_review (2026-03-09, implementation merged, reviewer pass 1 complete)
 
 - [x] Define module parity scope and CPython references
 - [x] Port/expand CPython-derived parity fixtures (canonical vector format)
@@ -644,8 +644,8 @@ status: in_review (2026-03-09, implementation ready)
 - [x] Run module demo
 - [x] Run targeted module tests
 - [x] Run full local suite
-- [ ] Open PR, review, and merge
-- [ ] External reviewer pass 1 remediation completed (if findings)
+- [x] Open PR, review, and merge
+- [x] External reviewer pass 1 remediation completed (if findings)
 - [ ] External reviewer pass 2 remediation completed (if findings)
 - [ ] Mark part progress in this checklist
 
@@ -657,6 +657,8 @@ Validation evidence:
 - Positive path: `/Users/yaseralnajjar/work/sifr/codebase/scripts/run_all_tests.sh` -> pass (`verification ok: variants=64, failures=0, blocking_failures=0, non_blocking_failures=0`).
 - Negative path: canonical bool vectors in `cpython_glob_subset.sifr` and `demos/m30_1e_glob_parity_demo/main.sifr` validate panic-free empty-list behavior for missing directories and unmatched patterns.
 - Root-cause fix: `sifr.glob` now removes silent print fallback, enforces deterministic sorted output, and applies CPython-aligned hidden-file filtering (hidden entries only matched when pattern starts with `.`) for approved wildcard subset.
+- PR: merged https://github.com/yaseralnajjar/sifr/pull/1012
+- Review pass 1 status: reviewer raised `pathlib.Path.glob`/`rglob` concerns (`reviews/phase-30-part-21-glob-review.md`); validation confirmed these are out-of-scope for Part 21 (`sifr.glob`) and already tracked under prior `pathlib` part scope, so no `glob` module remediation was required.
 
 ## Module Part Template (repeat per module)
 
@@ -760,6 +762,7 @@ Validation evidence:
 - Part 20 implementation: merged https://github.com/yaseralnajjar/sifr/pull/1008
 - Part 20 review pass 1 tracking: merged https://github.com/yaseralnajjar/sifr/pull/1009
 - Part 20 review pass 2 tracking: merged https://github.com/yaseralnajjar/sifr/pull/1010
+- Part 21 implementation: merged https://github.com/yaseralnajjar/sifr/pull/1012
 
 ## External Review Passes
 - Reviewer pass 1 request output: `reviews/phase-30-part-1-env-review.md`
@@ -821,6 +824,8 @@ Validation evidence:
 - Reviewer pass 1 remediation status (`pathlib`): done (2026-03-09, approved for production use with minor non-blocking observations; no module-scope remediation required for approved subset)
 - Reviewer pass 2 request output (`pathlib`): `reviews/phase-30-part-20-pathlib-review-2.md`
 - Reviewer pass 2 remediation status (`pathlib`): done (2026-03-09, approved for production use; no module-scope remediation required for approved subset)
+- Reviewer pass 1 request output (`glob`): `reviews/phase-30-part-21-glob-review.md`
+- Reviewer pass 1 remediation status (`glob`): done (2026-03-09, reviewer notes targeted `pathlib` intrinsic behavior outside Part 21 `glob` scope; no `glob` module remediation required)
 - Reviewer pass 2 remediation status (`itertools`): done (2026-03-08, approved for production use; no module-scope remediation required)
 - Reviewer pass 1 request output (`json`): `reviews/phase-30-part-15-json-review.md`
 - Reviewer pass 1 remediation status (`json`): done (2026-03-08, approved with observations; `unwrap_or_default` concern validated as panic-free and non-blocking for approved primitive subset)
