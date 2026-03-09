@@ -1,0 +1,59 @@
+# Adapted CPython time subset for sifr.time (canonical bool-vector format)
+from sifr.time import time_now, time, sleep, strftime, strptime, gmtime, localtime, perf_counter, monotonic
+from sifr.test import assert_bool_vector_eq
+
+
+def main():
+    expected: list[bool] = [True, True, True, True, True, True, True, True, True]
+    actual: list[bool] = []
+
+    now_direct: float = time_now()
+    now_alias: float = time()
+    now_ok: bool = now_direct > 0.0 and now_alias > 0.0
+    actual.append(now_ok)
+
+    perf_before: float = perf_counter()
+    mono_before: float = monotonic()
+    sleep(0.01)
+    perf_after: float = perf_counter()
+    mono_after: float = monotonic()
+    counters_ok: bool = perf_after >= perf_before and mono_after >= mono_before
+    actual.append(counters_ok)
+
+    fmt_ok: bool = strftime("%Y-%m-%d %H:%M:%S", 0.0) == "1970-01-01 00:00:00"
+    actual.append(fmt_ok)
+
+    gmt_ok: bool = gmtime(0.0) == "1970-01-01T00:00:00"
+    actual.append(gmt_ok)
+
+    local: str = localtime(0.0)
+    local_shape_ok: bool = len(local) == 19
+    actual.append(local_shape_ok)
+
+    parsed_ok: bool = False
+    try:
+        parsed: str = strptime("2024-01-15 10:30:00", "%Y-%m-%d %H:%M:%S")
+        parsed_ok = parsed == "2024-01-15T10:30:00"
+    except ValueError as e:
+        _ = str(e.message)
+        parsed_ok = False
+    actual.append(parsed_ok)
+
+    invalid_parse_rejected: bool = False
+    try:
+        _bad: str = strptime("bad", "%Y-%m-%d %H:%M:%S")
+    except ValueError as e:
+        _ = str(e.message)
+        invalid_parse_rejected = True
+    actual.append(invalid_parse_rejected)
+
+    invalid_sleep_safe: bool = False
+    sleep(-0.05)
+    invalid_sleep_safe = True
+    actual.append(invalid_sleep_safe)
+
+    out_of_range_safe: bool = gmtime(1.0e20) == "" and localtime(1.0e20) == ""
+    actual.append(out_of_range_safe)
+
+    assert_bool_vector_eq(actual, expected)
+    assert str("cpython_time_subset: pass") == "cpython_time_subset: pass"
