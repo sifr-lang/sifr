@@ -725,6 +725,11 @@ edition = "2021"
                     deps.push("regex = \"1\"".to_string());
                 }
             }
+            "sifr.pathlib" => {
+                if !deps.contains(&"regex = \"1\"".to_string()) {
+                    deps.push("regex = \"1\"".to_string());
+                }
+            }
             "sifr.hash" | "sifr.hashlib" => {
                 if !deps.contains(&"sha2 = \"0.10\"".to_string()) {
                     deps.push("sha2 = \"0.10\"".to_string());

@@ -1,0 +1,46 @@
+from sifr.pathlib import basename, join_path, Path
+from sifr.os import getpid
+from sifr.test import assert_bool_vector_eq
+
+
+def main():
+    expected: list[bool] = [True, True, True, True, True, True]
+    actual: list[bool] = []
+
+    actual.append(basename("/tmp/demo.txt") == "demo.txt")
+    actual.append(join_path("/tmp", "demo.txt") == "/tmp/demo.txt")
+
+    base: str = "/tmp/sifr_m30_1e_pathlib_demo_" + str(getpid())
+    filep: Path = Path(base + "/demo.txt")
+    dirp: Path = Path(base + "")
+    path_flow_ok: bool = False
+    glob_ok: bool = False
+    cleanup_ok: bool = False
+    try:
+        _m: None = dirp.mkdir()
+        _w: None = filep.write_text("hello")
+        content: str = filep.read_text()
+        path_flow_ok = filep.exists() and filep.is_file() and content == "hello"
+
+        matches: list[str] = dirp.glob("*.txt")
+        glob_ok = len(matches) >= 1
+
+        _u: None = filep.unlink()
+        _r: None = dirp.rmdir()
+        cleanup_ok = not dirp.exists()
+    except IOError as e:
+        _ = str(e.message)
+    actual.append(path_flow_ok)
+    actual.append(glob_ok)
+    actual.append(cleanup_ok)
+
+    missing_rejected: bool = False
+    try:
+        _bad: str = Path("/tmp/sifr_m30_1e_pathlib_demo_missing.txt").read_text()
+    except IOError as e:
+        _ = str(e.message)
+        missing_rejected = True
+    actual.append(missing_rejected)
+
+    assert_bool_vector_eq(actual, expected)
+    print("m30_1e pathlib parity demo: pass")
