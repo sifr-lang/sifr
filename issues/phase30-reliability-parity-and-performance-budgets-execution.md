@@ -60,7 +60,7 @@ Loop per part: Work -> Validate -> PR -> Review -> Merge -> External review pass
 25. [x] `time`
 26. [x] `timeit`
 27. [x] `platform`
-28. [ ] `uuid`
+28. [x] `uuid`
 
 ## milestone_30_2: Complexity and Resource Parity
 - [ ] Define canonical API-level complexity/resource check patterns for stabilized modules
@@ -837,7 +837,7 @@ Validation evidence:
 - Review pass 2 status: approved (`reviews/phase-30-part-27-platform-review-2.md`) with no blockers; production-grade re-review confirmed no unresolved correctness/safety risks in approved subset.
 
 ## Part 28: `uuid`
-status: in_review (2026-03-09, review pass 1 remediation ready)
+status: done (2026-03-09)
 
 - [x] Define module parity scope and CPython references
 - [x] Port/expand CPython-derived parity fixtures (canonical vector format)
@@ -848,8 +848,8 @@ status: in_review (2026-03-09, review pass 1 remediation ready)
 - [x] Run full local suite
 - [x] Open PR, review, and merge
 - [x] External reviewer pass 1 remediation completed (if findings)
-- [ ] External reviewer pass 2 remediation completed (if findings)
-- [ ] Mark part progress in this checklist
+- [x] External reviewer pass 2 remediation completed (if findings)
+- [x] Mark part progress in this checklist
 
 Validation evidence:
 - Positive path: `cargo run -q -p sifr -- run demos/m30_1f_uuid_parity_demo/main.sifr` -> prints `m30_1f uuid parity demo: pass`.
@@ -862,6 +862,7 @@ Validation evidence:
 - Root-cause fix: `UUID.version()` now derives the actual version nibble from canonical UUID text instead of returning a hardcoded `4`.
 - Parity governance update: `verification/stdlib/phase30_parity_matrix.md` now includes explicit `uuid` parity and intentional-diff rows for approved subset boundaries.
 - Review pass 1 status: `reviews/phase-30-part-28-uuid-review.md` identified non-blocking hardening gaps; remediation added explicit passthrough-constructor invalid-version coverage while preserving ownership-safe helper and typed-Result propagation patterns required by Sifr stdlib lowering.
+- Review pass 2 status: `reviews/phase-30-part-28-uuid-review-2a.md` approved production-grade readiness for approved scope; remaining low-severity style notes were validated as non-blocking and constrained by ownership/typed-Result semantics in current Sifr lowering contracts.
 
 ## Module Part Template (repeat per module)
 
@@ -990,6 +991,7 @@ Validation evidence:
 - Part 27 review pass 1 tracking: merged https://github.com/yaseralnajjar/sifr/pull/1034
 - Part 27 review pass 2 tracking: merged https://github.com/yaseralnajjar/sifr/pull/1035
 - Part 28 implementation: merged https://github.com/yaseralnajjar/sifr/pull/1036
+- Part 28 review pass 1 tracking: merged https://github.com/yaseralnajjar/sifr/pull/1037
 
 ## External Review Passes
 - Reviewer pass 1 request output: `reviews/phase-30-part-1-env-review.md`
@@ -1059,6 +1061,8 @@ Validation evidence:
 - Reviewer pass 3 remediation status (`glob`): done (2026-03-09, approved for production use after remediation; no remaining blockers for approved scope)
 - Reviewer pass 1 request output (`uuid`): `reviews/phase-30-part-28-uuid-review.md`
 - Reviewer pass 1 remediation status (`uuid`): done (2026-03-09, added constructor invalid-version coverage and validated ownership/Result constraints on existing helper and rethrow patterns)
+- Reviewer pass 2 request output (`uuid`): `reviews/phase-30-part-28-uuid-review-2a.md`
+- Reviewer pass 2 remediation status (`uuid`): done (2026-03-09, production-grade review approved; remaining style observations validated as non-blocking under current ownership/Result constraints)
 - Reviewer pass 2 remediation status (`itertools`): done (2026-03-08, approved for production use; no module-scope remediation required)
 - Reviewer pass 1 request output (`json`): `reviews/phase-30-part-15-json-review.md`
 - Reviewer pass 1 remediation status (`json`): done (2026-03-08, approved with observations; `unwrap_or_default` concern validated as panic-free and non-blocking for approved primitive subset)
