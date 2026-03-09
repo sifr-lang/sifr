@@ -1,0 +1,98 @@
+# Adapted CPython os subset for sifr.os (canonical bool-vector format)
+from sifr.os import run_command, get_args, getcwd, listdir, mkdir, rmdir, remove_file, rename, is_file, is_dir, chdir
+from sifr.os import getpid, cpu_count, which, disk_usage, stat
+from sifr.io import write_text
+from sifr.test import assert_bool_vector_eq
+
+
+def main():
+    expected: list[bool] = [True, True, True, True, True, True, True, True, True, True, True, True, True, True, True]
+    actual: list[bool] = []
+
+    shell_ok: bool = False
+    try:
+        output: str = run_command("echo sifr_os_subset")
+        shell_ok = output == "sifr_os_subset"
+    except IOError as e:
+        _ = str(e.message)
+    actual.append(shell_ok)
+
+    args: list[str] = get_args()
+    actual.append(len(args) > 0)
+
+    cwd_ok: bool = False
+    try:
+        cwd: str = getcwd()
+        cwd_ok = len(cwd) > 0
+    except IOError as e:
+        _ = str(e.message)
+    actual.append(cwd_ok)
+
+    base: str = "/tmp/sifr_cpython_os_subset_" + str(getpid())
+    file_a: str = base + "/a.txt"
+    file_b: str = base + "/b.txt"
+
+    mkdir_ok: bool = False
+    listdir_ok: bool = False
+    stat_ok: bool = False
+    rename_ok: bool = False
+    remove_ok: bool = False
+    rmdir_ok: bool = False
+    try:
+        _mk: None = mkdir(base)
+        mkdir_ok = is_dir(base)
+
+        _w: None = write_text(file_a, "alpha")
+        entries: list[str] = listdir(base)
+        listdir_ok = len(entries) >= 1
+
+        size_a: int = stat(file_a)
+        stat_ok = size_a > 0 and is_file(file_a)
+
+        _rn: None = rename(file_a, file_b)
+        rename_ok = is_file(file_b) and not is_file(file_a)
+
+        _rm: None = remove_file(file_b)
+        remove_ok = not is_file(file_b)
+
+        _rd: None = rmdir(base)
+        rmdir_ok = not is_dir(base)
+    except IOError as e:
+        _ = str(e.message)
+    actual.append(mkdir_ok)
+    actual.append(listdir_ok)
+    actual.append(stat_ok)
+    actual.append(rename_ok)
+    actual.append(remove_ok)
+    actual.append(rmdir_ok)
+
+    which_ok: bool = False
+    sh_path: str | None = which("sh")
+    if sh_path is not None:
+        which_ok = len(sh_path) > 0
+    actual.append(which_ok)
+
+    usage: list[int] = disk_usage("/tmp")
+    actual.append(len(usage) == 3 and usage[0] > 0 and usage[1] >= 0 and usage[2] >= 0)
+
+    actual.append(getpid() > 0)
+    actual.append(cpu_count() >= 1)
+
+    missing_rmdir_rejected: bool = False
+    try:
+        _r: None = rmdir("/tmp/sifr_cpython_os_subset_missing")
+    except IOError as e:
+        _ = str(e.message)
+        missing_rmdir_rejected = True
+    actual.append(missing_rmdir_rejected)
+
+    missing_chdir_rejected: bool = False
+    try:
+        _c: None = chdir("/tmp/sifr_cpython_os_subset_missing")
+    except IOError as e:
+        _ = str(e.message)
+        missing_chdir_rejected = True
+    actual.append(missing_chdir_rejected)
+
+    assert_bool_vector_eq(actual, expected)
+    assert str("cpython_os_subset: pass") == "cpython_os_subset: pass"
