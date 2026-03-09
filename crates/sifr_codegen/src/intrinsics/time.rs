@@ -71,21 +71,52 @@ pub(super) fn lower_sleep(args: &[RustExpr]) -> Option<RustExpr> {
     if args.len() != 1 {
         return None;
     }
-    Some(RustExpr::FnCall {
-        func: Box::new(RustExpr::Path(vec![
-            "std".to_string(),
-            "thread".to_string(),
-            "sleep".to_string(),
-        ])),
-        args: vec![RustExpr::FnCall {
-            func: Box::new(RustExpr::Path(vec![
-                "std".to_string(),
-                "time".to_string(),
-                "Duration".to_string(),
-                "from_secs_f64".to_string(),
-            ])),
-            args: vec![args[0].clone()],
+    Some(RustExpr::Block {
+        stmts: vec![RustStmt::Let {
+            mutable: false,
+            name: "__secs".to_string(),
+            ty: None,
+            value: args[0].clone(),
         }],
+        expr: Some(Box::new(RustExpr::If {
+            cond: Box::new(RustExpr::BinOp {
+                left: Box::new(RustExpr::MethodCall {
+                    receiver: Box::new(RustExpr::Ident("__secs".to_string())),
+                    method: "is_finite".to_string(),
+                    args: vec![],
+                }),
+                op: "&&".to_string(),
+                right: Box::new(RustExpr::BinOp {
+                    left: Box::new(RustExpr::Ident("__secs".to_string())),
+                    op: ">".to_string(),
+                    right: Box::new(RustExpr::Literal(RustLiteral::Float(0.0))),
+                }),
+            }),
+            then_expr: Box::new(RustExpr::FnCall {
+                func: Box::new(RustExpr::Path(vec![
+                    "std".to_string(),
+                    "thread".to_string(),
+                    "sleep".to_string(),
+                ])),
+                args: vec![RustExpr::FnCall {
+                    func: Box::new(RustExpr::Path(vec![
+                        "std".to_string(),
+                        "time".to_string(),
+                        "Duration".to_string(),
+                        "from_nanos".to_string(),
+                    ])),
+                    args: vec![RustExpr::Cast {
+                        expr: Box::new(RustExpr::BinOp {
+                            left: Box::new(RustExpr::Ident("__secs".to_string())),
+                            op: "*".to_string(),
+                            right: Box::new(RustExpr::Literal(RustLiteral::Float(1_000_000_000.0))),
+                        }),
+                        ty: RustType::Named("u64".to_string()),
+                    }],
+                }],
+            }),
+            else_expr: Some(Box::new(RustExpr::Literal(RustLiteral::Unit))),
+        })),
     })
 }
 
@@ -141,12 +172,7 @@ pub(super) fn lower_time_format(args: &[RustExpr]) -> Option<RustExpr> {
 }
 
 pub(super) fn lower_perf_counter(args: &[RustExpr]) -> Option<RustExpr> {
-    if !args.is_empty() {
-        return None;
-    }
-    Some(RustExpr::Ident(
-        "{ fn __monotonic() -> f64 { static __START: std::sync::OnceLock<std::time::Instant> = std::sync::OnceLock::new(); let s = __START.get_or_init(std::time::Instant::now); s.elapsed().as_secs_f64() } __monotonic() }".to_string(),
-    ))
+    lower_time_now(args)
 }
 
 pub(super) fn lower_monotonic(args: &[RustExpr]) -> Option<RustExpr> {

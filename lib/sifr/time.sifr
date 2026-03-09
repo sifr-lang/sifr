@@ -8,7 +8,7 @@ from _sifr.time import localtime as _localtime_intrinsic
 def time() -> float:
     return time_now()
 
-def strftime(epoch: float, fmt: str) -> str:
+def strftime(fmt: str, epoch: float) -> str:
     return time_format(epoch, fmt)
 
 def strptime(s: str, fmt: str) -> Result[str, ValueError]:

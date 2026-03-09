@@ -568,7 +568,8 @@ mod tests {
         assert!(render_expr(&now.expr).contains("SystemTime::now()"));
 
         let sleep = lower_intrinsic("sleep", &["0.1".to_string()]).expect("sleep");
-        assert!(render_expr(&sleep.expr).contains("from_secs_f64"));
+        assert!(render_expr(&sleep.expr).contains("is_finite()"));
+        assert!(render_expr(&sleep.expr).contains("Duration::from_nanos"));
 
         let fmt = lower_intrinsic("time_format", &["secs".to_string(), "mask".to_string()])
             .expect("time_format");
@@ -576,10 +577,10 @@ mod tests {
         assert!(render_expr(&fmt.expr).contains("DateTime::from_timestamp"));
 
         let perf = lower_intrinsic("perf_counter", &[]).expect("perf_counter");
-        assert!(render_expr(&perf.expr).contains("OnceLock<std::time::Instant>"));
+        assert!(render_expr(&perf.expr).contains("SystemTime::now()"));
 
         let mono = lower_intrinsic("monotonic", &[]).expect("monotonic");
-        assert!(render_expr(&mono.expr).contains("OnceLock<std::time::Instant>"));
+        assert!(render_expr(&mono.expr).contains("SystemTime::now()"));
 
         let parse =
             lower_intrinsic("strptime", &["s".to_string(), "f".to_string()]).expect("strptime");
