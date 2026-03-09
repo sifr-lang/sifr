@@ -59,7 +59,7 @@ Loop per part: Work -> Validate -> PR -> Review -> Merge -> External review pass
 24. [x] `logging`
 25. [x] `time`
 26. [x] `timeit`
-27. [ ] `platform`
+27. [x] `platform`
 28. [ ] `uuid`
 
 ## milestone_30_2: Complexity and Resource Parity
@@ -807,7 +807,7 @@ Validation evidence:
 - Review pass 2 status: approved (`reviews/phase-30-part-26-timeit-review-2.md`) with no blockers; production-grade re-review confirmed no unresolved correctness/safety risks in approved subset.
 
 ## Part 27: `platform`
-status: in_review (2026-03-09, PR #1033 merged; review pass 1 approved)
+status: done (2026-03-09, PR #1033)
 
 - [x] Define module parity scope and CPython references
 - [x] Port/expand CPython-derived parity fixtures (canonical vector format)
@@ -818,8 +818,8 @@ status: in_review (2026-03-09, PR #1033 merged; review pass 1 approved)
 - [x] Run full local suite
 - [x] Open PR, review, and merge
 - [x] External reviewer pass 1 remediation completed (if findings)
-- [ ] External reviewer pass 2 remediation completed (if findings)
-- [ ] Mark part progress in this checklist
+- [x] External reviewer pass 2 remediation completed (if findings)
+- [x] Mark part progress in this checklist
 
 Validation evidence:
 - Positive path: `cargo run -q -p sifr -- run demos/m30_1f_platform_parity_demo/main.sifr` -> prints `m30_1f platform parity demo: pass`.
@@ -834,6 +834,7 @@ Validation evidence:
 - Parity governance update: `verification/stdlib/phase30_parity_matrix.md` now includes explicit `platform` parity and intentional-diff rows for approved subset boundaries.
 - PR: merged https://github.com/yaseralnajjar/sifr/pull/1033
 - Review pass 1 status: approved (`reviews/phase-30-part-27-platform-review.md`) with no blockers; reviewer observations about `processor()` and command availability were validated as documented intentional-diff boundaries with deterministic fallback behavior.
+- Review pass 2 status: approved (`reviews/phase-30-part-27-platform-review-2.md`) with no blockers; production-grade re-review confirmed no unresolved correctness/safety risks in approved subset.
 
 ## Module Part Template (repeat per module)
 
@@ -959,6 +960,7 @@ Validation evidence:
 - Part 26 review pass 1 tracking: merged https://github.com/yaseralnajjar/sifr/pull/1031
 - Part 26 review pass 2 tracking: merged https://github.com/yaseralnajjar/sifr/pull/1032
 - Part 27 implementation: merged https://github.com/yaseralnajjar/sifr/pull/1033
+- Part 27 review pass 1 tracking: merged https://github.com/yaseralnajjar/sifr/pull/1034
 
 ## External Review Passes
 - Reviewer pass 1 request output: `reviews/phase-30-part-1-env-review.md`
@@ -1069,6 +1071,8 @@ Validation evidence:
 - Reviewer pass 2 remediation status (`timeit`): done (2026-03-09, approved for production use; no additional module-scope remediation required)
 - Reviewer pass 1 request output (`platform`): `reviews/phase-30-part-27-platform-review.md`
 - Reviewer pass 1 remediation status (`platform`): done (2026-03-09, approved with no blockers; no additional module-scope remediation required for approved subset)
+- Reviewer pass 2 request output (`platform`): `reviews/phase-30-part-27-platform-review-2.md`
+- Reviewer pass 2 remediation status (`platform`): done (2026-03-09, approved for production use; no additional module-scope remediation required)
 
 ## Wave Closure Review Cycles
 
