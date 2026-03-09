@@ -750,7 +750,7 @@ Validation evidence:
 - Review pass 2 status: approved (`reviews/phase-30-part-24-logging-review-2.md`) with no blockers; production-grade re-review confirmed no unresolved correctness/safety risks in approved subset.
 
 ## Part 25: `time`
-status: in_review (2026-03-09, implementation ready)
+status: in_review (2026-03-09, PR #1027 merged; review pass 1 approved)
 
 - [x] Define module parity scope and CPython references
 - [x] Port/expand CPython-derived parity fixtures (canonical vector format)
@@ -759,8 +759,8 @@ status: in_review (2026-03-09, implementation ready)
 - [x] Run module demo
 - [x] Run targeted module tests
 - [x] Run full local suite
-- [ ] Open PR, review, and merge
-- [ ] External reviewer pass 1 remediation completed (if findings)
+- [x] Open PR, review, and merge
+- [x] External reviewer pass 1 remediation completed (if findings)
 - [ ] External reviewer pass 2 remediation completed (if findings)
 - [ ] Mark part progress in this checklist
 
@@ -775,6 +775,8 @@ Validation evidence:
 - Root-cause fix: `sleep` intrinsic now guards invalid durations and uses panic-free `Duration::from_nanos` lowering; this removes user-triggerable panic paths from negative/invalid sleep inputs.
 - Root-cause fix: `perf_counter`/`monotonic` no longer use call-site-local baseline statics; both now lower through stable epoch-seconds timing to prevent per-call-site reset regressions in parity vectors.
 - Parity governance update: `verification/stdlib/phase30_parity_matrix.md` now includes explicit `time` parity and intentional-diff rows for approved subset boundaries.
+- PR: merged https://github.com/yaseralnajjar/sifr/pull/1027
+- Review pass 1 status: approved (`reviews/phase-30-part-25-time-review.md`) with no blockers; reviewer observations about wall-clock `perf_counter`/`monotonic` behavior and empty-string fallback for out-of-range epochs were validated as documented intentional-diff boundaries for approved subset scope.
 
 ## Module Part Template (repeat per module)
 
@@ -893,6 +895,7 @@ Validation evidence:
 - Part 24 implementation: merged https://github.com/yaseralnajjar/sifr/pull/1024
 - Part 24 review pass 1 tracking: merged https://github.com/yaseralnajjar/sifr/pull/1025
 - Part 24 review pass 2 tracking: merged https://github.com/yaseralnajjar/sifr/pull/1026
+- Part 25 implementation: merged https://github.com/yaseralnajjar/sifr/pull/1027
 
 ## External Review Passes
 - Reviewer pass 1 request output: `reviews/phase-30-part-1-env-review.md`
@@ -993,6 +996,8 @@ Validation evidence:
 - Reviewer pass 1 remediation status (`logging`): done (2026-03-09, approved with no blockers; no additional module-scope remediation required for approved subset)
 - Reviewer pass 2 request output (`logging`): `reviews/phase-30-part-24-logging-review-2.md`
 - Reviewer pass 2 remediation status (`logging`): done (2026-03-09, approved for production use; no additional module-scope remediation required)
+- Reviewer pass 1 request output (`time`): `reviews/phase-30-part-25-time-review.md`
+- Reviewer pass 1 remediation status (`time`): done (2026-03-09, approved with no blockers; no additional module-scope remediation required for approved subset)
 
 ## Wave Closure Review Cycles
 
