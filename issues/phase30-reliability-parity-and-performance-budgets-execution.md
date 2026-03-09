@@ -57,7 +57,7 @@ Loop per part: Work -> Validate -> PR -> Review -> Merge -> External review pass
 
 ### wave_30_1f: Runtime and Platform Wrappers
 24. [x] `logging`
-25. [ ] `time`
+25. [x] `time`
 26. [ ] `timeit`
 27. [ ] `platform`
 28. [ ] `uuid`
@@ -750,7 +750,7 @@ Validation evidence:
 - Review pass 2 status: approved (`reviews/phase-30-part-24-logging-review-2.md`) with no blockers; production-grade re-review confirmed no unresolved correctness/safety risks in approved subset.
 
 ## Part 25: `time`
-status: in_review (2026-03-09, PR #1027 merged; review pass 1 approved)
+status: done (2026-03-09, PR #1027)
 
 - [x] Define module parity scope and CPython references
 - [x] Port/expand CPython-derived parity fixtures (canonical vector format)
@@ -761,8 +761,8 @@ status: in_review (2026-03-09, PR #1027 merged; review pass 1 approved)
 - [x] Run full local suite
 - [x] Open PR, review, and merge
 - [x] External reviewer pass 1 remediation completed (if findings)
-- [ ] External reviewer pass 2 remediation completed (if findings)
-- [ ] Mark part progress in this checklist
+- [x] External reviewer pass 2 remediation completed (if findings)
+- [x] Mark part progress in this checklist
 
 Validation evidence:
 - Positive path: `cargo run -q -p sifr -- run demos/m30_1f_time_parity_demo/main.sifr` -> prints `m30_1f time parity demo: pass`.
@@ -777,6 +777,7 @@ Validation evidence:
 - Parity governance update: `verification/stdlib/phase30_parity_matrix.md` now includes explicit `time` parity and intentional-diff rows for approved subset boundaries.
 - PR: merged https://github.com/yaseralnajjar/sifr/pull/1027
 - Review pass 1 status: approved (`reviews/phase-30-part-25-time-review.md`) with no blockers; reviewer observations about wall-clock `perf_counter`/`monotonic` behavior and empty-string fallback for out-of-range epochs were validated as documented intentional-diff boundaries for approved subset scope.
+- Review pass 2 status: approved (`reviews/phase-30-part-25-time-review-2.md`) with no blockers; production-grade re-review confirmed no unresolved correctness/safety risks in approved subset.
 
 ## Module Part Template (repeat per module)
 
@@ -896,6 +897,7 @@ Validation evidence:
 - Part 24 review pass 1 tracking: merged https://github.com/yaseralnajjar/sifr/pull/1025
 - Part 24 review pass 2 tracking: merged https://github.com/yaseralnajjar/sifr/pull/1026
 - Part 25 implementation: merged https://github.com/yaseralnajjar/sifr/pull/1027
+- Part 25 review pass 1 tracking: merged https://github.com/yaseralnajjar/sifr/pull/1028
 
 ## External Review Passes
 - Reviewer pass 1 request output: `reviews/phase-30-part-1-env-review.md`
@@ -998,6 +1000,8 @@ Validation evidence:
 - Reviewer pass 2 remediation status (`logging`): done (2026-03-09, approved for production use; no additional module-scope remediation required)
 - Reviewer pass 1 request output (`time`): `reviews/phase-30-part-25-time-review.md`
 - Reviewer pass 1 remediation status (`time`): done (2026-03-09, approved with no blockers; no additional module-scope remediation required for approved subset)
+- Reviewer pass 2 request output (`time`): `reviews/phase-30-part-25-time-review-2.md`
+- Reviewer pass 2 remediation status (`time`): done (2026-03-09, approved for production use; no additional module-scope remediation required)
 
 ## Wave Closure Review Cycles
 
