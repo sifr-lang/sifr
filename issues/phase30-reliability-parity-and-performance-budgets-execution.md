@@ -663,6 +663,32 @@ Validation evidence:
 - Review pass 2 status: blocker report (`reviews/phase-30-part-21-glob-review-2.md`) confirmed `pathlib` glob parity gaps; remediation was applied before closeout.
 - Review pass 3 status: approved after remediation (`reviews/phase-30-part-21-glob-review-3.md`) with no remaining blockers for approved `glob` scope.
 
+## Part 22: `tempfile`
+status: in_review (2026-03-09, implementation PR #1016 merged)
+
+- [x] Define module parity scope and CPython references
+- [x] Port/expand CPython-derived parity fixtures (canonical vector format)
+- [x] Fix root-cause implementation gaps
+- [x] Record parity classification (`parity` / `intentional-diff` / `unsupported`)
+- [x] Run module demo
+- [x] Run targeted module tests
+- [x] Run full local suite
+- [x] Open PR, review, and merge
+- [x] External reviewer pass 1 remediation completed (if findings)
+- [ ] External reviewer pass 2 remediation completed (if findings)
+- [ ] Mark part progress in this checklist
+
+Validation evidence:
+- Positive path: `cargo run -q -p sifr -- run demos/m30_1e_tempfile_parity_demo/main.sifr` -> prints `m30_1e tempfile parity demo: pass`.
+- Positive path: `cargo run -q -p sifr -- run crates/sifr/tests/e2e/pass/cpython_tempfile_subset.sifr` -> pass.
+- Positive path: `cargo run -q -p sifr -- run crates/sifr/tests/e2e/pass/stdlib_tempfile.sifr` -> pass.
+- Positive path: `/Users/yaseralnajjar/work/sifr/codebase/scripts/run_all_tests.sh` -> pass (`verification ok: variants=64, failures=0, blocking_failures=0, non_blocking_failures=0`).
+- Negative path: canonical bool vectors in `cpython_tempfile_subset.sifr` and `demos/m30_1e_tempfile_parity_demo/main.sifr` validate panic-free `IOError` propagation for `mkstemp` on missing-parent paths (`<temp-root>/__sifr_*_missing_parent__/...`) without retrying non-collision I/O failures.
+- Root-cause fix: `sifr.tempfile` now uses `_sifr.fs.gettempdir()` for temp-root placement, performs bounded collision retries for `mkstemp`/`mkdtemp`, and retries only on actual collision races (`exists(path)` after failure) while re-raising non-collision `IOError` immediately.
+- Parity governance update: tempfile API-shape divergence (prefix-only args, path-string return surface, no fd tuple, no `suffix`/`dir` options in approved scope) is now explicitly documented as `intentional-diff` in the phase parity matrix.
+- PR: merged https://github.com/yaseralnajjar/sifr/pull/1016
+- Review pass 1 status: reviewer output in `reviews/phase-30-part-22-tempfile-review.md`; validated out-of-scope claims (`suffix`/`dir`/descriptor parity and full object API surface), and applied actionable remediation (negative-path evidence + explicit API-shape intentional-diff documentation).
+
 ## Module Part Template (repeat per module)
 
 ### Part N: <module>
@@ -768,6 +794,8 @@ Validation evidence:
 - Part 21 implementation: merged https://github.com/yaseralnajjar/sifr/pull/1012
 - Part 21 review pass 1 tracking: merged https://github.com/yaseralnajjar/sifr/pull/1013
 - Part 21 review pass 2 remediation + pass 3 approval: merged https://github.com/yaseralnajjar/sifr/pull/1014
+- Part 21 closeout log sync: merged https://github.com/yaseralnajjar/sifr/pull/1015
+- Part 22 implementation: merged https://github.com/yaseralnajjar/sifr/pull/1016
 
 ## External Review Passes
 - Reviewer pass 1 request output: `reviews/phase-30-part-1-env-review.md`
@@ -856,6 +884,8 @@ Validation evidence:
 - Reviewer pass 1 remediation status (`os`): done (2026-03-09, approved with no blockers; no additional module-scope remediation required)
 - Reviewer pass 2 request output (`os`): `reviews/phase-30-part-19-os-review-r2.md`
 - Reviewer pass 2 remediation status (`os`): done (2026-03-09, approved for production use; no additional module-scope remediation required)
+- Reviewer pass 1 request output (`tempfile`): `reviews/phase-30-part-22-tempfile-review.md`
+- Reviewer pass 1 remediation status (`tempfile`): done (2026-03-09, actionable note validated and remediated via negative-path coverage + parity-matrix API-shape intentional-diff documentation)
 
 ## Wave Closure Review Cycles
 
