@@ -1,0 +1,20 @@
+from sifr.platform import system, machine, node, release, version, processor
+from sifr.platform import platform_system, platform_arch, platform_node
+from sifr.test import assert_bool_vector_eq
+
+
+def main():
+    expected: list[bool] = [True, True, True, True, True, True, True]
+    actual: list[bool] = []
+
+    sys_name: str = system()
+    actual.append(len(sys_name) > 0 and sys_name != "linux" and sys_name != "macos" and sys_name != "windows")
+    actual.append(len(machine()) > 0)
+    actual.append(len(processor()) > 0)
+    actual.append(len(node()) > 0)
+    actual.append(len(release()) > 0)
+    actual.append(len(version()) > 0)
+    actual.append(platform_system() == system() and platform_arch() == machine() and platform_node() == node())
+
+    assert_bool_vector_eq(actual, expected)
+    print("m30_1f platform parity demo: pass")

@@ -1,6 +1,6 @@
 # Phase 30 Execution Checklist (Reliability Parity and Performance Budgets)
 
-Status: in_progress (started 2026-03-08)
+Status: done (started 2026-03-08, completed 2026-03-09)
 Owner: phase_30 execution loop
 Reference phase docs:
 - `.cursor/plans/main/phases/30_reliability_parity_and_performance_budgets.md`
@@ -58,19 +58,39 @@ Loop per part: Work -> Validate -> PR -> Review -> Merge -> External review pass
 ### wave_30_1f: Runtime and Platform Wrappers
 24. [x] `logging`
 25. [x] `time`
-26. [ ] `timeit`
-27. [ ] `platform`
-28. [ ] `uuid`
+26. [x] `timeit`
+27. [x] `platform`
+28. [x] `uuid`
 
 ## milestone_30_2: Complexity and Resource Parity
-- [ ] Define canonical API-level complexity/resource check patterns for stabilized modules
-- [ ] Add asymptotic checks per module API class and track constant-factor deltas
-- [ ] Document waivers for accepted constant-factor regressions with owner and revisit rule
+- [x] Define canonical API-level complexity/resource check patterns for stabilized modules
+- [x] Add asymptotic checks per module API class and track constant-factor deltas
+- [x] Document waivers for accepted constant-factor regressions with owner and revisit rule
 
 ## milestone_30_3: Parity Governance and Waiver Discipline
-- [ ] Define and enforce canonical parity matrix format
-- [ ] Require owner/rationale/linked issue/revisit rule for each unresolved gap
-- [ ] Enforce no module closes with undocumented mismatch status
+- [x] Define and enforce canonical parity matrix format
+- [x] Require owner/rationale/linked issue/revisit rule for each unresolved gap
+- [x] Enforce no module closes with undocumented mismatch status
+
+### Milestone 30_2 Evidence (Complexity and Resource Parity)
+- Canonical patterns + module API-class matrix:
+  - `verification/stdlib/phase30_complexity_resource_matrix.md`
+- Machine-readable inventory (all 28 modules, asymptotic expectations/observations, constant-factor bands, waiver metadata):
+  - `verification/stdlib/phase30_complexity_resource_inventory.json`
+- Structural validator:
+  - `scripts/check_phase30_complexity_resource_inventory.py`
+- Validation commands:
+  - `python3 scripts/check_phase30_complexity_resource_inventory.py` -> `phase30 complexity inventory: PASS (modules=28, waived_constant_factor=11)`
+  - `/Users/yaseralnajjar/work/sifr/codebase/scripts/run_all_tests.sh` -> pass (`verification ok: variants=64, failures=0, blocking_failures=0, non_blocking_failures=0`)
+
+### Milestone 30_3 Evidence (Parity Governance and Waiver Discipline)
+- Canonical parity format and documented mismatch governance:
+  - `verification/stdlib/phase30_parity_matrix.md`
+- Waiver discipline (owner/rationale/tracking/revisit) across complexity and parity inventories:
+  - `verification/stdlib/phase30_complexity_resource_inventory.json`
+  - `verification/stdlib/phase30_parity_matrix.md`
+- Module closeout enforcement:
+  - every module section in this issue includes parity classification and reviewer-pass status before closure marking
 
 ## Part 1: `env`
 status: done (2026-03-08, PR #929)
@@ -779,6 +799,91 @@ Validation evidence:
 - Review pass 1 status: approved (`reviews/phase-30-part-25-time-review.md`) with no blockers; reviewer observations about wall-clock `perf_counter`/`monotonic` behavior and empty-string fallback for out-of-range epochs were validated as documented intentional-diff boundaries for approved subset scope.
 - Review pass 2 status: approved (`reviews/phase-30-part-25-time-review-2.md`) with no blockers; production-grade re-review confirmed no unresolved correctness/safety risks in approved subset.
 
+## Part 26: `timeit`
+status: done (2026-03-09, PR #1030)
+
+- [x] Define module parity scope and CPython references
+- [x] Port/expand CPython-derived parity fixtures (canonical vector format)
+- [x] Fix root-cause implementation gaps
+- [x] Record parity classification (`parity` / `intentional-diff` / `unsupported`)
+- [x] Run module demo
+- [x] Run targeted module tests
+- [x] Run full local suite
+- [x] Open PR, review, and merge
+- [x] External reviewer pass 1 remediation completed (if findings)
+- [x] External reviewer pass 2 remediation completed (if findings)
+- [x] Mark part progress in this checklist
+
+Validation evidence:
+- Positive path: `cargo run -q -p sifr -- run demos/m30_1f_timeit_parity_demo/main.sifr` -> prints `m30_1f timeit parity demo: pass`.
+- Positive path: `cargo run -q -p sifr -- run crates/sifr/tests/e2e/pass/cpython_timeit_subset.sifr` -> pass.
+- Positive path: `cargo run -q -p sifr -- run crates/sifr/tests/e2e/pass/stdlib_timeit.sifr` -> pass.
+- Positive path: `/Users/yaseralnajjar/work/sifr/codebase/scripts/run_all_tests.sh` -> pass (`verification ok: variants=64, failures=0, blocking_failures=0, non_blocking_failures=0`).
+- Negative path: canonical bool vectors in `cpython_timeit_subset.sifr` and `demos/m30_1f_timeit_parity_demo/main.sifr` validate panic-free handling for zero/negative loop-count inputs and non-negative elapsed outputs.
+- Root-cause fix: elapsed-time calculation in `timeit`/`repeat` now clamps to non-negative values to prevent backward wall-clock drift from producing negative durations in approved subset behavior.
+- Parity governance update: `verification/stdlib/phase30_parity_matrix.md` now includes explicit `timeit` parity and intentional-diff rows for approved subset boundaries.
+- PR: merged https://github.com/yaseralnajjar/sifr/pull/1030
+- Review pass 1 status: approved (`reviews/phase-30-part-26-timeit-review.md`) with no blockers; reviewer observations about wall-clock timer mapping were validated as documented intentional-diff boundaries for approved subset scope.
+- Review pass 2 status: approved (`reviews/phase-30-part-26-timeit-review-2.md`) with no blockers; production-grade re-review confirmed no unresolved correctness/safety risks in approved subset.
+
+## Part 27: `platform`
+status: done (2026-03-09, PR #1033)
+
+- [x] Define module parity scope and CPython references
+- [x] Port/expand CPython-derived parity fixtures (canonical vector format)
+- [x] Fix root-cause implementation gaps
+- [x] Record parity classification (`parity` / `intentional-diff` / `unsupported`)
+- [x] Run module demo
+- [x] Run targeted module tests
+- [x] Run full local suite
+- [x] Open PR, review, and merge
+- [x] External reviewer pass 1 remediation completed (if findings)
+- [x] External reviewer pass 2 remediation completed (if findings)
+- [x] Mark part progress in this checklist
+
+Validation evidence:
+- Positive path: `cargo run -q -p sifr -- run demos/m30_1f_platform_parity_demo/main.sifr` -> prints `m30_1f platform parity demo: pass`.
+- Positive path: `cargo run -q -p sifr -- run crates/sifr/tests/e2e/pass/cpython_platform_subset.sifr` -> pass.
+- Positive path: `cargo run -q -p sifr -- run crates/sifr/tests/e2e/pass/stdlib_platform.sifr` -> pass.
+- Positive path: `cargo run -q -p sifr -- run crates/sifr/tests/e2e/pass/stdlib_platform_intrinsics.sifr` -> pass.
+- Positive path: `cargo test -q -p sifr_codegen lowers_platform_intrinsics_via_registry` -> pass.
+- Positive path: `/Users/yaseralnajjar/work/sifr/codebase/scripts/run_all_tests.sh` -> pass (`verification ok: variants=64, failures=0, blocking_failures=0, non_blocking_failures=0`).
+- Negative path: canonical bool vectors in `cpython_platform_subset.sifr` and `demos/m30_1f_platform_parity_demo/main.sifr` validate panic-free non-empty fallback behavior for host metadata wrappers and reject lowercase raw-const OS naming for `system()`.
+- Root-cause fix: `platform_system` intrinsic now maps host OS to CPython-style names (`Windows`/`Darwin`/`Linux`) instead of returning raw lowercase `std::env::consts::OS` values.
+- Root-cause fix: `platform_node`, `platform_release`, and `platform_version` no longer rely solely on shell command availability; deterministic non-empty fallbacks prevent empty-string metadata on hosts without `hostname`/`uname`.
+- Parity governance update: `verification/stdlib/phase30_parity_matrix.md` now includes explicit `platform` parity and intentional-diff rows for approved subset boundaries.
+- PR: merged https://github.com/yaseralnajjar/sifr/pull/1033
+- Review pass 1 status: approved (`reviews/phase-30-part-27-platform-review.md`) with no blockers; reviewer observations about `processor()` and command availability were validated as documented intentional-diff boundaries with deterministic fallback behavior.
+- Review pass 2 status: approved (`reviews/phase-30-part-27-platform-review-2.md`) with no blockers; production-grade re-review confirmed no unresolved correctness/safety risks in approved subset.
+
+## Part 28: `uuid`
+status: done (2026-03-09)
+
+- [x] Define module parity scope and CPython references
+- [x] Port/expand CPython-derived parity fixtures (canonical vector format)
+- [x] Fix root-cause implementation gaps
+- [x] Record parity classification (`parity` / `intentional-diff` / `unsupported`)
+- [x] Run module demo
+- [x] Run targeted module tests
+- [x] Run full local suite
+- [x] Open PR, review, and merge
+- [x] External reviewer pass 1 remediation completed (if findings)
+- [x] External reviewer pass 2 remediation completed (if findings)
+- [x] Mark part progress in this checklist
+
+Validation evidence:
+- Positive path: `cargo run -q -p sifr -- run demos/m30_1f_uuid_parity_demo/main.sifr` -> prints `m30_1f uuid parity demo: pass`.
+- Positive path: `cargo run -q -p sifr -- run crates/sifr/tests/e2e/pass/cpython_uuid_subset.sifr` -> pass.
+- Positive path: `cargo run -q -p sifr -- run crates/sifr/tests/e2e/pass/stdlib_uuid.sifr` -> pass.
+- Positive path: `cargo run -q -p sifr -- run crates/sifr/tests/e2e/pass/stdlib_uuid_class.sifr` -> pass.
+- Positive path: `/Users/yaseralnajjar/work/sifr/codebase/scripts/run_all_tests.sh` -> pass (`verification ok: variants=64, failures=0, blocking_failures=0, non_blocking_failures=0`).
+- Negative path: canonical bool vectors in `cpython_uuid_subset.sifr` and `demos/m30_1f_uuid_parity_demo/main.sifr` validate panic-free typed rejection for invalid UUID text (length, chars, and hyphen placement) in `uuid_from_hex(...)` parse paths.
+- Root-cause fix: UUID parsing now canonicalizes input to lowercase hyphenated form with strict length/character/hyphen validation, preventing malformed strings from silently constructing UUID objects.
+- Root-cause fix: `UUID.version()` now derives the actual version nibble from canonical UUID text instead of returning a hardcoded `4`.
+- Parity governance update: `verification/stdlib/phase30_parity_matrix.md` now includes explicit `uuid` parity and intentional-diff rows for approved subset boundaries.
+- Review pass 1 status: `reviews/phase-30-part-28-uuid-review.md` identified non-blocking hardening gaps; remediation added explicit passthrough-constructor invalid-version coverage while preserving ownership-safe helper and typed-Result propagation patterns required by Sifr stdlib lowering.
+- Review pass 2 status: `reviews/phase-30-part-28-uuid-review-2a.md` approved production-grade readiness for approved scope; remaining low-severity style notes were validated as non-blocking and constrained by ownership/typed-Result semantics in current Sifr lowering contracts.
+
 ## Module Part Template (repeat per module)
 
 ### Part N: <module>
@@ -898,6 +1003,23 @@ Validation evidence:
 - Part 24 review pass 2 tracking: merged https://github.com/yaseralnajjar/sifr/pull/1026
 - Part 25 implementation: merged https://github.com/yaseralnajjar/sifr/pull/1027
 - Part 25 review pass 1 tracking: merged https://github.com/yaseralnajjar/sifr/pull/1028
+- Part 25 review pass 2 tracking: merged https://github.com/yaseralnajjar/sifr/pull/1029
+- Part 26 implementation: merged https://github.com/yaseralnajjar/sifr/pull/1030
+- Part 26 review pass 1 tracking: merged https://github.com/yaseralnajjar/sifr/pull/1031
+- Part 26 review pass 2 tracking: merged https://github.com/yaseralnajjar/sifr/pull/1032
+- Part 27 implementation: merged https://github.com/yaseralnajjar/sifr/pull/1033
+- Part 27 review pass 1 tracking: merged https://github.com/yaseralnajjar/sifr/pull/1034
+- Part 27 review pass 2 tracking: merged https://github.com/yaseralnajjar/sifr/pull/1035
+- Part 28 implementation: merged https://github.com/yaseralnajjar/sifr/pull/1036
+- Part 28 review pass 1 tracking: merged https://github.com/yaseralnajjar/sifr/pull/1037
+- Part 28 review pass 2 tracking: merged https://github.com/yaseralnajjar/sifr/pull/1038
+- Wave completion closure cycle (wave_30_1f): merged https://github.com/yaseralnajjar/sifr/pull/1039
+- Wave production-grade closure cycle (wave_30_1f): merged https://github.com/yaseralnajjar/sifr/pull/1040
+- Milestone completion review cycle (updated): merged https://github.com/yaseralnajjar/sifr/pull/1041
+- Milestone 30_2/30_3 remediation: merged https://github.com/yaseralnajjar/sifr/pull/1042
+- Milestone completion closure cycle (approved rerun): merged https://github.com/yaseralnajjar/sifr/pull/1043
+- Milestone production-grade closure cycle (approved rerun): merged https://github.com/yaseralnajjar/sifr/pull/1044
+- Phase completion closure cycle (approved rerun): merged https://github.com/yaseralnajjar/sifr/pull/1045
 
 ## External Review Passes
 - Reviewer pass 1 request output: `reviews/phase-30-part-1-env-review.md`
@@ -965,6 +1087,10 @@ Validation evidence:
 - Reviewer pass 2 remediation status (`glob`): done (2026-03-09, blocker report received and remediated in follow-up changes)
 - Reviewer pass 3 request output (`glob`): `reviews/phase-30-part-21-glob-review-3.md`
 - Reviewer pass 3 remediation status (`glob`): done (2026-03-09, approved for production use after remediation; no remaining blockers for approved scope)
+- Reviewer pass 1 request output (`uuid`): `reviews/phase-30-part-28-uuid-review.md`
+- Reviewer pass 1 remediation status (`uuid`): done (2026-03-09, added constructor invalid-version coverage and validated ownership/Result constraints on existing helper and rethrow patterns)
+- Reviewer pass 2 request output (`uuid`): `reviews/phase-30-part-28-uuid-review-2a.md`
+- Reviewer pass 2 remediation status (`uuid`): done (2026-03-09, production-grade review approved; remaining style observations validated as non-blocking under current ownership/Result constraints)
 - Reviewer pass 2 remediation status (`itertools`): done (2026-03-08, approved for production use; no module-scope remediation required)
 - Reviewer pass 1 request output (`json`): `reviews/phase-30-part-15-json-review.md`
 - Reviewer pass 1 remediation status (`json`): done (2026-03-08, approved with observations; `unwrap_or_default` concern validated as panic-free and non-blocking for approved primitive subset)
@@ -1002,6 +1128,14 @@ Validation evidence:
 - Reviewer pass 1 remediation status (`time`): done (2026-03-09, approved with no blockers; no additional module-scope remediation required for approved subset)
 - Reviewer pass 2 request output (`time`): `reviews/phase-30-part-25-time-review-2.md`
 - Reviewer pass 2 remediation status (`time`): done (2026-03-09, approved for production use; no additional module-scope remediation required)
+- Reviewer pass 1 request output (`timeit`): `reviews/phase-30-part-26-timeit-review.md`
+- Reviewer pass 1 remediation status (`timeit`): done (2026-03-09, approved with no blockers; no additional module-scope remediation required for approved subset)
+- Reviewer pass 2 request output (`timeit`): `reviews/phase-30-part-26-timeit-review-2.md`
+- Reviewer pass 2 remediation status (`timeit`): done (2026-03-09, approved for production use; no additional module-scope remediation required)
+- Reviewer pass 1 request output (`platform`): `reviews/phase-30-part-27-platform-review.md`
+- Reviewer pass 1 remediation status (`platform`): done (2026-03-09, approved with no blockers; no additional module-scope remediation required for approved subset)
+- Reviewer pass 2 request output (`platform`): `reviews/phase-30-part-27-platform-review-2.md`
+- Reviewer pass 2 remediation status (`platform`): done (2026-03-09, approved for production use; no additional module-scope remediation required)
 
 ## Wave Closure Review Cycles
 
@@ -1061,34 +1195,50 @@ status: reviewed (2026-03-09), wave_30_1e production-grade approved
 - Reviewer verdict: `wave_30_1e` is production-grade (`io`, `csv`, `os`, `pathlib`, `glob`, `tempfile`, `shutil` all approved with no unresolved blockers in approved scope).
 - Action taken: marked `wave_30_1e` production-grade complete; proceed to `wave_30_1f` execution while milestone/phase closure remains pending.
 
+### Wave completion check
+status: reviewed (2026-03-09), wave_30_1f closure approved
+
+- Reviewer output: `reviews/phase-30-wave-30-1f-completion-review.md`
+- Reviewer verdict: `wave_30_1f` completion criteria are met (`logging`, `time`, `timeit`, `platform`, `uuid` all complete with implementation + two reviewer-pass cycles and merged PR chains).
+- Validation note: reviewer output referenced `#1038` as uuid implementation PR; validated merged chain is `#1036` (implementation), `#1037` (review pass 1), `#1038` (review pass 2 closeout).
+- Action taken: marked `wave_30_1f` completion approved; proceed to wave production-grade check for `wave_30_1f`.
+
+### Wave production-grade check
+status: reviewed (2026-03-09), wave_30_1f production-grade approved
+
+- Reviewer output: `reviews/phase-30-wave-30-1f-production-grade-review.md`
+- Reviewer verdict: `wave_30_1f` is production-grade for approved scope (`logging`, `time`, `timeit`, `platform`, `uuid`).
+- Validation note: reviewer output reported uuid pass-2 as pending; validated tracker and merged PR chain confirm uuid pass-2 closeout already completed in `#1038`.
+- Action taken: marked `wave_30_1f` production-grade complete; proceed to milestone closure review cycles.
+
 ## Milestone Closure Review Cycles
 
 ### Milestone completion check
-status: reviewed (2026-03-08), closure deferred
+status: reviewed (2026-03-09), closure approved
 
-- Reviewer output: `reviews/phase-30-milestone-completion-review.md`
-- Reviewer verdict: `milestone_30_1` not complete (`1/28` modules), `milestone_30_2` not started, `milestone_30_3` partially complete.
-- Action taken: milestone closure not claimed; continue sequential module execution and milestone_30_2/30_3 completion work.
+- Reviewer output: `reviews/phase-30-milestone-completion-review-3.md`
+- Reviewer verdict: `milestone_30_1`, `milestone_30_2`, and `milestone_30_3` all satisfy definition-of-done gates.
+- Action taken: milestone completion closure approved; proceed to refreshed milestone production-grade review cycle.
 
 ### Milestone production-grade check
-status: reviewed (2026-03-08), closure deferred
+status: reviewed (2026-03-09), closure approved
 
-- Reviewer output: `reviews/phase-30-milestone-production-grade-review.md`
-- Reviewer verdict: production-grade quality is confirmed for completed `env`, but milestone closure is not approved until all milestone DoD requirements are met.
-- Action taken: no `env` remediation required; milestone closure remains blocked on remaining modules and milestone_30_2/30_3 completion scope.
+- Reviewer output: `reviews/phase-30-milestone-production-grade-review-2.md`
+- Reviewer verdict: milestone_30_1, milestone_30_2, and milestone_30_3 are production-grade for approved phase scope.
+- Action taken: milestone production-grade closure approved; proceed to refreshed phase completion/production-grade closure cycles.
 
 ## Phase Closure Review Cycles
 
 ### Phase completion check
-status: reviewed (2026-03-08), closure deferred
+status: reviewed (2026-03-09), closure approved
 
-- Reviewer output: `reviews/phase-30-phase-completion-review.md`
-- Reviewer verdict: phase exit gate not met (`1/28` module parity coverage, milestone_30_2 not started, milestone_30_3 partial).
-- Action taken: phase closure not claimed; continue phase execution until exit-gate criteria are satisfied.
+- Reviewer output: `reviews/phase-30-phase-completion-review-2.md`
+- Reviewer verdict: all phase exit-gate completion criteria are satisfied (reviewed stdlib parity evidence, complexity/resource evidence, waiver-governed classification, and safety-aligned implementation coverage).
+- Action taken: phase completion closure approved; proceed to refreshed phase production-grade review cycle.
 
 ### Phase production-grade check
-status: reviewed (2026-03-08), closure deferred
+status: reviewed (2026-03-09), closure approved
 
-- Reviewer output: `reviews/phase-30-phase-production-grade-review.md`
-- Reviewer verdict: phase is not production-grade for closure until all exit-gate criteria are met.
-- Action taken: keep phase status `in_progress`; no roadmap phase-complete transition applied.
+- Reviewer output: `reviews/phase-30-phase-production-grade-review-2.md`
+- Reviewer verdict: phase_30 is production-grade for approved scope with all milestone gates satisfied and no remaining blockers.
+- Action taken: phase production-grade closure approved; phase status transitioned to `done`.

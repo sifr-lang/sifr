@@ -5,13 +5,20 @@ from _sifr.time import perf_counter
 def default_timer() -> float:
     return perf_counter()
 
+def _elapsed_non_negative(start: float, end: float) -> float:
+    elapsed: float = end - start
+    if elapsed < 0.0:
+        return 0.0
+    return elapsed
+
 def timeit(stmt: Callable[[], None], number: int) -> float:
     start: float = perf_counter()
     i: int = 0
     while i < number:
         stmt()
         i = i + 1
-    return perf_counter() - start
+    end: float = perf_counter()
+    return _elapsed_non_negative(start, end)
 
 def repeat(stmt: Callable[[], None], count: int, number: int) -> list[float]:
     results: list[float] = []
@@ -22,7 +29,8 @@ def repeat(stmt: Callable[[], None], count: int, number: int) -> list[float]:
         while i < number:
             stmt()
             i = i + 1
-        elapsed: float = perf_counter() - start
+        end: float = perf_counter()
+        elapsed: float = _elapsed_non_negative(start, end)
         results.append(elapsed)
         r = r + 1
     return results

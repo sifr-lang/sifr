@@ -1,0 +1,91 @@
+# Adapted CPython uuid subset for sifr.uuid (canonical bool-vector format)
+from sifr.uuid import uuid4, uuid4_obj, uuid_from_hex, UUID
+from sifr.test import assert_bool_vector_eq
+
+
+def is_canonical_shape(value: str) -> bool:
+    if len(value) != 36:
+        return False
+    h1: str | None = value[8]
+    h2: str | None = value[13]
+    h3: str | None = value[18]
+    h4: str | None = value[23]
+    return h1 == "-" and h2 == "-" and h3 == "-" and h4 == "-"
+
+
+def main():
+    expected: list[bool] = [True, True, True, True, True, True, True, True, True, True, True, True]
+    actual: list[bool] = []
+
+    id_text: str = uuid4()
+    actual.append(is_canonical_shape(id_text))
+
+    ver_char: str | None = id_text[14]
+    actual.append(ver_char == "4")
+
+    variant_char: str | None = id_text[19]
+    variant_ok: bool = variant_char == "8" or variant_char == "9" or variant_char == "a" or variant_char == "b"
+    actual.append(variant_ok)
+
+    id_obj: UUID = uuid4_obj()
+    actual.append(is_canonical_shape(id_obj.to_str()) and id_obj.version() == 4 and len(id_obj.urn()) > 9)
+
+    parsed_plain_ok: bool = False
+    try:
+        parsed_from_plain: UUID = uuid_from_hex("550e8400e29b41d4a716446655440000")
+        parsed_plain_ok = parsed_from_plain.to_str() == "550e8400-e29b-41d4-a716-446655440000"
+    except ValueError as e:
+        _ = str(e.message)
+        parsed_plain_ok = False
+    actual.append(parsed_plain_ok)
+
+    parsed_upper_ok: bool = False
+    try:
+        parsed_from_upper: UUID = uuid_from_hex("550E8400-E29B-41D4-A716-446655440000")
+        parsed_upper_ok = parsed_from_upper.to_str() == "550e8400-e29b-41d4-a716-446655440000"
+    except ValueError as e:
+        _ = str(e.message)
+        parsed_upper_ok = False
+    actual.append(parsed_upper_ok)
+
+    invalid_char_rejected: bool = False
+    try:
+        _bad_char: UUID = uuid_from_hex("550e8400e29b41d4a71644665544000g")
+    except ValueError as e:
+        _ = str(e.message)
+        invalid_char_rejected = True
+    actual.append(invalid_char_rejected)
+
+    invalid_len_rejected: bool = False
+    try:
+        _bad_len: UUID = uuid_from_hex("1234")
+    except ValueError as e:
+        _ = str(e.message)
+        invalid_len_rejected = True
+    actual.append(invalid_len_rejected)
+
+    invalid_hyphen_rejected: bool = False
+    try:
+        _bad_hyphen: UUID = uuid_from_hex("550e8400-e29b4-1d4-a716-446655440000")
+    except ValueError as e:
+        _ = str(e.message)
+        invalid_hyphen_rejected = True
+    actual.append(invalid_hyphen_rejected)
+
+    parsed_v1_ok: bool = False
+    try:
+        parsed_v1: UUID = uuid_from_hex("550e8400-e29b-11d4-a716-446655440000")
+        parsed_v1_ok = parsed_v1.version() == 1
+    except ValueError as e:
+        _ = str(e.message)
+        parsed_v1_ok = False
+    actual.append(parsed_v1_ok)
+
+    ctor_passthrough: UUID = UUID("550e8400-e29b-41d4-a716-44665544000g")
+    actual.append(ctor_passthrough.to_str() == "550e8400-e29b-41d4-a716-44665544000g")
+
+    ctor_invalid_version: UUID = UUID("zzzzzzzz-zzzz-zzzz-zzzz-zzzzzzzzzzzz")
+    actual.append(ctor_invalid_version.version() == -1)
+
+    assert_bool_vector_eq(actual, expected)
+    assert str("cpython_uuid_subset: pass") == "cpython_uuid_subset: pass"

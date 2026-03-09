@@ -50,7 +50,7 @@ This roadmap is the authoritative execution plan for the current hardening and e
 | 27 | Runtime Safety and Diagnostics Contract | completed | [27_runtime_safe_codegen_semantics.md](./phases/27_runtime_safe_codegen_semantics.md), [27_diagnostics_error_recovery_and_stability_contract.md](./phases/27_diagnostics_error_recovery_and_stability_contract.md) | Panic-safe generation and stable diagnostic/recovery guarantees |
 | 28 | Decimal Semantics | completed | [28_decimal_type_and_exact_numeric_semantics.md](./phases/28_decimal_type_and_exact_numeric_semantics.md) | First-class exact decimal semantics |
 | 29 | Verification Hardening | completed | [29_verification_hardening.md](./phases/29_verification_hardening.md) | Regression/fuzz/property/e2e hardening |
-| 30 | Stdlib Parity (Behavior + Complexity) | in_progress | [30_reliability_parity_and_performance_budgets.md](./phases/30_reliability_parity_and_performance_budgets.md) | CPython parity governance for stdlib behavior and complexity |
+| 30 | Stdlib Parity (Behavior + Complexity) | completed | [30_reliability_parity_and_performance_budgets.md](./phases/30_reliability_parity_and_performance_budgets.md) | CPython parity governance for stdlib behavior and complexity |
 | 31 | Algorithmic Compatibility (LeetCode) | draft | [31_algorithmic_compatibility_and_leetcode_coverage.md](./phases/31_algorithmic_compatibility_and_leetcode_coverage.md) | Corpus-driven compatibility signal and remediation backlog |
 
 ## Expansion and Distribution Track (Phase 32-41)

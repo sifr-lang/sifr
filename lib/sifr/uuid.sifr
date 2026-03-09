@@ -1,6 +1,21 @@
 # sifr.uuid — UUID generation and manipulation
 from _sifr.uuid import uuid4
 
+def _to_lower_hex_char(ch: str) -> str:
+    if ch == "A":
+        return "a"
+    if ch == "B":
+        return "b"
+    if ch == "C":
+        return "c"
+    if ch == "D":
+        return "d"
+    if ch == "E":
+        return "e"
+    if ch == "F":
+        return "f"
+    return ch + ""
+
 def _is_hex_char(ch: str) -> bool:
     if ch == "0":
         return True
@@ -48,27 +63,86 @@ def _is_hex_char(ch: str) -> bool:
         return True
     return False
 
-def _count_hex_chars(hex_str: str) -> int:
-    count: int = 0
+def _hex_digit_value(ch: str) -> int:
+    if ch == "0":
+        return 0
+    if ch == "1":
+        return 1
+    if ch == "2":
+        return 2
+    if ch == "3":
+        return 3
+    if ch == "4":
+        return 4
+    if ch == "5":
+        return 5
+    if ch == "6":
+        return 6
+    if ch == "7":
+        return 7
+    if ch == "8":
+        return 8
+    if ch == "9":
+        return 9
+    if ch == "a" or ch == "A":
+        return 10
+    if ch == "b" or ch == "B":
+        return 11
+    if ch == "c" or ch == "C":
+        return 12
+    if ch == "d" or ch == "D":
+        return 13
+    if ch == "e" or ch == "E":
+        return 14
+    if ch == "f" or ch == "F":
+        return 15
+    return -1
+
+def _canonical_uuid_text(input_text: str) -> Result[str, ValueError]:
+    input_len: int = len(input_text)
+    hex_only: str = ""
     i: int = 0
-    valid: bool = True
-    while i < len(hex_str):
-        ch: str | None = hex_str[i]
-        if ch is not None:
-            if ch != "-":
+    while i < input_len:
+        ch_opt: str | None = input_text[i]
+        if ch_opt is not None:
+            ch: str = ch_opt
+            if ch == "-":
+                pass
+            else:
                 if not _is_hex_char(ch):
-                    valid = False
-                count = count + 1
+                    raise ValueError("invalid UUID hex string")
+                hex_only = hex_only + _to_lower_hex_char(ch)
         i = i + 1
-    if not valid:
-        return -1
-    return count
+
+    if len(hex_only) != 32:
+        raise ValueError("UUID hex string must be 32 hex characters")
+
+    if input_len == 36:
+        h1: str | None = input_text[8]
+        h2: str | None = input_text[13]
+        h3: str | None = input_text[18]
+        h4: str | None = input_text[23]
+        if h1 != "-" or h2 != "-" or h3 != "-" or h4 != "-":
+            raise ValueError("invalid UUID hex string")
+    elif input_len != 32:
+        raise ValueError("invalid UUID hex string")
+
+    canonical: str = ""
+    j: int = 0
+    while j < len(hex_only):
+        if j == 8 or j == 12 or j == 16 or j == 20:
+            canonical = canonical + "-"
+        part: str | None = hex_only[j]
+        if part is not None:
+            canonical = canonical + part
+        j = j + 1
+    return canonical
 
 class UUID:
     _hex: str
 
     def __init__(self, hex_str: str):
-        self._hex = hex_str
+        self._hex = hex_str + ""
 
     def hex(self) -> str:
         result: str = ""
@@ -88,15 +162,17 @@ class UUID:
         return self._hex + ""
 
     def version(self) -> int:
-        return 4
+        marker: str | None = self._hex[14]
+        if marker is None:
+            return -1
+        return _hex_digit_value(marker)
 
 def uuid4_obj() -> UUID:
     return UUID(uuid4())
 
 def uuid_from_hex(hex_str: str) -> Result[UUID, ValueError]:
-    count: int = _count_hex_chars(hex_str)
-    if count < 0:
-        raise ValueError("invalid UUID hex string")
-    if count != 32:
-        raise ValueError("UUID hex string must be 32 hex characters")
-    return UUID(hex_str)
+    try:
+        canonical: str = _canonical_uuid_text(hex_str)
+        return UUID(canonical)
+    except ValueError as e:
+        raise ValueError(e.message)

@@ -1,0 +1,37 @@
+# Adapted CPython platform subset for sifr.platform (canonical bool-vector format)
+from sifr.platform import system, machine, node, release, version, processor
+from sifr.platform import platform_system, platform_arch, platform_node, platform_release, platform_version, platform_processor
+from sifr.test import assert_bool_vector_eq
+
+
+def main():
+    expected: list[bool] = [True, True, True, True, True, True, True, True]
+    actual: list[bool] = []
+
+    sys_name: str = system()
+    system_shape_ok: bool = len(sys_name) > 0 and sys_name != "linux" and sys_name != "macos" and sys_name != "windows"
+    actual.append(system_shape_ok)
+
+    machine_ok: bool = len(machine()) > 0
+    actual.append(machine_ok)
+
+    processor_ok: bool = len(processor()) > 0
+    actual.append(processor_ok)
+
+    node_ok: bool = len(node()) > 0
+    actual.append(node_ok)
+
+    release_ok: bool = len(release()) > 0
+    actual.append(release_ok)
+
+    version_ok: bool = len(version()) > 0
+    actual.append(version_ok)
+
+    alias_ok: bool = platform_system() == system() and platform_arch() == machine() and platform_processor() == processor()
+    actual.append(alias_ok)
+
+    host_alias_ok: bool = platform_node() == node() and len(platform_release()) > 0 and len(platform_version()) > 0
+    actual.append(host_alias_ok)
+
+    assert_bool_vector_eq(actual, expected)
+    assert str("cpython_platform_subset: pass") == "cpython_platform_subset: pass"

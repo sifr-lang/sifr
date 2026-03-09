@@ -3,6 +3,10 @@
 ## Objective
 Close the reliability track by proving stdlib behavioral parity, API-level complexity and resource parity, and parity-governance discipline before algorithmic compatibility expansion.
 
+## Closure Status
+- Status: completed (2026-03-09)
+- Closure evidence issue: `issues/phase30-reliability-parity-and-performance-budgets-execution.md`
+
 Phase 30 uses CPython as the behavioral reference model, but parity must always be aligned with Sifr's language guarantees:
 - no user-triggerable runtime panics
 - `Result[T, E]` or `Option[T]` where the Sifr architecture requires safe adaptation
@@ -88,6 +92,17 @@ In particular:
   - Phase 30 has one canonical parity-governance format.
   - No unresolved parity gap exists without documented status and ownership.
   - The waiver inventory is complete and reviewable.
+
+### Milestone Evidence Artifacts
+- `milestone_30_1` parity governance matrix:
+  - `verification/stdlib/phase30_parity_matrix.md`
+- `milestone_30_2` complexity/resource matrix and inventory:
+  - `verification/stdlib/phase30_complexity_resource_matrix.md`
+  - `verification/stdlib/phase30_complexity_resource_inventory.json`
+  - `scripts/check_phase30_complexity_resource_inventory.py`
+- `milestone_30_3` waiver and ownership discipline:
+  - `verification/stdlib/phase30_parity_matrix.md`
+  - `verification/stdlib/phase30_complexity_resource_inventory.json`
 
 ## Behavioral Parity Waves
 
