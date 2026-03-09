@@ -1,6 +1,6 @@
 //! Pathlib intrinsic lowerers for registry lowering.
 
-use crate::{RustExpr, RustLiteral, RustParam, RustStmt, RustType};
+use crate::{RustExpr, RustLiteral, RustMatchArm, RustParam, RustStmt, RustType};
 
 fn arg_expr(args: &[RustExpr], idx: usize) -> RustExpr {
     args[idx].clone()
@@ -82,16 +82,35 @@ fn regex_source_expr(pattern_ident: &str) -> RustExpr {
         name: "format".to_string(),
         format_str: "^{}$".to_string(),
         args: vec![RustExpr::MethodCall {
-            receiver: Box::new(RustExpr::FnCall {
-                func: Box::new(RustExpr::Path(vec![
-                    "regex".to_string(),
-                    "escape".to_string(),
-                ])),
-                args: vec![RustExpr::Ident(pattern_ident.to_string())],
+            receiver: Box::new(RustExpr::MethodCall {
+                receiver: Box::new(RustExpr::FnCall {
+                    func: Box::new(RustExpr::Path(vec![
+                        "regex".to_string(),
+                        "escape".to_string(),
+                    ])),
+                    args: vec![RustExpr::Ident(pattern_ident.to_string())],
+                }),
+                method: "replace".to_string(),
+                args: vec![str_ref_lit("\\*"), str_ref_lit(".*")],
             }),
             method: "replace".to_string(),
-            args: vec![str_ref_lit("\\*"), str_ref_lit(".*")],
+            args: vec![str_ref_lit("\\?"), str_ref_lit(".")],
         }],
+    }
+}
+
+fn starts_with_dot_expr(expr: RustExpr) -> RustExpr {
+    RustExpr::MethodCall {
+        receiver: Box::new(expr),
+        method: "starts_with".to_string(),
+        args: vec![str_ref_lit(".")],
+    }
+}
+
+fn empty_string_vec_expr() -> RustExpr {
+    RustExpr::FnCall {
+        func: Box::new(RustExpr::Path(vec!["Vec".to_string(), "new".to_string()])),
+        args: vec![],
     }
 }
 
@@ -273,6 +292,12 @@ pub(super) fn lower_glob_pattern(args: &[RustExpr]) -> Option<RustExpr> {
             },
             RustStmt::Let {
                 mutable: false,
+                name: "__include_hidden".to_string(),
+                ty: None,
+                value: starts_with_dot_expr(RustExpr::Ident("__pat".to_string())),
+            },
+            RustStmt::Let {
+                mutable: false,
                 name: "__regex_src".to_string(),
                 ty: None,
                 value: regex_source_expr("__pat"),
@@ -284,57 +309,79 @@ pub(super) fn lower_glob_pattern(args: &[RustExpr]) -> Option<RustExpr> {
                 value: RustExpr::Try(Box::new(regex_new("__regex_src"))),
             },
             RustStmt::Let {
-                mutable: false,
-                name: "__entries".to_string(),
-                ty: None,
-                value: RustExpr::Try(Box::new(io_map_err(RustExpr::FnCall {
+                mutable: true,
+                name: "__results".to_string(),
+                ty: Some(RustType::Vec(Box::new(RustType::String_))),
+                value: empty_string_vec_expr(),
+            },
+            RustStmt::Match {
+                expr: RustExpr::FnCall {
                     func: Box::new(RustExpr::Path(vec![
                         "std".to_string(),
                         "fs".to_string(),
                         "read_dir".to_string(),
                     ])),
                     args: vec![RustExpr::Ident("__dir".to_string())],
-                }))),
-            },
-            RustStmt::Let {
-                mutable: true,
-                name: "__results".to_string(),
-                ty: Some(RustType::Vec(Box::new(RustType::String_))),
-                value: RustExpr::FnCall {
-                    func: Box::new(RustExpr::Path(vec!["Vec".to_string(), "new".to_string()])),
-                    args: vec![],
                 },
-            },
-            RustStmt::For {
-                var: "__entry".to_string(),
-                iter: RustExpr::Ident("__entries".to_string()),
-                body: vec![
-                    RustStmt::Let {
-                        mutable: false,
-                        name: "__e".to_string(),
-                        ty: None,
-                        value: RustExpr::Try(Box::new(io_map_err(RustExpr::Ident(
-                            "__entry".to_string(),
-                        )))),
+                arms: vec![
+                    RustMatchArm {
+                        pattern: "Ok(__entries)".to_string(),
+                        bindings: vec![],
+                        guard: None,
+                        body: vec![RustStmt::For {
+                            var: "__entry".to_string(),
+                            iter: RustExpr::Ident("__entries".to_string()),
+                            body: vec![RustStmt::IfLet {
+                                pattern: "Ok(__e)".to_string(),
+                                expr: RustExpr::Ident("__entry".to_string()),
+                                then_body: vec![
+                                    RustStmt::Let {
+                                        mutable: false,
+                                        name: "__name".to_string(),
+                                        ty: None,
+                                        value: entry_name_to_string("__e"),
+                                    },
+                                    RustStmt::If {
+                                        cond: RustExpr::BinOp {
+                                            left: Box::new(RustExpr::UnaryOp {
+                                                op: "!".to_string(),
+                                                operand: Box::new(RustExpr::Ident(
+                                                    "__include_hidden".to_string(),
+                                                )),
+                                            }),
+                                            op: "&&".to_string(),
+                                            right: Box::new(starts_with_dot_expr(RustExpr::Ident(
+                                                "__name".to_string(),
+                                            ))),
+                                        },
+                                        then_body: vec![RustStmt::Continue],
+                                        else_body: None,
+                                    },
+                                    RustStmt::If {
+                                        cond: RustExpr::MethodCall {
+                                            receiver: Box::new(RustExpr::Ident("__re".to_string())),
+                                            method: "is_match".to_string(),
+                                            args: vec![ref_ident("__name")],
+                                        },
+                                        then_body: vec![RustStmt::Expr(RustExpr::MethodCall {
+                                            receiver: Box::new(RustExpr::Ident(
+                                                "__results".to_string(),
+                                            )),
+                                            method: "push".to_string(),
+                                            args: vec![entry_path_to_string("__e")],
+                                        })],
+                                        else_body: None,
+                                    },
+                                ],
+                                else_body: Some(vec![RustStmt::Continue]),
+                            }],
+                        }],
                     },
-                    RustStmt::Let {
-                        mutable: false,
-                        name: "__name".to_string(),
-                        ty: None,
-                        value: entry_name_to_string("__e"),
-                    },
-                    RustStmt::If {
-                        cond: RustExpr::MethodCall {
-                            receiver: Box::new(RustExpr::Ident("__re".to_string())),
-                            method: "is_match".to_string(),
-                            args: vec![ref_ident("__name")],
-                        },
-                        then_body: vec![RustStmt::Expr(RustExpr::MethodCall {
-                            receiver: Box::new(RustExpr::Ident("__results".to_string())),
-                            method: "push".to_string(),
-                            args: vec![entry_path_to_string("__e")],
-                        })],
-                        else_body: None,
+                    RustMatchArm {
+                        pattern: "Err(_)".to_string(),
+                        bindings: vec![],
+                        guard: None,
+                        body: vec![RustStmt::Return(Some(ok_expr(empty_string_vec_expr())))],
                     },
                 ],
             },
@@ -368,6 +415,12 @@ pub(super) fn lower_rglob_pattern(args: &[RustExpr]) -> Option<RustExpr> {
             },
             RustStmt::Let {
                 mutable: false,
+                name: "__include_hidden".to_string(),
+                ty: None,
+                value: starts_with_dot_expr(RustExpr::Ident("__pat".to_string())),
+            },
+            RustStmt::Let {
+                mutable: false,
                 name: "__regex_src".to_string(),
                 ty: None,
                 value: regex_source_expr("__pat"),
@@ -382,10 +435,7 @@ pub(super) fn lower_rglob_pattern(args: &[RustExpr]) -> Option<RustExpr> {
                 mutable: true,
                 name: "__results".to_string(),
                 ty: Some(RustType::Vec(Box::new(RustType::String_))),
-                value: RustExpr::FnCall {
-                    func: Box::new(RustExpr::Path(vec!["Vec".to_string(), "new".to_string()])),
-                    args: vec![],
-                },
+                value: empty_string_vec_expr(),
             },
             RustStmt::Let {
                 mutable: true,
@@ -404,86 +454,98 @@ pub(super) fn lower_rglob_pattern(args: &[RustExpr]) -> Option<RustExpr> {
                     then_body: vec![
                         RustStmt::Let {
                             mutable: false,
-                            name: "__entries".to_string(),
+                            name: "__entries_result".to_string(),
                             ty: None,
-                            value: RustExpr::Try(Box::new(io_map_err(RustExpr::FnCall {
+                            value: RustExpr::FnCall {
                                 func: Box::new(RustExpr::Path(vec![
                                     "std".to_string(),
                                     "fs".to_string(),
                                     "read_dir".to_string(),
                                 ])),
                                 args: vec![ref_ident("__current")],
-                            }))),
+                            },
                         },
-                        RustStmt::For {
-                            var: "__entry".to_string(),
-                            iter: RustExpr::Ident("__entries".to_string()),
-                            body: vec![
-                                RustStmt::Let {
-                                    mutable: false,
-                                    name: "__e".to_string(),
-                                    ty: None,
-                                    value: RustExpr::Try(Box::new(io_map_err(RustExpr::Ident(
-                                        "__entry".to_string(),
-                                    )))),
-                                },
-                                RustStmt::Let {
-                                    mutable: false,
-                                    name: "__path".to_string(),
-                                    ty: None,
-                                    value: RustExpr::MethodCall {
-                                        receiver: Box::new(RustExpr::Ident("__e".to_string())),
-                                        method: "path".to_string(),
-                                        args: vec![],
-                                    },
-                                },
-                                RustStmt::Let {
-                                    mutable: false,
-                                    name: "__name".to_string(),
-                                    ty: None,
-                                    value: entry_name_to_string("__e"),
-                                },
-                                RustStmt::If {
-                                    cond: RustExpr::MethodCall {
-                                        receiver: Box::new(RustExpr::Ident("__path".to_string())),
-                                        method: "is_dir".to_string(),
-                                        args: vec![],
-                                    },
-                                    then_body: vec![RustStmt::Expr(RustExpr::MethodCall {
-                                        receiver: Box::new(RustExpr::Ident("__stack".to_string())),
-                                        method: "push".to_string(),
-                                        args: vec![to_string_expr(RustExpr::MethodCall {
-                                            receiver: Box::new(RustExpr::Ident(
-                                                "__path".to_string(),
-                                            )),
-                                            method: "to_string_lossy".to_string(),
-                                            args: vec![],
-                                        })],
-                                    })],
-                                    else_body: None,
-                                },
-                                RustStmt::If {
-                                    cond: RustExpr::MethodCall {
-                                        receiver: Box::new(RustExpr::Ident("__re".to_string())),
-                                        method: "is_match".to_string(),
-                                        args: vec![ref_ident("__name")],
-                                    },
-                                    then_body: vec![RustStmt::Expr(RustExpr::MethodCall {
-                                        receiver: Box::new(RustExpr::Ident(
-                                            "__results".to_string(),
-                                        )),
-                                        method: "push".to_string(),
-                                        args: vec![to_string_expr(RustExpr::MethodCall {
-                                            receiver: Box::new(RustExpr::Ident(
-                                                "__path".to_string(),
-                                            )),
-                                            method: "to_string_lossy".to_string(),
-                                            args: vec![],
-                                        })],
-                                    })],
-                                    else_body: None,
-                                },
-                            ],
+                        RustStmt::IfLet {
+                            pattern: "Ok(__entries)".to_string(),
+                            expr: RustExpr::Ident("__entries_result".to_string()),
+                            then_body: vec![RustStmt::For {
+                                var: "__entry".to_string(),
+                                iter: RustExpr::Ident("__entries".to_string()),
+                                body: vec![RustStmt::IfLet {
+                                    pattern: "Ok(__e)".to_string(),
+                                    expr: RustExpr::Ident("__entry".to_string()),
+                                    then_body: vec![
+                                        RustStmt::Let {
+                                            mutable: false,
+                                            name: "__path".to_string(),
+                                            ty: None,
+                                            value: RustExpr::MethodCall {
+                                                receiver: Box::new(RustExpr::Ident("__e".to_string())),
+                                                method: "path".to_string(),
+                                                args: vec![],
+                                            },
+                                        },
+                                        RustStmt::Let {
+                                            mutable: false,
+                                            name: "__name".to_string(),
+                                            ty: None,
+                                            value: entry_name_to_string("__e"),
+                                        },
+                                        RustStmt::If {
+                                            cond: RustExpr::BinOp {
+                                                left: Box::new(RustExpr::UnaryOp {
+                                                    op: "!".to_string(),
+                                                    operand: Box::new(RustExpr::Ident(
+                                                        "__include_hidden".to_string(),
+                                                    )),
+                                                }),
+                                                op: "&&".to_string(),
+                                                right: Box::new(starts_with_dot_expr(RustExpr::Ident(
+                                                    "__name".to_string(),
+                                                ))),
+                                            },
+                                            then_body: vec![RustStmt::Continue],
+                                            else_body: None,
+                                        },
+                                        RustStmt::If {
+                                            cond: RustExpr::MethodCall {
+                                                receiver: Box::new(RustExpr::Ident("__path".to_string())),
+                                                method: "is_dir".to_string(),
+                                                args: vec![],
+                                            },
+                                            then_body: vec![RustStmt::Expr(RustExpr::MethodCall {
+                                                receiver: Box::new(RustExpr::Ident("__stack".to_string())),
+                                                method: "push".to_string(),
+                                                args: vec![to_string_expr(RustExpr::MethodCall {
+                                                    receiver: Box::new(RustExpr::Ident("__path".to_string())),
+                                                    method: "to_string_lossy".to_string(),
+                                                    args: vec![],
+                                                })],
+                                            })],
+                                            else_body: None,
+                                        },
+                                        RustStmt::If {
+                                            cond: RustExpr::MethodCall {
+                                                receiver: Box::new(RustExpr::Ident("__re".to_string())),
+                                                method: "is_match".to_string(),
+                                                args: vec![ref_ident("__name")],
+                                            },
+                                            then_body: vec![RustStmt::Expr(RustExpr::MethodCall {
+                                                receiver: Box::new(RustExpr::Ident("__results".to_string())),
+                                                method: "push".to_string(),
+                                                args: vec![to_string_expr(RustExpr::MethodCall {
+                                                    receiver: Box::new(RustExpr::Ident("__path".to_string())),
+                                                    method: "to_string_lossy".to_string(),
+                                                    args: vec![],
+                                                })],
+                                            })],
+                                            else_body: None,
+                                        },
+                                    ],
+                                    else_body: Some(vec![RustStmt::Continue]),
+                                }],
+                            }],
+                            else_body: Some(vec![RustStmt::Continue]),
                         },
                     ],
                     else_body: Some(vec![RustStmt::Break]),
