@@ -806,6 +806,33 @@ Validation evidence:
 - Review pass 1 status: approved (`reviews/phase-30-part-26-timeit-review.md`) with no blockers; reviewer observations about wall-clock timer mapping were validated as documented intentional-diff boundaries for approved subset scope.
 - Review pass 2 status: approved (`reviews/phase-30-part-26-timeit-review-2.md`) with no blockers; production-grade re-review confirmed no unresolved correctness/safety risks in approved subset.
 
+## Part 27: `platform`
+status: in_review (2026-03-09, implementation ready)
+
+- [x] Define module parity scope and CPython references
+- [x] Port/expand CPython-derived parity fixtures (canonical vector format)
+- [x] Fix root-cause implementation gaps
+- [x] Record parity classification (`parity` / `intentional-diff` / `unsupported`)
+- [x] Run module demo
+- [x] Run targeted module tests
+- [x] Run full local suite
+- [ ] Open PR, review, and merge
+- [ ] External reviewer pass 1 remediation completed (if findings)
+- [ ] External reviewer pass 2 remediation completed (if findings)
+- [ ] Mark part progress in this checklist
+
+Validation evidence:
+- Positive path: `cargo run -q -p sifr -- run demos/m30_1f_platform_parity_demo/main.sifr` -> prints `m30_1f platform parity demo: pass`.
+- Positive path: `cargo run -q -p sifr -- run crates/sifr/tests/e2e/pass/cpython_platform_subset.sifr` -> pass.
+- Positive path: `cargo run -q -p sifr -- run crates/sifr/tests/e2e/pass/stdlib_platform.sifr` -> pass.
+- Positive path: `cargo run -q -p sifr -- run crates/sifr/tests/e2e/pass/stdlib_platform_intrinsics.sifr` -> pass.
+- Positive path: `cargo test -q -p sifr_codegen lowers_platform_intrinsics_via_registry` -> pass.
+- Positive path: `/Users/yaseralnajjar/work/sifr/codebase/scripts/run_all_tests.sh` -> pass (`verification ok: variants=64, failures=0, blocking_failures=0, non_blocking_failures=0`).
+- Negative path: canonical bool vectors in `cpython_platform_subset.sifr` and `demos/m30_1f_platform_parity_demo/main.sifr` validate panic-free non-empty fallback behavior for host metadata wrappers and reject lowercase raw-const OS naming for `system()`.
+- Root-cause fix: `platform_system` intrinsic now maps host OS to CPython-style names (`Windows`/`Darwin`/`Linux`) instead of returning raw lowercase `std::env::consts::OS` values.
+- Root-cause fix: `platform_node`, `platform_release`, and `platform_version` no longer rely solely on shell command availability; deterministic non-empty fallbacks prevent empty-string metadata on hosts without `hostname`/`uname`.
+- Parity governance update: `verification/stdlib/phase30_parity_matrix.md` now includes explicit `platform` parity and intentional-diff rows for approved subset boundaries.
+
 ## Module Part Template (repeat per module)
 
 ### Part N: <module>
@@ -928,6 +955,7 @@ Validation evidence:
 - Part 25 review pass 2 tracking: merged https://github.com/yaseralnajjar/sifr/pull/1029
 - Part 26 implementation: merged https://github.com/yaseralnajjar/sifr/pull/1030
 - Part 26 review pass 1 tracking: merged https://github.com/yaseralnajjar/sifr/pull/1031
+- Part 26 review pass 2 tracking: merged https://github.com/yaseralnajjar/sifr/pull/1032
 
 ## External Review Passes
 - Reviewer pass 1 request output: `reviews/phase-30-part-1-env-review.md`
