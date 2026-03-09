@@ -548,6 +548,33 @@ Validation evidence:
 - Review pass 1 status: approved (`reviews/phase-30-part-17-io-review.md`) with non-blocking observations only; no additional module-scope remediation was required for approved scope.
 - Review pass 2 status: approved (`reviews/phase-30-part-17-io-review-2.md`) with no blockers; module is production-grade for approved scope with no additional remediation required.
 
+## Part 18: `csv`
+status: in_review (2026-03-09, implementation merged in PR #1002)
+
+- [x] Define module parity scope and CPython references
+- [x] Port/expand CPython-derived parity fixtures (canonical vector format)
+- [x] Fix root-cause implementation gaps
+- [x] Record parity classification (`parity` / `intentional-diff` / `unsupported`)
+- [x] Run module demo
+- [x] Run targeted module tests
+- [x] Run full local suite
+- [x] Open PR, review, and merge
+- [x] External reviewer pass 1 remediation completed (if findings)
+- [ ] External reviewer pass 2 remediation completed (if findings)
+- [ ] Mark part progress in this checklist
+
+Validation evidence:
+- Positive path: `cargo run -q -p sifr -- run demos/m30_1e_csv_parity_demo/main.sifr` -> prints `m30_1e csv parity demo: pass`.
+- Positive path: `cargo run -q -p sifr -- run crates/sifr/tests/e2e/pass/cpython_csv_subset.sifr` -> pass.
+- Positive path: `cargo run -q -p sifr -- run crates/sifr/tests/e2e/pass/stdlib_csv.sifr` -> pass.
+- Positive path: `cargo run -q -p sifr -- run crates/sifr/tests/e2e/pass/stdlib_csv_objects.sifr` -> pass.
+- Positive path: `cargo run -q -p sifr -- run crates/sifr/tests/e2e/pass/csv_reader_file.sifr` -> pass.
+- Positive path: `/Users/yaseralnajjar/work/sifr/codebase/scripts/run_all_tests.sh` -> pass (`verification ok: variants=64, failures=0, blocking_failures=0, non_blocking_failures=0`).
+- Negative path: canonical bool vectors in `cpython_csv_subset.sifr` validate panic-free typed `IOError` adaptation for missing-file path rejection in `reader_from_path`.
+- PR: merged https://github.com/yaseralnajjar/sifr/pull/1002
+- Review pass 1 remediation: optimized `lib/sifr/csv.sifr` root-cause inefficiencies in `reader.__next__`, `writer.writerow`/`writerows`, `DictReader.rows`, and `DictWriter` mutation paths while preserving approved subset semantics; revalidated module demos/fixtures and full suite.
+- Review pass 1 note validation: reviewer flag about `Result` + `raise` pattern was validated as non-blocking for this module because the same safe adaptation pattern is canonical across current stdlib `Result` wrappers in the approved architecture.
+
 ## Module Part Template (repeat per module)
 
 ### Part N: <module>
@@ -640,6 +667,8 @@ Validation evidence:
 - Wave production-grade closure cycle (wave_30_1d): merged https://github.com/yaseralnajjar/sifr/pull/998
 - Part 17 implementation: merged https://github.com/yaseralnajjar/sifr/pull/999
 - Part 17 review pass 1 tracking: merged https://github.com/yaseralnajjar/sifr/pull/1000
+- Part 17 review pass 2 tracking: merged https://github.com/yaseralnajjar/sifr/pull/1001
+- Part 18 implementation: merged https://github.com/yaseralnajjar/sifr/pull/1002
 
 ## External Review Passes
 - Reviewer pass 1 request output: `reviews/phase-30-part-1-env-review.md`
@@ -710,6 +739,8 @@ Validation evidence:
 - Reviewer pass 1 remediation status (`io`): done (2026-03-09, approved with non-blocking observations; no module-scope remediation required for approved scope)
 - Reviewer pass 2 request output (`io`): `reviews/phase-30-part-17-io-review-2.md`
 - Reviewer pass 2 remediation status (`io`): done (2026-03-09, approved for production use; no module-scope remediation required)
+- Reviewer pass 1 request output (`csv`): `reviews/phase-30-part-18-csv-review.md`
+- Reviewer pass 1 remediation status (`csv`): done (2026-03-09, approved after remediation updates; `Result`+`raise` observation validated as non-blocking architectural pattern)
 
 ## Wave Closure Review Cycles
 
