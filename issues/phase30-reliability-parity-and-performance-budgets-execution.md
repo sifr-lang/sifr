@@ -52,7 +52,7 @@ Loop per part: Work -> Validate -> PR -> Review -> Merge -> External review pass
 19. [x] `os`
 20. [x] `pathlib`
 21. [x] `glob`
-22. [ ] `tempfile`
+22. [x] `tempfile`
 23. [ ] `shutil`
 
 ### wave_30_1f: Runtime and Platform Wrappers
@@ -664,7 +664,7 @@ Validation evidence:
 - Review pass 3 status: approved after remediation (`reviews/phase-30-part-21-glob-review-3.md`) with no remaining blockers for approved `glob` scope.
 
 ## Part 22: `tempfile`
-status: in_review (2026-03-09, implementation PR #1016 merged)
+status: done (2026-03-09, PR #1016)
 
 - [x] Define module parity scope and CPython references
 - [x] Port/expand CPython-derived parity fixtures (canonical vector format)
@@ -675,8 +675,8 @@ status: in_review (2026-03-09, implementation PR #1016 merged)
 - [x] Run full local suite
 - [x] Open PR, review, and merge
 - [x] External reviewer pass 1 remediation completed (if findings)
-- [ ] External reviewer pass 2 remediation completed (if findings)
-- [ ] Mark part progress in this checklist
+- [x] External reviewer pass 2 remediation completed (if findings)
+- [x] Mark part progress in this checklist
 
 Validation evidence:
 - Positive path: `cargo run -q -p sifr -- run demos/m30_1e_tempfile_parity_demo/main.sifr` -> prints `m30_1e tempfile parity demo: pass`.
@@ -688,6 +688,7 @@ Validation evidence:
 - Parity governance update: tempfile API-shape divergence (prefix-only args, path-string return surface, no fd tuple, no `suffix`/`dir` options in approved scope) is now explicitly documented as `intentional-diff` in the phase parity matrix.
 - PR: merged https://github.com/yaseralnajjar/sifr/pull/1016
 - Review pass 1 status: reviewer output in `reviews/phase-30-part-22-tempfile-review.md`; validated out-of-scope claims (`suffix`/`dir`/descriptor parity and full object API surface), and applied actionable remediation (negative-path evidence + explicit API-shape intentional-diff documentation).
+- Review pass 2 status: approved (`reviews/phase-30-part-22-tempfile-review-2.md`) with no blocking correctness/safety issues; note about `path + ""` copy was validated as non-actionable because current lowering needs a stable pre-`try` path copy to avoid move-after-try borrow failures.
 
 ## Module Part Template (repeat per module)
 
@@ -796,6 +797,7 @@ Validation evidence:
 - Part 21 review pass 2 remediation + pass 3 approval: merged https://github.com/yaseralnajjar/sifr/pull/1014
 - Part 21 closeout log sync: merged https://github.com/yaseralnajjar/sifr/pull/1015
 - Part 22 implementation: merged https://github.com/yaseralnajjar/sifr/pull/1016
+- Part 22 review pass 1 remediation: merged https://github.com/yaseralnajjar/sifr/pull/1017
 
 ## External Review Passes
 - Reviewer pass 1 request output: `reviews/phase-30-part-1-env-review.md`
@@ -886,6 +888,8 @@ Validation evidence:
 - Reviewer pass 2 remediation status (`os`): done (2026-03-09, approved for production use; no additional module-scope remediation required)
 - Reviewer pass 1 request output (`tempfile`): `reviews/phase-30-part-22-tempfile-review.md`
 - Reviewer pass 1 remediation status (`tempfile`): done (2026-03-09, actionable note validated and remediated via negative-path coverage + parity-matrix API-shape intentional-diff documentation)
+- Reviewer pass 2 request output (`tempfile`): `reviews/phase-30-part-22-tempfile-review-2.md`
+- Reviewer pass 2 remediation status (`tempfile`): done (2026-03-09, approved for production use; non-blocking `path + \"\"` copy note validated as codegen-constraint-driven and non-actionable)
 
 ## Wave Closure Review Cycles
 
