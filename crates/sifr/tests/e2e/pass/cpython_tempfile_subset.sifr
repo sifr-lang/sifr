@@ -2,12 +2,12 @@
 from sifr.tempfile import mktemp_path, mkstemp, mkdtemp
 from sifr.io import exists, read_text
 from sifr.os import run_command
-from sifr.pathlib import basename
+from sifr.pathlib import basename, dirname
 from sifr.test import assert_bool_vector_eq
 
 
 def main():
-    expected: list[bool] = [True, True, True, True, True, True, True, True]
+    expected: list[bool] = [True, True, True, True, True, True, True, True, True]
     actual: list[bool] = []
 
     p0: str = mktemp_path("sifr_tmp_preview_")
@@ -40,15 +40,31 @@ def main():
         actual.append(file_content_is_empty)
         actual.append(exists(empty_prefix_path))
 
+        temp_root: str = dirname(p0)
+        missing_parent_name: str = "__sifr_phase30_missing_parent__"
+        missing_parent_path: str = temp_root + "/" + missing_parent_name
+        missing_prefix: str = missing_parent_name + "/tmp_"
+        _rm_missing: str = run_command("rm -rf " + missing_parent_path)
+        missing_file_error: bool = False
+        try:
+            unexpected_file: str = mkstemp(missing_prefix)
+            _rm_unexpected_file: str = run_command("rm -f " + unexpected_file)
+            missing_file_error = False
+        except IOError as e:
+            _ = str(e.message)
+            missing_file_error = True
+        actual.append(missing_file_error)
+
         _c1: str = run_command("rm -f " + p1)
         _c2: str = run_command("rm -f " + p2)
         _c3: str = run_command("rm -f " + empty_prefix_path)
         _c4: str = run_command("rm -rf " + d1)
+        _c5: str = run_command("rm -rf " + missing_parent_path)
         cleaned: bool = (not exists(p1)) and (not exists(p2)) and (not exists(empty_prefix_path)) and (not exists(d1))
         actual.append(cleaned)
     except IOError as e:
         _ = str(e.message)
-        actual = [False, False, False, False, False, False, False, False]
+        actual = [False, False, False, False, False, False, False, False, False]
 
     assert_bool_vector_eq(actual, expected)
     assert str("cpython_tempfile_subset: pass") == "cpython_tempfile_subset: pass"
