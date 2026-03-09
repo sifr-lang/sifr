@@ -48,7 +48,7 @@ Loop per part: Work -> Validate -> PR -> Review -> Merge -> External review pass
 
 ### wave_30_1e: File, Path, and Filesystem Surface
 17. [x] `io`
-18. [ ] `csv`
+18. [x] `csv`
 19. [ ] `os`
 20. [ ] `pathlib`
 21. [ ] `glob`
@@ -549,7 +549,7 @@ Validation evidence:
 - Review pass 2 status: approved (`reviews/phase-30-part-17-io-review-2.md`) with no blockers; module is production-grade for approved scope with no additional remediation required.
 
 ## Part 18: `csv`
-status: in_review (2026-03-09, implementation merged in PR #1002)
+status: done (2026-03-09, PR #1002)
 
 - [x] Define module parity scope and CPython references
 - [x] Port/expand CPython-derived parity fixtures (canonical vector format)
@@ -560,8 +560,8 @@ status: in_review (2026-03-09, implementation merged in PR #1002)
 - [x] Run full local suite
 - [x] Open PR, review, and merge
 - [x] External reviewer pass 1 remediation completed (if findings)
-- [ ] External reviewer pass 2 remediation completed (if findings)
-- [ ] Mark part progress in this checklist
+- [x] External reviewer pass 2 remediation completed (if findings)
+- [x] Mark part progress in this checklist
 
 Validation evidence:
 - Positive path: `cargo run -q -p sifr -- run demos/m30_1e_csv_parity_demo/main.sifr` -> prints `m30_1e csv parity demo: pass`.
@@ -574,6 +574,7 @@ Validation evidence:
 - PR: merged https://github.com/yaseralnajjar/sifr/pull/1002
 - Review pass 1 remediation: optimized `lib/sifr/csv.sifr` root-cause inefficiencies in `reader.__next__`, `writer.writerow`/`writerows`, `DictReader.rows`, and `DictWriter` mutation paths while preserving approved subset semantics; revalidated module demos/fixtures and full suite.
 - Review pass 1 note validation: reviewer flag about `Result` + `raise` pattern was validated as non-blocking for this module because the same safe adaptation pattern is canonical across current stdlib `Result` wrappers in the approved architecture.
+- Review pass 2 status: reviewer raised the same `Result`+`raise` concern (`reviews/phase-30-part-18-csv-review-2.md`); validation confirmed this remains a non-blocking architectural pattern for current stdlib wrappers, and no additional module-scope remediation was required for approved scope.
 
 ## Module Part Template (repeat per module)
 
@@ -669,6 +670,7 @@ Validation evidence:
 - Part 17 review pass 1 tracking: merged https://github.com/yaseralnajjar/sifr/pull/1000
 - Part 17 review pass 2 tracking: merged https://github.com/yaseralnajjar/sifr/pull/1001
 - Part 18 implementation: merged https://github.com/yaseralnajjar/sifr/pull/1002
+- Part 18 review pass 1 remediation: merged https://github.com/yaseralnajjar/sifr/pull/1003
 
 ## External Review Passes
 - Reviewer pass 1 request output: `reviews/phase-30-part-1-env-review.md`
@@ -741,6 +743,8 @@ Validation evidence:
 - Reviewer pass 2 remediation status (`io`): done (2026-03-09, approved for production use; no module-scope remediation required)
 - Reviewer pass 1 request output (`csv`): `reviews/phase-30-part-18-csv-review.md`
 - Reviewer pass 1 remediation status (`csv`): done (2026-03-09, approved after remediation updates; `Result`+`raise` observation validated as non-blocking architectural pattern)
+- Reviewer pass 2 request output (`csv`): `reviews/phase-30-part-18-csv-review-2.md`
+- Reviewer pass 2 remediation status (`csv`): done (2026-03-09, repeated `Result`+`raise` note validated as non-blocking architectural pattern; no additional module-scope changes required)
 
 ## Wave Closure Review Cycles
 
