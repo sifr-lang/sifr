@@ -56,7 +56,7 @@ Loop per part: Work -> Validate -> PR -> Review -> Merge -> External review pass
 23. [x] `shutil`
 
 ### wave_30_1f: Runtime and Platform Wrappers
-24. [ ] `logging`
+24. [x] `logging`
 25. [ ] `time`
 26. [ ] `timeit`
 27. [ ] `platform`
@@ -719,7 +719,7 @@ Validation evidence:
 - Review pass 2 status: approved (`reviews/phase-30-part-23-shutil-review-2.md`) with no blockers; production-grade re-review confirmed no unresolved correctness/safety risk in approved scope.
 
 ## Part 24: `logging`
-status: in_review (2026-03-09, implementation PR #1024 merged)
+status: done (2026-03-09, PR #1024)
 
 - [x] Define module parity scope and CPython references
 - [x] Port/expand CPython-derived parity fixtures (canonical vector format)
@@ -730,8 +730,8 @@ status: in_review (2026-03-09, implementation PR #1024 merged)
 - [x] Run full local suite
 - [x] Open PR, review, and merge
 - [x] External reviewer pass 1 remediation completed (if findings)
-- [ ] External reviewer pass 2 remediation completed (if findings)
-- [ ] Mark part progress in this checklist
+- [x] External reviewer pass 2 remediation completed (if findings)
+- [x] Mark part progress in this checklist
 
 Validation evidence:
 - Positive path: `cargo run -q -p sifr -- run demos/m30_1f_logging_parity_demo/main.sifr` -> prints `m30_1f logging parity demo: pass`.
@@ -747,6 +747,7 @@ Validation evidence:
 - Parity governance update: `verification/stdlib/phase30_parity_matrix.md` now includes explicit `logging` parity and intentional-diff rows for approved subset boundaries.
 - PR: merged https://github.com/yaseralnajjar/sifr/pull/1024
 - Review pass 1 status: approved (`reviews/phase-30-part-24-logging-review.md`) with no blockers; reviewer observations about silent handler error swallowing and helper-function scope were validated as intentional within approved panic-free subset boundaries.
+- Review pass 2 status: approved (`reviews/phase-30-part-24-logging-review-2.md`) with no blockers; production-grade re-review confirmed no unresolved correctness/safety risks in approved subset.
 
 ## Module Part Template (repeat per module)
 
@@ -863,6 +864,7 @@ Validation evidence:
 - Wave completion closure cycle (wave_30_1e): merged https://github.com/yaseralnajjar/sifr/pull/1022
 - Wave production-grade closure cycle (wave_30_1e): merged https://github.com/yaseralnajjar/sifr/pull/1023
 - Part 24 implementation: merged https://github.com/yaseralnajjar/sifr/pull/1024
+- Part 24 review pass 1 tracking: merged https://github.com/yaseralnajjar/sifr/pull/1025
 
 ## External Review Passes
 - Reviewer pass 1 request output: `reviews/phase-30-part-1-env-review.md`
@@ -961,6 +963,8 @@ Validation evidence:
 - Reviewer pass 2 remediation status (`shutil`): done (2026-03-09, approved for production use; no additional module-scope remediation required)
 - Reviewer pass 1 request output (`logging`): `reviews/phase-30-part-24-logging-review.md`
 - Reviewer pass 1 remediation status (`logging`): done (2026-03-09, approved with no blockers; no additional module-scope remediation required for approved subset)
+- Reviewer pass 2 request output (`logging`): `reviews/phase-30-part-24-logging-review-2.md`
+- Reviewer pass 2 remediation status (`logging`): done (2026-03-09, approved for production use; no additional module-scope remediation required)
 
 ## Wave Closure Review Cycles
 
