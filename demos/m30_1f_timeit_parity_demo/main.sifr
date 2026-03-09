@@ -1,0 +1,47 @@
+from sifr.timeit import default_timer, timeit, repeat
+from sifr.time import sleep
+from sifr.test import assert_bool_vector_eq
+
+
+def workload():
+    total: int = 0
+    i: int = 0
+    while i < 100:
+        total = total + i
+        i = i + 1
+
+
+def all_non_negative(values: list[float]) -> bool:
+    i: int = 0
+    while i < len(values):
+        current: float | None = values[i]
+        if current is None:
+            return False
+        if current < 0.0:
+            return False
+        i = i + 1
+    return True
+
+
+def main():
+    expected: list[bool] = [True, True, True, True, True, True, True]
+    actual: list[bool] = []
+
+    t1: float = default_timer()
+    sleep(0.01)
+    t2: float = default_timer()
+    actual.append(t2 >= t1)
+
+    elapsed: float = timeit(workload, 10)
+    actual.append(elapsed >= 0.0)
+
+    repeated: list[float] = repeat(workload, 3, 10)
+    actual.append(len(repeated) == 3)
+    actual.append(all_non_negative(repeated))
+
+    actual.append(len(repeat(workload, 0, 5)) == 0)
+    actual.append(timeit(workload, 0) >= 0.0)
+    actual.append(len(repeat(workload, 2, 0)) == 2)
+
+    assert_bool_vector_eq(actual, expected)
+    print("m30_1f timeit parity demo: pass")
