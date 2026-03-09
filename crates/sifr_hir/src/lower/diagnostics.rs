@@ -52,7 +52,10 @@ pub(super) fn format_type_name(ty: &Type) -> String {
 }
 
 /// Collect error types from raise statements in a list of HIR statements.
-pub(super) fn collect_raise_error_types(stmts: &[HirStmt], errors: &mut std::collections::HashSet<String>) {
+pub(super) fn collect_raise_error_types(
+    stmts: &[HirStmt],
+    errors: &mut std::collections::HashSet<String>,
+) {
     for stmt in stmts {
         match stmt {
             HirStmt::Raise { value } => {

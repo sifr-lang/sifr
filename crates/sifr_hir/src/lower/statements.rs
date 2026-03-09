@@ -1,6 +1,10 @@
 use super::*;
 
-pub(super) fn lower_stmts(stmts: &[Stmt], func_type: &FunctionType, ctx: &mut LowerCtx) -> Vec<HirStmt> {
+pub(super) fn lower_stmts(
+    stmts: &[Stmt],
+    func_type: &FunctionType,
+    ctx: &mut LowerCtx,
+) -> Vec<HirStmt> {
     let mut result = Vec::new();
     for (index, stmt) in stmts.iter().enumerate() {
         if crate::cfg::flow_facts(&result).always_exits() {
@@ -24,7 +28,11 @@ pub(super) fn lower_stmts(stmts: &[Stmt], func_type: &FunctionType, ctx: &mut Lo
     result
 }
 
-pub(super) fn lower_stmt(stmt: &Stmt, func_type: &FunctionType, ctx: &mut LowerCtx) -> Option<HirStmt> {
+pub(super) fn lower_stmt(
+    stmt: &Stmt,
+    func_type: &FunctionType,
+    ctx: &mut LowerCtx,
+) -> Option<HirStmt> {
     match stmt {
         Stmt::AnnAssign(ann) => lower_ann_assign(ann, ctx),
         Stmt::Assign(assign) => lower_assign(assign, ctx),
@@ -699,7 +707,11 @@ pub(super) fn lower_match(
     })
 }
 
-pub(super) fn lower_pattern(pattern: &Pattern, subject_ty: &Type, ctx: &mut LowerCtx) -> Option<HirPattern> {
+pub(super) fn lower_pattern(
+    pattern: &Pattern,
+    subject_ty: &Type,
+    ctx: &mut LowerCtx,
+) -> Option<HirPattern> {
     match pattern {
         Pattern::MatchAs(pat_as) => {
             if pat_as.pattern.is_none() && pat_as.name.is_none() {
@@ -854,7 +866,11 @@ pub(super) fn lower_pattern(pattern: &Pattern, subject_ty: &Type, ctx: &mut Lowe
     }
 }
 
-pub(super) fn pattern_narrowed_type(pattern: &HirPattern, subject_ty: &Type, ctx: &LowerCtx) -> Type {
+pub(super) fn pattern_narrowed_type(
+    pattern: &HirPattern,
+    subject_ty: &Type,
+    ctx: &LowerCtx,
+) -> Type {
     match pattern {
         HirPattern::None => Type::None,
         HirPattern::Class { class_name, .. } => {
@@ -1371,7 +1387,11 @@ pub(super) fn lower_aug_assign(aug: &StmtAugAssign, ctx: &mut LowerCtx) -> Optio
     })
 }
 
-pub(super) fn lower_return(ret: &StmtReturn, func_type: &FunctionType, ctx: &mut LowerCtx) -> Option<HirStmt> {
+pub(super) fn lower_return(
+    ret: &StmtReturn,
+    func_type: &FunctionType,
+    ctx: &mut LowerCtx,
+) -> Option<HirStmt> {
     let value = if let Some(val) = &ret.value {
         let expr = lower_expr(val, ctx)?;
         let expr_ty = expr.ty().clone();
@@ -1432,7 +1452,11 @@ pub(super) fn lower_return(ret: &StmtReturn, func_type: &FunctionType, ctx: &mut
     Some(HirStmt::Return { value })
 }
 
-pub(super) fn lower_if(if_stmt: &StmtIf, func_type: &FunctionType, ctx: &mut LowerCtx) -> Option<HirStmt> {
+pub(super) fn lower_if(
+    if_stmt: &StmtIf,
+    func_type: &FunctionType,
+    ctx: &mut LowerCtx,
+) -> Option<HirStmt> {
     // Try to detect a narrowing condition from the test expression
     let narrowing_cond = detect_narrowing_condition(&if_stmt.test, ctx);
 
@@ -1564,11 +1588,16 @@ pub(super) fn then_body_always_exits(stmts: &[HirStmt]) -> bool {
 
 /// Collect all return types from a list of HIR statements (recursively).
 pub(super) fn collect_return_types(stmts: &[HirStmt]) -> Vec<Type> {
-    crate::cfg::flow_facts(stmts).reachable_return_types().to_vec()
+    crate::cfg::flow_facts(stmts)
+        .reachable_return_types()
+        .to_vec()
 }
 
 /// Detect a narrowing condition from an if-test expression.
-pub(super) fn detect_narrowing_condition(expr: &Expr, ctx: &LowerCtx) -> Option<NarrowingCondition> {
+pub(super) fn detect_narrowing_condition(
+    expr: &Expr,
+    ctx: &LowerCtx,
+) -> Option<NarrowingCondition> {
     match expr {
         // isinstance(x, Type) -> IsInstance narrowing
         Expr::Call(call) => {
@@ -1757,7 +1786,11 @@ pub(super) fn lower_while(
     })
 }
 
-pub(super) fn lower_for(for_stmt: &StmtFor, func_type: &FunctionType, ctx: &mut LowerCtx) -> Option<HirStmt> {
+pub(super) fn lower_for(
+    for_stmt: &StmtFor,
+    func_type: &FunctionType,
+    ctx: &mut LowerCtx,
+) -> Option<HirStmt> {
     // Lower the iterable expression
     let iter_expr = lower_expr(&for_stmt.iter, ctx)?;
     let iter_ty = iter_expr.ty().clone();

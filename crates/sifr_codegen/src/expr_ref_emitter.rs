@@ -167,5 +167,4 @@ impl RustEmitter {
             self.lower_ref_expr_or_panic(expr, "display expr")
         }
     }
-
 }

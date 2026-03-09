@@ -406,4 +406,3 @@ pub(super) fn intrinsic_uuid() -> IntrinsicModule {
         constants: HashMap::new(),
     }
 }
-

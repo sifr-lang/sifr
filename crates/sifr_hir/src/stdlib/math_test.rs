@@ -544,4 +544,3 @@ pub(super) fn intrinsic_test() -> IntrinsicModule {
         constants: HashMap::new(),
     }
 }
-

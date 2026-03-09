@@ -485,4 +485,3 @@ pub(super) fn intrinsic_fs() -> IntrinsicModule {
         constants: HashMap::new(),
     }
 }
-

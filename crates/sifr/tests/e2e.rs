@@ -570,8 +570,8 @@ fn parse_expected_error(raw: &str) -> Option<CompileFailureExpectation> {
             .to_string();
         (code, message)
     } else {
-        let split = normalized
-            .find(|character: char| character == ':' || character.is_whitespace());
+        let split =
+            normalized.find(|character: char| character == ':' || character.is_whitespace());
         match split {
             Some(index) => {
                 let (code, raw_message) = normalized.split_at(index);
@@ -620,7 +620,10 @@ fn is_message_error_code(raw: &str) -> bool {
 
 fn normalize_error_code(raw: &str) -> String {
     let trimmed = raw.trim();
-    if let Some(inner) = trimmed.strip_prefix('[').and_then(|value| value.strip_suffix(']')) {
+    if let Some(inner) = trimmed
+        .strip_prefix('[')
+        .and_then(|value| value.strip_suffix(']'))
+    {
         inner.to_string()
     } else {
         trimmed.to_string()
@@ -2528,7 +2531,9 @@ fn test_expected_error_contract_with_messages() {
         "assignment to immutability"
     );
 
-    let parsed = parse_expected_error("[E2507] decimal.round() scale must be between 0 and 28, got 29").unwrap();
+    let parsed =
+        parse_expected_error("[E2507] decimal.round() scale must be between 0 and 28, got 29")
+            .unwrap();
     assert_eq!(parsed.code, "E2507");
     assert_eq!(
         parsed.message_contains.unwrap(),

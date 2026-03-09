@@ -480,7 +480,9 @@ pub(super) fn lower_rglob_pattern(args: &[RustExpr]) -> Option<RustExpr> {
                                             name: "__path".to_string(),
                                             ty: None,
                                             value: RustExpr::MethodCall {
-                                                receiver: Box::new(RustExpr::Ident("__e".to_string())),
+                                                receiver: Box::new(RustExpr::Ident(
+                                                    "__e".to_string(),
+                                                )),
                                                 method: "path".to_string(),
                                                 args: vec![],
                                             },
@@ -500,24 +502,30 @@ pub(super) fn lower_rglob_pattern(args: &[RustExpr]) -> Option<RustExpr> {
                                                     )),
                                                 }),
                                                 op: "&&".to_string(),
-                                                right: Box::new(starts_with_dot_expr(RustExpr::Ident(
-                                                    "__name".to_string(),
-                                                ))),
+                                                right: Box::new(starts_with_dot_expr(
+                                                    RustExpr::Ident("__name".to_string()),
+                                                )),
                                             },
                                             then_body: vec![RustStmt::Continue],
                                             else_body: None,
                                         },
                                         RustStmt::If {
                                             cond: RustExpr::MethodCall {
-                                                receiver: Box::new(RustExpr::Ident("__path".to_string())),
+                                                receiver: Box::new(RustExpr::Ident(
+                                                    "__path".to_string(),
+                                                )),
                                                 method: "is_dir".to_string(),
                                                 args: vec![],
                                             },
                                             then_body: vec![RustStmt::Expr(RustExpr::MethodCall {
-                                                receiver: Box::new(RustExpr::Ident("__stack".to_string())),
+                                                receiver: Box::new(RustExpr::Ident(
+                                                    "__stack".to_string(),
+                                                )),
                                                 method: "push".to_string(),
                                                 args: vec![to_string_expr(RustExpr::MethodCall {
-                                                    receiver: Box::new(RustExpr::Ident("__path".to_string())),
+                                                    receiver: Box::new(RustExpr::Ident(
+                                                        "__path".to_string(),
+                                                    )),
                                                     method: "to_string_lossy".to_string(),
                                                     args: vec![],
                                                 })],
@@ -526,15 +534,21 @@ pub(super) fn lower_rglob_pattern(args: &[RustExpr]) -> Option<RustExpr> {
                                         },
                                         RustStmt::If {
                                             cond: RustExpr::MethodCall {
-                                                receiver: Box::new(RustExpr::Ident("__re".to_string())),
+                                                receiver: Box::new(RustExpr::Ident(
+                                                    "__re".to_string(),
+                                                )),
                                                 method: "is_match".to_string(),
                                                 args: vec![ref_ident("__name")],
                                             },
                                             then_body: vec![RustStmt::Expr(RustExpr::MethodCall {
-                                                receiver: Box::new(RustExpr::Ident("__results".to_string())),
+                                                receiver: Box::new(RustExpr::Ident(
+                                                    "__results".to_string(),
+                                                )),
                                                 method: "push".to_string(),
                                                 args: vec![to_string_expr(RustExpr::MethodCall {
-                                                    receiver: Box::new(RustExpr::Ident("__path".to_string())),
+                                                    receiver: Box::new(RustExpr::Ident(
+                                                        "__path".to_string(),
+                                                    )),
                                                     method: "to_string_lossy".to_string(),
                                                     args: vec![],
                                                 })],

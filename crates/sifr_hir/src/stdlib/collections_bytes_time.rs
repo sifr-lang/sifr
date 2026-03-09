@@ -318,4 +318,3 @@ pub(super) fn intrinsic_time() -> IntrinsicModule {
         constants: HashMap::new(),
     }
 }
-

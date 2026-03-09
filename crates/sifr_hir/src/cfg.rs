@@ -126,11 +126,7 @@ impl ControlFlowGraph {
                     fingerprint.push(';');
                 }
                 CfgTerminator::Return { ty, has_value } => {
-                    fingerprint.push_str(&format!(
-                        "return:{}:{};",
-                        ty.display_name(),
-                        has_value
-                    ));
+                    fingerprint.push_str(&format!("return:{}:{};", ty.display_name(), has_value));
                 }
                 CfgTerminator::Raise => {
                     fingerprint.push_str("raise;");
@@ -295,7 +291,11 @@ impl CfgBuilder {
         builder
     }
 
-    fn new_block(&mut self, label: CfgBlockLabel, top_level_stmt_index: Option<usize>) -> CfgBlockId {
+    fn new_block(
+        &mut self,
+        label: CfgBlockLabel,
+        top_level_stmt_index: Option<usize>,
+    ) -> CfgBlockId {
         let id = self.blocks.len();
         self.blocks.push(CfgBlock {
             id,
@@ -338,7 +338,8 @@ impl CfgBuilder {
     ) -> CfgBlockId {
         match stmt {
             HirStmt::Return { value } => {
-                let block = self.new_block(CfgBlockLabel::Statement("return"), top_level_stmt_index);
+                let block =
+                    self.new_block(CfgBlockLabel::Statement("return"), top_level_stmt_index);
                 let (ty, has_value) = match value {
                     Some(expr) => (expr.ty().clone(), !matches!(expr, HirExpr::NoneLiteral)),
                     None => (Type::None, false),
@@ -388,7 +389,10 @@ impl CfgBuilder {
 
                 let then_entry = self.build_stmt_list(then_body, next, loop_targets, false);
                 let if_block = self.new_block(CfgBlockLabel::Statement("if"), top_level_stmt_index);
-                self.set_terminator(if_block, CfgTerminator::Branch(vec![then_entry, else_entry]));
+                self.set_terminator(
+                    if_block,
+                    CfgTerminator::Branch(vec![then_entry, else_entry]),
+                );
                 if_block
             }
             HirStmt::While {
@@ -415,7 +419,8 @@ impl CfgBuilder {
             HirStmt::For {
                 body, else_body, ..
             } => {
-                let for_block = self.new_block(CfgBlockLabel::Statement("for"), top_level_stmt_index);
+                let for_block =
+                    self.new_block(CfgBlockLabel::Statement("for"), top_level_stmt_index);
                 let false_target = if let Some(else_body) = else_body {
                     self.build_stmt_list(else_body, next, loop_targets, false)
                 } else {
@@ -426,7 +431,10 @@ impl CfgBuilder {
                     continue_target: for_block,
                 };
                 let body_entry = self.build_stmt_list(body, for_block, Some(loop_targets), false);
-                self.set_terminator(for_block, CfgTerminator::Branch(vec![body_entry, false_target]));
+                self.set_terminator(
+                    for_block,
+                    CfgTerminator::Branch(vec![body_entry, false_target]),
+                );
                 for_block
             }
             HirStmt::Match { arms, .. } => {
@@ -451,7 +459,12 @@ impl CfgBuilder {
                     let mut targets = Vec::with_capacity(1 + handlers.len());
                     targets.push(self.build_stmt_list(body, next, loop_targets, false));
                     for handler in handlers {
-                        targets.push(self.build_stmt_list(&handler.body, next, loop_targets, false));
+                        targets.push(self.build_stmt_list(
+                            &handler.body,
+                            next,
+                            loop_targets,
+                            false,
+                        ));
                     }
                     self.set_terminator(block, CfgTerminator::Branch(targets));
                 }
@@ -668,7 +681,9 @@ mod tests {
             expr: HirExpr::IntLiteral(1),
         }]);
         cfg.blocks[0].terminator = CfgTerminator::Goto(usize::MAX);
-        let err = cfg.validate().expect_err("invalid edge should fail validation");
+        let err = cfg
+            .validate()
+            .expect_err("invalid edge should fail validation");
         assert!(err.to_string().contains("invalid successor"));
     }
 
@@ -780,7 +795,10 @@ mod tests {
             let cfg_second = build_control_flow_graph(&stmts);
             let facts_first = flow_facts(&stmts);
             let facts_second = flow_facts(&stmts);
-            assert_eq!(cfg_first.shape_fingerprint(), cfg_second.shape_fingerprint());
+            assert_eq!(
+                cfg_first.shape_fingerprint(),
+                cfg_second.shape_fingerprint()
+            );
             assert_eq!(facts_first, facts_second);
         }
     }

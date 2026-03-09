@@ -310,9 +310,12 @@ mod tests {
             return RustExpr::Literal(crate::RustLiteral::Float(v));
         }
         if rendered.contains("::")
-            && rendered
-                .split("::")
-                .all(|segment| !segment.is_empty() && segment.chars().all(|c| c == '_' || c.is_ascii_alphanumeric()))
+            && rendered.split("::").all(|segment| {
+                !segment.is_empty()
+                    && segment
+                        .chars()
+                        .all(|c| c == '_' || c.is_ascii_alphanumeric())
+            })
         {
             return RustExpr::Path(rendered.split("::").map(str::to_string).collect());
         }
