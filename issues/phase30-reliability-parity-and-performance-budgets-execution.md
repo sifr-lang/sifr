@@ -53,7 +53,7 @@ Loop per part: Work -> Validate -> PR -> Review -> Merge -> External review pass
 20. [x] `pathlib`
 21. [x] `glob`
 22. [x] `tempfile`
-23. [ ] `shutil`
+23. [x] `shutil`
 
 ### wave_30_1f: Runtime and Platform Wrappers
 24. [ ] `logging`
@@ -691,7 +691,7 @@ Validation evidence:
 - Review pass 2 status: approved (`reviews/phase-30-part-22-tempfile-review-2.md`) with no blocking correctness/safety issues; note about `path + ""` copy was validated as non-actionable because current lowering needs a stable pre-`try` path copy to avoid move-after-try borrow failures.
 
 ## Part 23: `shutil`
-status: in_review (2026-03-09, implementation PR #1019 merged)
+status: done (2026-03-09, PR #1019)
 
 - [x] Define module parity scope and CPython references
 - [x] Port/expand CPython-derived parity fixtures (canonical vector format)
@@ -702,8 +702,8 @@ status: in_review (2026-03-09, implementation PR #1019 merged)
 - [x] Run full local suite
 - [x] Open PR, review, and merge
 - [x] External reviewer pass 1 remediation completed (if findings)
-- [ ] External reviewer pass 2 remediation completed (if findings)
-- [ ] Mark part progress in this checklist
+- [x] External reviewer pass 2 remediation completed (if findings)
+- [x] Mark part progress in this checklist
 
 Validation evidence:
 - Positive path: `cargo run -q -p sifr -- run demos/m30_1e_shutil_parity_demo/main.sifr` -> prints `m30_1e shutil parity demo: pass`.
@@ -716,6 +716,7 @@ Validation evidence:
 - Parity governance update: `verification/stdlib/phase30_parity_matrix.md` now includes explicit `shutil` parity and intentional-diff rows (name adaptation `move_file`, subset option matrix boundary, and `disk_usage` list-shape adaptation).
 - PR: merged https://github.com/yaseralnajjar/sifr/pull/1019
 - Review pass 1 status: approved (`reviews/phase-30-part-23-shutil-review.md`) with no blocking issues; reviewer notes about cross-device rename behavior and re-export visibility were validated as non-blocking and aligned with approved intentional-diff boundaries.
+- Review pass 2 status: approved (`reviews/phase-30-part-23-shutil-review-2.md`) with no blockers; production-grade re-review confirmed no unresolved correctness/safety risk in approved scope.
 
 ## Module Part Template (repeat per module)
 
@@ -827,6 +828,7 @@ Validation evidence:
 - Part 22 review pass 1 remediation: merged https://github.com/yaseralnajjar/sifr/pull/1017
 - Part 22 review pass 2 tracking: merged https://github.com/yaseralnajjar/sifr/pull/1018
 - Part 23 implementation: merged https://github.com/yaseralnajjar/sifr/pull/1019
+- Part 23 review pass 1 tracking: merged https://github.com/yaseralnajjar/sifr/pull/1020
 
 ## External Review Passes
 - Reviewer pass 1 request output: `reviews/phase-30-part-1-env-review.md`
@@ -921,6 +923,8 @@ Validation evidence:
 - Reviewer pass 2 remediation status (`tempfile`): done (2026-03-09, approved for production use; non-blocking `path + \"\"` copy note validated as codegen-constraint-driven and non-actionable)
 - Reviewer pass 1 request output (`shutil`): `reviews/phase-30-part-23-shutil-review.md`
 - Reviewer pass 1 remediation status (`shutil`): done (2026-03-09, approved with no blockers; no module-scope code remediation required for approved subset)
+- Reviewer pass 2 request output (`shutil`): `reviews/phase-30-part-23-shutil-review-2.md`
+- Reviewer pass 2 remediation status (`shutil`): done (2026-03-09, approved for production use; no additional module-scope remediation required)
 
 ## Wave Closure Review Cycles
 
