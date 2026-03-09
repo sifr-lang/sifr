@@ -9,7 +9,7 @@ def is_canonical_shape(value: str) -> bool:
 
 
 def main():
-    expected: list[bool] = [True, True, True, True, True, True, True, True]
+    expected: list[bool] = [True, True, True, True, True, True, True, True, True]
     actual: list[bool] = []
 
     id_text: str = uuid4()
@@ -47,6 +47,9 @@ def main():
 
     ctor_passthrough: UUID = UUID("550e8400-e29b-41d4-a716-44665544000z")
     actual.append(ctor_passthrough.to_str() == "550e8400-e29b-41d4-a716-44665544000z")
+
+    ctor_invalid_version: UUID = UUID("zzzzzzzz-zzzz-zzzz-zzzz-zzzzzzzzzzzz")
+    actual.append(ctor_invalid_version.version() == -1)
 
     actual.append(obj.hex() == "550e8400e29b41d4a716446655440000" or len(obj.hex()) == 32)
 

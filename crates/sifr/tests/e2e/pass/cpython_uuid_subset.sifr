@@ -14,7 +14,7 @@ def is_canonical_shape(value: str) -> bool:
 
 
 def main():
-    expected: list[bool] = [True, True, True, True, True, True, True, True, True, True, True]
+    expected: list[bool] = [True, True, True, True, True, True, True, True, True, True, True, True]
     actual: list[bool] = []
 
     id_text: str = uuid4()
@@ -83,6 +83,9 @@ def main():
 
     ctor_passthrough: UUID = UUID("550e8400-e29b-41d4-a716-44665544000g")
     actual.append(ctor_passthrough.to_str() == "550e8400-e29b-41d4-a716-44665544000g")
+
+    ctor_invalid_version: UUID = UUID("zzzzzzzz-zzzz-zzzz-zzzz-zzzzzzzzzzzz")
+    actual.append(ctor_invalid_version.version() == -1)
 
     assert_bool_vector_eq(actual, expected)
     assert str("cpython_uuid_subset: pass") == "cpython_uuid_subset: pass"
