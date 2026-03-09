@@ -1,5 +1,4 @@
 # sifr.logging — Simple logging with level filtering
-from _sifr.time import time_now
 from _sifr.logging import set_global_level, get_global_level
 from sifr.io import FileHandle, open
 
@@ -16,7 +15,7 @@ def log_info(msg: str) -> None:
     print("[INFO] " + msg)
 
 def log_warn(msg: str) -> None:
-    print("[WARN] " + msg)
+    print("[WARNING] " + msg)
 
 def log_error(msg: str) -> None:
     print("[ERROR] " + msg)

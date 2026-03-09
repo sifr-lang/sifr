@@ -718,6 +718,34 @@ Validation evidence:
 - Review pass 1 status: approved (`reviews/phase-30-part-23-shutil-review.md`) with no blocking issues; reviewer notes about cross-device rename behavior and re-export visibility were validated as non-blocking and aligned with approved intentional-diff boundaries.
 - Review pass 2 status: approved (`reviews/phase-30-part-23-shutil-review-2.md`) with no blockers; production-grade re-review confirmed no unresolved correctness/safety risk in approved scope.
 
+## Part 24: `logging`
+status: in_review (2026-03-09, implementation ready)
+
+- [x] Define module parity scope and CPython references
+- [x] Port/expand CPython-derived parity fixtures (canonical vector format)
+- [x] Fix root-cause implementation gaps
+- [x] Record parity classification (`parity` / `intentional-diff` / `unsupported`)
+- [x] Run module demo
+- [x] Run targeted module tests
+- [x] Run full local suite
+- [ ] Open PR, review, and merge
+- [ ] External reviewer pass 1 remediation completed (if findings)
+- [ ] External reviewer pass 2 remediation completed (if findings)
+- [ ] Mark part progress in this checklist
+
+Validation evidence:
+- Positive path: `cargo run -q -p sifr -- run demos/m30_1f_logging_parity_demo/main.sifr` -> prints `m30_1f logging parity demo: pass`.
+- Positive path: `cargo run -q -p sifr -- run crates/sifr/tests/e2e/pass/cpython_logging_subset.sifr` -> pass.
+- Positive path: `cargo run -q -p sifr -- run crates/sifr/tests/e2e/pass/stdlib_logging.sifr` -> pass.
+- Positive path: `cargo run -q -p sifr -- run crates/sifr/tests/e2e/pass/stdlib_logging_class.sifr` -> pass.
+- Positive path: `cargo run -q -p sifr -- run crates/sifr/tests/e2e/pass/stdlib_logging_enhanced.sifr` -> pass.
+- Positive path: `cargo run -q -p sifr -- run crates/sifr/tests/e2e/pass/logging_basic_config.sifr` -> pass.
+- Positive path: `cargo run -q -p sifr -- run crates/sifr/tests/e2e/pass/logging_file_handler.sifr` -> pass.
+- Positive path: `/Users/yaseralnajjar/work/sifr/codebase/scripts/run_all_tests.sh` -> pass (`verification ok: variants=64, failures=0, blocking_failures=0, non_blocking_failures=0`).
+- Negative path: canonical bool vectors in `cpython_logging_subset.sifr` and `demos/m30_1f_logging_parity_demo/main.sifr` validate panic-free behavior for invalid file targets (no crash, no file creation) while preserving level-filter semantics.
+- Root-cause fix: `log_warn` now emits CPython-aligned `WARNING` label; logging parity coverage was expanded with dedicated CPython-subset fixture and wave demo to lock level/filter/formatter/global-level behavior.
+- Parity governance update: `verification/stdlib/phase30_parity_matrix.md` now includes explicit `logging` parity and intentional-diff rows for approved subset boundaries.
+
 ## Module Part Template (repeat per module)
 
 ### Part N: <module>
@@ -831,6 +859,7 @@ Validation evidence:
 - Part 23 review pass 1 tracking: merged https://github.com/yaseralnajjar/sifr/pull/1020
 - Part 23 review pass 2 tracking: merged https://github.com/yaseralnajjar/sifr/pull/1021
 - Wave completion closure cycle (wave_30_1e): merged https://github.com/yaseralnajjar/sifr/pull/1022
+- Wave production-grade closure cycle (wave_30_1e): merged https://github.com/yaseralnajjar/sifr/pull/1023
 
 ## External Review Passes
 - Reviewer pass 1 request output: `reviews/phase-30-part-1-env-review.md`

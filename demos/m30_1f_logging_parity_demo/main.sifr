@@ -1,0 +1,78 @@
+from sifr.logging import getLogger, basicConfig, FileHandler, Formatter
+from sifr.logging import Logger, INFO, WARNING
+from sifr.io import write_text, read_text, exists
+from sifr.os import mkdir, run_command
+from sifr.tempfile import mktemp_path
+from sifr.test import assert_bool_vector_eq
+
+
+def main():
+    expected: list[bool] = [True, True, True, True, True, True]
+    actual: list[bool] = []
+
+    base: str = mktemp_path("sifr_m30_1f_logging_demo_")
+    app_log: str = base + "/app.log"
+    root_log: str = base + "/root.log"
+    handler_log: str = base + "/handler.log"
+    missing_log: str = base + "/missing/blocked.log"
+
+    app_ok: bool = False
+    root_ok: bool = False
+    handler_ok: bool = False
+    try:
+        _mk: None = mkdir(base)
+        _w1: None = write_text(app_log, "")
+        _w2: None = write_text(root_log, "")
+        _w3: None = write_text(handler_log, "")
+
+        app: Logger = getLogger("demo")
+        app.set_file(app_log)
+        app.set_level(INFO)
+        app.info("start")
+        app.warning("warn")
+        app.debug("hidden")
+        app_content: str = read_text(app_log)
+        app_ok = app_content == "[INFO] demo: start\n[WARNING] demo: warn\n"
+
+        root: Logger = basicConfig(WARNING)
+        root.set_file(root_log)
+        root.info("skip")
+        root.error("boom")
+        root_content: str = read_text(root_log)
+        root_ok = root_content == "[ERROR] root: boom\n"
+
+        handler: FileHandler = FileHandler(handler_log + "")
+        handler.set_formatter(Formatter("%(levelname)s:%(message)s"))
+        handler.emit("INFO", "demo", "formatted")
+        handler_content: str = read_text(handler_log)
+        handler_ok = handler_content == "INFO:formatted\n"
+    except IOError as e:
+        _ = str(e.message)
+    actual.append(app_ok)
+    actual.append(root_ok)
+    actual.append(handler_ok)
+
+    missing_safe: bool = False
+    try:
+        bad: Logger = getLogger("bad")
+        bad.set_file(missing_log)
+        bad.error("should fail")
+        missing_safe = not exists(missing_log)
+    except IOError as e:
+        _ = str(e.message)
+        missing_safe = False
+    actual.append(missing_safe)
+
+    cleanup_ok: bool = False
+    try:
+        _cleanup: str = run_command("rm -rf " + base)
+        cleanup_ok = not exists(base)
+    except IOError as e:
+        _ = str(e.message)
+        cleanup_ok = not exists(base)
+    actual.append(cleanup_ok)
+
+    actual.append(INFO == 20 and WARNING == 30)
+
+    assert_bool_vector_eq(actual, expected)
+    print("m30_1f logging parity demo: pass")
