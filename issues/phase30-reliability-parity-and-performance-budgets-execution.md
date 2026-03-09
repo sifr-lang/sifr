@@ -836,6 +836,32 @@ Validation evidence:
 - Review pass 1 status: approved (`reviews/phase-30-part-27-platform-review.md`) with no blockers; reviewer observations about `processor()` and command availability were validated as documented intentional-diff boundaries with deterministic fallback behavior.
 - Review pass 2 status: approved (`reviews/phase-30-part-27-platform-review-2.md`) with no blockers; production-grade re-review confirmed no unresolved correctness/safety risks in approved subset.
 
+## Part 28: `uuid`
+status: in_review (2026-03-09, implementation ready)
+
+- [x] Define module parity scope and CPython references
+- [x] Port/expand CPython-derived parity fixtures (canonical vector format)
+- [x] Fix root-cause implementation gaps
+- [x] Record parity classification (`parity` / `intentional-diff` / `unsupported`)
+- [x] Run module demo
+- [x] Run targeted module tests
+- [x] Run full local suite
+- [ ] Open PR, review, and merge
+- [ ] External reviewer pass 1 remediation completed (if findings)
+- [ ] External reviewer pass 2 remediation completed (if findings)
+- [ ] Mark part progress in this checklist
+
+Validation evidence:
+- Positive path: `cargo run -q -p sifr -- run demos/m30_1f_uuid_parity_demo/main.sifr` -> prints `m30_1f uuid parity demo: pass`.
+- Positive path: `cargo run -q -p sifr -- run crates/sifr/tests/e2e/pass/cpython_uuid_subset.sifr` -> pass.
+- Positive path: `cargo run -q -p sifr -- run crates/sifr/tests/e2e/pass/stdlib_uuid.sifr` -> pass.
+- Positive path: `cargo run -q -p sifr -- run crates/sifr/tests/e2e/pass/stdlib_uuid_class.sifr` -> pass.
+- Positive path: `/Users/yaseralnajjar/work/sifr/codebase/scripts/run_all_tests.sh` -> pass (`verification ok: variants=64, failures=0, blocking_failures=0, non_blocking_failures=0`).
+- Negative path: canonical bool vectors in `cpython_uuid_subset.sifr` and `demos/m30_1f_uuid_parity_demo/main.sifr` validate panic-free typed rejection for invalid UUID text (length, chars, and hyphen placement) in `uuid_from_hex(...)` parse paths.
+- Root-cause fix: UUID parsing now canonicalizes input to lowercase hyphenated form with strict length/character/hyphen validation, preventing malformed strings from silently constructing UUID objects.
+- Root-cause fix: `UUID.version()` now derives the actual version nibble from canonical UUID text instead of returning a hardcoded `4`.
+- Parity governance update: `verification/stdlib/phase30_parity_matrix.md` now includes explicit `uuid` parity and intentional-diff rows for approved subset boundaries.
+
 ## Module Part Template (repeat per module)
 
 ### Part N: <module>
@@ -961,6 +987,7 @@ Validation evidence:
 - Part 26 review pass 2 tracking: merged https://github.com/yaseralnajjar/sifr/pull/1032
 - Part 27 implementation: merged https://github.com/yaseralnajjar/sifr/pull/1033
 - Part 27 review pass 1 tracking: merged https://github.com/yaseralnajjar/sifr/pull/1034
+- Part 27 review pass 2 tracking: merged https://github.com/yaseralnajjar/sifr/pull/1035
 
 ## External Review Passes
 - Reviewer pass 1 request output: `reviews/phase-30-part-1-env-review.md`
