@@ -89,6 +89,17 @@ In particular:
   - No unresolved parity gap exists without documented status and ownership.
   - The waiver inventory is complete and reviewable.
 
+### Milestone Evidence Artifacts
+- `milestone_30_1` parity governance matrix:
+  - `verification/stdlib/phase30_parity_matrix.md`
+- `milestone_30_2` complexity/resource matrix and inventory:
+  - `verification/stdlib/phase30_complexity_resource_matrix.md`
+  - `verification/stdlib/phase30_complexity_resource_inventory.json`
+  - `scripts/check_phase30_complexity_resource_inventory.py`
+- `milestone_30_3` waiver and ownership discipline:
+  - `verification/stdlib/phase30_parity_matrix.md`
+  - `verification/stdlib/phase30_complexity_resource_inventory.json`
+
 ## Behavioral Parity Waves
 
 ### wave_30_1a: Binary and Encoding Foundations
