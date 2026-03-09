@@ -1,0 +1,42 @@
+from sifr.glob import glob
+from sifr.io import write_text
+from sifr.os import run_command, getpid
+from sifr.test import assert_bool_vector_eq
+
+
+def main():
+    expected: list[bool] = [True, True, True, True, True]
+    actual: list[bool] = []
+
+    base: str = "/tmp/sifr_m30_1e_glob_demo_" + str(getpid())
+    try:
+        _mk: str = run_command("mkdir -p " + base)
+        _w1: None = write_text(base + "/a.txt", "a")
+        _w2: None = write_text(base + "/b.txt", "b")
+        _w3: None = write_text(base + "/.hidden.txt", "h")
+
+        txt: list[str] = glob(base, "*.txt")
+        txt_ok: bool = len(txt) == 2 and txt[0] == "a.txt" and txt[1] == "b.txt"
+        actual.append(txt_ok)
+
+        hidden: list[str] = glob(base, ".*.txt")
+        hidden_ok: bool = len(hidden) == 1 and hidden[0] == ".hidden.txt"
+        actual.append(hidden_ok)
+
+        wildcard_q: list[str] = glob(base, "?.txt")
+        wildcard_q_ok: bool = len(wildcard_q) == 2 and wildcard_q[0] == "a.txt" and wildcard_q[1] == "b.txt"
+        actual.append(wildcard_q_ok)
+
+        none: list[str] = glob(base, "*.csv")
+        actual.append(len(none) == 0)
+
+        missing: list[str] = glob(base + "_missing", "*.txt")
+        actual.append(len(missing) == 0)
+    except IOError as e:
+        _ = str(e.message)
+        actual = [False, False, False, False, False]
+    finally:
+        _clean: str = run_command("rm -rf " + base)
+
+    assert_bool_vector_eq(actual, expected)
+    print("m30_1e glob parity demo: pass")
