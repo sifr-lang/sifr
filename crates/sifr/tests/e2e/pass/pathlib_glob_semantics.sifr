@@ -1,0 +1,37 @@
+from sifr.pathlib import Path
+from sifr.io import write_text
+from sifr.os import run_command, getpid
+from sifr.test import assert_bool_vector_eq
+
+
+def main():
+    expected: list[bool] = [True, True, True]
+    actual: list[bool] = []
+
+    base: str = "/tmp/sifr_pathlib_glob_semantics_" + str(getpid())
+    d: Path = Path(base + "")
+    missing: Path = Path(base + "_missing")
+    try:
+        _m: None = d.mkdir()
+        _w1: None = write_text(base + "/a.txt", "a")
+        _w2: None = write_text(base + "/b.txt", "b")
+        _w3: None = write_text(base + "/ab.txt", "ab")
+        _w4: None = write_text(base + "/.hidden.txt", "h")
+
+        q: list[str] = d.glob("?.txt")
+        q_ok: bool = len(q) == 2 and q[0] == base + "/a.txt" and q[1] == base + "/b.txt"
+        actual.append(q_ok)
+
+        star: list[str] = d.glob("*")
+        hidden_filtered: bool = len(star) == 3 and star[0] == base + "/a.txt" and star[1] == base + "/ab.txt" and star[2] == base + "/b.txt"
+        actual.append(hidden_filtered)
+
+        missing_matches: list[str] = missing.glob("*.txt")
+        actual.append(len(missing_matches) == 0)
+    except IOError as e:
+        _ = str(e.message)
+        actual = [False, False, False]
+    finally:
+        _clean: str = run_command("rm -rf " + base)
+
+    assert_bool_vector_eq(actual, expected)
