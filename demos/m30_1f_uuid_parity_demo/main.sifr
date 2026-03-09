@@ -1,0 +1,54 @@
+from sifr.uuid import uuid4, uuid4_obj, uuid_from_hex, UUID
+from sifr.test import assert_bool_vector_eq
+
+
+def is_canonical_shape(value: str) -> bool:
+    if len(value) != 36:
+        return False
+    return value[8] == "-" and value[13] == "-" and value[18] == "-" and value[23] == "-"
+
+
+def main():
+    expected: list[bool] = [True, True, True, True, True, True, True, True]
+    actual: list[bool] = []
+
+    id_text: str = uuid4()
+    actual.append(is_canonical_shape(id_text))
+    actual.append(id_text[14] == "4")
+
+    obj: UUID = uuid4_obj()
+    actual.append(is_canonical_shape(obj.to_str()) and obj.version() == 4)
+
+    parsed_ok: bool = False
+    try:
+        parsed: UUID = uuid_from_hex("550E8400E29B41D4A716446655440000")
+        parsed_ok = parsed.to_str() == "550e8400-e29b-41d4-a716-446655440000"
+    except ValueError as e:
+        _ = str(e.message)
+        parsed_ok = False
+    actual.append(parsed_ok)
+
+    parsed_v1_ok: bool = False
+    try:
+        parsed_v1: UUID = uuid_from_hex("550e8400-e29b-11d4-a716-446655440000")
+        parsed_v1_ok = parsed_v1.version() == 1
+    except ValueError as e:
+        _ = str(e.message)
+        parsed_v1_ok = False
+    actual.append(parsed_v1_ok)
+
+    invalid_rejected: bool = False
+    try:
+        _bad: UUID = uuid_from_hex("invalid")
+    except ValueError as e:
+        _ = str(e.message)
+        invalid_rejected = True
+    actual.append(invalid_rejected)
+
+    ctor_passthrough: UUID = UUID("550e8400-e29b-41d4-a716-44665544000z")
+    actual.append(ctor_passthrough.to_str() == "550e8400-e29b-41d4-a716-44665544000z")
+
+    actual.append(obj.hex() == "550e8400e29b41d4a716446655440000" or len(obj.hex()) == 32)
+
+    assert_bool_vector_eq(actual, expected)
+    print("m30_1f uuid parity demo: pass")
