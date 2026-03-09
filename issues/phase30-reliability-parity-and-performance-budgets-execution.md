@@ -634,6 +634,30 @@ Validation evidence:
 - Review pass 1 status: approved (`reviews/phase-30-part-20-pathlib-review.md`) with no blocking issues; minor observations (`Path.__str__` ergonomics and broader glob metachar support) were validated as out-of-scope for the approved subset and require no additional module-scope remediation.
 - Review pass 2 status: approved (`reviews/phase-30-part-20-pathlib-review-2.md`) with no blockers; production-grade re-review validated no unresolved correctness or safety issues for approved scope.
 
+## Part 21: `glob`
+status: in_review (2026-03-09, implementation ready)
+
+- [x] Define module parity scope and CPython references
+- [x] Port/expand CPython-derived parity fixtures (canonical vector format)
+- [x] Fix root-cause implementation gaps
+- [x] Record parity classification (`parity` / `intentional-diff` / `unsupported`)
+- [x] Run module demo
+- [x] Run targeted module tests
+- [x] Run full local suite
+- [ ] Open PR, review, and merge
+- [ ] External reviewer pass 1 remediation completed (if findings)
+- [ ] External reviewer pass 2 remediation completed (if findings)
+- [ ] Mark part progress in this checklist
+
+Validation evidence:
+- Positive path: `cargo run -q -p sifr -- run demos/m30_1e_glob_parity_demo/main.sifr` -> prints `m30_1e glob parity demo: pass`.
+- Positive path: `cargo run -q -p sifr -- run crates/sifr/tests/e2e/pass/cpython_glob_subset.sifr` -> pass.
+- Positive path: `cargo run -q -p sifr -- run crates/sifr/tests/e2e/pass/stdlib_glob.sifr` -> pass.
+- Positive path: `cargo run -q -p sifr -- run crates/sifr/tests/e2e/pass/path_glob.sifr` -> pass.
+- Positive path: `/Users/yaseralnajjar/work/sifr/codebase/scripts/run_all_tests.sh` -> pass (`verification ok: variants=64, failures=0, blocking_failures=0, non_blocking_failures=0`).
+- Negative path: canonical bool vectors in `cpython_glob_subset.sifr` and `demos/m30_1e_glob_parity_demo/main.sifr` validate panic-free empty-list behavior for missing directories and unmatched patterns.
+- Root-cause fix: `sifr.glob` now removes silent print fallback, enforces deterministic sorted output, and applies CPython-aligned hidden-file filtering (hidden entries only matched when pattern starts with `.`) for approved wildcard subset.
+
 ## Module Part Template (repeat per module)
 
 ### Part N: <module>
