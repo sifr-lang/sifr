@@ -1,6 +1,6 @@
 # sifr.tempfile — Temporary file and directory creation (wraps _sifr.fs + _sifr.crypto)
 # Operations return Result[str, IOError] for safe error handling.
-from _sifr.fs import mkdir, write_text, gettempdir
+from _sifr.fs import mkdir, write_text, gettempdir, exists
 from _sifr.crypto import random_int
 
 def _random_suffix() -> str:
@@ -9,20 +9,58 @@ def _random_suffix() -> str:
 
 def mktemp_path(prefix: str) -> str:
     suffix: str = _random_suffix()
-    return "/tmp/" + prefix + suffix
+    root: str = gettempdir()
+    if len(root) == 0:
+        root = "/tmp"
+    else:
+        last: str | None = root[len(root) - 1]
+        if last is not None:
+            if last == "/":
+                root = root[:len(root) - 1]
+    return root + "/" + prefix + suffix
+
+def _next_candidate(prefix: str) -> str:
+    return mktemp_path(prefix)
+
+def _collision_message(kind: str, attempts: int) -> str:
+    return "tempfile." + kind + ": failed to create unique path after " + str(attempts) + " attempts"
 
 def mkstemp(prefix: str) -> Result[str, IOError]:
-    path: str = mktemp_path(prefix)
-    try:
-        wrt: None = write_text(path, "")
-    except IOError as e:
-        raise IOError(e.message)
-    return path
+    attempts: int = 0
+    max_attempts: int = 64
+    while attempts < max_attempts:
+        path: str = _next_candidate(prefix)
+        path_for_check: str = path + ""
+        if exists(path):
+            attempts = attempts + 1
+            continue
+        try:
+            wrt: None = write_text(path, "")
+            return path
+        except IOError as e:
+            # Retry only when a race creates the same path between exists() and write_text().
+            if exists(path_for_check):
+                attempts = attempts + 1
+                continue
+            raise IOError(e.message)
+    raise IOError(_collision_message("mkstemp", max_attempts))
 
 def mkdtemp(prefix: str) -> Result[str, IOError]:
-    path: str = mktemp_path(prefix)
-    try:
-        md: None = mkdir(path)
-    except IOError as e:
-        raise IOError(e.message)
-    return path
+    attempts: int = 0
+    max_attempts: int = 64
+    while attempts < max_attempts:
+        path: str = _next_candidate(prefix)
+        path_for_check: str = path + ""
+        if exists(path):
+            attempts = attempts + 1
+            continue
+        try:
+            md: None = mkdir(path)
+            return path
+        except IOError as e:
+            # Retry only when a race creates the same path between exists() and mkdir().
+            if exists(path_for_check):
+                attempts = attempts + 1
+                continue
+            raise IOError(e.message)
+    raise IOError(_collision_message("mkdtemp", max_attempts))
