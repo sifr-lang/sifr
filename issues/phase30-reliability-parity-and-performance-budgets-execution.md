@@ -63,14 +63,34 @@ Loop per part: Work -> Validate -> PR -> Review -> Merge -> External review pass
 28. [x] `uuid`
 
 ## milestone_30_2: Complexity and Resource Parity
-- [ ] Define canonical API-level complexity/resource check patterns for stabilized modules
-- [ ] Add asymptotic checks per module API class and track constant-factor deltas
-- [ ] Document waivers for accepted constant-factor regressions with owner and revisit rule
+- [x] Define canonical API-level complexity/resource check patterns for stabilized modules
+- [x] Add asymptotic checks per module API class and track constant-factor deltas
+- [x] Document waivers for accepted constant-factor regressions with owner and revisit rule
 
 ## milestone_30_3: Parity Governance and Waiver Discipline
-- [ ] Define and enforce canonical parity matrix format
-- [ ] Require owner/rationale/linked issue/revisit rule for each unresolved gap
-- [ ] Enforce no module closes with undocumented mismatch status
+- [x] Define and enforce canonical parity matrix format
+- [x] Require owner/rationale/linked issue/revisit rule for each unresolved gap
+- [x] Enforce no module closes with undocumented mismatch status
+
+### Milestone 30_2 Evidence (Complexity and Resource Parity)
+- Canonical patterns + module API-class matrix:
+  - `verification/stdlib/phase30_complexity_resource_matrix.md`
+- Machine-readable inventory (all 28 modules, asymptotic expectations/observations, constant-factor bands, waiver metadata):
+  - `verification/stdlib/phase30_complexity_resource_inventory.json`
+- Structural validator:
+  - `scripts/check_phase30_complexity_resource_inventory.py`
+- Validation commands:
+  - `python3 scripts/check_phase30_complexity_resource_inventory.py` -> `phase30 complexity inventory: PASS (modules=28, waived_constant_factor=11)`
+  - `/Users/yaseralnajjar/work/sifr/codebase/scripts/run_all_tests.sh` -> pass (`verification ok: variants=64, failures=0, blocking_failures=0, non_blocking_failures=0`)
+
+### Milestone 30_3 Evidence (Parity Governance and Waiver Discipline)
+- Canonical parity format and documented mismatch governance:
+  - `verification/stdlib/phase30_parity_matrix.md`
+- Waiver discipline (owner/rationale/tracking/revisit) across complexity and parity inventories:
+  - `verification/stdlib/phase30_complexity_resource_inventory.json`
+  - `verification/stdlib/phase30_parity_matrix.md`
+- Module closeout enforcement:
+  - every module section in this issue includes parity classification and reviewer-pass status before closure marking
 
 ## Part 1: `env`
 status: done (2026-03-08, PR #929)
@@ -995,6 +1015,7 @@ Validation evidence:
 - Part 28 review pass 2 tracking: merged https://github.com/yaseralnajjar/sifr/pull/1038
 - Wave completion closure cycle (wave_30_1f): merged https://github.com/yaseralnajjar/sifr/pull/1039
 - Wave production-grade closure cycle (wave_30_1f): merged https://github.com/yaseralnajjar/sifr/pull/1040
+- Milestone completion review cycle (updated): merged https://github.com/yaseralnajjar/sifr/pull/1041
 
 ## External Review Passes
 - Reviewer pass 1 request output: `reviews/phase-30-part-1-env-review.md`
