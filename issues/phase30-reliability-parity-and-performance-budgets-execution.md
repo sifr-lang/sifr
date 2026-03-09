@@ -576,6 +576,32 @@ Validation evidence:
 - Review pass 1 note validation: reviewer flag about `Result` + `raise` pattern was validated as non-blocking for this module because the same safe adaptation pattern is canonical across current stdlib `Result` wrappers in the approved architecture.
 - Review pass 2 status: reviewer raised the same `Result`+`raise` concern (`reviews/phase-30-part-18-csv-review-2.md`); validation confirmed this remains a non-blocking architectural pattern for current stdlib wrappers, and no additional module-scope remediation was required for approved scope.
 
+## Part 19: `os`
+status: in_review (2026-03-09, implementation merged in PR #1005)
+
+- [x] Define module parity scope and CPython references
+- [x] Port/expand CPython-derived parity fixtures (canonical vector format)
+- [x] Fix root-cause implementation gaps
+- [x] Record parity classification (`parity` / `intentional-diff` / `unsupported`)
+- [x] Run module demo
+- [x] Run targeted module tests
+- [x] Run full local suite
+- [x] Open PR, review, and merge
+- [x] External reviewer pass 1 remediation completed (if findings)
+- [ ] External reviewer pass 2 remediation completed (if findings)
+- [ ] Mark part progress in this checklist
+
+Validation evidence:
+- Positive path: `cargo run -q -p sifr -- run demos/m30_1e_os_parity_demo/main.sifr` -> prints `m30_1e os parity demo: pass`.
+- Positive path: `cargo run -q -p sifr -- run crates/sifr/tests/e2e/pass/cpython_os_subset.sifr` -> pass.
+- Positive path: `cargo run -q -p sifr -- run crates/sifr/tests/e2e/pass/stdlib_os.sifr` -> pass.
+- Positive path: `cargo run -q -p sifr -- run crates/sifr/tests/e2e/pass/stdlib_os_expanded.sifr` -> pass.
+- Positive path: `cargo run -q -p sifr -- run crates/sifr/tests/e2e/pass/stdlib_os_intrinsics.sifr` -> pass.
+- Positive path: `/Users/yaseralnajjar/work/sifr/codebase/scripts/run_all_tests.sh` -> pass (`verification ok: variants=64, failures=0, blocking_failures=0, non_blocking_failures=0`).
+- Negative path: canonical bool vectors in `cpython_os_subset.sifr` validate panic-free typed `IOError` adaptation for failing `rmdir`/`chdir` paths.
+- PR: merged https://github.com/yaseralnajjar/sifr/pull/1005
+- Review pass 1 status: approved (`reviews/phase-30-part-19-os-review.md`) with no blocking issues and no additional module-scope remediation required.
+
 ## Module Part Template (repeat per module)
 
 ### Part N: <module>
@@ -671,6 +697,8 @@ Validation evidence:
 - Part 17 review pass 2 tracking: merged https://github.com/yaseralnajjar/sifr/pull/1001
 - Part 18 implementation: merged https://github.com/yaseralnajjar/sifr/pull/1002
 - Part 18 review pass 1 remediation: merged https://github.com/yaseralnajjar/sifr/pull/1003
+- Part 18 review pass 2 tracking: merged https://github.com/yaseralnajjar/sifr/pull/1004
+- Part 19 implementation: merged https://github.com/yaseralnajjar/sifr/pull/1005
 
 ## External Review Passes
 - Reviewer pass 1 request output: `reviews/phase-30-part-1-env-review.md`
@@ -745,6 +773,8 @@ Validation evidence:
 - Reviewer pass 1 remediation status (`csv`): done (2026-03-09, approved after remediation updates; `Result`+`raise` observation validated as non-blocking architectural pattern)
 - Reviewer pass 2 request output (`csv`): `reviews/phase-30-part-18-csv-review-2.md`
 - Reviewer pass 2 remediation status (`csv`): done (2026-03-09, repeated `Result`+`raise` note validated as non-blocking architectural pattern; no additional module-scope changes required)
+- Reviewer pass 1 request output (`os`): `reviews/phase-30-part-19-os-review.md`
+- Reviewer pass 1 remediation status (`os`): done (2026-03-09, approved with no blockers; no additional module-scope remediation required)
 
 ## Wave Closure Review Cycles
 
