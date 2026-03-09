@@ -93,6 +93,21 @@ In particular:
   - No unresolved parity gap exists without documented status and ownership.
   - The waiver inventory is complete and reviewable.
 
+### milestone_30_4: Parity Test Corpus Structure and Maintainability
+- Scope:
+  - Standardize the structure of Phase 30 module test corpora so they stay readable, reviewable, and production-maintainable as parity coverage grows.
+  - Require each module's parity tests to be organized into a small number of semantic fixtures rather than one oversized catch-all fixture or a large set of microscopic files.
+  - Require each fixture to keep `main()` as the orchestration layer only, with behavior grouped into small helper functions or clearly separated canonical vector sections.
+  - Require positive-path, negative-path, and safety-adaptation coverage to be explicit and easy to audit inside each module's approved parity scope.
+  - Require deterministic inputs, deterministic ordering, and stable assertion grouping so failures remain reproducible and reviewer-friendly.
+  - Require fixture structure to follow the canonical Sifr parity fixture format unless a justified extension is documented.
+- Definition of done:
+  - Every in-scope module has a parity test corpus whose structure is understandable without reverse-engineering a giant monolithic `main()`.
+  - Every module's parity tests are split along behavior or API-surface boundaries that are appropriate for the approved scope.
+  - Each fixture has a clear execution flow, with helper functions or vector sections that map to reviewable behavior groups.
+  - Positive-path, negative-path, and safety-adaptation assertions are all present and easy to locate.
+  - No module closes with parity coverage that is technically passing but structurally too tangled to maintain confidently.
+
 ### Milestone Evidence Artifacts
 - `milestone_30_1` parity governance matrix:
   - `verification/stdlib/phase30_parity_matrix.md`
@@ -103,6 +118,9 @@ In particular:
 - `milestone_30_3` waiver and ownership discipline:
   - `verification/stdlib/phase30_parity_matrix.md`
   - `verification/stdlib/phase30_complexity_resource_inventory.json`
+- `milestone_30_4` parity test corpus structure and maintainability:
+  - `audit/stdlib/cpython_parity_fixture_format.md`
+  - `crates/sifr/tests/e2e/pass/`
 
 ## Behavioral Parity Waves
 
@@ -220,6 +238,7 @@ In particular:
   - `milestone_30_1` (Stdlib Behavioral Parity Program): validation goals cover: port and maintain CPython-derived parity suites; execute one module at a time within related waves; classify every mismatch; require reviewer sign-off per module. Include negative-path goals that catch regressions against these guarantees.
   - `milestone_30_2` (Complexity and Resource Parity): validation goals cover: add API-level scaling and resource checks for stabilized modules; compare asymptotic behavior to CPython-relevant reference behavior; track constant-factor deltas explicitly. Include negative-path goals that catch regressions against these guarantees.
   - `milestone_30_3` (Parity Governance and Waiver Discipline): validation goals cover: standardize parity matrix, classification, and waiver formats; require owner, rationale, linked issue, and revisit rule for unresolved gaps; enforce that no module closes with undocumented mismatch status. Include negative-path goals that catch regressions against these guarantees.
+  - `milestone_30_4` (Parity Test Corpus Structure and Maintainability): validation goals cover: keep module parity coverage split into reviewable semantic fixtures; keep fixture `main()` bodies thin and orchestration-only; ensure positive-path, negative-path, and safety-adaptation checks are explicit and easy to audit; and keep fixture ordering and data deterministic. Include negative-path goals that catch regressions against these guarantees.
   - Exit-gate evidence explicitly demonstrates: reliability claims are backed by reviewed stdlib parity evidence, explicit safety-aligned divergence policy, API-level complexity and resource evidence, and complete waiver-governed parity classification.
 
 ## Local Validation Commands
