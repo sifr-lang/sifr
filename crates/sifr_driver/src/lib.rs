@@ -10,7 +10,6 @@ mod build;
 mod diagnostics;
 mod frontend;
 mod project;
-mod rooted_entrypoint;
 mod stdlib;
 mod test_runner;
 
@@ -45,12 +44,14 @@ pub(crate) use test_runner::{compose_test_runner_lib, generate_test_runner_cargo
 
 #[cfg(test)]
 mod tests {
+    mod discovery_and_workspace;
+    mod project_build_check;
     mod project_graph;
     mod single_file_frontend;
     mod support;
 
     use super::*;
-    use std::collections::{BTreeSet, HashSet};
+    use std::collections::HashSet;
     use std::path::PathBuf;
     use std::sync::{Arc, Barrier};
 
@@ -155,166 +156,6 @@ mod tests {
             .collect();
         let bounded = apply_diagnostic_recovery_limits(&diagnostics);
         assert_eq!(bounded.len(), 50);
-    }
-
-    #[test]
-    fn test_create_invocation_workspace_returns_unique_paths() {
-        let first = create_invocation_workspace("workspace_unique")
-            .expect("first workspace should be created");
-        let second = create_invocation_workspace("workspace_unique")
-            .expect("second workspace should be created");
-        assert_ne!(first, second);
-        assert!(first.exists());
-        assert!(second.exists());
-
-        let _ = std::fs::remove_dir_all(first);
-        let _ = std::fs::remove_dir_all(second);
-    }
-
-    #[test]
-    fn test_discover_test_root_modules_is_deterministic() {
-        let unique = format!(
-            "sifr_test_root_discovery_{}_{}",
-            std::process::id(),
-            std::time::SystemTime::now()
-                .duration_since(std::time::UNIX_EPOCH)
-                .expect("time should move forward")
-                .as_nanos()
-        );
-        let dir = std::env::temp_dir().join(unique);
-        std::fs::create_dir_all(&dir).expect("test dir should be created");
-        std::fs::write(dir.join("z_test.sifr"), "def test_z():\n    assert True\n")
-            .expect("z_test should be written");
-        std::fs::write(dir.join("test_a.sifr"), "def test_a():\n    assert True\n")
-            .expect("test_a should be written");
-        std::fs::write(
-            dir.join("helper.sifr"),
-            "def helper() -> int:\n    return 1\n",
-        )
-        .expect("helper should be written");
-
-        let roots = discover_test_root_modules(&dir);
-        let names: Vec<String> = roots.keys().cloned().collect();
-        assert_eq!(names, vec!["test_a".to_string(), "z_test".to_string()]);
-
-        let _ = std::fs::remove_dir_all(&dir);
-    }
-
-    #[test]
-    fn test_project_and_test_discovery_share_import_closure_membership() {
-        let unique = format!(
-            "sifr_discovery_parity_positive_{}_{}",
-            std::process::id(),
-            std::time::SystemTime::now()
-                .duration_since(std::time::UNIX_EPOCH)
-                .expect("time should move forward")
-                .as_nanos()
-        );
-        let dir = std::env::temp_dir().join(unique);
-        std::fs::create_dir_all(&dir).expect("project dir should be created");
-        std::fs::write(
-            dir.join("main.sifr"),
-            "from helper import value\n\ndef main():\n    print(value())\n",
-        )
-        .expect("main should be written");
-        std::fs::write(
-            dir.join("test_parity.sifr"),
-            "from helper import value\n\ndef test_value():\n    assert value() == 42\n",
-        )
-        .expect("test_parity should be written");
-        std::fs::write(
-            dir.join("helper.sifr"),
-            "from shared import BASE\n\ndef value() -> int:\n    return BASE\n",
-        )
-        .expect("helper should be written");
-        std::fs::write(dir.join("shared.sifr"), "BASE: int = 42\n")
-            .expect("shared should be written");
-        std::fs::write(dir.join("unrelated_bad.sifr"), "def unrelated(:\n")
-            .expect("unrelated sibling should be written");
-
-        let project_roots = BTreeSet::from(["main".to_string()]);
-        let test_roots = BTreeSet::from(["test_parity".to_string()]);
-        let project_modules = parse_import_closure_modules(
-            &dir,
-            &project_roots,
-            DiscoveryDiagnosticStyle::ModuleName,
-        )
-        .expect("project closure discovery should succeed");
-        let test_modules =
-            parse_import_closure_modules(&dir, &test_roots, DiscoveryDiagnosticStyle::ModuleName)
-                .expect("test closure discovery should succeed");
-
-        let project_support: BTreeSet<String> = project_modules
-            .keys()
-            .filter(|name| !project_roots.contains(*name))
-            .cloned()
-            .collect();
-        let test_support: BTreeSet<String> = test_modules
-            .keys()
-            .filter(|name| !test_roots.contains(*name))
-            .cloned()
-            .collect();
-
-        assert_eq!(
-            project_support,
-            BTreeSet::from(["helper".to_string(), "shared".to_string()])
-        );
-        assert_eq!(project_support, test_support);
-        assert!(!project_support.contains("unrelated_bad"));
-
-        let _ = std::fs::remove_dir_all(&dir);
-    }
-
-    #[test]
-    fn test_project_and_test_discovery_parity_reports_reachable_parse_errors() {
-        let unique = format!(
-            "sifr_discovery_parity_negative_{}_{}",
-            std::process::id(),
-            std::time::SystemTime::now()
-                .duration_since(std::time::UNIX_EPOCH)
-                .expect("time should move forward")
-                .as_nanos()
-        );
-        let dir = std::env::temp_dir().join(unique);
-        std::fs::create_dir_all(&dir).expect("project dir should be created");
-        std::fs::write(
-            dir.join("main.sifr"),
-            "from helper import value\n\ndef main():\n    print(value())\n",
-        )
-        .expect("main should be written");
-        std::fs::write(
-            dir.join("test_parity.sifr"),
-            "from helper import value\n\ndef test_value():\n    assert value() == 1\n",
-        )
-        .expect("test_parity should be written");
-        std::fs::write(dir.join("helper.sifr"), "def value(:\n").expect("helper should be written");
-        std::fs::write(
-            dir.join("unrelated_ok.sifr"),
-            "def spare() -> int:\n    return 1\n",
-        )
-        .expect("unrelated should be written");
-
-        let project_roots = BTreeSet::from(["main".to_string()]);
-        let test_roots = BTreeSet::from(["test_parity".to_string()]);
-
-        let project_errors = parse_import_closure_modules(
-            &dir,
-            &project_roots,
-            DiscoveryDiagnosticStyle::ModuleName,
-        )
-        .err()
-        .expect("project closure should fail on reachable parse error");
-        let test_errors =
-            parse_import_closure_modules(&dir, &test_roots, DiscoveryDiagnosticStyle::ModuleName)
-                .err()
-                .expect("test closure should fail on reachable parse error");
-
-        assert!(project_errors
-            .iter()
-            .any(|e| e.message.contains("[helper]")));
-        assert!(test_errors.iter().any(|e| e.message.contains("[helper]")));
-
-        let _ = std::fs::remove_dir_all(&dir);
     }
 
     #[test]
@@ -528,166 +369,6 @@ def test_import_parity():
             .all(|m| !m.contains("] [test_bad] return type mismatch")));
 
         let _ = std::fs::remove_dir_all(&test_dir);
-    }
-
-    #[test]
-    fn test_check_project_resolves_valid_local_imports() {
-        let unique = format!(
-            "sifr_check_project_{}_{}",
-            std::process::id(),
-            std::time::SystemTime::now()
-                .duration_since(std::time::UNIX_EPOCH)
-                .expect("time should move forward")
-                .as_nanos()
-        );
-        let dir = std::env::temp_dir().join(unique);
-        std::fs::create_dir_all(&dir).expect("project dir should be created");
-        std::fs::write(
-            dir.join("main.sifr"),
-            r#"
-from helper import area
-
-def main():
-    print(area(2.0))
-"#,
-        )
-        .expect("main module should be written");
-        std::fs::write(
-            dir.join("helper.sifr"),
-            r#"
-from sifr.math import pi
-
-def area(radius: float) -> float:
-    return pi * radius * radius
-"#,
-        )
-        .expect("helper module should be written");
-
-        let errors = check_project(&dir.join("main.sifr"));
-        assert!(
-            errors.is_empty(),
-            "check_project should succeed: {errors:?}"
-        );
-
-        let _ = std::fs::remove_dir_all(&dir);
-    }
-
-    #[test]
-    fn test_check_project_ignores_unrelated_non_closure_parse_errors() {
-        let unique = format!(
-            "sifr_check_project_closure_ignore_{}_{}",
-            std::process::id(),
-            std::time::SystemTime::now()
-                .duration_since(std::time::UNIX_EPOCH)
-                .expect("time should move forward")
-                .as_nanos()
-        );
-        let dir = std::env::temp_dir().join(unique);
-        std::fs::create_dir_all(&dir).expect("project dir should be created");
-        std::fs::write(
-            dir.join("main.sifr"),
-            "from helper import value\n\ndef main():\n    print(value())\n",
-        )
-        .expect("main module should be written");
-        std::fs::write(
-            dir.join("helper.sifr"),
-            "def value() -> int:\n    return 42\n",
-        )
-        .expect("helper module should be written");
-        std::fs::write(dir.join("unrelated_bad.sifr"), "def unrelated(:\n")
-            .expect("unrelated sibling should be written");
-
-        let errors = check_project(&dir.join("main.sifr"));
-        assert!(
-            errors.is_empty(),
-            "unrelated sibling parse errors should not affect check_project: {errors:?}"
-        );
-
-        let _ = std::fs::remove_dir_all(&dir);
-    }
-
-    #[test]
-    fn test_check_project_reports_reachable_parse_errors_in_import_closure() {
-        let unique = format!(
-            "sifr_check_project_closure_reachable_{}_{}",
-            std::process::id(),
-            std::time::SystemTime::now()
-                .duration_since(std::time::UNIX_EPOCH)
-                .expect("time should move forward")
-                .as_nanos()
-        );
-        let dir = std::env::temp_dir().join(unique);
-        std::fs::create_dir_all(&dir).expect("project dir should be created");
-        std::fs::write(
-            dir.join("main.sifr"),
-            "from helper import value\n\ndef main():\n    print(value())\n",
-        )
-        .expect("main module should be written");
-        std::fs::write(dir.join("helper.sifr"), "def value(:\n")
-            .expect("helper module should be written");
-        std::fs::write(
-            dir.join("unrelated_ok.sifr"),
-            "def spare() -> int:\n    return 1\n",
-        )
-        .expect("unrelated module should be written");
-
-        let errors = check_project(&dir.join("main.sifr"));
-        assert!(
-            errors.iter().any(|e| {
-                e.message.contains("[helper]")
-                    && (e.message.contains("failed to parse")
-                        || e.message.contains("Expected a parameter"))
-            }),
-            "reachable parse errors must still fail check_project: {errors:?}"
-        );
-
-        let _ = std::fs::remove_dir_all(&dir);
-    }
-
-    #[test]
-    fn test_check_project_error_messages_match_build_project() {
-        let unique = format!(
-            "sifr_check_project_error_parity_{}_{}",
-            std::process::id(),
-            std::time::SystemTime::now()
-                .duration_since(std::time::UNIX_EPOCH)
-                .expect("time should move forward")
-                .as_nanos()
-        );
-        let dir = std::env::temp_dir().join(unique);
-        std::fs::create_dir_all(&dir).expect("project dir should be created");
-        std::fs::write(
-            dir.join("main.sifr"),
-            r#"
-from helper import broken
-
-def main():
-    print(broken())
-"#,
-        )
-        .expect("main module should be written");
-        std::fs::write(
-            dir.join("helper.sifr"),
-            r#"
-def broken() -> int:
-    return "bad"
-"#,
-        )
-        .expect("helper module should be written");
-
-        let check_errors = check_project(&dir.join("main.sifr"));
-        let build_errors = build_project(&dir.join("main.sifr"), &dir.join("build_out"))
-            .err()
-            .expect("build_project should fail with same frontend error");
-
-        let check_messages: Vec<String> = check_errors.into_iter().map(|e| e.to_string()).collect();
-        let build_messages: Vec<String> = build_errors.into_iter().map(|e| e.to_string()).collect();
-        assert_eq!(check_messages, build_messages);
-        assert!(build_messages
-            .iter()
-            .any(|m| m.contains("[helper] return type mismatch")));
-
-        let _ = std::fs::remove_dir_all(&dir);
     }
 
     #[test]

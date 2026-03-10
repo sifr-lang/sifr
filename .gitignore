@@ -21,6 +21,8 @@ __pycache__/
 # Build
 dist/
 build/
+!crates/sifr_driver/src/build/
+!crates/sifr_driver/src/build/**
 **/target/
 Cargo.lock
 /tmp/

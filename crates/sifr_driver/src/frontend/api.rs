@@ -1,8 +1,6 @@
+use crate::build::{compile_single_file_entrypoint_with_metadata, compile_single_file_frontend};
 use crate::diagnostics::{CompileError, CompilePhase, CompileResult, CompileResultFull};
 use crate::frontend::module_lowering::emit_frontend_diagnostics;
-use crate::rooted_entrypoint::{
-    compile_single_file_entrypoint_with_metadata, compile_single_file_frontend,
-};
 use crate::stdlib::StdlibCompiled;
 use sifr_hir::LoweringResult;
 use sifr_python_ast::Stmt;

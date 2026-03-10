@@ -1,0 +1,4 @@
+from helper import render
+
+def main():
+    print(render())

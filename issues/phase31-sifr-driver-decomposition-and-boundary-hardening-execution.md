@@ -20,7 +20,7 @@ Loop per part: Plan -> Implement -> Validate -> Demo -> PR -> Review -> Merge ->
 ## Full Phase To-Do Plan
 1. [x] `milestone_driver_1`: extract diagnostics and public result types into a dedicated API spine while shrinking `lib.rs` toward crate wiring
 2. [x] `milestone_driver_2`: extract stdlib embedding, intrinsic mapping, cache, and bootstrap into a dedicated module tree with unchanged export behavior
-3. [ ] `milestone_driver_3`: extract frontend compile/check plumbing, module-export collection, dependency ordering, and cycle canonicalization into coherent frontend/project modules
+3. [x] `milestone_driver_3`: extract frontend compile/check plumbing, module-export collection, dependency ordering, and cycle canonicalization into coherent frontend/project modules
 4. [ ] `milestone_driver_4`: extract discovery, import-closure parsing, workspace allocation, project build orchestration, and file-write helpers into dedicated modules
 5. [ ] `milestone_driver_5`: extract test-runner orchestration, composed test-lib generation, and test-runner Cargo manifest logic into a dedicated module
 6. [ ] `milestone_driver_6`: split the embedded driver tests into focused modules and add the checked maintainability guardrail script, docs, and local-validation wiring
@@ -75,7 +75,7 @@ Loop per part: Plan -> Implement -> Validate -> Demo -> PR -> Review -> Merge ->
   - merge evidence: PR #1090 merged into `main` on 2026-03-10
 
 ### milestone_driver_3: Frontend and Project-Graph Extraction
-- Status: in_review
+- Status: complete
 - Implementation PR: https://github.com/yaseralnajjar/sifr/pull/1091
 - Demo target:
   - `cargo run -q -p sifr -- run demos/m_driver_3_frontend_project_graph_demo/main.sifr`
@@ -89,9 +89,11 @@ Loop per part: Plan -> Implement -> Validate -> Demo -> PR -> Review -> Merge ->
   - positive path: `cargo run -q -p sifr -- run demos/m_driver_3_frontend_project_graph_demo/main.sifr` -> printed `42`
   - negative path: `cargo test -q -p sifr_driver test_compute_module_compile_order_cycle_diagnostics_are_canonical_and_stable -- --nocapture` is covered by the `project_graph` module filter and passed, proving the extracted compile-order boundary still emits deterministic canonical cycle diagnostics
   - local gate: `/Users/yaseralnajjar/work/sifr/codebase/scripts/run_all_tests.sh --profile quick` -> passed (`verification ok: variants=64, failures=0, blocking_failures=0, non_blocking_failures=0`)
+  - merge evidence: PR #1091 merged into `main` on 2026-03-10
 
 ### milestone_driver_4: Discovery, Workspace, and Build Orchestration Extraction
-- Status: pending
+- Status: in_review
+- Implementation PR: https://github.com/yaseralnajjar/sifr/pull/1092
 - Demo target:
   - `cargo run -q -p sifr -- run demos/m_driver_4_build_orchestration_demo/main.sifr`
 - Validation target:
@@ -99,7 +101,12 @@ Loop per part: Plan -> Implement -> Validate -> Demo -> PR -> Review -> Merge ->
   - `cargo test -p sifr_driver project_build -- --nocapture`
   - `/Users/yaseralnajjar/work/sifr/codebase/scripts/run_all_tests.sh --profile quick`
 - Validation evidence:
-  - pending
+  - implementation note: `.gitignore` now explicitly unignores `crates/sifr_driver/src/build/` so the extracted build module tree is versioned instead of being silently dropped by the repo-wide `build/` ignore rule
+  - positive path: `cargo test -q -p sifr_driver discovery -- --nocapture` -> passed (`4 passed, 0 failed`)
+  - positive path: `cargo test -q -p sifr_driver project_build -- --nocapture` -> passed (`10 passed, 0 failed`)
+  - positive path: `cargo run -q -p sifr -- run demos/m_driver_4_build_orchestration_demo/main.sifr` -> printed `42`
+  - negative path: `cargo test -q -p sifr_driver test_check_project_error_messages_match_build_project -- --nocapture` is covered by the `project_build` module filter and passed, proving extracted project build/check orchestration still preserves the same reachable frontend error surface
+  - local gate: `/Users/yaseralnajjar/work/sifr/codebase/scripts/run_all_tests.sh --profile quick` -> passed (`verification ok: variants=64, failures=0, blocking_failures=0, non_blocking_failures=0`)
 
 ### milestone_driver_5: Test Runner Extraction
 - Status: pending
