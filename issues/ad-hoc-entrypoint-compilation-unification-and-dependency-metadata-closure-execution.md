@@ -20,7 +20,7 @@ Loop per part: Plan -> Implement -> Validate -> Demo -> PR -> Review -> Merge ->
 ## Full Phase To-Do Plan
 1. [x] `milestone_adhoc_1`: introduce one canonical rooted-entrypoint compilation plan and shared build materialization for single-file and project builds
 2. [x] `milestone_adhoc_2`: aggregate multi-module `used_stdlib_modules` and `required_crates` deterministically from compiler/codegen outputs
-3. [ ] `milestone_adhoc_3`: route single-file and multi-file manifest generation through one canonical dependency-driven path
+3. [x] `milestone_adhoc_3`: route single-file and multi-file manifest generation through one canonical dependency-driven path
 4. [ ] `milestone_adhoc_4`: harden CLI contract preservation regressions around mode boundaries and unchanged `check`/`emit` semantics
 5. [ ] `milestone_adhoc_5`: add dependency-closure regression matrix coverage for imported and transitive dependency sources
 
@@ -69,7 +69,7 @@ Loop per part: Plan -> Implement -> Validate -> Demo -> PR -> Review -> Merge ->
   - local gate: `/Users/yaseralnajjar/work/sifr/codebase/scripts/run_all_tests.sh --profile quick` -> passed (`verification ok: variants=64, failures=0, blocking_failures=0, non_blocking_failures=0`)
 
 ### milestone_adhoc_3: Canonical Manifest Generation Path
-- Status: in review
+- Status: complete
 - Implementation PR: https://github.com/yaseralnajjar/sifr/pull/1084
 - Implementation target:
   - move Cargo.toml generation into the one shared rooted-entrypoint materialization path
@@ -88,7 +88,22 @@ Loop per part: Plan -> Implement -> Validate -> Demo -> PR -> Review -> Merge ->
   - local gate: `/Users/yaseralnajjar/work/sifr/codebase/scripts/run_all_tests.sh --profile quick` -> passed (`verification ok: variants=64, failures=0, blocking_failures=0, non_blocking_failures=0`)
 
 ### milestone_adhoc_4: CLI Contract Preservation and Regression Hardening
-- Status: pending
+- Status: validated, PR pending
+- Implementation target:
+  - add explicit CLI tests for single-file isolation after the rooted-entrypoint refactor
+  - prove non-main entrypoints still bypass project mode
+  - prove `emit` remains single-file even when `check` resolves project-mode imports
+- Demo target:
+  - `cargo test -p sifr emit_entrypoint_preserves_single_file_boundary_for_project_like_main -- --nocapture`
+- Validation target:
+  - `cargo test -p sifr entrypoint_`
+  - `cargo test -p sifr emit_entrypoint_preserves_single_file_boundary_for_project_like_main -- --nocapture`
+  - `/Users/yaseralnajjar/work/sifr/codebase/scripts/run_all_tests.sh --profile quick`
+- Validation evidence:
+  - positive path: `cargo test -p sifr entrypoint_` -> passed (`9 passed, 0 failed`)
+  - positive path: `cargo test -p sifr emit_entrypoint_preserves_single_file_boundary_for_project_like_main -- --nocapture` -> passed (`1 passed, 0 failed`)
+  - negative path: `tests::test_emit_entrypoint_preserves_single_file_boundary_for_project_like_main` proves `check` resolves a project-like `main.sifr` successfully while `emit` still fails on the same local import as a single-file compilation boundary
+  - local gate: `/Users/yaseralnajjar/work/sifr/codebase/scripts/run_all_tests.sh --profile quick` -> passed (`verification ok: variants=64, failures=0, blocking_failures=0, non_blocking_failures=0`)
 
 ### milestone_adhoc_5: Dependency Closure Regression Matrix
 - Status: pending
