@@ -36,7 +36,7 @@ pub fn run_tests(test_dir: &Path) -> Result<bool, Vec<CompileError>> {
     ));
 
     let generated_project = build_test_runner_project(test_dir, &test_files_by_module)?;
-    execute_test_runner_project(generated_project)
+    execute_test_runner_project(&generated_project)
 }
 
 fn build_test_runner_project(

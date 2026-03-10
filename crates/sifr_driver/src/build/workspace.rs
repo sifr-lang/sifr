@@ -21,14 +21,13 @@ pub(crate) fn create_invocation_workspace(prefix: &str) -> Result<PathBuf, Vec<C
         };
         let workspace = root.join(unique);
         match std::fs::create_dir(&workspace) {
-            Ok(_) => return Ok(workspace),
-            Err(e) if e.kind() == std::io::ErrorKind::AlreadyExists => continue,
-            Err(e) => {
+            Ok(()) => return Ok(workspace),
+            Err(error) if error.kind() == std::io::ErrorKind::AlreadyExists => {}
+            Err(error) => {
+                let workspace_display = workspace.display();
                 return Err(vec![CompileError {
                     message: format!(
-                        "failed to create invocation workspace '{}': {}",
-                        workspace.display(),
-                        e
+                        "failed to create invocation workspace '{workspace_display}': {error}"
                     ),
                     phase: CompilePhase::Build,
                 }]);
@@ -36,10 +35,7 @@ pub(crate) fn create_invocation_workspace(prefix: &str) -> Result<PathBuf, Vec<C
         }
     }
     Err(vec![CompileError {
-        message: format!(
-            "failed to allocate unique invocation workspace for prefix '{}'",
-            prefix
-        ),
+        message: format!("failed to allocate unique invocation workspace for prefix '{prefix}'"),
         phase: CompilePhase::Build,
     }])
 }

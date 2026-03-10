@@ -34,14 +34,14 @@ pub(crate) struct RootedEntrypointPlan {
 pub(crate) fn compile_single_file_frontend(
     source: &str,
 ) -> Result<FrontendCompiled, Vec<CompileError>> {
-    RootedEntrypointPlan::from_entrypoint(RootedEntrypoint::SingleFile { source })?
+    RootedEntrypointPlan::from_entrypoint(&RootedEntrypoint::SingleFile { source })?
         .into_single_file_frontend()
 }
 
 pub(crate) fn compile_single_file_entrypoint_with_metadata(
     source: &str,
 ) -> Result<sifr_codegen::CodegenResult, Vec<CompileError>> {
-    let plan = RootedEntrypointPlan::from_entrypoint(RootedEntrypoint::SingleFile { source })?;
+    let plan = RootedEntrypointPlan::from_entrypoint(&RootedEntrypoint::SingleFile { source })?;
     plan.emit_frontend_diagnostics();
     plan.into_single_file_codegen_result()
 }
@@ -49,21 +49,21 @@ pub(crate) fn compile_single_file_entrypoint_with_metadata(
 pub(crate) fn resolve_project_entrypoint_plan(
     main_file: &Path,
 ) -> Result<RootedEntrypointPlan, Vec<CompileError>> {
-    RootedEntrypointPlan::from_entrypoint(RootedEntrypoint::Project { main_file })
+    RootedEntrypointPlan::from_entrypoint(&RootedEntrypoint::Project { main_file })
 }
 
 pub(crate) fn build_rooted_entrypoint_binary(
     entrypoint: RootedEntrypoint<'_>,
     output_dir: &Path,
 ) -> Result<PathBuf, Vec<CompileError>> {
-    let plan = RootedEntrypointPlan::from_entrypoint(entrypoint)?;
+    let plan = RootedEntrypointPlan::from_entrypoint(&entrypoint)?;
     plan.emit_frontend_diagnostics();
     let generated_project = plan.into_generated_binary_project()?;
     materialize_binary_project(output_dir, "sifr_output", generated_project)
 }
 
 impl RootedEntrypointPlan {
-    fn from_entrypoint(entrypoint: RootedEntrypoint<'_>) -> Result<Self, Vec<CompileError>> {
+    fn from_entrypoint(entrypoint: &RootedEntrypoint<'_>) -> Result<Self, Vec<CompileError>> {
         let stdlib = compile_stdlib()?;
         let (shape, project_lowering) = match entrypoint {
             RootedEntrypoint::SingleFile { source } => {
@@ -191,7 +191,7 @@ mod tests {
 
     #[test]
     fn test_single_file_entrypoint_plan_generates_main_only_project() {
-        let plan = RootedEntrypointPlan::from_entrypoint(RootedEntrypoint::SingleFile {
+        let plan = RootedEntrypointPlan::from_entrypoint(&RootedEntrypoint::SingleFile {
             source: "def main():\n    print(\"ok\")\n",
         })
         .expect("single-file entrypoint should compile");
@@ -221,7 +221,7 @@ mod tests {
         )
         .expect("helper should be written");
 
-        let plan = RootedEntrypointPlan::from_entrypoint(RootedEntrypoint::Project {
+        let plan = RootedEntrypointPlan::from_entrypoint(&RootedEntrypoint::Project {
             main_file: &main_file,
         })
         .expect("project entrypoint should compile");
@@ -258,7 +258,7 @@ mod tests {
         )
         .expect("helper should be written");
 
-        let errors = match RootedEntrypointPlan::from_entrypoint(RootedEntrypoint::Project {
+        let errors = match RootedEntrypointPlan::from_entrypoint(&RootedEntrypoint::Project {
             main_file: &main_file,
         }) {
             Ok(_) => panic!("reachable project type error should fail plan construction"),
@@ -288,7 +288,7 @@ def helper() -> bigint:\n    return bigint(1)\n",
         )
         .expect("helper should be written");
 
-        let plan = RootedEntrypointPlan::from_entrypoint(RootedEntrypoint::Project {
+        let plan = RootedEntrypointPlan::from_entrypoint(&RootedEntrypoint::Project {
             main_file: &main_file,
         })
         .expect("project entrypoint should compile");
@@ -326,7 +326,7 @@ def helper() -> bigint:\n    return bigint(1)\n",
         )
         .expect("unused dependency should be written");
 
-        let plan = RootedEntrypointPlan::from_entrypoint(RootedEntrypoint::Project {
+        let plan = RootedEntrypointPlan::from_entrypoint(&RootedEntrypoint::Project {
             main_file: &main_file,
         })
         .expect("project entrypoint should compile");
