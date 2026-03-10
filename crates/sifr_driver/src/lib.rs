@@ -10,8 +10,8 @@ mod rooted_entrypoint;
 
 use serde::Serialize;
 use sifr_codegen::{
-    generate_project, generate_project_with_deps_and_crates, generate_rust_multi_with_metadata,
-    generate_rust_test, generate_rust_with_stdlib, StdlibCode,
+    generate_project_with_deps_and_crates, generate_rust_multi_with_metadata, generate_rust_test,
+    generate_rust_with_stdlib, StdlibCode,
 };
 use sifr_hir::{
     lower_module_stdlib_with_externals, lower_module_with_externals, ExternalDefs, HirModule,

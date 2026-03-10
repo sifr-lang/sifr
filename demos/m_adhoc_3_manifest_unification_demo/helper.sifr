@@ -1,0 +1,5 @@
+def render() -> str:
+    value: bigint = bigint(42)
+    if str(value) == "42":
+        return "adhoc milestone 3 manifest unification demo: pass"
+    return "adhoc milestone 3 manifest unification demo: fail"

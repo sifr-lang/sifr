@@ -18,7 +18,6 @@ pub(crate) struct RootedEntrypointPlan {
 }
 
 struct GeneratedBinaryProject {
-    cargo_toml: String,
     main_rs: String,
     support_modules: BTreeMap<String, String>,
     used_stdlib_modules: HashSet<String>,
@@ -177,15 +176,8 @@ fn generated_single_file_binary_project(
     project_name: &str,
     codegen_result: sifr_codegen::CodegenResult,
 ) -> GeneratedBinaryProject {
-    let (cargo_toml, _) = generate_project_with_deps_and_crates(
-        &empty_hir_module(),
-        project_name,
-        &codegen_result.used_stdlib_modules,
-        &codegen_result.required_crates,
-    );
-
+    let _ = project_name;
     GeneratedBinaryProject {
-        cargo_toml,
         main_rs: codegen_result.rust_source,
         support_modules: BTreeMap::new(),
         used_stdlib_modules: codegen_result.used_stdlib_modules,
@@ -217,7 +209,7 @@ fn generated_project_binary_project(
     )
     .map_err(|error| vec![error])?;
 
-    let (cargo_toml, _) = generate_project(&empty_hir_module(), project_name);
+    let _ = project_name;
     let main_rs = assemble_project_main_rs(&compile_order, &codegen_result.rust_files);
     let support_modules = ordered_non_main_module_names(&compile_order, &codegen_result.rust_files)
         .into_iter()
@@ -230,7 +222,6 @@ fn generated_project_binary_project(
         .collect();
 
     Ok(GeneratedBinaryProject {
-        cargo_toml,
         main_rs,
         support_modules,
         used_stdlib_modules: codegen_result.used_stdlib_modules,
@@ -243,12 +234,6 @@ fn materialize_binary_project(
     project_name: &str,
     generated_project: GeneratedBinaryProject,
 ) -> Result<PathBuf, Vec<CompileError>> {
-    // Retain dependency metadata on the generated project as part of the rooted-entrypoint
-    // build contract even before milestone 3 wires it into manifest generation.
-    let _dependency_metadata = (
-        &generated_project.used_stdlib_modules,
-        &generated_project.required_crates,
-    );
     let project_path = output_dir.join(project_name);
     let src_dir = project_path.join("src");
     std::fs::create_dir_all(&src_dir).map_err(|error| {
@@ -258,11 +243,14 @@ fn materialize_binary_project(
         }]
     })?;
 
-    std::fs::write(
-        project_path.join("Cargo.toml"),
-        generated_project.cargo_toml,
-    )
-    .map_err(|error| {
+    let (cargo_toml, _) = generate_project_with_deps_and_crates(
+        &empty_hir_module(),
+        project_name,
+        &generated_project.used_stdlib_modules,
+        &generated_project.required_crates,
+    );
+
+    std::fs::write(project_path.join("Cargo.toml"), cargo_toml).map_err(|error| {
         vec![CompileError {
             message: format!("failed to write Cargo.toml: {error}"),
             phase: CompilePhase::Build,
@@ -346,9 +334,8 @@ mod tests {
 
         assert!(generated_project.support_modules.is_empty());
         assert!(generated_project.main_rs.contains("fn main"));
-        assert!(generated_project
-            .cargo_toml
-            .contains("name = \"sifr_output\""));
+        assert!(generated_project.used_stdlib_modules.is_empty());
+        assert!(generated_project.required_crates.is_empty());
     }
 
     #[test]
@@ -481,6 +468,67 @@ def helper() -> bigint:\n    return bigint(1)\n",
 
         assert!(!generated_project.used_stdlib_modules.contains("sifr.json"));
         assert!(!generated_project.required_crates.contains("serde_json"));
+
+        let _ = std::fs::remove_dir_all(dir);
+    }
+
+    #[test]
+    fn test_build_project_includes_support_module_required_crates_in_manifest() {
+        let dir = mktemp_dir("project_manifest_positive");
+        let main_file = dir.join("main.sifr");
+        let build_out = dir.join("build_out");
+        std::fs::write(
+            &main_file,
+            "from helper import helper\n\ndef main():\n    print(helper())\n",
+        )
+        .expect("main should be written");
+        std::fs::write(
+            dir.join("helper.sifr"),
+            "def helper() -> bigint:\n    return bigint(42)\n",
+        )
+        .expect("helper should be written");
+
+        let binary = build_project(&main_file, &build_out)
+            .expect("project build should succeed with support-module required crates");
+        assert!(binary.exists());
+
+        let cargo_toml = std::fs::read_to_string(build_out.join("sifr_output").join("Cargo.toml"))
+            .expect("cargo manifest should be written");
+        assert!(cargo_toml.contains("num-bigint = \"0.4\""));
+        assert!(cargo_toml.contains("num-traits = \"0.2\""));
+
+        let _ = std::fs::remove_dir_all(dir);
+    }
+
+    #[test]
+    fn test_build_project_manifest_ignores_unreachable_required_crates() {
+        let dir = mktemp_dir("project_manifest_negative");
+        let main_file = dir.join("main.sifr");
+        let build_out = dir.join("build_out");
+        std::fs::write(
+            &main_file,
+            "from helper import helper\n\ndef main():\n    print(helper())\n",
+        )
+        .expect("main should be written");
+        std::fs::write(
+            dir.join("helper.sifr"),
+            "def helper() -> int:\n    return 1\n",
+        )
+        .expect("helper should be written");
+        std::fs::write(
+            dir.join("unused_bigint.sifr"),
+            "def unused() -> bigint:\n    return bigint(99)\n",
+        )
+        .expect("unused helper should be written");
+
+        let binary = build_project(&main_file, &build_out)
+            .expect("project build should ignore unreachable dependency metadata");
+        assert!(binary.exists());
+
+        let cargo_toml = std::fs::read_to_string(build_out.join("sifr_output").join("Cargo.toml"))
+            .expect("cargo manifest should be written");
+        assert!(!cargo_toml.contains("num-bigint = \"0.4\""));
+        assert!(!cargo_toml.contains("num-traits = \"0.2\""));
 
         let _ = std::fs::remove_dir_all(dir);
     }

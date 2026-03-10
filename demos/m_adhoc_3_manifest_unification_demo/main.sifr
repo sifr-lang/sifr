@@ -1,0 +1,7 @@
+# Milestone adhoc 3 demo:
+# support-module-required crates must flow into the generated Cargo manifest.
+from helper import render
+
+
+def main():
+    print(render())

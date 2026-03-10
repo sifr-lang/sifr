@@ -19,7 +19,7 @@ Loop per part: Plan -> Implement -> Validate -> Demo -> PR -> Review -> Merge ->
 
 ## Full Phase To-Do Plan
 1. [x] `milestone_adhoc_1`: introduce one canonical rooted-entrypoint compilation plan and shared build materialization for single-file and project builds
-2. [ ] `milestone_adhoc_2`: aggregate multi-module `used_stdlib_modules` and `required_crates` deterministically from compiler/codegen outputs
+2. [x] `milestone_adhoc_2`: aggregate multi-module `used_stdlib_modules` and `required_crates` deterministically from compiler/codegen outputs
 3. [ ] `milestone_adhoc_3`: route single-file and multi-file manifest generation through one canonical dependency-driven path
 4. [ ] `milestone_adhoc_4`: harden CLI contract preservation regressions around mode boundaries and unchanged `check`/`emit` semantics
 5. [ ] `milestone_adhoc_5`: add dependency-closure regression matrix coverage for imported and transitive dependency sources
@@ -50,7 +50,7 @@ Loop per part: Plan -> Implement -> Validate -> Demo -> PR -> Review -> Merge ->
   - local gate: `/Users/yaseralnajjar/work/sifr/codebase/scripts/run_all_tests.sh --profile quick` -> passed (`verification ok: variants=64, failures=0, blocking_failures=0, non_blocking_failures=0`)
 
 ### milestone_adhoc_2: Multi-Module Dependency Metadata Aggregation
-- Status: in review
+- Status: complete
 - Implementation PR: https://github.com/yaseralnajjar/sifr/pull/1083
 - Implementation target:
   - return aggregate `used_stdlib_modules` and `required_crates` from multi-module codegen
@@ -69,7 +69,22 @@ Loop per part: Plan -> Implement -> Validate -> Demo -> PR -> Review -> Merge ->
   - local gate: `/Users/yaseralnajjar/work/sifr/codebase/scripts/run_all_tests.sh --profile quick` -> passed (`verification ok: variants=64, failures=0, blocking_failures=0, non_blocking_failures=0`)
 
 ### milestone_adhoc_3: Canonical Manifest Generation Path
-- Status: pending
+- Status: validated, PR pending
+- Implementation target:
+  - move Cargo.toml generation into the one shared rooted-entrypoint materialization path
+  - drive both single-file and project manifests from aggregated compiler metadata
+  - remove the zero-dependency project manifest path
+- Demo target:
+  - `cargo run -q -p sifr -- run demos/m_adhoc_3_manifest_unification_demo/main.sifr`
+- Validation target:
+  - `cargo test -p sifr_driver build_project_manifest -- --nocapture`
+  - `cargo test -p sifr_driver rooted_entrypoint`
+  - `/Users/yaseralnajjar/work/sifr/codebase/scripts/run_all_tests.sh --profile quick`
+- Validation evidence:
+  - positive path: `cargo test -p sifr_driver build_project_manifest -- --nocapture` -> passed (support-module-required crate manifests and unreachable sibling exclusion both covered)
+  - positive path: `cargo run -q -p sifr -- run demos/m_adhoc_3_manifest_unification_demo/main.sifr` -> printed `adhoc milestone 3 manifest unification demo: pass`
+  - negative path: `rooted_entrypoint::tests::test_build_project_manifest_ignores_unreachable_required_crates` proves unreachable bigint-only siblings do not contaminate rooted project manifests
+  - local gate: `/Users/yaseralnajjar/work/sifr/codebase/scripts/run_all_tests.sh --profile quick` -> passed (`verification ok: variants=64, failures=0, blocking_failures=0, non_blocking_failures=0`)
 
 ### milestone_adhoc_4: CLI Contract Preservation and Regression Hardening
 - Status: pending
