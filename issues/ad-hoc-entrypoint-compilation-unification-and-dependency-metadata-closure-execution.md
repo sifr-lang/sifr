@@ -1,6 +1,6 @@
 # Ad Hoc Phase Execution Checklist (Entrypoint Compilation Unification and Dependency Metadata Closure)
 
-Status: in progress (started 2026-03-10)
+Status: in progress (started 2026-03-10; external review pass 1 in progress)
 Owner: ad_hoc_entrypoint_compilation_unification execution loop
 Reference planning doc:
 - `issues/ad-hoc-entrypoint-compilation-unification-and-dependency-metadata-closure.md`
@@ -22,7 +22,7 @@ Loop per part: Plan -> Implement -> Validate -> Demo -> PR -> Review -> Merge ->
 2. [x] `milestone_adhoc_2`: aggregate multi-module `used_stdlib_modules` and `required_crates` deterministically from compiler/codegen outputs
 3. [x] `milestone_adhoc_3`: route single-file and multi-file manifest generation through one canonical dependency-driven path
 4. [x] `milestone_adhoc_4`: harden CLI contract preservation regressions around mode boundaries and unchanged `check`/`emit` semantics
-5. [ ] `milestone_adhoc_5`: add dependency-closure regression matrix coverage for imported and transitive dependency sources
+5. [x] `milestone_adhoc_5`: add dependency-closure regression matrix coverage for imported and transitive dependency sources
 
 ## Baseline Revalidation
 - 2026-03-10: full local validation started with `/Users/yaseralnajjar/work/sifr/codebase/scripts/run_all_tests.sh`
@@ -107,7 +107,7 @@ Loop per part: Plan -> Implement -> Validate -> Demo -> PR -> Review -> Merge ->
   - local gate: `/Users/yaseralnajjar/work/sifr/codebase/scripts/run_all_tests.sh --profile quick` -> passed (`verification ok: variants=64, failures=0, blocking_failures=0, non_blocking_failures=0`)
 
 ### milestone_adhoc_5: Dependency Closure Regression Matrix
-- Status: in review
+- Status: complete
 - Implementation PR: https://github.com/yaseralnajjar/sifr/pull/1086
 - Implementation target:
   - add regression coverage for reachable support-module stdlib dependencies and unreachable sibling exclusion
@@ -129,3 +129,19 @@ Loop per part: Plan -> Implement -> Validate -> Demo -> PR -> Review -> Merge ->
   - negative path: `rooted_entrypoint::tests::test_build_project_manifest_ignores_unreachable_required_crates` proves unreachable bigint-only siblings do not leak intrinsic-required crates into the manifest
   - negative path: `rooted_entrypoint::tests::test_build_project_manifest_ignores_unreachable_transitive_dependency_chain` proves unreachable transitive chains stay outside the rooted dependency closure
   - local gate: `scripts/run_all_tests.sh --profile quick` -> passed (`verification ok: variants=64, failures=0, blocking_failures=0, non_blocking_failures=0`)
+  - merge evidence: PR #1086 merged into `main` on 2026-03-10
+
+## External Review Passes
+
+### review_pass_1
+- Reviewer artifact: `/Users/yaseralnajjar/work/sifr/codebase/reviews/adhoc-entrypoint-review-2.md`
+- Status: in review
+- Review summary:
+  - phase approved overall
+  - remove dead-store `project_name` plumbing in rooted-entrypoint helpers
+  - document `RootedEntrypointPlan` in the architecture guide
+- Validation evidence:
+  - positive path: `cargo test -p sifr_driver rooted_entrypoint -- --nocapture` -> passed (`11 passed, 0 failed`) after removing the dead-store rooted-entrypoint helper plumbing
+  - local gate: `scripts/run_all_tests.sh --profile quick` -> passed (`verification ok: variants=64, failures=0, blocking_failures=0, non_blocking_failures=0`)
+- Follow-up PR:
+  - https://github.com/yaseralnajjar/sifr/pull/1087

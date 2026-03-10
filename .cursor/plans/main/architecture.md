@@ -190,6 +190,18 @@ New crates added per milestone as needed:
 - milestone_dev_tooling: `sifr_lsp` (language server), `sifr_fmt` (formatter), `sifr_lint` (linter)
 - milestone_ecosystem: `sifr_registry` (package registry client)
 
+## Driver Build Model
+
+`sifr_driver` uses one rooted-entrypoint compilation model for native binary builds.
+
+- `RootedEntrypointPlan` is the canonical driver abstraction for build planning.
+- `RootedEntrypointShape::SingleFile` models the one-module case.
+- `RootedEntrypointShape::Project` models the reachable local import closure rooted at `main.sifr`.
+- Both shapes materialize through the same generated-binary-project path and the same Cargo manifest generation helper.
+- Dependency metadata for both shapes comes from codegen outputs (`used_stdlib_modules` and `required_crates`), never from emitted Rust text scans.
+
+This keeps CLI mode resolution as the boundary that selects the rooted entrypoint shape while preserving one internal build architecture.
+
 ---
 
 ## Cross-cutting Contracts

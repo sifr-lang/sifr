@@ -51,7 +51,7 @@ pub(crate) fn build_rooted_entrypoint_binary(
 ) -> Result<PathBuf, Vec<CompileError>> {
     let plan = RootedEntrypointPlan::from_entrypoint(entrypoint)?;
     plan.emit_frontend_diagnostics();
-    let generated_project = plan.into_generated_binary_project("sifr_output")?;
+    let generated_project = plan.into_generated_binary_project()?;
     materialize_binary_project(output_dir, "sifr_output", generated_project)
 }
 
@@ -151,32 +151,22 @@ impl RootedEntrypointPlan {
         .map_err(|error| vec![error])
     }
 
-    fn into_generated_binary_project(
-        self,
-        project_name: &str,
-    ) -> Result<GeneratedBinaryProject, Vec<CompileError>> {
+    fn into_generated_binary_project(self) -> Result<GeneratedBinaryProject, Vec<CompileError>> {
         match self.shape {
             RootedEntrypointShape::SingleFile => {
                 let codegen_result = self.into_single_file_codegen_result()?;
-                Ok(generated_single_file_binary_project(
-                    project_name,
-                    codegen_result,
-                ))
+                Ok(generated_single_file_binary_project(codegen_result))
             }
-            RootedEntrypointShape::Project => generated_project_binary_project(
-                project_name,
-                &self.stdlib.code,
-                self.project_lowering,
-            ),
+            RootedEntrypointShape::Project => {
+                generated_project_binary_project(&self.stdlib.code, self.project_lowering)
+            }
         }
     }
 }
 
 fn generated_single_file_binary_project(
-    project_name: &str,
     codegen_result: sifr_codegen::CodegenResult,
 ) -> GeneratedBinaryProject {
-    let _ = project_name;
     GeneratedBinaryProject {
         main_rs: codegen_result.rust_source,
         support_modules: BTreeMap::new(),
@@ -186,7 +176,6 @@ fn generated_single_file_binary_project(
 }
 
 fn generated_project_binary_project(
-    project_name: &str,
     stdlib_code: &StdlibCode,
     project_lowering: ProjectLowering,
 ) -> Result<GeneratedBinaryProject, Vec<CompileError>> {
@@ -209,7 +198,6 @@ fn generated_project_binary_project(
     )
     .map_err(|error| vec![error])?;
 
-    let _ = project_name;
     let main_rs = assemble_project_main_rs(&compile_order, &codegen_result.rust_files);
     let support_modules = ordered_non_main_module_names(&compile_order, &codegen_result.rust_files)
         .into_iter()
@@ -329,7 +317,7 @@ mod tests {
         .expect("single-file entrypoint should compile");
 
         let generated_project = plan
-            .into_generated_binary_project("sifr_output")
+            .into_generated_binary_project()
             .expect("single-file generated project should succeed");
 
         assert!(generated_project.support_modules.is_empty());
@@ -358,7 +346,7 @@ mod tests {
         })
         .expect("project entrypoint should compile");
         let generated_project = plan
-            .into_generated_binary_project("sifr_output")
+            .into_generated_binary_project()
             .expect("project generated project should succeed");
 
         assert_eq!(
@@ -425,7 +413,7 @@ def helper() -> bigint:\n    return bigint(1)\n",
         })
         .expect("project entrypoint should compile");
         let generated_project = plan
-            .into_generated_binary_project("sifr_output")
+            .into_generated_binary_project()
             .expect("project metadata aggregation should succeed");
 
         assert!(generated_project
@@ -463,7 +451,7 @@ def helper() -> bigint:\n    return bigint(1)\n",
         })
         .expect("project entrypoint should compile");
         let generated_project = plan
-            .into_generated_binary_project("sifr_output")
+            .into_generated_binary_project()
             .expect("project metadata aggregation should succeed");
 
         assert!(!generated_project.used_stdlib_modules.contains("sifr.json"));
