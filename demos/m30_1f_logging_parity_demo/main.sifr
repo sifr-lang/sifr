@@ -1,30 +1,17 @@
 from sifr.logging import getLogger, basicConfig, FileHandler, Formatter
 from sifr.logging import Logger, INFO, WARNING
 from sifr.io import write_text, read_text, exists
-from sifr.os import mkdir, run_command
+from sifr.os import run_command
 from sifr.tempfile import mktemp_path
 from sifr.test import assert_bool_vector_eq
 
 
-def main():
-    expected: list[bool] = [True, True, True, True, True, True]
+def collect_logger_actual(base: str) -> list[bool]:
     actual: list[bool] = []
-
-    base: str = mktemp_path("sifr_m30_1f_logging_demo_")
     app_log: str = base + "/app.log"
-    root_log: str = base + "/root.log"
-    handler_log: str = base + "/handler.log"
-    missing_log: str = base + "/missing/blocked.log"
-
     app_ok: bool = False
-    root_ok: bool = False
-    handler_ok: bool = False
     try:
-        _mk: None = mkdir(base)
-        _w1: None = write_text(app_log, "")
-        _w2: None = write_text(root_log, "")
-        _w3: None = write_text(handler_log, "")
-
+        _w: None = write_text(app_log, "")
         app: Logger = getLogger("demo")
         app.set_file(app_log)
         app.set_level(INFO)
@@ -33,6 +20,21 @@ def main():
         app.debug("hidden")
         app_content: str = read_text(app_log)
         app_ok = app_content == "[INFO] demo: start\n[WARNING] demo: warn\n"
+    except IOError as e:
+        _ = str(e.message)
+    actual.append(app_ok)
+    return actual
+
+
+def collect_root_and_handler_actual(base: str) -> list[bool]:
+    actual: list[bool] = []
+    root_log: str = base + "/root.log"
+    handler_log: str = base + "/handler.log"
+    root_ok: bool = False
+    handler_ok: bool = False
+    try:
+        _w1: None = write_text(root_log, "")
+        _w2: None = write_text(handler_log, "")
 
         root: Logger = basicConfig(WARNING)
         root.set_file(root_log)
@@ -48,10 +50,14 @@ def main():
         handler_ok = handler_content == "INFO:formatted\n"
     except IOError as e:
         _ = str(e.message)
-    actual.append(app_ok)
     actual.append(root_ok)
     actual.append(handler_ok)
+    return actual
 
+
+def collect_safety_actual(base: str) -> list[bool]:
+    actual: list[bool] = []
+    missing_log: str = base + "/missing/blocked.log"
     missing_safe: bool = False
     try:
         bad: Logger = getLogger("bad")
@@ -62,7 +68,12 @@ def main():
         _ = str(e.message)
         missing_safe = False
     actual.append(missing_safe)
+    actual.append(INFO == 20 and WARNING == 30)
+    return actual
 
+
+def collect_cleanup_actual(base: str) -> list[bool]:
+    actual: list[bool] = []
     cleanup_ok: bool = False
     try:
         _cleanup: str = run_command("rm -rf " + base)
@@ -71,8 +82,27 @@ def main():
         _ = str(e.message)
         cleanup_ok = not exists(base)
     actual.append(cleanup_ok)
+    return actual
 
-    actual.append(INFO == 20 and WARNING == 30)
+
+def append_all(mut target: list[bool], values: list[bool]):
+    for value in values:
+        target.append(value)
+
+
+def main():
+    expected: list[bool] = [True, True, True, True, True, True]
+    actual: list[bool] = []
+    base: str = mktemp_path("sifr_m30_1f_logging_demo_")
+    try:
+        _mk: str = run_command("mkdir -p " + base)
+    except IOError as e:
+        _ = str(e.message)
+
+    append_all(actual, collect_logger_actual(base))
+    append_all(actual, collect_root_and_handler_actual(base))
+    append_all(actual, collect_safety_actual(base))
+    append_all(actual, collect_cleanup_actual(base))
 
     assert_bool_vector_eq(actual, expected)
     print("m30_1f logging parity demo: pass")

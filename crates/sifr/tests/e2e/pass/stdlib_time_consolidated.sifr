@@ -1,13 +1,11 @@
-# Adapted CPython time subset for sifr.time (canonical bool-vector format)
+# Consolidated stdlib time coverage for milestone_30_4 structure rules
 from sifr.time import time_now, time, sleep, strftime, strptime, gmtime, localtime, perf_counter, monotonic
 from sifr.test import assert_bool_vector_eq
 
 
 def collect_clock_actual() -> list[bool]:
     actual: list[bool] = []
-    now_direct: float = time_now()
-    now_alias: float = time()
-    now_ok: bool = now_direct > 0.0 and now_alias > 0.0
+    now_ok: bool = time_now() > 0.0 and time() > 0.0
     actual.append(now_ok)
 
     perf_before: float = perf_counter()
@@ -15,22 +13,17 @@ def collect_clock_actual() -> list[bool]:
     sleep(0.01)
     perf_after: float = perf_counter()
     mono_after: float = monotonic()
-    counters_ok: bool = perf_after >= perf_before and mono_after >= mono_before
-    actual.append(counters_ok)
+    actual.append(perf_after >= perf_before and mono_after >= mono_before)
     return actual
 
 
 def collect_format_actual() -> list[bool]:
     actual: list[bool] = []
-    fmt_ok: bool = strftime("%Y-%m-%d %H:%M:%S", 0.0) == "1970-01-01 00:00:00"
-    actual.append(fmt_ok)
-
-    gmt_ok: bool = gmtime(0.0) == "1970-01-01T00:00:00"
-    actual.append(gmt_ok)
+    actual.append(strftime("%Y-%m-%d %H:%M:%S", 0.0) == "1970-01-01 00:00:00")
+    actual.append(gmtime(0.0) == "1970-01-01T00:00:00")
 
     local: str = localtime(0.0)
-    local_shape_ok: bool = len(local) == 19
-    actual.append(local_shape_ok)
+    actual.append(len(local) == 19)
     return actual
 
 
@@ -72,6 +65,5 @@ def main():
     append_all(actual, collect_clock_actual())
     append_all(actual, collect_format_actual())
     append_all(actual, collect_parse_and_safety_actual())
-
     assert_bool_vector_eq(actual, expected)
-    assert str("cpython_time_subset: pass") == "cpython_time_subset: pass"
+    assert str("stdlib_time_consolidated: pass") == "stdlib_time_consolidated: pass"

@@ -2,12 +2,9 @@ from sifr.time import time_now, time, sleep, strftime, strptime, gmtime, localti
 from sifr.test import assert_bool_vector_eq
 
 
-def main():
-    expected: list[bool] = [True, True, True, True, True, True, True, True]
+def collect_clock_actual() -> list[bool]:
     actual: list[bool] = []
-
-    now_ok: bool = time_now() > 0.0 and time() > 0.0
-    actual.append(now_ok)
+    actual.append(time_now() > 0.0 and time() > 0.0)
 
     perf_before: float = perf_counter()
     mono_before: float = monotonic()
@@ -15,13 +12,21 @@ def main():
     perf_after: float = perf_counter()
     mono_after: float = monotonic()
     actual.append(perf_after >= perf_before and mono_after >= mono_before)
+    return actual
 
+
+def collect_format_actual() -> list[bool]:
+    actual: list[bool] = []
     actual.append(strftime("%Y-%m-%d %H:%M:%S", 0.0) == "1970-01-01 00:00:00")
     actual.append(gmtime(0.0) == "1970-01-01T00:00:00")
 
     local: str = localtime(0.0)
     actual.append(len(local) == 19)
+    return actual
 
+
+def collect_parse_and_safety_actual() -> list[bool]:
+    actual: list[bool] = []
     parsed_ok: bool = False
     try:
         parsed: str = strptime("2024-01-15 10:30:00", "%Y-%m-%d %H:%M:%S")
@@ -41,6 +46,20 @@ def main():
 
     sleep(-0.05)
     actual.append(True)
+    return actual
+
+
+def append_all(mut target: list[bool], values: list[bool]):
+    for value in values:
+        target.append(value)
+
+
+def main():
+    expected: list[bool] = [True, True, True, True, True, True, True, True]
+    actual: list[bool] = []
+    append_all(actual, collect_clock_actual())
+    append_all(actual, collect_format_actual())
+    append_all(actual, collect_parse_and_safety_actual())
 
     assert_bool_vector_eq(actual, expected)
     print("m30_1f time parity demo: pass")
