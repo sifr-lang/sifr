@@ -40,6 +40,7 @@ Loop per part: Plan -> Implement -> Validate -> Demo -> PR -> Review -> Merge ->
 
 ### milestone_driver_1: Public API Spine and Diagnostic Extraction
 - Status: in_progress
+- Implementation PR: https://github.com/yaseralnajjar/sifr/pull/1089
 - Implementation target:
   - reduce `crates/sifr_driver/src/lib.rs` to module wiring plus public re-exports for the stable public API
   - extract diagnostics, compile/public result types, panic-boundary helpers, and crate-root API surface into dedicated modules
