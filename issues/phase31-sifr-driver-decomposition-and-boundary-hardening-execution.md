@@ -127,7 +127,8 @@ Loop per part: Plan -> Implement -> Validate -> Demo -> PR -> Review -> Merge ->
   - merge evidence: PR #1093 merged into `main` on 2026-03-10
 
 ### milestone_driver_6: Test Suite Decomposition and Maintainability Guardrail
-- Status: validated_pending_pr
+- Status: in_review
+- Implementation PR: https://github.com/yaseralnajjar/sifr/pull/1094
 - Demo target:
   - `python3 scripts/check_sifr_driver_maintainability_guardrails.py`
 - Validation target:
