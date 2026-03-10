@@ -107,7 +107,8 @@ Loop per part: Plan -> Implement -> Validate -> Demo -> PR -> Review -> Merge ->
   - local gate: `/Users/yaseralnajjar/work/sifr/codebase/scripts/run_all_tests.sh --profile quick` -> passed (`verification ok: variants=64, failures=0, blocking_failures=0, non_blocking_failures=0`)
 
 ### milestone_adhoc_5: Dependency Closure Regression Matrix
-- Status: validated, PR pending
+- Status: in review
+- Implementation PR: https://github.com/yaseralnajjar/sifr/pull/1086
 - Implementation target:
   - add regression coverage for reachable support-module stdlib dependencies and unreachable sibling exclusion
   - prove non-main intrinsic-required crates remain included only through reachable closure
