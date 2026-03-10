@@ -80,7 +80,7 @@ Loop per part: Work -> Validate -> PR -> Review -> Merge -> External review pass
 ### milestone_30_4 wave-by-wave plan and status
 - Execution mode: wave-by-wave structural remediation, validation, PR merge, reviewer pass 1, reviewer pass 2, then next wave.
 - [x] `wave_30_1a` (`env`, `bytes`, `base64`, `hashlib`) - implementation merged in https://github.com/yaseralnajjar/sifr/pull/1048; review pass 1 and pass 2 approved; wave completion and wave production-grade closures approved
-- [ ] `wave_30_1b` (`math`, `statistics`, `bisect`, `heapq`) - in progress (implementation merged in https://github.com/yaseralnajjar/sifr/pull/1053; reviewer pass 1 remediation for legacy fixture consolidation in progress)
+- [ ] `wave_30_1b` (`math`, `statistics`, `bisect`, `heapq`) - in progress (implementation merged in https://github.com/yaseralnajjar/sifr/pull/1053; reviewer pass 1 remediation merged in https://github.com/yaseralnajjar/sifr/pull/1054; reviewer pass 2 approved; wave closure checks pending)
 - [ ] `wave_30_1c` (`string`, `textwrap`, `fnmatch`, `re`)
 - [ ] `wave_30_1d` (`collections`, `itertools`, `json`, `datetime`)
 - [ ] `wave_30_1e` (`io`, `csv`, `os`, `pathlib`, `glob`, `tempfile`, `shutil`)
@@ -131,12 +131,16 @@ status: wave closure complete (review pass 1 + review pass 2 + wave completion c
 - Next step: start `wave_30_1b` milestone_30_4 structural execution loop.
 
 ### milestone_30_4 wave_30_1b progress
-status: in progress (implementation merged, reviewer pass 1 remediation in flight) (2026-03-10)
+status: in progress (review pass 1 + review pass 2 approved; wave closure checks pending) (2026-03-10)
 
 - Implementation PR: merged https://github.com/yaseralnajjar/sifr/pull/1053
 - Reviewer pass 1 output: `reviews/phase-30-m30_4-wave-30_1b-review-1.md`
 - Reviewer pass 1 verdict: actionable structural blockers due to fragmented legacy `stdlib_*` fixtures in wave scope.
 - Remediation scope: consolidate legacy math/statistics/bisect/heapq `stdlib_*` fixtures into canonical consolidated fixtures and remove superseded fragmented fixtures.
+- Reviewer pass 1 remediation PR: merged https://github.com/yaseralnajjar/sifr/pull/1054
+- Reviewer pass 2 output: `reviews/phase-30-m30_4-wave-30_1b-review-2.md`
+- Reviewer pass 2 delayed output copy: `reviews/phase-30-m30_4-wave-30_1b-review-2a.md`
+- Reviewer pass 2 verdict: production-grade approved; no additional structural blockers in wave scope.
 - Validation status: full local suite passed after consolidation via `/Users/yaseralnajjar/work/sifr/codebase/scripts/run_all_tests.sh`.
 
 ## Part 1: `env`
