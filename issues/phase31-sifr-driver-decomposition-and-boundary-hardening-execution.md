@@ -61,6 +61,7 @@ Loop per part: Plan -> Implement -> Validate -> Demo -> PR -> Review -> Merge ->
 
 ### milestone_driver_2: Stdlib Bootstrap Extraction
 - Status: in_progress
+- Implementation PR: https://github.com/yaseralnajjar/sifr/pull/1090
 - Demo target:
   - `cargo run -q -p sifr -- run demos/m_driver_2_stdlib_bootstrap_demo.sifr`
 - Validation target:
