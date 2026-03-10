@@ -1,6 +1,11 @@
 mod bootstrap;
+mod cache;
+mod intrinsics;
+mod registry;
+mod types;
 
-pub(crate) use bootstrap::{compile_stdlib, StdlibCompiled};
+pub(crate) use bootstrap::compile_stdlib;
+pub(crate) use types::StdlibCompiled;
 
 #[cfg(test)]
-pub(crate) use bootstrap::{compile_stdlib_uncached, get_or_init_stdlib_cache};
+pub(crate) use bootstrap::compile_stdlib_uncached;

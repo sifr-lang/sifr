@@ -1,0 +1,5 @@
+from sifr.math import pi
+
+
+def main():
+    print(str(pi))
