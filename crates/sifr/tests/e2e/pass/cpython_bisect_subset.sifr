@@ -6,14 +6,8 @@ from sifr.bisect import (
 )
 from sifr.test import assert_bool_vector_eq
 
-def main():
-    expected: list[bool] = [
-        True, True, True, True, True, True,
-        True, True, True, True, True, True,
-        True, True, True, True, True
-    ]
+def collect_search_actual() -> list[bool]:
     actual: list[bool] = []
-
     empty: list[int] = []
     actual.append(bisect_left(empty, 7) == 0)
     actual.append(bisect_right(empty, 7) == 0)
@@ -31,7 +25,10 @@ def main():
     floats: list[float] = [1.0, 2.5, 2.5, 4.0]
     actual.append(bisect_left(floats, 2.5) == 1)
     actual.append(bisect_right(floats, 2.5) == 3)
+    return actual
 
+def collect_insert_actual() -> list[bool]:
+    actual: list[bool] = []
     ins_mut: list[int] = [1, 3, 3, 5]
     insort_left(ins_mut, 3)
     actual.append(str(ins_mut) == "[1, 3, 3, 3, 5]")
@@ -50,6 +47,21 @@ def main():
     right_copy: list[int] = insort_right_copy(src, 3)
     actual.append(str(src) == "[1, 3, 5]")
     actual.append(str(right_copy) == "[1, 3, 3, 5]")
+    return actual
+
+def append_all(mut target: list[bool], values: list[bool]):
+    for value in values:
+        target.append(value)
+
+def main():
+    expected: list[bool] = [
+        True, True, True, True, True, True,
+        True, True, True, True, True, True,
+        True, True, True, True, True
+    ]
+    actual: list[bool] = []
+    append_all(actual, collect_search_actual())
+    append_all(actual, collect_insert_actual())
 
     assert_bool_vector_eq(actual, expected)
     assert str("cpython_bisect_subset: pass") == "cpython_bisect_subset: pass"

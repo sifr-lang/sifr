@@ -6,14 +6,8 @@ from sifr.heapq import (
 )
 from sifr.test import assert_bool_vector_eq
 
-def main():
-    expected: list[bool] = [
-        True, True, True, True, True, True,
-        True, True, True, True, True, True,
-        True, True
-    ]
+def collect_push_pop_actual() -> list[bool]:
     actual: list[bool] = []
-
     h: list[int] = []
     heappush(h, 5)
     heappush(h, 3)
@@ -29,7 +23,10 @@ def main():
     actual.append(p3 is not None and p3 == 5)
     actual.append(p4 is not None and p4 == 7)
     actual.append(len(h) == 0)
+    return actual
 
+def collect_heapify_and_rank_actual() -> list[bool]:
+    actual: list[bool] = []
     h2: list[int] = [3, 1, 4, 1, 5, 9, 2, 6]
     heapify(h2)
     sorted_vals: list[int] = []
@@ -44,7 +41,10 @@ def main():
     actual.append(str(nlargest(3, items)) == "[5, 4, 3]")
     actual.append(str(nsmallest(1, items)) == "[1]")
     actual.append(str(nlargest(1, items)) == "[5]")
+    return actual
 
+def collect_edge_actual() -> list[bool]:
+    actual: list[bool] = []
     empty: list[int] = []
     actual.append(heappop(empty) is None)
     actual.append(heapreplace(empty, 8) is None and str(empty) == "[]")
@@ -53,6 +53,22 @@ def main():
     hp_ret: int | None = heappushpop(hp_src, 4)
     actual.append(hp_ret is not None and hp_ret == 3)
     actual.append(str(hp_src) == "[3, 5, 7]")
+    return actual
+
+def append_all(mut target: list[bool], values: list[bool]):
+    for value in values:
+        target.append(value)
+
+def main():
+    expected: list[bool] = [
+        True, True, True, True, True, True,
+        True, True, True, True, True, True,
+        True, True
+    ]
+    actual: list[bool] = []
+    append_all(actual, collect_push_pop_actual())
+    append_all(actual, collect_heapify_and_rank_actual())
+    append_all(actual, collect_edge_actual())
 
     assert_bool_vector_eq(actual, expected)
     assert str("cpython_heapq_subset: pass") == "cpython_heapq_subset: pass"

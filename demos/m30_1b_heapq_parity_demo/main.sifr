@@ -1,10 +1,8 @@
 from sifr.heapq import heapify, heappush, heappop, nsmallest, nlargest
 from sifr.test import assert_bool_vector_eq
 
-def main():
-    expected: list[bool] = [True, True, True, True, True, True, True]
+def collect_actual() -> list[bool]:
     actual: list[bool] = []
-
     heap: list[int] = []
     heappush(heap, 5)
     heappush(heap, 1)
@@ -26,6 +24,11 @@ def main():
     empty_heap: list[int] = []
     actual.append(heappop(empty_heap) is None)
     actual.append(str(items) == "[9, 3, 7, 1, 5]")
+    return actual
+
+def main():
+    expected: list[bool] = [True, True, True, True, True, True, True]
+    actual: list[bool] = collect_actual()
 
     assert_bool_vector_eq(actual, expected)
     print("m30_1b heapq parity demo: pass")

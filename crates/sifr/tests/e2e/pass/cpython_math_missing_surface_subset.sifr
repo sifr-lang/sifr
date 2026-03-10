@@ -6,6 +6,88 @@ from sifr.math import (
     factorial, dist
 )
 
+def collect_cbrt_exp2_actual() -> list[str]:
+    actual: list[str] = []
+    c1: float = cbrt(27.0)
+    c2: float = cbrt(-27.0)
+    c3: float = cbrt(1.2)
+    actual.append(str(c1 > 2.9999999 and c1 < 3.0000001))
+    actual.append(str(c2 < -2.9999999 and c2 > -3.0000001))
+    actual.append(str(c3 > 1.0626584 and c3 < 1.0626587))
+
+    e1: float = exp2(-1.0)
+    e2: float = exp2(2.3)
+    actual.append(str(e1 > 0.4999999 and e1 < 0.5000001))
+    actual.append(str(e2 > 4.9245775 and e2 < 4.9245778))
+    return actual
+
+def collect_fma_min_max_actual() -> list[str]:
+    actual: list[str] = []
+    actual.append(str(fma(2.0, 3.0, 4.0) == 10.0))
+
+    actual.append(str(fmax(1.0, 2.0) == 2.0))
+    actual.append(str(fmin(1.0, 2.0) == 1.0))
+    actual.append(str(isnan(fmax(nan, 1.0)) == False))
+    actual.append(str(isnan(fmin(nan, 1.0)) == False))
+    return actual
+
+def collect_sign_and_normal_actual() -> list[str]:
+    actual: list[str] = []
+    actual.append(str(signbit(0.0) == False))
+    actual.append(str(signbit(-0.0)))
+    actual.append(str(signbit(-1.0)))
+
+    tiny_subnormal: float = 2.2250738585072014e-308 / 2.0
+    actual.append(str(isnormal(1.25)))
+    actual.append(str(isnormal(0.0) == False))
+    actual.append(str(issubnormal(tiny_subnormal)))
+    actual.append(str(issubnormal(1.0) == False))
+    return actual
+
+def collect_remainder_log_actual() -> list[str]:
+    actual: list[str] = []
+    r1: float = remainder(5.0, 2.0)
+    r2: float = remainder(5.5, 2.0)
+    r3: float = remainder(-5.5, 2.0)
+    actual.append(str(r1 > 0.9999999 and r1 < 1.0000001))
+    actual.append(str(r2 < -0.4999999 and r2 > -0.5000001))
+    actual.append(str(r3 > 0.4999999 and r3 < 0.5000001))
+
+    l1: float = log(e)
+    l2: float = log_base(32.0, 2.0)
+    l3: float = log_base(1000.0, 10.0)
+    actual.append(str(l1 > 0.9999999 and l1 < 1.0000001))
+    actual.append(str(l2 > 4.9999999 and l2 < 5.0000001))
+    actual.append(str(l3 > 2.9999999 and l3 < 3.0000001))
+    return actual
+
+def collect_isclose_sumprod_actual() -> list[str]:
+    actual: list[str] = []
+    actual.append(str(isclose(1e-9, 0.0, 0.9, 0.0) == False))
+    actual.append(str(isclose(1e-9, 0.0, 0.9, 1e-8)))
+    actual.append(str(isclose(1.0, 1.0000001, 0.001, 0.0)))
+
+    p: list[float] = [1.0, 2.0, 3.0]
+    q: list[float] = [4.0, 5.0, 6.0]
+    empty_a: list[float] = []
+    empty_b: list[float] = []
+    actual.append(str(sumprod(p, q) == 32.0))
+    actual.append(str(factorial(-1) == 0))
+    actual.append(str(dist(empty_a, empty_b) == 0.0))
+    return actual
+
+def collect_negative_actual_false() -> list[bool]:
+    actual_false: list[bool] = [
+        isclose(1.0, 1.0, -0.1, 0.0),
+        isclose(1.0, 1.0, 0.1, -0.1),
+        isnormal(0.0)
+    ]
+    return actual_false
+
+def append_all(mut target: list[str], values: list[str]):
+    for value in values:
+        target.append(value)
+
 def main():
     expected: list[str] = [
         "true", "true", "true",
@@ -20,69 +102,14 @@ def main():
         "true", "true"
     ]
     actual: list[str] = []
-
-    c1: float = cbrt(27.0)
-    c2: float = cbrt(-27.0)
-    c3: float = cbrt(1.2)
-    actual.append(str(c1 > 2.9999999 and c1 < 3.0000001))
-    actual.append(str(c2 < -2.9999999 and c2 > -3.0000001))
-    actual.append(str(c3 > 1.0626584 and c3 < 1.0626587))
-
-    e1: float = exp2(-1.0)
-    e2: float = exp2(2.3)
-    actual.append(str(e1 > 0.4999999 and e1 < 0.5000001))
-    actual.append(str(e2 > 4.9245775 and e2 < 4.9245778))
-
-    actual.append(str(fma(2.0, 3.0, 4.0) == 10.0))
-
-    actual.append(str(fmax(1.0, 2.0) == 2.0))
-    actual.append(str(fmin(1.0, 2.0) == 1.0))
-    actual.append(str(isnan(fmax(nan, 1.0)) == False))
-    actual.append(str(isnan(fmin(nan, 1.0)) == False))
-
-    actual.append(str(signbit(0.0) == False))
-    actual.append(str(signbit(-0.0)))
-    actual.append(str(signbit(-1.0)))
-
-    tiny_subnormal: float = 2.2250738585072014e-308 / 2.0
-    actual.append(str(isnormal(1.25)))
-    actual.append(str(isnormal(0.0) == False))
-    actual.append(str(issubnormal(tiny_subnormal)))
-    actual.append(str(issubnormal(1.0) == False))
-
-    r1: float = remainder(5.0, 2.0)
-    r2: float = remainder(5.5, 2.0)
-    r3: float = remainder(-5.5, 2.0)
-    actual.append(str(r1 > 0.9999999 and r1 < 1.0000001))
-    actual.append(str(r2 < -0.4999999 and r2 > -0.5000001))
-    actual.append(str(r3 > 0.4999999 and r3 < 0.5000001))
-
-    l1: float = log(e)
-    l2: float = log_base(32.0, 2.0)
-    l3: float = log_base(1000.0, 10.0)
-    actual.append(str(l1 > 0.9999999 and l1 < 1.0000001))
-    actual.append(str(l2 > 4.9999999 and l2 < 5.0000001))
-    actual.append(str(l3 > 2.9999999 and l3 < 3.0000001))
-
-    actual.append(str(isclose(1e-9, 0.0, 0.9, 0.0) == False))
-    actual.append(str(isclose(1e-9, 0.0, 0.9, 1e-8)))
-    actual.append(str(isclose(1.0, 1.0000001, 0.001, 0.0)))
-
-    p: list[float] = [1.0, 2.0, 3.0]
-    q: list[float] = [4.0, 5.0, 6.0]
-    empty_a: list[float] = []
-    empty_b: list[float] = []
-    actual.append(str(sumprod(p, q) == 32.0))
-    actual.append(str(factorial(-1) == 0))
-    actual.append(str(dist(empty_a, empty_b) == 0.0))
+    append_all(actual, collect_cbrt_exp2_actual())
+    append_all(actual, collect_fma_min_max_actual())
+    append_all(actual, collect_sign_and_normal_actual())
+    append_all(actual, collect_remainder_log_actual())
+    append_all(actual, collect_isclose_sumprod_actual())
     assert_vector_eq(actual, expected)
 
-    # Negative-path semantic vectors.
     expected_false: list[bool] = [False, False, False]
-    actual_false: list[bool] = [
-        isclose(1.0, 1.0, -0.1, 0.0),
-        isclose(1.0, 1.0, 0.1, -0.1),
-        isnormal(0.0)
-    ]
+    actual_false: list[bool] = collect_negative_actual_false()
     assert_bool_vector_eq(actual_false, expected_false)
     assert str("cpython_math_missing_surface_subset: pass") == "cpython_math_missing_surface_subset: pass"

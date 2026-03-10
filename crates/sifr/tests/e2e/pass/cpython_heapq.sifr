@@ -3,8 +3,7 @@
 from sifr.test import assert_eq
 from sifr.heapq import heapify, heappush, heappop, heappop_rest, nsmallest, nlargest, heappushpop, heapreplace
 
-def main():
-    # --- heappush / heappop (in-place) ---
+def assert_push_pop_cases():
     h1: list[int] = []
     heappush(h1, 5)
     assert_eq(len(h1), 1)
@@ -31,7 +30,7 @@ def main():
         assert_eq(v4, 7)
     assert_eq(len(h1), 0)
 
-    # --- heapify (in-place) ---
+def assert_heapify_cases():
     h2: list[int] = [3, 1, 4, 1, 5, 9, 2, 6]
     heapify(h2)
 
@@ -49,7 +48,7 @@ def main():
     heapify(h3)
     assert_eq(len(h3), 0)
 
-    # --- nsmallest / nlargest (borrow data, return new list) ---
+def assert_rank_cases():
     data: list[int] = [4, 1, 5, 2, 3]
     sm: list[int] = nsmallest(3, data)
     assert_eq(len(sm), 3)
@@ -67,7 +66,7 @@ def main():
     assert_eq(len(lg1), 1)
     assert str(lg1) == '[5]'
 
-    # --- heappushpop (uses functional API internally) ---
+def assert_pushpop_replace_cases():
     h5: list[int] = [3, 5, 7]
     r1: int | None = heappushpop(h5, 1)
     if r1 is not None:
@@ -84,5 +83,10 @@ def main():
     if r3 is not None:
         assert_eq(r3, 1)
 
-    assert str("cpython_heapq: all assertions passed") == 'cpython_heapq: all assertions passed'
+def main():
+    assert_push_pop_cases()
+    assert_heapify_cases()
+    assert_rank_cases()
+    assert_pushpop_replace_cases()
 
+    assert str("cpython_heapq: all assertions passed") == 'cpython_heapq: all assertions passed'

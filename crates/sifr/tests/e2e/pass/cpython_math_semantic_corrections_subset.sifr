@@ -7,6 +7,74 @@ from sifr.math import (
     signbit, isinf, isnan, inf, nan
 )
 
+def collect_dist_actual() -> list[str]:
+    actual: list[str] = []
+    p: list[float] = [0.0, 0.0]
+    q: list[float] = [3.0, 4.0]
+    d: float = dist(p, q)
+    actual.append(str(d > 4.9999999 and d < 5.0000001))
+    mismatch: float = dist([1.0, 2.0], [1.0])
+    actual.append(str(isnan(mismatch)))
+    return actual
+
+def collect_fsum_actual() -> list[str]:
+    actual: list[str] = []
+    f1: float = fsum([1e100, 1.0, -1e100])
+    actual.append(str(f1 > 0.9999999 and f1 < 1.0000001))
+    tenths: list[float] = [0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1]
+    f2: float = fsum(tenths)
+    actual.append(str(f2 > 0.9999999 and f2 < 1.0000001))
+    actual.append(str(isnan(fsum([inf, 1.0, 0.0 - inf]))))
+    actual.append(str(isinf(fsum([inf, 2.0]))))
+    return actual
+
+def collect_nextafter_actual() -> list[str]:
+    actual: list[str] = []
+    actual.append(str(nextafter(1.0, inf) > 1.0))
+    actual.append(str(nextafter(1.0, 0.0 - inf) < 1.0))
+    actual.append(str(nextafter(0.0, inf) > 0.0))
+    actual.append(str(signbit(nextafter(0.0, -1.0))))
+    actual.append(str(isinf(nextafter(inf, 0.0)) == False))
+    actual.append(str(isinf(nextafter(0.0 - inf, 0.0)) == False))
+    actual.append(str(isnan(nextafter(nan, 1.0))))
+    actual.append(str(isnan(nextafter(1.0, nan))))
+    return actual
+
+def collect_ulp_actual() -> list[str]:
+    actual: list[str] = []
+    u1: float = ulp(1.0)
+    u2: float = ulp(2.0)
+    actual.append(str(u1 > 0.0))
+    actual.append(str(u2 > u1))
+    actual.append(str(ulp(-1.0) == u1))
+    actual.append(str(isinf(ulp(inf))))
+    actual.append(str(isnan(ulp(nan))))
+    return actual
+
+def collect_frexp_actual() -> list[str]:
+    actual: list[str] = []
+    fm1: float = frexp_mantissa(8.0)
+    actual.append(str(fm1 > 0.4999999 and fm1 < 0.5000001))
+    actual.append(str(frexp_exponent(8.0) == 4))
+    fm2: float = frexp_mantissa(-1.0)
+    actual.append(str(fm2 < -0.4999999 and fm2 > -0.5000001))
+    actual.append(str(frexp_exponent(-1.0) == 1))
+    return actual
+
+def collect_modf_actual() -> list[str]:
+    actual: list[str] = []
+    mf: float = modf_fractional(3.7)
+    mi: float = modf_integral(3.7)
+    actual.append(str(mf > 0.6999999 and mf < 0.7000001))
+    actual.append(str(mi > 2.9999999 and mi < 3.0000001))
+    actual.append(str(modf_fractional(0.0 - inf) == 0.0))
+    actual.append(str(isinf(modf_integral(0.0 - inf))))
+    return actual
+
+def append_all(mut target: list[str], values: list[str]):
+    for value in values:
+        target.append(value)
+
 def main():
     expected: list[str] = [
         "true", "true", "true", "true", "true", "true",
@@ -16,52 +84,12 @@ def main():
         "true", "true", "true", "true"
     ]
     actual: list[str] = []
-
-    p: list[float] = [0.0, 0.0]
-    q: list[float] = [3.0, 4.0]
-    d: float = dist(p, q)
-    actual.append(str(d > 4.9999999 and d < 5.0000001))
-    mismatch: float = dist([1.0, 2.0], [1.0])
-    actual.append(str(isnan(mismatch)))
-
-    f1: float = fsum([1e100, 1.0, -1e100])
-    actual.append(str(f1 > 0.9999999 and f1 < 1.0000001))
-    tenths: list[float] = [0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1]
-    f2: float = fsum(tenths)
-    actual.append(str(f2 > 0.9999999 and f2 < 1.0000001))
-    actual.append(str(isnan(fsum([inf, 1.0, 0.0 - inf]))))
-    actual.append(str(isinf(fsum([inf, 2.0]))))
-
-    actual.append(str(nextafter(1.0, inf) > 1.0))
-    actual.append(str(nextafter(1.0, 0.0 - inf) < 1.0))
-    actual.append(str(nextafter(0.0, inf) > 0.0))
-    actual.append(str(signbit(nextafter(0.0, -1.0))))
-    actual.append(str(isinf(nextafter(inf, 0.0)) == False))
-    actual.append(str(isinf(nextafter(0.0 - inf, 0.0)) == False))
-    actual.append(str(isnan(nextafter(nan, 1.0))))
-    actual.append(str(isnan(nextafter(1.0, nan))))
-
-    u1: float = ulp(1.0)
-    u2: float = ulp(2.0)
-    actual.append(str(u1 > 0.0))
-    actual.append(str(u2 > u1))
-    actual.append(str(ulp(-1.0) == u1))
-    actual.append(str(isinf(ulp(inf))))
-    actual.append(str(isnan(ulp(nan))))
-
-    fm1: float = frexp_mantissa(8.0)
-    actual.append(str(fm1 > 0.4999999 and fm1 < 0.5000001))
-    actual.append(str(frexp_exponent(8.0) == 4))
-    fm2: float = frexp_mantissa(-1.0)
-    actual.append(str(fm2 < -0.4999999 and fm2 > -0.5000001))
-    actual.append(str(frexp_exponent(-1.0) == 1))
-
-    mf: float = modf_fractional(3.7)
-    mi: float = modf_integral(3.7)
-    actual.append(str(mf > 0.6999999 and mf < 0.7000001))
-    actual.append(str(mi > 2.9999999 and mi < 3.0000001))
-    actual.append(str(modf_fractional(0.0 - inf) == 0.0))
-    actual.append(str(isinf(modf_integral(0.0 - inf))))
+    append_all(actual, collect_dist_actual())
+    append_all(actual, collect_fsum_actual())
+    append_all(actual, collect_nextafter_actual())
+    append_all(actual, collect_ulp_actual())
+    append_all(actual, collect_frexp_actual())
+    append_all(actual, collect_modf_actual())
 
     assert_vector_eq(actual, expected)
     assert str("cpython_math_semantic_corrections_subset: pass") == "cpython_math_semantic_corrections_subset: pass"
