@@ -244,11 +244,13 @@ status: wave closure complete (review pass 1 + review pass 2 + wave completion c
 - Next step: start milestone_30_4 closure cycles (completion check, production-grade check).
 
 ### milestone_30_4 closure progress
-status: milestone completion closure approved, production-grade closure pending (2026-03-10)
+status: milestone closure complete (milestone completion closure + milestone production-grade closure approved) (2026-03-10)
 
 - Milestone completion closure output: `reviews/phase-30-m30_4-milestone-completion-review.md`
 - Milestone completion closure verdict: all milestone_30_4 waves (`wave_30_1a` through `wave_30_1f`) satisfy completion criteria with required review cycles and no unresolved blockers.
-- Next step: run milestone_30_4 production-grade closure review cycle.
+- Milestone production-grade closure output: `reviews/phase-30-m30_4-milestone-production-grade-review.md`
+- Milestone production-grade closure verdict: milestone_30_4 is production-grade complete with no unresolved structural or maintainability blockers.
+- Next step: start phase 30 closure cycles (phase completion check, phase production-grade check).
 
 ## Part 1: `env`
 status: done (2026-03-08, PR #929)
