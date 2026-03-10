@@ -532,4 +532,138 @@ def helper() -> bigint:\n    return bigint(1)\n",
 
         let _ = std::fs::remove_dir_all(dir);
     }
+
+    #[test]
+    fn test_build_project_includes_reachable_support_module_stdlib_crates_in_manifest() {
+        let dir = mktemp_dir("project_support_module_stdlib_positive");
+        let main_file = dir.join("main.sifr");
+        let build_out = dir.join("build_out");
+        std::fs::write(
+            &main_file,
+            "from helper import render\n\ndef main():\n    print(render())\n",
+        )
+        .expect("main should be written");
+        std::fs::write(
+            dir.join("helper.sifr"),
+            "from sifr.tomllib import loads\n\n\
+def render() -> str:\n    try:\n        parsed: str = loads(\"name = \\\"phase-five\\\"\\nvalue = 5\")\n        return parsed\n    except TOMLDecodeError as e:\n        return e.message\n",
+        )
+        .expect("helper should be written");
+
+        let binary = build_project(&main_file, &build_out)
+            .expect("project build should succeed with support-module stdlib dependencies");
+        assert!(binary.exists());
+
+        let cargo_toml = std::fs::read_to_string(build_out.join("sifr_output").join("Cargo.toml"))
+            .expect("cargo manifest should be written");
+        assert!(cargo_toml.contains("toml = \"0.8\""));
+
+        let _ = std::fs::remove_dir_all(dir);
+    }
+
+    #[test]
+    fn test_build_project_manifest_ignores_unreachable_support_module_stdlib_crates() {
+        let dir = mktemp_dir("project_support_module_stdlib_negative");
+        let main_file = dir.join("main.sifr");
+        let build_out = dir.join("build_out");
+        std::fs::write(
+            &main_file,
+            "from helper import helper\n\ndef main():\n    print(helper())\n",
+        )
+        .expect("main should be written");
+        std::fs::write(
+            dir.join("helper.sifr"),
+            "def helper() -> int:\n    return 1\n",
+        )
+        .expect("helper should be written");
+        std::fs::write(
+            dir.join("unused_json.sifr"),
+            "from sifr.tomllib import loads\n\n\
+def unused() -> str:\n    try:\n        parsed: str = loads(\"name = \\\"unused\\\"\\nvalue = 1\")\n        return parsed\n    except TOMLDecodeError as e:\n        return e.message\n",
+        )
+        .expect("unused helper should be written");
+
+        let binary = build_project(&main_file, &build_out)
+            .expect("project build should ignore unreachable stdlib dependency metadata");
+        assert!(binary.exists());
+
+        let cargo_toml = std::fs::read_to_string(build_out.join("sifr_output").join("Cargo.toml"))
+            .expect("cargo manifest should be written");
+        assert!(!cargo_toml.contains("toml = \"0.8\""));
+
+        let _ = std::fs::remove_dir_all(dir);
+    }
+
+    #[test]
+    fn test_build_project_includes_transitive_dependency_closure_in_manifest() {
+        let dir = mktemp_dir("project_transitive_manifest_positive");
+        let main_file = dir.join("main.sifr");
+        let build_out = dir.join("build_out");
+        std::fs::write(
+            &main_file,
+            "from helper import render\n\ndef main():\n    print(render())\n",
+        )
+        .expect("main should be written");
+        std::fs::write(
+            dir.join("helper.sifr"),
+            "from formatter import render_value\n\n\
+def render() -> str:\n    return render_value()\n",
+        )
+        .expect("helper should be written");
+        std::fs::write(
+            dir.join("formatter.sifr"),
+            "def render_value() -> str:\n    value: bigint = bigint(7)\n    return str(value)\n",
+        )
+        .expect("formatter should be written");
+
+        let binary = build_project(&main_file, &build_out)
+            .expect("project build should include transitive dependency closure");
+        assert!(binary.exists());
+
+        let cargo_toml = std::fs::read_to_string(build_out.join("sifr_output").join("Cargo.toml"))
+            .expect("cargo manifest should be written");
+        assert!(cargo_toml.contains("num-bigint = \"0.4\""));
+        assert!(cargo_toml.contains("num-traits = \"0.2\""));
+
+        let _ = std::fs::remove_dir_all(dir);
+    }
+
+    #[test]
+    fn test_build_project_manifest_ignores_unreachable_transitive_dependency_chain() {
+        let dir = mktemp_dir("project_transitive_manifest_negative");
+        let main_file = dir.join("main.sifr");
+        let build_out = dir.join("build_out");
+        std::fs::write(
+            &main_file,
+            "from helper import helper\n\ndef main():\n    print(helper())\n",
+        )
+        .expect("main should be written");
+        std::fs::write(
+            dir.join("helper.sifr"),
+            "def helper() -> int:\n    return 1\n",
+        )
+        .expect("helper should be written");
+        std::fs::write(
+            dir.join("unused_chain.sifr"),
+            "from unused_formatter import render_value\n\n\
+def unused() -> str:\n    return render_value()\n",
+        )
+        .expect("unused chain root should be written");
+        std::fs::write(
+            dir.join("unused_formatter.sifr"),
+            "def render_value() -> str:\n    value: bigint = bigint(9)\n    return str(value)\n",
+        )
+        .expect("unused chain leaf should be written");
+
+        let binary = build_project(&main_file, &build_out)
+            .expect("project build should ignore unreachable transitive dependency chains");
+        assert!(binary.exists());
+
+        let cargo_toml = std::fs::read_to_string(build_out.join("sifr_output").join("Cargo.toml"))
+            .expect("cargo manifest should be written");
+        assert!(!cargo_toml.contains("num-bigint = \"0.4\""));
+        assert!(!cargo_toml.contains("num-traits = \"0.2\""));
+
+        let _ = std::fs::remove_dir_all(dir);
+    }
 }
