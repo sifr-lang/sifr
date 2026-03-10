@@ -75,7 +75,8 @@ Loop per part: Plan -> Implement -> Validate -> Demo -> PR -> Review -> Merge ->
   - merge evidence: PR #1090 merged into `main` on 2026-03-10
 
 ### milestone_driver_3: Frontend and Project-Graph Extraction
-- Status: validated_pending_pr
+- Status: in_review
+- Implementation PR: https://github.com/yaseralnajjar/sifr/pull/1091
 - Demo target:
   - `cargo run -q -p sifr -- run demos/m_driver_3_frontend_project_graph_demo/main.sifr`
 - Validation target:
