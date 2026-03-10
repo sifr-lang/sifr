@@ -519,12 +519,10 @@ fn cmd_test(dir: &Path, diagnostic_format: DiagnosticFormat) -> i32 {
 }
 
 fn cmd_emit(file: &Path, diagnostic_format: DiagnosticFormat) -> i32 {
-    let source = read_source(file);
-
     let compile_result = match run_with_panic_boundary(
         "internal compiler panic during emit command execution",
         CompilePhase::Codegen,
-        || compile(&source),
+        || emit_entrypoint(file),
     ) {
         Ok(result) => result,
         Err(internal) => return render_compile_errors(&[internal], diagnostic_format),
@@ -556,6 +554,11 @@ fn check_entrypoint(file: &Path) -> Vec<CompileError> {
             check(&source)
         }
     }
+}
+
+fn emit_entrypoint(file: &Path) -> CompileResult {
+    let source = read_source(file);
+    compile(&source)
 }
 
 #[cfg(test)]
@@ -995,6 +998,79 @@ mod tests {
             .any(|m| m.contains("[helper] return type mismatch")));
 
         let _ = std::fs::remove_dir_all(build_out);
+        let _ = std::fs::remove_dir_all(dir);
+    }
+
+    #[test]
+    fn test_compile_entrypoint_single_file_ignores_unrelated_sibling_parse_errors() {
+        let dir = mktemp_dir("single_file_sibling_isolation");
+        let main = dir.join("main.sifr");
+        let output = mktemp_dir("single_file_sibling_isolation_out");
+        std::fs::write(&main, "def main():\n    print(\"solo\")\n")
+            .expect("main file should be written");
+        std::fs::write(dir.join("scratch.sifr"), "def broken(:\n")
+            .expect("unrelated sibling should be written");
+
+        let binary = compile_entrypoint(&main, &output)
+            .expect("single-file build should ignore unrelated sibling parse errors");
+        assert!(binary.exists());
+
+        let _ = std::fs::remove_dir_all(output);
+        let _ = std::fs::remove_dir_all(dir);
+    }
+
+    #[test]
+    fn test_compile_entrypoint_non_main_input_stays_single_file() {
+        let dir = mktemp_dir("non_main_single_file_boundary");
+        let app = dir.join("app.sifr");
+        let output = mktemp_dir("non_main_single_file_boundary_out");
+        std::fs::write(&app, "def main():\n    print(\"app\")\n").expect("app should be written");
+        std::fs::write(
+            dir.join("main.sifr"),
+            "from helper import value\n\ndef main():\n    print(value())\n",
+        )
+        .expect("project-like main should be written");
+        std::fs::write(dir.join("helper.sifr"), "def value(:\n").expect("helper should be written");
+
+        let binary =
+            compile_entrypoint(&app, &output).expect("non-main entry should stay single-file");
+        assert!(binary.exists());
+
+        let _ = std::fs::remove_dir_all(output);
+        let _ = std::fs::remove_dir_all(dir);
+    }
+
+    #[test]
+    fn test_emit_entrypoint_preserves_single_file_boundary_for_project_like_main() {
+        let dir = mktemp_dir("emit_single_file_boundary");
+        let main = dir.join("main.sifr");
+        let helper = dir.join("helper.sifr");
+        std::fs::write(
+            &main,
+            "from helper import value\n\ndef main():\n    print(value())\n",
+        )
+        .expect("main should be written");
+        std::fs::write(&helper, "def value() -> int:\n    return 42\n")
+            .expect("helper should be written");
+
+        let check_errors = check_entrypoint(&main);
+        assert!(
+            check_errors.is_empty(),
+            "check should preserve project-mode behavior: {check_errors:?}"
+        );
+
+        let emit_result = emit_entrypoint(&main);
+        let emit_errors = match emit_result {
+            CompileResult::Success { .. } => {
+                panic!("emit should stay single-file and fail on local project imports")
+            }
+            CompileResult::Errors { errors } => errors,
+        };
+        let emit_messages: Vec<String> = emit_errors.iter().map(ToString::to_string).collect();
+        assert!(emit_messages
+            .iter()
+            .any(|message| message.contains("unknown module 'helper'")));
+
         let _ = std::fs::remove_dir_all(dir);
     }
 
