@@ -1,0 +1,98 @@
+# Consolidated stdlib itertools coverage for milestone_30_4 structure rules
+from sifr.itertools import (
+    chain, repeat, take, flatten, pairwise, batched, islice,
+    accumulate, compress, dropwhile, takewhile, filterfalse, zip_longest, count_from, cycle
+)
+from sifr.test import assert_bool_vector_eq
+
+def is_small(x: int) -> bool:
+    return x < 3
+
+def collect_core_actual() -> list[bool]:
+    actual: list[bool] = []
+    actual.append(str(chain([1, 2], [3, 4])) == "[1, 2, 3, 4]")
+    actual.append(str(repeat(7, 3)) == "[7, 7, 7]")
+    actual.append(str(take(3, [10, 20, 30, 40, 50])) == "[10, 20, 30]")
+    actual.append(str(flatten([[1, 2], [3], [4, 5]])) == "[1, 2, 3, 4, 5]")
+    actual.append(str(pairwise([1, 2, 3, 4])) == "[[1, 2], [2, 3], [3, 4]]")
+
+    batched_ok: bool = False
+    try:
+        bat: list[list[int]] = batched([1, 2, 3, 4, 5], 2)
+        batched_ok = str(bat) == "[[1, 2], [3, 4], [5]]"
+    except ValueError as e:
+        _ = str(e.message)
+    actual.append(batched_ok)
+    actual.append(str(islice([10, 20, 30, 40, 50], 3)) == "[10, 20, 30]")
+    return actual
+
+def collect_extended_actual() -> list[bool]:
+    actual: list[bool] = []
+    data: list[int] = [1, 2, 3, 4, 5]
+    acc: list[int] = accumulate(data)
+    acc_last_ok: bool = False
+    acc_last: int | None = acc[4]
+    if acc_last is not None:
+        acc_last_ok = acc_last == 15
+    actual.append(len(acc) == 5 and acc_last_ok)
+
+    selectors: list[bool] = [True, False, True, False, True]
+    comp: list[int] = compress(data, selectors)
+    actual.append(len(comp) == 3)
+    actual.append(len(dropwhile(is_small, data)) == 3)
+    actual.append(len(takewhile(is_small, data)) == 2)
+    actual.append(len(filterfalse(is_small, data)) == 3)
+
+    zl: list[list[int]] = zip_longest([1, 2, 3], [4, 5], 0)
+    actual.append(len(zl) == 3)
+
+    cf: list[int] = count_from(0, 2, 5)
+    cf_first_ok: bool = False
+    cf_second_ok: bool = False
+    cf_first: int | None = cf[0]
+    cf_second: int | None = cf[1]
+    if cf_first is not None:
+        cf_first_ok = cf_first == 0
+    if cf_second is not None:
+        cf_second_ok = cf_second == 2
+    actual.append(len(cf) == 5 and cf_first_ok and cf_second_ok)
+
+    cyc: list[int] = cycle([1, 2, 3], 7)
+    cyc_first_ok: bool = False
+    cyc_fourth_ok: bool = False
+    cyc_first: int | None = cyc[0]
+    cyc_fourth: int | None = cyc[3]
+    if cyc_first is not None:
+        cyc_first_ok = cyc_first == 1
+    if cyc_fourth is not None:
+        cyc_fourth_ok = cyc_fourth == 1
+    actual.append(len(cyc) == 7 and cyc_first_ok and cyc_fourth_ok)
+    return actual
+
+def collect_negative_actual() -> list[bool]:
+    actual: list[bool] = []
+    invalid_batch_rejected: bool = False
+    try:
+        _bad: list[list[int]] = batched([1, 2], 0)
+        _ = _bad
+    except ValueError as e:
+        invalid_batch_rejected = len(e.message) > 0
+    actual.append(invalid_batch_rejected)
+    return actual
+
+def append_all(mut target: list[bool], values: list[bool]):
+    for value in values:
+        target.append(value)
+
+def main():
+    expected: list[bool] = [
+        True, True, True, True, True, True, True,
+        True, True, True, True, True, True, True, True,
+        True
+    ]
+    actual: list[bool] = []
+    append_all(actual, collect_core_actual())
+    append_all(actual, collect_extended_actual())
+    append_all(actual, collect_negative_actual())
+    assert_bool_vector_eq(actual, expected)
+    assert str("stdlib_itertools_consolidated: pass") == "stdlib_itertools_consolidated: pass"

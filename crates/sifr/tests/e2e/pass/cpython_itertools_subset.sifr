@@ -5,13 +5,8 @@ from sifr.test import assert_bool_vector_eq
 def lt3(x: int) -> bool:
     return x < 3
 
-def main():
-    expected: list[bool] = [
-        True, True, True, True, True, True, True, True,
-        True, True, True, True, True, True, True, True
-    ]
+def collect_core_actual() -> list[bool]:
     actual: list[bool] = []
-
     actual.append(str(chain([1, 2], [3, 4])) == "[1, 2, 3, 4]")
     actual.append(str(repeat(7, 3)) == "[7, 7, 7]")
     actual.append(str(take(2, [10, 20, 30])) == "[10, 20]")
@@ -35,7 +30,10 @@ def main():
     actual.append(str(zip_longest([1, 2], [9], 0)) == "[[1, 9], [2, 0]]")
     actual.append(str(count_from(5, 2, 4)) == "[5, 7, 9, 11]")
     actual.append(str(cycle([1, 2, 3], 5)) == "[1, 2, 3, 1, 2]")
+    return actual
 
+def collect_negative_actual() -> list[bool]:
+    actual: list[bool] = []
     invalid_batch_rejected: bool = False
     try:
         _bad: list[list[int]] = batched([1, 2], 0)
@@ -43,6 +41,20 @@ def main():
     except ValueError as e:
         invalid_batch_rejected = len(e.message) > 0
     actual.append(invalid_batch_rejected)
+    return actual
+
+def append_all(mut target: list[bool], values: list[bool]):
+    for value in values:
+        target.append(value)
+
+def main():
+    expected: list[bool] = [
+        True, True, True, True, True, True, True, True,
+        True, True, True, True, True, True, True, True
+    ]
+    actual: list[bool] = []
+    append_all(actual, collect_core_actual())
+    append_all(actual, collect_negative_actual())
 
     assert_bool_vector_eq(actual, expected)
     assert str("cpython_itertools_subset: pass") == "cpython_itertools_subset: pass"

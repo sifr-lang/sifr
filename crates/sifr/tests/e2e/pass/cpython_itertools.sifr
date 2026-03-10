@@ -1,97 +1,119 @@
-# CPython test_itertools — ported assertions for sifr.itertools
-from sifr.test import assert_eq
+# CPython test_itertools — ported assertions for sifr.itertools (helper-structured)
 from sifr.itertools import chain, repeat, take, flatten, pairwise, batched, islice
+from sifr.test import assert_bool_vector_eq
 
-
-def main():
-    expected: list[str] = ["cpython_itertools: all 22 assertions passed", "[10, 20, 30]", "[[1, 2], [3, 4], [5]]", "[[1, 2], [2, 3], [3, 4]]", "[1, 2, 3, 4, 5]", "[10, 20, 30]", "[0, 0, 0]", "[42, 42, 42, 42, 42]", "[1, 2, 3, 4, 5, 6]"]
-    expected_index: int = 0
-    # --- chain ---
+def collect_chain_actual() -> list[bool]:
+    actual: list[bool] = []
     a: list[int] = [1, 2, 3]
     b: list[int] = [4, 5, 6]
     c: list[int] = chain(a, b)
-    assert_eq(len(c), 6)
-    assert str(c) == expected[len(expected) - expected_index - 1]
-    expected_index = expected_index + 1
+    actual.append(len(c) == 6)
+    actual.append(str(c) == "[1, 2, 3, 4, 5, 6]")
 
-    # chain with empty
     empty: list[int] = []
     c2: list[int] = chain(empty, a)
-    assert_eq(len(c2), 3)
     c3: list[int] = chain(a, empty)
-    assert_eq(len(c3), 3)
     c4: list[int] = chain(empty, empty)
-    assert_eq(len(c4), 0)
+    actual.append(len(c2) == 3)
+    actual.append(len(c3) == 3)
+    actual.append(len(c4) == 0)
+    return actual
 
-    # --- repeat ---
+def collect_repeat_actual() -> list[bool]:
+    actual: list[bool] = []
     r1: list[int] = repeat(42, 5)
-    assert_eq(len(r1), 5)
-    assert str(r1) == expected[len(expected) - expected_index - 1]
-    expected_index = expected_index + 1
+    actual.append(len(r1) == 5)
+    actual.append(str(r1) == "[42, 42, 42, 42, 42]")
 
     r2: list[int] = repeat(0, 3)
-    assert_eq(len(r2), 3)
-    assert str(r2) == expected[len(expected) - expected_index - 1]
-    expected_index = expected_index + 1
+    actual.append(len(r2) == 3)
+    actual.append(str(r2) == "[0, 0, 0]")
 
     r3: list[int] = repeat(1, 0)
-    assert_eq(len(r3), 0)
+    actual.append(len(r3) == 0)
+    return actual
 
-    # --- take ---
+def collect_take_actual() -> list[bool]:
+    actual: list[bool] = []
     data: list[int] = [10, 20, 30, 40, 50]
     t1: list[int] = take(3, data)
-    assert_eq(len(t1), 3)
-    assert str(t1) == expected[len(expected) - expected_index - 1]
-    expected_index = expected_index + 1
+    actual.append(len(t1) == 3)
+    actual.append(str(t1) == "[10, 20, 30]")
 
     t2: list[int] = take(0, data)
-    assert_eq(len(t2), 0)
+    actual.append(len(t2) == 0)
 
     t3: list[int] = take(10, data)
-    assert_eq(len(t3), 5)
+    actual.append(len(t3) == 5)
+    return actual
 
-    # --- flatten ---
+def collect_flatten_actual() -> list[bool]:
+    actual: list[bool] = []
     nested: list[list[int]] = [[1, 2], [3, 4], [5]]
     flat: list[int] = flatten(nested)
-    assert_eq(len(flat), 5)
-    assert str(flat) == expected[len(expected) - expected_index - 1]
-    expected_index = expected_index + 1
+    actual.append(len(flat) == 5)
+    actual.append(str(flat) == "[1, 2, 3, 4, 5]")
 
     empty_nested: list[list[int]] = [[], [], []]
     flat2: list[int] = flatten(empty_nested)
-    assert_eq(len(flat2), 0)
+    actual.append(len(flat2) == 0)
+    return actual
 
-    # --- pairwise ---
+def collect_pairwise_actual() -> list[bool]:
+    actual: list[bool] = []
     pw_data: list[int] = [1, 2, 3, 4]
     pw: list[list[int]] = pairwise(pw_data)
-    assert_eq(len(pw), 3)
-    assert str(pw) == expected[len(expected) - expected_index - 1]
-    expected_index = expected_index + 1
+    actual.append(len(pw) == 3)
+    actual.append(str(pw) == "[[1, 2], [2, 3], [3, 4]]")
+    return actual
 
-    # --- batched ---
+def collect_batched_actual() -> list[bool]:
+    actual: list[bool] = []
     bat_data: list[int] = [1, 2, 3, 4, 5]
     try:
         bat: list[list[int]] = batched(bat_data, 2)
-        assert_eq(len(bat), 3)
-        assert str(bat) == expected[len(expected) - expected_index - 1]
-        expected_index = expected_index + 1
+        actual.append(len(bat) == 3)
+        actual.append(str(bat) == "[[1, 2], [3, 4], [5]]")
     except ValueError as e:
-        assert str(f"error: {e.message}") == expected[len(expected) - expected_index - 1]
-        expected_index = expected_index + 1
+        actual.append(False)
+        actual.append(False)
+    return actual
 
-    # --- islice ---
+def collect_islice_actual() -> list[bool]:
+    actual: list[bool] = []
     sl_data: list[int] = [10, 20, 30, 40, 50]
     sl: list[int] = islice(sl_data, 3)
-    assert_eq(len(sl), 3)
-    assert str(sl) == expected[len(expected) - expected_index - 1]
-    expected_index = expected_index + 1
+    actual.append(len(sl) == 3)
+    actual.append(str(sl) == "[10, 20, 30]")
 
     sl2: list[int] = islice(sl_data, 0)
-    assert_eq(len(sl2), 0)
+    actual.append(len(sl2) == 0)
 
     sl3: list[int] = islice(sl_data, 10)
-    assert_eq(len(sl3), 5)
+    actual.append(len(sl3) == 5)
+    return actual
 
-    assert str("cpython_itertools: all 22 assertions passed") == expected[len(expected) - expected_index - 1]
-    expected_index = expected_index + 1
+def append_all(mut target: list[bool], values: list[bool]):
+    for value in values:
+        target.append(value)
 
+def main():
+    expected: list[bool] = [
+        True, True, True, True, True,
+        True, True, True, True, True,
+        True, True, True, True,
+        True, True, True,
+        True, True,
+        True, True,
+        True, True, True, True
+    ]
+    actual: list[bool] = []
+    append_all(actual, collect_chain_actual())
+    append_all(actual, collect_repeat_actual())
+    append_all(actual, collect_take_actual())
+    append_all(actual, collect_flatten_actual())
+    append_all(actual, collect_pairwise_actual())
+    append_all(actual, collect_batched_actual())
+    append_all(actual, collect_islice_actual())
+    assert_bool_vector_eq(actual, expected)
+    assert str("cpython_itertools: all 22 assertions passed") == "cpython_itertools: all 22 assertions passed"

@@ -1,0 +1,104 @@
+# Consolidated stdlib collections coverage for milestone_30_4 structure rules
+from sifr.collections import (
+    Counter, from_list, deque,
+    new_set, set_add, set_contains, set_remove, set_len, set_union, set_intersection, set_from_list
+)
+from sifr.test import assert_bool_vector_eq
+
+def collect_set_actual() -> list[bool]:
+    actual: list[bool] = []
+    actual.append(set_len(new_set()) == 0)
+    actual.append(set_len(set_from_list([1, 2, 2, 3, 3, 3])) == 3)
+    actual.append(set_contains(set_from_list([1, 2, 3]), 2))
+    missing_five: bool = not set_contains(set_from_list([1, 2, 3]), 5)
+    actual.append(missing_five)
+    actual.append(set_len(set_add(set_from_list([1, 2]), 3)) == 3)
+    actual.append(set_len(set_add(set_from_list([1, 2, 3]), 2)) == 3)
+    missing_two_after_remove: bool = not set_contains(set_remove(set_from_list([1, 2, 3]), 2), 2)
+    actual.append(missing_two_after_remove)
+    actual.append(set_len(set_remove(set_from_list([1, 2, 3]), 2)) == 2)
+    actual.append(set_len(set_union(set_from_list([1, 2, 3]), set_from_list([3, 4, 5]))) == 5)
+    actual.append(set_len(set_intersection(set_from_list([1, 2, 3]), set_from_list([3, 4, 5]))) == 1)
+    return actual
+
+def collect_counter_actual() -> list[bool]:
+    actual: list[bool] = []
+    c: Counter[str] = from_list(["apple", "banana", "apple", "cherry", "banana", "apple"])
+    actual.append(c.get("apple") == 3)
+    actual.append(c.get("banana") == 2)
+    actual.append(c.get("cherry") == 1)
+    actual.append(c.get("missing") == 0)
+    actual.append(c.total() == 6)
+    actual.append(str(c.most_common(2)) == "[\"apple\", \"banana\"]")
+    actual.append(len(c.keys()) == 3)
+    actual.append(len(c.values()) == 3)
+    c.increment("cherry")
+    c.increment("cherry")
+    actual.append(c.get("cherry") == 3)
+
+    c_mut: Counter[str] = from_list(["x", "y", "x"])
+    actual.append(c_mut.get("x") == 2)
+    c_mut.increment("x")
+    c_mut.increment("z")
+    actual.append(c_mut.get("x") == 3 and c_mut.get("z") == 1 and c_mut.total() == 5)
+
+    c1: Counter[str] = from_list(["a", "b", "a"])
+    c2: Counter[str] = from_list(["b", "c"])
+    c1.update(c2)
+    actual.append(c1.get("a") == 2 and c1.get("b") == 2 and c1.get("c") == 1)
+
+    c3: Counter[str] = from_list(["x", "x", "y"])
+    c4: Counter[str] = from_list(["x"])
+    c3.subtract(c4)
+    actual.append(c3.get("x") == 1 and c3.get("y") == 1)
+
+    c5: Counter[str] = from_list(["a", "a", "b"])
+    elems: list[str] = c5.elements()
+    actual.append(len(elems) == 3)
+
+    ca: Counter[str] = from_list(["a", "b"])
+    cb: Counter[str] = from_list(["b", "c"])
+    cc: Counter[str] = ca + cb
+    actual.append(cc.get("a") == 1 and cc.get("b") == 2 and cc.get("c") == 1)
+
+    cd: Counter[str] = from_list(["a", "a", "b"])
+    ce: Counter[str] = from_list(["a"])
+    cf: Counter[str] = cd - ce
+    actual.append(cf.get("a") == 1 and cf.get("b") == 1)
+    return actual
+
+def collect_deque_actual() -> list[bool]:
+    actual: list[bool] = []
+    d: deque[int] = deque(0)
+    d.append(1)
+    d.append(2)
+    d.append(3)
+    actual.append(d.len() == 3)
+    actual.append(d.pop() == 3)
+    actual.append(d.popleft() == 1)
+    actual.append(d.len() == 1)
+
+    d2: deque[int] = deque(3)
+    d2.append(1)
+    d2.append(2)
+    d2.append(3)
+    d2.append(4)
+    actual.append(d2.len() == 3)
+    return actual
+
+def append_all(mut target: list[bool], values: list[bool]):
+    for value in values:
+        target.append(value)
+
+def main():
+    expected: list[bool] = [
+        True, True, True, True, True, True, True, True, True, True,
+        True, True, True, True, True, True, True, True, True, True, True, True, True, True, True, True,
+        True, True, True, True, True
+    ]
+    actual: list[bool] = []
+    append_all(actual, collect_set_actual())
+    append_all(actual, collect_counter_actual())
+    append_all(actual, collect_deque_actual())
+    assert_bool_vector_eq(actual, expected)
+    assert str("stdlib_collections_consolidated: pass") == "stdlib_collections_consolidated: pass"

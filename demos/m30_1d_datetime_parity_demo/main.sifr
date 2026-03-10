@@ -1,10 +1,8 @@
 from sifr.datetime import timedelta, datetime, now, from_timestamp, timezone
 from sifr.test import assert_bool_vector_eq
 
-def main():
-    expected: list[bool] = [True, True, True, True, True, True]
+def collect_positive_actual() -> list[bool]:
     actual: list[bool] = []
-
     dt: datetime = datetime(2024, 1, 15, 10, 30, 0)
     actual.append(dt.isoformat() == "2024-01-15T10:30:00")
 
@@ -25,7 +23,10 @@ def main():
     actual.append(epoch_ok)
 
     actual.append(str(timezone(-19800)) == "UTC-05:30")
+    return actual
 
+def collect_negative_actual() -> list[bool]:
+    actual: list[bool] = []
     invalid_rejected: bool = False
     try:
         _bad: str = from_timestamp(100000000000000000000.0)
@@ -33,6 +34,17 @@ def main():
     except ValueError as e:
         invalid_rejected = len(e.message) > 0
     actual.append(invalid_rejected)
+    return actual
+
+def append_all(mut target: list[bool], values: list[bool]):
+    for value in values:
+        target.append(value)
+
+def main():
+    expected: list[bool] = [True, True, True, True, True, True]
+    actual: list[bool] = []
+    append_all(actual, collect_positive_actual())
+    append_all(actual, collect_negative_actual())
 
     assert_bool_vector_eq(actual, expected)
     print("m30_1d datetime parity demo: pass")

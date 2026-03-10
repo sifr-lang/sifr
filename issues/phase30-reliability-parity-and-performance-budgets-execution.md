@@ -82,7 +82,7 @@ Loop per part: Work -> Validate -> PR -> Review -> Merge -> External review pass
 - [x] `wave_30_1a` (`env`, `bytes`, `base64`, `hashlib`) - implementation merged in https://github.com/yaseralnajjar/sifr/pull/1048; review pass 1 and pass 2 approved; wave completion and wave production-grade closures approved
 - [x] `wave_30_1b` (`math`, `statistics`, `bisect`, `heapq`) - complete (implementation merged in https://github.com/yaseralnajjar/sifr/pull/1053; reviewer pass 1 remediation merged in https://github.com/yaseralnajjar/sifr/pull/1054; reviewer pass 2 approved; wave completion closure and production-grade closure approved)
 - [x] `wave_30_1c` (`string`, `textwrap`, `fnmatch`, `re`) - complete (implementation merged in https://github.com/yaseralnajjar/sifr/pull/1058; reviewer pass 1 and pass 2 approved; wave completion closure and production-grade closure approved)
-- [ ] `wave_30_1d` (`collections`, `itertools`, `json`, `datetime`)
+- [ ] `wave_30_1d` (`collections`, `itertools`, `json`, `datetime`) - in progress (fixture-structure remediation and stdlib fixture consolidation in implementation)
 - [ ] `wave_30_1e` (`io`, `csv`, `os`, `pathlib`, `glob`, `tempfile`, `shutil`)
 - [ ] `wave_30_1f` (`logging`, `time`, `timeit`, `platform`, `uuid`)
 
@@ -161,6 +161,14 @@ status: wave closure complete (review pass 1 + review pass 2 + wave completion c
 - Wave production-grade closure output: `reviews/phase-30-m30_4-wave-30_1c-production-grade-review.md`
 - Wave production-grade closure verdict: `wave_30_1c` is production-grade complete for milestone_30_4 scope with no blockers.
 - Next step: start `wave_30_1d` milestone_30_4 structural execution loop.
+
+### milestone_30_4 wave_30_1d progress
+status: in progress (implementation remediation in flight) (2026-03-10)
+
+- Planned remediation scope:
+  - refactor `cpython_{collections,itertools,json,datetime}*.sifr` fixtures to keep `main()` orchestration-only with helper-grouped behavior sections
+  - consolidate legacy `stdlib_{collections,itertools,json,datetime}*.sifr` fixtures into canonical consolidated fixtures
+  - keep wave demos helper-structured and deterministic for reviewability
 
 ## Part 1: `env`
 status: done (2026-03-08, PR #929)

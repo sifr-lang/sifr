@@ -1,75 +1,80 @@
 # CPython test_collections.py — ported assertions for sifr.collections
 # Updated to use native dict[str, int] Counter class (borrow-by-default milestone)
-from sifr.test import assert_eq, assert_true, assert_false
+from sifr.test import assert_bool_vector_eq
 from sifr.collections import (
     Counter, from_list,
     new_set, set_from_list, set_add, set_contains, set_remove,
     set_len, set_union, set_intersection
 )
 
-def main():
-    # --- Set operations (int-backed, functional) ---
+def collect_set_actual() -> list[bool]:
+    actual: list[bool] = []
     s1: list[int] = new_set()
-    assert_eq(set_len(s1), 0)
+    actual.append(set_len(s1) == 0)
 
     s1 = set_add(s1, 1)
-    assert_eq(set_len(s1), 1)
-    assert_true(set_contains(s1, 1))
-    assert_false(set_contains(s1, 2))
+    actual.append(set_len(s1) == 1)
+    actual.append(set_contains(s1, 1))
+    missing_two_initial: bool = not set_contains(s1, 2)
+    actual.append(missing_two_initial)
 
     s1 = set_add(s1, 2)
     s1 = set_add(s1, 3)
-    assert_eq(set_len(s1), 3)
+    actual.append(set_len(s1) == 3)
 
     s1 = set_remove(s1, 2)
-    assert_eq(set_len(s1), 2)
-    assert_false(set_contains(s1, 2))
+    actual.append(set_len(s1) == 2)
+    missing_two_after_remove: bool = not set_contains(s1, 2)
+    actual.append(missing_two_after_remove)
 
-    # Duplicate add
     s1 = set_add(s1, 1)
-    assert_eq(set_len(s1), 2)
+    actual.append(set_len(s1) == 2)
 
-    # set_from_list
     items: list[int] = [10, 20, 30, 10, 20]
     s2: list[int] = set_from_list(items)
-    assert_eq(set_len(s2), 3)
-    assert_true(set_contains(s2, 10))
-    assert_true(set_contains(s2, 20))
-    assert_true(set_contains(s2, 30))
+    actual.append(set_len(s2) == 3)
+    actual.append(set_contains(s2, 10))
+    actual.append(set_contains(s2, 20))
+    actual.append(set_contains(s2, 30))
 
-    # set_union
     a_set: list[int] = set_from_list([1, 2, 3])
     b_set: list[int] = set_from_list([2, 3, 4])
     u: list[int] = set_union(a_set, b_set)
-    assert_eq(set_len(u), 4)
-
-    # set_intersection
     inter: list[int] = set_intersection(a_set, b_set)
-    assert_eq(set_len(inter), 2)
+    actual.append(set_len(u) == 4)
+    actual.append(set_len(inter) == 2)
+    return actual
 
-    # --- Counter operations (native dict[str, int] class) ---
+def collect_counter_actual() -> list[bool]:
+    actual: list[bool] = []
     words: list[str] = ["apple", "banana", "apple", "cherry", "banana", "apple"]
     c: Counter[str] = from_list(words)
 
-    assert_eq(c.get("apple"), 3)
-    assert_eq(c.get("banana"), 2)
-    assert_eq(c.get("cherry"), 1)
-    assert_eq(c.get("missing"), 0)
-    assert_eq(c.total(), 6)
+    actual.append(c.get("apple") == 3)
+    actual.append(c.get("banana") == 2)
+    actual.append(c.get("cherry") == 1)
+    actual.append(c.get("missing") == 0)
+    actual.append(c.total() == 6)
+    actual.append(str(c.most_common(2)) == "[\"apple\", \"banana\"]")
+    actual.append(len(c.keys()) == 3)
+    actual.append(len(c.values()) == 3)
 
-    # most_common returns list of keys sorted by count descending
-    mc: list[str] = c.most_common(2)
-    assert str(mc) == '["apple", "banana"]'
-
-    # keys and values
-    keys: list[str] = c.keys()
-    assert_eq(len(keys), 3)
-
-    vals: list[int] = c.values()
-    assert_eq(len(vals), 3)
-
-    # increment
     c.increment("banana")
-    assert_eq(c.get("banana"), 3)
+    actual.append(c.get("banana") == 3)
+    return actual
+
+def append_all(mut target: list[bool], values: list[bool]):
+    for value in values:
+        target.append(value)
+
+def main():
+    expected: list[bool] = [
+        True, True, True, True, True, True, True, True, True, True, True, True, True, True,
+        True, True, True, True, True, True, True, True, True
+    ]
+    actual: list[bool] = []
+    append_all(actual, collect_set_actual())
+    append_all(actual, collect_counter_actual())
+    assert_bool_vector_eq(actual, expected)
 
     assert str("cpython_collections: all 26 assertions passed") == 'cpython_collections: all 26 assertions passed'
