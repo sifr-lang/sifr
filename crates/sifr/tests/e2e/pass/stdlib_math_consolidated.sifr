@@ -1,0 +1,122 @@
+# Consolidated stdlib math coverage for milestone_30_4 structure rules
+from sifr.math import (
+    sqrt, floor, ceil, pi, e, log, sin, cos, abs_val, pow_val, round_val,
+    asin, acos, sinh, log10, degrees, trunc, hypot, tau, inf, nan, isnan, isinf,
+    factorial, gcd, lcm, comb, perm, isclose, prod, exp, fabs, isfinite,
+    erf, erfc, gamma, lgamma, frexp, ldexp, modf, nextafter, ulp,
+    acosh, asinh, atanh, isqrt, dist, fsum
+)
+from sifr.test import assert_bool_vector_eq
+
+def near(v: float, target: float, tol: float) -> bool:
+    if v < target - tol:
+        return False
+    if v > target + tol:
+        return False
+    return True
+
+def collect_basic_actual() -> list[bool]:
+    actual: list[bool] = []
+    actual.append(sqrt(16.0) == 4.0)
+    actual.append(floor(3.7) == 3)
+    actual.append(ceil(3.2) == 4)
+    actual.append(pi > 3.14 and pi < 3.15)
+    actual.append(e > 2.71 and e < 2.72)
+    actual.append(log(1.0) == 0.0)
+    actual.append(sin(0.0) == 0.0)
+    actual.append(cos(0.0) == 1.0)
+    actual.append(abs_val(-5.0) == 5.0)
+    actual.append(pow_val(2.0, 3.0) == 8.0)
+    actual.append(round_val(3.7) == 4)
+    return actual
+
+def collect_expanded_actual() -> list[bool]:
+    actual: list[bool] = []
+    actual.append(trunc(degrees(asin(1.0))) == 90)
+    actual.append(trunc(degrees(acos(0.0))) == 90)
+    actual.append(trunc(sinh(0.0)) == 0)
+    actual.append(trunc(log10(100.0)) == 2)
+    actual.append(isnan(nan))
+    actual.append(isinf(inf))
+    actual.append(trunc(3.7) == 3)
+    actual.append(trunc(hypot(3.0, 4.0)) == 5)
+    actual.append(tau > 6.28 and tau < 6.29)
+    return actual
+
+def collect_extended_actual() -> list[bool]:
+    actual: list[bool] = []
+    actual.append(factorial(5) == 120)
+    actual.append(factorial(0) == 1)
+    actual.append(gcd(12, 8) == 4)
+    actual.append(lcm(4, 6) == 12)
+    actual.append(comb(5, 2) == 10)
+    actual.append(perm(5, 2) == 20)
+    nums: list[int] = [1, 2, 3, 4, 5]
+    actual.append(prod(nums) == 120)
+    actual.append(isclose(1.0, 1.0000001, 0.001, 0.0))
+    actual.append(near(exp(0.0), 1.0, 0.0001))
+    actual.append(near(fabs(-3.14), 3.14, 0.0001))
+    actual.append(isfinite(1.0))
+    return actual
+
+def collect_intrinsics_actual() -> list[bool]:
+    actual: list[bool] = []
+    actual.append(near(erf(0.0), 0.0, 0.001))
+    actual.append(near(erfc(0.0), 1.0, 0.001))
+    actual.append(gamma(5.0) > 23.0)
+    actual.append(lgamma(5.0) > 3.0)
+    fp: list[float] = frexp(8.0)
+    actual.append(len(fp) == 2)
+    actual.append(ldexp(0.5, 4) > 0.0)
+    md: list[float] = modf(3.7)
+    actual.append(len(md) == 2)
+    actual.append(nextafter(1.0, 2.0) > 1.0)
+    actual.append(ulp(1.0) > 0.0)
+    return actual
+
+def collect_pure_expansion_actual() -> list[bool]:
+    actual: list[bool] = []
+    actual.append(near(acosh(1.0), 0.0, 0.0001))
+    actual.append(near(asinh(0.0), 0.0, 0.0001))
+    actual.append(near(atanh(0.0), 0.0, 0.0001))
+    actual.append(isqrt(9) == 3)
+    actual.append(isqrt(10) == 3)
+    actual.append(isqrt(16) == 4)
+    p: list[float] = [0.0, 0.0]
+    q: list[float] = [3.0, 4.0]
+    actual.append(near(dist(p, q), 5.0, 0.0001))
+    tenths: list[float] = [0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1]
+    actual.append(near(fsum(tenths), 1.0, 0.0001))
+    return actual
+
+def append_all(mut target: list[bool], values: list[bool]):
+    for value in values:
+        target.append(value)
+
+def collect_negative_actual_false() -> list[bool]:
+    actual_false: list[bool] = []
+    actual_false.append(isclose(1.0, 1.0, -0.1, 0.0))
+    actual_false.append(isclose(1.0, 1.0, 0.1, -0.1))
+    actual_false.append(isfinite(inf))
+    return actual_false
+
+def main():
+    positive_expected: list[bool] = [
+        True, True, True, True, True, True, True, True, True, True, True,
+        True, True, True, True, True, True, True, True, True,
+        True, True, True, True, True, True, True, True, True, True, True,
+        True, True, True, True, True, True, True, True, True, True, True,
+        True, True, True, True, True, True
+    ]
+    positive_actual: list[bool] = []
+    append_all(positive_actual, collect_basic_actual())
+    append_all(positive_actual, collect_expanded_actual())
+    append_all(positive_actual, collect_extended_actual())
+    append_all(positive_actual, collect_intrinsics_actual())
+    append_all(positive_actual, collect_pure_expansion_actual())
+    assert_bool_vector_eq(positive_actual, positive_expected)
+
+    negative_expected_false: list[bool] = [False, False, False]
+    negative_actual_false: list[bool] = collect_negative_actual_false()
+    assert_bool_vector_eq(negative_actual_false, negative_expected_false)
+    assert str("stdlib_math_consolidated: pass") == "stdlib_math_consolidated: pass"
