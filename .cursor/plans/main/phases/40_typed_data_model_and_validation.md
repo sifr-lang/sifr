@@ -8,6 +8,8 @@ Introduce a dedicated typed model layer with serialization and validation semant
 ## Depends on
 - Phase 39
 
+**Scope note:** This phase owns the typed serialization surface (`Serialize`/`Deserialize`, `dumps`/`loads`, and typed JSON roundtrips). Phase 41 is the downstream consumer via typed extractors, not a dependency of this phase.
+
 ## Milestones
 
 ### milestone_40_1: Typed Model Core and Serialization
