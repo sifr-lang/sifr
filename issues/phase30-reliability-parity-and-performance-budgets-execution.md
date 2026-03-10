@@ -79,7 +79,7 @@ Loop per part: Work -> Validate -> PR -> Review -> Merge -> External review pass
 
 ### milestone_30_4 wave-by-wave plan and status
 - Execution mode: wave-by-wave structural remediation, validation, PR merge, reviewer pass 1, reviewer pass 2, then next wave.
-- [ ] `wave_30_1a` (`env`, `bytes`, `base64`, `hashlib`) - in progress
+- [ ] `wave_30_1a` (`env`, `bytes`, `base64`, `hashlib`) - implementation merged in https://github.com/yaseralnajjar/sifr/pull/1048; review pass 1 approved; pass 2 pending
 - [ ] `wave_30_1b` (`math`, `statistics`, `bisect`, `heapq`)
 - [ ] `wave_30_1c` (`string`, `textwrap`, `fnmatch`, `re`)
 - [ ] `wave_30_1d` (`collections`, `itertools`, `json`, `datetime`)
@@ -113,6 +113,15 @@ Loop per part: Work -> Validate -> PR -> Review -> Merge -> External review pass
   - `.cursor/plans/main/phases/30_reliability_parity_and_performance_budgets.md`
 - Status note:
   - `milestone_30_4` was added on 2026-03-10 after the original 2026-03-09 closure verdicts for `milestone_30_1` through `milestone_30_3`; it is currently documented as implementation guidance with review-based enforcement and does not reopen the closed phase by default.
+
+### milestone_30_4 wave_30_1a progress
+status: review pass 1 complete (2026-03-10)
+
+- Implementation PR: merged https://github.com/yaseralnajjar/sifr/pull/1048
+- Reviewer pass 1 output: `reviews/phase-30-m30_4-wave-30-1a-review-1.md`
+- Reviewer verdict: all reviewed fixtures are compliant with `audit/stdlib/cpython_parity_fixture_format.md` and production-grade quality for approved scope.
+- Action taken: reviewer notes validated; no additional code remediation required in wave_30_1a scope.
+- Next step: run production-grade reviewer pass (pass 2), apply remediation if needed, and merge wave_30_1a pass-2 PR.
 
 ## Part 1: `env`
 status: done (2026-03-08, PR #929)
