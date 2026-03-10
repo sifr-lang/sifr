@@ -3,6 +3,7 @@
 Status: open (documented 2026-03-10)
 Context: ad hoc planning phase captured in `issues/` before any roadmap-phase promotion
 Execution readiness: planning-ready; promote into an execution checklist issue before implementation begins
+Execution tracking: `issues/phase31-sifr-driver-decomposition-and-boundary-hardening-execution.md`
 
 ## Objective
 Break `crates/sifr_driver/src/lib.rs` into small, focused modules with explicit internal boundaries while preserving all current CLI-visible behavior, diagnostics, dependency behavior, and test contracts.

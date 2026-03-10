@@ -1,4 +1,17 @@
-use super::*;
+use crate::build::generate_dependency_cargo_toml;
+use crate::diagnostics::{run_codegen_with_boundary, CompileError, CompilePhase};
+use crate::frontend::{parse_source, FrontendCompiled, FrontendDiagnosticStyle};
+use crate::project::{
+    assemble_project_main_rs, collect_project_hir_modules, compile_frontend_modules,
+    emit_project_frontend_diagnostics, ordered_non_main_module_names, parse_import_closure_modules,
+    DiscoveryDiagnosticStyle, ProjectLowering,
+};
+use crate::stdlib::{compile_stdlib, StdlibCompiled};
+use sifr_codegen::{generate_rust_multi_with_metadata, generate_rust_with_stdlib, StdlibCode};
+use sifr_hir::{HirModule, LoweringResult};
+use std::collections::{BTreeMap, BTreeSet, HashMap, HashSet};
+use std::path::{Path, PathBuf};
+use std::process::Command;
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub(crate) enum RootedEntrypointShape {
@@ -231,8 +244,7 @@ fn materialize_binary_project(
         }]
     })?;
 
-    let (cargo_toml, _) = generate_project_with_deps_and_crates(
-        &empty_hir_module(),
+    let cargo_toml = generate_dependency_cargo_toml(
         project_name,
         &generated_project.used_stdlib_modules,
         &generated_project.required_crates,
@@ -294,6 +306,7 @@ fn materialize_binary_project(
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::build_project;
 
     fn mktemp_dir(name: &str) -> PathBuf {
         let unique = format!(
