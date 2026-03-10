@@ -77,6 +77,15 @@ Loop per part: Work -> Validate -> PR -> Review -> Merge -> External review pass
 - [x] Record milestone_30_4 as a post-closure structural clarification rather than silently treating it as part of the original 2026-03-09 closure verdict
 - [x] Record enforcement model: milestone_30_4 is implementation guidance enforced through normal review by default; explicit reviewer sign-off is only required if it is later promoted to an enforced retroactive closure gate
 
+### milestone_30_4 wave-by-wave plan and status
+- Execution mode: wave-by-wave structural remediation, validation, PR merge, reviewer pass 1, reviewer pass 2, then next wave.
+- [ ] `wave_30_1a` (`env`, `bytes`, `base64`, `hashlib`) - in progress
+- [ ] `wave_30_1b` (`math`, `statistics`, `bisect`, `heapq`)
+- [ ] `wave_30_1c` (`string`, `textwrap`, `fnmatch`, `re`)
+- [ ] `wave_30_1d` (`collections`, `itertools`, `json`, `datetime`)
+- [ ] `wave_30_1e` (`io`, `csv`, `os`, `pathlib`, `glob`, `tempfile`, `shutil`)
+- [ ] `wave_30_1f` (`logging`, `time`, `timeit`, `platform`, `uuid`)
+
 ### Milestone 30_2 Evidence (Complexity and Resource Parity)
 - Canonical patterns + module API-class matrix:
   - `verification/stdlib/phase30_complexity_resource_matrix.md`
