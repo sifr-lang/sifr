@@ -172,4 +172,4 @@ Loop per part: Plan -> Implement -> Validate -> Demo -> PR -> Review -> Merge ->
   - positive path: `cargo run -q -p sifr -- test demos/m_driver_5_test_runner_demo` -> executed the demo test runner successfully with `test_import_parity ... ok`
   - local gate: `/Users/yaseralnajjar/work/sifr/codebase/scripts/run_all_tests.sh --profile quick` -> passed (`verification ok: variants=64, failures=0, blocking_failures=0, non_blocking_failures=0`)
 - Follow-up PR:
-  - pending
+  - https://github.com/yaseralnajjar/sifr/pull/1097
