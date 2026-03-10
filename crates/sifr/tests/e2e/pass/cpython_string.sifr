@@ -1,47 +1,70 @@
 # CPython test_string.py — ported assertions for sifr.string
-from sifr.test import assert_eq, assert_true
+from sifr.test import assert_bool_vector_eq
 from sifr.string import (
     capwords, ascii_lowercase, ascii_uppercase, ascii_letters,
     digits, hexdigits, octdigits, punctuation, whitespace, printable
 )
 
+def collect_capwords_primary_actual() -> list[bool]:
+    actual: list[bool] = []
+    actual.append(capwords("hello world") == "Hello World")
+    actual.append(capwords("HELLO WORLD") == "Hello World")
+    actual.append(capwords("hello") == "Hello")
+    actual.append(capwords("") == "")
+    actual.append(capwords("hello   world") == "Hello World")
+    actual.append(capwords("  hello  world  ") == "Hello World")
+    actual.append(capwords("a b c") == "A B C")
+    return actual
+
+def collect_constants_primary_actual() -> list[bool]:
+    actual: list[bool] = []
+    actual.append(ascii_lowercase == "abcdefghijklmnopqrstuvwxyz")
+    actual.append(ascii_uppercase == "ABCDEFGHIJKLMNOPQRSTUVWXYZ")
+    actual.append(len(ascii_letters) == 52)
+    actual.append(digits == "0123456789")
+    actual.append(hexdigits == "0123456789abcdefABCDEF")
+    actual.append(octdigits == "01234567")
+    actual.append(len(digits) == 10)
+    actual.append(len(hexdigits) == 22)
+    actual.append(len(octdigits) == 8)
+    actual.append(len(punctuation) > 0)
+    actual.append(len(whitespace) > 0)
+    return actual
+
+def collect_capwords_secondary_actual() -> list[bool]:
+    actual: list[bool] = []
+    actual.append(capwords("python is great") == "Python Is Great")
+    actual.append(capwords("ONE TWO THREE") == "One Two Three")
+    actual.append(capwords("already Capitalized") == "Already Capitalized")
+    actual.append(capwords("x") == "X")
+    actual.append(capwords("x y z") == "X Y Z")
+    return actual
+
+def collect_constants_secondary_actual() -> list[bool]:
+    actual: list[bool] = []
+    actual.append(len(punctuation) == 32)
+    actual.append(len(whitespace) == 6)
+    actual.append(len(ascii_lowercase) == 26)
+    actual.append(len(ascii_uppercase) == 26)
+    actual.append(len(printable) > 90)
+    return actual
+
+def append_all(mut target: list[bool], values: list[bool]):
+    for value in values:
+        target.append(value)
+
 def main():
-    # --- capwords ---
-    assert_eq(capwords("hello world"), "Hello World")
-    assert_eq(capwords("HELLO WORLD"), "Hello World")
-    assert_eq(capwords("hello"), "Hello")
-    assert_eq(capwords(""), "")
-    assert_eq(capwords("hello   world"), "Hello World")
-    assert_eq(capwords("  hello  world  "), "Hello World")
-    assert_eq(capwords("a b c"), "A B C")
-
-    # --- Constants ---
-    assert_eq(ascii_lowercase, "abcdefghijklmnopqrstuvwxyz")
-    assert_eq(ascii_uppercase, "ABCDEFGHIJKLMNOPQRSTUVWXYZ")
-    assert_eq(len(ascii_letters), 52)
-    assert_eq(digits, "0123456789")
-    assert_eq(hexdigits, "0123456789abcdefABCDEF")
-    assert_eq(octdigits, "01234567")
-    assert_eq(len(digits), 10)
-    assert_eq(len(hexdigits), 22)
-    assert_eq(len(octdigits), 8)
-
-    # Verify constants contain expected characters
-    assert_true(len(punctuation) > 0)
-    assert_true(len(whitespace) > 0)
-
-    # --- More capwords ---
-    assert_eq(capwords("python is great"), "Python Is Great")
-    assert_eq(capwords("ONE TWO THREE"), "One Two Three")
-    assert_eq(capwords("already Capitalized"), "Already Capitalized")
-    assert_eq(capwords("x"), "X")
-    assert_eq(capwords("x y z"), "X Y Z")
-
-    # --- More constant checks ---
-    assert_eq(len(punctuation), 32)
-    assert_eq(len(whitespace), 6)
-    assert_eq(len(ascii_lowercase), 26)
-    assert_eq(len(ascii_uppercase), 26)
-    assert_true(len(printable) > 90)
+    expected: list[bool] = [
+        True, True, True, True, True, True, True,
+        True, True, True, True, True, True, True, True, True, True, True,
+        True, True, True, True, True,
+        True, True, True, True, True
+    ]
+    actual: list[bool] = []
+    append_all(actual, collect_capwords_primary_actual())
+    append_all(actual, collect_constants_primary_actual())
+    append_all(actual, collect_capwords_secondary_actual())
+    append_all(actual, collect_constants_secondary_actual())
+    assert_bool_vector_eq(actual, expected)
 
     assert str("cpython_string: all 30 assertions passed") == 'cpython_string: all 30 assertions passed'

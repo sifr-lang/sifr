@@ -1,7 +1,0 @@
-# Test sifr.string capwords
-
-from sifr.string import capwords
-
-def main():
-    result: str = capwords("hello world test")
-    assert str(result) == 'Hello World Test'

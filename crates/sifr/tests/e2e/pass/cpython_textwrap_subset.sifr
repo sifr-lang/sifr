@@ -2,13 +2,8 @@
 from sifr.textwrap import wrap, fill, dedent, indent, shorten
 from sifr.test import assert_bool_vector_eq
 
-def main():
-    expected: list[bool] = [
-        True, True, True, True, True, True,
-        True, True, True, True, True, True,
-    ]
+def collect_wrap_fill_actual() -> list[bool]:
     actual: list[bool] = []
-
     try:
         wrap_lines: list[str] = wrap("Hello\tthere,\nhow are\ryou", 12)
         actual.append(str(wrap_lines) == "[\"Hello there,\", \"how are you\"]")
@@ -25,10 +20,17 @@ def main():
     actual.append(dedent("") == "")
     actual.append(indent("A\nB", ">> ") == ">> A\n>> B")
     actual.append(indent("A\n  \nB", ">> ") == ">> A\n  \n>> B")
+    return actual
 
+def collect_shorten_actual() -> list[bool]:
+    actual: list[bool] = []
     actual.append(shorten("hello world here", 16) == "hello world [...]")
     actual.append(shorten("hello\tworld\there", 16) == "hello world [...]")
     actual.append(shorten("", 6) == "")
+    return actual
+
+def collect_error_actual() -> list[bool]:
+    actual: list[bool] = []
 
     wrap_err: bool = False
     try:
@@ -43,12 +45,31 @@ def main():
     except ValueError as e:
         fill_err = e.message == "fill: width must be > 0"
     actual.append(fill_err)
+    return actual
 
+def collect_empty_wrap_actual() -> list[bool]:
+    actual: list[bool] = []
     try:
         wrap_empty_lines: list[str] = wrap("", 6)
         actual.append(str(wrap_empty_lines) == "[]")
     except ValueError as e:
         actual.append(False)
+    return actual
+
+def append_all(mut target: list[bool], values: list[bool]):
+    for value in values:
+        target.append(value)
+
+def main():
+    expected: list[bool] = [
+        True, True, True, True, True, True,
+        True, True, True, True, True, True,
+    ]
+    actual: list[bool] = []
+    append_all(actual, collect_wrap_fill_actual())
+    append_all(actual, collect_shorten_actual())
+    append_all(actual, collect_error_actual())
+    append_all(actual, collect_empty_wrap_actual())
 
     assert_bool_vector_eq(actual, expected)
     assert str("cpython_textwrap_subset: pass") == "cpython_textwrap_subset: pass"

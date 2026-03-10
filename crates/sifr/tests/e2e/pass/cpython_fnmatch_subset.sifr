@@ -2,29 +2,34 @@
 from sifr.fnmatch import fnmatch, fnmatchcase, fnmatch_filter
 from sifr.test import assert_bool_vector_eq
 
-def main():
-    expected: list[bool] = [
-        True, True, True, True, True, True,
-        True, True, True, True, True, True,
-        True
-    ]
+def collect_fnmatch_actual() -> list[bool]:
     actual: list[bool] = []
-
-    actual.append(fnmatch("abc", "abc"))
-    actual.append(fnmatch("abc", "a*"))
-    actual.append(fnmatch("abc", "*c"))
-    actual.append(fnmatch("abc", "???"))
+    match_exact: bool = fnmatch("abc", "abc")
+    match_prefix: bool = fnmatch("abc", "a*")
+    match_suffix: bool = fnmatch("abc", "*c")
+    match_qmark: bool = fnmatch("abc", "???")
     no_ab_match: bool = not fnmatch("abc", "ab")
     empty_qmark_match: bool = not fnmatch("", "?")
+    actual.append(match_exact)
+    actual.append(match_prefix)
+    actual.append(match_suffix)
+    actual.append(match_qmark)
     actual.append(no_ab_match)
     actual.append(empty_qmark_match)
+    return actual
 
-    actual.append(fnmatchcase("AbC", "AbC"))
+def collect_fnmatchcase_actual() -> list[bool]:
+    actual: list[bool] = []
+    case_exact: bool = fnmatchcase("AbC", "AbC")
     no_case_fold_match: bool = not fnmatchcase("AbC", "abc")
     uppercase_pattern_miss: bool = not fnmatchcase("ABC", "a*")
+    actual.append(case_exact)
     actual.append(no_case_fold_match)
     actual.append(uppercase_pattern_miss)
+    return actual
 
+def collect_filter_actual() -> list[bool]:
+    actual: list[bool] = []
     names: list[str] = ["Python", "Ruby", "Perl", "Tcl"]
     actual.append(str(fnmatch_filter(names, "P*")) == "[\"Python\", \"Perl\"]")
     actual.append(str(fnmatch_filter(names, "R*")) == "[\"Ruby\"]")
@@ -32,6 +37,22 @@ def main():
 
     files: list[str] = ["a.py", "b.txt", "c.py", "d.rs"]
     actual.append(str(fnmatch_filter(files, "*.py")) == "[\"a.py\", \"c.py\"]")
+    return actual
+
+def append_all(mut target: list[bool], values: list[bool]):
+    for value in values:
+        target.append(value)
+
+def main():
+    expected: list[bool] = [
+        True, True, True, True, True, True,
+        True, True, True, True, True, True,
+        True
+    ]
+    actual: list[bool] = []
+    append_all(actual, collect_fnmatch_actual())
+    append_all(actual, collect_fnmatchcase_actual())
+    append_all(actual, collect_filter_actual())
 
     assert_bool_vector_eq(actual, expected)
     assert str("cpython_fnmatch_subset: pass") == "cpython_fnmatch_subset: pass"
