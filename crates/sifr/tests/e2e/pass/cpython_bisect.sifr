@@ -3,8 +3,7 @@
 from sifr.test import assert_eq
 from sifr.bisect import bisect_left, bisect_right, insort_left, insort_right
 
-def main():
-    # --- bisect_left ---
+def assert_bisect_left_cases():
     empty: list[int] = []
     assert_eq(bisect_left(empty, 1), 0)
 
@@ -26,32 +25,36 @@ def main():
     assert_eq(bisect_left(three, 3), 2)
     assert_eq(bisect_left(three, 4), 3)
 
-    # --- bisect_right ---
+def assert_bisect_right_cases():
+    empty: list[int] = []
     assert_eq(bisect_right(empty, 1), 0)
 
+    one: list[int] = [1]
     assert_eq(bisect_right(one, 0), 0)
     assert_eq(bisect_right(one, 1), 1)
     assert_eq(bisect_right(one, 2), 1)
 
+    two: list[int] = [1, 2]
     assert_eq(bisect_right(two, 0), 0)
     assert_eq(bisect_right(two, 1), 1)
     assert_eq(bisect_right(two, 2), 2)
     assert_eq(bisect_right(two, 3), 2)
 
+    three: list[int] = [1, 2, 3]
     assert_eq(bisect_right(three, 0), 0)
     assert_eq(bisect_right(three, 1), 1)
     assert_eq(bisect_right(three, 2), 2)
     assert_eq(bisect_right(three, 3), 3)
     assert_eq(bisect_right(three, 4), 3)
 
-    # Duplicates
+def assert_duplicate_cases():
     dups: list[int] = [1, 2, 2, 3, 3, 3, 4]
     assert_eq(bisect_left(dups, 2), 1)
     assert_eq(bisect_right(dups, 2), 3)
     assert_eq(bisect_left(dups, 3), 3)
     assert_eq(bisect_right(dups, 3), 6)
 
-    # --- insort_left (in-place, mut parameter) ---
+def assert_insort_left_cases():
     ins1: list[int] = []
     insort_left(ins1, 5)
     assert_eq(len(ins1), 1)
@@ -62,7 +65,7 @@ def main():
     assert_eq(len(ins2), 4)
     assert str(ins2) == '[1, 2, 3, 5]'
 
-    # --- insort_right (in-place, mut parameter) ---
+def assert_insort_right_cases():
     ins3: list[int] = [1, 3, 5]
     insort_right(ins3, 4)
     assert_eq(len(ins3), 4)
@@ -74,5 +77,11 @@ def main():
     assert_eq(len(ins4), 5)
     assert str(ins4) == '[1, 3, 3, 3, 5]'
 
-    assert str("cpython_bisect: all 34 assertions passed") == 'cpython_bisect: all 34 assertions passed'
+def main():
+    assert_bisect_left_cases()
+    assert_bisect_right_cases()
+    assert_duplicate_cases()
+    assert_insort_left_cases()
+    assert_insort_right_cases()
 
+    assert str("cpython_bisect: all 34 assertions passed") == 'cpython_bisect: all 34 assertions passed'

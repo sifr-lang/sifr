@@ -80,7 +80,7 @@ Loop per part: Work -> Validate -> PR -> Review -> Merge -> External review pass
 ### milestone_30_4 wave-by-wave plan and status
 - Execution mode: wave-by-wave structural remediation, validation, PR merge, reviewer pass 1, reviewer pass 2, then next wave.
 - [x] `wave_30_1a` (`env`, `bytes`, `base64`, `hashlib`) - implementation merged in https://github.com/yaseralnajjar/sifr/pull/1048; review pass 1 and pass 2 approved; wave completion and wave production-grade closures approved
-- [ ] `wave_30_1b` (`math`, `statistics`, `bisect`, `heapq`)
+- [ ] `wave_30_1b` (`math`, `statistics`, `bisect`, `heapq`) - in progress (structural refactor + full local validation complete; implementation PR pending)
 - [ ] `wave_30_1c` (`string`, `textwrap`, `fnmatch`, `re`)
 - [ ] `wave_30_1d` (`collections`, `itertools`, `json`, `datetime`)
 - [ ] `wave_30_1e` (`io`, `csv`, `os`, `pathlib`, `glob`, `tempfile`, `shutil`)

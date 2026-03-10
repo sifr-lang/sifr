@@ -13,15 +13,8 @@ def near(v: float, target: float, tol: float) -> bool:
         return False
     return True
 
-def main():
-    expected: list[str] = [
-        "true", "true", "true", "true",
-        "true", "true", "true",
-        "true", "true", "true",
-        "true", "true"
-    ]
+def collect_positive_actual() -> list[str]:
     actual: list[str] = []
-
     data: list[float] = [1.0, 2.0, 3.0, 4.0, 5.0]
     mean_ok: bool = True
     mean_v: float = 0.0
@@ -141,9 +134,9 @@ def main():
     except StatisticsError as e:
         gmean_ok = False
     actual.append(str(gmean_ok and near(gmean_v, 6.0, 0.0001)))
-    assert_vector_eq(actual, expected)
+    return actual
 
-    expected_ok: list[bool] = [False, False]
+def collect_error_actual_ok() -> list[bool]:
     actual_ok: list[bool] = []
     try:
         bad_mean: float = mean([])
@@ -157,6 +150,20 @@ def main():
         actual_ok.append(True)
     except StatisticsError as e:
         actual_ok.append(False)
+    return actual_ok
+
+def main():
+    expected: list[str] = [
+        "true", "true", "true", "true",
+        "true", "true", "true",
+        "true", "true", "true",
+        "true", "true"
+    ]
+    actual: list[str] = collect_positive_actual()
+    assert_vector_eq(actual, expected)
+
+    expected_ok: list[bool] = [False, False]
+    actual_ok: list[bool] = collect_error_actual_ok()
     assert_bool_vector_eq(actual_ok, expected_ok)
 
     print("m30_1b statistics parity demo: pass")
