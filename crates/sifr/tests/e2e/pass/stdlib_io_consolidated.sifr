@@ -1,0 +1,112 @@
+# Consolidated stdlib io coverage for milestone_30_4 structure rules
+from sifr.io import read_text, write_text, exists, read_lines, append_text
+from sifr.os import remove_file
+from sifr.test import assert_bool_vector_eq
+
+
+def collect_text_roundtrip_actual() -> list[bool]:
+    actual: list[bool] = []
+    path: str = "/tmp/sifr_stdlib_io_consolidated.txt"
+
+    text_roundtrip_ok: bool = False
+    append_roundtrip_ok: bool = False
+    line_view_ok: bool = False
+    cleanup_ok: bool = False
+    try:
+        _w: None = write_text(path, "hello\nworld")
+        original: str = read_text(path)
+        text_roundtrip_ok = original == "hello\nworld"
+
+        _a: None = append_text(path, "\nagain")
+        appended: str = read_text(path)
+        append_roundtrip_ok = appended == "hello\nworld\nagain"
+
+        lines: list[str] = read_lines(path)
+        line_view_ok = len(lines) == 3 and lines[0] == "hello" and lines[2] == "again"
+
+        _rm: None = remove_file(path)
+        cleanup_ok = not exists(path)
+    except IOError as e:
+        _ = str(e.message)
+
+    actual.append(text_roundtrip_ok)
+    actual.append(append_roundtrip_ok)
+    actual.append(line_view_ok)
+    actual.append(cleanup_ok)
+    return actual
+
+
+def collect_open_actual() -> list[bool]:
+    actual: list[bool] = []
+    text_path: str = "/tmp/sifr_stdlib_io_consolidated_open.txt"
+    binary_path: str = "/tmp/sifr_stdlib_io_consolidated_bytes.bin"
+
+    open_lines_ok: bool = False
+    binary_ok: bool = False
+    missing_open_rejected: bool = False
+    invalid_mode_rejected: bool = False
+    cleanup_ok: bool = False
+    try:
+        _w: None = write_text(text_path, "a\nb\nc")
+        f = open(text_path, "r")
+        first: str | None = f.readline()
+        second: str | None = f.readline()
+        third: str | None = f.readline()
+        fourth: str | None = f.readline()
+        f.close()
+        open_lines_ok = str(first) == "a" and str(second) == "b" and str(third) == "c" and fourth is None
+
+        bw = open(binary_path, "wb")
+        _wb: None = bw.write_bytes([97, 98, 99])
+        bw.close()
+        br = open(binary_path, "rb")
+        payload: list[int] = br.read_bytes()
+        br.close()
+        binary_ok = str(payload) == "[97, 98, 99]"
+    except IOError as e:
+        _ = str(e.message)
+
+    try:
+        _missing = open("/tmp/sifr_stdlib_io_consolidated_missing.txt", "r")
+    except IOError as e:
+        _ = str(e.message)
+        missing_open_rejected = True
+
+    try:
+        _bad = open(text_path, "q")
+    except IOError as e:
+        _ = str(e.message)
+        invalid_mode_rejected = True
+
+    try:
+        if exists(text_path):
+            _rm_t: None = remove_file(text_path)
+        if exists(binary_path):
+            _rm_b: None = remove_file(binary_path)
+        cleanup_ok = not exists(text_path) and not exists(binary_path)
+    except IOError as e:
+        _ = str(e.message)
+
+    actual.append(open_lines_ok)
+    actual.append(binary_ok)
+    actual.append(missing_open_rejected)
+    actual.append(invalid_mode_rejected)
+    actual.append(cleanup_ok)
+    return actual
+
+
+def append_all(mut target: list[bool], values: list[bool]):
+    for value in values:
+        target.append(value)
+
+
+def main():
+    expected: list[bool] = [
+        True, True, True, True,
+        True, True, True, True, True
+    ]
+    actual: list[bool] = []
+    append_all(actual, collect_text_roundtrip_actual())
+    append_all(actual, collect_open_actual())
+    assert_bool_vector_eq(actual, expected)
+    assert str("stdlib_io_consolidated: pass") == "stdlib_io_consolidated: pass"

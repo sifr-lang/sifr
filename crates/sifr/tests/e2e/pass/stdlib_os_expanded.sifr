@@ -1,9 +1,0 @@
-# Test expanded sifr.os functions
-from sifr.os import getcwd
-
-def main():
-    try:
-        cwd: str = getcwd()
-        assert str(len(cwd) > 0) == 'true'
-    except IOError as e:
-        _ = str("ERROR: " + e.message)

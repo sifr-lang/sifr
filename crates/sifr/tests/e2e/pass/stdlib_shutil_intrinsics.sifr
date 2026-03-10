@@ -1,7 +1,0 @@
-
-from sifr.shutil import disk_usage
-
-def main():
-    usage: list[int] = disk_usage("/")
-    assert str("disk_usage len = " + str(len(usage))) == 'disk_usage len = 3'
-    assert str("disk_total > 0 = " + str(usage[0] > 0)) == 'disk_total > 0 = true'

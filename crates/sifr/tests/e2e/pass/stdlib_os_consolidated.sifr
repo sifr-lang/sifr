@@ -1,6 +1,8 @@
-# Adapted CPython os subset for sifr.os (canonical bool-vector format)
-from sifr.os import run_command, get_args, getcwd, listdir, mkdir, rmdir, remove_file, rename, is_file, is_dir, chdir
-from sifr.os import getpid, cpu_count, which, disk_usage, stat
+# Consolidated stdlib os coverage for milestone_30_4 structure rules
+from sifr.os import (
+    run_command, get_args, getcwd, listdir, mkdir, rmdir, remove_file, rename,
+    is_file, is_dir, chdir, getpid, cpu_count, which, disk_usage, stat
+)
 from sifr.io import write_text
 from sifr.test import assert_bool_vector_eq
 
@@ -11,8 +13,8 @@ def collect_runtime_actual() -> list[bool]:
     cwd_ok: bool = False
 
     try:
-        output: str = run_command("echo sifr_os_subset")
-        shell_ok = output == "sifr_os_subset"
+        output: str = run_command("echo sifr_os_consolidated")
+        shell_ok = output == "sifr_os_consolidated"
     except IOError as e:
         _ = str(e.message)
     actual.append(shell_ok)
@@ -34,7 +36,7 @@ def collect_runtime_actual() -> list[bool]:
 
 def collect_filesystem_actual() -> list[bool]:
     actual: list[bool] = []
-    base: str = "/tmp/sifr_cpython_os_subset_" + str(getpid())
+    base: str = "/tmp/sifr_stdlib_os_consolidated_" + str(getpid())
     file_a: str = base + "/a.txt"
     file_b: str = base + "/b.txt"
 
@@ -42,27 +44,24 @@ def collect_filesystem_actual() -> list[bool]:
     listdir_ok: bool = False
     stat_ok: bool = False
     rename_ok: bool = False
-    remove_ok: bool = False
-    rmdir_ok: bool = False
+    cleanup_ok: bool = False
     try:
         _mk: None = mkdir(base)
         mkdir_ok = is_dir(base)
 
         _w: None = write_text(file_a, "alpha")
         entries: list[str] = listdir(base)
-        listdir_ok = len(entries) >= 1
+        listdir_ok = len(entries) >= 1 and is_file(file_a)
 
         size_a: int = stat(file_a)
-        stat_ok = size_a > 0 and is_file(file_a)
+        stat_ok = size_a > 0
 
         _rn: None = rename(file_a, file_b)
-        rename_ok = is_file(file_b) and not is_file(file_a)
+        rename_ok = is_file(file_b)
 
         _rm: None = remove_file(file_b)
-        remove_ok = not is_file(file_b)
-
         _rd: None = rmdir(base)
-        rmdir_ok = not is_dir(base)
+        cleanup_ok = not is_dir(base)
     except IOError as e:
         _ = str(e.message)
 
@@ -70,8 +69,7 @@ def collect_filesystem_actual() -> list[bool]:
     actual.append(listdir_ok)
     actual.append(stat_ok)
     actual.append(rename_ok)
-    actual.append(remove_ok)
-    actual.append(rmdir_ok)
+    actual.append(cleanup_ok)
     return actual
 
 
@@ -84,11 +82,18 @@ def collect_locator_and_errors_actual() -> list[bool]:
     actual.append(which_ok)
 
     usage: list[int] = disk_usage("/tmp")
-    actual.append(len(usage) == 3 and usage[0] > 0 and usage[1] >= 0 and usage[2] >= 0)
+    usage_ok: bool = False
+    if len(usage) == 3:
+        total: int | None = usage[0]
+        used: int | None = usage[1]
+        free: int | None = usage[2]
+        if total is not None and used is not None and free is not None:
+            usage_ok = total > 0 and used >= 0 and free >= 0
+    actual.append(usage_ok)
 
     missing_rmdir_rejected: bool = False
     try:
-        _r: None = rmdir("/tmp/sifr_cpython_os_subset_missing")
+        _r: None = rmdir("/tmp/sifr_stdlib_os_consolidated_missing")
     except IOError as e:
         _ = str(e.message)
         missing_rmdir_rejected = True
@@ -96,7 +101,7 @@ def collect_locator_and_errors_actual() -> list[bool]:
 
     missing_chdir_rejected: bool = False
     try:
-        _c: None = chdir("/tmp/sifr_cpython_os_subset_missing")
+        _c: None = chdir("/tmp/sifr_stdlib_os_consolidated_missing")
     except IOError as e:
         _ = str(e.message)
         missing_chdir_rejected = True
@@ -110,11 +115,14 @@ def append_all(mut target: list[bool], values: list[bool]):
 
 
 def main():
-    expected: list[bool] = [True, True, True, True, True, True, True, True, True, True, True, True, True, True, True]
+    expected: list[bool] = [
+        True, True, True, True, True,
+        True, True, True, True, True,
+        True, True, True, True
+    ]
     actual: list[bool] = []
     append_all(actual, collect_runtime_actual())
     append_all(actual, collect_filesystem_actual())
     append_all(actual, collect_locator_and_errors_actual())
-
     assert_bool_vector_eq(actual, expected)
-    assert str("cpython_os_subset: pass") == "cpython_os_subset: pass"
+    assert str("stdlib_os_consolidated: pass") == "stdlib_os_consolidated: pass"

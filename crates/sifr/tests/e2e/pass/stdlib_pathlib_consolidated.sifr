@@ -1,10 +1,10 @@
-# Adapted CPython pathlib subset for sifr.pathlib (canonical bool-vector format)
+# Consolidated stdlib pathlib coverage for milestone_30_4 structure rules
 from sifr.pathlib import basename, dirname, extension, stem, is_absolute, join_path, Path
 from sifr.os import getpid
 from sifr.test import assert_bool_vector_eq
 
 
-def collect_function_actual() -> list[bool]:
+def collect_path_functions_actual() -> list[bool]:
     actual: list[bool] = []
     actual.append(basename("/home/user/file.txt") == "file.txt")
     actual.append(dirname("/home/user/file.txt") == "/home/user")
@@ -13,15 +13,27 @@ def collect_function_actual() -> list[bool]:
     absolute_checks_ok: bool = is_absolute("/tmp") and not is_absolute("tmp/file.txt")
     actual.append(absolute_checks_ok)
     actual.append(join_path("/tmp", "demo.txt") == "/tmp/demo.txt")
+    return actual
 
+
+def collect_path_class_actual() -> list[bool]:
+    actual: list[bool] = []
     sample: Path = Path("/tmp/myfile.txt")
-    actual.append(sample.with_name("renamed.txt") == "/tmp/renamed.txt" and sample.with_suffix(".csv") == "/tmp/myfile.csv")
+    actual.append(sample.name() == "myfile.txt")
+    actual.append(sample.parent() == "/tmp")
+    actual.append(sample.suffix() == ".txt")
+    actual.append(sample.stem() == "myfile")
+    actual.append(sample.is_absolute())
+    actual.append(sample.to_str() == "/tmp/myfile.txt")
+    actual.append(sample.joinpath("sub") == "/tmp/myfile.txt/sub")
+    actual.append(sample.with_name("renamed.txt") == "/tmp/renamed.txt")
+    actual.append(sample.with_suffix(".csv") == "/tmp/myfile.csv")
     return actual
 
 
 def collect_filesystem_actual() -> list[bool]:
     actual: list[bool] = []
-    base: str = "/tmp/sifr_cpython_pathlib_subset_" + str(getpid())
+    base: str = "/tmp/sifr_stdlib_pathlib_consolidated_" + str(getpid())
     dir_path: str = base + ""
     sub_path: str = base + "/sub"
     f1_path: str = base + "/a.txt"
@@ -47,12 +59,13 @@ def collect_filesystem_actual() -> list[bool]:
         c2: str = f2.read_text()
         read_write_ok = c1 == "alpha" and c2 == "beta"
 
+        _touch: None = Path(base + "/touch.txt").touch()
         file_state_ok = f1.exists() and f1.is_file() and dirp.is_dir()
 
         g: list[str] = dirp.glob("*.txt")
-        glob_ok = len(g) >= 1
+        glob_ok = len(g) >= 2
         rg: list[str] = dirp.rglob("*.txt")
-        rglob_ok = len(rg) >= 2
+        rglob_ok = len(rg) >= 3
 
         entries: list[str] = dirp.iterdir()
         iterdir_ok = len(entries) >= 2
@@ -62,6 +75,7 @@ def collect_filesystem_actual() -> list[bool]:
 
         _u1: None = f1.unlink()
         _u2: None = f2.unlink()
+        _u3: None = Path(base + "/touch.txt").unlink()
         _sr: None = sub.rmdir()
         _dr: None = dirp.rmdir()
         cleanup_ok = not dirp.exists()
@@ -75,14 +89,10 @@ def collect_filesystem_actual() -> list[bool]:
     actual.append(iterdir_ok)
     actual.append(resolve_ok)
     actual.append(cleanup_ok)
-    return actual
 
-
-def collect_missing_path_actual() -> list[bool]:
-    actual: list[bool] = []
     missing_read_rejected: bool = False
     try:
-        _missing_content: str = Path("/tmp/sifr_cpython_pathlib_subset_missing.txt").read_text()
+        _missing_content: str = Path("/tmp/sifr_stdlib_pathlib_consolidated_missing.txt").read_text()
     except IOError as e:
         _ = str(e.message)
         missing_read_rejected = True
@@ -96,11 +106,14 @@ def append_all(mut target: list[bool], values: list[bool]):
 
 
 def main():
-    expected: list[bool] = [True, True, True, True, True, True, True, True, True, True, True, True, True, True, True]
+    expected: list[bool] = [
+        True, True, True, True, True, True,
+        True, True, True, True, True, True, True, True, True,
+        True, True, True, True, True, True, True, True
+    ]
     actual: list[bool] = []
-    append_all(actual, collect_function_actual())
+    append_all(actual, collect_path_functions_actual())
+    append_all(actual, collect_path_class_actual())
     append_all(actual, collect_filesystem_actual())
-    append_all(actual, collect_missing_path_actual())
-
     assert_bool_vector_eq(actual, expected)
-    assert str("cpython_pathlib_subset: pass") == "cpython_pathlib_subset: pass"
+    assert str("stdlib_pathlib_consolidated: pass") == "stdlib_pathlib_consolidated: pass"

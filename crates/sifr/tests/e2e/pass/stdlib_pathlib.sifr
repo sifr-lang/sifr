@@ -1,9 +1,0 @@
-# Test sifr.pathlib module
-from sifr.pathlib import join_path, basename, dirname, extension
-
-def main():
-    assert str(join_path("/home", "user")) == '/home/user'
-    assert str(basename("/home/user/file.txt")) == 'file.txt'
-    assert str(dirname("/home/user/file.txt")) == '/home/user'
-    assert str(extension("/home/user/file.txt")) == '.txt'
-

@@ -1,0 +1,61 @@
+# Consolidated stdlib tempfile coverage for milestone_30_4 structure rules
+from sifr.tempfile import mktemp_path, mkstemp, mkdtemp
+from sifr.io import exists
+from sifr.os import run_command
+from sifr.pathlib import basename, dirname
+from sifr.test import assert_bool_vector_eq
+
+
+def main():
+    expected: list[bool] = [True, True, True, True, True, True, True]
+    actual: list[bool] = []
+
+    preview_path: str = mktemp_path("sifr_stdlib_tempfile_preview_")
+    try:
+        file_path: str = mkstemp("sifr_stdlib_tempfile_file_")
+        dir_path: str = mkdtemp("sifr_stdlib_tempfile_dir_")
+        second_file: str = mkstemp("sifr_stdlib_tempfile_file_")
+
+        actual.append(exists(file_path))
+        actual.append(exists(dir_path))
+        actual.append(file_path != second_file)
+
+        preview_name: str = basename(preview_path)
+        file_name: str = basename(file_path)
+        dir_name: str = basename(dir_path)
+        preview_has_prefix: bool = len(preview_name) > len("sifr_stdlib_tempfile_preview_") and preview_name[0:len("sifr_stdlib_tempfile_preview_")] == "sifr_stdlib_tempfile_preview_"
+        file_has_prefix: bool = len(file_name) > len("sifr_stdlib_tempfile_file_") and file_name[0:len("sifr_stdlib_tempfile_file_")] == "sifr_stdlib_tempfile_file_"
+        dir_has_prefix: bool = len(dir_name) > len("sifr_stdlib_tempfile_dir_") and dir_name[0:len("sifr_stdlib_tempfile_dir_")] == "sifr_stdlib_tempfile_dir_"
+        actual.append(preview_has_prefix and file_has_prefix and dir_has_prefix)
+
+        temp_root: str = dirname(preview_path)
+        missing_parent_name: str = "__sifr_stdlib_tempfile_missing_parent__"
+        missing_parent_path: str = temp_root + "/" + missing_parent_name
+        missing_prefix: str = missing_parent_name + "/bad_"
+        _rm_missing: str = run_command("rm -rf " + missing_parent_path)
+        missing_error: bool = False
+        try:
+            unexpected_file: str = mkstemp(missing_prefix)
+            _rm_unexpected: str = run_command("rm -f " + unexpected_file)
+            missing_error = False
+        except IOError as e:
+            _ = str(e.message)
+            missing_error = True
+        actual.append(missing_error)
+
+        _c1: str = run_command("rm -f " + file_path)
+        _c2: str = run_command("rm -f " + second_file)
+        _c3: str = run_command("rm -rf " + dir_path)
+        _c4: str = run_command("rm -rf " + missing_parent_path)
+        cleaned: bool = (not exists(file_path)) and (not exists(second_file)) and (not exists(dir_path))
+        actual.append(cleaned)
+
+        empty_prefix_file: str = mkstemp("")
+        actual.append(exists(empty_prefix_file))
+        _ce: str = run_command("rm -f " + empty_prefix_file)
+    except IOError as e:
+        _ = str(e.message)
+        actual = [False, False, False, False, False, False, False]
+
+    assert_bool_vector_eq(actual, expected)
+    assert str("stdlib_tempfile_consolidated: pass") == "stdlib_tempfile_consolidated: pass"

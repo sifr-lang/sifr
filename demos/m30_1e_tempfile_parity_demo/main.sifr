@@ -5,10 +5,8 @@ from sifr.pathlib import basename, dirname
 from sifr.test import assert_bool_vector_eq
 
 
-def main():
-    expected: list[bool] = [True, True, True, True, True, True]
+def collect_tempfile_actual() -> list[bool]:
     actual: list[bool] = []
-
     preview_path: str = mktemp_path("sifr_m30_1e_preview_")
     try:
         file_path: str = mkstemp("sifr_m30_1e_tmp_")
@@ -52,6 +50,12 @@ def main():
     except IOError as e:
         _ = str(e.message)
         actual = [False, False, False, False, False, False]
+    return actual
+
+
+def main():
+    expected: list[bool] = [True, True, True, True, True, True]
+    actual: list[bool] = collect_tempfile_actual()
 
     assert_bool_vector_eq(actual, expected)
     print("m30_1e tempfile parity demo: pass")

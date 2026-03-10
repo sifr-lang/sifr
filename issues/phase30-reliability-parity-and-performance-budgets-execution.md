@@ -83,7 +83,7 @@ Loop per part: Work -> Validate -> PR -> Review -> Merge -> External review pass
 - [x] `wave_30_1b` (`math`, `statistics`, `bisect`, `heapq`) - complete (implementation merged in https://github.com/yaseralnajjar/sifr/pull/1053; reviewer pass 1 remediation merged in https://github.com/yaseralnajjar/sifr/pull/1054; reviewer pass 2 approved; wave completion closure and production-grade closure approved)
 - [x] `wave_30_1c` (`string`, `textwrap`, `fnmatch`, `re`) - complete (implementation merged in https://github.com/yaseralnajjar/sifr/pull/1058; reviewer pass 1 and pass 2 approved; wave completion closure and production-grade closure approved)
 - [x] `wave_30_1d` (`collections`, `itertools`, `json`, `datetime`) - complete (implementation merged in https://github.com/yaseralnajjar/sifr/pull/1063; reviewer pass 1 remediation merged in https://github.com/yaseralnajjar/sifr/pull/1064; reviewer pass 2 tracking and supplemental datetime consolidation merged in https://github.com/yaseralnajjar/sifr/pull/1065; wave completion closure merged in https://github.com/yaseralnajjar/sifr/pull/1066; wave production-grade closure approved via external review follow-up)
-- [ ] `wave_30_1e` (`io`, `csv`, `os`, `pathlib`, `glob`, `tempfile`, `shutil`)
+- [ ] `wave_30_1e` (`io`, `csv`, `os`, `pathlib`, `glob`, `tempfile`, `shutil`) - in progress (fixture-structure remediation and stdlib fixture consolidation in implementation)
 - [ ] `wave_30_1f` (`logging`, `time`, `timeit`, `platform`, `uuid`)
 
 ### Milestone 30_2 Evidence (Complexity and Resource Parity)
@@ -186,6 +186,15 @@ status: wave closure complete (review pass 1 + review pass 2 + wave completion c
 - Wave production-grade closure output: `reviews/phase-30-m30_4-wave-30_1d-production-grade-review-a.md`
 - Wave production-grade closure verdict: `wave_30_1d` is production-grade complete for milestone_30_4 scope.
 - Next step: start `wave_30_1e` milestone_30_4 structural execution loop.
+
+### milestone_30_4 wave_30_1e progress
+status: in progress (implementation remediation in flight) (2026-03-10)
+
+- Planned remediation scope:
+  - refactor `cpython_{io,csv,os,pathlib,glob,tempfile,shutil}_subset.sifr` fixtures to keep `main()` orchestration-only with helper-grouped behavior sections
+  - refactor `cpython_pathlib.sifr` to helper-organized canonical bool-vector structure for parity reviewability
+  - consolidate legacy `stdlib_{io,csv,os,pathlib,glob,tempfile,shutil}*.sifr` fixtures into canonical consolidated fixtures
+  - keep `demos/m30_1e_*_parity_demo/main.sifr` helper-structured and deterministic for reviewer-friendly auditing
 
 ## Part 1: `env`
 status: done (2026-03-08, PR #929)

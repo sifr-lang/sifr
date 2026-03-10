@@ -1,8 +1,0 @@
-# Test new sifr.pathlib functions
-
-from sifr.pathlib import stem, is_absolute
-
-def main():
-    assert str("stem = " + stem("/path/to/hello.txt")) == 'stem = hello'
-    assert str("is_absolute = " + str(is_absolute("/usr/bin"))) == 'is_absolute = true'
-    assert str("not_absolute = " + str(is_absolute("relative/path"))) == 'not_absolute = false'

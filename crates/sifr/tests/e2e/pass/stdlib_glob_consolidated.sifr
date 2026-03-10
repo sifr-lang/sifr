@@ -1,0 +1,45 @@
+# Consolidated stdlib glob coverage for milestone_30_4 structure rules
+from sifr.glob import glob
+from sifr.io import write_text
+from sifr.os import run_command
+from sifr.test import assert_bool_vector_eq
+
+
+def main():
+    expected: list[bool] = [True, True, True, True, True]
+    actual: list[bool] = []
+
+    base: str = "/tmp/sifr_stdlib_glob_consolidated"
+    try:
+        _mk: str = run_command("mkdir -p " + base + "/subdir")
+        _w1: None = write_text(base + "/a.txt", "a")
+        _w2: None = write_text(base + "/b.txt", "b")
+        _w3: None = write_text(base + "/alpha.log", "log")
+        _w4: None = write_text(base + "/.hidden.txt", "hidden")
+
+        txt: list[str] = glob(base, "*.txt")
+        txt_ok: bool = len(txt) == 2 and txt[0] == "a.txt" and txt[1] == "b.txt"
+        actual.append(txt_ok)
+
+        hidden: list[str] = glob(base, ".*.txt")
+        hidden_ok: bool = len(hidden) == 1 and hidden[0] == ".hidden.txt"
+        actual.append(hidden_ok)
+
+        one_char_txt: list[str] = glob(base, "?.txt")
+        one_char_ok: bool = len(one_char_txt) == 2 and one_char_txt[0] == "a.txt" and one_char_txt[1] == "b.txt"
+        actual.append(one_char_ok)
+
+        dirs: list[str] = glob(base, "sub*")
+        dirs_ok: bool = len(dirs) == 1 and dirs[0] == "subdir"
+        actual.append(dirs_ok)
+
+        none_found: list[str] = glob(base + "_missing", "*.txt")
+        actual.append(len(none_found) == 0)
+    except IOError as e:
+        _ = str(e.message)
+        actual = [False, False, False, False, False]
+    finally:
+        _clean: str = run_command("rm -rf " + base)
+
+    assert_bool_vector_eq(actual, expected)
+    assert str("stdlib_glob_consolidated: pass") == "stdlib_glob_consolidated: pass"
