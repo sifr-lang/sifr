@@ -1,0 +1,11 @@
+from sifr.tomllib import loads
+
+
+def render() -> str:
+    try:
+        parsed: str = loads("name = \"phase-five\"\nvalue = 5")
+        if len(parsed) > 0:
+            return "adhoc milestone 5 dependency closure demo: pass"
+        return "adhoc milestone 5 dependency closure demo: empty"
+    except TOMLDecodeError as e:
+        return e.message

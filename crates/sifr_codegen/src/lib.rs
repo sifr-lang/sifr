@@ -556,35 +556,99 @@ pub fn generate_rust_with_stdlib(module: &HirModule, stdlib_code: &StdlibCode) -
     }
 }
 
-fn extend_transitive_stdlib_modules(
-    used_stdlib_modules: &HashSet<String>,
-    stdlib_code: &StdlibCode,
-) -> HashSet<String> {
-    let mut all_used_modules = used_stdlib_modules.clone();
-    for module_name in used_stdlib_modules {
-        if let Some(deps) = stdlib_code.transitive_deps.get(module_name) {
-            all_used_modules.extend(deps.iter().cloned());
-        }
-    }
-    all_used_modules
+fn public_visibility() -> syn::Visibility {
+    syn::Visibility::Public(syn::token::Pub::default())
 }
 
-fn required_crates_from_import_needs(
-    import_needs: ir_imports::IrImportNeeds,
-    intrinsic_registry_crates: HashSet<String>,
-) -> HashSet<String> {
-    let mut crates = intrinsic_registry_crates;
-    if import_needs.runtime.needs_bigint {
-        crates.insert("num-bigint".to_string());
-        crates.insert("num-traits".to_string());
+fn publicize_impl_items(items: &mut [syn::ImplItem]) {
+    for item in items {
+        if let syn::ImplItem::Fn(function) = item {
+            function.vis = public_visibility();
+        }
     }
-    if import_needs.runtime.needs_decimal {
-        crates.insert("rust_decimal".to_string());
+}
+
+fn publicize_struct_fields(fields: &mut syn::Fields) {
+    match fields {
+        syn::Fields::Named(fields) => {
+            for field in &mut fields.named {
+                field.vis = public_visibility();
+            }
+        }
+        syn::Fields::Unnamed(fields) => {
+            for field in &mut fields.unnamed {
+                field.vis = public_visibility();
+            }
+        }
+        syn::Fields::Unit => {}
     }
-    if import_needs.runtime.needs_bigdecimal {
-        crates.insert("bigdecimal".to_string());
+}
+
+fn publicize_generated_module_source(source: &str) -> String {
+    let mut file = syn::parse_file(source).unwrap_or_else(|error| {
+        panic!("failed to parse generated module for publicization: {error}")
+    });
+    for item in &mut file.items {
+        match item {
+            syn::Item::Const(item) => item.vis = public_visibility(),
+            syn::Item::Enum(item) => item.vis = public_visibility(),
+            syn::Item::Fn(item) => item.vis = public_visibility(),
+            syn::Item::Impl(item) => {
+                if item.trait_.is_none() {
+                    publicize_impl_items(&mut item.items);
+                }
+            }
+            syn::Item::Static(item) => item.vis = public_visibility(),
+            syn::Item::Struct(item) => {
+                item.vis = public_visibility();
+                publicize_struct_fields(&mut item.fields);
+            }
+            syn::Item::Trait(item) => item.vis = public_visibility(),
+            syn::Item::Type(item) => item.vis = public_visibility(),
+            syn::Item::Union(item) => {
+                item.vis = public_visibility();
+                for field in &mut item.fields.named {
+                    field.vis = public_visibility();
+                }
+            }
+            syn::Item::Use(item) => item.vis = public_visibility(),
+            _ => {}
+        }
     }
-    crates
+    prettyplease::unparse(&file)
+}
+
+fn render_local_module_imports(module: &HirModule) -> String {
+    let mut module_import_items: Vec<RustItem> = Vec::new();
+    for import in &module.imports {
+        if import.module.starts_with("sifr.") || import.module.starts_with("_sifr.") {
+            continue;
+        }
+        let mut module_path = vec!["crate".to_string()];
+        module_path.extend(import.module.split('.').map(str::to_string));
+        for name in &import.names {
+            if let Some((_, alias)) = import.aliases.iter().find(|(orig, _)| orig == name) {
+                let mut alias_path = module_path.clone();
+                alias_path.push(name.clone());
+                module_import_items.push(RustItem::UseAlias {
+                    path: alias_path,
+                    alias: alias.clone(),
+                });
+            } else {
+                let mut import_path = module_path.clone();
+                import_path.push(name.clone());
+                module_import_items.push(RustItem::Use(import_path));
+            }
+        }
+    }
+
+    if module_import_items.is_empty() {
+        String::new()
+    } else {
+        Renderer::new().render_file(&RustFile {
+            items: module_import_items,
+        })
+    }
 }
 
 /// Generate Rust source code for a multi-module project, returning aggregate dependency metadata.
@@ -597,117 +661,21 @@ pub fn generate_rust_multi_with_metadata(
     let mut required_crates = HashSet::new();
 
     for (module_name, module) in modules {
-        let mut emitter = RustEmitter::new();
         let module_public = *module_name != "main";
-        emitter.collect_union_types(module);
-        emitter.generate_enum_definitions();
-        emitter.emit_module(module, module_public, false);
-        let mut module_import_items: Vec<RustItem> = Vec::new();
-
-        // For non-main modules, add imports as `use` statements
-        for import in &module.imports {
-            // Stdlib/intrinsic imports are lowered through registry/preamble paths.
-            // Emitting Rust `use crate::sifr.*` paths is invalid.
-            if import.module.starts_with("sifr.") || import.module.starts_with("_sifr.") {
-                continue;
-            }
-            let mut module_path = vec!["crate".to_string()];
-            module_path.extend(import.module.split('.').map(str::to_string));
-            for name in &import.names {
-                // Check if this name has an alias
-                if let Some((_, alias)) = import.aliases.iter().find(|(orig, _)| orig == name) {
-                    let mut alias_path = module_path.clone();
-                    alias_path.push(name.clone());
-                    module_import_items.push(RustItem::UseAlias {
-                        path: alias_path,
-                        alias: alias.clone(),
-                    });
-                } else {
-                    let mut import_path = module_path.clone();
-                    import_path.push(name.clone());
-                    module_import_items.push(RustItem::Use(import_path));
-                }
-            }
+        let codegen_result = generate_rust_with_stdlib(module, stdlib_code);
+        let local_imports = render_local_module_imports(module);
+        let mut rust_source = if module_public {
+            publicize_generated_module_source(&codegen_result.rust_source)
+        } else {
+            codegen_result.rust_source
+        };
+        if !local_imports.trim().is_empty() {
+            rust_source = format!("{}\n\n{}", local_imports.trim_end(), rust_source);
         }
 
-        let mut assembled_items: Vec<RustItem> = Vec::new();
-        assembled_items.extend(module_import_items);
-        if !emitter.enum_items.is_empty() {
-            assembled_items.extend(emitter.enum_items.clone());
-        }
-        if !emitter.body_items.is_empty() {
-            assembled_items.extend(emitter.body_items.clone());
-        }
-        let import_needs = collect_import_needs_from_items(&assembled_items);
-
-        let mut import_items: Vec<RustItem> = Vec::new();
-        if import_needs.collections.needs_hashmap {
-            import_items.push(RustItem::Use(vec![
-                "std".to_string(),
-                "collections".to_string(),
-                "HashMap".to_string(),
-            ]));
-        }
-        if import_needs.collections.needs_hashset {
-            import_items.push(RustItem::Use(vec![
-                "std".to_string(),
-                "collections".to_string(),
-                "HashSet".to_string(),
-            ]));
-        }
-        if import_needs.collections.needs_vecdeque {
-            import_items.push(RustItem::Use(vec![
-                "std".to_string(),
-                "collections".to_string(),
-                "VecDeque".to_string(),
-            ]));
-        }
-        if import_needs.runtime.needs_bigint {
-            import_items.push(RustItem::Use(vec![
-                "num_bigint".to_string(),
-                "BigInt".to_string(),
-            ]));
-        }
-        if import_needs.runtime.needs_decimal {
-            import_items.push(RustItem::Use(vec![
-                "rust_decimal".to_string(),
-                "Decimal".to_string(),
-            ]));
-        }
-        if import_needs.runtime.needs_bigdecimal {
-            import_items.push(RustItem::Use(vec![
-                "bigdecimal".to_string(),
-                "BigDecimal".to_string(),
-            ]));
-        }
-
-        let mut file_items: Vec<RustItem> = Vec::new();
-        file_items.extend(import_items);
-        file_items.extend(assembled_items);
-        remove_trivial_clones_in_items(&mut file_items);
-        let file_issues = validate_items(&file_items);
-        assert!(
-            file_issues.is_empty(),
-            "codegen IR validation failed (multi module file `{}`): {}",
-            module_name,
-            file_issues
-                .iter()
-                .map(|issue| issue.message.as_str())
-                .collect::<Vec<_>>()
-                .join(" | ")
-        );
-        let rust_file = RustFile { items: file_items };
-        let result = Renderer::new().render_file(&rust_file);
-
-        files.insert((*module_name).to_string(), result);
-        used_stdlib_modules.extend(extend_transitive_stdlib_modules(
-            &emitter.used_stdlib_modules,
-            stdlib_code,
-        ));
-        required_crates.extend(required_crates_from_import_needs(
-            import_needs,
-            emitter.intrinsic_registry_crates,
-        ));
+        files.insert((*module_name).to_string(), rust_source);
+        used_stdlib_modules.extend(codegen_result.used_stdlib_modules);
+        required_crates.extend(codegen_result.required_crates);
     }
 
     MultiModuleCodegenResult {

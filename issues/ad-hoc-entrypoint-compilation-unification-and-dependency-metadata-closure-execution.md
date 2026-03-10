@@ -21,7 +21,7 @@ Loop per part: Plan -> Implement -> Validate -> Demo -> PR -> Review -> Merge ->
 1. [x] `milestone_adhoc_1`: introduce one canonical rooted-entrypoint compilation plan and shared build materialization for single-file and project builds
 2. [x] `milestone_adhoc_2`: aggregate multi-module `used_stdlib_modules` and `required_crates` deterministically from compiler/codegen outputs
 3. [x] `milestone_adhoc_3`: route single-file and multi-file manifest generation through one canonical dependency-driven path
-4. [ ] `milestone_adhoc_4`: harden CLI contract preservation regressions around mode boundaries and unchanged `check`/`emit` semantics
+4. [x] `milestone_adhoc_4`: harden CLI contract preservation regressions around mode boundaries and unchanged `check`/`emit` semantics
 5. [ ] `milestone_adhoc_5`: add dependency-closure regression matrix coverage for imported and transitive dependency sources
 
 ## Baseline Revalidation
@@ -88,7 +88,7 @@ Loop per part: Plan -> Implement -> Validate -> Demo -> PR -> Review -> Merge ->
   - local gate: `/Users/yaseralnajjar/work/sifr/codebase/scripts/run_all_tests.sh --profile quick` -> passed (`verification ok: variants=64, failures=0, blocking_failures=0, non_blocking_failures=0`)
 
 ### milestone_adhoc_4: CLI Contract Preservation and Regression Hardening
-- Status: in review
+- Status: complete
 - Implementation PR: https://github.com/yaseralnajjar/sifr/pull/1085
 - Implementation target:
   - add explicit CLI tests for single-file isolation after the rooted-entrypoint refactor
@@ -107,4 +107,24 @@ Loop per part: Plan -> Implement -> Validate -> Demo -> PR -> Review -> Merge ->
   - local gate: `/Users/yaseralnajjar/work/sifr/codebase/scripts/run_all_tests.sh --profile quick` -> passed (`verification ok: variants=64, failures=0, blocking_failures=0, non_blocking_failures=0`)
 
 ### milestone_adhoc_5: Dependency Closure Regression Matrix
-- Status: pending
+- Status: validated, PR pending
+- Implementation target:
+  - add regression coverage for reachable support-module stdlib dependencies and unreachable sibling exclusion
+  - prove non-main intrinsic-required crates remain included only through reachable closure
+  - prove transitive reachable dependency chains contribute manifest crates while unreachable chains stay excluded
+- Demo target:
+  - `cargo run -q -p sifr -- run demos/m_adhoc_5_dependency_closure_demo/main.sifr`
+- Validation target:
+  - `cargo test -p sifr_codegen generate_rust_multi_with_metadata -- --nocapture`
+  - `cargo test -p sifr_driver support_module_stdlib -- --nocapture`
+  - `cargo test -p sifr_driver rooted_entrypoint -- --nocapture`
+  - `/Users/yaseralnajjar/work/sifr/codebase/scripts/run_all_tests.sh --profile quick`
+- Validation evidence:
+  - positive path: `cargo test -p sifr_codegen generate_rust_multi_with_metadata -- --nocapture` -> passed (`2 passed, 0 failed`), keeping aggregate multi-module dependency metadata stable while directly guarding the trait-impl visibility regression in publicized support modules
+  - positive path: `cargo test -p sifr_driver support_module_stdlib -- --nocapture` -> passed (`2 passed, 0 failed`), proving a reachable helper using `sifr.tomllib.loads` pulls `toml = "0.8"` into the rooted project manifest while an unreachable sibling does not
+  - positive path: `cargo test -p sifr_driver rooted_entrypoint -- --nocapture` -> passed (`11 passed, 0 failed`), covering reachable intrinsic-required crates outside `main`, reachable transitive dependency closure, and the corresponding unreachable negative paths in one rooted-entrypoint regression slice
+  - positive path: `cargo run -q -p sifr -- run demos/m_adhoc_5_dependency_closure_demo/main.sifr` -> printed `adhoc milestone 5 dependency closure demo: pass`
+  - negative path: `rooted_entrypoint::tests::test_build_project_manifest_ignores_unreachable_support_module_stdlib_crates` proves unreachable `sifr.tomllib` support modules do not contaminate the manifest
+  - negative path: `rooted_entrypoint::tests::test_build_project_manifest_ignores_unreachable_required_crates` proves unreachable bigint-only siblings do not leak intrinsic-required crates into the manifest
+  - negative path: `rooted_entrypoint::tests::test_build_project_manifest_ignores_unreachable_transitive_dependency_chain` proves unreachable transitive chains stay outside the rooted dependency closure
+  - local gate: `scripts/run_all_tests.sh --profile quick` -> passed (`verification ok: variants=64, failures=0, blocking_failures=0, non_blocking_failures=0`)
