@@ -82,7 +82,7 @@ Loop per part: Work -> Validate -> PR -> Review -> Merge -> External review pass
 - [x] `wave_30_1a` (`env`, `bytes`, `base64`, `hashlib`) - implementation merged in https://github.com/yaseralnajjar/sifr/pull/1048; review pass 1 and pass 2 approved; wave completion and wave production-grade closures approved
 - [x] `wave_30_1b` (`math`, `statistics`, `bisect`, `heapq`) - complete (implementation merged in https://github.com/yaseralnajjar/sifr/pull/1053; reviewer pass 1 remediation merged in https://github.com/yaseralnajjar/sifr/pull/1054; reviewer pass 2 approved; wave completion closure and production-grade closure approved)
 - [x] `wave_30_1c` (`string`, `textwrap`, `fnmatch`, `re`) - complete (implementation merged in https://github.com/yaseralnajjar/sifr/pull/1058; reviewer pass 1 and pass 2 approved; wave completion closure and production-grade closure approved)
-- [ ] `wave_30_1d` (`collections`, `itertools`, `json`, `datetime`) - in progress (fixture-structure remediation and stdlib fixture consolidation in implementation)
+- [ ] `wave_30_1d` (`collections`, `itertools`, `json`, `datetime`) - in progress (implementation merged in https://github.com/yaseralnajjar/sifr/pull/1063; reviewer pass 1 requested documentation of rule-5 extension justification for helper-oriented boolean vectors)
 - [ ] `wave_30_1e` (`io`, `csv`, `os`, `pathlib`, `glob`, `tempfile`, `shutil`)
 - [ ] `wave_30_1f` (`logging`, `time`, `timeit`, `platform`, `uuid`)
 
@@ -163,12 +163,14 @@ status: wave closure complete (review pass 1 + review pass 2 + wave completion c
 - Next step: start `wave_30_1d` milestone_30_4 structural execution loop.
 
 ### milestone_30_4 wave_30_1d progress
-status: in progress (implementation remediation in flight) (2026-03-10)
+status: review pass 1 remediation in progress (2026-03-10)
 
-- Planned remediation scope:
-  - refactor `cpython_{collections,itertools,json,datetime}*.sifr` fixtures to keep `main()` orchestration-only with helper-grouped behavior sections
-  - consolidate legacy `stdlib_{collections,itertools,json,datetime}*.sifr` fixtures into canonical consolidated fixtures
-  - keep wave demos helper-structured and deterministic for reviewability
+- Implementation PR: merged https://github.com/yaseralnajjar/sifr/pull/1063
+- Reviewer pass 1 output: `reviews/phase-30-m30_4-wave-30_1d-review-1.md`
+- Reviewer pass 1 verdict: wave fixture structure is deterministic and maintainable, but rule-5 format-extension justification must be explicitly recorded for helper-oriented boolean vectors in this structured-data wave scope.
+- Remediation in progress:
+  - document wave-specific extension rationale in `.cursor/plans/main/phases/30_reliability_parity_and_performance_budgets.md` under `wave_30_1d`
+  - record the same extension rationale in this execution tracker so reviewer sign-off has an explicit audit trail
 
 ## Part 1: `env`
 status: done (2026-03-08, PR #929)

@@ -183,6 +183,10 @@ In particular:
   - `datetime`
 - Why:
   - Shared object model, laziness, data-shape, and return-structure concerns.
+- Wave-specific handling notes:
+  - For this wave, parity fixtures may use a helper-oriented boolean assertion vector as an explicit module-specific extension to the baseline `inputs/expected/actual` string-vector format.
+  - Rationale: the approved parity scope includes structured-return and semantic-behavior checks (`Counter`, set semantics, iterator contracts, structured JSON values, `timedelta` arithmetic/comparison) where literal string-vector snapshots reduce signal and increase brittleness.
+  - Constraint: this extension is allowed only when fixtures keep deterministic helper ordering, orchestration-only `main()`, and explicit positive/negative/safety sections documented in the phase execution tracker.
 - CPython references:
   - `collections`: `/Users/yaseralnajjar/work/sifr/cpython/Lib/collections/__init__.py`, `/Users/yaseralnajjar/work/sifr/cpython/Lib/test/test_collections.py`, `/Users/yaseralnajjar/work/sifr/cpython/Modules/_collectionsmodule.c`
   - `itertools`: `/Users/yaseralnajjar/work/sifr/cpython/Modules/itertoolsmodule.c`, `/Users/yaseralnajjar/work/sifr/cpython/Lib/test/test_itertools.py`
