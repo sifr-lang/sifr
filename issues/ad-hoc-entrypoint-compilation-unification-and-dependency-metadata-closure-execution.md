@@ -1,6 +1,6 @@
 # Ad Hoc Phase Execution Checklist (Entrypoint Compilation Unification and Dependency Metadata Closure)
 
-Status: in progress (started 2026-03-10; external review pass 1 in progress)
+Status: complete (started 2026-03-10; external review passes completed on 2026-03-10)
 Owner: ad_hoc_entrypoint_compilation_unification execution loop
 Reference planning doc:
 - `issues/ad-hoc-entrypoint-compilation-unification-and-dependency-metadata-closure.md`
@@ -8,14 +8,14 @@ Reference planning doc:
 Loop per part: Plan -> Implement -> Validate -> Demo -> PR -> Review -> Merge -> Update docs -> Next part
 
 ## Global Gates
-- [ ] Scope remains constrained to the active milestone part
-- [ ] Root cause addressed without fallback or compatibility shims
-- [ ] CLI command semantics contract remains unchanged
-- [ ] Positive-path and negative-path validation recorded for the active milestone
-- [ ] Milestone demo runs successfully before the PR is opened
-- [ ] Local validation is run before the PR is opened
-- [ ] PR is opened, reviewed, and merged before the next milestone starts
-- [ ] Docs/checklists/PR links are updated before moving on
+- [x] Scope remains constrained to the active milestone part
+- [x] Root cause addressed without fallback or compatibility shims
+- [x] CLI command semantics contract remains unchanged
+- [x] Positive-path and negative-path validation recorded for the active milestone
+- [x] Milestone demo runs successfully before the PR is opened
+- [x] Local validation is run before the PR is opened
+- [x] PR is opened, reviewed, and merged before the next milestone starts
+- [x] Docs/checklists/PR links are updated before moving on
 
 ## Full Phase To-Do Plan
 1. [x] `milestone_adhoc_1`: introduce one canonical rooted-entrypoint compilation plan and shared build materialization for single-file and project builds
@@ -135,7 +135,7 @@ Loop per part: Plan -> Implement -> Validate -> Demo -> PR -> Review -> Merge ->
 
 ### review_pass_1
 - Reviewer artifact: `/Users/yaseralnajjar/work/sifr/codebase/reviews/adhoc-entrypoint-review-2.md`
-- Status: in review
+- Status: complete
 - Review summary:
   - phase approved overall
   - remove dead-store `project_name` plumbing in rooted-entrypoint helpers
@@ -144,4 +144,16 @@ Loop per part: Plan -> Implement -> Validate -> Demo -> PR -> Review -> Merge ->
   - positive path: `cargo test -p sifr_driver rooted_entrypoint -- --nocapture` -> passed (`11 passed, 0 failed`) after removing the dead-store rooted-entrypoint helper plumbing
   - local gate: `scripts/run_all_tests.sh --profile quick` -> passed (`verification ok: variants=64, failures=0, blocking_failures=0, non_blocking_failures=0`)
 - Follow-up PR:
-  - https://github.com/yaseralnajjar/sifr/pull/1087
+  - https://github.com/yaseralnajjar/sifr/pull/1087 (merged 2026-03-10)
+
+### review_pass_2
+- Reviewer artifact: `/Users/yaseralnajjar/work/sifr/codebase/reviews/adhoc-entrypoint-review-3.md`
+- Status: complete
+- Review summary:
+  - production-grade verdict approved
+  - all milestone PRs remain accepted on `main`
+  - no additional code changes required after review pass 1
+- Validation evidence:
+  - reviewer explicitly approved the current `main` state as production-grade for the phase
+- Follow-up PR:
+  - pending on current review-pass branch
