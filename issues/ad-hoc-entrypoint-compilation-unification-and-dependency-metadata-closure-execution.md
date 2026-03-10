@@ -69,7 +69,8 @@ Loop per part: Plan -> Implement -> Validate -> Demo -> PR -> Review -> Merge ->
   - local gate: `/Users/yaseralnajjar/work/sifr/codebase/scripts/run_all_tests.sh --profile quick` -> passed (`verification ok: variants=64, failures=0, blocking_failures=0, non_blocking_failures=0`)
 
 ### milestone_adhoc_3: Canonical Manifest Generation Path
-- Status: validated, PR pending
+- Status: in review
+- Implementation PR: https://github.com/yaseralnajjar/sifr/pull/1084
 - Implementation target:
   - move Cargo.toml generation into the one shared rooted-entrypoint materialization path
   - drive both single-file and project manifests from aggregated compiler metadata
