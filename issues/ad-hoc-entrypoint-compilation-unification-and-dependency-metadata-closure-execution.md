@@ -88,7 +88,8 @@ Loop per part: Plan -> Implement -> Validate -> Demo -> PR -> Review -> Merge ->
   - local gate: `/Users/yaseralnajjar/work/sifr/codebase/scripts/run_all_tests.sh --profile quick` -> passed (`verification ok: variants=64, failures=0, blocking_failures=0, non_blocking_failures=0`)
 
 ### milestone_adhoc_4: CLI Contract Preservation and Regression Hardening
-- Status: validated, PR pending
+- Status: in review
+- Implementation PR: https://github.com/yaseralnajjar/sifr/pull/1085
 - Implementation target:
   - add explicit CLI tests for single-file isolation after the rooted-entrypoint refactor
   - prove non-main entrypoints still bypass project mode
