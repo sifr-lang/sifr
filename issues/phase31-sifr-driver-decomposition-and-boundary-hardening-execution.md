@@ -19,7 +19,7 @@ Loop per part: Plan -> Implement -> Validate -> Demo -> PR -> Review -> Merge ->
 
 ## Full Phase To-Do Plan
 1. [x] `milestone_driver_1`: extract diagnostics and public result types into a dedicated API spine while shrinking `lib.rs` toward crate wiring
-2. [ ] `milestone_driver_2`: extract stdlib embedding, intrinsic mapping, cache, and bootstrap into a dedicated module tree with unchanged export behavior
+2. [x] `milestone_driver_2`: extract stdlib embedding, intrinsic mapping, cache, and bootstrap into a dedicated module tree with unchanged export behavior
 3. [ ] `milestone_driver_3`: extract frontend compile/check plumbing, module-export collection, dependency ordering, and cycle canonicalization into coherent frontend/project modules
 4. [ ] `milestone_driver_4`: extract discovery, import-closure parsing, workspace allocation, project build orchestration, and file-write helpers into dedicated modules
 5. [ ] `milestone_driver_5`: extract test-runner orchestration, composed test-lib generation, and test-runner Cargo manifest logic into a dedicated module
@@ -60,7 +60,7 @@ Loop per part: Plan -> Implement -> Validate -> Demo -> PR -> Review -> Merge ->
   - merge evidence: PR #1089 merged into `main` on 2026-03-10
 
 ### milestone_driver_2: Stdlib Bootstrap Extraction
-- Status: in_progress
+- Status: complete
 - Implementation PR: https://github.com/yaseralnajjar/sifr/pull/1090
 - Demo target:
   - `cargo run -q -p sifr -- run demos/m_driver_2_stdlib_bootstrap_demo.sifr`
@@ -72,9 +72,11 @@ Loop per part: Plan -> Implement -> Validate -> Demo -> PR -> Review -> Merge ->
   - positive path: `cargo run -q -p sifr -- run demos/m_driver_2_stdlib_bootstrap_demo.sifr` -> printed `3.141592653589793`
   - negative path: `cargo test -q -p sifr_driver test_get_or_init_stdlib_cache_reuses_error_without_fallback_rebuild -- --nocapture` -> passed (`1 passed, 0 failed`), proving cached stdlib failures are reused instead of silently rebuilding or falling back
   - local gate: `/Users/yaseralnajjar/work/sifr/codebase/scripts/run_all_tests.sh --profile quick` -> passed (`verification ok: variants=64, failures=0, blocking_failures=0, non_blocking_failures=0`)
+  - merge evidence: PR #1090 merged into `main` on 2026-03-10
 
 ### milestone_driver_3: Frontend and Project-Graph Extraction
-- Status: pending
+- Status: in_review
+- Implementation PR: https://github.com/yaseralnajjar/sifr/pull/1091
 - Demo target:
   - `cargo run -q -p sifr -- run demos/m_driver_3_frontend_project_graph_demo/main.sifr`
 - Validation target:
@@ -82,7 +84,11 @@ Loop per part: Plan -> Implement -> Validate -> Demo -> PR -> Review -> Merge ->
   - `cargo test -p sifr_driver project_graph -- --nocapture`
   - `/Users/yaseralnajjar/work/sifr/codebase/scripts/run_all_tests.sh --profile quick`
 - Validation evidence:
-  - pending
+  - positive path: `cargo test -q -p sifr_driver frontend -- --nocapture` -> passed (`15 passed, 0 failed`)
+  - positive path: `cargo test -q -p sifr_driver project_graph -- --nocapture` -> passed (`12 passed, 0 failed`)
+  - positive path: `cargo run -q -p sifr -- run demos/m_driver_3_frontend_project_graph_demo/main.sifr` -> printed `42`
+  - negative path: `cargo test -q -p sifr_driver test_compute_module_compile_order_cycle_diagnostics_are_canonical_and_stable -- --nocapture` is covered by the `project_graph` module filter and passed, proving the extracted compile-order boundary still emits deterministic canonical cycle diagnostics
+  - local gate: `/Users/yaseralnajjar/work/sifr/codebase/scripts/run_all_tests.sh --profile quick` -> passed (`verification ok: variants=64, failures=0, blocking_failures=0, non_blocking_failures=0`)
 
 ### milestone_driver_4: Discovery, Workspace, and Build Orchestration Extraction
 - Status: pending
