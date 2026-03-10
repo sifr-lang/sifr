@@ -53,10 +53,10 @@ pub(crate) fn resolve_project_entrypoint_plan(
 }
 
 pub(crate) fn build_rooted_entrypoint_binary(
-    entrypoint: RootedEntrypoint<'_>,
+    entrypoint: &RootedEntrypoint<'_>,
     output_dir: &Path,
 ) -> Result<PathBuf, Vec<CompileError>> {
-    let plan = RootedEntrypointPlan::from_entrypoint(&entrypoint)?;
+    let plan = RootedEntrypointPlan::from_entrypoint(entrypoint)?;
     plan.emit_frontend_diagnostics();
     let generated_project = plan.into_generated_binary_project()?;
     materialize_binary_project(output_dir, "sifr_output", generated_project)
