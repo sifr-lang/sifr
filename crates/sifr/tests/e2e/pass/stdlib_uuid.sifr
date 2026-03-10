@@ -1,7 +1,0 @@
-# Test sifr.uuid module
-from sifr.uuid import uuid4
-
-def main():
-    id: str = uuid4()
-    assert str(len(id) > 0) == 'true'
-

@@ -24,22 +24,28 @@ def all_non_negative(values: list[float]) -> bool:
     return True
 
 
-def main():
-    expected: list[bool] = [True, True, True, True, True, True, True, True]
+def collect_timer_actual() -> list[bool]:
     actual: list[bool] = []
-
     t1: float = default_timer()
     sleep(0.01)
     t2: float = default_timer()
     actual.append(t2 >= t1)
+    return actual
 
+
+def collect_repeat_actual() -> list[bool]:
+    actual: list[bool] = []
     elapsed: float = timeit(workload, 5)
     actual.append(elapsed >= 0.0)
 
     repeated: list[float] = repeat(workload, 3, 4)
     actual.append(len(repeated) == 3)
     actual.append(all_non_negative(repeated))
+    return actual
 
+
+def collect_edge_actual() -> list[bool]:
+    actual: list[bool] = []
     repeat_zero_count: list[float] = repeat(workload, 0, 4)
     actual.append(len(repeat_zero_count) == 0)
 
@@ -50,6 +56,20 @@ def main():
 
     repeat_zero_number: list[float] = repeat(workload, 2, 0)
     actual.append(len(repeat_zero_number) == 2 and all_non_negative(repeat_zero_number))
+    return actual
+
+
+def append_all(mut target: list[bool], values: list[bool]):
+    for value in values:
+        target.append(value)
+
+
+def main():
+    expected: list[bool] = [True, True, True, True, True, True, True, True]
+    actual: list[bool] = []
+    append_all(actual, collect_timer_actual())
+    append_all(actual, collect_repeat_actual())
+    append_all(actual, collect_edge_actual())
 
     assert_bool_vector_eq(actual, expected)
     assert str("cpython_timeit_subset: pass") == "cpython_timeit_subset: pass"

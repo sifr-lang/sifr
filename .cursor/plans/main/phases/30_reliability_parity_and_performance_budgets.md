@@ -226,6 +226,10 @@ In particular:
   - `uuid`
 - Why:
   - Shared wrapper-heavy APIs over host and runtime capabilities.
+- Wave-specific handling notes:
+  - For this wave, parity fixtures may use a helper-oriented boolean assertion vector as an explicit module-specific extension to the baseline `inputs/expected/actual` string-vector format.
+  - Rationale: the approved scope is host- and runtime-dependent (clock progression, platform identity, logging sinks, and random UUID generation) where literal string-vector snapshots are brittle and lower-signal than explicit semantic pass/fail checks.
+  - Constraint: this extension is allowed only when fixtures keep deterministic helper ordering, orchestration-only `main()`, and explicit positive/negative/safety sections documented in the phase execution tracker.
 - CPython references:
   - `logging`: `/Users/yaseralnajjar/work/sifr/cpython/Lib/logging/__init__.py`, `/Users/yaseralnajjar/work/sifr/cpython/Lib/logging/handlers.py`, `/Users/yaseralnajjar/work/sifr/cpython/Lib/test/test_logging.py`
   - `time`: `/Users/yaseralnajjar/work/sifr/cpython/Modules/timemodule.c`, `/Users/yaseralnajjar/work/sifr/cpython/Lib/test/test_time.py`

@@ -1,3 +1,4 @@
+# Consolidated stdlib timeit coverage for milestone_30_4 structure rules
 from sifr.timeit import default_timer, timeit, repeat
 from sifr.time import sleep
 from sifr.test import assert_bool_vector_eq
@@ -32,7 +33,7 @@ def collect_timer_actual() -> list[bool]:
     return actual
 
 
-def collect_repeat_actual() -> list[bool]:
+def collect_timeit_repeat_actual() -> list[bool]:
     actual: list[bool] = []
     elapsed: float = timeit(workload, 10)
     actual.append(elapsed >= 0.0)
@@ -46,8 +47,10 @@ def collect_repeat_actual() -> list[bool]:
 def collect_edge_actual() -> list[bool]:
     actual: list[bool] = []
     actual.append(len(repeat(workload, 0, 5)) == 0)
+    actual.append(len(repeat(workload, -2, 5)) == 0)
     actual.append(timeit(workload, 0) >= 0.0)
-    actual.append(len(repeat(workload, 2, 0)) == 2)
+    repeat_zero_number: list[float] = repeat(workload, 2, 0)
+    actual.append(len(repeat_zero_number) == 2 and all_non_negative(repeat_zero_number))
     return actual
 
 
@@ -57,11 +60,10 @@ def append_all(mut target: list[bool], values: list[bool]):
 
 
 def main():
-    expected: list[bool] = [True, True, True, True, True, True, True]
+    expected: list[bool] = [True, True, True, True, True, True, True, True]
     actual: list[bool] = []
     append_all(actual, collect_timer_actual())
-    append_all(actual, collect_repeat_actual())
+    append_all(actual, collect_timeit_repeat_actual())
     append_all(actual, collect_edge_actual())
-
     assert_bool_vector_eq(actual, expected)
-    print("m30_1f timeit parity demo: pass")
+    assert str("stdlib_timeit_consolidated: pass") == "stdlib_timeit_consolidated: pass"

@@ -1,0 +1,118 @@
+# Consolidated stdlib logging coverage for milestone_30_4 structure rules
+from sifr.logging import getLogger, Logger, FileHandler, Formatter
+from sifr.logging import DEBUG, INFO, WARNING, ERROR, CRITICAL, NOTSET
+from sifr.io import write_text, read_text, exists
+from sifr.os import run_command
+from sifr.tempfile import mktemp_path
+from sifr.test import assert_bool_vector_eq
+
+
+def collect_emit_actual(base: str) -> list[bool]:
+    actual: list[bool] = []
+    path: str = base + "/emit.log"
+    emit_ok: bool = False
+    try:
+        _w: None = write_text(path, "")
+        logger: Logger = getLogger("server")
+        logger.set_file(path)
+        logger._emit("INFO", 20, "server started")
+        logger._emit("WARN", 30, "disk space low")
+        output: str = read_text(path)
+        emit_ok = output == "[INFO] server: server started\n[WARN] server: disk space low\n"
+    except IOError as e:
+        _ = str(e.message)
+    actual.append(emit_ok)
+    return actual
+
+
+def collect_level_methods_actual(base: str) -> list[bool]:
+    actual: list[bool] = []
+    path: str = base + "/methods.log"
+    methods_ok: bool = False
+    try:
+        _w: None = write_text(path, "")
+        log: Logger = getLogger("myapp")
+        log.set_file(path)
+        log.info("starting up")
+        log.warning("low memory")
+        log.error("disk full")
+        log.debug("hidden")
+        log.set_level(DEBUG)
+        log.debug("now visible")
+        output: str = read_text(path)
+        methods_ok = output == "[INFO] myapp: starting up\n[WARNING] myapp: low memory\n[ERROR] myapp: disk full\n[DEBUG] myapp: now visible\n"
+    except IOError as e:
+        _ = str(e.message)
+    actual.append(methods_ok)
+    return actual
+
+
+def collect_handler_actual(base: str) -> list[bool]:
+    actual: list[bool] = []
+    path: str = base + "/handler.log"
+    handler_ok: bool = False
+    try:
+        _w: None = write_text(path, "")
+        handler: FileHandler = FileHandler(path + "")
+        handler.set_formatter(Formatter("%(name)s|%(levelname)s|%(message)s"))
+        handler.emit("INFO", "svc", "ok")
+        output: str = read_text(path)
+        handler_ok = output == "svc|INFO|ok\n"
+    except IOError as e:
+        _ = str(e.message)
+    actual.append(handler_ok)
+    return actual
+
+
+def collect_constants_and_safety_actual(base: str) -> list[bool]:
+    actual: list[bool] = []
+    constants_ok: bool = DEBUG == 10 and INFO == 20 and WARNING == 30 and ERROR == 40 and CRITICAL == 50 and NOTSET == 0
+    actual.append(constants_ok)
+
+    missing_log: str = base + "/missing/blocked.log"
+    missing_safe: bool = False
+    try:
+        bad: Logger = getLogger("missing")
+        bad.set_file(missing_log)
+        bad.error("should fail")
+        missing_safe = not exists(missing_log)
+    except IOError as e:
+        _ = str(e.message)
+        missing_safe = False
+    actual.append(missing_safe)
+    return actual
+
+
+def collect_cleanup_actual(base: str) -> list[bool]:
+    actual: list[bool] = []
+    cleanup_ok: bool = False
+    try:
+        _cleanup: str = run_command("rm -rf " + base)
+        cleanup_ok = not exists(base)
+    except IOError as e:
+        _ = str(e.message)
+        cleanup_ok = not exists(base)
+    actual.append(cleanup_ok)
+    return actual
+
+
+def append_all(mut target: list[bool], values: list[bool]):
+    for value in values:
+        target.append(value)
+
+
+def main():
+    expected: list[bool] = [True, True, True, True, True, True]
+    actual: list[bool] = []
+    base: str = mktemp_path("sifr_stdlib_logging_consolidated_")
+    try:
+        _mk: str = run_command("mkdir -p " + base)
+    except IOError as e:
+        _ = str(e.message)
+    append_all(actual, collect_emit_actual(base))
+    append_all(actual, collect_level_methods_actual(base))
+    append_all(actual, collect_handler_actual(base))
+    append_all(actual, collect_constants_and_safety_actual(base))
+    append_all(actual, collect_cleanup_actual(base))
+    assert_bool_vector_eq(actual, expected)
+    assert str("stdlib_logging_consolidated: pass") == "stdlib_logging_consolidated: pass"

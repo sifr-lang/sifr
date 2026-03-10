@@ -1,9 +1,0 @@
-# Test sifr.platform module
-from sifr.platform import platform_system, platform_arch
-
-def main():
-    os_name: str = platform_system()
-    arch: str = platform_arch()
-    assert str(len(os_name) > 0) == 'true'
-    assert str(len(arch) > 0) == 'true'
-

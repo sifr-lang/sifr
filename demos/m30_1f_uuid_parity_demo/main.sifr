@@ -5,20 +5,26 @@ from sifr.test import assert_bool_vector_eq
 def is_canonical_shape(value: str) -> bool:
     if len(value) != 36:
         return False
-    return value[8] == "-" and value[13] == "-" and value[18] == "-" and value[23] == "-"
+    h1: str | None = value[8]
+    h2: str | None = value[13]
+    h3: str | None = value[18]
+    h4: str | None = value[23]
+    return h1 == "-" and h2 == "-" and h3 == "-" and h4 == "-"
 
 
-def main():
-    expected: list[bool] = [True, True, True, True, True, True, True, True, True]
+def collect_generated_actual() -> list[bool]:
     actual: list[bool] = []
-
     id_text: str = uuid4()
     actual.append(is_canonical_shape(id_text))
     actual.append(id_text[14] == "4")
 
     obj: UUID = uuid4_obj()
     actual.append(is_canonical_shape(obj.to_str()) and obj.version() == 4)
+    return actual
 
+
+def collect_parse_actual() -> list[bool]:
+    actual: list[bool] = []
     parsed_ok: bool = False
     try:
         parsed: UUID = uuid_from_hex("550E8400E29B41D4A716446655440000")
@@ -36,7 +42,11 @@ def main():
         _ = str(e.message)
         parsed_v1_ok = False
     actual.append(parsed_v1_ok)
+    return actual
 
+
+def collect_negative_and_class_actual() -> list[bool]:
+    actual: list[bool] = []
     invalid_rejected: bool = False
     try:
         _bad: UUID = uuid_from_hex("invalid")
@@ -51,7 +61,22 @@ def main():
     ctor_invalid_version: UUID = UUID("zzzzzzzz-zzzz-zzzz-zzzz-zzzzzzzzzzzz")
     actual.append(ctor_invalid_version.version() == -1)
 
-    actual.append(obj.hex() == "550e8400e29b41d4a716446655440000" or len(obj.hex()) == 32)
+    obj: UUID = uuid4_obj()
+    actual.append(len(obj.hex()) == 32)
+    return actual
+
+
+def append_all(mut target: list[bool], values: list[bool]):
+    for value in values:
+        target.append(value)
+
+
+def main():
+    expected: list[bool] = [True, True, True, True, True, True, True, True, True]
+    actual: list[bool] = []
+    append_all(actual, collect_generated_actual())
+    append_all(actual, collect_parse_actual())
+    append_all(actual, collect_negative_and_class_actual())
 
     assert_bool_vector_eq(actual, expected)
     print("m30_1f uuid parity demo: pass")
