@@ -7,9 +7,24 @@ def render_opt_int(own value: int | None) -> str:
         return "None"
     return str(value)
 
-def main():
-    # Canonical parity fixture vectors for primary behavior checks.
-    expected: list[str] = ["4", "8", "None", "true", "true", "4869", "Hi"]
+def bytes_to_hex_or_err(payload: list[int]) -> str:
+    try:
+        hex_out: str = bytes_to_hex(payload)
+        return hex_out
+    except ParseError as e:
+        _ = str(e.message)
+        return "ERR"
+
+def bytes_from_hex_to_text_or_err(payload: str) -> str:
+    try:
+        parsed: list[int] = bytes_from_hex(payload)
+        text: str = decode_utf8(parsed)
+        return text
+    except ParseError as e:
+        _ = str(e.message)
+        return "ERR"
+
+def collect_primary_actual() -> list[str]:
     actual: list[str] = []
     data: list[int] = encode_utf8("mississippi")
     actual.append(str(count_byte(data, 115)))
@@ -17,49 +32,21 @@ def main():
     actual.append(render_opt_int(find_byte(data, 120)))
     actual.append(str(starts_with(data, encode_utf8("miss"))))
     actual.append(str(ends_with(data, encode_utf8("ippi"))))
+    actual.append(bytes_to_hex_or_err(encode_utf8("Hi")))
+    actual.append(bytes_from_hex_to_text_or_err("48 69"))
+    return actual
 
-    # bytes_to_hex positive-path behavior.
-    hex_ok: bool = True
-    hex_out: str = ""
-    try:
-        hx: str = bytes_to_hex(encode_utf8("Hi"))
-        hex_out = hx
-    except ParseError as e:
-        hex_ok = False
-    if hex_ok:
-        actual.append(hex_out)
-    else:
-        actual.append("ERR")
-
-    # bytes_from_hex + decode_utf8 positive-path behavior.
-    text_ok: bool = True
-    text_out: str = ""
-    try:
-        parsed: list[int] = bytes_from_hex("48 69")
-        txt: str = decode_utf8(parsed)
-        text_out = txt
-    except ParseError as e:
-        text_ok = False
-    if text_ok:
-        actual.append(text_out)
-    else:
-        actual.append("ERR")
-    assert_vector_eq(actual, expected)
-
-    # Error-path vectors for bytes_from_hex.
-    hex_inputs: list[str] = ["abc", "€"]
-    hex_expected_ok: list[bool] = [False, False]
+def collect_hex_error_actual_ok(inputs: list[str]) -> list[bool]:
     hex_actual_ok: list[bool] = []
-    for s in hex_inputs:
+    for s in inputs:
         try:
             _bad_hex: list[int] = bytes_from_hex(s)
             hex_actual_ok.append(True)
         except ParseError as e:
             hex_actual_ok.append(False)
-    assert_bool_vector_eq(hex_actual_ok, hex_expected_ok)
+    return hex_actual_ok
 
-    # Error-path vectors for decode_utf8 value-range checks.
-    decode_expected_ok: list[bool] = [False, True]
+def collect_decode_error_actual_ok() -> list[bool]:
     decode_actual_ok: list[bool] = []
     try:
         bad_text: str = decode_utf8([300])
@@ -71,5 +58,19 @@ def main():
         decode_actual_ok.append(True)
     except ParseError as e:
         decode_actual_ok.append(False)
+    return decode_actual_ok
+
+def main():
+    expected: list[str] = ["4", "8", "None", "true", "true", "4869", "Hi"]
+    actual: list[str] = collect_primary_actual()
+    assert_vector_eq(actual, expected)
+
+    hex_inputs: list[str] = ["abc", "€"]
+    hex_expected_ok: list[bool] = [False, False]
+    hex_actual_ok: list[bool] = collect_hex_error_actual_ok(hex_inputs)
+    assert_bool_vector_eq(hex_actual_ok, hex_expected_ok)
+
+    decode_expected_ok: list[bool] = [False, True]
+    decode_actual_ok: list[bool] = collect_decode_error_actual_ok()
     assert_bool_vector_eq(decode_actual_ok, decode_expected_ok)
     assert str("cpython_bytes_subset: pass") == "cpython_bytes_subset: pass"

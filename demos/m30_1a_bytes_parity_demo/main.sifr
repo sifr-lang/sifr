@@ -7,49 +7,63 @@ def render_opt_int(own value: int | None) -> str:
         return "None"
     return str(value)
 
-def main():
-    payload: list[int] = encode_utf8("bytes-phase30")
-    expected: list[str] = ["2", "5", "true", "true"]
+def collect_primary_actual(payload: list[int]) -> list[str]:
     actual: list[str] = []
     actual.append(str(count_byte(payload, 115)))
     actual.append(render_opt_int(find_byte(payload, 45)))
     actual.append(str(starts_with(payload, encode_utf8("bytes"))))
     actual.append(str(ends_with(payload, encode_utf8("e30"))))
-    assert_vector_eq(actual, expected)
+    return actual
 
-    hex_ok: bool = True
-    hex_text: str = ""
+def bytes_to_hex_or_empty(payload: list[int]) -> str:
     try:
-        hx: str = bytes_to_hex(encode_utf8("Hi"))
-        hex_text = hx
+        hx: str = bytes_to_hex(payload)
+        return hx
     except ParseError as e:
-        hex_ok = False
-    assert str(hex_ok) == "true"
-    assert str(hex_text) == "4869"
+        _ = str(e.message)
+        return ""
 
-    roundtrip_ok: bool = True
-    roundtrip_text: str = ""
+def bytes_from_hex_to_text_or_empty(payload: str) -> str:
     try:
-        parsed: list[int] = bytes_from_hex("48 69")
+        parsed: list[int] = bytes_from_hex(payload)
         txt: str = decode_utf8(parsed)
-        roundtrip_text = txt
+        return txt
     except ParseError as e:
-        roundtrip_ok = False
-    assert str(roundtrip_ok) == "true"
-    assert str(roundtrip_text) == "Hi"
+        _ = str(e.message)
+        return ""
 
-    invalid_expected_ok: list[bool] = [False, False]
+def collect_invalid_actual_ok() -> list[bool]:
     invalid_actual_ok: list[bool] = []
     try:
         odd: list[int] = bytes_from_hex("abc")
+        _ = str(len(odd))
         invalid_actual_ok.append(True)
     except ParseError as e:
         invalid_actual_ok.append(False)
     try:
         bad_utf8: str = decode_utf8([300])
+        _ = str(bad_utf8)
         invalid_actual_ok.append(True)
     except ParseError as e:
         invalid_actual_ok.append(False)
+    return invalid_actual_ok
+
+def main():
+    payload: list[int] = encode_utf8("bytes-phase30")
+    expected: list[str] = ["2", "5", "true", "true"]
+    actual: list[str] = collect_primary_actual(payload)
+    assert_vector_eq(actual, expected)
+
+    hex_text: str = bytes_to_hex_or_empty(encode_utf8("Hi"))
+    assert str(len(hex_text) > 0) == "true"
+    assert str(hex_text) == "4869"
+
+    roundtrip_text: str = bytes_from_hex_to_text_or_empty("48 69")
+    assert str(len(roundtrip_text) > 0) == "true"
+    assert str(roundtrip_text) == "Hi"
+
+    invalid_expected_ok: list[bool] = [False, False]
+    invalid_actual_ok: list[bool] = collect_invalid_actual_ok()
     assert_bool_vector_eq(invalid_actual_ok, invalid_expected_ok)
 
     print("m30_1a bytes parity demo: pass")

@@ -103,6 +103,8 @@ In particular:
   - Require deterministic inputs, deterministic ordering, and stable assertion grouping so failures remain reproducible and reviewer-friendly.
   - Require fixture structure to follow the canonical Sifr parity fixture format unless a justified extension is documented.
   - Use reviewer-driven enforcement for this milestone by default; automated structural linting is optional future hardening rather than part of the base phase contract.
+  - Execute this milestone wave-by-wave (not module-by-module): complete one wave's structural remediation, validation, PR merge, and reviewer cycles before starting the next wave.
+  - Run external review cycles at wave granularity: completion check then production-grade check, with remediation PRs merged between cycles when findings exist.
 - Definition of done:
   - Every in-scope module has a parity test corpus whose structure is understandable without reverse-engineering a giant monolithic `main()`.
   - Every module's parity tests are split along behavior or API-surface boundaries that are appropriate for the approved scope.

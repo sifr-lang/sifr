@@ -7,8 +7,7 @@ from sifr.hashlib import (
 )
 from sifr.test import assert_vector_eq, assert_bool_vector_eq
 
-def main():
-    expected: list[str] = ["true", "true", "true", "32", "64", "true", "true", "5d41402abc4b2a76b9719d911017c592", "16", "64"]
+def collect_positive_actual() -> list[str]:
     actual: list[str] = []
 
     h = sha256_obj("")
@@ -29,10 +28,9 @@ def main():
     actual.append(m.hexdigest())
     actual.append(str(m.digest_size))
     actual.append(str(m.block_size))
-    assert_vector_eq(actual, expected)
+    return actual
 
-    # Error-path fixture vectors.
-    expected_ok: list[bool] = [False, False, False, False]
+def collect_negative_actual_ok() -> list[bool]:
     actual_ok: list[bool] = []
     try:
         bad1: HashObject = sha3_256_obj("")
@@ -58,5 +56,25 @@ def main():
         actual_ok.append(True)
     except ValueError as e:
         actual_ok.append(False)
+    return actual_ok
+
+def main():
+    expected: list[str] = [
+        "true",
+        "true",
+        "true",
+        "32",
+        "64",
+        "true",
+        "true",
+        "5d41402abc4b2a76b9719d911017c592",
+        "16",
+        "64",
+    ]
+    actual: list[str] = collect_positive_actual()
+    assert_vector_eq(actual, expected)
+
+    expected_ok: list[bool] = [False, False, False, False]
+    actual_ok: list[bool] = collect_negative_actual_ok()
     assert_bool_vector_eq(actual_ok, expected_ok)
     assert str(md5("hello")) == "5d41402abc4b2a76b9719d911017c592"

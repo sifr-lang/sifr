@@ -14,8 +14,7 @@ def contains(values: list[str], needle: str) -> bool:
             return True
     return False
 
-def main():
-    expected: list[str] = ["true", "true", "true", "true", "true", "5d41402abc4b2a76b9719d911017c592", "8e6537b695ff181bc341e32d8b8970485ac3513408e5eb1e8ba9fc5af1cd3f57"]
+def collect_positive_actual(tmp_path: str) -> list[str]:
     actual: list[str] = []
 
     h = sha256_obj("")
@@ -32,23 +31,14 @@ def main():
     actual.append(str(m.hexdigest() == md5("hello")))
     actual.append(str(contains(algorithms_guaranteed(), "sha256")))
     actual.append(m.hexdigest())
-
-    _ = write_text("tmp_m30_1a_hashlib_demo.txt", "file-data")
-    fd_ok: bool = True
-    fd: str = ""
     try:
-        out: str = file_digest("tmp_m30_1a_hashlib_demo.txt", "sha256")
-        fd = out
+        out: str = file_digest(tmp_path, "sha256")
+        actual.append(out)
     except HashlibError as e:
-        fd_ok = False
-    if fd_ok:
-        actual.append(fd)
-    else:
         actual.append("ERR")
+    return actual
 
-    assert_vector_eq(actual, expected)
-
-    expected_ok: list[bool] = [False]
+def collect_negative_actual_ok() -> list[bool]:
     actual_ok: list[bool] = []
     try:
         bad: HashObject = new("sha3_256", "")
@@ -56,6 +46,26 @@ def main():
         actual_ok.append(True)
     except ValueError as e:
         actual_ok.append(False)
+    return actual_ok
+
+def main():
+    expected: list[str] = [
+        "true",
+        "true",
+        "true",
+        "true",
+        "true",
+        "5d41402abc4b2a76b9719d911017c592",
+        "8e6537b695ff181bc341e32d8b8970485ac3513408e5eb1e8ba9fc5af1cd3f57",
+    ]
+    tmp_path: str = "tmp_m30_1a_hashlib_demo.txt"
+    _ = write_text(tmp_path, "file-data")
+
+    actual: list[str] = collect_positive_actual(tmp_path)
+    assert_vector_eq(actual, expected)
+
+    expected_ok: list[bool] = [False]
+    actual_ok: list[bool] = collect_negative_actual_ok()
     assert_bool_vector_eq(actual_ok, expected_ok)
 
     print("m30_1a hashlib parity demo: pass")
