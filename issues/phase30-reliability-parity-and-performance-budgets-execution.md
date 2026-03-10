@@ -72,6 +72,11 @@ Loop per part: Work -> Validate -> PR -> Review -> Merge -> External review pass
 - [x] Require owner/rationale/linked issue/revisit rule for each unresolved gap
 - [x] Enforce no module closes with undocumented mismatch status
 
+## milestone_30_4: Parity Test Corpus Structure and Maintainability
+- [x] Document canonical Phase 30 parity-fixture structure expectations in `audit/stdlib/cpython_parity_fixture_format.md`
+- [x] Record milestone_30_4 as a post-closure structural clarification rather than silently treating it as part of the original 2026-03-09 closure verdict
+- [ ] Run explicit reviewer sign-off for milestone_30_4 if it is promoted from planning guidance to an enforced retroactive closure gate
+
 ### Milestone 30_2 Evidence (Complexity and Resource Parity)
 - Canonical patterns + module API-class matrix:
   - `verification/stdlib/phase30_complexity_resource_matrix.md`
@@ -91,6 +96,14 @@ Loop per part: Work -> Validate -> PR -> Review -> Merge -> External review pass
   - `verification/stdlib/phase30_parity_matrix.md`
 - Module closeout enforcement:
   - every module section in this issue includes parity classification and reviewer-pass status before closure marking
+
+### Milestone 30_4 Evidence (Parity Test Corpus Structure and Maintainability)
+- Canonical parity fixture baseline plus structure rules:
+  - `audit/stdlib/cpython_parity_fixture_format.md`
+- Phase-level milestone contract and explicit post-closure note:
+  - `.cursor/plans/main/phases/30_reliability_parity_and_performance_budgets.md`
+- Status note:
+  - `milestone_30_4` was added on 2026-03-10 after the original 2026-03-09 closure verdicts for `milestone_30_1` through `milestone_30_3`; it is currently documented as planning guidance unless/until it receives its own explicit review sign-off.
 
 ## Part 1: `env`
 status: done (2026-03-08, PR #929)
@@ -1218,6 +1231,7 @@ status: reviewed (2026-03-09), closure approved
 
 - Reviewer output: `reviews/phase-30-milestone-completion-review-3.md`
 - Reviewer verdict: `milestone_30_1`, `milestone_30_2`, and `milestone_30_3` all satisfy definition-of-done gates.
+- Scope note: `milestone_30_4` did not exist at the time of this review and is therefore not covered by this verdict.
 - Action taken: milestone completion closure approved; proceed to refreshed milestone production-grade review cycle.
 
 ### Milestone production-grade check
@@ -1225,6 +1239,7 @@ status: reviewed (2026-03-09), closure approved
 
 - Reviewer output: `reviews/phase-30-milestone-production-grade-review-2.md`
 - Reviewer verdict: milestone_30_1, milestone_30_2, and milestone_30_3 are production-grade for approved phase scope.
+- Scope note: `milestone_30_4` did not exist at the time of this review and is therefore not covered by this verdict.
 - Action taken: milestone production-grade closure approved; proceed to refreshed phase completion/production-grade closure cycles.
 
 ## Phase Closure Review Cycles

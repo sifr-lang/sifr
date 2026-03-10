@@ -6,6 +6,7 @@ Close the reliability track by proving stdlib behavioral parity, API-level compl
 ## Closure Status
 - Status: completed (2026-03-09)
 - Closure evidence issue: `issues/phase30-reliability-parity-and-performance-budgets-execution.md`
+- Closure note: the original explicit reviewer closure on 2026-03-09 covered `milestone_30_1`, `milestone_30_2`, and `milestone_30_3`. `milestone_30_4` was added on 2026-03-10 as a post-closure structural clarification for parity fixtures and must be reviewed explicitly before it is treated as a retroactive closure gate.
 
 Phase 30 uses CPython as the behavioral reference model, but parity must always be aligned with Sifr's language guarantees:
 - no user-triggerable runtime panics
@@ -107,6 +108,7 @@ In particular:
   - Each fixture has a clear execution flow, with helper functions or vector sections that map to reviewable behavior groups.
   - Positive-path, negative-path, and safety-adaptation assertions are all present and easy to locate.
   - No module closes with parity coverage that is technically passing but structurally too tangled to maintain confidently.
+  - The milestone's status is tracked explicitly in the Phase 30 execution checklist issue and is not implied by `milestone_30_1` through `milestone_30_3` reviewer sign-off.
 
 ### Milestone Evidence Artifacts
 - `milestone_30_1` parity governance matrix:
@@ -121,6 +123,7 @@ In particular:
 - `milestone_30_4` parity test corpus structure and maintainability:
   - `audit/stdlib/cpython_parity_fixture_format.md`
   - `crates/sifr/tests/e2e/pass/`
+  - `issues/phase30-reliability-parity-and-performance-budgets-execution.md`
 
 ## Behavioral Parity Waves
 
