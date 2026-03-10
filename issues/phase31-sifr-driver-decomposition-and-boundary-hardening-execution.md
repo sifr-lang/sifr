@@ -110,7 +110,8 @@ Loop per part: Plan -> Implement -> Validate -> Demo -> PR -> Review -> Merge ->
   - merge evidence: PR #1092 merged into `main` on 2026-03-10
 
 ### milestone_driver_5: Test Runner Extraction
-- Status: validated_pending_pr
+- Status: in_review
+- Implementation PR: https://github.com/yaseralnajjar/sifr/pull/1093
 - Demo target:
   - `cargo run -q -p sifr -- test demos/m_driver_5_test_runner_demo`
 - Validation target:
