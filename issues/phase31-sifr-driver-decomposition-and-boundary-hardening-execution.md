@@ -92,7 +92,8 @@ Loop per part: Plan -> Implement -> Validate -> Demo -> PR -> Review -> Merge ->
   - merge evidence: PR #1091 merged into `main` on 2026-03-10
 
 ### milestone_driver_4: Discovery, Workspace, and Build Orchestration Extraction
-- Status: validated_pending_pr
+- Status: in_review
+- Implementation PR: https://github.com/yaseralnajjar/sifr/pull/1092
 - Demo target:
   - `cargo run -q -p sifr -- run demos/m_driver_4_build_orchestration_demo/main.sifr`
 - Validation target:
