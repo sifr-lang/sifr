@@ -149,7 +149,7 @@ Loop per part: Plan -> Implement -> Validate -> Demo -> PR -> Review -> Merge ->
 ### review_pass_1
 - Reviewer artifact:
   - `reviews/phase-31-review-pass-1.md`
-- Status: in_progress
+- Status: complete
 - Validation evidence:
   - reviewer-approved findings triaged on `codex/phase31-review-pass-1`; only the `sifr_driver` clippy cleanup items were accepted as in-scope actionable follow-up work
   - root-cause fix: `RootedEntrypointPlan::from_entrypoint`, `panic_payload_message`, and `execute_test_runner_project` now borrow immutable inputs instead of taking needless ownership, and `create_invocation_workspace` now uses the minimal `AlreadyExists` retry path without redundant unit-pattern noise
@@ -158,7 +158,7 @@ Loop per part: Plan -> Implement -> Validate -> Demo -> PR -> Review -> Merge ->
   - positive path: `cargo run -q -p sifr -- test demos/m_driver_5_test_runner_demo` -> executed the demo test runner successfully with `test_import_parity ... ok`
   - local gate: `/Users/yaseralnajjar/work/sifr/codebase/scripts/run_all_tests.sh --profile quick` -> passed (`verification ok: variants=64, failures=0, blocking_failures=0, non_blocking_failures=0`)
 - Follow-up PR:
-  - pending
+  - https://github.com/yaseralnajjar/sifr/pull/1095
 
 ### review_pass_2
 - Reviewer artifact:
