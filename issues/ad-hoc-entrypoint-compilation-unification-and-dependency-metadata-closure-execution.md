@@ -50,7 +50,8 @@ Loop per part: Plan -> Implement -> Validate -> Demo -> PR -> Review -> Merge ->
   - local gate: `/Users/yaseralnajjar/work/sifr/codebase/scripts/run_all_tests.sh --profile quick` -> passed (`verification ok: variants=64, failures=0, blocking_failures=0, non_blocking_failures=0`)
 
 ### milestone_adhoc_2: Multi-Module Dependency Metadata Aggregation
-- Status: validated, PR pending
+- Status: in review
+- Implementation PR: https://github.com/yaseralnajjar/sifr/pull/1083
 - Implementation target:
   - return aggregate `used_stdlib_modules` and `required_crates` from multi-module codegen
   - thread aggregated metadata through rooted project build planning and test support-module codegen
