@@ -1,5 +1,5 @@
 # Consolidated stdlib datetime coverage for milestone_30_4 structure rules
-from sifr.datetime import now, from_timestamp, datetime, date
+from sifr.datetime import now, today, from_timestamp, datetime, date, timedelta, timezone
 from sifr.test import assert_bool_vector_eq
 
 def collect_now_and_timestamp_actual() -> list[bool]:
@@ -31,14 +31,35 @@ def collect_datetime_class_actual() -> list[bool]:
     actual.append(d.isoformat() == "2024-01-15")
     return actual
 
+def collect_duration_and_timezone_actual() -> list[bool]:
+    actual: list[bool] = []
+    one_day: timedelta = timedelta(1, 0)
+    one_hour: timedelta = timedelta(0, 3600)
+    combined: timedelta = one_day + one_hour
+    actual.append(combined.total_seconds() == 90000)
+    actual.append(combined.days() == 1)
+    actual.append(combined.seconds() == 3600)
+
+    tz: timezone = timezone(-19800)
+    actual.append(str(tz) == "UTC-05:30")
+    actual.append(tz.offset() == -19800)
+
+    today_iso: str = today().isoformat()
+    actual.append(len(today_iso) == 10 and "-" in today_iso)
+    return actual
+
 def append_all(mut target: list[bool], values: list[bool]):
     for value in values:
         target.append(value)
 
 def main():
-    expected: list[bool] = [True, True, True, True, True, True, True, True]
+    expected: list[bool] = [
+        True, True, True, True, True, True, True, True,
+        True, True, True, True, True, True
+    ]
     actual: list[bool] = []
     append_all(actual, collect_now_and_timestamp_actual())
     append_all(actual, collect_datetime_class_actual())
+    append_all(actual, collect_duration_and_timezone_actual())
     assert_bool_vector_eq(actual, expected)
     assert str("stdlib_datetime_consolidated: pass") == "stdlib_datetime_consolidated: pass"
