@@ -79,7 +79,7 @@ Loop per part: Work -> Validate -> PR -> Review -> Merge -> External review pass
 
 ### milestone_30_4 wave-by-wave plan and status
 - Execution mode: wave-by-wave structural remediation, validation, PR merge, reviewer pass 1, reviewer pass 2, then next wave.
-- [ ] `wave_30_1a` (`env`, `bytes`, `base64`, `hashlib`) - implementation merged in https://github.com/yaseralnajjar/sifr/pull/1048; review pass 1 and pass 2 approved; wave closure cycles pending
+- [ ] `wave_30_1a` (`env`, `bytes`, `base64`, `hashlib`) - implementation merged in https://github.com/yaseralnajjar/sifr/pull/1048; review pass 1 and pass 2 approved; wave completion approved; wave production-grade closure pending
 - [ ] `wave_30_1b` (`math`, `statistics`, `bisect`, `heapq`)
 - [ ] `wave_30_1c` (`string`, `textwrap`, `fnmatch`, `re`)
 - [ ] `wave_30_1d` (`collections`, `itertools`, `json`, `datetime`)
@@ -115,7 +115,7 @@ Loop per part: Work -> Validate -> PR -> Review -> Merge -> External review pass
   - `milestone_30_4` was added on 2026-03-10 after the original 2026-03-09 closure verdicts for `milestone_30_1` through `milestone_30_3`; it is currently documented as implementation guidance with review-based enforcement and does not reopen the closed phase by default.
 
 ### milestone_30_4 wave_30_1a progress
-status: review pass 1 and pass 2 complete; wave closure review cycles pending (2026-03-10)
+status: review pass 1 and pass 2 complete; wave completion closure approved; wave production-grade closure pending (2026-03-10)
 
 - Implementation PR: merged https://github.com/yaseralnajjar/sifr/pull/1048
 - Reviewer pass 1 output: `reviews/phase-30-m30_4-wave-30-1a-review-1.md`
@@ -123,7 +123,10 @@ status: review pass 1 and pass 2 complete; wave closure review cycles pending (2
 - Action taken: reviewer notes validated; no additional code remediation required in wave_30_1a scope.
 - Reviewer pass 2 output: `reviews/phase-30-m30_4-wave-30_1a-review-2a.md`
 - Reviewer pass 2 verdict: production-grade approved with no blockers for wave_30_1a scope.
-- Next step: run wave completion check and wave production-grade check review cycles for milestone_30_4 wave_30_1a.
+- Reviewer pass 2 delayed output copy: `reviews/phase-30-m30_4-wave-30-1a-review-2.md`
+- Wave completion check output: `reviews/phase-30-m30_4-wave-30_1a-completion-review.md`
+- Wave completion check verdict: `wave_30_1a` completion criteria for milestone_30_4 scope are satisfied.
+- Next step: run wave production-grade closure check for milestone_30_4 wave_30_1a.
 
 ## Part 1: `env`
 status: done (2026-03-08, PR #929)
