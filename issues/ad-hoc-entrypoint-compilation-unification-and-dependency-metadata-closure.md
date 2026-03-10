@@ -3,6 +3,7 @@
 Status: open (documented 2026-03-08)
 Context: ad hoc planning phase captured in `issues/` before any roadmap-phase promotion
 Execution readiness: planning-ready; promote into an execution checklist issue before implementation begins
+Execution tracking: `issues/ad-hoc-entrypoint-compilation-unification-and-dependency-metadata-closure-execution.md`
 
 ## Objective
 Unify the compiler's build internals around one rooted-entrypoint compilation model, ensure dependency metadata is complete for both single-file and multi-file builds, and remove the current project-build manifest gap while preserving the existing CLI semantics contract.
