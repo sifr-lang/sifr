@@ -21,6 +21,8 @@ struct GeneratedBinaryProject {
     cargo_toml: String,
     main_rs: String,
     support_modules: BTreeMap<String, String>,
+    used_stdlib_modules: HashSet<String>,
+    required_crates: HashSet<String>,
 }
 
 pub(crate) fn compile_single_file_frontend(
@@ -162,9 +164,11 @@ impl RootedEntrypointPlan {
                     codegen_result,
                 ))
             }
-            RootedEntrypointShape::Project => {
-                generated_project_binary_project(project_name, self.project_lowering)
-            }
+            RootedEntrypointShape::Project => generated_project_binary_project(
+                project_name,
+                &self.stdlib.code,
+                self.project_lowering,
+            ),
         }
     }
 }
@@ -184,11 +188,14 @@ fn generated_single_file_binary_project(
         cargo_toml,
         main_rs: codegen_result.rust_source,
         support_modules: BTreeMap::new(),
+        used_stdlib_modules: codegen_result.used_stdlib_modules,
+        required_crates: codegen_result.required_crates,
     }
 }
 
 fn generated_project_binary_project(
     project_name: &str,
+    stdlib_code: &StdlibCode,
     project_lowering: ProjectLowering,
 ) -> Result<GeneratedBinaryProject, Vec<CompileError>> {
     let ProjectLowering {
@@ -204,18 +211,19 @@ fn generated_project_binary_project(
                 .map(|module| (module_name.as_str(), module))
         })
         .collect();
-    let rust_files = run_codegen_with_boundary(
+    let codegen_result = run_codegen_with_boundary(
         "internal compiler panic during project code generation",
-        || generate_rust_multi(&module_refs),
+        || generate_rust_multi_with_metadata(&module_refs, stdlib_code),
     )
     .map_err(|error| vec![error])?;
 
     let (cargo_toml, _) = generate_project(&empty_hir_module(), project_name);
-    let main_rs = assemble_project_main_rs(&compile_order, &rust_files);
-    let support_modules = ordered_non_main_module_names(&compile_order, &rust_files)
+    let main_rs = assemble_project_main_rs(&compile_order, &codegen_result.rust_files);
+    let support_modules = ordered_non_main_module_names(&compile_order, &codegen_result.rust_files)
         .into_iter()
         .filter_map(|module_name| {
-            rust_files
+            codegen_result
+                .rust_files
                 .get(module_name.as_str())
                 .map(|code| (module_name, code.clone()))
         })
@@ -225,6 +233,8 @@ fn generated_project_binary_project(
         cargo_toml,
         main_rs,
         support_modules,
+        used_stdlib_modules: codegen_result.used_stdlib_modules,
+        required_crates: codegen_result.required_crates,
     })
 }
 
@@ -233,6 +243,12 @@ fn materialize_binary_project(
     project_name: &str,
     generated_project: GeneratedBinaryProject,
 ) -> Result<PathBuf, Vec<CompileError>> {
+    // Retain dependency metadata on the generated project as part of the rooted-entrypoint
+    // build contract even before milestone 3 wires it into manifest generation.
+    let _dependency_metadata = (
+        &generated_project.used_stdlib_modules,
+        &generated_project.required_crates,
+    );
     let project_path = output_dir.join(project_name);
     let src_dir = project_path.join("src");
     std::fs::create_dir_all(&src_dir).map_err(|error| {
@@ -397,6 +413,74 @@ mod tests {
         assert!(errors
             .iter()
             .any(|error| error.message.contains("[helper] return type mismatch")));
+
+        let _ = std::fs::remove_dir_all(dir);
+    }
+
+    #[test]
+    fn test_project_entrypoint_plan_aggregates_reachable_dependency_metadata() {
+        let dir = mktemp_dir("project_metadata_positive");
+        let main_file = dir.join("main.sifr");
+        std::fs::write(
+            &main_file,
+            "from helper import helper\n\ndef main():\n    print(helper())\n",
+        )
+        .expect("main should be written");
+        std::fs::write(
+            dir.join("helper.sifr"),
+            "from sifr.statistics import mean\n\n\
+def helper() -> bigint:\n    return bigint(1)\n",
+        )
+        .expect("helper should be written");
+
+        let plan = RootedEntrypointPlan::from_entrypoint(RootedEntrypoint::Project {
+            main_file: &main_file,
+        })
+        .expect("project entrypoint should compile");
+        let generated_project = plan
+            .into_generated_binary_project("sifr_output")
+            .expect("project metadata aggregation should succeed");
+
+        assert!(generated_project
+            .used_stdlib_modules
+            .contains("sifr.statistics"));
+        assert!(generated_project.used_stdlib_modules.contains("sifr.math"));
+        assert!(generated_project.required_crates.contains("num-bigint"));
+        assert!(generated_project.required_crates.contains("num-traits"));
+
+        let _ = std::fs::remove_dir_all(dir);
+    }
+
+    #[test]
+    fn test_project_entrypoint_plan_ignores_unreachable_dependency_metadata() {
+        let dir = mktemp_dir("project_metadata_negative");
+        let main_file = dir.join("main.sifr");
+        std::fs::write(
+            &main_file,
+            "from helper import helper\n\ndef main():\n    print(helper())\n",
+        )
+        .expect("main should be written");
+        std::fs::write(
+            dir.join("helper.sifr"),
+            "def helper() -> int:\n    return 1\n",
+        )
+        .expect("helper should be written");
+        std::fs::write(
+            dir.join("unused_dependency.sifr"),
+            "from sifr.json import dumps\n\ndef unused() -> str:\n    return dumps({\"x\": 1})\n",
+        )
+        .expect("unused dependency should be written");
+
+        let plan = RootedEntrypointPlan::from_entrypoint(RootedEntrypoint::Project {
+            main_file: &main_file,
+        })
+        .expect("project entrypoint should compile");
+        let generated_project = plan
+            .into_generated_binary_project("sifr_output")
+            .expect("project metadata aggregation should succeed");
+
+        assert!(!generated_project.used_stdlib_modules.contains("sifr.json"));
+        assert!(!generated_project.required_crates.contains("serde_json"));
 
         let _ = std::fs::remove_dir_all(dir);
     }

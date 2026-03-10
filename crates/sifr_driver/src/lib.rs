@@ -10,8 +10,8 @@ mod rooted_entrypoint;
 
 use serde::Serialize;
 use sifr_codegen::{
-    generate_project, generate_project_with_deps_and_crates, generate_rust_multi,
-    generate_rust_test, generate_rust_with_metadata, generate_rust_with_stdlib, StdlibCode,
+    generate_project, generate_project_with_deps_and_crates, generate_rust_multi_with_metadata,
+    generate_rust_test, generate_rust_with_stdlib, StdlibCode,
 };
 use sifr_hir::{
     lower_module_stdlib_with_externals, lower_module_with_externals, ExternalDefs, HirModule,
@@ -1591,31 +1591,16 @@ pub fn run_tests(test_dir: &Path) -> Result<bool, Vec<CompileError>> {
                 .map(|module| (name.as_str(), module))
         })
         .collect();
-    let support_rust_files = run_codegen_with_boundary(
+    let support_codegen = run_codegen_with_boundary(
         "internal compiler panic during support-module code generation",
-        || generate_rust_multi(&support_module_refs),
+        || generate_rust_multi_with_metadata(&support_module_refs, &stdlib_compiled.code),
     )
     .map_err(|e| vec![e])?;
 
     // Compile each test file and combine into a single Rust test binary
     let mut all_rust_code = String::new();
-    let mut all_stdlib_modules = HashSet::new();
-    let mut all_required_crates = HashSet::new();
-
-    for module_name in &support_module_names {
-        if let Some(module) = project_lowering.hir_modules.get(module_name) {
-            let support_codegen = run_codegen_with_boundary(
-                format!(
-                    "internal compiler panic during support-module code generation for '{}'",
-                    module_name
-                ),
-                || generate_rust_with_metadata(module),
-            )
-            .map_err(|e| vec![e])?;
-            all_stdlib_modules.extend(support_codegen.used_stdlib_modules);
-            all_required_crates.extend(support_codegen.required_crates);
-        }
-    }
+    let mut all_stdlib_modules = support_codegen.used_stdlib_modules;
+    let mut all_required_crates = support_codegen.required_crates;
 
     for (module_name, test_file) in &test_files_by_module {
         let Some(parsed) = test_modules.get(module_name.as_str()) else {
@@ -1689,7 +1674,7 @@ pub fn run_tests(test_dir: &Path) -> Result<bool, Vec<CompileError>> {
     })?;
 
     for module_name in &support_module_names {
-        if let Some(code) = support_rust_files.get(module_name) {
+        if let Some(code) = support_codegen.rust_files.get(module_name) {
             std::fs::write(src_dir.join(format!("{module_name}.rs")), code).map_err(|e| {
                 vec![CompileError {
                     message: format!("failed to write {module_name}.rs: {e}"),
