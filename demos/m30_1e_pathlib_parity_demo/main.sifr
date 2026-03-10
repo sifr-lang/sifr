@@ -3,13 +3,15 @@ from sifr.os import getpid
 from sifr.test import assert_bool_vector_eq
 
 
-def main():
-    expected: list[bool] = [True, True, True, True, True, True]
+def collect_path_helpers_actual() -> list[bool]:
     actual: list[bool] = []
-
     actual.append(basename("/tmp/demo.txt") == "demo.txt")
     actual.append(join_path("/tmp", "demo.txt") == "/tmp/demo.txt")
+    return actual
 
+
+def collect_path_class_actual() -> list[bool]:
+    actual: list[bool] = []
     base: str = "/tmp/sifr_m30_1e_pathlib_demo_" + str(getpid())
     filep: Path = Path(base + "/demo.txt")
     dirp: Path = Path(base + "")
@@ -30,10 +32,15 @@ def main():
         cleanup_ok = not dirp.exists()
     except IOError as e:
         _ = str(e.message)
+
     actual.append(path_flow_ok)
     actual.append(glob_ok)
     actual.append(cleanup_ok)
+    return actual
 
+
+def collect_missing_path_actual() -> list[bool]:
+    actual: list[bool] = []
     missing_rejected: bool = False
     try:
         _bad: str = Path("/tmp/sifr_m30_1e_pathlib_demo_missing.txt").read_text()
@@ -41,6 +48,20 @@ def main():
         _ = str(e.message)
         missing_rejected = True
     actual.append(missing_rejected)
+    return actual
+
+
+def append_all(mut target: list[bool], values: list[bool]):
+    for value in values:
+        target.append(value)
+
+
+def main():
+    expected: list[bool] = [True, True, True, True, True, True]
+    actual: list[bool] = []
+    append_all(actual, collect_path_helpers_actual())
+    append_all(actual, collect_path_class_actual())
+    append_all(actual, collect_missing_path_actual())
 
     assert_bool_vector_eq(actual, expected)
     print("m30_1e pathlib parity demo: pass")

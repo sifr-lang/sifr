@@ -5,10 +5,8 @@ from sifr.os import run_command, getpid
 from sifr.test import assert_bool_vector_eq
 
 
-def main():
-    expected: list[bool] = [True, True, True, True, True, True, True]
+def collect_glob_actual() -> list[bool]:
     actual: list[bool] = []
-
     base: str = "/tmp/sifr_cpython_glob_subset_" + str(getpid())
     missing: str = base + "_missing"
     try:
@@ -49,6 +47,12 @@ def main():
         actual = [False, False, False, False, False, False, False]
     finally:
         _clean: str = run_command("rm -rf " + base)
+    return actual
+
+
+def main():
+    expected: list[bool] = [True, True, True, True, True, True, True]
+    actual: list[bool] = collect_glob_actual()
 
     assert_bool_vector_eq(actual, expected)
     assert str("cpython_glob_subset: pass") == "cpython_glob_subset: pass"

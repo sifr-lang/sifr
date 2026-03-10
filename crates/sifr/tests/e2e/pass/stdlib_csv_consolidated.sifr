@@ -1,6 +1,8 @@
-# Adapted CPython csv subset for sifr.csv (canonical bool-vector format)
-from sifr.csv import parse_row, parse_csv, format_row, format_csv
-from sifr.csv import reader, writer, DictReader, DictWriter, reader_from_path, writer_to_path
+# Consolidated stdlib csv coverage for milestone_30_4 structure rules
+from sifr.csv import (
+    parse_row, parse_csv, format_row, format_csv,
+    reader, writer, DictReader, DictWriter, reader_from_path, writer_to_path
+)
 from sifr.test import assert_bool_vector_eq
 
 
@@ -19,6 +21,7 @@ def collect_parse_and_format_actual() -> list[bool]:
 
 def collect_object_api_actual() -> list[bool]:
     actual: list[bool] = []
+
     r: reader = reader("name,age\nalice,30\nbob,25")
     actual.append(str(r.rows()) == "[[\"name\", \"age\"], [\"alice\", \"30\"], [\"bob\", \"25\"]]")
 
@@ -39,7 +42,7 @@ def collect_object_api_actual() -> list[bool]:
 
 def collect_file_api_actual() -> list[bool]:
     actual: list[bool] = []
-    path: str = "/tmp/sifr_cpython_csv_subset.csv"
+    path: str = "/tmp/sifr_stdlib_csv_consolidated.csv"
     file_roundtrip_ok: bool = False
     missing_path_rejected: bool = False
 
@@ -52,7 +55,7 @@ def collect_file_api_actual() -> list[bool]:
     actual.append(file_roundtrip_ok)
 
     try:
-        _missing_reader: reader = reader_from_path("/tmp/sifr_cpython_csv_subset_missing.csv")
+        _missing_reader: reader = reader_from_path("/tmp/sifr_stdlib_csv_consolidated_missing.csv")
     except IOError as e:
         _ = str(e.message)
         missing_path_rejected = True
@@ -66,11 +69,14 @@ def append_all(mut target: list[bool], values: list[bool]):
 
 
 def main():
-    expected: list[bool] = [True, True, True, True, True, True, True, True, True, True]
+    expected: list[bool] = [
+        True, True, True, True,
+        True, True, True, True,
+        True, True
+    ]
     actual: list[bool] = []
     append_all(actual, collect_parse_and_format_actual())
     append_all(actual, collect_object_api_actual())
     append_all(actual, collect_file_api_actual())
-
     assert_bool_vector_eq(actual, expected)
-    assert str("cpython_csv_subset: pass") == "cpython_csv_subset: pass"
+    assert str("stdlib_csv_consolidated: pass") == "stdlib_csv_consolidated: pass"

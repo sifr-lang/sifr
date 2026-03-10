@@ -1,3 +1,4 @@
+# Consolidated stdlib shutil coverage for milestone_30_4 structure rules
 from sifr.shutil import copy, move_file, rmtree, which, disk_usage
 from sifr.io import write_text, read_text, exists
 from sifr.os import mkdir, run_command
@@ -7,24 +8,25 @@ from sifr.test import assert_bool_vector_eq
 
 def collect_copy_move_tree_actual() -> list[bool]:
     actual: list[bool] = []
-    base: str = mktemp_path("sifr_m30_1e_shutil_demo_")
+    base: str = mktemp_path("sifr_stdlib_shutil_consolidated_")
     src: str = base + "/src.txt"
     copied: str = base + "/copied.txt"
     moved: str = base + "/moved.txt"
-    tree: str = base + "/tree"
-    nested: str = tree + "/nested.txt"
+    subdir: str = base + "/subdir"
+    nested: str = subdir + "/nested.txt"
 
     copy_ok: bool = False
     move_ok: bool = False
     rmtree_ok: bool = False
+    cleanup_ok: bool = False
     try:
         _mk: None = mkdir(base)
-        _w: None = write_text(src, "demo")
+        _w: None = write_text(src, "alpha")
         _cp: None = copy(src, copied)
         copied_content_ok: bool = False
         try:
             copied_content: str = read_text(copied)
-            copied_content_ok = copied_content == "demo"
+            copied_content_ok = copied_content == "alpha"
         except IOError as e:
             _ = str(e.message)
         copy_ok = exists(src) and exists(copied) and copied_content_ok
@@ -32,60 +34,63 @@ def collect_copy_move_tree_actual() -> list[bool]:
         _mv: None = move_file(copied, moved)
         move_ok = exists(moved) and (not exists(copied))
 
-        _mk_tree: None = mkdir(tree)
+        _mk_sub: None = mkdir(subdir)
         _w_nested: None = write_text(nested, "nested")
-        _rm_tree: None = rmtree(tree)
-        rmtree_ok = not exists(tree)
+        _rm_tree: None = rmtree(subdir)
+        rmtree_ok = not exists(subdir)
+
+        _cleanup: str = run_command("rm -rf " + base)
+        cleanup_ok = not exists(base)
     except IOError as e:
         _ = str(e.message)
 
     actual.append(copy_ok)
     actual.append(move_ok)
     actual.append(rmtree_ok)
+    actual.append(cleanup_ok)
     return actual
 
 
-def collect_tooling_and_cleanup_actual() -> list[bool]:
+def collect_tooling_and_errors_actual() -> list[bool]:
     actual: list[bool] = []
-    base: str = mktemp_path("sifr_m30_1e_shutil_demo_cleanup_")
-    base_ready: bool = False
-    try:
-        _mk: None = mkdir(base)
-        base_ready = exists(base)
-    except IOError as e:
-        _ = str(e.message)
-
     which_ok: bool = False
-    tool: str | None = which("sh")
-    if tool is not None:
-        which_ok = len(tool) > 0
+    sh_path: str | None = which("sh")
+    if sh_path is not None:
+        which_ok = len(sh_path) > 0
     actual.append(which_ok)
 
-    usage: list[int] = disk_usage(base + "")
+    usage: list[int] = disk_usage("/")
     usage_ok: bool = False
     if len(usage) == 3:
         total: int | None = usage[0]
         if total is not None:
             usage_ok = total > 0
-    usage_ok = usage_ok and base_ready
     actual.append(usage_ok)
 
+    base: str = "/tmp/sifr_stdlib_shutil_consolidated_missing"
     missing_copy_rejected: bool = False
     try:
-        _bad: None = copy(base + "/missing_src.txt", base + "/missing_dst.txt")
+        _bad_copy: None = copy(base + "/missing_src.txt", base + "/missing_dst.txt")
     except IOError as e:
         _ = str(e.message)
         missing_copy_rejected = True
     actual.append(missing_copy_rejected)
 
-    cleanup_ok: bool = False
+    missing_move_rejected: bool = False
     try:
-        _cleanup: str = run_command("rm -rf " + base)
-        cleanup_ok = not exists(base)
+        _bad_move: None = move_file(base + "/missing_move_src.txt", base + "/missing_move_dst.txt")
     except IOError as e:
         _ = str(e.message)
-        cleanup_ok = not exists(base)
-    actual.append(cleanup_ok)
+        missing_move_rejected = True
+    actual.append(missing_move_rejected)
+
+    missing_rmtree_rejected: bool = False
+    try:
+        _bad_tree: None = rmtree(base + "/missing_tree")
+    except IOError as e:
+        _ = str(e.message)
+        missing_rmtree_rejected = True
+    actual.append(missing_rmtree_rejected)
     return actual
 
 
@@ -95,10 +100,9 @@ def append_all(mut target: list[bool], values: list[bool]):
 
 
 def main():
-    expected: list[bool] = [True, True, True, True, True, True, True]
+    expected: list[bool] = [True, True, True, True, True, True, True, True, True]
     actual: list[bool] = []
     append_all(actual, collect_copy_move_tree_actual())
-    append_all(actual, collect_tooling_and_cleanup_actual())
-
+    append_all(actual, collect_tooling_and_errors_actual())
     assert_bool_vector_eq(actual, expected)
-    print("m30_1e shutil parity demo: pass")
+    assert str("stdlib_shutil_consolidated: pass") == "stdlib_shutil_consolidated: pass"

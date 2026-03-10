@@ -1,44 +1,74 @@
 # CPython test_pathlib — ported assertions for sifr.pathlib
-from sifr.test import assert_eq, assert_true, assert_false
 from sifr.pathlib import basename, dirname, extension, stem, is_absolute, join_path
+from sifr.test import assert_bool_vector_eq
+
+
+def collect_basename_actual() -> list[bool]:
+    actual: list[bool] = []
+    actual.append(basename("/home/user/file.txt") == "file.txt")
+    actual.append(basename("/home/user/") == "")
+    actual.append(basename("file.txt") == "file.txt")
+    actual.append(basename("/a/b/c") == "c")
+    return actual
+
+
+def collect_dirname_actual() -> list[bool]:
+    actual: list[bool] = []
+    actual.append(dirname("/home/user/file.txt") == "/home/user")
+    actual.append(dirname("file.txt") == "")
+    actual.append(dirname("/a/b/c") == "/a/b")
+    actual.append(dirname("/a") == "")
+    return actual
+
+
+def collect_extension_and_stem_actual() -> list[bool]:
+    actual: list[bool] = []
+    actual.append(extension("file.txt") == ".txt")
+    actual.append(extension("file.tar.gz") == ".gz")
+    actual.append(extension("file") == "")
+    actual.append(extension(".hidden") == ".hidden")
+    actual.append(extension("path/to/file.py") == ".py")
+
+    actual.append(stem("file.txt") == "file")
+    actual.append(stem("file.tar.gz") == "file.tar")
+    actual.append(stem("file") == "file")
+    actual.append(stem("path/to/file.py") == "file")
+    return actual
+
+
+def collect_absolute_and_join_actual() -> list[bool]:
+    actual: list[bool] = []
+    actual.append(is_absolute("/home/user"))
+    actual.append(is_absolute("/"))
+    rel_path: bool = not is_absolute("relative/path")
+    file_path: bool = not is_absolute("file.txt")
+    empty_path: bool = not is_absolute("")
+    actual.append(rel_path)
+    actual.append(file_path)
+    actual.append(empty_path)
+
+    actual.append(join_path("/home", "user") == "/home/user")
+    actual.append(join_path("/home/user", "file.txt") == "/home/user/file.txt")
+    actual.append(join_path("a", "b") == "a/b")
+    return actual
+
+
+def append_all(mut target: list[bool], values: list[bool]):
+    for value in values:
+        target.append(value)
+
 
 def main():
-    # --- basename ---
-    assert_eq(basename("/home/user/file.txt"), "file.txt")
-    assert_eq(basename("/home/user/"), "")
-    assert_eq(basename("file.txt"), "file.txt")
-    assert_eq(basename("/a/b/c"), "c")
-
-    # --- dirname ---
-    assert_eq(dirname("/home/user/file.txt"), "/home/user")
-    assert_eq(dirname("file.txt"), "")
-    assert_eq(dirname("/a/b/c"), "/a/b")
-    assert_eq(dirname("/a"), "")
-
-    # --- extension ---
-    assert_eq(extension("file.txt"), ".txt")
-    assert_eq(extension("file.tar.gz"), ".gz")
-    assert_eq(extension("file"), "")
-    assert_eq(extension(".hidden"), ".hidden")
-    assert_eq(extension("path/to/file.py"), ".py")
-
-    # --- stem ---
-    assert_eq(stem("file.txt"), "file")
-    assert_eq(stem("file.tar.gz"), "file.tar")
-    assert_eq(stem("file"), "file")
-    assert_eq(stem("path/to/file.py"), "file")
-
-    # --- is_absolute ---
-    assert_true(is_absolute("/home/user"))
-    assert_true(is_absolute("/"))
-    assert_false(is_absolute("relative/path"))
-    assert_false(is_absolute("file.txt"))
-    assert_false(is_absolute(""))
-
-    # --- join_path ---
-    assert_eq(join_path("/home", "user"), "/home/user")
-    assert_eq(join_path("/home/user", "file.txt"), "/home/user/file.txt")
-    assert_eq(join_path("a", "b"), "a/b")
-
-    assert str("cpython_pathlib: all 28 assertions passed") == 'cpython_pathlib: all 28 assertions passed'
-
+    expected: list[bool] = [
+        True, True, True, True,
+        True, True, True, True,
+        True, True, True, True, True, True, True, True, True,
+        True, True, True, True, True, True, True, True
+    ]
+    actual: list[bool] = []
+    append_all(actual, collect_basename_actual())
+    append_all(actual, collect_dirname_actual())
+    append_all(actual, collect_extension_and_stem_actual())
+    append_all(actual, collect_absolute_and_join_actual())
+    assert_bool_vector_eq(actual, expected)
+    assert str("cpython_pathlib: pass") == "cpython_pathlib: pass"
