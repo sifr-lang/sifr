@@ -135,7 +135,7 @@ Loop per part: Plan -> Implement -> Validate -> Demo -> PR -> Review -> Merge ->
 
 ### review_pass_1
 - Reviewer artifact: `/Users/yaseralnajjar/work/sifr/codebase/reviews/adhoc-entrypoint-review-2.md`
-- Status: validated, PR pending
+- Status: in review
 - Review summary:
   - phase approved overall
   - remove dead-store `project_name` plumbing in rooted-entrypoint helpers
@@ -144,4 +144,4 @@ Loop per part: Plan -> Implement -> Validate -> Demo -> PR -> Review -> Merge ->
   - positive path: `cargo test -p sifr_driver rooted_entrypoint -- --nocapture` -> passed (`11 passed, 0 failed`) after removing the dead-store rooted-entrypoint helper plumbing
   - local gate: `scripts/run_all_tests.sh --profile quick` -> passed (`verification ok: variants=64, failures=0, blocking_failures=0, non_blocking_failures=0`)
 - Follow-up PR:
-  - pending on current review-pass branch
+  - https://github.com/yaseralnajjar/sifr/pull/1087
