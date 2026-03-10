@@ -172,7 +172,7 @@ sifr/
     sifr_hir/               (High-level IR: typed AST after name resolution + type checking)
     sifr_type_system/       (type definitions, inference, checking, subtyping)
     sifr_codegen/           (Rust source code generation from HIR via structured Rust IR)
-    sifr_driver/            (CLI/project orchestration, rendering, rustc invocation)
+    sifr_driver/            (CLI/project orchestration, split into diagnostics.rs + stdlib/ frontend/ project/ build/ test_runner/)
     sifr/                   (CLI binary: sifr build, sifr check, sifr run)
 
   # Git dependencies from ruff v0.4.10 (not vendored):
@@ -201,6 +201,15 @@ New crates added per milestone as needed:
 - Dependency metadata for both shapes comes from codegen outputs (`used_stdlib_modules` and `required_crates`), never from emitted Rust text scans.
 
 This keeps CLI mode resolution as the boundary that selects the rooted entrypoint shape while preserving one internal build architecture.
+
+Phase 31 decomposed `sifr_driver` into the following stable internal boundaries:
+
+- `diagnostics.rs`: compile/public result types, panic boundaries, diagnostic serialization, and stderr rendering helpers
+- `stdlib/`: embedded stdlib sources, intrinsic mapping, cache lifecycle, and bootstrap compilation
+- `frontend/`: single-file parse/lower/type-check entrypoints and metadata extraction
+- `project/`: import-closure discovery, reachable module parsing, export collection, and deterministic compile ordering
+- `build/`: rooted-entrypoint planning, generated-project materialization, Cargo manifest generation, and invocation workspace management
+- `test_runner/`: test root discovery, generated test harness assembly, and cargo test execution orchestration
 
 ---
 
