@@ -32,7 +32,8 @@ Loop per part: Plan -> Implement -> Validate -> Demo -> PR -> Review -> Merge ->
 ## Milestone Progress
 
 ### milestone_adhoc_1: Canonical Rooted Entrypoint Compilation Plan
-- Status: validated, PR pending
+- Status: in review
+- Implementation PR: https://github.com/yaseralnajjar/sifr/pull/1082
 - Implementation target:
   - add one rooted-entrypoint driver plan abstraction
   - route both single-file and project build orchestration through it
