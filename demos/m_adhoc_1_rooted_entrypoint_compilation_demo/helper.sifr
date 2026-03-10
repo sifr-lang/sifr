@@ -1,0 +1,5 @@
+from shared import phase_label
+
+
+def render() -> str:
+    return phase_label()

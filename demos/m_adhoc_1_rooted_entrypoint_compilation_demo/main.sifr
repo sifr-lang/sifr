@@ -1,0 +1,7 @@
+# Milestone adhoc 1 demo:
+# rooted entrypoint compilation still follows the reachable local import closure.
+from helper import render
+
+
+def main():
+    print(render())

@@ -6,6 +6,8 @@
 //! Stdlib `.sifr` files are embedded in the compiler binary via `include_str!`.
 //! They are compiled before user code (two-phase compilation).
 
+mod rooted_entrypoint;
+
 use serde::Serialize;
 use sifr_codegen::{
     generate_project, generate_project_with_deps_and_crates, generate_rust_multi,
@@ -25,6 +27,11 @@ use std::panic::{catch_unwind, AssertUnwindSafe};
 use std::path::{Path, PathBuf};
 use std::process::Command;
 use std::sync::OnceLock;
+
+use rooted_entrypoint::{
+    build_rooted_entrypoint_binary, compile_single_file_entrypoint_with_metadata,
+    compile_single_file_frontend, resolve_project_entrypoint_plan,
+};
 
 pub use sifr_codegen::LoweringStats;
 
@@ -812,40 +819,7 @@ pub fn parse_source(source: &str) -> Result<Vec<sifr_python_ast::Stmt>, Vec<Comp
 }
 
 fn compile_frontend(source: &str) -> Result<FrontendCompiled, Vec<CompileError>> {
-    // Phase 0: Compile embedded stdlib .sifr files
-    let stdlib_compiled = compile_stdlib()?;
-
-    // Phase 1: Parse
-    let parsed_suite = parse_source(source)?;
-
-    // Phase 2: Lower through the same module-orchestration path used by project/test modes.
-    let mut parsed_modules = HashMap::new();
-    parsed_modules.insert("main".to_string(), parsed_suite);
-    let mut project_lowering = compile_frontend_modules(
-        &parsed_modules,
-        stdlib_compiled.defs.clone(),
-        FrontendDiagnosticStyle::Bare,
-    )?;
-    let main_module = project_lowering.hir_modules.remove("main").ok_or_else(|| {
-        vec![CompileError {
-            message: "internal error: frontend lowering missing 'main' module".to_string(),
-            phase: CompilePhase::TypeCheck,
-        }]
-    })?;
-    let main_diag = project_lowering
-        .module_diagnostics
-        .remove("main")
-        .unwrap_or_default();
-    let lowering_result = LoweringResult {
-        module: main_module,
-        reveal_types: main_diag.reveal_types,
-        warnings: main_diag.warnings,
-    };
-
-    Ok(FrontendCompiled {
-        stdlib: stdlib_compiled,
-        lowering_result,
-    })
+    compile_single_file_frontend(source)
 }
 
 fn emit_frontend_diagnostics(lowering_result: &LoweringResult) {
@@ -878,24 +852,9 @@ pub fn type_check_source(source: &str) -> Vec<CompileError> {
 
 /// Compile Sifr source code to Rust source code, returning stdlib metadata.
 pub fn compile_with_metadata(source: &str) -> CompileResultFull {
-    let frontend = match compile_frontend(source) {
-        Ok(frontend) => frontend,
-        Err(errors) => return CompileResultFull::Errors { errors },
-    };
-
-    emit_frontend_diagnostics(&frontend.lowering_result);
-
-    // Phase 3: Generate Rust code with stdlib code
-    let codegen_result = match run_codegen_with_boundary(
-        "internal compiler panic during single-file code generation",
-        || generate_rust_with_stdlib(&frontend.lowering_result.module, &frontend.stdlib.code),
-    ) {
+    let codegen_result = match compile_single_file_entrypoint_with_metadata(source) {
         Ok(result) => result,
-        Err(error) => {
-            return CompileResultFull::Errors {
-                errors: vec![error],
-            };
-        }
+        Err(errors) => return CompileResultFull::Errors { errors },
     };
 
     CompileResultFull::Success {
@@ -1540,27 +1499,6 @@ fn parse_import_closure_modules(
     Ok(parsed_modules)
 }
 
-fn analyze_project_frontend(main_file: &Path) -> Result<ProjectLowering, Vec<CompileError>> {
-    let project_dir = main_file.parent().unwrap_or(Path::new("."));
-    let Some(main_module_name) = main_file
-        .file_stem()
-        .map(|stem| stem.to_string_lossy().to_string())
-    else {
-        return Err(vec![CompileError {
-            message: format!("invalid project entrypoint path '{}'", main_file.display()),
-            phase: CompilePhase::Build,
-        }]);
-    };
-    let root_modules = BTreeSet::from([main_module_name]);
-    let parsed_modules = parse_import_closure_modules(
-        project_dir,
-        &root_modules,
-        DiscoveryDiagnosticStyle::ModuleName,
-    )?;
-    let stdlib_compiled = compile_stdlib()?;
-    collect_project_hir_modules(&parsed_modules, stdlib_compiled.defs)
-}
-
 fn emit_project_frontend_diagnostics(project_lowering: &ProjectLowering) {
     for module_name in &project_lowering.compile_order {
         let Some(diag) = project_lowering
@@ -1582,116 +1520,17 @@ fn emit_project_frontend_diagnostics(project_lowering: &ProjectLowering) {
 /// `main_file` is the path to the main .sifr file. Other .sifr files in the same
 /// directory are compiled as modules.
 pub fn build_project(main_file: &Path, output_dir: &Path) -> Result<PathBuf, Vec<CompileError>> {
-    let project_lowering = analyze_project_frontend(main_file)?;
-    emit_project_frontend_diagnostics(&project_lowering);
-    let hir_modules = project_lowering.hir_modules;
-    let compile_order = project_lowering.compile_order;
-
-    // Phase 3: Generate Rust code
-    let module_refs: Vec<(&str, &HirModule)> = compile_order
-        .iter()
-        .filter_map(|module_name| {
-            hir_modules
-                .get(module_name)
-                .map(|module| (module_name.as_str(), module))
-        })
-        .collect();
-    let rust_files = run_codegen_with_boundary(
-        "internal compiler panic during project code generation",
-        || generate_rust_multi(&module_refs),
+    build_rooted_entrypoint_binary(
+        rooted_entrypoint::RootedEntrypoint::Project { main_file },
+        output_dir,
     )
-    .map_err(|e| vec![e])?;
-
-    // Phase 4: Build the Rust project
-    let project_path = output_dir.join("sifr_output");
-    let src_dir = project_path.join("src");
-    std::fs::create_dir_all(&src_dir).map_err(|e| {
-        vec![CompileError {
-            message: format!("failed to create output directory: {e}"),
-            phase: CompilePhase::Build,
-        }]
-    })?;
-
-    // Write Cargo.toml
-    let (cargo_toml, _) = generate_project(
-        &HirModule {
-            functions: vec![],
-            classes: vec![],
-            imports: vec![],
-            constants: vec![],
-            generic_functions: HashMap::new(),
-            type_param_bounds: HashMap::new(),
-        },
-        "sifr_output",
-    );
-    std::fs::write(project_path.join("Cargo.toml"), cargo_toml).map_err(|e| {
-        vec![CompileError {
-            message: format!("failed to write Cargo.toml: {e}"),
-            phase: CompilePhase::Build,
-        }]
-    })?;
-
-    // Write main.rs using deterministic module declaration ordering.
-    let main_rs = assemble_project_main_rs(&compile_order, &rust_files);
-
-    std::fs::write(src_dir.join("main.rs"), &main_rs).map_err(|e| {
-        vec![CompileError {
-            message: format!("failed to write main.rs: {e}"),
-            phase: CompilePhase::Build,
-        }]
-    })?;
-
-    // Write non-main module files in deterministic dependency-safe order.
-    for module_name in ordered_non_main_module_names(&compile_order, &rust_files) {
-        let Some(code) = rust_files.get(module_name.as_str()) else {
-            continue;
-        };
-        std::fs::write(src_dir.join(format!("{module_name}.rs")), code).map_err(|e| {
-            vec![CompileError {
-                message: format!("failed to write {module_name}.rs: {e}"),
-                phase: CompilePhase::Build,
-            }]
-        })?;
-    }
-
-    // Run cargo build
-    let output = Command::new("cargo")
-        .args(["build", "--release"])
-        .current_dir(&project_path)
-        .output()
-        .map_err(|e| {
-            vec![CompileError {
-                message: format!("failed to run cargo build: {e}"),
-                phase: CompilePhase::Build,
-            }]
-        })?;
-
-    if !output.status.success() {
-        let stderr = String::from_utf8_lossy(&output.stderr);
-        return Err(vec![CompileError {
-            message: format!("cargo build failed:\n{stderr}"),
-            phase: CompilePhase::Build,
-        }]);
-    }
-
-    let binary_name = if cfg!(target_os = "windows") {
-        "sifr_output.exe"
-    } else {
-        "sifr_output"
-    };
-    let binary_path = project_path
-        .join("target")
-        .join("release")
-        .join(binary_name);
-
-    Ok(binary_path)
 }
 
 /// Type-check a multi-file project entrypoint without code generation.
 pub fn check_project(main_file: &Path) -> Vec<CompileError> {
-    match analyze_project_frontend(main_file) {
-        Ok(project_lowering) => {
-            emit_project_frontend_diagnostics(&project_lowering);
+    match resolve_project_entrypoint_plan(main_file) {
+        Ok(project_plan) => {
+            project_plan.emit_frontend_diagnostics();
             vec![]
         }
         Err(errors) => errors,
@@ -1700,84 +1539,10 @@ pub fn check_project(main_file: &Path) -> Vec<CompileError> {
 
 /// Compile and build a native binary.
 pub fn build(source: &str, output_dir: &Path) -> Result<PathBuf, Vec<CompileError>> {
-    let (rust_source, used_stdlib_modules, required_crates) = match compile_with_metadata(source) {
-        CompileResultFull::Success {
-            rust_source,
-            used_stdlib_modules,
-            required_crates,
-            lowering_stats: _,
-        } => (rust_source, used_stdlib_modules, required_crates),
-        CompileResultFull::Errors { errors } => return Err(errors),
-    };
-
-    // Create a temporary Rust project
-    let project_dir = output_dir.join("sifr_output");
-    let src_dir = project_dir.join("src");
-    std::fs::create_dir_all(&src_dir).map_err(|e| {
-        vec![CompileError {
-            message: format!("failed to create output directory: {e}"),
-            phase: CompilePhase::Build,
-        }]
-    })?;
-
-    // Write Cargo.toml with stdlib + explicit required crates from codegen metadata.
-    let (cargo_toml, _) = generate_project_with_deps_and_crates(
-        &sifr_hir::HirModule {
-            functions: vec![],
-            classes: vec![],
-            imports: vec![],
-            constants: vec![],
-            generic_functions: HashMap::new(),
-            type_param_bounds: HashMap::new(),
-        },
-        "sifr_output",
-        &used_stdlib_modules,
-        &required_crates,
-    );
-    std::fs::write(project_dir.join("Cargo.toml"), cargo_toml).map_err(|e| {
-        vec![CompileError {
-            message: format!("failed to write Cargo.toml: {e}"),
-            phase: CompilePhase::Build,
-        }]
-    })?;
-
-    // Write main.rs
-    std::fs::write(src_dir.join("main.rs"), &rust_source).map_err(|e| {
-        vec![CompileError {
-            message: format!("failed to write main.rs: {e}"),
-            phase: CompilePhase::Build,
-        }]
-    })?;
-
-    // Run cargo build
-    let output = Command::new("cargo")
-        .args(["build", "--release"])
-        .current_dir(&project_dir)
-        .output()
-        .map_err(|e| {
-            vec![CompileError {
-                message: format!("failed to run cargo build: {e}"),
-                phase: CompilePhase::Build,
-            }]
-        })?;
-
-    if !output.status.success() {
-        let stderr = String::from_utf8_lossy(&output.stderr);
-        return Err(vec![CompileError {
-            message: format!("cargo build failed:\n{stderr}"),
-            phase: CompilePhase::Build,
-        }]);
-    }
-
-    // Return path to the built binary
-    let binary_name = if cfg!(target_os = "windows") {
-        "sifr_output.exe"
-    } else {
-        "sifr_output"
-    };
-    let binary_path = project_dir.join("target").join("release").join(binary_name);
-
-    Ok(binary_path)
+    build_rooted_entrypoint_binary(
+        rooted_entrypoint::RootedEntrypoint::SingleFile { source },
+        output_dir,
+    )
 }
 
 /// Discover and run tests in a directory.
@@ -1990,19 +1755,23 @@ fn generate_test_runner_cargo_toml(
     required_crates: &HashSet<String>,
 ) -> String {
     let (cargo_toml, _) = generate_project_with_deps_and_crates(
-        &HirModule {
-            functions: vec![],
-            classes: vec![],
-            imports: vec![],
-            constants: vec![],
-            generic_functions: HashMap::new(),
-            type_param_bounds: HashMap::new(),
-        },
+        &empty_hir_module(),
         "sifr_tests",
         stdlib_modules,
         required_crates,
     );
     cargo_toml
+}
+
+fn empty_hir_module() -> HirModule {
+    HirModule {
+        functions: vec![],
+        classes: vec![],
+        imports: vec![],
+        constants: vec![],
+        generic_functions: HashMap::new(),
+        type_param_bounds: HashMap::new(),
+    }
 }
 
 #[cfg(test)]

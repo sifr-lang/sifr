@@ -1,0 +1,2 @@
+def phase_label() -> str:
+    return "adhoc milestone 1 rooted entrypoint demo: pass"
