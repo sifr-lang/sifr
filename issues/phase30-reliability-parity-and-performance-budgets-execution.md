@@ -81,7 +81,7 @@ Loop per part: Work -> Validate -> PR -> Review -> Merge -> External review pass
 - Execution mode: wave-by-wave structural remediation, validation, PR merge, reviewer pass 1, reviewer pass 2, then next wave.
 - [x] `wave_30_1a` (`env`, `bytes`, `base64`, `hashlib`) - implementation merged in https://github.com/yaseralnajjar/sifr/pull/1048; review pass 1 and pass 2 approved; wave completion and wave production-grade closures approved
 - [x] `wave_30_1b` (`math`, `statistics`, `bisect`, `heapq`) - complete (implementation merged in https://github.com/yaseralnajjar/sifr/pull/1053; reviewer pass 1 remediation merged in https://github.com/yaseralnajjar/sifr/pull/1054; reviewer pass 2 approved; wave completion closure and production-grade closure approved)
-- [ ] `wave_30_1c` (`string`, `textwrap`, `fnmatch`, `re`)
+- [ ] `wave_30_1c` (`string`, `textwrap`, `fnmatch`, `re`) - in progress (fixture-structure remediation and stdlib fixture consolidation in implementation)
 - [ ] `wave_30_1d` (`collections`, `itertools`, `json`, `datetime`)
 - [ ] `wave_30_1e` (`io`, `csv`, `os`, `pathlib`, `glob`, `tempfile`, `shutil`)
 - [ ] `wave_30_1f` (`logging`, `time`, `timeit`, `platform`, `uuid`)
@@ -147,6 +147,14 @@ status: wave closure complete (review pass 1 + review pass 2 + wave completion c
 - Wave production-grade closure verdict: `wave_30_1b` is production-grade complete for milestone_30_4 scope with no blockers.
 - Validation status: full local suite passed after consolidation via `/Users/yaseralnajjar/work/sifr/codebase/scripts/run_all_tests.sh`.
 - Next step: start `wave_30_1c` milestone_30_4 structural execution loop.
+
+### milestone_30_4 wave_30_1c progress
+status: in progress (implementation remediation in flight) (2026-03-10)
+
+- Planned remediation scope:
+  - refactor `cpython_{string,textwrap,fnmatch,re}*.sifr` fixtures to keep `main()` orchestration-only with helper-grouped behavior sections
+  - consolidate legacy `stdlib_{string,textwrap,fnmatch,re}*.sifr` fixtures into canonical consolidated fixtures
+  - keep wave demos helper-structured and deterministic for reviewability
 
 ## Part 1: `env`
 status: done (2026-03-08, PR #929)

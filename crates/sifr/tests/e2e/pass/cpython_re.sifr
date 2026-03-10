@@ -1,132 +1,191 @@
-# CPython test_re.py — ported assertions for sifr.re
+# CPython test_re.py — ported assertions for sifr.re (helper-structured)
 # Uses CPython-compatible names: search, sub, findall, split (new aliases)
 # re_match has no alias (match is a Python keyword), so it stays as re_match
-from sifr.test import assert_eq, assert_true, assert_false
+from sifr.test import assert_bool_vector_eq
 from sifr.re import re_match, search, sub, findall, split
 
-def main():
+def collect_match_actual() -> list[bool]:
+    actual: list[bool] = []
     try:
-        # --- re_match (returns bool) ---
         m1: bool = re_match("a", "a")
-        assert_true(m1)
         m2: bool = re_match("a", "abc")
-        assert_true(m2)
         m3: bool = re_match("b", "a")
-        assert_false(m3)
         m4: bool = re_match("ab", "abc")
-        assert_true(m4)
         m5: bool = re_match("a*", "aaa")
-        assert_true(m5)
         m6: bool = re_match("a*", "")
-        assert_true(m6)
         m7: bool = re_match("x*", "xxxa")
-        assert_true(m7)
         m8: bool = re_match(".", "a")
-        assert_true(m8)
+        m9: bool = re_match("^abc$", "abc")
+        m10: bool = re_match("^abc$", "abcd")
+        m11: bool = re_match("[0-9]+", "123")
+        m12: bool = re_match("[0-9]+", "abc")
+        m13: bool = re_match("[a-z]+", "hello")
+        m14: bool = re_match("(a|b)", "a")
+        m15: bool = re_match("(a|b)", "b")
+        m16: bool = re_match("(a|b)", "c")
 
-        # --- search (re_find) returns str | None ---
+        actual.append(m1)
+        actual.append(m2)
+        actual.append(not m3)
+        actual.append(m4)
+        actual.append(m5)
+        actual.append(m6)
+        actual.append(m7)
+        actual.append(m8)
+        actual.append(m9)
+        actual.append(not m10)
+        actual.append(m11)
+        actual.append(not m12)
+        actual.append(m13)
+        actual.append(m14)
+        actual.append(m15)
+        actual.append(not m16)
+    except RegexError as e:
+        count: int = 0
+        while count < 16:
+            actual.append(False)
+            count = count + 1
+    return actual
+
+def collect_search_actual() -> list[bool]:
+    actual: list[bool] = []
+    try:
         found: str | None = search("x+", "axx")
-        assert str(found) == 'xx'
+        actual.append(str(found) == "xx")
 
         not_found: str | None = search("x", "aaa")
-        assert_true(not_found is None)
+        actual.append(not_found is None)
 
         word: str | None = search("\\w+", "hello world")
-        assert str(word) == 'hello'
+        actual.append(str(word) == "hello")
 
         digit: str | None = search("\\d+", "abc123def")
-        assert str(digit) == '123'
+        actual.append(str(digit) == "123")
+    except RegexError as e:
+        actual.append(False)
+        actual.append(False)
+        actual.append(False)
+        actual.append(False)
+    return actual
 
-        # --- findall ---
+def collect_findall_actual() -> list[bool]:
+    actual: list[bool] = []
+    try:
         r1: list[str] = findall(":+", "abc")
-        assert_eq(len(r1), 0)
+        actual.append(len(r1) == 0)
 
         r2: list[str] = findall(":+", "a:b::c:::d")
-        assert_eq(len(r2), 3)
-        assert str(r2) == '[":", "::", ":::"]'
+        actual.append(len(r2) == 3)
+        actual.append(str(r2) == "[\":\", \"::\", \":::\"]")
 
         r3: list[str] = findall("a", "abacada")
-        assert_eq(len(r3), 4)
+        actual.append(len(r3) == 4)
 
         r4: list[str] = findall("\\d+", "08.2 -2 23x99y")
-        assert_eq(len(r4), 5)
-        assert str(r4) == '["08", "2", "2", "23", "99"]'
+        actual.append(len(r4) == 5)
+        actual.append(str(r4) == "[\"08\", \"2\", \"2\", \"23\", \"99\"]")
 
-        # --- sub ---
-        s1: str = sub("y", "a", "xyz")
-        assert_eq(s1, "xaz")
-        s2: str = sub("a", "b", "aaaaa")
-        assert_eq(s2, "bbbbb")
-        s3: str = sub("\\d", "X", "a1b2c3")
-        assert_eq(s3, "aXbXcX")
-        s4: str = sub("\\s+", " ", "hello   world")
-        assert_eq(s4, "hello world")
-        s5: str = sub("x", "", "xaxbxcx")
-        assert_eq(s5, "abc")
-
-        # --- split ---
-        sp1: list[str] = split(":", ":a:b::c")
-        assert_eq(len(sp1), 5)
-        assert str(sp1) == '["", "a", "b", "", "c"]'
-
-        sp2: list[str] = split(":+", ":a:b::c")
-        assert_eq(len(sp2), 4)
-        assert str(sp2) == '["", "a", "b", "c"]'
-
-        sp3: list[str] = split("\\s+", "hello world  foo")
-        assert_eq(len(sp3), 3)
-        assert str(sp3) == '["hello", "world", "foo"]'
-
-        # --- Edge cases ---
-        empty_find: list[str] = findall("x", "")
-        assert_eq(len(empty_find), 0)
-
-        no_match_sub: str = sub("x", "y", "abc")
-        assert_eq(no_match_sub, "abc")
-
-        # --- More match patterns ---
-        m9: bool = re_match("^abc$", "abc")
-        assert_true(m9)
-        m10: bool = re_match("^abc$", "abcd")
-        assert_false(m10)
-        m11: bool = re_match("[0-9]+", "123")
-        assert_true(m11)
-        m12: bool = re_match("[0-9]+", "abc")
-        assert_false(m12)
-        m13: bool = re_match("[a-z]+", "hello")
-        assert_true(m13)
-        m14: bool = re_match("(a|b)", "a")
-        assert_true(m14)
-        m15: bool = re_match("(a|b)", "b")
-        assert_true(m15)
-        m16: bool = re_match("(a|b)", "c")
-        assert_false(m16)
-
-        # --- More sub ---
-        ms1: str = sub("[aeiou]", "*", "hello")
-        assert_eq(ms1, "h*ll*")
-        ms2: str = sub("^", ">>", "hello")
-        assert_eq(ms2, ">>hello")
-        ms3: str = sub("[0-9]", "#", "a1b2c3d4")
-        assert_eq(ms3, "a#b#c#d#")
-
-        # --- More findall ---
         r5: list[str] = findall("[A-Z]", "Hello World")
-        assert_eq(len(r5), 2)
+        actual.append(len(r5) == 2)
 
         r6: list[str] = findall("\\w+", "one two three")
-        assert_eq(len(r6), 3)
+        actual.append(len(r6) == 3)
 
         r7: list[str] = findall("[aeiou]", "beautiful")
-        assert_eq(len(r7), 5)
+        actual.append(len(r7) == 5)
+    except RegexError as e:
+        count: int = 0
+        while count < 9:
+            actual.append(False)
+            count = count + 1
+    return actual
 
-        # --- More split ---
+def collect_sub_actual() -> list[bool]:
+    actual: list[bool] = []
+    try:
+        s1: str = sub("y", "a", "xyz")
+        actual.append(s1 == "xaz")
+        s2: str = sub("a", "b", "aaaaa")
+        actual.append(s2 == "bbbbb")
+        s3: str = sub("\\d", "X", "a1b2c3")
+        actual.append(s3 == "aXbXcX")
+        s4: str = sub("\\s+", " ", "hello   world")
+        actual.append(s4 == "hello world")
+        s5: str = sub("x", "", "xaxbxcx")
+        actual.append(s5 == "abc")
+
+        ms1: str = sub("[aeiou]", "*", "hello")
+        actual.append(ms1 == "h*ll*")
+        ms2: str = sub("^", ">>", "hello")
+        actual.append(ms2 == ">>hello")
+        ms3: str = sub("[0-9]", "#", "a1b2c3d4")
+        actual.append(ms3 == "a#b#c#d#")
+    except RegexError as e:
+        count: int = 0
+        while count < 8:
+            actual.append(False)
+            count = count + 1
+    return actual
+
+def collect_split_actual() -> list[bool]:
+    actual: list[bool] = []
+    try:
+        sp1: list[str] = split(":", ":a:b::c")
+        actual.append(len(sp1) == 5)
+        actual.append(str(sp1) == "[\"\", \"a\", \"b\", \"\", \"c\"]")
+
+        sp2: list[str] = split(":+", ":a:b::c")
+        actual.append(len(sp2) == 4)
+        actual.append(str(sp2) == "[\"\", \"a\", \"b\", \"c\"]")
+
+        sp3: list[str] = split("\\s+", "hello world  foo")
+        actual.append(len(sp3) == 3)
+        actual.append(str(sp3) == "[\"hello\", \"world\", \"foo\"]")
+
         sp4: list[str] = split(",", "a,b,c,d")
-        assert_eq(len(sp4), 4)
+        actual.append(len(sp4) == 4)
 
         sp5: list[str] = split("[,;]", "a,b;c,d")
-        assert_eq(len(sp5), 4)
-
-        assert str("cpython_re: all 47 assertions passed") == 'cpython_re: all 47 assertions passed'
+        actual.append(len(sp5) == 4)
     except RegexError as e:
-        _ = str("unexpected regex error: " + e.message)
+        count: int = 0
+        while count < 8:
+            actual.append(False)
+            count = count + 1
+    return actual
+
+def collect_edge_actual() -> list[bool]:
+    actual: list[bool] = []
+    try:
+        empty_find: list[str] = findall("x", "")
+        actual.append(len(empty_find) == 0)
+
+        no_match_sub: str = sub("x", "y", "abc")
+        actual.append(no_match_sub == "abc")
+    except RegexError as e:
+        actual.append(False)
+        actual.append(False)
+    return actual
+
+def append_all(mut target: list[bool], values: list[bool]):
+    for value in values:
+        target.append(value)
+
+def main():
+    expected: list[bool] = [
+        True, True, True, True, True, True, True, True, True, True, True, True, True, True, True, True,
+        True, True, True, True,
+        True, True, True, True, True, True, True, True, True,
+        True, True, True, True, True, True, True, True,
+        True, True, True, True, True, True, True, True,
+        True, True
+    ]
+    actual: list[bool] = []
+    append_all(actual, collect_match_actual())
+    append_all(actual, collect_search_actual())
+    append_all(actual, collect_findall_actual())
+    append_all(actual, collect_sub_actual())
+    append_all(actual, collect_split_actual())
+    append_all(actual, collect_edge_actual())
+    assert_bool_vector_eq(actual, expected)
+    assert str("cpython_re: all 47 assertions passed") == "cpython_re: all 47 assertions passed"

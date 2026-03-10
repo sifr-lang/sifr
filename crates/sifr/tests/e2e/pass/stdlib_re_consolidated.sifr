@@ -1,0 +1,110 @@
+# Consolidated stdlib re coverage for milestone_30_4 structure rules
+from sifr.re import (
+    re_match, re_find, re_replace, re_findall, re_split,
+    Match, compile, fullmatch, Pattern, compile_flags, search_flags, IGNORECASE
+)
+from sifr.test import assert_bool_vector_eq
+
+def collect_core_actual() -> list[bool]:
+    actual: list[bool] = []
+
+    try:
+        number_match: bool = re_match("[0-9]+", "hello 42 world")
+        no_number_raw: bool = re_match("[0-9]+", "no numbers here")
+        no_number_match: bool = not no_number_raw
+        actual.append(no_number_match)
+        actual.append(number_match)
+        found: str | None = re_find("[0-9]+", "hello 42 world")
+        actual.append(str(found) == "42")
+        replaced: str = re_replace("[0-9]+", "NUM", "hello 42 world 7")
+        actual.append(replaced == "hello NUM world NUM")
+    except RegexError as e:
+        actual.append(False)
+        actual.append(False)
+        actual.append(False)
+        actual.append(False)
+    return actual
+
+def collect_expanded_actual() -> list[bool]:
+    actual: list[bool] = []
+    try:
+        matches: list[str] = re_findall("[0-9]+", "abc123def456")
+        actual.append(len(matches) == 2)
+        parts: list[str] = re_split(",", "a,b,c")
+        actual.append(len(parts) == 3)
+    except RegexError as e:
+        actual.append(False)
+        actual.append(False)
+    return actual
+
+def collect_match_class_actual() -> list[bool]:
+    actual: list[bool] = []
+    m: Match = Match("hello", 2, 7)
+    actual.append(m.group() == "hello")
+    actual.append(m.start() == 2)
+    actual.append(m.end() == 7)
+    sp: list[int] = m.span()
+    actual.append(sp[0] == 2)
+    actual.append(sp[1] == 7)
+    actual.append(m.to_str() == "hello")
+    return actual
+
+def collect_pattern_actual() -> list[bool]:
+    actual: list[bool] = []
+    p: Pattern = compile("\\d+")
+    actual.append(p.pattern() == "\\d+")
+
+    try:
+        pattern_match: bool = p.is_match("123abc")
+        actual.append(pattern_match)
+        search_result: str | None = p.search("hello 42 world")
+        actual.append(search_result is not None and len(search_result) > 0)
+        all_nums: list[str] = p.findall("hello 42 world 99")
+        actual.append(len(all_nums) == 2)
+        fullmatch_ok: bool = fullmatch("\\d+", "12345")
+        actual.append(fullmatch_ok)
+    except RegexError as e:
+        actual.append(False)
+        actual.append(False)
+        actual.append(False)
+        actual.append(False)
+    return actual
+
+def collect_flags_actual() -> list[bool]:
+    actual: list[bool] = []
+    try:
+        insensitive: str | None = search_flags("hello", "HELLO WORLD", IGNORECASE)
+        actual.append(insensitive is not None)
+
+        sensitive: str | None = search_flags("hello", "HELLO WORLD", 0)
+        actual.append(sensitive is None)
+
+        pat = compile_flags("hello", IGNORECASE)
+        from_compiled: str | None = pat.search("HELLO WORLD")
+        actual.append(from_compiled is not None)
+    except RegexError as e:
+        actual.append(False)
+        actual.append(False)
+        actual.append(False)
+    return actual
+
+def append_all(mut target: list[bool], values: list[bool]):
+    for value in values:
+        target.append(value)
+
+def main():
+    expected: list[bool] = [
+        True, True, True, True,
+        True, True,
+        True, True, True, True, True, True,
+        True, True, True, True, True,
+        True, True, True
+    ]
+    actual: list[bool] = []
+    append_all(actual, collect_core_actual())
+    append_all(actual, collect_expanded_actual())
+    append_all(actual, collect_match_class_actual())
+    append_all(actual, collect_pattern_actual())
+    append_all(actual, collect_flags_actual())
+    assert_bool_vector_eq(actual, expected)
+    assert str("stdlib_re_consolidated: pass") == "stdlib_re_consolidated: pass"

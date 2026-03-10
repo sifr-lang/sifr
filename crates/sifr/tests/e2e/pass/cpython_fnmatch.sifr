@@ -1,71 +1,130 @@
 # CPython test_fnmatch.py — ported assertions for sifr.fnmatch
 # Note: fnmatch_filter is used instead of the CPython alias 'filter' because
 # 'filter' conflicts with the built-in filter(func, iterable) function
-from sifr.test import assert_eq, assert_true, assert_false
+from sifr.test import assert_bool_vector_eq
 from sifr.fnmatch import fnmatch, fnmatch_filter, fnmatchcase
 
-def main():
-    # --- fnmatch ---
-    assert_true(fnmatch("abc", "abc"))
-    assert_true(fnmatch("abc", "???"))
-    assert_true(fnmatch("abc", "*"))
-    assert_true(fnmatch("abc", "a*"))
-    assert_true(fnmatch("abc", "*c"))
-    assert_true(fnmatch("abc", "a*c"))
-    assert_false(fnmatch("abc", "ab"))
-    assert_false(fnmatch("a", "??"))
-    assert_false(fnmatch("a", "b"))
-    assert_true(fnmatch("", ""))
-    assert_true(fnmatch("", "*"))
-    assert_false(fnmatch("", "?"))
+def collect_fnmatch_core_actual() -> list[bool]:
+    actual: list[bool] = []
+    match_exact: bool = fnmatch("abc", "abc")
+    match_qmark: bool = fnmatch("abc", "???")
+    match_star: bool = fnmatch("abc", "*")
+    match_prefix: bool = fnmatch("abc", "a*")
+    match_suffix: bool = fnmatch("abc", "*c")
+    match_mixed: bool = fnmatch("abc", "a*c")
+    no_short_match: bool = not fnmatch("abc", "ab")
+    no_double_qmark: bool = not fnmatch("a", "??")
+    no_other_char: bool = not fnmatch("a", "b")
+    match_empty: bool = fnmatch("", "")
+    match_empty_star: bool = fnmatch("", "*")
+    no_empty_qmark: bool = not fnmatch("", "?")
 
-    # --- fnmatchcase ---
-    assert_true(fnmatchcase("abc", "abc"))
-    assert_false(fnmatchcase("AbC", "abc"))
-    assert_false(fnmatchcase("abc", "AbC"))
-    assert_true(fnmatchcase("AbC", "AbC"))
-    assert_true(fnmatchcase("abc", "a*"))
-    assert_false(fnmatchcase("ABC", "a*"))
+    actual.append(match_exact)
+    actual.append(match_qmark)
+    actual.append(match_star)
+    actual.append(match_prefix)
+    actual.append(match_suffix)
+    actual.append(match_mixed)
+    actual.append(no_short_match)
+    actual.append(no_double_qmark)
+    actual.append(no_other_char)
+    actual.append(match_empty)
+    actual.append(match_empty_star)
+    actual.append(no_empty_qmark)
+    return actual
 
-    # --- fnmatch_filter ---
+def collect_fnmatchcase_actual() -> list[bool]:
+    actual: list[bool] = []
+    case_exact: bool = fnmatchcase("abc", "abc")
+    no_case_fold_ab: bool = not fnmatchcase("AbC", "abc")
+    no_case_fold_ba: bool = not fnmatchcase("abc", "AbC")
+    case_exact_mixed: bool = fnmatchcase("AbC", "AbC")
+    case_star_lower: bool = fnmatchcase("abc", "a*")
+    no_case_star_upper: bool = not fnmatchcase("ABC", "a*")
+
+    actual.append(case_exact)
+    actual.append(no_case_fold_ab)
+    actual.append(no_case_fold_ba)
+    actual.append(case_exact_mixed)
+    actual.append(case_star_lower)
+    actual.append(no_case_star_upper)
+    return actual
+
+def collect_filter_primary_actual() -> list[bool]:
+    actual: list[bool] = []
     names: list[str] = ["Python", "Ruby", "Perl", "Tcl"]
     r1: list[str] = fnmatch_filter(names, "P*")
-    assert_eq(len(r1), 2)
-    assert str(r1) == '["Python", "Perl"]'
+    actual.append(len(r1) == 2)
+    actual.append(str(r1) == "[\"Python\", \"Perl\"]")
 
     r2: list[str] = fnmatch_filter(names, "R*")
-    assert_eq(len(r2), 1)
+    actual.append(len(r2) == 1)
 
     r3: list[str] = fnmatch_filter(names, "X*")
-    assert_eq(len(r3), 0)
+    actual.append(len(r3) == 0)
 
     files: list[str] = ["test.py", "test.rb", "test.js", "main.py"]
     r4: list[str] = fnmatch_filter(files, "*.py")
-    assert_eq(len(r4), 2)
-    assert str(r4) == '["test.py", "main.py"]'
+    actual.append(len(r4) == 2)
+    actual.append(str(r4) == "[\"test.py\", \"main.py\"]")
+    return actual
 
-    # --- More fnmatch patterns ---
-    assert_true(fnmatch("foo.bar", "foo.*"))
-    assert_true(fnmatch("foo.bar", "*.bar"))
-    assert_false(fnmatch("foo.bar", "*.baz"))
-    assert_true(fnmatch("test123", "test???"))
-    assert_true(fnmatch("test123", "test*"))
-    assert_false(fnmatch("test123", "test?"))
-    assert_true(fnmatch("a.b.c", "a.*.*"))
-    assert_true(fnmatch("hello", "?ello"))
-    assert_true(fnmatch("hello", "hell?"))
-    assert_false(fnmatch("hello", "hell"))
+def collect_more_patterns_actual() -> list[bool]:
+    actual: list[bool] = []
+    match_foo_prefix: bool = fnmatch("foo.bar", "foo.*")
+    match_foo_suffix: bool = fnmatch("foo.bar", "*.bar")
+    no_foo_baz: bool = not fnmatch("foo.bar", "*.baz")
+    match_test_qmark: bool = fnmatch("test123", "test???")
+    match_test_star: bool = fnmatch("test123", "test*")
+    no_test_short: bool = not fnmatch("test123", "test?")
+    match_dotted: bool = fnmatch("a.b.c", "a.*.*")
+    match_prefix_qmark: bool = fnmatch("hello", "?ello")
+    match_suffix_qmark: bool = fnmatch("hello", "hell?")
+    no_missing_char: bool = not fnmatch("hello", "hell")
 
-    # --- More fnmatch_filter ---
+    actual.append(match_foo_prefix)
+    actual.append(match_foo_suffix)
+    actual.append(no_foo_baz)
+    actual.append(match_test_qmark)
+    actual.append(match_test_star)
+    actual.append(no_test_short)
+    actual.append(match_dotted)
+    actual.append(match_prefix_qmark)
+    actual.append(match_suffix_qmark)
+    actual.append(no_missing_char)
+    return actual
+
+def collect_filter_secondary_actual() -> list[bool]:
+    actual: list[bool] = []
     all_files: list[str] = ["a.txt", "b.txt", "c.py", "d.py", "e.rs"]
     txt: list[str] = fnmatch_filter(all_files, "*.txt")
-    assert_eq(len(txt), 2)
+    actual.append(len(txt) == 2)
     py: list[str] = fnmatch_filter(all_files, "*.py")
-    assert_eq(len(py), 2)
+    actual.append(len(py) == 2)
     rs: list[str] = fnmatch_filter(all_files, "*.rs")
-    assert_eq(len(rs), 1)
+    actual.append(len(rs) == 1)
     all_match: list[str] = fnmatch_filter(all_files, "*")
-    assert_eq(len(all_match), 5)
+    actual.append(len(all_match) == 5)
+    return actual
+
+def append_all(mut target: list[bool], values: list[bool]):
+    for value in values:
+        target.append(value)
+
+def main():
+    expected: list[bool] = [
+        True, True, True, True, True, True, True, True, True, True, True, True,
+        True, True, True, True, True, True,
+        True, True, True, True, True, True,
+        True, True, True, True, True, True, True, True, True, True,
+        True, True, True, True
+    ]
+    actual: list[bool] = []
+    append_all(actual, collect_fnmatch_core_actual())
+    append_all(actual, collect_fnmatchcase_actual())
+    append_all(actual, collect_filter_primary_actual())
+    append_all(actual, collect_more_patterns_actual())
+    append_all(actual, collect_filter_secondary_actual())
+    assert_bool_vector_eq(actual, expected)
 
     assert str("cpython_fnmatch: all 40 assertions passed") == 'cpython_fnmatch: all 40 assertions passed'
-

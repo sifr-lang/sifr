@@ -1,58 +1,92 @@
 # CPython test_textwrap.py — ported assertions for sifr.textwrap
-from sifr.test import assert_eq
+from sifr.test import assert_bool_vector_eq
 from sifr.textwrap import wrap, fill, dedent, indent, shorten
 
-def main():
-    # --- wrap ---
+def collect_wrap_actual() -> list[bool]:
+    actual: list[bool] = []
     try:
         w1: list[str] = wrap("Hello there, how are you this fine day?", 12)
-        assert_eq(len(w1), 4)
-        assert str(w1) == '["Hello there,", "how are you", "this fine", "day?"]'
+        actual.append(len(w1) == 4)
+        actual.append(str(w1) == "[\"Hello there,\", \"how are you\", \"this fine\", \"day?\"]")
     except ValueError as e:
-        assert str(f"error: {e.message}") == '["Hello", "there"]'
+        actual.append(False)
+        actual.append(False)
 
     try:
         w2: list[str] = wrap("", 6)
-        assert_eq(len(w2), 0)
+        actual.append(len(w2) == 0)
     except ValueError as e:
-        assert str(f"error: {e.message}") == 'cpython_textwrap: all 20 assertions passed'
+        actual.append(False)
 
     try:
         w3: list[str] = wrap("Short", 80)
-        assert_eq(len(w3), 1)
+        actual.append(len(w3) == 1)
     except ValueError as e:
-        _ = str(f"error: {e.message}")
+        actual.append(False)
+
     try:
         w4: list[str] = wrap("Hello there", 5)
-        assert_eq(len(w4), 2)
-        _ = str(w4)
+        actual.append(len(w4) == 2)
     except ValueError as e:
-        _ = str(f"error: {e.message}")
-    # --- fill ---
+        actual.append(False)
+    return actual
+
+def collect_fill_actual() -> list[bool]:
+    actual: list[bool] = []
     try:
         f1: str = fill("Hello there", 5)
-        assert_eq(f1, "Hello\nthere")
+        actual.append(f1 == "Hello\nthere")
         f2: str = fill("", 6)
-        assert_eq(f2, "")
+        actual.append(f2 == "")
         f3: str = fill("Short", 80)
-        assert_eq(f3, "Short")
+        actual.append(f3 == "Short")
     except ValueError as e:
-        _ = str(f"error: {e.message}")
-    # --- dedent ---
-    assert_eq(dedent("  Hello"), "Hello")
-    assert_eq(dedent("  Hello\n  World"), "Hello\nWorld")
-    assert_eq(dedent(""), "")
-    assert_eq(dedent("Hello"), "Hello")
-    assert_eq(dedent("    line1\n    line2\n    line3"), "line1\nline2\nline3")
+        actual.append(False)
+        actual.append(False)
+        actual.append(False)
+    return actual
 
-    # --- indent ---
-    assert_eq(indent("Hello\nWorld", "  "), "  Hello\n  World")
-    assert_eq(indent("", "  "), "")
-    assert_eq(indent("Hello", ""), "Hello")
-    assert_eq(indent("A\nB\nC", ">> "), ">> A\n>> B\n>> C")
+def collect_dedent_actual() -> list[bool]:
+    actual: list[bool] = []
+    actual.append(dedent("  Hello") == "Hello")
+    actual.append(dedent("  Hello\n  World") == "Hello\nWorld")
+    actual.append(dedent("") == "")
+    actual.append(dedent("Hello") == "Hello")
+    actual.append(dedent("    line1\n    line2\n    line3") == "line1\nline2\nline3")
+    return actual
 
-    # --- shorten ---
-    assert_eq(shorten("Hello", 10), "Hello")
-    assert_eq(shorten("", 6), "")
+def collect_indent_actual() -> list[bool]:
+    actual: list[bool] = []
+    actual.append(indent("Hello\nWorld", "  ") == "  Hello\n  World")
+    actual.append(indent("", "  ") == "")
+    actual.append(indent("Hello", "") == "Hello")
+    actual.append(indent("A\nB\nC", ">> ") == ">> A\n>> B\n>> C")
+    return actual
+
+def collect_shorten_actual() -> list[bool]:
+    actual: list[bool] = []
+    actual.append(shorten("Hello", 10) == "Hello")
+    actual.append(shorten("", 6) == "")
+    return actual
+
+def append_all(mut target: list[bool], values: list[bool]):
+    for value in values:
+        target.append(value)
+
+def main():
+    expected: list[bool] = [
+        True, True, True, True, True,
+        True, True, True,
+        True, True, True, True, True,
+        True, True, True, True,
+        True, True
+    ]
+    actual: list[bool] = []
+    append_all(actual, collect_wrap_actual())
+    append_all(actual, collect_fill_actual())
+    append_all(actual, collect_dedent_actual())
+    append_all(actual, collect_indent_actual())
+    append_all(actual, collect_shorten_actual())
+    assert_bool_vector_eq(actual, expected)
 
     _ = str("cpython_textwrap: all 20 assertions passed")

@@ -1,20 +1,32 @@
 from sifr.fnmatch import fnmatch, fnmatchcase, fnmatch_filter
 from sifr.test import assert_bool_vector_eq
 
-def main():
-    expected: list[bool] = [True, True, True, True, True, True]
+def collect_match_actual() -> list[bool]:
     actual: list[bool] = []
-
     actual.append(fnmatch("hello.txt", "*.txt"))
-    non_txt_match: bool = not fnmatch("hello.py", "*.txt")
-    actual.append(non_txt_match)
+    no_txt_match: bool = not fnmatch("hello.py", "*.txt")
+    actual.append(no_txt_match)
     actual.append(fnmatch("abc", "a?c"))
     case_sensitive_miss: bool = not fnmatchcase("AbC", "abc")
     actual.append(case_sensitive_miss)
+    return actual
 
+def collect_filter_actual() -> list[bool]:
+    actual: list[bool] = []
     names: list[str] = ["main.py", "notes.txt", "lib.py"]
     actual.append(str(fnmatch_filter(names, "*.py")) == "[\"main.py\", \"lib.py\"]")
     actual.append(str(fnmatch_filter(names, "README*")) == "[]")
+    return actual
+
+def append_all(mut target: list[bool], values: list[bool]):
+    for value in values:
+        target.append(value)
+
+def main():
+    expected: list[bool] = [True, True, True, True, True, True]
+    actual: list[bool] = []
+    append_all(actual, collect_match_actual())
+    append_all(actual, collect_filter_actual())
 
     assert_bool_vector_eq(actual, expected)
     print("m30_1c fnmatch parity demo: pass")

@@ -1,7 +1,0 @@
-# Test sifr.string stdlib module
-from sifr.string import ascii_lowercase, digits
-
-def main():
-    assert str(ascii_lowercase) == 'abcdefghijklmnopqrstuvwxyz'
-    assert str(digits) == '0123456789'
-

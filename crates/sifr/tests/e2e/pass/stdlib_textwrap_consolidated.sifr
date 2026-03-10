@@ -1,0 +1,62 @@
+# Consolidated stdlib textwrap coverage for milestone_30_4 structure rules
+from sifr.textwrap import wrap, fill, dedent, indent, shorten
+from sifr.test import assert_bool_vector_eq
+
+def collect_wrap_fill_actual() -> list[bool]:
+    actual: list[bool] = []
+    try:
+        lines: list[str] = wrap("the quick brown fox jumps", 10)
+        actual.append(str(lines) == "[\"the quick\", \"brown fox\", \"jumps\"]")
+    except ValueError as e:
+        actual.append(False)
+
+    try:
+        filled: str = fill("hello world foo bar", 12)
+        actual.append(filled == "hello world\nfoo bar")
+    except ValueError as e:
+        actual.append(False)
+
+    try:
+        empty_lines: list[str] = wrap("", 6)
+        actual.append(str(empty_lines) == "[]")
+    except ValueError as e:
+        actual.append(False)
+    return actual
+
+def collect_indent_dedent_shorten_actual() -> list[bool]:
+    actual: list[bool] = []
+    actual.append(dedent("  hello\n  world") == "hello\nworld")
+    actual.append(indent("hello\nworld", ">> ") == ">> hello\n>> world")
+    actual.append(shorten("hello world here", 16) == "hello world [...]")
+    return actual
+
+def collect_negative_actual() -> list[bool]:
+    actual: list[bool] = []
+
+    wrap_error: bool = False
+    try:
+        _bad_wrap: list[str] = wrap("x", 0)
+    except ValueError as e:
+        wrap_error = e.message == "wrap: width must be > 0"
+    actual.append(wrap_error)
+
+    fill_error: bool = False
+    try:
+        _bad_fill: str = fill("x", 0)
+    except ValueError as e:
+        fill_error = e.message == "fill: width must be > 0"
+    actual.append(fill_error)
+    return actual
+
+def append_all(mut target: list[bool], values: list[bool]):
+    for value in values:
+        target.append(value)
+
+def main():
+    expected: list[bool] = [True, True, True, True, True, True, True, True]
+    actual: list[bool] = []
+    append_all(actual, collect_wrap_fill_actual())
+    append_all(actual, collect_indent_dedent_shorten_actual())
+    append_all(actual, collect_negative_actual())
+    assert_bool_vector_eq(actual, expected)
+    assert str("stdlib_textwrap_consolidated: pass") == "stdlib_textwrap_consolidated: pass"
