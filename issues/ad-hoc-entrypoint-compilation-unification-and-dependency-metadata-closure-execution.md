@@ -156,4 +156,4 @@ Loop per part: Plan -> Implement -> Validate -> Demo -> PR -> Review -> Merge ->
 - Validation evidence:
   - reviewer explicitly approved the current `main` state as production-grade for the phase
 - Follow-up PR:
-  - pending on current review-pass branch
+  - https://github.com/yaseralnajjar/sifr/pull/1088
