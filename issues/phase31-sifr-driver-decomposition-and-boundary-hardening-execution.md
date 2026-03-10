@@ -23,7 +23,7 @@ Loop per part: Plan -> Implement -> Validate -> Demo -> PR -> Review -> Merge ->
 3. [x] `milestone_driver_3`: extract frontend compile/check plumbing, module-export collection, dependency ordering, and cycle canonicalization into coherent frontend/project modules
 4. [x] `milestone_driver_4`: extract discovery, import-closure parsing, workspace allocation, project build orchestration, and file-write helpers into dedicated modules
 5. [x] `milestone_driver_5`: extract test-runner orchestration, composed test-lib generation, and test-runner Cargo manifest logic into a dedicated module
-6. [ ] `milestone_driver_6`: split the embedded driver tests into focused modules and add the checked maintainability guardrail script, docs, and local-validation wiring
+6. [x] `milestone_driver_6`: split the embedded driver tests into focused modules and add the checked maintainability guardrail script, docs, and local-validation wiring
 
 ## Baseline Revalidation
 - 2026-03-10: full local validation passed with `/Users/yaseralnajjar/work/sifr/codebase/scripts/run_all_tests.sh`
@@ -127,7 +127,7 @@ Loop per part: Plan -> Implement -> Validate -> Demo -> PR -> Review -> Merge ->
   - merge evidence: PR #1093 merged into `main` on 2026-03-10
 
 ### milestone_driver_6: Test Suite Decomposition and Maintainability Guardrail
-- Status: in_review
+- Status: complete
 - Implementation PR: https://github.com/yaseralnajjar/sifr/pull/1094
 - Demo target:
   - `python3 scripts/check_sifr_driver_maintainability_guardrails.py`
@@ -142,15 +142,21 @@ Loop per part: Plan -> Implement -> Validate -> Demo -> PR -> Review -> Merge ->
   - positive path: `python3 scripts/check_sifr_driver_maintainability_guardrails.py` -> passed (`sifr_driver maintainability guardrails: PASS`)
   - negative path: `SIFR_DRIVER_GUARDRAIL_EXPECT_FAILURE=1 python3 scripts/check_sifr_driver_maintainability_guardrails.py` -> passed in expected-failure mode, proving the guardrail detects over-budget files when limits are forced below the current layout
   - local gate: `/Users/yaseralnajjar/work/sifr/codebase/scripts/run_all_tests.sh --profile quick` -> passed (`verification ok: variants=64, failures=0, blocking_failures=0, non_blocking_failures=0`)
+  - merge evidence: PR #1094 merged into `main` on 2026-03-10
 
 ## External Review Passes
 
 ### review_pass_1
 - Reviewer artifact:
-  - pending
-- Status: pending
+  - `reviews/phase-31-review-pass-1.md`
+- Status: in_progress
 - Validation evidence:
-  - pending
+  - reviewer-approved findings triaged on `codex/phase31-review-pass-1`; only the `sifr_driver` clippy cleanup items were accepted as in-scope actionable follow-up work
+  - root-cause fix: `RootedEntrypointPlan::from_entrypoint`, `panic_payload_message`, and `execute_test_runner_project` now borrow immutable inputs instead of taking needless ownership, and `create_invocation_workspace` now uses the minimal `AlreadyExists` retry path without redundant unit-pattern noise
+  - positive path: `cargo test -q -p sifr_driver -- --test-threads=1` -> passed (`59 passed, 0 failed`)
+  - positive path: `cargo run -q -p sifr -- run demos/m_driver_4_build_orchestration_demo/main.sifr` -> printed `42`
+  - positive path: `cargo run -q -p sifr -- test demos/m_driver_5_test_runner_demo` -> executed the demo test runner successfully with `test_import_parity ... ok`
+  - local gate: `/Users/yaseralnajjar/work/sifr/codebase/scripts/run_all_tests.sh --profile quick` -> passed (`verification ok: variants=64, failures=0, blocking_failures=0, non_blocking_failures=0`)
 - Follow-up PR:
   - pending
 

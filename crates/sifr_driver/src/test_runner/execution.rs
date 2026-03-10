@@ -4,7 +4,7 @@ use crate::build::{create_invocation_workspace, InvocationWorkspaceGuard};
 use crate::diagnostics::{write_stderr, CompileError, CompilePhase};
 
 pub(super) fn execute_test_runner_project(
-    generated_project: GeneratedTestRunnerProject,
+    generated_project: &GeneratedTestRunnerProject,
 ) -> Result<bool, Vec<CompileError>> {
     let project_dir = create_invocation_workspace("test_runner")?;
     let _workspace_guard = InvocationWorkspaceGuard::new(project_dir.clone());

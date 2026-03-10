@@ -102,7 +102,7 @@ impl CompileError {
         }
     }
 
-    fn diagnostic_severity(&self) -> Severity {
+    fn diagnostic_severity() -> Severity {
         Severity::Error
     }
 
@@ -111,7 +111,7 @@ impl CompileError {
         CompilerDiagnostic {
             url: format!("https://sifr.dev/docs/errors/{code}"),
             code,
-            severity: self.diagnostic_severity(),
+            severity: Self::diagnostic_severity(),
             message: self.message.clone(),
             primary_span: None,
             related_spans: Vec::new(),
@@ -205,7 +205,7 @@ pub(crate) fn write_stderr(message: &str) {
     let _ = write!(stderr, "{message}");
 }
 
-fn panic_payload_message(payload: Box<dyn Any + Send>) -> String {
+fn panic_payload_message(payload: &(dyn Any + Send)) -> String {
     if let Some(msg) = payload.downcast_ref::<&str>() {
         return (*msg).to_string();
     }
@@ -223,7 +223,7 @@ pub(crate) fn run_codegen_with_boundary<T>(
     match catch_unwind(AssertUnwindSafe(f)) {
         Ok(value) => Ok(value),
         Err(payload) => Err(CompileError {
-            message: format!("{context}: {}", panic_payload_message(payload)),
+            message: format!("{context}: {}", panic_payload_message(payload.as_ref())),
             phase: CompilePhase::Codegen,
         }),
     }
