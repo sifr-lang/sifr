@@ -80,7 +80,7 @@ Loop per part: Work -> Validate -> PR -> Review -> Merge -> External review pass
 ### milestone_30_4 wave-by-wave plan and status
 - Execution mode: wave-by-wave structural remediation, validation, PR merge, reviewer pass 1, reviewer pass 2, then next wave.
 - [x] `wave_30_1a` (`env`, `bytes`, `base64`, `hashlib`) - implementation merged in https://github.com/yaseralnajjar/sifr/pull/1048; review pass 1 and pass 2 approved; wave completion and wave production-grade closures approved
-- [ ] `wave_30_1b` (`math`, `statistics`, `bisect`, `heapq`) - in progress (structural refactor + full local validation complete; implementation PR pending)
+- [ ] `wave_30_1b` (`math`, `statistics`, `bisect`, `heapq`) - in progress (implementation merged in https://github.com/yaseralnajjar/sifr/pull/1053; reviewer pass 1 remediation for legacy fixture consolidation in progress)
 - [ ] `wave_30_1c` (`string`, `textwrap`, `fnmatch`, `re`)
 - [ ] `wave_30_1d` (`collections`, `itertools`, `json`, `datetime`)
 - [ ] `wave_30_1e` (`io`, `csv`, `os`, `pathlib`, `glob`, `tempfile`, `shutil`)
@@ -129,6 +129,15 @@ status: wave closure complete (review pass 1 + review pass 2 + wave completion c
 - Wave production-grade closure output: `reviews/phase-30-m30_4-wave-30_1a-production-grade-review.md`
 - Wave production-grade closure verdict: `wave_30_1a` is production-grade complete for milestone_30_4 scope with no blockers.
 - Next step: start `wave_30_1b` milestone_30_4 structural execution loop.
+
+### milestone_30_4 wave_30_1b progress
+status: in progress (implementation merged, reviewer pass 1 remediation in flight) (2026-03-10)
+
+- Implementation PR: merged https://github.com/yaseralnajjar/sifr/pull/1053
+- Reviewer pass 1 output: `reviews/phase-30-m30_4-wave-30_1b-review-1.md`
+- Reviewer pass 1 verdict: actionable structural blockers due to fragmented legacy `stdlib_*` fixtures in wave scope.
+- Remediation scope: consolidate legacy math/statistics/bisect/heapq `stdlib_*` fixtures into canonical consolidated fixtures and remove superseded fragmented fixtures.
+- Validation status: full local suite passed after consolidation via `/Users/yaseralnajjar/work/sifr/codebase/scripts/run_all_tests.sh`.
 
 ## Part 1: `env`
 status: done (2026-03-08, PR #929)

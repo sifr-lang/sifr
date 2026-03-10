@@ -1,0 +1,169 @@
+# Consolidated stdlib statistics coverage for milestone_30_4 structure rules
+from sifr.statistics import (
+    mean, median, mode, fmean, harmonic_mean, median_low, median_high,
+    multimode, quantiles, covariance, correlation, linear_regression,
+    variance, pvariance, stdev, pstdev, StatisticsError
+)
+from sifr.test import assert_bool_vector_eq
+
+def near(v: float, target: float, tol: float) -> bool:
+    if v < target - tol:
+        return False
+    if v > target + tol:
+        return False
+    return True
+
+def compute_stats(data: list[float]) -> Result[float, StatisticsError]:
+    if len(data) == 0:
+        raise StatisticsError("empty dataset")
+    total: float = 0.0
+    for value in data:
+        total = total + value
+    return total / float(len(data))
+
+def collect_positive_actual() -> list[bool]:
+    actual: list[bool] = []
+
+    try:
+        avg: float = mean([1.0, 2.0, 3.0, 4.0, 5.0])
+        actual.append(near(avg, 3.0, 0.0001))
+    except StatisticsError as e:
+        actual.append(False)
+
+    try:
+        med: float = median([1.0, 2.0, 3.0, 4.0, 5.0])
+        actual.append(near(med, 3.0, 0.0001))
+    except StatisticsError as e:
+        actual.append(False)
+
+    try:
+        mo: int = mode([1, 2, 2, 3, 3, 3, 4])
+        actual.append(mo == 3)
+    except StatisticsError as e:
+        actual.append(False)
+
+    try:
+        fm: float = fmean([1.0, 2.0, 3.0, 4.0, 5.0])
+        actual.append(near(fm, 3.0, 0.0001))
+    except StatisticsError as e:
+        actual.append(False)
+
+    try:
+        hm: float = harmonic_mean([1.0, 2.0, 3.0, 4.0, 5.0])
+        actual.append(near(hm, 2.18978102189781, 0.0001))
+    except StatisticsError as e:
+        actual.append(False)
+
+    try:
+        even: list[float] = [1.0, 2.0, 3.0, 4.0]
+        ml: float = median_low(even)
+        mh: float = median_high(even)
+        actual.append(ml == 2.0)
+        actual.append(mh == 3.0)
+    except StatisticsError as e:
+        actual.append(False)
+        actual.append(False)
+
+    try:
+        modes: list[int] = multimode([1, 2, 2, 3, 3])
+        actual.append(len(modes) == 2)
+    except StatisticsError as e:
+        actual.append(False)
+
+    try:
+        qdata: list[float] = [1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0]
+        qs: list[float] = quantiles(qdata, 4)
+        actual.append(len(qs) == 3)
+    except StatisticsError as e:
+        actual.append(False)
+
+    x: list[float] = [1.0, 2.0, 3.0, 4.0, 5.0]
+    y: list[float] = [2.0, 4.0, 6.0, 8.0, 10.0]
+    try:
+        cov: float = covariance(x, y)
+        actual.append(near(cov, 5.0, 0.0001))
+    except StatisticsError as e:
+        actual.append(False)
+
+    try:
+        corr: float = correlation(x, y)
+        actual.append(near(corr, 1.0, 0.0001))
+    except StatisticsError as e:
+        actual.append(False)
+
+    try:
+        lr: list[float] = linear_regression(x, y)
+        slope_ok: bool = False
+        intercept_ok: bool = False
+        slope: float | None = lr[0]
+        intercept: float | None = lr[1]
+        if slope is not None:
+            slope_ok = near(slope, 2.0, 0.0001)
+        if intercept is not None:
+            intercept_ok = near(intercept, 0.0, 0.0001)
+        actual.append(len(lr) == 2 and slope_ok and intercept_ok)
+    except StatisticsError as e:
+        actual.append(False)
+
+    try:
+        v_data: list[float] = [2.0, 4.0, 4.0, 4.0, 5.0, 5.0, 7.0, 9.0]
+        v: float = variance(v_data)
+        pv: float = pvariance(v_data)
+        sd: float = stdev(v_data)
+        psd: float = pstdev(v_data)
+        actual.append(near(v, 4.571428571428571, 0.0001))
+        actual.append(near(pv, 4.0, 0.0001))
+        actual.append(near(sd, 2.138089935299395, 0.0001))
+        actual.append(near(psd, 2.0, 0.0001))
+    except StatisticsError as e:
+        actual.append(False)
+        actual.append(False)
+        actual.append(False)
+        actual.append(False)
+
+    try:
+        computed: float = compute_stats([1.0, 2.0, 3.0])
+        actual.append(near(computed, 2.0, 0.0001))
+    except StatisticsError as e:
+        actual.append(False)
+
+    return actual
+
+def collect_negative_actual_ok() -> list[bool]:
+    actual_ok: list[bool] = []
+
+    try:
+        bad_mean: float = mean([])
+        _ = str(bad_mean)
+        actual_ok.append(True)
+    except StatisticsError as e:
+        actual_ok.append(False)
+
+    try:
+        bad_hmean: float = harmonic_mean([0.0, 1.0])
+        _ = str(bad_hmean)
+        actual_ok.append(True)
+    except StatisticsError as e:
+        actual_ok.append(False)
+
+    try:
+        bad_stats: float = compute_stats([])
+        _ = str(bad_stats)
+        actual_ok.append(True)
+    except StatisticsError as e:
+        actual_ok.append(False)
+
+    return actual_ok
+
+def main():
+    positive_expected: list[bool] = [
+        True, True, True, True, True, True, True, True, True,
+        True, True, True, True, True, True, True, True
+    ]
+    positive_actual: list[bool] = collect_positive_actual()
+    assert_bool_vector_eq(positive_actual, positive_expected)
+
+    negative_expected_ok: list[bool] = [False, False, False]
+    negative_actual_ok: list[bool] = collect_negative_actual_ok()
+    assert_bool_vector_eq(negative_actual_ok, negative_expected_ok)
+    assert str("stdlib_statistics_consolidated: pass") == "stdlib_statistics_consolidated: pass"

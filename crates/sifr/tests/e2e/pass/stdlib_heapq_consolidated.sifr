@@ -1,0 +1,99 @@
+# Consolidated stdlib heapq coverage for milestone_30_4 structure rules
+from sifr.heapq import heapify, heappush, heappop, nsmallest, nlargest
+from sifr.test import assert_bool_vector_eq
+
+def collect_int_actual() -> list[bool]:
+    actual: list[bool] = []
+
+    heap: list[int] = []
+    heappush(heap, 5)
+    heappush(heap, 1)
+    heappush(heap, 3)
+    first: int | None = heappop(heap)
+    actual.append(first is not None and first == 1)
+
+    data: list[int] = [4, 2, 7, 1, 5]
+    heapify(data)
+    top: int | None = heappop(data)
+    actual.append(top is not None and top == 1)
+
+    items: list[int] = [9, 3, 7, 1, 5]
+    small: list[int] = nsmallest(3, items)
+    big: list[int] = nlargest(2, items)
+    actual.append(str(small) == "[1, 3, 5]")
+    actual.append(str(big) == "[9, 7]")
+    actual.append(str(items) == "[9, 3, 7, 1, 5]")
+
+    empty_heap: list[int] = []
+    actual.append(heappop(empty_heap) is None)
+
+    inplace: list[int] = [5, 3, 8, 1, 2, 7, 4]
+    heapify(inplace)
+    heappush(inplace, 0)
+    min_val: int | None = heappop(inplace)
+    actual.append(min_val is not None and min_val == 0)
+    actual.append(len(inplace) == 7)
+    return actual
+
+def collect_bigint_actual() -> list[bool]:
+    actual: list[bool] = []
+    data: list[bigint] = [bigint(30), bigint(10), bigint(40), bigint(20)]
+    heapify(data)
+    first: bigint | None = heappop(data)
+    actual.append(first is not None and first == bigint(10))
+    smallest: list[bigint] = nsmallest(2, data)
+    smallest_ok: bool = smallest == [bigint(20), bigint(30)]
+    actual.append(smallest_ok)
+    return actual
+
+def collect_float_actual() -> list[bool]:
+    actual: list[bool] = []
+    data: list[float] = [3.3, 1.1, 4.4, 1.5, 2.2]
+    heapify(data)
+    first: float | None = heappop(data)
+    actual.append(first is not None and first == 1.1)
+
+    data2: list[float] = [5.5, 1.1, 3.3, 2.2, 4.4]
+    smallest: list[float] = nsmallest(3, data2)
+    actual.append(smallest == [1.1, 2.2, 3.3])
+    return actual
+
+def collect_rank_actual() -> list[bool]:
+    actual: list[bool] = []
+    data: list[int] = [5, 1, 9, 3, 7]
+
+    big: list[int] = nlargest(3, data)
+    first: int | None = big[0]
+    second: int | None = big[1]
+    third: int | None = big[2]
+    actual.append(len(big) == 3)
+    actual.append(first is not None and first == 9)
+    actual.append(second is not None and second == 7)
+    actual.append(third is not None and third == 5)
+
+    small: list[int] = nsmallest(2, data)
+    s1: int | None = small[0]
+    s2: int | None = small[1]
+    actual.append(len(small) == 2)
+    actual.append(s1 is not None and s1 == 1)
+    actual.append(s2 is not None and s2 == 3)
+    return actual
+
+def append_all(mut target: list[bool], values: list[bool]):
+    for value in values:
+        target.append(value)
+
+def main():
+    expected: list[bool] = [
+        True, True, True, True, True, True, True, True,
+        True, True,
+        True, True,
+        True, True, True, True, True, True, True
+    ]
+    actual: list[bool] = []
+    append_all(actual, collect_int_actual())
+    append_all(actual, collect_bigint_actual())
+    append_all(actual, collect_float_actual())
+    append_all(actual, collect_rank_actual())
+    assert_bool_vector_eq(actual, expected)
+    assert str("stdlib_heapq_consolidated: pass") == "stdlib_heapq_consolidated: pass"

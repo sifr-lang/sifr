@@ -1,8 +1,0 @@
-# Test sifr.bisect insort_right -- in-place API
-
-from sifr.bisect import insort_right
-
-def main():
-    data: list[int] = [1, 2, 3, 4, 5]
-    insort_right(data, 3)
-    assert str(data) == '[1, 2, 3, 3, 4, 5]'
