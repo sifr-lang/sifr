@@ -1,0 +1,44 @@
+# Consolidated stdlib datetime coverage for milestone_30_4 structure rules
+from sifr.datetime import now, from_timestamp, datetime, date
+from sifr.test import assert_bool_vector_eq
+
+def collect_now_and_timestamp_actual() -> list[bool]:
+    actual: list[bool] = []
+    dt_now: datetime = now()
+    iso_now: str = dt_now.isoformat()
+    actual.append(len(iso_now) > 0)
+
+    epoch_ok: bool = False
+    try:
+        ts_dt: str = from_timestamp(0.0)
+        epoch_ok = len(ts_dt) > 0
+    except ValueError as e:
+        _ = str("error: " + e.message)
+    actual.append(epoch_ok)
+    return actual
+
+def collect_datetime_class_actual() -> list[bool]:
+    actual: list[bool] = []
+    dt: datetime = datetime(2024, 1, 15, 10, 30, 0)
+    actual.append(dt.isoformat() == "2024-01-15T10:30:00")
+    actual.append(dt.year == 2024)
+    actual.append(dt.month == 1)
+    actual.append(dt.day == 15)
+    ts: int = dt.timestamp()
+    actual.append(ts > 0)
+
+    d: date = date(2024, 1, 15)
+    actual.append(d.isoformat() == "2024-01-15")
+    return actual
+
+def append_all(mut target: list[bool], values: list[bool]):
+    for value in values:
+        target.append(value)
+
+def main():
+    expected: list[bool] = [True, True, True, True, True, True, True, True]
+    actual: list[bool] = []
+    append_all(actual, collect_now_and_timestamp_actual())
+    append_all(actual, collect_datetime_class_actual())
+    assert_bool_vector_eq(actual, expected)
+    assert str("stdlib_datetime_consolidated: pass") == "stdlib_datetime_consolidated: pass"

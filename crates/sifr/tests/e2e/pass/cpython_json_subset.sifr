@@ -2,13 +2,8 @@
 from sifr.json import loads, json_dumps
 from sifr.test import assert_bool_vector_eq
 
-def main():
-    expected: list[bool] = [
-        True, True, True, True, True, True,
-        True, True, True, True, True, True
-    ]
+def collect_loads_actual() -> list[bool]:
     actual: list[bool] = []
-
     obj_ok: bool = False
     arr_ok: bool = False
     num_ok: bool = False
@@ -36,7 +31,10 @@ def main():
     actual.append(bool_ok)
     actual.append(null_ok)
     actual.append(str_ok)
+    return actual
 
+def collect_dumps_actual() -> list[bool]:
+    actual: list[bool] = []
     actual.append(json_dumps("hello") == "\"hello\"")
     actual.append(json_dumps(42) == "42")
     actual.append(json_dumps(True) == "true")
@@ -48,7 +46,10 @@ def main():
     except JSONDecodeError as e:
         _ = str(e.message)
     actual.append(roundtrip_ok)
+    return actual
 
+def collect_negative_actual() -> list[bool]:
+    actual: list[bool] = []
     invalid_open_brace_rejected: bool = False
     try:
         _bad1: str = loads("{")
@@ -64,6 +65,21 @@ def main():
     except JSONDecodeError as e:
         invalid_literal_rejected = len(e.message) > 0
     actual.append(invalid_literal_rejected)
+    return actual
+
+def append_all(mut target: list[bool], values: list[bool]):
+    for value in values:
+        target.append(value)
+
+def main():
+    expected: list[bool] = [
+        True, True, True, True, True, True,
+        True, True, True, True, True, True
+    ]
+    actual: list[bool] = []
+    append_all(actual, collect_loads_actual())
+    append_all(actual, collect_dumps_actual())
+    append_all(actual, collect_negative_actual())
 
     assert_bool_vector_eq(actual, expected)
     assert str("cpython_json_subset: pass") == "cpython_json_subset: pass"

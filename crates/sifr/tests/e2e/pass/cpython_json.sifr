@@ -1,64 +1,89 @@
 # CPython test_json — ported assertions for sifr.json
 # Uses CPython-compatible names: loads (new), json_dumps (no alias available for dumps)
-from sifr.test import assert_eq
+from sifr.test import assert_bool_vector_eq
 from sifr.json import loads, json_dumps
 
-def main():
+def collect_loads_actual() -> list[bool]:
+    actual: list[bool] = []
     try:
-        # --- loads (CPython-compatible alias for json_loads) ---
         r1: str = loads("{\"a\":1}")
-        assert_eq(r1, "{\"a\":1}")
         r2: str = loads("[1,2,3]")
-        assert_eq(r2, "[1,2,3]")
         r3: str = loads("42")
-        assert_eq(r3, "42")
         r4: str = loads("true")
-        assert_eq(r4, "true")
         r5: str = loads("false")
-        assert_eq(r5, "false")
         r6: str = loads("null")
-        assert_eq(r6, "null")
         r7: str = loads("[]")
-        assert_eq(r7, "[]")
         r8: str = loads("{}")
-        assert_eq(r8, "{}")
         r9: str = loads("3.14")
-        assert_eq(r9, "3.14")
-
-        # String values include quotes in the output
         r10: str = loads("\"hello\"")
-        assert_eq(r10, "\"hello\"")
         r11: str = loads("\"\"")
-        assert_eq(r11, "\"\"")
+        actual.append(r1 == "{\"a\":1}")
+        actual.append(r2 == "[1,2,3]")
+        actual.append(r3 == "42")
+        actual.append(r4 == "true")
+        actual.append(r5 == "false")
+        actual.append(r6 == "null")
+        actual.append(r7 == "[]")
+        actual.append(r8 == "{}")
+        actual.append(r9 == "3.14")
+        actual.append(r10 == "\"hello\"")
+        actual.append(r11 == "\"\"")
     except JSONDecodeError as e:
-        assert str("unexpected error: " + e.message) == 'cpython_json: all 23 assertions passed'
+        count: int = 0
+        while count < 11:
+            actual.append(False)
+            count = count + 1
+    return actual
 
-    # --- json_dumps (no CPython alias available due to Any type) ---
-    assert_eq(json_dumps("hello"), "\"hello\"")
-    assert_eq(json_dumps(""), "\"\"")
-    assert_eq(json_dumps(42), "42")
-    assert_eq(json_dumps(0), "0")
-    assert_eq(json_dumps(True), "true")
-    assert_eq(json_dumps(False), "false")
-    assert_eq(json_dumps(3.14), "3.14")
+def collect_dumps_actual() -> list[bool]:
+    actual: list[bool] = []
+    actual.append(json_dumps("hello") == "\"hello\"")
+    actual.append(json_dumps("") == "\"\"")
+    actual.append(json_dumps(42) == "42")
+    actual.append(json_dumps(0) == "0")
+    actual.append(json_dumps(True) == "true")
+    actual.append(json_dumps(False) == "false")
+    actual.append(json_dumps(3.14) == "3.14")
+    return actual
 
-    # Roundtrip: loads(dumps(x)) preserves structure for non-strings
+def collect_roundtrip_actual() -> list[bool]:
+    actual: list[bool] = []
     try:
         s2: str = json_dumps(42)
         r12: str = loads(s2)
-        assert_eq(r12, "42")
+        actual.append(r12 == "42")
 
         s3: str = json_dumps(True)
         r13: str = loads(s3)
-        assert_eq(r13, "true")
+        actual.append(r13 == "true")
 
         s4: str = json_dumps(False)
         r14: str = loads(s4)
-        assert_eq(r14, "false")
+        actual.append(r14 == "false")
 
         s5: str = json_dumps(3.14)
         r15: str = loads(s5)
-        assert_eq(r15, "3.14")
+        actual.append(r15 == "3.14")
     except JSONDecodeError as e:
-        _ = str("unexpected error: " + e.message)
+        actual.append(False)
+        actual.append(False)
+        actual.append(False)
+        actual.append(False)
+    return actual
+
+def append_all(mut target: list[bool], values: list[bool]):
+    for value in values:
+        target.append(value)
+
+def main():
+    expected: list[bool] = [
+        True, True, True, True, True, True, True, True, True, True, True,
+        True, True, True, True, True, True, True,
+        True, True, True, True
+    ]
+    actual: list[bool] = []
+    append_all(actual, collect_loads_actual())
+    append_all(actual, collect_dumps_actual())
+    append_all(actual, collect_roundtrip_actual())
+    assert_bool_vector_eq(actual, expected)
     _ = str("cpython_json: all 23 assertions passed")

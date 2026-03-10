@@ -1,25 +1,31 @@
+# Consolidated stdlib json coverage for milestone_30_4 structure rules
 from sifr.json import loads, json_dumps
 from sifr.test import assert_bool_vector_eq
 
-def collect_positive_actual() -> list[bool]:
+def collect_parse_actual() -> list[bool]:
     actual: list[bool] = []
-    parse_obj_ok: bool = False
-    parse_arr_ok: bool = False
-    roundtrip_ok: bool = False
     try:
         parsed_obj: str = loads("{\"name\":\"sifr\"}")
         parsed_arr: str = loads("[1,2,3]")
+        actual.append(parsed_obj == "{\"name\":\"sifr\"}")
+        actual.append(parsed_arr == "[1,2,3]")
+    except JSONDecodeError as e:
+        actual.append(False)
+        actual.append(False)
+    return actual
+
+def collect_dump_actual() -> list[bool]:
+    actual: list[bool] = []
+    actual.append(json_dumps("hello") == "\"hello\"")
+    actual.append(json_dumps(False) == "false")
+
+    roundtrip_ok: bool = False
+    try:
         parsed_roundtrip: str = loads(json_dumps(7))
-        parse_obj_ok = parsed_obj == "{\"name\":\"sifr\"}"
-        parse_arr_ok = parsed_arr == "[1,2,3]"
         roundtrip_ok = parsed_roundtrip == "7"
     except JSONDecodeError as e:
         _ = str(e.message)
-    actual.append(parse_obj_ok)
-    actual.append(parse_arr_ok)
     actual.append(roundtrip_ok)
-    actual.append(json_dumps("hello") == "\"hello\"")
-    actual.append(json_dumps(False) == "false")
     return actual
 
 def collect_negative_actual() -> list[bool]:
@@ -40,8 +46,8 @@ def append_all(mut target: list[bool], values: list[bool]):
 def main():
     expected: list[bool] = [True, True, True, True, True, True]
     actual: list[bool] = []
-    append_all(actual, collect_positive_actual())
+    append_all(actual, collect_parse_actual())
+    append_all(actual, collect_dump_actual())
     append_all(actual, collect_negative_actual())
-
     assert_bool_vector_eq(actual, expected)
-    print("m30_1d json parity demo: pass")
+    assert str("stdlib_json_consolidated: pass") == "stdlib_json_consolidated: pass"

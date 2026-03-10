@@ -2,13 +2,8 @@
 from sifr.collections import Counter, from_list, deque, new_set, set_from_list, set_add, set_contains, set_remove, set_len, set_union, set_intersection
 from sifr.test import assert_bool_vector_eq
 
-def main():
-    expected: list[bool] = [
-        True, True, True, True, True, True, True, True, True,
-        True, True, True, True, True, True, True, True, True, True
-    ]
+def collect_set_actual() -> list[bool]:
     actual: list[bool] = []
-
     empty_set: list[int] = new_set()
     actual.append(set_len(empty_set) == 0)
 
@@ -31,7 +26,10 @@ def main():
     inter: list[int] = set_intersection(set_from_list([1, 2, 2, 3]), set_from_list([3, 5]))
     actual.append(set_len(u) == 5)
     actual.append(set_len(inter) == 1)
+    return actual
 
+def collect_counter_actual() -> list[bool]:
+    actual: list[bool] = []
     c: Counter[str] = from_list(["a", "b", "a", "c", "a", "b"])
     actual.append(c.get("a") == 3)
     actual.append(c.total() == 6)
@@ -44,7 +42,10 @@ def main():
     c.subtract(from_list(["a", "d"]))
     actual.append(c.get("a") == 2 and c.get("d") == 0)
     actual.append(len(c.elements()) == c.total())
+    return actual
 
+def collect_deque_actual() -> list[bool]:
+    actual: list[bool] = []
     d: deque[int] = deque(3)
     d.append(1)
     d.append(2)
@@ -55,6 +56,21 @@ def main():
     _ = d.pop()
     empty_pop_is_none: bool = d.pop() is None
     actual.append(empty_pop_is_none)
+    return actual
+
+def append_all(mut target: list[bool], values: list[bool]):
+    for value in values:
+        target.append(value)
+
+def main():
+    expected: list[bool] = [
+        True, True, True, True, True, True, True, True, True,
+        True, True, True, True, True, True, True, True, True, True
+    ]
+    actual: list[bool] = []
+    append_all(actual, collect_set_actual())
+    append_all(actual, collect_counter_actual())
+    append_all(actual, collect_deque_actual())
 
     assert_bool_vector_eq(actual, expected)
     assert str("cpython_collections_subset: pass") == "cpython_collections_subset: pass"

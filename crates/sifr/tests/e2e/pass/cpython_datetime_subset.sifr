@@ -2,13 +2,8 @@
 from sifr.datetime import timedelta, datetime, date, time, timezone, now, from_timestamp
 from sifr.test import assert_bool_vector_eq
 
-def main():
-    expected: list[bool] = [
-        True, True, True, True, True, True, True,
-        True, True, True, True, True, True, True
-    ]
+def collect_timedelta_actual() -> list[bool]:
     actual: list[bool] = []
-
     td0: timedelta = timedelta(1, 0)
     td1: timedelta = timedelta(0, 3600)
     td_sum: timedelta = td0 + td1
@@ -17,7 +12,10 @@ def main():
     actual.append(td_sum.total_seconds() == 90000)
     actual.append(td_diff.total_seconds() == 82800)
     actual.append(timedelta(1, 0) == timedelta(0, 86400))
+    return actual
 
+def collect_datetime_actual() -> list[bool]:
+    actual: list[bool] = []
     dt: datetime = datetime(2024, 1, 15, 10, 30, 0)
     actual.append(dt.isoformat() == "2024-01-15T10:30:00")
     actual.append(dt.timestamp() > 0)
@@ -28,13 +26,19 @@ def main():
     actual.append(d.isoformat() == "2024-01-15")
     t: time = time(10, 30, 45)
     actual.append(t.isoformat() == "10:30:45")
+    return actual
 
+def collect_timezone_now_actual() -> list[bool]:
+    actual: list[bool] = []
     actual.append(str(timezone(9000)) == "UTC+02:30")
     actual.append(str(timezone(0)) == "UTC")
 
     current: datetime = now()
     actual.append(current.year > 2020 and current.month >= 1 and current.month <= 12 and current.day >= 1 and current.day <= 31)
+    return actual
 
+def collect_from_timestamp_actual() -> list[bool]:
+    actual: list[bool] = []
     epoch_ok: bool = False
     try:
         ts0: str = from_timestamp(0.0)
@@ -50,6 +54,22 @@ def main():
     except ValueError as e:
         invalid_ts_rejected = len(e.message) > 0
     actual.append(invalid_ts_rejected)
+    return actual
+
+def append_all(mut target: list[bool], values: list[bool]):
+    for value in values:
+        target.append(value)
+
+def main():
+    expected: list[bool] = [
+        True, True, True, True, True, True, True,
+        True, True, True, True, True, True, True
+    ]
+    actual: list[bool] = []
+    append_all(actual, collect_timedelta_actual())
+    append_all(actual, collect_datetime_actual())
+    append_all(actual, collect_timezone_now_actual())
+    append_all(actual, collect_from_timestamp_actual())
 
     assert_bool_vector_eq(actual, expected)
     assert str("cpython_datetime_subset: pass") == "cpython_datetime_subset: pass"
