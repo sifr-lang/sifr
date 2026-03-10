@@ -124,6 +124,13 @@ pub struct CodegenResult {
     pub lowering_stats: LoweringStats,
 }
 
+/// Result of multi-module code generation, including aggregate dependency metadata.
+pub struct MultiModuleCodegenResult {
+    pub rust_files: HashMap<String, String>,
+    pub used_stdlib_modules: HashSet<String>,
+    pub required_crates: HashSet<String>,
+}
+
 #[derive(Debug, Clone, Copy, Default)]
 pub struct LoweringStats {
     pub stmt_total: u64,
@@ -549,10 +556,45 @@ pub fn generate_rust_with_stdlib(module: &HirModule, stdlib_code: &StdlibCode) -
     }
 }
 
-/// Generate Rust source code for a multi-module project.
-/// Returns a map of filename -> Rust source code.
-pub fn generate_rust_multi(modules: &[(&str, &HirModule)]) -> HashMap<String, String> {
+fn extend_transitive_stdlib_modules(
+    used_stdlib_modules: &HashSet<String>,
+    stdlib_code: &StdlibCode,
+) -> HashSet<String> {
+    let mut all_used_modules = used_stdlib_modules.clone();
+    for module_name in used_stdlib_modules {
+        if let Some(deps) = stdlib_code.transitive_deps.get(module_name) {
+            all_used_modules.extend(deps.iter().cloned());
+        }
+    }
+    all_used_modules
+}
+
+fn required_crates_from_import_needs(
+    import_needs: ir_imports::IrImportNeeds,
+    intrinsic_registry_crates: HashSet<String>,
+) -> HashSet<String> {
+    let mut crates = intrinsic_registry_crates;
+    if import_needs.runtime.needs_bigint {
+        crates.insert("num-bigint".to_string());
+        crates.insert("num-traits".to_string());
+    }
+    if import_needs.runtime.needs_decimal {
+        crates.insert("rust_decimal".to_string());
+    }
+    if import_needs.runtime.needs_bigdecimal {
+        crates.insert("bigdecimal".to_string());
+    }
+    crates
+}
+
+/// Generate Rust source code for a multi-module project, returning aggregate dependency metadata.
+pub fn generate_rust_multi_with_metadata(
+    modules: &[(&str, &HirModule)],
+    stdlib_code: &StdlibCode,
+) -> MultiModuleCodegenResult {
     let mut files = HashMap::new();
+    let mut used_stdlib_modules = HashSet::new();
+    let mut required_crates = HashSet::new();
 
     for (module_name, module) in modules {
         let mut emitter = RustEmitter::new();
@@ -658,9 +700,30 @@ pub fn generate_rust_multi(modules: &[(&str, &HirModule)]) -> HashMap<String, St
         let result = Renderer::new().render_file(&rust_file);
 
         files.insert((*module_name).to_string(), result);
+        used_stdlib_modules.extend(extend_transitive_stdlib_modules(
+            &emitter.used_stdlib_modules,
+            stdlib_code,
+        ));
+        required_crates.extend(required_crates_from_import_needs(
+            import_needs,
+            emitter.intrinsic_registry_crates,
+        ));
     }
 
-    files
+    MultiModuleCodegenResult {
+        rust_files: files,
+        used_stdlib_modules,
+        required_crates,
+    }
+}
+
+/// Generate Rust source code for a multi-module project.
+/// Returns a map of filename -> Rust source code.
+pub fn generate_rust_multi(modules: &[(&str, &HirModule)]) -> HashMap<String, String> {
+    generate_rust_multi_with_metadata(modules, &StdlibCode::default())
+        .rust_files
+        .into_iter()
+        .collect()
 }
 
 /// Generate a complete Rust project (Cargo.toml + main.rs content).

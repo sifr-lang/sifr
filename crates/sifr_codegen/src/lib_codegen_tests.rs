@@ -846,6 +846,81 @@ fn test_generate_rust_multi_skips_stdlib_use_paths_in_non_main_modules() {
 }
 
 #[test]
+fn test_generate_rust_multi_with_metadata_aggregates_reachable_dependency_closure() {
+    let main_module = HirModule {
+        functions: vec![HirFunction {
+            name: "main".to_string(),
+            params: vec![],
+            return_type: Type::None,
+            body: vec![HirStmt::Expr {
+                expr: HirExpr::Call {
+                    func: "helper".to_string(),
+                    args: vec![],
+                    ty: Type::BigInt,
+                },
+            }],
+            method_kind: MethodKind::Regular,
+            decorators: vec![],
+            type_params: vec![],
+        }],
+        classes: vec![],
+        imports: vec![HirImport {
+            module: "helper".to_string(),
+            names: vec!["helper".to_string()],
+            aliases: vec![],
+        }],
+        constants: vec![],
+        generic_functions: std::collections::HashMap::new(),
+        type_param_bounds: std::collections::HashMap::new(),
+    };
+
+    let helper_module = HirModule {
+        functions: vec![HirFunction {
+            name: "helper".to_string(),
+            params: vec![],
+            return_type: Type::BigInt,
+            body: vec![HirStmt::Return {
+                value: Some(HirExpr::Call {
+                    func: "bigint".to_string(),
+                    args: vec![HirExpr::IntLiteral(1)],
+                    ty: Type::BigInt,
+                }),
+            }],
+            method_kind: MethodKind::Regular,
+            decorators: vec![],
+            type_params: vec![],
+        }],
+        classes: vec![],
+        imports: vec![HirImport {
+            module: "sifr.statistics".to_string(),
+            names: vec!["mean".to_string()],
+            aliases: vec![],
+        }],
+        constants: vec![],
+        generic_functions: std::collections::HashMap::new(),
+        type_param_bounds: std::collections::HashMap::new(),
+    };
+
+    let mut stdlib_code = StdlibCode::default();
+    stdlib_code.transitive_deps.insert(
+        "sifr.statistics".to_string(),
+        HashSet::from(["sifr.math".to_string()]),
+    );
+
+    let result = generate_rust_multi_with_metadata(
+        &[("main", &main_module), ("helper", &helper_module)],
+        &stdlib_code,
+    );
+
+    assert!(result.rust_files.contains_key("main"));
+    assert!(result.rust_files.contains_key("helper"));
+    assert!(result.used_stdlib_modules.contains("sifr.statistics"));
+    assert!(result.used_stdlib_modules.contains("sifr.math"));
+    assert!(result.required_crates.contains("num-bigint"));
+    assert!(result.required_crates.contains("num-traits"));
+}
+
+#[test]
 fn test_nested_break_without_inner_else_does_not_set_outer_broke_flag() {
     let int_list_ty = Type::List(Box::new(Type::Int));
     let module = HirModule {
