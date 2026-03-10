@@ -82,7 +82,7 @@ Loop per part: Work -> Validate -> PR -> Review -> Merge -> External review pass
 - [x] `wave_30_1a` (`env`, `bytes`, `base64`, `hashlib`) - implementation merged in https://github.com/yaseralnajjar/sifr/pull/1048; review pass 1 and pass 2 approved; wave completion and wave production-grade closures approved
 - [x] `wave_30_1b` (`math`, `statistics`, `bisect`, `heapq`) - complete (implementation merged in https://github.com/yaseralnajjar/sifr/pull/1053; reviewer pass 1 remediation merged in https://github.com/yaseralnajjar/sifr/pull/1054; reviewer pass 2 approved; wave completion closure and production-grade closure approved)
 - [x] `wave_30_1c` (`string`, `textwrap`, `fnmatch`, `re`) - complete (implementation merged in https://github.com/yaseralnajjar/sifr/pull/1058; reviewer pass 1 and pass 2 approved; wave completion closure and production-grade closure approved)
-- [ ] `wave_30_1d` (`collections`, `itertools`, `json`, `datetime`) - in progress (implementation merged in https://github.com/yaseralnajjar/sifr/pull/1063; reviewer pass 1 remediation merged in https://github.com/yaseralnajjar/sifr/pull/1064; reviewer pass 2 approved; pending wave completion and wave production-grade closure cycles)
+- [ ] `wave_30_1d` (`collections`, `itertools`, `json`, `datetime`) - in progress (implementation merged in https://github.com/yaseralnajjar/sifr/pull/1063; reviewer pass 1 remediation merged in https://github.com/yaseralnajjar/sifr/pull/1064; reviewer pass 2 approved; wave completion closure review recorded; pending wave production-grade closure cycle)
 - [ ] `wave_30_1e` (`io`, `csv`, `os`, `pathlib`, `glob`, `tempfile`, `shutil`)
 - [ ] `wave_30_1f` (`logging`, `time`, `timeit`, `platform`, `uuid`)
 
@@ -179,7 +179,9 @@ status: review pass 1 + review pass 2 complete, pending wave closure cycles (202
 - Supplemental remediation action: expanded `stdlib_datetime_consolidated.sifr` to include `timedelta` arithmetic checks, `timezone` representation/offset checks, and `today()` formatting checks; revalidated with demo run plus full quick-profile gate.
 - Supplemental reviewer output: `reviews/phase-30-m30_4-wave-30_1d-review-2a.md`
 - Supplemental reviewer-2a verdict: production-grade approved with no remaining blockers after supplemental remediation.
-- Next step: run wave completion closure review and wave production-grade closure review for `wave_30_1d`.
+- Wave completion closure output: `reviews/phase-30-m30_4-wave-30_1d-completion-review-a.md`
+- Wave completion closure verdict: code-level blockers are cleared and completion review is recorded; final wave closure remains pending the required wave production-grade closure cycle.
+- Next step: run wave production-grade closure review for `wave_30_1d`.
 
 ## Part 1: `env`
 status: done (2026-03-08, PR #929)
