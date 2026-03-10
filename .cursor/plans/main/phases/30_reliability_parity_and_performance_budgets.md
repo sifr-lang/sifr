@@ -204,6 +204,10 @@ In particular:
   - `shutil`
 - Why:
   - Shared file, path, and runtime-boundary semantics.
+- Wave-specific handling notes:
+  - For this wave, parity fixtures may use a helper-oriented boolean assertion vector as an explicit module-specific extension to the baseline `inputs/expected/actual` string-vector format.
+  - Rationale: the approved scope is dominated by filesystem effects and path-shape semantics where literal string-vector snapshots are brittle and lower-signal than explicit semantic pass/fail checks.
+  - Constraint: this extension is allowed only when fixtures keep deterministic helper ordering, orchestration-only `main()`, and explicit positive/negative/safety sections documented in the phase execution tracker.
 - CPython references:
   - `io`: `/Users/yaseralnajjar/work/sifr/cpython/Lib/io.py`, `/Users/yaseralnajjar/work/sifr/cpython/Lib/_pyio.py`, `/Users/yaseralnajjar/work/sifr/cpython/Lib/test/test_io/`, `/Users/yaseralnajjar/work/sifr/cpython/Modules/_io/_iomodule.c`, `/Users/yaseralnajjar/work/sifr/cpython/Modules/_io/fileio.c`, `/Users/yaseralnajjar/work/sifr/cpython/Modules/_io/textio.c`, `/Users/yaseralnajjar/work/sifr/cpython/Modules/_io/bufferedio.c`, `/Users/yaseralnajjar/work/sifr/cpython/Modules/_io/stringio.c`, `/Users/yaseralnajjar/work/sifr/cpython/Modules/_io/bytesio.c`
   - `csv`: `/Users/yaseralnajjar/work/sifr/cpython/Lib/csv.py`, `/Users/yaseralnajjar/work/sifr/cpython/Lib/test/test_csv.py`, `/Users/yaseralnajjar/work/sifr/cpython/Modules/_csv.c`

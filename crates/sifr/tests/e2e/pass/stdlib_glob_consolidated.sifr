@@ -5,6 +5,38 @@ from sifr.os import run_command
 from sifr.test import assert_bool_vector_eq
 
 
+def collect_pattern_actual(base: str) -> list[bool]:
+    actual: list[bool] = []
+    txt: list[str] = glob(base, "*.txt")
+    txt_ok: bool = len(txt) == 2 and txt[0] == "a.txt" and txt[1] == "b.txt"
+    actual.append(txt_ok)
+
+    hidden: list[str] = glob(base, ".*.txt")
+    hidden_ok: bool = len(hidden) == 1 and hidden[0] == ".hidden.txt"
+    actual.append(hidden_ok)
+
+    one_char_txt: list[str] = glob(base, "?.txt")
+    one_char_ok: bool = len(one_char_txt) == 2 and one_char_txt[0] == "a.txt" and one_char_txt[1] == "b.txt"
+    actual.append(one_char_ok)
+
+    dirs: list[str] = glob(base, "sub*")
+    dirs_ok: bool = len(dirs) == 1 and dirs[0] == "subdir"
+    actual.append(dirs_ok)
+    return actual
+
+
+def collect_missing_path_actual(base: str) -> list[bool]:
+    actual: list[bool] = []
+    none_found: list[str] = glob(base + "_missing", "*.txt")
+    actual.append(len(none_found) == 0)
+    return actual
+
+
+def append_all(mut target: list[bool], values: list[bool]):
+    for value in values:
+        target.append(value)
+
+
 def main():
     expected: list[bool] = [True, True, True, True, True]
     actual: list[bool] = []
@@ -16,25 +48,8 @@ def main():
         _w2: None = write_text(base + "/b.txt", "b")
         _w3: None = write_text(base + "/alpha.log", "log")
         _w4: None = write_text(base + "/.hidden.txt", "hidden")
-
-        txt: list[str] = glob(base, "*.txt")
-        txt_ok: bool = len(txt) == 2 and txt[0] == "a.txt" and txt[1] == "b.txt"
-        actual.append(txt_ok)
-
-        hidden: list[str] = glob(base, ".*.txt")
-        hidden_ok: bool = len(hidden) == 1 and hidden[0] == ".hidden.txt"
-        actual.append(hidden_ok)
-
-        one_char_txt: list[str] = glob(base, "?.txt")
-        one_char_ok: bool = len(one_char_txt) == 2 and one_char_txt[0] == "a.txt" and one_char_txt[1] == "b.txt"
-        actual.append(one_char_ok)
-
-        dirs: list[str] = glob(base, "sub*")
-        dirs_ok: bool = len(dirs) == 1 and dirs[0] == "subdir"
-        actual.append(dirs_ok)
-
-        none_found: list[str] = glob(base + "_missing", "*.txt")
-        actual.append(len(none_found) == 0)
+        append_all(actual, collect_pattern_actual(base))
+        append_all(actual, collect_missing_path_actual(base))
     except IOError as e:
         _ = str(e.message)
         actual = [False, False, False, False, False]
