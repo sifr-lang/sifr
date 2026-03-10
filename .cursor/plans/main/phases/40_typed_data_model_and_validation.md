@@ -3,20 +3,24 @@
 > Note: Needs more planning before execution (which pydantic subset to target, scope boundaries, parity target depth, and acceptance gates are still draft-level).
 
 ## Objective
-Introduce a dedicated typed model layer with validation semantics, stable error behavior, and explicit pydantic-parity boundaries.
+Introduce a dedicated typed model layer with serialization and validation semantics, stable error behavior, and explicit pydantic-parity boundaries.
 
 ## Depends on
 - Phase 39
 
 ## Milestones
 
-### milestone_40_1: Typed Model Core
+### milestone_40_1: Typed Model Core and Serialization
 - Scope:
   - Class-to-model mapping with field metadata and defaults.
+  - Auto-derive `Serialize`/`Deserialize` for model-backed classes without manual annotation.
   - Optional/union/list/dict model handling.
-  - Baseline serialization/deserialization (`dumps`/`loads`).
+  - Baseline serialization/deserialization (`dumps`/`loads`) with typed JSON roundtrips independent of web extractors.
 - Definition of done:
   - Typed model core is usable independent of async/web runtime concerns.
+  - `dumps(obj)` serializes model-backed classes to JSON strings.
+  - `loads(s, T)` deserializes JSON strings to typed models and returns `Result[T, JSONDecodeError]`.
+  - Nested models, lists, dicts, optionals, and unions serialize and deserialize correctly.
 
 ### milestone_40_2: Validation Engine
 - Scope:
@@ -54,7 +58,7 @@ Introduce a dedicated typed model layer with validation semantics, stable error 
   - Validation evidence must be recorded in the phase execution checklist issue before merge.
   - Validation evidence for every milestone must include at least one positive-path case and one negative-path case mapped to the milestone validation planning goals.
 - Validation planning goals:
-  - `milestone_40_1` (Typed Model Core): validation goals cover: Class-to-model mapping with field metadata and defaults; Optional/union/list/dict model handling; Baseline serialization/deserialization (`dumps`/`loads`). Include negative-path goals that catch regressions against these guarantees.
+  - `milestone_40_1` (Typed Model Core and Serialization): validation goals cover: Class-to-model mapping with field metadata and defaults; Auto-derive `Serialize`/`Deserialize`; Optional/union/list/dict model handling; Baseline serialization/deserialization (`dumps`/`loads`) and typed JSON roundtrip behavior. Include negative-path goals that catch regressions against these guarantees.
   - `milestone_40_2` (Validation Engine): validation goals cover: Strict vs coercion modes; Nested model validation and collection constraints; Field/model validator hooks with deterministic order. Include negative-path goals that catch regressions against these guarantees.
   - `milestone_40_3` (Error Model and Diagnostics Contract): validation goals cover: Structured validation errors (path, code, message, context); Stable parse/validation error-code contract. Include negative-path goals that catch regressions against these guarantees.
   - `milestone_40_4` (Parity and Compatibility Matrix): validation goals cover: Feature matrix per capability: `parity`, `intentional-diff`, `unsupported`; Port representative pydantic behavior tests. Include negative-path goals that catch regressions against these guarantees.

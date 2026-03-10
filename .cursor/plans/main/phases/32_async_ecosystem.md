@@ -44,35 +44,6 @@ status: pending
 
 ---
 
-### milestone_32_2: Typed Serialization (Core)
-
-status: pending
-
-**Goal:** Web-independent typed serialization. This does NOT include web extractors — those are delivered in a later web phase. Typed serde is kept in the async phase to make typed payload handling available early.
-
-**Depends on:** milestone_32_1 (async runtime must exist for async-compatible serde patterns; generics from Phase 13 enable `loads(s, T)`)
-
-### Work Items
-
-- Auto-derive `Serialize`/`Deserialize` on all classes
-- `dumps(obj)` serializes any class to JSON string
-- `loads(s, T)` deserializes JSON string to typed class, returns `Result[T, JSONDecodeError]`
-- Nested classes, lists, dicts, optionals, unions serialize correctly
-- E2E tests for typed JSON roundtrip independent of any web framework
-
-### Definition of Done (milestone_32_2)
-
-- Classes auto-derive `Serialize`/`Deserialize` — no manual annotation needed
-- `dumps(obj)` serializes any class to JSON string
-- `loads(s, T)` deserializes JSON string to typed class, returns `Result[T, JSONDecodeError]`
-- Nested classes, lists, dicts, optionals, unions serialize correctly
-- All existing E2E tests still pass (no regressions)
-- `cargo test` passes, `cargo clippy -- -D warnings` passes, no new `unsafe` without justification
-- E2E pass tests: typed_json_roundtrip, nested_class_serde, union_serde, optional_serde
-- E2E fail tests: json_parse_wrong_type, missing_required_field
-
----
-
 ### milestone_32_3: Async Synchronization Primitives
 
 status: pending
@@ -132,8 +103,8 @@ status: pending
 ## Milestone Ordering
 
 - **milestone_32_1 first:** The async runtime must exist before anything else. This is the minimum viable async — `async def`/`await`, Tokio, basic task spawning.
-- **milestone_32_2 second:** Typed serialization is web-independent and stays in this phase.
-- **milestone_32_3 third:** Synchronization primitives (Lock, Channel, Semaphore) and Send/Sync checking depend only on the async runtime.
+- **milestone_32_2 retired:** Typed serialization moved to Phase 40 so the typed data model, `dumps`/`loads`, and validation contracts stay in one phase.
+- **milestone_32_3 second:** Synchronization primitives (Lock, Channel, Semaphore) and Send/Sync checking depend only on the async runtime.
 - **milestone_32_4 last:** Advanced features (async with, async generators, async comprehensions) build on everything above.
 
 ## Quality Contract
@@ -141,7 +112,7 @@ status: pending
 - Phase 27 non-regression baseline is required at phase start and must remain green through completion.
 - Phase 27 non-regression invariants that must hold in this phase include: no user-triggerable panic paths; no data-dependent emitted `.unwrap()` / `.expect()` / `panic!` in user runtime paths; stable diagnostic contract (codes, severity, spans, URLs, suggestions, schema); canonical/lossless `json` diagnostics with `human` and `compact` as renderer views only; enforced recovery limits with deterministic ordering; and enforced exit-code and CLI stability contracts (`0/1/2/3`, and unknown `--diagnostic-format` exits `2` before semantic work).
 - Any milestone that regresses these invariants is incomplete, even if its local scope passes.
-- Exit criteria: Async runtime core, typed serialization core, sync primitives, and advanced async features are all delivered with regression coverage.
+- Exit criteria: Async runtime core, sync primitives, and advanced async features are all delivered with regression coverage.
 - Milestone quality checks:
   - No fallback, migration, or legacy compatibility code is allowed; implement the canonical architecture directly with clean code only.
   - No lazy or partial fixes are allowed; each milestone must resolve root causes completely, even when that requires significant rework.
@@ -151,11 +122,10 @@ status: pending
   - Validation evidence for every milestone must include at least one positive-path case and one negative-path case mapped to the milestone validation planning goals.
 - Validation planning goals:
   - `milestone_32_1` (Async Runtime Core): validation goals cover `async def`/`await` lowering, Tokio auto-bundling, `sifr.task` spawn/sleep/timeout behavior, and try/except auto-unwrap across await points. Include negative-path goals that catch regressions against these guarantees.
-  - `milestone_32_2` (Typed Serialization (Core)): validation goals cover auto-derive `Serialize`/`Deserialize`, typed `dumps`/`loads` behavior, and nested/union/optional collection roundtrip correctness. Include negative-path goals that catch regressions against these guarantees.
   - `milestone_32_3` (Async Synchronization Primitives): validation goals cover `sifr.sync.Lock`, `sifr.sync.Channel`, and `sifr.sync.Semaphore` semantics plus Send/Sync enforcement at spawn boundaries. Include negative-path goals that catch regressions against these guarantees.
   - `milestone_32_4` (Advanced Async Features): validation goals cover `async with` context manager flow, async generator semantics, and async comprehension compilation behavior. Include negative-path goals that catch regressions against these guarantees.
-  - Exit-gate evidence explicitly demonstrates: Async runtime core, typed serialization core, sync primitives, and advanced async features are all delivered with regression coverage.
+  - Exit-gate evidence explicitly demonstrates: Async runtime core, sync primitives, and advanced async features are all delivered with regression coverage.
 
 ## Exit Gate
-- Async runtime core, typed serialization core, sync primitives, and advanced async features are all delivered with regression coverage.
+- Async runtime core, sync primitives, and advanced async features are all delivered with regression coverage.
 - Phase 27 non-regression contract remains green: panic-free user paths, no emitted data-dependent unwrap/expect/panic, and stable diagnostics/renderer/exit-code behavior.
