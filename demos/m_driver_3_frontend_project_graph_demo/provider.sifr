@@ -1,0 +1,4 @@
+BASE: int = 41
+
+def answer() -> int:
+    return BASE

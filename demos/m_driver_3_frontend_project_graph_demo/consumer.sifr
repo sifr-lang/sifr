@@ -1,0 +1,4 @@
+from provider import BASE, answer
+
+def describe() -> int:
+    return answer() + BASE - 40
