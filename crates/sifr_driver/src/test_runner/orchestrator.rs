@@ -1,8 +1,6 @@
-use crate::build::{
-    create_invocation_workspace, generate_dependency_cargo_toml, InvocationWorkspaceGuard,
-};
+use super::execution::execute_test_runner_project;
 use crate::diagnostics::{
-    run_codegen_with_boundary, write_stderr, write_stderr_line, CompileError, CompilePhase,
+    run_codegen_with_boundary, write_stderr_line, CompileError, CompilePhase,
 };
 use crate::frontend::{lower_frontend_module, FrontendDiagnosticStyle};
 use crate::project::{
@@ -13,8 +11,16 @@ use crate::stdlib::compile_stdlib;
 use sifr_codegen::{generate_rust_multi_with_metadata, generate_rust_test};
 use sifr_hir::HirModule;
 use sifr_python_ast::Stmt;
-use std::collections::{BTreeSet, HashMap, HashSet};
-use std::path::Path;
+use std::collections::{BTreeMap, BTreeSet, HashMap, HashSet};
+use std::path::{Path, PathBuf};
+
+pub(super) struct GeneratedTestRunnerProject {
+    pub(super) support_module_names: Vec<String>,
+    pub(super) support_rust_files: HashMap<String, String>,
+    pub(super) all_rust_code: String,
+    pub(super) all_stdlib_modules: HashSet<String>,
+    pub(super) all_required_crates: HashSet<String>,
+}
 
 pub fn run_tests(test_dir: &Path) -> Result<bool, Vec<CompileError>> {
     let test_files_by_module = discover_test_root_modules(test_dir);
@@ -29,6 +35,14 @@ pub fn run_tests(test_dir: &Path) -> Result<bool, Vec<CompileError>> {
         test_files_by_module.len()
     ));
 
+    let generated_project = build_test_runner_project(test_dir, &test_files_by_module)?;
+    execute_test_runner_project(generated_project)
+}
+
+fn build_test_runner_project(
+    test_dir: &Path,
+    test_files_by_module: &BTreeMap<String, PathBuf>,
+) -> Result<GeneratedTestRunnerProject, Vec<CompileError>> {
     let test_roots: BTreeSet<String> = test_files_by_module.keys().cloned().collect();
     let parsed_modules =
         parse_import_closure_modules(test_dir, &test_roots, DiscoveryDiagnosticStyle::FilePath)?;
@@ -61,13 +75,13 @@ pub fn run_tests(test_dir: &Path) -> Result<bool, Vec<CompileError>> {
         "internal compiler panic during support-module code generation",
         || generate_rust_multi_with_metadata(&support_module_refs, &stdlib_compiled.code),
     )
-    .map_err(|e| vec![e])?;
+    .map_err(|error| vec![error])?;
 
     let mut all_rust_code = String::new();
     let mut all_stdlib_modules = support_codegen.used_stdlib_modules;
     let mut all_required_crates = support_codegen.required_crates;
 
-    for (module_name, test_file) in &test_files_by_module {
+    for (module_name, test_file) in test_files_by_module {
         let Some(parsed) = test_modules.get(module_name.as_str()) else {
             return Err(vec![CompileError {
                 message: format!(
@@ -89,8 +103,8 @@ pub fn run_tests(test_dir: &Path) -> Result<bool, Vec<CompileError>> {
             Err(errors) => {
                 let compile_errors: Vec<CompileError> = errors
                     .into_iter()
-                    .map(|e| CompileError {
-                        message: format!("[{}] {}", test_file.display(), e.message),
+                    .map(|error| CompileError {
+                        message: format!("[{}] {}", test_file.display(), error.message),
                         phase: CompilePhase::TypeCheck,
                     })
                     .collect();
@@ -105,7 +119,7 @@ pub fn run_tests(test_dir: &Path) -> Result<bool, Vec<CompileError>> {
             ),
             || generate_rust_test(&lowering_result.module),
         )
-        .map_err(|e| vec![e])?;
+        .map_err(|error| vec![error])?;
         all_rust_code.push_str("// Tests from: ");
         all_rust_code.push_str(&test_file.file_name().unwrap().to_string_lossy());
         all_rust_code.push('\n');
@@ -115,86 +129,11 @@ pub fn run_tests(test_dir: &Path) -> Result<bool, Vec<CompileError>> {
         all_required_crates.extend(codegen_result.required_crates);
     }
 
-    let project_dir = create_invocation_workspace("test_runner")?;
-    let _workspace_guard = InvocationWorkspaceGuard::new(project_dir.clone());
-    let src_dir = project_dir.join("src");
-    std::fs::create_dir_all(&src_dir).map_err(|e| {
-        vec![CompileError {
-            message: format!("failed to create test directory: {e}"),
-            phase: CompilePhase::Build,
-        }]
-    })?;
-
-    let cargo_toml = generate_test_runner_cargo_toml(&all_stdlib_modules, &all_required_crates);
-    std::fs::write(project_dir.join("Cargo.toml"), cargo_toml).map_err(|e| {
-        vec![CompileError {
-            message: format!("failed to write Cargo.toml: {e}"),
-            phase: CompilePhase::Build,
-        }]
-    })?;
-
-    for module_name in &support_module_names {
-        if let Some(code) = support_codegen.rust_files.get(module_name) {
-            std::fs::write(src_dir.join(format!("{module_name}.rs")), code).map_err(|e| {
-                vec![CompileError {
-                    message: format!("failed to write {module_name}.rs: {e}"),
-                    phase: CompilePhase::Build,
-                }]
-            })?;
-        }
-    }
-
-    let test_lib = compose_test_runner_lib(&support_module_names, &all_rust_code);
-    std::fs::write(src_dir.join("lib.rs"), &test_lib).map_err(|e| {
-        vec![CompileError {
-            message: format!("failed to write lib.rs: {e}"),
-            phase: CompilePhase::Build,
-        }]
-    })?;
-
-    let output = std::process::Command::new("cargo")
-        .args(["test"])
-        .current_dir(&project_dir)
-        .output()
-        .map_err(|e| {
-            vec![CompileError {
-                message: format!("failed to run cargo test: {e}"),
-                phase: CompilePhase::Build,
-            }]
-        })?;
-
-    let stdout = String::from_utf8_lossy(&output.stdout);
-    let stderr = String::from_utf8_lossy(&output.stderr);
-    if !stdout.is_empty() {
-        write_stderr(&stdout);
-    }
-    if !stderr.is_empty() {
-        write_stderr(&stderr);
-    }
-
-    Ok(output.status.success())
-}
-
-pub(crate) fn compose_test_runner_lib(
-    support_module_names: &[String],
-    all_rust_code: &str,
-) -> String {
-    let mut test_lib = String::from("#![cfg(test)]\n\n");
-    for module_name in support_module_names {
-        test_lib.push_str("mod ");
-        test_lib.push_str(module_name);
-        test_lib.push_str(";\n");
-    }
-    if !support_module_names.is_empty() {
-        test_lib.push('\n');
-    }
-    test_lib.push_str(all_rust_code);
-    test_lib
-}
-
-pub(crate) fn generate_test_runner_cargo_toml(
-    stdlib_modules: &HashSet<String>,
-    required_crates: &HashSet<String>,
-) -> String {
-    generate_dependency_cargo_toml("sifr_tests", stdlib_modules, required_crates)
+    Ok(GeneratedTestRunnerProject {
+        support_module_names,
+        support_rust_files: support_codegen.rust_files,
+        all_rust_code,
+        all_stdlib_modules,
+        all_required_crates,
+    })
 }
