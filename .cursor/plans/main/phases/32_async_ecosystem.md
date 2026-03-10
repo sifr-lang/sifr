@@ -2,6 +2,8 @@
 
 **Why now:** Safety is solid, ownership model is proven, stdlib is deep and fully generic (Phase 13). The type system is complete — generics, pattern matching, enums, and auto-init are all in place. The codegen architecture is sound (Phase 14) — all new async codegen patterns will be built on structured IR, not string templates. The async runtime can be built on a stable, expressive foundation where generic types, exhaustive error handling, and clean class definitions are available from day one.
 
+**Scope note:** Typed serialization is intentionally deferred to Phase 40 so the typed data model, `dumps`/`loads`, and validation contracts remain owned by one phase.
+
 ---
 
 ### milestone_32_1: Async Runtime Core
