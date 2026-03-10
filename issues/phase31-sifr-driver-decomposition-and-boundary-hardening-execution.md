@@ -22,7 +22,7 @@ Loop per part: Plan -> Implement -> Validate -> Demo -> PR -> Review -> Merge ->
 2. [x] `milestone_driver_2`: extract stdlib embedding, intrinsic mapping, cache, and bootstrap into a dedicated module tree with unchanged export behavior
 3. [x] `milestone_driver_3`: extract frontend compile/check plumbing, module-export collection, dependency ordering, and cycle canonicalization into coherent frontend/project modules
 4. [x] `milestone_driver_4`: extract discovery, import-closure parsing, workspace allocation, project build orchestration, and file-write helpers into dedicated modules
-5. [ ] `milestone_driver_5`: extract test-runner orchestration, composed test-lib generation, and test-runner Cargo manifest logic into a dedicated module
+5. [x] `milestone_driver_5`: extract test-runner orchestration, composed test-lib generation, and test-runner Cargo manifest logic into a dedicated module
 6. [ ] `milestone_driver_6`: split the embedded driver tests into focused modules and add the checked maintainability guardrail script, docs, and local-validation wiring
 
 ## Baseline Revalidation
@@ -110,7 +110,7 @@ Loop per part: Plan -> Implement -> Validate -> Demo -> PR -> Review -> Merge ->
   - merge evidence: PR #1092 merged into `main` on 2026-03-10
 
 ### milestone_driver_5: Test Runner Extraction
-- Status: in_review
+- Status: complete
 - Implementation PR: https://github.com/yaseralnajjar/sifr/pull/1093
 - Demo target:
   - `cargo run -q -p sifr -- test demos/m_driver_5_test_runner_demo`
@@ -124,9 +124,11 @@ Loop per part: Plan -> Implement -> Validate -> Demo -> PR -> Review -> Merge ->
   - positive path: `cargo run -q -p sifr -- test demos/m_driver_5_test_runner_demo` -> executed the demo test runner successfully with `test_import_parity ... ok`
   - negative path: `cargo test -q -p sifr_driver test_run_tests_frontend_type_errors_use_single_path_prefix -- --nocapture` is covered by the `test_runner` module filter and passed, proving extracted runner diagnostics still prefix each failing test module path exactly once
   - local gate: `/Users/yaseralnajjar/work/sifr/codebase/scripts/run_all_tests.sh --profile quick` -> passed (`verification ok: variants=64, failures=0, blocking_failures=0, non_blocking_failures=0`)
+  - merge evidence: PR #1093 merged into `main` on 2026-03-10
 
 ### milestone_driver_6: Test Suite Decomposition and Maintainability Guardrail
-- Status: pending
+- Status: in_review
+- Implementation PR: https://github.com/yaseralnajjar/sifr/pull/1094
 - Demo target:
   - `python3 scripts/check_sifr_driver_maintainability_guardrails.py`
 - Validation target:
@@ -135,7 +137,11 @@ Loop per part: Plan -> Implement -> Validate -> Demo -> PR -> Review -> Merge ->
   - `SIFR_DRIVER_GUARDRAIL_EXPECT_FAILURE=1 python3 scripts/check_sifr_driver_maintainability_guardrails.py`
   - `/Users/yaseralnajjar/work/sifr/codebase/scripts/run_all_tests.sh --profile quick`
 - Validation evidence:
-  - pending
+  - implementation note: `crates/sifr_driver/src/lib.rs` now delegates all crate-level regression coverage to `crates/sifr_driver/src/tests/mod.rs`, while `scripts/check_sifr_driver_maintainability_guardrails.py` and `docs/sifr_driver_maintainability_guardrails.md` enforce the anti-regrowth contract in local validation
+  - positive path: `cargo test -q -p sifr_driver -- --test-threads=1` -> passed (`59 passed, 0 failed`)
+  - positive path: `python3 scripts/check_sifr_driver_maintainability_guardrails.py` -> passed (`sifr_driver maintainability guardrails: PASS`)
+  - negative path: `SIFR_DRIVER_GUARDRAIL_EXPECT_FAILURE=1 python3 scripts/check_sifr_driver_maintainability_guardrails.py` -> passed in expected-failure mode, proving the guardrail detects over-budget files when limits are forced below the current layout
+  - local gate: `/Users/yaseralnajjar/work/sifr/codebase/scripts/run_all_tests.sh --profile quick` -> passed (`verification ok: variants=64, failures=0, blocking_failures=0, non_blocking_failures=0`)
 
 ## External Review Passes
 
