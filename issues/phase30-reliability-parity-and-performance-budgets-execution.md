@@ -75,7 +75,7 @@ Loop per part: Work -> Validate -> PR -> Review -> Merge -> External review pass
 ## milestone_30_4: Parity Test Corpus Structure and Maintainability
 - [x] Document canonical Phase 30 parity-fixture structure expectations in `audit/stdlib/cpython_parity_fixture_format.md`
 - [x] Record milestone_30_4 as a post-closure structural clarification rather than silently treating it as part of the original 2026-03-09 closure verdict
-- [ ] Run explicit reviewer sign-off for milestone_30_4 if it is promoted from planning guidance to an enforced retroactive closure gate
+- [x] Record enforcement model: milestone_30_4 is implementation guidance enforced through normal review by default; explicit reviewer sign-off is only required if it is later promoted to an enforced retroactive closure gate
 
 ### Milestone 30_2 Evidence (Complexity and Resource Parity)
 - Canonical patterns + module API-class matrix:
@@ -103,7 +103,7 @@ Loop per part: Work -> Validate -> PR -> Review -> Merge -> External review pass
 - Phase-level milestone contract and explicit post-closure note:
   - `.cursor/plans/main/phases/30_reliability_parity_and_performance_budgets.md`
 - Status note:
-  - `milestone_30_4` was added on 2026-03-10 after the original 2026-03-09 closure verdicts for `milestone_30_1` through `milestone_30_3`; it is currently documented as planning guidance unless/until it receives its own explicit review sign-off.
+  - `milestone_30_4` was added on 2026-03-10 after the original 2026-03-09 closure verdicts for `milestone_30_1` through `milestone_30_3`; it is currently documented as implementation guidance with review-based enforcement and does not reopen the closed phase by default.
 
 ## Part 1: `env`
 status: done (2026-03-08, PR #929)

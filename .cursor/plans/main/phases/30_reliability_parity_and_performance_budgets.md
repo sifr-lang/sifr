@@ -6,7 +6,7 @@ Close the reliability track by proving stdlib behavioral parity, API-level compl
 ## Closure Status
 - Status: completed (2026-03-09)
 - Closure evidence issue: `issues/phase30-reliability-parity-and-performance-budgets-execution.md`
-- Closure note: the original explicit reviewer closure on 2026-03-09 covered `milestone_30_1`, `milestone_30_2`, and `milestone_30_3`. `milestone_30_4` was added on 2026-03-10 as a post-closure structural clarification for parity fixtures and must be reviewed explicitly before it is treated as a retroactive closure gate.
+- Closure note: the original explicit reviewer closure on 2026-03-09 covered `milestone_30_1`, `milestone_30_2`, and `milestone_30_3`. `milestone_30_4` was added on 2026-03-10 as a post-closure structural clarification for parity fixtures. It does not reopen the closed phase by default; an explicit reviewer pass is only required if this milestone is later promoted from planning guidance to a retroactive closure gate.
 
 Phase 30 uses CPython as the behavioral reference model, but parity must always be aligned with Sifr's language guarantees:
 - no user-triggerable runtime panics
@@ -102,6 +102,7 @@ In particular:
   - Require positive-path, negative-path, and safety-adaptation coverage to be explicit and easy to audit inside each module's approved parity scope.
   - Require deterministic inputs, deterministic ordering, and stable assertion grouping so failures remain reproducible and reviewer-friendly.
   - Require fixture structure to follow the canonical Sifr parity fixture format unless a justified extension is documented.
+  - Use reviewer-driven enforcement for this milestone by default; automated structural linting is optional future hardening rather than part of the base phase contract.
 - Definition of done:
   - Every in-scope module has a parity test corpus whose structure is understandable without reverse-engineering a giant monolithic `main()`.
   - Every module's parity tests are split along behavior or API-surface boundaries that are appropriate for the approved scope.
@@ -109,6 +110,7 @@ In particular:
   - Positive-path, negative-path, and safety-adaptation assertions are all present and easy to locate.
   - No module closes with parity coverage that is technically passing but structurally too tangled to maintain confidently.
   - The milestone's status is tracked explicitly in the Phase 30 execution checklist issue and is not implied by `milestone_30_1` through `milestone_30_3` reviewer sign-off.
+  - Lack of an automated structure-validation script does not block this milestone; the required enforcement path is explicit review against the canonical fixture-format rules.
 
 ### Milestone Evidence Artifacts
 - `milestone_30_1` parity governance matrix:

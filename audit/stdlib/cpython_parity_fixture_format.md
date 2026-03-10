@@ -23,6 +23,11 @@ Use a simple vector table shape that maps cleanly to Sifr lists:
 These structure rules apply to Phase 30 parity fixtures. They are not a blanket style
 rule for unrelated non-parity e2e fixtures.
 
+Enforcement model:
+- These rules are intended to be enforced through normal module review and phase review.
+- A dedicated structural-validation script is optional future hardening, not a baseline
+  requirement for Phase 30 readiness.
+
 1. Organize a module's parity corpus into a small number of semantic fixtures rather than
    one oversized catch-all fixture or a large number of microscopic files.
 2. Keep `main()` as the orchestration layer only. Put behavior into small helper
