@@ -1,8 +1,8 @@
 # Phase 31: Algorithmic Compatibility and LeetCode Coverage
 
-status: in_progress
+status: complete
 
-> 2026-03-11 update: milestones `31_1`, `31_2`, and `31_3` are implemented in the workspace with a canonical 50-problem seed corpus, a 411-fixture raw inventory, a deterministic runner, a generated failure taxonomy, a smallest-known repro inventory, and a ranked remediation backlog with approval and stale-blocker policies. Remaining milestones stay pending.
+> 2026-03-11 update: milestones `31_1` through `31_5` are implemented in the workspace with a canonical 50-problem seed corpus, a deterministic runner, a generated failure taxonomy, a ranked remediation backlog, a first remediation wave, and stable scorecard/handoff artifacts. External review sign-off is recorded in `reviews/phase-31-review-pass-3.md` and `reviews/phase-31-review-pass-4.md`.
 
 ## Objective
 Run a representative LeetCode corpus end-to-end on Sifr, identify failures, classify root causes, and define the language/compiler fixes required to improve algorithmic compatibility.
@@ -181,14 +181,14 @@ status: complete
   - `scripts/build_phase31_leetcode_scorecard.py`
   - `scripts/test_phase31_leetcode_scorecard.py`
 - Scorecard summary (2026-03-11):
-  - review status: `pending_external_review`
+  - review status: `external_review_approved`
   - baseline status counts: `PASS=2`, `CHECK_ERROR=46`, `RUN_ERROR=2`
   - wave-1 status counts: `PASS=5`, `CHECK_ERROR=45`, `RUN_ERROR=0`
   - unresolved handoff entries: `9`
   - carried-forward targets:
     - unresolved former `phase31` proposals roll forward to `phase32`
     - `ownership.borrowed_return_surface` remains `deferred` as an intentional divergence
-  - phase closure note: artifact publication is complete; final closeout approval remains pending the external review loop
+  - phase closure note: artifact publication and external review sign-off are complete
 
 ## Quality Contract
 

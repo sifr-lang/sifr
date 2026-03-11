@@ -1,6 +1,6 @@
 # Phase 31 Compatibility Scorecard
 
-- Review status: `pending_external_review`
+- Review status: `external_review_approved`
 - Seed corpus size: `50`
 - Baseline status counts: `PASS=2`, `CHECK_ERROR=46`, `RUN_ERROR=2`
 - Wave 1 status counts: `PASS=5`, `CHECK_ERROR=45`, `RUN_ERROR=0`
@@ -39,4 +39,4 @@
 ## Closure Note
 
 - Phase 31 now has a reproducible baseline, taxonomy, remediation backlog, first remediation wave, and stable scorecard artifacts.
-- Final phase closure remains pending the external review/sign-off loop requested by the execution workflow.
+- External review/sign-off is complete, and the phase is approved for closure.

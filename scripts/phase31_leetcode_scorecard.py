@@ -137,7 +137,7 @@ def build_scorecard(paths: ScorecardPaths) -> dict[str, Any]:
     return {
         "name": "phase31_scorecard",
         "phase": 31,
-        "review_status": "pending_external_review",
+        "review_status": "external_review_approved",
         "input_artifacts": {
             "baseline_results": str(paths.baseline_results),
             "wave_results": str(paths.wave_results),
@@ -220,7 +220,7 @@ def render_scorecard_markdown(scorecard: dict[str, Any]) -> str:
             "## Closure Note",
             "",
             "- Phase 31 now has a reproducible baseline, taxonomy, remediation backlog, first remediation wave, and stable scorecard artifacts.",
-            "- Final phase closure remains pending the external review/sign-off loop requested by the execution workflow.",
+            "- External review/sign-off is complete, and the phase is approved for closure.",
         ]
     )
     return "\n".join(lines) + "\n"
