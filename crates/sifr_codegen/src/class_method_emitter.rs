@@ -10,8 +10,7 @@ use sifr_type_system::{ParamConvention, Type};
 
 impl RustEmitter {
     fn lower_class_stmt_strict(&mut self, stmt: &HirStmt, _context: &str) -> Vec<RustStmt> {
-        let lowered = self.capture_structured_stmts(|inner| inner.emit_stmt(stmt));
-        lowered
+        self.capture_structured_stmts(|inner| inner.emit_stmt(stmt))
     }
 
     fn lower_class_expr_strict(&mut self, expr: &HirExpr, context: &str) -> RustExpr {
@@ -84,11 +83,7 @@ impl RustEmitter {
         }
     }
 
-    fn lower_class_method_return_type(
-        &self,
-        method: &HirFunction,
-        class: &HirClass,
-    ) -> Option<RustType> {
+    fn lower_class_method_return_type(method: &HirFunction, class: &HirClass) -> Option<RustType> {
         if method.name == "new" {
             return Some(RustType::Named("Self".to_string()));
         }
@@ -354,7 +349,7 @@ impl RustEmitter {
         };
 
         if body.is_empty() {
-            if self.lower_class_method_return_type(method, class).is_none() {
+            if Self::lower_class_method_return_type(method, class).is_none() {
                 body.push(RustStmt::Return(None));
             } else {
                 panic!(
@@ -382,7 +377,7 @@ impl RustEmitter {
                 })
                 .collect(),
             params,
-            ret: self.lower_class_method_return_type(method, class),
+            ret: Self::lower_class_method_return_type(method, class),
             body,
             is_async: false,
         }

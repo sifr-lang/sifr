@@ -1,4 +1,6 @@
-use super::*;
+use super::{result_ty, IntrinsicModule};
+use sifr_type_system::{FunctionType, Type};
+use std::collections::HashMap;
 
 /// _sifr.collections — Extended collection intrinsics
 pub(super) fn intrinsic_collections() -> IntrinsicModule {

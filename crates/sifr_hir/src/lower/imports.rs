@@ -1,4 +1,7 @@
-use super::*;
+use sifr_python_ast::Stmt;
+use sifr_type_system::{FunctionType, Type};
+
+use super::{ExternalDefs, LowerCtx};
 
 pub(super) fn resolve_imports_early(stmts: &[Stmt], externals: &ExternalDefs, ctx: &mut LowerCtx) {
     for stmt in stmts {

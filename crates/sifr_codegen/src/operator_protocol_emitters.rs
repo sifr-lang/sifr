@@ -500,9 +500,7 @@ impl RustEmitter {
                         .map(|stmt| self.rewrite_stdlib_constant_idents_in_stmt(stmt)),
                 ),
                 Ok(None) => {
-                    let Some(lowered_stmt) = self.try_lower_operator_stmt_ir(stmt) else {
-                        return None;
-                    };
+                    let lowered_stmt = self.try_lower_operator_stmt_ir(stmt)?;
                     lowered.extend(lowered_stmt);
                 }
                 Err(_) => return None,

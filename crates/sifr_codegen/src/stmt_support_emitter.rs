@@ -242,7 +242,7 @@ impl RustEmitter {
                                 .and_then(|fields| fields.get(idx))
                                 .is_some_and(|field_name| {
                                     self.recursive_fields
-                                        .contains(&(class_name.to_string(), field_name.clone()))
+                                        .contains(&(class_name.clone(), field_name.clone()))
                                 });
                             let resolved_param = crate::resolve_alias_type_for_plain_call(param_ty);
                             if !crate::helpers::is_option_type(resolved_param) {
@@ -294,7 +294,7 @@ impl RustEmitter {
                     .and_then(|fields| fields.get(idx))
                     .is_some_and(|field_name| {
                         self.recursive_fields
-                            .contains(&(class_name.to_string(), field_name.clone()))
+                            .contains(&(class_name.clone(), field_name.clone()))
                     });
                 if !is_recursive_ctor_field || matches!(args[idx], HirExpr::NoneLiteral) {
                     continue;
@@ -508,7 +508,7 @@ impl RustEmitter {
             }
             return Ok(Some(crate::RustExpr::FnCall {
                 func: Box::new(crate::RustExpr::Path(
-                    func.split("::").map(|s| s.to_string()).collect(),
+                    func.split("::").map(ToString::to_string).collect(),
                 )),
                 args: lowered_args,
             }));
@@ -2535,7 +2535,7 @@ impl RustEmitter {
                 let lowered_func = if func.contains("::") {
                     crate::RustExpr::Path(func.split("::").map(str::to_string).collect())
                 } else {
-                    crate::RustExpr::Ident(func.to_string())
+                    crate::RustExpr::Ident(func.clone())
                 };
                 Ok(Some(crate::RustExpr::FnCall {
                     func: Box::new(lowered_func),
@@ -2787,7 +2787,7 @@ impl RustEmitter {
 
     fn object_name_expr_for_ir(object: &str) -> crate::RustExpr {
         if object.contains("::") {
-            return crate::RustExpr::Path(object.split("::").map(|s| s.to_string()).collect());
+            return crate::RustExpr::Path(object.split("::").map(ToString::to_string).collect());
         }
         crate::RustExpr::Ident(object.to_string())
     }
@@ -2887,7 +2887,7 @@ impl RustEmitter {
                             .and_then(|fields| fields.get(idx))
                             .map(|field_name| {
                                 self.recursive_fields
-                                    .contains(&(class_name.to_string(), field_name.clone()))
+                                    .contains(&(class_name.to_owned(), field_name.clone()))
                             })
                     })
                     .unwrap_or(false);
@@ -4112,34 +4112,29 @@ impl RustEmitter {
 
     /// Emit a generator initialization statement (always mutable for closure capture)
     pub(super) fn emit_generator_init_stmt(&mut self, stmt: &HirStmt) {
-        match stmt {
-            HirStmt::Let {
-                name, ty, value, ..
-            } => {
-                let lowered_value = match self.lower_stmt_expr_for_ir(value) {
-                    Ok(Some(lowered)) => lowered,
-                    Ok(None) | Err(_) => {
-                        panic!(
-                            "structured generator-init expression emission missing for production path: {value:?}"
-                        );
-                    }
-                };
-                self.push_captured_stmt(&crate::RustStmt::Let {
-                    mutable: true,
-                    name: name.clone(),
-                    ty: Some(crate::sifr_type_to_rust_type(ty)),
-                    value: lowered_value,
-                });
-            }
-            _ => match self.try_lower_structured_stmt(stmt) {
-                Ok(true) => {}
-                Ok(false) | Err(_) => {
-                    panic!(
-                            "structured generator-init statement emission missing for production path: {stmt:?}"
-                        );
-                }
-            },
+        if let HirStmt::Let {
+            name, ty, value, ..
+        } = stmt
+        {
+            let Ok(Some(lowered_value)) = self.lower_stmt_expr_for_ir(value) else {
+                panic!(
+                    "structured generator-init expression emission missing for production path: {value:?}"
+                );
+            };
+            self.push_captured_stmt(&crate::RustStmt::Let {
+                mutable: true,
+                name: name.clone(),
+                ty: Some(crate::sifr_type_to_rust_type(ty)),
+                value: lowered_value,
+            });
+            return;
         }
+
+        let Ok(true) = self.try_lower_structured_stmt(stmt) else {
+            panic!(
+                "structured generator-init statement emission missing for production path: {stmt:?}"
+            );
+        };
     }
 
     pub(super) fn emit_lowered_stmts(&mut self, lowered_stmts: &[RustStmt]) {
@@ -4169,7 +4164,7 @@ impl RustEmitter {
                     },
                 }),
                 RustStmt::Expr(lowered_expr) => {
-                    self.push_captured_stmt(&crate::RustStmt::Expr(lowered_expr.clone()))
+                    self.push_captured_stmt(&crate::RustStmt::Expr(lowered_expr.clone()));
                 }
                 _ => self.push_captured_stmt(lowered_stmt),
             }

@@ -14,12 +14,15 @@ mod math_test;
 mod platform_misc;
 mod sys_fs;
 
-use collections_bytes_time::*;
-use crypto_regex_uuid::*;
-use io_json::*;
-use math_test::*;
-use platform_misc::*;
-use sys_fs::*;
+use collections_bytes_time::{intrinsic_bytes, intrinsic_collections, intrinsic_time};
+use crypto_regex_uuid::{intrinsic_crypto, intrinsic_regex, intrinsic_uuid};
+use io_json::{intrinsic_io, intrinsic_json};
+use math_test::{intrinsic_math, intrinsic_test};
+use platform_misc::{
+    intrinsic_calendar, intrinsic_compress, intrinsic_datetime, intrinsic_html, intrinsic_logging,
+    intrinsic_platform, intrinsic_toml,
+};
+use sys_fs::{intrinsic_fs, intrinsic_sys};
 
 /// An intrinsic module definition with its functions and constants.
 pub struct IntrinsicModule {

@@ -109,16 +109,7 @@ impl RustEmitter {
     /// Wraps Option<T> expressions so they display as the inner value or "None".
     /// Omits `.to_string()` on string literals since format macros accept &str.
     pub(super) fn lower_display_expr(&mut self, expr: &HirExpr) -> crate::RustExpr {
-        let inferred_option_inner = if let Some(inner) = display_option_inner_type(expr) {
-            Some(inner)
-        } else if matches!(
-            crate::resolve_alias_type_for_plain_call(expr.ty()),
-            Type::Str | Type::LiteralStr(_)
-        ) {
-            None
-        } else {
-            None
-        };
+        let inferred_option_inner = display_option_inner_type(expr);
         if let Some(inner) = inferred_option_inner {
             let lowered = self.lower_ref_expr_or_panic(expr, "display option expr");
             let format_str = if uses_debug_display_format(&inner) {
@@ -126,7 +117,7 @@ impl RustEmitter {
             } else {
                 "{}".to_string()
             };
-            let lowered = crate::RustExpr::MethodCall {
+            crate::RustExpr::MethodCall {
                 receiver: Box::new(crate::RustExpr::Paren(Box::new(lowered))),
                 method: "map_or".to_string(),
                 args: vec![
@@ -150,8 +141,7 @@ impl RustEmitter {
                         is_move: false,
                     },
                 ],
-            };
-            lowered
+            }
         } else if let HirExpr::StringLiteral(val) = expr {
             // In display contexts, string literals don't need .to_string()
             crate::RustExpr::Literal(crate::RustLiteral::Str(val.clone()))

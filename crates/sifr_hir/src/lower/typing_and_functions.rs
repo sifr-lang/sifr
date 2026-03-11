@@ -1,4 +1,13 @@
-use super::*;
+use crate::hir_nodes::{HirFunction, HirParam, MethodKind};
+use sifr_python_ast::{AstParamConvention, Expr, Number, Operator, StmtFunctionDef};
+use sifr_type_system::infer::resolve_type_annotation;
+use sifr_type_system::{make_union, FunctionType, OwnershipKind, ParamConvention, Type};
+use std::collections::HashMap;
+
+use super::diagnostics::{format_type_name, is_valid_error_type};
+use super::expressions::lower_expr;
+use super::statements::{collect_return_types, lower_stmts};
+use super::{substitute_type_vars, LowerCtx};
 
 pub(super) fn register_builtins(ctx: &mut LowerCtx) {
     // print() accepts any single argument and returns None

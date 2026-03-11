@@ -14,6 +14,7 @@ use sifr_driver::{
 use sifr_python_ast::Stmt;
 use sifr_python_parser::parse_module;
 use std::collections::{BTreeMap, BTreeSet};
+use std::fmt::Write as _;
 use std::io::{self, Write};
 use std::panic::{catch_unwind, AssertUnwindSafe};
 use std::path::{Path, PathBuf};
@@ -117,9 +118,8 @@ fn has_local_project_imports(file: &Path) -> bool {
     let Some(parent) = file.parent() else {
         return false;
     };
-    let source = match std::fs::read_to_string(file) {
-        Ok(source) => source,
-        Err(_) => return false,
+    let Ok(source) = std::fs::read_to_string(file) else {
+        return false;
     };
     let parsed = match parse_module(&source) {
         Ok(parsed) if parsed.is_valid() => parsed,
@@ -181,17 +181,14 @@ impl InvocationWorkspace {
             };
             let path = root.join(unique);
             match std::fs::create_dir(&path) {
-                Ok(_) => return Ok(Self { path }),
-                Err(e) if e.kind() == io::ErrorKind::AlreadyExists => continue,
+                Ok(()) => return Ok(Self { path }),
+                Err(e) if e.kind() == io::ErrorKind::AlreadyExists => (),
                 Err(e) => return Err(e),
             }
         }
         Err(io::Error::new(
             io::ErrorKind::AlreadyExists,
-            format!(
-                "failed to allocate unique workspace for prefix '{}'",
-                prefix
-            ),
+            format!("failed to allocate unique workspace for prefix '{prefix}'"),
         ))
     }
 
@@ -224,7 +221,7 @@ fn severity_label(severity: Severity) -> &'static str {
     }
 }
 
-fn panic_payload_message(payload: Box<dyn std::any::Any + Send>) -> String {
+fn panic_payload_message(payload: &(dyn std::any::Any + Send)) -> String {
     if let Some(msg) = payload.downcast_ref::<&str>() {
         return (*msg).to_string();
     }
@@ -243,7 +240,7 @@ fn run_with_panic_boundary<T>(
     match catch_unwind(AssertUnwindSafe(f)) {
         Ok(value) => Ok(value),
         Err(payload) => Err(CompileError {
-            message: format!("{context}: {}", panic_payload_message(payload)),
+            message: format!("{context}: {}", panic_payload_message(payload.as_ref())),
             phase,
         }),
     }
@@ -312,11 +309,12 @@ fn render_compact_diagnostics(diagnostics: &[CompilerDiagnostic]) -> String {
 
     for ((_severity_rank, code, _is_summary_group, message), group) in grouped {
         let severity = group[0].severity;
-        output.push_str(&format!(
-            "{} [{code}] {message} (x{})\n",
+        let _ = writeln!(
+            output,
+            "{} [{code}] {message} (x{})",
             severity_label(severity),
             group.len()
-        ));
+        );
 
         let mut locations: BTreeSet<String> = BTreeSet::new();
         for diagnostic in &group {
@@ -330,26 +328,27 @@ fn render_compact_diagnostics(diagnostics: &[CompilerDiagnostic]) -> String {
             .take(MAX_COMPACT_REPRESENTATIVE_LOCATIONS)
             .collect::<Vec<_>>();
         for location in rendered_locations {
-            output.push_str(&format!("  at {location}\n"));
+            let _ = writeln!(output, "  at {location}");
         }
         if locations.len() > MAX_COMPACT_REPRESENTATIVE_LOCATIONS {
-            output.push_str(&format!(
-                "  ... +{} more\n",
+            let _ = writeln!(
+                output,
+                "  ... +{} more",
                 locations.len() - MAX_COMPACT_REPRESENTATIVE_LOCATIONS
-            ));
+            );
         }
 
         if let Some(help) = group
             .iter()
             .find_map(|diagnostic| diagnostic.help.as_deref())
         {
-            output.push_str(&format!("  help: {help}\n"));
+            let _ = writeln!(output, "  help: {help}");
         }
         if let Some(url) = group
             .iter()
             .find_map(|diagnostic| (!diagnostic.url.is_empty()).then_some(diagnostic.url.as_str()))
         {
-            output.push_str(&format!("  url: {url}\n"));
+            let _ = writeln!(output, "  url: {url}");
         }
     }
 
@@ -508,10 +507,10 @@ fn cmd_test(dir: &Path, diagnostic_format: DiagnosticFormat) -> i32 {
     };
     match run_result {
         Ok(success) => {
-            if !success {
-                EXIT_USER_DIAGNOSTIC
-            } else {
+            if success {
                 EXIT_SUCCESS
+            } else {
+                EXIT_USER_DIAGNOSTIC
             }
         }
         Err(errors) => render_compile_errors(&errors, diagnostic_format),

@@ -1,4 +1,8 @@
-use super::*;
+use crate::hir_nodes::HirStmt;
+use sifr_python_ast::{Expr, Stmt, StmtClassDef, StmtFunctionDef};
+use sifr_type_system::Type;
+
+use super::LowerCtx;
 
 #[allow(dead_code)]
 pub(super) fn is_error_class_with_ctx(

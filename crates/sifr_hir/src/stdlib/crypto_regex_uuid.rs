@@ -1,4 +1,6 @@
-use super::*;
+use super::{result_ty, IntrinsicModule};
+use sifr_type_system::{FunctionType, Type};
+use std::collections::HashMap;
 
 /// _sifr.crypto — Combined crypto intrinsics (random + hash + encoding)
 pub(super) fn intrinsic_crypto() -> IntrinsicModule {

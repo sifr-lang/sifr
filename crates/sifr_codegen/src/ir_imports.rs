@@ -17,6 +17,11 @@ pub(crate) struct IrCollectionImportNeeds {
 #[derive(Debug, Default, Clone, Copy, PartialEq, Eq)]
 pub(crate) struct IrRuntimeImportNeeds {
     pub(crate) needs_mutex: bool,
+    pub(crate) numeric: IrNumericImportNeeds,
+}
+
+#[derive(Debug, Default, Clone, Copy, PartialEq, Eq)]
+pub(crate) struct IrNumericImportNeeds {
     pub(crate) needs_bigint: bool,
     pub(crate) needs_decimal: bool,
     pub(crate) needs_bigdecimal: bool,
@@ -425,9 +430,9 @@ fn mark_symbol(symbol: &str, needs: &mut IrImportNeeds) {
         "HashSet" => needs.collections.needs_hashset = true,
         "VecDeque" => needs.collections.needs_vecdeque = true,
         "Mutex" => needs.runtime.needs_mutex = true,
-        "BigInt" => needs.runtime.needs_bigint = true,
-        "Decimal" => needs.runtime.needs_decimal = true,
-        "BigDecimal" => needs.runtime.needs_bigdecimal = true,
+        "BigInt" => needs.runtime.numeric.needs_bigint = true,
+        "Decimal" => needs.runtime.numeric.needs_decimal = true,
+        "BigDecimal" => needs.runtime.numeric.needs_bigdecimal = true,
         _ => {}
     }
 }
@@ -480,9 +485,9 @@ mod tests {
         assert!(needs.collections.needs_hashset);
         assert!(needs.collections.needs_vecdeque);
         assert!(needs.runtime.needs_mutex);
-        assert!(needs.runtime.needs_bigint);
-        assert!(!needs.runtime.needs_decimal);
-        assert!(!needs.runtime.needs_bigdecimal);
+        assert!(needs.runtime.numeric.needs_bigint);
+        assert!(!needs.runtime.numeric.needs_decimal);
+        assert!(!needs.runtime.numeric.needs_bigdecimal);
     }
 
     #[test]
@@ -512,8 +517,8 @@ mod tests {
         assert!(!needs.collections.needs_hashset);
         assert!(!needs.collections.needs_vecdeque);
         assert!(!needs.runtime.needs_mutex);
-        assert!(!needs.runtime.needs_bigint);
-        assert!(!needs.runtime.needs_decimal);
-        assert!(!needs.runtime.needs_bigdecimal);
+        assert!(!needs.runtime.numeric.needs_bigint);
+        assert!(!needs.runtime.numeric.needs_decimal);
+        assert!(!needs.runtime.numeric.needs_bigdecimal);
     }
 }

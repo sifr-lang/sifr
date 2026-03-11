@@ -1,4 +1,24 @@
-use super::*;
+use crate::hir_nodes::{HirExpr, HirFStringPart, HirParam, HirStmt};
+use sifr_python_ast::{
+    BoolOp, CmpOp, Expr, ExprAttribute, ExprBinOp, ExprBoolOp, ExprCall, ExprCompare, ExprDict,
+    ExprDictComp, ExprFString, ExprGenerator, ExprIf, ExprLambda, ExprList, ExprListComp, ExprName,
+    ExprNamed, ExprNumberLiteral, ExprSet, ExprSetComp, ExprSubscript, ExprTuple, ExprUnaryOp,
+    FStringElement, Number, Operator, UnaryOp,
+};
+use sifr_type_system::{
+    type_check_binary_op, type_check_bool_op, type_check_comparison, type_check_unary_op,
+    FunctionType, OwnershipKind, ParamConvention, Type,
+};
+use std::collections::HashMap;
+
+use super::classes::is_hashable_type;
+use super::decimal_methods::{decimal_conversion_error_type, resolve_decimal_method_type};
+use super::type_bounds::{type_satisfies_bound, type_satisfies_constraint};
+use super::typing_and_functions::resolve_annotation_expr;
+use super::{
+    collect_type_vars, decode_typevar_constraint, infer_type_var_bindings, substitute_type_vars,
+    LowerCtx,
+};
 use bigdecimal::BigDecimal;
 use rust_decimal::Decimal;
 use std::str::FromStr;
@@ -118,8 +138,8 @@ pub(super) fn op_to_dunder(op: &str) -> Option<&'static str> {
     }
 }
 
-/// Shape compatibility used when generic inference leaves unresolved TypeVars.
-/// TypeVars are treated as wildcards, but container/class structure must still match.
+/// Shape compatibility used when generic inference leaves unresolved `TypeVar`s.
+/// `TypeVar`s are treated as wildcards, but container/class structure must still match.
 fn is_compatible_with_unresolved_typevars(source: &Type, target: &Type) -> bool {
     match target {
         Type::TypeVar(_) => true,
@@ -3482,6 +3502,7 @@ pub(super) fn lower_named_expr(named: &ExprNamed, ctx: &mut LowerCtx) -> Option<
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::{lower_module, HirModule, LoweringError};
     use sifr_python_parser::parse_module;
 
     fn lower_source(source: &str) -> Result<HirModule, Vec<LoweringError>> {

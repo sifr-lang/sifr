@@ -2,6 +2,7 @@
 
 use crate::{HirExpr, HirStmt};
 use sifr_type_system::Type;
+use std::fmt::Write;
 
 /// Identifier for a CFG block.
 pub type CfgBlockId = usize;
@@ -108,25 +109,26 @@ impl ControlFlowGraph {
 
     pub fn shape_fingerprint(&self) -> String {
         let mut fingerprint = String::new();
-        fingerprint.push_str(&format!("entry:{};exit:{};", self.entry, self.exit));
+        let _ = write!(fingerprint, "entry:{};exit:{};", self.entry, self.exit);
         for block in &self.blocks {
-            fingerprint.push_str(&format!(
+            let _ = write!(
+                fingerprint,
                 "b{}:{:?}:{:?}:",
                 block.id, block.label, block.top_level_stmt_index
-            ));
+            );
             match &block.terminator {
                 CfgTerminator::Goto(target) => {
-                    fingerprint.push_str(&format!("goto:{target};"));
+                    let _ = write!(fingerprint, "goto:{target};");
                 }
                 CfgTerminator::Branch(targets) => {
                     fingerprint.push_str("branch:");
                     for target in targets {
-                        fingerprint.push_str(&format!("{target},"));
+                        let _ = write!(fingerprint, "{target},");
                     }
                     fingerprint.push(';');
                 }
                 CfgTerminator::Return { ty, has_value } => {
-                    fingerprint.push_str(&format!("return:{}:{};", ty.display_name(), has_value));
+                    let _ = write!(fingerprint, "return:{}:{};", ty.display_name(), has_value);
                 }
                 CfgTerminator::Raise => {
                     fingerprint.push_str("raise;");
@@ -188,21 +190,18 @@ impl ControlFlowGraph {
         for (idx, &block_id) in self.top_level_stmt_nodes.iter().enumerate() {
             if block_id >= self.blocks.len() {
                 return Err(CfgInvariantError::new(format!(
-                    "top-level stmt {} maps to invalid block id {}",
-                    idx, block_id
+                    "top-level stmt {idx} maps to invalid block id {block_id}",
                 )));
             }
             let mapped = self.blocks[block_id].top_level_stmt_index;
             if mapped != Some(idx) {
                 return Err(CfgInvariantError::new(format!(
-                    "top-level stmt {} maps to block {} with mismatched marker {:?}",
-                    idx, block_id, mapped
+                    "top-level stmt {idx} maps to block {block_id} with mismatched marker {mapped:?}",
                 )));
             }
             if seen_top[idx] {
                 return Err(CfgInvariantError::new(format!(
-                    "duplicate mapping for top-level stmt {}",
-                    idx
+                    "duplicate mapping for top-level stmt {idx}",
                 )));
             }
             seen_top[idx] = true;
