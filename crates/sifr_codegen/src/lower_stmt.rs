@@ -505,7 +505,11 @@ pub(crate) fn try_lower_simple_stmt_with_ctx(
         } if try_lower_simple_let_value(ty, value).is_some() => Some(vec![RustStmt::Let {
             mutable: bindings.mutated_vars.contains(name),
             name: name.clone(),
-            ty: Some(crate::sifr_type_to_rust_type(ty)),
+            ty: if should_omit_local_type_annotation(ty, value) {
+                None
+            } else {
+                Some(crate::sifr_type_to_rust_type(ty))
+            },
             value: try_lower_simple_let_value(ty, value)?,
         }]),
         HirStmt::Assign { name, value }
@@ -701,6 +705,13 @@ pub(crate) fn try_lower_simple_stmt_with_ctx(
         }
         _ => None,
     }
+}
+
+fn should_omit_local_type_annotation(ty: &Type, value: &HirExpr) -> bool {
+    matches!(
+        (crate::resolve_alias_type_for_plain_call(ty), value),
+        (Type::Set(_), HirExpr::Call { func, args, .. }) if func == "set" && args.is_empty()
+    )
 }
 
 fn try_lower_simple_nested_function_stmt(

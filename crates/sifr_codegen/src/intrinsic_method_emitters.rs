@@ -946,6 +946,50 @@ impl RustEmitter {
         args: &[HirExpr],
     ) -> Option<crate::RustExpr> {
         match func {
+            "set" if args.is_empty() => Some(crate::RustExpr::FnCall {
+                func: Box::new(crate::RustExpr::Path(vec![
+                    "HashSet".to_string(),
+                    "new".to_string(),
+                ])),
+                args: vec![],
+            }),
+            "set" if args.len() == 1 => {
+                let lowered = self.try_lower_registry_expr_strict(&args[0])?;
+                match crate::resolve_alias_type_for_plain_call(args[0].ty()) {
+                    Type::List(_) | Type::Set(_) | Type::Range => Some(crate::RustExpr::MethodCall {
+                        receiver: Box::new(crate::RustExpr::MethodCall {
+                            receiver: Box::new(crate::RustExpr::MethodCall {
+                                receiver: Box::new(crate::RustExpr::Paren(Box::new(lowered))),
+                                method: "clone".to_string(),
+                                args: vec![],
+                            }),
+                            method: "into_iter".to_string(),
+                            args: vec![],
+                        }),
+                        method: "collect::<HashSet<_>>".to_string(),
+                        args: vec![],
+                    }),
+                    Type::Tuple(_) => Some(crate::RustExpr::MethodCall {
+                        receiver: Box::new(crate::RustExpr::MethodCall {
+                            receiver: Box::new(crate::RustExpr::Paren(Box::new(lowered))),
+                            method: "into_iter".to_string(),
+                            args: vec![],
+                        }),
+                        method: "collect::<HashSet<_>>".to_string(),
+                        args: vec![],
+                    }),
+                    Type::Any | Type::Unknown => Some(crate::RustExpr::MethodCall {
+                        receiver: Box::new(crate::RustExpr::MethodCall {
+                            receiver: Box::new(crate::RustExpr::Paren(Box::new(lowered))),
+                            method: "into_iter".to_string(),
+                            args: vec![],
+                        }),
+                        method: "collect::<HashSet<_>>".to_string(),
+                        args: vec![],
+                    }),
+                    _ => None,
+                }
+            }
             "sum" if args.len() == 1 => {
                 let lowered = self.try_lower_registry_expr_strict(&args[0])?;
                 let iter_chain = crate::RustExpr::MethodCall {

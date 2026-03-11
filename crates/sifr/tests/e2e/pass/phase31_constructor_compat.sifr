@@ -1,0 +1,27 @@
+from sifr.test import assert_bool_vector_eq
+
+def collect_actual() -> list[bool]:
+    actual: list[bool] = []
+
+    names = set(["aa", "bb", "aa"])
+    actual.append(len(names) == 2)
+    actual.append("aa" in names)
+
+    seen = set()
+    seen.add("cc")
+    actual.append("cc" in seen)
+
+    q = deque(["x"])
+    q.append("y")
+    actual.append(q.popleft() == "x")
+    actual.append(q.popleft() == "y")
+
+    bounded = deque([1, 2, 3, 4], maxlen=3)
+    actual.append(bounded.len() == 3)
+    actual.append(bounded.popleft() == 2)
+
+    return actual
+
+def main():
+    expected: list[bool] = [True, True, True, True, True, True, True]
+    assert_bool_vector_eq(collect_actual(), expected)

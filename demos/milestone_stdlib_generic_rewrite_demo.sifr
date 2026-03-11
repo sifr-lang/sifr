@@ -89,7 +89,7 @@ def main():
 
     # --- 10. Generic deque[T] ---
     print("=== Generic deque[T] ===")
-    d: deque[str] = deque(0)
+    d: deque[str] = deque()
     d.append("first")
     d.append("second")
     d.appendleft("zero")

@@ -24,6 +24,18 @@ pub(super) fn resolve_python_compat_call_alias(
     ensure_synthetic_stdlib_import(ctx, &externals, module_name, attr.attr.as_str())
 }
 
+pub(super) fn resolve_bare_python_compat_call_alias(
+    func_name: &str,
+    ctx: &mut LowerCtx,
+) -> Option<String> {
+    let (module_name, member_name) = match func_name {
+        "deque" => ("sifr.collections", "deque"),
+        _ => return None,
+    };
+    let externals = ctx.externals.clone();
+    ensure_synthetic_stdlib_import(ctx, &externals, module_name, member_name)
+}
+
 pub(super) fn ensure_synthetic_stdlib_import(
     ctx: &mut LowerCtx,
     externals: &ExternalDefs,
@@ -41,6 +53,11 @@ pub(super) fn ensure_synthetic_stdlib_import(
     if let Some(module_fns) = externals.functions.get(module_name) {
         if let Some(ft) = module_fns.get(member_name) {
             ctx.functions.insert(alias.clone(), ft.clone());
+            if let Some(module_defaults) = externals.function_defaults.get(module_name) {
+                if let Some(defaults) = module_defaults.get(member_name) {
+                    ctx.function_defaults.insert(alias.clone(), defaults.clone());
+                }
+            }
             if let Some(module_gf) = externals.generic_functions.get(module_name) {
                 if let Some(type_vars) = module_gf.get(member_name) {
                     ctx.generic_functions
@@ -103,6 +120,11 @@ pub(super) fn ensure_synthetic_stdlib_import(
                         FunctionType::new(params, class_ty.clone())
                     };
                     ctx.functions.insert(alias.clone(), ft);
+                    if let Some(module_defaults) = externals.function_defaults.get(module_name) {
+                        if let Some(defaults) = module_defaults.get(member_name) {
+                            ctx.function_defaults.insert(alias.clone(), defaults.clone());
+                        }
+                    }
                 }
                 if let Some(module_bounds) = externals.type_param_bounds.get(module_name) {
                     if let Some(owner_bounds) = module_bounds.get(member_name) {

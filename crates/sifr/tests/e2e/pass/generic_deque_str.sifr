@@ -4,7 +4,7 @@ from sifr.test import assert_eq
 
 def main():
     # Test with int
-    d: deque[int] = deque(5)
+    d: deque[int] = deque(maxlen=5)
     d.append(10)
     d.append(20)
     d.append(30)
@@ -19,7 +19,7 @@ def main():
     assert_eq(len(items), 3)
 
     # Test with str
-    ds: deque[str] = deque(3)
+    ds: deque[str] = deque(maxlen=3)
     ds.append("hello")
     ds.append("world")
     ds.append("foo")
@@ -30,4 +30,3 @@ def main():
     assert_eq(ds.len(), 2)
 
     assert str("generic_deque_operations: passed") == 'generic_deque_operations: passed'
-

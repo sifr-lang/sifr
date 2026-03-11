@@ -12,7 +12,13 @@ use sifr_type_system::{
 use std::collections::HashMap;
 
 use super::classes::is_hashable_type;
-use super::compat_imports::resolve_python_compat_call_alias;
+use super::builtin_calls::{
+    lower_isinstance_call, lower_len_call, lower_range_call, lower_reveal_type_call,
+    lower_set_constructor_call,
+};
+use super::compat_imports::{
+    resolve_bare_python_compat_call_alias, resolve_python_compat_call_alias,
+};
 use super::decimal_methods::{decimal_conversion_error_type, resolve_decimal_method_type};
 use super::type_bounds::{type_satisfies_bound, type_satisfies_constraint};
 use super::typing_and_functions::resolve_annotation_expr;
@@ -328,7 +334,8 @@ pub(super) fn lower_compare(cmp: &ExprCompare, ctx: &mut LowerCtx) -> Option<Hir
     if cmp.ops.len() == 1 {
         match &cmp.ops[0] {
             CmpOp::In => {
-                let collection = lower_expr(&cmp.comparators[0], ctx)?;
+                let mut collection = lower_expr(&cmp.comparators[0], ctx)?;
+                collection = refine_empty_set_binding_expr(collection, left.ty().clone(), ctx);
                 let collection_ty = collection.ty().clone();
                 if let Some(elem_ty) = collection_ty.contains_element_type() {
                     if !left.ty().is_assignable_to(&elem_ty) {
@@ -351,7 +358,8 @@ pub(super) fn lower_compare(cmp: &ExprCompare, ctx: &mut LowerCtx) -> Option<Hir
                 });
             }
             CmpOp::NotIn => {
-                let collection = lower_expr(&cmp.comparators[0], ctx)?;
+                let mut collection = lower_expr(&cmp.comparators[0], ctx)?;
+                collection = refine_empty_set_binding_expr(collection, left.ty().clone(), ctx);
                 let collection_ty = collection.ty().clone();
                 if let Some(elem_ty) = collection_ty.contains_element_type() {
                     if !left.ty().is_assignable_to(&elem_ty) {
@@ -474,7 +482,7 @@ pub(super) fn lower_call(call: &ExprCall, ctx: &mut LowerCtx) -> Option<HirExpr>
     let func_name = if let Some(alias) = compat_alias {
         alias
     } else if let Expr::Name(n) = call.func.as_ref() {
-        n.id.clone()
+        resolve_bare_python_compat_call_alias(n.id.as_str(), ctx).unwrap_or_else(|| n.id.clone())
     } else {
         ctx.error("only simple function calls are supported".to_string());
         return None;
@@ -503,6 +511,10 @@ pub(super) fn lower_call(call: &ExprCall, ctx: &mut LowerCtx) -> Option<HirExpr>
         ctx.scope.lookup(&func_name).is_some() || ctx.functions.contains_key(&func_name);
 
     if !builtin_is_shadowed {
+        if func_name == "set" {
+            return lower_set_constructor_call(call, ctx);
+        }
+
         // Special handling for range() built-in
         if func_name == "range" {
             return lower_range_call(call, ctx);
@@ -2269,8 +2281,7 @@ pub(super) fn lower_method_call(
         }
     }
 
-    let object = lower_expr(&attr.value, ctx)?;
-    let object_ty = object.ty().clone();
+    let mut object = lower_expr(&attr.value, ctx)?;
     let method_name = attr.attr.to_string();
 
     // Lower arguments
@@ -2279,6 +2290,13 @@ pub(super) fn lower_method_call(
         let expr = lower_expr(arg, ctx)?;
         args.push(expr);
     }
+
+    if matches!(method_name.as_str(), "add" | "remove" | "discard" | "contains") {
+        if let Some(first_arg_ty) = args.first().map(|arg| arg.ty().clone()) {
+            object = refine_empty_set_binding_expr(object, first_arg_ty, ctx);
+        }
+    }
+    let object_ty = object.ty().clone();
 
     // Resolve method return type based on object type and method name
     let return_ty = resolve_method_type(&object_ty, &method_name, &args, ctx)?;
@@ -2289,6 +2307,24 @@ pub(super) fn lower_method_call(
         args,
         ty: return_ty,
     })
+}
+
+fn refine_empty_set_binding_expr(expr: HirExpr, inferred_elem_ty: Type, ctx: &mut LowerCtx) -> HirExpr {
+    let HirExpr::Name { name, ty } = &expr else {
+        return expr;
+    };
+    let Type::Set(inner) = ty.resolve_alias() else {
+        return expr;
+    };
+    if !matches!(inner.as_ref(), Type::Any | Type::Unknown) {
+        return expr;
+    }
+    let refined_ty = Type::Set(Box::new(inferred_elem_ty));
+    ctx.scope.narrow_var(name, refined_ty.clone());
+    HirExpr::Name {
+        name: name.clone(),
+        ty: refined_ty,
+    }
 }
 
 /// Resolve the return type of a method call on a given type.
@@ -2893,160 +2929,6 @@ pub(super) fn resolve_method_type(
     }
 }
 
-pub(super) fn lower_len_call(call: &ExprCall, ctx: &mut LowerCtx) -> Option<HirExpr> {
-    if call.arguments.args.len() != 1 {
-        ctx.error(format!(
-            "len() takes exactly 1 argument, got {}",
-            call.arguments.args.len()
-        ));
-        return None;
-    }
-    let arg = lower_expr(&call.arguments.args[0], ctx)?;
-    let arg_ty = arg.ty().clone();
-
-    // len() works on str, list, dict, tuple, set
-    // Also works on T|None where T is a valid len() argument (auto-unwrap)
-    let effective_ty = if let Type::Union(members) = &arg_ty {
-        let non_none: Vec<&Type> = members
-            .iter()
-            .filter(|m| !matches!(m, Type::None))
-            .collect();
-        if non_none.len() == 1 {
-            non_none[0].clone()
-        } else {
-            arg_ty.clone()
-        }
-    } else {
-        arg_ty.clone()
-    };
-    match &effective_ty {
-        Type::Str | Type::List(_) | Type::Dict(_, _) | Type::Tuple(_) | Type::Set(_) => {
-            Some(HirExpr::MethodCall {
-                object: Box::new(arg),
-                method: "len".to_string(),
-                args: vec![],
-                ty: Type::Int,
-            })
-        }
-        _ => {
-            ctx.error(format!(
-                "len() argument must be a string, list, dict, or tuple, got '{}'",
-                arg_ty.display_name()
-            ));
-            None
-        }
-    }
-}
-
-pub(super) fn lower_isinstance_call(call: &ExprCall, ctx: &mut LowerCtx) -> Option<HirExpr> {
-    if call.arguments.args.len() != 2 {
-        ctx.error(format!(
-            "isinstance() takes exactly 2 arguments, got {}",
-            call.arguments.args.len()
-        ));
-        return None;
-    }
-    let arg = lower_expr(&call.arguments.args[0], ctx)?;
-    // Extract the type name as a string literal so codegen can use it for match arms
-    let type_name = match &call.arguments.args[1] {
-        Expr::Name(n) => n.id.clone(),
-        _ => "unknown".to_string(),
-    };
-    // isinstance() always returns bool -- the narrowing happens at the if-statement level
-    // We pass both the variable and the type name string to codegen
-    Some(HirExpr::Call {
-        func: "isinstance".to_string(),
-        args: vec![arg, HirExpr::StringLiteral(type_name)],
-        ty: Type::Bool,
-    })
-}
-
-pub(super) fn lower_reveal_type_call(call: &ExprCall, ctx: &mut LowerCtx) -> Option<HirExpr> {
-    if call.arguments.args.len() != 1 {
-        ctx.error(format!(
-            "reveal_type() takes exactly 1 argument, got {}",
-            call.arguments.args.len()
-        ));
-        return None;
-    }
-    let arg = lower_expr(&call.arguments.args[0], ctx)?;
-    let ty = arg.ty().clone();
-    // Store the reveal_type diagnostic (not an error, just informational)
-    ctx.reveal_types
-        .push(format!("reveal_type: {}", ty.display_name()));
-    // reveal_type returns the value unchanged, so we emit a print of the type at runtime
-    // For now, just return the argument expression
-    Some(arg)
-}
-
-pub(super) fn lower_range_call(call: &ExprCall, ctx: &mut LowerCtx) -> Option<HirExpr> {
-    let args: Vec<_> = call.arguments.args.iter().collect();
-
-    match args.len() {
-        1 => {
-            // range(end) -> 0..end
-            let end = lower_expr(args[0], ctx)?;
-            if end.ty() != &Type::Int {
-                ctx.error(format!(
-                    "range() argument must be 'int', got '{}'",
-                    end.ty().display_name()
-                ));
-                return None;
-            }
-            Some(HirExpr::RangeLiteral {
-                start: Box::new(HirExpr::IntLiteral(0)),
-                end: Box::new(end),
-                step: None,
-                ty: Type::Range,
-            })
-        }
-        2 => {
-            // range(start, end) -> start..end
-            let start = lower_expr(args[0], ctx)?;
-            let end = lower_expr(args[1], ctx)?;
-            if start.ty() != &Type::Int {
-                ctx.error(format!(
-                    "range() start argument must be 'int', got '{}'",
-                    start.ty().display_name()
-                ));
-                return None;
-            }
-            if end.ty() != &Type::Int {
-                ctx.error(format!(
-                    "range() end argument must be 'int', got '{}'",
-                    end.ty().display_name()
-                ));
-                return None;
-            }
-            Some(HirExpr::RangeLiteral {
-                start: Box::new(start),
-                end: Box::new(end),
-                step: None,
-                ty: Type::Range,
-            })
-        }
-        3 => {
-            // range(start, end, step) -> (start..end).step_by(step)
-            let start = lower_expr(args[0], ctx)?;
-            let end = lower_expr(args[1], ctx)?;
-            let step = lower_expr(args[2], ctx)?;
-            Some(HirExpr::RangeLiteral {
-                start: Box::new(start),
-                end: Box::new(end),
-                step: Some(Box::new(step)),
-                ty: Type::Range,
-            })
-        }
-        _ => {
-            ctx.error(format!(
-                "range() takes 1, 2, or 3 arguments, got {}",
-                args.len()
-            ));
-            None
-        }
-    }
-}
-
 pub(super) fn lower_if_expr(if_expr: &ExprIf, ctx: &mut LowerCtx) -> Option<HirExpr> {
     let condition = lower_expr(&if_expr.test, ctx)?;
     let then_expr = lower_expr(&if_expr.body, ctx)?;
@@ -3578,6 +3460,25 @@ mod tests {
         assert!(
             result.is_ok(),
             "user-defined sum should shadow the builtin lowering path"
+        );
+    }
+
+    #[test]
+    fn test_builtin_set_constructor_accepts_list_iterable() {
+        let result = lower_source(
+            "def main():\n    seen = set([1, 2, 2])\n    assert 2 in seen\n",
+        );
+        assert!(result.is_ok(), "set(list[T]) should lower as a builtin constructor");
+    }
+
+    #[test]
+    fn test_bare_deque_call_resolves_without_import() {
+        let result = lower_source(
+            "def main():\n    q = deque([1])\n    q.append(2)\n    assert q.popleft() == 1\n",
+        );
+        assert!(
+            result.is_ok(),
+            "bare deque(...) should resolve through the compat stdlib surface"
         );
     }
 

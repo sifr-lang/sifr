@@ -6,6 +6,7 @@ use sifr_python_ast::{Expr, ExprCall, Stmt};
 use sifr_type_system::{make_union, FunctionType, Type};
 use std::collections::HashMap;
 
+mod builtin_calls;
 mod classes;
 mod compat_imports;
 mod decimal_methods;
@@ -442,6 +443,7 @@ fn infer_type_var_bindings(param_ty: &Type, arg_ty: &Type, bindings: &mut HashMa
 /// Result of lowering, including the HIR module and any diagnostics.
 pub struct LoweringResult {
     pub module: HirModule,
+    pub function_defaults: std::collections::HashMap<String, Vec<(usize, HirExpr)>>,
     /// `reveal_type()` diagnostics (informational, printed to stderr)
     pub reveal_types: Vec<String>,
     /// Compiler warnings (non-fatal, printed to stderr)
@@ -471,6 +473,11 @@ pub struct ExternalDefs {
     /// Map of `module_name` -> (`function_name` -> `type_var_names`)
     pub generic_functions:
         std::collections::HashMap<String, std::collections::HashMap<String, Vec<String>>>,
+    /// Map of `module_name` -> (`callable_name` -> default argument expressions by parameter index)
+    pub function_defaults: std::collections::HashMap<
+        String,
+        std::collections::HashMap<String, Vec<(usize, HirExpr)>>,
+    >,
 }
 
 /// Lower a parsed module AST into a typed HIR module.
@@ -816,6 +823,14 @@ fn lower_module_impl(
                         if let Some(module_fns) = externals.functions.get(&stdlib_module_key) {
                             if let Some(ft) = module_fns.get(name) {
                                 ctx.functions.insert(local.clone(), ft.clone());
+                                if let Some(module_defaults) =
+                                    externals.function_defaults.get(&stdlib_module_key)
+                                {
+                                    if let Some(defaults) = module_defaults.get(name) {
+                                        ctx.function_defaults
+                                            .insert(local.clone(), defaults.clone());
+                                    }
+                                }
                                 found = true;
                                 // Import generic function info and bounds
                                 if let Some(module_gf) =
@@ -879,6 +894,14 @@ fn lower_module_impl(
                                             FunctionType::new(params, class_ty.clone())
                                         };
                                         ctx.functions.insert(local.clone(), ft);
+                                        if let Some(module_defaults) =
+                                            externals.function_defaults.get(&stdlib_module_key)
+                                        {
+                                            if let Some(defaults) = module_defaults.get(name) {
+                                                ctx.function_defaults
+                                                    .insert(local.clone(), defaults.clone());
+                                            }
+                                        }
                                     }
                                     // Import class type parameter bounds
                                     if let Some(module_bounds) =
@@ -944,6 +967,12 @@ fn lower_module_impl(
                 if let Some(module_fns) = externals.functions.get(&module_name) {
                     if let Some(ft) = module_fns.get(name) {
                         ctx.functions.insert(local.clone(), ft.clone());
+                        if let Some(module_defaults) = externals.function_defaults.get(&module_name)
+                        {
+                            if let Some(defaults) = module_defaults.get(name) {
+                                ctx.function_defaults.insert(local.clone(), defaults.clone());
+                            }
+                        }
                         found = true;
                     }
                 }
@@ -990,6 +1019,14 @@ fn lower_module_impl(
                                     FunctionType::new(params, class_ty.clone())
                                 };
                                 ctx.functions.insert(local.clone(), ft);
+                                if let Some(module_defaults) =
+                                    externals.function_defaults.get(&module_name)
+                                {
+                                    if let Some(defaults) = module_defaults.get(name) {
+                                        ctx.function_defaults
+                                            .insert(local.clone(), defaults.clone());
+                                    }
+                                }
                             }
                             found = true;
                         }
@@ -1088,6 +1125,7 @@ fn lower_module_impl(
                 generic_functions: ctx.generic_functions.clone(),
                 type_param_bounds: ctx.type_param_bounds.clone(),
             },
+            function_defaults: ctx.function_defaults.clone(),
             reveal_types: ctx.reveal_types,
             warnings: ctx.warnings,
         })

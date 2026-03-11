@@ -137,6 +137,7 @@ impl RootedEntrypointPlan {
             .unwrap_or_default();
         let lowering_result = LoweringResult {
             module: main_module,
+            function_defaults: std::collections::HashMap::new(),
             reveal_types: main_diag.reveal_types,
             warnings: main_diag.warnings,
         };

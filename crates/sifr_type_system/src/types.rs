@@ -563,6 +563,7 @@ impl Type {
     pub fn contains_element_type(&self) -> Option<Type> {
         match self {
             Self::List(elem) => Some(*elem.clone()),
+            Self::Set(elem) => Some(*elem.clone()),
             Self::Dict(key, _) => Some(*key.clone()),
             Self::Str => Some(Type::Str),
             _ => None,
