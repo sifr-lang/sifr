@@ -137,7 +137,7 @@ Loop per part: Plan -> Implement -> Validate -> Demo -> PR -> Review -> Merge ->
   - `SIFR_DRIVER_GUARDRAIL_EXPECT_FAILURE=1 python3 scripts/check_sifr_driver_maintainability_guardrails.py`
   - `/Users/yaseralnajjar/work/sifr/codebase/scripts/run_all_tests.sh --profile quick`
 - Validation evidence:
-  - implementation note: `crates/sifr_driver/src/lib.rs` now delegates all crate-level regression coverage to `crates/sifr_driver/src/tests/mod.rs`, while `scripts/check_sifr_driver_maintainability_guardrails.py` and `docs/sifr_driver_maintainability_guardrails.md` enforce the anti-regrowth contract in local validation
+  - implementation note: `crates/sifr_driver/src/lib.rs` now delegates all crate-level regression coverage to `crates/sifr_driver/src/tests/mod.rs`, while `scripts/check_sifr_driver_maintainability_guardrails.py` and `internal_docs/sifr_driver_maintainability_guardrails.md` enforce the anti-regrowth contract in local validation
   - positive path: `cargo test -q -p sifr_driver -- --test-threads=1` -> passed (`59 passed, 0 failed`)
   - positive path: `python3 scripts/check_sifr_driver_maintainability_guardrails.py` -> passed (`sifr_driver maintainability guardrails: PASS`)
   - negative path: `SIFR_DRIVER_GUARDRAIL_EXPECT_FAILURE=1 python3 scripts/check_sifr_driver_maintainability_guardrails.py` -> passed in expected-failure mode, proving the guardrail detects over-budget files when limits are forced below the current layout

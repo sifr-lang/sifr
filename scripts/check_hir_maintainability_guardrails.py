@@ -31,7 +31,7 @@ BANNED_MONOLITHS = [
     "crates/sifr_hir/src/stdlib.rs",
 ]
 
-CHECKLIST_DOC = Path("docs/hir_maintainability_guardrails.md")
+CHECKLIST_DOC = Path("internal_docs/hir_maintainability_guardrails.md")
 REQUIRED_CHECKLIST_SNIPPETS = [
     "## Review Checklist",
     "- [ ] Lowering logic is placed in the correct file",

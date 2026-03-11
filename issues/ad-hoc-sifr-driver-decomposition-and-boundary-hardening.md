@@ -189,7 +189,7 @@ Milestone `milestone_driver_6` must add a checked-in guardrail system modeled af
 
 Required enforcement artifacts:
 - `scripts/check_sifr_driver_maintainability_guardrails.py`
-- `docs/sifr_driver_maintainability_guardrails.md`
+- `internal_docs/sifr_driver_maintainability_guardrails.md`
 - wiring in `scripts/run_all_tests.sh`
 
 Initial hard requirements for the guardrail:
@@ -284,7 +284,7 @@ Required checklist/documentation coverage:
 - `milestone_driver_6`
   - focused test-module tree
   - `scripts/check_sifr_driver_maintainability_guardrails.py`
-  - `docs/sifr_driver_maintainability_guardrails.md`
+  - `internal_docs/sifr_driver_maintainability_guardrails.md`
   - maintainability guardrail enforcement evidence
 
 ## Quality Contract

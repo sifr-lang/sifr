@@ -72,10 +72,8 @@ See `internal_docs/architecture.md` for full architectural detail.
 - `demos/` — Milestone demo files (*.sifr) showcasing language features
 - `scripts/` — Build/test automation
 - `verification/` — E2E test infrastructure
-- `internal_docs/architecture.md` — Comprehensive compiler architecture doc
-- `internal_docs/roadmap.md` — Phase execution roadmap
-- `internal_docs/phases/` — Per-phase execution plans
-- `docs/` — CLI semantics contract, HIR guardrails, verification policies
+- `internal_docs/` — Internal documentation such as architecture, roadmap... etc
+- `docs/` — Public/site-facing docs such as Sifr documentation and CLI... etc
 
 ## Core expectations
 

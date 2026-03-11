@@ -150,7 +150,7 @@ Carry-forward planning:
   - `verification/leetcode/phase31_seed_results.json`
   - `demos/m31_1_leetcode_runner_demo/corpus.json`
   - `demos/m31_1_leetcode_runner_demo/results.json`
-  - `docs/verification/phase31_leetcode_corpus_policy.md`
+  - `internal_docs/verification/phase31_leetcode_corpus_policy.md`
   - `scripts/phase31_leetcode_lib.py`
   - `scripts/build_phase31_leetcode_assets.py`
   - `scripts/run_phase31_leetcode.py`

@@ -10,7 +10,7 @@ from pathlib import Path
 from typing import Iterable, List
 
 
-CHECKLIST_DOC = Path("docs/sifr_driver_maintainability_guardrails.md")
+CHECKLIST_DOC = Path("internal_docs/sifr_driver_maintainability_guardrails.md")
 TESTS_DIR = Path("crates/sifr_driver/src/tests")
 DRIVER_SRC = Path("crates/sifr_driver/src")
 
