@@ -1,0 +1,11 @@
+# Test: mutated borrowed params should be shadowed into owned mutable locals for codegen.
+
+def reverse_words(s: str) -> str:
+    s = s.strip()
+    words = s.split()
+    words = words[::-1]
+    return ' '.join(words)
+
+def main():
+    assert str(reverse_words("the sky is blue")) == 'blue is sky the'
+    assert str(reverse_words("  hello world  ")) == 'world hello'

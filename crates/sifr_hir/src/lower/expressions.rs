@@ -498,611 +498,620 @@ pub(super) fn lower_call(call: &ExprCall, ctx: &mut LowerCtx) -> Option<HirExpr>
         }
     }
 
-    // Special handling for range() built-in
-    if func_name == "range" {
-        return lower_range_call(call, ctx);
-    }
+    let builtin_is_shadowed =
+        ctx.scope.lookup(&func_name).is_some() || ctx.functions.contains_key(&func_name);
 
-    // Special handling for len() built-in
-    if func_name == "len" {
-        return lower_len_call(call, ctx);
-    }
+    if !builtin_is_shadowed {
+        // Special handling for range() built-in
+        if func_name == "range" {
+            return lower_range_call(call, ctx);
+        }
 
-    // Special handling for isinstance() built-in
-    if func_name == "isinstance" {
-        return lower_isinstance_call(call, ctx);
-    }
+        // Special handling for len() built-in
+        if func_name == "len" {
+            return lower_len_call(call, ctx);
+        }
 
-    // Special handling for reveal_type() built-in
-    if func_name == "reveal_type" {
-        return lower_reveal_type_call(call, ctx);
-    }
+        // Special handling for isinstance() built-in
+        if func_name == "isinstance" {
+            return lower_isinstance_call(call, ctx);
+        }
 
-    // Special handling for str() conversion
-    if func_name == "str" {
-        if call.arguments.args.len() == 1 {
+        // Special handling for reveal_type() built-in
+        if func_name == "reveal_type" {
+            return lower_reveal_type_call(call, ctx);
+        }
+
+        // Special handling for str() conversion
+        if func_name == "str" {
+            if call.arguments.args.len() == 1 {
+                let arg = lower_expr(&call.arguments.args[0], ctx)?;
+                return Some(HirExpr::Call {
+                    func: "str".to_string(),
+                    args: vec![arg],
+                    ty: Type::Str,
+                });
+            }
+        }
+
+        // pow(base, exp) -> base ** exp
+        if func_name == "pow" {
+            if call.arguments.args.len() != 2 {
+                ctx.error("pow() takes exactly 2 arguments".to_string());
+                return None;
+            }
+            let base = lower_expr(&call.arguments.args[0], ctx)?;
+            let exp = lower_expr(&call.arguments.args[1], ctx)?;
+            let result_ty = if base.ty() == &Type::Int && exp.ty() == &Type::Int {
+                Type::Int
+            } else {
+                Type::Float
+            };
+            return Some(HirExpr::Call {
+                func: "pow".to_string(),
+                args: vec![base, exp],
+                ty: result_ty,
+            });
+        }
+
+        // Special handling for abs() built-in
+        if func_name == "abs" {
+            if call.arguments.args.len() != 1 {
+                ctx.error(format!(
+                    "abs() takes exactly 1 argument, got {}",
+                    call.arguments.args.len()
+                ));
+                return None;
+            }
+            let arg = lower_expr(&call.arguments.args[0], ctx)?;
+            let ty = arg.ty().clone();
+            if !ty.is_numeric() {
+                ctx.error(format!(
+                    "abs() argument must be numeric, got '{}'",
+                    ty.display_name()
+                ));
+                return None;
+            }
+            return Some(HirExpr::Call {
+                func: "abs".to_string(),
+                args: vec![arg],
+                ty,
+            });
+        }
+
+        // Special handling for hash() built-in
+        if func_name == "hash" {
+            if call.arguments.args.len() != 1 {
+                ctx.error(format!(
+                    "hash() takes exactly 1 argument, got {}",
+                    call.arguments.args.len()
+                ));
+                return None;
+            }
+            let arg = lower_expr(&call.arguments.args[0], ctx)?;
+            let ty = arg.ty().clone();
+            // Check if the type is hashable
+            if !is_hashable_type(&ty) {
+                ctx.error(format!(
+                    "hash() argument must be hashable, got '{}'",
+                    ty.display_name()
+                ));
+                return None;
+            }
+            return Some(HirExpr::Call {
+                func: "hash".to_string(),
+                args: vec![arg],
+                ty: Type::Int,
+            });
+        }
+
+        // Special handling for round() built-in
+        if func_name == "round" {
+            if call.arguments.args.is_empty() || call.arguments.args.len() > 2 {
+                ctx.error(format!(
+                    "round() takes 1 or 2 arguments, got {}",
+                    call.arguments.args.len()
+                ));
+                return None;
+            }
+            let arg = lower_expr(&call.arguments.args[0], ctx)?;
+            if !arg.ty().is_numeric() {
+                ctx.error(format!(
+                    "round() argument must be numeric, got '{}'",
+                    arg.ty().display_name()
+                ));
+                return None;
+            }
+            if call.arguments.args.len() == 2 {
+                let ndigits = lower_expr(&call.arguments.args[1], ctx)?;
+                return Some(HirExpr::Call {
+                    func: "round".to_string(),
+                    args: vec![arg, ndigits],
+                    ty: Type::Float,
+                });
+            }
+            return Some(HirExpr::Call {
+                func: "round".to_string(),
+                args: vec![arg],
+                ty: Type::Int,
+            });
+        }
+
+        // Special handling for repr() built-in
+        if func_name == "repr" {
+            if call.arguments.args.len() != 1 {
+                ctx.error(format!(
+                    "repr() takes exactly 1 argument, got {}",
+                    call.arguments.args.len()
+                ));
+                return None;
+            }
             let arg = lower_expr(&call.arguments.args[0], ctx)?;
             return Some(HirExpr::Call {
-                func: "str".to_string(),
+                func: "repr".to_string(),
                 args: vec![arg],
                 ty: Type::Str,
             });
         }
-    }
 
-    // pow(base, exp) -> base ** exp
-    if func_name == "pow" {
-        if call.arguments.args.len() != 2 {
-            ctx.error("pow() takes exactly 2 arguments".to_string());
-            return None;
-        }
-        let base = lower_expr(&call.arguments.args[0], ctx)?;
-        let exp = lower_expr(&call.arguments.args[1], ctx)?;
-        let result_ty = if base.ty() == &Type::Int && exp.ty() == &Type::Int {
-            Type::Int
-        } else {
-            Type::Float
-        };
-        return Some(HirExpr::Call {
-            func: "pow".to_string(),
-            args: vec![base, exp],
-            ty: result_ty,
-        });
-    }
-
-    // Special handling for abs() built-in
-    if func_name == "abs" {
-        if call.arguments.args.len() != 1 {
-            ctx.error(format!(
-                "abs() takes exactly 1 argument, got {}",
-                call.arguments.args.len()
-            ));
-            return None;
-        }
-        let arg = lower_expr(&call.arguments.args[0], ctx)?;
-        let ty = arg.ty().clone();
-        if !ty.is_numeric() {
-            ctx.error(format!(
-                "abs() argument must be numeric, got '{}'",
-                ty.display_name()
-            ));
-            return None;
-        }
-        return Some(HirExpr::Call {
-            func: "abs".to_string(),
-            args: vec![arg],
-            ty,
-        });
-    }
-
-    // Special handling for hash() built-in
-    if func_name == "hash" {
-        if call.arguments.args.len() != 1 {
-            ctx.error(format!(
-                "hash() takes exactly 1 argument, got {}",
-                call.arguments.args.len()
-            ));
-            return None;
-        }
-        let arg = lower_expr(&call.arguments.args[0], ctx)?;
-        let ty = arg.ty().clone();
-        // Check if the type is hashable
-        if !is_hashable_type(&ty) {
-            ctx.error(format!(
-                "hash() argument must be hashable, got '{}'",
-                ty.display_name()
-            ));
-            return None;
-        }
-        return Some(HirExpr::Call {
-            func: "hash".to_string(),
-            args: vec![arg],
-            ty: Type::Int,
-        });
-    }
-
-    // Special handling for round() built-in
-    if func_name == "round" {
-        if call.arguments.args.is_empty() || call.arguments.args.len() > 2 {
-            ctx.error(format!(
-                "round() takes 1 or 2 arguments, got {}",
-                call.arguments.args.len()
-            ));
-            return None;
-        }
-        let arg = lower_expr(&call.arguments.args[0], ctx)?;
-        if !arg.ty().is_numeric() {
-            ctx.error(format!(
-                "round() argument must be numeric, got '{}'",
-                arg.ty().display_name()
-            ));
-            return None;
-        }
-        if call.arguments.args.len() == 2 {
-            let ndigits = lower_expr(&call.arguments.args[1], ctx)?;
-            return Some(HirExpr::Call {
-                func: "round".to_string(),
-                args: vec![arg, ndigits],
-                ty: Type::Float,
-            });
-        }
-        return Some(HirExpr::Call {
-            func: "round".to_string(),
-            args: vec![arg],
-            ty: Type::Int,
-        });
-    }
-
-    // Special handling for repr() built-in
-    if func_name == "repr" {
-        if call.arguments.args.len() != 1 {
-            ctx.error(format!(
-                "repr() takes exactly 1 argument, got {}",
-                call.arguments.args.len()
-            ));
-            return None;
-        }
-        let arg = lower_expr(&call.arguments.args[0], ctx)?;
-        return Some(HirExpr::Call {
-            func: "repr".to_string(),
-            args: vec![arg],
-            ty: Type::Str,
-        });
-    }
-
-    // Decimal("...") / Decimal(int|bigint|bigdecimal)
-    if func_name == "Decimal" {
-        if call.arguments.args.len() != 1 {
-            ctx.error(format!(
-                "[E2505] Decimal() takes exactly 1 argument, got {}",
-                call.arguments.args.len()
-            ));
-            return None;
-        }
-        let arg = lower_expr(&call.arguments.args[0], ctx)?;
-        let arg_ty = arg.ty().clone();
-        let decimal_conversion_error_ty = ctx
-            .class_types
-            .get("DecimalConversionError")
-            .cloned()
-            .unwrap_or(Type::Class {
-                name: "DecimalConversionError".to_string(),
-                fields: vec![("message".to_string(), Type::Str)],
-                methods: vec![],
-                parent_class: None,
-            });
-        let result_ty = match arg_ty {
-            Type::Str => {
-                if let Expr::StringLiteral(lit) = &call.arguments.args[0] {
-                    validate_decimal_string_literal(lit.value.to_str(), ctx)?;
-                } else {
-                    ctx.error(
-                        "[E2501] Decimal() string construction requires a string literal"
-                            .to_string(),
-                    );
-                    return None;
-                }
-                Type::Decimal
+        // Decimal("...") / Decimal(int|bigint|bigdecimal)
+        if func_name == "Decimal" {
+            if call.arguments.args.len() != 1 {
+                ctx.error(format!(
+                    "[E2505] Decimal() takes exactly 1 argument, got {}",
+                    call.arguments.args.len()
+                ));
+                return None;
             }
-            Type::Int | Type::LiteralInt(_) | Type::Decimal => Type::Decimal,
-            Type::BigInt | Type::BigDecimal => Type::Result(
-                Box::new(Type::Decimal),
-                Box::new(decimal_conversion_error_ty),
-            ),
-            Type::Float => {
-                ctx.error(
+            let arg = lower_expr(&call.arguments.args[0], ctx)?;
+            let arg_ty = arg.ty().clone();
+            let decimal_conversion_error_ty = ctx
+                .class_types
+                .get("DecimalConversionError")
+                .cloned()
+                .unwrap_or(Type::Class {
+                    name: "DecimalConversionError".to_string(),
+                    fields: vec![("message".to_string(), Type::Str)],
+                    methods: vec![],
+                    parent_class: None,
+                });
+            let result_ty = match arg_ty {
+                Type::Str => {
+                    if let Expr::StringLiteral(lit) = &call.arguments.args[0] {
+                        validate_decimal_string_literal(lit.value.to_str(), ctx)?;
+                    } else {
+                        ctx.error(
+                            "[E2501] Decimal() string construction requires a string literal"
+                                .to_string(),
+                        );
+                        return None;
+                    }
+                    Type::Decimal
+                }
+                Type::Int | Type::LiteralInt(_) | Type::Decimal => Type::Decimal,
+                Type::BigInt | Type::BigDecimal => Type::Result(
+                    Box::new(Type::Decimal),
+                    Box::new(decimal_conversion_error_ty),
+                ),
+                Type::Float => {
+                    ctx.error(
                     "[E2505] Decimal(float_value) is not allowed; use Decimal(\"...\") for exact construction"
                         .to_string(),
                 );
-                return None;
-            }
-            _ => {
-                ctx.error(format!(
+                    return None;
+                }
+                _ => {
+                    ctx.error(format!(
                     "[E2505] Decimal() requires str, int, bigint, decimal, or bigdecimal argument, got '{}'",
                     arg_ty.display_name()
                 ));
-                return None;
-            }
-        };
-        return Some(HirExpr::Call {
-            func: "Decimal".to_string(),
-            args: vec![arg],
-            ty: result_ty,
-        });
-    }
-
-    // BigDecimal("...") / BigDecimal(int|bigint|decimal)
-    if func_name == "BigDecimal" {
-        if call.arguments.args.len() != 1 {
-            ctx.error(format!(
-                "[E2506] BigDecimal() takes exactly 1 argument, got {}",
-                call.arguments.args.len()
-            ));
-            return None;
-        }
-        let arg = lower_expr(&call.arguments.args[0], ctx)?;
-        let arg_ty = arg.ty().clone();
-        match arg_ty {
-            Type::Str => {
-                if let Expr::StringLiteral(lit) = &call.arguments.args[0] {
-                    validate_bigdecimal_string_literal(lit.value.to_str(), ctx)?;
-                } else {
-                    ctx.error(
-                        "[E2502] BigDecimal() string construction requires a string literal"
-                            .to_string(),
-                    );
                     return None;
                 }
+            };
+            return Some(HirExpr::Call {
+                func: "Decimal".to_string(),
+                args: vec![arg],
+                ty: result_ty,
+            });
+        }
+
+        // BigDecimal("...") / BigDecimal(int|bigint|decimal)
+        if func_name == "BigDecimal" {
+            if call.arguments.args.len() != 1 {
+                ctx.error(format!(
+                    "[E2506] BigDecimal() takes exactly 1 argument, got {}",
+                    call.arguments.args.len()
+                ));
+                return None;
             }
-            Type::Int | Type::LiteralInt(_) | Type::BigInt | Type::Decimal | Type::BigDecimal => {}
-            Type::Float => {
-                ctx.error(
+            let arg = lower_expr(&call.arguments.args[0], ctx)?;
+            let arg_ty = arg.ty().clone();
+            match arg_ty {
+                Type::Str => {
+                    if let Expr::StringLiteral(lit) = &call.arguments.args[0] {
+                        validate_bigdecimal_string_literal(lit.value.to_str(), ctx)?;
+                    } else {
+                        ctx.error(
+                            "[E2502] BigDecimal() string construction requires a string literal"
+                                .to_string(),
+                        );
+                        return None;
+                    }
+                }
+                Type::Int
+                | Type::LiteralInt(_)
+                | Type::BigInt
+                | Type::Decimal
+                | Type::BigDecimal => {}
+                Type::Float => {
+                    ctx.error(
                     "[E2506] BigDecimal(float_value) is not allowed; use BigDecimal(\"...\") for exact construction"
                         .to_string(),
                 );
+                    return None;
+                }
+                _ => {
+                    ctx.error(format!(
+                    "[E2506] BigDecimal() requires str, int, bigint, decimal, or bigdecimal argument, got '{}'",
+                    arg_ty.display_name()
+                ));
+                    return None;
+                }
+            }
+            return Some(HirExpr::Call {
+                func: "BigDecimal".to_string(),
+                args: vec![arg],
+                ty: Type::BigDecimal,
+            });
+        }
+
+        // Special handling for int() conversion
+        if func_name == "int" {
+            if call.arguments.args.len() != 1 {
+                ctx.error(format!(
+                    "int() takes exactly 1 argument, got {}",
+                    call.arguments.args.len()
+                ));
                 return None;
             }
-            _ => {
+            let arg = lower_expr(&call.arguments.args[0], ctx)?;
+            let arg_ty = arg.ty().clone();
+            // int(str) -> Result[int, ParseError] (fallible)
+            // int(float) -> int (infallible truncation)
+            // int(int) -> int (identity)
+            // int(bool) -> int (True=1, False=0)
+            // int(bigint) -> Result[int, OverflowError] (may overflow i64)
+            // int(decimal|bigdecimal) -> Result[int, DecimalConversionError] (truncate toward zero)
+            let result_ty = if arg_ty == Type::Str {
+                let parse_error_ty =
+                    ctx.class_types
+                        .get("ParseError")
+                        .cloned()
+                        .unwrap_or(Type::Class {
+                            name: "ParseError".to_string(),
+                            fields: vec![("message".to_string(), Type::Str)],
+                            methods: vec![],
+                            parent_class: None,
+                        });
+                Type::Result(Box::new(Type::Int), Box::new(parse_error_ty))
+            } else if arg_ty == Type::BigInt {
+                let overflow_error_ty =
+                    ctx.class_types
+                        .get("OverflowError")
+                        .cloned()
+                        .unwrap_or(Type::Class {
+                            name: "OverflowError".to_string(),
+                            fields: vec![("message".to_string(), Type::Str)],
+                            methods: vec![],
+                            parent_class: None,
+                        });
+                Type::Result(Box::new(Type::Int), Box::new(overflow_error_ty))
+            } else if matches!(arg_ty, Type::Decimal | Type::BigDecimal) {
+                Type::Result(
+                    Box::new(Type::Int),
+                    Box::new(decimal_conversion_error_type(ctx)),
+                )
+            } else {
+                Type::Int
+            };
+            return Some(HirExpr::Call {
+                func: "int".to_string(),
+                args: vec![arg],
+                ty: result_ty,
+            });
+        }
+
+        // bigint(n) — convert int|bigint|decimal|bigdecimal to bigint
+        if func_name == "bigint" {
+            if call.arguments.args.len() != 1 {
                 ctx.error(format!(
-                    "[E2506] BigDecimal() requires str, int, bigint, decimal, or bigdecimal argument, got '{}'",
+                    "bigint() takes exactly 1 argument, got {}",
+                    call.arguments.args.len()
+                ));
+                return None;
+            }
+            let arg = lower_expr(&call.arguments.args[0], ctx)?;
+            let arg_ty = arg.ty().clone();
+            if !matches!(
+                arg_ty,
+                Type::Int | Type::LiteralInt(_) | Type::BigInt | Type::Decimal | Type::BigDecimal
+            ) {
+                ctx.error(format!(
+                    "bigint() requires int, bigint, decimal, or bigdecimal argument, got '{}'",
                     arg_ty.display_name()
                 ));
                 return None;
             }
+            return Some(HirExpr::Call {
+                func: "bigint".to_string(),
+                args: vec![arg],
+                ty: Type::BigInt,
+            });
         }
-        return Some(HirExpr::Call {
-            func: "BigDecimal".to_string(),
-            args: vec![arg],
-            ty: Type::BigDecimal,
-        });
-    }
 
-    // Special handling for int() conversion
-    if func_name == "int" {
-        if call.arguments.args.len() != 1 {
-            ctx.error(format!(
-                "int() takes exactly 1 argument, got {}",
-                call.arguments.args.len()
-            ));
-            return None;
-        }
-        let arg = lower_expr(&call.arguments.args[0], ctx)?;
-        let arg_ty = arg.ty().clone();
-        // int(str) -> Result[int, ParseError] (fallible)
-        // int(float) -> int (infallible truncation)
-        // int(int) -> int (identity)
-        // int(bool) -> int (True=1, False=0)
-        // int(bigint) -> Result[int, OverflowError] (may overflow i64)
-        // int(decimal|bigdecimal) -> Result[int, DecimalConversionError] (truncate toward zero)
-        let result_ty = if arg_ty == Type::Str {
-            let parse_error_ty =
-                ctx.class_types
-                    .get("ParseError")
-                    .cloned()
-                    .unwrap_or(Type::Class {
-                        name: "ParseError".to_string(),
-                        fields: vec![("message".to_string(), Type::Str)],
-                        methods: vec![],
-                        parent_class: None,
-                    });
-            Type::Result(Box::new(Type::Int), Box::new(parse_error_ty))
-        } else if arg_ty == Type::BigInt {
-            let overflow_error_ty =
-                ctx.class_types
-                    .get("OverflowError")
-                    .cloned()
-                    .unwrap_or(Type::Class {
-                        name: "OverflowError".to_string(),
-                        fields: vec![("message".to_string(), Type::Str)],
-                        methods: vec![],
-                        parent_class: None,
-                    });
-            Type::Result(Box::new(Type::Int), Box::new(overflow_error_ty))
-        } else if matches!(arg_ty, Type::Decimal | Type::BigDecimal) {
-            Type::Result(
-                Box::new(Type::Int),
-                Box::new(decimal_conversion_error_type(ctx)),
-            )
-        } else {
-            Type::Int
-        };
-        return Some(HirExpr::Call {
-            func: "int".to_string(),
-            args: vec![arg],
-            ty: result_ty,
-        });
-    }
-
-    // bigint(n) — convert int|bigint|decimal|bigdecimal to bigint
-    if func_name == "bigint" {
-        if call.arguments.args.len() != 1 {
-            ctx.error(format!(
-                "bigint() takes exactly 1 argument, got {}",
-                call.arguments.args.len()
-            ));
-            return None;
-        }
-        let arg = lower_expr(&call.arguments.args[0], ctx)?;
-        let arg_ty = arg.ty().clone();
-        if !matches!(
-            arg_ty,
-            Type::Int | Type::LiteralInt(_) | Type::BigInt | Type::Decimal | Type::BigDecimal
-        ) {
-            ctx.error(format!(
-                "bigint() requires int, bigint, decimal, or bigdecimal argument, got '{}'",
-                arg_ty.display_name()
-            ));
-            return None;
-        }
-        return Some(HirExpr::Call {
-            func: "bigint".to_string(),
-            args: vec![arg],
-            ty: Type::BigInt,
-        });
-    }
-
-    // Special handling for float() conversion
-    if func_name == "float" {
-        if call.arguments.args.len() != 1 {
-            ctx.error(format!(
-                "float() takes exactly 1 argument, got {}",
-                call.arguments.args.len()
-            ));
-            return None;
-        }
-        let arg = lower_expr(&call.arguments.args[0], ctx)?;
-        let arg_ty = arg.ty().clone();
-        // float(str) -> Result[float, ParseError] (fallible)
-        // float(int) -> float (infallible widening)
-        // float(float) -> float (identity)
-        let result_ty = if arg_ty == Type::Str {
-            let parse_error_ty =
-                ctx.class_types
-                    .get("ParseError")
-                    .cloned()
-                    .unwrap_or(Type::Class {
-                        name: "ParseError".to_string(),
-                        fields: vec![("message".to_string(), Type::Str)],
-                        methods: vec![],
-                        parent_class: None,
-                    });
-            Type::Result(Box::new(Type::Float), Box::new(parse_error_ty))
-        } else if arg_ty == Type::Decimal {
-            ctx.error(
+        // Special handling for float() conversion
+        if func_name == "float" {
+            if call.arguments.args.len() != 1 {
+                ctx.error(format!(
+                    "float() takes exactly 1 argument, got {}",
+                    call.arguments.args.len()
+                ));
+                return None;
+            }
+            let arg = lower_expr(&call.arguments.args[0], ctx)?;
+            let arg_ty = arg.ty().clone();
+            // float(str) -> Result[float, ParseError] (fallible)
+            // float(int) -> float (infallible widening)
+            // float(float) -> float (identity)
+            let result_ty = if arg_ty == Type::Str {
+                let parse_error_ty =
+                    ctx.class_types
+                        .get("ParseError")
+                        .cloned()
+                        .unwrap_or(Type::Class {
+                            name: "ParseError".to_string(),
+                            fields: vec![("message".to_string(), Type::Str)],
+                            methods: vec![],
+                            parent_class: None,
+                        });
+                Type::Result(Box::new(Type::Float), Box::new(parse_error_ty))
+            } else if arg_ty == Type::Decimal {
+                ctx.error(
                 "[E2505] float(decimal_value) is not allowed; decimal values are exact and cannot be converted to float"
                     .to_string(),
             );
-            return None;
-        } else if arg_ty == Type::BigDecimal {
-            ctx.error(
+                return None;
+            } else if arg_ty == Type::BigDecimal {
+                ctx.error(
                 "[E2506] float(bigdecimal_value) is not allowed; bigdecimal values are exact and cannot be converted to float"
                     .to_string(),
             );
-            return None;
-        } else {
-            Type::Float
-        };
-        return Some(HirExpr::Call {
-            func: "float".to_string(),
-            args: vec![arg],
-            ty: result_ty,
-        });
-    }
-
-    // Special handling for bool() conversion
-    if func_name == "bool" {
-        if call.arguments.args.len() != 1 {
-            ctx.error(format!(
-                "bool() takes exactly 1 argument, got {}",
-                call.arguments.args.len()
-            ));
-            return None;
-        }
-        let arg = lower_expr(&call.arguments.args[0], ctx)?;
-        return Some(HirExpr::Call {
-            func: "bool".to_string(),
-            args: vec![arg],
-            ty: Type::Bool,
-        });
-    }
-
-    // --- Built-in generic functions ---
-
-    // min(iterable) or min(a, b) -> element type
-    if func_name == "min" {
-        if call.arguments.args.len() == 2 {
-            // min(a, b) -> std::cmp::min(a, b)
-            let a = lower_expr(&call.arguments.args[0], ctx)?;
-            let b = lower_expr(&call.arguments.args[1], ctx)?;
-            let result_ty = a.ty().clone();
+                return None;
+            } else {
+                Type::Float
+            };
             return Some(HirExpr::Call {
-                func: "min".to_string(),
-                args: vec![a, b],
+                func: "float".to_string(),
+                args: vec![arg],
                 ty: result_ty,
             });
-        } else if call.arguments.args.len() == 1 {
+        }
+
+        // Special handling for bool() conversion
+        if func_name == "bool" {
+            if call.arguments.args.len() != 1 {
+                ctx.error(format!(
+                    "bool() takes exactly 1 argument, got {}",
+                    call.arguments.args.len()
+                ));
+                return None;
+            }
+            let arg = lower_expr(&call.arguments.args[0], ctx)?;
+            return Some(HirExpr::Call {
+                func: "bool".to_string(),
+                args: vec![arg],
+                ty: Type::Bool,
+            });
+        }
+
+        // --- Built-in generic functions ---
+
+        // min(iterable) or min(a, b) -> element type
+        if func_name == "min" {
+            if call.arguments.args.len() == 2 {
+                // min(a, b) -> std::cmp::min(a, b)
+                let a = lower_expr(&call.arguments.args[0], ctx)?;
+                let b = lower_expr(&call.arguments.args[1], ctx)?;
+                let result_ty = a.ty().clone();
+                return Some(HirExpr::Call {
+                    func: "min".to_string(),
+                    args: vec![a, b],
+                    ty: result_ty,
+                });
+            } else if call.arguments.args.len() == 1 {
+                let arg = lower_expr(&call.arguments.args[0], ctx)?;
+                let elem_ty = if let Type::List(elem) = arg.ty() {
+                    *elem.clone()
+                } else {
+                    ctx.error(format!(
+                        "min() argument must be a list, got '{}'",
+                        arg.ty().display_name()
+                    ));
+                    return None;
+                };
+                // Returns Option[T] = T | None (safe: None on empty list)
+                return Some(HirExpr::Call {
+                    func: "min".to_string(),
+                    args: vec![arg],
+                    ty: Type::Union(vec![elem_ty, Type::None]),
+                });
+            }
+            ctx.error("min() takes 1 or 2 arguments".to_string());
+            return None;
+        }
+
+        // max(iterable) or max(a, b) -> element type
+        if func_name == "max" {
+            if call.arguments.args.len() == 2 {
+                // max(a, b) -> std::cmp::max(a, b)
+                let a = lower_expr(&call.arguments.args[0], ctx)?;
+                let b = lower_expr(&call.arguments.args[1], ctx)?;
+                let result_ty = a.ty().clone();
+                return Some(HirExpr::Call {
+                    func: "max".to_string(),
+                    args: vec![a, b],
+                    ty: result_ty,
+                });
+            } else if call.arguments.args.len() == 1 {
+                let arg = lower_expr(&call.arguments.args[0], ctx)?;
+                let elem_ty = if let Type::List(elem) = arg.ty() {
+                    *elem.clone()
+                } else {
+                    ctx.error(format!(
+                        "max() argument must be a list, got '{}'",
+                        arg.ty().display_name()
+                    ));
+                    return None;
+                };
+                // Returns Option[T] = T | None (safe: None on empty list)
+                return Some(HirExpr::Call {
+                    func: "max".to_string(),
+                    args: vec![arg],
+                    ty: Type::Union(vec![elem_ty, Type::None]),
+                });
+            }
+            ctx.error("max() takes 1 or 2 arguments".to_string());
+            return None;
+        }
+
+        // sum(iterable) -> element type (int or float)
+        if func_name == "sum" {
+            if call.arguments.args.len() != 1 {
+                ctx.error("sum() takes exactly 1 argument".to_string());
+                return None;
+            }
             let arg = lower_expr(&call.arguments.args[0], ctx)?;
             let elem_ty = if let Type::List(elem) = arg.ty() {
                 *elem.clone()
             } else {
                 ctx.error(format!(
-                    "min() argument must be a list, got '{}'",
+                    "sum() argument must be a list, got '{}'",
                     arg.ty().display_name()
                 ));
                 return None;
             };
-            // Returns Option[T] = T | None (safe: None on empty list)
             return Some(HirExpr::Call {
-                func: "min".to_string(),
+                func: "sum".to_string(),
                 args: vec![arg],
-                ty: Type::Union(vec![elem_ty, Type::None]),
+                ty: elem_ty,
             });
         }
-        ctx.error("min() takes 1 or 2 arguments".to_string());
-        return None;
-    }
 
-    // max(iterable) or max(a, b) -> element type
-    if func_name == "max" {
-        if call.arguments.args.len() == 2 {
-            // max(a, b) -> std::cmp::max(a, b)
-            let a = lower_expr(&call.arguments.args[0], ctx)?;
-            let b = lower_expr(&call.arguments.args[1], ctx)?;
-            let result_ty = a.ty().clone();
+        // sorted(iterable) -> list of element type
+        if func_name == "sorted" {
+            if call.arguments.args.len() != 1 {
+                ctx.error("sorted() takes exactly 1 argument".to_string());
+                return None;
+            }
+            let arg = lower_expr(&call.arguments.args[0], ctx)?;
+            let list_ty = if let Type::List(_) = arg.ty() {
+                arg.ty().clone()
+            } else {
+                ctx.error(format!(
+                    "sorted() argument must be a list, got '{}'",
+                    arg.ty().display_name()
+                ));
+                return None;
+            };
             return Some(HirExpr::Call {
-                func: "max".to_string(),
-                args: vec![a, b],
-                ty: result_ty,
+                func: "sorted".to_string(),
+                args: vec![arg],
+                ty: list_ty,
             });
-        } else if call.arguments.args.len() == 1 {
+        }
+
+        // reversed(iterable) -> list of element type
+        if func_name == "reversed" {
+            if call.arguments.args.len() != 1 {
+                ctx.error("reversed() takes exactly 1 argument".to_string());
+                return None;
+            }
+            let arg = lower_expr(&call.arguments.args[0], ctx)?;
+            let list_ty = if let Type::List(_) = arg.ty() {
+                arg.ty().clone()
+            } else {
+                ctx.error(format!(
+                    "reversed() argument must be a list, got '{}'",
+                    arg.ty().display_name()
+                ));
+                return None;
+            };
+            return Some(HirExpr::Call {
+                func: "reversed".to_string(),
+                args: vec![arg],
+                ty: list_ty,
+            });
+        }
+
+        // enumerate(iterable) -> list of (int, element) tuples
+        if func_name == "enumerate" {
+            if call.arguments.args.len() != 1 {
+                ctx.error("enumerate() takes exactly 1 argument".to_string());
+                return None;
+            }
             let arg = lower_expr(&call.arguments.args[0], ctx)?;
             let elem_ty = if let Type::List(elem) = arg.ty() {
                 *elem.clone()
             } else {
                 ctx.error(format!(
-                    "max() argument must be a list, got '{}'",
+                    "enumerate() argument must be a list, got '{}'",
                     arg.ty().display_name()
                 ));
                 return None;
             };
-            // Returns Option[T] = T | None (safe: None on empty list)
+            let tuple_ty = Type::Tuple(vec![Type::Int, elem_ty]);
+            let result_ty = Type::List(Box::new(tuple_ty));
             return Some(HirExpr::Call {
-                func: "max".to_string(),
+                func: "enumerate".to_string(),
                 args: vec![arg],
-                ty: Type::Union(vec![elem_ty, Type::None]),
+                ty: result_ty,
             });
         }
-        ctx.error("max() takes 1 or 2 arguments".to_string());
-        return None;
-    }
 
-    // sum(iterable) -> element type (int or float)
-    if func_name == "sum" {
-        if call.arguments.args.len() != 1 {
-            ctx.error("sum() takes exactly 1 argument".to_string());
-            return None;
+        // zip(iter1, iter2) -> list of (elem1, elem2) tuples
+        if func_name == "zip" {
+            if call.arguments.args.len() != 2 {
+                ctx.error("zip() takes exactly 2 arguments".to_string());
+                return None;
+            }
+            let arg1 = lower_expr(&call.arguments.args[0], ctx)?;
+            let arg2 = lower_expr(&call.arguments.args[1], ctx)?;
+            let elem1 = if let Type::List(elem) = arg1.ty() {
+                *elem.clone()
+            } else {
+                ctx.error(format!(
+                    "zip() argument 1 must be a list, got '{}'",
+                    arg1.ty().display_name()
+                ));
+                return None;
+            };
+            let elem2 = if let Type::List(elem) = arg2.ty() {
+                *elem.clone()
+            } else {
+                ctx.error(format!(
+                    "zip() argument 2 must be a list, got '{}'",
+                    arg2.ty().display_name()
+                ));
+                return None;
+            };
+            let tuple_ty = Type::Tuple(vec![elem1, elem2]);
+            let result_ty = Type::List(Box::new(tuple_ty));
+            return Some(HirExpr::Call {
+                func: "zip".to_string(),
+                args: vec![arg1, arg2],
+                ty: result_ty,
+            });
         }
-        let arg = lower_expr(&call.arguments.args[0], ctx)?;
-        let elem_ty = if let Type::List(elem) = arg.ty() {
-            *elem.clone()
-        } else {
-            ctx.error(format!(
-                "sum() argument must be a list, got '{}'",
-                arg.ty().display_name()
-            ));
-            return None;
-        };
-        return Some(HirExpr::Call {
-            func: "sum".to_string(),
-            args: vec![arg],
-            ty: elem_ty,
-        });
-    }
-
-    // sorted(iterable) -> list of element type
-    if func_name == "sorted" {
-        if call.arguments.args.len() != 1 {
-            ctx.error("sorted() takes exactly 1 argument".to_string());
-            return None;
-        }
-        let arg = lower_expr(&call.arguments.args[0], ctx)?;
-        let list_ty = if let Type::List(_) = arg.ty() {
-            arg.ty().clone()
-        } else {
-            ctx.error(format!(
-                "sorted() argument must be a list, got '{}'",
-                arg.ty().display_name()
-            ));
-            return None;
-        };
-        return Some(HirExpr::Call {
-            func: "sorted".to_string(),
-            args: vec![arg],
-            ty: list_ty,
-        });
-    }
-
-    // reversed(iterable) -> list of element type
-    if func_name == "reversed" {
-        if call.arguments.args.len() != 1 {
-            ctx.error("reversed() takes exactly 1 argument".to_string());
-            return None;
-        }
-        let arg = lower_expr(&call.arguments.args[0], ctx)?;
-        let list_ty = if let Type::List(_) = arg.ty() {
-            arg.ty().clone()
-        } else {
-            ctx.error(format!(
-                "reversed() argument must be a list, got '{}'",
-                arg.ty().display_name()
-            ));
-            return None;
-        };
-        return Some(HirExpr::Call {
-            func: "reversed".to_string(),
-            args: vec![arg],
-            ty: list_ty,
-        });
-    }
-
-    // enumerate(iterable) -> list of (int, element) tuples
-    if func_name == "enumerate" {
-        if call.arguments.args.len() != 1 {
-            ctx.error("enumerate() takes exactly 1 argument".to_string());
-            return None;
-        }
-        let arg = lower_expr(&call.arguments.args[0], ctx)?;
-        let elem_ty = if let Type::List(elem) = arg.ty() {
-            *elem.clone()
-        } else {
-            ctx.error(format!(
-                "enumerate() argument must be a list, got '{}'",
-                arg.ty().display_name()
-            ));
-            return None;
-        };
-        let tuple_ty = Type::Tuple(vec![Type::Int, elem_ty]);
-        let result_ty = Type::List(Box::new(tuple_ty));
-        return Some(HirExpr::Call {
-            func: "enumerate".to_string(),
-            args: vec![arg],
-            ty: result_ty,
-        });
-    }
-
-    // zip(iter1, iter2) -> list of (elem1, elem2) tuples
-    if func_name == "zip" {
-        if call.arguments.args.len() != 2 {
-            ctx.error("zip() takes exactly 2 arguments".to_string());
-            return None;
-        }
-        let arg1 = lower_expr(&call.arguments.args[0], ctx)?;
-        let arg2 = lower_expr(&call.arguments.args[1], ctx)?;
-        let elem1 = if let Type::List(elem) = arg1.ty() {
-            *elem.clone()
-        } else {
-            ctx.error(format!(
-                "zip() argument 1 must be a list, got '{}'",
-                arg1.ty().display_name()
-            ));
-            return None;
-        };
-        let elem2 = if let Type::List(elem) = arg2.ty() {
-            *elem.clone()
-        } else {
-            ctx.error(format!(
-                "zip() argument 2 must be a list, got '{}'",
-                arg2.ty().display_name()
-            ));
-            return None;
-        };
-        let tuple_ty = Type::Tuple(vec![elem1, elem2]);
-        let result_ty = Type::List(Box::new(tuple_ty));
-        return Some(HirExpr::Call {
-            func: "zip".to_string(),
-            args: vec![arg1, arg2],
-            ty: result_ty,
-        });
     }
 
     // any(iterable) -> bool
@@ -3557,6 +3566,17 @@ mod tests {
         assert!(
             result.is_ok(),
             "borrow-by-default should not cause use-after-move"
+        );
+    }
+
+    #[test]
+    fn test_user_defined_sum_shadows_builtin() {
+        let result = lower_source(
+            "def sum(num1: int, num2: int) -> int:\n    return num1 + num2\ndef main():\n    assert sum(12, 5) == 17\n",
+        );
+        assert!(
+            result.is_ok(),
+            "user-defined sum should shadow the builtin lowering path"
         );
     }
 

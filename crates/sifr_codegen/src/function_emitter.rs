@@ -1,11 +1,65 @@
+use crate::helpers::collect_reassigned_vars;
 use crate::{
     body_contains_yield, collect_mutated_vars_with_sigs, type_contains_typevar, RustEmitter,
     RustExpr, RustItem, RustLiteral, RustParam, RustStmt, RustType, RustTypeParam, Visibility,
 };
-use sifr_hir::{HirExpr, HirFunction, HirStmt};
-use sifr_type_system::{ParamConvention, Type};
+use sifr_hir::{HirExpr, HirFunction, HirParam, HirStmt};
+use sifr_type_system::{OwnershipKind, ParamConvention, Type};
 
 impl RustEmitter {
+    pub(super) fn lower_mutable_param_shadows(
+        &self,
+        params: &[HirParam],
+        reassigned_vars: &std::collections::HashSet<String>,
+    ) -> Vec<(String, RustExpr)> {
+        params
+            .iter()
+            .filter(|param| {
+                if param.convention == ParamConvention::Own {
+                    self.mutated_vars.contains(&param.name)
+                } else {
+                    reassigned_vars.contains(&param.name)
+                }
+            })
+            .map(|param| {
+                let value = if matches!(
+                    param.convention,
+                    ParamConvention::Borrow | ParamConvention::MutBorrow
+                ) && param.ty.ownership() != OwnershipKind::Copy
+                {
+                    RustExpr::Clone(Box::new(RustExpr::Ident(param.name.clone())))
+                } else {
+                    RustExpr::Ident(param.name.clone())
+                };
+                (param.name.clone(), value)
+            })
+            .collect()
+    }
+
+    pub(super) fn apply_mutable_param_shadowing(
+        &mut self,
+        mutable_param_shadows: &[(String, RustExpr)],
+    ) {
+        for (param_name, _) in mutable_param_shadows {
+            self.borrowed_params.remove(param_name);
+            self.mut_borrowed_params.remove(param_name);
+        }
+    }
+
+    pub(super) fn emit_mutable_param_shadow_stmts(
+        mutable_param_shadows: &[(String, RustExpr)],
+    ) -> Vec<RustStmt> {
+        mutable_param_shadows
+            .iter()
+            .map(|(param_name, value)| RustStmt::Let {
+                mutable: true,
+                name: param_name.clone(),
+                ty: None,
+                value: value.clone(),
+            })
+            .collect()
+    }
+
     fn returns_result_none(ty: &Type) -> bool {
         match crate::resolve_alias_type_for_plain_call(ty) {
             Type::Result(ok_ty, _) => matches!(
@@ -131,18 +185,10 @@ impl RustEmitter {
     fn lower_buffered_generator_function_body(
         &mut self,
         func: &HirFunction,
-        mutable_param_shadows: &[String],
+        mutable_param_shadows: &[(String, RustExpr)],
         yield_ty: &RustType,
     ) -> Vec<RustStmt> {
-        let mut body = Vec::new();
-        for param_name in mutable_param_shadows {
-            body.push(RustStmt::Let {
-                mutable: true,
-                name: param_name.clone(),
-                ty: None,
-                value: RustExpr::Ident(param_name.clone()),
-            });
-        }
+        let mut body = Self::emit_mutable_param_shadow_stmts(mutable_param_shadows);
 
         body.push(RustStmt::Let {
             mutable: true,
@@ -176,7 +222,7 @@ impl RustEmitter {
     fn lower_generator_function_body(
         &mut self,
         func: &HirFunction,
-        mutable_param_shadows: &[String],
+        mutable_param_shadows: &[(String, RustExpr)],
     ) -> Vec<RustStmt> {
         let yield_ty = if let Type::List(elem) = &func.return_type {
             crate::sifr_type_to_rust_type(elem)
@@ -184,15 +230,7 @@ impl RustEmitter {
             RustType::I64
         };
 
-        let mut body = Vec::new();
-        for param_name in mutable_param_shadows {
-            body.push(RustStmt::Let {
-                mutable: true,
-                name: param_name.clone(),
-                ty: None,
-                value: RustExpr::Ident(param_name.clone()),
-            });
-        }
+        let mut body = Self::emit_mutable_param_shadow_stmts(mutable_param_shadows);
 
         let mut init_stmts: Vec<&HirStmt> = Vec::new();
         let mut trailing_stmts: Vec<&HirStmt> = Vec::new();
@@ -478,14 +516,10 @@ impl RustEmitter {
             self.generator_functions.insert(func.name.clone());
         }
 
-        let mutable_param_shadows = func
-            .params
-            .iter()
-            .filter(|param| {
-                param.convention == ParamConvention::Own && self.mutated_vars.contains(&param.name)
-            })
-            .map(|param| param.name.clone())
-            .collect::<Vec<_>>();
+        let reassigned_vars = collect_reassigned_vars(&func.body);
+        let mutable_param_shadows =
+            self.lower_mutable_param_shadows(&func.params, &reassigned_vars);
+        self.apply_mutable_param_shadowing(&mutable_param_shadows);
 
         let params = func
             .params
@@ -499,15 +533,7 @@ impl RustEmitter {
         let mut lowered_body = if is_generator {
             self.lower_generator_function_body(func, &mutable_param_shadows)
         } else {
-            let mut lowered = Vec::new();
-            for param_name in &mutable_param_shadows {
-                lowered.push(RustStmt::Let {
-                    mutable: true,
-                    name: param_name.clone(),
-                    ty: None,
-                    value: RustExpr::Ident(param_name.clone()),
-                });
-            }
+            let mut lowered = Self::emit_mutable_param_shadow_stmts(&mutable_param_shadows);
             for stmt in &func.body {
                 lowered.extend(
                     self.lower_stmt_strict_for_function(stmt, "function body statement lowering"),

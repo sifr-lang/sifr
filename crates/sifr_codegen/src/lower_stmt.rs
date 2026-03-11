@@ -629,7 +629,7 @@ pub(crate) fn try_lower_simple_stmt_with_ctx(
             ctx,
         ),
         HirStmt::TupleUnpack { targets, value } => {
-            try_lower_simple_tuple_unpack_stmt(targets, value)
+            try_lower_simple_tuple_unpack_stmt(targets, value, bindings.mutated_vars)
         }
         HirStmt::StarUnpack {
             before,
@@ -1267,10 +1267,16 @@ fn try_lower_simple_stmt_block(
     Some(lowered)
 }
 
-fn tuple_unpack_pattern(targets: &[(String, Type)]) -> String {
+fn tuple_unpack_pattern(targets: &[(String, Type)], mutated_vars: &HashSet<String>) -> String {
     let names = targets
         .iter()
-        .map(|(name, _)| name.as_str())
+        .map(|(name, _)| {
+            if mutated_vars.contains(name) {
+                format!("mut {name}")
+            } else {
+                name.clone()
+            }
+        })
         .collect::<Vec<_>>()
         .join(", ");
     format!("({names})")
@@ -1279,12 +1285,13 @@ fn tuple_unpack_pattern(targets: &[(String, Type)]) -> String {
 fn try_lower_simple_tuple_unpack_stmt(
     targets: &[(String, Type)],
     value: &HirExpr,
+    mutated_vars: &HashSet<String>,
 ) -> Option<Vec<RustStmt>> {
     if targets.is_empty() {
         return None;
     }
     Some(vec![RustStmt::LetPattern {
-        pattern: tuple_unpack_pattern(targets),
+        pattern: tuple_unpack_pattern(targets, mutated_vars),
         value: try_lower_leaf_or_name_expr(value)?,
     }])
 }
@@ -3283,6 +3290,28 @@ mod tests {
                 ref pattern,
                 value: RustExpr::Tuple(ref elements),
             } if pattern == "(a, b)" && elements.len() == 2
+        ));
+    }
+
+    #[test]
+    fn lowers_simple_tuple_unpack_stmt_with_mutated_bindings() {
+        let tuple_unpack = HirStmt::TupleUnpack {
+            targets: vec![("l".to_string(), Type::Int), ("r".to_string(), Type::Int)],
+            value: HirExpr::TupleLiteral {
+                elements: vec![HirExpr::IntLiteral(0), HirExpr::IntLiteral(4)],
+                ty: Type::Tuple(vec![Type::Int, Type::Int]),
+            },
+        };
+        let mutated_vars = HashSet::from(["l".to_string(), "r".to_string(), "mid".to_string()]);
+        let lowered = try_lower_simple_stmt(&tuple_unpack, false, &mutated_vars, &HashSet::new())
+            .expect("tuple unpack lowered");
+        assert_eq!(lowered.len(), 1);
+        assert!(matches!(
+            lowered[0],
+            RustStmt::LetPattern {
+                ref pattern,
+                value: RustExpr::Tuple(ref elements),
+            } if pattern == "(mut l, mut r)" && elements.len() == 2
         ));
     }
 

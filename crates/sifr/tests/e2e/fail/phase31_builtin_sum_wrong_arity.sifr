@@ -1,0 +1,6 @@
+# expect-error: SIFR-TYPE-0001: sum() takes exactly 1 argument
+# Test: builtin sum still enforces its iterable-only arity when it is not shadowed.
+
+def main():
+    data: list[int] = [1, 2, 3]
+    print(sum(data, data))

@@ -523,6 +523,10 @@ pub(super) fn collect_mutated_vars_with_sigs(
     queries::collect_mutated_vars(stmts, Some(func_signatures))
 }
 
+pub(super) fn collect_reassigned_vars(stmts: &[HirStmt]) -> HashSet<String> {
+    queries::collect_reassigned_vars(stmts)
+}
+
 /// Collect all variable names and their types referenced in a list of statements.
 pub(super) fn collect_referenced_vars_with_types(stmts: &[HirStmt]) -> Vec<(String, Type)> {
     queries::collect_referenced_vars_with_types(stmts)
