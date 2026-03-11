@@ -3532,6 +3532,9 @@ impl RustEmitter {
         if let Some(lowered) = Self::try_lower_collection_truthiness_condition_for_ir(condition) {
             return Ok(Some(lowered));
         }
+        if let Some(lowered) = Self::try_lower_numeric_truthiness_condition_for_ir(condition) {
+            return Ok(Some(lowered));
+        }
         if let Some(lowered) = self.try_lower_borrowed_name_compare_condition_for_ir(condition) {
             return Ok(Some(lowered));
         }
@@ -3581,6 +3584,43 @@ impl RustEmitter {
         }
 
         None
+    }
+
+    fn try_lower_numeric_truthiness_condition_for_ir(
+        condition: &HirExpr,
+    ) -> Option<crate::RustExpr> {
+        fn zero_literal_for_type(ty: &Type) -> Option<crate::RustExpr> {
+            match crate::resolve_alias_type_for_plain_call(ty) {
+                Type::Int | Type::LiteralInt(_) => Some(crate::RustExpr::Cast {
+                    expr: Box::new(crate::RustExpr::Literal(crate::RustLiteral::Int(0))),
+                    ty: crate::RustType::I64,
+                }),
+                Type::Float => Some(crate::RustExpr::Cast {
+                    expr: Box::new(crate::RustExpr::Literal(crate::RustLiteral::Float(0.0))),
+                    ty: crate::RustType::F64,
+                }),
+                _ => None,
+            }
+        }
+
+        match condition {
+            HirExpr::Name { name, ty } => Some(crate::RustExpr::BinOp {
+                left: Box::new(crate::RustExpr::Ident(name.clone())),
+                op: "!=".to_string(),
+                right: Box::new(zero_literal_for_type(ty)?),
+            }),
+            HirExpr::UnaryOp { op, operand, .. } if op == "not" => {
+                let HirExpr::Name { name, ty } = operand.as_ref() else {
+                    return None;
+                };
+                Some(crate::RustExpr::BinOp {
+                    left: Box::new(crate::RustExpr::Ident(name.clone())),
+                    op: "==".to_string(),
+                    right: Box::new(zero_literal_for_type(ty)?),
+                })
+            }
+            _ => None,
+        }
     }
 
     fn try_lower_for_iter_expr_for_ir(

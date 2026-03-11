@@ -2139,6 +2139,9 @@ fn try_lower_simple_condition_test_expr(
     if let Some(lowered) = try_lower_structured_compare_condition_expr(expr) {
         return Some(lowered);
     }
+    if let Some(lowered) = try_lower_numeric_truthiness_condition_expr(expr) {
+        return Some(lowered);
+    }
     if let Some(lowered) = try_lower_leaf_expr(expr) {
         return Some(lowered);
     }
@@ -2148,6 +2151,41 @@ fn try_lower_simple_condition_test_expr(
         method: "is_some".to_string(),
         args: vec![],
     })
+}
+
+fn try_lower_numeric_truthiness_condition_expr(expr: &HirExpr) -> Option<RustExpr> {
+    fn zero_literal_for_type(ty: &Type) -> Option<RustExpr> {
+        match resolve_alias_type(ty) {
+            Type::Int | Type::LiteralInt(_) => Some(RustExpr::Cast {
+                expr: Box::new(RustExpr::Literal(RustLiteral::Int(0))),
+                ty: RustType::I64,
+            }),
+            Type::Float => Some(RustExpr::Cast {
+                expr: Box::new(RustExpr::Literal(RustLiteral::Float(0.0))),
+                ty: RustType::F64,
+            }),
+            _ => None,
+        }
+    }
+
+    match expr {
+        HirExpr::Name { name, ty } => Some(RustExpr::BinOp {
+            left: Box::new(RustExpr::Ident(name.clone())),
+            op: "!=".to_string(),
+            right: Box::new(zero_literal_for_type(ty)?),
+        }),
+        HirExpr::UnaryOp { op, operand, .. } if op == "not" => {
+            let HirExpr::Name { name, ty } = operand.as_ref() else {
+                return None;
+            };
+            Some(RustExpr::BinOp {
+                left: Box::new(RustExpr::Ident(name.clone())),
+                op: "==".to_string(),
+                right: Box::new(zero_literal_for_type(ty)?),
+            })
+        }
+        _ => None,
+    }
 }
 
 fn try_lower_structured_compare_condition_expr(expr: &HirExpr) -> Option<RustExpr> {
@@ -6745,6 +6783,29 @@ mod tests {
     }
 
     #[test]
+    fn lowers_simple_while_with_int_truthiness_name_condition() {
+        let while_stmt = HirStmt::While {
+            condition: HirExpr::Name {
+                name: "count".to_string(),
+                ty: Type::Int,
+            },
+            body: vec![HirStmt::Pass],
+            else_body: None,
+        };
+
+        let lowered = try_lower_simple_stmt(&while_stmt, false, &HashSet::new(), &HashSet::new())
+            .expect("while with int truthiness condition lowered");
+        assert_eq!(lowered.len(), 1);
+        assert!(matches!(
+            lowered[0],
+            RustStmt::While {
+                cond: RustExpr::BinOp { ref op, .. },
+                ..
+            } if op == "!="
+        ));
+    }
+
+    #[test]
     fn lowers_simple_while_with_not_bool_name_condition() {
         let while_stmt = HirStmt::While {
             condition: HirExpr::UnaryOp {
@@ -6771,6 +6832,33 @@ mod tests {
                 },
                 ..
             } if op == "!" && matches!(operand.as_ref(), RustExpr::Ident(name) if name == "ready")
+        ));
+    }
+
+    #[test]
+    fn lowers_simple_while_with_not_int_truthiness_name_condition() {
+        let while_stmt = HirStmt::While {
+            condition: HirExpr::UnaryOp {
+                op: "not".to_string(),
+                operand: Box::new(HirExpr::Name {
+                    name: "count".to_string(),
+                    ty: Type::Int,
+                }),
+                ty: Type::Bool,
+            },
+            body: vec![HirStmt::Pass],
+            else_body: None,
+        };
+
+        let lowered = try_lower_simple_stmt(&while_stmt, false, &HashSet::new(), &HashSet::new())
+            .expect("while with not-int truthiness condition lowered");
+        assert_eq!(lowered.len(), 1);
+        assert!(matches!(
+            lowered[0],
+            RustStmt::While {
+                cond: RustExpr::BinOp { ref op, .. },
+                ..
+            } if op == "=="
         ));
     }
 

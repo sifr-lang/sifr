@@ -626,6 +626,7 @@ impl Type {
             (Self::LiteralInt(_), Self::Int) => return true,
             (Self::LiteralStr(_), Self::Str) => return true,
             (Self::LiteralBool(_), Self::Bool) => return true,
+            (Self::Int | Self::LiteralInt(_), Self::Float) => return true,
             _ => {}
         }
         // Source is assignable to a union target if assignable to any member
@@ -780,6 +781,8 @@ mod tests {
     fn test_assignability() {
         assert!(Type::Int.is_assignable_to(&Type::Int));
         assert!(!Type::Int.is_assignable_to(&Type::Str));
+        assert!(Type::Int.is_assignable_to(&Type::Float));
+        assert!(Type::LiteralInt(42).is_assignable_to(&Type::Float));
         assert!(Type::Any.is_assignable_to(&Type::Int));
         assert!(Type::Int.is_assignable_to(&Type::Any));
         assert!(Type::Never.is_assignable_to(&Type::Int));

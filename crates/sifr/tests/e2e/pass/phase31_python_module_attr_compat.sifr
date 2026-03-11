@@ -1,0 +1,8 @@
+# Phase 31 regression: Python-style math module attribute calls resolve without explicit imports.
+
+def reverse_last_digit(x: int) -> int:
+    return int(math.fmod(float(x), 10.0))
+
+def main():
+    assert str(reverse_last_digit(123)) == "3"
+    assert str(reverse_last_digit(-123)) == "-3"

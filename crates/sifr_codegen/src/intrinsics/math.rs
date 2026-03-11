@@ -171,7 +171,14 @@ pub(super) fn lower_signbit(args: &[RustExpr]) -> Option<RustExpr> {
 }
 
 pub(super) fn lower_fmod(args: &[RustExpr]) -> Option<RustExpr> {
-    binary_method(args, "rem_euclid")
+    if args.len() != 2 {
+        return None;
+    }
+    Some(RustExpr::BinOp {
+        left: Box::new(parenthesized(&args[0])),
+        op: "%".to_string(),
+        right: Box::new(parenthesized(&args[1])),
+    })
 }
 
 pub(super) fn lower_hypot(args: &[RustExpr]) -> Option<RustExpr> {

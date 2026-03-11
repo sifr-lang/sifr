@@ -868,6 +868,7 @@ impl RustEmitter {
         func: &str,
         args: &[HirExpr],
     ) -> Option<crate::RustExpr> {
+        let intrinsic_func = canonicalize_compat_intrinsic_name(func);
         let mut ir_args = if let Some(lowered_args) = self.try_lower_registry_exprs_strict(args) {
             lowered_args
         } else {
@@ -879,7 +880,7 @@ impl RustEmitter {
             lowered_args
         };
         if matches!(
-            func,
+            intrinsic_func,
             "assert_eq" | "assert_ne" | "assert_gt" | "assert_lt" | "assert_almost_eq"
         ) {
             for (idx, arg) in args.iter().enumerate() {
@@ -898,8 +899,8 @@ impl RustEmitter {
                 }
             }
         }
-        let lowered = intrinsics::lower_intrinsic(func, &ir_args)?;
-        self.apply_intrinsic_registry_side_effects(func, &lowered);
+        let lowered = intrinsics::lower_intrinsic(intrinsic_func, &ir_args)?;
+        self.apply_intrinsic_registry_side_effects(intrinsic_func, &lowered);
         Some(lowered.expr)
     }
 
@@ -2416,8 +2417,14 @@ impl RustEmitter {
     }
 }
 
+fn canonicalize_compat_intrinsic_name(func: &str) -> &str {
+    func.strip_prefix("__compat_sifr_math_").unwrap_or(func)
+}
+
 #[cfg(test)]
 mod tests {
+    use super::canonicalize_compat_intrinsic_name;
+
     #[test]
     fn intrinsic_emit_wrapper_layer_is_absent() {
         let src = include_str!("intrinsic_method_emitters.rs");
@@ -2444,5 +2451,18 @@ mod tests {
         assert_eq!(helper_defs, 3, "unexpected registry expr helper set");
         assert!(!prod_src.contains("lower_registry_expr_with_string_path"));
         assert!(!prod_src.contains("render_expr_via_string_only("));
+    }
+
+    #[test]
+    fn canonicalizes_math_compat_intrinsic_aliases() {
+        assert_eq!(
+            canonicalize_compat_intrinsic_name("__compat_sifr_math_fmod"),
+            "fmod"
+        );
+        assert_eq!(canonicalize_compat_intrinsic_name("fmod"), "fmod");
+        assert_eq!(
+            canonicalize_compat_intrinsic_name("__compat_sifr_heapq_heappush"),
+            "__compat_sifr_heapq_heappush"
+        );
     }
 }

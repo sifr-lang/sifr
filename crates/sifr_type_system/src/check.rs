@@ -550,9 +550,25 @@ pub fn type_check_unary_op(op: &str, operand: &Type) -> Result<Type, TypeError> 
 
 /// Type-check a boolean operation (e.g., `a and b`, `a or b`).
 pub fn type_check_bool_op(left: &Type, op: &str, right: &Type) -> Result<Type, TypeError> {
+    fn supports_truthiness(ty: &Type) -> bool {
+        matches!(
+            ty,
+            Type::Bool
+                | Type::Int
+                | Type::Float
+                | Type::List(_)
+                | Type::Dict(_, _)
+                | Type::Set(_)
+                | Type::Tuple(_)
+                | Type::Str
+                | Type::Any
+                | Type::Unknown
+        ) || union_contains_none(ty)
+    }
+
     match op {
         "and" | "or" => {
-            if left == &Type::Bool && right == &Type::Bool {
+            if supports_truthiness(left) && supports_truthiness(right) {
                 return Ok(Type::Bool);
             }
             Err(TypeError {
@@ -697,6 +713,13 @@ mod tests {
             type_check_bool_op(&Type::Bool, "or", &Type::Bool).unwrap(),
             Type::Bool
         );
-        assert!(type_check_bool_op(&Type::Int, "and", &Type::Int).is_err());
+        assert_eq!(
+            type_check_bool_op(&Type::Int, "and", &Type::Int).unwrap(),
+            Type::Bool
+        );
+        assert_eq!(
+            type_check_bool_op(&Type::List(Box::new(Type::Int)), "and", &Type::Bool).unwrap(),
+            Type::Bool
+        );
     }
 }
