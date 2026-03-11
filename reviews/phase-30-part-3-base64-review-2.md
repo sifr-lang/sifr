@@ -23,7 +23,7 @@ The base32 intrinsics are registered with `None` namespace, but this does NOT ca
 
 **Verification:**
 ```
-$ cargo run -q -- run demos/m3_base64_demo.sifr
+$ cargo run -q -- run demos/m30_1a_base64_parity_demo/main.sifr
 D1IMOR3F   # b32hexencode("hello") - works!
 hello      # b32hexdecode("D1IMOR3F") - works!
 

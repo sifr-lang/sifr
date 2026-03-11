@@ -462,8 +462,8 @@ Three parts: (A) close gaps in existing modules by adding missing functions, (B)
 
 **Part C -- Parity audit:**
 
-- Run the comprehensive stdlib parity audit from [.cursor/plans/stdlib_parity_audit_2c354444.md](.cursor/plans/stdlib_parity_audit_2c354444.md) (~200 test files across 30 directories)
-- Produce `audit/STDLIB_PARITY_MASTER_REPORT.md` with coverage percentages per module
+- Run the comprehensive stdlib parity audit from [issues/stdlib_gaps_stdlib_cpython_parity_audit_2026-02-16.md](issues/stdlib_gaps_stdlib_cpython_parity_audit_2026-02-16.md) (~200 test files across 30 directories)
+- Produce `audits/STDLIB_PARITY_MASTER_REPORT.md` with coverage percentages per module
 - Target: 60%+ coverage across the top 20 CPython modules
 
 **Acceptance criteria:** All expanded modules pass their tests. All new modules compile and work. All fallible functions return `Result` or `Option` (safety contract). No panic paths in stdlib code. Negative tests (bad input) for each module. Parity audit report generated with coverage metrics. `cargo test` passes.
@@ -492,4 +492,3 @@ Full FFI (`extern crate`, `unsafe` blocks, type marshaling) solves a different p
 - **Safer:** Intrinsics are compiler-controlled, always correct
 - **Faster to ship:** Reuses the existing `emit_stdlib_call` mechanism
 - **Forward-compatible:** When FFI lands later (milestone_ffi in Phase 5), intrinsics can be reimplemented as FFI calls internally without changing the stdlib `.sifr` files
-

@@ -6,9 +6,9 @@ from __future__ import annotations
 import re
 from pathlib import Path
 
-BACKLOG_PATH = Path(".cursor/plans/main/phases/15_baseline_reconciliation.md")
+BACKLOG_PATH = Path("internal_docs/phases/15_baseline_reconciliation.md")
 ISSUES_PATH = Path("issues/phase15-canonical-backlog-issues.md")
-ROADMAP_PATH = Path(".cursor/plans/main/roadmap.md")
+ROADMAP_PATH = Path("internal_docs/roadmap.md")
 
 ALLOWED_SEVERITIES = {"P0", "P1", "P2", "P3"}
 

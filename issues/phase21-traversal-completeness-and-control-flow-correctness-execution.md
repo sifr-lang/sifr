@@ -2,7 +2,7 @@
 
 Status: completed (2026-03-05)
 Owner: phase_21 execution loop
-Reference phase doc: `.cursor/plans/main/phases/21_traversal_completeness_and_control_flow_correctness.md`
+Reference phase doc: `internal_docs/phases/21_traversal_completeness_and_control_flow_correctness.md`
 
 Loop per part: Work -> Validate -> PR -> Review -> Merge -> Mark Done
 

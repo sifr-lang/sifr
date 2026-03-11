@@ -44,7 +44,7 @@ This ad hoc phase does not own:
 - Architectural refactor target, not an already-shipping defect by itself: there is no canonical internal build-plan abstraction that models single-file and project builds as two rooted-entrypoint shapes of the same compilation pipeline.
 
 ## Execution Model
-- This remains an ad hoc issue-driven phase until promoted into `.cursor/plans/main/phases/`.
+- This remains an ad hoc issue-driven phase until promoted into `internal_docs/phases/`.
 - Work executes one milestone at a time.
 - Internal architecture unification must land before manifest-generation cleanup is considered complete.
 - CLI contract preservation is a hard gate for every milestone, not only the last one.

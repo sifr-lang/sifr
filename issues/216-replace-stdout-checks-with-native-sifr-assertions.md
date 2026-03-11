@@ -8,7 +8,7 @@ and stop depending on output matching via harness comments.
 - Total files with `# expect-stdout`: **631**
 - Total expected lines: **2049**
 - Location split:
-  - `audit/leetcode`: **208** files / **450** expectations
+  - `audits/leetcode`: **208** files / **450** expectations
   - `crates/sifr/tests/e2e/pass`: **387** files / **1138** expectations
   - `demos`: **36** files / **461** expectations
 - Exclusions:
@@ -43,7 +43,7 @@ and stop depending on output matching via harness comments.
 - Remove the consumed `# expect-stdout` comment lines.
 - Validate no new semantic statements are introduced; keep existing control flow and variable names unchanged.
 - Prioritize by smallest risk:
-  1. `audit/leetcode` (mostly algorithmic I/O assertions)
+  1. `audits/leetcode` (mostly algorithmic I/O assertions)
   2. `crates/sifr/tests/e2e/pass`
   3. `demos`
 
@@ -67,7 +67,7 @@ and stop depending on output matching via harness comments.
   - no `# expect-stdout` remains in converted files.
   - no behavior regressions observed in existing e2e command flow
   - per-folder conversion counts match target:
-    - `audit/leetcode`
+    - `audits/leetcode`
     - `crates/sifr/tests/e2e/pass`
     - `demos`
 
@@ -81,7 +81,7 @@ and stop depending on output matching via harness comments.
 - Do by folder batches to keep review easy:
   1. `demos` (36 files)
   2. `crates/sifr/tests/e2e/pass` (387 files)
-  3. `audit/leetcode` (208 files)
+  3. `audits/leetcode` (208 files)
 - Commit per batch, with a short checklist for each batch:
   - converted files
   - skipped/manual exceptions
@@ -97,7 +97,7 @@ and stop depending on output matching via harness comments.
 
 - [x] Part 1 - demos: convert all `simple` files and review demos for behavior retention
 - [x] Part 2 - crates/sifr/tests/e2e/pass: convert all `simple` files and review demos for behavior retention
-- [x] Part 3 - audit/leetcode: convert all `simple` files and review semantic edge cases
+- [x] Part 3 - audits/leetcode: convert all `simple` files and review semantic edge cases
 - [x] Manual bucket audit: resolve `manual_*` files with explicit assertions or owner review
 - [x] Part 5 - remove `# expect-*` markers from remaining `.sifr` fixtures:
   - [x] Part 5a: convert remaining `# expect-stdout` in pass fixtures to assertions
@@ -107,7 +107,7 @@ and stop depending on output matching via harness comments.
 
 ### Current Mechanical Conversion Status
 
-- `audit/leetcode`: 208 / 208 files converted (`# expect-stdout` removed from fixtures)
+- `audits/leetcode`: 208 / 208 files converted (`# expect-stdout` removed from fixtures)
 - `crates/sifr/tests/e2e/pass`: 387 / 387 files converted (`# expect-stdout` removed from fixtures)
 - `demos`: 36 / 36 files converted (`# expect-stdout` removed from fixtures)
 
@@ -115,7 +115,7 @@ and stop depending on output matching via harness comments.
 
 All manual mismatch buckets are resolved for the current repo snapshot. No remaining `# expect-stdout` comments in `.sifr` fixtures under:
 
-- `audit/leetcode`
+- `audits/leetcode`
 - `crates/sifr/tests/e2e/pass`
 - `demos`
 

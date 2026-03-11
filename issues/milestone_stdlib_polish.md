@@ -149,7 +149,7 @@ Note: The safety contract (Result/Option for fallible ops) and class-based APIs 
 - `crates/sifr_hir/src/lower.rs` -- fix stale comment
 - `crates/sifr/tests/e2e/pass/` -- 3 new pass tests + update `stdlib_timeit.sifr` for new API
 - `crates/sifr/tests/e2e/fail/` -- 5 new fail tests
-- `audit/STDLIB_PARITY_MASTER_REPORT.md` -- update metrics
+- `audits/STDLIB_PARITY_MASTER_REPORT.md` -- update metrics
 - `demos/milestone_stdlib_polish_demo.sifr` -- milestone demo
 
 ### 2.3 Testing Strategy

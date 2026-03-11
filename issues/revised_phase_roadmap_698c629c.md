@@ -152,7 +152,7 @@ Systematic verification that the safety remediation is complete. This is a hard 
 - Add a CI lint that scans intrinsic codegen blocks for all panic-inducing patterns (`.unwrap()`, `.expect(`, `panic!(`, `unreachable!(`, raw indexing on user data) and fails if any are found on user-facing operations (file I/O, parsing, collection access, subscript assignment)
 - Run the full stdlib safety audit script against all 37 modules and produce an updated safety score -- every module must score 7/10 or higher (up from the current state where 12 modules score below 5/10). Modules with documented divergences (e.g., math domain errors if option (b) is chosen in `milestone_collection_safety`) are scored against the documented behavior, not the CPython behavior -- a deliberate, documented design choice does not count as a safety violation.
 - E2E test: a program that calls every fallible stdlib function with invalid input must compile and run without panicking, handling all errors via `try`/`except`
-- Update `audit/STDLIB_PARITY_MASTER_REPORT.md` with post-remediation safety scores
+- Update `audits/STDLIB_PARITY_MASTER_REPORT.md` with post-remediation safety scores
 
 ---
 
@@ -162,7 +162,7 @@ Systematic verification that the safety remediation is complete. This is a hard 
 
 ### milestone_borrow_default: Borrow-by-Default Parameter Passing
 
-As defined in [05_borrow_by_default.md](.cursor/plans/main/phases/05_borrow_by_default.md):
+As defined in [05_borrow_by_default.md](internal_docs/phases/05_borrow_by_default.md):
 
 - Add `ParamConvention` enum (`Borrow`, `MutBorrow`, `Own`)
 - Parse `mut`/`own` soft keywords
@@ -252,7 +252,7 @@ Placed second because several of these modules (`subprocess`, `sys`, `gzip`, `zi
 
 ### milestone_async: Async Runtime
 
-As defined in the original [08_ecosystem.md](.cursor/plans/main/phases/08_ecosystem.md):
+As defined in the original [08_ecosystem.md](internal_docs/phases/08_ecosystem.md):
 
 - `async def` / `await` -> Rust `async fn` / `.await`
 - Tokio runtime auto-bundled

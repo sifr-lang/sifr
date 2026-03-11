@@ -20,7 +20,7 @@ Evidence:
 - `crates/sifr_codegen/src/intrinsics/mod.rs:309` (test helper uses `RustExpr::RawCode`)
 
 Strict checklist link:
-- `.cursor/plans/main/phases/14_codegen_architecture_finish_checklist.md:163`
+- `internal_docs/phases/14_codegen_architecture_finish_checklist.md:163`
 
 ---
 

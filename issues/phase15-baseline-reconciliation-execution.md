@@ -2,7 +2,7 @@
 
 Status: Completed (2026-03-03)
 Owner: phase_15 execution loop
-Reference phase doc: `.cursor/plans/main/phases/15_baseline_reconciliation.md`
+Reference phase doc: `internal_docs/phases/15_baseline_reconciliation.md`
 
 Loop per part: Work -> Validate -> PR -> Review -> Merge -> Mark Done
 

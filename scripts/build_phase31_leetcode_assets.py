@@ -18,7 +18,7 @@ SEED_CASES = [
     {
         "id": "0001",
         "fixture_slug": "0001_two_sum",
-        "sifr_path": "audit/leetcode/0001_two_sum.sifr",
+        "sifr_path": "audits/leetcode/0001_two_sum.sifr",
         "difficulty": "easy",
         "primary_topic": "arrays",
         "topics": ["arrays", "hash_map"],
@@ -29,7 +29,7 @@ SEED_CASES = [
     {
         "id": "0053",
         "fixture_slug": "0053_maximum_subarray",
-        "sifr_path": "audit/leetcode/0053_maximum_subarray.sifr",
+        "sifr_path": "audits/leetcode/0053_maximum_subarray.sifr",
         "difficulty": "easy",
         "primary_topic": "arrays",
         "topics": ["arrays", "dp"],
@@ -40,7 +40,7 @@ SEED_CASES = [
     {
         "id": "0238",
         "fixture_slug": "0238_product_of_array_except_self",
-        "sifr_path": "audit/leetcode/0238_product_of_array_except_self.sifr",
+        "sifr_path": "audits/leetcode/0238_product_of_array_except_self.sifr",
         "difficulty": "medium",
         "primary_topic": "arrays",
         "topics": ["arrays", "prefix_product"],
@@ -51,7 +51,7 @@ SEED_CASES = [
     {
         "id": "0912",
         "fixture_slug": "0912_sort_an_array",
-        "sifr_path": "audit/leetcode/0912_sort_an_array.sifr",
+        "sifr_path": "audits/leetcode/0912_sort_an_array.sifr",
         "difficulty": "medium",
         "primary_topic": "arrays",
         "topics": ["arrays", "sorting"],
@@ -62,7 +62,7 @@ SEED_CASES = [
     {
         "id": "1299",
         "fixture_slug": "1299_replace_elements_with_greatest_element_on_right_side",
-        "sifr_path": "audit/leetcode/1299_replace_elements_with_greatest_element_on_right_side.sifr",
+        "sifr_path": "audits/leetcode/1299_replace_elements_with_greatest_element_on_right_side.sifr",
         "difficulty": "easy",
         "primary_topic": "arrays",
         "topics": ["arrays"],
@@ -74,7 +74,7 @@ SEED_CASES = [
     {
         "id": "0014",
         "fixture_slug": "0014_longest_common_prefix",
-        "sifr_path": "audit/leetcode/0014_longest_common_prefix.sifr",
+        "sifr_path": "audits/leetcode/0014_longest_common_prefix.sifr",
         "difficulty": "easy",
         "primary_topic": "strings",
         "topics": ["strings"],
@@ -85,7 +85,7 @@ SEED_CASES = [
     {
         "id": "0043",
         "fixture_slug": "0043_multiply_strings",
-        "sifr_path": "audit/leetcode/0043_multiply_strings.sifr",
+        "sifr_path": "audits/leetcode/0043_multiply_strings.sifr",
         "difficulty": "medium",
         "primary_topic": "strings",
         "topics": ["strings", "math"],
@@ -96,7 +96,7 @@ SEED_CASES = [
     {
         "id": "0151",
         "fixture_slug": "0151_reverse_words_in_a_string",
-        "sifr_path": "audit/leetcode/0151_reverse_words_in_a_string.sifr",
+        "sifr_path": "audits/leetcode/0151_reverse_words_in_a_string.sifr",
         "difficulty": "medium",
         "primary_topic": "strings",
         "topics": ["strings", "two_pointers"],
@@ -107,7 +107,7 @@ SEED_CASES = [
     {
         "id": "1209",
         "fixture_slug": "1209_remove_all_adjacent_duplicates_in_string_ii",
-        "sifr_path": "audit/leetcode/1209_remove_all_adjacent_duplicates_in_string_ii.sifr",
+        "sifr_path": "audits/leetcode/1209_remove_all_adjacent_duplicates_in_string_ii.sifr",
         "difficulty": "medium",
         "primary_topic": "strings",
         "topics": ["strings", "stack"],
@@ -118,7 +118,7 @@ SEED_CASES = [
     {
         "id": "1768",
         "fixture_slug": "1768_merge_strings_alternately",
-        "sifr_path": "audit/leetcode/1768_merge_strings_alternately.sifr",
+        "sifr_path": "audits/leetcode/1768_merge_strings_alternately.sifr",
         "difficulty": "easy",
         "primary_topic": "strings",
         "topics": ["strings", "two_pointers"],
@@ -130,7 +130,7 @@ SEED_CASES = [
     {
         "id": "0003",
         "fixture_slug": "0003_longest_substring_without_repeating_characters",
-        "sifr_path": "audit/leetcode/0003_longest_substring_without_repeating_characters.sifr",
+        "sifr_path": "audits/leetcode/0003_longest_substring_without_repeating_characters.sifr",
         "difficulty": "medium",
         "primary_topic": "hash_map",
         "topics": ["hash_map", "strings", "sliding_window"],
@@ -141,7 +141,7 @@ SEED_CASES = [
     {
         "id": "0217",
         "fixture_slug": "0217_contains_duplicate",
-        "sifr_path": "audit/leetcode/0217_contains_duplicate.sifr",
+        "sifr_path": "audits/leetcode/0217_contains_duplicate.sifr",
         "difficulty": "easy",
         "primary_topic": "hash_map",
         "topics": ["hash_map", "arrays"],
@@ -152,7 +152,7 @@ SEED_CASES = [
     {
         "id": "0242",
         "fixture_slug": "0242_valid_anagram",
-        "sifr_path": "audit/leetcode/0242_valid_anagram.sifr",
+        "sifr_path": "audits/leetcode/0242_valid_anagram.sifr",
         "difficulty": "easy",
         "primary_topic": "hash_map",
         "topics": ["hash_map", "strings"],
@@ -163,7 +163,7 @@ SEED_CASES = [
     {
         "id": "0523",
         "fixture_slug": "0523_continuous_subarray_sum",
-        "sifr_path": "audit/leetcode/0523_continuous_subarray_sum.sifr",
+        "sifr_path": "audits/leetcode/0523_continuous_subarray_sum.sifr",
         "difficulty": "medium",
         "primary_topic": "hash_map",
         "topics": ["hash_map", "prefix_sum"],
@@ -174,7 +174,7 @@ SEED_CASES = [
     {
         "id": "0560",
         "fixture_slug": "0560_subarray_sum_equals_k",
-        "sifr_path": "audit/leetcode/0560_subarray_sum_equals_k.sifr",
+        "sifr_path": "audits/leetcode/0560_subarray_sum_equals_k.sifr",
         "difficulty": "medium",
         "primary_topic": "hash_map",
         "topics": ["hash_map", "prefix_sum"],
@@ -186,7 +186,7 @@ SEED_CASES = [
     {
         "id": "0070",
         "fixture_slug": "0070_climbing_stairs",
-        "sifr_path": "audit/leetcode/0070_climbing_stairs.sifr",
+        "sifr_path": "audits/leetcode/0070_climbing_stairs.sifr",
         "difficulty": "easy",
         "primary_topic": "dp",
         "topics": ["dp"],
@@ -197,7 +197,7 @@ SEED_CASES = [
     {
         "id": "0198",
         "fixture_slug": "0198_house_robber",
-        "sifr_path": "audit/leetcode/0198_house_robber.sifr",
+        "sifr_path": "audits/leetcode/0198_house_robber.sifr",
         "difficulty": "medium",
         "primary_topic": "dp",
         "topics": ["dp"],
@@ -208,7 +208,7 @@ SEED_CASES = [
     {
         "id": "0322",
         "fixture_slug": "0322_coin_change",
-        "sifr_path": "audit/leetcode/0322_coin_change.sifr",
+        "sifr_path": "audits/leetcode/0322_coin_change.sifr",
         "difficulty": "medium",
         "primary_topic": "dp",
         "topics": ["dp"],
@@ -219,7 +219,7 @@ SEED_CASES = [
     {
         "id": "0746",
         "fixture_slug": "0746_min_cost_climbing_stairs",
-        "sifr_path": "audit/leetcode/0746_min_cost_climbing_stairs.sifr",
+        "sifr_path": "audits/leetcode/0746_min_cost_climbing_stairs.sifr",
         "difficulty": "easy",
         "primary_topic": "dp",
         "topics": ["dp"],
@@ -230,7 +230,7 @@ SEED_CASES = [
     {
         "id": "1143",
         "fixture_slug": "1143_longest_common_subsequence",
-        "sifr_path": "audit/leetcode/1143_longest_common_subsequence.sifr",
+        "sifr_path": "audits/leetcode/1143_longest_common_subsequence.sifr",
         "difficulty": "medium",
         "primary_topic": "dp",
         "topics": ["dp", "strings"],
@@ -242,7 +242,7 @@ SEED_CASES = [
     {
         "id": "0127",
         "fixture_slug": "0127_word_ladder",
-        "sifr_path": "audit/leetcode/0127_word_ladder.sifr",
+        "sifr_path": "audits/leetcode/0127_word_ladder.sifr",
         "difficulty": "hard",
         "primary_topic": "graphs",
         "topics": ["graphs", "bfs", "strings"],
@@ -253,7 +253,7 @@ SEED_CASES = [
     {
         "id": "0207",
         "fixture_slug": "0207_course_schedule",
-        "sifr_path": "audit/leetcode/0207_course_schedule.sifr",
+        "sifr_path": "audits/leetcode/0207_course_schedule.sifr",
         "difficulty": "medium",
         "primary_topic": "graphs",
         "topics": ["graphs", "dfs"],
@@ -264,7 +264,7 @@ SEED_CASES = [
     {
         "id": "0684",
         "fixture_slug": "0684_redundant_connection",
-        "sifr_path": "audit/leetcode/0684_redundant_connection.sifr",
+        "sifr_path": "audits/leetcode/0684_redundant_connection.sifr",
         "difficulty": "medium",
         "primary_topic": "graphs",
         "topics": ["graphs", "union_find"],
@@ -275,7 +275,7 @@ SEED_CASES = [
     {
         "id": "0743",
         "fixture_slug": "0743_network_delay_time",
-        "sifr_path": "audit/leetcode/0743_network_delay_time.sifr",
+        "sifr_path": "audits/leetcode/0743_network_delay_time.sifr",
         "difficulty": "medium",
         "primary_topic": "graphs",
         "topics": ["graphs", "shortest_path", "heap"],
@@ -286,7 +286,7 @@ SEED_CASES = [
     {
         "id": "0997",
         "fixture_slug": "0997_find_the_town_judge",
-        "sifr_path": "audit/leetcode/0997_find_the_town_judge.sifr",
+        "sifr_path": "audits/leetcode/0997_find_the_town_judge.sifr",
         "difficulty": "easy",
         "primary_topic": "graphs",
         "topics": ["graphs"],
@@ -298,7 +298,7 @@ SEED_CASES = [
     {
         "id": "0100",
         "fixture_slug": "0100_same_tree",
-        "sifr_path": "audit/leetcode/0100_same_tree.sifr",
+        "sifr_path": "audits/leetcode/0100_same_tree.sifr",
         "difficulty": "easy",
         "primary_topic": "trees",
         "topics": ["trees", "dfs"],
@@ -309,7 +309,7 @@ SEED_CASES = [
     {
         "id": "0102",
         "fixture_slug": "0102_binary_tree_level_order_traversal",
-        "sifr_path": "audit/leetcode/0102_binary_tree_level_order_traversal.sifr",
+        "sifr_path": "audits/leetcode/0102_binary_tree_level_order_traversal.sifr",
         "difficulty": "medium",
         "primary_topic": "trees",
         "topics": ["trees", "bfs"],
@@ -320,7 +320,7 @@ SEED_CASES = [
     {
         "id": "0110",
         "fixture_slug": "0110_balanced_binary_tree",
-        "sifr_path": "audit/leetcode/0110_balanced_binary_tree.sifr",
+        "sifr_path": "audits/leetcode/0110_balanced_binary_tree.sifr",
         "difficulty": "easy",
         "primary_topic": "trees",
         "topics": ["trees", "dfs"],
@@ -331,7 +331,7 @@ SEED_CASES = [
     {
         "id": "0226",
         "fixture_slug": "0226_invert_binary_tree",
-        "sifr_path": "audit/leetcode/0226_invert_binary_tree.sifr",
+        "sifr_path": "audits/leetcode/0226_invert_binary_tree.sifr",
         "difficulty": "easy",
         "primary_topic": "trees",
         "topics": ["trees", "dfs"],
@@ -342,7 +342,7 @@ SEED_CASES = [
     {
         "id": "0235",
         "fixture_slug": "0235_lowest_common_ancestor_of_a_binary_search_tree",
-        "sifr_path": "audit/leetcode/0235_lowest_common_ancestor_of_a_binary_search_tree.sifr",
+        "sifr_path": "audits/leetcode/0235_lowest_common_ancestor_of_a_binary_search_tree.sifr",
         "difficulty": "medium",
         "primary_topic": "trees",
         "topics": ["trees", "bst"],
@@ -354,7 +354,7 @@ SEED_CASES = [
     {
         "id": "0017",
         "fixture_slug": "0017_letter_combinations_of_a_phone_number",
-        "sifr_path": "audit/leetcode/0017_letter_combinations_of_a_phone_number.sifr",
+        "sifr_path": "audits/leetcode/0017_letter_combinations_of_a_phone_number.sifr",
         "difficulty": "medium",
         "primary_topic": "backtracking",
         "topics": ["backtracking", "strings"],
@@ -365,7 +365,7 @@ SEED_CASES = [
     {
         "id": "0039",
         "fixture_slug": "0039_combination_sum",
-        "sifr_path": "audit/leetcode/0039_combination_sum.sifr",
+        "sifr_path": "audits/leetcode/0039_combination_sum.sifr",
         "difficulty": "medium",
         "primary_topic": "backtracking",
         "topics": ["backtracking"],
@@ -376,7 +376,7 @@ SEED_CASES = [
     {
         "id": "0078",
         "fixture_slug": "0078_subsets",
-        "sifr_path": "audit/leetcode/0078_subsets.sifr",
+        "sifr_path": "audits/leetcode/0078_subsets.sifr",
         "difficulty": "medium",
         "primary_topic": "backtracking",
         "topics": ["backtracking"],
@@ -387,7 +387,7 @@ SEED_CASES = [
     {
         "id": "0090",
         "fixture_slug": "0090_subsets_ii",
-        "sifr_path": "audit/leetcode/0090_subsets_ii.sifr",
+        "sifr_path": "audits/leetcode/0090_subsets_ii.sifr",
         "difficulty": "medium",
         "primary_topic": "backtracking",
         "topics": ["backtracking"],
@@ -398,7 +398,7 @@ SEED_CASES = [
     {
         "id": "0052",
         "fixture_slug": "0052_n_queens_ii",
-        "sifr_path": "audit/leetcode/0052_n_queens_ii.sifr",
+        "sifr_path": "audits/leetcode/0052_n_queens_ii.sifr",
         "difficulty": "hard",
         "primary_topic": "backtracking",
         "topics": ["backtracking"],
@@ -410,7 +410,7 @@ SEED_CASES = [
     {
         "id": "0007",
         "fixture_slug": "0007_reverse_integer",
-        "sifr_path": "audit/leetcode/0007_reverse_integer.sifr",
+        "sifr_path": "audits/leetcode/0007_reverse_integer.sifr",
         "difficulty": "medium",
         "primary_topic": "math",
         "topics": ["math"],
@@ -421,7 +421,7 @@ SEED_CASES = [
     {
         "id": "0009",
         "fixture_slug": "0009_palindrome_number",
-        "sifr_path": "audit/leetcode/0009_palindrome_number.sifr",
+        "sifr_path": "audits/leetcode/0009_palindrome_number.sifr",
         "difficulty": "easy",
         "primary_topic": "math",
         "topics": ["math"],
@@ -432,7 +432,7 @@ SEED_CASES = [
     {
         "id": "0050",
         "fixture_slug": "0050_powx_n",
-        "sifr_path": "audit/leetcode/0050_powx_n.sifr",
+        "sifr_path": "audits/leetcode/0050_powx_n.sifr",
         "difficulty": "medium",
         "primary_topic": "math",
         "topics": ["math", "recursion"],
@@ -443,7 +443,7 @@ SEED_CASES = [
     {
         "id": "0069",
         "fixture_slug": "0069_sqrtx",
-        "sifr_path": "audit/leetcode/0069_sqrtx.sifr",
+        "sifr_path": "audits/leetcode/0069_sqrtx.sifr",
         "difficulty": "easy",
         "primary_topic": "math",
         "topics": ["math", "binary_search"],
@@ -454,7 +454,7 @@ SEED_CASES = [
     {
         "id": "2235",
         "fixture_slug": "2235_add_two_integers",
-        "sifr_path": "audit/leetcode/2235_add_two_integers.sifr",
+        "sifr_path": "audits/leetcode/2235_add_two_integers.sifr",
         "difficulty": "easy",
         "primary_topic": "math",
         "topics": ["math"],
@@ -466,7 +466,7 @@ SEED_CASES = [
     {
         "id": "0215",
         "fixture_slug": "0215_kth_largest_element_in_an_array",
-        "sifr_path": "audit/leetcode/0215_kth_largest_element_in_an_array.sifr",
+        "sifr_path": "audits/leetcode/0215_kth_largest_element_in_an_array.sifr",
         "difficulty": "medium",
         "primary_topic": "heap_priority_queue",
         "topics": ["heap_priority_queue", "arrays"],
@@ -477,7 +477,7 @@ SEED_CASES = [
     {
         "id": "0295",
         "fixture_slug": "0295_find_median_from_data_stream",
-        "sifr_path": "audit/leetcode/0295_find_median_from_data_stream.sifr",
+        "sifr_path": "audits/leetcode/0295_find_median_from_data_stream.sifr",
         "difficulty": "hard",
         "primary_topic": "heap_priority_queue",
         "topics": ["heap_priority_queue", "design"],
@@ -488,7 +488,7 @@ SEED_CASES = [
     {
         "id": "0502",
         "fixture_slug": "0502_ipo",
-        "sifr_path": "audit/leetcode/0502_ipo.sifr",
+        "sifr_path": "audits/leetcode/0502_ipo.sifr",
         "difficulty": "hard",
         "primary_topic": "heap_priority_queue",
         "topics": ["heap_priority_queue", "greedy"],
@@ -499,7 +499,7 @@ SEED_CASES = [
     {
         "id": "0703",
         "fixture_slug": "0703_kth_largest_element_in_a_stream",
-        "sifr_path": "audit/leetcode/0703_kth_largest_element_in_a_stream.sifr",
+        "sifr_path": "audits/leetcode/0703_kth_largest_element_in_a_stream.sifr",
         "difficulty": "easy",
         "primary_topic": "heap_priority_queue",
         "topics": ["heap_priority_queue", "design"],
@@ -510,7 +510,7 @@ SEED_CASES = [
     {
         "id": "1046",
         "fixture_slug": "1046_last_stone_weight",
-        "sifr_path": "audit/leetcode/1046_last_stone_weight.sifr",
+        "sifr_path": "audits/leetcode/1046_last_stone_weight.sifr",
         "difficulty": "easy",
         "primary_topic": "heap_priority_queue",
         "topics": ["heap_priority_queue"],
@@ -522,7 +522,7 @@ SEED_CASES = [
     {
         "id": "0015",
         "fixture_slug": "0015_3sum",
-        "sifr_path": "audit/leetcode/0015_3sum.sifr",
+        "sifr_path": "audits/leetcode/0015_3sum.sifr",
         "difficulty": "medium",
         "primary_topic": "two_pointers_sliding_window",
         "topics": ["two_pointers_sliding_window", "arrays"],
@@ -533,7 +533,7 @@ SEED_CASES = [
     {
         "id": "0042",
         "fixture_slug": "0042_trapping_rain_water",
-        "sifr_path": "audit/leetcode/0042_trapping_rain_water.sifr",
+        "sifr_path": "audits/leetcode/0042_trapping_rain_water.sifr",
         "difficulty": "hard",
         "primary_topic": "two_pointers_sliding_window",
         "topics": ["two_pointers_sliding_window", "arrays"],
@@ -544,7 +544,7 @@ SEED_CASES = [
     {
         "id": "0209",
         "fixture_slug": "0209_minimum_size_subarray_sum",
-        "sifr_path": "audit/leetcode/0209_minimum_size_subarray_sum.sifr",
+        "sifr_path": "audits/leetcode/0209_minimum_size_subarray_sum.sifr",
         "difficulty": "medium",
         "primary_topic": "two_pointers_sliding_window",
         "topics": ["two_pointers_sliding_window", "arrays"],
@@ -555,7 +555,7 @@ SEED_CASES = [
     {
         "id": "0424",
         "fixture_slug": "0424_longest_repeating_character_replacement",
-        "sifr_path": "audit/leetcode/0424_longest_repeating_character_replacement.sifr",
+        "sifr_path": "audits/leetcode/0424_longest_repeating_character_replacement.sifr",
         "difficulty": "medium",
         "primary_topic": "two_pointers_sliding_window",
         "topics": ["two_pointers_sliding_window", "strings"],
@@ -566,7 +566,7 @@ SEED_CASES = [
     {
         "id": "1456",
         "fixture_slug": "1456_maximum_number_of_vowels_in_a_substring_of_given_length",
-        "sifr_path": "audit/leetcode/1456_maximum_number_of_vowels_in_a_substring_of_given_length.sifr",
+        "sifr_path": "audits/leetcode/1456_maximum_number_of_vowels_in_a_substring_of_given_length.sifr",
         "difficulty": "medium",
         "primary_topic": "two_pointers_sliding_window",
         "topics": ["two_pointers_sliding_window", "strings"],

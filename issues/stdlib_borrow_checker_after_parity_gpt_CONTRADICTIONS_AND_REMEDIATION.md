@@ -7,7 +7,7 @@ Generated: 2026-02-17
 ## 1) Fallible stdlib operations panic instead of returning `Result`/`Option` (High)
 
 **Architecture contract**
-- `.cursor/plans/main/architecture.md` states:
+- `internal_docs/architecture.md` states:
   - no panics in normal user code,
   - fallible stdlib operations should return `Result`/`Option`,
   - `assert` is the only intended panic escape hatch.

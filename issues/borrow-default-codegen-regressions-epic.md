@@ -38,7 +38,7 @@ The borrow-by-default milestone changed function parameters from move-by-default
 
 | **AC-ID** | Criterion |
 | --- | --- |
-| AC-1 | `audit/borrowing/14_reassignment_resets_move.sifr` compiles and runs correctly with `own` keyword |
+| AC-1 | `audits/borrowing/14_reassignment_resets_move.sifr` compiles and runs correctly with `own` keyword |
 | AC-2 | Functions with borrowed `str` params that compare with string literals compile correctly (no `&String == String` error) |
 | AC-3 | Functions with union params receive consistent `&` prefix at call sites for all variant types (Int, Str, Bool, None) |
 | AC-4 | All previously-passing audit tests continue to pass (no new regressions) |
@@ -57,7 +57,7 @@ The borrow-by-default milestone changed function parameters from move-by-default
 ### 2.2 High-Level Architecture
 
 ```
-Fix 1: audit/borrowing/14_reassignment_resets_move.sifr
+Fix 1: audits/borrowing/14_reassignment_resets_move.sifr
   → Add `own` to consume() parameter
 
 Fix 2: crates/sifr_codegen/src/lib.rs (HirExpr::Compare)
@@ -93,8 +93,8 @@ The fix: The `&` must be applied to the WHOLE expression `&IntOrStr::Int(42_i64)
 
 | **AC-ID** | Test Layer | Check |
 | --- | --- | --- |
-| AC-1 | E2E | `cargo run -- run audit/borrowing/14_reassignment_resets_move.sifr` passes |
-| AC-2 | E2E | `audit/type_inference/15_infer_from_optional_return.sifr` passes |
-| AC-3 | E2E | `audit/type_system/01_basic_unions.sifr` and `29_string_methods_after_narrow.sifr` pass |
+| AC-1 | E2E | `cargo run -- run audits/borrowing/14_reassignment_resets_move.sifr` passes |
+| AC-2 | E2E | `audits/type_inference/15_infer_from_optional_return.sifr` passes |
+| AC-3 | E2E | `audits/type_system/01_basic_unions.sifr` and `29_string_methods_after_narrow.sifr` pass |
 | AC-4 | Full audit | All 10 audit suites show no new regressions |
 | AC-5 | Manual | REPORT.md files updated |

@@ -2,7 +2,7 @@
 
 Status: completed (2026-03-05)
 Owner: phase_19 execution loop
-Reference phase doc: `.cursor/plans/main/phases/19_module_graph_safety_determinism_and_cache.md`
+Reference phase doc: `internal_docs/phases/19_module_graph_safety_determinism_and_cache.md`
 
 Loop per part: Work -> Validate -> PR -> Review -> Merge -> Mark Done
 

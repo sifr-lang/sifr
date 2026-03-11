@@ -234,7 +234,7 @@ The driver already handles class exports. The key verification is that:
 | `crates/sifr/tests/e2e/pass/stdlib_collections_counter_mutate.sifr` | New: Counter mutation via `increment` |
 | `crates/sifr/tests/e2e/fail/stdlib_counter_wrong_type.sifr` | New: wrong argument type to Counter |
 | `demos/milestone_stdlib_classes_demo.sifr` | New: demo showcasing Counter class usage |
-| `audit/STDLIB_PARITY_MASTER_REPORT.md` | Update metrics |
+| `audits/STDLIB_PARITY_MASTER_REPORT.md` | Update metrics |
 
 ---
 

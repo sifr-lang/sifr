@@ -6,7 +6,7 @@ Generated on 2026-02-17.
 
 - Canonical CPython module list source: `cpython/Python/stdlib_module_names.h` (same source as `sys.stdlib_module_names`).
 - Sifr module surface source: `codebase/lib/sifr/*.sifr`.
-- Existing parity estimates reused from `codebase/audit/STDLIB_PARITY_MASTER_REPORT.md` for currently implemented modules.
+- Existing parity estimates reused from `codebase/audits/STDLIB_PARITY_MASTER_REPORT.md` for currently implemented modules.
 - Classification is design-aware: modules were tagged according to Sifr architecture constraints (safety model, no exception-driven runtime, wrapper+FFI strategy, async deferred to ecosystem phase).
 
 ## Headline Metrics

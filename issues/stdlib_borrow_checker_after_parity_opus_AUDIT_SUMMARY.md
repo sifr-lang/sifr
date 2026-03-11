@@ -4,10 +4,10 @@ Generated: 2026-02-17
 
 ## Scope and Method
 
-- **Architecture reference:** `.cursor/plans/main/architecture.md` — Contracts #2 (Borrow and Lifetime Strategy), #3 (Error Semantics Matrix), #6 (Slice and Collection Semantics), #7 (String Semantics), #9 (Destruction and Cleanup), #10 (Auto-Derived Traits)
+- **Architecture reference:** `internal_docs/architecture.md` — Contracts #2 (Borrow and Lifetime Strategy), #3 (Error Semantics Matrix), #6 (Slice and Collection Semantics), #7 (String Semantics), #9 (Destruction and Cleanup), #10 (Auto-Derived Traits)
 - **Stdlib surface:** All 37 modules in `lib/sifr/*.sifr`
 - **Compiler implementation:** `crates/sifr_hir/src/scope.rs` (ownership tracking), `crates/sifr_hir/src/lower.rs` (borrow checking), `crates/sifr_codegen/src/lib.rs` (Rust code generation), `crates/sifr_hir/src/stdlib.rs` (intrinsic type signatures), `crates/sifr_type_system/src/types.rs` (OwnershipKind, ParamConvention)
-- **Existing audit baseline:** `audit/borrowing/REPORT.md` (50 borrow/ownership test files)
+- **Existing audit baseline:** `audits/borrowing/REPORT.md` (50 borrow/ownership test files)
 
 ## Headline Findings
 
@@ -69,7 +69,7 @@ Meanwhile, the architecture's **safety contract** (Result/Option for all fallibl
 
 ## Borrow Checker Test Suite Status
 
-From `audit/borrowing/REPORT.md` (50 tests):
+From `audits/borrowing/REPORT.md` (50 tests):
 
 | Status | Count | % |
 | --- | --- | --- |

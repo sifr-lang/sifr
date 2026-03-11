@@ -175,7 +175,7 @@ status: completed
 ### Part C -- Parity Audit
 
 - Run the comprehensive stdlib parity audit from [.cursor/plans/stdlib_parity_audit_2c354444.md](.cursor/plans/stdlib_parity_audit_2c354444.md) (~200 test files across 30 directories)
-- Produce `audit/STDLIB_PARITY_MASTER_REPORT.md` with coverage percentages per module
+- Produce `audits/STDLIB_PARITY_MASTER_REPORT.md` with coverage percentages per module
 - Target: 60%+ coverage across the top 20 CPython modules
 - **Reference:** CPython stdlib source is available at `/Users/yaseralnajjar/work/sifr/cpython` for comparing implementations and verifying API surfaces
 
@@ -247,7 +247,7 @@ status: completed
 
 - Fix stale fallback comment in `lower.rs`
 - Fix `has_pure_sifr_code` check in `sifr_driver` to include classes (future-proofing)
-- Update `audit/STDLIB_PARITY_MASTER_REPORT.md` with final metrics
+- Update `audits/STDLIB_PARITY_MASTER_REPORT.md` with final metrics
 
 ### Not included (and why)
 
@@ -351,7 +351,7 @@ Existing intrinsics reused unchanged: `counter_from_list`, `counter_get`, `count
 - `crates/sifr/tests/e2e/pass/stdlib_collections_counter_mutate.sifr` — Counter mutation via `increment`
 - `crates/sifr/tests/e2e/fail/stdlib_counter_wrong_type.sifr` — wrong argument type to Counter
 - `demos/milestone_stdlib_classes_demo.sifr` — demo showcasing Counter class usage
-- `audit/STDLIB_PARITY_MASTER_REPORT.md` — update metrics
+- `audits/STDLIB_PARITY_MASTER_REPORT.md` — update metrics
 
 ### Risk Assessment
 

@@ -2,7 +2,7 @@
 
 Status: done (started 2026-03-06, completed 2026-03-07)
 Owner: phase_26 execution loop
-Reference phase doc: `.cursor/plans/main/phases/26_type_system_soundness.md`
+Reference phase doc: `internal_docs/phases/26_type_system_soundness.md`
 
 Loop per part: Work -> Validate -> PR -> Review -> Merge -> Mark Done
 
