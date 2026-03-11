@@ -3,7 +3,7 @@
 Status: in_progress (started 2026-03-07)
 Owner: phase_28 execution loop
 Reference phase docs:
-- `.cursor/plans/main/phases/28_decimal_type_and_exact_numeric_semantics.md`
+- `internal_docs/phases/28_decimal_type_and_exact_numeric_semantics.md`
 
 Loop per part: Work -> Validate -> PR -> Review -> Merge -> Mark Done
 

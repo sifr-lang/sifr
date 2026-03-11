@@ -2,7 +2,7 @@
 
 Status: completed (2026-03-03)
 Owner: phase_16 execution loop
-Reference phase doc: `.cursor/plans/main/phases/16_local_first_test_platform_foundation.md`
+Reference phase doc: `internal_docs/phases/16_local_first_test_platform_foundation.md`
 
 Loop per part: Work -> Validate -> PR -> Review -> Merge -> Mark Done
 

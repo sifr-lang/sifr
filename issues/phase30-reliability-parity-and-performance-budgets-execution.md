@@ -3,8 +3,8 @@
 Status: done (started 2026-03-08, completed 2026-03-09)
 Owner: phase_30 execution loop
 Reference phase docs:
-- `.cursor/plans/main/phases/30_reliability_parity_and_performance_budgets.md`
-- `.cursor/plans/main/architecture.md`
+- `internal_docs/phases/30_reliability_parity_and_performance_budgets.md`
+- `internal_docs/architecture.md`
 
 Loop per part: Work -> Validate -> PR -> Review -> Merge -> External review pass(es) -> Mark Done
 
@@ -73,7 +73,7 @@ Loop per part: Work -> Validate -> PR -> Review -> Merge -> External review pass
 - [x] Enforce no module closes with undocumented mismatch status
 
 ## milestone_30_4: Parity Test Corpus Structure and Maintainability
-- [x] Document canonical Phase 30 parity-fixture structure expectations in `audit/stdlib/cpython_parity_fixture_format.md`
+- [x] Document canonical Phase 30 parity-fixture structure expectations in `audits/stdlib/cpython_parity_fixture_format.md`
 - [x] Record milestone_30_4 as a post-closure structural clarification rather than silently treating it as part of the original 2026-03-09 closure verdict
 - [x] Record enforcement model: milestone_30_4 is implementation guidance enforced through normal review by default; explicit reviewer sign-off is only required if it is later promoted to an enforced retroactive closure gate
 
@@ -108,9 +108,9 @@ Loop per part: Work -> Validate -> PR -> Review -> Merge -> External review pass
 
 ### Milestone 30_4 Evidence (Parity Test Corpus Structure and Maintainability)
 - Canonical parity fixture baseline plus structure rules:
-  - `audit/stdlib/cpython_parity_fixture_format.md`
+  - `audits/stdlib/cpython_parity_fixture_format.md`
 - Phase-level milestone contract and explicit post-closure note:
-  - `.cursor/plans/main/phases/30_reliability_parity_and_performance_budgets.md`
+  - `internal_docs/phases/30_reliability_parity_and_performance_budgets.md`
 - Status note:
   - `milestone_30_4` was added on 2026-03-10 after the original 2026-03-09 closure verdicts for `milestone_30_1` through `milestone_30_3`; it is currently documented as implementation guidance with review-based enforcement and does not reopen the closed phase by default.
 
@@ -119,7 +119,7 @@ status: wave closure complete (review pass 1 + review pass 2 + wave completion c
 
 - Implementation PR: merged https://github.com/yaseralnajjar/sifr/pull/1048
 - Reviewer pass 1 output: `reviews/phase-30-m30_4-wave-30-1a-review-1.md`
-- Reviewer verdict: all reviewed fixtures are compliant with `audit/stdlib/cpython_parity_fixture_format.md` and production-grade quality for approved scope.
+- Reviewer verdict: all reviewed fixtures are compliant with `audits/stdlib/cpython_parity_fixture_format.md` and production-grade quality for approved scope.
 - Action taken: reviewer notes validated; no additional code remediation required in wave_30_1a scope.
 - Reviewer pass 2 output: `reviews/phase-30-m30_4-wave-30_1a-review-2a.md`
 - Reviewer pass 2 verdict: production-grade approved with no blockers for wave_30_1a scope.
@@ -170,7 +170,7 @@ status: wave closure complete (review pass 1 + review pass 2 + wave completion c
 - Reviewer pass 1 verdict: wave fixture structure is deterministic and maintainable, but rule-5 format-extension justification must be explicitly recorded for helper-oriented boolean vectors in this structured-data wave scope.
 - Reviewer pass 1 remediation PR: merged https://github.com/yaseralnajjar/sifr/pull/1064
 - Reviewer pass 1 remediation actions:
-  - documented wave-specific extension rationale in `.cursor/plans/main/phases/30_reliability_parity_and_performance_budgets.md` under `wave_30_1d`
+  - documented wave-specific extension rationale in `internal_docs/phases/30_reliability_parity_and_performance_budgets.md` under `wave_30_1d`
   - recorded matching extension rationale in this execution tracker for explicit rule-5 auditability
 - Reviewer pass 2 output: `reviews/phase-30-m30_4-wave-30_1d-review-2.md`
 - Reviewer pass 2 verdict: approved for closure with no remaining blockers in wave scope.
@@ -203,7 +203,7 @@ status: wave closure complete (review pass 1 + review pass 2 + wave completion c
 - Reviewer pass 2 remediation PR: merged https://github.com/yaseralnajjar/sifr/pull/1070
 - Reviewer pass 2 remediation actions:
   - refactored `stdlib_glob_consolidated.sifr` into helper-organized `collect_*_actual()` sections with orchestration-only `main()`.
-  - added wave_30_1e wave-specific handling notes in `.cursor/plans/main/phases/30_reliability_parity_and_performance_budgets.md`.
+  - added wave_30_1e wave-specific handling notes in `internal_docs/phases/30_reliability_parity_and_performance_budgets.md`.
   - documented positive-path, negative-path, and safety-adaptation helper-group mapping for wave_30_1e in this execution tracker.
 - Explicit positive/negative/safety helper-group mapping (wave_30_1e):
   - Positive-path groups: `collect_{io_roundtrip,parse,runtime,path_helpers,path_class,glob_pattern,tempfile,copy_move_tree}_actual` and analogous consolidated fixture helpers that validate successful filesystem/path operations.
@@ -280,7 +280,7 @@ Validation evidence:
 - Positive path: `cargo run -q -p sifr -- run crates/sifr/tests/e2e/pass/cpython_env_subset.sifr` -> pass.
 - Positive path: `cargo run -q -p sifr -- run crates/sifr/tests/e2e/pass/stdlib_env.sifr` -> pass.
 - Positive path: `cargo run -q -p sifr -- run crates/sifr/tests/e2e/pass/stdlib_env_extended.sifr` -> pass.
-- Positive path: `cargo run -q -p sifr -- run demos/m1_env_demo.sifr` -> prints expected set/get/unset flow.
+- Positive path: `cargo run -q -p sifr -- run demos/m30_1a_env_parity_demo/main.sifr` -> prints expected set/get/unset flow.
 - Positive path: `cargo test -q -p sifr_codegen lowers_env_intrinsics_via_registry` -> pass.
 - Positive path: `/Users/yaseralnajjar/work/sifr/codebase/scripts/run_all_tests.sh` -> pass (`verification ok: variants=64, failures=0, blocking_failures=0, non_blocking_failures=0`).
 - Negative path: invalid key vectors (`""`, `"A=B"`) in `crates/sifr/tests/e2e/pass/cpython_env_subset.sifr` and `demos/m30_1a_env_parity_demo/main.sifr` validate panic-free no-op/`None` behavior.
@@ -308,7 +308,7 @@ Validation evidence:
 - Positive path: `cargo run -q -p sifr -- run crates/sifr/tests/e2e/pass/cpython_bytes_subset.sifr` -> pass.
 - Positive path: `cargo run -q -p sifr -- run crates/sifr/tests/e2e/pass/stdlib_bytes.sifr` -> pass.
 - Positive path: `cargo run -q -p sifr -- run crates/sifr/tests/e2e/pass/stdlib_bytes_safety.sifr` -> pass.
-- Positive path: `cargo run -q -p sifr -- run demos/m2_bytes_demo.sifr` -> prints expected bytes API flow and `range-safe`.
+- Positive path: `cargo run -q -p sifr -- run demos/m30_1a_bytes_parity_demo/main.sifr` -> prints expected bytes API flow and `range-safe`.
 - Positive path: `cargo test -q -p sifr_codegen lowers_bytes_intrinsics_via_registry` -> pass.
 - Positive path: `/Users/yaseralnajjar/work/sifr/codebase/scripts/run_all_tests.sh` -> pass (`verification ok: variants=64, failures=0, blocking_failures=0, non_blocking_failures=0`).
 - Negative path: canonical bool vectors in `cpython_bytes_subset.sifr` validate odd-hex and non-ASCII hex parse errors plus decode out-of-range byte rejection (`[300]`).
@@ -361,7 +361,7 @@ Validation evidence:
 - Positive path: `cargo run -q -p sifr -- run crates/sifr/tests/e2e/pass/cpython_hashlib_api_subset.sifr` -> pass.
 - Positive path: `cargo run -q -p sifr -- run crates/sifr/tests/e2e/pass/cpython_hashlib_object_model_subset.sifr` -> pass.
 - Positive path: `cargo run -q -p sifr -- run crates/sifr/tests/e2e/pass/stdlib_hashlib_intrinsics.sifr` -> pass.
-- Positive path: `cargo run -q -p sifr -- run demos/m5_hashlib_demo.sifr` -> expected object-model flow prints.
+- Positive path: `cargo run -q -p sifr -- run demos/m30_1a_hashlib_parity_demo/main.sifr` -> expected object-model flow prints.
 - Positive path: `/Users/yaseralnajjar/work/sifr/codebase/scripts/run_all_tests.sh` -> pass (`verification ok: variants=64, failures=0, blocking_failures=0, non_blocking_failures=0`).
 - Negative path: canonical bool vectors in `cpython_hashlib_api_subset.sifr` and `cpython_hashlib_object_model_subset.sifr` validate unsupported constructor/error adaptation (`ValueError`/`HashlibError`) behavior.
 - PR: merged https://github.com/yaseralnajjar/sifr/pull/945
@@ -389,7 +389,7 @@ Validation evidence:
 - Positive path: `cargo run -q -p sifr -- run crates/sifr/tests/e2e/pass/cpython_math_semantic_corrections_subset.sifr` -> pass.
 - Positive path: `cargo run -q -p sifr -- run crates/sifr/tests/e2e/pass/cpython_math_missing_surface_subset.sifr` -> pass.
 - Positive path: `cargo run -q -p sifr -- run crates/sifr/tests/e2e/pass/stdlib_math_intrinsics.sifr` -> pass.
-- Positive path: `cargo run -q -p sifr -- run demos/m4_math_demo.sifr` -> expected numeric parity flow prints.
+- Positive path: `cargo run -q -p sifr -- run demos/m30_1b_math_parity_demo/main.sifr` -> expected numeric parity flow prints.
 - Positive path: `/Users/yaseralnajjar/work/sifr/codebase/scripts/run_all_tests.sh` -> pass (`verification ok: variants=64, failures=0, blocking_failures=0, non_blocking_failures=0`).
 - Negative path: mismatched-dimension `dist(...)` and invalid-tolerance `isclose(...)` semantic checks are asserted in canonical vectors (`cpython_math_semantic_corrections_subset.sifr`, `cpython_math_missing_surface_subset.sifr`).
 - PR: merged https://github.com/yaseralnajjar/sifr/pull/948

@@ -86,7 +86,7 @@ Suggested boundary split:
   - focused test modules grouped by concern rather than one giant `mod tests`
 
 ## Execution Model
-- This remains an ad hoc issue-driven phase until promoted into `.cursor/plans/main/phases/`.
+- This remains an ad hoc issue-driven phase until promoted into `internal_docs/phases/`.
 - Work executes one milestone at a time.
 - `issues/ad-hoc-entrypoint-compilation-unification-and-dependency-metadata-closure.md` must be closed before execution starts for this phase.
 - Public behavior preservation is a hard gate for every milestone, not only the last one.

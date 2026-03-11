@@ -3,7 +3,7 @@
 Status: done (started 2026-03-08, completed 2026-03-08)
 Owner: phase_29 execution loop
 Reference phase docs:
-- `.cursor/plans/main/phases/29_verification_hardening.md`
+- `internal_docs/phases/29_verification_hardening.md`
 
 Loop per part: Work -> Validate -> PR -> Review -> Merge -> Mark Done
 

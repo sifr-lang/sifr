@@ -2,7 +2,7 @@
 
 Status: completed (2026-03-04)
 Owner: phase_18 execution loop
-Reference phase doc: `.cursor/plans/main/phases/18_project_and_cli_semantics_correctness.md`
+Reference phase doc: `internal_docs/phases/18_project_and_cli_semantics_correctness.md`
 
 Loop per part: Work -> Validate -> PR -> Review -> Merge -> Mark Done
 

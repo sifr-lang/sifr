@@ -57,7 +57,7 @@ Source (.sifr)
   → sifr                                     (CLI binary: build/run/check/emit/test)
 ```
 
-See `.cursor/plans/main/architecture.md` for full architectural detail.
+See `internal_docs/architecture.md` for full architectural detail.
 
 ## Key conventions
 
@@ -72,9 +72,9 @@ See `.cursor/plans/main/architecture.md` for full architectural detail.
 - `demos/` — Milestone demo files (*.sifr) showcasing language features
 - `scripts/` — Build/test automation
 - `verification/` — E2E test infrastructure
-- `.cursor/plans/main/architecture.md` — Comprehensive compiler architecture doc
-- `.cursor/plans/main/roadmap.md` — Phase execution roadmap
-- `.cursor/plans/main/phases/` — Per-phase execution plans
+- `internal_docs/architecture.md` — Comprehensive compiler architecture doc
+- `internal_docs/roadmap.md` — Phase execution roadmap
+- `internal_docs/phases/` — Per-phase execution plans
 - `docs/` — CLI semantics contract, HIR guardrails, verification policies
 
 ## Core expectations
@@ -101,9 +101,9 @@ See `.cursor/plans/main/architecture.md` for full architectural detail.
 
 Update corresponding docs after each item is completed (as applicable):
 
-- Architecture: `.cursor/plans/main/architecture.md`
-- Roadmap: `.cursor/plans/main/roadmap.md`
-- Phases: `.cursor/plans/main/phases/`
+- Architecture: `internal_docs/architecture.md`
+- Roadmap: `internal_docs/roadmap.md`
+- Phases: `internal_docs/phases/`
 - Issues: `issues/`
 
 ## Safety rules

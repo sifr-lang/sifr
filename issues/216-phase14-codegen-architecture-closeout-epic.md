@@ -23,13 +23,13 @@ At epic creation time, Phase 14 was marked `done` in planning docs, but the code
 This epic tracked the implementation work required to bring the codebase to the intended end-state.
 
 Primary source criteria:
-- `.cursor/plans/main/phases/14_codegen_architecture.md`
-- `.cursor/plans/main/phases/14_codegen_architecture_finish_checklist.md`
+- `internal_docs/phases/14_codegen_architecture.md`
+- `internal_docs/phases/14_codegen_architecture_finish_checklist.md`
 
 Unchecked strict checklist items at epic creation time (now resolved):
-- `.cursor/plans/main/phases/14_codegen_architecture_finish_checklist.md:57`
-- `.cursor/plans/main/phases/14_codegen_architecture_finish_checklist.md:162`
-- `.cursor/plans/main/phases/14_codegen_architecture_finish_checklist.md:163`
+- `internal_docs/phases/14_codegen_architecture_finish_checklist.md:57`
+- `internal_docs/phases/14_codegen_architecture_finish_checklist.md:162`
+- `internal_docs/phases/14_codegen_architecture_finish_checklist.md:163`
 
 ---
 

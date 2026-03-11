@@ -2,7 +2,7 @@
 
 Status: completed (started 2026-03-06, completed 2026-03-06)
 Owner: phase_24 execution loop
-Reference phase doc: `.cursor/plans/main/phases/24_hir_analysis_consolidation.md`
+Reference phase doc: `internal_docs/phases/24_hir_analysis_consolidation.md`
 
 Loop per part: Work -> Validate -> PR -> Review -> Merge -> Mark Done
 

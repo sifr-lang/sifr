@@ -113,7 +113,7 @@ All existing tests use `Result[T, str]` and `except str as e`. These must be mig
 - `crates/sifr/tests/e2e/pass/custom_error.sifr` (already uses error class — verify)
 - `crates/sifr/tests/e2e/fail/unused_result.sifr`
 - `demos/milestone_error_handling_demo.sifr`
-- All `audit/` files that use `Result[T, str]`
+- All `audits/` files that use `Result[T, str]`
 
 ### 6. Add New E2E Tests for Error Safety
 

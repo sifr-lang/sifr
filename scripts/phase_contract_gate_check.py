@@ -32,10 +32,10 @@ def parse_phase_statuses(roadmap_path: Path) -> dict[int, str]:
 
 
 def require_phase_file_exists(phase: int) -> None:
-    matches = list(Path(".cursor/plans/main/phases").glob(f"{phase:02d}_*.md"))
+    matches = list(Path("internal_docs/phases").glob(f"{phase:02d}_*.md"))
     if not matches:
         raise SystemExit(
-            f"gate-check failed: no phase file found for phase {phase} in .cursor/plans/main/phases"
+            f"gate-check failed: no phase file found for phase {phase} in internal_docs/phases"
         )
 
 
@@ -58,7 +58,7 @@ def main() -> None:
     )
     parser.add_argument(
         "--roadmap",
-        default=".cursor/plans/main/roadmap.md",
+        default="internal_docs/roadmap.md",
         help="Path to roadmap file.",
     )
     args = parser.parse_args()

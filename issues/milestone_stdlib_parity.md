@@ -48,7 +48,7 @@ With 18 stdlib modules now available (13 original + 5 new from milestone_stdlib_
 
 ##### Part C: Parity Audit
 - Run comprehensive audit against CPython's top 20 modules
-- Produce `audit/STDLIB_PARITY_MASTER_REPORT.md`
+- Produce `audits/STDLIB_PARITY_MASTER_REPORT.md`
 - Target: 60%+ function coverage across top 20 modules
 
 ### **Acceptance Criteria**

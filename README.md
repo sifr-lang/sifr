@@ -113,7 +113,7 @@ cargo test
 
 ## Architecture
 
-For a deep dive into the compiler pipeline, type system, ownership model, and design decisions, see the [Architecture Document](.cursor/plans/main/architecture.md).
+For a deep dive into the compiler pipeline, type system, ownership model, and design decisions, see the [Architecture Document](internal_docs/architecture.md).
 
 For stable command-mode behavior and edge-case guarantees, see the [CLI Command Semantics Contract](docs/cli_command_semantics.md).
 
@@ -122,7 +122,7 @@ For stable command-mode behavior and edge-case guarantees, see the [CLI Command 
 Want to see how a Sifr program travels from source text to a native binary?
 The interactive pipeline visualizer walks through every compiler step with a live `factorial` example at each stage.
 
-**[▶ Open the Compiler Pipeline Visualizer](https://htmlpreview.github.io/?https://github.com/yaseralnajjar/sifr/blob/main/compiler_pipeline.html)**
+**[▶ Open the Compiler Pipeline Visualizer](https://htmlpreview.github.io/?https://github.com/yaseralnajjar/sifr/blob/main/internal_docs/compiler_pipeline.html)**
 
 ## License
 

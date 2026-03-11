@@ -5,7 +5,7 @@ Scope order (required): `sifr.env` -> `sifr.bytes` -> `sifr.base64` -> `sifr.mat
 
 ## References Used
 
-- Sifr architecture contract: `.cursor/plans/main/architecture.md`
+- Sifr architecture contract: `internal_docs/architecture.md`
 - Sifr modules:
   - `lib/sifr/env.sifr`
   - `lib/sifr/bytes.sifr`
@@ -253,7 +253,7 @@ Scope order (required): `sifr.env` -> `sifr.bytes` -> `sifr.base64` -> `sifr.mat
 - Port tests from CPython:
   - selected tests from `test_os/test_os.py` + `test_os/test_posix.py` focused on environment operations
 - Demo:
-  - `demos/m1_env_demo.sifr`
+  - `demos/m30_1a_env_parity_demo/main.sifr`
 - PR plan:
   - PR1-A API+intrinsics
   - PR1-B parity tests + safety tests
@@ -268,7 +268,7 @@ Scope order (required): `sifr.env` -> `sifr.bytes` -> `sifr.base64` -> `sifr.mat
 - Port tests from CPython:
   - `test_bytes.py`: encoding/decode/fromhex/hex and core method subset first
 - Demo:
-  - `demos/m2_bytes_demo.sifr`
+  - `demos/m30_1a_bytes_parity_demo/main.sifr`
 - PR plan:
   - PR2-A correctness and safety fixes
   - PR2-B API expansion subset
@@ -284,7 +284,7 @@ Scope order (required): `sifr.env` -> `sifr.bytes` -> `sifr.base64` -> `sifr.mat
 - Port tests from CPython:
   - vectors + invalid input + roundtrip property tests from `test_base64.py`
 - Demo:
-  - `demos/m3_base64_demo.sifr`
+  - `demos/m30_1a_base64_parity_demo/main.sifr`
 - PR plan:
   - PR3-A API expansion
   - PR3-B strictness/error behavior
@@ -300,7 +300,7 @@ Scope order (required): `sifr.env` -> `sifr.bytes` -> `sifr.base64` -> `sifr.mat
 - Port tests:
   - expand from current subset to broad coverage from `test_math.py`
 - Demo:
-  - `demos/m4_math_demo.sifr`
+  - `demos/m30_1b_math_parity_demo/main.sifr`
 - PR plan:
   - PR4-A API/sig completion
   - PR4-B numerical behavior fixes
@@ -315,7 +315,7 @@ Scope order (required): `sifr.env` -> `sifr.bytes` -> `sifr.base64` -> `sifr.mat
 - Port tests:
   - selected vectors and API behavior from `test_hashlib.py`
 - Demo:
-  - `demos/m5_hashlib_demo.sifr`
+  - `demos/m30_1a_hashlib_parity_demo/main.sifr`
 - PR plan:
   - PR5-A hash object runtime model
   - PR5-B API/algorithms expansion
@@ -412,7 +412,7 @@ Scope order (required): `sifr.env` -> `sifr.bytes` -> `sifr.base64` -> `sifr.mat
   - [x] Record differences from full CPython mapping semantics
   - [x] Record safety adaptation for invalid key/value handling
 - [x] Milestone demo
-  - [x] `demos/m1_env_demo.sifr` passes
+  - [x] `demos/m30_1a_env_parity_demo/main.sifr` passes
 
 ### Milestone 2 (`sifr.bytes`)
 
@@ -427,7 +427,7 @@ Scope order (required): `sifr.env` -> `sifr.bytes` -> `sifr.base64` -> `sifr.mat
   - [x] fromhex/hex encoding-decoding core tests
   - [x] decode error-path tests
 - [x] Milestone demo
-  - [x] `demos/m2_bytes_demo.sifr` passes
+  - [x] `demos/m30_1a_bytes_parity_demo/main.sifr` passes
 
 ### Milestone 3 (`sifr.base64`)
 
@@ -446,7 +446,7 @@ Scope order (required): `sifr.env` -> `sifr.bytes` -> `sifr.base64` -> `sifr.mat
   - [x] round-trip stress/property-like cases (deterministic payload matrix in `cpython_base64_rfc4648_vectors.sifr`)
 - [x] PR3-C progress note: added full RFC4648 vector assertions + deterministic roundtrip matrix; also aligned `b16encode` output to uppercase for CPython parity.
 - [x] Milestone demo
-  - [x] `demos/m3_base64_demo.sifr` passes
+  - [x] `demos/m30_1a_base64_parity_demo/main.sifr` passes
 
 ### Milestone 4 (`sifr.math`)
 
@@ -463,7 +463,7 @@ Scope order (required): `sifr.env` -> `sifr.bytes` -> `sifr.base64` -> `sifr.mat
   - [x] Broad `test_math.py` subset migrated (`cpython_math.sifr`, `cpython_math_extended.sifr`, `cpython_math_missing_surface_subset.sifr`, `cpython_math_semantic_corrections_subset.sifr`, `cpython_math_parity_expanded_matrix.sifr`)
   - [x] divergence tests for intentional Sifr differences (safe-`NaN` paths for non-`Result` APIs such as `dist` mismatch and invalid `remainder` cases)
 - [x] Milestone demo
-  - [x] `demos/m4_math_demo.sifr` passes
+  - [x] `demos/m30_1b_math_parity_demo/main.sifr` passes
 
 ### Milestone 5 (`sifr.hashlib`)
 
@@ -479,5 +479,4 @@ Scope order (required): `sifr.env` -> `sifr.bytes` -> `sifr.base64` -> `sifr.mat
   - [x] object behavior
   - [x] file digest and error-path tests
 - [x] Milestone demo
-  - [x] `demos/m5_hashlib_demo.sifr` passes
-
+  - [x] `demos/m30_1a_hashlib_parity_demo/main.sifr` passes

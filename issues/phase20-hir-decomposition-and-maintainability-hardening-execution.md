@@ -2,7 +2,7 @@
 
 Status: completed (2026-03-05)
 Owner: phase_20 execution loop
-Reference phase doc: `.cursor/plans/main/phases/20_hir_decomposition_and_maintainability_hardening.md`
+Reference phase doc: `internal_docs/phases/20_hir_decomposition_and_maintainability_hardening.md`
 
 Loop per part: Work -> Validate -> PR -> Review -> Merge -> Mark Done
 

@@ -4,7 +4,7 @@ Generated: 2026-02-17
 
 ## Scope
 
-- Architecture baseline: `.cursor/plans/main/architecture.md` (borrow/lifetime + safety contracts).
+- Architecture baseline: `internal_docs/architecture.md` (borrow/lifetime + safety contracts).
 - Implemented stdlib: `lib/sifr/*.sifr` (37 modules).
 - Borrow conventions + intrinsic typing: `crates/sifr_hir/src/stdlib.rs`, `crates/sifr_type_system/src/types.rs`.
 - Runtime behavior in generated Rust: `crates/sifr_codegen/src/lib.rs`.

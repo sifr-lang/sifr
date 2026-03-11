@@ -44,7 +44,7 @@ Harden the borrow-by-default model with exclusivity enforcement, clear error mes
 | `crates/sifr_hir/src/scope.rs` | Add `is_mut_borrowed` to `VarInfo` |
 | `crates/sifr_hir/src/lower.rs` | Exclusivity checking, error messages |
 | `crates/sifr_driver/src/lib.rs` | Error formatting |
-| `audit/borrowing/*.sifr` | Update tests |
+| `audits/borrowing/*.sifr` | Update tests |
 | `crates/sifr/tests/e2e/pass/` | New pass tests |
 | `crates/sifr/tests/e2e/fail/` | New fail tests |
 | `crates/sifr_hir/src/stdlib.rs` | `mut` on mutating functions |

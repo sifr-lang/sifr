@@ -166,7 +166,7 @@ Loop per part: Plan -> Implement -> Validate -> Demo -> PR -> Review -> Merge ->
 - Status: complete
 - Validation evidence:
   - reviewer finding validated: the remaining `build_rooted_entrypoint_binary` ownership warning was real, and because the function is `pub(crate)` the signature could be safely tightened to borrow `&RootedEntrypoint<'_>` without any external API break
-  - reviewer finding validated: `.cursor/plans/main/architecture.md` had not been updated to describe the decomposed `sifr_driver` module layout, so the architecture doc now records the phase-31 driver boundaries explicitly
+  - reviewer finding validated: `internal_docs/architecture.md` had not been updated to describe the decomposed `sifr_driver` module layout, so the architecture doc now records the phase-31 driver boundaries explicitly
   - positive path: `cargo test -q -p sifr_driver -- --test-threads=1` -> passed (`59 passed, 0 failed`)
   - positive path: `cargo run -q -p sifr -- run demos/m_driver_4_build_orchestration_demo/main.sifr` -> printed `42`
   - positive path: `cargo run -q -p sifr -- test demos/m_driver_5_test_runner_demo` -> executed the demo test runner successfully with `test_import_parity ... ok`
