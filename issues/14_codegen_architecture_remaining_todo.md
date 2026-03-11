@@ -1,7 +1,7 @@
 # Phase 14 Remaining Work Loop Plan (Re-baselined 2026-02-23)
 
 > Status note (2026-02-24): This document is superseded by
-> `.cursor/plans/main/phases/14_codegen_architecture_finish_checklist.md`
+> `internal_docs/phases/14_codegen_architecture_finish_checklist.md`
 > for strict criterion-by-criterion completion tracking.
 > Use the strict checklist as the active source of truth.
 
@@ -9,8 +9,8 @@ This document replaces stale closeout checkboxes with code-verified remaining wo
 
 Source-of-truth inputs:
 
-- `.cursor/plans/main/phases/14_codegen_architecture.md`
-- `.cursor/plans/main/phases/14_codegen_architecture_execution.md`
+- `internal_docs/phases/14_codegen_architecture.md`
+- `internal_docs/phases/14_codegen_architecture_execution.md`
 - `crates/sifr_codegen/src/lib.rs`
 - `crates/sifr_codegen/src/lower_stmt.rs`
 - `crates/sifr_codegen/src/lower_expr.rs`

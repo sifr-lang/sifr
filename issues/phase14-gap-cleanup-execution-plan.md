@@ -774,10 +774,10 @@ Primary files:
 3. `issues/218-phase14-promote-full-ir-module-assembly.md`
 4. `issues/219-phase14-enforce-rawcode-zero-in-core-production-path.md`
 5. `Issue 220`
-6. `.cursor/plans/main/phases/14_codegen_architecture_finish_checklist.md`
-7. `.cursor/plans/main/phases/14_codegen_architecture.md`
-8. `.cursor/plans/main/architecture.md`
-9. `.cursor/plans/main/roadmap.md`
+6. `internal_docs/phases/14_codegen_architecture_finish_checklist.md`
+7. `internal_docs/phases/14_codegen_architecture.md`
+8. `internal_docs/architecture.md`
+9. `internal_docs/roadmap.md`
 
 To-do:
 1. Link merged PRs in order.

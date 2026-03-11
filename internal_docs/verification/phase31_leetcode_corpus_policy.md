@@ -3,7 +3,7 @@
 Phase 31 uses two version-controlled artifacts:
 
 - `verification/leetcode/phase31_corpus_inventory.json`
-  - raw inventory of every `audit/leetcode/*.sifr` fixture in the repository
+  - raw inventory of every `audits/leetcode/*.sifr` fixture in the repository
   - tracks fixture paths, paired Python sources, oracle shape, and whether the fixture is part of the curated seed corpus
 - `verification/leetcode/phase31_seed_corpus.json`
   - canonical Phase 31 seed corpus used for deterministic runner baselines
@@ -110,11 +110,11 @@ python3 scripts/test_phase31_leetcode_remediation_backlog.py
 
 ## Current Baseline Notes
 
-- The raw `audit/leetcode` fixture directory currently contains `411` Sifr fixtures.
+- The raw `audits/leetcode` fixture directory currently contains `411` Sifr fixtures.
 - Oracle distribution in the raw inventory:
   - `embedded_asserts`: `208`
   - `no_oracle`: `203`
-- The historical phase-31 artifacts in `audit/leetcode/*.md` are informative but not authoritative because they disagree on corpus size and pass-rate totals.
+- The historical phase-31 artifacts in `audits/leetcode/*.md` are informative but not authoritative because they disagree on corpus size and pass-rate totals.
 - The current taxonomy artifacts are generated from `verification/leetcode/phase31_seed_results.json`:
   - `verification/leetcode/phase31_failure_taxonomy.json`
   - `verification/leetcode/phase31_failure_repros.json`

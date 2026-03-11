@@ -66,19 +66,19 @@ This document defines the canonical suite taxonomy for compiler verification har
 - Policy and manifests live under `verification/fuzz_property/`.
 - Seeds and deterministic generation rules are version-controlled.
 - Each run emits machine-readable case outcomes and seed provenance.
-- Operational policy: `docs/verification/fuzz_property_policy.md`.
+- Operational policy: `internal_docs/verification/fuzz_property_policy.md`.
 
 ### OSS-Curated and Ecosystem-Broader
 - Manifests live under `verification/oss/`.
 - `oss-curated` entries must include pinned revision, owner, rationale, commands, timeout, and expected class.
 - `ecosystem-broader` is explicitly non-blocking and emits signal-only reports.
-- Operational policy: `docs/verification/oss_gate_policy.md`.
+- Operational policy: `internal_docs/verification/oss_gate_policy.md`.
 
 ## Manifest Source of Truth
 
 - Canonical manifest: `verification/suites/manifest.json`.
 - Suite runners must not hardcode fixture lists outside this manifest.
 - Manifest updates are review artifacts and follow normal PR review.
-- Corpus lifecycle and promotion rules: `docs/verification/regression_corpus_policy.md`.
-- Deterministic sharding + flake policy: `docs/verification/deterministic_sharding_and_flake_policy.md`.
-- Structured artifact schema + retention: `docs/verification/artifact_schema_and_retention.md`.
+- Corpus lifecycle and promotion rules: `internal_docs/verification/regression_corpus_policy.md`.
+- Deterministic sharding + flake policy: `internal_docs/verification/deterministic_sharding_and_flake_policy.md`.
+- Structured artifact schema + retention: `internal_docs/verification/artifact_schema_and_retention.md`.

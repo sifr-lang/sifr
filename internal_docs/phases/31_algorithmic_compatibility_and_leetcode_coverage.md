@@ -48,7 +48,7 @@ status: complete
   - `verification/leetcode/phase31_seed_corpus.json`
   - `verification/leetcode/phase31_corpus_inventory.json`
   - `verification/leetcode/phase31_seed_summary.json`
-  - `docs/verification/phase31_leetcode_corpus_policy.md`
+  - `internal_docs/verification/phase31_leetcode_corpus_policy.md`
   - `scripts/build_phase31_leetcode_assets.py`
   - `scripts/run_phase31_leetcode.py`
   - `scripts/test_phase31_leetcode.py`

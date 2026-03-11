@@ -2,7 +2,7 @@
 
 Status: completed (2026-03-06)
 Owner: phase_22 execution loop
-Reference phase doc: `.cursor/plans/main/phases/22_frontend_mode_parity_hardening.md`
+Reference phase doc: `internal_docs/phases/22_frontend_mode_parity_hardening.md`
 
 Loop per part: Work -> Validate -> PR -> Review -> Merge -> Mark Done
 

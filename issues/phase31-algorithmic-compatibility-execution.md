@@ -3,9 +3,9 @@
 Status: complete (started 2026-03-11, closed 2026-03-11)
 Owner: phase_31 execution loop
 Reference phase docs:
-- `.cursor/plans/main/phases/31_algorithmic_compatibility_and_leetcode_coverage.md`
-- `.cursor/plans/main/roadmap.md`
-- `.cursor/plans/main/architecture.md`
+- `internal_docs/phases/31_algorithmic_compatibility_and_leetcode_coverage.md`
+- `internal_docs/roadmap.md`
+- `internal_docs/architecture.md`
 
 Historical note:
 - `issues/phase31-sifr-driver-decomposition-and-boundary-hardening-execution.md` reflects an older phase numbering scheme. The active roadmap on 2026-03-11 assigns Phase 31 to algorithmic compatibility, so this file is the authoritative execution tracker for the current Phase 31 scope.
@@ -29,19 +29,19 @@ Carry-forward planning:
 ## Initial Investigation Summary
 
 ### What already exists
-- `audit/leetcode/` already contains a large pinned corpus of converted LeetCode programs (`.sifr`) plus source references (`.py`).
-- `audit/leetcode/run_audit.py` is a historical ad hoc harness, but it is not wired into the canonical workspace validation flow and hardcodes external paths.
-- `audit/leetcode/audit_results.json`, `audit/leetcode/REPORT.md`, and `audit/leetcode/POST_HARDENING_REPORT.md` provide historical compatibility snapshots.
+- `audits/leetcode/` already contains a large pinned corpus of converted LeetCode programs (`.sifr`) plus source references (`.py`).
+- `audits/leetcode/run_audit.py` is a historical ad hoc harness, but it is not wired into the canonical workspace validation flow and hardcodes external paths.
+- `audits/leetcode/audit_results.json`, `audits/leetcode/REPORT.md`, and `audits/leetcode/POST_HARDENING_REPORT.md` provide historical compatibility snapshots.
 
 ### Current inconsistencies that Phase 31 must resolve first
 - The roadmap says Phase 31 is still `draft`, but the repo already contains a substantial LeetCode corpus.
 - Historical baseline artifacts disagree:
-  - `audit/leetcode/audit_results.json` currently records `376` problems with `4 PASS`, `1 WRONG_OUTPUT`, and `371 COMPILE_ERROR`.
-  - `audit/leetcode/REPORT.md` documents `411` files and `39` end-to-end passes.
-  - `audit/leetcode/POST_HARDENING_REPORT.md` documents a February 16, 2026 post-hardening view with `39/411` end-to-end passes.
+  - `audits/leetcode/audit_results.json` currently records `376` problems with `4 PASS`, `1 WRONG_OUTPUT`, and `371 COMPILE_ERROR`.
+  - `audits/leetcode/REPORT.md` documents `411` files and `39` end-to-end passes.
+  - `audits/leetcode/POST_HARDENING_REPORT.md` documents a February 16, 2026 post-hardening view with `39/411` end-to-end passes.
 - Because the corpus definition, runner contract, and scorecard format are not canonicalized, the current repo cannot answer the core phase-31 question deterministically: "what is the current compatibility rate, why do failures happen, and what changed after a fix?"
 
-### Current blocker signal from `audit/leetcode/audit_results.json`
+### Current blocker signal from `audits/leetcode/audit_results.json`
 - Total corpus entries: `376`
 - Status counts:
   - `COMPILE_ERROR`: `371`
@@ -77,7 +77,7 @@ Carry-forward planning:
 
 ### milestone_31_1: Corpus and Runner Baseline
 1. [x] `m31_1a_corpus_manifest`
-   - Define the canonical Phase 31 seed corpus from `audit/leetcode/`.
+   - Define the canonical Phase 31 seed corpus from `audits/leetcode/`.
    - Add version-controlled metadata per problem: id, slug, source paths, topic tags, difficulty, scope classification, oracle type, timeout class.
    - Resolve the current `376` vs `411` mismatch explicitly in docs and generated outputs.
 2. [x] `m31_1b_runner_contract`
@@ -150,7 +150,7 @@ Carry-forward planning:
   - `verification/leetcode/phase31_seed_results.json`
   - `demos/m31_1_leetcode_runner_demo/corpus.json`
   - `demos/m31_1_leetcode_runner_demo/results.json`
-  - `docs/verification/phase31_leetcode_corpus_policy.md`
+  - `internal_docs/verification/phase31_leetcode_corpus_policy.md`
   - `scripts/phase31_leetcode_lib.py`
   - `scripts/build_phase31_leetcode_assets.py`
   - `scripts/run_phase31_leetcode.py`
@@ -269,9 +269,9 @@ Carry-forward planning:
 - Validation evidence:
   - positive path: `cargo test -p sifr_hir test_user_defined_sum_shadows_builtin` -> passed
   - positive path: `cargo test -p sifr_codegen lowers_simple_tuple_unpack_stmt_with_mutated_bindings -- --nocapture` -> passed
-  - positive path: `target/release/sifr run audit/leetcode/0069_sqrtx.sifr` -> passed
-  - positive path: `target/release/sifr run audit/leetcode/0151_reverse_words_in_a_string.sifr` -> passed
-  - positive path: `target/release/sifr run audit/leetcode/2235_add_two_integers.sifr` -> passed
+  - positive path: `target/release/sifr run audits/leetcode/0069_sqrtx.sifr` -> passed
+  - positive path: `target/release/sifr run audits/leetcode/0151_reverse_words_in_a_string.sifr` -> passed
+  - positive path: `target/release/sifr run audits/leetcode/2235_add_two_integers.sifr` -> passed
   - positive path: `target/release/sifr run crates/sifr/tests/e2e/pass/cpython_heapq_subset.sifr` -> passed after narrowing borrowed-param shadowing to true rebindings only
   - positive path: `target/release/sifr run crates/sifr/tests/e2e/pass/non_literal_default_args.sifr` -> passed, confirming mutated `own` params still receive mutable local shadows
   - positive path: `python3 scripts/run_phase31_leetcode.py --manifest verification/leetcode/phase31_seed_corpus.json --output verification/leetcode/phase31_seed_results_wave1.json` -> produced the wave-1 snapshot (`CHECK_ERROR=45`, `PASS=5`)
@@ -328,12 +328,12 @@ Carry-forward planning:
   - inspected `.cursor/skills/project-workflow/SKILL.md`
   - confirmed working tree clean before starting phase execution
   - confirmed active roadmap Phase 31 scope is algorithmic compatibility
-  - inspected `audit/leetcode/` baseline assets and recorded artifact inconsistency (`376` vs `411`)
+  - inspected `audits/leetcode/` baseline assets and recorded artifact inconsistency (`376` vs `411`)
 
 ## Open Questions Resolved for Execution
 - Phase numbering conflict:
-  - resolved in favor of `.cursor/plans/main/roadmap.md` as the active execution authority
+  - resolved in favor of `internal_docs/roadmap.md` as the active execution authority
 - Whether a corpus already exists:
-  - yes; Phase 31 should formalize and operationalize the existing `audit/leetcode` corpus rather than invent a new one from scratch
+  - yes; Phase 31 should formalize and operationalize the existing `audits/leetcode` corpus rather than invent a new one from scratch
 - Whether the existing audit harness is sufficient:
   - no; it is useful as source material, but not acceptable as the canonical phase runner because it is ad hoc, path-hardcoded, and not tied to the workspace validation contract

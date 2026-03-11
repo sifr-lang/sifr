@@ -45,7 +45,7 @@ functions.insert("write_text".to_string(), FunctionType::all_borrow(vec![
 
 ### Architecture Requirement
 
-**File:** `.cursor/plans/main/architecture.md`
+**File:** `internal_docs/architecture.md`
 
 - Line 15: "No panics in user code."
 - Line 21: "File I/O, network, and all stdlib operations that can fail" must return Result/Option
@@ -148,7 +148,7 @@ visited[node] = 1
 
 ### Architecture Requirement
 
-**File:** `.cursor/plans/main/architecture.md`
+**File:** `internal_docs/architecture.md`
 
 - Line 307: "Global indexing contract: all indexable types (`str`, `list`, `dict`) use safe indexing. `x[i]` returns `Option[T]`, never panics. This is enforced uniformly across the language."
 
@@ -250,7 +250,7 @@ A grep for `def.*\bmut\b` across all stdlib files returns zero matches. Every fu
 
 ### Architecture Definition
 
-**File:** `.cursor/plans/main/architecture.md`, line 175:
+**File:** `internal_docs/architecture.md`, line 175:
 ```
 Use `mut` keyword for mutable borrowing (`mut x: list[int]` generates `x: &mut Vec<i64>`).
 ```
@@ -285,7 +285,7 @@ Also lines 6-8:
 
 ### Architecture Definition
 
-**File:** `.cursor/plans/main/architecture.md`, Contract #12 (line 398):
+**File:** `internal_docs/architecture.md`, Contract #12 (line 398):
 The `Iterator` protocol should enable lazy iteration. But the generator codegen cannot handle borrowed parameters in loop conditions, forcing eager collection.
 
 ---

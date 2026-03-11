@@ -2,7 +2,7 @@
 
 Status: completed (2026-03-06)
 Owner: phase_23 execution loop
-Reference phase doc: `.cursor/plans/main/phases/23_project_graph_and_isolation_correctness.md`
+Reference phase doc: `internal_docs/phases/23_project_graph_and_isolation_correctness.md`
 
 Loop per part: Work -> Validate -> PR -> Review -> Merge -> Mark Done
 

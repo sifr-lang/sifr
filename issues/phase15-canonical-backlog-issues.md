@@ -1,7 +1,7 @@
 # Phase 15 Canonical Backlog Issues
 
 Status: open backlog register
-Source of truth: `.cursor/plans/main/phases/15_baseline_reconciliation.md`
+Source of truth: `internal_docs/phases/15_baseline_reconciliation.md`
 
 ## phase15-BL-15-001
 - Canonical finding ID: `BL-15-001`
@@ -48,5 +48,5 @@ Source of truth: `.cursor/plans/main/phases/15_baseline_reconciliation.md`
 - Title: Deferred planning gaps for Phases 36 and 37 require explicit closure criteria before track completion
 - Severity: `P2`
 - Owning phase: `35`
-- Source: `.cursor/plans/main/roadmap.md` deferred planning drafts
+- Source: `internal_docs/roadmap.md` deferred planning drafts
 - Status: open

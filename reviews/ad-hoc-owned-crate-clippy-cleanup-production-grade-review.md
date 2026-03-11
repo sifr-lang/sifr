@@ -31,14 +31,14 @@ scripts/run_all_tests.sh --profile quick
 
 | Test | Command | Result |
 |------|---------|--------|
-| Demo compilation | `cargo run -q -p sifr -- check demos/m1_env_demo.sifr` | PASS - "no errors found" |
+| Demo compilation | `cargo run -q -p sifr -- check demos/m30_1a_env_parity_demo/main.sifr` | PASS - "no errors found" |
 | Type error detection | `cargo run -q -p sifr -- check demos/milestone_generics_impl_demo.sifr` | PASS - Reports type error |
-| Exit code (success) | `cargo run -q -p sifr -- check demos/m1_env_demo.sifr; echo $?` | PASS - Exit code 0 |
+| Exit code (success) | `cargo run -q -p sifr -- check demos/m30_1a_env_parity_demo/main.sifr; echo $?` | PASS - Exit code 0 |
 | Exit code (failure) | `cargo run -q -p sifr -- check demos/milestone_generics_impl_demo.sifr; echo $?` | PASS - Exit code 1 |
 | JSON diagnostics | `cargo run -q -p sifr -- --diagnostic-format json check demos/milestone_generics_impl_demo.sifr` | PASS - Valid JSON output |
 | Compact diagnostics | `cargo run -q -p sifr -- --diagnostic-format compact check demos/milestone_generics_impl_demo.sifr` | PASS - Valid compact output |
-| Demo execution | `cargo run -q -p sifr -- run demos/m1_env_demo.sifr` | PASS - Runs correctly |
-| Code generation | `cargo run -q -p sifr -- emit demos/m1_env_demo.sifr` | PASS - Generates valid Rust |
+| Demo execution | `cargo run -q -p sifr -- run demos/m30_1a_env_parity_demo/main.sifr` | PASS - Runs correctly |
+| Code generation | `cargo run -q -p sifr -- emit demos/m30_1a_env_parity_demo/main.sifr` | PASS - Generates valid Rust |
 
 ## Changes Summary
 

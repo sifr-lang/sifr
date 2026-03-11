@@ -3,8 +3,8 @@
 Status: done (started 2026-03-07, completed 2026-03-07)
 Owner: phase_27 execution loop
 Reference phase docs:
-- `.cursor/plans/main/phases/27_runtime_safe_codegen_semantics.md`
-- `.cursor/plans/main/phases/27_diagnostics_error_recovery_and_stability_contract.md`
+- `internal_docs/phases/27_runtime_safe_codegen_semantics.md`
+- `internal_docs/phases/27_diagnostics_error_recovery_and_stability_contract.md`
 
 Loop per part: Work -> Validate -> PR -> Review -> Merge -> Mark Done
 

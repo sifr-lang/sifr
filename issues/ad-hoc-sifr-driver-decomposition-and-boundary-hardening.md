@@ -86,7 +86,7 @@ Suggested boundary split:
   - focused test modules grouped by concern rather than one giant `mod tests`
 
 ## Execution Model
-- This remains an ad hoc issue-driven phase until promoted into `.cursor/plans/main/phases/`.
+- This remains an ad hoc issue-driven phase until promoted into `internal_docs/phases/`.
 - Work executes one milestone at a time.
 - `issues/ad-hoc-entrypoint-compilation-unification-and-dependency-metadata-closure.md` must be closed before execution starts for this phase.
 - Public behavior preservation is a hard gate for every milestone, not only the last one.
@@ -189,7 +189,7 @@ Milestone `milestone_driver_6` must add a checked-in guardrail system modeled af
 
 Required enforcement artifacts:
 - `scripts/check_sifr_driver_maintainability_guardrails.py`
-- `docs/sifr_driver_maintainability_guardrails.md`
+- `internal_docs/sifr_driver_maintainability_guardrails.md`
 - wiring in `scripts/run_all_tests.sh`
 
 Initial hard requirements for the guardrail:
@@ -284,7 +284,7 @@ Required checklist/documentation coverage:
 - `milestone_driver_6`
   - focused test-module tree
   - `scripts/check_sifr_driver_maintainability_guardrails.py`
-  - `docs/sifr_driver_maintainability_guardrails.md`
+  - `internal_docs/sifr_driver_maintainability_guardrails.md`
   - maintainability guardrail enforcement evidence
 
 ## Quality Contract

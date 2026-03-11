@@ -152,7 +152,7 @@ This pattern is ownership-safe because:
 
 ## Finding 5: Borrow Checker Audit Regressions Affect Stdlib-Relevant Patterns
 
-The borrow audit (`audit/borrowing/REPORT.md`) shows 7 Rust compile failures. Several affect patterns the stdlib would use:
+The borrow audit (`audits/borrowing/REPORT.md`) shows 7 Rust compile failures. Several affect patterns the stdlib would use:
 
 | Test | Pattern | Stdlib Relevance |
 | --- | --- | --- |

@@ -20,7 +20,7 @@ Evidence:
 - `crates/sifr_codegen/src/ir_imports.rs:274` (`RustType::RawCode` import-need path)
 
 Support evidence in strict checklist:
-- `.cursor/plans/main/phases/14_codegen_architecture_finish_checklist.md:162`
+- `internal_docs/phases/14_codegen_architecture_finish_checklist.md:162`
 
 ---
 
