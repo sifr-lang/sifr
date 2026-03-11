@@ -84,6 +84,18 @@ Validate the Phase 31 contract locally:
 python3 scripts/test_phase31_leetcode.py
 ```
 
+Generate the milestone `31_2` taxonomy artifacts:
+
+```bash
+python3 scripts/build_phase31_leetcode_taxonomy.py
+```
+
+Validate the taxonomy classifier and spot-audit contract:
+
+```bash
+python3 scripts/test_phase31_leetcode_taxonomy.py
+```
+
 ## Current Baseline Notes
 
 - The raw `audit/leetcode` fixture directory currently contains `411` Sifr fixtures.
@@ -91,3 +103,8 @@ python3 scripts/test_phase31_leetcode.py
   - `embedded_asserts`: `208`
   - `no_oracle`: `203`
 - The historical phase-31 artifacts in `audit/leetcode/*.md` are informative but not authoritative because they disagree on corpus size and pass-rate totals.
+- The current taxonomy artifacts are generated from `verification/leetcode/phase31_seed_results.json`:
+  - `verification/leetcode/phase31_failure_taxonomy.json`
+  - `verification/leetcode/phase31_failure_repros.json`
+  - `verification/leetcode/phase31_spot_audit.json`
+  - `verification/leetcode/phase31_failure_report.md`
