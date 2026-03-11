@@ -113,9 +113,9 @@ Loop per part: Plan -> Implement -> Validate -> Demo -> PR -> Review -> Merge ->
    - Regenerate the corpus report and record before/after improvement in the tracker.
 
 ### milestone_31_5: Compatibility Scorecard and Handoff
-12. [ ] `m31_5a_publish_scorecard`
+12. [x] `m31_5a_publish_scorecard`
    - Publish a stable scorecard artifact with total/pass/fail/timeout counts and category breakdown.
-13. [ ] `m31_5b_phase_closeout`
+13. [x] `m31_5b_phase_closeout`
    - Record unresolved blockers, owners, and future-phase mapping.
    - Update roadmap/phase status and close Phase 31 only after review sign-off.
 
@@ -299,7 +299,9 @@ Loop per part: Plan -> Implement -> Validate -> Demo -> PR -> Review -> Merge ->
   - `/Users/yaseralnajjar/work/sifr/codebase/scripts/run_all_tests.sh --profile quick`
   - `/Users/yaseralnajjar/work/sifr/codebase/scripts/run_all_tests.sh`
 - Status:
-  - complete for artifact publication and handoff generation (2026-03-11); final phase closure/sign-off pending external review loop
+  - complete (merged on 2026-03-11; external review sign-off recorded on 2026-03-11)
+- Implementation PR:
+  - https://github.com/yaseralnajjar/sifr/pull/1104
 - Delivered artifacts:
   - `verification/leetcode/phase31_scorecard.json`
   - `verification/leetcode/phase31_scorecard.md`
@@ -313,8 +315,10 @@ Loop per part: Plan -> Implement -> Validate -> Demo -> PR -> Review -> Merge ->
   - positive path: `verification/leetcode/phase31_scorecard.json` records the stable before/after status counts, bucket breakdown, fixed cases, and unresolved handoff mapping
   - positive path: `verification/leetcode/phase31_scorecard.md` records the final phase state before external review (`PASS=5`, `CHECK_ERROR=45`, `RUN_ERROR=0`)
   - positive path: unresolved carry-forward targets are normalized to `phase32` for still-open phase-31 proposals, with the explicit intentional divergence carried as `deferred`
+  - positive path: external review sign-off recorded in `reviews/phase-31-review-pass-3.md` and `reviews/phase-31-review-pass-4.md`
   - local gate: `/Users/yaseralnajjar/work/sifr/codebase/scripts/run_all_tests.sh --profile quick` -> passed (`verification ok: variants=64, failures=0, blocking_failures=0, non_blocking_failures=0`)
   - local gate: `/Users/yaseralnajjar/work/sifr/codebase/scripts/run_all_tests.sh` -> passed (`verification ok: variants=64, failures=0, blocking_failures=0, non_blocking_failures=0`)
+  - merge evidence: PR #1104 merged into `main` on 2026-03-11
 
 ## Baseline Validation Log
 - 2026-03-11:

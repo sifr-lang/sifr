@@ -253,7 +253,7 @@
       "title": "Python builtin signature/parity gap"
     }
   ],
-  "review_status": "pending_external_review",
+  "review_status": "external_review_approved",
   "stale_blocker_policy": {
     "applies_to_priority": "P1",
     "required_action": "reassign owner or record an explicit defer decision with rationale and target phase",
