@@ -12,6 +12,7 @@ use sifr_type_system::{
 use std::collections::HashMap;
 
 use super::classes::is_hashable_type;
+use super::compat_imports::resolve_python_compat_call_alias;
 use super::decimal_methods::{decimal_conversion_error_type, resolve_decimal_method_type};
 use super::type_bounds::{type_satisfies_bound, type_satisfies_constraint};
 use super::typing_and_functions::resolve_annotation_expr;
@@ -466,18 +467,18 @@ pub(super) fn lower_boolop(boolop: &ExprBoolOp, ctx: &mut LowerCtx) -> Option<Hi
 }
 
 pub(super) fn lower_call(call: &ExprCall, ctx: &mut LowerCtx) -> Option<HirExpr> {
-    // Handle method calls: obj.method(args)
-    if let Expr::Attribute(attr) = call.func.as_ref() {
+    let compat_alias = resolve_python_compat_call_alias(call, ctx);
+    if let (None, Expr::Attribute(attr)) = (&compat_alias, call.func.as_ref()) {
         return lower_method_call(attr, call, ctx);
     }
-
-    let func_name = if let Expr::Name(n) = call.func.as_ref() {
+    let func_name = if let Some(alias) = compat_alias {
+        alias
+    } else if let Expr::Name(n) = call.func.as_ref() {
         n.id.clone()
     } else {
         ctx.error("only simple function calls are supported".to_string());
         return None;
     };
-
     // Handle `cls(...)` in @classmethod as constructor call for the current class
     if func_name == "cls" {
         if let Some(ref class_name) = ctx.current_class {

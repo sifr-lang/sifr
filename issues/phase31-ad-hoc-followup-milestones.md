@@ -1,6 +1,6 @@
 # Phase 31 Ad Hoc Follow-up Milestones
 
-Status: proposed on 2026-03-11
+Status: active follow-up plan on 2026-03-11
 Source inputs:
 - `verification/leetcode/phase31_scorecard.md`
 - `verification/leetcode/phase31_failure_taxonomy.json`
@@ -31,6 +31,15 @@ Phase 31 itself is complete. This document is the carry-forward plan for the rem
   - demo evidence for the milestone scope,
   - `scripts/run_all_tests.sh --profile quick`,
   - `scripts/run_all_tests.sh`.
+
+## Execution Log
+
+- `2026-03-11`: `m31_c_stdlib_module_parity` slice 1 completed local validation and targeted corpus rerun.
+  - Execution report: `issues/phase31-m31c-stdlib-module-parity-execution.md`
+  - Targeted result artifact: `verification/leetcode/phase31_m31c_wave1_results.json`
+  - Targeted six-case status: `PASS=1`, `CHECK_ERROR=5`, `RUN_ERROR=0`
+  - Confirmed pass: `0007_reverse_integer`
+  - Confirmed reclassification signal: `0502_ipo` moved past missing-`heapq` failure into deeper typing/destructuring blockers
 
 ## Recommended Execution Order
 
@@ -88,6 +97,13 @@ This order is chosen to remove the largest independent blockers first, then clea
   - medium pass-rate gain and lower friction for graph/heap workloads
 
 ### `m31_c_stdlib_module_parity`
+
+- Current execution status (`2026-03-11`):
+  - slice 1 is complete locally
+  - landed root-cause fixes for Python-style stdlib attribute compatibility, numeric truthiness lowering, and `math.fmod` runtime parity
+  - validated with `scripts/run_all_tests.sh --profile quick` and `scripts/run_all_tests.sh`
+  - targeted rerun outcome is recorded in `verification/leetcode/phase31_m31c_wave1_results.json`
+  - remaining blockers are now narrowed to constructor/module-surface gaps (`set`, `deque`, remaining `heapq`) plus downstream non-stdlib issues exposed by `0502`
 
 - Scope:
   - resolve `stdlib.python_module_surface`

@@ -29,6 +29,10 @@ fn is_allowed_plain_call(func: &str) -> bool {
     ALLOWED_PLAIN_CALLS.with(|calls| calls.borrow().iter().any(|name| name == func))
 }
 
+fn is_compat_stdlib_alias(func: &str) -> bool {
+    func.starts_with("__compat_sifr_")
+}
+
 pub fn try_lower_leaf_expr_result(expr: &HirExpr) -> Result<Option<RustExpr>, CodegenError> {
     validate_leaf_expr_shape(expr)?;
     Ok(try_lower_leaf_expr(expr))
@@ -422,6 +426,9 @@ fn try_lower_simple_call_expr(func: &str, args: &[HirExpr]) -> Option<RustExpr> 
     }
 
     if is_reserved_builtin_call_func(func) {
+        return None;
+    }
+    if is_compat_stdlib_alias(func) {
         return None;
     }
     // Keep namespaced calls on the structured emitter path so ownership/convention
@@ -1507,6 +1514,15 @@ mod tests {
             alias_string_name_expr,
             RustExpr::Ident(name) if name == "title"
         ));
+    }
+
+    #[test]
+    fn compat_stdlib_alias_calls_stay_off_plain_call_fast_path() {
+        let lowered = try_lower_simple_call_expr(
+            "__compat_sifr_math_fmod",
+            &[HirExpr::IntLiteral(7), HirExpr::IntLiteral(2)],
+        );
+        assert!(lowered.is_none());
     }
 
     #[test]

@@ -7,6 +7,7 @@ use sifr_type_system::{make_union, FunctionType, Type};
 use std::collections::HashMap;
 
 mod classes;
+mod compat_imports;
 mod decimal_methods;
 mod diagnostics;
 mod expressions;
@@ -40,7 +41,7 @@ impl std::fmt::Display for LoweringError {
 }
 
 /// The lowering context that tracks state during AST->HIR conversion.
-struct LowerCtx {
+pub(super) struct LowerCtx {
     /// Function signatures (name -> type)
     functions: HashMap<String, FunctionType>,
     /// Default parameter values for functions (name -> vec of (`param_index`, `default_expr`))
@@ -90,6 +91,12 @@ struct LowerCtx {
     borrowed_params: std::collections::HashSet<String>,
     /// Map of class names to their declared type parameters (from PEP 695 class C[T])
     class_declared_type_params: HashMap<String, Vec<String>>,
+    /// External definitions available to compatibility shims.
+    externals: ExternalDefs,
+    /// Synthetic imports added during lowering for compatibility aliases.
+    synthetic_imports: Vec<HirImport>,
+    /// Memoized alias names for synthetic imports keyed by `module:name`.
+    synthetic_import_aliases: HashMap<String, String>,
 }
 
 impl LowerCtx {
@@ -118,6 +125,9 @@ impl LowerCtx {
             allow_intrinsic_imports: false,
             borrowed_params: std::collections::HashSet::new(),
             class_declared_type_params: HashMap::new(),
+            externals: ExternalDefs::default(),
+            synthetic_imports: Vec::new(),
+            synthetic_import_aliases: HashMap::new(),
         }
     }
 
@@ -500,6 +510,7 @@ fn lower_module_impl(
     externals: &ExternalDefs,
     mut ctx: LowerCtx,
 ) -> Result<LoweringResult, Vec<LoweringError>> {
+    ctx.externals = externals.clone();
     // Register built-in functions
     register_builtins(&mut ctx);
 
@@ -1067,6 +1078,7 @@ fn lower_module_impl(
     }
 
     if ctx.errors.is_empty() {
+        imports.extend(ctx.synthetic_imports.clone());
         Ok(LoweringResult {
             module: HirModule {
                 functions,

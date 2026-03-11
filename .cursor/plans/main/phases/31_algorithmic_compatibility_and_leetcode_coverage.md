@@ -194,6 +194,11 @@ status: complete
 
 Phase 31 is closed, but its unresolved compatibility backlog now has a concrete carry-forward execution plan in `issues/phase31-ad-hoc-followup-milestones.md`.
 
+Latest execution note (`2026-03-11`):
+- `m31_c_stdlib_module_parity` slice 1 is locally validated and tracked in `issues/phase31-m31c-stdlib-module-parity-execution.md`.
+- Targeted six-case rerun artifact: `verification/leetcode/phase31_m31c_wave1_results.json`.
+- Measured outcome for that slice: `PASS=1`, `CHECK_ERROR=5`, `RUN_ERROR=0`, with `0007_reverse_integer` now passing and `0502_ipo` advanced past the original missing-stdlib blocker.
+
 - Planned follow-up milestones:
   - `m31_a_optional_narrowing_core`
   - `m31_b_destructuring_target_lowering`
