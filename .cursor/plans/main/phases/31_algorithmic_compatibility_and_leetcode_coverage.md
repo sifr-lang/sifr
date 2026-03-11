@@ -190,6 +190,24 @@ status: complete
     - `ownership.borrowed_return_surface` remains `deferred` as an intentional divergence
   - phase closure note: artifact publication and external review sign-off are complete
 
+## Ad Hoc Follow-up Milestones
+
+Phase 31 is closed, but its unresolved compatibility backlog now has a concrete carry-forward execution plan in `issues/phase31-ad-hoc-followup-milestones.md`.
+
+- Planned follow-up milestones:
+  - `m31_a_optional_narrowing_core`
+  - `m31_b_destructuring_target_lowering`
+  - `m31_c_stdlib_module_parity`
+  - `m31_d_nested_function_pipeline`
+  - `m31_e_tree_node_surface`
+  - `m31_f_ownership_divergence_resolution`
+- Remaining seed-corpus surface that this plan covers:
+  - `44` supportable failing cases
+  - `1` explicit intentional divergence case
+- Sequencing rationale:
+  - largest independent blockers first
+  - then dependency-ordered enablement chains for nested helpers and recursive tree-node support
+
 ## Quality Contract
 
 ### Entry criteria

@@ -1,6 +1,6 @@
 # Phase 31 Execution Checklist (Algorithmic Compatibility and LeetCode Coverage)
 
-Status: in_progress (started 2026-03-11)
+Status: complete (started 2026-03-11, closed 2026-03-11)
 Owner: phase_31 execution loop
 Reference phase docs:
 - `.cursor/plans/main/phases/31_algorithmic_compatibility_and_leetcode_coverage.md`
@@ -11,6 +11,9 @@ Historical note:
 - `issues/phase31-sifr-driver-decomposition-and-boundary-hardening-execution.md` reflects an older phase numbering scheme. The active roadmap on 2026-03-11 assigns Phase 31 to algorithmic compatibility, so this file is the authoritative execution tracker for the current Phase 31 scope.
 
 Loop per part: Plan -> Implement -> Validate -> Demo -> PR -> Review -> Merge -> Update docs -> Next part
+
+Carry-forward planning:
+- Remaining compatibility work is broken into execution-ready follow-up milestones in `issues/phase31-ad-hoc-followup-milestones.md`.
 
 ## Global Gates
 - [ ] Scope remains constrained to the active phase-31 part
