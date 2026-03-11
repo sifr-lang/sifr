@@ -329,6 +329,7 @@ fn validate_expr(expr: &RustExpr, issues: &mut Vec<IrValidationIssue>, in_functi
 }
 
 fn validate_type(ty: &RustType, issues: &mut Vec<IrValidationIssue>) {
+    let _ = issues.len();
     match ty {
         RustType::I64
         | RustType::F64

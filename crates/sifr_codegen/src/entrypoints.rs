@@ -80,19 +80,19 @@ pub fn generate_rust_test(module: &HirModule) -> CodegenResult {
             "VecDeque".to_string(),
         ]));
     }
-    if import_needs.runtime.needs_bigint {
+    if import_needs.runtime.numeric.needs_bigint {
         import_items.push(RustItem::Use(vec![
             "num_bigint".to_string(),
             "BigInt".to_string(),
         ]));
     }
-    if import_needs.runtime.needs_decimal {
+    if import_needs.runtime.numeric.needs_decimal {
         import_items.push(RustItem::Use(vec![
             "rust_decimal".to_string(),
             "Decimal".to_string(),
         ]));
     }
-    if import_needs.runtime.needs_bigdecimal {
+    if import_needs.runtime.numeric.needs_bigdecimal {
         import_items.push(RustItem::Use(vec![
             "bigdecimal".to_string(),
             "BigDecimal".to_string(),
@@ -122,14 +122,14 @@ pub fn generate_rust_test(module: &HirModule) -> CodegenResult {
         used_intrinsic_modules: emitter.used_stdlib_modules,
         required_crates: {
             let mut crates = emitter.intrinsic_registry_crates;
-            if emitter.runtime_needs.needs_bigint || import_needs.runtime.needs_bigint {
+            if emitter.runtime_needs.needs_bigint || import_needs.runtime.numeric.needs_bigint {
                 crates.insert("num-bigint".to_string());
                 crates.insert("num-traits".to_string());
             }
-            if import_needs.runtime.needs_decimal {
+            if import_needs.runtime.numeric.needs_decimal {
                 crates.insert("rust_decimal".to_string());
             }
-            if import_needs.runtime.needs_bigdecimal {
+            if import_needs.runtime.numeric.needs_bigdecimal {
                 crates.insert("bigdecimal".to_string());
             }
             crates

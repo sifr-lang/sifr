@@ -1,4 +1,6 @@
-use super::*;
+use sifr_type_system::Type;
+
+use super::{decode_typevar_constraint, encode_typevar_constraint, LowerCtx};
 
 fn lookup_named_type(name: &str, ctx: &LowerCtx) -> Option<Type> {
     match name {
@@ -33,7 +35,7 @@ fn current_owner_typevar_specs<'a>(ctx: &'a LowerCtx, tv_name: &str) -> Option<&
     ctx.type_param_bounds
         .get(owner)?
         .get(tv_name)
-        .map(|specs| specs.as_slice())
+        .map(Vec::as_slice)
 }
 
 fn typevar_satisfies_spec(tv_name: &str, target_spec: &str, ctx: &LowerCtx) -> bool {
@@ -118,7 +120,7 @@ pub(super) fn type_satisfies_bound(ty: &Type, bound: &str, ctx: &LowerCtx) -> bo
     }
 }
 
-/// Check if a type satisfies a TypeVar constraints entry (`TypeVar("T", A, B)` / `T: (A, B)`).
+/// Check if a type satisfies a `TypeVar` constraints entry (`TypeVar("T", A, B)` / `T: (A, B)`).
 pub(super) fn type_satisfies_constraint(ty: &Type, constraint_name: &str, ctx: &LowerCtx) -> bool {
     let encoded = encode_typevar_constraint(constraint_name);
     if let Type::TypeVar(tv_name) = ty {

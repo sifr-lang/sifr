@@ -16,7 +16,7 @@ impl RustEmitter {
         }
     }
 
-    fn lower_function_type_params(&self, func: &HirFunction) -> Vec<RustTypeParam> {
+    fn lower_function_type_params(func: &HirFunction) -> Vec<RustTypeParam> {
         if func.type_params.is_empty() {
             return Vec::new();
         }
@@ -38,7 +38,7 @@ impl RustEmitter {
             .collect()
     }
 
-    fn lower_function_param_type(&self, ty: &Type, convention: ParamConvention) -> RustType {
+    fn lower_function_param_type(ty: &Type, convention: ParamConvention) -> RustType {
         let base = crate::sifr_type_to_rust_type(ty);
         match convention {
             ParamConvention::Borrow if ty.ownership() != sifr_type_system::OwnershipKind::Copy => {
@@ -125,8 +125,7 @@ impl RustEmitter {
     }
 
     fn lower_stmt_strict_for_function(&mut self, stmt: &HirStmt, _context: &str) -> Vec<RustStmt> {
-        let lowered = self.capture_structured_stmts(|inner| inner.emit_stmt(stmt));
-        lowered
+        self.capture_structured_stmts(|inner| inner.emit_stmt(stmt))
     }
 
     fn lower_buffered_generator_function_body(
@@ -348,8 +347,7 @@ impl RustEmitter {
 
                 let Some(yield_expr) = yield_expr else {
                     panic!(
-                        "generator lowering expected a yield statement in while body: {:?}",
-                        while_body_hir
+                        "generator lowering expected a yield statement in while body: {while_body_hir:?}"
                     );
                 };
 
@@ -494,7 +492,7 @@ impl RustEmitter {
             .iter()
             .map(|param| RustParam::Named {
                 name: param.name.clone(),
-                ty: self.lower_function_param_type(&param.ty, param.convention),
+                ty: Self::lower_function_param_type(&param.ty, param.convention),
             })
             .collect::<Vec<_>>();
 
@@ -555,7 +553,7 @@ impl RustEmitter {
         self.body_items.push(RustItem::Fn {
             name: func.name.clone(),
             visibility,
-            type_params: self.lower_function_type_params(func),
+            type_params: Self::lower_function_type_params(func),
             params,
             ret: self.lower_function_return_type(func, is_generator),
             body: lowered_body,

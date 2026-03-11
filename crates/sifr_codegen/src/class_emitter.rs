@@ -158,7 +158,7 @@ impl RustEmitter {
         body
     }
 
-    fn build_display_impl_for_error(&self, class: &HirClass) -> RustItem {
+    fn build_display_impl_for_error(class: &HirClass) -> RustItem {
         let display_expr = if class.fields.iter().any(|(name, _)| name == "message") {
             RustExpr::Field {
                 expr: Box::new(RustExpr::Ident("self".to_string())),
@@ -205,7 +205,7 @@ impl RustEmitter {
         }
     }
 
-    fn build_display_impl_for_auto_fields(&self, class: &HirClass) -> RustItem {
+    fn build_display_impl_for_auto_fields(class: &HirClass) -> RustItem {
         let format_str = format!(
             "{}({})",
             class.name,
@@ -330,7 +330,7 @@ impl RustEmitter {
 
         if class.is_error_type {
             self.body_items
-                .push(self.build_display_impl_for_error(class));
+                .push(Self::build_display_impl_for_error(class));
             self.body_items.push(RustItem::Impl {
                 target: Self::class_impl_target(class),
                 type_params: Self::class_impl_type_params(class),
@@ -377,7 +377,7 @@ impl RustEmitter {
             && class.fields.iter().all(|(_, ty)| is_auto_display_type(ty))
         {
             self.body_items
-                .push(self.build_display_impl_for_auto_fields(class));
+                .push(Self::build_display_impl_for_auto_fields(class));
         }
 
         self.emit_protocol_impls(class, module);

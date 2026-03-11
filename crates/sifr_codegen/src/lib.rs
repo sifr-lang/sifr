@@ -423,12 +423,12 @@ pub fn generate_rust_with_stdlib(module: &HirModule, stdlib_code: &StdlibCode) -
         || stdlib_import_needs.collections.needs_hashset;
     let needs_vecdeque = body_import_needs.collections.needs_vecdeque
         || stdlib_import_needs.collections.needs_vecdeque;
-    let needs_bigint =
-        body_import_needs.runtime.needs_bigint || stdlib_import_needs.runtime.needs_bigint;
-    let needs_decimal =
-        body_import_needs.runtime.needs_decimal || stdlib_import_needs.runtime.needs_decimal;
-    let needs_bigdecimal =
-        body_import_needs.runtime.needs_bigdecimal || stdlib_import_needs.runtime.needs_bigdecimal;
+    let needs_bigint = body_import_needs.runtime.numeric.needs_bigint
+        || stdlib_import_needs.runtime.numeric.needs_bigint;
+    let needs_decimal = body_import_needs.runtime.numeric.needs_decimal
+        || stdlib_import_needs.runtime.numeric.needs_decimal;
+    let needs_bigdecimal = body_import_needs.runtime.numeric.needs_bigdecimal
+        || stdlib_import_needs.runtime.numeric.needs_bigdecimal;
     let needs_mutex = needs_file_handles
         || needs_logging
         || body_import_needs.runtime.needs_mutex
@@ -500,9 +500,10 @@ pub fn generate_rust_with_stdlib(module: &HirModule, stdlib_code: &StdlibCode) -
         let rust_file = RustFile { items: file_items };
         Renderer::new().render_file(&rust_file)
     } else {
-        if syn::parse_file(&stdlib_preamble).is_err() {
-            panic!("failed to parse stdlib preamble boundary as Rust source");
-        }
+        assert!(
+            syn::parse_file(&stdlib_preamble).is_ok(),
+            "failed to parse stdlib preamble boundary as Rust source"
+        );
         let mut source = String::new();
         if !import_items.is_empty() {
             let import_source = Renderer::new().render_file(&RustFile {

@@ -1,6 +1,13 @@
-use super::*;
-use sifr_hir::*;
+use crate::{
+    generate_rust, generate_rust_multi, generate_rust_multi_with_metadata, generate_rust_test,
+    generate_rust_with_metadata, RustEmitter, RustStmt, StdlibCode,
+};
+use sifr_hir::{
+    HirClass, HirClassKind, HirExceptHandler, HirExpr, HirFStringPart, HirFunction, HirImport,
+    HirMatchArm, HirModule, HirParam, HirPattern, HirStmt, MethodKind,
+};
 use sifr_type_system::{ParamConvention, Type};
+use std::collections::HashSet;
 
 #[test]
 fn test_simple_function_codegen() {

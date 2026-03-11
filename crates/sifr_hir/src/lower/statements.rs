@@ -1,4 +1,21 @@
-use super::*;
+use crate::hir_nodes::{
+    HirExceptHandler, HirExpr, HirFunction, HirMatchArm, HirParam, HirPattern, HirStmt, MethodKind,
+};
+use sifr_python_ast::{
+    BoolOp, CmpOp, ExceptHandler, Expr, Number, Operator, Pattern, Singleton, Stmt, StmtAnnAssign,
+    StmtAssign, StmtAugAssign, StmtFor, StmtIf, StmtMatch, StmtReturn, StmtWhile, UnaryOp,
+};
+use sifr_type_system::infer::resolve_type_annotation;
+use sifr_type_system::{
+    narrow_type, type_check_binary_op, FunctionType, NarrowingCondition, OwnershipKind,
+    ParamConvention, Type,
+};
+
+use super::classes::collect_literal_coverage;
+use super::diagnostics::{collect_raise_error_types, format_type_name, is_valid_error_type};
+use super::expressions::{lower_expr, lower_star_unpack_assign, lower_tuple_unpack_assign};
+use super::typing_and_functions::{extract_function_type, resolve_annotation_expr};
+use super::LowerCtx;
 
 pub(super) fn lower_stmts(
     stmts: &[Stmt],

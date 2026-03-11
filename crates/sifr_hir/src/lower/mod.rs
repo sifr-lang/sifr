@@ -1,23 +1,9 @@
 //! AST to HIR lowering with type checking and name resolution.
 
-use crate::hir_nodes::{
-    HirClass, HirClassKind, HirExceptHandler, HirExpr, HirFStringPart, HirFunction, HirImport,
-    HirMatchArm, HirModule, HirParam, HirPattern, HirStmt, MethodKind,
-};
+use crate::hir_nodes::{HirExpr, HirImport, HirModule};
 use crate::scope::Scope;
-use sifr_python_ast::{
-    AstParamConvention, BoolOp, CmpOp, ExceptHandler, Expr, ExprAttribute, ExprBinOp, ExprBoolOp,
-    ExprCall, ExprCompare, ExprDict, ExprDictComp, ExprFString, ExprGenerator, ExprIf, ExprLambda,
-    ExprList, ExprListComp, ExprName, ExprNamed, ExprNumberLiteral, ExprSet, ExprSetComp,
-    ExprSubscript, ExprTuple, ExprUnaryOp, FStringElement, Number, Operator, Pattern, Singleton,
-    Stmt, StmtAnnAssign, StmtAssign, StmtAugAssign, StmtClassDef, StmtFor, StmtFunctionDef, StmtIf,
-    StmtMatch, StmtReturn, StmtWhile, UnaryOp,
-};
-use sifr_type_system::infer::resolve_type_annotation;
-use sifr_type_system::{
-    make_union, narrow_type, type_check_binary_op, type_check_bool_op, type_check_comparison,
-    type_check_unary_op, FunctionType, NarrowingCondition, OwnershipKind, ParamConvention, Type,
-};
+use sifr_python_ast::{Expr, ExprCall, Stmt};
+use sifr_type_system::{make_union, FunctionType, Type};
 use std::collections::HashMap;
 
 mod classes;
@@ -29,14 +15,11 @@ mod statements;
 mod type_bounds;
 mod typing_and_functions;
 
-use classes::*;
-use decimal_methods::*;
-use diagnostics::*;
-use expressions::*;
-use imports::*;
-use statements::*;
-use type_bounds::*;
-use typing_and_functions::*;
+use classes::{collect_class_type, lower_class, lower_expr_simple};
+use imports::resolve_imports_early;
+use typing_and_functions::{
+    extract_function_type, lower_function, register_builtins, resolve_annotation_expr,
+};
 
 /// Errors produced during lowering.
 #[derive(Debug, Clone)]
@@ -165,7 +148,7 @@ fn decode_typevar_constraint(encoded: &str) -> Option<&str> {
     encoded.strip_prefix(TYPEVAR_CONSTRAINT_PREFIX)
 }
 
-/// Parse a TypeVar bound/constraint expression from PEP 695 syntax.
+/// Parse a `TypeVar` bound/constraint expression from PEP 695 syntax.
 /// `T: Bound` is treated as a hard bound; `T: (A, B)` is treated as constraints.
 fn parse_typevar_bound_expr(expr: &Expr, ctx: &mut LowerCtx) -> Vec<String> {
     match expr {

@@ -1,4 +1,16 @@
-use super::*;
+use crate::hir_nodes::{
+    HirClass, HirClassKind, HirExpr, HirFunction, HirParam, HirPattern, HirStmt, MethodKind,
+};
+use sifr_python_ast::{Expr, Number, Stmt, StmtClassDef, UnaryOp};
+use sifr_type_system::{FunctionType, ParamConvention, Type};
+
+use super::diagnostics::{
+    collect_enum_variants, get_newtype_inner, get_parent_class, has_decorator, is_enum_class,
+    is_error_class, is_operator_dunder, is_protocol_class,
+};
+use super::statements::lower_stmts;
+use super::typing_and_functions::resolve_annotation_expr;
+use super::{parse_typevar_bound_expr, LowerCtx};
 
 pub(super) fn collect_class_type(class_def: &StmtClassDef, ctx: &mut LowerCtx) {
     let class_name = class_def.name.to_string();

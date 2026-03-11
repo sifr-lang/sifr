@@ -1,4 +1,6 @@
-use super::*;
+use super::IntrinsicModule;
+use sifr_type_system::{FunctionType, Type};
+use std::collections::HashMap;
 
 pub(super) fn intrinsic_math() -> IntrinsicModule {
     let mut functions = HashMap::new();

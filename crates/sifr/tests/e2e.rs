@@ -17,6 +17,7 @@
 use serde::{Deserialize, Serialize};
 use std::collections::{BTreeMap, BTreeSet, HashSet};
 use std::env;
+use std::fmt::Write as _;
 use std::path::{Path, PathBuf};
 use std::process::Command;
 use std::sync::{Arc, Mutex};
@@ -965,15 +966,16 @@ fn build_group_sources(group_cases: Vec<CompiledCase>) -> Result<BatchGroup, Str
         let rust_source = build_rust_source_from_module(&case.rust_source, &entry_fn)
             .map_err(|err| format!("fixture {}: {}", case.fixture.name, err))?;
 
-        generated_modules.push_str(&format!("pub mod {module_name} {{\n"));
+        let _ = writeln!(generated_modules, "pub mod {module_name} {{");
         generated_modules.push_str(&make_entry_function_public(&rust_source, &entry_fn));
         generated_modules.push('\n');
         generated_modules.push_str("}\n\n");
 
-        case_signature.push_str(&format!(
+        let _ = write!(
+            case_signature,
             "{}:{}",
             case.fixture.name, case.fixture.source_hash
-        ));
+        );
         case_signature.push('|');
 
         case_modules.push((case.fixture.name.clone(), module_name, entry_fn));
@@ -1004,10 +1006,11 @@ fn build_group_sources(group_cases: Vec<CompiledCase>) -> Result<BatchGroup, Str
     generated_main.push_str("    }\n");
     generated_main.push_str("    match case.as_deref().expect(\"case\") {\n");
     for module in &case_modules {
-        generated_main.push_str(&format!(
-            "        \"{}\" => {}::{}(),\n",
+        let _ = writeln!(
+            generated_main,
+            "        \"{}\" => {}::{}(),",
             module.0, module.1, module.2
-        ));
+        );
     }
     generated_main.push_str("        other => {\n");
     generated_main.push_str("            eprintln!(\"--case must be one of: \");\n");
