@@ -1,8 +1,8 @@
 # Phase 31: Algorithmic Compatibility and LeetCode Coverage
 
-status: draft
+status: in_progress
 
-> Note: Needs more planning before execution (investigate first which ones are not running and add milestones accordingly)
+> 2026-03-11 update: milestone_31_1 is implemented in the workspace with a canonical 50-problem seed corpus, a 411-fixture raw inventory, a deterministic runner, contract tests, and recorded baseline metrics. Remaining milestones stay pending.
 
 ## Objective
 Run a representative LeetCode corpus end-to-end on Sifr, identify failures, classify root causes, and define the language/compiler fixes required to improve algorithmic compatibility.
@@ -29,7 +29,7 @@ Run a representative LeetCode corpus end-to-end on Sifr, identify failures, clas
 ## Milestones
 
 ### milestone_31_1: Corpus and Runner Baseline
-status: pending
+status: complete
 
 - Scope:
   - Define corpus size, selection criteria, and topic/difficulty distribution.
@@ -44,6 +44,19 @@ status: pending
   - Runner is deterministic and emits structured results.
   - Timeout and oracle policy are documented and enforced.
   - Baseline pass/fail/timeout metrics are generated.
+- Delivered artifacts:
+  - `verification/leetcode/phase31_seed_corpus.json`
+  - `verification/leetcode/phase31_corpus_inventory.json`
+  - `verification/leetcode/phase31_seed_summary.json`
+  - `docs/verification/phase31_leetcode_corpus_policy.md`
+  - `scripts/build_phase31_leetcode_assets.py`
+  - `scripts/run_phase31_leetcode.py`
+  - `scripts/test_phase31_leetcode.py`
+- Baseline metrics (2026-03-11 seed run):
+  - `case_count=50`
+  - `status_counts={CHECK_ERROR: 46, RUN_ERROR: 2, PASS: 2}`
+  - topic balance satisfied at `5` cases per required topic
+  - difficulty split: `easy=18`, `medium=27`, `hard=5`
 
 ---
 
@@ -150,9 +163,9 @@ status: pending
 - Full local suite:
   - `/Users/yaseralnajjar/work/sifr/codebase/scripts/run_all_tests.sh`
 - Milestone demos:
-  - `cargo run -q -p sifr -- run demos/<milestone_demo>.sifr`
-- LeetCode corpus runner (to be created in milestone_31_1):
-  - `cargo run -q -p sifr -- <leetcode-runner-command>`
+  - `python3 scripts/run_phase31_leetcode.py --manifest demos/m31_1_leetcode_runner_demo/corpus.json --output demos/m31_1_leetcode_runner_demo/results.json`
+- LeetCode corpus runner:
+  - `python3 scripts/run_phase31_leetcode.py --manifest verification/leetcode/phase31_seed_corpus.json --output verification/leetcode/phase31_seed_results.json`
 - Repeat determinism check:
   - run the corpus command twice with identical config and diff outputs.
 

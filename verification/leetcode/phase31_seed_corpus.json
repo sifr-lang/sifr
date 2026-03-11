@@ -1,0 +1,795 @@
+{
+  "case_count": 50,
+  "cases": [
+    {
+      "difficulty": "easy",
+      "fixture_slug": "0001_two_sum",
+      "id": "0001",
+      "oracle": {
+        "mode": "embedded_asserts"
+      },
+      "primary_topic": "arrays",
+      "scope_classification": "in_scope",
+      "sifr_path": "audit/leetcode/0001_two_sum.sifr",
+      "timeout_seconds": 20,
+      "topics": [
+        "arrays",
+        "hash_map"
+      ]
+    },
+    {
+      "difficulty": "easy",
+      "fixture_slug": "0053_maximum_subarray",
+      "id": "0053",
+      "oracle": {
+        "mode": "embedded_asserts"
+      },
+      "primary_topic": "arrays",
+      "scope_classification": "in_scope",
+      "sifr_path": "audit/leetcode/0053_maximum_subarray.sifr",
+      "timeout_seconds": 20,
+      "topics": [
+        "arrays",
+        "dp"
+      ]
+    },
+    {
+      "difficulty": "medium",
+      "fixture_slug": "0238_product_of_array_except_self",
+      "id": "0238",
+      "oracle": {
+        "mode": "embedded_asserts"
+      },
+      "primary_topic": "arrays",
+      "scope_classification": "in_scope",
+      "sifr_path": "audit/leetcode/0238_product_of_array_except_self.sifr",
+      "timeout_seconds": 20,
+      "topics": [
+        "arrays",
+        "prefix_product"
+      ]
+    },
+    {
+      "difficulty": "medium",
+      "fixture_slug": "0912_sort_an_array",
+      "id": "0912",
+      "oracle": {
+        "mode": "embedded_asserts"
+      },
+      "primary_topic": "arrays",
+      "scope_classification": "in_scope",
+      "sifr_path": "audit/leetcode/0912_sort_an_array.sifr",
+      "timeout_seconds": 20,
+      "topics": [
+        "arrays",
+        "sorting"
+      ]
+    },
+    {
+      "difficulty": "easy",
+      "fixture_slug": "1299_replace_elements_with_greatest_element_on_right_side",
+      "id": "1299",
+      "oracle": {
+        "mode": "embedded_asserts"
+      },
+      "primary_topic": "arrays",
+      "scope_classification": "in_scope",
+      "sifr_path": "audit/leetcode/1299_replace_elements_with_greatest_element_on_right_side.sifr",
+      "timeout_seconds": 20,
+      "topics": [
+        "arrays"
+      ]
+    },
+    {
+      "difficulty": "easy",
+      "fixture_slug": "0014_longest_common_prefix",
+      "id": "0014",
+      "oracle": {
+        "mode": "embedded_asserts"
+      },
+      "primary_topic": "strings",
+      "scope_classification": "in_scope",
+      "sifr_path": "audit/leetcode/0014_longest_common_prefix.sifr",
+      "timeout_seconds": 20,
+      "topics": [
+        "strings"
+      ]
+    },
+    {
+      "difficulty": "medium",
+      "fixture_slug": "0043_multiply_strings",
+      "id": "0043",
+      "oracle": {
+        "mode": "embedded_asserts"
+      },
+      "primary_topic": "strings",
+      "scope_classification": "in_scope",
+      "sifr_path": "audit/leetcode/0043_multiply_strings.sifr",
+      "timeout_seconds": 20,
+      "topics": [
+        "strings",
+        "math"
+      ]
+    },
+    {
+      "difficulty": "medium",
+      "fixture_slug": "0151_reverse_words_in_a_string",
+      "id": "0151",
+      "oracle": {
+        "mode": "embedded_asserts"
+      },
+      "primary_topic": "strings",
+      "scope_classification": "in_scope",
+      "sifr_path": "audit/leetcode/0151_reverse_words_in_a_string.sifr",
+      "timeout_seconds": 20,
+      "topics": [
+        "strings",
+        "two_pointers"
+      ]
+    },
+    {
+      "difficulty": "medium",
+      "fixture_slug": "1209_remove_all_adjacent_duplicates_in_string_ii",
+      "id": "1209",
+      "oracle": {
+        "mode": "embedded_asserts"
+      },
+      "primary_topic": "strings",
+      "scope_classification": "in_scope",
+      "sifr_path": "audit/leetcode/1209_remove_all_adjacent_duplicates_in_string_ii.sifr",
+      "timeout_seconds": 20,
+      "topics": [
+        "strings",
+        "stack"
+      ]
+    },
+    {
+      "difficulty": "easy",
+      "fixture_slug": "1768_merge_strings_alternately",
+      "id": "1768",
+      "oracle": {
+        "mode": "embedded_asserts"
+      },
+      "primary_topic": "strings",
+      "scope_classification": "in_scope",
+      "sifr_path": "audit/leetcode/1768_merge_strings_alternately.sifr",
+      "timeout_seconds": 20,
+      "topics": [
+        "strings",
+        "two_pointers"
+      ]
+    },
+    {
+      "difficulty": "medium",
+      "fixture_slug": "0003_longest_substring_without_repeating_characters",
+      "id": "0003",
+      "oracle": {
+        "mode": "embedded_asserts"
+      },
+      "primary_topic": "hash_map",
+      "scope_classification": "in_scope",
+      "sifr_path": "audit/leetcode/0003_longest_substring_without_repeating_characters.sifr",
+      "timeout_seconds": 20,
+      "topics": [
+        "hash_map",
+        "strings",
+        "sliding_window"
+      ]
+    },
+    {
+      "difficulty": "easy",
+      "fixture_slug": "0217_contains_duplicate",
+      "id": "0217",
+      "oracle": {
+        "mode": "embedded_asserts"
+      },
+      "primary_topic": "hash_map",
+      "scope_classification": "in_scope",
+      "sifr_path": "audit/leetcode/0217_contains_duplicate.sifr",
+      "timeout_seconds": 20,
+      "topics": [
+        "hash_map",
+        "arrays"
+      ]
+    },
+    {
+      "difficulty": "easy",
+      "fixture_slug": "0242_valid_anagram",
+      "id": "0242",
+      "oracle": {
+        "mode": "embedded_asserts"
+      },
+      "primary_topic": "hash_map",
+      "scope_classification": "in_scope",
+      "sifr_path": "audit/leetcode/0242_valid_anagram.sifr",
+      "timeout_seconds": 20,
+      "topics": [
+        "hash_map",
+        "strings"
+      ]
+    },
+    {
+      "difficulty": "medium",
+      "fixture_slug": "0523_continuous_subarray_sum",
+      "id": "0523",
+      "oracle": {
+        "mode": "embedded_asserts"
+      },
+      "primary_topic": "hash_map",
+      "scope_classification": "in_scope",
+      "sifr_path": "audit/leetcode/0523_continuous_subarray_sum.sifr",
+      "timeout_seconds": 20,
+      "topics": [
+        "hash_map",
+        "prefix_sum"
+      ]
+    },
+    {
+      "difficulty": "medium",
+      "fixture_slug": "0560_subarray_sum_equals_k",
+      "id": "0560",
+      "oracle": {
+        "mode": "embedded_asserts"
+      },
+      "primary_topic": "hash_map",
+      "scope_classification": "in_scope",
+      "sifr_path": "audit/leetcode/0560_subarray_sum_equals_k.sifr",
+      "timeout_seconds": 20,
+      "topics": [
+        "hash_map",
+        "prefix_sum"
+      ]
+    },
+    {
+      "difficulty": "easy",
+      "fixture_slug": "0070_climbing_stairs",
+      "id": "0070",
+      "oracle": {
+        "mode": "embedded_asserts"
+      },
+      "primary_topic": "dp",
+      "scope_classification": "in_scope",
+      "sifr_path": "audit/leetcode/0070_climbing_stairs.sifr",
+      "timeout_seconds": 20,
+      "topics": [
+        "dp"
+      ]
+    },
+    {
+      "difficulty": "medium",
+      "fixture_slug": "0198_house_robber",
+      "id": "0198",
+      "oracle": {
+        "mode": "embedded_asserts"
+      },
+      "primary_topic": "dp",
+      "scope_classification": "in_scope",
+      "sifr_path": "audit/leetcode/0198_house_robber.sifr",
+      "timeout_seconds": 20,
+      "topics": [
+        "dp"
+      ]
+    },
+    {
+      "difficulty": "medium",
+      "fixture_slug": "0322_coin_change",
+      "id": "0322",
+      "oracle": {
+        "mode": "embedded_asserts"
+      },
+      "primary_topic": "dp",
+      "scope_classification": "in_scope",
+      "sifr_path": "audit/leetcode/0322_coin_change.sifr",
+      "timeout_seconds": 20,
+      "topics": [
+        "dp"
+      ]
+    },
+    {
+      "difficulty": "easy",
+      "fixture_slug": "0746_min_cost_climbing_stairs",
+      "id": "0746",
+      "oracle": {
+        "mode": "embedded_asserts"
+      },
+      "primary_topic": "dp",
+      "scope_classification": "in_scope",
+      "sifr_path": "audit/leetcode/0746_min_cost_climbing_stairs.sifr",
+      "timeout_seconds": 20,
+      "topics": [
+        "dp"
+      ]
+    },
+    {
+      "difficulty": "medium",
+      "fixture_slug": "1143_longest_common_subsequence",
+      "id": "1143",
+      "oracle": {
+        "mode": "embedded_asserts"
+      },
+      "primary_topic": "dp",
+      "scope_classification": "in_scope",
+      "sifr_path": "audit/leetcode/1143_longest_common_subsequence.sifr",
+      "timeout_seconds": 20,
+      "topics": [
+        "dp",
+        "strings"
+      ]
+    },
+    {
+      "difficulty": "hard",
+      "fixture_slug": "0127_word_ladder",
+      "id": "0127",
+      "oracle": {
+        "mode": "no_oracle"
+      },
+      "primary_topic": "graphs",
+      "scope_classification": "in_scope",
+      "sifr_path": "audit/leetcode/0127_word_ladder.sifr",
+      "timeout_seconds": 20,
+      "topics": [
+        "graphs",
+        "bfs",
+        "strings"
+      ]
+    },
+    {
+      "difficulty": "medium",
+      "fixture_slug": "0207_course_schedule",
+      "id": "0207",
+      "oracle": {
+        "mode": "no_oracle"
+      },
+      "primary_topic": "graphs",
+      "scope_classification": "in_scope",
+      "sifr_path": "audit/leetcode/0207_course_schedule.sifr",
+      "timeout_seconds": 20,
+      "topics": [
+        "graphs",
+        "dfs"
+      ]
+    },
+    {
+      "difficulty": "medium",
+      "fixture_slug": "0684_redundant_connection",
+      "id": "0684",
+      "oracle": {
+        "mode": "no_oracle"
+      },
+      "primary_topic": "graphs",
+      "scope_classification": "in_scope",
+      "sifr_path": "audit/leetcode/0684_redundant_connection.sifr",
+      "timeout_seconds": 20,
+      "topics": [
+        "graphs",
+        "union_find"
+      ]
+    },
+    {
+      "difficulty": "medium",
+      "fixture_slug": "0743_network_delay_time",
+      "id": "0743",
+      "oracle": {
+        "mode": "no_oracle"
+      },
+      "primary_topic": "graphs",
+      "scope_classification": "in_scope",
+      "sifr_path": "audit/leetcode/0743_network_delay_time.sifr",
+      "timeout_seconds": 20,
+      "topics": [
+        "graphs",
+        "shortest_path",
+        "heap"
+      ]
+    },
+    {
+      "difficulty": "easy",
+      "fixture_slug": "0997_find_the_town_judge",
+      "id": "0997",
+      "oracle": {
+        "mode": "embedded_asserts"
+      },
+      "primary_topic": "graphs",
+      "scope_classification": "in_scope",
+      "sifr_path": "audit/leetcode/0997_find_the_town_judge.sifr",
+      "timeout_seconds": 20,
+      "topics": [
+        "graphs"
+      ]
+    },
+    {
+      "difficulty": "easy",
+      "fixture_slug": "0100_same_tree",
+      "id": "0100",
+      "oracle": {
+        "mode": "no_oracle"
+      },
+      "primary_topic": "trees",
+      "scope_classification": "in_scope",
+      "sifr_path": "audit/leetcode/0100_same_tree.sifr",
+      "timeout_seconds": 20,
+      "topics": [
+        "trees",
+        "dfs"
+      ]
+    },
+    {
+      "difficulty": "medium",
+      "fixture_slug": "0102_binary_tree_level_order_traversal",
+      "id": "0102",
+      "oracle": {
+        "mode": "no_oracle"
+      },
+      "primary_topic": "trees",
+      "scope_classification": "in_scope",
+      "sifr_path": "audit/leetcode/0102_binary_tree_level_order_traversal.sifr",
+      "timeout_seconds": 20,
+      "topics": [
+        "trees",
+        "bfs"
+      ]
+    },
+    {
+      "difficulty": "easy",
+      "fixture_slug": "0110_balanced_binary_tree",
+      "id": "0110",
+      "oracle": {
+        "mode": "no_oracle"
+      },
+      "primary_topic": "trees",
+      "scope_classification": "in_scope",
+      "sifr_path": "audit/leetcode/0110_balanced_binary_tree.sifr",
+      "timeout_seconds": 20,
+      "topics": [
+        "trees",
+        "dfs"
+      ]
+    },
+    {
+      "difficulty": "easy",
+      "fixture_slug": "0226_invert_binary_tree",
+      "id": "0226",
+      "oracle": {
+        "mode": "no_oracle"
+      },
+      "primary_topic": "trees",
+      "scope_classification": "in_scope",
+      "sifr_path": "audit/leetcode/0226_invert_binary_tree.sifr",
+      "timeout_seconds": 20,
+      "topics": [
+        "trees",
+        "dfs"
+      ]
+    },
+    {
+      "difficulty": "medium",
+      "fixture_slug": "0235_lowest_common_ancestor_of_a_binary_search_tree",
+      "id": "0235",
+      "oracle": {
+        "mode": "no_oracle"
+      },
+      "primary_topic": "trees",
+      "scope_classification": "in_scope",
+      "sifr_path": "audit/leetcode/0235_lowest_common_ancestor_of_a_binary_search_tree.sifr",
+      "timeout_seconds": 20,
+      "topics": [
+        "trees",
+        "bst"
+      ]
+    },
+    {
+      "difficulty": "medium",
+      "fixture_slug": "0017_letter_combinations_of_a_phone_number",
+      "id": "0017",
+      "oracle": {
+        "mode": "embedded_asserts"
+      },
+      "primary_topic": "backtracking",
+      "scope_classification": "in_scope",
+      "sifr_path": "audit/leetcode/0017_letter_combinations_of_a_phone_number.sifr",
+      "timeout_seconds": 20,
+      "topics": [
+        "backtracking",
+        "strings"
+      ]
+    },
+    {
+      "difficulty": "medium",
+      "fixture_slug": "0039_combination_sum",
+      "id": "0039",
+      "oracle": {
+        "mode": "embedded_asserts"
+      },
+      "primary_topic": "backtracking",
+      "scope_classification": "in_scope",
+      "sifr_path": "audit/leetcode/0039_combination_sum.sifr",
+      "timeout_seconds": 20,
+      "topics": [
+        "backtracking"
+      ]
+    },
+    {
+      "difficulty": "medium",
+      "fixture_slug": "0078_subsets",
+      "id": "0078",
+      "oracle": {
+        "mode": "embedded_asserts"
+      },
+      "primary_topic": "backtracking",
+      "scope_classification": "in_scope",
+      "sifr_path": "audit/leetcode/0078_subsets.sifr",
+      "timeout_seconds": 20,
+      "topics": [
+        "backtracking"
+      ]
+    },
+    {
+      "difficulty": "medium",
+      "fixture_slug": "0090_subsets_ii",
+      "id": "0090",
+      "oracle": {
+        "mode": "embedded_asserts"
+      },
+      "primary_topic": "backtracking",
+      "scope_classification": "in_scope",
+      "sifr_path": "audit/leetcode/0090_subsets_ii.sifr",
+      "timeout_seconds": 20,
+      "topics": [
+        "backtracking"
+      ]
+    },
+    {
+      "difficulty": "hard",
+      "fixture_slug": "0052_n_queens_ii",
+      "id": "0052",
+      "oracle": {
+        "mode": "embedded_asserts"
+      },
+      "primary_topic": "backtracking",
+      "scope_classification": "in_scope",
+      "sifr_path": "audit/leetcode/0052_n_queens_ii.sifr",
+      "timeout_seconds": 20,
+      "topics": [
+        "backtracking"
+      ]
+    },
+    {
+      "difficulty": "medium",
+      "fixture_slug": "0007_reverse_integer",
+      "id": "0007",
+      "oracle": {
+        "mode": "embedded_asserts"
+      },
+      "primary_topic": "math",
+      "scope_classification": "in_scope",
+      "sifr_path": "audit/leetcode/0007_reverse_integer.sifr",
+      "timeout_seconds": 20,
+      "topics": [
+        "math"
+      ]
+    },
+    {
+      "difficulty": "easy",
+      "fixture_slug": "0009_palindrome_number",
+      "id": "0009",
+      "oracle": {
+        "mode": "embedded_asserts"
+      },
+      "primary_topic": "math",
+      "scope_classification": "in_scope",
+      "sifr_path": "audit/leetcode/0009_palindrome_number.sifr",
+      "timeout_seconds": 20,
+      "topics": [
+        "math"
+      ]
+    },
+    {
+      "difficulty": "medium",
+      "fixture_slug": "0050_powx_n",
+      "id": "0050",
+      "oracle": {
+        "mode": "embedded_asserts"
+      },
+      "primary_topic": "math",
+      "scope_classification": "in_scope",
+      "sifr_path": "audit/leetcode/0050_powx_n.sifr",
+      "timeout_seconds": 20,
+      "topics": [
+        "math",
+        "recursion"
+      ]
+    },
+    {
+      "difficulty": "easy",
+      "fixture_slug": "0069_sqrtx",
+      "id": "0069",
+      "oracle": {
+        "mode": "embedded_asserts"
+      },
+      "primary_topic": "math",
+      "scope_classification": "in_scope",
+      "sifr_path": "audit/leetcode/0069_sqrtx.sifr",
+      "timeout_seconds": 20,
+      "topics": [
+        "math",
+        "binary_search"
+      ]
+    },
+    {
+      "difficulty": "easy",
+      "fixture_slug": "2235_add_two_integers",
+      "id": "2235",
+      "oracle": {
+        "mode": "embedded_asserts"
+      },
+      "primary_topic": "math",
+      "scope_classification": "in_scope",
+      "sifr_path": "audit/leetcode/2235_add_two_integers.sifr",
+      "timeout_seconds": 20,
+      "topics": [
+        "math"
+      ]
+    },
+    {
+      "difficulty": "medium",
+      "fixture_slug": "0215_kth_largest_element_in_an_array",
+      "id": "0215",
+      "oracle": {
+        "mode": "no_oracle"
+      },
+      "primary_topic": "heap_priority_queue",
+      "scope_classification": "in_scope",
+      "sifr_path": "audit/leetcode/0215_kth_largest_element_in_an_array.sifr",
+      "timeout_seconds": 20,
+      "topics": [
+        "heap_priority_queue",
+        "arrays"
+      ]
+    },
+    {
+      "difficulty": "hard",
+      "fixture_slug": "0295_find_median_from_data_stream",
+      "id": "0295",
+      "oracle": {
+        "mode": "no_oracle"
+      },
+      "primary_topic": "heap_priority_queue",
+      "scope_classification": "in_scope",
+      "sifr_path": "audit/leetcode/0295_find_median_from_data_stream.sifr",
+      "timeout_seconds": 20,
+      "topics": [
+        "heap_priority_queue",
+        "design"
+      ]
+    },
+    {
+      "difficulty": "hard",
+      "fixture_slug": "0502_ipo",
+      "id": "0502",
+      "oracle": {
+        "mode": "no_oracle"
+      },
+      "primary_topic": "heap_priority_queue",
+      "scope_classification": "in_scope",
+      "sifr_path": "audit/leetcode/0502_ipo.sifr",
+      "timeout_seconds": 20,
+      "topics": [
+        "heap_priority_queue",
+        "greedy"
+      ]
+    },
+    {
+      "difficulty": "easy",
+      "fixture_slug": "0703_kth_largest_element_in_a_stream",
+      "id": "0703",
+      "oracle": {
+        "mode": "no_oracle"
+      },
+      "primary_topic": "heap_priority_queue",
+      "scope_classification": "in_scope",
+      "sifr_path": "audit/leetcode/0703_kth_largest_element_in_a_stream.sifr",
+      "timeout_seconds": 20,
+      "topics": [
+        "heap_priority_queue",
+        "design"
+      ]
+    },
+    {
+      "difficulty": "easy",
+      "fixture_slug": "1046_last_stone_weight",
+      "id": "1046",
+      "oracle": {
+        "mode": "no_oracle"
+      },
+      "primary_topic": "heap_priority_queue",
+      "scope_classification": "in_scope",
+      "sifr_path": "audit/leetcode/1046_last_stone_weight.sifr",
+      "timeout_seconds": 20,
+      "topics": [
+        "heap_priority_queue"
+      ]
+    },
+    {
+      "difficulty": "medium",
+      "fixture_slug": "0015_3sum",
+      "id": "0015",
+      "oracle": {
+        "mode": "embedded_asserts"
+      },
+      "primary_topic": "two_pointers_sliding_window",
+      "scope_classification": "in_scope",
+      "sifr_path": "audit/leetcode/0015_3sum.sifr",
+      "timeout_seconds": 20,
+      "topics": [
+        "two_pointers_sliding_window",
+        "arrays"
+      ]
+    },
+    {
+      "difficulty": "hard",
+      "fixture_slug": "0042_trapping_rain_water",
+      "id": "0042",
+      "oracle": {
+        "mode": "embedded_asserts"
+      },
+      "primary_topic": "two_pointers_sliding_window",
+      "scope_classification": "in_scope",
+      "sifr_path": "audit/leetcode/0042_trapping_rain_water.sifr",
+      "timeout_seconds": 20,
+      "topics": [
+        "two_pointers_sliding_window",
+        "arrays"
+      ]
+    },
+    {
+      "difficulty": "medium",
+      "fixture_slug": "0209_minimum_size_subarray_sum",
+      "id": "0209",
+      "oracle": {
+        "mode": "embedded_asserts"
+      },
+      "primary_topic": "two_pointers_sliding_window",
+      "scope_classification": "in_scope",
+      "sifr_path": "audit/leetcode/0209_minimum_size_subarray_sum.sifr",
+      "timeout_seconds": 20,
+      "topics": [
+        "two_pointers_sliding_window",
+        "arrays"
+      ]
+    },
+    {
+      "difficulty": "medium",
+      "fixture_slug": "0424_longest_repeating_character_replacement",
+      "id": "0424",
+      "oracle": {
+        "mode": "embedded_asserts"
+      },
+      "primary_topic": "two_pointers_sliding_window",
+      "scope_classification": "in_scope",
+      "sifr_path": "audit/leetcode/0424_longest_repeating_character_replacement.sifr",
+      "timeout_seconds": 20,
+      "topics": [
+        "two_pointers_sliding_window",
+        "strings"
+      ]
+    },
+    {
+      "difficulty": "medium",
+      "fixture_slug": "1456_maximum_number_of_vowels_in_a_substring_of_given_length",
+      "id": "1456",
+      "oracle": {
+        "mode": "embedded_asserts"
+      },
+      "primary_topic": "two_pointers_sliding_window",
+      "scope_classification": "in_scope",
+      "sifr_path": "audit/leetcode/1456_maximum_number_of_vowels_in_a_substring_of_given_length.sifr",
+      "timeout_seconds": 20,
+      "topics": [
+        "two_pointers_sliding_window",
+        "strings"
+      ]
+    }
+  ],
+  "name": "phase31_seed_corpus",
+  "phase": 31
+}

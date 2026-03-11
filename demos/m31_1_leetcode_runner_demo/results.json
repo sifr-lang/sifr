@@ -1,0 +1,209 @@
+{
+  "command_prefix": [
+    "/Users/yaseralnajjar/work/sifr/codebase/target/release/sifr"
+  ],
+  "manifest": "demos/m31_1_leetcode_runner_demo/corpus.json",
+  "output": "demos/m31_1_leetcode_runner_demo/results.json",
+  "phase": 31,
+  "results": [
+    {
+      "difficulty": "easy",
+      "failure_stage": "check",
+      "fixture_slug": "0001_two_sum",
+      "id": "0001",
+      "oracle_mode": "embedded_asserts",
+      "primary_topic": "arrays",
+      "scope_classification": "in_scope",
+      "stages": [
+        {
+          "command": [
+            "/Users/yaseralnajjar/work/sifr/codebase/target/release/sifr",
+            "check",
+            "audit/leetcode/0001_two_sum.sifr"
+          ],
+          "duration_ms": 38,
+          "returncode": 1,
+          "stage": "check",
+          "stderr": "type error: cannot index type 'dict[Any, Any]' with 'int'",
+          "stdout": "",
+          "timed_out": false
+        }
+      ],
+      "status": "CHECK_ERROR",
+      "timeout_seconds": 20
+    },
+    {
+      "difficulty": "easy",
+      "failure_stage": null,
+      "fixture_slug": "0009_palindrome_number",
+      "id": "0009",
+      "oracle_mode": "embedded_asserts",
+      "primary_topic": "math",
+      "scope_classification": "in_scope",
+      "stages": [
+        {
+          "command": [
+            "/Users/yaseralnajjar/work/sifr/codebase/target/release/sifr",
+            "check",
+            "audit/leetcode/0009_palindrome_number.sifr"
+          ],
+          "duration_ms": 39,
+          "returncode": 0,
+          "stage": "check",
+          "stderr": "no errors found",
+          "stdout": "",
+          "timed_out": false
+        },
+        {
+          "command": [
+            "/Users/yaseralnajjar/work/sifr/codebase/target/release/sifr",
+            "run",
+            "audit/leetcode/0009_palindrome_number.sifr"
+          ],
+          "duration_ms": 377,
+          "returncode": 0,
+          "stage": "run",
+          "stderr": "",
+          "stdout": "",
+          "timed_out": false
+        }
+      ],
+      "status": "PASS",
+      "timeout_seconds": 20
+    },
+    {
+      "difficulty": "easy",
+      "failure_stage": "run",
+      "fixture_slug": "0069_sqrtx",
+      "id": "0069",
+      "oracle_mode": "embedded_asserts",
+      "primary_topic": "math",
+      "scope_classification": "in_scope",
+      "stages": [
+        {
+          "command": [
+            "/Users/yaseralnajjar/work/sifr/codebase/target/release/sifr",
+            "check",
+            "audit/leetcode/0069_sqrtx.sifr"
+          ],
+          "duration_ms": 36,
+          "returncode": 0,
+          "stage": "check",
+          "stderr": "warning: int multiplication with non-constant operands may overflow i64 at runtime; consider using bigint for large values\nwarning: int multiplication with non-constant operands may overflow i64 at runtime; consider using bigint for large values\nno errors found",
+          "stdout": "",
+          "timed_out": false
+        },
+        {
+          "command": [
+            "/Users/yaseralnajjar/work/sifr/codebase/target/release/sifr",
+            "run",
+            "audit/leetcode/0069_sqrtx.sifr"
+          ],
+          "duration_ms": 145,
+          "returncode": 1,
+          "stage": "run",
+          "stderr": "warning: int multiplication with non-constant operands may overflow i64 at runtime; consider using bigint for large values\nwarning: int multiplication with non-constant operands may overflow i64 at runtime; consider using bigint for large values\nbuild error: cargo build failed:\n   Compiling sifr_output v0.1.0 (/private/var/folders/lq/l19_y_rn76b8vprfvdjn9zch0000gn/T/sifr_run_71046_1773202153469461000/sifr_output)\nerror[E0384]: cannot assign twice to immutable variable `l`\n --> src/main.rs:9:13\n  |\n2 |     let (l, r) = (0 as i64, x);\n  |          - first assignment to `l`\n...\n9 |             l = mid + (1 as i64);\n  |             ^^^^^^^^^^^^^^^^^^^^ cannot assign twice to immutable variable\n  |\nhelp: consider making this binding mutable\n  |\n2 |     let (mut l, r) = (0 as i64, x);\n  |          +++\nhelp: to modify the original value, take a borrow instead\n  |\n2 |     let (ref mut l, r) = (0 as i64, x);\n  |          +++++++\n\nerror[E0384]: cannot assign twice to immutable variable `r`\n  --> src/main.rs:11:13\n   |\n 2 |     let (l, r) = (0 as i64, x);\n   |             - first assignment to `r`\n...\n11 |             r = mid - (1 as i64);\n   |             ^^^^^^^^^^^^^^^^^^^^ cannot assign twice to immutable variable\n   |\nhelp: consider making this binding mutable\n   |\n 2 |     let (l, mut r) = (0 as i64, x);\n   |             +++\nhelp: to modify the original value, take a borrow instead\n   |\n 2 |     let (l, ref mut r) = (0 as i64, x);\n   |             +++++++\n\nFor more information about this error, try `rustc --explain E0384`.\nerror: could not compile `sifr_output` (bin \"sifr_output\") due to 2 previous errors",
+          "stdout": "",
+          "timed_out": false
+        }
+      ],
+      "status": "RUN_ERROR",
+      "timeout_seconds": 20
+    },
+    {
+      "difficulty": "easy",
+      "failure_stage": null,
+      "fixture_slug": "0070_climbing_stairs",
+      "id": "0070",
+      "oracle_mode": "embedded_asserts",
+      "primary_topic": "dp",
+      "scope_classification": "in_scope",
+      "stages": [
+        {
+          "command": [
+            "/Users/yaseralnajjar/work/sifr/codebase/target/release/sifr",
+            "check",
+            "audit/leetcode/0070_climbing_stairs.sifr"
+          ],
+          "duration_ms": 37,
+          "returncode": 0,
+          "stage": "check",
+          "stderr": "no errors found",
+          "stdout": "",
+          "timed_out": false
+        },
+        {
+          "command": [
+            "/Users/yaseralnajjar/work/sifr/codebase/target/release/sifr",
+            "run",
+            "audit/leetcode/0070_climbing_stairs.sifr"
+          ],
+          "duration_ms": 375,
+          "returncode": 0,
+          "stage": "run",
+          "stderr": "",
+          "stdout": "",
+          "timed_out": false
+        }
+      ],
+      "status": "PASS",
+      "timeout_seconds": 20
+    },
+    {
+      "difficulty": "easy",
+      "failure_stage": "check",
+      "fixture_slug": "0100_same_tree",
+      "id": "0100",
+      "oracle_mode": "no_oracle",
+      "primary_topic": "trees",
+      "scope_classification": "in_scope",
+      "stages": [
+        {
+          "command": [
+            "/Users/yaseralnajjar/work/sifr/codebase/target/release/sifr",
+            "check",
+            "audit/leetcode/0100_same_tree.sifr"
+          ],
+          "duration_ms": 39,
+          "returncode": 1,
+          "stage": "check",
+          "stderr": "type error: attribute access '.val' is not supported as an expression; use as a method call\ntype error: unknown type: 'TreeNode'\ntype error: unknown type: 'TreeNode'",
+          "stdout": "",
+          "timed_out": false
+        }
+      ],
+      "status": "CHECK_ERROR",
+      "timeout_seconds": 20
+    }
+  ],
+  "summary": {
+    "case_count": 5,
+    "difficulty_counts": {
+      "easy": 5,
+      "hard": 0,
+      "medium": 0
+    },
+    "scope_counts": {
+      "blocked_feature": 0,
+      "in_scope": 5,
+      "out_of_scope_external_dep": 0
+    },
+    "status_counts": {
+      "CHECK_ERROR": 2,
+      "PASS": 2,
+      "RUN_ERROR": 1
+    },
+    "topic_counts": {
+      "arrays": 1,
+      "backtracking": 0,
+      "dp": 1,
+      "graphs": 0,
+      "hash_map": 0,
+      "heap_priority_queue": 0,
+      "math": 2,
+      "strings": 0,
+      "trees": 1,
+      "two_pointers_sliding_window": 0
+    }
+  }
+}

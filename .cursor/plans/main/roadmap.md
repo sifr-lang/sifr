@@ -51,7 +51,7 @@ This roadmap is the authoritative execution plan for the current hardening and e
 | 28 | Decimal Semantics | completed | [28_decimal_type_and_exact_numeric_semantics.md](./phases/28_decimal_type_and_exact_numeric_semantics.md) | First-class exact decimal semantics |
 | 29 | Verification Hardening | completed | [29_verification_hardening.md](./phases/29_verification_hardening.md) | Regression/fuzz/property/e2e hardening |
 | 30 | Stdlib Parity (Behavior + Complexity) | completed | [30_reliability_parity_and_performance_budgets.md](./phases/30_reliability_parity_and_performance_budgets.md) | CPython parity governance for stdlib behavior and complexity; milestone_30_4 structural closure completed (2026-03-10) |
-| 31 | Algorithmic Compatibility (LeetCode) | draft | [31_algorithmic_compatibility_and_leetcode_coverage.md](./phases/31_algorithmic_compatibility_and_leetcode_coverage.md) | Corpus-driven compatibility signal and remediation backlog |
+| 31 | Algorithmic Compatibility (LeetCode) | in_progress | [31_algorithmic_compatibility_and_leetcode_coverage.md](./phases/31_algorithmic_compatibility_and_leetcode_coverage.md) | Corpus-driven compatibility signal and remediation backlog; milestone_31_1 baseline landed on 2026-03-11 |
 
 ## Expansion and Distribution Track (Phase 32-41)
 
