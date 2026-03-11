@@ -159,7 +159,7 @@ status: complete
 ---
 
 ### milestone_31_5: Compatibility Scorecard and Handoff
-status: pending
+status: complete
 
 - Scope:
   - Publish scorecard with:
@@ -173,6 +173,22 @@ status: pending
   - Scorecard is published in a stable, repeatable format.
   - Open blockers are roadmap-mapped with owners.
   - Phase closure is approved with explicit handoff targets.
+- Delivered artifacts:
+  - `verification/leetcode/phase31_scorecard.json`
+  - `verification/leetcode/phase31_scorecard.md`
+  - `demos/m31_5_leetcode_scorecard_demo/report.md`
+  - `scripts/phase31_leetcode_scorecard.py`
+  - `scripts/build_phase31_leetcode_scorecard.py`
+  - `scripts/test_phase31_leetcode_scorecard.py`
+- Scorecard summary (2026-03-11):
+  - review status: `pending_external_review`
+  - baseline status counts: `PASS=2`, `CHECK_ERROR=46`, `RUN_ERROR=2`
+  - wave-1 status counts: `PASS=5`, `CHECK_ERROR=45`, `RUN_ERROR=0`
+  - unresolved handoff entries: `9`
+  - carried-forward targets:
+    - unresolved former `phase31` proposals roll forward to `phase32`
+    - `ownership.borrowed_return_surface` remains `deferred` as an intentional divergence
+  - phase closure note: artifact publication is complete; final closeout approval remains pending the external review loop
 
 ## Quality Contract
 

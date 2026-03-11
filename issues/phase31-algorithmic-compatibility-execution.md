@@ -285,6 +285,37 @@ Loop per part: Plan -> Implement -> Validate -> Demo -> PR -> Review -> Merge ->
   - local gate: `/Users/yaseralnajjar/work/sifr/codebase/scripts/run_all_tests.sh --profile quick` -> passed (`verification ok: variants=64, failures=0, blocking_failures=0, non_blocking_failures=0`)
   - local gate: `/Users/yaseralnajjar/work/sifr/codebase/scripts/run_all_tests.sh` -> passed (`verification ok: variants=64, failures=0, blocking_failures=0, non_blocking_failures=0`)
 
+### Part 5 target (`m31_5a_publish_scorecard` + `m31_5b_phase_closeout`)
+- Goal:
+  - publish a stable scorecard for the phase state after wave 1 and record the unresolved-blocker handoff needed for final phase closure
+- Expected deliverables:
+  - machine-readable scorecard JSON
+  - markdown scorecard and demo report
+  - unresolved-blocker handoff map with owner, priority, and carried-forward target phase
+  - updated phase/tracker docs reflecting that external review sign-off is the remaining closeout step
+- Validation target:
+  - scorecard generator and tests
+  - regenerated scorecard/demo artifacts
+  - `/Users/yaseralnajjar/work/sifr/codebase/scripts/run_all_tests.sh --profile quick`
+  - `/Users/yaseralnajjar/work/sifr/codebase/scripts/run_all_tests.sh`
+- Status:
+  - complete for artifact publication and handoff generation (2026-03-11); final phase closure/sign-off pending external review loop
+- Delivered artifacts:
+  - `verification/leetcode/phase31_scorecard.json`
+  - `verification/leetcode/phase31_scorecard.md`
+  - `demos/m31_5_leetcode_scorecard_demo/report.md`
+  - `scripts/phase31_leetcode_scorecard.py`
+  - `scripts/build_phase31_leetcode_scorecard.py`
+  - `scripts/test_phase31_leetcode_scorecard.py`
+- Validation evidence:
+  - positive path: `python3 scripts/build_phase31_leetcode_scorecard.py` -> regenerated the scorecard JSON, markdown report, and demo report successfully
+  - positive path: `python3 scripts/test_phase31_leetcode_scorecard.py` -> passed (`4` tests)
+  - positive path: `verification/leetcode/phase31_scorecard.json` records the stable before/after status counts, bucket breakdown, fixed cases, and unresolved handoff mapping
+  - positive path: `verification/leetcode/phase31_scorecard.md` records the final phase state before external review (`PASS=5`, `CHECK_ERROR=45`, `RUN_ERROR=0`)
+  - positive path: unresolved carry-forward targets are normalized to `phase32` for still-open phase-31 proposals, with the explicit intentional divergence carried as `deferred`
+  - local gate: `/Users/yaseralnajjar/work/sifr/codebase/scripts/run_all_tests.sh --profile quick` -> passed (`verification ok: variants=64, failures=0, blocking_failures=0, non_blocking_failures=0`)
+  - local gate: `/Users/yaseralnajjar/work/sifr/codebase/scripts/run_all_tests.sh` -> passed (`verification ok: variants=64, failures=0, blocking_failures=0, non_blocking_failures=0`)
+
 ## Baseline Validation Log
 - 2026-03-11:
   - inspected `.cursor/skills/project-workflow/SKILL.md`
