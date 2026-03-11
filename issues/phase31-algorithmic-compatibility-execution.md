@@ -137,7 +137,9 @@ Loop per part: Plan -> Implement -> Validate -> Demo -> PR -> Review -> Merge ->
   - `/Users/yaseralnajjar/work/sifr/codebase/scripts/run_all_tests.sh --profile quick`
   - `/Users/yaseralnajjar/work/sifr/codebase/scripts/run_all_tests.sh`
 - Status:
-  - complete (implementation + local validation finished on 2026-03-11; PR/merge pending)
+  - complete (merged on 2026-03-11)
+- Implementation PR:
+  - https://github.com/yaseralnajjar/sifr/pull/1100
 - Delivered artifacts:
   - `verification/leetcode/phase31_seed_corpus.json`
   - `verification/leetcode/phase31_corpus_inventory.json`
@@ -156,6 +158,43 @@ Loop per part: Plan -> Implement -> Validate -> Demo -> PR -> Review -> Merge ->
   - positive path: `python3 scripts/run_phase31_leetcode.py --manifest demos/m31_1_leetcode_runner_demo/corpus.json --output demos/m31_1_leetcode_runner_demo/results.json` -> passed and produced representative demo statuses (`PASS=2`, `RUN_ERROR=1`, `CHECK_ERROR=2`)
   - positive path: `python3 scripts/run_phase31_leetcode.py --manifest verification/leetcode/phase31_seed_corpus.json --output verification/leetcode/phase31_seed_results.json` -> produced the seed baseline (`CHECK_ERROR=46`, `RUN_ERROR=2`, `PASS=2`)
   - negative path: timeout handling is covered by `python3 scripts/test_phase31_leetcode.py` via `test_runner_classifies_timeout`
+  - local gate: `/Users/yaseralnajjar/work/sifr/codebase/scripts/run_all_tests.sh --profile quick` -> passed (`verification ok: variants=64, failures=0, blocking_failures=0, non_blocking_failures=0`)
+  - local gate: `/Users/yaseralnajjar/work/sifr/codebase/scripts/run_all_tests.sh` -> passed (`verification ok: variants=64, failures=0, blocking_failures=0, non_blocking_failures=0`)
+  - merge evidence: PR #1100 merged into `main` on 2026-03-11
+
+### Part 2 target (`m31_2a_taxonomy_schema` + `m31_2b_minimal_repro_inventory` + `m31_2c_spot_audit`)
+- Goal:
+  - turn the seed baseline into a stable, machine-readable failure taxonomy with reproducible evidence and a classifier accuracy gate
+- Expected deliverables:
+  - taxonomy rules with stable bucket ids
+  - generated taxonomy JSON and markdown report
+  - smallest-known repro inventory per bucket
+  - version-controlled spot-audit dataset and accuracy report
+  - demo report under `demos/`
+  - classifier tests
+- Validation target:
+  - targeted taxonomy generator and tests
+  - taxonomy demo report generation
+  - `/Users/yaseralnajjar/work/sifr/codebase/scripts/run_all_tests.sh --profile quick`
+  - `/Users/yaseralnajjar/work/sifr/codebase/scripts/run_all_tests.sh`
+- Status:
+  - complete (implementation + local validation finished on 2026-03-11; PR/merge pending)
+- Delivered artifacts:
+  - `verification/leetcode/phase31_failure_taxonomy.json`
+  - `verification/leetcode/phase31_failure_repros.json`
+  - `verification/leetcode/phase31_spot_audit.json`
+  - `verification/leetcode/phase31_spot_audit_cases.json`
+  - `verification/leetcode/phase31_failure_report.md`
+  - `demos/m31_2_leetcode_taxonomy_demo/report.md`
+  - `scripts/phase31_leetcode_taxonomy.py`
+  - `scripts/build_phase31_leetcode_taxonomy.py`
+  - `scripts/test_phase31_leetcode_taxonomy.py`
+- Validation evidence:
+  - positive path: `python3 scripts/build_phase31_leetcode_taxonomy.py` -> regenerated taxonomy JSON, repro inventory, spot-audit outputs, and demo report successfully
+  - positive path: `python3 scripts/test_phase31_leetcode_taxonomy.py` -> passed (`4` tests)
+  - positive path: `verification/leetcode/phase31_failure_report.md` classifies all `48` failing seed cases into `12` stable buckets
+  - positive path: `verification/leetcode/phase31_spot_audit.json` records `accuracy=1.0` against a `0.9` threshold
+  - negative path: the spot-audit dataset would fail if a bucket mapping regressed below the threshold enforced by `python3 scripts/test_phase31_leetcode_taxonomy.py`
   - local gate: `/Users/yaseralnajjar/work/sifr/codebase/scripts/run_all_tests.sh --profile quick` -> passed (`verification ok: variants=64, failures=0, blocking_failures=0, non_blocking_failures=0`)
   - local gate: `/Users/yaseralnajjar/work/sifr/codebase/scripts/run_all_tests.sh` -> passed (`verification ok: variants=64, failures=0, blocking_failures=0, non_blocking_failures=0`)
 

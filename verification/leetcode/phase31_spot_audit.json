@@ -1,0 +1,93 @@
+{
+  "accuracy": 1.0,
+  "cases": [
+    {
+      "actual_bucket_id": "stdlib.python_module_surface",
+      "expected_bucket_id": "stdlib.python_module_surface",
+      "id": "0003",
+      "matched": true
+    },
+    {
+      "actual_bucket_id": "frontend.nested_function_annotation_support",
+      "expected_bucket_id": "frontend.nested_function_annotation_support",
+      "id": "0017",
+      "matched": true
+    },
+    {
+      "actual_bucket_id": "lowering.unsupported_ast_shape",
+      "expected_bucket_id": "lowering.unsupported_ast_shape",
+      "id": "0052",
+      "matched": true
+    },
+    {
+      "actual_bucket_id": "codegen.mutable_binding_emission",
+      "expected_bucket_id": "codegen.mutable_binding_emission",
+      "id": "0069",
+      "matched": true
+    },
+    {
+      "actual_bucket_id": "type_system.recursive_node_forward_reference",
+      "expected_bucket_id": "type_system.recursive_node_forward_reference",
+      "id": "0100",
+      "matched": true
+    },
+    {
+      "actual_bucket_id": "lowering.destructuring_target_support",
+      "expected_bucket_id": "lowering.destructuring_target_support",
+      "id": "0207",
+      "matched": true
+    },
+    {
+      "actual_bucket_id": "type_system.optional_narrowing_and_union_ops",
+      "expected_bucket_id": "type_system.optional_narrowing_and_union_ops",
+      "id": "0238",
+      "matched": true
+    },
+    {
+      "actual_bucket_id": "lowering.destructuring_target_support",
+      "expected_bucket_id": "lowering.destructuring_target_support",
+      "id": "0295",
+      "matched": true
+    },
+    {
+      "actual_bucket_id": "stdlib.python_module_surface",
+      "expected_bucket_id": "stdlib.python_module_surface",
+      "id": "0502",
+      "matched": true
+    },
+    {
+      "actual_bucket_id": "type_system.optional_narrowing_and_union_ops",
+      "expected_bucket_id": "type_system.optional_narrowing_and_union_ops",
+      "id": "0746",
+      "matched": true
+    },
+    {
+      "actual_bucket_id": "frontend.nested_function_annotation_support",
+      "expected_bucket_id": "frontend.nested_function_annotation_support",
+      "id": "0912",
+      "matched": true
+    },
+    {
+      "actual_bucket_id": "ownership.borrowed_return_surface",
+      "expected_bucket_id": "ownership.borrowed_return_surface",
+      "id": "1299",
+      "matched": true
+    },
+    {
+      "actual_bucket_id": "type_system.optional_narrowing_and_union_ops",
+      "expected_bucket_id": "type_system.optional_narrowing_and_union_ops",
+      "id": "1456",
+      "matched": true
+    },
+    {
+      "actual_bucket_id": "stdlib.python_builtin_signature_surface",
+      "expected_bucket_id": "stdlib.python_builtin_signature_surface",
+      "id": "2235",
+      "matched": true
+    }
+  ],
+  "name": "phase31_spot_audit",
+  "passed": true,
+  "phase": 31,
+  "threshold": 0.9
+}

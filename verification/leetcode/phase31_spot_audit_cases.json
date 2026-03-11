@@ -1,0 +1,62 @@
+{
+  "cases": [
+    {
+      "expected_bucket_id": "stdlib.python_module_surface",
+      "id": "0003"
+    },
+    {
+      "expected_bucket_id": "frontend.nested_function_annotation_support",
+      "id": "0017"
+    },
+    {
+      "expected_bucket_id": "lowering.unsupported_ast_shape",
+      "id": "0052"
+    },
+    {
+      "expected_bucket_id": "codegen.mutable_binding_emission",
+      "id": "0069"
+    },
+    {
+      "expected_bucket_id": "type_system.recursive_node_forward_reference",
+      "id": "0100"
+    },
+    {
+      "expected_bucket_id": "lowering.destructuring_target_support",
+      "id": "0207"
+    },
+    {
+      "expected_bucket_id": "type_system.optional_narrowing_and_union_ops",
+      "id": "0238"
+    },
+    {
+      "expected_bucket_id": "lowering.destructuring_target_support",
+      "id": "0295"
+    },
+    {
+      "expected_bucket_id": "stdlib.python_module_surface",
+      "id": "0502"
+    },
+    {
+      "expected_bucket_id": "type_system.optional_narrowing_and_union_ops",
+      "id": "0746"
+    },
+    {
+      "expected_bucket_id": "frontend.nested_function_annotation_support",
+      "id": "0912"
+    },
+    {
+      "expected_bucket_id": "ownership.borrowed_return_surface",
+      "id": "1299"
+    },
+    {
+      "expected_bucket_id": "type_system.optional_narrowing_and_union_ops",
+      "id": "1456"
+    },
+    {
+      "expected_bucket_id": "stdlib.python_builtin_signature_surface",
+      "id": "2235"
+    }
+  ],
+  "name": "phase31_spot_audit_cases",
+  "phase": 31
+}

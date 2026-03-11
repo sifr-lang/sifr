@@ -1,0 +1,961 @@
+{
+  "buckets": [
+    {
+      "bucket_id": "type_system.optional_narrowing_and_union_ops",
+      "case_count": 16,
+      "case_ids": [
+        "0014",
+        "0015",
+        "0042",
+        "0043",
+        "0053",
+        "0198",
+        "0209",
+        "0215",
+        "0238",
+        "0322",
+        "0424",
+        "0560",
+        "0746",
+        "1143",
+        "1456",
+        "1768"
+      ],
+      "layer": "type_system",
+      "primary_topics": {
+        "arrays": 2,
+        "dp": 4,
+        "hash_map": 1,
+        "heap_priority_queue": 1,
+        "strings": 3,
+        "two_pointers_sliding_window": 5
+      },
+      "statuses": {
+        "CHECK_ERROR": 16
+      },
+      "title": "Optional narrowing and union-operator gap"
+    },
+    {
+      "bucket_id": "lowering.destructuring_target_support",
+      "case_count": 7,
+      "case_ids": [
+        "0207",
+        "0295",
+        "0684",
+        "0703",
+        "0743",
+        "0997",
+        "1209"
+      ],
+      "layer": "lowering",
+      "primary_topics": {
+        "graphs": 4,
+        "heap_priority_queue": 2,
+        "strings": 1
+      },
+      "statuses": {
+        "CHECK_ERROR": 7
+      },
+      "title": "Destructuring target lowering gap"
+    },
+    {
+      "bucket_id": "frontend.nested_function_annotation_support",
+      "case_count": 6,
+      "case_ids": [
+        "0017",
+        "0039",
+        "0050",
+        "0078",
+        "0090",
+        "0912"
+      ],
+      "layer": "frontend",
+      "primary_topics": {
+        "arrays": 1,
+        "backtracking": 4,
+        "math": 1
+      },
+      "statuses": {
+        "CHECK_ERROR": 6
+      },
+      "title": "Nested function annotation/inference gap"
+    },
+    {
+      "bucket_id": "stdlib.python_module_surface",
+      "case_count": 6,
+      "case_ids": [
+        "0003",
+        "0007",
+        "0127",
+        "0217",
+        "0502",
+        "1046"
+      ],
+      "layer": "stdlib_runtime",
+      "primary_topics": {
+        "graphs": 1,
+        "hash_map": 2,
+        "heap_priority_queue": 2,
+        "math": 1
+      },
+      "statuses": {
+        "CHECK_ERROR": 6
+      },
+      "title": "Python stdlib/module surface gap"
+    },
+    {
+      "bucket_id": "type_system.recursive_node_forward_reference",
+      "case_count": 4,
+      "case_ids": [
+        "0100",
+        "0102",
+        "0110",
+        "0226"
+      ],
+      "layer": "type_system",
+      "primary_topics": {
+        "trees": 4
+      },
+      "statuses": {
+        "CHECK_ERROR": 4
+      },
+      "title": "Recursive node forward-reference resolution gap"
+    },
+    {
+      "bucket_id": "frontend.generic_check_failure",
+      "case_count": 3,
+      "case_ids": [
+        "0001",
+        "0242",
+        "0523"
+      ],
+      "layer": "frontend",
+      "primary_topics": {
+        "arrays": 1,
+        "hash_map": 2
+      },
+      "statuses": {
+        "CHECK_ERROR": 3
+      },
+      "title": "Generic frontend check failure"
+    },
+    {
+      "bucket_id": "codegen.generic_run_failure",
+      "case_count": 1,
+      "case_ids": [
+        "0151"
+      ],
+      "layer": "codegen",
+      "primary_topics": {
+        "strings": 1
+      },
+      "statuses": {
+        "RUN_ERROR": 1
+      },
+      "title": "Generic codegen/runtime build failure"
+    },
+    {
+      "bucket_id": "codegen.mutable_binding_emission",
+      "case_count": 1,
+      "case_ids": [
+        "0069"
+      ],
+      "layer": "codegen",
+      "primary_topics": {
+        "math": 1
+      },
+      "statuses": {
+        "RUN_ERROR": 1
+      },
+      "title": "Codegen mutable binding emission gap"
+    },
+    {
+      "bucket_id": "lowering.attribute_expression_support",
+      "case_count": 1,
+      "case_ids": [
+        "0235"
+      ],
+      "layer": "lowering",
+      "primary_topics": {
+        "trees": 1
+      },
+      "statuses": {
+        "CHECK_ERROR": 1
+      },
+      "title": "Attribute-expression lowering gap"
+    },
+    {
+      "bucket_id": "lowering.unsupported_ast_shape",
+      "case_count": 1,
+      "case_ids": [
+        "0052"
+      ],
+      "layer": "lowering",
+      "primary_topics": {
+        "backtracking": 1
+      },
+      "statuses": {
+        "CHECK_ERROR": 1
+      },
+      "title": "Unsupported AST lowering shape"
+    },
+    {
+      "bucket_id": "ownership.borrowed_return_surface",
+      "case_count": 1,
+      "case_ids": [
+        "1299"
+      ],
+      "layer": "ownership",
+      "primary_topics": {
+        "arrays": 1
+      },
+      "statuses": {
+        "CHECK_ERROR": 1
+      },
+      "title": "Borrowed return ownership gap"
+    },
+    {
+      "bucket_id": "stdlib.python_builtin_signature_surface",
+      "case_count": 1,
+      "case_ids": [
+        "2235"
+      ],
+      "layer": "stdlib_runtime",
+      "primary_topics": {
+        "math": 1
+      },
+      "statuses": {
+        "CHECK_ERROR": 1
+      },
+      "title": "Python builtin signature/parity gap"
+    }
+  ],
+  "classified_results": [
+    {
+      "classification": {
+        "bucket_id": "frontend.generic_check_failure",
+        "layer": "frontend",
+        "matched_excerpt": "type error: cannot index type 'dict[Any, Any]' with 'int'",
+        "title": "Generic frontend check failure"
+      },
+      "difficulty": "easy",
+      "fixture_slug": "0001_two_sum",
+      "id": "0001",
+      "primary_topic": "arrays",
+      "sifr_path": "audit/leetcode/0001_two_sum.sifr",
+      "status": "CHECK_ERROR",
+      "stderr_excerpt": "type error: cannot index type 'dict[Any, Any]' with 'int'"
+    },
+    {
+      "classification": {
+        "bucket_id": "stdlib.python_module_surface",
+        "layer": "stdlib_runtime",
+        "matched_excerpt": "undefined function: 'set'",
+        "title": "Python stdlib/module surface gap"
+      },
+      "difficulty": "medium",
+      "fixture_slug": "0003_longest_substring_without_repeating_characters",
+      "id": "0003",
+      "primary_topic": "hash_map",
+      "sifr_path": "audit/leetcode/0003_longest_substring_without_repeating_characters.sifr",
+      "status": "CHECK_ERROR",
+      "stderr_excerpt": "undefined function: 'set'"
+    },
+    {
+      "classification": {
+        "bucket_id": "stdlib.python_module_surface",
+        "layer": "stdlib_runtime",
+        "matched_excerpt": "undefined variable: 'math'",
+        "title": "Python stdlib/module surface gap"
+      },
+      "difficulty": "medium",
+      "fixture_slug": "0007_reverse_integer",
+      "id": "0007",
+      "primary_topic": "math",
+      "sifr_path": "audit/leetcode/0007_reverse_integer.sifr",
+      "status": "CHECK_ERROR",
+      "stderr_excerpt": "undefined variable: 'math'"
+    },
+    {
+      "classification": {
+        "bucket_id": "type_system.optional_narrowing_and_union_ops",
+        "layer": "type_system",
+        "matched_excerpt": "str | None",
+        "title": "Optional narrowing and union-operator gap"
+      },
+      "difficulty": "easy",
+      "fixture_slug": "0014_longest_common_prefix",
+      "id": "0014",
+      "primary_topic": "strings",
+      "sifr_path": "audit/leetcode/0014_longest_common_prefix.sifr",
+      "status": "CHECK_ERROR",
+      "stderr_excerpt": "str | None"
+    },
+    {
+      "classification": {
+        "bucket_id": "type_system.optional_narrowing_and_union_ops",
+        "layer": "type_system",
+        "matched_excerpt": "int | None",
+        "title": "Optional narrowing and union-operator gap"
+      },
+      "difficulty": "medium",
+      "fixture_slug": "0015_3sum",
+      "id": "0015",
+      "primary_topic": "two_pointers_sliding_window",
+      "sifr_path": "audit/leetcode/0015_3sum.sifr",
+      "status": "CHECK_ERROR",
+      "stderr_excerpt": "int | None"
+    },
+    {
+      "classification": {
+        "bucket_id": "frontend.nested_function_annotation_support",
+        "layer": "frontend",
+        "matched_excerpt": "is missing a type annotation",
+        "title": "Nested function annotation/inference gap"
+      },
+      "difficulty": "medium",
+      "fixture_slug": "0017_letter_combinations_of_a_phone_number",
+      "id": "0017",
+      "primary_topic": "backtracking",
+      "sifr_path": "audit/leetcode/0017_letter_combinations_of_a_phone_number.sifr",
+      "status": "CHECK_ERROR",
+      "stderr_excerpt": "is missing a type annotation"
+    },
+    {
+      "classification": {
+        "bucket_id": "frontend.nested_function_annotation_support",
+        "layer": "frontend",
+        "matched_excerpt": "is missing a type annotation",
+        "title": "Nested function annotation/inference gap"
+      },
+      "difficulty": "medium",
+      "fixture_slug": "0039_combination_sum",
+      "id": "0039",
+      "primary_topic": "backtracking",
+      "sifr_path": "audit/leetcode/0039_combination_sum.sifr",
+      "status": "CHECK_ERROR",
+      "stderr_excerpt": "is missing a type annotation"
+    },
+    {
+      "classification": {
+        "bucket_id": "type_system.optional_narrowing_and_union_ops",
+        "layer": "type_system",
+        "matched_excerpt": "int | None",
+        "title": "Optional narrowing and union-operator gap"
+      },
+      "difficulty": "hard",
+      "fixture_slug": "0042_trapping_rain_water",
+      "id": "0042",
+      "primary_topic": "two_pointers_sliding_window",
+      "sifr_path": "audit/leetcode/0042_trapping_rain_water.sifr",
+      "status": "CHECK_ERROR",
+      "stderr_excerpt": "int | None"
+    },
+    {
+      "classification": {
+        "bucket_id": "type_system.optional_narrowing_and_union_ops",
+        "layer": "type_system",
+        "matched_excerpt": "int | None",
+        "title": "Optional narrowing and union-operator gap"
+      },
+      "difficulty": "medium",
+      "fixture_slug": "0043_multiply_strings",
+      "id": "0043",
+      "primary_topic": "strings",
+      "sifr_path": "audit/leetcode/0043_multiply_strings.sifr",
+      "status": "CHECK_ERROR",
+      "stderr_excerpt": "int | None"
+    },
+    {
+      "classification": {
+        "bucket_id": "frontend.nested_function_annotation_support",
+        "layer": "frontend",
+        "matched_excerpt": "is missing a type annotation",
+        "title": "Nested function annotation/inference gap"
+      },
+      "difficulty": "medium",
+      "fixture_slug": "0050_powx_n",
+      "id": "0050",
+      "primary_topic": "math",
+      "sifr_path": "audit/leetcode/0050_powx_n.sifr",
+      "status": "CHECK_ERROR",
+      "stderr_excerpt": "is missing a type annotation"
+    },
+    {
+      "classification": {
+        "bucket_id": "lowering.unsupported_ast_shape",
+        "layer": "lowering",
+        "matched_excerpt": "unsupported statement type",
+        "title": "Unsupported AST lowering shape"
+      },
+      "difficulty": "hard",
+      "fixture_slug": "0052_n_queens_ii",
+      "id": "0052",
+      "primary_topic": "backtracking",
+      "sifr_path": "audit/leetcode/0052_n_queens_ii.sifr",
+      "status": "CHECK_ERROR",
+      "stderr_excerpt": "unsupported statement type"
+    },
+    {
+      "classification": {
+        "bucket_id": "type_system.optional_narrowing_and_union_ops",
+        "layer": "type_system",
+        "matched_excerpt": "int | None",
+        "title": "Optional narrowing and union-operator gap"
+      },
+      "difficulty": "easy",
+      "fixture_slug": "0053_maximum_subarray",
+      "id": "0053",
+      "primary_topic": "arrays",
+      "sifr_path": "audit/leetcode/0053_maximum_subarray.sifr",
+      "status": "CHECK_ERROR",
+      "stderr_excerpt": "int | None"
+    },
+    {
+      "classification": {
+        "bucket_id": "codegen.mutable_binding_emission",
+        "layer": "codegen",
+        "matched_excerpt": "cannot assign twice to immutable variable",
+        "title": "Codegen mutable binding emission gap"
+      },
+      "difficulty": "easy",
+      "fixture_slug": "0069_sqrtx",
+      "id": "0069",
+      "primary_topic": "math",
+      "sifr_path": "audit/leetcode/0069_sqrtx.sifr",
+      "status": "RUN_ERROR",
+      "stderr_excerpt": "cannot assign twice to immutable variable"
+    },
+    {
+      "classification": {
+        "bucket_id": "frontend.nested_function_annotation_support",
+        "layer": "frontend",
+        "matched_excerpt": "is missing a type annotation",
+        "title": "Nested function annotation/inference gap"
+      },
+      "difficulty": "medium",
+      "fixture_slug": "0078_subsets",
+      "id": "0078",
+      "primary_topic": "backtracking",
+      "sifr_path": "audit/leetcode/0078_subsets.sifr",
+      "status": "CHECK_ERROR",
+      "stderr_excerpt": "is missing a type annotation"
+    },
+    {
+      "classification": {
+        "bucket_id": "frontend.nested_function_annotation_support",
+        "layer": "frontend",
+        "matched_excerpt": "is missing a type annotation",
+        "title": "Nested function annotation/inference gap"
+      },
+      "difficulty": "medium",
+      "fixture_slug": "0090_subsets_ii",
+      "id": "0090",
+      "primary_topic": "backtracking",
+      "sifr_path": "audit/leetcode/0090_subsets_ii.sifr",
+      "status": "CHECK_ERROR",
+      "stderr_excerpt": "is missing a type annotation"
+    },
+    {
+      "classification": {
+        "bucket_id": "type_system.recursive_node_forward_reference",
+        "layer": "type_system",
+        "matched_excerpt": "unknown type: 'TreeNode'",
+        "title": "Recursive node forward-reference resolution gap"
+      },
+      "difficulty": "easy",
+      "fixture_slug": "0100_same_tree",
+      "id": "0100",
+      "primary_topic": "trees",
+      "sifr_path": "audit/leetcode/0100_same_tree.sifr",
+      "status": "CHECK_ERROR",
+      "stderr_excerpt": "unknown type: 'TreeNode'"
+    },
+    {
+      "classification": {
+        "bucket_id": "type_system.recursive_node_forward_reference",
+        "layer": "type_system",
+        "matched_excerpt": "unknown type: 'TreeNode'",
+        "title": "Recursive node forward-reference resolution gap"
+      },
+      "difficulty": "medium",
+      "fixture_slug": "0102_binary_tree_level_order_traversal",
+      "id": "0102",
+      "primary_topic": "trees",
+      "sifr_path": "audit/leetcode/0102_binary_tree_level_order_traversal.sifr",
+      "status": "CHECK_ERROR",
+      "stderr_excerpt": "unknown type: 'TreeNode'"
+    },
+    {
+      "classification": {
+        "bucket_id": "type_system.recursive_node_forward_reference",
+        "layer": "type_system",
+        "matched_excerpt": "unknown type: 'TreeNode'",
+        "title": "Recursive node forward-reference resolution gap"
+      },
+      "difficulty": "easy",
+      "fixture_slug": "0110_balanced_binary_tree",
+      "id": "0110",
+      "primary_topic": "trees",
+      "sifr_path": "audit/leetcode/0110_balanced_binary_tree.sifr",
+      "status": "CHECK_ERROR",
+      "stderr_excerpt": "unknown type: 'TreeNode'"
+    },
+    {
+      "classification": {
+        "bucket_id": "stdlib.python_module_surface",
+        "layer": "stdlib_runtime",
+        "matched_excerpt": "undefined function: 'set'",
+        "title": "Python stdlib/module surface gap"
+      },
+      "difficulty": "hard",
+      "fixture_slug": "0127_word_ladder",
+      "id": "0127",
+      "primary_topic": "graphs",
+      "sifr_path": "audit/leetcode/0127_word_ladder.sifr",
+      "status": "CHECK_ERROR",
+      "stderr_excerpt": "undefined function: 'set'"
+    },
+    {
+      "classification": {
+        "bucket_id": "codegen.generic_run_failure",
+        "layer": "codegen",
+        "matched_excerpt": "build error: cargo build failed:",
+        "title": "Generic codegen/runtime build failure"
+      },
+      "difficulty": "medium",
+      "fixture_slug": "0151_reverse_words_in_a_string",
+      "id": "0151",
+      "primary_topic": "strings",
+      "sifr_path": "audit/leetcode/0151_reverse_words_in_a_string.sifr",
+      "status": "RUN_ERROR",
+      "stderr_excerpt": "build error: cargo build failed:"
+    },
+    {
+      "classification": {
+        "bucket_id": "type_system.optional_narrowing_and_union_ops",
+        "layer": "type_system",
+        "matched_excerpt": "int | None",
+        "title": "Optional narrowing and union-operator gap"
+      },
+      "difficulty": "medium",
+      "fixture_slug": "0198_house_robber",
+      "id": "0198",
+      "primary_topic": "dp",
+      "sifr_path": "audit/leetcode/0198_house_robber.sifr",
+      "status": "CHECK_ERROR",
+      "stderr_excerpt": "int | None"
+    },
+    {
+      "classification": {
+        "bucket_id": "lowering.destructuring_target_support",
+        "layer": "lowering",
+        "matched_excerpt": "for loop tuple target expects iterable elements of tuple type",
+        "title": "Destructuring target lowering gap"
+      },
+      "difficulty": "medium",
+      "fixture_slug": "0207_course_schedule",
+      "id": "0207",
+      "primary_topic": "graphs",
+      "sifr_path": "audit/leetcode/0207_course_schedule.sifr",
+      "status": "CHECK_ERROR",
+      "stderr_excerpt": "for loop tuple target expects iterable elements of tuple type"
+    },
+    {
+      "classification": {
+        "bucket_id": "type_system.optional_narrowing_and_union_ops",
+        "layer": "type_system",
+        "matched_excerpt": "int | None",
+        "title": "Optional narrowing and union-operator gap"
+      },
+      "difficulty": "medium",
+      "fixture_slug": "0209_minimum_size_subarray_sum",
+      "id": "0209",
+      "primary_topic": "two_pointers_sliding_window",
+      "sifr_path": "audit/leetcode/0209_minimum_size_subarray_sum.sifr",
+      "status": "CHECK_ERROR",
+      "stderr_excerpt": "int | None"
+    },
+    {
+      "classification": {
+        "bucket_id": "type_system.optional_narrowing_and_union_ops",
+        "layer": "type_system",
+        "matched_excerpt": "int | None",
+        "title": "Optional narrowing and union-operator gap"
+      },
+      "difficulty": "medium",
+      "fixture_slug": "0215_kth_largest_element_in_an_array",
+      "id": "0215",
+      "primary_topic": "heap_priority_queue",
+      "sifr_path": "audit/leetcode/0215_kth_largest_element_in_an_array.sifr",
+      "status": "CHECK_ERROR",
+      "stderr_excerpt": "int | None"
+    },
+    {
+      "classification": {
+        "bucket_id": "stdlib.python_module_surface",
+        "layer": "stdlib_runtime",
+        "matched_excerpt": "undefined function: 'set'",
+        "title": "Python stdlib/module surface gap"
+      },
+      "difficulty": "easy",
+      "fixture_slug": "0217_contains_duplicate",
+      "id": "0217",
+      "primary_topic": "hash_map",
+      "sifr_path": "audit/leetcode/0217_contains_duplicate.sifr",
+      "status": "CHECK_ERROR",
+      "stderr_excerpt": "undefined function: 'set'"
+    },
+    {
+      "classification": {
+        "bucket_id": "type_system.recursive_node_forward_reference",
+        "layer": "type_system",
+        "matched_excerpt": "unknown type: 'TreeNode'",
+        "title": "Recursive node forward-reference resolution gap"
+      },
+      "difficulty": "easy",
+      "fixture_slug": "0226_invert_binary_tree",
+      "id": "0226",
+      "primary_topic": "trees",
+      "sifr_path": "audit/leetcode/0226_invert_binary_tree.sifr",
+      "status": "CHECK_ERROR",
+      "stderr_excerpt": "unknown type: 'TreeNode'"
+    },
+    {
+      "classification": {
+        "bucket_id": "lowering.attribute_expression_support",
+        "layer": "lowering",
+        "matched_excerpt": "attribute access '.",
+        "title": "Attribute-expression lowering gap"
+      },
+      "difficulty": "medium",
+      "fixture_slug": "0235_lowest_common_ancestor_of_a_binary_search_tree",
+      "id": "0235",
+      "primary_topic": "trees",
+      "sifr_path": "audit/leetcode/0235_lowest_common_ancestor_of_a_binary_search_tree.sifr",
+      "status": "CHECK_ERROR",
+      "stderr_excerpt": "attribute access '."
+    },
+    {
+      "classification": {
+        "bucket_id": "type_system.optional_narrowing_and_union_ops",
+        "layer": "type_system",
+        "matched_excerpt": "int | None",
+        "title": "Optional narrowing and union-operator gap"
+      },
+      "difficulty": "medium",
+      "fixture_slug": "0238_product_of_array_except_self",
+      "id": "0238",
+      "primary_topic": "arrays",
+      "sifr_path": "audit/leetcode/0238_product_of_array_except_self.sifr",
+      "status": "CHECK_ERROR",
+      "stderr_excerpt": "int | None"
+    },
+    {
+      "classification": {
+        "bucket_id": "frontend.generic_check_failure",
+        "layer": "frontend",
+        "matched_excerpt": "type error: unsupported operand type(s) for +: 'int' and 'Any'",
+        "title": "Generic frontend check failure"
+      },
+      "difficulty": "easy",
+      "fixture_slug": "0242_valid_anagram",
+      "id": "0242",
+      "primary_topic": "hash_map",
+      "sifr_path": "audit/leetcode/0242_valid_anagram.sifr",
+      "status": "CHECK_ERROR",
+      "stderr_excerpt": "type error: unsupported operand type(s) for +: 'int' and 'Any'"
+    },
+    {
+      "classification": {
+        "bucket_id": "lowering.destructuring_target_support",
+        "layer": "lowering",
+        "matched_excerpt": "tuple unpacking target must be a simple name",
+        "title": "Destructuring target lowering gap"
+      },
+      "difficulty": "hard",
+      "fixture_slug": "0295_find_median_from_data_stream",
+      "id": "0295",
+      "primary_topic": "heap_priority_queue",
+      "sifr_path": "audit/leetcode/0295_find_median_from_data_stream.sifr",
+      "status": "CHECK_ERROR",
+      "stderr_excerpt": "tuple unpacking target must be a simple name"
+    },
+    {
+      "classification": {
+        "bucket_id": "type_system.optional_narrowing_and_union_ops",
+        "layer": "type_system",
+        "matched_excerpt": "int | None",
+        "title": "Optional narrowing and union-operator gap"
+      },
+      "difficulty": "medium",
+      "fixture_slug": "0322_coin_change",
+      "id": "0322",
+      "primary_topic": "dp",
+      "sifr_path": "audit/leetcode/0322_coin_change.sifr",
+      "status": "CHECK_ERROR",
+      "stderr_excerpt": "int | None"
+    },
+    {
+      "classification": {
+        "bucket_id": "type_system.optional_narrowing_and_union_ops",
+        "layer": "type_system",
+        "matched_excerpt": "str | None",
+        "title": "Optional narrowing and union-operator gap"
+      },
+      "difficulty": "medium",
+      "fixture_slug": "0424_longest_repeating_character_replacement",
+      "id": "0424",
+      "primary_topic": "two_pointers_sliding_window",
+      "sifr_path": "audit/leetcode/0424_longest_repeating_character_replacement.sifr",
+      "status": "CHECK_ERROR",
+      "stderr_excerpt": "str | None"
+    },
+    {
+      "classification": {
+        "bucket_id": "stdlib.python_module_surface",
+        "layer": "stdlib_runtime",
+        "matched_excerpt": "undefined variable: 'heapq'",
+        "title": "Python stdlib/module surface gap"
+      },
+      "difficulty": "hard",
+      "fixture_slug": "0502_ipo",
+      "id": "0502",
+      "primary_topic": "heap_priority_queue",
+      "sifr_path": "audit/leetcode/0502_ipo.sifr",
+      "status": "CHECK_ERROR",
+      "stderr_excerpt": "undefined variable: 'heapq'"
+    },
+    {
+      "classification": {
+        "bucket_id": "frontend.generic_check_failure",
+        "layer": "frontend",
+        "matched_excerpt": "type error: cannot index type 'dict[Any, Any]' with 'int'",
+        "title": "Generic frontend check failure"
+      },
+      "difficulty": "medium",
+      "fixture_slug": "0523_continuous_subarray_sum",
+      "id": "0523",
+      "primary_topic": "hash_map",
+      "sifr_path": "audit/leetcode/0523_continuous_subarray_sum.sifr",
+      "status": "CHECK_ERROR",
+      "stderr_excerpt": "type error: cannot index type 'dict[Any, Any]' with 'int'"
+    },
+    {
+      "classification": {
+        "bucket_id": "type_system.optional_narrowing_and_union_ops",
+        "layer": "type_system",
+        "matched_excerpt": "int | None",
+        "title": "Optional narrowing and union-operator gap"
+      },
+      "difficulty": "medium",
+      "fixture_slug": "0560_subarray_sum_equals_k",
+      "id": "0560",
+      "primary_topic": "hash_map",
+      "sifr_path": "audit/leetcode/0560_subarray_sum_equals_k.sifr",
+      "status": "CHECK_ERROR",
+      "stderr_excerpt": "int | None"
+    },
+    {
+      "classification": {
+        "bucket_id": "lowering.destructuring_target_support",
+        "layer": "lowering",
+        "matched_excerpt": "for loop tuple target expects iterable elements of tuple type",
+        "title": "Destructuring target lowering gap"
+      },
+      "difficulty": "medium",
+      "fixture_slug": "0684_redundant_connection",
+      "id": "0684",
+      "primary_topic": "graphs",
+      "sifr_path": "audit/leetcode/0684_redundant_connection.sifr",
+      "status": "CHECK_ERROR",
+      "stderr_excerpt": "for loop tuple target expects iterable elements of tuple type"
+    },
+    {
+      "classification": {
+        "bucket_id": "lowering.destructuring_target_support",
+        "layer": "lowering",
+        "matched_excerpt": "tuple unpacking target must be a simple name",
+        "title": "Destructuring target lowering gap"
+      },
+      "difficulty": "easy",
+      "fixture_slug": "0703_kth_largest_element_in_a_stream",
+      "id": "0703",
+      "primary_topic": "heap_priority_queue",
+      "sifr_path": "audit/leetcode/0703_kth_largest_element_in_a_stream.sifr",
+      "status": "CHECK_ERROR",
+      "stderr_excerpt": "tuple unpacking target must be a simple name"
+    },
+    {
+      "classification": {
+        "bucket_id": "lowering.destructuring_target_support",
+        "layer": "lowering",
+        "matched_excerpt": "for loop tuple target expects iterable elements of tuple type",
+        "title": "Destructuring target lowering gap"
+      },
+      "difficulty": "medium",
+      "fixture_slug": "0743_network_delay_time",
+      "id": "0743",
+      "primary_topic": "graphs",
+      "sifr_path": "audit/leetcode/0743_network_delay_time.sifr",
+      "status": "CHECK_ERROR",
+      "stderr_excerpt": "for loop tuple target expects iterable elements of tuple type"
+    },
+    {
+      "classification": {
+        "bucket_id": "type_system.optional_narrowing_and_union_ops",
+        "layer": "type_system",
+        "matched_excerpt": "int | None",
+        "title": "Optional narrowing and union-operator gap"
+      },
+      "difficulty": "easy",
+      "fixture_slug": "0746_min_cost_climbing_stairs",
+      "id": "0746",
+      "primary_topic": "dp",
+      "sifr_path": "audit/leetcode/0746_min_cost_climbing_stairs.sifr",
+      "status": "CHECK_ERROR",
+      "stderr_excerpt": "int | None"
+    },
+    {
+      "classification": {
+        "bucket_id": "frontend.nested_function_annotation_support",
+        "layer": "frontend",
+        "matched_excerpt": "is missing a type annotation",
+        "title": "Nested function annotation/inference gap"
+      },
+      "difficulty": "medium",
+      "fixture_slug": "0912_sort_an_array",
+      "id": "0912",
+      "primary_topic": "arrays",
+      "sifr_path": "audit/leetcode/0912_sort_an_array.sifr",
+      "status": "CHECK_ERROR",
+      "stderr_excerpt": "is missing a type annotation"
+    },
+    {
+      "classification": {
+        "bucket_id": "lowering.destructuring_target_support",
+        "layer": "lowering",
+        "matched_excerpt": "for loop tuple target expects iterable elements of tuple type",
+        "title": "Destructuring target lowering gap"
+      },
+      "difficulty": "easy",
+      "fixture_slug": "0997_find_the_town_judge",
+      "id": "0997",
+      "primary_topic": "graphs",
+      "sifr_path": "audit/leetcode/0997_find_the_town_judge.sifr",
+      "status": "CHECK_ERROR",
+      "stderr_excerpt": "for loop tuple target expects iterable elements of tuple type"
+    },
+    {
+      "classification": {
+        "bucket_id": "stdlib.python_module_surface",
+        "layer": "stdlib_runtime",
+        "matched_excerpt": "undefined variable: 'heapq'",
+        "title": "Python stdlib/module surface gap"
+      },
+      "difficulty": "easy",
+      "fixture_slug": "1046_last_stone_weight",
+      "id": "1046",
+      "primary_topic": "heap_priority_queue",
+      "sifr_path": "audit/leetcode/1046_last_stone_weight.sifr",
+      "status": "CHECK_ERROR",
+      "stderr_excerpt": "undefined variable: 'heapq'"
+    },
+    {
+      "classification": {
+        "bucket_id": "type_system.optional_narrowing_and_union_ops",
+        "layer": "type_system",
+        "matched_excerpt": "int | None",
+        "title": "Optional narrowing and union-operator gap"
+      },
+      "difficulty": "medium",
+      "fixture_slug": "1143_longest_common_subsequence",
+      "id": "1143",
+      "primary_topic": "dp",
+      "sifr_path": "audit/leetcode/1143_longest_common_subsequence.sifr",
+      "status": "CHECK_ERROR",
+      "stderr_excerpt": "int | None"
+    },
+    {
+      "classification": {
+        "bucket_id": "lowering.destructuring_target_support",
+        "layer": "lowering",
+        "matched_excerpt": "for loop tuple target expects iterable elements of tuple type",
+        "title": "Destructuring target lowering gap"
+      },
+      "difficulty": "medium",
+      "fixture_slug": "1209_remove_all_adjacent_duplicates_in_string_ii",
+      "id": "1209",
+      "primary_topic": "strings",
+      "sifr_path": "audit/leetcode/1209_remove_all_adjacent_duplicates_in_string_ii.sifr",
+      "status": "CHECK_ERROR",
+      "stderr_excerpt": "for loop tuple target expects iterable elements of tuple type"
+    },
+    {
+      "classification": {
+        "bucket_id": "ownership.borrowed_return_surface",
+        "layer": "ownership",
+        "matched_excerpt": "cannot return borrowed parameter",
+        "title": "Borrowed return ownership gap"
+      },
+      "difficulty": "easy",
+      "fixture_slug": "1299_replace_elements_with_greatest_element_on_right_side",
+      "id": "1299",
+      "primary_topic": "arrays",
+      "sifr_path": "audit/leetcode/1299_replace_elements_with_greatest_element_on_right_side.sifr",
+      "status": "CHECK_ERROR",
+      "stderr_excerpt": "cannot return borrowed parameter"
+    },
+    {
+      "classification": {
+        "bucket_id": "type_system.optional_narrowing_and_union_ops",
+        "layer": "type_system",
+        "matched_excerpt": "str | None",
+        "title": "Optional narrowing and union-operator gap"
+      },
+      "difficulty": "medium",
+      "fixture_slug": "1456_maximum_number_of_vowels_in_a_substring_of_given_length",
+      "id": "1456",
+      "primary_topic": "two_pointers_sliding_window",
+      "sifr_path": "audit/leetcode/1456_maximum_number_of_vowels_in_a_substring_of_given_length.sifr",
+      "status": "CHECK_ERROR",
+      "stderr_excerpt": "str | None"
+    },
+    {
+      "classification": {
+        "bucket_id": "type_system.optional_narrowing_and_union_ops",
+        "layer": "type_system",
+        "matched_excerpt": "str | None",
+        "title": "Optional narrowing and union-operator gap"
+      },
+      "difficulty": "easy",
+      "fixture_slug": "1768_merge_strings_alternately",
+      "id": "1768",
+      "primary_topic": "strings",
+      "sifr_path": "audit/leetcode/1768_merge_strings_alternately.sifr",
+      "status": "CHECK_ERROR",
+      "stderr_excerpt": "str | None"
+    },
+    {
+      "classification": {
+        "bucket_id": "stdlib.python_builtin_signature_surface",
+        "layer": "stdlib_runtime",
+        "matched_excerpt": "sum() takes exactly 1 argument",
+        "title": "Python builtin signature/parity gap"
+      },
+      "difficulty": "easy",
+      "fixture_slug": "2235_add_two_integers",
+      "id": "2235",
+      "primary_topic": "math",
+      "sifr_path": "audit/leetcode/2235_add_two_integers.sifr",
+      "status": "CHECK_ERROR",
+      "stderr_excerpt": "sum() takes exactly 1 argument"
+    }
+  ],
+  "name": "phase31_failure_taxonomy",
+  "phase": 31,
+  "summary": {
+    "bucket_count": 12,
+    "classified_case_count": 48
+  }
+}

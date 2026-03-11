@@ -2,7 +2,7 @@
 
 status: in_progress
 
-> 2026-03-11 update: milestone_31_1 is implemented in the workspace with a canonical 50-problem seed corpus, a 411-fixture raw inventory, a deterministic runner, contract tests, and recorded baseline metrics. Remaining milestones stay pending.
+> 2026-03-11 update: milestones `31_1` and `31_2` are implemented in the workspace with a canonical 50-problem seed corpus, a 411-fixture raw inventory, a deterministic runner, a generated failure taxonomy, a smallest-known repro inventory, and a passing spot-audit classifier check. Remaining milestones stay pending.
 
 ## Objective
 Run a representative LeetCode corpus end-to-end on Sifr, identify failures, classify root causes, and define the language/compiler fixes required to improve algorithmic compatibility.
@@ -61,7 +61,7 @@ status: complete
 ---
 
 ### milestone_31_2: Failure Inventory and Root-Cause Taxonomy
-status: pending
+status: complete
 
 - Scope:
   - Classify failures by layer: parser, type system, lowering, codegen, stdlib/runtime, performance timeout, unsupported feature.
@@ -72,6 +72,25 @@ status: pending
   - Every failing case is tagged with root-cause category and reproducible evidence.
   - Taxonomy report includes frequency and impact ranking.
   - Classification spot-audit accuracy is `>= 90%`.
+- Delivered artifacts:
+  - `verification/leetcode/phase31_failure_taxonomy.json`
+  - `verification/leetcode/phase31_failure_repros.json`
+  - `verification/leetcode/phase31_spot_audit.json`
+  - `verification/leetcode/phase31_spot_audit_cases.json`
+  - `verification/leetcode/phase31_failure_report.md`
+  - `demos/m31_2_leetcode_taxonomy_demo/report.md`
+  - `scripts/phase31_leetcode_taxonomy.py`
+  - `scripts/build_phase31_leetcode_taxonomy.py`
+  - `scripts/test_phase31_leetcode_taxonomy.py`
+- Baseline taxonomy metrics (2026-03-11 seed run):
+  - classified failing seed cases: `48`
+  - taxonomy buckets: `12`
+  - largest buckets:
+    - `type_system.optional_narrowing_and_union_ops` (`16`)
+    - `lowering.destructuring_target_support` (`7`)
+    - `frontend.nested_function_annotation_support` (`6`)
+    - `stdlib.python_module_surface` (`6`)
+  - spot-audit accuracy: `100%`
 
 ---
 
