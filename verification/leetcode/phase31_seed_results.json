@@ -1,0 +1,1392 @@
+{
+  "command_prefix": [
+    "/Users/yaseralnajjar/work/sifr/codebase/target/release/sifr"
+  ],
+  "manifest": "verification/leetcode/phase31_seed_corpus.json",
+  "output": "verification/leetcode/phase31_seed_results.json",
+  "phase": 31,
+  "results": [
+    {
+      "difficulty": "easy",
+      "failure_stage": "check",
+      "fixture_slug": "0001_two_sum",
+      "id": "0001",
+      "oracle_mode": "embedded_asserts",
+      "primary_topic": "arrays",
+      "scope_classification": "in_scope",
+      "stages": [
+        {
+          "command": [
+            "/Users/yaseralnajjar/work/sifr/codebase/target/release/sifr",
+            "check",
+            "audit/leetcode/0001_two_sum.sifr"
+          ],
+          "duration_ms": 36,
+          "returncode": 1,
+          "stage": "check",
+          "stderr": "type error: cannot index type 'dict[Any, Any]' with 'int'",
+          "stdout": "",
+          "timed_out": false
+        }
+      ],
+      "status": "CHECK_ERROR",
+      "timeout_seconds": 20
+    },
+    {
+      "difficulty": "medium",
+      "failure_stage": "check",
+      "fixture_slug": "0003_longest_substring_without_repeating_characters",
+      "id": "0003",
+      "oracle_mode": "embedded_asserts",
+      "primary_topic": "hash_map",
+      "scope_classification": "in_scope",
+      "stages": [
+        {
+          "command": [
+            "/Users/yaseralnajjar/work/sifr/codebase/target/release/sifr",
+            "check",
+            "audit/leetcode/0003_longest_substring_without_repeating_characters.sifr"
+          ],
+          "duration_ms": 37,
+          "returncode": 1,
+          "stage": "check",
+          "stderr": "type error: undefined function: 'set'\ntype error: undefined variable: 'charSet'\ntype error: undefined variable: 'charSet'",
+          "stdout": "",
+          "timed_out": false
+        }
+      ],
+      "status": "CHECK_ERROR",
+      "timeout_seconds": 20
+    },
+    {
+      "difficulty": "medium",
+      "failure_stage": "check",
+      "fixture_slug": "0007_reverse_integer",
+      "id": "0007",
+      "oracle_mode": "embedded_asserts",
+      "primary_topic": "math",
+      "scope_classification": "in_scope",
+      "stages": [
+        {
+          "command": [
+            "/Users/yaseralnajjar/work/sifr/codebase/target/release/sifr",
+            "check",
+            "audit/leetcode/0007_reverse_integer.sifr"
+          ],
+          "duration_ms": 37,
+          "returncode": 1,
+          "stage": "check",
+          "stderr": "type error: undefined variable: 'digit'\ntype error: undefined variable: 'digit'\ntype error: undefined variable: 'digit'\ntype error: undefined variable: 'math'",
+          "stdout": "",
+          "timed_out": false
+        }
+      ],
+      "status": "CHECK_ERROR",
+      "timeout_seconds": 20
+    },
+    {
+      "difficulty": "easy",
+      "failure_stage": null,
+      "fixture_slug": "0009_palindrome_number",
+      "id": "0009",
+      "oracle_mode": "embedded_asserts",
+      "primary_topic": "math",
+      "scope_classification": "in_scope",
+      "stages": [
+        {
+          "command": [
+            "/Users/yaseralnajjar/work/sifr/codebase/target/release/sifr",
+            "check",
+            "audit/leetcode/0009_palindrome_number.sifr"
+          ],
+          "duration_ms": 39,
+          "returncode": 0,
+          "stage": "check",
+          "stderr": "no errors found",
+          "stdout": "",
+          "timed_out": false
+        },
+        {
+          "command": [
+            "/Users/yaseralnajjar/work/sifr/codebase/target/release/sifr",
+            "run",
+            "audit/leetcode/0009_palindrome_number.sifr"
+          ],
+          "duration_ms": 373,
+          "returncode": 0,
+          "stage": "run",
+          "stderr": "",
+          "stdout": "",
+          "timed_out": false
+        }
+      ],
+      "status": "PASS",
+      "timeout_seconds": 20
+    },
+    {
+      "difficulty": "easy",
+      "failure_stage": "check",
+      "fixture_slug": "0014_longest_common_prefix",
+      "id": "0014",
+      "oracle_mode": "embedded_asserts",
+      "primary_topic": "strings",
+      "scope_classification": "in_scope",
+      "stages": [
+        {
+          "command": [
+            "/Users/yaseralnajjar/work/sifr/codebase/target/release/sifr",
+            "check",
+            "audit/leetcode/0014_longest_common_prefix.sifr"
+          ],
+          "duration_ms": 38,
+          "returncode": 1,
+          "stage": "check",
+          "stderr": "type error: type 'str | None' has no method 'startswith'\ntype error: type mismatch: expected 'str', got 'str | None'",
+          "stdout": "",
+          "timed_out": false
+        }
+      ],
+      "status": "CHECK_ERROR",
+      "timeout_seconds": 20
+    },
+    {
+      "difficulty": "medium",
+      "failure_stage": "check",
+      "fixture_slug": "0015_3sum",
+      "id": "0015",
+      "oracle_mode": "embedded_asserts",
+      "primary_topic": "two_pointers_sliding_window",
+      "scope_classification": "in_scope",
+      "stages": [
+        {
+          "command": [
+            "/Users/yaseralnajjar/work/sifr/codebase/target/release/sifr",
+            "check",
+            "audit/leetcode/0015_3sum.sifr"
+          ],
+          "duration_ms": 38,
+          "returncode": 1,
+          "stage": "check",
+          "stderr": "type error: '>' not supported between instances of 'function' and 'int'\ntype error: unsupported operand type(s) for +: 'int' and 'int | None'",
+          "stdout": "",
+          "timed_out": false
+        }
+      ],
+      "status": "CHECK_ERROR",
+      "timeout_seconds": 20
+    },
+    {
+      "difficulty": "medium",
+      "failure_stage": "check",
+      "fixture_slug": "0017_letter_combinations_of_a_phone_number",
+      "id": "0017",
+      "oracle_mode": "embedded_asserts",
+      "primary_topic": "backtracking",
+      "scope_classification": "in_scope",
+      "stages": [
+        {
+          "command": [
+            "/Users/yaseralnajjar/work/sifr/codebase/target/release/sifr",
+            "check",
+            "audit/leetcode/0017_letter_combinations_of_a_phone_number.sifr"
+          ],
+          "duration_ms": 36,
+          "returncode": 1,
+          "stage": "check",
+          "stderr": "type error: cannot index type 'dict[str, str]' with 'Any'\ntype error: cannot index type 'str' with 'Any'\ntype error: cannot iterate over type 'Any'\ntype error: len() argument must be a string, list, dict, or tuple, got 'Any'\ntype error: parameter 'curStr' in function 'backtrack' is missing a type annotation\ntype error: parameter 'i' in function 'backtrack' is missing a type annotation\ntype error: unsupported operand type(s) for +: 'Any' and 'int'",
+          "stdout": "",
+          "timed_out": false
+        }
+      ],
+      "status": "CHECK_ERROR",
+      "timeout_seconds": 20
+    },
+    {
+      "difficulty": "medium",
+      "failure_stage": "check",
+      "fixture_slug": "0039_combination_sum",
+      "id": "0039",
+      "oracle_mode": "embedded_asserts",
+      "primary_topic": "backtracking",
+      "scope_classification": "in_scope",
+      "stages": [
+        {
+          "command": [
+            "/Users/yaseralnajjar/work/sifr/codebase/target/release/sifr",
+            "check",
+            "audit/leetcode/0039_combination_sum.sifr"
+          ],
+          "duration_ms": 38,
+          "returncode": 1,
+          "stage": "check",
+          "stderr": "type error: '>=' not supported between instances of 'Any' and 'int'\ntype error: cannot index type 'list[int]' with 'Any'\ntype error: cannot index type 'list[int]' with 'Any'\ntype error: function expects return type 'Any', but returns nothing\ntype error: parameter 'cur' in function 'dfs' is missing a type annotation\ntype error: parameter 'i' in function 'dfs' is missing a type annotation\ntype error: parameter 'total' in function 'dfs' is missing a type annotation\ntype error: type 'Any' has no method 'append'\ntype error: type 'Any' has no method 'copy'\ntype error: type 'Any' has no method 'pop'\ntype error: unsupported operand type(s) for +: 'Any' and 'Any'\ntype error: unsupported operand type(s) for +: 'Any' and 'int'",
+          "stdout": "",
+          "timed_out": false
+        }
+      ],
+      "status": "CHECK_ERROR",
+      "timeout_seconds": 20
+    },
+    {
+      "difficulty": "hard",
+      "failure_stage": "check",
+      "fixture_slug": "0042_trapping_rain_water",
+      "id": "0042",
+      "oracle_mode": "embedded_asserts",
+      "primary_topic": "two_pointers_sliding_window",
+      "scope_classification": "in_scope",
+      "stages": [
+        {
+          "command": [
+            "/Users/yaseralnajjar/work/sifr/codebase/target/release/sifr",
+            "check",
+            "audit/leetcode/0042_trapping_rain_water.sifr"
+          ],
+          "duration_ms": 37,
+          "returncode": 1,
+          "stage": "check",
+          "stderr": "type error: unsupported operand type(s) for -: 'int | None' and 'int | None'\ntype error: unsupported operand type(s) for -: 'int | None' and 'int | None'",
+          "stdout": "",
+          "timed_out": false
+        }
+      ],
+      "status": "CHECK_ERROR",
+      "timeout_seconds": 20
+    },
+    {
+      "difficulty": "medium",
+      "failure_stage": "check",
+      "fixture_slug": "0043_multiply_strings",
+      "id": "0043",
+      "oracle_mode": "embedded_asserts",
+      "primary_topic": "strings",
+      "scope_classification": "in_scope",
+      "stages": [
+        {
+          "command": [
+            "/Users/yaseralnajjar/work/sifr/codebase/target/release/sifr",
+            "check",
+            "audit/leetcode/0043_multiply_strings.sifr"
+          ],
+          "duration_ms": 39,
+          "returncode": 1,
+          "stage": "check",
+          "stderr": "type error: undefined variable: 'str'\ntype error: unsupported operand type(s) for %: 'int | None' and 'int'\ntype error: unsupported operand type(s) for //: 'int | None' and 'int'",
+          "stdout": "",
+          "timed_out": false
+        }
+      ],
+      "status": "CHECK_ERROR",
+      "timeout_seconds": 20
+    },
+    {
+      "difficulty": "medium",
+      "failure_stage": "check",
+      "fixture_slug": "0050_powx_n",
+      "id": "0050",
+      "oracle_mode": "embedded_asserts",
+      "primary_topic": "math",
+      "scope_classification": "in_scope",
+      "stages": [
+        {
+          "command": [
+            "/Users/yaseralnajjar/work/sifr/codebase/target/release/sifr",
+            "check",
+            "audit/leetcode/0050_powx_n.sifr"
+          ],
+          "duration_ms": 38,
+          "returncode": 1,
+          "stage": "check",
+          "stderr": "type error: parameter 'n' in function 'helper' is missing a type annotation\ntype error: parameter 'x' in function 'helper' is missing a type annotation\ntype error: unsupported operand type(s) for %: 'Never' and 'int'\ntype error: unsupported operand type(s) for *: 'Never' and 'Never'\ntype error: unsupported operand type(s) for /: 'int' and 'Any'",
+          "stdout": "",
+          "timed_out": false
+        }
+      ],
+      "status": "CHECK_ERROR",
+      "timeout_seconds": 20
+    },
+    {
+      "difficulty": "hard",
+      "failure_stage": "check",
+      "fixture_slug": "0052_n_queens_ii",
+      "id": "0052",
+      "oracle_mode": "embedded_asserts",
+      "primary_topic": "backtracking",
+      "scope_classification": "in_scope",
+      "stages": [
+        {
+          "command": [
+            "/Users/yaseralnajjar/work/sifr/codebase/target/release/sifr",
+            "check",
+            "audit/leetcode/0052_n_queens_ii.sifr"
+          ],
+          "duration_ms": 36,
+          "returncode": 1,
+          "stage": "check",
+          "stderr": "type error: function expects return type 'Any', but returns nothing\ntype error: parameter 'i' in function 'backtrack' is missing a type annotation\ntype error: undefined function: 'set'\ntype error: undefined function: 'set'\ntype error: undefined function: 'set'\ntype error: undefined variable: 'cols'\ntype error: undefined variable: 'cols'\ntype error: undefined variable: 'cols'\ntype error: undefined variable: 'negdiag'\ntype error: undefined variable: 'negdiag'\ntype error: undefined variable: 'posdiag'\ntype error: undefined variable: 'posdiag'\ntype error: unsupported operand type(s) for +: 'Any' and 'int'\ntype error: unsupported statement type",
+          "stdout": "",
+          "timed_out": false
+        }
+      ],
+      "status": "CHECK_ERROR",
+      "timeout_seconds": 20
+    },
+    {
+      "difficulty": "easy",
+      "failure_stage": "check",
+      "fixture_slug": "0053_maximum_subarray",
+      "id": "0053",
+      "oracle_mode": "embedded_asserts",
+      "primary_topic": "arrays",
+      "scope_classification": "in_scope",
+      "stages": [
+        {
+          "command": [
+            "/Users/yaseralnajjar/work/sifr/codebase/target/release/sifr",
+            "check",
+            "audit/leetcode/0053_maximum_subarray.sifr"
+          ],
+          "duration_ms": 38,
+          "returncode": 1,
+          "stage": "check",
+          "stderr": "type error: type mismatch: cannot assign 'int | None' to variable 'current_sum' of type 'int'\ntype error: type mismatch: expected 'int', got 'int | None'\ntype error: type mismatch: expected 'int', got 'int | None'\ntype error: unsupported operand type(s) for +: 'int' and 'int | None'",
+          "stdout": "",
+          "timed_out": false
+        }
+      ],
+      "status": "CHECK_ERROR",
+      "timeout_seconds": 20
+    },
+    {
+      "difficulty": "easy",
+      "failure_stage": "run",
+      "fixture_slug": "0069_sqrtx",
+      "id": "0069",
+      "oracle_mode": "embedded_asserts",
+      "primary_topic": "math",
+      "scope_classification": "in_scope",
+      "stages": [
+        {
+          "command": [
+            "/Users/yaseralnajjar/work/sifr/codebase/target/release/sifr",
+            "check",
+            "audit/leetcode/0069_sqrtx.sifr"
+          ],
+          "duration_ms": 36,
+          "returncode": 0,
+          "stage": "check",
+          "stderr": "warning: int multiplication with non-constant operands may overflow i64 at runtime; consider using bigint for large values\nwarning: int multiplication with non-constant operands may overflow i64 at runtime; consider using bigint for large values\nno errors found",
+          "stdout": "",
+          "timed_out": false
+        },
+        {
+          "command": [
+            "/Users/yaseralnajjar/work/sifr/codebase/target/release/sifr",
+            "run",
+            "audit/leetcode/0069_sqrtx.sifr"
+          ],
+          "duration_ms": 145,
+          "returncode": 1,
+          "stage": "run",
+          "stderr": "warning: int multiplication with non-constant operands may overflow i64 at runtime; consider using bigint for large values\nwarning: int multiplication with non-constant operands may overflow i64 at runtime; consider using bigint for large values\nbuild error: cargo build failed:\n   Compiling sifr_output v0.1.0 (/private/var/folders/lq/l19_y_rn76b8vprfvdjn9zch0000gn/T/sifr_run_75078_1773202163120639000/sifr_output)\nerror[E0384]: cannot assign twice to immutable variable `l`\n --> src/main.rs:9:13\n  |\n2 |     let (l, r) = (0 as i64, x);\n  |          - first assignment to `l`\n...\n9 |             l = mid + (1 as i64);\n  |             ^^^^^^^^^^^^^^^^^^^^ cannot assign twice to immutable variable\n  |\nhelp: consider making this binding mutable\n  |\n2 |     let (mut l, r) = (0 as i64, x);\n  |          +++\nhelp: to modify the original value, take a borrow instead\n  |\n2 |     let (ref mut l, r) = (0 as i64, x);\n  |          +++++++\n\nerror[E0384]: cannot assign twice to immutable variable `r`\n  --> src/main.rs:11:13\n   |\n 2 |     let (l, r) = (0 as i64, x);\n   |             - first assignment to `r`\n...\n11 |             r = mid - (1 as i64);\n   |             ^^^^^^^^^^^^^^^^^^^^ cannot assign twice to immutable variable\n   |\nhelp: consider making this binding mutable\n   |\n 2 |     let (l, mut r) = (0 as i64, x);\n   |             +++\nhelp: to modify the original value, take a borrow instead\n   |\n 2 |     let (l, ref mut r) = (0 as i64, x);\n   |             +++++++\n\nFor more information about this error, try `rustc --explain E0384`.\nerror: could not compile `sifr_output` (bin \"sifr_output\") due to 2 previous errors",
+          "stdout": "",
+          "timed_out": false
+        }
+      ],
+      "status": "RUN_ERROR",
+      "timeout_seconds": 20
+    },
+    {
+      "difficulty": "easy",
+      "failure_stage": null,
+      "fixture_slug": "0070_climbing_stairs",
+      "id": "0070",
+      "oracle_mode": "embedded_asserts",
+      "primary_topic": "dp",
+      "scope_classification": "in_scope",
+      "stages": [
+        {
+          "command": [
+            "/Users/yaseralnajjar/work/sifr/codebase/target/release/sifr",
+            "check",
+            "audit/leetcode/0070_climbing_stairs.sifr"
+          ],
+          "duration_ms": 36,
+          "returncode": 0,
+          "stage": "check",
+          "stderr": "no errors found",
+          "stdout": "",
+          "timed_out": false
+        },
+        {
+          "command": [
+            "/Users/yaseralnajjar/work/sifr/codebase/target/release/sifr",
+            "run",
+            "audit/leetcode/0070_climbing_stairs.sifr"
+          ],
+          "duration_ms": 374,
+          "returncode": 0,
+          "stage": "run",
+          "stderr": "",
+          "stdout": "",
+          "timed_out": false
+        }
+      ],
+      "status": "PASS",
+      "timeout_seconds": 20
+    },
+    {
+      "difficulty": "medium",
+      "failure_stage": "check",
+      "fixture_slug": "0078_subsets",
+      "id": "0078",
+      "oracle_mode": "embedded_asserts",
+      "primary_topic": "backtracking",
+      "scope_classification": "in_scope",
+      "stages": [
+        {
+          "command": [
+            "/Users/yaseralnajjar/work/sifr/codebase/target/release/sifr",
+            "check",
+            "audit/leetcode/0078_subsets.sifr"
+          ],
+          "duration_ms": 41,
+          "returncode": 1,
+          "stage": "check",
+          "stderr": "type error: '>=' not supported between instances of 'Any' and 'int'\ntype error: cannot index type 'list[int]' with 'Any'\ntype error: parameter 'i' in function 'dfs' is missing a type annotation\ntype error: unsupported operand type(s) for +: 'Any' and 'int'\ntype error: unsupported operand type(s) for +: 'Any' and 'int'",
+          "stdout": "",
+          "timed_out": false
+        }
+      ],
+      "status": "CHECK_ERROR",
+      "timeout_seconds": 20
+    },
+    {
+      "difficulty": "medium",
+      "failure_stage": "check",
+      "fixture_slug": "0090_subsets_ii",
+      "id": "0090",
+      "oracle_mode": "embedded_asserts",
+      "primary_topic": "backtracking",
+      "scope_classification": "in_scope",
+      "stages": [
+        {
+          "command": [
+            "/Users/yaseralnajjar/work/sifr/codebase/target/release/sifr",
+            "check",
+            "audit/leetcode/0090_subsets_ii.sifr"
+          ],
+          "duration_ms": 36,
+          "returncode": 1,
+          "stage": "check",
+          "stderr": "type error: cannot index type 'list[int]' with 'Any'\ntype error: cannot slice type 'Any'\ntype error: function expects return type 'Any', but returns nothing\ntype error: parameter 'i' in function 'backtrack' is missing a type annotation\ntype error: parameter 'subset' in function 'backtrack' is missing a type annotation\ntype error: type 'Any' has no method 'append'\ntype error: type 'Any' has no method 'pop'\ntype error: unsupported operand type(s) for +: 'Any' and 'int'\ntype error: unsupported operand type(s) for +: 'Any' and 'int'\ntype error: unsupported operand type(s) for +: 'Any' and 'int'",
+          "stdout": "",
+          "timed_out": false
+        }
+      ],
+      "status": "CHECK_ERROR",
+      "timeout_seconds": 20
+    },
+    {
+      "difficulty": "easy",
+      "failure_stage": "check",
+      "fixture_slug": "0100_same_tree",
+      "id": "0100",
+      "oracle_mode": "no_oracle",
+      "primary_topic": "trees",
+      "scope_classification": "in_scope",
+      "stages": [
+        {
+          "command": [
+            "/Users/yaseralnajjar/work/sifr/codebase/target/release/sifr",
+            "check",
+            "audit/leetcode/0100_same_tree.sifr"
+          ],
+          "duration_ms": 37,
+          "returncode": 1,
+          "stage": "check",
+          "stderr": "type error: attribute access '.val' is not supported as an expression; use as a method call\ntype error: unknown type: 'TreeNode'\ntype error: unknown type: 'TreeNode'",
+          "stdout": "",
+          "timed_out": false
+        }
+      ],
+      "status": "CHECK_ERROR",
+      "timeout_seconds": 20
+    },
+    {
+      "difficulty": "medium",
+      "failure_stage": "check",
+      "fixture_slug": "0102_binary_tree_level_order_traversal",
+      "id": "0102",
+      "oracle_mode": "no_oracle",
+      "primary_topic": "trees",
+      "scope_classification": "in_scope",
+      "stages": [
+        {
+          "command": [
+            "/Users/yaseralnajjar/work/sifr/codebase/target/release/sifr",
+            "check",
+            "audit/leetcode/0102_binary_tree_level_order_traversal.sifr"
+          ],
+          "duration_ms": 38,
+          "returncode": 1,
+          "stage": "check",
+          "stderr": "type error: undefined variable: 'collections'\ntype error: undefined variable: 'q'\ntype error: undefined variable: 'q'\ntype error: unknown type: 'TreeNode'",
+          "stdout": "",
+          "timed_out": false
+        }
+      ],
+      "status": "CHECK_ERROR",
+      "timeout_seconds": 20
+    },
+    {
+      "difficulty": "easy",
+      "failure_stage": "check",
+      "fixture_slug": "0110_balanced_binary_tree",
+      "id": "0110",
+      "oracle_mode": "no_oracle",
+      "primary_topic": "trees",
+      "scope_classification": "in_scope",
+      "stages": [
+        {
+          "command": [
+            "/Users/yaseralnajjar/work/sifr/codebase/target/release/sifr",
+            "check",
+            "audit/leetcode/0110_balanced_binary_tree.sifr"
+          ],
+          "duration_ms": 37,
+          "returncode": 1,
+          "stage": "check",
+          "stderr": "type error: attribute access '.left' is not supported as an expression; use as a method call\ntype error: bad operand type for unary not: 'Any'\ntype error: cannot index type 'Any' with 'int'\ntype error: parameter 'root' in function 'dfs' is missing a type annotation\ntype error: undefined variable: 'balanced'\ntype error: undefined variable: 'left'\ntype error: unknown type: 'TreeNode'",
+          "stdout": "",
+          "timed_out": false
+        }
+      ],
+      "status": "CHECK_ERROR",
+      "timeout_seconds": 20
+    },
+    {
+      "difficulty": "hard",
+      "failure_stage": "check",
+      "fixture_slug": "0127_word_ladder",
+      "id": "0127",
+      "oracle_mode": "no_oracle",
+      "primary_topic": "graphs",
+      "scope_classification": "in_scope",
+      "stages": [
+        {
+          "command": [
+            "/Users/yaseralnajjar/work/sifr/codebase/target/release/sifr",
+            "check",
+            "audit/leetcode/0127_word_ladder.sifr"
+          ],
+          "duration_ms": 36,
+          "returncode": 1,
+          "stage": "check",
+          "stderr": "type error: undefined function: 'deque'\ntype error: undefined function: 'set'\ntype error: undefined variable: 'collections'\ntype error: undefined variable: 'nei'\ntype error: undefined variable: 'q'",
+          "stdout": "",
+          "timed_out": false
+        }
+      ],
+      "status": "CHECK_ERROR",
+      "timeout_seconds": 20
+    },
+    {
+      "difficulty": "medium",
+      "failure_stage": "run",
+      "fixture_slug": "0151_reverse_words_in_a_string",
+      "id": "0151",
+      "oracle_mode": "embedded_asserts",
+      "primary_topic": "strings",
+      "scope_classification": "in_scope",
+      "stages": [
+        {
+          "command": [
+            "/Users/yaseralnajjar/work/sifr/codebase/target/release/sifr",
+            "check",
+            "audit/leetcode/0151_reverse_words_in_a_string.sifr"
+          ],
+          "duration_ms": 38,
+          "returncode": 0,
+          "stage": "check",
+          "stderr": "no errors found",
+          "stdout": "",
+          "timed_out": false
+        },
+        {
+          "command": [
+            "/Users/yaseralnajjar/work/sifr/codebase/target/release/sifr",
+            "run",
+            "audit/leetcode/0151_reverse_words_in_a_string.sifr"
+          ],
+          "duration_ms": 195,
+          "returncode": 1,
+          "stage": "run",
+          "stderr": "build error: cargo build failed:\n   Compiling sifr_output v0.1.0 (/private/var/folders/lq/l19_y_rn76b8vprfvdjn9zch0000gn/T/sifr_run_75193_1773202163944200000/sifr_output)\nerror[E0308]: mismatched types\n --> src/main.rs:2:9\n  |\n1 | fn reverseWords(s: &String) -> String {\n  |                    ------- expected due to this parameter type\n2 |     s = s.trim().to_string();\n  |         ^^^^^^^^^^^^^^^^^^^^ expected `&String`, found `String`\n  |\nhelp: consider borrowing here\n  |\n2 |     s = &s.trim().to_string();\n  |         +\n\nFor more information about this error, try `rustc --explain E0308`.\nerror: could not compile `sifr_output` (bin \"sifr_output\") due to 1 previous error",
+          "stdout": "",
+          "timed_out": false
+        }
+      ],
+      "status": "RUN_ERROR",
+      "timeout_seconds": 20
+    },
+    {
+      "difficulty": "medium",
+      "failure_stage": "check",
+      "fixture_slug": "0198_house_robber",
+      "id": "0198",
+      "oracle_mode": "embedded_asserts",
+      "primary_topic": "dp",
+      "scope_classification": "in_scope",
+      "stages": [
+        {
+          "command": [
+            "/Users/yaseralnajjar/work/sifr/codebase/target/release/sifr",
+            "check",
+            "audit/leetcode/0198_house_robber.sifr"
+          ],
+          "duration_ms": 40,
+          "returncode": 1,
+          "stage": "check",
+          "stderr": "type error: return type mismatch: expected 'int', got 'int | None'\ntype error: type mismatch: cannot assign 'int | None' to variable 'prev1' of type 'int'\ntype error: type mismatch: expected 'int', got 'int | None'\ntype error: type mismatch: expected 'int', got 'int | None'\ntype error: undefined variable: 'current'\ntype error: undefined variable: 'current'\ntype error: unsupported operand type(s) for +: 'int' and 'int | None'",
+          "stdout": "",
+          "timed_out": false
+        }
+      ],
+      "status": "CHECK_ERROR",
+      "timeout_seconds": 20
+    },
+    {
+      "difficulty": "medium",
+      "failure_stage": "check",
+      "fixture_slug": "0207_course_schedule",
+      "id": "0207",
+      "oracle_mode": "no_oracle",
+      "primary_topic": "graphs",
+      "scope_classification": "in_scope",
+      "stages": [
+        {
+          "command": [
+            "/Users/yaseralnajjar/work/sifr/codebase/target/release/sifr",
+            "check",
+            "audit/leetcode/0207_course_schedule.sifr"
+          ],
+          "duration_ms": 41,
+          "returncode": 1,
+          "stage": "check",
+          "stderr": "type error: bad operand type for unary not: 'Any'\ntype error: bad operand type for unary not: 'Any'\ntype error: cannot index type 'dict[int, list[Any]]' with 'Any'\ntype error: cannot index type 'dict[int, list[Any]]' with 'Any'\ntype error: cannot iterate over type 'Any'\ntype error: for loop tuple target expects iterable elements of tuple type, got 'list[int]'\ntype error: parameter 'crs' in function 'dfs' is missing a type annotation\ntype error: undefined function: 'set'\ntype error: undefined variable: 'visiting'\ntype error: undefined variable: 'visiting'\ntype error: undefined variable: 'visiting'",
+          "stdout": "",
+          "timed_out": false
+        }
+      ],
+      "status": "CHECK_ERROR",
+      "timeout_seconds": 20
+    },
+    {
+      "difficulty": "medium",
+      "failure_stage": "check",
+      "fixture_slug": "0209_minimum_size_subarray_sum",
+      "id": "0209",
+      "oracle_mode": "embedded_asserts",
+      "primary_topic": "two_pointers_sliding_window",
+      "scope_classification": "in_scope",
+      "stages": [
+        {
+          "command": [
+            "/Users/yaseralnajjar/work/sifr/codebase/target/release/sifr",
+            "check",
+            "audit/leetcode/0209_minimum_size_subarray_sum.sifr"
+          ],
+          "duration_ms": 37,
+          "returncode": 1,
+          "stage": "check",
+          "stderr": "type error: if expression branches have incompatible types: 'Result[float, ParseError]' and 'int'\ntype error: unsupported operand type(s) for +: 'int' and 'int | None'\ntype error: unsupported operand type(s) for -: 'int' and 'int | None'",
+          "stdout": "",
+          "timed_out": false
+        }
+      ],
+      "status": "CHECK_ERROR",
+      "timeout_seconds": 20
+    },
+    {
+      "difficulty": "medium",
+      "failure_stage": "check",
+      "fixture_slug": "0215_kth_largest_element_in_an_array",
+      "id": "0215",
+      "oracle_mode": "no_oracle",
+      "primary_topic": "heap_priority_queue",
+      "scope_classification": "in_scope",
+      "stages": [
+        {
+          "command": [
+            "/Users/yaseralnajjar/work/sifr/codebase/target/release/sifr",
+            "check",
+            "audit/leetcode/0215_kth_largest_element_in_an_array.sifr"
+          ],
+          "duration_ms": 37,
+          "returncode": 1,
+          "stage": "check",
+          "stderr": "type error: return type mismatch: expected 'int', got 'int | None'\ntype error: return type mismatch: expected 'int', got 'int | None'\ntype error: undefined function: 'heapify'\ntype error: undefined function: 'heappop'\ntype error: undefined variable: 'left'\ntype error: undefined variable: 'length_left'\ntype error: undefined variable: 'mid'\ntype error: undefined variable: 'pivot'\ntype error: undefined variable: 'pivot'\ntype error: undefined variable: 'pivot'\ntype error: undefined variable: 'random'\ntype error: undefined variable: 'right'",
+          "stdout": "",
+          "timed_out": false
+        }
+      ],
+      "status": "CHECK_ERROR",
+      "timeout_seconds": 20
+    },
+    {
+      "difficulty": "easy",
+      "failure_stage": "check",
+      "fixture_slug": "0217_contains_duplicate",
+      "id": "0217",
+      "oracle_mode": "embedded_asserts",
+      "primary_topic": "hash_map",
+      "scope_classification": "in_scope",
+      "stages": [
+        {
+          "command": [
+            "/Users/yaseralnajjar/work/sifr/codebase/target/release/sifr",
+            "check",
+            "audit/leetcode/0217_contains_duplicate.sifr"
+          ],
+          "duration_ms": 39,
+          "returncode": 1,
+          "stage": "check",
+          "stderr": "type error: undefined function: 'set'\ntype error: undefined variable: 'hashset'\ntype error: undefined variable: 'hashset'",
+          "stdout": "",
+          "timed_out": false
+        }
+      ],
+      "status": "CHECK_ERROR",
+      "timeout_seconds": 20
+    },
+    {
+      "difficulty": "easy",
+      "failure_stage": "check",
+      "fixture_slug": "0226_invert_binary_tree",
+      "id": "0226",
+      "oracle_mode": "no_oracle",
+      "primary_topic": "trees",
+      "scope_classification": "in_scope",
+      "stages": [
+        {
+          "command": [
+            "/Users/yaseralnajjar/work/sifr/codebase/target/release/sifr",
+            "check",
+            "audit/leetcode/0226_invert_binary_tree.sifr"
+          ],
+          "duration_ms": 36,
+          "returncode": 1,
+          "stage": "check",
+          "stderr": "type error: attribute access '.left' is not supported as an expression; use as a method call\ntype error: attribute access '.right' is not supported as an expression; use as a method call\ntype error: cannot return borrowed parameter `root`: it is borrowed by default -- use `own root` to take ownership, or return `root.clone()`\ntype error: tuple unpacking target must be a simple name\ntype error: unknown type: 'TreeNode'\ntype error: unknown type: 'TreeNode'",
+          "stdout": "",
+          "timed_out": false
+        }
+      ],
+      "status": "CHECK_ERROR",
+      "timeout_seconds": 20
+    },
+    {
+      "difficulty": "medium",
+      "failure_stage": "check",
+      "fixture_slug": "0235_lowest_common_ancestor_of_a_binary_search_tree",
+      "id": "0235",
+      "oracle_mode": "no_oracle",
+      "primary_topic": "trees",
+      "scope_classification": "in_scope",
+      "stages": [
+        {
+          "command": [
+            "/Users/yaseralnajjar/work/sifr/codebase/target/release/sifr",
+            "check",
+            "audit/leetcode/0235_lowest_common_ancestor_of_a_binary_search_tree.sifr"
+          ],
+          "duration_ms": 34,
+          "returncode": 1,
+          "stage": "check",
+          "stderr": "type error: attribute access '.val' is not supported as an expression; use as a method call\ntype error: parameter 'self' in function 'lowestCommonAncestor' is missing a type annotation",
+          "stdout": "",
+          "timed_out": false
+        }
+      ],
+      "status": "CHECK_ERROR",
+      "timeout_seconds": 20
+    },
+    {
+      "difficulty": "medium",
+      "failure_stage": "check",
+      "fixture_slug": "0238_product_of_array_except_self",
+      "id": "0238",
+      "oracle_mode": "embedded_asserts",
+      "primary_topic": "arrays",
+      "scope_classification": "in_scope",
+      "stages": [
+        {
+          "command": [
+            "/Users/yaseralnajjar/work/sifr/codebase/target/release/sifr",
+            "check",
+            "audit/leetcode/0238_product_of_array_except_self.sifr"
+          ],
+          "duration_ms": 34,
+          "returncode": 1,
+          "stage": "check",
+          "stderr": "type error: unsupported operand type(s) for *: 'int | None' and 'int'\ntype error: unsupported operand type(s) for *: 'int' and 'int | None'\ntype error: unsupported operand type(s) for *: 'int' and 'int | None'",
+          "stdout": "",
+          "timed_out": false
+        }
+      ],
+      "status": "CHECK_ERROR",
+      "timeout_seconds": 20
+    },
+    {
+      "difficulty": "easy",
+      "failure_stage": "check",
+      "fixture_slug": "0242_valid_anagram",
+      "id": "0242",
+      "oracle_mode": "embedded_asserts",
+      "primary_topic": "hash_map",
+      "scope_classification": "in_scope",
+      "stages": [
+        {
+          "command": [
+            "/Users/yaseralnajjar/work/sifr/codebase/target/release/sifr",
+            "check",
+            "audit/leetcode/0242_valid_anagram.sifr"
+          ],
+          "duration_ms": 35,
+          "returncode": 1,
+          "stage": "check",
+          "stderr": "type error: unsupported operand type(s) for +: 'int' and 'Any'\ntype error: unsupported operand type(s) for +: 'int' and 'Any'",
+          "stdout": "",
+          "timed_out": false
+        }
+      ],
+      "status": "CHECK_ERROR",
+      "timeout_seconds": 20
+    },
+    {
+      "difficulty": "hard",
+      "failure_stage": "check",
+      "fixture_slug": "0295_find_median_from_data_stream",
+      "id": "0295",
+      "oracle_mode": "no_oracle",
+      "primary_topic": "heap_priority_queue",
+      "scope_classification": "in_scope",
+      "stages": [
+        {
+          "command": [
+            "/Users/yaseralnajjar/work/sifr/codebase/target/release/sifr",
+            "check",
+            "audit/leetcode/0295_find_median_from_data_stream.sifr"
+          ],
+          "duration_ms": 36,
+          "returncode": 1,
+          "stage": "check",
+          "stderr": "type error: tuple unpacking target must be a simple name\ntype error: type 'MedianFinder' has no field 'large'\ntype error: type 'MedianFinder' has no field 'large'\ntype error: type 'MedianFinder' has no field 'small'\ntype error: type 'MedianFinder' has no field 'small'\ntype error: type 'MedianFinder' has no field 'small'",
+          "stdout": "",
+          "timed_out": false
+        }
+      ],
+      "status": "CHECK_ERROR",
+      "timeout_seconds": 20
+    },
+    {
+      "difficulty": "medium",
+      "failure_stage": "check",
+      "fixture_slug": "0322_coin_change",
+      "id": "0322",
+      "oracle_mode": "embedded_asserts",
+      "primary_topic": "dp",
+      "scope_classification": "in_scope",
+      "stages": [
+        {
+          "command": [
+            "/Users/yaseralnajjar/work/sifr/codebase/target/release/sifr",
+            "check",
+            "audit/leetcode/0322_coin_change.sifr"
+          ],
+          "duration_ms": 36,
+          "returncode": 1,
+          "stage": "check",
+          "stderr": "type error: return type mismatch: expected 'int', got 'int | None'\ntype error: unsupported operand type(s) for +: 'int' and 'int | None'",
+          "stdout": "",
+          "timed_out": false
+        }
+      ],
+      "status": "CHECK_ERROR",
+      "timeout_seconds": 20
+    },
+    {
+      "difficulty": "medium",
+      "failure_stage": "check",
+      "fixture_slug": "0424_longest_repeating_character_replacement",
+      "id": "0424",
+      "oracle_mode": "embedded_asserts",
+      "primary_topic": "two_pointers_sliding_window",
+      "scope_classification": "in_scope",
+      "stages": [
+        {
+          "command": [
+            "/Users/yaseralnajjar/work/sifr/codebase/target/release/sifr",
+            "check",
+            "audit/leetcode/0424_longest_repeating_character_replacement.sifr"
+          ],
+          "duration_ms": 36,
+          "returncode": 1,
+          "stage": "check",
+          "stderr": "type error: cannot index type 'dict[Any, Any]' with 'str | None'\ntype error: undefined variable: 'r'\ntype error: unsupported operand type(s) for +: 'int' and 'Any'",
+          "stdout": "",
+          "timed_out": false
+        }
+      ],
+      "status": "CHECK_ERROR",
+      "timeout_seconds": 20
+    },
+    {
+      "difficulty": "hard",
+      "failure_stage": "check",
+      "fixture_slug": "0502_ipo",
+      "id": "0502",
+      "oracle_mode": "no_oracle",
+      "primary_topic": "heap_priority_queue",
+      "scope_classification": "in_scope",
+      "stages": [
+        {
+          "command": [
+            "/Users/yaseralnajjar/work/sifr/codebase/target/release/sifr",
+            "check",
+            "audit/leetcode/0502_ipo.sifr"
+          ],
+          "duration_ms": 35,
+          "returncode": 1,
+          "stage": "check",
+          "stderr": "type error: undefined variable: 'heapq'\ntype error: undefined variable: 'heapq'\ntype error: unsupported operand type(s) for and: 'list[tuple[int, int]]' and 'bool'",
+          "stdout": "",
+          "timed_out": false
+        }
+      ],
+      "status": "CHECK_ERROR",
+      "timeout_seconds": 20
+    },
+    {
+      "difficulty": "medium",
+      "failure_stage": "check",
+      "fixture_slug": "0523_continuous_subarray_sum",
+      "id": "0523",
+      "oracle_mode": "embedded_asserts",
+      "primary_topic": "hash_map",
+      "scope_classification": "in_scope",
+      "stages": [
+        {
+          "command": [
+            "/Users/yaseralnajjar/work/sifr/codebase/target/release/sifr",
+            "check",
+            "audit/leetcode/0523_continuous_subarray_sum.sifr"
+          ],
+          "duration_ms": 35,
+          "returncode": 1,
+          "stage": "check",
+          "stderr": "type error: cannot index type 'dict[Any, Any]' with 'int'\ntype error: unsupported operand type(s) for -: 'int' and 'Any'",
+          "stdout": "",
+          "timed_out": false
+        }
+      ],
+      "status": "CHECK_ERROR",
+      "timeout_seconds": 20
+    },
+    {
+      "difficulty": "medium",
+      "failure_stage": "check",
+      "fixture_slug": "0560_subarray_sum_equals_k",
+      "id": "0560",
+      "oracle_mode": "embedded_asserts",
+      "primary_topic": "hash_map",
+      "scope_classification": "in_scope",
+      "stages": [
+        {
+          "command": [
+            "/Users/yaseralnajjar/work/sifr/codebase/target/release/sifr",
+            "check",
+            "audit/leetcode/0560_subarray_sum_equals_k.sifr"
+          ],
+          "duration_ms": 37,
+          "returncode": 1,
+          "stage": "check",
+          "stderr": "type error: cannot index type 'dict[Any, Any]' with 'int'\ntype error: unsupported operand type(s) for +: 'Any' and 'int'\ntype error: unsupported operand type(s) for +: 'int' and 'Any'\ntype error: unsupported operand type(s) for +: 'int' and 'int | None'",
+          "stdout": "",
+          "timed_out": false
+        }
+      ],
+      "status": "CHECK_ERROR",
+      "timeout_seconds": 20
+    },
+    {
+      "difficulty": "medium",
+      "failure_stage": "check",
+      "fixture_slug": "0684_redundant_connection",
+      "id": "0684",
+      "oracle_mode": "no_oracle",
+      "primary_topic": "graphs",
+      "scope_classification": "in_scope",
+      "stages": [
+        {
+          "command": [
+            "/Users/yaseralnajjar/work/sifr/codebase/target/release/sifr",
+            "check",
+            "audit/leetcode/0684_redundant_connection.sifr"
+          ],
+          "duration_ms": 35,
+          "returncode": 1,
+          "stage": "check",
+          "stderr": "type error: '>' not supported between instances of 'Any' and 'Any'\ntype error: cannot index type 'list[int]' with 'Any'\ntype error: cannot index type 'list[int]' with 'Any'\ntype error: cannot index type 'list[int]' with 'Any'\ntype error: cannot index type 'list[int]' with 'Any'\ntype error: cannot index type 'list[int]' with 'Any'\ntype error: ... +2 more similar diagnostics\ntype error: for loop tuple target expects iterable elements of tuple type, got 'list[int]'\ntype error: parameter 'n' in function 'find' is missing a type annotation\ntype error: parameter 'n1' in function 'union' is missing a type annotation\ntype error: parameter 'n2' in function 'union' is missing a type annotation",
+          "stdout": "",
+          "timed_out": false
+        }
+      ],
+      "status": "CHECK_ERROR",
+      "timeout_seconds": 20
+    },
+    {
+      "difficulty": "easy",
+      "failure_stage": "check",
+      "fixture_slug": "0703_kth_largest_element_in_a_stream",
+      "id": "0703",
+      "oracle_mode": "no_oracle",
+      "primary_topic": "heap_priority_queue",
+      "scope_classification": "in_scope",
+      "stages": [
+        {
+          "command": [
+            "/Users/yaseralnajjar/work/sifr/codebase/target/release/sifr",
+            "check",
+            "audit/leetcode/0703_kth_largest_element_in_a_stream.sifr"
+          ],
+          "duration_ms": 36,
+          "returncode": 1,
+          "stage": "check",
+          "stderr": "type error: tuple unpacking target must be a simple name\ntype error: type 'KthLargest' has no field 'minHeap'\ntype error: type 'KthLargest' has no field 'minHeap'\ntype error: type 'KthLargest' has no field 'minHeap'\ntype error: undefined variable: 'heapq'\ntype error: undefined variable: 'heapq'",
+          "stdout": "",
+          "timed_out": false
+        }
+      ],
+      "status": "CHECK_ERROR",
+      "timeout_seconds": 20
+    },
+    {
+      "difficulty": "medium",
+      "failure_stage": "check",
+      "fixture_slug": "0743_network_delay_time",
+      "id": "0743",
+      "oracle_mode": "no_oracle",
+      "primary_topic": "graphs",
+      "scope_classification": "in_scope",
+      "stages": [
+        {
+          "command": [
+            "/Users/yaseralnajjar/work/sifr/codebase/target/release/sifr",
+            "check",
+            "audit/leetcode/0743_network_delay_time.sifr"
+          ],
+          "duration_ms": 35,
+          "returncode": 1,
+          "stage": "check",
+          "stderr": "type error: for loop tuple target expects iterable elements of tuple type, got 'list[int]'\ntype error: undefined function: 'set'\ntype error: undefined variable: 'collections'\ntype error: undefined variable: 'edges'\ntype error: undefined variable: 'heapq'\ntype error: undefined variable: 'n1'\ntype error: undefined variable: 'visit'\ntype error: undefined variable: 'visit'\ntype error: undefined variable: 'w1'",
+          "stdout": "",
+          "timed_out": false
+        }
+      ],
+      "status": "CHECK_ERROR",
+      "timeout_seconds": 20
+    },
+    {
+      "difficulty": "easy",
+      "failure_stage": "check",
+      "fixture_slug": "0746_min_cost_climbing_stairs",
+      "id": "0746",
+      "oracle_mode": "embedded_asserts",
+      "primary_topic": "dp",
+      "scope_classification": "in_scope",
+      "stages": [
+        {
+          "command": [
+            "/Users/yaseralnajjar/work/sifr/codebase/target/release/sifr",
+            "check",
+            "audit/leetcode/0746_min_cost_climbing_stairs.sifr"
+          ],
+          "duration_ms": 36,
+          "returncode": 1,
+          "stage": "check",
+          "stderr": "type error: return type mismatch: expected 'int', got 'int | None'",
+          "stdout": "",
+          "timed_out": false
+        }
+      ],
+      "status": "CHECK_ERROR",
+      "timeout_seconds": 20
+    },
+    {
+      "difficulty": "medium",
+      "failure_stage": "check",
+      "fixture_slug": "0912_sort_an_array",
+      "id": "0912",
+      "oracle_mode": "embedded_asserts",
+      "primary_topic": "arrays",
+      "scope_classification": "in_scope",
+      "stages": [
+        {
+          "command": [
+            "/Users/yaseralnajjar/work/sifr/codebase/target/release/sifr",
+            "check",
+            "audit/leetcode/0912_sort_an_array.sifr"
+          ],
+          "duration_ms": 36,
+          "returncode": 1,
+          "stage": "check",
+          "stderr": "type error: parameter 'L' in function 'merge' is missing a type annotation\ntype error: parameter 'M' in function 'merge' is missing a type annotation\ntype error: parameter 'R' in function 'merge' is missing a type annotation\ntype error: parameter 'arr' in function 'merge' is missing a type annotation\ntype error: parameter 'arr' in function 'mergeSort' is missing a type annotation\ntype error: parameter 'l' in function 'mergeSort' is missing a type annotation\ntype error: parameter 'r' in function 'mergeSort' is missing a type annotation\ntype error: undefined variable: 'left'\ntype error: undefined variable: 'left'\ntype error: undefined variable: 'm'\ntype error: undefined variable: 'm'\ntype error: undefined variable: 'm'\ntype error: undefined variable: 'right'\ntype error: unsupported operand type(s) for +: 'Any' and 'Any'\ntype error: unsupported operand type(s) for +: 'Any' and 'int'",
+          "stdout": "",
+          "timed_out": false
+        }
+      ],
+      "status": "CHECK_ERROR",
+      "timeout_seconds": 20
+    },
+    {
+      "difficulty": "easy",
+      "failure_stage": "check",
+      "fixture_slug": "0997_find_the_town_judge",
+      "id": "0997",
+      "oracle_mode": "embedded_asserts",
+      "primary_topic": "graphs",
+      "scope_classification": "in_scope",
+      "stages": [
+        {
+          "command": [
+            "/Users/yaseralnajjar/work/sifr/codebase/target/release/sifr",
+            "check",
+            "audit/leetcode/0997_find_the_town_judge.sifr"
+          ],
+          "duration_ms": 34,
+          "returncode": 1,
+          "stage": "check",
+          "stderr": "type error: for loop tuple target expects iterable elements of tuple type, got 'list[int]'\ntype error: undefined function: 'defaultdict'\ntype error: undefined variable: 'delta'",
+          "stdout": "",
+          "timed_out": false
+        }
+      ],
+      "status": "CHECK_ERROR",
+      "timeout_seconds": 20
+    },
+    {
+      "difficulty": "easy",
+      "failure_stage": "check",
+      "fixture_slug": "1046_last_stone_weight",
+      "id": "1046",
+      "oracle_mode": "no_oracle",
+      "primary_topic": "heap_priority_queue",
+      "scope_classification": "in_scope",
+      "stages": [
+        {
+          "command": [
+            "/Users/yaseralnajjar/work/sifr/codebase/target/release/sifr",
+            "check",
+            "audit/leetcode/1046_last_stone_weight.sifr"
+          ],
+          "duration_ms": 36,
+          "returncode": 1,
+          "stage": "check",
+          "stderr": "type error: abs() argument must be numeric, got 'Any'\ntype error: cannot index type 'Any' with 'int'\ntype error: cannot index type 'Any' with 'int'\ntype error: cannot iterate over type 'Any'\ntype error: len() argument must be a string, list, dict, or tuple, got 'Any'\ntype error: len() argument must be a string, list, dict, or tuple, got 'Any'\ntype error: parameter 'stones' in function 'lastStoneWeight' is missing a type annotation\ntype error: type 'Any' has no method 'append'\ntype error: type 'Any' has no method 'append'\ntype error: undefined variable: 'heapq'\ntype error: undefined variable: 'heapq'",
+          "stdout": "",
+          "timed_out": false
+        }
+      ],
+      "status": "CHECK_ERROR",
+      "timeout_seconds": 20
+    },
+    {
+      "difficulty": "medium",
+      "failure_stage": "check",
+      "fixture_slug": "1143_longest_common_subsequence",
+      "id": "1143",
+      "oracle_mode": "embedded_asserts",
+      "primary_topic": "dp",
+      "scope_classification": "in_scope",
+      "stages": [
+        {
+          "command": [
+            "/Users/yaseralnajjar/work/sifr/codebase/target/release/sifr",
+            "check",
+            "audit/leetcode/1143_longest_common_subsequence.sifr"
+          ],
+          "duration_ms": 36,
+          "returncode": 1,
+          "stage": "check",
+          "stderr": "type error: return type mismatch: expected 'int', got 'int | None'\ntype error: unsupported operand type(s) for +: 'int' and 'int | None'",
+          "stdout": "",
+          "timed_out": false
+        }
+      ],
+      "status": "CHECK_ERROR",
+      "timeout_seconds": 20
+    },
+    {
+      "difficulty": "medium",
+      "failure_stage": "check",
+      "fixture_slug": "1209_remove_all_adjacent_duplicates_in_string_ii",
+      "id": "1209",
+      "oracle_mode": "embedded_asserts",
+      "primary_topic": "strings",
+      "scope_classification": "in_scope",
+      "stages": [
+        {
+          "command": [
+            "/Users/yaseralnajjar/work/sifr/codebase/target/release/sifr",
+            "check",
+            "audit/leetcode/1209_remove_all_adjacent_duplicates_in_string_ii.sifr"
+          ],
+          "duration_ms": 36,
+          "returncode": 1,
+          "stage": "check",
+          "stderr": "type error: cannot index type 'Any | None' with 'int'\ntype error: cannot index type 'Any | None' with 'int'\ntype error: for loop tuple target expects iterable elements of tuple type, got 'Any'\ntype error: unsupported operand type(s) for and: 'list[Any]' and 'bool'",
+          "stdout": "",
+          "timed_out": false
+        }
+      ],
+      "status": "CHECK_ERROR",
+      "timeout_seconds": 20
+    },
+    {
+      "difficulty": "easy",
+      "failure_stage": "check",
+      "fixture_slug": "1299_replace_elements_with_greatest_element_on_right_side",
+      "id": "1299",
+      "oracle_mode": "embedded_asserts",
+      "primary_topic": "arrays",
+      "scope_classification": "in_scope",
+      "stages": [
+        {
+          "command": [
+            "/Users/yaseralnajjar/work/sifr/codebase/target/release/sifr",
+            "check",
+            "audit/leetcode/1299_replace_elements_with_greatest_element_on_right_side.sifr"
+          ],
+          "duration_ms": 37,
+          "returncode": 1,
+          "stage": "check",
+          "stderr": "type error: cannot return borrowed parameter `arr`: it is borrowed by default -- use `own arr` to take ownership, or return `arr.clone()`",
+          "stdout": "",
+          "timed_out": false
+        }
+      ],
+      "status": "CHECK_ERROR",
+      "timeout_seconds": 20
+    },
+    {
+      "difficulty": "medium",
+      "failure_stage": "check",
+      "fixture_slug": "1456_maximum_number_of_vowels_in_a_substring_of_given_length",
+      "id": "1456",
+      "oracle_mode": "embedded_asserts",
+      "primary_topic": "two_pointers_sliding_window",
+      "scope_classification": "in_scope",
+      "stages": [
+        {
+          "command": [
+            "/Users/yaseralnajjar/work/sifr/codebase/target/release/sifr",
+            "check",
+            "audit/leetcode/1456_maximum_number_of_vowels_in_a_substring_of_given_length.sifr"
+          ],
+          "duration_ms": 37,
+          "returncode": 1,
+          "stage": "check",
+          "stderr": "type error: 'in' operator: element type 'str | None' is not compatible with collection element type 'str'\ntype error: 'in' operator: element type 'str | None' is not compatible with collection element type 'str'",
+          "stdout": "",
+          "timed_out": false
+        }
+      ],
+      "status": "CHECK_ERROR",
+      "timeout_seconds": 20
+    },
+    {
+      "difficulty": "easy",
+      "failure_stage": "check",
+      "fixture_slug": "1768_merge_strings_alternately",
+      "id": "1768",
+      "oracle_mode": "embedded_asserts",
+      "primary_topic": "strings",
+      "scope_classification": "in_scope",
+      "stages": [
+        {
+          "command": [
+            "/Users/yaseralnajjar/work/sifr/codebase/target/release/sifr",
+            "check",
+            "audit/leetcode/1768_merge_strings_alternately.sifr"
+          ],
+          "duration_ms": 37,
+          "returncode": 1,
+          "stage": "check",
+          "stderr": "type error: unsupported operand type(s) for +: 'str' and 'str | None'\ntype error: unsupported operand type(s) for +: 'str' and 'str | None'\ntype error: unsupported operand type(s) for +: 'str' and 'str | None'\ntype error: unsupported operand type(s) for +: 'str' and 'str | None'",
+          "stdout": "",
+          "timed_out": false
+        }
+      ],
+      "status": "CHECK_ERROR",
+      "timeout_seconds": 20
+    },
+    {
+      "difficulty": "easy",
+      "failure_stage": "check",
+      "fixture_slug": "2235_add_two_integers",
+      "id": "2235",
+      "oracle_mode": "embedded_asserts",
+      "primary_topic": "math",
+      "scope_classification": "in_scope",
+      "stages": [
+        {
+          "command": [
+            "/Users/yaseralnajjar/work/sifr/codebase/target/release/sifr",
+            "check",
+            "audit/leetcode/2235_add_two_integers.sifr"
+          ],
+          "duration_ms": 35,
+          "returncode": 1,
+          "stage": "check",
+          "stderr": "type error: sum() takes exactly 1 argument\ntype error: sum() takes exactly 1 argument",
+          "stdout": "",
+          "timed_out": false
+        }
+      ],
+      "status": "CHECK_ERROR",
+      "timeout_seconds": 20
+    }
+  ],
+  "summary": {
+    "case_count": 50,
+    "difficulty_counts": {
+      "easy": 18,
+      "hard": 5,
+      "medium": 27
+    },
+    "scope_counts": {
+      "blocked_feature": 0,
+      "in_scope": 50,
+      "out_of_scope_external_dep": 0
+    },
+    "status_counts": {
+      "CHECK_ERROR": 46,
+      "PASS": 2,
+      "RUN_ERROR": 2
+    },
+    "topic_counts": {
+      "arrays": 5,
+      "backtracking": 5,
+      "dp": 5,
+      "graphs": 5,
+      "hash_map": 5,
+      "heap_priority_queue": 5,
+      "math": 5,
+      "strings": 5,
+      "trees": 5,
+      "two_pointers_sliding_window": 5
+    }
+  }
+}
