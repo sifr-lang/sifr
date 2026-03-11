@@ -178,7 +178,9 @@ Loop per part: Plan -> Implement -> Validate -> Demo -> PR -> Review -> Merge ->
   - `/Users/yaseralnajjar/work/sifr/codebase/scripts/run_all_tests.sh --profile quick`
   - `/Users/yaseralnajjar/work/sifr/codebase/scripts/run_all_tests.sh`
 - Status:
-  - complete (implementation + local validation finished on 2026-03-11; PR/merge pending)
+  - complete (merged on 2026-03-11)
+- Implementation PR:
+  - https://github.com/yaseralnajjar/sifr/pull/1101
 - Delivered artifacts:
   - `verification/leetcode/phase31_failure_taxonomy.json`
   - `verification/leetcode/phase31_failure_repros.json`
@@ -195,6 +197,38 @@ Loop per part: Plan -> Implement -> Validate -> Demo -> PR -> Review -> Merge ->
   - positive path: `verification/leetcode/phase31_failure_report.md` classifies all `48` failing seed cases into `12` stable buckets
   - positive path: `verification/leetcode/phase31_spot_audit.json` records `accuracy=1.0` against a `0.9` threshold
   - negative path: the spot-audit dataset would fail if a bucket mapping regressed below the threshold enforced by `python3 scripts/test_phase31_leetcode_taxonomy.py`
+  - local gate: `/Users/yaseralnajjar/work/sifr/codebase/scripts/run_all_tests.sh --profile quick` -> passed (`verification ok: variants=64, failures=0, blocking_failures=0, non_blocking_failures=0`)
+  - local gate: `/Users/yaseralnajjar/work/sifr/codebase/scripts/run_all_tests.sh` -> passed (`verification ok: variants=64, failures=0, blocking_failures=0, non_blocking_failures=0`)
+  - merge evidence: PR #1101 merged into `main` on 2026-03-11
+
+### Part 3 target (`m31_3a_ranked_backlog` + `m31_3b_docs_and_roadmap_alignment`)
+- Goal:
+  - convert the taxonomy into an approved, dependency-aware remediation backlog with explicit ownership, divergence handling, and stale-blocker governance
+- Expected deliverables:
+  - machine-readable remediation backlog covering every taxonomy bucket
+  - markdown remediation plan with approval process and stale-blocker policy
+  - explicit `bug` / `spec_gap` / `intentional_divergence` tagging
+  - demo report under `demos/`
+  - backlog validator tests
+- Validation target:
+  - targeted remediation backlog generator and tests
+  - remediation-plan demo generation
+  - `/Users/yaseralnajjar/work/sifr/codebase/scripts/run_all_tests.sh --profile quick`
+  - `/Users/yaseralnajjar/work/sifr/codebase/scripts/run_all_tests.sh`
+- Status:
+  - complete (implementation + local validation finished on 2026-03-11; PR/merge pending)
+- Delivered artifacts:
+  - `verification/leetcode/phase31_remediation_backlog.json`
+  - `verification/leetcode/phase31_remediation_backlog.md`
+  - `demos/m31_3_leetcode_remediation_plan_demo/report.md`
+  - `scripts/phase31_leetcode_remediation.py`
+  - `scripts/build_phase31_leetcode_remediation_backlog.py`
+  - `scripts/test_phase31_leetcode_remediation_backlog.py`
+- Validation evidence:
+  - positive path: `python3 scripts/build_phase31_leetcode_remediation_backlog.py` -> regenerated the remediation backlog JSON, markdown plan, and demo report successfully
+  - positive path: `python3 scripts/test_phase31_leetcode_remediation_backlog.py` -> passed (`4` tests)
+  - positive path: `verification/leetcode/phase31_remediation_backlog.json` covers all `12` taxonomy buckets with explicit owner, priority, effort, dependencies, and acceptance criteria
+  - positive path: `verification/leetcode/phase31_remediation_backlog.md` records the approval process and stale `P1` blocker escalation policy (`14` days)
   - local gate: `/Users/yaseralnajjar/work/sifr/codebase/scripts/run_all_tests.sh --profile quick` -> passed (`verification ok: variants=64, failures=0, blocking_failures=0, non_blocking_failures=0`)
   - local gate: `/Users/yaseralnajjar/work/sifr/codebase/scripts/run_all_tests.sh` -> passed (`verification ok: variants=64, failures=0, blocking_failures=0, non_blocking_failures=0`)
 
