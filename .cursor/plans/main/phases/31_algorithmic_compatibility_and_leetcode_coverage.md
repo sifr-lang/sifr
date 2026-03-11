@@ -125,7 +125,7 @@ status: complete
 ---
 
 ### milestone_31_4: First Compatibility Remediation Wave
-status: pending
+status: complete
 
 - Scope:
   - Implement highest-leverage fixes using explicit selection criteria:
@@ -139,6 +139,22 @@ status: pending
   - First remediation batch lands with regression coverage.
   - Pass-rate improvement is measurable against baseline.
   - No regression in previously passing corpus slice.
+- Delivered artifacts:
+  - `verification/leetcode/phase31_seed_results_wave1.json`
+  - `verification/leetcode/phase31_wave1_delta.md`
+  - `demos/m31_4_leetcode_remediation_wave1_demo/report.md`
+  - `crates/sifr/tests/e2e/pass/phase31_builtin_shadow_sum.sifr`
+  - `crates/sifr/tests/e2e/pass/phase31_mutated_borrowed_param_shadow.sifr`
+  - `crates/sifr/tests/e2e/pass/phase31_tuple_unpack_mutability.sifr`
+  - `crates/sifr/tests/e2e/fail/phase31_builtin_sum_wrong_arity.sifr`
+- Wave 1 metrics (2026-03-11):
+  - seed status counts: `PASS=5`, `CHECK_ERROR=45`, `RUN_ERROR=0`
+  - delta vs baseline: `PASS +3`, `CHECK_ERROR -1`, `RUN_ERROR -2`
+  - fixed seed cases:
+    - `0069_sqrtx`
+    - `0151_reverse_words_in_a_string`
+    - `2235_add_two_integers`
+  - regression note: borrowed-parameter shadowing is limited to true rebinding sites, preserving in-place mutation semantics for existing stdlib and e2e coverage
 
 ---
 

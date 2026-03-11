@@ -229,6 +229,26 @@ pub(crate) fn collect_mutated_vars(
     mutated.into_inner()
 }
 
+pub(crate) fn collect_reassigned_vars(stmts: &[HirStmt]) -> HashSet<String> {
+    let reassigned = RefCell::new(HashSet::new());
+
+    let mut on_stmt = |stmt: &HirStmt| {
+        if let HirStmt::Assign { name, .. } | HirStmt::AugAssign { name, .. } = stmt {
+            reassigned.borrow_mut().insert(name.clone());
+        }
+    };
+    let mut on_expr = |_expr: &HirExpr| {};
+
+    traversal::walk_stmts(
+        stmts,
+        TraversalConfig::LOCAL_SCOPE_ONLY,
+        &mut on_stmt,
+        &mut on_expr,
+    );
+
+    reassigned.into_inner()
+}
+
 pub(crate) fn collect_referenced_vars_with_types(stmts: &[HirStmt]) -> Vec<(String, Type)> {
     let mut refs: HashMap<String, Type> = HashMap::new();
     let mut on_stmt = |_stmt: &HirStmt| {};

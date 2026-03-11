@@ -87,29 +87,29 @@ Loop per part: Plan -> Implement -> Validate -> Demo -> PR -> Review -> Merge ->
    - Add tests that lock the runner schema, determinism behavior, and timeout handling.
 
 ### milestone_31_2: Failure Inventory and Root-Cause Taxonomy
-4. [ ] `m31_2a_taxonomy_schema`
+4. [x] `m31_2a_taxonomy_schema`
    - Define canonical failure buckets by compiler layer and problem scope.
    - Teach the runner/report pipeline to map raw failures into that taxonomy deterministically.
-5. [ ] `m31_2b_minimal_repro_inventory`
+5. [x] `m31_2b_minimal_repro_inventory`
    - Attach minimal reproducible evidence for each unique high-frequency failure class.
    - Store the evidence in a stable location linked from the generated report.
-6. [ ] `m31_2c_spot_audit`
+6. [x] `m31_2c_spot_audit`
    - Add a spot-audit script/check to measure classification accuracy and reject stale or ambiguous tags.
 
 ### milestone_31_3: Compatibility Fix Plan
-7. [ ] `m31_3a_ranked_backlog`
+7. [x] `m31_3a_ranked_backlog`
    - Convert ranked taxonomy buckets into concrete remediation items with acceptance criteria and dependency notes.
    - Mark each item as `bug`, `spec_gap`, or `intentional_divergence`.
-8. [ ] `m31_3b_docs_and_roadmap_alignment`
+8. [x] `m31_3b_docs_and_roadmap_alignment`
    - Update roadmap/architecture/phase docs with approved backlog links and explicit deferred items.
 
 ### milestone_31_4: First Compatibility Remediation Wave
-9. [ ] `m31_4a_select_wave`
+9. [x] `m31_4a_select_wave`
    - Choose the highest-leverage blockers that are root-cause-fixable within Phase 31.
    - Selection must be justified by corpus impact, implementation risk, and dependency readiness.
-10. [ ] `m31_4b_implement_wave`
+10. [x] `m31_4b_implement_wave`
    - Land the chosen compiler/language/runtime fixes with regression coverage and rerun evidence.
-11. [ ] `m31_4c_measure_delta`
+11. [x] `m31_4c_measure_delta`
    - Regenerate the corpus report and record before/after improvement in the tracker.
 
 ### milestone_31_5: Compatibility Scorecard and Handoff
@@ -216,7 +216,9 @@ Loop per part: Plan -> Implement -> Validate -> Demo -> PR -> Review -> Merge ->
   - `/Users/yaseralnajjar/work/sifr/codebase/scripts/run_all_tests.sh --profile quick`
   - `/Users/yaseralnajjar/work/sifr/codebase/scripts/run_all_tests.sh`
 - Status:
-  - complete (implementation + local validation finished on 2026-03-11; PR/merge pending)
+  - complete (merged on 2026-03-11)
+- Implementation PR:
+  - https://github.com/yaseralnajjar/sifr/pull/1102
 - Delivered artifacts:
   - `verification/leetcode/phase31_remediation_backlog.json`
   - `verification/leetcode/phase31_remediation_backlog.md`
@@ -229,6 +231,57 @@ Loop per part: Plan -> Implement -> Validate -> Demo -> PR -> Review -> Merge ->
   - positive path: `python3 scripts/test_phase31_leetcode_remediation_backlog.py` -> passed (`4` tests)
   - positive path: `verification/leetcode/phase31_remediation_backlog.json` covers all `12` taxonomy buckets with explicit owner, priority, effort, dependencies, and acceptance criteria
   - positive path: `verification/leetcode/phase31_remediation_backlog.md` records the approval process and stale `P1` blocker escalation policy (`14` days)
+  - local gate: `/Users/yaseralnajjar/work/sifr/codebase/scripts/run_all_tests.sh --profile quick` -> passed (`verification ok: variants=64, failures=0, blocking_failures=0, non_blocking_failures=0`)
+  - local gate: `/Users/yaseralnajjar/work/sifr/codebase/scripts/run_all_tests.sh` -> passed (`verification ok: variants=64, failures=0, blocking_failures=0, non_blocking_failures=0`)
+  - merge evidence: PR #1102 merged into `main` on 2026-03-11
+
+### Part 4 target (`m31_4a_select_wave` + `m31_4b_implement_wave` + `m31_4c_measure_delta`)
+- Goal:
+  - land a low-risk first remediation wave that removes the seed run-stage failures and fixes one builtin-shadowing check-stage failure without regressing the existing pass slice
+- Selected blockers:
+  - `codegen.mutable_binding_emission` (`0069_sqrtx`)
+  - `codegen.generic_run_failure` (`0151_reverse_words_in_a_string`)
+  - `stdlib.python_builtin_signature_surface` (`2235_add_two_integers`)
+- Expected deliverables:
+  - compiler fixes for the three selected repros
+  - regression coverage in unit and e2e suites
+  - wave-specific seed result snapshot and before/after delta report
+  - demo report under `demos/`
+- Validation target:
+  - targeted unit tests for tuple destructuring and builtin shadowing
+  - direct canonical release-binary runs for the fixed repros
+  - seed corpus rerun plus normalized repeat/determinism check
+  - `/Users/yaseralnajjar/work/sifr/codebase/scripts/run_all_tests.sh --profile quick`
+  - `/Users/yaseralnajjar/work/sifr/codebase/scripts/run_all_tests.sh`
+- Status:
+  - complete (implementation + local validation finished on 2026-03-11; PR/merge pending)
+- Delivered artifacts:
+  - `verification/leetcode/phase31_seed_results_wave1.json`
+  - `verification/leetcode/phase31_wave1_delta.md`
+  - `demos/m31_4_leetcode_remediation_wave1_demo/report.md`
+  - `crates/sifr/tests/e2e/pass/phase31_builtin_shadow_sum.sifr`
+  - `crates/sifr/tests/e2e/pass/phase31_mutated_borrowed_param_shadow.sifr`
+  - `crates/sifr/tests/e2e/pass/phase31_tuple_unpack_mutability.sifr`
+  - `crates/sifr/tests/e2e/fail/phase31_builtin_sum_wrong_arity.sifr`
+- Validation evidence:
+  - positive path: `cargo test -p sifr_hir test_user_defined_sum_shadows_builtin` -> passed
+  - positive path: `cargo test -p sifr_codegen lowers_simple_tuple_unpack_stmt_with_mutated_bindings -- --nocapture` -> passed
+  - positive path: `target/release/sifr run audit/leetcode/0069_sqrtx.sifr` -> passed
+  - positive path: `target/release/sifr run audit/leetcode/0151_reverse_words_in_a_string.sifr` -> passed
+  - positive path: `target/release/sifr run audit/leetcode/2235_add_two_integers.sifr` -> passed
+  - positive path: `target/release/sifr run crates/sifr/tests/e2e/pass/cpython_heapq_subset.sifr` -> passed after narrowing borrowed-param shadowing to true rebindings only
+  - positive path: `target/release/sifr run crates/sifr/tests/e2e/pass/non_literal_default_args.sifr` -> passed, confirming mutated `own` params still receive mutable local shadows
+  - positive path: `python3 scripts/run_phase31_leetcode.py --manifest verification/leetcode/phase31_seed_corpus.json --output verification/leetcode/phase31_seed_results_wave1.json` -> produced the wave-1 snapshot (`CHECK_ERROR=45`, `PASS=5`)
+  - positive path: normalized repeat run of the same seed command matched after excluding `duration_ms` and run-specific temp/output paths
+  - negative path: `cargo run -q -p sifr -- check crates/sifr/tests/e2e/fail/phase31_builtin_sum_wrong_arity.sifr` -> preserved the builtin `sum()` arity diagnostic when no user-defined shadow exists
+  - regression note: an over-broad borrowed-param shadowing change initially broke heapq/in-place mutation paths; the final implementation narrows shadowing to borrowed-param rebindings while preserving mutable-local shadows for mutated `own` params
+  - delta summary:
+    - baseline: `PASS=2`, `CHECK_ERROR=46`, `RUN_ERROR=2`
+    - wave 1: `PASS=5`, `CHECK_ERROR=45`, `RUN_ERROR=0`
+    - changed cases:
+      - `0069_sqrtx`: `RUN_ERROR -> PASS`
+      - `0151_reverse_words_in_a_string`: `RUN_ERROR -> PASS`
+      - `2235_add_two_integers`: `CHECK_ERROR -> PASS`
   - local gate: `/Users/yaseralnajjar/work/sifr/codebase/scripts/run_all_tests.sh --profile quick` -> passed (`verification ok: variants=64, failures=0, blocking_failures=0, non_blocking_failures=0`)
   - local gate: `/Users/yaseralnajjar/work/sifr/codebase/scripts/run_all_tests.sh` -> passed (`verification ok: variants=64, failures=0, blocking_failures=0, non_blocking_failures=0`)
 
