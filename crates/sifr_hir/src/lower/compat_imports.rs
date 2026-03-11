@@ -14,6 +14,9 @@ pub(super) fn resolve_python_compat_call_alias(
     let Expr::Name(name) = attr.value.as_ref() else {
         return None;
     };
+    if name.id.as_str() == "collections" && attr.attr.as_str() == "defaultdict" {
+        return Some("defaultdict".to_string());
+    }
     let module_name = match name.id.as_str() {
         "collections" => Some("sifr.collections"),
         "heapq" => Some("sifr.heapq"),
@@ -29,6 +32,7 @@ pub(super) fn resolve_bare_python_compat_call_alias(
     ctx: &mut LowerCtx,
 ) -> Option<String> {
     let (module_name, member_name) = match func_name {
+        "defaultdict" => return Some("defaultdict".to_string()),
         "deque" => ("sifr.collections", "deque"),
         _ => return None,
     };

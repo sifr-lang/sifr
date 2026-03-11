@@ -5,6 +5,10 @@ use sifr_type_system::Type;
 use super::expressions::lower_expr;
 use super::LowerCtx;
 
+pub(super) const DEFAULTDICT_INT_ALIAS: &str = "__compat_defaultdict_int";
+pub(super) const DEFAULTDICT_LIST_ALIAS: &str = "__compat_defaultdict_list";
+pub(super) const DEFAULTDICT_SET_ALIAS: &str = "__compat_defaultdict_set";
+
 fn set_constructor_element_type(arg_ty: &Type) -> Option<Type> {
     match arg_ty.resolve_alias() {
         Type::List(elem) | Type::Set(elem) => Some(*elem.clone()),
@@ -23,6 +27,81 @@ fn set_constructor_element_type(arg_ty: &Type) -> Option<Type> {
         Type::Any | Type::Unknown => Some(Type::Any),
         _ => None,
     }
+}
+
+fn defaultdict_alias_and_value_type(factory_name: &str) -> Option<(&'static str, Type)> {
+    match factory_name {
+        "int" => Some((DEFAULTDICT_INT_ALIAS, Type::Int)),
+        "list" => Some((DEFAULTDICT_LIST_ALIAS, Type::List(Box::new(Type::Any)))),
+        "set" => Some((DEFAULTDICT_SET_ALIAS, Type::Set(Box::new(Type::Any)))),
+        _ => None,
+    }
+}
+
+pub(super) fn lower_defaultdict_constructor_call(
+    call: &ExprCall,
+    ctx: &mut LowerCtx,
+) -> Option<HirExpr> {
+    if !call.arguments.keywords.is_empty() {
+        ctx.error("defaultdict() does not support keyword arguments in this slice".to_string());
+        return None;
+    }
+    if call.arguments.args.is_empty() || call.arguments.args.len() > 2 {
+        ctx.error(format!(
+            "defaultdict() takes 1 or 2 positional arguments, got {}",
+            call.arguments.args.len()
+        ));
+        return None;
+    }
+
+    let factory_name = match &call.arguments.args[0] {
+        Expr::Name(name) => name.id.as_str(),
+        _ => {
+            ctx.error(
+                "defaultdict() factory must be a builtin name such as int, list, or set"
+                    .to_string(),
+            );
+            return None;
+        }
+    };
+    let Some((alias_name, value_ty)) = defaultdict_alias_and_value_type(factory_name) else {
+        ctx.error(format!(
+            "defaultdict() currently supports int, list, and set factories, got '{factory_name}'"
+        ));
+        return None;
+    };
+
+    let mut args = Vec::new();
+    let dict_ty = if call.arguments.args.len() == 2 {
+        let mapping = lower_expr(&call.arguments.args[1], ctx)?;
+        let Type::Dict(key_ty, mapping_value_ty) = mapping.ty().resolve_alias() else {
+            ctx.error(format!(
+                "defaultdict() initial mapping must be a dict, got '{}'",
+                mapping.ty().display_name()
+            ));
+            return None;
+        };
+        if !mapping_value_ty.is_assignable_to(&value_ty) && !value_ty.is_assignable_to(mapping_value_ty)
+        {
+            ctx.error(format!(
+                "defaultdict() initial mapping value type '{}' is not compatible with factory '{}'",
+                mapping_value_ty.display_name(),
+                factory_name
+            ));
+            return None;
+        }
+        let dict_key_ty = key_ty.clone();
+        args.push(mapping);
+        Type::Dict(dict_key_ty, Box::new(value_ty))
+    } else {
+        Type::Dict(Box::new(Type::Any), Box::new(value_ty))
+    };
+
+    Some(HirExpr::Call {
+        func: alias_name.to_string(),
+        args,
+        ty: Type::Alias(alias_name.to_string(), Box::new(dict_ty)),
+    })
 }
 
 pub(super) fn lower_set_constructor_call(call: &ExprCall, ctx: &mut LowerCtx) -> Option<HirExpr> {
@@ -109,8 +188,16 @@ pub(super) fn lower_len_call(call: &ExprCall, ctx: &mut LowerCtx) -> Option<HirE
     } else {
         arg_ty.clone()
     };
-    match &effective_ty {
+    match effective_ty.resolve_alias() {
         Type::Str | Type::List(_) | Type::Dict(_, _) | Type::Tuple(_) | Type::Set(_) => {
+            Some(HirExpr::MethodCall {
+                object: Box::new(arg),
+                method: "len".to_string(),
+                args: vec![],
+                ty: Type::Int,
+            })
+        }
+        Type::Class { methods, .. } if methods.iter().any(|(name, _)| name == "len") => {
             Some(HirExpr::MethodCall {
                 object: Box::new(arg),
                 method: "len".to_string(),
@@ -120,7 +207,7 @@ pub(super) fn lower_len_call(call: &ExprCall, ctx: &mut LowerCtx) -> Option<HirE
         }
         _ => {
             ctx.error(format!(
-                "len() argument must be a string, list, dict, or tuple, got '{}'",
+                "len() argument must be a string, list, dict, tuple, set, or sized class, got '{}'",
                 arg_ty.display_name()
             ));
             None

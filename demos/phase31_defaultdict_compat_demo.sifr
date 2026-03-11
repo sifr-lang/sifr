@@ -1,0 +1,18 @@
+def main():
+    groups = collections.defaultdict(list)
+    groups["hit"].append("hot")
+    groups["hit"].append("hut")
+    assert len(groups["hit"]) == 2
+
+    seen = defaultdict(set)
+    seen[1].add("a")
+    seen[1].add("b")
+    assert "a" in seen[1]
+
+    counts = defaultdict(int)
+    counts["steps"] += 1
+    counts["steps"] += 2
+    assert counts["steps"] == 3
+
+    q = deque([1, 2, 3])
+    assert len(q) == 3

@@ -1190,14 +1190,33 @@ impl RustEmitter {
             };
 
             self.push_captured_stmt(&RustStmt::Let {
-                mutable: self.mutated_vars.contains(name),
+                mutable: self.mutated_vars.contains(name)
+                    || matches!(ty, Type::Alias(alias_name, _) if alias_name.starts_with("__compat_defaultdict_")),
                 name: name.clone(),
                 ty: if is_generic_class
-                    || matches!(
-                        (resolve_alias_type_for_plain_call(ty), value),
-                        (Type::Set(_), HirExpr::Call { func, args, .. })
-                            if func == "set" && args.is_empty()
-                    )
+                    || match (ty, value) {
+                        (resolved_ty, HirExpr::Call { func, args, .. })
+                            if matches!(resolve_alias_type_for_plain_call(resolved_ty), Type::Set(_))
+                                && func == "set"
+                                && args.is_empty() =>
+                        {
+                            true
+                        }
+                        (Type::Alias(alias_name, inner), HirExpr::Call { func, args, .. })
+                            if func == alias_name
+                                && args.is_empty()
+                                && alias_name.starts_with("__compat_defaultdict_") =>
+                        {
+                            if let Type::Dict(key_ty, value_ty) = inner.resolve_alias() {
+                                matches!(key_ty.as_ref(), Type::Any | Type::Unknown)
+                                    || matches!(value_ty.as_ref(), Type::List(elem) if matches!(elem.as_ref(), Type::Any | Type::Unknown))
+                                    || matches!(value_ty.as_ref(), Type::Set(elem) if matches!(elem.as_ref(), Type::Any | Type::Unknown))
+                            } else {
+                                false
+                            }
+                        }
+                        _ => false,
+                    }
                 {
                     None
                 } else {

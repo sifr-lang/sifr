@@ -56,6 +56,43 @@ fn registry_is_string_like_type(ty: &Type) -> bool {
     )
 }
 
+fn registry_defaultdict_alias_parts(ty: &Type) -> Option<(&str, &Type, &Type)> {
+    let Type::Alias(alias_name, inner) = ty else {
+        return None;
+    };
+    if !alias_name.starts_with("__compat_defaultdict_") {
+        return None;
+    }
+    let Type::Dict(key_ty, value_ty) = inner.resolve_alias() else {
+        return None;
+    };
+    Some((alias_name.as_str(), key_ty.as_ref(), value_ty.as_ref()))
+}
+
+fn registry_defaultdict_default_expr(alias_name: &str) -> RustExpr {
+    match alias_name {
+        "__compat_defaultdict_int" => RustExpr::Literal(crate::RustLiteral::Int(0)),
+        "__compat_defaultdict_list" => RustExpr::FnCall {
+            func: Box::new(RustExpr::Path(vec!["Vec".to_string(), "new".to_string()])),
+            args: vec![],
+        },
+        "__compat_defaultdict_set" => RustExpr::FnCall {
+            func: Box::new(RustExpr::Path(vec!["HashSet".to_string(), "new".to_string()])),
+            args: vec![],
+        },
+        _ => RustExpr::Literal(crate::RustLiteral::Unit),
+    }
+}
+
+fn registry_defaultdict_key_arg(index: &HirExpr, lowered_index: RustExpr, key_ty: &Type) -> RustExpr {
+    if let HirExpr::StringLiteral(value) = index {
+        RustExpr::Literal(crate::RustLiteral::Str(value.clone()))
+    } else {
+        let _ = key_ty;
+        RustExpr::Clone(Box::new(lowered_index))
+    }
+}
+
 fn registry_can_construct_error_from_message(ty_name: &str) -> bool {
     matches!(
         ty_name,
@@ -142,6 +179,10 @@ impl RustEmitter {
         method: &str,
         args: &[HirExpr],
     ) -> Option<crate::RustExpr> {
+        if let Some(lowered) = self.try_lower_defaultdict_index_method_call_expr(object, method, args)
+        {
+            return Some(lowered);
+        }
         let is_deque_data_field = self.is_deque_data_field(object);
         let object_expr = self.try_lower_registry_expr_strict(object)?;
         let mut arg_exprs = self.try_lower_registry_exprs_strict(args)?;
@@ -221,6 +262,54 @@ impl RustEmitter {
             is_deque_data_field,
         )?;
         Some(lowered.expr)
+    }
+
+    fn try_lower_defaultdict_index_method_call_expr(
+        &mut self,
+        object: &HirExpr,
+        method: &str,
+        args: &[HirExpr],
+    ) -> Option<crate::RustExpr> {
+        let HirExpr::Index {
+            object: base_object,
+            index,
+            ..
+        } = object
+        else {
+            return None;
+        };
+        let (alias_name, key_ty, _) = registry_defaultdict_alias_parts(base_object.ty())?;
+        let lowered_object = self.try_lower_registry_expr_strict(base_object)?;
+        let lowered_index = self.try_lower_registry_expr_strict(index)?;
+        let lowered_args = self.try_lower_registry_exprs_strict(args)?;
+        let entry_expr = crate::RustExpr::MethodCall {
+            receiver: Box::new(crate::RustExpr::MethodCall {
+                receiver: Box::new(lowered_object),
+                method: "entry".to_string(),
+                args: vec![registry_defaultdict_key_arg(index, lowered_index, key_ty)],
+            }),
+            method: "or_insert".to_string(),
+            args: vec![registry_defaultdict_default_expr(alias_name)],
+        };
+        match (alias_name, method, lowered_args.as_slice()) {
+            ("__compat_defaultdict_list", "append", [value]) => Some(crate::RustExpr::Block {
+                stmts: vec![crate::RustStmt::Expr(crate::RustExpr::MethodCall {
+                    receiver: Box::new(entry_expr),
+                    method: "push".to_string(),
+                    args: vec![value.clone()],
+                })],
+                expr: Some(Box::new(crate::RustExpr::Literal(crate::RustLiteral::Unit))),
+            }),
+            ("__compat_defaultdict_set", "add", [value]) => Some(crate::RustExpr::Block {
+                stmts: vec![crate::RustStmt::Expr(crate::RustExpr::MethodCall {
+                    receiver: Box::new(entry_expr),
+                    method: "insert".to_string(),
+                    args: vec![value.clone()],
+                })],
+                expr: Some(Box::new(crate::RustExpr::Literal(crate::RustLiteral::Unit))),
+            }),
+            _ => None,
+        }
     }
 
     pub(crate) fn try_lower_registry_exprs_strict(
@@ -375,6 +464,31 @@ impl RustEmitter {
             HirExpr::Index {
                 object, index, ty, ..
             } => {
+                if let Some((alias_name, key_ty, value_ty)) = registry_defaultdict_alias_parts(object.ty()) {
+                    let lowered_object = self.try_lower_registry_expr_strict(object)?;
+                    let lowered_index = self.try_lower_registry_expr_strict(index)?;
+                    let entry_expr = crate::RustExpr::MethodCall {
+                        receiver: Box::new(crate::RustExpr::MethodCall {
+                            receiver: Box::new(lowered_object),
+                            method: "entry".to_string(),
+                            args: vec![registry_defaultdict_key_arg(index, lowered_index, key_ty)],
+                        }),
+                        method: "or_insert".to_string(),
+                        args: vec![registry_defaultdict_default_expr(alias_name)],
+                    };
+                    let value_expr = match crate::resolve_alias_type_for_plain_call(value_ty) {
+                        Type::Int => crate::RustExpr::Deref(Box::new(entry_expr)),
+                        _ => crate::RustExpr::MethodCall {
+                            receiver: Box::new(entry_expr),
+                            method: "clone".to_string(),
+                            args: vec![],
+                        },
+                    };
+                    if crate::helpers::is_option_type(ty) {
+                        return Some(value_expr);
+                    }
+                    return Some(value_expr);
+                }
                 let object_ty = crate::resolve_alias_type_for_plain_call(object.ty());
                 if let Type::Union(members) = object_ty {
                     let mut option_inner: Option<&Type> = None;
@@ -946,6 +1060,27 @@ impl RustEmitter {
         args: &[HirExpr],
     ) -> Option<crate::RustExpr> {
         match func {
+            "__compat_defaultdict_int" | "__compat_defaultdict_list" | "__compat_defaultdict_set"
+                if args.is_empty() =>
+            {
+                Some(crate::RustExpr::FnCall {
+                    func: Box::new(crate::RustExpr::Path(vec![
+                        "HashMap".to_string(),
+                        "new".to_string(),
+                    ])),
+                    args: vec![],
+                })
+            }
+            "__compat_defaultdict_int" | "__compat_defaultdict_list" | "__compat_defaultdict_set"
+                if args.len() == 1 =>
+            {
+                let lowered = self.try_lower_registry_expr_strict(&args[0])?;
+                Some(crate::RustExpr::MethodCall {
+                    receiver: Box::new(crate::RustExpr::Paren(Box::new(lowered))),
+                    method: "clone".to_string(),
+                    args: vec![],
+                })
+            }
             "set" if args.is_empty() => Some(crate::RustExpr::FnCall {
                 func: Box::new(crate::RustExpr::Path(vec![
                     "HashSet".to_string(),
