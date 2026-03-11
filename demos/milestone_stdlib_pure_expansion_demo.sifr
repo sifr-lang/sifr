@@ -147,25 +147,25 @@ def main():
 
     # --- Counter enhancements ---
     print("=== Counter enhancements ===")
-    c1: Counter = from_list(["a", "b", "a", "c"])
-    c2: Counter = from_list(["b", "c", "d"])
+    c1: Counter[str] = from_list(["a", "b", "a", "c"])
+    c2: Counter[str] = from_list(["b", "c", "d"])
     c1.update(c2)
     print("after update: a=" + str(c1.get("a")) + " b=" + str(c1.get("b")))
 
-    c3: Counter = from_list(["x", "x", "y"])
-    c4: Counter = from_list(["x"])
+    c3: Counter[str] = from_list(["x", "x", "y"])
+    c4: Counter[str] = from_list(["x"])
     c3.subtract(c4)
     print("after subtract: x=" + str(c3.get("x")))
 
-    c5: Counter = from_list(["a", "a", "b"])
+    c5: Counter[str] = from_list(["a", "a", "b"])
     elems: list[str] = c5.elements()
     print("elements len = " + str(len(elems)))
 
-    cc: Counter = from_list(["a", "b"])
+    cc: Counter[str] = from_list(["a", "b"])
     cc.update(from_list(["b", "c"]))
     print("counter_add b = " + str(cc.get("b")))
 
-    cd: Counter = from_list(["a", "a", "b"])
+    cd: Counter[str] = from_list(["a", "a", "b"])
     cd.subtract(from_list(["a"]))
     print("counter_sub a = " + str(cd.get("a")))
 

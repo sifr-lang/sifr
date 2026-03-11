@@ -15,7 +15,7 @@ from sifr.collections import Counter, from_list
 def main():
     # ─── 1. Create a Counter from a list of words ───
     words: list[str] = ["apple", "banana", "apple", "cherry", "banana", "apple"]
-    c: Counter = from_list(words)
+    c: Counter[str] = from_list(words)
 
     # ─── 2. Query individual counts (read-only, uses &self) ───
     print(c.get("apple"))
@@ -39,7 +39,7 @@ def main():
     print(c.total())
 
     # ─── 6. Direct construction with a pre-built dict ───
-    c2: Counter = Counter({"x": 10, "y": 20})
+    c2: Counter[str] = Counter({"x": 10, "y": 20})
     print(c2.get("x"))
     print(c2.get("y"))
     print(c2.total())

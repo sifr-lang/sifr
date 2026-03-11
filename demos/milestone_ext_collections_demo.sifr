@@ -36,7 +36,7 @@ def main():
     print("=== Counter ===")
 
     fruits: list[str] = ["apple", "banana", "apple", "cherry", "banana", "apple"]
-    fruit_counter: Counter = from_list(fruits)
+    fruit_counter: Counter[str] = from_list(fruits)
     print(f"apple count: {fruit_counter.get('apple')}")
     print(f"banana count: {fruit_counter.get('banana')}")
     print(f"cherry count: {fruit_counter.get('cherry')}")

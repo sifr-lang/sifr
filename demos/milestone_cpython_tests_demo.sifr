@@ -109,7 +109,7 @@ def main():
     s = set_add(s, 2)
     assert_eq(set_len(s), 2)
     words: list[str] = ["a", "b", "a", "a"]
-    c: Counter = from_list(words)
+    c: Counter[str] = from_list(words)
     assert_eq(c.get("a"), 3)
     print("collections: OK")
 
@@ -141,4 +141,3 @@ def main():
     print("")
     print("=== CPython Test Parity Demo ===")
     print("500 assertions across 14 modules — all passing!")
-
