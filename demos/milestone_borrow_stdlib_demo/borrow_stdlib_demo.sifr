@@ -125,7 +125,7 @@ def demo_counter() -> None:
     print("=== Section 4: Counter with native dict[str, int] ===")
 
     words: list[str] = ["apple", "banana", "apple", "cherry", "banana", "apple"]
-    c: Counter = from_list(words)
+    c: Counter[str] = from_list(words)
 
     print("apple count:")
     print(c.get("apple"))
