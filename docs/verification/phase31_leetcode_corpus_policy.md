@@ -96,6 +96,18 @@ Validate the taxonomy classifier and spot-audit contract:
 python3 scripts/test_phase31_leetcode_taxonomy.py
 ```
 
+Generate the milestone `31_3` remediation backlog artifacts:
+
+```bash
+python3 scripts/build_phase31_leetcode_remediation_backlog.py
+```
+
+Validate the remediation backlog contract:
+
+```bash
+python3 scripts/test_phase31_leetcode_remediation_backlog.py
+```
+
 ## Current Baseline Notes
 
 - The raw `audit/leetcode` fixture directory currently contains `411` Sifr fixtures.
@@ -108,3 +120,6 @@ python3 scripts/test_phase31_leetcode_taxonomy.py
   - `verification/leetcode/phase31_failure_repros.json`
   - `verification/leetcode/phase31_spot_audit.json`
   - `verification/leetcode/phase31_failure_report.md`
+- The remediation planning artifacts are generated from the taxonomy outputs:
+  - `verification/leetcode/phase31_remediation_backlog.json`
+  - `verification/leetcode/phase31_remediation_backlog.md`

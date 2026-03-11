@@ -2,7 +2,7 @@
 
 status: in_progress
 
-> 2026-03-11 update: milestones `31_1` and `31_2` are implemented in the workspace with a canonical 50-problem seed corpus, a 411-fixture raw inventory, a deterministic runner, a generated failure taxonomy, a smallest-known repro inventory, and a passing spot-audit classifier check. Remaining milestones stay pending.
+> 2026-03-11 update: milestones `31_1`, `31_2`, and `31_3` are implemented in the workspace with a canonical 50-problem seed corpus, a 411-fixture raw inventory, a deterministic runner, a generated failure taxonomy, a smallest-known repro inventory, and a ranked remediation backlog with approval and stale-blocker policies. Remaining milestones stay pending.
 
 ## Objective
 Run a representative LeetCode corpus end-to-end on Sifr, identify failures, classify root causes, and define the language/compiler fixes required to improve algorithmic compatibility.
@@ -95,7 +95,7 @@ status: complete
 ---
 
 ### milestone_31_3: Compatibility Fix Plan (Language + Compiler)
-status: pending
+status: complete
 
 - Scope:
   - Convert ranked blockers into concrete milestones/issues with acceptance criteria.
@@ -108,6 +108,19 @@ status: pending
   - Intentional divergences are explicitly documented.
   - Plan is approved and linked into roadmap phases.
   - Unresolved `P1` blockers older than 14 days are escalated with explicit owner reassignment or defer decision.
+- Delivered artifacts:
+  - `verification/leetcode/phase31_remediation_backlog.json`
+  - `verification/leetcode/phase31_remediation_backlog.md`
+  - `demos/m31_3_leetcode_remediation_plan_demo/report.md`
+  - `scripts/phase31_leetcode_remediation.py`
+  - `scripts/build_phase31_leetcode_remediation_backlog.py`
+  - `scripts/test_phase31_leetcode_remediation_backlog.py`
+- Backlog summary (2026-03-11):
+  - backlog entries: `12` (one per taxonomy bucket)
+  - `P1` items: `6`
+  - wave candidates for milestone_31_4 selection: `5`
+  - explicit intentional divergence recorded for `ownership.borrowed_return_surface`
+  - stale blocker escalation threshold: `14` days for `P1`
 
 ---
 
