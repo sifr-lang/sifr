@@ -40,6 +40,13 @@ Phase 31 itself is complete. This document is the carry-forward plan for the rem
   - Targeted six-case status: `PASS=1`, `CHECK_ERROR=5`, `RUN_ERROR=0`
   - Confirmed pass: `0007_reverse_integer`
   - Confirmed reclassification signal: `0502_ipo` moved past missing-`heapq` failure into deeper typing/destructuring blockers
+- `2026-03-11`: `m31_c_stdlib_module_parity` slice 2 completed local validation and targeted constructor-surface rerun.
+  - Execution report: `issues/phase31-m31c-constructor-compatibility-execution.md`
+  - Targeted result artifact: `verification/leetcode/phase31_m31c_wave2_results.json`
+  - Targeted three-case status: `PASS=1`, `RUN_ERROR=1`, `CHECK_ERROR=1`
+  - Confirmed pass: `0217_contains_duplicate`
+  - Confirmed reclassification signal: `0127_word_ladder` moved past missing bare `deque(...)` into remaining `defaultdict` / `len(deque)` blockers
+  - Confirmed deeper follow-on blocker: `0003_longest_substring_without_repeating_characters` moved past missing `set(...)` into a downstream codegen panic
 
 ## Recommended Execution Order
 
@@ -99,11 +106,11 @@ This order is chosen to remove the largest independent blockers first, then clea
 ### `m31_c_stdlib_module_parity`
 
 - Current execution status (`2026-03-11`):
-  - slice 1 is complete locally
-  - landed root-cause fixes for Python-style stdlib attribute compatibility, numeric truthiness lowering, and `math.fmod` runtime parity
+  - slice 1 and slice 2 are complete locally
+  - landed root-cause fixes for Python-style stdlib attribute compatibility, numeric truthiness lowering, `math.fmod` runtime parity, native `set(...)` constructor lowering, bare `deque(...)` compatibility resolution, and imported callable default propagation
   - validated with `scripts/run_all_tests.sh --profile quick` and `scripts/run_all_tests.sh`
-  - targeted rerun outcome is recorded in `verification/leetcode/phase31_m31c_wave1_results.json`
-  - remaining blockers are now narrowed to constructor/module-surface gaps (`set`, `deque`, remaining `heapq`) plus downstream non-stdlib issues exposed by `0502`
+  - targeted rerun outcomes are recorded in `verification/leetcode/phase31_m31c_wave1_results.json` and `verification/leetcode/phase31_m31c_wave2_results.json`
+  - remaining blockers are now narrowed to `defaultdict` / `len(deque)` surface gaps plus the downstream `0003` codegen failure and the already exposed non-stdlib issues behind `0502`
 
 - Scope:
   - resolve `stdlib.python_module_surface`

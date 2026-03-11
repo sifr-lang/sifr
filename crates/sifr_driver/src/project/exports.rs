@@ -1,16 +1,18 @@
-use sifr_hir::{ExternalDefs, HirModule};
+use sifr_hir::{ExternalDefs, LoweringResult};
 use sifr_type_system::{FunctionType, ParamConvention, Type};
 use std::collections::HashMap;
 
 pub(crate) fn collect_module_exports(
     module_name: &str,
-    module: &HirModule,
+    lowering_result: &LoweringResult,
     external_defs: &mut ExternalDefs,
 ) {
+    let module = &lowering_result.module;
     let mut fn_exports = HashMap::new();
     let mut class_exports = HashMap::new();
     let mut class_type_param_exports = HashMap::new();
     let mut const_exports = HashMap::new();
+    let mut default_exports = HashMap::new();
 
     for func in &module.functions {
         if !func.name.starts_with('_') {
@@ -26,6 +28,12 @@ pub(crate) fn collect_module_exports(
                     return_type: Box::new(func.return_type.clone()),
                 },
             );
+        }
+    }
+
+    for (callable_name, defaults) in &lowering_result.function_defaults {
+        if !callable_name.starts_with('_') {
+            default_exports.insert(callable_name.clone(), defaults.clone());
         }
     }
 
@@ -93,6 +101,11 @@ pub(crate) fn collect_module_exports(
         external_defs
             .class_type_params
             .insert(module_name.to_string(), class_type_param_exports);
+    }
+    if !default_exports.is_empty() {
+        external_defs
+            .function_defaults
+            .insert(module_name.to_string(), default_exports);
     }
     external_defs
         .constants

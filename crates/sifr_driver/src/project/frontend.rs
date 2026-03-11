@@ -32,10 +32,17 @@ pub(crate) fn compile_frontend_modules(
         let result = lower_frontend_module(module_name, stmts, &external_defs, diagnostic_style)?;
         let LoweringResult {
             module,
+            function_defaults,
             reveal_types,
             warnings,
         } = result;
-        collect_module_exports(module_name, &module, &mut external_defs);
+        let lowering_result = LoweringResult {
+            module: module.clone(),
+            function_defaults,
+            reveal_types: reveal_types.clone(),
+            warnings: warnings.clone(),
+        };
+        collect_module_exports(module_name, &lowering_result, &mut external_defs);
         hir_modules.insert(module_name.clone(), module);
         module_diagnostics.insert(
             module_name.clone(),

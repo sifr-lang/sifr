@@ -1,0 +1,144 @@
+{
+  "command_prefix": [
+    "target/debug/sifr"
+  ],
+  "manifest": "verification/leetcode/phase31_seed_corpus.json",
+  "output": "verification/leetcode/phase31_m31c_wave2_results.json",
+  "phase": 31,
+  "results": [
+    {
+      "difficulty": "medium",
+      "failure_stage": "run",
+      "fixture_slug": "0003_longest_substring_without_repeating_characters",
+      "id": "0003",
+      "oracle_mode": "embedded_asserts",
+      "primary_topic": "hash_map",
+      "scope_classification": "in_scope",
+      "stages": [
+        {
+          "command": [
+            "target/debug/sifr",
+            "check",
+            "audits/leetcode/0003_longest_substring_without_repeating_characters.sifr"
+          ],
+          "duration_ms": 125,
+          "returncode": 0,
+          "stage": "check",
+          "stderr": "no errors found",
+          "stdout": "",
+          "timed_out": false
+        },
+        {
+          "command": [
+            "target/debug/sifr",
+            "run",
+            "audits/leetcode/0003_longest_substring_without_repeating_characters.sifr"
+          ],
+          "duration_ms": 125,
+          "returncode": 3,
+          "stage": "run",
+          "stderr": "thread 'main' (92456342) panicked at crates/sifr_codegen/src/lib.rs:1318:17:\nstructured statement emission missing for production path: For { target: \"r\", target_ty: Int, iter: RangeLiteral { start: IntLiteral(0), end: MethodCall { object: Name { name: \"s\", ty: Str }, method: \"len\", args: [], ty: Int }, step: None, ty: Range }, body: [While { condition: ContainsOp { element: Index { object: Name { name: \"s\", ty: Str }, index: Name { name: \"r\", ty: Int }, ty: Union([Str, None]) }, collection: Name { name: \"charSet\", ty: Set(Union([Str, None])) }, ty: Bool }, body: [Expr { expr: MethodCall { object: Name { name: \"charSet\", ty: Set(Union([Str, None])) }, method: \"remove\", args: [Index { object: Name { name: \"s\", ty: Str }, index: Name { name: \"l\", ty: Int }, ty: Union([Str, None]) }], ty: None } }, AugAssign { name: \"l\", op: \"+=\", value: IntLiteral(1) }], else_body: None }, Expr { expr: MethodCall { object: Name { name: \"charSet\", ty: Set(Union([Str, None])) }, method: \"add\", args: [Index { object: Name { name: \"s\", ty: Str }, index: Name { name: \"r\", ty: Int }, ty: Union([Str, None]) }], ty: None } }, Assign { name: \"res\", value: Call { func: \"max\", args: [Name { name: \"res\", ty: Int }, BinOp { left: BinOp { left: Name { name: \"r\", ty: Int }, op: \"-\", right: Name { name: \"l\", ty: Int }, ty: Int }, op: \"+\", right: IntLiteral(1), ty: Int }], ty: Int } }], else_body: None }\nnote: run with `RUST_BACKTRACE=1` environment variable to display a backtrace\ncodegen error: internal compiler panic during single-file code generation: structured statement emission missing for production path: For { target: \"r\", target_ty: Int, iter: RangeLiteral { start: IntLiteral(0), end: MethodCall { object: Name { name: \"s\", ty: Str }, method: \"len\", args: [], ty: Int }, step: None, ty: Range }, body: [While { condition: ContainsOp { element: Index { object: Name { name: \"s\", ty: Str }, index: Name { name: \"r\", ty: Int }, ty: Union([Str, None]) }, collection: Name { name: \"charSet\", ty: Set(Union([Str, None])) }, ty: Bool }, body: [Expr { expr: MethodCall { object: Name { name: \"charSet\", ty: Set(Union([Str, None])) }, method: \"remove\", args: [Index { object: Name { name: \"s\", ty: Str }, index: Name { name: \"l\", ty: Int }, ty: Union([Str, None]) }], ty: None } }, AugAssign { name: \"l\", op: \"+=\", value: IntLiteral(1) }], else_body: None }, Expr { expr: MethodCall { object: Name { name: \"charSet\", ty: Set(Union([Str, None])) }, method: \"add\", args: [Index { object: Name { name: \"s\", ty: Str }, index: Name { name: \"r\", ty: Int }, ty: Union([Str, None]) }], ty: None } }, Assign { name: \"res\", value: Call { func: \"max\", args: [Name { name: \"res\", ty: Int }, BinOp { left: BinOp { left: Name { name: \"r\", ty: Int }, op: \"-\", right: Name { name: \"l\", ty: Int }, ty: Int }, op: \"+\", right: IntLiteral(1), ty: Int }], ty: Int } }], else_body: None }",
+          "stdout": "",
+          "timed_out": false
+        }
+      ],
+      "status": "RUN_ERROR",
+      "timeout_seconds": 20
+    },
+    {
+      "difficulty": "hard",
+      "failure_stage": "check",
+      "fixture_slug": "0127_word_ladder",
+      "id": "0127",
+      "oracle_mode": "no_oracle",
+      "primary_topic": "graphs",
+      "scope_classification": "in_scope",
+      "stages": [
+        {
+          "command": [
+            "target/debug/sifr",
+            "check",
+            "audits/leetcode/0127_word_ladder.sifr"
+          ],
+          "duration_ms": 127,
+          "returncode": 1,
+          "stage": "check",
+          "stderr": "type error: len() argument must be a string, list, dict, or tuple, got 'deque'\ntype error: undefined variable: 'collections'\ntype error: undefined variable: 'nei'",
+          "stdout": "",
+          "timed_out": false
+        }
+      ],
+      "status": "CHECK_ERROR",
+      "timeout_seconds": 20
+    },
+    {
+      "difficulty": "easy",
+      "failure_stage": null,
+      "fixture_slug": "0217_contains_duplicate",
+      "id": "0217",
+      "oracle_mode": "embedded_asserts",
+      "primary_topic": "hash_map",
+      "scope_classification": "in_scope",
+      "stages": [
+        {
+          "command": [
+            "target/debug/sifr",
+            "check",
+            "audits/leetcode/0217_contains_duplicate.sifr"
+          ],
+          "duration_ms": 131,
+          "returncode": 0,
+          "stage": "check",
+          "stderr": "no errors found",
+          "stdout": "",
+          "timed_out": false
+        },
+        {
+          "command": [
+            "target/debug/sifr",
+            "run",
+            "audits/leetcode/0217_contains_duplicate.sifr"
+          ],
+          "duration_ms": 534,
+          "returncode": 0,
+          "stage": "run",
+          "stderr": "",
+          "stdout": "",
+          "timed_out": false
+        }
+      ],
+      "status": "PASS",
+      "timeout_seconds": 20
+    }
+  ],
+  "summary": {
+    "case_count": 3,
+    "difficulty_counts": {
+      "easy": 1,
+      "hard": 1,
+      "medium": 1
+    },
+    "scope_counts": {
+      "blocked_feature": 0,
+      "in_scope": 3,
+      "out_of_scope_external_dep": 0
+    },
+    "status_counts": {
+      "CHECK_ERROR": 1,
+      "PASS": 1,
+      "RUN_ERROR": 1
+    },
+    "topic_counts": {
+      "arrays": 0,
+      "backtracking": 0,
+      "dp": 0,
+      "graphs": 1,
+      "hash_map": 2,
+      "heap_priority_queue": 0,
+      "math": 0,
+      "strings": 0,
+      "trees": 0,
+      "two_pointers_sliding_window": 0
+    }
+  }
+}

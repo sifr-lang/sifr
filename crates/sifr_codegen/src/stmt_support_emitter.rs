@@ -61,6 +61,19 @@ enum HandlerMatchCondition {
     Expr(RustExpr),
 }
 
+fn canonical_constructor_class_name(class_name: &str) -> &str {
+    class_name
+        .strip_prefix("__compat_sifr_collections_")
+        .unwrap_or(class_name)
+}
+
+fn should_omit_local_type_annotation(ty: &Type, value: &HirExpr) -> bool {
+    matches!(
+        (crate::resolve_alias_type_for_plain_call(ty), value),
+        (Type::Set(_), HirExpr::Call { func, args, .. }) if func == "set" && args.is_empty()
+    )
+}
+
 impl RustEmitter {
     fn uses_debug_display_format_for_ir(ty: &Type) -> bool {
         match crate::resolve_alias_type_for_plain_call(ty) {
@@ -219,7 +232,8 @@ impl RustEmitter {
             class_name, args, ..
         } = expr
         {
-            let ctor_key = format!("{class_name}::new");
+            let emitted_class_name = canonical_constructor_class_name(class_name).to_string();
+            let ctor_key = format!("{emitted_class_name}::new");
             let ctor_params = self
                 .func_signatures
                 .get(&ctor_key)
@@ -310,7 +324,7 @@ impl RustEmitter {
             }
             return Ok(Some(crate::RustExpr::FnCall {
                 func: Box::new(crate::RustExpr::Path(vec![
-                    class_name.clone(),
+                    emitted_class_name,
                     "new".to_string(),
                 ])),
                 args: lowered_args,
@@ -3143,7 +3157,7 @@ impl RustEmitter {
                     vec![RustStmt::Let {
                         mutable: self.mutated_vars.contains(name),
                         name: name.clone(),
-                        ty: if is_generic_class {
+                        ty: if is_generic_class || should_omit_local_type_annotation(ty, value) {
                             None
                         } else {
                             Some(crate::sifr_type_to_rust_type(ty))

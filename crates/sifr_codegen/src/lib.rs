@@ -1192,7 +1192,13 @@ impl RustEmitter {
             self.push_captured_stmt(&RustStmt::Let {
                 mutable: self.mutated_vars.contains(name),
                 name: name.clone(),
-                ty: if is_generic_class {
+                ty: if is_generic_class
+                    || matches!(
+                        (resolve_alias_type_for_plain_call(ty), value),
+                        (Type::Set(_), HirExpr::Call { func, args, .. })
+                            if func == "set" && args.is_empty()
+                    )
+                {
                     None
                 } else {
                     Some(sifr_type_to_rust_type(ty))

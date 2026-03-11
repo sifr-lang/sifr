@@ -3,7 +3,7 @@ from sifr.collections import deque
 from sifr.test import assert_eq
 
 def main():
-    d: deque[float] = deque(4)
+    d: deque[float] = deque(maxlen=4)
     d.append(1.1)
     d.append(2.2)
     d.append(3.3)
@@ -13,4 +13,3 @@ def main():
         assert_eq(val, 1.1)
     assert_eq(d.len(), 2)
     assert str("generic_deque_float: passed") == 'generic_deque_float: passed'
-

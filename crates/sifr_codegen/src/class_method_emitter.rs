@@ -207,16 +207,28 @@ impl RustEmitter {
                             args: vec![],
                         }
                     } else {
-                        self.lower_class_expr_strict(
-                            value,
-                            "deque constructor _data field value lowering",
-                        )
+                        RustExpr::FnCall {
+                            func: Box::new(RustExpr::Path(vec![
+                                "VecDeque".to_string(),
+                                "from".to_string(),
+                            ])),
+                            args: vec![self.lower_class_expr_strict(
+                                value,
+                                "deque constructor _data field value lowering",
+                            )],
+                        }
                     }
                 } else {
-                    self.lower_class_expr_strict(
-                        value,
-                        "deque constructor _data field value lowering",
-                    )
+                    RustExpr::FnCall {
+                        func: Box::new(RustExpr::Path(vec![
+                            "VecDeque".to_string(),
+                            "from".to_string(),
+                        ])),
+                        args: vec![self.lower_class_expr_strict(
+                            value,
+                            "deque constructor _data field value lowering",
+                        )],
+                    }
                 }
             } else {
                 self.lower_class_expr_strict(value, "class constructor field value lowering")

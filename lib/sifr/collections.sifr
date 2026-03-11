@@ -158,9 +158,19 @@ class deque[T]:
     _data: list[T]
     _maxlen: int
 
-    def __init__(self, maxlen: int) -> None:
-        self._data = []
+    def __init__(self, items: list[T] = [], maxlen: int = 0) -> None:
+        data: list[T] = []
+        start: int = 0
+        if maxlen > 0 and len(items) > maxlen:
+            start = len(items) - maxlen
+        i: int = start
+        while i < len(items):
+            item: T | None = items[i]
+            if item is not None:
+                data.append(item)
+            i += 1
         self._maxlen = maxlen
+        self._data = data
 
     def append(self, val: T) -> None:
         self._data.append(val)

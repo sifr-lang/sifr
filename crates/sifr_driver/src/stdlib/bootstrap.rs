@@ -71,6 +71,7 @@ fn compile_stdlib_uncached_impl() -> Result<StdlibCompiled, Vec<CompileError>> {
         let mut fn_exports = HashMap::new();
         let mut class_exports = HashMap::new();
         let mut class_type_param_exports = HashMap::new();
+        let mut default_exports = HashMap::new();
 
         for func in &result.module.functions {
             if !func.name.starts_with('_') {
@@ -86,6 +87,12 @@ fn compile_stdlib_uncached_impl() -> Result<StdlibCompiled, Vec<CompileError>> {
                         return_type: Box::new(func.return_type.clone()),
                     },
                 );
+            }
+        }
+
+        for (callable_name, defaults) in &result.function_defaults {
+            if !callable_name.starts_with('_') {
+                default_exports.insert(callable_name.clone(), defaults.clone());
             }
         }
 
@@ -315,6 +322,11 @@ fn compile_stdlib_uncached_impl() -> Result<StdlibCompiled, Vec<CompileError>> {
             stdlib_defs
                 .class_type_params
                 .insert((*module_name).to_string(), class_type_param_exports);
+        }
+        if !default_exports.is_empty() {
+            stdlib_defs
+                .function_defaults
+                .insert((*module_name).to_string(), default_exports);
         }
         if !const_exports.is_empty() {
             stdlib_defs

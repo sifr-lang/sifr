@@ -46,7 +46,7 @@ def collect_counter_actual() -> list[bool]:
 
 def collect_deque_actual() -> list[bool]:
     actual: list[bool] = []
-    d: deque[int] = deque(3)
+    d: deque[int] = deque(maxlen=3)
     d.append(1)
     d.append(2)
     d.append(3)
