@@ -555,6 +555,7 @@ pub fn type_check_bool_op(left: &Type, op: &str, right: &Type) -> Result<Type, T
             ty,
             Type::Bool
                 | Type::Int
+                | Type::BigInt
                 | Type::Float
                 | Type::List(_)
                 | Type::Dict(_, _)
@@ -715,6 +716,10 @@ mod tests {
         );
         assert_eq!(
             type_check_bool_op(&Type::Int, "and", &Type::Int).unwrap(),
+            Type::Bool
+        );
+        assert_eq!(
+            type_check_bool_op(&Type::BigInt, "and", &Type::Bool).unwrap(),
             Type::Bool
         );
         assert_eq!(

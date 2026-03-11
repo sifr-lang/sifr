@@ -75,3 +75,11 @@ Remaining slice-local blockers:
 1. Add constructor compatibility for `set(...)` and `collections.deque(...)`.
 2. Finish heap-oriented module/member parity for `heapq` call patterns that still surface as undefined symbols.
 3. Re-run the targeted six-case slice and update this report with the next delta before opening the next PR.
+
+## External Review Follow-up
+
+- `2026-03-11` review pass 1 (`reviews/phase-31-m31c-slice1-review-pass-1.md`) was validated against the merged code.
+- Accepted finding:
+  - add `BigInt` truthiness parity to condition lowering and boolean-operator type checking
+- Deferred as next functional slice, not review-fix scope:
+  - broader numeric-expression truthiness beyond simple names (`call`, `binop`, `field access`)

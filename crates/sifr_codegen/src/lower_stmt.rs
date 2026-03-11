@@ -2160,6 +2160,16 @@ fn try_lower_numeric_truthiness_condition_expr(expr: &HirExpr) -> Option<RustExp
                 expr: Box::new(RustExpr::Literal(RustLiteral::Int(0))),
                 ty: RustType::I64,
             }),
+            Type::BigInt => Some(RustExpr::FnCall {
+                func: Box::new(RustExpr::Path(vec![
+                    "BigInt".to_string(),
+                    "from".to_string(),
+                ])),
+                args: vec![RustExpr::Cast {
+                    expr: Box::new(RustExpr::Literal(RustLiteral::Int(0))),
+                    ty: RustType::I64,
+                }],
+            }),
             Type::Float => Some(RustExpr::Cast {
                 expr: Box::new(RustExpr::Literal(RustLiteral::Float(0.0))),
                 ty: RustType::F64,
@@ -6806,6 +6816,29 @@ mod tests {
     }
 
     #[test]
+    fn lowers_simple_while_with_bigint_truthiness_name_condition() {
+        let while_stmt = HirStmt::While {
+            condition: HirExpr::Name {
+                name: "count".to_string(),
+                ty: Type::BigInt,
+            },
+            body: vec![HirStmt::Pass],
+            else_body: None,
+        };
+
+        let lowered = try_lower_simple_stmt(&while_stmt, false, &HashSet::new(), &HashSet::new())
+            .expect("while with bigint truthiness condition lowered");
+        assert_eq!(lowered.len(), 1);
+        assert!(matches!(
+            lowered[0],
+            RustStmt::While {
+                cond: RustExpr::BinOp { ref op, .. },
+                ..
+            } if op == "!="
+        ));
+    }
+
+    #[test]
     fn lowers_simple_while_with_not_bool_name_condition() {
         let while_stmt = HirStmt::While {
             condition: HirExpr::UnaryOp {
@@ -6852,6 +6885,33 @@ mod tests {
 
         let lowered = try_lower_simple_stmt(&while_stmt, false, &HashSet::new(), &HashSet::new())
             .expect("while with not-int truthiness condition lowered");
+        assert_eq!(lowered.len(), 1);
+        assert!(matches!(
+            lowered[0],
+            RustStmt::While {
+                cond: RustExpr::BinOp { ref op, .. },
+                ..
+            } if op == "=="
+        ));
+    }
+
+    #[test]
+    fn lowers_simple_while_with_not_bigint_truthiness_name_condition() {
+        let while_stmt = HirStmt::While {
+            condition: HirExpr::UnaryOp {
+                op: "not".to_string(),
+                operand: Box::new(HirExpr::Name {
+                    name: "count".to_string(),
+                    ty: Type::BigInt,
+                }),
+                ty: Type::Bool,
+            },
+            body: vec![HirStmt::Pass],
+            else_body: None,
+        };
+
+        let lowered = try_lower_simple_stmt(&while_stmt, false, &HashSet::new(), &HashSet::new())
+            .expect("while with not-bigint truthiness condition lowered");
         assert_eq!(lowered.len(), 1);
         assert!(matches!(
             lowered[0],
