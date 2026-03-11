@@ -13,8 +13,9 @@ use std::collections::HashMap;
 
 use super::classes::is_hashable_type;
 use super::builtin_calls::{
-    lower_isinstance_call, lower_len_call, lower_range_call, lower_reveal_type_call,
-    lower_set_constructor_call,
+    lower_defaultdict_constructor_call, lower_isinstance_call, lower_len_call, lower_range_call,
+    lower_reveal_type_call, lower_set_constructor_call, DEFAULTDICT_INT_ALIAS,
+    DEFAULTDICT_LIST_ALIAS, DEFAULTDICT_SET_ALIAS,
 };
 use super::compat_imports::{
     resolve_bare_python_compat_call_alias, resolve_python_compat_call_alias,
@@ -511,6 +512,10 @@ pub(super) fn lower_call(call: &ExprCall, ctx: &mut LowerCtx) -> Option<HirExpr>
         ctx.scope.lookup(&func_name).is_some() || ctx.functions.contains_key(&func_name);
 
     if !builtin_is_shadowed {
+        if func_name == "defaultdict" {
+            return lower_defaultdict_constructor_call(call, ctx);
+        }
+
         if func_name == "set" {
             return lower_set_constructor_call(call, ctx);
         }
@@ -2296,6 +2301,9 @@ pub(super) fn lower_method_call(
             object = refine_empty_set_binding_expr(object, first_arg_ty, ctx);
         }
     }
+    if let Some(refined_object) = refine_defaultdict_binding_expr(object.clone(), &method_name, &args, ctx) {
+        object = refined_object;
+    }
     let object_ty = object.ty().clone();
 
     // Resolve method return type based on object type and method name
@@ -2306,6 +2314,67 @@ pub(super) fn lower_method_call(
         method: method_name,
         args,
         ty: return_ty,
+    })
+}
+
+fn refine_defaultdict_binding_expr(
+    expr: HirExpr,
+    method_name: &str,
+    args: &[HirExpr],
+    ctx: &mut LowerCtx,
+) -> Option<HirExpr> {
+    let inferred_value_ty = match method_name {
+        "append" if args.len() == 1 => Type::List(Box::new(args[0].ty().clone())),
+        "add" if args.len() == 1 => Type::Set(Box::new(args[0].ty().clone())),
+        _ => return None,
+    };
+    let HirExpr::Index { object, index, .. } = expr else {
+        return None;
+    };
+    let HirExpr::Name { name, ty } = object.as_ref() else {
+        return None;
+    };
+    let Type::Alias(alias_name, inner) = ty else {
+        return None;
+    };
+    if !matches!(
+        alias_name.as_str(),
+        DEFAULTDICT_INT_ALIAS | DEFAULTDICT_LIST_ALIAS | DEFAULTDICT_SET_ALIAS
+    ) {
+        return None;
+    }
+    let Type::Dict(key_ty, value_ty) = inner.as_ref() else {
+        return None;
+    };
+    let expected_unrefined = match alias_name.as_str() {
+        DEFAULTDICT_LIST_ALIAS => Type::List(Box::new(Type::Any)),
+        DEFAULTDICT_SET_ALIAS => Type::Set(Box::new(Type::Any)),
+        DEFAULTDICT_INT_ALIAS => Type::Int,
+        _ => return None,
+    };
+    if *value_ty.as_ref() != expected_unrefined {
+        return None;
+    }
+    let refined_key_ty = if matches!(key_ty.as_ref(), Type::Any | Type::Unknown) {
+        index.ty().clone()
+    } else {
+        *key_ty.clone()
+    };
+    let refined_ty = Type::Alias(
+        alias_name.clone(),
+        Box::new(Type::Dict(
+            Box::new(refined_key_ty),
+            Box::new(inferred_value_ty.clone()),
+        )),
+    );
+    ctx.scope.narrow_var(name, refined_ty.clone());
+    Some(HirExpr::Index {
+        object: Box::new(HirExpr::Name {
+            name: name.clone(),
+            ty: refined_ty,
+        }),
+        index,
+        ty: inferred_value_ty,
     })
 }
 
@@ -2334,6 +2403,14 @@ pub(super) fn resolve_method_type(
     args: &[HirExpr],
     ctx: &mut LowerCtx,
 ) -> Option<Type> {
+    if let Type::Alias(alias_name, inner) = object_ty {
+        if matches!(
+            alias_name.as_str(),
+            DEFAULTDICT_INT_ALIAS | DEFAULTDICT_LIST_ALIAS | DEFAULTDICT_SET_ALIAS
+        ) {
+            return resolve_method_type(inner, method, args, ctx);
+        }
+    }
     match object_ty {
         Type::List(elem_ty) => match method {
             "append" => {
@@ -3479,6 +3556,17 @@ mod tests {
         assert!(
             result.is_ok(),
             "bare deque(...) should resolve through the compat stdlib surface"
+        );
+    }
+
+    #[test]
+    fn test_defaultdict_list_call_resolves_without_import() {
+        let result = lower_source(
+            "def main():\n    groups = defaultdict(list)\n    groups[\"a\"].append(\"x\")\n    assert len(groups[\"a\"]) == 1\n",
+        );
+        assert!(
+            result.is_ok(),
+            "defaultdict(list) should resolve through the compat builtin surface"
         );
     }
 

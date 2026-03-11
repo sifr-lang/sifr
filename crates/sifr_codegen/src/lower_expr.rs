@@ -697,7 +697,59 @@ fn try_lower_simple_constructor_call_expr(class_name: &str, args: &[HirExpr]) ->
     })
 }
 
+fn try_lower_simple_defaultdict_index_expr(object: &HirExpr, index: &HirExpr) -> Option<RustExpr> {
+    let Type::Alias(alias_name, inner) = object.ty() else {
+        return None;
+    };
+    if !alias_name.starts_with("__compat_defaultdict_") {
+        return None;
+    }
+    let Type::Dict(key_ty, value_ty) = inner.resolve_alias() else {
+        return None;
+    };
+    let lowered_object = try_lower_leaf_or_name_expr(object)?;
+    let lowered_index = try_lower_leaf_or_name_expr(index)?;
+    let key_arg = if let HirExpr::StringLiteral(value) = index {
+        RustExpr::Literal(crate::RustLiteral::Str(value.clone()))
+    } else {
+        let _ = key_ty;
+        RustExpr::Clone(Box::new(lowered_index))
+    };
+    let default_expr = match alias_name.as_str() {
+        "__compat_defaultdict_int" => RustExpr::Literal(crate::RustLiteral::Int(0)),
+        "__compat_defaultdict_list" => RustExpr::FnCall {
+            func: Box::new(RustExpr::Path(vec!["Vec".to_string(), "new".to_string()])),
+            args: vec![],
+        },
+        "__compat_defaultdict_set" => RustExpr::FnCall {
+            func: Box::new(RustExpr::Path(vec!["HashSet".to_string(), "new".to_string()])),
+            args: vec![],
+        },
+        _ => return None,
+    };
+    let entry_expr = RustExpr::MethodCall {
+        receiver: Box::new(RustExpr::MethodCall {
+            receiver: Box::new(lowered_object),
+            method: "entry".to_string(),
+            args: vec![key_arg],
+        }),
+        method: "or_insert".to_string(),
+        args: vec![default_expr],
+    };
+    Some(match resolve_alias_type(value_ty.as_ref()) {
+        Type::Int => RustExpr::Deref(Box::new(entry_expr)),
+        _ => RustExpr::MethodCall {
+            receiver: Box::new(entry_expr),
+            method: "clone".to_string(),
+            args: vec![],
+        },
+    })
+}
+
 fn try_lower_simple_index_expr(object: &HirExpr, index: &HirExpr) -> Option<RustExpr> {
+    if let Some(lowered) = try_lower_simple_defaultdict_index_expr(object, index) {
+        return Some(lowered);
+    }
     match resolve_alias_type(object.ty()) {
         Type::Dict(_, _) => Some(RustExpr::MethodCall {
             receiver: Box::new(RustExpr::MethodCall {

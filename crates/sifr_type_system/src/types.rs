@@ -510,6 +510,19 @@ impl Type {
     /// For tuple with literal index: returns the exact element type (no Option).
     pub fn index_result_type(&self, index_ty: &Type) -> Option<Type> {
         match self {
+            Self::Alias(alias_name, inner) if alias_name.starts_with("__compat_defaultdict_") => {
+                let Self::Dict(key, value) = inner.resolve_alias() else {
+                    return None;
+                };
+                if matches!(key.as_ref(), Type::Any | Type::Unknown)
+                    || index_ty.is_assignable_to(key)
+                    || key.is_assignable_to(index_ty)
+                {
+                    Some(*value.clone())
+                } else {
+                    None
+                }
+            }
             Self::List(elem) => {
                 if index_ty == &Type::Int {
                     // Safe indexing: returns Option[T] = T | None

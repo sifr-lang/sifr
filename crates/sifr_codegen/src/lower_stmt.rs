@@ -503,7 +503,7 @@ pub(crate) fn try_lower_simple_stmt_with_ctx(
         HirStmt::Let {
             name, ty, value, ..
         } if try_lower_simple_let_value(ty, value).is_some() => Some(vec![RustStmt::Let {
-            mutable: bindings.mutated_vars.contains(name),
+            mutable: bindings.mutated_vars.contains(name) || should_force_mutable_binding(ty),
             name: name.clone(),
             ty: if should_omit_local_type_annotation(ty, value) {
                 None
@@ -708,10 +708,30 @@ pub(crate) fn try_lower_simple_stmt_with_ctx(
 }
 
 fn should_omit_local_type_annotation(ty: &Type, value: &HirExpr) -> bool {
-    matches!(
-        (crate::resolve_alias_type_for_plain_call(ty), value),
-        (Type::Set(_), HirExpr::Call { func, args, .. }) if func == "set" && args.is_empty()
-    )
+    match (ty, value) {
+        (resolved_ty, HirExpr::Call { func, args, .. })
+            if matches!(crate::resolve_alias_type_for_plain_call(resolved_ty), Type::Set(_))
+                && func == "set"
+                && args.is_empty() =>
+        {
+            true
+        }
+        (Type::Alias(alias_name, inner), HirExpr::Call { func, args, .. })
+            if func == alias_name && args.is_empty() && alias_name.starts_with("__compat_defaultdict_") =>
+        {
+            let Type::Dict(key_ty, value_ty) = inner.resolve_alias() else {
+                return false;
+            };
+            matches!(key_ty.as_ref(), Type::Any | Type::Unknown)
+                || matches!(value_ty.as_ref(), Type::List(elem) if matches!(elem.as_ref(), Type::Any | Type::Unknown))
+                || matches!(value_ty.as_ref(), Type::Set(elem) if matches!(elem.as_ref(), Type::Any | Type::Unknown))
+        }
+        _ => false,
+    }
+}
+
+fn should_force_mutable_binding(ty: &Type) -> bool {
+    matches!(ty, Type::Alias(alias_name, _) if alias_name.starts_with("__compat_defaultdict_"))
 }
 
 fn try_lower_simple_nested_function_stmt(
@@ -2933,6 +2953,30 @@ fn try_lower_simple_subscript_augassign_stmt(
     let lowered_index = try_lower_leaf_or_name_expr(index)?;
     let lowered_value = try_lower_leaf_or_name_expr(value)?;
     let lowered_body_stmt = build_subscript_augassign_elem_stmt(op, lowered_value);
+
+    if matches!(object_ty, Type::Alias(alias_name, _) if alias_name == "__compat_defaultdict_int") {
+        return Some(vec![RustStmt::Block(vec![
+            RustStmt::Let {
+                mutable: false,
+                name: "__elem".to_string(),
+                ty: None,
+                value: RustExpr::MethodCall {
+                    receiver: Box::new(RustExpr::MethodCall {
+                        receiver: Box::new(RustExpr::Ident(object.to_string())),
+                        method: "entry".to_string(),
+                        args: vec![if matches!(&lowered_index, RustExpr::Literal(RustLiteral::Str(_))) {
+                            lowered_index
+                        } else {
+                            RustExpr::Clone(Box::new(lowered_index))
+                        }],
+                    }),
+                    method: "or_insert".to_string(),
+                    args: vec![RustExpr::Literal(RustLiteral::Int(0))],
+                },
+            },
+            lowered_body_stmt,
+        ])]);
+    }
 
     match resolve_alias_type(object_ty) {
         Type::List(_) => Some(vec![build_list_get_mut_block_stmt(
