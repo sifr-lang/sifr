@@ -12,7 +12,7 @@ use super::decimal_methods::{
     validate_decimal_string_literal,
 };
 use super::guarded_index::guarded_sequence_index_result_type;
-use super::sequence_pointers::record_sequence_pointer_fact;
+use super::sequence_pointers::record_tuple_unpack_pointer_facts;
 use super::type_bounds::{type_satisfies_bound, type_satisfies_constraint};
 use super::typing_and_functions::resolve_annotation_expr;
 use super::{
@@ -1788,26 +1788,11 @@ pub(super) fn lower_tuple_unpack_assign(
         return None;
     };
 
-    let tuple_value_exprs = match value {
-        Expr::Tuple(value_tuple) if value_tuple.elts.len() == target_names.len() => {
-            Some(&value_tuple.elts)
-        }
-        _ => None,
-    };
-
     // Define variables in scope
     let mut targets = Vec::new();
-    for (index, (name, ty)) in target_names
-        .into_iter()
-        .zip(elem_types.into_iter())
-        .enumerate()
-    {
+    record_tuple_unpack_pointer_facts(ctx, &target_names, value);
+    for (name, ty) in target_names.into_iter().zip(elem_types.into_iter()) {
         ctx.scope.define(name.clone(), ty.clone());
-        if let Some(value_exprs) = tuple_value_exprs {
-            record_sequence_pointer_fact(ctx, &name, &value_exprs[index]);
-        } else {
-            ctx.clear_sequence_pointer(&name);
-        }
         targets.push((name, ty));
     }
 
