@@ -88,6 +88,28 @@ pub(super) fn record_sequence_pointer_fact(ctx: &mut LowerCtx, name: &str, value
     }
 }
 
+pub(super) fn record_tuple_unpack_pointer_facts(
+    ctx: &mut LowerCtx,
+    target_names: &[String],
+    value: &Expr,
+) {
+    let Expr::Tuple(value_tuple) = value else {
+        for name in target_names {
+            ctx.clear_sequence_pointer(name);
+        }
+        return;
+    };
+    if value_tuple.elts.len() != target_names.len() {
+        for name in target_names {
+            ctx.clear_sequence_pointer(name);
+        }
+        return;
+    }
+    for (index, name) in target_names.iter().enumerate() {
+        record_sequence_pointer_fact(ctx, name, &value_tuple.elts[index]);
+    }
+}
+
 fn expr_is_zero(expr: &Expr) -> bool {
     let Expr::NumberLiteral(num) = expr else {
         return false;
