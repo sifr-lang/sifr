@@ -77,14 +77,21 @@ fn registry_defaultdict_default_expr(alias_name: &str) -> RustExpr {
             args: vec![],
         },
         "__compat_defaultdict_set" => RustExpr::FnCall {
-            func: Box::new(RustExpr::Path(vec!["HashSet".to_string(), "new".to_string()])),
+            func: Box::new(RustExpr::Path(vec![
+                "HashSet".to_string(),
+                "new".to_string(),
+            ])),
             args: vec![],
         },
         _ => RustExpr::Literal(crate::RustLiteral::Unit),
     }
 }
 
-fn registry_defaultdict_key_arg(index: &HirExpr, lowered_index: RustExpr, key_ty: &Type) -> RustExpr {
+fn registry_defaultdict_key_arg(
+    index: &HirExpr,
+    lowered_index: RustExpr,
+    key_ty: &Type,
+) -> RustExpr {
     if let HirExpr::StringLiteral(value) = index {
         RustExpr::Literal(crate::RustLiteral::Str(value.clone()))
     } else {
@@ -179,7 +186,8 @@ impl RustEmitter {
         method: &str,
         args: &[HirExpr],
     ) -> Option<crate::RustExpr> {
-        if let Some(lowered) = self.try_lower_defaultdict_index_method_call_expr(object, method, args)
+        if let Some(lowered) =
+            self.try_lower_defaultdict_index_method_call_expr(object, method, args)
         {
             return Some(lowered);
         }
@@ -464,7 +472,9 @@ impl RustEmitter {
             HirExpr::Index {
                 object, index, ty, ..
             } => {
-                if let Some((alias_name, key_ty, value_ty)) = registry_defaultdict_alias_parts(object.ty()) {
+                if let Some((alias_name, key_ty, value_ty)) =
+                    registry_defaultdict_alias_parts(object.ty())
+                {
                     let lowered_object = self.try_lower_registry_expr_strict(object)?;
                     let lowered_index = self.try_lower_registry_expr_strict(index)?;
                     let entry_expr = crate::RustExpr::MethodCall {
@@ -1060,7 +1070,9 @@ impl RustEmitter {
         args: &[HirExpr],
     ) -> Option<crate::RustExpr> {
         match func {
-            "__compat_defaultdict_int" | "__compat_defaultdict_list" | "__compat_defaultdict_set"
+            "__compat_defaultdict_int"
+            | "__compat_defaultdict_list"
+            | "__compat_defaultdict_set"
                 if args.is_empty() =>
             {
                 Some(crate::RustExpr::FnCall {
@@ -1071,7 +1083,9 @@ impl RustEmitter {
                     args: vec![],
                 })
             }
-            "__compat_defaultdict_int" | "__compat_defaultdict_list" | "__compat_defaultdict_set"
+            "__compat_defaultdict_int"
+            | "__compat_defaultdict_list"
+            | "__compat_defaultdict_set"
                 if args.len() == 1 =>
             {
                 let lowered = self.try_lower_registry_expr_strict(&args[0])?;
@@ -1091,19 +1105,21 @@ impl RustEmitter {
             "set" if args.len() == 1 => {
                 let lowered = self.try_lower_registry_expr_strict(&args[0])?;
                 match crate::resolve_alias_type_for_plain_call(args[0].ty()) {
-                    Type::List(_) | Type::Set(_) | Type::Range => Some(crate::RustExpr::MethodCall {
-                        receiver: Box::new(crate::RustExpr::MethodCall {
+                    Type::List(_) | Type::Set(_) | Type::Range => {
+                        Some(crate::RustExpr::MethodCall {
                             receiver: Box::new(crate::RustExpr::MethodCall {
-                                receiver: Box::new(crate::RustExpr::Paren(Box::new(lowered))),
-                                method: "clone".to_string(),
+                                receiver: Box::new(crate::RustExpr::MethodCall {
+                                    receiver: Box::new(crate::RustExpr::Paren(Box::new(lowered))),
+                                    method: "clone".to_string(),
+                                    args: vec![],
+                                }),
+                                method: "into_iter".to_string(),
                                 args: vec![],
                             }),
-                            method: "into_iter".to_string(),
+                            method: "collect::<HashSet<_>>".to_string(),
                             args: vec![],
-                        }),
-                        method: "collect::<HashSet<_>>".to_string(),
-                        args: vec![],
-                    }),
+                        })
+                    }
                     Type::Tuple(_) => Some(crate::RustExpr::MethodCall {
                         receiver: Box::new(crate::RustExpr::MethodCall {
                             receiver: Box::new(crate::RustExpr::Paren(Box::new(lowered))),

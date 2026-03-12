@@ -1,3 +1,23 @@
+use super::builtin_calls::{
+    lower_defaultdict_constructor_call, lower_isinstance_call, lower_len_call, lower_range_call,
+    lower_reveal_type_call, lower_set_constructor_call, DEFAULTDICT_INT_ALIAS,
+    DEFAULTDICT_LIST_ALIAS, DEFAULTDICT_SET_ALIAS,
+};
+use super::classes::is_hashable_type;
+use super::compat_imports::{
+    resolve_bare_python_compat_call_alias, resolve_python_compat_call_alias,
+};
+use super::decimal_methods::{
+    decimal_conversion_error_type, resolve_decimal_method_type, validate_bigdecimal_string_literal,
+    validate_decimal_string_literal,
+};
+use super::guarded_index::guarded_sequence_index_result_type;
+use super::type_bounds::{type_satisfies_bound, type_satisfies_constraint};
+use super::typing_and_functions::resolve_annotation_expr;
+use super::{
+    collect_type_vars, decode_typevar_constraint, infer_type_var_bindings, substitute_type_vars,
+    LowerCtx,
+};
 use crate::hir_nodes::{HirExpr, HirFStringPart, HirParam, HirStmt};
 use sifr_python_ast::{
     BoolOp, CmpOp, Expr, ExprAttribute, ExprBinOp, ExprBoolOp, ExprCall, ExprCompare, ExprDict,
@@ -10,27 +30,6 @@ use sifr_type_system::{
     FunctionType, OwnershipKind, ParamConvention, Type,
 };
 use std::collections::HashMap;
-
-use super::classes::is_hashable_type;
-use super::builtin_calls::{
-    lower_defaultdict_constructor_call, lower_isinstance_call, lower_len_call, lower_range_call,
-    lower_reveal_type_call, lower_set_constructor_call, DEFAULTDICT_INT_ALIAS,
-    DEFAULTDICT_LIST_ALIAS, DEFAULTDICT_SET_ALIAS,
-};
-use super::compat_imports::{
-    resolve_bare_python_compat_call_alias, resolve_python_compat_call_alias,
-};
-use super::decimal_methods::{decimal_conversion_error_type, resolve_decimal_method_type};
-use super::guarded_index::guarded_sequence_index_result_type;
-use super::type_bounds::{type_satisfies_bound, type_satisfies_constraint};
-use super::typing_and_functions::resolve_annotation_expr;
-use super::{
-    collect_type_vars, decode_typevar_constraint, infer_type_var_bindings, substitute_type_vars,
-    LowerCtx,
-};
-use bigdecimal::BigDecimal;
-use rust_decimal::Decimal;
-use std::str::FromStr;
 
 pub(super) fn lower_expr(expr: &Expr, ctx: &mut LowerCtx) -> Option<HirExpr> {
     match expr {
@@ -111,26 +110,6 @@ pub(super) fn lower_name(name: &ExprName, ctx: &mut LowerCtx) -> Option<HirExpr>
 
     ctx.error(format!("undefined variable: '{var_name}'"));
     None
-}
-
-fn validate_decimal_string_literal(value: &str, ctx: &mut LowerCtx) -> Option<()> {
-    if Decimal::from_str_exact(value).is_err() {
-        ctx.error(format!(
-            "[E2501] Decimal() received invalid exact literal '{value}'"
-        ));
-        return None;
-    }
-    Some(())
-}
-
-fn validate_bigdecimal_string_literal(value: &str, ctx: &mut LowerCtx) -> Option<()> {
-    if BigDecimal::from_str(value).is_err() {
-        ctx.error(format!(
-            "[E2502] BigDecimal() received invalid decimal literal '{value}'"
-        ));
-        return None;
-    }
-    Some(())
 }
 
 /// Map a binary operator to its corresponding dunder method name.
@@ -2129,20 +2108,19 @@ pub(super) fn lower_subscript(sub: &ExprSubscript, ctx: &mut LowerCtx) -> Option
     let index = lower_expr(&sub.slice, ctx)?;
     let index_ty = index.ty().clone();
 
-    let result_ty = if let Some(guarded_ty) =
-        guarded_sequence_index_result_type(sub, &object_ty, ctx)
-    {
-        guarded_ty
-    } else {
-        object_ty.index_result_type(&index_ty).unwrap_or_else(|| {
-            ctx.error(format!(
-                "cannot index type '{}' with '{}'",
-                object_ty.display_name(),
-                index_ty.display_name()
-            ));
-            Type::Any
-        })
-    };
+    let result_ty =
+        if let Some(guarded_ty) = guarded_sequence_index_result_type(sub, &object_ty, ctx) {
+            guarded_ty
+        } else {
+            object_ty.index_result_type(&index_ty).unwrap_or_else(|| {
+                ctx.error(format!(
+                    "cannot index type '{}' with '{}'",
+                    object_ty.display_name(),
+                    index_ty.display_name()
+                ));
+                Type::Any
+            })
+        };
 
     Some(HirExpr::Index {
         object: Box::new(object),
@@ -2303,12 +2281,17 @@ pub(super) fn lower_method_call(
         args.push(expr);
     }
 
-    if matches!(method_name.as_str(), "add" | "remove" | "discard" | "contains") {
+    if matches!(
+        method_name.as_str(),
+        "add" | "remove" | "discard" | "contains"
+    ) {
         if let Some(first_arg_ty) = args.first().map(|arg| arg.ty().clone()) {
             object = refine_empty_set_binding_expr(object, first_arg_ty, ctx);
         }
     }
-    if let Some(refined_object) = refine_defaultdict_binding_expr(object.clone(), &method_name, &args, ctx) {
+    if let Some(refined_object) =
+        refine_defaultdict_binding_expr(object.clone(), &method_name, &args, ctx)
+    {
         object = refined_object;
     }
     let object_ty = object.ty().clone();
@@ -2385,7 +2368,11 @@ fn refine_defaultdict_binding_expr(
     })
 }
 
-fn refine_empty_set_binding_expr(expr: HirExpr, inferred_elem_ty: Type, ctx: &mut LowerCtx) -> HirExpr {
+fn refine_empty_set_binding_expr(
+    expr: HirExpr,
+    inferred_elem_ty: Type,
+    ctx: &mut LowerCtx,
+) -> HirExpr {
     let HirExpr::Name { name, ty } = &expr else {
         return expr;
     };
@@ -3549,10 +3536,11 @@ mod tests {
 
     #[test]
     fn test_builtin_set_constructor_accepts_list_iterable() {
-        let result = lower_source(
-            "def main():\n    seen = set([1, 2, 2])\n    assert 2 in seen\n",
+        let result = lower_source("def main():\n    seen = set([1, 2, 2])\n    assert 2 in seen\n");
+        assert!(
+            result.is_ok(),
+            "set(list[T]) should lower as a builtin constructor"
         );
-        assert!(result.is_ok(), "set(list[T]) should lower as a builtin constructor");
     }
 
     #[test]

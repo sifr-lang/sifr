@@ -34,11 +34,13 @@ impl LowerCtx {
                         sequence: existing_sequence,
                         index_var: existing_index_var,
                     } => existing_sequence == &sequence && existing_index_var == &index_var,
-                    _ => false,
+                    SequenceGuard::MinLength { .. } => false,
                 });
                 if !exists {
-                    self.sequence_guards
-                        .push(SequenceGuard::IndexVarInRange { sequence, index_var });
+                    self.sequence_guards.push(SequenceGuard::IndexVarInRange {
+                        sequence,
+                        index_var,
+                    });
                 }
             }
         }

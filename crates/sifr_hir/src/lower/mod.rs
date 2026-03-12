@@ -480,10 +480,8 @@ pub struct ExternalDefs {
     pub generic_functions:
         std::collections::HashMap<String, std::collections::HashMap<String, Vec<String>>>,
     /// Map of `module_name` -> (`callable_name` -> default argument expressions by parameter index)
-    pub function_defaults: std::collections::HashMap<
-        String,
-        std::collections::HashMap<String, Vec<(usize, HirExpr)>>,
-    >,
+    pub function_defaults:
+        std::collections::HashMap<String, std::collections::HashMap<String, Vec<(usize, HirExpr)>>>,
 }
 
 /// Lower a parsed module AST into a typed HIR module.
@@ -976,7 +974,8 @@ fn lower_module_impl(
                         if let Some(module_defaults) = externals.function_defaults.get(&module_name)
                         {
                             if let Some(defaults) = module_defaults.get(name) {
-                                ctx.function_defaults.insert(local.clone(), defaults.clone());
+                                ctx.function_defaults
+                                    .insert(local.clone(), defaults.clone());
                             }
                         }
                         found = true;

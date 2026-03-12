@@ -70,14 +70,18 @@ fn canonical_constructor_class_name(class_name: &str) -> &str {
 fn should_omit_local_type_annotation(ty: &Type, value: &HirExpr) -> bool {
     match (ty, value) {
         (resolved_ty, HirExpr::Call { func, args, .. })
-            if matches!(crate::resolve_alias_type_for_plain_call(resolved_ty), Type::Set(_))
-                && func == "set"
+            if matches!(
+                crate::resolve_alias_type_for_plain_call(resolved_ty),
+                Type::Set(_)
+            ) && func == "set"
                 && args.is_empty() =>
         {
             true
         }
         (Type::Alias(alias_name, inner), HirExpr::Call { func, args, .. })
-            if func == alias_name && args.is_empty() && alias_name.starts_with("__compat_defaultdict_") =>
+            if func == alias_name
+                && args.is_empty()
+                && alias_name.starts_with("__compat_defaultdict_") =>
         {
             let Type::Dict(key_ty, value_ty) = inner.resolve_alias() else {
                 return false;
@@ -3273,7 +3277,8 @@ impl RustEmitter {
                 };
                 (
                     vec![RustStmt::Let {
-                        mutable: self.mutated_vars.contains(name) || should_force_mutable_binding(ty),
+                        mutable: self.mutated_vars.contains(name)
+                            || should_force_mutable_binding(ty),
                         name: name.clone(),
                         ty: if is_generic_class || should_omit_local_type_annotation(ty, value) {
                             None
