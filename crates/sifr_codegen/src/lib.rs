@@ -1152,6 +1152,18 @@ impl RustEmitter {
             return Ok(true);
         }
 
+        if let HirStmt::TupleUnpack { targets, value } = stmt {
+            if let Some(lowered_value) = self.lower_stmt_expr_for_ir(value)? {
+                self.push_captured_stmt(&RustStmt::LetPattern {
+                    pattern: crate::tuple_unpack_pattern(targets, &self.mutated_vars),
+                    value: self.rewrite_stdlib_constant_idents_in_expr(lowered_value),
+                });
+                self.lowering_stats.stmt_structured += 1;
+                self.lowering_stats.stmt_candidate_structured += 1;
+                return Ok(true);
+            }
+        }
+
         if let HirStmt::Let {
             name, ty, value, ..
         } = stmt

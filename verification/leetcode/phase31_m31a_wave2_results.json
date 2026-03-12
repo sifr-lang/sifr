@@ -1,0 +1,351 @@
+{
+  "command_prefix": [
+    "target/debug/sifr"
+  ],
+  "manifest": "verification/leetcode/phase31_seed_corpus.json",
+  "output": "verification/leetcode/phase31_m31a_wave2_results.json",
+  "phase": 31,
+  "results": [
+    {
+      "difficulty": "easy",
+      "failure_stage": null,
+      "fixture_slug": "0014_longest_common_prefix",
+      "id": "0014",
+      "oracle_mode": "embedded_asserts",
+      "primary_topic": "strings",
+      "scope_classification": "in_scope",
+      "stages": [
+        {
+          "command": [
+            "target/debug/sifr",
+            "check",
+            "audits/leetcode/0014_longest_common_prefix.sifr"
+          ],
+          "duration_ms": 130,
+          "returncode": 0,
+          "stage": "check",
+          "stderr": "no errors found",
+          "stdout": "",
+          "timed_out": false
+        },
+        {
+          "command": [
+            "target/debug/sifr",
+            "run",
+            "audits/leetcode/0014_longest_common_prefix.sifr"
+          ],
+          "duration_ms": 1385,
+          "returncode": 0,
+          "stage": "run",
+          "stderr": "",
+          "stdout": "",
+          "timed_out": false
+        }
+      ],
+      "status": "PASS",
+      "timeout_seconds": 20
+    },
+    {
+      "difficulty": "hard",
+      "failure_stage": null,
+      "fixture_slug": "0042_trapping_rain_water",
+      "id": "0042",
+      "oracle_mode": "embedded_asserts",
+      "primary_topic": "two_pointers_sliding_window",
+      "scope_classification": "in_scope",
+      "stages": [
+        {
+          "command": [
+            "target/debug/sifr",
+            "check",
+            "audits/leetcode/0042_trapping_rain_water.sifr"
+          ],
+          "duration_ms": 142,
+          "returncode": 0,
+          "stage": "check",
+          "stderr": "no errors found",
+          "stdout": "",
+          "timed_out": false
+        },
+        {
+          "command": [
+            "target/debug/sifr",
+            "run",
+            "audits/leetcode/0042_trapping_rain_water.sifr"
+          ],
+          "duration_ms": 638,
+          "returncode": 0,
+          "stage": "run",
+          "stderr": "",
+          "stdout": "",
+          "timed_out": false
+        }
+      ],
+      "status": "PASS",
+      "timeout_seconds": 20
+    },
+    {
+      "difficulty": "easy",
+      "failure_stage": "check",
+      "fixture_slug": "0053_maximum_subarray",
+      "id": "0053",
+      "oracle_mode": "embedded_asserts",
+      "primary_topic": "arrays",
+      "scope_classification": "in_scope",
+      "stages": [
+        {
+          "command": [
+            "target/debug/sifr",
+            "check",
+            "audits/leetcode/0053_maximum_subarray.sifr"
+          ],
+          "duration_ms": 129,
+          "returncode": 1,
+          "stage": "check",
+          "stderr": "type error: type mismatch: expected 'int', got 'int | None'\ntype error: type mismatch: expected 'int', got 'int | None'",
+          "stdout": "",
+          "timed_out": false
+        }
+      ],
+      "status": "CHECK_ERROR",
+      "timeout_seconds": 20
+    },
+    {
+      "difficulty": "medium",
+      "failure_stage": null,
+      "fixture_slug": "0198_house_robber",
+      "id": "0198",
+      "oracle_mode": "embedded_asserts",
+      "primary_topic": "dp",
+      "scope_classification": "in_scope",
+      "stages": [
+        {
+          "command": [
+            "target/debug/sifr",
+            "check",
+            "audits/leetcode/0198_house_robber.sifr"
+          ],
+          "duration_ms": 124,
+          "returncode": 0,
+          "stage": "check",
+          "stderr": "no errors found",
+          "stdout": "",
+          "timed_out": false
+        },
+        {
+          "command": [
+            "target/debug/sifr",
+            "run",
+            "audits/leetcode/0198_house_robber.sifr"
+          ],
+          "duration_ms": 689,
+          "returncode": 0,
+          "stage": "run",
+          "stderr": "",
+          "stdout": "",
+          "timed_out": false
+        }
+      ],
+      "status": "PASS",
+      "timeout_seconds": 20
+    },
+    {
+      "difficulty": "medium",
+      "failure_stage": "check",
+      "fixture_slug": "0238_product_of_array_except_self",
+      "id": "0238",
+      "oracle_mode": "embedded_asserts",
+      "primary_topic": "arrays",
+      "scope_classification": "in_scope",
+      "stages": [
+        {
+          "command": [
+            "target/debug/sifr",
+            "check",
+            "audits/leetcode/0238_product_of_array_except_self.sifr"
+          ],
+          "duration_ms": 135,
+          "returncode": 1,
+          "stage": "check",
+          "stderr": "type error: unsupported operand type(s) for *: 'int | None' and 'int'\ntype error: unsupported operand type(s) for *: 'int' and 'int | None'\ntype error: unsupported operand type(s) for *: 'int' and 'int | None'",
+          "stdout": "",
+          "timed_out": false
+        }
+      ],
+      "status": "CHECK_ERROR",
+      "timeout_seconds": 20
+    },
+    {
+      "difficulty": "medium",
+      "failure_stage": "check",
+      "fixture_slug": "0322_coin_change",
+      "id": "0322",
+      "oracle_mode": "embedded_asserts",
+      "primary_topic": "dp",
+      "scope_classification": "in_scope",
+      "stages": [
+        {
+          "command": [
+            "target/debug/sifr",
+            "check",
+            "audits/leetcode/0322_coin_change.sifr"
+          ],
+          "duration_ms": 125,
+          "returncode": 1,
+          "stage": "check",
+          "stderr": "type error: return type mismatch: expected 'int', got 'int | None'\ntype error: unsupported operand type(s) for +: 'int' and 'int | None'",
+          "stdout": "",
+          "timed_out": false
+        }
+      ],
+      "status": "CHECK_ERROR",
+      "timeout_seconds": 20
+    },
+    {
+      "difficulty": "easy",
+      "failure_stage": "check",
+      "fixture_slug": "0746_min_cost_climbing_stairs",
+      "id": "0746",
+      "oracle_mode": "embedded_asserts",
+      "primary_topic": "dp",
+      "scope_classification": "in_scope",
+      "stages": [
+        {
+          "command": [
+            "target/debug/sifr",
+            "check",
+            "audits/leetcode/0746_min_cost_climbing_stairs.sifr"
+          ],
+          "duration_ms": 126,
+          "returncode": 1,
+          "stage": "check",
+          "stderr": "type error: return type mismatch: expected 'int', got 'int | None'",
+          "stdout": "",
+          "timed_out": false
+        }
+      ],
+      "status": "CHECK_ERROR",
+      "timeout_seconds": 20
+    },
+    {
+      "difficulty": "medium",
+      "failure_stage": "check",
+      "fixture_slug": "1143_longest_common_subsequence",
+      "id": "1143",
+      "oracle_mode": "embedded_asserts",
+      "primary_topic": "dp",
+      "scope_classification": "in_scope",
+      "stages": [
+        {
+          "command": [
+            "target/debug/sifr",
+            "check",
+            "audits/leetcode/1143_longest_common_subsequence.sifr"
+          ],
+          "duration_ms": 127,
+          "returncode": 1,
+          "stage": "check",
+          "stderr": "type error: return type mismatch: expected 'int', got 'int | None'\ntype error: unsupported operand type(s) for +: 'int' and 'int | None'",
+          "stdout": "",
+          "timed_out": false
+        }
+      ],
+      "status": "CHECK_ERROR",
+      "timeout_seconds": 20
+    },
+    {
+      "difficulty": "medium",
+      "failure_stage": "check",
+      "fixture_slug": "1456_maximum_number_of_vowels_in_a_substring_of_given_length",
+      "id": "1456",
+      "oracle_mode": "embedded_asserts",
+      "primary_topic": "two_pointers_sliding_window",
+      "scope_classification": "in_scope",
+      "stages": [
+        {
+          "command": [
+            "target/debug/sifr",
+            "check",
+            "audits/leetcode/1456_maximum_number_of_vowels_in_a_substring_of_given_length.sifr"
+          ],
+          "duration_ms": 127,
+          "returncode": 1,
+          "stage": "check",
+          "stderr": "type error: 'in' operator: element type 'str | None' is not compatible with collection element type 'str'",
+          "stdout": "",
+          "timed_out": false
+        }
+      ],
+      "status": "CHECK_ERROR",
+      "timeout_seconds": 20
+    },
+    {
+      "difficulty": "easy",
+      "failure_stage": null,
+      "fixture_slug": "1768_merge_strings_alternately",
+      "id": "1768",
+      "oracle_mode": "embedded_asserts",
+      "primary_topic": "strings",
+      "scope_classification": "in_scope",
+      "stages": [
+        {
+          "command": [
+            "target/debug/sifr",
+            "check",
+            "audits/leetcode/1768_merge_strings_alternately.sifr"
+          ],
+          "duration_ms": 126,
+          "returncode": 0,
+          "stage": "check",
+          "stderr": "no errors found",
+          "stdout": "",
+          "timed_out": false
+        },
+        {
+          "command": [
+            "target/debug/sifr",
+            "run",
+            "audits/leetcode/1768_merge_strings_alternately.sifr"
+          ],
+          "duration_ms": 749,
+          "returncode": 0,
+          "stage": "run",
+          "stderr": "",
+          "stdout": "",
+          "timed_out": false
+        }
+      ],
+      "status": "PASS",
+      "timeout_seconds": 20
+    }
+  ],
+  "summary": {
+    "case_count": 10,
+    "difficulty_counts": {
+      "easy": 4,
+      "hard": 1,
+      "medium": 5
+    },
+    "scope_counts": {
+      "blocked_feature": 0,
+      "in_scope": 10,
+      "out_of_scope_external_dep": 0
+    },
+    "status_counts": {
+      "CHECK_ERROR": 6,
+      "PASS": 4
+    },
+    "topic_counts": {
+      "arrays": 2,
+      "backtracking": 0,
+      "dp": 4,
+      "graphs": 0,
+      "hash_map": 0,
+      "heap_priority_queue": 0,
+      "math": 0,
+      "strings": 2,
+      "trees": 0,
+      "two_pointers_sliding_window": 2
+    }
+  }
+}

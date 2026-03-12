@@ -1,0 +1,27 @@
+# Same-sequence two-pointer `while` loops should narrow safe index reads.
+
+def trap(height: list[int]) -> int:
+    if not height:
+        return 0
+
+    l, r = 0, len(height) - 1
+    left_max: int = height[l]
+    right_max: int = height[r]
+    total = 0
+
+    while l < r:
+        if left_max < right_max:
+            l += 1
+            left_max = max(left_max, height[l])
+            total += left_max - height[l]
+        else:
+            r -= 1
+            right_max = max(right_max, height[r])
+            total += right_max - height[r]
+
+    return total
+
+
+def main():
+    assert str(trap([0, 1, 0, 2, 1, 0, 1, 3, 2, 1, 2, 1])) == "6"
+    assert str(trap([4, 2, 0, 3, 2, 5])) == "9"
