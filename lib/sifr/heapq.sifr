@@ -67,6 +67,59 @@ def _sift_up[T: Comparable](mut heap: list[T], pos: int) -> None:
             else:
                 done = True
 
+def _sift_down_max[T: Comparable](mut data: list[T], pos: int, n: int) -> None:
+    done: bool = False
+    while not done:
+        largest: int = pos
+        left: int = 2 * pos + 1
+        right: int = 2 * pos + 2
+        if left < n:
+            current_val: T | None = data[largest]
+            left_val: T | None = data[left]
+            if current_val is not None:
+                if left_val is not None:
+                    if left_val > current_val:
+                        largest = left
+        if right < n:
+            current_val2: T | None = data[largest]
+            right_val: T | None = data[right]
+            if current_val2 is not None:
+                if right_val is not None:
+                    if right_val > current_val2:
+                        largest = right
+        if largest == pos:
+            done = True
+        else:
+            tmp_pos: T | None = data[pos]
+            tmp_largest: T | None = data[largest]
+            if tmp_pos is not None:
+                if tmp_largest is not None:
+                    data[pos] = tmp_largest
+                    data[largest] = tmp_pos
+            pos = largest
+
+def _sift_up_max[T: Comparable](mut heap: list[T], pos: int) -> None:
+    done: bool = False
+    while not done:
+        if pos <= 0:
+            done = True
+        else:
+            parent: int = (pos - 1) // 2
+            parent_val: T | None = heap[parent]
+            child_val: T | None = heap[pos]
+            if parent_val is not None:
+                if child_val is not None:
+                    if child_val > parent_val:
+                        heap[parent] = child_val
+                        heap[pos] = parent_val
+                        pos = parent
+                    else:
+                        done = True
+                else:
+                    done = True
+            else:
+                done = True
+
 # ── In-place API (mut parameters) ────────────────────────────────────────────
 
 def heapify[T: Comparable](mut data: list[T]) -> None:
@@ -97,6 +150,35 @@ def heappop[T: Comparable](mut heap: list[T]) -> T | None:
         if last is not None:
             heap[0] = last
         _sift_down(heap, 0, n2)
+    return top
+
+def _heapify_max[T: Comparable](mut data: list[T]) -> None:
+    n: int = len(data)
+    i: int = n // 2 - 1
+    while i >= 0:
+        _sift_down_max(data, i, n)
+        i = i - 1
+
+def _heappop_max[T: Comparable](mut heap: list[T]) -> T | None:
+    n: int = len(heap)
+    if n == 0:
+        return None
+    top: T | None = heap[0]
+    last: T | None = heap[n - 1]
+    heap.pop()
+    n2: int = len(heap)
+    if n2 > 0:
+        if last is not None:
+            heap[0] = last
+        _sift_down_max(heap, 0, n2)
+    return top
+
+def _heapreplace_max[T: Comparable](mut heap: list[T], own item: T) -> T | None:
+    if len(heap) == 0:
+        return None
+    top: T | None = heap[0]
+    heap[0] = item
+    _sift_down_max(heap, 0, len(heap))
     return top
 
 # ── Functional API (backward compatibility) ───────────────────────────────────

@@ -1,4 +1,5 @@
 use crate::diagnostics::{run_codegen_with_boundary, CompileError, CompilePhase};
+use crate::export_policy::should_export_callable;
 use crate::stdlib::cache::{get_or_init_stdlib_cache, STDLIB_COMPILED_CACHE};
 use crate::stdlib::intrinsics::intrinsic_constant_rust_expr;
 use crate::stdlib::registry::STDLIB_FILES;
@@ -74,7 +75,7 @@ fn compile_stdlib_uncached_impl() -> Result<StdlibCompiled, Vec<CompileError>> {
         let mut default_exports = HashMap::new();
 
         for func in &result.module.functions {
-            if !func.name.starts_with('_') {
+            if should_export_callable(module_name, &func.name) {
                 let params: Vec<(String, Type, ParamConvention)> = func
                     .params
                     .iter()
@@ -91,7 +92,7 @@ fn compile_stdlib_uncached_impl() -> Result<StdlibCompiled, Vec<CompileError>> {
         }
 
         for (callable_name, defaults) in &result.function_defaults {
-            if !callable_name.starts_with('_') {
+            if should_export_callable(module_name, callable_name) {
                 default_exports.insert(callable_name.clone(), defaults.clone());
             }
         }
@@ -226,7 +227,7 @@ fn compile_stdlib_uncached_impl() -> Result<StdlibCompiled, Vec<CompileError>> {
             }
             let mut sig_map = HashMap::new();
             for func in &result.module.functions {
-                if !func.name.starts_with('_') {
+                if should_export_callable(module_name, &func.name) {
                     let param_info: Vec<(Type, ParamConvention)> = func
                         .params
                         .iter()
@@ -286,7 +287,9 @@ fn compile_stdlib_uncached_impl() -> Result<StdlibCompiled, Vec<CompileError>> {
 
             let mut gen_fns = HashSet::new();
             for func in &result.module.functions {
-                if !func.name.starts_with('_') && sifr_codegen::body_contains_yield(&func.body) {
+                if should_export_callable(module_name, &func.name)
+                    && sifr_codegen::body_contains_yield(&func.body)
+                {
                     gen_fns.insert(func.name.clone());
                 }
             }

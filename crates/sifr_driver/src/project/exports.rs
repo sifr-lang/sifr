@@ -1,3 +1,4 @@
+use crate::export_policy::should_export_callable;
 use sifr_hir::{ExternalDefs, LoweringResult};
 use sifr_type_system::{FunctionType, ParamConvention, Type};
 use std::collections::HashMap;
@@ -15,7 +16,7 @@ pub(crate) fn collect_module_exports(
     let mut default_exports = HashMap::new();
 
     for func in &module.functions {
-        if !func.name.starts_with('_') {
+        if should_export_callable(module_name, &func.name) {
             let params: Vec<(String, Type, ParamConvention)> = func
                 .params
                 .iter()
@@ -32,7 +33,7 @@ pub(crate) fn collect_module_exports(
     }
 
     for (callable_name, defaults) in &lowering_result.function_defaults {
-        if !callable_name.starts_with('_') {
+        if should_export_callable(module_name, callable_name) {
             default_exports.insert(callable_name.clone(), defaults.clone());
         }
     }
