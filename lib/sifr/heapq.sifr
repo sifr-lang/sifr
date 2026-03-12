@@ -153,6 +153,7 @@ def heappop[T: Comparable](mut heap: list[T]) -> T | None:
     return top
 
 def _heapify_max[T: Comparable](mut data: list[T]) -> None:
+    """Convert list to a max-heap in-place. O(n) time."""
     n: int = len(data)
     i: int = n // 2 - 1
     while i >= 0:
@@ -160,6 +161,8 @@ def _heapify_max[T: Comparable](mut data: list[T]) -> None:
         i = i - 1
 
 def _heappop_max[T: Comparable](mut heap: list[T]) -> T | None:
+    """Pop and return the largest item. Heap is modified in-place. O(log n) time.
+    Returns None if the heap is empty."""
     n: int = len(heap)
     if n == 0:
         return None
@@ -174,6 +177,8 @@ def _heappop_max[T: Comparable](mut heap: list[T]) -> T | None:
     return top
 
 def _heapreplace_max[T: Comparable](mut heap: list[T], own item: T) -> T | None:
+    """Pop and return the largest item, then push item onto the heap.
+    Returns None if the heap is empty. O(log n) time."""
     if len(heap) == 0:
         return None
     top: T | None = heap[0]
