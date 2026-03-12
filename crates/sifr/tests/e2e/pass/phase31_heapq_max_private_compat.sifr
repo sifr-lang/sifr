@@ -1,10 +1,12 @@
 from sifr.heapq import _heapify_max, _heappop_max, _heapreplace_max
 from sifr.test import assert_bool_vector_eq
 
-def pop_all(mut heap: list[int]) -> list[int]:
-    result: list[int] = []
+T = TypeVar("T")
+
+def pop_all[T: Comparable](mut heap: list[T]) -> list[T]:
+    result: list[T] = []
     while len(heap) > 0:
-        value: int | None = _heappop_max(heap)
+        value: T | None = _heappop_max(heap)
         if value is not None:
             result.append(value)
     return result
@@ -26,9 +28,13 @@ def collect_actual() -> list[bool]:
     actual.append(_heappop_max(empty) is None)
     actual.append(_heapreplace_max(empty, 8) is None)
 
+    float_values: list[float] = [3.14, 2.71, 1.41, 1.73, 4.67]
+    _heapify_max(float_values)
+    actual.append(str(pop_all(float_values)) == "[4.67, 3.14, 2.71, 1.73, 1.41]")
+
     return actual
 
 def main():
-    expected: list[bool] = [True, True, True, True, True]
+    expected: list[bool] = [True, True, True, True, True, True]
     actual: list[bool] = collect_actual()
     assert_bool_vector_eq(actual, expected)
