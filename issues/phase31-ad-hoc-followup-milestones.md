@@ -64,6 +64,12 @@ Phase 31 itself is complete. This document is the carry-forward plan for the rem
   - Closure report: `issues/phase31-m31c-milestone-closure.md`
   - Closure PR: `#1112`
   - Closure basis: all remaining watched-case failures are now downstream codegen/type-system work rather than `stdlib.python_module_surface`
+- `2026-03-12`: `m31_a_optional_narrowing_core` slice 1 completed local validation for guarded sequence index narrowing.
+  - Execution report: `issues/phase31-m31a-guarded-sequence-index-narrowing-execution.md`
+  - Targeted result artifact: `verification/leetcode/phase31_m31a_wave1_results.json`
+  - Targeted 10-case status: `PASS=3`, `CHECK_ERROR=7`, `RUN_ERROR=0`
+  - Confirmed passes: `0014_longest_common_prefix`, `0198_house_robber`, `1768_merge_strings_alternately`
+  - Confirmed reclassification signal: remaining watched failures are now narrower optional-flow shapes beyond the guarded-index root cause covered in slice 1
 
 ## Recommended Execution Order
 
@@ -79,6 +85,13 @@ This order is chosen to remove the largest independent blockers first, then clea
 ## Milestones
 
 ### `m31_a_optional_narrowing_core`
+
+- Current execution status (`2026-03-12`):
+  - in progress
+  - slice 1 completed the guarded sequence-index root cause for explicit `while i < len(seq)`, `for i in range(len(seq))`, and early-return non-empty guards
+  - validated with targeted HIR/codegen tests, guarded-index e2e coverage, demo coverage, and `verification/leetcode/phase31_m31a_wave1_results.json`
+  - current watch-set outcome for slice 1: `PASS=3`, `CHECK_ERROR=7`, `RUN_ERROR=0`
+  - remaining optional failures in the watch set are follow-on accumulator/sliding-window/two-pointer proof shapes, not the original guarded fixed-index codegen mismatch
 
 - Scope:
   - resolve `type_system.optional_narrowing_and_union_ops`

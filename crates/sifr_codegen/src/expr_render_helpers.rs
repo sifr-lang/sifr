@@ -4,6 +4,27 @@ use sifr_hir::HirExpr;
 use sifr_type_system::{ParamConvention, Type};
 
 impl RustEmitter {
+    fn lower_proven_index_option_expr_for_ir(
+        &self,
+        option_expr: crate::RustExpr,
+        binding_name: &str,
+        message: &str,
+    ) -> crate::RustExpr {
+        crate::RustExpr::Block {
+            stmts: vec![crate::RustStmt::LetElse {
+                pattern: format!("Some({binding_name})"),
+                value: option_expr,
+                else_body: vec![crate::RustStmt::Expr(crate::RustExpr::MacroCall {
+                    name: "unreachable".to_string(),
+                    args: vec![crate::RustExpr::Literal(crate::RustLiteral::Str(
+                        message.to_string(),
+                    ))],
+                })],
+            }],
+            expr: Some(Box::new(crate::RustExpr::Ident(binding_name.to_string()))),
+        }
+    }
+
     pub(super) fn try_lower_registry_expr_result(
         &self,
         expr: &HirExpr,
@@ -847,9 +868,19 @@ impl RustEmitter {
             {
                 return Ok(Some(lowered_expr));
             }
-            Err(crate::CodegenError::new(
-                "internal codegen invariant violated: list/dict/str index produced non-optional result type",
-            ))
+            match index_base_ty {
+                Type::List(_) | Type::Str => Ok(Some(self.lower_proven_index_option_expr_for_ir(
+                    lowered_expr,
+                    "__sifr_index_value",
+                    "compiler-verified index should be in range",
+                ))),
+                Type::Dict(_, _) => Err(crate::CodegenError::new(
+                    "internal codegen invariant violated: dict index produced non-optional result type",
+                )),
+                _ => Err(crate::CodegenError::new(
+                    "internal codegen invariant violated: list/dict/str index produced non-optional result type",
+                )),
+            }
         })();
 
         if suppress_self_field_clone && self.pending_self_field_clone_suppression > 0 {

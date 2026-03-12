@@ -1,0 +1,29 @@
+# Test: guarded sequence index narrowing yields definite values when flow proves bounds safety
+
+def collect_vowels(text: str) -> str:
+    result: str = ""
+    i: int = 0
+    while i < len(text):
+        ch: str = text[i]
+        if ch in "aeiou":
+            result = result + ch
+        i = i + 1
+    return result
+
+def sum_all(values: list[int]) -> int:
+    total: int = 0
+    for i in range(len(values)):
+        total = total + values[i]
+    return total
+
+def head_or_zero(values: list[int]) -> int:
+    if len(values) == 0:
+        return 0
+    first: int = values[0]
+    return first
+
+def main():
+    assert collect_vowels("sequoia") == "euoia"
+    assert sum_all([4, 5, 6]) == 15
+    assert head_or_zero([]) == 0
+    assert head_or_zero([9, 1]) == 9
