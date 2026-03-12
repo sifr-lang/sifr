@@ -1918,7 +1918,7 @@ pub(super) fn lower_for(
     } else {
         ctx.scope.define(target_name.clone(), elem_ty.clone());
     }
-    for guard in detect_range_sequence_guards(for_stmt, &target_name) {
+    for guard in detect_range_sequence_guards(for_stmt, &target_name, ctx) {
         ctx.add_sequence_guard(guard);
     }
     ctx.loop_depth += 1;

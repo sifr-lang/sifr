@@ -76,6 +76,12 @@ Phase 31 itself is complete. This document is the carry-forward plan for the rem
   - Targeted 10-case status: `PASS=4`, `CHECK_ERROR=6`, `RUN_ERROR=0`
   - Confirmed new pass: `0042_trapping_rain_water`
   - Confirmed reclassification signal: remaining watch-set failures are now concentrated in sliding-window left-pointer, reverse-range, and constructed-sequence proof gaps rather than the same-sequence two-pointer `while` shape
+- `2026-03-12`: `m31_a_optional_narrowing_core` slice 3 completed local validation for canonical sliding-window left-pointer narrowing.
+  - Execution report: `issues/phase31-m31a-sliding-window-left-pointer-execution.md`
+  - Targeted result artifact: `verification/leetcode/phase31_m31a_wave3_results.json`
+  - Targeted three-case status: `PASS=2`, `CHECK_ERROR=1`, `RUN_ERROR=0`
+  - Confirmed new passes: `0003_longest_substring_without_repeating_characters`, `1456_maximum_number_of_vowels_in_a_substring_of_given_length`
+  - Confirmed reclassification signal: `0209_minimum_size_subarray_sum` moved past the prior left-pointer optional-index failure into the remaining `float('inf')` branch-type mismatch
 
 ## Recommended Execution Order
 
@@ -96,9 +102,10 @@ This order is chosen to remove the largest independent blockers first, then clea
   - in progress
   - slice 1 completed the guarded sequence-index root cause for explicit `while i < len(seq)`, `for i in range(len(seq))`, and early-return non-empty guards
   - slice 2 completed same-sequence two-pointer `while left < right` narrowing for zero/end pointer construction plus the downstream production-path emit gaps that slice exposed
-  - validated with targeted HIR/codegen/e2e coverage, demo coverage, `verification/leetcode/phase31_m31a_wave1_results.json`, and `verification/leetcode/phase31_m31a_wave2_results.json`
-  - current watch-set outcome after slice 2: `PASS=4`, `CHECK_ERROR=6`, `RUN_ERROR=0`
-  - remaining optional failures in the watch set are follow-on sliding-window left-pointer, constructed-sequence, and recurrence proof shapes rather than the original guarded-index or same-sequence two-pointer roots
+  - slice 3 completed canonical sliding-window left-pointer narrowing for direct `seq[l]` reads under a `for r in range(len(seq))` driver, including tuple-unpacked zero-based locals
+  - validated with targeted HIR/e2e/demo coverage, `verification/leetcode/phase31_m31a_wave1_results.json`, `verification/leetcode/phase31_m31a_wave2_results.json`, and `verification/leetcode/phase31_m31a_wave3_results.json`
+  - slice 3 targeted outcome: `PASS=2`, `CHECK_ERROR=1`, `RUN_ERROR=0` across `0003`, `0209`, and `1456`
+  - remaining optional failures are now concentrated in constructed-sequence, recurrence, and broader arithmetic/branch-type proof gaps rather than guarded-index, same-sequence two-pointer, or canonical sliding-window left-pointer roots
 
 - Scope:
   - resolve `type_system.optional_narrowing_and_union_ops`

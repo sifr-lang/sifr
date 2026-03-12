@@ -4,6 +4,8 @@ use sifr_python_ast::{
     BoolOp, CmpOp, Expr, Number, Operator, Stmt, StmtAssign, StmtAugAssign, StmtFor, StmtWhile,
     UnaryOp,
 };
+use sifr_python_ast::visitor::{self, Visitor};
+use sifr_type_system::Type;
 
 pub(super) fn detect_while_sequence_guards(
     while_stmt: &StmtWhile,
@@ -116,37 +118,297 @@ pub(super) fn detect_false_exit_sequence_guards(expr: &Expr, ctx: &LowerCtx) -> 
 pub(super) fn detect_range_sequence_guards(
     for_stmt: &StmtFor,
     target_name: &str,
+    ctx: &LowerCtx,
 ) -> Vec<SequenceGuard> {
-    let Expr::Call(call) = for_stmt.iter.as_ref() else {
+    let Some(sequence) = range_sequence_name(for_stmt.iter.as_ref()) else {
         return Vec::new();
+    };
+    let mut guards = vec![SequenceGuard::IndexVarInRange {
+        sequence: sequence.clone(),
+        index_var: target_name.to_string(),
+    }];
+    guards.extend(detect_sliding_window_pointer_guards(
+        &for_stmt.body,
+        target_name,
+        &sequence,
+        ctx,
+    ));
+    guards
+}
+
+fn range_sequence_name(expr: &Expr) -> Option<String> {
+    let Expr::Call(call) = expr else {
+        return None;
     };
     let Expr::Name(func_name) = call.func.as_ref() else {
-        return Vec::new();
+        return None;
     };
     if func_name.id.as_str() != "range" {
-        return Vec::new();
+        return None;
     }
-    let mut sequence_name = None;
     for arg in &call.arguments.args {
         if let Some(found) = len_call_sequence_name(arg) {
-            sequence_name = Some(found);
-            break;
+            return Some(found);
         }
         if let Expr::BinOp(binop) = arg {
             if let Some(found) = len_call_sequence_name(binop.left.as_ref()) {
-                sequence_name = Some(found);
-                break;
+                return Some(found);
             }
         }
     }
-    sequence_name
-        .map(|sequence| {
-            vec![SequenceGuard::IndexVarInRange {
-                sequence,
-                index_var: target_name.to_string(),
-            }]
+    None
+}
+
+fn detect_sliding_window_pointer_guards(
+    stmts: &[Stmt],
+    right_var: &str,
+    sequence: &str,
+    ctx: &LowerCtx,
+) -> Vec<SequenceGuard> {
+    sequence_index_vars_in_stmts(stmts, sequence)
+        .into_iter()
+        .filter(|left_var| left_var.as_str() != right_var)
+        .filter(|left_var| {
+            ctx.is_zero_based_pointer(left_var)
+                || matches!(ctx.scope.effective_type(left_var), Some(Type::LiteralInt(0)))
         })
-        .unwrap_or_default()
+        .filter(|left_var| loop_body_preserves_sliding_window_pointer(stmts, sequence, left_var))
+        .map(|left_var| SequenceGuard::IndexVarInRange {
+            sequence: sequence.to_string(),
+            index_var: left_var,
+        })
+        .collect()
+}
+
+fn sequence_index_vars_in_stmts(stmts: &[Stmt], sequence: &str) -> Vec<String> {
+    let mut visitor = SequenceIndexVarCollector::new(sequence);
+    for stmt in stmts {
+        visitor::walk_stmt(&mut visitor, stmt);
+    }
+    visitor.vars
+}
+
+#[derive(Copy, Clone, Debug, PartialEq, Eq)]
+enum SlidingWindowPointerState {
+    NotIncremented,
+    MaybeIncremented,
+}
+
+fn loop_body_preserves_sliding_window_pointer(
+    stmts: &[Stmt],
+    sequence: &str,
+    left_var: &str,
+) -> bool {
+    body_sliding_window_pointer_state(stmts, sequence, left_var, SlidingWindowPointerState::NotIncremented)
+        .is_some()
+}
+
+fn body_sliding_window_pointer_state(
+    stmts: &[Stmt],
+    sequence: &str,
+    left_var: &str,
+    mut state: SlidingWindowPointerState,
+) -> Option<SlidingWindowPointerState> {
+    for stmt in stmts {
+        state = stmt_sliding_window_pointer_state(stmt, sequence, left_var, state)?;
+    }
+    Some(state)
+}
+
+fn stmt_sliding_window_pointer_state(
+    stmt: &Stmt,
+    sequence: &str,
+    left_var: &str,
+    state: SlidingWindowPointerState,
+) -> Option<SlidingWindowPointerState> {
+    if state == SlidingWindowPointerState::MaybeIncremented
+        && stmt_contains_specific_index(stmt, sequence, left_var)
+    {
+        return None;
+    }
+    match stmt {
+        Stmt::AugAssign(aug) => {
+            if target_is_named_var(aug.target.as_ref(), left_var) {
+                if aug_assign_is_single_step_increment(aug, left_var) {
+                    Some(SlidingWindowPointerState::MaybeIncremented)
+                } else {
+                    None
+                }
+            } else {
+                Some(state)
+            }
+        }
+        Stmt::Assign(assign) => {
+            if assign.targets.iter().any(|target| target_is_named_var(target, left_var)) {
+                if assign_is_single_step_increment(assign, left_var) {
+                    Some(SlidingWindowPointerState::MaybeIncremented)
+                } else {
+                    None
+                }
+            } else {
+                Some(state)
+            }
+        }
+        Stmt::AnnAssign(ann) => {
+            if target_is_named_var(ann.target.as_ref(), left_var) {
+                None
+            } else {
+                Some(state)
+            }
+        }
+        Stmt::If(if_stmt) => {
+            if state == SlidingWindowPointerState::MaybeIncremented
+                && expr_contains_specific_index(if_stmt.test.as_ref(), sequence, left_var)
+            {
+                return None;
+            }
+            let mut branch_states = vec![body_sliding_window_pointer_state(
+                &if_stmt.body,
+                sequence,
+                left_var,
+                state,
+            )?];
+            let mut has_else = false;
+            for clause in &if_stmt.elif_else_clauses {
+                if let Some(test) = &clause.test {
+                    if state == SlidingWindowPointerState::MaybeIncremented
+                        && expr_contains_specific_index(test, sequence, left_var)
+                    {
+                        return None;
+                    }
+                } else {
+                    has_else = true;
+                }
+                branch_states.push(body_sliding_window_pointer_state(
+                    &clause.body,
+                    sequence,
+                    left_var,
+                    state,
+                )?);
+            }
+            if !has_else {
+                branch_states.push(state);
+            }
+            if branch_states
+                .iter()
+                .any(|branch_state| *branch_state == SlidingWindowPointerState::MaybeIncremented)
+            {
+                Some(SlidingWindowPointerState::MaybeIncremented)
+            } else {
+                Some(SlidingWindowPointerState::NotIncremented)
+            }
+        }
+        Stmt::While(_)
+        | Stmt::For(_)
+        | Stmt::Try(_)
+        | Stmt::With(_)
+        | Stmt::Match(_)
+        | Stmt::FunctionDef(_)
+        | Stmt::ClassDef(_) => Some(state),
+        _ => Some(state),
+    }
+}
+
+fn stmt_contains_specific_index(stmt: &Stmt, sequence: &str, index_var: &str) -> bool {
+    let mut visitor = SpecificIndexUseVisitor::new(sequence, index_var);
+    visitor::walk_stmt(&mut visitor, stmt);
+    visitor.found
+}
+
+fn expr_contains_specific_index(expr: &Expr, sequence: &str, index_var: &str) -> bool {
+    let mut visitor = SpecificIndexUseVisitor::new(sequence, index_var);
+    visitor.visit_expr(expr);
+    visitor.found
+}
+
+struct SpecificIndexUseVisitor<'a> {
+    sequence: &'a str,
+    index_var: &'a str,
+    found: bool,
+}
+
+impl<'a> SpecificIndexUseVisitor<'a> {
+    fn new(sequence: &'a str, index_var: &'a str) -> Self {
+        Self {
+            sequence,
+            index_var,
+            found: false,
+        }
+    }
+}
+
+impl<'a> Visitor<'a> for SpecificIndexUseVisitor<'a> {
+    fn visit_expr(&mut self, expr: &'a Expr) {
+        if self.found {
+            return;
+        }
+        if let Expr::Subscript(sub) = expr {
+            if let (Expr::Name(sequence_name), Expr::Name(index_name)) =
+                (sub.value.as_ref(), sub.slice.as_ref())
+            {
+                if sequence_name.id.as_str() == self.sequence
+                    && index_name.id.as_str() == self.index_var
+                {
+                    self.found = true;
+                    return;
+                }
+            }
+        }
+        visitor::walk_expr(self, expr);
+    }
+}
+
+struct SequenceIndexVarCollector<'a> {
+    sequence: &'a str,
+    vars: Vec<String>,
+}
+
+impl<'a> SequenceIndexVarCollector<'a> {
+    fn new(sequence: &'a str) -> Self {
+        Self {
+            sequence,
+            vars: Vec::new(),
+        }
+    }
+}
+
+impl<'a> Visitor<'a> for SequenceIndexVarCollector<'a> {
+    fn visit_expr(&mut self, expr: &'a Expr) {
+        if let Expr::Subscript(sub) = expr {
+            if let (Expr::Name(sequence_name), Expr::Name(index_name)) =
+                (sub.value.as_ref(), sub.slice.as_ref())
+            {
+                if sequence_name.id.as_str() == self.sequence
+                    && !self.vars.iter().any(|var| var == index_name.id.as_str())
+                {
+                    self.vars.push(index_name.id.to_string());
+                }
+            }
+        }
+        visitor::walk_expr(self, expr);
+    }
+}
+
+fn target_is_named_var(target: &Expr, var_name: &str) -> bool {
+    matches!(target, Expr::Name(name) if name.id.as_str() == var_name)
+}
+
+fn aug_assign_is_single_step_increment(aug: &StmtAugAssign, var_name: &str) -> bool {
+    matches!(aug.op, Operator::Add)
+        && target_is_named_var(aug.target.as_ref(), var_name)
+        && literal_int(aug.value.as_ref()) == Some(1)
+}
+
+fn assign_is_single_step_increment(assign: &StmtAssign, var_name: &str) -> bool {
+    if assign.targets.len() != 1 || !target_is_named_var(&assign.targets[0], var_name) {
+        return false;
+    }
+    let Expr::BinOp(binop) = assign.value.as_ref() else {
+        return false;
+    };
+    matches!(binop.op, Operator::Add)
+        && literal_int(binop.right.as_ref()) == Some(1)
+        && matches!(binop.left.as_ref(), Expr::Name(name) if name.id.as_str() == var_name)
 }
 
 fn len_call_sequence_name(expr: &Expr) -> Option<String> {
@@ -173,6 +435,16 @@ fn literal_usize(expr: &Expr) -> Option<usize> {
         return None;
     };
     value.as_i64().and_then(|value| usize::try_from(value).ok())
+}
+
+fn literal_int(expr: &Expr) -> Option<i64> {
+    let Expr::NumberLiteral(num) = expr else {
+        return None;
+    };
+    let Number::Int(value) = &num.value else {
+        return None;
+    };
+    value.as_i64()
 }
 
 fn detect_two_pointer_while_guards(while_stmt: &StmtWhile, ctx: &LowerCtx) -> Vec<SequenceGuard> {

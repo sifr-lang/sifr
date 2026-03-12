@@ -1,0 +1,143 @@
+{
+  "command_prefix": [
+    "target/debug/sifr"
+  ],
+  "manifest": "verification/leetcode/phase31_seed_corpus.json",
+  "output": "verification/leetcode/phase31_m31a_wave3_results.json",
+  "phase": 31,
+  "results": [
+    {
+      "difficulty": "medium",
+      "failure_stage": null,
+      "fixture_slug": "0003_longest_substring_without_repeating_characters",
+      "id": "0003",
+      "oracle_mode": "embedded_asserts",
+      "primary_topic": "hash_map",
+      "scope_classification": "in_scope",
+      "stages": [
+        {
+          "command": [
+            "target/debug/sifr",
+            "check",
+            "audits/leetcode/0003_longest_substring_without_repeating_characters.sifr"
+          ],
+          "duration_ms": 157,
+          "returncode": 0,
+          "stage": "check",
+          "stderr": "no errors found",
+          "stdout": "",
+          "timed_out": false
+        },
+        {
+          "command": [
+            "target/debug/sifr",
+            "run",
+            "audits/leetcode/0003_longest_substring_without_repeating_characters.sifr"
+          ],
+          "duration_ms": 1257,
+          "returncode": 0,
+          "stage": "run",
+          "stderr": "",
+          "stdout": "",
+          "timed_out": false
+        }
+      ],
+      "status": "PASS",
+      "timeout_seconds": 20
+    },
+    {
+      "difficulty": "medium",
+      "failure_stage": "check",
+      "fixture_slug": "0209_minimum_size_subarray_sum",
+      "id": "0209",
+      "oracle_mode": "embedded_asserts",
+      "primary_topic": "two_pointers_sliding_window",
+      "scope_classification": "in_scope",
+      "stages": [
+        {
+          "command": [
+            "target/debug/sifr",
+            "check",
+            "audits/leetcode/0209_minimum_size_subarray_sum.sifr"
+          ],
+          "duration_ms": 138,
+          "returncode": 1,
+          "stage": "check",
+          "stderr": "type error: if expression branches have incompatible types: 'Result[float, ParseError]' and 'int'",
+          "stdout": "",
+          "timed_out": false
+        }
+      ],
+      "status": "CHECK_ERROR",
+      "timeout_seconds": 20
+    },
+    {
+      "difficulty": "medium",
+      "failure_stage": null,
+      "fixture_slug": "1456_maximum_number_of_vowels_in_a_substring_of_given_length",
+      "id": "1456",
+      "oracle_mode": "embedded_asserts",
+      "primary_topic": "two_pointers_sliding_window",
+      "scope_classification": "in_scope",
+      "stages": [
+        {
+          "command": [
+            "target/debug/sifr",
+            "check",
+            "audits/leetcode/1456_maximum_number_of_vowels_in_a_substring_of_given_length.sifr"
+          ],
+          "duration_ms": 130,
+          "returncode": 0,
+          "stage": "check",
+          "stderr": "no errors found",
+          "stdout": "",
+          "timed_out": false
+        },
+        {
+          "command": [
+            "target/debug/sifr",
+            "run",
+            "audits/leetcode/1456_maximum_number_of_vowels_in_a_substring_of_given_length.sifr"
+          ],
+          "duration_ms": 847,
+          "returncode": 0,
+          "stage": "run",
+          "stderr": "",
+          "stdout": "",
+          "timed_out": false
+        }
+      ],
+      "status": "PASS",
+      "timeout_seconds": 20
+    }
+  ],
+  "summary": {
+    "case_count": 3,
+    "difficulty_counts": {
+      "easy": 0,
+      "hard": 0,
+      "medium": 3
+    },
+    "scope_counts": {
+      "blocked_feature": 0,
+      "in_scope": 3,
+      "out_of_scope_external_dep": 0
+    },
+    "status_counts": {
+      "CHECK_ERROR": 1,
+      "PASS": 2
+    },
+    "topic_counts": {
+      "arrays": 0,
+      "backtracking": 0,
+      "dp": 0,
+      "graphs": 0,
+      "hash_map": 1,
+      "heap_priority_queue": 0,
+      "math": 0,
+      "strings": 0,
+      "trees": 0,
+      "two_pointers_sliding_window": 2
+    }
+  }
+}
