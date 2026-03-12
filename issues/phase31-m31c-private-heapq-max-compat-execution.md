@@ -3,6 +3,7 @@
 Status: complete
 Started: 2026-03-12
 Current slice: `m31_c_slice_4_private_heapq_max_compat`
+PR: `#1112`
 
 ## Goal
 

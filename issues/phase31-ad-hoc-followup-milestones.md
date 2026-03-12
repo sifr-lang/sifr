@@ -55,12 +55,14 @@ Phase 31 itself is complete. This document is the carry-forward plan for the rem
   - Confirmed reclassification signal: `0149_max_points_on_a_line` moved past `defaultdict(int)` surface failure into deeper optional/arithmetic typing gaps
 - `2026-03-12`: `m31_c_stdlib_module_parity` slice 4 completed local validation for private `heapq` max-heap compatibility.
   - Execution report: `issues/phase31-m31c-private-heapq-max-compat-execution.md`
+  - PR: `#1112`
   - Targeted result artifact: `verification/leetcode/phase31_m31c_wave4_results.json`
   - Targeted six-case status: `PASS=2`, `CHECK_ERROR=3`, `RUN_ERROR=1`
   - Confirmed reclassification signal: `1046_last_stone_weight` moved past missing private `heapq` symbols into deeper annotation / `Any` typing failures
   - Confirmed broader parity probe: `2971_find_polygon_with_the_largest_perimeter` now resolves private `heapq` helpers and fails only on downstream optional arithmetic
 - `2026-03-12`: `m31_c_stdlib_module_parity` milestone closed.
   - Closure report: `issues/phase31-m31c-milestone-closure.md`
+  - Closure PR: `#1112`
   - Closure basis: all remaining watched-case failures are now downstream codegen/type-system work rather than `stdlib.python_module_surface`
 
 ## Recommended Execution Order

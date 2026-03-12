@@ -2,6 +2,7 @@
 
 Status: complete
 Closed: 2026-03-12
+Closure PR: `#1112`
 
 ## Scope Closed
 
