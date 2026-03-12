@@ -1,0 +1,34 @@
+# Phase 31 m31_a slice 4 demo
+# Shows canonical infinity sentinels behaving like integer-domain accumulators
+# once later control flow proves the algorithm only ever updates them with ints.
+
+def minSubArrayLen(target: int, nums: list[int]) -> int:
+    res = float("inf")
+    l, total = 0, 0
+
+    for r in range(len(nums)):
+        total += nums[r]
+        while total >= target:
+            res = min(res, r - l + 1)
+            total -= nums[l]
+            l += 1
+    return res if res != float("inf") else 0
+
+def increasingTriplet(nums: list[int]) -> bool:
+    first = float("inf")
+    second = float("inf")
+
+    for num in nums:
+        if num <= first:
+            first = num
+        elif num <= second:
+            second = num
+        else:
+            return True
+    return False
+
+def main():
+    assert str(minSubArrayLen(7, [2, 3, 1, 2, 4, 3])) == "2"
+    assert str(minSubArrayLen(15, [1, 2, 3, 4, 5])) == "5"
+    assert str(increasingTriplet([2, 1, 5, 0, 4, 6])) == "true"
+    assert str(increasingTriplet([5, 4, 3, 2, 1])) == "false"

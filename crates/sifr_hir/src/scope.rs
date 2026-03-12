@@ -79,6 +79,18 @@ impl Scope {
         }
     }
 
+    /// Update the declared type for an existing variable.
+    pub fn set_type(&mut self, name: &str, ty: Type) -> bool {
+        for frame in self.frames.iter_mut().rev() {
+            if let Some(info) = frame.get_mut(name) {
+                info.ty = ty;
+                info.narrowed_type = None;
+                return true;
+            }
+        }
+        false
+    }
+
     /// Look up a variable, searching from innermost to outermost scope.
     pub fn lookup(&self, name: &str) -> Option<&VarInfo> {
         for frame in self.frames.iter().rev() {

@@ -1,3 +1,4 @@
+use super::arithmetic_warnings::check_int_overflow_risk;
 use super::builtin_calls::{
     lower_defaultdict_constructor_call, lower_isinstance_call, lower_len_call, lower_range_call,
     lower_reveal_type_call, lower_set_constructor_call, DEFAULTDICT_INT_ALIAS,
@@ -12,6 +13,11 @@ use super::decimal_methods::{
     validate_decimal_string_literal,
 };
 use super::guarded_index::guarded_sequence_index_result_type;
+use super::numeric_sentinels::{
+    float_sentinel_expr, float_sentinel_kind_from_call, lower_sentinel_expr_for_name_domain,
+    maybe_resolve_numeric_sentinel_name_from_type, normalize_min_max_numeric_sentinels,
+    retag_numeric_sentinel_name_expr,
+};
 use super::sequence_pointers::record_tuple_unpack_pointer_facts;
 use super::type_bounds::{type_satisfies_bound, type_satisfies_constraint};
 use super::typing_and_functions::resolve_annotation_expr;
@@ -239,53 +245,6 @@ pub(super) fn lower_binop(binop: &ExprBinOp, ctx: &mut LowerCtx) -> Option<HirEx
     }
 }
 
-pub(super) fn check_int_overflow_risk(
-    op: &str,
-    left: &HirExpr,
-    right: &HirExpr,
-    ctx: &mut LowerCtx,
-) {
-    let is_left_const = matches!(left, HirExpr::IntLiteral(_));
-    let is_right_const = matches!(right, HirExpr::IntLiteral(_));
-
-    match op {
-        "**" => {
-            if let HirExpr::IntLiteral(exp) = right {
-                if *exp > 40 {
-                    ctx.warn(format!(
-                        "warning: int exponentiation with large exponent ({exp}) may overflow i64; consider using bigint"
-                    ));
-                }
-            } else {
-                ctx.warn(
-                    "warning: int exponentiation (**) with non-constant exponent may overflow i64 at runtime; consider using bigint".to_string()
-                );
-            }
-        }
-        "*" => {
-            if !is_left_const && !is_right_const {
-                ctx.warn(
-                    "warning: int multiplication with non-constant operands may overflow i64 at runtime; consider using bigint for large values".to_string()
-                );
-            }
-        }
-        "<<" => {
-            if !is_right_const {
-                ctx.warn(
-                    "warning: int left shift (<<) with non-constant shift amount may overflow i64 at runtime; consider using bigint".to_string()
-                );
-            } else if let HirExpr::IntLiteral(shift) = right {
-                if *shift >= 63 {
-                    ctx.warn(format!(
-                        "warning: int left shift by {shift} exceeds i64 range; consider using bigint"
-                    ));
-                }
-            }
-        }
-        _ => {}
-    }
-}
-
 pub(super) fn lower_unaryop(unary: &ExprUnaryOp, ctx: &mut LowerCtx) -> Option<HirExpr> {
     let operand = lower_expr(&unary.operand, ctx)?;
 
@@ -310,7 +269,7 @@ pub(super) fn lower_unaryop(unary: &ExprUnaryOp, ctx: &mut LowerCtx) -> Option<H
 }
 
 pub(super) fn lower_compare(cmp: &ExprCompare, ctx: &mut LowerCtx) -> Option<HirExpr> {
-    let left = lower_expr(&cmp.left, ctx)?;
+    let mut left = lower_expr(&cmp.left, ctx)?;
 
     // Handle `in` and `not in` operators specially
     if cmp.ops.len() == 1 {
@@ -392,7 +351,21 @@ pub(super) fn lower_compare(cmp: &ExprCompare, ctx: &mut LowerCtx) -> Option<Hir
             }
         };
 
-        let right = lower_expr(comparator, ctx)?;
+        let mut right = if let Some(retagged_right) =
+            lower_sentinel_expr_for_name_domain(comparator, &left, ctx)
+        {
+            retagged_right
+        } else {
+            lower_expr(comparator, ctx)?
+        };
+        maybe_resolve_numeric_sentinel_name_from_type(&left, right.ty(), ctx);
+        maybe_resolve_numeric_sentinel_name_from_type(&right, left.ty(), ctx);
+        left = retag_numeric_sentinel_name_expr(left, ctx);
+        if let Some(retagged_right) = lower_sentinel_expr_for_name_domain(comparator, &left, ctx) {
+            right = retagged_right;
+        } else {
+            right = retag_numeric_sentinel_name_expr(right, ctx);
+        }
 
         // `is` and `is not` are identity checks (used for None comparison)
         // They don't need type_check_comparison
@@ -857,6 +830,9 @@ pub(super) fn lower_call(call: &ExprCall, ctx: &mut LowerCtx) -> Option<HirExpr>
                 ));
                 return None;
             }
+            if let Some(kind) = float_sentinel_kind_from_call(call) {
+                return Some(float_sentinel_expr(kind));
+            }
             let arg = lower_expr(&call.arguments.args[0], ctx)?;
             let arg_ty = arg.ty().clone();
             // float(str) -> Result[float, ParseError] (fallible)
@@ -921,7 +897,13 @@ pub(super) fn lower_call(call: &ExprCall, ctx: &mut LowerCtx) -> Option<HirExpr>
                 // min(a, b) -> std::cmp::min(a, b)
                 let a = lower_expr(&call.arguments.args[0], ctx)?;
                 let b = lower_expr(&call.arguments.args[1], ctx)?;
-                let result_ty = a.ty().clone();
+                let (a, b, result_ty) = normalize_min_max_numeric_sentinels(
+                    &call.arguments.args[0],
+                    &call.arguments.args[1],
+                    a,
+                    b,
+                    ctx,
+                );
                 return Some(HirExpr::Call {
                     func: "min".to_string(),
                     args: vec![a, b],
@@ -955,7 +937,13 @@ pub(super) fn lower_call(call: &ExprCall, ctx: &mut LowerCtx) -> Option<HirExpr>
                 // max(a, b) -> std::cmp::max(a, b)
                 let a = lower_expr(&call.arguments.args[0], ctx)?;
                 let b = lower_expr(&call.arguments.args[1], ctx)?;
-                let result_ty = a.ty().clone();
+                let (a, b, result_ty) = normalize_min_max_numeric_sentinels(
+                    &call.arguments.args[0],
+                    &call.arguments.args[1],
+                    a,
+                    b,
+                    ctx,
+                );
                 return Some(HirExpr::Call {
                     func: "max".to_string(),
                     args: vec![a, b],

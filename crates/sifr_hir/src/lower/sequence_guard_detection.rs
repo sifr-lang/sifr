@@ -1,10 +1,10 @@
 use super::sequence_guards::SequenceGuard;
 use super::LowerCtx;
+use sifr_python_ast::visitor::{self, Visitor};
 use sifr_python_ast::{
     BoolOp, CmpOp, Expr, Number, Operator, Stmt, StmtAssign, StmtAugAssign, StmtFor, StmtWhile,
     UnaryOp,
 };
-use sifr_python_ast::visitor::{self, Visitor};
 use sifr_type_system::Type;
 
 pub(super) fn detect_while_sequence_guards(
@@ -170,7 +170,10 @@ fn detect_sliding_window_pointer_guards(
         .filter(|left_var| left_var.as_str() != right_var)
         .filter(|left_var| {
             ctx.is_zero_based_pointer(left_var)
-                || matches!(ctx.scope.effective_type(left_var), Some(Type::LiteralInt(0)))
+                || matches!(
+                    ctx.scope.effective_type(left_var),
+                    Some(Type::LiteralInt(0))
+                )
         })
         .filter(|left_var| loop_body_preserves_sliding_window_pointer(stmts, sequence, left_var))
         .map(|left_var| SequenceGuard::IndexVarInRange {
@@ -199,8 +202,13 @@ fn loop_body_preserves_sliding_window_pointer(
     sequence: &str,
     left_var: &str,
 ) -> bool {
-    body_sliding_window_pointer_state(stmts, sequence, left_var, SlidingWindowPointerState::NotIncremented)
-        .is_some()
+    body_sliding_window_pointer_state(
+        stmts,
+        sequence,
+        left_var,
+        SlidingWindowPointerState::NotIncremented,
+    )
+    .is_some()
 }
 
 fn body_sliding_window_pointer_state(
@@ -239,7 +247,11 @@ fn stmt_sliding_window_pointer_state(
             }
         }
         Stmt::Assign(assign) => {
-            if assign.targets.iter().any(|target| target_is_named_var(target, left_var)) {
+            if assign
+                .targets
+                .iter()
+                .any(|target| target_is_named_var(target, left_var))
+            {
                 if assign_is_single_step_increment(assign, left_var) {
                     Some(SlidingWindowPointerState::MaybeIncremented)
                 } else {
@@ -289,10 +301,7 @@ fn stmt_sliding_window_pointer_state(
             if !has_else {
                 branch_states.push(state);
             }
-            if branch_states
-                .iter()
-                .any(|branch_state| *branch_state == SlidingWindowPointerState::MaybeIncremented)
-            {
+            if branch_states.contains(&SlidingWindowPointerState::MaybeIncremented) {
                 Some(SlidingWindowPointerState::MaybeIncremented)
             } else {
                 Some(SlidingWindowPointerState::NotIncremented)
@@ -381,7 +390,7 @@ impl<'a> Visitor<'a> for SequenceIndexVarCollector<'a> {
                 if sequence_name.id.as_str() == self.sequence
                     && !self.vars.iter().any(|var| var == index_name.id.as_str())
                 {
-                    self.vars.push(index_name.id.to_string());
+                    self.vars.push(index_name.id.clone());
                 }
             }
         }
