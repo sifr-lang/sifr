@@ -59,6 +59,7 @@ Secondary parity probes that should move if the same root cause is fixed:
 - Resolved sentinel accumulator domains when later `min(...)`, `max(...)`, assignment, or comparison flow proves an integer-only algorithmic accumulator.
 - Patched already-lowered initializer statements once the domain resolves so emitted Rust uses an integer sentinel constant (`i64::MAX` / `i64::MIN`) instead of a float value or parse call.
 - Extracted the new min/max sentinel normalization and integer-overflow warning logic into dedicated lowering modules so `expressions.rs` stays under the HIR maintainability guardrail.
+- Reviewer follow-up hardening fixed float-domain special literal rendering in codegen so unresolved float sentinels now emit valid Rust constants (`f64::INFINITY`, `f64::NEG_INFINITY`, `f64::NAN`) instead of invalid bare identifiers.
 
 ## Regression Coverage
 
@@ -83,11 +84,13 @@ Secondary parity probes that should move if the same root cause is fixed:
 ## Validation Evidence
 
 - `cargo test -p sifr_hir numeric_sentinel`
+- `cargo test -p sifr_codegen renders_special_float_literals_with_rust_constants`
 - `target/debug/sifr run crates/sifr/tests/e2e/pass/phase31_numeric_sentinel_domain_normalization.sifr`
 - `target/debug/sifr run demos/phase31_numeric_sentinel_domain_demo.sifr`
 - `target/debug/sifr run audits/leetcode/0334_increasing_triplet_subsequence.sifr`
 - `python3 scripts/run_phase31_leetcode.py --sifr-bin target/debug/sifr --output verification/leetcode/phase31_m31a_wave4_results.json --case 0209`
 - `target/debug/sifr emit audits/leetcode/0209_minimum_size_subarray_sum.sifr`
+- `cargo run -q -p sifr -- emit /tmp/phase31_float_inf_codegen_probe.sifr`
 - `cargo fmt --check`
 - `cargo clippy --workspace -- -D warnings`
 - `scripts/run_all_tests.sh --profile quick`
@@ -108,5 +111,7 @@ Observed movement across the targeted slice:
   - `0334` `increasing_triplet_subsequence` now checks and runs with integer-domain sentinel lowering
 - Confirmed codegen outcome:
   - emitted Rust for `0209` now uses `let mut res: i64 = 9223372036854775807 as i64;` and compares against the same integer sentinel rather than `f64::INFINITY`
+- Confirmed reviewer-driven hardening:
+  - unresolved float sentinels now emit valid Rust constants such as `let mut res: f64 = f64::INFINITY as f64;`
 - Explicit non-goal confirmation:
   - this slice does not clear unrelated `Any`/optional-index failures such as `2017_grid_game`

@@ -846,7 +846,15 @@ impl Renderer {
         match lit {
             RustLiteral::Int(v) => v.to_string(),
             RustLiteral::Float(v) => {
-                if v.fract() == 0.0 {
+                if v.is_nan() {
+                    "f64::NAN".to_string()
+                } else if v.is_infinite() {
+                    if v.is_sign_negative() {
+                        "f64::NEG_INFINITY".to_string()
+                    } else {
+                        "f64::INFINITY".to_string()
+                    }
+                } else if v.fract() == 0.0 {
                     format!("{v:.1}")
                 } else {
                     v.to_string()
@@ -1288,6 +1296,22 @@ mod tests {
 
         let rendered = render_expr(&expr);
         assert_eq!(rendered, "(1..10).step_by(2 as usize)");
+    }
+
+    #[test]
+    fn renders_special_float_literals_with_rust_constants() {
+        assert_eq!(
+            render_expr(&RustExpr::Literal(RustLiteral::Float(f64::INFINITY))),
+            "f64::INFINITY"
+        );
+        assert_eq!(
+            render_expr(&RustExpr::Literal(RustLiteral::Float(f64::NEG_INFINITY))),
+            "f64::NEG_INFINITY"
+        );
+        assert_eq!(
+            render_expr(&RustExpr::Literal(RustLiteral::Float(f64::NAN))),
+            "f64::NAN"
+        );
     }
 
     #[test]
