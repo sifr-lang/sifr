@@ -2313,14 +2313,20 @@ fn try_lower_condition_operand_expr(expr: &HirExpr) -> Option<RustExpr> {
             }),
             ty: RustType::I64,
         }),
-        HirExpr::Index { object, index, .. } => {
-            try_lower_condition_index_operand_expr(object, index)
+        HirExpr::Index {
+            object, index, ty, ..
+        } => {
+            try_lower_condition_index_operand_expr(object, index, ty)
         }
         _ => None,
     }
 }
 
-fn try_lower_condition_index_operand_expr(object: &HirExpr, index: &HirExpr) -> Option<RustExpr> {
+fn try_lower_condition_index_operand_expr(
+    object: &HirExpr,
+    index: &HirExpr,
+    result_ty: &Type,
+) -> Option<RustExpr> {
     match resolve_alias_type(object.ty()) {
         Type::Dict(_, _) => {
             let lowered_key = if let HirExpr::StringLiteral(value) = index {
@@ -2341,6 +2347,15 @@ fn try_lower_condition_index_operand_expr(object: &HirExpr, index: &HirExpr) -> 
                 args: vec![],
             })
         }
+        Type::List(_) if !is_option_like_type(result_ty) => Some(RustExpr::Clone(Box::new(
+            RustExpr::Index {
+                expr: Box::new(try_lower_leaf_or_name_expr(object)?),
+                index: Box::new(RustExpr::Cast {
+                    expr: Box::new(try_lower_leaf_or_name_expr(index)?),
+                    ty: RustType::Named("usize".to_string()),
+                }),
+            },
+        ))),
         Type::List(_) => Some(RustExpr::MethodCall {
             receiver: Box::new(RustExpr::MethodCall {
                 receiver: Box::new(try_lower_leaf_or_name_expr(object)?),
@@ -2352,6 +2367,34 @@ fn try_lower_condition_index_operand_expr(object: &HirExpr, index: &HirExpr) -> 
             }),
             method: "cloned".to_string(),
             args: vec![],
+        }),
+        Type::Str if !is_option_like_type(result_ty) => Some(RustExpr::Block {
+            stmts: vec![RustStmt::LetElse {
+                pattern: "Some(__indexed_char)".to_string(),
+                value: RustExpr::MethodCall {
+                    receiver: Box::new(RustExpr::MethodCall {
+                        receiver: Box::new(try_lower_leaf_or_name_expr(object)?),
+                        method: "chars".to_string(),
+                        args: vec![],
+                    }),
+                    method: "nth".to_string(),
+                    args: vec![RustExpr::Cast {
+                        expr: Box::new(try_lower_leaf_or_name_expr(index)?),
+                        ty: RustType::Named("usize".to_string()),
+                    }],
+                },
+                else_body: vec![RustStmt::Expr(RustExpr::MacroCall {
+                    name: "unreachable".to_string(),
+                    args: vec![RustExpr::Literal(RustLiteral::Str(
+                        "compiler-verified string index should be in range".to_string(),
+                    ))],
+                })],
+            }],
+            expr: Some(Box::new(RustExpr::MethodCall {
+                receiver: Box::new(RustExpr::Ident("__indexed_char".to_string())),
+                method: "to_string".to_string(),
+                args: vec![],
+            })),
         }),
         _ => None,
     }
@@ -2517,6 +2560,11 @@ fn try_lower_stmt_index_expr(expr: &HirExpr) -> Option<RustExpr> {
     let HirExpr::Index { object, index, .. } = expr else {
         return None;
     };
+    if !is_option_like_type(expr.ty())
+        && matches!(resolve_alias_type(object.ty()), Type::List(_) | Type::Str)
+    {
+        return None;
+    }
     match resolve_alias_type(object.ty()) {
         Type::Dict(_, _) => {
             let lowered_key = if let HirExpr::StringLiteral(value) = index.as_ref() {
@@ -3323,6 +3371,119 @@ mod tests {
         let lowered = try_lower_simple_stmt(&assign_stmt, false, &HashSet::new(), &HashSet::new())
             .expect("assign lowered");
         assert!(matches!(lowered[0], RustStmt::Assign { .. }));
+    }
+
+    #[test]
+    fn simple_let_declines_non_optional_list_index_to_allow_structured_lowering() {
+        let let_stmt = HirStmt::Let {
+            name: "first".to_string(),
+            ty: Type::Int,
+            value: HirExpr::Index {
+                object: Box::new(HirExpr::Name {
+                    name: "values".to_string(),
+                    ty: Type::List(Box::new(Type::Int)),
+                }),
+                index: Box::new(HirExpr::IntLiteral(0)),
+                ty: Type::Int,
+            },
+            is_mutable: false,
+        };
+
+        let lowered = try_lower_simple_stmt(
+            &let_stmt,
+            false,
+            &HashSet::new(),
+            &HashSet::new(),
+        );
+
+        assert!(
+            lowered.is_none(),
+            "non-optional proven list indexes should bypass the simple stmt path"
+        );
+    }
+
+    #[test]
+    fn simple_return_declines_non_optional_string_index_to_allow_structured_lowering() {
+        let return_stmt = HirStmt::Return {
+            value: Some(HirExpr::Index {
+                object: Box::new(HirExpr::Name {
+                    name: "text".to_string(),
+                    ty: Type::Str,
+                }),
+                index: Box::new(HirExpr::Name {
+                    name: "j".to_string(),
+                    ty: Type::Int,
+                }),
+                ty: Type::Str,
+            }),
+        };
+
+        let lowered = try_lower_simple_stmt_with_ctx(
+            &return_stmt,
+            false,
+            &HashSet::new(),
+            &HashSet::new(),
+            SimpleStmtLoweringCtx {
+                return_type: Some(&Type::Str),
+                ..SimpleStmtLoweringCtx::default()
+            },
+        );
+
+        assert!(
+            lowered.is_none(),
+            "non-optional proven string indexes should bypass the simple return path"
+        );
+    }
+
+    #[test]
+    fn simple_compare_condition_wraps_proven_list_index_without_double_option() {
+        let expr = HirExpr::Compare {
+            left: Box::new(HirExpr::Index {
+                object: Box::new(HirExpr::Name {
+                    name: "actual".to_string(),
+                    ty: Type::List(Box::new(Type::Bool)),
+                }),
+                index: Box::new(HirExpr::Name {
+                    name: "i".to_string(),
+                    ty: Type::Int,
+                }),
+                ty: Type::Bool,
+            }),
+            ops: vec!["==".to_string()],
+            comparators: vec![HirExpr::Index {
+                object: Box::new(HirExpr::Name {
+                    name: "expected".to_string(),
+                    ty: Type::List(Box::new(Type::Bool)),
+                }),
+                index: Box::new(HirExpr::Name {
+                    name: "i".to_string(),
+                    ty: Type::Int,
+                }),
+                ty: Type::Union(vec![Type::Bool, Type::None]),
+            }],
+            ty: Type::Bool,
+        };
+
+        let lowered = try_lower_simple_condition_test_expr(&expr, &HashSet::new())
+            .expect("compare condition should lower");
+
+        assert!(matches!(
+            lowered,
+            RustExpr::BinOp { left, right, .. }
+                if matches!(
+                    left.as_ref(),
+                    RustExpr::FnCall { func, args }
+                        if matches!(func.as_ref(), RustExpr::Path(path) if path == &vec!["Some".to_string()])
+                            && matches!(
+                                args.as_slice(),
+                                [RustExpr::Clone(inner)]
+                                    if matches!(inner.as_ref(), RustExpr::Index { .. })
+                            )
+                ) && matches!(
+                    right.as_ref(),
+                    RustExpr::MethodCall { method, .. } if method == "cloned"
+                )
+        ));
     }
 
     #[test]

@@ -311,7 +311,7 @@ impl Renderer {
             } => {
                 self.emit_line(&format!(
                     "let {pattern} = {} else {{",
-                    Self::render_expr_string(value)
+                    Self::wrap_expr(value)
                 ));
                 self.indent();
                 for stmt in else_body {
@@ -870,7 +870,7 @@ impl Renderer {
         }
         // `assert!`/`assert_eq!`/`assert_ne!` message format arguments must be
         // literal tokens, not owned `String` expressions.
-        if matches!(name, "assert" | "assert_eq" | "assert_ne") {
+        if matches!(name, "assert" | "assert_eq" | "assert_ne" | "unreachable") {
             if let RustExpr::Literal(RustLiteral::Str(value)) = arg {
                 return format!("\"{}\"", value.escape_default());
             }

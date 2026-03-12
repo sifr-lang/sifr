@@ -21,6 +21,7 @@ use super::compat_imports::{
     resolve_bare_python_compat_call_alias, resolve_python_compat_call_alias,
 };
 use super::decimal_methods::{decimal_conversion_error_type, resolve_decimal_method_type};
+use super::guarded_index::guarded_sequence_index_result_type;
 use super::type_bounds::{type_satisfies_bound, type_satisfies_constraint};
 use super::typing_and_functions::resolve_annotation_expr;
 use super::{
@@ -2128,14 +2129,20 @@ pub(super) fn lower_subscript(sub: &ExprSubscript, ctx: &mut LowerCtx) -> Option
     let index = lower_expr(&sub.slice, ctx)?;
     let index_ty = index.ty().clone();
 
-    let result_ty = object_ty.index_result_type(&index_ty).unwrap_or_else(|| {
-        ctx.error(format!(
-            "cannot index type '{}' with '{}'",
-            object_ty.display_name(),
-            index_ty.display_name()
-        ));
-        Type::Any
-    });
+    let result_ty = if let Some(guarded_ty) =
+        guarded_sequence_index_result_type(sub, &object_ty, ctx)
+    {
+        guarded_ty
+    } else {
+        object_ty.index_result_type(&index_ty).unwrap_or_else(|| {
+            ctx.error(format!(
+                "cannot index type '{}' with '{}'",
+                object_ty.display_name(),
+                index_ty.display_name()
+            ));
+            Type::Any
+        })
+    };
 
     Some(HirExpr::Index {
         object: Box::new(object),

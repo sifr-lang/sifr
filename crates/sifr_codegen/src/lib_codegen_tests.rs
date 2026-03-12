@@ -1,6 +1,6 @@
 use crate::{
     generate_rust, generate_rust_multi, generate_rust_multi_with_metadata, generate_rust_test,
-    generate_rust_with_metadata, RustEmitter, RustStmt, StdlibCode,
+    generate_rust_with_metadata, RustEmitter, RustExpr, RustStmt, RustType, StdlibCode,
 };
 use sifr_hir::{
     HirClass, HirClassKind, HirExceptHandler, HirExpr, HirFStringPart, HirFunction, HirImport,
@@ -2076,6 +2076,104 @@ fn test_structured_stmt_path_handles_copy_typed_return_expr() {
     assert!(
         generated.lowering_stats.stmt_structured >= 1,
         "copy-typed return should be emitted through structured stmt path"
+    );
+}
+
+#[test]
+fn test_structured_stmt_path_wraps_non_optional_string_index_into_option_local() {
+    let stmt = HirStmt::Let {
+        name: "part".to_string(),
+        ty: Type::Union(vec![Type::Str, Type::None]),
+        value: HirExpr::Index {
+            object: Box::new(HirExpr::Name {
+                name: "text".to_string(),
+                ty: Type::Str,
+            }),
+            index: Box::new(HirExpr::Name {
+                name: "j".to_string(),
+                ty: Type::Int,
+            }),
+            ty: Type::Str,
+        },
+        is_mutable: false,
+    };
+    let mut emitter = RustEmitter::new();
+
+    let captured = emitter.capture_structured_stmts(|inner| inner.emit_stmt(&stmt));
+
+    assert!(matches!(
+        captured.first(),
+        Some(RustStmt::Let {
+            name,
+            ty: Some(RustType::Option(inner)),
+            value:
+                RustExpr::FnCall {
+                    func,
+                    args,
+                },
+            ..
+        }) if name == "part"
+            && matches!(inner.as_ref(), RustType::String_)
+            && matches!(func.as_ref(), RustExpr::Path(path) if path == &vec!["Some".to_string()])
+            && matches!(args.as_slice(), [RustExpr::Block { .. }])
+    ));
+}
+
+#[test]
+fn test_structured_stmt_path_handles_non_optional_string_index_return_expr() {
+    let module = HirModule {
+        functions: vec![HirFunction {
+            name: "char_at".to_string(),
+            params: vec![
+                HirParam {
+                    name: "text".to_string(),
+                    ty: Type::Str,
+                    default: None,
+                    keyword_only: false,
+                    convention: ParamConvention::Borrow,
+                },
+                HirParam {
+                    name: "j".to_string(),
+                    ty: Type::Int,
+                    default: None,
+                    keyword_only: false,
+                    convention: ParamConvention::Own,
+                },
+            ],
+            return_type: Type::Str,
+            body: vec![HirStmt::Return {
+                value: Some(HirExpr::Index {
+                    object: Box::new(HirExpr::Name {
+                        name: "text".to_string(),
+                        ty: Type::Str,
+                    }),
+                    index: Box::new(HirExpr::Name {
+                        name: "j".to_string(),
+                        ty: Type::Int,
+                    }),
+                    ty: Type::Str,
+                }),
+            }],
+            method_kind: MethodKind::Regular,
+            decorators: vec![],
+            type_params: vec![],
+        }],
+        classes: vec![],
+        imports: vec![],
+        constants: vec![],
+        generic_functions: std::collections::HashMap::new(),
+        type_param_bounds: std::collections::HashMap::new(),
+    };
+
+    let generated = generate_rust_with_metadata(&module);
+    assert!(generated.rust_source.contains("return {"));
+    assert!(generated
+        .rust_source
+        .contains("let Some(__indexed_char) = text.chars().nth(j as usize) else {"));
+    assert!(generated.rust_source.contains("__indexed_char.to_string()"));
+    assert!(
+        generated.lowering_stats.stmt_structured >= 1,
+        "non-optional string index return should stay on the structured stmt path"
     );
 }
 

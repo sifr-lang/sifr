@@ -95,6 +95,27 @@ fn should_force_mutable_binding(ty: &Type) -> bool {
 }
 
 impl RustEmitter {
+    pub(super) fn wrap_option_local_value_for_ir(
+        &self,
+        target_ty: &Type,
+        value: &HirExpr,
+        lowered_value: crate::RustExpr,
+    ) -> crate::RustExpr {
+        if !crate::helpers::is_option_type(target_ty) {
+            return lowered_value;
+        }
+        if matches!(value, HirExpr::NoneLiteral) || matches!(value.ty(), Type::None) {
+            return crate::RustExpr::Literal(crate::RustLiteral::None);
+        }
+        if crate::helpers::is_option_type(value.ty()) {
+            return lowered_value;
+        }
+        crate::RustExpr::FnCall {
+            func: Box::new(crate::RustExpr::Path(vec!["Some".to_string()])),
+            args: vec![lowered_value],
+        }
+    }
+
     fn uses_debug_display_format_for_ir(ty: &Type) -> bool {
         match crate::resolve_alias_type_for_plain_call(ty) {
             Type::Int
@@ -1451,10 +1472,44 @@ impl RustEmitter {
                 else_expr: Some(Box::new(lowered_else)),
             }));
         }
+        if let HirExpr::RangeLiteral {
+            start, end, step, ..
+        } = expr
+        {
+            let Some(lowered_start) = self.lower_stmt_expr_for_ir(start)? else {
+                return Ok(None);
+            };
+            let Some(lowered_end) = self.lower_stmt_expr_for_ir(end)? else {
+                return Ok(None);
+            };
+            let lowered_range = crate::RustExpr::Range {
+                start: Box::new(lowered_start),
+                end: Box::new(lowered_end),
+            };
+            if let Some(step_expr) = step {
+                let Some(lowered_step) = self.lower_stmt_expr_for_ir(step_expr)? else {
+                    return Ok(None);
+                };
+                return Ok(Some(crate::RustExpr::MethodCall {
+                    receiver: Box::new(lowered_range),
+                    method: "step_by".to_string(),
+                    args: vec![crate::RustExpr::Cast {
+                        expr: Box::new(lowered_step),
+                        ty: crate::RustType::Named("usize".to_string()),
+                    }],
+                }));
+            }
+            return Ok(Some(lowered_range));
+        }
         if let HirExpr::Index {
             object, index, ty, ..
         } = expr
         {
+            if !crate::helpers::is_option_type(ty) {
+                if let Some(lowered) = self.lower_non_option_index_expr_for_ir(object, index)? {
+                    return Ok(Some(lowered));
+                }
+            }
             if let Some(lowered) = self.try_lower_structured_index_expr(object, index, ty)? {
                 return Ok(Some(lowered));
             }
@@ -3012,20 +3067,20 @@ impl RustEmitter {
         ))))
     }
 
-    fn lower_non_option_index_return_expr_for_ir(
+    fn lower_non_option_index_expr_for_ir(
         &mut self,
         object: &HirExpr,
         index: &HirExpr,
     ) -> Result<Option<crate::RustExpr>, crate::CodegenError> {
         let object_ty = crate::resolve_alias_type_for_plain_call(object.ty());
-        if !matches!(
-            object_ty,
-            Type::Tuple(_) | Type::Dict(_, _) | Type::List(_) | Type::Str
-        ) {
+        if !matches!(object_ty, Type::Tuple(_) | Type::List(_) | Type::Str) {
             return Ok(None);
         }
 
         let Some(lowered_object) = self.lower_stmt_expr_for_ir(object)? else {
+            return Ok(None);
+        };
+        let Some(lowered_index) = self.lower_stmt_expr_for_ir(index)? else {
             return Ok(None);
         };
 
@@ -3045,10 +3100,43 @@ impl RustEmitter {
                     field: idx.to_string(),
                 }
             }
-            Type::Dict(_, _) | Type::List(_) | Type::Str => {
-                return Err(crate::CodegenError::new(
-                    "internal codegen invariant violated: non-optional list/dict/str index return reached codegen",
-                ));
+            Type::List(_) => crate::RustExpr::Clone(Box::new(crate::RustExpr::Index {
+                expr: Box::new(lowered_object),
+                index: Box::new(crate::RustExpr::Cast {
+                    expr: Box::new(lowered_index),
+                    ty: crate::RustType::Named("usize".to_string()),
+                }),
+            })),
+            Type::Str => {
+                let nth_expr = crate::RustExpr::MethodCall {
+                    receiver: Box::new(crate::RustExpr::MethodCall {
+                        receiver: Box::new(lowered_object),
+                        method: "chars".to_string(),
+                        args: vec![],
+                    }),
+                    method: "nth".to_string(),
+                    args: vec![crate::RustExpr::Cast {
+                        expr: Box::new(lowered_index),
+                        ty: crate::RustType::Named("usize".to_string()),
+                    }],
+                };
+                crate::RustExpr::Block {
+                    stmts: vec![crate::RustStmt::LetElse {
+                        pattern: "Some(__indexed_char)".to_string(),
+                        value: nth_expr,
+                        else_body: vec![crate::RustStmt::Expr(crate::RustExpr::MacroCall {
+                            name: "unreachable".to_string(),
+                            args: vec![crate::RustExpr::Literal(crate::RustLiteral::Str(
+                                "compiler-verified string index should be in range".to_string(),
+                            ))],
+                        })],
+                    }],
+                    expr: Some(Box::new(crate::RustExpr::MethodCall {
+                        receiver: Box::new(crate::RustExpr::Ident("__indexed_char".to_string())),
+                        method: "to_string".to_string(),
+                        args: vec![],
+                    })),
+                }
             }
             _ => return Ok(None),
         };
@@ -3078,7 +3166,7 @@ impl RustEmitter {
             let HirExpr::Index { object, index, .. } = value else {
                 unreachable!();
             };
-            if let Some(lowered) = self.lower_non_option_index_return_expr_for_ir(object, index)? {
+            if let Some(lowered) = self.lower_non_option_index_expr_for_ir(object, index)? {
                 return Ok(Some(lowered));
             }
         }
@@ -3098,6 +3186,16 @@ impl RustEmitter {
         &mut self,
         expr: &HirExpr,
     ) -> Result<Option<crate::RustExpr>, crate::CodegenError> {
+        if let HirExpr::Index {
+            object, index, ty, ..
+        } = expr
+        {
+            if !crate::helpers::is_option_type(ty) {
+                if let Some(lowered) = self.lower_non_option_index_expr_for_ir(object, index)? {
+                    return Ok(Some(lowered));
+                }
+            }
+        }
         if let Some(lowered_leaf) = crate::try_lower_leaf_or_name_expr_result(expr)? {
             return Ok(Some(lowered_leaf));
         }
@@ -3171,7 +3269,7 @@ impl RustEmitter {
                     let Some(lowered) = self.lower_rendered_expr_for_ir(value)? else {
                         return Ok(None);
                     };
-                    lowered
+                    self.wrap_option_local_value_for_ir(ty, value, lowered)
                 };
                 (
                     vec![RustStmt::Let {
