@@ -14,6 +14,10 @@ use sifr_type_system::{
 use super::classes::collect_literal_coverage;
 use super::diagnostics::{collect_raise_error_types, format_type_name, is_valid_error_type};
 use super::expressions::{lower_expr, lower_star_unpack_assign, lower_tuple_unpack_assign};
+use super::numeric_sentinels::{
+    apply_numeric_sentinel_patches, domain_typed_sentinel_expr, numeric_domain_for_type,
+    numeric_sentinel_kind,
+};
 use super::sequence_guard_detection::{
     detect_false_exit_sequence_guards, detect_range_sequence_guards, detect_true_sequence_guards,
     detect_while_sequence_guards,
@@ -46,6 +50,7 @@ pub(super) fn lower_stmts(
         if let Some(hir_stmt) = lower_stmt(stmt, func_type, ctx) {
             result.push(hir_stmt);
         }
+        apply_numeric_sentinel_patches(&mut result, &mut ctx.pending_numeric_sentinel_patches);
     }
     result
 }
@@ -943,7 +948,15 @@ pub(super) fn lower_ann_assign(ann: &StmtAnnAssign, ctx: &mut LowerCtx) -> Optio
     let declared_type = resolve_annotation_expr(&ann.annotation, ctx);
 
     let value = if let Some(val) = &ann.value {
-        let mut expr = lower_expr(val, ctx)?;
+        let mut expr = if let Some(kind) = numeric_sentinel_kind(val) {
+            if let Some(domain) = numeric_domain_for_type(&declared_type) {
+                domain_typed_sentinel_expr(kind, domain)
+            } else {
+                lower_expr(val, ctx)?
+            }
+        } else {
+            lower_expr(val, ctx)?
+        };
         let expr_ty = expr.ty().clone();
         // Inside try blocks, auto-unwrap Result[T, E] when declared type is T
         if ctx.in_try_block {
@@ -998,6 +1011,18 @@ pub(super) fn lower_ann_assign(ann: &StmtAnnAssign, ctx: &mut LowerCtx) -> Optio
     }
 
     ctx.scope.define(name.clone(), declared_type.clone());
+    if let Some(kind) = ann
+        .value
+        .as_ref()
+        .and_then(|value| numeric_sentinel_kind(value))
+    {
+        ctx.record_numeric_sentinel_initializer(name.clone(), kind);
+        if let Some(domain) = numeric_domain_for_type(&declared_type) {
+            ctx.resolve_numeric_sentinel_domain(&name, domain);
+        }
+    } else {
+        ctx.clear_numeric_sentinel_var(&name);
+    }
     record_sequence_pointer_fact(ctx, &name, ann.value.as_ref()?);
 
     Some(HirStmt::Let {
@@ -1255,11 +1280,21 @@ pub(super) fn lower_assign(assign: &StmtAssign, ctx: &mut LowerCtx) -> Option<Hi
         }
         // Reset moved state on reassignment
         ctx.scope.reset_moved(&name);
+        if ctx.numeric_sentinel_fact(&name).is_some() {
+            if let Some(domain) = numeric_domain_for_type(&value_ty) {
+                ctx.resolve_numeric_sentinel_domain(&name, domain);
+            }
+        }
         record_sequence_pointer_fact(ctx, &name, &assign.value);
         Some(HirStmt::Assign { name, value })
     } else {
         // New variable (type inferred)
         ctx.scope.define(name.clone(), value_ty.clone());
+        if let Some(kind) = numeric_sentinel_kind(&assign.value) {
+            ctx.record_numeric_sentinel_initializer(name.clone(), kind);
+        } else {
+            ctx.clear_numeric_sentinel_var(&name);
+        }
         record_sequence_pointer_fact(ctx, &name, &assign.value);
         Some(HirStmt::Let {
             name,

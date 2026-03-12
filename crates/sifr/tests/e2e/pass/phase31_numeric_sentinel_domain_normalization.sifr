@@ -1,0 +1,35 @@
+# Phase 31 m31_a slice 4
+# Proves canonical float("inf") sentinels normalize onto the integer domain
+# for algorithmic accumulators without changing ordinary float(str) parsing.
+
+def minSubArrayLen(target: int, nums: list[int]) -> int:
+    res = float("inf")
+    l, total = 0, 0
+
+    for r in range(len(nums)):
+        total += nums[r]
+        while total >= target:
+            res = min(res, r - l + 1)
+            total -= nums[l]
+            l += 1
+    return res if res != float("inf") else 0
+
+def increasingTriplet(nums: list[int]) -> bool:
+    first = float("inf")
+    second = float("inf")
+
+    for num in nums:
+        if num <= first:
+            first = num
+        elif num <= second:
+            second = num
+        else:
+            return True
+    return False
+
+def main():
+    assert str(minSubArrayLen(7, [2, 3, 1, 2, 4, 3])) == "2"
+    assert str(minSubArrayLen(4, [1, 4, 4])) == "1"
+    assert str(minSubArrayLen(11, [1, 1, 1, 1, 1, 1, 1, 1])) == "0"
+    assert str(increasingTriplet([1, 2, 3, 4, 5])) == "true"
+    assert str(increasingTriplet([5, 4, 3, 2, 1])) == "false"

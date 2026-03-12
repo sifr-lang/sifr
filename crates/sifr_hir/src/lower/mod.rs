@@ -6,6 +6,7 @@ use sifr_python_ast::{Expr, ExprCall, Stmt};
 use sifr_type_system::{make_union, FunctionType, Type};
 use std::collections::HashMap;
 
+mod arithmetic_warnings;
 mod builtin_calls;
 mod classes;
 mod compat_imports;
@@ -14,6 +15,7 @@ mod diagnostics;
 mod expressions;
 mod guarded_index;
 mod imports;
+mod numeric_sentinels;
 mod sequence_guard_detection;
 mod sequence_guards;
 mod sequence_pointers;
@@ -108,6 +110,10 @@ pub(super) struct LowerCtx {
     sequence_guards: Vec<SequenceGuard>,
     /// Simple pointer-role facts used to recognize same-sequence two-pointer loops.
     sequence_pointers: Vec<SequencePointerFact>,
+    /// Pending/resolved local infinity sentinel facts for algorithmic accumulators.
+    numeric_sentinel_vars: HashMap<String, numeric_sentinels::NumericSentinelFact>,
+    /// Pending initializer patches once a sentinel variable domain resolves.
+    pending_numeric_sentinel_patches: HashMap<String, numeric_sentinels::NumericSentinelPatch>,
 }
 
 impl LowerCtx {
@@ -141,6 +147,8 @@ impl LowerCtx {
             synthetic_import_aliases: HashMap::new(),
             sequence_guards: Vec::new(),
             sequence_pointers: Vec::new(),
+            numeric_sentinel_vars: HashMap::new(),
+            pending_numeric_sentinel_patches: HashMap::new(),
         }
     }
 
