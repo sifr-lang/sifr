@@ -710,14 +710,18 @@ pub(crate) fn try_lower_simple_stmt_with_ctx(
 fn should_omit_local_type_annotation(ty: &Type, value: &HirExpr) -> bool {
     match (ty, value) {
         (resolved_ty, HirExpr::Call { func, args, .. })
-            if matches!(crate::resolve_alias_type_for_plain_call(resolved_ty), Type::Set(_))
-                && func == "set"
+            if matches!(
+                crate::resolve_alias_type_for_plain_call(resolved_ty),
+                Type::Set(_)
+            ) && func == "set"
                 && args.is_empty() =>
         {
             true
         }
         (Type::Alias(alias_name, inner), HirExpr::Call { func, args, .. })
-            if func == alias_name && args.is_empty() && alias_name.starts_with("__compat_defaultdict_") =>
+            if func == alias_name
+                && args.is_empty()
+                && alias_name.starts_with("__compat_defaultdict_") =>
         {
             let Type::Dict(key_ty, value_ty) = inner.resolve_alias() else {
                 return false;
@@ -2315,9 +2319,7 @@ fn try_lower_condition_operand_expr(expr: &HirExpr) -> Option<RustExpr> {
         }),
         HirExpr::Index {
             object, index, ty, ..
-        } => {
-            try_lower_condition_index_operand_expr(object, index, ty)
-        }
+        } => try_lower_condition_index_operand_expr(object, index, ty),
         _ => None,
     }
 }
@@ -2347,15 +2349,15 @@ fn try_lower_condition_index_operand_expr(
                 args: vec![],
             })
         }
-        Type::List(_) if !is_option_like_type(result_ty) => Some(RustExpr::Clone(Box::new(
-            RustExpr::Index {
+        Type::List(_) if !is_option_like_type(result_ty) => {
+            Some(RustExpr::Clone(Box::new(RustExpr::Index {
                 expr: Box::new(try_lower_leaf_or_name_expr(object)?),
                 index: Box::new(RustExpr::Cast {
                     expr: Box::new(try_lower_leaf_or_name_expr(index)?),
                     ty: RustType::Named("usize".to_string()),
                 }),
-            },
-        ))),
+            })))
+        }
         Type::List(_) => Some(RustExpr::MethodCall {
             receiver: Box::new(RustExpr::MethodCall {
                 receiver: Box::new(try_lower_leaf_or_name_expr(object)?),
@@ -3012,7 +3014,10 @@ fn try_lower_simple_subscript_augassign_stmt(
                     receiver: Box::new(RustExpr::MethodCall {
                         receiver: Box::new(RustExpr::Ident(object.to_string())),
                         method: "entry".to_string(),
-                        args: vec![if matches!(&lowered_index, RustExpr::Literal(RustLiteral::Str(_))) {
+                        args: vec![if matches!(
+                            &lowered_index,
+                            RustExpr::Literal(RustLiteral::Str(_))
+                        ) {
                             lowered_index
                         } else {
                             RustExpr::Clone(Box::new(lowered_index))
@@ -3389,12 +3394,7 @@ mod tests {
             is_mutable: false,
         };
 
-        let lowered = try_lower_simple_stmt(
-            &let_stmt,
-            false,
-            &HashSet::new(),
-            &HashSet::new(),
-        );
+        let lowered = try_lower_simple_stmt(&let_stmt, false, &HashSet::new(), &HashSet::new());
 
         assert!(
             lowered.is_none(),

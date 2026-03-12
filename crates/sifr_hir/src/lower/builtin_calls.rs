@@ -54,15 +54,13 @@ pub(super) fn lower_defaultdict_constructor_call(
         return None;
     }
 
-    let factory_name = match &call.arguments.args[0] {
-        Expr::Name(name) => name.id.as_str(),
-        _ => {
-            ctx.error(
-                "defaultdict() factory must be a builtin name such as int, list, or set"
-                    .to_string(),
-            );
-            return None;
-        }
+    let factory_name = if let Expr::Name(name) = &call.arguments.args[0] {
+        name.id.as_str()
+    } else {
+        ctx.error(
+            "defaultdict() factory must be a builtin name such as int, list, or set".to_string(),
+        );
+        return None;
     };
     let Some((alias_name, value_ty)) = defaultdict_alias_and_value_type(factory_name) else {
         ctx.error(format!(
@@ -81,7 +79,8 @@ pub(super) fn lower_defaultdict_constructor_call(
             ));
             return None;
         };
-        if !mapping_value_ty.is_assignable_to(&value_ty) && !value_ty.is_assignable_to(mapping_value_ty)
+        if !mapping_value_ty.is_assignable_to(&value_ty)
+            && !value_ty.is_assignable_to(mapping_value_ty)
         {
             ctx.error(format!(
                 "defaultdict() initial mapping value type '{}' is not compatible with factory '{}'",

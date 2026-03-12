@@ -722,7 +722,10 @@ fn try_lower_simple_defaultdict_index_expr(object: &HirExpr, index: &HirExpr) ->
             args: vec![],
         },
         "__compat_defaultdict_set" => RustExpr::FnCall {
-            func: Box::new(RustExpr::Path(vec!["HashSet".to_string(), "new".to_string()])),
+            func: Box::new(RustExpr::Path(vec![
+                "HashSet".to_string(),
+                "new".to_string(),
+            ])),
             args: vec![],
         },
         _ => return None,

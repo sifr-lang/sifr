@@ -1981,9 +1981,10 @@ fn detect_true_sequence_guards(expr: &Expr, ctx: &LowerCtx) -> Vec<SequenceGuard
         Expr::Compare(cmp) if cmp.ops.len() == 1 && cmp.comparators.len() == 1 => {
             match &cmp.ops[0] {
                 CmpOp::Lt => {
-                    if let (Expr::Name(index_name), Some(sequence_name)) =
-                        (cmp.left.as_ref(), len_call_sequence_name(&cmp.comparators[0]))
-                    {
+                    if let (Expr::Name(index_name), Some(sequence_name)) = (
+                        cmp.left.as_ref(),
+                        len_call_sequence_name(&cmp.comparators[0]),
+                    ) {
                         return vec![SequenceGuard::IndexVarInRange {
                             sequence: sequence_name,
                             index_var: index_name.id.clone(),

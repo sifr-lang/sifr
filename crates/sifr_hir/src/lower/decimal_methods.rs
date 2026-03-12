@@ -1,5 +1,6 @@
 use crate::hir_nodes::HirExpr;
 use sifr_type_system::Type;
+use std::str::FromStr;
 
 use super::LowerCtx;
 
@@ -61,6 +62,26 @@ pub(super) fn decimal_conversion_error_type(ctx: &LowerCtx) -> Type {
             methods: vec![],
             parent_class: None,
         })
+}
+
+pub(super) fn validate_decimal_string_literal(value: &str, ctx: &mut LowerCtx) -> Option<()> {
+    if rust_decimal::Decimal::from_str_exact(value).is_err() {
+        ctx.error(format!(
+            "[E2501] Decimal() received invalid exact literal '{value}'"
+        ));
+        return None;
+    }
+    Some(())
+}
+
+pub(super) fn validate_bigdecimal_string_literal(value: &str, ctx: &mut LowerCtx) -> Option<()> {
+    if bigdecimal::BigDecimal::from_str(value).is_err() {
+        ctx.error(format!(
+            "[E2502] BigDecimal() received invalid decimal literal '{value}'"
+        ));
+        return None;
+    }
+    Some(())
 }
 
 pub(super) fn validate_decimal_scale_argument(

@@ -59,7 +59,8 @@ pub(super) fn ensure_synthetic_stdlib_import(
             ctx.functions.insert(alias.clone(), ft.clone());
             if let Some(module_defaults) = externals.function_defaults.get(module_name) {
                 if let Some(defaults) = module_defaults.get(member_name) {
-                    ctx.function_defaults.insert(alias.clone(), defaults.clone());
+                    ctx.function_defaults
+                        .insert(alias.clone(), defaults.clone());
                 }
             }
             if let Some(module_gf) = externals.generic_functions.get(module_name) {
@@ -126,7 +127,8 @@ pub(super) fn ensure_synthetic_stdlib_import(
                     ctx.functions.insert(alias.clone(), ft);
                     if let Some(module_defaults) = externals.function_defaults.get(module_name) {
                         if let Some(defaults) = module_defaults.get(member_name) {
-                            ctx.function_defaults.insert(alias.clone(), defaults.clone());
+                            ctx.function_defaults
+                                .insert(alias.clone(), defaults.clone());
                         }
                     }
                 }

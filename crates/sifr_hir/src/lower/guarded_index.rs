@@ -137,7 +137,10 @@ mod tests {
             "def main():\n    nums: list[int] = [1, 2, 3]\n    first: int = nums[0]\n",
         );
 
-        assert!(result.is_err(), "unguarded list index should remain optional");
+        assert!(
+            result.is_err(),
+            "unguarded list index should remain optional"
+        );
         let errors = result.unwrap_err();
         assert!(errors.iter().any(|error| {
             error
