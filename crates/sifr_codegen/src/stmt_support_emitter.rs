@@ -3241,6 +3241,17 @@ impl RustEmitter {
 
             let (lowered_stmts, skip_rewrite) = if let Some(lowered_stmts) = maybe_simple_lowered {
                 (lowered_stmts, false)
+            } else if let HirStmt::TupleUnpack { targets, value } = stmt {
+                let Some(lowered_value) = self.lower_stmt_expr_for_ir(value)? else {
+                    return Ok(None);
+                };
+                (
+                    vec![RustStmt::LetPattern {
+                        pattern: crate::tuple_unpack_pattern(targets, &self.mutated_vars),
+                        value: lowered_value,
+                    }],
+                    false,
+                )
             } else if let HirStmt::Let {
                 name, ty, value, ..
             } = stmt
@@ -3295,6 +3306,23 @@ impl RustEmitter {
                 (
                     vec![RustStmt::Assign {
                         target: crate::RustExpr::Ident(name.clone()),
+                        value: lowered_value,
+                    }],
+                    true,
+                )
+            } else if let HirStmt::AugAssign { name, op, value } = stmt {
+                let Some(lowered_value) = self.lower_stmt_expr_for_ir(value)? else {
+                    return Ok(None);
+                };
+                let normalized_op = if op == "//=" {
+                    "/".to_string()
+                } else {
+                    op.strip_suffix('=').unwrap_or(op).to_string()
+                };
+                (
+                    vec![RustStmt::AugAssign {
+                        target: crate::RustExpr::Ident(name.clone()),
+                        op: normalized_op,
                         value: lowered_value,
                     }],
                     true,

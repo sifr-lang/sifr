@@ -14,7 +14,11 @@ use sifr_type_system::{
 use super::classes::collect_literal_coverage;
 use super::diagnostics::{collect_raise_error_types, format_type_name, is_valid_error_type};
 use super::expressions::{lower_expr, lower_star_unpack_assign, lower_tuple_unpack_assign};
-use super::sequence_guards::SequenceGuard;
+use super::sequence_guard_detection::{
+    detect_false_exit_sequence_guards, detect_range_sequence_guards, detect_true_sequence_guards,
+    detect_while_sequence_guards,
+};
+use super::sequence_pointers::record_sequence_pointer_fact;
 use super::typing_and_functions::{extract_function_type, resolve_annotation_expr};
 use super::LowerCtx;
 
@@ -994,6 +998,7 @@ pub(super) fn lower_ann_assign(ann: &StmtAnnAssign, ctx: &mut LowerCtx) -> Optio
     }
 
     ctx.scope.define(name.clone(), declared_type.clone());
+    record_sequence_pointer_fact(ctx, &name, ann.value.as_ref()?);
 
     Some(HirStmt::Let {
         name,
@@ -1250,10 +1255,12 @@ pub(super) fn lower_assign(assign: &StmtAssign, ctx: &mut LowerCtx) -> Option<Hi
         }
         // Reset moved state on reassignment
         ctx.scope.reset_moved(&name);
+        record_sequence_pointer_fact(ctx, &name, &assign.value);
         Some(HirStmt::Assign { name, value })
     } else {
         // New variable (type inferred)
         ctx.scope.define(name.clone(), value_ty.clone());
+        record_sequence_pointer_fact(ctx, &name, &assign.value);
         Some(HirStmt::Let {
             name,
             ty: value_ty,
@@ -1350,6 +1357,7 @@ pub(super) fn lower_aug_assign(aug: &StmtAugAssign, ctx: &mut LowerCtx) -> Optio
     };
 
     let value = lower_expr(&aug.value, ctx)?;
+    ctx.clear_sequence_pointer(&name);
 
     let op_str = match aug.op {
         Operator::Add => "+=",
@@ -1607,6 +1615,8 @@ pub(super) fn lower_if(
         }
     }
 
+    ctx.clear_sequence_pointers();
+
     Some(HirStmt::If {
         condition,
         then_body,
@@ -1788,7 +1798,7 @@ pub(super) fn lower_while(
 ) -> Option<HirStmt> {
     let condition = lower_expr(&while_stmt.test, ctx)?;
     let saved_sequence_guards = ctx.save_sequence_guards();
-    for guard in detect_true_sequence_guards(&while_stmt.test, ctx) {
+    for guard in detect_while_sequence_guards(while_stmt, ctx) {
         ctx.add_sequence_guard(guard);
     }
 
@@ -1818,6 +1828,8 @@ pub(super) fn lower_while(
         ctx.scope.pop();
         Some(else_stmts)
     };
+
+    ctx.clear_sequence_pointers();
 
     Some(HirStmt::While {
         condition,
@@ -1932,6 +1944,8 @@ pub(super) fn lower_for(
         Some(else_stmts)
     };
 
+    ctx.clear_sequence_pointers();
+
     Some(HirStmt::For {
         target: target_name,
         target_ty: elem_ty,
@@ -1939,159 +1953,4 @@ pub(super) fn lower_for(
         body,
         else_body,
     })
-}
-
-fn len_call_sequence_name(expr: &Expr) -> Option<String> {
-    let Expr::Call(call) = expr else {
-        return None;
-    };
-    let Expr::Name(func_name) = call.func.as_ref() else {
-        return None;
-    };
-    if func_name.id.as_str() != "len" || call.arguments.args.len() != 1 {
-        return None;
-    }
-    let Expr::Name(sequence_name) = &call.arguments.args[0] else {
-        return None;
-    };
-    Some(sequence_name.id.clone())
-}
-
-fn literal_usize(expr: &Expr) -> Option<usize> {
-    let Expr::NumberLiteral(num) = expr else {
-        return None;
-    };
-    let Number::Int(value) = &num.value else {
-        return None;
-    };
-    value.as_i64().and_then(|value| usize::try_from(value).ok())
-}
-
-fn detect_true_sequence_guards(expr: &Expr, ctx: &LowerCtx) -> Vec<SequenceGuard> {
-    match expr {
-        Expr::BoolOp(boolop) if matches!(boolop.op, BoolOp::And) => boolop
-            .values
-            .iter()
-            .flat_map(|value| detect_true_sequence_guards(value, ctx))
-            .collect(),
-        Expr::Name(name) => vec![SequenceGuard::MinLength {
-            sequence: name.id.clone(),
-            min_len: 1,
-        }],
-        Expr::Compare(cmp) if cmp.ops.len() == 1 && cmp.comparators.len() == 1 => {
-            match &cmp.ops[0] {
-                CmpOp::Lt => {
-                    if let (Expr::Name(index_name), Some(sequence_name)) = (
-                        cmp.left.as_ref(),
-                        len_call_sequence_name(&cmp.comparators[0]),
-                    ) {
-                        return vec![SequenceGuard::IndexVarInRange {
-                            sequence: sequence_name,
-                            index_var: index_name.id.clone(),
-                        }];
-                    }
-                    Vec::new()
-                }
-                CmpOp::Eq => {
-                    if let (Some(sequence_name), Some(len_value)) = (
-                        len_call_sequence_name(cmp.left.as_ref()),
-                        literal_usize(&cmp.comparators[0]),
-                    ) {
-                        if len_value > 0 {
-                            return vec![SequenceGuard::MinLength {
-                                sequence: sequence_name,
-                                min_len: len_value,
-                            }];
-                        }
-                    }
-                    Vec::new()
-                }
-                CmpOp::Gt => {
-                    if let (Some(sequence_name), Some(len_value)) = (
-                        len_call_sequence_name(cmp.left.as_ref()),
-                        literal_usize(&cmp.comparators[0]),
-                    ) {
-                        return vec![SequenceGuard::MinLength {
-                            sequence: sequence_name,
-                            min_len: len_value + 1,
-                        }];
-                    }
-                    Vec::new()
-                }
-                _ => Vec::new(),
-            }
-        }
-        Expr::UnaryOp(unary) if matches!(unary.op, UnaryOp::Not) => {
-            detect_false_exit_sequence_guards(&unary.operand, ctx)
-        }
-        _ => Vec::new(),
-    }
-}
-
-fn detect_false_exit_sequence_guards(expr: &Expr, ctx: &LowerCtx) -> Vec<SequenceGuard> {
-    match expr {
-        Expr::Name(name) => vec![SequenceGuard::MinLength {
-            sequence: name.id.clone(),
-            min_len: 1,
-        }],
-        Expr::Compare(cmp) if cmp.ops.len() == 1 && cmp.comparators.len() == 1 => {
-            if !matches!(&cmp.ops[0], CmpOp::Eq) {
-                return Vec::new();
-            }
-            let Some(sequence_name) = len_call_sequence_name(cmp.left.as_ref()) else {
-                return Vec::new();
-            };
-            let Some(len_value) = literal_usize(&cmp.comparators[0]) else {
-                return Vec::new();
-            };
-            let current_min_len = ctx.min_length_guard(&sequence_name);
-            if current_min_len >= len_value {
-                vec![SequenceGuard::MinLength {
-                    sequence: sequence_name,
-                    min_len: len_value + 1,
-                }]
-            } else if len_value == 0 {
-                vec![SequenceGuard::MinLength {
-                    sequence: sequence_name,
-                    min_len: 1,
-                }]
-            } else {
-                Vec::new()
-            }
-        }
-        _ => Vec::new(),
-    }
-}
-
-fn detect_range_sequence_guards(for_stmt: &StmtFor, target_name: &str) -> Vec<SequenceGuard> {
-    let Expr::Call(call) = for_stmt.iter.as_ref() else {
-        return Vec::new();
-    };
-    let Expr::Name(func_name) = call.func.as_ref() else {
-        return Vec::new();
-    };
-    if func_name.id.as_str() != "range" {
-        return Vec::new();
-    }
-    let mut sequence_name = None;
-    for arg in &call.arguments.args {
-        if let Some(found) = len_call_sequence_name(arg) {
-            sequence_name = Some(found);
-            break;
-        }
-        if let Expr::BinOp(binop) = arg {
-            if let Some(found) = len_call_sequence_name(binop.left.as_ref()) {
-                sequence_name = Some(found);
-                break;
-            }
-        }
-    }
-    sequence_name
-        .map(|sequence| {
-            vec![SequenceGuard::IndexVarInRange {
-                sequence,
-                index_var: target_name.to_string(),
-            }]
-        })
-        .unwrap_or_default()
 }

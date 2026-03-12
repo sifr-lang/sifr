@@ -70,6 +70,12 @@ Phase 31 itself is complete. This document is the carry-forward plan for the rem
   - Targeted 10-case status: `PASS=3`, `CHECK_ERROR=7`, `RUN_ERROR=0`
   - Confirmed passes: `0014_longest_common_prefix`, `0198_house_robber`, `1768_merge_strings_alternately`
   - Confirmed reclassification signal: remaining watched failures are now narrower optional-flow shapes beyond the guarded-index root cause covered in slice 1
+- `2026-03-12`: `m31_a_optional_narrowing_core` slice 2 completed local validation for same-sequence two-pointer `while` guard narrowing.
+  - Execution report: `issues/phase31-m31a-two-pointer-while-guard-execution.md`
+  - Targeted result artifact: `verification/leetcode/phase31_m31a_wave2_results.json`
+  - Targeted 10-case status: `PASS=4`, `CHECK_ERROR=6`, `RUN_ERROR=0`
+  - Confirmed new pass: `0042_trapping_rain_water`
+  - Confirmed reclassification signal: remaining watch-set failures are now concentrated in sliding-window left-pointer, reverse-range, and constructed-sequence proof gaps rather than the same-sequence two-pointer `while` shape
 
 ## Recommended Execution Order
 
@@ -89,9 +95,10 @@ This order is chosen to remove the largest independent blockers first, then clea
 - Current execution status (`2026-03-12`):
   - in progress
   - slice 1 completed the guarded sequence-index root cause for explicit `while i < len(seq)`, `for i in range(len(seq))`, and early-return non-empty guards
-  - validated with targeted HIR/codegen tests, guarded-index e2e coverage, demo coverage, and `verification/leetcode/phase31_m31a_wave1_results.json`
-  - current watch-set outcome for slice 1: `PASS=3`, `CHECK_ERROR=7`, `RUN_ERROR=0`
-  - remaining optional failures in the watch set are follow-on accumulator/sliding-window/two-pointer proof shapes, not the original guarded fixed-index codegen mismatch
+  - slice 2 completed same-sequence two-pointer `while left < right` narrowing for zero/end pointer construction plus the downstream production-path emit gaps that slice exposed
+  - validated with targeted HIR/codegen/e2e coverage, demo coverage, `verification/leetcode/phase31_m31a_wave1_results.json`, and `verification/leetcode/phase31_m31a_wave2_results.json`
+  - current watch-set outcome after slice 2: `PASS=4`, `CHECK_ERROR=6`, `RUN_ERROR=0`
+  - remaining optional failures in the watch set are follow-on sliding-window left-pointer, constructed-sequence, and recurrence proof shapes rather than the original guarded-index or same-sequence two-pointer roots
 
 - Scope:
   - resolve `type_system.optional_narrowing_and_union_ops`

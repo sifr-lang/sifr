@@ -1302,7 +1302,10 @@ fn try_lower_simple_stmt_block(
     Some(lowered)
 }
 
-fn tuple_unpack_pattern(targets: &[(String, Type)], mutated_vars: &HashSet<String>) -> String {
+pub(crate) fn tuple_unpack_pattern(
+    targets: &[(String, Type)],
+    mutated_vars: &HashSet<String>,
+) -> String {
     let names = targets
         .iter()
         .map(|(name, _)| {

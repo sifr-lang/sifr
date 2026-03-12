@@ -46,7 +46,16 @@ fn guarded_string_index_type(
 
 fn has_guarded_sequence_index(sequence_name: &str, index_expr: &Expr, ctx: &LowerCtx) -> bool {
     match index_expr {
-        Expr::Name(index_name) => ctx.has_index_var_guard(sequence_name, index_name.id.as_str()),
+        Expr::Name(index_name) => {
+            let index_var = index_name.id.as_str();
+            ctx.has_index_var_guard(sequence_name, index_var)
+                || (ctx.is_zero_based_pointer(index_var) && ctx.min_length_guard(sequence_name) > 0)
+                || ctx
+                    .end_pointer_sequence(index_var)
+                    .is_some_and(|pointer_sequence| {
+                        pointer_sequence == sequence_name && ctx.min_length_guard(sequence_name) > 0
+                    })
+        }
         Expr::NumberLiteral(num) => {
             let Number::Int(value) = &num.value else {
                 return false;
@@ -147,5 +156,53 @@ mod tests {
                 .message
                 .contains("type mismatch: expected 'int', got 'int | None'")
         }));
+    }
+
+    #[test]
+    fn test_two_pointer_while_reveals_element_type_after_single_step_updates() {
+        let result = lower_source_result(
+            "def main():\n    height: list[int] = [0, 1, 0, 2]\n    l: int = 0\n    r: int = len(height) - 1\n    while l < r:\n        l += 1\n        reveal_type(height[l])\n        r -= 1\n        reveal_type(height[r])\n",
+        )
+        .expect("two-pointer while index should lower");
+
+        let reveal_count = result
+            .reveal_types
+            .iter()
+            .filter(|diagnostic| diagnostic.as_str() == "reveal_type: int")
+            .count();
+        assert_eq!(reveal_count, 2);
+    }
+
+    #[test]
+    fn test_two_pointer_while_with_pointer_jump_stays_optional() {
+        let result = lower_source(
+            "def main():\n    height: list[int] = [0, 1, 0, 2]\n    l: int = 0\n    r: int = len(height) - 1\n    while l < r:\n        l += 2\n        current: int = height[l]\n",
+        );
+
+        assert!(
+            result.is_err(),
+            "unsupported pointer jumps should remain optional"
+        );
+        let errors = result.unwrap_err();
+        assert!(errors.iter().any(|error| {
+            error
+                .message
+                .contains("type mismatch: expected 'int', got 'int | None'")
+        }));
+    }
+
+    #[test]
+    fn test_non_empty_zero_and_end_pointers_reveal_element_type() {
+        let result = lower_source_result(
+            "def main(values: list[int]) -> int:\n    if not values:\n        return 0\n    l: int = 0\n    r: int = len(values) - 1\n    reveal_type(values[l])\n    reveal_type(values[r])\n    return values[l] + values[r]\n",
+        )
+        .expect("non-empty zero/end pointers should lower");
+
+        let reveal_count = result
+            .reveal_types
+            .iter()
+            .filter(|diagnostic| diagnostic.as_str() == "reveal_type: int")
+            .count();
+        assert_eq!(reveal_count, 2);
     }
 }

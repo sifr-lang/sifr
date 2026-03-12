@@ -14,7 +14,9 @@ mod diagnostics;
 mod expressions;
 mod guarded_index;
 mod imports;
+mod sequence_guard_detection;
 mod sequence_guards;
+mod sequence_pointers;
 mod statements;
 mod type_bounds;
 mod typing_and_functions;
@@ -22,6 +24,7 @@ mod typing_and_functions;
 use classes::{collect_class_type, lower_class, lower_expr_simple};
 use imports::resolve_imports_early;
 use sequence_guards::SequenceGuard;
+use sequence_pointers::SequencePointerFact;
 use typing_and_functions::{
     extract_function_type, lower_function, register_builtins, resolve_annotation_expr,
 };
@@ -103,6 +106,8 @@ pub(super) struct LowerCtx {
     synthetic_import_aliases: HashMap<String, String>,
     /// Proven local sequence/index facts used to refine optional indexing.
     sequence_guards: Vec<SequenceGuard>,
+    /// Simple pointer-role facts used to recognize same-sequence two-pointer loops.
+    sequence_pointers: Vec<SequencePointerFact>,
 }
 
 impl LowerCtx {
@@ -135,6 +140,7 @@ impl LowerCtx {
             synthetic_imports: Vec::new(),
             synthetic_import_aliases: HashMap::new(),
             sequence_guards: Vec::new(),
+            sequence_pointers: Vec::new(),
         }
     }
 
