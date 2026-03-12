@@ -8,6 +8,7 @@
 
 mod build;
 mod diagnostics;
+mod export_policy;
 mod frontend;
 mod project;
 mod stdlib;

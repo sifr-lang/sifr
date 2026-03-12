@@ -53,6 +53,15 @@ Phase 31 itself is complete. This document is the carry-forward plan for the rem
   - Primary seeded-case status: `0127` remains `CHECK_ERROR`, but the prior stdlib blockers are removed
   - Confirmed parity pass: `0036_valid_sudoku` now checks and runs with `defaultdict(set)`
   - Confirmed reclassification signal: `0149_max_points_on_a_line` moved past `defaultdict(int)` surface failure into deeper optional/arithmetic typing gaps
+- `2026-03-12`: `m31_c_stdlib_module_parity` slice 4 completed local validation for private `heapq` max-heap compatibility.
+  - Execution report: `issues/phase31-m31c-private-heapq-max-compat-execution.md`
+  - Targeted result artifact: `verification/leetcode/phase31_m31c_wave4_results.json`
+  - Targeted six-case status: `PASS=2`, `CHECK_ERROR=3`, `RUN_ERROR=1`
+  - Confirmed reclassification signal: `1046_last_stone_weight` moved past missing private `heapq` symbols into deeper annotation / `Any` typing failures
+  - Confirmed broader parity probe: `2971_find_polygon_with_the_largest_perimeter` now resolves private `heapq` helpers and fails only on downstream optional arithmetic
+- `2026-03-12`: `m31_c_stdlib_module_parity` milestone closed.
+  - Closure report: `issues/phase31-m31c-milestone-closure.md`
+  - Closure basis: all remaining watched-case failures are now downstream codegen/type-system work rather than `stdlib.python_module_surface`
 
 ## Recommended Execution Order
 
@@ -111,12 +120,13 @@ This order is chosen to remove the largest independent blockers first, then clea
 
 ### `m31_c_stdlib_module_parity`
 
-- Current execution status (`2026-03-11`):
-  - slices 1 through 3 are complete locally
-  - landed root-cause fixes for Python-style stdlib attribute compatibility, numeric truthiness lowering, `math.fmod` runtime parity, native `set(...)` constructor lowering, bare `deque(...)` compatibility resolution, imported callable default propagation, `defaultdict(...)` builtin compatibility, and `len(deque)` sized-class handling
+- Current execution status (`2026-03-12`):
+  - complete
+  - landed root-cause fixes for Python-style stdlib attribute compatibility, numeric truthiness lowering, `math.fmod` runtime parity, native `set(...)` constructor lowering, bare `deque(...)` compatibility resolution, imported callable default propagation, `defaultdict(...)` builtin compatibility, `len(deque)` sized-class handling, and private `heapq` max-heap compatibility
   - validated with `scripts/run_all_tests.sh --profile quick` and `scripts/run_all_tests.sh`
-  - targeted rerun outcomes are recorded in `verification/leetcode/phase31_m31c_wave1_results.json`, `verification/leetcode/phase31_m31c_wave2_results.json`, and `verification/leetcode/phase31_m31c_wave3_results.json`
-  - remaining blockers are now narrowed to the downstream `0003` codegen failure plus the deeper non-stdlib issues exposed behind `0127`, `0149`, and `0502`
+  - targeted rerun outcomes are recorded in `verification/leetcode/phase31_m31c_wave1_results.json`, `verification/leetcode/phase31_m31c_wave2_results.json`, `verification/leetcode/phase31_m31c_wave3_results.json`, and `verification/leetcode/phase31_m31c_wave4_results.json`
+  - milestone closure report: `issues/phase31-m31c-milestone-closure.md`
+  - remaining watched-case blockers are downstream `0003` codegen work plus deeper non-stdlib issues in `0127`, `0502`, and `1046`
 
 - Scope:
   - resolve `stdlib.python_module_surface`
