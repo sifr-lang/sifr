@@ -205,4 +205,48 @@ mod tests {
             .count();
         assert_eq!(reveal_count, 2);
     }
+
+    #[test]
+    fn test_sliding_window_left_pointer_reveals_element_type_before_single_step_increment() {
+        let result = lower_source_result(
+            "def main(text: str, k: int) -> int:\n    l: int = 0\n    total: int = 0\n    for r in range(len(text)):\n        if (r - l + 1) > k:\n            reveal_type(text[l])\n            l += 1\n        if text[r] == \"a\":\n            total += 1\n    return total\n",
+        )
+        .expect("sliding-window left pointer should lower");
+
+        assert!(result
+            .reveal_types
+            .iter()
+            .any(|diagnostic| diagnostic == "reveal_type: str"));
+    }
+
+    #[test]
+    fn test_tuple_unpack_sliding_window_left_pointer_reveals_element_type() {
+        let result = lower_source_result(
+            "def main(text: str, k: int) -> int:\n    l, total = 0, 0\n    vowels = \"aeiou\"\n    for r in range(len(text)):\n        if (r - l + 1) > k:\n            reveal_type(text[l])\n            if text[l] in vowels:\n                total -= 1\n            l += 1\n        if text[r] in vowels:\n            total += 1\n    return total\n",
+        )
+        .expect("tuple-unpacked sliding-window left pointer should lower");
+
+        assert!(result
+            .reveal_types
+            .iter()
+            .any(|diagnostic| diagnostic == "reveal_type: str"));
+    }
+
+    #[test]
+    fn test_sliding_window_left_pointer_stays_optional_after_incremented_branch_merges() {
+        let result = lower_source(
+            "def main(text: str, k: int) -> str:\n    l: int = 0\n    for r in range(len(text)):\n        if (r - l + 1) > k:\n            l += 1\n        current: str = text[l]\n    return \"\"\n",
+        );
+
+        assert!(
+            result.is_err(),
+            "post-branch reads after a potential left-pointer increment should remain optional"
+        );
+        let errors = result.unwrap_err();
+        assert!(errors.iter().any(|error| {
+            error
+                .message
+                .contains("type mismatch: expected 'str', got 'str | None'")
+        }));
+    }
 }
