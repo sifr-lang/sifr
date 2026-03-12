@@ -86,7 +86,7 @@ status: pending
 
 ### Work Items
 
-- `async with` — async context managers (`__aenter__` / `__aexit__`)
+- `async with` — async context managers (`__aenter_`_ / `__aexit__`)
 - Async generators — `yield` inside `async def` produces async iterators
 - Async comprehensions — `[await x async for x in stream]`
 
@@ -110,6 +110,7 @@ status: pending
 - **milestone_32_4 last:** Advanced features (async with, async generators, async comprehensions) build on everything above.
 
 ## Quality Contract
+
 - Entry criteria: Phase 31 is completed and codegen architecture from Phase 14 remains intact.
 - Phase 27 non-regression baseline is required at phase start and must remain green through completion.
 - Phase 27 non-regression invariants that must hold in this phase include: no user-triggerable panic paths; no data-dependent emitted `.unwrap()` / `.expect()` / `panic!` in user runtime paths; stable diagnostic contract (codes, severity, spans, URLs, suggestions, schema); canonical/lossless `json` diagnostics with `human` and `compact` as renderer views only; enforced recovery limits with deterministic ordering; and enforced exit-code and CLI stability contracts (`0/1/2/3`, and unknown `--diagnostic-format` exits `2` before semantic work).
@@ -129,5 +130,7 @@ status: pending
   - Exit-gate evidence explicitly demonstrates: Async runtime core, sync primitives, and advanced async features are all delivered with regression coverage.
 
 ## Exit Gate
+
 - Async runtime core, sync primitives, and advanced async features are all delivered with regression coverage.
 - Phase 27 non-regression contract remains green: panic-free user paths, no emitted data-dependent unwrap/expect/panic, and stable diagnostics/renderer/exit-code behavior.
+
