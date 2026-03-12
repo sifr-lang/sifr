@@ -100,7 +100,6 @@ fn should_force_mutable_binding(ty: &Type) -> bool {
 
 impl RustEmitter {
     pub(super) fn wrap_option_local_value_for_ir(
-        &self,
         target_ty: &Type,
         value: &HirExpr,
         lowered_value: crate::RustExpr,
@@ -3273,7 +3272,7 @@ impl RustEmitter {
                     let Some(lowered) = self.lower_rendered_expr_for_ir(value)? else {
                         return Ok(None);
                     };
-                    self.wrap_option_local_value_for_ir(ty, value, lowered)
+                    Self::wrap_option_local_value_for_ir(ty, value, lowered)
                 };
                 (
                     vec![RustStmt::Let {

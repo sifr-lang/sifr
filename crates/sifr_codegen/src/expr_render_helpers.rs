@@ -5,7 +5,6 @@ use sifr_type_system::{ParamConvention, Type};
 
 impl RustEmitter {
     fn lower_proven_index_option_expr_for_ir(
-        &self,
         option_expr: crate::RustExpr,
         binding_name: &str,
         message: &str,
@@ -869,7 +868,7 @@ impl RustEmitter {
                 return Ok(Some(lowered_expr));
             }
             match index_base_ty {
-                Type::List(_) | Type::Str => Ok(Some(self.lower_proven_index_option_expr_for_ir(
+                Type::List(_) | Type::Str => Ok(Some(Self::lower_proven_index_option_expr_for_ir(
                     lowered_expr,
                     "__sifr_index_value",
                     "compiler-verified index should be in range",
