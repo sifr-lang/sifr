@@ -1790,6 +1790,21 @@ pub(super) fn detect_narrowing_condition(
                 Some(NarrowingCondition::And(conditions))
             }
         }
+        // a or b -> Or narrowing (at least one condition must be true)
+        Expr::BoolOp(boolop) if matches!(boolop.op, BoolOp::Or) => {
+            let conditions: Vec<NarrowingCondition> = boolop
+                .values
+                .iter()
+                .filter_map(|v| detect_narrowing_condition(v, ctx))
+                .collect();
+            if conditions.is_empty() {
+                None
+            } else if conditions.len() == 1 {
+                Some(conditions.into_iter().next().unwrap())
+            } else {
+                Some(NarrowingCondition::Or(conditions))
+            }
+        }
         _ => None,
     }
 }

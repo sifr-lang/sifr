@@ -3783,4 +3783,15 @@ mod tests {
             .iter()
             .any(|e| e.message.contains("does not implement protocol 'Readable'")));
     }
+
+    #[test]
+    fn test_recursive_tree_attributes_narrow_after_truthiness_or_guard() {
+        let result = lower_source(
+            "class TreeNode:\n    val: int\n    left: TreeNode | None\n    right: TreeNode | None\n\n    def __init__(self, val: int, left: TreeNode | None, right: TreeNode | None):\n        self.val = val\n        self.left = left\n        self.right = right\n\ndef mirrored_sum(p: TreeNode | None, q: TreeNode | None) -> int:\n    if not p and not q:\n        return 0\n    if not p or not q:\n        return 0\n    left: TreeNode | None = p.left\n    right: TreeNode | None = q.right\n    return p.val + q.val + mirrored_sum(left, q.left) + mirrored_sum(p.right, right)\n",
+        );
+        assert!(
+            result.is_ok(),
+            "recursive tree attributes should lower after `if not p or not q` early-return narrowing"
+        );
+    }
 }
