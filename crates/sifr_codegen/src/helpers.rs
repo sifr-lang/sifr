@@ -459,33 +459,29 @@ pub(super) fn type_references_class(ty: &Type, class_name: &str) -> bool {
     }
 }
 
-/// Generate the Rust type string for a recursive field.
-/// For `ClassName | None` -> `Option<Box<ClassName>>`
-/// For `ClassName` directly -> `Box<ClassName>`
-pub(super) fn recursive_field_rust_type(ty: &Type, class_name: &str) -> String {
+pub(super) fn type_references_any_class(
+    ty: &Type,
+    class_names: &std::collections::HashSet<String>,
+) -> bool {
     match ty {
-        Type::Union(members) => {
-            let non_none: Vec<&Type> = members
-                .iter()
-                .filter(|m| !matches!(m, Type::None))
-                .collect();
-            let has_none = members.iter().any(|m| matches!(m, Type::None));
-            if has_none && non_none.len() == 1 {
-                // T | None where T references the class -> Option<Box<T>>
-                if type_references_class(non_none[0], class_name) {
-                    format!("Option<Box<{}>>", non_none[0].rust_type())
-                } else {
-                    ty.rust_type()
-                }
-            } else {
-                // General union with recursive member - wrap the whole thing in Box
-                format!("Box<{}>", ty.rust_type())
-            }
+        Type::Class { name, .. } => class_names.contains(name),
+        Type::Union(members) => members
+            .iter()
+            .any(|m| type_references_any_class(m, class_names)),
+        Type::List(inner) => type_references_any_class(inner, class_names),
+        Type::Dict(key, val) => {
+            type_references_any_class(key, class_names)
+                || type_references_any_class(val, class_names)
         }
-        Type::Class { name, .. } if name == class_name => {
-            format!("Box<{name}>")
+        Type::Tuple(elems) => elems
+            .iter()
+            .any(|e| type_references_any_class(e, class_names)),
+        Type::Result(ok, err) => {
+            type_references_any_class(ok, class_names)
+                || type_references_any_class(err, class_names)
         }
-        _ => format!("Box<{}>", ty.rust_type()),
+        Type::Alias { body, .. } => type_references_any_class(body, class_names),
+        _ => false,
     }
 }
 

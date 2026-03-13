@@ -1,5 +1,5 @@
 use crate::{
-    helpers::{collect_mutated_vars_with_sigs, is_auto_display_type, recursive_field_rust_type},
+    helpers::{collect_mutated_vars_with_sigs, is_auto_display_type},
     RustEmitter, RustExpr, RustItem, RustLiteral, RustParam, RustStmt, RustType, RustTypeParam,
     Visibility,
 };
@@ -76,16 +76,21 @@ impl RustEmitter {
                 .recursive_fields
                 .contains(&(class.name.clone(), field_name.clone()))
             {
-                RustType::Named(recursive_field_rust_type(field_ty, &class.name))
+                RustType::Named(
+                    self.recursive_field_rust_types
+                        .get(&(class.name.clone(), field_name.clone()))
+                        .cloned()
+                        .unwrap_or_else(|| field_ty.rust_type()),
+                )
             } else if class.name == "deque" && field_name == "_data" {
                 self.collection_needs.needs_vecdeque = true;
                 if let Type::List(elem) = field_ty {
-                    RustType::Named(format!("VecDeque<{}>", elem.rust_type()))
+                    RustType::Named(format!("VecDeque<{}>", self.rust_type_with_generics(elem)))
                 } else {
-                    RustType::Named(field_ty.rust_type_for_struct_field())
+                    RustType::Named(self.rust_struct_field_type_with_generics(field_ty))
                 }
             } else {
-                RustType::Named(field_ty.rust_type_for_struct_field())
+                RustType::Named(self.rust_struct_field_type_with_generics(field_ty))
             };
             fields.push((name, ty));
         }
@@ -101,9 +106,14 @@ impl RustEmitter {
                     .recursive_fields
                     .contains(&(class.name.clone(), field_name.clone()))
                 {
-                    RustType::Named(recursive_field_rust_type(field_ty, &class.name))
+                    RustType::Named(
+                        self.recursive_field_rust_types
+                            .get(&(class.name.clone(), field_name.clone()))
+                            .cloned()
+                            .unwrap_or_else(|| self.rust_type_with_generics(field_ty)),
+                    )
                 } else {
-                    RustType::Named(field_ty.rust_type())
+                    self.rust_ir_type_with_generics(field_ty)
                 };
                 RustParam::Named {
                     name: field_name.clone(),

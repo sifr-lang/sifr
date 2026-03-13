@@ -1,8 +1,5 @@
 use crate::{
-    helpers::{
-        body_contains_field_assign_codegen, collect_mutated_vars_with_sigs,
-        recursive_field_rust_type,
-    },
+    helpers::{body_contains_field_assign_codegen, collect_mutated_vars_with_sigs},
     RustEmitter, RustExpr, RustItem, RustParam, RustStmt, RustType, RustTypeParam, Visibility,
 };
 use sifr_hir::{HirClass, HirExpr, HirFunction, HirStmt, MethodKind};
@@ -53,12 +50,20 @@ impl RustEmitter {
                 .recursive_fields
                 .contains(&(class.name.clone(), param_name.to_string()));
             if is_recursive {
-                return RustType::Named(recursive_field_rust_type(param_ty, &class.name));
+                return RustType::Named(
+                    self.recursive_field_rust_types
+                        .get(&(class.name.clone(), param_name.to_string()))
+                        .cloned()
+                        .unwrap_or_else(|| self.rust_type_with_generics(param_ty)),
+                );
             }
             if matches!(param_ty, Type::Callable(..)) {
-                return RustType::Named(format!("{} + 'static", param_ty.rust_type()));
+                return RustType::Named(format!(
+                    "{} + 'static",
+                    self.rust_type_with_generics(param_ty)
+                ));
             }
-            return crate::sifr_type_to_rust_type(param_ty);
+            return self.rust_ir_type_with_generics(param_ty);
         }
 
         let rust_ty = self.rust_type_with_generics(param_ty);
@@ -83,7 +88,11 @@ impl RustEmitter {
         }
     }
 
-    fn lower_class_method_return_type(method: &HirFunction, class: &HirClass) -> Option<RustType> {
+    fn lower_class_method_return_type(
+        &self,
+        method: &HirFunction,
+        class: &HirClass,
+    ) -> Option<RustType> {
         if method.name == "new" {
             return Some(RustType::Named("Self".to_string()));
         }
@@ -99,7 +108,7 @@ impl RustEmitter {
                 )));
             }
         }
-        Some(crate::sifr_type_to_rust_type(&method.return_type))
+        Some(self.rust_ir_type_with_generics(&method.return_type))
     }
 
     fn lower_constructor_body(&mut self, method: &HirFunction, class: &HirClass) -> Vec<RustStmt> {
@@ -361,7 +370,7 @@ impl RustEmitter {
         };
 
         if body.is_empty() {
-            if Self::lower_class_method_return_type(method, class).is_none() {
+            if self.lower_class_method_return_type(method, class).is_none() {
                 body.push(RustStmt::Return(None));
             } else {
                 panic!(
@@ -389,7 +398,7 @@ impl RustEmitter {
                 })
                 .collect(),
             params,
-            ret: Self::lower_class_method_return_type(method, class),
+            ret: self.lower_class_method_return_type(method, class),
             body,
             is_async: false,
         }

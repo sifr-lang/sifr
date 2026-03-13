@@ -1,0 +1,32 @@
+# Test: mutually recursive classes lower through the same recursive SCC and run.
+
+class Expr:
+    value: int
+    term: Term | None
+
+    def __init__(self, value: int, term: Term | None):
+        self.value = value
+        self.term = term
+
+class Term:
+    factor: int
+    expr: Expr | None
+
+    def __init__(self, factor: int, expr: Expr | None):
+        self.factor = factor
+        self.expr = expr
+
+def measure(expr: Expr | None) -> int:
+    if not expr:
+        return 0
+    term: Term | None = expr.term
+    if not term:
+        return expr.value
+    parent: Expr | None = term.expr
+    return expr.value + term.factor + measure(parent)
+
+def main():
+    leaf: Expr = Expr(1, None)
+    mid: Term = Term(2, leaf)
+    root: Expr = Expr(3, mid)
+    assert measure(root) == 6

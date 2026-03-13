@@ -368,6 +368,19 @@ Part completion is not allowed to introduce vague fallback diagnostics such as g
   - Full local validation:
     - `scripts/run_all_tests.sh --profile quick`
     - `scripts/run_all_tests.sh`
+- `2026-03-13`: part 6 `recursive_corpus_closure_tests_and_demo` completed local validation.
+  - Execution report: `issues/ad-hoc-full-recursive-type-feature-part6-execution.md`
+  - PR: `#1127`
+  - Demo: `demos/ad_hoc_recursive_type_part6_demo.sifr`
+  - Added regression coverage:
+    - `crates/sifr_codegen/src/lib_codegen_tests.rs`
+    - `crates/sifr_hir/src/lower/type_alias_tests.rs`
+    - `crates/sifr/tests/e2e/pass/recursive_mutual_classes_runtime.sifr`
+    - `crates/sifr/tests/e2e/pass/recursive_generic_node_runtime.sifr`
+    - `crates/sifr/tests/e2e/fail/recursive_mutual_type_alias_missing_boundary.sifr`
+  - Full local validation:
+    - `scripts/run_all_tests.sh --profile quick`
+    - `scripts/run_all_tests.sh`
 
 ## Implementation Parts and PR Breakdown
 

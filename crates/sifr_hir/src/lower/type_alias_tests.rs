@@ -52,6 +52,18 @@ fn test_naked_recursive_alias_is_rejected() {
 }
 
 #[test]
+fn test_mutual_naked_recursive_alias_is_rejected() {
+    let result =
+        lower_source("type Left = Right\ntype Right = Left\n\ndef main():\n    print(\"ok\")\n");
+    assert!(result.is_err());
+    let errors = result.unwrap_err();
+    assert!(errors.iter().any(|error| {
+        error.message
+            == "ill-formed recursive type alias 'Left': recursion must cross an indirection boundary"
+    }));
+}
+
+#[test]
 fn test_recursive_generic_tuple_alias_is_rejected() {
     let result =
         lower_source("type AlsoBad[T] = tuple[AlsoBad[T], T]\n\ndef main():\n    print(\"ok\")\n");

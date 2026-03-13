@@ -48,10 +48,7 @@ mod union_type_helpers;
 mod lib_codegen_tests;
 
 use error_refs::collect_referenced_builtin_error_classes;
-use helpers::{
-    collect_mutated_vars_with_sigs, is_hashable_type_codegen, module_uses_bigint,
-    type_contains_typevar,
-};
+use helpers::{collect_mutated_vars_with_sigs, is_hashable_type_codegen, module_uses_bigint};
 use ir_imports::{collect_import_needs_from_items, collect_import_needs_from_source};
 use ir_optimize::remove_trivial_clones_in_items;
 use ir_validate::validate_items;
@@ -955,6 +952,8 @@ struct RustEmitter {
     intrinsic_registry_crates: HashSet<String>,
     /// Set of (`class_name`, `field_name`) pairs that are self-referential and need Box<T>
     recursive_fields: HashSet<(String, String)>,
+    /// Map of (`class_name`, `field_name`) -> concrete Rust type used for recursive field storage.
+    recursive_field_rust_types: HashMap<(String, String), String>,
     /// Map from class name -> ordered list of field names (for constructor arg mapping)
     class_field_order: HashMap<String, Vec<String>>,
     /// Map from nested function name -> list of captured variable (name, type) pairs
@@ -968,6 +967,8 @@ struct RustEmitter {
     generic_classes: HashSet<String>,
     /// Map of generic class name -> list of type parameter names (e.g., `Counter` -> `T`)
     generic_class_params: HashMap<String, Vec<String>>,
+    /// Map of generic class name -> original HIR class template.
+    generic_class_templates: HashMap<String, sifr_hir::HirClass>,
     /// Set of parameter names that are borrowed (&T) in the current function.
     /// Used to emit dereference (*name) in comparisons where &String != String.
     borrowed_params: HashSet<String>,
@@ -1048,11 +1049,13 @@ impl RustEmitter {
             intrinsic_functions: HashSet::new(),
             intrinsic_registry_crates: HashSet::new(),
             recursive_fields: HashSet::new(),
+            recursive_field_rust_types: HashMap::new(),
             class_field_order: HashMap::new(),
             nested_fn_captures: HashMap::new(),
             module_constants: HashMap::new(),
             generic_classes: HashSet::new(),
             generic_class_params: HashMap::new(),
+            generic_class_templates: HashMap::new(),
             borrowed_params: HashSet::new(),
             mut_borrowed_params: HashSet::new(),
             stdlib_intrinsic_names: HashMap::new(),
@@ -1134,22 +1137,26 @@ impl RustEmitter {
             }
         }
 
-        if let Some(lowered_stmts) = try_lower_simple_stmt_with_scope_result(
-            stmt,
-            &self.mutated_vars,
-            &self.borrowed_params,
-            &scope_ctx,
-        )? {
-            self.lowering_stats.expr_candidate_total += 1;
-            self.lowering_stats.expr_candidate_structured += 1;
-            let rewritten_stmts = lowered_stmts
-                .into_iter()
-                .map(|stmt| self.rewrite_stdlib_constant_idents_in_stmt(stmt))
-                .collect::<Vec<_>>();
-            self.lowering_stats.stmt_structured += 1;
-            self.lowering_stats.stmt_candidate_structured += 1;
-            self.emit_lowered_stmts(&rewritten_stmts);
-            return Ok(true);
+        let should_bypass_simple_lowering =
+            matches!(stmt, HirStmt::Let { ty, .. } if self.type_contains_generic_class(ty));
+        if !should_bypass_simple_lowering {
+            if let Some(lowered_stmts) = try_lower_simple_stmt_with_scope_result(
+                stmt,
+                &self.mutated_vars,
+                &self.borrowed_params,
+                &scope_ctx,
+            )? {
+                self.lowering_stats.expr_candidate_total += 1;
+                self.lowering_stats.expr_candidate_structured += 1;
+                let rewritten_stmts = lowered_stmts
+                    .into_iter()
+                    .map(|stmt| self.rewrite_stdlib_constant_idents_in_stmt(stmt))
+                    .collect::<Vec<_>>();
+                self.lowering_stats.stmt_structured += 1;
+                self.lowering_stats.stmt_candidate_structured += 1;
+                self.emit_lowered_stmts(&rewritten_stmts);
+                return Ok(true);
+            }
         }
 
         if let HirStmt::TupleUnpack { targets, value } = stmt {
@@ -1243,7 +1250,7 @@ impl RustEmitter {
                 {
                     None
                 } else {
-                    Some(sifr_type_to_rust_type(ty))
+                    Some(self.rust_ir_type_with_generics(ty))
                 },
                 value: lowered_value,
             });

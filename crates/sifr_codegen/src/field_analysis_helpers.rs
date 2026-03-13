@@ -1,8 +1,52 @@
-use crate::helpers::type_references_class;
+use crate::helpers::{type_references_any_class, type_references_class};
 use crate::RustEmitter;
 use sifr_hir::{HirExpr, HirModule};
+use std::collections::{HashMap, HashSet};
 
 impl RustEmitter {
+    fn recursive_target_rust_type_for_field(&self, ty: &sifr_type_system::Type) -> String {
+        match ty {
+            sifr_type_system::Type::Alias { body, .. } => {
+                self.recursive_target_rust_type_for_field(body)
+            }
+            _ => self.rust_type_with_generics(ty),
+        }
+    }
+
+    fn recursive_field_storage_rust_type(
+        &self,
+        ty: &sifr_type_system::Type,
+        same_scc_classes: &HashSet<String>,
+    ) -> String {
+        match ty {
+            sifr_type_system::Type::Union(members) => {
+                let non_none: Vec<&sifr_type_system::Type> = members
+                    .iter()
+                    .filter(|member| !matches!(member, sifr_type_system::Type::None))
+                    .collect();
+                let has_none = members
+                    .iter()
+                    .any(|member| matches!(member, sifr_type_system::Type::None));
+                if has_none && non_none.len() == 1 {
+                    if type_references_any_class(non_none[0], same_scc_classes) {
+                        format!(
+                            "Option<Box<{}>>",
+                            self.recursive_target_rust_type_for_field(non_none[0])
+                        )
+                    } else {
+                        self.rust_type_with_generics(ty)
+                    }
+                } else {
+                    format!("Box<{}>", self.rust_type_with_generics(ty))
+                }
+            }
+            sifr_type_system::Type::Class { .. } => {
+                format!("Box<{}>", self.recursive_target_rust_type_for_field(ty))
+            }
+            _ => format!("Box<{}>", self.rust_type_with_generics(ty)),
+        }
+    }
+
     /// Check if the object expression is `self._data` inside the `deque` class.
     pub(crate) fn is_deque_data_field(&self, object: &HirExpr) -> bool {
         if self.current_class_name.as_deref() != Some("deque") {
@@ -23,23 +67,85 @@ impl RustEmitter {
         false
     }
 
-    /// Detect self-referential class fields that need Box<T> wrapping.
-    /// A field is recursive if its type directly or indirectly references the class being defined.
+    /// Detect recursive class fields that need Box<T> wrapping.
+    /// A field is recursive if it references a class in the same recursive SCC.
     pub(crate) fn detect_recursive_fields(&mut self, module: &HirModule) {
+        let class_names: HashSet<String> = module
+            .classes
+            .iter()
+            .map(|class| class.name.clone())
+            .collect();
+        let mut graph: HashMap<String, HashSet<String>> = HashMap::new();
+
         for class in &module.classes {
             let field_names: Vec<String> = class.fields.iter().map(|(n, _)| n.clone()).collect();
             self.class_field_order
                 .insert(class.name.clone(), field_names);
+            let mut deps = HashSet::new();
             for (field_name, field_ty) in &class.fields {
+                for target in &class_names {
+                    if type_references_class(field_ty, target) {
+                        deps.insert(target.clone());
+                    }
+                }
                 if type_references_class(field_ty, &class.name) {
                     self.recursive_fields
                         .insert((class.name.clone(), field_name.clone()));
                 }
             }
+            graph.insert(class.name.clone(), deps);
             if !class.type_params.is_empty() {
                 self.generic_classes.insert(class.name.clone());
                 self.generic_class_params
                     .insert(class.name.clone(), class.type_params.clone());
+                self.generic_class_templates
+                    .insert(class.name.clone(), class.clone());
+            }
+        }
+
+        let mut reachability: HashMap<String, HashSet<String>> = HashMap::new();
+        for class_name in &class_names {
+            let mut seen = HashSet::new();
+            let mut stack = vec![class_name.clone()];
+            while let Some(current) = stack.pop() {
+                let Some(neighbors) = graph.get(&current) else {
+                    continue;
+                };
+                for neighbor in neighbors {
+                    if seen.insert(neighbor.clone()) {
+                        stack.push(neighbor.clone());
+                    }
+                }
+            }
+            reachability.insert(class_name.clone(), seen);
+        }
+
+        for class in &module.classes {
+            let same_scc_classes: HashSet<String> = class_names
+                .iter()
+                .filter(|candidate| {
+                    reachability
+                        .get(&class.name)
+                        .is_some_and(|reachable| reachable.contains(*candidate))
+                        && reachability
+                            .get(*candidate)
+                            .is_some_and(|reachable| reachable.contains(&class.name))
+                })
+                .cloned()
+                .collect();
+            if same_scc_classes.is_empty() {
+                continue;
+            }
+
+            for (field_name, field_ty) in &class.fields {
+                if type_references_any_class(field_ty, &same_scc_classes) {
+                    let key = (class.name.clone(), field_name.clone());
+                    self.recursive_fields.insert(key.clone());
+                    self.recursive_field_rust_types.insert(
+                        key,
+                        self.recursive_field_storage_rust_type(field_ty, &same_scc_classes),
+                    );
+                }
             }
         }
     }
