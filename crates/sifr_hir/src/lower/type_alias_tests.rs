@@ -29,6 +29,40 @@ fn test_recursive_type_alias_name_resolves_without_unknown_type_error() {
 }
 
 #[test]
+fn test_mutual_recursive_alias_accepts_cycle_with_container_boundary() {
+    let result = lower_source(
+        "type Node = Branch\ntype Branch = list[Node]\n\ndef main():\n    print(\"ok\")\n",
+    );
+    assert!(
+        result.is_ok(),
+        "recursive SCCs should be accepted when every cycle crosses a container boundary"
+    );
+}
+
+#[test]
+fn test_naked_recursive_alias_is_rejected() {
+    let result = lower_source("type Bad = Bad\n\ndef main():\n    print(\"ok\")\n");
+    assert!(result.is_err());
+    let errors = result.unwrap_err();
+    assert!(errors.iter().any(|error| {
+        error.message
+            == "ill-formed recursive type alias 'Bad': recursion must cross an indirection boundary"
+    }));
+}
+
+#[test]
+fn test_recursive_generic_tuple_alias_is_rejected() {
+    let result =
+        lower_source("type AlsoBad[T] = tuple[AlsoBad[T], T]\n\ndef main():\n    print(\"ok\")\n");
+    assert!(result.is_err());
+    let errors = result.unwrap_err();
+    assert!(errors.iter().any(|error| {
+        error.message
+            == "ill-formed recursive generic alias 'AlsoBad[T]': recursion must cross an indirection boundary"
+    }));
+}
+
+#[test]
 fn test_unresolved_type_alias_dependency_still_errors() {
     let result = lower_source("type Payload = Missing\n\ndef main():\n    print(\"ok\")\n");
     assert!(result.is_err());

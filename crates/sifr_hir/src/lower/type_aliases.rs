@@ -2,7 +2,7 @@ use super::typing_and_functions::resolve_annotation_expr;
 use super::LowerCtx;
 use sifr_python_ast::{Expr, Stmt, TypeParam};
 use sifr_type_system::Type;
-use std::collections::{BTreeSet, HashMap, HashSet};
+use std::collections::{BTreeMap, BTreeSet, HashMap, HashSet};
 
 #[derive(Clone)]
 pub(super) struct TypeAliasDecl {
@@ -10,6 +10,12 @@ pub(super) struct TypeAliasDecl {
     pub(super) type_params: Vec<String>,
     pub(super) value: Box<Expr>,
     pub(super) order: usize,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq)]
+struct DependencyEdge {
+    target: String,
+    crosses_boundary: bool,
 }
 
 pub(super) fn collect_type_alias_decls(stmts: &[Stmt], ctx: &mut LowerCtx) -> Vec<TypeAliasDecl> {
@@ -66,7 +72,8 @@ pub(super) fn resolve_type_aliases(alias_decls: &[TypeAliasDecl], ctx: &mut Lowe
 
     let alias_names: HashSet<String> = alias_decls.iter().map(|decl| decl.name.clone()).collect();
     let graph = build_dependency_graph(alias_decls, &alias_names);
-    let sccs = tarjan_scc(alias_decls, &graph);
+    let ordered_names = ordered_alias_names(alias_decls);
+    let sccs = tarjan_scc(&ordered_names, &dependency_targets(&graph));
     let order_map: HashMap<String, usize> = alias_decls
         .iter()
         .map(|decl| (decl.name.clone(), decl.order))
@@ -76,6 +83,7 @@ pub(super) fn resolve_type_aliases(alias_decls: &[TypeAliasDecl], ctx: &mut Lowe
         .cloned()
         .map(|decl| (decl.name.clone(), decl))
         .collect();
+    let invalid_aliases = validate_recursive_alias_sccs(&sccs, &graph, &decl_map, &order_map, ctx);
 
     for component in sccs {
         let mut members: Vec<TypeAliasDecl> = component
@@ -85,7 +93,11 @@ pub(super) fn resolve_type_aliases(alias_decls: &[TypeAliasDecl], ctx: &mut Lowe
         members.sort_by_key(|decl| order_map.get(&decl.name).copied().unwrap_or(usize::MAX));
 
         for decl in members {
-            let resolved = resolve_alias_decl(&decl, ctx);
+            let resolved = if invalid_aliases.contains(&decl.name) {
+                Type::Unknown
+            } else {
+                resolve_alias_decl(&decl, ctx)
+            };
             if decl.type_params.is_empty() {
                 ctx.scope.define_type_alias(decl.name.clone(), resolved);
             } else {
@@ -116,50 +128,120 @@ fn resolve_alias_decl(decl: &TypeAliasDecl, ctx: &mut LowerCtx) -> Type {
 fn build_dependency_graph(
     alias_decls: &[TypeAliasDecl],
     alias_names: &HashSet<String>,
-) -> HashMap<String, Vec<String>> {
+) -> HashMap<String, Vec<DependencyEdge>> {
     let mut graph = HashMap::new();
 
     for decl in alias_decls {
         let local_type_params: HashSet<&str> =
             decl.type_params.iter().map(String::as_str).collect();
-        let mut deps = BTreeSet::new();
-        collect_alias_dependencies(&decl.value, alias_names, &local_type_params, &mut deps);
-        graph.insert(decl.name.clone(), deps.into_iter().collect());
+        let mut deps = BTreeMap::new();
+        collect_alias_dependencies(
+            &decl.value,
+            alias_names,
+            &local_type_params,
+            false,
+            &mut deps,
+        );
+        let edges = deps
+            .into_iter()
+            .map(|(target, crosses_boundary)| DependencyEdge {
+                target,
+                crosses_boundary,
+            })
+            .collect();
+        graph.insert(decl.name.clone(), edges);
     }
 
     graph
+}
+
+fn dependency_targets(
+    graph: &HashMap<String, Vec<DependencyEdge>>,
+) -> HashMap<String, Vec<String>> {
+    graph
+        .iter()
+        .map(|(name, edges)| {
+            (
+                name.clone(),
+                edges.iter().map(|edge| edge.target.clone()).collect(),
+            )
+        })
+        .collect()
 }
 
 fn collect_alias_dependencies(
     expr: &Expr,
     alias_names: &HashSet<String>,
     local_type_params: &HashSet<&str>,
-    deps: &mut BTreeSet<String>,
+    crosses_boundary: bool,
+    deps: &mut BTreeMap<String, bool>,
 ) {
     match expr {
         Expr::Name(name) => {
             if alias_names.contains(name.id.as_str())
                 && !local_type_params.contains(name.id.as_str())
             {
-                deps.insert(name.id.clone());
+                deps.entry(name.id.clone())
+                    .and_modify(|existing| *existing &= crosses_boundary)
+                    .or_insert(crosses_boundary);
             }
         }
         Expr::BinOp(binop) => {
-            collect_alias_dependencies(&binop.left, alias_names, local_type_params, deps);
-            collect_alias_dependencies(&binop.right, alias_names, local_type_params, deps);
+            collect_alias_dependencies(
+                &binop.left,
+                alias_names,
+                local_type_params,
+                crosses_boundary,
+                deps,
+            );
+            collect_alias_dependencies(
+                &binop.right,
+                alias_names,
+                local_type_params,
+                crosses_boundary,
+                deps,
+            );
         }
         Expr::Subscript(subscript) => {
-            collect_alias_dependencies(&subscript.value, alias_names, local_type_params, deps);
-            collect_alias_dependencies(&subscript.slice, alias_names, local_type_params, deps);
+            collect_alias_dependencies(
+                &subscript.value,
+                alias_names,
+                local_type_params,
+                crosses_boundary,
+                deps,
+            );
+            let crosses_container_boundary = matches!(
+                subscript.value.as_ref(),
+                Expr::Name(name) if matches!(name.id.as_str(), "list" | "dict" | "set")
+            );
+            collect_alias_dependencies(
+                &subscript.slice,
+                alias_names,
+                local_type_params,
+                crosses_boundary || crosses_container_boundary,
+                deps,
+            );
         }
         Expr::Tuple(tuple) => {
             for elt in &tuple.elts {
-                collect_alias_dependencies(elt, alias_names, local_type_params, deps);
+                collect_alias_dependencies(
+                    elt,
+                    alias_names,
+                    local_type_params,
+                    crosses_boundary,
+                    deps,
+                );
             }
         }
         Expr::List(list) => {
             for elt in &list.elts {
-                collect_alias_dependencies(elt, alias_names, local_type_params, deps);
+                collect_alias_dependencies(
+                    elt,
+                    alias_names,
+                    local_type_params,
+                    crosses_boundary,
+                    deps,
+                );
             }
         }
         Expr::BooleanLiteral(_)
@@ -170,10 +252,92 @@ fn collect_alias_dependencies(
     }
 }
 
-fn tarjan_scc(
-    alias_decls: &[TypeAliasDecl],
-    graph: &HashMap<String, Vec<String>>,
-) -> Vec<Vec<String>> {
+fn validate_recursive_alias_sccs(
+    sccs: &[Vec<String>],
+    graph: &HashMap<String, Vec<DependencyEdge>>,
+    decl_map: &HashMap<String, TypeAliasDecl>,
+    order_map: &HashMap<String, usize>,
+    ctx: &mut LowerCtx,
+) -> HashSet<String> {
+    let mut invalid_aliases = HashSet::new();
+
+    for component in sccs {
+        let component_set: HashSet<&str> = component.iter().map(String::as_str).collect();
+        let has_recursive_cycle = component.len() > 1
+            || component.iter().any(|name| {
+                graph
+                    .get(name)
+                    .is_some_and(|edges| edges.iter().any(|edge| edge.target == *name))
+            });
+        if !has_recursive_cycle {
+            continue;
+        }
+
+        let mut unbounded_graph: HashMap<String, Vec<String>> = HashMap::new();
+        for name in component {
+            let mut targets = BTreeSet::new();
+            for edge in graph.get(name).into_iter().flatten() {
+                if !edge.crosses_boundary && component_set.contains(edge.target.as_str()) {
+                    targets.insert(edge.target.clone());
+                }
+            }
+            unbounded_graph.insert(name.clone(), targets.into_iter().collect());
+        }
+
+        let mut ordered_component = component.clone();
+        ordered_component.sort_by_key(|name| order_map.get(name).copied().unwrap_or(usize::MAX));
+
+        for bad_component in tarjan_scc(&ordered_component, &unbounded_graph) {
+            let has_unbounded_cycle = bad_component.len() > 1
+                || bad_component.iter().any(|name| {
+                    unbounded_graph
+                        .get(name)
+                        .is_some_and(|targets| targets.contains(name))
+                });
+            if !has_unbounded_cycle {
+                continue;
+            }
+
+            for name in bad_component {
+                if let Some(decl) = decl_map.get(&name) {
+                    ctx.error(recursive_alias_error_message(decl));
+                    invalid_aliases.insert(name);
+                }
+            }
+        }
+    }
+
+    invalid_aliases
+}
+
+fn recursive_alias_error_message(decl: &TypeAliasDecl) -> String {
+    if decl.type_params.is_empty() {
+        format!(
+            "ill-formed recursive type alias '{}': recursion must cross an indirection boundary",
+            decl.name
+        )
+    } else {
+        format!(
+            "ill-formed recursive generic alias '{}[{}]': recursion must cross an indirection boundary",
+            decl.name,
+            decl.type_params.join(", "),
+        )
+    }
+}
+
+fn ordered_alias_names(alias_decls: &[TypeAliasDecl]) -> Vec<String> {
+    let mut ordered_names: Vec<String> = alias_decls.iter().map(|decl| decl.name.clone()).collect();
+    ordered_names.sort_by_key(|name| {
+        alias_decls
+            .iter()
+            .find(|decl| decl.name == *name)
+            .map(|decl| decl.order)
+            .unwrap_or(usize::MAX)
+    });
+    ordered_names
+}
+
+fn tarjan_scc(ordered_names: &[String], graph: &HashMap<String, Vec<String>>) -> Vec<Vec<String>> {
     struct TarjanState<'a> {
         index: usize,
         indices: HashMap<String, usize>,
@@ -236,18 +400,9 @@ fn tarjan_scc(
         components: Vec::new(),
     };
 
-    let mut ordered_names: Vec<String> = alias_decls.iter().map(|decl| decl.name.clone()).collect();
-    ordered_names.sort_by_key(|name| {
-        alias_decls
-            .iter()
-            .find(|decl| decl.name == *name)
-            .map(|decl| decl.order)
-            .unwrap_or(usize::MAX)
-    });
-
     for name in ordered_names {
-        if !state.indices.contains_key(&name) {
-            strong_connect(&name, &mut state);
+        if !state.indices.contains_key(name) {
+            strong_connect(name, &mut state);
         }
     }
 

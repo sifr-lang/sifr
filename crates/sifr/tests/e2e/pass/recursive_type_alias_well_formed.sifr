@@ -1,0 +1,7 @@
+# Test: recursive alias cycles are accepted when they cross a container boundary.
+
+type Node = Branch
+type Branch = list[Node]
+
+def main():
+    print("well-formed recursive alias accepted")

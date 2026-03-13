@@ -325,6 +325,16 @@ Part completion is not allowed to introduce vague fallback diagnostics such as g
   - Full local validation:
     - `scripts/run_all_tests.sh --profile quick`
     - `scripts/run_all_tests.sh`
+- `2026-03-13`: part 2 `recursive_well_formedness_validation` completed local validation.
+  - Execution report: `issues/ad-hoc-full-recursive-type-feature-part2-execution.md`
+  - Demo: `demos/ad_hoc_recursive_type_part2_demo.sifr`
+  - Added regression coverage:
+    - `crates/sifr/tests/e2e/pass/recursive_type_alias_well_formed.sifr`
+    - `crates/sifr/tests/e2e/fail/recursive_type_alias_missing_boundary.sifr`
+    - `crates/sifr_hir/src/lower/type_alias_tests.rs`
+  - Full local validation:
+    - `scripts/run_all_tests.sh --profile quick`
+    - `scripts/run_all_tests.sh`
 
 ## Implementation Parts and PR Breakdown
 
