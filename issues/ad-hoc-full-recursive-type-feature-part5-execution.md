@@ -4,7 +4,7 @@ Status: complete
 Started: 2026-03-13
 Completed: 2026-03-13
 Part: `recursive_rust_lowering_and_codegen`
-PR: pending
+PR: `#1126`
 
 ## Goal
 
