@@ -351,6 +351,59 @@ fn test_structured_codegen_lowers_comprehension_local_initializers() {
 }
 
 #[test]
+fn test_reverse_range_for_loop_uses_rev_iterator_for_unary_negative_step() {
+    let module = HirModule {
+        functions: vec![HirFunction {
+            name: "main".to_string(),
+            params: vec![],
+            return_type: Type::None,
+            body: vec![HirStmt::For {
+                target: "i".to_string(),
+                target_ty: Type::Int,
+                iter: HirExpr::RangeLiteral {
+                    start: Box::new(HirExpr::IntLiteral(4)),
+                    end: Box::new(HirExpr::UnaryOp {
+                        op: "-".to_string(),
+                        operand: Box::new(HirExpr::IntLiteral(1)),
+                        ty: Type::Int,
+                    }),
+                    step: Some(Box::new(HirExpr::UnaryOp {
+                        op: "-".to_string(),
+                        operand: Box::new(HirExpr::IntLiteral(1)),
+                        ty: Type::Int,
+                    })),
+                    ty: Type::Range,
+                },
+                body: vec![HirStmt::Expr {
+                    expr: HirExpr::Call {
+                        func: "print".to_string(),
+                        args: vec![HirExpr::Name {
+                            name: "i".to_string(),
+                            ty: Type::Int,
+                        }],
+                        ty: Type::None,
+                    },
+                }],
+                else_body: None,
+            }],
+            method_kind: MethodKind::Regular,
+            decorators: vec![],
+            type_params: vec![],
+        }],
+        classes: vec![],
+        imports: vec![],
+        constants: vec![],
+        generic_functions: std::collections::HashMap::new(),
+        type_param_bounds: std::collections::HashMap::new(),
+    };
+
+    let rust_code = generate_rust(&module);
+
+    assert!(rust_code.contains(".rev()"));
+    assert!(!rust_code.contains("step_by(-(1 as i64) as usize)"));
+}
+
+#[test]
 fn test_hashmap_short_name() {
     // Dict literal should use HashMap::from not std::collections::HashMap::from
     let module = HirModule {

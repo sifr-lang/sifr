@@ -360,6 +360,19 @@ mod tests {
     }
 
     #[test]
+    fn test_reverse_range_suffix_plus_two_offset_reveals_int() {
+        let result = lower_source_result(
+            "def main(text: str) -> list[int]:\n    suffix = [0 for i in range(len(text) + 2)]\n    for i in range(len(text) - 1, -1, -1):\n        reveal_type(suffix[i + 2])\n        suffix[i] = suffix[i + 2] + 1\n    return suffix\n",
+        )
+        .expect("reverse range +2 recurrence should lower");
+
+        assert!(result
+            .reveal_types
+            .iter()
+            .any(|diagnostic| diagnostic == "reveal_type: int"));
+    }
+
+    #[test]
     fn test_subtractive_recurrence_offset_stays_optional() {
         let result = lower_source(
             "def main(limit: str, shift: int) -> list[int]:\n    suffix = [0 for i in range(len(limit) + 1)]\n    for i in range(len(limit) - 1, -1, -1):\n        value: int = suffix[i - shift]\n    return suffix\n",
