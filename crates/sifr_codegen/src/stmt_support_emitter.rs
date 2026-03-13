@@ -260,7 +260,7 @@ impl RustEmitter {
 
     fn negative_range_step_magnitude(step_expr: &HirExpr) -> Option<i64> {
         match step_expr {
-            HirExpr::IntLiteral(value) if *value < 0 => Some(value.unsigned_abs() as i64),
+            HirExpr::IntLiteral(value) if *value < 0 => value.checked_abs(),
             HirExpr::UnaryOp { op, operand, .. } if op == "-" => match operand.as_ref() {
                 HirExpr::IntLiteral(value) if *value > 0 => Some(*value),
                 _ => None,
@@ -3787,6 +3787,13 @@ impl RustEmitter {
                 None
             };
 
+            let should_bypass_simple_lowering =
+                matches!(stmt, HirStmt::Let { ty, .. } if self.type_contains_generic_class(ty));
+            let maybe_simple_lowered = if should_bypass_simple_lowering {
+                None
+            } else {
+                maybe_simple_lowered
+            };
             let (lowered_stmts, skip_rewrite) = if let Some(lowered_stmts) = maybe_simple_lowered {
                 (lowered_stmts, false)
             } else if let HirStmt::TupleUnpack { targets, value } = stmt {
@@ -3841,7 +3848,7 @@ impl RustEmitter {
                         ty: if is_generic_class || should_omit_local_type_annotation(ty, value) {
                             None
                         } else {
-                            Some(crate::sifr_type_to_rust_type(ty))
+                            Some(self.rust_ir_type_with_generics(ty))
                         },
                         value: lowered_value,
                     }],
@@ -5013,7 +5020,7 @@ impl RustEmitter {
             self.push_captured_stmt(&crate::RustStmt::Let {
                 mutable: true,
                 name: name.clone(),
-                ty: Some(crate::sifr_type_to_rust_type(ty)),
+                ty: Some(self.rust_ir_type_with_generics(ty)),
                 value: lowered_value,
             });
             return;

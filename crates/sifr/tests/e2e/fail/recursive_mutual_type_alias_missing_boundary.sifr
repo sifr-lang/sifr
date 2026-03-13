@@ -1,0 +1,7 @@
+# Test: mutually recursive aliases without an indirection boundary are rejected.
+
+type Left = Right
+type Right = Left
+
+def main():
+    print("unreachable")

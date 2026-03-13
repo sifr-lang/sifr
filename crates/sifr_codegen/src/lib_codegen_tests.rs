@@ -200,6 +200,30 @@ fn test_generate_rust_recursive_tree_traversal_uses_option_let_else_and_cloned_b
 }
 
 #[test]
+fn test_generate_rust_mutually_recursive_classes_box_same_scc_fields() {
+    let rust_code = generate_rust_from_source(
+        "class Expr:\n    value: int\n    term: Term | None\n\n    def __init__(self, value: int, term: Term | None):\n        self.value = value\n        self.term = term\n\nclass Term:\n    factor: int\n    expr: Expr | None\n\n    def __init__(self, factor: int, expr: Expr | None):\n        self.factor = factor\n        self.expr = expr\n",
+    );
+
+    assert!(rust_code.contains("term: Option<Box<Term>>"));
+    assert!(rust_code.contains("expr: Option<Box<Expr>>"));
+    assert!(!rust_code.contains("term: Option<Term>"));
+    assert!(!rust_code.contains("expr: Option<Expr>"));
+}
+
+#[test]
+fn test_generate_rust_recursive_generic_node_preserves_instantiated_type_arguments() {
+    let rust_code = generate_rust_from_source(
+        "class Node[T]:\n    value: T\n    next: Node[T] | None\n\n    def __init__(self, value: T, next: Node[T] | None):\n        self.value = value\n        self.next = next\n\ndef total(node: Node[int] | None) -> int:\n    if not node:\n        return 0\n    rest: Node[int] | None = node.next\n    return node.value + total(rest)\n",
+    );
+
+    assert!(rust_code.contains("next: Option<Box<Node<T>>>"));
+    assert!(rust_code.contains("fn new(value: T, next: Option<Box<Node<T>>>) -> Self"));
+    assert!(rust_code.contains("fn total(node: &Option<Node<i64>>) -> i64"));
+    assert!(rust_code.contains("let rest: Option<Node<i64>> = (node.next).as_deref().cloned();"));
+}
+
+#[test]
 fn test_println_fstring_inlined() {
     // print(f"hello {name}") should emit println!("hello {}", name) not println!("{}", format!(...))
     let module = HirModule {
