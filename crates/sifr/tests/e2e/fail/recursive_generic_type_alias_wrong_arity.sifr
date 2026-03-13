@@ -1,0 +1,7 @@
+# Test: recursive generic aliases reject wrong type-argument arity.
+
+type Node[T] = T | list[Node[T]]
+
+def main():
+    bad: Node[int, str] = 1
+    print(bad)

@@ -32,7 +32,8 @@ pub(super) fn default_param_convention(ty: &Type) -> ParamConvention {
 }
 
 pub(super) fn is_option_type(ty: &Type) -> bool {
-    if let Type::Union(members) = ty {
+    let resolved = crate::resolve_alias_type_for_plain_call(ty);
+    if let Type::Union(members) = resolved {
         let non_none: Vec<&Type> = members
             .iter()
             .filter(|m| !matches!(m, Type::None))
@@ -103,8 +104,9 @@ pub(super) fn detect_isinstance_union(expr: &HirExpr) -> Option<IsinstanceUnionM
     if let HirExpr::Call { func, args, .. } = expr {
         if func == "isinstance" && args.len() == 2 {
             if let HirExpr::Name { name, ty } = &args[0] {
-                if let Type::Union(members) = ty {
-                    if !is_option_type(ty) {
+                let resolved_ty = crate::resolve_alias_type_for_plain_call(ty);
+                if let Type::Union(members) = resolved_ty {
+                    if !is_option_type(resolved_ty) {
                         let type_name = match &args[1] {
                             HirExpr::StringLiteral(type_name) => type_name.as_str(),
                             HirExpr::Name { name, .. } => name.as_str(),
@@ -129,7 +131,7 @@ pub(super) fn detect_isinstance_union(expr: &HirExpr) -> Option<IsinstanceUnionM
                         // Check that this type is a member of the union
                         if members.contains(&target_ty) {
                             let variant = target_ty.union_variant_name();
-                            let enum_name = ty.union_enum_name();
+                            let enum_name = resolved_ty.union_enum_name();
                             // Collect other variants for else branch destructuring
                             let other_variants: Vec<(String, Type)> = members
                                 .iter()

@@ -78,12 +78,18 @@ fn should_omit_local_type_annotation(ty: &Type, value: &HirExpr) -> bool {
         {
             true
         }
-        (Type::Alias(alias_name, inner), HirExpr::Call { func, args, .. })
-            if func == alias_name
-                && args.is_empty()
-                && alias_name.starts_with("__compat_defaultdict_") =>
+        (
+            Type::Alias {
+                name: alias_name,
+                body,
+                ..
+            },
+            HirExpr::Call { func, args, .. },
+        ) if func == alias_name
+            && args.is_empty()
+            && alias_name.starts_with("__compat_defaultdict_") =>
         {
-            let Type::Dict(key_ty, value_ty) = inner.resolve_alias() else {
+            let Type::Dict(key_ty, value_ty) = body.resolve_alias() else {
                 return false;
             };
             matches!(key_ty.as_ref(), Type::Any | Type::Unknown)
@@ -95,7 +101,10 @@ fn should_omit_local_type_annotation(ty: &Type, value: &HirExpr) -> bool {
 }
 
 fn should_force_mutable_binding(ty: &Type) -> bool {
-    matches!(ty, Type::Alias(alias_name, _) if alias_name.starts_with("__compat_defaultdict_"))
+    matches!(
+        ty,
+        Type::Alias { name: alias_name, .. } if alias_name.starts_with("__compat_defaultdict_")
+    )
 }
 
 impl RustEmitter {
@@ -150,7 +159,7 @@ impl RustEmitter {
             | Type::Unknown
             | Type::Intersection(_)
             | Type::Never => true,
-            Type::Alias(_, inner) => Self::uses_debug_display_format_for_ir(inner),
+            Type::Alias { body, .. } => Self::uses_debug_display_format_for_ir(body),
         }
     }
 
@@ -237,7 +246,7 @@ impl RustEmitter {
 
     fn resolve_alias_type_for_loop_iter(ty: &Type) -> &Type {
         match ty {
-            Type::Alias(_, inner) => Self::resolve_alias_type_for_loop_iter(inner),
+            Type::Alias { body, .. } => Self::resolve_alias_type_for_loop_iter(body),
             _ => ty,
         }
     }

@@ -307,6 +307,14 @@ fn collect_type_vars(ty: &Type, vars: &mut Vec<String>) {
             collect_type_vars(ok, vars);
             collect_type_vars(err, vars);
         }
+        Type::Alias {
+            type_args, body, ..
+        } => {
+            for arg in type_args {
+                collect_type_vars(arg, vars);
+            }
+            collect_type_vars(body, vars);
+        }
         Type::Function(ft) => {
             for (_, param_ty, _) in &ft.params {
                 collect_type_vars(param_ty, vars);
@@ -392,6 +400,18 @@ fn substitute_type_vars(ty: &Type, bindings: &HashMap<String, Type>) -> Type {
             Box::new(substitute_type_vars(ok, bindings)),
             Box::new(substitute_type_vars(err, bindings)),
         ),
+        Type::Alias {
+            name,
+            type_args,
+            body,
+        } => Type::Alias {
+            name: name.clone(),
+            type_args: type_args
+                .iter()
+                .map(|arg| substitute_type_vars(arg, bindings))
+                .collect(),
+            body: Box::new(substitute_type_vars(body, bindings)),
+        },
         Type::Function(ft) => Type::Function(substitute_function_type(ft, bindings)),
         Type::Class {
             name,
@@ -447,6 +467,29 @@ fn infer_type_var_bindings(param_ty: &Type, arg_ty: &Type, bindings: &mut HashMa
         (Type::Result(p_ok, p_err), Type::Result(a_ok, a_err)) => {
             infer_type_var_bindings(p_ok, a_ok, bindings);
             infer_type_var_bindings(p_err, a_err, bindings);
+        }
+        (
+            Type::Alias {
+                name: p_name,
+                type_args: p_args,
+                body: p_body,
+            },
+            Type::Alias {
+                name: a_name,
+                type_args: a_args,
+                body: a_body,
+            },
+        ) if p_name == a_name && p_args.len() == a_args.len() => {
+            for (p_arg, a_arg) in p_args.iter().zip(a_args.iter()) {
+                infer_type_var_bindings(p_arg, a_arg, bindings);
+            }
+            infer_type_var_bindings(p_body, a_body, bindings);
+        }
+        (Type::Alias { body, .. }, other) => {
+            infer_type_var_bindings(body, other, bindings);
+        }
+        (other, Type::Alias { body, .. }) => {
+            infer_type_var_bindings(other, body, bindings);
         }
         (
             Type::Class {

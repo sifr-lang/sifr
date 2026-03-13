@@ -34,7 +34,7 @@ fn registry_uses_debug_display_format(ty: &Type) -> bool {
         | Type::Unknown
         | Type::Intersection(_)
         | Type::Never => true,
-        Type::Alias(_, inner) => registry_uses_debug_display_format(inner),
+        Type::Alias { body, .. } => registry_uses_debug_display_format(body),
     }
 }
 
@@ -57,13 +57,18 @@ fn registry_is_string_like_type(ty: &Type) -> bool {
 }
 
 fn registry_defaultdict_alias_parts(ty: &Type) -> Option<(&str, &Type, &Type)> {
-    let Type::Alias(alias_name, inner) = ty else {
+    let Type::Alias {
+        name: alias_name,
+        body,
+        ..
+    } = ty
+    else {
         return None;
     };
     if !alias_name.starts_with("__compat_defaultdict_") {
         return None;
     }
-    let Type::Dict(key_ty, value_ty) = inner.resolve_alias() else {
+    let Type::Dict(key_ty, value_ty) = body.resolve_alias() else {
         return None;
     };
     Some((alias_name.as_str(), key_ty.as_ref(), value_ty.as_ref()))

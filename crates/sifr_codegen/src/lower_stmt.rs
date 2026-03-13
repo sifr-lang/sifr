@@ -718,12 +718,18 @@ fn should_omit_local_type_annotation(ty: &Type, value: &HirExpr) -> bool {
         {
             true
         }
-        (Type::Alias(alias_name, inner), HirExpr::Call { func, args, .. })
-            if func == alias_name
-                && args.is_empty()
-                && alias_name.starts_with("__compat_defaultdict_") =>
+        (
+            Type::Alias {
+                name: alias_name,
+                body,
+                ..
+            },
+            HirExpr::Call { func, args, .. },
+        ) if func == alias_name
+            && args.is_empty()
+            && alias_name.starts_with("__compat_defaultdict_") =>
         {
-            let Type::Dict(key_ty, value_ty) = inner.resolve_alias() else {
+            let Type::Dict(key_ty, value_ty) = body.resolve_alias() else {
                 return false;
             };
             matches!(key_ty.as_ref(), Type::Any | Type::Unknown)
@@ -735,7 +741,10 @@ fn should_omit_local_type_annotation(ty: &Type, value: &HirExpr) -> bool {
 }
 
 fn should_force_mutable_binding(ty: &Type) -> bool {
-    matches!(ty, Type::Alias(alias_name, _) if alias_name.starts_with("__compat_defaultdict_"))
+    matches!(
+        ty,
+        Type::Alias { name: alias_name, .. } if alias_name.starts_with("__compat_defaultdict_")
+    )
 }
 
 fn try_lower_simple_nested_function_stmt(
@@ -2479,7 +2488,7 @@ fn expr_uses_borrowed_name(expr: &HirExpr, borrowed_params: &HashSet<String>) ->
 
 fn resolve_alias_type(ty: &Type) -> &Type {
     match ty {
-        Type::Alias(_, inner) => resolve_alias_type(inner),
+        Type::Alias { body, .. } => resolve_alias_type(body),
         _ => ty,
     }
 }
@@ -3010,7 +3019,10 @@ fn try_lower_simple_subscript_augassign_stmt(
     let lowered_value = try_lower_leaf_or_name_expr(value)?;
     let lowered_body_stmt = build_subscript_augassign_elem_stmt(op, lowered_value);
 
-    if matches!(object_ty, Type::Alias(alias_name, _) if alias_name == "__compat_defaultdict_int") {
+    if matches!(
+        object_ty,
+        Type::Alias { name: alias_name, .. } if alias_name == "__compat_defaultdict_int"
+    ) {
         return Some(vec![RustStmt::Block(vec![
             RustStmt::Let {
                 mutable: false,
@@ -3676,10 +3688,7 @@ mod tests {
             field: "items".to_string(),
             index: HirExpr::IntLiteral(0),
             value: HirExpr::IntLiteral(1),
-            field_ty: Type::Alias(
-                "IntList".to_string(),
-                Box::new(Type::List(Box::new(Type::Int))),
-            ),
+            field_ty: Type::alias("IntList", Type::List(Box::new(Type::Int))),
         };
         let lowered = try_lower_simple_stmt(&stmt, false, &HashSet::new(), &HashSet::new())
             .expect("alias attribute-list subscript assign lowered");
@@ -3728,9 +3737,9 @@ mod tests {
             field: "mapping".to_string(),
             index: HirExpr::IntLiteral(1),
             value: HirExpr::IntLiteral(2),
-            field_ty: Type::Alias(
-                "IntMap".to_string(),
-                Box::new(Type::Dict(Box::new(Type::Int), Box::new(Type::Int))),
+            field_ty: Type::alias(
+                "IntMap",
+                Type::Dict(Box::new(Type::Int), Box::new(Type::Int)),
             ),
         };
         let lowered = try_lower_simple_stmt(&stmt, false, &HashSet::new(), &HashSet::new())
@@ -3847,10 +3856,7 @@ mod tests {
             object: "items".to_string(),
             index: HirExpr::IntLiteral(0),
             value: HirExpr::IntLiteral(1),
-            object_ty: Type::Alias(
-                "IntList".to_string(),
-                Box::new(Type::List(Box::new(Type::Int))),
-            ),
+            object_ty: Type::alias("IntList", Type::List(Box::new(Type::Int))),
         };
         let lowered = try_lower_simple_stmt(&stmt, false, &HashSet::new(), &HashSet::new())
             .expect("alias-list subscript assign lowered");
@@ -4307,9 +4313,9 @@ mod tests {
             },
             op: "|=".to_string(),
             value: HirExpr::IntLiteral(2),
-            object_ty: Type::Alias(
-                "IntMap".to_string(),
-                Box::new(Type::Dict(Box::new(Type::Str), Box::new(Type::Int))),
+            object_ty: Type::alias(
+                "IntMap",
+                Type::Dict(Box::new(Type::Str), Box::new(Type::Int)),
             ),
         };
         let lowered = try_lower_simple_stmt(&stmt, false, &HashSet::new(), &HashSet::new())
@@ -4406,10 +4412,7 @@ mod tests {
             index: HirExpr::IntLiteral(0),
             op: "+=".to_string(),
             value: HirExpr::IntLiteral(1),
-            object_ty: Type::Alias(
-                "IntList".to_string(),
-                Box::new(Type::List(Box::new(Type::Int))),
-            ),
+            object_ty: Type::alias("IntList", Type::List(Box::new(Type::Int))),
         };
         let lowered = try_lower_simple_stmt(&stmt, false, &HashSet::new(), &HashSet::new())
             .expect("alias-list subscript augassign lowered");
@@ -4594,7 +4597,7 @@ mod tests {
 
     #[test]
     fn lowers_simple_let_alias_int_literal_rhs() {
-        let alias_int = Type::Alias("Meters".to_string(), Box::new(Type::Int));
+        let alias_int = Type::alias("Meters", Type::Int);
         let let_stmt = HirStmt::Let {
             name: "distance".to_string(),
             ty: alias_int,
@@ -4617,12 +4620,12 @@ mod tests {
 
     #[test]
     fn lowers_simple_let_alias_enum_name_rhs() {
-        let alias_enum = Type::Alias(
-            "ColorAlias".to_string(),
-            Box::new(Type::Enum {
+        let alias_enum = Type::alias(
+            "ColorAlias",
+            Type::Enum {
                 name: "Color".to_string(),
                 variants: vec![("RED".to_string(), Some(1)), ("BLUE".to_string(), Some(2))],
-            }),
+            },
         );
         let let_stmt = HirStmt::Let {
             name: "shade".to_string(),
@@ -4671,7 +4674,7 @@ mod tests {
 
     #[test]
     fn lowers_simple_let_alias_none_literal_to_unit() {
-        let alias_none = Type::Alias("Nothing".to_string(), Box::new(Type::None));
+        let alias_none = Type::alias("Nothing", Type::None);
         let let_stmt = HirStmt::Let {
             name: "x".to_string(),
             ty: alias_none,
@@ -4719,7 +4722,7 @@ mod tests {
 
     #[test]
     fn lowers_simple_let_alias_none_name_rhs() {
-        let alias_none = Type::Alias("Nothing".to_string(), Box::new(Type::None));
+        let alias_none = Type::alias("Nothing", Type::None);
         let let_stmt = HirStmt::Let {
             name: "x".to_string(),
             ty: alias_none.clone(),
@@ -4768,10 +4771,7 @@ mod tests {
 
     #[test]
     fn lowers_simple_option_let_none_literal_to_none_with_alias_option_ty() {
-        let option_ty = Type::Alias(
-            "MaybeInt".to_string(),
-            Box::new(Type::Union(vec![Type::Int, Type::None])),
-        );
+        let option_ty = Type::alias("MaybeInt", Type::Union(vec![Type::Int, Type::None]));
         let let_stmt = HirStmt::Let {
             name: "x".to_string(),
             ty: option_ty,
@@ -4938,7 +4938,7 @@ mod tests {
     #[test]
     fn lowers_simple_option_let_alias_none_name_rhs_to_none() {
         let option_ty = Type::Union(vec![Type::Int, Type::None]);
-        let alias_none = Type::Alias("Nothing".to_string(), Box::new(Type::None));
+        let alias_none = Type::alias("Nothing", Type::None);
         let let_stmt = HirStmt::Let {
             name: "x".to_string(),
             ty: option_ty,
@@ -5105,7 +5105,7 @@ mod tests {
             op: "+=".to_string(),
             value: HirExpr::Name {
                 name: "delta".to_string(),
-                ty: Type::Alias("Meters".to_string(), Box::new(Type::Int)),
+                ty: Type::alias("Meters", Type::Int),
             },
         };
 
@@ -5164,7 +5164,7 @@ mod tests {
             op: "//=".to_string(),
             value: HirExpr::Name {
                 name: "step".to_string(),
-                ty: Type::Alias("Step".to_string(), Box::new(Type::Int)),
+                ty: Type::alias("Step", Type::Int),
             },
         };
 
@@ -5206,7 +5206,7 @@ mod tests {
                 op: op.to_string(),
                 value: HirExpr::Name {
                     name: "delta".to_string(),
-                    ty: Type::Alias("Bits".to_string(), Box::new(Type::Int)),
+                    ty: Type::alias("Bits", Type::Int),
                 },
             };
 
@@ -5270,7 +5270,7 @@ mod tests {
             op: "//=".to_string(),
             value: HirExpr::Name {
                 name: "step".to_string(),
-                ty: Type::Alias("Step".to_string(), Box::new(Type::Int)),
+                ty: Type::alias("Step", Type::Int),
             },
         };
 
@@ -5389,10 +5389,7 @@ mod tests {
     #[test]
     fn lowers_simple_bare_return_to_none_in_alias_option_context() {
         let stmt = HirStmt::Return { value: None };
-        let option_ret = Type::Alias(
-            "MaybeInt".to_string(),
-            Box::new(Type::Union(vec![Type::Int, Type::None])),
-        );
+        let option_ret = Type::alias("MaybeInt", Type::Union(vec![Type::Int, Type::None]));
         let lowered = try_lower_simple_stmt_with_ctx(
             &stmt,
             false,
@@ -5579,10 +5576,7 @@ mod tests {
 
     #[test]
     fn lowers_option_name_return_with_alias_option_return_context() {
-        let alias_option = Type::Alias(
-            "MaybeInt".to_string(),
-            Box::new(Type::Union(vec![Type::Int, Type::None])),
-        );
+        let alias_option = Type::alias("MaybeInt", Type::Union(vec![Type::Int, Type::None]));
         let stmt = HirStmt::Return {
             value: Some(HirExpr::Name {
                 name: "maybe_x".to_string(),
@@ -5691,7 +5685,7 @@ mod tests {
 
     #[test]
     fn lowers_return_alias_none_name_with_option_return_context() {
-        let alias_none = Type::Alias("Nothing".to_string(), Box::new(Type::None));
+        let alias_none = Type::alias("Nothing", Type::None);
         let stmt = HirStmt::Return {
             value: Some(HirExpr::Name {
                 name: "none_value".to_string(),
@@ -5746,7 +5740,7 @@ mod tests {
 
     #[test]
     fn does_not_lower_non_leaf_alias_none_typed_return_with_option_return_context() {
-        let alias_none = Type::Alias("Nothing".to_string(), Box::new(Type::None));
+        let alias_none = Type::alias("Nothing", Type::None);
         let stmt = HirStmt::Return {
             value: Some(HirExpr::Call {
                 func: "produce_none".to_string(),
@@ -5834,10 +5828,7 @@ mod tests {
         let stmt = HirStmt::Return {
             value: Some(HirExpr::IntLiteral(5)),
         };
-        let union_ret = Type::Alias(
-            "ValueUnion".to_string(),
-            Box::new(Type::Union(vec![Type::Int, Type::Str])),
-        );
+        let union_ret = Type::alias("ValueUnion", Type::Union(vec![Type::Int, Type::Str]));
         let expected_enum = union_ret.union_enum_name();
         let lowered = try_lower_simple_stmt_with_ctx(
             &stmt,
@@ -5871,10 +5862,7 @@ mod tests {
                 ty: Type::Int,
             }),
         };
-        let union_ret = Type::Alias(
-            "ValueUnion".to_string(),
-            Box::new(Type::Union(vec![Type::Int, Type::Str])),
-        );
+        let union_ret = Type::alias("ValueUnion", Type::Union(vec![Type::Int, Type::Str]));
         let expected_enum = union_ret.union_enum_name();
         let lowered = try_lower_simple_stmt_with_ctx(
             &stmt,
@@ -6423,10 +6411,7 @@ mod tests {
             test: HirExpr::BoolLiteral(true),
             msg: Some(HirExpr::Name {
                 name: "msg".to_string(),
-                ty: Type::Alias(
-                    "MaybeStr".to_string(),
-                    Box::new(Type::Union(vec![Type::Str, Type::None])),
-                ),
+                ty: Type::alias("MaybeStr", Type::Union(vec![Type::Str, Type::None])),
             }),
         };
 
@@ -6823,10 +6808,7 @@ mod tests {
         let if_stmt = HirStmt::If {
             condition: HirExpr::Name {
                 name: "maybe_x".to_string(),
-                ty: Type::Alias(
-                    "MaybeInt".to_string(),
-                    Box::new(Type::Union(vec![Type::Int, Type::None])),
-                ),
+                ty: Type::alias("MaybeInt", Type::Union(vec![Type::Int, Type::None])),
             },
             then_body: vec![HirStmt::Pass],
             elif_clauses: vec![],
@@ -7285,10 +7267,7 @@ mod tests {
         let while_stmt = HirStmt::While {
             condition: HirExpr::Name {
                 name: "maybe_x".to_string(),
-                ty: Type::Alias(
-                    "MaybeInt".to_string(),
-                    Box::new(Type::Union(vec![Type::Int, Type::None])),
-                ),
+                ty: Type::alias("MaybeInt", Type::Union(vec![Type::Int, Type::None])),
             },
             body: vec![HirStmt::Pass],
             else_body: None,

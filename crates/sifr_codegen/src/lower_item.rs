@@ -9,7 +9,7 @@ use sifr_type_system::Type;
 
 fn resolve_alias_type(ty: &Type) -> &Type {
     match ty {
-        Type::Alias(_, inner) => resolve_alias_type(inner),
+        Type::Alias { body, .. } => resolve_alias_type(body),
         _ => ty,
     }
 }
@@ -469,7 +469,7 @@ mod tests {
 
     #[test]
     fn lowers_simple_module_alias_int_const_item() {
-        let alias_int = Type::Alias("Meters".to_string(), Box::new(Type::Int));
+        let alias_int = Type::alias("Meters", Type::Int);
         let (item, rust_name) =
             try_lower_simple_module_const_item("answer", &alias_int, &HirExpr::IntLiteral(42))
                 .expect("alias int const should lower");
@@ -486,7 +486,7 @@ mod tests {
 
     #[test]
     fn dispatcher_lowers_alias_primitive_module_const_as_const_item() {
-        let alias_bool = Type::Alias("Flag".to_string(), Box::new(Type::Bool));
+        let alias_bool = Type::alias("Flag", Type::Bool);
         let (item, rust_name) = try_lower_simple_module_constant_item(
             "enabled",
             &alias_bool,
@@ -510,7 +510,7 @@ mod tests {
 
     #[test]
     fn does_not_lower_alias_primitive_module_helper_const_item() {
-        let alias_int = Type::Alias("Meters".to_string(), Box::new(Type::Int));
+        let alias_int = Type::alias("Meters", Type::Int);
         assert!(try_lower_simple_module_helper_const_item(
             "answer",
             &alias_int,
@@ -541,7 +541,7 @@ mod tests {
 
     #[test]
     fn lowers_simple_module_alias_string_const_item() {
-        let alias_str = Type::Alias("Message".to_string(), Box::new(Type::Str));
+        let alias_str = Type::alias("Message", Type::Str);
         let (item, rust_name_call) = try_lower_simple_module_string_const_item(
             "greeting",
             &alias_str,
@@ -562,7 +562,7 @@ mod tests {
 
     #[test]
     fn dispatcher_lowers_alias_string_module_const_as_string_item() {
-        let alias_str = Type::Alias("Message".to_string(), Box::new(Type::Str));
+        let alias_str = Type::alias("Message", Type::Str);
         let (item, rust_name_call) = try_lower_simple_module_constant_item(
             "greeting",
             &alias_str,
@@ -683,7 +683,7 @@ mod tests {
 
     #[test]
     fn lowers_simple_module_alias_none_const_item() {
-        let alias_none = Type::Alias("Nothing".to_string(), Box::new(Type::None));
+        let alias_none = Type::alias("Nothing", Type::None);
         let (item, rust_name_call) =
             try_lower_simple_module_none_const_item("nothing", &alias_none, &HirExpr::NoneLiteral)
                 .expect("alias none const should lower");
@@ -726,7 +726,7 @@ mod tests {
 
     #[test]
     fn lowers_simple_module_alias_none_name_const_item() {
-        let alias_none = Type::Alias("Nothing".to_string(), Box::new(Type::None));
+        let alias_none = Type::alias("Nothing", Type::None);
         let (item, rust_name_call) = try_lower_simple_module_none_const_item(
             "nothing",
             &alias_none,
@@ -752,7 +752,7 @@ mod tests {
 
     #[test]
     fn dispatcher_lowers_alias_none_module_const_as_none_item() {
-        let alias_none = Type::Alias("Nothing".to_string(), Box::new(Type::None));
+        let alias_none = Type::alias("Nothing", Type::None);
         let (item, rust_name_call) =
             try_lower_simple_module_constant_item("nothing", &alias_none, &HirExpr::NoneLiteral)
                 .expect("dispatcher should lower alias none constant");
@@ -770,7 +770,7 @@ mod tests {
 
     #[test]
     fn dispatcher_lowers_alias_none_name_module_const_as_none_item() {
-        let alias_none = Type::Alias("Nothing".to_string(), Box::new(Type::None));
+        let alias_none = Type::alias("Nothing", Type::None);
         let (item, rust_name_call) = try_lower_simple_module_constant_item(
             "nothing",
             &alias_none,
@@ -819,7 +819,7 @@ mod tests {
 
     #[test]
     fn does_not_lower_alias_none_module_helper_const_item() {
-        let alias_none = Type::Alias("Nothing".to_string(), Box::new(Type::None));
+        let alias_none = Type::alias("Nothing", Type::None);
         assert!(try_lower_simple_module_helper_const_item(
             "nothing",
             &alias_none,
@@ -884,7 +884,7 @@ mod tests {
 
     #[test]
     fn does_not_lower_alias_string_module_helper_const_item() {
-        let alias_str = Type::Alias("Message".to_string(), Box::new(Type::Str));
+        let alias_str = Type::alias("Message", Type::Str);
         assert!(try_lower_simple_module_helper_const_item(
             "greeting",
             &alias_str,

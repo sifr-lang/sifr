@@ -33,7 +33,7 @@ fn uses_debug_display_format(ty: &Type) -> bool {
         | Type::Unknown
         | Type::Intersection(_)
         | Type::Never => true,
-        Type::Alias(_, inner) => uses_debug_display_format(inner),
+        Type::Alias { body, .. } => uses_debug_display_format(body),
     }
 }
 

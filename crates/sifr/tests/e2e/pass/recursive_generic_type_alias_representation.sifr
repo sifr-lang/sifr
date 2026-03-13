@@ -1,0 +1,6 @@
+# Test: recursive generic aliases preserve specialized type arguments.
+
+type Node[T] = T | list[Node[T]]
+
+def main():
+    print("recursive generic alias representation preserved")

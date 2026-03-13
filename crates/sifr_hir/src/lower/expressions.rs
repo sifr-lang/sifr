@@ -2140,11 +2140,12 @@ pub(super) fn lower_attribute(attr: &ExprAttribute, ctx: &mut LowerCtx) -> Optio
 
     let object = lower_expr(&attr.value, ctx)?;
     let object_ty = object.ty().clone();
+    let resolved_object_ty = object_ty.resolve_alias().clone();
 
     // Check if the object is a class instance with this field
     if let Type::Class {
         name: _, fields, ..
-    } = &object_ty
+    } = &resolved_object_ty
     {
         if let Some((_, field_ty)) = fields.iter().find(|(n, _)| n == &field_name) {
             return Some(HirExpr::FieldAccess {
@@ -2164,7 +2165,7 @@ pub(super) fn lower_attribute(attr: &ExprAttribute, ctx: &mut LowerCtx) -> Optio
     // Check if the object is an enum instance - access .name or .value
     if let Type::Enum {
         name: enum_name, ..
-    } = &object_ty
+    } = &resolved_object_ty
     {
         match field_name.as_str() {
             "name" => {
@@ -2314,7 +2315,12 @@ fn refine_defaultdict_binding_expr(
     let HirExpr::Name { name, ty } = object.as_ref() else {
         return None;
     };
-    let Type::Alias(alias_name, inner) = ty else {
+    let Type::Alias {
+        name: alias_name,
+        body,
+        ..
+    } = ty
+    else {
         return None;
     };
     if !matches!(
@@ -2323,7 +2329,7 @@ fn refine_defaultdict_binding_expr(
     ) {
         return None;
     }
-    let Type::Dict(key_ty, value_ty) = inner.as_ref() else {
+    let Type::Dict(key_ty, value_ty) = body.as_ref() else {
         return None;
     };
     let expected_unrefined = match alias_name.as_str() {
@@ -2340,13 +2346,14 @@ fn refine_defaultdict_binding_expr(
     } else {
         *key_ty.clone()
     };
-    let refined_ty = Type::Alias(
-        alias_name.clone(),
-        Box::new(Type::Dict(
+    let refined_ty = Type::Alias {
+        name: alias_name.clone(),
+        type_args: Vec::new(),
+        body: Box::new(Type::Dict(
             Box::new(refined_key_ty),
             Box::new(inferred_value_ty.clone()),
         )),
-    );
+    };
     ctx.scope.narrow_var(name, refined_ty.clone());
     Some(HirExpr::Index {
         object: Box::new(HirExpr::Name {
@@ -2387,12 +2394,17 @@ pub(super) fn resolve_method_type(
     args: &[HirExpr],
     ctx: &mut LowerCtx,
 ) -> Option<Type> {
-    if let Type::Alias(alias_name, inner) = object_ty {
+    if let Type::Alias {
+        name: alias_name,
+        body,
+        ..
+    } = object_ty
+    {
         if matches!(
             alias_name.as_str(),
             DEFAULTDICT_INT_ALIAS | DEFAULTDICT_LIST_ALIAS | DEFAULTDICT_SET_ALIAS
         ) {
-            return resolve_method_type(inner, method, args, ctx);
+            return resolve_method_type(body, method, args, ctx);
         }
     }
     match object_ty {

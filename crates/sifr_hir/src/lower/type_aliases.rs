@@ -52,14 +52,14 @@ pub(super) fn collect_type_alias_decls(stmts: &[Stmt], ctx: &mut LowerCtx) -> Ve
 
 pub(super) fn predeclare_type_aliases(alias_decls: &[TypeAliasDecl], ctx: &mut LowerCtx) {
     for decl in alias_decls {
+        let alias_ty = alias_type_template(decl);
         if decl.type_params.is_empty() {
-            ctx.scope
-                .define_type_alias(decl.name.clone(), Type::Unknown);
+            ctx.scope.define_type_alias(decl.name.clone(), alias_ty);
         } else {
             ctx.scope.define_generic_type_alias(
                 decl.name.clone(),
                 decl.type_params.clone(),
-                Type::Unknown,
+                alias_ty,
             );
         }
     }
@@ -98,17 +98,34 @@ pub(super) fn resolve_type_aliases(alias_decls: &[TypeAliasDecl], ctx: &mut Lowe
             } else {
                 resolve_alias_decl(&decl, ctx)
             };
+            let alias_ty = Type::Alias {
+                name: decl.name.clone(),
+                type_args: alias_template_type_args(&decl.type_params),
+                body: Box::new(resolved),
+            };
             if decl.type_params.is_empty() {
-                ctx.scope.define_type_alias(decl.name.clone(), resolved);
+                ctx.scope.define_type_alias(decl.name.clone(), alias_ty);
             } else {
                 ctx.scope.define_generic_type_alias(
                     decl.name.clone(),
                     decl.type_params.clone(),
-                    resolved,
+                    alias_ty,
                 );
             }
         }
     }
+}
+
+fn alias_type_template(decl: &TypeAliasDecl) -> Type {
+    Type::Alias {
+        name: decl.name.clone(),
+        type_args: alias_template_type_args(&decl.type_params),
+        body: Box::new(Type::Unknown),
+    }
+}
+
+fn alias_template_type_args(type_params: &[String]) -> Vec<Type> {
+    type_params.iter().cloned().map(Type::TypeVar).collect()
 }
 
 fn resolve_alias_decl(decl: &TypeAliasDecl, ctx: &mut LowerCtx) -> Type {

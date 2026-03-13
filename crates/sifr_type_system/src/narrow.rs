@@ -55,6 +55,10 @@ impl NarrowingCondition {
 ///
 /// Returns the narrowed type.
 pub fn narrow_type(ty: &Type, condition: &NarrowingCondition, is_true: bool) -> Type {
+    if let Type::Alias { body, .. } = ty {
+        return narrow_type(body, condition, is_true);
+    }
+
     match condition {
         NarrowingCondition::Truthiness(_) => {
             if is_true {
