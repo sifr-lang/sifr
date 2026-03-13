@@ -191,7 +191,24 @@ fn type_sort_key(ty: &Type) -> (u8, String) {
         Type::Never => (15, String::new()),
         Type::Union(_) => (16, String::new()),
         Type::Intersection(_) => (17, String::new()),
-        Type::Alias(name, _) => (18, name.clone()),
+        Type::Alias {
+            name, type_args, ..
+        } => (
+            18,
+            if type_args.is_empty() {
+                name.clone()
+            } else {
+                format!(
+                    "{}[{}]",
+                    name,
+                    type_args
+                        .iter()
+                        .map(Type::display_name)
+                        .collect::<Vec<_>>()
+                        .join(", ")
+                )
+            },
+        ),
         Type::Class { name, .. } => (19, name.clone()),
         Type::Result(_, _) => (20, String::new()),
         Type::Protocol { name, .. } => (21, name.clone()),

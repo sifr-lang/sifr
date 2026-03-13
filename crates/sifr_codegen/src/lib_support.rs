@@ -12,7 +12,7 @@ pub(crate) fn is_self_field_access_expr(expr: &HirExpr) -> bool {
 
 pub(crate) fn is_copyish_structured_stmt_expr_type(ty: &Type) -> bool {
     match ty {
-        Type::Alias(_, inner) => is_copyish_structured_stmt_expr_type(inner),
+        Type::Alias { body, .. } => is_copyish_structured_stmt_expr_type(body),
         Type::Int | Type::Float | Type::Bool | Type::Enum { .. } => true,
         _ => false,
     }
@@ -20,14 +20,16 @@ pub(crate) fn is_copyish_structured_stmt_expr_type(ty: &Type) -> bool {
 
 pub(crate) fn resolve_alias_type_for_plain_call(ty: &Type) -> &Type {
     match ty {
-        Type::Alias(_, inner) => resolve_alias_type_for_plain_call(inner),
+        Type::Alias { body, .. } => resolve_alias_type_for_plain_call(body),
         _ => ty,
     }
 }
 
 pub(crate) fn type_has_typevar(ty: &Type) -> bool {
     match ty {
-        Type::Alias(_, inner) => type_has_typevar(inner),
+        Type::Alias {
+            type_args, body, ..
+        } => type_args.iter().any(type_has_typevar) || type_has_typevar(body),
         Type::TypeVar(_) => true,
         Type::List(inner) | Type::Set(inner) => type_has_typevar(inner),
         Type::Dict(key, val) => type_has_typevar(key) || type_has_typevar(val),

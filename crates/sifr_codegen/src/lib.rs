@@ -1203,7 +1203,11 @@ impl RustEmitter {
 
             self.push_captured_stmt(&RustStmt::Let {
                 mutable: self.mutated_vars.contains(name)
-                    || matches!(ty, Type::Alias(alias_name, _) if alias_name.starts_with("__compat_defaultdict_")),
+                    || matches!(
+                        ty,
+                        Type::Alias { name: alias_name, .. }
+                            if alias_name.starts_with("__compat_defaultdict_")
+                    ),
                 name: name.clone(),
                 ty: if is_generic_class
                     || match (ty, value) {
@@ -1214,12 +1218,19 @@ impl RustEmitter {
                         {
                             true
                         }
-                        (Type::Alias(alias_name, inner), HirExpr::Call { func, args, .. })
+                        (
+                            Type::Alias {
+                                name: alias_name,
+                                body,
+                                ..
+                            },
+                            HirExpr::Call { func, args, .. },
+                        )
                             if func == alias_name
                                 && args.is_empty()
                                 && alias_name.starts_with("__compat_defaultdict_") =>
                         {
-                            if let Type::Dict(key_ty, value_ty) = inner.resolve_alias() {
+                            if let Type::Dict(key_ty, value_ty) = body.resolve_alias() {
                                 matches!(key_ty.as_ref(), Type::Any | Type::Unknown)
                                     || matches!(value_ty.as_ref(), Type::List(elem) if matches!(elem.as_ref(), Type::Any | Type::Unknown))
                                     || matches!(value_ty.as_ref(), Type::Set(elem) if matches!(elem.as_ref(), Type::Any | Type::Unknown))

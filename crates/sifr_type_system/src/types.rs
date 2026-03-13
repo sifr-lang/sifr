@@ -42,8 +42,14 @@ pub enum Type {
     LiteralStr(String),
     /// Literal boolean type: a specific bool value as a type (`True`)
     LiteralBool(bool),
-    /// Type alias reference (resolved during checking)
-    Alias(String, Box<Type>),
+    /// Type alias reference, optionally specialized with concrete type arguments.
+    /// The body holds the alias expansion when known, or `Unknown` for symbolic
+    /// recursive references that must preserve alias identity without infinite expansion.
+    Alias {
+        name: String,
+        type_args: Vec<Type>,
+        body: Box<Type>,
+    },
     /// Safe top type: accepts any value but must be narrowed before use.
     /// Unlike `Any` which opts out of type checking, `Unknown` forces
     /// the programmer to prove the type before operating on it.
@@ -166,6 +172,15 @@ pub enum OwnershipKind {
 }
 
 impl Type {
+    /// Construct a non-generic type alias wrapper.
+    pub fn alias(name: impl Into<String>, body: Type) -> Self {
+        Self::Alias {
+            name: name.into(),
+            type_args: Vec::new(),
+            body: Box::new(body),
+        }
+    }
+
     /// Returns the ownership kind for this type.
     ///
     /// - Primitives (`Int`, `Float`, `Bool`) are `Copy`.
@@ -211,7 +226,7 @@ impl Type {
                 }
             }
             // Alias: delegate to the underlying type
-            Self::Alias(_, inner) => inner.ownership(),
+            Self::Alias { body, .. } => body.ownership(),
         }
     }
 
@@ -251,7 +266,20 @@ impl Type {
                     "False".to_string()
                 }
             }
-            Self::Alias(name, _) => name.clone(),
+            Self::Alias {
+                name, type_args, ..
+            } => {
+                if type_args.is_empty() {
+                    name.clone()
+                } else {
+                    let args = type_args
+                        .iter()
+                        .map(Self::display_name)
+                        .collect::<Vec<_>>()
+                        .join(", ");
+                    format!("{name}[{args}]")
+                }
+            }
             Self::Unknown => "Unknown".to_string(),
             Self::Class { name, .. } => name.clone(),
             Self::Result(ok, err) => {
@@ -317,7 +345,7 @@ impl Type {
                 }
             }
             Self::Intersection(_) => "Box<dyn std::any::Any>".to_string(),
-            Self::Alias(_, inner) => inner.rust_type(),
+            Self::Alias { body, .. } => body.rust_type(),
             Self::Unknown => "Box<dyn std::any::Any>".to_string(),
             Self::Class { name, .. } => name.clone(),
             Self::Result(ok, err) => format!("Result<{}, {}>", ok.rust_type(), err.rust_type()),
@@ -432,7 +460,7 @@ impl Type {
             Type::Never => "Never".to_string(),
             Type::Union(_) => "Union".to_string(),
             Type::Intersection(_) => "Intersection".to_string(),
-            Type::Alias(name, _) => capitalize(name),
+            Type::Alias { name, .. } => capitalize(name),
             Type::Class { name, .. } => name.clone(),
             Type::Result(_, _) => "Result".to_string(),
             Type::Protocol { name, .. } => name.clone(),
@@ -488,7 +516,7 @@ impl Type {
     /// Resolve an alias to its underlying type.
     pub fn resolve_alias(&self) -> &Type {
         match self {
-            Self::Alias(_, inner) => inner.resolve_alias(),
+            Self::Alias { body, .. } => body.resolve_alias(),
             other => other,
         }
     }
@@ -510,8 +538,12 @@ impl Type {
     /// For tuple with literal index: returns the exact element type (no Option).
     pub fn index_result_type(&self, index_ty: &Type) -> Option<Type> {
         match self {
-            Self::Alias(alias_name, inner) if alias_name.starts_with("__compat_defaultdict_") => {
-                let Self::Dict(key, value) = inner.resolve_alias() else {
+            Self::Alias {
+                name: alias_name,
+                body,
+                ..
+            } if alias_name.starts_with("__compat_defaultdict_") => {
+                let Self::Dict(key, value) = body.resolve_alias() else {
                     return None;
                 };
                 if matches!(key.as_ref(), Type::Any | Type::Unknown)
@@ -523,6 +555,7 @@ impl Type {
                     None
                 }
             }
+            Self::Alias { body, .. } => body.index_result_type(index_ty),
             Self::List(elem) => {
                 if index_ty == &Type::Int {
                     // Safe indexing: returns Option[T] = T | None
@@ -597,7 +630,7 @@ impl Type {
                     params.iter().any(contains_any) || contains_any(ret)
                 }
                 Type::Result(ok, err) => contains_any(ok) || contains_any(err),
-                Type::Alias(_, inner) => contains_any(inner),
+                Type::Alias { body, .. } => contains_any(body),
                 Type::Function(ft) => {
                     ft.params.iter().any(|(_, ty, _)| contains_any(ty))
                         || contains_any(&ft.return_type)
@@ -613,6 +646,28 @@ impl Type {
                 }
                 _ => false,
             }
+        }
+
+        fn same_alias_identity(left: &Type, right: &Type) -> bool {
+            match (left, right) {
+                (
+                    Type::Alias {
+                        name: left_name,
+                        type_args: left_args,
+                        ..
+                    },
+                    Type::Alias {
+                        name: right_name,
+                        type_args: right_args,
+                        ..
+                    },
+                ) => left_name == right_name && left_args == right_args,
+                _ => false,
+            }
+        }
+
+        if same_alias_identity(self, target) {
+            return true;
         }
 
         // Resolve aliases
@@ -661,11 +716,18 @@ impl Type {
         // Mutable collections are invariant in their element/key/value types.
         // Explicit `Any` inside the collection type remains an escape hatch.
         match (source, target_resolved) {
-            (Self::List(a), Self::List(b)) => a == b || contains_any(a) || contains_any(b),
-            (Self::Set(a), Self::Set(b)) => a == b || contains_any(a) || contains_any(b),
+            (Self::List(a), Self::List(b)) => {
+                a == b || same_alias_identity(a, b) || contains_any(a) || contains_any(b)
+            }
+            (Self::Set(a), Self::Set(b)) => {
+                a == b || same_alias_identity(a, b) || contains_any(a) || contains_any(b)
+            }
             (Self::Dict(ak, av), Self::Dict(bk, bv)) => {
-                (ak == bk || contains_any(ak) || contains_any(bk))
-                    && (av == bv || contains_any(av) || contains_any(bv))
+                (ak == bk || same_alias_identity(ak, bk) || contains_any(ak) || contains_any(bk))
+                    && (av == bv
+                        || same_alias_identity(av, bv)
+                        || contains_any(av)
+                        || contains_any(bv))
             }
             (Self::Tuple(a), Self::Tuple(b)) => {
                 a.len() == b.len() && a.iter().zip(b.iter()).all(|(x, y)| x.is_assignable_to(y))
@@ -1010,7 +1072,11 @@ mod tests {
 
     #[test]
     fn test_alias_resolves() {
-        let alias = Type::Alias("UserId".to_string(), Box::new(Type::Int));
+        let alias = Type::Alias {
+            name: "UserId".to_string(),
+            type_args: Vec::new(),
+            body: Box::new(Type::Int),
+        };
         assert_eq!(alias.display_name(), "UserId");
         assert_eq!(alias.rust_type(), "i64");
         assert!(alias.is_assignable_to(&Type::Int));
