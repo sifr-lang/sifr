@@ -4,6 +4,7 @@ Status: complete
 Started: 2026-03-13
 Completed: 2026-03-13
 Part: `recursive_well_formedness_validation`
+PR: `#1123`
 
 ## Goal
 
