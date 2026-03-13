@@ -347,6 +347,17 @@ Part completion is not allowed to introduce vague fallback diagnostics such as g
   - Full local validation:
     - `scripts/run_all_tests.sh --profile quick`
     - `scripts/run_all_tests.sh`
+- `2026-03-13`: part 4 `recursive_hir_surface_and_attribute_access` completed local validation.
+  - Execution report: `issues/ad-hoc-full-recursive-type-feature-part4-execution.md`
+  - PR: `#1125`
+  - Demo: `demos/ad_hoc_recursive_type_part4_demo.sifr`
+  - Added regression coverage:
+    - `crates/sifr_hir/src/lower/expressions.rs`
+    - `crates/sifr_type_system/src/narrow.rs`
+    - `crates/sifr/tests/e2e/fail/recursive_tree_attribute_without_narrowing.sifr`
+  - Full local validation:
+    - `scripts/run_all_tests.sh --profile quick`
+    - `scripts/run_all_tests.sh`
 
 ## Implementation Parts and PR Breakdown
 
