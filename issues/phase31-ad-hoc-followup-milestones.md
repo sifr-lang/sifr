@@ -1,36 +1,94 @@
 # Phase 31 Ad Hoc Follow-up Milestones
 
-Status: active follow-up plan on 2026-03-11
+Status: active follow-up plan on 2026-03-13
 Source inputs:
-- `verification/leetcode/phase31_scorecard.md`
+
+- `verification/leetcode/phase31_current_full_results_after_m31a_wave5_rerun.json`
 - `verification/leetcode/phase31_failure_taxonomy.json`
 - `verification/leetcode/phase31_remediation_backlog.json`
+- `issues/ad-hoc-full-recursive-type-feature.md`
+- `issues/ad-hoc-own-mut-parameter-convention.md`
 
 ## Purpose
 
-Convert the unresolved Phase 31 LeetCode compatibility backlog into a small set of execution-ready milestones with explicit sequencing, measurable success criteria, and validation gates.
+Convert the remaining Phase 31 LeetCode failures into a complete carry-forward plan that:
 
-Phase 31 itself is complete. This document is the carry-forward plan for the remaining compatibility work that Phase 31 surfaced.
+- fixes root causes rather than patching individual problems,
+- keeps every in-scope LeetCode problem solvable in Sifr,
+- separates raw-source incompatibilities from true algorithm support,
+- treats cross-cutting language-feature work as explicit prerequisites when those features are broader than the Phase 31 LeetCode closure itself.
+
+Phase 31 itself is complete. This document is the carry-forward plan for the remaining compatibility work it surfaced.
 
 ## Current Remaining Surface
 
 - Seed corpus size: `50`
 - Current passes: `15`
-- Remaining failing cases: `35`
-- Supportable in current language/runtime direction: `44`
-- Explicit intentional divergence: `1` (`ownership.borrowed_return_surface`, case `1299`)
+- Remaining failing raw fixtures: `35`
+- Problems expected to be solvable in Sifr after this carry-forward: `35`
+- Known raw-source divergence requiring a canonical Sifr rewrite: `1` (`0043`)
 
-## Planning Rules
+## Planning Policy
 
-- Fix root causes, not individual LeetCode programs.
-- Prefer milestones that remove an entire failure bucket or unblock a dependent bucket.
-- Do not add fallback semantics that weaken Sifr's ownership or type guarantees.
+- Fix root causes, not one-off fixtures.
+- Every in-scope LeetCode problem must end up solvable in Sifr.
+- If a required fix is already covered by a broader ad hoc language/compiler phase, make that phase a prerequisite and keep this Phase 31 plan focused on LeetCode closure after the prerequisite lands.
+- A raw Python-shaped fixture may remain non-canonical only if it conflicts with an intentional Sifr language guarantee.
+- If a raw fixture is non-canonical, add a canonical Sifr variant and count that as the pass target.
+- Do not add fallback semantics that weaken ownership, type safety, or parse-safety guarantees.
 - Each milestone must end with:
   - updated regression coverage,
   - regenerated compatibility artifacts where counts change,
   - demo evidence for the milestone scope,
   - `scripts/run_all_tests.sh --profile quick`,
   - `scripts/run_all_tests.sh`.
+
+## Canonical Sifr Fixture Policy
+
+- Every in-scope LeetCode problem must be solvable in Sifr.
+- If a scraped Python fixture conflicts with an intentional Sifr language guarantee, do not weaken the language to accept it verbatim.
+- Instead, create a canonical Sifr variant that preserves the same algorithm and changes only the minimum syntax or semantics required by Sifr's contracts.
+- Prefer the nearest already-supported Sifr form over broader rewrites.
+- Preserve algorithm shape, asymptotic complexity, and test expectations.
+- Track the original raw fixture as a `raw-source divergence`, not as an unsupported problem.
+- Count the canonical Sifr variant as the pass target for milestone closure.
+
+### Rewrite Rules
+
+- Keep supported constructs if Sifr already supports them.
+- Replace only the conflicting surface.
+- Prefer explicit safety over implicit fallback behavior.
+- Prefer local helper extraction over whole-function rewrites.
+
+### Milestone Planning Rule
+
+- When a failure is caused by a policy mismatch rather than a missing compiler capability, the milestone must target the canonical Sifr form of that problem, and the plan must record the raw fixture as a source divergence rather than treating the problem itself as unsupported.
+
+## Cross-Phase Prerequisites
+
+These are broader feature phases that must land before the related Phase 31 LeetCode closure milestones start.
+
+### `prereq_recursive_types`
+
+- Source phase: `issues/ad-hoc-full-recursive-type-feature.md`
+- Why it is a prerequisite:
+  - Phase 31 tree cases need recursive forward references and recursive-node field access
+  - the new ad hoc recursive-type phase intentionally owns the production-grade language feature and broader compiler architecture
+- Phase 31 responsibility after prerequisite lands:
+  - rerun the affected LeetCode cases
+  - add any remaining corpus-specific regression coverage
+  - close the related Phase 31 milestone only when the LeetCode cases are passing
+
+### `prereq_own_mut`
+
+- Source phase: `issues/ad-hoc-own-mut-parameter-convention.md`
+- Why it is a prerequisite:
+  - `1299` depends on `own mut` as a language feature, not a narrow LeetCode patch
+  - the new ad hoc `own mut` phase intentionally owns parser/HIR/codegen/ownership contract work
+- Phase 31 responsibility after prerequisite lands:
+  - rewrite `1299` into canonical Sifr form
+  - rerun the case and lock the corpus/demo coverage
+  - close the related Phase 31 milestone only when the LeetCode case is passing
 
 ## Execution Log
 
@@ -69,203 +127,197 @@ Phase 31 itself is complete. This document is the carry-forward plan for the rem
   - Targeted result artifact: `verification/leetcode/phase31_m31a_wave1_results.json`
   - Targeted 10-case status: `PASS=3`, `CHECK_ERROR=7`, `RUN_ERROR=0`
   - Confirmed passes: `0014_longest_common_prefix`, `0198_house_robber`, `1768_merge_strings_alternately`
-  - Confirmed reclassification signal: remaining watched failures are now narrower optional-flow shapes beyond the guarded-index root cause covered in slice 1
 - `2026-03-12`: `m31_a_optional_narrowing_core` slice 2 completed local validation for same-sequence two-pointer `while` guard narrowing.
   - Execution report: `issues/phase31-m31a-two-pointer-while-guard-execution.md`
   - Targeted result artifact: `verification/leetcode/phase31_m31a_wave2_results.json`
   - Targeted 10-case status: `PASS=4`, `CHECK_ERROR=6`, `RUN_ERROR=0`
   - Confirmed new pass: `0042_trapping_rain_water`
-  - Confirmed reclassification signal: remaining watch-set failures are now concentrated in sliding-window left-pointer, reverse-range, and constructed-sequence proof gaps rather than the same-sequence two-pointer `while` shape
 - `2026-03-12`: `m31_a_optional_narrowing_core` slice 3 completed local validation for canonical sliding-window left-pointer narrowing.
   - Execution report: `issues/phase31-m31a-sliding-window-left-pointer-execution.md`
   - Targeted result artifact: `verification/leetcode/phase31_m31a_wave3_results.json`
   - Targeted three-case status: `PASS=2`, `CHECK_ERROR=1`, `RUN_ERROR=0`
   - Confirmed new passes: `0003_longest_substring_without_repeating_characters`, `1456_maximum_number_of_vowels_in_a_substring_of_given_length`
-  - Confirmed reclassification signal: `0209_minimum_size_subarray_sum` moved past the prior left-pointer optional-index failure into the remaining `float('inf')` branch-type mismatch
 - `2026-03-12`: `m31_a_optional_narrowing_core` slice 4 completed local validation for sentinel-domain normalization on canonical infinity accumulators.
   - Execution report: `issues/phase31-m31a-sentinel-domain-normalization-execution.md`
   - Targeted result artifact: `verification/leetcode/phase31_m31a_wave4_results.json`
   - Targeted seeded-case status: `PASS=1`, `CHECK_ERROR=0`, `RUN_ERROR=0`
   - Confirmed new pass: `0209_minimum_size_subarray_sum`
-  - Confirmed parity probe: `0334_increasing_triplet_subsequence` now checks and runs with integer-domain sentinel lowering
-  - Confirmed non-goal boundary: `2017_grid_game` remains blocked by unrelated `Any`/annotation failures rather than sentinel handling
 - `2026-03-13`: `m31_a_optional_narrowing_core` slice 5 completed local validation for reverse-range recurrence narrowing over sized local constructions.
   - Execution report: `issues/phase31-m31a-reverse-range-recurrence-execution.md`
   - Targeted result artifact: `verification/leetcode/phase31_m31a_wave5_results.json`
   - Targeted four-case status: `PASS=1`, `CHECK_ERROR=3`, `RUN_ERROR=0`
   - Confirmed new pass: `1143_longest_common_subsequence`
-  - Confirmed reclassification boundary: `0053` and `0746` remain unsafe plain-parameter head-access failures, and `0322` remains a subtractive/value-dependent recurrence gap
   - Stable warmed full-corpus rerun: `verification/leetcode/phase31_current_full_results_after_m31a_wave5_rerun.json`
   - Full-corpus state after slice 5: `PASS=15`, `CHECK_ERROR=35`, `RUN_ERROR=0`
 
 ## Recommended Execution Order
 
-1. `m31_a_optional_narrowing_core`
-2. `m31_b_destructuring_target_lowering`
-3. `m31_c_stdlib_module_parity`
-4. `m31_d_nested_function_pipeline`
-5. `m31_e_tree_node_surface`
-6. `m31_f_ownership_divergence_resolution`
+1. `prereq_recursive_types`
+2. `prereq_own_mut`
+3. `m31_g_container_literal_specialization_and_state_tracking`
+4. `m31_a_optional_flow_completion`
+5. `m31_b_destructuring_and_composite_lvalues`
+6. `m31_d_nested_function_pipeline_completion`
+7. `m31_e_recursive_tree_surface_leetcode_closure`
+8. `m31_h_local_name_binding_and_shadowing`
+9. `m31_j_own_mut_leetcode_closure`
+10. `m31_k_canonical_sifr_fixture_normalization`
+11. `m31_i_corpus_fixture_canonicalization_for_multi_solution_files`
 
-This order is chosen to remove the largest independent blockers first, then clear dependency chains (`unsupported_ast_shape -> nested_function_annotation_support` and `recursive_node_forward_reference -> attribute_expression_support`).
+This order starts with the two broader feature prerequisites, then front-loads independent compiler wins, and keeps the related Phase 31 milestones focused on corpus closure rather than re-owning the prerequisite feature work.
 
 ## Milestones
 
-### `m31_a_optional_narrowing_core`
+### `m31_g_container_literal_specialization_and_state_tracking`
+
+- Scope:
+  - specialize empty container literals from later typed writes and reads
+  - remove `Any` leakage through dictionary growth, `.get`, membership, and equality
+- Implementation notes:
+  - use first-write specialization for empty literals
+  - propagate the specialized key/value shape through subsequent reads, `.get(...)`, membership checks, and equality
+  - reject conflicting later writes with deterministic "empty literal type conflict" diagnostics
+- Affected ids:
+  - `0001`, `0242`, `0424`, `0523`, `0560`
+- Definition of done:
+  - these five cases move past `dict[Any, Any]` / `Any` arithmetic failures
+  - regression coverage locks empty-literal specialization and conflicting-write diagnostics
+
+### `m31_a_optional_flow_completion`
 
 - Current execution status (`2026-03-13`):
-  - in progress
-  - slice 1 completed the guarded sequence-index root cause for explicit `while i < len(seq)`, `for i in range(len(seq))`, and early-return non-empty guards
-  - slice 2 completed same-sequence two-pointer `while left < right` narrowing for zero/end pointer construction plus the downstream production-path emit gaps that slice exposed
-  - slice 3 completed canonical sliding-window left-pointer narrowing for direct `seq[l]` reads under a `for r in range(len(seq))` driver, including tuple-unpacked zero-based locals
-  - slice 4 completed canonical infinity sentinel-domain normalization for integer algorithm accumulators
-  - slice 5 completed reverse-range recurrence narrowing for sized local constructions, plus the required structured codegen support for comprehension-backed locals, dynamic subscript writes, borrow-safe recurrence assignments, and negative-step range iterators
-  - validated with targeted HIR/e2e/demo coverage, `verification/leetcode/phase31_m31a_wave1_results.json`, `verification/leetcode/phase31_m31a_wave2_results.json`, `verification/leetcode/phase31_m31a_wave3_results.json`, `verification/leetcode/phase31_m31a_wave4_results.json`, and `verification/leetcode/phase31_m31a_wave5_results.json`
-  - slice 5 targeted outcome: `PASS=1`, `CHECK_ERROR=3`, `RUN_ERROR=0` across the watched recurrence set
-  - stable warmed full-corpus state after slice 5: `PASS=15`, `CHECK_ERROR=35`, `RUN_ERROR=0`
-  - remaining optional failures are now concentrated in unsafe plain-parameter head indexing, subtractive/value-dependent recurrence indexing, and broader arithmetic/branch-type proof gaps rather than guarded-index, same-sequence two-pointer, canonical sliding-window left-pointer, infinity-sentinel joins, or reverse-range recurrence proofs
+  - guarded sequence indexing, two-pointer `while`, sliding-window left-pointer narrowing, sentinel normalization, and reverse-range recurrence narrowing are already landed
+  - remaining optional-flow work is now the narrower closure set below
+- Remaining root-cause scope:
+  - fixed-index reads after length guards
+  - non-empty queue/heap/list pop results under truthiness guards
+  - subtractive/value-dependent recurrence indexing
+- Implementation notes:
+  - prefer a general forward-propagation rule for definite in-bounds access rather than adding more narrow special cases
+  - track range/loop bounds, arithmetic offsets such as `i + 1` and `i + 2`, and first-element access after non-empty proofs
+  - keep the existing no-implicit-unwrap rule outside proven-safe flow
+- Affected ids:
+  - `0053`, `0127`, `0238`, `0322`, `0502`, `0743`, `0746`
+- Definition of done:
+  - these seven cases move past `int | None`, `None | str`, and `None | tuple[...]` failures
+  - regression coverage exists for guarded queue/heap pops and guarded recurrence indexing
+
+### `m31_b_destructuring_and_composite_lvalues`
 
 - Scope:
-  - resolve `type_system.optional_narrowing_and_union_ops`
-  - current blocked cases: `16`
-  - affected ids: `0014`, `0015`, `0042`, `0043`, `0053`, `0198`, `0209`, `0215`, `0238`, `0322`, `0424`, `0560`, `0746`, `1143`, `1456`, `1768`
-- Why this is a standalone milestone:
-  - it is the largest remaining bucket
-  - it is independent of lowering/frontend enablement work
-  - it affects DP, strings, heaps, and sliding-window patterns at once
+  - support fixed-shape destructuring into locals and attributes
+  - support loop destructuring from known two-element items
+  - support fixed-shape heterogeneous mutable cells used with subscript mutation
+- Affected ids:
+  - `0295`, `0703`, `0997`, `1209`
 - Definition of done:
-  - optional/union arithmetic, indexing, comparisons, and return-flow patterns used by the corpus type-check successfully
-  - narrowing behavior is deterministic across `if`, early-return, and local-rebinding paths
-  - the bucket is either eliminated or reduced with every remaining case reclassified into a narrower root cause
-- Required validation:
-  - targeted type-system regression tests for optional narrowing and union operator compatibility
-  - rerun the 16 affected corpus cases and regenerate the compatibility snapshot if counts change
-  - full local suite
-- Expected impact:
-  - highest potential pass-rate improvement of any single milestone
+  - these four cases move past destructuring/composite-lvalue failures
+  - regression coverage exists for attribute destructuring, loop tuple targets, and fixed-shape subscript augassign
 
-### `m31_b_destructuring_target_lowering`
+### `m31_d_nested_function_pipeline_completion`
 
 - Scope:
-  - resolve `lowering.destructuring_target_support`
-  - current blocked cases: `7`
-  - affected ids: `0207`, `0295`, `0684`, `0703`, `0743`, `0997`, `1209`
-- Why this is a standalone milestone:
-  - it is a concentrated lowering limitation with clear syntax-shape boundaries
-  - it blocks graph and heap solutions that otherwise already fit current language semantics
+  - finish lowering for remaining nested function shapes, including `nonlocal`
+  - infer nested helper params/returns for the supported corpus patterns
+  - eliminate generic `Any` fallback leakage from nested helper bodies
+- Implementation notes:
+  - prefer usage-driven inference from nested helper call sites and captured-state operations rather than requiring manual annotations
+  - flow argument and return expectations across recursive helpers, backtracking helpers, and captured mutable locals
+  - keep this milestone corpus-driven rather than expanding into a broader nested-function feature redesign
+- Affected ids:
+  - `0017`, `0039`, `0050`, `0052`, `0078`, `0090`, `0207`, `0684`, `0912`
 - Definition of done:
-  - tuple/loop destructuring targets used in the corpus lower into stable HIR/codegen forms
-  - reassignment, loop-target, and nested destructuring diagnostics remain deterministic for unsupported shapes
-  - the affected cases move past the current lowering failure
-- Required validation:
-  - positive e2e coverage for supported destructuring assignments and loop targets
-  - negative e2e coverage for still-unsupported destructuring forms, if any remain
-  - rerun the 7 affected corpus cases and regenerate the compatibility snapshot if counts change
-  - full local suite
-- Expected impact:
-  - medium pass-rate gain and lower friction for graph/heap workloads
+  - these nine cases move past nested-function and generic frontend failures
+  - the generic frontend bucket reaches zero for the Phase 31 corpus
+
+### `m31_e_recursive_tree_surface_leetcode_closure`
+
+- Scope:
+  - depends on `prereq_recursive_types`
+  - verify that the recursive-type phase fully unblocks the tree LeetCode cases for this corpus
+  - add any remaining corpus-specific regression coverage and demos needed for closure
+- Affected ids:
+  - `0100`, `0102`, `0110`, `0226`, `0235`
+- Definition of done:
+  - these five tree cases pass in the Phase 31 corpus after the recursive-type prerequisite lands
+  - any residual tree-case failure is either fixed as a narrow LeetCode closure bug or sent back to the recursive-type phase with a concrete gap report
+  - regression coverage exists for the corpus-facing recursive-node behavior exercised by these problems
+
+### `m31_h_local_name_binding_and_shadowing`
+
+- Scope:
+  - make local assignment shadow the enclosing function symbol immediately and consistently
+  - audit same-block reads/comparisons so they resolve to the local binding
+- Affected ids:
+  - `0015`
+- Definition of done:
+  - `0015` moves past the `function` vs `int` comparison failure
+  - regression coverage locks same-name local shadowing behavior
+
+### `m31_j_own_mut_leetcode_closure`
+
+- Scope:
+  - depends on `prereq_own_mut`
+  - rewrite `1299` into canonical Sifr form using `own mut`
+  - verify corpus/demo/regression closure for the LeetCode problem after the prerequisite lands
+- Affected ids:
+  - `1299`
+- Definition of done:
+  - `1299` is no longer treated as a permanent divergence in the Phase 31 corpus
+  - canonical `1299` Sifr source using `own mut` checks, emits, and runs successfully
+  - any residual failure is either fixed as a narrow LeetCode closure bug or sent back to the `own mut` phase with a concrete gap report
+
+### `m31_k_canonical_sifr_fixture_normalization`
+
+- Scope:
+  - define the corpus rule for raw-source policy mismatches
+  - keep the problem in scope while replacing the pass target with a canonical Sifr fixture
+  - do not weaken core Sifr guarantees just to accept the raw Python-shaped syntax verbatim
+- Initial affected ids:
+  - `0043`
+- Definition of done:
+  - canonical Sifr version of `0043` exists and is counted as the pass target
+  - corpus docs clearly separate “problem supported” from “raw fixture source-compatible”
+
+### `m31_i_corpus_fixture_canonicalization_for_multi_solution_files`
+
+- Scope:
+  - normalize scraped fixtures that contain multiple alternative top-level solutions
+  - prefer one canonical typed / lowest-dependency solution
+  - do not treat duplicate top-level solution blocks as a language feature requirement
+- Affected ids:
+  - `0215`, `1046`
+- Definition of done:
+  - each file is reduced to one canonical solution
+  - any remaining failure is reclassified into a real compiler/runtime bucket
 
 ### `m31_c_stdlib_module_parity`
 
-- Current execution status (`2026-03-12`):
+- Status:
   - complete
-  - landed root-cause fixes for Python-style stdlib attribute compatibility, numeric truthiness lowering, `math.fmod` runtime parity, native `set(...)` constructor lowering, bare `deque(...)` compatibility resolution, imported callable default propagation, `defaultdict(...)` builtin compatibility, `len(deque)` sized-class handling, and private `heapq` max-heap compatibility
-  - validated with `scripts/run_all_tests.sh --profile quick` and `scripts/run_all_tests.sh`
-  - targeted rerun outcomes are recorded in `verification/leetcode/phase31_m31c_wave1_results.json`, `verification/leetcode/phase31_m31c_wave2_results.json`, `verification/leetcode/phase31_m31c_wave3_results.json`, and `verification/leetcode/phase31_m31c_wave4_results.json`
-  - milestone closure report: `issues/phase31-m31c-milestone-closure.md`
-  - remaining watched-case blockers are downstream `0003` codegen work plus deeper non-stdlib issues in `0127`, `0502`, and `1046`
+  - leave closed unless later milestones expose a real new stdlib blocker rather than a corpus artifact or deeper compiler failure
 
-- Scope:
-  - resolve `stdlib.python_module_surface`
-  - current blocked cases: `6`
-  - affected ids: `0003`, `0007`, `0127`, `0217`, `0502`, `1046`
-- Why this is a standalone milestone:
-  - this is runtime/API surface work rather than core compiler work
-  - it can be validated with focused stdlib parity tests and corpus reruns
-- Definition of done:
-  - corpus usages of `set`, `defaultdict`, `deque`, `heapq`, and equivalent module aliases resolve and behave according to documented Sifr semantics
-  - any deliberate Python parity differences are documented explicitly instead of surfacing as undefined-symbol errors
-  - each newly added API has regression coverage in stdlib/runtime tests
-- Required validation:
-  - focused stdlib parity tests per newly exposed symbol/module surface
-  - rerun the 6 affected corpus cases and regenerate the compatibility snapshot if counts change
-  - demo showing at least one graph case and one heap case now working
-  - full local suite
-- Expected impact:
-  - moderate pass-rate gain across unrelated algorithm families
+## Raw-Source Divergence List
 
-### `m31_d_nested_function_pipeline`
+These are not unsupported LeetCode problems. They are raw source shapes we do not plan to support verbatim if doing so would weaken intentional Sifr guarantees.
 
-- Scope:
-  - resolve `lowering.unsupported_ast_shape`
-  - resolve `frontend.nested_function_annotation_support`
-  - resolve `frontend.generic_check_failure`
-  - current blocked cases: `10`
-  - affected ids:
-    - `0052`
-    - `0017`, `0039`, `0050`, `0078`, `0090`, `0912`
-    - `0001`, `0242`, `0523`
-- Why this is a single milestone:
-  - the nested-helper failures are pipeline-related
-  - enabling the AST shape before inference cleanup matches the documented dependency chain
-  - the generic frontend bucket should be reclassified or eliminated once nested helper handling is repaired
-- Definition of done:
-  - previously unsupported nested function statement shapes lower successfully
-  - nested helper parameter/return inference works for the covered corpus patterns without requiring ad hoc annotations
-  - the generic frontend bucket reaches zero, either by fixes or by reclassification into tighter buckets
-- Required validation:
-  - targeted lowering tests for nested helper shapes
-  - targeted frontend/type-check tests for nested helper inference and generic-bucket regressions
-  - rerun the 10 affected corpus cases and regenerate the compatibility snapshot if counts change
-  - full local suite
-- Expected impact:
-  - unblocks backtracking-heavy problems and removes a residual generic failure bucket
+### `0043_multiply_strings`
 
-### `m31_e_tree_node_surface`
-
-- Scope:
-  - resolve `type_system.recursive_node_forward_reference`
-  - resolve `lowering.attribute_expression_support`
-  - current blocked cases: `5`
-  - affected ids: `0100`, `0102`, `0110`, `0226`, `0235`
-- Why this is a single milestone:
-  - the attribute-expression blocker depends on recursive node reference support
-  - both buckets are tree-domain specific and benefit from being validated together
-- Definition of done:
-  - `TreeNode`/`ListNode`-style recursive forward references resolve in signatures and local usage without manual reordering
-  - attribute reads on supported recursive node values lower successfully
-  - tree cases move past both the unknown-type and unsupported-expression diagnostics
-- Required validation:
-  - targeted type-system tests for recursive forward references
-  - targeted lowering tests for field/attribute access on recursive node values
-  - rerun the 5 affected corpus cases and regenerate the compatibility snapshot if counts change
-  - full local suite
-- Expected impact:
-  - closes the remaining tree-structure enablement gap for the seed corpus
-
-### `m31_f_ownership_divergence_resolution`
-
-- Scope:
-  - resolve planning status for `ownership.borrowed_return_surface`
-  - current blocked cases: `1`
-  - affected id: `1299`
-- Why this is a milestone:
-  - this is not a normal bug bucket; it is the only explicitly documented language-design divergence
-  - the project still needs a crisp product decision and user-facing documentation
-- Definition of done:
-  - either:
-    - the divergence remains intentional and the required `own`/clone-style escape hatch is documented in compiler/language docs and compatibility reporting, or
-    - product direction changes and a real implementation milestone is created with ownership-sound acceptance criteria
-  - the status is no longer ambiguous in planning artifacts
-- Required validation:
-  - documentation update and compatibility artifact alignment
-  - if implementation is chosen, add focused ownership tests and rerun the affected corpus case
-- Expected impact:
-  - removes ambiguity from the only remaining unsupported-by-design case
+- Why it is a raw-source divergence:
+  - the scraped Python solution relies on unchecked `int(str)` conversion
+  - Sifr intentionally keeps parse safety: `int(str)` is `Result[int, ParseError]`
+  - weakening that behavior would change the language’s error model, not just fix a compiler bug
+- Carry-forward policy:
+  - keep the problem in scope
+  - add a canonical Sifr rewrite and count that as the pass target
+  - rewrite only the conflicting parse-safety surface and keep the rest of the algorithm as close as possible to the existing supported form
+  - document the raw-source incompatibility as a corpus divergence
 
 ## Exit Conditions For The Carry-forward Plan
 
-- Every supportable remaining case is assigned to exactly one milestone above.
+- Every remaining failing problem is assigned to exactly one milestone or to the raw-source divergence list.
+- Every in-scope LeetCode problem ends up solvable in Sifr, even if the raw scraped Python source is non-canonical.
+- The recursive-type phase and `own mut` phase land before their dependent Phase 31 closure milestones begin.
+- `1299` is closed in the corpus after the `own mut` prerequisite, rather than left as a permanent unsupported case.
 - Dependency-bearing milestones are sequenced before their dependents.
-- The intentional divergence is either documented as a stable policy or promoted into a normal implementation milestone.
 - Each milestone can be executed as its own PR loop: plan -> implement -> validate -> demo -> PR -> review -> merge.
