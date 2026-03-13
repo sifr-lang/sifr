@@ -4,7 +4,7 @@ Status: complete
 Started: 2026-03-13
 Completed: 2026-03-13
 Part: `recursive_corpus_closure_tests_and_demo`
-PR: pending
+PR: `#1127`
 
 ## Goal
 
