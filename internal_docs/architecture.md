@@ -235,11 +235,23 @@ Union types, `Unknown`, and class instances all need a coherent runtime represen
 
 ### 2. Borrow and Lifetime Strategy
 
-Sifr uses **borrow-by-default** semantics for function parameters. Move-type arguments are immutably borrowed (`&T`) unless the programmer opts in to mutable borrowing (`mut`) or ownership transfer (`own`). Copy types (`int`, `float`, `bool`) always pass by value. This eliminates "use-after-move" friction for the common case while keeping ownership explicit where it matters.
+Sifr uses **borrow-by-default** semantics for function parameters. Move-type arguments are immutably borrowed (`&T`) unless the programmer opts in to mutable borrowing (`mut`), ownership transfer (`own`), or owned mutable parameters (`own mut`). Copy types (`int`, `float`, `bool`) always pass by value. This eliminates "use-after-move" friction for the common case while keeping ownership explicit where it matters.
 
 **Contract:**
 
-- **Function arguments:** borrow by default (immutable). The compiler emits `&T` for Move-type parameters. Use `mut` keyword for mutable borrowing (`mut x: list[int]` generates `x: &mut Vec<i64>`). Use `own` keyword for ownership transfer (`own x: list[int]` generates `x: Vec<i64>`). Copy types (`int`, `float`, `bool`) always pass by value regardless of annotation.
+- **Function arguments:** borrow by default (immutable). The compiler models parameter passing along two axes:
+  - ownership:
+    - borrowed
+    - owned
+  - mutability:
+    - immutable
+    - mutable
+  Valid surface forms are:
+  - `x: list[int]` -> borrowed immutable -> `x: &Vec<i64>`
+  - `mut x: list[int]` -> borrowed mutable -> `x: &mut Vec<i64>`
+  - `own x: list[int]` -> owned immutable -> `x: Vec<i64>`
+  - `own mut x: list[int]` -> owned mutable -> `mut x: Vec<i64>`
+  Copy types (`int`, `float`, `bool`) always pass by value regardless of annotation; `mut` on Copy parameters only affects local rebinding/mutation semantics, not borrow emission.
 - **Method receivers:** auto-borrow based on method body analysis:
   - If the method only reads `self` fields: `&self`
   - If the method mutates `self` fields: `&mut self`
@@ -252,13 +264,15 @@ Sifr uses **borrow-by-default** semantics for function parameters. Move-type arg
 - **Temporary lifetimes:** temporaries created in expressions live until the end of the enclosing statement. Method chains like `x.upper().split(",")` work without explicit borrows.
 - **Escape analysis:** the compiler tracks whether a reference escapes its scope. If it does, the compiler emits a diagnostic rather than silently cloning. The programmer must choose: clone explicitly, or restructure to avoid the escape.
 - **No lifetime annotations in user code:** Sifr does not expose Rust's `'a` lifetime syntax. The compiler infers lifetimes using the rules above. If inference fails, the compiler emits a clear error suggesting `.clone()` or restructuring.
-- **Shared mutable state requires explicit opt-in:** the compiler does NOT auto-wrap shared data in `RefCell` or `Mutex`. If multiple variables reference the same mutable data, the programmer must use explicit sharing primitives (deferred to post-milestone_protocols). Default behavior is borrow-by-default with explicit `mut`/`own` for mutable borrowing and ownership transfer. This keeps ownership rules predictable and avoids hidden runtime borrow panics.
+- **Shared mutable state requires explicit opt-in:** the compiler does NOT auto-wrap shared data in `RefCell` or `Mutex`. If multiple variables reference the same mutable data, the programmer must use explicit sharing primitives (deferred to post-milestone_protocols). Default behavior is borrow-by-default with explicit `mut`, `own`, and `own mut` parameter contracts rather than hidden runtime borrowing. This keeps ownership rules predictable and avoids hidden runtime borrow panics.
+- **Return semantics follow ownership, not mutability:** returning a Move-type parameter by value is only valid when the callee owns that parameter (`own` / `own mut`). Borrowed parameters, including `mut` borrows, cannot escape by return or store unless the programmer clones explicitly.
 
 **Milestone responsibilities:**
 
 - milestone_classes: implement method receiver inference (`&self` / `&mut self` / `self`)
-- milestone_borrow_default: implement ParamConvention and borrow-by-default codegen
+- milestone_borrow_default: implement borrow-by-default parameter conventions and codegen
 - milestone_borrow_hardening: implement exclusivity checking and error diagnostics
+- ad-hoc-own-mut-parameter-convention: extend parameter conventions so owned mutable parameters are first-class and lower canonically to Rust `mut x: T`
 - milestone_generics: implement closure capture inference
 - milestone_async_sync: implement async capture rules (closures sent across `.await` points must be `Send + 'static`)
 - Post-milestone_protocols: evaluate explicit shared mutable abstractions (e.g., `Shared[T]` mapping to `Rc<RefCell<T>>`)
@@ -1040,7 +1054,7 @@ This ensures every feature is tested at every layer of the compiler, and any age
 Mojo (`/Users/yaseralnajjar/work/sifr/modular/mojo`) was evaluated as a reference. Key findings:
 
 - **No Rust code to reuse.** Mojo's compiler is proprietary, built on MLIR/LLVM (C++). The open-source repo only contains the stdlib, docs, and design proposals.
-- **Ownership model alignment:** Both Mojo and Sifr use **borrow-by-default** for function arguments. Sifr uses `mut` for mutable borrows and `own` for ownership transfer (Mojo uses `mut`/`owned`). Assignment still moves for heap types (preventing aliasing). This gives Python-like ergonomics with Rust-like safety.
+- **Ownership model alignment:** Both Mojo and Sifr use **borrow-by-default** for function arguments. Sifr uses `mut` for mutable borrows, `own` for ownership transfer, and `own mut` for owned mutable parameters (Mojo uses `mut`/`owned`). Assignment still moves for heap types (preventing aliasing). This gives Python-like ergonomics with Rust-like safety.
 - **Useful design references:** `proposals/value-ownership.md` and `proposals/lifetimes-and-provenance.md` document tradeoffs between move/borrow defaults, ASAP destruction, and lifecycle methods.
 - `**def` vs `fn` split:** Mojo uses `def` for dynamic and `fn` for strict. Sifr does not need this split since all code is strictly typed.
 
