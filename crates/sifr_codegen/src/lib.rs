@@ -1262,6 +1262,16 @@ impl RustEmitter {
             self.lowering_stats.stmt_candidate_structured += 1;
             return Ok(true);
         }
+        if self.try_lower_structured_subscript_assign_stmt(stmt)? {
+            self.lowering_stats.stmt_structured += 1;
+            self.lowering_stats.stmt_candidate_structured += 1;
+            return Ok(true);
+        }
+        if self.try_lower_structured_nested_subscript_assign_stmt(stmt)? {
+            self.lowering_stats.stmt_structured += 1;
+            self.lowering_stats.stmt_candidate_structured += 1;
+            return Ok(true);
+        }
         if self.try_lower_structured_attribute_subscript_assign_stmt(stmt)? {
             self.lowering_stats.stmt_structured += 1;
             self.lowering_stats.stmt_candidate_structured += 1;

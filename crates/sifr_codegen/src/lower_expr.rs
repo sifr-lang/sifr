@@ -374,6 +374,22 @@ pub fn try_lower_leaf_expr(expr: &HirExpr) -> Option<RustExpr> {
             try_lower_simple_dict_literal_expr(keys, values, ty)
         }
         HirExpr::SetLiteral { elements, ty } => try_lower_simple_set_literal_expr(elements, ty),
+        HirExpr::ListComp { .. } | HirExpr::DictComp { .. } | HirExpr::SetComp { .. } => {
+            try_lower_simple_comprehension_expr(expr)
+        }
+        HirExpr::GeneratorExpr {
+            expr,
+            var,
+            iter,
+            filter,
+            ty,
+        } => try_lower_simple_generator_expr(expr, var, iter, filter.as_deref(), ty),
+        _ => None,
+    }
+}
+
+pub(crate) fn try_lower_simple_comprehension_expr(expr: &HirExpr) -> Option<RustExpr> {
+    match expr {
         HirExpr::ListComp {
             expr,
             generators,
@@ -390,13 +406,6 @@ pub fn try_lower_leaf_expr(expr: &HirExpr) -> Option<RustExpr> {
             generators,
             ty,
         } => try_lower_simple_set_comp_expr(expr, generators, ty),
-        HirExpr::GeneratorExpr {
-            expr,
-            var,
-            iter,
-            filter,
-            ty,
-        } => try_lower_simple_generator_expr(expr, var, iter, filter.as_deref(), ty),
         _ => None,
     }
 }

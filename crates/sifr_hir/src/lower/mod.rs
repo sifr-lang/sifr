@@ -19,6 +19,7 @@ mod numeric_sentinels;
 mod sequence_guard_detection;
 mod sequence_guards;
 mod sequence_pointers;
+mod sequence_shapes;
 mod statements;
 mod type_bounds;
 mod typing_and_functions;
@@ -114,6 +115,8 @@ pub(super) struct LowerCtx {
     numeric_sentinel_vars: HashMap<String, numeric_sentinels::NumericSentinelFact>,
     /// Pending initializer patches once a sentinel variable domain resolves.
     pending_numeric_sentinel_patches: HashMap<String, numeric_sentinels::NumericSentinelPatch>,
+    /// Supported constructed sequence shapes whose lengths are tied to other sequences.
+    sequence_shapes: Vec<sequence_shapes::SequenceShapeFact>,
 }
 
 impl LowerCtx {
@@ -149,6 +152,7 @@ impl LowerCtx {
             sequence_pointers: Vec::new(),
             numeric_sentinel_vars: HashMap::new(),
             pending_numeric_sentinel_patches: HashMap::new(),
+            sequence_shapes: Vec::new(),
         }
     }
 

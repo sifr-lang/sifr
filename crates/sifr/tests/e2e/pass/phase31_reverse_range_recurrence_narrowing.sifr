@@ -1,0 +1,26 @@
+# Phase 31 m31_a slice 5
+# Proves reverse-range recurrence reads over sized local constructions lower to
+# concrete element types when the compiler can prove the +1 offset stays in range.
+
+def suffixLengths(text: str) -> list[int]:
+    suffix = [0 for i in range(len(text) + 1)]
+    for i in range(len(text) - 1, -1, -1):
+        suffix[i] = suffix[i + 1] + 1
+    return suffix
+
+def longestCommonSubsequence(text1: str, text2: str) -> int:
+    dp = [[0 for j in range(len(text2) + 1)] for i in range(len(text1) + 1)]
+
+    for i in range(len(text1) - 1, -1, -1):
+        for j in range(len(text2) - 1, -1, -1):
+            if text1[i] == text2[j]:
+                dp[i][j] = 1 + dp[i + 1][j + 1]
+            else:
+                dp[i][j] = max(dp[i][j + 1], dp[i + 1][j])
+
+    return dp[0][0]
+
+def main():
+    assert str(suffixLengths("abc")) == "[3, 2, 1, 0]"
+    assert str(longestCommonSubsequence("abcde", "ace")) == "3"
+    assert str(longestCommonSubsequence("abc", "def")) == "0"

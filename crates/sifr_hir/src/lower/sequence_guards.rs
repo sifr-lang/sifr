@@ -2,8 +2,15 @@ use super::LowerCtx;
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub(super) enum SequenceGuard {
-    MinLength { sequence: String, min_len: usize },
-    IndexVarInRange { sequence: String, index_var: String },
+    MinLength {
+        sequence: String,
+        min_len: usize,
+    },
+    IndexVarInRange {
+        sequence: String,
+        index_var: String,
+        max_offset: usize,
+    },
 }
 
 impl LowerCtx {
@@ -28,20 +35,26 @@ impl LowerCtx {
             SequenceGuard::IndexVarInRange {
                 sequence,
                 index_var,
+                max_offset,
             } => {
-                let exists = self.sequence_guards.iter().any(|existing| match existing {
-                    SequenceGuard::IndexVarInRange {
+                for existing in &mut self.sequence_guards {
+                    if let SequenceGuard::IndexVarInRange {
                         sequence: existing_sequence,
                         index_var: existing_index_var,
-                    } => existing_sequence == &sequence && existing_index_var == &index_var,
-                    SequenceGuard::MinLength { .. } => false,
-                });
-                if !exists {
-                    self.sequence_guards.push(SequenceGuard::IndexVarInRange {
-                        sequence,
-                        index_var,
-                    });
+                        max_offset: existing_max_offset,
+                    } = existing
+                    {
+                        if existing_sequence == &sequence && existing_index_var == &index_var {
+                            *existing_max_offset = (*existing_max_offset).max(max_offset);
+                            return;
+                        }
+                    }
                 }
+                self.sequence_guards.push(SequenceGuard::IndexVarInRange {
+                    sequence,
+                    index_var,
+                    max_offset,
+                });
             }
         }
     }
@@ -69,13 +82,25 @@ impl LowerCtx {
     }
 
     pub(super) fn has_index_var_guard(&self, sequence: &str, index_var: &str) -> bool {
+        self.has_index_var_offset_guard(sequence, index_var, 0)
+    }
+
+    pub(super) fn has_index_var_offset_guard(
+        &self,
+        sequence: &str,
+        index_var: &str,
+        offset: usize,
+    ) -> bool {
         self.sequence_guards.iter().any(|guard| {
             matches!(
                 guard,
                 SequenceGuard::IndexVarInRange {
                     sequence: guard_sequence,
                     index_var: guard_index_var,
-                } if guard_sequence == sequence && guard_index_var == index_var
+                    max_offset,
+                } if guard_sequence == sequence
+                    && guard_index_var == index_var
+                    && *max_offset >= offset
             )
         })
     }

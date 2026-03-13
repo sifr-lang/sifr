@@ -1,5 +1,5 @@
 use super::LowerCtx;
-use sifr_python_ast::{Expr, ExprSubscript, Number};
+use sifr_python_ast::{Expr, ExprBinOp, ExprSubscript, Number, Operator};
 use sifr_type_system::Type;
 
 pub(super) fn guarded_sequence_index_result_type(
@@ -7,14 +7,44 @@ pub(super) fn guarded_sequence_index_result_type(
     object_ty: &Type,
     ctx: &LowerCtx,
 ) -> Option<Type> {
-    let Expr::Name(sequence_name) = sub.value.as_ref() else {
+    if let Expr::Name(sequence_name) = sub.value.as_ref() {
+        return match object_ty.resolve_alias() {
+            Type::List(elem_ty) => {
+                guarded_element_type(sequence_name.id.as_str(), elem_ty, &sub.slice, ctx)
+            }
+            Type::Str => guarded_string_index_type(sequence_name.id.as_str(), &sub.slice, ctx),
+            _ => None,
+        };
+    }
+
+    let Expr::Subscript(outer_sub) = sub.value.as_ref() else {
         return None;
     };
+    let Expr::Name(matrix_name) = outer_sub.value.as_ref() else {
+        return None;
+    };
+    let Some((outer_anchor, outer_extra_len, inner_anchor, inner_extra_len)) =
+        ctx.matrix_sequence_fact(matrix_name.id.as_str())
+    else {
+        return None;
+    };
+    if !index_expr_is_safe_for_anchor(
+        outer_sub.slice.as_ref(),
+        &outer_anchor,
+        outer_extra_len,
+        ctx,
+    ) {
+        return None;
+    }
     match object_ty.resolve_alias() {
         Type::List(elem_ty) => {
-            guarded_element_type(sequence_name.id.as_str(), elem_ty, &sub.slice, ctx)
+            if index_expr_is_safe_for_anchor(&sub.slice, &inner_anchor, inner_extra_len, ctx) {
+                Some(*elem_ty.clone())
+            } else {
+                None
+            }
         }
-        Type::Str => guarded_string_index_type(sequence_name.id.as_str(), &sub.slice, ctx),
+        Type::Str => None,
         _ => None,
     }
 }
@@ -45,15 +75,35 @@ fn guarded_string_index_type(
 }
 
 fn has_guarded_sequence_index(sequence_name: &str, index_expr: &Expr, ctx: &LowerCtx) -> bool {
+    if index_expr_is_safe_for_anchor(index_expr, sequence_name, 0, ctx) {
+        return true;
+    }
+    if let Some((anchor_sequence, extra_len)) = ctx.sized_sequence_fact(sequence_name) {
+        return index_expr_is_safe_for_anchor(index_expr, &anchor_sequence, extra_len, ctx);
+    }
+    if let Some((outer_anchor, outer_extra_len, _, _)) = ctx.matrix_sequence_fact(sequence_name) {
+        return index_expr_is_safe_for_anchor(index_expr, &outer_anchor, outer_extra_len, ctx);
+    }
+    false
+}
+
+fn index_expr_is_safe_for_anchor(
+    index_expr: &Expr,
+    anchor_sequence: &str,
+    extra_len: usize,
+    ctx: &LowerCtx,
+) -> bool {
     match index_expr {
         Expr::Name(index_name) => {
             let index_var = index_name.id.as_str();
-            ctx.has_index_var_guard(sequence_name, index_var)
-                || (ctx.is_zero_based_pointer(index_var) && ctx.min_length_guard(sequence_name) > 0)
+            ctx.has_index_var_guard(anchor_sequence, index_var)
+                || (ctx.is_zero_based_pointer(index_var)
+                    && ctx.min_length_guard(anchor_sequence) > 0)
                 || ctx
                     .end_pointer_sequence(index_var)
                     .is_some_and(|pointer_sequence| {
-                        pointer_sequence == sequence_name && ctx.min_length_guard(sequence_name) > 0
+                        pointer_sequence == anchor_sequence
+                            && ctx.min_length_guard(anchor_sequence) > 0
                     })
         }
         Expr::NumberLiteral(num) => {
@@ -66,10 +116,43 @@ fn has_guarded_sequence_index(sequence_name: &str, index_expr: &Expr, ctx: &Lowe
             let Ok(index_value) = usize::try_from(index_value) else {
                 return false;
             };
-            ctx.min_length_guard(sequence_name) > index_value
+            if index_value < extra_len {
+                true
+            } else {
+                ctx.min_length_guard(anchor_sequence) > index_value - extra_len
+            }
+        }
+        Expr::BinOp(ExprBinOp {
+            left, op, right, ..
+        }) => {
+            let Expr::Name(index_name) = left.as_ref() else {
+                return false;
+            };
+            let Some(offset) = literal_usize(right.as_ref()) else {
+                return false;
+            };
+            match op {
+                Operator::Add => ctx.has_index_var_offset_guard(
+                    anchor_sequence,
+                    index_name.id.as_str(),
+                    offset.saturating_sub(extra_len),
+                ),
+                Operator::Sub => false,
+                _ => false,
+            }
         }
         _ => false,
     }
+}
+
+fn literal_usize(expr: &Expr) -> Option<usize> {
+    let Expr::NumberLiteral(num) = expr else {
+        return None;
+    };
+    let Number::Int(value) = &num.value else {
+        return None;
+    };
+    value.as_i64().and_then(|value| usize::try_from(value).ok())
 }
 
 #[cfg(test)]
@@ -247,6 +330,63 @@ mod tests {
             error
                 .message
                 .contains("type mismatch: expected 'str', got 'str | None'")
+        }));
+    }
+
+    #[test]
+    fn test_reverse_range_suffix_recurrence_reveals_int() {
+        let result = lower_source_result(
+            "def main(text: str) -> list[int]:\n    suffix = [0 for i in range(len(text) + 1)]\n    for i in range(len(text) - 1, -1, -1):\n        reveal_type(suffix[i + 1])\n        suffix[i] = suffix[i + 1] + 1\n    return suffix\n",
+        )
+        .expect("reverse range recurrence should lower");
+
+        assert!(result
+            .reveal_types
+            .iter()
+            .any(|diagnostic| diagnostic == "reveal_type: int"));
+    }
+
+    #[test]
+    fn test_matrix_recurrence_offsets_reveal_int() {
+        let result = lower_source_result(
+            "def main(text1: str, text2: str) -> int:\n    dp = [[0 for j in range(len(text2) + 1)] for i in range(len(text1) + 1)]\n    for i in range(len(text1) - 1, -1, -1):\n        for j in range(len(text2) - 1, -1, -1):\n            reveal_type(dp[i + 1][j + 1])\n            dp[i][j] = dp[i + 1][j + 1] + 1\n    return dp[0][0]\n",
+        )
+        .expect("matrix recurrence offsets should lower");
+
+        assert!(result
+            .reveal_types
+            .iter()
+            .any(|diagnostic| diagnostic == "reveal_type: int"));
+    }
+
+    #[test]
+    fn test_reverse_range_suffix_plus_two_offset_reveals_int() {
+        let result = lower_source_result(
+            "def main(text: str) -> list[int]:\n    suffix = [0 for i in range(len(text) + 2)]\n    for i in range(len(text) - 1, -1, -1):\n        reveal_type(suffix[i + 2])\n        suffix[i] = suffix[i + 2] + 1\n    return suffix\n",
+        )
+        .expect("reverse range +2 recurrence should lower");
+
+        assert!(result
+            .reveal_types
+            .iter()
+            .any(|diagnostic| diagnostic == "reveal_type: int"));
+    }
+
+    #[test]
+    fn test_subtractive_recurrence_offset_stays_optional() {
+        let result = lower_source(
+            "def main(limit: str, shift: int) -> list[int]:\n    suffix = [0 for i in range(len(limit) + 1)]\n    for i in range(len(limit) - 1, -1, -1):\n        value: int = suffix[i - shift]\n    return suffix\n",
+        );
+
+        assert!(
+            result.is_err(),
+            "subtractive offsets without lower-bound proof should remain optional"
+        );
+        let errors = result.unwrap_err();
+        assert!(errors.iter().any(|error| {
+            error
+                .message
+                .contains("type mismatch: expected 'int', got 'int | None'")
         }));
     }
 }

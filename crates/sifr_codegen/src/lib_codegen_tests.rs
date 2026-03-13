@@ -273,6 +273,137 @@ fn test_no_tostring_in_println() {
 }
 
 #[test]
+fn test_structured_codegen_lowers_comprehension_local_initializers() {
+    let items_name = HirExpr::Name {
+        name: "items".to_string(),
+        ty: Type::List(Box::new(Type::Int)),
+    };
+    let comp_item = HirExpr::Name {
+        name: "x".to_string(),
+        ty: Type::Int,
+    };
+    let module = HirModule {
+        functions: vec![HirFunction {
+            name: "main".to_string(),
+            params: vec![],
+            return_type: Type::None,
+            body: vec![
+                HirStmt::Let {
+                    name: "items".to_string(),
+                    ty: Type::List(Box::new(Type::Int)),
+                    value: HirExpr::ListLiteral {
+                        elements: vec![HirExpr::IntLiteral(1), HirExpr::IntLiteral(2)],
+                        ty: Type::List(Box::new(Type::Int)),
+                    },
+                    is_mutable: false,
+                },
+                HirStmt::Let {
+                    name: "values".to_string(),
+                    ty: Type::List(Box::new(Type::Int)),
+                    value: HirExpr::ListComp {
+                        expr: Box::new(comp_item.clone()),
+                        generators: vec![("x".to_string(), items_name.clone(), None)],
+                        ty: Type::List(Box::new(Type::Int)),
+                    },
+                    is_mutable: false,
+                },
+                HirStmt::Let {
+                    name: "lookup".to_string(),
+                    ty: Type::Dict(Box::new(Type::Int), Box::new(Type::Int)),
+                    value: HirExpr::DictComp {
+                        key_expr: Box::new(comp_item.clone()),
+                        val_expr: Box::new(comp_item.clone()),
+                        generators: vec![("x".to_string(), items_name.clone(), None)],
+                        ty: Type::Dict(Box::new(Type::Int), Box::new(Type::Int)),
+                    },
+                    is_mutable: false,
+                },
+                HirStmt::Let {
+                    name: "unique".to_string(),
+                    ty: Type::Set(Box::new(Type::Int)),
+                    value: HirExpr::SetComp {
+                        expr: Box::new(comp_item),
+                        generators: vec![("x".to_string(), items_name, None)],
+                        ty: Type::Set(Box::new(Type::Int)),
+                    },
+                    is_mutable: false,
+                },
+            ],
+            method_kind: MethodKind::Regular,
+            decorators: vec![],
+            type_params: vec![],
+        }],
+        classes: vec![],
+        imports: vec![],
+        constants: vec![],
+        generic_functions: std::collections::HashMap::new(),
+        type_param_bounds: std::collections::HashMap::new(),
+    };
+
+    let rust_code = generate_rust(&module);
+
+    assert!(rust_code.contains("let values: Vec<i64> = {"));
+    assert!(rust_code.contains("let lookup: HashMap<i64, i64> = {"));
+    assert!(rust_code.contains("let unique: HashSet<i64> = {"));
+    assert!(rust_code.contains("__sifr_list_comp"));
+    assert!(rust_code.contains("__sifr_dict_comp"));
+    assert!(rust_code.contains("__sifr_set_comp"));
+}
+
+#[test]
+fn test_reverse_range_for_loop_uses_rev_iterator_for_unary_negative_step() {
+    let module = HirModule {
+        functions: vec![HirFunction {
+            name: "main".to_string(),
+            params: vec![],
+            return_type: Type::None,
+            body: vec![HirStmt::For {
+                target: "i".to_string(),
+                target_ty: Type::Int,
+                iter: HirExpr::RangeLiteral {
+                    start: Box::new(HirExpr::IntLiteral(4)),
+                    end: Box::new(HirExpr::UnaryOp {
+                        op: "-".to_string(),
+                        operand: Box::new(HirExpr::IntLiteral(1)),
+                        ty: Type::Int,
+                    }),
+                    step: Some(Box::new(HirExpr::UnaryOp {
+                        op: "-".to_string(),
+                        operand: Box::new(HirExpr::IntLiteral(1)),
+                        ty: Type::Int,
+                    })),
+                    ty: Type::Range,
+                },
+                body: vec![HirStmt::Expr {
+                    expr: HirExpr::Call {
+                        func: "print".to_string(),
+                        args: vec![HirExpr::Name {
+                            name: "i".to_string(),
+                            ty: Type::Int,
+                        }],
+                        ty: Type::None,
+                    },
+                }],
+                else_body: None,
+            }],
+            method_kind: MethodKind::Regular,
+            decorators: vec![],
+            type_params: vec![],
+        }],
+        classes: vec![],
+        imports: vec![],
+        constants: vec![],
+        generic_functions: std::collections::HashMap::new(),
+        type_param_bounds: std::collections::HashMap::new(),
+    };
+
+    let rust_code = generate_rust(&module);
+
+    assert!(rust_code.contains(".rev()"));
+    assert!(!rust_code.contains("step_by(-(1 as i64) as usize)"));
+}
+
+#[test]
 fn test_hashmap_short_name() {
     // Dict literal should use HashMap::from not std::collections::HashMap::from
     let module = HirModule {

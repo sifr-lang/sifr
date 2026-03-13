@@ -37,6 +37,7 @@ pub(super) fn detect_true_sequence_guards(expr: &Expr, ctx: &LowerCtx) -> Vec<Se
                         return vec![SequenceGuard::IndexVarInRange {
                             sequence: sequence_name,
                             index_var: index_name.id.clone(),
+                            max_offset: 0,
                         }];
                     }
                     Vec::new()
@@ -120,12 +121,13 @@ pub(super) fn detect_range_sequence_guards(
     target_name: &str,
     ctx: &LowerCtx,
 ) -> Vec<SequenceGuard> {
-    let Some(sequence) = range_sequence_name(for_stmt.iter.as_ref()) else {
+    let Some((sequence, max_offset)) = range_sequence_shape(for_stmt.iter.as_ref()) else {
         return Vec::new();
     };
     let mut guards = vec![SequenceGuard::IndexVarInRange {
         sequence: sequence.clone(),
         index_var: target_name.to_string(),
+        max_offset,
     }];
     guards.extend(detect_sliding_window_pointer_guards(
         &for_stmt.body,
@@ -136,7 +138,7 @@ pub(super) fn detect_range_sequence_guards(
     guards
 }
 
-fn range_sequence_name(expr: &Expr) -> Option<String> {
+fn range_sequence_shape(expr: &Expr) -> Option<(String, usize)> {
     let Expr::Call(call) = expr else {
         return None;
     };
@@ -146,17 +148,43 @@ fn range_sequence_name(expr: &Expr) -> Option<String> {
     if func_name.id.as_str() != "range" {
         return None;
     }
-    for arg in &call.arguments.args {
-        if let Some(found) = len_call_sequence_name(arg) {
-            return Some(found);
-        }
-        if let Expr::BinOp(binop) = arg {
-            if let Some(found) = len_call_sequence_name(binop.left.as_ref()) {
-                return Some(found);
-            }
-        }
+    if call.arguments.args.len() == 1 {
+        return len_anchor_with_max_offset(&call.arguments.args[0]);
+    }
+    if call.arguments.args.len() == 2 {
+        return len_anchor_with_max_offset(&call.arguments.args[1])
+            .map(|(sequence, _)| (sequence, 0));
+    }
+    if call.arguments.args.len() == 3 {
+        return reverse_len_range_shape(
+            &call.arguments.args[0],
+            &call.arguments.args[1],
+            &call.arguments.args[2],
+        );
     }
     None
+}
+
+fn reverse_len_range_shape(start: &Expr, stop: &Expr, step: &Expr) -> Option<(String, usize)> {
+    if literal_int(stop) != Some(-1) || literal_int(step) != Some(-1) {
+        return None;
+    }
+    len_anchor_with_max_offset(start)
+}
+
+fn len_anchor_with_max_offset(expr: &Expr) -> Option<(String, usize)> {
+    if let Some(sequence_name) = len_call_sequence_name(expr) {
+        return Some((sequence_name, 0));
+    }
+    let Expr::BinOp(binop) = expr else {
+        return None;
+    };
+    if !matches!(binop.op, Operator::Sub) {
+        return None;
+    }
+    let sequence_name = len_call_sequence_name(binop.left.as_ref())?;
+    let subtracted = literal_usize(binop.right.as_ref())?;
+    Some((sequence_name, subtracted.saturating_sub(1)))
 }
 
 fn detect_sliding_window_pointer_guards(
@@ -179,6 +207,7 @@ fn detect_sliding_window_pointer_guards(
         .map(|left_var| SequenceGuard::IndexVarInRange {
             sequence: sequence.to_string(),
             index_var: left_var,
+            max_offset: 0,
         })
         .collect()
 }
@@ -447,13 +476,18 @@ fn literal_usize(expr: &Expr) -> Option<usize> {
 }
 
 fn literal_int(expr: &Expr) -> Option<i64> {
-    let Expr::NumberLiteral(num) = expr else {
-        return None;
-    };
-    let Number::Int(value) = &num.value else {
-        return None;
-    };
-    value.as_i64()
+    match expr {
+        Expr::NumberLiteral(num) => {
+            let Number::Int(value) = &num.value else {
+                return None;
+            };
+            value.as_i64()
+        }
+        Expr::UnaryOp(unary) if matches!(unary.op, UnaryOp::USub) => {
+            literal_int(unary.operand.as_ref()).map(|value| -value)
+        }
+        _ => None,
+    }
 }
 
 fn detect_two_pointer_while_guards(while_stmt: &StmtWhile, ctx: &LowerCtx) -> Vec<SequenceGuard> {
@@ -483,10 +517,12 @@ fn detect_two_pointer_while_guards(while_stmt: &StmtWhile, ctx: &LowerCtx) -> Ve
         SequenceGuard::IndexVarInRange {
             sequence: sequence.clone(),
             index_var: left_name.id.clone(),
+            max_offset: 0,
         },
         SequenceGuard::IndexVarInRange {
             sequence,
             index_var: right_name.id.clone(),
+            max_offset: 0,
         },
     ]
 }

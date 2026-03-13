@@ -23,6 +23,7 @@ use super::sequence_guard_detection::{
     detect_while_sequence_guards,
 };
 use super::sequence_pointers::record_sequence_pointer_fact;
+use super::sequence_shapes::sequence_shape_fact;
 use super::typing_and_functions::{extract_function_type, resolve_annotation_expr};
 use super::LowerCtx;
 
@@ -1023,6 +1024,15 @@ pub(super) fn lower_ann_assign(ann: &StmtAnnAssign, ctx: &mut LowerCtx) -> Optio
     } else {
         ctx.clear_numeric_sentinel_var(&name);
     }
+    if let Some(fact) = ann
+        .value
+        .as_ref()
+        .and_then(|value| sequence_shape_fact(&name, value))
+    {
+        ctx.record_sequence_shape_fact(fact);
+    } else {
+        ctx.clear_sequence_shape_fact(&name);
+    }
     record_sequence_pointer_fact(ctx, &name, ann.value.as_ref()?);
 
     Some(HirStmt::Let {
@@ -1285,6 +1295,7 @@ pub(super) fn lower_assign(assign: &StmtAssign, ctx: &mut LowerCtx) -> Option<Hi
                 ctx.resolve_numeric_sentinel_domain(&name, domain);
             }
         }
+        ctx.clear_sequence_shape_fact(&name);
         record_sequence_pointer_fact(ctx, &name, &assign.value);
         Some(HirStmt::Assign { name, value })
     } else {
@@ -1294,6 +1305,11 @@ pub(super) fn lower_assign(assign: &StmtAssign, ctx: &mut LowerCtx) -> Option<Hi
             ctx.record_numeric_sentinel_initializer(name.clone(), kind);
         } else {
             ctx.clear_numeric_sentinel_var(&name);
+        }
+        if let Some(fact) = sequence_shape_fact(&name, &assign.value) {
+            ctx.record_sequence_shape_fact(fact);
+        } else {
+            ctx.clear_sequence_shape_fact(&name);
         }
         record_sequence_pointer_fact(ctx, &name, &assign.value);
         Some(HirStmt::Let {
