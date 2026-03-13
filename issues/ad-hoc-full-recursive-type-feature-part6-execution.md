@@ -90,3 +90,13 @@ Part 6 is complete because the recursive-type phase is now regression-locked at 
 - and the authoritative local validation gate passes end to end.
 
 That closes the ad hoc recursive-type phase and leaves the remaining Phase 31 work as narrow corpus closure instead of prerequisite compiler plumbing.
+
+## External Review Follow-up
+
+- First external review pass (`reviews/phase-recursive-types-review-pass-1.md`) reported no actionable bugs.
+- Second external review pass (`reviews/phase-recursive-types-production-grade-review-pass-2.md`) reported critical failures, but those findings were validated against a stale local checkout rather than merged `origin/main`.
+- Validation against merged `origin/main` (`fbb99462`, PR `#1127`) showed:
+  - the recursive e2e fixtures the review marked as missing are present in `crates/sifr/tests/e2e/pass/` and `crates/sifr/tests/e2e/fail/`,
+  - the merged codegen contains same-SCC recursive field boxing in `crates/sifr_codegen/src/field_analysis_helpers.rs`,
+  - and the merged codegen contains recursive generic Rust type rendering plus dedicated regressions in `crates/sifr_codegen/src/generic_bounds_helpers.rs` and `crates/sifr_codegen/src/lib_codegen_tests.rs`.
+- Outcome: no additional code fix was required from production-grade review pass 2; the review was closed as stale-invalidated rather than patched.
