@@ -22,6 +22,26 @@ This is intentionally broader than the current Phase 31 carry-forward work. Phas
 - Entry criteria: current class lowering, union lowering, generic type alias support, and borrow-by-default architecture remain green before this phase starts.
 - Exit criteria: recursive types are production-grade, deterministic, regression-locked, and lowered through one coherent compiler architecture rather than special-case patches.
 
+## Entry Baseline
+
+Baseline checks that should be re-run and recorded in the execution issue before part 1 starts:
+
+- `target/debug/sifr check crates/sifr/tests/e2e/pass/recursive_treenode.sifr` -> currently passes on `2026-03-13`
+- `target/debug/sifr check crates/sifr/tests/e2e/pass/forward_ref_listnode.sifr` -> currently passes on `2026-03-13`
+- `target/debug/sifr check audits/leetcode/0100_same_tree.sifr` -> currently fails on `2026-03-13` with:
+  - `unknown type: 'TreeNode'`
+  - `attribute access '.val' is not supported as an expression; use as a method call`
+- `target/debug/sifr check audits/leetcode/0102_binary_tree_level_order_traversal.sifr` -> currently fails on `2026-03-13` with:
+  - `unknown type: 'TreeNode'`
+  - `attribute access '.left' is not supported as an expression; use as a method call`
+  - `attribute access '.right' is not supported as an expression; use as a method call`
+
+Interpretation:
+
+- the compiler already has partial recursive-class and forward-reference capability in isolated fixtures,
+- but recursive types are not yet implemented as a complete general feature,
+- and the LeetCode tree surface still fails end-to-end because recursive-type resolution and attribute expression support are not unified under one architecture.
+
 ### Common quality controls
 
 - No fallback or one-off `TreeNode`/`ListNode` special-casing is allowed as the phase architecture.
@@ -63,6 +83,27 @@ But the current language surface is not yet a full recursive-type feature. The r
 - and LeetCode tree cases still fail because recursive-node field access and type resolution are not complete end-to-end.
 
 Without a real recursive-type feature, the compiler risks accumulating narrow fixes for `TreeNode` while leaving the underlying language contract incomplete.
+
+## Current State
+
+What already works today:
+
+- simple self-referential class fixtures can pass type checking
+- at least one forward-reference `ListNode` fixture can pass type checking
+- existing runtime/type contracts already support unions, `Option`, classes, and generic type aliases in isolation
+
+What is not yet a complete feature:
+
+- there is no documented general recursive-type well-formedness rule
+- there is no explicit recursive declaration dependency-graph resolution contract
+- there is no single documented lowering rule for when recursive fields become boxed/indirected in Rust
+- recursive aliases are not yet defined as a supported general feature
+- the LeetCode tree cases still fail because recursive-node resolution and attribute-expression lowering are not closed end-to-end
+
+Practical consequence:
+
+- the current compiler behavior is best described as partial recursive support, not a production-grade recursive-type feature
+- this phase should promote that partial support into a fully specified and regression-locked language capability
 
 ## Product Decision
 
@@ -219,7 +260,14 @@ This phase must define one coherent lowering strategy that composes with the exi
 Recommended contract:
 
 - `T | None` continues to lower to `Option<T>`
-- recursive class fields lower through explicit indirection internally
+- recursive class fields whose resolved field type is the containing class or another class in the same recursive SCC lower through explicit indirection internally
+- direct recursive class field:
+  - `next: Node | None` -> `Option<Box<Node>>`
+  - `child: Node` -> `Box<Node>`
+- container recursion does not add extra boxing beyond the container's own heap boundary:
+  - `list[Json]`
+  - `dict[str, Json]`
+  - `set[NodeId]`
 - recursive aliases lower only when the resolved recursive path is well-founded
 - generic recursive types remain monomorphized like the rest of Sifr generics
 
@@ -235,6 +283,21 @@ struct TreeNode {
 
 This is a codegen consequence, not required user syntax.
 
+## Diagnostic Contract
+
+This phase should standardize diagnostics for ill-formed or unsupported recursive forms. Exact error codes can be assigned during implementation, but the message family should be fixed by the phase:
+
+- naked alias recursion:
+  - `type error: ill-formed recursive type alias 'Bad': recursion must cross an indirection boundary`
+- recursive generic alias without a valid boundary:
+  - `type error: ill-formed recursive generic alias 'AlsoBad[T]': recursion must cross an indirection boundary`
+- unresolved recursive-name use outside supported declaration resolution:
+  - `type error: unknown type: 'TreeNode'`
+- recursive value field access before the recursive surface is supported:
+  - `type error: attribute access '.left' is not supported as an expression; use as a method call`
+
+Part completion is not allowed to introduce vague fallback diagnostics such as generic `Any`-driven errors when a specific recursive-type validation error is available.
+
 ## Acceptance Criteria
 
 | AC-ID | Criterion |
@@ -249,55 +312,113 @@ This is a codegen consequence, not required user syntax.
 | AC-8 | emitted Rust uses finite well-founded recursive representations |
 | AC-9 | full local validation passes with no regressions in existing class/union/generic behavior |
 
-## Implementation Plan
+## Implementation Parts and PR Breakdown
 
-### 1. Symbol Predeclaration and Resolution Graph
+This phase should not be executed as one large PR. The recommended breakdown is:
 
-- predeclare class and alias symbols before resolving their bodies
-- add dependency graph resolution for recursive and mutually recursive declarations
-- normalize declaration-order behavior so supported recursive forms are deterministic
+### Part 1. Recursive symbol predeclaration and SCC resolution
 
-### 2. Recursive Well-Formedness Rules
+- PR scope:
+  - predeclare class and alias symbols before resolving their bodies
+  - add dependency-graph resolution for recursive and mutually recursive declarations
+  - normalize declaration-order behavior so supported recursive forms are deterministic
+- Primary compiler areas:
+  - parser/AST-to-HIR type resolution path
+  - symbol registration and annotation resolution
+- Part definition of done:
+  - self-recursive and mutually recursive declarations resolve deterministically at the symbol/type-name level
+  - declaration order inside one SCC no longer changes supported outcomes
+- Required validation:
+  - positive tests for self recursion and mutual recursion
+  - negative tests for unresolved names outside the supported resolution model
 
-- define what counts as a valid recursive boundary
-- reject naked infinite recursion with explicit diagnostics
-- ensure recursive generic aliases are validated structurally rather than by ad hoc pattern lists
+### Part 2. Recursive well-formedness validation
 
-### 3. Type System Representation
+- Depends on: part 1
+- PR scope:
+  - define the exact valid indirection boundaries
+  - reject naked infinite recursion and structurally invalid recursive aliases
+  - stabilize recursive-type diagnostics
+- Minimum rule set for this phase:
+  - legal recursion must cross a valid indirection boundary
+  - valid boundaries are:
+    - recursive class fields lowered through internal boxing
+    - heap-owning containers such as `list[...]`, `dict[..., ...]`, and `set[...]`
+  - naked alias recursion like `type Bad = Bad` is illegal
+  - tuple-only recursive aliases are illegal in this phase unless a future phase explicitly adds tuple-level indirection semantics
+- Part definition of done:
+  - supported recursive forms are accepted for principled reasons
+  - unsupported recursive forms fail with deterministic specific diagnostics
 
-- extend internal type representation to preserve recursive references safely
-- ensure unions, optionals, aliases, and generics compose with recursive references
-- keep narrowing behavior consistent for `RecursiveType | None`
+### Part 3. Recursive type representation in the type system
 
-### 4. HIR and Attribute Surface
+- Depends on: parts 1 and 2
+- PR scope:
+  - extend internal type representation to preserve recursive references safely
+  - ensure unions, optionals, aliases, and generics compose with recursive references
+  - keep narrowing behavior consistent for `RecursiveType | None`
+- Primary compiler areas:
+  - type representation and annotation resolution
+  - normalization / equality / substitution for recursive generic forms
+- Part definition of done:
+  - recursive references survive type resolution without degrading to `Any`
+  - generic recursive types preserve type arguments end-to-end
 
-- make recursive type annotations survive parser -> AST -> HIR consistently
-- allow attribute access and local uses on resolved recursive-node values
-- remove any remaining expression-shape rejections that only exist because recursive values are not fully typed
+### Part 4. Recursive HIR surface and attribute access
 
-### 5. Codegen
+- Depends on: parts 1 through 3
+- PR scope:
+  - make recursive annotations survive parser -> AST -> HIR consistently
+  - allow attribute access and local uses on resolved recursive-node values
+  - close the LeetCode-facing tree surface that still fails on `unknown type` and attribute-expression rejection
+- Primary compiler areas:
+  - HIR lowering
+  - attribute-expression typing/lowering
+- Part definition of done:
+  - current LeetCode tree failures move past unknown-type and attribute-expression blockers without special casing
+  - recursive-node values behave like normal typed class values in expressions
 
-- lower recursive classes to finite Rust representations
-- lower recursive aliases only when well-formed
-- keep generated Rust readable and deterministic
+### Part 5. Recursive Rust lowering and codegen
 
-### 6. Tests and Demos
+- Depends on: parts 1 through 4
+- PR scope:
+  - lower recursive classes to finite Rust representations
+  - lower recursive aliases only when well-formed
+  - keep generated Rust readable and deterministic
+- Explicit lowering rules for this phase:
+  - recursive class fields to same-SCC classes are boxed at the field boundary
+  - `T | None` around a recursive class field remains `Option<Box<T>>`
+  - container recursion uses the container's existing heap representation and does not add extra boxing just because the contained type is recursive
+- Part definition of done:
+  - generated Rust for supported recursive forms is finite, valid, and stable
+  - no special-case `TreeNode`/`ListNode` lowering exists
 
-- parser/unit coverage for recursive alias syntax and forward refs
-- type-system coverage for:
-  - self recursion
-  - mutual recursion
-  - recursive generics
-  - accepted container-recursive aliases
-  - rejected naked recursion
-- codegen coverage for recursive class lowering
-- e2e pass fixtures for:
-  - recursive class fields
-  - mutually recursive classes
-  - recursive alias through containers
-  - recursive generic node types
-- e2e fail fixtures for ill-formed recursion
-- demo showing recursive tree traversal and a non-tree recursive alias
+### Part 6. Corpus closure, tests, and demo
+
+- Depends on: parts 1 through 5
+- PR scope:
+  - add the final regression matrix
+  - add demo coverage
+  - verify the handoff to the Phase 31 tree closure milestone
+- Required coverage:
+  - parser/unit coverage for recursive alias syntax and forward refs
+  - type-system coverage for:
+    - self recursion
+    - mutual recursion
+    - recursive generics
+    - accepted container-recursive aliases
+    - rejected naked recursion
+  - codegen coverage for recursive class lowering
+  - e2e pass fixtures for:
+    - recursive class fields
+    - mutually recursive classes
+    - recursive alias through containers
+    - recursive generic node types
+  - e2e fail fixtures for ill-formed recursion
+  - demo showing recursive tree traversal and a non-tree recursive alias
+- Part definition of done:
+  - the full recursive-type feature is regression-locked
+  - the prerequisite is ready for `m31_e_recursive_tree_surface_leetcode_closure`
 
 ## Validation Gate
 
@@ -311,12 +432,15 @@ Before closing this phase:
 
 ## Relationship to Phase 31
 
-This phase is broader than the current Phase 31 carry-forward milestone `m31_e_recursive_tree_surface`.
+This phase is broader than the current Phase 31 carry-forward milestones `prereq_recursive_types` and `m31_e_recursive_tree_surface_leetcode_closure`.
 
-- `m31_e` only needs enough recursive forward-reference and attribute support to make the current tree-domain LeetCode corpus pass.
-- this ad hoc phase defines the full general feature that would make recursive types a normal Sifr capability beyond LeetCode.
+- `prereq_recursive_types` should point at this ad hoc phase and use it as the implementation source of truth for the broad feature.
+- `m31_e_recursive_tree_surface_leetcode_closure` should stay narrow and corpus-focused:
+  - verify that this prerequisite fully unblocks `0100`, `0102`, `0110`, `0226`, and `0235`
+  - add only the remaining LeetCode-specific regression/demo closure work
+- this ad hoc phase does not supersede the Phase 31 milestone tracker; it supplies the prerequisite feature work that the tracker depends on.
 
 Recommended planning relationship:
 
-- keep `m31_e` narrow for current corpus closure
-- use this ad hoc phase only if the project wants the complete recursive-type feature rather than the minimum tree-surface repair
+- execute this ad hoc phase as the broad recursive-type prerequisite
+- keep `m31_e_recursive_tree_surface_leetcode_closure` narrow for current corpus closure after the prerequisite lands
