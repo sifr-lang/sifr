@@ -3,11 +3,18 @@ use crate::{
     generate_rust_with_metadata, RustEmitter, RustExpr, RustStmt, RustType, StdlibCode,
 };
 use sifr_hir::{
-    HirClass, HirClassKind, HirExceptHandler, HirExpr, HirFStringPart, HirFunction, HirImport,
-    HirMatchArm, HirModule, HirParam, HirPattern, HirStmt, MethodKind,
+    lower_module, HirClass, HirClassKind, HirExceptHandler, HirExpr, HirFStringPart, HirFunction,
+    HirImport, HirMatchArm, HirModule, HirParam, HirPattern, HirStmt, MethodKind,
 };
+use sifr_python_parser::parse_module;
 use sifr_type_system::{ParamConvention, Type};
 use std::collections::HashSet;
+
+fn generate_rust_from_source(source: &str) -> String {
+    let parsed = parse_module(source).expect("parse failed");
+    let lowering = lower_module(parsed.suite()).expect("lowering failed");
+    generate_rust(&lowering.module)
+}
 
 #[test]
 fn test_simple_function_codegen() {
@@ -178,6 +185,18 @@ fn test_mut_on_reassigned_variable() {
         rust_code.contains("let mut x: i64"),
         "should emit `let mut x` for reassigned var"
     );
+}
+
+#[test]
+fn test_generate_rust_recursive_tree_traversal_uses_option_let_else_and_cloned_box_reads() {
+    let rust_code = generate_rust_from_source(
+        "class TreeNode:\n    val: int\n    left: TreeNode | None\n    right: TreeNode | None\n\n    def __init__(self, val: int, left: TreeNode | None, right: TreeNode | None):\n        self.val = val\n        self.left = left\n        self.right = right\n\ndef tree_sum(node: TreeNode | None) -> int:\n    if not node:\n        return 0\n    left: TreeNode | None = node.left\n    right: TreeNode | None = node.right\n    return node.val + tree_sum(left) + tree_sum(right)\n\ndef same_shape_and_sum(p: TreeNode | None, q: TreeNode | None) -> int:\n    if not p and not q:\n        return 0\n    if not p or not q:\n        return -1\n    return p.val + q.val + same_shape_and_sum(p.left, q.left) + same_shape_and_sum(p.right, q.right)\n",
+    );
+
+    assert!(rust_code.contains("let Some(node) = node.as_ref() else {"));
+    assert!(rust_code.contains("(node.left).as_deref().cloned()"));
+    assert!(rust_code.contains("let (Some(p), Some(q)) = (p.as_ref(), q.as_ref()) else {"));
+    assert!(rust_code.contains("(p.left).as_deref().cloned()"));
 }
 
 #[test]

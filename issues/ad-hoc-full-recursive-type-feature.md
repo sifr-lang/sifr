@@ -358,6 +358,16 @@ Part completion is not allowed to introduce vague fallback diagnostics such as g
   - Full local validation:
     - `scripts/run_all_tests.sh --profile quick`
     - `scripts/run_all_tests.sh`
+- `2026-03-13`: part 5 `recursive_rust_lowering_and_codegen` completed local validation.
+  - Execution report: `issues/ad-hoc-full-recursive-type-feature-part5-execution.md`
+  - PR: `#1126`
+  - Demo: `demos/ad_hoc_recursive_type_part5_demo.sifr`
+  - Added regression coverage:
+    - `crates/sifr_codegen/src/lib_codegen_tests.rs`
+    - `crates/sifr/tests/e2e/pass/recursive_tree_traversal_runtime.sifr`
+  - Full local validation:
+    - `scripts/run_all_tests.sh --profile quick`
+    - `scripts/run_all_tests.sh`
 
 ## Implementation Parts and PR Breakdown
 

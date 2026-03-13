@@ -455,10 +455,38 @@ impl RustEmitter {
             lowered_object
         };
 
+        let is_recursive_field = class_name_for_parent.as_ref().is_some_and(|class_name| {
+            self.recursive_fields
+                .contains(&(class_name.clone(), field.to_string()))
+        });
+
         let lowered_field = crate::RustExpr::Field {
             expr: Box::new(lowered_base),
             field: field.to_string(),
         };
+
+        if is_recursive_field {
+            if crate::helpers::is_option_type(ty) {
+                return Ok(Some(crate::RustExpr::MethodCall {
+                    receiver: Box::new(crate::RustExpr::MethodCall {
+                        receiver: Box::new(crate::RustExpr::Paren(Box::new(lowered_field))),
+                        method: "as_deref".to_string(),
+                        args: vec![],
+                    }),
+                    method: "cloned".to_string(),
+                    args: vec![],
+                }));
+            }
+            return Ok(Some(crate::RustExpr::MethodCall {
+                receiver: Box::new(crate::RustExpr::MethodCall {
+                    receiver: Box::new(crate::RustExpr::Paren(Box::new(lowered_field))),
+                    method: "as_ref".to_string(),
+                    args: vec![],
+                }),
+                method: "clone".to_string(),
+                args: vec![],
+            }));
+        }
 
         if needs_clone {
             return Ok(Some(crate::RustExpr::MethodCall {

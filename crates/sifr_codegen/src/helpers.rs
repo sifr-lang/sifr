@@ -55,6 +55,16 @@ pub(super) fn detect_option_truthiness(expr: &HirExpr) -> Option<String> {
     None
 }
 
+/// Detect negated truthiness on an Option variable: `if not x:`.
+pub(super) fn detect_not_option_truthiness(expr: &HirExpr) -> Option<String> {
+    if let HirExpr::UnaryOp { op, operand, .. } = expr {
+        if op == "not" {
+            return detect_option_truthiness(operand);
+        }
+    }
+    None
+}
+
 /// Detect `x is not None` pattern in a Compare expression. Returns the variable name.
 pub(super) fn detect_is_not_none_var(expr: &HirExpr) -> Option<String> {
     if let HirExpr::Compare {
@@ -90,6 +100,22 @@ pub(super) fn detect_and_not_none_vars(expr: &HirExpr) -> Option<Vec<String>> {
                     vars.push(var_name);
                 }
             }
+            if vars.len() >= 2 {
+                return Some(vars);
+            }
+        }
+    }
+    None
+}
+
+/// Detect compound `not a or not b` where both names are Option values.
+pub(super) fn detect_or_not_option_truthiness_vars(expr: &HirExpr) -> Option<Vec<String>> {
+    if let HirExpr::BoolOp { op, values, .. } = expr {
+        if op == "or" {
+            let vars: Vec<String> = values
+                .iter()
+                .filter_map(detect_not_option_truthiness)
+                .collect();
             if vars.len() >= 2 {
                 return Some(vars);
             }

@@ -1,5 +1,5 @@
-# Ad hoc recursive type feature, part 4:
-# recursive node values behave like normal typed class values after guard narrowing.
+# Ad hoc recursive type feature, part 5:
+# recursive tree traversal lowers to finite, runnable Rust.
 
 class TreeNode:
     val: int
