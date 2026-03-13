@@ -2679,7 +2679,7 @@ fn try_lower_attribute_dict_insert_key_expr(index: &HirExpr, field_ty: &Type) ->
     try_lower_leaf_or_name_expr(index)
 }
 
-fn build_list_subscript_assign_stmt(
+pub(crate) fn build_list_subscript_assign_stmt(
     receiver: RustExpr,
     lowered_index: RustExpr,
     lowered_value: RustExpr,
@@ -2736,7 +2736,10 @@ fn build_list_get_mut_block_stmt(
     ])
 }
 
-fn build_normalized_list_index_i64_expr(receiver: RustExpr, raw_index_name: &str) -> RustExpr {
+pub(crate) fn build_normalized_list_index_i64_expr(
+    receiver: RustExpr,
+    raw_index_name: &str,
+) -> RustExpr {
     let raw_ident = || RustExpr::Ident(raw_index_name.to_string());
     RustExpr::If {
         cond: Box::new(RustExpr::BinOp {
@@ -2760,7 +2763,7 @@ fn build_normalized_list_index_i64_expr(receiver: RustExpr, raw_index_name: &str
     }
 }
 
-fn build_dict_subscript_assign_stmt(
+pub(crate) fn build_dict_subscript_assign_stmt(
     receiver: RustExpr,
     lowered_index: RustExpr,
     lowered_value: RustExpr,

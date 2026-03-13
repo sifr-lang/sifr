@@ -15,8 +15,8 @@ Phase 31 itself is complete. This document is the carry-forward plan for the rem
 ## Current Remaining Surface
 
 - Seed corpus size: `50`
-- Current passes: `5`
-- Remaining failing cases: `45`
+- Current passes: `15`
+- Remaining failing cases: `35`
 - Supportable in current language/runtime direction: `44`
 - Explicit intentional divergence: `1` (`ownership.borrowed_return_surface`, case `1299`)
 
@@ -89,6 +89,14 @@ Phase 31 itself is complete. This document is the carry-forward plan for the rem
   - Confirmed new pass: `0209_minimum_size_subarray_sum`
   - Confirmed parity probe: `0334_increasing_triplet_subsequence` now checks and runs with integer-domain sentinel lowering
   - Confirmed non-goal boundary: `2017_grid_game` remains blocked by unrelated `Any`/annotation failures rather than sentinel handling
+- `2026-03-13`: `m31_a_optional_narrowing_core` slice 5 completed local validation for reverse-range recurrence narrowing over sized local constructions.
+  - Execution report: `issues/phase31-m31a-reverse-range-recurrence-execution.md`
+  - Targeted result artifact: `verification/leetcode/phase31_m31a_wave5_results.json`
+  - Targeted four-case status: `PASS=1`, `CHECK_ERROR=3`, `RUN_ERROR=0`
+  - Confirmed new pass: `1143_longest_common_subsequence`
+  - Confirmed reclassification boundary: `0053` and `0746` remain unsafe plain-parameter head-access failures, and `0322` remains a subtractive/value-dependent recurrence gap
+  - Stable warmed full-corpus rerun: `verification/leetcode/phase31_current_full_results_after_m31a_wave5_rerun.json`
+  - Full-corpus state after slice 5: `PASS=15`, `CHECK_ERROR=35`, `RUN_ERROR=0`
 
 ## Recommended Execution Order
 
@@ -105,15 +113,17 @@ This order is chosen to remove the largest independent blockers first, then clea
 
 ### `m31_a_optional_narrowing_core`
 
-- Current execution status (`2026-03-12`):
+- Current execution status (`2026-03-13`):
   - in progress
   - slice 1 completed the guarded sequence-index root cause for explicit `while i < len(seq)`, `for i in range(len(seq))`, and early-return non-empty guards
   - slice 2 completed same-sequence two-pointer `while left < right` narrowing for zero/end pointer construction plus the downstream production-path emit gaps that slice exposed
   - slice 3 completed canonical sliding-window left-pointer narrowing for direct `seq[l]` reads under a `for r in range(len(seq))` driver, including tuple-unpacked zero-based locals
   - slice 4 completed canonical infinity sentinel-domain normalization for integer algorithm accumulators
-  - validated with targeted HIR/e2e/demo coverage, `verification/leetcode/phase31_m31a_wave1_results.json`, `verification/leetcode/phase31_m31a_wave2_results.json`, `verification/leetcode/phase31_m31a_wave3_results.json`, and `verification/leetcode/phase31_m31a_wave4_results.json`
-  - slice 4 targeted outcome: `PASS=1`, `CHECK_ERROR=0`, `RUN_ERROR=0` across the seeded slice case `0209`
-  - remaining optional failures are now concentrated in constructed-sequence, recurrence, and broader arithmetic/branch-type proof gaps rather than guarded-index, same-sequence two-pointer, canonical sliding-window left-pointer, or infinity-sentinel branch joins
+  - slice 5 completed reverse-range recurrence narrowing for sized local constructions, plus the required structured codegen support for comprehension-backed locals, dynamic subscript writes, borrow-safe recurrence assignments, and negative-step range iterators
+  - validated with targeted HIR/e2e/demo coverage, `verification/leetcode/phase31_m31a_wave1_results.json`, `verification/leetcode/phase31_m31a_wave2_results.json`, `verification/leetcode/phase31_m31a_wave3_results.json`, `verification/leetcode/phase31_m31a_wave4_results.json`, and `verification/leetcode/phase31_m31a_wave5_results.json`
+  - slice 5 targeted outcome: `PASS=1`, `CHECK_ERROR=3`, `RUN_ERROR=0` across the watched recurrence set
+  - stable warmed full-corpus state after slice 5: `PASS=15`, `CHECK_ERROR=35`, `RUN_ERROR=0`
+  - remaining optional failures are now concentrated in unsafe plain-parameter head indexing, subtractive/value-dependent recurrence indexing, and broader arithmetic/branch-type proof gaps rather than guarded-index, same-sequence two-pointer, canonical sliding-window left-pointer, infinity-sentinel joins, or reverse-range recurrence proofs
 
 - Scope:
   - resolve `type_system.optional_narrowing_and_union_ops`

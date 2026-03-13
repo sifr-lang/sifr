@@ -242,6 +242,533 @@ impl RustEmitter {
         }
     }
 
+    fn int_i64_literal_expr(value: i64) -> RustExpr {
+        RustExpr::Cast {
+            expr: Box::new(RustExpr::Literal(crate::RustLiteral::Int(value))),
+            ty: crate::RustType::I64,
+        }
+    }
+
+    fn negative_range_step_magnitude(step_expr: &HirExpr) -> Option<i64> {
+        match step_expr {
+            HirExpr::IntLiteral(value) if *value < 0 => Some(value.unsigned_abs() as i64),
+            HirExpr::UnaryOp { op, operand, .. } if op == "-" => match operand.as_ref() {
+                HirExpr::IntLiteral(value) if *value > 0 => Some(*value),
+                _ => None,
+            },
+            _ => None,
+        }
+    }
+
+    fn try_lower_range_iter_expr_for_ir(
+        &mut self,
+        start: &HirExpr,
+        end: &HirExpr,
+        step: Option<&HirExpr>,
+    ) -> Result<Option<RustExpr>, crate::CodegenError> {
+        let Some(step_expr) = step else {
+            return Ok(None);
+        };
+        let Some(step_magnitude) = Self::negative_range_step_magnitude(step_expr) else {
+            return Ok(None);
+        };
+        let Some(lowered_start) = self.lower_stmt_expr_for_ir(start)? else {
+            return Ok(None);
+        };
+        let Some(lowered_end) = self.lower_stmt_expr_for_ir(end)? else {
+            return Ok(None);
+        };
+
+        let reversed_iter = RustExpr::MethodCall {
+            receiver: Box::new(RustExpr::Range {
+                start: Box::new(RustExpr::BinOp {
+                    left: Box::new(lowered_end),
+                    op: "+".to_string(),
+                    right: Box::new(Self::int_i64_literal_expr(1)),
+                }),
+                end: Box::new(RustExpr::BinOp {
+                    left: Box::new(lowered_start),
+                    op: "+".to_string(),
+                    right: Box::new(Self::int_i64_literal_expr(1)),
+                }),
+            }),
+            method: "rev".to_string(),
+            args: vec![],
+        };
+        if step_magnitude == 1 {
+            return Ok(Some(reversed_iter));
+        }
+        Ok(Some(RustExpr::MethodCall {
+            receiver: Box::new(reversed_iter),
+            method: "step_by".to_string(),
+            args: vec![RustExpr::Cast {
+                expr: Box::new(Self::int_i64_literal_expr(step_magnitude)),
+                ty: crate::RustType::Named("usize".to_string()),
+            }],
+        }))
+    }
+
+    fn lower_comprehension_iter_for_ir(
+        &mut self,
+        iter_expr: &HirExpr,
+    ) -> Result<Option<RustExpr>, crate::CodegenError> {
+        if let HirExpr::RangeLiteral {
+            start, end, step, ..
+        } = iter_expr
+        {
+            if let Some(lowered_range_iter) =
+                self.try_lower_range_iter_expr_for_ir(start, end, step.as_deref())?
+            {
+                return Ok(Some(lowered_range_iter));
+            }
+        }
+        let Some(lowered_iter) = self.lower_stmt_expr_for_ir(iter_expr)? else {
+            return Ok(None);
+        };
+        if matches!(iter_expr.ty(), Type::Range) {
+            return Ok(Some(lowered_iter));
+        }
+        Ok(Some(RustExpr::MethodCall {
+            receiver: Box::new(RustExpr::MethodCall {
+                receiver: Box::new(lowered_iter),
+                method: "clone".to_string(),
+                args: vec![],
+            }),
+            method: "into_iter".to_string(),
+            args: vec![],
+        }))
+    }
+
+    fn try_lower_comprehension_expr_for_ir(
+        &mut self,
+        expr: &HirExpr,
+    ) -> Result<Option<RustExpr>, crate::CodegenError> {
+        match expr {
+            HirExpr::ListComp {
+                expr,
+                generators,
+                ty,
+            } if matches!(
+                Self::resolve_alias_type_for_loop_iter(ty),
+                Type::Any | Type::List(_)
+            ) =>
+            {
+                if generators.is_empty() || generators.iter().any(|(var, _, _)| var.contains(',')) {
+                    return Ok(None);
+                }
+
+                let result_ident = "__sifr_list_comp".to_string();
+                let Some(lowered_expr) = self.lower_stmt_expr_for_ir(expr)? else {
+                    return Ok(None);
+                };
+                let mut nested_body = vec![RustStmt::Expr(RustExpr::MethodCall {
+                    receiver: Box::new(RustExpr::Ident(result_ident.clone())),
+                    method: "push".to_string(),
+                    args: vec![lowered_expr],
+                })];
+
+                for (var, iter_expr, maybe_filter) in generators.iter().rev() {
+                    let Some(iter) = self.lower_comprehension_iter_for_ir(iter_expr)? else {
+                        return Ok(None);
+                    };
+                    let loop_body = if let Some(filter) = maybe_filter {
+                        let Some(lowered_filter) = self.lower_stmt_expr_for_ir(filter)? else {
+                            return Ok(None);
+                        };
+                        vec![RustStmt::If {
+                            cond: lowered_filter,
+                            then_body: nested_body,
+                            else_body: None,
+                        }]
+                    } else {
+                        nested_body
+                    };
+                    nested_body = vec![RustStmt::For {
+                        var: var.clone(),
+                        iter,
+                        body: loop_body,
+                    }];
+                }
+
+                let mut stmts = vec![RustStmt::Let {
+                    mutable: true,
+                    name: result_ident.clone(),
+                    ty: None,
+                    value: RustExpr::Vec(vec![]),
+                }];
+                stmts.extend(nested_body);
+
+                Ok(Some(RustExpr::Block {
+                    stmts,
+                    expr: Some(Box::new(RustExpr::Ident(result_ident))),
+                }))
+            }
+            HirExpr::DictComp {
+                key_expr,
+                val_expr,
+                generators,
+                ty,
+            } if generators.len() == 1
+                && matches!(
+                    Self::resolve_alias_type_for_loop_iter(ty),
+                    Type::Any | Type::Dict(_, _)
+                ) =>
+            {
+                let Some((var, iter_expr, maybe_filter)) = generators.first() else {
+                    return Ok(None);
+                };
+                if var.contains(',') {
+                    return Ok(None);
+                }
+                let Some(iter) = self.lower_comprehension_iter_for_ir(iter_expr)? else {
+                    return Ok(None);
+                };
+                let Some(lowered_key) = self.lower_stmt_expr_for_ir(key_expr)? else {
+                    return Ok(None);
+                };
+                let Some(lowered_value) = self.lower_stmt_expr_for_ir(val_expr)? else {
+                    return Ok(None);
+                };
+
+                let result_ident = "__sifr_dict_comp".to_string();
+                let insert_stmt = RustStmt::Expr(RustExpr::MethodCall {
+                    receiver: Box::new(RustExpr::Ident(result_ident.clone())),
+                    method: "insert".to_string(),
+                    args: vec![lowered_key, lowered_value],
+                });
+
+                let loop_body = if let Some(filter) = maybe_filter {
+                    let Some(lowered_filter) = self.lower_stmt_expr_for_ir(filter)? else {
+                        return Ok(None);
+                    };
+                    vec![RustStmt::If {
+                        cond: lowered_filter,
+                        then_body: vec![insert_stmt],
+                        else_body: None,
+                    }]
+                } else {
+                    vec![insert_stmt]
+                };
+
+                Ok(Some(RustExpr::Block {
+                    stmts: vec![
+                        RustStmt::Let {
+                            mutable: true,
+                            name: result_ident.clone(),
+                            ty: None,
+                            value: RustExpr::FnCall {
+                                func: Box::new(RustExpr::Path(vec![
+                                    "HashMap".to_string(),
+                                    "new".to_string(),
+                                ])),
+                                args: vec![],
+                            },
+                        },
+                        RustStmt::For {
+                            var: var.clone(),
+                            iter,
+                            body: loop_body,
+                        },
+                    ],
+                    expr: Some(Box::new(RustExpr::Ident(result_ident))),
+                }))
+            }
+            HirExpr::SetComp {
+                expr,
+                generators,
+                ty,
+            } if generators.len() == 1
+                && matches!(
+                    Self::resolve_alias_type_for_loop_iter(ty),
+                    Type::Any | Type::Set(_)
+                ) =>
+            {
+                let Some((var, iter_expr, maybe_filter)) = generators.first() else {
+                    return Ok(None);
+                };
+                if var.contains(',') {
+                    return Ok(None);
+                }
+                let Some(iter) = self.lower_comprehension_iter_for_ir(iter_expr)? else {
+                    return Ok(None);
+                };
+                let Some(lowered_expr) = self.lower_stmt_expr_for_ir(expr)? else {
+                    return Ok(None);
+                };
+
+                let result_ident = "__sifr_set_comp".to_string();
+                let insert_stmt = RustStmt::Expr(RustExpr::MethodCall {
+                    receiver: Box::new(RustExpr::Ident(result_ident.clone())),
+                    method: "insert".to_string(),
+                    args: vec![lowered_expr],
+                });
+
+                let loop_body = if let Some(filter) = maybe_filter {
+                    let Some(lowered_filter) = self.lower_stmt_expr_for_ir(filter)? else {
+                        return Ok(None);
+                    };
+                    vec![RustStmt::If {
+                        cond: lowered_filter,
+                        then_body: vec![insert_stmt],
+                        else_body: None,
+                    }]
+                } else {
+                    vec![insert_stmt]
+                };
+
+                Ok(Some(RustExpr::Block {
+                    stmts: vec![
+                        RustStmt::Let {
+                            mutable: true,
+                            name: result_ident.clone(),
+                            ty: None,
+                            value: RustExpr::FnCall {
+                                func: Box::new(RustExpr::Path(vec![
+                                    "HashSet".to_string(),
+                                    "new".to_string(),
+                                ])),
+                                args: vec![],
+                            },
+                        },
+                        RustStmt::For {
+                            var: var.clone(),
+                            iter,
+                            body: loop_body,
+                        },
+                    ],
+                    expr: Some(Box::new(RustExpr::Ident(result_ident))),
+                }))
+            }
+            _ => Ok(None),
+        }
+    }
+
+    fn lower_structured_nested_list_subscript_assign_stmt_for_ir(
+        &mut self,
+        object: &str,
+        outer_index: &HirExpr,
+        inner_index: &HirExpr,
+        value: &HirExpr,
+    ) -> Result<Option<RustStmt>, crate::CodegenError> {
+        let Some(lowered_outer_index) = self.lower_stmt_expr_for_ir(outer_index)? else {
+            return Ok(None);
+        };
+        let Some(lowered_inner_index) = self.lower_stmt_expr_for_ir(inner_index)? else {
+            return Ok(None);
+        };
+        let Some(lowered_value) = self.lower_stmt_expr_for_ir(value)? else {
+            return Ok(None);
+        };
+
+        Ok(Some(RustStmt::Block(vec![
+            RustStmt::Let {
+                mutable: false,
+                name: "__nested_assign_value".to_string(),
+                ty: None,
+                value: lowered_value,
+            },
+            RustStmt::Let {
+                mutable: false,
+                name: "__oi_raw".to_string(),
+                ty: None,
+                value: lowered_outer_index,
+            },
+            RustStmt::Let {
+                mutable: false,
+                name: "__oi_norm".to_string(),
+                ty: None,
+                value: crate::build_normalized_list_index_i64_expr(
+                    RustExpr::Ident(object.to_string()),
+                    "__oi_raw",
+                ),
+            },
+            RustStmt::If {
+                cond: RustExpr::BinOp {
+                    left: Box::new(RustExpr::Ident("__oi_norm".to_string())),
+                    op: ">=".to_string(),
+                    right: Box::new(RustExpr::Literal(crate::RustLiteral::Int(0))),
+                },
+                then_body: vec![RustStmt::IfLet {
+                    pattern: "Some(__row)".to_string(),
+                    expr: RustExpr::MethodCall {
+                        receiver: Box::new(RustExpr::Ident(object.to_string())),
+                        method: "get_mut".to_string(),
+                        args: vec![RustExpr::Cast {
+                            expr: Box::new(RustExpr::Ident("__oi_norm".to_string())),
+                            ty: crate::RustType::Named("usize".to_string()),
+                        }],
+                    },
+                    then_body: vec![
+                        RustStmt::Let {
+                            mutable: false,
+                            name: "__ii_raw".to_string(),
+                            ty: None,
+                            value: lowered_inner_index,
+                        },
+                        RustStmt::Let {
+                            mutable: false,
+                            name: "__ii_norm".to_string(),
+                            ty: None,
+                            value: crate::build_normalized_list_index_i64_expr(
+                                RustExpr::Ident("__row".to_string()),
+                                "__ii_raw",
+                            ),
+                        },
+                        RustStmt::If {
+                            cond: RustExpr::BinOp {
+                                left: Box::new(RustExpr::Ident("__ii_norm".to_string())),
+                                op: ">=".to_string(),
+                                right: Box::new(RustExpr::Literal(crate::RustLiteral::Int(0))),
+                            },
+                            then_body: vec![RustStmt::IfLet {
+                                pattern: "Some(__elem)".to_string(),
+                                expr: RustExpr::MethodCall {
+                                    receiver: Box::new(RustExpr::Ident("__row".to_string())),
+                                    method: "get_mut".to_string(),
+                                    args: vec![RustExpr::Cast {
+                                        expr: Box::new(RustExpr::Ident("__ii_norm".to_string())),
+                                        ty: crate::RustType::Named("usize".to_string()),
+                                    }],
+                                },
+                                then_body: vec![RustStmt::Assign {
+                                    target: RustExpr::Deref(Box::new(RustExpr::Ident(
+                                        "__elem".to_string(),
+                                    ))),
+                                    value: RustExpr::Ident("__nested_assign_value".to_string()),
+                                }],
+                                else_body: None,
+                            }],
+                            else_body: None,
+                        },
+                    ],
+                    else_body: None,
+                }],
+                else_body: None,
+            },
+        ])))
+    }
+
+    fn lower_subscript_assign_stmt_for_ir(
+        &mut self,
+        object: &str,
+        index: &HirExpr,
+        value: &HirExpr,
+        object_ty: &Type,
+    ) -> Result<Option<RustStmt>, crate::CodegenError> {
+        let Some(lowered_index) = self.lower_stmt_expr_for_ir(index)? else {
+            return Ok(None);
+        };
+        let Some(lowered_value) = self.lower_stmt_expr_for_ir(value)? else {
+            return Ok(None);
+        };
+
+        match Self::resolve_alias_type_for_loop_iter(object_ty) {
+            Type::List(_) => Ok(Some(RustStmt::Block(vec![
+                RustStmt::Let {
+                    mutable: false,
+                    name: "__assign_value".to_string(),
+                    ty: None,
+                    value: lowered_value,
+                },
+                crate::build_list_subscript_assign_stmt(
+                    RustExpr::Ident(object.to_string()),
+                    lowered_index,
+                    RustExpr::Ident("__assign_value".to_string()),
+                ),
+            ]))),
+            Type::Dict(key_ty, _) => {
+                let key_needs_clone = matches!(key_ty.as_ref(), Type::Str | Type::TypeVar(_))
+                    && matches!(index, HirExpr::Name { name, .. }
+                        if self.borrowed_params.contains(name.as_str())
+                            || self.mut_borrowed_params.contains(name.as_str()));
+                let lowered_index = if key_needs_clone {
+                    RustExpr::Clone(Box::new(lowered_index))
+                } else {
+                    lowered_index
+                };
+                Ok(Some(RustStmt::Block(vec![
+                    RustStmt::Let {
+                        mutable: false,
+                        name: "__assign_key".to_string(),
+                        ty: None,
+                        value: lowered_index,
+                    },
+                    RustStmt::Let {
+                        mutable: false,
+                        name: "__assign_value".to_string(),
+                        ty: None,
+                        value: lowered_value,
+                    },
+                    crate::build_dict_subscript_assign_stmt(
+                        RustExpr::Ident(object.to_string()),
+                        RustExpr::Ident("__assign_key".to_string()),
+                        RustExpr::Ident("__assign_value".to_string()),
+                    ),
+                ])))
+            }
+            _ => Ok(None),
+        }
+    }
+
+    pub(crate) fn try_lower_structured_subscript_assign_stmt(
+        &mut self,
+        stmt: &HirStmt,
+    ) -> Result<bool, crate::CodegenError> {
+        let HirStmt::SubscriptAssign {
+            object,
+            index,
+            value,
+            object_ty,
+        } = stmt
+        else {
+            return Ok(false);
+        };
+
+        let Some(lowered) =
+            self.lower_subscript_assign_stmt_for_ir(object, index, value, object_ty)?
+        else {
+            return Ok(false);
+        };
+
+        self.emit_lowered_stmts(std::slice::from_ref(&lowered));
+        Ok(true)
+    }
+
+    pub(crate) fn try_lower_structured_nested_subscript_assign_stmt(
+        &mut self,
+        stmt: &HirStmt,
+    ) -> Result<bool, crate::CodegenError> {
+        let HirStmt::NestedSubscriptAssign {
+            object,
+            outer_index,
+            inner_index,
+            value,
+            object_ty,
+        } = stmt
+        else {
+            return Ok(false);
+        };
+
+        let Type::List(inner) = Self::resolve_alias_type_for_loop_iter(object_ty) else {
+            return Ok(false);
+        };
+        if !matches!(Self::resolve_alias_type_for_loop_iter(inner), Type::List(_)) {
+            return Ok(false);
+        }
+
+        let Some(lowered) = self.lower_structured_nested_list_subscript_assign_stmt_for_ir(
+            object,
+            outer_index,
+            inner_index,
+            value,
+        )?
+        else {
+            return Ok(false);
+        };
+        self.emit_lowered_stmts(std::slice::from_ref(&lowered));
+        Ok(true)
+    }
+
     pub(crate) fn lower_stmt_expr_for_ir(
         &mut self,
         expr: &HirExpr,
@@ -480,6 +1007,9 @@ impl RustEmitter {
                 stmts,
                 expr: Some(Box::new(crate::RustExpr::Ident("__set".to_string()))),
             }));
+        }
+        if let Some(lowered_comprehension) = self.try_lower_comprehension_expr_for_ir(expr)? {
+            return Ok(Some(lowered_comprehension));
         }
         if let HirExpr::Call { func, args, .. } = expr {
             if let Some(lowered_intrinsic) = self.try_lower_registry_intrinsic_call_expr(func, args)
@@ -3327,6 +3857,44 @@ impl RustEmitter {
                     }],
                     true,
                 )
+            } else if let HirStmt::SubscriptAssign {
+                object,
+                index,
+                value,
+                object_ty,
+            } = stmt
+            {
+                let Some(lowered_stmt) =
+                    self.lower_subscript_assign_stmt_for_ir(object, index, value, object_ty)?
+                else {
+                    return Ok(None);
+                };
+                (vec![lowered_stmt], true)
+            } else if let HirStmt::NestedSubscriptAssign {
+                object,
+                outer_index,
+                inner_index,
+                value,
+                object_ty,
+            } = stmt
+            {
+                let Type::List(inner) = Self::resolve_alias_type_for_loop_iter(object_ty) else {
+                    return Ok(None);
+                };
+                if !matches!(Self::resolve_alias_type_for_loop_iter(inner), Type::List(_)) {
+                    return Ok(None);
+                }
+                let Some(lowered_stmt) = self
+                    .lower_structured_nested_list_subscript_assign_stmt_for_ir(
+                        object,
+                        outer_index,
+                        inner_index,
+                        value,
+                    )?
+                else {
+                    return Ok(None);
+                };
+                (vec![lowered_stmt], true)
             } else if let HirStmt::AttributeSubscriptAssign {
                 object,
                 field,
@@ -3897,6 +4465,16 @@ impl RustEmitter {
                         is_move: false,
                     }],
                 }));
+            }
+        }
+        if let HirExpr::RangeLiteral {
+            start, end, step, ..
+        } = iter
+        {
+            if let Some(lowered_range_iter) =
+                self.try_lower_range_iter_expr_for_ir(start, end, step.as_deref())?
+            {
+                return Ok(Some(lowered_range_iter));
             }
         }
 
