@@ -1,6 +1,6 @@
 # Ad Hoc Phase: Full Recursive Type Feature
 
-Status: proposed on 2026-03-13
+Status: active on 2026-03-13
 
 ## Purpose
 
@@ -311,6 +311,19 @@ Part completion is not allowed to introduce vague fallback diagnostics such as g
 | AC-7 | `TreeNode`-style LeetCode cases move past unknown-type and attribute-expression failures without special casing |
 | AC-8 | emitted Rust uses finite well-founded recursive representations |
 | AC-9 | full local validation passes with no regressions in existing class/union/generic behavior |
+
+## Execution Log
+
+- `2026-03-13`: part 1 `recursive_symbol_predeclaration_and_alias_order_resolution` completed local validation.
+  - Execution report: `issues/ad-hoc-full-recursive-type-feature-part1-execution.md`
+  - Demo: `demos/ad_hoc_recursive_type_part1_demo.sifr`
+  - Added regression coverage:
+    - `crates/sifr/tests/e2e/pass/recursive_type_alias_symbol_predeclaration.sifr`
+    - `crates/sifr/tests/e2e/fail/type_alias_missing_dependency.sifr`
+    - `crates/sifr_hir/src/lower/type_alias_tests.rs`
+  - Full local validation:
+    - `scripts/run_all_tests.sh --profile quick`
+    - `scripts/run_all_tests.sh`
 
 ## Implementation Parts and PR Breakdown
 
