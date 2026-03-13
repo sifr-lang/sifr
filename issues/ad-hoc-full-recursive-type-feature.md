@@ -316,6 +316,7 @@ Part completion is not allowed to introduce vague fallback diagnostics such as g
 
 - `2026-03-13`: part 1 `recursive_symbol_predeclaration_and_alias_order_resolution` completed local validation.
   - Execution report: `issues/ad-hoc-full-recursive-type-feature-part1-execution.md`
+  - PR: `#1122`
   - Demo: `demos/ad_hoc_recursive_type_part1_demo.sifr`
   - Added regression coverage:
     - `crates/sifr/tests/e2e/pass/recursive_type_alias_symbol_predeclaration.sifr`

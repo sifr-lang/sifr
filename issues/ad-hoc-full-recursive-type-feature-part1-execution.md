@@ -4,6 +4,7 @@ Status: complete
 Started: 2026-03-13
 Completed: 2026-03-13
 Part: `recursive_symbol_predeclaration_and_alias_order_resolution`
+PR: `#1122`
 
 ## Goal
 
