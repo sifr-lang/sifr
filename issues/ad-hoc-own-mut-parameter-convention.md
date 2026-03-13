@@ -21,6 +21,34 @@ and the fourth semantically valid mode that Sifr currently cannot express:
 
 This phase is motivated by in-place transform APIs such as LeetCode `1299`, where the function must mutate a list and then return that same owned list.
 
+## Quality Contract
+
+- Entry criteria: borrow-by-default parameter conventions, escape analysis, and current `mut` / `own` lowering remain green before this phase starts.
+- Exit criteria: `own mut` is a production-grade, deterministic, regression-locked parameter mode with no fallback semantics and no ownership-safety regressions.
+
+### Common quality controls
+
+- No fallback, migration, or legacy compatibility code is allowed; implement the canonical architecture directly with clean code only.
+- No lazy or partial fixes are allowed; each part must resolve the root cause completely, even when that requires structural rework.
+- All implementations must be production-grade compiler code: strict typing, deterministic behavior, explicit invariants, and unforgiving correctness standards, with architecture cleaned up toward the target design.
+- Scope must remain constrained to the current part definition-of-done.
+- Validation evidence must be recorded in the execution issue before merge.
+- Every part must include at least one positive-path and one negative-path validation case.
+- No part is complete if its outputs are not reviewable and reproducible locally.
+- Local validation gates pass before merge.
+- Full local suite passes:
+  - `/Users/yaseralnajjar/work/sifr/codebase/scripts/run_all_tests.sh`
+- Milestone demo runs successfully before opening each part PR.
+- PR is opened, externally reviewed, and merged before starting the next part.
+- Roadmap/phase/issues docs are updated with latest status and merged PR links as each part closes.
+
+### Non-regression obligations inherited from the shared quality bar
+
+- No emitted data-dependent `.unwrap()` / `.expect()` / `panic!` is introduced on user-triggerable paths.
+- Generated Rust for the new ownership surface compiles cleanly with warnings denied where the existing phase gates require it.
+- Behavior remains deterministic across repeated runs for the same source inputs.
+- Every fixed bug in scope lands with permanent regression coverage.
+
 ## Problem Statement
 
 Today, Sifr's ownership model treats mutability and ownership as separate concepts, but the parameter surface only exposes three combinations. That leaves one real hole:
@@ -80,6 +108,7 @@ In scope:
 4. Make `return x` legal when `x` is an owned parameter, including `own mut`.
 5. Preserve current escape-analysis errors for borrowed parameters.
 6. Add regression coverage for consuming mutable APIs, including a direct `1299`-style case.
+7. Update `internal_docs/architecture.md` so the canonical ownership model documents `own mut` and the orthogonal ownership/mutability interpretation.
 
 Out of scope:
 
@@ -204,6 +233,7 @@ fn replace_elements(mut arr: Vec<i64>) -> Vec<i64> {
   - `own`-only parameter mutation fails if local mutability is required
   - `mut`-only parameter return still fails
 - demo file showing `1299`-style consume-mutate-return behavior
+- architecture documentation updated alongside the implementation change, not after milestone closure
 
 ## Validation Gate
 
