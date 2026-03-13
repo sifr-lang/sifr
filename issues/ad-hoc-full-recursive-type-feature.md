@@ -381,6 +381,9 @@ Part completion is not allowed to introduce vague fallback diagnostics such as g
   - Full local validation:
     - `scripts/run_all_tests.sh --profile quick`
     - `scripts/run_all_tests.sh`
+  - External review follow-up:
+    - review pass 1 found no actionable issues
+    - production-grade review pass 2 was invalidated against stale local `main`; merged `origin/main` already contains the claimed fixes and fixtures
 
 ## Implementation Parts and PR Breakdown
 
