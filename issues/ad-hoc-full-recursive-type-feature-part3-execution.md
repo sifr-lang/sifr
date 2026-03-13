@@ -4,7 +4,7 @@ Status: complete
 Started: 2026-03-13
 Completed: 2026-03-13
 Part: `recursive_type_representation_in_the_type_system`
-PR: TBD
+PR: `#1124`
 
 ## Goal
 

@@ -338,7 +338,7 @@ Part completion is not allowed to introduce vague fallback diagnostics such as g
     - `scripts/run_all_tests.sh`
 - `2026-03-13`: part 3 `recursive_type_representation_in_the_type_system` completed local validation.
   - Execution report: `issues/ad-hoc-full-recursive-type-feature-part3-execution.md`
-  - PR: `TBD`
+  - PR: `#1124`
   - Demo: `demos/ad_hoc_recursive_type_part3_demo.sifr`
   - Added regression coverage:
     - `crates/sifr/tests/e2e/pass/recursive_generic_type_alias_representation.sifr`
