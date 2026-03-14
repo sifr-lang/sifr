@@ -100,3 +100,4 @@ That closes the ad hoc recursive-type phase and leaves the remaining Phase 31 wo
   - the merged codegen contains same-SCC recursive field boxing in `crates/sifr_codegen/src/field_analysis_helpers.rs`,
   - and the merged codegen contains recursive generic Rust type rendering plus dedicated regressions in `crates/sifr_codegen/src/generic_bounds_helpers.rs` and `crates/sifr_codegen/src/lib_codegen_tests.rs`.
 - Outcome: no additional code fix was required from production-grade review pass 2; the review was closed as stale-invalidated rather than patched.
+- Additional production-grade re-review pass 4 (`reviews/phase-recursive-types-production-grade-review-pass-4.md`) was then run on a fresh branch at merged `origin/main` (`47108685`, PR `#1128`) and concluded the phase is ready for production with no further compiler changes required.
