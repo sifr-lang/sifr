@@ -69,7 +69,7 @@ This phase covers the full compiler pipeline for:
 
 ## Why This Needs Its Own Phase
 
-The full LeetCode corpus review in `issues/full-leetcode-corpus-strategy-review.md` found:
+A broader LeetCode corpus review found:
 
 - `114` still-failing fixtures containing nested local functions,
 - `95` still-failing fixtures after excluding recursive-type and duplicate-top-level-definition families,
