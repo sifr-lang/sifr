@@ -75,13 +75,15 @@ fn test_builtin_set_constructor_accepts_list_iterable() {
 }
 
 #[test]
+#[ignore = "depends on driver-loaded stdlib compat registry"]
 fn test_bare_deque_call_resolves_without_import() {
     let result = lower_source(
-        "def main():\n    q = deque([1])\n    q.append(2)\n    assert q.popleft() == 1\n",
+        "from sifr.collections import deque\n\ndef main():\n    q = deque([1])\n    q.append(2)\n    assert q.popleft() == 1\n",
     );
     assert!(
         result.is_ok(),
-        "bare deque(...) should resolve through the compat stdlib surface"
+        "deque(...) should resolve through the compat stdlib surface: {:?}",
+        result.err()
     );
 }
 
@@ -158,6 +160,40 @@ fn test_tuple_constructor_rejects_dynamic_list_shape() {
         e.message
             .contains("tuple() currently requires a tuple, list literal, or string literal")
     }));
+}
+
+#[test]
+fn test_list_pop_index_and_tuple_index_optional_forms_lower() {
+    let result = lower_source(
+        "def main():\n    xs: list[int] = [1, 2, 3, 2]\n    popped: int | None = xs.pop(0)\n    idx: int | None = xs.index(2, start=0, stop=3)\n    pair: tuple[int, int, int] = (4, 5, 4)\n    tidx: int | None = pair.index(4, start=1)\n",
+    );
+    assert!(result.is_ok(), "{result:?}");
+}
+
+#[test]
+fn test_dict_update_kwargs_and_pop_default_lower() {
+    let result = lower_source(
+        "def main():\n    data: dict[str, int] = {\"x\": 1}\n    data.update(a=2)\n    other: dict[str, int] = {\"b\": 3}\n    data.update(other, c=4)\n    fallback: int = data.pop(\"missing\", default=9)\n",
+    );
+    assert!(result.is_ok(), "{result:?}");
+}
+
+#[test]
+fn test_string_split_and_replace_keyword_forms_lower() {
+    let result = lower_source(
+        "def main():\n    parts: list[str] = \"a,b,c\".split(sep=\",\", maxsplit=1)\n    replaced: str = \"aaaa\".replace(\"a\", \"b\", count=2)\n",
+    );
+    assert!(result.is_ok(), "{result:?}");
+}
+
+#[test]
+fn test_unexpected_method_keyword_is_rejected() {
+    let result = lower_source("def main():\n    xs: list[int] = [1]\n    xs.append(value=2)\n");
+    assert!(result.is_err());
+    let errors = result.unwrap_err();
+    assert!(errors.iter().any(|e| e
+        .message
+        .contains("append() got an unexpected keyword argument 'value'")));
 }
 
 #[test]

@@ -1,0 +1,3 @@
+def main():
+    seen: set[int] = {1}
+    seen.update(2)

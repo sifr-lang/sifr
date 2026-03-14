@@ -34,7 +34,8 @@ pub(crate) fn lower_method_with_context(
 ) -> Option<LoweredMethod> {
     let expr = match (object_ty, method) {
         (Type::Tuple(elems), "len") => common::lower_tuple_len(elems.len(), args),
-        (Type::Tuple(_), "count") => common::lower_tuple_count_placeholder(args),
+        (Type::Tuple(elems), "count") => common::lower_tuple_count(elems.len(), object, args),
+        (Type::Tuple(elems), "index") => common::lower_tuple_index(elems.len(), object, args),
         (Type::Str, "len") => common::lower_string_char_len(object, args),
         (ty, "len") if is_option_type(ty) => common::lower_option_len(object, args),
         (_, "len") => common::lower_len(object, args),
@@ -176,7 +177,16 @@ mod tests {
             &["1".to_string()],
         )
         .expect("tuple count lowers");
-        assert_eq!(render_expr(&tuple_count.expr), "0 as i64");
+        assert!(render_expr(&tuple_count.expr).contains("__count"));
+
+        let tuple_index = lower_method(
+            &Type::Tuple(vec![Type::Int, Type::Str, Type::Bool]),
+            "index",
+            "t",
+            &["1".to_string()],
+        )
+        .expect("tuple index lowers");
+        assert!(render_expr(&tuple_index.expr).contains("__result"));
 
         let str_len = lower_method(&Type::Str, "len", "s", &[]).expect("str len lowers");
         assert_eq!(render_expr(&str_len.expr), "s.chars().count() as i64");
@@ -428,10 +438,12 @@ mod tests {
             &["1".to_string()],
         )
         .expect("list index lowers");
-        assert_eq!(
-            render_expr(&list_index.expr),
-            "xs.iter().position(|__x| *__x == 1).map(|__p| __p as i64)"
+        let list_index_rendered = render_expr(&list_index.expr);
+        assert!(
+            list_index_rendered.contains("let __result = None;")
+                || list_index_rendered.contains("let mut __result = None;")
         );
+        assert!(list_index_rendered.contains("xs.get(__i as usize)"));
 
         let dict_ty = Type::Dict(Box::new(Type::Str), Box::new(Type::Int));
         let dict_keys = lower_method(&dict_ty, "keys", "d", &[]).expect("dict keys lowers");
@@ -455,6 +467,10 @@ mod tests {
         let dict_update = lower_method(&dict_ty, "update", "d", &["other".to_string()])
             .expect("dict update lowers");
         assert_eq!(render_expr(&dict_update.expr), "d.extend(other)");
+
+        let dict_update_empty =
+            lower_method(&dict_ty, "update", "d", &[]).expect("empty update lowers");
+        assert_eq!(render_expr(&dict_update_empty.expr), "()");
 
         let dict_clear = lower_method(&dict_ty, "clear", "d", &[]).expect("dict clear lowers");
         assert_eq!(render_expr(&dict_clear.expr), "d.clear()");
@@ -492,6 +508,18 @@ mod tests {
         let dict_pop =
             lower_method(&dict_ty, "pop", "d", &["\"k\"".to_string()]).expect("dict pop lowers");
         assert_eq!(render_expr(&dict_pop.expr), "d.remove(&\"k\")");
+
+        let dict_pop_default = lower_method(
+            &dict_ty,
+            "pop",
+            "d",
+            &["\"k\"".to_string(), "0".to_string()],
+        )
+        .expect("dict pop default lowers");
+        assert_eq!(
+            render_expr(&dict_pop_default.expr),
+            "d.remove(&\"k\").unwrap_or(0)"
+        );
 
         let set_ty = Type::Set(Box::new(Type::Int));
         let set_add =

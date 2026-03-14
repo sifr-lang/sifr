@@ -50,7 +50,17 @@ fn method_requires_mutable_parameter_binding(object_ty: &Type, method: &str) -> 
                 | "remove"
         ),
         Type::Dict(_, _) => matches!(method, "update" | "clear" | "pop"),
-        Type::Set(_) => matches!(method, "add" | "remove" | "discard" | "clear"),
+        Type::Set(_) => matches!(
+            method,
+            "add"
+                | "remove"
+                | "discard"
+                | "clear"
+                | "update"
+                | "intersection_update"
+                | "difference_update"
+                | "symmetric_difference_update"
+        ),
         _ => false,
     }
 }

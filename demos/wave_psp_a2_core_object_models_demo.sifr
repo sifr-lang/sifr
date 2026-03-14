@@ -1,0 +1,20 @@
+def main():
+    words: list[str] = ["core"]
+    words.extend("xy")
+    print(str(words))
+
+    mapping: dict[str, int] = {"base": 1}
+    mapping.update(extra=2)
+    print(str(mapping.pop("missing", default=7)))
+
+    seen: set[int] = {1}
+    seen.update([2, 3], range(4, 6))
+    seen.symmetric_difference_update([3, 9])
+    print(str(seen.contains(9)))
+
+    pair: tuple[int, int, int] = (4, 5, 4)
+    print(str(pair.count(4)))
+    print(str(pair.index(4, start=1)))
+
+    print(str("alpha,beta,gamma".split(sep=",", maxsplit=1)))
+    print("aaaa".replace("a", "b", count=2))

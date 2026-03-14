@@ -16,6 +16,10 @@ use super::decimal_methods::{
     validate_decimal_string_literal,
 };
 use super::guarded_index::guarded_sequence_index_result_type;
+use super::method_call_args::{
+    lower_method_call_args, validate_dict_update_arg, validate_list_extend_arg,
+    validate_set_iterable_arg,
+};
 use super::mutating_methods::reject_immutable_parameter_method_mutation;
 use super::numeric_sentinels::{
     float_sentinel_expr, float_sentinel_kind_from_call, lower_sentinel_expr_for_name_domain,
@@ -2454,12 +2458,7 @@ pub(super) fn lower_method_call(
     let mut object = lower_expr(&attr.value, ctx)?;
     let method_name = attr.attr.to_string();
 
-    // Lower arguments
-    let mut args = Vec::new();
-    for arg in &call.arguments.args {
-        let expr = lower_expr(arg, ctx)?;
-        args.push(expr);
-    }
+    let args = lower_method_call_args(object.ty(), &method_name, call, ctx)?;
 
     if matches!(
         method_name.as_str(),
@@ -2627,6 +2626,7 @@ pub(super) fn resolve_method_type(
                     ));
                     return None;
                 }
+                validate_list_extend_arg(elem_ty, args[0].ty(), ctx);
                 Some(Type::None)
             }
             "insert" => {
@@ -2695,9 +2695,20 @@ pub(super) fn resolve_method_type(
                 Some(Type::Int)
             }
             "pop" => {
-                if !args.is_empty() {
-                    ctx.error("list.pop() takes no arguments".to_string());
+                if args.len() > 1 {
+                    ctx.error(format!(
+                        "list.pop() takes at most 1 argument, got {}",
+                        args.len()
+                    ));
                     return None;
+                }
+                if let Some(index_arg) = args.first() {
+                    if index_arg.ty() != &Type::Int {
+                        ctx.error(format!(
+                            "list.pop() index must be 'int', got '{}'",
+                            index_arg.ty().display_name()
+                        ));
+                    }
                 }
                 // pop() returns Option[T] = T | None
                 Some(Type::Union(vec![*elem_ty.clone(), Type::None]))
@@ -2730,12 +2741,20 @@ pub(super) fn resolve_method_type(
                 Some(Type::None)
             }
             "index" => {
-                if args.len() != 1 {
+                if args.is_empty() || args.len() > 3 {
                     ctx.error(format!(
-                        "list.index() takes exactly 1 argument, got {}",
+                        "list.index() takes 1 to 3 arguments, got {}",
                         args.len()
                     ));
                     return None;
+                }
+                for bound in args.iter().skip(1) {
+                    if bound.ty() != &Type::Int {
+                        ctx.error(format!(
+                            "list.index() bounds must be 'int', got '{}'",
+                            bound.ty().display_name()
+                        ));
+                    }
                 }
                 // Returns Option[int] = int | None (safe: no panic if not found)
                 Some(Type::Union(vec![Type::Int, Type::None]))
@@ -2778,12 +2797,18 @@ pub(super) fn resolve_method_type(
                 ]))))
             }
             "update" => {
-                if args.len() != 1 {
+                if args.len() > 2 {
                     ctx.error(format!(
-                        "dict.update() takes exactly 1 argument, got {}",
+                        "dict.update() takes at most 2 arguments, got {}",
                         args.len()
                     ));
                     return None;
+                }
+                if let Some(arg) = args.first() {
+                    validate_dict_update_arg(key_ty, val_ty, arg.ty(), ctx);
+                }
+                if let Some(keyword_dict) = args.get(1) {
+                    validate_dict_update_arg(key_ty, val_ty, keyword_dict.ty(), ctx);
                 }
                 Some(Type::None)
             }
@@ -2820,6 +2845,13 @@ pub(super) fn resolve_method_type(
                     return None;
                 }
                 if args.len() == 2 {
+                    if !args[1].ty().is_assignable_to(val_ty) {
+                        ctx.error(format!(
+                            "dict.get() default type '{}' is not compatible with dict value type '{}'",
+                            args[1].ty().display_name(),
+                            val_ty.display_name()
+                        ));
+                    }
                     // dict.get(key, default) -> V (returns default if key not found)
                     Some(*val_ty.clone())
                 } else {
@@ -2828,15 +2860,26 @@ pub(super) fn resolve_method_type(
                 }
             }
             "pop" => {
-                if args.len() != 1 {
+                if args.is_empty() || args.len() > 2 {
                     ctx.error(format!(
-                        "dict.pop() takes exactly 1 argument, got {}",
+                        "dict.pop() takes 1 or 2 arguments, got {}",
                         args.len()
                     ));
                     return None;
                 }
-                // pop() returns Option[V] = V | None
-                Some(Type::Union(vec![*val_ty.clone(), Type::None]))
+                if args.len() == 2 {
+                    if !args[1].ty().is_assignable_to(val_ty) {
+                        ctx.error(format!(
+                            "dict.pop() default type '{}' is not compatible with dict value type '{}'",
+                            args[1].ty().display_name(),
+                            val_ty.display_name()
+                        ));
+                    }
+                    Some(*val_ty.clone())
+                } else {
+                    // pop() returns Option[V] = V | None
+                    Some(Type::Union(vec![*val_ty.clone(), Type::None]))
+                }
             }
             _ => {
                 ctx.error(format!("dict has no method '{method}'"));
@@ -2896,7 +2939,13 @@ pub(super) fn resolve_method_type(
                 }
                 Some(Type::Set(elem_ty.clone()))
             }
-            "union" | "intersection" | "difference" | "symmetric_difference" => {
+            "union" | "intersection" | "difference" => {
+                for arg in args {
+                    validate_set_iterable_arg(elem_ty, arg.ty(), method, ctx);
+                }
+                Some(Type::Set(elem_ty.clone()))
+            }
+            "symmetric_difference" => {
                 if args.len() != 1 {
                     ctx.error(format!(
                         "set.{}() takes exactly 1 argument, got {}",
@@ -2905,7 +2954,26 @@ pub(super) fn resolve_method_type(
                     ));
                     return None;
                 }
+                validate_set_iterable_arg(elem_ty, args[0].ty(), method, ctx);
                 Some(Type::Set(elem_ty.clone()))
+            }
+            "update" | "intersection_update" | "difference_update" => {
+                for arg in args {
+                    validate_set_iterable_arg(elem_ty, arg.ty(), method, ctx);
+                }
+                Some(Type::None)
+            }
+            "symmetric_difference_update" => {
+                if args.len() != 1 {
+                    ctx.error(format!(
+                        "set.{}() takes exactly 1 argument, got {}",
+                        method,
+                        args.len()
+                    ));
+                    return None;
+                }
+                validate_set_iterable_arg(elem_ty, args[0].ty(), method, ctx);
+                Some(Type::None)
             }
             "issubset" | "issuperset" | "isdisjoint" => {
                 if args.len() != 1 {
@@ -2916,6 +2984,7 @@ pub(super) fn resolve_method_type(
                     ));
                     return None;
                 }
+                validate_set_iterable_arg(elem_ty, args[0].ty(), method, ctx);
                 Some(Type::Bool)
             }
             "pop" => {
@@ -2954,22 +3023,38 @@ pub(super) fn resolve_method_type(
                 Some(Type::Bool)
             }
             "split" => {
-                if args.len() > 1 {
+                if args.len() > 2 {
                     ctx.error(format!(
-                        "str.split() takes 0 or 1 arguments, got {}",
+                        "str.split() takes 0 to 2 arguments, got {}",
                         args.len()
                     ));
                     return None;
                 }
+                if let Some(maxsplit) = args.get(1) {
+                    if maxsplit.ty() != &Type::Int {
+                        ctx.error(format!(
+                            "str.split() maxsplit must be 'int', got '{}'",
+                            maxsplit.ty().display_name()
+                        ));
+                    }
+                }
                 Some(Type::List(Box::new(Type::Str)))
             }
             "replace" => {
-                if args.len() != 2 {
+                if args.len() < 2 || args.len() > 3 {
                     ctx.error(format!(
-                        "str.replace() takes exactly 2 arguments, got {}",
+                        "str.replace() takes 2 or 3 arguments, got {}",
                         args.len()
                     ));
                     return None;
+                }
+                if let Some(count) = args.get(2) {
+                    if count.ty() != &Type::Int {
+                        ctx.error(format!(
+                            "str.replace() count must be 'int', got '{}'",
+                            count.ty().display_name()
+                        ));
+                    }
                 }
                 Some(Type::Str)
             }
@@ -3031,6 +3116,24 @@ pub(super) fn resolve_method_type(
                     return None;
                 }
                 Some(Type::Int)
+            }
+            "index" => {
+                if args.is_empty() || args.len() > 3 {
+                    ctx.error(format!(
+                        "tuple.index() takes 1 to 3 arguments, got {}",
+                        args.len()
+                    ));
+                    return None;
+                }
+                for bound in args.iter().skip(1) {
+                    if bound.ty() != &Type::Int {
+                        ctx.error(format!(
+                            "tuple.index() bounds must be 'int', got '{}'",
+                            bound.ty().display_name()
+                        ));
+                    }
+                }
+                Some(Type::Union(vec![Type::Int, Type::None]))
             }
             _ => {
                 ctx.error(format!("tuple has no method '{method}'"));

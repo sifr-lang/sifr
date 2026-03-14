@@ -706,6 +706,10 @@ pub(super) fn callable_builtin_list_output_type(arg_ty: &Type) -> Option<Type> {
     list_constructor_output_type(arg_ty)
 }
 
+pub(super) fn callable_builtin_dict_output_type(arg_ty: &Type) -> Option<Type> {
+    dict_constructor_output_type(arg_ty)
+}
+
 pub(super) fn lower_builtin_reverseable_arg(
     call: &ExprCall,
     builtin_name: &str,
