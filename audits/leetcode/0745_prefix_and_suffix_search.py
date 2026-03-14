@@ -1,11 +1,3 @@
-from __future__ import annotations
-import collections
-import heapq
-import math
-import random
-from collections import Counter, defaultdict, deque
-from functools import cache, cmp_to_key, lru_cache
-from math import ceil, sqrt
 
 # LeetCode 745: Prefix And Suffix Search
 # Python version
@@ -34,7 +26,7 @@ class TrieNode:
         self.children = {}  # Dictionary to store child nodes
         self.word = -1  # Store the index of the word at this node
 class WordFilter:
-    def __init__(self, words: List[str]):
+    def __init__(self, words: list[str]):
         self.root = TrieNode()
         for index, word in enumerate(words):
             for i in range(len(word) + 1):

@@ -1,16 +1,8 @@
-from __future__ import annotations
-import collections
-import heapq
-import math
-import random
-from collections import Counter, defaultdict, deque
-from functools import cache, cmp_to_key, lru_cache
-from math import ceil, sqrt
 
 # LeetCode 269: Alien Dictionary
 # Python version
 
-def alienOrder(words: List[str]) -> str:
+def alienOrder(words: list[str]) -> str:
     adj = {char: set() for word in words for char in word}
 
     for i in range(len(words) - 1):

@@ -1,11 +1,3 @@
-from __future__ import annotations
-import collections
-import heapq
-import math
-import random
-from collections import Counter, defaultdict, deque
-from functools import cache, cmp_to_key, lru_cache
-from math import ceil, sqrt
 
 # LeetCode 83: Remove Duplicates From Sorted List
 # Python version
@@ -44,7 +36,7 @@ class Node:
         self.neighbors = [] if neighbors is None else neighbors
         self.key = key
 
-def deleteDuplicates(head: Optional[ListNode]) -> Optional[ListNode]:
+def deleteDuplicates(head: ListNode | None) -> ListNode | None:
     cur = head
     while cur:
         while cur.next and cur.next.val == cur.val:

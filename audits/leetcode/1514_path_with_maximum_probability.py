@@ -1,16 +1,10 @@
-from __future__ import annotations
 import collections
 import heapq
-import math
-import random
-from collections import Counter, defaultdict, deque
-from functools import cache, cmp_to_key, lru_cache
-from math import ceil, sqrt
 
 # LeetCode 1514: Path With Maximum Probability
 # Python version
 
-def maxProbability(n: int, edges: List[List[int]], succProb: List[float], start: int, end: int) -> float:
+def maxProbability(n: int, edges: list[list[int]], succProb: list[float], start: int, end: int) -> float:
     adj = collections.defaultdict(list)
     for i in range(len(edges)):
         src, dst = edges[i]

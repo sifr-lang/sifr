@@ -1,16 +1,9 @@
-from __future__ import annotations
-import collections
-import heapq
-import math
-import random
-from collections import Counter, defaultdict, deque
-from functools import cache, cmp_to_key, lru_cache
-from math import ceil, sqrt
+from math import ceil
 
 # LeetCode 1049: Last Stone Weight Ii
 # Python version
 
-def lastStoneWeightII(stones: List[int]) -> int:
+def lastStoneWeightII(stones: list[int]) -> int:
     # Memoization
     stoneSum = sum(stones)
     target = ceil(stoneSum / 2)

@@ -1,16 +1,8 @@
-from __future__ import annotations
-import collections
-import heapq
-import math
-import random
-from collections import Counter, defaultdict, deque
-from functools import cache, cmp_to_key, lru_cache
-from math import ceil, sqrt
 
 # LeetCode 334: Increasing Triplet Subsequence
 # Python version
 
-def increasingTriplet(nums: List[int]) -> bool:
+def increasingTriplet(nums: list[int]) -> bool:
     first = float('inf')  # Initialize first to positive infinity
     second = float('inf')  # Initialize second to positive infinity
     

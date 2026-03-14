@@ -1,16 +1,8 @@
-from __future__ import annotations
-import collections
-import heapq
-import math
-import random
-from collections import Counter, defaultdict, deque
-from functools import cache, cmp_to_key, lru_cache
-from math import ceil, sqrt
 
 # LeetCode 684: Redundant Connection
 # Python version
 
-def findRedundantConnection(edges: List[List[int]]) -> List[int]:
+def findRedundantConnection(edges: list[list[int]]) -> list[int]:
     par = [i for i in range(len(edges) + 1)]
     rank = [1] * (len(edges) + 1)
 

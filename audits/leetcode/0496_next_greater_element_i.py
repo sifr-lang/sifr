@@ -1,16 +1,8 @@
-from __future__ import annotations
-import collections
-import heapq
-import math
-import random
-from collections import Counter, defaultdict, deque
-from functools import cache, cmp_to_key, lru_cache
-from math import ceil, sqrt
 
 # LeetCode 496: Next Greater Element I
 # Python version
 
-def nextGreaterElement(nums1: List[int], nums2: List[int]) -> List[int]:
+def nextGreaterElement(nums1: list[int], nums2: list[int]) -> list[int]:
 
     # O (n + m)
     nums1Idx = { n:i for i, n in enumerate(nums1) }

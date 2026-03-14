@@ -1,16 +1,8 @@
-from __future__ import annotations
-import collections
-import heapq
-import math
-import random
-from collections import Counter, defaultdict, deque
-from functools import cache, cmp_to_key, lru_cache
-from math import ceil, sqrt
 
 # LeetCode 438: Find All Anagrams In A String
 # Python version
 
-def findAnagrams(s: str, p: str) -> List[int]:
+def findAnagrams(s: str, p: str) -> list[int]:
     
     startIndex = 0
     pMap, sMap = {}, {}

@@ -1,16 +1,8 @@
-from __future__ import annotations
-import collections
-import heapq
-import math
-import random
-from collections import Counter, defaultdict, deque
-from functools import cache, cmp_to_key, lru_cache
-from math import ceil, sqrt
 
 # LeetCode 1020: Number Of Enclaves
 # Python version
 
-def numEnclaves(grid: List[List[int]]) -> int:
+def numEnclaves(grid: list[list[int]]) -> int:
 
     ROWS, COLS = len(grid), len(grid[0])
 

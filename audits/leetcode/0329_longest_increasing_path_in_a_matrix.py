@@ -1,16 +1,8 @@
-from __future__ import annotations
-import collections
-import heapq
-import math
-import random
-from collections import Counter, defaultdict, deque
-from functools import cache, cmp_to_key, lru_cache
-from math import ceil, sqrt
 
 # LeetCode 329: Longest Increasing Path In A Matrix
 # Python version
 
-def longestIncreasingPath(matrix: List[List[int]]) -> int:
+def longestIncreasingPath(matrix: list[list[int]]) -> int:
     ROWS, COLS = len(matrix), len(matrix[0])
     dp = {}  # (r, c) -> LIP
 

@@ -1,16 +1,8 @@
-from __future__ import annotations
-import collections
-import heapq
-import math
-import random
-from collections import Counter, defaultdict, deque
-from functools import cache, cmp_to_key, lru_cache
-from math import ceil, sqrt
 
 # LeetCode 90: Subsets Ii
 # Python version
 
-def subsetsWithDup(nums: List[int]) -> List[List[int]]:
+def subsetsWithDup(nums: list[int]) -> list[list[int]]:
     res = []
     nums.sort()
 

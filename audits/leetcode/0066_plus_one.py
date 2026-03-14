@@ -1,16 +1,8 @@
-from __future__ import annotations
-import collections
-import heapq
-import math
-import random
-from collections import Counter, defaultdict, deque
-from functools import cache, cmp_to_key, lru_cache
-from math import ceil, sqrt
 
 # LeetCode 66: Plus One
 # Python version
 
-def plusOne(digits: List[int]) -> List[int]:
+def plusOne(digits: list[int]) -> list[int]:
     one = 1
     i = 0
     digits = digits[::-1]

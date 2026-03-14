@@ -1,16 +1,9 @@
-from __future__ import annotations
-import collections
 import heapq
-import math
-import random
-from collections import Counter, defaultdict, deque
-from functools import cache, cmp_to_key, lru_cache
-from math import ceil, sqrt
 
 # LeetCode 846: Hand Of Straights
 # Python version
 
-def isNStraightHand(hand: List[int], groupSize: int) -> bool:
+def isNStraightHand(hand: list[int], groupSize: int) -> bool:
     if len(hand) % groupSize:
         return False
 

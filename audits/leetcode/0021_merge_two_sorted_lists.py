@@ -1,11 +1,3 @@
-from __future__ import annotations
-import collections
-import heapq
-import math
-import random
-from collections import Counter, defaultdict, deque
-from functools import cache, cmp_to_key, lru_cache
-from math import ceil, sqrt
 
 # LeetCode 21: Merge Two Sorted Lists
 # Python version
@@ -62,7 +54,7 @@ def mergeTwoLists(list1: ListNode, list2: ListNode) -> ListNode:
 
 # Recursive
 
-def mergeTwoLists(list1: Optional[ListNode], list2: Optional[ListNode]) -> Optional[ListNode]:
+def mergeTwoLists(list1: ListNode | None, list2: ListNode | None) -> ListNode | None:
     if not list1:
         return list2
     if not list2:

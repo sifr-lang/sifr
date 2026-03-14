@@ -1,16 +1,8 @@
-from __future__ import annotations
-import collections
-import heapq
-import math
-import random
-from collections import Counter, defaultdict, deque
-from functools import cache, cmp_to_key, lru_cache
-from math import ceil, sqrt
 
 # LeetCode 1260: Shift 2D Grid
 # Python version
 
-def shiftGrid(grid: List[List[int]], k: int) -> List[List[int]]:
+def shiftGrid(grid: list[list[int]], k: int) -> list[list[int]]:
     M, N = len(grid), len(grid[0])
     
     def posToVal(r, c):

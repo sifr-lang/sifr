@@ -1,16 +1,8 @@
-from __future__ import annotations
-import collections
-import heapq
-import math
-import random
-from collections import Counter, defaultdict, deque
-from functools import cache, cmp_to_key, lru_cache
-from math import ceil, sqrt
 
 # LeetCode 1489: Find Critical And Pseudo Critical Edges In Minimum Spanning Tree
 # Python version
 
-def findCriticalAndPseudoCriticalEdges(n: int, edges: List[List[int]]) -> List[List[int]]:
+def findCriticalAndPseudoCriticalEdges(n: int, edges: list[list[int]]) -> list[list[int]]:
     # Time: O(E^2) - UF operations are assumed to be approx O(1)
     for i, e in enumerate(edges):
         e.append(i) # [v1, v2, weight, original_index]

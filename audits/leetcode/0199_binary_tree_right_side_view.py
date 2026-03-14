@@ -1,11 +1,4 @@
-from __future__ import annotations
 import collections
-import heapq
-import math
-import random
-from collections import Counter, defaultdict, deque
-from functools import cache, cmp_to_key, lru_cache
-from math import ceil, sqrt
 
 # LeetCode 199: Binary Tree Right Side View
 # Python version
@@ -47,7 +40,7 @@ class Node:
         self.neighbors = [] if neighbors is None else neighbors
         self.key = key
 
-def rightSideView(root: TreeNode) -> List[int]:
+def rightSideView(root: TreeNode) -> list[int]:
     res = []
     q = collections.deque([root])
 

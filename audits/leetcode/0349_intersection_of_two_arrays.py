@@ -1,16 +1,8 @@
-from __future__ import annotations
-import collections
-import heapq
-import math
-import random
-from collections import Counter, defaultdict, deque
-from functools import cache, cmp_to_key, lru_cache
-from math import ceil, sqrt
 
 # LeetCode 349: Intersection Of Two Arrays
 # Python version
 
-def intersection(nums1: List[int], nums2: List[int]) -> List[int]:
+def intersection(nums1: list[int], nums2: list[int]) -> list[int]:
     seen = set(nums1)
 
     res = []

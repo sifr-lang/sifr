@@ -1,18 +1,10 @@
-from __future__ import annotations
-import collections
-import heapq
-import math
-import random
-from collections import Counter, defaultdict, deque
-from functools import cache, cmp_to_key, lru_cache
-from math import ceil, sqrt
 
 # LeetCode 57: Insert Interval
 # Python version
 
 def insert(
-    self, intervals: List[List[int]], newInterval: List[int]
-) -> List[List[int]]:
+    self, intervals: list[list[int]], newInterval: list[int]
+) -> list[list[int]]:
     res = []
 
     for i in range(len(intervals)):

@@ -1,16 +1,8 @@
-from __future__ import annotations
-import collections
-import heapq
-import math
-import random
-from collections import Counter, defaultdict, deque
-from functools import cache, cmp_to_key, lru_cache
-from math import ceil, sqrt
 
 # LeetCode 26: Remove Duplicates From Sorted Array
 # Python version
 
-def removeDuplicates(nums: List[int]) -> int:
+def removeDuplicates(nums: list[int]) -> int:
     L = 1
     
     for R in range(1, len(nums)):

@@ -1,16 +1,9 @@
-from __future__ import annotations
-import collections
-import heapq
-import math
-import random
-from collections import Counter, defaultdict, deque
-from functools import cache, cmp_to_key, lru_cache
-from math import ceil, sqrt
+from collections import deque
 
 # LeetCode 785: Is Graph Bipartite
 # Python version
 
-def isBipartiteBFS(graph: List[List[int]]) -> bool:
+def isBipartiteBFS(graph: list[list[int]]) -> bool:
     colors = [-1] * len(graph)
     
     for i in range(len(graph)):
@@ -31,7 +24,7 @@ def isBipartiteBFS(graph: List[List[int]]) -> bool:
     return True
 
 
-def isBipartiteDFS(graph: List[List[int]]) -> bool:
+def isBipartiteDFS(graph: list[list[int]]) -> bool:
     colors = [-1] * len(graph)
 
     def dfs(node, c):

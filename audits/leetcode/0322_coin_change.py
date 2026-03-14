@@ -1,16 +1,8 @@
-from __future__ import annotations
-import collections
-import heapq
-import math
-import random
-from collections import Counter, defaultdict, deque
-from functools import cache, cmp_to_key, lru_cache
-from math import ceil, sqrt
 
 # LeetCode 322: Coin Change
 # Python version
 
-def coinChange(coins: List[int], amount: int) -> int:
+def coinChange(coins: list[int], amount: int) -> int:
     dp = [amount + 1] * (amount + 1)
     dp[0] = 0
 

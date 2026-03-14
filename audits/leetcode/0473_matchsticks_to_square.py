@@ -1,16 +1,8 @@
-from __future__ import annotations
-import collections
-import heapq
-import math
-import random
-from collections import Counter, defaultdict, deque
-from functools import cache, cmp_to_key, lru_cache
-from math import ceil, sqrt
 
 # LeetCode 473: Matchsticks To Square
 # Python version
 
-def makesquare(matchsticks: List[int]) -> bool:
+def makesquare(matchsticks: list[int]) -> bool:
     length = sum(matchsticks) // 4
     sides = [0] * 4
 

@@ -1,16 +1,8 @@
-from __future__ import annotations
-import collections
-import heapq
-import math
-import random
-from collections import Counter, defaultdict, deque
-from functools import cache, cmp_to_key, lru_cache
-from math import ceil, sqrt
 
 # LeetCode 213: House Robber Ii
 # Python version
 
-def rob(nums: List[int]) -> int:
+def rob(nums: list[int]) -> int:
     return max(nums[0], helper(nums[1:]), helper(nums[:-1]))
 
 

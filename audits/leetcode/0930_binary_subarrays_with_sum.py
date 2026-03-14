@@ -1,16 +1,8 @@
-from __future__ import annotations
-import collections
-import heapq
-import math
-import random
-from collections import Counter, defaultdict, deque
-from functools import cache, cmp_to_key, lru_cache
-from math import ceil, sqrt
 
 # LeetCode 930: Binary Subarrays With Sum
 # Python version
 
-def numSubarraysWithSum(nums: List[int], goal: int) -> int:
+def numSubarraysWithSum(nums: list[int], goal: int) -> int:
 
     def helper(x):
         if x < 0: return 0

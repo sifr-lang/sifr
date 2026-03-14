@@ -1,16 +1,9 @@
-from __future__ import annotations
-import collections
 import heapq
-import math
-import random
-from collections import Counter, defaultdict, deque
-from functools import cache, cmp_to_key, lru_cache
-from math import ceil, sqrt
 
 # LeetCode 1383: Maximum Performance Of A Team
 # Python version
 
-def maxPerformance(n: int, speed: List[int], efficiency: List[int], k: int) -> int:
+def maxPerformance(n: int, speed: list[int], efficiency: list[int], k: int) -> int:
     mod = 10 ** 9 + 7
     eng = []
     for eff, spd in zip(efficiency, speed):

@@ -1,16 +1,8 @@
-from __future__ import annotations
-import collections
-import heapq
-import math
-import random
-from collections import Counter, defaultdict, deque
-from functools import cache, cmp_to_key, lru_cache
-from math import ceil, sqrt
 
 # LeetCode 560: Subarray Sum Equals K
 # Python version
 
-def subarraySum(nums: List[int], k: int) -> int:
+def subarraySum(nums: list[int], k: int) -> int:
     count = 0
     sum = 0
     dic = {}

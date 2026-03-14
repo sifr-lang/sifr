@@ -1,16 +1,8 @@
-from __future__ import annotations
-import collections
-import heapq
-import math
-import random
-from collections import Counter, defaultdict, deque
-from functools import cache, cmp_to_key, lru_cache
-from math import ceil, sqrt
 
 # LeetCode 75: Sort Colors
 # Python version
 
-def sortColors(nums: List[int]) -> None:
+def sortColors(nums: list[int]) -> None:
     low = 0
     high = len(nums) - 1
     mid = 0

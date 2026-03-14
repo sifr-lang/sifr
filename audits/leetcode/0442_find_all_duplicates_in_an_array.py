@@ -1,16 +1,8 @@
-from __future__ import annotations
-import collections
-import heapq
-import math
-import random
-from collections import Counter, defaultdict, deque
-from functools import cache, cmp_to_key, lru_cache
-from math import ceil, sqrt
 
 # LeetCode 442: Find All Duplicates In An Array
 # Python version
 
-def findDuplicates(nums: List[int]) -> List[int]:
+def findDuplicates(nums: list[int]) -> list[int]:
     res = []
 
     for n in nums:

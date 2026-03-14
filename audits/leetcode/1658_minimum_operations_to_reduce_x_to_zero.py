@@ -1,16 +1,8 @@
-from __future__ import annotations
-import collections
-import heapq
-import math
-import random
-from collections import Counter, defaultdict, deque
-from functools import cache, cmp_to_key, lru_cache
-from math import ceil, sqrt
 
 # LeetCode 1658: Minimum Operations To Reduce X To Zero
 # Python version
 
-def minOperations(nums: List[int], x: int) -> int:
+def minOperations(nums: list[int], x: int) -> int:
     # determine sum of subarray remaining after reduction
     target_sum = sum(nums) - x
     # check that x could be reduced to zero

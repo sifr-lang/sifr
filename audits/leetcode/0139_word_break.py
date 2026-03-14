@@ -1,16 +1,8 @@
-from __future__ import annotations
-import collections
-import heapq
-import math
-import random
-from collections import Counter, defaultdict, deque
-from functools import cache, cmp_to_key, lru_cache
-from math import ceil, sqrt
 
 # LeetCode 139: Word Break
 # Python version
 
-def wordBreak(s: str, wordDict: List[str]) -> bool:
+def wordBreak(s: str, wordDict: list[str]) -> bool:
 
     dp = [False] * (len(s) + 1)
     dp[len(s)] = True

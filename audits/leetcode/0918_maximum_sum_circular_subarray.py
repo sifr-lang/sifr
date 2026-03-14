@@ -1,16 +1,8 @@
-from __future__ import annotations
-import collections
-import heapq
-import math
-import random
-from collections import Counter, defaultdict, deque
-from functools import cache, cmp_to_key, lru_cache
-from math import ceil, sqrt
 
 # LeetCode 918: Maximum Sum Circular Subarray
 # Python version
 
-def maxSubarraySumCircular(nums: List[int]) -> int:
+def maxSubarraySumCircular(nums: list[int]) -> int:
     globMax, globMin = nums[0], nums[0]
     curMax, curMin = 0, 0
     total = 0

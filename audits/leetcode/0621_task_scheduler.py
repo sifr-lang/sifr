@@ -1,16 +1,11 @@
-from __future__ import annotations
 import collections
 import heapq
-import math
-import random
-from collections import Counter, defaultdict, deque
-from functools import cache, cmp_to_key, lru_cache
-from math import ceil, sqrt
+from collections import Counter, deque
 
 # LeetCode 621: Task Scheduler
 # Python version
 
-def leastInterval(tasks: List[str], n: int) -> int:
+def leastInterval(tasks: list[str], n: int) -> int:
     count = Counter(tasks)
     maxHeap = [-cnt for cnt in count.values()]
     heapq.heapify(maxHeap)
@@ -33,7 +28,7 @@ def leastInterval(tasks: List[str], n: int) -> int:
 
 # Greedy algorithm
 
-def leastInterval(tasks: List[str], n: int) -> int:
+def leastInterval(tasks: list[str], n: int) -> int:
     counter = collections.Counter(tasks)
     max_count = max(counter.values())
     min_time = (max_count - 1) * (n + 1) + \

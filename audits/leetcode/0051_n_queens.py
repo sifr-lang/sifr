@@ -1,16 +1,8 @@
-from __future__ import annotations
-import collections
-import heapq
-import math
-import random
-from collections import Counter, defaultdict, deque
-from functools import cache, cmp_to_key, lru_cache
-from math import ceil, sqrt
 
 # LeetCode 51: N Queens
 # Python version
 
-def solveNQueens(n: int) -> List[List[str]]:
+def solveNQueens(n: int) -> list[list[str]]:
     col = set()
     posDiag = set()  # (r + c)
     negDiag = set()  # (r - c)

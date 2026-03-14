@@ -1,16 +1,8 @@
-from __future__ import annotations
-import collections
-import heapq
-import math
-import random
-from collections import Counter, defaultdict, deque
-from functools import cache, cmp_to_key, lru_cache
-from math import ceil, sqrt
 
 # LeetCode 2709: Greatest Common Divisor Traversal
 # Python version
 
-def canTraverseAllPairs(nums: List[int]) -> bool:
+def canTraverseAllPairs(nums: list[int]) -> bool:
     uf = UnionFind(len(nums))
 
     factor_index = {}

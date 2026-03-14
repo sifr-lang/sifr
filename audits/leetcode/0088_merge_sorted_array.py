@@ -1,16 +1,8 @@
-from __future__ import annotations
-import collections
-import heapq
-import math
-import random
-from collections import Counter, defaultdict, deque
-from functools import cache, cmp_to_key, lru_cache
-from math import ceil, sqrt
 
 # LeetCode 88: Merge Sorted Array
 # Python version
 
-def merge(nums1: List[int], m: int, nums2: List[int], n: int) -> None:
+def merge(nums1: list[int], m: int, nums2: list[int], n: int) -> None:
     """
     Do not return anything, modify nums1 in-place instead.
     """

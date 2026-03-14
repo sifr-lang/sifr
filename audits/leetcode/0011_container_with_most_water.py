@@ -1,16 +1,8 @@
-from __future__ import annotations
-import collections
-import heapq
-import math
-import random
-from collections import Counter, defaultdict, deque
-from functools import cache, cmp_to_key, lru_cache
-from math import ceil, sqrt
 
 # LeetCode 11: Container With Most Water
 # Python version
 
-def maxArea(height: List[int]) -> int:
+def maxArea(height: list[int]) -> int:
     l, r = 0, len(height) - 1
     res = 0
 

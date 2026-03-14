@@ -1,16 +1,8 @@
-from __future__ import annotations
-import collections
-import heapq
-import math
-import random
-from collections import Counter, defaultdict, deque
-from functools import cache, cmp_to_key, lru_cache
-from math import ceil, sqrt
 
 # LeetCode 2215: Find The Difference Of Two Arrays
 # Python version
 
-def findDifference(nums1: List[int], nums2: List[int]) -> List[List[int]]:
+def findDifference(nums1: list[int], nums2: list[int]) -> list[list[int]]:
     nums1 = set(nums1)
     nums2 = set(nums2)
     table = {}
@@ -37,7 +29,7 @@ def findDifference(nums1: List[int], nums2: List[int]) -> List[List[int]]:
 
 
 
-def findDifference(nums1: List[int], nums2: List[int]) -> List[List[int]]:
+def findDifference(nums1: list[int], nums2: list[int]) -> list[list[int]]:
     nums1_set = set(nums1)
     nums2_set = set(nums2)
 

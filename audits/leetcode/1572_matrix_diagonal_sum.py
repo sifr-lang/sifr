@@ -1,11 +1,3 @@
-from __future__ import annotations
-import collections
-import heapq
-import math
-import random
-from collections import Counter, defaultdict, deque
-from functools import cache, cmp_to_key, lru_cache
-from math import ceil, sqrt
 
 # LeetCode 1572: Matrix Diagonal Sum
 # Python version
@@ -24,7 +16,7 @@ def CrossSum(mat):
     return cnt
 
 
-def diagonalSum(mat: List[List[int]]) -> int:
+def diagonalSum(mat: list[list[int]]) -> int:
     prime = PrimeSum(mat)
     cross = CrossSum(mat)
 

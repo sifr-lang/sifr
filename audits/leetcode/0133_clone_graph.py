@@ -1,16 +1,8 @@
-from __future__ import annotations
-import collections
-import heapq
-import math
-import random
-from collections import Counter, defaultdict, deque
-from functools import cache, cmp_to_key, lru_cache
-from math import ceil, sqrt
 
 # LeetCode 133: Clone Graph
 # Python version
 
-def build_graph(adjacency: list[list[int]]) -> Node | None:
+def build_graph(adjacency: list[list[int]]) -> 'Node | None':
     if len(adjacency) == 0:
         return None
     nodes = [Node(i + 1) for i in range(len(adjacency))]
@@ -19,7 +11,7 @@ def build_graph(adjacency: list[list[int]]) -> Node | None:
     return nodes[0]
 
 
-def graph_to_adj(node: Node | None) -> list[list[int]]:
+def graph_to_adj(node: 'Node | None') -> list[list[int]]:
     if node is None:
         return []
     queue = [node]

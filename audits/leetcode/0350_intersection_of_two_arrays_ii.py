@@ -1,16 +1,9 @@
-from __future__ import annotations
-import collections
-import heapq
-import math
-import random
-from collections import Counter, defaultdict, deque
-from functools import cache, cmp_to_key, lru_cache
-from math import ceil, sqrt
+from collections import Counter, defaultdict
 
 # LeetCode 350: Intersection Of Two Arrays Ii
 # Python version
 
-def intersect(nums1: List[int], nums2: List[int]) -> List[int]:
+def intersect(nums1: list[int], nums2: list[int]) -> list[int]:
     counter1 = Counter(nums1)
     counter2 = Counter(nums2)
 

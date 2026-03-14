@@ -1,11 +1,4 @@
-from __future__ import annotations
-import collections
-import heapq
-import math
-import random
-from collections import Counter, defaultdict, deque
-from functools import cache, cmp_to_key, lru_cache
-from math import ceil, sqrt
+from collections import deque
 
 # LeetCode 286: Walls And Gates
 # Python version
@@ -16,7 +9,7 @@ from math import ceil, sqrt
 """
 
 
-def walls_and_gates(rooms: List[List[int]]):
+def walls_and_gates(rooms: list[list[int]]):
     ROWS, COLS = len(rooms), len(rooms[0])
     visit = set()
     q = deque()

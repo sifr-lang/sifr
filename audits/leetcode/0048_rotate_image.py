@@ -1,16 +1,8 @@
-from __future__ import annotations
-import collections
-import heapq
-import math
-import random
-from collections import Counter, defaultdict, deque
-from functools import cache, cmp_to_key, lru_cache
-from math import ceil, sqrt
 
 # LeetCode 48: Rotate Image
 # Python version
 
-def rotate(matrix: List[List[int]]) -> None:
+def rotate(matrix: list[list[int]]) -> None:
     """
     Do not return anything, modify matrix in-place instead.
     """

@@ -1,19 +1,11 @@
-from __future__ import annotations
-import collections
-import heapq
-import math
-import random
-from collections import Counter, defaultdict, deque
-from functools import cache, cmp_to_key, lru_cache
-from math import ceil, sqrt
+from collections import defaultdict
 
 # LeetCode 474: Ones And Zeroes
 # Python version
 
 from collections import defaultdict
-from typing import List
 
-def findMaxForm(strs: List[str], M: int, N: int) -> int:
+def findMaxForm(strs: list[str], M: int, N: int) -> int:
     # Dynamic Programming
     dp = defaultdict(int)
 

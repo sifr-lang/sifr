@@ -1,11 +1,3 @@
-from __future__ import annotations
-import collections
-import heapq
-import math
-import random
-from collections import Counter, defaultdict, deque
-from functools import cache, cmp_to_key, lru_cache
-from math import ceil, sqrt
 
 # LeetCode 23: Merge K Sorted Lists
 # Python version
@@ -53,7 +45,7 @@ class Node:
         self.neighbors = [] if neighbors is None else neighbors
         self.key = key
 
-def mergeKLists(lists: List[ListNode]) -> ListNode:
+def mergeKLists(lists: list[ListNode]) -> ListNode:
     if not lists or len(lists) == 0:
         return None
 

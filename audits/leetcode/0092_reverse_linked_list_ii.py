@@ -1,11 +1,3 @@
-from __future__ import annotations
-import collections
-import heapq
-import math
-import random
-from collections import Counter, defaultdict, deque
-from functools import cache, cmp_to_key, lru_cache
-from math import ceil, sqrt
 
 # LeetCode 92: Reverse Linked List Ii
 # Python version
@@ -45,8 +37,8 @@ class Node:
         self.key = key
 
 def reverseBetween(
-    self, head: Optional[ListNode], left: int, right: int
-) -> Optional[ListNode]:
+    self, head: ListNode | None, left: int, right: int
+) -> ListNode | None:
     dummy = ListNode(0, head)
 
     # 1) reach node at position "left"

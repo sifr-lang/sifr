@@ -1,16 +1,8 @@
-from __future__ import annotations
-import collections
-import heapq
-import math
-import random
-from collections import Counter, defaultdict, deque
-from functools import cache, cmp_to_key, lru_cache
-from math import ceil, sqrt
 
 # LeetCode 77: Combinations
 # Python version
 
-def combine(n: int, k: int) -> List[List[int]]:
+def combine(n: int, k: int) -> list[list[int]]:
     res = []
     def helper(start, comb):
         if len(comb) == k:

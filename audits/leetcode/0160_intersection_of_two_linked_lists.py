@@ -1,11 +1,3 @@
-from __future__ import annotations
-import collections
-import heapq
-import math
-import random
-from collections import Counter, defaultdict, deque
-from functools import cache, cmp_to_key, lru_cache
-from math import ceil, sqrt
 
 # LeetCode 160: Intersection Of Two Linked Lists
 # Python version
@@ -46,7 +38,7 @@ class Node:
 
 def getIntersectionNode(
     self, headA: ListNode, headB: ListNode
-) -> Optional[ListNode]:
+) -> ListNode | None:
     l1, l2 = headA, headB
     while l1 != l2:
         l1 = l1.next if l1 else headB

@@ -1,16 +1,8 @@
-from __future__ import annotations
-import collections
-import heapq
-import math
-import random
-from collections import Counter, defaultdict, deque
-from functools import cache, cmp_to_key, lru_cache
-from math import ceil, sqrt
 
 # LeetCode 323: Number Of Connected Components In An Undirected Graph
 # Python version
 
-def countComponents(n: int, edges: List[List[int]]) -> int:
+def countComponents(n: int, edges: list[list[int]]) -> int:
     dsu = UnionFind()
     for a, b in edges:
         dsu.union(a, b)

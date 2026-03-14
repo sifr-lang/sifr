@@ -1,16 +1,8 @@
-from __future__ import annotations
-import collections
-import heapq
-import math
-import random
-from collections import Counter, defaultdict, deque
-from functools import cache, cmp_to_key, lru_cache
-from math import ceil, sqrt
 
 # LeetCode 410: Split Array Largest Sum
 # Python version
 
-def splitArray(nums: List[int], m: int) -> int:
+def splitArray(nums: list[int], m: int) -> int:
     def canSplit(largest):
         subarray = 0
         curSum = 0

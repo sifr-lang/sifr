@@ -1,17 +1,9 @@
-from __future__ import annotations
-import collections
-import heapq
-import math
-import random
-from collections import Counter, defaultdict, deque
-from functools import cache, cmp_to_key, lru_cache
-from math import ceil, sqrt
 
 # LeetCode 303: Range Sum Query Immutable
 # Python version
 
 class NumArray:
-    def __init__(self, nums: List[int]):
+    def __init__(self, nums: list[int]):
         self.prefix = []
         cur = 0
         for n in nums:

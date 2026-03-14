@@ -1,16 +1,8 @@
-from __future__ import annotations
-import collections
-import heapq
-import math
-import random
-from collections import Counter, defaultdict, deque
-from functools import cache, cmp_to_key, lru_cache
-from math import ceil, sqrt
 
 # LeetCode 435: Non Overlapping Intervals
 # Python version
 
-def eraseOverlapIntervals(intervals: List[List[int]]) -> int:
+def eraseOverlapIntervals(intervals: list[list[int]]) -> int:
     intervals.sort()
     res = 0
     prevEnd = intervals[0][1]

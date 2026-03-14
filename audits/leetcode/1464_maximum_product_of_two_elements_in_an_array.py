@@ -1,16 +1,8 @@
-from __future__ import annotations
-import collections
-import heapq
-import math
-import random
-from collections import Counter, defaultdict, deque
-from functools import cache, cmp_to_key, lru_cache
-from math import ceil, sqrt
 
 # LeetCode 1464: Maximum Product Of Two Elements In An Array
 # Python version
 
-def maxProduct(nums: List[int]) -> int:
+def maxProduct(nums: list[int]) -> int:
     high = secondHigh = 0
     for n in nums:
         if n > high:

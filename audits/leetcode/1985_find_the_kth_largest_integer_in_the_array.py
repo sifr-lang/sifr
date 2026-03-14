@@ -1,16 +1,9 @@
-from __future__ import annotations
-import collections
 import heapq
-import math
-import random
-from collections import Counter, defaultdict, deque
-from functools import cache, cmp_to_key, lru_cache
-from math import ceil, sqrt
 
 # LeetCode 1985: Find The Kth Largest Integer In The Array
 # Python version
 
-def kthLargestNumber(nums: List[str], k: int) -> str:
+def kthLargestNumber(nums: list[str], k: int) -> str:
     maxHeap = [-int(n) for n in nums]
     heapq.heapify(maxHeap)
     while k>1:

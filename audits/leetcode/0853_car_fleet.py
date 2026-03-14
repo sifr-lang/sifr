@@ -1,16 +1,8 @@
-from __future__ import annotations
-import collections
-import heapq
-import math
-import random
-from collections import Counter, defaultdict, deque
-from functools import cache, cmp_to_key, lru_cache
-from math import ceil, sqrt
 
 # LeetCode 853: Car Fleet
 # Python version
 
-def carFleet(target: int, position: List[int], speed: List[int]) -> int:
+def carFleet(target: int, position: list[int], speed: list[int]) -> int:
     pair = [(p, s) for p, s in zip(position, speed)]
     pair.sort(reverse=True)
     stack = []

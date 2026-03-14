@@ -1,16 +1,8 @@
-from __future__ import annotations
-import collections
-import heapq
-import math
-import random
-from collections import Counter, defaultdict, deque
-from functools import cache, cmp_to_key, lru_cache
-from math import ceil, sqrt
 
 # LeetCode 494: Target Sum
 # Python version
 
-def findTargetSumWays(nums: List[int], target: int) -> int:
+def findTargetSumWays(nums: list[int], target: int) -> int:
     dp = {}  # (index, total) -> # of ways
 
     def backtrack(i, total):

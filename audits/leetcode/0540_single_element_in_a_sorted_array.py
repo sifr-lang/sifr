@@ -1,16 +1,8 @@
-from __future__ import annotations
-import collections
-import heapq
-import math
-import random
-from collections import Counter, defaultdict, deque
-from functools import cache, cmp_to_key, lru_cache
-from math import ceil, sqrt
 
 # LeetCode 540: Single Element In A Sorted Array
 # Python version
 
-def singleNonDuplicate(nums: List[int]) -> int:
+def singleNonDuplicate(nums: list[int]) -> int:
     def is_non_duplicate(i):
         is_left_different = i == 0 or nums[i-1] != nums[i]
         is_right_different = i == len(nums)-1 or nums[i+1] != nums[i]

@@ -1,16 +1,8 @@
-from __future__ import annotations
-import collections
-import heapq
-import math
-import random
-from collections import Counter, defaultdict, deque
-from functools import cache, cmp_to_key, lru_cache
-from math import ceil, sqrt
 
 # LeetCode 1905: Count Sub Islands
 # Python version
 
-def countSubIslands(grid1: List[List[int]], grid2: List[List[int]]) -> int:
+def countSubIslands(grid1: list[list[int]], grid2: list[list[int]]) -> int:
     ROWS, COLS = len(grid1), len(grid1[0])
     visit = set()
 

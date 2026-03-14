@@ -1,16 +1,8 @@
-from __future__ import annotations
-import collections
-import heapq
-import math
-import random
-from collections import Counter, defaultdict, deque
-from functools import cache, cmp_to_key, lru_cache
-from math import ceil, sqrt
 
 # LeetCode 338: Counting Bits
 # Python version
 
-def countBits(n: int) -> List[int]:
+def countBits(n: int) -> list[int]:
     dp = [0] * (n + 1)
     offset = 1
 
@@ -22,7 +14,7 @@ def countBits(n: int) -> List[int]:
 
 # Another dp solution
 
-def countBits(n: int) -> List[int]:
+def countBits(n: int) -> list[int]:
     res = [0] * (n + 1)
     for i in range(1, n + 1):
         if i % 2 == 1:

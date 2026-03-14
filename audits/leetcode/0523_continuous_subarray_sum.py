@@ -1,16 +1,8 @@
-from __future__ import annotations
-import collections
-import heapq
-import math
-import random
-from collections import Counter, defaultdict, deque
-from functools import cache, cmp_to_key, lru_cache
-from math import ceil, sqrt
 
 # LeetCode 523: Continuous Subarray Sum
 # Python version
 
-def checkSubarraySum(nums: List[int], k: int) -> bool:
+def checkSubarraySum(nums: list[int], k: int) -> bool:
     hashmap = {}
     hashmap[0]=-1
     summ=0

@@ -1,17 +1,10 @@
-from __future__ import annotations
-import collections
 import heapq
-import math
-import random
-from collections import Counter, defaultdict, deque
-from functools import cache, cmp_to_key, lru_cache
-from math import ceil, sqrt
 
 # LeetCode 703: Kth Largest Element In A Stream
 # Python version
 
 class KthLargest:
-    def __init__(self, k: int, nums: List[int]):
+    def __init__(self, k: int, nums: list[int]):
         self.minHeap, self.k = nums, k
         heapq.heapify(self.minHeap)
         while len(self.minHeap) > k:

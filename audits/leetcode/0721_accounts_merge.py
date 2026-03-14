@@ -1,16 +1,9 @@
-from __future__ import annotations
-import collections
-import heapq
-import math
-import random
-from collections import Counter, defaultdict, deque
-from functools import cache, cmp_to_key, lru_cache
-from math import ceil, sqrt
+from collections import defaultdict
 
 # LeetCode 721: Accounts Merge
 # Python version
 
-def accountsMerge(accounts: List[List[str]]) -> List[List[str]]:
+def accountsMerge(accounts: list[list[str]]) -> list[list[str]]:
     uf = UnionFind(len(accounts))
     emailToAcc = {} # email -> index of acc
 

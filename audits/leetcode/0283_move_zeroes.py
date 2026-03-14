@@ -1,16 +1,8 @@
-from __future__ import annotations
-import collections
-import heapq
-import math
-import random
-from collections import Counter, defaultdict, deque
-from functools import cache, cmp_to_key, lru_cache
-from math import ceil, sqrt
 
 # LeetCode 283: Move Zeroes
 # Python version
 
-def moveZeroes(nums: List[int]) -> None:
+def moveZeroes(nums: list[int]) -> None:
     """
     Do not return anything, modify nums in-place instead.
     """

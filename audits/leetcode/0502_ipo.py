@@ -1,16 +1,9 @@
-from __future__ import annotations
-import collections
 import heapq
-import math
-import random
-from collections import Counter, defaultdict, deque
-from functools import cache, cmp_to_key, lru_cache
-from math import ceil, sqrt
 
 # LeetCode 502: Ipo
 # Python version
 
-def findMaximizedCapital(k: int, w: int, profits: List[int], capital: List[int]) -> int:
+def findMaximizedCapital(k: int, w: int, profits: list[int], capital: list[int]) -> int:
     # O(nlogn)
     maxProfit = [] # only projects we can afford
     minCapital = [(c, p) for c, p in zip(capital, profits)]

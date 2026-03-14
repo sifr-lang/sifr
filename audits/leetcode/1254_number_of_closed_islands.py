@@ -1,16 +1,8 @@
-from __future__ import annotations
-import collections
-import heapq
-import math
-import random
-from collections import Counter, defaultdict, deque
-from functools import cache, cmp_to_key, lru_cache
-from math import ceil, sqrt
 
 # LeetCode 1254: Number Of Closed Islands
 # Python version
 
-def closedIsland(grid: List[List[int]]) -> int:
+def closedIsland(grid: list[list[int]]) -> int:
     r = len(grid)
     c = len(grid[0])
     seen = set()

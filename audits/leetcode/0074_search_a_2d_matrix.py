@@ -1,16 +1,8 @@
-from __future__ import annotations
-import collections
-import heapq
-import math
-import random
-from collections import Counter, defaultdict, deque
-from functools import cache, cmp_to_key, lru_cache
-from math import ceil, sqrt
 
 # LeetCode 74: Search A 2D Matrix
 # Python version
 
-def searchMatrix(matrix: List[List[int]], target: int) -> bool:
+def searchMatrix(matrix: list[list[int]], target: int) -> bool:
     ROWS, COLS = len(matrix), len(matrix[0])
 
     top, bot = 0, ROWS - 1

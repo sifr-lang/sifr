@@ -1,11 +1,3 @@
-from __future__ import annotations
-import collections
-import heapq
-import math
-import random
-from collections import Counter, defaultdict, deque
-from functools import cache, cmp_to_key, lru_cache
-from math import ceil, sqrt
 
 # LeetCode 106: Construct Binary Tree From Inorder And Postorder Traversal
 # Python version
@@ -47,7 +39,7 @@ class Node:
         self.neighbors = [] if neighbors is None else neighbors
         self.key = key
 
-def buildTree(inorder: List[int], postorder: List[int]) -> Optional[TreeNode]:
+def buildTree(inorder: list[int], postorder: list[int]) -> TreeNode | None:
     def buildTreeHelper(left, right):
         if left > right:
             return None

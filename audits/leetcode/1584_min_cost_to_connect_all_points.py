@@ -1,16 +1,9 @@
-from __future__ import annotations
-import collections
 import heapq
-import math
-import random
-from collections import Counter, defaultdict, deque
-from functools import cache, cmp_to_key, lru_cache
-from math import ceil, sqrt
 
 # LeetCode 1584: Min Cost To Connect All Points
 # Python version
 
-def minCostConnectPoints(points: List[List[int]]) -> int:
+def minCostConnectPoints(points: list[list[int]]) -> int:
     N = len(points)
     adj = {i: [] for i in range(N)}  # i : list of [cost, node]
     for i in range(N):

@@ -1,16 +1,8 @@
-from __future__ import annotations
-import collections
-import heapq
-import math
-import random
-from collections import Counter, defaultdict, deque
-from functools import cache, cmp_to_key, lru_cache
-from math import ceil, sqrt
 
 # LeetCode 27: Remove Element
 # Python version
 
-def removeElement(nums: List[int], val: int) -> int:
+def removeElement(nums: list[int], val: int) -> int:
     k = 0
     for i in range(len(nums)):
         if nums[i] != val:
@@ -20,7 +12,7 @@ def removeElement(nums: List[int], val: int) -> int:
 
 # Optimized solution with the same time and space complexity
 
-def removeElement(nums: List[int], val: int) -> int:
+def removeElement(nums: list[int], val: int) -> int:
     # Avoid unessary copy operations in a previous solution, when k == i and nums[i] != val 
     # by swapping nums[i] and the last element of the array (nums[n])
     n = len(nums)

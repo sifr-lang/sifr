@@ -1,16 +1,8 @@
-from __future__ import annotations
-import collections
-import heapq
-import math
-import random
-from collections import Counter, defaultdict, deque
-from functools import cache, cmp_to_key, lru_cache
-from math import ceil, sqrt
 
 # LeetCode 673: Number Of Longest Increasing Subsequence
 # Python version
 
-def findNumberOfLIS(nums: List[int]) -> int:
+def findNumberOfLIS(nums: list[int]) -> int:
     # 1. O(n^2) Recursive solution with Caching
 
     dp = {}  # key = index, value = [length of LIS, count]

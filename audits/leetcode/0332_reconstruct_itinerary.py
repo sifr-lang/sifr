@@ -1,16 +1,8 @@
-from __future__ import annotations
-import collections
-import heapq
-import math
-import random
-from collections import Counter, defaultdict, deque
-from functools import cache, cmp_to_key, lru_cache
-from math import ceil, sqrt
 
 # LeetCode 332: Reconstruct Itinerary
 # Python version
 
-def findItinerary(tickets: List[List[str]]) -> List[str]:
+def findItinerary(tickets: list[list[str]]) -> list[str]:
     adj = {src: [] for src, dst in tickets}
     res = []
 

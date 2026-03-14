@@ -1,16 +1,9 @@
-from __future__ import annotations
-import collections
-import heapq
-import math
-import random
-from collections import Counter, defaultdict, deque
-from functools import cache, cmp_to_key, lru_cache
-from math import ceil, sqrt
+from collections import defaultdict
 
 # LeetCode 1074: Number Of Submatrices That Sum To Target
 # Python version
 
-def numSubmatrixSumTarget(matrix: List[List[int]], target: int) -> int:
+def numSubmatrixSumTarget(matrix: list[list[int]], target: int) -> int:
     ROWS, COLS = len(matrix), len(matrix[0])
     sub_sum = [[0 for i in range(COLS)] for j in range(ROWS)]
 

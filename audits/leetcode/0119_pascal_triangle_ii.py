@@ -1,11 +1,3 @@
-from __future__ import annotations
-import collections
-import heapq
-import math
-import random
-from collections import Counter, defaultdict, deque
-from functools import cache, cmp_to_key, lru_cache
-from math import ceil, sqrt
 
 # LeetCode 119: Pascal Triangle Ii
 # Python version
@@ -13,7 +5,7 @@ from math import ceil, sqrt
 Memo = {}
 
 
-def getRow(rowIndex: int) -> List[int]:
+def getRow(rowIndex: int) -> list[int]:
     if rowIndex in Memo:
         return Memo[rowIndex]
     if rowIndex == 0:

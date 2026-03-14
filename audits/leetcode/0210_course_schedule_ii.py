@@ -1,16 +1,8 @@
-from __future__ import annotations
-import collections
-import heapq
-import math
-import random
-from collections import Counter, defaultdict, deque
-from functools import cache, cmp_to_key, lru_cache
-from math import ceil, sqrt
 
 # LeetCode 210: Course Schedule Ii
 # Python version
 
-def findOrder(numCourses: int, prerequisites: List[List[int]]) -> List[int]:
+def findOrder(numCourses: int, prerequisites: list[list[int]]) -> list[int]:
     prereq = {c: [] for c in range(numCourses)}
     for crs, pre in prerequisites:
         prereq[crs].append(pre)

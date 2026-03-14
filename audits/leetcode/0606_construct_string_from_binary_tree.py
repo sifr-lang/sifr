@@ -1,11 +1,3 @@
-from __future__ import annotations
-import collections
-import heapq
-import math
-import random
-from collections import Counter, defaultdict, deque
-from functools import cache, cmp_to_key, lru_cache
-from math import ceil, sqrt
 
 # LeetCode 606: Construct String From Binary Tree
 # Python version
@@ -47,7 +39,7 @@ class Node:
         self.neighbors = [] if neighbors is None else neighbors
         self.key = key
 
-def tree2str(root: Optional[TreeNode]) -> str:
+def tree2str(root: TreeNode | None) -> str:
     # Solution with O(n) time and space complexity
     res = []
     dfs(root, res)

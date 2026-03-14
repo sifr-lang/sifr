@@ -1,16 +1,9 @@
-from __future__ import annotations
 import collections
-import heapq
-import math
-import random
-from collections import Counter, defaultdict, deque
-from functools import cache, cmp_to_key, lru_cache
-from math import ceil, sqrt
 
 # LeetCode 149: Max Points On A Line
 # Python version
 
-def maxPoints(points: List[List[int]]) -> int:
+def maxPoints(points: list[list[int]]) -> int:
     # 1. For each pt determine if it lies on the longest line
     # 2. Count all pts with same slope
     # 3. Update result with max

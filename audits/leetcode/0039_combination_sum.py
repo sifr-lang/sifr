@@ -1,16 +1,8 @@
-from __future__ import annotations
-import collections
-import heapq
-import math
-import random
-from collections import Counter, defaultdict, deque
-from functools import cache, cmp_to_key, lru_cache
-from math import ceil, sqrt
 
 # LeetCode 39: Combination Sum
 # Python version
 
-def combinationSum(candidates: List[int], target: int) -> List[List[int]]:
+def combinationSum(candidates: list[int], target: int) -> list[list[int]]:
     res = []
 
     def dfs(i, cur, total):

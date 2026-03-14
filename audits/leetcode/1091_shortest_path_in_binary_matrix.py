@@ -1,16 +1,9 @@
-from __future__ import annotations
-import collections
-import heapq
-import math
-import random
-from collections import Counter, defaultdict, deque
-from functools import cache, cmp_to_key, lru_cache
-from math import ceil, sqrt
+from collections import deque
 
 # LeetCode 1091: Shortest Path In Binary Matrix
 # Python version
 
-def shortestPathBinaryMatrix(grid: List[List[int]]) -> int:
+def shortestPathBinaryMatrix(grid: list[list[int]]) -> int:
     N = len(grid)
     q = deque([(0, 0, 1)]) # r, c, length
     visit = set((0, 0))

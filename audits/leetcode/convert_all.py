@@ -12,8 +12,6 @@ For each Python LeetCode solution:
 
 import os
 import re
-import sys
-import textwrap
 
 PYTHON_DIR = "/Users/yaseralnajjar/work/sifr/leetcode/python"
 OUTPUT_DIR = "/Users/yaseralnajjar/work/sifr/codebase/audit/leetcode"
@@ -1073,7 +1071,7 @@ def convert_method_to_function(method_text):
 
 def python_to_sifr_function(func_text):
     """Convert Python function text to Sifr-compatible code."""
-    # Replace List[int] etc with list[int]
+    # Replace list[int] etc with list[int]
     text = func_text
     text = re.sub(r'List\[(\w+)\]', r'list[\1]', text)
     text = re.sub(r'List\[List\[(\w+)\]\]', r'list[list[\1]]', text)

@@ -1,16 +1,10 @@
-from __future__ import annotations
-import collections
 import heapq
-import math
-import random
-from collections import Counter, defaultdict, deque
-from functools import cache, cmp_to_key, lru_cache
-from math import ceil, sqrt
+from collections import Counter
 
 # LeetCode 1481: Least Number Of Unique Integers After K Removals
 # Python version
 
-def findLeastNumOfUniqueInts(arr: List[int], k: int) -> int: 
+def findLeastNumOfUniqueInts(arr: list[int], k: int) -> int: 
     freq = Counter(arr)
     heap = list(freq.values())
     heapq.heapify(heap)
@@ -25,7 +19,7 @@ def findLeastNumOfUniqueInts(arr: List[int], k: int) -> int:
 
 # Use buckets
 
-def findLeastNumOfUniqueInts(arr: List[int], k: int) -> int: 
+def findLeastNumOfUniqueInts(arr: list[int], k: int) -> int: 
     freq = Counter(arr)
     freqList = [0] * (len(arr) + 1)
 

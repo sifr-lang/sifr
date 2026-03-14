@@ -1,11 +1,3 @@
-from __future__ import annotations
-import collections
-import heapq
-import math
-import random
-from collections import Counter, defaultdict, deque
-from functools import cache, cmp_to_key, lru_cache
-from math import ceil, sqrt
 
 # LeetCode 148: Sort List
 # Python version
@@ -44,7 +36,7 @@ class Node:
         self.neighbors = [] if neighbors is None else neighbors
         self.key = key
 
-def sortList(head: Optional[ListNode]) -> Optional[ListNode]:
+def sortList(head: ListNode | None) -> ListNode | None:
     if not head or not head.next:
         return head
 
@@ -55,7 +47,7 @@ def sortList(head: Optional[ListNode]) -> Optional[ListNode]:
 
 
 
-def merge_two_sorted(list1: Optional[ListNode], list2: Optional[ListNode]) -> Optional[ListNode]:
+def merge_two_sorted(list1: ListNode | None, list2: ListNode | None) -> ListNode | None:
     if not list1:
         return list2
 
@@ -82,7 +74,7 @@ def merge_two_sorted(list1: Optional[ListNode], list2: Optional[ListNode]) -> Op
 
 
 
-def get_mid(head: Optional[ListNode]) -> Optional[ListNode]:
+def get_mid(head: ListNode | None) -> ListNode | None:
     mid_prev = None
     while head and head.next:
         mid_prev = mid_prev.next if mid_prev else head

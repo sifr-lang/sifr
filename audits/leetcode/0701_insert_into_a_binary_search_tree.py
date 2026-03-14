@@ -1,11 +1,3 @@
-from __future__ import annotations
-import collections
-import heapq
-import math
-import random
-from collections import Counter, defaultdict, deque
-from functools import cache, cmp_to_key, lru_cache
-from math import ceil, sqrt
 
 # LeetCode 701: Insert Into A Binary Search Tree
 # Python version
@@ -47,7 +39,7 @@ class Node:
         self.neighbors = [] if neighbors is None else neighbors
         self.key = key
 
-def insertIntoBST(root: Optional[TreeNode], val: int) -> Optional[TreeNode]:
+def insertIntoBST(root: TreeNode | None, val: int) -> TreeNode | None:
     if not root:
         return TreeNode(val)
     if val > root.val:

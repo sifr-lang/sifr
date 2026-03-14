@@ -1,16 +1,8 @@
-from __future__ import annotations
-import collections
-import heapq
-import math
-import random
-from collections import Counter, defaultdict, deque
-from functools import cache, cmp_to_key, lru_cache
-from math import ceil, sqrt
 
 # LeetCode 377: Combination Sum Iv
 # Python version
 
-def combinationSum4(nums: List[int], target: int) -> int:
+def combinationSum4(nums: list[int], target: int) -> int:
     cache = {0: 1}
 
     for total in range(1, target + 1):

@@ -1,16 +1,8 @@
-from __future__ import annotations
-import collections
-import heapq
-import math
-import random
-from collections import Counter, defaultdict, deque
-from functools import cache, cmp_to_key, lru_cache
-from math import ceil, sqrt
 
 # LeetCode 312: Burst Balloons
 # Python version
 
-def maxCoins(nums: List[int]) -> int:
+def maxCoins(nums: list[int]) -> int:
     cache = {}
     nums = [1] + nums + [1]
 

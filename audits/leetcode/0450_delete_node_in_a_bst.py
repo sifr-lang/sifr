@@ -1,11 +1,3 @@
-from __future__ import annotations
-import collections
-import heapq
-import math
-import random
-from collections import Counter, defaultdict, deque
-from functools import cache, cmp_to_key, lru_cache
-from math import ceil, sqrt
 
 # LeetCode 450: Delete Node In A Bst
 # Python version
@@ -47,7 +39,7 @@ class Node:
         self.neighbors = [] if neighbors is None else neighbors
         self.key = key
 
-def deleteNode(root: Optional[TreeNode], key: int) -> Optional[TreeNode]:
+def deleteNode(root: TreeNode | None, key: int) -> TreeNode | None:
     if not root:
         return root
     

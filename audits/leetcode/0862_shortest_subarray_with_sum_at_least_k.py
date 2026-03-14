@@ -1,16 +1,9 @@
-from __future__ import annotations
 import collections
-import heapq
-import math
-import random
-from collections import Counter, defaultdict, deque
-from functools import cache, cmp_to_key, lru_cache
-from math import ceil, sqrt
 
 # LeetCode 862: Shortest Subarray With Sum At Least K
 # Python version
 
-def shortestSubarray(nums: List[int], k: int) -> int:
+def shortestSubarray(nums: list[int], k: int) -> int:
     size = len(nums)
     pre = [0]
     for i in nums:

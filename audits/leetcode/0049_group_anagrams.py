@@ -1,16 +1,9 @@
-from __future__ import annotations
 import collections
-import heapq
-import math
-import random
-from collections import Counter, defaultdict, deque
-from functools import cache, cmp_to_key, lru_cache
-from math import ceil, sqrt
 
 # LeetCode 49: Group Anagrams
 # Python version
 
-def groupAnagrams(strs: List[str]) -> List[List[str]]:
+def groupAnagrams(strs: list[str]) -> list[list[str]]:
     groups = {}
 
     # Iterate over strings
@@ -32,7 +25,7 @@ def groupAnagrams(strs: List[str]) -> List[List[str]]:
     return list(groups.values())
 
 
-def groupAnagrams(strs: List[str]) -> List[List[str]]:
+def groupAnagrams(strs: list[str]) -> list[list[str]]:
     ans = collections.defaultdict(list)
 
     for s in strs:

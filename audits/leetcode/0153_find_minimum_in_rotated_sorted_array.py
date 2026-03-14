@@ -1,16 +1,8 @@
-from __future__ import annotations
-import collections
-import heapq
-import math
-import random
-from collections import Counter, defaultdict, deque
-from functools import cache, cmp_to_key, lru_cache
-from math import ceil, sqrt
 
 # LeetCode 153: Find Minimum In Rotated Sorted Array
 # Python version
 
-def findMin(nums: List[int]) -> int:
+def findMin(nums: list[int]) -> int:
     start , end = 0, len(nums) - 1 
     curr_min = float("inf")
     

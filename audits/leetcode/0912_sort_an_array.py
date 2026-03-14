@@ -1,16 +1,8 @@
-from __future__ import annotations
-import collections
-import heapq
-import math
-import random
-from collections import Counter, defaultdict, deque
-from functools import cache, cmp_to_key, lru_cache
-from math import ceil, sqrt
 
 # LeetCode 912: Sort An Array
 # Python version
 
-def sortArray(nums: List[int]) -> List[int]:
+def sortArray(nums: list[int]) -> list[int]:
     def merge(arr, L, M, R):
         left, right = arr[L:M+1], arr[M+1:R+1]
         i, j, k = L, 0, 0

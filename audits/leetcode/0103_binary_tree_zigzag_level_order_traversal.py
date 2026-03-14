@@ -1,11 +1,3 @@
-from __future__ import annotations
-import collections
-import heapq
-import math
-import random
-from collections import Counter, defaultdict, deque
-from functools import cache, cmp_to_key, lru_cache
-from math import ceil, sqrt
 
 # LeetCode 103: Binary Tree Zigzag Level Order Traversal
 # Python version
@@ -47,7 +39,7 @@ class Node:
         self.neighbors = [] if neighbors is None else neighbors
         self.key = key
 
-def zigzagLevelOrder(root: Optional[TreeNode]) -> List[List[int]]:
+def zigzagLevelOrder(root: TreeNode | None) -> list[list[int]]:
     if root is None:
         return
     result, zigzagDirection = [], 1

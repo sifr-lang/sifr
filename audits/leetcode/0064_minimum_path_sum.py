@@ -1,16 +1,8 @@
-from __future__ import annotations
-import collections
-import heapq
-import math
-import random
-from collections import Counter, defaultdict, deque
-from functools import cache, cmp_to_key, lru_cache
-from math import ceil, sqrt
 
 # LeetCode 64: Minimum Path Sum
 # Python version
 
-def minPathSum(grid: List[List[int]]) -> int:
+def minPathSum(grid: list[list[int]]) -> int:
     m, n = len(grid), len(grid[0])
     prev = [float("inf")] * n
     prev[-1] = 0

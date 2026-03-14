@@ -1,11 +1,3 @@
-from __future__ import annotations
-import collections
-import heapq
-import math
-import random
-from collections import Counter, defaultdict, deque
-from functools import cache, cmp_to_key, lru_cache
-from math import ceil, sqrt
 
 # LeetCode 1968: Array With Elements Not Equal To Average Of Neighbors
 # Python version
@@ -21,7 +13,7 @@ from math import ceil, sqrt
 # 2nd Filled arr = [0,7,2,9,6]
 
 
-def rearrangeArray(nums: List[int]) -> List[int]:
+def rearrangeArray(nums: list[int]) -> list[int]:
     nums.sort()
 
     i, j, n = 0, 0, len(nums)

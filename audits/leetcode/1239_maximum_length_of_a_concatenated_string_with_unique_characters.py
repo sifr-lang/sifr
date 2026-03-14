@@ -1,16 +1,9 @@
-from __future__ import annotations
-import collections
-import heapq
-import math
-import random
-from collections import Counter, defaultdict, deque
-from functools import cache, cmp_to_key, lru_cache
-from math import ceil, sqrt
+from collections import Counter
 
 # LeetCode 1239: Maximum Length Of A Concatenated String With Unique Characters
 # Python version
 
-def maxLength(arr: List[str]) -> int:
+def maxLength(arr: list[str]) -> int:
     charSet = set()
 
     def overlap(charSet, s):

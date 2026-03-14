@@ -1,18 +1,10 @@
-from __future__ import annotations
-import collections
-import heapq
-import math
-import random
-from collections import Counter, defaultdict, deque
-from functools import cache, cmp_to_key, lru_cache
-from math import ceil, sqrt
 
 # LeetCode 698: Partition To K Equal Sum Subsets
 # Python version
 
 def canPartitionKSubsets(nums, k):
     """
-    :type nums: List[int]
+    :type nums: list[int]
     :type k: int
     :rtype: bool
     """

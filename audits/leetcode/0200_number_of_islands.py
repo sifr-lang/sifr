@@ -1,16 +1,9 @@
-from __future__ import annotations
-import collections
-import heapq
-import math
-import random
-from collections import Counter, defaultdict, deque
-from functools import cache, cmp_to_key, lru_cache
-from math import ceil, sqrt
+from collections import deque
 
 # LeetCode 200: Number Of Islands
 # Python version
 
-def numIslands(grid: List[List[str]]) -> int:
+def numIslands(grid: list[list[str]]) -> int:
     if not grid or not grid[0]:
         return 0
 
@@ -41,7 +34,7 @@ def numIslands(grid: List[List[str]]) -> int:
 
 # DFS O(1) Space and much less code
 
-def numIslands(grid: List[List[str]]) -> int:
+def numIslands(grid: list[list[str]]) -> int:
     rows, cols = len(grid), len(grid[0])
     def dfs(r, c):
         if not 0 <= r < len(grid) or not 0 <= c < len(grid[0]) or grid[r][c] == '0':
@@ -60,7 +53,7 @@ def numIslands(grid: List[List[str]]) -> int:
 
 # BFS Version From Video
 
-def numIslands(grid: List[List[str]]) -> int:
+def numIslands(grid: list[list[str]]) -> int:
     if not grid:
         return 0
 

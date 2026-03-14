@@ -1,11 +1,3 @@
-from __future__ import annotations
-import collections
-import heapq
-import math
-import random
-from collections import Counter, defaultdict, deque
-from functools import cache, cmp_to_key, lru_cache
-from math import ceil, sqrt
 
 # LeetCode 876: Middle Of The Linked List
 # Python version
@@ -44,7 +36,7 @@ class Node:
         self.neighbors = [] if neighbors is None else neighbors
         self.key = key
 
-def middleNode(head: Optional[ListNode]) -> Optional[ListNode]:
+def middleNode(head: ListNode | None) -> ListNode | None:
     if not head or not head.next:
         return head
 

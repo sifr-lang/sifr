@@ -1,16 +1,8 @@
-from __future__ import annotations
-import collections
-import heapq
-import math
-import random
-from collections import Counter, defaultdict, deque
-from functools import cache, cmp_to_key, lru_cache
-from math import ceil, sqrt
 
 # LeetCode 739: Daily Temperatures
 # Python version
 
-def dailyTemperatures(temperatures: List[int]) -> List[int]:
+def dailyTemperatures(temperatures: list[int]) -> list[int]:
     res = [0] * len(temperatures)
     stack = []  # pair: [temp, index]
 

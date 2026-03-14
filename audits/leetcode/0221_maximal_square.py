@@ -1,16 +1,8 @@
-from __future__ import annotations
-import collections
-import heapq
-import math
-import random
-from collections import Counter, defaultdict, deque
-from functools import cache, cmp_to_key, lru_cache
-from math import ceil, sqrt
 
 # LeetCode 221: Maximal Square
 # Python version
 
-def maximalSquare(matrix: List[List[str]]) -> int:
+def maximalSquare(matrix: list[list[str]]) -> int:
     ROWS, COLS = len(matrix), len(matrix[0])
     cache = {}  # map each (r, c) -> maxLength of square
 

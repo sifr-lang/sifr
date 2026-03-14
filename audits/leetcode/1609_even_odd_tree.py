@@ -1,11 +1,4 @@
-from __future__ import annotations
-import collections
-import heapq
-import math
-import random
-from collections import Counter, defaultdict, deque
-from functools import cache, cmp_to_key, lru_cache
-from math import ceil, sqrt
+from collections import deque
 
 # LeetCode 1609: Even Odd Tree
 # Python version
@@ -47,7 +40,7 @@ class Node:
         self.neighbors = [] if neighbors is None else neighbors
         self.key = key
 
-def isEvenOddTree(root: Optional[TreeNode]) -> bool:
+def isEvenOddTree(root: TreeNode | None) -> bool:
     even = True
     q = deque([root])
 

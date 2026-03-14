@@ -1,16 +1,8 @@
-from __future__ import annotations
-import collections
-import heapq
-import math
-import random
-from collections import Counter, defaultdict, deque
-from functools import cache, cmp_to_key, lru_cache
-from math import ceil, sqrt
 
 # LeetCode 554: Brick Wall
 # Python version
 
-def leastBricks(wall: List[List[int]]) -> int:
+def leastBricks(wall: list[list[int]]) -> int:
     countGap = { 0 : 0 }    # { Position : Gap count }
 
     for r in wall:

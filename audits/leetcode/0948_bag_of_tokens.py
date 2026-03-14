@@ -1,16 +1,8 @@
-from __future__ import annotations
-import collections
-import heapq
-import math
-import random
-from collections import Counter, defaultdict, deque
-from functools import cache, cmp_to_key, lru_cache
-from math import ceil, sqrt
 
 # LeetCode 948: Bag Of Tokens
 # Python version
 
-def bagOfTokensScore(tokens: List[int], power: int) -> int:
+def bagOfTokensScore(tokens: list[int], power: int) -> int:
     res = score = 0
     tokens.sort()
 

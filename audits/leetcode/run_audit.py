@@ -13,7 +13,7 @@ For each of the 376 remaining LeetCode problems:
 The conversion rules:
 - class Solution → standalone function
 - self removed
-- List[int] → list[int]
+- list[int] → list[int]
 - Type annotations preserved
 - No set() → use dict workaround
 - No enumerate tuple unpacking → use range(len())
@@ -22,7 +22,6 @@ The conversion rules:
 import os
 import re
 import subprocess
-import sys
 import json
 
 SRC = "/Users/yaseralnajjar/work/sifr/leetcode/python"

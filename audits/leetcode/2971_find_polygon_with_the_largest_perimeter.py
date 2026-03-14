@@ -1,16 +1,9 @@
-from __future__ import annotations
-import collections
 import heapq
-import math
-import random
-from collections import Counter, defaultdict, deque
-from functools import cache, cmp_to_key, lru_cache
-from math import ceil, sqrt
 
 # LeetCode 2971: Find Polygon With The Largest Perimeter
 # Python version
 
-def largestPerimeter(nums: List[int]) -> int:
+def largestPerimeter(nums: list[int]) -> int:
     nums.sort()
     res = -1
     total = 0
@@ -24,7 +17,7 @@ def largestPerimeter(nums: List[int]) -> int:
 
 # Time complexity O(n + 30logn) ~ O(n)
 
-def largestPerimeter(nums: List[int]) -> int:
+def largestPerimeter(nums: list[int]) -> int:
     curSum = sum(nums)
     heapq._heapify_max(nums)
 

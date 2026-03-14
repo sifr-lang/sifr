@@ -1,16 +1,8 @@
-from __future__ import annotations
-import collections
-import heapq
-import math
-import random
-from collections import Counter, defaultdict, deque
-from functools import cache, cmp_to_key, lru_cache
-from math import ceil, sqrt
 
 # LeetCode 1423: Maximum Points You Can Obtain From Cards
 # Python version
 
-def maxScore(cardPoints: List[int], k: int) -> int:
+def maxScore(cardPoints: list[int], k: int) -> int:
     n = len(cardPoints)
 
     score = maxScore = sum(cardPoints[:k])

@@ -1,17 +1,9 @@
-from __future__ import annotations
-import collections
-import heapq
-import math
-import random
-from collections import Counter, defaultdict, deque
-from functools import cache, cmp_to_key, lru_cache
-from math import ceil, sqrt
 
 # LeetCode 787: Cheapest Flights Within K Stops
 # Python version
 
 def findCheapestPrice(
-    self, n: int, flights: List[List[int]], src: int, dst: int, k: int
+    self, n: int, flights: list[list[int]], src: int, dst: int, k: int
 ) -> int:
     prices = [float("inf")] * n
     prices[src] = 0

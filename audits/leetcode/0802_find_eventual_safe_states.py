@@ -1,11 +1,3 @@
-from __future__ import annotations
-import collections
-import heapq
-import math
-import random
-from collections import Counter, defaultdict, deque
-from functools import cache, cmp_to_key, lru_cache
-from math import ceil, sqrt
 
 # LeetCode 802: Find Eventual Safe States
 # Python version
@@ -29,7 +21,7 @@ class Node:
         self.neighbors = [] if neighbors is None else neighbors
         self.key = key
 
-def eventualSafeNodes(graph: List[List[int]]) -> List[int]:
+def eventualSafeNodes(graph: list[list[int]]) -> list[int]:
     n = len(graph)
     safe = {}
     res = []

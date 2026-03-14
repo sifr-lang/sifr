@@ -1,16 +1,8 @@
-from __future__ import annotations
-import collections
-import heapq
-import math
-import random
-from collections import Counter, defaultdict, deque
-from functools import cache, cmp_to_key, lru_cache
-from math import ceil, sqrt
 
 # LeetCode 2482: Difference Between Ones And Zeros In Row And Column
 # Python version
 
-def onesMinusZeros(grid: List[List[int]]) -> List[List[int]]:
+def onesMinusZeros(grid: list[list[int]]) -> list[list[int]]:
     m , n = len(grid), len(grid[0])
     rowCount = [[0, 0] for _ in range(m)] # (zeros, ones)
     colCount = [[0, 0] for _ in range(n)]

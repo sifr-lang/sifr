@@ -1,16 +1,8 @@
-from __future__ import annotations
-import collections
-import heapq
-import math
-import random
-from collections import Counter, defaultdict, deque
-from functools import cache, cmp_to_key, lru_cache
-from math import ceil, sqrt
 
 # LeetCode 525: Contiguous Array
 # Python version
 
-def findMaxLength(nums: List[int]) -> int:
+def findMaxLength(nums: list[int]) -> int:
     zero, one = 0, 0
     res = 0
 

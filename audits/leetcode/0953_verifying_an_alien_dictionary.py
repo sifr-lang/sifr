@@ -1,16 +1,8 @@
-from __future__ import annotations
-import collections
-import heapq
-import math
-import random
-from collections import Counter, defaultdict, deque
-from functools import cache, cmp_to_key, lru_cache
-from math import ceil, sqrt
 
 # LeetCode 953: Verifying An Alien Dictionary
 # Python version
 
-def isAlienSorted(words: List[str], order: str) -> bool:
+def isAlienSorted(words: list[str], order: str) -> bool:
     # first differing char
     # if word A is prefix of word B, word B must be AFTER word A
     orderInd = { c : i for i, c in enumerate(order)}

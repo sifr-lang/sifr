@@ -1,16 +1,9 @@
-from __future__ import annotations
-import collections
-import heapq
-import math
 import random
-from collections import Counter, defaultdict, deque
-from functools import cache, cmp_to_key, lru_cache
-from math import ceil, sqrt
 
 # LeetCode 215: Kth Largest Element In An Array
 # Python version
 
-def findKthLargest(nums: List[int], k: int) -> int:
+def findKthLargest(nums: list[int], k: int) -> int:
     heapify(nums)
     while len(nums) > k:
         heappop(nums)
@@ -23,7 +16,7 @@ def findKthLargest(nums: List[int], k: int) -> int:
 #   - Worst Case:O(n*log(n))
 # Extra Space Complexity: O(n)
 
-def findKthLargest(nums: List[int], k: int) -> int:
+def findKthLargest(nums: list[int], k: int) -> int:
     nums.sort()
     return nums[len(nums) - k]
 
@@ -32,7 +25,7 @@ def findKthLargest(nums: List[int], k: int) -> int:
 # Time Complexity: O(n)
 # Extra Space Complexity: O(n)
 
-def findKthLargest(nums: List[int], k: int) -> int:
+def findKthLargest(nums: list[int], k: int) -> int:
     pivot = random.choice(nums)
     left = [num for num in nums if num > pivot]
     mid = [num for num in nums if num == pivot]

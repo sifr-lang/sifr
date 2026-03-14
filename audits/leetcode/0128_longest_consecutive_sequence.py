@@ -1,16 +1,8 @@
-from __future__ import annotations
-import collections
-import heapq
-import math
-import random
-from collections import Counter, defaultdict, deque
-from functools import cache, cmp_to_key, lru_cache
-from math import ceil, sqrt
 
 # LeetCode 128: Longest Consecutive Sequence
 # Python version
 
-def longestConsecutive(nums: List[int]) -> int:
+def longestConsecutive(nums: list[int]) -> int:
     numSet = set(nums)
     longest = 0
 

@@ -1,16 +1,8 @@
-from __future__ import annotations
-import collections
-import heapq
-import math
-import random
-from collections import Counter, defaultdict, deque
-from functools import cache, cmp_to_key, lru_cache
-from math import ceil, sqrt
 
 # LeetCode 54: Spiral Matrix
 # Python version
 
-def spiralOrder(matrix: List[List[int]]) -> List[int]:
+def spiralOrder(matrix: list[list[int]]) -> list[int]:
     res = []
     left, right = 0, len(matrix[0])
     top, bottom = 0, len(matrix)

@@ -1,16 +1,8 @@
-from __future__ import annotations
-import collections
-import heapq
-import math
-import random
-from collections import Counter, defaultdict, deque
-from functools import cache, cmp_to_key, lru_cache
-from math import ceil, sqrt
 
 # LeetCode 347: Top K Frequent Elements
 # Python version
 
-def topKFrequent(nums: List[int], k: int) -> List[int]:
+def topKFrequent(nums: list[int], k: int) -> list[int]:
     count = {}
     freq = [[] for i in range(len(nums) + 1)]
 

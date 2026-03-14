@@ -1,16 +1,8 @@
-from __future__ import annotations
-import collections
-import heapq
-import math
-import random
-from collections import Counter, defaultdict, deque
-from functools import cache, cmp_to_key, lru_cache
-from math import ceil, sqrt
 
 # LeetCode 135: Candy
 # Python version
 
-def candy(ratings: List[int]) -> int:
+def candy(ratings: list[int]) -> int:
     n = len(ratings)
     # Initialize with one candy becuase each child must have at least one candy.
     candies = [1] * n 

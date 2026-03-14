@@ -1,16 +1,8 @@
-from __future__ import annotations
-import collections
-import heapq
-import math
-import random
-from collections import Counter, defaultdict, deque
-from functools import cache, cmp_to_key, lru_cache
-from math import ceil, sqrt
 
 # LeetCode 280: Wiggle Sort
 # Python version
 
-def wiggleSort(nums: List[int]) -> None:
+def wiggleSort(nums: list[int]) -> None:
     for i in range(1, len(nums)):
         if (i % 2 == 1 and nums[i] < nums[i - 1]) or (i % 2 == 0 and nums[i] > nums[i - 1]):
             nums[i], nums[i - 1] = nums[i - 1], nums[i]

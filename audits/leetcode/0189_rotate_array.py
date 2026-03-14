@@ -1,16 +1,8 @@
-from __future__ import annotations
-import collections
-import heapq
-import math
-import random
-from collections import Counter, defaultdict, deque
-from functools import cache, cmp_to_key, lru_cache
-from math import ceil, sqrt
 
 # LeetCode 189: Rotate Array
 # Python version
 
-def rotate(nums: List[int], k: int) -> None:
+def rotate(nums: list[int], k: int) -> None:
     """
     Do not return anything, modify nums in-place instead.
     """

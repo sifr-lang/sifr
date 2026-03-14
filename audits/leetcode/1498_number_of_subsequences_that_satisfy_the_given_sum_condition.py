@@ -1,16 +1,8 @@
-from __future__ import annotations
-import collections
-import heapq
-import math
-import random
-from collections import Counter, defaultdict, deque
-from functools import cache, cmp_to_key, lru_cache
-from math import ceil, sqrt
 
 # LeetCode 1498: Number Of Subsequences That Satisfy The Given Sum Condition
 # Python version
 
-def numSubseq(nums: List[int], target: int) -> int:
+def numSubseq(nums: list[int], target: int) -> int:
     nums.sort()
 
     res, mod = 0, (10**9 + 7)

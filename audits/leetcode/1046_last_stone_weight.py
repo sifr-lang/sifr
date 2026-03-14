@@ -1,16 +1,9 @@
-from __future__ import annotations
-import collections
 import heapq
-import math
-import random
-from collections import Counter, defaultdict, deque
-from functools import cache, cmp_to_key, lru_cache
-from math import ceil, sqrt
 
 # LeetCode 1046: Last Stone Weight
 # Python version
 
-def lastStoneWeight(stones: List[int]) -> int:
+def lastStoneWeight(stones: list[int]) -> int:
     stones = [-s for s in stones]
     heapq.heapify(stones)
 

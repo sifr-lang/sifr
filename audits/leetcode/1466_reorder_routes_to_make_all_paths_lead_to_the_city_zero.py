@@ -1,16 +1,9 @@
-from __future__ import annotations
-import collections
-import heapq
-import math
-import random
-from collections import Counter, defaultdict, deque
-from functools import cache, cmp_to_key, lru_cache
-from math import ceil, sqrt
+from collections import defaultdict
 
 # LeetCode 1466: Reorder Routes To Make All Paths Lead To The City Zero
 # Python version
 
-def minReorder(n: int, connections: List[List[int]]) -> int:
+def minReorder(n: int, connections: list[list[int]]) -> int:
     edges = {(a,b) for a, b in connections}
     neighbors = defaultdict(list)
     visit = set()

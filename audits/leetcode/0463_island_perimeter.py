@@ -1,16 +1,8 @@
-from __future__ import annotations
-import collections
-import heapq
-import math
-import random
-from collections import Counter, defaultdict, deque
-from functools import cache, cmp_to_key, lru_cache
-from math import ceil, sqrt
 
 # LeetCode 463: Island Perimeter
 # Python version
 
-def islandPerimeter(grid: List[List[int]]) -> int:
+def islandPerimeter(grid: list[list[int]]) -> int:
     visit = set()
 
     def dfs(i, j):

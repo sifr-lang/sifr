@@ -1,16 +1,9 @@
-from __future__ import annotations
-import collections
-import heapq
-import math
-import random
-from collections import Counter, defaultdict, deque
-from functools import cache, cmp_to_key, lru_cache
-from math import ceil, sqrt
+from math import sqrt
 
 # LeetCode 2101: Detonate The Maximum Bombs
 # Python version
 
-def maximumDetonation(bombs: List[List[int]]) -> int:
+def maximumDetonation(bombs: list[list[int]]) -> int:
     n = len(bombs)
     graph = [[] for _ in range(n)]
 

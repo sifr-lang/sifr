@@ -1,16 +1,8 @@
-from __future__ import annotations
-import collections
-import heapq
-import math
-import random
-from collections import Counter, defaultdict, deque
-from functools import cache, cmp_to_key, lru_cache
-from math import ceil, sqrt
 
 # LeetCode 1984: Minimum Difference Between Highest And Lowest Of K Scores
 # Python version
 
-def minimumDifference(nums: List[int], k: int) -> int:
+def minimumDifference(nums: list[int], k: int) -> int:
     nums.sort()
     l, r = 0, k - 1
     res = float("inf")

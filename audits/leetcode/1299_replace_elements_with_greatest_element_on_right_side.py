@@ -1,16 +1,8 @@
-from __future__ import annotations
-import collections
-import heapq
-import math
-import random
-from collections import Counter, defaultdict, deque
-from functools import cache, cmp_to_key, lru_cache
-from math import ceil, sqrt
 
 # LeetCode 1299: Replace Elements With Greatest Element On Right Side
 # Python version
 
-def replaceElements(arr: List[int]) -> List[int]:
+def replaceElements(arr: list[int]) -> list[int]:
     rightMax = -1
     for i in range(len(arr) -1, -1, -1):
         newMax = max(rightMax, arr[i])

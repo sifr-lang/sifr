@@ -1,16 +1,8 @@
-from __future__ import annotations
-import collections
-import heapq
-import math
-import random
-from collections import Counter, defaultdict, deque
-from functools import cache, cmp_to_key, lru_cache
-from math import ceil, sqrt
 
 # LeetCode 56: Merge Intervals
 # Python version
 
-def merge(intervals: List[List[int]]) -> List[List[int]]:
+def merge(intervals: list[list[int]]) -> list[list[int]]:
     intervals.sort(key=lambda pair: pair[0])
     output = [intervals[0]]
 

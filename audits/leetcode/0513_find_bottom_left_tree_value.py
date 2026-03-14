@@ -1,11 +1,4 @@
-from __future__ import annotations
-import collections
-import heapq
-import math
-import random
-from collections import Counter, defaultdict, deque
-from functools import cache, cmp_to_key, lru_cache
-from math import ceil, sqrt
+from collections import deque
 
 # LeetCode 513: Find Bottom Left Tree Value
 # Python version
@@ -47,7 +40,7 @@ class Node:
         self.neighbors = [] if neighbors is None else neighbors
         self.key = key
 
-def findBottomLeftValue(root: Optional[TreeNode]) -> int:
+def findBottomLeftValue(root: TreeNode | None) -> int:
 
     res = []
     q = deque()
@@ -67,7 +60,7 @@ def findBottomLeftValue(root: Optional[TreeNode]) -> int:
   
 # recursive
 
-def findBottomLeftValue(root: Optional[TreeNode]) -> int:
+def findBottomLeftValue(root: TreeNode | None) -> int:
     max_height = -1
     res = -1
     def dfs(root, depth):

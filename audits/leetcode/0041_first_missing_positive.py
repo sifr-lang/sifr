@@ -1,16 +1,8 @@
-from __future__ import annotations
-import collections
-import heapq
-import math
-import random
-from collections import Counter, defaultdict, deque
-from functools import cache, cmp_to_key, lru_cache
-from math import ceil, sqrt
 
 # LeetCode 41: First Missing Positive
 # Python version
 
-def firstMissingPositive(nums: List[int]) -> int:
+def firstMissingPositive(nums: list[int]) -> int:
     A = nums
     for i in range(len(A)):
         if A[i] < 0:
@@ -31,7 +23,7 @@ def firstMissingPositive(nums: List[int]) -> int:
     return len(A) + 1
     
 
-def firstMissingPositive_2(nums: List[int]) -> int:
+def firstMissingPositive_2(nums: list[int]) -> int:
     new = set(nums)
     i = 1
     while i in new:

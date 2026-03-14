@@ -1,16 +1,9 @@
-from __future__ import annotations
-import collections
-import heapq
-import math
-import random
-from collections import Counter, defaultdict, deque
-from functools import cache, cmp_to_key, lru_cache
-from math import ceil, sqrt
+from functools import cmp_to_key
 
 # LeetCode 179: Largest Number
 # Python version
 
-def largestNumber(nums: List[int]) -> str:
+def largestNumber(nums: list[int]) -> str:
     for i, n in enumerate(nums):
         nums[i] = str(n)
 

@@ -1,16 +1,8 @@
-from __future__ import annotations
-import collections
-import heapq
-import math
-import random
-from collections import Counter, defaultdict, deque
-from functools import cache, cmp_to_key, lru_cache
-from math import ceil, sqrt
 
 # LeetCode 209: Minimum Size Subarray Sum
 # Python version
 
-def minSubArrayLen(target: int, nums: List[int]) -> int:
+def minSubArrayLen(target: int, nums: list[int]) -> int:
     res = float('inf')
     l, total = 0, 0
 

@@ -1,16 +1,8 @@
-from __future__ import annotations
-import collections
-import heapq
-import math
-import random
-from collections import Counter, defaultdict, deque
-from functools import cache, cmp_to_key, lru_cache
-from math import ceil, sqrt
 
 # LeetCode 122: Best Time To Buy And Sell Stock Ii
 # Python version
 
-def maxProfit(prices: List[int]) -> int:
+def maxProfit(prices: list[int]) -> int:
     max_profit = 0
     for i in range(1, len(prices)):
         if prices[i] > prices[i-1]:

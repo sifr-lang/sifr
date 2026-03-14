@@ -1,11 +1,4 @@
-from __future__ import annotations
 import collections
-import heapq
-import math
-import random
-from collections import Counter, defaultdict, deque
-from functools import cache, cmp_to_key, lru_cache
-from math import ceil, sqrt
 
 # LeetCode 102: Binary Tree Level Order Traversal
 # Python version
@@ -47,7 +40,7 @@ class Node:
         self.neighbors = [] if neighbors is None else neighbors
         self.key = key
 
-def levelOrder(root: TreeNode) -> List[List[int]]:
+def levelOrder(root: TreeNode) -> list[list[int]]:
     res = []
     q = collections.deque()
     if root:

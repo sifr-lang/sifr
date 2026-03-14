@@ -1,16 +1,8 @@
-from __future__ import annotations
-import collections
-import heapq
-import math
-import random
-from collections import Counter, defaultdict, deque
-from functools import cache, cmp_to_key, lru_cache
-from math import ceil, sqrt
 
 # LeetCode 978: Longest Turbulent Subarray
 # Python version
 
-def maxTurbulenceSize(arr: List[int]) -> int:
+def maxTurbulenceSize(arr: list[int]) -> int:
     l, r = 0, 1
     res, prev = 1, ""
 

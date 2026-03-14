@@ -1,16 +1,8 @@
-from __future__ import annotations
-import collections
-import heapq
-import math
-import random
-from collections import Counter, defaultdict, deque
-from functools import cache, cmp_to_key, lru_cache
-from math import ceil, sqrt
 
 # LeetCode 130: Surrounded Regions
 # Python version
 
-def solve(board: List[List[str]]) -> None:
+def solve(board: list[list[str]]) -> None:
     rows, cols = len(board), len(board[0])
     flag = set()
 
@@ -34,7 +26,7 @@ def solve(board: List[List[str]]) -> None:
 
 '''
 
-def solve(board: List[List[str]]) -> None:
+def solve(board: list[list[str]]) -> None:
     ROWS, COLS = len(board), len(board[0])
 
     def capture(r, c):

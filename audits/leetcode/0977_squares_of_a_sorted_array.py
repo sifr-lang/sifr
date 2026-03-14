@@ -1,16 +1,8 @@
-from __future__ import annotations
-import collections
-import heapq
-import math
-import random
-from collections import Counter, defaultdict, deque
-from functools import cache, cmp_to_key, lru_cache
-from math import ceil, sqrt
 
 # LeetCode 977: Squares Of A Sorted Array
 # Python version
 
-def sortedSquares(nums: List[int]) -> List[int]:
+def sortedSquares(nums: list[int]) -> list[int]:
     n = len(nums)
     res = [0] * n
     l, r = 0, n - 1

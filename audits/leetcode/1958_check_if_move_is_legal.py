@@ -1,16 +1,8 @@
-from __future__ import annotations
-import collections
-import heapq
-import math
-import random
-from collections import Counter, defaultdict, deque
-from functools import cache, cmp_to_key, lru_cache
-from math import ceil, sqrt
 
 # LeetCode 1958: Check If Move Is Legal
 # Python version
 
-def checkMove(board: List[List[str]], rMove: int, cMove: int, color: str) -> bool:
+def checkMove(board: list[list[str]], rMove: int, cMove: int, color: str) -> bool:
     ROWS, COLS = len(board), len(board[0])
     direction = [[1, 0], [-1, 0], [0, 1], [0, -1],
                  [1, 1], [-1, -1], [1, -1], [-1, 1]]

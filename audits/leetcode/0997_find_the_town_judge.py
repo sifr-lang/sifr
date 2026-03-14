@@ -1,16 +1,9 @@
-from __future__ import annotations
-import collections
-import heapq
-import math
-import random
-from collections import Counter, defaultdict, deque
-from functools import cache, cmp_to_key, lru_cache
-from math import ceil, sqrt
+from collections import defaultdict
 
 # LeetCode 997: Find The Town Judge
 # Python version
 
-def findJudge(n: int, trust: List[List[int]]) -> int:
+def findJudge(n: int, trust: list[list[int]]) -> int:
     delta = defaultdict(int)
 
     for src, dst in trust:

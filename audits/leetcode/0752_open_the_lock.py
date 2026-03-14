@@ -1,16 +1,9 @@
-from __future__ import annotations
-import collections
-import heapq
-import math
-import random
-from collections import Counter, defaultdict, deque
-from functools import cache, cmp_to_key, lru_cache
-from math import ceil, sqrt
+from collections import deque
 
 # LeetCode 752: Open The Lock
 # Python version
 
-def openLock(deadends: List[str], target: str) -> int:
+def openLock(deadends: list[str], target: str) -> int:
     if "0000" in deadends:
         return -1
 

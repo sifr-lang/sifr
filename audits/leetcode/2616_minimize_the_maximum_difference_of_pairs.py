@@ -1,16 +1,8 @@
-from __future__ import annotations
-import collections
-import heapq
-import math
-import random
-from collections import Counter, defaultdict, deque
-from functools import cache, cmp_to_key, lru_cache
-from math import ceil, sqrt
 
 # LeetCode 2616: Minimize The Maximum Difference Of Pairs
 # Python version
 
-def minimizeMax(nums: List[int], p: int) -> int:
+def minimizeMax(nums: list[int], p: int) -> int:
     nums.sort()
 
     def checkPair(mid):

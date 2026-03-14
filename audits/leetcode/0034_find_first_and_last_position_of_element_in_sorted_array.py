@@ -1,16 +1,8 @@
-from __future__ import annotations
-import collections
-import heapq
-import math
-import random
-from collections import Counter, defaultdict, deque
-from functools import cache, cmp_to_key, lru_cache
-from math import ceil, sqrt
 
 # LeetCode 34: Find First And Last Position Of Element In Sorted Array
 # Python version
 
-def searchRange(nums: List[int], target: int) -> List[int]:
+def searchRange(nums: list[int], target: int) -> list[int]:
     left = binSearch(nums, target, True)
     right = binSearch(nums, target, False)
     return [left, right]

@@ -1,16 +1,8 @@
-from __future__ import annotations
-import collections
-import heapq
-import math
-import random
-from collections import Counter, defaultdict, deque
-from functools import cache, cmp_to_key, lru_cache
-from math import ceil, sqrt
 
 # LeetCode 658: Find K Closest Elements
 # Python version
 
-def findClosestElements(arr: List[int], k: int, x: int) -> List[int]:
+def findClosestElements(arr: list[int], k: int, x: int) -> list[int]:
     l, r = 0, len(arr) - 1
 
     # Find index of x or the closest val to x
@@ -42,7 +34,7 @@ def findClosestElements(arr: List[int], k: int, x: int) -> List[int]:
 # Log(n-k) + k
 # Elegant but very difficult to understand
 
-def findClosestElements(arr: List[int], k: int, x: int) -> List[int]:
+def findClosestElements(arr: list[int], k: int, x: int) -> list[int]:
     l, r = 0, len(arr) - k
 
     while l < r:

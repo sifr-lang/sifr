@@ -1,16 +1,8 @@
-from __future__ import annotations
-import collections
-import heapq
-import math
-import random
-from collections import Counter, defaultdict, deque
-from functools import cache, cmp_to_key, lru_cache
-from math import ceil, sqrt
 
 # LeetCode 81: Search In Rotated Sorted Array Ii
 # Python version
 
-def search(nums: List[int], target: int) -> bool:
+def search(nums: list[int], target: int) -> bool:
     left,right = 0,len(nums) - 1
     while left <= right:
         mid = left + (right - left) // 2

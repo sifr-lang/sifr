@@ -1,16 +1,8 @@
-from __future__ import annotations
-import collections
-import heapq
-import math
-import random
-from collections import Counter, defaultdict, deque
-from functools import cache, cmp_to_key, lru_cache
-from math import ceil, sqrt
 
 # LeetCode 63: Unique Paths Ii
 # Python version
 
-def uniquePathsWithObstacles(grid: List[List[int]]) -> int:
+def uniquePathsWithObstacles(grid: list[list[int]]) -> int:
     M, N = len(grid), len(grid[0])
     dp = [0] * N
     dp[N-1] = 1

@@ -1,16 +1,9 @@
-from __future__ import annotations
-import collections
 import heapq
-import math
-import random
-from collections import Counter, defaultdict, deque
-from functools import cache, cmp_to_key, lru_cache
-from math import ceil, sqrt
 
 # LeetCode 1834: Single Threaded Cpu
 # Python version
 
-def getOrder(tasks: List[List[int]]) -> List[int]:
+def getOrder(tasks: list[list[int]]) -> list[int]:
     tasks = sorted([(t[0], t[1], i) for i, t in enumerate(tasks)])
     result, heap = [], []
     cur_task_index = 0

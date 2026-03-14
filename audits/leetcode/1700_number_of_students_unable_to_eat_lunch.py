@@ -1,16 +1,8 @@
-from __future__ import annotations
-import collections
-import heapq
-import math
-import random
-from collections import Counter, defaultdict, deque
-from functools import cache, cmp_to_key, lru_cache
-from math import ceil, sqrt
 
 # LeetCode 1700: Number Of Students Unable To Eat Lunch
 # Python version
 
-def countStudents(students: List[int], sandwiches: List[int]) -> int:
+def countStudents(students: list[int], sandwiches: list[int]) -> int:
     num_of_students_back_in_line = 0
     while num_of_students_back_in_line != len(students):
         curr_student = students.pop(0)

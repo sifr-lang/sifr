@@ -1,16 +1,8 @@
-from __future__ import annotations
-import collections
-import heapq
-import math
-import random
-from collections import Counter, defaultdict, deque
-from functools import cache, cmp_to_key, lru_cache
-from math import ceil, sqrt
 
 # LeetCode 150: Evaluate Reverse Polish Notation
 # Python version
 
-def evalRPN(tokens: List[str]) -> int:
+def evalRPN(tokens: list[str]) -> int:
     stack = []
     for c in tokens:
         if c == "+":

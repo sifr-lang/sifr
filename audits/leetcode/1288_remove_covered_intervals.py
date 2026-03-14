@@ -1,16 +1,8 @@
-from __future__ import annotations
-import collections
-import heapq
-import math
-import random
-from collections import Counter, defaultdict, deque
-from functools import cache, cmp_to_key, lru_cache
-from math import ceil, sqrt
 
 # LeetCode 1288: Remove Covered Intervals
 # Python version
 
-def removeCoveredIntervals(intervals: List[List[int]]) -> int:
+def removeCoveredIntervals(intervals: list[list[int]]) -> int:
     # sort on the basis of inc li first and then on the basis of dec length (=> -ri)
     intervals.sort(key=lambda x: (x[0], -x[1]))
     

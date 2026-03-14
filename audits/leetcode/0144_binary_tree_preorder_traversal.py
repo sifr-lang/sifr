@@ -1,11 +1,3 @@
-from __future__ import annotations
-import collections
-import heapq
-import math
-import random
-from collections import Counter, defaultdict, deque
-from functools import cache, cmp_to_key, lru_cache
-from math import ceil, sqrt
 
 # LeetCode 144: Binary Tree Preorder Traversal
 # Python version
@@ -47,7 +39,7 @@ class Node:
         self.neighbors = [] if neighbors is None else neighbors
         self.key = key
 
-def preorderTraversal(root: Optional[TreeNode]) -> List[int]:
+def preorderTraversal(root: TreeNode | None) -> list[int]:
     cur, stack = root, []
     res = []
     while cur or stack:

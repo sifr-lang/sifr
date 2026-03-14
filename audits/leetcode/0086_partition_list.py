@@ -1,11 +1,3 @@
-from __future__ import annotations
-import collections
-import heapq
-import math
-import random
-from collections import Counter, defaultdict, deque
-from functools import cache, cmp_to_key, lru_cache
-from math import ceil, sqrt
 
 # LeetCode 86: Partition List
 # Python version
@@ -44,7 +36,7 @@ class Node:
         self.neighbors = [] if neighbors is None else neighbors
         self.key = key
 
-def partition(head: Optional[ListNode], x: int) -> Optional[ListNode]:
+def partition(head: ListNode | None, x: int) -> ListNode | None:
     less_head, bigger_head = ListNode(-1), ListNode(-1)
     less_prev, bigger_prev = less_head, bigger_head
     while head:

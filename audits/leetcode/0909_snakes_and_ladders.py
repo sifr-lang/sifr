@@ -1,16 +1,9 @@
-from __future__ import annotations
-import collections
-import heapq
-import math
-import random
-from collections import Counter, defaultdict, deque
-from functools import cache, cmp_to_key, lru_cache
-from math import ceil, sqrt
+from collections import deque
 
 # LeetCode 909: Snakes And Ladders
 # Python version
 
-def snakesAndLadders(board: List[List[int]]) -> int:
+def snakesAndLadders(board: list[list[int]]) -> int:
     length = len(board)
     board.reverse()
 

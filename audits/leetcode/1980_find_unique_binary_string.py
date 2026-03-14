@@ -1,16 +1,8 @@
-from __future__ import annotations
-import collections
-import heapq
-import math
-import random
-from collections import Counter, defaultdict, deque
-from functools import cache, cmp_to_key, lru_cache
-from math import ceil, sqrt
 
 # LeetCode 1980: Find Unique Binary String
 # Python version
 
-def findDifferentBinaryString(nums: List[str]) -> str:
+def findDifferentBinaryString(nums: list[str]) -> str:
     
     strSet = { s for s in nums }
     

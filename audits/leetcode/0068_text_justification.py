@@ -1,16 +1,8 @@
-from __future__ import annotations
-import collections
-import heapq
-import math
-import random
-from collections import Counter, defaultdict, deque
-from functools import cache, cmp_to_key, lru_cache
-from math import ceil, sqrt
 
 # LeetCode 68: Text Justification
 # Python version
 
-def fullJustify(words: List[str], maxWidth: int) -> List[str]:
+def fullJustify(words: list[str], maxWidth: int) -> list[str]:
     res = []
     line = []  # Words in current line
     length = 0  # Current line length

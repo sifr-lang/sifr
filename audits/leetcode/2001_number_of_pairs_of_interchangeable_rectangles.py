@@ -1,16 +1,8 @@
-from __future__ import annotations
-import collections
-import heapq
-import math
-import random
-from collections import Counter, defaultdict, deque
-from functools import cache, cmp_to_key, lru_cache
-from math import ceil, sqrt
 
 # LeetCode 2001: Number Of Pairs Of Interchangeable Rectangles
 # Python version
 
-def interchangeableRectangles(rectangles: List[List[int]]) -> int:
+def interchangeableRectangles(rectangles: list[list[int]]) -> int:
     count = {}  # { W / H : Count }
     res = 0
 

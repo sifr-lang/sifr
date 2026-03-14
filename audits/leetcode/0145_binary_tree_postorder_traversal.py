@@ -1,11 +1,3 @@
-from __future__ import annotations
-import collections
-import heapq
-import math
-import random
-from collections import Counter, defaultdict, deque
-from functools import cache, cmp_to_key, lru_cache
-from math import ceil, sqrt
 
 # LeetCode 145: Binary Tree Postorder Traversal
 # Python version
@@ -47,7 +39,7 @@ class Node:
         self.neighbors = [] if neighbors is None else neighbors
         self.key = key
 
-def postorderTraversal(root: Optional[TreeNode]) -> List[int]:
+def postorderTraversal(root: TreeNode | None) -> list[int]:
     stack = [root]
     visit = [False]
     res = []

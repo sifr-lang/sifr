@@ -1,16 +1,8 @@
-from __future__ import annotations
-import collections
-import heapq
-import math
-import random
-from collections import Counter, defaultdict, deque
-from functools import cache, cmp_to_key, lru_cache
-from math import ceil, sqrt
 
 # LeetCode 1822: Sign Of The Product Of An Array
 # Python version
 
-def arraySign(nums: List[int]) -> int:
+def arraySign(nums: list[int]) -> int:
     flag = True
     for i in nums:
         if i == 0:

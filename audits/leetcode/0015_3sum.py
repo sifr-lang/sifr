@@ -1,16 +1,8 @@
-from __future__ import annotations
-import collections
-import heapq
-import math
-import random
-from collections import Counter, defaultdict, deque
-from functools import cache, cmp_to_key, lru_cache
-from math import ceil, sqrt
 
 # LeetCode 15: 3Sum
 # Python version
 
-def threeSum(nums: List[int]) -> List[List[int]]:
+def threeSum(nums: list[int]) -> list[list[int]]:
     res = []
     nums.sort()
 

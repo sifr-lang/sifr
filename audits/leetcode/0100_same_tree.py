@@ -1,11 +1,3 @@
-from __future__ import annotations
-import collections
-import heapq
-import math
-import random
-from collections import Counter, defaultdict, deque
-from functools import cache, cmp_to_key, lru_cache
-from math import ceil, sqrt
 
 # LeetCode 100: Same Tree
 # Python version
@@ -47,7 +39,7 @@ class Node:
         self.neighbors = [] if neighbors is None else neighbors
         self.key = key
 
-def isSameTree(p: Optional[TreeNode], q: Optional[TreeNode]) -> bool:
+def isSameTree(p: TreeNode | None, q: TreeNode | None) -> bool:
     if not p and not q:
         return True
     if p and q and p.val == q.val:

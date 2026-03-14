@@ -1,16 +1,8 @@
-from __future__ import annotations
-import collections
-import heapq
-import math
-import random
-from collections import Counter, defaultdict, deque
-from functools import cache, cmp_to_key, lru_cache
-from math import ceil, sqrt
 
 # LeetCode 417: Pacific Atlantic Water Flow
 # Python version
 
-def pacificAtlantic(heights: List[List[int]]) -> List[List[int]]:
+def pacificAtlantic(heights: list[list[int]]) -> list[list[int]]:
     ROWS, COLS = len(heights), len(heights[0])
     pac, atl = set(), set()
 

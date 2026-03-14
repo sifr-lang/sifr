@@ -1,16 +1,8 @@
-from __future__ import annotations
-import collections
-import heapq
-import math
-import random
-from collections import Counter, defaultdict, deque
-from functools import cache, cmp_to_key, lru_cache
-from math import ceil, sqrt
 
 # LeetCode 73: Set Matrix Zeroes
 # Python version
 
-def setZeroes(matrix: List[List[int]]) -> None:
+def setZeroes(matrix: list[list[int]]) -> None:
     # O(1)
     ROWS, COLS = len(matrix), len(matrix[0])
     rowZero = False

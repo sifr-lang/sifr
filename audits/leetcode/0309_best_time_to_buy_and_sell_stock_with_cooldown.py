@@ -1,16 +1,8 @@
-from __future__ import annotations
-import collections
-import heapq
-import math
-import random
-from collections import Counter, defaultdict, deque
-from functools import cache, cmp_to_key, lru_cache
-from math import ceil, sqrt
 
 # LeetCode 309: Best Time To Buy And Sell Stock With Cooldown
 # Python version
 
-def maxProfit(prices: List[int]) -> int:
+def maxProfit(prices: list[int]) -> int:
     # State: Buying or Selling?
     # If Buy -> i + 1
     # If Sell -> i + 2

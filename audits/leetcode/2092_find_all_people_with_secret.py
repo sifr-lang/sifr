@@ -1,16 +1,9 @@
-from __future__ import annotations
-import collections
-import heapq
-import math
-import random
-from collections import Counter, defaultdict, deque
-from functools import cache, cmp_to_key, lru_cache
-from math import ceil, sqrt
+from collections import defaultdict
 
 # LeetCode 2092: Find All People With Secret
 # Python version
 
-def findAllPeople(n: int, meetings: List[List[int]], firstPerson: int) -> List[int]:
+def findAllPeople(n: int, meetings: list[list[int]], firstPerson: int) -> list[int]:
     secrets = set([0, firstPerson])
     time_map = {}
 
