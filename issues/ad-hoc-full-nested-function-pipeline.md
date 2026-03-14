@@ -22,7 +22,7 @@ This phase covers the full compiler pipeline for:
 - [x] `milestone_nested_3`: capture typing and `nonlocal`-style state updates
 - [x] `milestone_nested_4`: codegen, diagnostics, and unsupported-shape boundaries
 - [x] `milestone_nested_5`: regression corpus, demos, and full-corpus closure evidence
-- [ ] external review pass 1 completed and acted on
+- [x] external review pass 1 completed and acted on
 - [ ] production-grade review pass completed and acted on
 
 ## Execution Log
@@ -47,6 +47,9 @@ This phase covers the full compiler pipeline for:
   - Execution report: `issues/ad-hoc-full-nested-function-pipeline-part5-execution.md`
   - PR: `#1146`
   - Closure basis: the phase now has authoritative demo coverage plus permanent pass/fail nested-function regressions, and the watched audit set is classified into supported passes, explicit ownership boundaries, and unrelated residual blockers outside this pipeline.
+- `2026-03-15`: external review pass 1 completed.
+  - Review file: `reviews/phase-nested-functions-review-pass-1.md`
+  - Outcome: approved for the documented phase scope with no blocking findings and no required code changes.
 
 ## Entry Baseline Evidence (2026-03-14)
 
