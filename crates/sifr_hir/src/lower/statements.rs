@@ -24,7 +24,9 @@ use super::sequence_guard_detection::{
 };
 use super::sequence_pointers::record_sequence_pointer_fact;
 use super::sequence_shapes::sequence_shape_fact;
-use super::typing_and_functions::{register_local_function_symbol, resolve_annotation_expr};
+use super::typing_and_functions::{
+    register_local_function_signature, register_local_function_symbol, resolve_annotation_expr,
+};
 use super::LowerCtx;
 
 fn ensure_mutable_parameter_binding(ctx: &mut LowerCtx, name: &str, operation: &str) -> bool {
@@ -73,9 +75,14 @@ pub(super) fn lower_stmts(
 }
 
 fn predeclare_nested_function_symbols(stmts: &[Stmt], ctx: &mut LowerCtx) {
+    let inferred_types = super::nested_function_inference::infer_nested_function_types(stmts, ctx);
     for stmt in stmts {
         if let Stmt::FunctionDef(func) = stmt {
-            register_local_function_symbol(func, ctx);
+            if let Some(function_type) = inferred_types.get(func.name.as_str()).cloned() {
+                register_local_function_signature(func, function_type, ctx);
+            } else {
+                register_local_function_symbol(func, ctx);
+            }
         }
     }
 }

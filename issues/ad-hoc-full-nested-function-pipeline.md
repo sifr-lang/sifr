@@ -18,7 +18,7 @@ This phase covers the full compiler pipeline for:
 ## Execution Checklist
 
 - [x] `milestone_nested_1`: nested symbol predeclaration and typed callable representation
-- [ ] `milestone_nested_2`: usage-driven inference and recursive local helper typing
+- [x] `milestone_nested_2`: usage-driven inference and recursive local helper typing
 - [ ] `milestone_nested_3`: capture typing and `nonlocal`-style state updates
 - [ ] `milestone_nested_4`: codegen, diagnostics, and unsupported-shape boundaries
 - [ ] `milestone_nested_5`: regression corpus, demos, and full-corpus closure evidence
@@ -31,6 +31,10 @@ This phase covers the full compiler pipeline for:
   - Execution report: `issues/ad-hoc-full-nested-function-pipeline-part1-execution.md`
   - PR: `#1139`
   - Closure basis: nested helpers are now predeclared as typed local callables during HIR lowering, forward local helper references no longer fail due to statement-order registration, and missing helper names still fail explicitly.
+- `2026-03-14`: `milestone_nested_2` completed.
+  - Execution report: `issues/ad-hoc-full-nested-function-pipeline-part2-execution.md`
+  - PR: pending
+  - Closure basis: supported recursive local helpers now infer parameters and returns deterministically, conflicting local-helper inference fails explicitly, and the watched corpus has moved beyond the original nested-annotation / `Any` failure mode.
 
 ## Entry Baseline Evidence (2026-03-14)
 

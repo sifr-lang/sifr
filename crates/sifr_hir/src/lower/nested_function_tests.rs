@@ -62,3 +62,26 @@ fn test_missing_forward_local_helper_still_errors_explicitly() {
         .iter()
         .any(|error| error.message == "undefined variable: 'missing'"));
 }
+
+#[test]
+fn test_recursive_nested_helper_infers_int_signature_from_usage() {
+    let result = lower_source(
+        "def power_two(exp: int) -> int:\n    def helper(n):\n        if n == 0:\n            return 1\n        return 2 * helper(n - 1)\n\n    return helper(exp)\n",
+    );
+    assert!(
+        result.is_ok(),
+        "recursive local helpers should infer integer parameter and return types from supported usage"
+    );
+}
+
+#[test]
+fn test_conflicting_nested_helper_call_sites_fail_inference_explicitly() {
+    let result = lower_source(
+        "def outer(flag: bool) -> None:\n    def helper(value):\n        print(value)\n\n    if flag:\n        helper(1)\n    else:\n        helper(\"x\")\n",
+    );
+    assert!(result.is_err());
+    let errors = result.unwrap_err();
+    assert!(errors.iter().any(|error| {
+        error.message == "argument 1 of callable 'helper': expected 'str', got 'int'"
+    }));
+}

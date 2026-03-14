@@ -1,0 +1,12 @@
+# Test: Recursive nested helper infers integer parameter and return types.
+
+def power_two(exp: int) -> int:
+    def helper(n):
+        if n == 0:
+            return 1
+        return 2 * helper(n - 1)
+
+    return helper(exp)
+
+def main():
+    assert power_two(10) == 1024
