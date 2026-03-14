@@ -60,9 +60,33 @@ def addTwoNumbers(l1: ListNode, l2: ListNode) -> ListNode:
 
 
 def main():
-    assert addTwoNumbers(ListNode(2, ListNode(4, ListNode(3, None))), ListNode(5, ListNode(6, ListNode(4, None)))) == <ListNode object at 0x105bb3750>
-    assert addTwoNumbers(ListNode(0, None), ListNode(0, None)) == <ListNode object at 0x106630290>
-    assert addTwoNumbers(ListNode(9, ListNode(9, ListNode(9, ListNode(9, ListNode(9, ListNode(9, ListNode(9, None))))))), ListNode(9, ListNode(9, ListNode(9, ListNode(9, None))))) == <ListNode object at 0x105bf6f10>
+    assert list_node_to_string(
+        addTwoNumbers(
+            ListNode(2, ListNode(4, ListNode(3, None))),
+            ListNode(5, ListNode(6, ListNode(4, None))),
+        )
+    ) == list_node_to_string(ListNode(7, ListNode(0, ListNode(8, None))))
+    assert list_node_to_string(addTwoNumbers(ListNode(0, None), ListNode(0, None))) == list_node_to_string(ListNode(0, None))
+    assert list_node_to_string(
+        addTwoNumbers(
+            ListNode(9, ListNode(9, ListNode(9, ListNode(9, ListNode(9, ListNode(9, ListNode(9, None))))))),
+            ListNode(9, ListNode(9, ListNode(9, ListNode(9, None)))),
+        )
+    ) == list_node_to_string(
+        ListNode(
+            8,
+            ListNode(
+                9,
+                ListNode(
+                    9,
+                    ListNode(
+                        9,
+                        ListNode(0, ListNode(0, ListNode(0, ListNode(1, None)))),
+                    ),
+                ),
+            ),
+        )
+    )
 
 if __name__ == "__main__":
     main()
