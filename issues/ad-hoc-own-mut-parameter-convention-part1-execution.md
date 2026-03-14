@@ -1,10 +1,10 @@
 # Ad Hoc `own mut` Parameter Convention: Part 1 Execution
 
-Status: complete locally
+Status: complete
 Started: 2026-03-14
 Completed: 2026-03-14
 Part: `orthogonal_parameter_convention_model_and_frontend_normalization`
-PR: pending
+PR: `#1130`
 
 ## Goal
 

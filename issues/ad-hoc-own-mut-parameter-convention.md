@@ -198,7 +198,7 @@ fn replace_elements(mut arr: Vec<i64>) -> Vec<i64> {
 
 ## Part Breakdown
 
-- [ ] Part 1 `orthogonal_parameter_convention_model_and_frontend_normalization` (locally validated; PR pending)
+- [x] Part 1 `orthogonal_parameter_convention_model_and_frontend_normalization`
   - parser accepts `own mut` and `mut own`
   - AST/HIR/type signatures carry orthogonal ownership + mutability structurally
   - normalization and duplicate-modifier regressions are locked
@@ -217,9 +217,9 @@ fn replace_elements(mut arr: Vec<i64>) -> Vec<i64> {
 
 ## Execution Log
 
-- `2026-03-14`: part 1 `orthogonal_parameter_convention_model_and_frontend_normalization` completed local validation and is ready for PR.
+- `2026-03-14`: part 1 `orthogonal_parameter_convention_model_and_frontend_normalization` completed and merged.
   - Execution report: `issues/ad-hoc-own-mut-parameter-convention-part1-execution.md`
-  - PR: pending
+  - PR: `#1130`
   - Demo: `demos/ad_hoc_own_mut_parameter_convention_part1_demo.sifr`
   - Added regression coverage:
     - `crates/sifr_python_parser/src/parser/tests.rs`
