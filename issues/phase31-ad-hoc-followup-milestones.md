@@ -68,6 +68,7 @@ Phase 31 itself is complete. This document is the carry-forward plan for the rem
 
 These are broader feature phases that must land before the related Phase 31 LeetCode closure milestones start.
 
+For the original 50-case seed corpus, the two prerequisites below were sufficient at plan time. A later broader corpus review showed that nested local functions are also broad enough to justify their own prerequisite phase, so `m31_d` should now be treated as follow-on LeetCode closure after that broader phase lands.
 ### `prereq_recursive_types`
 
 - Source phase: `issues/ad-hoc-full-recursive-type-feature.md`
@@ -89,6 +90,17 @@ These are broader feature phases that must land before the related Phase 31 Leet
   - rewrite `1299` into canonical Sifr form
   - rerun the case and lock the corpus/demo coverage
   - close the related Phase 31 milestone only when the LeetCode case is passing
+
+### `prereq_nested_function_pipeline`
+
+- Source phase: `issues/ad-hoc-full-nested-function-pipeline.md`
+- Why it is a prerequisite:
+  - the broader full-corpus review showed nested local functions are a real cross-cutting language/compiler feature rather than a seed-only compatibility patch
+  - the new ad hoc nested-function phase intentionally owns the production-grade lowering, inference, capture typing, and `nonlocal`-style behavior
+- Phase 31 responsibility after prerequisite lands:
+  - rerun the seed nested-helper cases
+  - add any remaining corpus-specific regression coverage
+  - close `m31_d` only when the Phase 31 cases are passing
 
 ## Execution Log
 
@@ -154,17 +166,18 @@ These are broader feature phases that must land before the related Phase 31 Leet
 
 1. `prereq_recursive_types`
 2. `prereq_own_mut`
-3. `m31_g_container_literal_specialization_and_state_tracking`
-4. `m31_a_optional_flow_completion`
-5. `m31_b_destructuring_and_composite_lvalues`
-6. `m31_d_nested_function_pipeline_completion`
-7. `m31_e_recursive_tree_surface_leetcode_closure`
-8. `m31_h_local_name_binding_and_shadowing`
-9. `m31_j_own_mut_leetcode_closure`
-10. `m31_k_canonical_sifr_fixture_normalization`
-11. `m31_i_corpus_fixture_canonicalization_for_multi_solution_files`
+3. `prereq_nested_function_pipeline`
+4. `m31_g_container_literal_specialization_and_state_tracking`
+5. `m31_a_optional_flow_completion`
+6. `m31_b_destructuring_and_composite_lvalues`
+7. `m31_d_nested_function_pipeline_completion`
+8. `m31_e_recursive_tree_surface_leetcode_closure`
+9. `m31_h_local_name_binding_and_shadowing`
+10. `m31_j_own_mut_leetcode_closure`
+11. `m31_k_canonical_sifr_fixture_normalization`
+12. `m31_i_corpus_fixture_canonicalization_for_multi_solution_files`
 
-This order starts with the two broader feature prerequisites, then front-loads independent compiler wins, and keeps the related Phase 31 milestones focused on corpus closure rather than re-owning the prerequisite feature work.
+This order starts with the broader feature prerequisites, then front-loads independent compiler wins, and keeps the related Phase 31 milestones focused on corpus closure rather than re-owning the prerequisite feature work.
 
 ## Milestones
 
@@ -217,6 +230,7 @@ This order starts with the two broader feature prerequisites, then front-loads i
 ### `m31_d_nested_function_pipeline_completion`
 
 - Scope:
+  - depends on `prereq_nested_function_pipeline`
   - finish lowering for remaining nested function shapes, including `nonlocal`
   - infer nested helper params/returns for the supported corpus patterns
   - eliminate generic `Any` fallback leakage from nested helper bodies
