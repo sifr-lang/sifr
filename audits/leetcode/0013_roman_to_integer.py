@@ -1,3 +1,4 @@
+
 # LeetCode 13: Roman To Integer
 # Python version
 
@@ -14,9 +15,9 @@ def romanToInt(s: str) -> int:
 
 
 def main():
-    print(romanToInt("III"))
-    print(romanToInt("LVIII"))
-    print(romanToInt("MCMXCIV"))
+    assert romanToInt("III") == 3
+    assert romanToInt("LVIII") == 58
+    assert romanToInt("MCMXCIV") == 1994
 
 if __name__ == "__main__":
     main()

@@ -1,7 +1,8 @@
+
 # LeetCode 525: Contiguous Array
 # Python version
 
-def findMaxLength(nums: List[int]) -> int:
+def findMaxLength(nums: list[int]) -> int:
     zero, one = 0, 0
     res = 0
 
@@ -25,8 +26,8 @@ def findMaxLength(nums: List[int]) -> int:
 
 
 def main():
-    print(findMaxLength([0,1]))
-    print(findMaxLength([0,1,0]))
+    assert findMaxLength([0,1]) == 2
+    assert findMaxLength([0,1,0]) == 2
 
 if __name__ == "__main__":
     main()

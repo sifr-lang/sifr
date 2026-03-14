@@ -1,3 +1,5 @@
+from collections import deque
+
 # LeetCode 286: Walls And Gates
 # Python version
 
@@ -7,7 +9,7 @@
 """
 
 
-def walls_and_gates(rooms: List[List[int]]):
+def walls_and_gates(rooms: list[list[int]]):
     ROWS, COLS = len(rooms), len(rooms[0])
     visit = set()
     q = deque()
@@ -44,7 +46,12 @@ def walls_and_gates(rooms: List[List[int]]):
 
 
 def main():
-    print("no test cases")
+    arg0 = [[2147483647, -1, 0, 2147483647], [2147483647, 2147483647, 2147483647, -1], [2147483647, -1, 2147483647, -1], [0, -1, 2147483647, 2147483647]]
+    _result = walls_and_gates(arg0)
+    assert arg0 == [[3, -1, 0, 1], [2, 2, 1, -1], [1, -1, 2, -1], [0, -1, 3, 4]]
+    arg0 = [[-1]]
+    _result = walls_and_gates(arg0)
+    assert arg0 == [[-1]]
 
 if __name__ == "__main__":
     main()

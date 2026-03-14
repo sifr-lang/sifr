@@ -1,3 +1,4 @@
+
 # LeetCode 168: Excel Sheet Column Title
 # Python version
 
@@ -14,9 +15,9 @@ def convertToTitle(columnNumber: int) -> str:
 
 
 def main():
-    print(convertToTitle(1))
-    print(convertToTitle(28))
-    print(convertToTitle(701))
+    assert convertToTitle(1) == 'A'
+    assert convertToTitle(28) == 'AB'
+    assert convertToTitle(701) == 'ZY'
 
 if __name__ == "__main__":
     main()

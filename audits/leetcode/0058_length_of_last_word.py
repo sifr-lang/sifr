@@ -1,3 +1,4 @@
+
 # LeetCode 58: Length of Last Word
 # Python version with test cases
 
@@ -14,10 +15,10 @@ def lengthOfLastWord(s: str) -> int:
     return length
 
 def main():
-    print(lengthOfLastWord("Hello World"))
-    print(lengthOfLastWord("   fly me   to   the moon  "))
-    print(lengthOfLastWord("luffy is still joyboy"))
-    print(lengthOfLastWord("a"))
+    assert lengthOfLastWord("Hello World") == 5
+    assert lengthOfLastWord("   fly me   to   the moon  ") == 4
+    assert lengthOfLastWord("luffy is still joyboy") == 6
+    assert lengthOfLastWord("a") == 1
 
 if __name__ == "__main__":
     main()

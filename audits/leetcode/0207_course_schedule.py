@@ -1,7 +1,8 @@
+
 # LeetCode 207: Course Schedule
 # Python version
 
-def canFinish(numCourses: int, prerequisites: List[List[int]]) -> bool:
+def canFinish(numCourses: int, prerequisites: list[list[int]]) -> bool:
     # dfs
     preMap = {i: [] for i in range(numCourses)}
 
@@ -33,7 +34,8 @@ def canFinish(numCourses: int, prerequisites: List[List[int]]) -> bool:
 
 
 def main():
-    print("no test cases")
+    assert canFinish(2, [[1, 0]]) == True
+    assert canFinish(2, [[1, 0], [0, 1]]) == False
 
 if __name__ == "__main__":
     main()

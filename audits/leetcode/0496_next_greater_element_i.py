@@ -1,7 +1,8 @@
+
 # LeetCode 496: Next Greater Element I
 # Python version
 
-def nextGreaterElement(nums1: List[int], nums2: List[int]) -> List[int]:
+def nextGreaterElement(nums1: list[int], nums2: list[int]) -> list[int]:
 
     # O (n + m)
     nums1Idx = { n:i for i, n in enumerate(nums1) }
@@ -40,7 +41,7 @@ def nextGreaterElement(nums1: List[int], nums2: List[int]) -> List[int]:
 
 
 def main():
-    print(nextGreaterElement([4,1,2], [1,3,4,2]))
+    assert nextGreaterElement([4,1,2], [1,3,4,2]) == [-1, 3, -1]
 
 if __name__ == "__main__":
     main()

@@ -5,7 +5,7 @@ writes .py + .sifr files, and records which ones need test cases.
 
 This script handles the CONVERSION only. Testing is done separately.
 """
-import os, re, sys, textwrap
+import os, re
 
 SRC = "/Users/yaseralnajjar/work/sifr/leetcode/python"
 DST = "/Users/yaseralnajjar/work/sifr/codebase/audit/leetcode"

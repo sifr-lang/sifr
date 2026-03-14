@@ -1,7 +1,8 @@
+
 # LeetCode 377: Combination Sum Iv
 # Python version
 
-def combinationSum4(nums: List[int], target: int) -> int:
+def combinationSum4(nums: list[int], target: int) -> int:
     cache = {0: 1}
 
     for total in range(1, target + 1):
@@ -28,7 +29,7 @@ def combinationSum4(nums: List[int], target: int) -> int:
 
 
 def main():
-    print(combinationSum4([1,2,3], 4))
+    assert combinationSum4([1,2,3], 4) == 7
 
 if __name__ == "__main__":
     main()

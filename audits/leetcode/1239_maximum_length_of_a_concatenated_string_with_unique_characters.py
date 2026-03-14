@@ -1,7 +1,9 @@
+from collections import Counter
+
 # LeetCode 1239: Maximum Length Of A Concatenated String With Unique Characters
 # Python version
 
-def maxLength(arr: List[str]) -> int:
+def maxLength(arr: list[str]) -> int:
     charSet = set()
 
     def overlap(charSet, s):
@@ -31,7 +33,9 @@ def maxLength(arr: List[str]) -> int:
 
 
 def main():
-    print("no test cases")
+    assert maxLength(['un', 'iq', 'ue']) == 4
+    assert maxLength(['cha', 'r', 'act', 'ers']) == 6
+    assert maxLength(['abcdefghijklmnopqrstuvwxyz']) == 26
 
 if __name__ == "__main__":
     main()

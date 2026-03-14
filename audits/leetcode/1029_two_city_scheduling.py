@@ -1,7 +1,8 @@
+
 # LeetCode 1029: Two City Scheduling
 # Python version
 
-def twoCitySchedCost(costs: List[List[int]]) -> int:
+def twoCitySchedCost(costs: list[list[int]]) -> int:
     diffs = []
     for c1, c2 in costs:
         diffs.append([c2 - c1, c1, c2])
@@ -16,7 +17,7 @@ def twoCitySchedCost(costs: List[List[int]]) -> int:
 
 
 def main():
-    print(twoCitySchedCost([[10,20],[30,200],[400,50],[30,20]]))
+    assert twoCitySchedCost([[10,20],[30,200],[400,50],[30,20]]) == 110
 
 if __name__ == "__main__":
     main()

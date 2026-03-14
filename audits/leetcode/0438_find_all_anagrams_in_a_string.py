@@ -1,7 +1,8 @@
+
 # LeetCode 438: Find All Anagrams In A String
 # Python version
 
-def findAnagrams(s: str, p: str) -> List[int]:
+def findAnagrams(s: str, p: str) -> list[int]:
     
     startIndex = 0
     pMap, sMap = {}, {}
@@ -28,8 +29,8 @@ def findAnagrams(s: str, p: str) -> List[int]:
 
 
 def main():
-    print(findAnagrams("cbaebabacd", "abc"))
-    print(findAnagrams("abab", "ab"))
+    assert findAnagrams("cbaebabacd", "abc") == [0, 6]
+    assert findAnagrams("abab", "ab") == [0, 1, 2]
 
 if __name__ == "__main__":
     main()

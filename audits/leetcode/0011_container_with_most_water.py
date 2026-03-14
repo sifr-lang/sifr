@@ -1,7 +1,8 @@
+
 # LeetCode 11: Container With Most Water
 # Python version
 
-def maxArea(height: List[int]) -> int:
+def maxArea(height: list[int]) -> int:
     l, r = 0, len(height) - 1
     res = 0
 
@@ -17,8 +18,8 @@ def maxArea(height: List[int]) -> int:
 
 
 def main():
-    print(maxArea([1,8,6,2,5,4,8,3,7]))
-    print(maxArea([1,1]))
+    assert maxArea([1,8,6,2,5,4,8,3,7]) == 49
+    assert maxArea([1,1]) == 1
 
 if __name__ == "__main__":
     main()

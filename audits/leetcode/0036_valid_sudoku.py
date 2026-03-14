@@ -1,7 +1,10 @@
+
 # LeetCode 36: Valid Sudoku
 # Python version
 
-def isValidSudoku(board: List[List[str]]) -> bool:
+import collections
+
+def isValidSudoku(board: list[list[str]]) -> bool:
     cols = collections.defaultdict(set)
     rows = collections.defaultdict(set)
     squares = collections.defaultdict(set)  # key = (r /3, c /3)
@@ -25,7 +28,30 @@ def isValidSudoku(board: List[List[str]]) -> bool:
 
 
 def main():
-    print("no test cases")
+    valid_board = [
+        ["5", "3", ".", ".", "7", ".", ".", ".", "."],
+        ["6", ".", ".", "1", "9", "5", ".", ".", "."],
+        [".", "9", "8", ".", ".", ".", ".", "6", "."],
+        ["8", ".", ".", ".", "6", ".", ".", ".", "3"],
+        ["4", ".", ".", "8", ".", "3", ".", ".", "1"],
+        ["7", ".", ".", ".", "2", ".", ".", ".", "6"],
+        [".", "6", ".", ".", ".", ".", "2", "8", "."],
+        [".", ".", ".", "4", "1", "9", ".", ".", "5"],
+        [".", ".", ".", ".", "8", ".", ".", "7", "9"],
+    ]
+    invalid_board = [
+        ["8", "3", ".", ".", "7", ".", ".", ".", "."],
+        ["6", ".", ".", "1", "9", "5", ".", ".", "."],
+        [".", "9", "8", ".", ".", ".", ".", "6", "."],
+        ["8", ".", ".", ".", "6", ".", ".", ".", "3"],
+        ["4", ".", ".", "8", ".", "3", ".", ".", "1"],
+        ["7", ".", ".", ".", "2", ".", ".", ".", "6"],
+        [".", "6", ".", ".", ".", ".", "2", "8", "."],
+        [".", ".", ".", "4", "1", "9", ".", ".", "5"],
+        [".", ".", ".", ".", "8", ".", ".", "7", "9"],
+    ]
+    assert isValidSudoku(valid_board) is True
+    assert isValidSudoku(invalid_board) is False
 
 if __name__ == "__main__":
     main()

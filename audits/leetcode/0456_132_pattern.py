@@ -1,7 +1,8 @@
+
 # LeetCode 456: 132 Pattern
 # Python version
 
-def find132pattern(nums: List[int]) -> bool:
+def find132pattern(nums: list[int]) -> bool:
     stack = [] # pair [num, curLeftMin], mono-decreasing stack
     curMin = nums[0]
 
@@ -19,8 +20,8 @@ def find132pattern(nums: List[int]) -> bool:
 
 
 def main():
-    print(find132pattern([1,2,3,4]))
-    print(find132pattern([3,1,4,2]))
+    assert find132pattern([1,2,3,4]) == False
+    assert find132pattern([3,1,4,2]) == True
 
 if __name__ == "__main__":
     main()

@@ -1,7 +1,9 @@
+from collections import defaultdict
+
 # LeetCode 1074: Number Of Submatrices That Sum To Target
 # Python version
 
-def numSubmatrixSumTarget(matrix: List[List[int]], target: int) -> int:
+def numSubmatrixSumTarget(matrix: list[list[int]], target: int) -> int:
     ROWS, COLS = len(matrix), len(matrix[0])
     sub_sum = [[0 for i in range(COLS)] for j in range(ROWS)]
 
@@ -30,7 +32,9 @@ def numSubmatrixSumTarget(matrix: List[List[int]], target: int) -> int:
 
 
 def main():
-    print("no test cases")
+    assert numSubmatrixSumTarget([[0, 1, 0], [1, 1, 1], [0, 1, 0]], 0) == 4
+    assert numSubmatrixSumTarget([[1, -1], [-1, 1]], 0) == 5
+    assert numSubmatrixSumTarget([[904]], 0) == 0
 
 if __name__ == "__main__":
     main()

@@ -8,5 +8,6 @@ def hammingWeight(n: int) -> int:
     return res
 
 def main():
-    print("no test cases")
-
+    assert hammingWeight(11) == 3
+    assert hammingWeight(128) == 1
+    assert hammingWeight(2147483645) == 30

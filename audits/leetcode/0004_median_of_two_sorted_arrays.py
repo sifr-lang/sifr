@@ -1,7 +1,8 @@
+
 # LeetCode 4: Median Of Two Sorted Arrays
 # Python version
 
-def findMedianSortedArrays(nums1: List[int], nums2: List[int]) -> float:
+def findMedianSortedArrays(nums1: list[int], nums2: list[int]) -> float:
     A, B = nums1, nums2
     total = len(nums1) + len(nums2)
     half = total // 2
@@ -34,8 +35,8 @@ def findMedianSortedArrays(nums1: List[int], nums2: List[int]) -> float:
 
 
 def main():
-    print(findMedianSortedArrays([1,3], [2]))
-    print(findMedianSortedArrays([1,2], [3,4]))
+    assert findMedianSortedArrays([1,3], [2]) == 2
+    assert findMedianSortedArrays([1,2], [3,4]) == 2.5
 
 if __name__ == "__main__":
     main()

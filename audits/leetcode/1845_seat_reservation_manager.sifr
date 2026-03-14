@@ -9,5 +9,13 @@ class SeatManager:
         heapq.heappush(self.seats, seatNumber)
 
 def main():
-    print("no test cases")
+    obj = SeatManager(5)
+    assert obj.reserve() == 1
+    assert obj.reserve() == 2
+    obj.unreserve(2)
+    assert obj.reserve() == 2
+    assert obj.reserve() == 3
+    assert obj.reserve() == 4
+    assert obj.reserve() == 5
+    obj.unreserve(5)
 

@@ -1,7 +1,9 @@
+from collections import deque
+
 # LeetCode 1091: Shortest Path In Binary Matrix
 # Python version
 
-def shortestPathBinaryMatrix(grid: List[List[int]]) -> int:
+def shortestPathBinaryMatrix(grid: list[list[int]]) -> int:
     N = len(grid)
     q = deque([(0, 0, 1)]) # r, c, length
     visit = set((0, 0))
@@ -23,7 +25,9 @@ def shortestPathBinaryMatrix(grid: List[List[int]]) -> int:
 
 
 def main():
-    print("no test cases")
+    assert shortestPathBinaryMatrix([[0, 1], [1, 0]]) == 2
+    assert shortestPathBinaryMatrix([[0, 0, 0], [1, 1, 0], [1, 1, 0]]) == 4
+    assert shortestPathBinaryMatrix([[1, 0, 0], [1, 1, 0], [1, 1, 0]]) == -1
 
 if __name__ == "__main__":
     main()

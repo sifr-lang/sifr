@@ -1,3 +1,4 @@
+
 # LeetCode 1209: Remove All Adjacent Duplicates In String Ii
 # Python version
 
@@ -22,8 +23,8 @@ def removeDuplicates(s: str, k: int) -> str:
 
 
 def main():
-    print(removeDuplicates("abcd", 2))
-    print(removeDuplicates("deeedbbcccbdaa", 3))
+    assert removeDuplicates("abcd", 2) == 'abcd'
+    assert removeDuplicates("deeedbbcccbdaa", 3) == 'aa'
 
 if __name__ == "__main__":
     main()

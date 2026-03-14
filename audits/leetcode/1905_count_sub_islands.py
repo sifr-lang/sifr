@@ -1,7 +1,8 @@
+
 # LeetCode 1905: Count Sub Islands
 # Python version
 
-def countSubIslands(grid1: List[List[int]], grid2: List[List[int]]) -> int:
+def countSubIslands(grid1: list[list[int]], grid2: list[list[int]]) -> int:
     ROWS, COLS = len(grid1), len(grid1[0])
     visit = set()
 
@@ -37,7 +38,8 @@ def countSubIslands(grid1: List[List[int]], grid2: List[List[int]]) -> int:
 
 
 def main():
-    print("no test cases")
+    assert countSubIslands([[1, 1, 1, 0, 0], [0, 1, 1, 1, 1], [0, 0, 0, 0, 0], [1, 0, 0, 0, 0], [1, 1, 0, 1, 1]], [[1, 1, 1, 0, 0], [0, 0, 1, 1, 1], [0, 1, 0, 0, 0], [1, 0, 1, 1, 0], [0, 1, 0, 1, 0]]) == 3
+    assert countSubIslands([[1, 0, 1, 0, 1], [1, 1, 1, 1, 1], [0, 0, 0, 0, 0], [1, 1, 1, 1, 1], [1, 0, 1, 0, 1]], [[0, 0, 0, 0, 0], [1, 1, 1, 1, 1], [0, 1, 0, 1, 0], [0, 1, 0, 1, 0], [1, 0, 0, 0, 1]]) == 2
 
 if __name__ == "__main__":
     main()

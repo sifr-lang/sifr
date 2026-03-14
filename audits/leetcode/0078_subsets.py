@@ -1,7 +1,8 @@
+
 # LeetCode 78: Subsets
 # Python version
 
-def subsets(nums: List[int]) -> List[List[int]]:
+def subsets(nums: list[int]) -> list[list[int]]:
     res = []
 
     subset = []
@@ -23,7 +24,7 @@ def subsets(nums: List[int]) -> List[List[int]]:
 
 
 def main():
-    print(subsets([1,2,3]))
+    assert subsets([1,2,3]) == [[1, 2, 3], [1, 2], [1, 3], [1], [2, 3], [2], [3], []]
 
 if __name__ == "__main__":
     main()

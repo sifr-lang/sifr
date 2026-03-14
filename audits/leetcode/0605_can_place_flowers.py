@@ -1,3 +1,4 @@
+
 # LeetCode 605: Can Place Flowers
 # Python version with test cases
 
@@ -13,10 +14,10 @@ def canPlaceFlowers(flowerbed: list[int], n: int) -> bool:
     return count >= n
 
 def main():
-    print(canPlaceFlowers([1, 0, 0, 0, 1], 1))
-    print(canPlaceFlowers([1, 0, 0, 0, 1], 2))
-    print(canPlaceFlowers([0, 0, 1, 0, 0], 1))
-    print(canPlaceFlowers([0], 1))
+    assert canPlaceFlowers([1, 0, 0, 0, 1], 1) == True
+    assert canPlaceFlowers([1, 0, 0, 0, 1], 2) == False
+    assert canPlaceFlowers([0, 0, 1, 0, 0], 1) == True
+    assert canPlaceFlowers([0], 1) == True
 
 if __name__ == "__main__":
     main()

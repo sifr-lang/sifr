@@ -1,7 +1,9 @@
+import heapq
+
 # LeetCode 1851: Minimum Interval To Include Each Query
 # Python version
 
-def minInterval(intervals: List[List[int]], queries: List[int]) -> List[int]:
+def minInterval(intervals: list[list[int]], queries: list[int]) -> list[int]:
     intervals.sort()
     minHeap = []
     res = {}
@@ -20,7 +22,8 @@ def minInterval(intervals: List[List[int]], queries: List[int]) -> List[int]:
 
 
 def main():
-    print("no test cases")
+    assert minInterval([[1, 4], [2, 4], [3, 6], [4, 4]], [2, 3, 4, 5]) == [3, 3, 1, 4]
+    assert minInterval([[2, 3], [2, 5], [1, 8], [20, 25]], [2, 19, 5, 22]) == [2, -1, 4, 6]
 
 if __name__ == "__main__":
     main()

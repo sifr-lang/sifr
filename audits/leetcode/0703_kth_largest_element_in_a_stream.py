@@ -1,8 +1,10 @@
+import heapq
+
 # LeetCode 703: Kth Largest Element In A Stream
 # Python version
 
 class KthLargest:
-    def __init__(self, k: int, nums: List[int]):
+    def __init__(self, k: int, nums: list[int]):
         self.minHeap, self.k = nums, k
         heapq.heapify(self.minHeap)
         while len(self.minHeap) > k:
@@ -14,7 +16,12 @@ class KthLargest:
         return self.minHeap[0]
 
 def main():
-    print("no test cases")
+    obj = KthLargest(3, [4, 5, 8, 2])
+    assert obj.add(3) == 4
+    assert obj.add(5) == 5
+    assert obj.add(10) == 5
+    assert obj.add(9) == 8
+    assert obj.add(4) == 8
 
 if __name__ == "__main__":
     main()

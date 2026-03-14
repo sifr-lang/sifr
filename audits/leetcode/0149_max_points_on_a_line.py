@@ -1,7 +1,9 @@
+import collections
+
 # LeetCode 149: Max Points On A Line
 # Python version
 
-def maxPoints(points: List[List[int]]) -> int:
+def maxPoints(points: list[list[int]]) -> int:
     # 1. For each pt determine if it lies on the longest line
     # 2. Count all pts with same slope
     # 3. Update result with max
@@ -23,7 +25,8 @@ def maxPoints(points: List[List[int]]) -> int:
 
 
 def main():
-    print("no test cases")
+    assert maxPoints([[1, 1], [2, 2], [3, 3]]) == 3
+    assert maxPoints([[1, 1], [3, 2], [5, 3], [4, 1], [2, 3], [1, 4]]) == 4
 
 if __name__ == "__main__":
     main()

@@ -1,7 +1,8 @@
+
 # LeetCode 268: Missing Number
 # Python version
 
-def missingNumber(nums: List[int]) -> int:
+def missingNumber(nums: list[int]) -> int:
     res = len(nums)
 
     for i in range(len(nums)):
@@ -11,8 +12,8 @@ def missingNumber(nums: List[int]) -> int:
 
 
 def main():
-    print(missingNumber([3,0,1]))
-    print(missingNumber([0,1]))
+    assert missingNumber([3,0,1]) == 2
+    assert missingNumber([0,1]) == 2
 
 if __name__ == "__main__":
     main()

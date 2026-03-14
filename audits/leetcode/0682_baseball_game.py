@@ -1,7 +1,8 @@
+
 # LeetCode 682: Baseball Game
 # Python version
 
-def calPoints(operations: List[str]) -> int:
+def calPoints(operations: list[str]) -> int:
     
     score_stack = []
     
@@ -27,7 +28,7 @@ def calPoints(operations: List[str]) -> int:
 
 
 def main():
-    print(calPoints(["5","2","C","D","+"]))
+    assert calPoints(["5","2","C","D","+"]) == 30
 
 if __name__ == "__main__":
     main()

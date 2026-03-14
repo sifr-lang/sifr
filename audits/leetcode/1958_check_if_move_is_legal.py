@@ -1,7 +1,8 @@
+
 # LeetCode 1958: Check If Move Is Legal
 # Python version
 
-def checkMove(board: List[List[str]], rMove: int, cMove: int, color: str) -> bool:
+def checkMove(board: list[list[str]], rMove: int, cMove: int, color: str) -> bool:
     ROWS, COLS = len(board), len(board[0])
     direction = [[1, 0], [-1, 0], [0, 1], [0, -1],
                  [1, 1], [-1, -1], [1, -1], [-1, 1]]
@@ -27,7 +28,8 @@ def checkMove(board: List[List[str]], rMove: int, cMove: int, color: str) -> boo
 
 
 def main():
-    print("no test cases")
+    assert checkMove([['.', '.', '.', 'B', '.', '.', '.', '.'], ['.', '.', '.', 'W', '.', '.', '.', '.'], ['.', '.', '.', 'W', '.', '.', '.', '.'], ['.', '.', '.', 'W', '.', '.', '.', '.'], ['W', 'B', 'B', '.', 'W', 'W', 'W', 'B'], ['.', '.', '.', 'B', '.', '.', '.', '.'], ['.', '.', '.', 'B', '.', '.', '.', '.'], ['.', '.', '.', 'W', '.', '.', '.', '.']], 4, 3, 'B') == True
+    assert checkMove([['.', '.', '.', '.', '.', '.', '.', '.'], ['.', 'B', '.', '.', 'W', '.', '.', '.'], ['.', '.', 'W', '.', '.', '.', '.', '.'], ['.', '.', '.', 'W', 'B', '.', '.', '.'], ['.', '.', '.', '.', '.', '.', '.', '.'], ['.', '.', '.', '.', 'B', 'W', '.', '.'], ['.', '.', '.', '.', '.', '.', 'W', '.'], ['.', '.', '.', '.', '.', '.', '.', 'B']], 4, 4, 'W') == False
 
 if __name__ == "__main__":
     main()

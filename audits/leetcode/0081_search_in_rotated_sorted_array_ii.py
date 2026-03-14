@@ -1,7 +1,8 @@
+
 # LeetCode 81: Search In Rotated Sorted Array Ii
 # Python version
 
-def search(nums: List[int], target: int) -> bool:
+def search(nums: list[int], target: int) -> bool:
     left,right = 0,len(nums) - 1
     while left <= right:
         mid = left + (right - left) // 2
@@ -27,8 +28,8 @@ def search(nums: List[int], target: int) -> bool:
 
 
 def main():
-    print(search([2,5,6,0,0,1,2], 0))
-    print(search([2,5,6,0,0,1,2], 3))
+    assert search([2,5,6,0,0,1,2], 0) == True
+    assert search([2,5,6,0,0,1,2], 3) == False
 
 if __name__ == "__main__":
     main()

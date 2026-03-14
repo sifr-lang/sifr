@@ -1,3 +1,4 @@
+
 # LeetCode 1750: Minimum Length Of String After Deleting Similar Ends
 # Python version
 
@@ -15,8 +16,8 @@ def minimumLength(s: str) -> int:
 
 
 def main():
-    print(minimumLength("ca"))
-    print(minimumLength("cabaabac"))
+    assert minimumLength("ca") == 2
+    assert minimumLength("cabaabac") == 0
 
 if __name__ == "__main__":
     main()

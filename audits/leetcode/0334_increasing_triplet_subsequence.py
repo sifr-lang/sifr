@@ -1,7 +1,8 @@
+
 # LeetCode 334: Increasing Triplet Subsequence
 # Python version
 
-def increasingTriplet(nums: List[int]) -> bool:
+def increasingTriplet(nums: list[int]) -> bool:
     first = float('inf')  # Initialize first to positive infinity
     second = float('inf')  # Initialize second to positive infinity
     
@@ -18,8 +19,8 @@ def increasingTriplet(nums: List[int]) -> bool:
 
 
 def main():
-    print(increasingTriplet([1,2,3,4,5]))
-    print(increasingTriplet([5,4,3,2,1]))
+    assert increasingTriplet([1,2,3,4,5]) == True
+    assert increasingTriplet([5,4,3,2,1]) == False
 
 if __name__ == "__main__":
     main()

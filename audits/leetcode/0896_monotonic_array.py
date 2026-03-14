@@ -1,7 +1,8 @@
+
 # LeetCode 896: Monotonic Array
 # Python version
 
-def isMonotonic(nums: List[int]) -> bool:
+def isMonotonic(nums: list[int]) -> bool:
     increasing = decreasing = True
     
     for i in range(len(nums) - 1):
@@ -15,9 +16,9 @@ def isMonotonic(nums: List[int]) -> bool:
 
 
 def main():
-    print(isMonotonic([1,2,2,3]))
-    print(isMonotonic([6,5,4,4]))
-    print(isMonotonic([1,3,2]))
+    assert isMonotonic([1,2,2,3]) == True
+    assert isMonotonic([6,5,4,4]) == True
+    assert isMonotonic([1,3,2]) == False
 
 if __name__ == "__main__":
     main()

@@ -1,5 +1,54 @@
 # LeetCode 1448: Count Good Nodes In Binary Tree
 
+class TreeNode:
+    val: int
+    left: TreeNode | None
+    right: TreeNode | None
+
+    def __init__(
+        self,
+        val: int = 0,
+        left: TreeNode | None = None,
+        right: TreeNode | None = None,
+    ):
+        self.val = val
+        self.left = left
+        self.right = right
+
+
+def treeToString(node: TreeNode | None) -> str:
+    if node is None:
+        return "None"
+    return str(node.val) + "(" + treeToString(node.left) + "," + treeToString(node.right) + ")"
+
+
+class Node:
+    val: int
+    next: Node | None
+    random: Node | None
+    left: Node | None
+    right: Node | None
+    neighbors: list[Node]
+    key: int
+
+    def __init__(
+        self,
+        val: int = 0,
+        next: Node | None = None,
+        random: Node | None = None,
+        left: Node | None = None,
+        right: Node | None = None,
+        neighbors: list[Node] = [],
+        key: int = -1,
+    ):
+        self.val = val
+        self.next = next
+        self.random = random
+        self.left = left
+        self.right = right
+        self.neighbors = neighbors
+        self.key = key
+
 def goodNodes(root: TreeNode) -> int:
     def dfs(node, maxVal):
         if not node:
@@ -14,5 +63,6 @@ def goodNodes(root: TreeNode) -> int:
     return dfs(root, root.val)
 
 def main():
-    print("no test cases")
-
+    assert goodNodes(TreeNode(3, TreeNode(1, TreeNode(3, None, None), None), TreeNode(4, TreeNode(1, None, None), TreeNode(5, None, None)))) == 4
+    assert goodNodes(TreeNode(3, TreeNode(3, TreeNode(4, None, None), TreeNode(2, None, None)), None)) == 3
+    assert goodNodes(TreeNode(1, None, None)) == 1

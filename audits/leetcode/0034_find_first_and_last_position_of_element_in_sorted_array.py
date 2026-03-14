@@ -1,7 +1,8 @@
+
 # LeetCode 34: Find First And Last Position Of Element In Sorted Array
 # Python version
 
-def searchRange(nums: List[int], target: int) -> List[int]:
+def searchRange(nums: list[int], target: int) -> list[int]:
     left = binSearch(nums, target, True)
     right = binSearch(nums, target, False)
     return [left, right]
@@ -28,8 +29,8 @@ def binSearch(nums, target, leftBias):
 
 
 def main():
-    print(searchRange([5,7,7,8,8,10], 8))
-    print(searchRange([5,7,7,8,8,10], 6))
+    assert searchRange([5,7,7,8,8,10], 8) == [3, 4]
+    assert searchRange([5,7,7,8,8,10], 6) == [-1, -1]
 
 if __name__ == "__main__":
     main()

@@ -1,3 +1,4 @@
+
 # LeetCode 187: Repeated Dna Sequences
 # Python version
 
@@ -14,7 +15,8 @@ def findRepeatedDnaSequences(s: str) -> list[str]:
 
 
 def main():
-    print("no test cases")
+    assert sorted(findRepeatedDnaSequences('AAAAACCCCCAAAAACCCCCCAAAAAGGGTTT')) == ['AAAAACCCCC', 'CCCCCAAAAA']
+    assert sorted(findRepeatedDnaSequences('AAAAAAAAAAAAA')) == ['AAAAAAAAAA']
 
 if __name__ == "__main__":
     main()

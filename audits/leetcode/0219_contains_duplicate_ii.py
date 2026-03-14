@@ -1,7 +1,8 @@
+
 # LeetCode 219: Contains Duplicate Ii
 # Python version
 
-def containsNearbyDuplicate(nums: List[int], k: int) -> bool:
+def containsNearbyDuplicate(nums: list[int], k: int) -> bool:
     window = set()
     L = 0
 
@@ -17,8 +18,8 @@ def containsNearbyDuplicate(nums: List[int], k: int) -> bool:
 
 
 def main():
-    print(containsNearbyDuplicate([1,2,3,1], 3))
-    print(containsNearbyDuplicate([1,2,3,1,2,3], 2))
+    assert containsNearbyDuplicate([1,2,3,1], 3) == True
+    assert containsNearbyDuplicate([1,2,3,1,2,3], 2) == False
 
 if __name__ == "__main__":
     main()

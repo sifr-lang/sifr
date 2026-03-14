@@ -1,7 +1,8 @@
+
 # LeetCode 130: Surrounded Regions
 # Python version
 
-def solve(board: List[List[str]]) -> None:
+def solve(board: list[list[str]]) -> None:
     rows, cols = len(board), len(board[0])
     flag = set()
 
@@ -25,7 +26,7 @@ def solve(board: List[List[str]]) -> None:
 
 '''
 
-def solve(board: List[List[str]]) -> None:
+def solve(board: list[list[str]]) -> None:
     ROWS, COLS = len(board), len(board[0])
 
     def capture(r, c):
@@ -59,7 +60,12 @@ def solve(board: List[List[str]]) -> None:
 
 
 def main():
-    print("no test cases")
+    arg0 = [['X', 'X', 'X', 'X'], ['X', 'O', 'O', 'X'], ['X', 'X', 'O', 'X'], ['X', 'O', 'X', 'X']]
+    _result = solve(arg0)
+    assert arg0 == [['X', 'X', 'X', 'X'], ['X', 'X', 'X', 'X'], ['X', 'X', 'X', 'X'], ['X', 'O', 'X', 'X']]
+    arg0 = [['X']]
+    _result = solve(arg0)
+    assert arg0 == [['X']]
 
 if __name__ == "__main__":
     main()

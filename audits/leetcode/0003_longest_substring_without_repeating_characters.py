@@ -1,3 +1,4 @@
+
 # LeetCode 3: Longest Substring Without Repeating Characters
 # Python version
 
@@ -17,9 +18,9 @@ def lengthOfLongestSubstring(s: str) -> int:
 
 
 def main():
-    print(lengthOfLongestSubstring("abcabcbb"))
-    print(lengthOfLongestSubstring("bbbbb"))
-    print(lengthOfLongestSubstring("pwwkew"))
+    assert lengthOfLongestSubstring("abcabcbb") == 3
+    assert lengthOfLongestSubstring("bbbbb") == 1
+    assert lengthOfLongestSubstring("pwwkew") == 3
 
 if __name__ == "__main__":
     main()

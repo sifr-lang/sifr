@@ -1,7 +1,8 @@
+
 # LeetCode 51: N Queens
 # Python version
 
-def solveNQueens(n: int) -> List[List[str]]:
+def solveNQueens(n: int) -> list[list[str]]:
     col = set()
     posDiag = set()  # (r + c)
     negDiag = set()  # (r - c)
@@ -37,7 +38,8 @@ def solveNQueens(n: int) -> List[List[str]]:
 
 
 def main():
-    print("no test cases")
+    assert solveNQueens(4) == [['.Q..', '...Q', 'Q...', '..Q.'], ['..Q.', 'Q...', '...Q', '.Q..']]
+    assert solveNQueens(1) == [['Q']]
 
 if __name__ == "__main__":
     main()

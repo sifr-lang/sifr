@@ -1,7 +1,8 @@
+
 # LeetCode 1020: Number Of Enclaves
 # Python version
 
-def numEnclaves(grid: List[List[int]]) -> int:
+def numEnclaves(grid: list[list[int]]) -> int:
 
     ROWS, COLS = len(grid), len(grid[0])
 
@@ -27,7 +28,8 @@ def numEnclaves(grid: List[List[int]]) -> int:
 
 
 def main():
-    print("no test cases")
+    assert numEnclaves([[0, 0, 0, 0], [1, 0, 1, 0], [0, 1, 1, 0], [0, 0, 0, 0]]) == 3
+    assert numEnclaves([[0, 1, 1, 0], [0, 0, 1, 0], [0, 0, 1, 0], [0, 0, 0, 0]]) == 0
 
 if __name__ == "__main__":
     main()

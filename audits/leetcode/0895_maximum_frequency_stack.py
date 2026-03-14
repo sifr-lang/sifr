@@ -1,3 +1,4 @@
+
 # LeetCode 895: Maximum Frequency Stack
 # Python version
 
@@ -21,7 +22,17 @@ class FreqStack:
         return res
 
 def main():
-    print("no test cases")
+    obj = FreqStack()
+    obj.push(5)
+    obj.push(7)
+    obj.push(5)
+    obj.push(7)
+    obj.push(4)
+    obj.push(5)
+    assert obj.pop() == 5
+    assert obj.pop() == 7
+    assert obj.pop() == 5
+    assert obj.pop() == 4
 
 if __name__ == "__main__":
     main()

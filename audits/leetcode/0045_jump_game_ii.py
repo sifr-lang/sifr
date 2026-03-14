@@ -1,3 +1,4 @@
+
 # LeetCode 45: Jump Game II
 # Python version with test cases
 
@@ -14,10 +15,10 @@ def jump(nums: list[int]) -> int:
     return jumps
 
 def main():
-    print(jump([2, 3, 1, 1, 4]))
-    print(jump([2, 3, 0, 1, 4]))
-    print(jump([1, 2, 3]))
-    print(jump([0]))
+    assert jump([2, 3, 1, 1, 4]) == 2
+    assert jump([2, 3, 0, 1, 4]) == 2
+    assert jump([1, 2, 3]) == 2
+    assert jump([0]) == 0
 
 if __name__ == "__main__":
     main()

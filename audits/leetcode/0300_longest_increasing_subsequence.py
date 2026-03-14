@@ -1,3 +1,4 @@
+
 # LeetCode 300: Longest Increasing Subsequence
 # Python version with test cases (O(n^2) DP approach)
 
@@ -20,10 +21,10 @@ def lengthOfLIS(nums: list[int]) -> int:
     return best
 
 def main():
-    print(lengthOfLIS([10, 9, 2, 5, 3, 7, 101, 18]))
-    print(lengthOfLIS([0, 1, 0, 3, 2, 3]))
-    print(lengthOfLIS([7, 7, 7, 7, 7, 7, 7]))
-    print(lengthOfLIS([1]))
+    assert lengthOfLIS([10, 9, 2, 5, 3, 7, 101, 18]) == 4
+    assert lengthOfLIS([0, 1, 0, 3, 2, 3]) == 4
+    assert lengthOfLIS([7, 7, 7, 7, 7, 7, 7]) == 1
+    assert lengthOfLIS([1]) == 1
 
 if __name__ == "__main__":
     main()

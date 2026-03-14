@@ -11,5 +11,5 @@ def findRepeatedDnaSequences(s: str) -> list[str]:
     return list(result)
 
 def main():
-    print("no test cases")
-
+    assert sorted(findRepeatedDnaSequences('AAAAACCCCCAAAAACCCCCCAAAAAGGGTTT')) == ['AAAAACCCCC', 'CCCCCAAAAA']
+    assert sorted(findRepeatedDnaSequences('AAAAAAAAAAAAA')) == ['AAAAAAAAAA']

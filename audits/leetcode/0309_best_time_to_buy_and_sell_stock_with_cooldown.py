@@ -1,7 +1,8 @@
+
 # LeetCode 309: Best Time To Buy And Sell Stock With Cooldown
 # Python version
 
-def maxProfit(prices: List[int]) -> int:
+def maxProfit(prices: list[int]) -> int:
     # State: Buying or Selling?
     # If Buy -> i + 1
     # If Sell -> i + 2
@@ -28,8 +29,8 @@ def maxProfit(prices: List[int]) -> int:
 
 
 def main():
-    print(maxProfit([1,2,3,0,2]))
-    print(maxProfit([1]))
+    assert maxProfit([1,2,3,0,2]) == 3
+    assert maxProfit([1]) == 0
 
 if __name__ == "__main__":
     main()

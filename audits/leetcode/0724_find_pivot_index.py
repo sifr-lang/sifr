@@ -1,7 +1,8 @@
+
 # LeetCode 724: Find Pivot Index
 # Python version
 
-def pivotIndex(nums: List[int]) -> int:
+def pivotIndex(nums: list[int]) -> int:
     total = sum(nums)  # O(n)
 
     leftSum = 0
@@ -15,8 +16,8 @@ def pivotIndex(nums: List[int]) -> int:
 
 
 def main():
-    print(pivotIndex([1,7,3,6,5,6]))
-    print(pivotIndex([1,2,3]))
+    assert pivotIndex([1,7,3,6,5,6]) == 3
+    assert pivotIndex([1,2,3]) == -1
 
 if __name__ == "__main__":
     main()

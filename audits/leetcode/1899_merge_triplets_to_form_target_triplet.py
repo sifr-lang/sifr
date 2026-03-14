@@ -1,7 +1,8 @@
+
 # LeetCode 1899: Merge Triplets To Form Target Triplet
 # Python version
 
-def mergeTriplets(triplets: List[List[int]], target: List[int]) -> bool:
+def mergeTriplets(triplets: list[list[int]], target: list[int]) -> bool:
     good = set()
 
     for t in triplets:
@@ -15,7 +16,7 @@ def mergeTriplets(triplets: List[List[int]], target: List[int]) -> bool:
 
 
 def main():
-    print(mergeTriplets([[2,5,3],[1,8,4],[1,7,5]], [2,7,5]))
+    assert mergeTriplets([[2,5,3],[1,8,4],[1,7,5]], [2,7,5]) == True
 
 if __name__ == "__main__":
     main()

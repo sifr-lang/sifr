@@ -1,7 +1,10 @@
+import collections
+import heapq
+
 # LeetCode 743: Network Delay Time
 # Python version
 
-def networkDelayTime(times: List[List[int]], n: int, k: int) -> int:
+def networkDelayTime(times: list[list[int]], n: int, k: int) -> int:
     edges = collections.defaultdict(list)
     for u, v, w in times:
         edges[u].append((v, w))
@@ -26,7 +29,9 @@ def networkDelayTime(times: List[List[int]], n: int, k: int) -> int:
 
 
 def main():
-    print("no test cases")
+    assert networkDelayTime([[2, 1, 1], [2, 3, 1], [3, 4, 1]], 4, 2) == 2
+    assert networkDelayTime([[1, 2, 1]], 2, 1) == 1
+    assert networkDelayTime([[1, 2, 1]], 2, 2) == -1
 
 if __name__ == "__main__":
     main()

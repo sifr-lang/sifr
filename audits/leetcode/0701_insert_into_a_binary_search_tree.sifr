@@ -1,5 +1,54 @@
 # LeetCode 701: Insert Into A Binary Search Tree
 
+class TreeNode:
+    val: int
+    left: TreeNode | None
+    right: TreeNode | None
+
+    def __init__(
+        self,
+        val: int = 0,
+        left: TreeNode | None = None,
+        right: TreeNode | None = None,
+    ):
+        self.val = val
+        self.left = left
+        self.right = right
+
+
+def treeToString(node: TreeNode | None) -> str:
+    if node is None:
+        return "None"
+    return str(node.val) + "(" + treeToString(node.left) + "," + treeToString(node.right) + ")"
+
+
+class Node:
+    val: int
+    next: Node | None
+    random: Node | None
+    left: Node | None
+    right: Node | None
+    neighbors: list[Node]
+    key: int
+
+    def __init__(
+        self,
+        val: int = 0,
+        next: Node | None = None,
+        random: Node | None = None,
+        left: Node | None = None,
+        right: Node | None = None,
+        neighbors: list[Node] = [],
+        key: int = -1,
+    ):
+        self.val = val
+        self.next = next
+        self.random = random
+        self.left = left
+        self.right = right
+        self.neighbors = neighbors
+        self.key = key
+
 def insertIntoBST(root: TreeNode | None, val: int) -> TreeNode | None:
     if not root:
         return TreeNode(val)
@@ -10,5 +59,6 @@ def insertIntoBST(root: TreeNode | None, val: int) -> TreeNode | None:
     return root
 
 def main():
-    print("no test cases")
-
+    assert treeToString(insertIntoBST(TreeNode(4, TreeNode(2, TreeNode(1, None, None), TreeNode(3, None, None)), TreeNode(7, None, None)), 5)) == treeToString(TreeNode(4, TreeNode(2, TreeNode(1, None, None), TreeNode(3, None, None)), TreeNode(7, TreeNode(5, None, None), None)))
+    assert treeToString(insertIntoBST(TreeNode(40, TreeNode(20, TreeNode(10, None, None), TreeNode(30, None, None)), TreeNode(60, TreeNode(50, None, None), TreeNode(70, None, None))), 25)) == treeToString(TreeNode(40, TreeNode(20, TreeNode(10, None, None), TreeNode(30, TreeNode(25, None, None), None)), TreeNode(60, TreeNode(50, None, None), TreeNode(70, None, None))))
+    assert treeToString(insertIntoBST(TreeNode(4, TreeNode(2, TreeNode(1, None, None), TreeNode(3, None, None)), TreeNode(7, None, None)), 5)) == treeToString(TreeNode(4, TreeNode(2, TreeNode(1, None, None), TreeNode(3, None, None)), TreeNode(7, TreeNode(5, None, None), None)))

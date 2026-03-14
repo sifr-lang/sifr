@@ -1,3 +1,4 @@
+
 # LeetCode 705: Design Hashset
 # Python version
 
@@ -14,7 +15,15 @@ class MyHashSet:
         return True if key in self.hashset else False
 
 def main():
-    print("no test cases")
+    obj = MyHashSet()
+    obj.add(1)
+    obj.add(2)
+    assert obj.contains(1) == True
+    assert obj.contains(3) == False
+    obj.add(2)
+    assert obj.contains(2) == True
+    obj.remove(2)
+    assert obj.contains(2) == False
 
 if __name__ == "__main__":
     main()

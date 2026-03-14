@@ -1,7 +1,8 @@
+
 # LeetCode 88: Merge Sorted Array
 # Python version
 
-def merge(nums1: List[int], m: int, nums2: List[int], n: int) -> None:
+def merge(nums1: list[int], m: int, nums2: list[int], n: int) -> None:
     """
     Do not return anything, modify nums1 in-place instead.
     """
@@ -17,7 +18,24 @@ def merge(nums1: List[int], m: int, nums2: List[int], n: int) -> None:
 
 
 def main():
-    print("no test cases")
+    arg0 = [1, 2, 3, 0, 0, 0]
+    arg1 = 3
+    arg2 = [2, 5, 6]
+    arg3 = 3
+    _result = merge(arg0, arg1, arg2, arg3)
+    assert arg0 == [1, 2, 2, 3, 5, 6]
+    arg0 = [1]
+    arg1 = 1
+    arg2 = []
+    arg3 = 0
+    _result = merge(arg0, arg1, arg2, arg3)
+    assert arg0 == [1]
+    arg0 = [0]
+    arg1 = 0
+    arg2 = [1]
+    arg3 = 1
+    _result = merge(arg0, arg1, arg2, arg3)
+    assert arg0 == [1]
 
 if __name__ == "__main__":
     main()

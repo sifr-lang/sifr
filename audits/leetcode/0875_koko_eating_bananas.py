@@ -1,7 +1,9 @@
+import math
+
 # LeetCode 875: Koko Eating Bananas
 # Python version
 
-def minEatingSpeed(piles: List[int], h: int) -> int:
+def minEatingSpeed(piles: list[int], h: int) -> int:
     l, r = 1, max(piles)
     res = r
 
@@ -21,8 +23,8 @@ def minEatingSpeed(piles: List[int], h: int) -> int:
 
 
 def main():
-    print(minEatingSpeed([3,6,7,11], 8))
-    print(minEatingSpeed([30,11,23,4,20], 5))
+    assert minEatingSpeed([3,6,7,11], 8) == 4
+    assert minEatingSpeed([30,11,23,4,20], 5) == 30
 
 if __name__ == "__main__":
     main()

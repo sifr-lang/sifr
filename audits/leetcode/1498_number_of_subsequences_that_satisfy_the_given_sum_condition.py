@@ -1,7 +1,8 @@
+
 # LeetCode 1498: Number Of Subsequences That Satisfy The Given Sum Condition
 # Python version
 
-def numSubseq(nums: List[int], target: int) -> int:
+def numSubseq(nums: list[int], target: int) -> int:
     nums.sort()
 
     res, mod = 0, (10**9 + 7)
@@ -18,7 +19,9 @@ def numSubseq(nums: List[int], target: int) -> int:
 
 
 def main():
-    print("no test cases")
+    assert numSubseq([3, 5, 6, 7], 9) == 4
+    assert numSubseq([3, 3, 6, 8], 10) == 6
+    assert numSubseq([2, 3, 3, 4, 6, 7], 12) == 61
 
 if __name__ == "__main__":
     main()

@@ -1,3 +1,4 @@
+
 # LeetCode 5: Longest Palindromic Substring
 # Python version
 
@@ -7,25 +8,28 @@ def longestPalindrome(s: str) -> str:
     for i in range(len(s)):
         s1 = helper(s, i, i)
         s2 = helper(s, i, i + 1)
-    return s2
+        if len(s1) > lenres:
+            res = s1
+            lenres = len(s1)
+        if len(s2) > lenres:
+            res = s2
+            lenres = len(s2)
+    return res
     
 
 def helper(s, left, right):
         while left >= 0 and right < len(s) and s[left] == s[right]:
-            if (right - left + 1) > lenres:
-                res = s[left:right+1]
-                lenres = right - left + 1
             left -= 1
             right += 1
-        return res
+        return s[left + 1:right]
 
 
 
 
 
 def main():
-    print(longestPalindrome("babad"))
-    print(longestPalindrome("cbbd"))
+    assert longestPalindrome("babad",) in {"bab", "aba"}
+    assert longestPalindrome("cbbd",) == 'bb'
 
 if __name__ == "__main__":
     main()

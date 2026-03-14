@@ -1,3 +1,4 @@
+
 # LeetCode 151: Reverse Words In A String
 # Python version
 
@@ -19,7 +20,7 @@ def reverseWords(s: str) -> str:
 
 
 def main():
-    print(reverseWords("the sky is blue"))
+    assert reverseWords("the sky is blue") == 'blue is sky the'
 
 if __name__ == "__main__":
     main()

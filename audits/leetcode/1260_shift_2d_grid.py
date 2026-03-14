@@ -1,7 +1,8 @@
+
 # LeetCode 1260: Shift 2D Grid
 # Python version
 
-def shiftGrid(grid: List[List[int]], k: int) -> List[List[int]]:
+def shiftGrid(grid: list[list[int]], k: int) -> list[list[int]]:
     M, N = len(grid), len(grid[0])
     
     def posToVal(r, c):
@@ -20,7 +21,9 @@ def shiftGrid(grid: List[List[int]], k: int) -> List[List[int]]:
 
 
 def main():
-    print("no test cases")
+    assert shiftGrid([[1, 2, 3], [4, 5, 6], [7, 8, 9]], 1) == [[9, 1, 2], [3, 4, 5], [6, 7, 8]]
+    assert shiftGrid([[3, 8, 1, 9], [19, 7, 2, 5], [4, 6, 11, 10], [12, 0, 21, 13]], 4) == [[12, 0, 21, 13], [3, 8, 1, 9], [19, 7, 2, 5], [4, 6, 11, 10]]
+    assert shiftGrid([[1, 2, 3], [4, 5, 6], [7, 8, 9]], 9) == [[1, 2, 3], [4, 5, 6], [7, 8, 9]]
 
 if __name__ == "__main__":
     main()

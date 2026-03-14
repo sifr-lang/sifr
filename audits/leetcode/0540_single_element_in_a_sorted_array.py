@@ -1,7 +1,8 @@
+
 # LeetCode 540: Single Element In A Sorted Array
 # Python version
 
-def singleNonDuplicate(nums: List[int]) -> int:
+def singleNonDuplicate(nums: list[int]) -> int:
     def is_non_duplicate(i):
         is_left_different = i == 0 or nums[i-1] != nums[i]
         is_right_different = i == len(nums)-1 or nums[i+1] != nums[i]
@@ -31,7 +32,7 @@ def singleNonDuplicate(nums: List[int]) -> int:
 
 
 def main():
-    print(singleNonDuplicate([1,1,2,3,3,4,4,8,8]))
+    assert singleNonDuplicate([1,1,2,3,3,4,4,8,8]) == 2
 
 if __name__ == "__main__":
     main()

@@ -1,7 +1,8 @@
+
 # LeetCode 1489: Find Critical And Pseudo Critical Edges In Minimum Spanning Tree
 # Python version
 
-def findCriticalAndPseudoCriticalEdges(n: int, edges: List[List[int]]) -> List[List[int]]:
+def findCriticalAndPseudoCriticalEdges(n: int, edges: list[list[int]]) -> list[list[int]]:
     # Time: O(E^2) - UF operations are assumed to be approx O(1)
     for i, e in enumerate(edges):
         e.append(i) # [v1, v2, weight, original_index]
@@ -60,7 +61,8 @@ class UnionFind:
         return True
 
 def main():
-    print("no test cases")
+    assert findCriticalAndPseudoCriticalEdges(5, [[0, 1, 1], [1, 2, 1], [2, 3, 2], [0, 3, 2], [0, 4, 3], [3, 4, 3], [1, 4, 6]]) == [[0, 1], [2, 3, 4, 5]]
+    assert findCriticalAndPseudoCriticalEdges(4, [[0, 1, 1], [1, 2, 1], [2, 3, 1], [0, 3, 1]]) == [[], [0, 1, 2, 3]]
 
 if __name__ == "__main__":
     main()

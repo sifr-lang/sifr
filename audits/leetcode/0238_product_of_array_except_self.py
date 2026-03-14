@@ -1,3 +1,4 @@
+
 # LeetCode 238: Product of Array Except Self
 # Python version with test cases
 
@@ -24,9 +25,9 @@ def productExceptSelf(nums: list[int]) -> list[int]:
     return result
 
 def main():
-    print(productExceptSelf([1, 2, 3, 4]))
-    print(productExceptSelf([-1, 1, 0, -3, 3]))
-    print(productExceptSelf([2, 3]))
+    assert productExceptSelf([1, 2, 3, 4]) == [24, 12, 8, 6]
+    assert productExceptSelf([-1, 1, 0, -3, 3]) == [0, 0, 9, 0, 0]
+    assert productExceptSelf([2, 3]) == [3, 2]
 
 if __name__ == "__main__":
     main()

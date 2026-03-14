@@ -1,7 +1,9 @@
+import collections
+
 # LeetCode 49: Group Anagrams
 # Python version
 
-def groupAnagrams(strs: List[str]) -> List[List[str]]:
+def groupAnagrams(strs: list[str]) -> list[list[str]]:
     groups = {}
 
     # Iterate over strings
@@ -23,7 +25,7 @@ def groupAnagrams(strs: List[str]) -> List[List[str]]:
     return list(groups.values())
 
 
-def groupAnagrams(strs: List[str]) -> List[List[str]]:
+def groupAnagrams(strs: list[str]) -> list[list[str]]:
     ans = collections.defaultdict(list)
 
     for s in strs:
@@ -36,7 +38,9 @@ def groupAnagrams(strs: List[str]) -> List[List[str]]:
 
 
 def main():
-    print("no test cases")
+    assert groupAnagrams(['eat', 'tea', 'tan', 'ate', 'nat', 'bat']) == [['eat', 'tea', 'ate'], ['tan', 'nat'], ['bat']]
+    assert groupAnagrams(['']) == [['']]
+    assert groupAnagrams(['a']) == [['a']]
 
 if __name__ == "__main__":
     main()

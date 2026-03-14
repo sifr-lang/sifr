@@ -1,7 +1,8 @@
+
 # LeetCode 695: Max Area Of Island
 # Python version
 
-def maxAreaOfIsland(grid: List[List[int]]) -> int:
+def maxAreaOfIsland(grid: list[list[int]]) -> int:
     ROWS, COLS = len(grid), len(grid[0])
     visit = set()
 
@@ -27,7 +28,8 @@ def maxAreaOfIsland(grid: List[List[int]]) -> int:
 
 
 def main():
-    print("no test cases")
+    assert maxAreaOfIsland([[0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0], [0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 0, 0, 0], [0, 1, 1, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0], [0, 1, 0, 0, 1, 1, 0, 0, 1, 0, 1, 0, 0], [0, 1, 0, 0, 1, 1, 0, 0, 1, 1, 1, 0, 0], [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0], [0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 0, 0, 0], [0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0]]) == 6
+    assert maxAreaOfIsland([[0, 0, 0, 0, 0, 0, 0, 0]]) == 0
 
 if __name__ == "__main__":
     main()

@@ -1,5 +1,52 @@
 # LeetCode 203: Remove Linked List Elements
 
+class ListNode:
+    val: int
+    next: ListNode | None
+
+    def __init__(self, val: int = 0, next: ListNode | None = None):
+        self.val = val
+        self.next = next
+
+
+def listNodeToString(node: ListNode | None) -> str:
+    if node is None:
+        return "None"
+    parts: list[str] = []
+    cur: ListNode | None = node
+    while cur is not None:
+        parts.append(str(cur.val))
+        cur = cur.next
+    return "->".join(parts)
+
+
+class Node:
+    val: int
+    next: Node | None
+    random: Node | None
+    left: Node | None
+    right: Node | None
+    neighbors: list[Node]
+    key: int
+
+    def __init__(
+        self,
+        val: int = 0,
+        next: Node | None = None,
+        random: Node | None = None,
+        left: Node | None = None,
+        right: Node | None = None,
+        neighbors: list[Node] = [],
+        key: int = -1,
+    ):
+        self.val = val
+        self.next = next
+        self.random = random
+        self.left = left
+        self.right = right
+        self.neighbors = neighbors
+        self.key = key
+
 def removeElements(head: ListNode, val: int) -> ListNode:
     dummy = ListNode(next=head)
     prev, curr = dummy, head
@@ -16,5 +63,6 @@ def removeElements(head: ListNode, val: int) -> ListNode:
     return dummy.next
 
 def main():
-    print("no test cases")
-
+    assert listNodeToString(removeElements(ListNode(1, ListNode(2, ListNode(6, ListNode(3, ListNode(4, ListNode(5, ListNode(6, None))))))), 6)) == listNodeToString(ListNode(1, ListNode(2, ListNode(3, ListNode(4, ListNode(5, None))))))
+    assert removeElements(None, 1) == None
+    assert removeElements(ListNode(7, ListNode(7, ListNode(7, ListNode(7, None)))), 7) == None

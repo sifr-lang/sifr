@@ -1,3 +1,4 @@
+
 # LeetCode 14: Longest Common Prefix
 # Python version with test cases
 
@@ -13,10 +14,10 @@ def longestCommonPrefix(strs: list[str]) -> str:
     return prefix
 
 def main():
-    print(longestCommonPrefix(["flower", "flow", "flight"]))
-    print(longestCommonPrefix(["dog", "racecar", "car"]))
-    print(longestCommonPrefix(["interspecies", "interstellar", "interstate"]))
-    print(longestCommonPrefix(["a"]))
+    assert longestCommonPrefix(["flower", "flow", "flight"]) == 'fl'
+    assert longestCommonPrefix(["dog", "racecar", "car"]) == ''
+    assert longestCommonPrefix(["interspecies", "interstellar", "interstate"]) == 'inters'
+    assert longestCommonPrefix(["a"]) == 'a'
 
 if __name__ == "__main__":
     main()

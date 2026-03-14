@@ -1,7 +1,8 @@
+
 # LeetCode 312: Burst Balloons
 # Python version
 
-def maxCoins(nums: List[int]) -> int:
+def maxCoins(nums: list[int]) -> int:
     cache = {}
     nums = [1] + nums + [1]
 
@@ -17,7 +18,7 @@ def maxCoins(nums: List[int]) -> int:
 
 
 def main():
-    print(maxCoins([3,1,5,8]))
+    assert maxCoins([3,1,5,8]) == 167
 
 if __name__ == "__main__":
     main()

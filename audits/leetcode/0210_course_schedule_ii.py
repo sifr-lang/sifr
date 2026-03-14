@@ -1,7 +1,8 @@
+
 # LeetCode 210: Course Schedule Ii
 # Python version
 
-def findOrder(numCourses: int, prerequisites: List[List[int]]) -> List[int]:
+def findOrder(numCourses: int, prerequisites: list[list[int]]) -> list[int]:
     prereq = {c: [] for c in range(numCourses)}
     for crs, pre in prerequisites:
         prereq[crs].append(pre)
@@ -32,7 +33,9 @@ def findOrder(numCourses: int, prerequisites: List[List[int]]) -> List[int]:
 
 
 def main():
-    print("no test cases")
+    assert findOrder(2, [[1, 0]]) == [0, 1]
+    assert findOrder(4, [[1, 0], [2, 0], [3, 1], [3, 2]]) == [0, 1, 2, 3]
+    assert findOrder(1, []) == [0]
 
 if __name__ == "__main__":
     main()

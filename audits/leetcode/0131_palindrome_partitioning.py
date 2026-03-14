@@ -1,7 +1,8 @@
+
 # LeetCode 131: Palindrome Partitioning
 # Python version
 
-def partition(s: str) -> List[List[str]]:
+def partition(s: str) -> list[list[str]]:
     res, part = [], []
 
     def dfs(i):
@@ -28,7 +29,7 @@ def isPali(s, l, r):
 
 
 def main():
-    print(partition("aab"))
+    assert partition("aab") == [['a', 'a', 'b'], ['aa', 'b']]
 
 if __name__ == "__main__":
     main()

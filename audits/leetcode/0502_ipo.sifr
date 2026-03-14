@@ -17,5 +17,6 @@ def findMaximizedCapital(k: int, w: int, profits: list[int], capital: list[int])
     return w
 
 def main():
-    print("no test cases")
+    assert findMaximizedCapital(2, 0, [1, 2, 3], [0, 1, 1]) == 4
+    assert findMaximizedCapital(3, 0, [1, 2, 3], [0, 1, 2]) == 6
 

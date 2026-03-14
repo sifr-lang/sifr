@@ -1,7 +1,9 @@
+import heapq
+
 # LeetCode 778: Swim In Rising Water
 # Python version
 
-def swimInWater(grid: List[List[int]]) -> int:
+def swimInWater(grid: list[list[int]]) -> int:
     N = len(grid)
     visit = set()
     minH = [[grid[0][0], 0, 0]]  # (time/max-height, r, c)
@@ -28,7 +30,8 @@ def swimInWater(grid: List[List[int]]) -> int:
 
 
 def main():
-    print("no test cases")
+    assert swimInWater([[0, 2], [1, 3]]) == 3
+    assert swimInWater([[0, 1, 2, 3, 4], [24, 23, 22, 21, 5], [12, 13, 14, 15, 16], [11, 17, 18, 19, 20], [10, 9, 8, 7, 6]]) == 16
 
 if __name__ == "__main__":
     main()

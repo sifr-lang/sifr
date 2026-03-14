@@ -1,3 +1,4 @@
+
 # LeetCode 263: Ugly Number
 # Python version
 
@@ -13,9 +14,9 @@ def isUgly(n: int) -> bool:
 
 
 def main():
-    print(isUgly(6))
-    print(isUgly(1))
-    print(isUgly(14))
+    assert isUgly(6) == True
+    assert isUgly(1) == True
+    assert isUgly(14) == False
 
 if __name__ == "__main__":
     main()

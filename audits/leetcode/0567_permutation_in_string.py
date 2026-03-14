@@ -1,3 +1,4 @@
+
 # LeetCode 567: Permutation In String
 # Python version
 
@@ -38,8 +39,8 @@ def checkInclusion(s1: str, s2: str) -> bool:
 
 
 def main():
-    print(checkInclusion("ab", "eidbaooo"))
-    print(checkInclusion("ab", "eidboaoo"))
+    assert checkInclusion("ab", "eidbaooo") == True
+    assert checkInclusion("ab", "eidboaoo") == False
 
 if __name__ == "__main__":
     main()

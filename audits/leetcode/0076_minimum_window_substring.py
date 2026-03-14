@@ -1,3 +1,4 @@
+
 # LeetCode 76: Minimum Window Substring
 # Python version
 
@@ -35,7 +36,9 @@ def minWindow(s: str, t: str) -> str:
 
 
 def main():
-    print("no test cases")
+    assert minWindow('ADOBECODEBANC', 'ABC') == 'BANC'
+    assert minWindow('a', 'a') == 'a'
+    assert minWindow('a', 'aa') == ''
 
 if __name__ == "__main__":
     main()

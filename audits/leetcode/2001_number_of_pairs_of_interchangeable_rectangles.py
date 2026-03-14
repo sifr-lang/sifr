@@ -1,7 +1,8 @@
+
 # LeetCode 2001: Number Of Pairs Of Interchangeable Rectangles
 # Python version
 
-def interchangeableRectangles(rectangles: List[List[int]]) -> int:
+def interchangeableRectangles(rectangles: list[list[int]]) -> int:
     count = {}  # { W / H : Count }
     res = 0
 
@@ -17,7 +18,8 @@ def interchangeableRectangles(rectangles: List[List[int]]) -> int:
 
 
 def main():
-    print("no test cases")
+    assert interchangeableRectangles([[4, 8], [3, 6], [10, 20], [15, 30]]) == 6
+    assert interchangeableRectangles([[4, 5], [7, 8]]) == 0
 
 if __name__ == "__main__":
     main()

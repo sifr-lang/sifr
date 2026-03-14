@@ -1,3 +1,4 @@
+
 # LeetCode 169: Majority Element (Boyer-Moore Voting)
 # Python version with test cases
 
@@ -14,10 +15,10 @@ def majorityElement(nums: list[int]) -> int:
     return candidate
 
 def main():
-    print(majorityElement([3, 2, 3]))
-    print(majorityElement([2, 2, 1, 1, 1, 2, 2]))
-    print(majorityElement([1]))
-    print(majorityElement([6, 5, 5]))
+    assert majorityElement([3, 2, 3]) == 3
+    assert majorityElement([2, 2, 1, 1, 1, 2, 2]) == 2
+    assert majorityElement([1]) == 1
+    assert majorityElement([6, 5, 5]) == 5
 
 if __name__ == "__main__":
     main()

@@ -1,3 +1,4 @@
+
 # LeetCode 134: Gas Station
 # Python version with test cases
 
@@ -17,9 +18,9 @@ def canCompleteCircuit(gas: list[int], cost: list[int]) -> int:
     return -1
 
 def main():
-    print(canCompleteCircuit([1, 2, 3, 4, 5], [3, 4, 5, 1, 2]))
-    print(canCompleteCircuit([2, 3, 4], [3, 4, 3]))
-    print(canCompleteCircuit([5, 1, 2, 3, 4], [4, 4, 1, 5, 1]))
+    assert canCompleteCircuit([1, 2, 3, 4, 5], [3, 4, 5, 1, 2]) == 3
+    assert canCompleteCircuit([2, 3, 4], [3, 4, 3]) == -1
+    assert canCompleteCircuit([5, 1, 2, 3, 4], [4, 4, 1, 5, 1]) == 4
 
 if __name__ == "__main__":
     main()

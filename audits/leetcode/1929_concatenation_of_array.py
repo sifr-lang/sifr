@@ -1,3 +1,4 @@
+
 # LeetCode 1929: Concatenation of Array
 # Python version with test cases
 
@@ -9,8 +10,8 @@ def getConcatenation(nums: list[int]) -> list[int]:
     return ans
 
 def main():
-    print(getConcatenation([1, 2, 1]))
-    print(getConcatenation([1, 3, 2, 1]))
+    assert getConcatenation([1, 2, 1]) == [1, 2, 1, 1, 2, 1]
+    assert getConcatenation([1, 3, 2, 1]) == [1, 3, 2, 1, 1, 3, 2, 1]
 
 if __name__ == "__main__":
     main()

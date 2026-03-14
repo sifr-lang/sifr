@@ -13,7 +13,7 @@ For each of the 376 remaining LeetCode problems:
 The conversion rules:
 - class Solution → standalone function
 - self removed
-- List[int] → list[int]
+- list[int] → list[int]
 - Type annotations preserved
 - No set() → use dict workaround
 - No enumerate tuple unpacking → use range(len())
@@ -22,7 +22,6 @@ The conversion rules:
 import os
 import re
 import subprocess
-import sys
 import json
 
 SRC = "/Users/yaseralnajjar/work/sifr/leetcode/python"
@@ -388,7 +387,7 @@ def main():
                 sifr_content += f"# expect-stdout: {sifr_expected}\n"
         else:
             sifr_content += "def main():\n"
-            sifr_content += '    print("no test cases")\n'
+            sifr_content += "    placeholder = 0\n"
         
         sifr_content += "\n"
         
@@ -402,7 +401,7 @@ def main():
                 py_content += f"    print({func_name}({args}))\n"
             py_content += '\nif __name__ == "__main__":\n    main()\n'
         else:
-            py_content += 'def main():\n    print("no test cases")\n\nif __name__ == "__main__":\n    main()\n'
+            py_content += 'def main():\n    placeholder = 0\n\nif __name__ == "__main__":\n    main()\n'
         
         # Write files
         sifr_path = os.path.join(DST, f"{s}.sifr")
@@ -441,10 +440,7 @@ def main():
                 status = "WRONG_OUTPUT"
                 error = f"Expected: {expected_output[:100]}... Got: {stdout[:100]}..."
         else:
-            if "no test cases" in stdout:
-                status = "COMPILES_NO_TESTS"
-                error = ""
-            elif stdout:
+            if stdout:
                 status = "COMPILES_NO_TESTS"
                 error = ""
             else:

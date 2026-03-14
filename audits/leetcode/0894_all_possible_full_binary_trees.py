@@ -1,7 +1,45 @@
+
 # LeetCode 894: All Possible Full Binary Trees
 # Python version
 
-def allPossibleFBT(n: int) -> List[Optional[TreeNode]]:
+class TreeNode:
+    def __init__(
+        self,
+        val: int = 0,
+        left: 'TreeNode | None' = None,
+        right: 'TreeNode | None' = None,
+    ):
+        self.val = val
+        self.left = left
+        self.right = right
+
+
+def tree_to_string(node: TreeNode | None) -> str:
+    if node is None:
+        return "None"
+    return f"{node.val}({tree_to_string(node.left)},{tree_to_string(node.right)})"
+
+
+class Node:
+    def __init__(
+        self,
+        val: int = 0,
+        next: 'Node | None' = None,
+        random: 'Node | None' = None,
+        left: 'Node | None' = None,
+        right: 'Node | None' = None,
+        neighbors: list['Node'] | None = None,
+        key: int = -1,
+    ):
+        self.val = val
+        self.next = next
+        self.random = random
+        self.left = left
+        self.right = right
+        self.neighbors = [] if neighbors is None else neighbors
+        self.key = key
+
+def allPossibleFBT(n: int) -> list[TreeNode | None]:
     dp = { 0 : [], 1 : [ TreeNode() ] }
 
     def backtrack(n):
@@ -22,9 +60,19 @@ def allPossibleFBT(n: int) -> List[Optional[TreeNode]]:
     return backtrack(n)
 
 
+def sorted_tree_strings(nodes: list[TreeNode | None]) -> list[str]:
+    return sorted(tree_to_string(node) for node in nodes)
+
 
 def main():
-    print("no test cases")
+    assert sorted_tree_strings(allPossibleFBT(7)) == [
+        "0(0(0(0(None,None),0(None,None)),0(None,None)),0(None,None))",
+        "0(0(0(None,None),0(0(None,None),0(None,None))),0(None,None))",
+        "0(0(0(None,None),0(None,None)),0(0(None,None),0(None,None)))",
+        "0(0(None,None),0(0(0(None,None),0(None,None)),0(None,None)))",
+        "0(0(None,None),0(0(None,None),0(0(None,None),0(None,None))))",
+    ]
+    assert sorted_tree_strings(allPossibleFBT(3)) == ["0(0(None,None),0(None,None))"]
 
 if __name__ == "__main__":
     main()

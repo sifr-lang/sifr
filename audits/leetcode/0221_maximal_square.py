@@ -1,7 +1,8 @@
+
 # LeetCode 221: Maximal Square
 # Python version
 
-def maximalSquare(matrix: List[List[str]]) -> int:
+def maximalSquare(matrix: list[list[str]]) -> int:
     ROWS, COLS = len(matrix), len(matrix[0])
     cache = {}  # map each (r, c) -> maxLength of square
 
@@ -25,7 +26,9 @@ def maximalSquare(matrix: List[List[str]]) -> int:
 
 
 def main():
-    print("no test cases")
+    assert maximalSquare([['1', '0', '1', '0', '0'], ['1', '0', '1', '1', '1'], ['1', '1', '1', '1', '1'], ['1', '0', '0', '1', '0']]) == 4
+    assert maximalSquare([['0', '1'], ['1', '0']]) == 1
+    assert maximalSquare([['0']]) == 0
 
 if __name__ == "__main__":
     main()

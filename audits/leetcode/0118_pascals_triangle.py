@@ -1,7 +1,8 @@
+
 # LeetCode 118: Pascals Triangle
 # Python version
 
-def generate(rowIndex) -> List[List[int]]:
+def generate(rowIndex) -> list[list[int]]:
     if rowIndex == 0:
         return [[1]]
     else:
@@ -22,7 +23,7 @@ def getAllRow(rowIndex):
 
 
 def main():
-    print(generate(5))
+    assert generate(5) == [[1], [1, 1], [1, 2, 1], [1, 3, 3, 1], [1, 4, 6, 4, 1]]
 
 if __name__ == "__main__":
     main()

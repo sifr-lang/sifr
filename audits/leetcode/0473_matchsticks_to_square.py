@@ -1,7 +1,8 @@
+
 # LeetCode 473: Matchsticks To Square
 # Python version
 
-def makesquare(matchsticks: List[int]) -> bool:
+def makesquare(matchsticks: list[int]) -> bool:
     length = sum(matchsticks) // 4
     sides = [0] * 4
 
@@ -26,7 +27,8 @@ def makesquare(matchsticks: List[int]) -> bool:
 
 
 def main():
-    print("no test cases")
+    assert makesquare([1, 1, 2, 2, 2]) == True
+    assert makesquare([3, 3, 3, 3, 4]) == False
 
 if __name__ == "__main__":
     main()

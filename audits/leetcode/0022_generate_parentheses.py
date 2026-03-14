@@ -1,7 +1,8 @@
+
 # LeetCode 22: Generate Parentheses
 # Python version
 
-def generateParenthesis(n: int) -> List[str]:
+def generateParenthesis(n: int) -> list[str]:
     stack = []
     res = []
 
@@ -25,7 +26,7 @@ def generateParenthesis(n: int) -> List[str]:
 
 
 def main():
-    print(generateParenthesis(3))
+    assert generateParenthesis(3) == ['((()))', '(()())', '(())()', '()(())', '()()()']
 
 if __name__ == "__main__":
     main()

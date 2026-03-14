@@ -29,5 +29,6 @@ def ladderLength(beginWord: str, endWord: str, wordList: list[str]) -> int:
     return 0
 
 def main():
-    print("no test cases")
+    assert ladderLength('hit', 'cog', ['hot', 'dot', 'dog', 'lot', 'log', 'cog']) == 5
+    assert ladderLength('hit', 'cog', ['hot', 'dot', 'dog', 'lot', 'log']) == 0
 

@@ -1,7 +1,9 @@
+from collections import deque
+
 # LeetCode 909: Snakes And Ladders
 # Python version
 
-def snakesAndLadders(board: List[List[int]]) -> int:
+def snakesAndLadders(board: list[list[int]]) -> int:
     length = len(board)
     board.reverse()
 
@@ -32,7 +34,8 @@ def snakesAndLadders(board: List[List[int]]) -> int:
 
 
 def main():
-    print("no test cases")
+    assert snakesAndLadders([[-1, -1, -1, -1, -1, -1], [-1, -1, -1, -1, -1, -1], [-1, -1, -1, -1, -1, -1], [-1, 35, -1, -1, 13, -1], [-1, -1, -1, -1, -1, -1], [-1, 15, -1, -1, -1, -1]]) == 4
+    assert snakesAndLadders([[-1, -1], [-1, 3]]) == 1
 
 if __name__ == "__main__":
     main()

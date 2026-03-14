@@ -1,3 +1,5 @@
+from functools import cache
+
 # LeetCode 1397: Find All Good Strings
 # Python version
 
@@ -52,7 +54,9 @@ def findGoodStrings(n: int, s1: str, s2: str, evil: str) -> int:
 
 
 def main():
-    print("no test cases")
+    assert findGoodStrings(2, 'aa', 'da', 'b') == 51
+    assert findGoodStrings(8, 'leetcode', 'leetgoes', 'leet') == 0
+    assert findGoodStrings(2, 'gx', 'gz', 'x') == 2
 
 if __name__ == "__main__":
     main()

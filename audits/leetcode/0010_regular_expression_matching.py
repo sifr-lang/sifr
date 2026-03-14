@@ -1,3 +1,4 @@
+
 # LeetCode 10: Regular Expression Matching
 # Python version
 
@@ -49,7 +50,9 @@ def isMatch(s: str, p: str) -> bool:
 
 
 def main():
-    print("no test cases")
+    assert isMatch('aa', 'a') == False
+    assert isMatch('aa', 'a*') == True
+    assert isMatch('ab', '.*') == True
 
 if __name__ == "__main__":
     main()

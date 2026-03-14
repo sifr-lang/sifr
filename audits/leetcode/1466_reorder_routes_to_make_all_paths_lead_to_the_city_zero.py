@@ -1,7 +1,9 @@
+from collections import defaultdict
+
 # LeetCode 1466: Reorder Routes To Make All Paths Lead To The City Zero
 # Python version
 
-def minReorder(n: int, connections: List[List[int]]) -> int:
+def minReorder(n: int, connections: list[list[int]]) -> int:
     edges = {(a,b) for a, b in connections}
     neighbors = defaultdict(list)
     visit = set()
@@ -29,7 +31,9 @@ def minReorder(n: int, connections: List[List[int]]) -> int:
 
 
 def main():
-    print("no test cases")
+    assert minReorder(6, [[0, 1], [1, 3], [2, 3], [4, 0], [4, 5]]) == 3
+    assert minReorder(5, [[1, 0], [1, 2], [3, 2], [3, 4]]) == 2
+    assert minReorder(3, [[1, 0], [2, 0]]) == 0
 
 if __name__ == "__main__":
     main()

@@ -1,7 +1,8 @@
+
 # LeetCode 269: Alien Dictionary
 # Python version
 
-def alienOrder(words: List[str]) -> str:
+def alienOrder(words: list[str]) -> str:
     adj = {char: set() for word in words for char in word}
 
     for i in range(len(words) - 1):
@@ -41,7 +42,9 @@ def alienOrder(words: List[str]) -> str:
 
 
 def main():
-    print("no test cases")
+    assert alienOrder(['wrt', 'wrf', 'er', 'ett', 'rftt']) == 'wertf'
+    assert alienOrder(['z', 'x']) == 'zx'
+    assert alienOrder(['z', 'x', 'z']) == ''
 
 if __name__ == "__main__":
     main()

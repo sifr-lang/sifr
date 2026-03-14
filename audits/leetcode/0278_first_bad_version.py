@@ -1,5 +1,11 @@
+
 # LeetCode 278: First Bad Version
 # Python version
+
+BAD_VERSION = 4
+
+def isBadVersion(version: int) -> bool:
+    return version >= BAD_VERSION
 
 def firstBadVersion(n: int) -> int:
     l, r = 1, n
@@ -14,7 +20,8 @@ def firstBadVersion(n: int) -> int:
 
 
 def main():
-    print("no test cases")
+    assert firstBadVersion(5) == 4
+    assert firstBadVersion(4) == 4
 
 if __name__ == "__main__":
     main()
