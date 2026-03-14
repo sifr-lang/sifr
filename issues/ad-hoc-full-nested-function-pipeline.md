@@ -37,7 +37,7 @@ This phase covers the full compiler pipeline for:
   - Closure basis: supported recursive local helpers now infer parameters and returns deterministically, conflicting local-helper inference fails explicitly, and the watched corpus has moved beyond the original nested-annotation / `Any` failure mode.
 - `2026-03-14`: `milestone_nested_3` completed.
   - Execution report: `issues/ad-hoc-full-nested-function-pipeline-part3-execution.md`
-  - PR: `TBD`
+  - PR: `#1143`
   - Closure basis: supported non-recursive `nonlocal` capture updates now lower and run deterministically, recursive and tuple-unpack capture updates fail explicitly before codegen, and the watched corpus has moved off the generic unsupported-statement failure mode for captured-state updates.
 
 ## Entry Baseline Evidence (2026-03-14)
