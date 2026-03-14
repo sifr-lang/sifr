@@ -41,7 +41,7 @@ This phase covers the full compiler pipeline for:
   - Closure basis: supported non-recursive `nonlocal` capture updates now lower and run deterministically, recursive and tuple-unpack capture updates fail explicitly before codegen, and the watched corpus has moved off the generic unsupported-statement failure mode for captured-state updates.
 - `2026-03-15`: `milestone_nested_4` completed.
   - Execution report: `issues/ad-hoc-full-nested-function-pipeline-part4-execution.md`
-  - PR: pending
+  - PR: `#1145`
   - Closure basis: structured codegen now lowers recursive nested helpers with typed capture parameters and mutable collection captures, supported backtracking helpers no longer fall through to production panics or `Any`-driven Rust mismatches, and immutable-parameter capture mutation now fails explicitly at the language boundary.
 
 ## Entry Baseline Evidence (2026-03-14)

@@ -5,7 +5,7 @@ Status: completed on 2026-03-15
 - Demo: `demos/ad_hoc_nested_function_part4_demo.sifr`
 - Pass fixture: `crates/sifr/tests/e2e/pass/nested_function_recursive_collection_backtracking.sifr`
 - Fail fixture: `crates/sifr/tests/e2e/fail/nested_function_capture_mutates_immutable_param.sifr`
-- PR: pending
+- PR: `#1145`
 
 ## Closure Basis
 
