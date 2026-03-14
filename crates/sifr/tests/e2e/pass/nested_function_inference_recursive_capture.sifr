@@ -1,0 +1,12 @@
+# Test: Recursive nested helper infers captured integer state and integer params.
+
+def sum_to(limit: int) -> int:
+    def helper(i, acc):
+        if i > limit:
+            return acc
+        return helper(i + 1, acc + i)
+
+    return helper(1, 0)
+
+def main():
+    assert sum_to(10) == 55

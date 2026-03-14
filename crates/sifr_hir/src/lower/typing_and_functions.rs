@@ -266,18 +266,12 @@ fn collect_function_defaults(
     defaults
 }
 
-pub(super) fn register_local_function_symbol(
+pub(super) fn register_local_function_signature(
     func: &StmtFunctionDef,
+    ft: FunctionType,
     ctx: &mut LowerCtx,
 ) -> FunctionType {
     let function_name = func.name.to_string();
-    if let Some(existing) = ctx.functions.get(function_name.as_str()) {
-        if ctx.scope.lookup(function_name.as_str()).is_some() {
-            return existing.clone();
-        }
-    }
-
-    let ft = extract_function_type(func, ctx);
     let callable_ty = function_type_to_callable_type(&ft);
     let defaults = collect_function_defaults(func, ctx);
 
@@ -292,6 +286,19 @@ pub(super) fn register_local_function_symbol(
     }
 
     ft
+}
+
+pub(super) fn register_local_function_symbol(
+    func: &StmtFunctionDef,
+    ctx: &mut LowerCtx,
+) -> FunctionType {
+    if let Some(existing) = ctx.functions.get(func.name.as_str()) {
+        if ctx.scope.lookup(func.name.as_str()).is_some() {
+            return existing.clone();
+        }
+    }
+
+    register_local_function_signature(func, extract_function_type(func, ctx), ctx)
 }
 
 pub(super) fn extract_function_type(func: &StmtFunctionDef, ctx: &mut LowerCtx) -> FunctionType {

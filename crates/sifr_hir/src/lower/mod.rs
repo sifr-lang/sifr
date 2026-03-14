@@ -16,6 +16,7 @@ mod expressions;
 mod guarded_index;
 mod imports;
 mod mutating_methods;
+mod nested_function_inference;
 #[cfg(test)]
 mod nested_function_tests;
 mod numeric_sentinels;
