@@ -46,7 +46,6 @@ use type_aliases::{collect_type_alias_decls, predeclare_type_aliases, resolve_ty
 use typing_and_functions::{
     extract_function_type, lower_function, register_builtins, resolve_annotation_expr,
 };
-
 /// Errors produced during lowering.
 #[derive(Debug, Clone)]
 pub struct LoweringError {
