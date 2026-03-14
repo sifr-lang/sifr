@@ -30,6 +30,10 @@ This phase covers the full compiler pipeline for:
   - local-first validation remains authoritative,
   - regression corpus discipline remains enforced,
   - deterministic artifacts remain reviewable and reproducible.
+- Entry-baseline evidence is recorded in the execution issue before part 1 starts, including:
+  - at least one passing nested-function capture/recursion fixture,
+  - at least one failing inference-driven LeetCode case,
+  - at least one failing unsupported-shape or `Any`-fallback case.
 
 ### Exit criteria
 
@@ -73,6 +77,18 @@ The full LeetCode corpus review in `issues/full-leetcode-corpus-strategy-review.
 
 This is broader than a Phase 31 closure milestone. It is a language/compiler feature surface.
 
+## Current Readiness Note
+
+This phase is intentionally **not** marked ready or in progress yet.
+
+Validated current state:
+
+- there is already partial nested-function infrastructure in the compiler,
+- there are existing passing fixtures for basic nested functions, recursive nested functions, and recursive capture,
+- but the broad feature is still incomplete enough that many real nested-helper programs degrade to missing annotations and `Any` fallout.
+
+This phase exists to close that gap through one coherent architecture rather than treating the current partial support as sufficient.
+
 ## Non-goals
 
 - Broad redesign of top-level function inference.
@@ -103,16 +119,51 @@ Without a coherent feature phase, the compiler risks accumulating narrow fixes f
 What partially works today:
 
 - some nested local helpers parse and lower far enough to run when fully annotated and minimally captured,
+- nested-function registration already exists in partial form in HIR lowering,
 - top-level callable machinery already exists and can be extended rather than replaced,
 - the compiler already has evidence that recursive and backtracking helper patterns are intended source forms.
 
 What is still incomplete:
 
+- usage-driven nested parameter/return inference is not implemented for the real LeetCode helper shapes that depend on it,
 - nested defs are not treated as fully typed callables early enough,
 - supported local-helper patterns still require annotations that should be inferable,
 - capture typing is not preserved strongly enough through recursion and mutation,
+- unsupported nested-function shapes do not yet fail through one clean boundary and still frequently degrade to `Any`,
 - unsupported or partially supported shapes degrade to `Any` instead of failing explicitly,
 - downstream closure/codegen behavior is not yet owned by one documented architecture.
+
+### Entry baseline examples to record when execution starts
+
+Positive-path baseline examples:
+
+- `crates/sifr/tests/e2e/pass/nested_function_basic.sifr`
+- `crates/sifr/tests/e2e/pass/nested_function_recursive.sifr`
+- `crates/sifr/tests/e2e/pass/nested_function_recursive_capture.sifr`
+
+Known failing inference-driven examples:
+
+- `audits/leetcode/0017_letter_combinations_of_a_phone_number.sifr`
+- `audits/leetcode/0039_combination_sum.sifr`
+- `audits/leetcode/0050_powx_n.sifr`
+- `audits/leetcode/0078_subsets.sifr`
+- `audits/leetcode/0090_subsets_ii.sifr`
+- `audits/leetcode/0912_sort_an_array.sifr`
+
+Current representative failure shapes from those cases include:
+
+- `parameter 'i' in function 'backtrack' is missing a type annotation`
+- `parameter 'curStr' in function 'backtrack' is missing a type annotation`
+- `parameter 'n' in function 'helper' is missing a type annotation`
+- `function expects return type 'Any', but returns nothing`
+- `cannot index type 'list[int]' with 'Any'`
+- `unsupported operand type(s) for +: 'Any' and 'int'`
+
+Important interpretation:
+
+- milestone 1 is only **partially** present today because symbol registration exists but a complete typed nested-callable model does not.
+- milestone 2 is the clearest unimplemented core gap.
+- milestone 3 and milestone 4 are only partially present today.
 
 ## Product Decision
 
@@ -180,6 +231,7 @@ The feature needs one coherent architecture:
   - represent nested defs as typed callables in HIR/type checking,
   - remove early name-resolution holes that currently produce undefined helper/function fallout.
 - Definition of done:
+  - this milestone closes the gap between the current partial nested symbol registration and a real typed nested-callable model,
   - nested helper symbols resolve deterministically,
   - supported local calls no longer fail due to missing helper symbol registration,
   - unsupported shapes fail explicitly rather than degrading to unresolved names or `Any`.
@@ -214,18 +266,18 @@ The feature needs one coherent architecture:
   - stabilize diagnostics for unsupported nested-function shapes.
 - Definition of done:
   - supported nested-helper programs check, emit, and run cleanly,
-  - unsupported shapes fail with explicit diagnostics instead of downstream `Any` errors,
+  - unsupported nested-function shapes fail with explicit diagnostics instead of downstream `Any` arithmetic/indexing fallout,
   - generated Rust stays panic-free for supported nested-helper paths.
 
 ### milestone_nested_5: Regression Corpus, Demos, and Full-Corpus Closure Evidence
 
 - Scope:
   - add pass/fail regression coverage for nested-function families,
-  - add milestone demos,
+  - add milestone demos or explicitly replace the current legacy nested-functions demo with phase-owned closure evidence,
   - rerun the watched LeetCode nested-helper set and record closure evidence.
 - Definition of done:
   - nested-function regressions are permanently locked,
-  - milestone demos execute successfully,
+  - phase-owned demo evidence executes successfully and reflects this phase's supported boundaries,
   - full-corpus or targeted closure artifacts show the nested-helper family moving past current blockers.
 
 ## Validation Planning Goals
@@ -255,6 +307,7 @@ The feature needs one coherent architecture:
 
 ## Local Validation Commands
 
+- targeted baseline checks and reruns recorded in the execution issue,
 - `cargo fmt --check`
 - `cargo clippy --workspace -- -D warnings`
 - `python3 scripts/check_hir_maintainability_guardrails.py`
