@@ -239,9 +239,9 @@ fn replace_elements(mut arr: Vec<i64>) -> Vec<i64> {
   - Full local validation:
     - `scripts/run_all_tests.sh --profile quick`
     - `scripts/run_all_tests.sh`
-- `2026-03-14`: part 3 `codegen_and_runtime_semantics_for_owned_mutable_parameters` completed local validation and opened PR pending.
+- `2026-03-14`: part 3 `codegen_and_runtime_semantics_for_owned_mutable_parameters` completed local validation and opened PR `#1133`.
   - Execution report: `issues/ad-hoc-own-mut-parameter-convention-part3-execution.md`
-  - PR: pending
+  - PR: `#1133`
   - Demo: `demos/ad_hoc_own_mut_parameter_convention_part3_demo.sifr`
   - Added regression coverage:
     - `crates/sifr_codegen/src/lib_codegen_tests.rs`

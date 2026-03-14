@@ -4,7 +4,7 @@ Status: complete locally
 Started: 2026-03-14
 Completed: 2026-03-14
 Part: `codegen_and_runtime_semantics_for_owned_mutable_parameters`
-PR: pending
+PR: `#1133`
 
 ## Goal
 
