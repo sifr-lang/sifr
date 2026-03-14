@@ -9,6 +9,7 @@ use sifr_type_system::{
 };
 use std::collections::HashMap;
 
+use super::classes::lower_expr_simple;
 use super::diagnostics::{format_type_name, is_valid_error_type};
 use super::expressions::lower_expr;
 use super::statements::{collect_return_types, lower_stmts};
@@ -216,6 +217,81 @@ pub(super) fn ast_convention_to_param(conv: AstParamConvention, ty: &Type) -> Pa
         AstParamMutability::Mutable => ParamMutability::Mutable,
     };
     ParamConvention::new(ownership, mutability)
+}
+
+pub(super) fn function_type_to_callable_type(ft: &FunctionType) -> Type {
+    Type::Callable(
+        ft.params.iter().map(|(_, ty, _)| ty.clone()).collect(),
+        ft.params
+            .iter()
+            .map(|(_, _, convention)| *convention)
+            .collect(),
+        ft.return_type.clone(),
+    )
+}
+
+fn collect_function_defaults(
+    func: &StmtFunctionDef,
+    ctx: &mut LowerCtx,
+) -> Vec<(usize, crate::hir_nodes::HirExpr)> {
+    let mut defaults = Vec::new();
+
+    for (index, param) in func.parameters.args.iter().enumerate() {
+        if let Some(default_expr) = &param.default {
+            if let Some(hir_default) = lower_expr_simple(default_expr) {
+                defaults.push((index, hir_default));
+            } else {
+                ctx.error(format!(
+                    "function '{}': unsupported default argument expression for parameter '{}'",
+                    func.name, param.parameter.name
+                ));
+            }
+        }
+    }
+
+    let regular_count = func.parameters.args.len();
+    for (index, param) in func.parameters.kwonlyargs.iter().enumerate() {
+        if let Some(default_expr) = &param.default {
+            if let Some(hir_default) = lower_expr_simple(default_expr) {
+                defaults.push((regular_count + index, hir_default));
+            } else {
+                ctx.error(format!(
+                    "function '{}': unsupported default argument expression for parameter '{}'",
+                    func.name, param.parameter.name
+                ));
+            }
+        }
+    }
+
+    defaults
+}
+
+pub(super) fn register_local_function_symbol(
+    func: &StmtFunctionDef,
+    ctx: &mut LowerCtx,
+) -> FunctionType {
+    let function_name = func.name.to_string();
+    if let Some(existing) = ctx.functions.get(function_name.as_str()) {
+        if ctx.scope.lookup(function_name.as_str()).is_some() {
+            return existing.clone();
+        }
+    }
+
+    let ft = extract_function_type(func, ctx);
+    let callable_ty = function_type_to_callable_type(&ft);
+    let defaults = collect_function_defaults(func, ctx);
+
+    if !defaults.is_empty() {
+        ctx.function_defaults
+            .insert(function_name.clone(), defaults);
+    }
+    ctx.scope.define(function_name.clone(), callable_ty);
+    ctx.functions.insert(function_name.clone(), ft.clone());
+    if func.parameters.vararg.is_some() {
+        ctx.vararg_functions.insert(function_name);
+    }
+
+    ft
 }
 
 pub(super) fn extract_function_type(func: &StmtFunctionDef, ctx: &mut LowerCtx) -> FunctionType {

@@ -16,6 +16,8 @@ mod expressions;
 mod guarded_index;
 mod imports;
 mod mutating_methods;
+#[cfg(test)]
+mod nested_function_tests;
 mod numeric_sentinels;
 #[cfg(test)]
 mod own_mut_param_tests;

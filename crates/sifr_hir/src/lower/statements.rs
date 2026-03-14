@@ -24,7 +24,7 @@ use super::sequence_guard_detection::{
 };
 use super::sequence_pointers::record_sequence_pointer_fact;
 use super::sequence_shapes::sequence_shape_fact;
-use super::typing_and_functions::{extract_function_type, resolve_annotation_expr};
+use super::typing_and_functions::{register_local_function_symbol, resolve_annotation_expr};
 use super::LowerCtx;
 
 fn ensure_mutable_parameter_binding(ctx: &mut LowerCtx, name: &str, operation: &str) -> bool {
@@ -46,6 +46,8 @@ pub(super) fn lower_stmts(
     func_type: &FunctionType,
     ctx: &mut LowerCtx,
 ) -> Vec<HirStmt> {
+    predeclare_nested_function_symbols(stmts, ctx);
+
     let mut result = Vec::new();
     for (index, stmt) in stmts.iter().enumerate() {
         if crate::cfg::flow_facts(&result).always_exits() {
@@ -68,6 +70,14 @@ pub(super) fn lower_stmts(
         apply_numeric_sentinel_patches(&mut result, &mut ctx.pending_numeric_sentinel_patches);
     }
     result
+}
+
+fn predeclare_nested_function_symbols(stmts: &[Stmt], ctx: &mut LowerCtx) {
+    for stmt in stmts {
+        if let Stmt::FunctionDef(func) = stmt {
+            register_local_function_symbol(func, ctx);
+        }
+    }
 }
 
 pub(super) fn lower_stmt(
@@ -387,10 +397,11 @@ pub(super) fn lower_stmt(
         Stmt::FunctionDef(func) => {
             // Nested function definition (def inside def)
             // Extract the function type (params + return type)
-            let ft = extract_function_type(func, ctx);
-
-            // Register the nested function in the current scope so it can be called
-            ctx.functions.insert(func.name.to_string(), ft.clone());
+            let ft = ctx
+                .functions
+                .get(func.name.as_str())
+                .cloned()
+                .unwrap_or_else(|| register_local_function_symbol(func, ctx));
 
             // Lower the nested function body
             ctx.scope.push();
