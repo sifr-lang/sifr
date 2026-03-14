@@ -7,7 +7,7 @@ Status: completed on 2026-03-15
 - Fail fixtures:
   - `crates/sifr/tests/e2e/fail/nested_function_capture_mutates_immutable_param.sifr`
   - `crates/sifr/tests/e2e/fail/nested_function_recursive_nonlocal_unsupported.sifr`
-- PR: pending
+- PR: `#1146`
 
 ## Closure Basis
 

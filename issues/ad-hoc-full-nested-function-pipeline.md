@@ -45,7 +45,7 @@ This phase covers the full compiler pipeline for:
   - Closure basis: structured codegen now lowers recursive nested helpers with typed capture parameters and mutable collection captures, supported backtracking helpers no longer fall through to production panics or `Any`-driven Rust mismatches, and immutable-parameter capture mutation now fails explicitly at the language boundary.
 - `2026-03-15`: `milestone_nested_5` completed.
   - Execution report: `issues/ad-hoc-full-nested-function-pipeline-part5-execution.md`
-  - PR: pending
+  - PR: `#1146`
   - Closure basis: the phase now has authoritative demo coverage plus permanent pass/fail nested-function regressions, and the watched audit set is classified into supported passes, explicit ownership boundaries, and unrelated residual blockers outside this pipeline.
 
 ## Entry Baseline Evidence (2026-03-14)
