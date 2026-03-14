@@ -1,7 +1,8 @@
+
 # LeetCode 948: Bag Of Tokens
 # Python version
 
-def bagOfTokensScore(tokens: List[int], power: int) -> int:
+def bagOfTokensScore(tokens: list[int], power: int) -> int:
     res = score = 0
     tokens.sort()
 
@@ -23,8 +24,8 @@ def bagOfTokensScore(tokens: List[int], power: int) -> int:
 
 
 def main():
-    print(bagOfTokensScore([100], 50))
-    print(bagOfTokensScore([200,100], 150))
+    assert bagOfTokensScore([100], 50) == 0
+    assert bagOfTokensScore([200,100], 150) == 1
 
 if __name__ == "__main__":
     main()

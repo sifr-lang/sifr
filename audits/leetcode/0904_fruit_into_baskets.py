@@ -1,7 +1,8 @@
+
 # LeetCode 904: 0904_Fruit_Into_Baskets
 # Python version
 
-def totalFruit(fruits: List[int]) -> int:
+def totalFruit(fruits: list[int]) -> int:
     tr = {}
     l = r = 0
     res = 0
@@ -22,7 +23,9 @@ def totalFruit(fruits: List[int]) -> int:
 
 
 def main():
-    print("no test cases")
+    assert totalFruit([1, 2, 1]) == 3
+    assert totalFruit([0, 1, 2, 2]) == 3
+    assert totalFruit([1, 2, 3, 2, 2]) == 4
 
 if __name__ == "__main__":
     main()

@@ -1,3 +1,5 @@
+from collections import defaultdict
+
 # LeetCode 2013: Detect Squares
 # Python version
 
@@ -5,10 +7,10 @@ class DetectSquares:
     def __init__(self):
         self.ptsCount = defaultdict(int)
         self.pts = []
-    def add(self, point: List[int]) -> None:
+    def add(self, point: list[int]) -> None:
         self.ptsCount[tuple(point)] += 1
         self.pts.append(point)
-    def count(self, point: List[int]) -> int:
+    def count(self, point: list[int]) -> int:
         res = 0
         px, py = point
         for x, y in self.pts:
@@ -18,7 +20,14 @@ class DetectSquares:
         return res
 
 def main():
-    print("no test cases")
+    obj = DetectSquares()
+    obj.add([3, 10])
+    obj.add([11, 2])
+    obj.add([3, 2])
+    assert obj.count([11, 10]) == 1
+    assert obj.count([14, 8]) == 0
+    obj.add([11, 2])
+    assert obj.count([11, 10]) == 2
 
 if __name__ == "__main__":
     main()

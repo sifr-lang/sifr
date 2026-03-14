@@ -1,7 +1,9 @@
+import heapq
+
 # LeetCode 502: Ipo
 # Python version
 
-def findMaximizedCapital(k: int, w: int, profits: List[int], capital: List[int]) -> int:
+def findMaximizedCapital(k: int, w: int, profits: list[int], capital: list[int]) -> int:
     # O(nlogn)
     maxProfit = [] # only projects we can afford
     minCapital = [(c, p) for c, p in zip(capital, profits)]
@@ -20,7 +22,8 @@ def findMaximizedCapital(k: int, w: int, profits: List[int], capital: List[int])
 
 
 def main():
-    print("no test cases")
+    assert findMaximizedCapital(2, 0, [1, 2, 3], [0, 1, 1]) == 4
+    assert findMaximizedCapital(3, 0, [1, 2, 3], [0, 1, 2]) == 6
 
 if __name__ == "__main__":
     main()

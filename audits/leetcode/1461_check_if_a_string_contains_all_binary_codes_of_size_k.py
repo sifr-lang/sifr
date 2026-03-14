@@ -1,3 +1,4 @@
+
 # LeetCode 1461: Check If A String Contains All Binary Codes Of Size K
 # Python version
 
@@ -7,7 +8,9 @@ def hasAllCodes(s: str, k: int) -> bool:
 
 
 def main():
-    print("no test cases")
+    assert hasAllCodes('00110110', 2) == True
+    assert hasAllCodes('0110', 1) == True
+    assert hasAllCodes('0110', 2) == False
 
 if __name__ == "__main__":
     main()

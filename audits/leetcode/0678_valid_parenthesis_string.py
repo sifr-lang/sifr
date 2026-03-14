@@ -1,3 +1,4 @@
+
 # LeetCode 678: Valid Parenthesis String
 # Python version
 
@@ -44,9 +45,9 @@ def checkValidString(s: str) -> bool:
 
 
 def main():
-    print(checkValidString("()"))
-    print(checkValidString("(*)"))
-    print(checkValidString("(*))"))
+    assert checkValidString("()") == True
+    assert checkValidString("(*)") == True
+    assert checkValidString("(*))") == True
 
 if __name__ == "__main__":
     main()

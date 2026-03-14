@@ -1,3 +1,4 @@
+
 # LeetCode 2390: Removing Stars From A String
 # Python version
 
@@ -13,7 +14,7 @@ def removeStars(s) :
 
 
 def main():
-    print(removeStars("leet**cod*e"))
+    assert removeStars("leet**cod*e") == 'lecoe'
 
 if __name__ == "__main__":
     main()

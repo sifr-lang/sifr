@@ -1,3 +1,4 @@
+
 # LeetCode 680: Valid Palindrome Ii
 # Python version
 
@@ -26,9 +27,9 @@ def validPalindromeUtil(s, i, j):
 
 
 def main():
-    print(validPalindrome("aba"))
-    print(validPalindrome("abca"))
-    print(validPalindrome("abc"))
+    assert validPalindrome("aba") == True
+    assert validPalindrome("abca") == True
+    assert validPalindrome("abc") == False
 
 if __name__ == "__main__":
     main()

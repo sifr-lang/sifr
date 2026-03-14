@@ -1,7 +1,8 @@
+
 # LeetCode 1582: Special Positions In A Binary Matrix
 # Python version
 
-def numSpecial(mat: List[List[int]]) -> int:
+def numSpecial(mat: list[list[int]]) -> int:
     m = len(mat)
     n = len(mat[0])
     rowCount = [0] * m
@@ -22,7 +23,8 @@ def numSpecial(mat: List[List[int]]) -> int:
 
 
 def main():
-    print("no test cases")
+    assert numSpecial([[1, 0, 0], [0, 0, 1], [1, 0, 0]]) == 1
+    assert numSpecial([[1, 0, 0], [0, 1, 0], [0, 0, 1]]) == 3
 
 if __name__ == "__main__":
     main()

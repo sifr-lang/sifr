@@ -24,5 +24,6 @@ def decode(s):
     return res
 
 def main():
-    print("no test cases")
+    assert encode(['Hello', 'World']) == '5#Hello5#World'
+    assert encode(['']) == '0#'
 

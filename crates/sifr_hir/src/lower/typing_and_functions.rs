@@ -1,9 +1,15 @@
 use crate::hir_nodes::{HirFunction, HirParam, MethodKind};
-use sifr_python_ast::{AstParamConvention, Expr, Number, Operator, StmtFunctionDef};
+use sifr_python_ast::{
+    AstParamConvention, AstParamMutability, AstParamOwnership, Expr, Number, Operator,
+    StmtFunctionDef,
+};
 use sifr_type_system::infer::resolve_type_annotation;
-use sifr_type_system::{make_union, FunctionType, OwnershipKind, ParamConvention, Type};
+use sifr_type_system::{
+    make_union, FunctionType, OwnershipKind, ParamConvention, ParamMutability, ParamOwnership, Type,
+};
 use std::collections::HashMap;
 
+use super::classes::lower_expr_simple;
 use super::diagnostics::{format_type_name, is_valid_error_type};
 use super::expressions::lower_expr;
 use super::statements::{collect_return_types, lower_stmts};
@@ -194,20 +200,98 @@ pub(super) fn register_builtins(ctx: &mut LowerCtx) {
 }
 
 pub(super) fn ast_convention_to_param(conv: AstParamConvention, ty: &Type) -> ParamConvention {
-    match conv {
-        AstParamConvention::Mut => ParamConvention::MutBorrow,
-        AstParamConvention::Own => ParamConvention::Own,
-        AstParamConvention::Default => {
-            // TypeVars (generics) default to Borrow since the concrete type is unknown
+    let ownership = match conv.ownership {
+        AstParamOwnership::Own => ParamOwnership::Own,
+        AstParamOwnership::Borrow => {
             if matches!(ty, Type::TypeVar(_)) {
-                ParamConvention::Borrow
+                ParamOwnership::Borrow
             } else if ty.ownership() == OwnershipKind::Copy {
-                ParamConvention::Own
+                ParamOwnership::Own
             } else {
-                ParamConvention::Borrow
+                ParamOwnership::Borrow
+            }
+        }
+    };
+    let mutability = match conv.mutability {
+        AstParamMutability::Immutable => ParamMutability::Immutable,
+        AstParamMutability::Mutable => ParamMutability::Mutable,
+    };
+    ParamConvention::new(ownership, mutability)
+}
+
+pub(super) fn function_type_to_callable_type(ft: &FunctionType) -> Type {
+    Type::Callable(
+        ft.params.iter().map(|(_, ty, _)| ty.clone()).collect(),
+        ft.params
+            .iter()
+            .map(|(_, _, convention)| *convention)
+            .collect(),
+        ft.return_type.clone(),
+    )
+}
+
+fn collect_function_defaults(
+    func: &StmtFunctionDef,
+    ctx: &mut LowerCtx,
+) -> Vec<(usize, crate::hir_nodes::HirExpr)> {
+    let mut defaults = Vec::new();
+
+    for (index, param) in func.parameters.args.iter().enumerate() {
+        if let Some(default_expr) = &param.default {
+            if let Some(hir_default) = lower_expr_simple(default_expr) {
+                defaults.push((index, hir_default));
+            } else {
+                ctx.error(format!(
+                    "function '{}': unsupported default argument expression for parameter '{}'",
+                    func.name, param.parameter.name
+                ));
             }
         }
     }
+
+    let regular_count = func.parameters.args.len();
+    for (index, param) in func.parameters.kwonlyargs.iter().enumerate() {
+        if let Some(default_expr) = &param.default {
+            if let Some(hir_default) = lower_expr_simple(default_expr) {
+                defaults.push((regular_count + index, hir_default));
+            } else {
+                ctx.error(format!(
+                    "function '{}': unsupported default argument expression for parameter '{}'",
+                    func.name, param.parameter.name
+                ));
+            }
+        }
+    }
+
+    defaults
+}
+
+pub(super) fn register_local_function_symbol(
+    func: &StmtFunctionDef,
+    ctx: &mut LowerCtx,
+) -> FunctionType {
+    let function_name = func.name.to_string();
+    if let Some(existing) = ctx.functions.get(function_name.as_str()) {
+        if ctx.scope.lookup(function_name.as_str()).is_some() {
+            return existing.clone();
+        }
+    }
+
+    let ft = extract_function_type(func, ctx);
+    let callable_ty = function_type_to_callable_type(&ft);
+    let defaults = collect_function_defaults(func, ctx);
+
+    if !defaults.is_empty() {
+        ctx.function_defaults
+            .insert(function_name.clone(), defaults);
+    }
+    ctx.scope.define(function_name.clone(), callable_ty);
+    ctx.functions.insert(function_name.clone(), ft.clone());
+    if func.parameters.vararg.is_some() {
+        ctx.vararg_functions.insert(function_name);
+    }
+
+    ft
 }
 
 pub(super) fn extract_function_type(func: &StmtFunctionDef, ctx: &mut LowerCtx) -> FunctionType {
@@ -431,9 +515,9 @@ pub(super) fn resolve_annotation_expr(expr: &Expr, ctx: &mut LowerCtx) -> Type {
                             .iter()
                             .map(|ty| {
                                 if ty.ownership() == OwnershipKind::Copy {
-                                    ParamConvention::Own
+                                    ParamConvention::own()
                                 } else {
-                                    ParamConvention::Borrow
+                                    ParamConvention::borrow()
                                 }
                             })
                             .collect();
@@ -586,11 +670,11 @@ pub(super) fn lower_function(func: &StmtFunctionDef, ctx: &mut LowerCtx) -> Opti
             .get(i)
             .map(|(_, t, _)| t.clone())
             .unwrap_or(Type::Any);
-        ctx.scope.define(name.clone(), ty.clone());
+        let convention = ast_convention_to_param(param_def.parameter.convention, &ty);
+        ctx.scope
+            .define_parameter(name.clone(), ty.clone(), convention.is_mutable());
 
         let default = param_def.default.as_ref().and_then(|d| lower_expr(d, ctx));
-
-        let convention = ast_convention_to_param(param_def.parameter.convention, &ty);
 
         params.push(HirParam {
             name,
@@ -610,9 +694,9 @@ pub(super) fn lower_function(func: &StmtFunctionDef, ctx: &mut LowerCtx) -> Opti
             .get(regular_count)
             .map(|(_, t, _)| t.clone())
             .unwrap_or(Type::Any);
-        ctx.scope.define(name.clone(), ty.clone());
-
         let convention = ast_convention_to_param(vararg.convention, &ty);
+        ctx.scope
+            .define_parameter(name.clone(), ty.clone(), convention.is_mutable());
         params.push(HirParam {
             name,
             ty,
@@ -631,11 +715,11 @@ pub(super) fn lower_function(func: &StmtFunctionDef, ctx: &mut LowerCtx) -> Opti
             .get(regular_count + i)
             .map(|(_, t, _)| t.clone())
             .unwrap_or(Type::Any);
-        ctx.scope.define(name.clone(), ty.clone());
+        let convention = ast_convention_to_param(param_def.parameter.convention, &ty);
+        ctx.scope
+            .define_parameter(name.clone(), ty.clone(), convention.is_mutable());
 
         let default = param_def.default.as_ref().and_then(|d| lower_expr(d, ctx));
-
-        let convention = ast_convention_to_param(param_def.parameter.convention, &ty);
 
         params.push(HirParam {
             name,
@@ -646,13 +730,13 @@ pub(super) fn lower_function(func: &StmtFunctionDef, ctx: &mut LowerCtx) -> Opti
         });
     }
 
-    // Populate borrowed_params for escape analysis in lower_return / lower_let
-    // A param is "borrowed" (escape-unsafe) if its convention is Borrow and its type is Move.
+    // Populate borrowed_params for escape analysis in lower_return / lower_let.
+    // Any borrowed move-type parameter, shared or mutable, is escape-unsafe.
     // Exclude TypeVar parameters: generics are monomorphized by Rust and ownership is handled
     // by the Rust compiler, not by Sifr's escape analysis.
     ctx.borrowed_params.clear();
     for param in &params {
-        if param.convention == ParamConvention::Borrow
+        if param.convention.is_borrowed()
             && param.ty.ownership() == OwnershipKind::Move
             && !matches!(param.ty, Type::TypeVar(_))
         {

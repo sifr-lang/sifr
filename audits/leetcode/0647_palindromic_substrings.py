@@ -1,3 +1,4 @@
+
 # LeetCode 647: Palindromic Substrings
 # Python version
 
@@ -21,8 +22,8 @@ def countPali(s, l, r):
 
 
 def main():
-    print(countSubstrings("abc"))
-    print(countSubstrings("aaa"))
+    assert countSubstrings("abc") == 3
+    assert countSubstrings("aaa") == 6
 
 if __name__ == "__main__":
     main()

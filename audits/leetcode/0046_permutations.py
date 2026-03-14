@@ -1,7 +1,8 @@
+
 # LeetCode 46: Permutations
 # Python version
 
-def permute(nums: List[int]) -> List[List[int]]:
+def permute(nums: list[int]) -> list[list[int]]:
     res = []
 
     # base case
@@ -21,7 +22,7 @@ def permute(nums: List[int]) -> List[List[int]]:
 
 
 def main():
-    print(permute([1,2,3]))
+    assert permute([1,2,3]) == [[3, 2, 1], [2, 3, 1], [1, 3, 2], [3, 1, 2], [2, 1, 3], [1, 2, 3]]
 
 if __name__ == "__main__":
     main()

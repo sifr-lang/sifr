@@ -662,7 +662,7 @@ mod tests {
                 ty: Type::Int,
                 default: None,
                 keyword_only: false,
-                convention: ParamConvention::Own,
+                convention: ParamConvention::own(),
             }],
             return_type: Type::None,
             body: vec![HirStmt::Expr {

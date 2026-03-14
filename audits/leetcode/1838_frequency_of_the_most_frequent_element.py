@@ -1,7 +1,8 @@
+
 # LeetCode 1838: Frequency Of The Most Frequent Element
 # Python version
 
-def maxFrequency(nums: List[int], k: int) -> int:
+def maxFrequency(nums: list[int], k: int) -> int:
     nums.sort()
 
     l, r = 0, 0
@@ -21,7 +22,9 @@ def maxFrequency(nums: List[int], k: int) -> int:
 
 
 def main():
-    print("no test cases")
+    assert maxFrequency([1, 2, 4], 5) == 3
+    assert maxFrequency([1, 4, 8, 13], 5) == 2
+    assert maxFrequency([3, 9, 6], 2) == 1
 
 if __name__ == "__main__":
     main()

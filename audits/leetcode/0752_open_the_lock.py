@@ -1,7 +1,9 @@
+from collections import deque
+
 # LeetCode 752: Open The Lock
 # Python version
 
-def openLock(deadends: List[str], target: str) -> int:
+def openLock(deadends: list[str], target: str) -> int:
     if "0000" in deadends:
         return -1
 
@@ -30,7 +32,9 @@ def openLock(deadends: List[str], target: str) -> int:
 
 
 def main():
-    print("no test cases")
+    assert openLock(['0201', '0101', '0102', '1212', '2002'], '0202') == 6
+    assert openLock(['8888'], '0009') == 1
+    assert openLock(['8887', '8889', '8878', '8898', '8788', '8988', '7888', '9888'], '8888') == -1
 
 if __name__ == "__main__":
     main()

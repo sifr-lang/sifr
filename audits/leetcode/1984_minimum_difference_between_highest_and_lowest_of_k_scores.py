@@ -1,7 +1,8 @@
+
 # LeetCode 1984: Minimum Difference Between Highest And Lowest Of K Scores
 # Python version
 
-def minimumDifference(nums: List[int], k: int) -> int:
+def minimumDifference(nums: list[int], k: int) -> int:
     nums.sort()
     l, r = 0, k - 1
     res = float("inf")
@@ -14,7 +15,7 @@ def minimumDifference(nums: List[int], k: int) -> int:
 
 
 def main():
-    print(minimumDifference([90], 1))
+    assert minimumDifference([90], 1) == 0
 
 if __name__ == "__main__":
     main()

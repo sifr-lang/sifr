@@ -5,7 +5,7 @@ use crate::{
     RustTypeParam, ScopeContext, Visibility,
 };
 use sifr_hir::{HirClass, HirFunction, MethodKind};
-use sifr_type_system::{ParamConvention, Type};
+use sifr_type_system::Type;
 
 impl RustEmitter {
     pub(super) fn emit_protocol_trait(&mut self, class: &HirClass, module_public: bool) {
@@ -294,25 +294,14 @@ impl RustEmitter {
         }
         for param in &method.params {
             let mut ty = crate::sifr_type_to_rust_type(&param.ty);
-            ty = match param.convention {
-                ParamConvention::Borrow
-                    if param.ty.ownership() != sifr_type_system::OwnershipKind::Copy =>
-                {
-                    RustType::Ref {
-                        mutable: false,
-                        inner: Box::new(ty),
-                    }
-                }
-                ParamConvention::MutBorrow
-                    if param.ty.ownership() != sifr_type_system::OwnershipKind::Copy =>
-                {
-                    RustType::Ref {
-                        mutable: true,
-                        inner: Box::new(ty),
-                    }
-                }
-                _ => ty,
-            };
+            if param.ty.ownership() != sifr_type_system::OwnershipKind::Copy
+                && param.convention.is_borrowed()
+            {
+                ty = RustType::Ref {
+                    mutable: param.convention.is_mut_borrow(),
+                    inner: Box::new(ty),
+                };
+            }
             params.push(RustParam::Named {
                 name: param.name.clone(),
                 ty,
@@ -352,12 +341,12 @@ impl RustEmitter {
         self.borrowed_params.clear();
         self.mut_borrowed_params.clear();
         for param in &method.params {
-            if param.convention == ParamConvention::Borrow
+            if param.convention.is_shared_borrow()
                 && param.ty.ownership() != sifr_type_system::OwnershipKind::Copy
             {
                 self.borrowed_params.insert(param.name.clone());
             }
-            if param.convention == ParamConvention::MutBorrow
+            if param.convention.is_mut_borrow()
                 && param.ty.ownership() != sifr_type_system::OwnershipKind::Copy
             {
                 self.mut_borrowed_params.insert(param.name.clone());

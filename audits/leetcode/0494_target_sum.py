@@ -1,7 +1,8 @@
+
 # LeetCode 494: Target Sum
 # Python version
 
-def findTargetSumWays(nums: List[int], target: int) -> int:
+def findTargetSumWays(nums: list[int], target: int) -> int:
     dp = {}  # (index, total) -> # of ways
 
     def backtrack(i, total):
@@ -20,7 +21,7 @@ def findTargetSumWays(nums: List[int], target: int) -> int:
 
 
 def main():
-    print(findTargetSumWays([1,1,1,1,1], 3))
+    assert findTargetSumWays([1,1,1,1,1], 3) == 5
 
 if __name__ == "__main__":
     main()

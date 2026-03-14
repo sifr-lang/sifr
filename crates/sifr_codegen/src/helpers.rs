@@ -25,9 +25,9 @@ pub(super) fn is_auto_display_type(ty: &Type) -> bool {
 /// Move types (str, list, dict, class, etc.) are passed by reference (Borrow).
 pub(super) fn default_param_convention(ty: &Type) -> ParamConvention {
     if ty.ownership() == sifr_type_system::OwnershipKind::Copy {
-        ParamConvention::Own
+        ParamConvention::own()
     } else {
-        ParamConvention::Borrow
+        ParamConvention::borrow()
     }
 }
 
@@ -634,7 +634,7 @@ mod tests {
                 ty: Type::Int,
                 default: None,
                 keyword_only: false,
-                convention: ParamConvention::Own,
+                convention: ParamConvention::own(),
             }],
             return_type: Type::Int,
             body: vec![HirStmt::Return {

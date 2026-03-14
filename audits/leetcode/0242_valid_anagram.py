@@ -1,3 +1,4 @@
+
 # LeetCode 242: Valid Anagram
 # Python version
 
@@ -19,8 +20,8 @@ def isAnagram(s: str, t: str) -> bool:
 
 
 def main():
-    print(isAnagram("anagram", "nagaram"))
-    print(isAnagram("rat", "car"))
+    assert isAnagram("anagram", "nagaram") == True
+    assert isAnagram("rat", "car") == False
 
 if __name__ == "__main__":
     main()

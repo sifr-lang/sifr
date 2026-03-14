@@ -1,7 +1,9 @@
+import heapq
+
 # LeetCode 1584: Min Cost To Connect All Points
 # Python version
 
-def minCostConnectPoints(points: List[List[int]]) -> int:
+def minCostConnectPoints(points: list[list[int]]) -> int:
     N = len(points)
     adj = {i: [] for i in range(N)}  # i : list of [cost, node]
     for i in range(N):
@@ -30,7 +32,8 @@ def minCostConnectPoints(points: List[List[int]]) -> int:
 
 
 def main():
-    print("no test cases")
+    assert minCostConnectPoints([[0, 0], [2, 2], [3, 10], [5, 2], [7, 0]]) == 20
+    assert minCostConnectPoints([[3, 12], [-2, 5], [-4, 1]]) == 18
 
 if __name__ == "__main__":
     main()

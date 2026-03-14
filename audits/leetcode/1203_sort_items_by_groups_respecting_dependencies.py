@@ -1,9 +1,11 @@
+from collections import deque
+
 # LeetCode 1203: Sort Items By Groups Respecting Dependencies
 # Python version
 
 # This function performs topological sort on a directed graph represented by successors and predecessors_count arrays.
 
-def topologicalSort(successors: List[List[int]], predecessors_count: List[int], num_nodes: int) -> List[int]:
+def topologicalSort(successors: list[list[int]], predecessors_count: list[int], num_nodes: int) -> list[int]:
     order = []  # To store the topologically sorted nodes
     # Initialize a deque with all nodes that have no predecessors (i.e., in-degree of 0)
     nodes_with_no_predecessors = deque(node for node in range(num_nodes) if not predecessors_count[node])
@@ -20,7 +22,7 @@ def topologicalSort(successors: List[List[int]], predecessors_count: List[int], 
     return order if len(order) == num_nodes else []  # Return the order if all nodes were sorted, else return empty list
 
 
-def sortItems(n: int, m: int, group: List[int], beforeItems: List[List[int]]) -> List[int]:
+def sortItems(n: int, m: int, group: list[int], beforeItems: list[list[int]]) -> list[int]:
     # Step 1: Assign unique group IDs to items that don't belong to any group
     for item in range(n):
         if group[item] == -1:  # If the item doesn't belong to any group
@@ -67,7 +69,7 @@ def sortItems(n: int, m: int, group: List[int], beforeItems: List[List[int]]) ->
 
 
 def main():
-    print("no test cases")
+    assert topologicalSort([[0]], [0], 0) == []
 
 if __name__ == "__main__":
     main()

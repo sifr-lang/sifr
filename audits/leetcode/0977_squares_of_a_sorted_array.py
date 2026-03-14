@@ -1,7 +1,8 @@
+
 # LeetCode 977: Squares Of A Sorted Array
 # Python version
 
-def sortedSquares(nums: List[int]) -> List[int]:
+def sortedSquares(nums: list[int]) -> list[int]:
     n = len(nums)
     res = [0] * n
     l, r = 0, n - 1
@@ -19,7 +20,7 @@ def sortedSquares(nums: List[int]) -> List[int]:
 
 
 def main():
-    print(sortedSquares([-4,-1,0,3,10]))
+    assert sortedSquares([-4,-1,0,3,10]) == [0, 1, 9, 16, 100]
 
 if __name__ == "__main__":
     main()

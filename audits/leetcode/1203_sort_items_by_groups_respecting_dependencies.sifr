@@ -64,5 +64,5 @@ def sortItems(n: int, m: int, group: list[int], beforeItems: list[list[int]]) ->
     return result  # Return the final sorted list of items respecting both item and group dependencies
 
 def main():
-    print("no test cases")
+    assert topologicalSort([[0]], [0], 0) == []
 

@@ -1,7 +1,8 @@
+
 # LeetCode 338: Counting Bits
 # Python version
 
-def countBits(n: int) -> List[int]:
+def countBits(n: int) -> list[int]:
     dp = [0] * (n + 1)
     offset = 1
 
@@ -13,7 +14,7 @@ def countBits(n: int) -> List[int]:
 
 # Another dp solution
 
-def countBits(n: int) -> List[int]:
+def countBits(n: int) -> list[int]:
     res = [0] * (n + 1)
     for i in range(1, n + 1):
         if i % 2 == 1:
@@ -28,8 +29,8 @@ def countBits(n: int) -> List[int]:
 
 
 def main():
-    print(countBits(2))
-    print(countBits(5))
+    assert countBits(2) == [0, 1, 1]
+    assert countBits(5) == [0, 1, 1, 2, 1, 2]
 
 if __name__ == "__main__":
     main()

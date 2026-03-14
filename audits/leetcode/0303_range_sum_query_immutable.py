@@ -1,8 +1,9 @@
+
 # LeetCode 303: Range Sum Query Immutable
 # Python version
 
 class NumArray:
-    def __init__(self, nums: List[int]):
+    def __init__(self, nums: list[int]):
         self.prefix = []
         cur = 0
         for n in nums:
@@ -14,7 +15,10 @@ class NumArray:
         return r - l
 
 def main():
-    print("no test cases")
+    obj = NumArray([-2, 0, 3, -5, 2, -1])
+    assert obj.sumRange(0, 2) == 1
+    assert obj.sumRange(2, 5) == -1
+    assert obj.sumRange(0, 5) == -3
 
 if __name__ == "__main__":
     main()

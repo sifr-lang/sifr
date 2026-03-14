@@ -1,7 +1,8 @@
+
 # LeetCode 1700: Number Of Students Unable To Eat Lunch
 # Python version
 
-def countStudents(students: List[int], sandwiches: List[int]) -> int:
+def countStudents(students: list[int], sandwiches: list[int]) -> int:
     num_of_students_back_in_line = 0
     while num_of_students_back_in_line != len(students):
         curr_student = students.pop(0)
@@ -16,7 +17,7 @@ def countStudents(students: List[int], sandwiches: List[int]) -> int:
 
 
 def main():
-    print(countStudents([1,1,0,0], [0,1,0,1]))
+    assert countStudents([1,1,0,0], [0,1,0,1]) == 0
 
 if __name__ == "__main__":
     main()

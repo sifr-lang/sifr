@@ -1,3 +1,4 @@
+
 # LeetCode 622: Design Circular Queue
 # Python version
 
@@ -36,7 +37,16 @@ class MyCircularQueue:
         return self.capacity == self.size
 
 def main():
-    print("no test cases")
+    obj = MyCircularQueue(3)
+    assert obj.enQueue(1) == True
+    assert obj.enQueue(2) == True
+    assert obj.enQueue(3) == True
+    assert obj.enQueue(4) == False
+    assert obj.Rear() == 3
+    assert obj.isFull() == True
+    assert obj.deQueue() == True
+    assert obj.enQueue(4) == True
+    assert obj.Rear() == 4
 
 if __name__ == "__main__":
     main()

@@ -1,3 +1,4 @@
+
 # LeetCode 71: Simplify Path
 # Python version
 
@@ -23,7 +24,9 @@ def simplifyPath(path: str) -> str:
 
 
 def main():
-    print("no test cases")
+    assert simplifyPath('/home/') == '/home'
+    assert simplifyPath('/home//foo/') == '/home/foo'
+    assert simplifyPath('/home/user/Documents/../Pictures') == '/home/user/Pictures'
 
 if __name__ == "__main__":
     main()

@@ -1,7 +1,8 @@
+
 # LeetCode 68: Text Justification
 # Python version
 
-def fullJustify(words: List[str], maxWidth: int) -> List[str]:
+def fullJustify(words: list[str], maxWidth: int) -> list[str]:
     res = []
     line = []  # Words in current line
     length = 0  # Current line length
@@ -37,7 +38,9 @@ def fullJustify(words: List[str], maxWidth: int) -> List[str]:
 
 
 def main():
-    print("no test cases")
+    assert fullJustify(['This', 'is', 'an', 'example', 'of', 'text', 'justification.'], 16) == ['This    is    an', 'example  of text', 'justification.  ']
+    assert fullJustify(['What', 'must', 'be', 'acknowledgment', 'shall', 'be'], 16) == ['What   must   be', 'acknowledgment  ', 'shall be        ']
+    assert fullJustify(['Science', 'is', 'what', 'we', 'understand', 'well', 'enough', 'to', 'explain', 'to', 'a', 'computer.', 'Art', 'is', 'everything', 'else', 'we', 'do'], 20) == ['Science  is  what we', 'understand      well', 'enough to explain to', 'a  computer.  Art is', 'everything  else  we', 'do                  ']
 
 if __name__ == "__main__":
     main()

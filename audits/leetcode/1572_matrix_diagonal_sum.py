@@ -1,3 +1,4 @@
+
 # LeetCode 1572: Matrix Diagonal Sum
 # Python version
 
@@ -15,7 +16,7 @@ def CrossSum(mat):
     return cnt
 
 
-def diagonalSum(mat: List[List[int]]) -> int:
+def diagonalSum(mat: list[list[int]]) -> int:
     prime = PrimeSum(mat)
     cross = CrossSum(mat)
 
@@ -29,7 +30,7 @@ def diagonalSum(mat: List[List[int]]) -> int:
 
 
 def main():
-    print(diagonalSum([[1,2,3],[4,5,6],[7,8,9]]))
+    assert diagonalSum([[1,2,3],[4,5,6],[7,8,9]]) == 25
 
 if __name__ == "__main__":
     main()

@@ -1,7 +1,8 @@
+
 # LeetCode 410: Split Array Largest Sum
 # Python version
 
-def splitArray(nums: List[int], m: int) -> int:
+def splitArray(nums: list[int], m: int) -> int:
     def canSplit(largest):
         subarray = 0
         curSum = 0
@@ -26,7 +27,7 @@ def splitArray(nums: List[int], m: int) -> int:
 
 
 def main():
-    print(splitArray([7,2,5,10,8], 2))
+    assert splitArray([7,2,5,10,8], 2) == 18
 
 if __name__ == "__main__":
     main()

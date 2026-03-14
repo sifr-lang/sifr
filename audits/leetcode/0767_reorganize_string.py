@@ -1,3 +1,6 @@
+import heapq
+from collections import Counter
+
 # LeetCode 767: Reorganize String
 # Python version
 
@@ -26,7 +29,8 @@ def reorganizeString(s: str) -> str:
 
 
 def main():
-    print("no test cases")
+    assert reorganizeString('aab') == 'aba'
+    assert reorganizeString('aaab') == ''
 
 if __name__ == "__main__":
     main()

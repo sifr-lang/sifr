@@ -1,7 +1,9 @@
+from math import ceil
+
 # LeetCode 1049: Last Stone Weight Ii
 # Python version
 
-def lastStoneWeightII(stones: List[int]) -> int:
+def lastStoneWeightII(stones: list[int]) -> int:
     # Memoization
     stoneSum = sum(stones)
     target = ceil(stoneSum / 2)
@@ -22,7 +24,7 @@ def lastStoneWeightII(stones: List[int]) -> int:
 
 
 def main():
-    print(lastStoneWeightII([2,7,4,1,8,1]))
+    assert lastStoneWeightII([2,7,4,1,8,1]) == 1
 
 if __name__ == "__main__":
     main()

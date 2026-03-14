@@ -1,3 +1,4 @@
+
 # LeetCode 367: Valid Perfect Square
 # Python version
 
@@ -26,8 +27,8 @@ def isPerfectSquare_2(num: int) -> bool:
 
 
 def main():
-    print(isPerfectSquare(16))
-    print(isPerfectSquare(14))
+    assert isPerfectSquare(16) == True
+    assert isPerfectSquare(14) == False
 
 if __name__ == "__main__":
     main()

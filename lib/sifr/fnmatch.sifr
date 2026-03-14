@@ -4,7 +4,7 @@
 def fnmatch(name: str, pattern: str) -> bool:
     return _match(name, 0, pattern, 0)
 
-def _match(name: str, ni: int, pattern: str, pi: int) -> bool:
+def _match(name: str, mut ni: int, pattern: str, mut pi: int) -> bool:
     while pi < len(pattern):
         pc: str | None = pattern[pi]
         if pc is not None:

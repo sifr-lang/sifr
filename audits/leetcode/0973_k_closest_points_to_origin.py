@@ -1,7 +1,9 @@
+import heapq
+
 # LeetCode 973: K Closest Points To Origin
 # Python version
 
-def kClosest(points: List[List[int]], k: int) -> List[List[int]]:
+def kClosest(points: list[list[int]], k: int) -> list[list[int]]:
     minHeap = []
     for x, y in points:
         dist = (x ** 2) + (y ** 2)
@@ -16,7 +18,8 @@ def kClosest(points: List[List[int]], k: int) -> List[List[int]]:
 
 
 def main():
-    print("no test cases")
+    assert kClosest([[1, 3], [-2, 2]], 1) == [(-2, 2)]
+    assert kClosest([[3, 3], [5, -1], [-2, 4]], 2) == [(3, 3), (-2, 4)]
 
 if __name__ == "__main__":
     main()

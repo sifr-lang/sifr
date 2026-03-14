@@ -1,7 +1,8 @@
+
 # LeetCode 931: Minimum Falling Path Sum
 # Python version
 
-def minFallingPathSum(matrix: List[List[int]]) -> int:
+def minFallingPathSum(matrix: list[list[int]]) -> int:
     Memo = {}
 
     def Path(i, k, n):
@@ -37,7 +38,8 @@ def minFallingPathSum(matrix: List[List[int]]) -> int:
 
 
 def main():
-    print("no test cases")
+    assert minFallingPathSum([[2, 1, 3], [6, 5, 4], [7, 8, 9]]) == 13
+    assert minFallingPathSum([[-19, 57], [-40, -5]]) == -59
 
 if __name__ == "__main__":
     main()

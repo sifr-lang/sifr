@@ -1,7 +1,8 @@
+
 # LeetCode 241: Different Ways To Add Parentheses
 # Python version
 
-def diffWaysToCompute(s: str) -> List[int]:
+def diffWaysToCompute(s: str) -> list[int]:
     def f(s):
         res = []
         for i, c in enumerate(s):
@@ -16,7 +17,7 @@ def diffWaysToCompute(s: str) -> List[int]:
 
 
 def main():
-    print(diffWaysToCompute("2-1-1"))
+    assert diffWaysToCompute("2-1-1") == [2, 0]
 
 if __name__ == "__main__":
     main()

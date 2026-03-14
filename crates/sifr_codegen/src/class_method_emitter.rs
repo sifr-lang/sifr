@@ -67,24 +67,14 @@ impl RustEmitter {
         }
 
         let rust_ty = self.rust_type_with_generics(param_ty);
-        match convention {
-            ParamConvention::Borrow
-                if param_ty.ownership() != sifr_type_system::OwnershipKind::Copy =>
-            {
-                RustType::Ref {
-                    mutable: false,
-                    inner: Box::new(RustType::Named(rust_ty)),
-                }
+        if param_ty.ownership() != sifr_type_system::OwnershipKind::Copy && convention.is_borrowed()
+        {
+            RustType::Ref {
+                mutable: convention.is_mut_borrow(),
+                inner: Box::new(RustType::Named(rust_ty)),
             }
-            ParamConvention::MutBorrow
-                if param_ty.ownership() != sifr_type_system::OwnershipKind::Copy =>
-            {
-                RustType::Ref {
-                    mutable: true,
-                    inner: Box::new(RustType::Named(rust_ty)),
-                }
-            }
-            _ => RustType::Named(rust_ty),
+        } else {
+            RustType::Named(rust_ty)
         }
     }
 
@@ -304,17 +294,17 @@ impl RustEmitter {
 
         for param in &method.params {
             let effective_convention = if method.name == "new" {
-                ParamConvention::Own
+                ParamConvention::own()
             } else {
                 param.convention
             };
 
-            if effective_convention == ParamConvention::Borrow
+            if effective_convention.is_shared_borrow()
                 && param.ty.ownership() != sifr_type_system::OwnershipKind::Copy
             {
                 self.borrowed_params.insert(param.name.clone());
             }
-            if effective_convention == ParamConvention::MutBorrow
+            if effective_convention.is_mut_borrow()
                 && param.ty.ownership() != sifr_type_system::OwnershipKind::Copy
             {
                 self.mut_borrowed_params.insert(param.name.clone());
@@ -346,16 +336,26 @@ impl RustEmitter {
             _ => {}
         }
         for param in &method.params {
-            params.push(RustParam::Named {
-                name: param.name.clone(),
-                ty: self.lower_class_method_param_type(
-                    class,
-                    method,
-                    &param.name,
-                    &param.ty,
-                    param.convention,
-                ),
-            });
+            let rust_ty = self.lower_class_method_param_type(
+                class,
+                method,
+                &param.name,
+                &param.ty,
+                param.convention,
+            );
+            params.push(
+                if param.convention.is_owned() && param.convention.is_mutable() {
+                    RustParam::NamedMut {
+                        name: param.name.clone(),
+                        ty: rust_ty,
+                    }
+                } else {
+                    RustParam::Named {
+                        name: param.name.clone(),
+                        ty: rust_ty,
+                    }
+                },
+            );
         }
 
         let mut body = if method.method_kind == MethodKind::Regular && method.name == "new" {

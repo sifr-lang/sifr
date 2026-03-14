@@ -1,7 +1,8 @@
+
 # LeetCode 1475: Final Prices With A Special Discount In A Shop
 # Python version
 
-def finalPrices(prices: List[int]) -> List[int]:
+def finalPrices(prices: list[int]) -> list[int]:
     stack = []
     res = []
     for i in range(len(prices) - 1, -1, -1):
@@ -23,7 +24,7 @@ def finalPrices(prices: List[int]) -> List[int]:
 
 
 def main():
-    print(finalPrices([8,4,6,2,3]))
+    assert finalPrices([8,4,6,2,3]) == [4, 2, 4, 2, 3]
 
 if __name__ == "__main__":
     main()

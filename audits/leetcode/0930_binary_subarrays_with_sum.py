@@ -1,7 +1,8 @@
+
 # LeetCode 930: Binary Subarrays With Sum
 # Python version
 
-def numSubarraysWithSum(nums: List[int], goal: int) -> int:
+def numSubarraysWithSum(nums: list[int], goal: int) -> int:
 
     def helper(x):
         if x < 0: return 0
@@ -21,7 +22,7 @@ def numSubarraysWithSum(nums: List[int], goal: int) -> int:
 
 
 def main():
-    print(numSubarraysWithSum([1,0,1,0,1], 2))
+    assert numSubarraysWithSum([1,0,1,0,1], 2) == 4
 
 if __name__ == "__main__":
     main()

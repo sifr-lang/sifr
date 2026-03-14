@@ -1,3 +1,4 @@
+
 # LeetCode 18: 4Sum
 # Python version
 
@@ -29,7 +30,7 @@ def fourSum(nums, target):
 
 
 def main():
-    print(fourSum([1,0,-1,0,-2,2], 0))
+    assert fourSum([1,0,-1,0,-2,2], 0) == [[-2, -1, 1, 2], [-2, 0, 0, 2], [-1, 0, 0, 1]]
 
 if __name__ == "__main__":
     main()

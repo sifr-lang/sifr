@@ -1,7 +1,8 @@
+
 # LeetCode 75: Sort Colors
 # Python version
 
-def sortColors(nums: List[int]) -> None:
+def sortColors(nums: list[int]) -> None:
     low = 0
     high = len(nums) - 1
     mid = 0
@@ -21,7 +22,12 @@ def sortColors(nums: List[int]) -> None:
 
 
 def main():
-    print("no test cases")
+    arg0 = [2, 0, 2, 1, 1, 0]
+    _result = sortColors(arg0)
+    assert arg0 == [0, 0, 1, 1, 2, 2]
+    arg0 = [2, 0, 1]
+    _result = sortColors(arg0)
+    assert arg0 == [0, 1, 2]
 
 if __name__ == "__main__":
     main()

@@ -1,7 +1,8 @@
+
 # LeetCode 735: Asteroid Collision
 # Python version
 
-def asteroidCollision(asteroids: List[int]) -> List[int]:
+def asteroidCollision(asteroids: list[int]) -> list[int]:
     stack = []
 
     for a in asteroids:
@@ -22,9 +23,9 @@ def asteroidCollision(asteroids: List[int]) -> List[int]:
 
 
 def main():
-    print(asteroidCollision([5,10,-5]))
-    print(asteroidCollision([8,-8]))
-    print(asteroidCollision([10,2,-5]))
+    assert asteroidCollision([5,10,-5]) == [5, 10]
+    assert asteroidCollision([8,-8]) == []
+    assert asteroidCollision([10,2,-5]) == [10]
 
 if __name__ == "__main__":
     main()

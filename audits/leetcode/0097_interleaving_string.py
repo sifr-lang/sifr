@@ -1,3 +1,4 @@
+
 # LeetCode 97: Interleaving String
 # Python version
 
@@ -19,8 +20,8 @@ def isInterleave(s1: str, s2: str, s3: str) -> bool:
 
 
 def main():
-    print(isInterleave("aabcc", "dbbca", "aadbbcbcac"))
-    print(isInterleave("aabcc", "dbbca", "aadbbbaccc"))
+    assert isInterleave("aabcc", "dbbca", "aadbbcbcac") == True
+    assert isInterleave("aabcc", "dbbca", "aadbbbaccc") == False
 
 if __name__ == "__main__":
     main()

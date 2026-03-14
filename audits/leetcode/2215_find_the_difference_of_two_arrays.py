@@ -1,7 +1,8 @@
+
 # LeetCode 2215: Find The Difference Of Two Arrays
 # Python version
 
-def findDifference(nums1: List[int], nums2: List[int]) -> List[List[int]]:
+def findDifference(nums1: list[int], nums2: list[int]) -> list[list[int]]:
     nums1 = set(nums1)
     nums2 = set(nums2)
     table = {}
@@ -28,7 +29,7 @@ def findDifference(nums1: List[int], nums2: List[int]) -> List[List[int]]:
 
 
 
-def findDifference(nums1: List[int], nums2: List[int]) -> List[List[int]]:
+def findDifference(nums1: list[int], nums2: list[int]) -> list[list[int]]:
     nums1_set = set(nums1)
     nums2_set = set(nums2)
 
@@ -41,7 +42,8 @@ def findDifference(nums1: List[int], nums2: List[int]) -> List[List[int]]:
 
 
 def main():
-    print("no test cases")
+    assert findDifference([1, 2, 3], [2, 4, 6]) == [[1, 3], [4, 6]]
+    assert findDifference([1, 2, 3, 3], [1, 1, 2, 2]) == [[3], []]
 
 if __name__ == "__main__":
     main()

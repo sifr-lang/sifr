@@ -1,3 +1,4 @@
+
 # LeetCode 2405: Optimal Partition Of String
 # Python version
 

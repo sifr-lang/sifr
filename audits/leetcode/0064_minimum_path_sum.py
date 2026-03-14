@@ -1,7 +1,8 @@
+
 # LeetCode 64: Minimum Path Sum
 # Python version
 
-def minPathSum(grid: List[List[int]]) -> int:
+def minPathSum(grid: list[list[int]]) -> int:
     m, n = len(grid), len(grid[0])
     prev = [float("inf")] * n
     prev[-1] = 0
@@ -19,7 +20,7 @@ def minPathSum(grid: List[List[int]]) -> int:
 
 
 def main():
-    print(minPathSum([[1,3,1],[1,5,1],[4,2,1]]))
+    assert minPathSum([[1,3,1],[1,5,1],[4,2,1]]) == 7
 
 if __name__ == "__main__":
     main()

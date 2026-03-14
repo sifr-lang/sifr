@@ -1,10 +1,11 @@
+from collections import defaultdict
+
 # LeetCode 474: Ones And Zeroes
 # Python version
 
 from collections import defaultdict
-from typing import List
 
-def findMaxForm(strs: List[str], M: int, N: int) -> int:
+def findMaxForm(strs: list[str], M: int, N: int) -> int:
     # Dynamic Programming
     dp = defaultdict(int)
 

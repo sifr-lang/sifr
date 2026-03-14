@@ -1,3 +1,4 @@
+
 # LeetCode 205: Isomorphic Strings
 # Python version
 
@@ -14,8 +15,8 @@ def isIsomorphic(s: str, t: str) -> bool:
 
 
 def main():
-    print(isIsomorphic("egg", "add"))
-    print(isIsomorphic("foo", "bar"))
+    assert isIsomorphic("egg", "add") == True
+    assert isIsomorphic("foo", "bar") == False
 
 if __name__ == "__main__":
     main()

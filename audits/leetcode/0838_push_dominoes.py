@@ -1,3 +1,5 @@
+import collections
+
 # LeetCode 838: Push Dominoes
 # Python version
 
@@ -27,7 +29,8 @@ def pushDominoes(dominoes: str) -> str:
 
 
 def main():
-    print("no test cases")
+    assert pushDominoes('RR.L') == 'RR.L'
+    assert pushDominoes('.L.R...LR..L..') == 'LL.RR.LLRRLL..'
 
 if __name__ == "__main__":
     main()

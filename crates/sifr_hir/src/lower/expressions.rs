@@ -13,6 +13,7 @@ use super::decimal_methods::{
     validate_decimal_string_literal,
 };
 use super::guarded_index::guarded_sequence_index_result_type;
+use super::mutating_methods::reject_immutable_parameter_method_mutation;
 use super::numeric_sentinels::{
     float_sentinel_expr, float_sentinel_kind_from_call, lower_sentinel_expr_for_name_domain,
     maybe_resolve_numeric_sentinel_name_from_type, normalize_min_max_numeric_sentinels,
@@ -1346,8 +1347,8 @@ pub(super) fn lower_call(call: &ExprCall, ctx: &mut LowerCtx) -> Option<HirExpr>
             let convention = conventions
                 .get(i)
                 .copied()
-                .unwrap_or(ParamConvention::Borrow);
-            if convention == ParamConvention::Own {
+                .unwrap_or(ParamConvention::borrow());
+            if convention.is_owned() {
                 // Own convention: transfer ownership, mark variable as moved
                 if let HirExpr::Name { name, ty } = arg {
                     if ty.ownership() == OwnershipKind::Move {
@@ -1552,29 +1553,27 @@ pub(super) fn lower_call(call: &ExprCall, ctx: &mut LowerCtx) -> Option<HirExpr>
                         .params
                         .get(i)
                         .map(|(_, _, c)| *c)
-                        .unwrap_or(ParamConvention::Borrow);
-                    match convention {
-                        ParamConvention::MutBorrow => {
-                            if mut_borrowed.contains(name) {
-                                ctx.error(format!(
-                                    "cannot borrow '{name}' as mutable more than once in the same call to '{func_name}'"
-                                ));
-                            } else if immut_borrowed.contains(name) {
-                                ctx.error(format!(
-                                    "cannot borrow '{name}' as mutable because it is already borrowed as immutable in the same call to '{func_name}'"
-                                ));
-                            }
-                            mut_borrowed.push(name.clone());
+                        .unwrap_or(ParamConvention::borrow());
+                    if convention.is_mut_borrow() {
+                        if mut_borrowed.contains(name) {
+                            ctx.error(format!(
+                                "cannot borrow '{name}' as mutable more than once in the same call to '{func_name}'"
+                            ));
+                        } else if immut_borrowed.contains(name) {
+                            ctx.error(format!(
+                                "cannot borrow '{name}' as mutable because it is already borrowed as immutable in the same call to '{func_name}'"
+                            ));
                         }
-                        ParamConvention::Borrow => {
-                            if mut_borrowed.contains(name) {
-                                ctx.error(format!(
-                                    "cannot borrow '{name}' as immutable because it is already borrowed as mutable in the same call to '{func_name}'"
-                                ));
-                            }
-                            immut_borrowed.push(name.clone());
+                        mut_borrowed.push(name.clone());
+                    } else if convention.is_shared_borrow() {
+                        if mut_borrowed.contains(name) {
+                            ctx.error(format!(
+                                "cannot borrow '{name}' as immutable because it is already borrowed as mutable in the same call to '{func_name}'"
+                            ));
                         }
-                        ParamConvention::Own => {} // ownership transfer, no borrow conflict
+                        immut_borrowed.push(name.clone());
+                    } else {
+                        // Ownership transfer, including `own mut`, does not create a borrow conflict.
                     }
                 }
             }
@@ -1590,8 +1589,8 @@ pub(super) fn lower_call(call: &ExprCall, ctx: &mut LowerCtx) -> Option<HirExpr>
                     .params
                     .get(i)
                     .map(|(_, _, c)| *c)
-                    .unwrap_or(ParamConvention::Borrow);
-                if convention == ParamConvention::Own {
+                    .unwrap_or(ParamConvention::borrow());
+                if convention.is_owned() {
                     ctx.scope.mark_moved(name);
                 }
             }
@@ -2286,6 +2285,10 @@ pub(super) fn lower_method_call(
         object = refined_object;
     }
     let object_ty = object.ty().clone();
+
+    if reject_immutable_parameter_method_mutation(ctx, &object, &object_ty, &method_name) {
+        return None;
+    }
 
     // Resolve method return type based on object type and method name
     let return_ty = resolve_method_type(&object_ty, &method_name, &args, ctx)?;

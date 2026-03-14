@@ -1,3 +1,4 @@
+
 # LeetCode 1930: Unique Length 3 Palindromic Subsequences
 # Python version
 
@@ -11,7 +12,9 @@ def countPalindromicSubsequence(s: str) -> int:
 
 
 def main():
-    print("no test cases")
+    assert countPalindromicSubsequence('aabca') == 3
+    assert countPalindromicSubsequence('adc') == 0
+    assert countPalindromicSubsequence('bbcbaba') == 4
 
 if __name__ == "__main__":
     main()

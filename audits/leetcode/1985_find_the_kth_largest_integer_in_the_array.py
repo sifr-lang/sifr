@@ -1,7 +1,9 @@
+import heapq
+
 # LeetCode 1985: Find The Kth Largest Integer In The Array
 # Python version
 
-def kthLargestNumber(nums: List[str], k: int) -> str:
+def kthLargestNumber(nums: list[str], k: int) -> str:
     maxHeap = [-int(n) for n in nums]
     heapq.heapify(maxHeap)
     while k>1:
@@ -12,7 +14,9 @@ def kthLargestNumber(nums: List[str], k: int) -> str:
 
 
 def main():
-    print("no test cases")
+    assert kthLargestNumber(['3', '6', '7', '10'], 4) == '3'
+    assert kthLargestNumber(['2', '21', '12', '1'], 3) == '2'
+    assert kthLargestNumber(['0', '0'], 2) == '0'
 
 if __name__ == "__main__":
     main()

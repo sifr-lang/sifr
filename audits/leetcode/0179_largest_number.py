@@ -1,7 +1,9 @@
+from functools import cmp_to_key
+
 # LeetCode 179: Largest Number
 # Python version
 
-def largestNumber(nums: List[int]) -> str:
+def largestNumber(nums: list[int]) -> str:
     for i, n in enumerate(nums):
         nums[i] = str(n)
 
@@ -18,8 +20,8 @@ def largestNumber(nums: List[int]) -> str:
 
 
 def main():
-    print(largestNumber([10,2]))
-    print(largestNumber([3,30,34,5,9]))
+    assert largestNumber([10, 2],) == "210"
+    assert largestNumber([3, 30, 34, 5, 9],) == "9534330"
 
 if __name__ == "__main__":
     main()

@@ -1,9 +1,11 @@
+import collections
+
 # LeetCode 47: Permutations Ii
 # Python version
 
 
 
-def permuteUnique(nums: List[int]) -> List[List[int]]:
+def permuteUnique(nums: list[int]) -> list[list[int]]:
     result = []
     counter = collections.Counter(nums)
 
@@ -27,7 +29,7 @@ def permuteUnique(nums: List[int]) -> List[List[int]]:
 
 
 def main():
-    print(permuteUnique([1,1,2]))
+    assert permuteUnique([1,1,2]) == [[1, 1, 2], [1, 2, 1], [2, 1, 1]]
 
 if __name__ == "__main__":
     main()

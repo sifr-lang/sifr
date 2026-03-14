@@ -1,7 +1,8 @@
+
 # LeetCode 523: Continuous Subarray Sum
 # Python version
 
-def checkSubarraySum(nums: List[int], k: int) -> bool:
+def checkSubarraySum(nums: list[int], k: int) -> bool:
     hashmap = {}
     hashmap[0]=-1
     summ=0
@@ -19,7 +20,7 @@ def checkSubarraySum(nums: List[int], k: int) -> bool:
 
 
 def main():
-    print(checkSubarraySum([23,2,4,6,7], 6))
+    assert checkSubarraySum([23,2,4,6,7], 6) == True
 
 if __name__ == "__main__":
     main()

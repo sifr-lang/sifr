@@ -1,7 +1,8 @@
+
 # LeetCode 953: Verifying An Alien Dictionary
 # Python version
 
-def isAlienSorted(words: List[str], order: str) -> bool:
+def isAlienSorted(words: list[str], order: str) -> bool:
     # first differing char
     # if word A is prefix of word B, word B must be AFTER word A
     orderInd = { c : i for i, c in enumerate(order)}
@@ -22,7 +23,9 @@ def isAlienSorted(words: List[str], order: str) -> bool:
 
 
 def main():
-    print("no test cases")
+    assert isAlienSorted(['hello', 'leetcode'], 'hlabcdefgijkmnopqrstuvwxyz') == True
+    assert isAlienSorted(['word', 'world', 'row'], 'worldabcefghijkmnpqstuvxyz') == False
+    assert isAlienSorted(['apple', 'app'], 'abcdefghijklmnopqrstuvwxyz') == False
 
 if __name__ == "__main__":
     main()

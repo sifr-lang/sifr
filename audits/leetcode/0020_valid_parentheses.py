@@ -1,3 +1,4 @@
+
 # LeetCode 20: Valid Parentheses
 # Python version
 
@@ -18,9 +19,9 @@ def isValid(s: str) -> bool:
 
 
 def main():
-    print(isValid("()"))
-    print(isValid("()[]{}"))
-    print(isValid("(]"))
+    assert isValid("()") == True
+    assert isValid("()[]{}") == True
+    assert isValid("(]") == False
 
 if __name__ == "__main__":
     main()

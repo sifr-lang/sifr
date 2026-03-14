@@ -1,3 +1,4 @@
+
 # LeetCode 981: Time Based Key Value Store
 # Python version
 
@@ -24,7 +25,13 @@ class TimeMap:
         return res
 
 def main():
-    print("no test cases")
+    obj = TimeMap()
+    obj.set('foo', 'bar', 1)
+    assert obj.get('foo', 1) == 'bar'
+    assert obj.get('foo', 3) == 'bar'
+    obj.set('foo', 'bar2', 4)
+    assert obj.get('foo', 4) == 'bar2'
+    assert obj.get('foo', 5) == 'bar2'
 
 if __name__ == "__main__":
     main()

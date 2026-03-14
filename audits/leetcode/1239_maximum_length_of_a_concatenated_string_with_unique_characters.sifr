@@ -28,5 +28,7 @@ def maxLength(arr: list[str]) -> int:
     return backtrack(0)
 
 def main():
-    print("no test cases")
+    assert maxLength(['un', 'iq', 'ue']) == 4
+    assert maxLength(['cha', 'r', 'act', 'ers']) == 6
+    assert maxLength(['abcdefghijklmnopqrstuvwxyz']) == 26
 

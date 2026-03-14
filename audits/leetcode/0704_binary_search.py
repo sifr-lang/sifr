@@ -1,3 +1,4 @@
+
 # LeetCode 704: Binary Search
 # Python version with test cases
 
@@ -15,10 +16,10 @@ def search(nums: list[int], target: int) -> int:
     return -1
 
 def main():
-    print(search([-1, 0, 3, 5, 9, 12], 9))
-    print(search([-1, 0, 3, 5, 9, 12], 2))
-    print(search([5], 5))
-    print(search([2, 5], 5))
+    assert search([-1, 0, 3, 5, 9, 12], 9) == 4
+    assert search([-1, 0, 3, 5, 9, 12], 2) == -1
+    assert search([5], 5) == 0
+    assert search([2, 5], 5) == 1
 
 if __name__ == "__main__":
     main()

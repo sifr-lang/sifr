@@ -1,7 +1,8 @@
+
 # LeetCode 17: Letter Combinations Of A Phone Number
 # Python version
 
-def letterCombinations(digits: str) -> List[str]:
+def letterCombinations(digits: str) -> list[str]:
     res = []
     digitToChar = {
         "2": "abc",
@@ -29,7 +30,7 @@ def letterCombinations(digits: str) -> List[str]:
 
 
 def main():
-    print(letterCombinations("23"))
+    assert letterCombinations("23") == ['ad', 'ae', 'af', 'bd', 'be', 'bf', 'cd', 'ce', 'cf']
 
 if __name__ == "__main__":
     main()

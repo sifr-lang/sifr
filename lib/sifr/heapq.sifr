@@ -14,7 +14,7 @@ T = TypeVar("T")
 
 # ── Internal helpers ──────────────────────────────────────────────────────────
 
-def _sift_down[T: Comparable](mut data: list[T], pos: int, n: int) -> None:
+def _sift_down[T: Comparable](mut data: list[T], mut pos: int, n: int) -> None:
     done: bool = False
     while not done:
         smallest: int = pos
@@ -45,7 +45,7 @@ def _sift_down[T: Comparable](mut data: list[T], pos: int, n: int) -> None:
                     data[smallest] = tmp_pos
             pos = smallest
 
-def _sift_up[T: Comparable](mut heap: list[T], pos: int) -> None:
+def _sift_up[T: Comparable](mut heap: list[T], mut pos: int) -> None:
     done: bool = False
     while not done:
         if pos <= 0:
@@ -67,7 +67,7 @@ def _sift_up[T: Comparable](mut heap: list[T], pos: int) -> None:
             else:
                 done = True
 
-def _sift_down_max[T: Comparable](mut data: list[T], pos: int, n: int) -> None:
+def _sift_down_max[T: Comparable](mut data: list[T], mut pos: int, n: int) -> None:
     done: bool = False
     while not done:
         largest: int = pos
@@ -98,7 +98,7 @@ def _sift_down_max[T: Comparable](mut data: list[T], pos: int, n: int) -> None:
                     data[largest] = tmp_pos
             pos = largest
 
-def _sift_up_max[T: Comparable](mut heap: list[T], pos: int) -> None:
+def _sift_up_max[T: Comparable](mut heap: list[T], mut pos: int) -> None:
     done: bool = False
     while not done:
         if pos <= 0:

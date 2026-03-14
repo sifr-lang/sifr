@@ -1,3 +1,4 @@
+
 # LeetCode 271: Encode And Decode Strings
 # Python version
 
@@ -27,7 +28,8 @@ def decode(s):
 
 
 def main():
-    print("no test cases")
+    assert encode(['Hello', 'World']) == '5#Hello5#World'
+    assert encode(['']) == '0#'
 
 if __name__ == "__main__":
     main()

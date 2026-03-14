@@ -1,3 +1,4 @@
+
 # LeetCode 9: Palindrome Number
 # Python version with test cases
 
@@ -12,11 +13,11 @@ def isPalindrome(x: int) -> bool:
     return original == rev
 
 def main():
-    print(isPalindrome(121))
-    print(isPalindrome(-121))
-    print(isPalindrome(10))
-    print(isPalindrome(0))
-    print(isPalindrome(12321))
+    assert isPalindrome(121) == True
+    assert isPalindrome(-121) == False
+    assert isPalindrome(10) == False
+    assert isPalindrome(0) == True
+    assert isPalindrome(12321) == True
 
 if __name__ == "__main__":
     main()

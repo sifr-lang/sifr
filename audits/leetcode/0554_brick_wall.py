@@ -1,7 +1,8 @@
+
 # LeetCode 554: Brick Wall
 # Python version
 
-def leastBricks(wall: List[List[int]]) -> int:
+def leastBricks(wall: list[list[int]]) -> int:
     countGap = { 0 : 0 }    # { Position : Gap count }
 
     for r in wall:
@@ -15,7 +16,8 @@ def leastBricks(wall: List[List[int]]) -> int:
 
 
 def main():
-    print("no test cases")
+    assert leastBricks([[1, 2, 2, 1], [3, 1, 2], [1, 3, 2], [2, 4], [3, 1, 2], [1, 3, 1, 1]]) == 2
+    assert leastBricks([[1], [1], [1]]) == 3
 
 if __name__ == "__main__":
     main()

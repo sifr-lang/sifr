@@ -1,3 +1,4 @@
+
 # LeetCode 374: Guess Number Higher Or Lower
 # Python version
 

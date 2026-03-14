@@ -1,7 +1,8 @@
+
 # LeetCode 1254: Number Of Closed Islands
 # Python version
 
-def closedIsland(grid: List[List[int]]) -> int:
+def closedIsland(grid: list[list[int]]) -> int:
     r = len(grid)
     c = len(grid[0])
     seen = set()
@@ -30,7 +31,9 @@ def closedIsland(grid: List[List[int]]) -> int:
 
 
 def main():
-    print("no test cases")
+    assert closedIsland([[1, 1, 1, 1, 1, 1, 1, 0], [1, 0, 0, 0, 0, 1, 1, 0], [1, 0, 1, 0, 1, 1, 1, 0], [1, 0, 0, 0, 0, 1, 0, 1], [1, 1, 1, 1, 1, 1, 1, 0]]) == 2
+    assert closedIsland([[0, 0, 1, 0, 0], [0, 1, 0, 1, 0], [0, 1, 1, 1, 0]]) == 1
+    assert closedIsland([[1, 1, 1, 1, 1, 1, 1], [1, 0, 0, 0, 0, 0, 1], [1, 0, 1, 1, 1, 0, 1], [1, 0, 1, 0, 1, 0, 1], [1, 0, 1, 1, 1, 0, 1], [1, 0, 0, 0, 0, 0, 1], [1, 1, 1, 1, 1, 1, 1]]) == 2
 
 if __name__ == "__main__":
     main()

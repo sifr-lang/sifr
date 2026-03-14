@@ -1,7 +1,51 @@
+
 # LeetCode 23: Merge K Sorted Lists
 # Python version
 
-def mergeKLists(lists: List[ListNode]) -> ListNode:
+class ListNode:
+    def __init__(self, val: int = 0, next: 'ListNode | None' = None):
+        self.val = val
+        self.next = next
+
+
+def build_list_node(values: list[int]) -> ListNode | None:
+    dummy = ListNode()
+    tail = dummy
+    for value in values:
+        tail.next = ListNode(value)
+        tail = tail.next
+    return dummy.next
+
+
+def list_node_to_string(node: ListNode | None) -> str:
+    parts = []
+    cur = node
+    while cur is not None:
+        parts.append(str(cur.val))
+        cur = cur.next
+    return "->".join(parts) if parts else "None"
+
+
+class Node:
+    def __init__(
+        self,
+        val: int = 0,
+        next: 'Node | None' = None,
+        random: 'Node | None' = None,
+        left: 'Node | None' = None,
+        right: 'Node | None' = None,
+        neighbors: list['Node'] | None = None,
+        key: int = -1,
+    ):
+        self.val = val
+        self.next = next
+        self.random = random
+        self.left = left
+        self.right = right
+        self.neighbors = [] if neighbors is None else neighbors
+        self.key = key
+
+def mergeKLists(lists: list[ListNode]) -> ListNode:
     if not lists or len(lists) == 0:
         return None
 
@@ -36,7 +80,13 @@ def mergeList(l1, l2):
 
 
 def main():
-    print("no test cases")
+    lists = [
+        build_list_node([1, 4, 5]),
+        build_list_node([1, 3, 4]),
+        build_list_node([2, 6]),
+    ]
+    assert list_node_to_string(mergeKLists(lists)) == "1->1->2->3->4->4->5->6"
+    assert mergeKLists([]) is None
 
 if __name__ == "__main__":
     main()

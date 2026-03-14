@@ -1,7 +1,8 @@
+
 # LeetCode 80: Remove Duplicates From Sorted Array Ii
 # Python version
 
-def removeDuplicates(nums: List[int]) -> int:
+def removeDuplicates(nums: list[int]) -> int:
     l, r = 0, 0
 
     while r < len(nums):
@@ -19,7 +20,7 @@ def removeDuplicates(nums: List[int]) -> int:
 
 
 def main():
-    print(removeDuplicates([1,1,1,2,2,3]))
+    assert removeDuplicates([1,1,1,2,2,3]) == 5
 
 if __name__ == "__main__":
     main()

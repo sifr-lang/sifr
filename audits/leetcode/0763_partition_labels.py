@@ -1,7 +1,8 @@
+
 # LeetCode 763: Partition Labels
 # Python version
 
-def partitionLabels(S: str) -> List[int]:
+def partitionLabels(S: str) -> list[int]:
     count = {}
     res = []
     i, length = 0, len(S)
@@ -25,7 +26,7 @@ def partitionLabels(S: str) -> List[int]:
 
 
 def main():
-    print(partitionLabels("ababcbacadefegdehijhklij"))
+    assert partitionLabels("ababcbacadefegdehijhklij") == [9, 7, 8]
 
 if __name__ == "__main__":
     main()

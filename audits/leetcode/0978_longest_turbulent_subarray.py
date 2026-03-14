@@ -1,7 +1,8 @@
+
 # LeetCode 978: Longest Turbulent Subarray
 # Python version
 
-def maxTurbulenceSize(arr: List[int]) -> int:
+def maxTurbulenceSize(arr: list[int]) -> int:
     l, r = 0, 1
     res, prev = 1, ""
 
@@ -23,8 +24,8 @@ def maxTurbulenceSize(arr: List[int]) -> int:
 
 
 def main():
-    print(maxTurbulenceSize([9,4,2,10,7,8,8,1,9]))
-    print(maxTurbulenceSize([100]))
+    assert maxTurbulenceSize([9,4,2,10,7,8,8,1,9]) == 5
+    assert maxTurbulenceSize([100]) == 1
 
 if __name__ == "__main__":
     main()

@@ -1,7 +1,8 @@
+
 # LeetCode 2709: Greatest Common Divisor Traversal
 # Python version
 
-def canTraverseAllPairs(nums: List[int]) -> bool:
+def canTraverseAllPairs(nums: list[int]) -> bool:
     uf = UnionFind(len(nums))
 
     factor_index = {}
@@ -46,7 +47,9 @@ class UnionFind:
         self.count -=1
 
 def main():
-    print("no test cases")
+    assert canTraverseAllPairs([2, 3, 6]) == True
+    assert canTraverseAllPairs([3, 9, 5]) == False
+    assert canTraverseAllPairs([4, 3, 12, 8]) == True
 
 if __name__ == "__main__":
     main()

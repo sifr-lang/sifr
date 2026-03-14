@@ -1,5 +1,12 @@
+
 # LeetCode 112: Path Sum
 # Python version
+
+class TreeNode:
+    def __init__(self, val: int = 0, left=None, right=None):
+        self.val = val
+        self.left = left
+        self.right = right
 
 def hasPathSum(root, sum):
     if not root:
@@ -12,6 +19,8 @@ def hasPathSum(root, sum):
 # Iterative Solution
 
 def hasPathSum(root, sum):
+    if not root:
+        return False
     de = [
         (root, sum - root.val),
     ]
@@ -27,7 +36,14 @@ def hasPathSum(root, sum):
 
 
 def main():
-    print("no test cases")
+    root = TreeNode(
+        5,
+        TreeNode(4, TreeNode(11, TreeNode(7), TreeNode(2))),
+        TreeNode(8, TreeNode(13), TreeNode(4, None, TreeNode(1))),
+    )
+    assert hasPathSum(root, 22) == True
+    assert hasPathSum(TreeNode(1, TreeNode(2), TreeNode(3)), 5) == False
+    assert hasPathSum(None, 0) == False
 
 if __name__ == "__main__":
     main()

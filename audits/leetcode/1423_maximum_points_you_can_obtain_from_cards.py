@@ -1,7 +1,8 @@
+
 # LeetCode 1423: Maximum Points You Can Obtain From Cards
 # Python version
 
-def maxScore(cardPoints: List[int], k: int) -> int:
+def maxScore(cardPoints: list[int], k: int) -> int:
     n = len(cardPoints)
 
     score = maxScore = sum(cardPoints[:k])
@@ -15,7 +16,7 @@ def maxScore(cardPoints: List[int], k: int) -> int:
 
 
 def main():
-    print(maxScore([1,2,3,4,5,6,1], 3))
+    assert maxScore([1,2,3,4,5,6,1], 3) == 12
 
 if __name__ == "__main__":
     main()

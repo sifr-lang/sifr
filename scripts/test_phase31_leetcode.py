@@ -22,7 +22,7 @@ class Phase31LeetCodeTests(unittest.TestCase):
     def test_detect_oracle_mode(self) -> None:
         self.assertEqual(detect_oracle_mode("assert value == 1\n"), "embedded_asserts")
         self.assertEqual(
-            detect_oracle_mode('def main():\n    print("no test cases")\n'),
+            detect_oracle_mode("def main():\n    value = 1\n"),
             "no_oracle",
         )
 
@@ -81,8 +81,6 @@ class Phase31LeetCodeTests(unittest.TestCase):
             helper = Path(tmpdir) / "fake_sifr.py"
             helper.write_text(
                 "import sys\n"
-                "if sys.argv[1] == 'run':\n"
-                "    print('no test cases')\n"
                 "raise SystemExit(0)\n"
             )
             result = run_case(

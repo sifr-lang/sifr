@@ -1,7 +1,8 @@
+
 # LeetCode 673: Number Of Longest Increasing Subsequence
 # Python version
 
-def findNumberOfLIS(nums: List[int]) -> int:
+def findNumberOfLIS(nums: list[int]) -> int:
     # 1. O(n^2) Recursive solution with Caching
 
     dp = {}  # key = index, value = [length of LIS, count]
@@ -58,8 +59,8 @@ def findNumberOfLIS(nums: List[int]) -> int:
 
 
 def main():
-    print(findNumberOfLIS([1,3,5,4,7]))
-    print(findNumberOfLIS([2,2,2,2,2]))
+    assert findNumberOfLIS([1,3,5,4,7]) == 2
+    assert findNumberOfLIS([2,2,2,2,2]) == 5
 
 if __name__ == "__main__":
     main()

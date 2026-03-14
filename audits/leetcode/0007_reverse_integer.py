@@ -1,3 +1,5 @@
+import math
+
 # LeetCode 7: Reverse Integer
 # Python version
 
@@ -24,10 +26,10 @@ def reverse(x: int) -> int:
 
 
 def main():
-    print(reverse(123))
-    print(reverse(-123))
-    print(reverse(120))
-    print(reverse(0))
+    assert reverse(123) == 321
+    assert reverse(-123) == -321
+    assert reverse(120) == 21
+    assert reverse(0) == 0
 
 if __name__ == "__main__":
     main()

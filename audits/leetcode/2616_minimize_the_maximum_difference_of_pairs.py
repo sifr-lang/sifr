@@ -1,7 +1,8 @@
+
 # LeetCode 2616: Minimize The Maximum Difference Of Pairs
 # Python version
 
-def minimizeMax(nums: List[int], p: int) -> int:
+def minimizeMax(nums: list[int], p: int) -> int:
     nums.sort()
 
     def checkPair(mid):
@@ -31,7 +32,7 @@ def minimizeMax(nums: List[int], p: int) -> int:
 
 
 def main():
-    print(minimizeMax([10,1,2,7,1,3], 2))
+    assert minimizeMax([10,1,2,7,1,3], 2) == 1
 
 if __name__ == "__main__":
     main()

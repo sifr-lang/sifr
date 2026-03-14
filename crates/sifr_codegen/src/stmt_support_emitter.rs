@@ -1,7 +1,7 @@
 use crate::hir_analysis::queries;
 use crate::{RustEmitter, RustExpr, RustStmt};
 use sifr_hir::{HirExceptHandler, HirExpr, HirFStringPart, HirStmt};
-use sifr_type_system::{ParamConvention, Type};
+use sifr_type_system::Type;
 
 fn io_error_kind_for_handler(error_type: &str) -> Option<&'static str> {
     match error_type {
@@ -3562,7 +3562,7 @@ impl RustEmitter {
                 };
             }
 
-            if *convention == ParamConvention::Own && borrowed_name_arg {
+            if convention.is_owned() && borrowed_name_arg {
                 lowered_arg = crate::RustExpr::MethodCall {
                     receiver: Box::new(crate::RustExpr::Paren(Box::new(lowered_arg))),
                     method: "clone".to_string(),
@@ -3574,11 +3574,11 @@ impl RustEmitter {
                 param_ty.rust_type().starts_with('&') && !param_ty.rust_type().starts_with("&mut ");
             let expects_mut_ref_type = param_ty.rust_type().starts_with("&mut ");
             let needs_shared_borrow = expects_shared_ref_type
-                || (*convention == ParamConvention::Borrow
+                || (convention.is_shared_borrow()
                     && (param_ty.ownership() != sifr_type_system::OwnershipKind::Copy
                         || matches!(resolved_param, Type::TypeVar(_) | Type::Any)));
             let needs_mut_borrow = expects_mut_ref_type
-                || (*convention == ParamConvention::MutBorrow
+                || (convention.is_mut_borrow()
                     && (param_ty.ownership() != sifr_type_system::OwnershipKind::Copy
                         || matches!(resolved_param, Type::TypeVar(_) | Type::Any)));
             let already_borrowed = matches!(lowered_arg, crate::RustExpr::Ref { .. })

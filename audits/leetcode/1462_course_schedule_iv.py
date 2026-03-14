@@ -1,7 +1,9 @@
+from collections import defaultdict
+
 # LeetCode 1462: Course Schedule Iv
 # Python version
 
-def checkIfPrerequisite(numCourses: int, prerequisites: List[List[int]], queries: List[List[int]]) -> List[bool]:
+def checkIfPrerequisite(numCourses: int, prerequisites: list[list[int]], queries: list[list[int]]) -> list[bool]:
     adj = defaultdict(list)
     for prereq, crs in prerequisites:
         adj[crs].append(prereq)
@@ -26,7 +28,9 @@ def checkIfPrerequisite(numCourses: int, prerequisites: List[List[int]], queries
 
 
 def main():
-    print("no test cases")
+    assert checkIfPrerequisite(2, [[1, 0]], [[0, 1], [1, 0]]) == [False, True]
+    assert checkIfPrerequisite(2, [], [[1, 0], [0, 1]]) == [False, False]
+    assert checkIfPrerequisite(3, [[1, 2], [1, 0], [2, 0]], [[1, 0], [1, 2]]) == [True, True]
 
 if __name__ == "__main__":
     main()

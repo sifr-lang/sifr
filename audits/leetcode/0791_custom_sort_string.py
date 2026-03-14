@@ -1,3 +1,4 @@
+
 # LeetCode 791: Custom Sort String
 # Python version
 
@@ -20,7 +21,7 @@ def customSortString(order: str, s: str) -> str:
 
 
 def main():
-    print(customSortString("cba", "abcd"))
+    assert customSortString("cba", "abcd") == 'cbad'
 
 if __name__ == "__main__":
     main()

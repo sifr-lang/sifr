@@ -1,3 +1,4 @@
+
 # LeetCode 516: Longest Palindromic Subsequence
 # Python version
 
@@ -64,8 +65,8 @@ def longestCommonSubsequence(s1: str, s2: str) -> int:
 
 
 def main():
-    print(longestPalindromeSubseq("bbbab"))
-    print(longestPalindromeSubseq("cbbd"))
+    assert longestPalindromeSubseq("bbbab") == 4
+    assert longestPalindromeSubseq("cbbd") == 2
 
 if __name__ == "__main__":
     main()

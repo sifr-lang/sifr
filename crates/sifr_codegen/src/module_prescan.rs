@@ -126,7 +126,7 @@ impl RustEmitter {
                     .iter()
                     .map(|param| {
                         let convention = if method.name == "new" {
-                            sifr_type_system::ParamConvention::Own
+                            sifr_type_system::ParamConvention::own()
                         } else {
                             param.convention
                         };

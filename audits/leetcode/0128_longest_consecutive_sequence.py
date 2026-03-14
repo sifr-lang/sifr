@@ -1,7 +1,8 @@
+
 # LeetCode 128: Longest Consecutive Sequence
 # Python version
 
-def longestConsecutive(nums: List[int]) -> int:
+def longestConsecutive(nums: list[int]) -> int:
     numSet = set(nums)
     longest = 0
 
@@ -17,7 +18,7 @@ def longestConsecutive(nums: List[int]) -> int:
 
 
 def main():
-    print(longestConsecutive([100,4,200,1,3,2]))
+    assert longestConsecutive([100,4,200,1,3,2]) == 4
 
 if __name__ == "__main__":
     main()

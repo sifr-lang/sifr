@@ -2630,27 +2630,40 @@ impl<'src> Parser<'src> {
         function_kind: FunctionKind,
         allow_star_annotation: AllowStarAnnotation,
     ) -> ast::Parameter {
-        // Sifr extension: check for `mut` or `own` convention prefix.
-        // Disambiguation rule: if current token is `mut`/`own` AND the next token
-        // is a Name (identifier), then it's a convention prefix. Otherwise, treat
-        // `mut`/`own` as the parameter name itself (e.g., `def f(mut: int)`).
-        let convention = if self.at(TokenKind::Name) {
+        // Sifr extension: check for `mut` / `own` modifiers before the parameter name.
+        // Disambiguation rule: only treat a soft keyword as a modifier when another name follows,
+        // so `def f(mut: int)` still parses `mut` as the parameter name.
+        let mut convention = ast::AstParamConvention::borrow();
+        while self.at(TokenKind::Name) && self.peek() == TokenKind::Name {
             let text = self.src_text(self.current_token_range());
-            if (text == "mut" || text == "own") && self.peek() == TokenKind::Name {
-                let conv = if text == "mut" {
-                    ast::AstParamConvention::Mut
-                } else {
-                    ast::AstParamConvention::Own
-                };
-                // Consume the convention keyword
-                self.bump_any();
-                conv
-            } else {
-                ast::AstParamConvention::Default
+            match text {
+                "mut" => {
+                    if convention.is_mutable() {
+                        self.add_error(
+                            ParseErrorType::OtherError(
+                                "duplicate `mut` parameter modifier".to_string(),
+                            ),
+                            self.current_token_range(),
+                        );
+                    }
+                    convention.mutability = ast::AstParamMutability::Mutable;
+                    self.bump_any();
+                }
+                "own" => {
+                    if convention.is_owned() {
+                        self.add_error(
+                            ParseErrorType::OtherError(
+                                "duplicate `own` parameter modifier".to_string(),
+                            ),
+                            self.current_token_range(),
+                        );
+                    }
+                    convention.ownership = ast::AstParamOwnership::Own;
+                    self.bump_any();
+                }
+                _ => break,
             }
-        } else {
-            ast::AstParamConvention::Default
-        };
+        }
 
         let name = self.parse_identifier();
 

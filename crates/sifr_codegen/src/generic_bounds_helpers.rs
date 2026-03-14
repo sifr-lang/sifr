@@ -1,6 +1,6 @@
 use crate::RustEmitter;
 use sifr_hir::{HirClass, HirFunction, HirStmt};
-use sifr_type_system::{FunctionType, OwnershipKind, ParamConvention, Type};
+use sifr_type_system::{FunctionType, OwnershipKind, Type};
 use std::collections::{HashMap, HashSet};
 use std::fmt::Write as _;
 
@@ -105,18 +105,14 @@ impl RustEmitter {
                     .zip(conventions.iter())
                     .map(|(param_ty, convention)| {
                         let rendered = self.rust_type_with_generics(param_ty);
-                        match convention {
-                            ParamConvention::Borrow
-                                if param_ty.ownership() == OwnershipKind::Move =>
-                            {
+                        if param_ty.ownership() == OwnershipKind::Move && convention.is_borrowed() {
+                            if convention.is_mut_borrow() {
+                                format!("&mut {rendered}")
+                            } else {
                                 format!("&{rendered}")
                             }
-                            ParamConvention::MutBorrow
-                                if param_ty.ownership() == OwnershipKind::Move =>
-                            {
-                                format!("&mut {rendered}")
-                            }
-                            _ => rendered,
+                        } else {
+                            rendered
                         }
                     })
                     .collect::<Vec<_>>();
@@ -139,18 +135,14 @@ impl RustEmitter {
                     .zip(conventions.iter())
                     .map(|(param_ty, convention)| {
                         let rendered = self.rust_type_with_generics(param_ty);
-                        match convention {
-                            ParamConvention::Borrow
-                                if param_ty.ownership() == OwnershipKind::Move =>
-                            {
+                        if param_ty.ownership() == OwnershipKind::Move && convention.is_borrowed() {
+                            if convention.is_mut_borrow() {
+                                format!("&mut {rendered}")
+                            } else {
                                 format!("&{rendered}")
                             }
-                            ParamConvention::MutBorrow
-                                if param_ty.ownership() == OwnershipKind::Move =>
-                            {
-                                format!("&mut {rendered}")
-                            }
-                            _ => rendered,
+                        } else {
+                            rendered
                         }
                     })
                     .collect::<Vec<_>>();

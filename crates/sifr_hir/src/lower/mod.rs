@@ -15,7 +15,14 @@ mod diagnostics;
 mod expressions;
 mod guarded_index;
 mod imports;
+mod mutating_methods;
+#[cfg(test)]
+mod nested_function_tests;
 mod numeric_sentinels;
+#[cfg(test)]
+mod own_mut_param_tests;
+#[cfg(test)]
+mod own_mut_semantics_tests;
 mod sequence_guard_detection;
 mod sequence_guards;
 mod sequence_pointers;

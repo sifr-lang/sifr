@@ -1,3 +1,4 @@
+
 # LeetCode 2483: Minimum Penalty For A Shop
 # Python version
 
@@ -19,8 +20,8 @@ def bestClosingTime(customers: str) -> int:
 
 
 def main():
-    print(bestClosingTime("YYNY"))
-    print(bestClosingTime("NNNNN"))
+    assert bestClosingTime("YYNY") == 2
+    assert bestClosingTime("NNNNN") == 0
 
 if __name__ == "__main__":
     main()

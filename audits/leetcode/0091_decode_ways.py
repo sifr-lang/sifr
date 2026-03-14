@@ -1,3 +1,4 @@
+
 # LeetCode 91: Decode Ways
 # Python version
 
@@ -38,9 +39,9 @@ def numDecodings(s: str) -> int:
 
 
 def main():
-    print(numDecodings("12"))
-    print(numDecodings("226"))
-    print(numDecodings("06"))
+    assert numDecodings("12") == 2
+    assert numDecodings("226") == 3
+    assert numDecodings("06") == 0
 
 if __name__ == "__main__":
     main()

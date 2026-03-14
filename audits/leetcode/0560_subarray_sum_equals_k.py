@@ -1,7 +1,8 @@
+
 # LeetCode 560: Subarray Sum Equals K
 # Python version
 
-def subarraySum(nums: List[int], k: int) -> int:
+def subarraySum(nums: list[int], k: int) -> int:
     count = 0
     sum = 0
     dic = {}
@@ -22,8 +23,8 @@ def subarraySum(nums: List[int], k: int) -> int:
 
 
 def main():
-    print(subarraySum([1,1,1], 2))
-    print(subarraySum([1,2,3], 3))
+    assert subarraySum([1,1,1], 2) == 2
+    assert subarraySum([1,2,3], 3) == 2
 
 if __name__ == "__main__":
     main()

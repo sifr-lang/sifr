@@ -1,3 +1,4 @@
+
 # LeetCode 929: Unique Email Addresses
 # Python version
 
@@ -14,7 +15,8 @@ def numUniqueEmails(emails: list[str]) -> int:
 
 
 def main():
-    print("no test cases")
+    assert numUniqueEmails(['test.email+alex@leetcode.com', 'test.e.mail+bob.cathy@leetcode.com', 'testemail+david@lee.tcode.com']) == 2
+    assert numUniqueEmails(['a@leetcode.com', 'b@leetcode.com', 'c@leetcode.com']) == 3
 
 if __name__ == "__main__":
     main()

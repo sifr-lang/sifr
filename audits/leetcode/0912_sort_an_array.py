@@ -1,7 +1,8 @@
+
 # LeetCode 912: Sort An Array
 # Python version
 
-def sortArray(nums: List[int]) -> List[int]:
+def sortArray(nums: list[int]) -> list[int]:
     def merge(arr, L, M, R):
         left, right = arr[L:M+1], arr[M+1:R+1]
         i, j, k = L, 0, 0
@@ -36,7 +37,7 @@ def sortArray(nums: List[int]) -> List[int]:
 
 
 def main():
-    print(sortArray([5,2,3,1]))
+    assert sortArray([5,2,3,1]) == [1, 2, 3, 5]
 
 if __name__ == "__main__":
     main()

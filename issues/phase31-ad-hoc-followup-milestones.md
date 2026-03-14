@@ -69,8 +69,7 @@ Phase 31 itself is complete. This document is the carry-forward plan for the rem
 
 These are broader feature phases that must land before the related Phase 31 LeetCode closure milestones start.
 
-For the original 50-case seed corpus, the two prerequisites below were sufficient at plan time. The broader 411-fixture review in `issues/full-leetcode-corpus-strategy-review.md` later showed that nested local functions are also broad enough to justify their own prerequisite phase, so `m31_d` should now be treated as follow-on LeetCode closure after that broader phase lands.
-
+For the original 50-case seed corpus, the two prerequisites below were sufficient at plan time. A later broader corpus review showed that nested local functions are also broad enough to justify their own prerequisite phase, so `m31_d` should now be treated as follow-on LeetCode closure after that broader phase lands.
 ### `prereq_recursive_types`
 
 - Source phase: `issues/ad-hoc-full-recursive-type-feature.md`

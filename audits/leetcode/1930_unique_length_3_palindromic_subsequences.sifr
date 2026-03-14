@@ -9,5 +9,7 @@ def countPalindromicSubsequence(s: str) -> int:
     return count
 
 def main():
-    print("no test cases")
+    assert countPalindromicSubsequence('aabca') == 3
+    assert countPalindromicSubsequence('adc') == 0
+    assert countPalindromicSubsequence('bbcbaba') == 4
 

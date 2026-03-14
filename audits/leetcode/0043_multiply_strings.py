@@ -1,3 +1,4 @@
+
 # LeetCode 43: Multiply Strings
 # Python version
 
@@ -23,8 +24,8 @@ def multiply(num1: str, num2: str) -> str:
 
 
 def main():
-    print(multiply("2", "3"))
-    print(multiply("123", "456"))
+    assert multiply("2", "3") == '6'
+    assert multiply("123", "456") == '56088'
 
 if __name__ == "__main__":
     main()

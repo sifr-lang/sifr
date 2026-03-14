@@ -27,5 +27,6 @@ def distinctNames(ideas):
     return num_distinct_names
 
 def main():
-    print("no test cases")
+    assert distinctNames(['coffee', 'donuts', 'time', 'toffee']) == 6
+    assert distinctNames(['lack', 'back']) == 0
 

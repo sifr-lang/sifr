@@ -124,9 +124,9 @@ impl FunctionType {
             .map(|(name, ty)| {
                 let conv =
                     if matches!(ty, Type::TypeVar(_)) || ty.ownership() == OwnershipKind::Copy {
-                        ParamConvention::Own
+                        ParamConvention::own()
                     } else {
-                        ParamConvention::Borrow
+                        ParamConvention::borrow()
                     };
                 (name, ty, conv)
             })
@@ -141,7 +141,7 @@ impl FunctionType {
     pub fn all_borrow(params: Vec<(String, Type)>, return_type: Type) -> Self {
         let params = params
             .into_iter()
-            .map(|(name, ty)| (name, ty, ParamConvention::Borrow))
+            .map(|(name, ty)| (name, ty, ParamConvention::borrow()))
             .collect();
         FunctionType {
             params,
@@ -150,16 +150,96 @@ impl FunctionType {
     }
 }
 
-/// How a function parameter receives its value.
+/// Parameter ownership mode in the type system.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Default)]
-pub enum ParamConvention {
-    /// Immutable borrow (default for Move types). Codegen: &T
+pub enum ParamOwnership {
+    /// Borrow the argument from the caller.
     #[default]
     Borrow,
-    /// Mutable borrow (mut keyword). Codegen: &mut T
-    MutBorrow,
-    /// Ownership transfer (own keyword, or default for Copy types). Codegen: T
+    /// Transfer ownership into the callee.
     Own,
+}
+
+/// Parameter local mutability mode in the type system.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Default)]
+pub enum ParamMutability {
+    /// The local binding is immutable.
+    #[default]
+    Immutable,
+    /// The local binding is mutable.
+    Mutable,
+}
+
+/// How a function parameter receives its value.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Default)]
+pub struct ParamConvention {
+    ownership: ParamOwnership,
+    mutability: ParamMutability,
+}
+
+impl ParamConvention {
+    #[must_use]
+    pub const fn new(ownership: ParamOwnership, mutability: ParamMutability) -> Self {
+        Self {
+            ownership,
+            mutability,
+        }
+    }
+
+    #[must_use]
+    pub const fn borrow() -> Self {
+        Self::new(ParamOwnership::Borrow, ParamMutability::Immutable)
+    }
+
+    #[must_use]
+    pub const fn mut_borrow() -> Self {
+        Self::new(ParamOwnership::Borrow, ParamMutability::Mutable)
+    }
+
+    #[must_use]
+    pub const fn own() -> Self {
+        Self::new(ParamOwnership::Own, ParamMutability::Immutable)
+    }
+
+    #[must_use]
+    pub const fn own_mut() -> Self {
+        Self::new(ParamOwnership::Own, ParamMutability::Mutable)
+    }
+
+    #[must_use]
+    pub const fn ownership(self) -> ParamOwnership {
+        self.ownership
+    }
+
+    #[must_use]
+    pub const fn mutability(self) -> ParamMutability {
+        self.mutability
+    }
+
+    #[must_use]
+    pub const fn is_owned(self) -> bool {
+        matches!(self.ownership, ParamOwnership::Own)
+    }
+
+    #[must_use]
+    pub const fn is_borrowed(self) -> bool {
+        matches!(self.ownership, ParamOwnership::Borrow)
+    }
+
+    #[must_use]
+    pub const fn is_mutable(self) -> bool {
+        matches!(self.mutability, ParamMutability::Mutable)
+    }
+
+    #[must_use]
+    pub const fn is_shared_borrow(self) -> bool {
+        self.is_borrowed() && !self.is_mutable()
+    }
+
+    #[must_use]
+    pub const fn is_mut_borrow(self) -> bool {
+        self.is_borrowed() && self.is_mutable()
+    }
 }
 
 /// Describes how a type behaves with respect to ownership.
@@ -363,10 +443,16 @@ impl Type {
                     .map(|(t, conv)| {
                         let rust_ty = t.rust_type();
                         match conv {
-                            ParamConvention::Borrow if t.ownership() == OwnershipKind::Move => {
+                            convention
+                                if convention.is_shared_borrow()
+                                    && t.ownership() == OwnershipKind::Move =>
+                            {
                                 format!("&{rust_ty}")
                             }
-                            ParamConvention::MutBorrow if t.ownership() == OwnershipKind::Move => {
+                            convention
+                                if convention.is_mut_borrow()
+                                    && t.ownership() == OwnershipKind::Move =>
+                            {
                                 format!("&mut {rust_ty}")
                             }
                             _ => rust_ty,
@@ -396,10 +482,16 @@ impl Type {
                     .map(|(t, conv)| {
                         let rust_ty = t.rust_type();
                         match conv {
-                            ParamConvention::Borrow if t.ownership() == OwnershipKind::Move => {
+                            convention
+                                if convention.is_shared_borrow()
+                                    && t.ownership() == OwnershipKind::Move =>
+                            {
                                 format!("&{rust_ty}")
                             }
-                            ParamConvention::MutBorrow if t.ownership() == OwnershipKind::Move => {
+                            convention
+                                if convention.is_mut_borrow()
+                                    && t.ownership() == OwnershipKind::Move =>
+                            {
                                 format!("&mut {rust_ty}")
                             }
                             _ => rust_ty,

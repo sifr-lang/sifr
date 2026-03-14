@@ -34,5 +34,7 @@ def orangesRotting(grid: list[list[int]]) -> int:
     return time if fresh == 0 else -1
 
 def main():
-    print("no test cases")
+    assert orangesRotting([[2, 1, 1], [1, 1, 0], [0, 1, 1]]) == 4
+    assert orangesRotting([[2, 1, 1], [0, 1, 1], [1, 0, 1]]) == -1
+    assert orangesRotting([[0, 2]]) == 0
 

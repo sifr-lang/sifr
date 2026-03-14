@@ -1,7 +1,27 @@
+
 # LeetCode 212: Word Search Ii
 # Python version
 
-def findWords(board: List[List[str]], words: List[str]) -> List[str]:
+class Node:
+    def __init__(
+        self,
+        val: int = 0,
+        next: 'Node | None' = None,
+        random: 'Node | None' = None,
+        left: 'Node | None' = None,
+        right: 'Node | None' = None,
+        neighbors: list['Node'] | None = None,
+        key: int = -1,
+    ):
+        self.val = val
+        self.next = next
+        self.random = random
+        self.left = left
+        self.right = right
+        self.neighbors = [] if neighbors is None else neighbors
+        self.key = key
+
+def findWords(board: list[list[str]], words: list[str]) -> list[str]:
     root = TrieNode()
     for w in words:
         root.addWord(w)
@@ -63,7 +83,8 @@ class TrieNode:
                 cur.refs -= 1
 
 def main():
-    print("no test cases")
+    assert sorted(findWords([['o', 'a', 'a', 'n'], ['e', 't', 'a', 'e'], ['i', 'h', 'k', 'r'], ['i', 'f', 'l', 'v']], ['oath', 'pea', 'eat', 'rain'])) == ['eat', 'oath']
+    assert sorted(findWords([['a', 'b'], ['c', 'd']], ['abcb'])) == []
 
 if __name__ == "__main__":
     main()

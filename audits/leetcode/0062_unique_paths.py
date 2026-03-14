@@ -1,3 +1,4 @@
+
 # LeetCode 62: Unique Paths
 # Python version
 
@@ -16,8 +17,8 @@ def uniquePaths(m: int, n: int) -> int:
 
 
 def main():
-    print(uniquePaths(3, 7))
-    print(uniquePaths(3, 2))
+    assert uniquePaths(3, 7) == 28
+    assert uniquePaths(3, 2) == 3
 
 if __name__ == "__main__":
     main()

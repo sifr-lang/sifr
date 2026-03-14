@@ -1,7 +1,8 @@
+
 # LeetCode 42: Trapping Rain Water
 # Python version
 
-def trap(height: List[int]) -> int:
+def trap(height: list[int]) -> int:
     if not height:
         return 0
 
@@ -22,8 +23,8 @@ def trap(height: List[int]) -> int:
 
 
 def main():
-    print(trap([0,1,0,2,1,0,1,3,2,1,2,1]))
-    print(trap([4,2,0,3,2,5]))
+    assert trap([0,1,0,2,1,0,1,3,2,1,2,1]) == 6
+    assert trap([4,2,0,3,2,5]) == 9
 
 if __name__ == "__main__":
     main()

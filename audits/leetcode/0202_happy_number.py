@@ -1,3 +1,4 @@
+
 # LeetCode 202: Happy Number
 # Python version
 
@@ -22,8 +23,8 @@ def sumSquareDigits(n):
 
 
 def main():
-    print(isHappy(19))
-    print(isHappy(2))
+    assert isHappy(19) == True
+    assert isHappy(2) == False
 
 if __name__ == "__main__":
     main()

@@ -1,7 +1,8 @@
+
 # LeetCode 1288: Remove Covered Intervals
 # Python version
 
-def removeCoveredIntervals(intervals: List[List[int]]) -> int:
+def removeCoveredIntervals(intervals: list[list[int]]) -> int:
     # sort on the basis of inc li first and then on the basis of dec length (=> -ri)
     intervals.sort(key=lambda x: (x[0], -x[1]))
     
@@ -17,7 +18,7 @@ def removeCoveredIntervals(intervals: List[List[int]]) -> int:
 
 
 def main():
-    print(removeCoveredIntervals([[1,4],[3,6],[2,8]]))
+    assert removeCoveredIntervals([[1,4],[3,6],[2,8]]) == 2
 
 if __name__ == "__main__":
     main()

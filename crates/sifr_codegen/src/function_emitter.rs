@@ -8,24 +8,21 @@ use sifr_type_system::{OwnershipKind, ParamConvention, Type};
 
 impl RustEmitter {
     pub(super) fn lower_mutable_param_shadows(
-        &self,
         params: &[HirParam],
         reassigned_vars: &std::collections::HashSet<String>,
     ) -> Vec<(String, RustExpr)> {
         params
             .iter()
             .filter(|param| {
-                if param.convention == ParamConvention::Own {
-                    self.mutated_vars.contains(&param.name)
+                if param.convention.is_owned() {
+                    false
                 } else {
                     reassigned_vars.contains(&param.name)
                 }
             })
             .map(|param| {
-                let value = if matches!(
-                    param.convention,
-                    ParamConvention::Borrow | ParamConvention::MutBorrow
-                ) && param.ty.ownership() != OwnershipKind::Copy
+                let value = if param.convention.is_borrowed()
+                    && param.ty.ownership() != OwnershipKind::Copy
                 {
                     RustExpr::Clone(Box::new(RustExpr::Ident(param.name.clone())))
                 } else {
@@ -94,22 +91,13 @@ impl RustEmitter {
 
     fn lower_function_param_type(&self, ty: &Type, convention: ParamConvention) -> RustType {
         let base = self.rust_ir_type_with_generics(ty);
-        match convention {
-            ParamConvention::Borrow if ty.ownership() != sifr_type_system::OwnershipKind::Copy => {
-                RustType::Ref {
-                    mutable: false,
-                    inner: Box::new(base),
-                }
+        if ty.ownership() != sifr_type_system::OwnershipKind::Copy && convention.is_borrowed() {
+            RustType::Ref {
+                mutable: convention.is_mut_borrow(),
+                inner: Box::new(base),
             }
-            ParamConvention::MutBorrow
-                if ty.ownership() != sifr_type_system::OwnershipKind::Copy =>
-            {
-                RustType::Ref {
-                    mutable: true,
-                    inner: Box::new(base),
-                }
-            }
-            _ => base,
+        } else {
+            base
         }
     }
 
@@ -461,12 +449,12 @@ impl RustEmitter {
         self.mut_borrowed_params.clear();
         self.callable_var_conventions.clear();
         for param in &func.params {
-            if param.convention == ParamConvention::Borrow
+            if param.convention.is_shared_borrow()
                 && param.ty.ownership() != sifr_type_system::OwnershipKind::Copy
             {
                 self.borrowed_params.insert(param.name.clone());
             }
-            if param.convention == ParamConvention::MutBorrow
+            if param.convention.is_mut_borrow()
                 && param.ty.ownership() != sifr_type_system::OwnershipKind::Copy
             {
                 self.mut_borrowed_params.insert(param.name.clone());
@@ -495,15 +483,25 @@ impl RustEmitter {
 
         let reassigned_vars = collect_reassigned_vars(&func.body);
         let mutable_param_shadows =
-            self.lower_mutable_param_shadows(&func.params, &reassigned_vars);
+            Self::lower_mutable_param_shadows(&func.params, &reassigned_vars);
         self.apply_mutable_param_shadowing(&mutable_param_shadows);
 
         let params = func
             .params
             .iter()
-            .map(|param| RustParam::Named {
-                name: param.name.clone(),
-                ty: self.lower_function_param_type(&param.ty, param.convention),
+            .map(|param| {
+                let rust_ty = self.lower_function_param_type(&param.ty, param.convention);
+                if param.convention.is_owned() && param.convention.is_mutable() {
+                    RustParam::NamedMut {
+                        name: param.name.clone(),
+                        ty: rust_ty,
+                    }
+                } else {
+                    RustParam::Named {
+                        name: param.name.clone(),
+                        ty: rust_ty,
+                    }
+                }
             })
             .collect::<Vec<_>>();
 

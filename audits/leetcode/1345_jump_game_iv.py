@@ -1,9 +1,11 @@
+from collections import defaultdict, deque
+
 # LeetCode 1345: Jump Game Iv
 # Python version
 
 # Time O(n) - Space O(n)
 
-def minJumps(arr: List[int]) -> int:
+def minJumps(arr: list[int]) -> int:
     n = len(arr)
     # Base case.
     if n < 2:
@@ -15,7 +17,7 @@ def minJumps(arr: List[int]) -> int:
 
     # A function that gets all neighbors of a node that we have not
     # queued yet.
-    def getUnqueuedNeighbors(i: int) -> List[int]:
+    def getUnqueuedNeighbors(i: int) -> list[int]:
         adj = []
         # We can reach the element before.
         if 0 < i and not seen[i - 1]:
@@ -53,7 +55,9 @@ def minJumps(arr: List[int]) -> int:
 
 
 def main():
-    print("no test cases")
+    assert minJumps([100, -23, -23, 404, 100, 23, 23, 23, 3, 404]) == 3
+    assert minJumps([7]) == 0
+    assert minJumps([7, 6, 9, 6, 9, 6, 9, 7]) == 1
 
 if __name__ == "__main__":
     main()

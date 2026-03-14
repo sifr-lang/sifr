@@ -1,3 +1,4 @@
+
 # LeetCode 2864: Maximum Odd Binary Number
 # Python version
 
@@ -25,8 +26,8 @@ def maximumOddBinaryNumber(s: str) -> str:
 
 
 def main():
-    print(maximumOddBinaryNumber("010"))
-    print(maximumOddBinaryNumber("0101"))
+    assert maximumOddBinaryNumber("010") == '001'
+    assert maximumOddBinaryNumber("0101") == '1001'
 
 if __name__ == "__main__":
     main()

@@ -1,7 +1,8 @@
+
 # LeetCode 120: Triangle
 # Python version
 
-def minimumTotal(triangle: List[List[int]]) -> int:
+def minimumTotal(triangle: list[list[int]]) -> int:
     dp = triangle[-1]
 
     for row in range(len(triangle) - 2, -1, -1):
@@ -13,7 +14,7 @@ def minimumTotal(triangle: List[List[int]]) -> int:
 
 
 def main():
-    print(minimumTotal([[2],[3,4],[6,5,7],[4,1,8,3]]))
+    assert minimumTotal([[2],[3,4],[6,5,7],[4,1,8,3]]) == 11
 
 if __name__ == "__main__":
     main()

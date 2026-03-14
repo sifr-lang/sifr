@@ -1,7 +1,8 @@
+
 # LeetCode 2554: Maximum Number Of Integers To Choose From A Range I
 # Python version
 
-def maxCount(banned: List[int], n: int, maxSum: int) -> int:
+def maxCount(banned: list[int], n: int, maxSum: int) -> int:
     nums = {x:1 for x in range(1, n + 1)} # hashmap for storing the required elements
     for i in banned:
         if nums.get(i):
@@ -19,7 +20,9 @@ def maxCount(banned: List[int], n: int, maxSum: int) -> int:
 
 
 def main():
-    print(maxCount(6, [1,6,5], 2))
+    assert maxCount([1, 6, 5], 5, 6) == 2
+    assert maxCount([1, 2, 3, 4, 5, 6, 7], 8, 1) == 0
+    assert maxCount([11], 7, 50) == 7
 
 if __name__ == "__main__":
     main()

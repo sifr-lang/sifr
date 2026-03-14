@@ -1,7 +1,8 @@
+
 # LeetCode 39: Combination Sum
 # Python version
 
-def combinationSum(candidates: List[int], target: int) -> List[List[int]]:
+def combinationSum(candidates: list[int], target: int) -> list[list[int]]:
     res = []
 
     def dfs(i, cur, total):
@@ -22,7 +23,7 @@ def combinationSum(candidates: List[int], target: int) -> List[List[int]]:
 
 
 def main():
-    print(combinationSum([2,3,6,7], 7))
+    assert combinationSum([2,3,6,7], 7) == [[2, 2, 3], [7]]
 
 if __name__ == "__main__":
     main()

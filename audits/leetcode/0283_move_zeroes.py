@@ -1,7 +1,8 @@
+
 # LeetCode 283: Move Zeroes
 # Python version
 
-def moveZeroes(nums: List[int]) -> None:
+def moveZeroes(nums: list[int]) -> None:
     """
     Do not return anything, modify nums in-place instead.
     """
@@ -16,7 +17,12 @@ def moveZeroes(nums: List[int]) -> None:
 
 
 def main():
-    print("no test cases")
+    arg0 = [0, 1, 0, 3, 12]
+    _result = moveZeroes(arg0)
+    assert arg0 == [1, 3, 12, 0, 0]
+    arg0 = [0]
+    _result = moveZeroes(arg0)
+    assert arg0 == [0]
 
 if __name__ == "__main__":
     main()

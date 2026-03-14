@@ -1,7 +1,9 @@
+import random
+
 # LeetCode 215: Kth Largest Element In An Array
 # Python version
 
-def findKthLargest(nums: List[int], k: int) -> int:
+def findKthLargest(nums: list[int], k: int) -> int:
     heapify(nums)
     while len(nums) > k:
         heappop(nums)
@@ -14,7 +16,7 @@ def findKthLargest(nums: List[int], k: int) -> int:
 #   - Worst Case:O(n*log(n))
 # Extra Space Complexity: O(n)
 
-def findKthLargest(nums: List[int], k: int) -> int:
+def findKthLargest(nums: list[int], k: int) -> int:
     nums.sort()
     return nums[len(nums) - k]
 
@@ -23,7 +25,7 @@ def findKthLargest(nums: List[int], k: int) -> int:
 # Time Complexity: O(n)
 # Extra Space Complexity: O(n)
 
-def findKthLargest(nums: List[int], k: int) -> int:
+def findKthLargest(nums: list[int], k: int) -> int:
     pivot = random.choice(nums)
     left = [num for num in nums if num > pivot]
     mid = [num for num in nums if num == pivot]
@@ -42,7 +44,8 @@ def findKthLargest(nums: List[int], k: int) -> int:
 
 
 def main():
-    print("no test cases")
+    assert findKthLargest([3, 2, 1, 5, 6, 4], 2) == 5
+    assert findKthLargest([3, 2, 3, 1, 2, 4, 5, 5, 6], 4) == 4
 
 if __name__ == "__main__":
     main()

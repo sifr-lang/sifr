@@ -1,7 +1,8 @@
+
 # LeetCode 442: Find All Duplicates In An Array
 # Python version
 
-def findDuplicates(nums: List[int]) -> List[int]:
+def findDuplicates(nums: list[int]) -> list[int]:
     res = []
 
     for n in nums:
@@ -15,7 +16,9 @@ def findDuplicates(nums: List[int]) -> List[int]:
 
 
 def main():
-    print("no test cases")
+    assert findDuplicates([4, 3, 2, 7, 8, 2, 3, 1]) == [2, 3]
+    assert findDuplicates([1, 1, 2]) == [1]
+    assert findDuplicates([1]) == []
 
 if __name__ == "__main__":
     main()

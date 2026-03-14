@@ -1,7 +1,8 @@
+
 # LeetCode 63: Unique Paths Ii
 # Python version
 
-def uniquePathsWithObstacles(grid: List[List[int]]) -> int:
+def uniquePathsWithObstacles(grid: list[list[int]]) -> int:
     M, N = len(grid), len(grid[0])
     dp = [0] * N
     dp[N-1] = 1
@@ -32,7 +33,7 @@ def uniquePathsWithObstacles(grid: List[List[int]]) -> int:
 
 
 def main():
-    print(uniquePathsWithObstacles([[0,0,0],[0,1,0],[0,0,0]]))
+    assert uniquePathsWithObstacles([[0,0,0],[0,1,0],[0,0,0]]) == 2
 
 if __name__ == "__main__":
     main()

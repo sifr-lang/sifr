@@ -1,7 +1,8 @@
+
 # LeetCode 139: Word Break
 # Python version
 
-def wordBreak(s: str, wordDict: List[str]) -> bool:
+def wordBreak(s: str, wordDict: list[str]) -> bool:
 
     dp = [False] * (len(s) + 1)
     dp[len(s)] = True
@@ -18,8 +19,8 @@ def wordBreak(s: str, wordDict: List[str]) -> bool:
 
 
 def main():
-    print(wordBreak("leetcode", ["leet","code"]))
-    print(wordBreak("applepenapple", ["apple","pen"]))
+    assert wordBreak("leetcode", ["leet","code"]) == True
+    assert wordBreak("applepenapple", ["apple","pen"]) == True
 
 if __name__ == "__main__":
     main()

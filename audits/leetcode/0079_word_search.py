@@ -1,7 +1,9 @@
+from collections import Counter
+
 # LeetCode 79: Word Search
 # Python version
 
-def exist(board: List[List[str]], word: str) -> bool:
+def exist(board: list[list[str]], word: str) -> bool:
     ROWS, COLS = len(board), len(board[0])
     path = set()
 
@@ -42,7 +44,9 @@ def exist(board: List[List[str]], word: str) -> bool:
 
 
 def main():
-    print("no test cases")
+    assert exist([['A', 'B', 'C', 'E'], ['S', 'F', 'C', 'S'], ['A', 'D', 'E', 'E']], 'ABCCED') == True
+    assert exist([['A', 'B', 'C', 'E'], ['S', 'F', 'C', 'S'], ['A', 'D', 'E', 'E']], 'SEE') == True
+    assert exist([['A', 'B', 'C', 'E'], ['S', 'F', 'C', 'S'], ['A', 'D', 'E', 'E']], 'ABCB') == False
 
 if __name__ == "__main__":
     main()

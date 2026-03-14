@@ -1,0 +1,7 @@
+# Test: mutable borrowed parameters cannot escape by value.
+
+def borrowed_return(mut items: list[int]) -> list[int]:
+    return items
+
+def main():
+    print("unreachable")

@@ -1,3 +1,4 @@
+
 # LeetCode 1968: Array With Elements Not Equal To Average Of Neighbors
 # Python version
 
@@ -12,7 +13,7 @@
 # 2nd Filled arr = [0,7,2,9,6]
 
 
-def rearrangeArray(nums: List[int]) -> List[int]:
+def rearrangeArray(nums: list[int]) -> list[int]:
     nums.sort()
 
     i, j, n = 0, 0, len(nums)
@@ -34,7 +35,7 @@ def rearrangeArray(nums: List[int]) -> List[int]:
 
 
 def main():
-    print(rearrangeArray([3,1,-2,-5,2,-4]))
+    assert rearrangeArray([3,1,-2,-5,2,-4]) == [-5, 1, -4, 2, -2, 3]
 
 if __name__ == "__main__":
     main()

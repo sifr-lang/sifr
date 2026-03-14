@@ -24,14 +24,30 @@ use super::sequence_guard_detection::{
 };
 use super::sequence_pointers::record_sequence_pointer_fact;
 use super::sequence_shapes::sequence_shape_fact;
-use super::typing_and_functions::{extract_function_type, resolve_annotation_expr};
+use super::typing_and_functions::{register_local_function_symbol, resolve_annotation_expr};
 use super::LowerCtx;
+
+fn ensure_mutable_parameter_binding(ctx: &mut LowerCtx, name: &str, operation: &str) -> bool {
+    if ctx
+        .scope
+        .lookup(name)
+        .is_some_and(|info| info.is_parameter_binding() && !info.is_mutable_binding)
+    {
+        ctx.error(format!(
+            "cannot {operation} immutable parameter `{name}`: add `mut` to the parameter declaration"
+        ));
+        return false;
+    }
+    true
+}
 
 pub(super) fn lower_stmts(
     stmts: &[Stmt],
     func_type: &FunctionType,
     ctx: &mut LowerCtx,
 ) -> Vec<HirStmt> {
+    predeclare_nested_function_symbols(stmts, ctx);
+
     let mut result = Vec::new();
     for (index, stmt) in stmts.iter().enumerate() {
         if crate::cfg::flow_facts(&result).always_exits() {
@@ -54,6 +70,14 @@ pub(super) fn lower_stmts(
         apply_numeric_sentinel_patches(&mut result, &mut ctx.pending_numeric_sentinel_patches);
     }
     result
+}
+
+fn predeclare_nested_function_symbols(stmts: &[Stmt], ctx: &mut LowerCtx) {
+    for stmt in stmts {
+        if let Stmt::FunctionDef(func) = stmt {
+            register_local_function_symbol(func, ctx);
+        }
+    }
 }
 
 pub(super) fn lower_stmt(
@@ -373,10 +397,11 @@ pub(super) fn lower_stmt(
         Stmt::FunctionDef(func) => {
             // Nested function definition (def inside def)
             // Extract the function type (params + return type)
-            let ft = extract_function_type(func, ctx);
-
-            // Register the nested function in the current scope so it can be called
-            ctx.functions.insert(func.name.to_string(), ft.clone());
+            let ft = ctx
+                .functions
+                .get(func.name.as_str())
+                .cloned()
+                .unwrap_or_else(|| register_local_function_symbol(func, ctx));
 
             // Lower the nested function body
             ctx.scope.push();
@@ -1003,7 +1028,7 @@ pub(super) fn lower_ann_assign(ann: &StmtAnnAssign, ctx: &mut LowerCtx) -> Optio
             // Escape analysis: cannot store a borrowed parameter into a new binding
             if ctx.borrowed_params.contains(src_name.as_str()) {
                 ctx.error(format!(
-                    "cannot store borrowed parameter `{src_name}`: it is borrowed by default -- use `own {src_name}` to take ownership, or store `{src_name}.clone()`"
+                    "cannot store borrowed parameter `{src_name}`: borrowed parameters cannot escape -- add `own` at the signature boundary or store `{src_name}.clone()`"
                 ));
             } else {
                 ctx.scope.mark_moved(src_name);
@@ -1136,6 +1161,9 @@ pub(super) fn lower_assign(assign: &StmtAssign, ctx: &mut LowerCtx) -> Option<Hi
             ctx.error("attribute assignment target must be a simple name".to_string());
             return None;
         };
+        if !ensure_mutable_parameter_binding(ctx, &obj_name, "mutate through") {
+            return None;
+        }
         let field_name = attr.attr.to_string();
         let value = lower_expr(&assign.value, ctx)?;
         return Some(HirStmt::FieldAssign {
@@ -1155,6 +1183,9 @@ pub(super) fn lower_assign(assign: &StmtAssign, ctx: &mut LowerCtx) -> Option<Hi
                 ctx.error("nested subscript assignment target must be a simple name".to_string());
                 return None;
             };
+            if !ensure_mutable_parameter_binding(ctx, &obj_name, "mutate through") {
+                return None;
+            }
             let obj_ty = ctx
                 .scope
                 .lookup(&obj_name)
@@ -1179,6 +1210,9 @@ pub(super) fn lower_assign(assign: &StmtAssign, ctx: &mut LowerCtx) -> Option<Hi
                 ctx.error("subscript assignment target must be a simple name".to_string());
                 return None;
             };
+            if !ensure_mutable_parameter_binding(ctx, &obj_name, "mutate through") {
+                return None;
+            }
             let field_name = attr.attr.to_string();
             // Look up field type from the object's class definition
             let field_ty = ctx
@@ -1229,6 +1263,9 @@ pub(super) fn lower_assign(assign: &StmtAssign, ctx: &mut LowerCtx) -> Option<Hi
             ctx.error("subscript assignment target must be a simple name".to_string());
             return None;
         };
+        if !ensure_mutable_parameter_binding(ctx, &obj_name, "mutate through") {
+            return None;
+        }
         let obj_ty = ctx
             .scope
             .lookup(&obj_name)
@@ -1279,6 +1316,12 @@ pub(super) fn lower_assign(assign: &StmtAssign, ctx: &mut LowerCtx) -> Option<Hi
 
     // Check if variable already exists
     if let Some(info) = ctx.scope.lookup(&name) {
+        if info.is_parameter_binding() && !info.is_mutable_binding {
+            ctx.error(format!(
+                "cannot reassign immutable parameter `{name}`: add `mut` to the parameter declaration"
+            ));
+            return None;
+        }
         // Reassignment: check type compatibility
         if !value_ty.is_assignable_to(&info.ty) {
             ctx.error(format!(
@@ -1330,6 +1373,9 @@ pub(super) fn lower_aug_assign(aug: &StmtAugAssign, ctx: &mut LowerCtx) -> Optio
             ctx.error("augmented attribute assignment target must be a simple name".to_string());
             return None;
         };
+        if !ensure_mutable_parameter_binding(ctx, &obj_name, "mutate through") {
+            return None;
+        }
         let field_name = attr.attr.to_string();
         let value = lower_expr(&aug.value, ctx)?;
         let op_str = match aug.op {
@@ -1366,6 +1412,9 @@ pub(super) fn lower_aug_assign(aug: &StmtAugAssign, ctx: &mut LowerCtx) -> Optio
             ctx.error("augmented subscript assignment target must be a simple name".to_string());
             return None;
         };
+        if !ensure_mutable_parameter_binding(ctx, &obj_name, "mutate through") {
+            return None;
+        }
         let obj_ty = ctx
             .scope
             .lookup(&obj_name)
@@ -1435,7 +1484,14 @@ pub(super) fn lower_aug_assign(aug: &StmtAugAssign, ctx: &mut LowerCtx) -> Optio
         ctx.error(format!("undefined variable: '{name}'"));
         return None;
     }
-    let var_ty = var_info.unwrap().ty.clone();
+    let var_info = var_info.unwrap();
+    if var_info.is_parameter_binding() && !var_info.is_mutable_binding {
+        ctx.error(format!(
+            "cannot reassign immutable parameter `{name}`: add `mut` to the parameter declaration"
+        ));
+        return None;
+    }
+    let var_ty = var_info.ty.clone();
 
     // Type check the operation
     let base_op = &op_str[..op_str.len() - 1]; // Remove '='
@@ -1474,12 +1530,12 @@ pub(super) fn lower_return(
         let expr_ty = expr.ty().clone();
 
         // Escape analysis: returning a borrowed parameter is a compile error.
-        // The programmer must use `own` to transfer ownership, or call `.clone()` explicitly.
+        // The programmer must add `own` at the signature boundary, or call `.clone()` explicitly.
         if let HirExpr::Name { name, ty } = &expr {
             if ctx.borrowed_params.contains(name.as_str()) && ty.ownership() == OwnershipKind::Move
             {
                 ctx.error(format!(
-                    "cannot return borrowed parameter `{name}`: it is borrowed by default -- use `own {name}` to take ownership, or return `{name}.clone()`"
+                    "cannot return borrowed parameter `{name}`: borrowed parameters cannot escape -- add `own` at the signature boundary or return `{name}.clone()`"
                 ));
             }
         }

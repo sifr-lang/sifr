@@ -10,5 +10,7 @@ def maxNumberOfBalloons(text: str) -> int:
     return res
 
 def main():
-    print("no test cases")
+    assert maxNumberOfBalloons('nlaebolko') == 1
+    assert maxNumberOfBalloons('loonbalxballpoon') == 2
+    assert maxNumberOfBalloons('leetcode') == 0
 

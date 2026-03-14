@@ -1,10 +1,10 @@
+
 # LeetCode 36: Valid Sudoku
 # Python version
 
 import collections
-from typing import List
 
-def isValidSudoku(board: List[List[str]]) -> bool:
+def isValidSudoku(board: list[list[str]]) -> bool:
     cols = collections.defaultdict(set)
     rows = collections.defaultdict(set)
     squares = collections.defaultdict(set)  # key = (r /3, c /3)

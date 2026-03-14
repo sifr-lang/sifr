@@ -1,7 +1,10 @@
+import collections
+from collections import deque
+
 # LeetCode 127: Word Ladder
 # Python version
 
-def ladderLength(beginWord: str, endWord: str, wordList: List[str]) -> int:
+def ladderLength(beginWord: str, endWord: str, wordList: list[str]) -> int:
     if endWord not in wordList:
         return 0
 
@@ -32,7 +35,8 @@ def ladderLength(beginWord: str, endWord: str, wordList: List[str]) -> int:
 
 
 def main():
-    print("no test cases")
+    assert ladderLength('hit', 'cog', ['hot', 'dot', 'dog', 'lot', 'log', 'cog']) == 5
+    assert ladderLength('hit', 'cog', ['hot', 'dot', 'dog', 'lot', 'log']) == 0
 
 if __name__ == "__main__":
     main()

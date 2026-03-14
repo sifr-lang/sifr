@@ -1,7 +1,8 @@
+
 # LeetCode 416: Partition Equal Subset Sum
 # Python version
 
-def canPartition(nums: List[int]) -> bool:
+def canPartition(nums: list[int]) -> bool:
     if sum(nums) % 2:
         return False
 
@@ -22,8 +23,8 @@ def canPartition(nums: List[int]) -> bool:
 
 
 def main():
-    print(canPartition([1,5,11,5]))
-    print(canPartition([1,2,3,5]))
+    assert canPartition([1,5,11,5]) == True
+    assert canPartition([1,2,3,5]) == False
 
 if __name__ == "__main__":
     main()
