@@ -1,6 +1,6 @@
 # Ad Hoc Phase: Full Nested Function Pipeline
 
-Status: in progress on 2026-03-14
+Status: completed on 2026-03-15
 
 ## Purpose
 
@@ -23,7 +23,7 @@ This phase covers the full compiler pipeline for:
 - [x] `milestone_nested_4`: codegen, diagnostics, and unsupported-shape boundaries
 - [x] `milestone_nested_5`: regression corpus, demos, and full-corpus closure evidence
 - [x] external review pass 1 completed and acted on
-- [ ] production-grade review pass completed and acted on
+- [x] production-grade review pass completed and acted on
 
 ## Execution Log
 
@@ -50,6 +50,9 @@ This phase covers the full compiler pipeline for:
 - `2026-03-15`: external review pass 1 completed.
   - Review file: `reviews/phase-nested-functions-review-pass-1.md`
   - Outcome: approved for the documented phase scope with no blocking findings and no required code changes.
+- `2026-03-15`: production-grade review pass completed.
+  - Review file: `reviews/phase-nested-functions-production-grade-review-pass-2a.md`
+  - Outcome: approved as production-ready for the documented phase scope with no blocking findings and no required code changes.
 
 ## Entry Baseline Evidence (2026-03-14)
 
