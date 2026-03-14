@@ -4,7 +4,7 @@ use crate::{
     RustExpr, RustItem, RustParam, RustStmt, RustType, RustTypeParam, ScopeContext, Visibility,
 };
 use sifr_hir::{HirClass, HirExpr, HirFunction, HirModule, HirStmt};
-use sifr_type_system::{ParamConvention, Type};
+use sifr_type_system::Type;
 
 impl RustEmitter {
     pub(super) fn emit_operator_impls(&mut self, class: &HirClass) {
@@ -299,12 +299,12 @@ impl RustEmitter {
         self.borrowed_params.clear();
         self.mut_borrowed_params.clear();
         for param in &func.params {
-            if param.convention == ParamConvention::Borrow
+            if param.convention.is_shared_borrow()
                 && param.ty.ownership() != sifr_type_system::OwnershipKind::Copy
             {
                 self.borrowed_params.insert(param.name.clone());
             }
-            if param.convention == ParamConvention::MutBorrow
+            if param.convention.is_mut_borrow()
                 && param.ty.ownership() != sifr_type_system::OwnershipKind::Copy
             {
                 self.mut_borrowed_params.insert(param.name.clone());

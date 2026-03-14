@@ -1,7 +1,7 @@
 use crate::helpers::needs_clone_for_type;
 use crate::RustEmitter;
 use sifr_hir::HirExpr;
-use sifr_type_system::{ParamConvention, Type};
+use sifr_type_system::Type;
 
 impl RustEmitter {
     fn lower_proven_index_option_expr_for_ir(
@@ -544,7 +544,7 @@ impl RustEmitter {
         let right_expr = if method_sig
             .params
             .first()
-            .is_some_and(|(_, _, conv)| *conv == ParamConvention::Borrow)
+            .is_some_and(|(_, _, conv)| conv.is_shared_borrow())
         {
             crate::RustExpr::Ref {
                 mutable: false,

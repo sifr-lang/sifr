@@ -45,7 +45,7 @@ impl RustEmitter {
                     .iter()
                     .map(|p| {
                         let conv = if method.name == "new" {
-                            ParamConvention::Own
+                            ParamConvention::own()
                         } else {
                             p.convention
                         };
@@ -74,7 +74,7 @@ impl RustEmitter {
                 let ctor_params = class
                     .fields
                     .iter()
-                    .map(|(_, ty)| (ty.clone(), ParamConvention::Own))
+                    .map(|(_, ty)| (ty.clone(), ParamConvention::own()))
                     .collect::<Vec<_>>();
                 self.func_signatures.insert(
                     format!("{}::new", class.name),

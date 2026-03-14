@@ -1,7 +1,7 @@
 use crate::hir_analysis::traversal::{self, TraversalConfig, TraversalControl};
 use crate::ModuleFuncSignatures;
 use sifr_hir::{cfg, HirExpr, HirPattern, HirStmt};
-use sifr_type_system::{ParamConvention, Type};
+use sifr_type_system::Type;
 use std::cell::RefCell;
 use std::collections::{HashMap, HashSet};
 
@@ -207,7 +207,10 @@ pub(crate) fn collect_mutated_vars(
             if let Some(sigs) = func_signatures {
                 if let Some((param_convs, _)) = sigs.get(func) {
                     for (idx, arg) in args.iter().enumerate() {
-                        if let Some((_, ParamConvention::MutBorrow)) = param_convs.get(idx) {
+                        if param_convs
+                            .get(idx)
+                            .is_some_and(|(_, convention)| convention.is_mut_borrow())
+                        {
                             if let HirExpr::Name { name, .. } = arg {
                                 mutated.borrow_mut().insert(name.clone());
                             }
@@ -426,7 +429,10 @@ mod tests {
         sigs.insert(
             "touch".to_string(),
             (
-                vec![(Type::List(Box::new(Type::Int)), ParamConvention::MutBorrow)],
+                vec![(
+                    Type::List(Box::new(Type::Int)),
+                    ParamConvention::mut_borrow(),
+                )],
                 Type::None,
             ),
         );
@@ -444,7 +450,7 @@ mod tests {
                 ty: Type::Int,
                 default: None,
                 keyword_only: false,
-                convention: ParamConvention::Own,
+                convention: ParamConvention::own(),
             }],
             return_type: Type::Int,
             body: vec![HirStmt::Return {

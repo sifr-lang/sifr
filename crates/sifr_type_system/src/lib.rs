@@ -13,7 +13,9 @@ pub use check::{
     type_check_binary_op, type_check_bool_op, type_check_comparison, type_check_unary_op,
 };
 pub use infer::infer_literal_type;
-pub use types::{FunctionType, OwnershipKind, ParamConvention, Type};
+pub use types::{
+    FunctionType, OwnershipKind, ParamConvention, ParamMutability, ParamOwnership, Type,
+};
 pub mod narrow;
 pub use literal::{widen as widen_literal, LiteralValue};
 pub use narrow::{narrow_type, NarrowingCondition};

@@ -1,4 +1,5 @@
-use crate::{parse, parse_expression, parse_module, Mode};
+use crate::{parse, parse_expression, parse_module, Mode, ParseErrorType};
+use sifr_python_ast::{AstParamConvention, Stmt};
 
 #[test]
 fn test_modes() {
@@ -133,4 +134,62 @@ foo.bar[0].baz[2].egg??
     )
     .unwrap();
     insta::assert_debug_snapshot!(parsed.syntax());
+}
+
+fn parse_function(source: &str) -> sifr_python_ast::StmtFunctionDef {
+    let suite = parse_module(source).expect("parse failed").into_suite();
+    let stmt = suite
+        .into_iter()
+        .next()
+        .expect("expected function definition");
+    match stmt {
+        Stmt::FunctionDef(function) => function,
+        other => panic!("expected function definition, got {other:?}"),
+    }
+}
+
+#[test]
+fn test_parameter_modifiers_normalize_both_source_orders() {
+    let own_mut = parse_function("def f(own mut items: list[int]):\n    return items\n");
+    let mut_own = parse_function("def f(mut own items: list[int]):\n    return items\n");
+
+    let own_mut_param = &own_mut.parameters.args[0].parameter;
+    let mut_own_param = &mut_own.parameters.args[0].parameter;
+
+    assert_eq!(own_mut_param.convention, AstParamConvention::own_mut());
+    assert_eq!(mut_own_param.convention, AstParamConvention::own_mut());
+}
+
+#[test]
+fn test_duplicate_mut_parameter_modifier_is_rejected() {
+    let error = parse_module("def f(mut mut items: list[int]):\n    return items\n").unwrap_err();
+
+    assert!(matches!(
+        error.error,
+        ParseErrorType::OtherError(message) if message == "duplicate `mut` parameter modifier"
+    ));
+}
+
+#[test]
+fn test_duplicate_own_parameter_modifier_is_rejected() {
+    let error = parse_module("def f(own own items: list[int]):\n    return items\n").unwrap_err();
+
+    assert!(matches!(
+        error.error,
+        ParseErrorType::OtherError(message) if message == "duplicate `own` parameter modifier"
+    ));
+}
+
+#[test]
+fn test_soft_keyword_parameter_names_still_parse_without_modifier_context() {
+    let function = parse_function("def f(mut: int, own: int) -> int:\n    return mut + own\n");
+
+    assert_eq!(
+        function.parameters.args[0].parameter.convention,
+        AstParamConvention::borrow()
+    );
+    assert_eq!(
+        function.parameters.args[1].parameter.convention,
+        AstParamConvention::borrow()
+    );
 }

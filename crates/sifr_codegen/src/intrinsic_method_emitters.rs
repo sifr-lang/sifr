@@ -2138,7 +2138,7 @@ impl RustEmitter {
                 if self.borrowed_params.contains(name)
                     || self.mut_borrowed_params.contains(name)
                     || ty.rust_type().starts_with('&'));
-            if *convention == ParamConvention::Own && borrowed_name_arg {
+            if convention.is_owned() && borrowed_name_arg {
                 lowered_arg = crate::RustExpr::MethodCall {
                     receiver: Box::new(crate::RustExpr::Paren(Box::new(lowered_arg))),
                     method: "clone".to_string(),
@@ -2150,11 +2150,11 @@ impl RustEmitter {
                 param_ty.rust_type().starts_with('&') && !param_ty.rust_type().starts_with("&mut ");
             let expects_mut_ref_type = param_ty.rust_type().starts_with("&mut ");
             let requires_shared_borrow = expects_shared_ref_type
-                || (*convention == ParamConvention::Borrow
+                || (convention.is_shared_borrow()
                     && (param_ty.ownership() != sifr_type_system::OwnershipKind::Copy
                         || matches!(resolved_param, Type::TypeVar(_) | Type::Any)));
             let requires_mut_borrow = expects_mut_ref_type
-                || (*convention == ParamConvention::MutBorrow
+                || (convention.is_mut_borrow()
                     && (param_ty.ownership() != sifr_type_system::OwnershipKind::Copy
                         || matches!(resolved_param, Type::TypeVar(_) | Type::Any)));
 
@@ -2252,27 +2252,29 @@ impl RustEmitter {
             });
 
             let base_arg = crate::RustExpr::Ident(arg_name.clone());
-            let adapted = match (expected, provided) {
-                (ParamConvention::Borrow | ParamConvention::MutBorrow, ParamConvention::Own) => {
-                    crate::RustExpr::MethodCall {
-                        receiver: Box::new(crate::RustExpr::Paren(Box::new(base_arg))),
-                        method: "clone".to_string(),
-                        args: vec![],
-                    }
+            let adapted = if provided.is_owned() && expected.is_borrowed() {
+                crate::RustExpr::MethodCall {
+                    receiver: Box::new(crate::RustExpr::Paren(Box::new(base_arg))),
+                    method: "clone".to_string(),
+                    args: vec![],
                 }
-                (ParamConvention::Own, ParamConvention::Borrow) => crate::RustExpr::Ref {
+            } else if expected.is_owned() && provided.is_shared_borrow() {
+                crate::RustExpr::Ref {
                     mutable: false,
                     expr: Box::new(base_arg),
-                },
-                (ParamConvention::Own, ParamConvention::MutBorrow) => crate::RustExpr::Ref {
+                }
+            } else if expected.is_owned() && provided.is_mut_borrow() {
+                crate::RustExpr::Ref {
                     mutable: true,
                     expr: Box::new(base_arg),
-                },
-                (ParamConvention::Borrow, ParamConvention::MutBorrow) => crate::RustExpr::Ref {
+                }
+            } else if expected.is_shared_borrow() && provided.is_mut_borrow() {
+                crate::RustExpr::Ref {
                     mutable: false,
                     expr: Box::new(crate::RustExpr::Deref(Box::new(base_arg))),
-                },
-                _ => base_arg,
+                }
+            } else {
+                base_arg
             };
             call_args.push(adapted);
         }
@@ -2326,10 +2328,10 @@ impl RustEmitter {
         mut lowered_arg: crate::RustExpr,
     ) -> crate::RustExpr {
         let resolved_param = crate::resolve_alias_type_for_plain_call(param_ty);
-        let requires_shared_borrow = convention == ParamConvention::Borrow
+        let requires_shared_borrow = convention.is_shared_borrow()
             && (param_ty.ownership() != sifr_type_system::OwnershipKind::Copy
                 || matches!(resolved_param, Type::TypeVar(_)));
-        let requires_mut_borrow = convention == ParamConvention::MutBorrow
+        let requires_mut_borrow = convention.is_mut_borrow()
             && (param_ty.ownership() != sifr_type_system::OwnershipKind::Copy
                 || matches!(resolved_param, Type::TypeVar(_)));
 
