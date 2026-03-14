@@ -29,6 +29,11 @@ This phase must use the following inputs as authoritative references:
 
 - CPython source tree:
   - `/Users/yaseralnajjar/work/sifr/cpython`
+- CPython test corpus:
+  - `/Users/yaseralnajjar/work/sifr/cpython/Lib/test`
+  - C-backed and runtime-adjacent test coverage under:
+    - `/Users/yaseralnajjar/work/sifr/cpython/Lib/test/test_capi`
+    - `/Users/yaseralnajjar/work/sifr/cpython/Lib/test/test_free_threading`
 - Current module-by-module parity audit:
   - [stdlib_gaps_cpython_module_by_module_audit_2026-03-14.md](/Users/yaseralnajjar/.codex/worktrees/9e99/codebase/issues/stdlib_gaps_cpython_module_by_module_audit_2026-03-14.md)
 - Existing architectural and parity baseline:
@@ -137,6 +142,14 @@ This phase should increase parity without weakening Sifr's contract.
 - compile-time rejection remains preferable to runtime rejection where possible
 - no user-triggerable panics are allowed
 
+### 5. CPython Tests Define Hardness, Sifr Defines Adaptation
+
+Each wave must begin by reading the relevant CPython tests for the builtins and modules in scope. The job is not to copy CPython blindly; it is to inherit the same behavioral hardness and then adapt expectations where Sifr intentionally diverges.
+
+- If a CPython test expresses behavior that is compatible with Sifr's model, port it or derive a direct Sifr equivalent.
+- If a CPython test depends on exceptions, dynamic typing, runtime mutability, implementation-specific refcounting, or host behavior that Sifr intentionally rejects, keep the hardness but adapt the assertion to Sifr's typed result, compile-time rejection, or `host-limited` classification.
+- If a CPython test exercises a surface Sifr will not support, record an explicit waiver rather than silently dropping the case.
+
 ## Parity Accounting Model
 
 The phase should not track parity as a vague per-module adjective. Every builtin and every shipped module must be measured across the same review dimensions:
@@ -175,6 +188,51 @@ Each tracked surface must end in exactly one state:
 - `open`
 
 `open` is allowed during implementation only. It is not allowed at phase exit.
+
+Each upstream CPython test or test family reviewed for this phase must also end in exactly one state:
+
+- `adopted`
+- `adapted`
+- `waived`
+
+`waived` requires explicit rationale tied to one of:
+
+- `intentional-diff`
+- `unsupported`
+- `host-limited`
+- `cpython-implementation-detail`
+
+The phase should therefore close both surface parity and test-parity accounting.
+
+## CPython Test Harvesting Contract
+
+Every milestone and closure wave must produce a reviewable upstream-test inventory before implementation starts.
+
+For each builtin or module in scope:
+
+1. identify the relevant CPython test files, subpackages, and high-value fixtures
+2. classify the upstream cases into:
+   - direct-port candidates
+   - Sifr-adaptation candidates
+   - explicit waivers
+3. port or derive a representative Sifr regression corpus that preserves the same hardness for:
+   - happy-path behavior
+   - boundary conditions
+   - error behavior
+   - deterministic behavior
+4. record the mapping between:
+   - CPython test family
+   - Sifr parity surface
+   - resulting local regression location
+   - final adopt/adapt/waive state
+
+Minimum bar per wave:
+
+- at least one positive-path and one negative-path case must be traceable back to the relevant CPython tests for every builtin or module closed in that wave
+- parser-heavy or data-heavy modules should import larger upstream fixture families where practical rather than rewriting tiny hand-picked examples
+- no wave is complete if it claims parity without an upstream test review matrix
+
+The goal is not literal test-suite duplication. The goal is CPython-grade behavioral hardness with Sifr-native semantics.
 
 ## Root-Cause Stack
 
@@ -243,6 +301,7 @@ This phase is strictly sequential, not a parallel track.
 - Only one root-cause layer or one closure wave may be in active implementation at a time.
 - No later wave starts before the current wave has:
   - implemented the targeted root-cause or module closure
+  - completed the CPython test inventory and adopt/adapt/waive matrix for the surfaces in scope
   - added regression coverage
   - updated the parity inventory
   - passed local validation
@@ -507,6 +566,105 @@ The milestones above define architecture and scope. Execution inside them should
 - `hashlib`
 - `test`
 
+## CPython Test Inputs By Wave
+
+The following upstream test families should be the default harvesting inputs for each wave. These are not the only possible references, but they are the minimum concrete starting set.
+
+### wave_psp_a: Builtins and Core Types
+
+- builtins and core containers:
+  - `Lib/test/test_list.py`
+  - `Lib/test/test_dict.py`
+  - `Lib/test/test_set.py`
+  - `Lib/test/test_tuple.py`
+  - `Lib/test/test_str.py`
+- lower-level/runtime-adjacent references to mine selectively where useful:
+  - `Lib/test/test_capi/test_list.py`
+  - `Lib/test/test_capi/test_dict.py`
+  - `Lib/test/test_capi/test_set.py`
+  - `Lib/test/test_capi/test_tuple.py`
+  - `Lib/test/test_free_threading/test_list.py`
+  - `Lib/test/test_free_threading/test_dict.py`
+  - `Lib/test/test_free_threading/test_set.py`
+  - `Lib/test/test_free_threading/test_str.py`
+- adaptation rule:
+  - keep semantic hardness around constructors, slicing, mutation, membership, hashing, and iteration, but convert exception-oriented expectations into Sifr-safe typed or compile-time outcomes
+
+### wave_psp_b: Collections and Iterators
+
+- `Lib/test/test_collections.py`
+- `Lib/test/test_itertools.py`
+- `Lib/test/test_functools.py`
+- `Lib/test/test_operator.py`
+- `Lib/test/test_bisect.py`
+- `Lib/test/test_heapq.py`
+- `Lib/test/test_random.py`
+- `Lib/test/test_secrets.py`
+- concurrency/implementation-adjacent references to mine selectively:
+  - `Lib/test/test_free_threading/test_bisect.py`
+  - `Lib/test/test_free_threading/test_heapq.py`
+  - `Lib/test/test_free_threading/test_functools.py`
+  - `Lib/test/test_free_threading/test_itertools.py`
+- adaptation rule:
+  - preserve callable-shape, iterator, and algorithmic boundary coverage, but do not port CPython-only laziness or mutability edge expectations without checking Sifr ownership and iterator contracts first
+
+### wave_psp_c: Structured Data and Text
+
+- `Lib/test/test_json/`
+- `Lib/test/test_tomllib/`
+- `Lib/test/test_csv.py`
+- `Lib/test/test_configparser.py`
+- `Lib/test/test_string/test_string.py`
+- `Lib/test/test_string/test_templatelib.py`
+- `Lib/test/test_textwrap.py`
+- `Lib/test/test_base64.py`
+- `Lib/test/test_html.py`
+- `Lib/test/test_fnmatch.py`
+- `Lib/test/test_difflib.py`
+- `Lib/test/test_calendar.py`
+- adaptation rule:
+  - reuse upstream data corpora and invalid-input fixtures wherever practical, especially for `json` and `tomllib`; adapt exception assertions into typed decode/parse failures and keep fixture coverage broad rather than anecdotal
+
+### wave_psp_d: Runtime and Filesystem
+
+- `Lib/test/test_io/`
+- `Lib/test/test_os/`
+- `Lib/test/test_sys.py`
+- `Lib/test/test_pathlib/`
+- `Lib/test/test_glob.py`
+- `Lib/test/test_shutil.py`
+- `Lib/test/test_tempfile.py`
+- `Lib/test/test_subprocess.py`
+- `Lib/test/test_logging.py`
+- `Lib/test/test_platform.py`
+- `Lib/test/test_time.py`
+- `Lib/test/test_timeit.py`
+- `Lib/test/test_gzip.py`
+- `Lib/test/test_zipfile/`
+- runtime-adjacent references to mine selectively:
+  - `Lib/test/test_capi/test_sys.py`
+  - `Lib/test/test_capi/test_time.py`
+  - `Lib/test/test_free_threading/test_io.py`
+- adaptation rule:
+  - separate portable semantics from host-specific behavior early; for host-limited APIs, preserve the same boundary hardness while explicitly waiving or constraining platform-dependent cases
+
+### wave_psp_e: Remaining Existing Modules and Final Cleanup
+
+- `Lib/test/test_argparse.py`
+- `Lib/test/test_ipaddress.py`
+- `Lib/test/test_uuid.py`
+- `Lib/test/test_graphlib.py`
+- `Lib/test/test_datetime.py`
+- `Lib/test/test_re.py`
+- `Lib/test/test_math.py`
+- `Lib/test/test_statistics.py`
+- `Lib/test/test_hashlib.py`
+- selective concurrency/runtime references:
+  - `Lib/test/test_free_threading/test_uuid.py`
+  - `Lib/test/test_free_threading/test_re.py`
+- adaptation rule:
+  - keep the same semantic hardness for parser, regex, datetime, and numeric edge behavior, but preserve Sifr's explicit `Result`/`Option`, ownership, and compile-time rejection contracts
+
 ## Module Closure Ledger
 
 Every shipped module in `lib/sifr` must terminate in an explicit closure bucket during this phase.
@@ -638,9 +796,12 @@ This phase must not weaken Sifr's contract.
 - no module is complete while major top-level CPython exports remain unclassified
 - no class-heavy module is complete while major public classes remain missing without waiver
 - every root-cause fix includes regression coverage
+- every wave includes a CPython test inventory and adopt/adapt/waive matrix for the surfaces in scope
+- no CPython-derived parity claim is accepted without a traceable local regression or explicit waiver
 - every milestone includes at least one positive-path and one negative-path validation case
 - constructor parity work must include positive-path and safe-error-path validation
 - optional-argument parity decisions must be documented, not left implicit
+- parser-heavy modules must prefer upstream fixture/data reuse where practical instead of ad hoc examples only
 - validation evidence must be recorded in the execution checklist issue before merge
 - no milestone is complete if its outputs are not reviewable and reproducible locally
 - parity-governance outputs must be machine-reviewable and deterministic
@@ -654,13 +815,13 @@ This phase must not weaken Sifr's contract.
 
 ### Validation planning goals
 
-- `milestone_psp_1` (Builtin and Signature-Lowering Architecture): validation goals cover: builtin constructor closure, builtin helper call-shape closure, keyword/default/variadic lowering stability, and parity-safe callable lowering for downstream stdlib work. Include negative-path goals that catch regressions against these guarantees.
-- `milestone_psp_2` (Core Container and String Object-Model Closure): validation goals cover: constructor/method coherence for `list`, `dict`, `set`, `tuple`, and `str`; major optional-argument forms; safe adaptation where CPython would raise. Include negative-path goals that catch regressions against these guarantees.
-- `milestone_psp_3` (Collections, Iterator, and Functional Surface Closure): validation goals cover: Python-shaped parity for `collections`, `itertools`, `functools`, `operator`, `bisect`, `heapq`, `random`, and `secrets`; removal of workaround-first entry surfaces; iterator/object-model parity where supported. Include negative-path goals that catch regressions against these guarantees.
-- `milestone_psp_4` (Structured Data, Text, and Parsing Surface Closure): validation goals cover: structured return-shape parity, class exports, constant exports, and call-shape closure for `json`, `tomllib`, `csv`, `configparser`, `string`, `textwrap`, `base64`, `html`, `difflib`, and `calendar`. Include negative-path goals that catch regressions against these guarantees.
-- `milestone_psp_5` (Runtime, Filesystem, Process, and Platform Closure): validation goals cover: object-model parity, constants/errors, host-limited classification, and Python-shaped entry names for `io`, `os`, `sys`, `pathlib`, `glob`, `shutil`, `tempfile`, `subprocess`, `logging`, `platform`, `time`, `timeit`, `gzip`, and `zipfile`. Include negative-path goals that catch regressions against these guarantees.
-- `milestone_psp_6` (Remaining Existing-Module Closure): validation goals cover: cleanup closure for the remaining shipped modules and the strong-but-incomplete modules; explicit closure or waiver for all remaining surface gaps. Include negative-path goals that catch regressions against these guarantees.
-- `milestone_psp_7` (Parity Governance and Exit Closure): validation goals cover: one canonical parity inventory for builtins, object models, and all existing modules; explicit classification of every non-closed surface; documentation alignment with actual support. Include negative-path goals that catch regressions against these guarantees.
+- `milestone_psp_1` (Builtin and Signature-Lowering Architecture): validation goals cover: builtin constructor closure, builtin helper call-shape closure, keyword/default/variadic lowering stability, parity-safe callable lowering for downstream stdlib work, and a CPython-derived core-type test matrix for the affected surfaces. Include negative-path goals that catch regressions against these guarantees.
+- `milestone_psp_2` (Core Container and String Object-Model Closure): validation goals cover: constructor/method coherence for `list`, `dict`, `set`, `tuple`, and `str`; major optional-argument forms; safe adaptation where CPython would raise; and ported or adapted coverage from the relevant CPython core-type tests. Include negative-path goals that catch regressions against these guarantees.
+- `milestone_psp_3` (Collections, Iterator, and Functional Surface Closure): validation goals cover: Python-shaped parity for `collections`, `itertools`, `functools`, `operator`, `bisect`, `heapq`, `random`, and `secrets`; removal of workaround-first entry surfaces; iterator/object-model parity where supported; and a wave-level CPython test harvest for collections/iterator behavior. Include negative-path goals that catch regressions against these guarantees.
+- `milestone_psp_4` (Structured Data, Text, and Parsing Surface Closure): validation goals cover: structured return-shape parity, class exports, constant exports, and call-shape closure for `json`, `tomllib`, `csv`, `configparser`, `string`, `textwrap`, `base64`, `html`, `difflib`, and `calendar`; plus reuse of upstream CPython data/fixture corpora where practical. Include negative-path goals that catch regressions against these guarantees.
+- `milestone_psp_5` (Runtime, Filesystem, Process, and Platform Closure): validation goals cover: object-model parity, constants/errors, host-limited classification, and Python-shaped entry names for `io`, `os`, `sys`, `pathlib`, `glob`, `shutil`, `tempfile`, `subprocess`, `logging`, `platform`, `time`, `timeit`, `gzip`, and `zipfile`; plus explicit CPython test adaptation for portable versus host-bound cases. Include negative-path goals that catch regressions against these guarantees.
+- `milestone_psp_6` (Remaining Existing-Module Closure): validation goals cover: cleanup closure for the remaining shipped modules and the strong-but-incomplete modules; explicit closure or waiver for all remaining surface gaps; and final CPython test-family harvest for those modules. Include negative-path goals that catch regressions against these guarantees.
+- `milestone_psp_7` (Parity Governance and Exit Closure): validation goals cover: one canonical parity inventory for builtins, object models, and all existing modules; explicit classification of every non-closed surface; documentation alignment with actual support; and a canonical adopt/adapt/waive ledger for all reviewed CPython test families. Include negative-path goals that catch regressions against these guarantees.
 - Exit-gate evidence explicitly demonstrates: builtins and all existing shipped modules have either maximal parity closure or an explicit, reviewable divergence classification.
 
 ### Local validation commands
@@ -698,6 +859,8 @@ The phase must define and keep current:
 - canonical builtin parity inventory
 - canonical core object-model parity inventory
 - per-module closure inventory for every shipped `lib/sifr` module
+- per-wave CPython test inventory with adopt/adapt/waive classification
+- traceability matrix from CPython test families to local Sifr regression locations
 - explicit waiver index for every `intentional-diff`, `unsupported`, and `host-limited` surface
 - milestone demos covering major user-visible parity expansions
 - validation evidence summary for each milestone
@@ -712,6 +875,10 @@ The phase must define and keep current:
   - intentional divergence
   - unsupported
   - host-limited
+- Every reviewed CPython test family for the phase is in one of these states:
+  - adopted
+  - adapted
+  - waived
 - No existing shipped module remains with undocumented open parity gaps.
 - Intentional divergences remain explicit, typed, panic-free, and documented.
 - Any waiver is explicit, time-bounded, owner-assigned, and issue-linked.
