@@ -299,7 +299,7 @@ They need a stronger standard-library class surface:
 
 ### root_cause_4: Module-Specific Semantic Closure
 
-Only after the three layers above are stabilized should the phase move fully into module-by-module closure waves. At that point the remaining work should mostly be direct semantics, not infrastructure rediscovery.
+Only after the three layers above are stabilized should the phase move fully into module-by-module closure sub-waves. At that point the remaining work should mostly be direct semantics, not infrastructure rediscovery.
 
 ## Sequencing Note
 
@@ -312,9 +312,9 @@ This phase is strictly sequential, not a parallel track.
 ## Execution Model
 
 - This phase remains a single sequential phase.
-- Work is grouped into dependency-ordered milestones and closure waves.
-- Only one root-cause layer or one closure wave may be in active implementation at a time.
-- No later wave starts before the current wave has:
+- Work is grouped into dependency-ordered milestones and reviewable closure sub-waves.
+- Only one root-cause layer or one closure sub-wave may be in active implementation at a time.
+- No later sub-wave starts before the current sub-wave has:
   - implemented the targeted root-cause or module closure
   - completed the CPython test inventory and adopt/adapt/waive matrix for the surfaces in scope
   - added regression coverage
@@ -329,17 +329,17 @@ This phase is strictly sequential, not a parallel track.
 
 ## Milestone-to-Wave Mapping
 
-The phase uses milestones for dependency-ordered closure logic and waves for execution grouping. Their mapping is:
+The phase uses milestones for dependency-ordered closure logic and sub-waves for execution grouping. Their mapping is:
 
-| milestone | primary waves | purpose |
+| milestone | primary sub-waves | purpose |
 | --- | --- | --- |
-| `milestone_psp_1` | `wave_psp_a` | builtin constructor and callable/signature lowering closure |
-| `milestone_psp_2` | `wave_psp_a` | core container and string object-model closure |
-| `milestone_psp_3` | `wave_psp_b` | collections, iterators, and functional module closure |
-| `milestone_psp_4` | `wave_psp_c` | structured data, text, and parsing module closure |
-| `milestone_psp_5` | `wave_psp_d` | runtime, filesystem, process, and platform module closure |
-| `milestone_psp_6` | `wave_psp_e` | remaining shipped-module cleanup and strong-but-incomplete module closure |
-| `milestone_psp_7` | `wave_psp_a` through `wave_psp_e` | parity inventory, waiver governance, and final exit closure across all prior waves |
+| `milestone_psp_1` | `wave_psp_a1` | builtin constructor and callable/signature lowering closure |
+| `milestone_psp_2` | `wave_psp_a2` | core container and string object-model closure |
+| `milestone_psp_3` | `wave_psp_b1`, `wave_psp_b2` | collections, iterators, and functional module closure |
+| `milestone_psp_4` | `wave_psp_c1`, `wave_psp_c2` | structured data, text, and parsing module closure |
+| `milestone_psp_5` | `wave_psp_d1`, `wave_psp_d2` | runtime, filesystem, process, and platform module closure |
+| `milestone_psp_6` | `wave_psp_e1`, `wave_psp_e2` | remaining shipped-module cleanup and strong-but-incomplete module closure |
+| `milestone_psp_7` | `wave_psp_a1` through `wave_psp_e2` | parity inventory, waiver governance, and final exit closure across all prior sub-waves |
 
 ## Milestones
 
@@ -521,9 +521,9 @@ Definition of done:
 - no shipped module remains in an ambiguous "partial parity" state
 - the closure inventory is reviewable enough that future corpus work does not rediscover unknown surface gaps
 
-## Closure Waves
+## Closure Sub-Waves
 
-The milestones above define architecture and scope. Execution inside them should follow these waves.
+The milestones above define architecture and scope. Execution inside them should follow these sub-waves.
 
 Custom-surface note:
 
@@ -531,37 +531,74 @@ Custom-surface note:
 - They are not treated as ordinary CPython module-parity targets.
 - Their closure obligation in this phase is classification cleanup, claim hygiene, and alignment to the correct CPython-adjacent surface where applicable.
 
-### wave_psp_a: Builtins and Core Types
+### wave_psp_a1: Builtin Constructors and Callable Surface
 
 - builtins:
   - `list`, `tuple`, `dict`, `set`, `str`, `int`, `float`, `bool`, `ord`, `chr`
   - `len`, `abs`, `min`, `max`, `sum`, `sorted`, `reversed`, `enumerate`, `zip`, `map`, `range`, `any`, `all`
-- custom-surface classification tied to core-type parity:
-  - `bytes`
+- focus:
+  - constructor-entry parity
+  - builtin helper call-shape lowering
+  - keyword/default/variadic callable parity
+
+### wave_psp_a2: Core Object Models and Builtin Semantics
+
 - object models:
   - `list`
   - `dict`
   - `set`
   - `tuple`
   - `str`
+- custom-surface classification tied to core-type parity:
+  - `bytes`
+- focus:
+  - indexing
+  - slicing
+  - membership
+  - mutation
+  - hashability
+  - method and overload parity
 
-### wave_psp_b: Collections and Iterators
+### wave_psp_b1: Collections Objects and Ordered Helpers
 
 - `collections`
+- `bisect`
+- `heapq`
+- focus:
+  - `Counter`
+  - `defaultdict`
+  - `deque`
+  - constructor parity
+  - object-model parity
+  - ordered search and heap helper parity
+
+### wave_psp_b2: Iterators, Functional Helpers, and Randomness
+
 - `itertools`
 - `functools`
 - `operator`
-- `bisect`
-- `heapq`
 - `random`
 - `secrets`
+- focus:
+  - iterator families
+  - lazy/eager boundary decisions
+  - callable-wrapper parity
+  - random/secrets helper and state surfaces
 
-### wave_psp_c: Structured Data and Text
+### wave_psp_c1: Structured Parsing and Serialization
 
 - `json`
 - `tomllib`
 - `csv`
 - `configparser`
+- focus:
+  - structured returns
+  - parser and decode behavior
+  - encoder/decoder or reader/writer object surfaces
+  - reuse of upstream fixture corpora
+
+### wave_psp_c2: Text, Pattern, and Formatting Modules
+
 - `string`
 - `textwrap`
 - `base64`
@@ -569,43 +606,84 @@ Custom-surface note:
 - `fnmatch`
 - `difflib`
 - `calendar`
+- focus:
+  - class-heavy text helpers
+  - formatting and pattern semantics
+  - helper and constant parity
 
-### wave_psp_d: Runtime and Filesystem
+### wave_psp_d1: Filesystem, Paths, and Archive Surfaces
 
 - `io`
-- `os`
-- `env`
-- `sys`
 - `pathlib`
 - `glob`
 - `shutil`
 - `tempfile`
+- `gzip`
+- `zipfile`
+- focus:
+  - files and streams
+  - path and archive object models
+  - lifecycle and filesystem semantics
+
+### wave_psp_d2: Process, Runtime, and Platform Surfaces
+
+- `os`
+- `env`
+- `sys`
 - `subprocess`
 - `logging`
 - `platform`
 - `time`
 - `timeit`
-- `gzip`
-- `zipfile`
+- focus:
+  - process and environment behavior
+  - runtime metadata and constants
+  - logging hierarchy
+  - clocks and platform probes
 
-### wave_psp_e: Remaining Existing Modules and Final Cleanup
+### wave_psp_e1: Strong-But-Incomplete Core Modules
 
-- `argparse`
-- `ipaddress`
-- `uuid`
-- `graphlib`
 - `datetime`
 - `re`
 - `math`
 - `statistics`
 - `hashlib`
+- focus:
+  - strong existing modules with remaining return-shape, option, and object-model gaps
+
+### wave_psp_e2: Class-Heavy and Custom Cleanup
+
+- `argparse`
+- `ipaddress`
+- `uuid`
+- `graphlib`
 - `test`
+- focus:
+  - remaining class-heavy shipped modules
+  - custom-surface closure hygiene
+  - final cleanup of explicit waivers and claim boundaries
 
-## CPython Test Inputs By Wave
+## CPython Test Inputs By Sub-Wave
 
-The following upstream test families should be the default harvesting inputs for each wave. These are not the only possible references, but they are the minimum concrete starting set.
+The following upstream test families should be the default harvesting inputs for each sub-wave. These are not the only possible references, but they are the minimum concrete starting set.
 
-### wave_psp_a: Builtins and Core Types
+### wave_psp_a1: Builtin Constructors and Callable Surface
+
+- builtins and core containers:
+  - `Lib/test/test_list.py`
+  - `Lib/test/test_dict.py`
+  - `Lib/test/test_set.py`
+  - `Lib/test/test_tuple.py`
+  - `Lib/test/test_str.py`
+- lower-level/runtime-adjacent references to mine selectively where useful:
+  - `Lib/test/test_capi/test_list.py`
+  - `Lib/test/test_capi/test_dict.py`
+  - `Lib/test/test_capi/test_set.py`
+  - `Lib/test/test_capi/test_tuple.py`
+- adaptation rule:
+  - emphasize constructor shapes, builtin entry behavior, and helper-call signatures; convert exception-oriented expectations into Sifr-safe typed or compile-time outcomes
+
+### wave_psp_a2: Core Object Models and Builtin Semantics
 
 - builtins and core containers:
   - `Lib/test/test_list.py`
@@ -625,14 +703,19 @@ The following upstream test families should be the default harvesting inputs for
 - adaptation rule:
   - keep semantic hardness around constructors, slicing, mutation, membership, hashing, and iteration, but convert exception-oriented expectations into Sifr-safe typed or compile-time outcomes
 
-### wave_psp_b: Collections and Iterators
+### wave_psp_b1: Collections Objects and Ordered Helpers
 
 - `Lib/test/test_collections.py`
+- `Lib/test/test_bisect.py`
+- `Lib/test/test_heapq.py`
+- adaptation rule:
+  - preserve constructor and object behavior for `collections`, plus ordered-helper boundary conditions for `bisect` and `heapq`
+
+### wave_psp_b2: Iterators, Functional Helpers, and Randomness
+
 - `Lib/test/test_itertools.py`
 - `Lib/test/test_functools.py`
 - `Lib/test/test_operator.py`
-- `Lib/test/test_bisect.py`
-- `Lib/test/test_heapq.py`
 - `Lib/test/test_random.py`
 - `Lib/test/test_secrets.py`
 - concurrency/implementation-adjacent references to mine selectively:
@@ -643,12 +726,17 @@ The following upstream test families should be the default harvesting inputs for
 - adaptation rule:
   - preserve callable-shape, iterator, and algorithmic boundary coverage, but do not port CPython-only laziness or mutability edge expectations without checking Sifr ownership and iterator contracts first
 
-### wave_psp_c: Structured Data and Text
+### wave_psp_c1: Structured Parsing and Serialization
 
 - `Lib/test/test_json/`
 - `Lib/test/test_tomllib/`
 - `Lib/test/test_csv.py`
 - `Lib/test/test_configparser.py`
+- adaptation rule:
+  - reuse upstream data corpora and invalid-input fixtures wherever practical, especially for `json` and `tomllib`; adapt exception assertions into typed decode/parse failures and keep fixture coverage broad rather than anecdotal
+
+### wave_psp_c2: Text, Pattern, and Formatting Modules
+
 - `Lib/test/test_string/test_string.py`
 - `Lib/test/test_string/test_templatelib.py`
 - `Lib/test/test_textwrap.py`
@@ -658,24 +746,29 @@ The following upstream test families should be the default harvesting inputs for
 - `Lib/test/test_difflib.py`
 - `Lib/test/test_calendar.py`
 - adaptation rule:
-  - reuse upstream data corpora and invalid-input fixtures wherever practical, especially for `json` and `tomllib`; adapt exception assertions into typed decode/parse failures and keep fixture coverage broad rather than anecdotal
+  - preserve text and pattern edge-case hardness, but adapt exception or implementation-detail behavior to Sifr-safe and reviewable equivalents
 
-### wave_psp_d: Runtime and Filesystem
+### wave_psp_d1: Filesystem, Paths, and Archive Surfaces
 
 - `Lib/test/test_io/`
-- `Lib/test/test_os/`
-- `Lib/test/test_sys.py`
 - `Lib/test/test_pathlib/`
 - `Lib/test/test_glob.py`
 - `Lib/test/test_shutil.py`
 - `Lib/test/test_tempfile.py`
+- `Lib/test/test_gzip.py`
+- `Lib/test/test_zipfile/`
+- adaptation rule:
+  - preserve filesystem, path, temp, and archive hardness while keeping host-limited behavior explicit
+
+### wave_psp_d2: Process, Runtime, and Platform Surfaces
+
+- `Lib/test/test_os/`
+- `Lib/test/test_sys.py`
 - `Lib/test/test_subprocess.py`
 - `Lib/test/test_logging.py`
 - `Lib/test/test_platform.py`
 - `Lib/test/test_time.py`
 - `Lib/test/test_timeit.py`
-- `Lib/test/test_gzip.py`
-- `Lib/test/test_zipfile/`
 - runtime-adjacent references to mine selectively:
   - `Lib/test/test_capi/test_sys.py`
   - `Lib/test/test_capi/test_time.py`
@@ -685,22 +778,28 @@ The following upstream test families should be the default harvesting inputs for
 - custom-surface guidance:
   - `env` should not claim a standalone CPython module analogue; use `os` and environment-related test families as the behavioral reference set
 
-### wave_psp_e: Remaining Existing Modules and Final Cleanup
+### wave_psp_e1: Strong-But-Incomplete Core Modules
 
-- `Lib/test/test_argparse.py`
-- `Lib/test/test_ipaddress.py`
-- `Lib/test/test_uuid.py`
-- `Lib/test/test_graphlib.py`
 - `Lib/test/test_datetime.py`
 - `Lib/test/test_re.py`
 - `Lib/test/test_math.py`
 - `Lib/test/test_statistics.py`
 - `Lib/test/test_hashlib.py`
 - selective concurrency/runtime references:
-  - `Lib/test/test_free_threading/test_uuid.py`
   - `Lib/test/test_free_threading/test_re.py`
 - adaptation rule:
-  - keep the same semantic hardness for parser, regex, datetime, and numeric edge behavior, but preserve Sifr's explicit `Result`/`Option`, ownership, and compile-time rejection contracts
+  - keep the same semantic hardness for regex, datetime, and numeric edge behavior, while preserving Sifr's explicit `Result`/`Option`, ownership, and compile-time rejection contracts
+
+### wave_psp_e2: Class-Heavy and Custom Cleanup
+
+- `Lib/test/test_argparse.py`
+- `Lib/test/test_ipaddress.py`
+- `Lib/test/test_uuid.py`
+- `Lib/test/test_graphlib.py`
+- selective concurrency/runtime references:
+  - `Lib/test/test_free_threading/test_uuid.py`
+- adaptation rule:
+  - keep the same semantic hardness for parser and class-heavy module behavior, but preserve Sifr's explicit `Result`/`Option`, ownership, and compile-time rejection contracts
 - custom-surface guidance:
   - `test` is Sifr infrastructure and should exit this phase as a classified non-CPython parity surface rather than a faux stdlib parity target
 
@@ -710,51 +809,51 @@ Every shipped module in `lib/sifr` must terminate in an explicit closure bucket 
 
 | module | execution wave | closure target |
 | --- | --- | --- |
-| `argparse` | `wave_psp_e` | close object-model parity for `ArgumentParser`-style usage or classify the remaining class-heavy surfaces explicitly |
-| `base64` | `wave_psp_c` | close remaining codec family and signature gaps compatible with Sifr bytes/string policy |
-| `bisect` | `wave_psp_b` | close aliases and optional-argument parity including `lo`/`hi`/`key` where supported |
-| `bytes` | `wave_psp_a` | classify as custom surface and align parity target to CPython `bytes` object-model semantics rather than a fake module parity claim |
-| `calendar` | `wave_psp_c` | close constants, helper functions, and class-family gaps or classify them explicitly |
-| `collections` | `wave_psp_b` | close constructor parity, object-model parity, and remaining public exports or classify gaps explicitly |
-| `configparser` | `wave_psp_c` | close parser class/error/constant parity as far as architecture permits |
-| `csv` | `wave_psp_c` | close reader/writer/dialect/constant parity and remove helper-only limitations |
-| `datetime` | `wave_psp_e` | close remaining constructors, constants, return types, and aware/naive semantics where supported |
-| `difflib` | `wave_psp_c` | close class and helper parity beyond the current narrow helper subset |
-| `env` | `wave_psp_d` | classify as custom surface and fold parity accounting into `os`/environment behavior rather than standalone CPython-module parity |
-| `fnmatch` | `wave_psp_c` | close helper and signature parity for the public pattern-matching surface |
-| `functools` | `wave_psp_b` | close high-value functional parity and callable-wrapper behavior rather than leaving `reduce` as a token subset |
-| `glob` | `wave_psp_d` | close recursive/pathname-expansion signatures and helper parity or classify host-limited gaps |
-| `graphlib` | `wave_psp_e` | close `TopologicalSorter` object-model parity and supporting errors/helpers |
-| `gzip` | `wave_psp_d` | close class/error/open-surface parity or classify unsupported archive semantics explicitly |
-| `hashlib` | `wave_psp_e` | close remaining constructor/result/object semantics and classify crypto-host limits explicitly |
-| `heapq` | `wave_psp_b` | close merge/max-heap/signature semantics and mutation/error behavior |
-| `html` | `wave_psp_c` | close top-level parity and classify any remaining sibling-module boundaries explicitly |
-| `io` | `wave_psp_d` | close stream class hierarchy, buffering objects, and open/handle semantics as far as Sifr's runtime supports |
-| `ipaddress` | `wave_psp_e` | close public constructors, classes, and error types for IPv4/IPv6 parity |
-| `itertools` | `wave_psp_b` | close remaining iterator families and lazy object-model parity instead of eager stand-ins |
-| `json` | `wave_psp_c` | close natural `dump`/`load`/`dumps`/`loads`, structured returns, and encoder/decoder parity |
-| `logging` | `wave_psp_d` | close handler/filter/record hierarchy and root-helper parity or classify deliberate limits |
-| `math` | `wave_psp_e` | close remaining return-shape and naming details and explicitly classify safety divergences |
-| `operator` | `wave_psp_b` | close callable object helpers and naming parity for the public operator surface |
-| `os` | `wave_psp_d` | close environment/path/process entry surfaces and retire wrapper-first names where direct parity is feasible |
-| `pathlib` | `wave_psp_d` | close path class-family semantics and platform-specific gaps or classify them explicitly |
-| `platform` | `wave_psp_d` | close uname/platform helper parity and classify platform-probe limitations |
-| `random` | `wave_psp_b` | close seed/state/class-based APIs and remaining distributions or classify deliberate omissions |
-| `re` | `wave_psp_e` | close remaining top-level helpers, flags, and iterator/match parity |
-| `secrets` | `wave_psp_b` | close token/helper parity and classify crypto-host limitations explicitly |
-| `shutil` | `wave_psp_d` | close natural copy/move/archive/error names and broader filesystem helper parity |
-| `statistics` | `wave_psp_e` | close remaining distribution/class/helper gaps and classify numerical policy differences explicitly |
-| `string` | `wave_psp_c` | close `Template`/`Formatter` class parity and remaining constants/helper gaps |
-| `subprocess` | `wave_psp_d` | close process object/error/constant parity and classify host-limited lifecycle semantics explicitly |
-| `sys` | `wave_psp_d` | close interpreter metadata, streams, flags, and runtime config parity where host/runtime allows |
-| `tempfile` | `wave_psp_d` | close temporary object/class helpers and lifecycle semantics or classify host-limited behavior |
-| `test` | `wave_psp_e` | classify as Sifr-specific infrastructure and remove it from ordinary CPython module parity claims |
-| `textwrap` | `wave_psp_c` | close `TextWrapper` class and option parity for helper functions |
-| `time` | `wave_psp_d` | close clock families, structured returns, constants, and ns variants or classify host limits |
-| `timeit` | `wave_psp_d` | close `Timer` object-model parity and helper signatures |
-| `tomllib` | `wave_psp_c` | close structured returns and error export parity instead of string/error adapters |
-| `uuid` | `wave_psp_e` | close constructor overloads, public helpers, and newer UUID family coverage where approved |
-| `zipfile` | `wave_psp_d` | close archive class/error/constant/path parity or classify unsupported archive features explicitly |
+| `argparse` | `wave_psp_e2` | close object-model parity for `ArgumentParser`-style usage or classify the remaining class-heavy surfaces explicitly |
+| `base64` | `wave_psp_c2` | close remaining codec family and signature gaps compatible with Sifr bytes/string policy |
+| `bisect` | `wave_psp_b1` | close aliases and optional-argument parity including `lo`/`hi`/`key` where supported |
+| `bytes` | `wave_psp_a2` | classify as custom surface and align parity target to CPython `bytes` object-model semantics rather than a fake module parity claim |
+| `calendar` | `wave_psp_c2` | close constants, helper functions, and class-family gaps or classify them explicitly |
+| `collections` | `wave_psp_b1` | close constructor parity, object-model parity, and remaining public exports or classify gaps explicitly |
+| `configparser` | `wave_psp_c1` | close parser class/error/constant parity as far as architecture permits |
+| `csv` | `wave_psp_c1` | close reader/writer/dialect/constant parity and remove helper-only limitations |
+| `datetime` | `wave_psp_e1` | close remaining constructors, constants, return types, and aware/naive semantics where supported |
+| `difflib` | `wave_psp_c2` | close class and helper parity beyond the current narrow helper subset |
+| `env` | `wave_psp_d2` | classify as custom surface and fold parity accounting into `os`/environment behavior rather than standalone CPython-module parity |
+| `fnmatch` | `wave_psp_c2` | close helper and signature parity for the public pattern-matching surface |
+| `functools` | `wave_psp_b2` | close high-value functional parity and callable-wrapper behavior rather than leaving `reduce` as a token subset |
+| `glob` | `wave_psp_d1` | close recursive/pathname-expansion signatures and helper parity or classify host-limited gaps |
+| `graphlib` | `wave_psp_e2` | close `TopologicalSorter` object-model parity and supporting errors/helpers |
+| `gzip` | `wave_psp_d1` | close class/error/open-surface parity or classify unsupported archive semantics explicitly |
+| `hashlib` | `wave_psp_e1` | close remaining constructor/result/object semantics and classify crypto-host limits explicitly |
+| `heapq` | `wave_psp_b1` | close merge/max-heap/signature semantics and mutation/error behavior |
+| `html` | `wave_psp_c2` | close top-level parity and classify any remaining sibling-module boundaries explicitly |
+| `io` | `wave_psp_d1` | close stream class hierarchy, buffering objects, and open/handle semantics as far as Sifr's runtime supports |
+| `ipaddress` | `wave_psp_e2` | close public constructors, classes, and error types for IPv4/IPv6 parity |
+| `itertools` | `wave_psp_b2` | close remaining iterator families and lazy object-model parity instead of eager stand-ins |
+| `json` | `wave_psp_c1` | close natural `dump`/`load`/`dumps`/`loads`, structured returns, and encoder/decoder parity |
+| `logging` | `wave_psp_d2` | close handler/filter/record hierarchy and root-helper parity or classify deliberate limits |
+| `math` | `wave_psp_e1` | close remaining return-shape and naming details and explicitly classify safety divergences |
+| `operator` | `wave_psp_b2` | close callable object helpers and naming parity for the public operator surface |
+| `os` | `wave_psp_d2` | close environment/path/process entry surfaces and retire wrapper-first names where direct parity is feasible |
+| `pathlib` | `wave_psp_d1` | close path class-family semantics and platform-specific gaps or classify them explicitly |
+| `platform` | `wave_psp_d2` | close uname/platform helper parity and classify platform-probe limitations |
+| `random` | `wave_psp_b2` | close seed/state/class-based APIs and remaining distributions or classify deliberate omissions |
+| `re` | `wave_psp_e1` | close remaining top-level helpers, flags, and iterator/match parity |
+| `secrets` | `wave_psp_b2` | close token/helper parity and classify crypto-host limitations explicitly |
+| `shutil` | `wave_psp_d1` | close natural copy/move/archive/error names and broader filesystem helper parity |
+| `statistics` | `wave_psp_e1` | close remaining distribution/class/helper gaps and classify numerical policy differences explicitly |
+| `string` | `wave_psp_c2` | close `Template`/`Formatter` class parity and remaining constants/helper gaps |
+| `subprocess` | `wave_psp_d2` | close process object/error/constant parity and classify host-limited lifecycle semantics explicitly |
+| `sys` | `wave_psp_d2` | close interpreter metadata, streams, flags, and runtime config parity where host/runtime allows |
+| `tempfile` | `wave_psp_d1` | close temporary object/class helpers and lifecycle semantics or classify host-limited behavior |
+| `test` | `wave_psp_e2` | classify as Sifr-specific infrastructure and remove it from ordinary CPython module parity claims |
+| `textwrap` | `wave_psp_c2` | close `TextWrapper` class and option parity for helper functions |
+| `time` | `wave_psp_d2` | close clock families, structured returns, constants, and ns variants or classify host limits |
+| `timeit` | `wave_psp_d2` | close `Timer` object-model parity and helper signatures |
+| `tomllib` | `wave_psp_c1` | close structured returns and error export parity instead of string/error adapters |
+| `uuid` | `wave_psp_e2` | close constructor overloads, public helpers, and newer UUID family coverage where approved |
+| `zipfile` | `wave_psp_d1` | close archive class/error/constant/path parity or classify unsupported archive features explicitly |
 
 ## Current Priority Tiers From The Audit
 
@@ -854,12 +953,12 @@ This phase must not weaken Sifr's contract.
 
 ### Validation planning goals
 
-- `milestone_psp_1` (Builtin and Signature-Lowering Architecture): validation goals cover: builtin constructor closure, builtin helper call-shape closure, keyword/default/variadic lowering stability, parity-safe callable lowering for downstream stdlib work, and a CPython-derived core-type test matrix for the affected surfaces. Include negative-path goals that catch regressions against these guarantees.
-- `milestone_psp_2` (Core Container and String Object-Model Closure): validation goals cover: constructor/method coherence for `list`, `dict`, `set`, `tuple`, and `str`; major optional-argument forms; safe adaptation where CPython would raise; and ported or adapted coverage from the relevant CPython core-type tests. Include negative-path goals that catch regressions against these guarantees.
-- `milestone_psp_3` (Collections, Iterator, and Functional Surface Closure): validation goals cover: Python-shaped parity for `collections`, `itertools`, `functools`, `operator`, `bisect`, `heapq`, `random`, and `secrets`; removal of workaround-first entry surfaces; iterator/object-model parity where supported; and a wave-level CPython test harvest for collections/iterator behavior. Include negative-path goals that catch regressions against these guarantees.
-- `milestone_psp_4` (Structured Data, Text, and Parsing Surface Closure): validation goals cover: structured return-shape parity, class exports, constant exports, and call-shape closure for `json`, `tomllib`, `csv`, `configparser`, `string`, `textwrap`, `base64`, `html`, `difflib`, and `calendar`; plus reuse of upstream CPython data/fixture corpora where practical. Include negative-path goals that catch regressions against these guarantees.
-- `milestone_psp_5` (Runtime, Filesystem, Process, and Platform Closure): validation goals cover: object-model parity, constants/errors, host-limited classification, and Python-shaped entry names for `io`, `os`, `sys`, `pathlib`, `glob`, `shutil`, `tempfile`, `subprocess`, `logging`, `platform`, `time`, `timeit`, `gzip`, and `zipfile`; plus explicit CPython test adaptation for portable versus host-bound cases. Include negative-path goals that catch regressions against these guarantees.
-- `milestone_psp_6` (Remaining Existing-Module Closure): validation goals cover: cleanup closure for the remaining shipped modules and the strong-but-incomplete modules; explicit closure or waiver for all remaining surface gaps; and final CPython test-family harvest for those modules. Include negative-path goals that catch regressions against these guarantees.
+- `milestone_psp_1` (Builtin and Signature-Lowering Architecture): validation goals cover: builtin constructor closure, builtin helper call-shape closure, keyword/default/variadic lowering stability, parity-safe callable lowering for downstream stdlib work, and a CPython-derived core-type test matrix for `wave_psp_a1`. Include negative-path goals that catch regressions against these guarantees.
+- `milestone_psp_2` (Core Container and String Object-Model Closure): validation goals cover: constructor/method coherence for `list`, `dict`, `set`, `tuple`, and `str`; major optional-argument forms; safe adaptation where CPython would raise; and ported or adapted coverage from the relevant CPython core-type tests for `wave_psp_a2`. Include negative-path goals that catch regressions against these guarantees.
+- `milestone_psp_3` (Collections, Iterator, and Functional Surface Closure): validation goals cover: Python-shaped parity for `collections`, `itertools`, `functools`, `operator`, `bisect`, `heapq`, `random`, and `secrets`; removal of workaround-first entry surfaces; iterator/object-model parity where supported; and a sub-wave-level CPython test harvest for `wave_psp_b1` and `wave_psp_b2`. Include negative-path goals that catch regressions against these guarantees.
+- `milestone_psp_4` (Structured Data, Text, and Parsing Surface Closure): validation goals cover: structured return-shape parity, class exports, constant exports, and call-shape closure for `json`, `tomllib`, `csv`, `configparser`, `string`, `textwrap`, `base64`, `html`, `difflib`, and `calendar`; plus reuse of upstream CPython data/fixture corpora where practical across `wave_psp_c1` and `wave_psp_c2`. Include negative-path goals that catch regressions against these guarantees.
+- `milestone_psp_5` (Runtime, Filesystem, Process, and Platform Closure): validation goals cover: object-model parity, constants/errors, host-limited classification, and Python-shaped entry names for `io`, `os`, `sys`, `pathlib`, `glob`, `shutil`, `tempfile`, `subprocess`, `logging`, `platform`, `time`, `timeit`, `gzip`, and `zipfile`; plus explicit CPython test adaptation for portable versus host-bound cases across `wave_psp_d1` and `wave_psp_d2`. Include negative-path goals that catch regressions against these guarantees.
+- `milestone_psp_6` (Remaining Existing-Module Closure): validation goals cover: cleanup closure for the remaining shipped modules and the strong-but-incomplete modules; explicit closure or waiver for all remaining surface gaps; and final CPython test-family harvest for `wave_psp_e1` and `wave_psp_e2`. Include negative-path goals that catch regressions against these guarantees.
 - `milestone_psp_7` (Parity Governance and Exit Closure): validation goals cover: one canonical parity inventory for builtins, object models, and all existing modules; explicit classification of every non-closed surface; documentation alignment with actual support; and a canonical adopt/adapt/waive ledger for all reviewed CPython test families. Include negative-path goals that catch regressions against these guarantees.
 - Exit-gate evidence explicitly demonstrates: builtins and all existing shipped modules have either maximal parity closure or an explicit, reviewable divergence classification.
 
@@ -898,7 +997,7 @@ The phase must define and keep current:
 - canonical builtin parity inventory
 - canonical core object-model parity inventory
 - per-module closure inventory for every shipped `lib/sifr` module
-- per-wave CPython test inventory with adopt/adapt/waive classification
+- per-sub-wave CPython test inventory with adopt/adapt/waive classification
 - traceability matrix from CPython test families to local Sifr regression locations
 - explicit waiver index for every `intentional-diff`, `unsupported`, and `host-limited` surface
 - milestone demos covering major user-visible parity expansions
@@ -928,13 +1027,17 @@ Python source parity is production-governed for builtins and all existing shippe
 
 ## Recommended First Execution Order
 
-1. builtin and signature-lowering architecture
-2. core container and string object-model closure
-3. collections, iterator, and functional surface closure
-4. structured data, text, and parsing surface closure
-5. runtime, filesystem, process, and platform closure
-6. remaining existing-module closure
-7. parity governance and exit closure
+1. `wave_psp_a1` builtin constructors and callable surface
+2. `wave_psp_a2` core object models and builtin semantics
+3. `wave_psp_b1` collections objects and ordered helpers
+4. `wave_psp_b2` iterators, functional helpers, and randomness
+5. `wave_psp_c1` structured parsing and serialization
+6. `wave_psp_c2` text, pattern, and formatting modules
+7. `wave_psp_d1` filesystem, paths, and archive surfaces
+8. `wave_psp_d2` process, runtime, and platform surfaces
+9. `wave_psp_e1` strong-but-incomplete core modules
+10. `wave_psp_e2` class-heavy and custom cleanup
+11. `milestone_psp_7` parity governance and exit closure
 
 ## Why This Is Better Than Continuing Corpus Discovery
 
