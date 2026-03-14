@@ -22,5 +22,11 @@ class RandomizedSet:
         return choice(self.list)
 
 def main():
-    print("no test cases")
-
+    randomizedSet = RandomizedSet()
+    assert randomizedSet.insert(1) == True
+    assert randomizedSet.remove(2) == False
+    assert randomizedSet.insert(2) == True
+    assert randomizedSet.getRandom() == 1
+    assert randomizedSet.remove(1) == True
+    assert randomizedSet.insert(2) == False
+    assert randomizedSet.getRandom() == 2
