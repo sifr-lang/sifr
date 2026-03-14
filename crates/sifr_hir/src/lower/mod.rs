@@ -15,6 +15,7 @@ mod diagnostics;
 mod expressions;
 mod guarded_index;
 mod imports;
+mod mutating_methods;
 mod numeric_sentinels;
 #[cfg(test)]
 mod own_mut_param_tests;

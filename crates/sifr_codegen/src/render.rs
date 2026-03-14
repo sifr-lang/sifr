@@ -573,6 +573,9 @@ impl Renderer {
             }
             RustParam::SelfValue => "self".to_string(),
             RustParam::Named { name, ty } => format!("{name}: {}", Self::render_type_string(ty)),
+            RustParam::NamedMut { name, ty } => {
+                format!("mut {name}: {}", Self::render_type_string(ty))
+            }
         }
     }
 
@@ -922,7 +925,7 @@ impl Renderer {
     fn render_closure_param_string(param: &RustParam) -> String {
         match param {
             RustParam::SelfParam { .. } | RustParam::SelfValue => "self".to_string(),
-            RustParam::Named { name, .. } => name.clone(),
+            RustParam::Named { name, .. } | RustParam::NamedMut { name, .. } => name.clone(),
         }
     }
 

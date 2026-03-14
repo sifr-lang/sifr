@@ -299,6 +299,7 @@ pub enum RustParam {
     SelfParam { mutable: bool },
     SelfValue,
     Named { name: String, ty: RustType },
+    NamedMut { name: String, ty: RustType },
 }
 
 #[derive(Debug, Clone, PartialEq)]

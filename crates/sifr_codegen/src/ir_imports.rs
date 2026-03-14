@@ -77,7 +77,7 @@ fn collect_item(item: &RustItem, needs: &mut IrImportNeeds) {
             params, ret, body, ..
         } => {
             for param in params {
-                if let RustParam::Named { ty, .. } = param {
+                if let RustParam::Named { ty, .. } | RustParam::NamedMut { ty, .. } = param {
                     collect_type(ty, needs);
                 }
             }
@@ -90,7 +90,7 @@ fn collect_item(item: &RustItem, needs: &mut IrImportNeeds) {
         }
         RustItem::TraitMethodSig { params, ret, .. } => {
             for param in params {
-                if let RustParam::Named { ty, .. } = param {
+                if let RustParam::Named { ty, .. } | RustParam::NamedMut { ty, .. } = param {
                     collect_type(ty, needs);
                 }
             }
@@ -207,7 +207,9 @@ fn collect_stmt(stmt: &RustStmt, needs: &mut IrImportNeeds) {
         } => {
             for param in params {
                 match param {
-                    RustParam::Named { ty, .. } => collect_type(ty, needs),
+                    RustParam::Named { ty, .. } | RustParam::NamedMut { ty, .. } => {
+                        collect_type(ty, needs);
+                    }
                     RustParam::SelfParam { .. } | RustParam::SelfValue => {}
                 }
             }

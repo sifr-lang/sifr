@@ -2,7 +2,7 @@ class Config:
     numbers: list[int] = [1, 2]
     settings: dict[str, int] = {"ok": 1}
 
-def with_default_list(own values: list[int] = [1]) -> list[int]:
+def with_default_list(own mut values: list[int] = [1]) -> list[int]:
     values.append(5)
     return values
 

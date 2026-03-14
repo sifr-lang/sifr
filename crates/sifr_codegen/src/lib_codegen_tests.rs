@@ -224,6 +224,20 @@ fn test_generate_rust_recursive_generic_node_preserves_instantiated_type_argumen
 }
 
 #[test]
+fn test_generate_rust_own_mut_param_emits_mut_binding_without_shadow() {
+    let rust_code = generate_rust_from_source(
+        "def replace_elements(own mut arr: list[int]) -> list[int]:\n    arr[0] = 8\n    return arr\n\ndef touch(mut arr: list[int]) -> int:\n    arr[0] = 7\n    return len(arr)\n",
+    );
+
+    assert!(rust_code.contains("fn replace_elements(mut arr: Vec<i64>) -> Vec<i64>"));
+    assert!(
+        !rust_code.contains("let mut arr = arr;"),
+        "owned mutable params should lower directly to mutable Rust params"
+    );
+    assert!(rust_code.contains("fn touch(arr: &mut Vec<i64>) -> i64"));
+}
+
+#[test]
 fn test_println_fstring_inlined() {
     // print(f"hello {name}") should emit println!("hello {}", name) not println!("{}", format!(...))
     let module = HirModule {

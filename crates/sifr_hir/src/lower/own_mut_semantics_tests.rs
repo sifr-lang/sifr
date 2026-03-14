@@ -63,6 +63,18 @@ fn test_own_parameter_cannot_be_mutated_without_mut() {
 }
 
 #[test]
+fn test_own_parameter_mutating_method_requires_mut() {
+    let errors = lower_error_messages(
+        "def owned_immutable_append(own items: list[int] = [1]) -> list[int]:\n    items.append(5)\n    return items\n",
+    );
+
+    assert!(errors.iter().any(|message| {
+        message
+            == "cannot mutate through immutable parameter `items`: add `mut` to the parameter declaration"
+    }));
+}
+
+#[test]
 fn test_borrowed_parameter_cannot_be_reassigned_without_mut() {
     let errors = lower_error_messages(
         "def borrowed_reassign(items: list[int]) -> int:\n    items = [1, 2, 3]\n    return len(items)\n",
