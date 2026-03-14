@@ -55,6 +55,10 @@ impl NarrowingCondition {
 ///
 /// Returns the narrowed type.
 pub fn narrow_type(ty: &Type, condition: &NarrowingCondition, is_true: bool) -> Type {
+    if let Type::Alias { body, .. } = ty {
+        return narrow_type(body, condition, is_true);
+    }
+
     match condition {
         NarrowingCondition::Truthiness(_) => {
             if is_true {
@@ -315,5 +319,16 @@ mod tests {
         // False branch: Unknown minus Int is still Unknown
         let false_result = narrow_type(&ty, &cond, false);
         assert_eq!(false_result, Type::Unknown);
+    }
+
+    #[test]
+    fn test_or_false_branch_applies_each_inner_negation() {
+        let ty = make_union(vec![Type::Str, Type::None]);
+        let cond = NarrowingCondition::Or(vec![
+            NarrowingCondition::Not(Box::new(NarrowingCondition::Truthiness("x".to_string()))),
+            NarrowingCondition::IsNone("x".to_string()),
+        ]);
+        let result = narrow_type(&ty, &cond, false);
+        assert_eq!(result, Type::Str);
     }
 }

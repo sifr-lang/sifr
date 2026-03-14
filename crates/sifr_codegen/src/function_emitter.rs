@@ -1,7 +1,7 @@
 use crate::helpers::collect_reassigned_vars;
 use crate::{
-    body_contains_yield, collect_mutated_vars_with_sigs, type_contains_typevar, RustEmitter,
-    RustExpr, RustItem, RustLiteral, RustParam, RustStmt, RustType, RustTypeParam, Visibility,
+    body_contains_yield, collect_mutated_vars_with_sigs, RustEmitter, RustExpr, RustItem,
+    RustLiteral, RustParam, RustStmt, RustType, RustTypeParam, Visibility,
 };
 use sifr_hir::{HirExpr, HirFunction, HirParam, HirStmt};
 use sifr_type_system::{OwnershipKind, ParamConvention, Type};
@@ -92,8 +92,8 @@ impl RustEmitter {
             .collect()
     }
 
-    fn lower_function_param_type(ty: &Type, convention: ParamConvention) -> RustType {
-        let base = crate::sifr_type_to_rust_type(ty);
+    fn lower_function_param_type(&self, ty: &Type, convention: ParamConvention) -> RustType {
+        let base = self.rust_ir_type_with_generics(ty);
         match convention {
             ParamConvention::Borrow if ty.ownership() != sifr_type_system::OwnershipKind::Copy => {
                 RustType::Ref {
@@ -120,7 +120,7 @@ impl RustEmitter {
     ) -> Option<RustType> {
         if is_generator {
             let yield_ty = if let Type::List(elem) = &func.return_type {
-                crate::sifr_type_to_rust_type(elem)
+                self.rust_ir_type_with_generics(elem)
             } else {
                 RustType::I64
             };
@@ -136,30 +136,7 @@ impl RustEmitter {
         if func.return_type == Type::None {
             return None;
         }
-        if let Type::Class {
-            name: ref ret_name, ..
-        } = func.return_type
-        {
-            if self.generic_classes.contains(ret_name) && !func.type_params.is_empty() {
-                let type_params_in_ret = func
-                    .type_params
-                    .iter()
-                    .filter(|tp| type_contains_typevar(&func.return_type, tp))
-                    .collect::<Vec<_>>();
-                if !type_params_in_ret.is_empty() {
-                    return Some(RustType::Named(format!(
-                        "{}<{}>",
-                        ret_name,
-                        type_params_in_ret
-                            .iter()
-                            .map(|s| s.as_str())
-                            .collect::<Vec<_>>()
-                            .join(", ")
-                    )));
-                }
-            }
-        }
-        Some(crate::sifr_type_to_rust_type(&func.return_type))
+        Some(self.rust_ir_type_with_generics(&func.return_type))
     }
 
     fn lower_stmt_expr_strict_for_function(&mut self, expr: &HirExpr, context: &str) -> RustExpr {
@@ -225,7 +202,7 @@ impl RustEmitter {
         mutable_param_shadows: &[(String, RustExpr)],
     ) -> Vec<RustStmt> {
         let yield_ty = if let Type::List(elem) = &func.return_type {
-            crate::sifr_type_to_rust_type(elem)
+            self.rust_ir_type_with_generics(elem)
         } else {
             RustType::I64
         };
@@ -526,7 +503,7 @@ impl RustEmitter {
             .iter()
             .map(|param| RustParam::Named {
                 name: param.name.clone(),
-                ty: Self::lower_function_param_type(&param.ty, param.convention),
+                ty: self.lower_function_param_type(&param.ty, param.convention),
             })
             .collect::<Vec<_>>();
 

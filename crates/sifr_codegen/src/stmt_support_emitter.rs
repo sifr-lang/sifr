@@ -78,12 +78,18 @@ fn should_omit_local_type_annotation(ty: &Type, value: &HirExpr) -> bool {
         {
             true
         }
-        (Type::Alias(alias_name, inner), HirExpr::Call { func, args, .. })
-            if func == alias_name
-                && args.is_empty()
-                && alias_name.starts_with("__compat_defaultdict_") =>
+        (
+            Type::Alias {
+                name: alias_name,
+                body,
+                ..
+            },
+            HirExpr::Call { func, args, .. },
+        ) if func == alias_name
+            && args.is_empty()
+            && alias_name.starts_with("__compat_defaultdict_") =>
         {
-            let Type::Dict(key_ty, value_ty) = inner.resolve_alias() else {
+            let Type::Dict(key_ty, value_ty) = body.resolve_alias() else {
                 return false;
             };
             matches!(key_ty.as_ref(), Type::Any | Type::Unknown)
@@ -95,7 +101,10 @@ fn should_omit_local_type_annotation(ty: &Type, value: &HirExpr) -> bool {
 }
 
 fn should_force_mutable_binding(ty: &Type) -> bool {
-    matches!(ty, Type::Alias(alias_name, _) if alias_name.starts_with("__compat_defaultdict_"))
+    matches!(
+        ty,
+        Type::Alias { name: alias_name, .. } if alias_name.starts_with("__compat_defaultdict_")
+    )
 }
 
 impl RustEmitter {
@@ -150,7 +159,7 @@ impl RustEmitter {
             | Type::Unknown
             | Type::Intersection(_)
             | Type::Never => true,
-            Type::Alias(_, inner) => Self::uses_debug_display_format_for_ir(inner),
+            Type::Alias { body, .. } => Self::uses_debug_display_format_for_ir(body),
         }
     }
 
@@ -237,7 +246,7 @@ impl RustEmitter {
 
     fn resolve_alias_type_for_loop_iter(ty: &Type) -> &Type {
         match ty {
-            Type::Alias(_, inner) => Self::resolve_alias_type_for_loop_iter(inner),
+            Type::Alias { body, .. } => Self::resolve_alias_type_for_loop_iter(body),
             _ => ty,
         }
     }
@@ -251,7 +260,7 @@ impl RustEmitter {
 
     fn negative_range_step_magnitude(step_expr: &HirExpr) -> Option<i64> {
         match step_expr {
-            HirExpr::IntLiteral(value) if *value < 0 => Some(value.unsigned_abs() as i64),
+            HirExpr::IntLiteral(value) if *value < 0 => value.checked_abs(),
             HirExpr::UnaryOp { op, operand, .. } if op == "-" => match operand.as_ref() {
                 HirExpr::IntLiteral(value) if *value > 0 => Some(*value),
                 _ => None,
@@ -2311,6 +2320,15 @@ impl RustEmitter {
             return Ok(Some(lowered));
         }
         if let HirExpr::UnaryOp { op, operand, .. } = expr {
+            if op == "not" {
+                if let Some(option_var) = crate::helpers::detect_option_truthiness(operand) {
+                    return Ok(Some(crate::RustExpr::MethodCall {
+                        receiver: Box::new(crate::RustExpr::Ident(option_var)),
+                        method: "is_none".to_string(),
+                        args: vec![],
+                    }));
+                }
+            }
             let Some(lowered_operand) = self.lower_stmt_expr_for_ir(operand)? else {
                 return Ok(None);
             };
@@ -3769,6 +3787,13 @@ impl RustEmitter {
                 None
             };
 
+            let should_bypass_simple_lowering =
+                matches!(stmt, HirStmt::Let { ty, .. } if self.type_contains_generic_class(ty));
+            let maybe_simple_lowered = if should_bypass_simple_lowering {
+                None
+            } else {
+                maybe_simple_lowered
+            };
             let (lowered_stmts, skip_rewrite) = if let Some(lowered_stmts) = maybe_simple_lowered {
                 (lowered_stmts, false)
             } else if let HirStmt::TupleUnpack { targets, value } = stmt {
@@ -3823,7 +3848,7 @@ impl RustEmitter {
                         ty: if is_generic_class || should_omit_local_type_annotation(ty, value) {
                             None
                         } else {
-                            Some(crate::sifr_type_to_rust_type(ty))
+                            Some(self.rust_ir_type_with_generics(ty))
                         },
                         value: lowered_value,
                     }],
@@ -4261,6 +4286,20 @@ impl RustEmitter {
         &mut self,
         condition: &HirExpr,
     ) -> Result<Option<crate::RustExpr>, crate::CodegenError> {
+        if let Some(option_var) = crate::helpers::detect_option_truthiness(condition) {
+            return Ok(Some(crate::RustExpr::MethodCall {
+                receiver: Box::new(crate::RustExpr::Ident(option_var)),
+                method: "is_some".to_string(),
+                args: vec![],
+            }));
+        }
+        if let Some(option_var) = crate::helpers::detect_not_option_truthiness(condition) {
+            return Ok(Some(crate::RustExpr::MethodCall {
+                receiver: Box::new(crate::RustExpr::Ident(option_var)),
+                method: "is_none".to_string(),
+                args: vec![],
+            }));
+        }
         if let Some(lowered) = Self::try_lower_collection_truthiness_condition_for_ir(condition) {
             return Ok(Some(lowered));
         }
@@ -4276,6 +4315,21 @@ impl RustEmitter {
             }
         }
         self.lower_rendered_expr_for_ir(condition)
+    }
+
+    fn option_binding_value_expr_for_ir(&self, option_var: &str) -> crate::RustExpr {
+        let base = crate::RustExpr::Ident(option_var.to_string());
+        if self.borrowed_params.contains(option_var)
+            || self.mut_borrowed_params.contains(option_var)
+        {
+            crate::RustExpr::MethodCall {
+                receiver: Box::new(base),
+                method: "as_ref".to_string(),
+                args: vec![],
+            }
+        } else {
+            base
+        }
     }
 
     fn try_lower_collection_truthiness_condition_for_ir(
@@ -4814,6 +4868,47 @@ impl RustEmitter {
         elif_clauses: &[(HirExpr, Vec<HirStmt>)],
         else_body: Option<&[HirStmt]>,
     ) -> Result<Option<RustStmt>, crate::CodegenError> {
+        if elif_clauses.is_empty()
+            && else_body.is_none()
+            && queries::block_control_flow_effect(then_body).always_exits()
+        {
+            let Some(lowered_then_body) = self.try_lower_stmt_block_for_ir(then_body)? else {
+                return Ok(None);
+            };
+            if let Some(option_var) = crate::helpers::detect_is_none_var(condition)
+                .or_else(|| crate::helpers::detect_not_option_truthiness(condition))
+            {
+                return Ok(Some(RustStmt::LetElse {
+                    pattern: format!("Some({option_var})"),
+                    value: self.option_binding_value_expr_for_ir(&option_var),
+                    else_body: lowered_then_body,
+                }));
+            }
+            if let Some(option_vars) =
+                crate::helpers::detect_or_not_option_truthiness_vars(condition)
+            {
+                let pattern = format!(
+                    "({})",
+                    option_vars
+                        .iter()
+                        .map(|option_var| format!("Some({option_var})"))
+                        .collect::<Vec<_>>()
+                        .join(", ")
+                );
+                let value = crate::RustExpr::Tuple(
+                    option_vars
+                        .iter()
+                        .map(|option_var| self.option_binding_value_expr_for_ir(option_var))
+                        .collect(),
+                );
+                return Ok(Some(RustStmt::LetElse {
+                    pattern,
+                    value,
+                    else_body: lowered_then_body,
+                }));
+            }
+        }
+
         let mut nested_else = if let Some(else_body) = else_body {
             let Some(lowered_else) = self.try_lower_stmt_block_for_ir(else_body)? else {
                 return Ok(None);
@@ -4848,7 +4943,7 @@ impl RustEmitter {
         if let Some(option_var) = crate::helpers::detect_is_not_none_var(condition) {
             return Ok(Some(RustStmt::IfLet {
                 pattern: format!("Some({option_var})"),
-                expr: crate::RustExpr::Ident(option_var),
+                expr: self.option_binding_value_expr_for_ir(&option_var),
                 then_body: lowered_then_body,
                 else_body: nested_else,
             }));
@@ -4859,7 +4954,7 @@ impl RustEmitter {
             for option_var in option_vars.iter().rev() {
                 chain_then = vec![RustStmt::IfLet {
                     pattern: format!("Some({option_var})"),
-                    expr: crate::RustExpr::Ident(option_var.clone()),
+                    expr: self.option_binding_value_expr_for_ir(option_var),
                     then_body: chain_then,
                     else_body: None,
                 }];
@@ -4873,6 +4968,15 @@ impl RustEmitter {
             return Ok(Some(chain_root));
         }
 
+        if let Some(option_var) = crate::helpers::detect_option_truthiness(condition) {
+            return Ok(Some(RustStmt::IfLet {
+                pattern: format!("Some({option_var})"),
+                expr: self.option_binding_value_expr_for_ir(&option_var),
+                then_body: lowered_then_body,
+                else_body: nested_else,
+            }));
+        }
+
         if let Some(option_var) = crate::helpers::detect_is_none_var(condition) {
             let Some(lowered_cond) = self.lower_condition_expr_for_ir(condition)? else {
                 return Ok(None);
@@ -4880,7 +4984,7 @@ impl RustEmitter {
             let lowered_else = nested_else.map(|else_body| {
                 vec![RustStmt::IfLet {
                     pattern: format!("Some({option_var})"),
-                    expr: crate::RustExpr::Ident(option_var.clone()),
+                    expr: self.option_binding_value_expr_for_ir(&option_var),
                     then_body: else_body,
                     else_body: None,
                 }]
@@ -4916,7 +5020,7 @@ impl RustEmitter {
             self.push_captured_stmt(&crate::RustStmt::Let {
                 mutable: true,
                 name: name.clone(),
-                ty: Some(crate::sifr_type_to_rust_type(ty)),
+                ty: Some(self.rust_ir_type_with_generics(ty)),
                 value: lowered_value,
             });
             return;

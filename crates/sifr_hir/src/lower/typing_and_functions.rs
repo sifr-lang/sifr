@@ -459,6 +459,14 @@ pub(super) fn resolve_annotation_expr(expr: &Expr, ctx: &mut LowerCtx) -> Type {
                                 .collect(),
                             single => vec![resolve_annotation_expr(single, ctx)],
                         };
+                        if alias_params.len() != type_args.len() {
+                            ctx.error(format!(
+                                "generic type alias '{base_name}' expects {} type argument(s), got {}",
+                                alias_params.len(),
+                                type_args.len()
+                            ));
+                            return Type::Any;
+                        }
                         let mut bindings = HashMap::new();
                         for (i, tp) in alias_params.iter().enumerate() {
                             if let Some(arg) = type_args.get(i) {

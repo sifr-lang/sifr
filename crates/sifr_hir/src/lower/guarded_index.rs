@@ -23,11 +23,8 @@ pub(super) fn guarded_sequence_index_result_type(
     let Expr::Name(matrix_name) = outer_sub.value.as_ref() else {
         return None;
     };
-    let Some((outer_anchor, outer_extra_len, inner_anchor, inner_extra_len)) =
-        ctx.matrix_sequence_fact(matrix_name.id.as_str())
-    else {
-        return None;
-    };
+    let (outer_anchor, outer_extra_len, inner_anchor, inner_extra_len) =
+        ctx.matrix_sequence_fact(matrix_name.id.as_str())?;
     if !index_expr_is_safe_for_anchor(
         outer_sub.slice.as_ref(),
         &outer_anchor,

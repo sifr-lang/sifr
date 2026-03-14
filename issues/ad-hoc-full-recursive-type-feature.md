@@ -1,6 +1,6 @@
 # Ad Hoc Phase: Full Recursive Type Feature
 
-Status: proposed on 2026-03-13
+Status: active on 2026-03-13
 
 ## Purpose
 
@@ -311,6 +311,80 @@ Part completion is not allowed to introduce vague fallback diagnostics such as g
 | AC-7 | `TreeNode`-style LeetCode cases move past unknown-type and attribute-expression failures without special casing |
 | AC-8 | emitted Rust uses finite well-founded recursive representations |
 | AC-9 | full local validation passes with no regressions in existing class/union/generic behavior |
+
+## Execution Log
+
+- `2026-03-13`: part 1 `recursive_symbol_predeclaration_and_alias_order_resolution` completed local validation.
+  - Execution report: `issues/ad-hoc-full-recursive-type-feature-part1-execution.md`
+  - PR: `#1122`
+  - Demo: `demos/ad_hoc_recursive_type_part1_demo.sifr`
+  - Added regression coverage:
+    - `crates/sifr/tests/e2e/pass/recursive_type_alias_symbol_predeclaration.sifr`
+    - `crates/sifr/tests/e2e/fail/type_alias_missing_dependency.sifr`
+    - `crates/sifr_hir/src/lower/type_alias_tests.rs`
+  - Full local validation:
+    - `scripts/run_all_tests.sh --profile quick`
+    - `scripts/run_all_tests.sh`
+- `2026-03-13`: part 2 `recursive_well_formedness_validation` completed local validation.
+  - Execution report: `issues/ad-hoc-full-recursive-type-feature-part2-execution.md`
+  - PR: `#1123`
+  - Demo: `demos/ad_hoc_recursive_type_part2_demo.sifr`
+  - Added regression coverage:
+    - `crates/sifr/tests/e2e/pass/recursive_type_alias_well_formed.sifr`
+    - `crates/sifr/tests/e2e/fail/recursive_type_alias_missing_boundary.sifr`
+    - `crates/sifr_hir/src/lower/type_alias_tests.rs`
+  - Full local validation:
+    - `scripts/run_all_tests.sh --profile quick`
+    - `scripts/run_all_tests.sh`
+- `2026-03-13`: part 3 `recursive_type_representation_in_the_type_system` completed local validation.
+  - Execution report: `issues/ad-hoc-full-recursive-type-feature-part3-execution.md`
+  - PR: `#1124`
+  - Demo: `demos/ad_hoc_recursive_type_part3_demo.sifr`
+  - Added regression coverage:
+    - `crates/sifr/tests/e2e/pass/recursive_generic_type_alias_representation.sifr`
+    - `crates/sifr/tests/e2e/fail/recursive_generic_type_alias_wrong_arity.sifr`
+    - `crates/sifr_hir/src/lower/type_alias_tests.rs`
+  - Full local validation:
+    - `scripts/run_all_tests.sh --profile quick`
+    - `scripts/run_all_tests.sh`
+- `2026-03-13`: part 4 `recursive_hir_surface_and_attribute_access` completed local validation.
+  - Execution report: `issues/ad-hoc-full-recursive-type-feature-part4-execution.md`
+  - PR: `#1125`
+  - Demo: `demos/ad_hoc_recursive_type_part4_demo.sifr`
+  - Added regression coverage:
+    - `crates/sifr_hir/src/lower/expressions.rs`
+    - `crates/sifr_type_system/src/narrow.rs`
+    - `crates/sifr/tests/e2e/fail/recursive_tree_attribute_without_narrowing.sifr`
+  - Full local validation:
+    - `scripts/run_all_tests.sh --profile quick`
+    - `scripts/run_all_tests.sh`
+- `2026-03-13`: part 5 `recursive_rust_lowering_and_codegen` completed local validation.
+  - Execution report: `issues/ad-hoc-full-recursive-type-feature-part5-execution.md`
+  - PR: `#1126`
+  - Demo: `demos/ad_hoc_recursive_type_part5_demo.sifr`
+  - Added regression coverage:
+    - `crates/sifr_codegen/src/lib_codegen_tests.rs`
+    - `crates/sifr/tests/e2e/pass/recursive_tree_traversal_runtime.sifr`
+  - Full local validation:
+    - `scripts/run_all_tests.sh --profile quick`
+    - `scripts/run_all_tests.sh`
+- `2026-03-13`: part 6 `recursive_corpus_closure_tests_and_demo` completed local validation.
+  - Execution report: `issues/ad-hoc-full-recursive-type-feature-part6-execution.md`
+  - PR: `#1127`
+  - Demo: `demos/ad_hoc_recursive_type_part6_demo.sifr`
+  - Added regression coverage:
+    - `crates/sifr_codegen/src/lib_codegen_tests.rs`
+    - `crates/sifr_hir/src/lower/type_alias_tests.rs`
+    - `crates/sifr/tests/e2e/pass/recursive_mutual_classes_runtime.sifr`
+    - `crates/sifr/tests/e2e/pass/recursive_generic_node_runtime.sifr`
+    - `crates/sifr/tests/e2e/fail/recursive_mutual_type_alias_missing_boundary.sifr`
+  - Full local validation:
+    - `scripts/run_all_tests.sh --profile quick`
+    - `scripts/run_all_tests.sh`
+  - External review follow-up:
+    - review pass 1 found no actionable issues
+    - production-grade review pass 2 was invalidated against stale local `main`; merged `origin/main` already contains the claimed fixes and fixtures
+    - production-grade re-review pass 4 on merged `origin/main` confirmed the phase is ready for production with no further in-scope changes required
 
 ## Implementation Parts and PR Breakdown
 

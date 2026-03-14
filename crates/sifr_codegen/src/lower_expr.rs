@@ -707,13 +707,18 @@ fn try_lower_simple_constructor_call_expr(class_name: &str, args: &[HirExpr]) ->
 }
 
 fn try_lower_simple_defaultdict_index_expr(object: &HirExpr, index: &HirExpr) -> Option<RustExpr> {
-    let Type::Alias(alias_name, inner) = object.ty() else {
+    let Type::Alias {
+        name: alias_name,
+        body,
+        ..
+    } = object.ty()
+    else {
         return None;
     };
     if !alias_name.starts_with("__compat_defaultdict_") {
         return None;
     }
-    let Type::Dict(key_ty, value_ty) = inner.resolve_alias() else {
+    let Type::Dict(key_ty, value_ty) = body.resolve_alias() else {
         return None;
     };
     let lowered_object = try_lower_leaf_or_name_expr(object)?;
@@ -1195,7 +1200,7 @@ fn is_string_like_simple(ty: &Type) -> bool {
 
 fn resolve_alias_type(ty: &Type) -> &Type {
     match ty {
-        Type::Alias(_, inner) => resolve_alias_type(inner),
+        Type::Alias { body, .. } => resolve_alias_type(body),
         _ => ty,
     }
 }
@@ -1430,7 +1435,7 @@ fn try_lower_simple_compare_operand_expr(expr: &HirExpr) -> Option<RustExpr> {
 
 fn normalize_simple_compare_scalar_type(ty: &Type) -> Option<&'static str> {
     match ty {
-        Type::Alias(_, inner) => normalize_simple_compare_scalar_type(inner),
+        Type::Alias { body, .. } => normalize_simple_compare_scalar_type(body),
         Type::Int | Type::LiteralInt(_) => Some("int"),
         Type::Float => Some("float"),
         Type::Bool | Type::LiteralBool(_) => Some("bool"),
@@ -1441,7 +1446,7 @@ fn normalize_simple_compare_scalar_type(ty: &Type) -> Option<&'static str> {
 
 fn normalize_simple_numeric_scalar_type(ty: &Type) -> Option<&'static str> {
     match ty {
-        Type::Alias(_, inner) => normalize_simple_numeric_scalar_type(inner),
+        Type::Alias { body, .. } => normalize_simple_numeric_scalar_type(body),
         Type::Int | Type::LiteralInt(_) => Some("int"),
         Type::Float => Some("float"),
         _ => None,
@@ -1518,12 +1523,12 @@ mod tests {
         .expect("float name lowered");
         let alias_int_name_expr = try_lower_leaf_expr(&HirExpr::Name {
             name: "index".to_string(),
-            ty: Type::Alias("Index".to_string(), Box::new(Type::Int)),
+            ty: Type::alias("Index", Type::Int),
         })
         .expect("alias-int name lowered");
         let alias_float_name_expr = try_lower_leaf_expr(&HirExpr::Name {
             name: "weight".to_string(),
-            ty: Type::Alias("Weight".to_string(), Box::new(Type::Float)),
+            ty: Type::alias("Weight", Type::Float),
         })
         .expect("alias-float name lowered");
 
@@ -1537,7 +1542,7 @@ mod tests {
     fn lowers_bool_and_enum_name_leaf_expr_variants() {
         let alias_bool_name_expr = try_lower_leaf_expr(&HirExpr::Name {
             name: "ready".to_string(),
-            ty: Type::Alias("ReadyFlag".to_string(), Box::new(Type::Bool)),
+            ty: Type::alias("ReadyFlag", Type::Bool),
         })
         .expect("alias-bool name lowered");
         let enum_ty = Type::Enum {
@@ -1551,7 +1556,7 @@ mod tests {
         .expect("enum name lowered");
         let alias_enum_name_expr = try_lower_leaf_expr(&HirExpr::Name {
             name: "mode_alias".to_string(),
-            ty: Type::Alias("ModeAlias".to_string(), Box::new(enum_ty)),
+            ty: Type::alias("ModeAlias", enum_ty),
         })
         .expect("alias-enum name lowered");
 
@@ -1569,7 +1574,7 @@ mod tests {
         .expect("string name lowered");
         let alias_string_name_expr = try_lower_leaf_expr(&HirExpr::Name {
             name: "title".to_string(),
-            ty: Type::Alias("Title".to_string(), Box::new(Type::Str)),
+            ty: Type::alias("Title", Type::Str),
         })
         .expect("alias-string name lowered");
 
@@ -1696,7 +1701,7 @@ mod tests {
 
     #[test]
     fn lowers_alias_wrapped_numeric_binop_with_name_operands() {
-        let alias_int = Type::Alias("Meters".to_string(), Box::new(Type::Int));
+        let alias_int = Type::alias("Meters", Type::Int);
         let bin = HirExpr::BinOp {
             left: Box::new(HirExpr::Name {
                 name: "lhs".to_string(),
@@ -1722,7 +1727,7 @@ mod tests {
 
     #[test]
     fn lowers_simple_alias_base_int_binop_with_name_operands() {
-        let alias_int = Type::Alias("Meters".to_string(), Box::new(Type::Int));
+        let alias_int = Type::alias("Meters", Type::Int);
         let bin = HirExpr::BinOp {
             left: Box::new(HirExpr::Name {
                 name: "lhs".to_string(),
@@ -1748,8 +1753,8 @@ mod tests {
 
     #[test]
     fn lowers_alias_wrapped_mixed_int_float_division_with_name_operands() {
-        let alias_int = Type::Alias("Count".to_string(), Box::new(Type::Int));
-        let alias_float = Type::Alias("Ratio".to_string(), Box::new(Type::Float));
+        let alias_int = Type::alias("Count", Type::Int);
+        let alias_float = Type::alias("Ratio", Type::Float);
         let bin = HirExpr::BinOp {
             left: Box::new(HirExpr::Name {
                 name: "lhs".to_string(),
@@ -1782,7 +1787,7 @@ mod tests {
 
     #[test]
     fn lowers_simple_alias_base_float_division_with_name_operands() {
-        let alias_float = Type::Alias("Ratio".to_string(), Box::new(Type::Float));
+        let alias_float = Type::alias("Ratio", Type::Float);
         let bin = HirExpr::BinOp {
             left: Box::new(HirExpr::Name {
                 name: "lhs".to_string(),
@@ -2057,10 +2062,7 @@ mod tests {
             op: "not".to_string(),
             operand: Box::new(HirExpr::Name {
                 name: "maybe_x".to_string(),
-                ty: Type::Alias(
-                    "MaybeInt".to_string(),
-                    Box::new(Type::Union(vec![Type::Int, Type::None])),
-                ),
+                ty: Type::alias("MaybeInt", Type::Union(vec![Type::Int, Type::None])),
             }),
             ty: Type::Bool,
         };
@@ -2080,7 +2082,7 @@ mod tests {
 
     #[test]
     fn lowers_unary_not_with_alias_bool_name_operand() {
-        let alias_bool = Type::Alias("Decision".to_string(), Box::new(Type::Bool));
+        let alias_bool = Type::alias("Decision", Type::Bool);
         let unary = HirExpr::UnaryOp {
             op: "not".to_string(),
             operand: Box::new(HirExpr::Name {
@@ -2120,7 +2122,7 @@ mod tests {
 
     #[test]
     fn lowers_unary_bitwise_invert_with_alias_int_name_operand() {
-        let alias_int = Type::Alias("Bits".to_string(), Box::new(Type::Int));
+        let alias_int = Type::alias("Bits", Type::Int);
         let unary = HirExpr::UnaryOp {
             op: "~".to_string(),
             operand: Box::new(HirExpr::Name {
@@ -2181,10 +2183,7 @@ mod tests {
         let cmp = HirExpr::Compare {
             left: Box::new(HirExpr::Name {
                 name: "maybe_x".to_string(),
-                ty: Type::Alias(
-                    "MaybeInt".to_string(),
-                    Box::new(Type::Union(vec![Type::Int, Type::None])),
-                ),
+                ty: Type::alias("MaybeInt", Type::Union(vec![Type::Int, Type::None])),
             }),
             ops: vec!["is".to_string()],
             comparators: vec![HirExpr::NoneLiteral],
@@ -2234,10 +2233,7 @@ mod tests {
         let cmp = HirExpr::Compare {
             left: Box::new(HirExpr::Name {
                 name: "maybe_x".to_string(),
-                ty: Type::Alias(
-                    "MaybeInt".to_string(),
-                    Box::new(Type::Union(vec![Type::Int, Type::None])),
-                ),
+                ty: Type::alias("MaybeInt", Type::Union(vec![Type::Int, Type::None])),
             }),
             ops: vec!["is not".to_string()],
             comparators: vec![HirExpr::NoneLiteral],
@@ -2289,10 +2285,7 @@ mod tests {
             ops: vec!["is not".to_string()],
             comparators: vec![HirExpr::Name {
                 name: "maybe_x".to_string(),
-                ty: Type::Alias(
-                    "MaybeInt".to_string(),
-                    Box::new(Type::Union(vec![Type::Int, Type::None])),
-                ),
+                ty: Type::alias("MaybeInt", Type::Union(vec![Type::Int, Type::None])),
             }],
             ty: Type::Bool,
         };
@@ -2462,12 +2455,12 @@ mod tests {
 
     #[test]
     fn lowers_alias_wrapped_enum_variant_equality_compare() {
-        let alias_enum_ty = Type::Alias(
-            "ColorAlias".to_string(),
-            Box::new(Type::Enum {
+        let alias_enum_ty = Type::alias(
+            "ColorAlias",
+            Type::Enum {
                 name: "Color".to_string(),
                 variants: vec![("RED".to_string(), Some(1)), ("BLUE".to_string(), Some(2))],
-            }),
+            },
         );
         let cmp = HirExpr::Compare {
             left: Box::new(HirExpr::EnumVariant {
@@ -2493,12 +2486,12 @@ mod tests {
 
     #[test]
     fn does_not_lower_alias_wrapped_enum_variant_ordering_compare() {
-        let alias_enum_ty = Type::Alias(
-            "ColorAlias".to_string(),
-            Box::new(Type::Enum {
+        let alias_enum_ty = Type::alias(
+            "ColorAlias",
+            Type::Enum {
                 name: "Color".to_string(),
                 variants: vec![("RED".to_string(), Some(1)), ("BLUE".to_string(), Some(2))],
-            }),
+            },
         );
         let cmp = HirExpr::Compare {
             left: Box::new(HirExpr::EnumVariant {
@@ -2520,7 +2513,7 @@ mod tests {
 
     #[test]
     fn lowers_alias_wrapped_scalar_compare() {
-        let alias_int = Type::Alias("Meters".to_string(), Box::new(Type::Int));
+        let alias_int = Type::alias("Meters", Type::Int);
         let cmp = HirExpr::Compare {
             left: Box::new(HirExpr::Name {
                 name: "x".to_string(),
@@ -2543,8 +2536,8 @@ mod tests {
 
     #[test]
     fn does_not_lower_mismatched_alias_wrapped_scalar_compare() {
-        let int_alias = Type::Alias("Meters".to_string(), Box::new(Type::Int));
-        let bool_alias = Type::Alias("Flag".to_string(), Box::new(Type::Bool));
+        let int_alias = Type::alias("Meters", Type::Int);
+        let bool_alias = Type::alias("Flag", Type::Bool);
         let cmp = HirExpr::Compare {
             left: Box::new(HirExpr::Name {
                 name: "x".to_string(),
@@ -2661,7 +2654,7 @@ mod tests {
 
     #[test]
     fn lowers_none_identity_compare_with_alias_none_typed_left() {
-        let alias_none = Type::Alias("Nothing".to_string(), Box::new(Type::None));
+        let alias_none = Type::alias("Nothing", Type::None);
         let is_cmp = HirExpr::Compare {
             left: Box::new(HirExpr::Name {
                 name: "n".to_string(),
@@ -2732,7 +2725,7 @@ mod tests {
 
     #[test]
     fn lowers_none_identity_compare_with_alias_none_typed_right() {
-        let alias_none = Type::Alias("Nothing".to_string(), Box::new(Type::None));
+        let alias_none = Type::alias("Nothing", Type::None);
         let is_cmp = HirExpr::Compare {
             left: Box::new(HirExpr::NoneLiteral),
             ops: vec!["is".to_string()],
@@ -2819,7 +2812,7 @@ mod tests {
 
     #[test]
     fn lowers_range_literal_with_alias_name_bounds() {
-        let alias_int = Type::Alias("Index".to_string(), Box::new(Type::Int));
+        let alias_int = Type::alias("Index", Type::Int);
         let range = HirExpr::RangeLiteral {
             start: Box::new(HirExpr::Name {
                 name: "start".to_string(),
@@ -2844,7 +2837,7 @@ mod tests {
 
     #[test]
     fn lowers_range_literal_with_alias_name_step() {
-        let alias_int = Type::Alias("Step".to_string(), Box::new(Type::Int));
+        let alias_int = Type::alias("Step", Type::Int);
         let range = HirExpr::RangeLiteral {
             start: Box::new(HirExpr::IntLiteral(1)),
             end: Box::new(HirExpr::IntLiteral(10)),

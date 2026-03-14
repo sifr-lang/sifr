@@ -1,0 +1,6 @@
+# Test: naked recursive aliases are rejected without falling back to Unknown.
+
+type Bad = Bad
+
+def main():
+    print("unreachable")

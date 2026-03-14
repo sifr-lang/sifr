@@ -1,0 +1,20 @@
+# Test: recursive generic classes preserve concrete type arguments in emitted Rust.
+
+class Node[T]:
+    value: T
+    next: Node[T] | None
+
+    def __init__(self, value: T, next: Node[T] | None):
+        self.value = value
+        self.next = next
+
+def total(node: Node[int] | None) -> int:
+    if not node:
+        return 0
+    rest: Node[int] | None = node.next
+    return node.value + total(rest)
+
+def main():
+    tail: Node[int] = Node(3, None)
+    head: Node[int] = Node(2, tail)
+    assert total(head) == 5

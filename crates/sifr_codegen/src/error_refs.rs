@@ -69,11 +69,16 @@ fn collect_type_error_refs(
                 referenced.insert(name.clone());
             }
         }
-        Type::List(inner)
-        | Type::Set(inner)
-        | Type::Alias(_, inner)
-        | Type::Newtype { inner, .. } => {
+        Type::List(inner) | Type::Set(inner) | Type::Newtype { inner, .. } => {
             collect_type_error_refs(inner, referenced, builtin_error_classes);
+        }
+        Type::Alias {
+            type_args, body, ..
+        } => {
+            for arg in type_args {
+                collect_type_error_refs(arg, referenced, builtin_error_classes);
+            }
+            collect_type_error_refs(body, referenced, builtin_error_classes);
         }
         Type::Dict(key, value) | Type::Result(key, value) => {
             collect_type_error_refs(key, referenced, builtin_error_classes);
@@ -517,7 +522,7 @@ mod tests {
                 name: "check".to_string(),
                 params: vec![HirParam {
                     name: "e".to_string(),
-                    ty: Type::Alias("AliasErr".to_string(), Box::new(error_type("RegexError"))),
+                    ty: Type::alias("AliasErr", error_type("RegexError")),
                     default: None,
                     keyword_only: false,
                     convention: ParamConvention::Own,

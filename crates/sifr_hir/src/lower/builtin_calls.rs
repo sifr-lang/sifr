@@ -99,7 +99,11 @@ pub(super) fn lower_defaultdict_constructor_call(
     Some(HirExpr::Call {
         func: alias_name.to_string(),
         args,
-        ty: Type::Alias(alias_name.to_string(), Box::new(dict_ty)),
+        ty: Type::Alias {
+            name: alias_name.to_string(),
+            type_args: Vec::new(),
+            body: Box::new(dict_ty),
+        },
     })
 }
 

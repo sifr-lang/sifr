@@ -1,0 +1,6 @@
+# Test: unresolved names outside the alias predeclaration set still fail.
+
+type Payload = Missing
+
+def main():
+    print("unreachable")

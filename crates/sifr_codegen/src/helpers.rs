@@ -32,7 +32,8 @@ pub(super) fn default_param_convention(ty: &Type) -> ParamConvention {
 }
 
 pub(super) fn is_option_type(ty: &Type) -> bool {
-    if let Type::Union(members) = ty {
+    let resolved = crate::resolve_alias_type_for_plain_call(ty);
+    if let Type::Union(members) = resolved {
         let non_none: Vec<&Type> = members
             .iter()
             .filter(|m| !matches!(m, Type::None))
@@ -49,6 +50,16 @@ pub(super) fn detect_option_truthiness(expr: &HirExpr) -> Option<String> {
     if let HirExpr::Name { name, ty } = expr {
         if is_option_type(ty) {
             return Some(name.clone());
+        }
+    }
+    None
+}
+
+/// Detect negated truthiness on an Option variable: `if not x:`.
+pub(super) fn detect_not_option_truthiness(expr: &HirExpr) -> Option<String> {
+    if let HirExpr::UnaryOp { op, operand, .. } = expr {
+        if op == "not" {
+            return detect_option_truthiness(operand);
         }
     }
     None
@@ -97,14 +108,31 @@ pub(super) fn detect_and_not_none_vars(expr: &HirExpr) -> Option<Vec<String>> {
     None
 }
 
+/// Detect compound `not a or not b` where both names are Option values.
+pub(super) fn detect_or_not_option_truthiness_vars(expr: &HirExpr) -> Option<Vec<String>> {
+    if let HirExpr::BoolOp { op, values, .. } = expr {
+        if op == "or" {
+            let vars: Vec<String> = values
+                .iter()
+                .filter_map(detect_not_option_truthiness)
+                .collect();
+            if vars.len() >= 2 {
+                return Some(vars);
+            }
+        }
+    }
+    None
+}
+
 /// Detect `isinstance(x, type)` where x is a non-Option union type.
 /// Returns (`var_name`, `variant_name`, `enum_name`, `other_variants`: Vec<(`variant_name`, type)>).
 pub(super) fn detect_isinstance_union(expr: &HirExpr) -> Option<IsinstanceUnionMatch> {
     if let HirExpr::Call { func, args, .. } = expr {
         if func == "isinstance" && args.len() == 2 {
             if let HirExpr::Name { name, ty } = &args[0] {
-                if let Type::Union(members) = ty {
-                    if !is_option_type(ty) {
+                let resolved_ty = crate::resolve_alias_type_for_plain_call(ty);
+                if let Type::Union(members) = resolved_ty {
+                    if !is_option_type(resolved_ty) {
                         let type_name = match &args[1] {
                             HirExpr::StringLiteral(type_name) => type_name.as_str(),
                             HirExpr::Name { name, .. } => name.as_str(),
@@ -129,7 +157,7 @@ pub(super) fn detect_isinstance_union(expr: &HirExpr) -> Option<IsinstanceUnionM
                         // Check that this type is a member of the union
                         if members.contains(&target_ty) {
                             let variant = target_ty.union_variant_name();
-                            let enum_name = ty.union_enum_name();
+                            let enum_name = resolved_ty.union_enum_name();
                             // Collect other variants for else branch destructuring
                             let other_variants: Vec<(String, Type)> = members
                                 .iter()
@@ -431,33 +459,29 @@ pub(super) fn type_references_class(ty: &Type, class_name: &str) -> bool {
     }
 }
 
-/// Generate the Rust type string for a recursive field.
-/// For `ClassName | None` -> `Option<Box<ClassName>>`
-/// For `ClassName` directly -> `Box<ClassName>`
-pub(super) fn recursive_field_rust_type(ty: &Type, class_name: &str) -> String {
+pub(super) fn type_references_any_class(
+    ty: &Type,
+    class_names: &std::collections::HashSet<String>,
+) -> bool {
     match ty {
-        Type::Union(members) => {
-            let non_none: Vec<&Type> = members
-                .iter()
-                .filter(|m| !matches!(m, Type::None))
-                .collect();
-            let has_none = members.iter().any(|m| matches!(m, Type::None));
-            if has_none && non_none.len() == 1 {
-                // T | None where T references the class -> Option<Box<T>>
-                if type_references_class(non_none[0], class_name) {
-                    format!("Option<Box<{}>>", non_none[0].rust_type())
-                } else {
-                    ty.rust_type()
-                }
-            } else {
-                // General union with recursive member - wrap the whole thing in Box
-                format!("Box<{}>", ty.rust_type())
-            }
+        Type::Class { name, .. } => class_names.contains(name),
+        Type::Union(members) => members
+            .iter()
+            .any(|m| type_references_any_class(m, class_names)),
+        Type::List(inner) => type_references_any_class(inner, class_names),
+        Type::Dict(key, val) => {
+            type_references_any_class(key, class_names)
+                || type_references_any_class(val, class_names)
         }
-        Type::Class { name, .. } if name == class_name => {
-            format!("Box<{name}>")
+        Type::Tuple(elems) => elems
+            .iter()
+            .any(|e| type_references_any_class(e, class_names)),
+        Type::Result(ok, err) => {
+            type_references_any_class(ok, class_names)
+                || type_references_any_class(err, class_names)
         }
-        _ => format!("Box<{}>", ty.rust_type()),
+        Type::Alias { body, .. } => type_references_any_class(body, class_names),
+        _ => false,
     }
 }
 

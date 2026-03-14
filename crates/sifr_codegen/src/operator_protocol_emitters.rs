@@ -656,7 +656,7 @@ impl RustEmitter {
 
     fn resolve_alias_type_for_operator_loop_iter(ty: &Type) -> &Type {
         match ty {
-            Type::Alias(_, inner) => Self::resolve_alias_type_for_operator_loop_iter(inner),
+            Type::Alias { body, .. } => Self::resolve_alias_type_for_operator_loop_iter(body),
             _ => ty,
         }
     }

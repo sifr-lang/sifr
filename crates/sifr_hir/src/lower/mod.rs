@@ -21,6 +21,9 @@ mod sequence_guards;
 mod sequence_pointers;
 mod sequence_shapes;
 mod statements;
+#[cfg(test)]
+mod type_alias_tests;
+mod type_aliases;
 mod type_bounds;
 mod typing_and_functions;
 
@@ -28,6 +31,7 @@ use classes::{collect_class_type, lower_class, lower_expr_simple};
 use imports::resolve_imports_early;
 use sequence_guards::SequenceGuard;
 use sequence_pointers::SequencePointerFact;
+use type_aliases::{collect_type_alias_decls, predeclare_type_aliases, resolve_type_aliases};
 use typing_and_functions::{
     extract_function_type, lower_function, register_builtins, resolve_annotation_expr,
 };
@@ -303,6 +307,14 @@ fn collect_type_vars(ty: &Type, vars: &mut Vec<String>) {
             collect_type_vars(ok, vars);
             collect_type_vars(err, vars);
         }
+        Type::Alias {
+            type_args, body, ..
+        } => {
+            for arg in type_args {
+                collect_type_vars(arg, vars);
+            }
+            collect_type_vars(body, vars);
+        }
         Type::Function(ft) => {
             for (_, param_ty, _) in &ft.params {
                 collect_type_vars(param_ty, vars);
@@ -388,6 +400,18 @@ fn substitute_type_vars(ty: &Type, bindings: &HashMap<String, Type>) -> Type {
             Box::new(substitute_type_vars(ok, bindings)),
             Box::new(substitute_type_vars(err, bindings)),
         ),
+        Type::Alias {
+            name,
+            type_args,
+            body,
+        } => Type::Alias {
+            name: name.clone(),
+            type_args: type_args
+                .iter()
+                .map(|arg| substitute_type_vars(arg, bindings))
+                .collect(),
+            body: Box::new(substitute_type_vars(body, bindings)),
+        },
         Type::Function(ft) => Type::Function(substitute_function_type(ft, bindings)),
         Type::Class {
             name,
@@ -443,6 +467,29 @@ fn infer_type_var_bindings(param_ty: &Type, arg_ty: &Type, bindings: &mut HashMa
         (Type::Result(p_ok, p_err), Type::Result(a_ok, a_err)) => {
             infer_type_var_bindings(p_ok, a_ok, bindings);
             infer_type_var_bindings(p_err, a_err, bindings);
+        }
+        (
+            Type::Alias {
+                name: p_name,
+                type_args: p_args,
+                body: p_body,
+            },
+            Type::Alias {
+                name: a_name,
+                type_args: a_args,
+                body: a_body,
+            },
+        ) if p_name == a_name && p_args.len() == a_args.len() => {
+            for (p_arg, a_arg) in p_args.iter().zip(a_args.iter()) {
+                infer_type_var_bindings(p_arg, a_arg, bindings);
+            }
+            infer_type_var_bindings(p_body, a_body, bindings);
+        }
+        (Type::Alias { body, .. }, other) => {
+            infer_type_var_bindings(body, other, bindings);
+        }
+        (other, Type::Alias { body, .. }) => {
+            infer_type_var_bindings(other, body, bindings);
         }
         (
             Type::Class {
@@ -586,49 +633,32 @@ fn lower_module_impl(
         }
     }
 
-    // First pass: collect class definitions first (so function signatures can reference them),
-    // then type aliases, then function signatures.
+    // Early import pass: resolve imported types so they're available for function signatures.
+    // This must happen before function signature extraction so that imported error classes
+    // (e.g., StatisticsError from sifr.statistics) can be used in Result[T, E] annotations.
+    resolve_imports_early(stmts, externals, &mut ctx);
+
+    let alias_decls = collect_type_alias_decls(stmts, &mut ctx);
+    predeclare_type_aliases(&alias_decls, &mut ctx);
+
+    // First class pass materializes full class shapes before alias resolution so aliases like
+    // `type Shape = Circle | Square` see concrete class fields instead of placeholder shells.
     for stmt in stmts {
         if let Stmt::ClassDef(class_def) = stmt {
             collect_class_type(class_def, &mut ctx);
         }
     }
 
-    // Early import pass: resolve imported types so they're available for function signatures.
-    // This must happen before function signature extraction so that imported error classes
-    // (e.g., StatisticsError from sifr.statistics) can be used in Result[T, E] annotations.
-    resolve_imports_early(stmts, externals, &mut ctx);
+    resolve_type_aliases(&alias_decls, &mut ctx);
 
+    // Refresh class definitions after alias resolution so class field/method annotations that
+    // depend on aliases declared later in the module see the final alias shapes.
     for stmt in stmts {
-        if let Stmt::TypeAlias(type_alias) = stmt {
-            let name = if let Expr::Name(n) = type_alias.name.as_ref() {
-                n.id.clone()
-            } else {
-                ctx.error("type alias name must be a simple name".to_string());
-                continue;
-            };
-            let mut alias_type_params = Vec::new();
-            if let Some(ref tps) = type_alias.type_params {
-                for tp in tps.iter() {
-                    if let sifr_python_ast::TypeParam::TypeVar(tv) = tp {
-                        let tp_name = tv.name.to_string();
-                        ctx.type_vars.insert(tp_name.clone());
-                        alias_type_params.push(tp_name);
-                    }
-                }
-            }
-            let ty = resolve_annotation_expr(&type_alias.value, &mut ctx);
-            if alias_type_params.is_empty() {
-                ctx.scope.define_type_alias(name, ty);
-            } else {
-                ctx.scope
-                    .define_generic_type_alias(name, alias_type_params.clone(), ty);
-            }
-            for tp_name in &alias_type_params {
-                ctx.type_vars.remove(tp_name.as_str());
-            }
+        if let Stmt::ClassDef(class_def) = stmt {
+            collect_class_type(class_def, &mut ctx);
         }
     }
+
     for stmt in stmts {
         if let Stmt::FunctionDef(func) = stmt {
             // PEP 695: register inline type params (def f[T](...)) as type variables

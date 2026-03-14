@@ -93,7 +93,8 @@ impl RustEmitter {
     }
 
     fn register_union_type(&mut self, ty: &Type) {
-        if let Type::Union(members) = ty {
+        let resolved = crate::resolve_alias_type_for_plain_call(ty);
+        if let Type::Union(members) = resolved {
             // Skip Option<T> pattern (T | None with exactly 2 members)
             let non_none: Vec<&Type> = members
                 .iter()
@@ -104,7 +105,7 @@ impl RustEmitter {
                 return; // This maps to Option<T>, no enum needed
             }
             // Register the enum name and its member types
-            let enum_name = ty.union_enum_name();
+            let enum_name = resolved.union_enum_name();
             self.union_enums
                 .entry(enum_name)
                 .or_insert_with(|| members.clone());
