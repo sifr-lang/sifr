@@ -6,6 +6,12 @@
 use sifr_type_system::{OwnershipKind, Type};
 use std::collections::HashMap;
 
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum BindingKind {
+    Local,
+    Parameter,
+}
+
 /// Tracks variable state for ownership and narrowing.
 #[derive(Debug, Clone)]
 pub struct VarInfo {
@@ -17,12 +23,20 @@ pub struct VarInfo {
     pub is_moved: bool,
     /// Whether the variable is currently mutably borrowed.
     pub is_mut_borrowed: bool,
+    /// Whether the binding itself is mutable.
+    pub is_mutable_binding: bool,
+    /// Whether this binding originated from a function parameter.
+    pub binding_kind: BindingKind,
 }
 
 impl VarInfo {
     /// Get the effective type (narrowed if available, otherwise declared).
     pub fn effective_type(&self) -> &Type {
         self.narrowed_type.as_ref().unwrap_or(&self.ty)
+    }
+
+    pub fn is_parameter_binding(&self) -> bool {
+        matches!(self.binding_kind, BindingKind::Parameter)
     }
 }
 
@@ -66,6 +80,21 @@ impl Scope {
 
     /// Define a variable in the current (innermost) scope.
     pub fn define(&mut self, name: String, ty: Type) {
+        self.define_binding(name, ty, true, BindingKind::Local);
+    }
+
+    /// Define a function parameter in the current (innermost) scope.
+    pub fn define_parameter(&mut self, name: String, ty: Type, is_mutable_binding: bool) {
+        self.define_binding(name, ty, is_mutable_binding, BindingKind::Parameter);
+    }
+
+    fn define_binding(
+        &mut self,
+        name: String,
+        ty: Type,
+        is_mutable_binding: bool,
+        binding_kind: BindingKind,
+    ) {
         if let Some(frame) = self.frames.last_mut() {
             frame.insert(
                 name,
@@ -74,6 +103,8 @@ impl Scope {
                     narrowed_type: None,
                     is_moved: false,
                     is_mut_borrowed: false,
+                    is_mutable_binding,
+                    binding_kind,
                 },
             );
         }
@@ -217,6 +248,11 @@ impl Scope {
     /// Get the effective type of a variable (narrowed if available, otherwise declared).
     pub fn effective_type(&self, name: &str) -> Option<&Type> {
         self.lookup(name).map(VarInfo::effective_type)
+    }
+
+    /// Check whether an existing binding is mutable.
+    pub fn is_mutable_binding(&self, name: &str) -> Option<bool> {
+        self.lookup(name).map(|info| info.is_mutable_binding)
     }
 
     // --- Moved state snapshot support ---

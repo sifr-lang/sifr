@@ -203,7 +203,7 @@ fn replace_elements(mut arr: Vec<i64>) -> Vec<i64> {
   - AST/HIR/type signatures carry orthogonal ownership + mutability structurally
   - normalization and duplicate-modifier regressions are locked
   - runnable demo proves the new syntax survives frontend lowering without fallback behavior
-- [ ] Part 2 `borrow_checking_and_escape_semantics_for_four_parameter_modes`
+- [ ] Part 2 `borrow_checking_and_escape_semantics_for_four_parameter_modes` (locally validated; PR pending)
   - borrow/exclusivity checks derive from the orthogonal model
   - owned parameters, including `own mut`, remain returnable
   - borrowed parameters keep deterministic escape diagnostics
@@ -224,6 +224,18 @@ fn replace_elements(mut arr: Vec<i64>) -> Vec<i64> {
   - Added regression coverage:
     - `crates/sifr_python_parser/src/parser/tests.rs`
     - `crates/sifr_hir/src/lower/own_mut_param_tests.rs`
+  - Full local validation:
+    - `scripts/run_all_tests.sh --profile quick`
+    - `scripts/run_all_tests.sh`
+- `2026-03-14`: part 2 `borrow_checking_and_escape_semantics_for_four_parameter_modes` completed local validation and is ready for PR.
+  - Execution report: `issues/ad-hoc-own-mut-parameter-convention-part2-execution.md`
+  - PR: pending
+  - Demo: `demos/ad_hoc_own_mut_parameter_convention_part2_demo.sifr`
+  - Added regression coverage:
+    - `crates/sifr_hir/src/lower/own_mut_semantics_tests.rs`
+    - `crates/sifr/tests/e2e/pass/own_mut_parameter_semantics.sifr`
+    - `crates/sifr/tests/e2e/fail/borrowed_mut_parameter_return_escape.sifr`
+    - `crates/sifr/tests/e2e/fail/own_parameter_mutation_requires_mut.sifr`
   - Full local validation:
     - `scripts/run_all_tests.sh --profile quick`
     - `scripts/run_all_tests.sh`

@@ -1,6 +1,6 @@
 # Test: mutated borrowed params should be shadowed into owned mutable locals for codegen.
 
-def reverse_words(s: str) -> str:
+def reverse_words(own mut s: str) -> str:
     s = s.strip()
     words = s.split()
     words = words[::-1]

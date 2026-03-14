@@ -594,11 +594,11 @@ pub(super) fn lower_function(func: &StmtFunctionDef, ctx: &mut LowerCtx) -> Opti
             .get(i)
             .map(|(_, t, _)| t.clone())
             .unwrap_or(Type::Any);
-        ctx.scope.define(name.clone(), ty.clone());
+        let convention = ast_convention_to_param(param_def.parameter.convention, &ty);
+        ctx.scope
+            .define_parameter(name.clone(), ty.clone(), convention.is_mutable());
 
         let default = param_def.default.as_ref().and_then(|d| lower_expr(d, ctx));
-
-        let convention = ast_convention_to_param(param_def.parameter.convention, &ty);
 
         params.push(HirParam {
             name,
@@ -618,9 +618,9 @@ pub(super) fn lower_function(func: &StmtFunctionDef, ctx: &mut LowerCtx) -> Opti
             .get(regular_count)
             .map(|(_, t, _)| t.clone())
             .unwrap_or(Type::Any);
-        ctx.scope.define(name.clone(), ty.clone());
-
         let convention = ast_convention_to_param(vararg.convention, &ty);
+        ctx.scope
+            .define_parameter(name.clone(), ty.clone(), convention.is_mutable());
         params.push(HirParam {
             name,
             ty,
@@ -639,11 +639,11 @@ pub(super) fn lower_function(func: &StmtFunctionDef, ctx: &mut LowerCtx) -> Opti
             .get(regular_count + i)
             .map(|(_, t, _)| t.clone())
             .unwrap_or(Type::Any);
-        ctx.scope.define(name.clone(), ty.clone());
+        let convention = ast_convention_to_param(param_def.parameter.convention, &ty);
+        ctx.scope
+            .define_parameter(name.clone(), ty.clone(), convention.is_mutable());
 
         let default = param_def.default.as_ref().and_then(|d| lower_expr(d, ctx));
-
-        let convention = ast_convention_to_param(param_def.parameter.convention, &ty);
 
         params.push(HirParam {
             name,
@@ -654,13 +654,13 @@ pub(super) fn lower_function(func: &StmtFunctionDef, ctx: &mut LowerCtx) -> Opti
         });
     }
 
-    // Populate borrowed_params for escape analysis in lower_return / lower_let
-    // A param is "borrowed" (escape-unsafe) if its convention is Borrow and its type is Move.
+    // Populate borrowed_params for escape analysis in lower_return / lower_let.
+    // Any borrowed move-type parameter, shared or mutable, is escape-unsafe.
     // Exclude TypeVar parameters: generics are monomorphized by Rust and ownership is handled
     // by the Rust compiler, not by Sifr's escape analysis.
     ctx.borrowed_params.clear();
     for param in &params {
-        if param.convention.is_shared_borrow()
+        if param.convention.is_borrowed()
             && param.ty.ownership() == OwnershipKind::Move
             && !matches!(param.ty, Type::TypeVar(_))
         {
