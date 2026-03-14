@@ -55,6 +55,10 @@ fn render_borrowed_arg_expr(arg: &RustExpr) -> RustExpr {
     }
 }
 
+fn is_none_expr(expr: &RustExpr) -> bool {
+    matches!(expr, RustExpr::Path(path) if path.len() == 1 && path[0] == "None")
+}
+
 fn lower_non_empty_char_all(
     object: &RustExpr,
     args: &[RustExpr],
@@ -206,46 +210,215 @@ pub(super) fn lower_split(object: &RustExpr, args: &[RustExpr]) -> Option<RustEx
             method: "collect::<Vec<String>>".to_string(),
             args: vec![],
         }),
-        1 => Some(RustExpr::MethodCall {
-            receiver: Box::new(RustExpr::MethodCall {
+        1 => Some(if is_none_expr(&args[0]) {
+            RustExpr::MethodCall {
                 receiver: Box::new(RustExpr::MethodCall {
-                    receiver: Box::new(object.clone()),
-                    method: "split".to_string(),
-                    args: vec![render_borrowed_arg_expr(&args[0])],
-                }),
-                method: "map".to_string(),
-                args: vec![RustExpr::Closure {
-                    params: vec![RustParam::Named {
-                        name: "s".to_string(),
-                        ty: RustType::Named("_".to_string()),
-                    }],
-                    body: Box::new(RustExpr::MethodCall {
-                        receiver: Box::new(RustExpr::Ident("s".to_string())),
-                        method: "to_string".to_string(),
+                    receiver: Box::new(RustExpr::MethodCall {
+                        receiver: Box::new(object.clone()),
+                        method: "split_whitespace".to_string(),
                         args: vec![],
                     }),
-                    is_move: false,
-                }],
-            }),
-            method: "collect::<Vec<String>>".to_string(),
-            args: vec![],
+                    method: "map".to_string(),
+                    args: vec![RustExpr::Closure {
+                        params: vec![RustParam::Named {
+                            name: "s".to_string(),
+                            ty: RustType::Named("_".to_string()),
+                        }],
+                        body: Box::new(RustExpr::MethodCall {
+                            receiver: Box::new(RustExpr::Ident("s".to_string())),
+                            method: "to_string".to_string(),
+                            args: vec![],
+                        }),
+                        is_move: false,
+                    }],
+                }),
+                method: "collect::<Vec<String>>".to_string(),
+                args: vec![],
+            }
+        } else {
+            RustExpr::MethodCall {
+                receiver: Box::new(RustExpr::MethodCall {
+                    receiver: Box::new(RustExpr::MethodCall {
+                        receiver: Box::new(object.clone()),
+                        method: "split".to_string(),
+                        args: vec![render_borrowed_arg_expr(&args[0])],
+                    }),
+                    method: "map".to_string(),
+                    args: vec![RustExpr::Closure {
+                        params: vec![RustParam::Named {
+                            name: "s".to_string(),
+                            ty: RustType::Named("_".to_string()),
+                        }],
+                        body: Box::new(RustExpr::MethodCall {
+                            receiver: Box::new(RustExpr::Ident("s".to_string())),
+                            method: "to_string".to_string(),
+                            args: vec![],
+                        }),
+                        is_move: false,
+                    }],
+                }),
+                method: "collect::<Vec<String>>".to_string(),
+                args: vec![],
+            }
         }),
+        2 => {
+            let maxsplit = args[1].clone();
+            Some(RustExpr::If {
+                cond: Box::new(RustExpr::BinOp {
+                    left: Box::new(maxsplit.clone()),
+                    op: "<".to_string(),
+                    right: Box::new(RustExpr::Literal(RustLiteral::Int(0))),
+                }),
+                then_expr: Box::new(lower_split(object, &args[..1])?),
+                else_expr: Some(Box::new(if is_none_expr(&args[0]) {
+                    RustExpr::MethodCall {
+                        receiver: Box::new(RustExpr::MethodCall {
+                            receiver: Box::new(RustExpr::MethodCall {
+                                receiver: Box::new(RustExpr::MethodCall {
+                                    receiver: Box::new(object.clone()),
+                                    method: "splitn".to_string(),
+                                    args: vec![
+                                        RustExpr::Cast {
+                                            expr: Box::new(RustExpr::Paren(Box::new(
+                                                RustExpr::BinOp {
+                                                    left: Box::new(maxsplit),
+                                                    op: "+".to_string(),
+                                                    right: Box::new(RustExpr::Literal(
+                                                        RustLiteral::Int(1),
+                                                    )),
+                                                },
+                                            ))),
+                                            ty: RustType::Named("usize".to_string()),
+                                        },
+                                        RustExpr::Closure {
+                                            params: vec![RustParam::Named {
+                                                name: "c".to_string(),
+                                                ty: RustType::Named("_".to_string()),
+                                            }],
+                                            body: Box::new(RustExpr::MethodCall {
+                                                receiver: Box::new(RustExpr::Ident(
+                                                    "c".to_string(),
+                                                )),
+                                                method: "is_whitespace".to_string(),
+                                                args: vec![],
+                                            }),
+                                            is_move: false,
+                                        },
+                                    ],
+                                }),
+                                method: "filter".to_string(),
+                                args: vec![RustExpr::Closure {
+                                    params: vec![RustParam::Named {
+                                        name: "s".to_string(),
+                                        ty: RustType::Named("_".to_string()),
+                                    }],
+                                    body: Box::new(RustExpr::UnaryOp {
+                                        op: "!".to_string(),
+                                        operand: Box::new(RustExpr::MethodCall {
+                                            receiver: Box::new(RustExpr::Ident("s".to_string())),
+                                            method: "is_empty".to_string(),
+                                            args: vec![],
+                                        }),
+                                    }),
+                                    is_move: false,
+                                }],
+                            }),
+                            method: "map".to_string(),
+                            args: vec![RustExpr::Closure {
+                                params: vec![RustParam::Named {
+                                    name: "s".to_string(),
+                                    ty: RustType::Named("_".to_string()),
+                                }],
+                                body: Box::new(RustExpr::MethodCall {
+                                    receiver: Box::new(RustExpr::Ident("s".to_string())),
+                                    method: "to_string".to_string(),
+                                    args: vec![],
+                                }),
+                                is_move: false,
+                            }],
+                        }),
+                        method: "collect::<Vec<String>>".to_string(),
+                        args: vec![],
+                    }
+                } else {
+                    RustExpr::MethodCall {
+                        receiver: Box::new(RustExpr::MethodCall {
+                            receiver: Box::new(RustExpr::MethodCall {
+                                receiver: Box::new(object.clone()),
+                                method: "splitn".to_string(),
+                                args: vec![
+                                    RustExpr::Cast {
+                                        expr: Box::new(RustExpr::Paren(Box::new(
+                                            RustExpr::BinOp {
+                                                left: Box::new(args[1].clone()),
+                                                op: "+".to_string(),
+                                                right: Box::new(RustExpr::Literal(
+                                                    RustLiteral::Int(1),
+                                                )),
+                                            },
+                                        ))),
+                                        ty: RustType::Named("usize".to_string()),
+                                    },
+                                    render_borrowed_arg_expr(&args[0]),
+                                ],
+                            }),
+                            method: "map".to_string(),
+                            args: vec![RustExpr::Closure {
+                                params: vec![RustParam::Named {
+                                    name: "s".to_string(),
+                                    ty: RustType::Named("_".to_string()),
+                                }],
+                                body: Box::new(RustExpr::MethodCall {
+                                    receiver: Box::new(RustExpr::Ident("s".to_string())),
+                                    method: "to_string".to_string(),
+                                    args: vec![],
+                                }),
+                                is_move: false,
+                            }],
+                        }),
+                        method: "collect::<Vec<String>>".to_string(),
+                        args: vec![],
+                    }
+                })),
+            })
+        }
         _ => None,
     }
 }
 
 pub(super) fn lower_replace(object: &RustExpr, args: &[RustExpr]) -> Option<RustExpr> {
-    if args.len() != 2 {
-        return None;
+    match args {
+        [old, new] => Some(RustExpr::MethodCall {
+            receiver: Box::new(object.clone()),
+            method: "replace".to_string(),
+            args: vec![render_borrowed_arg_expr(old), render_borrowed_arg_expr(new)],
+        }),
+        [old, new, count] => Some(RustExpr::If {
+            cond: Box::new(RustExpr::BinOp {
+                left: Box::new(count.clone()),
+                op: "<".to_string(),
+                right: Box::new(RustExpr::Literal(RustLiteral::Int(0))),
+            }),
+            then_expr: Box::new(RustExpr::MethodCall {
+                receiver: Box::new(object.clone()),
+                method: "replace".to_string(),
+                args: vec![render_borrowed_arg_expr(old), render_borrowed_arg_expr(new)],
+            }),
+            else_expr: Some(Box::new(RustExpr::MethodCall {
+                receiver: Box::new(object.clone()),
+                method: "replacen".to_string(),
+                args: vec![
+                    render_borrowed_arg_expr(old),
+                    render_borrowed_arg_expr(new),
+                    RustExpr::Cast {
+                        expr: Box::new(count.clone()),
+                        ty: RustType::Named("usize".to_string()),
+                    },
+                ],
+            })),
+        }),
+        _ => None,
     }
-    Some(RustExpr::MethodCall {
-        receiver: Box::new(object.clone()),
-        method: "replace".to_string(),
-        args: vec![
-            render_borrowed_arg_expr(&args[0]),
-            render_borrowed_arg_expr(&args[1]),
-        ],
-    })
 }
 
 pub(super) fn lower_find(object: &RustExpr, args: &[RustExpr]) -> Option<RustExpr> {

@@ -1,0 +1,38 @@
+def main():
+    nums: list[int] = [1, 2, 3, 2]
+    assert nums.index(2, start=1, stop=4) == 1
+    assert nums.pop(0) == 1
+    assert nums == [2, 3, 2]
+
+    letters: list[str] = ["seed"]
+    letters.extend("ab")
+    assert letters == ["seed", "a", "b"]
+
+    data: dict[str, int] = {"x": 1}
+    data.update(a=2)
+    data.update([("b", 3)], c=4)
+    assert data["a"] == 2
+    assert data["b"] == 3
+    assert data["c"] == 4
+    assert data.pop("missing", default=9) == 9
+
+    seen: set[int] = {1}
+    seen.update([2, 3], range(4, 6))
+    assert seen.contains(5)
+    trimmed: set[int] = seen.intersection([1, 2, 7], [2, 3])
+    assert trimmed.len() == 1
+    assert trimmed.contains(2)
+    seen.difference_update([1, 5])
+    assert not seen.contains(1)
+    assert not seen.contains(5)
+    seen.symmetric_difference_update([3, 9])
+    assert not seen.contains(3)
+    assert seen.contains(9)
+
+    pair: tuple[int, int, int] = (4, 5, 4)
+    assert pair.count(4) == 2
+    assert pair.index(4, start=1) == 2
+
+    parts: list[str] = "alpha,beta,gamma".split(sep=",", maxsplit=1)
+    assert parts == ["alpha", "beta,gamma"]
+    assert "aaaa".replace("a", "b", count=2) == "bbaa"

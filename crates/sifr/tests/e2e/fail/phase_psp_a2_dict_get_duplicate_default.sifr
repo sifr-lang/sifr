@@ -1,0 +1,3 @@
+def main():
+    data: dict[str, int] = {"x": 1}
+    value: int = data.get("x", 1, default=2)

@@ -17,6 +17,7 @@ mod function_scopes;
 mod expressions_tests;
 mod guarded_index;
 mod imports;
+mod method_call_args;
 mod mutating_methods;
 mod nested_function_inference;
 #[cfg(test)]

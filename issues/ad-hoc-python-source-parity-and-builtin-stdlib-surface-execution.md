@@ -4,7 +4,7 @@ Status: in_progress
 Started: 2026-03-14
 Phase owner: Codex (GPT-5)
 Source phase: `issues/ad-hoc-python-source-parity-and-builtin-stdlib-surface.md`
-Current active wave: `wave_psp_a1`
+Current active wave: `wave_psp_a2`
 
 ## Execution Rules
 
@@ -15,7 +15,7 @@ Current active wave: `wave_psp_a1`
 
 ## Phase Todo
 
-- [ ] `milestone_psp_1` / `wave_psp_a1`: builtin constructors and callable surface
+- [x] `milestone_psp_1` / `wave_psp_a1`: builtin constructors and callable surface
 - [ ] `milestone_psp_2` / `wave_psp_a2`: core object models and builtin semantics
 - [ ] `milestone_psp_3` / `wave_psp_b1`: collections objects and ordered helpers
 - [ ] `milestone_psp_3` / `wave_psp_b2`: iterators, functional helpers, and randomness
@@ -31,7 +31,7 @@ Current active wave: `wave_psp_a1`
 
 ### `wave_psp_a1` Builtin Constructors and Callable Surface
 
-Status: in_progress
+Status: done
 
 - [x] Baseline current builtin gaps against the phase spec and CPython test inputs:
   - `Lib/test/test_list.py`
@@ -44,15 +44,15 @@ Status: in_progress
 - [x] Add CPython-derived adopt/adapt/waive matrix and traceability rows for this wave.
 - [x] Add a wave demo that proves the milestone surface works naturally from Python-shaped source.
 - [x] Run local validation and record evidence.
-- [ ] Open PR, review, merge, and update this ledger with PR links and outcomes.
+- [x] Open PR, review, merge, and update this ledger with PR links and outcomes.
 
 ### `wave_psp_a2` Core Object Models and Builtin Semantics
 
-Status: pending
+Status: in_progress
 
-- [ ] Harvest the required CPython test inputs for container and string object-model behavior.
-- [ ] Close `list`, `dict`, `set`, `tuple`, `str`, and `bytes` classification/object-model gaps.
-- [ ] Add adapted regression coverage and update parity ledgers.
+- [x] Harvest the required CPython test inputs for container and string object-model behavior.
+- [x] Close `list`, `dict`, `set`, `tuple`, `str`, and `bytes` classification/object-model gaps.
+- [x] Add adapted regression coverage and update parity ledgers.
 - [ ] Demo, validate, PR, review, merge.
 
 ### `wave_psp_b1` Collections Objects and Ordered Helpers
@@ -163,10 +163,53 @@ Status: pending
   - `scripts/run_all_tests.sh --profile quick`
 - Note:
   - The external script path requested in the phase instructions (`/Users/yaseralnajjar/work/sifr/codebase/scripts/run_all_tests.sh`) changes into a different checkout before running. The equivalent script inside this worktree was used for authoritative validation of the actual code under change.
+- PR / merge:
+  - Merged PR: `#1142` `Close wave_psp_a1 builtin constructor and call-shape parity`
+  - Merge commit: `2879fcaa844367b4e4521f1daa68793292c28b76`
 
 ### `wave_psp_a2`
 
-- Pending.
+- Implemented core object-model argument normalization and parity closure in:
+  - `crates/sifr_hir/src/lower/method_call_args.rs`
+  - `crates/sifr_hir/src/lower/builtin_calls.rs`
+  - `crates/sifr_hir/src/lower/expressions.rs`
+  - `crates/sifr_hir/src/lower/mutating_methods.rs`
+  - `crates/sifr_codegen/src/intrinsic_method_emitters.rs`
+  - `crates/sifr_codegen/src/methods/common.rs`
+  - `crates/sifr_codegen/src/methods/dict.rs`
+  - `crates/sifr_codegen/src/methods/list.rs`
+  - `crates/sifr_codegen/src/methods/mod.rs`
+  - `crates/sifr_codegen/src/methods/string.rs`
+- Added wave-specific regression, demo, and traceability artifacts:
+  - `crates/sifr/tests/e2e/pass/phase_psp_a2_core_object_model_surface.sifr`
+  - `crates/sifr/tests/e2e/fail/phase_psp_a2_list_unexpected_keyword.sifr`
+  - `crates/sifr/tests/e2e/fail/phase_psp_a2_dict_update_invalid_pairs.sifr`
+  - `crates/sifr/tests/e2e/fail/phase_psp_a2_dict_get_duplicate_default.sifr`
+  - `crates/sifr/tests/e2e/fail/phase_psp_a2_set_update_non_iterable.sifr`
+  - `crates/sifr/tests/e2e/fail/phase_psp_a2_str_replace_invalid_count.sifr`
+  - `crates/sifr/tests/e2e/fail/phase_psp_a2_tuple_index_invalid_bound.sifr`
+  - `demos/wave_psp_a2_core_object_models_demo.sifr`
+  - `verification/stdlib/wave_psp_a2_cpython_traceability.md`
+- Demo validation:
+  - `cargo run -q -p sifr -- run demos/wave_psp_a2_core_object_models_demo.sifr`
+- Targeted regression validation:
+  - `cargo run -q -p sifr -- run crates/sifr/tests/e2e/pass/phase_psp_a2_core_object_model_surface.sifr`
+  - `cargo run -q -p sifr -- check crates/sifr/tests/e2e/fail/phase_psp_a2_list_unexpected_keyword.sifr`
+  - `cargo run -q -p sifr -- check crates/sifr/tests/e2e/fail/phase_psp_a2_dict_update_invalid_pairs.sifr`
+  - `cargo run -q -p sifr -- check crates/sifr/tests/e2e/fail/phase_psp_a2_dict_get_duplicate_default.sifr`
+  - `cargo run -q -p sifr -- check crates/sifr/tests/e2e/fail/phase_psp_a2_set_update_non_iterable.sifr`
+  - `cargo run -q -p sifr -- check crates/sifr/tests/e2e/fail/phase_psp_a2_str_replace_invalid_count.sifr`
+  - `cargo run -q -p sifr -- check crates/sifr/tests/e2e/fail/phase_psp_a2_tuple_index_invalid_bound.sifr`
+  - `cargo test -p sifr_hir expressions_tests -- --nocapture`
+  - `cargo test -p sifr_codegen methods -- --nocapture`
+- Maintainability/lint validation:
+  - `python3 scripts/check_hir_maintainability_guardrails.py`
+  - `cargo fmt --check`
+  - `cargo clippy --workspace -- -D warnings`
+- Authoritative local gate:
+  - `scripts/run_all_tests.sh --profile quick`
+- CPython parity note:
+  - `bytes` / `bytearray` remain explicitly classified as `unsupported` for this wave because Sifr still does not expose a first-class bytes primitive; the traceability ledger records the closure as an intentional object-model classification outcome rather than a fake module-parity claim.
 
 ### `wave_psp_b1`
 
@@ -206,7 +249,7 @@ Status: pending
 
 ## PR Ledger
 
-- Pending.
+- `wave_psp_a1`: PR `#1142` merged at `2026-03-14T17:28:40Z`
 
 ## External Review Ledger
 
