@@ -468,8 +468,29 @@ This phase should not erase Sifr's safety model.
 ### Entry criteria
 
 - Phase 31 is complete
-- existing Phase 27 safety invariants remain non-negotiable
+- Phase 30 and Phase 31 evidence is available and treated as the starting baseline rather than reopened blindly
+- Phase 27 non-regression baseline is green at phase start and must remain green through completion
+- Phase 16 local-first validation platform remains the authoritative execution foundation
 - this phase must start from the current Phase 30 and Phase 31 parity evidence rather than reopening closed module subsets blindly
+
+### Phase-wide invariants
+
+- No user-triggerable panic paths.
+- No data-dependent emitted `.unwrap()` / `.expect()` / `panic!` in user runtime paths.
+- Stable diagnostic contract:
+  - codes
+  - severity
+  - spans
+  - URLs
+  - suggestions
+  - schema
+- Canonical and lossless `json` diagnostics remain authoritative.
+- `human` and `compact` remain renderer views over the same diagnostic model.
+- Recovery ordering remains deterministic.
+- Exit-code and CLI contract remain stable.
+- No fallback, migration, or legacy compatibility code is allowed; implement the canonical architecture directly with clean code only.
+- No lazy or partial fixes are allowed; each milestone must resolve root causes completely, even when that requires significant rework.
+- All implementations must be production-grade compiler and stdlib work: strict typing, deterministic behavior, explicit invariants, and unforgiving correctness standards.
 
 ### Milestone quality checks
 
@@ -479,26 +500,47 @@ This phase should not erase Sifr's safety model.
 - every root-cause fix includes regression coverage
 - constructor parity work must include both positive-path and negative-path validation
 - optional-argument parity decisions must be documented, not left implicit
+- every milestone must satisfy the scope and definition of done already documented in this file
+- every milestone includes at least one positive-path and one negative-path validation case
+- validation evidence must be recorded in the execution checklist issue before merge
+- no milestone is complete if its outputs are not reviewable and reproducible locally
+- parity-governance outputs must be machine-reviewable and deterministic
+- any divergence or waiver must be explicit, time-bounded, owner-assigned, and issue-linked
+- if a milestone changes existing approved subset behavior from Phase 30, the change must explicitly classify whether it is:
+  - parity expansion
+  - compatibility cleanup
+  - intentional divergence retained
+  - prior waiver retired
+- modules or builtins with parsing-heavy, numeric-edge, or panic-risk surfaces must reuse the established property/fuzz machinery where applicable rather than relying only on happy-path e2e coverage
 
 ### Validation planning goals
 
-- constructor parity:
-  - positive: Python-shaped constructor calls compile and run
-  - negative: invalid constructor inputs produce the documented `Result` / `Option` / compile-time rejection behavior
-- builtin helper parity:
-  - positive: common Python call shapes and optional arguments compile
-  - negative: unsupported shapes fail with explicit diagnostics rather than silent drift
-- object-model parity:
-  - positive: approved methods behave correctly across positive-path and safe-error-path inputs
-  - negative: unsupported method shapes are classified and regression-tested where needed
-- governance:
-  - positive: canonical gap inventory is complete and reviewable
-  - negative: undocumented surface mismatches block closure
+- `milestone_psp_1` (Builtin Constructor and Conversion Parity): validation goals cover: Python-shaped constructor parity for `list`, `tuple`, `dict`, `set`, `str`, `int`, `float`, `bool`, `ord`, and `chr`; accepted input-shape matrix for each constructor; explicit safe adaptation for parse/bounds failures. Include negative-path goals that catch regressions against these guarantees.
+- `milestone_psp_2` (Builtin Functional Helper Parity): validation goals cover: common Python call shapes and approved optional-argument surfaces for `len`, `abs`, `min`, `max`, `sum`, `sorted`, `reversed`, `enumerate`, `zip`, `map`, `range`, `any`, and `all`; iterable-vs-list behavior; explicit classification for unsupported call shapes. Include negative-path goals that catch regressions against these guarantees.
+- `milestone_psp_3` (Core Type Object-Model Parity): validation goals cover: approved object-model surface for `list`, `dict`, `set`, `tuple`, and `str`; constructor/method coherence; explicit classification of unsupported methods and overloads. Include negative-path goals that catch regressions against these guarantees.
+- `milestone_psp_4` (Collections Constructor and Ergonomics Parity): validation goals cover: Python-shaped constructor-entry parity for `Counter`, `defaultdict`, and `deque`; retirement of workaround-only entry surfaces as the primary path; explicit handling of callable-factory and ownership-driven divergences. Include negative-path goals that catch regressions against these guarantees.
+- `milestone_psp_5` (Existing-Module Python-Surface Cleanup): validation goals cover: Python-shaped cleanup for existing modules `math`, `collections`, `heapq`, `random`, `bisect`, `itertools`, `functools`, and `operator`; removal or explicit classification of workaround names and call shapes. Include negative-path goals that catch regressions against these guarantees.
+- `milestone_psp_6` (Parity Governance for Python-Shaped Source): validation goals cover: canonical source-surface inventory for `done`, `open`, `intentional-diff`, and `unsupported`; explicit classification of constructor, builtin, object-model, and module-surface gaps; prevention of undocumented rediscovery through future corpora. Include negative-path goals that catch regressions against these guarantees.
+- Exit-gate evidence explicitly demonstrates: supported Python-shaped source compiles naturally for the approved scope, intentional divergences remain explicit and safe, and future compatibility work is governed by a canonical source-surface inventory rather than ad hoc rediscovery.
 
 ### Local validation commands
 
+- Full local suite:
+  - `/Users/yaseralnajjar/work/sifr/codebase/scripts/run_all_tests.sh`
 - `scripts/run_all_tests.sh --profile quick`
 - `scripts/run_all_tests.sh`
+
+### Exit criteria
+
+- All milestone definitions of done are satisfied.
+- Supported Python-shaped source for the approved scope compiles naturally without workaround-first APIs.
+- Intentional divergences remain explicit, typed, panic-free, and documented.
+- Constructor, builtin-helper, object-model, and module-surface gaps are tracked in a canonical parity inventory.
+- Any waiver is explicit, time-bounded, owner-assigned, and issue-linked.
+
+## Exit Gate
+
+Python-shaped source parity is production-governed for the approved scope: supported builtins, constructors, object models, and existing in-scope stdlib entry surfaces compile naturally; intentional divergences remain explicit and safety-aligned; and the Phase 27 non-regression contract remains green with deterministic, reviewable validation evidence.
 
 ## Recommended First Execution Order
 
