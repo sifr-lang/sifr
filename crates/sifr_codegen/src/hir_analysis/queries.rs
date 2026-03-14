@@ -171,18 +171,17 @@ pub(crate) fn collect_mutated_vars(
             mutated.borrow_mut().insert(name.clone());
         }
         HirStmt::NestedFunction { func } => {
-            let nested_mutated = collect_mutated_vars(&func.body, func_signatures);
             let param_names = func
                 .params
                 .iter()
                 .map(|param| param.name.clone())
                 .collect::<HashSet<_>>();
             let locally_defined = collect_locally_defined_vars(&func.body);
-            for name in nested_mutated {
-                if !param_names.contains(&name) && !locally_defined.contains(&name) {
-                    mutated.borrow_mut().insert(name);
-                }
-            }
+            let captured_mutated = collect_mutated_vars(&func.body, func_signatures)
+                .into_iter()
+                .filter(|name| !param_names.contains(name) && !locally_defined.contains(name))
+                .collect::<Vec<_>>();
+            mutated.borrow_mut().extend(captured_mutated);
         }
         HirStmt::SubscriptAssign { object, .. }
         | HirStmt::NestedSubscriptAssign { object, .. }
@@ -195,19 +194,6 @@ pub(crate) fn collect_mutated_vars(
             ..
         } => {
             mutated.borrow_mut().insert(name.clone());
-        }
-        HirStmt::NestedFunction { func } => {
-            let param_names = func
-                .params
-                .iter()
-                .map(|param| param.name.clone())
-                .collect::<HashSet<_>>();
-            let locally_defined = collect_locally_defined_vars(&func.body);
-            let captured_mutated = collect_mutated_vars(&func.body, func_signatures)
-                .into_iter()
-                .filter(|name| !param_names.contains(name) && !locally_defined.contains(name))
-                .collect::<Vec<_>>();
-            mutated.borrow_mut().extend(captured_mutated);
         }
         _ => {}
     };

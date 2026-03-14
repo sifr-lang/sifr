@@ -450,7 +450,13 @@ pub(super) fn lower_stmt(
                     .get(i)
                     .map(|(_, t, _)| t.clone())
                     .unwrap_or(Type::Any);
-                let convention = ast_convention_to_param(param_def.parameter.convention, &ty);
+                let convention = ft
+                    .params
+                    .get(i)
+                    .map(|(_, _, convention)| *convention)
+                    .unwrap_or_else(|| {
+                        ast_convention_to_param(param_def.parameter.convention, &ty)
+                    });
                 ctx.scope
                     .define_parameter(name.clone(), ty.clone(), convention.is_mutable());
                 let default = param_def.default.as_ref().and_then(|d| lower_expr(d, ctx));
@@ -472,7 +478,11 @@ pub(super) fn lower_stmt(
                     .get(regular_count)
                     .map(|(_, t, _)| t.clone())
                     .unwrap_or(Type::Any);
-                let convention = ast_convention_to_param(vararg.convention, &ty);
+                let convention = ft
+                    .params
+                    .get(regular_count)
+                    .map(|(_, _, convention)| *convention)
+                    .unwrap_or_else(|| ast_convention_to_param(vararg.convention, &ty));
                 ctx.scope
                     .define_parameter(name.clone(), ty.clone(), convention.is_mutable());
                 params.push(HirParam {
@@ -494,7 +504,13 @@ pub(super) fn lower_stmt(
                     .get(regular_count + i)
                     .map(|(_, t, _)| t.clone())
                     .unwrap_or(Type::Any);
-                let convention = ast_convention_to_param(param_def.parameter.convention, &ty);
+                let convention = ft
+                    .params
+                    .get(regular_count + i)
+                    .map(|(_, _, convention)| *convention)
+                    .unwrap_or_else(|| {
+                        ast_convention_to_param(param_def.parameter.convention, &ty)
+                    });
                 ctx.scope
                     .define_parameter(name.clone(), ty.clone(), convention.is_mutable());
                 let default = param_def.default.as_ref().and_then(|d| lower_expr(d, ctx));

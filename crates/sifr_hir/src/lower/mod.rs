@@ -121,12 +121,9 @@ pub(super) struct LowerCtx {
     synthetic_import_aliases: HashMap<String, String>,
     sequence_guards: Vec<SequenceGuard>,
     sequence_pointers: Vec<SequencePointerFact>,
-    /// Pending/resolved local infinity sentinel facts for algorithmic accumulators.
     numeric_sentinel_vars: HashMap<String, numeric_sentinels::NumericSentinelFact>,
-    /// Pending initializer patches once a sentinel variable domain resolves.
     pending_numeric_sentinel_patches: HashMap<String, numeric_sentinels::NumericSentinelPatch>,
     sequence_shapes: Vec<sequence_shapes::SequenceShapeFact>,
-    /// Per-function nonlocal declarations and frame boundaries.
     function_scopes: Vec<function_scopes::FunctionScopeState>,
     inferred_binding_hints: Vec<HashMap<String, Type>>,
 }
