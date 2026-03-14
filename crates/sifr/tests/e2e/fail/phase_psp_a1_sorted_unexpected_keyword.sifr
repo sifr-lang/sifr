@@ -1,0 +1,5 @@
+# expect-error: SIFR-TYPE-0001: sorted() got an unexpected keyword argument 'bogus'
+
+def main():
+    nums: list[int] = [3, 1, 2]
+    ordered: list[int] = sorted(nums, bogus=True)

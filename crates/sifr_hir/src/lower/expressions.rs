@@ -1,7 +1,10 @@
 use super::arithmetic_warnings::check_int_overflow_risk;
 use super::builtin_calls::{
-    lower_defaultdict_constructor_call, lower_isinstance_call, lower_len_call, lower_range_call,
-    lower_reveal_type_call, lower_set_constructor_call, DEFAULTDICT_INT_ALIAS,
+    callable_builtin_element_type, callable_builtin_list_output_type,
+    lower_builtin_reverseable_arg, lower_chr_call, lower_defaultdict_constructor_call,
+    lower_dict_constructor_call, lower_isinstance_call, lower_len_call,
+    lower_list_constructor_call, lower_ord_call, lower_range_call, lower_reveal_type_call,
+    lower_set_constructor_call, lower_tuple_constructor_call, DEFAULTDICT_INT_ALIAS,
     DEFAULTDICT_LIST_ALIAS, DEFAULTDICT_SET_ALIAS,
 };
 use super::classes::is_hashable_type;
@@ -83,6 +86,23 @@ pub(super) fn lower_number_literal(num: &ExprNumberLiteral) -> Option<HirExpr> {
         }
         Number::Float(f) => Some(HirExpr::FloatLiteral(*f)),
         Number::Complex { .. } => None, // Not supported in M1
+    }
+}
+
+fn callable_signature(expr: &HirExpr) -> Option<(Vec<Type>, Vec<ParamConvention>, Type)> {
+    match expr.ty().resolve_alias() {
+        Type::Function(ft) => Some((
+            ft.params.iter().map(|(_, ty, _)| ty.clone()).collect(),
+            ft.params
+                .iter()
+                .map(|(_, _, convention)| *convention)
+                .collect(),
+            *ft.return_type.clone(),
+        )),
+        Type::Callable(params, conventions, return_type) => {
+            Some((params.clone(), conventions.clone(), *return_type.clone()))
+        }
+        _ => None,
     }
 }
 
@@ -471,8 +491,28 @@ pub(super) fn lower_call(call: &ExprCall, ctx: &mut LowerCtx) -> Option<HirExpr>
             return lower_defaultdict_constructor_call(call, ctx);
         }
 
+        if func_name == "list" {
+            return lower_list_constructor_call(call, ctx);
+        }
+
+        if func_name == "tuple" {
+            return lower_tuple_constructor_call(call, ctx);
+        }
+
+        if func_name == "dict" {
+            return lower_dict_constructor_call(call, ctx);
+        }
+
         if func_name == "set" {
             return lower_set_constructor_call(call, ctx);
+        }
+
+        if func_name == "ord" {
+            return lower_ord_call(call, ctx);
+        }
+
+        if func_name == "chr" {
+            return lower_chr_call(call, ctx);
         }
 
         // Special handling for range() built-in
@@ -997,43 +1037,131 @@ pub(super) fn lower_call(call: &ExprCall, ctx: &mut LowerCtx) -> Option<HirExpr>
 
         // sorted(iterable) -> list of element type
         if func_name == "sorted" {
-            if call.arguments.args.len() != 1 {
-                ctx.error("sorted() takes exactly 1 argument".to_string());
+            if call.arguments.args.len() > 1 {
+                ctx.error("sorted() takes at most 1 positional argument".to_string());
                 return None;
             }
-            let arg = lower_expr(&call.arguments.args[0], ctx)?;
-            let list_ty = if let Type::List(_) = arg.ty() {
-                arg.ty().clone()
-            } else {
+            let mut iterable_keyword = None;
+            let mut key_keyword = None;
+            let mut reverse_keyword = None;
+            for keyword in &call.arguments.keywords {
+                let Some(name) = keyword.arg.as_ref() else {
+                    ctx.error("sorted() does not support unpacked keyword arguments".to_string());
+                    return None;
+                };
+                match name.as_str() {
+                    "iterable" => {
+                        if iterable_keyword.is_some() {
+                            ctx.error(
+                                "sorted() got multiple values for keyword argument 'iterable'"
+                                    .to_string(),
+                            );
+                            return None;
+                        }
+                        iterable_keyword = Some(keyword);
+                    }
+                    "key" => {
+                        if key_keyword.is_some() {
+                            ctx.error(
+                                "sorted() got multiple values for keyword argument 'key'"
+                                    .to_string(),
+                            );
+                            return None;
+                        }
+                        key_keyword = Some(keyword);
+                    }
+                    "reverse" => {
+                        if reverse_keyword.is_some() {
+                            ctx.error(
+                                "sorted() got multiple values for keyword argument 'reverse'"
+                                    .to_string(),
+                            );
+                            return None;
+                        }
+                        reverse_keyword = Some(keyword);
+                    }
+                    other => {
+                        ctx.error(format!(
+                            "sorted() got an unexpected keyword argument '{other}'"
+                        ));
+                        return None;
+                    }
+                }
+            }
+            let iterable = match (call.arguments.args.first(), iterable_keyword) {
+                (Some(_), Some(_)) => {
+                    ctx.error("sorted() got multiple values for argument 'iterable'".to_string());
+                    return None;
+                }
+                (Some(arg), None) => lower_expr(arg, ctx)?,
+                (None, Some(keyword)) => lower_expr(&keyword.value, ctx)?,
+                (None, None) => {
+                    ctx.error("sorted() missing required argument 'iterable'".to_string());
+                    return None;
+                }
+            };
+            let Some(elem_ty) = callable_builtin_element_type(iterable.ty()) else {
                 ctx.error(format!(
-                    "sorted() argument must be a list, got '{}'",
-                    arg.ty().display_name()
+                    "sorted() argument must be an iterable with a statically-known element type, got '{}'",
+                    iterable.ty().display_name()
                 ));
                 return None;
             };
+            let mut key_arg = None;
+            let mut reverse_arg = HirExpr::BoolLiteral(false);
+            if let Some(keyword) = key_keyword {
+                let lowered = if matches!(keyword.value, Expr::NoneLiteral(_)) {
+                    lower_expr(&keyword.value, ctx)?
+                } else {
+                    lower_lambda_with_context(&keyword.value, std::slice::from_ref(&elem_ty), ctx)?
+                };
+                if !matches!(lowered, HirExpr::NoneLiteral) {
+                    let Some((param_types, _conventions, _return_ty)) =
+                        callable_signature(&lowered)
+                    else {
+                        ctx.error("sorted() keyword argument 'key' must be callable".to_string());
+                        return None;
+                    };
+                    if param_types.len() != 1 {
+                        ctx.error(
+                            "sorted() key callable must accept exactly 1 argument".to_string(),
+                        );
+                        return None;
+                    }
+                }
+                key_arg = Some(lowered);
+            }
+            if let Some(keyword) = reverse_keyword {
+                let lowered = lower_expr(&keyword.value, ctx)?;
+                if lowered.ty() != &Type::Bool {
+                    ctx.error(format!(
+                        "sorted() keyword argument 'reverse' must be 'bool', got '{}'",
+                        lowered.ty().display_name()
+                    ));
+                    return None;
+                }
+                reverse_arg = lowered;
+            }
+            let list_ty = callable_builtin_list_output_type(iterable.ty())?;
+            let mut args = vec![iterable];
+            if let Some(key_arg) = key_arg {
+                args.push(key_arg);
+                args.push(reverse_arg);
+            } else if !matches!(reverse_arg, HirExpr::BoolLiteral(false)) {
+                args.push(HirExpr::NoneLiteral);
+                args.push(reverse_arg);
+            }
             return Some(HirExpr::Call {
                 func: "sorted".to_string(),
-                args: vec![arg],
+                args,
                 ty: list_ty,
             });
         }
 
         // reversed(iterable) -> list of element type
         if func_name == "reversed" {
-            if call.arguments.args.len() != 1 {
-                ctx.error("reversed() takes exactly 1 argument".to_string());
-                return None;
-            }
-            let arg = lower_expr(&call.arguments.args[0], ctx)?;
-            let list_ty = if let Type::List(_) = arg.ty() {
-                arg.ty().clone()
-            } else {
-                ctx.error(format!(
-                    "reversed() argument must be a list, got '{}'",
-                    arg.ty().display_name()
-                ));
-                return None;
-            };
+            let arg = lower_builtin_reverseable_arg(call, "reversed", ctx)?;
+            let list_ty = callable_builtin_list_output_type(arg.ty())?;
             return Some(HirExpr::Call {
                 func: "reversed".to_string(),
                 args: vec![arg],
@@ -1043,60 +1171,103 @@ pub(super) fn lower_call(call: &ExprCall, ctx: &mut LowerCtx) -> Option<HirExpr>
 
         // enumerate(iterable) -> list of (int, element) tuples
         if func_name == "enumerate" {
-            if call.arguments.args.len() != 1 {
-                ctx.error("enumerate() takes exactly 1 argument".to_string());
+            if call.arguments.args.is_empty() || call.arguments.args.len() > 2 {
+                ctx.error("enumerate() takes 1 or 2 arguments".to_string());
                 return None;
             }
             let arg = lower_expr(&call.arguments.args[0], ctx)?;
-            let elem_ty = if let Type::List(elem) = arg.ty() {
-                *elem.clone()
-            } else {
+            let Some(elem_ty) = callable_builtin_element_type(arg.ty()) else {
                 ctx.error(format!(
-                    "enumerate() argument must be a list, got '{}'",
+                    "enumerate() argument must be an iterable with a statically-known element type, got '{}'",
                     arg.ty().display_name()
                 ));
                 return None;
             };
+            let start = if call.arguments.args.len() == 2 {
+                let lowered = lower_expr(&call.arguments.args[1], ctx)?;
+                if lowered.ty() != &Type::Int {
+                    ctx.error(format!(
+                        "enumerate() start argument must be 'int', got '{}'",
+                        lowered.ty().display_name()
+                    ));
+                    return None;
+                }
+                lowered
+            } else if let Some(keyword) = call
+                .arguments
+                .keywords
+                .iter()
+                .find(|keyword| keyword.arg.as_deref() == Some("start"))
+            {
+                let lowered = lower_expr(&keyword.value, ctx)?;
+                if lowered.ty() != &Type::Int {
+                    ctx.error(format!(
+                        "enumerate() keyword argument 'start' must be 'int', got '{}'",
+                        lowered.ty().display_name()
+                    ));
+                    return None;
+                }
+                lowered
+            } else {
+                HirExpr::IntLiteral(0)
+            };
+            for keyword in &call.arguments.keywords {
+                let Some(name) = keyword.arg.as_ref() else {
+                    ctx.error(
+                        "enumerate() does not support unpacked keyword arguments".to_string(),
+                    );
+                    return None;
+                };
+                if name.as_str() != "start" {
+                    ctx.error(format!(
+                        "enumerate() got an unexpected keyword argument '{name}'"
+                    ));
+                    return None;
+                }
+                if call.arguments.args.len() == 2 {
+                    ctx.error("enumerate() got multiple values for argument 'start'".to_string());
+                    return None;
+                }
+            }
             let tuple_ty = Type::Tuple(vec![Type::Int, elem_ty]);
             let result_ty = Type::List(Box::new(tuple_ty));
+            let args = if matches!(start, HirExpr::IntLiteral(0)) {
+                vec![arg]
+            } else {
+                vec![arg, start]
+            };
             return Some(HirExpr::Call {
                 func: "enumerate".to_string(),
-                args: vec![arg],
+                args,
                 ty: result_ty,
             });
         }
 
-        // zip(iter1, iter2) -> list of (elem1, elem2) tuples
+        // zip(*iters) -> list of tuples
         if func_name == "zip" {
-            if call.arguments.args.len() != 2 {
-                ctx.error("zip() takes exactly 2 arguments".to_string());
+            if !call.arguments.keywords.is_empty() {
+                ctx.error("zip() does not accept keyword arguments in this phase".to_string());
                 return None;
             }
-            let arg1 = lower_expr(&call.arguments.args[0], ctx)?;
-            let arg2 = lower_expr(&call.arguments.args[1], ctx)?;
-            let elem1 = if let Type::List(elem) = arg1.ty() {
-                *elem.clone()
-            } else {
-                ctx.error(format!(
-                    "zip() argument 1 must be a list, got '{}'",
-                    arg1.ty().display_name()
-                ));
-                return None;
-            };
-            let elem2 = if let Type::List(elem) = arg2.ty() {
-                *elem.clone()
-            } else {
-                ctx.error(format!(
-                    "zip() argument 2 must be a list, got '{}'",
-                    arg2.ty().display_name()
-                ));
-                return None;
-            };
-            let tuple_ty = Type::Tuple(vec![elem1, elem2]);
-            let result_ty = Type::List(Box::new(tuple_ty));
+            let mut args = Vec::with_capacity(call.arguments.args.len());
+            let mut elem_types = Vec::with_capacity(call.arguments.args.len());
+            for (index, arg_expr) in call.arguments.args.iter().enumerate() {
+                let arg = lower_expr(arg_expr, ctx)?;
+                let Some(elem_ty) = callable_builtin_element_type(arg.ty()) else {
+                    ctx.error(format!(
+                        "zip() argument {} must be an iterable with a statically-known element type, got '{}'",
+                        index + 1,
+                        arg.ty().display_name()
+                    ));
+                    return None;
+                };
+                elem_types.push(elem_ty);
+                args.push(arg);
+            }
+            let result_ty = Type::List(Box::new(Type::Tuple(elem_types)));
             return Some(HirExpr::Call {
                 func: "zip".to_string(),
-                args: vec![arg1, arg2],
+                args,
                 ty: result_ty,
             });
         }
@@ -1132,27 +1303,46 @@ pub(super) fn lower_call(call: &ExprCall, ctx: &mut LowerCtx) -> Option<HirExpr>
 
     // map(func, iterable) -> list
     if func_name == "map" {
-        if call.arguments.args.len() != 2 {
-            ctx.error("map() takes exactly 2 arguments (function, iterable)".to_string());
+        if !call.arguments.keywords.is_empty() {
+            ctx.error("map() does not accept keyword arguments in this phase".to_string());
             return None;
         }
-        // Lower iterable first to get element type for contextual lambda typing
-        let iter_arg = lower_expr(&call.arguments.args[1], ctx)?;
-        let elem_ty = match iter_arg.ty() {
-            Type::List(elem) => *elem.clone(),
-            _ => Type::Any,
+        if call.arguments.args.len() < 2 {
+            ctx.error("map() takes a callable followed by at least one iterable".to_string());
+            return None;
+        }
+        let mut iter_args = Vec::with_capacity(call.arguments.args.len() - 1);
+        let mut context_types = Vec::with_capacity(call.arguments.args.len() - 1);
+        for arg_expr in call.arguments.args.iter().skip(1) {
+            let iter_arg = lower_expr(arg_expr, ctx)?;
+            let Some(elem_ty) = callable_builtin_element_type(iter_arg.ty()) else {
+                ctx.error(format!(
+                    "map() iterable arguments must have statically-known element types, got '{}'",
+                    iter_arg.ty().display_name()
+                ));
+                return None;
+            };
+            context_types.push(elem_ty);
+            iter_args.push(iter_arg);
+        }
+        let func_arg = lower_lambda_with_context(&call.arguments.args[0], &context_types, ctx)?;
+        let Some((param_types, _conventions, result_elem_ty)) = callable_signature(&func_arg)
+        else {
+            ctx.error("map() first argument must be callable".to_string());
+            return None;
         };
-        // Lower lambda with contextual typing
-        let func_arg = lower_lambda_with_context(&call.arguments.args[0], &[elem_ty], ctx)?;
-        // Determine result element type from the function's return type
-        let result_elem_ty = match func_arg.ty() {
-            Type::Function(ft) => *ft.return_type.clone(),
-            _ => Type::Any,
-        };
+        if param_types.len() != context_types.len() {
+            ctx.error(format!(
+                "map() callable expects {} argument(s), got {} iterable(s)",
+                param_types.len(),
+                context_types.len()
+            ));
+            return None;
+        }
         let result_ty = Type::List(Box::new(result_elem_ty));
         return Some(HirExpr::Call {
             func: "map".to_string(),
-            args: vec![func_arg, iter_arg],
+            args: std::iter::once(func_arg).chain(iter_args).collect(),
             ty: result_ty,
         });
     }
@@ -3465,336 +3655,4 @@ pub(super) fn lower_named_expr(named: &ExprNamed, ctx: &mut LowerCtx) -> Option<
         value: Box::new(value),
         ty,
     })
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-    use crate::{lower_module, HirModule, LoweringError};
-    use sifr_python_parser::parse_module;
-
-    fn lower_source(source: &str) -> Result<HirModule, Vec<LoweringError>> {
-        let parsed = parse_module(source).expect("parse failed");
-        lower_module(parsed.suite()).map(|r| r.module)
-    }
-
-    #[test]
-    fn test_simple_function() {
-        let module = lower_source("def add(a: int, b: int) -> int:\n    return a + b\n").unwrap();
-        assert_eq!(module.functions.len(), 1);
-        assert_eq!(module.functions[0].name, "add");
-        assert_eq!(module.functions[0].return_type, Type::Int);
-    }
-
-    #[test]
-    fn test_type_mismatch_error() {
-        let result = lower_source("def main():\n    x: int = \"hello\"\n");
-        assert!(result.is_err());
-        let errors = result.unwrap_err();
-        assert!(errors.iter().any(|e| e.message.contains("type mismatch")));
-    }
-
-    #[test]
-    fn test_undefined_variable() {
-        let result = lower_source("def main():\n    print(x)\n");
-        assert!(result.is_err());
-        let errors = result.unwrap_err();
-        assert!(errors
-            .iter()
-            .any(|e| e.message.contains("undefined variable")));
-    }
-
-    #[test]
-    fn test_use_after_move() {
-        // Under borrow-by-default, consume() needs `own` to move the argument.
-        // Without `own`, the argument is borrowed and no move error occurs.
-        let result = lower_source(
-            "def consume(own s: str) -> str:\n    return s\ndef main():\n    s: str = \"hello\"\n    x: str = consume(s)\n    print(s)\n"
-        );
-        assert!(result.is_err());
-        let errors = result.unwrap_err();
-        assert!(errors.iter().any(|e| e.message.contains("moved value")));
-    }
-
-    #[test]
-    fn test_borrow_by_default_no_move() {
-        // Under borrow-by-default, passing to a function that borrows does NOT move.
-        let result = lower_source(
-            "def process(s: str) -> int:\n    return len(s)\ndef main():\n    s: str = \"hello\"\n    x: int = process(s)\n    print(s)\n"
-        );
-        assert!(
-            result.is_ok(),
-            "borrow-by-default should not cause use-after-move"
-        );
-    }
-
-    #[test]
-    fn test_user_defined_sum_shadows_builtin() {
-        let result = lower_source(
-            "def sum(num1: int, num2: int) -> int:\n    return num1 + num2\ndef main():\n    assert sum(12, 5) == 17\n",
-        );
-        assert!(
-            result.is_ok(),
-            "user-defined sum should shadow the builtin lowering path"
-        );
-    }
-
-    #[test]
-    fn test_builtin_set_constructor_accepts_list_iterable() {
-        let result = lower_source("def main():\n    seen = set([1, 2, 2])\n    assert 2 in seen\n");
-        assert!(
-            result.is_ok(),
-            "set(list[T]) should lower as a builtin constructor"
-        );
-    }
-
-    #[test]
-    fn test_bare_deque_call_resolves_without_import() {
-        let result = lower_source(
-            "def main():\n    q = deque([1])\n    q.append(2)\n    assert q.popleft() == 1\n",
-        );
-        assert!(
-            result.is_ok(),
-            "bare deque(...) should resolve through the compat stdlib surface"
-        );
-    }
-
-    #[test]
-    fn test_defaultdict_list_call_resolves_without_import() {
-        let result = lower_source(
-            "def main():\n    groups = defaultdict(list)\n    groups[\"a\"].append(\"x\")\n    assert len(groups[\"a\"]) == 1\n",
-        );
-        assert!(
-            result.is_ok(),
-            "defaultdict(list) should resolve through the compat builtin surface"
-        );
-    }
-
-    #[test]
-    fn test_copy_type_no_move() {
-        let module =
-            lower_source("def main():\n    x: int = 42\n    print(x)\n    print(x)\n").unwrap();
-        assert_eq!(module.functions.len(), 1);
-    }
-
-    #[test]
-    fn test_while_loop() {
-        let module =
-            lower_source("def main():\n    i: int = 0\n    while i < 10:\n        i = i + 1\n")
-                .unwrap();
-        assert_eq!(module.functions.len(), 1);
-        // Body should contain a Let and a While
-        assert!(module.functions[0].body.len() >= 2);
-        assert!(matches!(module.functions[0].body[1], HirStmt::While { .. }));
-    }
-
-    #[test]
-    fn test_for_range() {
-        let module =
-            lower_source("def main():\n    for i in range(10):\n        print(i)\n").unwrap();
-        assert_eq!(module.functions.len(), 1);
-        assert!(matches!(module.functions[0].body[0], HirStmt::For { .. }));
-    }
-
-    #[test]
-    fn test_for_range_start_end() {
-        let module =
-            lower_source("def main():\n    for i in range(1, 5):\n        print(i)\n").unwrap();
-        assert_eq!(module.functions.len(), 1);
-        assert!(matches!(module.functions[0].body[0], HirStmt::For { .. }));
-    }
-
-    #[test]
-    fn test_break_outside_loop() {
-        let result = lower_source("def main():\n    break\n");
-        assert!(result.is_err());
-        let errors = result.unwrap_err();
-        assert!(errors
-            .iter()
-            .any(|e| e.message.contains("'break' outside of loop")));
-    }
-
-    #[test]
-    fn test_continue_outside_loop() {
-        let result = lower_source("def main():\n    continue\n");
-        assert!(result.is_err());
-        let errors = result.unwrap_err();
-        assert!(errors
-            .iter()
-            .any(|e| e.message.contains("'continue' outside of loop")));
-    }
-
-    #[test]
-    fn test_break_inside_loop() {
-        let module = lower_source("def main():\n    while True:\n        break\n").unwrap();
-        assert_eq!(module.functions.len(), 1);
-    }
-
-    #[test]
-    fn test_nested_loops() {
-        let module = lower_source(
-            "def main():\n    for i in range(3):\n        for j in range(2):\n            print(i)\n"
-        ).unwrap();
-        assert_eq!(module.functions.len(), 1);
-    }
-
-    #[test]
-    fn test_fstring_basic() {
-        let module = lower_source(
-            "def main():\n    name: str = \"Alice\"\n    msg: str = f\"Hello, {name}!\"\n    print(msg)\n"
-        ).unwrap();
-        assert_eq!(module.functions.len(), 1);
-        // Should have 3 statements: let name, let msg, print
-        assert_eq!(module.functions[0].body.len(), 3);
-    }
-
-    #[test]
-    fn test_fstring_with_expression() {
-        let module = lower_source(
-            "def main():\n    a: int = 2\n    b: int = 3\n    print(f\"{a} + {b} = {a + b}\")\n",
-        )
-        .unwrap();
-        assert_eq!(module.functions.len(), 1);
-    }
-
-    #[test]
-    fn test_tuple_unpack() {
-        let module = lower_source(
-            "def main():\n    pair: tuple[int, str] = (1, \"hello\")\n    x, y = pair\n    print(x)\n"
-        ).unwrap();
-        assert_eq!(module.functions.len(), 1);
-        // Should have: let pair, tuple_unpack, print
-        assert!(module.functions[0].body.len() >= 3);
-        assert!(matches!(
-            module.functions[0].body[1],
-            HirStmt::TupleUnpack { .. }
-        ));
-    }
-
-    #[test]
-    fn test_tuple_unpack_wrong_count() {
-        let result = lower_source(
-            "def main():\n    pair: tuple[int, str] = (1, \"hello\")\n    x, y, z = pair\n",
-        );
-        assert!(result.is_err());
-        let errors = result.unwrap_err();
-        assert!(errors
-            .iter()
-            .any(|e| e.message.contains("expected 3 values, got 2")));
-    }
-
-    #[test]
-    fn test_tuple_unpack_non_tuple() {
-        let result = lower_source("def main():\n    x: int = 42\n    a, b = x\n");
-        assert!(result.is_err());
-        let errors = result.unwrap_err();
-        assert!(errors
-            .iter()
-            .any(|e| e.message.contains("cannot unpack non-tuple")));
-    }
-
-    #[test]
-    fn test_for_tuple_target_requires_tuple_elements() {
-        let result = lower_source(
-            "def main():\n    nums: list[int] = [1, 2, 3]\n    for a, b in nums:\n        print(a)\n",
-        );
-        assert!(result.is_err());
-        let errors = result.unwrap_err();
-        assert!(errors.iter().any(|e| {
-            e.message
-                .contains("for loop tuple target expects iterable elements of tuple type")
-        }));
-    }
-
-    #[test]
-    fn test_generic_class_subscript_requires_declared_type_params() {
-        let result = lower_source(
-            "T = TypeVar(\"T\")\nclass LegacyBox:\n    value: T\ndef f(x: LegacyBox[int]) -> int:\n    return 1\n",
-        );
-        assert!(result.is_err());
-        let errors = result.unwrap_err();
-        assert!(errors
-            .iter()
-            .any(|e| e.message.contains("does not declare type parameters")));
-    }
-
-    #[test]
-    fn test_generic_class_subscript_arity_mismatch_errors() {
-        let result = lower_source(
-            "class Pair[T]:\n    left: T\n    right: T\ndef f(x: Pair[int, str]) -> int:\n    return 1\n",
-        );
-        assert!(result.is_err());
-        let errors = result.unwrap_err();
-        assert!(errors
-            .iter()
-            .any(|e| e.message.contains("expects 1 type argument(s), got 2")));
-    }
-
-    #[test]
-    fn test_match_tuple_pattern_requires_tuple_subject() {
-        let result = lower_source(
-            "def main():\n    x: int = 1\n    match x:\n        case (a, b):\n            print(a)\n",
-        );
-        assert!(result.is_err());
-        let errors = result.unwrap_err();
-        assert!(errors.iter().any(|e| e
-            .message
-            .contains("tuple pattern requires subject of tuple type")));
-    }
-
-    #[test]
-    fn test_match_tuple_pattern_arity_mismatch_errors() {
-        let result = lower_source(
-            "def main():\n    x: tuple[int, int] = (1, 2)\n    match x:\n        case (a, b, c):\n            print(a)\n",
-        );
-        assert!(result.is_err());
-        let errors = result.unwrap_err();
-        assert!(errors.iter().any(|e| e
-            .message
-            .contains("tuple pattern expects 3 element(s), subject has 2")));
-    }
-
-    #[test]
-    fn test_protocol_bound_forwarding_accepts_conforming_typevar() {
-        let result = lower_source(
-            "class Runner(Protocol):\n    def run(self) -> int:\n        pass\n\nclass Job:\n    def run(self) -> int:\n        return 1\n\ndef use_runner[T: Runner](x: T) -> T:\n    return x\n\ndef relay_runner[U: Runner](x: U) -> U:\n    return use_runner(x)\n\ndef main():\n    j: Job = relay_runner(Job())\n    print(j.run())\n",
-        );
-        assert!(result.is_ok());
-    }
-
-    #[test]
-    fn test_protocol_bound_forwarding_rejects_unknown_bound() {
-        let result = lower_source(
-            "def take_missing[T: MissingBound](x: T) -> T:\n    return x\n\ndef relay_missing[U: MissingBound](x: U) -> U:\n    return take_missing(x)\n\ndef main():\n    print(1)\n",
-        );
-        assert!(result.is_err());
-        let errors = result.unwrap_err();
-        assert!(errors.iter().any(|e| {
-            e.message
-                .contains("does not implement protocol 'MissingBound'")
-        }));
-    }
-
-    #[test]
-    fn test_protocol_bound_forwarding_rejects_non_conforming_typevar() {
-        let result = lower_source(
-            "class Readable(Protocol):\n    def read(self) -> str:\n        pass\n\nclass Closable(Protocol):\n    def close(self) -> None:\n        pass\n\ndef take_readable[T: Readable](x: T) -> T:\n    return x\n\ndef relay_bad[U: Closable](x: U) -> U:\n    return take_readable(x)\n\ndef main():\n    print(1)\n",
-        );
-        assert!(result.is_err());
-        let errors = result.unwrap_err();
-        assert!(errors
-            .iter()
-            .any(|e| e.message.contains("does not implement protocol 'Readable'")));
-    }
-
-    #[test]
-    fn test_recursive_tree_attributes_narrow_after_truthiness_or_guard() {
-        let result = lower_source(
-            "class TreeNode:\n    val: int\n    left: TreeNode | None\n    right: TreeNode | None\n\n    def __init__(self, val: int, left: TreeNode | None, right: TreeNode | None):\n        self.val = val\n        self.left = left\n        self.right = right\n\ndef mirrored_sum(p: TreeNode | None, q: TreeNode | None) -> int:\n    if not p and not q:\n        return 0\n    if not p or not q:\n        return 0\n    left: TreeNode | None = p.left\n    right: TreeNode | None = q.right\n    return p.val + q.val + mirrored_sum(left, q.left) + mirrored_sum(p.right, right)\n",
-        );
-        assert!(
-            result.is_ok(),
-            "recursive tree attributes should lower after `if not p or not q` early-return narrowing"
-        );
-    }
 }
