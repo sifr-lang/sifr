@@ -32,9 +32,50 @@ def validTree(n, edges):
 
     return dfs(0, -1) and n == len(visit)
 
+
+# alternative solution via DSU. It avoids building an adjacency walk stack
+# and instead rejects cycles while tracking connected components directly.
+def validTreeDsu(n, edges):
+    if n == 0:
+        return True
+
+    parents = [i for i in range(n)]
+    ranks = [1] * n
+    components = n
+
+    def find(node):
+        while node != parents[node]:
+            parents[node] = parents[parents[node]]
+            node = parents[node]
+        return node
+
+    def union(a, b):
+        nonlocal components
+        root_a = find(a)
+        root_b = find(b)
+        if root_a == root_b:
+            return False
+        if ranks[root_a] < ranks[root_b]:
+            parents[root_a] = root_b
+        elif ranks[root_a] > ranks[root_b]:
+            parents[root_b] = root_a
+        else:
+            parents[root_b] = root_a
+            ranks[root_a] += 1
+        components -= 1
+        return True
+
+    for a, b in edges:
+        if not union(a, b):
+            return False
+
+    return components == 1
+
 def main():
     assert validTree(5, [[0, 1], [0, 2], [0, 3], [1, 4]]) is True
     assert validTree(5, [[0, 1], [1, 2], [2, 3], [1, 3], [1, 4]]) is False
+    assert validTreeDsu(5, [[0, 1], [0, 2], [0, 3], [1, 4]]) is True
+    assert validTreeDsu(5, [[0, 1], [1, 2], [2, 3], [1, 3], [1, 4]]) is False
 
 if __name__ == "__main__":
     main()
