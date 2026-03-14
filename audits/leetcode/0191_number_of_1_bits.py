@@ -11,7 +11,9 @@ def hammingWeight(n: int) -> int:
 
 
 def main():
-    print("no test cases")
+    assert hammingWeight(11) == 3
+    assert hammingWeight(128) == 1
+    assert hammingWeight(2147483645) == 30
 
 if __name__ == "__main__":
     main()

@@ -11,6 +11,6 @@ def partitionString(s: str) -> int:
     return c+1
 
 def main():
-    assert str(minPartitions("abacbc")) == '3'
-
+    assert partitionString("abacbc") == 3
+    assert partitionString("ssssss") == 6
 

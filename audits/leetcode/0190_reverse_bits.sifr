@@ -8,5 +8,5 @@ def reverseBits(n: int) -> int:
     return res
 
 def main():
-    print("no test cases")
-
+    assert reverseBits(43261596) == 964176192
+    assert reverseBits(4294967293) == 3221225471
