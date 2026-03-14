@@ -68,6 +68,8 @@ Phase 31 itself is complete. This document is the carry-forward plan for the rem
 
 These are broader feature phases that must land before the related Phase 31 LeetCode closure milestones start.
 
+After reviewing every currently failing case and validating the result with an external reviewer, no additional broad ad hoc language/compiler phase is justified at this time beyond the two prerequisites below.
+
 ### `prereq_recursive_types`
 
 - Source phase: `issues/ad-hoc-full-recursive-type-feature.md`
@@ -277,6 +279,9 @@ This order starts with the two broader feature prerequisites, then front-loads i
   - `0043`
 - Definition of done:
   - canonical Sifr version of `0043` exists and is counted as the pass target
+  - the canonical rewrite changes only the parse-safety-conflicting surface and leaves the algorithm shape intact
+  - any remaining compiler/runtime failure after canonicalization is explicitly reclassified into the normal closure milestone that owns it
+  - current expectation: the post-canonicalization follow-on for `0043` is `m31_a_optional_flow_completion`
   - corpus docs clearly separate “problem supported” from “raw fixture source-compatible”
 
 ### `m31_i_corpus_fixture_canonicalization_for_multi_solution_files`
@@ -289,7 +294,9 @@ This order starts with the two broader feature prerequisites, then front-loads i
   - `0215`, `1046`
 - Definition of done:
   - each file is reduced to one canonical solution
-  - any remaining failure is reclassified into a real compiler/runtime bucket
+  - the milestone owns fixture canonicalization only; it is not the final functional owner of making the case pass
+  - any remaining failure after canonicalization is reclassified into the normal closure milestone that owns it
+  - current expectation: `0215` and `1046` both fall into `m31_a_optional_flow_completion` after canonicalization
 
 ### `m31_c_stdlib_module_parity`
 
