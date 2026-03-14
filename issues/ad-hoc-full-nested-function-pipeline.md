@@ -33,7 +33,7 @@ This phase covers the full compiler pipeline for:
   - Closure basis: nested helpers are now predeclared as typed local callables during HIR lowering, forward local helper references no longer fail due to statement-order registration, and missing helper names still fail explicitly.
 - `2026-03-14`: `milestone_nested_2` completed.
   - Execution report: `issues/ad-hoc-full-nested-function-pipeline-part2-execution.md`
-  - PR: pending
+  - PR: `#1141`
   - Closure basis: supported recursive local helpers now infer parameters and returns deterministically, conflicting local-helper inference fails explicitly, and the watched corpus has moved beyond the original nested-annotation / `Any` failure mode.
 
 ## Entry Baseline Evidence (2026-03-14)

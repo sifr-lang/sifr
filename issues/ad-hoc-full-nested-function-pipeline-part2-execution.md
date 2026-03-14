@@ -4,7 +4,7 @@ Status: complete
 Started: 2026-03-14
 Completed: 2026-03-14
 Part: `milestone_nested_2`
-PR: pending
+PR: `#1141`
 
 ## Goal
 
