@@ -1,0 +1,8 @@
+# Test: owned parameters remain immutable unless explicitly marked mut.
+
+def owned_immutable_mutation(own items: list[int]) -> list[int]:
+    items[0] = 7
+    return items
+
+def main():
+    print("unreachable")
