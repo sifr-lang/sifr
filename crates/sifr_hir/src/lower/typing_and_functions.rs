@@ -12,6 +12,7 @@ use std::collections::HashMap;
 use super::classes::lower_expr_simple;
 use super::diagnostics::{format_type_name, is_valid_error_type};
 use super::expressions::lower_expr;
+use super::nonlocal_support::collect_declared_nonlocals;
 use super::statements::{collect_return_types, lower_stmts};
 use super::{substitute_type_vars, LowerCtx};
 
@@ -664,7 +665,7 @@ pub(super) fn resolve_annotation_expr(expr: &Expr, ctx: &mut LowerCtx) -> Type {
 pub(super) fn lower_function(func: &StmtFunctionDef, ctx: &mut LowerCtx) -> Option<HirFunction> {
     let ft = ctx.functions.get::<str>(func.name.as_ref())?.clone();
 
-    ctx.scope.push();
+    ctx.enter_function_scope(collect_declared_nonlocals(&func.body));
 
     // Define parameters in scope, handling defaults
     let mut params = Vec::new();
@@ -758,7 +759,7 @@ pub(super) fn lower_function(func: &StmtFunctionDef, ctx: &mut LowerCtx) -> Opti
 
     ctx.borrowed_params.clear();
 
-    ctx.scope.pop();
+    ctx.exit_function_scope();
 
     // Infer return type if not explicitly annotated (marked as Type::Any)
     let inferred_return_type = if *ft.return_type == Type::Any && func.returns.is_none() {

@@ -7,13 +7,15 @@ use sifr_python_ast::{
 };
 use sifr_type_system::infer::resolve_type_annotation;
 use sifr_type_system::{
-    narrow_type, type_check_binary_op, FunctionType, NarrowingCondition, OwnershipKind,
-    ParamConvention, Type,
+    narrow_type, type_check_binary_op, FunctionType, NarrowingCondition, OwnershipKind, Type,
 };
 
 use super::classes::collect_literal_coverage;
 use super::diagnostics::{collect_raise_error_types, format_type_name, is_valid_error_type};
 use super::expressions::{lower_expr, lower_star_unpack_assign, lower_tuple_unpack_assign};
+use super::nonlocal_support::{
+    collect_declared_nonlocals, hir_body_calls_function, lower_nonlocal, should_rebind_simple_name,
+};
 use super::numeric_sentinels::{
     apply_numeric_sentinel_patches, domain_typed_sentinel_expr, numeric_domain_for_type,
     numeric_sentinel_kind,
@@ -25,7 +27,8 @@ use super::sequence_guard_detection::{
 use super::sequence_pointers::record_sequence_pointer_fact;
 use super::sequence_shapes::sequence_shape_fact;
 use super::typing_and_functions::{
-    register_local_function_signature, register_local_function_symbol, resolve_annotation_expr,
+    ast_convention_to_param, register_local_function_signature, register_local_function_symbol,
+    resolve_annotation_expr,
 };
 use super::LowerCtx;
 
@@ -401,6 +404,10 @@ pub(super) fn lower_stmt(
                 body_error_types,
             })
         }
+        Stmt::Nonlocal(nonlocal) => {
+            lower_nonlocal(nonlocal, ctx);
+            None
+        }
         Stmt::FunctionDef(func) => {
             // Nested function definition (def inside def)
             // Extract the function type (params + return type)
@@ -411,7 +418,8 @@ pub(super) fn lower_stmt(
                 .unwrap_or_else(|| register_local_function_symbol(func, ctx));
 
             // Lower the nested function body
-            ctx.scope.push();
+            let declared_nonlocals = collect_declared_nonlocals(&func.body);
+            ctx.enter_function_scope(declared_nonlocals.clone());
 
             // Define parameters in scope
             let mut params = Vec::new();
@@ -422,14 +430,16 @@ pub(super) fn lower_stmt(
                     .get(i)
                     .map(|(_, t, _)| t.clone())
                     .unwrap_or(Type::Any);
-                ctx.scope.define(name.clone(), ty.clone());
+                let convention = ast_convention_to_param(param_def.parameter.convention, &ty);
+                ctx.scope
+                    .define_parameter(name.clone(), ty.clone(), convention.is_mutable());
                 let default = param_def.default.as_ref().and_then(|d| lower_expr(d, ctx));
                 params.push(HirParam {
                     name,
                     ty,
                     default,
                     keyword_only: false,
-                    convention: ParamConvention::default(),
+                    convention,
                 });
             }
 
@@ -442,13 +452,15 @@ pub(super) fn lower_stmt(
                     .get(regular_count)
                     .map(|(_, t, _)| t.clone())
                     .unwrap_or(Type::Any);
-                ctx.scope.define(name.clone(), ty.clone());
+                let convention = ast_convention_to_param(vararg.convention, &ty);
+                ctx.scope
+                    .define_parameter(name.clone(), ty.clone(), convention.is_mutable());
                 params.push(HirParam {
                     name,
                     ty,
                     default: None,
                     keyword_only: false,
-                    convention: ParamConvention::default(),
+                    convention,
                 });
             }
 
@@ -462,19 +474,29 @@ pub(super) fn lower_stmt(
                     .get(regular_count + i)
                     .map(|(_, t, _)| t.clone())
                     .unwrap_or(Type::Any);
-                ctx.scope.define(name.clone(), ty.clone());
+                let convention = ast_convention_to_param(param_def.parameter.convention, &ty);
+                ctx.scope
+                    .define_parameter(name.clone(), ty.clone(), convention.is_mutable());
                 let default = param_def.default.as_ref().and_then(|d| lower_expr(d, ctx));
                 params.push(HirParam {
                     name,
                     ty,
                     default,
                     keyword_only: true,
-                    convention: ParamConvention::default(),
+                    convention,
                 });
             }
 
             let body = lower_stmts(&func.body, &ft, ctx);
-            ctx.scope.pop();
+            ctx.exit_function_scope();
+
+            if !declared_nonlocals.is_empty() && hir_body_calls_function(&body, func.name.as_str())
+            {
+                ctx.error(format!(
+                    "recursive nested function '{}' cannot mutate captured state with `nonlocal` yet",
+                    func.name
+                ));
+            }
 
             // Infer return type if not explicitly annotated
             let inferred_return_type = if *ft.return_type == Type::Any && func.returns.is_none() {
@@ -1321,8 +1343,18 @@ pub(super) fn lower_assign(assign: &StmtAssign, ctx: &mut LowerCtx) -> Option<Hi
         }
     }
 
+    let should_treat_as_existing_binding = if ctx.current_function_frame_start().is_some() {
+        should_rebind_simple_name(ctx, &name)
+    } else {
+        ctx.scope.lookup(&name).is_some()
+    };
+
     // Check if variable already exists
-    if let Some(info) = ctx.scope.lookup(&name) {
+    if should_treat_as_existing_binding {
+        let Some(info) = ctx.scope.lookup(&name) else {
+            ctx.error(format!("undefined variable: '{name}'"));
+            return None;
+        };
         if info.is_parameter_binding() && !info.is_mutable_binding {
             ctx.error(format!(
                 "cannot reassign immutable parameter `{name}`: add `mut` to the parameter declaration"
@@ -1485,13 +1517,26 @@ pub(super) fn lower_aug_assign(aug: &StmtAugAssign, ctx: &mut LowerCtx) -> Optio
         }
     };
 
-    // Check that the variable exists
-    let var_info = ctx.scope.lookup(&name);
-    if var_info.is_none() {
+    let var_info = if ctx.current_function_frame_start().is_some() {
+        if let Some(info) = ctx.lookup_current_function_binding(&name) {
+            Some(info)
+        } else if ctx.is_declared_nonlocal(&name) {
+            ctx.lookup_outer_function_binding(&name)
+        } else if ctx.scope.lookup(&name).is_some() {
+            ctx.error(format!(
+                "captured variable `{name}` must be declared with `nonlocal` before augmented assignment"
+            ));
+            return None;
+        } else {
+            None
+        }
+    } else {
+        ctx.scope.lookup(&name)
+    };
+    let Some(var_info) = var_info else {
         ctx.error(format!("undefined variable: '{name}'"));
         return None;
-    }
-    let var_info = var_info.unwrap();
+    };
     if var_info.is_parameter_binding() && !var_info.is_mutable_binding {
         ctx.error(format!(
             "cannot reassign immutable parameter `{name}`: add `mut` to the parameter declaration"

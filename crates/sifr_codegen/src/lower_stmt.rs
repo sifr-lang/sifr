@@ -795,6 +795,9 @@ fn try_lower_simple_nested_function_stmt(
         .into_iter()
         .filter(|(name, _)| !param_names.contains(name) && !locally_defined.contains(name))
         .collect();
+    let mutates_captures = nested_mutated_vars
+        .iter()
+        .any(|name| !param_names.contains(name) && !locally_defined.contains(name));
 
     if is_recursive {
         let capture_names = captures
@@ -839,7 +842,7 @@ fn try_lower_simple_nested_function_stmt(
         .collect::<Vec<_>>();
 
     Some(vec![RustStmt::Let {
-        mutable: outer_bindings.mutated_vars.contains(&func.name),
+        mutable: outer_bindings.mutated_vars.contains(&func.name) || mutates_captures,
         name: func.name.clone(),
         ty: None,
         value: RustExpr::ClosureBlock {
@@ -1312,16 +1315,16 @@ fn try_lower_simple_stmt_block(
 }
 
 pub(crate) fn tuple_unpack_pattern(
-    targets: &[(String, Type)],
+    targets: &[sifr_hir::HirTupleTarget],
     mutated_vars: &HashSet<String>,
 ) -> String {
     let names = targets
         .iter()
-        .map(|(name, _)| {
-            if mutated_vars.contains(name) {
-                format!("mut {name}")
+        .map(|target| {
+            if mutated_vars.contains(&target.name) {
+                format!("mut {}", target.name)
             } else {
-                name.clone()
+                target.name.clone()
             }
         })
         .collect::<Vec<_>>()
@@ -1330,17 +1333,63 @@ pub(crate) fn tuple_unpack_pattern(
 }
 
 fn try_lower_simple_tuple_unpack_stmt(
-    targets: &[(String, Type)],
+    targets: &[sifr_hir::HirTupleTarget],
     value: &HirExpr,
     mutated_vars: &HashSet<String>,
 ) -> Option<Vec<RustStmt>> {
     if targets.is_empty() {
         return None;
     }
+    if targets.iter().any(|target| target.rebind_existing) {
+        return None;
+    }
     Some(vec![RustStmt::LetPattern {
         pattern: tuple_unpack_pattern(targets, mutated_vars),
         value: try_lower_leaf_or_name_expr(value)?,
     }])
+}
+
+pub(crate) fn lower_tuple_unpack_targets(
+    targets: &[sifr_hir::HirTupleTarget],
+    lowered_value: RustExpr,
+    mutated_vars: &HashSet<String>,
+) -> Vec<RustStmt> {
+    if targets.iter().all(|target| !target.rebind_existing) {
+        return vec![RustStmt::LetPattern {
+            pattern: tuple_unpack_pattern(targets, mutated_vars),
+            value: lowered_value,
+        }];
+    }
+
+    let temp_names = targets
+        .iter()
+        .enumerate()
+        .map(|(index, _)| format!("__sifr_tuple_unpack_{index}"))
+        .collect::<Vec<_>>();
+    let temp_pattern = format!("({})", temp_names.join(", "));
+
+    let mut lowered = vec![RustStmt::LetPattern {
+        pattern: temp_pattern,
+        value: lowered_value,
+    }];
+
+    for (target, temp_name) in targets.iter().zip(temp_names.into_iter()) {
+        if target.rebind_existing {
+            lowered.push(RustStmt::Assign {
+                target: RustExpr::Ident(target.name.clone()),
+                value: RustExpr::Ident(temp_name),
+            });
+        } else {
+            lowered.push(RustStmt::Let {
+                mutable: mutated_vars.contains(&target.name),
+                name: target.name.clone(),
+                ty: None,
+                value: RustExpr::Ident(temp_name),
+            });
+        }
+    }
+
+    lowered
 }
 
 fn try_lower_simple_star_unpack_stmt(
@@ -3557,7 +3606,18 @@ mod tests {
     #[test]
     fn lowers_simple_tuple_unpack_stmt() {
         let tuple_unpack = HirStmt::TupleUnpack {
-            targets: vec![("a".to_string(), Type::Int), ("b".to_string(), Type::Bool)],
+            targets: vec![
+                sifr_hir::HirTupleTarget {
+                    name: "a".to_string(),
+                    ty: Type::Int,
+                    rebind_existing: false,
+                },
+                sifr_hir::HirTupleTarget {
+                    name: "b".to_string(),
+                    ty: Type::Bool,
+                    rebind_existing: false,
+                },
+            ],
             value: HirExpr::TupleLiteral {
                 elements: vec![HirExpr::IntLiteral(1), HirExpr::BoolLiteral(true)],
                 ty: Type::Tuple(vec![Type::Int, Type::Bool]),
@@ -3578,7 +3638,18 @@ mod tests {
     #[test]
     fn lowers_simple_tuple_unpack_stmt_with_mutated_bindings() {
         let tuple_unpack = HirStmt::TupleUnpack {
-            targets: vec![("l".to_string(), Type::Int), ("r".to_string(), Type::Int)],
+            targets: vec![
+                sifr_hir::HirTupleTarget {
+                    name: "l".to_string(),
+                    ty: Type::Int,
+                    rebind_existing: false,
+                },
+                sifr_hir::HirTupleTarget {
+                    name: "r".to_string(),
+                    ty: Type::Int,
+                    rebind_existing: false,
+                },
+            ],
             value: HirExpr::TupleLiteral {
                 elements: vec![HirExpr::IntLiteral(0), HirExpr::IntLiteral(4)],
                 ty: Type::Tuple(vec![Type::Int, Type::Int]),
@@ -3600,7 +3671,18 @@ mod tests {
     #[test]
     fn does_not_lower_tuple_unpack_with_non_leaf_value() {
         let tuple_unpack = HirStmt::TupleUnpack {
-            targets: vec![("a".to_string(), Type::Int), ("b".to_string(), Type::Bool)],
+            targets: vec![
+                sifr_hir::HirTupleTarget {
+                    name: "a".to_string(),
+                    ty: Type::Int,
+                    rebind_existing: false,
+                },
+                sifr_hir::HirTupleTarget {
+                    name: "b".to_string(),
+                    ty: Type::Bool,
+                    rebind_existing: false,
+                },
+            ],
             value: HirExpr::Call {
                 func: "pair".to_string(),
                 args: vec![],
@@ -3612,6 +3694,53 @@ mod tests {
             try_lower_simple_stmt(&tuple_unpack, false, &HashSet::new(), &HashSet::new(),)
                 .is_none()
         );
+    }
+
+    #[test]
+    fn lowers_tuple_unpack_with_rebind_targets_to_temp_and_assigns() {
+        let tuple_unpack = HirStmt::TupleUnpack {
+            targets: vec![
+                sifr_hir::HirTupleTarget {
+                    name: "left".to_string(),
+                    ty: Type::Int,
+                    rebind_existing: true,
+                },
+                sifr_hir::HirTupleTarget {
+                    name: "right".to_string(),
+                    ty: Type::Int,
+                    rebind_existing: false,
+                },
+            ],
+            value: HirExpr::TupleLiteral {
+                elements: vec![HirExpr::IntLiteral(1), HirExpr::IntLiteral(2)],
+                ty: Type::Tuple(vec![Type::Int, Type::Int]),
+            },
+        };
+
+        let lowered = lower_tuple_unpack_targets(
+            match &tuple_unpack {
+                HirStmt::TupleUnpack { targets, .. } => targets,
+                _ => unreachable!(),
+            },
+            RustExpr::Tuple(vec![
+                RustExpr::Literal(RustLiteral::Int(1)),
+                RustExpr::Literal(RustLiteral::Int(2)),
+            ]),
+            &HashSet::new(),
+        );
+
+        assert!(matches!(
+            lowered.as_slice(),
+            [
+                RustStmt::LetPattern { pattern, .. },
+                RustStmt::Assign { target: RustExpr::Ident(left), value: RustExpr::Ident(tmp0) },
+                RustStmt::Let { name: right, value: RustExpr::Ident(tmp1), .. }
+            ] if pattern == "(__sifr_tuple_unpack_0, __sifr_tuple_unpack_1)"
+                && left == "left"
+                && right == "right"
+                && tmp0 == "__sifr_tuple_unpack_0"
+                && tmp1 == "__sifr_tuple_unpack_1"
+        ));
     }
 
     #[test]
@@ -7993,6 +8122,38 @@ mod tests {
         assert!(matches!(
             lowered[0],
             RustStmt::LocalFn { ref name, .. } if name == "inner"
+        ));
+    }
+
+    #[test]
+    fn lowers_mutating_capture_nested_function_to_mutable_closure_binding() {
+        let stmt = HirStmt::NestedFunction {
+            func: HirFunction {
+                name: "inner".to_string(),
+                params: vec![],
+                return_type: Type::None,
+                body: vec![HirStmt::AugAssign {
+                    name: "total".to_string(),
+                    op: "+=".to_string(),
+                    value: HirExpr::IntLiteral(1),
+                }],
+                method_kind: MethodKind::Regular,
+                decorators: vec![],
+                type_params: vec![],
+            },
+        };
+
+        let lowered = try_lower_simple_stmt(&stmt, false, &HashSet::new(), &HashSet::new())
+            .expect("mutating nested function lowered");
+
+        assert!(matches!(
+            lowered[0],
+            RustStmt::Let {
+                mutable: true,
+                ref name,
+                value: RustExpr::ClosureBlock { .. },
+                ..
+            } if name == "inner"
         ));
     }
 

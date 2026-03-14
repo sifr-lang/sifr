@@ -159,7 +159,7 @@ pub enum HirStmt {
     Continue,
     /// Tuple unpacking: a, b = expr
     TupleUnpack {
-        targets: Vec<(String, Type)>,
+        targets: Vec<HirTupleTarget>,
         value: HirExpr,
     },
     /// Star unpacking: first, *rest = items
@@ -483,6 +483,17 @@ pub enum HirExpr {
         variant: String,
         ty: Type,
     },
+}
+
+/// A tuple-unpack target.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct HirTupleTarget {
+    /// The bound name.
+    pub name: String,
+    /// The inferred/declared element type.
+    pub ty: Type,
+    /// Whether this target rebinds an existing local/nonlocal binding.
+    pub rebind_existing: bool,
 }
 
 impl HirExpr {

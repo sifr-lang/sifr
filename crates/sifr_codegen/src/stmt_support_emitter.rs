@@ -3801,10 +3801,7 @@ impl RustEmitter {
                     return Ok(None);
                 };
                 (
-                    vec![RustStmt::LetPattern {
-                        pattern: crate::tuple_unpack_pattern(targets, &self.mutated_vars),
-                        value: lowered_value,
-                    }],
+                    crate::lower_tuple_unpack_targets(targets, lowered_value, &self.mutated_vars),
                     false,
                 )
             } else if let HirStmt::Let {

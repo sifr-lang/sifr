@@ -85,3 +85,52 @@ fn test_conflicting_nested_helper_call_sites_fail_inference_explicitly() {
         error.message == "argument 1 of callable 'helper': expected 'str', got 'int'"
     }));
 }
+
+#[test]
+fn test_nonlocal_nested_helper_rebinds_enclosing_name() {
+    let result = lower_source(
+        "def outer(values: list[int]) -> int:\n    total = 0\n    def apply() -> None:\n        nonlocal total\n        for value in values:\n            total += value\n    apply()\n    return total\n",
+    );
+    assert!(
+        result.is_ok(),
+        "nonlocal rebinding in a non-recursive nested helper should lower cleanly"
+    );
+}
+
+#[test]
+fn test_nonlocal_tuple_unpack_fails_explicitly() {
+    let result = lower_source(
+        "def outer() -> int:\n    left, right = 0, 1\n    def update() -> None:\n        nonlocal left, right\n        left, right = right, left + right\n    update()\n    return left + right\n",
+    );
+    assert!(result.is_err());
+    let errors = result.unwrap_err();
+    assert!(errors.iter().any(|error| {
+        error.message == "tuple unpacking cannot rebind captured state with `nonlocal` yet"
+    }));
+}
+
+#[test]
+fn test_augassign_to_capture_requires_nonlocal() {
+    let result = lower_source(
+        "def outer() -> int:\n    total = 0\n    def apply() -> None:\n        total += 1\n    apply()\n    return total\n",
+    );
+    assert!(result.is_err());
+    let errors = result.unwrap_err();
+    assert!(errors.iter().any(|error| {
+        error.message
+            == "captured variable `total` must be declared with `nonlocal` before augmented assignment"
+    }));
+}
+
+#[test]
+fn test_recursive_nonlocal_nested_helper_fails_explicitly() {
+    let result = lower_source(
+        "def outer(limit: int) -> int:\n    total = 0\n    def visit(i: int) -> None:\n        nonlocal total\n        if i == limit:\n            total += 1\n            return\n        visit(i + 1)\n    visit(0)\n    return total\n",
+    );
+    assert!(result.is_err());
+    let errors = result.unwrap_err();
+    assert!(errors.iter().any(|error| {
+        error.message
+            == "recursive nested function 'visit' cannot mutate captured state with `nonlocal` yet"
+    }));
+}
