@@ -4,7 +4,7 @@ Status: complete locally
 Started: 2026-03-14
 Completed: 2026-03-14
 Part: `borrow_checking_and_escape_semantics_for_four_parameter_modes`
-PR: pending
+PR: `#1132`
 
 ## Goal
 
