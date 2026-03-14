@@ -41,3 +41,6 @@ demos/**/*.exe
 # Claude worktrees
 .claude/worktrees/*
 \!CLAUDE.md
+
+# Generated snapshot proposals from insta
+*.snap.new
