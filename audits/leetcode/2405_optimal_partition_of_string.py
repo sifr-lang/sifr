@@ -14,7 +14,8 @@ def partitionString(s: str) -> int:
 
 
 def main():
-    print(minPartitions("abacbc"))
+    assert partitionString("abacbc") == 3
+    assert partitionString("ssssss") == 6
 
 if __name__ == "__main__":
     main()

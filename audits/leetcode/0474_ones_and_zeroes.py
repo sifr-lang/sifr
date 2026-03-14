@@ -1,6 +1,9 @@
 # LeetCode 474: Ones And Zeroes
 # Python version
 
+from collections import defaultdict
+from typing import List
+
 def findMaxForm(strs: List[str], M: int, N: int) -> int:
     # Dynamic Programming
     dp = defaultdict(int)
@@ -13,30 +16,12 @@ def findMaxForm(strs: List[str], M: int, N: int) -> int:
                     1 + dp[(m - mCnt, n - nCnt)],
                     dp[(m, n)])
     return dp[(M, N)]
-    
-    # Memoization
-    dp = {}
-
-    def dfs(i, m, n):
-        if i == len(strs):
-            return 0
-        if (i, m, n) in dp:
-            return dp[(i, m, n)]
-        
-        mCnt, nCnt = strs[i].count("0"), strs[i].count("1")
-        dp[(i, m, n)] = dfs(i + 1, m, n)
-        if mCnt <= m and nCnt <= n:
-            dp[(i, m, n)] = max(
-                dp[(i, m, n)], 
-                1 + dfs(i + 1, m - mCnt, n - nCnt))
-        return dp[(i, m, n)]
-
-    return dfs(0, m, n)
 
 
 
 def main():
-    print("no test cases")
+    assert findMaxForm(["10", "0001", "111001", "1", "0"], 5, 3) == 4
+    assert findMaxForm(["10", "0", "1"], 1, 1) == 2
 
 if __name__ == "__main__":
     main()

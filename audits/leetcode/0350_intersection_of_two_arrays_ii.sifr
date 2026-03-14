@@ -1,22 +1,22 @@
 # LeetCode 350: Intersection Of Two Arrays Ii
 
+from sifr.collections import Counter, from_list
+
 def intersect(nums1: list[int], nums2: list[int]) -> list[int]:
-    counter1 = Counter(nums1)
-    counter2 = Counter(nums2)
-
-    # Using defaultdict to handle missing keys more efficiently
-    counter1 = defaultdict(int, counter1)
-    counter2 = defaultdict(int, counter2)
-
-    intersection = []
-
-    for num, freq in counter1.items():
-        min_freq = min(freq, counter2[num])
-        if min_freq > 0:
-            intersection.extend([num] * min_freq)
-
+    counter1: Counter[int] = from_list(nums1)
+    counter2: Counter[int] = from_list(nums2)
+    intersection: list[int] = []
+    for num in counter1.keys():
+        freq1: int = counter1.get(num)
+        freq2: int = counter2.get(num)
+        count: int = min(freq1, freq2)
+        i: int = 0
+        while i < count:
+            intersection.append(num)
+            i += 1
+    intersection.sort()
     return intersection
 
 def main():
-    print("no test cases")
-
+    assert str(intersect([1, 2, 2, 1], [2, 2])) == '[2, 2]'
+    assert str(intersect([4, 9, 5], [9, 4, 9, 8, 4])) == '[4, 9]'
