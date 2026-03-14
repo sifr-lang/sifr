@@ -1,0 +1,64 @@
+use crate::{lower_module, HirExpr, HirModule, HirStmt, LoweringError};
+use sifr_python_parser::parse_module;
+use sifr_type_system::{ParamConvention, Type};
+
+fn lower_source(source: &str) -> Result<HirModule, Vec<LoweringError>> {
+    let parsed = parse_module(source).expect("parse failed");
+    lower_module(parsed.suite()).map(|result| result.module)
+}
+
+#[test]
+fn test_nested_function_is_predeclared_as_typed_callable_for_forward_local_use() {
+    let module = lower_source(
+        "def apply(f: Callable[[int], int], value: int) -> int:\n    return f(value)\n\ndef outer(x: int) -> int:\n    result = apply(helper, x)\n    def helper(y: int) -> int:\n        return y + 1\n    return result\n",
+    )
+    .expect("nested helper should be predeclared before lowering the body");
+
+    let outer = module
+        .functions
+        .iter()
+        .find(|function| function.name == "outer")
+        .expect("outer function missing");
+    let HirStmt::Let { value, .. } = &outer.body[0] else {
+        panic!("expected first outer statement to be a let binding");
+    };
+    let HirExpr::Call { args, .. } = value else {
+        panic!("expected first outer statement to lower as a call");
+    };
+    let HirExpr::Name { name, ty } = &args[0] else {
+        panic!("expected helper to lower as a local callable binding");
+    };
+
+    assert_eq!(name, "helper");
+    assert_eq!(
+        ty,
+        &Type::Callable(
+            vec![Type::Int],
+            vec![ParamConvention::own()],
+            Box::new(Type::Int),
+        )
+    );
+}
+
+#[test]
+fn test_forward_direct_call_to_nested_function_type_checks() {
+    let result = lower_source(
+        "def outer(x: int) -> int:\n    result = helper(x)\n    def helper(y: int) -> int:\n        return y + 1\n    return result\n",
+    );
+    assert!(
+        result.is_ok(),
+        "forward direct calls should see the nested helper symbol during lowering"
+    );
+}
+
+#[test]
+fn test_missing_forward_local_helper_still_errors_explicitly() {
+    let result = lower_source(
+        "def apply(f: Callable[[int], int], value: int) -> int:\n    return f(value)\n\ndef outer(x: int) -> int:\n    return apply(missing, x)\n",
+    );
+    assert!(result.is_err());
+    let errors = result.unwrap_err();
+    assert!(errors
+        .iter()
+        .any(|error| error.message == "undefined variable: 'missing'"));
+}

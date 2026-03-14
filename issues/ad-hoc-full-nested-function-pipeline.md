@@ -1,6 +1,6 @@
 # Ad Hoc Phase: Full Nested Function Pipeline
 
-Status: proposed on 2026-03-14
+Status: in progress on 2026-03-14
 
 ## Purpose
 
@@ -14,6 +14,40 @@ This phase covers the full compiler pipeline for:
 - `nonlocal`-style mutation patterns,
 - usage-driven parameter and return inference for supported local-helper patterns,
 - and deterministic lowering/codegen for nested callables without degrading to `Any`.
+
+## Execution Checklist
+
+- [x] `milestone_nested_1`: nested symbol predeclaration and typed callable representation
+- [ ] `milestone_nested_2`: usage-driven inference and recursive local helper typing
+- [ ] `milestone_nested_3`: capture typing and `nonlocal`-style state updates
+- [ ] `milestone_nested_4`: codegen, diagnostics, and unsupported-shape boundaries
+- [ ] `milestone_nested_5`: regression corpus, demos, and full-corpus closure evidence
+- [ ] external review pass 1 completed and acted on
+- [ ] production-grade review pass completed and acted on
+
+## Execution Log
+
+- `2026-03-14`: `milestone_nested_1` completed.
+  - Execution report: `issues/ad-hoc-full-nested-function-pipeline-part1-execution.md`
+  - PR: `#1139`
+  - Closure basis: nested helpers are now predeclared as typed local callables during HIR lowering, forward local helper references no longer fail due to statement-order registration, and missing helper names still fail explicitly.
+
+## Entry Baseline Evidence (2026-03-14)
+
+Positive-path checks:
+
+- `cargo run -q -p sifr -- check crates/sifr/tests/e2e/pass/nested_function_basic.sifr` -> pass
+- `cargo run -q -p sifr -- check crates/sifr/tests/e2e/pass/nested_function_recursive.sifr` -> pass
+- `cargo run -q -p sifr -- check crates/sifr/tests/e2e/pass/nested_function_recursive_capture.sifr` -> pass
+
+Known failing inference-driven checks:
+
+- `cargo run -q -p sifr -- check audits/leetcode/0017_letter_combinations_of_a_phone_number.sifr` -> fails with missing nested parameter annotations plus downstream `Any` index/iteration fallout
+- `cargo run -q -p sifr -- check audits/leetcode/0050_powx_n.sifr` -> fails with missing nested parameter annotations plus downstream `Any` arithmetic fallout
+
+Typed-callable / unresolved-symbol baseline:
+
+- forward local helper used as a callable value before its `def` currently fails as `undefined variable: 'helper'`
 
 ## Quality Contract
 
