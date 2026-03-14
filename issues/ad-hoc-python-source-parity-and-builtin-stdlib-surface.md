@@ -1,477 +1,617 @@
-# Ad Hoc Phase: Python Source Parity for Builtins and Stdlib Surface
+# Ad Hoc Phase: Python Source Parity and CPython Surface Closure
 
 Status: proposed
 
 ## Objective
 
-Close the gap between:
+Drive Sifr to maximal CPython parity for:
 
-- Phase 30's approved stdlib subset parity
-- Phase 31's corpus-driven compatibility fixes
-- the broader product requirement that supported Python-shaped source should compile naturally in Sifr
+- builtins
+- core container and string object models
+- every existing module currently shipped in `lib/sifr`
 
-This ad hoc phase is about source compatibility, not raw module-count expansion. The target is:
+This phase is not about adding a large number of new module names. It is about closing the gap between:
 
-1. support idiomatic Python source for the parts Sifr already claims to support
-2. keep safety, ownership, and type-system divergences explicit
-3. stop requiring workaround APIs where Python-shaped source should compile directly
+- current subset parity from Phase 30
+- corpus-driven compatibility fixes from Phase 31
+- the product requirement that Python-shaped source should compile naturally for the surfaces Sifr already claims to support
+
+The target is:
+
+1. supported Python-shaped source compiles directly without workaround-first APIs
+2. top-level exported surfaces for existing `lib/sifr` modules are brought as close to CPython as possible
+3. major class/object-model surfaces are completed where architecture already permits them
+4. intentional divergences remain explicit, typed, safety-aligned, and documented
+
+## Source of Truth
+
+This phase must use the following inputs as authoritative references:
+
+- CPython source tree:
+  - `/Users/yaseralnajjar/work/sifr/cpython`
+- Current module-by-module parity audit:
+  - [stdlib_gaps_cpython_module_by_module_audit_2026-03-14.md](/Users/yaseralnajjar/.codex/worktrees/9e99/codebase/issues/stdlib_gaps_cpython_module_by_module_audit_2026-03-14.md)
+- Existing architectural and parity baseline:
+  - [architecture.md](/Users/yaseralnajjar/.codex/worktrees/9e99/codebase/internal_docs/architecture.md)
+  - [30_reliability_parity_and_performance_budgets.md](/Users/yaseralnajjar/.codex/worktrees/9e99/codebase/internal_docs/phases/30_reliability_parity_and_performance_budgets.md)
+  - [phase30_parity_matrix.md](/Users/yaseralnajjar/.codex/worktrees/9e99/codebase/verification/stdlib/phase30_parity_matrix.md)
+  - [31_algorithmic_compatibility_and_leetcode_coverage.md](/Users/yaseralnajjar/.codex/worktrees/9e99/codebase/internal_docs/phases/31_algorithmic_compatibility_and_leetcode_coverage.md)
 
 ## Why This Needs Its Own Phase
 
-Phase 30 closed approved stdlib subsets module by module. That work was necessary and correct, but it explicitly left many constructor, optional-argument, and object-model surfaces out of scope. The Phase 30 parity matrix records many of these as approved subset boundaries rather than bugs.
+Phase 30 proved approved stdlib subsets. Phase 31 proved that real Python-shaped source still fails because the repo is missing the last compatibility layer:
 
-Phase 31 then rediscovered part of the same problem from the opposite direction under the `stdlib.python_module_surface` bucket. Several high-value fixes landed there already, including:
+- constructor-entry parity
+- call-shape parity
+- optional-argument parity
+- class/object-model parity
+- structured return-shape parity
+- retirement of workaround-only APIs as the primary ergonomic path
 
-- native `set()` / `set(iterable)` lowering
-- bare `deque(...)` compatibility resolution
-- `defaultdict(...)` compatibility lowering for the current factory subset
-- `len(deque)` compatibility
+The 2026-03-14 CPython audit confirms that the main problem is no longer "stdlib modules do not exist". The dominant missing layers are:
 
-That pattern is now clear enough that continuing to discover the remaining gaps through LeetCode or OSS corpora is the wrong execution model. This is broad enough to deserve a dedicated parity phase with its own scope, milestones, and verification rules.
+1. builtin constructor parity
+2. class/object-model parity
+3. optional-argument parity
+4. structured return-type parity
+5. iterator/lazy object-model parity
+6. wrapper cleanup where Sifr-specific helper names still stand in for natural CPython entry surfaces
+
+That is phase-sized work. Continuing to discover it through LeetCode or OSS corpora is the wrong execution model.
+
+## Depends on
+
+- [31_algorithmic_compatibility_and_leetcode_coverage.md](/Users/yaseralnajjar/.codex/worktrees/9e99/codebase/internal_docs/phases/31_algorithmic_compatibility_and_leetcode_coverage.md)
+- Phase 30 parity matrix and approved subset decisions remain the baseline to expand from rather than restart from zero.
+- Phase 27 non-regression invariants remain mandatory for every milestone in this phase.
 
 ## Recommended Placement
 
 - Depends on: Phase 31 completion
-- Recommended execution point: before Phase 32 if Python-parity remains a near-term product claim
-- Rationale: this work is mostly about consolidating already-supported language/runtime surfaces into Python-shaped entry points, and it directly reduces future compatibility churn across algorithmic, OSS, and docs tracks
+- Recommended execution point: before Phase 32 if Python parity remains a near-term product claim
+- Rationale: this work reduces downstream churn across algorithmic compatibility, OSS validation, docs, and future ecosystem phases
+
+## Full-Parity Target
+
+The closure target for this phase is broader than "make current demos pass" and narrower than "copy CPython blindly".
+
+For builtins and every existing module in `lib/sifr`, the target state is:
+
+1. all major top-level CPython entry points are implemented where compatible with Sifr's safety model
+2. major classes and object-model methods are implemented where the runtime and type system already support them
+3. common CPython call shapes, optional arguments, and constructor forms compile directly
+4. workaround-only API names stop being the primary documented or ergonomic path
+5. every remaining gap is classified as one of:
+   - `intentional-diff`
+   - `unsupported`
+   - `host-limited`
+6. no remaining `open` gap is allowed at phase exit without an explicit owner, rationale, and issue
+
+This phase should therefore aim for "full parity as much as possible" under the existing language contract, not just another approved subset.
+
+## Scope Boundary
+
+In scope:
+
+- builtins and builtin helper parity needed for natural Python-shaped source
+- core container and string object-model parity
+- closure of every module already shipped under `lib/sifr`
+- classification and documentation of every remaining non-parity surface
+
+Out of scope:
+
+- adding a large new tier of modules not already shipped in `lib/sifr`
+- changing Sifr's core safety contract to mimic CPython failure behavior
+- leaving workaround-first APIs as the steady-state answer where direct parity is feasible
 
 ## Non-goals
 
-- Copying CPython blindly where it conflicts with Sifr safety guarantees
-- Claiming full CPython parity for every existing stdlib module
-- Reintroducing exception-driven control flow
-- Hiding ownership transfer or mutability behind Python-compatible syntax
-- Adding fallback or duplicate workaround APIs as the primary user-facing surface
-
-## Current Repo-State Review
-
-The current repo is stronger than the older stdlib audits in several areas, but it still has a real parity gap at the Python-shaped source layer.
-
-### 1. Builtin constructors and conversions
-
-Already present in lowering or compatibility surface:
-
-- `set()`, `set(iterable)`
-- `str(...)`
-- `int(...)`
-- `float(...)`
-- `bool(...)`
-- `range(...)`
-
-Still missing or incomplete:
-
-- `list(...)` builtin constructor parity is missing
-- `tuple(...)` builtin constructor parity is missing
-- `dict(...)` builtin constructor parity is missing
-- `ord(...)` is missing
-- `chr(...)` is missing
-- `Counter()` / `Counter(iterable)` / `Counter(mapping)` parity is missing; today the natural path is still `from_list(...)` or direct field-shaped construction
-- `defaultdict(factory[, initial])` exists only as a narrow compatibility slice for builtin factories `int`, `list`, and `set`
-
-Current implication:
-
-- supported container types exist in the language
-- some supported collection classes exist in stdlib
-- but the constructor-entry surface is still incomplete and uneven
-
-### 2. Builtin functional helpers
-
-Present today:
-
-- `len`
-- `abs`
-- `min`
-- `max`
-- `sum`
-- `sorted`
-- `reversed`
-- `enumerate`
-- `zip`
-- `map`
-- `range`
-- `any`
-- `all`
+- copying CPython behavior where it violates Sifr safety guarantees
+- reintroducing exception-driven control flow
+- hiding ownership or mutability semantics behind Python-compatibility shims
+- adding fallback or duplicate workaround APIs as the final user-facing answer
+- claiming parity for modules not currently shipped in `lib/sifr`
+- bundling unrelated new ecosystem expansion into this phase
 
-Main remaining parity gaps:
+## Planning Principles
 
-- `sorted(...)` is currently one-argument, eager, and list-backed; no `reverse=` or `key=`
-- `reversed(...)` is currently list-only
-- `enumerate(...)` currently lacks the `start` argument
-- `zip(...)` currently supports exactly two iterables
-- `map(...)` currently supports one iterable and lowers to eager list output
-- builtin helper lowering is still mostly list-centric rather than iterable-centric
-
-Current implication:
-
-- the names exist, which is good
-- the Python call shapes and optional-argument surfaces are still not broad enough to count as true parity
-
-### 3. Builtin type object-model parity
-
-#### `list`
-
-Already present:
-
-- indexing
-- slicing
-- `append`
-- `extend`
-- `pop`
-- `sort`
-- `reverse`
-- `index`
-- `remove`
-- `clear`
-- `copy`
-- `count`
+### 1. Root-Cause First, Not Module-First
 
-Remaining parity gaps:
+This phase must execute top-down. Start with the infrastructure defects that cause the same parity gap to recur across many modules, then move outward into module closure.
 
-- no `list(...)` constructor parity
-- `list.pop()` is still zero-arg only in the current lowering
-- `list.sort()` remains milestone-limited with no parity for option arguments
-- `list.index()` remains narrow compared with CPython's optional bounds
+### 2. Existing Modules Must Be Closed Deliberately
 
-#### `dict`
+Every module already present under `lib/sifr` must be reviewed against CPython and assigned to an explicit closure wave. No existing shipped module may remain in a vague "partial parity someday" state at phase exit.
 
-Already present:
+### 3. Workaround APIs Are Transitional
 
-- literal construction
-- lookup and membership
-- `get`
-- `keys`
-- `values`
-- `items`
-- `update`
-- `pop`
-- `copy`
-- `clear`
+If a CPython-shaped source form is architecturally compatible with Sifr, that source form should become the primary path. Helper surfaces like `from_list(...)`, `json_dumps`, `run_command`, `move_file`, and similar compatibility detours should not remain the main answer when natural parity is feasible.
 
-Remaining parity gaps:
+### 4. Divergences Must Stay Explicit
 
-- no `dict(...)` constructor parity
-- no Python-shaped constructor support from iterable pairs / mapping-copy inputs
-- `dict.pop()` is still narrow compared with CPython's default-value form
-- broader object-model helpers such as `setdefault` and `fromkeys` are not yet part of the native parity surface
+This phase should increase parity without weakening Sifr's contract.
 
-#### `set`
+- `int(str)` remains `Result[int, ParseError]`
+- `float(str)` remains `Result[float, ParseError]`
+- `Result` / `Option` remain the adaptation path where CPython would raise
+- compile-time rejection remains preferable to runtime rejection where possible
+- no user-triggerable panics are allowed
 
-Already present:
+## Parity Accounting Model
 
-- literal construction
-- native `set()` / `set(iterable)`
-- membership
-- `add`
-- `remove`
-- `discard`
-- `copy`
-- algebra and relation helpers
-- `pop`
-- `clear`
+The phase should not track parity as a vague per-module adjective. Every builtin and every shipped module must be measured across the same review dimensions:
 
-Remaining parity gaps:
+1. top-level entry surfaces
+   - functions
+   - constructors
+   - aliases
+2. call-shape parity
+   - positional arguments
+   - keyword arguments
+   - default arguments
+   - variadic forms
+3. class and object-model parity
+   - public classes
+   - methods
+   - instance behavior
+   - iterator behavior
+4. exported constants and error types
+5. structured return-shape parity
+   - tuples
+   - objects
+   - iterators
+   - typed structured values
+6. semantic parity and safety adaptation
+   - Sifr-safe divergence
+   - panic-free behavior
+   - compile-time rejection where required
 
-- constructor parity is now in much better shape
-- the main remaining work is consistency and broader object-model polish, not first-entry access
+Each tracked surface must end in exactly one state:
 
-#### `tuple`
+- `done`
+- `intentional-diff`
+- `unsupported`
+- `host-limited`
+- `open`
 
-Already present:
+`open` is allowed during implementation only. It is not allowed at phase exit.
 
-- tuple literals
-- fixed-shape typing
-- destructuring
-- indexing
+## Root-Cause Stack
 
-Remaining parity gaps:
+This is the dependency order that should drive the entire phase.
 
-- no `tuple(...)` constructor parity
-- tuple object-model parity is not tracked as a first-class phase surface yet
-- tuple hashability and use as a broad Python-compatibility surface need explicit verification rather than incidental coverage
+### root_cause_1: Callable, Constructor, and Signature Lowering
 
-#### `str`
+Missing parity repeatedly comes from incomplete callable lowering:
 
-Already present:
+- missing builtin constructors: `list`, `tuple`, `dict`, `ord`, `chr`
+- incomplete builtin call shapes: `enumerate(start)`, `zip(*iters)`, `sorted(key=..., reverse=...)`
+- incomplete module call shapes: `bisect(..., lo, hi, key)`, `defaultdict(factory[, initial])`, `json.dump/load/dumps`, `tempfile` option matrices
+- incomplete keyword/default/variadic handling
 
-- indexing
-- slicing
-- `join`
-- `split`
-- `replace`
-- `find`
-- `startswith`
-- `endswith`
-- `strip`
-- `lstrip`
-- `rstrip`
-- `lower`
-- `upper`
-- `isdigit`
-- other case predicates already beyond the reviewer's minimum ask
+This layer must be fixed before broad module closure. Otherwise downstream module work will keep rediscovering the same signature-lowering gap.
 
-Remaining parity gaps:
+### root_cause_2: Iterable, Container-Conversion, and Structured Return Infrastructure
 
-- `ord` / `chr` builtins are still missing
-- some optional-argument and richer CPython object-model edges remain untracked
+Many parity gaps depend on treating Python iterables and structured returns more naturally:
 
-Current implication:
+- `list(iterable)`, `tuple(iterable)`, `dict(iterable-of-pairs)`
+- iterable-compatible builtins rather than list-only lowering
+- tuple- and object-shaped returns instead of list/string adapters
+- lazy-iterator parity for `itertools` and builtin helpers
+- structured parse outputs for `json` and `tomllib`
 
-- `str` parity is materially ahead of several other builtins
-- `tuple` and constructor-entry parity remain behind
-- `list` and `dict` object models are good enough to justify this phase focusing on constructor and call-shape cleanup rather than claiming they are entirely absent
+This is the second root layer. Without it, module implementations will remain workaround-heavy even if the names exist.
 
-### 4. Collections ergonomics
+### root_cause_3: Class, Object-Model, Error, Constant, and Export Infrastructure
 
-#### `Counter`
+The weakest modules in the audit are mostly class-heavy:
 
-Current state:
-
-- `Counter[T]` class exists
-- arithmetic and helper methods exist
-- common workflows are validated through `from_list(...)`
-
-Main remaining gap:
-
-- Python-shaped constructor parity is still absent
-- users should not have to reach for `from_list(...)` when `Counter(...)` is the natural Python surface
-
-#### `defaultdict`
-
-Current state:
-
-- compatibility lowering exists
-- bare `defaultdict(list|set|int)` works
-
-Main remaining gap:
-
-- factory support is restricted to builtin names
-- the callable/object-model parity is still slice-limited
-- this is still a compatibility shim, not a mature parity surface
-
-#### `deque`
-
-Current state:
-
-- `deque(iterable?, maxlen?)` constructor shape now exists
-- bare-call compatibility exists
-- `len(deque)` support exists
-
-Main remaining gap:
-
-- broader object-model parity is still partial
-- current behavior is enough for common algorithmic use, but not enough to call the type fully Python-parity aligned
-
-### 5. High-value stdlib module cleanup
-
-The repo is not missing a stdlib strategy. It is missing the last layer that makes supported modules feel Pythonic.
-
-#### `math`
-
-- Phase 30 and later work expanded this module substantially
-- the remaining issue is less "module missing" and more "subset still governed as approved slice rather than natural parity surface"
-
-#### `collections`
-
-- constructor and object-model parity remain the core problem
-- helper functions such as `from_list(...)` should not remain the canonical ergonomic path
-
-#### `heapq`
-
-- subset is present
-- helper semantics and safety adaptation still diverge from CPython in ways that need an explicit cleanup decision rather than perpetual drift
-
-#### `random`
-
-- current repo state is materially ahead of older audits: `choice`, `shuffle`, `sample`, `randrange`, and `gauss` already exist
-- parity work here is mostly cleanup and optional-argument review, not greenfield module creation
-
-#### `bisect`
-
-- current parity matrix still records missing optional-argument parity (`lo`, `hi`, `key`)
-
-#### `itertools`
-
-- current module remains a valuable but eager, list-backed subset
-- major missing layer is lazy iterator object-model parity
-
-#### `functools`
-
-- current surface is effectively `reduce` only
-- if `functools` remains an advertised supported module, it still needs a deliberate parity policy instead of accidental minimal presence
-
-#### `operator`
-
-- current surface is narrow and type-specific
-- naming still includes compatibility debt such as `mod_val`
-
-## Root-Cause Summary
-
-The main missing layer is no longer "stdlib modules do not exist". The current root causes are:
-
-1. constructor parity is incomplete
-2. builtin callable parity is incomplete
-3. optional-argument parity is incomplete
-4. object-model parity is inconsistent across core types
-5. workaround APIs are still the practical path for several supported surfaces
-
-## Phase Policy
-
-This ad hoc phase should use the following policy.
-
-1. If Python syntax is compatible with Sifr's safety model, support it directly.
-2. If the repo already has a workaround API for it, that workaround should usually stop being the primary documented path.
-3. If Python behavior conflicts with Sifr's guarantees, keep the divergence explicit, typed, and documented.
+- `argparse`
+- `io`
+- `subprocess`
+- `zipfile`
+- `configparser`
+- `ipaddress`
+- `logging`
+- `graphlib`
+
+They need a stronger standard-library class surface:
+
+- class construction and method parity
+- exported error types
+- exported constants
+- richer object return types
+- class-family / hierarchy support where appropriate
+
+### root_cause_4: Module-Specific Semantic Closure
+
+Only after the three layers above are stabilized should the phase move fully into module-by-module closure waves. At that point the remaining work should mostly be direct semantics, not infrastructure rediscovery.
+
+## Sequencing Note
+
+This phase is strictly sequential, not a parallel track.
+
+- Milestones are completed in numeric order.
+- Closure waves start only after their prerequisite root-cause milestones are merged and locally validated.
+- No downstream module may claim completion while depending on an upstream `open` parity surface.
+
+## Execution Model
+
+- This phase remains a single sequential phase.
+- Work is grouped into dependency-ordered milestones and closure waves.
+- Only one root-cause layer or one closure wave may be in active implementation at a time.
+- No later wave starts before the current wave has:
+  - implemented the targeted root-cause or module closure
+  - added regression coverage
+  - updated the parity inventory
+  - passed local validation
+  - completed review
+- No module is declared complete when it merely has "useful subset behavior". A module is complete only when:
+  - major CPython top-level exports are implemented or explicitly waived
+  - major class/object-model surfaces are implemented or explicitly waived
+  - major constructor and call-shape parity is implemented or explicitly waived
+  - every remaining gap is classified
 
 ## Milestones
 
-### milestone_psp_1: Builtin Constructor and Conversion Parity
+### milestone_psp_1: Builtin and Signature-Lowering Architecture
 
 Scope:
 
-- implement Python-shaped constructor parity for:
+- close builtin constructor-entry parity for:
   - `list(...)`
   - `tuple(...)`
   - `dict(...)`
-  - `set(...)` cleanup and consistency hardening
-  - `str(...)`
-  - `int(...)`
-  - `float(...)`
-  - `bool(...)`
+  - `set(...)` consistency cleanup
   - `ord(...)`
   - `chr(...)`
-- define accepted input-shape matrix for each constructor
-- keep safety divergences explicit where parse or bounds failure is possible
-
-Definition of done:
-
-- constructor-entry parity exists for the approved matrix
-- no supported constructor requires workaround APIs for common Python source forms
-- every intentional divergence is documented with rationale and tests
-
-### milestone_psp_2: Builtin Functional Helper Parity
-
-Scope:
-
-- deepen builtin parity for:
-  - `len`
-  - `abs`
-  - `min`
-  - `max`
-  - `sum`
+- expand builtin helper call-shape parity for:
   - `sorted`
   - `reversed`
   - `enumerate`
   - `zip`
   - `map`
   - `range`
-  - `any`
-  - `all`
-- explicitly decide and implement the supported optional-argument matrix
-- broaden list-only helpers into iterable-compatible helpers wherever the safety model allows
+- establish the canonical support rules for:
+  - positional arguments
+  - keyword arguments
+  - default arguments
+  - variadic argument surfaces
+  - callable aliases imported from stdlib modules
+- unify call lowering so parity expansion does not require one-off compat aliases for every affected module
 
 Definition of done:
 
-- common Python call shapes compile directly
-- optional arguments are either supported or explicitly classified
-- builtins do not remain artificially two-argument or list-only when the broader safe shape is already architecturally compatible
+- missing builtin constructors are implemented or explicitly waived
+- builtin helper signatures cover the approved CPython call-shape matrix
+- keyword/default/variadic behavior is stable enough to support downstream module closure without special-case hacks
 
-### milestone_psp_3: Core Type Object-Model Parity
+### milestone_psp_2: Core Container and String Object-Model Closure
 
 Scope:
 
-- close parity gaps for the approved object-model surface of:
+- close the Python-shaped object-model surface for:
   - `list`
   - `dict`
   - `set`
   - `tuple`
   - `str`
-- prioritize Python-shaped methods over Sifr-specific helper paths
-- audit each type for missing method overloads, optional arguments, and constructor consistency
+- ensure constructor parity and method parity are coherent
+- add missing method overloads and optional-argument forms where architecturally compatible
+- verify hashability, membership, slicing, indexing, copying, and mutation behavior against CPython intent with Sifr-safe adaptation
 
 Definition of done:
 
-- supported object-model methods compile from Python-shaped source without workaround naming
-- constructor parity and method parity are coherent for each approved type
-- remaining unsupported methods are classified explicitly rather than left implicit
+- core builtins no longer require workaround APIs for ordinary Python source
+- remaining differences in container or string behavior are explicit intentional divergences rather than incidental gaps
 
-### milestone_psp_4: Collections Constructor and Ergonomics Parity
-
-Scope:
-
-- implement natural constructor-entry parity for:
-  - `Counter()`
-  - `Counter(iterable)`
-  - `Counter(mapping)`
-  - `defaultdict(factory[, initial])`
-  - `deque(iterable?, maxlen?)`
-- retire helper-only ergonomics as the primary documented path where parity exists
-
-Definition of done:
-
-- common Python `collections` entry surfaces work directly
-- `from_list(...)`-style helpers are no longer required for natural Python source
-- remaining callable-factory or ownership-driven divergences are explicit and justified
-
-### milestone_psp_5: Existing-Module Python-Surface Cleanup
+### milestone_psp_3: Collections, Iterator, and Functional Surface Closure
 
 Scope:
 
-- audit and clean up the Python-shaped surface for:
-  - `math`
-  - `collections`
-  - `heapq`
-  - `random`
-  - `bisect`
+- close constructor and object-model parity for:
+  - `collections.Counter`
+  - `collections.defaultdict`
+  - `collections.deque`
+- close iterator and helper parity for:
   - `itertools`
   - `functools`
   - `operator`
-- remove the need for workaround names or workaround call shapes where parity is otherwise feasible
-- keep this milestone focused on already-existing modules, not new-module expansion
+  - `bisect`
+  - `heapq`
+  - `random`
+  - `secrets`
+- prioritize removal of workaround-first APIs and eager/list-only stand-ins where direct parity is feasible
 
 Definition of done:
 
-- supported modules feel Pythonic at the entry surface
-- workaround APIs are either retired from primary docs or classified as explicit Sifr extensions
-- every claimed supported surface has a concrete parity status
+- Python-shaped constructor and helper surfaces for the collections/iterator family work directly
+- remaining iterator laziness gaps or callable-surface gaps are explicitly classified
 
-### milestone_psp_6: Parity Governance for Python-Shaped Source
+### milestone_psp_4: Structured Data, Text, and Parsing Surface Closure
 
 Scope:
 
-- add a canonical inventory for:
-  - `done`
-  - `open`
-  - `intentional-diff`
-  - `unsupported`
-- classify constructor, builtin, object-model, and module-surface gaps explicitly
-- prevent future compatibility work from rediscovering undocumented surface gaps piecemeal
+- close major parity gaps for:
+  - `json`
+  - `tomllib`
+  - `csv`
+  - `configparser`
+  - `string`
+  - `textwrap`
+  - `base64`
+  - `html`
+  - `difflib`
+  - `calendar`
+- replace string/list adapters with structured return surfaces where parity requires them
+- export missing error types and constants
+- complete high-value class surfaces such as:
+  - `string.Template`
+  - `string.Formatter`
+  - `textwrap.TextWrapper`
 
 Definition of done:
 
-- parity status is reviewable at the source-surface level, not only the module-subset level
-- no unresolved gap remains undocumented
-- future corpus-driven work can link to explicit surface classifications instead of reopening ambiguity
+- configuration/text/data modules no longer stop at helper-only parity where CPython-shaped classes and returns are the natural public surface
+
+### milestone_psp_5: Runtime, Filesystem, Process, and Platform Closure
+
+Scope:
+
+- close major parity gaps for:
+  - `io`
+  - `os`
+  - `sys`
+  - `pathlib`
+  - `glob`
+  - `shutil`
+  - `tempfile`
+  - `subprocess`
+  - `logging`
+  - `platform`
+  - `time`
+  - `timeit`
+  - `gzip`
+  - `zipfile`
+- prioritize:
+  - natural CPython entry names
+  - class/object-model parity
+  - constants/error exports
+  - structured return objects
+  - option matrices where host/runtime allows
+- explicitly classify host-limited or low-level surfaces rather than leaving them as silent omissions
+
+Definition of done:
+
+- wrapper-heavy modules are closed as far as the host/runtime model reasonably allows
+- remaining low-level omissions are deliberate, documented, and issue-linked
+
+### milestone_psp_6: Remaining Existing-Module Closure
+
+Scope:
+
+- close remaining gaps for the current shipped modules not fully closed earlier, especially:
+  - `argparse`
+  - `ipaddress`
+  - `uuid`
+  - `graphlib`
+  - `datetime`
+  - `re`
+  - `math`
+  - `statistics`
+  - `hashlib`
+- use this milestone as the cleanup wave for modules that are already strong but still not fully parity-aligned
+
+Definition of done:
+
+- every existing shipped module is either:
+  - parity-closed for the approved CPython surface
+  - explicitly marked as intentional divergence
+  - explicitly marked as unsupported or host-limited with owner and rationale
+
+### milestone_psp_7: Parity Governance and Exit Closure
+
+Scope:
+
+- create one canonical parity inventory for:
+  - builtins
+  - core object models
+  - every module in `lib/sifr`
+- require per-surface classification:
+  - `done`
+  - `intentional-diff`
+  - `unsupported`
+  - `host-limited`
+  - `open`
+- require linked owner, rationale, issue, and revisit rule for every non-`done` entry
+- update docs and public claims so they match the actual parity state at closure
+
+Definition of done:
+
+- no parity gap remains undocumented
+- no shipped module remains in an ambiguous "partial parity" state
+- the closure inventory is reviewable enough that future corpus work does not rediscover unknown surface gaps
+
+## Closure Waves
+
+The milestones above define architecture and scope. Execution inside them should follow these waves.
+
+### wave_psp_a: Builtins and Core Types
+
+- builtins:
+  - `list`, `tuple`, `dict`, `set`, `str`, `int`, `float`, `bool`, `ord`, `chr`
+  - `len`, `abs`, `min`, `max`, `sum`, `sorted`, `reversed`, `enumerate`, `zip`, `map`, `range`, `any`, `all`
+- custom-surface classification tied to core-type parity:
+  - `bytes`
+- object models:
+  - `list`
+  - `dict`
+  - `set`
+  - `tuple`
+  - `str`
+
+### wave_psp_b: Collections and Iterators
+
+- `collections`
+- `itertools`
+- `functools`
+- `operator`
+- `bisect`
+- `heapq`
+- `random`
+- `secrets`
+
+### wave_psp_c: Structured Data and Text
+
+- `json`
+- `tomllib`
+- `csv`
+- `configparser`
+- `string`
+- `textwrap`
+- `base64`
+- `html`
+- `fnmatch`
+- `difflib`
+- `calendar`
+
+### wave_psp_d: Runtime and Filesystem
+
+- `io`
+- `os`
+- `env`
+- `sys`
+- `pathlib`
+- `glob`
+- `shutil`
+- `tempfile`
+- `subprocess`
+- `logging`
+- `platform`
+- `time`
+- `timeit`
+- `gzip`
+- `zipfile`
+
+### wave_psp_e: Remaining Existing Modules and Final Cleanup
+
+- `argparse`
+- `ipaddress`
+- `uuid`
+- `graphlib`
+- `datetime`
+- `re`
+- `math`
+- `statistics`
+- `hashlib`
+- `test`
+
+## Module Closure Ledger
+
+Every shipped module in `lib/sifr` must terminate in an explicit closure bucket during this phase.
+
+| module | execution wave | closure target |
+| --- | --- | --- |
+| `argparse` | `wave_psp_e` | close object-model parity for `ArgumentParser`-style usage or classify the remaining class-heavy surfaces explicitly |
+| `base64` | `wave_psp_c` | close remaining codec family and signature gaps compatible with Sifr bytes/string policy |
+| `bisect` | `wave_psp_b` | close aliases and optional-argument parity including `lo`/`hi`/`key` where supported |
+| `bytes` | `wave_psp_a` | classify as custom surface and align parity target to CPython `bytes` object-model semantics rather than a fake module parity claim |
+| `calendar` | `wave_psp_c` | close constants, helper functions, and class-family gaps or classify them explicitly |
+| `collections` | `wave_psp_b` | close constructor parity, object-model parity, and remaining public exports or classify gaps explicitly |
+| `configparser` | `wave_psp_c` | close parser class/error/constant parity as far as architecture permits |
+| `csv` | `wave_psp_c` | close reader/writer/dialect/constant parity and remove helper-only limitations |
+| `datetime` | `wave_psp_e` | close remaining constructors, constants, return types, and aware/naive semantics where supported |
+| `difflib` | `wave_psp_c` | close class and helper parity beyond the current narrow helper subset |
+| `env` | `wave_psp_d` | classify as custom surface and fold parity accounting into `os`/environment behavior rather than standalone CPython-module parity |
+| `fnmatch` | `wave_psp_c` | close helper and signature parity for the public pattern-matching surface |
+| `functools` | `wave_psp_b` | close high-value functional parity and callable-wrapper behavior rather than leaving `reduce` as a token subset |
+| `glob` | `wave_psp_d` | close recursive/pathname-expansion signatures and helper parity or classify host-limited gaps |
+| `graphlib` | `wave_psp_e` | close `TopologicalSorter` object-model parity and supporting errors/helpers |
+| `gzip` | `wave_psp_d` | close class/error/open-surface parity or classify unsupported archive semantics explicitly |
+| `hashlib` | `wave_psp_e` | close remaining constructor/result/object semantics and classify crypto-host limits explicitly |
+| `heapq` | `wave_psp_b` | close merge/max-heap/signature semantics and mutation/error behavior |
+| `html` | `wave_psp_c` | close top-level parity and classify any remaining sibling-module boundaries explicitly |
+| `io` | `wave_psp_d` | close stream class hierarchy, buffering objects, and open/handle semantics as far as Sifr's runtime supports |
+| `ipaddress` | `wave_psp_e` | close public constructors, classes, and error types for IPv4/IPv6 parity |
+| `itertools` | `wave_psp_b` | close remaining iterator families and lazy object-model parity instead of eager stand-ins |
+| `json` | `wave_psp_c` | close natural `dump`/`load`/`dumps`/`loads`, structured returns, and encoder/decoder parity |
+| `logging` | `wave_psp_d` | close handler/filter/record hierarchy and root-helper parity or classify deliberate limits |
+| `math` | `wave_psp_e` | close remaining return-shape and naming details and explicitly classify safety divergences |
+| `operator` | `wave_psp_b` | close callable object helpers and naming parity for the public operator surface |
+| `os` | `wave_psp_d` | close environment/path/process entry surfaces and retire wrapper-first names where direct parity is feasible |
+| `pathlib` | `wave_psp_d` | close path class-family semantics and platform-specific gaps or classify them explicitly |
+| `platform` | `wave_psp_d` | close uname/platform helper parity and classify platform-probe limitations |
+| `random` | `wave_psp_b` | close seed/state/class-based APIs and remaining distributions or classify deliberate omissions |
+| `re` | `wave_psp_e` | close remaining top-level helpers, flags, and iterator/match parity |
+| `secrets` | `wave_psp_b` | close token/helper parity and classify crypto-host limitations explicitly |
+| `shutil` | `wave_psp_d` | close natural copy/move/archive/error names and broader filesystem helper parity |
+| `statistics` | `wave_psp_e` | close remaining distribution/class/helper gaps and classify numerical policy differences explicitly |
+| `string` | `wave_psp_c` | close `Template`/`Formatter` class parity and remaining constants/helper gaps |
+| `subprocess` | `wave_psp_d` | close process object/error/constant parity and classify host-limited lifecycle semantics explicitly |
+| `sys` | `wave_psp_d` | close interpreter metadata, streams, flags, and runtime config parity where host/runtime allows |
+| `tempfile` | `wave_psp_d` | close temporary object/class helpers and lifecycle semantics or classify host-limited behavior |
+| `test` | `wave_psp_e` | classify as Sifr-specific infrastructure and remove it from ordinary CPython module parity claims |
+| `textwrap` | `wave_psp_c` | close `TextWrapper` class and option parity for helper functions |
+| `time` | `wave_psp_d` | close clock families, structured returns, constants, and ns variants or classify host limits |
+| `timeit` | `wave_psp_d` | close `Timer` object-model parity and helper signatures |
+| `tomllib` | `wave_psp_c` | close structured returns and error export parity instead of string/error adapters |
+| `uuid` | `wave_psp_e` | close constructor overloads, public helpers, and newer UUID family coverage where approved |
+| `zipfile` | `wave_psp_d` | close archive class/error/constant/path parity or classify unsupported archive features explicitly |
+
+## Current Priority Tiers From The Audit
+
+### Highest Priority Weak Modules
+
+These should be treated as explicit closure targets, not best-effort cleanup:
+
+- `argparse`
+- `functools`
+- `json`
+- `io`
+- `ipaddress`
+- `operator`
+- `secrets`
+- `subprocess`
+- `sys`
+- `tempfile`
+- `zipfile`
+
+### Strong But Still Incomplete Modules
+
+These should not be ignored just because they are already useful:
+
+- `math`
+- `statistics`
+- `re`
+- `datetime`
+- `hashlib`
+- `collections`
+- `random`
+
+The audit shows these are among the strongest modules today, but they still contain real CPython parity gaps in constructor shapes, object models, optional arguments, or return structures.
 
 ## Intentional Divergences That Must Stay Explicit
 
-This phase should not erase Sifr's safety model.
+This phase must not weaken Sifr's contract.
 
 - `int(str)` remains `Result[int, ParseError]`
 - `float(str)` remains `Result[float, ParseError]`
-- `Option` / `Result` remain the adaptation path where CPython would raise
+- `Result` / `Option` remain the adaptation path where CPython would raise
 - compile-time rejection remains preferable to runtime rejection for invalid ownership, mutability, or hashability patterns
-- empty or missing collection behavior should remain panic-free
-- ownership transfer should remain explicit
+- empty or missing collection behavior remains panic-free
+- ownership transfer remains explicit
+- low-level host/runtime APIs may still be classified as `host-limited` where parity is not safely portable
 
 ## Quality Contract
 
 ### Entry criteria
 
-- Phase 31 is complete
-- Phase 30 and Phase 31 evidence is available and treated as the starting baseline rather than reopened blindly
-- Phase 27 non-regression baseline is green at phase start and must remain green through completion
-- Phase 16 local-first validation platform remains the authoritative execution foundation
-- this phase must start from the current Phase 30 and Phase 31 parity evidence rather than reopening closed module subsets blindly
+- Phase 31 is complete.
+- Phase 30 and Phase 31 evidence is available and treated as the starting baseline rather than reopened blindly.
+- The module-by-module CPython audit is the current planning baseline.
+- Phase 27 non-regression baseline is green at phase start and must remain green through completion.
+- Phase 16 local-first validation platform remains the authoritative execution foundation.
 
 ### Phase-wide invariants
 
@@ -494,67 +634,107 @@ This phase should not erase Sifr's safety model.
 
 ### Milestone quality checks
 
-- no fallback compatibility shims as the final user-facing answer
 - no partial parity claims without explicit classification
-- no user-triggerable runtime panics
+- no module is complete while major top-level CPython exports remain unclassified
+- no class-heavy module is complete while major public classes remain missing without waiver
 - every root-cause fix includes regression coverage
-- constructor parity work must include both positive-path and negative-path validation
-- optional-argument parity decisions must be documented, not left implicit
-- every milestone must satisfy the scope and definition of done already documented in this file
 - every milestone includes at least one positive-path and one negative-path validation case
+- constructor parity work must include positive-path and safe-error-path validation
+- optional-argument parity decisions must be documented, not left implicit
 - validation evidence must be recorded in the execution checklist issue before merge
 - no milestone is complete if its outputs are not reviewable and reproducible locally
 - parity-governance outputs must be machine-reviewable and deterministic
 - any divergence or waiver must be explicit, time-bounded, owner-assigned, and issue-linked
-- if a milestone changes existing approved subset behavior from Phase 30, the change must explicitly classify whether it is:
+- if a milestone changes an approved Phase 30 behavior, the change must explicitly classify whether it is:
   - parity expansion
   - compatibility cleanup
   - intentional divergence retained
   - prior waiver retired
-- modules or builtins with parsing-heavy, numeric-edge, or panic-risk surfaces must reuse the established property/fuzz machinery where applicable rather than relying only on happy-path e2e coverage
+- modules or builtins with parsing-heavy, numeric-edge, or panic-risk surfaces must reuse the established property/fuzz machinery where applicable
 
 ### Validation planning goals
 
-- `milestone_psp_1` (Builtin Constructor and Conversion Parity): validation goals cover: Python-shaped constructor parity for `list`, `tuple`, `dict`, `set`, `str`, `int`, `float`, `bool`, `ord`, and `chr`; accepted input-shape matrix for each constructor; explicit safe adaptation for parse/bounds failures. Include negative-path goals that catch regressions against these guarantees.
-- `milestone_psp_2` (Builtin Functional Helper Parity): validation goals cover: common Python call shapes and approved optional-argument surfaces for `len`, `abs`, `min`, `max`, `sum`, `sorted`, `reversed`, `enumerate`, `zip`, `map`, `range`, `any`, and `all`; iterable-vs-list behavior; explicit classification for unsupported call shapes. Include negative-path goals that catch regressions against these guarantees.
-- `milestone_psp_3` (Core Type Object-Model Parity): validation goals cover: approved object-model surface for `list`, `dict`, `set`, `tuple`, and `str`; constructor/method coherence; explicit classification of unsupported methods and overloads. Include negative-path goals that catch regressions against these guarantees.
-- `milestone_psp_4` (Collections Constructor and Ergonomics Parity): validation goals cover: Python-shaped constructor-entry parity for `Counter`, `defaultdict`, and `deque`; retirement of workaround-only entry surfaces as the primary path; explicit handling of callable-factory and ownership-driven divergences. Include negative-path goals that catch regressions against these guarantees.
-- `milestone_psp_5` (Existing-Module Python-Surface Cleanup): validation goals cover: Python-shaped cleanup for existing modules `math`, `collections`, `heapq`, `random`, `bisect`, `itertools`, `functools`, and `operator`; removal or explicit classification of workaround names and call shapes. Include negative-path goals that catch regressions against these guarantees.
-- `milestone_psp_6` (Parity Governance for Python-Shaped Source): validation goals cover: canonical source-surface inventory for `done`, `open`, `intentional-diff`, and `unsupported`; explicit classification of constructor, builtin, object-model, and module-surface gaps; prevention of undocumented rediscovery through future corpora. Include negative-path goals that catch regressions against these guarantees.
-- Exit-gate evidence explicitly demonstrates: supported Python-shaped source compiles naturally for the approved scope, intentional divergences remain explicit and safe, and future compatibility work is governed by a canonical source-surface inventory rather than ad hoc rediscovery.
+- `milestone_psp_1` (Builtin and Signature-Lowering Architecture): validation goals cover: builtin constructor closure, builtin helper call-shape closure, keyword/default/variadic lowering stability, and parity-safe callable lowering for downstream stdlib work. Include negative-path goals that catch regressions against these guarantees.
+- `milestone_psp_2` (Core Container and String Object-Model Closure): validation goals cover: constructor/method coherence for `list`, `dict`, `set`, `tuple`, and `str`; major optional-argument forms; safe adaptation where CPython would raise. Include negative-path goals that catch regressions against these guarantees.
+- `milestone_psp_3` (Collections, Iterator, and Functional Surface Closure): validation goals cover: Python-shaped parity for `collections`, `itertools`, `functools`, `operator`, `bisect`, `heapq`, `random`, and `secrets`; removal of workaround-first entry surfaces; iterator/object-model parity where supported. Include negative-path goals that catch regressions against these guarantees.
+- `milestone_psp_4` (Structured Data, Text, and Parsing Surface Closure): validation goals cover: structured return-shape parity, class exports, constant exports, and call-shape closure for `json`, `tomllib`, `csv`, `configparser`, `string`, `textwrap`, `base64`, `html`, `difflib`, and `calendar`. Include negative-path goals that catch regressions against these guarantees.
+- `milestone_psp_5` (Runtime, Filesystem, Process, and Platform Closure): validation goals cover: object-model parity, constants/errors, host-limited classification, and Python-shaped entry names for `io`, `os`, `sys`, `pathlib`, `glob`, `shutil`, `tempfile`, `subprocess`, `logging`, `platform`, `time`, `timeit`, `gzip`, and `zipfile`. Include negative-path goals that catch regressions against these guarantees.
+- `milestone_psp_6` (Remaining Existing-Module Closure): validation goals cover: cleanup closure for the remaining shipped modules and the strong-but-incomplete modules; explicit closure or waiver for all remaining surface gaps. Include negative-path goals that catch regressions against these guarantees.
+- `milestone_psp_7` (Parity Governance and Exit Closure): validation goals cover: one canonical parity inventory for builtins, object models, and all existing modules; explicit classification of every non-closed surface; documentation alignment with actual support. Include negative-path goals that catch regressions against these guarantees.
+- Exit-gate evidence explicitly demonstrates: builtins and all existing shipped modules have either maximal parity closure or an explicit, reviewable divergence classification.
 
 ### Local validation commands
 
 - Full local suite:
   - `/Users/yaseralnajjar/work/sifr/codebase/scripts/run_all_tests.sh`
-- `scripts/run_all_tests.sh --profile quick`
-- `scripts/run_all_tests.sh`
+- Quick local suite:
+  - `scripts/run_all_tests.sh --profile quick`
+- Full local suite via workspace path:
+  - `scripts/run_all_tests.sh`
+- Unit tests only:
+  - `cargo test -p sifr -- --skip test_e2e_pass`
+- E2E pass suite:
+  - `scripts/run_e2e_pass.sh`
+- Lint and maintainability guardrails:
+  - `cargo clippy --workspace -- -D warnings`
+  - `cargo fmt --check`
+  - `python3 scripts/check_hir_maintainability_guardrails.py`
+
+## Required Policies
+
+The phase must define and keep current:
+
+- builtin and module parity classification policy
+- signature-parity policy for positional, keyword, default, and variadic forms
+- structured-return policy for tuple/object/iterator/value surfaces
+- intentional-divergence policy for Sifr-safe behavior differences
+- host-limited classification policy for runtime/platform-dependent surfaces
+- workaround retirement policy for compatibility aliases and helper-first APIs
+- parity inventory update policy tied to each merged milestone
+- demo and validation evidence policy for parity claims
+
+## Required Artifacts
+
+- canonical builtin parity inventory
+- canonical core object-model parity inventory
+- per-module closure inventory for every shipped `lib/sifr` module
+- explicit waiver index for every `intentional-diff`, `unsupported`, and `host-limited` surface
+- milestone demos covering major user-visible parity expansions
+- validation evidence summary for each milestone
+- final exit-gate closure summary mapping shipped surfaces to their terminal classification
 
 ### Exit criteria
 
 - All milestone definitions of done are satisfied.
-- Supported Python-shaped source for the approved scope compiles naturally without workaround-first APIs.
+- Supported Python-shaped source for builtins and all existing shipped modules compiles naturally without workaround-first APIs.
+- Every existing module in `lib/sifr` is in one of these states:
+  - parity-closed
+  - intentional divergence
+  - unsupported
+  - host-limited
+- No existing shipped module remains with undocumented open parity gaps.
 - Intentional divergences remain explicit, typed, panic-free, and documented.
-- Constructor, builtin-helper, object-model, and module-surface gaps are tracked in a canonical parity inventory.
 - Any waiver is explicit, time-bounded, owner-assigned, and issue-linked.
 
 ## Exit Gate
 
-Python-shaped source parity is production-governed for the approved scope: supported builtins, constructors, object models, and existing in-scope stdlib entry surfaces compile naturally; intentional divergences remain explicit and safety-aligned; and the Phase 27 non-regression contract remains green with deterministic, reviewable validation evidence.
+Python source parity is production-governed for builtins and all existing shipped stdlib modules: supported builtins, constructors, object models, and module entry surfaces compile naturally; major class/object-model surfaces are closed wherever architecture allows; intentional divergences remain explicit and safety-aligned; and the Phase 27 non-regression contract remains green with deterministic, reviewable validation evidence.
 
 ## Recommended First Execution Order
 
-1. builtin constructors and conversions
-2. collections constructor parity
-3. builtin functional helper optional-argument parity
-4. core type object-model cleanup
-5. existing-module Python-surface cleanup
-6. parity governance closeout
+1. builtin and signature-lowering architecture
+2. core container and string object-model closure
+3. collections, iterator, and functional surface closure
+4. structured data, text, and parsing surface closure
+5. runtime, filesystem, process, and platform closure
+6. remaining existing-module closure
+7. parity governance and exit closure
 
 ## Why This Is Better Than Continuing Corpus Discovery
 
-This phase turns a recurring compatibility smell into a deliberate engineering program.
+This phase converts a recurring compatibility smell into a deliberate closure program.
 
 - Phase 30 proved subset module behavior.
-- Phase 31 proved that real Python-shaped source still exposes a missing surface layer.
-- This ad hoc phase should now close that layer systematically instead of letting future corpora keep rediscovering the same class of gap under different symptoms.
+- Phase 31 proved that real Python-shaped source still exposes the missing compatibility layer.
+- The 2026-03-14 audit proves the remaining work is broad, concrete, and already localizable module-by-module.
+- A top-down, root-cause-first phase will close more parity with less churn than continuing to rediscover the same structural gaps through external corpora.
