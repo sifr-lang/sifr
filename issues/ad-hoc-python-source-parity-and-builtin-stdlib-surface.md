@@ -1,6 +1,8 @@
 # Ad Hoc Phase: Python Source Parity and CPython Surface Closure
 
 Status: proposed
+Phase placement: ad hoc interstitial phase between Phase 31 and Phase 32
+Phase owner: must be assigned in the execution checklist issue before implementation starts
 
 ## Objective
 
@@ -42,6 +44,11 @@ This phase must use the following inputs as authoritative references:
   - [phase30_parity_matrix.md](/Users/yaseralnajjar/.codex/worktrees/9e99/codebase/verification/stdlib/phase30_parity_matrix.md)
   - [31_algorithmic_compatibility_and_leetcode_coverage.md](/Users/yaseralnajjar/.codex/worktrees/9e99/codebase/internal_docs/phases/31_algorithmic_compatibility_and_leetcode_coverage.md)
 
+Path note:
+
+- Absolute CPython paths in this document are intentional and workspace-authoritative for this planning cycle.
+- Relative references such as `Lib/test/test_list.py` are relative to `/Users/yaseralnajjar/work/sifr/cpython`.
+
 ## Why This Needs Its Own Phase
 
 Phase 30 proved approved stdlib subsets. Phase 31 proved that real Python-shaped source still fails because the repo is missing the last compatibility layer:
@@ -68,12 +75,12 @@ That is phase-sized work. Continuing to discover it through LeetCode or OSS corp
 
 - [31_algorithmic_compatibility_and_leetcode_coverage.md](/Users/yaseralnajjar/.codex/worktrees/9e99/codebase/internal_docs/phases/31_algorithmic_compatibility_and_leetcode_coverage.md)
 - Phase 30 parity matrix and approved subset decisions remain the baseline to expand from rather than restart from zero.
-- Phase 27 non-regression invariants remain mandatory for every milestone in this phase.
+- Phase 27 exit gate is treated as satisfied and its non-regression invariants remain mandatory for every milestone in this phase.
 
 ## Recommended Placement
 
 - Depends on: Phase 31 completion
-- Recommended execution point: before Phase 32 if Python parity remains a near-term product claim
+- Recommended execution point: execute as an interstitial ad hoc phase after Phase 31 and before the currently planned Phase 32 track if Python parity remains a near-term product claim
 - Rationale: this work reduces downstream churn across algorithmic compatibility, OSS validation, docs, and future ecosystem phases
 
 ## Full-Parity Target
@@ -188,6 +195,14 @@ Each tracked surface must end in exactly one state:
 - `open`
 
 `open` is allowed during implementation only. It is not allowed at phase exit.
+
+For this phase, `done` is not a percentage threshold. A surface is `done` only when:
+
+- major top-level exports in scope are implemented or explicitly waived
+- major public classes and object-model behavior in scope are implemented or explicitly waived
+- common CPython call shapes in scope are implemented or explicitly waived
+- local regression coverage exists with traceability to the relevant CPython test families
+- no undocumented parity gap remains for that surface
 
 Each upstream CPython test or test family reviewed for this phase must also end in exactly one state:
 
@@ -311,6 +326,20 @@ This phase is strictly sequential, not a parallel track.
   - major class/object-model surfaces are implemented or explicitly waived
   - major constructor and call-shape parity is implemented or explicitly waived
   - every remaining gap is classified
+
+## Milestone-to-Wave Mapping
+
+The phase uses milestones for dependency-ordered closure logic and waves for execution grouping. Their mapping is:
+
+| milestone | primary waves | purpose |
+| --- | --- | --- |
+| `milestone_psp_1` | `wave_psp_a` | builtin constructor and callable/signature lowering closure |
+| `milestone_psp_2` | `wave_psp_a` | core container and string object-model closure |
+| `milestone_psp_3` | `wave_psp_b` | collections, iterators, and functional module closure |
+| `milestone_psp_4` | `wave_psp_c` | structured data, text, and parsing module closure |
+| `milestone_psp_5` | `wave_psp_d` | runtime, filesystem, process, and platform module closure |
+| `milestone_psp_6` | `wave_psp_e` | remaining shipped-module cleanup and strong-but-incomplete module closure |
+| `milestone_psp_7` | `wave_psp_a` through `wave_psp_e` | parity inventory, waiver governance, and final exit closure across all prior waves |
 
 ## Milestones
 
@@ -496,6 +525,12 @@ Definition of done:
 
 The milestones above define architecture and scope. Execution inside them should follow these waves.
 
+Custom-surface note:
+
+- `bytes`, `env`, and `test` remain in scope because they are shipped in `lib/sifr`.
+- They are not treated as ordinary CPython module-parity targets.
+- Their closure obligation in this phase is classification cleanup, claim hygiene, and alignment to the correct CPython-adjacent surface where applicable.
+
 ### wave_psp_a: Builtins and Core Types
 
 - builtins:
@@ -647,6 +682,8 @@ The following upstream test families should be the default harvesting inputs for
   - `Lib/test/test_free_threading/test_io.py`
 - adaptation rule:
   - separate portable semantics from host-specific behavior early; for host-limited APIs, preserve the same boundary hardness while explicitly waiving or constraining platform-dependent cases
+- custom-surface guidance:
+  - `env` should not claim a standalone CPython module analogue; use `os` and environment-related test families as the behavioral reference set
 
 ### wave_psp_e: Remaining Existing Modules and Final Cleanup
 
@@ -664,6 +701,8 @@ The following upstream test families should be the default harvesting inputs for
   - `Lib/test/test_free_threading/test_re.py`
 - adaptation rule:
   - keep the same semantic hardness for parser, regex, datetime, and numeric edge behavior, but preserve Sifr's explicit `Result`/`Option`, ownership, and compile-time rejection contracts
+- custom-surface guidance:
+  - `test` is Sifr infrastructure and should exit this phase as a classified non-CPython parity surface rather than a faux stdlib parity target
 
 ## Module Closure Ledger
 
