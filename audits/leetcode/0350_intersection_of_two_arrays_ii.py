@@ -21,7 +21,8 @@ def intersect(nums1: List[int], nums2: List[int]) -> List[int]:
 
 
 def main():
-    print("no test cases")
+    assert intersect([1, 2, 2, 1], [2, 2]) == [2, 2]
+    assert intersect([4, 9, 5], [9, 4, 9, 8, 4]) == [4, 9]
 
 if __name__ == "__main__":
     main()

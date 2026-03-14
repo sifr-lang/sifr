@@ -24,8 +24,8 @@ def helper(s, left, right):
 
 
 def main():
-    print(longestPalindrome("babad"))
-    print(longestPalindrome("cbbd"))
+    assert longestPalindrome("babad",) == 'bab'
+    assert longestPalindrome("cbbd",) == 'bb'
 
 if __name__ == "__main__":
     main()

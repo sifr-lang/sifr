@@ -32,5 +32,7 @@ def leastInterval(tasks: list[str], n: int) -> int:
     return max(min_time, len(tasks))
 
 def main():
-    print("no test cases")
+    assert leastInterval(['A', 'A', 'A', 'B', 'B', 'B'], 2) == 8
+    assert leastInterval(['A', 'C', 'A', 'B', 'D', 'B'], 1) == 6
+    assert leastInterval(['A', 'A', 'A', 'B', 'B', 'B'], 3) == 10
 

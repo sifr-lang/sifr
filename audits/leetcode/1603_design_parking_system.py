@@ -16,7 +16,11 @@ class ParkingSystem:
         return False
 
 def main():
-    print("no test cases")
+    obj = ParkingSystem(1, 1, 0)
+    assert obj.addCar(1) == True
+    assert obj.addCar(2) == True
+    assert obj.addCar(3) == False
+    assert obj.addCar(1) == False
 
 if __name__ == "__main__":
     main()

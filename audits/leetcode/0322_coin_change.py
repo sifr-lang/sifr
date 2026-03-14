@@ -14,9 +14,9 @@ def coinChange(coins: List[int], amount: int) -> int:
 
 
 def main():
-    print(coinChange([1,2,5], 11))
-    print(coinChange([2], 3))
-    print(coinChange([1], 0))
+    assert coinChange([1,2,5], 11) == 3
+    assert coinChange([2], 3) == -1
+    assert coinChange([1], 0) == 0
 
 if __name__ == "__main__":
     main()

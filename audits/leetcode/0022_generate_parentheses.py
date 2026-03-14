@@ -25,7 +25,7 @@ def generateParenthesis(n: int) -> List[str]:
 
 
 def main():
-    print(generateParenthesis(3))
+    assert generateParenthesis(3) == ['((()))', '(()())', '(())()', '()(())', '()()()']
 
 if __name__ == "__main__":
     main()

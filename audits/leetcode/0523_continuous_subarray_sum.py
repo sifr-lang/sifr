@@ -19,7 +19,7 @@ def checkSubarraySum(nums: List[int], k: int) -> bool:
 
 
 def main():
-    print(checkSubarraySum([23,2,4,6,7], 6))
+    assert checkSubarraySum([23,2,4,6,7], 6) == True
 
 if __name__ == "__main__":
     main()

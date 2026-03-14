@@ -46,5 +46,7 @@ def isMatch(s: str, p: str) -> bool:
     return dfs(0, 0)
 
 def main():
-    print("no test cases")
+    assert isMatch('aa', 'a') == False
+    assert isMatch('aa', 'a*') == True
+    assert isMatch('ab', '.*') == True
 

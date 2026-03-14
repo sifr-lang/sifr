@@ -24,5 +24,6 @@ def pushDominoes(dominoes: str) -> str:
     return ''.join(dom)
 
 def main():
-    print("no test cases")
+    assert pushDominoes('RR.L') == 'RR.L'
+    assert pushDominoes('.L.R...LR..L..') == 'LL.RR.LLRRLL..'
 

@@ -23,7 +23,7 @@ def finalPrices(prices: List[int]) -> List[int]:
 
 
 def main():
-    print(finalPrices([8,4,6,2,3]))
+    assert finalPrices([8,4,6,2,3]) == [4, 2, 4, 2, 3]
 
 if __name__ == "__main__":
     main()

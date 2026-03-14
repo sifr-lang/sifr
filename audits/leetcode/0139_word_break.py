@@ -18,8 +18,8 @@ def wordBreak(s: str, wordDict: List[str]) -> bool:
 
 
 def main():
-    print(wordBreak("leetcode", ["leet","code"]))
-    print(wordBreak("applepenapple", ["apple","pen"]))
+    assert wordBreak("leetcode", ["leet","code"]) == True
+    assert wordBreak("applepenapple", ["apple","pen"]) == True
 
 if __name__ == "__main__":
     main()

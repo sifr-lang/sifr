@@ -16,7 +16,7 @@ def countStudents(students: List[int], sandwiches: List[int]) -> int:
 
 
 def main():
-    print(countStudents([1,1,0,0], [0,1,0,1]))
+    assert countStudents([1,1,0,0], [0,1,0,1]) == 0
 
 if __name__ == "__main__":
     main()

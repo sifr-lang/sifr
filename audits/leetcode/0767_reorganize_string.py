@@ -26,7 +26,8 @@ def reorganizeString(s: str) -> str:
 
 
 def main():
-    print("no test cases")
+    assert reorganizeString('aab') == 'aba'
+    assert reorganizeString('aaab') == ''
 
 if __name__ == "__main__":
     main()

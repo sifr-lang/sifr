@@ -11,8 +11,8 @@ def isPalindrome(s: str) -> bool:
 
 
 def main():
-    print(isPalindrome("A man, a plan, a canal: Panama"))
-    print(isPalindrome("race a car"))
+    assert isPalindrome("A man, a plan, a canal: Panama") == True
+    assert isPalindrome("race a car") == False
 
 if __name__ == "__main__":
     main()

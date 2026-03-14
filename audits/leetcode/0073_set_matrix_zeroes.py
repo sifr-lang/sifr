@@ -32,7 +32,12 @@ def setZeroes(matrix: List[List[int]]) -> None:
 
 
 def main():
-    print("no test cases")
+    arg0 = [[1, 1, 1], [1, 0, 1], [1, 1, 1]]
+    _result = setZeroes(arg0)
+    assert arg0 == [[1, 0, 1], [0, 0, 0], [1, 0, 1]]
+    arg0 = [[0, 1, 2, 0], [3, 4, 5, 2], [1, 3, 1, 5]]
+    _result = setZeroes(arg0)
+    assert arg0 == [[0, 0, 0, 0], [0, 4, 5, 0], [0, 3, 1, 0]]
 
 if __name__ == "__main__":
     main()

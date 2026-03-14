@@ -14,9 +14,9 @@ def arraySign(nums: List[int]) -> int:
 
 
 def main():
-    print(arraySign([-1,-2,-3,-4,3,2,1]))
-    print(arraySign([1,5,0,2,-3]))
-    print(arraySign([-1,1,-1,1,-1]))
+    assert arraySign([-1,-2,-3,-4,3,2,1]) == 1
+    assert arraySign([1,5,0,2,-3]) == 0
+    assert arraySign([-1,1,-1,1,-1]) == -1
 
 if __name__ == "__main__":
     main()

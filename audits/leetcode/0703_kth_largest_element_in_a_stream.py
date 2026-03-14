@@ -14,7 +14,12 @@ class KthLargest:
         return self.minHeap[0]
 
 def main():
-    print("no test cases")
+    obj = KthLargest(3, [8, 9, 10])
+    assert obj.add(3) == 4
+    assert obj.add(5) == 5
+    assert obj.add(10) == 5
+    assert obj.add(9) == 8
+    assert obj.add(4) == 8
 
 if __name__ == "__main__":
     main()

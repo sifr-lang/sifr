@@ -18,7 +18,14 @@ class MinStack:
         return self.minStack[-1]
 
 def main():
-    print("no test cases")
+    obj = MinStack()
+    obj.push(-2)
+    obj.push(0)
+    obj.push(-3)
+    assert obj.getMin() == -3
+    obj.pop()
+    assert obj.top() == 0
+    assert obj.getMin() == -2
 
 if __name__ == "__main__":
     main()

@@ -20,5 +20,7 @@ def shortestPathBinaryMatrix(grid: list[list[int]]) -> int:
     return -1
 
 def main():
-    print("no test cases")
+    assert shortestPathBinaryMatrix([[0, 1], [1, 0]]) == 2
+    assert shortestPathBinaryMatrix([[0, 0, 0], [1, 1, 0], [1, 1, 0]]) == 4
+    assert shortestPathBinaryMatrix([[1, 0, 0], [1, 1, 0], [1, 1, 0]]) == -1
 

@@ -14,7 +14,10 @@ class NumArray:
         return r - l
 
 def main():
-    print("no test cases")
+    obj = NumArray([-2, 0, 3, -5, 2, -1])
+    assert obj.sumRange(0, 2) == 1
+    assert obj.sumRange(2, 5) == -1
+    assert obj.sumRange(0, 5) == -3
 
 if __name__ == "__main__":
     main()

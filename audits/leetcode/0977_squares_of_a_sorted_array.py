@@ -19,7 +19,7 @@ def sortedSquares(nums: List[int]) -> List[int]:
 
 
 def main():
-    print(sortedSquares([-4,-1,0,3,10]))
+    assert sortedSquares([-4,-1,0,3,10]) == [0, 1, 9, 16, 100]
 
 if __name__ == "__main__":
     main()

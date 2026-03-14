@@ -44,5 +44,6 @@ def isBipartiteDFS(graph: list[list[int]]) -> bool:
     return True
 
 def main():
-    print("no test cases")
+    assert isBipartiteBFS([[1, 2, 3], [0, 2], [0, 1, 3], [0, 2]]) == False
+    assert isBipartiteBFS([[1, 3], [0, 2], [1, 3], [0, 2]]) == True
 

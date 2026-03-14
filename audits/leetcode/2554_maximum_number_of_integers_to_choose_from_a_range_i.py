@@ -19,7 +19,7 @@ def maxCount(banned: List[int], n: int, maxSum: int) -> int:
 
 
 def main():
-    print(maxCount(6, [1,6,5], 2))
+    assert maxCount(6, [1, 6, 5], 2) == 3
 
 if __name__ == "__main__":
     main()

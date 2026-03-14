@@ -19,5 +19,7 @@ def findDifferentBinaryString(nums: list[str]) -> str:
     return backtrack(0, ["0" for s in nums])
 
 def main():
-    print("no test cases")
+    assert findDifferentBinaryString(['01', '10']) == '00'
+    assert findDifferentBinaryString(['00', '01']) == '11'
+    assert findDifferentBinaryString(['111', '011', '001']) == '000'
 

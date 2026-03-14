@@ -31,7 +31,9 @@ def minimumEffortPath(heights: List[List[int]]) -> int:
 
 
 def main():
-    print("no test cases")
+    assert minimumEffortPath([[1, 2, 2], [3, 8, 2], [5, 3, 5]]) == 2
+    assert minimumEffortPath([[1, 2, 3], [3, 8, 4], [5, 3, 5]]) == 1
+    assert minimumEffortPath([[1, 2, 1, 1, 1], [1, 2, 1, 2, 1], [1, 2, 1, 2, 1], [1, 2, 1, 2, 1], [1, 1, 1, 2, 1]]) == 0
 
 if __name__ == "__main__":
     main()

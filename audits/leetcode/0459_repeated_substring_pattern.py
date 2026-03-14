@@ -8,8 +8,8 @@ def repeatedSubstringPattern(s: str) -> bool:
 
 
 def main():
-    print(repeatedSubstringPattern("abab"))
-    print(repeatedSubstringPattern("aba"))
+    assert repeatedSubstringPattern("abab") == True
+    assert repeatedSubstringPattern("aba") == False
 
 if __name__ == "__main__":
     main()

@@ -16,8 +16,8 @@ def longestCommonSubsequence(text1: str, text2: str) -> int:
 
 
 def main():
-    print(longestCommonSubsequence("abcde", "ace"))
-    print(longestCommonSubsequence("abc", "def"))
+    assert longestCommonSubsequence("abcde", "ace") == 3
+    assert longestCommonSubsequence("abc", "def") == 0
 
 if __name__ == "__main__":
     main()

@@ -21,8 +21,8 @@ def canAttendMeetings(intervals):
 
 
 def main():
-    print(canAttendMeetings([[0,30],[5,10],[15,20]]))
-    print(canAttendMeetings([[7,10],[2,4]]))
+    assert canAttendMeetings([[0,30],[5,10],[15,20]]) == False
+    assert canAttendMeetings([[7,10],[2,4]]) == True
 
 if __name__ == "__main__":
     main()

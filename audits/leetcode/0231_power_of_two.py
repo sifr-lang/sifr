@@ -20,9 +20,9 @@ def isPowerOfTwo(n: int) -> bool:
 
 
 def main():
-    print(isPowerOfTwo(1))
-    print(isPowerOfTwo(16))
-    print(isPowerOfTwo(3))
+    assert isPowerOfTwo(1) == True
+    assert isPowerOfTwo(16) == True
+    assert isPowerOfTwo(3) == False
 
 if __name__ == "__main__":
     main()

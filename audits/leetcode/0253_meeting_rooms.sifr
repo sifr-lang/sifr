@@ -17,5 +17,6 @@ def minMeetingRooms(intervals):
     return res
 
 def main():
-    print("no test cases")
+    assert minMeetingRooms([[0, 30], [5, 10], [15, 20]]) == 2
+    assert minMeetingRooms([[7, 10], [2, 4]]) == 1
 

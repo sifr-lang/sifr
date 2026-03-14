@@ -34,7 +34,7 @@ def rearrangeArray(nums: List[int]) -> List[int]:
 
 
 def main():
-    print(rearrangeArray([3,1,-2,-5,2,-4]))
+    assert rearrangeArray([3,1,-2,-5,2,-4]) == [-5, 1, -4, 2, -2, 3]
 
 if __name__ == "__main__":
     main()

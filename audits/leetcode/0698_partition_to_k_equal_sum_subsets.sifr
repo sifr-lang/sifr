@@ -39,5 +39,6 @@ def canPartitionKSubsets(nums, k):
     return backtrack(0, 0, 0)
 
 def main():
-    print("no test cases")
+    assert canPartitionKSubsets([4, 3, 2, 3, 5, 2, 1], 4) == True
+    assert canPartitionKSubsets([1, 2, 3, 4], 3) == False
 

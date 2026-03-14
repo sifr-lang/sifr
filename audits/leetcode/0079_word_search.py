@@ -42,7 +42,9 @@ def exist(board: List[List[str]], word: str) -> bool:
 
 
 def main():
-    print("no test cases")
+    assert exist([['A', 'B', 'C', 'E'], ['S', 'F', 'C', 'S'], ['A', 'D', 'E', 'E']], 'ABCCED') == True
+    assert exist([['A', 'B', 'C', 'E'], ['S', 'F', 'C', 'S'], ['A', 'D', 'E', 'E']], 'SEE') == True
+    assert exist([['A', 'B', 'C', 'E'], ['S', 'F', 'C', 'S'], ['A', 'D', 'E', 'E']], 'ABCB') == False
 
 if __name__ == "__main__":
     main()

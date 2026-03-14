@@ -15,9 +15,9 @@ def isMatch(s, p):
 
 
 def main():
-    print(isMatch("aa", "a"))
-    print(isMatch("aa", "*"))
-    print(isMatch("cb", "?a"))
+    assert isMatch("aa", "a") == False
+    assert isMatch("aa", "*") == True
+    assert isMatch("cb", "?a") == False
 
 if __name__ == "__main__":
     main()

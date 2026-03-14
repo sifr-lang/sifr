@@ -18,7 +18,14 @@ class DetectSquares:
         return res
 
 def main():
-    print("no test cases")
+    obj = DetectSquares()
+    obj.add([3, 10])
+    obj.add([11, 2])
+    obj.add([3, 2])
+    assert obj.count([11, 10]) == 1
+    assert obj.count([14, 8]) == 0
+    obj.add([11, 2])
+    assert obj.count([11, 10]) == 2
 
 if __name__ == "__main__":
     main()

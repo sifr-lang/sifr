@@ -33,7 +33,9 @@ Space Complexity: O(2^N)
 """
 
 def main():
-    print("no test cases")
+    assert maxProduct('leetcodecom') == 9
+    assert maxProduct('bb') == 1
+    assert maxProduct('accbcaxxcxx') == 25
 
 if __name__ == "__main__":
     main()

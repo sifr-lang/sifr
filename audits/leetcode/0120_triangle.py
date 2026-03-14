@@ -13,7 +13,7 @@ def minimumTotal(triangle: List[List[int]]) -> int:
 
 
 def main():
-    print(minimumTotal([[2],[3,4],[6,5,7],[4,1,8,3]]))
+    assert minimumTotal([[2],[3,4],[6,5,7],[4,1,8,3]]) == 11
 
 if __name__ == "__main__":
     main()

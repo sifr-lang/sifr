@@ -18,7 +18,7 @@ def merge(intervals: List[List[int]]) -> List[List[int]]:
 
 
 def main():
-    print(merge([[1,3],[2,6],[8,10],[15,18]]))
+    assert merge([[1,3],[2,6],[8,10],[15,18]]) == [[1, 6], [8, 10], [15, 18]]
 
 if __name__ == "__main__":
     main()

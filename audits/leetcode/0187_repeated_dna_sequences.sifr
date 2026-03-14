@@ -11,5 +11,6 @@ def findRepeatedDnaSequences(s: str) -> list[str]:
     return list(result)
 
 def main():
-    print("no test cases")
+    assert findRepeatedDnaSequences('AAAAACCCCCAAAAACCCCCCAAAAAGGGTTT') == ['AAAAACCCCC', 'CCCCCAAAAA']
+    assert findRepeatedDnaSequences('AAAAAAAAAAAAA') == ['AAAAAAAAAA']
 

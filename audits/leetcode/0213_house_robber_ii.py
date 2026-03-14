@@ -17,8 +17,8 @@ def helper(nums):
 
 
 def main():
-    print(rob([2,3,2]))
-    print(rob([1,2,3,1]))
+    assert rob([2,3,2]) == 3
+    assert rob([1,2,3,1]) == 4
 
 if __name__ == "__main__":
     main()

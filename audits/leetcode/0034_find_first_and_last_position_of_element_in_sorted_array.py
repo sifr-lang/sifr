@@ -28,8 +28,8 @@ def binSearch(nums, target, leftBias):
 
 
 def main():
-    print(searchRange([5,7,7,8,8,10], 8))
-    print(searchRange([5,7,7,8,8,10], 6))
+    assert searchRange([5,7,7,8,8,10], 8) == [3, 4]
+    assert searchRange([5,7,7,8,8,10], 6) == [-1, -1]
 
 if __name__ == "__main__":
     main()

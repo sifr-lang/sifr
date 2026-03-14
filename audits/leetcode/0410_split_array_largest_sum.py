@@ -26,7 +26,7 @@ def splitArray(nums: List[int], m: int) -> int:
 
 
 def main():
-    print(splitArray([7,2,5,10,8], 2))
+    assert splitArray([7,2,5,10,8], 2) == 18
 
 if __name__ == "__main__":
     main()

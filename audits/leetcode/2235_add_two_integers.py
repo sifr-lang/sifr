@@ -7,8 +7,8 @@ def sum(num1: int, num2: int) -> int:
 
 
 def main():
-    print(sum(12, 5))
-    print(sum(-10, 4))
+    assert sum(12, 5) == 17
+    assert sum(-10, 4) == -6
 
 if __name__ == "__main__":
     main()

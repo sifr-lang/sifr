@@ -17,8 +17,8 @@ def validateStackSequences(pushed, popped):
 
 
 def main():
-    print(validateStackSequences([1,2,3,4,5], [4,5,3,2,1]))
-    print(validateStackSequences([1,2,3,4,5], [4,3,5,1,2]))
+    assert validateStackSequences([1,2,3,4,5], [4,5,3,2,1]) == True
+    assert validateStackSequences([1,2,3,4,5], [4,3,5,1,2]) == False
 
 if __name__ == "__main__":
     main()

@@ -35,7 +35,16 @@ class LRUCache:
             del self.cache[lru.key]
 
 def main():
-    print("no test cases")
+    obj = LRUCache(2)
+    obj.put(1, 1)
+    obj.put(2, 2)
+    assert obj.get(1) == 1
+    obj.put(3, 3)
+    assert obj.get(2) == -1
+    obj.put(4, 4)
+    assert obj.get(1) == -1
+    assert obj.get(3) == 3
+    assert obj.get(4) == 4
 
 if __name__ == "__main__":
     main()

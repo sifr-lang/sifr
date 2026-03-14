@@ -16,7 +16,12 @@ def moveZeroes(nums: List[int]) -> None:
 
 
 def main():
-    print("no test cases")
+    arg0 = [0, 1, 0, 3, 12]
+    _result = moveZeroes(arg0)
+    assert arg0 == [1, 3, 12, 0, 0]
+    arg0 = [0]
+    _result = moveZeroes(arg0)
+    assert arg0 == [0]
 
 if __name__ == "__main__":
     main()

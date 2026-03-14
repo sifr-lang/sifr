@@ -22,7 +22,9 @@ def topKFrequent(nums: List[int], k: int) -> List[int]:
 
 
 def main():
-    print("no test cases")
+    assert topKFrequent([1, 1, 1, 2, 2, 3], 2) == [1, 2]
+    assert topKFrequent([1], 1) == [1]
+    assert topKFrequent([1, 2, 1, 2, 1, 2, 3, 1, 3, 2], 2) == [1, 2]
 
 if __name__ == "__main__":
     main()

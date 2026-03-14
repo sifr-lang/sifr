@@ -11,10 +11,10 @@ def canJump(nums: list[int]) -> bool:
     return True
 
 def main():
-    print(canJump([2, 3, 1, 1, 4]))
-    print(canJump([3, 2, 1, 0, 4]))
-    print(canJump([0]))
-    print(canJump([2, 0, 0]))
+    assert canJump([2, 3, 1, 1, 4]) == True
+    assert canJump([3, 2, 1, 0, 4]) == False
+    assert canJump([0]) == True
+    assert canJump([2, 0, 0]) == True
 
 if __name__ == "__main__":
     main()

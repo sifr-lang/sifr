@@ -37,7 +37,8 @@ def solveNQueens(n: int) -> List[List[str]]:
 
 
 def main():
-    print("no test cases")
+    assert solveNQueens(4) == [['.Q..', '...Q', 'Q...', '..Q.'], ['..Q.', 'Q...', '...Q', '.Q..']]
+    assert solveNQueens(1) == [['Q']]
 
 if __name__ == "__main__":
     main()

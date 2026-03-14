@@ -15,7 +15,7 @@ def numOfSubarrays(arr: List[int], k: int, threshold: int) -> int:
 
 
 def main():
-    print(numOfSubarrays([2,1,5,6,0,9,8], 3, 4))
+    assert numOfSubarrays([2,1,5,6,0,9,8], 3, 4) == 3
 
 if __name__ == "__main__":
     main()

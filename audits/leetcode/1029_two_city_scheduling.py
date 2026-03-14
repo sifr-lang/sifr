@@ -16,7 +16,7 @@ def twoCitySchedCost(costs: List[List[int]]) -> int:
 
 
 def main():
-    print(twoCitySchedCost([[10,20],[30,200],[400,50],[30,20]]))
+    assert twoCitySchedCost([[10,20],[30,200],[400,50],[30,20]]) == 110
 
 if __name__ == "__main__":
     main()

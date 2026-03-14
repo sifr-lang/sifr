@@ -13,13 +13,13 @@ def fib(n: int) -> int:
     return b
 
 def main():
-    print(fib(0))
-    print(fib(1))
-    print(fib(2))
-    print(fib(3))
-    print(fib(4))
-    print(fib(10))
-    print(fib(20))
+    assert fib(0) == 0
+    assert fib(1) == 1
+    assert fib(2) == 1
+    assert fib(3) == 2
+    assert fib(4) == 3
+    assert fib(10) == 55
+    assert fib(20) == 6765
 
 if __name__ == "__main__":
     main()

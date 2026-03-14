@@ -14,7 +14,8 @@ def findRepeatedDnaSequences(s: str) -> list[str]:
 
 
 def main():
-    print("no test cases")
+    assert findRepeatedDnaSequences('AAAAACCCCCAAAAACCCCCCAAAAAGGGTTT') == ['AAAAACCCCC', 'CCCCCAAAAA']
+    assert findRepeatedDnaSequences('AAAAAAAAAAAAA') == ['AAAAAAAAAA']
 
 if __name__ == "__main__":
     main()

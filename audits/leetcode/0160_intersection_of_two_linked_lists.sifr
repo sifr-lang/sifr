@@ -1,5 +1,52 @@
 # LeetCode 160: Intersection Of Two Linked Lists
 
+class ListNode:
+    val: int
+    next: ListNode | None
+
+    def __init__(self, val: int = 0, next: ListNode | None = None):
+        self.val = val
+        self.next = next
+
+
+def listNodeToString(node: ListNode | None) -> str:
+    if node is None:
+        return "None"
+    parts: list[str] = []
+    cur: ListNode | None = node
+    while cur is not None:
+        parts.append(str(cur.val))
+        cur = cur.next
+    return "->".join(parts)
+
+
+class Node:
+    val: int
+    next: Node | None
+    random: Node | None
+    left: Node | None
+    right: Node | None
+    neighbors: list[Node]
+    key: int
+
+    def __init__(
+        self,
+        val: int = 0,
+        next: Node | None = None,
+        random: Node | None = None,
+        left: Node | None = None,
+        right: Node | None = None,
+        neighbors: list[Node] = [],
+        key: int = -1,
+    ):
+        self.val = val
+        self.next = next
+        self.random = random
+        self.left = left
+        self.right = right
+        self.neighbors = neighbors
+        self.key = key
+
 def getIntersectionNode(
     self, headA: ListNode, headB: ListNode
 ) -> ListNode | None:
@@ -10,5 +57,11 @@ def getIntersectionNode(
     return l1
 
 def main():
-    print("no test cases")
+    shared = ListNode(8, ListNode(4, ListNode(5)))
+    headA = ListNode(4, ListNode(1, shared))
+    headB = ListNode(5, ListNode(6, ListNode(1, shared)))
+    assert listNodeToString(getIntersectionNode(None, headA, headB)) == "8->4->5"
 
+    headC = ListNode(2, ListNode(6, ListNode(4)))
+    headD = ListNode(1, ListNode(5))
+    assert listNodeToString(getIntersectionNode(None, headC, headD)) == "None"

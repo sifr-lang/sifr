@@ -22,8 +22,8 @@ def findMin(nums: List[int]) -> int:
 
 
 def main():
-    print(findMin([3,4,5,1,2]))
-    print(findMin([4,5,6,7,0,1,2]))
+    assert findMin([3,4,5,1,2]) == 1
+    assert findMin([4,5,6,7,0,1,2]) == 0
 
 if __name__ == "__main__":
     main()

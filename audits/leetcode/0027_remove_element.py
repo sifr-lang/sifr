@@ -29,8 +29,8 @@ def removeElement(nums: List[int], val: int) -> int:
 
 
 def main():
-    print(removeElement([3,2,2,3], 3))
-    print(removeElement([0,1,2,2,3,0,4,2], 2))
+    assert removeElement([3,2,2,3], 3) == 2
+    assert removeElement([0,1,2,2,3,0,4,2], 2) == 5
 
 if __name__ == "__main__":
     main()

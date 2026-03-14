@@ -23,7 +23,8 @@ def maxPoints(points: List[List[int]]) -> int:
 
 
 def main():
-    print("no test cases")
+    assert maxPoints([[1, 1], [2, 2], [3, 3]]) == 3
+    assert maxPoints([[1, 1], [3, 2], [5, 3], [4, 1], [2, 3], [1, 4]]) == 4
 
 if __name__ == "__main__":
     main()

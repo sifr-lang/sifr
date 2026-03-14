@@ -27,8 +27,8 @@ def search(nums: List[int], target: int) -> bool:
 
 
 def main():
-    print(search([2,5,6,0,0,1,2], 0))
-    print(search([2,5,6,0,0,1,2], 3))
+    assert search([2,5,6,0,0,1,2], 0) == True
+    assert search([2,5,6,0,0,1,2], 3) == False
 
 if __name__ == "__main__":
     main()

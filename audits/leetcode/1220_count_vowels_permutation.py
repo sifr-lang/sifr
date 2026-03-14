@@ -44,9 +44,9 @@ def countVowelPermutation(n, c = '') -> int:
 
 
 def main():
-    print(countVowelPermutation(1))
-    print(countVowelPermutation(2))
-    print(countVowelPermutation(5))
+    assert countVowelPermutation(1) == 5
+    assert countVowelPermutation(2) == 10
+    assert countVowelPermutation(5) == 68
 
 if __name__ == "__main__":
     main()

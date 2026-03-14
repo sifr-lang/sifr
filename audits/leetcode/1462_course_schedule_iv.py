@@ -26,7 +26,9 @@ def checkIfPrerequisite(numCourses: int, prerequisites: List[List[int]], queries
 
 
 def main():
-    print("no test cases")
+    assert checkIfPrerequisite(2, [[1, 0]], [[0, 1], [1, 0]]) == [False, True]
+    assert checkIfPrerequisite(2, [], [[1, 0], [0, 1]]) == [False, False]
+    assert checkIfPrerequisite(3, [[1, 2], [1, 0], [2, 0]], [[1, 0], [1, 2]]) == [True, True]
 
 if __name__ == "__main__":
     main()

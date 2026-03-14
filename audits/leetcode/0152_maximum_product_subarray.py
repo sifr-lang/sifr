@@ -25,10 +25,10 @@ def maxProduct(nums: list[int]) -> int:
     return result
 
 def main():
-    print(maxProduct([2, 3, -2, 4]))
-    print(maxProduct([-2, 0, -1]))
-    print(maxProduct([-2, 3, -4]))
-    print(maxProduct([2, -5, -2, -4, 3]))
+    assert maxProduct([2, 3, -2, 4]) == 6
+    assert maxProduct([-2, 0, -1]) == 0
+    assert maxProduct([-2, 3, -4]) == 24
+    assert maxProduct([2, -5, -2, -4, 3]) == 24
 
 if __name__ == "__main__":
     main()

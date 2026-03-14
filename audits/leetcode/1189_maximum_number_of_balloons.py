@@ -13,7 +13,9 @@ def maxNumberOfBalloons(text: str) -> int:
 
 
 def main():
-    print("no test cases")
+    assert maxNumberOfBalloons('nlaebolko') == 1
+    assert maxNumberOfBalloons('loonbalxballpoon') == 2
+    assert maxNumberOfBalloons('leetcode') == 0
 
 if __name__ == "__main__":
     main()

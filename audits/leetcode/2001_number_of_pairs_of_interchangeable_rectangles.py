@@ -17,7 +17,8 @@ def interchangeableRectangles(rectangles: List[List[int]]) -> int:
 
 
 def main():
-    print("no test cases")
+    assert interchangeableRectangles([[4, 8], [3, 6], [10, 20], [15, 30]]) == 6
+    assert interchangeableRectangles([[4, 5], [7, 8]]) == 0
 
 if __name__ == "__main__":
     main()

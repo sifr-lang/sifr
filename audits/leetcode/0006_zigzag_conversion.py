@@ -21,8 +21,8 @@ def convert(s: str, numRows: int) -> str:
 
 
 def main():
-    print(convert("PAYPALISHIRING", 3))
-    print(convert("A", 1))
+    assert convert("PAYPALISHIRING", 3) == 'PAHNAPLSIIGYIR'
+    assert convert("A", 1) == 'A'
 
 if __name__ == "__main__":
     main()

@@ -10,7 +10,7 @@ def minCostClimbingStairs(cost: List[int]) -> int:
 
 
 def main():
-    print(minCostClimbingStairs([10,15,20]))
+    assert minCostClimbingStairs([10,15,20]) == 15
 
 if __name__ == "__main__":
     main()

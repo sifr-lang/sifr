@@ -19,8 +19,8 @@ def characterReplacement(s: str, k: int) -> int:
 
 
 def main():
-    print(characterReplacement("ABAB", 2))
-    print(characterReplacement("AABABBA", 1))
+    assert characterReplacement("ABAB", 2) == 4
+    assert characterReplacement("AABABBA", 1) == 4
 
 if __name__ == "__main__":
     main()

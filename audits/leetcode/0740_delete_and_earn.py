@@ -23,8 +23,8 @@ def deleteAndEarn(nums):
 
 
 def main():
-    print(deleteAndEarn([3,4,2]))
-    print(deleteAndEarn([2,2,3,3,3,4]))
+    assert deleteAndEarn([3,4,2]) == 6
+    assert deleteAndEarn([2,2,3,3,3,4]) == 9
 
 if __name__ == "__main__":
     main()

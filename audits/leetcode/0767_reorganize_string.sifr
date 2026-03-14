@@ -23,5 +23,6 @@ def reorganizeString(s: str) -> str:
     return res
 
 def main():
-    print("no test cases")
+    assert reorganizeString('aab') == 'aba'
+    assert reorganizeString('aaab') == ''
 

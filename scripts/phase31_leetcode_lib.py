@@ -52,7 +52,7 @@ def fixture_paths() -> list[Path]:
 def detect_oracle_mode(source_text: str) -> str:
     if "assert " in source_text:
         return "embedded_asserts"
-    if 'print("no test cases")' in source_text or "print('no test cases')" in source_text:
+    if "def main():" in source_text:
         return "no_oracle"
     raise ValueError("unsupported LeetCode fixture oracle shape")
 

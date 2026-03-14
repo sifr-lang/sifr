@@ -25,7 +25,7 @@ def partitionLabels(S: str) -> List[int]:
 
 
 def main():
-    print(partitionLabels("ababcbacadefegdehijhklij"))
+    assert partitionLabels("ababcbacadefegdehijhklij") == [9, 7, 8]
 
 if __name__ == "__main__":
     main()

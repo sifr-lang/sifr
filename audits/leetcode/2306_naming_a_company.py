@@ -32,7 +32,8 @@ def distinctNames(ideas):
 
 
 def main():
-    print("no test cases")
+    assert distinctNames(['coffee', 'donuts', 'time', 'toffee']) == 6
+    assert distinctNames(['lack', 'back']) == 0
 
 if __name__ == "__main__":
     main()

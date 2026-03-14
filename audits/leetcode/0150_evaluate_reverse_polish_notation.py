@@ -21,7 +21,7 @@ def evalRPN(tokens: List[str]) -> int:
 
 
 def main():
-    print(evalRPN(["2","1","+","3","*"]))
+    assert evalRPN(["2","1","+","3","*"]) == 9
 
 if __name__ == "__main__":
     main()

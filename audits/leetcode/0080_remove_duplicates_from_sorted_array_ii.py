@@ -19,7 +19,7 @@ def removeDuplicates(nums: List[int]) -> int:
 
 
 def main():
-    print(removeDuplicates([1,1,1,2,2,3]))
+    assert removeDuplicates([1,1,1,2,2,3]) == 5
 
 if __name__ == "__main__":
     main()

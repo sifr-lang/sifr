@@ -23,5 +23,10 @@ def solve(board: list[list[str]]) -> None:
                 board[r][c] = 'X'
 
 def main():
-    print("no test cases")
+    arg0 = [['X', 'X', 'X', 'X'], ['X', 'O', 'O', 'X'], ['X', 'X', 'O', 'X'], ['X', 'O', 'X', 'X']]
+    _result = solve(arg0)
+    assert arg0 == [['X', 'X', 'X', 'X'], ['X', 'X', 'X', 'X'], ['X', 'X', 'X', 'X'], ['X', 'O', 'X', 'X']]
+    arg0 = [['X']]
+    _result = solve(arg0)
+    assert arg0 == [['X']]
 

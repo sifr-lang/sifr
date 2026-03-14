@@ -19,7 +19,7 @@ def reverseWords(s: str) -> str:
 
 
 def main():
-    print(reverseWords("the sky is blue"))
+    assert reverseWords("the sky is blue") == 'blue is sky the'
 
 if __name__ == "__main__":
     main()

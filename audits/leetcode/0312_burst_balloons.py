@@ -17,7 +17,7 @@ def maxCoins(nums: List[int]) -> int:
 
 
 def main():
-    print(maxCoins([3,1,5,8]))
+    assert maxCoins([3,1,5,8]) == 167
 
 if __name__ == "__main__":
     main()

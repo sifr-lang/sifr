@@ -31,7 +31,7 @@ def singleNonDuplicate(nums: List[int]) -> int:
 
 
 def main():
-    print(singleNonDuplicate([1,1,2,3,3,4,4,8,8]))
+    assert singleNonDuplicate([1,1,2,3,3,4,4,8,8]) == 2
 
 if __name__ == "__main__":
     main()

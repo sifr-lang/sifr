@@ -28,5 +28,7 @@ def minFlips(s: str) -> int:
     return res
 
 def main():
-    print("no test cases")
+    assert minFlips('111000') == 2
+    assert minFlips('010') == 0
+    assert minFlips('1110') == 1
 

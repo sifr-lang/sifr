@@ -20,7 +20,7 @@ def findTargetSumWays(nums: List[int], target: int) -> int:
 
 
 def main():
-    print(findTargetSumWays([1,1,1,1,1], 3))
+    assert findTargetSumWays([1,1,1,1,1], 3) == 5
 
 if __name__ == "__main__":
     main()

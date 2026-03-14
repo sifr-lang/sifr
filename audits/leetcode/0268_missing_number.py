@@ -11,8 +11,8 @@ def missingNumber(nums: List[int]) -> int:
 
 
 def main():
-    print(missingNumber([3,0,1]))
-    print(missingNumber([0,1]))
+    assert missingNumber([3,0,1]) == 2
+    assert missingNumber([0,1]) == 2
 
 if __name__ == "__main__":
     main()

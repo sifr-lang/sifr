@@ -20,7 +20,8 @@ def getSum(a: int, b: int) -> int:
 
 
 def main():
-    print("no test cases")
+    assert getSum(1, 2) == 3
+    assert getSum(2, 3) == 5
 
 if __name__ == "__main__":
     main()

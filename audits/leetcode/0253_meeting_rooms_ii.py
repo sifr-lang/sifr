@@ -15,7 +15,8 @@ def minMeetingRooms(self, intervals: List[List[int]]) -> int:
         return max_count
 
 def main():
-    print("no test cases")
+    assert minMeetingRooms(None, [[0, 30], [5, 10], [15, 20]]) == 2
+    assert minMeetingRooms(None, [[7, 10], [2, 4]]) == 1
 
 if __name__ == "__main__":
     main()

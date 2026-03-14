@@ -17,5 +17,6 @@ def getSum(a: int, b: int) -> int:
     return add(a, b)  # a*b >= 0 or (-a) > b > 0
 
 def main():
-    print("no test cases")
+    assert getSum(1, 2) == 3
+    assert getSum(2, 3) == 5
 

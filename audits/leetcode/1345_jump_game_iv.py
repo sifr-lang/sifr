@@ -53,7 +53,9 @@ def minJumps(arr: List[int]) -> int:
 
 
 def main():
-    print("no test cases")
+    assert minJumps([100, -23, -23, 404, 100, 23, 23, 23, 3, 404]) == 3
+    assert minJumps([7]) == 0
+    assert minJumps([7, 6, 9, 6, 9, 6, 9, 7]) == 1
 
 if __name__ == "__main__":
     main()

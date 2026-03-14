@@ -30,7 +30,7 @@ def threeSumClosest(nums: List[int], target: int) -> int:
 
 
 def main():
-    print(threeSumClosest([-1,2,1,-4], 1))
+    assert threeSumClosest([-1,2,1,-4], 1) == 2
 
 if __name__ == "__main__":
     main()

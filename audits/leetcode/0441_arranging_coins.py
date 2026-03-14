@@ -17,8 +17,8 @@ def arrangeCoins(n: int) -> int:
 
 
 def main():
-    print(arrangeCoins(5))
-    print(arrangeCoins(8))
+    assert arrangeCoins(5) == 2
+    assert arrangeCoins(8) == 3
 
 if __name__ == "__main__":
     main()

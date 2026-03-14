@@ -12,10 +12,10 @@ def maxProfit(prices: list[int]) -> int:
     return max_profit
 
 def main():
-    print(maxProfit([7, 1, 5, 3, 6, 4]))
-    print(maxProfit([7, 6, 4, 3, 1]))
-    print(maxProfit([2, 4, 1]))
-    print(maxProfit([1, 2]))
+    assert maxProfit([7, 1, 5, 3, 6, 4]) == 5
+    assert maxProfit([7, 6, 4, 3, 1]) == 0
+    assert maxProfit([2, 4, 1]) == 2
+    assert maxProfit([1, 2]) == 1
 
 if __name__ == "__main__":
     main()

@@ -25,7 +25,7 @@ def subsetsWithDup(nums: List[int]) -> List[List[int]]:
 
 
 def main():
-    print(subsetsWithDup([1,2,2]))
+    assert subsetsWithDup([1,2,2]) == [[1, 2, 2], [1, 2], [1], [2, 2], [2], []]
 
 if __name__ == "__main__":
     main()

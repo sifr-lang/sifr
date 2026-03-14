@@ -20,8 +20,8 @@ def checkPossibility(nums):
 
 
 def main():
-    print(checkPossibility([4,2,3]))
-    print(checkPossibility([4,2,1]))
+    assert checkPossibility([4,2,3]) == True
+    assert checkPossibility([4,2,1]) == False
 
 if __name__ == "__main__":
     main()

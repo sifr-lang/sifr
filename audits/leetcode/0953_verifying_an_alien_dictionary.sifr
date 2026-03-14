@@ -19,5 +19,7 @@ def isAlienSorted(words: list[str], order: str) -> bool:
     return True
 
 def main():
-    print("no test cases")
+    assert isAlienSorted(['hello', 'leetcode'], 'hlabcdefgijkmnopqrstuvwxyz') == True
+    assert isAlienSorted(['word', 'world', 'row'], 'worldabcefghijkmnpqstuvxyz') == False
+    assert isAlienSorted(['apple', 'app'], 'abcdefghijklmnopqrstuvwxyz') == False
 

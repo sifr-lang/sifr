@@ -84,5 +84,6 @@ def numIslands(grid: list[list[str]]) -> int:
      return islands
 
 def main():
-    print("no test cases")
+    assert numIslands([['1', '1', '1', '1', '0'], ['1', '1', '0', '1', '0'], ['1', '1', '0', '0', '0'], ['0', '0', '0', '0', '0']]) == 1
+    assert numIslands([['1', '1', '0', '0', '0'], ['1', '1', '0', '0', '0'], ['0', '0', '1', '0', '0'], ['0', '0', '0', '1', '1']]) == 3
 

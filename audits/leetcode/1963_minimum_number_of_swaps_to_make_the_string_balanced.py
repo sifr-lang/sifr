@@ -17,8 +17,8 @@ def minSwaps(s: str) -> int:
 
 
 def main():
-    print(minSwaps("][]["))
-    print(minSwaps("[][][]"))
+    assert minSwaps("][][") == 1
+    assert minSwaps("[][][]") == 0
 
 if __name__ == "__main__":
     main()

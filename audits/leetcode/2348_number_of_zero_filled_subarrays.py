@@ -24,8 +24,8 @@ def zeroFilledSubarray(nums):
 
 
 def main():
-    print(zeroFilledSubarray([1,3,0,0,2,0,0,4]))
-    print(zeroFilledSubarray([0,0,0,2,0,0]))
+    assert zeroFilledSubarray([1,3,0,0,2,0,0,4]) == 6
+    assert zeroFilledSubarray([0,0,0,2,0,0]) == 9
 
 if __name__ == "__main__":
     main()

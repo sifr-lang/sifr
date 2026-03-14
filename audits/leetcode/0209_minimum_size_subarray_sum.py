@@ -21,9 +21,9 @@ def minSubArrayLen(target: int, nums: List[int]) -> int:
 
 
 def main():
-    print(minSubArrayLen(7, [2,3,1,2,4,3]))
-    print(minSubArrayLen(4, [1,4,4]))
-    print(minSubArrayLen(11, [1,1,1,1,1,1,1,1]))
+    assert minSubArrayLen(7, [2,3,1,2,4,3]) == 2
+    assert minSubArrayLen(4, [1,4,4]) == 1
+    assert minSubArrayLen(11, [1,1,1,1,1,1,1,1]) == 0
 
 if __name__ == "__main__":
     main()

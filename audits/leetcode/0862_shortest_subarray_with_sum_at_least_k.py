@@ -21,7 +21,9 @@ def shortestSubarray(nums: List[int], k: int) -> int:
 
 
 def main():
-    print("no test cases")
+    assert shortestSubarray([1], 1) == 1
+    assert shortestSubarray([1, 2], 4) == -1
+    assert shortestSubarray([2, -1, 2], 3) == 3
 
 if __name__ == "__main__":
     main()
