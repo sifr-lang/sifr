@@ -3137,7 +3137,7 @@ mod tests {
                         ty: Type::Int,
                         default: None,
                         keyword_only: false,
-                        convention: sifr_type_system::ParamConvention::Borrow,
+                        convention: sifr_type_system::ParamConvention::borrow(),
                     }],
                     body: Box::new(HirExpr::BinOp {
                         left: Box::new(HirExpr::Name {
@@ -3150,7 +3150,7 @@ mod tests {
                     }),
                     ty: Type::Callable(
                         vec![Type::Int],
-                        vec![sifr_type_system::ParamConvention::Own],
+                        vec![sifr_type_system::ParamConvention::own()],
                         Box::new(Type::Int),
                     ),
                 },
@@ -3820,12 +3820,12 @@ mod tests {
                 ty: Type::Any,
                 default: None,
                 keyword_only: false,
-                convention: sifr_type_system::ParamConvention::Own,
+                convention: sifr_type_system::ParamConvention::own(),
             }],
             body: Box::new(HirExpr::IntLiteral(1)),
             ty: Type::Callable(
                 vec![Type::Any],
-                vec![sifr_type_system::ParamConvention::Own],
+                vec![sifr_type_system::ParamConvention::own()],
                 Box::new(Type::Int),
             ),
         };
@@ -3849,7 +3849,7 @@ mod tests {
                 ty: Type::Int,
                 default: None,
                 keyword_only: false,
-                convention: sifr_type_system::ParamConvention::Own,
+                convention: sifr_type_system::ParamConvention::own(),
             }],
             body: Box::new(HirExpr::Name {
                 name: "x".to_string(),
@@ -3857,7 +3857,7 @@ mod tests {
             }),
             ty: Type::Callable(
                 vec![Type::Int],
-                vec![sifr_type_system::ParamConvention::Own],
+                vec![sifr_type_system::ParamConvention::own()],
                 Box::new(Type::Int),
             ),
         };

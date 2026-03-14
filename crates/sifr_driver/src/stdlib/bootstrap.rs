@@ -244,7 +244,7 @@ fn compile_stdlib_uncached_impl() -> Result<StdlibCompiled, Vec<CompileError>> {
                         .iter()
                         .map(|p| {
                             let conv = if method.name == "new" {
-                                ParamConvention::Own
+                                ParamConvention::own()
                             } else {
                                 p.convention
                             };
@@ -263,7 +263,7 @@ fn compile_stdlib_uncached_impl() -> Result<StdlibCompiled, Vec<CompileError>> {
                     let ctor_params = class
                         .fields
                         .iter()
-                        .map(|(_, ty)| (ty.clone(), ParamConvention::Own))
+                        .map(|(_, ty)| (ty.clone(), ParamConvention::own()))
                         .collect::<Vec<_>>();
                     sig_map.insert(
                         format!("{}::new", class.name),

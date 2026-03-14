@@ -11,7 +11,7 @@ impl RustEmitter {
         arg_name: Option<&str>,
     ) -> Option<&'static str> {
         // Own convention: pass by value (move), no prefix needed
-        if convention == ParamConvention::Own {
+        if convention.is_owned() {
             return None;
         }
         // If the parameter type is a TypeVar, always emit the borrow prefix
@@ -27,22 +27,24 @@ impl RustEmitter {
         }
         // Avoid borrowing an already borrowed parameter again.
         if let Some(name) = arg_name {
-            if self.borrowed_params.contains(name) && convention == ParamConvention::Borrow {
+            if self.borrowed_params.contains(name) && convention.is_shared_borrow() {
                 return None;
             }
             if self.mut_borrowed_params.contains(name) {
-                if convention == ParamConvention::MutBorrow {
+                if convention.is_mut_borrow() {
                     return None;
                 }
-                if convention == ParamConvention::Borrow {
+                if convention.is_shared_borrow() {
                     return None;
                 }
             }
         }
-        match convention {
-            ParamConvention::Borrow => Some("&"),
-            ParamConvention::MutBorrow => Some("&mut "),
-            ParamConvention::Own => None,
+        if convention.is_mut_borrow() {
+            Some("&mut ")
+        } else if convention.is_shared_borrow() {
+            Some("&")
+        } else {
+            None
         }
     }
 

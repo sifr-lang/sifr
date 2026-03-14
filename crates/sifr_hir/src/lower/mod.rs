@@ -16,6 +16,8 @@ mod expressions;
 mod guarded_index;
 mod imports;
 mod numeric_sentinels;
+#[cfg(test)]
+mod own_mut_param_tests;
 mod sequence_guard_detection;
 mod sequence_guards;
 mod sequence_pointers;

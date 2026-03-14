@@ -1,7 +1,12 @@
 use crate::hir_nodes::{HirFunction, HirParam, MethodKind};
-use sifr_python_ast::{AstParamConvention, Expr, Number, Operator, StmtFunctionDef};
+use sifr_python_ast::{
+    AstParamConvention, AstParamMutability, AstParamOwnership, Expr, Number, Operator,
+    StmtFunctionDef,
+};
 use sifr_type_system::infer::resolve_type_annotation;
-use sifr_type_system::{make_union, FunctionType, OwnershipKind, ParamConvention, Type};
+use sifr_type_system::{
+    make_union, FunctionType, OwnershipKind, ParamConvention, ParamMutability, ParamOwnership, Type,
+};
 use std::collections::HashMap;
 
 use super::diagnostics::{format_type_name, is_valid_error_type};
@@ -194,20 +199,23 @@ pub(super) fn register_builtins(ctx: &mut LowerCtx) {
 }
 
 pub(super) fn ast_convention_to_param(conv: AstParamConvention, ty: &Type) -> ParamConvention {
-    match conv {
-        AstParamConvention::Mut => ParamConvention::MutBorrow,
-        AstParamConvention::Own => ParamConvention::Own,
-        AstParamConvention::Default => {
-            // TypeVars (generics) default to Borrow since the concrete type is unknown
+    let ownership = match conv.ownership {
+        AstParamOwnership::Own => ParamOwnership::Own,
+        AstParamOwnership::Borrow => {
             if matches!(ty, Type::TypeVar(_)) {
-                ParamConvention::Borrow
+                ParamOwnership::Borrow
             } else if ty.ownership() == OwnershipKind::Copy {
-                ParamConvention::Own
+                ParamOwnership::Own
             } else {
-                ParamConvention::Borrow
+                ParamOwnership::Borrow
             }
         }
-    }
+    };
+    let mutability = match conv.mutability {
+        AstParamMutability::Immutable => ParamMutability::Immutable,
+        AstParamMutability::Mutable => ParamMutability::Mutable,
+    };
+    ParamConvention::new(ownership, mutability)
 }
 
 pub(super) fn extract_function_type(func: &StmtFunctionDef, ctx: &mut LowerCtx) -> FunctionType {
@@ -431,9 +439,9 @@ pub(super) fn resolve_annotation_expr(expr: &Expr, ctx: &mut LowerCtx) -> Type {
                             .iter()
                             .map(|ty| {
                                 if ty.ownership() == OwnershipKind::Copy {
-                                    ParamConvention::Own
+                                    ParamConvention::own()
                                 } else {
-                                    ParamConvention::Borrow
+                                    ParamConvention::borrow()
                                 }
                             })
                             .collect();
@@ -652,7 +660,7 @@ pub(super) fn lower_function(func: &StmtFunctionDef, ctx: &mut LowerCtx) -> Opti
     // by the Rust compiler, not by Sifr's escape analysis.
     ctx.borrowed_params.clear();
     for param in &params {
-        if param.convention == ParamConvention::Borrow
+        if param.convention.is_shared_borrow()
             && param.ty.ownership() == OwnershipKind::Move
             && !matches!(param.ty, Type::TypeVar(_))
         {

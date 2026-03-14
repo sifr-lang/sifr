@@ -15,17 +15,15 @@ impl RustEmitter {
         params
             .iter()
             .filter(|param| {
-                if param.convention == ParamConvention::Own {
+                if param.convention.is_owned() {
                     self.mutated_vars.contains(&param.name)
                 } else {
                     reassigned_vars.contains(&param.name)
                 }
             })
             .map(|param| {
-                let value = if matches!(
-                    param.convention,
-                    ParamConvention::Borrow | ParamConvention::MutBorrow
-                ) && param.ty.ownership() != OwnershipKind::Copy
+                let value = if param.convention.is_borrowed()
+                    && param.ty.ownership() != OwnershipKind::Copy
                 {
                     RustExpr::Clone(Box::new(RustExpr::Ident(param.name.clone())))
                 } else {
@@ -94,22 +92,13 @@ impl RustEmitter {
 
     fn lower_function_param_type(&self, ty: &Type, convention: ParamConvention) -> RustType {
         let base = self.rust_ir_type_with_generics(ty);
-        match convention {
-            ParamConvention::Borrow if ty.ownership() != sifr_type_system::OwnershipKind::Copy => {
-                RustType::Ref {
-                    mutable: false,
-                    inner: Box::new(base),
-                }
+        if ty.ownership() != sifr_type_system::OwnershipKind::Copy && convention.is_borrowed() {
+            RustType::Ref {
+                mutable: convention.is_mut_borrow(),
+                inner: Box::new(base),
             }
-            ParamConvention::MutBorrow
-                if ty.ownership() != sifr_type_system::OwnershipKind::Copy =>
-            {
-                RustType::Ref {
-                    mutable: true,
-                    inner: Box::new(base),
-                }
-            }
-            _ => base,
+        } else {
+            base
         }
     }
 
@@ -461,12 +450,12 @@ impl RustEmitter {
         self.mut_borrowed_params.clear();
         self.callable_var_conventions.clear();
         for param in &func.params {
-            if param.convention == ParamConvention::Borrow
+            if param.convention.is_shared_borrow()
                 && param.ty.ownership() != sifr_type_system::OwnershipKind::Copy
             {
                 self.borrowed_params.insert(param.name.clone());
             }
-            if param.convention == ParamConvention::MutBorrow
+            if param.convention.is_mut_borrow()
                 && param.ty.ownership() != sifr_type_system::OwnershipKind::Copy
             {
                 self.mut_borrowed_params.insert(param.name.clone());

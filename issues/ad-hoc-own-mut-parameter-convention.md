@@ -1,6 +1,6 @@
 # Ad Hoc Phase: `own mut` Parameter Convention
 
-Status: proposed on 2026-03-13
+Status: in progress on 2026-03-14
 
 ## Purpose
 
@@ -195,6 +195,38 @@ fn replace_elements(mut arr: Vec<i64>) -> Vec<i64> {
 | AC-7 | borrowed parameters still fail escape analysis with deterministic diagnostics |
 | AC-8 | a `1299`-style fixture written with `own mut` checks, emits, and runs successfully |
 | AC-9 | full local validation passes with no regressions in existing borrow-by-default coverage |
+
+## Part Breakdown
+
+- [ ] Part 1 `orthogonal_parameter_convention_model_and_frontend_normalization` (locally validated; PR pending)
+  - parser accepts `own mut` and `mut own`
+  - AST/HIR/type signatures carry orthogonal ownership + mutability structurally
+  - normalization and duplicate-modifier regressions are locked
+  - runnable demo proves the new syntax survives frontend lowering without fallback behavior
+- [ ] Part 2 `borrow_checking_and_escape_semantics_for_four_parameter_modes`
+  - borrow/exclusivity checks derive from the orthogonal model
+  - owned parameters, including `own mut`, remain returnable
+  - borrowed parameters keep deterministic escape diagnostics
+- [ ] Part 3 `codegen_and_runtime_semantics_for_owned_mutable_parameters`
+  - emitted Rust distinguishes all four parameter modes
+  - `own mut` lowers to `mut x: T`
+  - direct runtime coverage includes a `1299`-style consuming mutable transform
+- [ ] Part 4 `phase_closure_review_cycles_and_documentation`
+  - architecture docs describe the orthogonal parameter model canonically
+  - full validation, external review loops, and closure evidence are recorded
+
+## Execution Log
+
+- `2026-03-14`: part 1 `orthogonal_parameter_convention_model_and_frontend_normalization` completed local validation and is ready for PR.
+  - Execution report: `issues/ad-hoc-own-mut-parameter-convention-part1-execution.md`
+  - PR: pending
+  - Demo: `demos/ad_hoc_own_mut_parameter_convention_part1_demo.sifr`
+  - Added regression coverage:
+    - `crates/sifr_python_parser/src/parser/tests.rs`
+    - `crates/sifr_hir/src/lower/own_mut_param_tests.rs`
+  - Full local validation:
+    - `scripts/run_all_tests.sh --profile quick`
+    - `scripts/run_all_tests.sh`
 
 ## Implementation Plan
 
