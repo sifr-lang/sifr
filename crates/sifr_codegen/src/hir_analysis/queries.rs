@@ -411,6 +411,7 @@ fn collect_capture_pattern_names(pattern: &HirPattern, defined: &mut HashSet<Str
 mod tests {
     use super::*;
     use sifr_hir::{HirFunction, HirParam, MethodKind};
+    use sifr_type_system::ParamConvention;
 
     #[test]
     fn collect_mutated_vars_marks_mutborrow_call_argument() {

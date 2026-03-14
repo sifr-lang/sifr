@@ -207,7 +207,7 @@ fn replace_elements(mut arr: Vec<i64>) -> Vec<i64> {
   - borrow/exclusivity checks derive from the orthogonal model
   - owned parameters, including `own mut`, remain returnable
   - borrowed parameters keep deterministic escape diagnostics
-- [ ] Part 3 `codegen_and_runtime_semantics_for_owned_mutable_parameters`
+- [x] Part 3 `codegen_and_runtime_semantics_for_owned_mutable_parameters`
   - emitted Rust distinguishes all four parameter modes
   - `own mut` lowers to `mut x: T`
   - direct runtime coverage includes a `1299`-style consuming mutable transform
@@ -236,6 +236,18 @@ fn replace_elements(mut arr: Vec<i64>) -> Vec<i64> {
     - `crates/sifr/tests/e2e/pass/own_mut_parameter_semantics.sifr`
     - `crates/sifr/tests/e2e/fail/borrowed_mut_parameter_return_escape.sifr`
     - `crates/sifr/tests/e2e/fail/own_parameter_mutation_requires_mut.sifr`
+  - Full local validation:
+    - `scripts/run_all_tests.sh --profile quick`
+    - `scripts/run_all_tests.sh`
+- `2026-03-14`: part 3 `codegen_and_runtime_semantics_for_owned_mutable_parameters` completed local validation and opened PR pending.
+  - Execution report: `issues/ad-hoc-own-mut-parameter-convention-part3-execution.md`
+  - PR: pending
+  - Demo: `demos/ad_hoc_own_mut_parameter_convention_part3_demo.sifr`
+  - Added regression coverage:
+    - `crates/sifr_codegen/src/lib_codegen_tests.rs`
+    - `crates/sifr_hir/src/lower/own_mut_semantics_tests.rs`
+    - `crates/sifr/tests/e2e/pass/own_mut_replace_elements_1299.sifr`
+    - `crates/sifr/tests/e2e/fail/own_parameter_method_mutation_requires_mut.sifr`
   - Full local validation:
     - `scripts/run_all_tests.sh --profile quick`
     - `scripts/run_all_tests.sh`

@@ -13,6 +13,7 @@ use super::decimal_methods::{
     validate_decimal_string_literal,
 };
 use super::guarded_index::guarded_sequence_index_result_type;
+use super::mutating_methods::reject_immutable_parameter_method_mutation;
 use super::numeric_sentinels::{
     float_sentinel_expr, float_sentinel_kind_from_call, lower_sentinel_expr_for_name_domain,
     maybe_resolve_numeric_sentinel_name_from_type, normalize_min_max_numeric_sentinels,
@@ -2284,6 +2285,10 @@ pub(super) fn lower_method_call(
         object = refined_object;
     }
     let object_ty = object.ty().clone();
+
+    if reject_immutable_parameter_method_mutation(ctx, &object, &object_ty, &method_name) {
+        return None;
+    }
 
     // Resolve method return type based on object type and method name
     let return_ty = resolve_method_type(&object_ty, &method_name, &args, ctx)?;

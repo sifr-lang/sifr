@@ -336,16 +336,26 @@ impl RustEmitter {
             _ => {}
         }
         for param in &method.params {
-            params.push(RustParam::Named {
-                name: param.name.clone(),
-                ty: self.lower_class_method_param_type(
-                    class,
-                    method,
-                    &param.name,
-                    &param.ty,
-                    param.convention,
-                ),
-            });
+            let rust_ty = self.lower_class_method_param_type(
+                class,
+                method,
+                &param.name,
+                &param.ty,
+                param.convention,
+            );
+            params.push(
+                if param.convention.is_owned() && param.convention.is_mutable() {
+                    RustParam::NamedMut {
+                        name: param.name.clone(),
+                        ty: rust_ty,
+                    }
+                } else {
+                    RustParam::Named {
+                        name: param.name.clone(),
+                        ty: rust_ty,
+                    }
+                },
+            );
         }
 
         let mut body = if method.method_kind == MethodKind::Regular && method.name == "new" {

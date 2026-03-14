@@ -1525,7 +1525,9 @@ mod tests {
                 params
                     .iter()
                     .map(|p| match p {
-                        RustParam::Named { ty, .. } => count_raw_in_type(ty),
+                        RustParam::Named { ty, .. } | RustParam::NamedMut { ty, .. } => {
+                            count_raw_in_type(ty)
+                        }
                         RustParam::SelfParam { .. } | RustParam::SelfValue => 0,
                     })
                     .sum::<usize>()
@@ -1562,7 +1564,9 @@ mod tests {
                     .iter()
                     .map(|p| match p {
                         RustParam::SelfParam { .. } | RustParam::SelfValue => 0,
-                        RustParam::Named { ty, .. } => count_raw_in_type(ty),
+                        RustParam::Named { ty, .. } | RustParam::NamedMut { ty, .. } => {
+                            count_raw_in_type(ty)
+                        }
                     })
                     .sum::<usize>()
                     + ret.as_ref().map(count_raw_in_type).unwrap_or(0)
@@ -1573,7 +1577,9 @@ mod tests {
                     .iter()
                     .map(|p| match p {
                         RustParam::SelfParam { .. } | RustParam::SelfValue => 0,
-                        RustParam::Named { ty, .. } => count_raw_in_type(ty),
+                        RustParam::Named { ty, .. } | RustParam::NamedMut { ty, .. } => {
+                            count_raw_in_type(ty)
+                        }
                     })
                     .sum::<usize>()
                     + ret.as_ref().map(count_raw_in_type).unwrap_or(0)

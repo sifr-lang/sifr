@@ -8,7 +8,6 @@ use sifr_type_system::{OwnershipKind, ParamConvention, Type};
 
 impl RustEmitter {
     pub(super) fn lower_mutable_param_shadows(
-        &self,
         params: &[HirParam],
         reassigned_vars: &std::collections::HashSet<String>,
     ) -> Vec<(String, RustExpr)> {
@@ -16,7 +15,7 @@ impl RustEmitter {
             .iter()
             .filter(|param| {
                 if param.convention.is_owned() {
-                    self.mutated_vars.contains(&param.name)
+                    false
                 } else {
                     reassigned_vars.contains(&param.name)
                 }
@@ -484,15 +483,25 @@ impl RustEmitter {
 
         let reassigned_vars = collect_reassigned_vars(&func.body);
         let mutable_param_shadows =
-            self.lower_mutable_param_shadows(&func.params, &reassigned_vars);
+            Self::lower_mutable_param_shadows(&func.params, &reassigned_vars);
         self.apply_mutable_param_shadowing(&mutable_param_shadows);
 
         let params = func
             .params
             .iter()
-            .map(|param| RustParam::Named {
-                name: param.name.clone(),
-                ty: self.lower_function_param_type(&param.ty, param.convention),
+            .map(|param| {
+                let rust_ty = self.lower_function_param_type(&param.ty, param.convention);
+                if param.convention.is_owned() && param.convention.is_mutable() {
+                    RustParam::NamedMut {
+                        name: param.name.clone(),
+                        ty: rust_ty,
+                    }
+                } else {
+                    RustParam::Named {
+                        name: param.name.clone(),
+                        ty: rust_ty,
+                    }
+                }
             })
             .collect::<Vec<_>>();
 

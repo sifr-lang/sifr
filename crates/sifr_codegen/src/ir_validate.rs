@@ -67,7 +67,9 @@ fn validate_item(item: &RustItem, issues: &mut Vec<IrValidationIssue>) {
                 });
             }
             for param in params {
-                if let crate::RustParam::Named { ty, .. } = param {
+                if let crate::RustParam::Named { ty, .. } | crate::RustParam::NamedMut { ty, .. } =
+                    param
+                {
                     validate_type(ty, issues);
                 }
             }
@@ -80,7 +82,9 @@ fn validate_item(item: &RustItem, issues: &mut Vec<IrValidationIssue>) {
         }
         RustItem::TraitMethodSig { params, ret, .. } => {
             for param in params {
-                if let crate::RustParam::Named { ty, .. } = param {
+                if let crate::RustParam::Named { ty, .. } | crate::RustParam::NamedMut { ty, .. } =
+                    param
+                {
                     validate_type(ty, issues);
                 }
             }
@@ -208,7 +212,7 @@ fn validate_stmt(stmt: &RustStmt, issues: &mut Vec<IrValidationIssue>, in_functi
             params, ret, body, ..
         } => {
             for param in params {
-                if let RustParam::Named { ty, .. } = param {
+                if let RustParam::Named { ty, .. } | RustParam::NamedMut { ty, .. } = param {
                     validate_type(ty, issues);
                 }
             }
