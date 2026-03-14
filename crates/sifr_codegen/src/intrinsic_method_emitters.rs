@@ -2850,6 +2850,12 @@ impl RustEmitter {
             lowered_args.push(lowered_arg);
         }
 
+        if let Some(captures) = self.nested_fn_captures.get(func).cloned() {
+            for capture in captures {
+                lowered_args.push(self.lower_recursive_capture_arg_for_ir(&capture));
+            }
+        }
+
         Some(crate::RustExpr::FnCall {
             func: Box::new(crate::RustExpr::Ident(func.to_string())),
             args: lowered_args,

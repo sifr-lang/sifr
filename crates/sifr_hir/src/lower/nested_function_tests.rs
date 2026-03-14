@@ -75,6 +75,27 @@ fn test_recursive_nested_helper_infers_int_signature_from_usage() {
 }
 
 #[test]
+fn test_recursive_nested_helper_infers_mutable_collection_param_from_usage() {
+    let module = lower_source(
+        "def combination_sum(candidates: list[int], target: int) -> list[list[int]]:\n    res = []\n\n    def dfs(i, cur, total):\n        if total == target:\n            res.append(cur.copy())\n            return\n        if i >= len(candidates) or total > target:\n            return\n        cur.append(candidates[i])\n        dfs(i, cur, total + candidates[i])\n        cur.pop()\n        dfs(i + 1, cur, total)\n\n    dfs(0, [], 0)\n    return res\n",
+    )
+    .expect("recursive local helpers should infer mutable collection params from usage");
+
+    let combination_sum = module
+        .functions
+        .iter()
+        .find(|function| function.name == "combination_sum")
+        .expect("combination_sum function missing");
+    let HirStmt::NestedFunction { func } = &combination_sum.body[1] else {
+        panic!("expected nested dfs helper");
+    };
+
+    assert_eq!(func.params[1].name, "cur");
+    assert_eq!(func.params[1].ty, Type::List(Box::new(Type::Int)));
+    assert_eq!(func.params[1].convention, ParamConvention::mut_borrow());
+}
+
+#[test]
 fn test_conflicting_nested_helper_call_sites_fail_inference_explicitly() {
     let result = lower_source(
         "def outer(flag: bool) -> None:\n    def helper(value):\n        print(value)\n\n    if flag:\n        helper(1)\n    else:\n        helper(\"x\")\n",
@@ -133,4 +154,31 @@ fn test_recursive_nonlocal_nested_helper_fails_explicitly() {
         error.message
             == "recursive nested function 'visit' cannot mutate captured state with `nonlocal` yet"
     }));
+}
+
+#[test]
+fn test_nested_helper_usage_refines_outer_empty_collection_types() {
+    let module = lower_source(
+        "def subsets(limit: int) -> list[list[int]]:\n    res = []\n    subset = []\n\n    def dfs(i: int):\n        if i >= limit:\n            res.append(subset.copy())\n            return\n        subset.append(i)\n        dfs(i + 1)\n        subset.pop()\n        dfs(i + 1)\n\n    dfs(0)\n    return res\n",
+    )
+    .expect("nested helper capture usage should refine outer empty collection types");
+
+    let subsets = module
+        .functions
+        .iter()
+        .find(|function| function.name == "subsets")
+        .expect("subsets function missing");
+
+    let HirStmt::Let { ty: res_ty, .. } = &subsets.body[0] else {
+        panic!("expected first subsets statement to be the result binding");
+    };
+    let HirStmt::Let { ty: subset_ty, .. } = &subsets.body[1] else {
+        panic!("expected second subsets statement to be the subset binding");
+    };
+
+    assert_eq!(
+        res_ty,
+        &Type::List(Box::new(Type::List(Box::new(Type::Int))))
+    );
+    assert_eq!(subset_ty, &Type::List(Box::new(Type::Int)));
 }

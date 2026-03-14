@@ -12,9 +12,9 @@ mod compat_imports;
 mod decimal_methods;
 mod diagnostics;
 mod expressions;
-mod function_scopes;
 #[cfg(test)]
 mod expressions_tests;
+mod function_scopes;
 mod guarded_index;
 mod imports;
 mod method_call_args;
@@ -117,22 +117,15 @@ pub(super) struct LowerCtx {
     class_declared_type_params: HashMap<String, Vec<String>>,
     /// External definitions available to compatibility shims.
     externals: ExternalDefs,
-    /// Synthetic imports added during lowering for compatibility aliases.
     synthetic_imports: Vec<HirImport>,
-    /// Memoized alias names for synthetic imports keyed by `module:name`.
     synthetic_import_aliases: HashMap<String, String>,
-    /// Proven local sequence/index facts used to refine optional indexing.
     sequence_guards: Vec<SequenceGuard>,
-    /// Simple pointer-role facts used to recognize same-sequence two-pointer loops.
     sequence_pointers: Vec<SequencePointerFact>,
-    /// Pending/resolved local infinity sentinel facts for algorithmic accumulators.
     numeric_sentinel_vars: HashMap<String, numeric_sentinels::NumericSentinelFact>,
-    /// Pending initializer patches once a sentinel variable domain resolves.
     pending_numeric_sentinel_patches: HashMap<String, numeric_sentinels::NumericSentinelPatch>,
-    /// Supported constructed sequence shapes whose lengths are tied to other sequences.
     sequence_shapes: Vec<sequence_shapes::SequenceShapeFact>,
-    /// Per-function nonlocal declarations and frame boundaries.
     function_scopes: Vec<function_scopes::FunctionScopeState>,
+    inferred_binding_hints: Vec<HashMap<String, Type>>,
 }
 
 impl LowerCtx {
@@ -170,6 +163,7 @@ impl LowerCtx {
             pending_numeric_sentinel_patches: HashMap::new(),
             sequence_shapes: Vec::new(),
             function_scopes: Vec::new(),
+            inferred_binding_hints: Vec::new(),
         }
     }
 
@@ -188,8 +182,13 @@ impl LowerCtx {
     fn in_loop(&self) -> bool {
         self.loop_depth > 0
     }
+    fn inferred_binding_hint(&self, name: &str) -> Option<&Type> {
+        self.inferred_binding_hints
+            .iter()
+            .rev()
+            .find_map(|hints| hints.get(name))
+    }
 }
-
 const TYPEVAR_CONSTRAINT_PREFIX: &str = "__constraint__:";
 
 fn encode_typevar_constraint(name: &str) -> String {

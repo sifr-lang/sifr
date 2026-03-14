@@ -1820,6 +1820,35 @@ fn test_stmt_path_handles_nested_function() {
 }
 
 #[test]
+fn test_stmt_path_handles_recursive_nested_function_with_structured_captures() {
+    let generated = generate_rust_from_source(
+        r#"
+def main():
+    values: list[int] = [1, 2]
+    subset: list[int] = []
+    res: list[list[int]] = []
+
+    def dfs(i: int):
+        if i >= values.len():
+            res.append(subset.copy())
+            return
+        subset.append(i)
+        dfs(i + 1)
+        subset.pop()
+        dfs(i + 1)
+
+    dfs(0)
+"#,
+    );
+
+    assert!(generated.contains(
+        "fn dfs(i: i64, values: &Vec<i64>, subset: &mut Vec<i64>, res: &mut Vec<Vec<i64>>)"
+    ));
+    assert!(generated.contains("dfs(0 as i64, &values, &mut subset, &mut res);"));
+    assert!(generated.contains("dfs((i + 1 as i64), values, subset, res);"));
+}
+
+#[test]
 fn test_expr_path_handles_call_expression() {
     let module = HirModule {
         functions: vec![HirFunction {

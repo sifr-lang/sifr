@@ -51,7 +51,11 @@ pub(super) fn lower_stmts(
     func_type: &FunctionType,
     ctx: &mut LowerCtx,
 ) -> Vec<HirStmt> {
-    predeclare_nested_function_symbols(stmts, ctx);
+    let nested_inference =
+        super::nested_function_inference::infer_nested_function_types(stmts, ctx);
+    ctx.inferred_binding_hints
+        .push(nested_inference.binding_hints.clone());
+    predeclare_nested_function_symbols(stmts, &nested_inference.function_types, ctx);
 
     let mut result = Vec::new();
     for (index, stmt) in stmts.iter().enumerate() {
@@ -74,11 +78,15 @@ pub(super) fn lower_stmts(
         }
         apply_numeric_sentinel_patches(&mut result, &mut ctx.pending_numeric_sentinel_patches);
     }
+    let _ = ctx.inferred_binding_hints.pop();
     result
 }
 
-fn predeclare_nested_function_symbols(stmts: &[Stmt], ctx: &mut LowerCtx) {
-    let inferred_types = super::nested_function_inference::infer_nested_function_types(stmts, ctx);
+fn predeclare_nested_function_symbols(
+    stmts: &[Stmt],
+    inferred_types: &std::collections::HashMap<String, FunctionType>,
+    ctx: &mut LowerCtx,
+) {
     for stmt in stmts {
         if let Stmt::FunctionDef(func) = stmt {
             if let Some(function_type) = inferred_types.get(func.name.as_str()).cloned() {
@@ -87,6 +95,18 @@ fn predeclare_nested_function_symbols(stmts: &[Stmt], ctx: &mut LowerCtx) {
                 register_local_function_symbol(func, ctx);
             }
         }
+    }
+}
+
+fn type_contains_unknown_or_any(ty: &Type) -> bool {
+    match ty {
+        Type::Unknown | Type::Any => true,
+        Type::List(elem) => type_contains_unknown_or_any(elem),
+        Type::Dict(key, value) => {
+            type_contains_unknown_or_any(key) || type_contains_unknown_or_any(value)
+        }
+        Type::Tuple(elements) => elements.iter().any(type_contains_unknown_or_any),
+        _ => false,
     }
 }
 
@@ -430,7 +450,13 @@ pub(super) fn lower_stmt(
                     .get(i)
                     .map(|(_, t, _)| t.clone())
                     .unwrap_or(Type::Any);
-                let convention = ast_convention_to_param(param_def.parameter.convention, &ty);
+                let convention = ft
+                    .params
+                    .get(i)
+                    .map(|(_, _, convention)| *convention)
+                    .unwrap_or_else(|| {
+                        ast_convention_to_param(param_def.parameter.convention, &ty)
+                    });
                 ctx.scope
                     .define_parameter(name.clone(), ty.clone(), convention.is_mutable());
                 let default = param_def.default.as_ref().and_then(|d| lower_expr(d, ctx));
@@ -452,7 +478,11 @@ pub(super) fn lower_stmt(
                     .get(regular_count)
                     .map(|(_, t, _)| t.clone())
                     .unwrap_or(Type::Any);
-                let convention = ast_convention_to_param(vararg.convention, &ty);
+                let convention = ft
+                    .params
+                    .get(regular_count)
+                    .map(|(_, _, convention)| *convention)
+                    .unwrap_or_else(|| ast_convention_to_param(vararg.convention, &ty));
                 ctx.scope
                     .define_parameter(name.clone(), ty.clone(), convention.is_mutable());
                 params.push(HirParam {
@@ -474,7 +504,13 @@ pub(super) fn lower_stmt(
                     .get(regular_count + i)
                     .map(|(_, t, _)| t.clone())
                     .unwrap_or(Type::Any);
-                let convention = ast_convention_to_param(param_def.parameter.convention, &ty);
+                let convention = ft
+                    .params
+                    .get(regular_count + i)
+                    .map(|(_, _, convention)| *convention)
+                    .unwrap_or_else(|| {
+                        ast_convention_to_param(param_def.parameter.convention, &ty)
+                    });
                 ctx.scope
                     .define_parameter(name.clone(), ty.clone(), convention.is_mutable());
                 let default = param_def.default.as_ref().and_then(|d| lower_expr(d, ctx));
@@ -1382,7 +1418,14 @@ pub(super) fn lower_assign(assign: &StmtAssign, ctx: &mut LowerCtx) -> Option<Hi
         Some(HirStmt::Assign { name, value })
     } else {
         // New variable (type inferred)
-        ctx.scope.define(name.clone(), value_ty.clone());
+        let binding_ty = ctx
+            .inferred_binding_hint(&name)
+            .filter(|hint| {
+                type_contains_unknown_or_any(&value_ty) && value_ty.is_assignable_to(hint)
+            })
+            .cloned()
+            .unwrap_or_else(|| value_ty.clone());
+        ctx.scope.define(name.clone(), binding_ty.clone());
         if let Some(kind) = numeric_sentinel_kind(&assign.value) {
             ctx.record_numeric_sentinel_initializer(name.clone(), kind);
         } else {
@@ -1396,7 +1439,7 @@ pub(super) fn lower_assign(assign: &StmtAssign, ctx: &mut LowerCtx) -> Option<Hi
         record_sequence_pointer_fact(ctx, &name, &assign.value);
         Some(HirStmt::Let {
             name,
-            ty: value_ty,
+            ty: binding_ty,
             value,
             is_mutable: true,
         })

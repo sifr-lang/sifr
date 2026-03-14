@@ -1,11 +1,16 @@
-use sifr_python_ast::{CmpOp, Expr, ExprCall, Operator, Stmt, StmtFunctionDef};
+use sifr_python_ast::{AstParamConvention, CmpOp, Expr, ExprCall, Operator, Stmt, StmtFunctionDef};
 use sifr_type_system::{type_check_binary_op, FunctionType, Type};
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
 
 use super::typing_and_functions::{ast_convention_to_param, resolve_annotation_expr};
 use super::LowerCtx;
 
 const MAX_INFERENCE_PASSES: usize = 8;
+
+pub(super) struct NestedFunctionInference {
+    pub(super) function_types: HashMap<String, FunctionType>,
+    pub(super) binding_hints: HashMap<String, Type>,
+}
 
 #[derive(Clone)]
 struct ParamState {
@@ -13,6 +18,7 @@ struct ParamState {
     ty: Type,
     explicit: bool,
     convention: sifr_python_ast::AstParamConvention,
+    mutated: bool,
 }
 
 #[derive(Clone)]
@@ -31,15 +37,34 @@ impl LocalFunctionState<'_> {
                 .params
                 .iter()
                 .map(|param| {
+                    let convention = inferred_param_convention(param);
                     (
                         param.name.clone(),
                         param.ty.clone(),
-                        ast_convention_to_param(param.convention, &param.ty),
+                        ast_convention_to_param(convention, &param.ty),
                     )
                 })
                 .collect(),
             return_type: Box::new(self.return_type.clone()),
         }
+    }
+}
+
+fn inferred_param_convention(param: &ParamState) -> AstParamConvention {
+    if !param.mutated || param.convention.is_mutable() {
+        return param.convention;
+    }
+    if param.ty.ownership() == sifr_type_system::OwnershipKind::Copy {
+        return if param.convention.is_owned() {
+            AstParamConvention::own_mut()
+        } else {
+            param.convention
+        };
+    }
+    if param.convention.is_owned() {
+        AstParamConvention::own_mut()
+    } else {
+        AstParamConvention::mut_borrow()
     }
 }
 
@@ -51,11 +76,29 @@ struct FunctionEnv {
 
 impl FunctionEnv {
     fn bind_var(&mut self, name: &str, ty: Type) {
+        let ty = if let Some(existing) = self.vars.get(name) {
+            if type_contains_unknown_or_any(&ty) {
+                unify_types(existing.clone(), ty)
+            } else {
+                ty
+            }
+        } else {
+            ty
+        };
         self.vars.insert(name.to_string(), ty);
         self.call_return_origins.remove(name);
     }
 
     fn bind_call_result(&mut self, name: String, ty: Type, callee: String) {
+        let ty = if let Some(existing) = self.vars.get(&name) {
+            if type_contains_unknown_or_any(&ty) {
+                unify_types(existing.clone(), ty)
+            } else {
+                ty
+            }
+        } else {
+            ty
+        };
         self.vars.insert(name.clone(), ty);
         self.call_return_origins.insert(name, callee);
     }
@@ -64,22 +107,39 @@ impl FunctionEnv {
 pub(super) fn infer_nested_function_types(
     stmts: &[Stmt],
     ctx: &mut LowerCtx,
-) -> HashMap<String, FunctionType> {
+) -> NestedFunctionInference {
     let mut states = collect_nested_function_states(stmts, ctx);
     if states.is_empty() {
-        return HashMap::new();
+        return NestedFunctionInference {
+            function_types: HashMap::new(),
+            binding_hints: HashMap::new(),
+        };
     }
 
+    let mut binding_hints = HashMap::new();
     for _ in 0..MAX_INFERENCE_PASSES {
         let previous = snapshot_signatures(&states);
-        let mut env = FunctionEnv::default();
+        let mut env = FunctionEnv {
+            vars: binding_hints.clone(),
+            call_return_origins: HashMap::new(),
+        };
         analyze_block(stmts, &mut env, &mut states, None, ctx);
+        binding_hints = env.vars;
         if snapshot_signatures(&states) == previous {
             break;
         }
     }
 
-    finalize_nested_function_types(&mut states, ctx)
+    let mut env = FunctionEnv {
+        vars: binding_hints,
+        call_return_origins: HashMap::new(),
+    };
+    analyze_block(stmts, &mut env, &mut states, None, ctx);
+
+    NestedFunctionInference {
+        function_types: finalize_nested_function_types(&mut states, ctx),
+        binding_hints: env.vars,
+    }
 }
 
 fn collect_nested_function_states<'a>(
@@ -94,6 +154,13 @@ fn collect_nested_function_states<'a>(
         };
 
         let mut params = Vec::new();
+        let param_names = func
+            .parameters
+            .args
+            .iter()
+            .map(|param| param.parameter.name.to_string())
+            .collect::<HashSet<_>>();
+        let mutated_params = collect_mutated_parameter_names(&func.body, &param_names);
         for param in &func.parameters.args {
             let name = param.parameter.name.to_string();
             let (ty, explicit) = if let Some(annotation) = &param.parameter.annotation {
@@ -106,6 +173,7 @@ fn collect_nested_function_states<'a>(
                 ty,
                 explicit,
                 convention: param.parameter.convention,
+                mutated: mutated_params.contains(param.parameter.name.as_str()),
             });
         }
 
@@ -128,6 +196,214 @@ fn collect_nested_function_states<'a>(
     }
 
     states
+}
+
+fn collect_mutated_parameter_names(
+    stmts: &[Stmt],
+    param_names: &HashSet<String>,
+) -> HashSet<String> {
+    let mut mutated = HashSet::new();
+    for stmt in stmts {
+        collect_mutated_parameter_names_in_stmt(stmt, param_names, &mut mutated);
+    }
+    mutated
+}
+
+fn collect_mutated_parameter_names_in_stmt(
+    stmt: &Stmt,
+    param_names: &HashSet<String>,
+    mutated: &mut HashSet<String>,
+) {
+    match stmt {
+        Stmt::Assign(assign) => {
+            for target in &assign.targets {
+                collect_mutated_parameter_names_in_target(target, param_names, mutated);
+            }
+            collect_mutated_parameter_names_in_expr(&assign.value, param_names, mutated);
+        }
+        Stmt::AnnAssign(assign) => {
+            collect_mutated_parameter_names_in_target(assign.target.as_ref(), param_names, mutated);
+            if let Some(value) = &assign.value {
+                collect_mutated_parameter_names_in_expr(value, param_names, mutated);
+            }
+        }
+        Stmt::AugAssign(assign) => {
+            collect_mutated_parameter_names_in_target(assign.target.as_ref(), param_names, mutated);
+            collect_mutated_parameter_names_in_expr(&assign.value, param_names, mutated);
+        }
+        Stmt::Expr(expr_stmt) => {
+            collect_mutated_parameter_names_in_expr(&expr_stmt.value, param_names, mutated);
+        }
+        Stmt::Return(ret) => {
+            if let Some(value) = &ret.value {
+                collect_mutated_parameter_names_in_expr(value, param_names, mutated);
+            }
+        }
+        Stmt::If(if_stmt) => {
+            collect_mutated_parameter_names_in_expr(&if_stmt.test, param_names, mutated);
+            for body_stmt in &if_stmt.body {
+                collect_mutated_parameter_names_in_stmt(body_stmt, param_names, mutated);
+            }
+            for clause in &if_stmt.elif_else_clauses {
+                if let Some(test) = &clause.test {
+                    collect_mutated_parameter_names_in_expr(test, param_names, mutated);
+                }
+                for body_stmt in &clause.body {
+                    collect_mutated_parameter_names_in_stmt(body_stmt, param_names, mutated);
+                }
+            }
+        }
+        Stmt::While(while_stmt) => {
+            collect_mutated_parameter_names_in_expr(&while_stmt.test, param_names, mutated);
+            for body_stmt in &while_stmt.body {
+                collect_mutated_parameter_names_in_stmt(body_stmt, param_names, mutated);
+            }
+            for body_stmt in &while_stmt.orelse {
+                collect_mutated_parameter_names_in_stmt(body_stmt, param_names, mutated);
+            }
+        }
+        Stmt::For(for_stmt) => {
+            collect_mutated_parameter_names_in_target(
+                for_stmt.target.as_ref(),
+                param_names,
+                mutated,
+            );
+            collect_mutated_parameter_names_in_expr(&for_stmt.iter, param_names, mutated);
+            for body_stmt in &for_stmt.body {
+                collect_mutated_parameter_names_in_stmt(body_stmt, param_names, mutated);
+            }
+            for body_stmt in &for_stmt.orelse {
+                collect_mutated_parameter_names_in_stmt(body_stmt, param_names, mutated);
+            }
+        }
+        Stmt::FunctionDef(_) => {}
+        _ => {}
+    }
+}
+
+fn collect_mutated_parameter_names_in_target(
+    expr: &Expr,
+    param_names: &HashSet<String>,
+    mutated: &mut HashSet<String>,
+) {
+    match expr {
+        Expr::Name(name) => {
+            if param_names.contains(name.id.as_str()) {
+                mutated.insert(name.id.clone());
+            }
+        }
+        Expr::Attribute(attr) => {
+            if let Expr::Name(name) = attr.value.as_ref() {
+                if param_names.contains(name.id.as_str()) {
+                    mutated.insert(name.id.clone());
+                }
+            }
+        }
+        Expr::Subscript(sub) => {
+            if let Expr::Name(name) = sub.value.as_ref() {
+                if param_names.contains(name.id.as_str()) {
+                    mutated.insert(name.id.clone());
+                }
+            }
+            collect_mutated_parameter_names_in_expr(&sub.slice, param_names, mutated);
+        }
+        Expr::Tuple(tuple) => {
+            for elt in &tuple.elts {
+                collect_mutated_parameter_names_in_target(elt, param_names, mutated);
+            }
+        }
+        _ => {}
+    }
+}
+
+fn collect_mutated_parameter_names_in_expr(
+    expr: &Expr,
+    param_names: &HashSet<String>,
+    mutated: &mut HashSet<String>,
+) {
+    match expr {
+        Expr::Call(call) => {
+            if let Expr::Attribute(attr) = call.func.as_ref() {
+                if let Expr::Name(name) = attr.value.as_ref() {
+                    if param_names.contains(name.id.as_str())
+                        && matches!(
+                            attr.attr.as_str(),
+                            "append"
+                                | "appendleft"
+                                | "clear"
+                                | "extend"
+                                | "insert"
+                                | "pop"
+                                | "popleft"
+                                | "remove"
+                                | "reverse"
+                                | "sort"
+                                | "update"
+                                | "add"
+                                | "discard"
+                        )
+                    {
+                        mutated.insert(name.id.clone());
+                    }
+                }
+                collect_mutated_parameter_names_in_expr(attr.value.as_ref(), param_names, mutated);
+            } else {
+                collect_mutated_parameter_names_in_expr(call.func.as_ref(), param_names, mutated);
+            }
+            for arg in &call.arguments.args {
+                collect_mutated_parameter_names_in_expr(arg, param_names, mutated);
+            }
+        }
+        Expr::Attribute(attr) => {
+            collect_mutated_parameter_names_in_expr(attr.value.as_ref(), param_names, mutated);
+        }
+        Expr::Subscript(sub) => {
+            collect_mutated_parameter_names_in_expr(sub.value.as_ref(), param_names, mutated);
+            collect_mutated_parameter_names_in_expr(sub.slice.as_ref(), param_names, mutated);
+        }
+        Expr::BinOp(binop) => {
+            collect_mutated_parameter_names_in_expr(binop.left.as_ref(), param_names, mutated);
+            collect_mutated_parameter_names_in_expr(binop.right.as_ref(), param_names, mutated);
+        }
+        Expr::BoolOp(boolop) => {
+            for value in &boolop.values {
+                collect_mutated_parameter_names_in_expr(value, param_names, mutated);
+            }
+        }
+        Expr::UnaryOp(unary) => {
+            collect_mutated_parameter_names_in_expr(unary.operand.as_ref(), param_names, mutated);
+        }
+        Expr::Compare(compare) => {
+            collect_mutated_parameter_names_in_expr(compare.left.as_ref(), param_names, mutated);
+            for comparator in &compare.comparators {
+                collect_mutated_parameter_names_in_expr(comparator, param_names, mutated);
+            }
+        }
+        Expr::If(if_expr) => {
+            collect_mutated_parameter_names_in_expr(if_expr.test.as_ref(), param_names, mutated);
+            collect_mutated_parameter_names_in_expr(if_expr.body.as_ref(), param_names, mutated);
+            collect_mutated_parameter_names_in_expr(if_expr.orelse.as_ref(), param_names, mutated);
+        }
+        Expr::List(list) => {
+            for elt in &list.elts {
+                collect_mutated_parameter_names_in_expr(elt, param_names, mutated);
+            }
+        }
+        Expr::Tuple(tuple) => {
+            for elt in &tuple.elts {
+                collect_mutated_parameter_names_in_expr(elt, param_names, mutated);
+            }
+        }
+        Expr::Dict(dict) => {
+            for item in &dict.items {
+                if let Some(key) = &item.key {
+                    collect_mutated_parameter_names_in_expr(key, param_names, mutated);
+                }
+                collect_mutated_parameter_names_in_expr(&item.value, param_names, mutated);
+            }
+        }
+        _ => {}
+    }
 }
 
 fn snapshot_signatures(
@@ -244,6 +520,105 @@ fn analyze_block(
 ) {
     for stmt in stmts {
         analyze_stmt(stmt, env, states, current_function, ctx);
+    }
+}
+
+fn collect_current_function_local_bindings(stmts: &[Stmt], bindings: &mut HashSet<String>) {
+    for stmt in stmts {
+        match stmt {
+            Stmt::Assign(assign) => {
+                collect_assignment_target_names(&assign.targets, bindings);
+            }
+            Stmt::AnnAssign(assign) => {
+                collect_assignment_target_names(
+                    std::slice::from_ref(assign.target.as_ref()),
+                    bindings,
+                );
+            }
+            Stmt::AugAssign(assign) => {
+                collect_assignment_target_names(
+                    std::slice::from_ref(assign.target.as_ref()),
+                    bindings,
+                );
+            }
+            Stmt::For(for_stmt) => {
+                collect_assignment_target_names(
+                    std::slice::from_ref(for_stmt.target.as_ref()),
+                    bindings,
+                );
+                collect_current_function_local_bindings(&for_stmt.body, bindings);
+                collect_current_function_local_bindings(&for_stmt.orelse, bindings);
+            }
+            Stmt::While(while_stmt) => {
+                collect_current_function_local_bindings(&while_stmt.body, bindings);
+                collect_current_function_local_bindings(&while_stmt.orelse, bindings);
+            }
+            Stmt::If(if_stmt) => {
+                collect_current_function_local_bindings(&if_stmt.body, bindings);
+                for clause in &if_stmt.elif_else_clauses {
+                    collect_current_function_local_bindings(&clause.body, bindings);
+                }
+            }
+            Stmt::With(with_stmt) => {
+                for item in &with_stmt.items {
+                    if let Some(optional_vars) = &item.optional_vars {
+                        collect_assignment_target_names(
+                            std::slice::from_ref(optional_vars.as_ref()),
+                            bindings,
+                        );
+                    }
+                }
+                collect_current_function_local_bindings(&with_stmt.body, bindings);
+            }
+            Stmt::FunctionDef(func) => {
+                bindings.insert(func.name.to_string());
+            }
+            _ => {}
+        }
+    }
+}
+
+fn collect_assignment_target_names(targets: &[Expr], bindings: &mut HashSet<String>) {
+    for target in targets {
+        match target {
+            Expr::Name(name) => {
+                bindings.insert(name.id.clone());
+            }
+            Expr::Tuple(tuple) => {
+                collect_assignment_target_names(&tuple.elts, bindings);
+            }
+            _ => {}
+        }
+    }
+}
+
+fn collect_nonlocal_names(stmts: &[Stmt], names: &mut HashSet<String>) {
+    for stmt in stmts {
+        match stmt {
+            Stmt::Nonlocal(nonlocal_stmt) => {
+                for name in &nonlocal_stmt.names {
+                    names.insert(name.to_string());
+                }
+            }
+            Stmt::For(for_stmt) => {
+                collect_nonlocal_names(&for_stmt.body, names);
+                collect_nonlocal_names(&for_stmt.orelse, names);
+            }
+            Stmt::While(while_stmt) => {
+                collect_nonlocal_names(&while_stmt.body, names);
+                collect_nonlocal_names(&while_stmt.orelse, names);
+            }
+            Stmt::If(if_stmt) => {
+                collect_nonlocal_names(&if_stmt.body, names);
+                for clause in &if_stmt.elif_else_clauses {
+                    collect_nonlocal_names(&clause.body, names);
+                }
+            }
+            Stmt::With(with_stmt) => {
+                collect_nonlocal_names(&with_stmt.body, names);
+            }
+            _ => {}
+        }
     }
 }
 
@@ -381,6 +756,16 @@ fn analyze_stmt(
                 .get(func.name.as_str())
                 .cloned()
                 .expect("state present");
+            let outer_names = env.vars.keys().cloned().collect::<HashSet<_>>();
+            let param_names = state
+                .params
+                .iter()
+                .map(|param| param.name.clone())
+                .collect::<HashSet<_>>();
+            let mut local_bindings = HashSet::new();
+            collect_current_function_local_bindings(&func.body, &mut local_bindings);
+            let mut nonlocal_names = HashSet::new();
+            collect_nonlocal_names(&func.body, &mut nonlocal_names);
             let mut nested_env = env.clone();
             for param in &state.params {
                 nested_env.bind_var(param.name.as_str(), param.ty.clone());
@@ -392,6 +777,18 @@ fn analyze_stmt(
                 Some(func.name.as_str()),
                 ctx,
             );
+            for name in outer_names {
+                let Some(refined_ty) = nested_env.vars.get(&name).cloned() else {
+                    continue;
+                };
+                if param_names.contains(&name) {
+                    continue;
+                }
+                if local_bindings.contains(&name) && !nonlocal_names.contains(&name) {
+                    continue;
+                }
+                unify_name_binding(name.as_str(), refined_ty, env, states, current_function);
+            }
         }
         _ => {}
     }
@@ -1039,6 +1436,18 @@ fn unify_types(current: Type, incoming: Type) -> Type {
         _ if incoming.is_assignable_to(&current) => current,
         _ if current.is_assignable_to(&incoming) => incoming,
         _ => current,
+    }
+}
+
+fn type_contains_unknown_or_any(ty: &Type) -> bool {
+    match ty {
+        Type::Unknown | Type::Any => true,
+        Type::List(elem) => type_contains_unknown_or_any(elem),
+        Type::Dict(key, value) => {
+            type_contains_unknown_or_any(key) || type_contains_unknown_or_any(value)
+        }
+        Type::Tuple(elements) => elements.iter().any(type_contains_unknown_or_any),
+        _ => false,
     }
 }
 

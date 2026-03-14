@@ -20,7 +20,7 @@ This phase covers the full compiler pipeline for:
 - [x] `milestone_nested_1`: nested symbol predeclaration and typed callable representation
 - [x] `milestone_nested_2`: usage-driven inference and recursive local helper typing
 - [x] `milestone_nested_3`: capture typing and `nonlocal`-style state updates
-- [ ] `milestone_nested_4`: codegen, diagnostics, and unsupported-shape boundaries
+- [x] `milestone_nested_4`: codegen, diagnostics, and unsupported-shape boundaries
 - [ ] `milestone_nested_5`: regression corpus, demos, and full-corpus closure evidence
 - [ ] external review pass 1 completed and acted on
 - [ ] production-grade review pass completed and acted on
@@ -39,6 +39,10 @@ This phase covers the full compiler pipeline for:
   - Execution report: `issues/ad-hoc-full-nested-function-pipeline-part3-execution.md`
   - PR: `#1143`
   - Closure basis: supported non-recursive `nonlocal` capture updates now lower and run deterministically, recursive and tuple-unpack capture updates fail explicitly before codegen, and the watched corpus has moved off the generic unsupported-statement failure mode for captured-state updates.
+- `2026-03-15`: `milestone_nested_4` completed.
+  - Execution report: `issues/ad-hoc-full-nested-function-pipeline-part4-execution.md`
+  - PR: `#1145`
+  - Closure basis: structured codegen now lowers recursive nested helpers with typed capture parameters and mutable collection captures, supported backtracking helpers no longer fall through to production panics or `Any`-driven Rust mismatches, and immutable-parameter capture mutation now fails explicitly at the language boundary.
 
 ## Entry Baseline Evidence (2026-03-14)
 
