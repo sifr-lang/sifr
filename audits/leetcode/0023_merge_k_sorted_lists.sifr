@@ -9,6 +9,15 @@ class ListNode:
         self.next = next
 
 
+def buildListNode(values: list[int]) -> ListNode | None:
+    dummy = ListNode()
+    tail = dummy
+    for value in values:
+        tail.next = ListNode(value)
+        tail = tail.next
+    return dummy.next
+
+
 def listNodeToString(node: ListNode | None) -> str:
     if node is None:
         return "None"
@@ -47,7 +56,7 @@ class Node:
         self.neighbors = neighbors
         self.key = key
 
-def mergeKLists(lists: list[ListNode]) -> ListNode:
+def mergeKLists(mut lists: list[ListNode]) -> ListNode | None:
     if not lists or len(lists) == 0:
         return None
 
@@ -61,7 +70,7 @@ def mergeKLists(lists: list[ListNode]) -> ListNode:
     return lists[0]
 
 
-def mergeList(l1, l2):
+def mergeList(l1: ListNode | None, l2: ListNode | None) -> ListNode | None:
     dummy = ListNode()
     tail = dummy
 
@@ -80,5 +89,10 @@ def mergeList(l1, l2):
     return dummy.next
 
 def main():
-    assert mergeKLists(ListNode([1, 4, 5], ListNode([1, 3, 4], ListNode([2, 6], None)))) == [1, 1, 2, 3, 4, 4, 5, 6]
-    assert mergeKLists(None) == []
+    lists = [
+        buildListNode([1, 4, 5]),
+        buildListNode([1, 3, 4]),
+        buildListNode([2, 6]),
+    ]
+    assert listNodeToString(mergeKLists(lists)) == "1->1->2->3->4->4->5->6"
+    assert str(mergeKLists([])) == "None"

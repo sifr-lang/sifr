@@ -49,7 +49,7 @@ class Node:
         self.neighbors = neighbors
         self.key = key
 
-def allPossibleFBT(n: int) -> List[TreeNode | None]:
+def allPossibleFBT(n: int) -> list[TreeNode | None]:
     dp = { 0 : [], 1 : [ TreeNode() ] }
 
     def backtrack(n):
@@ -69,6 +69,15 @@ def allPossibleFBT(n: int) -> List[TreeNode | None]:
     
     return backtrack(n)
 
+def sortedTreeStrings(nodes: list[TreeNode | None]) -> list[str]:
+    return sorted(map(treeToString, nodes))
+
 def main():
-    assert allPossibleFBT(7) == [<TreeNode object at 0x1064b7a80>, <TreeNode object at 0x106631b50>, <TreeNode object at 0x1064c1370>, <TreeNode object at 0x1064c1590>, <TreeNode object at 0x106467e50>]
-    assert allPossibleFBT(3) == [<TreeNode object at 0x1064bdf40>]
+    assert sortedTreeStrings(allPossibleFBT(7)) == [
+        "0(0(0(0(None,None),0(None,None)),0(None,None)),0(None,None))",
+        "0(0(0(None,None),0(0(None,None),0(None,None))),0(None,None))",
+        "0(0(0(None,None),0(None,None)),0(0(None,None),0(None,None)))",
+        "0(0(None,None),0(0(0(None,None),0(None,None)),0(None,None)))",
+        "0(0(None,None),0(0(None,None),0(0(None,None),0(None,None))))",
+    ]
+    assert sortedTreeStrings(allPossibleFBT(3)) == ["0(0(None,None),0(None,None))"]

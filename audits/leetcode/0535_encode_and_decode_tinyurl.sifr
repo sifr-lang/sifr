@@ -66,6 +66,9 @@ class Codec:
         return self.decodeMap[shortUrl]
 
 def main():
-    root = TreeNode('h', TreeNode('t', TreeNode('p', TreeNode('/', TreeNode('e', TreeNode('e', None, None), TreeNode('s', None, None)), TreeNode('.', TreeNode('i', None, None), TreeNode('g', None, None))), TreeNode('l', TreeNode('c', TreeNode('n', None, None), TreeNode('-', None, None)), TreeNode('o', TreeNode('t', None, None), TreeNode('i', None, None)))), TreeNode('s', TreeNode('e', TreeNode('m', TreeNode('n', None, None), TreeNode('y', None, None)), TreeNode('/', TreeNode('u', None, None), TreeNode('r', None, None))), TreeNode('e', TreeNode('p', TreeNode('l', None, None), None), TreeNode('r', None, None)))), TreeNode('t', TreeNode(':', TreeNode('t', TreeNode('o', None, None), TreeNode('b', None, None)), TreeNode('c', TreeNode('l', None, None), TreeNode('e', None, None))), TreeNode('/', TreeNode('o', TreeNode('m', None, None), TreeNode('s', None, None)), TreeNode('d', TreeNode('/', None, None), TreeNode('d', None, None)))))
     codec = Codec()
-    assert treeToString(codec.deserialize(codec.serialize(root))) == treeToString(root)
+    url = "https://leetcode.com/problems/design-tinyurl"
+    shortUrl = codec.encode(url)
+    assert shortUrl == "http://tinyurl.com/1"
+    assert codec.decode(shortUrl) == url
+    assert codec.encode(url) == shortUrl

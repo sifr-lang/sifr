@@ -89,5 +89,5 @@ class TrieNode:
                 cur.refs -= 1
 
 def main():
-    assert findWords([['o', 'a', 'a', 'n'], ['e', 't', 'a', 'e'], ['i', 'h', 'k', 'r'], ['i', 'f', 'l', 'v']], ['oath', 'pea', 'eat', 'rain']) == ['eat', 'oath']
-    assert findWords([['a', 'b'], ['c', 'd']], ['abcb']) == []
+    assert sorted(findWords([['o', 'a', 'a', 'n'], ['e', 't', 'a', 'e'], ['i', 'h', 'k', 'r'], ['i', 'f', 'l', 'v']], ['oath', 'pea', 'eat', 'rain'])) == ['eat', 'oath']
+    assert sorted(findWords([['a', 'b'], ['c', 'd']], ['abcb'])) == []

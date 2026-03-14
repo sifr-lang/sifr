@@ -16,6 +16,7 @@ def maxCount(banned: list[int], n: int, maxSum: int) -> int:
     return count
 
 def main():
-    assert str(maxCount(6, [1,6,5], 2)) == '3'
-
+    assert maxCount([1, 6, 5], 5, 6) == 2
+    assert maxCount([1, 2, 3, 4, 5, 6, 7], 8, 1) == 0
+    assert maxCount([11], 7, 50) == 7
 

@@ -20,11 +20,11 @@ def findLeastNumOfUniqueInts(arr: list[int], k: int) -> int:
     freqList = [0] * (len(arr) + 1)
 
     for n, f in freq.items():
-        freqlist[f] += 1
+        freqList[f] += 1
 
     res = len(freq)
     for f in range(1, len(freqList)):
-        remove = freqlist[f]
+        remove = freqList[f]
         if k >= f * remove:
             k -= f * remove
             res -= remove
@@ -37,4 +37,3 @@ def findLeastNumOfUniqueInts(arr: list[int], k: int) -> int:
 def main():
     assert findLeastNumOfUniqueInts([5, 5, 4], 1) == 1
     assert findLeastNumOfUniqueInts([4, 3, 1, 1, 3, 3, 2], 3) == 2
-
