@@ -13,6 +13,8 @@ mod decimal_methods;
 mod diagnostics;
 mod expressions;
 mod function_scopes;
+#[cfg(test)]
+mod expressions_tests;
 mod guarded_index;
 mod imports;
 mod mutating_methods;

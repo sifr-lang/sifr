@@ -1,0 +1,44 @@
+# wave_psp_a1 Builtin Constructors and Callable Surface Demo
+# Shows the Python-shaped source forms closed in milestone_psp_1 / wave_psp_a1.
+
+from sifr.test import assert_ok, assert_err
+
+
+def negate(x: int) -> int:
+    return 0 - x
+
+
+def add(x: int, y: int) -> int:
+    return x + y
+
+
+def main():
+    # --- constructor entry parity ---
+    print("=== constructors ===")
+    print(list("sifr"))
+    print(tuple([1, 2, 3]))
+    print(dict([("compiler", 1)], demo=2))
+
+    # --- helper call-shape parity ---
+    print("=== helpers ===")
+    print(sorted(iterable=[3, 1, 2], key=None))
+    print(sorted([3, 1, 2], key=negate))
+    print(sorted([3, 1, 2], reverse=True))
+    print(reversed("sifr"))
+    print(enumerate(["a", "b"], start=10))
+    print(zip([1, 2], ["a", "b"], [True, False]))
+    print(map(add, [1, 2, 3], [4, 5, 6]))
+    print(list(range(start=2, stop=9, step=3)))
+
+    # --- safe Result adaptation for ord/chr ---
+    print("=== ord/chr ===")
+    print(ord("A"))
+    print(chr(66))
+    ok_text: str = "Z"
+    bad_text: str = "ZZ"
+    ok_codepoint: int = 67
+    huge: int = 1114112
+    assert_ok(ord(ok_text))
+    assert_err(ord(bad_text))
+    assert_ok(chr(ok_codepoint))
+    assert_err(chr(huge))

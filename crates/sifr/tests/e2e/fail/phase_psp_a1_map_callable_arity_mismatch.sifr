@@ -1,0 +1,8 @@
+# expect-error: SIFR-TYPE-0001: map() callable expects 1 argument(s), got 2 iterable(s)
+
+def inc(x: int) -> int:
+    return x + 1
+
+
+def main():
+    values: list[int] = map(inc, [1, 2], [3, 4])

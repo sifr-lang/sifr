@@ -1,0 +1,61 @@
+# CPython-derived wave_psp_a1 coverage:
+# - constructor entry parity for list/tuple/dict
+# - builtin helper call shapes for sorted/reversed/enumerate/zip/map/range
+# - ord/chr success and safe error adaptation
+
+from sifr.test import assert_ok, assert_err
+
+
+def neg(x: int) -> int:
+    return 0 - x
+
+
+def add(x: int, y: int) -> int:
+    return x + y
+
+
+def main():
+    letters: list[str] = list("spam")
+    assert letters == ["s", "p", "a", "m"]
+    empty_letters: list[str] = list()
+    assert len(empty_letters) == 0
+
+    fixed: tuple[int, int, int] = tuple([1, 2, 3])
+    assert fixed == (1, 2, 3)
+    assert tuple("go") == ("g", "o")
+
+    empty_map: dict[str, int] = dict()
+    assert len(empty_map) == 0
+    scores: dict[str, int] = dict([("a", 1), ("b", 2)], c=3)
+    assert scores["a"] == 1
+    assert scores["c"] == 3
+
+    nums: list[int] = [3, 1, 2]
+    assert sorted(iterable=nums, key=None) == [1, 2, 3]
+    assert sorted(nums, key=neg) == [3, 2, 1]
+    assert sorted(nums, reverse=True) == [3, 2, 1]
+    assert reversed(nums) == [2, 1, 3]
+
+    indexed: list[tuple[int, str]] = enumerate(["a", "b"], start=5)
+    assert indexed == [(5, "a"), (6, "b")]
+
+    zipped: list[tuple[int, str, bool]] = zip([1, 2], ["a", "b"], [True, False])
+    assert zipped == [(1, "a", True), (2, "b", False)]
+
+    summed: list[int] = map(add, [1, 2, 3], [4, 5, 6])
+    assert summed == [5, 7, 9]
+
+    stepped: list[int] = list(range(start=1, stop=7, step=2))
+    assert stepped == [1, 3, 5]
+
+    assert ord("A") == 65
+    assert chr(66) == "B"
+
+    single: str = "Z"
+    multiple: str = "ZZ"
+    valid_codepoint: int = 67
+    invalid_codepoint: int = 1114112
+    assert_ok(ord(single))
+    assert_err(ord(multiple))
+    assert_ok(chr(valid_codepoint))
+    assert_err(chr(invalid_codepoint))
