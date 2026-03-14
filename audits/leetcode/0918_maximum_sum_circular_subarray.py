@@ -18,9 +18,9 @@ def maxSubarraySumCircular(nums: List[int]) -> int:
 
 
 def main():
-    print(maxSubarraySumCircular([1,-2,3,-2]))
-    print(maxSubarraySumCircular([5,-3,5]))
-    print(maxSubarraySumCircular([-3,-2,-3]))
+    assert maxSubarraySumCircular([1,-2,3,-2]) == 3
+    assert maxSubarraySumCircular([5,-3,5]) == 10
+    assert maxSubarraySumCircular([-3,-2,-3]) == -2
 
 if __name__ == "__main__":
     main()

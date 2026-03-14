@@ -20,7 +20,8 @@ class UnionFind:
         self.f[self.findParent(x)] = self.findParent(y)
 
 def main():
-    print("no test cases")
+    assert countComponents(5, [[0, 1], [1, 2], [3, 4]]) == 2
+    assert countComponents(5, [[0, 1], [1, 2], [2, 3], [3, 4]]) == 1
 
 if __name__ == "__main__":
     main()

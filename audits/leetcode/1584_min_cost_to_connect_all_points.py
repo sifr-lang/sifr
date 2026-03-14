@@ -30,7 +30,8 @@ def minCostConnectPoints(points: List[List[int]]) -> int:
 
 
 def main():
-    print("no test cases")
+    assert minCostConnectPoints([[0, 0], [2, 2], [3, 10], [5, 2], [7, 0]]) == 20
+    assert minCostConnectPoints([[3, 12], [-2, 5], [-4, 1]]) == 18
 
 if __name__ == "__main__":
     main()

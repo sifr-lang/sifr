@@ -21,7 +21,12 @@ class MyQueue:
         return not (self.append_stack or self.inverted_stack)
 
 def main():
-    print("no test cases")
+    obj = MyQueue()
+    obj.push(1)
+    obj.push(2)
+    assert obj.peek() == 1
+    assert obj.pop() == 1
+    assert obj.empty() == False
 
 if __name__ == "__main__":
     main()

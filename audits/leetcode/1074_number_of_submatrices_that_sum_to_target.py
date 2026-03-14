@@ -30,7 +30,9 @@ def numSubmatrixSumTarget(matrix: List[List[int]], target: int) -> int:
 
 
 def main():
-    print("no test cases")
+    assert numSubmatrixSumTarget([[0, 1, 0], [1, 1, 1], [0, 1, 0]], 0) == 4
+    assert numSubmatrixSumTarget([[1, -1], [-1, 1]], 0) == 5
+    assert numSubmatrixSumTarget([[904]], 0) == 0
 
 if __name__ == "__main__":
     main()

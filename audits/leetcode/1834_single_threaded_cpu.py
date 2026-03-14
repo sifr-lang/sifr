@@ -23,7 +23,8 @@ def getOrder(tasks: List[List[int]]) -> List[int]:
 
 
 def main():
-    print("no test cases")
+    assert getOrder([[1, 2], [2, 4], [3, 2], [4, 1]]) == [0, 2, 3, 1]
+    assert getOrder([[7, 10], [7, 12], [7, 5], [7, 4], [7, 2]]) == [4, 3, 2, 0, 1]
 
 if __name__ == "__main__":
     main()

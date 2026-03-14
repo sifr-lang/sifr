@@ -1,5 +1,54 @@
 # LeetCode 894: All Possible Full Binary Trees
 
+class TreeNode:
+    val: int
+    left: TreeNode | None
+    right: TreeNode | None
+
+    def __init__(
+        self,
+        val: int = 0,
+        left: TreeNode | None = None,
+        right: TreeNode | None = None,
+    ):
+        self.val = val
+        self.left = left
+        self.right = right
+
+
+def treeToString(node: TreeNode | None) -> str:
+    if node is None:
+        return "None"
+    return str(node.val) + "(" + treeToString(node.left) + "," + treeToString(node.right) + ")"
+
+
+class Node:
+    val: int
+    next: Node | None
+    random: Node | None
+    left: Node | None
+    right: Node | None
+    neighbors: list[Node]
+    key: int
+
+    def __init__(
+        self,
+        val: int = 0,
+        next: Node | None = None,
+        random: Node | None = None,
+        left: Node | None = None,
+        right: Node | None = None,
+        neighbors: list[Node] = [],
+        key: int = -1,
+    ):
+        self.val = val
+        self.next = next
+        self.random = random
+        self.left = left
+        self.right = right
+        self.neighbors = neighbors
+        self.key = key
+
 def allPossibleFBT(n: int) -> List[TreeNode | None]:
     dp = { 0 : [], 1 : [ TreeNode() ] }
 
@@ -21,5 +70,5 @@ def allPossibleFBT(n: int) -> List[TreeNode | None]:
     return backtrack(n)
 
 def main():
-    print("no test cases")
-
+    assert allPossibleFBT(7) == [<TreeNode object at 0x1064b7a80>, <TreeNode object at 0x106631b50>, <TreeNode object at 0x1064c1370>, <TreeNode object at 0x1064c1590>, <TreeNode object at 0x106467e50>]
+    assert allPossibleFBT(3) == [<TreeNode object at 0x1064bdf40>]

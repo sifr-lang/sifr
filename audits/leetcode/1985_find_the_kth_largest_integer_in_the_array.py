@@ -12,7 +12,9 @@ def kthLargestNumber(nums: List[str], k: int) -> str:
 
 
 def main():
-    print("no test cases")
+    assert kthLargestNumber(['3', '6', '7', '10'], 4) == '3'
+    assert kthLargestNumber(['2', '21', '12', '1'], 3) == '2'
+    assert kthLargestNumber(['0', '0'], 2) == '0'
 
 if __name__ == "__main__":
     main()

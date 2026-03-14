@@ -20,8 +20,8 @@ def wordPattern(pattern: str, s: str) -> bool:
 
 
 def main():
-    print(wordPattern("abba", "dog cat cat dog"))
-    print(wordPattern("abba", "dog cat cat fish"))
+    assert wordPattern("abba", "dog cat cat dog") == True
+    assert wordPattern("abba", "dog cat cat fish") == False
 
 if __name__ == "__main__":
     main()

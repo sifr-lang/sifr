@@ -15,9 +15,9 @@ def isMonotonic(nums: List[int]) -> bool:
 
 
 def main():
-    print(isMonotonic([1,2,2,3]))
-    print(isMonotonic([6,5,4,4]))
-    print(isMonotonic([1,3,2]))
+    assert isMonotonic([1,2,2,3]) == True
+    assert isMonotonic([6,5,4,4]) == True
+    assert isMonotonic([1,3,2]) == False
 
 if __name__ == "__main__":
     main()

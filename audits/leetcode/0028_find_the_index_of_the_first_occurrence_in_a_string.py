@@ -35,8 +35,8 @@ def strStr(haystack: str, needle: str) -> int:
 
 
 def main():
-    print(strStr("sadbutsad", "sad"))
-    print(strStr("leetcode", "leeto"))
+    assert strStr("sadbutsad", "sad") == 0
+    assert strStr("leetcode", "leeto") == -1
 
 if __name__ == "__main__":
     main()

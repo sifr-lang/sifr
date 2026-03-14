@@ -28,8 +28,8 @@ def maxProfit(prices: List[int]) -> int:
 
 
 def main():
-    print(maxProfit([1,2,3,0,2]))
-    print(maxProfit([1]))
+    assert maxProfit([1,2,3,0,2]) == 3
+    assert maxProfit([1]) == 0
 
 if __name__ == "__main__":
     main()

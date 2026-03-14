@@ -22,8 +22,8 @@ def splitString(s: str) -> bool:
 
 
 def main():
-    print(splitString("1234"))
-    print(splitString("050043"))
+    assert splitString("1234") == False
+    assert splitString("050043") == True
 
 if __name__ == "__main__":
     main()

@@ -15,7 +15,7 @@ def maxScore(cardPoints: List[int], k: int) -> int:
 
 
 def main():
-    print(maxScore([1,2,3,4,5,6,1], 3))
+    assert maxScore([1,2,3,4,5,6,1], 3) == 12
 
 if __name__ == "__main__":
     main()

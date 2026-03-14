@@ -17,9 +17,9 @@ def searchInsert(nums: List[int], target: int) -> int:
 
 
 def main():
-    print(searchInsert([1,3,5,6], 5))
-    print(searchInsert([1,3,5,6], 2))
-    print(searchInsert([1,3,5,6], 7))
+    assert searchInsert([1,3,5,6], 5) == 2
+    assert searchInsert([1,3,5,6], 2) == 1
+    assert searchInsert([1,3,5,6], 7) == 4
 
 if __name__ == "__main__":
     main()

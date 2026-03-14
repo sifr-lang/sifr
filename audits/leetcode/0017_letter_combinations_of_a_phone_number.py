@@ -29,7 +29,7 @@ def letterCombinations(digits: str) -> List[str]:
 
 
 def main():
-    print(letterCombinations("23"))
+    assert letterCombinations("23") == ['ad', 'ae', 'af', 'bd', 'be', 'bf', 'cd', 'ce', 'cf']
 
 if __name__ == "__main__":
     main()

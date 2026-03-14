@@ -20,8 +20,8 @@ def numDistinct(s: str, t: str) -> int:
 
 
 def main():
-    print(numDistinct("rabbbit", "rabbit"))
-    print(numDistinct("babgbag", "bag"))
+    assert numDistinct("rabbbit", "rabbit") == 3
+    assert numDistinct("babgbag", "bag") == 5
 
 if __name__ == "__main__":
     main()

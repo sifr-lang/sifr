@@ -27,7 +27,8 @@ def onesMinusZeros(grid: List[List[int]]) -> List[List[int]]:
 
 
 def main():
-    print("no test cases")
+    assert onesMinusZeros([[0, 1, 1], [1, 0, 1], [0, 0, 1]]) == [[0, 0, 4], [0, 0, 4], [-2, -2, 2]]
+    assert onesMinusZeros([[1, 1, 1], [1, 1, 1]]) == [[5, 5, 5], [5, 5, 5]]
 
 if __name__ == "__main__":
     main()

@@ -15,7 +15,12 @@ def reverseString(s: List[str]) -> None:
 
 
 def main():
-    print("no test cases")
+    arg0 = ['h', 'e', 'l', 'l', 'o']
+    _result = reverseString(arg0)
+    assert arg0 == ['o', 'l', 'l', 'e', 'h']
+    arg0 = ['H', 'a', 'n', 'n', 'a', 'h']
+    _result = reverseString(arg0)
+    assert arg0 == ['h', 'a', 'n', 'n', 'a', 'H']
 
 if __name__ == "__main__":
     main()

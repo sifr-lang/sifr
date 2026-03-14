@@ -14,8 +14,8 @@ def maxProduct(nums: List[int]) -> int:
 
 
 def main():
-    print(maxProduct([3,4,5,2]))
-    print(maxProduct([1,5,4,5]))
+    assert maxProduct([3,4,5,2]) == 12
+    assert maxProduct([1,5,4,5]) == 16
 
 if __name__ == "__main__":
     main()

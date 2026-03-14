@@ -33,7 +33,8 @@ def canFinish(numCourses: int, prerequisites: List[List[int]]) -> bool:
 
 
 def main():
-    print("no test cases")
+    assert canFinish(2, [[1, 0]]) == True
+    assert canFinish(2, [[1, 0], [0, 1]]) == False
 
 if __name__ == "__main__":
     main()

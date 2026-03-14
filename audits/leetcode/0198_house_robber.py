@@ -19,10 +19,10 @@ def rob(nums: list[int]) -> int:
     return prev1
 
 def main():
-    print(rob([1, 2, 3, 1]))
-    print(rob([2, 7, 9, 3, 1]))
-    print(rob([2, 1, 1, 2]))
-    print(rob([0]))
+    assert rob([1, 2, 3, 1]) == 4
+    assert rob([2, 7, 9, 3, 1]) == 12
+    assert rob([2, 1, 1, 2]) == 4
+    assert rob([0]) == 0
 
 if __name__ == "__main__":
     main()

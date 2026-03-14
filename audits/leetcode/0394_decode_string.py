@@ -24,8 +24,8 @@ def decodeString(s: str) -> str:
 
 
 def main():
-    print(decodeString("3[a]2[bc]"))
-    print(decodeString("3[a2[c]]"))
+    assert decodeString("3[a]2[bc]") == 'aaabcbc'
+    assert decodeString("3[a2[c]]") == 'accaccacc'
 
 if __name__ == "__main__":
     main()

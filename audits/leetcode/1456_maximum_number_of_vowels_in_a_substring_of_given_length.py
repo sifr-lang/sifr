@@ -21,8 +21,8 @@ def maxVowels(s: str, k: int) -> int:
 
 
 def main():
-    print(maxVowels("abciiidef", 3))
-    print(maxVowels("aeiou", 2))
+    assert maxVowels("abciiidef", 3) == 3
+    assert maxVowels("aeiou", 2) == 2
 
 if __name__ == "__main__":
     main()

@@ -19,9 +19,9 @@ def mergeAlternately(word1: str, word2: str) -> str:
     return result
 
 def main():
-    print(mergeAlternately("abc", "pqr"))
-    print(mergeAlternately("ab", "pqrs"))
-    print(mergeAlternately("abcd", "pq"))
+    assert mergeAlternately("abc", "pqr") == 'apbqcr'
+    assert mergeAlternately("ab", "pqrs") == 'apbqrs'
+    assert mergeAlternately("abcd", "pq") == 'apbqcd'
 
 if __name__ == "__main__":
     main()

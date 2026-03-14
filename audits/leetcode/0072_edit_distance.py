@@ -20,8 +20,8 @@ def minDistance(word1: str, word2: str) -> int:
 
 
 def main():
-    print(minDistance("horse", "ros"))
-    print(minDistance("intention", "execution"))
+    assert minDistance("horse", "ros") == 3
+    assert minDistance("intention", "execution") == 5
 
 if __name__ == "__main__":
     main()

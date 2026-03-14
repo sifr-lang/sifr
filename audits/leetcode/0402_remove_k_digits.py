@@ -17,9 +17,9 @@ def removeKdigits(num: str, k: int) -> str:
 
 
 def main():
-    print(removeKdigits("1432219", 3))
-    print(removeKdigits("10200", 1))
-    print(removeKdigits("10", 2))
+    assert removeKdigits("1432219", 3) == '1219'
+    assert removeKdigits("10200", 1) == '200'
+    assert removeKdigits("10", 2) == '0'
 
 if __name__ == "__main__":
     main()

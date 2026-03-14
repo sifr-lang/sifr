@@ -13,8 +13,8 @@ def containsDuplicate(nums: List[int]) -> bool:
 
 
 def main():
-    print(containsDuplicate([1,2,3,1]))
-    print(containsDuplicate([1,2,3,4]))
+    assert containsDuplicate([1,2,3,1]) == True
+    assert containsDuplicate([1,2,3,4]) == False
 
 if __name__ == "__main__":
     main()

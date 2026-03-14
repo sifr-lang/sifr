@@ -27,7 +27,8 @@ def numEnclaves(grid: List[List[int]]) -> int:
 
 
 def main():
-    print("no test cases")
+    assert numEnclaves([[0, 0, 0, 0], [1, 0, 1, 0], [0, 1, 1, 0], [0, 0, 0, 0]]) == 3
+    assert numEnclaves([[0, 1, 1, 0], [0, 0, 1, 0], [0, 0, 1, 0], [0, 0, 0, 0]]) == 0
 
 if __name__ == "__main__":
     main()

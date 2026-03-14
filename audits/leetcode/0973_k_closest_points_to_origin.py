@@ -16,7 +16,8 @@ def kClosest(points: List[List[int]], k: int) -> List[List[int]]:
 
 
 def main():
-    print("no test cases")
+    assert kClosest([[1, 3], [-2, 2]], 1) == [(-2, 2)]
+    assert kClosest([[3, 3], [5, -1], [-2, 4]], 2) == [(3, 3), (-2, 4)]
 
 if __name__ == "__main__":
     main()

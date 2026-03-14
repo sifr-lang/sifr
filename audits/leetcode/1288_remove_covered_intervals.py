@@ -17,7 +17,7 @@ def removeCoveredIntervals(intervals: List[List[int]]) -> int:
 
 
 def main():
-    print(removeCoveredIntervals([[1,4],[3,6],[2,8]]))
+    assert removeCoveredIntervals([[1,4],[3,6],[2,8]]) == 2
 
 if __name__ == "__main__":
     main()

@@ -1,5 +1,52 @@
 # LeetCode 23: Merge K Sorted Lists
 
+class ListNode:
+    val: int
+    next: ListNode | None
+
+    def __init__(self, val: int = 0, next: ListNode | None = None):
+        self.val = val
+        self.next = next
+
+
+def listNodeToString(node: ListNode | None) -> str:
+    if node is None:
+        return "None"
+    parts: list[str] = []
+    cur: ListNode | None = node
+    while cur is not None:
+        parts.append(str(cur.val))
+        cur = cur.next
+    return "->".join(parts)
+
+
+class Node:
+    val: int
+    next: Node | None
+    random: Node | None
+    left: Node | None
+    right: Node | None
+    neighbors: list[Node]
+    key: int
+
+    def __init__(
+        self,
+        val: int = 0,
+        next: Node | None = None,
+        random: Node | None = None,
+        left: Node | None = None,
+        right: Node | None = None,
+        neighbors: list[Node] = [],
+        key: int = -1,
+    ):
+        self.val = val
+        self.next = next
+        self.random = random
+        self.left = left
+        self.right = right
+        self.neighbors = neighbors
+        self.key = key
+
 def mergeKLists(lists: list[ListNode]) -> ListNode:
     if not lists or len(lists) == 0:
         return None
@@ -33,5 +80,5 @@ def mergeList(l1, l2):
     return dummy.next
 
 def main():
-    print("no test cases")
-
+    assert mergeKLists(ListNode([1, 4, 5], ListNode([1, 3, 4], ListNode([2, 6], None)))) == [1, 1, 2, 3, 4, 4, 5, 6]
+    assert mergeKLists(None) == []

@@ -30,7 +30,7 @@ def shipWithinDays(weights: List[int], days: int) -> int:
 
 
 def main():
-    print(shipWithinDays([1,2,3,4,5,6,7,8,9,10], 5))
+    assert shipWithinDays([1,2,3,4,5,6,7,8,9,10], 5) == 15
 
 if __name__ == "__main__":
     main()

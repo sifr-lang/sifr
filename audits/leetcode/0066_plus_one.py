@@ -22,8 +22,8 @@ def plusOne(digits: List[int]) -> List[int]:
 
 
 def main():
-    print(plusOne([1,2,3]))
-    print(plusOne([9]))
+    assert plusOne([1,2,3]) == [1, 2, 4]
+    assert plusOne([9]) == [1, 0]
 
 if __name__ == "__main__":
     main()

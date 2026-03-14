@@ -26,7 +26,12 @@ class MedianFinder:
         return (-1 * self.small[0] + self.large[0]) / 2.0
 
 def main():
-    print("no test cases")
+    obj = MedianFinder()
+    obj.addNum(1)
+    obj.addNum(2)
+    assert obj.findMedian() == 1.5
+    obj.addNum(3)
+    assert obj.findMedian() == 2
 
 if __name__ == "__main__":
     main()

@@ -28,9 +28,9 @@ def intToRoman(num: int) -> str:
 
 
 def main():
-    print(intToRoman(3749))
-    print(intToRoman(58))
-    print(intToRoman(1994))
+    assert intToRoman(3749) == 'MMMDCCXLIX'
+    assert intToRoman(58) == 'LVIII'
+    assert intToRoman(1994) == 'MCMXCIV'
 
 if __name__ == "__main__":
     main()

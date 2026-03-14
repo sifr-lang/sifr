@@ -36,7 +36,7 @@ def sortArray(nums: List[int]) -> List[int]:
 
 
 def main():
-    print(sortArray([5,2,3,1]))
+    assert sortArray([5,2,3,1]) == [1, 2, 3, 5]
 
 if __name__ == "__main__":
     main()

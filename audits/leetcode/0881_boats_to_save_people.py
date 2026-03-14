@@ -15,8 +15,8 @@ def numRescueBoats(people: list[int], limit: int) -> int:
 
 
 def main():
-    print(numRescueBoats([1,2], 3))
-    print(numRescueBoats([3,2,2,1], 3))
+    assert numRescueBoats([1,2], 3) == 1
+    assert numRescueBoats([3,2,2,1], 3) == 3
 
 if __name__ == "__main__":
     main()

@@ -13,8 +13,8 @@ def canConstruct(ransomNote: str, magazine: str) -> bool:
 
 
 def main():
-    print(canConstruct("a", "b"))
-    print(canConstruct("aa", "aab"))
+    assert canConstruct("a", "b") == False
+    assert canConstruct("aa", "aab") == True
 
 if __name__ == "__main__":
     main()

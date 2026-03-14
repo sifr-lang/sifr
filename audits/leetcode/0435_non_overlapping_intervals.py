@@ -16,8 +16,8 @@ def eraseOverlapIntervals(intervals: List[List[int]]) -> int:
 
 
 def main():
-    print(eraseOverlapIntervals([[1,2],[2,3],[3,4],[1,3]]))
-    print(eraseOverlapIntervals([[1,2],[1,2],[1,2]]))
+    assert eraseOverlapIntervals([[1,2],[2,3],[3,4],[1,3]]) == 1
+    assert eraseOverlapIntervals([[1,2],[1,2],[1,2]]) == 2
 
 if __name__ == "__main__":
     main()

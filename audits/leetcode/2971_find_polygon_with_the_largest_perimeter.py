@@ -28,8 +28,8 @@ def largestPerimeter(nums: List[int]) -> int:
 
 
 def main():
-    print(largestPerimeter([5,5,5]))
-    print(largestPerimeter([1,12,1,2,5,50,3]))
+    assert largestPerimeter([5,5,5]) == 15
+    assert largestPerimeter([1,12,1,2,5,50,3]) == 12
 
 if __name__ == "__main__":
     main()

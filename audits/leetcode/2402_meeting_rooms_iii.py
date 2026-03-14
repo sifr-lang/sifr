@@ -27,7 +27,8 @@ def mostBooked(n: int, meetings: List[List[int]]) -> int:
 
 
 def main():
-    print("no test cases")
+    assert mostBooked(2, [[0, 10], [1, 5], [2, 7], [3, 4]]) == 0
+    assert mostBooked(3, [[1, 20], [2, 10], [3, 5], [4, 9], [6, 8]]) == 1
 
 if __name__ == "__main__":
     main()

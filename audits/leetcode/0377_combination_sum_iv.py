@@ -28,7 +28,7 @@ def combinationSum4(nums: List[int], target: int) -> int:
 
 
 def main():
-    print(combinationSum4([1,2,3], 4))
+    assert combinationSum4([1,2,3], 4) == 7
 
 if __name__ == "__main__":
     main()

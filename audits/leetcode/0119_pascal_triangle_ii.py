@@ -20,8 +20,8 @@ def getRow(rowIndex: int) -> List[int]:
 
 
 def main():
-    print(getRow(3))
-    print(getRow(0))
+    assert getRow(3) == [1, 3, 3, 1]
+    assert getRow(0) == [1]
 
 if __name__ == "__main__":
     main()

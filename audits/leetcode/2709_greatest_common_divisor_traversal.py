@@ -46,7 +46,9 @@ class UnionFind:
         self.count -=1
 
 def main():
-    print("no test cases")
+    assert canTraverseAllPairs([2, 3, 6]) == True
+    assert canTraverseAllPairs([3, 9, 5]) == False
+    assert canTraverseAllPairs([4, 3, 12, 8]) == True
 
 if __name__ == "__main__":
     main()

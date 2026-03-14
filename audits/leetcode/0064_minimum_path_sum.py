@@ -19,7 +19,7 @@ def minPathSum(grid: List[List[int]]) -> int:
 
 
 def main():
-    print(minPathSum([[1,3,1],[1,5,1],[4,2,1]]))
+    assert minPathSum([[1,3,1],[1,5,1],[4,2,1]]) == 7
 
 if __name__ == "__main__":
     main()

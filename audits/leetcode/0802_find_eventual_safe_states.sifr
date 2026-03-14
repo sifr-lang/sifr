@@ -1,5 +1,32 @@
 # LeetCode 802: Find Eventual Safe States
 
+class Node:
+    val: int
+    next: Node | None
+    random: Node | None
+    left: Node | None
+    right: Node | None
+    neighbors: list[Node]
+    key: int
+
+    def __init__(
+        self,
+        val: int = 0,
+        next: Node | None = None,
+        random: Node | None = None,
+        left: Node | None = None,
+        right: Node | None = None,
+        neighbors: list[Node] = [],
+        key: int = -1,
+    ):
+        self.val = val
+        self.next = next
+        self.random = random
+        self.left = left
+        self.right = right
+        self.neighbors = neighbors
+        self.key = key
+
 def eventualSafeNodes(graph: list[list[int]]) -> list[int]:
     n = len(graph)
     safe = {}
@@ -18,5 +45,5 @@ def eventualSafeNodes(graph: list[list[int]]) -> list[int]:
     return res
 
 def main():
-    print("no test cases")
-
+    assert eventualSafeNodes([[1, 2], [2, 3], [5], [0], [5], [], []]) == [2, 4, 5, 6]
+    assert eventualSafeNodes([[1, 2, 3, 4], [1, 2], [3, 4], [0, 4], []]) == [4]

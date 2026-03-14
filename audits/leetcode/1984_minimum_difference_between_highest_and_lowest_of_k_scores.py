@@ -14,7 +14,7 @@ def minimumDifference(nums: List[int], k: int) -> int:
 
 
 def main():
-    print(minimumDifference([90], 1))
+    assert minimumDifference([90], 1) == 0
 
 if __name__ == "__main__":
     main()

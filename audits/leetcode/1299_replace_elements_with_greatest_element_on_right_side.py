@@ -12,7 +12,7 @@ def replaceElements(arr: List[int]) -> List[int]:
 
 
 def main():
-    print(replaceElements([17,18,5,4,6,1]))
+    assert replaceElements([17,18,5,4,6,1]) == [18, 6, 6, 6, 1, -1]
 
 if __name__ == "__main__":
     main()

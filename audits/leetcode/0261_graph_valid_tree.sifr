@@ -24,45 +24,6 @@ def validTree(n, edges):
 
     return dfs(0, -1) and n == len(visit)
 
-
-
-# alternative solution via DSU O(ElogV) time complexity and 
-# save some space as we don't recreate graph\tree into adjacency list prior dfs and loop over the edge list directly
-class Solution:
-
-
-def __find(n: int) -> int:
-    while n != parents.get(n, n):
-        n = parents.get(n, n)
-    return n
-
-
-def __connect(n: int, m: int) -> None:
-    pn = __find(n)
-    pm = __find(m)
-    if pn == pm:
-        return
-    if heights.get(pn, 1) > heights.get(pm, 1):
-        parents[pn] = pm
-    else:
-        parents[pm] = pn
-        heights[pm] = heights.get(pn, 1) + 1
-    components -= 1
-
-
-def valid_tree(n: int, edges: list[list[int]]) -> bool:
-    # init here as not sure that ctor will be re-invoked in different tests
-    parents = {}
-    heights = {}
-    components = n
-
-    for e1, e2 in edges:
-        if __find(e1) == __find(e2):  # 'redundant' edge
-            return False
-        __connect(e1, e2)
-
-    return components == 1  # forest contains one tree
-
 def main():
-    print("no test cases")
-
+    assert validTree(5, [[0, 1], [0, 2], [0, 3], [1, 4]]) == True
+    assert validTree(5, [[0, 1], [1, 2], [2, 3], [1, 3], [1, 4]]) == False

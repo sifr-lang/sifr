@@ -11,10 +11,10 @@ def isSubsequence(s: str, t: str) -> bool:
     return si == len(s)
 
 def main():
-    print(isSubsequence("abc", "ahbgdc"))
-    print(isSubsequence("axc", "ahbgdc"))
-    print(isSubsequence("", "ahbgdc"))
-    print(isSubsequence("ace", "abcde"))
+    assert isSubsequence("abc", "ahbgdc") == True
+    assert isSubsequence("axc", "ahbgdc") == False
+    assert isSubsequence("", "ahbgdc") == True
+    assert isSubsequence("ace", "abcde") == True
 
 if __name__ == "__main__":
     main()

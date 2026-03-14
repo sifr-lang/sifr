@@ -33,7 +33,8 @@ def lastStoneWeight(stones):
 
 
 def main():
-    print("no test cases")
+    assert lastStoneWeight([2, 7, 4, 1, 8, 1]) == 1
+    assert lastStoneWeight([1]) == 1
 
 if __name__ == "__main__":
     main()

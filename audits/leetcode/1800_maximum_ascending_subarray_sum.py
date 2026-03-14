@@ -15,7 +15,7 @@ def maxAscendingSum(nums: List[int]) -> int:
 
 
 def main():
-    print(maxAscendingSum([10,20,30,5,10,50]))
+    assert maxAscendingSum([10,20,30,5,10,50]) == 65
 
 if __name__ == "__main__":
     main()

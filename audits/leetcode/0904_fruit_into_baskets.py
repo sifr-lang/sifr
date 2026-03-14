@@ -22,7 +22,9 @@ def totalFruit(fruits: List[int]) -> int:
 
 
 def main():
-    print("no test cases")
+    assert totalFruit([1, 2, 1]) == 3
+    assert totalFruit([0, 1, 2, 2]) == 3
+    assert totalFruit([1, 2, 3, 2, 2]) == 4
 
 if __name__ == "__main__":
     main()

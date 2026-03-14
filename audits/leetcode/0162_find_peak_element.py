@@ -17,7 +17,7 @@ def findPeakElement(nums: List[int]) -> int:
 
 
 def main():
-    print(findPeakElement([1,2,3,1]))
+    assert findPeakElement([1,2,3,1]) == 2
 
 if __name__ == "__main__":
     main()

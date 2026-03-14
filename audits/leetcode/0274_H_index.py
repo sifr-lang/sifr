@@ -12,7 +12,7 @@ def hIndex(citations: List[int]) -> int:
 
 
 def main():
-    print(hIndex([3,0,6,1,5]))
+    assert hIndex([3,0,6,1,5]) == 3
 
 if __name__ == "__main__":
     main()

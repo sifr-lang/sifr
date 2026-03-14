@@ -21,7 +21,39 @@ def findCheapestPrice(
 
 
 def main():
-    print("no test cases")
+    assert (
+        findCheapestPrice(
+            None,
+            4,
+            [[0, 1, 100], [1, 2, 100], [2, 0, 100], [1, 3, 600], [2, 3, 200]],
+            0,
+            3,
+            1,
+        )
+        == 700
+    )
+    assert (
+        findCheapestPrice(
+            None,
+            3,
+            [[0, 1, 100], [1, 2, 100], [0, 2, 500]],
+            0,
+            2,
+            1,
+        )
+        == 200
+    )
+    assert (
+        findCheapestPrice(
+            None,
+            3,
+            [[0, 1, 100], [1, 2, 100], [0, 2, 500]],
+            0,
+            2,
+            0,
+        )
+        == 500
+    )
 
 if __name__ == "__main__":
     main()

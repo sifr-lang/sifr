@@ -35,5 +35,6 @@ def findLeastNumOfUniqueInts(arr: list[int], k: int) -> int:
     return res
 
 def main():
-    print("no test cases")
+    assert findLeastNumOfUniqueInts([5, 5, 4], 1) == 1
+    assert findLeastNumOfUniqueInts([4, 3, 1, 1, 3, 3, 2], 3) == 2
 

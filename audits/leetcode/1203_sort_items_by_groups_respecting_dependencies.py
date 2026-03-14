@@ -67,7 +67,7 @@ def sortItems(n: int, m: int, group: List[int], beforeItems: List[List[int]]) ->
 
 
 def main():
-    print("no test cases")
+    assert topologicalSort([[0]], [0], 0) == []
 
 if __name__ == "__main__":
     main()

@@ -1,6 +1,25 @@
 # LeetCode 707: Design Linked List
 # Python version
 
+class Node:
+    def __init__(
+        self,
+        val: int = 0,
+        next: 'Node | None' = None,
+        random: 'Node | None' = None,
+        left: 'Node | None' = None,
+        right: 'Node | None' = None,
+        neighbors: list['Node'] | None = None,
+        key: int = -1,
+    ):
+        self.val = val
+        self.next = next
+        self.random = random
+        self.left = left
+        self.right = right
+        self.neighbors = [] if neighbors is None else neighbors
+        self.key = key
+
 class ListNode:
     def __init__(self, val):
         self.val = val
@@ -50,7 +69,13 @@ class MyLinkedList:
             node.next.prev = node.prev
 
 def main():
-    print("no test cases")
+    obj = MyLinkedList()
+    obj.addAtHead(1)
+    obj.addAtTail(3)
+    obj.addAtIndex(1, 2)
+    assert obj.get(1) == 2
+    obj.deleteAtIndex(1)
+    assert obj.get(1) == 3
 
 if __name__ == "__main__":
     main()

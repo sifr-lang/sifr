@@ -1,6 +1,25 @@
 # LeetCode 706: Design Hashmap
 # Python version
 
+class Node:
+    def __init__(
+        self,
+        val: int = 0,
+        next: 'Node | None' = None,
+        random: 'Node | None' = None,
+        left: 'Node | None' = None,
+        right: 'Node | None' = None,
+        neighbors: list['Node'] | None = None,
+        key: int = -1,
+    ):
+        self.val = val
+        self.next = next
+        self.random = random
+        self.left = left
+        self.right = right
+        self.neighbors = [] if neighbors is None else neighbors
+        self.key = key
+
 class ListNode:
     def __init__(self, key=-1, val=-1, next=None):
         self.key = key
@@ -34,7 +53,15 @@ class MyHashMap:
             cur.next = cur.next.next
 
 def main():
-    print("no test cases")
+    obj = MyHashMap()
+    obj.put(1, 1)
+    obj.put(2, 2)
+    assert obj.get(1) == 1
+    assert obj.get(3) == -1
+    obj.put(2, 1)
+    assert obj.get(2) == 1
+    obj.remove(2)
+    assert obj.get(2) == -1
 
 if __name__ == "__main__":
     main()

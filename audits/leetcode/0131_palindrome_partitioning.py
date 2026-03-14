@@ -28,7 +28,7 @@ def isPali(s, l, r):
 
 
 def main():
-    print(partition("aab"))
+    assert partition("aab") == [['a', 'a', 'b'], ['aa', 'b']]
 
 if __name__ == "__main__":
     main()

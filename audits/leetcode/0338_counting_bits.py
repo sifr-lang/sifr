@@ -28,8 +28,8 @@ def countBits(n: int) -> List[int]:
 
 
 def main():
-    print(countBits(2))
-    print(countBits(5))
+    assert countBits(2) == [0, 1, 1]
+    assert countBits(5) == [0, 1, 1, 2, 1, 2]
 
 if __name__ == "__main__":
     main()

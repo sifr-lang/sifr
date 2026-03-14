@@ -31,8 +31,8 @@ def minOperations(nums: List[int], x: int) -> int:
 
 
 def main():
-    print(minOperations([1,1,4,2,3], 5))
-    print(minOperations([5,6,7,8,9], 4))
+    assert minOperations([1,1,4,2,3], 5) == 2
+    assert minOperations([5,6,7,8,9], 4) == -1
 
 if __name__ == "__main__":
     main()

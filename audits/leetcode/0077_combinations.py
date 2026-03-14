@@ -17,7 +17,7 @@ def combine(n: int, k: int) -> List[List[int]]:
 
 
 def main():
-    print(combine(4, 2))
+    assert combine(4, 2) == [[1, 2], [1, 3], [1, 4], [2, 3], [2, 4], [3, 4]]
 
 if __name__ == "__main__":
     main()

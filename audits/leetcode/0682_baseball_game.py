@@ -27,7 +27,7 @@ def calPoints(operations: List[str]) -> int:
 
 
 def main():
-    print(calPoints(["5","2","C","D","+"]))
+    assert calPoints(["5","2","C","D","+"]) == 30
 
 if __name__ == "__main__":
     main()

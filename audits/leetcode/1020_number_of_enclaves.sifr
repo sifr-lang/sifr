@@ -24,5 +24,6 @@ def numEnclaves(grid: list[list[int]]) -> int:
     return sum(grid[row][col] == 1 for row in range(ROWS) for col in range(COLS))
 
 def main():
-    print("no test cases")
+    assert numEnclaves([[0, 0, 0, 0], [1, 0, 1, 0], [0, 1, 1, 0], [0, 0, 0, 0]]) == 3
+    assert numEnclaves([[0, 1, 1, 0], [0, 0, 1, 0], [0, 0, 1, 0], [0, 0, 0, 0]]) == 0
 

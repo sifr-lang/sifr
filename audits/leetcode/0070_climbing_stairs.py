@@ -13,11 +13,11 @@ def climbStairs(n: int) -> int:
     return b
 
 def main():
-    print(climbStairs(1))
-    print(climbStairs(2))
-    print(climbStairs(3))
-    print(climbStairs(5))
-    print(climbStairs(10))
+    assert climbStairs(1) == 1
+    assert climbStairs(2) == 2
+    assert climbStairs(3) == 3
+    assert climbStairs(5) == 8
+    assert climbStairs(10) == 89
 
 if __name__ == "__main__":
     main()

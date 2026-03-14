@@ -31,7 +31,9 @@ def maxLength(arr: List[str]) -> int:
 
 
 def main():
-    print("no test cases")
+    assert maxLength(['un', 'iq', 'ue']) == 4
+    assert maxLength(['cha', 'r', 'act', 'ers']) == 6
+    assert maxLength(['abcdefghijklmnopqrstuvwxyz']) == 26
 
 if __name__ == "__main__":
     main()

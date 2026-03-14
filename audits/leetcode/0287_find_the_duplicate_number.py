@@ -19,8 +19,8 @@ def findDuplicate(nums: List[int]) -> int:
 
 
 def main():
-    print(findDuplicate([1,3,4,2,2]))
-    print(findDuplicate([3,1,3,4,2]))
+    assert findDuplicate([1,3,4,2,2]) == 2
+    assert findDuplicate([3,1,3,4,2]) == 3
 
 if __name__ == "__main__":
     main()

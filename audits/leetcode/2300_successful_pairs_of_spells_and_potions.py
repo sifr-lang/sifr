@@ -27,7 +27,7 @@ def successfulPairs(spells: List[int], potions: List[int], success: int) -> List
 
 
 def main():
-    print(successfulPairs([5,1,3], [1,2,3,4,5], 7))
+    assert successfulPairs([5,1,3], [1,2,3,4,5], 7) == [4, 0, 3]
 
 if __name__ == "__main__":
     main()

@@ -18,8 +18,8 @@ def largestNumber(nums: List[int]) -> str:
 
 
 def main():
-    print(largestNumber([10,2]))
-    print(largestNumber([3,30,34,5,9]))
+    assert largestNumber([10, 2],) == 210
+    assert largestNumber([3, 30, 34, 5, 9],) == 9534330
 
 if __name__ == "__main__":
     main()

@@ -1,6 +1,25 @@
 # LeetCode 745: Prefix And Suffix Search
 # Python version
 
+class Node:
+    def __init__(
+        self,
+        val: int = 0,
+        next: 'Node | None' = None,
+        random: 'Node | None' = None,
+        left: 'Node | None' = None,
+        right: 'Node | None' = None,
+        neighbors: list['Node'] | None = None,
+        key: int = -1,
+    ):
+        self.val = val
+        self.next = next
+        self.random = random
+        self.left = left
+        self.right = right
+        self.neighbors = [] if neighbors is None else neighbors
+        self.key = key
+
 class TrieNode:
     def __init__(self):
         self.children = {}  # Dictionary to store child nodes
@@ -28,7 +47,8 @@ class WordFilter:
         return cur.word  # Return the largest index found for the valid combination
 
 def main():
-    print("no test cases")
+    obj = WordFilter(['apple'])
+    assert obj.f('a', 'e') == 0
 
 if __name__ == "__main__":
     main()

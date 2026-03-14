@@ -32,7 +32,14 @@ class Twitter:
             self.followMap[followerId].remove(followeeId)
 
 def main():
-    print("no test cases")
+    obj = Twitter()
+    obj.postTweet(1, 5)
+    assert obj.getNewsFeed(1) == [5]
+    obj.follow(1, 2)
+    obj.postTweet(2, 6)
+    assert obj.getNewsFeed(1) == [6, 5]
+    obj.unfollow(1, 2)
+    assert obj.getNewsFeed(1) == [5]
 
 if __name__ == "__main__":
     main()

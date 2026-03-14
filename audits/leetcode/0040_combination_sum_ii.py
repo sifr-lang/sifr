@@ -28,7 +28,7 @@ def combinationSum2(candidates: List[int], target: int) -> List[List[int]]:
 
 
 def main():
-    print(combinationSum2([10,1,2,7,6,1,5], 8))
+    assert combinationSum2([10,1,2,7,6,1,5], 8) == [[1, 1, 6], [1, 2, 5], [1, 7], [2, 6]]
 
 if __name__ == "__main__":
     main()

@@ -1,6 +1,43 @@
 # LeetCode 1609: Even Odd Tree
 # Python version
 
+class TreeNode:
+    def __init__(
+        self,
+        val: int = 0,
+        left: 'TreeNode | None' = None,
+        right: 'TreeNode | None' = None,
+    ):
+        self.val = val
+        self.left = left
+        self.right = right
+
+
+def tree_to_string(node: TreeNode | None) -> str:
+    if node is None:
+        return "None"
+    return f"{node.val}({tree_to_string(node.left)},{tree_to_string(node.right)})"
+
+
+class Node:
+    def __init__(
+        self,
+        val: int = 0,
+        next: 'Node | None' = None,
+        random: 'Node | None' = None,
+        left: 'Node | None' = None,
+        right: 'Node | None' = None,
+        neighbors: list['Node'] | None = None,
+        key: int = -1,
+    ):
+        self.val = val
+        self.next = next
+        self.random = random
+        self.left = left
+        self.right = right
+        self.neighbors = [] if neighbors is None else neighbors
+        self.key = key
+
 def isEvenOddTree(root: Optional[TreeNode]) -> bool:
     even = True
     q = deque([root])
@@ -26,7 +63,9 @@ def isEvenOddTree(root: Optional[TreeNode]) -> bool:
 
 
 def main():
-    print("no test cases")
+    assert isEvenOddTree(TreeNode(1, TreeNode(10, TreeNode(3, TreeNode(12, None, None), TreeNode(8, None, None)), None), TreeNode(4, TreeNode(7, TreeNode(6, None, None), None), TreeNode(9, None, TreeNode(2, None, None))))) == True
+    assert isEvenOddTree(TreeNode(5, TreeNode(4, TreeNode(3, None, None), TreeNode(3, None, None)), TreeNode(2, TreeNode(7, None, None), None))) == False
+    assert isEvenOddTree(TreeNode(5, TreeNode(9, TreeNode(3, None, None), TreeNode(5, None, None)), TreeNode(1, TreeNode(7, None, None), None))) == False
 
 if __name__ == "__main__":
     main()

@@ -32,7 +32,7 @@ def uniquePathsWithObstacles(grid: List[List[int]]) -> int:
 
 
 def main():
-    print(uniquePathsWithObstacles([[0,0,0],[0,1,0],[0,0,0]]))
+    assert uniquePathsWithObstacles([[0,0,0],[0,1,0],[0,0,0]]) == 2
 
 if __name__ == "__main__":
     main()

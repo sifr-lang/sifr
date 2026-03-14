@@ -31,7 +31,9 @@ def minFlips(s: str) -> int:
 
 
 def main():
-    print("no test cases")
+    assert minFlips('111000') == 2
+    assert minFlips('010') == 0
+    assert minFlips('1110') == 1
 
 if __name__ == "__main__":
     main()

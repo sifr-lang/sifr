@@ -27,7 +27,9 @@ def longestIncreasingPath(matrix: List[List[int]]) -> int:
 
 
 def main():
-    print("no test cases")
+    assert longestIncreasingPath([[9, 9, 4], [6, 6, 8], [2, 1, 1]]) == 4
+    assert longestIncreasingPath([[3, 4, 5], [3, 2, 6], [2, 2, 1]]) == 4
+    assert longestIncreasingPath([[1]]) == 1
 
 if __name__ == "__main__":
     main()

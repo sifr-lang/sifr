@@ -17,8 +17,8 @@ def maxArea(height: List[int]) -> int:
 
 
 def main():
-    print(maxArea([1,8,6,2,5,4,8,3,7]))
-    print(maxArea([1,1]))
+    assert maxArea([1,8,6,2,5,4,8,3,7]) == 49
+    assert maxArea([1,1]) == 1
 
 if __name__ == "__main__":
     main()

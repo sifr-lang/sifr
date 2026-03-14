@@ -1,6 +1,25 @@
 # LeetCode 1472: Design Browser History
 # Python version
 
+class Node:
+    def __init__(
+        self,
+        val: int = 0,
+        next: 'Node | None' = None,
+        random: 'Node | None' = None,
+        left: 'Node | None' = None,
+        right: 'Node | None' = None,
+        neighbors: list['Node'] | None = None,
+        key: int = -1,
+    ):
+        self.val = val
+        self.next = next
+        self.random = random
+        self.left = left
+        self.right = right
+        self.neighbors = [] if neighbors is None else neighbors
+        self.key = key
+
 class ListNode:
     def __init__(self, val, prev=None, next=None):
         self.val = val
@@ -42,7 +61,17 @@ class BrowserHistory:
         return self.history[self.i]
 
 def main():
-    print("no test cases")
+    obj = BrowserHistory('leetcode.com')
+    obj.visit('google.com')
+    obj.visit('facebook.com')
+    obj.visit('youtube.com')
+    assert obj.back(1) == 'facebook.com'
+    assert obj.back(1) == 'google.com'
+    assert obj.forward(1) == 'facebook.com'
+    obj.visit('linkedin.com')
+    assert obj.forward(2) == 'linkedin.com'
+    assert obj.back(2) == 'google.com'
+    assert obj.back(7) == 'leetcode.com'
 
 if __name__ == "__main__":
     main()

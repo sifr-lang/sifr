@@ -19,5 +19,7 @@ def maxPerformance(n: int, speed: list[int], efficiency: list[int], k: int) -> i
     return res % mod
 
 def main():
-    print("no test cases")
+    assert maxPerformance(6, [2, 10, 3, 1, 5, 8], [5, 4, 3, 9, 7, 2], 2) == 60
+    assert maxPerformance(6, [2, 10, 3, 1, 5, 8], [5, 4, 3, 9, 7, 2], 3) == 68
+    assert maxPerformance(6, [2, 10, 3, 1, 5, 8], [5, 4, 3, 9, 7, 2], 4) == 72
 

@@ -21,8 +21,8 @@ def tribonacci(n: int):
 
 
 def main():
-    print(tribonacci(4))
-    print(tribonacci(25))
+    assert tribonacci(4) == 4
+    assert tribonacci(25) == 1389537
 
 if __name__ == "__main__":
     main()

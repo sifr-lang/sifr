@@ -16,9 +16,9 @@ def findJudge(n: int, trust: List[List[int]]) -> int:
 
 
 def main():
-    print(findJudge(2, [[1,2]]))
-    print(findJudge(3, [[1,3],[2,3]]))
-    print(findJudge(3, [[1,3],[2,3],[3,1]]))
+    assert findJudge(2, [[1,2]]) == 2
+    assert findJudge(3, [[1,3],[2,3]]) == 3
+    assert findJudge(3, [[1,3],[2,3],[3,1]]) == -1
 
 if __name__ == "__main__":
     main()

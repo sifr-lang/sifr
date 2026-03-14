@@ -42,7 +42,8 @@ def findKthLargest(nums: List[int], k: int) -> int:
 
 
 def main():
-    print("no test cases")
+    assert findKthLargest([3, 2, 1, 5, 6, 4], 2) == 5
+    assert findKthLargest([3, 2, 3, 1, 2, 4, 5, 5, 6], 4) == 4
 
 if __name__ == "__main__":
     main()

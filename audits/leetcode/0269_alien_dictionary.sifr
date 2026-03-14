@@ -38,5 +38,7 @@ def alienOrder(words: list[str]) -> str:
     return "".join(res)
 
 def main():
-    print("no test cases")
+    assert alienOrder(['wrt', 'wrf', 'er', 'ett', 'rftt']) == 'wertf'
+    assert alienOrder(['z', 'x']) == 'zx'
+    assert alienOrder(['z', 'x', 'z']) == ''
 

@@ -32,7 +32,7 @@ def threeSum(nums: List[int]) -> List[List[int]]:
 
 
 def main():
-    print(threeSum([-1,0,1,2,-1,-4]))
+    assert threeSum([-1,0,1,2,-1,-4]) == [[-1, -1, 2], [-1, 0, 1]]
 
 if __name__ == "__main__":
     main()

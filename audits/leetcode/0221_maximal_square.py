@@ -25,7 +25,9 @@ def maximalSquare(matrix: List[List[str]]) -> int:
 
 
 def main():
-    print("no test cases")
+    assert maximalSquare([['1', '0', '1', '0', '0'], ['1', '0', '1', '1', '1'], ['1', '1', '1', '1', '1'], ['1', '0', '0', '1', '0']]) == 4
+    assert maximalSquare([['0', '1'], ['1', '0']]) == 1
+    assert maximalSquare([['0']]) == 0
 
 if __name__ == "__main__":
     main()

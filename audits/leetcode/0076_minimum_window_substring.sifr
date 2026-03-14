@@ -32,5 +32,7 @@ def minWindow(s: str, t: str) -> str:
     return s[l : r + 1] if resLen != float("infinity") else ""
 
 def main():
-    print("no test cases")
+    assert minWindow('ADOBECODEBANC', 'ABC') == 'BANC'
+    assert minWindow('a', 'a') == 'a'
+    assert minWindow('a', 'aa') == ''
 

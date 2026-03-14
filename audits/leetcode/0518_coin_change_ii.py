@@ -53,8 +53,8 @@ def change(amount: int, coins: List[int]) -> int:
 
 
 def main():
-    print(change(5, [1,2,5]))
-    print(change(3, [2]))
+    assert change(5, [1,2,5]) == 4
+    assert change(3, [2]) == 0
 
 if __name__ == "__main__":
     main()

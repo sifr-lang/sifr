@@ -21,7 +21,7 @@ def numSubarraysWithSum(nums: List[int], goal: int) -> int:
 
 
 def main():
-    print(numSubarraysWithSum([1,0,1,0,1], 2))
+    assert numSubarraysWithSum([1,0,1,0,1], 2) == 4
 
 if __name__ == "__main__":
     main()

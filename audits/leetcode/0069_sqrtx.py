@@ -16,9 +16,9 @@ def mySqrt(x: int) -> int:
 
 
 def main():
-    print(mySqrt(4))
-    print(mySqrt(8))
-    print(mySqrt(0))
+    assert mySqrt(4) == 2
+    assert mySqrt(8) == 2
+    assert mySqrt(0) == 0
 
 if __name__ == "__main__":
     main()

@@ -9,8 +9,8 @@ def countOdds(low: int, high: int) -> int:
 
 
 def main():
-    print(countOdds(3, 7))
-    print(countOdds(8, 10))
+    assert countOdds(3, 7) == 3
+    assert countOdds(8, 10) == 1
 
 if __name__ == "__main__":
     main()

@@ -33,8 +33,8 @@ def totalNQueens(n: int) -> int:
 
 
 def main():
-    print(totalNQueens(4))
-    print(totalNQueens(1))
+    assert totalNQueens(4) == 2
+    assert totalNQueens(1) == 1
 
 if __name__ == "__main__":
     main()

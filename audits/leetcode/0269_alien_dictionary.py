@@ -41,7 +41,9 @@ def alienOrder(words: List[str]) -> str:
 
 
 def main():
-    print("no test cases")
+    assert alienOrder(['wrt', 'wrf', 'er', 'ett', 'rftt']) == 'wertf'
+    assert alienOrder(['z', 'x']) == 'zx'
+    assert alienOrder(['z', 'x', 'z']) == ''
 
 if __name__ == "__main__":
     main()

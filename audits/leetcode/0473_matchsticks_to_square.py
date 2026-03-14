@@ -26,7 +26,8 @@ def makesquare(matchsticks: List[int]) -> bool:
 
 
 def main():
-    print("no test cases")
+    assert makesquare([1, 1, 2, 2, 2]) == True
+    assert makesquare([3, 3, 3, 3, 4]) == False
 
 if __name__ == "__main__":
     main()

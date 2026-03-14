@@ -1,5 +1,52 @@
 # LeetCode 2130: Maximum Twin Sum Of A Linked List
 
+class ListNode:
+    val: int
+    next: ListNode | None
+
+    def __init__(self, val: int = 0, next: ListNode | None = None):
+        self.val = val
+        self.next = next
+
+
+def listNodeToString(node: ListNode | None) -> str:
+    if node is None:
+        return "None"
+    parts: list[str] = []
+    cur: ListNode | None = node
+    while cur is not None:
+        parts.append(str(cur.val))
+        cur = cur.next
+    return "->".join(parts)
+
+
+class Node:
+    val: int
+    next: Node | None
+    random: Node | None
+    left: Node | None
+    right: Node | None
+    neighbors: list[Node]
+    key: int
+
+    def __init__(
+        self,
+        val: int = 0,
+        next: Node | None = None,
+        random: Node | None = None,
+        left: Node | None = None,
+        right: Node | None = None,
+        neighbors: list[Node] = [],
+        key: int = -1,
+    ):
+        self.val = val
+        self.next = next
+        self.random = random
+        self.left = left
+        self.right = right
+        self.neighbors = neighbors
+        self.key = key
+
 def pairSum(head: ListNode | None) -> int:
     slow, fast = head, head
     prev = None
@@ -18,5 +65,6 @@ def pairSum(head: ListNode | None) -> int:
     return res
 
 def main():
-    print("no test cases")
-
+    assert pairSum(ListNode(5, ListNode(4, ListNode(2, ListNode(1, None))))) == 6
+    assert pairSum(ListNode(4, ListNode(2, ListNode(2, ListNode(3, None))))) == 7
+    assert pairSum(ListNode(1, ListNode(100000, None))) == 100001

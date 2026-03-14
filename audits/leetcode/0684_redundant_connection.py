@@ -33,7 +33,8 @@ def findRedundantConnection(edges: List[List[int]]) -> List[int]:
 
 
 def main():
-    print("no test cases")
+    assert findRedundantConnection([[1, 2], [1, 3], [2, 3]]) == [2, 3]
+    assert findRedundantConnection([[1, 2], [2, 3], [3, 4], [1, 4], [1, 5]]) == [1, 4]
 
 if __name__ == "__main__":
     main()

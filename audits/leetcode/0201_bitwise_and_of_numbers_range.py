@@ -28,7 +28,9 @@ def rangeBitwiseAnd(left: int, right: int) -> int:
 
 
 def main():
-    print("no test cases")
+    assert rangeBitwiseAnd(5, 7) == 4
+    assert rangeBitwiseAnd(0, 0) == 0
+    assert rangeBitwiseAnd(1, 2147483647) == 0
 
 if __name__ == "__main__":
     main()

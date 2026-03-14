@@ -24,7 +24,14 @@ def rotate(nums: List[int], k: int) -> None:
 
 
 def main():
-    print("no test cases")
+    arg0 = [1, 2, 3, 4, 5, 6, 7]
+    arg1 = 3
+    _result = rotate(arg0, arg1)
+    assert arg0 == [5, 6, 7, 1, 2, 3, 4]
+    arg0 = [-1, -100, 3, 99]
+    arg1 = 2
+    _result = rotate(arg0, arg1)
+    assert arg0 == [3, 99, -1, -100]
 
 if __name__ == "__main__":
     main()

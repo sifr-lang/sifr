@@ -31,7 +31,7 @@ def minimizeMax(nums: List[int], p: int) -> int:
 
 
 def main():
-    print(minimizeMax([10,1,2,7,1,3], 2))
+    assert minimizeMax([10,1,2,7,1,3], 2) == 1
 
 if __name__ == "__main__":
     main()

@@ -25,8 +25,8 @@ def candy(ratings: List[int]) -> int:
 
 
 def main():
-    print(candy([1,0,2]))
-    print(candy([1,2,2]))
+    assert candy([1,0,2]) == 5
+    assert candy([1,2,2]) == 4
 
 if __name__ == "__main__":
     main()

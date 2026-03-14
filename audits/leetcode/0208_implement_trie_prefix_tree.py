@@ -1,6 +1,25 @@
 # LeetCode 208: Implement Trie Prefix Tree
 # Python version
 
+class Node:
+    def __init__(
+        self,
+        val: int = 0,
+        next: 'Node | None' = None,
+        random: 'Node | None' = None,
+        left: 'Node | None' = None,
+        right: 'Node | None' = None,
+        neighbors: list['Node'] | None = None,
+        key: int = -1,
+    ):
+        self.val = val
+        self.next = next
+        self.random = random
+        self.left = left
+        self.right = right
+        self.neighbors = [] if neighbors is None else neighbors
+        self.key = key
+
 class TrieNode:
     def __init__(self):
         self.children = [None] * 26
@@ -46,7 +65,13 @@ class Trie:
         return True
 
 def main():
-    print("no test cases")
+    obj = Trie()
+    obj.insert('apple')
+    assert obj.search('apple') == True
+    assert obj.search('app') == False
+    assert obj.startsWith('app') == True
+    obj.insert('app')
+    assert obj.search('app') == True
 
 if __name__ == "__main__":
     main()

@@ -9,7 +9,12 @@ def wiggleSort(nums: List[int]) -> None:
 
 
 def main():
-    print("no test cases")
+    arg0 = [3, 5, 2, 1, 6, 4]
+    _result = wiggleSort(arg0)
+    assert arg0 == [3, 5, 1, 6, 2, 4]
+    arg0 = [6, 6, 5, 6, 3, 8]
+    _result = wiggleSort(arg0)
+    assert arg0 == [6, 6, 5, 6, 3, 8]
 
 if __name__ == "__main__":
     main()

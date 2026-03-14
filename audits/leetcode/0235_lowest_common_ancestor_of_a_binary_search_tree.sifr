@@ -1,5 +1,54 @@
 # LeetCode 235: Lowest Common Ancestor Of A Binary Search Tree
 
+class TreeNode:
+    val: int
+    left: TreeNode | None
+    right: TreeNode | None
+
+    def __init__(
+        self,
+        val: int = 0,
+        left: TreeNode | None = None,
+        right: TreeNode | None = None,
+    ):
+        self.val = val
+        self.left = left
+        self.right = right
+
+
+def treeToString(node: TreeNode | None) -> str:
+    if node is None:
+        return "None"
+    return str(node.val) + "(" + treeToString(node.left) + "," + treeToString(node.right) + ")"
+
+
+class Node:
+    val: int
+    next: Node | None
+    random: Node | None
+    left: Node | None
+    right: Node | None
+    neighbors: list[Node]
+    key: int
+
+    def __init__(
+        self,
+        val: int = 0,
+        next: Node | None = None,
+        random: Node | None = None,
+        left: Node | None = None,
+        right: Node | None = None,
+        neighbors: list[Node] = [],
+        key: int = -1,
+    ):
+        self.val = val
+        self.next = next
+        self.random = random
+        self.left = left
+        self.right = right
+        self.neighbors = neighbors
+        self.key = key
+
 def lowestCommonAncestor(
     self, root: "TreeNode", p: "TreeNode", q: "TreeNode"
 ) -> "TreeNode":
@@ -12,5 +61,18 @@ def lowestCommonAncestor(
             return root
 
 def main():
-    print("no test cases")
-
+    root = TreeNode(
+        6,
+        TreeNode(2, TreeNode(0), TreeNode(4, TreeNode(3), TreeNode(5))),
+        TreeNode(8, TreeNode(7), TreeNode(9)),
+    )
+    assert treeToString(
+        lowestCommonAncestor(None, root, root.left, root.right)
+    ) == treeToString(root)
+    assert treeToString(
+        lowestCommonAncestor(None, root, root.left, root.left.right)
+    ) == treeToString(root.left)
+    sampleRoot = TreeNode(2, TreeNode(1), None)
+    assert treeToString(
+        lowestCommonAncestor(None, sampleRoot, sampleRoot, sampleRoot.left)
+    ) == treeToString(sampleRoot)
