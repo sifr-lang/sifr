@@ -1,6 +1,6 @@
 use crate::hir_nodes::HirExpr;
-use sifr_python_ast::{Expr, ExprCall};
-use sifr_type_system::Type;
+use sifr_python_ast::{Expr, ExprCall, Number};
+use sifr_type_system::{make_union, Type};
 
 use super::expressions::lower_expr;
 use super::LowerCtx;
@@ -9,24 +9,383 @@ pub(super) const DEFAULTDICT_INT_ALIAS: &str = "__compat_defaultdict_int";
 pub(super) const DEFAULTDICT_LIST_ALIAS: &str = "__compat_defaultdict_list";
 pub(super) const DEFAULTDICT_SET_ALIAS: &str = "__compat_defaultdict_set";
 
-fn set_constructor_element_type(arg_ty: &Type) -> Option<Type> {
+fn homogeneous_tuple_element_type(elems: &[Type]) -> Option<Type> {
+    if elems.is_empty() {
+        return Some(Type::Any);
+    }
+    let first = elems[0].clone();
+    if elems.iter().all(|elem| elem == &first) {
+        Some(first)
+    } else {
+        None
+    }
+}
+
+fn iterable_element_type_for_builtin(arg_ty: &Type) -> Option<Type> {
     match arg_ty.resolve_alias() {
         Type::List(elem) | Type::Set(elem) => Some(*elem.clone()),
-        Type::Tuple(elems) => {
-            if elems.is_empty() {
-                Some(Type::Any)
-            } else {
-                let first = elems[0].clone();
-                if elems.iter().all(|elem| elem == &first) {
-                    Some(first)
-                } else {
-                    Some(Type::Any)
-                }
-            }
-        }
+        Type::Tuple(elems) => homogeneous_tuple_element_type(elems),
+        Type::Range => Some(Type::Int),
+        Type::Str => Some(Type::Str),
+        Type::Dict(key, _) => Some(*key.clone()),
         Type::Any | Type::Unknown => Some(Type::Any),
         _ => None,
     }
+}
+
+fn list_constructor_output_type(arg_ty: &Type) -> Option<Type> {
+    Some(Type::List(Box::new(iterable_element_type_for_builtin(
+        arg_ty,
+    )?)))
+}
+
+fn pair_tuple_types(ty: &Type) -> Option<(Type, Type)> {
+    let Type::Tuple(items) = ty.resolve_alias() else {
+        return None;
+    };
+    if items.len() != 2 {
+        return None;
+    }
+    Some((items[0].clone(), items[1].clone()))
+}
+
+fn dict_constructor_output_type(arg_ty: &Type) -> Option<Type> {
+    match arg_ty.resolve_alias() {
+        Type::Dict(key, value) => Some(Type::Dict(key.clone(), value.clone())),
+        Type::List(elem) | Type::Set(elem) => {
+            let (key_ty, value_ty) = pair_tuple_types(elem)?;
+            Some(Type::Dict(Box::new(key_ty), Box::new(value_ty)))
+        }
+        Type::Tuple(items) => {
+            if items.is_empty() {
+                Some(Type::Dict(Box::new(Type::Any), Box::new(Type::Any)))
+            } else {
+                let mut key_types = Vec::with_capacity(items.len());
+                let mut value_types = Vec::with_capacity(items.len());
+                for item in items {
+                    let (key_ty, value_ty) = pair_tuple_types(item)?;
+                    key_types.push(key_ty);
+                    value_types.push(value_ty);
+                }
+                Some(Type::Dict(
+                    Box::new(make_union(key_types)),
+                    Box::new(make_union(value_types)),
+                ))
+            }
+        }
+        Type::Any | Type::Unknown => Some(Type::Dict(Box::new(Type::Any), Box::new(Type::Any))),
+        _ => None,
+    }
+}
+
+enum OptionalIterableArg {
+    Missing,
+    Value(HirExpr),
+}
+
+fn lower_single_optional_iterable_arg(
+    call: &ExprCall,
+    builtin_name: &str,
+    ctx: &mut LowerCtx,
+) -> Option<OptionalIterableArg> {
+    if !call.arguments.keywords.is_empty() {
+        ctx.error(format!(
+            "{builtin_name}() does not accept keyword arguments"
+        ));
+        return None;
+    }
+    match call.arguments.args.len() {
+        0 => Some(OptionalIterableArg::Missing),
+        1 => Some(OptionalIterableArg::Value(lower_expr(
+            &call.arguments.args[0],
+            ctx,
+        )?)),
+        actual => {
+            ctx.error(format!(
+                "{builtin_name}() takes at most 1 positional argument, got {actual}"
+            ));
+            None
+        }
+    }
+}
+
+pub(super) fn lower_list_constructor_call(call: &ExprCall, ctx: &mut LowerCtx) -> Option<HirExpr> {
+    let arg = lower_single_optional_iterable_arg(call, "list", ctx)?;
+    match arg {
+        OptionalIterableArg::Missing => Some(HirExpr::ListLiteral {
+            elements: Vec::new(),
+            ty: Type::List(Box::new(Type::Any)),
+        }),
+        OptionalIterableArg::Value(iterable) => {
+            let list_ty = list_constructor_output_type(iterable.ty())?;
+            Some(HirExpr::Call {
+                func: "list".to_string(),
+                args: vec![iterable],
+                ty: list_ty,
+            })
+        }
+    }
+}
+
+pub(super) fn lower_tuple_constructor_call(call: &ExprCall, ctx: &mut LowerCtx) -> Option<HirExpr> {
+    if !call.arguments.keywords.is_empty() {
+        ctx.error("tuple() does not accept keyword arguments".to_string());
+        return None;
+    }
+    match &call.arguments.args[..] {
+        [] => Some(HirExpr::TupleLiteral {
+            elements: Vec::new(),
+            ty: Type::Tuple(Vec::new()),
+        }),
+        [Expr::Tuple(tuple)] => {
+            let mut elements = Vec::with_capacity(tuple.elts.len());
+            let mut elem_types = Vec::with_capacity(tuple.elts.len());
+            for element in &tuple.elts {
+                let lowered = lower_expr(element, ctx)?;
+                elem_types.push(lowered.ty().clone());
+                elements.push(lowered);
+            }
+            Some(HirExpr::TupleLiteral {
+                elements,
+                ty: Type::Tuple(elem_types),
+            })
+        }
+        [Expr::List(list)] => {
+            let mut elements = Vec::with_capacity(list.elts.len());
+            let mut elem_types = Vec::with_capacity(list.elts.len());
+            for element in &list.elts {
+                let lowered = lower_expr(element, ctx)?;
+                elem_types.push(lowered.ty().clone());
+                elements.push(lowered);
+            }
+            Some(HirExpr::TupleLiteral {
+                elements,
+                ty: Type::Tuple(elem_types),
+            })
+        }
+        [Expr::StringLiteral(text)] => {
+            let chars: Vec<String> = text
+                .value
+                .to_str()
+                .chars()
+                .map(|character| character.to_string())
+                .collect();
+            Some(HirExpr::TupleLiteral {
+                elements: chars.iter().cloned().map(HirExpr::StringLiteral).collect(),
+                ty: Type::Tuple(vec![Type::Str; chars.len()]),
+            })
+        }
+        [arg_expr] => {
+            let lowered = lower_expr(arg_expr, ctx)?;
+            if matches!(lowered.ty().resolve_alias(), Type::Tuple(_)) {
+                Some(lowered)
+            } else {
+                ctx.error(
+                    "tuple() currently requires a tuple, list literal, or string literal because Sifr tuples are fixed-length typed values".to_string(),
+                );
+                None
+            }
+        }
+        _ => {
+            ctx.error(format!(
+                "tuple() takes at most 1 positional argument, got {}",
+                call.arguments.args.len()
+            ));
+            None
+        }
+    }
+}
+
+pub(super) fn lower_dict_constructor_call(call: &ExprCall, ctx: &mut LowerCtx) -> Option<HirExpr> {
+    if call.arguments.args.len() > 1 {
+        ctx.error(format!(
+            "dict() takes at most 1 positional argument, got {}",
+            call.arguments.args.len()
+        ));
+        return None;
+    }
+
+    let mut keyword_keys = Vec::with_capacity(call.arguments.keywords.len());
+    let mut keyword_values = Vec::with_capacity(call.arguments.keywords.len());
+    for keyword in &call.arguments.keywords {
+        let Some(name) = keyword.arg.as_ref() else {
+            ctx.error("dict() does not support unpacked keyword arguments".to_string());
+            return None;
+        };
+        keyword_keys.push(HirExpr::StringLiteral(name.to_string()));
+        keyword_values.push(lower_expr(&keyword.value, ctx)?);
+    }
+
+    let keyword_value_ty = if keyword_values.is_empty() {
+        Type::Any
+    } else {
+        make_union(
+            keyword_values
+                .iter()
+                .map(|value| value.ty().clone())
+                .collect(),
+        )
+    };
+    let keyword_dict = if keyword_keys.is_empty() {
+        None
+    } else {
+        Some(HirExpr::DictLiteral {
+            keys: keyword_keys,
+            values: keyword_values,
+            ty: Type::Dict(Box::new(Type::Str), Box::new(keyword_value_ty.clone())),
+        })
+    };
+
+    match &call.arguments.args[..] {
+        [] if keyword_dict.is_none() => Some(HirExpr::Call {
+            func: "dict".to_string(),
+            args: Vec::new(),
+            ty: Type::Dict(Box::new(Type::Any), Box::new(Type::Any)),
+        }),
+        [] => keyword_dict,
+        [arg_expr] if keyword_dict.is_none() => {
+            let arg = lower_expr(arg_expr, ctx)?;
+            let dict_ty = dict_constructor_output_type(arg.ty())?;
+            Some(HirExpr::Call {
+                func: "dict".to_string(),
+                args: vec![arg],
+                ty: dict_ty,
+            })
+        }
+        [arg_expr] => {
+            let arg = lower_expr(arg_expr, ctx)?;
+            let Type::Dict(key_ty, value_ty) = dict_constructor_output_type(arg.ty())? else {
+                ctx.error(format!(
+                    "dict() argument must be a dict or iterable of key/value tuples, got '{}'",
+                    arg.ty().display_name()
+                ));
+                return None;
+            };
+            let merged_ty = Type::Dict(
+                Box::new(make_union(vec![(*key_ty).clone(), Type::Str])),
+                Box::new(make_union(vec![(*value_ty).clone(), keyword_value_ty])),
+            );
+            Some(HirExpr::Call {
+                func: "dict".to_string(),
+                args: vec![arg, keyword_dict?],
+                ty: merged_ty,
+            })
+        }
+        _ => unreachable!(),
+    }
+}
+
+pub(super) fn lower_ord_call(call: &ExprCall, ctx: &mut LowerCtx) -> Option<HirExpr> {
+    if !call.arguments.keywords.is_empty() {
+        ctx.error("ord() does not accept keyword arguments".to_string());
+        return None;
+    }
+    if call.arguments.args.len() != 1 {
+        ctx.error(format!(
+            "ord() takes exactly 1 positional argument, got {}",
+            call.arguments.args.len()
+        ));
+        return None;
+    }
+
+    if let Expr::StringLiteral(text) = &call.arguments.args[0] {
+        let chars: Vec<char> = text.value.to_str().chars().collect();
+        if chars.len() != 1 {
+            ctx.error(
+                "ord() string literal argument must contain exactly one character".to_string(),
+            );
+            return None;
+        }
+        return Some(HirExpr::IntLiteral(chars[0] as i64));
+    }
+
+    let arg = lower_expr(&call.arguments.args[0], ctx)?;
+    if arg.ty() != &Type::Str {
+        ctx.error(format!(
+            "ord() argument must be 'str', got '{}'",
+            arg.ty().display_name()
+        ));
+        return None;
+    }
+    Some(HirExpr::Call {
+        func: "ord".to_string(),
+        args: vec![arg],
+        ty: Type::Result(
+            Box::new(Type::Int),
+            Box::new(
+                ctx.class_types
+                    .get("ValueError")
+                    .cloned()
+                    .unwrap_or(Type::Class {
+                        name: "ValueError".to_string(),
+                        fields: vec![("message".to_string(), Type::Str)],
+                        methods: vec![],
+                        parent_class: Some("Error".to_string()),
+                    }),
+            ),
+        ),
+    })
+}
+
+pub(super) fn lower_chr_call(call: &ExprCall, ctx: &mut LowerCtx) -> Option<HirExpr> {
+    if !call.arguments.keywords.is_empty() {
+        ctx.error("chr() does not accept keyword arguments".to_string());
+        return None;
+    }
+    if call.arguments.args.len() != 1 {
+        ctx.error(format!(
+            "chr() takes exactly 1 positional argument, got {}",
+            call.arguments.args.len()
+        ));
+        return None;
+    }
+
+    if let Expr::NumberLiteral(num) = &call.arguments.args[0] {
+        let Number::Int(value) = &num.value else {
+            ctx.error("chr() argument must be an integer".to_string());
+            return None;
+        };
+        let Some(value) = value.as_i64() else {
+            ctx.error("chr() integer literal is out of range for 'int'".to_string());
+            return None;
+        };
+        let Ok(code_point) = u32::try_from(value) else {
+            ctx.error("chr() integer literal must be a valid Unicode code point".to_string());
+            return None;
+        };
+        let Some(character) = char::from_u32(code_point) else {
+            ctx.error("chr() integer literal must be a valid Unicode code point".to_string());
+            return None;
+        };
+        return Some(HirExpr::StringLiteral(character.to_string()));
+    }
+
+    let arg = lower_expr(&call.arguments.args[0], ctx)?;
+    if arg.ty() != &Type::Int {
+        ctx.error(format!(
+            "chr() argument must be 'int', got '{}'",
+            arg.ty().display_name()
+        ));
+        return None;
+    }
+    Some(HirExpr::Call {
+        func: "chr".to_string(),
+        args: vec![arg],
+        ty: Type::Result(
+            Box::new(Type::Str),
+            Box::new(
+                ctx.class_types
+                    .get("ValueError")
+                    .cloned()
+                    .unwrap_or(Type::Class {
+                        name: "ValueError".to_string(),
+                        fields: vec![("message".to_string(), Type::Str)],
+                        methods: vec![],
+                        parent_class: Some("Error".to_string()),
+                    }),
+            ),
+        ),
+    })
 }
 
 fn defaultdict_alias_and_value_type(factory_name: &str) -> Option<(&'static str, Type)> {
@@ -108,52 +467,18 @@ pub(super) fn lower_defaultdict_constructor_call(
 }
 
 pub(super) fn lower_set_constructor_call(call: &ExprCall, ctx: &mut LowerCtx) -> Option<HirExpr> {
-    if call.arguments.keywords.len() > 1 {
-        ctx.error("set() accepts at most one keyword argument".to_string());
-        return None;
-    }
-    if let Some(keyword) = call.arguments.keywords.first() {
-        let Some(name) = keyword.arg.as_ref() else {
-            ctx.error("set() does not support unpacked keyword arguments".to_string());
-            return None;
-        };
-        if name.as_str() != "iterable" {
-            ctx.error(format!("set() got an unexpected keyword argument '{name}'"));
-            return None;
-        }
-    }
-
-    let mut positional_args = Vec::with_capacity(call.arguments.args.len());
-    for arg in &call.arguments.args {
-        positional_args.push(lower_expr(arg, ctx)?);
-    }
-
-    let iterable_arg = if let Some(keyword) = call.arguments.keywords.first() {
-        Some(lower_expr(&keyword.value, ctx)?)
-    } else {
-        None
-    };
-
-    let arg = match (positional_args.len(), iterable_arg) {
-        (0, None) => None,
-        (1, None) => positional_args.into_iter().next(),
-        (0, Some(arg)) => Some(arg),
-        _ => {
-            ctx.error("set() takes at most 1 argument".to_string());
-            return None;
-        }
-    };
+    let arg = lower_single_optional_iterable_arg(call, "set", ctx)?;
 
     match arg {
-        None => Some(HirExpr::Call {
+        OptionalIterableArg::Missing => Some(HirExpr::Call {
             func: "set".to_string(),
             args: Vec::new(),
             ty: Type::Set(Box::new(Type::Any)),
         }),
-        Some(iterable) => {
-            let Some(elem_ty) = set_constructor_element_type(iterable.ty()) else {
+        OptionalIterableArg::Value(iterable) => {
+            let Some(elem_ty) = iterable_element_type_for_builtin(iterable.ty()) else {
                 ctx.error(format!(
-                    "set() argument must be a list, set, tuple, or compatible iterable, got '{}'",
+                    "set() argument must be an iterable with a statically-known element type, got '{}'",
                     iterable.ty().display_name()
                 ));
                 return None;
@@ -254,66 +579,151 @@ pub(super) fn lower_reveal_type_call(call: &ExprCall, ctx: &mut LowerCtx) -> Opt
 }
 
 pub(super) fn lower_range_call(call: &ExprCall, ctx: &mut LowerCtx) -> Option<HirExpr> {
-    let args: Vec<_> = call.arguments.args.iter().collect();
+    if call.arguments.args.len() > 3 {
+        ctx.error(format!(
+            "range() takes at most 3 positional arguments, got {}",
+            call.arguments.args.len()
+        ));
+        return None;
+    }
 
-    match args.len() {
-        1 => {
-            let end = lower_expr(args[0], ctx)?;
-            if end.ty() != &Type::Int {
-                ctx.error(format!(
-                    "range() argument must be 'int', got '{}'",
-                    end.ty().display_name()
-                ));
-                return None;
-            }
-            Some(HirExpr::RangeLiteral {
-                start: Box::new(HirExpr::IntLiteral(0)),
-                end: Box::new(end),
-                step: None,
-                ty: Type::Range,
-            })
-        }
-        2 => {
-            let start = lower_expr(args[0], ctx)?;
-            let end = lower_expr(args[1], ctx)?;
-            if start.ty() != &Type::Int {
-                ctx.error(format!(
-                    "range() start argument must be 'int', got '{}'",
-                    start.ty().display_name()
-                ));
-                return None;
-            }
-            if end.ty() != &Type::Int {
-                ctx.error(format!(
-                    "range() end argument must be 'int', got '{}'",
-                    end.ty().display_name()
-                ));
-                return None;
-            }
-            Some(HirExpr::RangeLiteral {
-                start: Box::new(start),
-                end: Box::new(end),
-                step: None,
-                ty: Type::Range,
-            })
-        }
-        3 => {
-            let start = lower_expr(args[0], ctx)?;
-            let end = lower_expr(args[1], ctx)?;
-            let step = lower_expr(args[2], ctx)?;
-            Some(HirExpr::RangeLiteral {
-                start: Box::new(start),
-                end: Box::new(end),
-                step: Some(Box::new(step)),
-                ty: Type::Range,
-            })
-        }
-        _ => {
-            ctx.error(format!(
-                "range() takes 1, 2, or 3 arguments, got {}",
-                args.len()
-            ));
-            None
+    let mut start_expr = None;
+    let mut stop_expr = None;
+    let mut step_expr = None;
+
+    for (index, arg) in call.arguments.args.iter().enumerate() {
+        match index {
+            0 => start_expr = Some(arg),
+            1 => stop_expr = Some(arg),
+            2 => step_expr = Some(arg),
+            _ => unreachable!(),
         }
     }
+
+    for keyword in &call.arguments.keywords {
+        let Some(name) = keyword.arg.as_ref() else {
+            ctx.error("range() does not support unpacked keyword arguments".to_string());
+            return None;
+        };
+        match name.as_str() {
+            "start" => {
+                if start_expr.is_some() {
+                    ctx.error(
+                        "range(): 'start' was provided both positionally and as a keyword"
+                            .to_string(),
+                    );
+                    return None;
+                }
+                start_expr = Some(&keyword.value);
+            }
+            "stop" => {
+                if stop_expr.is_some() {
+                    ctx.error(
+                        "range(): 'stop' was provided both positionally and as a keyword"
+                            .to_string(),
+                    );
+                    return None;
+                }
+                stop_expr = Some(&keyword.value);
+            }
+            "step" => {
+                if step_expr.is_some() {
+                    ctx.error(
+                        "range(): 'step' was provided both positionally and as a keyword"
+                            .to_string(),
+                    );
+                    return None;
+                }
+                step_expr = Some(&keyword.value);
+            }
+            other => {
+                ctx.error(format!(
+                    "range() got an unexpected keyword argument '{other}'"
+                ));
+                return None;
+            }
+        }
+    }
+
+    let (start_raw, stop_raw, step_raw) = match (start_expr, stop_expr, step_expr) {
+        (Some(stop), None, None) => (None, Some(stop), None),
+        (start, stop, step) => (start, stop, step),
+    };
+
+    let Some(stop_raw) = stop_raw else {
+        ctx.error("range() missing required argument 'stop'".to_string());
+        return None;
+    };
+
+    let start = if let Some(raw) = start_raw {
+        let lowered = lower_expr(raw, ctx)?;
+        if lowered.ty() != &Type::Int {
+            ctx.error(format!(
+                "range() start argument must be 'int', got '{}'",
+                lowered.ty().display_name()
+            ));
+            return None;
+        }
+        lowered
+    } else {
+        HirExpr::IntLiteral(0)
+    };
+    let stop = lower_expr(stop_raw, ctx)?;
+    if stop.ty() != &Type::Int {
+        ctx.error(format!(
+            "range() stop argument must be 'int', got '{}'",
+            stop.ty().display_name()
+        ));
+        return None;
+    }
+    let step = if let Some(raw) = step_raw {
+        let lowered = lower_expr(raw, ctx)?;
+        if lowered.ty() != &Type::Int {
+            ctx.error(format!(
+                "range() step argument must be 'int', got '{}'",
+                lowered.ty().display_name()
+            ));
+            return None;
+        }
+        Some(Box::new(lowered))
+    } else {
+        None
+    };
+
+    Some(HirExpr::RangeLiteral {
+        start: Box::new(start),
+        end: Box::new(stop),
+        step,
+        ty: Type::Range,
+    })
+}
+
+pub(super) fn callable_builtin_element_type(arg_ty: &Type) -> Option<Type> {
+    iterable_element_type_for_builtin(arg_ty)
+}
+
+pub(super) fn callable_builtin_list_output_type(arg_ty: &Type) -> Option<Type> {
+    list_constructor_output_type(arg_ty)
+}
+
+pub(super) fn lower_builtin_reverseable_arg(
+    call: &ExprCall,
+    builtin_name: &str,
+    ctx: &mut LowerCtx,
+) -> Option<HirExpr> {
+    if call.arguments.args.len() != 1 || !call.arguments.keywords.is_empty() {
+        ctx.error(format!(
+            "{builtin_name}() takes exactly 1 positional argument"
+        ));
+        return None;
+    }
+    let arg = lower_expr(&call.arguments.args[0], ctx)?;
+    if callable_builtin_element_type(arg.ty()).is_none() {
+        ctx.error(format!(
+            "{builtin_name}() argument must be an iterable with a statically-known element type, got '{}'",
+            arg.ty().display_name()
+        ));
+        return None;
+    }
+    Some(arg)
 }
