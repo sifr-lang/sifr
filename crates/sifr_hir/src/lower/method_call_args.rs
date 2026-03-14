@@ -18,11 +18,11 @@ pub(super) fn lower_method_call_args(
     let mut keywords = lower_keyword_args(call, method, ctx)?;
     let resolved = object_ty.resolve_alias();
     let args = match resolved {
-        Type::List(_) => normalize_list_method_args(method, positional, &mut keywords),
-        Type::Dict(_, _) => normalize_dict_method_args(method, positional, &mut keywords),
+        Type::List(_) => normalize_list_method_args(method, positional, &mut keywords, ctx)?,
+        Type::Dict(_, _) => normalize_dict_method_args(method, positional, &mut keywords, ctx)?,
         Type::Set(_) => normalize_set_method_args(method, positional, &mut keywords, ctx)?,
-        Type::Tuple(_) => normalize_tuple_method_args(method, positional, &mut keywords),
-        Type::Str => normalize_string_method_args(method, positional, &mut keywords),
+        Type::Tuple(_) => normalize_tuple_method_args(method, positional, &mut keywords, ctx)?,
+        Type::Str => normalize_string_method_args(method, positional, &mut keywords, ctx)?,
         _ => {
             reject_remaining_keywords(method, &keywords, ctx)?;
             positional
@@ -83,30 +83,46 @@ fn reject_remaining_keywords(
     Some(())
 }
 
+fn duplicate_argument_error(method: &str, arg: &str, ctx: &mut LowerCtx) -> Option<Vec<HirExpr>> {
+    ctx.error(format!(
+        "{method}() got multiple values for argument '{arg}'"
+    ));
+    None
+}
+
 fn append_start_stop_args(
+    method: &str,
     mut positional: Vec<HirExpr>,
     keywords: &mut LoweredKeywords,
-) -> Vec<HirExpr> {
+    ctx: &mut LowerCtx,
+) -> Option<Vec<HirExpr>> {
     if let Some(start) = take_keyword(keywords, "start") {
+        if positional.len() > 1 {
+            return duplicate_argument_error(method, "start", ctx);
+        }
         positional.push(start);
     }
     if let Some(stop) = take_keyword(keywords, "stop") {
+        if positional.len() > 2 {
+            return duplicate_argument_error(method, "stop", ctx);
+        }
         if positional.len() == 1 {
             positional.push(HirExpr::IntLiteral(0));
         }
         positional.push(stop);
     }
-    positional
+    Some(positional)
 }
 
 fn normalize_list_method_args(
     method: &str,
     positional: Vec<HirExpr>,
     keywords: &mut LoweredKeywords,
-) -> Vec<HirExpr> {
+    ctx: &mut LowerCtx,
+) -> Option<Vec<HirExpr>> {
     match method {
-        "index" => append_start_stop_args(positional, keywords),
-        _ => positional,
+        "index" => append_start_stop_args(method, positional, keywords, ctx),
+        _ => Some(positional),
     }
 }
 
@@ -114,16 +130,20 @@ fn normalize_dict_method_args(
     method: &str,
     positional: Vec<HirExpr>,
     keywords: &mut LoweredKeywords,
-) -> Vec<HirExpr> {
+    ctx: &mut LowerCtx,
+) -> Option<Vec<HirExpr>> {
     match method {
         "get" | "pop" => {
             let mut args = positional;
             if let Some(default) = take_keyword(keywords, "default") {
+                if args.len() > 1 {
+                    return duplicate_argument_error(method, "default", ctx);
+                }
                 if args.len() == 1 {
                     args.push(default);
                 }
             }
-            args
+            Some(args)
         }
         "update" => {
             let mut args = positional;
@@ -149,9 +169,9 @@ fn normalize_dict_method_args(
                     ),
                 });
             }
-            args
+            Some(args)
         }
-        _ => positional,
+        _ => Some(positional),
     }
 }
 
@@ -169,10 +189,11 @@ fn normalize_tuple_method_args(
     method: &str,
     positional: Vec<HirExpr>,
     keywords: &mut LoweredKeywords,
-) -> Vec<HirExpr> {
+    ctx: &mut LowerCtx,
+) -> Option<Vec<HirExpr>> {
     match method {
-        "index" => append_start_stop_args(positional, keywords),
-        _ => positional,
+        "index" => append_start_stop_args(method, positional, keywords, ctx),
+        _ => Some(positional),
     }
 }
 
@@ -180,31 +201,41 @@ fn normalize_string_method_args(
     method: &str,
     positional: Vec<HirExpr>,
     keywords: &mut LoweredKeywords,
-) -> Vec<HirExpr> {
+    ctx: &mut LowerCtx,
+) -> Option<Vec<HirExpr>> {
     match method {
         "split" => {
             let mut args = positional;
             if let Some(sep) = take_keyword(keywords, "sep") {
+                if !args.is_empty() {
+                    return duplicate_argument_error(method, "sep", ctx);
+                }
                 if args.is_empty() {
                     args.push(sep);
                 }
             }
             if let Some(maxsplit) = take_keyword(keywords, "maxsplit") {
+                if args.len() > 1 {
+                    return duplicate_argument_error(method, "maxsplit", ctx);
+                }
                 if args.is_empty() {
                     args.push(HirExpr::NoneLiteral);
                 }
                 args.push(maxsplit);
             }
-            args
+            Some(args)
         }
         "replace" => {
             let mut args = positional;
             if let Some(count) = take_keyword(keywords, "count") {
+                if args.len() > 2 {
+                    return duplicate_argument_error(method, "count", ctx);
+                }
                 args.push(count);
             }
-            args
+            Some(args)
         }
-        _ => positional,
+        _ => Some(positional),
     }
 }
 

@@ -197,6 +197,18 @@ fn test_unexpected_method_keyword_is_rejected() {
 }
 
 #[test]
+fn test_duplicate_optional_method_keyword_is_rejected() {
+    let result = lower_source(
+        "def main():\n    data: dict[str, int] = {\"x\": 1}\n    value: int = data.get(\"x\", 1, default=2)\n",
+    );
+    assert!(result.is_err());
+    let errors = result.unwrap_err();
+    assert!(errors.iter().any(|e| e
+        .message
+        .contains("get() got multiple values for argument 'default'")));
+}
+
+#[test]
 fn test_break_outside_loop() {
     let result = lower_source("def main():\n    break\n");
     assert!(result.is_err());
