@@ -1,3 +1,12 @@
+from __future__ import annotations
+import collections
+import heapq
+import math
+import random
+from collections import Counter, defaultdict, deque
+from functools import cache, cmp_to_key, lru_cache
+from math import ceil, sqrt
+
 # LeetCode 108: Convert Sorted Array To Binary Search Tree
 # Python version
 
@@ -50,8 +59,8 @@ def sortedArrayToBST(nums: List[int]) -> Optional[TreeNode]:
 
 
 def main():
-    assert sortedArrayToBST([-10, -3, 0, 5, 9]) == <TreeNode object at 0x106644c20>
-    assert sortedArrayToBST([1, 3]) == <TreeNode object at 0x106630950>
+    assert tree_to_string(sortedArrayToBST([-10, -3, 0, 5, 9])) == "0(-3(-10(None,None),None),9(5(None,None),None))"
+    assert tree_to_string(sortedArrayToBST([1, 3])) == "3(1(None,None),None)"
 
 if __name__ == "__main__":
     main()

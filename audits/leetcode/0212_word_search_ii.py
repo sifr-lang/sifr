@@ -1,3 +1,12 @@
+from __future__ import annotations
+import collections
+import heapq
+import math
+import random
+from collections import Counter, defaultdict, deque
+from functools import cache, cmp_to_key, lru_cache
+from math import ceil, sqrt
+
 # LeetCode 212: Word Search Ii
 # Python version
 
@@ -82,8 +91,8 @@ class TrieNode:
                 cur.refs -= 1
 
 def main():
-    assert findWords([['o', 'a', 'a', 'n'], ['e', 't', 'a', 'e'], ['i', 'h', 'k', 'r'], ['i', 'f', 'l', 'v']], ['oath', 'pea', 'eat', 'rain']) == ['eat', 'oath']
-    assert findWords([['a', 'b'], ['c', 'd']], ['abcb']) == []
+    assert sorted(findWords([['o', 'a', 'a', 'n'], ['e', 't', 'a', 'e'], ['i', 'h', 'k', 'r'], ['i', 'f', 'l', 'v']], ['oath', 'pea', 'eat', 'rain'])) == ['eat', 'oath']
+    assert sorted(findWords([['a', 'b'], ['c', 'd']], ['abcb'])) == []
 
 if __name__ == "__main__":
     main()

@@ -1,5 +1,20 @@
+from __future__ import annotations
+import collections
+import heapq
+import math
+import random
+from collections import Counter, defaultdict, deque
+from functools import cache, cmp_to_key, lru_cache
+from math import ceil, sqrt
+
 # LeetCode 138: Copy List With Random Pointer
 # Python version
+
+class Node:
+    def __init__(self, x: int, next: 'Node | None' = None, random: 'Node | None' = None):
+        self.val = int(x)
+        self.next = next
+        self.random = random
 
 def build_random_list(spec: list[tuple[int, int]]) -> Node | None:
     if len(spec) == 0:
@@ -42,14 +57,6 @@ def copyRandomList(head: "Node") -> "Node":
         cur = cur.next
     return oldToCopy[head]
 
-
-"""
-class Node:
-    def __init__(self, x: int, next: 'Node' = None, random: 'Node' = None):
-        self.val = int(x)
-        self.next = next
-        self.random = random
-"""
 
 def main():
     assert random_list_to_pairs(copyRandomList(build_random_list([(7, -1), (13, 0), (11, 4), (10, 2), (1, 0)]))) == [(7, -1), (13, 0), (11, 4), (10, 2), (1, 0)]

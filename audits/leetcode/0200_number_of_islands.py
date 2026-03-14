@@ -1,3 +1,12 @@
+from __future__ import annotations
+import collections
+import heapq
+import math
+import random
+from collections import Counter, defaultdict, deque
+from functools import cache, cmp_to_key, lru_cache
+from math import ceil, sqrt
+
 # LeetCode 200: Number Of Islands
 # Python version
 
@@ -59,30 +68,28 @@ def numIslands(grid: List[List[str]]) -> int:
     visited = set()
     islands = 0
 
-     def bfs(r, c):
-         q = deque()
-         visited.add((r, c))
-         q.append((r, c))
-       
-         while q:
-             row, col = q.popleft()
-             directions = [[1, 0],[-1, 0],[0, 1],[0, -1]]
-           
-             for dr, dc in directions:
-                 r, c = row + dr, col + dc
-                 if (r) in range(rows) and (c) in range(cols) and grid[r][c] == '1' and (r, c) not in visited:
-                   
-                     q.append((r, c ))
-                     visited.add((r, c ))
+    def bfs(r, c):
+        q = deque()
+        visited.add((r, c))
+        q.append((r, c))
 
-     for r in range(rows):
-         for c in range(cols):
-           
-             if grid[r][c] == "1" and (r, c) not in visited:
-                 bfs(r, c)
-                 islands += 1 
+        while q:
+            row, col = q.popleft()
+            directions = [[1, 0], [-1, 0], [0, 1], [0, -1]]
 
-     return islands
+            for dr, dc in directions:
+                nr, nc = row + dr, col + dc
+                if nr in range(rows) and nc in range(cols) and grid[nr][nc] == '1' and (nr, nc) not in visited:
+                    q.append((nr, nc))
+                    visited.add((nr, nc))
+
+    for r in range(rows):
+        for c in range(cols):
+            if grid[r][c] == "1" and (r, c) not in visited:
+                bfs(r, c)
+                islands += 1
+
+    return islands
 
 
 

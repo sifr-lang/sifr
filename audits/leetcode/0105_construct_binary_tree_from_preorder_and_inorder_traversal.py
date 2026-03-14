@@ -1,3 +1,12 @@
+from __future__ import annotations
+import collections
+import heapq
+import math
+import random
+from collections import Counter, defaultdict, deque
+from functools import cache, cmp_to_key, lru_cache
+from math import ceil, sqrt
+
 # LeetCode 105: Construct Binary Tree From Preorder And Inorder Traversal
 # Python version
 
@@ -51,8 +60,8 @@ def buildTree(preorder: List[int], inorder: List[int]) -> Optional[TreeNode]:
 
 
 def main():
-    assert buildTree([3, 9, 20, 15, 7], [9, 3, 15, 20, 7]) == <TreeNode object at 0x106644830>
-    assert buildTree([-1], [-1]) == <TreeNode object at 0x106630950>
+    assert tree_to_string(buildTree([3, 9, 20, 15, 7], [9, 3, 15, 20, 7])) == "3(9(None,None),20(15(None,None),7(None,None)))"
+    assert tree_to_string(buildTree([-1], [-1])) == "-1(None,None)"
 
 if __name__ == "__main__":
     main()

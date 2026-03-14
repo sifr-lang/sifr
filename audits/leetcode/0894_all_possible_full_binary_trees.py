@@ -1,3 +1,12 @@
+from __future__ import annotations
+import collections
+import heapq
+import math
+import random
+from collections import Counter, defaultdict, deque
+from functools import cache, cmp_to_key, lru_cache
+from math import ceil, sqrt
+
 # LeetCode 894: All Possible Full Binary Trees
 # Python version
 
@@ -59,10 +68,19 @@ def allPossibleFBT(n: int) -> List[Optional[TreeNode]]:
     return backtrack(n)
 
 
+def sorted_tree_strings(nodes: list[TreeNode | None]) -> list[str]:
+    return sorted(tree_to_string(node) for node in nodes)
+
 
 def main():
-    assert allPossibleFBT(7) == [<TreeNode object at 0x1064b7a80>, <TreeNode object at 0x106631b50>, <TreeNode object at 0x1064c1370>, <TreeNode object at 0x1064c1590>, <TreeNode object at 0x106467e50>]
-    assert allPossibleFBT(3) == [<TreeNode object at 0x1064bdf40>]
+    assert sorted_tree_strings(allPossibleFBT(7)) == [
+        "0(0(0(0(None,None),0(None,None)),0(None,None)),0(None,None))",
+        "0(0(0(None,None),0(0(None,None),0(None,None))),0(None,None))",
+        "0(0(0(None,None),0(None,None)),0(0(None,None),0(None,None)))",
+        "0(0(None,None),0(0(0(None,None),0(None,None)),0(None,None)))",
+        "0(0(None,None),0(0(None,None),0(0(None,None),0(None,None))))",
+    ]
+    assert sorted_tree_strings(allPossibleFBT(3)) == ["0(0(None,None),0(None,None))"]
 
 if __name__ == "__main__":
     main()

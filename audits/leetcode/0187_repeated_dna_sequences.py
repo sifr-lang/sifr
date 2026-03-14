@@ -1,3 +1,12 @@
+from __future__ import annotations
+import collections
+import heapq
+import math
+import random
+from collections import Counter, defaultdict, deque
+from functools import cache, cmp_to_key, lru_cache
+from math import ceil, sqrt
+
 # LeetCode 187: Repeated Dna Sequences
 # Python version
 
@@ -14,8 +23,8 @@ def findRepeatedDnaSequences(s: str) -> list[str]:
 
 
 def main():
-    assert findRepeatedDnaSequences('AAAAACCCCCAAAAACCCCCCAAAAAGGGTTT') == ['AAAAACCCCC', 'CCCCCAAAAA']
-    assert findRepeatedDnaSequences('AAAAAAAAAAAAA') == ['AAAAAAAAAA']
+    assert sorted(findRepeatedDnaSequences('AAAAACCCCCAAAAACCCCCCAAAAAGGGTTT')) == ['AAAAACCCCC', 'CCCCCAAAAA']
+    assert sorted(findRepeatedDnaSequences('AAAAAAAAAAAAA')) == ['AAAAAAAAAA']
 
 if __name__ == "__main__":
     main()

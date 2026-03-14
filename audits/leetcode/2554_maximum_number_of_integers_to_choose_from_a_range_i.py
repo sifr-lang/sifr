@@ -1,3 +1,12 @@
+from __future__ import annotations
+import collections
+import heapq
+import math
+import random
+from collections import Counter, defaultdict, deque
+from functools import cache, cmp_to_key, lru_cache
+from math import ceil, sqrt
+
 # LeetCode 2554: Maximum Number Of Integers To Choose From A Range I
 # Python version
 
@@ -19,7 +28,9 @@ def maxCount(banned: List[int], n: int, maxSum: int) -> int:
 
 
 def main():
-    assert maxCount(6, [1, 6, 5], 2) == 3
+    assert maxCount([1, 6, 5], 5, 6) == 2
+    assert maxCount([1, 2, 3, 4, 5, 6, 7], 8, 1) == 0
+    assert maxCount([11], 7, 50) == 7
 
 if __name__ == "__main__":
     main()

@@ -1,3 +1,12 @@
+from __future__ import annotations
+import collections
+import heapq
+import math
+import random
+from collections import Counter, defaultdict, deque
+from functools import cache, cmp_to_key, lru_cache
+from math import ceil, sqrt
+
 # LeetCode 179: Largest Number
 # Python version
 
@@ -18,8 +27,8 @@ def largestNumber(nums: List[int]) -> str:
 
 
 def main():
-    assert largestNumber([10, 2],) == 210
-    assert largestNumber([3, 30, 34, 5, 9],) == 9534330
+    assert largestNumber([10, 2],) == "210"
+    assert largestNumber([3, 30, 34, 5, 9],) == "9534330"
 
 if __name__ == "__main__":
     main()

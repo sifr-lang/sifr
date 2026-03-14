@@ -1,3 +1,12 @@
+from __future__ import annotations
+import collections
+import heapq
+import math
+import random
+from collections import Counter, defaultdict, deque
+from functools import cache, cmp_to_key, lru_cache
+from math import ceil, sqrt
+
 # LeetCode 535: Encode And Decode Tinyurl
 # Python version
 
@@ -57,9 +66,12 @@ class Codec:
         return self.decodeMap[shortUrl]
 
 def main():
-    root = TreeNode('h', TreeNode('t', TreeNode('p', TreeNode('/', TreeNode('e', TreeNode('e', None, None), TreeNode('s', None, None)), TreeNode('.', TreeNode('i', None, None), TreeNode('g', None, None))), TreeNode('l', TreeNode('c', TreeNode('n', None, None), TreeNode('-', None, None)), TreeNode('o', TreeNode('t', None, None), TreeNode('i', None, None)))), TreeNode('s', TreeNode('e', TreeNode('m', TreeNode('n', None, None), TreeNode('y', None, None)), TreeNode('/', TreeNode('u', None, None), TreeNode('r', None, None))), TreeNode('e', TreeNode('p', TreeNode('l', None, None), None), TreeNode('r', None, None)))), TreeNode('t', TreeNode(':', TreeNode('t', TreeNode('o', None, None), TreeNode('b', None, None)), TreeNode('c', TreeNode('l', None, None), TreeNode('e', None, None))), TreeNode('/', TreeNode('o', TreeNode('m', None, None), TreeNode('s', None, None)), TreeNode('d', TreeNode('/', None, None), TreeNode('d', None, None)))))
     codec = Codec()
-    assert tree_to_string(codec.deserialize(codec.serialize(root))) == tree_to_string(root)
+    url = "https://leetcode.com/problems/design-tinyurl"
+    short_url = codec.encode(url)
+    assert short_url == "http://tinyurl.com/1"
+    assert codec.decode(short_url) == url
+    assert codec.encode(url) == short_url
 
 if __name__ == "__main__":
     main()
