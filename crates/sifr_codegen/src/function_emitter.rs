@@ -7,6 +7,208 @@ use sifr_hir::{HirExpr, HirFunction, HirParam, HirStmt};
 use sifr_type_system::{OwnershipKind, ParamConvention, Type};
 
 impl RustEmitter {
+    fn effective_nested_param_convention(
+        param: &HirParam,
+        mutated_vars: &std::collections::HashSet<String>,
+    ) -> ParamConvention {
+        if !mutated_vars.contains(&param.name) {
+            return param.convention;
+        }
+        if param.ty.ownership() == OwnershipKind::Copy {
+            return if param.convention.is_owned() {
+                ParamConvention::own_mut()
+            } else {
+                param.convention
+            };
+        }
+        if param.convention.is_borrowed() {
+            ParamConvention::mut_borrow()
+        } else {
+            ParamConvention::own_mut()
+        }
+    }
+
+    fn register_function_scope_binding(
+        &mut self,
+        name: &str,
+        ty: &Type,
+        convention: ParamConvention,
+    ) {
+        if convention.is_shared_borrow() && ty.ownership() != sifr_type_system::OwnershipKind::Copy
+        {
+            self.borrowed_params.insert(name.to_string());
+        }
+        if convention.is_mut_borrow() && ty.ownership() != sifr_type_system::OwnershipKind::Copy {
+            self.mut_borrowed_params.insert(name.to_string());
+        }
+        if let Type::Callable(ref param_types, ref conventions, _) = ty {
+            let conv_list: Vec<(Type, ParamConvention)> = param_types
+                .iter()
+                .zip(conventions.iter())
+                .map(|(ty, convention)| (ty.clone(), *convention))
+                .collect();
+            self.callable_var_conventions
+                .insert(name.to_string(), conv_list);
+        }
+    }
+
+    fn register_function_scope_params(&mut self, params: &[HirParam]) {
+        for param in params {
+            self.register_function_scope_binding(&param.name, &param.ty, param.convention);
+        }
+    }
+
+    pub(super) fn try_lower_structured_nested_function_stmt(
+        &mut self,
+        stmt: &HirStmt,
+    ) -> Result<bool, crate::CodegenError> {
+        let HirStmt::NestedFunction { func } = stmt else {
+            return Ok(false);
+        };
+
+        if func.method_kind != sifr_hir::MethodKind::Regular
+            || !func.decorators.is_empty()
+            || !func.type_params.is_empty()
+            || func
+                .params
+                .iter()
+                .any(|param| param.default.is_some() || param.keyword_only)
+        {
+            return Ok(false);
+        }
+
+        let is_recursive =
+            crate::hir_analysis::queries::body_calls_function(&func.body, &func.name);
+        let nested_mutated_vars = collect_mutated_vars_with_sigs(&func.body, &self.func_signatures);
+        let effective_param_conventions = func
+            .params
+            .iter()
+            .map(|param| {
+                (
+                    param.name.clone(),
+                    Self::effective_nested_param_convention(param, &nested_mutated_vars),
+                )
+            })
+            .collect::<std::collections::HashMap<_, _>>();
+        let recursive_captures = self
+            .nested_fn_captures
+            .get(&func.name)
+            .cloned()
+            .unwrap_or_default();
+        let post_stmt_callable_conventions = {
+            let mut conventions = self.callable_var_conventions.clone();
+            let params = func
+                .params
+                .iter()
+                .map(|param| {
+                    (
+                        param.ty.clone(),
+                        *effective_param_conventions
+                            .get(&param.name)
+                            .unwrap_or(&param.convention),
+                    )
+                })
+                .collect::<Vec<_>>();
+            conventions.insert(func.name.clone(), params);
+            conventions
+        };
+
+        let saved_return_type = self.current_return_type.clone();
+        let saved_mutated_vars = self.mutated_vars.clone();
+        let saved_borrowed_params = self.borrowed_params.clone();
+        let saved_mut_borrowed_params = self.mut_borrowed_params.clone();
+        let saved_callable_var_conventions = self.callable_var_conventions.clone();
+        let nested_binding_mutable = saved_mutated_vars.contains(&func.name);
+
+        self.current_return_type = Some(func.return_type.clone());
+        self.mutated_vars = nested_mutated_vars;
+        self.borrowed_params.clear();
+        self.mut_borrowed_params.clear();
+        self.callable_var_conventions = post_stmt_callable_conventions.clone();
+        for param in &func.params {
+            self.register_function_scope_binding(
+                &param.name,
+                &param.ty,
+                *effective_param_conventions
+                    .get(&param.name)
+                    .unwrap_or(&param.convention),
+            );
+        }
+        for capture in &recursive_captures {
+            self.register_function_scope_binding(&capture.name, &capture.ty, capture.convention);
+        }
+
+        let mut lowered_body = Vec::new();
+        for body_stmt in &func.body {
+            lowered_body.extend(self.lower_stmt_strict_for_function(
+                body_stmt,
+                "nested function body statement lowering",
+            ));
+        }
+
+        self.current_return_type = saved_return_type;
+        self.mutated_vars = saved_mutated_vars;
+        self.borrowed_params = saved_borrowed_params;
+        self.mut_borrowed_params = saved_mut_borrowed_params;
+        self.callable_var_conventions = post_stmt_callable_conventions.clone();
+
+        let lowered_stmt = if is_recursive {
+            let params = func
+                .params
+                .iter()
+                .map(|param| RustParam::Named {
+                    name: param.name.clone(),
+                    ty: self.lower_function_param_type(
+                        &param.ty,
+                        *effective_param_conventions
+                            .get(&param.name)
+                            .unwrap_or(&param.convention),
+                    ),
+                })
+                .chain(recursive_captures.iter().map(|capture| RustParam::Named {
+                    name: capture.name.clone(),
+                    ty: self.lower_function_param_type(&capture.ty, capture.convention),
+                }))
+                .collect::<Vec<_>>();
+            RustStmt::LocalFn {
+                name: func.name.clone(),
+                params,
+                ret: self.lower_function_return_type(func, false),
+                body: lowered_body,
+            }
+        } else {
+            let params = func
+                .params
+                .iter()
+                .map(|param| RustParam::Named {
+                    name: param.name.clone(),
+                    ty: self.lower_function_param_type(
+                        &param.ty,
+                        *effective_param_conventions
+                            .get(&param.name)
+                            .unwrap_or(&param.convention),
+                    ),
+                })
+                .collect::<Vec<_>>();
+            RustStmt::Let {
+                mutable: nested_binding_mutable,
+                name: func.name.clone(),
+                ty: None,
+                value: RustExpr::ClosureBlock {
+                    params,
+                    body: lowered_body,
+                    is_move: false,
+                },
+            }
+        };
+
+        self.callable_var_conventions = saved_callable_var_conventions;
+        self.callable_var_conventions
+            .extend(post_stmt_callable_conventions);
+        self.push_captured_stmt(&lowered_stmt);
+        Ok(true)
+    }
+
     pub(super) fn lower_mutable_param_shadows(
         params: &[HirParam],
         reassigned_vars: &std::collections::HashSet<String>,
@@ -448,28 +650,7 @@ impl RustEmitter {
         self.borrowed_params.clear();
         self.mut_borrowed_params.clear();
         self.callable_var_conventions.clear();
-        for param in &func.params {
-            if param.convention.is_shared_borrow()
-                && param.ty.ownership() != sifr_type_system::OwnershipKind::Copy
-            {
-                self.borrowed_params.insert(param.name.clone());
-            }
-            if param.convention.is_mut_borrow()
-                && param.ty.ownership() != sifr_type_system::OwnershipKind::Copy
-            {
-                self.mut_borrowed_params.insert(param.name.clone());
-            }
-            // Register Callable-typed params for convention-aware call emission
-            if let Type::Callable(ref param_types, ref conventions, _) = param.ty {
-                let conv_list: Vec<(Type, ParamConvention)> = param_types
-                    .iter()
-                    .zip(conventions.iter())
-                    .map(|(t, c)| (t.clone(), *c))
-                    .collect();
-                self.callable_var_conventions
-                    .insert(param.name.clone(), conv_list);
-            }
-        }
+        self.register_function_scope_params(&func.params);
 
         let visibility = if !test_mode && module_public && func.name != "main" {
             Visibility::Pub

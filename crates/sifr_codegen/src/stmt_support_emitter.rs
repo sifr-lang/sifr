@@ -1099,8 +1099,8 @@ impl RustEmitter {
             lowered_args =
                 self.adapt_plain_call_args_with_signature_for_ir(func, args, lowered_args);
             if let Some(captures) = self.nested_fn_captures.get(func).cloned() {
-                for (capture_name, _) in captures {
-                    lowered_args.push(crate::RustExpr::Ident(capture_name));
+                for capture in captures {
+                    lowered_args.push(self.lower_recursive_capture_arg_for_ir(&capture));
                 }
             }
             return Ok(Some(crate::RustExpr::FnCall {
@@ -3172,6 +3172,11 @@ impl RustEmitter {
                 }
                 lowered_args =
                     self.adapt_plain_call_args_with_signature_for_ir(func, args, lowered_args);
+                if let Some(captures) = self.nested_fn_captures.get(func).cloned() {
+                    for capture in captures {
+                        lowered_args.push(self.lower_recursive_capture_arg_for_ir(&capture));
+                    }
+                }
                 let lowered_func = if func.contains("::") {
                     crate::RustExpr::Path(func.split("::").map(str::to_string).collect())
                 } else {
@@ -3604,6 +3609,34 @@ impl RustEmitter {
             adapted.push(lowered_arg);
         }
         adapted
+    }
+
+    pub(crate) fn lower_recursive_capture_arg_for_ir(
+        &self,
+        capture: &crate::NestedFnCapture,
+    ) -> crate::RustExpr {
+        let ident = crate::RustExpr::Ident(capture.name.clone());
+        if capture.convention.is_mut_borrow() {
+            if self.mut_borrowed_params.contains(&capture.name) {
+                return ident;
+            }
+            return crate::RustExpr::Ref {
+                mutable: true,
+                expr: Box::new(ident),
+            };
+        }
+        if capture.convention.is_shared_borrow() {
+            if self.borrowed_params.contains(&capture.name)
+                || self.mut_borrowed_params.contains(&capture.name)
+            {
+                return ident;
+            }
+            return crate::RustExpr::Ref {
+                mutable: false,
+                expr: Box::new(ident),
+            };
+        }
+        ident
     }
 
     fn borrowed_return_name_clone_expr_for_ir(&self, value: &HirExpr) -> Option<crate::RustExpr> {

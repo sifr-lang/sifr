@@ -134,3 +134,30 @@ fn test_recursive_nonlocal_nested_helper_fails_explicitly() {
             == "recursive nested function 'visit' cannot mutate captured state with `nonlocal` yet"
     }));
 }
+
+#[test]
+fn test_nested_helper_usage_refines_outer_empty_collection_types() {
+    let module = lower_source(
+        "def subsets(limit: int) -> list[list[int]]:\n    res = []\n    subset = []\n\n    def dfs(i: int):\n        if i >= limit:\n            res.append(subset.copy())\n            return\n        subset.append(i)\n        dfs(i + 1)\n        subset.pop()\n        dfs(i + 1)\n\n    dfs(0)\n    return res\n",
+    )
+    .expect("nested helper capture usage should refine outer empty collection types");
+
+    let subsets = module
+        .functions
+        .iter()
+        .find(|function| function.name == "subsets")
+        .expect("subsets function missing");
+
+    let HirStmt::Let { ty: res_ty, .. } = &subsets.body[0] else {
+        panic!("expected first subsets statement to be the result binding");
+    };
+    let HirStmt::Let { ty: subset_ty, .. } = &subsets.body[1] else {
+        panic!("expected second subsets statement to be the subset binding");
+    };
+
+    assert_eq!(
+        res_ty,
+        &Type::List(Box::new(Type::List(Box::new(Type::Int))))
+    );
+    assert_eq!(subset_ty, &Type::List(Box::new(Type::Int)));
+}

@@ -48,14 +48,18 @@ mod union_type_helpers;
 mod lib_codegen_tests;
 
 use error_refs::collect_referenced_builtin_error_classes;
-use helpers::{collect_mutated_vars_with_sigs, is_hashable_type_codegen, module_uses_bigint};
+use helpers::{
+    collect_locally_defined_vars, collect_mutated_vars_with_sigs,
+    collect_referenced_vars_with_types, default_param_convention, is_hashable_type_codegen,
+    module_uses_bigint,
+};
 use ir_imports::{collect_import_needs_from_items, collect_import_needs_from_source};
 use ir_optimize::remove_trivial_clones_in_items;
 use ir_validate::validate_items;
 pub(crate) use lib_support::{
     resolve_alias_type_for_plain_call, try_lower_leaf_or_name_expr_result,
 };
-use sifr_hir::{HirExpr, HirModule, HirStmt};
+use sifr_hir::{HirExpr, HirFunction, HirModule, HirStmt};
 use sifr_type_system::{ParamConvention, Type};
 use std::collections::{HashMap, HashSet};
 use std::fmt::Write as _;
@@ -71,6 +75,13 @@ type IsinstanceUnionMatch = (String, String, String, UnionVariantTypes);
 type IsNoneUnionMatch = (String, String, UnionVariantTypes);
 
 pub use entrypoints::{generate_rust, generate_rust_test, generate_rust_with_metadata};
+
+#[derive(Clone)]
+struct NestedFnCapture {
+    name: String,
+    ty: Type,
+    convention: ParamConvention,
+}
 
 /// Built-in error class names that the compiler provides.
 const BUILTIN_ERROR_CLASSES: &[&str] = &[
@@ -958,7 +969,7 @@ struct RustEmitter {
     class_field_order: HashMap<String, Vec<String>>,
     /// Map from nested function name -> list of captured variable (name, type) pairs
     /// Used to pass extra args at call sites for recursive+capturing nested functions
-    nested_fn_captures: HashMap<String, Vec<(String, Type)>>,
+    nested_fn_captures: HashMap<String, Vec<NestedFnCapture>>,
     /// Map from module-level constant name -> (type, `rust_name`)
     /// For primitives: `rust_name` is the UPPERCASE const name
     /// For strings/complex: `rust_name` is __`const_name()` function call
@@ -1082,6 +1093,42 @@ impl RustEmitter {
         self.stmt_capture_stack.pop().unwrap_or_default()
     }
 
+    fn collect_recursive_nested_fn_captures(&self, func: &HirFunction) -> Vec<NestedFnCapture> {
+        if !crate::hir_analysis::queries::body_calls_function(&func.body, &func.name) {
+            return Vec::new();
+        }
+
+        let param_names = func
+            .params
+            .iter()
+            .map(|param| param.name.clone())
+            .collect::<HashSet<_>>();
+        let referenced_with_types = collect_referenced_vars_with_types(&func.body);
+        let locally_defined = collect_locally_defined_vars(&func.body);
+        let mutated_captures = collect_mutated_vars_with_sigs(&func.body, &self.func_signatures);
+
+        let mut captures = referenced_with_types
+            .into_iter()
+            .filter(|(name, _)| !param_names.contains(name) && !locally_defined.contains(name))
+            .map(|(name, ty)| {
+                let convention = if ty.ownership() == sifr_type_system::OwnershipKind::Copy {
+                    ParamConvention::own()
+                } else if mutated_captures.contains(&name) {
+                    ParamConvention::mut_borrow()
+                } else {
+                    default_param_convention(&ty)
+                };
+                NestedFnCapture {
+                    name,
+                    ty,
+                    convention,
+                }
+            })
+            .collect::<Vec<_>>();
+        captures.sort_by(|left, right| left.name.cmp(&right.name));
+        captures
+    }
+
     fn emit_module(&mut self, module: &HirModule, module_public: bool, test_mode: bool) {
         // Pre-scan: detect bigint usage
         if module_uses_bigint(module) {
@@ -1111,29 +1158,11 @@ impl RustEmitter {
         };
 
         if let HirStmt::NestedFunction { func } = stmt {
-            if crate::hir_analysis::queries::body_calls_function(&func.body, &func.name) {
-                let param_names = func
-                    .params
-                    .iter()
-                    .map(|param| param.name.clone())
-                    .collect::<HashSet<_>>();
-                let referenced_with_types =
-                    crate::hir_analysis::queries::collect_referenced_vars_with_types(&func.body);
-                let locally_defined =
-                    crate::hir_analysis::queries::collect_locally_defined_vars(&func.body);
-                let captures = referenced_with_types
-                    .into_iter()
-                    .filter(|(name, _)| {
-                        !param_names.contains(name) && !locally_defined.contains(name)
-                    })
-                    .collect::<Vec<(String, Type)>>();
-                if captures.is_empty() {
-                    self.nested_fn_captures.remove(&func.name);
-                } else {
-                    self.nested_fn_captures.insert(func.name.clone(), captures);
-                }
-            } else {
+            let captures = self.collect_recursive_nested_fn_captures(func);
+            if captures.is_empty() {
                 self.nested_fn_captures.remove(&func.name);
+            } else {
+                self.nested_fn_captures.insert(func.name.clone(), captures);
             }
         }
 
@@ -1157,6 +1186,12 @@ impl RustEmitter {
                 self.emit_lowered_stmts(&rewritten_stmts);
                 return Ok(true);
             }
+        }
+
+        if self.try_lower_structured_nested_function_stmt(stmt)? {
+            self.lowering_stats.stmt_structured += 1;
+            self.lowering_stats.stmt_candidate_structured += 1;
+            return Ok(true);
         }
 
         if let HirStmt::TupleUnpack { targets, value } = stmt {

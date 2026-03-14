@@ -196,6 +196,19 @@ pub(crate) fn collect_mutated_vars(
         } => {
             mutated.borrow_mut().insert(name.clone());
         }
+        HirStmt::NestedFunction { func } => {
+            let param_names = func
+                .params
+                .iter()
+                .map(|param| param.name.clone())
+                .collect::<HashSet<_>>();
+            let locally_defined = collect_locally_defined_vars(&func.body);
+            let captured_mutated = collect_mutated_vars(&func.body, func_signatures)
+                .into_iter()
+                .filter(|name| !param_names.contains(name) && !locally_defined.contains(name))
+                .collect::<Vec<_>>();
+            mutated.borrow_mut().extend(captured_mutated);
+        }
         _ => {}
     };
 
@@ -618,6 +631,32 @@ mod tests {
 
         let mutated = collect_mutated_vars(&[HirStmt::NestedFunction { func: nested }], None);
         assert!(mutated.contains("total"));
+    }
+
+    #[test]
+    fn collect_mutated_vars_marks_captured_outer_mutation_from_nested_function() {
+        let nested = HirFunction {
+            name: "inner".to_string(),
+            params: vec![],
+            return_type: Type::None,
+            body: vec![HirStmt::Expr {
+                expr: HirExpr::MethodCall {
+                    object: Box::new(HirExpr::Name {
+                        name: "items".to_string(),
+                        ty: Type::List(Box::new(Type::Int)),
+                    }),
+                    method: "append".to_string(),
+                    args: vec![HirExpr::IntLiteral(1)],
+                    ty: Type::None,
+                },
+            }],
+            method_kind: MethodKind::Regular,
+            decorators: vec![],
+            type_params: vec![],
+        };
+
+        let mutated = collect_mutated_vars(&[HirStmt::NestedFunction { func: nested }], None);
+        assert!(mutated.contains("items"));
     }
 
     #[test]
