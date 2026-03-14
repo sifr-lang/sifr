@@ -170,6 +170,20 @@ pub(crate) fn collect_mutated_vars(
         HirStmt::Assign { name, .. } | HirStmt::AugAssign { name, .. } => {
             mutated.borrow_mut().insert(name.clone());
         }
+        HirStmt::NestedFunction { func } => {
+            let nested_mutated = collect_mutated_vars(&func.body, func_signatures);
+            let param_names = func
+                .params
+                .iter()
+                .map(|param| param.name.clone())
+                .collect::<HashSet<_>>();
+            let locally_defined = collect_locally_defined_vars(&func.body);
+            for name in nested_mutated {
+                if !param_names.contains(&name) && !locally_defined.contains(&name) {
+                    mutated.borrow_mut().insert(name);
+                }
+            }
+        }
         HirStmt::SubscriptAssign { object, .. }
         | HirStmt::NestedSubscriptAssign { object, .. }
         | HirStmt::SubscriptAugAssign { object, .. }
@@ -287,8 +301,10 @@ pub(crate) fn collect_locally_defined_vars(stmts: &[HirStmt]) -> HashSet<String>
             defined.insert(target.clone());
         }
         HirStmt::TupleUnpack { targets, .. } => {
-            for (name, _) in targets {
-                defined.insert(name.clone());
+            for target in targets {
+                if !target.rebind_existing {
+                    defined.insert(target.name.clone());
+                }
             }
         }
         HirStmt::StarUnpack {
@@ -582,6 +598,26 @@ mod tests {
 
         let mutated = collect_mutated_vars(&[HirStmt::NestedFunction { func: nested }], None);
         assert!(!mutated.contains("inside"));
+    }
+
+    #[test]
+    fn collect_mutated_vars_includes_captured_rebinds_from_nested_functions() {
+        let nested = HirFunction {
+            name: "inner".to_string(),
+            params: vec![],
+            return_type: Type::None,
+            body: vec![HirStmt::AugAssign {
+                name: "total".to_string(),
+                op: "+=".to_string(),
+                value: HirExpr::IntLiteral(1),
+            }],
+            method_kind: MethodKind::Regular,
+            decorators: vec![],
+            type_params: vec![],
+        };
+
+        let mutated = collect_mutated_vars(&[HirStmt::NestedFunction { func: nested }], None);
+        assert!(mutated.contains("total"));
     }
 
     #[test]

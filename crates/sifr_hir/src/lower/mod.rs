@@ -1,5 +1,4 @@
 //! AST to HIR lowering with type checking and name resolution.
-
 use crate::hir_nodes::{HirExpr, HirImport, HirModule};
 use crate::scope::Scope;
 use sifr_python_ast::{Expr, ExprCall, Stmt};
@@ -13,12 +12,14 @@ mod compat_imports;
 mod decimal_methods;
 mod diagnostics;
 mod expressions;
+mod function_scopes;
 mod guarded_index;
 mod imports;
 mod mutating_methods;
 mod nested_function_inference;
 #[cfg(test)]
 mod nested_function_tests;
+mod nonlocal_support;
 mod numeric_sentinels;
 #[cfg(test)]
 mod own_mut_param_tests;
@@ -29,12 +30,12 @@ mod sequence_guards;
 mod sequence_pointers;
 mod sequence_shapes;
 mod statements;
+mod tuple_unpack;
 #[cfg(test)]
 mod type_alias_tests;
 mod type_aliases;
 mod type_bounds;
 mod typing_and_functions;
-
 use classes::{collect_class_type, lower_class, lower_expr_simple};
 use imports::resolve_imports_early;
 use sequence_guards::SequenceGuard;
@@ -61,7 +62,6 @@ impl std::fmt::Display for LoweringError {
         }
     }
 }
-
 /// The lowering context that tracks state during AST->HIR conversion.
 pub(super) struct LowerCtx {
     /// Function signatures (name -> type)
@@ -129,6 +129,8 @@ pub(super) struct LowerCtx {
     pending_numeric_sentinel_patches: HashMap<String, numeric_sentinels::NumericSentinelPatch>,
     /// Supported constructed sequence shapes whose lengths are tied to other sequences.
     sequence_shapes: Vec<sequence_shapes::SequenceShapeFact>,
+    /// Per-function nonlocal declarations and frame boundaries.
+    function_scopes: Vec<function_scopes::FunctionScopeState>,
 }
 
 impl LowerCtx {
@@ -165,6 +167,7 @@ impl LowerCtx {
             numeric_sentinel_vars: HashMap::new(),
             pending_numeric_sentinel_patches: HashMap::new(),
             sequence_shapes: Vec::new(),
+            function_scopes: Vec::new(),
         }
     }
 

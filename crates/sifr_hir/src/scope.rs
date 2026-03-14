@@ -78,6 +78,11 @@ impl Scope {
         self.frames.pop();
     }
 
+    /// Return the current number of scope frames.
+    pub fn frame_count(&self) -> usize {
+        self.frames.len()
+    }
+
     /// Define a variable in the current (innermost) scope.
     pub fn define(&mut self, name: String, ty: Type) {
         self.define_binding(name, ty, true, BindingKind::Local);
@@ -126,6 +131,19 @@ impl Scope {
     pub fn lookup(&self, name: &str) -> Option<&VarInfo> {
         for frame in self.frames.iter().rev() {
             if let Some(info) = frame.get(name) {
+                return Some(info);
+            }
+        }
+        None
+    }
+
+    /// Look up a variable within an inclusive frame range.
+    pub fn lookup_in_frame_range(&self, name: &str, start: usize, end: usize) -> Option<&VarInfo> {
+        if start > end || end >= self.frames.len() {
+            return None;
+        }
+        for frame_index in (start..=end).rev() {
+            if let Some(info) = self.frames[frame_index].get(name) {
                 return Some(info);
             }
         }

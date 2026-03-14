@@ -1,0 +1,18 @@
+# expect-error: SIFR-TYPE-0001
+
+def outer(limit: int) -> int:
+    total = 0
+
+    def visit(i: int) -> None:
+        nonlocal total
+        if i == limit:
+            total += 1
+            return
+        visit(i + 1)
+
+    visit(0)
+    return total
+
+
+def main():
+    print("unreachable")

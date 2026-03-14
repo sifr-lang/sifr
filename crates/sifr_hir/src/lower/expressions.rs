@@ -19,14 +19,14 @@ use super::numeric_sentinels::{
     maybe_resolve_numeric_sentinel_name_from_type, normalize_min_max_numeric_sentinels,
     retag_numeric_sentinel_name_expr,
 };
-use super::sequence_pointers::record_tuple_unpack_pointer_facts;
+pub(super) use super::tuple_unpack::{lower_star_unpack_assign, lower_tuple_unpack_assign};
 use super::type_bounds::{type_satisfies_bound, type_satisfies_constraint};
 use super::typing_and_functions::resolve_annotation_expr;
 use super::{
     collect_type_vars, decode_typevar_constraint, infer_type_var_bindings, substitute_type_vars,
     LowerCtx,
 };
-use crate::hir_nodes::{HirExpr, HirFStringPart, HirParam, HirStmt};
+use crate::hir_nodes::{HirExpr, HirFStringPart, HirParam};
 use sifr_python_ast::{
     BoolOp, CmpOp, Expr, ExprAttribute, ExprBinOp, ExprBoolOp, ExprCall, ExprCompare, ExprDict,
     ExprDictComp, ExprFString, ExprGenerator, ExprIf, ExprLambda, ExprList, ExprListComp, ExprName,
@@ -1736,125 +1736,6 @@ pub(super) fn lower_fstring(fstring: &ExprFString, ctx: &mut LowerCtx) -> Option
     })
 }
 
-pub(super) fn lower_tuple_unpack_assign(
-    tuple: &ExprTuple,
-    value: &Expr,
-    ctx: &mut LowerCtx,
-) -> Option<HirStmt> {
-    // Extract target names
-    let mut target_names = Vec::new();
-    for elt in &tuple.elts {
-        if let Expr::Name(n) = elt {
-            target_names.push(n.id.clone());
-        } else {
-            ctx.error("tuple unpacking target must be a simple name".to_string());
-            return None;
-        }
-    }
-
-    // Lower the value expression
-    let value_expr = lower_expr(value, ctx)?;
-    let value_ty = value_expr.ty().clone();
-
-    // Check that the value is a tuple with matching length
-    let elem_types = if let Type::Tuple(elems) = &value_ty {
-        if elems.len() != target_names.len() {
-            ctx.error(format!(
-                "tuple unpacking: expected {} values, got {}",
-                target_names.len(),
-                elems.len()
-            ));
-            return None;
-        }
-        elems.clone()
-    } else {
-        ctx.error(format!(
-            "cannot unpack non-tuple type '{}'",
-            value_ty.display_name()
-        ));
-        return None;
-    };
-
-    // Define variables in scope
-    let mut targets = Vec::new();
-    record_tuple_unpack_pointer_facts(ctx, &target_names, value);
-    for (name, ty) in target_names.into_iter().zip(elem_types.into_iter()) {
-        ctx.scope.define(name.clone(), ty.clone());
-        targets.push((name, ty));
-    }
-
-    Some(HirStmt::TupleUnpack {
-        targets,
-        value: value_expr,
-    })
-}
-
-pub(super) fn lower_star_unpack_assign(
-    tuple: &ExprTuple,
-    value: &Expr,
-    ctx: &mut LowerCtx,
-) -> Option<HirStmt> {
-    let value_expr = lower_expr(value, ctx)?;
-    let value_ty = value_expr.ty().clone();
-
-    // Get the element type from the list
-    let elem_ty = if let Type::List(elem) = &value_ty {
-        *elem.clone()
-    } else {
-        ctx.error("star unpacking requires a list type".to_string());
-        return None;
-    };
-
-    let mut before = Vec::new();
-    let mut star: Option<(String, Type)> = None;
-    let mut after = Vec::new();
-
-    for elt in &tuple.elts {
-        match elt {
-            Expr::Starred(starred) => {
-                if star.is_some() {
-                    ctx.error("multiple starred expressions in assignment".to_string());
-                    return None;
-                }
-                if let Expr::Name(n) = starred.value.as_ref() {
-                    let name = n.id.clone();
-                    let star_ty = Type::List(Box::new(elem_ty.clone()));
-                    ctx.scope.define(name.clone(), star_ty.clone());
-                    star = Some((name, star_ty));
-                } else {
-                    ctx.error("starred target must be a simple name".to_string());
-                    return None;
-                }
-            }
-            Expr::Name(n) => {
-                let name = n.id.clone();
-                ctx.scope.define(name.clone(), elem_ty.clone());
-                if star.is_none() {
-                    before.push((name, elem_ty.clone()));
-                } else {
-                    after.push((name, elem_ty.clone()));
-                }
-            }
-            _ => {
-                ctx.error("star unpacking target must be a simple name".to_string());
-                return None;
-            }
-        }
-    }
-
-    let star = star.unwrap_or_else(|| {
-        ctx.error("star unpacking requires a starred expression".to_string());
-        ("_".to_string(), Type::List(Box::new(elem_ty.clone())))
-    });
-
-    Some(HirStmt::StarUnpack {
-        before,
-        star,
-        after,
-        value: value_expr,
-    })
-}
-
 pub(super) fn lower_list_literal(list: &ExprList, ctx: &mut LowerCtx) -> Option<HirExpr> {
     let mut elements = Vec::new();
     let mut elem_ty: Option<Type> = None;
@@ -3470,7 +3351,7 @@ pub(super) fn lower_named_expr(named: &ExprNamed, ctx: &mut LowerCtx) -> Option<
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::{lower_module, HirModule, LoweringError};
+    use crate::{lower_module, HirModule, HirStmt, LoweringError};
     use sifr_python_parser::parse_module;
 
     fn lower_source(source: &str) -> Result<HirModule, Vec<LoweringError>> {

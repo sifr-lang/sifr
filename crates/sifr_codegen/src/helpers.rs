@@ -275,7 +275,7 @@ pub(super) fn module_uses_bigint(module: &HirModule) -> bool {
             HirStmt::Let { ty, .. } => type_has_bigint(ty),
             HirStmt::For { target_ty, .. } => type_has_bigint(target_ty),
             HirStmt::TupleUnpack { targets, .. } => {
-                targets.iter().any(|(_, ty)| type_has_bigint(ty))
+                targets.iter().any(|target| type_has_bigint(&target.ty))
             }
             HirStmt::StarUnpack {
                 before,
