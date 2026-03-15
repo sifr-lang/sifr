@@ -1,3 +1,5 @@
+from sifr.collections import deque
+
 def main():
     groups = collections.defaultdict(list)
     groups["hit"].append("hot")
@@ -17,6 +19,7 @@ def main():
     assert counts["steps"] == 3
     assert counts["other"] == 0
 
-    q = deque([1, 2, 3])
+    q: deque[int] = deque([1, 2, 3])
     assert len(q) == 3
-    assert q.popleft() == 1
+    first: int | None = q.popleft()
+    assert first is not None and first == 1

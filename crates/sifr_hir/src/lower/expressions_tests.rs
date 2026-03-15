@@ -209,6 +209,14 @@ fn test_duplicate_optional_method_keyword_is_rejected() {
 }
 
 #[test]
+fn test_user_defined_method_defaults_and_keywords_lower() {
+    let result = lower_source(
+        "class CounterBox:\n    value: int\n\n    def __init__(self, value: int):\n        self.value = value\n\n    def bump(self, amount: int = 1) -> int:\n        return self.value + amount\n\ndef main():\n    box: CounterBox = CounterBox(4)\n    a: int = box.bump()\n    b: int = box.bump(amount=3)\n",
+    );
+    assert!(result.is_ok(), "{result:?}");
+}
+
+#[test]
 fn test_break_outside_loop() {
     let result = lower_source("def main():\n    break\n");
     assert!(result.is_err());

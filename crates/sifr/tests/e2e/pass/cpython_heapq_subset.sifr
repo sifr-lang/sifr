@@ -52,7 +52,7 @@ def collect_edge_actual() -> list[bool]:
     hp_src: list[int] = [3, 5, 7]
     hp_ret: int | None = heappushpop(hp_src, 4)
     actual.append(hp_ret is not None and hp_ret == 3)
-    actual.append(str(hp_src) == "[3, 5, 7]")
+    actual.append(str(hp_src) == "[4, 5, 7]")
     return actual
 
 def append_all(mut target: list[bool], values: list[bool]):

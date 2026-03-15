@@ -1,6 +1,6 @@
 use crate::hir_nodes::HirExpr;
 use sifr_python_ast::ExprCall;
-use sifr_type_system::Type;
+use sifr_type_system::{FunctionType, Type};
 
 use super::builtin_calls::{callable_builtin_dict_output_type, callable_builtin_element_type};
 use super::expressions::lower_expr;
@@ -30,6 +30,95 @@ pub(super) fn lower_method_call_args(
     };
     reject_remaining_keywords(method, &keywords, ctx)?;
     Some(args)
+}
+
+pub(super) fn lower_signature_call_args(
+    call: &ExprCall,
+    callable_name: &str,
+    ft: &FunctionType,
+    defaults: Option<&[(usize, HirExpr)]>,
+    ctx: &mut LowerCtx,
+) -> Option<Vec<HirExpr>> {
+    let positional_args = lower_positional_args(call, ctx)?;
+    let keyword_args = lower_keyword_args(call, callable_name, ctx)?;
+
+    if keyword_args.is_empty() {
+        if positional_args.len() > ft.params.len() {
+            ctx.error(format!(
+                "{callable_name}() takes at most {} argument(s), got {}",
+                ft.params.len(),
+                positional_args.len()
+            ));
+            return None;
+        }
+        if positional_args.len() < ft.params.len() {
+            let mut filled = positional_args;
+            for i in filled.len()..ft.params.len() {
+                if let Some(default_expr) = defaults
+                    .and_then(|defs| defs.iter().find(|(idx, _)| *idx == i).map(|(_, expr)| expr))
+                {
+                    filled.push(default_expr.clone());
+                } else {
+                    ctx.error(format!(
+                        "{callable_name}(): missing argument '{}' with no default value",
+                        ft.params[i].0
+                    ));
+                    return None;
+                }
+            }
+            return Some(filled);
+        }
+        return Some(positional_args);
+    }
+
+    let mut resolved = Vec::with_capacity(ft.params.len());
+    for (i, (param_name, _, _)) in ft.params.iter().enumerate() {
+        if i < positional_args.len() {
+            if keyword_args
+                .iter()
+                .any(|(keyword, _)| keyword == param_name)
+            {
+                ctx.error(format!(
+                    "{callable_name}() got multiple values for argument '{param_name}'"
+                ));
+                return None;
+            }
+            resolved.push(positional_args[i].clone());
+            continue;
+        }
+        if let Some(position) = keyword_args
+            .iter()
+            .position(|(keyword, _)| keyword == param_name)
+        {
+            resolved.push(keyword_args[position].1.clone());
+            continue;
+        }
+        if let Some(default_expr) =
+            defaults.and_then(|defs| defs.iter().find(|(idx, _)| *idx == i).map(|(_, expr)| expr))
+        {
+            resolved.push(default_expr.clone());
+            continue;
+        }
+        ctx.error(format!(
+            "{callable_name}(): missing argument '{param_name}' with no default value"
+        ));
+        return None;
+    }
+
+    for (keyword, _) in &keyword_args {
+        if !ft
+            .params
+            .iter()
+            .any(|(param_name, _, _)| param_name == keyword)
+        {
+            ctx.error(format!(
+                "{callable_name}() got an unexpected keyword argument '{keyword}'"
+            ));
+            return None;
+        }
+    }
+
+    Some(resolved)
 }
 
 fn lower_positional_args(call: &ExprCall, ctx: &mut LowerCtx) -> Option<Vec<HirExpr>> {

@@ -2,7 +2,7 @@
 # Updated to use native dict[str, int] Counter class (borrow-by-default milestone)
 from sifr.test import assert_bool_vector_eq
 from sifr.collections import (
-    Counter, from_list,
+    Counter, deque, from_list,
     new_set, set_from_list, set_add, set_contains, set_remove,
     set_len, set_union, set_intersection
 )
@@ -49,18 +49,47 @@ def collect_counter_actual() -> list[bool]:
     actual: list[bool] = []
     words: list[str] = ["apple", "banana", "apple", "cherry", "banana", "apple"]
     c: Counter[str] = from_list(words)
+    empty_seed: dict[str, int] = {}
+    empty: Counter[str] = Counter(empty_seed)
+    seeded: Counter[str] = Counter({"alpha": 2, "beta": 1})
 
+    actual.append(empty.total() == 0)
+    actual.append(seeded.get("alpha") == 2)
     actual.append(c.get("apple") == 3)
     actual.append(c.get("banana") == 2)
     actual.append(c.get("cherry") == 1)
     actual.append(c.get("missing") == 0)
     actual.append(c.total() == 6)
-    actual.append(str(c.most_common(2)) == "[\"apple\", \"banana\"]")
+    common: list[tuple[str, int]] = c.most_common(2)
+    actual.append(len(common) == 2)
+    actual.append(str(common) == "[(\"apple\", 3), (\"banana\", 2)]")
     actual.append(len(c.keys()) == 3)
+    actual.append(len(c.items()) == 3)
     actual.append(len(c.values()) == 3)
 
     c.increment("banana")
     actual.append(c.get("banana") == 3)
+    copied: Counter[str] = c.copy()
+    copied.clear()
+    actual.append(copied.total() == 0)
+    return actual
+
+def collect_deque_actual() -> list[bool]:
+    actual: list[bool] = []
+    q: deque[int] = deque([1, 2, 3], maxlen=4)
+    q.appendleft(0)
+    actual.append(str(q.to_list()) == "[0, 1, 2, 3]")
+    q.append(4)
+    actual.append(str(q.to_list()) == "[1, 2, 3, 4]")
+    q.rotate(1)
+    actual.append(str(q.to_list()) == "[4, 1, 2, 3]")
+    actual.append(q.count(2) == 1)
+    actual.append(q.index(2, 0, None) == 2)
+    q.remove(1)
+    actual.append(str(q.to_list()) == "[4, 2, 3]")
+    copied: deque[int] = q.copy()
+    copied.reverse()
+    actual.append(str(copied.to_list()) == "[3, 2, 4]")
     return actual
 
 def append_all(mut target: list[bool], values: list[bool]):
@@ -70,11 +99,13 @@ def append_all(mut target: list[bool], values: list[bool]):
 def main():
     expected: list[bool] = [
         True, True, True, True, True, True, True, True, True, True, True, True, True, True,
-        True, True, True, True, True, True, True, True, True
+        True, True, True, True, True, True, True, True, True, True, True, True, True, True,
+        True, True, True, True, True, True, True
     ]
     actual: list[bool] = []
     append_all(actual, collect_set_actual())
     append_all(actual, collect_counter_actual())
+    append_all(actual, collect_deque_actual())
     assert_bool_vector_eq(actual, expected)
 
-    assert str("cpython_collections: all 26 assertions passed") == 'cpython_collections: all 26 assertions passed'
+    assert str("cpython_collections: all 35 assertions passed") == 'cpython_collections: all 35 assertions passed'

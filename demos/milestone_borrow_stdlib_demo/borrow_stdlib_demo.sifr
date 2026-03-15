@@ -142,8 +142,8 @@ def demo_counter() -> None:
     print("cherry after 2 increments:")
     print(c.get("cherry"))
 
-    # most_common returns top keys by count
-    top: list[str] = c.most_common(1)
+    # most_common returns key/count pairs ordered by descending count
+    top: list[tuple[str, int]] = c.most_common(1)
     print("top 1 most common:")
     print(top)
 

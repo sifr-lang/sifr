@@ -1,0 +1,5 @@
+from sifr.collections import deque
+
+def main():
+    q: deque[int] = deque([1, 2, 3])
+    idx: int | None = q.index(2, "bad", None)

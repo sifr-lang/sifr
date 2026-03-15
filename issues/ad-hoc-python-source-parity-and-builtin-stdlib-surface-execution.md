@@ -4,7 +4,7 @@ Status: in_progress
 Started: 2026-03-14
 Phase owner: Codex (GPT-5)
 Source phase: `issues/ad-hoc-python-source-parity-and-builtin-stdlib-surface.md`
-Current active wave: `wave_psp_a2`
+Current active wave: `wave_psp_b1`
 
 ## Execution Rules
 
@@ -16,7 +16,7 @@ Current active wave: `wave_psp_a2`
 ## Phase Todo
 
 - [x] `milestone_psp_1` / `wave_psp_a1`: builtin constructors and callable surface
-- [ ] `milestone_psp_2` / `wave_psp_a2`: core object models and builtin semantics
+- [x] `milestone_psp_2` / `wave_psp_a2`: core object models and builtin semantics
 - [ ] `milestone_psp_3` / `wave_psp_b1`: collections objects and ordered helpers
 - [ ] `milestone_psp_3` / `wave_psp_b2`: iterators, functional helpers, and randomness
 - [ ] `milestone_psp_4` / `wave_psp_c1`: structured parsing and serialization
@@ -48,20 +48,21 @@ Status: done
 
 ### `wave_psp_a2` Core Object Models and Builtin Semantics
 
-Status: in_progress
+Status: done
 
 - [x] Harvest the required CPython test inputs for container and string object-model behavior.
 - [x] Close `list`, `dict`, `set`, `tuple`, `str`, and `bytes` classification/object-model gaps.
 - [x] Add adapted regression coverage and update parity ledgers.
-- [ ] Demo, validate, PR, review, merge.
+- [x] Demo, validate, PR, review, merge.
 
 ### `wave_psp_b1` Collections Objects and Ordered Helpers
 
-Status: pending
+Status: in_progress
 
-- [ ] Harvest `Lib/test/test_collections.py`, `Lib/test/test_bisect.py`, and `Lib/test/test_heapq.py`.
-- [ ] Close `collections`, `bisect`, and `heapq` constructor/object/call-shape gaps.
-- [ ] Add traceable regressions, demo, validate, PR, review, merge.
+- [x] Harvest `Lib/test/test_collections.py`, `Lib/test/test_bisect.py`, and `Lib/test/test_heapq.py`.
+- [x] Close `collections`, `bisect`, and `heapq` constructor/object/call-shape gaps.
+- [x] Add traceable regressions, demo, and local validation coverage for the closed surface.
+- [ ] Open PR, review, merge, and update this ledger with PR links and outcomes.
 
 ### `wave_psp_b2` Iterators, Functional Helpers, and Randomness
 
@@ -210,10 +211,69 @@ Status: pending
   - `scripts/run_all_tests.sh --profile quick`
 - CPython parity note:
   - `bytes` / `bytearray` remain explicitly classified as `unsupported` for this wave because Sifr still does not expose a first-class bytes primitive; the traceability ledger records the closure as an intentional object-model classification outcome rather than a fake module-parity claim.
+- PR / merge:
+  - Merged PR: `#1144` `Close wave_psp_a2 core object-model parity`
+  - Merge commit: `d55a79285ee8aaaea8985c6fb1a9d0d0c4737f95`
 
 ### `wave_psp_b1`
 
-- Pending.
+- Implemented collections/object/call-shape closure in:
+  - `lib/sifr/collections.sifr`
+  - `lib/sifr/bisect.sifr`
+  - `lib/sifr/heapq.sifr`
+  - `crates/sifr_hir/src/lower/classes.rs`
+  - `crates/sifr_hir/src/lower/compat_imports.rs`
+  - `crates/sifr_hir/src/lower/expressions.rs`
+  - `crates/sifr_hir/src/lower/expressions_tests.rs`
+  - `crates/sifr_hir/src/lower/imported_defaults.rs`
+  - `crates/sifr_hir/src/lower/method_call_args.rs`
+  - `crates/sifr_hir/src/lower/mod.rs`
+- Added wave-specific regression, demo, and traceability artifacts:
+  - `crates/sifr/tests/e2e/pass/phase_psp_b1_collections_ordered_helpers.sifr`
+  - `crates/sifr/tests/e2e/fail/phase_psp_b1_bisect_key_unsupported.sifr`
+  - `crates/sifr/tests/e2e/fail/phase_psp_b1_counter_iterable_constructor_unsupported.sifr`
+  - `crates/sifr/tests/e2e/fail/phase_psp_b1_deque_index_invalid_bound.sifr`
+  - `demos/wave_psp_b1_collections_ordered_helpers_demo.sifr`
+  - `verification/stdlib/wave_psp_b1_cpython_traceability.md`
+- Compatibility regressions updated to the new b1 semantics:
+  - `crates/sifr/tests/e2e/pass/cpython_collections.sifr`
+  - `crates/sifr/tests/e2e/pass/cpython_collections_subset.sifr`
+  - `crates/sifr/tests/e2e/pass/cpython_heapq_subset.sifr`
+  - `crates/sifr/tests/e2e/pass/counter_dict_native.sifr`
+  - `crates/sifr/tests/e2e/pass/generic_counter_custom_class.sifr`
+  - `crates/sifr/tests/e2e/pass/phase31_constructor_compat.sifr`
+  - `crates/sifr/tests/e2e/pass/phase31_defaultdict_len_deque_compat.sifr`
+  - `crates/sifr/tests/e2e/pass/stdlib_collections_consolidated.sifr`
+  - `crates/sifr/tests/e2e/fail/stdlib_counter_wrong_type.sifr`
+  - `demos/m30_1d_collections_parity_demo/main.sifr`
+  - `demos/milestone_borrow_stdlib_demo/borrow_stdlib_demo.sifr`
+  - `demos/milestone_stdlib_generic_rewrite_demo.sifr`
+  - `demos/phase31_defaultdict_compat_demo.sifr`
+- Demo validation:
+  - `cargo run -q -p sifr -- run demos/wave_psp_b1_collections_ordered_helpers_demo.sifr`
+- Targeted regression validation:
+  - `cargo run -q -p sifr -- run crates/sifr/tests/e2e/pass/cpython_bisect.sifr`
+  - `cargo run -q -p sifr -- run crates/sifr/tests/e2e/pass/cpython_collections.sifr`
+  - `cargo run -q -p sifr -- run crates/sifr/tests/e2e/pass/cpython_heapq.sifr`
+  - `cargo run -q -p sifr -- run crates/sifr/tests/e2e/pass/cpython_heapq_subset.sifr`
+  - `cargo run -q -p sifr -- run crates/sifr/tests/e2e/pass/counter_dict_native.sifr`
+  - `cargo run -q -p sifr -- run crates/sifr/tests/e2e/pass/generic_counter_custom_class.sifr`
+  - `cargo run -q -p sifr -- run crates/sifr/tests/e2e/pass/phase_psp_b1_collections_ordered_helpers.sifr`
+  - `cargo run -q -p sifr -- check crates/sifr/tests/e2e/pass/phase31_constructor_compat.sifr`
+  - `cargo run -q -p sifr -- check crates/sifr/tests/e2e/pass/phase31_defaultdict_len_deque_compat.sifr`
+  - `cargo run -q -p sifr -- check crates/sifr/tests/e2e/fail/phase_psp_b1_bisect_key_unsupported.sifr`
+  - `cargo run -q -p sifr -- check crates/sifr/tests/e2e/fail/phase_psp_b1_counter_iterable_constructor_unsupported.sifr`
+  - `cargo run -q -p sifr -- check crates/sifr/tests/e2e/fail/phase_psp_b1_deque_index_invalid_bound.sifr`
+  - `cargo test -p sifr_hir expressions_tests -- --nocapture`
+- Maintainability/lint validation:
+  - `cargo fmt --check`
+  - `cargo clippy --workspace -- -D warnings`
+- Authoritative local gate:
+  - `scripts/run_all_tests.sh --profile quick`
+- CPython parity note:
+  - The traceability ledger closes `Counter(dict)`, `Counter.most_common([n])`, deque ordered helpers, `bisect` / `insort` optional `lo` / `hi`, and mutating `heapreplace` / `heappushpop`; it explicitly records `bisect(key=...)`, iterable/kwargs `Counter(...)` constructors, and non-exported/private max-heap helper gaps as unsupported for this wave rather than pretending they were closed.
+- PR / merge:
+  - Pending.
 
 ### `wave_psp_b2`
 
@@ -250,6 +310,7 @@ Status: pending
 ## PR Ledger
 
 - `wave_psp_a1`: PR `#1142` merged at `2026-03-14T17:28:40Z`
+- `wave_psp_a2`: PR `#1144` merged at `2026-03-14T18:24:24Z`
 
 ## External Review Ledger
 

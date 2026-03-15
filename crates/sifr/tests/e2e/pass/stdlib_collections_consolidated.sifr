@@ -29,7 +29,7 @@ def collect_counter_actual() -> list[bool]:
     actual.append(c.get("cherry") == 1)
     actual.append(c.get("missing") == 0)
     actual.append(c.total() == 6)
-    actual.append(str(c.most_common(2)) == "[\"apple\", \"banana\"]")
+    actual.append(str(c.most_common(2)) == "[(\"apple\", 3), (\"banana\", 2)]")
     actual.append(len(c.keys()) == 3)
     actual.append(len(c.values()) == 3)
     c.increment("cherry")

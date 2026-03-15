@@ -296,6 +296,23 @@ pub(super) fn collect_class_type(class_def: &StmtClassDef, ctx: &mut LowerCtx) {
                     } else {
                         Type::None
                     };
+                    let mut defaults = Vec::new();
+                    for (i, param) in func.parameters.args.iter().skip(skip_count).enumerate() {
+                        if let Some(ref default_expr) = param.default {
+                            if let Some(hir_default) = lower_expr_simple(default_expr) {
+                                defaults.push((i, hir_default));
+                            } else {
+                                ctx.error(format!(
+                                    "class '{class_name}.{method_name}': unsupported default argument expression for parameter '{}'",
+                                    param.parameter.name
+                                ));
+                            }
+                        }
+                    }
+                    if !defaults.is_empty() {
+                        ctx.function_defaults
+                            .insert(format!("{class_name}.{method_name}"), defaults);
+                    }
                     methods.push((method_name, FunctionType::new(params, return_ty)));
                 }
             }
