@@ -73,6 +73,7 @@ fn compile_stdlib_uncached_impl() -> Result<StdlibCompiled, Vec<CompileError>> {
         let mut class_exports = HashMap::new();
         let mut class_type_param_exports = HashMap::new();
         let mut default_exports = HashMap::new();
+        let mut vararg_exports = HashMap::new();
 
         for func in &result.module.functions {
             if should_export_callable(module_name, &func.name) {
@@ -88,6 +89,9 @@ fn compile_stdlib_uncached_impl() -> Result<StdlibCompiled, Vec<CompileError>> {
                         return_type: Box::new(func.return_type.clone()),
                     },
                 );
+                if let Some(vararg_index) = result.function_varargs.get(&func.name) {
+                    vararg_exports.insert(func.name.clone(), *vararg_index);
+                }
             }
         }
 
@@ -330,6 +334,11 @@ fn compile_stdlib_uncached_impl() -> Result<StdlibCompiled, Vec<CompileError>> {
             stdlib_defs
                 .function_defaults
                 .insert((*module_name).to_string(), default_exports);
+        }
+        if !vararg_exports.is_empty() {
+            stdlib_defs
+                .function_varargs
+                .insert((*module_name).to_string(), vararg_exports);
         }
         if !const_exports.is_empty() {
             stdlib_defs

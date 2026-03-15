@@ -33,12 +33,14 @@ pub(crate) fn compile_frontend_modules(
         let LoweringResult {
             module,
             function_defaults,
+            function_varargs,
             reveal_types,
             warnings,
         } = result;
         let lowering_result = LoweringResult {
             module: module.clone(),
             function_defaults,
+            function_varargs,
             reveal_types: reveal_types.clone(),
             warnings: warnings.clone(),
         };

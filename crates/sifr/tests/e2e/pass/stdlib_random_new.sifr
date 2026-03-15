@@ -1,13 +1,12 @@
-# Test new random functions: shuffle, sample, randrange, gauss
-from sifr.random import shuffle, sample, randrange, gauss
+# Test new random functions: shuffle, sample, randrange, gauss, choice, choices, getrandbits
+from sifr.random import choice, choices, getrandbits, shuffle, sample, randrange, gauss
 from sifr.test import assert_eq, assert_true
 
 def main():
-    # shuffle returns a new list with same length
+    # shuffle mutates in place and preserves length
     items: list[int] = [1, 2, 3, 4, 5]
-    shuffled: list[int] = shuffle(items)
-    assert_eq(len(shuffled), 5)
-    # original unchanged
+    assert_eq(len(items), 5)
+    shuffle(items)
     assert_eq(len(items), 5)
 
     # sample
@@ -19,11 +18,26 @@ def main():
 
     # randrange
     try:
+        r0: int = randrange(10)
+        assert_true(r0 >= 0)
+        assert_true(r0 < 10)
         r: int = randrange(0, 10, 1)
         assert_true(r >= 0)
         assert_true(r < 10)
     except ValueError as e:
         _ = str("unexpected: " + e.message)
+
+    try:
+        picked: int = choice(items)
+        assert_true(picked >= 1)
+        assert_true(picked <= 5)
+        many: list[int] = choices(items, k=4)
+        assert_eq(len(many), 4)
+        bits: int = getrandbits(12)
+        assert_true(bits >= 0)
+    except ValueError as e:
+        _ = str("unexpected: " + e.message)
+
     # gauss returns a float
     g: float = gauss(0.0, 1.0)
     # just check it's a number (no assertion on value since it's random)

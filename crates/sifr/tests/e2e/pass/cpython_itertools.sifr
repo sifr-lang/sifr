@@ -4,16 +4,17 @@ from sifr.test import assert_bool_vector_eq
 
 def collect_chain_actual() -> list[bool]:
     actual: list[bool] = []
-    a: list[int] = [1, 2, 3]
-    b: list[int] = [4, 5, 6]
-    c: list[int] = chain(a, b)
+    c: list[int] = chain([1, 2, 3], [4, 5, 6])
     actual.append(len(c) == 6)
     actual.append(str(c) == "[1, 2, 3, 4, 5, 6]")
 
-    empty: list[int] = []
-    c2: list[int] = chain(empty, a)
-    c3: list[int] = chain(a, empty)
-    c4: list[int] = chain(empty, empty)
+    empty1: list[int] = []
+    empty2: list[int] = []
+    empty3: list[int] = []
+    empty4: list[int] = []
+    c2: list[int] = chain(empty1, [1, 2, 3])
+    c3: list[int] = chain([1, 2, 3], empty2)
+    c4: list[int] = chain(empty3, empty4)
     actual.append(len(c2) == 3)
     actual.append(len(c3) == 3)
     actual.append(len(c4) == 0)

@@ -1,29 +1,81 @@
-# sifr.random — Random number generation (generic)
-from _sifr.crypto import random_int, random_float, random_choice, random_uniform, random_shuffle, random_sample, random_randrange, random_gauss
+from _sifr.crypto import random_choice, random_float, random_gauss, random_int, random_randrange, random_sample, random_shuffle, random_uniform
+
 T = TypeVar("T")
+
+
+def _choice_nonempty[T](items: list[T]) -> T:
+    return random_choice(items)
+
 
 def randint(min: int, max: int) -> Result[int, ValueError]:
     if min > max:
         raise ValueError("randint: min must be <= max")
     return random_int(min, max)
 
+
 def random() -> float:
     return random_float()
+
 
 def uniform(min: float, max: float) -> float:
     return random_uniform(min, max)
 
-def shuffle(items: list[T]) -> list[T]:
-    return random_shuffle(items)
 
-def sample(items: list[T], k: int) -> Result[list[T], ValueError]:
+def shuffle[T](mut items: list[T]) -> None:
+    shuffled: list[T] = random_shuffle(items)
+    i: int = 0
+    while i < len(shuffled):
+        value: T | None = shuffled[i]
+        if value is not None:
+            items[i] = value
+        i = i + 1
+
+
+def sample[T](items: list[T], k: int) -> Result[list[T], ValueError]:
     return random_sample(items, k)
 
-def randrange(start: int, stop: int, step: int) -> Result[int, ValueError]:
-    return random_randrange(start, stop, step)
+
+def randrange(start: int, stop: int | None = None, step: int = 1) -> Result[int, ValueError]:
+    actual_start: int = start
+    actual_stop: int = start
+    if stop is None:
+        actual_start = 0
+    else:
+        actual_stop = stop
+    return random_randrange(actual_start, actual_stop, step)
+
+
+def getrandbits(k: int) -> Result[int, ValueError]:
+    if k < 0:
+        raise ValueError("getrandbits: number of bits must be >= 0")
+    result: int = 0
+    i: int = 0
+    while i < k:
+        bit: int = random_int(0, 1)
+        result = result * 2 + bit
+        i = i + 1
+    return result
+
 
 def gauss(mu: float, sigma: float) -> float:
     return random_gauss(mu, sigma)
 
-def choice(items: list[T]) -> T:
-    return random_choice(items)
+
+def choice[T](items: list[T]) -> Result[T, ValueError]:
+    if len(items) == 0:
+        raise ValueError("choice: items must not be empty")
+    return _choice_nonempty(items)
+
+
+def choices[T](items: list[T], k: int = 1) -> Result[list[T], ValueError]:
+    if k <= 0:
+        return []
+    if len(items) == 0:
+        raise ValueError("choices: items must not be empty")
+
+    result: list[T] = []
+    i: int = 0
+    while i < k:
+        result.append(_choice_nonempty(items))
+        i = i + 1
+    return result

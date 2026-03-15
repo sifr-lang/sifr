@@ -2610,6 +2610,20 @@ fn try_lower_leaf_or_name_expr(expr: &HirExpr) -> Option<RustExpr> {
     if let Some(lowered) = try_lower_leaf_expr(expr) {
         return Some(lowered);
     }
+    if let HirExpr::Lambda { params, body, .. } = expr {
+        let lowered_params = params
+            .iter()
+            .map(|param| RustParam::Named {
+                name: param.name.clone(),
+                ty: RustType::Named("_".to_string()),
+            })
+            .collect::<Vec<_>>();
+        return Some(RustExpr::Closure {
+            params: lowered_params,
+            body: Box::new(try_lower_leaf_or_name_expr(body)?),
+            is_move: false,
+        });
+    }
     if let Some(lowered) = try_lower_stmt_index_expr(expr) {
         return Some(lowered);
     }

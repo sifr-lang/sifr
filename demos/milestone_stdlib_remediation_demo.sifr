@@ -102,8 +102,11 @@ def main():
 
     # --- random.choice ---
     items: list[int] = [1, 2, 3, 4, 5]
-    picked: int = choice(items)
-    print("random choice ok = " + str(picked >= 1 and picked <= 5))
+    try:
+        picked: int = choice(items)
+        print("random choice ok = " + str(picked >= 1 and picked <= 5))
+    except ValueError as e:
+        print("random choice error: " + e.message)
 
     # --- logging.basicConfig sets global log level ---
     root: Logger = basicConfig(WARNING)

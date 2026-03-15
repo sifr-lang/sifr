@@ -1189,7 +1189,7 @@ impl RustEmitter {
             }
         }
 
-        if self.try_lower_structured_nested_function_stmt(stmt)? {
+        if self.try_lower_structured_nested_function_stmt(stmt) {
             self.lowering_stats.stmt_structured += 1;
             self.lowering_stats.stmt_candidate_structured += 1;
             return Ok(true);

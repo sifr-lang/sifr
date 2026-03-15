@@ -88,8 +88,8 @@ def main():
     # --- Random additions ---
     print("=== random additions ===")
     items: list[int] = [1, 2, 3, 4, 5]
-    shuffled: list[int] = shuffle(items)
-    print("shuffle len = " + str(len(shuffled)))
+    shuffle(items)
+    print("shuffle len = " + str(len(items)))
 
     try:
         s3: list[int] = sample(items, 3)

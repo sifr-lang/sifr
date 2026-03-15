@@ -61,9 +61,9 @@ impl RustEmitter {
     pub(super) fn try_lower_structured_nested_function_stmt(
         &mut self,
         stmt: &HirStmt,
-    ) -> Result<bool, crate::CodegenError> {
+    ) -> bool {
         let HirStmt::NestedFunction { func } = stmt else {
-            return Ok(false);
+            return false;
         };
 
         if func.method_kind != sifr_hir::MethodKind::Regular
@@ -74,7 +74,7 @@ impl RustEmitter {
                 .iter()
                 .any(|param| param.default.is_some() || param.keyword_only)
         {
-            return Ok(false);
+            return false;
         }
 
         let is_recursive =
@@ -124,7 +124,8 @@ impl RustEmitter {
         self.mutated_vars = nested_mutated_vars;
         self.borrowed_params.clear();
         self.mut_borrowed_params.clear();
-        self.callable_var_conventions = post_stmt_callable_conventions.clone();
+        self.callable_var_conventions
+            .clone_from(&post_stmt_callable_conventions);
         for param in &func.params {
             self.register_function_scope_binding(
                 &param.name,
@@ -150,7 +151,8 @@ impl RustEmitter {
         self.mutated_vars = saved_mutated_vars;
         self.borrowed_params = saved_borrowed_params;
         self.mut_borrowed_params = saved_mut_borrowed_params;
-        self.callable_var_conventions = post_stmt_callable_conventions.clone();
+        self.callable_var_conventions
+            .clone_from(&post_stmt_callable_conventions);
 
         let lowered_stmt = if is_recursive {
             let params = func
@@ -206,7 +208,7 @@ impl RustEmitter {
         self.callable_var_conventions
             .extend(post_stmt_callable_conventions);
         self.push_captured_stmt(&lowered_stmt);
-        Ok(true)
+        true
     }
 
     pub(super) fn lower_mutable_param_shadows(
