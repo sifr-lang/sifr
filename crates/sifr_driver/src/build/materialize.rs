@@ -12,10 +12,9 @@ pub(super) fn materialize_binary_project(
     let project_path = output_dir.join(project_name);
     let src_dir = project_path.join("src");
     std::fs::create_dir_all(&src_dir).map_err(|error| {
-        vec![CompileError {
-            message: format!("failed to create output directory: {error}"),
-            phase: CompilePhase::Build,
-        }]
+        vec![build_error(format!(
+            "failed to create output directory: {error}"
+        ))]
     })?;
 
     let cargo_toml = generate_dependency_cargo_toml(
@@ -24,46 +23,28 @@ pub(super) fn materialize_binary_project(
         &generated_project.required_crates,
     );
 
-    std::fs::write(project_path.join("Cargo.toml"), cargo_toml).map_err(|error| {
-        vec![CompileError {
-            message: format!("failed to write Cargo.toml: {error}"),
-            phase: CompilePhase::Build,
-        }]
-    })?;
+    write_project_file(&project_path.join("Cargo.toml"), cargo_toml, "Cargo.toml")?;
 
-    std::fs::write(src_dir.join("main.rs"), generated_project.main_rs).map_err(|error| {
-        vec![CompileError {
-            message: format!("failed to write main.rs: {error}"),
-            phase: CompilePhase::Build,
-        }]
-    })?;
+    write_project_file(
+        &src_dir.join("main.rs"),
+        generated_project.main_rs,
+        "main.rs",
+    )?;
 
     for (module_name, code) in generated_project.support_modules {
-        std::fs::write(src_dir.join(format!("{module_name}.rs")), code).map_err(|error| {
-            vec![CompileError {
-                message: format!("failed to write {module_name}.rs: {error}"),
-                phase: CompilePhase::Build,
-            }]
-        })?;
+        let file_name = format!("{module_name}.rs");
+        write_project_file(&src_dir.join(&file_name), code, &file_name)?;
     }
 
     let output = Command::new("cargo")
         .args(["build", "--release"])
         .current_dir(&project_path)
         .output()
-        .map_err(|error| {
-            vec![CompileError {
-                message: format!("failed to run cargo build: {error}"),
-                phase: CompilePhase::Build,
-            }]
-        })?;
+        .map_err(|error| vec![build_error(format!("failed to run cargo build: {error}"))])?;
 
     if !output.status.success() {
         let stderr = String::from_utf8_lossy(&output.stderr);
-        return Err(vec![CompileError {
-            message: format!("cargo build failed:\n{stderr}"),
-            phase: CompilePhase::Build,
-        }]);
+        return Err(vec![build_error(format!("cargo build failed:\n{stderr}"))]);
     }
 
     let binary_name = if cfg!(target_os = "windows") {
@@ -75,4 +56,20 @@ pub(super) fn materialize_binary_project(
         .join("target")
         .join("release")
         .join(binary_name))
+}
+
+fn write_project_file(
+    path: &Path,
+    contents: impl AsRef<[u8]>,
+    label: &str,
+) -> Result<(), Vec<CompileError>> {
+    std::fs::write(path, contents)
+        .map_err(|error| vec![build_error(format!("failed to write {label}: {error}"))])
+}
+
+fn build_error(message: String) -> CompileError {
+    CompileError {
+        message,
+        phase: CompilePhase::Build,
+    }
 }
