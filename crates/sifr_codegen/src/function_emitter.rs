@@ -58,10 +58,7 @@ impl RustEmitter {
         }
     }
 
-    pub(super) fn try_lower_structured_nested_function_stmt(
-        &mut self,
-        stmt: &HirStmt,
-    ) -> bool {
+    pub(super) fn try_lower_structured_nested_function_stmt(&mut self, stmt: &HirStmt) -> bool {
         let HirStmt::NestedFunction { func } = stmt else {
             return false;
         };

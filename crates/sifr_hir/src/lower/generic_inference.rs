@@ -12,8 +12,7 @@ pub(super) fn infer_type_var_bindings(
                 bindings.insert(name.clone(), concrete.clone());
             }
         }
-        (Type::List(p_elem), Type::List(a_elem))
-        | (Type::Set(p_elem), Type::Set(a_elem)) => {
+        (Type::List(p_elem), Type::List(a_elem)) | (Type::Set(p_elem), Type::Set(a_elem)) => {
             infer_type_var_bindings(p_elem, a_elem, bindings);
         }
         (Type::Dict(pk, pv), Type::Dict(ak, av)) => {

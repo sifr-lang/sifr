@@ -4,7 +4,7 @@ Status: in_progress
 Started: 2026-03-14
 Phase owner: Codex (GPT-5)
 Source phase: `issues/ad-hoc-python-source-parity-and-builtin-stdlib-surface.md`
-Current active wave: `wave_psp_b2`
+Current active wave: `wave_psp_c1`
 
 ## Execution Rules
 
@@ -18,7 +18,7 @@ Current active wave: `wave_psp_b2`
 - [x] `milestone_psp_1` / `wave_psp_a1`: builtin constructors and callable surface
 - [x] `milestone_psp_2` / `wave_psp_a2`: core object models and builtin semantics
 - [x] `milestone_psp_3` / `wave_psp_b1`: collections objects and ordered helpers
-- [ ] `milestone_psp_3` / `wave_psp_b2`: iterators, functional helpers, and randomness
+- [x] `milestone_psp_3` / `wave_psp_b2`: iterators, functional helpers, and randomness
 - [ ] `milestone_psp_4` / `wave_psp_c1`: structured parsing and serialization
 - [ ] `milestone_psp_4` / `wave_psp_c2`: text, pattern, and formatting modules
 - [ ] `milestone_psp_5` / `wave_psp_d1`: filesystem, paths, and archive surfaces
@@ -66,14 +66,14 @@ Status: done
 
 ### `wave_psp_b2` Iterators, Functional Helpers, and Randomness
 
-Status: in_review
+Status: done
 
 - [x] Harvest `Lib/test/test_itertools.py`, `Lib/test/test_functools.py`, `Lib/test/test_operator.py`, `Lib/test/test_random.py`, and `Lib/test/test_secrets.py`.
 - [x] Close iterator/object/callable parity for `itertools`, `functools`, `operator`, `random`, and `secrets`.
 - [x] Add traceable regressions, demo, and traceability coverage for the closed/adapted surface.
 - [x] Run local validation and record evidence.
 - [x] Open implementation PR and merge the wave body.
-- [ ] Complete external review passes and update this ledger with outcomes.
+- [x] Complete external review passes and update this ledger with outcomes.
 
 ### `wave_psp_c1` Structured Parsing and Serialization
 
@@ -324,7 +324,10 @@ Status: pending
   - `cargo run -q -p sifr -- run demos/wave_psp_b2_iterators_functional_randomness_demo.sifr`
 - Targeted regression validation:
   - `cargo run -q -p sifr -- run crates/sifr/tests/e2e/pass/cpython_itertools.sifr`
+  - `cargo run -q -p sifr -- run crates/sifr/tests/e2e/pass/generic_chain_float.sifr`
+  - `cargo run -q -p sifr -- run crates/sifr/tests/e2e/pass/generic_chain_str.sifr`
   - `cargo run -q -p sifr -- run crates/sifr/tests/e2e/pass/generic_shuffle_str.sifr`
+  - `cargo run -q -p sifr -- run crates/sifr/tests/e2e/pass/itertools_chain_own.sifr`
   - `cargo run -q -p sifr -- run crates/sifr/tests/e2e/pass/phase_psp_b2_iterators_functional_randomness.sifr`
   - `cargo run -q -p sifr -- run crates/sifr/tests/e2e/pass/stdlib_functools.sifr`
   - `cargo run -q -p sifr -- run crates/sifr/tests/e2e/pass/stdlib_operator.sifr`
@@ -408,3 +411,7 @@ Status: pending
   - Reviewer file: `/Users/yaseralnajjar/.codex/worktrees/0761/codebase/reviews/wave-psp-b2-review-pass1.md`
   - Validation result: non-actionable stale review. The notes described the pre-implementation state and incorrectly claimed the merged b2 artifacts, traceability ledger, demo, and PR were absent from current `main`.
   - Fix status: no code changes required.
+- `wave_psp_b2` review pass 2:
+  - Reviewer file: `/Users/yaseralnajjar/.codex/worktrees/0761/codebase/reviews/wave-psp-b2-review-pass2.md`
+  - Validated finding: borrowed aggregate arguments were still packing move-only names into temporary collection literals, which regressed `chain(a, b)` / `chain(a, b, c)` style ownership semantics after the b2 vararg expansion.
+  - Fix status: remediated in PR `#1162`.
