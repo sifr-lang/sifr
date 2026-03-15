@@ -319,4 +319,8 @@ Status: pending
 - `wave_psp_a1` review pass 1:
   - Reviewer file: `/Users/yaseralnajjar/work/sifr/codebase/reviews/wave-psp-a1-review-pass1.md`
   - Validated finding: duplicate `range(stop=...)` positional/keyword collision was accepted when the one-positional form normalized too late in builtin lowering.
-  - Fix status: remediated locally on `codex/python-builtin-std-parity-review-wave-a1-pass1`; PR / merge pending.
+  - Fix status: merged via PR `#1150`.
+- `wave_psp_a1` review pass 2:
+  - Reviewer file: `/Users/yaseralnajjar/work/sifr/codebase/reviews/wave-psp-a1-review-pass2.md`
+  - Validation result: no new actionable finding. The repeated `range(10, stop=20)` bug claim was invalid on the post-`#1150` mainline, and the recommendation to reject all `range(...)` keywords conflicts with the wave's documented `adapted` parity contract in `verification/stdlib/wave_psp_a1_cpython_traceability.md`.
+  - Fix status: no code changes required.
