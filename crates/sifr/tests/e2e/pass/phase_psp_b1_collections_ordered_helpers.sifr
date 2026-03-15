@@ -1,0 +1,49 @@
+from sifr.collections import Counter, deque, from_list
+from sifr.bisect import bisect, bisect_left, insort
+from sifr.heapq import (
+    heapify, heappushpop, heapreplace,
+    _heapify_max, _heappop_max, _heapreplace_max
+)
+
+def main():
+    nums: list[int] = [1, 2, 2, 4, 5]
+    assert bisect_left(nums, 2, lo=1, hi=4) == 1
+    assert bisect(nums, 2, lo=1) == 3
+
+    ordered: list[int] = [1, 3, 5]
+    insort(ordered, 4)
+    assert ordered == [1, 3, 4, 5]
+
+    heap: list[int] = [1, 3, 5]
+    heapify(heap)
+    pushed: int | None = heappushpop(heap, 2)
+    assert pushed == 1
+    assert heap == [2, 3, 5]
+    replaced: int | None = heapreplace(heap, 4)
+    assert replaced == 2
+    assert heap == [3, 4, 5]
+
+    max_heap: list[int] = [3, 1, 2]
+    _heapify_max(max_heap)
+    assert _heappop_max(max_heap) == 3
+    assert _heapreplace_max(max_heap, 6) == 2
+
+    base_words: list[str] = ["apple", "banana", "apple", "banana", "apple"]
+    counts: Counter[str] = from_list(base_words)
+    assert str(counts.most_common()) == "[(\"apple\", 3), (\"banana\", 2)]"
+    seeded_map: dict[str, int] = {"x": 2, "y": 1}
+    seeded: Counter[str] = Counter(seeded_map)
+    assert seeded.get("x") == 2
+
+    q: deque[int] = deque([1, 2, 3], maxlen=4)
+    q.rotate()
+    assert q.to_list() == [3, 1, 2]
+    q.appendleft(0)
+    assert q.to_list() == [0, 3, 1, 2]
+    assert q.count(2) == 1
+    assert q.index(2, 0, None) == 3
+    q.remove(1)
+    assert q.to_list() == [0, 3, 2]
+    copied: deque[int] = q.copy()
+    copied.reverse()
+    assert copied.to_list() == [2, 3, 0]

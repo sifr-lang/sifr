@@ -76,7 +76,7 @@ def main():
     c: Counter[str] = from_list(words)
     print(c.get("apple"))
     print(c.total())
-    top: list[str] = c.most_common(2)
+    top: list[tuple[str, int]] = c.most_common(2)
     print(top)
 
     nums: list[int] = [1, 2, 2, 3, 3, 3]

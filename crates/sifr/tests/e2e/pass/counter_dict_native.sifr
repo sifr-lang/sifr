@@ -20,6 +20,6 @@ def main():
     c.increment("sifr")
     assert str(c.get("sifr")) == '2'
 
-    # Most common top-1 (clear winner: hello with 3)
-    top: list[str] = c.most_common(1)
-    assert str(top) == '["hello"]'
+    # Most common top-1 includes the key/count pair.
+    top: list[tuple[str, int]] = c.most_common(1)
+    assert str(top) == '[(\"hello\", 3)]'

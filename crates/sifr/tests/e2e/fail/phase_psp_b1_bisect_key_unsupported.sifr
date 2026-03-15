@@ -1,0 +1,8 @@
+from sifr.bisect import bisect_left
+
+def identity(x: int) -> int:
+    return x
+
+def main():
+    nums: list[int] = [1, 2, 3]
+    idx: int = bisect_left(nums, 2, key=identity)

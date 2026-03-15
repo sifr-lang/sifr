@@ -17,8 +17,8 @@ use super::decimal_methods::{
 };
 use super::guarded_index::guarded_sequence_index_result_type;
 use super::method_call_args::{
-    lower_method_call_args, validate_dict_update_arg, validate_list_extend_arg,
-    validate_set_iterable_arg,
+    lower_method_call_args, lower_signature_call_args, validate_dict_update_arg,
+    validate_list_extend_arg, validate_set_iterable_arg,
 };
 use super::mutating_methods::reject_immutable_parameter_method_mutation;
 use super::numeric_sentinels::{
@@ -2338,8 +2338,40 @@ pub(super) fn lower_method_call(
 
     let mut object = lower_expr(&attr.value, ctx)?;
     let method_name = attr.attr.to_string();
-
-    let args = lower_method_call_args(object.ty(), &method_name, call, ctx)?;
+    let object_ty_for_args = object.ty().resolve_alias().clone();
+    let args = match &object_ty_for_args {
+        Type::Class { name, methods, .. } => {
+            if let Some((_, ft)) = methods
+                .iter()
+                .find(|(candidate, _)| candidate == &method_name)
+            {
+                let ft = ft.clone();
+                let defaults_key = format!("{name}.{method_name}");
+                let method_defaults = ctx.function_defaults.get(&defaults_key).cloned();
+                lower_signature_call_args(
+                    call,
+                    &format!("{name}.{method_name}"),
+                    &ft,
+                    method_defaults.as_deref(),
+                    ctx,
+                )?
+            } else {
+                lower_method_call_args(object.ty(), &method_name, call, ctx)?
+            }
+        }
+        Type::Protocol { name, methods, .. } => {
+            if let Some((_, ft)) = methods
+                .iter()
+                .find(|(candidate, _)| candidate == &method_name)
+            {
+                let ft = ft.clone();
+                lower_signature_call_args(call, &format!("{name}.{method_name}"), &ft, None, ctx)?
+            } else {
+                lower_method_call_args(object.ty(), &method_name, call, ctx)?
+            }
+        }
+        _ => lower_method_call_args(object.ty(), &method_name, call, ctx)?,
+    };
 
     if matches!(
         method_name.as_str(),

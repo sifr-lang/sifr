@@ -4,7 +4,6 @@ use crate::scope::Scope;
 use sifr_python_ast::{Expr, ExprCall, Stmt};
 use sifr_type_system::{make_union, FunctionType, Type};
 use std::collections::HashMap;
-
 mod arithmetic_warnings;
 mod builtin_calls;
 mod classes;
@@ -16,6 +15,7 @@ mod expressions;
 mod expressions_tests;
 mod function_scopes;
 mod guarded_index;
+mod imported_defaults;
 mod imports;
 mod method_call_args;
 mod mutating_methods;
@@ -127,7 +127,6 @@ pub(super) struct LowerCtx {
     function_scopes: Vec<function_scopes::FunctionScopeState>,
     inferred_binding_hints: Vec<HashMap<String, Type>>,
 }
-
 impl LowerCtx {
     fn new() -> Self {
         Self {
@@ -166,7 +165,6 @@ impl LowerCtx {
             inferred_binding_hints: Vec::new(),
         }
     }
-
     fn warn(&mut self, message: String) {
         self.warnings.push(message);
     }
@@ -522,7 +520,6 @@ fn infer_type_var_bindings(param_ty: &Type, arg_ty: &Type, bindings: &mut HashMa
         _ => {}
     }
 }
-
 /// Result of lowering, including the HIR module and any diagnostics.
 pub struct LoweringResult {
     pub module: HirModule,
@@ -532,7 +529,6 @@ pub struct LoweringResult {
     /// Compiler warnings (non-fatal, printed to stderr)
     pub warnings: Vec<String>,
 }
-
 /// External module definitions that can be imported.
 #[derive(Debug, Clone, Default)]
 pub struct ExternalDefs {
@@ -560,19 +556,16 @@ pub struct ExternalDefs {
     pub function_defaults:
         std::collections::HashMap<String, std::collections::HashMap<String, Vec<(usize, HirExpr)>>>,
 }
-
 /// Lower a parsed module AST into a typed HIR module.
 pub fn lower_module(stmts: &[Stmt]) -> Result<LoweringResult, Vec<LoweringError>> {
     lower_module_with_externals(stmts, &ExternalDefs::default())
 }
-
 /// Lower a stdlib .sifr module. Allows _sifr.* intrinsic imports.
 pub fn lower_module_stdlib(stmts: &[Stmt]) -> Result<LoweringResult, Vec<LoweringError>> {
     let mut ctx = LowerCtx::new();
     ctx.allow_intrinsic_imports = true;
     lower_module_impl(stmts, &ExternalDefs::default(), ctx)
 }
-
 /// Lower a stdlib .sifr module with external definitions (for inter-stdlib deps).
 pub fn lower_module_stdlib_with_externals(
     stmts: &[Stmt],
@@ -582,7 +575,6 @@ pub fn lower_module_stdlib_with_externals(
     ctx.allow_intrinsic_imports = true;
     lower_module_impl(stmts, externals, ctx)
 }
-
 /// Lower a parsed module AST into a typed HIR module, with external module definitions.
 pub fn lower_module_with_externals(
     stmts: &[Stmt],
@@ -591,7 +583,6 @@ pub fn lower_module_with_externals(
     let ctx = LowerCtx::new();
     lower_module_impl(stmts, externals, ctx)
 }
-
 /// Internal implementation of module lowering.
 fn lower_module_impl(
     stmts: &[Stmt],
@@ -601,7 +592,6 @@ fn lower_module_impl(
     ctx.externals = externals.clone();
     // Register built-in functions
     register_builtins(&mut ctx);
-
     // Pass 0: Pre-register all class names as forward-reference placeholders.
     // This allows function signatures and other classes to reference classes
     // defined later in the file (e.g., ListNode, TreeNode, Node).
@@ -890,10 +880,12 @@ fn lower_module_impl(
                                 if let Some(module_defaults) =
                                     externals.function_defaults.get(&stdlib_module_key)
                                 {
-                                    if let Some(defaults) = module_defaults.get(name) {
-                                        ctx.function_defaults
-                                            .insert(local.clone(), defaults.clone());
-                                    }
+                                    imported_defaults::import_callable_defaults(
+                                        &mut ctx,
+                                        module_defaults,
+                                        name,
+                                        &local,
+                                    );
                                 }
                                 found = true;
                                 // Import generic function info and bounds
@@ -961,10 +953,12 @@ fn lower_module_impl(
                                         if let Some(module_defaults) =
                                             externals.function_defaults.get(&stdlib_module_key)
                                         {
-                                            if let Some(defaults) = module_defaults.get(name) {
-                                                ctx.function_defaults
-                                                    .insert(local.clone(), defaults.clone());
-                                            }
+                                            imported_defaults::import_class_method_defaults(
+                                                &mut ctx,
+                                                module_defaults,
+                                                name,
+                                                &local,
+                                            );
                                         }
                                     }
                                     // Import class type parameter bounds
@@ -1033,10 +1027,12 @@ fn lower_module_impl(
                         ctx.functions.insert(local.clone(), ft.clone());
                         if let Some(module_defaults) = externals.function_defaults.get(&module_name)
                         {
-                            if let Some(defaults) = module_defaults.get(name) {
-                                ctx.function_defaults
-                                    .insert(local.clone(), defaults.clone());
-                            }
+                            imported_defaults::import_callable_defaults(
+                                &mut ctx,
+                                module_defaults,
+                                name,
+                                &local,
+                            );
                         }
                         found = true;
                     }
@@ -1087,10 +1083,12 @@ fn lower_module_impl(
                                 if let Some(module_defaults) =
                                     externals.function_defaults.get(&module_name)
                                 {
-                                    if let Some(defaults) = module_defaults.get(name) {
-                                        ctx.function_defaults
-                                            .insert(local.clone(), defaults.clone());
-                                    }
+                                    imported_defaults::import_class_method_defaults(
+                                        &mut ctx,
+                                        module_defaults,
+                                        name,
+                                        &local,
+                                    );
                                 }
                             }
                             found = true;

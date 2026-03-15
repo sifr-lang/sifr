@@ -11,52 +11,78 @@
 # Functional sorted-insert (backward compatibility):
 #   insort_left_copy(a, x) -> list   -- returns new sorted list
 #   insort_right_copy(a, x) -> list  -- returns new sorted list
-def bisect_left[T: Comparable](a: list[T], x: T) -> int:
-    lo: int = 0
-    hi: int = len(a)
-    while lo < hi:
-        mid: int = (lo + hi) // 2
+def bisect_left[T: Comparable](a: list[T], x: T, lo: int = 0, hi: int | None = None) -> int:
+    left: int = lo
+    if left < 0:
+        left = 0
+    right: int = len(a)
+    if hi is None:
+        right = len(a)
+    elif hi < 0:
+        right = 0
+    elif hi > len(a):
+        right = len(a)
+    else:
+        right = hi
+    while left < right:
+        mid: int = (left + right) // 2
         val: T | None = a[mid]
         if val is not None:
             if val < x:
-                lo = mid + 1
+                left = mid + 1
             else:
-                hi = mid
+                right = mid
         else:
-            lo = mid + 1
-    return lo
+            left = mid + 1
+    return left
 
-def bisect_right[T: Comparable](a: list[T], x: T) -> int:
-    lo: int = 0
-    hi: int = len(a)
-    while lo < hi:
-        mid: int = (lo + hi) // 2
+def bisect_right[T: Comparable](a: list[T], x: T, lo: int = 0, hi: int | None = None) -> int:
+    left: int = lo
+    if left < 0:
+        left = 0
+    right: int = len(a)
+    if hi is None:
+        right = len(a)
+    elif hi < 0:
+        right = 0
+    elif hi > len(a):
+        right = len(a)
+    else:
+        right = hi
+    while left < right:
+        mid: int = (left + right) // 2
         val: T | None = a[mid]
         if val is not None:
             if x < val:
-                hi = mid
+                right = mid
             else:
-                lo = mid + 1
+                left = mid + 1
         else:
-            lo = mid + 1
-    return lo
+            left = mid + 1
+    return left
 
 # ── In-place API (mut parameters) ────────────────────────────────────────────
 
-def insort_left[T: Comparable](mut a: list[T], x: T) -> None:
+def bisect[T: Comparable](a: list[T], x: T, lo: int = 0, hi: int | None = None) -> int:
+    return bisect_right(a, x, lo, hi)
+
+def insort_left[T: Comparable](mut a: list[T], x: T, lo: int = 0, hi: int | None = None) -> None:
     # Insert x into sorted list a in-place (left/stable position). O(n) time.
-    pos: int = bisect_left(a, x)
+    pos: int = bisect_left(a, x, lo, hi)
     a.insert(pos, x)
 
-def insort_right[T: Comparable](mut a: list[T], x: T) -> None:
+def insort_right[T: Comparable](mut a: list[T], x: T, lo: int = 0, hi: int | None = None) -> None:
     # Insert x into sorted list a in-place (right position). O(n) time.
-    pos: int = bisect_right(a, x)
+    pos: int = bisect_right(a, x, lo, hi)
     a.insert(pos, x)
+
+def insort[T: Comparable](mut a: list[T], x: T, lo: int = 0, hi: int | None = None) -> None:
+    insort_right(a, x, lo, hi)
 
 # ── Functional API (backward compatibility) ───────────────────────────────────
 
-def insort_left_copy[T: Comparable](a: list[T], x: T) -> list[T]:
-    pos: int = bisect_left(a, x)
+def insort_left_copy[T: Comparable](a: list[T], x: T, lo: int = 0, hi: int | None = None) -> list[T]:
+    pos: int = bisect_left(a, x, lo, hi)
     result: list[T] = []
     i: int = 0
     while i < len(a):
@@ -70,8 +96,8 @@ def insort_left_copy[T: Comparable](a: list[T], x: T) -> list[T]:
         result.append(x)
     return result
 
-def insort_right_copy[T: Comparable](a: list[T], x: T) -> list[T]:
-    pos: int = bisect_right(a, x)
+def insort_right_copy[T: Comparable](a: list[T], x: T, lo: int = 0, hi: int | None = None) -> list[T]:
+    pos: int = bisect_right(a, x, lo, hi)
     result: list[T] = []
     i: int = 0
     while i < len(a):

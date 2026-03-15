@@ -33,7 +33,7 @@ def collect_counter_actual() -> list[bool]:
     c: Counter[str] = from_list(["a", "b", "a", "c", "a", "b"])
     actual.append(c.get("a") == 3)
     actual.append(c.total() == 6)
-    actual.append(str(c.most_common(2)) == "[\"a\", \"b\"]")
+    actual.append(str(c.most_common(2)) == "[(\"a\", 3), (\"b\", 2)]")
     c.increment("b")
     actual.append(c.get("b") == 3)
 

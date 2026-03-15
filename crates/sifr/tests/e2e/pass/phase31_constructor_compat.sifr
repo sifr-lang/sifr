@@ -1,3 +1,4 @@
+from sifr.collections import deque
 from sifr.test import assert_bool_vector_eq
 
 def collect_actual() -> list[bool]:
@@ -11,14 +12,17 @@ def collect_actual() -> list[bool]:
     seen.add("cc")
     actual.append("cc" in seen)
 
-    q = deque(["x"])
+    q: deque[str] = deque(["x"])
     q.append("y")
-    actual.append(q.popleft() == "x")
-    actual.append(q.popleft() == "y")
+    first: str | None = q.popleft()
+    second: str | None = q.popleft()
+    actual.append(first is not None and first == "x")
+    actual.append(second is not None and second == "y")
 
-    bounded = deque([1, 2, 3, 4], maxlen=3)
+    bounded: deque[int] = deque([1, 2, 3, 4], maxlen=3)
     actual.append(bounded.len() == 3)
-    actual.append(bounded.popleft() == 2)
+    bounded_first: int | None = bounded.popleft()
+    actual.append(bounded_first is not None and bounded_first == 2)
 
     return actual
 

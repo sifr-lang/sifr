@@ -9,11 +9,10 @@ def main():
     assert_eq(c.get("cherry"), 1)
     assert_eq(c.total(), 6)
 
-    top: list[str] = c.most_common(2)
-    assert_eq(len(top), 2)
+    top: list[tuple[str, int]] = c.most_common(2)
+    assert str(top) == '[(\"apple\", 3), (\"banana\", 2)]'
 
     elems: list[str] = c.elements()
     assert_eq(len(elems), 6)
 
     assert str("generic_counter_custom_class: passed") == 'generic_counter_custom_class: passed'
-
