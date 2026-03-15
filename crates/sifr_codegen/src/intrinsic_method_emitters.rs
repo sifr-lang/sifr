@@ -2831,6 +2831,10 @@ impl RustEmitter {
                     && (param_ty.ownership() != sifr_type_system::OwnershipKind::Copy
                         || matches!(resolved_param, Type::TypeVar(_) | Type::Any)));
 
+            if requires_shared_borrow || requires_mut_borrow {
+                lowered_arg = self.clone_moved_names_in_borrowed_aggregate(arg, lowered_arg);
+            }
+
             if requires_shared_borrow
                 && !self.arg_is_already_borrowed_for_registry_call(arg, &lowered_arg)
             {
@@ -3040,6 +3044,45 @@ impl RustEmitter {
             };
         }
         lowered_arg
+    }
+
+    pub(crate) fn clone_moved_names_in_borrowed_aggregate(
+        &self,
+        arg: &HirExpr,
+        lowered: crate::RustExpr,
+    ) -> crate::RustExpr {
+        match (arg, lowered) {
+            (HirExpr::Name { name, ty }, lowered_expr)
+                if ty.ownership() == sifr_type_system::OwnershipKind::Move
+                    && !self.borrowed_params.contains(name)
+                    && !self.mut_borrowed_params.contains(name) =>
+            {
+                crate::RustExpr::Clone(Box::new(lowered_expr))
+            }
+            (HirExpr::ListLiteral { elements, .. }, crate::RustExpr::Vec(items)) => {
+                crate::RustExpr::Vec(
+                    elements
+                        .iter()
+                        .zip(items)
+                        .map(|(element, item)| {
+                            self.clone_moved_names_in_borrowed_aggregate(element, item)
+                        })
+                        .collect(),
+                )
+            }
+            (HirExpr::TupleLiteral { elements, .. }, crate::RustExpr::Tuple(items)) => {
+                crate::RustExpr::Tuple(
+                    elements
+                        .iter()
+                        .zip(items)
+                        .map(|(element, item)| {
+                            self.clone_moved_names_in_borrowed_aggregate(element, item)
+                        })
+                        .collect(),
+                )
+            }
+            (_, lowered_expr) => lowered_expr,
+        }
     }
 
     fn arg_is_already_borrowed_for_registry_call(
