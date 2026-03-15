@@ -328,3 +328,7 @@ Status: pending
   - Reviewer file: `/Users/yaseralnajjar/work/sifr/codebase/reviews/wave-psp-a2-review-pass1.md`
   - Validation result: approved with no actionable implementation issue. The only noted verification-hardening interruption was an environment-level disk-space concern, not a wave-specific regression.
   - Fix status: no code changes required.
+- `wave_psp_a2` review pass 2:
+  - Reviewer file: `/Users/yaseralnajjar/work/sifr/codebase/reviews/wave-psp-a2-review-pass2.md`
+  - Validated finding: the wave traceability doc did not explicitly call out that `list.index(start=/stop=)`, `tuple.index(start=)`, `dict.pop(default=)`, and `dict.get(default=)` are intentional keyword-binding adaptations over CPython's positional-only API.
+  - Fix status: documentation tightened in `verification/stdlib/wave_psp_a2_cpython_traceability.md`; code behavior unchanged.
