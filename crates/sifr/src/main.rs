@@ -578,6 +578,34 @@ mod tests {
         dir
     }
 
+    struct TestProject {
+        dir: PathBuf,
+    }
+
+    impl TestProject {
+        fn new(name: &str) -> Self {
+            Self {
+                dir: mktemp_dir(name),
+            }
+        }
+
+        /// Writes a test fixture and creates any missing parent directories first.
+        fn write(&self, relative_path: &str, contents: &str, failure_message: &str) -> PathBuf {
+            let path = self.dir.join(relative_path);
+            if let Some(parent) = path.parent() {
+                std::fs::create_dir_all(parent).expect("test fixture parent should exist");
+            }
+            std::fs::write(&path, contents).expect(failure_message);
+            path
+        }
+    }
+
+    impl Drop for TestProject {
+        fn drop(&mut self) {
+            let _ = std::fs::remove_dir_all(&self.dir);
+        }
+    }
+
     #[test]
     fn test_invocation_workspace_create_returns_unique_paths() {
         let first = InvocationWorkspace::create("sifr_run_workspace")
@@ -591,254 +619,255 @@ mod tests {
 
     #[test]
     fn test_resolve_compilation_mode_project_for_main_with_siblings() {
-        let dir = mktemp_dir("project");
-        let main = dir.join("main.sifr");
-        let helper = dir.join("helper.sifr");
-        std::fs::write(
-            &main,
+        let project = TestProject::new("project");
+        let main = project.write(
+            "main.sifr",
             "from helper import value\n\ndef main():\n    print(value())\n",
-        )
-        .expect("main file should be written");
-        std::fs::write(&helper, "def helper() -> int:\n    return 1\n")
-            .expect("helper file should be written");
+            "main file should be written",
+        );
+        project.write(
+            "helper.sifr",
+            "def helper() -> int:\n    return 1\n",
+            "helper file should be written",
+        );
 
         assert_eq!(resolve_compilation_mode(&main), CompilationMode::Project);
-        let _ = std::fs::remove_dir_all(dir);
     }
 
     #[test]
     fn test_resolve_compilation_mode_single_file_for_non_main_entry() {
-        let dir = mktemp_dir("single");
-        let app = dir.join("app.sifr");
-        let helper = dir.join("helper.sifr");
-        std::fs::write(&app, "def main():\n    pass\n").expect("app file should be written");
-        std::fs::write(&helper, "def helper() -> int:\n    return 1\n")
-            .expect("helper file should be written");
+        let project = TestProject::new("single");
+        let app = project.write(
+            "app.sifr",
+            "def main():\n    pass\n",
+            "app file should be written",
+        );
+        project.write(
+            "helper.sifr",
+            "def helper() -> int:\n    return 1\n",
+            "helper file should be written",
+        );
 
         assert_eq!(resolve_compilation_mode(&app), CompilationMode::SingleFile);
-        let _ = std::fs::remove_dir_all(dir);
     }
 
     #[test]
     fn test_resolve_compilation_mode_single_file_for_main_without_local_imports() {
-        let dir = mktemp_dir("main_no_imports");
-        let main = dir.join("main.sifr");
-        let scratch = dir.join("scratch.sifr");
-        std::fs::write(&main, "def main():\n    print(\"ok\")\n")
-            .expect("main file should be written");
-        std::fs::write(&scratch, "def nope(:\n").expect("scratch file should be written");
+        let project = TestProject::new("main_no_imports");
+        let main = project.write(
+            "main.sifr",
+            "def main():\n    print(\"ok\")\n",
+            "main file should be written",
+        );
+        project.write(
+            "scratch.sifr",
+            "def nope(:\n",
+            "scratch file should be written",
+        );
 
         assert_eq!(resolve_compilation_mode(&main), CompilationMode::SingleFile);
-        let _ = std::fs::remove_dir_all(dir);
     }
 
     #[test]
     fn test_resolve_compilation_mode_single_file_for_stdlib_only_imports() {
-        let dir = mktemp_dir("main_stdlib_only");
-        let main = dir.join("main.sifr");
-        let helper = dir.join("helper.sifr");
-        std::fs::write(
-            &main,
+        let project = TestProject::new("main_stdlib_only");
+        let main = project.write(
+            "main.sifr",
             "from sifr.math import floor\n\ndef main():\n    print(floor(3.9))\n",
-        )
-        .expect("main file should be written");
-        std::fs::write(&helper, "def helper() -> int:\n    return 1\n")
-            .expect("helper file should be written");
+            "main file should be written",
+        );
+        project.write(
+            "helper.sifr",
+            "def helper() -> int:\n    return 1\n",
+            "helper file should be written",
+        );
 
         assert_eq!(resolve_compilation_mode(&main), CompilationMode::SingleFile);
-        let _ = std::fs::remove_dir_all(dir);
     }
 
     #[test]
     fn test_resolve_compilation_mode_single_file_for_missing_local_module() {
-        let dir = mktemp_dir("missing_local");
-        let main = dir.join("main.sifr");
-        std::fs::write(
-            &main,
+        let project = TestProject::new("missing_local");
+        let main = project.write(
+            "main.sifr",
             "from helper import value\n\ndef main():\n    print(value())\n",
-        )
-        .expect("main file should be written");
+            "main file should be written",
+        );
 
         assert_eq!(resolve_compilation_mode(&main), CompilationMode::SingleFile);
-        let _ = std::fs::remove_dir_all(dir);
     }
 
     #[test]
     fn test_resolve_compilation_mode_single_file_for_regular_import_with_local_module() {
-        let dir = mktemp_dir("regular_import_local_module");
-        let main = dir.join("main.sifr");
-        let helper = dir.join("helper.sifr");
-        std::fs::write(&main, "import helper\n\ndef main():\n    print(\"ok\")\n")
-            .expect("main file should be written");
-        std::fs::write(&helper, "def value() -> int:\n    return 1\n")
-            .expect("helper file should be written");
+        let project = TestProject::new("regular_import_local_module");
+        let main = project.write(
+            "main.sifr",
+            "import helper\n\ndef main():\n    print(\"ok\")\n",
+            "main file should be written",
+        );
+        project.write(
+            "helper.sifr",
+            "def value() -> int:\n    return 1\n",
+            "helper file should be written",
+        );
 
         assert_eq!(resolve_compilation_mode(&main), CompilationMode::SingleFile);
-        let _ = std::fs::remove_dir_all(dir);
     }
 
     #[test]
     fn test_resolve_compilation_mode_single_file_for_invalid_main_source() {
-        let dir = mktemp_dir("invalid_main");
-        let main = dir.join("main.sifr");
-        let helper = dir.join("helper.sifr");
-        std::fs::write(&main, "def main(:\n").expect("main file should be written");
-        std::fs::write(&helper, "def helper() -> int:\n    return 1\n")
-            .expect("helper file should be written");
+        let project = TestProject::new("invalid_main");
+        let main = project.write("main.sifr", "def main(:\n", "main file should be written");
+        project.write(
+            "helper.sifr",
+            "def helper() -> int:\n    return 1\n",
+            "helper file should be written",
+        );
 
         assert_eq!(resolve_compilation_mode(&main), CompilationMode::SingleFile);
-        let _ = std::fs::remove_dir_all(dir);
     }
 
     #[test]
     fn test_resolve_compilation_mode_single_file_for_typing_import() {
-        let dir = mktemp_dir("typing_import");
-        let main = dir.join("main.sifr");
-        let helper = dir.join("helper.sifr");
-        std::fs::write(
-            &main,
+        let project = TestProject::new("typing_import");
+        let main = project.write(
+            "main.sifr",
             "from typing import List\n\ndef main():\n    values: List[int] = [1]\n    print(values)\n",
-        )
-        .expect("main file should be written");
-        std::fs::write(&helper, "def helper() -> int:\n    return 1\n")
-            .expect("helper file should be written");
+            "main file should be written",
+        );
+        project.write(
+            "helper.sifr",
+            "def helper() -> int:\n    return 1\n",
+            "helper file should be written",
+        );
 
         assert_eq!(resolve_compilation_mode(&main), CompilationMode::SingleFile);
-        let _ = std::fs::remove_dir_all(dir);
     }
 
     #[test]
     fn test_resolve_compilation_mode_single_file_for_typing_import_with_local_typing_file() {
-        let dir = mktemp_dir("typing_import_local_file");
-        let main = dir.join("main.sifr");
-        let typing_local = dir.join("typing.sifr");
-        std::fs::write(
-            &main,
+        let project = TestProject::new("typing_import_local_file");
+        let main = project.write(
+            "main.sifr",
             "from typing import List\n\ndef main():\n    values: List[int] = [1]\n    print(values)\n",
-        )
-        .expect("main file should be written");
-        std::fs::write(&typing_local, "def local() -> int:\n    return 1\n")
-            .expect("typing file should be written");
+            "main file should be written",
+        );
+        project.write(
+            "typing.sifr",
+            "def local() -> int:\n    return 1\n",
+            "typing file should be written",
+        );
 
         assert_eq!(resolve_compilation_mode(&main), CompilationMode::SingleFile);
-        let _ = std::fs::remove_dir_all(dir);
     }
 
     #[test]
     fn test_resolve_compilation_mode_single_file_for_enum_import() {
-        let dir = mktemp_dir("enum_import");
-        let main = dir.join("main.sifr");
-        let helper = dir.join("helper.sifr");
-        std::fs::write(
-            &main,
+        let project = TestProject::new("enum_import");
+        let main = project.write(
+            "main.sifr",
             "from enum import Enum\n\ndef main():\n    print(\"ok\")\n",
-        )
-        .expect("main file should be written");
-        std::fs::write(&helper, "def helper() -> int:\n    return 1\n")
-            .expect("helper file should be written");
+            "main file should be written",
+        );
+        project.write(
+            "helper.sifr",
+            "def helper() -> int:\n    return 1\n",
+            "helper file should be written",
+        );
 
         assert_eq!(resolve_compilation_mode(&main), CompilationMode::SingleFile);
-        let _ = std::fs::remove_dir_all(dir);
     }
 
     #[test]
     fn test_resolve_compilation_mode_single_file_for_enum_import_with_local_enum_file() {
-        let dir = mktemp_dir("enum_import_local_file");
-        let main = dir.join("main.sifr");
-        let enum_local = dir.join("enum.sifr");
-        std::fs::write(
-            &main,
+        let project = TestProject::new("enum_import_local_file");
+        let main = project.write(
+            "main.sifr",
             "from enum import Enum\n\ndef main():\n    print(\"ok\")\n",
-        )
-        .expect("main file should be written");
-        std::fs::write(&enum_local, "def local() -> int:\n    return 1\n")
-            .expect("enum file should be written");
+            "main file should be written",
+        );
+        project.write(
+            "enum.sifr",
+            "def local() -> int:\n    return 1\n",
+            "enum file should be written",
+        );
 
         assert_eq!(resolve_compilation_mode(&main), CompilationMode::SingleFile);
-        let _ = std::fs::remove_dir_all(dir);
     }
 
     #[test]
     fn test_resolve_compilation_mode_single_file_for_package_init_import() {
-        let dir = mktemp_dir("pkg_import");
-        let main = dir.join("main.sifr");
-        let pkg_dir = dir.join("pkg");
-        std::fs::create_dir_all(&pkg_dir).expect("pkg dir should be created");
-        std::fs::write(
-            &main,
+        let project = TestProject::new("pkg_import");
+        let main = project.write(
+            "main.sifr",
             "from pkg import value\n\ndef main():\n    print(value())\n",
-        )
-        .expect("main file should be written");
-        std::fs::write(
-            pkg_dir.join("__init__.sifr"),
+            "main file should be written",
+        );
+        project.write(
+            "pkg/__init__.sifr",
             "def value() -> int:\n    return 1\n",
-        )
-        .expect("pkg init should be written");
+            "pkg init should be written",
+        );
 
         assert_eq!(resolve_compilation_mode(&main), CompilationMode::SingleFile);
-        let _ = std::fs::remove_dir_all(dir);
     }
 
     #[test]
     fn test_resolve_compilation_mode_project_for_relative_import_with_sibling() {
-        let dir = mktemp_dir("relative_import");
-        let main = dir.join("main.sifr");
-        let helper = dir.join("helper.sifr");
-        std::fs::write(
-            &main,
+        let project = TestProject::new("relative_import");
+        let main = project.write(
+            "main.sifr",
             "from .helper import value\n\ndef main():\n    print(value())\n",
-        )
-        .expect("main file should be written");
-        std::fs::write(&helper, "def value() -> int:\n    return 1\n")
-            .expect("helper file should be written");
+            "main file should be written",
+        );
+        project.write(
+            "helper.sifr",
+            "def value() -> int:\n    return 1\n",
+            "helper file should be written",
+        );
 
         assert_eq!(resolve_compilation_mode(&main), CompilationMode::Project);
-        let _ = std::fs::remove_dir_all(dir);
     }
 
     #[test]
     fn test_resolve_compilation_mode_single_file_for_relative_import_without_sibling() {
-        let dir = mktemp_dir("relative_import_missing_sibling");
-        let main = dir.join("main.sifr");
-        std::fs::write(
-            &main,
+        let project = TestProject::new("relative_import_missing_sibling");
+        let main = project.write(
+            "main.sifr",
             "from .helper import value\n\ndef main():\n    print(value())\n",
-        )
-        .expect("main file should be written");
+            "main file should be written",
+        );
 
         assert_eq!(resolve_compilation_mode(&main), CompilationMode::SingleFile);
-        let _ = std::fs::remove_dir_all(dir);
     }
 
     #[test]
     fn test_resolve_compilation_mode_single_file_for_multi_level_relative_import() {
-        let dir = mktemp_dir("relative_import_multi_level");
-        let main = dir.join("main.sifr");
-        let helper = dir.join("helper.sifr");
-        std::fs::write(
-            &main,
+        let project = TestProject::new("relative_import_multi_level");
+        let main = project.write(
+            "main.sifr",
             "from ..helper import value\n\ndef main():\n    print(value())\n",
-        )
-        .expect("main file should be written");
-        std::fs::write(&helper, "def value() -> int:\n    return 1\n")
-            .expect("helper file should be written");
+            "main file should be written",
+        );
+        project.write(
+            "helper.sifr",
+            "def value() -> int:\n    return 1\n",
+            "helper file should be written",
+        );
 
         assert_eq!(resolve_compilation_mode(&main), CompilationMode::SingleFile);
-        let _ = std::fs::remove_dir_all(dir);
     }
 
     #[test]
     fn test_resolve_compilation_mode_single_file_for_bare_relative_import() {
-        let dir = mktemp_dir("relative_import_bare");
-        let main = dir.join("main.sifr");
-        std::fs::write(
-            &main,
+        let project = TestProject::new("relative_import_bare");
+        let main = project.write(
+            "main.sifr",
             "from . import value\n\ndef main():\n    print(value)\n",
-        )
-        .expect("main file should be written");
+            "main file should be written",
+        );
 
         assert_eq!(resolve_compilation_mode(&main), CompilationMode::SingleFile);
-        let _ = std::fs::remove_dir_all(dir);
     }
 
     #[test]
