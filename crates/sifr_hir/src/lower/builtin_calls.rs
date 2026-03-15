@@ -591,13 +591,21 @@ pub(super) fn lower_range_call(call: &ExprCall, ctx: &mut LowerCtx) -> Option<Hi
     let mut stop_expr = None;
     let mut step_expr = None;
 
-    for (index, arg) in call.arguments.args.iter().enumerate() {
-        match index {
-            0 => start_expr = Some(arg),
-            1 => stop_expr = Some(arg),
-            2 => step_expr = Some(arg),
-            _ => unreachable!(),
+    match call.arguments.args.len() {
+        0 => {}
+        1 => {
+            stop_expr = Some(&call.arguments.args[0]);
         }
+        2 => {
+            start_expr = Some(&call.arguments.args[0]);
+            stop_expr = Some(&call.arguments.args[1]);
+        }
+        3 => {
+            start_expr = Some(&call.arguments.args[0]);
+            stop_expr = Some(&call.arguments.args[1]);
+            step_expr = Some(&call.arguments.args[2]);
+        }
+        _ => unreachable!(),
     }
 
     for keyword in &call.arguments.keywords {
@@ -645,17 +653,12 @@ pub(super) fn lower_range_call(call: &ExprCall, ctx: &mut LowerCtx) -> Option<Hi
         }
     }
 
-    let (start_raw, stop_raw, step_raw) = match (start_expr, stop_expr, step_expr) {
-        (Some(stop), None, None) => (None, Some(stop), None),
-        (start, stop, step) => (start, stop, step),
-    };
-
-    let Some(stop_raw) = stop_raw else {
+    let Some(stop_raw) = stop_expr else {
         ctx.error("range() missing required argument 'stop'".to_string());
         return None;
     };
 
-    let start = if let Some(raw) = start_raw {
+    let start = if let Some(raw) = start_expr {
         let lowered = lower_expr(raw, ctx)?;
         if lowered.ty() != &Type::Int {
             ctx.error(format!(
@@ -676,7 +679,7 @@ pub(super) fn lower_range_call(call: &ExprCall, ctx: &mut LowerCtx) -> Option<Hi
         ));
         return None;
     }
-    let step = if let Some(raw) = step_raw {
+    let step = if let Some(raw) = step_expr {
         let lowered = lower_expr(raw, ctx)?;
         if lowered.ty() != &Type::Int {
             ctx.error(format!(

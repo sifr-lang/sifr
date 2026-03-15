@@ -143,6 +143,7 @@ Status: pending
   - `crates/sifr_codegen/src/lower_expr.rs`
 - Added wave-specific regression/demo/traceability artifacts:
   - `crates/sifr/tests/e2e/pass/phase_psp_a1_builtin_callable_surface.sifr`
+  - `crates/sifr/tests/e2e/fail/phase_psp_a1_range_duplicate_stop_keyword.sifr`
   - `crates/sifr/tests/e2e/fail/phase_psp_a1_sorted_unexpected_keyword.sifr`
   - `crates/sifr/tests/e2e/fail/phase_psp_a1_map_callable_arity_mismatch.sifr`
   - `crates/sifr/tests/e2e/fail/phase_psp_a1_tuple_dynamic_list_shape.sifr`
@@ -152,6 +153,7 @@ Status: pending
   - `cargo run -q -p sifr -- run demos/wave_psp_a1_builtin_callable_surface_demo.sifr`
 - Targeted regression validation:
   - `cargo run -q -p sifr -- run crates/sifr/tests/e2e/pass/phase_psp_a1_builtin_callable_surface.sifr`
+  - `cargo run -q -p sifr -- check crates/sifr/tests/e2e/fail/phase_psp_a1_range_duplicate_stop_keyword.sifr`
   - `cargo run -q -p sifr -- check crates/sifr/tests/e2e/fail/phase_psp_a1_sorted_unexpected_keyword.sifr`
   - `cargo run -q -p sifr -- check crates/sifr/tests/e2e/fail/phase_psp_a1_map_callable_arity_mismatch.sifr`
   - `cargo run -q -p sifr -- check crates/sifr/tests/e2e/fail/phase_psp_a1_tuple_dynamic_list_shape.sifr`
@@ -314,4 +316,7 @@ Status: pending
 
 ## External Review Ledger
 
-- Pending.
+- `wave_psp_a1` review pass 1:
+  - Reviewer file: `/Users/yaseralnajjar/work/sifr/codebase/reviews/wave-psp-a1-review-pass1.md`
+  - Validated finding: duplicate `range(stop=...)` positional/keyword collision was accepted when the one-positional form normalized too late in builtin lowering.
+  - Fix status: remediated locally on `codex/python-builtin-std-parity-review-wave-a1-pass1`; PR / merge pending.
