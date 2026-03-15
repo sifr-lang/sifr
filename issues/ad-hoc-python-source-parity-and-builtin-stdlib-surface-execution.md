@@ -414,4 +414,4 @@ Status: pending
 - `wave_psp_b2` review pass 2:
   - Reviewer file: `/Users/yaseralnajjar/.codex/worktrees/0761/codebase/reviews/wave-psp-b2-review-pass2.md`
   - Validated finding: borrowed aggregate arguments were still packing move-only names into temporary collection literals, which regressed `chain(a, b)` / `chain(a, b, c)` style ownership semantics after the b2 vararg expansion.
-  - Fix status: remediated in the current pass-2 review branch; merge pending.
+  - Fix status: remediated in PR `#1162`.
