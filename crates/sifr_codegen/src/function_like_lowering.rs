@@ -1,0 +1,96 @@
+use crate::helpers::collect_mutated_vars_with_sigs;
+use crate::{
+    is_simple_stmt_candidate, try_lower_simple_stmt_with_scope_result, ClassScope, RustEmitter,
+    RustStmt, ScopeContext,
+};
+use sifr_hir::{HirFunction, HirStmt};
+
+impl RustEmitter {
+    pub(super) fn lower_function_like_body<F>(
+        &mut self,
+        func: &HirFunction,
+        missing_panic_message: &str,
+        failed_panic_message: &str,
+        mut fallback: F,
+    ) -> Vec<RustStmt>
+    where
+        F: FnMut(&mut Self, &HirStmt) -> Option<Vec<RustStmt>>,
+    {
+        let saved_return_type = self.current_return_type.clone();
+        let saved_mutated_vars = self.mutated_vars.clone();
+        let saved_borrowed_params = self.borrowed_params.clone();
+        let saved_mut_borrowed_params = self.mut_borrowed_params.clone();
+
+        self.current_return_type = Some(func.return_type.clone());
+        self.mutated_vars = collect_mutated_vars_with_sigs(&func.body, &self.func_signatures);
+        self.borrowed_params.clear();
+        self.mut_borrowed_params.clear();
+        for param in &func.params {
+            if param.convention.is_shared_borrow()
+                && param.ty.ownership() != sifr_type_system::OwnershipKind::Copy
+            {
+                self.borrowed_params.insert(param.name.clone());
+            }
+            if param.convention.is_mut_borrow()
+                && param.ty.ownership() != sifr_type_system::OwnershipKind::Copy
+            {
+                self.mut_borrowed_params.insert(param.name.clone());
+            }
+        }
+
+        let scope_ctx = ScopeContext {
+            function_return_type: self.current_return_type.clone(),
+            in_generator_closure: false,
+            in_display_impl: false,
+            in_loop_with_else: false,
+            class_scope: ClassScope::Inside,
+        };
+
+        let mut lowered_body = Vec::new();
+        for stmt in &func.body {
+            self.lowering_stats.stmt_total += 1;
+            if is_simple_stmt_candidate(stmt) {
+                self.lowering_stats.stmt_candidate_total += 1;
+            }
+            match try_lower_simple_stmt_with_scope_result(
+                stmt,
+                &self.mutated_vars,
+                &self.borrowed_params,
+                &scope_ctx,
+            ) {
+                Ok(Some(lowered)) => {
+                    self.lowering_stats.expr_candidate_total += 1;
+                    self.lowering_stats.expr_candidate_structured += 1;
+                    self.lowering_stats.stmt_structured += 1;
+                    self.lowering_stats.stmt_candidate_structured += 1;
+                    lowered_body.extend(
+                        lowered
+                            .into_iter()
+                            .map(|stmt| self.rewrite_stdlib_constant_idents_in_stmt(stmt)),
+                    );
+                }
+                Ok(None) => {
+                    if let Some(lowered) = fallback(self, stmt) {
+                        self.lowering_stats.expr_candidate_total += 1;
+                        self.lowering_stats.expr_candidate_structured += 1;
+                        self.lowering_stats.stmt_structured += 1;
+                        self.lowering_stats.stmt_candidate_structured += 1;
+                        lowered_body.extend(lowered);
+                    } else {
+                        panic!("{missing_panic_message}: {stmt:?}");
+                    }
+                }
+                Err(_) => {
+                    self.lowering_stats.stmt_lowering_errors += 1;
+                    panic!("{failed_panic_message}: {stmt:?}");
+                }
+            }
+        }
+
+        self.current_return_type = saved_return_type;
+        self.mutated_vars = saved_mutated_vars;
+        self.borrowed_params = saved_borrowed_params;
+        self.mut_borrowed_params = saved_mut_borrowed_params;
+        lowered_body
+    }
+}
