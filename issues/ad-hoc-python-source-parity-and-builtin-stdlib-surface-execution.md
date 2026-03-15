@@ -66,13 +66,14 @@ Status: done
 
 ### `wave_psp_b2` Iterators, Functional Helpers, and Randomness
 
-Status: in_progress
+Status: in_review
 
 - [x] Harvest `Lib/test/test_itertools.py`, `Lib/test/test_functools.py`, `Lib/test/test_operator.py`, `Lib/test/test_random.py`, and `Lib/test/test_secrets.py`.
 - [x] Close iterator/object/callable parity for `itertools`, `functools`, `operator`, `random`, and `secrets`.
 - [x] Add traceable regressions, demo, and traceability coverage for the closed/adapted surface.
 - [x] Run local validation and record evidence.
-- [ ] Open PR, review, merge, and update this ledger with PR links and outcomes.
+- [x] Open implementation PR and merge the wave body.
+- [ ] Complete external review passes and update this ledger with outcomes.
 
 ### `wave_psp_c1` Structured Parsing and Serialization
 
@@ -339,7 +340,8 @@ Status: pending
 - CPython parity note:
   - The traceability ledger records eager list-backed iterator helpers as `adapted`, preserves the new direct `__call__`/imported-vararg root-cause compiler closure, and explicitly classifies `functools.partial`, cache/decorator families, and callable-object use inside higher-order stdlib helpers as unsupported rather than claiming fake parity.
 - PR / merge:
-  - Pending.
+  - Merged PR: `#1160` `Close wave_psp_b2 iterator and randomness parity`
+  - Merge commit: `07a4c6f9d61d6aadc89b2873fff57444c4738a12`
 
 ### `wave_psp_c1`
 
@@ -374,6 +376,7 @@ Status: pending
 - `wave_psp_a1`: PR `#1142` merged at `2026-03-14T17:28:40Z`
 - `wave_psp_a2`: PR `#1144` merged at `2026-03-14T18:24:24Z`
 - `wave_psp_b1`: PR `#1149` merged at `2026-03-15T02:23:59Z`
+- `wave_psp_b2`: PR `#1160` merged at `2026-03-15T11:41:51Z`
 
 ## External Review Ledger
 
@@ -400,4 +403,8 @@ Status: pending
 - `wave_psp_b1` review pass 2:
   - Reviewer file: `/Users/yaseralnajjar/.codex/worktrees/0761/codebase/reviews/wave-psp-b1-review-pass2.md`
   - Validation result: approved as production-ready with no actionable implementation issue.
+  - Fix status: no code changes required.
+- `wave_psp_b2` review pass 1:
+  - Reviewer file: `/Users/yaseralnajjar/.codex/worktrees/0761/codebase/reviews/wave-psp-b2-review-pass1.md`
+  - Validation result: non-actionable stale review. The notes described the pre-implementation state and incorrectly claimed the merged b2 artifacts, traceability ledger, demo, and PR were absent from current `main`.
   - Fix status: no code changes required.
