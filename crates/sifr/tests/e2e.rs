@@ -27,6 +27,7 @@ use std::time::{Instant, SystemTime, UNIX_EPOCH};
 const E2E_CACHE_DIR: &str = "target/sifr_e2e_cache";
 const E2E_CACHE_MANIFEST: &str = "manifest.json";
 const E2E_CACHE_SCHEMA_VERSION: u32 = 1;
+const E2E_CACHE_TTL_SECS: u64 = 2 * 60 * 60;
 const E2E_CACHE_ENV_ALLOWLIST: [&str; 8] = [
     "RUSTFLAGS",
     "CARGO_ENCODED_RUSTFLAGS",
@@ -356,6 +357,14 @@ fn cache_dir(root: &Path) -> PathBuf {
 
 fn cache_manifest_path(root: &Path) -> PathBuf {
     cache_dir(root).join(E2E_CACHE_MANIFEST)
+}
+
+fn cache_groups_root(root: &Path) -> PathBuf {
+    cache_dir(root).join("groups")
+}
+
+fn cache_group_path(root: &Path, group_id: &str) -> PathBuf {
+    cache_groups_root(root).join(group_id)
 }
 
 fn deterministic_hash(value: &str) -> String {
@@ -1124,6 +1133,67 @@ fn write_cache_manifest(root: &Path, manifest: &CacheManifest) {
     }
 }
 
+fn prune_cache_manifest(root: &Path, manifest: CacheManifest, now_unix_secs: u64) -> CacheManifest {
+    let groups_root = cache_groups_root(root);
+    let cutoff_unix_secs = now_unix_secs.saturating_sub(E2E_CACHE_TTL_SECS);
+    let mut next_manifest = CacheManifest {
+        schema_version: manifest.schema_version,
+        entries: manifest
+            .entries
+            .into_iter()
+            .filter(|(_, entry)| entry.built_at_unix_secs >= cutoff_unix_secs)
+            .collect(),
+    };
+
+    next_manifest
+        .entries
+        .retain(|_, entry| cache_group_path(root, &entry.group_id).is_dir());
+
+    let live_group_ids = next_manifest
+        .entries
+        .values()
+        .map(|entry| entry.group_id.as_str())
+        .collect::<HashSet<_>>();
+
+    match std::fs::read_dir(&groups_root) {
+        Ok(entries) => {
+            for entry in entries.flatten() {
+                let path = entry.path();
+                let Ok(file_type) = entry.file_type() else {
+                    continue;
+                };
+                if !file_type.is_dir() {
+                    continue;
+                }
+
+                let Some(group_id) = path.file_name().and_then(|name| name.to_str()) else {
+                    continue;
+                };
+
+                if live_group_ids.contains(group_id) {
+                    continue;
+                }
+
+                if let Err(err) = std::fs::remove_dir_all(&path) {
+                    eprintln!(
+                        "[sifr-e2e-cache] cannot remove stale group dir {}: {err}",
+                        path.display()
+                    );
+                }
+            }
+        }
+        Err(err) if err.kind() == std::io::ErrorKind::NotFound => {}
+        Err(err) => {
+            eprintln!(
+                "[sifr-e2e-cache] cannot list cache groups root {}: {err}",
+                groups_root.display()
+            );
+        }
+    }
+
+    next_manifest
+}
+
 fn toolchain_info() -> ToolchainInfo {
     let rustc_version = command_with_capture("rustc", &["-V"], None).stdout;
     let rustc_vv = command_with_capture("rustc", &["-Vv"], None).stdout;
@@ -1753,7 +1823,17 @@ fn run_new_pass_suite(config: &RunnerConfig) -> PassReport {
         if let Err(err) = std::fs::create_dir_all(&config.cache.root) {
             eprintln!("[sifr-e2e-cache] cannot create cache root: {err}");
         }
-        read_cache_manifest(&config.cache.root)
+        let manifest = read_cache_manifest(&config.cache.root);
+        let pruned_manifest = prune_cache_manifest(
+            &config.cache.root,
+            manifest,
+            SystemTime::now()
+                .duration_since(UNIX_EPOCH)
+                .map(|duration| duration.as_secs())
+                .unwrap_or_default(),
+        );
+        write_cache_manifest(&config.cache.root, &pruned_manifest);
+        pruned_manifest
     } else {
         CacheManifest {
             schema_version: E2E_CACHE_SCHEMA_VERSION,
@@ -2866,6 +2946,13 @@ fn sample_cache_entry(
     }
 }
 
+fn sample_cache_root(label: &str) -> PathBuf {
+    let now = SystemTime::now()
+        .duration_since(UNIX_EPOCH)
+        .unwrap_or_default();
+    env::temp_dir().join(format!("sifr-e2e-cache-test-{label}-{}", now.as_nanos()))
+}
+
 #[test]
 fn test_cache_entry_invalidation_rules() {
     let case = FixtureCase {
@@ -2943,4 +3030,185 @@ fn test_cache_entry_invalidation_rules() {
         &toolchain,
         &env_signature,
     ));
+}
+
+#[test]
+fn test_prune_cache_manifest_removes_expired_entries_and_orphan_groups() {
+    let root = sample_cache_root("prune-expired");
+    let groups_root = cache_groups_root(&root);
+    std::fs::create_dir_all(&groups_root).expect("cache groups root");
+
+    let stale_group = "stale-group";
+    let live_group = "live-group";
+    let orphan_group = "orphan-group";
+    let missing_group = "missing-group";
+
+    for group in [stale_group, live_group, orphan_group] {
+        let group_root = cache_group_path(&root, group);
+        std::fs::create_dir_all(group_root.join("target")).expect("group root");
+    }
+
+    let now_unix_secs = 20_000;
+    let manifest = CacheManifest {
+        schema_version: E2E_CACHE_SCHEMA_VERSION,
+        entries: BTreeMap::from([
+            (
+                "stale-key".to_string(),
+                CacheEntry {
+                    schema_version: E2E_CACHE_SCHEMA_VERSION,
+                    cache_key: "stale-key".to_string(),
+                    group_id: stale_group.to_string(),
+                    group_fingerprint: "stale".to_string(),
+                    group_rust_hash: "stale".to_string(),
+                    fixture_sources: Vec::new(),
+                    compiler_signature: "toolchain".to_string(),
+                    rustc_v: "rustc".to_string(),
+                    rustc_vv: "rustc-vv".to_string(),
+                    cargo_v: "cargo".to_string(),
+                    target: "target".to_string(),
+                    os: "os".to_string(),
+                    arch: "arch".to_string(),
+                    env_signature: "env".to_string(),
+                    artifact_path: cache_group_path(&root, stale_group)
+                        .join("target")
+                        .display()
+                        .to_string(),
+                    build_log_path: None,
+                    built_at_unix_secs: now_unix_secs - E2E_CACHE_TTL_SECS - 1,
+                },
+            ),
+            (
+                "live-key".to_string(),
+                CacheEntry {
+                    schema_version: E2E_CACHE_SCHEMA_VERSION,
+                    cache_key: "live-key".to_string(),
+                    group_id: live_group.to_string(),
+                    group_fingerprint: "live".to_string(),
+                    group_rust_hash: "live".to_string(),
+                    fixture_sources: Vec::new(),
+                    compiler_signature: "toolchain".to_string(),
+                    rustc_v: "rustc".to_string(),
+                    rustc_vv: "rustc-vv".to_string(),
+                    cargo_v: "cargo".to_string(),
+                    target: "target".to_string(),
+                    os: "os".to_string(),
+                    arch: "arch".to_string(),
+                    env_signature: "env".to_string(),
+                    artifact_path: cache_group_path(&root, live_group)
+                        .join("target")
+                        .display()
+                        .to_string(),
+                    build_log_path: None,
+                    built_at_unix_secs: now_unix_secs,
+                },
+            ),
+            (
+                "missing-key".to_string(),
+                CacheEntry {
+                    schema_version: E2E_CACHE_SCHEMA_VERSION,
+                    cache_key: "missing-key".to_string(),
+                    group_id: missing_group.to_string(),
+                    group_fingerprint: "missing".to_string(),
+                    group_rust_hash: "missing".to_string(),
+                    fixture_sources: Vec::new(),
+                    compiler_signature: "toolchain".to_string(),
+                    rustc_v: "rustc".to_string(),
+                    rustc_vv: "rustc-vv".to_string(),
+                    cargo_v: "cargo".to_string(),
+                    target: "target".to_string(),
+                    os: "os".to_string(),
+                    arch: "arch".to_string(),
+                    env_signature: "env".to_string(),
+                    artifact_path: cache_group_path(&root, missing_group)
+                        .join("target")
+                        .display()
+                        .to_string(),
+                    build_log_path: None,
+                    built_at_unix_secs: now_unix_secs,
+                },
+            ),
+        ]),
+    };
+
+    let pruned = prune_cache_manifest(&root, manifest, now_unix_secs);
+    assert_eq!(pruned.entries.len(), 1);
+    assert!(pruned.entries.contains_key("live-key"));
+    assert!(cache_group_path(&root, live_group).is_dir());
+    assert!(!cache_group_path(&root, stale_group).exists());
+    assert!(!cache_group_path(&root, orphan_group).exists());
+    assert!(!pruned.entries.contains_key("missing-key"));
+
+    let _ = std::fs::remove_dir_all(root);
+}
+
+#[test]
+fn test_prune_cache_manifest_keeps_shared_live_group_for_fresh_entry() {
+    let root = sample_cache_root("prune-shared");
+    let shared_group = "shared-group";
+    std::fs::create_dir_all(cache_group_path(&root, shared_group).join("target"))
+        .expect("shared group root");
+
+    let now_unix_secs = 30_000;
+    let manifest = CacheManifest {
+        schema_version: E2E_CACHE_SCHEMA_VERSION,
+        entries: BTreeMap::from([
+            (
+                "old-key".to_string(),
+                CacheEntry {
+                    schema_version: E2E_CACHE_SCHEMA_VERSION,
+                    cache_key: "old-key".to_string(),
+                    group_id: shared_group.to_string(),
+                    group_fingerprint: "group".to_string(),
+                    group_rust_hash: "hash".to_string(),
+                    fixture_sources: Vec::new(),
+                    compiler_signature: "toolchain".to_string(),
+                    rustc_v: "rustc".to_string(),
+                    rustc_vv: "rustc-vv".to_string(),
+                    cargo_v: "cargo".to_string(),
+                    target: "target".to_string(),
+                    os: "os".to_string(),
+                    arch: "arch".to_string(),
+                    env_signature: "env".to_string(),
+                    artifact_path: cache_group_path(&root, shared_group)
+                        .join("target")
+                        .display()
+                        .to_string(),
+                    build_log_path: None,
+                    built_at_unix_secs: now_unix_secs - E2E_CACHE_TTL_SECS - 1,
+                },
+            ),
+            (
+                "fresh-key".to_string(),
+                CacheEntry {
+                    schema_version: E2E_CACHE_SCHEMA_VERSION,
+                    cache_key: "fresh-key".to_string(),
+                    group_id: shared_group.to_string(),
+                    group_fingerprint: "group".to_string(),
+                    group_rust_hash: "hash".to_string(),
+                    fixture_sources: Vec::new(),
+                    compiler_signature: "toolchain".to_string(),
+                    rustc_v: "rustc".to_string(),
+                    rustc_vv: "rustc-vv".to_string(),
+                    cargo_v: "cargo".to_string(),
+                    target: "target".to_string(),
+                    os: "os".to_string(),
+                    arch: "arch".to_string(),
+                    env_signature: "env".to_string(),
+                    artifact_path: cache_group_path(&root, shared_group)
+                        .join("target")
+                        .display()
+                        .to_string(),
+                    build_log_path: None,
+                    built_at_unix_secs: now_unix_secs,
+                },
+            ),
+        ]),
+    };
+
+    let pruned = prune_cache_manifest(&root, manifest, now_unix_secs);
+    assert_eq!(pruned.entries.len(), 1);
+    assert!(pruned.entries.contains_key("fresh-key"));
+    assert!(cache_group_path(&root, shared_group).is_dir());
+
+    let _ = std::fs::remove_dir_all(root);
 }
