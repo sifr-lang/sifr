@@ -17,8 +17,8 @@ use super::decimal_methods::{
 };
 use super::guarded_index::guarded_sequence_index_result_type;
 use super::method_call_args::{
-    lower_method_call_args, lower_signature_call_args, validate_dict_update_arg,
-    validate_list_extend_arg, validate_set_iterable_arg,
+    lower_function_call_args, lower_method_call_args, lower_signature_call_args,
+    validate_dict_update_arg, validate_list_extend_arg, validate_set_iterable_arg,
 };
 use super::mutating_methods::reject_immutable_parameter_method_mutation;
 use super::numeric_sentinels::{
@@ -106,6 +106,19 @@ fn callable_signature(expr: &HirExpr) -> Option<(Vec<Type>, Vec<ParamConvention>
         Type::Callable(params, conventions, return_type) => {
             Some((params.clone(), conventions.clone(), *return_type.clone()))
         }
+        Type::Class { methods, .. } | Type::Protocol { methods, .. } => methods
+            .iter()
+            .find(|(name, _)| name == "__call__")
+            .map(|(_, ft)| {
+                (
+                    ft.params.iter().map(|(_, ty, _)| ty.clone()).collect(),
+                    ft.params
+                        .iter()
+                        .map(|(_, _, convention)| *convention)
+                        .collect(),
+                    *ft.return_type.clone(),
+                )
+            }),
         _ => None,
     }
 }
@@ -1559,155 +1572,54 @@ pub(super) fn lower_call(call: &ExprCall, ctx: &mut LowerCtx) -> Option<HirExpr>
         });
     }
 
+    let callable_object_ft =
+        ctx.scope
+            .lookup(&func_name)
+            .and_then(|info| match info.effective_type().resolve_alias() {
+                Type::Class { methods, .. } | Type::Protocol { methods, .. } => methods
+                    .iter()
+                    .find(|(name, _)| name == "__call__")
+                    .map(|(_, ft)| ft.clone()),
+                _ => None,
+            });
+    if let Some(call_ft) = callable_object_ft {
+        let Expr::Name(name_expr) = call.func.as_ref() else {
+            ctx.error("only simple function calls are supported".to_string());
+            return None;
+        };
+        let object = lower_name(name_expr, ctx)?;
+        let args =
+            lower_signature_call_args(call, &format!("{func_name}.__call__"), &call_ft, None, ctx)?;
+        return Some(HirExpr::MethodCall {
+            object: Box::new(object),
+            method: "__call__".to_string(),
+            args,
+            ty: *call_ft.return_type.clone(),
+        });
+    }
+
     let ft = ctx.functions.get(&func_name).cloned().or_else(|| {
         ctx.error(format!("undefined function: '{func_name}'"));
         None
     })?;
 
-    // Lower positional arguments
-    let mut positional_args = Vec::new();
-    for arg in &call.arguments.args {
-        let expr = lower_expr(arg, ctx)?;
-        positional_args.push(expr);
-    }
-
-    // Lower keyword arguments
-    let mut keyword_args: Vec<(String, HirExpr)> = Vec::new();
-    for kw in &call.arguments.keywords {
-        if let Some(ref arg_name) = kw.arg {
-            let expr = lower_expr(&kw.value, ctx)?;
-            keyword_args.push((arg_name.to_string(), expr));
-        }
-    }
-
     // Resolve keyword arguments to positional order
     let args = if func_name == "print" {
-        // print() is special - just pass positional args
-        positional_args
-    } else if keyword_args.is_empty() {
-        // No keyword args - check count and use positional directly
-        // Allow fewer args if there are defaults
-        let is_vararg = ctx.vararg_functions.contains(&func_name);
-        if is_vararg && positional_args.len() >= ft.params.len() - 1 {
-            // Vararg function: collect extra args into a list for the last param
-            let regular_count = ft.params.len() - 1; // all params except the vararg
-            let mut args = Vec::new();
-            for arg in positional_args.iter().take(regular_count) {
-                args.push(arg.clone());
-            }
-            // Collect remaining args into a list literal
-            let vararg_elements: Vec<HirExpr> = positional_args[regular_count..].to_vec();
-            let elem_ty = if let Type::List(ref elem) = ft.params[regular_count].1 {
-                *elem.clone()
-            } else {
-                Type::Any
-            };
-            args.push(HirExpr::ListLiteral {
-                elements: vararg_elements,
-                ty: Type::List(Box::new(elem_ty)),
-            });
-            // Skip the normal argument handling below
-            let is_constructor = ctx.class_types.contains_key(&func_name);
-            if is_constructor {
-                let ty = ctx.class_types.get(&func_name).unwrap().clone();
-                return Some(HirExpr::ConstructorCall {
-                    class_name: func_name,
-                    args,
-                    ty,
-                });
-            }
-            return Some(HirExpr::Call {
-                func: func_name,
-                args,
-                ty: *ft.return_type.clone(),
-            });
-        } else if positional_args.len() > ft.params.len() {
-            ctx.error(format!(
-                "function '{}' expects at most {} argument(s), got {}",
-                func_name,
-                ft.params.len(),
-                positional_args.len()
-            ));
-            return None;
+        let mut args = Vec::with_capacity(call.arguments.args.len());
+        for arg in &call.arguments.args {
+            args.push(lower_expr(arg, ctx)?);
         }
-        // Fill in defaults for missing arguments
-        if positional_args.len() < ft.params.len() {
-            let defaults = ctx.function_defaults.get(&func_name).cloned();
-            let mut filled = positional_args;
-            for i in filled.len()..ft.params.len() {
-                if let Some(ref defs) = defaults {
-                    if let Some((_, default_expr)) = defs.iter().find(|(idx, _)| *idx == i) {
-                        filled.push(default_expr.clone());
-                    } else {
-                        ctx.error(format!(
-                            "function '{}': missing argument '{}' with no default value",
-                            func_name, ft.params[i].0
-                        ));
-                        return None;
-                    }
-                } else {
-                    ctx.error(format!(
-                        "function '{}': missing argument '{}' with no default value",
-                        func_name, ft.params[i].0
-                    ));
-                    return None;
-                }
-            }
-            filled
-        } else {
-            positional_args
-        }
+        args
     } else {
-        // Resolve keyword arguments into positional order
-        let mut resolved = Vec::new();
-        let mut used_kwargs: std::collections::HashSet<String> = std::collections::HashSet::new();
         let defaults = ctx.function_defaults.get(&func_name).cloned();
-
-        // Check: no positional args after keyword args (already enforced by parser)
-        for (i, (param_name, _param_ty, _)) in ft.params.iter().enumerate() {
-            if i < positional_args.len() {
-                // Check no duplicate keyword for this position
-                if keyword_args.iter().any(|(k, _)| k == param_name) {
-                    ctx.error(format!(
-                        "function '{func_name}': argument '{param_name}' given both positionally and as keyword"
-                    ));
-                    return None;
-                }
-                resolved.push(positional_args[i].clone());
-            } else if let Some(pos) = keyword_args.iter().position(|(k, _)| k == param_name) {
-                resolved.push(keyword_args[pos].1.clone());
-                used_kwargs.insert(param_name.clone());
-            } else {
-                // Try to fill from default values
-                if let Some(ref defs) = defaults {
-                    if let Some((_, default_expr)) = defs.iter().find(|(idx, _)| *idx == i) {
-                        resolved.push(default_expr.clone());
-                    } else {
-                        ctx.error(format!(
-                            "function '{func_name}': missing argument '{param_name}' with no default value"
-                        ));
-                        return None;
-                    }
-                } else {
-                    ctx.error(format!(
-                        "function '{func_name}': missing argument '{param_name}' with no default value"
-                    ));
-                    return None;
-                }
-            }
-        }
-
-        // Check for unknown keyword arguments
-        for (kw_name, _) in &keyword_args {
-            if !ft.params.iter().any(|(p, _, _)| p == kw_name) {
-                ctx.error(format!(
-                    "function '{func_name}': unexpected keyword argument '{kw_name}'"
-                ));
-                return None;
-            }
-        }
-
-        resolved
+        lower_function_call_args(
+            call,
+            &func_name,
+            &ft,
+            defaults.as_deref(),
+            ctx.vararg_functions.get(&func_name).copied(),
+            ctx,
+        )?
     };
 
     // Check argument types (skip for print)

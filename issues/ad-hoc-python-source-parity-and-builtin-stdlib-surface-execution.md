@@ -4,7 +4,7 @@ Status: in_progress
 Started: 2026-03-14
 Phase owner: Codex (GPT-5)
 Source phase: `issues/ad-hoc-python-source-parity-and-builtin-stdlib-surface.md`
-Current active wave: `wave_psp_b1`
+Current active wave: `wave_psp_b2`
 
 ## Execution Rules
 
@@ -17,7 +17,7 @@ Current active wave: `wave_psp_b1`
 
 - [x] `milestone_psp_1` / `wave_psp_a1`: builtin constructors and callable surface
 - [x] `milestone_psp_2` / `wave_psp_a2`: core object models and builtin semantics
-- [ ] `milestone_psp_3` / `wave_psp_b1`: collections objects and ordered helpers
+- [x] `milestone_psp_3` / `wave_psp_b1`: collections objects and ordered helpers
 - [ ] `milestone_psp_3` / `wave_psp_b2`: iterators, functional helpers, and randomness
 - [ ] `milestone_psp_4` / `wave_psp_c1`: structured parsing and serialization
 - [ ] `milestone_psp_4` / `wave_psp_c2`: text, pattern, and formatting modules
@@ -57,20 +57,22 @@ Status: done
 
 ### `wave_psp_b1` Collections Objects and Ordered Helpers
 
-Status: in_progress
+Status: done
 
 - [x] Harvest `Lib/test/test_collections.py`, `Lib/test/test_bisect.py`, and `Lib/test/test_heapq.py`.
 - [x] Close `collections`, `bisect`, and `heapq` constructor/object/call-shape gaps.
 - [x] Add traceable regressions, demo, and local validation coverage for the closed surface.
-- [ ] Open PR, review, merge, and update this ledger with PR links and outcomes.
+- [x] Open PR, review, merge, and update this ledger with PR links and outcomes.
 
 ### `wave_psp_b2` Iterators, Functional Helpers, and Randomness
 
-Status: pending
+Status: in_progress
 
-- [ ] Harvest `Lib/test/test_itertools.py`, `Lib/test/test_functools.py`, `Lib/test/test_operator.py`, `Lib/test/test_random.py`, and `Lib/test/test_secrets.py`.
-- [ ] Close iterator/object/callable parity for `itertools`, `functools`, `operator`, `random`, and `secrets`.
-- [ ] Add traceable regressions, demo, validate, PR, review, merge.
+- [x] Harvest `Lib/test/test_itertools.py`, `Lib/test/test_functools.py`, `Lib/test/test_operator.py`, `Lib/test/test_random.py`, and `Lib/test/test_secrets.py`.
+- [x] Close iterator/object/callable parity for `itertools`, `functools`, `operator`, `random`, and `secrets`.
+- [x] Add traceable regressions, demo, and traceability coverage for the closed/adapted surface.
+- [x] Run local validation and record evidence.
+- [ ] Open PR, review, merge, and update this ledger with PR links and outcomes.
 
 ### `wave_psp_c1` Structured Parsing and Serialization
 
@@ -275,11 +277,69 @@ Status: pending
 - CPython parity note:
   - The traceability ledger closes `Counter(dict)`, `Counter.most_common([n])`, deque ordered helpers, `bisect` / `insort` optional `lo` / `hi`, and mutating `heapreplace` / `heappushpop`; it explicitly records `bisect(key=...)`, iterable/kwargs `Counter(...)` constructors, and non-exported/private max-heap helper gaps as unsupported for this wave rather than pretending they were closed.
 - PR / merge:
-  - Pending.
+  - Merged PR: `#1149` `Close wave_psp_b1 collections ordered-helper parity`
+  - Merge commit: `e9c051bcf7aca5dc005a2d8ecce9e9341fe002dd`
 
 ### `wave_psp_b2`
 
-- Pending.
+- Implemented iterator/function/randomness parity closure in:
+  - `lib/sifr/itertools.sifr`
+  - `lib/sifr/functools.sifr`
+  - `lib/sifr/operator.sifr`
+  - `lib/sifr/random.sifr`
+  - `lib/sifr/secrets.sifr`
+  - `crates/sifr_hir/src/lower/compat_imports.rs`
+  - `crates/sifr_hir/src/lower/expressions.rs`
+  - `crates/sifr_hir/src/lower/generic_inference.rs`
+  - `crates/sifr_hir/src/lower/imported_defaults.rs`
+  - `crates/sifr_hir/src/lower/imports.rs`
+  - `crates/sifr_hir/src/lower/method_call_args.rs`
+  - `crates/sifr_hir/src/lower/mod.rs`
+  - `crates/sifr_hir/src/lower/typing_and_functions.rs`
+  - `crates/sifr_codegen/src/function_emitter.rs`
+  - `crates/sifr_codegen/src/lib.rs`
+  - `crates/sifr_codegen/src/lib_support.rs`
+  - `crates/sifr_codegen/src/lower_stmt.rs`
+  - `crates/sifr_codegen/src/operator_protocol_emitters.rs`
+  - `crates/sifr_driver/src/build/entrypoint.rs`
+  - `crates/sifr_driver/src/project/exports.rs`
+  - `crates/sifr_driver/src/project/frontend.rs`
+  - `crates/sifr_driver/src/stdlib/bootstrap.rs`
+- Added wave-specific regression, demo, and traceability artifacts:
+  - `crates/sifr/tests/e2e/pass/phase_psp_b2_iterators_functional_randomness.sifr`
+  - `demos/wave_psp_b2_iterators_functional_randomness_demo.sifr`
+  - `verification/stdlib/wave_psp_b2_cpython_traceability.md`
+- Compatibility regressions updated to the new b2 semantics:
+  - `crates/sifr/tests/e2e/pass/cpython_itertools.sifr`
+  - `crates/sifr/tests/e2e/pass/generic_shuffle_str.sifr`
+  - `crates/sifr/tests/e2e/pass/stdlib_functools.sifr`
+  - `crates/sifr/tests/e2e/pass/stdlib_operator.sifr`
+  - `crates/sifr/tests/e2e/pass/stdlib_random_new.sifr`
+  - `crates/sifr/tests/e2e/pass/stdlib_secrets.sifr`
+  - `demos/milestone_stdlib_generic_rewrite_demo.sifr`
+  - `demos/milestone_stdlib_pure_expansion_demo.sifr`
+  - `demos/milestone_stdlib_remediation_demo.sifr`
+- Demo validation:
+  - `cargo run -q -p sifr -- run demos/wave_psp_b2_iterators_functional_randomness_demo.sifr`
+- Targeted regression validation:
+  - `cargo run -q -p sifr -- run crates/sifr/tests/e2e/pass/cpython_itertools.sifr`
+  - `cargo run -q -p sifr -- run crates/sifr/tests/e2e/pass/generic_shuffle_str.sifr`
+  - `cargo run -q -p sifr -- run crates/sifr/tests/e2e/pass/phase_psp_b2_iterators_functional_randomness.sifr`
+  - `cargo run -q -p sifr -- run crates/sifr/tests/e2e/pass/stdlib_functools.sifr`
+  - `cargo run -q -p sifr -- run crates/sifr/tests/e2e/pass/stdlib_operator.sifr`
+  - `cargo run -q -p sifr -- run crates/sifr/tests/e2e/pass/stdlib_random_new.sifr`
+  - `cargo run -q -p sifr -- run crates/sifr/tests/e2e/pass/stdlib_secrets.sifr`
+  - `cargo test -p sifr_hir expressions_tests -- --nocapture`
+- Maintainability/lint validation:
+  - `cargo fmt --check`
+  - `cargo clippy --workspace -- -D warnings`
+  - `python3 scripts/check_hir_maintainability_guardrails.py`
+- Authoritative local gate:
+  - `scripts/run_all_tests.sh --profile quick`
+- CPython parity note:
+  - The traceability ledger records eager list-backed iterator helpers as `adapted`, preserves the new direct `__call__`/imported-vararg root-cause compiler closure, and explicitly classifies `functools.partial`, cache/decorator families, and callable-object use inside higher-order stdlib helpers as unsupported rather than claiming fake parity.
+- PR / merge:
+  - Pending.
 
 ### `wave_psp_c1`
 
@@ -313,6 +373,7 @@ Status: pending
 
 - `wave_psp_a1`: PR `#1142` merged at `2026-03-14T17:28:40Z`
 - `wave_psp_a2`: PR `#1144` merged at `2026-03-14T18:24:24Z`
+- `wave_psp_b1`: PR `#1149` merged at `2026-03-15T02:23:59Z`
 
 ## External Review Ledger
 

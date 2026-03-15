@@ -117,5 +117,6 @@ def main():
 
     # --- 14. Generic shuffle ---
     print("=== Generic shuffle ===")
-    shuffled_str: list[str] = shuffle(["a", "b", "c", "d", "e"])
+    shuffled_str: list[str] = ["a", "b", "c", "d", "e"]
+    shuffle(shuffled_str)
     print(len(shuffled_str))

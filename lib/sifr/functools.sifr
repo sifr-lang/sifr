@@ -1,9 +1,10 @@
-# sifr.functools — Functional programming tools (pure Sifr)
 from typing import Callable
 
+T = TypeVar("T")
+U = TypeVar("U")
+
+
 def reduce[T, U](func: Callable[[U, T], U], data: list[T], initial: U) -> U:
-    # Applies func cumulatively to items of data, starting with initial.
-    # Matches CPython's functools.reduce(func, iterable, initializer).
     result: U = initial
     for val in data:
         result = func(result, val)

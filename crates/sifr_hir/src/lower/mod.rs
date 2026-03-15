@@ -14,6 +14,7 @@ mod expressions;
 #[cfg(test)]
 mod expressions_tests;
 mod function_scopes;
+mod generic_inference;
 mod guarded_index;
 mod imported_defaults;
 mod imports;
@@ -44,6 +45,7 @@ use imports::resolve_imports_early;
 use sequence_guards::SequenceGuard;
 use sequence_pointers::SequencePointerFact;
 use type_aliases::{collect_type_alias_decls, predeclare_type_aliases, resolve_type_aliases};
+use generic_inference::infer_type_var_bindings;
 use typing_and_functions::{
     extract_function_type, lower_function, register_builtins, resolve_annotation_expr,
 };
@@ -97,8 +99,8 @@ pub(super) struct LowerCtx {
     error_types: std::collections::HashSet<String>,
     /// Map of parent error type -> list of known child error types (for exhaustiveness checking)
     error_hierarchy: HashMap<String, Vec<String>>,
-    /// Set of function names that have *args (vararg) parameters
-    vararg_functions: std::collections::HashSet<String>,
+    /// Map of function names to the parameter index of their *args (vararg) parameter
+    vararg_functions: HashMap<String, usize>,
     /// Set of registered type variable names (e.g., T, K, V from `TypeVar` declarations)
     type_vars: std::collections::HashSet<String>,
     /// Map of generic function names to their type variable names
@@ -145,7 +147,7 @@ impl LowerCtx {
             try_block_error_types: std::collections::HashSet::new(),
             error_types: std::collections::HashSet::new(),
             error_hierarchy: HashMap::new(),
-            vararg_functions: std::collections::HashSet::new(),
+            vararg_functions: HashMap::new(),
             type_vars: std::collections::HashSet::new(),
             generic_functions: HashMap::new(),
             type_param_bounds: HashMap::new(),
@@ -451,79 +453,11 @@ fn substitute_type_vars(ty: &Type, bindings: &HashMap<String, Type>) -> Type {
     }
 }
 
-/// Try to infer type variable bindings from a concrete argument type and a parameterized type.
-fn infer_type_var_bindings(param_ty: &Type, arg_ty: &Type, bindings: &mut HashMap<String, Type>) {
-    match (param_ty, arg_ty) {
-        (Type::TypeVar(name), concrete) => {
-            if !bindings.contains_key(name) {
-                bindings.insert(name.clone(), concrete.clone());
-            }
-        }
-        (Type::List(p_elem), Type::List(a_elem)) => {
-            infer_type_var_bindings(p_elem, a_elem, bindings);
-        }
-        (Type::Set(p_elem), Type::Set(a_elem)) => {
-            infer_type_var_bindings(p_elem, a_elem, bindings);
-        }
-        (Type::Dict(pk, pv), Type::Dict(ak, av)) => {
-            infer_type_var_bindings(pk, ak, bindings);
-            infer_type_var_bindings(pv, av, bindings);
-        }
-        (Type::Tuple(p_elems), Type::Tuple(a_elems)) if p_elems.len() == a_elems.len() => {
-            for (p, a) in p_elems.iter().zip(a_elems.iter()) {
-                infer_type_var_bindings(p, a, bindings);
-            }
-        }
-        (Type::Result(p_ok, p_err), Type::Result(a_ok, a_err)) => {
-            infer_type_var_bindings(p_ok, a_ok, bindings);
-            infer_type_var_bindings(p_err, a_err, bindings);
-        }
-        (
-            Type::Alias {
-                name: p_name,
-                type_args: p_args,
-                body: p_body,
-            },
-            Type::Alias {
-                name: a_name,
-                type_args: a_args,
-                body: a_body,
-            },
-        ) if p_name == a_name && p_args.len() == a_args.len() => {
-            for (p_arg, a_arg) in p_args.iter().zip(a_args.iter()) {
-                infer_type_var_bindings(p_arg, a_arg, bindings);
-            }
-            infer_type_var_bindings(p_body, a_body, bindings);
-        }
-        (Type::Alias { body, .. }, other) => {
-            infer_type_var_bindings(body, other, bindings);
-        }
-        (other, Type::Alias { body, .. }) => {
-            infer_type_var_bindings(other, body, bindings);
-        }
-        (
-            Type::Class {
-                name: p_name,
-                fields: p_fields,
-                ..
-            },
-            Type::Class {
-                name: a_name,
-                fields: a_fields,
-                ..
-            },
-        ) if p_name == a_name && p_fields.len() == a_fields.len() => {
-            for ((_, p_ty), (_, a_ty)) in p_fields.iter().zip(a_fields.iter()) {
-                infer_type_var_bindings(p_ty, a_ty, bindings);
-            }
-        }
-        _ => {}
-    }
-}
 /// Result of lowering, including the HIR module and any diagnostics.
 pub struct LoweringResult {
     pub module: HirModule,
     pub function_defaults: std::collections::HashMap<String, Vec<(usize, HirExpr)>>,
+    pub function_varargs: std::collections::HashMap<String, usize>,
     /// `reveal_type()` diagnostics (informational, printed to stderr)
     pub reveal_types: Vec<String>,
     /// Compiler warnings (non-fatal, printed to stderr)
@@ -552,6 +486,9 @@ pub struct ExternalDefs {
     /// Map of `module_name` -> (`function_name` -> `type_var_names`)
     pub generic_functions:
         std::collections::HashMap<String, std::collections::HashMap<String, Vec<String>>>,
+    /// Map of `module_name` -> (`callable_name` -> vararg parameter index)
+    pub function_varargs:
+        std::collections::HashMap<String, std::collections::HashMap<String, usize>>,
     /// Map of `module_name` -> (`callable_name` -> default argument expressions by parameter index)
     pub function_defaults:
         std::collections::HashMap<String, std::collections::HashMap<String, Vec<(usize, HirExpr)>>>,
@@ -741,7 +678,8 @@ fn lower_module_impl(
                 }
             }
             // Also collect defaults for keyword-only args
-            let regular_count = func.parameters.args.len();
+            let regular_count =
+                func.parameters.args.len() + usize::from(func.parameters.vararg.is_some());
             for (i, param) in func.parameters.kwonlyargs.iter().enumerate() {
                 if let Some(ref default_expr) = param.default {
                     if let Some(hir_default) = lower_expr_simple(default_expr) {
@@ -762,7 +700,8 @@ fn lower_module_impl(
             ctx.functions.insert(func.name.to_string(), ft);
             // Track vararg functions
             if func.parameters.vararg.is_some() {
-                ctx.vararg_functions.insert(func.name.to_string());
+                ctx.vararg_functions
+                    .insert(func.name.to_string(), func.parameters.args.len());
             }
         }
     }
@@ -887,6 +826,16 @@ fn lower_module_impl(
                                         &local,
                                     );
                                 }
+                                if let Some(module_varargs) =
+                                    externals.function_varargs.get(&stdlib_module_key)
+                                {
+                                    imported_defaults::import_callable_vararg(
+                                        &mut ctx,
+                                        module_varargs,
+                                        name,
+                                        &local,
+                                    );
+                                }
                                 found = true;
                                 // Import generic function info and bounds
                                 if let Some(module_gf) =
@@ -956,6 +905,16 @@ fn lower_module_impl(
                                             imported_defaults::import_class_method_defaults(
                                                 &mut ctx,
                                                 module_defaults,
+                                                name,
+                                                &local,
+                                            );
+                                        }
+                                        if let Some(module_varargs) =
+                                            externals.function_varargs.get(&stdlib_module_key)
+                                        {
+                                            imported_defaults::import_class_method_varargs(
+                                                &mut ctx,
+                                                module_varargs,
                                                 name,
                                                 &local,
                                             );
@@ -1034,6 +993,14 @@ fn lower_module_impl(
                                 &local,
                             );
                         }
+                        if let Some(module_varargs) = externals.function_varargs.get(&module_name) {
+                            imported_defaults::import_callable_vararg(
+                                &mut ctx,
+                                module_varargs,
+                                name,
+                                &local,
+                            );
+                        }
                         found = true;
                     }
                 }
@@ -1086,6 +1053,16 @@ fn lower_module_impl(
                                     imported_defaults::import_class_method_defaults(
                                         &mut ctx,
                                         module_defaults,
+                                        name,
+                                        &local,
+                                    );
+                                }
+                                if let Some(module_varargs) =
+                                    externals.function_varargs.get(&module_name)
+                                {
+                                    imported_defaults::import_class_method_varargs(
+                                        &mut ctx,
+                                        module_varargs,
                                         name,
                                         &local,
                                     );
@@ -1189,6 +1166,7 @@ fn lower_module_impl(
                 type_param_bounds: ctx.type_param_bounds.clone(),
             },
             function_defaults: ctx.function_defaults.clone(),
+            function_varargs: ctx.vararg_functions.clone(),
             reveal_types: ctx.reveal_types,
             warnings: ctx.warnings,
         })

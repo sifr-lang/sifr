@@ -1,0 +1,69 @@
+from sifr.itertools import chain, combinations, combinations_with_replacement, islice, permutations, product, starmap
+from sifr.operator import contains, getitem, truth
+from sifr.random import choice, choices, getrandbits, randrange, shuffle
+from sifr.secrets import compare_digest, randbelow, randbits, token_hex
+
+
+def add(a: int, b: int) -> int:
+    return a + b
+
+
+class Doubler:
+    def __init__(self):
+        pass
+
+    def __call__(self, x: int) -> int:
+        return x * 2
+
+
+def main():
+    assert str(chain([1], [2], [3])) == '[1, 2, 3]'
+    assert str(islice([10, 20, 30, 40, 50], 1, 5, 2)) == '[20, 40]'
+    assert str(product([1, 2], repeat=2)) == '[[1, 1], [1, 2], [2, 1], [2, 2]]'
+    assert str(permutations([1, 2, 3], 2)) == '[[1, 2], [1, 3], [2, 1], [2, 3], [3, 1], [3, 2]]'
+    assert str(combinations([1, 2, 3], 2)) == '[[1, 2], [1, 3], [2, 3]]'
+    assert str(combinations_with_replacement([1, 2], 2)) == '[[1, 1], [1, 2], [2, 2]]'
+    assert str(starmap(add, [(2, 3), (4, 5)])) == '[5, 9]'
+
+    doubler: Doubler = Doubler()
+    assert str(doubler(3)) == '6'
+
+    assert str(getitem([10, 20, 30], 1)) == '20'
+    assert str(contains([10, 20, 30], 20)) == 'true'
+    assert str(truth([10])) == 'true'
+
+    shuffled: list[int] = [1, 2, 3, 4]
+    shuffle(shuffled)
+    assert str(len(shuffled)) == '4'
+
+    try:
+        picked: int = choice([1, 2, 3])
+        assert str(picked >= 1 and picked <= 3) == 'true'
+        sampled: list[int] = choices([1, 2, 3], k=4)
+        assert str(len(sampled)) == '4'
+        single_arg: int = randrange(10)
+        assert str(single_arg >= 0 and single_arg < 10) == 'true'
+        stepped: int = randrange(2, 10, 2)
+        assert str(stepped >= 2 and stepped < 10 and stepped % 2 == 0) == 'true'
+        bits: int = getrandbits(10)
+        assert str(bits >= 0) == 'true'
+    except ValueError as e:
+        assert str("unexpected random error: " + e.message) == 'phase_psp_b2: random block passed'
+
+    try:
+        _bad_choice: int = choice([])
+        assert str("choice unexpectedly succeeded") == 'phase_psp_b2: choice empty handled'
+    except ValueError as e:
+        assert str(e.message) == 'choice: items must not be empty'
+
+    assert str(compare_digest("abc", "abc")) == 'true'
+    assert str(compare_digest("abc", "abd")) == 'false'
+    assert str(len(token_hex(6))) == '12'
+
+    try:
+        secure_bits: int = randbits(12)
+        assert str(secure_bits >= 0) == 'true'
+        below: int = randbelow(7)
+        assert str(below >= 0 and below < 7) == 'true'
+    except ValueError as e:
+        assert str("unexpected secrets error: " + e.message) == 'phase_psp_b2: secrets block passed'

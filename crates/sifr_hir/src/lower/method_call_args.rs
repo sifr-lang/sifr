@@ -1,6 +1,6 @@
 use crate::hir_nodes::HirExpr;
 use sifr_python_ast::ExprCall;
-use sifr_type_system::{FunctionType, Type};
+use sifr_type_system::{make_union, FunctionType, Type};
 
 use super::builtin_calls::{callable_builtin_dict_output_type, callable_builtin_element_type};
 use super::expressions::lower_expr;
@@ -39,8 +39,31 @@ pub(super) fn lower_signature_call_args(
     defaults: Option<&[(usize, HirExpr)]>,
     ctx: &mut LowerCtx,
 ) -> Option<Vec<HirExpr>> {
+    lower_function_call_args(call, callable_name, ft, defaults, None, ctx)
+}
+
+pub(super) fn lower_function_call_args(
+    call: &ExprCall,
+    callable_name: &str,
+    ft: &FunctionType,
+    defaults: Option<&[(usize, HirExpr)]>,
+    vararg_index: Option<usize>,
+    ctx: &mut LowerCtx,
+) -> Option<Vec<HirExpr>> {
     let positional_args = lower_positional_args(call, ctx)?;
     let keyword_args = lower_keyword_args(call, callable_name, ctx)?;
+
+    if let Some(vararg_index) = vararg_index {
+        return lower_vararg_function_call_args(
+            callable_name,
+            ft,
+            defaults,
+            vararg_index,
+            &positional_args,
+            &keyword_args,
+            ctx,
+        );
+    }
 
     if keyword_args.is_empty() {
         if positional_args.len() > ft.params.len() {
@@ -105,11 +128,128 @@ pub(super) fn lower_signature_call_args(
         return None;
     }
 
-    for (keyword, _) in &keyword_args {
+    for (keyword, _) in keyword_args {
         if !ft
             .params
             .iter()
-            .any(|(param_name, _, _)| param_name == keyword)
+            .any(|(param_name, _, _)| param_name == keyword.as_str())
+        {
+            ctx.error(format!(
+                "{callable_name}() got an unexpected keyword argument '{keyword}'"
+            ));
+            return None;
+        }
+    }
+
+    Some(resolved)
+}
+
+fn lower_vararg_function_call_args(
+    callable_name: &str,
+    ft: &FunctionType,
+    defaults: Option<&[(usize, HirExpr)]>,
+    vararg_index: usize,
+    positional_args: &[HirExpr],
+    keyword_args: &LoweredKeywords,
+    ctx: &mut LowerCtx,
+) -> Option<Vec<HirExpr>> {
+    let mut resolved = Vec::with_capacity(ft.params.len());
+    let mut used_kwargs: std::collections::HashSet<String> = std::collections::HashSet::new();
+
+    for (i, (param_name, _, _)) in ft.params.iter().take(vararg_index).enumerate() {
+        if i < positional_args.len() {
+            if keyword_args
+                .iter()
+                .any(|(keyword, _)| keyword == param_name)
+            {
+                ctx.error(format!(
+                    "{callable_name}() got multiple values for argument '{param_name}'"
+                ));
+                return None;
+            }
+            resolved.push(positional_args[i].clone());
+            continue;
+        }
+        if let Some(position) = keyword_args
+            .iter()
+            .position(|(keyword, _)| keyword == param_name)
+        {
+            resolved.push(keyword_args[position].1.clone());
+            used_kwargs.insert(param_name.clone());
+            continue;
+        }
+        if let Some(default_expr) =
+            defaults.and_then(|defs| defs.iter().find(|(idx, _)| *idx == i).map(|(_, expr)| expr))
+        {
+            resolved.push(default_expr.clone());
+            continue;
+        }
+        ctx.error(format!(
+            "{callable_name}(): missing argument '{param_name}' with no default value"
+        ));
+        return None;
+    }
+
+    let vararg_elements = if positional_args.len() > vararg_index {
+        positional_args[vararg_index..].to_vec()
+    } else {
+        Vec::new()
+    };
+    let vararg_ty = ft.params.get(vararg_index).map(|(_, ty, _)| ty.clone());
+    let vararg_elem_ty = if vararg_elements.is_empty() {
+        match vararg_ty {
+            Some(Type::List(elem_ty)) => *elem_ty,
+            Some(_) | None => Type::Any,
+        }
+    } else {
+        make_union(
+            vararg_elements
+                .iter()
+                .map(|element| element.ty().clone())
+                .collect(),
+        )
+    };
+    resolved.push(HirExpr::ListLiteral {
+        elements: vararg_elements,
+        ty: Type::List(Box::new(vararg_elem_ty)),
+    });
+
+    for (i, (param_name, _, _)) in ft.params.iter().enumerate().skip(vararg_index + 1) {
+        if let Some(position) = keyword_args
+            .iter()
+            .position(|(keyword, _)| keyword == param_name)
+        {
+            resolved.push(keyword_args[position].1.clone());
+            used_kwargs.insert(param_name.clone());
+            continue;
+        }
+        if let Some(default_expr) =
+            defaults.and_then(|defs| defs.iter().find(|(idx, _)| *idx == i).map(|(_, expr)| expr))
+        {
+            resolved.push(default_expr.clone());
+            continue;
+        }
+        ctx.error(format!(
+            "{callable_name}(): missing argument '{param_name}' with no default value"
+        ));
+        return None;
+    }
+
+    let vararg_name = &ft.params[vararg_index].0;
+    for (keyword, _) in keyword_args {
+        if keyword == vararg_name {
+            ctx.error(format!(
+                "{callable_name}() got an unexpected keyword argument '{keyword}'"
+            ));
+            return None;
+        }
+        if !used_kwargs.contains(keyword)
+            && !ft
+                .params
+                .iter()
+                .take(vararg_index)
+                .chain(ft.params.iter().skip(vararg_index + 1))
+                .any(|(param_name, _, _)| param_name == keyword)
         {
             ctx.error(format!(
                 "{callable_name}() got an unexpected keyword argument '{keyword}'"

@@ -14,6 +14,7 @@ pub(crate) fn collect_module_exports(
     let mut class_type_param_exports = HashMap::new();
     let mut const_exports = HashMap::new();
     let mut default_exports = HashMap::new();
+    let mut vararg_exports = HashMap::new();
 
     for func in &module.functions {
         if should_export_callable(module_name, &func.name) {
@@ -29,6 +30,9 @@ pub(crate) fn collect_module_exports(
                     return_type: Box::new(func.return_type.clone()),
                 },
             );
+            if let Some(vararg_index) = lowering_result.function_varargs.get(&func.name) {
+                vararg_exports.insert(func.name.clone(), *vararg_index);
+            }
         }
     }
 
@@ -107,6 +111,11 @@ pub(crate) fn collect_module_exports(
         external_defs
             .function_defaults
             .insert(module_name.to_string(), default_exports);
+    }
+    if !vararg_exports.is_empty() {
+        external_defs
+            .function_varargs
+            .insert(module_name.to_string(), vararg_exports);
     }
     external_defs
         .constants

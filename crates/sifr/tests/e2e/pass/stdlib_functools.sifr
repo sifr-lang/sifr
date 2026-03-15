@@ -17,4 +17,3 @@ def main():
     # reduce with multiply
     product: int = reduce(mul, data, 1)
     assert str(product) == '120'
-

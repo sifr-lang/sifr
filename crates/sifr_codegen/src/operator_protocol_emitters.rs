@@ -292,7 +292,7 @@ impl RustEmitter {
             func,
             "structured operator method statement lowering missing for IR-first emission",
             "structured operator method statement lowering failed for IR-first emission",
-            |this, stmt| this.try_lower_operator_stmt_ir(stmt),
+            Self::try_lower_operator_stmt_ir,
         )
     }
 

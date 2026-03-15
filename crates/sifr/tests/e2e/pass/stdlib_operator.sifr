@@ -1,5 +1,4 @@
-
-from sifr.operator import add, sub, mul, floordiv, mod_val, neg, lt, eq, itemgetter
+from sifr.operator import add, sub, mul, floordiv, mod_val, neg, lt, eq, contains, getitem, itemgetter, truth
 
 def main():
     assert str("add = " + str(add(3, 4))) == 'add = 7'
@@ -12,4 +11,7 @@ def main():
     assert str("eq = " + str(eq(3, 5))) == 'eq = false'
 
     items: list[int] = [10, 20, 30, 40]
+    assert str("getitem = " + str(getitem(items, 2))) == 'getitem = 30'
     assert str("itemgetter = " + str(itemgetter(items, 2))) == 'itemgetter = 30'
+    assert str("contains = " + str(contains(items, 20))) == 'contains = true'
+    assert str("truth = " + str(truth(items))) == 'truth = true'

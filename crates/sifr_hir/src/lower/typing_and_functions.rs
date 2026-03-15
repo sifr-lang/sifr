@@ -250,7 +250,7 @@ fn collect_function_defaults(
         }
     }
 
-    let regular_count = func.parameters.args.len();
+    let regular_count = func.parameters.args.len() + usize::from(func.parameters.vararg.is_some());
     for (index, param) in func.parameters.kwonlyargs.iter().enumerate() {
         if let Some(default_expr) = &param.default {
             if let Some(hir_default) = lower_expr_simple(default_expr) {
@@ -283,7 +283,8 @@ pub(super) fn register_local_function_signature(
     ctx.scope.define(function_name.clone(), callable_ty);
     ctx.functions.insert(function_name.clone(), ft.clone());
     if func.parameters.vararg.is_some() {
-        ctx.vararg_functions.insert(function_name);
+        ctx.vararg_functions
+            .insert(function_name, func.parameters.args.len());
     }
 
     ft

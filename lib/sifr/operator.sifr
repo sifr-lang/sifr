@@ -1,55 +1,77 @@
-# sifr.operator — Functional operators (CPython-compatible)
-# Provides function equivalents of built-in operators.
+T = TypeVar("T")
+
 
 def add(a: int, b: int) -> int:
     return a + b
 
+
 def sub(a: int, b: int) -> int:
     return a - b
+
 
 def mul(a: int, b: int) -> int:
     return a * b
 
+
 def floordiv(a: int, b: int) -> int:
     return a // b
 
+
 def mod_val(a: int, b: int) -> int:
-    # CPython: operator.mod — renamed mod_val due to Rust keyword conflict
     return a % b
+
 
 def neg(a: int) -> int:
     return -a
 
+
 def lt(a: int, b: int) -> bool:
     return a < b
+
 
 def le(a: int, b: int) -> bool:
     return a <= b
 
+
 def eq(a: int, b: int) -> bool:
     return a == b
+
 
 def ne(a: int, b: int) -> bool:
     return a != b
 
+
 def ge(a: int, b: int) -> bool:
     return a >= b
+
 
 def gt(a: int, b: int) -> bool:
     return a > b
 
+
 def and_(a: bool, b: bool) -> bool:
     return a and b
+
 
 def or_(a: bool, b: bool) -> bool:
     return a or b
 
+
 def not_(a: bool) -> bool:
     return not a
 
-def itemgetter(items: list[int], index: int) -> int:
-    result: int = 0
-    for i, v in enumerate(items):
-        if i == index:
-            result = v
-    return result
+
+def getitem[T](items: list[T], index: int) -> T | None:
+    return items[index]
+
+
+def itemgetter[T](items: list[T], index: int) -> T | None:
+    return getitem(items, index)
+
+
+def contains[T](items: list[T], value: T) -> bool:
+    return value in items
+
+
+def truth[T](value: list[T]) -> bool:
+    return len(value) != 0
