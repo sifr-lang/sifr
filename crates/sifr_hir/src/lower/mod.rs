@@ -41,11 +41,11 @@ mod type_aliases;
 mod type_bounds;
 mod typing_and_functions;
 use classes::{collect_class_type, lower_class, lower_expr_simple};
+use generic_inference::infer_type_var_bindings;
 use imports::resolve_imports_early;
 use sequence_guards::SequenceGuard;
 use sequence_pointers::SequencePointerFact;
 use type_aliases::{collect_type_alias_decls, predeclare_type_aliases, resolve_type_aliases};
-use generic_inference::infer_type_var_bindings;
 use typing_and_functions::{
     extract_function_type, lower_function, register_builtins, resolve_annotation_expr,
 };
