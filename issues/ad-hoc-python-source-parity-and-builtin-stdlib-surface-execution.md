@@ -95,11 +95,37 @@ Status: done
 
 ### `wave_psp_d1` Filesystem, Paths, and Archive Surfaces
 
-Status: pending
+Status: in_progress
 
 - [ ] Harvest the required CPython filesystem/archive test families.
 - [ ] Close `io`, `pathlib`, `glob`, `shutil`, `tempfile`, `gzip`, and `zipfile`.
 - [ ] Add traceable regressions, demo, validate, PR, review, merge.
+- [ ] Build per-module adopt/adapt/waive map against:
+  - `Lib/test/test_io/`
+  - `Lib/test/test_pathlib/`
+  - `Lib/test/test_glob.py`
+  - `Lib/test/test_shutil.py`
+  - `Lib/test/test_tempfile.py`
+  - `Lib/test/test_gzip.py`
+  - `Lib/test/test_zipfile/`
+- [ ] Close `io` object/call-shape gaps:
+  - context-manager lifecycle parity for file handles
+  - binary/text mode coverage and CPython-shaped helper entry points
+- [ ] Close `pathlib` class-family gaps:
+  - ensure `Path` methods align with CPython naming and return-shape expectations
+  - tighten path-mutation helper semantics (`with_name`, `with_suffix`, join/parent/name/suffix/stem)
+- [ ] Close `glob` parity gaps:
+  - recursive matching behavior and predictable hidden-file handling rules
+  - align pattern semantics with shipped `fnmatch` adaptations
+- [ ] Close `shutil` helper surface gaps:
+  - CPython-shaped copy/move/tree helpers and disk/tooling helpers
+  - explicit error semantics for missing inputs and tree cleanup
+- [ ] Close `tempfile` lifecycle and naming gaps:
+  - temp path generation semantics and creation helpers (`mkstemp`, `mkdtemp`)
+  - collision/error behavior under missing parent and race-like conditions
+- [ ] Close `gzip` and `zipfile` class/entry gaps:
+  - gzip codec surface parity that is compatible with Sifr string/bytes policy
+  - zip archive class/object model and helper methods with deterministic behavior
 
 ### `wave_psp_d2` Process, Runtime, and Platform Surfaces
 
@@ -312,6 +338,14 @@ Status: pending
   - `crates/sifr/tests/e2e/pass/phase_psp_b2_iterators_functional_randomness.sifr`
   - `demos/wave_psp_b2_iterators_functional_randomness_demo.sifr`
   - `verification/stdlib/wave_psp_b2_cpython_traceability.md`
+- Post-closure parity hardening from A/B reviewer cycle:
+  - `crates/sifr/tests/e2e/pass/cpython_random_subset.sifr`
+  - `crates/sifr/tests/e2e/pass/cpython_secrets_subset.sifr`
+  - `crates/sifr/tests/e2e/fail/phase_psp_b2_functools_partial_unsupported.sifr`
+  - `crates/sifr/tests/e2e/fail/phase_psp_b2_operator_attrgetter_unsupported.sifr`
+  - `crates/sifr/tests/e2e/fail/phase_psp_b2_operator_methodcaller_unsupported.sifr`
+  - `crates/sifr/tests/e2e/fail/phase_psp_b2_random_choices_weights_unsupported.sifr`
+  - `crates/sifr/tests/e2e/fail/phase_psp_b2_secrets_token_urlsafe_unsupported.sifr`
 - Compatibility regressions updated to the new b2 semantics:
   - `crates/sifr/tests/e2e/pass/cpython_itertools.sifr`
   - `crates/sifr/tests/e2e/pass/generic_shuffle_str.sifr`
@@ -335,6 +369,9 @@ Status: pending
   - `cargo run -q -p sifr -- run crates/sifr/tests/e2e/pass/stdlib_operator.sifr`
   - `cargo run -q -p sifr -- run crates/sifr/tests/e2e/pass/stdlib_random_new.sifr`
   - `cargo run -q -p sifr -- run crates/sifr/tests/e2e/pass/stdlib_secrets.sifr`
+  - `cargo run -q -p sifr -- run crates/sifr/tests/e2e/pass/cpython_random_subset.sifr`
+  - `cargo run -q -p sifr -- run crates/sifr/tests/e2e/pass/cpython_secrets_subset.sifr`
+  - `cargo test -p sifr test_e2e_fail -- --nocapture`
   - `cargo test -p sifr_hir expressions_tests -- --nocapture`
 - Maintainability/lint validation:
   - `cargo fmt --check`
@@ -467,6 +504,7 @@ Status: pending
 - `wave_psp_c1-review-pass1`: PR `#1174` merged at `2026-03-16T02:26:34Z`
 - `wave_psp_c2`: PR `#1182` merged at `2026-03-16T03:11:07Z`
 - `wave_psp_c2-review-pass1`: PR `#1187` merged at `2026-03-16T03:39:09Z`
+- `wave_psp_ab-review-pass1`: PR `#1190` merged at `2026-03-16T04:49:13Z`
 
 ## External Review Ledger
 
@@ -518,4 +556,12 @@ Status: pending
 - `wave_psp_c2` review pass 2:
   - Reviewer file: `/Users/yaseralnajjar/.codex/worktrees/0761/codebase/reviews/wave-psp-c2-review-pass2c.md`
   - Validation result: approved as production-ready with no actionable implementation issue.
+  - Fix status: no code changes required.
+- `wave_psp_ab` review pass 1:
+  - Reviewer file: `/Users/yaseralnajjar/.codex/worktrees/0761/codebase/reviews/wave-psp-ab-review-pass1.md`
+  - Validated findings: b2 parity coverage lacked CPython-derived random/secrets subset fixtures and explicit waiver guard fail tests for unsupported callable/factory surfaces.
+  - Fix status: remediated in PR `#1190`.
+- `wave_psp_ab` review pass 2:
+  - Reviewer file: `/Users/yaseralnajjar/.codex/worktrees/0761/codebase/reviews/wave-psp-ab-review-pass2.md`
+  - Validation result: no new actionable implementation issue. The repeated recommendation to reject all `range(...)` keywords conflicts with the approved `wave_psp_a1` adapted parity contract, and the "no b2 fail tests" note is stale after PR `#1190`.
   - Fix status: no code changes required.
