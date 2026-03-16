@@ -34,4 +34,4 @@ echo "Running smoke fuzz checks"
 cargo test -p sifr --test e2e smoke_fuzz -- --nocapture
 
 echo "Running phase 29 property and fuzz-smoke verification suites"
-python3 "${SCRIPT_DIR}/run_verification_hardening.py" --profile quick --suite property --suite fuzz-smoke
+python3 "${SCRIPT_DIR}/run_verification_hardening.py" --profile nightly --suite property --suite fuzz-smoke
