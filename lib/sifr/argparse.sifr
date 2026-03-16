@@ -1,5 +1,6 @@
 # sifr.argparse — Command-line argument parsing (pure Sifr)
-# Simplified argument parser using function-based API.
+# Class/object-model shim over the existing helper functions.
+
 
 def parse_flag(args: list[str], flag: str) -> bool:
     for arg in args:
@@ -7,17 +8,18 @@ def parse_flag(args: list[str], flag: str) -> bool:
             return True
     return False
 
+
 def parse_option(args: list[str], name: str, default: str) -> str:
     i: int = 0
     while i < len(args) - 1:
         arg: str | None = args[i]
-        if arg is not None:
-            if arg == name:
-                next_val: str | None = args[i + 1]
-                if next_val is not None:
-                    return next_val + ""
+        if arg is not None and arg == name:
+            next_val: str | None = args[i + 1]
+            if next_val is not None:
+                return next_val + ""
         i = i + 1
     return default + ""
+
 
 def parse_positional(args: list[str], index: int, default: str) -> str:
     positionals: list[str] = []
@@ -25,37 +27,162 @@ def parse_positional(args: list[str], index: int, default: str) -> str:
     for arg in args:
         if skip_next:
             skip_next = False
-        elif len(arg) >= 2:
-            first: str | None = arg[0]
-            second: str | None = arg[1]
-            if first is not None:
-                if first == "-":
-                    if second is not None:
-                        if second == "-":
-                            # --option, skip next as value
-                            skip_next = True
-                        else:
-                            # -o, skip next as value
-                            skip_next = True
-                    else:
-                        positionals.append(arg)
-                else:
-                    positionals.append(arg)
-            else:
-                positionals.append(arg)
-        elif len(arg) >= 1:
-            first2: str | None = arg[0]
-            if first2 is not None:
-                if first2 == "-":
-                    skip_next = True
-                else:
-                    positionals.append(arg)
-            else:
-                positionals.append(arg)
+        elif arg.startswith("-"):
+            skip_next = True
         else:
             positionals.append(arg)
     if index < len(positionals):
-        val: str | None = positionals[index]
-        if val is not None:
-            return val + ""
+        value: str | None = positionals[index]
+        if value is not None:
+            return value + ""
     return default + ""
+
+
+class ArgumentSpec:
+    name: str
+    dest: str
+    kind: str
+    default_value: str
+
+    def __init__(self, name: str, dest: str, kind: str, default_value: str):
+        self.name = name + ""
+        self.dest = dest + ""
+        self.kind = kind + ""
+        self.default_value = default_value + ""
+
+
+class Namespace:
+    _str_values: list[tuple[str, str]]
+    _bool_values: list[tuple[str, bool]]
+
+    def __init__(self):
+        self._str_values = []
+        self._bool_values = []
+
+    def set(self, name: str, value: str) -> None:
+        updated: list[tuple[str, str]] = []
+        replaced: bool = False
+        for key, current in self._str_values:
+            if key == name:
+                updated.append((name + "", value + ""))
+                replaced = True
+            else:
+                updated.append((key, current))
+        if not replaced:
+            updated.append((name + "", value + ""))
+        self._str_values = updated
+
+    def set_bool(self, name: str, value: bool) -> None:
+        updated: list[tuple[str, bool]] = []
+        replaced: bool = False
+        for key, current in self._bool_values:
+            if key == name:
+                updated.append((name + "", value))
+                replaced = True
+            else:
+                updated.append((key, current))
+        if not replaced:
+            updated.append((name + "", value))
+        self._bool_values = updated
+
+    def get(self, name: str, default: str = "") -> str:
+        for key, value in self._str_values:
+            if key == name:
+                return value + ""
+        return default + ""
+
+    def get_bool(self, name: str, default: bool = False) -> bool:
+        for key, value in self._bool_values:
+            if key == name:
+                return value
+        return default
+
+
+def _derive_dest(name: str) -> str:
+    return name + ""
+
+
+class ArgumentParser:
+    _prog: str
+    _specs: list[ArgumentSpec]
+
+    def __init__(self, prog: str = ""):
+        self._prog = prog + ""
+        self._specs = []
+
+    def prog(self) -> str:
+        return self._prog + ""
+
+    def add_argument(
+        self,
+        name: str,
+        dest: str = "",
+        action: str = "store",
+        default: str = "",
+    ) -> None:
+        resolved_dest: str = dest + ""
+        if resolved_dest == "":
+            resolved_dest = _derive_dest(name)
+        kind: str = "positional"
+        if name.startswith("-"):
+            if action == "store_true":
+                kind = "flag"
+            else:
+                kind = "option"
+        spec: ArgumentSpec = ArgumentSpec(name, resolved_dest, kind, default)
+        self._specs.append(spec)
+
+    def parse_args(self, args: list[str]) -> Namespace:
+        ns: Namespace = Namespace()
+        for spec in self._specs:
+            if spec.kind == "flag":
+                ns.set_bool(spec.dest, False)
+            elif spec.kind == "option":
+                ns.set(spec.dest, spec.default_value)
+            else:
+                ns.set(spec.dest, spec.default_value)
+
+        pending_option_dest: str = ""
+        has_pending_option: bool = False
+        positional_index: int = 0
+        for token in args:
+            if has_pending_option:
+                ns.set(pending_option_dest, token)
+                has_pending_option = False
+                continue
+
+            if token.startswith("-"):
+                matched: bool = False
+                matched_kind: str = ""
+                matched_dest: str = ""
+                for spec in self._specs:
+                    if spec.kind == "positional":
+                        continue
+                    if spec.name == token:
+                        matched = True
+                        matched_kind = spec.kind
+                        matched_dest = spec.dest
+                        break
+                if matched:
+                    if matched_kind == "flag":
+                        ns.set_bool(matched_dest, True)
+                    elif matched_kind == "option":
+                        pending_option_dest = matched_dest
+                        has_pending_option = True
+                continue
+
+            position_cursor: int = 0
+            positional_found: bool = False
+            positional_dest: str = ""
+            for spec in self._specs:
+                if spec.kind != "positional":
+                    continue
+                if position_cursor == positional_index:
+                    positional_found = True
+                    positional_dest = spec.dest
+                    break
+                position_cursor = position_cursor + 1
+            if positional_found:
+                ns.set(positional_dest, token)
+                positional_index = positional_index + 1
+        return ns

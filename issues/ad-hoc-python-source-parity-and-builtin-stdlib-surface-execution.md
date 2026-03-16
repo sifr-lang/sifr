@@ -147,8 +147,8 @@ Status: done
 
 Status: in_progress
 
-- [ ] Harvest `Lib/test/test_argparse.py`, `Lib/test/test_ipaddress.py`, `Lib/test/test_uuid.py`, and `Lib/test/test_graphlib.py`.
-- [ ] Close or explicitly classify final gaps for `argparse`, `ipaddress`, `uuid`, `graphlib`, and `test`.
+- [x] Harvest `Lib/test/test_argparse.py`, `Lib/test/test_ipaddress.py`, `Lib/test/test_uuid.py`, and `Lib/test/test_graphlib.py`.
+- [x] Close or explicitly classify final gaps for `argparse`, `ipaddress`, `uuid`, `graphlib`, and `test`.
 - [ ] Add traceable regressions, demo, validate, PR, review, merge.
 
 ### `milestone_psp_7` Parity Governance and Exit Closure
@@ -572,7 +572,42 @@ Status: pending
 
 ### `wave_psp_e2`
 
-- Pending.
+- Implemented class/object-model parity upgrades in:
+  - `lib/sifr/argparse.sifr`
+  - `lib/sifr/ipaddress.sifr`
+  - `lib/sifr/graphlib.sifr`
+- Added wave-specific regression, demo, and traceability artifacts:
+  - `crates/sifr/tests/e2e/pass/phase_psp_e2_class_heavy_custom_cleanup.sifr`
+  - `crates/sifr/tests/e2e/pass/cpython_argparse_subset.sifr`
+  - `crates/sifr/tests/e2e/pass/cpython_ipaddress_subset.sifr`
+  - `crates/sifr/tests/e2e/pass/cpython_graphlib_subset.sifr`
+  - `crates/sifr/tests/e2e/fail/phase_psp_e2_argparse_parse_args_non_string_list.sifr`
+  - `crates/sifr/tests/e2e/fail/phase_psp_e2_ip_address_non_string.sifr`
+  - `crates/sifr/tests/e2e/fail/phase_psp_e2_graphlib_add_non_int_predecessor.sifr`
+  - `crates/sifr/tests/e2e/fail/phase_psp_e2_uuid_from_hex_non_string.sifr`
+  - `demos/wave_psp_e2_class_heavy_custom_cleanup_demo.sifr`
+  - `verification/stdlib/wave_psp_e2_cpython_traceability.md`
+- CPython-derived regression fixtures exercised for this wave:
+  - `crates/sifr/tests/e2e/pass/cpython_argparse_subset.sifr`
+  - `crates/sifr/tests/e2e/pass/cpython_ipaddress_subset.sifr`
+  - `crates/sifr/tests/e2e/pass/cpython_uuid_subset.sifr`
+  - `crates/sifr/tests/e2e/pass/cpython_graphlib_subset.sifr`
+  - `crates/sifr/tests/e2e/pass/cpython_unittest_assertions_subset.sifr`
+- Demo validation:
+  - `cargo run -q -p sifr -- run demos/wave_psp_e2_class_heavy_custom_cleanup_demo.sifr`
+- Targeted regression validation:
+  - `cargo run -q -p sifr -- run crates/sifr/tests/e2e/pass/phase_psp_e2_class_heavy_custom_cleanup.sifr`
+  - `cargo run -q -p sifr -- run crates/sifr/tests/e2e/pass/cpython_argparse_subset.sifr`
+  - `cargo run -q -p sifr -- run crates/sifr/tests/e2e/pass/cpython_ipaddress_subset.sifr`
+  - `cargo run -q -p sifr -- run crates/sifr/tests/e2e/pass/cpython_uuid_subset.sifr`
+  - `cargo run -q -p sifr -- run crates/sifr/tests/e2e/pass/cpython_graphlib_subset.sifr`
+  - `cargo run -q -p sifr -- run crates/sifr/tests/e2e/pass/cpython_unittest_assertions_subset.sifr`
+  - `cargo run -q -p sifr -- check crates/sifr/tests/e2e/fail/phase_psp_e2_argparse_parse_args_non_string_list.sifr`
+  - `cargo run -q -p sifr -- check crates/sifr/tests/e2e/fail/phase_psp_e2_ip_address_non_string.sifr`
+  - `cargo run -q -p sifr -- check crates/sifr/tests/e2e/fail/phase_psp_e2_graphlib_add_non_int_predecessor.sifr`
+  - `cargo run -q -p sifr -- check crates/sifr/tests/e2e/fail/phase_psp_e2_uuid_from_hex_non_string.sifr`
+- Authoritative local gate:
+  - `scripts/run_all_tests.sh --profile quick`
 
 ### `milestone_psp_7`
 

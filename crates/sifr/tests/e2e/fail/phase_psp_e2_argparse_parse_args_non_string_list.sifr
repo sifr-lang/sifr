@@ -1,0 +1,8 @@
+from sifr.argparse import ArgumentParser, Namespace
+
+
+def main():
+    parser: ArgumentParser = ArgumentParser("tool")
+    parser.add_argument("--verbose", "verbose", "store_true")
+    _bad: Namespace = parser.parse_args([1, 2, 3])
+    _ = _bad.get_bool("verbose")

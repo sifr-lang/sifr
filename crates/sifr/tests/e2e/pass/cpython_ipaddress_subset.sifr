@@ -1,0 +1,70 @@
+# Adapted CPython ipaddress subset for sifr.ipaddress class-heavy surface
+from sifr.ipaddress import (
+    is_valid_ipv4,
+    ip_address,
+    ipv4_address,
+    IPv4Address,
+    AddressValueError
+)
+from sifr.test import assert_bool_vector_eq
+
+
+def collect_positive_actual() -> list[bool]:
+    actual: list[bool] = []
+    actual.append(is_valid_ipv4("192.168.1.1"))
+    actual.append(is_valid_ipv4("999.1.1.1") == False)
+
+    local_ok: bool = False
+    public_ok: bool = False
+    try:
+        local: IPv4Address = ip_address("192.168.1.1")
+        local_ok = (
+            local.version() == 4 and
+            local.to_str() == "192.168.1.1" and
+            local.packed_int() == 3232235777 and
+            local.is_private() and
+            local.is_global() == False
+        )
+        public_addr: IPv4Address = ipv4_address("8.8.8.8")
+        public_ok = public_addr.is_global()
+    except AddressValueError as e:
+        _ = e.message
+    actual.append(local_ok)
+    actual.append(public_ok)
+    return actual
+
+
+def collect_negative_actual() -> list[bool]:
+    actual: list[bool] = []
+    invalid_rejected: bool = False
+    try:
+        _bad: IPv4Address = ip_address("300.0.0.1")
+        _ = _bad.to_str()
+    except AddressValueError as e:
+        _ = e.message
+        invalid_rejected = True
+    actual.append(invalid_rejected)
+
+    v6_rejected: bool = False
+    try:
+        _v6: IPv4Address = ip_address("2001:db8::1")
+        _ = _v6.to_str()
+    except AddressValueError as e:
+        _ = e.message
+        v6_rejected = True
+    actual.append(v6_rejected)
+    return actual
+
+
+def append_all(mut target: list[bool], values: list[bool]):
+    for value in values:
+        target.append(value)
+
+
+def main():
+    expected: list[bool] = [True, True, True, True, True, True]
+    actual: list[bool] = []
+    append_all(actual, collect_positive_actual())
+    append_all(actual, collect_negative_actual())
+    assert_bool_vector_eq(actual, expected)
+    assert str("cpython_ipaddress_subset: pass") == "cpython_ipaddress_subset: pass"

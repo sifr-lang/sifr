@@ -1,0 +1,31 @@
+# Adapted CPython argparse subset for sifr.argparse class-heavy surface
+from sifr.argparse import ArgumentParser, Namespace
+from sifr.test import assert_bool_vector_eq
+
+
+def collect_argument_parser_actual() -> list[bool]:
+    actual: list[bool] = []
+
+    parser: ArgumentParser = ArgumentParser("sifr-tool")
+    parser.add_argument("--verbose", "verbose", "store_true")
+    parser.add_argument("--output", "output", "store", "default.txt")
+    parser.add_argument("input", "input", "store", "missing.sifr")
+
+    parsed: Namespace = parser.parse_args(["--verbose", "--output", "artifact.bin", "main.sifr"])
+    actual.append(parser.prog() == "sifr-tool")
+    actual.append(parsed.get_bool("verbose", False) == True)
+    actual.append(parsed.get("output", "") == "artifact.bin")
+    actual.append(parsed.get("input", "") == "main.sifr")
+
+    parsed_default: Namespace = parser.parse_args(["main_only.sifr"])
+    actual.append(parsed_default.get_bool("verbose", False) == False)
+    actual.append(parsed_default.get("output", "") == "default.txt")
+    actual.append(parsed_default.get("input", "") == "main_only.sifr")
+    return actual
+
+
+def main():
+    expected: list[bool] = [True, True, True, True, True, True, True]
+    actual: list[bool] = collect_argument_parser_actual()
+    assert_bool_vector_eq(actual, expected)
+    assert str("cpython_argparse_subset: pass") == "cpython_argparse_subset: pass"
