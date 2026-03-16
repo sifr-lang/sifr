@@ -25,7 +25,7 @@ Loop per part: Plan -> Implement -> Validate -> Demo -> PR -> Review -> Merge ->
 5. [x] `milestone_test_5`: refactor hardening and determinism into non-default lanes while preserving breadth
 6. [x] `milestone_test_6`: add throughput/resource reporting, worker guidance, and regression visibility
 7. [x] external review pass 1 completed and acted on
-8. [ ] production-grade review pass completed and acted on
+8. [x] production-grade review pass completed and acted on
 
 ## Entry Baseline Evidence (2026-03-16)
 
@@ -219,4 +219,4 @@ Known architectural entry facts from the planning doc:
   - positive path: `find target/validation_lane_reports -type f -newer /tmp/validation-lane-marker.G1cX7v | sort` -> only `quick.latest.{json,log,time}`, proving `run_all_tests.sh` no longer leaves behind per-run `lane.<profile>.*` capture files once the latest artifacts are written
   - rejected finding validation: `scripts/check_e2e_report_determinism.sh` and `scripts/check_e2e_sequential_parallel_equivalence.sh` only default `PROFILE` before argument parsing; the passed `--profile` value still wins, so the reported “always release” bug was not reproducible
 - Follow-up PR:
-  - pending
+  - PR `#1186` (`https://github.com/yaseralnajjar/sifr/pull/1186`) carries the accepted production-grade review fixes and records the reviewer artifact/disposition
