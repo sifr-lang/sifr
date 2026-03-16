@@ -1,0 +1,25 @@
+# `wave_psp_d1` CPython Traceability
+
+## Reviewed upstream families
+
+| CPython family | Surface | Local regression/demo | State | Notes |
+| --- | --- | --- | --- | --- |
+| `Lib/test/test_io/` | `open(...)`, text/binary reads/writes, context-managed file handles, and missing-file/invalid-mode error paths | `crates/sifr/tests/e2e/pass/cpython_io_subset.sifr`<br>`crates/sifr/tests/e2e/pass/phase_psp_d1_filesystem_paths_archives.sifr`<br>`crates/sifr/tests/e2e/fail/phase_psp_d1_io_open_non_string_mode.sifr` | adapted | Sifr preserves open/read/write semantics and error-path hardness with typed `IOError` results while keeping a smaller explicit `open(path, mode)` call shape. |
+| `Lib/test/test_pathlib/` | path string helpers plus `Path` object methods (`exists`, `is_file`, `is_dir`, `read_text`, `write_text`, `glob`, `rglob`, `iterdir`, `resolve`, `with_name`, `with_suffix`) | `crates/sifr/tests/e2e/pass/cpython_pathlib.sifr`<br>`crates/sifr/tests/e2e/pass/cpython_pathlib_subset.sifr`<br>`crates/sifr/tests/e2e/pass/phase_psp_d1_filesystem_paths_archives.sifr` | adapted | Helper semantics track CPython-style path behavior while preserving Sifr-safe return types and typed filesystem errors. |
+| `Lib/test/test_glob.py` | wildcard matching families (`*`, `?`, prefix patterns), hidden-entry handling, and missing-root behavior | `crates/sifr/tests/e2e/pass/cpython_glob_subset.sifr`<br>`crates/sifr/tests/e2e/pass/phase_psp_d1_filesystem_paths_archives.sifr`<br>`crates/sifr/tests/e2e/fail/phase_psp_d1_glob_non_string_pattern.sifr` | adapted | `glob(directory, pattern)` returns sorted entry names for deterministic behavior and safely returns `[]` for missing roots. |
+| `Lib/test/test_shutil.py` | copy/move/tree helpers plus `which(...)` and `disk_usage(...)` utility behavior | `crates/sifr/tests/e2e/pass/cpython_shutil_subset.sifr`<br>`crates/sifr/tests/e2e/pass/phase_psp_d1_filesystem_paths_archives.sifr`<br>`crates/sifr/tests/e2e/fail/phase_psp_d1_shutil_copy_non_string_path.sifr` | adapted | Core copy/move/tree semantics are preserved with typed `IOError` boundaries and statically checked argument types. |
+| `Lib/test/test_tempfile.py` | unique path generation, `mkstemp`, `mkdtemp`, and missing-parent failure behavior | `crates/sifr/tests/e2e/pass/cpython_tempfile_subset.sifr`<br>`crates/sifr/tests/e2e/pass/phase_psp_d1_filesystem_paths_archives.sifr` | adapted | Sifr closes deterministic unique-name helpers and collision-safe creation loops while keeping direct string-path APIs. |
+| `Lib/test/test_gzip.py` | string payload compression/decompression and invalid/truncated payload rejection | `crates/sifr/tests/e2e/pass/cpython_gzip_subset.sifr`<br>`crates/sifr/tests/e2e/pass/phase_psp_d1_filesystem_paths_archives.sifr` | adapted | Gzip is currently list-of-byte-values + string roundtrip parity instead of file-object parity. |
+| `Lib/test/test_zipfile/` | create/write/read/namelist archive basics and missing-entry / missing-archive error paths | `crates/sifr/tests/e2e/pass/cpython_zipfile_subset.sifr`<br>`crates/sifr/tests/e2e/pass/phase_psp_d1_filesystem_paths_archives.sifr`<br>`crates/sifr/tests/e2e/fail/phase_psp_d1_zipfile_write_non_string_content.sifr` | adapted | Zip parity is intentionally focused on string-content archive workflows with typed `IOError` results. |
+
+## Classified waivers
+
+| Surface | State | Rationale |
+| --- | --- | --- |
+| CPython `io` stream-class hierarchy (`BytesIO`, `StringIO`, buffered/raw/text wrapper families, seek/tell variants) | `unsupported` | This wave closes open/read/write file-handle parity only; the richer in-memory and buffered class hierarchy needs a broader runtime type-model expansion. |
+| Full `pathlib` class family (`PurePath`, `PosixPath`/`WindowsPath` specialization, URI/device semantics) | `unsupported` | Current parity uses a single typed `Path` wrapper and portable string-path helpers. Platform-specialized class families are deferred. |
+| CPython `glob` recursive `**` semantics and full keyword matrix (`recursive`, `root_dir`, `dir_fd`, `include_hidden`) | `unsupported` | Current `glob(directory, pattern)` surface intentionally keeps deterministic non-recursive wildcard matching for this wave. |
+| Broader `shutil` surface (`copy2`, `copytree`, archive creation helpers, metadata-copy families) | `unsupported` | This wave closes copy/move/rmtree/which/disk usage essentials first and leaves metadata/archive helper parity to future closure work. |
+| `tempfile` object-oriented helpers (`NamedTemporaryFile`, `TemporaryDirectory`, spooled/temp wrappers) | `unsupported` | Current parity targets deterministic path/creation helpers (`mktemp_path`, `mkstemp`, `mkdtemp`) without object-lifecycle wrappers. |
+| `gzip` file-object APIs (`GzipFile`, streamed open modes) | `unsupported` | The wave keeps string/list-byte helper parity through `compress` and `decompress` only. |
+| Extended `zipfile` features (compression methods/options, extraction APIs, context-manager orchestration) | `unsupported` | `ZipFile` currently closes create/write/read/namelist and typed error boundaries, with advanced archive controls deferred. |

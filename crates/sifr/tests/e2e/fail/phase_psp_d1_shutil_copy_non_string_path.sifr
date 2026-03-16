@@ -1,0 +1,6 @@
+from sifr.shutil import copy
+
+
+def main():
+    copied: None = copy(1, "/tmp/phase_psp_d1_dest.txt")
+    _ = copied

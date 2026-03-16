@@ -1,0 +1,61 @@
+from sifr.io import read_text, write_text
+from sifr.pathlib import Path
+from sifr.glob import glob
+from sifr.shutil import copy, move_file, rmtree
+from sifr.tempfile import mkdtemp, mkstemp
+from sifr.gzip import compress, decompress
+from sifr.zipfile import ZipFile
+from sifr.os import getpid, run_command
+
+
+def main():
+    base: str = "/tmp/sifr_wave_psp_d1_demo_" + str(getpid())
+    try:
+        _mk: str = run_command("mkdir -p " + base)
+        source: str = base + "/note.txt"
+        _w: None = write_text(source, "hello d1")
+        try:
+            note_content: str = read_text(source)
+            print("io.read_text = " + note_content)
+        except IOError as e:
+            print("io.read_text error: " + e.message)
+
+        note_path: Path = Path(source + "")
+        print("pathlib.stem = " + note_path.stem())
+        print("glob(\"*.txt\") = " + str(glob(base, "*.txt")))
+
+        copied: str = base + "/copied.txt"
+        moved: str = base + "/moved.txt"
+        _cp: None = copy(source, copied)
+        _mv: None = move_file(copied, moved)
+        print("shutil.move_file exists = " + str(Path(moved).exists()))
+
+        temp_file: str = mkstemp("sifr_wave_psp_d1_demo_")
+        temp_dir: str = mkdtemp("sifr_wave_psp_d1_demo_")
+        print("tempfile.mkstemp = " + temp_file)
+        print("tempfile.mkdtemp = " + temp_dir)
+
+        compressed: list[int] = compress("archive sample")
+        try:
+            restored: str = decompress(compressed)
+            print("gzip roundtrip = " + restored)
+        except IOError as e:
+            print("gzip error: " + e.message)
+
+        zip_path: str = base + "/demo.zip"
+        archive: ZipFile = ZipFile(zip_path)
+        try:
+            _zc: None = archive.create()
+            _zw: None = archive.write("inside.txt", "inside-zip")
+            inside: str = archive.read("inside.txt")
+            print("zipfile.read = " + inside)
+            print("zipfile.namelist = " + str(archive.namelist()))
+        except IOError as e:
+            print("zipfile error: " + e.message)
+
+        _rm_temp_file: str = run_command("rm -f " + temp_file)
+        _rm_temp_dir: None = rmtree(temp_dir)
+    except IOError as e:
+        print("wave_psp_d1 demo error: " + e.message)
+    finally:
+        _cleanup: str = run_command("rm -rf " + base)

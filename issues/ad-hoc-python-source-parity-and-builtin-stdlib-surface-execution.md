@@ -21,7 +21,7 @@ Current active wave: `wave_psp_d1`
 - [x] `milestone_psp_3` / `wave_psp_b2`: iterators, functional helpers, and randomness
 - [x] `milestone_psp_4` / `wave_psp_c1`: structured parsing and serialization
 - [x] `milestone_psp_4` / `wave_psp_c2`: text, pattern, and formatting modules
-- [ ] `milestone_psp_5` / `wave_psp_d1`: filesystem, paths, and archive surfaces
+- [x] `milestone_psp_5` / `wave_psp_d1`: filesystem, paths, and archive surfaces
 - [ ] `milestone_psp_5` / `wave_psp_d2`: process, runtime, and platform surfaces
 - [ ] `milestone_psp_6` / `wave_psp_e1`: strong-but-incomplete core modules
 - [ ] `milestone_psp_6` / `wave_psp_e2`: class-heavy and custom cleanup
@@ -95,11 +95,11 @@ Status: done
 
 ### `wave_psp_d1` Filesystem, Paths, and Archive Surfaces
 
-Status: in_progress
+Status: done
 
-- [ ] Harvest the required CPython filesystem/archive test families.
-- [ ] Close `io`, `pathlib`, `glob`, `shutil`, `tempfile`, `gzip`, and `zipfile`.
-- [ ] Add traceable regressions, demo, validate, PR, review, merge.
+- [x] Harvest the required CPython filesystem/archive test families.
+- [x] Close `io`, `pathlib`, `glob`, `shutil`, `tempfile`, `gzip`, and `zipfile`.
+- [x] Add traceable regressions, demo, validate, PR, review, merge.
 - [ ] Build per-module adopt/adapt/waive map against:
   - `Lib/test/test_io/`
   - `Lib/test/test_pathlib/`
@@ -476,7 +476,32 @@ Status: pending
 
 ### `wave_psp_d1`
 
-- Pending.
+- Added wave-specific regression, fail guard, demo, and traceability artifacts:
+  - `crates/sifr/tests/e2e/pass/phase_psp_d1_filesystem_paths_archives.sifr`
+  - `crates/sifr/tests/e2e/pass/cpython_gzip_subset.sifr`
+  - `crates/sifr/tests/e2e/pass/cpython_zipfile_subset.sifr`
+  - `crates/sifr/tests/e2e/fail/phase_psp_d1_io_open_non_string_mode.sifr`
+  - `crates/sifr/tests/e2e/fail/phase_psp_d1_glob_non_string_pattern.sifr`
+  - `crates/sifr/tests/e2e/fail/phase_psp_d1_shutil_copy_non_string_path.sifr`
+  - `crates/sifr/tests/e2e/fail/phase_psp_d1_zipfile_write_non_string_content.sifr`
+  - `demos/wave_psp_d1_filesystem_paths_archives_demo.sifr`
+  - `verification/stdlib/wave_psp_d1_cpython_traceability.md`
+- Targeted regression validation:
+  - `cargo run -q -p sifr -- run crates/sifr/tests/e2e/pass/phase_psp_d1_filesystem_paths_archives.sifr`
+  - `cargo run -q -p sifr -- run crates/sifr/tests/e2e/pass/cpython_io_subset.sifr`
+  - `cargo run -q -p sifr -- run crates/sifr/tests/e2e/pass/cpython_pathlib_subset.sifr`
+  - `cargo run -q -p sifr -- run crates/sifr/tests/e2e/pass/cpython_glob_subset.sifr`
+  - `cargo run -q -p sifr -- run crates/sifr/tests/e2e/pass/cpython_shutil_subset.sifr`
+  - `cargo run -q -p sifr -- run crates/sifr/tests/e2e/pass/cpython_tempfile_subset.sifr`
+  - `cargo run -q -p sifr -- run crates/sifr/tests/e2e/pass/cpython_gzip_subset.sifr`
+  - `cargo run -q -p sifr -- run crates/sifr/tests/e2e/pass/cpython_zipfile_subset.sifr`
+  - `cargo run -q -p sifr -- run demos/wave_psp_d1_filesystem_paths_archives_demo.sifr`
+  - `cargo run -q -p sifr -- check crates/sifr/tests/e2e/fail/phase_psp_d1_io_open_non_string_mode.sifr`
+  - `cargo run -q -p sifr -- check crates/sifr/tests/e2e/fail/phase_psp_d1_glob_non_string_pattern.sifr`
+  - `cargo run -q -p sifr -- check crates/sifr/tests/e2e/fail/phase_psp_d1_shutil_copy_non_string_path.sifr`
+  - `cargo run -q -p sifr -- check crates/sifr/tests/e2e/fail/phase_psp_d1_zipfile_write_non_string_content.sifr`
+- Authoritative local gate:
+  - `scripts/run_all_tests.sh --profile quick`
 
 ### `wave_psp_d2`
 

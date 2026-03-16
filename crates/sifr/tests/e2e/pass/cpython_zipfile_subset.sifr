@@ -1,0 +1,36 @@
+# Adapted CPython zipfile subset for sifr.zipfile
+from sifr.zipfile import ZipFile
+from sifr.io import exists
+from sifr.os import run_command
+
+
+def main():
+    path: str = "/tmp/sifr_cpython_zipfile_subset.zip"
+    zf: ZipFile = ZipFile(path + "")
+
+    try:
+        _c: None = zf.create()
+        assert str(exists(path)) == "true"
+
+        _w1: None = zf.write("first.txt", "first")
+        _w2: None = zf.write("second.txt", "second")
+        names: list[str] = zf.namelist()
+        assert str(len(names) == 2 and "first.txt" in names and "second.txt" in names) == "true"
+    except IOError as e:
+        assert str("unexpected zipfile error: " + e.message) == "cpython_zipfile_subset: pass"
+
+    try:
+        _rm: str = run_command("rm -f " + path)
+        _ = _rm
+    except IOError as e:
+        _ = e.message
+
+    try:
+        _missing_names: list[str] = zf.namelist()
+        _ = _missing_names
+        assert str("namelist unexpectedly succeeded after archive removal") == "cpython_zipfile_subset: pass"
+    except IOError as e:
+        assert str(len(e.message) > 0) == "true"
+
+    assert str(not exists(path)) == "true"
+    assert str("cpython_zipfile_subset: pass") == "cpython_zipfile_subset: pass"
