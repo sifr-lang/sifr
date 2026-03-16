@@ -212,68 +212,69 @@ pub(super) fn lower_stmt(
                 ctx.error("with statement must have at least one item".to_string());
                 return None;
             }
-            let mut items = Vec::new();
-            ctx.scope.push();
-            for item in &with_stmt.items {
-                let value = lower_expr(&item.context_expr, ctx)?;
-                let var_name = if let Some(ref vars) = item.optional_vars {
-                    if let Expr::Name(n) = vars.as_ref() {
-                        n.id.clone()
-                    } else {
-                        ctx.error("with target must be a simple name".to_string());
-                        return None;
-                    }
-                } else {
-                    format!("_with_val_{}", items.len())
-                };
-                let val_ty = value.ty().clone();
-                // Check if the type implements the ContextManager protocol (__enter__/__exit__)
-                let has_context_manager = if let Type::Class { methods, .. } = &val_ty {
-                    let has_enter = methods.iter().any(|(name, _)| name == "__enter__");
-                    let has_exit = methods.iter().any(|(name, _)| name == "__exit__");
-                    if has_enter && has_exit {
-                        true
-                    } else if has_enter || has_exit {
-                        ctx.error("type used in 'with' statement must implement both __enter__ and __exit__ methods".to_string());
-                        false
-                    } else {
-                        ctx.error(format!(
-                            "type '{}' does not implement the ContextManager protocol (missing __enter__ and __exit__ methods)",
-                            match &val_ty { Type::Class { name, .. } => name.clone(), _ => "unknown".to_string() }
-                        ));
-                        false
-                    }
-                } else {
-                    // Non-class types don't have methods — can't be context managers
-                    ctx.error("type used in 'with' statement must implement the ContextManager protocol (__enter__/__exit__)".to_string());
-                    false
-                };
-                // If the type has __enter__, the variable is bound to __enter__()'s return type
-                // We resolve the actual class type from ctx.class_types to get full fields/methods
-                let bound_ty = if has_context_manager {
-                    if let Type::Class { methods, .. } = &val_ty {
-                        let ret_ty = methods
-                            .iter()
-                            .find(|(name, _)| name == "__enter__")
-                            .map(|(_, ft)| (*ft.return_type).clone())
-                            .unwrap_or(val_ty.clone());
-                        // If the return type is a class, look up the fully-defined version
-                        if let Type::Class { name: ret_name, .. } = &ret_ty {
-                            ctx.class_types.get(ret_name).cloned().unwrap_or(ret_ty)
+            let (items, body) = ctx.with_pushed_scope(|ctx| {
+                let mut items = Vec::new();
+                for item in &with_stmt.items {
+                    let value = lower_expr(&item.context_expr, ctx)?;
+                    let var_name = if let Some(ref vars) = item.optional_vars {
+                        if let Expr::Name(n) = vars.as_ref() {
+                            n.id.clone()
                         } else {
-                            ret_ty
+                            ctx.error("with target must be a simple name".to_string());
+                            return None;
+                        }
+                    } else {
+                        format!("_with_val_{}", items.len())
+                    };
+                    let val_ty = value.ty().clone();
+                    // Check if the type implements the ContextManager protocol (__enter__/__exit__)
+                    let has_context_manager = if let Type::Class { methods, .. } = &val_ty {
+                        let has_enter = methods.iter().any(|(name, _)| name == "__enter__");
+                        let has_exit = methods.iter().any(|(name, _)| name == "__exit__");
+                        if has_enter && has_exit {
+                            true
+                        } else if has_enter || has_exit {
+                            ctx.error("type used in 'with' statement must implement both __enter__ and __exit__ methods".to_string());
+                            false
+                        } else {
+                            ctx.error(format!(
+                                "type '{}' does not implement the ContextManager protocol (missing __enter__ and __exit__ methods)",
+                                match &val_ty { Type::Class { name, .. } => name.clone(), _ => "unknown".to_string() }
+                            ));
+                            false
+                        }
+                    } else {
+                        // Non-class types don't have methods — can't be context managers
+                        ctx.error("type used in 'with' statement must implement the ContextManager protocol (__enter__/__exit__)".to_string());
+                        false
+                    };
+                    // If the type has __enter__, the variable is bound to __enter__()'s return type
+                    // We resolve the actual class type from ctx.class_types to get full fields/methods
+                    let bound_ty = if has_context_manager {
+                        if let Type::Class { methods, .. } = &val_ty {
+                            let ret_ty = methods
+                                .iter()
+                                .find(|(name, _)| name == "__enter__")
+                                .map(|(_, ft)| (*ft.return_type).clone())
+                                .unwrap_or(val_ty.clone());
+                            // If the return type is a class, look up the fully-defined version
+                            if let Type::Class { name: ret_name, .. } = &ret_ty {
+                                ctx.class_types.get(ret_name).cloned().unwrap_or(ret_ty)
+                            } else {
+                                ret_ty
+                            }
+                        } else {
+                            val_ty.clone()
                         }
                     } else {
                         val_ty.clone()
-                    }
-                } else {
-                    val_ty.clone()
-                };
-                ctx.scope.define(var_name.clone(), bound_ty);
-                items.push((var_name, value, has_context_manager));
-            }
-            let body = lower_stmts(&with_stmt.body, func_type, ctx);
-            ctx.scope.pop();
+                    };
+                    ctx.scope.define(var_name.clone(), bound_ty);
+                    items.push((var_name, value, has_context_manager));
+                }
+                let body = lower_stmts(&with_stmt.body, func_type, ctx);
+                Some((items, body))
+            })?;
             Some(HirStmt::With { items, body })
         }
         Stmt::Try(try_stmt) => {
@@ -603,36 +604,35 @@ pub(super) fn lower_match(
 
     let mut arms = Vec::new();
     for case in &match_stmt.cases {
-        ctx.scope.push();
+        let arm = ctx.with_pushed_scope(|ctx| {
+            let pattern = lower_pattern(&case.pattern, &subject_ty, ctx)?;
 
-        let pattern = lower_pattern(&case.pattern, &subject_ty, ctx)?;
+            // Bind captured variables into scope
+            bind_pattern_vars(&pattern, ctx);
 
-        // Bind captured variables into scope
-        bind_pattern_vars(&pattern, ctx);
+            let guard = if let Some(ref g) = case.guard {
+                let guard_expr = lower_expr(g, ctx)?;
+                let guard_ty = guard_expr.ty();
+                if *guard_ty != Type::Bool && *guard_ty != Type::Any {
+                    ctx.error(format!(
+                        "match guard must be a bool expression, got '{}'",
+                        guard_ty.display_name()
+                    ));
+                }
+                Some(guard_expr)
+            } else {
+                None
+            };
 
-        let guard = if let Some(ref g) = case.guard {
-            let guard_expr = lower_expr(g, ctx)?;
-            let guard_ty = guard_expr.ty();
-            if *guard_ty != Type::Bool && *guard_ty != Type::Any {
-                ctx.error(format!(
-                    "match guard must be a bool expression, got '{}'",
-                    guard_ty.display_name()
-                ));
-            }
-            Some(guard_expr)
-        } else {
-            None
-        };
+            let body = lower_stmts(&case.body, func_type, ctx);
+            Some(HirMatchArm {
+                pattern,
+                guard,
+                body,
+            })
+        })?;
 
-        let body = lower_stmts(&case.body, func_type, ctx);
-
-        ctx.scope.pop();
-
-        arms.push(HirMatchArm {
-            pattern,
-            guard,
-            body,
-        });
+        arms.push(arm);
     }
 
     // Exhaustiveness check: verify all variants of the subject type are covered
