@@ -343,9 +343,11 @@ Status: pending
   - `demos/wave_psp_b2_iterators_functional_randomness_demo.sifr`
   - `verification/stdlib/wave_psp_b2_cpython_traceability.md`
 - Post-closure parity hardening from A/B reviewer cycle:
+  - `crates/sifr/tests/e2e/pass/cpython_itertools_subset.sifr`
   - `crates/sifr/tests/e2e/pass/cpython_random_subset.sifr`
   - `crates/sifr/tests/e2e/pass/cpython_secrets_subset.sifr`
   - `crates/sifr/tests/e2e/fail/phase_psp_b2_functools_partial_unsupported.sifr`
+  - `crates/sifr/tests/e2e/fail/phase_psp_b2_itertools_starmap_non_binary_callable.sifr`
   - `crates/sifr/tests/e2e/fail/phase_psp_b2_operator_attrgetter_unsupported.sifr`
   - `crates/sifr/tests/e2e/fail/phase_psp_b2_operator_methodcaller_unsupported.sifr`
   - `crates/sifr/tests/e2e/fail/phase_psp_b2_random_choices_weights_unsupported.sifr`
@@ -369,12 +371,14 @@ Status: pending
   - `cargo run -q -p sifr -- run crates/sifr/tests/e2e/pass/generic_shuffle_str.sifr`
   - `cargo run -q -p sifr -- run crates/sifr/tests/e2e/pass/itertools_chain_own.sifr`
   - `cargo run -q -p sifr -- run crates/sifr/tests/e2e/pass/phase_psp_b2_iterators_functional_randomness.sifr`
+  - `cargo run -q -p sifr -- run crates/sifr/tests/e2e/pass/cpython_itertools_subset.sifr`
   - `cargo run -q -p sifr -- run crates/sifr/tests/e2e/pass/stdlib_functools.sifr`
   - `cargo run -q -p sifr -- run crates/sifr/tests/e2e/pass/stdlib_operator.sifr`
   - `cargo run -q -p sifr -- run crates/sifr/tests/e2e/pass/stdlib_random_new.sifr`
   - `cargo run -q -p sifr -- run crates/sifr/tests/e2e/pass/stdlib_secrets.sifr`
   - `cargo run -q -p sifr -- run crates/sifr/tests/e2e/pass/cpython_random_subset.sifr`
   - `cargo run -q -p sifr -- run crates/sifr/tests/e2e/pass/cpython_secrets_subset.sifr`
+  - `cargo run -q -p sifr -- check crates/sifr/tests/e2e/fail/phase_psp_b2_itertools_starmap_non_binary_callable.sifr`
   - `cargo test -p sifr test_e2e_fail -- --nocapture`
   - `cargo test -p sifr_hir expressions_tests -- --nocapture`
 - Maintainability/lint validation:
@@ -709,6 +713,10 @@ Status: pending
   - Reviewer file: `/Users/yaseralnajjar/.codex/worktrees/0761/codebase/reviews/wave-psp-b2-review-gap-cpython-parity-20260316-r2.md`
   - Validation result: partially stale. The review repeated already-remediated b2 items (itertools combinator coverage and operator helper tests) but raised two useful follow-ups: remove internal-API dependency in `stdlib_random.sifr` and make `compare_digest` timing-safety non-claim explicit in waivers.
   - Fix status: remediated by rewriting `crates/sifr/tests/e2e/pass/stdlib_random.sifr` against the public `sifr.random` API and tightening `verification/stdlib/wave_psp_b2_cpython_traceability.md` to classify constant-time `compare_digest` guarantees as unsupported for this wave.
+- `wave_psp_b2` review pass 5:
+  - Reviewer file: `/Users/yaseralnajjar/.codex/worktrees/0761/codebase/reviews/wave-psp-b2-review-gap-cpython-parity-20260317-r1.md`
+  - Validation result: partially actionable. Core implementation was correct, but parity evidence needed stronger coverage for documented edge paths and an explicit compile-time guard around the typed `starmap` arity adaptation.
+  - Fix status: remediated by expanding `cpython_itertools_subset.sifr` with negative edge assertions (`repeat<0`, oversized combinator `r`, empty-data replacement combos, and non-positive `islice` step), expanding `cpython_random_subset.sifr` with shipped helper coverage (`random`, `randint`, `uniform`, `gauss`, `sample` + invalid sample guard), adding fail fixture `phase_psp_b2_itertools_starmap_non_binary_callable.sifr`, and tightening `verification/stdlib/wave_psp_b2_cpython_traceability.md` to include explicit `itemgetter`/random surface coverage and the intentional binary-only `starmap` contract.
 - `wave_psp_c1` review pass 1:
   - Reviewer file: `/Users/yaseralnajjar/.codex/worktrees/0761/codebase/reviews/wave-psp-c1-review-pass1b.md`
   - Validated findings: `ConfigParser.read(path)` only read bytes and skipped parser population, `has_option()` default fallback semantics regressed for existing sections, and class-method mutability inference missed delegated `self.read_string(...)` mutation.

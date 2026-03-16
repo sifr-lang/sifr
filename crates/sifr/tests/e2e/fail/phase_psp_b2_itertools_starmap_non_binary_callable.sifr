@@ -1,0 +1,11 @@
+from sifr.itertools import starmap
+
+
+def add3(a: int, b: int, c: int) -> int:
+    return a + b + c
+
+
+def main():
+    triples: list[tuple[int, int, int]] = [(1, 2, 3)]
+    result = starmap(add3, triples)
+    assert str(result) == "[6]"
