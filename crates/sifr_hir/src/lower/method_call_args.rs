@@ -328,10 +328,7 @@ fn normalize_list_method_args(
     keywords: &mut LoweredKeywords,
     ctx: &mut LowerCtx,
 ) -> Option<Vec<HirExpr>> {
-    match method {
-        "index" => append_start_stop_args(method, positional, keywords, ctx),
-        _ => Some(positional),
-    }
+    normalize_index_method_args(method, positional, keywords, ctx)
 }
 
 fn normalize_dict_method_args(
@@ -394,6 +391,15 @@ fn normalize_set_method_args(
 }
 
 fn normalize_tuple_method_args(
+    method: &str,
+    positional: Vec<HirExpr>,
+    keywords: &mut LoweredKeywords,
+    ctx: &mut LowerCtx,
+) -> Option<Vec<HirExpr>> {
+    normalize_index_method_args(method, positional, keywords, ctx)
+}
+
+fn normalize_index_method_args(
     method: &str,
     positional: Vec<HirExpr>,
     keywords: &mut LoweredKeywords,
