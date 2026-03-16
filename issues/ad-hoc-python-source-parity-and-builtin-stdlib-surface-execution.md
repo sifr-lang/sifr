@@ -137,10 +137,10 @@ Status: done
 
 ### `wave_psp_e1` Strong-But-Incomplete Core Modules
 
-Status: pending
+Status: in_progress
 
-- [ ] Harvest `Lib/test/test_datetime.py`, `Lib/test/test_re.py`, `Lib/test/test_math.py`, `Lib/test/test_statistics.py`, and `Lib/test/test_hashlib.py`.
-- [ ] Close remaining parity gaps for `datetime`, `re`, `math`, `statistics`, and `hashlib`.
+- [x] Harvest `Lib/test/test_datetime.py`, `Lib/test/test_re.py`, `Lib/test/test_math.py`, `Lib/test/test_statistics.py`, and `Lib/test/test_hashlib.py`.
+- [x] Close remaining parity gaps for `datetime`, `re`, `math`, `statistics`, and `hashlib`.
 - [ ] Add traceable regressions, demo, validate, PR, review, merge.
 
 ### `wave_psp_e2` Class-Heavy and Custom Cleanup
@@ -534,7 +534,41 @@ Status: pending
 
 ### `wave_psp_e1`
 
-- Pending.
+- Added wave-specific regression, demo, and traceability artifacts:
+  - `crates/sifr/tests/e2e/pass/phase_psp_e1_core_modules_numeric_patterns_crypto.sifr`
+  - `crates/sifr/tests/e2e/fail/phase_psp_e1_datetime_from_timestamp_non_float.sifr`
+  - `crates/sifr/tests/e2e/fail/phase_psp_e1_re_search_non_string_pattern.sifr`
+  - `crates/sifr/tests/e2e/fail/phase_psp_e1_math_isclose_non_float_tol.sifr`
+  - `crates/sifr/tests/e2e/fail/phase_psp_e1_statistics_mean_non_float_list.sifr`
+  - `crates/sifr/tests/e2e/fail/phase_psp_e1_hashlib_new_non_string_name.sifr`
+  - `demos/wave_psp_e1_strong_core_modules_demo.sifr`
+  - `verification/stdlib/wave_psp_e1_cpython_traceability.md`
+- CPython-derived regression fixtures exercised for this wave:
+  - `crates/sifr/tests/e2e/pass/cpython_datetime_subset.sifr`
+  - `crates/sifr/tests/e2e/pass/cpython_re_subset.sifr`
+  - `crates/sifr/tests/e2e/pass/cpython_math_missing_surface_subset.sifr`
+  - `crates/sifr/tests/e2e/pass/cpython_math_semantic_corrections_subset.sifr`
+  - `crates/sifr/tests/e2e/pass/cpython_statistics_subset.sifr`
+  - `crates/sifr/tests/e2e/pass/cpython_hashlib_api_subset.sifr`
+  - `crates/sifr/tests/e2e/pass/cpython_hashlib_object_model_subset.sifr`
+- Demo validation:
+  - `cargo run -q -p sifr -- run demos/wave_psp_e1_strong_core_modules_demo.sifr`
+- Targeted regression validation:
+  - `cargo run -q -p sifr -- run crates/sifr/tests/e2e/pass/phase_psp_e1_core_modules_numeric_patterns_crypto.sifr`
+  - `cargo run -q -p sifr -- check crates/sifr/tests/e2e/fail/phase_psp_e1_datetime_from_timestamp_non_float.sifr`
+  - `cargo run -q -p sifr -- check crates/sifr/tests/e2e/fail/phase_psp_e1_re_search_non_string_pattern.sifr`
+  - `cargo run -q -p sifr -- check crates/sifr/tests/e2e/fail/phase_psp_e1_math_isclose_non_float_tol.sifr`
+  - `cargo run -q -p sifr -- check crates/sifr/tests/e2e/fail/phase_psp_e1_statistics_mean_non_float_list.sifr`
+  - `cargo run -q -p sifr -- check crates/sifr/tests/e2e/fail/phase_psp_e1_hashlib_new_non_string_name.sifr`
+  - `cargo run -q -p sifr -- run crates/sifr/tests/e2e/pass/cpython_datetime_subset.sifr`
+  - `cargo run -q -p sifr -- run crates/sifr/tests/e2e/pass/cpython_re_subset.sifr`
+  - `cargo run -q -p sifr -- run crates/sifr/tests/e2e/pass/cpython_math_missing_surface_subset.sifr`
+  - `cargo run -q -p sifr -- run crates/sifr/tests/e2e/pass/cpython_math_semantic_corrections_subset.sifr`
+  - `cargo run -q -p sifr -- run crates/sifr/tests/e2e/pass/cpython_statistics_subset.sifr`
+  - `cargo run -q -p sifr -- run crates/sifr/tests/e2e/pass/cpython_hashlib_api_subset.sifr`
+  - `cargo run -q -p sifr -- run crates/sifr/tests/e2e/pass/cpython_hashlib_object_model_subset.sifr`
+- Authoritative local gate:
+  - `scripts/run_all_tests.sh --profile quick`
 
 ### `wave_psp_e2`
 

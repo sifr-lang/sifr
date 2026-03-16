@@ -1,0 +1,140 @@
+from sifr.datetime import datetime, from_timestamp
+from sifr.re import search, findall
+from sifr.math import comb, perm, isclose
+from sifr.statistics import mean, variance, StatisticsError
+from sifr.hashlib import new, HashObject
+from sifr.test import assert_bool_vector_eq
+
+
+def collect_datetime_actual() -> list[bool]:
+    actual: list[bool] = []
+    dt: datetime = datetime(2024, 4, 1, 12, 30, 0)
+    actual.append(dt.isoformat() == "2024-04-01T12:30:00")
+
+    epoch_ok: bool = False
+    overflow_rejected: bool = False
+    try:
+        ts0: str = from_timestamp(0.0)
+        epoch_ok = ts0 == "1970-01-01T00:00:00"
+    except ValueError as e:
+        _ = e.message
+    actual.append(epoch_ok)
+
+    try:
+        _bad: str = from_timestamp(100000000000000000000.0)
+        _ = _bad
+    except ValueError as e:
+        _ = e.message
+        overflow_rejected = True
+    actual.append(overflow_rejected)
+    return actual
+
+
+def collect_re_actual() -> list[bool]:
+    actual: list[bool] = []
+    found_ok: bool = False
+    findall_ok: bool = False
+    invalid_pattern_rejected: bool = False
+    try:
+        found: str | None = search("\\d+", "a1b22")
+        found_ok = str(found) == "1"
+        all_hits: list[str] = findall("\\d+", "a1b22")
+        findall_ok = str(all_hits) == "[\"1\", \"22\"]"
+    except RegexError as e:
+        _ = e.message
+    actual.append(found_ok)
+    actual.append(findall_ok)
+
+    try:
+        _bad: str | None = search("(", "abc")
+        _ = _bad
+    except RegexError as e:
+        _ = e.message
+        invalid_pattern_rejected = True
+    actual.append(invalid_pattern_rejected)
+    return actual
+
+
+def collect_math_actual() -> list[bool]:
+    actual: list[bool] = []
+    actual.append(comb(6, 2) == 15)
+    actual.append(perm(6, 2) == 30)
+    actual.append(isclose(0.30000000000000004, 0.3, 1e-9, 0.0))
+    far_close: bool = isclose(1.0, 2.0, 1e-9, 0.0)
+    actual.append(far_close == False)
+    return actual
+
+
+def collect_statistics_actual() -> list[bool]:
+    actual: list[bool] = []
+    mean_ok: bool = False
+    variance_ok: bool = False
+    empty_mean_rejected: bool = False
+
+    try:
+        m: float = mean([1.0, 2.0, 3.0, 4.0])
+        mean_ok = m > 2.499999 and m < 2.500001
+    except StatisticsError as e:
+        _ = e.message
+    actual.append(mean_ok)
+
+    try:
+        v: float = variance([1.0, 2.0, 3.0, 4.0])
+        variance_ok = v > 1.666666 and v < 1.666667
+    except StatisticsError as e:
+        _ = e.message
+    actual.append(variance_ok)
+
+    try:
+        _bad: float = mean([])
+        _ = _bad
+    except StatisticsError as e:
+        _ = e.message
+        empty_mean_rejected = True
+    actual.append(empty_mean_rejected)
+    return actual
+
+
+def collect_hashlib_actual() -> list[bool]:
+    actual: list[bool] = []
+    sha_ok: bool = False
+    unsupported_rejected: bool = False
+    try:
+        h: HashObject = new("sha256", "abc")
+        sha_ok = h.hexdigest() == "ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad"
+    except ValueError as e:
+        _ = e.message
+    actual.append(sha_ok)
+
+    try:
+        _bad: HashObject = new("sha3_256", "")
+        _ = _bad.name
+    except ValueError as e:
+        _ = e.message
+        unsupported_rejected = True
+    actual.append(unsupported_rejected)
+    return actual
+
+
+def append_all(mut target: list[bool], values: list[bool]):
+    for value in values:
+        target.append(value)
+
+
+def main():
+    expected: list[bool] = [
+        True, True, True,
+        True, True, True,
+        True, True, True, True,
+        True, True, True,
+        True, True
+    ]
+    actual: list[bool] = []
+    append_all(actual, collect_datetime_actual())
+    append_all(actual, collect_re_actual())
+    append_all(actual, collect_math_actual())
+    append_all(actual, collect_statistics_actual())
+    append_all(actual, collect_hashlib_actual())
+
+    assert_bool_vector_eq(actual, expected)
+    assert str("phase_psp_e1_core_modules_numeric_patterns_crypto: pass") == "phase_psp_e1_core_modules_numeric_patterns_crypto: pass"

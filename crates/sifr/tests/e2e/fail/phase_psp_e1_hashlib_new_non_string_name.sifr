@@ -1,0 +1,6 @@
+from sifr.hashlib import new
+
+
+def main():
+    h = new(123, "abc")
+    _ = h

@@ -1,0 +1,6 @@
+from sifr.statistics import mean
+
+
+def main():
+    _avg: float = mean(["1.0", "2.0"])
+    _ = _avg
