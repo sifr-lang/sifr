@@ -2019,9 +2019,7 @@ fn run_new_pass_suite(config: &RunnerConfig) -> PassReport {
     );
     eprintln!(
         "[sifr-e2e] group_stats: groups={} largest_group_fixtures={} median_group_fixtures={}",
-        group_count,
-        largest_group_fixtures,
-        median_group_fixtures
+        group_count, largest_group_fixtures, median_group_fixtures
     );
     eprintln!(
         "[sifr-e2e] slowest build groups:\n{}",
