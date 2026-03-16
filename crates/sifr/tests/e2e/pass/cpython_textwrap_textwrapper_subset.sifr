@@ -32,6 +32,20 @@ def main():
         assert False
     assert indented_fill == "> alpha\n.. beta\n.. gamma"
 
+    width_constrained: TextWrapper = TextWrapper(5, ">>", "..")
+    constrained_lines: list[str] = []
+    try:
+        constrained_lines = width_constrained.wrap("ab cd ef")
+    except ValueError as e:
+        assert False
+    assert str(constrained_lines) == "[\">>ab\", \"..cd\", \"..ef\"]"
+    constrained_fill: str = ""
+    try:
+        constrained_fill = width_constrained.fill("ab cd ef")
+    except ValueError as e:
+        assert False
+    assert constrained_fill == ">>ab\n..cd\n..ef"
+
     bad_wrap: TextWrapper = TextWrapper(0)
     assert str(bad_wrap.wrap("x")) == "[]"
     assert bad_wrap.fill("x") == ""

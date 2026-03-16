@@ -54,10 +54,7 @@ def _normalize_firstweekday(firstweekday: int) -> int:
 def _month_name_lookup(month: int) -> str | None:
     if month < 1 or month > 12:
         return None
-    label: str | None = month_name[month]
-    if label is not None:
-        return label + ""
-    return None
+    return month_name[month]
 
 def isleap(year: int) -> bool:
     return calendar_isleap(year)

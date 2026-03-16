@@ -50,6 +50,45 @@ def _apply_line_indents(
         index = index + 1
     return result
 
+def _effective_content_width(total_width: int, indent: str) -> int:
+    available: int = total_width - len(indent)
+    if available <= 0:
+        return 1
+    return available
+
+def _wrap_with_indents(
+    text: str, total_width: int, initial_indent: str, subsequent_indent: str
+) -> list[str]:
+    normalized: str = _normalize_whitespace(text)
+    words: list[str] = normalized.split(" ")
+    result: list[str] = []
+    current: str = ""
+    first_line: bool = True
+    current_limit: int = _effective_content_width(total_width, initial_indent)
+
+    for word in words:
+        if len(word) == 0:
+            continue
+        if len(current) == 0:
+            current = word
+        elif len(current) + 1 + len(word) <= current_limit:
+            current = current + " " + word
+        else:
+            if first_line:
+                result.append(initial_indent + current)
+                first_line = False
+                current_limit = _effective_content_width(total_width, subsequent_indent)
+            else:
+                result.append(subsequent_indent + current)
+            current = word
+
+    if len(current) > 0:
+        if first_line:
+            result.append(initial_indent + current)
+        else:
+            result.append(subsequent_indent + current)
+    return result
+
 class TextWrapper:
     width: int
     initial_indent: str
@@ -68,21 +107,16 @@ class TextWrapper:
     def wrap(self, text: str) -> list[str]:
         if self.width <= 0:
             return []
-        wrapped: list[str] = _wrap_impl(text, self.width)
-        if len(wrapped) == 0:
-            return wrapped
-        return _apply_line_indents(
-            wrapped, self.initial_indent, self.subsequent_indent
+        return _wrap_with_indents(
+            text, self.width, self.initial_indent, self.subsequent_indent
         )
 
     def fill(self, text: str) -> str:
         if self.width <= 0:
             return ""
-        lines: list[str] = _wrap_impl(text, self.width)
-        if len(lines) > 0:
-            lines = _apply_line_indents(
-                lines, self.initial_indent, self.subsequent_indent
-            )
+        lines: list[str] = _wrap_with_indents(
+            text, self.width, self.initial_indent, self.subsequent_indent
+        )
         result: str = ""
         i: int = 0
         for line in lines:
