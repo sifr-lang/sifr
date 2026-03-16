@@ -25,7 +25,7 @@ The primary optimization target is the developer experience on a normal local ma
 - [x] `milestone_test_2`: declarative validation harness
 - [x] `milestone_test_3`: invariant downshifting
 - [x] `milestone_test_4`: artifact reuse and cache boundary redesign
-- [ ] `milestone_test_5`: hardening lane refactor
+- [x] `milestone_test_5`: hardening lane refactor
 - [ ] `milestone_test_6`: throughput and resource governance
 
 ## Execution Log
@@ -45,6 +45,10 @@ The primary optimization target is the developer experience on a normal local ma
   - Execution issue: `issues/ad-hoc-test-strategy-and-validation-lane-redesign-execution.md`
   - PR: `#1178`
   - Closure basis: `sifr run` and `sifr test` now reuse content-addressed generated Cargo workspaces when inputs are unchanged, cache misses promote atomically from staging directories, and cache hit/miss accounting is emitted directly in validation logs.
+- `2026-03-16`: `milestone_test_5` completed.
+  - Execution issue: `issues/ad-hoc-test-strategy-and-validation-lane-redesign-execution.md`
+  - PR: `#1180`
+  - Closure basis: determinism and broad hardening now reject `quick` as an explicit lane, determinism-scale inherits the selected non-default lane profile instead of silently reusing the quick subset, and the smoke property/fuzz wrapper now targets `nightly`.
 
 ## Why This Needs Its Own Phase
 The current suite is strong on breadth but inefficient in architecture.
