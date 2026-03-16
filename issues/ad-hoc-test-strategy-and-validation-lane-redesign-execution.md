@@ -20,7 +20,7 @@ Loop per part: Plan -> Implement -> Validate -> Demo -> PR -> Review -> Merge ->
 ## Full Phase To-Do Plan
 1. [x] `milestone_test_1`: redesign lane taxonomy and policy so `quick`, `pr`, `nightly`, and `release` are explicit and `quick` stops running broad hardening / nested determinism work
 2. [x] `milestone_test_2`: replace shell-matrix repetition with one declarative validation harness and thin wrappers
-3. [ ] `milestone_test_3`: downshift eligible invariants from expensive CLI/e2e paths into cheaper integration or unit coverage
+3. [x] `milestone_test_3`: downshift eligible invariants from expensive CLI/e2e paths into cheaper integration or unit coverage
 4. [ ] `milestone_test_4`: redesign generated-program artifact reuse and cache boundaries for repeated `run` / `test` validation
 5. [ ] `milestone_test_5`: refactor hardening and determinism into non-default lanes while preserving breadth
 6. [ ] `milestone_test_6`: add throughput/resource reporting, worker guidance, and regression visibility
@@ -95,7 +95,8 @@ Known architectural entry facts from the planning doc:
   - closure basis: the contract matrix now lives in `verification/validation_contracts/manifest.json`, `tests/validation_contracts.rs` is the single Rust-native execution harness, `scripts/run_validation_contract_matrix.sh` is the one harness entrypoint, and the old matrix scripts have been reduced to thin suite-selecting wrappers
 
 ### milestone_test_3: Invariant Downshifting
-- Status: complete locally
+- Status: complete
+- Implementation PR: https://github.com/yaseralnajjar/sifr/pull/1175
 - Implementation target:
   - move diagnostic/lowering/codegen invariants into cheaper integration or unit coverage where possible
   - keep traceability from removed expensive checks to the new cheaper proof
@@ -110,6 +111,7 @@ Known architectural entry facts from the planning doc:
   - positive path: `bash scripts/run_validation_contract_matrix.sh --suite frontend_mode_parity --suite phase23_graph_isolation --suite phase24_hir_analysis --suite phase25_cfg_flow` -> passed after removing the downshifted positive analysis rows, reducing the full contract harness from `19` rows / `66302ms` to `14` rows / `42173ms`
   - positive path: `$(pwd)/scripts/run_all_tests.sh --profile quick` -> passed with the new lower-layer phase 24/25 checks folded into `cargo test -p sifr -- --skip test_e2e_pass`
   - negative path: the removed contract rows were not deleted blindly; each moved invariant is now pinned in `crates/sifr/src/main.rs` against emitted Rust shape, and the remaining phase 24/25 negative contract rows continue to enforce diagnostic parity in the declarative harness
+  - merge evidence: PR `#1175` merged into `main` as `208192d3497e84d689dfb3c7f3548469ea192caf` on `2026-03-16`
   - closure basis: phase 24/25 positive analysis invariants no longer depend on expensive CLI `run` execution, while the contract harness retains only the rows that still need true CLI-mode parity coverage
 
 ### milestone_test_4: Artifact Reuse and Cache Boundary Redesign

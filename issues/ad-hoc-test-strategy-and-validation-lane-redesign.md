@@ -23,7 +23,7 @@ The primary optimization target is the developer experience on a normal local ma
 ## Execution Checklist
 - [x] `milestone_test_1`: lane taxonomy and policy redesign
 - [x] `milestone_test_2`: declarative validation harness
-- [ ] `milestone_test_3`: invariant downshifting
+- [x] `milestone_test_3`: invariant downshifting
 - [ ] `milestone_test_4`: artifact reuse and cache boundary redesign
 - [ ] `milestone_test_5`: hardening lane refactor
 - [ ] `milestone_test_6`: throughput and resource governance
@@ -37,6 +37,10 @@ The primary optimization target is the developer experience on a normal local ma
   - Execution issue: `issues/ad-hoc-test-strategy-and-validation-lane-redesign-execution.md`
   - PR: `#1172`
   - Closure basis: the shell matrix logic now lives in one declarative contract manifest plus one Rust-native harness, while the old matrix script names remain only as thin compatibility wrappers.
+- `2026-03-16`: `milestone_test_3` completed.
+  - Execution issue: `issues/ad-hoc-test-strategy-and-validation-lane-redesign-execution.md`
+  - PR: `#1175`
+  - Closure basis: phase 24/25 positive analysis invariants now live in cheap `emit_entrypoint` tests under `cargo test -p sifr`, and the declarative contract harness keeps only the remaining CLI-parity rows that still need expensive proof.
 
 ## Why This Needs Its Own Phase
 The current suite is strong on breadth but inefficient in architecture.
