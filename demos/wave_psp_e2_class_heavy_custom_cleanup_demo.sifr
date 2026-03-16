@@ -16,10 +16,17 @@ def main():
     parsed_inline = parser.parse_args(["--mode=inline", "--", "--literal.sifr"])
     print("argparse.inline = " + parsed_inline.get("mode", ""))
     print("argparse.literal = " + parsed_inline.get("entry", ""))
+    parsed_missing = parser.parse_args(["--mode", "--strict", "fallback.sifr"])
+    print("argparse.missing_mode = " + parsed_missing.get("mode", ""))
+    print("argparse.missing_strict = " + str(parsed_missing.get_bool("strict", False)))
 
     try:
         addr: IPv4Address = ip_address("8.8.8.8")
         print("ipaddress.value = " + addr.to_str() + " global=" + str(addr.is_global()))
+        link_local: IPv4Address = ip_address("169.254.10.20")
+        print("ipaddress.link_local = " + str(link_local.is_link_local()) + " global=" + str(link_local.is_global()))
+        multicast: IPv4Address = ip_address("224.0.0.1")
+        print("ipaddress.multicast_global = " + str(multicast.is_global()))
     except AddressValueError as e:
         print("ipaddress.error = " + e.message)
 

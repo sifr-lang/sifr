@@ -20,6 +20,8 @@ def main():
 
     missing: str = parse_option(args, "--format", "json")
     assert str(missing) == 'json'
+    missing_value_keeps_default: str = parse_option(["--output", "--verbose"], "--output", "default.txt")
+    assert str(missing_value_keeps_default) == 'default.txt'
 
     # parse_positional (skips --option value pairs)
     pos0: str = parse_positional(args, 0, "none")

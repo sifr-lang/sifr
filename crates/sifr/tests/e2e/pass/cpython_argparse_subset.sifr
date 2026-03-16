@@ -1,5 +1,5 @@
 # Adapted CPython argparse subset for sifr.argparse class-heavy surface
-from sifr.argparse import ArgumentParser, Namespace
+from sifr.argparse import ArgumentParser, Namespace, parse_option
 from sifr.test import assert_bool_vector_eq
 
 
@@ -40,15 +40,40 @@ def collect_option_token_shape_actual() -> list[bool]:
     return actual
 
 
+def collect_missing_option_value_actual() -> list[bool]:
+    actual: list[bool] = []
+    parser: ArgumentParser = ArgumentParser("missing-option")
+    parser.add_argument("--verbose", "verbose", "store_true")
+    parser.add_argument("--output", "output", "store", "default.txt")
+    parser.add_argument("input", "input", "store", "missing.sifr")
+
+    parsed_missing: Namespace = parser.parse_args(["--output", "--verbose", "main.sifr"])
+    actual.append(parsed_missing.get("output", "") == "default.txt")
+    actual.append(parsed_missing.get_bool("verbose", False) == True)
+    actual.append(parsed_missing.get("input", "") == "main.sifr")
+
+    parsed_with_double_dash: Namespace = parser.parse_args(["--output", "--", "main.sifr"])
+    actual.append(parsed_with_double_dash.get("output", "") == "default.txt")
+    actual.append(parsed_with_double_dash.get_bool("verbose", False) == False)
+    actual.append(parsed_with_double_dash.get("input", "") == "main.sifr")
+
+    helper_default: str = parse_option(["--output", "--verbose"], "--output", "default.txt")
+    helper_negative_number: str = parse_option(["--output", "-1"], "--output", "default.txt")
+    actual.append(helper_default == "default.txt")
+    actual.append(helper_negative_number == "-1")
+    return actual
+
+
 def append_all(mut target: list[bool], values: list[bool]):
     for value in values:
         target.append(value)
 
 
 def main():
-    expected: list[bool] = [True, True, True, True, True, True, True, True, True, True, True]
+    expected: list[bool] = [True, True, True, True, True, True, True, True, True, True, True, True, True, True, True, True, True, True, True]
     actual: list[bool] = []
     append_all(actual, collect_argument_parser_actual())
     append_all(actual, collect_option_token_shape_actual())
+    append_all(actual, collect_missing_option_value_actual())
     assert_bool_vector_eq(actual, expected)
     assert str("cpython_argparse_subset: pass") == "cpython_argparse_subset: pass"

@@ -579,7 +579,9 @@ Status: pending
   - `lib/sifr/graphlib.sifr`
 - Post-closure gap hardening (CPython-derived) in this same wave:
   - `argparse`: added `--name=value` token-shape support and `--` positional passthrough in `parse_option`, `parse_positional`, and `ArgumentParser.parse_args`.
+  - `argparse`: hardened pending-option parsing so option-like tokens (`--...`) are no longer consumed as values for an option that is missing its argument; defaults now remain stable under this adapted flow.
   - `ipaddress`: added CPython-style leading-zero rejection for IPv4 segments while preserving typed factory errors via `ip_address` / `ipv4_address`.
+  - `ipaddress`: aligned IPv4 special-range classification with CPython-adapted semantics for `is_private` / `is_global` (including `100.64.0.0/10` and `192.0.0.9/.10` exception handling) and added `is_link_local` / `is_reserved` coverage on both function and class surfaces.
   - `uuid`: extended `uuid_from_hex` normalization to accept canonical, hyphenated, `urn:uuid:...`, and `{...}` forms.
   - `graphlib`: fixed sparse-node ordering by filtering static/incremental order to explicitly added nodes (no undeclared intermediary node leakage).
 - Added wave-specific regression, demo, and traceability artifacts:
@@ -763,4 +765,12 @@ Status: pending
 - `wave_psp_e2` review pass 4:
   - Reviewer file: `/Users/yaseralnajjar/.codex/worktrees/0761/codebase/reviews/wave-psp-e2-review-pass4.md`
   - Validation result: non-actionable stale cross-branch review. The report evaluated an outdated branch state and claimed e2 artifacts were missing; in this active worktree the referenced files and tests are present and validated.
+  - Fix status: no code changes required.
+- `wave_psp_e2` review pass 5:
+  - Reviewer file: `/Users/yaseralnajjar/.codex/worktrees/0761/codebase/reviews/wave-psp-e2-review-pass5.md`
+  - Validation result: approved with no actionable implementation issue after the follow-up e2 gap-closure hardening (argparse pending-option fallback + ipaddress special-range parity alignment + expanded CPython-derived regressions).
+  - Fix status: no code changes required.
+- `wave_psp_e2` review pass 6:
+  - Reviewer file: `/Users/yaseralnajjar/.codex/worktrees/0761/codebase/reviews/wave-psp-e2-review-pass6.md`
+  - Validation result: approved with no actionable implementation issue; the body references an older e2 commit snapshot but reports no correctness regressions against the active wave surface.
   - Fix status: no code changes required.
