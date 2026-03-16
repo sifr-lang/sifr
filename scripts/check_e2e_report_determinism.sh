@@ -4,13 +4,14 @@ set -euo pipefail
 
 usage() {
   cat <<'EOF'
-Usage: scripts/check_e2e_report_determinism.sh [--profile <quick|full|stress>] [--help]
+Usage: scripts/check_e2e_report_determinism.sh [--profile <quick|pr|nightly|release|full|stress>] [--help]
 
 Run the e2e pass suite twice and assert the emitted report signature is identical.
 EOF
 }
 
 PROFILE="quick"
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
 while [[ $# -gt 0 ]]; do
   case "$1" in
@@ -30,17 +31,7 @@ while [[ $# -gt 0 ]]; do
   esac
 done
 
-case "${PROFILE}" in
-  quick|full|stress)
-    ;;
-  *)
-    echo "unsupported profile: ${PROFILE}" >&2
-    usage >&2
-    exit 2
-    ;;
-esac
-
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+PROFILE="$(python3 "${SCRIPT_DIR}/validation_lane.py" canonical-profile --profile "${PROFILE}")"
 REPO_ROOT="${SCRIPT_DIR}/.."
 
 extract_signature() {

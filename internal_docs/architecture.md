@@ -1020,8 +1020,11 @@ Note: `extract_expect_stdout` is retained for legacy runner compatibility only. 
 ```bash
 cargo test                                    # Run all tests (layers 1-3)
 ./scripts/run_all_tests.sh --profile quick   # Fast local-first profile
-./scripts/run_all_tests.sh --profile full    # Authoritative local-first gate
-./scripts/run_all_tests.sh --profile stress  # High-contention local parity profile
+./scripts/run_all_tests.sh --profile pr      # Authoritative merge gate
+./scripts/run_all_tests.sh --profile nightly # Broad nightly validation lane
+./scripts/run_all_tests.sh --profile release # Highest-confidence local qualification lane
+./scripts/run_all_tests.sh --profile full    # Legacy alias for `pr`
+./scripts/run_all_tests.sh --profile stress  # Legacy alias for `release`
 ./scripts/check_e2e_report_determinism.sh --profile quick  # Stable e2e report signature across reruns
 ./scripts/run_smoke_fuzz_property.sh         # Always-on smoke property/fuzz validation
 cargo test -p sifr_python_parser              # Parser snapshots
@@ -1033,6 +1036,8 @@ cargo test -- corpus --ignored                # Run corpus tests (slower, layer 
 cargo fuzz run parser_fuzz -- -max_total_time=300  # Run fuzz tests (layer 5, milestone_generics+)
 cargo bench                                   # Run benchmarks (layer 6, milestone_generics+)
 ```
+
+Validation-lane policy is defined in `verification/validation_lanes/manifest.json`. Representative `quick` and `pr` e2e coverage is selected through checked-in fixture manifests rather than hard-coded shell assumptions.
 
 ### Adding Tests for New Features (Agent Workflow)
 

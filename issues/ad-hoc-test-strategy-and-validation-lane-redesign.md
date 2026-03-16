@@ -1,9 +1,9 @@
 # Ad Hoc Phase: Test Strategy and Validation Lane Redesign
 
-Status: open (documented 2026-03-16)
+Status: in progress (execution started 2026-03-16)
 Context: ad hoc planning phase captured in `issues/` before any roadmap-phase promotion
-Execution readiness: planning-ready; promote into an execution checklist issue before implementation begins
-Execution tracking: create `issues/phaseXX-test-strategy-and-validation-lane-redesign-execution.md` when execution begins
+Execution readiness: in progress via execution checklist issue
+Execution tracking: `issues/ad-hoc-test-strategy-and-validation-lane-redesign-execution.md`
 Suggested phase owner: compiler test platform / local validation infrastructure
 
 ## Objective
@@ -17,8 +17,8 @@ CI/CD symmetry is not the design driver for this document.
 The primary optimization target is the developer experience on a normal local machine.
 
 ## Closure Status
-- Status: open
-- Closure evidence issue: create `issues/phaseXX-test-strategy-and-validation-lane-redesign-execution.md` when execution begins
+- Status: in progress
+- Closure evidence issue: `issues/ad-hoc-test-strategy-and-validation-lane-redesign-execution.md`
 
 ## Why This Needs Its Own Phase
 The current suite is strong on breadth but inefficient in architecture.

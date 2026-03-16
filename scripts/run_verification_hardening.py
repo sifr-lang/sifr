@@ -35,8 +35,8 @@ def parse_args() -> argparse.Namespace:
     )
     parser.add_argument(
         "--profile",
-        choices=("quick", "full", "stress"),
-        default="full",
+        choices=("quick", "pr", "nightly", "release", "full", "stress"),
+        default="pr",
         help="Execution profile.",
     )
     parser.add_argument(
@@ -81,6 +81,14 @@ def parse_args() -> argparse.Namespace:
     return parser.parse_args()
 
 
+def canonicalize_profile(profile: str) -> str:
+    if profile == "full":
+        return "pr"
+    if profile == "stress":
+        return "release"
+    return profile
+
+
 def normalize_string(value: str, repo_root: Path) -> str:
     normalized = value.replace("\r\n", "\n").replace("\r", "\n")
     normalized = normalized.replace(str(repo_root), "<WORKSPACE>")
@@ -122,17 +130,16 @@ def load_text(path: Path) -> str:
 
 
 def should_run_suite(profile: str, suite_name: str) -> bool:
-    if profile == "quick":
+    canonical_profile = canonicalize_profile(profile)
+    if canonical_profile == "quick":
+        return False
+    if canonical_profile == "pr":
         return suite_name in {
             "diagnostics",
             "project",
             "fixedbugs",
             "crashes",
-            "property",
-            "fuzz-smoke",
             "oss-curated",
-            "ecosystem-broader",
-            "determinism-scale",
         }
     return True
 
@@ -1514,6 +1521,7 @@ def failed_case_ids(suite_result: dict[str, Any]) -> set[str]:
 
 def main() -> int:
     args = parse_args()
+    args.profile = canonicalize_profile(args.profile)
     if args.shard_total < 1:
         raise SystemExit("--shard-total must be >= 1")
     if args.shard_index < 0 or args.shard_index >= args.shard_total:
