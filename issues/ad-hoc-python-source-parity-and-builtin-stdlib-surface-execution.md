@@ -4,7 +4,7 @@ Status: in_progress
 Started: 2026-03-14
 Phase owner: Codex (GPT-5)
 Source phase: `issues/ad-hoc-python-source-parity-and-builtin-stdlib-surface.md`
-Current active wave: `wave_psp_d1`
+Current active wave: `wave_psp_d2`
 
 ## Execution Rules
 
@@ -530,6 +530,8 @@ Status: pending
 - `wave_psp_c2`: PR `#1182` merged at `2026-03-16T03:11:07Z`
 - `wave_psp_c2-review-pass1`: PR `#1187` merged at `2026-03-16T03:39:09Z`
 - `wave_psp_ab-review-pass1`: PR `#1190` merged at `2026-03-16T04:49:13Z`
+- `wave_psp_d1`: PR `#1192` merged at `2026-03-16T05:15:54Z`
+- `wave_psp_d1-review-pass1`: PR `#1193` merged at `2026-03-16T05:28:23Z`
 
 ## External Review Ledger
 
@@ -589,4 +591,12 @@ Status: pending
 - `wave_psp_ab` review pass 2:
   - Reviewer file: `/Users/yaseralnajjar/.codex/worktrees/0761/codebase/reviews/wave-psp-ab-review-pass2.md`
   - Validation result: no new actionable implementation issue. The repeated recommendation to reject all `range(...)` keywords conflicts with the approved `wave_psp_a1` adapted parity contract, and the "no b2 fail tests" note is stale after PR `#1190`.
+  - Fix status: no code changes required.
+- `wave_psp_d1` review pass 1:
+  - Reviewer file: `/Users/yaseralnajjar/.codex/worktrees/0761/codebase/reviews/wave-psp-d1-review-pass1.md`
+  - Validated finding: `pathlib.Path` transformation methods (`parent`, `joinpath`, `with_name`, `with_suffix`) returned `str` instead of `Path`, which broke Python-shaped chaining semantics.
+  - Fix status: remediated in PR `#1193` by returning `Path` from those methods and updating impacted parity tests/demos.
+- `wave_psp_d1` review pass 2:
+  - Reviewer file: `/Users/yaseralnajjar/.codex/worktrees/0761/codebase/reviews/wave-psp-d1-review-pass2.md`
+  - Validation result: non-actionable stale review. The notes incorrectly reported `wave_psp_d1` as pending and missing artifacts that are already merged (`#1192`) on current mainline.
   - Fix status: no code changes required.
