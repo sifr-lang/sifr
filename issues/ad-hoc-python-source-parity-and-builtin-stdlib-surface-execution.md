@@ -413,12 +413,16 @@ Status: pending
   - `crates/sifr_codegen/src/lib.rs`
 - Added wave-specific regression/demo/traceability artifacts:
   - `crates/sifr/tests/e2e/pass/phase_psp_c1_structured_parsing_serialization.sifr`
+  - `crates/sifr/tests/e2e/pass/cpython_json_subset.sifr`
+  - `crates/sifr/tests/e2e/pass/cpython_csv_subset.sifr`
   - `crates/sifr/tests/e2e/pass/cpython_tomllib_subset.sifr`
   - `crates/sifr/tests/e2e/pass/cpython_configparser_subset.sifr`
   - `demos/wave_psp_c1_structured_parsing_serialization_demo.sifr`
   - `verification/stdlib/wave_psp_c1_cpython_traceability.md`
 - Targeted validation:
   - `cargo run -q -p sifr -- run demos/wave_psp_c1_structured_parsing_serialization_demo.sifr`
+  - `cargo run -q -p sifr -- run crates/sifr/tests/e2e/pass/cpython_json_subset.sifr`
+  - `cargo run -q -p sifr -- run crates/sifr/tests/e2e/pass/cpython_csv_subset.sifr`
   - `cargo run -q -p sifr -- run crates/sifr/tests/e2e/pass/cpython_tomllib_subset.sifr`
   - `cargo run -q -p sifr -- run crates/sifr/tests/e2e/pass/cpython_configparser_subset.sifr`
   - `cargo run -q -p sifr -- run crates/sifr/tests/e2e/pass/phase_psp_c1_structured_parsing_serialization.sifr`
@@ -730,6 +734,10 @@ Status: pending
   - Reviewer file: `/Users/yaseralnajjar/.codex/worktrees/0761/codebase/reviews/wave-psp-c1-review-gap-cpython-parity-20260316.md`
   - Validation result: partially actionable. The reported `ConfigParser.has_option()` bug is invalid against CPython behavior (`DEFAULT` options are visible to concrete sections), while the request to explicitly classify `json.dumps` encode-error semantics and clean minor CSV no-op assignment was valid.
   - Fix status: remediated by classifying `json.dumps` encode-error propagation as an intentional C1 divergence in `verification/stdlib/wave_psp_c1_cpython_traceability.md` and removing the redundant `DictWriter.writeheader()` reassignment in `lib/sifr/csv.sifr`.
+- `wave_psp_c1` review pass 4:
+  - Reviewer file: `/Users/yaseralnajjar/.codex/worktrees/0761/codebase/reviews/wave-psp-c1-review-gap-cpython-parity-20260317-r1.md`
+  - Validation result: partially actionable on documentation fidelity. Runtime behavior remained correct, but traceability wording needed tighter subset-scoped coverage framing to avoid overstating CPython-family depth.
+  - Fix status: remediated by tightening `verification/stdlib/wave_psp_c1_cpython_traceability.md` (explicit subset-coverage scope note, explicit `cpython_json_subset.sifr` evidence mapping, and explicit TOML decode-position `intentional-diff` classification).
 - `wave_psp_c2` review pass 1:
   - Reviewer file: `/Users/yaseralnajjar/.codex/worktrees/0761/codebase/reviews/wave-psp-c2-review-pass1.md`
   - Validated findings: `SequenceMatcher.get_matching_blocks()` only returned the longest substring block, `SequenceMatcher.ratio()` used character-presence instead of block-based matching, and `TextWrapper` width did not account for line indentation width.
