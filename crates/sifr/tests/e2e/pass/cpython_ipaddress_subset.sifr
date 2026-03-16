@@ -13,6 +13,7 @@ def collect_positive_actual() -> list[bool]:
     actual: list[bool] = []
     actual.append(is_valid_ipv4("192.168.1.1"))
     actual.append(is_valid_ipv4("999.1.1.1") == False)
+    actual.append(is_valid_ipv4("01.2.3.40") == False)
 
     local_ok: bool = False
     public_ok: bool = False
@@ -53,6 +54,20 @@ def collect_negative_actual() -> list[bool]:
         _ = e.message
         v6_rejected = True
     actual.append(v6_rejected)
+
+    leading_zero_rejected: bool = False
+    try:
+        _leading_zero: IPv4Address = ip_address("1.02.3.40")
+        _ = _leading_zero.to_str()
+    except AddressValueError as e:
+        _ = e.message
+        leading_zero_rejected = True
+    actual.append(leading_zero_rejected)
+
+    direct_ctor_marks_invalid: bool = False
+    direct: IPv4Address = IPv4Address("500.1.1.1")
+    direct_ctor_marks_invalid = direct.packed_int() == -1
+    actual.append(direct_ctor_marks_invalid)
     return actual
 
 
@@ -62,7 +77,7 @@ def append_all(mut target: list[bool], values: list[bool]):
 
 
 def main():
-    expected: list[bool] = [True, True, True, True, True, True]
+    expected: list[bool] = [True, True, True, True, True, True, True, True, True]
     actual: list[bool] = []
     append_all(actual, collect_positive_actual())
     append_all(actual, collect_negative_actual())

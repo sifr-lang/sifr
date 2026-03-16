@@ -98,12 +98,43 @@ def _hex_digit_value(ch: str) -> int:
         return 15
     return -1
 
+def _substring(value: str, start: int, end: int) -> str:
+    result: str = ""
+    i: int = start
+    while i < end:
+        ch: str | None = value[i]
+        if ch is not None:
+            result = result + ch
+        i = i + 1
+    return result
+
+def _starts_with(value: str, prefix: str) -> bool:
+    if len(value) < len(prefix):
+        return False
+    i: int = 0
+    while i < len(prefix):
+        left: str | None = value[i]
+        right: str | None = prefix[i]
+        if left != right:
+            return False
+        i = i + 1
+    return True
+
 def _canonical_uuid_text(input_text: str) -> Result[str, ValueError]:
-    input_len: int = len(input_text)
+    normalized_input: str = input_text + ""
+    if _starts_with(normalized_input, "urn:uuid:"):
+        normalized_input = _substring(normalized_input, 9, len(normalized_input))
+    if len(normalized_input) >= 2:
+        first: str | None = normalized_input[0]
+        last: str | None = normalized_input[len(normalized_input) - 1]
+        if first == "{" and last == "}":
+            normalized_input = _substring(normalized_input, 1, len(normalized_input) - 1)
+
+    input_len: int = len(normalized_input)
     hex_only: str = ""
     i: int = 0
     while i < input_len:
-        ch_opt: str | None = input_text[i]
+        ch_opt: str | None = normalized_input[i]
         if ch_opt is not None:
             ch: str = ch_opt
             if ch == "-":
@@ -118,10 +149,10 @@ def _canonical_uuid_text(input_text: str) -> Result[str, ValueError]:
         raise ValueError("UUID hex string must be 32 hex characters")
 
     if input_len == 36:
-        h1: str | None = input_text[8]
-        h2: str | None = input_text[13]
-        h3: str | None = input_text[18]
-        h4: str | None = input_text[23]
+        h1: str | None = normalized_input[8]
+        h2: str | None = normalized_input[13]
+        h3: str | None = normalized_input[18]
+        h4: str | None = normalized_input[23]
         if h1 != "-" or h2 != "-" or h3 != "-" or h4 != "-":
             raise ValueError("invalid UUID hex string")
     elif input_len != 32:

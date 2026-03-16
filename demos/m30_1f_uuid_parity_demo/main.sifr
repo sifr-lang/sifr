@@ -58,8 +58,14 @@ def collect_negative_and_class_actual() -> list[bool]:
     ctor_passthrough: UUID = UUID("550e8400-e29b-41d4-a716-44665544000z")
     actual.append(ctor_passthrough.to_str() == "550e8400-e29b-41d4-a716-44665544000z")
 
-    ctor_invalid_version: UUID = UUID("zzzzzzzz-zzzz-zzzz-zzzz-zzzzzzzzzzzz")
-    actual.append(ctor_invalid_version.version() == -1)
+    ctor_curly_ok: bool = False
+    try:
+        ctor_curly: UUID = uuid_from_hex("{550E8400-E29B-41D4-A716-446655440000}")
+        ctor_curly_ok = ctor_curly.to_str() == "550e8400-e29b-41d4-a716-446655440000"
+    except ValueError as e:
+        _ = str(e.message)
+        ctor_curly_ok = False
+    actual.append(ctor_curly_ok)
 
     obj: UUID = uuid4_obj()
     actual.append(len(obj.hex()) == 32)

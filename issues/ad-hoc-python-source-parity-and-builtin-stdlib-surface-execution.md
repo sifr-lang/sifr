@@ -575,7 +575,13 @@ Status: pending
 - Implemented class/object-model parity upgrades in:
   - `lib/sifr/argparse.sifr`
   - `lib/sifr/ipaddress.sifr`
+  - `lib/sifr/uuid.sifr`
   - `lib/sifr/graphlib.sifr`
+- Post-closure gap hardening (CPython-derived) in this same wave:
+  - `argparse`: added `--name=value` token-shape support and `--` positional passthrough in `parse_option`, `parse_positional`, and `ArgumentParser.parse_args`.
+  - `ipaddress`: added CPython-style leading-zero rejection for IPv4 segments while preserving typed factory errors via `ip_address` / `ipv4_address`.
+  - `uuid`: extended `uuid_from_hex` normalization to accept canonical, hyphenated, `urn:uuid:...`, and `{...}` forms.
+  - `graphlib`: fixed sparse-node ordering by filtering static/incremental order to explicitly added nodes (no undeclared intermediary node leakage).
 - Added wave-specific regression, demo, and traceability artifacts:
   - `crates/sifr/tests/e2e/pass/phase_psp_e2_class_heavy_custom_cleanup.sifr`
   - `crates/sifr/tests/e2e/pass/cpython_argparse_subset.sifr`
@@ -602,6 +608,12 @@ Status: pending
   - `cargo run -q -p sifr -- run crates/sifr/tests/e2e/pass/cpython_uuid_subset.sifr`
   - `cargo run -q -p sifr -- run crates/sifr/tests/e2e/pass/cpython_graphlib_subset.sifr`
   - `cargo run -q -p sifr -- run crates/sifr/tests/e2e/pass/cpython_unittest_assertions_subset.sifr`
+  - `cargo run -q -p sifr -- run crates/sifr/tests/e2e/pass/stdlib_argparse.sifr`
+  - `cargo run -q -p sifr -- run crates/sifr/tests/e2e/pass/stdlib_ipaddress.sifr`
+  - `cargo run -q -p sifr -- run crates/sifr/tests/e2e/pass/stdlib_ipaddress_extended.sifr`
+  - `cargo run -q -p sifr -- run crates/sifr/tests/e2e/pass/stdlib_uuid_consolidated.sifr`
+  - `cargo run -q -p sifr -- run crates/sifr/tests/e2e/pass/stdlib_graphlib.sifr`
+  - `cargo run -q -p sifr -- run crates/sifr/tests/e2e/pass/stdlib_graphlib_class.sifr`
   - `cargo run -q -p sifr -- check crates/sifr/tests/e2e/fail/phase_psp_e2_argparse_parse_args_non_string_list.sifr`
   - `cargo run -q -p sifr -- check crates/sifr/tests/e2e/fail/phase_psp_e2_ip_address_non_string.sifr`
   - `cargo run -q -p sifr -- check crates/sifr/tests/e2e/fail/phase_psp_e2_graphlib_add_non_int_predecessor.sifr`
@@ -734,4 +746,12 @@ Status: pending
 - `wave_psp_e2` review pass 2:
   - Reviewer file: `/Users/yaseralnajjar/.codex/worktrees/0761/codebase/reviews/wave-psp-e2-review-pass2.md`
   - Validation result: approved as production-ready with no actionable implementation issue. The review reiterated stale artifact-missing claims that are invalid after merged PRs `#1205` and `#1206`.
+  - Fix status: no code changes required.
+- `wave_psp_e2` review pass 3:
+  - Reviewer file: `/Users/yaseralnajjar/.codex/worktrees/0761/codebase/reviews/wave-psp-e2-review-pass3.md`
+  - Validation result: approved with no actionable implementation issue after the e2 hardening pass (`argparse` token-shape support, `ipaddress` leading-zero rejection, `uuid` URN/curly parse normalization, and `graphlib` sparse-node filtering).
+  - Fix status: no code changes required.
+- `wave_psp_e2` review pass 4:
+  - Reviewer file: `/Users/yaseralnajjar/.codex/worktrees/0761/codebase/reviews/wave-psp-e2-review-pass4.md`
+  - Validation result: non-actionable stale cross-branch review. The report evaluated an outdated branch state and claimed e2 artifacts were missing; in this active worktree the referenced files and tests are present and validated.
   - Fix status: no code changes required.
