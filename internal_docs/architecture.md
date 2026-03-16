@@ -1037,7 +1037,7 @@ cargo fuzz run parser_fuzz -- -max_total_time=300  # Run fuzz tests (layer 5, mi
 cargo bench                                   # Run benchmarks (layer 6, milestone_generics+)
 ```
 
-Validation-lane policy is defined in `verification/validation_lanes/manifest.json`. Representative `quick` and `pr` e2e coverage is selected through checked-in fixture manifests rather than hard-coded shell assumptions.
+Validation-lane policy is defined in `verification/validation_lanes/manifest.json`. Representative `quick` and `pr` e2e coverage is selected through checked-in fixture manifests rather than hard-coded shell assumptions. Declarative contract-matrix coverage lives in `verification/validation_contracts/manifest.json` and is executed through `scripts/run_validation_contract_matrix.sh` plus the Rust-native `tests/validation_contracts.rs` harness.
 
 ### Adding Tests for New Features (Agent Workflow)
 
