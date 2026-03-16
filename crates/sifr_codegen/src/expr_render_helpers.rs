@@ -4,6 +4,152 @@ use sifr_hir::HirExpr;
 use sifr_type_system::Type;
 
 impl RustEmitter {
+    pub(super) fn method_call_needs_field_clone_suppression(
+        &self,
+        object: &HirExpr,
+        method: &str,
+    ) -> bool {
+        let HirExpr::FieldAccess {
+            object: parent,
+            field,
+            ..
+        } = object
+        else {
+            return false;
+        };
+
+        if matches!(
+            crate::resolve_alias_type_for_plain_call(object.ty()),
+            Type::Class { .. }
+        ) {
+            return true;
+        }
+
+        if !crate::helpers::MUTATING_METHODS.contains(&method) {
+            return false;
+        }
+
+        if matches!(parent.as_ref(), HirExpr::Name { name, .. } if name == "self") {
+            return true;
+        }
+
+        let parent_class_name = match crate::resolve_alias_type_for_plain_call(parent.ty()) {
+            Type::Class { name, .. } => Some(name.clone()),
+            _ => None,
+        };
+
+        parent_class_name.is_some_and(|class_name| {
+            self.recursive_fields
+                .contains(&(class_name, field.to_string()))
+        })
+    }
+
+    pub(super) fn lower_field_access_expr_with_lowered_object(
+        &mut self,
+        object: &HirExpr,
+        field: &str,
+        ty: &Type,
+        lowered_object: crate::RustExpr,
+    ) -> crate::RustExpr {
+        if matches!(object.ty(), Type::Enum { .. }) {
+            return crate::RustExpr::FnCall {
+                func: Box::new(crate::RustExpr::Field {
+                    expr: Box::new(lowered_object),
+                    field: field.to_string(),
+                }),
+                args: vec![],
+            };
+        }
+
+        let is_self_access = matches!(object, HirExpr::Name { name, .. } if name == "self");
+        let class_name_for_parent = if let Some(ref current_class_name) = self.current_class_name {
+            if is_self_access {
+                Some(current_class_name.clone())
+            } else {
+                None
+            }
+        } else {
+            None
+        }
+        .or_else(|| match object.ty() {
+            Type::Class { name, .. } => Some(name.clone()),
+            _ => None,
+        });
+
+        let is_recursive_field = class_name_for_parent.as_ref().is_some_and(|class_name| {
+            self.recursive_fields
+                .contains(&(class_name.clone(), field.to_string()))
+        });
+
+        let suppress_self_clone = if self.pending_self_field_clone_suppression > 0
+            && (is_self_access || is_recursive_field)
+        {
+            self.pending_self_field_clone_suppression -= 1;
+            true
+        } else {
+            false
+        };
+        let needs_clone = is_self_access && needs_clone_for_type(ty) && !suppress_self_clone;
+
+        let lowered_base = if let Some(ref class_name) = class_name_for_parent {
+            if let Some((parent_name, parent_field_names)) = self.parent_fields.get(class_name) {
+                if parent_field_names.contains(field) {
+                    crate::RustExpr::Field {
+                        expr: Box::new(lowered_object),
+                        field: parent_name.to_lowercase(),
+                    }
+                } else {
+                    lowered_object
+                }
+            } else {
+                lowered_object
+            }
+        } else {
+            lowered_object
+        };
+
+        let lowered_field = crate::RustExpr::Field {
+            expr: Box::new(lowered_base),
+            field: field.to_string(),
+        };
+
+        if is_recursive_field {
+            if suppress_self_clone {
+                return lowered_field;
+            }
+            if crate::helpers::is_option_type(ty) {
+                return crate::RustExpr::MethodCall {
+                    receiver: Box::new(crate::RustExpr::MethodCall {
+                        receiver: Box::new(crate::RustExpr::Paren(Box::new(lowered_field))),
+                        method: "as_deref".to_string(),
+                        args: vec![],
+                    }),
+                    method: "cloned".to_string(),
+                    args: vec![],
+                };
+            }
+            return crate::RustExpr::MethodCall {
+                receiver: Box::new(crate::RustExpr::MethodCall {
+                    receiver: Box::new(crate::RustExpr::Paren(Box::new(lowered_field))),
+                    method: "as_ref".to_string(),
+                    args: vec![],
+                }),
+                method: "clone".to_string(),
+                args: vec![],
+            };
+        }
+
+        if needs_clone {
+            return crate::RustExpr::MethodCall {
+                receiver: Box::new(lowered_field),
+                method: "clone".to_string(),
+                args: vec![],
+            };
+        }
+
+        lowered_field
+    }
+
     fn lower_proven_index_option_expr_for_ir(
         option_expr: crate::RustExpr,
         binding_name: &str,
@@ -401,102 +547,12 @@ impl RustEmitter {
             return Ok(None);
         };
 
-        if matches!(object.ty(), Type::Enum { .. }) {
-            return Ok(Some(crate::RustExpr::FnCall {
-                func: Box::new(crate::RustExpr::Field {
-                    expr: Box::new(lowered_object),
-                    field: field.to_string(),
-                }),
-                args: vec![],
-            }));
-        }
-
-        let is_self_access = matches!(object, HirExpr::Name { name, .. } if name == "self");
-        let suppress_self_clone = if is_self_access && self.pending_self_field_clone_suppression > 0
-        {
-            self.pending_self_field_clone_suppression -= 1;
-            true
-        } else {
-            false
-        };
-        let needs_clone = is_self_access && needs_clone_for_type(ty) && !suppress_self_clone;
-
-        let class_name_for_parent = if let Some(ref current_class_name) = self.current_class_name {
-            if is_self_access {
-                Some(current_class_name.clone())
-            } else {
-                None
-            }
-        } else {
-            None
-        }
-        .or_else(|| {
-            if let Type::Class { name, .. } = object.ty() {
-                Some(name.clone())
-            } else {
-                None
-            }
-        });
-
-        let lowered_base = if let Some(ref class_name) = class_name_for_parent {
-            if let Some((parent_name, parent_field_names)) = self.parent_fields.get(class_name) {
-                if parent_field_names.contains(field) {
-                    crate::RustExpr::Field {
-                        expr: Box::new(lowered_object),
-                        field: parent_name.to_lowercase(),
-                    }
-                } else {
-                    lowered_object
-                }
-            } else {
-                lowered_object
-            }
-        } else {
-            lowered_object
-        };
-
-        let is_recursive_field = class_name_for_parent.as_ref().is_some_and(|class_name| {
-            self.recursive_fields
-                .contains(&(class_name.clone(), field.to_string()))
-        });
-
-        let lowered_field = crate::RustExpr::Field {
-            expr: Box::new(lowered_base),
-            field: field.to_string(),
-        };
-
-        if is_recursive_field {
-            if crate::helpers::is_option_type(ty) {
-                return Ok(Some(crate::RustExpr::MethodCall {
-                    receiver: Box::new(crate::RustExpr::MethodCall {
-                        receiver: Box::new(crate::RustExpr::Paren(Box::new(lowered_field))),
-                        method: "as_deref".to_string(),
-                        args: vec![],
-                    }),
-                    method: "cloned".to_string(),
-                    args: vec![],
-                }));
-            }
-            return Ok(Some(crate::RustExpr::MethodCall {
-                receiver: Box::new(crate::RustExpr::MethodCall {
-                    receiver: Box::new(crate::RustExpr::Paren(Box::new(lowered_field))),
-                    method: "as_ref".to_string(),
-                    args: vec![],
-                }),
-                method: "clone".to_string(),
-                args: vec![],
-            }));
-        }
-
-        if needs_clone {
-            return Ok(Some(crate::RustExpr::MethodCall {
-                receiver: Box::new(lowered_field),
-                method: "clone".to_string(),
-                args: vec![],
-            }));
-        }
-
-        Ok(Some(lowered_field))
+        Ok(Some(self.lower_field_access_expr_with_lowered_object(
+            object,
+            field,
+            ty,
+            lowered_object,
+        )))
     }
 
     pub(crate) fn try_lower_structured_class_binop_expr(
@@ -638,7 +694,7 @@ impl RustEmitter {
 
             let build_inner_index = |container_expr: crate::RustExpr| -> Option<crate::RustExpr> {
                 let lowered_expr = match index_base_ty {
-                    Type::Dict(key_ty, _) => {
+                    Type::Dict(key_ty, value_ty) => {
                         let key_is_string_like = matches!(
                             crate::resolve_alias_type_for_plain_call(key_ty.as_ref()),
                             Type::Str | Type::LiteralStr(_)
@@ -659,7 +715,7 @@ impl RustEmitter {
                                 expr: Box::new(lowered_index.clone()),
                             }
                         };
-                        crate::RustExpr::MethodCall {
+                        let lowered_get = crate::RustExpr::MethodCall {
                             receiver: Box::new(crate::RustExpr::MethodCall {
                                 receiver: Box::new(container_expr),
                                 method: "get".to_string(),
@@ -667,6 +723,22 @@ impl RustEmitter {
                             }),
                             method: "cloned".to_string(),
                             args: vec![],
+                        };
+                        if crate::helpers::is_option_type(value_ty.as_ref()) {
+                            crate::RustExpr::MethodCall {
+                                receiver: Box::new(lowered_get),
+                                method: "and_then".to_string(),
+                                args: vec![crate::RustExpr::Closure {
+                                    params: vec![crate::RustParam::Named {
+                                        name: "__v".to_string(),
+                                        ty: crate::RustType::Named("_".to_string()),
+                                    }],
+                                    body: Box::new(crate::RustExpr::Ident("__v".to_string())),
+                                    is_move: false,
+                                }],
+                            }
+                        } else {
+                            lowered_get
                         }
                     }
                     Type::List(_) => {

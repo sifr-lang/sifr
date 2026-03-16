@@ -1,0 +1,79 @@
+# Adapted CPython tomllib subset for sifr.tomllib (structured value surface)
+from sifr.tomllib import TomlValue, loads
+from sifr.test import assert_bool_vector_eq
+
+
+def collect_basic_actual() -> list[bool]:
+    actual: list[bool] = []
+    values_ok: bool = False
+    keys_ok: bool = False
+    try:
+        parsed: TomlValue = loads(
+            "title = \"TOML Example\"\n"
+            "count = 7\n"
+            "enabled = true\n"
+            "items = [1, 2]\n"
+            "[owner]\n"
+            "name = \"yasir\"\n"
+        )
+        title: TomlValue | None = parsed.get("title")
+        count: TomlValue | None = parsed.get("count")
+        enabled: TomlValue | None = parsed.get("enabled")
+        items: TomlValue | None = parsed.get("items")
+        owner: TomlValue | None = parsed.get("owner")
+
+        first_item: TomlValue | None = None
+        owner_name: TomlValue | None = None
+        if items is not None:
+            first_item = items.at(0)
+        if owner is not None:
+            owner_name = owner.get("name")
+
+        values_ok = (
+            title is not None
+            and count is not None
+            and enabled is not None
+            and first_item is not None
+            and owner_name is not None
+        )
+        if values_ok and title is not None and count is not None and enabled is not None and first_item is not None and owner_name is not None:
+            values_ok = (
+                title.as_str() == "TOML Example"
+                and count.as_int() == 7
+                and enabled.as_bool() == True
+                and first_item.as_int() == 1
+                and owner_name.as_str() == "yasir"
+            )
+        keys_ok = str(parsed.keys()) == "[\"title\", \"count\", \"enabled\", \"items\", \"owner\"]"
+    except TOMLDecodeError as e:
+        _ = str(e.message)
+
+    actual.append(values_ok)
+    actual.append(keys_ok)
+    return actual
+
+
+def collect_error_actual() -> list[bool]:
+    actual: list[bool] = []
+    invalid_rejected: bool = False
+    try:
+        _bad: TomlValue = loads("title = ")
+        _ = _bad
+    except TOMLDecodeError as e:
+        invalid_rejected = len(e.message) > 0
+    actual.append(invalid_rejected)
+    return actual
+
+
+def append_all(mut target: list[bool], values: list[bool]):
+    for value in values:
+        target.append(value)
+
+
+def main():
+    expected: list[bool] = [True, True, True]
+    actual: list[bool] = []
+    append_all(actual, collect_basic_actual())
+    append_all(actual, collect_error_actual())
+    assert_bool_vector_eq(actual, expected)
+    assert str("cpython_tomllib_subset: pass") == "cpython_tomllib_subset: pass"

@@ -41,8 +41,8 @@ use sifr_python_ast::{
     FStringElement, Number, Operator, UnaryOp,
 };
 use sifr_type_system::{
-    type_check_binary_op, type_check_bool_op, type_check_comparison, type_check_unary_op,
-    FunctionType, OwnershipKind, ParamConvention, Type,
+    make_union, type_check_binary_op, type_check_bool_op, type_check_comparison,
+    type_check_unary_op, FunctionType, OwnershipKind, ParamConvention, Type,
 };
 use std::collections::HashMap;
 
@@ -120,6 +120,69 @@ fn callable_signature(expr: &HirExpr) -> Option<(Vec<Type>, Vec<ParamConvention>
                 )
             }),
         _ => None,
+    }
+}
+
+fn canonicalize_class_surface_type(ty: &Type, ctx: &LowerCtx) -> Type {
+    match ty {
+        Type::List(elem) => Type::List(Box::new(canonicalize_class_surface_type(elem, ctx))),
+        Type::Set(elem) => Type::Set(Box::new(canonicalize_class_surface_type(elem, ctx))),
+        Type::Dict(key, value) => Type::Dict(
+            Box::new(canonicalize_class_surface_type(key, ctx)),
+            Box::new(canonicalize_class_surface_type(value, ctx)),
+        ),
+        Type::Tuple(elements) => Type::Tuple(
+            elements
+                .iter()
+                .map(|element| canonicalize_class_surface_type(element, ctx))
+                .collect(),
+        ),
+        Type::Union(members) => make_union(
+            members
+                .iter()
+                .map(|member| canonicalize_class_surface_type(member, ctx))
+                .collect(),
+        ),
+        Type::Result(ok, err) => Type::Result(
+            Box::new(canonicalize_class_surface_type(ok, ctx)),
+            Box::new(canonicalize_class_surface_type(err, ctx)),
+        ),
+        Type::Callable(params, conventions, ret) => Type::Callable(
+            params
+                .iter()
+                .map(|param| canonicalize_class_surface_type(param, ctx))
+                .collect(),
+            conventions.clone(),
+            Box::new(canonicalize_class_surface_type(ret, ctx)),
+        ),
+        Type::Function(ft) => Type::Function(FunctionType {
+            params: ft
+                .params
+                .iter()
+                .map(|(name, param_ty, convention)| {
+                    (
+                        name.clone(),
+                        canonicalize_class_surface_type(param_ty, ctx),
+                        *convention,
+                    )
+                })
+                .collect(),
+            return_type: Box::new(canonicalize_class_surface_type(&ft.return_type, ctx)),
+        }),
+        Type::Alias {
+            name,
+            type_args,
+            body,
+        } => Type::Alias {
+            name: name.clone(),
+            type_args: type_args
+                .iter()
+                .map(|arg| canonicalize_class_surface_type(arg, ctx))
+                .collect(),
+            body: Box::new(canonicalize_class_surface_type(body, ctx)),
+        },
+        Type::Class { .. } | Type::Protocol { .. } => ty.clone(),
+        _ => ty.clone(),
     }
 }
 
@@ -2126,7 +2189,9 @@ pub(super) fn lower_attribute(attr: &ExprAttribute, ctx: &mut LowerCtx) -> Optio
 
     let object = lower_expr(&attr.value, ctx)?;
     let object_ty = object.ty().clone();
-    let resolved_object_ty = object_ty.resolve_alias().clone();
+    let resolved_object_ty = canonicalize_class_surface_type(object_ty.resolve_alias(), ctx)
+        .resolve_alias()
+        .clone();
 
     // Check if the object is a class instance with this field
     if let Type::Class {
@@ -2250,7 +2315,7 @@ pub(super) fn lower_method_call(
 
     let mut object = lower_expr(&attr.value, ctx)?;
     let method_name = attr.attr.to_string();
-    let object_ty_for_args = object.ty().resolve_alias().clone();
+    let object_ty_for_args = canonicalize_class_surface_type(object.ty().resolve_alias(), ctx);
     let args = match &object_ty_for_args {
         Type::Class { name, methods, .. } => {
             if let Some((_, ft)) = methods
@@ -2411,6 +2476,8 @@ pub(super) fn resolve_method_type(
     args: &[HirExpr],
     ctx: &mut LowerCtx,
 ) -> Option<Type> {
+    let canonical_object_ty = canonicalize_class_surface_type(object_ty, ctx);
+    let object_ty = &canonical_object_ty;
     if let Type::Alias {
         name: alias_name,
         body,
@@ -2999,7 +3066,7 @@ pub(super) fn resolve_method_type(
                         ));
                     }
                 }
-                Some(*ft.return_type.clone())
+                Some(canonicalize_class_surface_type(&ft.return_type, ctx))
             } else if let Some((_, field_ty)) = fields.iter().find(|(n, _)| n == method) {
                 // Check if the field is a Callable type — allow calling it like a method
                 if let Type::Callable(param_types, _, ret_type) = field_ty {
@@ -3025,7 +3092,7 @@ pub(super) fn resolve_method_type(
                             ));
                         }
                     }
-                    Some(*ret_type.clone())
+                    Some(canonicalize_class_surface_type(ret_type, ctx))
                 } else {
                     ctx.error(format!(
                         "field '{}' of class '{}' is not callable (type: '{}')",
@@ -3051,7 +3118,7 @@ pub(super) fn resolve_method_type(
                         args.len()
                     ));
                 }
-                Some(*ft.return_type.clone())
+                Some(canonicalize_class_surface_type(&ft.return_type, ctx))
             } else {
                 ctx.error(format!("protocol '{name}' has no method '{method}'"));
                 None

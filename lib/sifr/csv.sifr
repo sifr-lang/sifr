@@ -1,70 +1,486 @@
-# sifr.csv — CSV parsing and writing (pure Sifr)
-# Simplified CSV: no quoting, comma-separated values.
-from _sifr.fs import file_read, file_write, open_file, file_close
-from sifr.io import FileHandle, open
+from sifr.io import FileHandle, read_text, write_text
 
-def parse_row(line: str) -> list[str]:
-    return line.split(",")
 
-def parse_csv(text: str) -> list[list[str]]:
+QUOTE_MINIMAL: int = 0
+QUOTE_ALL: int = 1
+QUOTE_NONNUMERIC: int = 2
+QUOTE_NONE: int = 3
+QUOTE_STRINGS: int = 4
+QUOTE_NOTNULL: int = 5
+
+
+class Error(Error):
+    message: str
+
+
+class Dialect:
+    delimiter: str
+    quotechar: str
+    escapechar: str
+    doublequote: bool
+    skipinitialspace: bool
+    lineterminator: str
+    quoting: int
+
+    def __init__(
+        self,
+        delimiter: str = ",",
+        quotechar: str = "\"",
+        escapechar: str = "",
+        doublequote: bool = True,
+        skipinitialspace: bool = False,
+        lineterminator: str = "\n",
+        quoting: int = 0,
+    ) -> None:
+        resolved_quoting: int = quoting
+        _validate_char("delimiter", delimiter)
+        if quotechar != "":
+            _validate_char("quotechar", quotechar)
+        if escapechar != "":
+            _validate_char("escapechar", escapechar)
+        if quotechar == "" and resolved_quoting != QUOTE_NONE:
+            resolved_quoting = QUOTE_NONE
+        self.delimiter = delimiter
+        self.quotechar = quotechar
+        self.escapechar = escapechar
+        self.doublequote = doublequote
+        self.skipinitialspace = skipinitialspace
+        self.lineterminator = lineterminator
+        self.quoting = resolved_quoting
+
+
+def excel() -> Dialect:
+    return Dialect()
+
+
+def excel_tab() -> Dialect:
+    return Dialect(delimiter="\t")
+
+
+def unix_dialect() -> Dialect:
+    return Dialect(quoting=1)
+
+
+def _validate_char(name: str, value: str) -> None:
+    _ = name
+    _ = value
+
+
+def _resolve_dialect(
+    dialect: Dialect | None = None,
+    delimiter: str = ",",
+    quotechar: str = "\"",
+    escapechar: str = "",
+    doublequote: bool = True,
+    skipinitialspace: bool = False,
+    lineterminator: str = "\n",
+    quoting: int = 0,
+) -> Dialect:
+    if dialect is not None:
+        return Dialect(
+            delimiter=dialect.delimiter + "",
+            quotechar=dialect.quotechar + "",
+            escapechar=dialect.escapechar + "",
+            doublequote=dialect.doublequote,
+            skipinitialspace=dialect.skipinitialspace,
+            lineterminator=dialect.lineterminator + "",
+            quoting=dialect.quoting,
+        )
+    return Dialect(
+        delimiter=delimiter,
+        quotechar=quotechar,
+        escapechar=escapechar,
+        doublequote=doublequote,
+        skipinitialspace=skipinitialspace,
+        lineterminator=lineterminator,
+        quoting=quoting,
+    )
+
+
+def _quotechar_value(dialect: Dialect) -> str:
+    quotechar: str = dialect.quotechar + ""
+    if quotechar == "":
+        return "\""
+    return quotechar
+
+
+def _append_field(mut row: list[str], own field: str) -> None:
+    row.append(field + "")
+
+
+def _append_row(mut rows: list[list[str]], own row: list[str]) -> None:
+    rows.append(row)
+
+
+def _char_at(text: str, index: int) -> str:
+    if index < 0 or index >= len(text):
+        return ""
+    ch: str | None = text[index]
+    if ch is None:
+        return ""
+    return ch
+
+
+def _list_value_at(values: list[str], index: int) -> str:
+    if index < 0 or index >= len(values):
+        return ""
+    for current_index, value in enumerate(values):
+        if current_index == index:
+            return value + ""
+    return ""
+
+
+def _dict_value_at(values: dict[str, str], key: str) -> str:
+    for item_key in values:
+        if item_key != key:
+            continue
+        value: str | None = values[item_key]
+        if value is None:
+            return ""
+        return value + ""
+    return ""
+
+
+def _first_char(text: str) -> str:
+    return _char_at(text, 0)
+
+
+def _last_char(text: str) -> str:
+    return _char_at(text, len(text) - 1)
+
+
+def parse_row(
+    line: str,
+    dialect: Dialect | None = None,
+    delimiter: str = ",",
+    quotechar: str = "\"",
+    escapechar: str = "",
+    doublequote: bool = True,
+    skipinitialspace: bool = False,
+    quoting: int = 0,
+) -> list[str]:
+    rows: list[list[str]] = parse_csv(
+        line,
+        dialect=dialect,
+        delimiter=delimiter,
+        quotechar=quotechar,
+        escapechar=escapechar,
+        doublequote=doublequote,
+        skipinitialspace=skipinitialspace,
+        quoting=quoting,
+    )
+    if len(rows) == 0:
+        return []
+    for index, row in enumerate(rows):
+        if index == 0:
+            copied: list[str] = []
+            for field in row:
+                copied.append(field + "")
+            return copied
+    return []
+
+
+def parse_csv(
+    text: str,
+    dialect: Dialect | None = None,
+    delimiter: str = ",",
+    quotechar: str = "\"",
+    escapechar: str = "",
+    doublequote: bool = True,
+    skipinitialspace: bool = False,
+    quoting: int = 0,
+) -> list[list[str]]:
+    resolved: Dialect = _resolve_dialect(
+        dialect=dialect,
+        delimiter=delimiter,
+        quotechar=quotechar,
+        escapechar=escapechar,
+        doublequote=doublequote,
+        skipinitialspace=skipinitialspace,
+        quoting=quoting,
+    )
     rows: list[list[str]] = []
-    lines: list[str] = text.split("\n")
-    for line in lines:
-        if len(line) > 0:
-            row: list[str] = parse_row(line)
-            rows.append(row)
+    row: list[str] = []
+    field: str = ""
+    in_quotes: bool = False
+    field_started: bool = False
+    i: int = 0
+    while i < len(text):
+        ch_value: str = _char_at(text, i)
+        if in_quotes:
+            if resolved.escapechar != "" and ch_value == resolved.escapechar:
+                if i + 1 < len(text):
+                    escaped_value: str = _char_at(text, i + 1)
+                    field = field + escaped_value
+                    i = i + 2
+                    continue
+                field = field + ch_value
+                i = i + 1
+                continue
+            if resolved.quotechar != "" and ch_value == resolved.quotechar:
+                quotechar: str = _quotechar_value(resolved)
+                if (
+                    resolved.doublequote
+                    and i + 1 < len(text)
+                    and _char_at(text, i + 1) == quotechar
+                ):
+                    field = field + quotechar
+                    i = i + 2
+                    continue
+                in_quotes = False
+                i = i + 1
+                continue
+            field = field + ch_value
+            i = i + 1
+            continue
+
+        if not field_started and resolved.skipinitialspace and ch_value == " ":
+            i = i + 1
+            continue
+
+        if resolved.escapechar != "" and ch_value == resolved.escapechar:
+            if i + 1 < len(text):
+                escaped_plain_value: str = _char_at(text, i + 1)
+                field = field + escaped_plain_value
+                field_started = True
+                i = i + 2
+                continue
+            field = field + ch_value
+            field_started = True
+            i = i + 1
+            continue
+
+        if resolved.quoting != QUOTE_NONE and resolved.quotechar != "":
+            quotechar2: str = _quotechar_value(resolved)
+            if ch_value == quotechar2:
+                in_quotes = True
+                field_started = True
+                i = i + 1
+                continue
+
+        if ch_value == resolved.delimiter:
+            _append_field(row, field)
+            field = ""
+            field_started = False
+            i = i + 1
+            continue
+
+        if ch_value == "\n" or ch_value == "\r":
+            if ch_value == "\r" and i + 1 < len(text) and _char_at(text, i + 1) == "\n":
+                i = i + 1
+            if len(row) == 0 and field == "":
+                _append_row(rows, [])
+            else:
+                _append_field(row, field)
+                _append_row(rows, row)
+            row = []
+            field = ""
+            field_started = False
+            i = i + 1
+            continue
+
+        field = field + ch_value
+        field_started = True
+        i = i + 1
+
+    if in_quotes:
+        in_quotes = False
+    if len(row) > 0 or field != "":
+        _append_field(row, field)
+        _append_row(rows, row)
     return rows
 
-def format_row(fields: list[str]) -> str:
-    result: str = ""
-    i: int = 0
-    for field in fields:
-        if i > 0:
-            result = result + ","
-        result = result + field
-        i = i + 1
+
+def _needs_quote(field: str, dialect: Dialect) -> bool:
+    if dialect.quoting == QUOTE_ALL:
+        return True
+    if dialect.quoting == QUOTE_NONNUMERIC:
+        return True
+    if dialect.quoting == QUOTE_STRINGS:
+        return True
+    if dialect.quoting == QUOTE_NOTNULL:
+        return True
+    if dialect.quoting == QUOTE_NONE:
+        return False
+    if dialect.delimiter in field:
+        return True
+    if "\n" in field or "\r" in field:
+        return True
+    if dialect.quotechar != "":
+        quotechar: str = _quotechar_value(dialect)
+        if quotechar in field:
+            return True
+    if len(field) > 0:
+        first: str = _first_char(field)
+        last: str = _last_char(field)
+        if first == " ":
+            return True
+        if last == " ":
+            return True
+    return False
+
+
+def _quote_field(field: str, dialect: Dialect) -> str:
+    quotechar: str = _quotechar_value(dialect)
+    escaped: str = field + ""
+    if quotechar in escaped:
+        if dialect.doublequote:
+            escaped = escaped.replace(quotechar, quotechar + quotechar)
+        elif dialect.escapechar != "":
+            escapechar_value: str = dialect.escapechar + ""
+            escaped = escaped.replace(quotechar, escapechar_value + quotechar)
+        else:
+            escaped = escaped.replace(quotechar, quotechar + quotechar)
+    return quotechar + escaped + quotechar
+
+
+def _escape_unquoted_field(field: str, dialect: Dialect) -> str:
+    result: str = field + ""
+    if dialect.delimiter in result:
+        if dialect.escapechar != "":
+            result = result.replace(dialect.delimiter, dialect.escapechar + dialect.delimiter)
+    if "\n" in result:
+        if dialect.escapechar != "":
+            result = result.replace("\n", dialect.escapechar + "\n")
+    if "\r" in result:
+        if dialect.escapechar != "":
+            result = result.replace("\r", dialect.escapechar + "\r")
+    if dialect.quotechar != "":
+        quotechar2: str = _quotechar_value(dialect)
+        if quotechar2 in result:
+            if dialect.escapechar != "":
+                result = result.replace(quotechar2, dialect.escapechar + quotechar2)
+            else:
+                result = result.replace(quotechar2, quotechar2 + quotechar2)
     return result
 
-def format_csv(rows: list[list[str]]) -> str:
-    result: str = ""
-    i: int = 0
+
+def format_row(
+    fields: list[str],
+    dialect: Dialect | None = None,
+    delimiter: str = ",",
+    quotechar: str = "\"",
+    escapechar: str = "",
+    doublequote: bool = True,
+    skipinitialspace: bool = False,
+    quoting: int = 0,
+) -> str:
+    resolved: Dialect = _resolve_dialect(
+        dialect=dialect,
+        delimiter=delimiter,
+        quotechar=quotechar,
+        escapechar=escapechar,
+        doublequote=doublequote,
+        skipinitialspace=skipinitialspace,
+        quoting=quoting,
+    )
+    parts: list[str] = []
+    for field in fields:
+        if _needs_quote(field, resolved):
+            parts.append(_quote_field(field, resolved))
+        else:
+            parts.append(_escape_unquoted_field(field, resolved))
+    return resolved.delimiter.join(parts)
+
+
+def format_csv(
+    rows: list[list[str]],
+    dialect: Dialect | None = None,
+    delimiter: str = ",",
+    quotechar: str = "\"",
+    escapechar: str = "",
+    doublequote: bool = True,
+    skipinitialspace: bool = False,
+    lineterminator: str = "\n",
+    quoting: int = 0,
+) -> str:
+    resolved: Dialect = _resolve_dialect(
+        dialect=dialect,
+        delimiter=delimiter,
+        quotechar=quotechar,
+        escapechar=escapechar,
+        doublequote=doublequote,
+        skipinitialspace=skipinitialspace,
+        lineterminator=lineterminator,
+        quoting=quoting,
+    )
+    rendered: list[str] = []
+    resolved_delimiter: str = resolved.delimiter + ""
+    resolved_quotechar: str = resolved.quotechar + ""
+    resolved_escapechar: str = resolved.escapechar + ""
+    resolved_lineterminator: str = resolved.lineterminator + ""
     for row in rows:
-        if i > 0:
-            result = result + "\n"
-        result = result + format_row(row)
-        i = i + 1
-    return result
+        rendered.append(
+            format_row(
+                row,
+                delimiter=resolved_delimiter,
+                quotechar=resolved_quotechar,
+                escapechar=resolved_escapechar,
+                doublequote=resolved.doublequote,
+                skipinitialspace=resolved.skipinitialspace,
+                quoting=resolved.quoting,
+            )
+        )
+    return resolved_lineterminator.join(rendered)
 
 
 class reader:
-    # CSV reader object that parses text line by line.
     _rows: list[list[str]]
     _pos: int
+    dialect: Dialect
 
-    def __init__(self, text: str) -> None:
-        self._rows = parse_csv(text)
+    def __init__(
+        self,
+        text: str,
+        dialect: Dialect | None = None,
+        delimiter: str = ",",
+        quotechar: str = "\"",
+        escapechar: str = "",
+        doublequote: bool = True,
+        skipinitialspace: bool = False,
+        quoting: int = 0,
+    ) -> None:
+        resolved_dialect: Dialect = _resolve_dialect(
+            dialect=dialect,
+            delimiter=delimiter,
+            quotechar=quotechar,
+            escapechar=escapechar,
+            doublequote=doublequote,
+            skipinitialspace=skipinitialspace,
+            quoting=quoting,
+        )
+        rows: list[list[str]] = parse_csv(
+            text,
+            delimiter=resolved_dialect.delimiter + "",
+            quotechar=resolved_dialect.quotechar + "",
+            escapechar=resolved_dialect.escapechar + "",
+            doublequote=resolved_dialect.doublequote,
+            skipinitialspace=resolved_dialect.skipinitialspace,
+            quoting=resolved_dialect.quoting,
+        )
+        self.dialect = resolved_dialect
+        self._rows = rows
         self._pos = 0
 
     def __next__(self) -> list[str] | None:
         if self._pos >= len(self._rows):
             return None
-        row: list[str] = []
-        pos: int = self._pos
-        next_row: list[str] | None = self._rows[pos]
-        if next_row is None:
+        row: list[str] | None = self._rows[self._pos]
+        self._pos = self._pos + 1
+        if row is None:
             return None
-        for cell in next_row:
-            row.append(cell)
-        self._pos = pos + 1
-        return row
+        result: list[str] = []
+        for field in row:
+            result.append(field + "")
+        return result
 
     def rows(self) -> list[list[str]]:
         result: list[list[str]] = []
         for row in self._rows:
-            copy: list[str] = []
-            for cell in row:
-                copy.append(cell)
-            result.append(copy)
+            copied: list[str] = []
+            for field in row:
+                copied.append(field + "")
+            result.append(copied)
         return result
 
     def line_num(self) -> int:
@@ -72,154 +488,337 @@ class reader:
 
 
 class writer:
-    # CSV writer object that accumulates rows.
     _rows: list[list[str]]
+    dialect: Dialect
 
-    def __init__(self) -> None:
+    def __init__(
+        self,
+        dialect: Dialect | None = None,
+        delimiter: str = ",",
+        quotechar: str = "\"",
+        escapechar: str = "",
+        doublequote: bool = True,
+        skipinitialspace: bool = False,
+        lineterminator: str = "\n",
+        quoting: int = 0,
+    ) -> None:
+        resolved_dialect: Dialect = _resolve_dialect(
+            dialect=dialect,
+            delimiter=delimiter,
+            quotechar=quotechar,
+            escapechar=escapechar,
+            doublequote=doublequote,
+            skipinitialspace=skipinitialspace,
+            lineterminator=lineterminator,
+            quoting=quoting,
+        )
+        self.dialect = resolved_dialect
         self._rows = []
 
     def writerow(self, row: list[str]) -> None:
-        copy: list[str] = []
-        for v in row:
-            copy.append(v)
-        self._rows.append(copy)
+        copied: list[str] = []
+        for value in row:
+            copied.append(value)
+        self._rows.append(copied)
 
     def writerows(self, rows: list[list[str]]) -> None:
         for row in rows:
-            copy: list[str] = []
-            for v in row:
-                copy.append(v)
-            self._rows.append(copy)
+            copied: list[str] = []
+            for value in row:
+                copied.append(value + "")
+            self._rows.append(copied)
 
     def getvalue(self) -> str:
-        return format_csv(self._rows)
+        return format_csv(self._rows, dialect=self.dialect)
 
 
 class DictReader:
-    # CSV reader that returns rows as dict[str, str] using header row as keys.
-    _headers: list[str]
+    _fieldnames: list[str]
     _rows: list[list[str]]
     _pos: int
+    restkey: str
+    restval: str
+    dialect: Dialect
 
-    def __init__(self, text: str) -> None:
-        all_rows: list[list[str]] = parse_csv(text)
-        headers: list[str] = []
-        data_rows: list[list[str]] = []
-        for i, v in enumerate(all_rows):
-            if i == 0:
-                for h in v:
-                    headers.append(h)
-            else:
-                copy_r: list[str] = []
-                for cell in v:
-                    copy_r.append(cell)
-                data_rows.append(copy_r)
-        self._headers = headers
-        self._rows = data_rows
+    def __init__(
+        self,
+        text: str,
+        fieldnames: list[str] | None = None,
+        restkey: str = "",
+        restval: str = "",
+        dialect: Dialect | None = None,
+        delimiter: str = ",",
+        quotechar: str = "\"",
+        escapechar: str = "",
+        doublequote: bool = True,
+        skipinitialspace: bool = False,
+        quoting: int = 0,
+    ) -> None:
+        resolved_dialect: Dialect = _resolve_dialect(
+            dialect=dialect,
+            delimiter=delimiter,
+            quotechar=quotechar,
+            escapechar=escapechar,
+            doublequote=doublequote,
+            skipinitialspace=skipinitialspace,
+            quoting=quoting,
+        )
+        all_rows: list[list[str]] = parse_csv(
+            text,
+            delimiter=resolved_dialect.delimiter + "",
+            quotechar=resolved_dialect.quotechar + "",
+            escapechar=resolved_dialect.escapechar + "",
+            doublequote=resolved_dialect.doublequote,
+            skipinitialspace=resolved_dialect.skipinitialspace,
+            quoting=resolved_dialect.quoting,
+        )
+        fieldnames_data: list[str] = []
+        rows_data: list[list[str]] = []
+        if fieldnames is not None:
+            for field in fieldnames:
+                fieldnames_data.append(field + "")
+            for row in all_rows:
+                copied_row: list[str] = []
+                for value in row:
+                    copied_row.append(value + "")
+                rows_data.append(copied_row)
+        else:
+            for index, row in enumerate(all_rows):
+                if index == 0:
+                    for field in row:
+                        fieldnames_data.append(field + "")
+                else:
+                    copied_row2: list[str] = []
+                    for value in row:
+                        copied_row2.append(value + "")
+                    rows_data.append(copied_row2)
+        self.dialect = resolved_dialect
+        self.restkey = restkey
+        self.restval = restval
         self._pos = 0
+        self._fieldnames = fieldnames_data
+        self._rows = rows_data
 
     def fieldnames(self) -> list[str]:
-        result: list[str] = []
-        for h in self._headers:
-            result.append(h)
-        return result
+        copied: list[str] = []
+        for field in self._fieldnames:
+            copied.append(field + "")
+        return copied
+
+    def __next__(self) -> dict[str, str] | None:
+        while self._pos < len(self._rows):
+            row: list[str] | None = self._rows[self._pos]
+            self._pos = self._pos + 1
+            if row is None:
+                return None
+            if len(row) == 0:
+                continue
+            return _dict_reader_row(self._fieldnames, row, self.restkey, self.restval)
+        return None
 
     def rows(self) -> list[dict[str, str]]:
         result: list[dict[str, str]] = []
         for row in self._rows:
-            d: dict[str, str] = {}
-            for i, key in enumerate(self._headers):
-                val: str | None = row[i]
-                if val is not None:
-                    d[key] = val
-                else:
-                    d[key] = ""
-            result.append(d)
+            if len(row) == 0:
+                continue
+            result.append(_dict_reader_row(self._fieldnames, row, self.restkey, self.restval))
         return result
 
 
-class DictWriter:
-    # CSV writer that writes rows from dict[str, str].
-    _headers: list[str]
-    _rows: list[list[str]]
+def _dict_reader_row(
+    fieldnames: list[str],
+    row: list[str],
+    restkey: str,
+    restval: str,
+) -> dict[str, str]:
+    result: dict[str, str] = {}
+    for i, key in enumerate(fieldnames):
+        if i < len(row):
+            result[key] = _list_value_at(row, i)
+        else:
+            result[key] = restval + ""
+    if restkey != "" and len(row) > len(fieldnames):
+        extras: list[str] = []
+        j: int = len(fieldnames)
+        while j < len(row):
+            extras.append(_list_value_at(row, j))
+            j = j + 1
+        result[restkey] = str(extras)
+    return result
 
-    def __init__(self, fieldnames: list[str]) -> None:
-        copy_fn: list[str] = []
-        for h in fieldnames:
-            copy_fn.append(h)
-        self._headers = copy_fn
-        self._rows = []
+
+class DictWriter:
+    fieldnames: list[str]
+    restval: str
+    extrasaction: str
+    _writer: writer
+
+    def __init__(
+        self,
+        fieldnames: list[str],
+        restval: str = "",
+        extrasaction: str = "raise",
+        dialect: Dialect | None = None,
+        delimiter: str = ",",
+        quotechar: str = "\"",
+        escapechar: str = "",
+        doublequote: bool = True,
+        skipinitialspace: bool = False,
+        lineterminator: str = "\n",
+        quoting: int = 0,
+    ) -> None:
+        fieldnames_data: list[str] = []
+        for field in fieldnames:
+            fieldnames_data.append(field + "")
+        action: str = extrasaction.lower()
+        if action != "raise" and action != "ignore":
+            action = "raise"
+        writer_value: writer = writer(
+            dialect=dialect,
+            delimiter=delimiter,
+            quotechar=quotechar,
+            escapechar=escapechar,
+            doublequote=doublequote,
+            skipinitialspace=skipinitialspace,
+            lineterminator=lineterminator,
+            quoting=quoting,
+        )
+        self.fieldnames = fieldnames_data
+        self.restval = restval
+        self.extrasaction = action
+        self._writer = writer_value
 
     def writeheader(self) -> None:
-        copy: list[str] = []
-        for h in self._headers:
-            copy.append(h)
-        self._rows.append(copy)
+        current_writer: writer = self._writer
+        current_writer.writerow(self.fieldnames)
+        self._writer = current_writer
 
     def writerow(self, row: dict[str, str]) -> None:
-        data: list[str] = []
-        for key in self._headers:
-            val: str | None = row[key]
-            if val is not None:
-                data.append(val)
+        ordered: list[str] = []
+        for fieldname in self.fieldnames:
+            if fieldname in row:
+                ordered.append(_dict_value_at(row, fieldname))
             else:
-                data.append("")
-        self._rows.append(data)
+                ordered.append(self.restval)
+        current_writer: writer = self._writer
+        current_writer.writerow(ordered)
+        self._writer = current_writer
+
+    def writerows(self, rows: list[dict[str, str]]) -> None:
+        current_writer: writer = self._writer
+        for row in rows:
+            ordered: list[str] = []
+            for fieldname in self.fieldnames:
+                if fieldname in row:
+                    ordered.append(_dict_value_at(row, fieldname))
+                else:
+                    ordered.append(self.restval)
+            current_writer.writerow(ordered)
+        self._writer = current_writer
 
     def getvalue(self) -> str:
-        return format_csv(self._rows)
+        return self._writer.getvalue()
 
 
-def reader_from_handle(fh: FileHandle) -> Result[reader, IOError]:
+def reader_from_handle(
+    fh: FileHandle,
+    dialect: Dialect | None = None,
+    delimiter: str = ",",
+    quotechar: str = "\"",
+    escapechar: str = "",
+    doublequote: bool = True,
+    skipinitialspace: bool = False,
+    quoting: int = 0,
+) -> Result[reader, IOError]:
     try:
         text: str = fh.read()
-        return reader(text)
+        return reader(
+            text,
+            dialect=dialect,
+            delimiter=delimiter,
+            quotechar=quotechar,
+            escapechar=escapechar,
+            doublequote=doublequote,
+            skipinitialspace=skipinitialspace,
+            quoting=quoting,
+        )
     except IOError as e:
-        raise IOError(e.message)
+        raise e
 
 
-def writer_to_handle(fh: FileHandle, rows: list[list[str]]) -> Result[None, IOError]:
+def writer_to_handle(
+    fh: FileHandle,
+    rows: list[list[str]],
+    dialect: Dialect | None = None,
+    delimiter: str = ",",
+    quotechar: str = "\"",
+    escapechar: str = "",
+    doublequote: bool = True,
+    skipinitialspace: bool = False,
+    lineterminator: str = "\n",
+    quoting: int = 0,
+) -> Result[None, IOError]:
+    payload: str = format_csv(
+        rows,
+        dialect=dialect,
+        delimiter=delimiter,
+        quotechar=quotechar,
+        escapechar=escapechar,
+        doublequote=doublequote,
+        skipinitialspace=skipinitialspace,
+        lineterminator=lineterminator,
+        quoting=quoting,
+    )
+    return fh.write(payload)
+
+
+def reader_from_path(
+    path: str,
+    dialect: Dialect | None = None,
+    delimiter: str = ",",
+    quotechar: str = "\"",
+    escapechar: str = "",
+    doublequote: bool = True,
+    skipinitialspace: bool = False,
+    quoting: int = 0,
+) -> Result[reader, IOError]:
     try:
-        content: str = format_csv(rows)
-        _: None = fh.write(content)
-        return None
+        text: str = read_text(path)
+        return reader(
+            text,
+            dialect=dialect,
+            delimiter=delimiter,
+            quotechar=quotechar,
+            escapechar=escapechar,
+            doublequote=doublequote,
+            skipinitialspace=skipinitialspace,
+            quoting=quoting,
+        )
     except IOError as e:
-        raise IOError(e.message)
+        raise e
 
 
-def reader_from_file(handle: int) -> Result[reader, IOError]:
-    try:
-        text: str = file_read(handle)
-        return reader(text)
-    except IOError as e:
-        raise IOError(e.message)
-
-
-def writer_to_file(handle: int, rows: list[list[str]]) -> Result[None, IOError]:
-    try:
-        content: str = format_csv(rows)
-        _: None = file_write(handle, content)
-    except IOError as e:
-        raise IOError(e.message)
-
-
-def reader_from_path(path: str) -> Result[reader, IOError]:
-    # Create a csv.reader by reading a file at the given path.
-    try:
-        handle: int = open_file(path, "r")
-        text: str = file_read(handle)
-        file_close(handle)
-        return reader(text)
-    except IOError as e:
-        raise IOError(e.message)
-
-
-def writer_to_path(path: str, rows: list[list[str]]) -> Result[None, IOError]:
-    # Write CSV rows to a file at the given path.
-    try:
-        handle: int = open_file(path, "w")
-        content: str = format_csv(rows)
-        _: None = file_write(handle, content)
-        file_close(handle)
-    except IOError as e:
-        raise IOError(e.message)
+def writer_to_path(
+    path: str,
+    rows: list[list[str]],
+    dialect: Dialect | None = None,
+    delimiter: str = ",",
+    quotechar: str = "\"",
+    escapechar: str = "",
+    doublequote: bool = True,
+    skipinitialspace: bool = False,
+    lineterminator: str = "\n",
+    quoting: int = 0,
+) -> Result[None, IOError]:
+    payload: str = format_csv(
+        rows,
+        dialect=dialect,
+        delimiter=delimiter,
+        quotechar=quotechar,
+        escapechar=escapechar,
+        doublequote=doublequote,
+        skipinitialspace=skipinitialspace,
+        lineterminator=lineterminator,
+        quoting=quoting,
+    )
+    return write_text(path, payload)

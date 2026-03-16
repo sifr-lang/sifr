@@ -2391,7 +2391,7 @@ fn try_lower_condition_index_operand_expr(
     result_ty: &Type,
 ) -> Option<RustExpr> {
     match resolve_alias_type(object.ty()) {
-        Type::Dict(_, _) => {
+        Type::Dict(_, value_ty) => {
             let lowered_key = if let HirExpr::StringLiteral(value) = index {
                 RustExpr::Ident(format!("{value:?}"))
             } else {
@@ -2400,7 +2400,7 @@ fn try_lower_condition_index_operand_expr(
                     expr: Box::new(try_lower_leaf_or_name_expr(index)?),
                 }
             };
-            Some(RustExpr::MethodCall {
+            let lowered_get = RustExpr::MethodCall {
                 receiver: Box::new(RustExpr::MethodCall {
                     receiver: Box::new(try_lower_leaf_or_name_expr(object)?),
                     method: "get".to_string(),
@@ -2408,7 +2408,23 @@ fn try_lower_condition_index_operand_expr(
                 }),
                 method: "cloned".to_string(),
                 args: vec![],
-            })
+            };
+            if is_option_like_type(value_ty.as_ref()) {
+                Some(RustExpr::MethodCall {
+                    receiver: Box::new(lowered_get),
+                    method: "and_then".to_string(),
+                    args: vec![RustExpr::Closure {
+                        params: vec![RustParam::Named {
+                            name: "__v".to_string(),
+                            ty: RustType::Named("_".to_string()),
+                        }],
+                        body: Box::new(RustExpr::Ident("__v".to_string())),
+                        is_move: false,
+                    }],
+                })
+            } else {
+                Some(lowered_get)
+            }
         }
         Type::List(_) if !is_option_like_type(result_ty) => {
             Some(RustExpr::Clone(Box::new(RustExpr::Index {
@@ -2643,7 +2659,7 @@ fn try_lower_stmt_index_expr(expr: &HirExpr) -> Option<RustExpr> {
         return None;
     }
     match resolve_alias_type(object.ty()) {
-        Type::Dict(_, _) => {
+        Type::Dict(_, value_ty) => {
             let lowered_key = if let HirExpr::StringLiteral(value) = index.as_ref() {
                 RustExpr::Ident(format!("{value:?}"))
             } else {
@@ -2652,7 +2668,7 @@ fn try_lower_stmt_index_expr(expr: &HirExpr) -> Option<RustExpr> {
                     expr: Box::new(try_lower_leaf_or_name_expr(index)?),
                 }
             };
-            Some(RustExpr::MethodCall {
+            let lowered_get = RustExpr::MethodCall {
                 receiver: Box::new(RustExpr::MethodCall {
                     receiver: Box::new(try_lower_leaf_or_name_expr(object)?),
                     method: "get".to_string(),
@@ -2660,7 +2676,23 @@ fn try_lower_stmt_index_expr(expr: &HirExpr) -> Option<RustExpr> {
                 }),
                 method: "cloned".to_string(),
                 args: vec![],
-            })
+            };
+            if is_option_like_type(value_ty.as_ref()) {
+                Some(RustExpr::MethodCall {
+                    receiver: Box::new(lowered_get),
+                    method: "and_then".to_string(),
+                    args: vec![RustExpr::Closure {
+                        params: vec![RustParam::Named {
+                            name: "__v".to_string(),
+                            ty: RustType::Named("_".to_string()),
+                        }],
+                        body: Box::new(RustExpr::Ident("__v".to_string())),
+                        is_move: false,
+                    }],
+                })
+            } else {
+                Some(lowered_get)
+            }
         }
         Type::List(_) => Some(RustExpr::MethodCall {
             receiver: Box::new(RustExpr::MethodCall {

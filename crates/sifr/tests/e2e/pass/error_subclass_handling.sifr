@@ -1,6 +1,6 @@
 # Test error subclass handling: IOError subclasses, extra fields, parent catch-all
 from sifr.io import read_text, write_text
-from sifr.json import json_loads
+from sifr.json import JsonValue, json_loads
 from sifr.re import re_match
 
 
@@ -43,7 +43,7 @@ def main():
 
     # 5. JSONDecodeError has line and column fields
     try:
-        result: str = json_loads("{invalid json")
+        result: JsonValue = json_loads("{invalid json")
     except JSONDecodeError as e:
         assert str(f"5: json line={e.line} col={e.column}") == expected[len(expected) - expected_index - 1]
         expected_index = expected_index + 1
@@ -84,4 +84,3 @@ def main():
 
     assert str("all tests passed") == expected[len(expected) - expected_index - 1]
     expected_index = expected_index + 1
-

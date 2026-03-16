@@ -803,7 +803,9 @@ fn generate_cargo_toml(
     for module_name in stdlib_modules {
         match module_name.as_str() {
             "sifr.json" | "sifr.collections" | "_sifr.json" | "_sifr.collections" => {
-                deps.insert("serde_json = \"1\"".to_string());
+                deps.insert(
+                    "serde_json = { version = \"1\", features = [\"preserve_order\"] }".to_string(),
+                );
                 deps.insert("serde = { version = \"1\", features = [\"derive\"] }".to_string());
             }
             "sifr.time" | "_sifr.time" | "sifr.datetime" | "_sifr.datetime" => {
@@ -826,7 +828,9 @@ fn generate_cargo_toml(
                 deps.insert("base64 = \"0.22\"".to_string());
             }
             "sifr.tomllib" | "_sifr.toml" => {
-                deps.insert("toml = \"0.8\"".to_string());
+                deps.insert(
+                    "toml = { version = \"0.8\", features = [\"preserve_order\"] }".to_string(),
+                );
             }
             "sifr.gzip" | "sifr.zipfile" | "_sifr.compress" => {
                 deps.insert("flate2 = \"1\"".to_string());
@@ -843,7 +847,9 @@ fn generate_cargo_toml(
     for crate_name in required_crates {
         match crate_name.as_str() {
             "serde_json" => {
-                deps.insert("serde_json = \"1\"".to_string());
+                deps.insert(
+                    "serde_json = { version = \"1\", features = [\"preserve_order\"] }".to_string(),
+                );
                 deps.insert("serde = { version = \"1\", features = [\"derive\"] }".to_string());
             }
             "chrono" => {
@@ -874,7 +880,9 @@ fn generate_cargo_toml(
                 deps.insert("base64 = \"0.22\"".to_string());
             }
             "toml" => {
-                deps.insert("toml = \"0.8\"".to_string());
+                deps.insert(
+                    "toml = { version = \"0.8\", features = [\"preserve_order\"] }".to_string(),
+                );
             }
             "flate2" => {
                 deps.insert("flate2 = \"1\"".to_string());
@@ -2901,6 +2909,24 @@ fn test_dependency_fingerprint_and_cache_key_determinism() {
     let key_b = cache_key_for_group(&group, &toolchain, "different");
     assert_ne!(key_a, key_b);
     assert!(group.id.len() > 0);
+}
+
+#[test]
+fn test_generate_cargo_toml_tomllib_uses_preserve_order_feature() {
+    let stdlib_modules = normalize_dependency_set(vec!["sifr.tomllib".to_string()].into_iter());
+    let required_crates = BTreeSet::new();
+
+    let cargo_toml = generate_cargo_toml(&stdlib_modules, &required_crates, "sifr_output");
+    assert!(cargo_toml.contains("toml = { version = \"0.8\", features = [\"preserve_order\"] }"));
+}
+
+#[test]
+fn test_generate_cargo_toml_required_toml_uses_preserve_order_feature() {
+    let stdlib_modules = BTreeSet::new();
+    let required_crates = normalize_dependency_set(vec!["toml".to_string()].into_iter());
+
+    let cargo_toml = generate_cargo_toml(&stdlib_modules, &required_crates, "sifr_output");
+    assert!(cargo_toml.contains("toml = { version = \"0.8\", features = [\"preserve_order\"] }"));
 }
 
 fn sample_cache_entry(
