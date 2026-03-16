@@ -2,6 +2,9 @@
 
 set -euo pipefail
 
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+ORIGINAL_ARGS=("$@")
+
 usage() {
   cat <<'EOF'
 Usage: scripts/run_all_tests.sh [options]
@@ -46,7 +49,33 @@ while [[ $# -gt 0 ]]; do
   esac
 done
 
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+if [[ -z "${SIFR_LANE_REPORT_CAPTURED:-}" ]]; then
+  REPORT_DIR="${SCRIPT_DIR}/../target/validation_lane_reports"
+  mkdir -p "${REPORT_DIR}"
+  LOG_FILE="$(mktemp "${REPORT_DIR}/lane.${PROFILE}.log.XXXXXX")"
+  TIME_FILE="$(mktemp "${REPORT_DIR}/lane.${PROFILE}.time.XXXXXX")"
+  LATEST_LOG_FILE="${REPORT_DIR}/${PROFILE}.latest.log"
+  LATEST_TIME_FILE="${REPORT_DIR}/${PROFILE}.latest.time"
+  JSON_FILE="${REPORT_DIR}/${PROFILE}.latest.json"
+
+  set +e
+  /usr/bin/time -l -o "${TIME_FILE}" \
+    env SIFR_LANE_REPORT_CAPTURED=1 \
+    bash "$0" "${ORIGINAL_ARGS[@]}" \
+    > >(tee "${LOG_FILE}") 2>&1
+  STATUS=$?
+  set -e
+
+  cp "${LOG_FILE}" "${LATEST_LOG_FILE}"
+  cp "${TIME_FILE}" "${LATEST_TIME_FILE}"
+
+  python3 "${SCRIPT_DIR}/validation_lane_report.py" summarize \
+    --profile "${PROFILE}" \
+    --log "${LATEST_LOG_FILE}" \
+    --time-file "${LATEST_TIME_FILE}" \
+    --json-out "${JSON_FILE}" || true
+  exit "${STATUS}"
+fi
 
 cd "${SCRIPT_DIR}/.."
 

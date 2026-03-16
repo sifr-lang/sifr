@@ -166,6 +166,9 @@ fi
 if [[ -n "${FIXTURE_MANIFEST_OVERRIDE}" ]]; then
   FIXTURE_MANIFEST="${FIXTURE_MANIFEST_OVERRIDE}"
 fi
+if [[ "${CACHE_DIR}" != /* ]]; then
+  CACHE_DIR="$(cd "${SCRIPT_DIR}/.." && pwd)/${CACHE_DIR}"
+fi
 if [[ -n "${FIXTURE_MANIFEST}" && "${FIXTURE_MANIFEST}" != /* ]]; then
   FIXTURE_MANIFEST="$(cd "${SCRIPT_DIR}/.." && pwd)/${FIXTURE_MANIFEST}"
 fi
