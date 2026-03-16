@@ -3157,35 +3157,34 @@ pub(super) fn lower_lambda_with_context(
     ctx: &mut LowerCtx,
 ) -> Option<HirExpr> {
     if let Expr::Lambda(lambda) = expr {
-        ctx.scope.push();
-
-        let mut params = Vec::new();
-        if let Some(ref parameters) = lambda.parameters {
-            for (i, param) in parameters.args.iter().enumerate() {
-                let param_name = param.parameter.name.to_string();
-                let param_ty = if let Some(ref ann) = param.parameter.annotation {
-                    resolve_annotation_expr(ann, ctx)
-                } else if i < context_types.len() {
-                    // Use contextual type
-                    context_types[i].clone()
-                } else {
-                    Type::Any
-                };
-                ctx.scope.define(param_name.clone(), param_ty.clone());
-                params.push(HirParam {
-                    name: param_name,
-                    ty: param_ty,
-                    default: None,
-                    keyword_only: false,
-                    convention: ParamConvention::default(),
-                });
+        let (params, body, body_ty) = ctx.with_pushed_scope(|ctx| {
+            let mut params = Vec::new();
+            if let Some(ref parameters) = lambda.parameters {
+                for (i, param) in parameters.args.iter().enumerate() {
+                    let param_name = param.parameter.name.to_string();
+                    let param_ty = if let Some(ref ann) = param.parameter.annotation {
+                        resolve_annotation_expr(ann, ctx)
+                    } else if i < context_types.len() {
+                        // Use contextual type
+                        context_types[i].clone()
+                    } else {
+                        Type::Any
+                    };
+                    ctx.scope.define(param_name.clone(), param_ty.clone());
+                    params.push(HirParam {
+                        name: param_name,
+                        ty: param_ty,
+                        default: None,
+                        keyword_only: false,
+                        convention: ParamConvention::default(),
+                    });
+                }
             }
-        }
 
-        let body = lower_expr(&lambda.body, ctx)?;
-        let body_ty = body.ty().clone();
-
-        ctx.scope.pop();
+            let body = lower_expr(&lambda.body, ctx)?;
+            let body_ty = body.ty().clone();
+            Some((params, body, body_ty))
+        })?;
 
         let param_types: Vec<(String, Type)> = params
             .iter()
@@ -3205,34 +3204,33 @@ pub(super) fn lower_lambda_with_context(
 }
 
 pub(super) fn lower_lambda(lambda: &ExprLambda, ctx: &mut LowerCtx) -> Option<HirExpr> {
-    ctx.scope.push();
-
-    let mut params = Vec::new();
-    if let Some(ref parameters) = lambda.parameters {
-        for param in &parameters.args {
-            let param_name = param.parameter.name.to_string();
-            let param_ty = if let Some(ref ann) = param.parameter.annotation {
-                resolve_annotation_expr(ann, ctx)
-            } else {
-                // Lambda params without annotations: infer as Any for now
-                // Contextual typing will refine this at call sites
-                Type::Any
-            };
-            ctx.scope.define(param_name.clone(), param_ty.clone());
-            params.push(HirParam {
-                name: param_name,
-                ty: param_ty,
-                default: None,
-                keyword_only: false,
-                convention: ParamConvention::default(),
-            });
+    let (params, body, body_ty) = ctx.with_pushed_scope(|ctx| {
+        let mut params = Vec::new();
+        if let Some(ref parameters) = lambda.parameters {
+            for param in &parameters.args {
+                let param_name = param.parameter.name.to_string();
+                let param_ty = if let Some(ref ann) = param.parameter.annotation {
+                    resolve_annotation_expr(ann, ctx)
+                } else {
+                    // Lambda params without annotations: infer as Any for now
+                    // Contextual typing will refine this at call sites
+                    Type::Any
+                };
+                ctx.scope.define(param_name.clone(), param_ty.clone());
+                params.push(HirParam {
+                    name: param_name,
+                    ty: param_ty,
+                    default: None,
+                    keyword_only: false,
+                    convention: ParamConvention::default(),
+                });
+            }
         }
-    }
 
-    let body = lower_expr(&lambda.body, ctx)?;
-    let body_ty = body.ty().clone();
-
-    ctx.scope.pop();
+        let body = lower_expr(&lambda.body, ctx)?;
+        let body_ty = body.ty().clone();
+        Some((params, body, body_ty))
+    })?;
 
     // Build the function type for the lambda
     let param_types: Vec<(String, Type)> = params
@@ -3255,237 +3253,241 @@ pub(super) fn lower_list_comp(comp: &ExprListComp, ctx: &mut LowerCtx) -> Option
     }
 
     let mut generators = Vec::new();
-    let num_gens = comp.generators.len();
-
-    // Process each generator: push scope, define var, lower iter
-    for gen in &comp.generators {
-        let var_name = match &gen.target {
-            Expr::Name(n) => n.id.clone(),
-            Expr::Tuple(tup) => {
-                let names: Vec<String> = tup
-                    .elts
-                    .iter()
-                    .filter_map(|e| {
-                        if let Expr::Name(n) = e {
-                            Some(n.id.clone())
-                        } else {
-                            None
-                        }
-                    })
-                    .collect();
-                if names.len() != tup.elts.len() {
-                    ctx.error(
-                        "comprehension tuple target must contain only simple names".to_string(),
-                    );
+    let mut pushed_scopes = 0;
+    let result = (|| {
+        // Process each generator: push scope, define var, lower iter
+        for gen in &comp.generators {
+            let var_name = match &gen.target {
+                Expr::Name(n) => n.id.clone(),
+                Expr::Tuple(tup) => {
+                    let names: Vec<String> = tup
+                        .elts
+                        .iter()
+                        .filter_map(|e| {
+                            if let Expr::Name(n) = e {
+                                Some(n.id.clone())
+                            } else {
+                                None
+                            }
+                        })
+                        .collect();
+                    if names.len() != tup.elts.len() {
+                        ctx.error(
+                            "comprehension tuple target must contain only simple names".to_string(),
+                        );
+                        return None;
+                    }
+                    names.join(",")
+                }
+                _ => {
+                    ctx.error("comprehension target must be a simple name or tuple".to_string());
                     return None;
                 }
-                names.join(",")
-            }
-            _ => {
-                ctx.error("comprehension target must be a simple name or tuple".to_string());
-                return None;
-            }
-        };
+            };
 
-        let iter_expr = lower_expr(&gen.iter, ctx)?;
-        let iter_ty = iter_expr.ty().clone();
-        let elem_ty = match &iter_ty {
-            Type::List(elem) => *elem.clone(),
-            Type::Set(elem) => *elem.clone(),
-            Type::Str => Type::Str,
-            Type::Range => Type::Int,
-            Type::Dict(key, _) => *key.clone(),
-            Type::Tuple(elems) if !elems.is_empty() => elems[0].clone(),
-            _ => {
-                ctx.error(format!(
-                    "cannot iterate over type '{}'",
-                    iter_ty.display_name()
-                ));
-                return None;
-            }
-        };
+            let iter_expr = lower_expr(&gen.iter, ctx)?;
+            let iter_ty = iter_expr.ty().clone();
+            let elem_ty = match &iter_ty {
+                Type::List(elem) => *elem.clone(),
+                Type::Set(elem) => *elem.clone(),
+                Type::Str => Type::Str,
+                Type::Range => Type::Int,
+                Type::Dict(key, _) => *key.clone(),
+                Type::Tuple(elems) if !elems.is_empty() => elems[0].clone(),
+                _ => {
+                    ctx.error(format!(
+                        "cannot iterate over type '{}'",
+                        iter_ty.display_name()
+                    ));
+                    return None;
+                }
+            };
 
-        ctx.scope.push();
-        if var_name.contains(',') {
-            let names: Vec<&str> = var_name.split(',').collect();
-            if let Type::Tuple(elem_types) = &elem_ty {
-                for (i, name) in names.iter().enumerate() {
-                    let ty = elem_types.get(i).cloned().unwrap_or(Type::Any);
-                    ctx.scope.define((*name).to_string(), ty);
+            ctx.scope.push();
+            pushed_scopes += 1;
+            if var_name.contains(',') {
+                let names: Vec<&str> = var_name.split(',').collect();
+                if let Type::Tuple(elem_types) = &elem_ty {
+                    for (i, name) in names.iter().enumerate() {
+                        let ty = elem_types.get(i).cloned().unwrap_or(Type::Any);
+                        ctx.scope.define((*name).to_string(), ty);
+                    }
+                } else {
+                    for name in &names {
+                        ctx.scope.define((*name).to_string(), Type::Any);
+                    }
                 }
             } else {
-                for name in &names {
-                    ctx.scope.define((*name).to_string(), Type::Any);
-                }
+                ctx.scope.define(var_name.clone(), elem_ty.clone());
             }
-        } else {
-            ctx.scope.define(var_name.clone(), elem_ty.clone());
+
+            let filter = if gen.ifs.is_empty() {
+                None
+            } else {
+                let first = lower_expr(&gen.ifs[0], ctx)?;
+                if gen.ifs.len() == 1 {
+                    Some(first)
+                } else {
+                    let mut combined = first;
+                    for cond in &gen.ifs[1..] {
+                        let next = lower_expr(cond, ctx)?;
+                        combined = HirExpr::BoolOp {
+                            op: "and".to_string(),
+                            values: vec![combined, next],
+                            ty: Type::Bool,
+                        };
+                    }
+                    Some(combined)
+                }
+            };
+
+            generators.push((var_name, iter_expr, filter));
         }
 
-        let filter = if gen.ifs.is_empty() {
-            None
-        } else {
-            let first = lower_expr(&gen.ifs[0], ctx)?;
-            if gen.ifs.len() == 1 {
-                Some(first)
-            } else {
-                let mut combined = first;
-                for cond in &gen.ifs[1..] {
-                    let next = lower_expr(cond, ctx)?;
-                    combined = HirExpr::BoolOp {
-                        op: "and".to_string(),
-                        values: vec![combined, next],
-                        ty: Type::Bool,
-                    };
-                }
-                Some(combined)
-            }
-        };
+        // Lower the expression (all generator vars are in scope)
+        let expr = lower_expr(&comp.elt, ctx)?;
+        let expr_ty = expr.ty().clone();
+        let result_ty = Type::List(Box::new(expr_ty));
 
-        generators.push((var_name, iter_expr, filter));
-    }
-
-    // Lower the expression (all generator vars are in scope)
-    let expr = lower_expr(&comp.elt, ctx)?;
-    let expr_ty = expr.ty().clone();
-
-    // Pop all scopes
-    for _ in 0..num_gens {
-        ctx.scope.pop();
-    }
-
-    let result_ty = Type::List(Box::new(expr_ty));
-
-    Some(HirExpr::ListComp {
-        expr: Box::new(expr),
-        generators,
-        ty: result_ty,
-    })
+        Some(HirExpr::ListComp {
+            expr: Box::new(expr),
+            generators,
+            ty: result_ty,
+        })
+    })();
+    ctx.pop_scopes(pushed_scopes);
+    result
 }
 
 pub(super) fn lower_set_comp(comp: &ExprSetComp, ctx: &mut LowerCtx) -> Option<HirExpr> {
     let mut generators = Vec::new();
-    let num_gens = comp.generators.len();
-    for gen in &comp.generators {
-        let var_name = if let Expr::Name(n) = &gen.target {
-            n.id.clone()
-        } else {
-            ctx.error("set comprehension target must be a simple name".to_string());
-            return None;
-        };
-        let iter_expr = lower_expr(&gen.iter, ctx)?;
-        let iter_ty = iter_expr.ty().clone();
-        let elem_ty = match &iter_ty {
-            Type::List(elem) => *elem.clone(),
-            Type::Set(elem) => *elem.clone(),
-            Type::Range => Type::Int,
-            _ => {
-                ctx.error(format!(
-                    "cannot iterate over type '{}'",
-                    iter_ty.display_name()
-                ));
+    let mut pushed_scopes = 0;
+    let result = (|| {
+        for gen in &comp.generators {
+            let var_name = if let Expr::Name(n) = &gen.target {
+                n.id.clone()
+            } else {
+                ctx.error("set comprehension target must be a simple name".to_string());
                 return None;
-            }
-        };
-        ctx.scope.push();
-        ctx.scope.define(var_name.clone(), elem_ty);
-        let filter = if gen.ifs.is_empty() {
-            None
-        } else {
-            Some(lower_expr(&gen.ifs[0], ctx)?)
-        };
-        generators.push((var_name, iter_expr, filter));
-    }
-    let expr = lower_expr(&comp.elt, ctx)?;
-    let expr_ty = expr.ty().clone();
-    for _ in 0..num_gens {
-        ctx.scope.pop();
-    }
-    let result_ty = Type::Set(Box::new(expr_ty));
-    Some(HirExpr::SetComp {
-        expr: Box::new(expr),
-        generators,
-        ty: result_ty,
-    })
+            };
+            let iter_expr = lower_expr(&gen.iter, ctx)?;
+            let iter_ty = iter_expr.ty().clone();
+            let elem_ty = match &iter_ty {
+                Type::List(elem) => *elem.clone(),
+                Type::Set(elem) => *elem.clone(),
+                Type::Range => Type::Int,
+                _ => {
+                    ctx.error(format!(
+                        "cannot iterate over type '{}'",
+                        iter_ty.display_name()
+                    ));
+                    return None;
+                }
+            };
+            ctx.scope.push();
+            pushed_scopes += 1;
+            ctx.scope.define(var_name.clone(), elem_ty);
+            let filter = if gen.ifs.is_empty() {
+                None
+            } else {
+                Some(lower_expr(&gen.ifs[0], ctx)?)
+            };
+            generators.push((var_name, iter_expr, filter));
+        }
+        let expr = lower_expr(&comp.elt, ctx)?;
+        let expr_ty = expr.ty().clone();
+        let result_ty = Type::Set(Box::new(expr_ty));
+        Some(HirExpr::SetComp {
+            expr: Box::new(expr),
+            generators,
+            ty: result_ty,
+        })
+    })();
+    ctx.pop_scopes(pushed_scopes);
+    result
 }
 
 pub(super) fn lower_dict_comp(comp: &ExprDictComp, ctx: &mut LowerCtx) -> Option<HirExpr> {
     let mut generators = Vec::new();
-    let num_gens = comp.generators.len();
-    for gen in &comp.generators {
-        let var_name = match &gen.target {
-            Expr::Name(n) => n.id.clone(),
-            Expr::Tuple(tup) => {
-                let names: Vec<String> = tup
-                    .elts
-                    .iter()
-                    .filter_map(|e| {
-                        if let Expr::Name(n) = e {
-                            Some(n.id.clone())
-                        } else {
-                            None
-                        }
-                    })
-                    .collect();
-                names.join(",")
-            }
-            _ => {
-                ctx.error("dict comprehension target must be a simple name or tuple".to_string());
-                return None;
-            }
-        };
-        let iter_expr = lower_expr(&gen.iter, ctx)?;
-        let iter_ty = iter_expr.ty().clone();
-        let elem_ty = match &iter_ty {
-            Type::List(elem) => *elem.clone(),
-            Type::Set(elem) => *elem.clone(),
-            Type::Range => Type::Int,
-            Type::Dict(key, _) => *key.clone(),
-            _ => {
-                ctx.error(format!(
-                    "cannot iterate over type '{}'",
-                    iter_ty.display_name()
-                ));
-                return None;
-            }
-        };
-        ctx.scope.push();
-        if var_name.contains(',') {
-            let names: Vec<&str> = var_name.split(',').collect();
-            if let Type::Tuple(elem_types) = &elem_ty {
-                for (i, name) in names.iter().enumerate() {
-                    let ty = elem_types.get(i).cloned().unwrap_or(Type::Any);
-                    ctx.scope.define((*name).to_string(), ty);
+    let mut pushed_scopes = 0;
+    let result = (|| {
+        for gen in &comp.generators {
+            let var_name = match &gen.target {
+                Expr::Name(n) => n.id.clone(),
+                Expr::Tuple(tup) => {
+                    let names: Vec<String> = tup
+                        .elts
+                        .iter()
+                        .filter_map(|e| {
+                            if let Expr::Name(n) = e {
+                                Some(n.id.clone())
+                            } else {
+                                None
+                            }
+                        })
+                        .collect();
+                    names.join(",")
+                }
+                _ => {
+                    ctx.error(
+                        "dict comprehension target must be a simple name or tuple".to_string(),
+                    );
+                    return None;
+                }
+            };
+            let iter_expr = lower_expr(&gen.iter, ctx)?;
+            let iter_ty = iter_expr.ty().clone();
+            let elem_ty = match &iter_ty {
+                Type::List(elem) => *elem.clone(),
+                Type::Set(elem) => *elem.clone(),
+                Type::Range => Type::Int,
+                Type::Dict(key, _) => *key.clone(),
+                _ => {
+                    ctx.error(format!(
+                        "cannot iterate over type '{}'",
+                        iter_ty.display_name()
+                    ));
+                    return None;
+                }
+            };
+            ctx.scope.push();
+            pushed_scopes += 1;
+            if var_name.contains(',') {
+                let names: Vec<&str> = var_name.split(',').collect();
+                if let Type::Tuple(elem_types) = &elem_ty {
+                    for (i, name) in names.iter().enumerate() {
+                        let ty = elem_types.get(i).cloned().unwrap_or(Type::Any);
+                        ctx.scope.define((*name).to_string(), ty);
+                    }
+                } else {
+                    for name in &names {
+                        ctx.scope.define((*name).to_string(), Type::Any);
+                    }
                 }
             } else {
-                for name in &names {
-                    ctx.scope.define((*name).to_string(), Type::Any);
-                }
+                ctx.scope.define(var_name.clone(), elem_ty);
             }
-        } else {
-            ctx.scope.define(var_name.clone(), elem_ty);
+            let filter = if gen.ifs.is_empty() {
+                None
+            } else {
+                Some(lower_expr(&gen.ifs[0], ctx)?)
+            };
+            generators.push((var_name, iter_expr, filter));
         }
-        let filter = if gen.ifs.is_empty() {
-            None
-        } else {
-            Some(lower_expr(&gen.ifs[0], ctx)?)
-        };
-        generators.push((var_name, iter_expr, filter));
-    }
-    let key_expr = lower_expr(&comp.key, ctx)?;
-    let val_expr = lower_expr(&comp.value, ctx)?;
-    let key_ty = key_expr.ty().clone();
-    let val_ty = val_expr.ty().clone();
-    for _ in 0..num_gens {
-        ctx.scope.pop();
-    }
-    let result_ty = Type::Dict(Box::new(key_ty), Box::new(val_ty));
-    Some(HirExpr::DictComp {
-        key_expr: Box::new(key_expr),
-        val_expr: Box::new(val_expr),
-        generators,
-        ty: result_ty,
-    })
+        let key_expr = lower_expr(&comp.key, ctx)?;
+        let val_expr = lower_expr(&comp.value, ctx)?;
+        let key_ty = key_expr.ty().clone();
+        let val_ty = val_expr.ty().clone();
+        let result_ty = Type::Dict(Box::new(key_ty), Box::new(val_ty));
+        Some(HirExpr::DictComp {
+            key_expr: Box::new(key_expr),
+            val_expr: Box::new(val_expr),
+            generators,
+            ty: result_ty,
+        })
+    })();
+    ctx.pop_scopes(pushed_scopes);
+    result
 }
 
 pub(super) fn lower_generator_expr(gen: &ExprGenerator, ctx: &mut LowerCtx) -> Option<HirExpr> {
@@ -3522,36 +3524,36 @@ pub(super) fn lower_generator_expr(gen: &ExprGenerator, ctx: &mut LowerCtx) -> O
         }
     };
 
-    // Push scope and define the loop variable
-    ctx.scope.push();
-    ctx.scope.define(var_name.clone(), elem_ty.clone());
+    let (expr, expr_ty, filter) = ctx.with_pushed_scope(|ctx| {
+        ctx.scope.define(var_name.clone(), elem_ty.clone());
 
-    // Lower the expression
-    let expr = lower_expr(&gen.elt, ctx)?;
-    let expr_ty = expr.ty().clone();
+        // Lower the expression
+        let expr = lower_expr(&gen.elt, ctx)?;
+        let expr_ty = expr.ty().clone();
 
-    // Lower the filter condition if present
-    let filter = if comp.ifs.is_empty() {
-        None
-    } else {
-        let first = lower_expr(&comp.ifs[0], ctx)?;
-        if comp.ifs.len() == 1 {
-            Some(Box::new(first))
+        // Lower the filter condition if present
+        let filter = if comp.ifs.is_empty() {
+            None
         } else {
-            let mut combined = first;
-            for cond in &comp.ifs[1..] {
-                let next = lower_expr(cond, ctx)?;
-                combined = HirExpr::BoolOp {
-                    op: "and".to_string(),
-                    values: vec![combined, next],
-                    ty: Type::Bool,
-                };
+            let first = lower_expr(&comp.ifs[0], ctx)?;
+            if comp.ifs.len() == 1 {
+                Some(Box::new(first))
+            } else {
+                let mut combined = first;
+                for cond in &comp.ifs[1..] {
+                    let next = lower_expr(cond, ctx)?;
+                    combined = HirExpr::BoolOp {
+                        op: "and".to_string(),
+                        values: vec![combined, next],
+                        ty: Type::Bool,
+                    };
+                }
+                Some(Box::new(combined))
             }
-            Some(Box::new(combined))
-        }
-    };
+        };
 
-    ctx.scope.pop();
+        Some((expr, expr_ty, filter))
+    })?;
 
     let result_ty = Type::List(Box::new(expr_ty));
 
