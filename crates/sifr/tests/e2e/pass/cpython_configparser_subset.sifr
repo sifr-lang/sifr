@@ -1,5 +1,6 @@
 # Adapted CPython configparser subset for sifr.configparser (core parser model)
 from sifr.configparser import ConfigParser, DEFAULTSECT, ParsingError
+from sifr.io import write_text
 from sifr.test import assert_bool_vector_eq
 
 
@@ -32,6 +33,10 @@ def collect_parser_actual() -> list[bool]:
     )
     fallback_value: str | None = "missing"
     basics_ok = basics_ok and parser.get("server", "feature", fallback_value) is None
+    has_option_defaults_ok: bool = (
+        parser.has_option("server", "encoding")
+        and not parser.has_option("server", "missing")
+    )
 
     converters_ok: bool = (
         parser.getint("server", "port") == 8080
@@ -48,9 +53,24 @@ def collect_parser_actual() -> list[bool]:
         and not parser.has_section("server")
     )
 
+    file_read_ok: bool = False
+    try:
+        path: str = "/tmp/sifr_cpython_configparser_subset.ini"
+        _: None = write_text(path, "[app]\nname = sifr\n")
+        file_parser: ConfigParser = ConfigParser()
+        loaded_paths: list[str] = file_parser.read(path)
+        file_read_ok = (
+            str(loaded_paths) == "[\"" + path + "\"]"
+            and file_parser.get("app", "name") == "sifr"
+        )
+    except IOError as e:
+        _ = str(e.message)
+
     actual.append(basics_ok)
+    actual.append(has_option_defaults_ok)
     actual.append(converters_ok)
     actual.append(mutation_ok)
+    actual.append(file_read_ok)
     return actual
 
 
@@ -82,7 +102,7 @@ def append_all(mut target: list[bool], values: list[bool]):
 
 
 def main():
-    expected: list[bool] = [True, True, True, True, True]
+    expected: list[bool] = [True, True, True, True, True, True, True]
     actual: list[bool] = []
     append_all(actual, collect_parser_actual())
     append_all(actual, collect_error_actual())

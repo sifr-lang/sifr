@@ -215,6 +215,10 @@ def collect_configparser_actual() -> list[bool]:
     )
     fallback_value: str | None = "missing"
     basics_ok = basics_ok and parser.get("server", "feature", fallback_value) is None
+    has_option_defaults_ok: bool = (
+        parser.has_option("server", "encoding")
+        and not parser.has_option("server", "missing")
+    )
     converters_ok: bool = (
         parser.getint("server", "port") == 8080
         and parser.getboolean("server", "enabled") == True
@@ -244,11 +248,26 @@ def collect_configparser_actual() -> list[bool]:
     except ParsingError as e:
         parse_error_rejected = e.line == 1
 
+    read_file_ok: bool = False
+    try:
+        path: str = "/tmp/sifr_wave_psp_c1_configparser.ini"
+        _: None = write_text(path, "[file]\nname = sifr\n")
+        file_parser: ConfigParser = ConfigParser()
+        loaded_paths: list[str] = file_parser.read(path)
+        read_file_ok = (
+            str(loaded_paths) == "[\"" + path + "\"]"
+            and file_parser.get("file", "name") == "sifr"
+        )
+    except IOError as e:
+        _ = str(e.message)
+
     actual.append(basics_ok)
+    actual.append(has_option_defaults_ok)
     actual.append(converters_ok)
     actual.append(mutation_ok)
     actual.append(duplicate_rejected)
     actual.append(parse_error_rejected)
+    actual.append(read_file_ok)
     return actual
 
 
@@ -257,7 +276,7 @@ def main() -> None:
         True, True, True, True, True,
         True, True, True,
         True, True, True, True,
-        True, True, True, True, True,
+        True, True, True, True, True, True, True,
     ]
     actual: list[bool] = []
     for value in collect_json_actual():

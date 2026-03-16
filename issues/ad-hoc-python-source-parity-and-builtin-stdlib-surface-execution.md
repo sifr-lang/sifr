@@ -82,7 +82,8 @@ Status: in_progress
 - [x] Harvest `Lib/test/test_json/`, `Lib/test/test_tomllib/`, `Lib/test/test_csv.py`, and `Lib/test/test_configparser.py`.
 - [x] Close structured-return and class/export gaps for `json`, `tomllib`, `csv`, and `configparser`.
 - [x] Add traceable regressions (including CPython subset fixtures), demo, and local validation evidence.
-- [ ] Open PR, complete review/merge loop, and finalize ledger links.
+- [x] Open implementation PR and merge the wave body.
+- [ ] Complete external review passes and finalize ledger links.
 
 ### `wave_psp_c2` Text, Pattern, and Formatting Modules
 
@@ -380,7 +381,8 @@ Status: pending
   - `SIFR_E2E_DISABLE_CACHE=1 scripts/run_all_tests.sh --profile quick`
   - Includes phase-29 hardening summary: `verification ok: variants=64, failures=0, blocking_failures=0, non_blocking_failures=0`
 - PR / merge:
-  - Pending.
+  - Merged PR: `#1168` `Close wave_psp_c1 structured parsing and serialization parity`
+  - Merge commit: `582697f0b869e07bbaf3ac672e3f1dd87ddd04e6`
 
 ### `wave_psp_c2`
 
@@ -412,6 +414,7 @@ Status: pending
 - `wave_psp_a2`: PR `#1144` merged at `2026-03-14T18:24:24Z`
 - `wave_psp_b1`: PR `#1149` merged at `2026-03-15T02:23:59Z`
 - `wave_psp_b2`: PR `#1160` merged at `2026-03-15T11:41:51Z`
+- `wave_psp_c1`: PR `#1168` merged at `2026-03-16T01:34:09Z`
 
 ## External Review Ledger
 

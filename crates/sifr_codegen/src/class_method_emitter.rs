@@ -1,11 +1,77 @@
 use crate::{
     helpers::{body_contains_field_assign_codegen, collect_mutated_vars_with_sigs},
+    hir_analysis::traversal::{self, TraversalConfig},
     RustEmitter, RustExpr, RustItem, RustParam, RustStmt, RustType, RustTypeParam, Visibility,
 };
 use sifr_hir::{HirClass, HirExpr, HirFunction, HirStmt, MethodKind};
 use sifr_type_system::{ParamConvention, Type};
+use std::collections::HashSet;
 
 impl RustEmitter {
+    fn class_method_requires_mutable_self(&self, class: &HirClass, method: &HirFunction) -> bool {
+        if method.method_kind != MethodKind::Regular || method.name == "new" {
+            return false;
+        }
+        let mut visiting = HashSet::new();
+        Self::class_method_requires_mutable_self_recursive(class, &method.name, &mut visiting)
+    }
+
+    fn class_method_requires_mutable_self_recursive(
+        class: &HirClass,
+        method_name: &str,
+        visiting: &mut HashSet<String>,
+    ) -> bool {
+        let Some(method) = class
+            .methods
+            .iter()
+            .find(|candidate| candidate.name == method_name)
+        else {
+            return false;
+        };
+
+        if body_contains_field_assign_codegen(&method.body) {
+            return true;
+        }
+
+        if !visiting.insert(method_name.to_string()) {
+            return false;
+        }
+
+        let delegated_calls = Self::collect_direct_self_method_calls(&method.body);
+        for delegated_method in delegated_calls {
+            if Self::class_method_requires_mutable_self_recursive(
+                class,
+                &delegated_method,
+                visiting,
+            ) {
+                visiting.remove(method_name);
+                return true;
+            }
+        }
+
+        visiting.remove(method_name);
+        false
+    }
+
+    fn collect_direct_self_method_calls(stmts: &[HirStmt]) -> HashSet<String> {
+        let mut calls = HashSet::new();
+        let mut on_stmt = |_stmt: &HirStmt| {};
+        let mut on_expr = |expr: &HirExpr| {
+            if let HirExpr::MethodCall { object, method, .. } = expr {
+                if matches!(object.as_ref(), HirExpr::Name { name, .. } if name == "self") {
+                    calls.insert(method.clone());
+                }
+            }
+        };
+        traversal::walk_stmts(
+            stmts,
+            TraversalConfig::LOCAL_SCOPE_ONLY,
+            &mut on_stmt,
+            &mut on_expr,
+        );
+        calls
+    }
+
     fn is_some_call_expr(expr: &RustExpr) -> bool {
         matches!(
             expr,
@@ -467,7 +533,7 @@ impl RustEmitter {
         match method.method_kind {
             MethodKind::Regular if method.name != "new" => {
                 params.push(RustParam::SelfParam {
-                    mutable: body_contains_field_assign_codegen(&method.body),
+                    mutable: self.class_method_requires_mutable_self(class, method),
                 });
             }
             _ => {}
