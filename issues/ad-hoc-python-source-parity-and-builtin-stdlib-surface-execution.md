@@ -4,7 +4,7 @@ Status: in_progress
 Started: 2026-03-14
 Phase owner: Codex (GPT-5)
 Source phase: `issues/ad-hoc-python-source-parity-and-builtin-stdlib-surface.md`
-Current active wave: `wave_psp_e1`
+Current active wave: `wave_psp_e2`
 
 ## Execution Rules
 
@@ -23,7 +23,7 @@ Current active wave: `wave_psp_e1`
 - [x] `milestone_psp_4` / `wave_psp_c2`: text, pattern, and formatting modules
 - [x] `milestone_psp_5` / `wave_psp_d1`: filesystem, paths, and archive surfaces
 - [x] `milestone_psp_5` / `wave_psp_d2`: process, runtime, and platform surfaces
-- [ ] `milestone_psp_6` / `wave_psp_e1`: strong-but-incomplete core modules
+- [x] `milestone_psp_6` / `wave_psp_e1`: strong-but-incomplete core modules
 - [ ] `milestone_psp_6` / `wave_psp_e2`: class-heavy and custom cleanup
 - [ ] `milestone_psp_7`: parity governance and exit closure
 
@@ -137,15 +137,15 @@ Status: done
 
 ### `wave_psp_e1` Strong-But-Incomplete Core Modules
 
-Status: in_progress
+Status: done
 
 - [x] Harvest `Lib/test/test_datetime.py`, `Lib/test/test_re.py`, `Lib/test/test_math.py`, `Lib/test/test_statistics.py`, and `Lib/test/test_hashlib.py`.
 - [x] Close remaining parity gaps for `datetime`, `re`, `math`, `statistics`, and `hashlib`.
-- [ ] Add traceable regressions, demo, validate, PR, review, merge.
+- [x] Add traceable regressions, demo, validate, PR, review, merge.
 
 ### `wave_psp_e2` Class-Heavy and Custom Cleanup
 
-Status: pending
+Status: in_progress
 
 - [ ] Harvest `Lib/test/test_argparse.py`, `Lib/test/test_ipaddress.py`, `Lib/test/test_uuid.py`, and `Lib/test/test_graphlib.py`.
 - [ ] Close or explicitly classify final gaps for `argparse`, `ipaddress`, `uuid`, `graphlib`, and `test`.
@@ -597,6 +597,7 @@ Status: pending
 - `wave_psp_d2-review-pass1`: PR `#1199` merged at `2026-03-16T08:22:10Z`
 - `wave_psp_d2-review-pass2`: PR `#1200` merged at `2026-03-16T08:36:31Z`
 - `wave_psp_e1`: PR `#1201` merged at `2026-03-16T08:43:54Z`
+- `wave_psp_e1-review-pass1`: PR `#1202` merged at `2026-03-16T09:01:04Z`
 
 ## External Review Ledger
 
@@ -685,3 +686,7 @@ Status: pending
   - Reviewer file: `/Users/yaseralnajjar/.codex/worktrees/0761/codebase/reviews/wave-psp-e1-review-pass1.md`
   - Validation result: partially actionable. The review mostly reflected stale pre-`#1201` state (it claimed missing e1 artifacts and pending implementation), but the request to make e1 semantic adaptations explicit in evidence was valid.
   - Fix status: remediated by hardening `phase_psp_e1_core_modules_numeric_patterns_crypto.sifr` assertions (`timedelta.total_seconds()`, invalid combinatorics domains, and `digest()==hexdigest()`) and tightening adaptation notes in `verification/stdlib/wave_psp_e1_cpython_traceability.md`.
+- `wave_psp_e1` review pass 2:
+  - Reviewer file: `/Users/yaseralnajjar/.codex/worktrees/0761/codebase/reviews/wave-psp-e1-review-pass2.md`
+  - Validation result: non-actionable stale review. It incorrectly reported wave e1 as pending and missing traceability/demo artifacts that are already merged in `#1201` and `#1202`.
+  - Fix status: no code changes required.
