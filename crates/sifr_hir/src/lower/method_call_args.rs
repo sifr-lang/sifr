@@ -77,16 +77,10 @@ pub(super) fn lower_function_call_args(
         if positional_args.len() < ft.params.len() {
             let mut filled = positional_args;
             for i in filled.len()..ft.params.len() {
-                if let Some(default_expr) = defaults
-                    .and_then(|defs| defs.iter().find(|(idx, _)| *idx == i).map(|(_, expr)| expr))
-                {
+                if let Some(default_expr) = default_arg_expr(defaults, i) {
                     filled.push(default_expr.clone());
                 } else {
-                    ctx.error(format!(
-                        "{callable_name}(): missing argument '{}' with no default value",
-                        ft.params[i].0
-                    ));
-                    return None;
+                    return missing_argument_error(callable_name, &ft.params[i].0, ctx);
                 }
             }
             return Some(filled);
@@ -97,35 +91,21 @@ pub(super) fn lower_function_call_args(
     let mut resolved = Vec::with_capacity(ft.params.len());
     for (i, (param_name, _, _)) in ft.params.iter().enumerate() {
         if i < positional_args.len() {
-            if keyword_args
-                .iter()
-                .any(|(keyword, _)| keyword == param_name)
-            {
-                ctx.error(format!(
-                    "{callable_name}() got multiple values for argument '{param_name}'"
-                ));
-                return None;
+            if keyword_arg_expr(&keyword_args, param_name).is_some() {
+                return duplicate_argument_error(callable_name, param_name, ctx);
             }
             resolved.push(positional_args[i].clone());
             continue;
         }
-        if let Some(position) = keyword_args
-            .iter()
-            .position(|(keyword, _)| keyword == param_name)
-        {
-            resolved.push(keyword_args[position].1.clone());
+        if let Some(argument) = keyword_arg_expr(&keyword_args, param_name) {
+            resolved.push(argument.clone());
             continue;
         }
-        if let Some(default_expr) =
-            defaults.and_then(|defs| defs.iter().find(|(idx, _)| *idx == i).map(|(_, expr)| expr))
-        {
+        if let Some(default_expr) = default_arg_expr(defaults, i) {
             resolved.push(default_expr.clone());
             continue;
         }
-        ctx.error(format!(
-            "{callable_name}(): missing argument '{param_name}' with no default value"
-        ));
-        return None;
+        return missing_argument_error(callable_name, param_name, ctx);
     }
 
     for (keyword, _) in keyword_args {
@@ -134,10 +114,7 @@ pub(super) fn lower_function_call_args(
             .iter()
             .any(|(param_name, _, _)| param_name == keyword.as_str())
         {
-            ctx.error(format!(
-                "{callable_name}() got an unexpected keyword argument '{keyword}'"
-            ));
-            return None;
+            return unexpected_keyword_error(callable_name, &keyword, ctx);
         }
     }
 
@@ -158,36 +135,22 @@ fn lower_vararg_function_call_args(
 
     for (i, (param_name, _, _)) in ft.params.iter().take(vararg_index).enumerate() {
         if i < positional_args.len() {
-            if keyword_args
-                .iter()
-                .any(|(keyword, _)| keyword == param_name)
-            {
-                ctx.error(format!(
-                    "{callable_name}() got multiple values for argument '{param_name}'"
-                ));
-                return None;
+            if keyword_arg_expr(keyword_args, param_name).is_some() {
+                return duplicate_argument_error(callable_name, param_name, ctx);
             }
             resolved.push(positional_args[i].clone());
             continue;
         }
-        if let Some(position) = keyword_args
-            .iter()
-            .position(|(keyword, _)| keyword == param_name)
-        {
-            resolved.push(keyword_args[position].1.clone());
+        if let Some(argument) = keyword_arg_expr(keyword_args, param_name) {
+            resolved.push(argument.clone());
             used_kwargs.insert(param_name.clone());
             continue;
         }
-        if let Some(default_expr) =
-            defaults.and_then(|defs| defs.iter().find(|(idx, _)| *idx == i).map(|(_, expr)| expr))
-        {
+        if let Some(default_expr) = default_arg_expr(defaults, i) {
             resolved.push(default_expr.clone());
             continue;
         }
-        ctx.error(format!(
-            "{callable_name}(): missing argument '{param_name}' with no default value"
-        ));
-        return None;
+        return missing_argument_error(callable_name, param_name, ctx);
     }
 
     let vararg_elements = if positional_args.len() > vararg_index {
@@ -215,33 +178,22 @@ fn lower_vararg_function_call_args(
     });
 
     for (i, (param_name, _, _)) in ft.params.iter().enumerate().skip(vararg_index + 1) {
-        if let Some(position) = keyword_args
-            .iter()
-            .position(|(keyword, _)| keyword == param_name)
-        {
-            resolved.push(keyword_args[position].1.clone());
+        if let Some(argument) = keyword_arg_expr(keyword_args, param_name) {
+            resolved.push(argument.clone());
             used_kwargs.insert(param_name.clone());
             continue;
         }
-        if let Some(default_expr) =
-            defaults.and_then(|defs| defs.iter().find(|(idx, _)| *idx == i).map(|(_, expr)| expr))
-        {
+        if let Some(default_expr) = default_arg_expr(defaults, i) {
             resolved.push(default_expr.clone());
             continue;
         }
-        ctx.error(format!(
-            "{callable_name}(): missing argument '{param_name}' with no default value"
-        ));
-        return None;
+        return missing_argument_error(callable_name, param_name, ctx);
     }
 
     let vararg_name = &ft.params[vararg_index].0;
     for (keyword, _) in keyword_args {
         if keyword == vararg_name {
-            ctx.error(format!(
-                "{callable_name}() got an unexpected keyword argument '{keyword}'"
-            ));
-            return None;
+            return unexpected_keyword_error(callable_name, keyword, ctx);
         }
         if !used_kwargs.contains(keyword)
             && !ft
@@ -251,10 +203,7 @@ fn lower_vararg_function_call_args(
                 .chain(ft.params.iter().skip(vararg_index + 1))
                 .any(|(param_name, _, _)| param_name == keyword)
         {
-            ctx.error(format!(
-                "{callable_name}() got an unexpected keyword argument '{keyword}'"
-            ));
-            return None;
+            return unexpected_keyword_error(callable_name, keyword, ctx);
         }
     }
 
@@ -304,17 +253,47 @@ fn reject_remaining_keywords(
     ctx: &mut LowerCtx,
 ) -> Option<()> {
     if let Some((keyword, _)) = keywords.first() {
-        ctx.error(format!(
-            "{method}() got an unexpected keyword argument '{keyword}'"
-        ));
-        return None;
+        return unexpected_keyword_error(method, keyword, ctx);
     }
     Some(())
 }
 
-fn duplicate_argument_error(method: &str, arg: &str, ctx: &mut LowerCtx) -> Option<Vec<HirExpr>> {
+fn default_arg_expr(defaults: Option<&[(usize, HirExpr)]>, index: usize) -> Option<&HirExpr> {
+    defaults.and_then(|defs| {
+        defs.iter()
+            .find(|(idx, _)| *idx == index)
+            .map(|(_, expr)| expr)
+    })
+}
+
+fn keyword_arg_expr<'a>(keywords: &'a LoweredKeywords, name: &str) -> Option<&'a HirExpr> {
+    keywords
+        .iter()
+        .find(|(keyword, _)| keyword == name)
+        .map(|(_, expr)| expr)
+}
+
+fn duplicate_argument_error<T>(callable_name: &str, arg: &str, ctx: &mut LowerCtx) -> Option<T> {
     ctx.error(format!(
-        "{method}() got multiple values for argument '{arg}'"
+        "{callable_name}() got multiple values for argument '{arg}'"
+    ));
+    None
+}
+
+fn missing_argument_error<T>(callable_name: &str, arg: &str, ctx: &mut LowerCtx) -> Option<T> {
+    ctx.error(format!(
+        "{callable_name}(): missing argument '{arg}' with no default value"
+    ));
+    None
+}
+
+fn unexpected_keyword_error<T>(
+    callable_name: &str,
+    keyword: &str,
+    ctx: &mut LowerCtx,
+) -> Option<T> {
+    ctx.error(format!(
+        "{callable_name}() got an unexpected keyword argument '{keyword}'"
     ));
     None
 }
