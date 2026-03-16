@@ -227,17 +227,21 @@ def starmap(func: Callable[[A, B], R], pairs: list[tuple[A, B]]) -> list[R]:
     return result
 
 
-def accumulate[T: Addable](data: list[T]) -> list[T]:
+def accumulate[T: Addable](data: list[T], initial: T | None = None) -> list[T]:
     result: list[T] = []
-    if len(data) == 0:
-        return result
-    first: T | None = data[0]
-    if first is not None:
-        result.append(first)
-    i: int = 1
+    i: int = 0
+    if initial is not None:
+        result.append(initial)
+    else:
+        if len(data) == 0:
+            return result
+        first: T | None = data[0]
+        if first is not None:
+            result.append(first)
+        i = 1
     while i < len(data):
-        prev: T | None = result[len(result) - 1]
         cur: T | None = data[i]
+        prev: T | None = result[len(result) - 1]
         if prev is not None:
             if cur is not None:
                 next_val: T = prev + cur

@@ -701,6 +701,10 @@ Status: pending
   - Reviewer file: `/Users/yaseralnajjar/.codex/worktrees/0761/codebase/reviews/wave-psp-b2-review-pass2.md`
   - Validated finding: borrowed aggregate arguments were still packing move-only names into temporary collection literals, which regressed `chain(a, b)` / `chain(a, b, c)` style ownership semantics after the b2 vararg expansion.
   - Fix status: remediated in PR `#1162`.
+- `wave_psp_b2` review pass 3:
+  - Reviewer file: `/Users/yaseralnajjar/.codex/worktrees/0761/codebase/reviews/wave-psp-b2-review-gap-cpython-parity-20260316.md`
+  - Validated findings: CPython-derived coverage for itertools combinator families was too concentrated in the wave fixture, `accumulate(..., initial=...)` parity was missing, operator helper coverage omitted shipped boolean helpers, and `compare_digest` constant-time limitations needed clearer traceability wording.
+  - Fix status: remediated by adding `accumulate(initial=...)` in `lib/sifr/itertools.sifr`, expanding `cpython_itertools_subset.sifr` with product/permutations/combinations/combinations_with_replacement/starmap coverage, extending `stdlib_operator.sifr` boolean-helper assertions, and tightening `verification/stdlib/wave_psp_b2_cpython_traceability.md`.
 - `wave_psp_c1` review pass 1:
   - Reviewer file: `/Users/yaseralnajjar/.codex/worktrees/0761/codebase/reviews/wave-psp-c1-review-pass1b.md`
   - Validated findings: `ConfigParser.read(path)` only read bytes and skipped parser population, `has_option()` default fallback semantics regressed for existing sections, and class-method mutability inference missed delegated `self.read_string(...)` mutation.
