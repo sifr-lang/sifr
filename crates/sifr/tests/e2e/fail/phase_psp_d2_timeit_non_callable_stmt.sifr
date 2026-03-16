@@ -1,0 +1,6 @@
+from sifr.timeit import timeit
+
+
+def main():
+    elapsed: float = timeit("print('x')", 3)
+    _ = elapsed

@@ -22,7 +22,7 @@ Current active wave: `wave_psp_d2`
 - [x] `milestone_psp_4` / `wave_psp_c1`: structured parsing and serialization
 - [x] `milestone_psp_4` / `wave_psp_c2`: text, pattern, and formatting modules
 - [x] `milestone_psp_5` / `wave_psp_d1`: filesystem, paths, and archive surfaces
-- [ ] `milestone_psp_5` / `wave_psp_d2`: process, runtime, and platform surfaces
+- [x] `milestone_psp_5` / `wave_psp_d2`: process, runtime, and platform surfaces
 - [ ] `milestone_psp_6` / `wave_psp_e1`: strong-but-incomplete core modules
 - [ ] `milestone_psp_6` / `wave_psp_e2`: class-heavy and custom cleanup
 - [ ] `milestone_psp_7`: parity governance and exit closure
@@ -129,11 +129,11 @@ Status: done
 
 ### `wave_psp_d2` Process, Runtime, and Platform Surfaces
 
-Status: pending
+Status: done
 
-- [ ] Harvest the required CPython runtime/platform test families.
-- [ ] Close `os`, `env`, `sys`, `subprocess`, `logging`, `platform`, `time`, and `timeit`.
-- [ ] Add traceable regressions, demo, validate, PR, review, merge.
+- [x] Harvest the required CPython runtime/platform test families.
+- [x] Close `os`, `env`, `sys`, `subprocess`, `logging`, `platform`, `time`, and `timeit`.
+- [x] Add traceable regressions, demo, validate, PR, review, merge.
 
 ### `wave_psp_e1` Strong-But-Incomplete Core Modules
 
@@ -509,7 +509,28 @@ Status: pending
 
 ### `wave_psp_d2`
 
-- Pending.
+- Added wave-specific regression, demo, and traceability artifacts:
+  - `crates/sifr/tests/e2e/pass/phase_psp_d2_process_runtime_platform.sifr`
+  - `crates/sifr/tests/e2e/pass/cpython_sys_subset.sifr`
+  - `crates/sifr/tests/e2e/pass/cpython_subprocess_subset.sifr`
+  - `crates/sifr/tests/e2e/fail/phase_psp_d2_os_mkdir_non_string_path.sifr`
+  - `crates/sifr/tests/e2e/fail/phase_psp_d2_subprocess_non_string_cmd.sifr`
+  - `crates/sifr/tests/e2e/fail/phase_psp_d2_sys_exit_non_int_code.sifr`
+  - `crates/sifr/tests/e2e/fail/phase_psp_d2_timeit_non_callable_stmt.sifr`
+  - `demos/wave_psp_d2_process_runtime_platform_demo.sifr`
+  - `verification/stdlib/wave_psp_d2_cpython_traceability.md`
+- Demo validation:
+  - `cargo run -q -p sifr -- run demos/wave_psp_d2_process_runtime_platform_demo.sifr`
+- Targeted regression validation:
+  - `cargo run -q -p sifr -- run crates/sifr/tests/e2e/pass/phase_psp_d2_process_runtime_platform.sifr`
+  - `cargo run -q -p sifr -- run crates/sifr/tests/e2e/pass/cpython_sys_subset.sifr`
+  - `cargo run -q -p sifr -- run crates/sifr/tests/e2e/pass/cpython_subprocess_subset.sifr`
+  - `cargo run -q -p sifr -- check crates/sifr/tests/e2e/fail/phase_psp_d2_os_mkdir_non_string_path.sifr`
+  - `cargo run -q -p sifr -- check crates/sifr/tests/e2e/fail/phase_psp_d2_subprocess_non_string_cmd.sifr`
+  - `cargo run -q -p sifr -- check crates/sifr/tests/e2e/fail/phase_psp_d2_sys_exit_non_int_code.sifr`
+  - `cargo run -q -p sifr -- check crates/sifr/tests/e2e/fail/phase_psp_d2_timeit_non_callable_stmt.sifr`
+- Authoritative local gate:
+  - `scripts/run_all_tests.sh --profile quick`
 
 ### `wave_psp_e1`
 
@@ -537,6 +558,7 @@ Status: pending
 - `wave_psp_d1`: PR `#1192` merged at `2026-03-16T05:15:54Z`
 - `wave_psp_d1-review-pass1`: PR `#1193` merged at `2026-03-16T05:28:23Z`
 - `wave_psp_ab-review-pass3`: PR `#1196` merged at `2026-03-16T06:12:23Z`
+- `wave_psp_ab-review-pass4`: PR `#1197` merged at `2026-03-16T06:38:54Z`
 
 ## External Review Ledger
 

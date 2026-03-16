@@ -1,0 +1,6 @@
+from sifr.subprocess import run
+
+
+def main():
+    result = run(123)
+    _ = result

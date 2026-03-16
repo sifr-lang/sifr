@@ -1,0 +1,5 @@
+from sifr.sys import exit
+
+
+def main():
+    exit("1")
