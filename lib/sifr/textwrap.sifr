@@ -37,6 +37,61 @@ def _wrap_impl(text: str, width: int) -> list[str]:
         result.append(current)
     return result
 
+def _apply_line_indents(
+    lines: list[str], initial_indent: str, subsequent_indent: str
+) -> list[str]:
+    result: list[str] = []
+    index: int = 0
+    for line in lines:
+        if index == 0:
+            result.append(initial_indent + line)
+        else:
+            result.append(subsequent_indent + line)
+        index = index + 1
+    return result
+
+class TextWrapper:
+    width: int
+    initial_indent: str
+    subsequent_indent: str
+
+    def __init__(
+        self,
+        width: int = 70,
+        initial_indent: str = "",
+        subsequent_indent: str = "",
+    ) -> None:
+        self.width = width
+        self.initial_indent = initial_indent + ""
+        self.subsequent_indent = subsequent_indent + ""
+
+    def wrap(self, text: str) -> list[str]:
+        if self.width <= 0:
+            return []
+        wrapped: list[str] = _wrap_impl(text, self.width)
+        if len(wrapped) == 0:
+            return wrapped
+        return _apply_line_indents(
+            wrapped, self.initial_indent, self.subsequent_indent
+        )
+
+    def fill(self, text: str) -> str:
+        if self.width <= 0:
+            return ""
+        lines: list[str] = _wrap_impl(text, self.width)
+        if len(lines) > 0:
+            lines = _apply_line_indents(
+                lines, self.initial_indent, self.subsequent_indent
+            )
+        result: str = ""
+        i: int = 0
+        for line in lines:
+            if i > 0:
+                result = result + "\n"
+            result = result + line
+            i = i + 1
+        return result
+
 def wrap(text: str, width: int) -> Result[list[str], ValueError]:
     if width <= 0:
         raise ValueError("wrap: width must be > 0")

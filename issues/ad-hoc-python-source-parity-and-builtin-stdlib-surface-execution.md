@@ -87,10 +87,10 @@ Status: done
 
 ### `wave_psp_c2` Text, Pattern, and Formatting Modules
 
-Status: pending
+Status: in_progress
 
-- [ ] Harvest the required CPython text-formatting test families.
-- [ ] Close `string`, `textwrap`, `base64`, `html`, `fnmatch`, `difflib`, and `calendar`.
+- [x] Harvest the required CPython text-formatting test families.
+- [x] Close `string`, `textwrap`, `base64`, `html`, `fnmatch`, `difflib`, and `calendar`.
 - [ ] Add traceable regressions, demo, validate, PR, review, merge.
 
 ### `wave_psp_d1` Filesystem, Paths, and Archive Surfaces
@@ -390,7 +390,46 @@ Status: pending
 
 ### `wave_psp_c2`
 
-- Pending.
+- Implemented text/pattern/formatting parity closure in:
+  - `lib/sifr/string.sifr`
+  - `lib/sifr/textwrap.sifr`
+  - `lib/sifr/fnmatch.sifr`
+  - `lib/sifr/difflib.sifr`
+  - `lib/sifr/calendar.sifr`
+  - `lib/sifr/base64.sifr`
+- Added wave-specific regression, demo, and traceability artifacts:
+  - `crates/sifr/tests/e2e/pass/phase_psp_c2_text_pattern_formatting.sifr`
+  - `crates/sifr/tests/e2e/pass/cpython_string_template_subset.sifr`
+  - `crates/sifr/tests/e2e/pass/cpython_textwrap_textwrapper_subset.sifr`
+  - `crates/sifr/tests/e2e/pass/cpython_fnmatch_translate_subset.sifr`
+  - `crates/sifr/tests/e2e/pass/cpython_difflib_subset.sifr`
+  - `crates/sifr/tests/e2e/pass/cpython_calendar_subset.sifr`
+  - `demos/wave_psp_c2_text_pattern_formatting_demo.sifr`
+  - `verification/stdlib/wave_psp_c2_cpython_traceability.md`
+- Targeted validation:
+  - `cargo run -q -p sifr -- run demos/wave_psp_c2_text_pattern_formatting_demo.sifr`
+  - `cargo run -q -p sifr -- run crates/sifr/tests/e2e/pass/phase_psp_c2_text_pattern_formatting.sifr`
+  - `cargo run -q -p sifr -- run crates/sifr/tests/e2e/pass/cpython_string_template_subset.sifr`
+  - `cargo run -q -p sifr -- run crates/sifr/tests/e2e/pass/cpython_textwrap_textwrapper_subset.sifr`
+  - `cargo run -q -p sifr -- run crates/sifr/tests/e2e/pass/cpython_fnmatch_translate_subset.sifr`
+  - `cargo run -q -p sifr -- run crates/sifr/tests/e2e/pass/cpython_difflib_subset.sifr`
+  - `cargo run -q -p sifr -- run crates/sifr/tests/e2e/pass/cpython_calendar_subset.sifr`
+  - `cargo run -q -p sifr -- run crates/sifr/tests/e2e/pass/cpython_string.sifr`
+  - `cargo run -q -p sifr -- run crates/sifr/tests/e2e/pass/cpython_string_subset.sifr`
+  - `cargo run -q -p sifr -- run crates/sifr/tests/e2e/pass/cpython_textwrap.sifr`
+  - `cargo run -q -p sifr -- run crates/sifr/tests/e2e/pass/cpython_textwrap_subset.sifr`
+  - `cargo run -q -p sifr -- run crates/sifr/tests/e2e/pass/cpython_base64_subset.sifr`
+  - `cargo run -q -p sifr -- run crates/sifr/tests/e2e/pass/cpython_base64_rfc4648_vectors.sifr`
+  - `cargo run -q -p sifr -- run crates/sifr/tests/e2e/pass/cpython_base64_strictness_subset.sifr`
+  - `cargo run -q -p sifr -- run crates/sifr/tests/e2e/pass/cpython_fnmatch.sifr`
+  - `cargo run -q -p sifr -- run crates/sifr/tests/e2e/pass/cpython_fnmatch_subset.sifr`
+  - `cargo run -q -p sifr -- run crates/sifr/tests/e2e/pass/stdlib_fnmatch_consolidated.sifr`
+  - `cargo run -q -p sifr -- run crates/sifr/tests/e2e/pass/stdlib_difflib.sifr`
+  - `cargo run -q -p sifr -- run crates/sifr/tests/e2e/pass/stdlib_calendar.sifr`
+  - `cargo run -q -p sifr -- run crates/sifr/tests/e2e/pass/stdlib_html.sifr`
+  - `cargo run -q -p sifr -- run crates/sifr/tests/e2e/pass/stdlib_base64_intrinsics.sifr`
+- Authoritative local gate:
+  - `SIFR_E2E_DISABLE_CACHE=1 scripts/run_all_tests.sh --profile quick`
 
 ### `wave_psp_d1`
 

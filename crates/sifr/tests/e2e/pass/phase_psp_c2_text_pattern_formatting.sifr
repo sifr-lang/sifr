@@ -1,0 +1,139 @@
+from sifr.string import Template, Formatter
+from sifr.textwrap import TextWrapper
+from sifr.base64 import b64encode, b64decode, urlsafe_b64encode, urlsafe_b64decode, b32encode, b32decode
+from sifr.html import escape, unescape
+from sifr.fnmatch import fnmatch, translate, filterfalse
+from sifr.difflib import SequenceMatcher
+from sifr.calendar import Calendar, TextCalendar, HTMLCalendar, MONDAY, SUNDAY, month_name
+from sifr.test import assert_bool_vector_eq
+
+def collect_string_actual() -> list[bool]:
+    actual: list[bool] = []
+
+    template: Template = Template("$name -> ${value} $$")
+    template_ok: bool = False
+    try:
+        rendered: str = template.substitute({"name": "k", "value": "v"})
+        template_ok = rendered == "k -> v $"
+    except ValueError as e:
+        _ = e.message
+    actual.append(template_ok)
+
+    safe_rendered: str = template.safe_substitute({"name": "k"})
+    actual.append(safe_rendered == "k -> ${value} $")
+
+    formatter: Formatter = Formatter()
+    formatter_ok: bool = False
+    try:
+        rendered2: str = formatter.format("X={x}, Y={y}", {"x": "1", "y": "2"})
+        formatter_ok = rendered2 == "X=1, Y=2"
+    except ValueError as e:
+        _ = e.message
+    actual.append(formatter_ok)
+
+    return actual
+
+def collect_textwrap_actual() -> list[bool]:
+    actual: list[bool] = []
+    wrapper: TextWrapper = TextWrapper(9, "> ", ".. ")
+    wrapped: list[str] = wrapper.wrap("alpha beta gamma")
+    filled: str = wrapper.fill("alpha beta gamma")
+    wrap_ok: bool = str(wrapped) == "[\"> alpha\", \".. beta\", \".. gamma\"]"
+    fill_ok: bool = filled == "> alpha\n.. beta\n.. gamma"
+    actual.append(wrap_ok)
+    actual.append(fill_ok)
+    return actual
+
+def collect_base64_actual() -> list[bool]:
+    actual: list[bool] = []
+    payload: str = "hello sifr"
+    b64: str = b64encode(payload + "")
+    actual.append(len(b64) > 0)
+
+    b64_ok: bool = False
+    try:
+        decoded_b64: str = b64decode(b64)
+        b64_ok = decoded_b64 == payload
+    except ParseError as e:
+        _ = e.message
+    actual.append(b64_ok)
+
+    url_ok: bool = False
+    try:
+        encoded_url: str = urlsafe_b64encode(payload + "")
+        decoded_url: str = urlsafe_b64decode(encoded_url)
+        url_ok = decoded_url == payload
+    except ParseError as e:
+        _ = e.message
+    actual.append(url_ok)
+
+    b32_ok: bool = False
+    try:
+        encoded32: str = b32encode(payload + "")
+        decoded32: str = b32decode(encoded32)
+        b32_ok = decoded32 == payload
+    except ParseError as e:
+        _ = e.message
+    actual.append(b32_ok)
+
+    return actual
+
+def collect_html_fnmatch_actual() -> list[bool]:
+    actual: list[bool] = []
+    escaped: str = escape("<a&b>")
+    unescaped: str = unescape(escaped)
+    actual.append(unescaped == "<a&b>")
+
+    actual.append(fnmatch("report.txt", "*.txt"))
+    actual.append(translate("*.txt") == "(?s:.*\\.txt)\\z")
+    actual.append(str(filterfalse(["a.py", "b.txt", "c.py"], "*.py")) == "[\"b.txt\"]")
+    return actual
+
+def collect_difflib_calendar_actual() -> list[bool]:
+    actual: list[bool] = []
+
+    matcher: SequenceMatcher = SequenceMatcher("abcd", "abed")
+    ratio: float = matcher.ratio()
+    actual.append(ratio > 0.4 and ratio < 1.0)
+    blocks: list[tuple[int, int, int]] = matcher.get_matching_blocks()
+    actual.append(str(blocks) == "[(0, 0, 2), (4, 4, 0)]")
+
+    cal: Calendar = Calendar(MONDAY)
+    actual.append(str(cal.iterweekdays()) == "[0, 1, 2, 3, 4, 5, 6]")
+    cal.setfirstweekday(SUNDAY)
+    actual.append(str(cal.iterweekdays()) == "[6, 0, 1, 2, 3, 4, 5]")
+
+    text_label_ok: bool = False
+    html_label_ok: bool = False
+    try:
+        text_label: str = TextCalendar().formatmonthname(2024, 2, 0)
+        html_label: str = HTMLCalendar().formatmonthname(2024, 2)
+        feb: str | None = month_name[2]
+        text_label_ok = text_label == "February 2024" and feb == "February"
+        html_label_ok = html_label == "<tr><th colspan=\"7\" class=\"month\">February 2024</th></tr>"
+    except ValueError as e:
+        _ = e.message
+    actual.append(text_label_ok)
+    actual.append(html_label_ok)
+
+    return actual
+
+def append_all(mut target: list[bool], values: list[bool]):
+    for value in values:
+        target.append(value)
+
+def main() -> None:
+    expected: list[bool] = [
+        True, True, True,
+        True, True,
+        True, True, True, True,
+        True, True, True, True,
+        True, True, True, True, True, True,
+    ]
+    actual: list[bool] = []
+    append_all(actual, collect_string_actual())
+    append_all(actual, collect_textwrap_actual())
+    append_all(actual, collect_base64_actual())
+    append_all(actual, collect_html_fnmatch_actual())
+    append_all(actual, collect_difflib_calendar_actual())
+    assert_bool_vector_eq(actual, expected)

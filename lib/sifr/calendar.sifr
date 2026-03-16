@@ -1,6 +1,64 @@
 # sifr.calendar — Calendar-related functions
 from _sifr.calendar import calendar_isleap, calendar_weekday, calendar_monthrange
 
+MONDAY: int = 0
+TUESDAY: int = 1
+WEDNESDAY: int = 2
+THURSDAY: int = 3
+FRIDAY: int = 4
+SATURDAY: int = 5
+SUNDAY: int = 6
+
+day_name: list[str] = [
+    "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"
+]
+day_abbr: list[str] = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]
+
+month_name: list[str] = [
+    "",
+    "January",
+    "February",
+    "March",
+    "April",
+    "May",
+    "June",
+    "July",
+    "August",
+    "September",
+    "October",
+    "November",
+    "December",
+]
+month_abbr: list[str] = [
+    "",
+    "Jan",
+    "Feb",
+    "Mar",
+    "Apr",
+    "May",
+    "Jun",
+    "Jul",
+    "Aug",
+    "Sep",
+    "Oct",
+    "Nov",
+    "Dec",
+]
+
+def _normalize_firstweekday(firstweekday: int) -> int:
+    value: int = firstweekday % 7
+    if value < 0:
+        value = value + 7
+    return value
+
+def _month_name_lookup(month: int) -> str | None:
+    if month < 1 or month > 12:
+        return None
+    label: str | None = month_name[month]
+    if label is not None:
+        return label + ""
+    return None
+
 def isleap(year: int) -> bool:
     return calendar_isleap(year)
 
@@ -11,3 +69,84 @@ def weekday(year: int, month: int, day: int) -> int:
 def monthrange(year: int, month: int) -> list[int]:
     # Returns [weekday_of_first_day, number_of_days_in_month].
     return calendar_monthrange(year, month)
+
+def leapdays(y1: int, y2: int) -> int:
+    count: int = 0
+    year: int = y1
+    while year < y2:
+        if isleap(year):
+            count = count + 1
+        year = year + 1
+    return count
+
+class Calendar:
+    firstweekday: int
+
+    def __init__(self, firstweekday: int = 0) -> None:
+        self.firstweekday = _normalize_firstweekday(firstweekday)
+
+    def getfirstweekday(self) -> int:
+        return self.firstweekday
+
+    def setfirstweekday(self, firstweekday: int) -> None:
+        self.firstweekday = _normalize_firstweekday(firstweekday)
+
+    def iterweekdays(self) -> list[int]:
+        result: list[int] = []
+        offset: int = 0
+        while offset < 7:
+            result.append((self.firstweekday + offset) % 7)
+            offset = offset + 1
+        return result
+
+class TextCalendar:
+    firstweekday: int
+
+    def __init__(self, firstweekday: int = 0) -> None:
+        self.firstweekday = _normalize_firstweekday(firstweekday)
+
+    def formatmonthname(self, year: int, month: int, width: int = 0) -> Result[str, ValueError]:
+        name_lookup: str | None = _month_name_lookup(month)
+        name: str = ""
+        if name_lookup is not None:
+            name = name_lookup
+        else:
+            raise ValueError("calendar: month must be in 1..12")
+        formatted: str = name + " " + str(year)
+        if width <= 0:
+            return formatted
+        if len(formatted) >= width:
+            return formatted
+        pad: int = width - len(formatted)
+        left: int = pad // 2
+        right: int = pad - left
+        result: str = ""
+        while left > 0:
+            result = result + " "
+            left = left - 1
+        result = result + formatted
+        while right > 0:
+            result = result + " "
+            right = right - 1
+        return result
+
+class HTMLCalendar:
+    firstweekday: int
+
+    def __init__(self, firstweekday: int = 0) -> None:
+        self.firstweekday = _normalize_firstweekday(firstweekday)
+
+    def formatmonthname(self, year: int, month: int) -> Result[str, ValueError]:
+        name_lookup: str | None = _month_name_lookup(month)
+        name: str = ""
+        if name_lookup is not None:
+            name = name_lookup
+        else:
+            raise ValueError("calendar: month must be in 1..12")
+        return (
+            "<tr><th colspan=\"7\" class=\"month\">"
+            + name
+            + " "
+            + str(year)
+            + "</th></tr>"
+        )

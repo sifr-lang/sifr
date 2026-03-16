@@ -1,0 +1,57 @@
+from sifr.string import Template, Formatter
+from sifr.textwrap import TextWrapper
+from sifr.base64 import b64encode, b64decode
+from sifr.html import escape, unescape
+from sifr.fnmatch import fnmatch, translate
+from sifr.difflib import SequenceMatcher
+from sifr.calendar import TextCalendar
+
+def main() -> None:
+    # string.Template / string.Formatter adapted class surfaces
+    template: Template = Template("Hello $name, mode=${mode}")
+    rendered_ok: bool = False
+    try:
+        rendered: str = template.substitute({"name": "Sifr", "mode": "c2"})
+        rendered_ok = rendered == "Hello Sifr, mode=c2"
+    except ValueError as e:
+        _ = e.message
+    assert rendered_ok
+
+    formatter: Formatter = Formatter()
+    rendered_fmt_ok: bool = False
+    try:
+        rendered_fmt: str = formatter.format("Wave {wave}: {status}", {"wave": "c2", "status": "ok"})
+        rendered_fmt_ok = rendered_fmt == "Wave c2: ok"
+    except ValueError as e:
+        _ = e.message
+    assert rendered_fmt_ok
+
+    # textwrap.TextWrapper class surface
+    wrapper: TextWrapper = TextWrapper(8, "> ", ".. ")
+    wrapped: list[str] = wrapper.wrap("alpha beta gamma")
+    assert str(wrapped) == "[\"> alpha\", \".. beta\", \".. gamma\"]"
+
+    # base64 + html helper parity
+    encoded: str = b64encode("hello")
+    decoded_ok: bool = False
+    try:
+        decoded: str = b64decode(encoded)
+        decoded_ok = decoded == "hello"
+    except ParseError as e:
+        _ = e.message
+    assert decoded_ok
+    escaped: str = escape("<b>safe</b>")
+    assert unescape(escaped) == "<b>safe</b>"
+
+    # fnmatch + difflib + calendar class surfaces
+    assert fnmatch("report.txt", "*.txt")
+    assert translate("*.txt") == "(?s:.*\\.txt)\\z"
+    ratio: float = SequenceMatcher("abcd", "abed").ratio()
+    assert ratio > 0.4
+    month_label_ok: bool = False
+    try:
+        month_label: str = TextCalendar().formatmonthname(2024, 2, 0)
+        month_label_ok = month_label == "February 2024"
+    except ValueError as e:
+        _ = e.message
+    assert month_label_ok
