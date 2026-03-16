@@ -171,6 +171,34 @@ fn test_list_pop_index_and_tuple_index_optional_forms_lower() {
 }
 
 #[test]
+fn test_index_stop_only_keyword_forms_lower() {
+    let result = lower_source(
+        "def main():\n    xs: list[int] = [1, 2, 3, 2]\n    list_idx: int | None = xs.index(2, stop=3)\n    pair: tuple[int, int, int] = (4, 5, 4)\n    tuple_idx: int | None = pair.index(4, stop=2)\n",
+    );
+    assert!(result.is_ok(), "{result:?}");
+}
+
+#[test]
+fn test_index_optional_keyword_duplicate_forms_are_rejected() {
+    let list_result =
+        lower_source("def main():\n    xs: list[int] = [1, 2, 3]\n    xs.index(2, 0, start=1)\n");
+    assert!(list_result.is_err());
+    let list_errors = list_result.unwrap_err();
+    assert!(list_errors.iter().any(|e| e
+        .message
+        .contains("index() got multiple values for argument 'start'")));
+
+    let tuple_result = lower_source(
+        "def main():\n    pair: tuple[int, int, int] = (1, 2, 3)\n    pair.index(2, 0, 2, stop=3)\n",
+    );
+    assert!(tuple_result.is_err());
+    let tuple_errors = tuple_result.unwrap_err();
+    assert!(tuple_errors.iter().any(|e| e
+        .message
+        .contains("index() got multiple values for argument 'stop'")));
+}
+
+#[test]
 fn test_dict_update_kwargs_and_pop_default_lower() {
     let result = lower_source(
         "def main():\n    data: dict[str, int] = {\"x\": 1}\n    data.update(a=2)\n    other: dict[str, int] = {\"b\": 3}\n    data.update(other, c=4)\n    fallback: int = data.pop(\"missing\", default=9)\n",
