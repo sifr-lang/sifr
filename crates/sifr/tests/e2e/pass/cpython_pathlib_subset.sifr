@@ -12,6 +12,8 @@ def collect_function_actual() -> list[bool]:
     actual.append(stem("/home/user/file.txt") == "file")
     absolute_checks_ok: bool = is_absolute("/tmp") and not is_absolute("tmp/file.txt")
     actual.append(absolute_checks_ok)
+    windows_absolute_checks_ok: bool = is_absolute("C:/Windows/System32") and not is_absolute("C:Windows/System32")
+    actual.append(windows_absolute_checks_ok)
     actual.append(join_path("/tmp", "demo.txt") == "/tmp/demo.txt")
 
     sample: Path = Path("/tmp/myfile.txt")
@@ -96,7 +98,7 @@ def append_all(mut target: list[bool], values: list[bool]):
 
 
 def main():
-    expected: list[bool] = [True, True, True, True, True, True, True, True, True, True, True, True, True, True, True]
+    expected: list[bool] = [True, True, True, True, True, True, True, True, True, True, True, True, True, True, True, True]
     actual: list[bool] = []
     append_all(actual, collect_function_actual())
     append_all(actual, collect_filesystem_actual())

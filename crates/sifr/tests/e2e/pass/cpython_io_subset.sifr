@@ -47,6 +47,7 @@ def collect_error_and_binary_actual() -> list[bool]:
 
     missing_open_rejected: bool = False
     invalid_mode_rejected: bool = False
+    rw_modes_rejected: bool = False
     binary_roundtrip_ok: bool = False
     ctx_roundtrip_ok: bool = False
     missing_read_rejected: bool = False
@@ -62,6 +63,24 @@ def collect_error_and_binary_actual() -> list[bool]:
     except IOError as e:
         _ = str(e.message)
         invalid_mode_rejected = True
+
+    try:
+        _bad_rw = open(path, "r+")
+    except IOError as e:
+        _ = str(e.message)
+        rw_modes_rejected = True
+
+    try:
+        _bad_wa = open(path, "w+")
+        rw_modes_rejected = False
+    except IOError as e:
+        _ = str(e.message)
+
+    try:
+        _bad_ap = open(path, "a+")
+        rw_modes_rejected = False
+    except IOError as e:
+        _ = str(e.message)
 
     try:
         bw = open(binary_path, "wb")
@@ -98,6 +117,7 @@ def collect_error_and_binary_actual() -> list[bool]:
 
     actual.append(missing_open_rejected)
     actual.append(invalid_mode_rejected)
+    actual.append(rw_modes_rejected)
     actual.append(binary_roundtrip_ok)
     actual.append(ctx_roundtrip_ok)
     actual.append(missing_read_rejected)
@@ -110,7 +130,7 @@ def append_all(mut target: list[bool], values: list[bool]):
 
 
 def main():
-    expected: list[bool] = [True, True, True, True, True, True, True, True, True, True, True, True]
+    expected: list[bool] = [True, True, True, True, True, True, True, True, True, True, True, True, True]
     actual: list[bool] = []
     append_all(actual, collect_text_file_actual())
     append_all(actual, collect_error_and_binary_actual())

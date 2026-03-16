@@ -500,6 +500,11 @@ Status: pending
   - `crates/sifr/tests/e2e/fail/phase_psp_d1_zipfile_write_non_string_content.sifr`
   - `demos/wave_psp_d1_filesystem_paths_archives_demo.sifr`
   - `verification/stdlib/wave_psp_d1_cpython_traceability.md`
+- Post-closure parity hardening from d1 review pass4:
+  - `lib/sifr/pathlib.sifr`
+  - `crates/sifr/tests/e2e/pass/cpython_pathlib_subset.sifr`
+  - `crates/sifr/tests/e2e/pass/cpython_io_subset.sifr`
+  - `verification/stdlib/wave_psp_d1_cpython_traceability.md`
 - Targeted regression validation:
   - `cargo run -q -p sifr -- run crates/sifr/tests/e2e/pass/phase_psp_d1_filesystem_paths_archives.sifr`
   - `cargo run -q -p sifr -- run crates/sifr/tests/e2e/pass/cpython_io_subset.sifr`
@@ -784,6 +789,10 @@ Status: pending
   - Reviewer file: `/Users/yaseralnajjar/.codex/worktrees/0761/codebase/reviews/wave-psp-d1-review-gap-cpython-parity-20260316.md`
   - Validation result: no new actionable implementation issue. Reported gaps are documented adapt/waive scope boundaries already captured in `verification/stdlib/wave_psp_d1_cpython_traceability.md`.
   - Fix status: no code changes required.
+- `wave_psp_d1` review pass 4:
+  - Reviewer file: `/Users/yaseralnajjar/.codex/worktrees/0761/codebase/reviews/wave-psp-d1-review-gap-cpython-parity-20260317-r1.md`
+  - Validation result: partially actionable. Public parity behavior was stable, but absolute-path classification and open-mode waiver boundaries needed clearer enforcement and evidence to prevent cross-platform parity ambiguity.
+  - Fix status: remediated by broadening `sifr.pathlib.is_absolute()` to recognize drive-prefixed and rooted-backslash absolute forms, extending `cpython_pathlib_subset.sifr` coverage for drive-form absolute semantics, extending `cpython_io_subset.sifr` to assert rejection of unsupported mixed read/write modes (`r+`/`w+`/`a+`), and tightening `verification/stdlib/wave_psp_d1_cpython_traceability.md` with explicit mode-matrix and internal-surface waivers.
 - `wave_psp_d2` review pass 1:
   - Reviewer file: `/Users/yaseralnajjar/.codex/worktrees/0761/codebase/reviews/wave-psp-d2-review-pass1.md`
   - Validation result: non-actionable stale review. It incorrectly reported d2 as pending and missing artifacts (`wave_psp_d2` traceability/demo/pass/fail fixtures) that are present and merged in PR `#1198`.
