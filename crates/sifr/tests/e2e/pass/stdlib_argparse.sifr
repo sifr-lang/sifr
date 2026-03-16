@@ -3,6 +3,7 @@ from sifr.argparse import parse_flag, parse_option, parse_positional
 
 def main():
     args: list[str] = ["--output", "file.txt", "input.sifr"]
+    args_inline: list[str] = ["--output=file.bin", "--", "--literal.sifr"]
 
     # parse_flag
     verbose: bool = parse_flag(args, "--output")
@@ -14,6 +15,8 @@ def main():
     # parse_option
     output: str = parse_option(args, "--output", "default.txt")
     assert str(output) == 'file.txt'
+    inline_output: str = parse_option(args_inline, "--output", "default.txt")
+    assert str(inline_output) == 'file.bin'
 
     missing: str = parse_option(args, "--format", "json")
     assert str(missing) == 'json'
@@ -21,4 +24,5 @@ def main():
     # parse_positional (skips --option value pairs)
     pos0: str = parse_positional(args, 0, "none")
     assert str(pos0) == 'input.sifr'
-
+    pos_after_double_dash: str = parse_positional(args_inline, 0, "none")
+    assert str(pos_after_double_dash) == '--literal.sifr'

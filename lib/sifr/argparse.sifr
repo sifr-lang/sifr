@@ -9,14 +9,38 @@ def parse_flag(args: list[str], flag: str) -> bool:
     return False
 
 
+def _split_inline_option(token: str) -> tuple[bool, str, str]:
+    key: str = ""
+    i: int = 0
+    while i < len(token):
+        ch: str | None = token[i]
+        if ch is not None and ch == "=":
+            value: str = ""
+            j: int = i + 1
+            while j < len(token):
+                part: str | None = token[j]
+                if part is not None:
+                    value = value + part
+                j = j + 1
+            return (True, key, value)
+        if ch is not None:
+            key = key + ch
+        i = i + 1
+    return (False, token + "", "")
+
+
 def parse_option(args: list[str], name: str, default: str) -> str:
     i: int = 0
-    while i < len(args) - 1:
+    while i < len(args):
         arg: str | None = args[i]
-        if arg is not None and arg == name:
-            next_val: str | None = args[i + 1]
-            if next_val is not None:
-                return next_val + ""
+        if arg is not None:
+            if arg == name and i + 1 < len(args):
+                next_val: str | None = args[i + 1]
+                if next_val is not None:
+                    return next_val + ""
+            inline_has_value, inline_name, inline_value = _split_inline_option(arg)
+            if inline_has_value and inline_name == name:
+                return inline_value + ""
         i = i + 1
     return default + ""
 
@@ -24,10 +48,19 @@ def parse_option(args: list[str], name: str, default: str) -> str:
 def parse_positional(args: list[str], index: int, default: str) -> str:
     positionals: list[str] = []
     skip_next: bool = False
+    force_positional: bool = False
     for arg in args:
+        if force_positional:
+            positionals.append(arg)
+            continue
         if skip_next:
             skip_next = False
+        elif arg == "--":
+            force_positional = True
         elif arg.startswith("-"):
+            inline_has_value, inline_name, inline_value = _split_inline_option(arg)
+            if inline_has_value:
+                continue
             skip_next = True
         else:
             positionals.append(arg)
@@ -145,20 +178,29 @@ class ArgumentParser:
         pending_option_dest: str = ""
         has_pending_option: bool = False
         positional_index: int = 0
+        force_positional: bool = False
         for token in args:
             if has_pending_option:
                 ns.set(pending_option_dest, token)
                 has_pending_option = False
                 continue
 
-            if token.startswith("-"):
+            if token == "--" and not force_positional:
+                force_positional = True
+                continue
+
+            if token.startswith("-") and not force_positional:
+                inline_has_value, inline_name, inline_value = _split_inline_option(token)
+                lookup_name: str = token + ""
+                if inline_has_value:
+                    lookup_name = inline_name + ""
                 matched: bool = False
                 matched_kind: str = ""
                 matched_dest: str = ""
                 for spec in self._specs:
                     if spec.kind == "positional":
                         continue
-                    if spec.name == token:
+                    if spec.name == lookup_name:
                         matched = True
                         matched_kind = spec.kind
                         matched_dest = spec.dest
@@ -167,8 +209,11 @@ class ArgumentParser:
                     if matched_kind == "flag":
                         ns.set_bool(matched_dest, True)
                     elif matched_kind == "option":
-                        pending_option_dest = matched_dest
-                        has_pending_option = True
+                        if inline_has_value:
+                            ns.set(matched_dest, inline_value)
+                        else:
+                            pending_option_dest = matched_dest
+                            has_pending_option = True
                 continue
 
             position_cursor: int = 0

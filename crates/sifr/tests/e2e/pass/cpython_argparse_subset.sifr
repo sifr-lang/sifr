@@ -24,8 +24,31 @@ def collect_argument_parser_actual() -> list[bool]:
     return actual
 
 
+def collect_option_token_shape_actual() -> list[bool]:
+    actual: list[bool] = []
+    parser: ArgumentParser = ArgumentParser("token-shape")
+    parser.add_argument("--foo", "foo", "store", "none")
+    parser.add_argument("item", "item", "store", "missing")
+
+    parsed_inline: Namespace = parser.parse_args(["--foo=bar", "value.txt"])
+    actual.append(parsed_inline.get("foo", "") == "bar")
+    actual.append(parsed_inline.get("item", "") == "value.txt")
+
+    parsed_double_dash: Namespace = parser.parse_args(["--", "--literal.txt"])
+    actual.append(parsed_double_dash.get("foo", "") == "none")
+    actual.append(parsed_double_dash.get("item", "") == "--literal.txt")
+    return actual
+
+
+def append_all(mut target: list[bool], values: list[bool]):
+    for value in values:
+        target.append(value)
+
+
 def main():
-    expected: list[bool] = [True, True, True, True, True, True, True]
-    actual: list[bool] = collect_argument_parser_actual()
+    expected: list[bool] = [True, True, True, True, True, True, True, True, True, True, True]
+    actual: list[bool] = []
+    append_all(actual, collect_argument_parser_actual())
+    append_all(actual, collect_option_token_shape_actual())
     assert_bool_vector_eq(actual, expected)
     assert str("cpython_argparse_subset: pass") == "cpython_argparse_subset: pass"

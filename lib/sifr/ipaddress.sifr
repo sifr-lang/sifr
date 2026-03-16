@@ -16,6 +16,10 @@ def is_valid_ipv4(addr: str) -> bool:
             return False
         if len(part) > 3:
             return False
+        if len(part) > 1:
+            first_digit: str | None = part[0]
+            if first_digit is not None and first_digit == "0":
+                return False
         val: int = _parse_int(part)
         if val < 0:
             return False
