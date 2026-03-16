@@ -1,0 +1,6 @@
+from sifr.random import choices
+
+
+def main():
+    weighted: list[int] = choices([1, 2, 3], weights=[10, 1, 1], k=4)
+    assert str(len(weighted)) == "4"
