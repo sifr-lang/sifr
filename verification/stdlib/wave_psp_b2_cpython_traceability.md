@@ -19,3 +19,14 @@
 | `operator.attrgetter` and `operator.methodcaller` callable factories | `unsupported` | Reflective attribute and method lookup by string is not available in the current statically typed object model (guarded by `phase_psp_b2_operator_attrgetter_unsupported.sifr` and `phase_psp_b2_operator_methodcaller_unsupported.sifr`). |
 | Weighted `random.choices(...)`, `seed`, `getstate`, `setstate`, and `Random` / `SystemRandom` object families | `unsupported` | The current crypto-backed randomness layer does not expose deterministic stateful generator objects or weighted-distribution helpers (guarded by `phase_psp_b2_random_choices_weights_unsupported.sifr`). |
 | `secrets.token_urlsafe(...)` and bytes-oriented `compare_digest(...)` parity | `unsupported` | This wave stays on `str`-only parity and does not claim CPython's bytes/base64-oriented security surface without a first-class bytes type (guarded by `phase_psp_b2_secrets_token_urlsafe_unsupported.sifr`). |
+
+## Negative Coverage Evidence
+
+- Compile-time waiver guards:
+  - `crates/sifr/tests/e2e/fail/phase_psp_b2_functools_partial_unsupported.sifr`
+  - `crates/sifr/tests/e2e/fail/phase_psp_b2_operator_attrgetter_unsupported.sifr`
+  - `crates/sifr/tests/e2e/fail/phase_psp_b2_operator_methodcaller_unsupported.sifr`
+  - `crates/sifr/tests/e2e/fail/phase_psp_b2_random_choices_weights_unsupported.sifr`
+  - `crates/sifr/tests/e2e/fail/phase_psp_b2_secrets_token_urlsafe_unsupported.sifr`
+- Runtime negative-path assertions:
+  - `crates/sifr/tests/e2e/pass/cpython_random_subset.sifr` asserts error behavior for empty `choice`/`choices`, invalid `randrange` bounds/step, and invalid `getrandbits` bit width.
