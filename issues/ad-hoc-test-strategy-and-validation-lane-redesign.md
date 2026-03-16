@@ -681,6 +681,13 @@ These thresholds are planning defaults for execution, not permanent hard budgets
 - local reports must surface warm-vs-cold deltas, slowest fixtures/groups, and cache-hit behavior
 - threshold enforcement can remain advisory early in execution and harden later once the new architecture stabilizes
 
+### metrics implementation note
+- initial metric collection should reuse existing local primitives where possible:
+  - Rust test timing and structured stderr reporting from the current harness
+  - `/usr/bin/time` or equivalent wrapper timing for lane-level wall-time measurement
+  - checked-in helper scripts for cache-size/file-count reporting
+  - manifest-driven fixture/group summaries emitted by the redesigned harness
+- persistent visualization is not required for phase entry; local machine-readable reports are sufficient for the first execution wave
 ## Non-goals
 - no correctness regression in exchange for speed
 - no removal of determinism or hardening coverage
@@ -731,6 +738,8 @@ No execution milestone is complete if it only improves wall time by weakening va
 ## Recommended Milestones
 
 ### milestone_test_1: Lane Taxonomy and Policy Redesign
+Suggested owner role:
+- local validation lane owner
 Scope:
 - redefine `quick`, `pr`, `nightly`, and `release`
 - classify every current validation step into the correct lane
@@ -746,6 +755,8 @@ Definition of done:
 - representative lane counts are explicit rather than hand-wavy
 
 ### milestone_test_2: Declarative Validation Harness
+Suggested owner role:
+- test platform / harness owner
 Scope:
 - replace the current shell-matrix scripts with one manifest-driven harness
 - unify mode parity, diagnostic parity, repeatability, and fixture expectations in one system
@@ -758,6 +769,8 @@ Definition of done:
 - the harness implementation approach and manifest format are documented and checked in
 
 ### milestone_test_3: Invariant Downshifting
+Suggested owner role:
+- compiler correctness / integration-test owner
 Scope:
 - audit current expensive checks
 - move eligible invariants from e2e/CLI execution into unit or integration coverage
@@ -768,6 +781,8 @@ Definition of done:
 - every removed expensive check has equivalent or stronger cheaper coverage
 
 ### milestone_test_4: Artifact Reuse and Cache Boundary Redesign
+Suggested owner role:
+- cache and generated-artifact owner
 Scope:
 - introduce reusable generated-program workspaces and artifact caching
 - reuse stable outputs for repeated `run` and `test` validation
@@ -779,6 +794,8 @@ Definition of done:
 - cache-hit metrics are visible
 
 ### milestone_test_5: Hardening Lane Refactor
+Suggested owner role:
+- hardening and determinism lane owner
 Scope:
 - keep hardening broad but partition it into nightly/release lanes
 - preserve determinism and no-cache equivalence checks outside the default local loop
@@ -788,6 +805,8 @@ Definition of done:
 - `quick` no longer re-executes e2e families multiple times through nested hardening flows
 
 ### milestone_test_6: Throughput and Resource Governance
+Suggested owner role:
+- local performance governance owner
 Scope:
 - add lane budgets
 - track cache size, tail groups, slow fixtures, and no-cache deltas
@@ -799,6 +818,8 @@ Definition of done:
 - cache growth and group skew are no longer invisible
 - worker defaults are chosen for local wall-time improvement without unacceptable sustained heat
 
+Thermal acceptability example for execution:
+- the default `quick` lane should not rely on sustained "fan pinned high for the whole run" behavior on a normal developer laptop just to meet its wall-time target
 ## Suggested Effort Profile
 These are rough planning estimates only:
 - milestone_test_1: small
