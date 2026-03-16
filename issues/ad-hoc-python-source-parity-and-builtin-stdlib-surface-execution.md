@@ -705,6 +705,10 @@ Status: pending
   - Reviewer file: `/Users/yaseralnajjar/.codex/worktrees/0761/codebase/reviews/wave-psp-b2-review-gap-cpython-parity-20260316.md`
   - Validated findings: CPython-derived coverage for itertools combinator families was too concentrated in the wave fixture, `accumulate(..., initial=...)` parity was missing, operator helper coverage omitted shipped boolean helpers, and `compare_digest` constant-time limitations needed clearer traceability wording.
   - Fix status: remediated by adding `accumulate(initial=...)` in `lib/sifr/itertools.sifr`, expanding `cpython_itertools_subset.sifr` with product/permutations/combinations/combinations_with_replacement/starmap coverage, extending `stdlib_operator.sifr` boolean-helper assertions, and tightening `verification/stdlib/wave_psp_b2_cpython_traceability.md`.
+- `wave_psp_b2` review pass 4:
+  - Reviewer file: `/Users/yaseralnajjar/.codex/worktrees/0761/codebase/reviews/wave-psp-b2-review-gap-cpython-parity-20260316-r2.md`
+  - Validation result: partially stale. The review repeated already-remediated b2 items (itertools combinator coverage and operator helper tests) but raised two useful follow-ups: remove internal-API dependency in `stdlib_random.sifr` and make `compare_digest` timing-safety non-claim explicit in waivers.
+  - Fix status: remediated by rewriting `crates/sifr/tests/e2e/pass/stdlib_random.sifr` against the public `sifr.random` API and tightening `verification/stdlib/wave_psp_b2_cpython_traceability.md` to classify constant-time `compare_digest` guarantees as unsupported for this wave.
 - `wave_psp_c1` review pass 1:
   - Reviewer file: `/Users/yaseralnajjar/.codex/worktrees/0761/codebase/reviews/wave-psp-c1-review-pass1b.md`
   - Validated findings: `ConfigParser.read(path)` only read bytes and skipped parser population, `has_option()` default fallback semantics regressed for existing sections, and class-method mutability inference missed delegated `self.read_string(...)` mutation.
