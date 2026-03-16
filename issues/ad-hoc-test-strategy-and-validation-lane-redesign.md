@@ -4,6 +4,7 @@ Status: open (documented 2026-03-16)
 Context: ad hoc planning phase captured in `issues/` before any roadmap-phase promotion
 Execution readiness: planning-ready; promote into an execution checklist issue before implementation begins
 Execution tracking: create `issues/phaseXX-test-strategy-and-validation-lane-redesign-execution.md` when execution begins
+Suggested phase owner: compiler test platform / local validation infrastructure
 
 ## Objective
 Redesign the compiler test platform so local validation is fast, thermally reasonable, and highly cache-efficient while preserving or improving correctness coverage across compiler internals, CLI contracts, e2e behavior, determinism, hardening, and performance.
@@ -51,6 +52,31 @@ Primary planning and implementation inputs for this phase:
 - `crates/sifr_driver/src/build/workspace.rs`
 - `crates/sifr_driver/src/test_runner/execution.rs`
 
+## Current Infrastructure Reuse Boundary
+This phase is not a greenfield replacement.
+It should explicitly reuse the current infrastructure where the architecture is already sound and redesign only the parts that are structurally wrong.
+
+Current reusable foundations:
+- `crates/sifr/tests/e2e.rs` already contains:
+  - fixture discovery
+  - worker configuration
+  - batch planning
+  - persistent cache manifest handling
+  - timing reporting
+  - deterministic report-signature generation
+- `verification/suites/manifest.json` and related manifests already establish a declarative pattern for broader validation suites
+- the existing Rust test harness already provides strong unit/integration coverage outside `test_e2e_pass`
+
+Current redesign targets:
+- shell-matrix repetition across multiple scripts
+- repeated CLI-driven validation of the same fixtures across `check`/`build`/`run`/`test`
+- invocation-scoped generated-program workspaces that prevent artifact reuse
+- lane composition that nests repeated e2e families inside the default local loop
+
+Working assumption for execution:
+- the existing Rust-based e2e harness logic should be extracted, generalized, and reused rather than discarded
+- the shell scripts should shrink into thin lane wrappers or disappear entirely
+
 ## Current Validated Shape
 The current top-level local gate is a serial wrapper in `scripts/run_all_tests.sh` that executes:
 - maintainability guardrails
@@ -77,6 +103,78 @@ Observed structural facts:
 - `quick` e2e caching is enabled for the main e2e pass, but determinism/equivalence checks later rerun e2e work
 - verification hardening still includes broad work in `quick`, including determinism-scale and fuzz-smoke
 - the quick e2e cache currently grows into a multi-gigabyte cache tree under `crates/sifr/target/sifr_e2e_cache/quick`
+- the current pass-fixture corpus under `crates/sifr/tests/e2e/pass` contains `418` `.sifr` fixtures
+- the current quick verification hardening profile expands to roughly `57` command variants across diagnostics, project, fixedbugs, crashes, property, fuzz-smoke, OSS, and determinism coverage
+
+## Current Fixture Taxonomy
+The current validation estate should be treated as four distinct fixture families rather than one undifferentiated "test suite":
+
+### A. Rust unit/integration tests
+Location:
+- crate-local Rust tests across `crates/`
+- `cargo test -p sifr -- --skip test_e2e_pass`
+
+Role:
+- compiler-internal correctness
+- diagnostics formatting
+- targeted pipeline contracts
+
+### B. CLI contract/matrix fixtures
+Location:
+- shell-driven demo and negative-case matrices in `scripts/run_frontend_mode_parity_matrix.sh`
+- `scripts/run_phase23_graph_isolation_matrix.sh`
+- `scripts/run_phase24_hir_analysis_consolidation_matrix.sh`
+- `scripts/run_phase25_cfg_flow_activation_matrix.sh`
+
+Role:
+- mode parity
+- diagnostic parity/stability
+- selected project/test discovery and isolation contracts
+
+### C. Broad e2e pass corpus
+Location:
+- `crates/sifr/tests/e2e/pass`
+
+Current size:
+- `418` pass fixtures
+
+Role:
+- representative and broad integrated compiler + Rust-build + runtime execution
+
+### D. Hardening and determinism corpus
+Location:
+- `verification/`
+- verification suite manifests
+- determinism/equivalence scripts
+
+Current quick-profile expansion:
+- approximately `57` command variants before counting repeated nested e2e executions inside determinism checks
+
+Role:
+- regression hardening
+- crash resistance
+- deterministic behavior
+- no-cache equivalence
+- sample OSS/project validation
+
+## Target Fixture Taxonomy
+The redesigned system should make these categories explicit in metadata.
+
+Each fixture or suite entry should declare:
+- invariant class
+- required layer
+- allowed lanes
+- whether runtime execution is required
+- whether determinism/no-cache validation applies
+- whether the fixture is eligible for reusable build artifacts
+
+Initial sizing targets for the redesigned lanes:
+- `quick` representative e2e sample: approximately `20-30` fixtures
+- `pr` representative e2e sample: approximately `50-80` fixtures
+- nightly broad e2e and hardening: full corpora
+
+These are planning targets, not final counts.
+Execution must refine them based on measured coverage density and wall-time cost.
 
 ## Root-Cause Findings
 
@@ -215,7 +313,21 @@ A single declarative harness can:
 
 That harness should be free to use multiple local CPUs when beneficial, but it must do so with explicit worker controls and a thermally aware default rather than "max everything all the time."
 
-### 6. Preserve deterministic confidence without taxing every local run
+### 6. Build on the existing Rust harness and manifest style
+This phase should prefer a Rust-native harness implementation over adding another shell- or Python-centric control plane.
+
+Why:
+- the current expensive path already lives in Rust (`crates/sifr/tests/e2e.rs`)
+- cache/accounting logic is already there
+- keeping orchestration close to the compiler/test platform reduces duplication
+- manifest parsing and typed fixture metadata are easier to make coherent in Rust than in distributed shell scripts
+
+Manifest direction:
+- extend the existing declarative manifest pattern already used under `verification/`
+- keep machine-readable checked-in manifests in JSON for continuity with current infrastructure
+- allow future migration to TOML only if there is a concrete readability benefit and no duplication cost
+
+### 7. Preserve deterministic confidence without taxing every local run
 Determinism, no-cache equivalence, and sequential-vs-parallel equivalence remain required quality gates.
 They should not all run on every default local invocation.
 
@@ -367,6 +479,26 @@ The target harness should express, per fixture:
 - stability expectations across repeated runs
 - whether full runtime execution is required or whether compile/check/emit is sufficient
 
+Preferred implementation shape:
+- a Rust-native test platform entrypoint owned by the repository rather than an external shell layer
+- a manifest-driven runner that can be called from Rust tests and from top-level scripts
+- top-level scripts become thin wrappers around lane selection instead of implementing validation logic themselves
+
+Preferred manifest shape:
+- checked-in JSON manifests under `verification/` or a dedicated `verification/lanes/` subtree
+- each entry records:
+  - fixture id
+  - path
+  - invariant category
+  - modes
+  - expected exit behavior
+  - expected output/snapshot mode
+  - lane membership
+  - cache policy
+  - determinism policy
+  - required runtime execution flag
+  - worker sensitivity flag when relevant
+
 Benefits:
 - shared process and state reuse
 - fewer shell processes
@@ -437,6 +569,20 @@ Invocation-scoped temp workspaces are appropriate for isolation, but they are th
 The end-state should support:
 - content-addressed reusable workspaces for stable fixture builds
 - temporary isolated workspaces only where required by the contract under test
+
+## Migration Strategy
+This phase must not strand developers on a half-migrated system, but it also must not leave permanent parallel test architectures behind.
+
+Required migration shape:
+1. introduce the declarative harness while preserving the current top-level entry commands
+2. re-point `scripts/run_all_tests.sh` and the matrix wrappers to the new harness one lane at a time
+3. preserve existing user-facing command names during migration
+4. deprecate script-local logic once the harness has absorbed the behavior
+5. remove old shell-specific orchestration after parity is proven
+
+Backward-compatibility rule:
+- existing top-level commands may remain as thin wrappers
+- existing duplicated validation logic may not remain as the steady-state implementation
 
 ## Coverage Strategy By Invariant Type
 
@@ -511,6 +657,30 @@ This phase should make the following metrics visible and tracked:
 
 Without these measurements, future slowness will only be rediscovered anecdotally.
 
+## Initial Local Metrics and Thresholds
+These thresholds are planning defaults for execution, not permanent hard budgets.
+
+### `quick`
+- warm wall-time target: `<= 5 minutes`
+- cold wall-time target: `<= 10 minutes`
+- no repeated full e2e family nested inside the lane
+
+### representative e2e sample
+- warm rerun should show a clear build-reuse win over the first run
+- generated-program build cache hit rate on unchanged reruns should trend toward `>= 90%` for the representative lane
+
+### cache footprint
+- quick-lane cache growth should be observable and prunable
+- cache budgets must be explicit once the redesigned cache layers land
+
+### thermal guidance
+- default worker settings must improve wall time without producing obviously unsustainable sustained heat on a normal developer laptop
+- if a higher-worker configuration is materially faster but thermally unacceptable, it belongs as an opt-in override rather than the default
+
+### reporting
+- local reports must surface warm-vs-cold deltas, slowest fixtures/groups, and cache-hit behavior
+- threshold enforcement can remain advisory early in execution and harden later once the new architecture stabilizes
+
 ## Non-goals
 - no correctness regression in exchange for speed
 - no removal of determinism or hardening coverage
@@ -566,22 +736,26 @@ Scope:
 - classify every current validation step into the correct lane
 - remove hardening/determinism overreach from the default local lane
 - define explicit local worker and thermal policy for each lane
+- assign fixture families and representative-sample targets per lane
 
 Definition of done:
 - each suite has one intended lane
 - `quick` has an explicit time-budget target
 - expensive repeated e2e work is no longer part of the default local loop unless intentionally justified
 - local multi-core defaults are intentional and bounded rather than incidental
+- representative lane counts are explicit rather than hand-wavy
 
 ### milestone_test_2: Declarative Validation Harness
 Scope:
 - replace the current shell-matrix scripts with one manifest-driven harness
 - unify mode parity, diagnostic parity, repeatability, and fixture expectations in one system
+- define the manifest schema and Rust-native implementation boundary
 
 Definition of done:
 - shell-driven repetition is retired or reduced to minimal wrappers
 - fixture contracts are defined declaratively
 - one unified timing report is emitted
+- the harness implementation approach and manifest format are documented and checked in
 
 ### milestone_test_3: Invariant Downshifting
 Scope:
@@ -624,6 +798,20 @@ Definition of done:
 - performance regressions are detectable from local reports
 - cache growth and group skew are no longer invisible
 - worker defaults are chosen for local wall-time improvement without unacceptable sustained heat
+
+## Suggested Effort Profile
+These are rough planning estimates only:
+- milestone_test_1: small
+- milestone_test_2: medium
+- milestone_test_3: medium
+- milestone_test_4: large
+- milestone_test_5: small-to-medium
+- milestone_test_6: small-to-medium
+
+Indicative sequencing:
+- first wave: milestones 1-2
+- second wave: milestones 3-4
+- third wave: milestones 5-6
 
 ## Reviewer Gate
 A milestone is complete only when the reviewer explicitly confirms:
