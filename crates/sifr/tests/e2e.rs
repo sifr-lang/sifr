@@ -1941,6 +1941,18 @@ fn run_new_pass_suite(config: &RunnerConfig) -> PassReport {
         .iter()
         .filter(|outcome| outcome.cache_hit)
         .count();
+    let mut group_sizes = build_outcomes
+        .iter()
+        .map(|outcome| outcome.group.cases.len())
+        .collect::<Vec<_>>();
+    group_sizes.sort_unstable();
+    let group_count = group_sizes.len();
+    let largest_group_fixtures = group_sizes.iter().copied().max().unwrap_or(0);
+    let median_group_fixtures = if group_sizes.is_empty() {
+        0
+    } else {
+        group_sizes[group_sizes.len() / 2]
+    };
 
     let mut all_cases = Vec::new();
     let run_started = Instant::now();
@@ -1996,13 +2008,20 @@ fn run_new_pass_suite(config: &RunnerConfig) -> PassReport {
     };
 
     eprintln!(
-        "[sifr-e2e] timing: compile={}ms plan={}ms build={}ms build-sum={}ms run={}ms cache_hits={}",
+        "[sifr-e2e] timing: compile={}ms plan={}ms build={}ms build-sum={}ms run={}ms cache_hits={}/{}",
         compile_ms,
         plan_ms,
         build_ms,
         observed_build_ms,
         run_ms,
-        cache_hits
+        cache_hits,
+        group_count
+    );
+    eprintln!(
+        "[sifr-e2e] group_stats: groups={} largest_group_fixtures={} median_group_fixtures={}",
+        group_count,
+        largest_group_fixtures,
+        median_group_fixtures
     );
     eprintln!(
         "[sifr-e2e] slowest build groups:\n{}",

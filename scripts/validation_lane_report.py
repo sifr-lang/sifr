@@ -1,0 +1,424 @@
+#!/usr/bin/env python3
+"""Summarize validation-lane runtime, cache, and resource metrics."""
+
+from __future__ import annotations
+
+import argparse
+import json
+import re
+import tempfile
+from pathlib import Path
+from typing import Any
+
+REPO_ROOT = Path(__file__).resolve().parent.parent
+DEFAULT_MANIFEST = REPO_ROOT / "verification" / "validation_lanes" / "manifest.json"
+ARTIFACT_CACHE_ROOT = Path(tempfile.gettempdir()) / "sifr_generated_artifact_cache"
+BSD_TIME_COMBINED_RE = re.compile(r"^\s*([0-9.]+)\s+real\s+([0-9.]+)\s+user\s+([0-9.]+)\s+sys$")
+TIME_REAL_RE = re.compile(r"^\s*([0-9.]+)\s+real$")
+TIME_USER_RE = re.compile(r"^\s*([0-9.]+)\s+user$")
+TIME_SYS_RE = re.compile(r"^\s*([0-9.]+)\s+sys$")
+TIME_MAX_RSS_RE = re.compile(r"^\s*(\d+)\s+maximum resident set size$")
+TIME_SWAPS_RE = re.compile(r"^\s*(\d+)\s+swaps$")
+CONTRACT_SUITE_RE = re.compile(r"^\s*-\s+([a-z0-9_-]+):\s+(\d+)\s+rows,\s+(\d+)ms$")
+CONTRACT_TOTAL_RE = re.compile(r"^\[validation-contract\]\s+total_rows=(\d+)\s+total_ms=(\d+)$")
+E2E_TIMING_RE = re.compile(
+    r"^\[sifr-e2e\]\s+timing:\s+compile=(\d+)ms\s+plan=(\d+)ms\s+build=(\d+)ms\s+build-sum=(\d+)ms\s+run=(\d+)ms\s+cache_hits=(\d+)/(\d+)$"
+)
+E2E_GROUP_RE = re.compile(
+    r"^\[sifr-e2e\]\s+group_stats:\s+groups=(\d+)\s+largest_group_fixtures=(\d+)\s+median_group_fixtures=(\d+)$"
+)
+ARTIFACT_CACHE_RE = re.compile(
+    r"^\[sifr-artifact-cache\]\s+namespace=([a-z0-9_-]+)\s+key=([0-9a-f]+)\s+cache_hit=(true|false)\s+workspace=([^\s]+)(?:\s+miss_reason=([a-z0-9_-]+))?$"
+)
+HARDENING_OK_RE = re.compile(
+    r"^verification ok:\s+variants=(\d+),\s+failures=(\d+),\s+blocking_failures=(\d+),\s+non_blocking_failures=(\d+)$"
+)
+CACHE_DIR_RE = re.compile(r"^\s*cache_dir=(.+)$")
+WARM_CACHE_HIT_TARGET = 0.90
+GROUP_SKEW_ADVISORY_RATIO = 4.0
+GROUP_SKEW_ABSOLUTE_DELTA = 8
+DEFAULT_LANE_RSS_ADVISORY_BYTES = 6 * 1024 * 1024 * 1024
+
+
+def parse_args() -> argparse.Namespace:
+    parser = argparse.ArgumentParser(description=__doc__)
+    subparsers = parser.add_subparsers(dest="command", required=True)
+
+    summarize = subparsers.add_parser("summarize")
+    summarize.add_argument("--profile", required=True)
+    summarize.add_argument("--log", required=True)
+    summarize.add_argument("--time-file", required=True)
+    summarize.add_argument(
+        "--manifest",
+        default=str(DEFAULT_MANIFEST),
+        help="Validation-lane manifest JSON.",
+    )
+    summarize.add_argument(
+        "--json-out",
+        default="",
+        help="Optional output path for machine-readable JSON summary.",
+    )
+    return parser.parse_args()
+
+
+def load_json(path: Path) -> dict[str, Any]:
+    payload = json.loads(path.read_text(encoding="utf-8"))
+    if not isinstance(payload, dict):
+        raise SystemExit(f"invalid JSON object: {path}")
+    return payload
+
+
+def canonical_profile(profile: str, manifest_path: Path) -> tuple[str, dict[str, Any]]:
+    payload = load_json(manifest_path)
+    aliases = payload.get("aliases", {})
+    lanes = payload.get("lanes", [])
+    if not isinstance(aliases, dict) or not isinstance(lanes, list):
+        raise SystemExit(f"invalid lane manifest: {manifest_path}")
+    lane_map = {
+        lane.get("name"): lane
+        for lane in lanes
+        if isinstance(lane, dict) and isinstance(lane.get("name"), str)
+    }
+    canonical = aliases.get(profile, profile)
+    lane = lane_map.get(canonical)
+    if not isinstance(lane, dict):
+        supported = sorted({*lane_map.keys(), *aliases.keys()})
+        raise SystemExit(f"unsupported profile '{profile}' (supported: {', '.join(supported)})")
+    return canonical, lane
+
+
+def parse_time_file(path: Path) -> dict[str, int | float]:
+    metrics: dict[str, int | float] = {}
+    for line in path.read_text(encoding="utf-8").splitlines():
+        if match := BSD_TIME_COMBINED_RE.match(line):
+            metrics["real_seconds"] = float(match.group(1))
+            metrics["user_seconds"] = float(match.group(2))
+            metrics["sys_seconds"] = float(match.group(3))
+        elif match := TIME_REAL_RE.match(line):
+            metrics["real_seconds"] = float(match.group(1))
+        elif match := TIME_USER_RE.match(line):
+            metrics["user_seconds"] = float(match.group(1))
+        elif match := TIME_SYS_RE.match(line):
+            metrics["sys_seconds"] = float(match.group(1))
+        elif match := TIME_MAX_RSS_RE.match(line):
+            metrics["max_rss_bytes"] = int(match.group(1))
+        elif match := TIME_SWAPS_RE.match(line):
+            metrics["swaps"] = int(match.group(1))
+    return metrics
+
+
+def format_bytes(value: int) -> str:
+    if value <= 0:
+        return "0B"
+    units = ["B", "KiB", "MiB", "GiB", "TiB"]
+    scaled = float(value)
+    for unit in units:
+        if scaled < 1024.0 or unit == units[-1]:
+            return f"{scaled:.1f}{unit}" if unit != "B" else f"{int(scaled)}B"
+        scaled /= 1024.0
+    raise AssertionError("unreachable")
+
+
+def lane_workers(lane: dict[str, Any]) -> dict[str, int]:
+    e2e = lane.get("e2e")
+    if not isinstance(e2e, dict):
+        return {"sifr_jobs": 0, "rust_jobs": 0, "run_jobs": 0, "cargo_build_jobs": 0}
+    return {
+        "sifr_jobs": int(e2e.get("sifr_jobs", 0) or 0),
+        "rust_jobs": int(e2e.get("rust_jobs", 0) or 0),
+        "run_jobs": int(e2e.get("run_jobs", 0) or 0),
+        "cargo_build_jobs": int(e2e.get("cargo_build_jobs", 0) or 0),
+    }
+
+
+def build_advisories(
+    profile: str,
+    warm_target_minutes: int,
+    real_seconds: float,
+    time_metrics: dict[str, int | float],
+    e2e_metrics: dict[str, int] | None,
+) -> list[str]:
+    advisories: list[str] = []
+
+    if warm_target_minutes > 0 and real_seconds > warm_target_minutes * 60:
+        advisories.append("warm wall-time budget exceeded")
+
+    swaps = int(time_metrics.get("swaps", 0))
+    if swaps > 0:
+        advisories.append("swap activity observed; lower worker counts or rebalance groups")
+
+    max_rss_bytes = int(time_metrics.get("max_rss_bytes", 0))
+    if profile in {"quick", "pr"} and max_rss_bytes > DEFAULT_LANE_RSS_ADVISORY_BYTES:
+        advisories.append("peak RSS exceeded low-single-digit GiB guidance for the default lane")
+
+    if isinstance(e2e_metrics, dict):
+        group_count = int(e2e_metrics.get("group_count", 0))
+        cache_hits = int(e2e_metrics.get("cache_hits", 0))
+        if group_count > 0:
+            cache_hit_rate = cache_hits / group_count
+            if cache_hits > 0 and cache_hit_rate < WARM_CACHE_HIT_TARGET:
+                advisories.append(
+                    "warm-cache hit rate below advisory target; unchanged reruns should trend toward >=90%"
+                )
+        largest_group = int(e2e_metrics.get("largest_group_fixtures", 0))
+        median_group = int(e2e_metrics.get("median_group_fixtures", 0))
+        normalized_median = max(median_group, 1)
+        skew_ratio = largest_group / normalized_median
+        if largest_group - median_group >= GROUP_SKEW_ABSOLUTE_DELTA and skew_ratio >= GROUP_SKEW_ADVISORY_RATIO:
+            advisories.append("group skew is high; investigate batching balance or fixture clustering")
+
+    return advisories
+
+
+def directory_stats(path: Path) -> dict[str, int | str]:
+    if not path.exists():
+        return {"path": str(path), "bytes": 0, "files": 0}
+    total_bytes = 0
+    file_count = 0
+    for child in path.rglob("*"):
+        if child.is_file():
+            file_count += 1
+            total_bytes += child.stat().st_size
+    return {"path": str(path), "bytes": total_bytes, "files": file_count}
+
+
+def parse_log(path: Path) -> dict[str, Any]:
+    contract_suites: list[dict[str, int | str]] = []
+    artifact_cache: dict[str, dict[str, int]] = {}
+    hardening_summary: dict[str, int] | None = None
+    e2e_metrics: dict[str, int] | None = None
+    cache_dir: str | None = None
+
+    for raw_line in path.read_text(encoding="utf-8").splitlines():
+        line = raw_line.strip()
+        if not line:
+            continue
+        if match := CONTRACT_SUITE_RE.match(line):
+            contract_suites.append(
+                {
+                    "suite": match.group(1),
+                    "rows": int(match.group(2)),
+                    "elapsed_ms": int(match.group(3)),
+                }
+            )
+            continue
+        if match := CONTRACT_TOTAL_RE.match(line):
+            contract_suites.append(
+                {
+                    "suite": "__total__",
+                    "rows": int(match.group(1)),
+                    "elapsed_ms": int(match.group(2)),
+                }
+            )
+            continue
+        if match := E2E_TIMING_RE.match(line):
+            e2e_metrics = {
+                "compile_ms": int(match.group(1)),
+                "plan_ms": int(match.group(2)),
+                "build_ms": int(match.group(3)),
+                "build_sum_ms": int(match.group(4)),
+                "run_ms": int(match.group(5)),
+                "cache_hits": int(match.group(6)),
+                "group_count": int(match.group(7)),
+            }
+            continue
+        if match := E2E_GROUP_RE.match(line):
+            e2e_metrics = dict(e2e_metrics or {})
+            e2e_metrics.update(
+                {
+                    "groups": int(match.group(1)),
+                    "largest_group_fixtures": int(match.group(2)),
+                    "median_group_fixtures": int(match.group(3)),
+                }
+            )
+            continue
+        if match := ARTIFACT_CACHE_RE.match(line):
+            namespace = match.group(1)
+            entry = artifact_cache.setdefault(namespace, {"hits": 0, "misses": 0})
+            if match.group(3) == "true":
+                entry["hits"] += 1
+            else:
+                entry["misses"] += 1
+            continue
+        if match := HARDENING_OK_RE.match(line):
+            hardening_summary = {
+                "variants": int(match.group(1)),
+                "failures": int(match.group(2)),
+                "blocking_failures": int(match.group(3)),
+                "non_blocking_failures": int(match.group(4)),
+            }
+            continue
+        if match := CACHE_DIR_RE.match(line):
+            cache_dir = match.group(1).strip()
+
+    return {
+        "contract_suites": contract_suites,
+        "artifact_cache": artifact_cache,
+        "hardening_summary": hardening_summary,
+        "e2e_metrics": e2e_metrics,
+        "e2e_cache_dir": cache_dir,
+    }
+
+
+def summarize(args: argparse.Namespace) -> int:
+    manifest_path = Path(args.manifest).resolve()
+    canonical, lane = canonical_profile(args.profile, manifest_path)
+    log_path = Path(args.log).resolve()
+    time_path = Path(args.time_file).resolve()
+
+    parsed_log = parse_log(log_path)
+    time_metrics = parse_time_file(time_path)
+    e2e_cache_dir = parsed_log["e2e_cache_dir"]
+    if isinstance(e2e_cache_dir, str):
+        e2e_cache_path = Path(e2e_cache_dir)
+        if not e2e_cache_path.is_absolute():
+            e2e_cache_path = REPO_ROOT / e2e_cache_path
+        e2e_cache_stats = directory_stats(e2e_cache_path)
+    else:
+        e2e_cache_stats = None
+    artifact_cache_stats = directory_stats(ARTIFACT_CACHE_ROOT)
+
+    real_seconds = float(time_metrics.get("real_seconds", 0.0))
+    user_seconds = float(time_metrics.get("user_seconds", 0.0))
+    sys_seconds = float(time_metrics.get("sys_seconds", 0.0))
+    cpu_seconds = user_seconds + sys_seconds
+    warm_target_minutes = int(lane.get("warm_wall_time_target_minutes", 0))
+    within_budget = True
+    if warm_target_minutes > 0 and real_seconds > 0:
+        within_budget = real_seconds <= warm_target_minutes * 60
+    workers = lane_workers(lane)
+    e2e_metrics = parsed_log["e2e_metrics"] if isinstance(parsed_log["e2e_metrics"], dict) else None
+    cache_hit_rate = None
+    rebuild_groups = None
+    group_skew_ratio = None
+    if isinstance(e2e_metrics, dict):
+        group_count = int(e2e_metrics.get("group_count", 0))
+        cache_hits = int(e2e_metrics.get("cache_hits", 0))
+        if group_count > 0:
+            cache_hit_rate = cache_hits / group_count
+            rebuild_groups = group_count - cache_hits
+        largest_group = int(e2e_metrics.get("largest_group_fixtures", 0))
+        median_group = int(e2e_metrics.get("median_group_fixtures", 0))
+        group_skew_ratio = largest_group / max(median_group, 1) if largest_group > 0 else 0.0
+    advisories = build_advisories(canonical, warm_target_minutes, real_seconds, time_metrics, e2e_metrics)
+
+    payload = {
+        "profile": canonical,
+        "requested_profile": args.profile,
+        "lane": lane.get("name", canonical),
+        "description": lane.get("description", ""),
+        "budget": {
+            "warm_wall_time_target_minutes": warm_target_minutes,
+            "cold_wall_time_target_minutes": int(lane.get("cold_wall_time_target_minutes", 0)),
+            "within_warm_budget": within_budget,
+        },
+        "policy": {
+            "thermal": lane.get("thermal_policy", ""),
+            "memory": lane.get("memory_policy", ""),
+        },
+        "workers": workers,
+        "time": time_metrics,
+        "cpu_seconds": cpu_seconds,
+        "e2e": e2e_metrics,
+        "observations": {
+            "cache_hit_rate": cache_hit_rate,
+            "rebuild_groups": rebuild_groups,
+            "group_skew_ratio": group_skew_ratio,
+        },
+        "advisories": advisories,
+        "contract_suites": parsed_log["contract_suites"],
+        "artifact_cache": parsed_log["artifact_cache"],
+        "hardening_summary": parsed_log["hardening_summary"],
+        "cache_footprint": {
+            "e2e": e2e_cache_stats,
+            "generated_artifacts": artifact_cache_stats,
+        },
+        "log_path": str(log_path),
+        "time_file": str(time_path),
+    }
+
+    if args.json_out:
+        json_path = Path(args.json_out).resolve()
+        json_path.parent.mkdir(parents=True, exist_ok=True)
+        json_path.write_text(json.dumps(payload, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+
+    print("Validation lane report")
+    print(f"  profile={canonical}")
+    print(
+        "  wall_time="
+        f"{real_seconds:.2f}s "
+        f"cpu={cpu_seconds:.2f}s "
+        f"(warm_target<={warm_target_minutes}m budget_ok={'yes' if within_budget else 'no'})"
+    )
+    if "max_rss_bytes" in time_metrics:
+        print(
+            "  resources="
+            f"max_rss={format_bytes(int(time_metrics['max_rss_bytes']))} "
+            f"swaps={int(time_metrics.get('swaps', 0))}"
+        )
+    if isinstance(e2e_metrics, dict):
+        e2e = e2e_metrics
+        rebuilt_groups_suffix = ""
+        if rebuild_groups is not None:
+            rebuilt_groups_suffix = f" rebuilt_groups={rebuild_groups}"
+        skew_suffix = ""
+        if group_skew_ratio is not None:
+            skew_suffix = f" skew={group_skew_ratio:.1f}x"
+        hit_rate_suffix = ""
+        if cache_hit_rate is not None:
+            hit_rate_suffix = f" hit_rate={cache_hit_rate * 100:.0f}%"
+        print(
+            "  e2e="
+            f"compile={e2e.get('compile_ms', 0)}ms "
+            f"plan={e2e.get('plan_ms', 0)}ms "
+            f"build={e2e.get('build_ms', 0)}ms "
+            f"run={e2e.get('run_ms', 0)}ms "
+            f"cache_hits={e2e.get('cache_hits', 0)}/{e2e.get('group_count', 0)} "
+            f"largest_group={e2e.get('largest_group_fixtures', 0)} "
+            f"median_group={e2e.get('median_group_fixtures', 0)}"
+            f"{hit_rate_suffix}{rebuilt_groups_suffix}{skew_suffix}"
+        )
+    print(
+        "  workers="
+        f"sifr={workers['sifr_jobs']} "
+        f"rust={workers['rust_jobs']} "
+        f"run={workers['run_jobs']} "
+        f"cargo_build={workers['cargo_build_jobs']}"
+    )
+    if parsed_log["artifact_cache"]:
+        summaries = []
+        for namespace, stats in sorted(parsed_log["artifact_cache"].items()):
+            summaries.append(f"{namespace}:hits={stats['hits']},misses={stats['misses']}")
+        print("  generated_artifact_cache=" + " ".join(summaries))
+    if e2e_cache_stats is not None:
+        print(
+            "  cache_footprint="
+            f"e2e={format_bytes(int(e2e_cache_stats['bytes']))}/{e2e_cache_stats['files']}files "
+            f"generated={format_bytes(int(artifact_cache_stats['bytes']))}/{artifact_cache_stats['files']}files"
+        )
+    if isinstance(parsed_log["hardening_summary"], dict):
+        hardening = parsed_log["hardening_summary"]
+        print(
+            "  hardening="
+            f"variants={hardening['variants']} "
+            f"failures={hardening['failures']} "
+            f"blocking_failures={hardening['blocking_failures']}"
+        )
+    if advisories:
+        print("  advisories=" + "; ".join(advisories))
+    else:
+        print("  advisories=none")
+    if args.json_out:
+        print(f"  json={Path(args.json_out).resolve().relative_to(REPO_ROOT)}")
+    return 0
+
+
+def main() -> int:
+    args = parse_args()
+    if args.command == "summarize":
+        return summarize(args)
+    raise SystemExit(f"unsupported command: {args.command}")
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())
