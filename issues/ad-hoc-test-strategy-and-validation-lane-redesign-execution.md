@@ -21,7 +21,7 @@ Loop per part: Plan -> Implement -> Validate -> Demo -> PR -> Review -> Merge ->
 1. [x] `milestone_test_1`: redesign lane taxonomy and policy so `quick`, `pr`, `nightly`, and `release` are explicit and `quick` stops running broad hardening / nested determinism work
 2. [x] `milestone_test_2`: replace shell-matrix repetition with one declarative validation harness and thin wrappers
 3. [x] `milestone_test_3`: downshift eligible invariants from expensive CLI/e2e paths into cheaper integration or unit coverage
-4. [ ] `milestone_test_4`: redesign generated-program artifact reuse and cache boundaries for repeated `run` / `test` validation
+4. [x] `milestone_test_4`: redesign generated-program artifact reuse and cache boundaries for repeated `run` / `test` validation
 5. [ ] `milestone_test_5`: refactor hardening and determinism into non-default lanes while preserving breadth
 6. [ ] `milestone_test_6`: add throughput/resource reporting, worker guidance, and regression visibility
 7. [ ] external review pass 1 completed and acted on
@@ -115,16 +115,31 @@ Known architectural entry facts from the planning doc:
   - closure basis: phase 24/25 positive analysis invariants no longer depend on expensive CLI `run` execution, while the contract harness retains only the rows that still need true CLI-mode parity coverage
 
 ### milestone_test_4: Artifact Reuse and Cache Boundary Redesign
-- Status: pending
+- Status: complete
+- Implementation PR: https://github.com/yaseralnajjar/sifr/pull/1178
 - Implementation target:
   - introduce reusable generated-program workspaces and repeat-run cache visibility
   - materially improve unchanged reruns for `run` and `test`
 - Demo target:
-  - pending
+  - `cargo run -q -p sifr -- run demos/m22_4_parity_regression_matrix_demo/main.sifr`
+  - `cargo run -q -p sifr -- test demos/m22_4_parity_regression_matrix_demo`
 - Validation target:
-  - pending
+  - `cargo test -p sifr_driver test_cached_project_binary -- --nocapture`
+  - `cargo test -p sifr_driver test_run_tests_reuses_cached_workspace_for_unchanged_project -- --nocapture`
+  - `cargo test -p sifr_driver test_run_tests_invalidates_cached_workspace_when_sources_change -- --nocapture`
+  - `cargo run -q -p sifr -- run demos/m22_4_parity_regression_matrix_demo/main.sifr` twice
+  - `cargo run -q -p sifr -- test demos/m22_4_parity_regression_matrix_demo` twice
+  - `$(pwd)/scripts/run_all_tests.sh --profile quick`
 - Validation evidence:
-  - pending
+  - positive path: `cargo test -p sifr_driver test_cached_project_binary -- --nocapture` -> passed (`2 passed, 0 failed`), proving repeated cached `run` builds reuse the same binary path for unchanged project inputs and emit a new key/path when the source graph changes
+  - positive path: `cargo test -p sifr_driver test_run_tests_reuses_cached_workspace_for_unchanged_project -- --nocapture` -> passed, proving repeated `sifr test` invocations on unchanged inputs reuse the same generated Cargo workspace
+  - positive path: `cargo test -p sifr_driver test_run_tests_invalidates_cached_workspace_when_sources_change -- --nocapture` -> passed, proving `sifr test` invalidates to a new cache key/workspace once reachable sources change
+  - positive path: `cargo run -q -p sifr -- run demos/m22_4_parity_regression_matrix_demo/main.sifr` -> first invocation emitted `[sifr-artifact-cache] ... cache_hit=false ... miss_reason=not_found`, second invocation emitted the same cache key with `cache_hit=true`
+  - positive path: `cargo run -q -p sifr -- test demos/m22_4_parity_regression_matrix_demo` -> first invocation emitted `[sifr-artifact-cache] ... cache_hit=false ... miss_reason=not_found`, second invocation emitted the same cache key with `cache_hit=true`
+  - positive path: `$(pwd)/scripts/run_all_tests.sh --profile quick` -> passed, with the authoritative quick lane preserving correctness while the `run`/`test` paths now surface explicit cache-hit accounting
+  - negative path: cache invalidation is now explicit instead of implicit temp-dir churn; generated artifacts rebuild only when the rooted scope, generated Rust/Cargo inputs, or toolchain/env signature changes, and the tests above pin the changed-source invalidation contract for both `run` and `test`
+  - merge evidence: PR `#1178` merged into `main` as `b2c5b48fc53b593c1668e87e3c73b0fa835b3e0d` on `2026-03-16`
+  - closure basis: `sifr run` and `sifr test` now materialize through content-addressed caches under the system temp root, promote cache misses atomically from staging directories, and emit explicit cache hit/miss status lines so repeated local validation no longer always pays the generated-program rebuild cost
 
 ### milestone_test_5: Hardening Lane Refactor
 - Status: pending
