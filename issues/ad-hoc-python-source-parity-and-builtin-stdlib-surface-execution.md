@@ -4,7 +4,7 @@ Status: in_progress
 Started: 2026-03-14
 Phase owner: Codex (GPT-5)
 Source phase: `issues/ad-hoc-python-source-parity-and-builtin-stdlib-surface.md`
-Current active wave: `wave_psp_c1`
+Current active wave: `wave_psp_c2`
 
 ## Execution Rules
 
@@ -19,7 +19,7 @@ Current active wave: `wave_psp_c1`
 - [x] `milestone_psp_2` / `wave_psp_a2`: core object models and builtin semantics
 - [x] `milestone_psp_3` / `wave_psp_b1`: collections objects and ordered helpers
 - [x] `milestone_psp_3` / `wave_psp_b2`: iterators, functional helpers, and randomness
-- [ ] `milestone_psp_4` / `wave_psp_c1`: structured parsing and serialization
+- [x] `milestone_psp_4` / `wave_psp_c1`: structured parsing and serialization
 - [ ] `milestone_psp_4` / `wave_psp_c2`: text, pattern, and formatting modules
 - [ ] `milestone_psp_5` / `wave_psp_d1`: filesystem, paths, and archive surfaces
 - [ ] `milestone_psp_5` / `wave_psp_d2`: process, runtime, and platform surfaces
@@ -77,13 +77,13 @@ Status: done
 
 ### `wave_psp_c1` Structured Parsing and Serialization
 
-Status: in_progress
+Status: done
 
 - [x] Harvest `Lib/test/test_json/`, `Lib/test/test_tomllib/`, `Lib/test/test_csv.py`, and `Lib/test/test_configparser.py`.
 - [x] Close structured-return and class/export gaps for `json`, `tomllib`, `csv`, and `configparser`.
 - [x] Add traceable regressions (including CPython subset fixtures), demo, and local validation evidence.
 - [x] Open implementation PR and merge the wave body.
-- [ ] Complete external review passes and finalize ledger links.
+- [x] Complete external review passes and finalize ledger links.
 
 ### `wave_psp_c2` Text, Pattern, and Formatting Modules
 
@@ -377,12 +377,16 @@ Status: pending
   - `cargo run -q -p sifr -- run crates/sifr/tests/e2e/pass/cpython_tomllib_subset.sifr`
   - `cargo run -q -p sifr -- run crates/sifr/tests/e2e/pass/cpython_configparser_subset.sifr`
   - `cargo run -q -p sifr -- run crates/sifr/tests/e2e/pass/phase_psp_c1_structured_parsing_serialization.sifr`
+  - `cargo run -q -p sifr -- run crates/sifr/tests/e2e/pass/stdlib_configparser.sifr`
+  - `cargo test -p sifr_codegen test_class_method_mutable_self_propagates_through_delegation`
 - Authoritative local gate:
   - `SIFR_E2E_DISABLE_CACHE=1 scripts/run_all_tests.sh --profile quick`
   - Includes phase-29 hardening summary: `verification ok: variants=64, failures=0, blocking_failures=0, non_blocking_failures=0`
 - PR / merge:
   - Merged PR: `#1168` `Close wave_psp_c1 structured parsing and serialization parity`
   - Merge commit: `582697f0b869e07bbaf3ac672e3f1dd87ddd04e6`
+  - Reviewer remediation PR: `#1174` `wave_psp_c1: fix reviewer pass1 configparser read + delegated mut self`
+  - Merge commit: `a5c6fb7ec1916795dc9408d00cd4b32ff9308271`
 
 ### `wave_psp_c2`
 
@@ -415,6 +419,7 @@ Status: pending
 - `wave_psp_b1`: PR `#1149` merged at `2026-03-15T02:23:59Z`
 - `wave_psp_b2`: PR `#1160` merged at `2026-03-15T11:41:51Z`
 - `wave_psp_c1`: PR `#1168` merged at `2026-03-16T01:34:09Z`
+- `wave_psp_c1-review-pass1`: PR `#1174` merged at `2026-03-16T02:26:34Z`
 
 ## External Review Ledger
 
@@ -450,3 +455,12 @@ Status: pending
   - Reviewer file: `/Users/yaseralnajjar/.codex/worktrees/0761/codebase/reviews/wave-psp-b2-review-pass2.md`
   - Validated finding: borrowed aggregate arguments were still packing move-only names into temporary collection literals, which regressed `chain(a, b)` / `chain(a, b, c)` style ownership semantics after the b2 vararg expansion.
   - Fix status: remediated in PR `#1162`.
+- `wave_psp_c1` review pass 1:
+  - Reviewer file: `/Users/yaseralnajjar/.codex/worktrees/0761/codebase/reviews/wave-psp-c1-review-pass1b.md`
+  - Validated findings: `ConfigParser.read(path)` only read bytes and skipped parser population, `has_option()` default fallback semantics regressed for existing sections, and class-method mutability inference missed delegated `self.read_string(...)` mutation.
+  - Fix status: remediated in PR `#1174`.
+- `wave_psp_c1` review pass 2:
+  - Reviewer file: `/Users/yaseralnajjar/.codex/worktrees/0761/codebase/reviews/wave-psp-c1-review-pass2.md`
+  - Validation result: approved as production-ready with no actionable implementation issue.
+  - Non-actionable stale note: the review text still mentions `ConfigParser.read()` not populating parser state, which was true before PR `#1174` and is now invalid on current mainline.
+  - Fix status: no code changes required.
