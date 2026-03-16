@@ -15,7 +15,7 @@ def collect_function_actual() -> list[bool]:
     actual.append(join_path("/tmp", "demo.txt") == "/tmp/demo.txt")
 
     sample: Path = Path("/tmp/myfile.txt")
-    actual.append(sample.with_name("renamed.txt") == "/tmp/renamed.txt" and sample.with_suffix(".csv") == "/tmp/myfile.csv")
+    actual.append(sample.with_name("renamed.txt").to_str() == "/tmp/renamed.txt" and sample.with_suffix(".csv").to_str() == "/tmp/myfile.csv")
     return actual
 
 

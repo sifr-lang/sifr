@@ -20,14 +20,14 @@ def collect_path_class_actual() -> list[bool]:
     actual: list[bool] = []
     sample: Path = Path("/tmp/myfile.txt")
     actual.append(sample.name() == "myfile.txt")
-    actual.append(sample.parent() == "/tmp")
+    actual.append(sample.parent().to_str() == "/tmp")
     actual.append(sample.suffix() == ".txt")
     actual.append(sample.stem() == "myfile")
     actual.append(sample.is_absolute())
     actual.append(sample.to_str() == "/tmp/myfile.txt")
-    actual.append(sample.joinpath("sub") == "/tmp/myfile.txt/sub")
-    actual.append(sample.with_name("renamed.txt") == "/tmp/renamed.txt")
-    actual.append(sample.with_suffix(".csv") == "/tmp/myfile.csv")
+    actual.append(sample.joinpath("sub").to_str() == "/tmp/myfile.txt/sub")
+    actual.append(sample.with_name("renamed.txt").to_str() == "/tmp/renamed.txt")
+    actual.append(sample.with_suffix(".csv").to_str() == "/tmp/myfile.csv")
     return actual
 
 
