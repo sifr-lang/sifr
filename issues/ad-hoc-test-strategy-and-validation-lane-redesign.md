@@ -1,6 +1,6 @@
 # Ad Hoc Phase: Test Strategy and Validation Lane Redesign
 
-Status: in progress (implementation complete 2026-03-16; external review pending)
+Status: complete (implementation and external review completed 2026-03-16)
 Context: ad hoc planning phase captured in `issues/` before any roadmap-phase promotion
 Execution readiness: in progress via execution checklist issue
 Execution tracking: `issues/ad-hoc-test-strategy-and-validation-lane-redesign-execution.md`
@@ -17,7 +17,7 @@ CI/CD symmetry is not the design driver for this document.
 The primary optimization target is the developer experience on a normal local machine.
 
 ## Closure Status
-- Status: implementation complete; reviewer gate pending
+- Status: complete
 - Closure evidence issue: `issues/ad-hoc-test-strategy-and-validation-lane-redesign-execution.md`
 
 ## Execution Checklist
@@ -53,6 +53,10 @@ The primary optimization target is the developer experience on a normal local ma
   - Execution issue: `issues/ad-hoc-test-strategy-and-validation-lane-redesign-execution.md`
   - PR: `#1183`
   - Closure basis: `scripts/run_all_tests.sh` now emits per-lane `latest` report artifacts with wall/CPU time, cache hit rate, rebuilt-group counts, cache footprints, worker defaults, and advisory resource signals, while `run_e2e_pass.sh` resolves the cache root to an absolute path so the reported cache footprint matches the real e2e workspace cache.
+- `2026-03-16`: external review passes completed.
+  - Execution issue: `issues/ad-hoc-test-strategy-and-validation-lane-redesign-execution.md`
+  - PRs: `#1185`, `#1186`, `#1187`
+  - Closure basis: review pass 1 confirmed the lane-boundary design choices, review pass 2 landed fixture-manifest and temp-file hygiene fixes, and review pass 3 reported only minor future enhancements with no additional blocking defects.
 
 ## Why This Needs Its Own Phase
 The current suite is strong on breadth but inefficient in architecture.
