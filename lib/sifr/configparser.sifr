@@ -216,7 +216,11 @@ class ConfigParser:
 
     def read(self, path: str) -> Result[list[str], IOError]:
         try:
-            _: str = read_text(path)
+            content: str = read_text(path)
+            try:
+                _: None = self.read_string(content)
+            except ParsingError as e:
+                raise IOError("parse error on line " + str(e.line) + ": " + e.message)
             loaded_path: str = path + ""
             return [loaded_path]
         except IOError as e:
@@ -268,8 +272,8 @@ class ConfigParser:
                 continue
             if _has_option_key(section_values, normalized):
                 return True
-            return False
-        return normalized in self._defaults
+            return normalized in self._defaults
+        return False
 
     def get(self, section: str, option: str, fallback: str | None = None) -> str | None:
         normalized: str = _normalize_option(option)

@@ -17,6 +17,17 @@ fn generate_rust_from_source(source: &str) -> String {
 }
 
 #[test]
+fn test_class_method_mutable_self_propagates_through_delegation() {
+    let rust_code = generate_rust_from_source(
+        "class ConfigParser:\n    text: str\n\n    def __init__(self):\n        self.text = \"\"\n\n    def read_string(self, text: str) -> None:\n        self.text = text\n\n    def read(self, text: str) -> None:\n        self.read_string(text)\n",
+    );
+
+    assert!(rust_code.contains("fn read_string(&mut self"));
+    assert!(rust_code.contains("fn read(&mut self"));
+    assert!(!rust_code.contains("fn read(&self"));
+}
+
+#[test]
 fn test_simple_function_codegen() {
     let module = HirModule {
         functions: vec![HirFunction {
