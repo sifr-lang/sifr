@@ -112,6 +112,7 @@ def emit_shell(profile: str, lane: dict[str, Any], manifest_path: Path) -> None:
         "COLD_TARGET_MINUTES": lane.get("cold_wall_time_target_minutes", ""),
         "THERMAL_POLICY": lane.get("thermal_policy", ""),
         "MEMORY_POLICY": lane.get("memory_policy", ""),
+        "CONTRACT_SUITES": ",".join(matrix_suites),
         "RUN_FRONTEND_MODE_PARITY": "1" if "frontend_mode_parity" in matrix_suites else "0",
         "RUN_PHASE23_GRAPH_ISOLATION": "1" if "phase23_graph_isolation" in matrix_suites else "0",
         "RUN_PHASE24_HIR_ANALYSIS": "1" if "phase24_hir_analysis" in matrix_suites else "0",

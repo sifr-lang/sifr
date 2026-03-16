@@ -69,24 +69,16 @@ python3 "${SCRIPT_DIR}/check_sifr_driver_maintainability_guardrails.py"
 echo "Running unit tests and non-pass e2e tests (cargo test -p sifr -- --skip test_e2e_pass)"
 cargo test -p sifr -- --skip test_e2e_pass
 
-if [[ "${RUN_FRONTEND_MODE_PARITY}" == "1" ]]; then
-  echo "Running frontend mode parity matrix"
-  bash "${SCRIPT_DIR}/run_frontend_mode_parity_matrix.sh"
-fi
-
-if [[ "${RUN_PHASE23_GRAPH_ISOLATION}" == "1" ]]; then
-  echo "Running phase 23 graph/isolation matrix"
-  bash "${SCRIPT_DIR}/run_phase23_graph_isolation_matrix.sh"
-fi
-
-if [[ "${RUN_PHASE24_HIR_ANALYSIS}" == "1" ]]; then
-  echo "Running phase 24 HIR analysis consolidation matrix"
-  bash "${SCRIPT_DIR}/run_phase24_hir_analysis_consolidation_matrix.sh"
-fi
-
-if [[ "${RUN_PHASE25_CFG_FLOW}" == "1" ]]; then
-  echo "Running phase 25 CFG/flow activation matrix"
-  bash "${SCRIPT_DIR}/run_phase25_cfg_flow_activation_matrix.sh"
+if [[ -n "${CONTRACT_SUITES}" ]]; then
+  echo "Running validation contract matrix suites"
+  CONTRACT_ARGS=()
+  IFS=',' read -r -a CONTRACT_SUITE_ARRAY <<< "${CONTRACT_SUITES}"
+  for suite in "${CONTRACT_SUITE_ARRAY[@]}"; do
+    if [[ -n "${suite}" ]]; then
+      CONTRACT_ARGS+=(--suite "${suite}")
+    fi
+  done
+  bash "${SCRIPT_DIR}/run_validation_contract_matrix.sh" "${CONTRACT_ARGS[@]}"
 fi
 
 echo "Running e2e pass suite"

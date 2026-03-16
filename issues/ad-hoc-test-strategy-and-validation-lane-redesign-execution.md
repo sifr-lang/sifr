@@ -74,16 +74,23 @@ Known architectural entry facts from the planning doc:
   - closure basis: lane semantics are now checked in under `verification/validation_lanes/manifest.json`, `quick` no longer executes broad hardening by default, and representative e2e selection is enforced by the Rust harness through fixture manifests rather than shell-only convention
 
 ### milestone_test_2: Declarative Validation Harness
-- Status: pending
+- Status: complete locally
 - Implementation target:
   - replace shell-matrix orchestration with one manifest-driven harness
   - keep top-level scripts as thin wrappers only
 - Demo target:
-  - pending
+  - `bash scripts/run_validation_contract_matrix.sh --suite frontend_mode_parity --suite phase23_graph_isolation`
 - Validation target:
-  - pending
+  - `bash scripts/run_validation_contract_matrix.sh --suite frontend_mode_parity --suite phase23_graph_isolation --suite phase24_hir_analysis --suite phase25_cfg_flow`
+  - `bash scripts/run_frontend_mode_parity_matrix.sh`
+  - `$(pwd)/scripts/run_all_tests.sh --profile quick`
 - Validation evidence:
-  - pending
+  - positive path: `bash scripts/run_validation_contract_matrix.sh --suite frontend_mode_parity --suite phase23_graph_isolation` -> passed, with one shared timing report across `7` contract rows
+  - positive path: `bash scripts/run_validation_contract_matrix.sh --suite frontend_mode_parity --suite phase23_graph_isolation --suite phase24_hir_analysis --suite phase25_cfg_flow` -> passed, with one shared timing report across all `19` contract rows
+  - positive path: `bash scripts/run_frontend_mode_parity_matrix.sh` -> passed through the compatibility wrapper, proving the legacy command name now delegates to the declarative harness
+  - positive path: `$(pwd)/scripts/run_all_tests.sh --profile quick` -> passed with the quick lane invoking `scripts/run_validation_contract_matrix.sh` instead of the legacy shell loops
+  - negative path: the initial harness revision surfaced a real workspace-boundary regression when `<TMP>` paths lived under the repo `target/` tree; the harness was corrected to allocate temp roots under the system temp directory so generated `build` outputs stay outside the workspace, matching the old shell behavior
+  - closure basis: the contract matrix now lives in `verification/validation_contracts/manifest.json`, `tests/validation_contracts.rs` is the single Rust-native execution harness, `scripts/run_validation_contract_matrix.sh` is the one harness entrypoint, and the old matrix scripts have been reduced to thin suite-selecting wrappers
 
 ### milestone_test_3: Invariant Downshifting
 - Status: pending
