@@ -1,4 +1,4 @@
-from sifr.datetime import datetime, from_timestamp
+from sifr.datetime import datetime, timedelta, from_timestamp
 from sifr.re import search, findall
 from sifr.math import comb, perm, isclose
 from sifr.statistics import mean, variance, StatisticsError
@@ -10,6 +10,7 @@ def collect_datetime_actual() -> list[bool]:
     actual: list[bool] = []
     dt: datetime = datetime(2024, 4, 1, 12, 30, 0)
     actual.append(dt.isoformat() == "2024-04-01T12:30:00")
+    actual.append(timedelta(0, 0).total_seconds() == 0)
 
     epoch_ok: bool = False
     overflow_rejected: bool = False
@@ -62,6 +63,8 @@ def collect_math_actual() -> list[bool]:
     actual.append(isclose(0.30000000000000004, 0.3, 1e-9, 0.0))
     far_close: bool = isclose(1.0, 2.0, 1e-9, 0.0)
     actual.append(far_close == False)
+    actual.append(comb(5, 10) == 0)
+    actual.append(perm(5, 10) == 0)
     return actual
 
 
@@ -98,13 +101,16 @@ def collect_statistics_actual() -> list[bool]:
 def collect_hashlib_actual() -> list[bool]:
     actual: list[bool] = []
     sha_ok: bool = False
+    digest_alias_ok: bool = False
     unsupported_rejected: bool = False
     try:
         h: HashObject = new("sha256", "abc")
         sha_ok = h.hexdigest() == "ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad"
+        digest_alias_ok = h.digest() == h.hexdigest()
     except ValueError as e:
         _ = e.message
     actual.append(sha_ok)
+    actual.append(digest_alias_ok)
 
     try:
         _bad: HashObject = new("sha3_256", "")
@@ -123,11 +129,11 @@ def append_all(mut target: list[bool], values: list[bool]):
 
 def main():
     expected: list[bool] = [
-        True, True, True,
-        True, True, True,
         True, True, True, True,
         True, True, True,
-        True, True
+        True, True, True, True, True, True,
+        True, True, True,
+        True, True, True
     ]
     actual: list[bool] = []
     append_all(actual, collect_datetime_actual())

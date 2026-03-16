@@ -595,6 +595,8 @@ Status: pending
 - `wave_psp_ab-review-pass4`: PR `#1197` merged at `2026-03-16T06:38:54Z`
 - `wave_psp_d2`: PR `#1198` merged at `2026-03-16T08:10:57Z`
 - `wave_psp_d2-review-pass1`: PR `#1199` merged at `2026-03-16T08:22:10Z`
+- `wave_psp_d2-review-pass2`: PR `#1200` merged at `2026-03-16T08:36:31Z`
+- `wave_psp_e1`: PR `#1201` merged at `2026-03-16T08:43:54Z`
 
 ## External Review Ledger
 
@@ -679,3 +681,7 @@ Status: pending
   - Reviewer file: `/Users/yaseralnajjar/.codex/worktrees/0761/codebase/reviews/wave-psp-d2-review-pass2.md`
   - Validation result: approved as production-ready with no actionable implementation issue.
   - Fix status: no code changes required.
+- `wave_psp_e1` review pass 1:
+  - Reviewer file: `/Users/yaseralnajjar/.codex/worktrees/0761/codebase/reviews/wave-psp-e1-review-pass1.md`
+  - Validation result: partially actionable. The review mostly reflected stale pre-`#1201` state (it claimed missing e1 artifacts and pending implementation), but the request to make e1 semantic adaptations explicit in evidence was valid.
+  - Fix status: remediated by hardening `phase_psp_e1_core_modules_numeric_patterns_crypto.sifr` assertions (`timedelta.total_seconds()`, invalid combinatorics domains, and `digest()==hexdigest()`) and tightening adaptation notes in `verification/stdlib/wave_psp_e1_cpython_traceability.md`.
