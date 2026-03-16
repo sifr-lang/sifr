@@ -161,6 +161,7 @@ fn lower_intrinsic_rendered(name: &str, args: &[RustExpr]) -> Option<LoweredIntr
         "file_write_bytes" => (file_handles::lower_file_write_bytes(args), None),
         "json_loads" => (json::lower_json_loads(args), Some("serde_json")),
         "json_dumps" => (json::lower_json_dumps(args), Some("serde_json")),
+        "json_dumps_value" => (json::lower_json_dumps_value(args), Some("serde_json")),
         "assert_eq" => (test::lower_assert_eq(args), None),
         "assert_ne" => (test::lower_assert_ne(args), None),
         "assert_true" => (test::lower_assert_true(args), None),

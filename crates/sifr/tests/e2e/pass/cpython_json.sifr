@@ -1,89 +1,50 @@
-# CPython test_json — ported assertions for sifr.json
-# Uses CPython-compatible names: loads (new), json_dumps (no alias available for dumps)
-from sifr.test import assert_bool_vector_eq
-from sifr.json import loads, json_dumps
+# CPython test_json — structured-value assertions for sifr.json
+from sifr.json import JsonValue, loads, json_dumps
 
-def collect_loads_actual() -> list[bool]:
-    actual: list[bool] = []
+
+def main() -> None:
     try:
-        r1: str = loads("{\"a\":1}")
-        r2: str = loads("[1,2,3]")
-        r3: str = loads("42")
-        r4: str = loads("true")
-        r5: str = loads("false")
-        r6: str = loads("null")
-        r7: str = loads("[]")
-        r8: str = loads("{}")
-        r9: str = loads("3.14")
-        r10: str = loads("\"hello\"")
-        r11: str = loads("\"\"")
-        actual.append(r1 == "{\"a\":1}")
-        actual.append(r2 == "[1,2,3]")
-        actual.append(r3 == "42")
-        actual.append(r4 == "true")
-        actual.append(r5 == "false")
-        actual.append(r6 == "null")
-        actual.append(r7 == "[]")
-        actual.append(r8 == "{}")
-        actual.append(r9 == "3.14")
-        actual.append(r10 == "\"hello\"")
-        actual.append(r11 == "\"\"")
+        parsed_obj: JsonValue = loads("{\"a\":1}")
+        parsed_arr: JsonValue = loads("[1,2,3]")
+        parsed_int: JsonValue = loads("42")
+        parsed_true: JsonValue = loads("true")
+        parsed_false: JsonValue = loads("false")
+        parsed_null: JsonValue = loads("null")
+        parsed_empty_arr: JsonValue = loads("[]")
+        parsed_empty_obj: JsonValue = loads("{}")
+        parsed_float: JsonValue = loads("3.14")
+        parsed_hello: JsonValue = loads("\"hello\"")
+        parsed_empty_str: JsonValue = loads("\"\"")
+        assert str(parsed_obj) == "{\"a\":1}"
+        assert str(parsed_arr) == "[1,2,3]"
+        assert str(parsed_int) == "42"
+        assert str(parsed_true) == "true"
+        assert str(parsed_false) == "false"
+        assert str(parsed_null) == "null"
+        assert str(parsed_empty_arr) == "[]"
+        assert str(parsed_empty_obj) == "{}"
+        assert str(parsed_float) == "3.14"
+        assert str(parsed_hello) == "\"hello\""
+        assert str(parsed_empty_str) == "\"\""
     except JSONDecodeError as e:
-        count: int = 0
-        while count < 11:
-            actual.append(False)
-            count = count + 1
-    return actual
+        assert False
 
-def collect_dumps_actual() -> list[bool]:
-    actual: list[bool] = []
-    actual.append(json_dumps("hello") == "\"hello\"")
-    actual.append(json_dumps("") == "\"\"")
-    actual.append(json_dumps(42) == "42")
-    actual.append(json_dumps(0) == "0")
-    actual.append(json_dumps(True) == "true")
-    actual.append(json_dumps(False) == "false")
-    actual.append(json_dumps(3.14) == "3.14")
-    return actual
+    assert json_dumps("hello") == "\"hello\""
+    assert json_dumps("") == "\"\""
+    assert json_dumps(42) == "42"
+    assert json_dumps(0) == "0"
+    assert json_dumps(True) == "true"
+    assert json_dumps(False) == "false"
+    assert json_dumps(3.14) == "3.14"
 
-def collect_roundtrip_actual() -> list[bool]:
-    actual: list[bool] = []
     try:
-        s2: str = json_dumps(42)
-        r12: str = loads(s2)
-        actual.append(r12 == "42")
-
-        s3: str = json_dumps(True)
-        r13: str = loads(s3)
-        actual.append(r13 == "true")
-
-        s4: str = json_dumps(False)
-        r14: str = loads(s4)
-        actual.append(r14 == "false")
-
-        s5: str = json_dumps(3.14)
-        r15: str = loads(s5)
-        actual.append(r15 == "3.14")
+        roundtrip_int: JsonValue = loads(json_dumps(42))
+        roundtrip_true: JsonValue = loads(json_dumps(True))
+        roundtrip_false: JsonValue = loads(json_dumps(False))
+        roundtrip_float: JsonValue = loads(json_dumps(3.14))
+        assert str(roundtrip_int) == "42"
+        assert str(roundtrip_true) == "true"
+        assert str(roundtrip_false) == "false"
+        assert str(roundtrip_float) == "3.14"
     except JSONDecodeError as e:
-        actual.append(False)
-        actual.append(False)
-        actual.append(False)
-        actual.append(False)
-    return actual
-
-def append_all(mut target: list[bool], values: list[bool]):
-    for value in values:
-        target.append(value)
-
-def main():
-    expected: list[bool] = [
-        True, True, True, True, True, True, True, True, True, True, True,
-        True, True, True, True, True, True, True,
-        True, True, True, True
-    ]
-    actual: list[bool] = []
-    append_all(actual, collect_loads_actual())
-    append_all(actual, collect_dumps_actual())
-    append_all(actual, collect_roundtrip_actual())
-    assert_bool_vector_eq(actual, expected)
-    _ = str("cpython_json: all 23 assertions passed")
+        assert False

@@ -405,7 +405,12 @@ fn is_self_field_mutating_method_call(expr: &HirExpr) -> bool {
         HirExpr::MethodCall { object, method, .. } => {
             let is_self_field = matches!(object.as_ref(), HirExpr::FieldAccess { object: inner, .. }
                 if matches!(inner.as_ref(), HirExpr::Name { name, .. } if name == "self"));
-            is_self_field && MUTATING_METHODS.contains(&method.as_str())
+            is_self_field
+                && (MUTATING_METHODS.contains(&method.as_str())
+                    || matches!(
+                        crate::resolve_alias_type_for_plain_call(object.ty()),
+                        Type::Class { .. }
+                    ))
         }
         _ => false,
     }
@@ -512,19 +517,7 @@ pub(super) fn body_contains_yield_inner(stmts: &[HirStmt]) -> bool {
 
 /// Check if a type needs .`clone()` when accessed from &self (non-Copy types).
 pub(super) fn needs_clone_for_type(ty: &Type) -> bool {
-    match ty {
-        Type::Int | Type::Float | Type::Bool | Type::None | Type::Decimal => false,
-        Type::LiteralInt(_) | Type::LiteralBool(_) => false,
-        Type::Str | Type::LiteralStr(_) => true, // String is not Copy
-        Type::List(_) | Type::Dict(_, _) => true,
-        Type::Tuple(_) => true, // tuples of non-Copy are non-Copy
-        Type::Class { .. } => true,
-        Type::Newtype { .. } => true,
-        Type::TypeVar(_) => true, // Generic type params have T: Clone bound, so .clone() is safe
-        Type::BigInt => true,     // num_bigint::BigInt is not Copy
-        Type::BigDecimal => true,
-        _ => false,
-    }
+    ty.ownership() == sifr_type_system::OwnershipKind::Move
 }
 
 /// Mutating methods that require the receiver variable to be `mut`.
@@ -762,6 +755,39 @@ mod tests {
         let stmts = vec![HirStmt::NestedFunction { func: nested }];
 
         assert!(!body_contains_return_stmt(&stmts));
+    }
+
+    #[test]
+    fn body_contains_field_assign_detects_delegated_self_field_class_mutation() {
+        let writer_ty = Type::Class {
+            name: "writer".to_string(),
+            fields: vec![],
+            methods: vec![],
+            parent_class: None,
+        };
+        let holder_ty = Type::Class {
+            name: "DictWriter".to_string(),
+            fields: vec![("_writer".to_string(), writer_ty.clone())],
+            methods: vec![],
+            parent_class: None,
+        };
+        let stmts = vec![HirStmt::Expr {
+            expr: HirExpr::MethodCall {
+                object: Box::new(HirExpr::FieldAccess {
+                    object: Box::new(HirExpr::Name {
+                        name: "self".to_string(),
+                        ty: holder_ty,
+                    }),
+                    field: "_writer".to_string(),
+                    ty: writer_ty,
+                }),
+                method: "writerow".to_string(),
+                args: vec![],
+                ty: Type::None,
+            },
+        }];
+
+        assert!(body_contains_field_assign_codegen(&stmts));
     }
 
     #[test]

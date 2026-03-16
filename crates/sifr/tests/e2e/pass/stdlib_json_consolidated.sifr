@@ -1,53 +1,28 @@
-# Consolidated stdlib json coverage for milestone_30_4 structure rules
-from sifr.json import loads, json_dumps
-from sifr.test import assert_bool_vector_eq
+# Consolidated stdlib json coverage for structured-value parity
+from sifr.json import JsonValue, loads, json_dumps
 
-def collect_parse_actual() -> list[bool]:
-    actual: list[bool] = []
+
+def main() -> None:
     try:
-        parsed_obj: str = loads("{\"name\":\"sifr\"}")
-        parsed_arr: str = loads("[1,2,3]")
-        actual.append(parsed_obj == "{\"name\":\"sifr\"}")
-        actual.append(parsed_arr == "[1,2,3]")
+        parsed_obj: JsonValue = loads("{\"name\":\"sifr\"}")
+        parsed_arr: JsonValue = loads("[1,2,3]")
+        assert str(parsed_obj) == "{\"name\":\"sifr\"}"
+        assert str(parsed_arr) == "[1,2,3]"
     except JSONDecodeError as e:
-        actual.append(False)
-        actual.append(False)
-    return actual
+        assert False
 
-def collect_dump_actual() -> list[bool]:
-    actual: list[bool] = []
-    actual.append(json_dumps("hello") == "\"hello\"")
-    actual.append(json_dumps(False) == "false")
+    assert json_dumps("hello") == "\"hello\""
+    assert json_dumps(False) == "false"
 
-    roundtrip_ok: bool = False
     try:
-        parsed_roundtrip: str = loads(json_dumps(7))
-        roundtrip_ok = parsed_roundtrip == "7"
+        parsed_roundtrip: JsonValue = loads(json_dumps(7))
+        assert str(parsed_roundtrip) == "7"
     except JSONDecodeError as e:
-        _ = str(e.message)
-    actual.append(roundtrip_ok)
-    return actual
+        assert False
 
-def collect_negative_actual() -> list[bool]:
-    actual: list[bool] = []
-    invalid_rejected: bool = False
     try:
-        _bad: str = loads("{")
+        _bad: JsonValue = loads("{")
         _ = _bad
+        assert False
     except JSONDecodeError as e:
-        invalid_rejected = len(e.message) > 0
-    actual.append(invalid_rejected)
-    return actual
-
-def append_all(mut target: list[bool], values: list[bool]):
-    for value in values:
-        target.append(value)
-
-def main():
-    expected: list[bool] = [True, True, True, True, True, True]
-    actual: list[bool] = []
-    append_all(actual, collect_parse_actual())
-    append_all(actual, collect_dump_actual())
-    append_all(actual, collect_negative_actual())
-    assert_bool_vector_eq(actual, expected)
-    assert str("stdlib_json_consolidated: pass") == "stdlib_json_consolidated: pass"
+        assert len(e.message) > 0

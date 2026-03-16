@@ -205,14 +205,19 @@ pub(crate) fn collect_mutated_vars(
             args: _,
             ..
         } => {
-            if MUTATING_METHODS.contains(&method.as_str()) {
-                if let HirExpr::Name { name, .. } = object.as_ref() {
-                    mutated.borrow_mut().insert(name.clone());
-                }
-            }
-            if matches!(object.ty(), Type::Class { .. }) {
-                if let HirExpr::Name { name, .. } = object.as_ref() {
-                    mutated.borrow_mut().insert(name.clone());
+            let root_name = match object.as_ref() {
+                HirExpr::Name { name, .. } => Some(name.clone()),
+                HirExpr::FieldAccess { object: inner, .. } => match inner.as_ref() {
+                    HirExpr::Name { name, .. } => Some(name.clone()),
+                    _ => None,
+                },
+                _ => None,
+            };
+            if MUTATING_METHODS.contains(&method.as_str())
+                || matches!(object.ty(), Type::Class { .. })
+            {
+                if let Some(name) = root_name {
+                    mutated.borrow_mut().insert(name);
                 }
             }
         }
@@ -643,6 +648,40 @@ mod tests {
 
         let mutated = collect_mutated_vars(&[HirStmt::NestedFunction { func: nested }], None);
         assert!(mutated.contains("items"));
+    }
+
+    #[test]
+    fn collect_mutated_vars_marks_self_for_delegated_field_class_method_call() {
+        let writer_ty = Type::Class {
+            name: "writer".to_string(),
+            fields: vec![],
+            methods: vec![],
+            parent_class: None,
+        };
+        let holder_ty = Type::Class {
+            name: "DictWriter".to_string(),
+            fields: vec![("_writer".to_string(), writer_ty.clone())],
+            methods: vec![],
+            parent_class: None,
+        };
+        let stmts = vec![HirStmt::Expr {
+            expr: HirExpr::MethodCall {
+                object: Box::new(HirExpr::FieldAccess {
+                    object: Box::new(HirExpr::Name {
+                        name: "self".to_string(),
+                        ty: holder_ty,
+                    }),
+                    field: "_writer".to_string(),
+                    ty: writer_ty,
+                }),
+                method: "writerow".to_string(),
+                args: vec![],
+                ty: Type::None,
+            },
+        }];
+
+        let mutated = collect_mutated_vars(&stmts, None);
+        assert!(mutated.contains("self"));
     }
 
     #[test]

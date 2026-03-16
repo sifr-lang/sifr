@@ -1,4 +1,3 @@
-use crate::helpers::MUTATING_METHODS;
 use crate::{intrinsics, methods, RustEmitter, RustExpr};
 use sifr_hir::{HirExpr, HirFStringPart};
 use sifr_type_system::{ParamConvention, Type};
@@ -730,10 +729,13 @@ impl RustEmitter {
                 {
                     return Some(lowered);
                 }
-                Some(crate::RustExpr::Field {
-                    expr: Box::new(self.try_lower_registry_expr_strict(object)?),
-                    field: field.clone(),
-                })
+                let lowered_object = self.try_lower_registry_expr_strict(object)?;
+                Some(self.lower_field_access_expr_with_lowered_object(
+                    object,
+                    field,
+                    ty,
+                    lowered_object,
+                ))
             }
             HirExpr::Call { func, args, .. } => {
                 if let Some(lowered) = self.try_lower_registry_intrinsic_call_expr(func, args) {
@@ -765,10 +767,8 @@ impl RustEmitter {
                 args,
                 ..
             } => {
-                let is_self_field = matches!(object.as_ref(), HirExpr::FieldAccess { object: inner, .. }
-                    if matches!(inner.as_ref(), HirExpr::Name { name, .. } if name == "self"));
                 let needs_self_field_clone_suppression =
-                    is_self_field && MUTATING_METHODS.contains(&method.as_str());
+                    self.method_call_needs_field_clone_suppression(object, method);
                 let suppression_prev = self.pending_self_field_clone_suppression;
                 if needs_self_field_clone_suppression {
                     self.pending_self_field_clone_suppression += 1;
@@ -1280,6 +1280,18 @@ impl RustEmitter {
             HirExpr::DictLiteral { keys, values, .. } => {
                 self.try_lower_registry_dict_literal_expr(keys, values)
             }
+            HirExpr::ListLiteral { elements, .. } => Some(crate::RustExpr::Vec(
+                elements
+                    .iter()
+                    .map(|element| self.try_lower_registry_expr_strict(element))
+                    .collect::<Option<Vec<_>>>()?,
+            )),
+            HirExpr::TupleLiteral { elements, .. } => Some(crate::RustExpr::Tuple(
+                elements
+                    .iter()
+                    .map(|element| self.try_lower_registry_expr_strict(element))
+                    .collect::<Option<Vec<_>>>()?,
+            )),
             HirExpr::SetLiteral { elements, .. } => {
                 self.try_lower_registry_set_literal_expr(elements)
             }
@@ -3051,21 +3063,23 @@ impl RustEmitter {
         arg: &HirExpr,
         lowered: crate::RustExpr,
     ) -> crate::RustExpr {
+        self.clone_moved_names_in_borrowed_aggregate_inner(arg, lowered, false)
+    }
+
+    fn clone_moved_names_in_borrowed_aggregate_inner(
+        &self,
+        arg: &HirExpr,
+        lowered: crate::RustExpr,
+        in_aggregate: bool,
+    ) -> crate::RustExpr {
         match (arg, lowered) {
-            (HirExpr::Name { name, ty }, lowered_expr)
-                if ty.ownership() == sifr_type_system::OwnershipKind::Move
-                    && !self.borrowed_params.contains(name)
-                    && !self.mut_borrowed_params.contains(name) =>
-            {
-                crate::RustExpr::Clone(Box::new(lowered_expr))
-            }
             (HirExpr::ListLiteral { elements, .. }, crate::RustExpr::Vec(items)) => {
                 crate::RustExpr::Vec(
                     elements
                         .iter()
                         .zip(items)
                         .map(|(element, item)| {
-                            self.clone_moved_names_in_borrowed_aggregate(element, item)
+                            self.clone_moved_names_in_borrowed_aggregate_inner(element, item, true)
                         })
                         .collect(),
                 )
@@ -3076,10 +3090,19 @@ impl RustEmitter {
                         .iter()
                         .zip(items)
                         .map(|(element, item)| {
-                            self.clone_moved_names_in_borrowed_aggregate(element, item)
+                            self.clone_moved_names_in_borrowed_aggregate_inner(element, item, true)
                         })
                         .collect(),
                 )
+            }
+            (HirExpr::Name { ty, .. }, lowered_expr)
+                if in_aggregate && ty.ownership() != sifr_type_system::OwnershipKind::Copy =>
+            {
+                crate::RustExpr::MethodCall {
+                    receiver: Box::new(crate::RustExpr::Paren(Box::new(lowered_expr))),
+                    method: "clone".to_string(),
+                    args: vec![],
+                }
             }
             (_, lowered_expr) => lowered_expr,
         }

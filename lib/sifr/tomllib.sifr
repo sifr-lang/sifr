@@ -1,19 +1,153 @@
-# sifr.tomllib — TOML parsing (wraps _sifr.toml + _sifr.fs)
-# loads() returns Result[str, TOMLDecodeError] — parse can fail on invalid TOML.
-# load() returns Result[str, IOError] — read can fail on missing file.
 from _sifr.toml import toml_parse
-from _sifr.fs import read_text
+from sifr.io import FileHandle, read_text
 
-def loads(text: str) -> Result[str, TOMLDecodeError]:
+
+class TomlValue:
+    kind: str
+    bool_value: bool | None
+    int_value: int | None
+    float_value: float | None
+    str_value: str | None
+    datetime_value: str | None
+    array_items: list[TomlValue]
+    table_items: list[tuple[str, TomlValue]]
+
+    def __init__(
+        self,
+        kind: str,
+        bool_value: bool | None = None,
+        int_value: int | None = None,
+        float_value: float | None = None,
+        str_value: str | None = None,
+        datetime_value: str | None = None,
+    ):
+        self.kind = kind
+        self.bool_value = bool_value
+        self.int_value = int_value
+        self.float_value = float_value
+        self.str_value = str_value
+        self.datetime_value = datetime_value
+        self.array_items = []
+        self.table_items = []
+
+    def is_bool(self) -> bool:
+        return self.kind == "bool"
+
+    def is_int(self) -> bool:
+        return self.kind == "int"
+
+    def is_float(self) -> bool:
+        return self.kind == "float"
+
+    def is_str(self) -> bool:
+        return self.kind == "str"
+
+    def is_datetime(self) -> bool:
+        return self.kind == "datetime"
+
+    def is_array(self) -> bool:
+        return self.kind == "array"
+
+    def is_table(self) -> bool:
+        return self.kind == "table"
+
+    def as_bool(self) -> bool | None:
+        return self.bool_value
+
+    def as_int(self) -> int | None:
+        return self.int_value
+
+    def as_float(self) -> float | None:
+        return self.float_value
+
+    def as_str(self) -> str | None:
+        return self.str_value
+
+    def as_datetime(self) -> str | None:
+        return self.datetime_value
+
+    def as_array(self) -> list[TomlValue] | None:
+        if not self.is_array():
+            return None
+        result: list[TomlValue] = []
+        for item in self.array_items:
+            result.append(item)
+        return result
+
+    def as_table(self) -> list[tuple[str, TomlValue]] | None:
+        if not self.is_table():
+            return None
+        result: list[tuple[str, TomlValue]] = []
+        for key, value in self.table_items:
+            result.append((key, value))
+        return result
+
+    def at(self, index: int) -> TomlValue | None:
+        if not self.is_array():
+            return None
+        if index < 0 or index >= len(self.array_items):
+            return None
+        value: TomlValue | None = self.array_items[index]
+        return value
+
+    def get(self, key: str) -> TomlValue | None:
+        if not self.is_table():
+            return None
+        for item_key, item_value in self.table_items:
+            if item_key == key:
+                return item_value
+        return None
+
+    def keys(self) -> list[str]:
+        result: list[str] = []
+        if not self.is_table():
+            return result
+        for item_key, _item_value in self.table_items:
+            result.append(item_key)
+        return result
+
+    def values(self) -> list[TomlValue]:
+        result: list[TomlValue] = []
+        if not self.is_table():
+            return result
+        for _item_key, item_value in self.table_items:
+            result.append(item_value)
+        return result
+
+    def items(self) -> list[tuple[str, TomlValue]]:
+        if not self.is_table():
+            return []
+        result: list[tuple[str, TomlValue]] = []
+        for key, value in self.table_items:
+            result.append((key, value))
+        return result
+
+
+def loads(text: str) -> Result[TomlValue, TOMLDecodeError]:
     return toml_parse(text)
 
-def load(path: str) -> Result[str, IOError]:
+
+def _decode_loaded_toml(content: str) -> Result[TomlValue, Error]:
     try:
-        content: str = read_text(path)
-    except IOError as e:
-        raise IOError(e.message)
-    try:
-        result: str = toml_parse(content)
+        value: TomlValue = toml_parse(content)
+        return value
     except TOMLDecodeError as e:
-        raise IOError(e.message)
-    return result
+        raise Error(e.message)
+
+
+def load_handle(fh: FileHandle) -> Result[TomlValue, Error]:
+    content_result: Result[str, IOError] = fh.read()
+    try:
+        content: str = content_result
+        return _decode_loaded_toml(content)
+    except IOError as e:
+        raise Error(e.message)
+
+
+def load(path: str) -> Result[TomlValue, Error]:
+    content_result: Result[str, IOError] = read_text(path)
+    try:
+        content: str = content_result
+        return _decode_loaded_toml(content)
+    except IOError as e:
+        raise Error(e.message)
