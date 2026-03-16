@@ -57,9 +57,18 @@ def stem(path: str) -> str:
 def is_absolute(path: str) -> bool:
     if len(path) == 0:
         return False
+
+    if len(path) >= 3:
+        colon: str | None = path[1]
+        sep: str | None = path[2]
+        if colon is not None:
+            if sep is not None:
+                if colon == ":" and (sep == "/" or sep == "\\"):
+                    return True
+
     first: str | None = path[0]
     if first is not None:
-        if first == "/":
+        if first == "/" or first == "\\":
             return True
     return False
 
