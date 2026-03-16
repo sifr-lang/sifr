@@ -27,7 +27,7 @@ Scope: `string`, `textwrap`, `base64`, `html`, `fnmatch`, `difflib`, `calendar`
 | `test_html` escape/unescape | `html.escape`, `html.unescape` | `adopted` | `crates/sifr/tests/e2e/pass/stdlib_html.sifr` |
 | `test_fnmatch` wildcard matching | `fnmatch`, `fnmatchcase`, `filter` | `adopted` | `crates/sifr/tests/e2e/pass/cpython_fnmatch.sifr` |
 | `test_fnmatch` translate/filterfalse helpers | `translate`, `filterfalse` | `adapted` | `crates/sifr/tests/e2e/pass/cpython_fnmatch_translate_subset.sifr` |
-| `test_difflib` close-match + matcher object model | `get_close_matches`, `SequenceMatcher` | `adapted` | `crates/sifr/tests/e2e/pass/cpython_difflib_subset.sifr` |
+| `test_difflib` close-match + matcher object model | `get_close_matches`, `SequenceMatcher` | `adapted` | `crates/sifr/tests/e2e/pass/cpython_difflib_subset.sifr`, `crates/sifr/tests/e2e/fail/phase_psp_c2_difflib_sequence_matcher_isjunk_unsupported.sifr` |
 | `test_calendar` constants/helpers | weekday/leap helpers + name/abbr constants + class family | `adapted` | `crates/sifr/tests/e2e/pass/cpython_calendar_subset.sifr` |
 
 ## Explicit Waivers
@@ -36,4 +36,5 @@ Scope: `string`, `textwrap`, `base64`, `html`, `fnmatch`, `difflib`, `calendar`
 - `textwrap.TextWrapper` advanced options (`break_on_hyphens`, sentence-end fixing, tabsize/drop_whitespace variants) remain waived and tracked as `adapted`.
 - `fnmatch` character-class and platform path-normalization semantics (`[]`, ranges, normcase behavior) remain waived and tracked as `adapted`.
 - `difflib` advanced class families (`Differ`, `HtmlDiff`, full opcode/group APIs) remain waived and tracked as `adapted`.
+- `difflib.SequenceMatcher` keeps a simplified constructor surface (`SequenceMatcher(a, b)` only) and does not expose CPython's `isjunk` / `autojunk` parameter matrix; this wave intentionally uses deterministic non-junk matching semantics and guards the unsupported call shape via `phase_psp_c2_difflib_sequence_matcher_isjunk_unsupported.sifr`.
 - `calendar` full rendering family and locale/platform formatting behavior remain waived; this wave closes constants/helper and core class entry surfaces only.

@@ -459,6 +459,7 @@ Status: pending
   - `crates/sifr/tests/e2e/pass/cpython_fnmatch_translate_subset.sifr`
   - `crates/sifr/tests/e2e/pass/cpython_difflib_subset.sifr`
   - `crates/sifr/tests/e2e/pass/cpython_calendar_subset.sifr`
+  - `crates/sifr/tests/e2e/fail/phase_psp_c2_difflib_sequence_matcher_isjunk_unsupported.sifr`
   - `demos/wave_psp_c2_text_pattern_formatting_demo.sifr`
   - `verification/stdlib/wave_psp_c2_cpython_traceability.md`
 - Targeted validation:
@@ -469,6 +470,7 @@ Status: pending
   - `cargo run -q -p sifr -- run crates/sifr/tests/e2e/pass/cpython_fnmatch_translate_subset.sifr`
   - `cargo run -q -p sifr -- run crates/sifr/tests/e2e/pass/cpython_difflib_subset.sifr`
   - `cargo run -q -p sifr -- run crates/sifr/tests/e2e/pass/cpython_calendar_subset.sifr`
+  - `cargo run -q -p sifr -- check crates/sifr/tests/e2e/fail/phase_psp_c2_difflib_sequence_matcher_isjunk_unsupported.sifr`
   - `cargo run -q -p sifr -- run crates/sifr/tests/e2e/pass/cpython_string.sifr`
   - `cargo run -q -p sifr -- run crates/sifr/tests/e2e/pass/cpython_string_subset.sifr`
   - `cargo run -q -p sifr -- run crates/sifr/tests/e2e/pass/cpython_textwrap.sifr`
@@ -750,6 +752,10 @@ Status: pending
   - Reviewer file: `/Users/yaseralnajjar/.codex/worktrees/0761/codebase/reviews/wave-psp-c2-review-gap-cpython-parity-20260316.md`
   - Validation result: approved as production-grade with no actionable implementation issue.
   - Fix status: no code changes required.
+- `wave_psp_c2` review pass 4:
+  - Reviewer file: `/Users/yaseralnajjar/.codex/worktrees/0761/codebase/reviews/wave-psp-c2-review-gap-cpython-parity-20260317-r2.md`
+  - Validation result: partially actionable on parity-contract clarity. The reported "critical difflib mismatch" reflects CPython's 3-argument `SequenceMatcher(isjunk, a, b)` semantics, while Sifr intentionally ships a simplified 2-argument constructor in this wave.
+  - Fix status: remediated by adding compile-time guard fixture `phase_psp_c2_difflib_sequence_matcher_isjunk_unsupported.sifr` and tightening `verification/stdlib/wave_psp_c2_cpython_traceability.md` to explicitly classify the simplified constructor and deterministic non-junk matching as an intentional adaptation.
 - `wave_psp_ab` review pass 1:
   - Reviewer file: `/Users/yaseralnajjar/.codex/worktrees/0761/codebase/reviews/wave-psp-ab-review-pass1.md`
   - Validated findings: b2 parity coverage lacked CPython-derived random/secrets subset fixtures and explicit waiver guard fail tests for unsupported callable/factory surfaces.

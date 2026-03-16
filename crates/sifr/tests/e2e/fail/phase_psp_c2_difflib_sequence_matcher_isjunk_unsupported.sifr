@@ -1,0 +1,10 @@
+from sifr.difflib import SequenceMatcher
+
+
+def skip_x(ch: str) -> bool:
+    return ch == "x"
+
+
+def main():
+    matcher = SequenceMatcher(skip_x, "abcd", "abed")
+    assert matcher.ratio() > 0.0
