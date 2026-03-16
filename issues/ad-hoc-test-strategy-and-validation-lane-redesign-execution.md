@@ -18,7 +18,7 @@ Loop per part: Plan -> Implement -> Validate -> Demo -> PR -> Review -> Merge ->
 - [ ] Docs/checklists/PR links are updated before moving on
 
 ## Full Phase To-Do Plan
-1. [ ] `milestone_test_1`: redesign lane taxonomy and policy so `quick`, `pr`, `nightly`, and `release` are explicit and `quick` stops running broad hardening / nested determinism work
+1. [x] `milestone_test_1`: redesign lane taxonomy and policy so `quick`, `pr`, `nightly`, and `release` are explicit and `quick` stops running broad hardening / nested determinism work
 2. [ ] `milestone_test_2`: replace shell-matrix repetition with one declarative validation harness and thin wrappers
 3. [ ] `milestone_test_3`: downshift eligible invariants from expensive CLI/e2e paths into cheaper integration or unit coverage
 4. [ ] `milestone_test_4`: redesign generated-program artifact reuse and cache boundaries for repeated `run` / `test` validation
@@ -52,7 +52,8 @@ Known architectural entry facts from the planning doc:
 ## Milestone Progress
 
 ### milestone_test_1: Lane Taxonomy and Policy Redesign
-- Status: complete locally
+- Status: complete
+- Implementation PR: https://github.com/yaseralnajjar/sifr/pull/1170
 - Implementation target:
   - define checked-in lane metadata for `quick`, `pr`, `nightly`, and `release`
   - make `quick` a true developer lane with representative e2e instead of broad hardening
@@ -69,6 +70,7 @@ Known architectural entry facts from the planning doc:
   - positive path: `$(pwd)/scripts/run_all_tests.sh --profile quick` -> passed with no hardening suites invoked and `24` pass fixtures completed successfully
   - positive path: `/usr/bin/time -l $(pwd)/scripts/run_all_tests.sh --profile quick` -> passed in `36.86s` warm wall time with `0` swaps, `6` e2e cache hits, and `24` representative pass fixtures
   - negative path: `bash scripts/run_all_tests.sh --profile invalid` -> exits `2` with the unsupported-profile contract preserved
+  - merge evidence: PR `#1170` merged into `main` as `d604b6ba24966d4c83a37b50e01e131c30c3b743` on `2026-03-16`
   - closure basis: lane semantics are now checked in under `verification/validation_lanes/manifest.json`, `quick` no longer executes broad hardening by default, and representative e2e selection is enforced by the Rust harness through fixture manifests rather than shell-only convention
 
 ### milestone_test_2: Declarative Validation Harness
