@@ -20,6 +20,20 @@ The primary optimization target is the developer experience on a normal local ma
 - Status: in progress
 - Closure evidence issue: `issues/ad-hoc-test-strategy-and-validation-lane-redesign-execution.md`
 
+## Execution Checklist
+- [x] `milestone_test_1`: lane taxonomy and policy redesign
+- [ ] `milestone_test_2`: declarative validation harness
+- [ ] `milestone_test_3`: invariant downshifting
+- [ ] `milestone_test_4`: artifact reuse and cache boundary redesign
+- [ ] `milestone_test_5`: hardening lane refactor
+- [ ] `milestone_test_6`: throughput and resource governance
+
+## Execution Log
+- `2026-03-16`: `milestone_test_1` completed.
+  - Execution issue: `issues/ad-hoc-test-strategy-and-validation-lane-redesign-execution.md`
+  - PR: `#1170`
+  - Closure basis: validation lanes are now governed by checked-in metadata, `quick` no longer runs phase-29 hardening by default, and representative e2e selection is enforced by manifest-aware Rust-harness filtering instead of shell-only convention.
+
 ## Why This Needs Its Own Phase
 The current suite is strong on breadth but inefficient in architecture.
 The problem is no longer "we need more tests."
