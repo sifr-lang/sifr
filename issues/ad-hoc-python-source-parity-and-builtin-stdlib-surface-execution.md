@@ -155,12 +155,12 @@ Status: done
 
 Status: pending
 
-- [ ] Publish canonical builtin parity inventory.
-- [ ] Publish canonical core object-model parity inventory.
-- [ ] Publish per-module closure inventory for all shipped `lib/sifr` modules.
-- [ ] Publish CPython adopt/adapt/waive ledger and traceability matrix for every wave.
-- [ ] Publish waiver index and final exit-gate closure summary.
-- [ ] Align `internal_docs/architecture.md`, `internal_docs/roadmap.md`, phase docs, and public claims to the closed state.
+- [x] Publish canonical builtin parity inventory.
+- [x] Publish canonical core object-model parity inventory.
+- [x] Publish per-module closure inventory for all shipped `lib/sifr` modules.
+- [x] Publish CPython adopt/adapt/waive ledger and traceability matrix for every wave.
+- [x] Publish waiver index and final exit-gate closure summary.
+- [x] Align `internal_docs/architecture.md`, `internal_docs/roadmap.md`, phase docs, and public claims to the closed state.
 - [ ] Run full validation, external reviewer passes, remediation loops, and closure notifications.
 
 ## Validation Evidence
@@ -623,7 +623,16 @@ Status: pending
 
 ### `milestone_psp_7`
 
-- Pending.
+- Added canonical parity-governance inventory artifact:
+  - `verification/stdlib/milestone_psp_7_parity_governance_inventory.md`
+- Inventory now covers:
+  - canonical builtin parity inventory
+  - canonical core object-model inventory
+  - per-module closure inventory for all shipped `lib/sifr` modules
+  - per-wave CPython adopt/adapt/waive ledger links
+  - waiver index and exit-gate closure summary
+- Validation evidence:
+  - `scripts/run_all_tests.sh --profile quick`
 
 ## PR Ledger
 

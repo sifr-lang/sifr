@@ -79,6 +79,14 @@ Every milestone that implements built-in functions, data structure methods, or s
 
 This safety test layer is tracked in each milestone's Definition of Done as: **"CPython parity tests pass with safe error handling (no panics, Result/Option where CPython raises)"**.
 
+### Phase 31.5 Governance Artifact
+
+For the ad-hoc Python source parity closure track (roadmap phase `31.5`), the canonical parity governance source is:
+
+- `verification/stdlib/milestone_psp_7_parity_governance_inventory.md`
+
+It is the single consolidated inventory for builtin parity status, core object-model parity status, shipped-module terminal classification, CPython adopt/adapt/waive traceability links, and waiver-index governance rules.
+
 ## Python Divergences
 
 Sifr intentionally diverges from CPython in several areas to achieve compile-time safety. This table documents each divergence, its rationale, and the milestone where it is introduced.
