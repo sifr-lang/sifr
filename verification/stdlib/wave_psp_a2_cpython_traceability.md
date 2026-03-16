@@ -16,6 +16,11 @@
 | `Lib/test/test_str.py` | `str.split(sep=..., maxsplit=...)` and `str.replace(..., count=...)` | `crates/sifr/tests/e2e/pass/phase_psp_a2_core_object_model_surface.sifr` | adapted | `count < 0` still means “replace all”, aligned with CPython intent. |
 | `Lib/test/test_str.py` | invalid `count=` type | `crates/sifr/tests/e2e/fail/phase_psp_a2_str_replace_invalid_count.sifr` | adapted | Compile-time rejection replaces CPython runtime `TypeError`. |
 
+## Executable CPython-Derived Subset Fixture
+
+- `crates/sifr/tests/e2e/pass/cpython_core_object_model_subset.sifr`
+  - Consolidates CPython-derived method/object-model assertions for `list`, `dict`, `set`, `tuple`, and `str` surfaces closed in this wave.
+
 ## Classified waivers
 
 | Surface | State | Rationale |

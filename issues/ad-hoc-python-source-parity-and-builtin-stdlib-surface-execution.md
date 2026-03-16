@@ -174,6 +174,7 @@ Status: pending
   - `crates/sifr_codegen/src/lower_expr.rs`
 - Added wave-specific regression/demo/traceability artifacts:
   - `crates/sifr/tests/e2e/pass/phase_psp_a1_builtin_callable_surface.sifr`
+  - `crates/sifr/tests/e2e/pass/cpython_builtins_subset.sifr`
   - `crates/sifr/tests/e2e/fail/phase_psp_a1_range_duplicate_stop_keyword.sifr`
   - `crates/sifr/tests/e2e/fail/phase_psp_a1_sorted_unexpected_keyword.sifr`
   - `crates/sifr/tests/e2e/fail/phase_psp_a1_map_callable_arity_mismatch.sifr`
@@ -184,6 +185,7 @@ Status: pending
   - `cargo run -q -p sifr -- run demos/wave_psp_a1_builtin_callable_surface_demo.sifr`
 - Targeted regression validation:
   - `cargo run -q -p sifr -- run crates/sifr/tests/e2e/pass/phase_psp_a1_builtin_callable_surface.sifr`
+  - `cargo run -q -p sifr -- run crates/sifr/tests/e2e/pass/cpython_builtins_subset.sifr`
   - `cargo run -q -p sifr -- check crates/sifr/tests/e2e/fail/phase_psp_a1_range_duplicate_stop_keyword.sifr`
   - `cargo run -q -p sifr -- check crates/sifr/tests/e2e/fail/phase_psp_a1_sorted_unexpected_keyword.sifr`
   - `cargo run -q -p sifr -- check crates/sifr/tests/e2e/fail/phase_psp_a1_map_callable_arity_mismatch.sifr`
@@ -216,6 +218,7 @@ Status: pending
   - `crates/sifr_codegen/src/methods/string.rs`
 - Added wave-specific regression, demo, and traceability artifacts:
   - `crates/sifr/tests/e2e/pass/phase_psp_a2_core_object_model_surface.sifr`
+  - `crates/sifr/tests/e2e/pass/cpython_core_object_model_subset.sifr`
   - `crates/sifr/tests/e2e/fail/phase_psp_a2_list_unexpected_keyword.sifr`
   - `crates/sifr/tests/e2e/fail/phase_psp_a2_dict_update_invalid_pairs.sifr`
   - `crates/sifr/tests/e2e/fail/phase_psp_a2_dict_get_duplicate_default.sifr`
@@ -228,6 +231,7 @@ Status: pending
   - `cargo run -q -p sifr -- run demos/wave_psp_a2_core_object_models_demo.sifr`
 - Targeted regression validation:
   - `cargo run -q -p sifr -- run crates/sifr/tests/e2e/pass/phase_psp_a2_core_object_model_surface.sifr`
+  - `cargo run -q -p sifr -- run crates/sifr/tests/e2e/pass/cpython_core_object_model_subset.sifr`
   - `cargo run -q -p sifr -- check crates/sifr/tests/e2e/fail/phase_psp_a2_list_unexpected_keyword.sifr`
   - `cargo run -q -p sifr -- check crates/sifr/tests/e2e/fail/phase_psp_a2_dict_update_invalid_pairs.sifr`
   - `cargo run -q -p sifr -- check crates/sifr/tests/e2e/fail/phase_psp_a2_dict_get_duplicate_default.sifr`
@@ -552,11 +556,11 @@ Status: pending
   - Validated finding: the wave traceability doc did not explicitly call out that `list.index(start=/stop=)`, `tuple.index(start=)`, `dict.pop(default=)`, and `dict.get(default=)` are intentional keyword-binding adaptations over CPython's positional-only API.
   - Fix status: documentation tightened in `verification/stdlib/wave_psp_a2_cpython_traceability.md`; code behavior unchanged.
 - `wave_psp_b1` review pass 1:
-  - Reviewer file: `/Users/yaseralnajjar/.codex/worktrees/0761/codebase/reviews/wave-psp-b1-review-pass1.md`
+  - Reviewer file: historical artifact no longer present in the current workspace (`reviews/wave-psp-b1-review-pass1.md` was removed during later workspace cleanup); validated outcome retained in this ledger.
   - Validation result: approved with no actionable implementation issue.
   - Fix status: no code changes required.
 - `wave_psp_b1` review pass 2:
-  - Reviewer file: `/Users/yaseralnajjar/.codex/worktrees/0761/codebase/reviews/wave-psp-b1-review-pass2.md`
+  - Reviewer file: historical artifact no longer present in the current workspace (`reviews/wave-psp-b1-review-pass2.md` was removed during later workspace cleanup); validated outcome retained in this ledger.
   - Validation result: approved as production-ready with no actionable implementation issue.
   - Fix status: no code changes required.
 - `wave_psp_b2` review pass 1:
@@ -592,6 +596,10 @@ Status: pending
   - Reviewer file: `/Users/yaseralnajjar/.codex/worktrees/0761/codebase/reviews/wave-psp-ab-review-pass2.md`
   - Validation result: no new actionable implementation issue. The repeated recommendation to reject all `range(...)` keywords conflicts with the approved `wave_psp_a1` adapted parity contract, and the "no b2 fail tests" note is stale after PR `#1190`.
   - Fix status: no code changes required.
+- `wave_psp_ab` review pass 3:
+  - Reviewer file: `/Users/yaseralnajjar/.codex/worktrees/0761/codebase/reviews/wave-psp-ab-review-pass3.md`
+  - Validation result: partially actionable. The claimed absence of b2 fail tests was stale (fail fixtures exist since PR `#1190`), but the request for stronger explicit CPython-port evidence on A-wave coverage was valid.
+  - Fix status: remediated by adding `crates/sifr/tests/e2e/pass/cpython_builtins_subset.sifr` and `crates/sifr/tests/e2e/pass/cpython_core_object_model_subset.sifr`, then wiring both into A-wave traceability docs.
 - `wave_psp_d1` review pass 1:
   - Reviewer file: `/Users/yaseralnajjar/.codex/worktrees/0761/codebase/reviews/wave-psp-d1-review-pass1.md`
   - Validated finding: `pathlib.Path` transformation methods (`parent`, `joinpath`, `with_name`, `with_suffix`) returned `str` instead of `Path`, which broke Python-shaped chaining semantics.

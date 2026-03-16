@@ -1,0 +1,70 @@
+# Adapted CPython core object-model subset for wave_psp_a2 list/dict/set/tuple/str parity
+from sifr.test import assert_bool_vector_eq
+
+
+def collect_list_actual() -> list[bool]:
+    actual: list[bool] = []
+    items: list[int] = [10, 20, 30, 40]
+    popped: int | None = items.pop(1)
+    actual.append(popped is 20 and items == [10, 30, 40])
+    idx: int | None = items.index(40, start=1, stop=3)
+    actual.append(idx is 2)
+    return actual
+
+
+def collect_dict_actual() -> list[bool]:
+    actual: list[bool] = []
+    mapping: dict[str, int] = {"a": 1}
+    mapping.update({"b": 2})
+    mapping.update([("c", 3)])
+    actual.append(mapping["b"] == 2 and mapping["c"] == 3)
+    got_default: int = mapping.get("missing", default=99)
+    actual.append(got_default == 99)
+    popped: int = mapping.pop("missing", default=77)
+    actual.append(popped == 77)
+    return actual
+
+
+def collect_set_actual() -> list[bool]:
+    actual: list[bool] = []
+    values: set[int] = {1, 2}
+    values.update([2, 3], [4])
+    actual.append(values == {1, 2, 3, 4})
+    intersection: set[int] = values.intersection([2, 4, 8], [4, 2])
+    actual.append(intersection == {2, 4})
+    values.difference_update([2], [9])
+    actual.append(values == {1, 3, 4})
+    return actual
+
+
+def collect_tuple_and_str_actual() -> list[bool]:
+    actual: list[bool] = []
+    coords: tuple[int, int, int, int] = (3, 1, 3, 5)
+    actual.append(coords.count(3) == 2)
+    tuple_idx: int | None = coords.index(3, start=1)
+    actual.append(tuple_idx is 2)
+    actual.append("a,b,c".split(sep=",", maxsplit=1) == ["a", "b,c"])
+    actual.append("sifr".replace("f", "F", count=1) == "siFr")
+    return actual
+
+
+def append_all(mut target: list[bool], values: list[bool]):
+    for value in values:
+        target.append(value)
+
+
+def main():
+    expected: list[bool] = [
+        True, True,
+        True, True, True,
+        True, True, True,
+        True, True, True, True
+    ]
+    actual: list[bool] = []
+    append_all(actual, collect_list_actual())
+    append_all(actual, collect_dict_actual())
+    append_all(actual, collect_set_actual())
+    append_all(actual, collect_tuple_and_str_actual())
+
+    assert_bool_vector_eq(actual, expected)
+    assert str("cpython_core_object_model_subset: pass") == "cpython_core_object_model_subset: pass"

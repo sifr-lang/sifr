@@ -31,7 +31,12 @@ Wave: `wave_psp_a1`
 | `zip(..., strict=True)` | `test_builtin.py:2181-2286` | `waived` | `verification/stdlib/wave_psp_a1_cpython_traceability.md` | `strict` is intentionally deferred; this wave closes variadic arity and base iterable lowering first. |
 | multi-iterable `map()` | `test_builtin.py:1323-1355` | `adopted` | `crates/sifr/tests/e2e/pass/phase_psp_a1_builtin_callable_surface.sifr`, `crates/sifr/tests/e2e/fail/phase_psp_a1_map_callable_arity_mismatch.sifr` | Callable arity is now checked against iterable count and lambda/context typing flows through all iterable arguments. |
 | `map(..., strict=True)` | `test_builtin.py:1395-1504` | `waived` | `verification/stdlib/wave_psp_a1_cpython_traceability.md` | `strict` is deferred with the rest of the iterator-family parity work. |
-| keyword `range(start=..., stop=..., step=...)` | `test_range.py:46-52`, `test_range.py:94-105` | `adapted` | `crates/sifr/tests/e2e/pass/phase_psp_a1_builtin_callable_surface.sifr` | Keyword and duplicate-argument validation now occurs in builtin lowering instead of falling through as positional-only behavior. |
+| keyword `range(start=..., stop=..., step=...)` | `test_range.py:46-52`, `test_range.py:94-105` | `adapted` | `crates/sifr/tests/e2e/pass/phase_psp_a1_builtin_callable_surface.sifr`, `crates/sifr/tests/e2e/fail/phase_psp_a1_range_duplicate_stop_keyword.sifr` | Sifr intentionally normalizes keyword forms for `range(...)` as a typed ergonomics adaptation while still rejecting positional/keyword duplication at compile time. |
+
+## Executable CPython-Derived Subset Fixture
+
+- `crates/sifr/tests/e2e/pass/cpython_builtins_subset.sifr`
+  - Consolidates CPython-derived constructor and call-shape assertions for `list`, `tuple`, `dict`, `sorted`, `reversed`, `enumerate`, `zip`, `map`, `range`, `ord`, and `chr`.
 
 ## Result
 
