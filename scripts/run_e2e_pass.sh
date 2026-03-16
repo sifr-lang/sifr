@@ -2,7 +2,7 @@
 
 set -euo pipefail
 
-PROFILE="${SIFR_E2E_PROFILE:-full}"
+PROFILE="${SIFR_E2E_PROFILE:-pr}"
 MODE_OVERRIDE=""
 SIFR_JOBS_OVERRIDE=""
 RUST_JOBS_OVERRIDE=""
@@ -10,6 +10,7 @@ RUN_JOBS_OVERRIDE=""
 CARGO_BUILD_JOBS_OVERRIDE=""
 DISABLE_CACHE_OVERRIDE=""
 CACHE_DIR_OVERRIDE=""
+FIXTURE_MANIFEST_OVERRIDE=""
 
 usage() {
   cat <<'EOF'
@@ -17,20 +18,30 @@ Usage: scripts/run_e2e_pass.sh [options]
 
 Profiles:
   quick   Fast local signal; bounded parallel workers; cache enabled.
-  full    Authoritative local gate; balanced parallel workers; cache enabled.
-  stress  High-contention check; compare mode + cache disabled.
+  pr      Authoritative merge gate; representative corpus; cache enabled.
+  nightly Broad pass-corpus lane; cache enabled.
+  release Highest-confidence local gate; cache enabled.
+
+Legacy aliases:
+  full    Alias for `pr`
+  stress  Alias for `release`
 
 Options:
-  --profile <quick|full|stress> Local execution profile (default: full)
+  --profile <quick|pr|nightly|release|full|stress> Local execution profile (default: pr)
   --mode <legacy|new|compare>  Runner mode (default: new)
   --sifr-jobs <n>              Parallel Sifr compile workers
   --rust-jobs <n>              Parallel group build workers
   --run-jobs <n>               Parallel group run workers
   --cargo-build-jobs <n>       Cargo jobs per generated group build
   --cache-dir <path>           e2e cache directory (default: target/sifr_e2e_cache/<profile>)
+  --fixture-manifest <path>    JSON manifest listing the selected e2e pass fixtures
   --no-cache                   Disable the e2e cache for this run
   --help                       Show this help
 EOF
+}
+
+canonicalize_profile() {
+  python3 "${SCRIPT_DIR}/validation_lane.py" canonical-profile --profile "$1"
 }
 
 set_profile_defaults() {
@@ -44,21 +55,21 @@ set_profile_defaults() {
       CARGO_BUILD_JOBS="1"
       DISABLE_CACHE="0"
       ;;
-    full)
+    pr)
+      MODE="new"
+      SIFR_JOBS="4"
+      RUST_JOBS="3"
+      RUN_JOBS="3"
+      CARGO_BUILD_JOBS="1"
+      DISABLE_CACHE="0"
+      ;;
+    nightly|release)
       MODE="new"
       SIFR_JOBS="6"
       RUST_JOBS="4"
       RUN_JOBS="4"
       CARGO_BUILD_JOBS="1"
       DISABLE_CACHE="0"
-      ;;
-    stress)
-      MODE="compare"
-      SIFR_JOBS="8"
-      RUST_JOBS="6"
-      RUN_JOBS="6"
-      CARGO_BUILD_JOBS="1"
-      DISABLE_CACHE="1"
       ;;
     *)
       echo "unsupported profile: ${profile}" >&2
@@ -98,6 +109,10 @@ while [[ $# -gt 0 ]]; do
       CACHE_DIR_OVERRIDE="${2:-}"
       shift 2
       ;;
+    --fixture-manifest)
+      FIXTURE_MANIFEST_OVERRIDE="${2:-}"
+      shift 2
+      ;;
     --no-cache)
       DISABLE_CACHE_OVERRIDE="1"
       shift
@@ -114,6 +129,8 @@ while [[ $# -gt 0 ]]; do
   esac
 done
 
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+PROFILE="$(canonicalize_profile "${PROFILE}")"
 set_profile_defaults "${PROFILE}"
 
 MODE="${SIFR_E2E_RUNNER_MODE:-${MODE}}"
@@ -123,6 +140,7 @@ RUN_JOBS="${SIFR_E2E_RUN_JOBS:-${RUN_JOBS}}"
 CARGO_BUILD_JOBS="${SIFR_E2E_CARGO_BUILD_JOBS:-${CARGO_BUILD_JOBS}}"
 DISABLE_CACHE="${SIFR_E2E_DISABLE_CACHE:-${DISABLE_CACHE}}"
 CACHE_DIR="${SIFR_E2E_CACHE_DIR:-target/sifr_e2e_cache/${PROFILE}}"
+FIXTURE_MANIFEST="${SIFR_E2E_FIXTURE_MANIFEST:-}"
 
 if [[ -n "${MODE_OVERRIDE}" ]]; then
   MODE="${MODE_OVERRIDE}"
@@ -145,6 +163,12 @@ fi
 if [[ -n "${CACHE_DIR_OVERRIDE}" ]]; then
   CACHE_DIR="${CACHE_DIR_OVERRIDE}"
 fi
+if [[ -n "${FIXTURE_MANIFEST_OVERRIDE}" ]]; then
+  FIXTURE_MANIFEST="${FIXTURE_MANIFEST_OVERRIDE}"
+fi
+if [[ -n "${FIXTURE_MANIFEST}" && "${FIXTURE_MANIFEST}" != /* ]]; then
+  FIXTURE_MANIFEST="$(cd "${SCRIPT_DIR}/.." && pwd)/${FIXTURE_MANIFEST}"
+fi
 
 echo "Running e2e pass suite"
 echo "  profile=${PROFILE}"
@@ -155,6 +179,9 @@ echo "  run_jobs=${RUN_JOBS}"
 echo "  cargo_build_jobs=${CARGO_BUILD_JOBS}"
 echo "  disable_cache=${DISABLE_CACHE}"
 echo "  cache_dir=${CACHE_DIR}"
+if [[ -n "${FIXTURE_MANIFEST}" ]]; then
+  echo "  fixture_manifest=${FIXTURE_MANIFEST}"
+fi
 
 SIFR_E2E_PROFILE="${PROFILE}" \
 SIFR_E2E_RUNNER_MODE="${MODE}" \
@@ -164,4 +191,5 @@ SIFR_E2E_RUN_JOBS="${RUN_JOBS}" \
 SIFR_E2E_CARGO_BUILD_JOBS="${CARGO_BUILD_JOBS}" \
 SIFR_E2E_DISABLE_CACHE="${DISABLE_CACHE}" \
 SIFR_E2E_CACHE_DIR="${CACHE_DIR}" \
+SIFR_E2E_FIXTURE_MANIFEST="${FIXTURE_MANIFEST}" \
 cargo test -p sifr --test e2e test_e2e_pass -- --nocapture

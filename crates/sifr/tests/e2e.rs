@@ -28,7 +28,7 @@ const E2E_CACHE_DIR: &str = "target/sifr_e2e_cache";
 const E2E_CACHE_MANIFEST: &str = "manifest.json";
 const E2E_CACHE_SCHEMA_VERSION: u32 = 1;
 const E2E_CACHE_TTL_SECS: u64 = 2 * 60 * 60;
-const E2E_CACHE_ENV_ALLOWLIST: [&str; 8] = [
+const E2E_CACHE_ENV_ALLOWLIST: [&str; 9] = [
     "RUSTFLAGS",
     "CARGO_ENCODED_RUSTFLAGS",
     "RUSTC_WRAPPER",
@@ -37,7 +37,9 @@ const E2E_CACHE_ENV_ALLOWLIST: [&str; 8] = [
     "SIFR_E2E_NEW_RUNNER",
     "SIFR_E2E_LEGACY_RUNNER",
     "SIFR_E2E_CACHE_DIR",
+    "SIFR_E2E_FIXTURE_MANIFEST",
 ];
+const E2E_FIXTURE_MANIFEST_ENV: &str = "SIFR_E2E_FIXTURE_MANIFEST";
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 enum RunnerMode {
@@ -204,6 +206,11 @@ struct CacheEntry {
 struct FixtureSourceHash {
     fixture: String,
     hash: String,
+}
+
+#[derive(Deserialize, Debug)]
+struct FixtureSelectionManifest {
+    fixture_names: Vec<String>,
 }
 
 struct CommandCapture {
@@ -700,6 +707,71 @@ fn compile_source_with_metadata_and_stats(
     }
 }
 
+fn parse_fixture_selection_manifest(raw: &str) -> Result<BTreeSet<String>, String> {
+    let manifest: FixtureSelectionManifest =
+        serde_json::from_str(raw).map_err(|err| format!("manifest parse failed: {err}"))?;
+    if manifest.fixture_names.is_empty() {
+        return Err("fixture manifest must contain at least one fixture name".to_string());
+    }
+
+    let mut selected = BTreeSet::new();
+    for fixture_name in manifest.fixture_names {
+        let trimmed = fixture_name.trim();
+        if trimmed.is_empty() {
+            return Err("fixture manifest contains an empty fixture name".to_string());
+        }
+        selected.insert(trimmed.to_string());
+    }
+    Ok(selected)
+}
+
+fn load_selected_fixture_names_from_env() -> Result<Option<BTreeSet<String>>, String> {
+    let Some(raw_path) = env::var(E2E_FIXTURE_MANIFEST_ENV)
+        .ok()
+        .map(|value| value.trim().to_string())
+        .filter(|value| !value.is_empty())
+    else {
+        return Ok(None);
+    };
+    let manifest_path = PathBuf::from(&raw_path);
+    let raw = std::fs::read_to_string(&manifest_path).map_err(|err| {
+        format!(
+            "unable to read fixture manifest {}: {err}",
+            manifest_path.display()
+        )
+    })?;
+    parse_fixture_selection_manifest(&raw).map(Some)
+}
+
+fn filter_fixtures_by_selection(
+    entries: Vec<FixtureCase>,
+    selected_fixture_names: &BTreeSet<String>,
+) -> Result<Vec<FixtureCase>, String> {
+    let available_names = entries
+        .iter()
+        .map(|fixture| fixture.name.clone())
+        .collect::<BTreeSet<_>>();
+    let missing = selected_fixture_names
+        .difference(&available_names)
+        .cloned()
+        .collect::<Vec<_>>();
+    if !missing.is_empty() {
+        return Err(format!(
+            "fixture manifest referenced unknown pass fixtures: {}",
+            missing.join(", ")
+        ));
+    }
+
+    let filtered = entries
+        .into_iter()
+        .filter(|fixture| selected_fixture_names.contains(&fixture.name))
+        .collect::<Vec<_>>();
+    if filtered.is_empty() {
+        return Err("fixture selection produced an empty pass corpus".to_string());
+    }
+    Ok(filtered)
+}
+
 fn discover_fixtures(base_dir: &Path) -> Vec<FixtureCase> {
     if !base_dir.exists() {
         return Vec::new();
@@ -734,6 +806,12 @@ fn discover_fixtures(base_dir: &Path) -> Vec<FixtureCase> {
     }
 
     entries.sort_by(|left, right| left.path.cmp(&right.path));
+    let selected_fixture_names = load_selected_fixture_names_from_env()
+        .unwrap_or_else(|err| panic!("invalid {E2E_FIXTURE_MANIFEST_ENV}: {err}"));
+    if let Some(selected_fixture_names) = selected_fixture_names {
+        return filter_fixtures_by_selection(entries, &selected_fixture_names)
+            .unwrap_or_else(|err| panic!("invalid {E2E_FIXTURE_MANIFEST_ENV}: {err}"));
+    }
     entries
 }
 
@@ -2864,6 +2942,52 @@ fn test_fixture_discovery_is_deterministic() {
         names,
         vec!["alpha".to_string(), "beta".to_string(), "zeta".to_string()]
     );
+}
+
+#[test]
+fn test_parse_fixture_selection_manifest_requires_non_empty_fixture_names() {
+    let selected = parse_fixture_selection_manifest(r#"{"fixture_names":["beta","alpha","beta"]}"#)
+        .expect("fixture manifest should parse");
+    assert_eq!(
+        selected,
+        BTreeSet::from(["alpha".to_string(), "beta".to_string(),])
+    );
+    assert!(parse_fixture_selection_manifest(r#"{"fixture_names":[]}"#).is_err());
+    assert!(parse_fixture_selection_manifest(r#"{"fixture_names":[""]}"#).is_err());
+}
+
+#[test]
+fn test_filter_fixtures_by_selection_rejects_unknown_fixture_names() {
+    let fixtures = vec![
+        FixtureCase {
+            name: "alpha".to_string(),
+            path: PathBuf::from("alpha.sifr"),
+            source: String::new(),
+            source_hash: "a".to_string(),
+            expected_stdout: None,
+            _expected_stderr: Vec::new(),
+            _expected_errors: Vec::new(),
+        },
+        FixtureCase {
+            name: "beta".to_string(),
+            path: PathBuf::from("beta.sifr"),
+            source: String::new(),
+            source_hash: "b".to_string(),
+            expected_stdout: None,
+            _expected_stderr: Vec::new(),
+            _expected_errors: Vec::new(),
+        },
+    ];
+
+    let filtered =
+        filter_fixtures_by_selection(fixtures.clone(), &BTreeSet::from(["beta".to_string()]))
+            .expect("fixture filtering should succeed");
+    assert_eq!(filtered.len(), 1);
+    assert_eq!(filtered[0].name, "beta");
+
+    let error = filter_fixtures_by_selection(fixtures, &BTreeSet::from(["missing".to_string()]))
+        .expect_err("unknown fixtures should be rejected");
+    assert!(error.contains("unknown pass fixtures"));
 }
 
 #[test]
