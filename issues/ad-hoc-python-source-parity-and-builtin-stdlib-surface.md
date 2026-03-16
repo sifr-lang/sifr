@@ -1004,6 +1004,10 @@ The phase must define and keep current:
 - validation evidence summary for each milestone
 - final exit-gate closure summary mapping shipped surfaces to their terminal classification
 
+Current canonical artifact path for milestone 7 governance closure:
+
+- `verification/stdlib/milestone_psp_7_parity_governance_inventory.md`
+
 ### Exit criteria
 
 - All milestone definitions of done are satisfied.
