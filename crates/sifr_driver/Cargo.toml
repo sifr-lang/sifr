@@ -13,6 +13,7 @@ sifr_hir = { workspace = true }
 sifr_codegen = { workspace = true }
 sifr_type_system = { workspace = true }
 serde = { workspace = true }
+serde_json = { workspace = true }
 
 [dev-dependencies]
 

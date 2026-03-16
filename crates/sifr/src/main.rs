@@ -7,9 +7,9 @@
 //!   sifr emit <file.sifr>     Show generated Rust code
 use clap::{Parser, Subcommand, ValueEnum};
 use sifr_driver::{
-    apply_diagnostic_recovery_limits, build, build_project, check, check_project, compile,
-    compile_errors_to_diagnostics, run_tests, CompileError, CompilePhase, CompileResult,
-    CompilerDiagnostic, Severity,
+    apply_diagnostic_recovery_limits, build, build_cached_project, build_cached_single_file,
+    build_project, check, check_project, compile, compile_errors_to_diagnostics, run_tests,
+    CachedBinaryArtifact, CompileError, CompilePhase, CompileResult, CompilerDiagnostic, Severity,
 };
 use sifr_python_ast::Stmt;
 use sifr_python_parser::parse_module;
@@ -162,10 +162,12 @@ fn read_source(file: &Path) -> String {
     }
 }
 
+#[cfg(test)]
 struct InvocationWorkspace {
     path: PathBuf,
 }
 
+#[cfg(test)]
 impl InvocationWorkspace {
     fn create(prefix: &str) -> io::Result<Self> {
         let base_nanos = std::time::SystemTime::now()
@@ -197,6 +199,7 @@ impl InvocationWorkspace {
     }
 }
 
+#[cfg(test)]
 impl Drop for InvocationWorkspace {
     fn drop(&mut self) {
         let _ = std::fs::remove_dir_all(&self.path);
@@ -427,25 +430,19 @@ fn cmd_build(file: &Path, output: &Path, diagnostic_format: DiagnosticFormat) ->
 }
 
 fn cmd_run(file: &Path, diagnostic_format: DiagnosticFormat) -> i32 {
-    let workspace = match InvocationWorkspace::create("sifr_run") {
-        Ok(workspace) => workspace,
-        Err(e) => {
-            let _ = writeln!(io::stderr(), "error: could not create run workspace: {e}");
-            return EXIT_USAGE_OR_CONFIG;
-        }
-    };
     let result = match run_with_panic_boundary(
         "internal compiler panic during run command compilation",
         CompilePhase::Build,
-        || compile_entrypoint(file, workspace.path()),
+        || build_run_artifact(file),
     ) {
         Ok(result) => result,
         Err(internal) => return render_compile_errors(&[internal], diagnostic_format),
     };
 
     match result {
-        Ok(binary_path) => {
-            let output = std::process::Command::new(&binary_path)
+        Ok(artifact) => {
+            let _ = writeln!(io::stderr(), "{}", artifact.cache_status_line());
+            let output = std::process::Command::new(artifact.binary_path())
                 .output()
                 .unwrap_or_else(|e| {
                     let _ = writeln!(io::stderr(), "error: could not run binary: {e}");
@@ -541,6 +538,16 @@ fn compile_entrypoint(file: &Path, output: &Path) -> Result<PathBuf, Vec<Compile
         CompilationMode::SingleFile => {
             let source = read_source(file);
             build(&source, output)
+        }
+    }
+}
+
+fn build_run_artifact(file: &Path) -> Result<CachedBinaryArtifact, Vec<CompileError>> {
+    match resolve_compilation_mode(file) {
+        CompilationMode::Project => build_cached_project(file),
+        CompilationMode::SingleFile => {
+            let source = read_source(file);
+            build_cached_single_file(&source, file)
         }
     }
 }
@@ -1122,7 +1129,8 @@ mod tests {
 
     #[test]
     fn test_emit_entrypoint_downshifts_phase24_analysis_demos() {
-        let m24_2 = emit_demo_rust("demos/m24_2_semantic_query_layer_standardization_demo/main.sifr");
+        let m24_2 =
+            emit_demo_rust("demos/m24_2_semantic_query_layer_standardization_demo/main.sifr");
         assert!(m24_2.contains("fn recurse(n: i64) -> i64"));
         assert!(m24_2.contains("if !_broke"));
 

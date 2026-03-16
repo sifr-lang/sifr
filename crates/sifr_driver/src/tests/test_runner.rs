@@ -1,4 +1,7 @@
-use crate::{compose_test_runner_lib, generate_test_runner_cargo_toml, run_tests};
+use crate::{
+    build_test_runner_project, compose_test_runner_lib, discover_test_root_modules,
+    execute_test_runner_project, generate_test_runner_cargo_toml, run_tests,
+};
 use std::collections::HashSet;
 use std::path::PathBuf;
 use std::sync::{Arc, Barrier};
@@ -39,6 +42,100 @@ def test_import_parity():
 
     let result = run_tests(&test_dir).expect("test runner should compile and execute");
     assert!(result, "sifr test run should succeed");
+
+    let _ = std::fs::remove_dir_all(&test_dir);
+}
+
+#[test]
+fn test_run_tests_reuses_cached_workspace_for_unchanged_project() {
+    let unique = format!(
+        "sifr_test_cache_reuse_{}_{}",
+        std::process::id(),
+        std::time::SystemTime::now()
+            .duration_since(std::time::UNIX_EPOCH)
+            .expect("time should move forward")
+            .as_nanos()
+    );
+    let test_dir = std::env::temp_dir().join(unique);
+    std::fs::create_dir_all(&test_dir).expect("test dir should be created");
+    std::fs::write(
+        test_dir.join("helper.sifr"),
+        "def value() -> int:\n    return 7\n",
+    )
+    .expect("helper should be written");
+    std::fs::write(
+        test_dir.join("test_cache.sifr"),
+        "from helper import value\n\ndef test_value():\n    assert value() == 7\n",
+    )
+    .expect("test module should be written");
+
+    let discovered = discover_test_root_modules(&test_dir);
+    let generated_project =
+        build_test_runner_project(&test_dir, &discovered).expect("generated project should build");
+    let first = execute_test_runner_project(&generated_project)
+        .expect("first test execution should succeed");
+    assert!(first.success);
+    assert!(!first.cache_report.cache_hit());
+
+    let second = execute_test_runner_project(&generated_project)
+        .expect("second test execution should succeed");
+    assert!(second.success);
+    assert!(second.cache_report.cache_hit());
+    assert_eq!(
+        first.cache_report.workspace_root(),
+        second.cache_report.workspace_root()
+    );
+
+    let _ = std::fs::remove_dir_all(&test_dir);
+}
+
+#[test]
+fn test_run_tests_invalidates_cached_workspace_when_sources_change() {
+    let unique = format!(
+        "sifr_test_cache_invalidation_{}_{}",
+        std::process::id(),
+        std::time::SystemTime::now()
+            .duration_since(std::time::UNIX_EPOCH)
+            .expect("time should move forward")
+            .as_nanos()
+    );
+    let test_dir = std::env::temp_dir().join(unique);
+    std::fs::create_dir_all(&test_dir).expect("test dir should be created");
+    let helper = test_dir.join("helper.sifr");
+    std::fs::write(&helper, "def value() -> int:\n    return 3\n")
+        .expect("helper should be written");
+    let test_file = test_dir.join("test_cache.sifr");
+    std::fs::write(
+        &test_file,
+        "from helper import value\n\ndef test_value():\n    assert value() == 3\n",
+    )
+    .expect("test module should be written");
+
+    let first_discovered = discover_test_root_modules(&test_dir);
+    let first_project = build_test_runner_project(&test_dir, &first_discovered)
+        .expect("generated project should build");
+    let first =
+        execute_test_runner_project(&first_project).expect("first test execution should succeed");
+    assert!(first.success);
+    let first_root = first.cache_report.workspace_root().to_path_buf();
+    let first_key = first.cache_report.key().to_string();
+
+    std::fs::write(&helper, "def value() -> int:\n    return 4\n").expect("helper should update");
+    std::fs::write(
+        &test_file,
+        "from helper import value\n\ndef test_value():\n    assert value() == 4\n",
+    )
+    .expect("test module should update");
+
+    let second_discovered = discover_test_root_modules(&test_dir);
+    let second_project = build_test_runner_project(&test_dir, &second_discovered)
+        .expect("updated generated project should build");
+    let second =
+        execute_test_runner_project(&second_project).expect("second test execution should succeed");
+    assert!(second.success);
+    assert!(!second.cache_report.cache_hit());
+    assert_ne!(first_root, second.cache_report.workspace_root());
+    assert_ne!(first_key, second.cache_report.key());
 
     let _ = std::fs::remove_dir_all(&test_dir);
 }

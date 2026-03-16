@@ -14,12 +14,13 @@ use sifr_python_ast::Stmt;
 use std::collections::{BTreeMap, BTreeSet, HashMap, HashSet};
 use std::path::{Path, PathBuf};
 
-pub(super) struct GeneratedTestRunnerProject {
-    pub(super) support_module_names: Vec<String>,
-    pub(super) support_rust_files: HashMap<String, String>,
-    pub(super) all_rust_code: String,
-    pub(super) all_stdlib_modules: HashSet<String>,
-    pub(super) all_required_crates: HashSet<String>,
+pub(crate) struct GeneratedTestRunnerProject {
+    pub(crate) cache_scope: PathBuf,
+    pub(crate) support_module_names: Vec<String>,
+    pub(crate) support_rust_files: HashMap<String, String>,
+    pub(crate) all_rust_code: String,
+    pub(crate) all_stdlib_modules: HashSet<String>,
+    pub(crate) all_required_crates: HashSet<String>,
 }
 
 pub fn run_tests(test_dir: &Path) -> Result<bool, Vec<CompileError>> {
@@ -36,10 +37,10 @@ pub fn run_tests(test_dir: &Path) -> Result<bool, Vec<CompileError>> {
     ));
 
     let generated_project = build_test_runner_project(test_dir, &test_files_by_module)?;
-    execute_test_runner_project(&generated_project)
+    execute_test_runner_project(&generated_project).map(|outcome| outcome.success)
 }
 
-fn build_test_runner_project(
+pub(crate) fn build_test_runner_project(
     test_dir: &Path,
     test_files_by_module: &BTreeMap<String, PathBuf>,
 ) -> Result<GeneratedTestRunnerProject, Vec<CompileError>> {
@@ -130,6 +131,7 @@ fn build_test_runner_project(
     }
 
     Ok(GeneratedTestRunnerProject {
+        cache_scope: test_dir.to_path_buf(),
         support_module_names,
         support_rust_files: support_codegen.rust_files,
         all_rust_code,

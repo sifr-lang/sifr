@@ -208,8 +208,22 @@ Phase 31 decomposed `sifr_driver` into the following stable internal boundaries:
 - `stdlib/`: embedded stdlib sources, intrinsic mapping, cache lifecycle, and bootstrap compilation
 - `frontend/`: single-file parse/lower/type-check entrypoints and metadata extraction
 - `project/`: import-closure discovery, reachable module parsing, export collection, and deterministic compile ordering
-- `build/`: rooted-entrypoint planning, generated-project materialization, Cargo manifest generation, and invocation workspace management
-- `test_runner/`: test root discovery, generated test harness assembly, and cargo test execution orchestration
+- `build/`: rooted-entrypoint planning, generated-project materialization, Cargo manifest generation, and generated-artifact cache management for repeated `sifr run` builds
+- `test_runner/`: test root discovery, generated test harness assembly, reusable cached Cargo test workspaces, and cargo test execution orchestration
+
+### Generated Artifact Cache Boundary
+
+Phase ad-hoc test strategy milestone 4 moved `run`/`test` away from invocation-scoped temp directories as the default cache boundary.
+
+- `sifr build` still materializes into the caller-provided output directory and does not reuse a hidden cache.
+- `sifr run` now lowers/codegens on each invocation but materializes the generated Cargo project into a content-addressed cache rooted under the system temp directory. The cache key includes:
+  - rooted entrypoint scope
+  - generated Cargo manifest and Rust sources
+  - cargo/rustc toolchain signature plus relevant build env vars
+- cache misses build inside an isolated staging directory and promote atomically into the stable cache path only after `cargo build --release` succeeds
+- cache hits execute the previously built binary directly without paying the generated-project rebuild cost again
+- `sifr test` uses the same cache discipline for generated test-runner Cargo projects: unchanged input reuses the prior workspace and its `target/` artifacts, while still running `cargo test` on every invocation
+- both paths emit explicit cache-hit/miss status lines so validation logs surface reuse and invalidation behavior
 
 ---
 
