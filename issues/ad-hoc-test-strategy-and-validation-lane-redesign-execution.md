@@ -19,7 +19,7 @@ Loop per part: Plan -> Implement -> Validate -> Demo -> PR -> Review -> Merge ->
 
 ## Full Phase To-Do Plan
 1. [x] `milestone_test_1`: redesign lane taxonomy and policy so `quick`, `pr`, `nightly`, and `release` are explicit and `quick` stops running broad hardening / nested determinism work
-2. [ ] `milestone_test_2`: replace shell-matrix repetition with one declarative validation harness and thin wrappers
+2. [x] `milestone_test_2`: replace shell-matrix repetition with one declarative validation harness and thin wrappers
 3. [ ] `milestone_test_3`: downshift eligible invariants from expensive CLI/e2e paths into cheaper integration or unit coverage
 4. [ ] `milestone_test_4`: redesign generated-program artifact reuse and cache boundaries for repeated `run` / `test` validation
 5. [ ] `milestone_test_5`: refactor hardening and determinism into non-default lanes while preserving breadth
@@ -74,7 +74,8 @@ Known architectural entry facts from the planning doc:
   - closure basis: lane semantics are now checked in under `verification/validation_lanes/manifest.json`, `quick` no longer executes broad hardening by default, and representative e2e selection is enforced by the Rust harness through fixture manifests rather than shell-only convention
 
 ### milestone_test_2: Declarative Validation Harness
-- Status: complete locally
+- Status: complete
+- Implementation PR: https://github.com/yaseralnajjar/sifr/pull/1172
 - Implementation target:
   - replace shell-matrix orchestration with one manifest-driven harness
   - keep top-level scripts as thin wrappers only
@@ -90,6 +91,7 @@ Known architectural entry facts from the planning doc:
   - positive path: `bash scripts/run_frontend_mode_parity_matrix.sh` -> passed through the compatibility wrapper, proving the legacy command name now delegates to the declarative harness
   - positive path: `$(pwd)/scripts/run_all_tests.sh --profile quick` -> passed with the quick lane invoking `scripts/run_validation_contract_matrix.sh` instead of the legacy shell loops
   - negative path: the initial harness revision surfaced a real workspace-boundary regression when `<TMP>` paths lived under the repo `target/` tree; the harness was corrected to allocate temp roots under the system temp directory so generated `build` outputs stay outside the workspace, matching the old shell behavior
+  - merge evidence: PR `#1172` merged into `main` as `fee3e67110adf9668a261dc931ccab097c26dbc6` on `2026-03-16`
   - closure basis: the contract matrix now lives in `verification/validation_contracts/manifest.json`, `tests/validation_contracts.rs` is the single Rust-native execution harness, `scripts/run_validation_contract_matrix.sh` is the one harness entrypoint, and the old matrix scripts have been reduced to thin suite-selecting wrappers
 
 ### milestone_test_3: Invariant Downshifting
