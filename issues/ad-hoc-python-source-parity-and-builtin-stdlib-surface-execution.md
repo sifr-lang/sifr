@@ -536,6 +536,7 @@ Status: pending
 - `wave_psp_ab-review-pass1`: PR `#1190` merged at `2026-03-16T04:49:13Z`
 - `wave_psp_d1`: PR `#1192` merged at `2026-03-16T05:15:54Z`
 - `wave_psp_d1-review-pass1`: PR `#1193` merged at `2026-03-16T05:28:23Z`
+- `wave_psp_ab-review-pass3`: PR `#1196` merged at `2026-03-16T06:12:23Z`
 
 ## External Review Ledger
 
@@ -600,6 +601,10 @@ Status: pending
   - Reviewer file: `/Users/yaseralnajjar/.codex/worktrees/0761/codebase/reviews/wave-psp-ab-review-pass3.md`
   - Validation result: partially actionable. The claimed absence of b2 fail tests was stale (fail fixtures exist since PR `#1190`), but the request for stronger explicit CPython-port evidence on A-wave coverage was valid.
   - Fix status: remediated by adding `crates/sifr/tests/e2e/pass/cpython_builtins_subset.sifr` and `crates/sifr/tests/e2e/pass/cpython_core_object_model_subset.sifr`, then wiring both into A-wave traceability docs.
+- `wave_psp_ab` review pass 4:
+  - Reviewer file: `/Users/yaseralnajjar/.codex/worktrees/0761/codebase/reviews/wave-psp-ab-review-pass4.md`
+  - Validation result: no new actionable implementation issue. The repeated “no b2 fail tests” claim is stale: b2 has explicit fail fixtures (`phase_psp_b2_*_unsupported`) plus runtime negative-path assertions in `cpython_random_subset.sifr`.
+  - Fix status: documentation tightened in `verification/stdlib/wave_psp_b2_cpython_traceability.md` to make negative coverage evidence explicit and avoid future stale misreads.
 - `wave_psp_d1` review pass 1:
   - Reviewer file: `/Users/yaseralnajjar/.codex/worktrees/0761/codebase/reviews/wave-psp-d1-review-pass1.md`
   - Validated finding: `pathlib.Path` transformation methods (`parent`, `joinpath`, `with_name`, `with_suffix`) returned `str` instead of `Path`, which broke Python-shaped chaining semantics.
