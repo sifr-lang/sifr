@@ -233,4 +233,4 @@ Known architectural entry facts from the planning doc:
   - disposition validation: the review’s only actionable-looking cache/temp-file concerns were already addressed in review pass 2 (`#1186`), and the remaining comments were enhancement suggestions rather than regressions in the merged phase work
   - closure basis: after three external passes, no unresolved critical or high-severity defects remain against the completed phase scope
 - Follow-up PR:
-  - PR `#1187` (`https://github.com/yaseralnajjar/sifr/pull/1187`) records the reviewer artifact and closes the phase status after the additional external review pass
+  - PR `#1188` (`https://github.com/yaseralnajjar/sifr/pull/1188`) records the reviewer artifact and closes the phase status after the additional external review pass
