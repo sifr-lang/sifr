@@ -21,15 +21,22 @@ def collect_argparse_actual() -> list[bool]:
 
     parsed_after_double_dash: Namespace = parser.parse_args(["--", "--literal.sifr"])
     actual.append(parsed_after_double_dash.get("entry", "") == "--literal.sifr")
+
+    parsed_missing: Namespace = parser.parse_args(["--mode", "--check", "fallback.sifr"])
+    actual.append(parsed_missing.get("mode", "") == "safe")
+    actual.append(parsed_missing.get_bool("check", False))
+    actual.append(parsed_missing.get("entry", "") == "fallback.sifr")
     return actual
 
 
 def collect_ipaddress_actual() -> list[bool]:
     actual: list[bool] = []
     valid_ok: bool = False
+    valid_not_link_local: bool = False
     try:
         valid: IPv4Address = ip_address("10.0.0.8")
         valid_ok = valid.is_private() and valid.is_global() == False and valid.to_str() == "10.0.0.8"
+        valid_not_link_local = valid.is_link_local() == False
     except AddressValueError as e:
         _ = e.message
     actual.append(valid_ok)
@@ -55,6 +62,19 @@ def collect_ipaddress_actual() -> list[bool]:
     direct_bad: IPv4Address = IPv4Address("999.1.1.1")
     direct_ctor_marked_invalid = direct_bad.packed_int() == -1
     actual.append(direct_ctor_marked_invalid)
+    actual.append(valid_not_link_local)
+
+    link_local_flags_ok: bool = False
+    multicast_global_ok: bool = False
+    try:
+        link_local_addr: IPv4Address = ip_address("169.254.10.20")
+        multicast_addr: IPv4Address = ip_address("224.0.0.1")
+        link_local_flags_ok = link_local_addr.is_link_local() and link_local_addr.is_global() == False
+        multicast_global_ok = multicast_addr.is_global()
+    except AddressValueError as e:
+        _ = e.message
+    actual.append(link_local_flags_ok)
+    actual.append(multicast_global_ok)
     return actual
 
 
@@ -151,8 +171,8 @@ def append_all(mut target: list[bool], values: list[bool]):
 
 def main():
     expected: list[bool] = [
-        True, True, True, True, True,
-        True, True, True, True,
+        True, True, True, True, True, True, True, True,
+        True, True, True, True, True, True, True,
         True, True, True, True,
         True, True, True, True,
         True

@@ -1,8 +1,12 @@
 # Test new sifr.ipaddress functions
 
-from sifr.ipaddress import int_to_ip, is_multicast, is_global
+from sifr.ipaddress import int_to_ip, is_multicast, is_global, is_link_local, is_reserved
 
 def main():
     assert str("int_to_ip = " + int_to_ip(3232235777)) == 'int_to_ip = 192.168.1.1'
     assert str("is_multicast = " + str(is_multicast("224.0.0.1"))) == 'is_multicast = true'
     assert str("is_global = " + str(is_global("8.8.8.8"))) == 'is_global = true'
+    assert str("is_global_multicast = " + str(is_global("224.0.0.1"))) == 'is_global_multicast = true'
+    assert str("is_global_link_local = " + str(is_global("169.254.10.20"))) == 'is_global_link_local = false'
+    assert str("is_link_local = " + str(is_link_local("169.254.10.20"))) == 'is_link_local = true'
+    assert str("is_reserved = " + str(is_reserved("240.0.0.10"))) == 'is_reserved = true'

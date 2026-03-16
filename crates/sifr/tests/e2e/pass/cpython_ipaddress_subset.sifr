@@ -1,6 +1,10 @@
 # Adapted CPython ipaddress subset for sifr.ipaddress class-heavy surface
 from sifr.ipaddress import (
     is_valid_ipv4,
+    is_private,
+    is_global,
+    is_link_local,
+    is_reserved,
     ip_address,
     ipv4_address,
     IPv4Address,
@@ -14,9 +18,19 @@ def collect_positive_actual() -> list[bool]:
     actual.append(is_valid_ipv4("192.168.1.1"))
     actual.append(is_valid_ipv4("999.1.1.1") == False)
     actual.append(is_valid_ipv4("01.2.3.40") == False)
+    actual.append(is_private("169.254.100.200"))
+    actual.append(is_global("169.254.100.200") == False)
+    actual.append(is_global("203.0.113.1") == False)
+    actual.append(is_global("100.64.0.1") == False)
+    actual.append(is_global("192.0.0.9"))
+    actual.append(is_global("192.0.0.255") == False)
+    actual.append(is_global("224.1.1.1"))
+    actual.append(is_link_local("169.254.1.1"))
+    actual.append(is_reserved("240.0.0.1"))
 
     local_ok: bool = False
     public_ok: bool = False
+    special_flags_ok: bool = False
     try:
         local: IPv4Address = ip_address("192.168.1.1")
         local_ok = (
@@ -28,10 +42,14 @@ def collect_positive_actual() -> list[bool]:
         )
         public_addr: IPv4Address = ipv4_address("8.8.8.8")
         public_ok = public_addr.is_global()
+        link_local_addr: IPv4Address = ip_address("169.254.10.20")
+        reserved_addr: IPv4Address = ip_address("240.0.0.10")
+        special_flags_ok = link_local_addr.is_link_local() and reserved_addr.is_reserved()
     except AddressValueError as e:
         _ = e.message
     actual.append(local_ok)
     actual.append(public_ok)
+    actual.append(special_flags_ok)
     return actual
 
 
@@ -77,7 +95,10 @@ def append_all(mut target: list[bool], values: list[bool]):
 
 
 def main():
-    expected: list[bool] = [True, True, True, True, True, True, True, True, True]
+    expected: list[bool] = [
+        True, True, True, True, True, True, True, True, True, True, True, True, True, True,
+        True, True, True, True, True
+    ]
     actual: list[bool] = []
     append_all(actual, collect_positive_actual())
     append_all(actual, collect_negative_actual())

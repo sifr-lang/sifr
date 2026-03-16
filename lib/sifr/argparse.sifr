@@ -37,7 +37,10 @@ def parse_option(args: list[str], name: str, default: str) -> str:
             if arg == name and i + 1 < len(args):
                 next_val: str | None = args[i + 1]
                 if next_val is not None:
-                    return next_val + ""
+                    if next_val == "--" or next_val.startswith("--"):
+                        pass
+                    else:
+                        return next_val + ""
             inline_has_value, inline_name, inline_value = _split_inline_option(arg)
             if inline_has_value and inline_name == name:
                 return inline_value + ""
@@ -135,6 +138,24 @@ def _derive_dest(name: str) -> str:
     return name + ""
 
 
+def _is_option_like_token(specs: list[ArgumentSpec], token: str) -> bool:
+    if token == "--":
+        return True
+    if token.startswith("--"):
+        return True
+    inline_has_value, inline_name, inline_value = _split_inline_option(token)
+    _ = inline_value
+    lookup_name: str = token + ""
+    if inline_has_value:
+        lookup_name = inline_name + ""
+    for spec in specs:
+        if spec.kind == "positional":
+            continue
+        if spec.name == lookup_name:
+            return True
+    return False
+
+
 class ArgumentParser:
     _prog: str
     _specs: list[ArgumentSpec]
@@ -180,9 +201,20 @@ class ArgumentParser:
         positional_index: int = 0
         force_positional: bool = False
         for token in args:
+            process_current_token: bool = True
+
             if has_pending_option:
-                ns.set(pending_option_dest, token)
-                has_pending_option = False
+                if _is_option_like_token(self._specs, token):
+                    has_pending_option = False
+                    if token == "--" and not force_positional:
+                        force_positional = True
+                        process_current_token = False
+                else:
+                    ns.set(pending_option_dest, token)
+                    has_pending_option = False
+                    continue
+
+            if not process_current_token:
                 continue
 
             if token == "--" and not force_positional:

@@ -66,6 +66,52 @@ def _ip_to_int_raw(addr: str) -> int:
         result = result * 256 + val
     return result
 
+def _in_ipv4_range(value: int, start: int, end: int) -> bool:
+    if value < start:
+        return False
+    if value > end:
+        return False
+    return True
+
+def _is_private_ipv4_value(value: int) -> bool:
+    private_hit: bool = False
+
+    if _in_ipv4_range(value, 0, 16777215):  # 0.0.0.0/8
+        private_hit = True
+    elif _in_ipv4_range(value, 167772160, 184549375):  # 10.0.0.0/8
+        private_hit = True
+    elif _in_ipv4_range(value, 2130706432, 2147483647):  # 127.0.0.0/8
+        private_hit = True
+    elif _in_ipv4_range(value, 2851995648, 2852061183):  # 169.254.0.0/16
+        private_hit = True
+    elif _in_ipv4_range(value, 2886729728, 2887778303):  # 172.16.0.0/12
+        private_hit = True
+    elif _in_ipv4_range(value, 3221225472, 3221225727):  # 192.0.0.0/24
+        private_hit = True
+    elif _in_ipv4_range(value, 3221225642, 3221225643):  # 192.0.0.170/31
+        private_hit = True
+    elif _in_ipv4_range(value, 3221225984, 3221226239):  # 192.0.2.0/24
+        private_hit = True
+    elif _in_ipv4_range(value, 3232235520, 3232301055):  # 192.168.0.0/16
+        private_hit = True
+    elif _in_ipv4_range(value, 3323068416, 3323199487):  # 198.18.0.0/15
+        private_hit = True
+    elif _in_ipv4_range(value, 3325256704, 3325256959):  # 198.51.100.0/24
+        private_hit = True
+    elif _in_ipv4_range(value, 3405803776, 3405804031):  # 203.0.113.0/24
+        private_hit = True
+    elif _in_ipv4_range(value, 4026531840, 4294967295):  # 240.0.0.0/4
+        private_hit = True
+    elif value == 4294967295:  # 255.255.255.255/32
+        private_hit = True
+
+    if private_hit:
+        if value == 3221225481:  # 192.0.0.9/32
+            return False
+        if value == 3221225482:  # 192.0.0.10/32
+            return False
+    return private_hit
+
 def ip_to_int(addr: str) -> Result[int, ValueError]:
     if not is_valid_ipv4(addr):
         raise ValueError("invalid IPv4 address")
@@ -75,19 +121,7 @@ def is_private(addr: str) -> bool:
     if not is_valid_ipv4(addr):
         return False
     val: int = _ip_to_int_raw(addr)
-    # 10.0.0.0/8
-    if val >= 167772160:
-        if val <= 184549375:
-            return True
-    # 172.16.0.0/12
-    if val >= 2886729728:
-        if val <= 2887778303:
-            return True
-    # 192.168.0.0/16
-    if val >= 3232235520:
-        if val <= 3232301055:
-            return True
-    return False
+    return _is_private_ipv4_value(val)
 
 def is_loopback(addr: str) -> bool:
     if not is_valid_ipv4(addr):
@@ -127,21 +161,24 @@ def is_multicast(addr: str) -> bool:
 def is_global(addr: str) -> bool:
     if not is_valid_ipv4(addr):
         return False
-    if is_private(addr):
+    val: int = _ip_to_int_raw(addr)
+    if _in_ipv4_range(val, 1681915904, 1686110207):  # 100.64.0.0/10
         return False
-    if is_loopback(addr):
+    return not _is_private_ipv4_value(val)
+
+
+def is_link_local(addr: str) -> bool:
+    if not is_valid_ipv4(addr):
         return False
-    if is_multicast(addr):
+    val: int = _ip_to_int_raw(addr)
+    return _in_ipv4_range(val, 2851995648, 2852061183)  # 169.254.0.0/16
+
+
+def is_reserved(addr: str) -> bool:
+    if not is_valid_ipv4(addr):
         return False
-    parts: list[str] = addr.split(".")
-    if len(parts) == 4:
-        first: str | None = parts[0]
-        if first is not None:
-            if first == "0":
-                return False
-            if first == "255":
-                return False
-    return True
+    val: int = _ip_to_int_raw(addr)
+    return _in_ipv4_range(val, 4026531840, 4294967295)  # 240.0.0.0/4
 
 
 class IPv4Address:
@@ -178,6 +215,12 @@ class IPv4Address:
 
     def is_global(self) -> bool:
         return is_global(self._text)
+
+    def is_link_local(self) -> bool:
+        return is_link_local(self._text)
+
+    def is_reserved(self) -> bool:
+        return is_reserved(self._text)
 
 
 def ip_address(addr: str) -> Result[IPv4Address, AddressValueError]:
