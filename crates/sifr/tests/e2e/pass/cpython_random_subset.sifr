@@ -1,5 +1,5 @@
 # Adapted CPython random subset for sifr.random (canonical vector format)
-from sifr.random import choice, choices, getrandbits, randrange, shuffle
+from sifr.random import choice, choices, gauss, getrandbits, randint, random, randrange, sample, shuffle, uniform
 from sifr.test import assert_bool_vector_eq
 
 
@@ -64,6 +64,31 @@ def collect_core_actual() -> list[bool]:
         _ = e.message
     actual.append(bits_ok)
 
+    random_float: float = random()
+    actual.append(random_float >= 0.0 and random_float < 1.0)
+
+    randint_ok: bool = False
+    try:
+        randint_value: int = randint(3, 7)
+        randint_ok = randint_value >= 3 and randint_value <= 7
+    except ValueError as e:
+        _ = e.message
+    actual.append(randint_ok)
+
+    uniform_value: float = uniform(2.0, 4.0)
+    actual.append(uniform_value >= 2.0 and uniform_value <= 4.0)
+
+    gauss_value: float = gauss(1.0, 0.5)
+    actual.append(gauss_value == gauss_value)
+
+    sample_ok: bool = False
+    try:
+        sampled: list[int] = sample(items, 2)
+        sample_ok = len(sampled) == 2 and values_within(sampled, 1, 4)
+    except ValueError as e:
+        _ = e.message
+    actual.append(sample_ok)
+
     return actual
 
 
@@ -110,6 +135,14 @@ def collect_negative_actual() -> list[bool]:
         invalid_bits_rejected = e.message == "getrandbits: number of bits must be >= 0"
     actual.append(invalid_bits_rejected)
 
+    invalid_sample_rejected: bool = False
+    try:
+        _bad_sample: list[int] = sample([1, 2, 3], 4)
+        _ = _bad_sample
+    except ValueError as e:
+        invalid_sample_rejected = len(e.message) > 0
+    actual.append(invalid_sample_rejected)
+
     return actual
 
 
@@ -120,8 +153,8 @@ def append_all(mut target: list[bool], values: list[bool]):
 
 def main():
     expected: list[bool] = [
-        True, True, True, True, True, True, True,
-        True, True, True, True, True
+        True, True, True, True, True, True, True, True, True, True,
+        True, True, True, True, True, True, True, True
     ]
     actual: list[bool] = []
     append_all(actual, collect_core_actual())
