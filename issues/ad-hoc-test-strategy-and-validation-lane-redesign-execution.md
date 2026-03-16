@@ -24,7 +24,7 @@ Loop per part: Plan -> Implement -> Validate -> Demo -> PR -> Review -> Merge ->
 4. [x] `milestone_test_4`: redesign generated-program artifact reuse and cache boundaries for repeated `run` / `test` validation
 5. [x] `milestone_test_5`: refactor hardening and determinism into non-default lanes while preserving breadth
 6. [x] `milestone_test_6`: add throughput/resource reporting, worker guidance, and regression visibility
-7. [ ] external review pass 1 completed and acted on
+7. [x] external review pass 1 completed and acted on
 8. [ ] production-grade review pass completed and acted on
 
 ## Entry Baseline Evidence (2026-03-16)
@@ -202,7 +202,7 @@ Known architectural entry facts from the planning doc:
   - script validation: `scripts/check_e2e_report_determinism.sh` and `scripts/check_e2e_sequential_parallel_equivalence.sh` already exit with an explicit error when `signature` is empty, and the extraction regex only matches `[0-9a-f]+`, so reviewer finding 5 did not expose a real bug in the merged scripts
   - reviewer-artifact preservation: the external review output was recorded verbatim under `reviews/ad-hoc-test-strategy-and-validation-lane-redesign-review-pass-1a.md` for traceability even though no code delta followed from this pass
 - Follow-up PR:
-  - pending
+  - PR `#1185` (`https://github.com/yaseralnajjar/sifr/pull/1185`) records the reviewer artifact and the no-code-change disposition for this pass
 
 ### review_pass_2
 - Reviewer artifact: pending
