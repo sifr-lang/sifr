@@ -633,6 +633,7 @@ Status: pending
 - `wave_psp_d2-review-pass2`: PR `#1200` merged at `2026-03-16T08:36:31Z`
 - `wave_psp_e1`: PR `#1201` merged at `2026-03-16T08:43:54Z`
 - `wave_psp_e1-review-pass1`: PR `#1202` merged at `2026-03-16T09:01:04Z`
+- `wave_psp_e2`: PR `#1205` merged at `2026-03-16T09:39:48Z`
 
 ## External Review Ledger
 
@@ -724,4 +725,8 @@ Status: pending
 - `wave_psp_e1` review pass 2:
   - Reviewer file: `/Users/yaseralnajjar/.codex/worktrees/0761/codebase/reviews/wave-psp-e1-review-pass2.md`
   - Validation result: non-actionable stale review. It incorrectly reported wave e1 as pending and missing traceability/demo artifacts that are already merged in `#1201` and `#1202`.
+  - Fix status: no code changes required.
+- `wave_psp_e2` review pass 1:
+  - Reviewer file: `/Users/yaseralnajjar/.codex/worktrees/0761/codebase/reviews/wave-psp-e2-review-pass1.md`
+  - Validation result: approved with no actionable implementation issue. The only missing-artifact concerns in the report were stale: the e2 wave demo, fail fixtures, and traceability ledger are already present in PR `#1205`.
   - Fix status: no code changes required.
