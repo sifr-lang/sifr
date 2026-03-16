@@ -1039,8 +1039,8 @@ cargo test                                    # Run all tests (layers 1-3)
 ./scripts/run_all_tests.sh --profile release # Highest-confidence local qualification lane
 ./scripts/run_all_tests.sh --profile full    # Legacy alias for `pr`
 ./scripts/run_all_tests.sh --profile stress  # Legacy alias for `release`
-./scripts/check_e2e_report_determinism.sh --profile quick  # Stable e2e report signature across reruns
-./scripts/run_smoke_fuzz_property.sh         # Always-on smoke property/fuzz validation
+./scripts/check_e2e_report_determinism.sh --profile release # Stable e2e report signature across reruns
+./scripts/run_smoke_fuzz_property.sh         # Opt-in nightly smoke property/fuzz validation
 cargo test -p sifr_python_parser              # Parser snapshots
 cargo test -p sifr_type_system -- mdtest      # Type checker markdown tests
 cargo test -p sifr_codegen                    # Codegen snapshots

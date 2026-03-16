@@ -24,6 +24,7 @@ LOCAL_PINNED_REVISION_PATTERN = re.compile(r"^local-main@([0-9a-f]{7,40})$")
 STRING_LITERAL_PATTERN = re.compile(r"(\"[^\n\"]*\"|'[^\n']*')")
 INTEGER_LITERAL_PATTERN = re.compile(r"(?<![A-Za-z0-9_])\d+(?![A-Za-z0-9_])")
 FUNCTION_SIGNATURE_PATTERN = re.compile(r"^\s*def\s+\w+\s*\(")
+ARTIFACT_CACHE_LINE_PATTERN = re.compile(r"^\[sifr-artifact-cache\].*$")
 
 
 def parse_args() -> argparse.Namespace:
@@ -35,7 +36,7 @@ def parse_args() -> argparse.Namespace:
     )
     parser.add_argument(
         "--profile",
-        choices=("quick", "pr", "nightly", "release", "full", "stress"),
+        choices=("pr", "nightly", "release", "full", "stress"),
         default="pr",
         help="Execution profile.",
     )
@@ -94,7 +95,11 @@ def normalize_string(value: str, repo_root: Path) -> str:
     normalized = normalized.replace(str(repo_root), "<WORKSPACE>")
     for pattern in TMP_PATTERNS:
         normalized = pattern.sub("<TMP>", normalized)
-    normalized = "\n".join(line.rstrip() for line in normalized.split("\n"))
+    normalized = "\n".join(
+        line.rstrip()
+        for line in normalized.split("\n")
+        if not ARTIFACT_CACHE_LINE_PATTERN.fullmatch(line.strip())
+    )
     if normalized and not normalized.endswith("\n"):
         normalized += "\n"
     return normalized
@@ -131,8 +136,6 @@ def load_text(path: Path) -> str:
 
 def should_run_suite(profile: str, suite_name: str) -> bool:
     canonical_profile = canonicalize_profile(profile)
-    if canonical_profile == "quick":
-        return False
     if canonical_profile == "pr":
         return suite_name in {
             "diagnostics",
@@ -1357,10 +1360,15 @@ def run_external_command(
     return exit_code, stdout, stderr, elapsed_ms
 
 
+def substitute_profile_tokens(command: list[str], profile: str) -> list[str]:
+    return [profile if token == "<PROFILE>" else token for token in command]
+
+
 def run_determinism_scale_suite(
     *,
     suite: dict[str, Any],
     repo_root: Path,
+    profile: str,
 ) -> dict[str, Any]:
     suite_name = suite["name"]
     index_raw = suite.get("index")
@@ -1426,9 +1434,10 @@ def run_determinism_scale_suite(
 
         assert isinstance(command_raw, list)
         assert isinstance(timeout_secs, int)
+        command = substitute_profile_tokens(command_raw, profile)
         exit_code, stdout, stderr, elapsed_ms = run_external_command(
             repo_root=repo_root,
-            argv=command_raw,
+            argv=command,
             timeout_secs=timeout_secs,
         )
         stdout_norm = normalize_string(stdout, repo_root)
@@ -1449,7 +1458,7 @@ def run_determinism_scale_suite(
                 "label": "command",
                 "status": status,
                 "mismatches": variant_mismatches,
-                "argv": command_raw,
+                "argv": command,
                 "expected_exit_code": expected_exit,
                 "actual_exit_code": exit_code,
                 "duration_ms": round(elapsed_ms, 3),
@@ -1635,6 +1644,7 @@ def main() -> int:
             return run_determinism_scale_suite(
                 suite=suite,
                 repo_root=repo_root,
+                profile=args.profile,
             )
         raise SystemExit(f"unsupported runner '{runner}' for suite '{suite.get('name', '<unknown>')}'")
 
