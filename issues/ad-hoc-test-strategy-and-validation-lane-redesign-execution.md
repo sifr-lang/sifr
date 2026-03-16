@@ -22,7 +22,7 @@ Loop per part: Plan -> Implement -> Validate -> Demo -> PR -> Review -> Merge ->
 2. [x] `milestone_test_2`: replace shell-matrix repetition with one declarative validation harness and thin wrappers
 3. [x] `milestone_test_3`: downshift eligible invariants from expensive CLI/e2e paths into cheaper integration or unit coverage
 4. [x] `milestone_test_4`: redesign generated-program artifact reuse and cache boundaries for repeated `run` / `test` validation
-5. [ ] `milestone_test_5`: refactor hardening and determinism into non-default lanes while preserving breadth
+5. [x] `milestone_test_5`: refactor hardening and determinism into non-default lanes while preserving breadth
 6. [ ] `milestone_test_6`: add throughput/resource reporting, worker guidance, and regression visibility
 7. [ ] external review pass 1 completed and acted on
 8. [ ] production-grade review pass completed and acted on
@@ -142,16 +142,28 @@ Known architectural entry facts from the planning doc:
   - closure basis: `sifr run` and `sifr test` now materialize through content-addressed caches under the system temp root, promote cache misses atomically from staging directories, and emit explicit cache hit/miss status lines so repeated local validation no longer always pays the generated-program rebuild cost
 
 ### milestone_test_5: Hardening Lane Refactor
-- Status: pending
+- Status: complete
+- Implementation PR: https://github.com/yaseralnajjar/sifr/pull/1180
 - Implementation target:
   - preserve broad hardening and determinism coverage while removing it from the default local loop
   - make lane placement explicit rather than script-local
 - Demo target:
-  - pending
+  - `bash scripts/run_smoke_fuzz_property.sh`
 - Validation target:
-  - pending
+  - `bash scripts/check_e2e_report_determinism.sh --profile quick`
+  - `bash scripts/check_e2e_sequential_parallel_equivalence.sh --profile quick`
+  - `python3 scripts/run_verification_hardening.py --profile pr --suite diagnostics --suite project`
+  - `bash scripts/run_smoke_fuzz_property.sh`
+  - `$(pwd)/scripts/run_all_tests.sh --profile quick`
 - Validation evidence:
-  - pending
+  - positive path: `python3 scripts/run_verification_hardening.py --profile pr --suite diagnostics --suite project` -> passed (`verification ok: variants=7, failures=0, blocking_failures=0, non_blocking_failures=0`), proving the selected PR hardening subset still runs cleanly after the lane-boundary refactor
+  - positive path: `bash scripts/run_smoke_fuzz_property.sh` -> passed, and the wrapper now drives the property/fuzz-smoke suites through `run_verification_hardening.py --profile nightly` instead of `quick`
+  - positive path: `$(pwd)/scripts/run_all_tests.sh --profile quick` -> passed, with no hardening or determinism checks reintroduced into the default local loop
+  - negative path: `bash scripts/check_e2e_report_determinism.sh --profile quick` -> exits `2` with `determinism checks are not part of the quick lane`
+  - negative path: `bash scripts/check_e2e_sequential_parallel_equivalence.sh --profile quick` -> exits `2` with `sequential-vs-parallel equivalence is not part of the quick lane`
+  - hardening-compatibility fix: milestone 4 cache-status lines initially broke the hardening `project` baseline suite; `scripts/run_verification_hardening.py` now normalizes `[sifr-artifact-cache] ...` lines out of baseline-checked outputs so cache accounting remains visible in normal CLI logs without narrowing hardening coverage
+  - merge evidence: PR `#1180` merged into `main` as `8d6621d7031e2858d172af512ad7b8af6a9b1ef9` on `2026-03-16`
+  - closure basis: determinism and broad hardening no longer have `quick` as a hidden execution profile, determinism-scale now inherits the selected non-default lane profile instead of hardcoding the quick representative subset, and the smoke-hardening wrapper is aligned to `nightly`
 
 ### milestone_test_6: Throughput and Resource Governance
 - Status: pending
