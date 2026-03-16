@@ -1,6 +1,6 @@
 # Ad Hoc Phase Execution Checklist (Test Strategy and Validation Lane Redesign)
 
-Status: in progress (started 2026-03-16)
+Status: in progress (all implementation milestones complete; external review pending)
 Owner: ad_hoc_test_strategy_validation_lane_redesign execution loop
 Reference planning doc:
 - `issues/ad-hoc-test-strategy-and-validation-lane-redesign.md`
@@ -8,14 +8,14 @@ Reference planning doc:
 Loop per part: Plan -> Implement -> Validate -> Demo -> PR -> Review -> Merge -> Update docs -> Next part
 
 ## Global Gates
-- [ ] Scope remains constrained to the active milestone part
-- [ ] Root cause addressed without fallback or compatibility shims
-- [ ] Coverage is preserved or strengthened when expensive checks move downward
-- [ ] Positive-path and negative-path validation recorded for the active milestone
-- [ ] Milestone demo runs successfully before the PR is opened
-- [ ] Local validation is run before the PR is opened
-- [ ] PR is opened, reviewed, and merged before the next milestone starts
-- [ ] Docs/checklists/PR links are updated before moving on
+- [x] Scope remains constrained to the active milestone part
+- [x] Root cause addressed without fallback or compatibility shims
+- [x] Coverage is preserved or strengthened when expensive checks move downward
+- [x] Positive-path and negative-path validation recorded for the active milestone
+- [x] Milestone demo runs successfully before the PR is opened
+- [x] Local validation is run before the PR is opened
+- [x] PR is opened, reviewed, and merged before the next milestone starts
+- [x] Docs/checklists/PR links are updated before moving on
 
 ## Full Phase To-Do Plan
 1. [x] `milestone_test_1`: redesign lane taxonomy and policy so `quick`, `pr`, `nightly`, and `release` are explicit and `quick` stops running broad hardening / nested determinism work
@@ -23,7 +23,7 @@ Loop per part: Plan -> Implement -> Validate -> Demo -> PR -> Review -> Merge ->
 3. [x] `milestone_test_3`: downshift eligible invariants from expensive CLI/e2e paths into cheaper integration or unit coverage
 4. [x] `milestone_test_4`: redesign generated-program artifact reuse and cache boundaries for repeated `run` / `test` validation
 5. [x] `milestone_test_5`: refactor hardening and determinism into non-default lanes while preserving breadth
-6. [ ] `milestone_test_6`: add throughput/resource reporting, worker guidance, and regression visibility
+6. [x] `milestone_test_6`: add throughput/resource reporting, worker guidance, and regression visibility
 7. [ ] external review pass 1 completed and acted on
 8. [ ] production-grade review pass completed and acted on
 
@@ -166,16 +166,27 @@ Known architectural entry facts from the planning doc:
   - closure basis: determinism and broad hardening no longer have `quick` as a hidden execution profile, determinism-scale now inherits the selected non-default lane profile instead of hardcoding the quick representative subset, and the smoke-hardening wrapper is aligned to `nightly`
 
 ### milestone_test_6: Throughput and Resource Governance
-- Status: pending
+- Status: complete
+- Implementation PR: https://github.com/yaseralnajjar/sifr/pull/1183
 - Implementation target:
   - report lane timing, cache behavior, fixture/group skew, and memory-related guidance
   - make performance and resource regressions visible from local runs
 - Demo target:
-  - pending
+  - `$(pwd)/scripts/run_all_tests.sh --profile quick`
 - Validation target:
-  - pending
+  - `python3 -m py_compile scripts/validation_lane_report.py`
+  - `cargo fmt --check`
+  - `$(pwd)/scripts/run_all_tests.sh --profile quick` (cold run)
+  - `$(pwd)/scripts/run_all_tests.sh --profile quick` (warm rerun)
 - Validation evidence:
-  - pending
+  - positive path: `python3 -m py_compile scripts/validation_lane_report.py` -> passed, proving the new lane-report helper is syntactically valid
+  - positive path: `cargo fmt --check` -> passed after the follow-up formatting-only commit, keeping the new e2e summary output aligned with workspace formatting rules
+  - positive path: `$(pwd)/scripts/run_all_tests.sh --profile quick` -> cold run passed in `55.32s` wall time / `48.67s` CPU time with `0` swaps, `377.0MiB` peak RSS, `cache_hits=0/6`, `rebuilt_groups=6`, and `cache_footprint=e2e=250.4MiB/1512files`, proving the new report surfaces first-run cache cost and resource footprint from the default lane
+  - positive path: `$(pwd)/scripts/run_all_tests.sh --profile quick` -> immediate warm rerun passed in `32.43s` wall time / `22.03s` CPU time with `0` swaps, `104.9MiB` peak RSS, `cache_hits=6/6`, `build=1ms`, and the same cache footprint, proving the representative lane now makes warm-cache wins and steady-state resource behavior visible in the default local report
+  - demo evidence: the same warm quick rerun emitted `target/validation_lane_reports/quick.latest.{json,log,time}`, and the JSON report captures wall/CPU time, cache hit rate, rebuilt groups, group skew ratio, worker defaults, and advisory signals for downstream regression inspection
+  - negative path: the first implementation pass exposed two root-cause reporting bugs rather than papering over them: macOS `/usr/bin/time -l` emits `real/user/sys` on one combined line, and the e2e cache dir was being reported as a relative path while the test harness resolved it from the crate working directory; milestone 6 fixes both by parsing BSD `time -l` output directly and resolving the e2e cache root to an absolute path inside `run_e2e_pass.sh`
+  - merge evidence: PR `#1183` merged into `main` as `0e3ad38da2710afe7684478a1d1e3a4e7fd70fc6` on `2026-03-16`
+  - closure basis: throughput/resource visibility is now part of the default lane wrapper itself, cache growth and group skew are surfaced in both terminal output and JSON artifacts, and the quick lane now exposes worker defaults plus swap/RSS signals without reintroducing heavy validation families
 
 ## External Review Passes
 
