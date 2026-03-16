@@ -74,6 +74,7 @@ if [[ -z "${SIFR_LANE_REPORT_CAPTURED:-}" ]]; then
     --log "${LATEST_LOG_FILE}" \
     --time-file "${LATEST_TIME_FILE}" \
     --json-out "${JSON_FILE}" || true
+  rm -f "${LOG_FILE}" "${TIME_FILE}"
   exit "${STATUS}"
 fi
 
