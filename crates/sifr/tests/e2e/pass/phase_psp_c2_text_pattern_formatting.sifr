@@ -96,7 +96,7 @@ def collect_difflib_calendar_actual() -> list[bool]:
     ratio: float = matcher.ratio()
     actual.append(ratio > 0.4 and ratio < 1.0)
     blocks: list[tuple[int, int, int]] = matcher.get_matching_blocks()
-    actual.append(str(blocks) == "[(0, 0, 2), (4, 4, 0)]")
+    actual.append(str(blocks) == "[(0, 0, 2), (3, 3, 1), (4, 4, 0)]")
 
     cal: Calendar = Calendar(MONDAY)
     actual.append(str(cal.iterweekdays()) == "[0, 1, 2, 3, 4, 5, 6]")
