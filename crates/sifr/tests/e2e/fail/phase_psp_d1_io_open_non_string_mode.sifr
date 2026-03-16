@@ -1,0 +1,6 @@
+from sifr.io import read_text
+
+
+def main():
+    content: str = read_text(1)
+    _ = content

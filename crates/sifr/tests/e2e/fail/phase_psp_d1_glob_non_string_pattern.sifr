@@ -1,0 +1,6 @@
+from sifr.glob import glob
+
+
+def main():
+    matches: list[str] = glob("/tmp", 123)
+    _ = matches

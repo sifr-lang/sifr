@@ -1,0 +1,67 @@
+# Adapted CPython gzip subset for sifr.gzip (canonical bool-vector format)
+from sifr.gzip import compress, decompress
+from sifr.test import assert_bool_vector_eq
+
+
+def collect_core_actual() -> list[bool]:
+    actual: list[bool] = []
+    payload: str = "gzip parity sample"
+    compressed: list[int] = compress(payload)
+    actual.append(len(compressed) > 0)
+
+    roundtrip_ok: bool = False
+    try:
+        restored: str = decompress(compressed)
+        roundtrip_ok = restored == payload
+    except IOError as e:
+        _ = e.message
+    actual.append(roundtrip_ok)
+
+    empty_roundtrip_ok: bool = False
+    try:
+        empty_restored: str = decompress(compress(""))
+        empty_roundtrip_ok = empty_restored == ""
+    except IOError as e:
+        _ = e.message
+    actual.append(empty_roundtrip_ok)
+    return actual
+
+
+def collect_negative_actual() -> list[bool]:
+    actual: list[bool] = []
+
+    invalid_data_rejected: bool = False
+    try:
+        _bad: str = decompress([1, 2, 3, 4])
+        _ = _bad
+    except IOError as e:
+        _ = e.message
+        invalid_data_rejected = True
+    actual.append(invalid_data_rejected)
+
+    truncated_data_rejected: bool = False
+    sample: list[int] = compress("truncate me")
+    if len(sample) > 2:
+        try:
+            _truncated: str = decompress(sample[0:2])
+            _ = _truncated
+        except IOError as e:
+            _ = e.message
+            truncated_data_rejected = True
+    actual.append(truncated_data_rejected)
+    return actual
+
+
+def append_all(mut target: list[bool], values: list[bool]):
+    for value in values:
+        target.append(value)
+
+
+def main():
+    expected: list[bool] = [True, True, True, True, True]
+    actual: list[bool] = []
+    append_all(actual, collect_core_actual())
+    append_all(actual, collect_negative_actual())
+
+    assert_bool_vector_eq(actual, expected)
+    assert str("cpython_gzip_subset: pass") == "cpython_gzip_subset: pass"
