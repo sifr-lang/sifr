@@ -1102,6 +1102,55 @@ mod tests {
         let _ = std::fs::remove_dir_all(dir);
     }
 
+    fn repo_root() -> PathBuf {
+        PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+            .parent()
+            .and_then(Path::parent)
+            .expect("crate should live under repo_root/crates/sifr")
+            .to_path_buf()
+    }
+
+    fn emit_demo_rust(relative_path: &str) -> String {
+        let demo_path = repo_root().join(relative_path);
+        match emit_entrypoint(&demo_path) {
+            CompileResult::Success { rust_source } => rust_source,
+            CompileResult::Errors { errors } => {
+                panic!("emit should succeed for {relative_path}: {errors:?}")
+            }
+        }
+    }
+
+    #[test]
+    fn test_emit_entrypoint_downshifts_phase24_analysis_demos() {
+        let m24_2 = emit_demo_rust("demos/m24_2_semantic_query_layer_standardization_demo/main.sifr");
+        assert!(m24_2.contains("fn recurse(n: i64) -> i64"));
+        assert!(m24_2.contains("if !_broke"));
+
+        let m24_3 =
+            emit_demo_rust("demos/m24_3_control_flow_effect_query_unification_demo/main.sifr");
+        assert!(m24_3.contains("return Err(ValueError::new(\"non-positive\".to_string()));"));
+        assert!(m24_3.contains("return 99 as i64;"));
+
+        let m24_4 =
+            emit_demo_rust("demos/m24_4_analysis_emission_boundary_hardening_demo/main.sifr");
+        assert!(m24_4.contains("fn summarize(values: &Vec<i64>) -> i64"));
+        assert!(m24_4.contains("if value > (10 as i64)"));
+    }
+
+    #[test]
+    fn test_emit_entrypoint_downshifts_phase25_analysis_demos() {
+        let m25_3 = emit_demo_rust("demos/m25_3_canonical_flow_truth_queries_demo/main.sifr");
+        assert!(m25_3.contains("return Err(ValueError::new(\"bad value\".to_string()));"));
+        assert!(m25_3.contains("return 77 as i64;"));
+        assert!(!m25_3.contains("11 as i64"));
+
+        let m25_4 =
+            emit_demo_rust("demos/m25_4_diagnostics_and_consumer_integration_demo/main.sifr");
+        assert!(m25_4.contains("fn inferred(flag: bool) -> i64"));
+        assert!(m25_4.contains("return 2 as i64;"));
+        assert!(!m25_4.contains("never"));
+    }
+
     #[test]
     fn test_frontend_error_messages_match_across_check_build_and_run_paths() {
         let dir = mktemp_dir("frontend_error_mode_parity");

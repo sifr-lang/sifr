@@ -95,16 +95,22 @@ Known architectural entry facts from the planning doc:
   - closure basis: the contract matrix now lives in `verification/validation_contracts/manifest.json`, `tests/validation_contracts.rs` is the single Rust-native execution harness, `scripts/run_validation_contract_matrix.sh` is the one harness entrypoint, and the old matrix scripts have been reduced to thin suite-selecting wrappers
 
 ### milestone_test_3: Invariant Downshifting
-- Status: pending
+- Status: complete locally
 - Implementation target:
   - move diagnostic/lowering/codegen invariants into cheaper integration or unit coverage where possible
   - keep traceability from removed expensive checks to the new cheaper proof
 - Demo target:
-  - pending
+  - `cargo test -p sifr emit_entrypoint_downshifts_phase -- --nocapture`
 - Validation target:
-  - pending
+  - `cargo test -p sifr emit_entrypoint_downshifts_phase -- --nocapture`
+  - `bash scripts/run_validation_contract_matrix.sh --suite frontend_mode_parity --suite phase23_graph_isolation --suite phase24_hir_analysis --suite phase25_cfg_flow`
+  - `$(pwd)/scripts/run_all_tests.sh --profile quick`
 - Validation evidence:
-  - pending
+  - positive path: `cargo test -p sifr emit_entrypoint_downshifts_phase -- --nocapture` -> passed (`2 passed, 0 failed`), proving the phase 24/25 positive analysis demos through `emit_entrypoint`-level Rust shape checks instead of CLI `run` execution
+  - positive path: `bash scripts/run_validation_contract_matrix.sh --suite frontend_mode_parity --suite phase23_graph_isolation --suite phase24_hir_analysis --suite phase25_cfg_flow` -> passed after removing the downshifted positive analysis rows, reducing the full contract harness from `19` rows / `66302ms` to `14` rows / `42173ms`
+  - positive path: `$(pwd)/scripts/run_all_tests.sh --profile quick` -> passed with the new lower-layer phase 24/25 checks folded into `cargo test -p sifr -- --skip test_e2e_pass`
+  - negative path: the removed contract rows were not deleted blindly; each moved invariant is now pinned in `crates/sifr/src/main.rs` against emitted Rust shape, and the remaining phase 24/25 negative contract rows continue to enforce diagnostic parity in the declarative harness
+  - closure basis: phase 24/25 positive analysis invariants no longer depend on expensive CLI `run` execution, while the contract harness retains only the rows that still need true CLI-mode parity coverage
 
 ### milestone_test_4: Artifact Reuse and Cache Boundary Redesign
 - Status: pending
