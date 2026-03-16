@@ -1,0 +1,144 @@
+from sifr.os import run_command, getcwd
+from sifr.env import getenv, getenv_opt, setenv, unsetenv
+from sifr.sys import argv, version, platform, maxsize
+from sifr.subprocess import run, run_with_input, CompletedProcess
+from sifr.logging import getLogger, INFO, Logger
+from sifr.platform import system, machine, processor
+from sifr.time import time, strftime, strptime
+from sifr.timeit import timeit, repeat
+from sifr.io import read_text, write_text, exists
+from sifr.tempfile import mktemp_path
+from sifr.test import assert_bool_vector_eq
+
+
+def workload():
+    i: int = 0
+    total: int = 0
+    while i < 64:
+        total = total + i
+        i = i + 1
+
+
+def collect_runtime_actual() -> list[bool]:
+    actual: list[bool] = []
+
+    shell_ok: bool = False
+    try:
+        out: str = run_command("echo wave_psp_d2")
+        shell_ok = out == "wave_psp_d2"
+    except IOError as e:
+        _ = e.message
+    actual.append(shell_ok)
+
+    cwd_ok: bool = False
+    try:
+        cwd: str = getcwd()
+        cwd_ok = len(cwd) > 0
+    except IOError as e:
+        _ = e.message
+    actual.append(cwd_ok)
+
+    setenv("SIFR_PSP_D2_KEY", "v2")
+    actual.append(getenv("SIFR_PSP_D2_KEY", "fallback") == "v2")
+    actual.append(getenv_opt("SIFR_PSP_D2_KEY") is not None)
+    unsetenv("SIFR_PSP_D2_KEY")
+    actual.append(getenv("SIFR_PSP_D2_KEY", "fallback") == "fallback")
+
+    actual.append(len(argv()) > 0)
+    actual.append(len(version()) > 0)
+    actual.append(len(platform()) > 0)
+    actual.append(maxsize() > 0)
+    return actual
+
+
+def collect_process_logging_actual() -> list[bool]:
+    actual: list[bool] = []
+    subprocess_ok: bool = False
+    stdin_ok: bool = False
+    logging_ok: bool = False
+    cleanup_ok: bool = False
+
+    try:
+        cp: CompletedProcess = run("echo psp_d2_subprocess")
+        subprocess_ok = cp.returncode == 0 and cp.stdout.strip() == "psp_d2_subprocess"
+    except IOError as e:
+        _ = e.message
+    actual.append(subprocess_ok)
+
+    try:
+        echoed: str = run_with_input("cat", "stdin_d2")
+        stdin_ok = echoed == "stdin_d2"
+    except IOError as e:
+        _ = e.message
+    actual.append(stdin_ok)
+
+    log_path: str = mktemp_path("sifr_phase_psp_d2_log_")
+    try:
+        _w: None = write_text(log_path, "")
+        logger: Logger = getLogger("phase_psp_d2")
+        logger.set_file(log_path)
+        logger.set_level(INFO)
+        logger.info("hello")
+        log_content: str = read_text(log_path)
+        logging_ok = log_content == "[INFO] phase_psp_d2: hello\n"
+    except IOError as e:
+        _ = e.message
+    actual.append(logging_ok)
+
+    try:
+        _rm: str = run_command("rm -f " + log_path)
+        _ = _rm
+    except IOError as e:
+        _ = e.message
+    cleanup_ok = not exists(log_path)
+    actual.append(cleanup_ok)
+    return actual
+
+
+def collect_platform_time_actual() -> list[bool]:
+    actual: list[bool] = []
+    actual.append(len(system()) > 0 and len(machine()) > 0 and len(processor()) > 0)
+    actual.append(time() > 0.0)
+    actual.append(strftime("%Y-%m-%d %H:%M:%S", 0.0) == "1970-01-01 00:00:00")
+
+    parse_ok: bool = False
+    try:
+        parsed: str = strptime("2024-04-01 12:30:00", "%Y-%m-%d %H:%M:%S")
+        parse_ok = parsed == "2024-04-01T12:30:00"
+    except ValueError as e:
+        _ = e.message
+    actual.append(parse_ok)
+
+    invalid_parse_rejected: bool = False
+    try:
+        _bad: str = strptime("bad", "%Y-%m-%d %H:%M:%S")
+        _ = _bad
+    except ValueError as e:
+        _ = e.message
+        invalid_parse_rejected = True
+    actual.append(invalid_parse_rejected)
+
+    actual.append(timeit(workload, 4) >= 0.0)
+    timings: list[float] = repeat(workload, 3, 2)
+    actual.append(len(timings) == 3)
+    return actual
+
+
+def append_all(mut target: list[bool], values: list[bool]):
+    for value in values:
+        target.append(value)
+
+
+def main():
+    expected: list[bool] = [
+        True, True, True, True, True, True, True, True, True,
+        True, True, True, True,
+        True, True, True, True, True, True, True
+    ]
+    actual: list[bool] = []
+    append_all(actual, collect_runtime_actual())
+    append_all(actual, collect_process_logging_actual())
+    append_all(actual, collect_platform_time_actual())
+
+    assert_bool_vector_eq(actual, expected)
+    assert str("phase_psp_d2_process_runtime_platform: pass") == "phase_psp_d2_process_runtime_platform: pass"

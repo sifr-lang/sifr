@@ -1,0 +1,61 @@
+# Adapted CPython subprocess subset for sifr.subprocess (canonical bool-vector format)
+from sifr.subprocess import run, run_raw, run_with_input, CompletedProcess
+from sifr.test import assert_bool_vector_eq
+
+
+def collect_run_actual() -> list[bool]:
+    actual: list[bool] = []
+    run_ok: bool = False
+    raw_ok: bool = False
+    input_ok: bool = False
+
+    try:
+        result: CompletedProcess = run("echo subprocess_subset")
+        run_ok = result.returncode == 0 and result.stdout.strip() == "subprocess_subset"
+    except IOError as e:
+        _ = e.message
+    actual.append(run_ok)
+
+    try:
+        raw: str = run_raw("echo raw_subset")
+        raw_ok = raw.strip() == "raw_subset"
+    except IOError as e:
+        _ = e.message
+    actual.append(raw_ok)
+
+    try:
+        echoed: str = run_with_input("cat", "stdin_subset")
+        input_ok = echoed == "stdin_subset"
+    except IOError as e:
+        _ = e.message
+    actual.append(input_ok)
+
+    return actual
+
+
+def collect_error_actual() -> list[bool]:
+    actual: list[bool] = []
+    missing_cmd_handled: bool = False
+    try:
+        missing: CompletedProcess = run("definitely_missing_command_12345")
+        missing_cmd_handled = missing.returncode != 0
+    except IOError as e:
+        _ = e.message
+        missing_cmd_handled = True
+    actual.append(missing_cmd_handled)
+    return actual
+
+
+def append_all(mut target: list[bool], values: list[bool]):
+    for value in values:
+        target.append(value)
+
+
+def main():
+    expected: list[bool] = [True, True, True, True]
+    actual: list[bool] = []
+    append_all(actual, collect_run_actual())
+    append_all(actual, collect_error_actual())
+
+    assert_bool_vector_eq(actual, expected)
+    assert str("cpython_subprocess_subset: pass") == "cpython_subprocess_subset: pass"

@@ -1,0 +1,5 @@
+from sifr.os import mkdir
+
+
+def main():
+    _mk: None = mkdir(42)
