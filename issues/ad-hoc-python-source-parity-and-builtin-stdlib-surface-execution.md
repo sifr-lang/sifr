@@ -4,7 +4,7 @@ Status: in_progress
 Started: 2026-03-14
 Phase owner: Codex (GPT-5)
 Source phase: `issues/ad-hoc-python-source-parity-and-builtin-stdlib-surface.md`
-Current active wave: `wave_psp_d2`
+Current active wave: `wave_psp_e1`
 
 ## Execution Rules
 
@@ -560,6 +560,7 @@ Status: pending
 - `wave_psp_ab-review-pass3`: PR `#1196` merged at `2026-03-16T06:12:23Z`
 - `wave_psp_ab-review-pass4`: PR `#1197` merged at `2026-03-16T06:38:54Z`
 - `wave_psp_d2`: PR `#1198` merged at `2026-03-16T08:10:57Z`
+- `wave_psp_d2-review-pass1`: PR `#1199` merged at `2026-03-16T08:22:10Z`
 
 ## External Review Ledger
 
@@ -639,4 +640,8 @@ Status: pending
 - `wave_psp_d2` review pass 1:
   - Reviewer file: `/Users/yaseralnajjar/.codex/worktrees/0761/codebase/reviews/wave-psp-d2-review-pass1.md`
   - Validation result: non-actionable stale review. It incorrectly reported d2 as pending and missing artifacts (`wave_psp_d2` traceability/demo/pass/fail fixtures) that are present and merged in PR `#1198`.
+  - Fix status: no code changes required.
+- `wave_psp_d2` review pass 2:
+  - Reviewer file: `/Users/yaseralnajjar/.codex/worktrees/0761/codebase/reviews/wave-psp-d2-review-pass2.md`
+  - Validation result: approved as production-ready with no actionable implementation issue.
   - Fix status: no code changes required.
