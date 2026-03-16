@@ -77,11 +77,12 @@ Status: done
 
 ### `wave_psp_c1` Structured Parsing and Serialization
 
-Status: pending
+Status: in_progress
 
-- [ ] Harvest `Lib/test/test_json/`, `Lib/test/test_tomllib/`, `Lib/test/test_csv.py`, and `Lib/test/test_configparser.py`.
-- [ ] Close structured-return and class/export gaps for `json`, `tomllib`, `csv`, and `configparser`.
-- [ ] Add traceable regressions, demo, validate, PR, review, merge.
+- [x] Harvest `Lib/test/test_json/`, `Lib/test/test_tomllib/`, `Lib/test/test_csv.py`, and `Lib/test/test_configparser.py`.
+- [x] Close structured-return and class/export gaps for `json`, `tomllib`, `csv`, and `configparser`.
+- [x] Add traceable regressions (including CPython subset fixtures), demo, and local validation evidence.
+- [ ] Open PR, complete review/merge loop, and finalize ledger links.
 
 ### `wave_psp_c2` Text, Pattern, and Formatting Modules
 
@@ -348,7 +349,38 @@ Status: pending
 
 ### `wave_psp_c1`
 
-- Pending.
+- Implemented structured parsing/serialization closure in:
+  - `lib/sifr/json.sifr`
+  - `lib/sifr/tomllib.sifr`
+  - `lib/sifr/csv.sifr`
+  - `lib/sifr/configparser.sifr`
+  - `crates/sifr_hir/src/stdlib/io_json.rs`
+  - `crates/sifr_hir/src/stdlib/platform_misc.rs`
+  - `crates/sifr_hir/src/lower/expressions.rs`
+  - `crates/sifr_codegen/src/intrinsics/json.rs`
+  - `crates/sifr_codegen/src/intrinsics/toml.rs`
+  - `crates/sifr_codegen/src/intrinsic_method_emitters.rs`
+  - `crates/sifr_codegen/src/expr_render_helpers.rs`
+  - `crates/sifr_codegen/src/stmt_support_emitter.rs`
+  - `crates/sifr_codegen/src/helpers.rs`
+  - `crates/sifr_codegen/src/hir_analysis/queries.rs`
+  - `crates/sifr_codegen/src/lib.rs`
+- Added wave-specific regression/demo/traceability artifacts:
+  - `crates/sifr/tests/e2e/pass/phase_psp_c1_structured_parsing_serialization.sifr`
+  - `crates/sifr/tests/e2e/pass/cpython_tomllib_subset.sifr`
+  - `crates/sifr/tests/e2e/pass/cpython_configparser_subset.sifr`
+  - `demos/wave_psp_c1_structured_parsing_serialization_demo.sifr`
+  - `verification/stdlib/wave_psp_c1_cpython_traceability.md`
+- Targeted validation:
+  - `cargo run -q -p sifr -- run demos/wave_psp_c1_structured_parsing_serialization_demo.sifr`
+  - `cargo run -q -p sifr -- run crates/sifr/tests/e2e/pass/cpython_tomllib_subset.sifr`
+  - `cargo run -q -p sifr -- run crates/sifr/tests/e2e/pass/cpython_configparser_subset.sifr`
+  - `cargo run -q -p sifr -- run crates/sifr/tests/e2e/pass/phase_psp_c1_structured_parsing_serialization.sifr`
+- Authoritative local gate:
+  - `SIFR_E2E_DISABLE_CACHE=1 scripts/run_all_tests.sh --profile quick`
+  - Includes phase-29 hardening summary: `verification ok: variants=64, failures=0, blocking_failures=0, non_blocking_failures=0`
+- PR / merge:
+  - Pending.
 
 ### `wave_psp_c2`
 

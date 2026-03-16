@@ -1117,12 +1117,10 @@ impl RustEmitter {
             ..
         } = expr
         {
-            let is_self_field = matches!(object.as_ref(), HirExpr::FieldAccess { object: inner, .. }
-                if matches!(inner.as_ref(), HirExpr::Name { name, .. } if name == "self"));
-            let needs_self_field_clone_suppression =
-                is_self_field && crate::helpers::MUTATING_METHODS.contains(&method.as_str());
+            let needs_field_clone_suppression =
+                self.method_call_needs_field_clone_suppression(object, method);
             let suppression_prev = self.pending_self_field_clone_suppression;
-            if needs_self_field_clone_suppression {
+            if needs_field_clone_suppression {
                 self.pending_self_field_clone_suppression += 1;
             }
             let lowered_registry = self.try_lower_registry_method_call_expr(
@@ -1131,7 +1129,7 @@ impl RustEmitter {
                 method,
                 args,
             );
-            if needs_self_field_clone_suppression
+            if needs_field_clone_suppression
                 && self.pending_self_field_clone_suppression > suppression_prev
             {
                 self.pending_self_field_clone_suppression -= 1;
@@ -3193,10 +3191,8 @@ impl RustEmitter {
                 args,
                 ..
             } => {
-                let is_self_field = matches!(object.as_ref(), HirExpr::FieldAccess { object: inner, .. }
-                    if matches!(inner.as_ref(), HirExpr::Name { name, .. } if name == "self"));
                 let needs_self_field_clone_suppression =
-                    is_self_field && crate::helpers::MUTATING_METHODS.contains(&method.as_str());
+                    self.method_call_needs_field_clone_suppression(object, method);
                 let suppression_prev = self.pending_self_field_clone_suppression;
                 if needs_self_field_clone_suppression {
                     self.pending_self_field_clone_suppression += 1;
@@ -3736,16 +3732,22 @@ impl RustEmitter {
         value: &HirExpr,
         return_ty: Option<&Type>,
     ) -> Result<Option<crate::RustExpr>, crate::CodegenError> {
+        let wrap_option_return = |lowered: crate::RustExpr| -> crate::RustExpr {
+            if let Some(target_ty) = return_ty {
+                return Self::wrap_option_local_value_for_ir(target_ty, value, lowered);
+            }
+            lowered
+        };
         if self.current_class_name.is_some()
             && matches!(value, HirExpr::Name { name, .. } if name == "self")
         {
-            return Ok(Some(crate::RustExpr::Clone(Box::new(
+            return Ok(Some(wrap_option_return(crate::RustExpr::Clone(Box::new(
                 crate::RustExpr::Ident("self".to_string()),
-            ))));
+            )))));
         }
 
         if let Some(clone_expr) = self.borrowed_return_name_clone_expr_for_ir(value) {
-            return Ok(Some(clone_expr));
+            return Ok(Some(wrap_option_return(clone_expr)));
         }
 
         if return_ty.is_some_and(|ty| !crate::helpers::is_option_type(ty))
@@ -3760,12 +3762,12 @@ impl RustEmitter {
         }
 
         if let Some(lowered_leaf) = crate::try_lower_leaf_or_name_expr_result(value)? {
-            return Ok(Some(lowered_leaf));
+            return Ok(Some(wrap_option_return(lowered_leaf)));
         }
         if let Some(lowered_expr) = self.lower_stmt_expr_for_ir(value)? {
-            return Ok(Some(
+            return Ok(Some(wrap_option_return(
                 self.rewrite_stdlib_constant_idents_in_expr(lowered_expr),
-            ));
+            )));
         }
         Ok(None)
     }
@@ -5976,6 +5978,23 @@ impl RustEmitter {
 
         let Some(value_expr) = self.lower_stmt_expr_for_ir(value)? else {
             return Ok(false);
+        };
+        let value_expr = if object == "self"
+            && self.current_class_name.as_ref().is_some_and(|class_name| {
+                self.recursive_fields
+                    .contains(&(class_name.clone(), field.clone()))
+            })
+            && !Self::is_box_new_call_expr_for_ir(&value_expr)
+        {
+            crate::RustExpr::FnCall {
+                func: Box::new(crate::RustExpr::Path(vec![
+                    "Box".to_string(),
+                    "new".to_string(),
+                ])),
+                args: vec![value_expr],
+            }
+        } else {
+            value_expr
         };
         let lowered = crate::RustStmt::Assign {
             target,

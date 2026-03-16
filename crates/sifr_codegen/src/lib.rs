@@ -738,8 +738,14 @@ edition = "2021"
     for module_name in stdlib_modules {
         match module_name.as_str() {
             "sifr.json" | "sifr.collections" | "_sifr.json" | "_sifr.collections" => {
-                if !deps.contains(&"serde_json = \"1\"".to_string()) {
-                    deps.push("serde_json = \"1\"".to_string());
+                if !deps.contains(
+                    &"serde_json = { version = \"1\", features = [\"preserve_order\"] }"
+                        .to_string(),
+                ) {
+                    deps.push(
+                        "serde_json = { version = \"1\", features = [\"preserve_order\"] }"
+                            .to_string(),
+                    );
                     deps.push("serde = { version = \"1\", features = [\"derive\"] }".to_string());
                 }
             }
@@ -785,8 +791,10 @@ edition = "2021"
                 }
             }
             "sifr.tomllib" | "_sifr.toml" => {
-                if !deps.contains(&"toml = \"0.8\"".to_string()) {
-                    deps.push("toml = \"0.8\"".to_string());
+                let toml_dep =
+                    "toml = { version = \"0.8\", features = [\"preserve_order\"] }".to_string();
+                if !deps.contains(&toml_dep) {
+                    deps.push(toml_dep);
                 }
             }
             "sifr.datetime" | "_sifr.datetime" => {
@@ -817,8 +825,14 @@ edition = "2021"
     for crate_name in required_crates {
         match crate_name.as_str() {
             "serde_json" => {
-                if !deps.contains(&"serde_json = \"1\"".to_string()) {
-                    deps.push("serde_json = \"1\"".to_string());
+                if !deps.contains(
+                    &"serde_json = { version = \"1\", features = [\"preserve_order\"] }"
+                        .to_string(),
+                ) {
+                    deps.push(
+                        "serde_json = { version = \"1\", features = [\"preserve_order\"] }"
+                            .to_string(),
+                    );
                 }
                 if !deps
                     .contains(&"serde = { version = \"1\", features = [\"derive\"] }".to_string())
@@ -872,8 +886,10 @@ edition = "2021"
                 }
             }
             "toml" => {
-                if !deps.contains(&"toml = \"0.8\"".to_string()) {
-                    deps.push("toml = \"0.8\"".to_string());
+                let toml_dep =
+                    "toml = { version = \"0.8\", features = [\"preserve_order\"] }".to_string();
+                if !deps.contains(&toml_dep) {
+                    deps.push(toml_dep);
                 }
             }
             "flate2" => {

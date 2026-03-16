@@ -1,13 +1,17 @@
 
+from sifr.configparser import ParsingError
 from sifr.configparser import ConfigParser
 
 def main():
     config: ConfigParser = ConfigParser()
-    config.read_string("[database]\nhost = localhost\nport = 5432\n")
+    try:
+        _: None = config.read_string("[database]\nhost = localhost\nport = 5432\n")
+    except ParsingError:
+        assert False
 
-    host: str = config.get("database", "host")
-    port: str = config.get("database", "port")
-    assert str("host = " + host) == 'host = localhost'
-    assert str("port = " + port) == 'port = 5432'
+    host: str | None = config.get("database", "host")
+    port: str | None = config.get("database", "port")
+    assert host == "localhost"
+    assert port == "5432"
     assert str("has_host = " + str(config.has_option("database", "host"))) == 'has_host = true'
     assert str("has_missing = " + str(config.has_option("database", "missing"))) == 'has_missing = false'

@@ -1,16 +1,161 @@
 //! TOML intrinsic lowerers for registry lowering.
 
-use crate::{RustExpr, RustLiteral, RustParam, RustStmt, RustType};
+use crate::{RustExpr, RustLiteral, RustMatchArm, RustParam, RustStmt, RustType};
 
-fn arg_expr(args: &[RustExpr], idx: usize) -> RustExpr {
-    args[idx].clone()
+fn string_expr(value: &str) -> RustExpr {
+    RustExpr::MethodCall {
+        receiver: Box::new(RustExpr::Literal(RustLiteral::Str(value.to_string()))),
+        method: "to_string".to_string(),
+        args: vec![],
+    }
 }
 
-fn ref_expr(expr: RustExpr) -> RustExpr {
-    RustExpr::Ref {
-        mutable: false,
-        expr: Box::new(expr),
+fn some_expr(value: RustExpr) -> RustExpr {
+    RustExpr::FnCall {
+        func: Box::new(RustExpr::Path(vec!["Some".to_string()])),
+        args: vec![value],
     }
+}
+
+fn ok_expr(value: RustExpr) -> RustExpr {
+    RustExpr::FnCall {
+        func: Box::new(RustExpr::Path(vec!["Ok".to_string()])),
+        args: vec![value],
+    }
+}
+
+fn box_expr(value: RustExpr) -> RustExpr {
+    RustExpr::FnCall {
+        func: Box::new(RustExpr::Path(vec!["Box".to_string(), "new".to_string()])),
+        args: vec![value],
+    }
+}
+
+fn toml_decode_error(message: RustExpr) -> RustExpr {
+    RustExpr::StructInit {
+        name: "TOMLDecodeError".to_string(),
+        fields: vec![
+            ("message".to_string(), message),
+            ("line".to_string(), RustExpr::Literal(RustLiteral::Int(0))),
+            ("column".to_string(), RustExpr::Literal(RustLiteral::Int(0))),
+        ],
+    }
+}
+
+fn toml_struct(
+    kind: &str,
+    bool_value: RustExpr,
+    int_value: RustExpr,
+    float_value: RustExpr,
+    str_value: RustExpr,
+    datetime_value: RustExpr,
+    array_items: RustExpr,
+    table_items: RustExpr,
+) -> RustExpr {
+    RustExpr::StructInit {
+        name: "TomlValue".to_string(),
+        fields: vec![
+            ("kind".to_string(), string_expr(kind)),
+            ("bool_value".to_string(), bool_value),
+            ("int_value".to_string(), int_value),
+            ("float_value".to_string(), float_value),
+            ("str_value".to_string(), str_value),
+            ("datetime_value".to_string(), datetime_value),
+            ("array_items".to_string(), array_items),
+            ("table_items".to_string(), table_items),
+        ],
+    }
+}
+
+fn toml_bool_expr(value: RustExpr) -> RustExpr {
+    toml_struct(
+        "bool",
+        some_expr(value),
+        RustExpr::Literal(RustLiteral::None),
+        RustExpr::Literal(RustLiteral::None),
+        RustExpr::Literal(RustLiteral::None),
+        RustExpr::Literal(RustLiteral::None),
+        box_expr(RustExpr::Vec(vec![])),
+        box_expr(RustExpr::Vec(vec![])),
+    )
+}
+
+fn toml_int_expr(value: RustExpr) -> RustExpr {
+    toml_struct(
+        "int",
+        RustExpr::Literal(RustLiteral::None),
+        some_expr(value),
+        RustExpr::Literal(RustLiteral::None),
+        RustExpr::Literal(RustLiteral::None),
+        RustExpr::Literal(RustLiteral::None),
+        box_expr(RustExpr::Vec(vec![])),
+        box_expr(RustExpr::Vec(vec![])),
+    )
+}
+
+fn toml_float_expr(value: RustExpr) -> RustExpr {
+    toml_struct(
+        "float",
+        RustExpr::Literal(RustLiteral::None),
+        RustExpr::Literal(RustLiteral::None),
+        some_expr(value),
+        RustExpr::Literal(RustLiteral::None),
+        RustExpr::Literal(RustLiteral::None),
+        box_expr(RustExpr::Vec(vec![])),
+        box_expr(RustExpr::Vec(vec![])),
+    )
+}
+
+fn toml_str_expr(value: RustExpr) -> RustExpr {
+    toml_struct(
+        "str",
+        RustExpr::Literal(RustLiteral::None),
+        RustExpr::Literal(RustLiteral::None),
+        RustExpr::Literal(RustLiteral::None),
+        some_expr(value),
+        RustExpr::Literal(RustLiteral::None),
+        box_expr(RustExpr::Vec(vec![])),
+        box_expr(RustExpr::Vec(vec![])),
+    )
+}
+
+fn toml_datetime_expr(value: RustExpr) -> RustExpr {
+    toml_struct(
+        "datetime",
+        RustExpr::Literal(RustLiteral::None),
+        RustExpr::Literal(RustLiteral::None),
+        RustExpr::Literal(RustLiteral::None),
+        RustExpr::Literal(RustLiteral::None),
+        some_expr(value),
+        box_expr(RustExpr::Vec(vec![])),
+        box_expr(RustExpr::Vec(vec![])),
+    )
+}
+
+fn toml_array_expr(value: RustExpr) -> RustExpr {
+    toml_struct(
+        "array",
+        RustExpr::Literal(RustLiteral::None),
+        RustExpr::Literal(RustLiteral::None),
+        RustExpr::Literal(RustLiteral::None),
+        RustExpr::Literal(RustLiteral::None),
+        RustExpr::Literal(RustLiteral::None),
+        box_expr(value),
+        box_expr(RustExpr::Vec(vec![])),
+    )
+}
+
+fn toml_table_expr(value: RustExpr) -> RustExpr {
+    toml_struct(
+        "table",
+        RustExpr::Literal(RustLiteral::None),
+        RustExpr::Literal(RustLiteral::None),
+        RustExpr::Literal(RustLiteral::None),
+        RustExpr::Literal(RustLiteral::None),
+        RustExpr::Literal(RustLiteral::None),
+        box_expr(RustExpr::Vec(vec![])),
+        box_expr(value),
+    )
 }
 
 pub(super) fn lower_toml_parse(args: &[RustExpr]) -> Option<RustExpr> {
@@ -18,53 +163,205 @@ pub(super) fn lower_toml_parse(args: &[RustExpr]) -> Option<RustExpr> {
         return None;
     }
     Some(RustExpr::Block {
-        stmts: vec![RustStmt::Let {
-            mutable: false,
-            name: "__toml_str".to_string(),
-            ty: None,
-            value: ref_expr(arg_expr(args, 0)),
-        }],
+        stmts: vec![
+            RustStmt::Let {
+                mutable: false,
+                name: "__toml_input".to_string(),
+                ty: None,
+                value: RustExpr::Ref {
+                    mutable: false,
+                    expr: Box::new(args[0].clone()),
+                },
+            },
+            RustStmt::LocalFn {
+                name: "__sifr_toml_value_from_parsed".to_string(),
+                params: vec![RustParam::Named {
+                    name: "value".to_string(),
+                    ty: RustType::Named("toml::Value".to_string()),
+                }],
+                ret: Some(RustType::Named(
+                    "Result<TomlValue, TOMLDecodeError>".to_string(),
+                )),
+                body: vec![RustStmt::Match {
+                    expr: RustExpr::Ident("value".to_string()),
+                    arms: vec![
+                        RustMatchArm {
+                            pattern: "toml::Value::Boolean(v)".to_string(),
+                            bindings: vec![],
+                            guard: None,
+                            body: vec![RustStmt::Return(Some(ok_expr(toml_bool_expr(
+                                RustExpr::Ident("v".to_string()),
+                            ))))],
+                        },
+                        RustMatchArm {
+                            pattern: "toml::Value::Integer(v)".to_string(),
+                            bindings: vec![],
+                            guard: None,
+                            body: vec![RustStmt::Return(Some(ok_expr(toml_int_expr(
+                                RustExpr::Ident("v".to_string()),
+                            ))))],
+                        },
+                        RustMatchArm {
+                            pattern: "toml::Value::Float(v)".to_string(),
+                            bindings: vec![],
+                            guard: None,
+                            body: vec![RustStmt::Return(Some(ok_expr(toml_float_expr(
+                                RustExpr::Ident("v".to_string()),
+                            ))))],
+                        },
+                        RustMatchArm {
+                            pattern: "toml::Value::String(v)".to_string(),
+                            bindings: vec![],
+                            guard: None,
+                            body: vec![RustStmt::Return(Some(ok_expr(toml_str_expr(
+                                RustExpr::Ident("v".to_string()),
+                            ))))],
+                        },
+                        RustMatchArm {
+                            pattern: "toml::Value::Datetime(v)".to_string(),
+                            bindings: vec![],
+                            guard: None,
+                            body: vec![RustStmt::Return(Some(ok_expr(toml_datetime_expr(
+                                RustExpr::MethodCall {
+                                    receiver: Box::new(RustExpr::Ident("v".to_string())),
+                                    method: "to_string".to_string(),
+                                    args: vec![],
+                                },
+                            ))))],
+                        },
+                        RustMatchArm {
+                            pattern: "toml::Value::Array(items)".to_string(),
+                            bindings: vec![],
+                            guard: None,
+                            body: vec![
+                                RustStmt::Let {
+                                    mutable: true,
+                                    name: "converted".to_string(),
+                                    ty: None,
+                                    value: RustExpr::Vec(vec![]),
+                                },
+                                RustStmt::For {
+                                    var: "item".to_string(),
+                                    iter: RustExpr::Ident("items".to_string()),
+                                    body: vec![RustStmt::Expr(RustExpr::MethodCall {
+                                        receiver: Box::new(RustExpr::Ident(
+                                            "converted".to_string(),
+                                        )),
+                                        method: "push".to_string(),
+                                        args: vec![RustExpr::Try(Box::new(RustExpr::FnCall {
+                                            func: Box::new(RustExpr::Ident(
+                                                "__sifr_toml_value_from_parsed".to_string(),
+                                            )),
+                                            args: vec![RustExpr::Ident("item".to_string())],
+                                        }))],
+                                    })],
+                                },
+                                RustStmt::Return(Some(ok_expr(toml_array_expr(RustExpr::Ident(
+                                    "converted".to_string(),
+                                ))))),
+                            ],
+                        },
+                        RustMatchArm {
+                            pattern: "toml::Value::Table(items)".to_string(),
+                            bindings: vec![],
+                            guard: None,
+                            body: vec![
+                                RustStmt::Let {
+                                    mutable: true,
+                                    name: "converted".to_string(),
+                                    ty: None,
+                                    value: RustExpr::Vec(vec![]),
+                                },
+                                RustStmt::For {
+                                    var: "entry".to_string(),
+                                    iter: RustExpr::Ident("items".to_string()),
+                                    body: vec![
+                                        RustStmt::Let {
+                                            mutable: false,
+                                            name: "entry_key".to_string(),
+                                            ty: None,
+                                            value: RustExpr::Field {
+                                                expr: Box::new(RustExpr::Ident(
+                                                    "entry".to_string(),
+                                                )),
+                                                field: "0".to_string(),
+                                            },
+                                        },
+                                        RustStmt::Let {
+                                            mutable: false,
+                                            name: "entry_value".to_string(),
+                                            ty: None,
+                                            value: RustExpr::Field {
+                                                expr: Box::new(RustExpr::Ident(
+                                                    "entry".to_string(),
+                                                )),
+                                                field: "1".to_string(),
+                                            },
+                                        },
+                                        RustStmt::Let {
+                                            mutable: false,
+                                            name: "converted_value".to_string(),
+                                            ty: None,
+                                            value: RustExpr::Try(Box::new(RustExpr::FnCall {
+                                                func: Box::new(RustExpr::Ident(
+                                                    "__sifr_toml_value_from_parsed".to_string(),
+                                                )),
+                                                args: vec![RustExpr::Ident(
+                                                    "entry_value".to_string(),
+                                                )],
+                                            })),
+                                        },
+                                        RustStmt::Expr(RustExpr::MethodCall {
+                                            receiver: Box::new(RustExpr::Ident(
+                                                "converted".to_string(),
+                                            )),
+                                            method: "push".to_string(),
+                                            args: vec![RustExpr::Tuple(vec![
+                                                RustExpr::Ident("entry_key".to_string()),
+                                                RustExpr::Ident("converted_value".to_string()),
+                                            ])],
+                                        }),
+                                    ],
+                                },
+                                RustStmt::Return(Some(ok_expr(toml_table_expr(RustExpr::Ident(
+                                    "converted".to_string(),
+                                ))))),
+                            ],
+                        },
+                    ],
+                }],
+            },
+        ],
         expr: Some(Box::new(RustExpr::MethodCall {
             receiver: Box::new(RustExpr::MethodCall {
                 receiver: Box::new(RustExpr::MethodCall {
-                    receiver: Box::new(RustExpr::Ident("__toml_str".to_string())),
+                    receiver: Box::new(RustExpr::Ident("__toml_input".to_string())),
                     method: "parse::<toml::Value>".to_string(),
                     args: vec![],
                 }),
-                method: "map".to_string(),
+                method: "map_err".to_string(),
                 args: vec![RustExpr::Closure {
                     params: vec![RustParam::Named {
-                        name: "v".to_string(),
+                        name: "e".to_string(),
                         ty: RustType::Named("_".to_string()),
                     }],
-                    body: Box::new(RustExpr::FormatMacro {
-                        name: "format".to_string(),
-                        format_str: "{}".to_string(),
-                        args: vec![RustExpr::Ident("v".to_string())],
-                    }),
+                    body: Box::new(toml_decode_error(RustExpr::MethodCall {
+                        receiver: Box::new(RustExpr::Ident("e".to_string())),
+                        method: "to_string".to_string(),
+                        args: vec![],
+                    })),
                     is_move: false,
                 }],
             }),
-            method: "map_err".to_string(),
+            method: "and_then".to_string(),
             args: vec![RustExpr::Closure {
                 params: vec![RustParam::Named {
-                    name: "e".to_string(),
-                    ty: RustType::Named("_".to_string()),
+                    name: "parsed".to_string(),
+                    ty: RustType::Named("toml::Value".to_string()),
                 }],
-                body: Box::new(RustExpr::StructInit {
-                    name: "TOMLDecodeError".to_string(),
-                    fields: vec![
-                        (
-                            "message".to_string(),
-                            RustExpr::MethodCall {
-                                receiver: Box::new(RustExpr::Ident("e".to_string())),
-                                method: "to_string".to_string(),
-                                args: vec![],
-                            },
-                        ),
-                        ("line".to_string(), RustExpr::Literal(RustLiteral::Int(0))),
-                        ("column".to_string(), RustExpr::Literal(RustLiteral::Int(0))),
-                    ],
+                body: Box::new(RustExpr::FnCall {
+                    func: Box::new(RustExpr::Ident("__sifr_toml_value_from_parsed".to_string())),
+                    args: vec![RustExpr::Ident("parsed".to_string())],
                 }),
                 is_move: false,
             }],

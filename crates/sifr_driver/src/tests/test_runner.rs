@@ -239,8 +239,19 @@ fn test_generate_test_runner_cargo_toml_preserves_stdlib_deps() {
     let required_crates = HashSet::new();
 
     let cargo_toml = generate_test_runner_cargo_toml(&stdlib_modules, &required_crates);
-    assert!(cargo_toml.contains("serde_json = \"1\""));
+    assert!(
+        cargo_toml.contains("serde_json = { version = \"1\", features = [\"preserve_order\"] }")
+    );
     assert!(cargo_toml.contains("serde = { version = \"1\", features = [\"derive\"] }"));
+}
+
+#[test]
+fn test_generate_test_runner_cargo_toml_preserves_tomllib_ordering_deps() {
+    let stdlib_modules = HashSet::from(["sifr.tomllib".to_string()]);
+    let required_crates = HashSet::new();
+
+    let cargo_toml = generate_test_runner_cargo_toml(&stdlib_modules, &required_crates);
+    assert!(cargo_toml.contains("toml = { version = \"0.8\", features = [\"preserve_order\"] }"));
 }
 
 #[test]
