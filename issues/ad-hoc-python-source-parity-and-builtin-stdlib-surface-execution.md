@@ -4,7 +4,7 @@ Status: in_progress
 Started: 2026-03-14
 Phase owner: Codex (GPT-5)
 Source phase: `issues/ad-hoc-python-source-parity-and-builtin-stdlib-surface.md`
-Current active wave: `wave_psp_c2`
+Current active wave: `wave_psp_d1`
 
 ## Execution Rules
 
@@ -20,7 +20,7 @@ Current active wave: `wave_psp_c2`
 - [x] `milestone_psp_3` / `wave_psp_b1`: collections objects and ordered helpers
 - [x] `milestone_psp_3` / `wave_psp_b2`: iterators, functional helpers, and randomness
 - [x] `milestone_psp_4` / `wave_psp_c1`: structured parsing and serialization
-- [ ] `milestone_psp_4` / `wave_psp_c2`: text, pattern, and formatting modules
+- [x] `milestone_psp_4` / `wave_psp_c2`: text, pattern, and formatting modules
 - [ ] `milestone_psp_5` / `wave_psp_d1`: filesystem, paths, and archive surfaces
 - [ ] `milestone_psp_5` / `wave_psp_d2`: process, runtime, and platform surfaces
 - [ ] `milestone_psp_6` / `wave_psp_e1`: strong-but-incomplete core modules
@@ -87,11 +87,11 @@ Status: done
 
 ### `wave_psp_c2` Text, Pattern, and Formatting Modules
 
-Status: in_progress
+Status: done
 
 - [x] Harvest the required CPython text-formatting test families.
 - [x] Close `string`, `textwrap`, `base64`, `html`, `fnmatch`, `difflib`, and `calendar`.
-- [ ] Add traceable regressions, demo, validate, PR, review, merge.
+- [x] Add traceable regressions, demo, validate, PR, review, merge.
 
 ### `wave_psp_d1` Filesystem, Paths, and Archive Surfaces
 
@@ -381,6 +381,12 @@ Status: pending
   - `cargo test -p sifr_codegen test_class_method_mutable_self_propagates_through_delegation`
 - Authoritative local gate:
   - `SIFR_E2E_DISABLE_CACHE=1 scripts/run_all_tests.sh --profile quick`
+  - Re-run after reviewer-pass1 remediation merged: `SIFR_E2E_DISABLE_CACHE=1 scripts/run_all_tests.sh --profile quick`
+- PR / merge:
+  - Merged PR: `#1182` `Close wave_psp_c2 text pattern and formatting parity`
+  - Merge commit: `030bc9053b9bfbb598db7267934a567665ba7924`
+  - Reviewer remediation PR: `#1187` `wave_psp_c2: fix reviewer-pass parity gaps in difflib/textwrap`
+  - Merge commit: `4ad100ee85d32791822dfd48ce09fcdddb04d306`
   - Includes phase-29 hardening summary: `verification ok: variants=64, failures=0, blocking_failures=0, non_blocking_failures=0`
 - PR / merge:
   - Merged PR: `#1168` `Close wave_psp_c1 structured parsing and serialization parity`
@@ -459,6 +465,8 @@ Status: pending
 - `wave_psp_b2`: PR `#1160` merged at `2026-03-15T11:41:51Z`
 - `wave_psp_c1`: PR `#1168` merged at `2026-03-16T01:34:09Z`
 - `wave_psp_c1-review-pass1`: PR `#1174` merged at `2026-03-16T02:26:34Z`
+- `wave_psp_c2`: PR `#1182` merged at `2026-03-16T03:11:07Z`
+- `wave_psp_c2-review-pass1`: PR `#1187` merged at `2026-03-16T03:39:09Z`
 
 ## External Review Ledger
 
@@ -502,4 +510,12 @@ Status: pending
   - Reviewer file: `/Users/yaseralnajjar/.codex/worktrees/0761/codebase/reviews/wave-psp-c1-review-pass2.md`
   - Validation result: approved as production-ready with no actionable implementation issue.
   - Non-actionable stale note: the review text still mentions `ConfigParser.read()` not populating parser state, which was true before PR `#1174` and is now invalid on current mainline.
+  - Fix status: no code changes required.
+- `wave_psp_c2` review pass 1:
+  - Reviewer file: `/Users/yaseralnajjar/.codex/worktrees/0761/codebase/reviews/wave-psp-c2-review-pass1.md`
+  - Validated findings: `SequenceMatcher.get_matching_blocks()` only returned the longest substring block, `SequenceMatcher.ratio()` used character-presence instead of block-based matching, and `TextWrapper` width did not account for line indentation width.
+  - Fix status: remediated in PR `#1187` with strengthened CPython-derived regression assertions for difflib/textwrap.
+- `wave_psp_c2` review pass 2:
+  - Reviewer file: `/Users/yaseralnajjar/.codex/worktrees/0761/codebase/reviews/wave-psp-c2-review-pass2c.md`
+  - Validation result: approved as production-ready with no actionable implementation issue.
   - Fix status: no code changes required.
