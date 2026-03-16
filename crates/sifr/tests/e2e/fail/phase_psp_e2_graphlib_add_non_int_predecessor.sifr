@@ -1,0 +1,6 @@
+from sifr.graphlib import TopologicalSorter
+
+
+def main():
+    sorter: TopologicalSorter = TopologicalSorter()
+    sorter.add(1, "0")

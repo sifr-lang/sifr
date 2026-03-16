@@ -1,0 +1,6 @@
+from sifr.uuid import uuid_from_hex, UUID
+
+
+def main():
+    _bad: UUID = uuid_from_hex(9001)
+    _ = _bad.to_str()

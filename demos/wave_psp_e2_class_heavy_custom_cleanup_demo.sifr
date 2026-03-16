@@ -1,0 +1,33 @@
+from sifr.argparse import ArgumentParser
+from sifr.ipaddress import ip_address, IPv4Address, AddressValueError
+from sifr.uuid import uuid4_obj
+from sifr.graphlib import TopologicalSorter, CycleError
+
+
+def main():
+    parser: ArgumentParser = ArgumentParser("wave-e2-demo")
+    parser.add_argument("--strict", "strict", "store_true")
+    parser.add_argument("--mode", "mode", "store", "safe")
+    parser.add_argument("entry", "entry", "store", "demo.sifr")
+    parsed = parser.parse_args(["--strict", "--mode", "parity", "main.sifr"])
+    print("argparse.strict = " + str(parsed.get_bool("strict", False)))
+    print("argparse.mode = " + parsed.get("mode", ""))
+    print("argparse.entry = " + parsed.get("entry", ""))
+
+    try:
+        addr: IPv4Address = ip_address("8.8.8.8")
+        print("ipaddress.value = " + addr.to_str() + " global=" + str(addr.is_global()))
+    except AddressValueError as e:
+        print("ipaddress.error = " + e.message)
+
+    generated = uuid4_obj()
+    print("uuid.version = " + str(generated.version()) + " text=" + generated.to_str())
+
+    sorter: TopologicalSorter = TopologicalSorter()
+    sorter.add_many(2, [0, 1])
+    sorter.add(1, 0)
+    try:
+        order: list[int] = sorter.static_order()
+        print("graphlib.order = " + str(order))
+    except CycleError as e:
+        print("graphlib.error = " + e.message)

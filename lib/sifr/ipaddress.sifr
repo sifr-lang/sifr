@@ -1,5 +1,12 @@
 # sifr.ipaddress — IP address manipulation (pure Sifr)
 
+
+class AddressValueError(Error):
+    message: str
+
+    def __init__(self, message: str) -> None:
+        self.message = message + ""
+
 def is_valid_ipv4(addr: str) -> bool:
     parts: list[str] = addr.split(".")
     if len(parts) != 4:
@@ -61,6 +68,8 @@ def ip_to_int(addr: str) -> Result[int, ValueError]:
     return _ip_to_int_raw(addr)
 
 def is_private(addr: str) -> bool:
+    if not is_valid_ipv4(addr):
+        return False
     val: int = _ip_to_int_raw(addr)
     # 10.0.0.0/8
     if val >= 167772160:
@@ -77,6 +86,8 @@ def is_private(addr: str) -> bool:
     return False
 
 def is_loopback(addr: str) -> bool:
+    if not is_valid_ipv4(addr):
+        return False
     parts: list[str] = addr.split(".")
     if len(parts) == 4:
         first: str | None = parts[0]
@@ -86,6 +97,8 @@ def is_loopback(addr: str) -> bool:
     return False
 
 def int_to_ip(val: int) -> str:
+    if val < 0 or val > 4294967295:
+        return "0.0.0.0"
     a: int = val // 16777216
     rem: int = val % 16777216
     b: int = rem // 65536
@@ -95,6 +108,8 @@ def int_to_ip(val: int) -> str:
     return str(a) + "." + str(b) + "." + str(c) + "." + str(d)
 
 def is_multicast(addr: str) -> bool:
+    if not is_valid_ipv4(addr):
+        return False
     parts: list[str] = addr.split(".")
     if len(parts) == 4:
         first: str | None = parts[0]
@@ -106,6 +121,8 @@ def is_multicast(addr: str) -> bool:
     return False
 
 def is_global(addr: str) -> bool:
+    if not is_valid_ipv4(addr):
+        return False
     if is_private(addr):
         return False
     if is_loopback(addr):
@@ -121,3 +138,49 @@ def is_global(addr: str) -> bool:
             if first == "255":
                 return False
     return True
+
+
+class IPv4Address:
+    _text: str
+    _value: int
+
+    def __init__(self, addr: str) -> None:
+        normalized_text: str = addr + ""
+        normalized_value: int = -1
+        if is_valid_ipv4(addr):
+            parsed: int = _ip_to_int_raw(addr)
+            normalized_value = parsed
+            normalized_text = int_to_ip(parsed)
+        self._value = normalized_value
+        self._text = normalized_text
+
+    def to_str(self) -> str:
+        return self._text + ""
+
+    def packed_int(self) -> int:
+        return self._value
+
+    def version(self) -> int:
+        return 4
+
+    def is_private(self) -> bool:
+        return is_private(self._text)
+
+    def is_loopback(self) -> bool:
+        return is_loopback(self._text)
+
+    def is_multicast(self) -> bool:
+        return is_multicast(self._text)
+
+    def is_global(self) -> bool:
+        return is_global(self._text)
+
+
+def ip_address(addr: str) -> Result[IPv4Address, AddressValueError]:
+    if not is_valid_ipv4(addr):
+        raise AddressValueError("invalid IPv4 address")
+    return IPv4Address(addr)
+
+
+def ipv4_address(addr: str) -> Result[IPv4Address, AddressValueError]:
+    return ip_address(addr)
