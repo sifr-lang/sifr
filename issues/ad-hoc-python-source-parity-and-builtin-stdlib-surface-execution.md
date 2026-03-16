@@ -685,6 +685,14 @@ Status: pending
   - Reviewer file: historical artifact no longer present in the current workspace (`reviews/wave-psp-b1-review-pass2.md` was removed during later workspace cleanup); validated outcome retained in this ledger.
   - Validation result: approved as production-ready with no actionable implementation issue.
   - Fix status: no code changes required.
+- `wave_psp_b1` review pass 3:
+  - Reviewer file: `/Users/yaseralnajjar/.codex/worktrees/0761/codebase/reviews/wave-psp-b1-review-gap-cpython-parity-20260316.md`
+  - Validated findings: `heapq.merge` had no regression coverage and compiled in `check` mode but failed in `run` mode due invalid option/comparison lowering in `lib/sifr/heapq.sifr`; parity documentation under-described the intentional `defaultdict` compat-lowering model, and waiver enforcement for `Counter(**kwargs)` was missing.
+  - Fix status: remediated by hardening `lib/sifr/heapq.sifr::merge`, adding CPython-derived merge assertions in `crates/sifr/tests/e2e/pass/cpython_heapq*.sifr` and `phase_psp_b1_collections_ordered_helpers.sifr`, adding `phase_psp_b1_defaultdict_keyword_constructor_unsupported.sifr` and `phase_psp_b1_counter_kwargs_constructor_unsupported.sifr`, extending `Counter.get(key[, default])` parity in `lib/sifr/collections.sifr`, and tightening `verification/stdlib/wave_psp_b1_cpython_traceability.md`.
+- `wave_psp_b1` review pass 4:
+  - Reviewer file: `/Users/yaseralnajjar/.codex/worktrees/0761/codebase/reviews/wave-psp-b1-review-gap-cpython-parity-20260316-r2.md`
+  - Validation result: approved for closure. The reviewer-confirmed r1 follow-ups (`Counter.get` default parameter and `Counter(**kwargs)` waiver enforcement) are now present, and remaining deque gaps are intentional/adapted differences.
+  - Fix status: no additional code changes required beyond pass-3 remediation; documentation remains aligned with current behavior.
 - `wave_psp_b2` review pass 1:
   - Reviewer file: `/Users/yaseralnajjar/.codex/worktrees/0761/codebase/reviews/wave-psp-b2-review-pass1.md`
   - Validation result: non-actionable stale review. The notes described the pre-implementation state and incorrectly claimed the merged b2 artifacts, traceability ledger, demo, and PR were absent from current `main`.

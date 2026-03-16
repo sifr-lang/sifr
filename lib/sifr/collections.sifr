@@ -14,11 +14,11 @@ class Counter[T: Hashable]:
                     counts[key] = value
         self.counts = counts
 
-    def get(self, key: T) -> int:
+    def get(self, key: T, default: int = 0) -> int:
         val: int | None = self.counts[key]
         if val is not None:
             return val
-        return 0
+        return default
 
     def increment(self, key: T) -> None:
         val: int | None = self.counts[key]

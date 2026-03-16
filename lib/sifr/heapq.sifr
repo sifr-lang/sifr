@@ -248,8 +248,8 @@ def merge[T: Comparable](*iterables: list[T]) -> list[T]:
     positions: list[int] = []
     for _values in iterables:
         positions.append(0)
-    while True:
-        best_value: T | None = None
+    done: bool = False
+    while not done:
         best_index: int = -1
         i: int = 0
         while i < len(iterables):
@@ -258,19 +258,33 @@ def merge[T: Comparable](*iterables: list[T]) -> list[T]:
                 pos: int | None = positions[i]
                 if pos is not None:
                     if pos < len(values):
-                        current: T | None = values[pos]
-                        if current is not None:
-                            if best_value is None or current < best_value:
-                                best_value = current
-                                best_index = i
+                        if best_index < 0:
+                            best_index = i
+                        else:
+                            best_values: list[T] | None = iterables[best_index]
+                            if best_values is not None:
+                                best_pos: int | None = positions[best_index]
+                                if best_pos is not None:
+                                    if best_pos < len(best_values):
+                                        current: T | None = values[pos]
+                                        chosen: T | None = best_values[best_pos]
+                                        if current is not None and chosen is not None:
+                                            if current < chosen:
+                                                best_index = i
             i = i + 1
         if best_index < 0:
-            return result
-        if best_value is not None:
-            result.append(best_value)
-        selected_pos: int | None = positions[best_index]
-        if selected_pos is not None:
-            positions[best_index] = selected_pos + 1
+            done = True
+        else:
+            selected_values: list[T] | None = iterables[best_index]
+            if selected_values is not None:
+                selected_pos: int | None = positions[best_index]
+                if selected_pos is not None:
+                    if selected_pos < len(selected_values):
+                        selected_value: T | None = selected_values[selected_pos]
+                        if selected_value is not None:
+                            result.append(selected_value)
+                        positions[best_index] = selected_pos + 1
+    return result
 
 def nsmallest[T: Comparable](n: int, data: list[T]) -> list[T]:
     heap: list[T] = heapify_copy(data)
