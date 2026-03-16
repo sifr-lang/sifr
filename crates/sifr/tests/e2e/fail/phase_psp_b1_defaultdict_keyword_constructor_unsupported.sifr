@@ -1,0 +1,3 @@
+def main():
+    groups = defaultdict(default_factory=list)
+    groups["alpha"].append("beta")

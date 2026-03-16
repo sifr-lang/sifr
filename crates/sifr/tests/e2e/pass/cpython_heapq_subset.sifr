@@ -2,7 +2,7 @@
 from sifr.heapq import (
     heapify, heappush, heappop,
     nsmallest, nlargest,
-    heappushpop, heapreplace
+    heappushpop, heapreplace, merge
 )
 from sifr.test import assert_bool_vector_eq
 
@@ -53,6 +53,8 @@ def collect_edge_actual() -> list[bool]:
     hp_ret: int | None = heappushpop(hp_src, 4)
     actual.append(hp_ret is not None and hp_ret == 3)
     actual.append(str(hp_src) == "[4, 5, 7]")
+    merged: list[int] = merge([1, 4, 7], [2, 5, 8], [3, 6])
+    actual.append(str(merged) == "[1, 2, 3, 4, 5, 6, 7, 8]")
     return actual
 
 def append_all(mut target: list[bool], values: list[bool]):
@@ -63,7 +65,7 @@ def main():
     expected: list[bool] = [
         True, True, True, True, True, True,
         True, True, True, True, True, True,
-        True, True
+        True, True, True
     ]
     actual: list[bool] = []
     append_all(actual, collect_push_pop_actual())

@@ -1,7 +1,7 @@
 # CPython test_heapq.py — ported assertions for sifr.heapq
 # Updated to use the in-place mut-parameter API (borrow-by-default milestone)
 from sifr.test import assert_eq
-from sifr.heapq import heapify, heappush, heappop, heappop_rest, nsmallest, nlargest, heappushpop, heapreplace
+from sifr.heapq import heapify, heappush, heappop, heappop_rest, nsmallest, nlargest, heappushpop, heapreplace, merge
 
 def assert_push_pop_cases():
     h1: list[int] = []
@@ -83,10 +83,18 @@ def assert_pushpop_replace_cases():
     if r3 is not None:
         assert_eq(r3, 1)
 
+def assert_merge_cases():
+    left: list[int] = [1, 4, 7]
+    right: list[int] = [2, 5, 8]
+    tail: list[int] = [3, 6, 9]
+    merged: list[int] = merge(left, right, tail)
+    assert_eq(str(merged), '[1, 2, 3, 4, 5, 6, 7, 8, 9]')
+
 def main():
     assert_push_pop_cases()
     assert_heapify_cases()
     assert_rank_cases()
     assert_pushpop_replace_cases()
+    assert_merge_cases()
 
     assert str("cpython_heapq: all assertions passed") == 'cpython_heapq: all assertions passed'
