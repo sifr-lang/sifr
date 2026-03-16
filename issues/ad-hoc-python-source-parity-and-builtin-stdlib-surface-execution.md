@@ -4,7 +4,7 @@ Status: in_progress
 Started: 2026-03-14
 Phase owner: Codex (GPT-5)
 Source phase: `issues/ad-hoc-python-source-parity-and-builtin-stdlib-surface.md`
-Current active wave: `wave_psp_e2`
+Current active wave: `milestone_psp_7`
 
 ## Execution Rules
 
@@ -24,7 +24,7 @@ Current active wave: `wave_psp_e2`
 - [x] `milestone_psp_5` / `wave_psp_d1`: filesystem, paths, and archive surfaces
 - [x] `milestone_psp_5` / `wave_psp_d2`: process, runtime, and platform surfaces
 - [x] `milestone_psp_6` / `wave_psp_e1`: strong-but-incomplete core modules
-- [ ] `milestone_psp_6` / `wave_psp_e2`: class-heavy and custom cleanup
+- [x] `milestone_psp_6` / `wave_psp_e2`: class-heavy and custom cleanup
 - [ ] `milestone_psp_7`: parity governance and exit closure
 
 ## Wave Ledger
@@ -145,11 +145,11 @@ Status: done
 
 ### `wave_psp_e2` Class-Heavy and Custom Cleanup
 
-Status: in_progress
+Status: done
 
 - [x] Harvest `Lib/test/test_argparse.py`, `Lib/test/test_ipaddress.py`, `Lib/test/test_uuid.py`, and `Lib/test/test_graphlib.py`.
 - [x] Close or explicitly classify final gaps for `argparse`, `ipaddress`, `uuid`, `graphlib`, and `test`.
-- [ ] Add traceable regressions, demo, validate, PR, review, merge.
+- [x] Add traceable regressions, demo, validate, PR, review, merge.
 
 ### `milestone_psp_7` Parity Governance and Exit Closure
 
@@ -634,6 +634,7 @@ Status: pending
 - `wave_psp_e1`: PR `#1201` merged at `2026-03-16T08:43:54Z`
 - `wave_psp_e1-review-pass1`: PR `#1202` merged at `2026-03-16T09:01:04Z`
 - `wave_psp_e2`: PR `#1205` merged at `2026-03-16T09:39:48Z`
+- `wave_psp_e2-review-pass1`: PR `#1206` merged at `2026-03-16T09:50:26Z`
 
 ## External Review Ledger
 
@@ -729,4 +730,8 @@ Status: pending
 - `wave_psp_e2` review pass 1:
   - Reviewer file: `/Users/yaseralnajjar/.codex/worktrees/0761/codebase/reviews/wave-psp-e2-review-pass1.md`
   - Validation result: approved with no actionable implementation issue. The only missing-artifact concerns in the report were stale: the e2 wave demo, fail fixtures, and traceability ledger are already present in PR `#1205`.
+  - Fix status: no code changes required.
+- `wave_psp_e2` review pass 2:
+  - Reviewer file: `/Users/yaseralnajjar/.codex/worktrees/0761/codebase/reviews/wave-psp-e2-review-pass2.md`
+  - Validation result: approved as production-ready with no actionable implementation issue. The review reiterated stale artifact-missing claims that are invalid after merged PRs `#1205` and `#1206`.
   - Fix status: no code changes required.
