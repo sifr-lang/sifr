@@ -25,3 +25,254 @@ def capwords(s: str) -> str:
             cap: str = word.capitalize()
             result = result + cap
     return result
+
+def _is_identifier_start(ch: str) -> bool:
+    return ch == "_" or ch.isalpha()
+
+def _is_identifier_continue(ch: str) -> bool:
+    return ch == "_" or ch.isalpha() or ch.isdigit()
+
+def _mapping_lookup(mapping: dict[str, str], key: str) -> str | None:
+    for current_key, current_value in mapping.items():
+        if current_key == key:
+            return current_value + ""
+    return None
+
+def _template_substitute_impl(
+    template: str, mapping: dict[str, str], safe: bool
+) -> Result[str, ValueError]:
+    result: str = ""
+    i: int = 0
+    while i < len(template):
+        ch: str | None = template[i]
+        if ch is None:
+            i = i + 1
+            continue
+        ch_value: str = ""
+        if ch is not None:
+            ch_value = ch
+        if ch_value != "$":
+            result = result + ch_value
+            i = i + 1
+            continue
+
+        if i + 1 >= len(template):
+            if safe:
+                result = result + "$"
+                i = i + 1
+                continue
+            raise ValueError("invalid template placeholder at end of string")
+
+        next_ch: str | None = template[i + 1]
+        next_value: str = ""
+        if next_ch is None:
+            if safe:
+                result = result + "$"
+                i = i + 1
+                continue
+            raise ValueError("invalid template placeholder")
+        else:
+            next_value = next_ch
+
+        if next_value == "$":
+            result = result + "$"
+            i = i + 2
+            continue
+
+        if next_value == "{":
+            j: int = i + 2
+            name: str = ""
+            while j < len(template):
+                part: str | None = template[j]
+                if part is None:
+                    j = j + 1
+                    continue
+                part_value: str = ""
+                if part is not None:
+                    part_value = part
+                if part_value == "}":
+                    break
+                name = name + part_value
+                j = j + 1
+
+            if j >= len(template):
+                if safe:
+                    result = result + template[i:]
+                    return result
+                raise ValueError("invalid template placeholder: missing closing brace")
+
+            if len(name) == 0:
+                if safe:
+                    result = result + "${}"
+                    i = j + 1
+                    continue
+                raise ValueError("invalid template placeholder: empty name")
+
+            first_candidate: str | None = name[0]
+            first_value: str = ""
+            has_first: bool = False
+            if first_candidate is not None:
+                has_first = True
+                first_value = first_candidate
+            if not has_first or not _is_identifier_start(first_value):
+                if safe:
+                    result = result + "${" + name + "}"
+                    i = j + 1
+                    continue
+                raise ValueError("invalid template placeholder: " + name)
+
+            valid: bool = True
+            k: int = 1
+            while k < len(name):
+                part: str | None = name[k]
+                if part is not None:
+                    if not _is_identifier_continue(part):
+                        valid = False
+                        k = len(name)
+                k = k + 1
+
+            if not valid:
+                if safe:
+                    result = result + "${" + name + "}"
+                    i = j + 1
+                    continue
+                raise ValueError("invalid template placeholder: " + name)
+
+            mapped_value: str | None = _mapping_lookup(mapping, name)
+            mapped_value_text: str = ""
+            if mapped_value is None:
+                if safe:
+                    result = result + "${" + name + "}"
+                    i = j + 1
+                    continue
+                raise ValueError("missing template value for key: " + name)
+            else:
+                mapped_value_text = mapped_value
+
+            result = result + mapped_value_text
+            i = j + 1
+            continue
+
+        if not _is_identifier_start(next_value):
+            if safe:
+                result = result + "$" + next_value
+                i = i + 2
+                continue
+            raise ValueError("invalid template placeholder near: $" + next_value)
+
+        name2: str = ""
+        j2: int = i + 1
+        while j2 < len(template):
+            part2: str | None = template[j2]
+            if part2 is None:
+                j2 = j2 + 1
+                continue
+            part2_value: str = ""
+            if part2 is not None:
+                part2_value = part2
+            if not _is_identifier_continue(part2_value):
+                break
+            name2 = name2 + part2_value
+            j2 = j2 + 1
+
+        mapped_value2: str | None = _mapping_lookup(mapping, name2)
+        mapped_value2_text: str = ""
+        if mapped_value2 is None:
+            if safe:
+                result = result + "$" + name2
+                i = j2
+                continue
+            raise ValueError("missing template value for key: " + name2)
+        else:
+            mapped_value2_text = mapped_value2
+
+        result = result + mapped_value2_text
+        i = j2
+
+    return result
+
+def _formatter_format_impl(
+    format_string: str, values: dict[str, str]
+) -> Result[str, ValueError]:
+    result: str = ""
+    i: int = 0
+    while i < len(format_string):
+        ch: str | None = format_string[i]
+        if ch is None:
+            i = i + 1
+            continue
+        ch_value: str = ""
+        if ch is not None:
+            ch_value = ch
+
+        if ch_value == "{":
+            if i + 1 < len(format_string):
+                escaped_next: str | None = format_string[i + 1]
+                if escaped_next is not None and escaped_next == "{":
+                    result = result + "{"
+                    i = i + 2
+                    continue
+            j: int = i + 1
+            field_name: str = ""
+            while j < len(format_string):
+                part: str | None = format_string[j]
+                if part is None:
+                    j = j + 1
+                    continue
+                part_value: str = ""
+                if part is not None:
+                    part_value = part
+                if part_value == "}":
+                    break
+                field_name = field_name + part_value
+                j = j + 1
+            if j >= len(format_string):
+                raise ValueError("formatter: missing closing brace")
+            if len(field_name) == 0:
+                raise ValueError("formatter: empty replacement field is not supported")
+            value: str | None = _mapping_lookup(values, field_name)
+            if value is None:
+                raise ValueError("formatter: missing value for key: " + field_name)
+            result = result + value
+            i = j + 1
+            continue
+
+        if ch_value == "}":
+            if i + 1 < len(format_string):
+                escaped_next2: str | None = format_string[i + 1]
+                if escaped_next2 is not None and escaped_next2 == "}":
+                    result = result + "}"
+                    i = i + 2
+                    continue
+            raise ValueError("formatter: single '}' is invalid")
+
+        result = result + ch_value
+        i = i + 1
+
+    return result
+
+class Template:
+    template: str
+
+    def __init__(self, template: str) -> None:
+        self.template = template + ""
+
+    def substitute(self, mapping: dict[str, str]) -> Result[str, ValueError]:
+        return _template_substitute_impl(self.template, mapping, False)
+
+    def safe_substitute(self, mapping: dict[str, str]) -> str:
+        try:
+            value: str = _template_substitute_impl(self.template, mapping, True)
+            return value
+        except ValueError as e:
+            _ = e.message
+            return self.template + ""
+
+class Formatter:
+    def __init__(self) -> None:
+        pass
+
+    def format(
+        self, format_string: str, values: dict[str, str]
+    ) -> Result[str, ValueError]:
+        return _formatter_format_impl(format_string, values)

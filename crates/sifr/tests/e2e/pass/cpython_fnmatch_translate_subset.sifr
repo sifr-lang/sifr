@@ -1,0 +1,27 @@
+# Adapted CPython fnmatch.translate/filterfalse subset for sifr.fnmatch
+from sifr.fnmatch import fnmatch, translate, filterfalse
+
+def main():
+    assert translate("*") == "(?s:.*)\\z"
+    assert translate("?") == "(?s:.)\\z"
+    assert translate("a?b*") == "(?s:a.b.*)\\z"
+    assert translate("*.txt") == "(?s:.*\\.txt)\\z"
+
+    names: list[str] = ["Python", "Perl", "Ruby", "Pony"]
+    ff_p: list[str] = filterfalse(names, "P*")
+    assert str(ff_p) == "[\"Ruby\"]"
+    ff_suffix: list[str] = filterfalse(names, "*y")
+    assert len(ff_suffix) >= 1
+    all_non_suffix: bool = True
+    for value in ff_suffix:
+        if fnmatch(value, "*y"):
+            all_non_suffix = False
+    assert all_non_suffix
+    ff_none: list[str] = filterfalse(names, "X*")
+    assert len(ff_none) == 4
+
+    assert fnmatch("abc", "a*")
+    no_match_prefix: bool = not fnmatch("abc", "x*")
+    assert no_match_prefix
+
+    assert str("cpython_fnmatch_translate_subset: pass") == "cpython_fnmatch_translate_subset: pass"

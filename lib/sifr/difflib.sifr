@@ -63,6 +63,61 @@ def _similarity(a: str, b: str) -> float:
     numerator: int = 2 * matches
     return float(numerator) / float(total)
 
+def _longest_common_substring(a: str, b: str) -> tuple[int, int, int]:
+    best_i: int = 0
+    best_j: int = 0
+    best_len: int = 0
+    i: int = 0
+    while i < len(a):
+        j: int = 0
+        while j < len(b):
+            k: int = 0
+            while i + k < len(a) and j + k < len(b):
+                ai: str | None = a[i + k]
+                bj: str | None = b[j + k]
+                if ai is None or bj is None:
+                    k = k + 1
+                    continue
+                if ai != bj:
+                    break
+                k = k + 1
+            if k > best_len:
+                best_len = k
+                best_i = i
+                best_j = j
+            j = j + 1
+        i = i + 1
+    return (best_i, best_j, best_len)
+
+class SequenceMatcher:
+    _a: str
+    _b: str
+
+    def __init__(self, a: str = "", b: str = "") -> None:
+        self._a = a + ""
+        self._b = b + ""
+
+    def set_seq1(self, a: str) -> None:
+        self._a = a + ""
+
+    def set_seq2(self, b: str) -> None:
+        self._b = b + ""
+
+    def set_seqs(self, a: str, b: str) -> None:
+        self._a = a + ""
+        self._b = b + ""
+
+    def ratio(self) -> float:
+        return _similarity(self._a, self._b)
+
+    def get_matching_blocks(self) -> list[tuple[int, int, int]]:
+        blocks: list[tuple[int, int, int]] = []
+        ai, bj, size = _longest_common_substring(self._a, self._b)
+        if size > 0:
+            blocks.append((ai, bj, size))
+        blocks.append((len(self._a), len(self._b), 0))
+        return blocks
+
 def unified_diff(a: list[str], b: list[str]) -> list[str]:
     result: list[str] = []
     result.append("--- a")

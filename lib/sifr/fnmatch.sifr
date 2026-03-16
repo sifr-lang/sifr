@@ -46,8 +46,57 @@ def fnmatch_filter(names: list[str], pattern: str) -> list[str]:
             result.append(name)
     return result
 
+def filterfalse(names: list[str], pattern: str) -> list[str]:
+    result: list[str] = []
+    for name in names:
+        if not fnmatch(name, pattern):
+            result.append(name)
+    return result
+
 def fnmatchcase(name: str, pattern: str) -> bool:
     return _match(name, 0, pattern, 0)
+
+def _translate_literal(ch: str) -> str:
+    if ch == ".":
+        return "\\."
+    if ch == "^":
+        return "\\^"
+    if ch == "$":
+        return "\\$"
+    if ch == "+":
+        return "\\+"
+    if ch == "(":
+        return "\\("
+    if ch == ")":
+        return "\\)"
+    if ch == "{":
+        return "\\{"
+    if ch == "}":
+        return "\\}"
+    if ch == "[":
+        return "\\["
+    if ch == "]":
+        return "\\]"
+    if ch == "|":
+        return "\\|"
+    if ch == "\\":
+        return "\\\\"
+    return ch + ""
+
+def translate(pattern: str) -> str:
+    body: str = ""
+    i: int = 0
+    while i < len(pattern):
+        ch: str | None = pattern[i]
+        if ch is not None:
+            if ch == "*":
+                body = body + ".*"
+            elif ch == "?":
+                body = body + "."
+            else:
+                body = body + _translate_literal(ch)
+        i = i + 1
+    return "(?s:" + body + ")\\z"
 
 # CPython-compatible alias
 def filter(names: list[str], pattern: str) -> list[str]:
