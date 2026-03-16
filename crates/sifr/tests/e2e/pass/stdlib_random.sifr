@@ -1,14 +1,16 @@
-# Test sifr.random stdlib module
-from sifr.random import random_int, random_float
+# Test sifr.random stdlib module through the public API surface
+from sifr.random import randint, random
 
 def main():
-    # Random int in range
-    r: int = random_int(1, 10)
-    assert str(r >= 1) == 'true'
-    assert str(r <= 10) == 'true'
+    # Random int in range (public Result-returning API)
+    try:
+        r: int = randint(1, 10)
+        assert str(r >= 1) == 'true'
+        assert str(r <= 10) == 'true'
+    except ValueError as e:
+        assert str("unexpected randint error: " + e.message) == 'stdlib_random: randint ok'
 
-    # Random float between 0 and 1
-    f: float = random_float()
+    # Random float between 0 and 1 (public API)
+    f: float = random()
     assert str(f >= 0.0) == 'true'
     assert str(f < 1.0) == 'true'
-
