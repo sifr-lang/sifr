@@ -7,7 +7,7 @@ Execution tracking: create `issues/phaseXX-test-strategy-and-validation-lane-red
 Suggested phase owner: compiler test platform / local validation infrastructure
 
 ## Objective
-Redesign the compiler test platform so local validation is fast, thermally reasonable, and highly cache-efficient while preserving or improving correctness coverage across compiler internals, CLI contracts, e2e behavior, determinism, hardening, and performance.
+Redesign the compiler test platform so local validation is fast, memory-efficient, thermally reasonable, and highly cache-efficient while preserving or improving correctness coverage across compiler internals, CLI contracts, e2e behavior, determinism, hardening, and performance.
 
 The goal of this phase is not "make tests a bit faster."
 The goal is to replace the current over-reliance on expensive end-to-end execution with a layered, deliberate validation architecture where each invariant is enforced at the cheapest layer that can prove it.
@@ -105,6 +105,7 @@ Observed structural facts:
 - the quick e2e cache currently grows into a multi-gigabyte cache tree under `crates/sifr/target/sifr_e2e_cache/quick`
 - the current pass-fixture corpus under `crates/sifr/tests/e2e/pass` contains `418` `.sifr` fixtures
 - the current quick verification hardening profile expands to roughly `57` command variants across diagnostics, project, fixedbugs, crashes, property, fuzz-smoke, OSS, and determinism coverage
+- observed local Activity Monitor evidence showed individual `sifr_batch_*` processes reaching roughly `28-35 GiB` RSS with double-digit gigabytes of swap in use; this is treated as phase-failure resource behavior, not an acceptable extreme case
 
 ## Current Fixture Taxonomy
 The current validation estate should be treated as four distinct fixture families rather than one undifferentiated "test suite":
@@ -257,6 +258,19 @@ Local multi-core execution is acceptable and desirable in this phase as long as:
 - it stays within a thermally reasonable envelope for sustained development use
 - it does not compensate for architectural waste by brute-force oversubscription
 
+### 8. Memory footprint is currently unacceptable
+The current validation shape is also memory-aggressive in a way that is not acceptable for a default local workflow.
+
+Symptoms:
+- `sifr_batch_*` processes can grow into multi-tens-of-gigabytes RSS
+- swap usage can climb into double-digit gigabytes
+- a few oversized groups can likely amplify both memory retention and swap pressure
+
+This phase must treat memory the same way it treats runtime and heat:
+- memory usage in the default local lanes should be intentionally bounded
+- swap-heavy behavior is a design bug, not a tolerable side effect
+- batch planning and artifact reuse must be designed to minimize peak resident memory, not just improve wall time
+
 ## What Must Be Preserved
 Any redesign must keep the suite solid across all of these dimensions:
 - parser correctness
@@ -312,6 +326,7 @@ A single declarative harness can:
 - centralize timing and cache accounting
 
 That harness should be free to use multiple local CPUs when beneficial, but it must do so with explicit worker controls and a thermally aware default rather than "max everything all the time."
+It must also keep resident memory bounded by design through fixture-group sizing, streaming/reporting choices, and worker defaults that do not create runaway aggregate memory pressure.
 
 ### 6. Build on the existing Rust harness and manifest style
 This phase should prefer a Rust-native harness implementation over adding another shell- or Python-centric control plane.
@@ -399,6 +414,8 @@ Characteristics:
 ### Layer 5: Throughput and Resource Regression
 Purpose:
 - runtime throughput budgets
+- memory budgets
+- swap-avoidance budgets
 - cache efficiency budgets
 - group skew detection
 - artifact-size growth monitoring
@@ -651,6 +668,9 @@ This phase should make the following metrics visible and tracked:
 - slowest fixtures and slowest groups
 - group-size skew and tail behavior
 - total cache size and file count
+- peak RSS per lane
+- peak RSS per worker/batch process
+- swap delta during a lane run
 - flake rate and rerun rate
 - no-cache versus warm-cache delta
 - thermal proxy metrics where practical
@@ -673,9 +693,19 @@ These thresholds are planning defaults for execution, not permanent hard budgets
 - quick-lane cache growth should be observable and prunable
 - cache budgets must be explicit once the redesigned cache layers land
 
+### memory footprint
+- default local lanes should avoid swap growth in normal operation
+- no default-lane batch process should grow into multi-tens-of-gigabytes RSS
+- the target steady-state is low-single-digit GiB RSS per heavy worker, not tens of GiB
+- if a fixture group violates the memory target, that is a batching/design failure that must be corrected rather than normalized
+
 ### thermal guidance
 - default worker settings must improve wall time without producing obviously unsustainable sustained heat on a normal developer laptop
 - if a higher-worker configuration is materially faster but thermally unacceptable, it belongs as an opt-in override rather than the default
+
+### memory guidance
+- default worker settings must also respect aggregate local memory limits and avoid pushing the machine into swap-heavy behavior
+- worker-count defaults, fixture-group sizes, and output buffering strategy must be chosen together; CPU scaling is not allowed to explode resident memory
 
 ### reporting
 - local reports must surface warm-vs-cold deltas, slowest fixtures/groups, and cache-hit behavior
@@ -686,6 +716,7 @@ These thresholds are planning defaults for execution, not permanent hard budgets
   - Rust test timing and structured stderr reporting from the current harness
   - `/usr/bin/time` or equivalent wrapper timing for lane-level wall-time measurement
   - checked-in helper scripts for cache-size/file-count reporting
+  - `ps`, Activity Monitor snapshots, or equivalent process-level RSS sampling for peak-memory tracking
   - manifest-driven fixture/group summaries emitted by the redesigned harness
 - persistent visualization is not required for phase entry; local machine-readable reports are sufficient for the first execution wave
 ## Non-goals
@@ -812,14 +843,19 @@ Scope:
 - track cache size, tail groups, slow fixtures, and no-cache deltas
 - add regression alarms for throughput and cache health
 - add local worker/thermal guidance and measure the wall-time tradeoff of different worker defaults
+- add memory and swap guidance and measure the resource tradeoff of different worker/grouping defaults
 
 Definition of done:
 - performance regressions are detectable from local reports
 - cache growth and group skew are no longer invisible
 - worker defaults are chosen for local wall-time improvement without unacceptable sustained heat
+- worker defaults and batching strategy avoid pathological RSS and swap behavior in default local lanes
 
 Thermal acceptability example for execution:
 - the default `quick` lane should not rely on sustained "fan pinned high for the whole run" behavior on a normal developer laptop just to meet its wall-time target
+
+Memory acceptability example for execution:
+- the default `quick` lane should not produce `sifr_batch_*`-style processes in the tens-of-gigabytes RSS range or force the machine into heavy swap just to complete successfully
 ## Suggested Effort Profile
 These are rough planning estimates only:
 - milestone_test_1: small
@@ -850,12 +886,14 @@ This ad hoc phase is complete only when all of the following are true:
 - matrix-style contract validation is harness-driven rather than shell-loop-driven
 - repeated `run`/`test` validation can reuse stable generated-program artifacts
 - cache hit rates and resource costs are measurable and reported
+- default local lanes have explicit memory budgets and no longer exhibit pathological multi-tens-of-gigabytes RSS or swap-heavy behavior
 - no critical correctness domain has lost coverage
 - developer guidance clearly distinguishes local, PR, nightly, and release validation
 
 ## Expected Outcome
 If executed correctly, this phase should deliver:
 - materially faster local validation
+- materially lower memory usage and swap pressure during normal development
 - lower CPU and thermal load during normal development
 - better cache leverage
 - clearer lane semantics
