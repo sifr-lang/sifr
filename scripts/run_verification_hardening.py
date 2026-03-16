@@ -1066,18 +1066,22 @@ def run_fuzz_smoke_suite(
         if run_mismatches:
             case_failed = True
             result["total_failures"] += 1
+        else:
+            tmp_file.unlink(missing_ok=True)
 
-        case_result["variants"].append(
-            {
-                "label": f"fuzz-{i:03d}",
-                "status": status,
-                "mismatches": run_mismatches,
-                "source_hash": snippet_hash,
-                "actual_exit_code": exit_code,
-                "duration_ms": round(elapsed_ms, 3),
-                "argv": argv,
-            }
-        )
+        variant_result = {
+            "label": f"fuzz-{i:03d}",
+            "status": status,
+            "mismatches": run_mismatches,
+            "source_hash": snippet_hash,
+            "actual_exit_code": exit_code,
+            "duration_ms": round(elapsed_ms, 3),
+            "argv": argv,
+        }
+        if run_mismatches:
+            variant_result["source_path"] = str(tmp_file.relative_to(repo_root))
+
+        case_result["variants"].append(variant_result)
 
     uniqueness_mismatch: list[str] = []
     if len(unique_hashes) < min_unique:

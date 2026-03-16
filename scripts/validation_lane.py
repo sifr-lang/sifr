@@ -80,6 +80,13 @@ def load_fixture_count(path: Path) -> int:
     return len(fixture_names)
 
 
+def resolve_fixture_manifest_path(raw_path: str) -> Path:
+    fixture_manifest_path = (REPO_ROOT / raw_path).resolve()
+    if not fixture_manifest_path.is_file():
+        raise SystemExit(f"fixture manifest not found: {fixture_manifest_path}")
+    return fixture_manifest_path
+
+
 def shell_quote(value: Any) -> str:
     return shlex.quote("" if value is None else str(value))
 
@@ -102,7 +109,7 @@ def emit_shell(profile: str, lane: dict[str, Any], manifest_path: Path) -> None:
     fixture_manifest = e2e.get("fixture_manifest")
     fixture_manifest_abs = ""
     if isinstance(fixture_manifest, str) and fixture_manifest:
-        fixture_manifest_abs = str((REPO_ROOT / fixture_manifest).resolve())
+        fixture_manifest_abs = str(resolve_fixture_manifest_path(fixture_manifest))
 
     values = {
         "CANONICAL_PROFILE": profile,
@@ -143,7 +150,7 @@ def emit_summary(requested_profile: str, canonical_profile: str, lane: dict[str,
     fixture_count = "full-corpus"
     fixture_manifest_display = "none"
     if isinstance(fixture_manifest, str) and fixture_manifest:
-        fixture_manifest_path = (REPO_ROOT / fixture_manifest).resolve()
+        fixture_manifest_path = resolve_fixture_manifest_path(fixture_manifest)
         fixture_count = str(load_fixture_count(fixture_manifest_path))
         fixture_manifest_display = str(fixture_manifest_path.relative_to(REPO_ROOT))
 
