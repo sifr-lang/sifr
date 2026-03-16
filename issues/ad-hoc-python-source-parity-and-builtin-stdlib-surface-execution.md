@@ -718,6 +718,10 @@ Status: pending
   - Validation result: approved as production-ready with no actionable implementation issue.
   - Non-actionable stale note: the review text still mentions `ConfigParser.read()` not populating parser state, which was true before PR `#1174` and is now invalid on current mainline.
   - Fix status: no code changes required.
+- `wave_psp_c1` review pass 3:
+  - Reviewer file: `/Users/yaseralnajjar/.codex/worktrees/0761/codebase/reviews/wave-psp-c1-review-gap-cpython-parity-20260316.md`
+  - Validation result: partially actionable. The reported `ConfigParser.has_option()` bug is invalid against CPython behavior (`DEFAULT` options are visible to concrete sections), while the request to explicitly classify `json.dumps` encode-error semantics and clean minor CSV no-op assignment was valid.
+  - Fix status: remediated by classifying `json.dumps` encode-error propagation as an intentional C1 divergence in `verification/stdlib/wave_psp_c1_cpython_traceability.md` and removing the redundant `DictWriter.writeheader()` reassignment in `lib/sifr/csv.sifr`.
 - `wave_psp_c2` review pass 1:
   - Reviewer file: `/Users/yaseralnajjar/.codex/worktrees/0761/codebase/reviews/wave-psp-c2-review-pass1.md`
   - Validated findings: `SequenceMatcher.get_matching_blocks()` only returned the longest substring block, `SequenceMatcher.ratio()` used character-presence instead of block-based matching, and `TextWrapper` width did not account for line indentation width.
@@ -725,6 +729,10 @@ Status: pending
 - `wave_psp_c2` review pass 2:
   - Reviewer file: `/Users/yaseralnajjar/.codex/worktrees/0761/codebase/reviews/wave-psp-c2-review-pass2c.md`
   - Validation result: approved as production-ready with no actionable implementation issue.
+  - Fix status: no code changes required.
+- `wave_psp_c2` review pass 3:
+  - Reviewer file: `/Users/yaseralnajjar/.codex/worktrees/0761/codebase/reviews/wave-psp-c2-review-gap-cpython-parity-20260316.md`
+  - Validation result: approved as production-grade with no actionable implementation issue.
   - Fix status: no code changes required.
 - `wave_psp_ab` review pass 1:
   - Reviewer file: `/Users/yaseralnajjar/.codex/worktrees/0761/codebase/reviews/wave-psp-ab-review-pass1.md`
@@ -750,6 +758,10 @@ Status: pending
   - Reviewer file: `/Users/yaseralnajjar/.codex/worktrees/0761/codebase/reviews/wave-psp-d1-review-pass2.md`
   - Validation result: non-actionable stale review. The notes incorrectly reported `wave_psp_d1` as pending and missing artifacts that are already merged (`#1192`) on current mainline.
   - Fix status: no code changes required.
+- `wave_psp_d1` review pass 3:
+  - Reviewer file: `/Users/yaseralnajjar/.codex/worktrees/0761/codebase/reviews/wave-psp-d1-review-gap-cpython-parity-20260316.md`
+  - Validation result: no new actionable implementation issue. Reported gaps are documented adapt/waive scope boundaries already captured in `verification/stdlib/wave_psp_d1_cpython_traceability.md`.
+  - Fix status: no code changes required.
 - `wave_psp_d2` review pass 1:
   - Reviewer file: `/Users/yaseralnajjar/.codex/worktrees/0761/codebase/reviews/wave-psp-d2-review-pass1.md`
   - Validation result: non-actionable stale review. It incorrectly reported d2 as pending and missing artifacts (`wave_psp_d2` traceability/demo/pass/fail fixtures) that are present and merged in PR `#1198`.
@@ -758,6 +770,10 @@ Status: pending
   - Reviewer file: `/Users/yaseralnajjar/.codex/worktrees/0761/codebase/reviews/wave-psp-d2-review-pass2.md`
   - Validation result: approved as production-ready with no actionable implementation issue.
   - Fix status: no code changes required.
+- `wave_psp_d2` review pass 3:
+  - Reviewer file: `/Users/yaseralnajjar/.codex/worktrees/0761/codebase/reviews/wave-psp-d2-review-gap-cpython-parity-20260316.md`
+  - Validation result: approved with no actionable implementation issue.
+  - Fix status: no code changes required.
 - `wave_psp_e1` review pass 1:
   - Reviewer file: `/Users/yaseralnajjar/.codex/worktrees/0761/codebase/reviews/wave-psp-e1-review-pass1.md`
   - Validation result: partially actionable. The review mostly reflected stale pre-`#1201` state (it claimed missing e1 artifacts and pending implementation), but the request to make e1 semantic adaptations explicit in evidence was valid.
@@ -765,6 +781,10 @@ Status: pending
 - `wave_psp_e1` review pass 2:
   - Reviewer file: `/Users/yaseralnajjar/.codex/worktrees/0761/codebase/reviews/wave-psp-e1-review-pass2.md`
   - Validation result: non-actionable stale review. It incorrectly reported wave e1 as pending and missing traceability/demo artifacts that are already merged in `#1201` and `#1202`.
+  - Fix status: no code changes required.
+- `wave_psp_e1` review pass 3:
+  - Reviewer file: `/Users/yaseralnajjar/.codex/worktrees/0761/codebase/reviews/wave-psp-e1-review-gap-cpython-parity-20260316.md`
+  - Validation result: approved with no actionable implementation issue.
   - Fix status: no code changes required.
 - `wave_psp_e2` review pass 1:
   - Reviewer file: `/Users/yaseralnajjar/.codex/worktrees/0761/codebase/reviews/wave-psp-e2-review-pass1.md`
@@ -789,4 +809,8 @@ Status: pending
 - `wave_psp_e2` review pass 6:
   - Reviewer file: `/Users/yaseralnajjar/.codex/worktrees/0761/codebase/reviews/wave-psp-e2-review-pass6.md`
   - Validation result: approved with no actionable implementation issue; the body references an older e2 commit snapshot but reports no correctness regressions against the active wave surface.
+  - Fix status: no code changes required.
+- `wave_psp_e2` review pass 7:
+  - Reviewer file: `/Users/yaseralnajjar/.codex/worktrees/0761/codebase/reviews/wave-psp-e2-review-gap-cpython-parity-20260316.md`
+  - Validation result: non-actionable stale review. It reports `wave_psp_e2` as "in progress / PR pending" even though the wave and follow-up hardening are already merged.
   - Fix status: no code changes required.

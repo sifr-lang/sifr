@@ -14,6 +14,7 @@
 | Surface | State | Rationale |
 | --- | --- | --- |
 | `json` encoder/decoder hook families such as `default=`, `object_hook`, `object_pairs_hook`, `parse_float`, `parse_int`, `parse_constant`, pretty-print indentation, and CLI tooling | `unsupported` | These families require dynamic callback injection or formatting controls that are outside the current typed structured-value surface closed in this wave. |
+| `json.dumps(...)` CPython-style encoder error propagation (`JSONEncodeError` on serialization failure) | `intentional-diff` | The closed C1 surface accepts typed `JsonValue` inputs and keeps panic-free emission semantics. Internal serialization failures currently fall back to `"null"` rather than surfacing a dynamic encode exception contract. |
 | `tomllib.load(fp, parse_float=...)` and callback-based numeric customization | `unsupported` | Sifr does not expose CPython's dynamic parse-hook customization model for TOML decoding. |
 | Lazy streaming behavior for `csv.reader`/`csv.DictReader` and the dialect registry API from `test_csv.py` | `unsupported` | Sifr keeps eager row materialization and direct `Dialect(...)` construction rather than a global registry and iterator-based reader lifecycle. |
 | `configparser` interpolation families, converter registration, mapping proxy protocols, and write-back formatting parity | `unsupported` | This wave closes the core parser/object/error surface only; the richer interpolation and proxy model would require additional class and callback infrastructure. |
