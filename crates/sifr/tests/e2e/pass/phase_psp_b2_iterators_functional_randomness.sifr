@@ -63,6 +63,30 @@ def main():
     except ValueError as e:
         assert str(e.message) == 'choice: items must not be empty'
 
+    try:
+        _bad_choices: list[int] = choices([], k=2)
+        assert str("choices unexpectedly succeeded") == 'phase_psp_b2: choices empty handled'
+    except ValueError as e:
+        assert str(e.message) == 'choices: items must not be empty'
+
+    try:
+        _bad_range: int = randrange(5, 3)
+        assert str("randrange unexpectedly succeeded") == 'phase_psp_b2: randrange bounds handled'
+    except ValueError as e:
+        assert str(len(e.message) > 0) == 'true'
+
+    try:
+        _bad_step: int = randrange(0, 10, 0)
+        assert str("randrange step unexpectedly succeeded") == 'phase_psp_b2: randrange step handled'
+    except ValueError as e:
+        assert str(len(e.message) > 0) == 'true'
+
+    try:
+        _bad_bits: int = getrandbits(-1)
+        assert str("getrandbits unexpectedly succeeded") == 'phase_psp_b2: getrandbits handled'
+    except ValueError as e:
+        assert str(e.message) == 'getrandbits: number of bits must be >= 0'
+
     assert str(compare_digest("abc", "abc")) == 'true'
     assert str(compare_digest("abc", "abd")) == 'false'
     assert str(len(token_hex(6))) == '12'
@@ -74,3 +98,15 @@ def main():
         assert str(below >= 0 and below < 7) == 'true'
     except ValueError as e:
         assert str("unexpected secrets error: " + e.message) == 'phase_psp_b2: secrets block passed'
+
+    try:
+        _bad_below: int = randbelow(0)
+        assert str("randbelow unexpectedly succeeded") == 'phase_psp_b2: randbelow handled'
+    except ValueError as e:
+        assert str(e.message) == 'randbelow: n must be > 0'
+
+    try:
+        _bad_randbits: int = randbits(-1)
+        assert str("randbits unexpectedly succeeded") == 'phase_psp_b2: randbits handled'
+    except ValueError as e:
+        assert str(e.message) == 'randbits: number of bits must be >= 0'

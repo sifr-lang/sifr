@@ -1,0 +1,131 @@
+# Adapted CPython random subset for sifr.random (canonical vector format)
+from sifr.random import choice, choices, getrandbits, randrange, shuffle
+from sifr.test import assert_bool_vector_eq
+
+
+def values_within(items: list[int], minimum: int, maximum: int) -> bool:
+    for item in items:
+        if item < minimum or item > maximum:
+            return False
+    return True
+
+
+def collect_core_actual() -> list[bool]:
+    actual: list[bool] = []
+    items: list[int] = [1, 2, 3, 4]
+    shuffle(items)
+    actual.append(len(items) == 4)
+
+    choice_ok: bool = False
+    try:
+        picked: int = choice(items)
+        choice_ok = picked >= 1 and picked <= 4
+    except ValueError as e:
+        _ = e.message
+    actual.append(choice_ok)
+
+    choices_ok: bool = False
+    try:
+        picked_many: list[int] = choices(items, k=5)
+        choices_ok = len(picked_many) == 5 and values_within(picked_many, 1, 4)
+    except ValueError as e:
+        _ = e.message
+    actual.append(choices_ok)
+
+    choices_zero_ok: bool = False
+    try:
+        zero_picks: list[int] = choices(items, k=0)
+        choices_zero_ok = len(zero_picks) == 0
+    except ValueError as e:
+        _ = e.message
+    actual.append(choices_zero_ok)
+
+    randrange_single_ok: bool = False
+    try:
+        single: int = randrange(8)
+        randrange_single_ok = single >= 0 and single < 8
+    except ValueError as e:
+        _ = e.message
+    actual.append(randrange_single_ok)
+
+    randrange_stepped_ok: bool = False
+    try:
+        stepped: int = randrange(2, 9, 2)
+        randrange_stepped_ok = stepped >= 2 and stepped < 9 and stepped % 2 == 0
+    except ValueError as e:
+        _ = e.message
+    actual.append(randrange_stepped_ok)
+
+    bits_ok: bool = False
+    try:
+        bits: int = getrandbits(12)
+        bits_ok = bits >= 0
+    except ValueError as e:
+        _ = e.message
+    actual.append(bits_ok)
+
+    return actual
+
+
+def collect_negative_actual() -> list[bool]:
+    actual: list[bool] = []
+
+    empty_choice_rejected: bool = False
+    try:
+        _bad_choice: int = choice([])
+        _ = _bad_choice
+    except ValueError as e:
+        empty_choice_rejected = e.message == "choice: items must not be empty"
+    actual.append(empty_choice_rejected)
+
+    empty_choices_rejected: bool = False
+    try:
+        _bad_choices: list[int] = choices([], k=3)
+        _ = _bad_choices
+    except ValueError as e:
+        empty_choices_rejected = e.message == "choices: items must not be empty"
+    actual.append(empty_choices_rejected)
+
+    invalid_bounds_rejected: bool = False
+    try:
+        _bad_range: int = randrange(5, 3)
+        _ = _bad_range
+    except ValueError as e:
+        invalid_bounds_rejected = len(e.message) > 0
+    actual.append(invalid_bounds_rejected)
+
+    invalid_step_rejected: bool = False
+    try:
+        _bad_step: int = randrange(0, 10, 0)
+        _ = _bad_step
+    except ValueError as e:
+        invalid_step_rejected = len(e.message) > 0
+    actual.append(invalid_step_rejected)
+
+    invalid_bits_rejected: bool = False
+    try:
+        _bad_bits: int = getrandbits(-1)
+        _ = _bad_bits
+    except ValueError as e:
+        invalid_bits_rejected = e.message == "getrandbits: number of bits must be >= 0"
+    actual.append(invalid_bits_rejected)
+
+    return actual
+
+
+def append_all(mut target: list[bool], values: list[bool]):
+    for value in values:
+        target.append(value)
+
+
+def main():
+    expected: list[bool] = [
+        True, True, True, True, True, True, True,
+        True, True, True, True, True
+    ]
+    actual: list[bool] = []
+    append_all(actual, collect_core_actual())
+    append_all(actual, collect_negative_actual())
+
+    assert_bool_vector_eq(actual, expected)
+    assert str("cpython_random_subset: pass") == "cpython_random_subset: pass"
