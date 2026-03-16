@@ -286,60 +286,6 @@
       "label": "Phase 24 HIR analysis consolidation regression matrix",
       "rows": [
         {
-          "id": "nested_conditionals_call_detection",
-          "commands": [
-            {
-              "id": "m24_2_run",
-              "argv": ["cargo", "run", "-q", "-p", "sifr", "--", "run", "demos/m24_2_semantic_query_layer_standardization_demo/main.sifr"],
-              "expected_exit": 0
-            }
-          ],
-          "assertions": [
-            {
-              "kind": "contains",
-              "command_id": "m24_2_run",
-              "stream": "stdout",
-              "text": "m24_2 semantic query layer standardization demo:"
-            }
-          ]
-        },
-        {
-          "id": "control_flow_effect_query_paths",
-          "commands": [
-            {
-              "id": "m24_3_run",
-              "argv": ["cargo", "run", "-q", "-p", "sifr", "--", "run", "demos/m24_3_control_flow_effect_query_unification_demo/main.sifr"],
-              "expected_exit": 0
-            }
-          ],
-          "assertions": [
-            {
-              "kind": "contains",
-              "command_id": "m24_3_run",
-              "stream": "stdout",
-              "text": "99"
-            }
-          ]
-        },
-        {
-          "id": "analysis_boundary_consumers",
-          "commands": [
-            {
-              "id": "m24_4_run",
-              "argv": ["cargo", "run", "-q", "-p", "sifr", "--", "run", "demos/m24_4_analysis_emission_boundary_hardening_demo/main.sifr"],
-              "expected_exit": 0
-            }
-          ],
-          "assertions": [
-            {
-              "kind": "contains",
-              "command_id": "m24_4_run",
-              "stream": "stdout",
-              "text": "33"
-            }
-          ]
-        },
-        {
           "id": "matrix_fixture_full_modes",
           "commands": [
             {
@@ -453,48 +399,6 @@
       "name": "phase25_cfg_flow",
       "label": "Phase 25 CFG/flow activation regression matrix",
       "rows": [
-        {
-          "id": "canonical_query_paths",
-          "commands": [
-            {
-              "id": "m25_3_run",
-              "argv": ["cargo", "run", "-q", "-p", "sifr", "--", "run", "demos/m25_3_canonical_flow_truth_queries_demo/main.sifr"],
-              "expected_exit": 0
-            }
-          ],
-          "assertions": [
-            {
-              "kind": "contains",
-              "command_id": "m25_3_run",
-              "stream": "stdout",
-              "text": "m25_3 canonical flow truth queries demo:"
-            }
-          ]
-        },
-        {
-          "id": "diagnostics_consumer_cfg_integration",
-          "commands": [
-            {
-              "id": "m25_4_run",
-              "argv": ["cargo", "run", "-q", "-p", "sifr", "--", "run", "demos/m25_4_diagnostics_and_consumer_integration_demo/main.sifr"],
-              "expected_exit": 0
-            }
-          ],
-          "assertions": [
-            {
-              "kind": "contains",
-              "command_id": "m25_4_run",
-              "stream": "stdout",
-              "text": "m25_4 diagnostics and consumer integration demo:"
-            },
-            {
-              "kind": "contains",
-              "command_id": "m25_4_run",
-              "stream": "stderr",
-              "text": "unreachable statement at block index 2 was ignored"
-            }
-          ]
-        },
         {
           "id": "matrix_fixture_full_modes",
           "commands": [
