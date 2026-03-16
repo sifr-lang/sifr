@@ -1,0 +1,6 @@
+from sifr.math import isclose
+
+
+def main():
+    _close: bool = isclose(1.0, 1.0, "0.1", 0.0)
+    _ = _close

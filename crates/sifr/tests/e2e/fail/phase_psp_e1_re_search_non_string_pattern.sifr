@@ -1,0 +1,6 @@
+from sifr.re import search
+
+
+def main():
+    found = search(42, "abc")
+    _ = found

@@ -1,0 +1,6 @@
+from sifr.datetime import from_timestamp
+
+
+def main():
+    value = from_timestamp("0")
+    _ = value
