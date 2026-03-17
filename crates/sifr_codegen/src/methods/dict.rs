@@ -213,3 +213,30 @@ pub(super) fn lower_pop(object: &RustExpr, args: &[RustExpr]) -> Option<RustExpr
         _ => None,
     }
 }
+
+pub(super) fn lower_setdefault(object: &RustExpr, args: &[RustExpr]) -> Option<RustExpr> {
+    match args {
+        [key, default] => Some(RustExpr::MethodCall {
+            receiver: Box::new(RustExpr::MethodCall {
+                receiver: Box::new(RustExpr::MethodCall {
+                    receiver: Box::new(object.clone()),
+                    method: "entry".to_string(),
+                    args: vec![RustExpr::MethodCall {
+                        receiver: Box::new(key.clone()),
+                        method: "clone".to_string(),
+                        args: vec![],
+                    }],
+                }),
+                method: "or_insert".to_string(),
+                args: vec![RustExpr::MethodCall {
+                    receiver: Box::new(default.clone()),
+                    method: "clone".to_string(),
+                    args: vec![],
+                }],
+            }),
+            method: "clone".to_string(),
+            args: vec![],
+        }),
+        _ => None,
+    }
+}

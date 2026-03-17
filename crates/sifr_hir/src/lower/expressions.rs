@@ -2773,6 +2773,23 @@ pub(super) fn resolve_method_type(
                     Some(Type::Union(vec![*val_ty.clone(), Type::None]))
                 }
             }
+            "setdefault" => {
+                if args.len() != 2 {
+                    ctx.error(format!(
+                        "dict.setdefault() takes exactly 2 arguments, got {}",
+                        args.len()
+                    ));
+                    return None;
+                }
+                if !args[1].ty().is_assignable_to(val_ty) {
+                    ctx.error(format!(
+                        "dict.setdefault() default type '{}' is not compatible with dict value type '{}'",
+                        args[1].ty().display_name(),
+                        val_ty.display_name()
+                    ));
+                }
+                Some(*val_ty.clone())
+            }
             _ => {
                 ctx.error(format!("dict has no method '{method}'"));
                 None

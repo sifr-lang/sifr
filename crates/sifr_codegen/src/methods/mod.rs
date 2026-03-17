@@ -103,6 +103,7 @@ pub(crate) fn lower_method_with_context(
         (Type::Dict(_, _), "contains") => dict::lower_contains(object, args),
         (Type::Dict(_, _), "get") => dict::lower_get(object, args),
         (Type::Dict(_, _), "pop") => dict::lower_pop(object, args),
+        (Type::Dict(_, _), "setdefault") => dict::lower_setdefault(object, args),
         (Type::Set(_), "add") => set::lower_add(object, args),
         (Type::Set(_), "remove") => set::lower_remove(object, args),
         (Type::Set(_), "discard") => set::lower_discard(object, args),
@@ -519,6 +520,18 @@ mod tests {
         assert_eq!(
             render_expr(&dict_pop_default.expr),
             "d.remove(&\"k\").unwrap_or(0)"
+        );
+
+        let dict_setdefault = lower_method(
+            &dict_ty,
+            "setdefault",
+            "d",
+            &["\"k\"".to_string(), "0".to_string()],
+        )
+        .expect("dict setdefault lowers");
+        assert_eq!(
+            render_expr(&dict_setdefault.expr),
+            "d.entry(\"k\".clone()).or_insert(0.clone()).clone()"
         );
 
         let set_ty = Type::Set(Box::new(Type::Int));

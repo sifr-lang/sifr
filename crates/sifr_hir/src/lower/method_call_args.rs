@@ -338,7 +338,7 @@ fn normalize_dict_method_args(
     ctx: &mut LowerCtx,
 ) -> Option<Vec<HirExpr>> {
     match method {
-        "get" | "pop" => {
+        "get" | "pop" | "setdefault" => {
             let mut args = positional;
             if let Some(default) = take_keyword(keywords, "default") {
                 if args.len() > 1 {

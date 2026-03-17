@@ -222,6 +222,7 @@ Status: pending
   - `crates/sifr/tests/e2e/fail/phase_psp_a2_list_unexpected_keyword.sifr`
   - `crates/sifr/tests/e2e/fail/phase_psp_a2_dict_update_invalid_pairs.sifr`
   - `crates/sifr/tests/e2e/fail/phase_psp_a2_dict_get_duplicate_default.sifr`
+  - `crates/sifr/tests/e2e/fail/phase_psp_a2_dict_setdefault_invalid_default.sifr`
   - `crates/sifr/tests/e2e/fail/phase_psp_a2_set_update_non_iterable.sifr`
   - `crates/sifr/tests/e2e/fail/phase_psp_a2_str_replace_invalid_count.sifr`
   - `crates/sifr/tests/e2e/fail/phase_psp_a2_tuple_index_invalid_bound.sifr`
@@ -235,6 +236,7 @@ Status: pending
   - `cargo run -q -p sifr -- check crates/sifr/tests/e2e/fail/phase_psp_a2_list_unexpected_keyword.sifr`
   - `cargo run -q -p sifr -- check crates/sifr/tests/e2e/fail/phase_psp_a2_dict_update_invalid_pairs.sifr`
   - `cargo run -q -p sifr -- check crates/sifr/tests/e2e/fail/phase_psp_a2_dict_get_duplicate_default.sifr`
+  - `cargo run -q -p sifr -- check crates/sifr/tests/e2e/fail/phase_psp_a2_dict_setdefault_invalid_default.sifr`
   - `cargo run -q -p sifr -- check crates/sifr/tests/e2e/fail/phase_psp_a2_set_update_non_iterable.sifr`
   - `cargo run -q -p sifr -- check crates/sifr/tests/e2e/fail/phase_psp_a2_str_replace_invalid_count.sifr`
   - `cargo run -q -p sifr -- check crates/sifr/tests/e2e/fail/phase_psp_a2_tuple_index_invalid_bound.sifr`
@@ -684,6 +686,10 @@ Status: pending
   - Reviewer file: `/Users/yaseralnajjar/work/sifr/codebase/reviews/wave-psp-a1-review-pass2.md`
   - Validation result: no new actionable finding. The repeated `range(10, stop=20)` bug claim was invalid on the post-`#1150` mainline, and the recommendation to reject all `range(...)` keywords conflicts with the wave's documented `adapted` parity contract in `verification/stdlib/wave_psp_a1_cpython_traceability.md`.
   - Fix status: no code changes required.
+- `wave_psp_a1` review pass 3:
+  - Reviewer file: `/Users/yaseralnajjar/.codex/worktrees/0761/codebase/reviews/wave-psp-a1-review-gap-cpython-parity-20260317-r2.md`
+  - Validation result: non-actionable stale finding. The report asks to reject all `range(...)` keyword forms, but wave `a1` intentionally classifies keyword `range(start=..., stop=..., step=...)` as `adapted` parity, with executable evidence in `phase_psp_a1_builtin_callable_surface.sifr` and `cpython_builtins_subset.sifr`.
+  - Fix status: no code changes required; behavior and traceability remain aligned.
 - `wave_psp_a2` review pass 1:
   - Reviewer file: `/Users/yaseralnajjar/work/sifr/codebase/reviews/wave-psp-a2-review-pass1.md`
   - Validation result: approved with no actionable implementation issue. The only noted verification-hardening interruption was an environment-level disk-space concern, not a wave-specific regression.
@@ -692,6 +698,10 @@ Status: pending
   - Reviewer file: `/Users/yaseralnajjar/work/sifr/codebase/reviews/wave-psp-a2-review-pass2.md`
   - Validated finding: the wave traceability doc did not explicitly call out that `list.index(start=/stop=)`, `tuple.index(start=)`, `dict.pop(default=)`, and `dict.get(default=)` are intentional keyword-binding adaptations over CPython's positional-only API.
   - Fix status: documentation tightened in `verification/stdlib/wave_psp_a2_cpython_traceability.md`; code behavior unchanged.
+- `wave_psp_a2` review pass 3:
+  - Reviewer file: `/Users/yaseralnajjar/.codex/worktrees/0761/codebase/reviews/wave-psp-a2-review-gap-cpython-parity-20260317-r1.md`
+  - Validation result: partially actionable. The reported mutable-set method failures were stale on current mainline, but the `dict.setdefault(key, default)` parity gap was valid for the shipped a2 surface.
+  - Fix status: remediated by adding `dict.setdefault` lowering/type checks (`crates/sifr_hir/src/lower/{method_call_args,expressions,mutating_methods}.rs` + `crates/sifr_codegen/src/methods/{dict,mod}.rs`), adding fail guard `phase_psp_a2_dict_setdefault_invalid_default.sifr`, expanding CPython-derived/pass coverage for `setdefault` + set mutating update families in `phase_psp_a2_core_object_model_surface.sifr` and `cpython_core_object_model_subset.sifr`, and tightening `verification/stdlib/wave_psp_a2_cpython_traceability.md`.
 - `wave_psp_b1` review pass 1:
   - Reviewer file: historical artifact no longer present in the current workspace (`reviews/wave-psp-b1-review-pass1.md` was removed during later workspace cleanup); validated outcome retained in this ledger.
   - Validation result: approved with no actionable implementation issue.
