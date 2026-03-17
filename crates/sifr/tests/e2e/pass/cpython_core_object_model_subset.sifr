@@ -14,6 +14,8 @@ def collect_list_actual() -> list[bool]:
 
 def collect_dict_actual() -> list[bool]:
     actual: list[bool] = []
+    defaults_first: dict[str, int] = {"base": 1}
+    actual.append(defaults_first.setdefault("new", 2) == 2 and defaults_first["new"] == 2)
     mapping: dict[str, int] = {"a": 1}
     mapping.update({"b": 2})
     mapping.update([("c", 3)])
@@ -29,6 +31,16 @@ def collect_dict_actual() -> list[bool]:
 
 def collect_set_actual() -> list[bool]:
     actual: list[bool] = []
+    first_intersection: set[int] = {1, 2, 3}
+    first_intersection.intersection_update([2, 3, 4])
+    actual.append(first_intersection == {2, 3})
+    first_difference: set[int] = {1, 2, 3}
+    first_difference.difference_update([2], [8])
+    actual.append(first_difference == {1, 3})
+    first_symmetric: set[int] = {1, 2}
+    first_symmetric.symmetric_difference_update([2, 3])
+    actual.append(first_symmetric == {1, 3})
+
     values: set[int] = {1, 2}
     values.update([2, 3], [4])
     actual.append(values == {1, 2, 3, 4})
@@ -62,8 +74,8 @@ def append_all(mut target: list[bool], values: list[bool]):
 def main():
     expected: list[bool] = [
         True, True,
-        True, True, True, True, True,
-        True, True, True, True, True,
+        True, True, True, True, True, True,
+        True, True, True, True, True, True, True, True,
         True, True, True, True
     ]
     actual: list[bool] = []
