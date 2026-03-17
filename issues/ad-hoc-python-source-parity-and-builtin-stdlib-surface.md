@@ -1,6 +1,6 @@
 # Ad Hoc Phase: Python Source Parity and CPython Surface Closure
 
-Status: in_progress
+Status: complete
 Phase placement: ad hoc interstitial phase between Phase 31 and Phase 32
 Phase owner: Codex (GPT-5), tracked in `issues/ad-hoc-python-source-parity-and-builtin-stdlib-surface-execution.md`
 

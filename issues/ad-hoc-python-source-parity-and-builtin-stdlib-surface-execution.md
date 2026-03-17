@@ -1,10 +1,10 @@
 # Ad Hoc Phase Execution: Python Source Parity and Builtin Stdlib Surface Closure
 
-Status: in_progress
+Status: complete
 Started: 2026-03-14
 Phase owner: Codex (GPT-5)
 Source phase: `issues/ad-hoc-python-source-parity-and-builtin-stdlib-surface.md`
-Current active wave: `milestone_psp_7`
+Current active wave: `none (phase closed)`
 
 ## Execution Rules
 
@@ -691,6 +691,7 @@ Status: done
 - `wave_psp_d2-review-pass5`: PR `#1232` merged at `2026-03-17T14:54:01Z`
 - `wave_psp_e2-review-pass9`: PR `#1233` merged at `2026-03-17T15:03:44Z`
 - `wave-ledger-sync-through-1233`: PR `#1234` merged at `2026-03-17T15:04:56Z`
+- `milestone_psp_7-production-grade-remediation-r2`: PR `#1235` merged at `2026-03-17T16:17:31Z`
 
 ## External Review Ledger
 
@@ -935,3 +936,19 @@ Status: done
   - Reviewer file: `/Users/yaseralnajjar/.codex/worktrees/0761/codebase/reviews/milestone-psp-7-production-grade-review-20260317-r1.md`
   - Validation result: actionable gap. Clippy `-D warnings` failed across HIR/codegen/driver, and the milestone demo had an invalid TOML type annotation.
   - Fix status: remediated by removing recursion-only context plumbing from `crates/sifr_hir/src/lower/expressions.rs`, hardening clippy-clean helper shapes in `crates/sifr_codegen/src/{class_method_emitter.rs,expr_render_helpers.rs,intrinsic_method_emitters.rs,intrinsics/toml.rs,stmt_support_emitter.rs}`, fixing driver lint issues in `crates/sifr_driver/src/build/materialize.rs`, and correcting TOML typing assertions in `demos/milestone_stdlib_parity_demo.sifr`.
+- `milestone_psp_7` production-grade review pass 2:
+  - Reviewer file: `/Users/yaseralnajjar/.codex/worktrees/0761/codebase/reviews/milestone-psp-7-production-grade-review-20260317-r2.md`
+  - Validation result: reviewer satisfied; milestone marked production-grade ready with no actionable gaps.
+  - Fix status: no additional code changes required beyond pass-1 remediation.
+- `milestone_psp_7` completion review pass 2:
+  - Reviewer file: `/Users/yaseralnajjar/.codex/worktrees/0761/codebase/reviews/milestone-psp-7-completion-review-20260317-r2.md`
+  - Validation result: reviewer satisfied; milestone completion closure confirmed with no actionable gaps.
+  - Fix status: no code changes required.
+- `phase_psp` completion review pass 1:
+  - Reviewer file: `/Users/yaseralnajjar/.codex/worktrees/0761/codebase/reviews/phase-psp-completion-review-20260317-r1.md`
+  - Validation result: reviewer marked the phase complete with no actionable closure gaps.
+  - Fix status: no code changes required.
+- `phase_psp` production-grade review pass 1:
+  - Reviewer file: `/Users/yaseralnajjar/.codex/worktrees/0761/codebase/reviews/phase-psp-production-grade-review-20260317-r1.md`
+  - Validation result: reviewer marked production-grade ready; only minor cosmetic governance status-marker inconsistencies were noted.
+  - Fix status: remediated by updating status markers to `complete` in `verification/stdlib/milestone_psp_7_parity_governance_inventory.md` and `issues/ad-hoc-python-source-parity-and-builtin-stdlib-surface.md`, and by closing this execution ledger status.

@@ -1,6 +1,6 @@
 # `milestone_psp_7` Parity Governance Inventory
 
-Status: in_progress  
+Status: complete  
 Phase: `issues/ad-hoc-python-source-parity-and-builtin-stdlib-surface.md`  
 Execution ledger: `issues/ad-hoc-python-source-parity-and-builtin-stdlib-surface-execution.md`
 
