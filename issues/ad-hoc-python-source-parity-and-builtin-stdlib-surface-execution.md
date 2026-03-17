@@ -779,6 +779,10 @@ Status: pending
   - Reviewer file: `/Users/yaseralnajjar/.codex/worktrees/0761/codebase/reviews/wave-psp-c1-review-gap-cpython-parity-20260317-r1.md`
   - Validation result: partially actionable on documentation fidelity. Runtime behavior remained correct, but traceability wording needed tighter subset-scoped coverage framing to avoid overstating CPython-family depth.
   - Fix status: remediated by tightening `verification/stdlib/wave_psp_c1_cpython_traceability.md` (explicit subset-coverage scope note, explicit `cpython_json_subset.sifr` evidence mapping, and explicit TOML decode-position `intentional-diff` classification).
+- `wave_psp_c1` review pass 5:
+  - Reviewer file: `/Users/yaseralnajjar/.codex/worktrees/0761/codebase/reviews/wave-psp-c1-review-gap-cpython-parity-20260317-r3.md`
+  - Validation result: approved with no actionable implementation or parity gaps; the previously flagged `ConfigParser.has_option()` claim was explicitly corrected as non-bug and aligned with CPython behavior.
+  - Fix status: no code changes required.
 - `wave_psp_c2` review pass 1:
   - Reviewer file: `/Users/yaseralnajjar/.codex/worktrees/0761/codebase/reviews/wave-psp-c2-review-pass1.md`
   - Validated findings: `SequenceMatcher.get_matching_blocks()` only returned the longest substring block, `SequenceMatcher.ratio()` used character-presence instead of block-based matching, and `TextWrapper` width did not account for line indentation width.
