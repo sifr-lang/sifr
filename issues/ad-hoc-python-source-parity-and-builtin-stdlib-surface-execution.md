@@ -675,6 +675,10 @@ Status: pending
 - `wave_psp_e1-review-pass1`: PR `#1202` merged at `2026-03-16T09:01:04Z`
 - `wave_psp_e2`: PR `#1205` merged at `2026-03-16T09:39:48Z`
 - `wave_psp_e2-review-pass1`: PR `#1206` merged at `2026-03-16T09:50:26Z`
+- `wave_psp_a2-review-pass3`: PR `#1220` merged at `2026-03-17T11:32:16Z`
+- `wave_psp_a2-review-pass4`: PR `#1221` merged at `2026-03-17T12:01:41Z`
+- `wave_psp_a2-review-pass5`: PR `#1222` merged at `2026-03-17T13:03:15Z`
+- `wave_psp_b2-review-pass6`: PR `#1223` merged at `2026-03-17T13:15:23Z`
 
 ## External Review Ledger
 
