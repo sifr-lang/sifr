@@ -1,7 +1,7 @@
 # Ad Hoc Phase: Stateful RNG, Crypto, and Polish Parity Expansion
 
 Status: open (documented 2026-03-18)
-Context: final cleanup phase after the structured/class and runtime/file-object follow-ups
+Context: final cleanup phase after the structured/class, bytes-foundation, and runtime/file-object follow-ups
 Execution readiness: implementation-ready after `issues/ad-hoc-runtime-and-file-object-parity-expansion.md`
 
 ## Objective
@@ -34,6 +34,7 @@ Conditional residual polish targets:
   - `verification/stdlib/wave_psp_e1_cpython_traceability.md`
 - predecessor planning docs:
   - `issues/ad-hoc-structured-data-and-class-surface-parity-expansion.md`
+  - `issues/ad-hoc-first-class-bytes-and-binary-surface-foundation.md`
   - `issues/ad-hoc-runtime-and-file-object-parity-expansion.md`
 - architecture baseline:
   - `internal_docs/architecture.md`
@@ -62,6 +63,8 @@ It should therefore execute after the broader object-model and runtime work, not
 
 ## Depends on
 
+- `issues/ad-hoc-first-class-bytes-and-binary-surface-foundation.md`
+- `issues/ad-hoc-runtime-and-file-object-parity-expansion.md`
 - milestone-7 canonical closure inventory remains the baseline
 - prior follow-up phases should already have reduced broader parser, class, and runtime debt
 - Phase 27 non-regression invariants remain mandatory
@@ -83,30 +86,31 @@ It should therefore execute after the broader object-model and runtime work, not
   - `state_words: list[int]`
   - `index: int`
   - `gauss_next: float | None`
-- Module-level `seed`, `getstate`, `setstate`, `randrange`, `randint`, `random`, `choice`, `choices`, `sample`, `shuffle`, `gauss`, and `uniform` delegate to one module-global `Random` instance.
+- Module-level `seed`, `getstate`, `setstate`, `randrange`, `randint`, `random`, `choice`, `choices`, `sample`, `shuffle`, `gauss`, `uniform`, and `randbytes` delegate to one module-global `Random` instance.
 - `SystemRandom` remains non-deterministic and does not support `getstate` or `setstate`.
+- `randbytes(n: int) -> Result[bytes, ValueError]` is in scope once the deterministic object model is stable.
 - `choices(weights=...)` stays out of scope unless the deterministic `RandomState` model lands cleanly in `wave_psp_rng_1`; otherwise it remains explicitly unsupported for this phase.
 
 ### `hashlib`
 
 - Keep `str` input support.
-- Standardize binary data transport as `list[int]`, not first-class `bytes`.
+- Use first-class `bytes` as the canonical binary carrier.
 - `HashObject` gains:
   - `update(data: str) -> None`
-  - `update_bytes(data: list[int]) -> None`
-  - `digest() -> list[int]`
-  - `digest_bytes() -> list[int]`
+  - `update_bytes(data: bytes) -> None`
+  - `digest() -> bytes`
+  - `digest_bytes() -> bytes`
   - `hexdigest() -> str`
 - `digest_bytes()` is an explicit alias for `digest()` for API clarity.
 - Add:
-  - `new_bytes(name: str, data: list[int] = []) -> Result[HashObject, ValueError]`
+  - `new_bytes(name: str, data: bytes = bytes()) -> Result[HashObject, ValueError]`
 - Add SHA3 / SHAKE only for algorithms already supported by the Rust dependency stack when implementation begins.
-- SHAKE APIs require explicit output length parameters and return `list[int]`.
+- SHAKE APIs require explicit output length parameters and return `bytes`.
 
 ### `base64`
 
-- Any remaining advanced codec work also uses `list[int]` as the binary carrier.
-- Existing text-friendly helpers may remain, but binary-oriented parity surfaces use `list[int]`.
+- Any remaining advanced codec work uses first-class `bytes` as the binary carrier.
+- Existing text-friendly helpers may remain, but parity claims for binary-oriented surfaces attach to the bytes-based APIs.
 
 ### `statistics`
 
@@ -122,8 +126,9 @@ It should therefore execute after the broader object-model and runtime work, not
 
 The following are intentionally not part of this phase’s execution target:
 
-- first-class CPython `bytes` object-model parity,
-- arbitrary binary APIs that require a first-class `bytes` type,
+- full CPython buffer protocol parity,
+- `memoryview`,
+- `bytearray`-driven binary mutability ecosystems,
 - non-deterministic state export for `SystemRandom`,
 - decimal / fraction / context-aware `statistics` semantics.
 
@@ -134,14 +139,13 @@ If these remain unsupported at phase exit, they must be explicit and narrow in t
 This phase owns:
 
 - `random` stateful generator parity such as `seed`, `getstate`, `setstate`, and the typed `Random` / `SystemRandom` object model,
-- `hashlib` advanced algorithm and binary digest parity under the `list[int]` transport contract defined in this phase,
-- `base64` residual binary-surface polish using `list[int]`,
+- `hashlib` advanced algorithm and bytes-native digest parity on top of the predecessor `bytes` phase,
+- `base64` residual binary-surface polish using first-class `bytes`,
 - `statistics` narrow advanced-surface cleanup,
 - residual `textwrap` / `html` polish only if earlier phases leave explicit waivers open.
 
 This phase does not own:
 
-- first-class `bytes` object-model design,
 - broad parser/class expansion,
 - stream/file-object lifecycle work,
 - reflection-heavy callable wrappers,
@@ -150,7 +154,7 @@ This phase does not own:
 ## Non-goals
 
 - pretending deterministic RNG object parity exists without the typed state model defined above,
-- claiming bytes-native crypto parity while still routing through string-only stand-ins,
+- claiming bytes-native crypto parity while still routing through helper-only stand-ins,
 - reopening already-closed low-value polish areas unless they shrink a specific waiver entry.
 
 ## Priority Targets
@@ -165,6 +169,7 @@ Required closure direction:
 
 - land the deterministic `RandomState` model,
 - define the module-global proxy behavior,
+- add `randbytes` on the approved bytes-backed object model,
 - preserve panic-free typed domain behavior for all invalid-state and invalid-argument paths.
 
 ### priority_2: Advanced crypto parity
@@ -177,8 +182,8 @@ Modules:
 Required closure direction:
 
 - ship the next algorithm tranche only when the runtime support is real,
-- close binary digest/object gaps using `list[int]`,
-- keep unsupported families explicitly classified if first-class bytes parity is still absent.
+- close binary digest/object gaps using first-class `bytes`,
+- keep unsupported families explicitly classified if buffer/view parity is still absent.
 
 ### priority_3: Near-closure polish modules
 
@@ -201,11 +206,11 @@ Scope:
 
 - `RandomState`
 - module-global RNG proxy behavior
-- `list[int]` binary boundary
+- bytes-native crypto boundary
 
 Definition of done:
 
-- the typed RNG state model and binary transport rules in this document are reflected in traceability and waivers,
+- the typed RNG state model and bytes-native crypto rules in this document are reflected in traceability and waivers,
 - no later wave needs to invent state serialization or binary-carrier semantics,
 - permanently deferred families are explicitly classified before implementation proceeds.
 
@@ -231,7 +236,7 @@ Scope:
 Definition of done:
 
 - the next algorithm and binary-surface tranche is closed or explicitly re-waived with concrete runtime blockers,
-- binary behavior is not overclaimed,
+- bytes-native behavior is not overclaimed,
 - traceability and negative coverage match the shipped surface.
 
 ### wave_psp_rng_3: Final Polish Waiver Reduction
@@ -269,7 +274,7 @@ Definition of done:
 Before `wave_psp_rng_1` begins implementation, the phase must add:
 
 - one Sifr demo covering the typed `RandomState` and module-global RNG proxy model,
-- one Sifr demo covering the `list[int]` binary digest model,
+- one Sifr demo covering the bytes-native digest model,
 - one negative-path test for every newly explicit permanent divergence,
 - one CPython-family mapping table proving which upstream cases are adopted, adapted, or permanently waived,
 - explicit phase test families covering `test_random`, `test_hashlib`, `test_base64`, and `test_statistics`,

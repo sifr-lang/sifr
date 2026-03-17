@@ -1,8 +1,8 @@
 # Ad Hoc Phase: Runtime and File-Object Parity Expansion
 
 Status: open (documented 2026-03-18)
-Context: follow-up phase after structured/class-surface parity expansion
-Execution readiness: implementation-ready after `issues/ad-hoc-structured-data-and-class-surface-parity-expansion.md`
+Context: follow-up phase after structured/class-surface parity expansion and the bytes/binary-surface foundation
+Execution readiness: implementation-ready after `issues/ad-hoc-first-class-bytes-and-binary-surface-foundation.md`
 
 ## Objective
 
@@ -34,6 +34,7 @@ Secondary module target:
 - predecessor planning docs:
   - `issues/ad-hoc-python-source-parity-extension-waiver-reduction.md`
   - `issues/ad-hoc-structured-data-and-class-surface-parity-expansion.md`
+  - `issues/ad-hoc-first-class-bytes-and-binary-surface-foundation.md`
 - CPython source and tests:
   - `/Users/yaseralnajjar/work/sifr/cpython`
   - `/Users/yaseralnajjar/work/sifr/cpython/Lib/test`
@@ -63,7 +64,8 @@ That is a separate implementation problem from parser/class expansion and from R
 ## Depends on
 
 - `issues/ad-hoc-structured-data-and-class-surface-parity-expansion.md`
-  - sequencing preference, not because of a hard type-system dependency
+- `issues/ad-hoc-first-class-bytes-and-binary-surface-foundation.md`
+  - hard dependency for all binary stream, archive, and file-object surfaces
 - milestone-7 canonical closure inventory remains the baseline
 - Phase 27 non-regression invariants remain mandatory
 - Phase 29 local-first validation contract remains mandatory
@@ -78,6 +80,7 @@ That is a separate implementation problem from parser/class expansion and from R
   - `TextIOBase`
   - `BinaryIOBase`
   - `FileHandle` as the concrete text-file type
+  - `BinaryFileHandle` as the concrete binary-file type
   - `BytesIO`
   - `StringIO`
 - `BufferedReader`, `BufferedWriter`, `BufferedRWPair`, and `BufferedRandom` are deferred unless they become necessary inside this same phase for `zipfile` or `tempfile`.
@@ -90,7 +93,14 @@ That is a separate implementation problem from parser/class expansion and from R
   - `readable() -> bool`
   - `writable() -> bool`
   - `seekable() -> bool`
+- Required text surfaces:
+  - `read() -> Result[str, IOError]`
+  - `write(data: str) -> Result[int, IOError]`
+- Required binary surfaces:
+  - `read_bytes(size: int | None = None) -> Result[bytes, IOError]`
+  - `write_bytes(data: bytes) -> Result[int, IOError]`
 - Text iteration over files is line-based and must reuse the iterator architecture from phase 1.
+- Binary surfaces must use first-class `bytes` from the predecessor phase rather than `list[int]`.
 
 ### Resource lifecycle
 
@@ -107,6 +117,7 @@ That is a separate implementation problem from parser/class expansion and from R
 - `SpooledTemporaryFile` is deferred in this phase.
 - `NamedTemporaryFile(delete: bool = True)` deletes on scope exit when `delete` is true.
 - `NamedTemporaryFile.close()` and `NamedTemporaryFile.cleanup()` surface errors explicitly.
+- Binary temporary-file modes use `bytes` as their payload type.
 - `TemporaryDirectory.cleanup() -> Result[None, IOError]`.
 
 ### `zipfile`
@@ -120,6 +131,7 @@ That is a separate implementation problem from parser/class expansion and from R
   - `ZipFile.extract()`
   - `ZipFile.extractall()`
 - `ZipFile.open(name, mode="r")` returns a `BinaryIOBase`-compatible read handle only.
+- The binary handle returned by `ZipFile.open(...)` reads `bytes`.
 - Write-mode streamed file handles remain out of scope in this phase.
 - Compression support stays limited to formats already available in the Rust backend when implementation begins; unsupported formats remain explicit waivers.
 
@@ -253,6 +265,7 @@ Scope:
 Definition of done:
 
 - the sealed hierarchy, cleanup rules, host-model constraints, and deferred families in this document are reflected in traceability and waivers,
+- all binary stream and archive surfaces in this document explicitly build on first-class `bytes`,
 - no later wave needs to invent ownership or lifecycle semantics,
 - every permanent deferral is explicitly classified before implementation proceeds.
 
@@ -333,6 +346,7 @@ Before `wave_psp_runtime_1` begins implementation, the phase must add:
 
 - one Sifr demo covering the sealed stream hierarchy,
 - one Sifr demo covering deterministic tempfile or zipfile lifecycle behavior,
+- one Sifr demo covering bytes-backed binary file or `BytesIO` behavior,
 - one negative-path test for every newly explicit permanent divergence,
 - one CPython-family mapping table proving which upstream cases are adopted, adapted, or permanently waived,
 - explicit phase test families covering `test_io`, `test_tempfile`, `test_zipfile`, `test_logging`, `test_time`, `test_timeit`, and `test_subprocess`,

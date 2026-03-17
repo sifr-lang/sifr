@@ -195,6 +195,7 @@ This phase owns:
 This phase does not own:
 
 - async iterators,
+- first-class `bytes` object-model design,
 - runtime host abstractions,
 - `io` / stream hierarchy expansion,
 - `zipfile` / archive file-object expansion,
