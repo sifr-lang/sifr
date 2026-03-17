@@ -694,6 +694,10 @@ Status: pending
   - Reviewer file: `/Users/yaseralnajjar/.codex/worktrees/0761/codebase/reviews/wave-psp-a1-review-gap-cpython-parity-20260317-r3.md`
   - Validation result: non-actionable stale finding. The report repeats the same recommendation to reject all `range(...)` keyword forms, which conflicts with the wave's explicit `adapted` parity contract and shipped CPython-derived fixtures.
   - Fix status: no code changes required; traceability and executable evidence remain aligned.
+- `wave_psp_a1` review pass 5:
+  - Reviewer file: `/Users/yaseralnajjar/work/sifr/codebase/reviews/wave-psp-a1-review-gap-cpython-parity-20260317-r4.md`
+  - Validation result: reviewer satisfied with no actionable findings.
+  - Fix status: no code changes required.
 - `wave_psp_a2` review pass 1:
   - Reviewer file: `/Users/yaseralnajjar/work/sifr/codebase/reviews/wave-psp-a2-review-pass1.md`
   - Validation result: approved with no actionable implementation issue. The only noted verification-hardening interruption was an environment-level disk-space concern, not a wave-specific regression.
@@ -710,6 +714,10 @@ Status: pending
   - Reviewer file: `/Users/yaseralnajjar/.codex/worktrees/0761/codebase/reviews/wave-psp-a2-review-gap-cpython-parity-20260317-r2.md`
   - Validated finding: local-variable mutability inference missed `dict.setdefault` and set `_update` mutators when they were the first mutating call on a binding, which produced non-`mut` Rust locals and compile failures.
   - Fix status: remediated at root cause by extending the canonical codegen mutator registry in `crates/sifr_codegen/src/hir_analysis/queries.rs` (which feeds `collect_mutated_vars`) to include `setdefault` and set `_update` mutators, adding unit coverage for the new mutator detection paths, and strengthening CPython-derived pass fixtures with first-mutation local-binding assertions.
+- `wave_psp_a2` review pass 5:
+  - Reviewer file: `/Users/yaseralnajjar/work/sifr/codebase/reviews/wave-psp-a2-review-gap-cpython-parity-20260317-r3.md`
+  - Validation result: reviewer satisfied with no actionable findings.
+  - Fix status: no code changes required.
 - `wave_psp_b1` review pass 1:
   - Reviewer file: historical artifact no longer present in the current workspace (`reviews/wave-psp-b1-review-pass1.md` was removed during later workspace cleanup); validated outcome retained in this ledger.
   - Validation result: approved with no actionable implementation issue.
