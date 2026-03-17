@@ -572,8 +572,9 @@ Sifr uses Python-like slicing syntax, but must define whether slicing copies or 
 - **String slicing copies:** `str[a:b]` produces a new `str`. Indices are character positions (not byte offsets). Codegen: `s.chars().skip(a).take(b - a).collect::<String>()`.
 - **Dict:** not sliceable. **Tuple:** compile-time slicing supported (milestone_ergonomics) -- the compiler can statically verify tuple slice bounds and produce a new tuple type.
 - **Views deferred:** an explicit view API (e.g., `list.view(a, b)` mapping to `&[T]`) may be added in a later milestone for performance-critical paths. Not part of MVP.
-- **`for` loop collection borrowing:** `for item in collection` borrows the collection (does not consume it). The collection remains usable after the loop. Codegen: `for item in collection.iter().cloned()` -- the collection is borrowed (not moved), elements are independent copies (Python-like semantics). Modifying the loop variable `item` does not affect the original collection. Explicit consumption would require `for item in collection.consume()` or similar -- not currently supported. For string iteration: `for ch in s` yields single-character strings via `.chars().map(|c| c.to_string())`.
+- **`for` loop protocol entry:** `for item in collection` lowers through `iter(collection)` first, then iterates the resulting iterator. Collection-backed iterables (list/set/dict/string/range/iterable wrappers) are converted to iterator objects without consuming the original collection. This preserves reusable collection behavior while making the protocol boundary explicit in HIR.
 - **For-loop element semantics (milestone_borrow_hardening):** Loop elements are independent copies (deep-copy on assignment via `.cloned()`). This matches Python's loop semantics and avoids exposing Rust's borrow/lifetime complexity to Sifr users. The practical consequence: `for x in items: x = transform(x)` does not mutate `items`. Codegen rationale: `.iter().cloned()` copies elements one-at-a-time (like Python), avoids lifetime issues with borrowed elements escaping the loop, and keeps the Sifr ownership model simple for users.
+- **Iterator mutation safety in loops (wave_iter_2):** mutating a collection while iterating over it in the same `for` body is rejected at compile time (`cannot mutate '<name>' while iterating over it in a for loop`). No eager fallback or implicit snapshot is inserted.
 
 ### 7. String Semantics (UTF-8)
 
@@ -714,7 +715,7 @@ Sifr defines a set of built-in protocols (traits) that are used across multiple 
 | `Display`        | `std::fmt::Display`                             | milestone_classes (auto-derived for `__str__`), milestone_protocols (explicit impl) | String representation via `str()`, f-strings, `print()`       |
 | `ContextManager` | Custom trait (`__enter__`/`__exit__` -> `Drop`) | milestone_generators (syntax), milestone_compiler_hardening (protocol enforcement)  | `with` statement resource management                          |
 | `Iterable`       | `IntoIterator` / iterable protocol             | ad-hoc phase `first-class-lazy-iterators-and-python-iterable-protocol` (wave 1+) | `iter(x)` entry boundary and protocol typing                 |
-| `Iterator`       | `Iterator`                                      | ad-hoc phase `first-class-lazy-iterators-and-python-iterable-protocol` (wave 1+) | `next(it)`, single-pass stateful iteration, lazy pipelines  |
+| `Iterator`       | `Box<dyn Iterator<Item = T>>` runtime surface  | ad-hoc phase `first-class-lazy-iterators-and-python-iterable-protocol` (wave 1+, builtin lowering in wave 2) | `next(it)`, single-pass stateful iteration, lazy pipelines  |
 | `Hashable`       | `Hash` (+ `Eq`)                                 | milestone_classes (auto-derived)                                                    | Dict keys, set membership                                     |
 
 

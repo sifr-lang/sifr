@@ -10,9 +10,12 @@ use sifr_type_system::{
     narrow_type, type_check_binary_op, FunctionType, NarrowingCondition, OwnershipKind, Type,
 };
 
+use super::binding_mutability::ensure_mutable_parameter_binding;
+use super::builtin_calls::callable_builtin_element_type;
 use super::classes::collect_literal_coverage;
 use super::diagnostics::{collect_raise_error_types, format_type_name, is_valid_error_type};
 use super::expressions::{lower_expr, lower_star_unpack_assign, lower_tuple_unpack_assign};
+use super::for_loop_safety::{is_collection_backed_iter_source, loop_body_mutates_iter_source};
 use super::nonlocal_support::{
     collect_declared_nonlocals, hir_body_calls_function, lower_nonlocal, should_rebind_simple_name,
 };
@@ -31,20 +34,6 @@ use super::typing_and_functions::{
     resolve_annotation_expr,
 };
 use super::LowerCtx;
-
-fn ensure_mutable_parameter_binding(ctx: &mut LowerCtx, name: &str, operation: &str) -> bool {
-    if ctx
-        .scope
-        .lookup(name)
-        .is_some_and(|info| info.is_parameter_binding() && !info.is_mutable_binding)
-    {
-        ctx.error(format!(
-            "cannot {operation} immutable parameter `{name}`: add `mut` to the parameter declaration"
-        ));
-        return false;
-    }
-    true
-}
 
 pub(super) fn lower_stmts(
     stmts: &[Stmt],
@@ -2060,18 +2049,35 @@ pub(super) fn lower_for(
     func_type: &FunctionType,
     ctx: &mut LowerCtx,
 ) -> Option<HirStmt> {
-    // Lower the iterable expression
-    let iter_expr = lower_expr(&for_stmt.iter, ctx)?;
-    let iter_ty = iter_expr.ty().clone();
-
-    // Determine the element type from the iterable
-    let elem_ty = iter_ty.iterable_element_type().unwrap_or_else(|| {
+    // Lower the iterable expression and normalize protocol usage through `iter(...)`.
+    let iterable_expr = lower_expr(&for_stmt.iter, ctx)?;
+    let iter_source_name = match &iterable_expr {
+        HirExpr::Name { name, .. } => Some(name.clone()),
+        _ => None,
+    };
+    let iter_source_ty = iterable_expr.ty().clone();
+    if matches!(
+        iter_source_ty.resolve_alias(),
+        Type::Any | Type::Unknown | Type::Tuple(_)
+    ) {
+        ctx.error(format!(
+            "for-loop iterable must have a statically-known element type, got '{}'",
+            iter_source_ty.display_name()
+        ));
+        return None;
+    }
+    let Some(elem_ty) = callable_builtin_element_type(&iter_source_ty) else {
         ctx.error(format!(
             "cannot iterate over type '{}'",
-            iter_ty.display_name()
+            iter_source_ty.display_name()
         ));
-        Type::Any
-    });
+        return None;
+    };
+    let iter_expr = HirExpr::Call {
+        func: "iter".to_string(),
+        args: vec![iterable_expr],
+        ty: Type::Iterator(Box::new(elem_ty.clone())),
+    };
 
     // Extract the target variable name(s)
     let target_name = match for_stmt.target.as_ref() {
@@ -2143,6 +2149,17 @@ pub(super) fn lower_for(
     ctx.loop_depth -= 1;
     ctx.scope.pop();
     ctx.restore_sequence_guards(&saved_sequence_guards);
+
+    if let Some(source_name) = iter_source_name.as_deref() {
+        if is_collection_backed_iter_source(&iter_source_ty)
+            && loop_body_mutates_iter_source(&body, source_name)
+        {
+            ctx.error(format!(
+                "cannot mutate '{source_name}' while iterating over it in a for loop"
+            ));
+            return None;
+        }
+    }
 
     // Check for outer-scope variables moved inside the loop body
     let newly_moved = ctx.scope.moved_since(&moved_before_loop);

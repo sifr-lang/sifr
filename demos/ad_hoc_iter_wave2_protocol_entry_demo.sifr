@@ -1,0 +1,16 @@
+def main():
+    values: list[int] = [1, 2, 3, 4]
+    it: Iterator[int] = iter(values)
+
+    first: int | None = next(it)
+    print(first)
+
+    remaining_total: int = 0
+    for item in it:
+        remaining_total = remaining_total + item
+    print(remaining_total)
+
+    pair_total: int = 0
+    for i, value in enumerate(values):
+        pair_total = pair_total + i + value
+    print(pair_total)

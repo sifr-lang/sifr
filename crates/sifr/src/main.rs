@@ -1132,7 +1132,7 @@ mod tests {
         let m24_2 =
             emit_demo_rust("demos/m24_2_semantic_query_layer_standardization_demo/main.sifr");
         assert!(m24_2.contains("fn recurse(n: i64) -> i64"));
-        assert!(m24_2.contains("if !_broke"));
+        assert!(m24_2.contains("if !_broke") || m24_2.contains("if !(_broke)"));
 
         let m24_3 =
             emit_demo_rust("demos/m24_3_control_flow_effect_query_unification_demo/main.sifr");

@@ -104,7 +104,7 @@ fn should_force_mutable_binding(ty: &Type) -> bool {
     matches!(
         ty,
         Type::Alias { name: alias_name, .. } if alias_name.starts_with("__compat_defaultdict_")
-    )
+    ) || matches!(ty.resolve_alias(), Type::Iterator(_))
 }
 
 impl RustEmitter {
@@ -1034,6 +1034,19 @@ impl RustEmitter {
                 self.try_lower_registry_plain_call_with_signature(func, args)
             {
                 return Ok(Some(lowered_plain));
+            }
+            if func == "iter" && args.len() == 1 {
+                return self.lower_iter_source_expr_for_ir(&args[0]);
+            }
+            if func == "next" && args.len() == 1 {
+                let Some(lowered_iterator) = self.lower_stmt_expr_for_ir(&args[0])? else {
+                    return Ok(None);
+                };
+                return Ok(Some(crate::RustExpr::MethodCall {
+                    receiver: Box::new(lowered_iterator),
+                    method: "next".to_string(),
+                    args: vec![],
+                }));
             }
             if func == "str" && args.is_empty() {
                 return Ok(Some(crate::RustExpr::FnCall {
@@ -3163,6 +3176,19 @@ impl RustEmitter {
                 {
                     return Ok(Some(lowered_plain));
                 }
+                if func == "iter" && args.len() == 1 {
+                    return self.lower_iter_source_expr_for_ir(&args[0]);
+                }
+                if func == "next" && args.len() == 1 {
+                    let Some(lowered_iterator) = self.lower_stmt_expr_for_ir(&args[0])? else {
+                        return Ok(None);
+                    };
+                    return Ok(Some(crate::RustExpr::MethodCall {
+                        receiver: Box::new(lowered_iterator),
+                        method: "next".to_string(),
+                        args: vec![],
+                    }));
+                }
                 let mut lowered_args = Vec::with_capacity(args.len());
                 for arg in args {
                     let Some(lowered_arg) = self.lower_stmt_expr_for_ir(arg)? else {
@@ -4461,35 +4487,10 @@ impl RustEmitter {
         &mut self,
         iter: &HirExpr,
     ) -> Result<Option<crate::RustExpr>, crate::CodegenError> {
-        fn is_collect_call_expr(expr: &crate::RustExpr) -> bool {
-            match expr {
-                crate::RustExpr::MethodCall { method, .. } => {
-                    method == "collect" || method.starts_with("collect::<")
-                }
-                crate::RustExpr::Paren(inner) => is_collect_call_expr(inner),
-                _ => false,
-            }
-        }
-
-        fn normalize_for_loop_iter_expr(expr: crate::RustExpr) -> crate::RustExpr {
-            if let crate::RustExpr::MethodCall {
-                receiver,
-                method,
-                args,
-            } = expr
-            {
-                if method == "cloned" && args.is_empty() && is_collect_call_expr(&receiver) {
-                    return *receiver;
-                }
-                return crate::RustExpr::MethodCall {
-                    receiver,
-                    method,
-                    args,
-                };
-            }
-            expr
-        }
         if let HirExpr::Call { func, args, .. } = iter {
+            if func == "iter" && args.len() == 1 {
+                return self.lower_iter_source_expr_for_ir(&args[0]);
+            }
             if func == "enumerate" && args.len() == 1 {
                 let Some(lowered_arg) = self.lower_rendered_expr_for_ir(&args[0])? else {
                     return Ok(None);
@@ -4559,9 +4560,16 @@ impl RustEmitter {
                 }));
             }
         }
+        self.lower_iter_source_expr_for_ir(iter)
+    }
+
+    fn lower_iter_source_expr_for_ir(
+        &mut self,
+        source: &HirExpr,
+    ) -> Result<Option<crate::RustExpr>, crate::CodegenError> {
         if let HirExpr::RangeLiteral {
             start, end, step, ..
-        } = iter
+        } = source
         {
             if let Some(lowered_range_iter) =
                 self.try_lower_range_iter_expr_for_ir(start, end, step.as_deref())?
@@ -4570,22 +4578,24 @@ impl RustEmitter {
             }
         }
 
-        let Some(lowered_iter) = self.lower_rendered_expr_for_ir(iter)? else {
+        let Some(lowered_source) = self.lower_rendered_expr_for_ir(source)? else {
             return Ok(None);
         };
-        let lowered_iter = normalize_for_loop_iter_expr(lowered_iter);
-        let is_generator_expr = matches!(iter, HirExpr::GeneratorExpr { .. });
-        let is_generator_fn_call = self.is_generator_call(iter);
-        if is_generator_expr
-            || is_generator_fn_call
-            || Self::is_iterator_like_expr_for_ir(&lowered_iter)
+        let lowered_source = Self::normalize_for_loop_iter_expr(lowered_source);
+        let source_ty = Self::resolve_alias_type_for_loop_iter(source.ty());
+
+        if matches!(source_ty, Type::Iterator(_))
+            || matches!(source, HirExpr::GeneratorExpr { .. })
+            || self.is_generator_call(source)
+            || Self::is_iterator_like_expr_for_ir(&lowered_source)
         {
-            return Ok(Some(lowered_iter));
+            return Ok(Some(lowered_source));
         }
-        let lowered_iter = match Self::resolve_alias_type_for_loop_iter(iter.ty()) {
-            Type::List(_) => crate::RustExpr::MethodCall {
+
+        let iterator_expr = match source_ty {
+            Type::List(_) | Type::Set(_) | Type::Iterable(_) => crate::RustExpr::MethodCall {
                 receiver: Box::new(crate::RustExpr::MethodCall {
-                    receiver: Box::new(lowered_iter),
+                    receiver: Box::new(lowered_source),
                     method: "iter".to_string(),
                     args: vec![],
                 }),
@@ -4594,7 +4604,7 @@ impl RustEmitter {
             },
             Type::Dict(_, _) => crate::RustExpr::MethodCall {
                 receiver: Box::new(crate::RustExpr::MethodCall {
-                    receiver: Box::new(lowered_iter),
+                    receiver: Box::new(lowered_source),
                     method: "keys".to_string(),
                     args: vec![],
                 }),
@@ -4603,7 +4613,7 @@ impl RustEmitter {
             },
             Type::Str => crate::RustExpr::MethodCall {
                 receiver: Box::new(crate::RustExpr::MethodCall {
-                    receiver: Box::new(lowered_iter),
+                    receiver: Box::new(lowered_source),
                     method: "chars".to_string(),
                     args: vec![],
                 }),
@@ -4621,9 +4631,53 @@ impl RustEmitter {
                     is_move: false,
                 }],
             },
-            _ => lowered_iter,
+            Type::Range => crate::RustExpr::MethodCall {
+                receiver: Box::new(crate::RustExpr::MethodCall {
+                    receiver: Box::new(crate::RustExpr::Paren(Box::new(lowered_source))),
+                    method: "clone".to_string(),
+                    args: vec![],
+                }),
+                method: "into_iter".to_string(),
+                args: vec![],
+            },
+            _ => return Ok(Some(lowered_source)),
         };
-        Ok(Some(lowered_iter))
+        Ok(Some(crate::RustExpr::FnCall {
+            func: Box::new(crate::RustExpr::Path(vec![
+                "Box".to_string(),
+                "new".to_string(),
+            ])),
+            args: vec![iterator_expr],
+        }))
+    }
+
+    fn is_collect_call_expr(expr: &crate::RustExpr) -> bool {
+        match expr {
+            crate::RustExpr::MethodCall { method, .. } => {
+                method == "collect" || method.starts_with("collect::<")
+            }
+            crate::RustExpr::Paren(inner) => Self::is_collect_call_expr(inner),
+            _ => false,
+        }
+    }
+
+    fn normalize_for_loop_iter_expr(expr: crate::RustExpr) -> crate::RustExpr {
+        if let crate::RustExpr::MethodCall {
+            receiver,
+            method,
+            args,
+        } = expr
+        {
+            if method == "cloned" && args.is_empty() && Self::is_collect_call_expr(&receiver) {
+                return *receiver;
+            }
+            return crate::RustExpr::MethodCall {
+                receiver,
+                method,
+                args,
+            };
+        }
+        expr
     }
 
     fn is_iterator_like_expr_for_ir(expr: &crate::RustExpr) -> bool {
