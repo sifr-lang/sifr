@@ -303,7 +303,8 @@ impl RustEmitter {
             } => {
                 let lowered_value = self.lower_operator_expr_ir(value)?;
                 Some(vec![RustStmt::Let {
-                    mutable: self.mutated_vars.contains(name),
+                    mutable: self.mutated_vars.contains(name)
+                        || matches!(ty.resolve_alias(), Type::Iterator(_)),
                     name: name.clone(),
                     ty: Some(crate::sifr_type_to_rust_type(ty)),
                     value: lowered_value,

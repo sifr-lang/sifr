@@ -744,7 +744,7 @@ fn should_force_mutable_binding(ty: &Type) -> bool {
     matches!(
         ty,
         Type::Alias { name: alias_name, .. } if alias_name.starts_with("__compat_defaultdict_")
-    )
+    ) || matches!(ty.resolve_alias(), Type::Iterator(_))
 }
 
 fn try_lower_simple_nested_function_stmt(

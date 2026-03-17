@@ -1,4 +1,4 @@
-use crate::{lower_module, HirModule, HirStmt, LoweringError};
+use crate::{lower_module, HirExpr, HirModule, HirStmt, LoweringError};
 use sifr_python_parser::parse_module;
 use sifr_type_system::Type;
 
@@ -131,6 +131,27 @@ fn test_for_range_start_end() {
 }
 
 #[test]
+fn test_for_loop_lowers_through_iter_protocol_call() {
+    let module = lower_source(
+        "def main():\n    values: list[int] = [1, 2]\n    for x in values:\n        print(x)\n",
+    )
+    .unwrap();
+    let for_stmt = module.functions[0]
+        .body
+        .iter()
+        .find(|stmt| matches!(stmt, HirStmt::For { .. }))
+        .expect("expected for loop");
+    let HirStmt::For { iter, .. } = for_stmt else {
+        unreachable!("matched for loop above")
+    };
+    assert!(matches!(
+        iter,
+        HirExpr::Call { func, args, ty }
+            if func == "iter" && args.len() == 1 && matches!(ty, Type::Iterator(_))
+    ));
+}
+
+#[test]
 fn test_iterable_annotation_accepts_list_argument() {
     let result = lower_source(
         "def consume(xs: Iterable[int]) -> int:\n    total: int = 0\n    for x in xs:\n        total = total + x\n    return total\n\ndef main():\n    values: list[int] = [1, 2, 3]\n    out: int = consume(values)\n    print(out)\n",
@@ -145,11 +166,40 @@ fn test_iterator_annotation_rejects_plain_list_argument() {
     );
     assert!(result.is_err());
     let errors = result.unwrap_err();
-    assert!(
-        errors
-            .iter()
-            .any(|e| e.message.contains("expected 'Iterator[int]', got 'list[int]'"))
+    assert!(errors.iter().any(|e| e
+        .message
+        .contains("expected 'Iterator[int]', got 'list[int]'")));
+}
+
+#[test]
+fn test_iter_and_next_builtin_protocol_calls_lower() {
+    let result = lower_source(
+        "def main():\n    values: list[int] = [1, 2, 3]\n    it: Iterator[int] = iter(values)\n    first: int | None = next(it)\n    second: int | None = next(it)\n",
     );
+    assert!(result.is_ok(), "{result:?}");
+}
+
+#[test]
+fn test_next_rejects_plain_iterable_argument() {
+    let result = lower_source("def main():\n    values: list[int] = [1, 2, 3]\n    next(values)\n");
+    assert!(result.is_err());
+    let errors = result.unwrap_err();
+    assert!(errors
+        .iter()
+        .any(|e| e.message.contains("next() argument must be an iterator")));
+}
+
+#[test]
+fn test_for_rejects_mutation_of_collection_with_live_iterator() {
+    let result = lower_source(
+        "def main():\n    values: list[int] = [1, 2, 3]\n    for value in values:\n        values.append(value)\n",
+    );
+    assert!(result.is_err());
+    let errors = result.unwrap_err();
+    assert!(errors.iter().any(|e| {
+        e.message
+            .contains("cannot mutate 'values' while iterating over it in a for loop")
+    }));
 }
 
 #[test]

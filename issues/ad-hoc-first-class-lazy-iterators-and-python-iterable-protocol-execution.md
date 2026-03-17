@@ -18,7 +18,7 @@ Loop per wave: Plan -> Implement -> Validate -> Demo -> PR -> External completio
 - [ ] Docs + traceability + waiver state updated before moving on
 
 ## Full Phase To-Do Plan
-1. [ ] `wave_iter_1`: first-class `Iterable[T]` / `Iterator[T]` type-system + governance/doc contract
+1. [x] `wave_iter_1`: first-class `Iterable[T]` / `Iterator[T]` type-system + governance/doc contract
 2. [ ] `wave_iter_2`: `iter(...)` + `next(...)` builtin surfaces and protocol-driven `for` lowering
 3. [ ] `wave_iter_3`: generator rewrite to true lazy iterator semantics
 4. [ ] `wave_iter_4`: lazy builtin conversion for `zip`, `enumerate`, `reversed`
@@ -60,13 +60,13 @@ Required entry records:
 ## Wave Progress
 
 ### wave_iter_1: Iterator Protocol and Type-System Contract
-- Status: ready_for_pr
+- Status: merged
 - Goal:
   - add first-class `Iterable[T]` / `Iterator[T]` in type model
   - wire typing helpers so iterator element extraction is protocol-based
   - update architecture/governance docs to replace eager-lazy waiver baseline
 - Implementation PR:
-  - branch: `wave-iter-1-first-class-protocol-contract`
+  - `https://github.com/yaseralnajjar/sifr/pull/1241` (merged)
 - Validation:
   - positive path: `cargo run -q -p sifr -- check demos/ad_hoc_iter_wave1_type_protocol_demo.sifr` -> `no errors found`
   - positive path: `cargo run -q -p sifr -- run demos/ad_hoc_iter_wave1_type_protocol_demo.sifr` -> `12`
@@ -74,9 +74,17 @@ Required entry records:
   - wave gate: `$(pwd)/scripts/run_all_tests.sh` -> PASS (2026-03-18)
 
 ### wave_iter_2: Builtin Protocol Entry and `for` Lowering
-- Status: pending
+- Status: ready_for_pr
 - Implementation PR:
-  - pending
+  - branch: `wave-iter-2-builtin-protocol-entry-and-for-lowering`
+- Validation:
+  - positive path: `cargo test -p sifr_hir -- test_for_loop_lowers_through_iter_protocol_call` -> PASS
+  - positive path: `cargo test -p sifr_hir -- test_iter_and_next_builtin_protocol_calls_lower` -> PASS
+  - negative path: `cargo test -p sifr_hir -- test_next_rejects_plain_iterable_argument` -> PASS
+  - negative path: `cargo test -p sifr_hir -- test_for_rejects_mutation_of_collection_with_live_iterator` -> PASS
+  - demo check: `cargo run -q -p sifr -- check demos/ad_hoc_iter_wave2_protocol_entry_demo.sifr` -> `no errors found`
+  - demo run: `cargo run -q -p sifr -- run demos/ad_hoc_iter_wave2_protocol_entry_demo.sifr` -> `1`, `9`, `16`
+  - wave gate: `$(pwd)/scripts/run_all_tests.sh` -> PASS (2026-03-18)
 
 ### wave_iter_3: Generator Rewrite
 - Status: pending

@@ -407,7 +407,7 @@ impl Type {
             }
             Self::Range => "std::ops::Range<i64>".to_string(),
             Self::Iterable(elem) => format!("Vec<{}>", elem.rust_type()),
-            Self::Iterator(elem) => format!("std::vec::IntoIter<{}>", elem.rust_type()),
+            Self::Iterator(elem) => format!("Box<dyn Iterator<Item = {}>>", elem.rust_type()),
             Self::Any => "Box<dyn std::any::Any>".to_string(),
             Self::Never => "!".to_string(),
             Self::Function(ft) => {

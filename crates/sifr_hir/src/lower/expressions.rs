@@ -602,6 +602,75 @@ pub(super) fn lower_call(call: &ExprCall, ctx: &mut LowerCtx) -> Option<HirExpr>
             return lower_len_call(call, ctx);
         }
 
+        // iter(iterable) -> Iterator[T]
+        if func_name == "iter" {
+            if !call.arguments.keywords.is_empty() {
+                ctx.error("iter() does not accept keyword arguments".to_string());
+                return None;
+            }
+            if call.arguments.args.len() != 1 {
+                ctx.error(format!(
+                    "iter() takes exactly 1 argument, got {}",
+                    call.arguments.args.len()
+                ));
+                return None;
+            }
+            let iterable = lower_expr(&call.arguments.args[0], ctx)?;
+            if matches!(
+                iterable.ty().resolve_alias(),
+                Type::Any | Type::Unknown | Type::Tuple(_)
+            ) {
+                ctx.error(format!(
+                    "iter() argument must be an iterable with a statically-known element type, got '{}'",
+                    iterable.ty().display_name()
+                ));
+                return None;
+            }
+            let Some(elem_ty) = callable_builtin_element_type(iterable.ty()) else {
+                ctx.error(format!(
+                    "iter() argument must be iterable, got '{}'",
+                    iterable.ty().display_name()
+                ));
+                return None;
+            };
+            return Some(HirExpr::Call {
+                func: "iter".to_string(),
+                args: vec![iterable],
+                ty: Type::Iterator(Box::new(elem_ty)),
+            });
+        }
+
+        // next(iterator) -> Option[T]
+        if func_name == "next" {
+            if !call.arguments.keywords.is_empty() {
+                ctx.error("next() does not accept keyword arguments".to_string());
+                return None;
+            }
+            if call.arguments.args.len() != 1 {
+                ctx.error(format!(
+                    "next() takes exactly 1 argument, got {}",
+                    call.arguments.args.len()
+                ));
+                return None;
+            }
+            let iterator = lower_expr(&call.arguments.args[0], ctx)?;
+            let elem_ty = match iterator.ty().resolve_alias() {
+                Type::Iterator(elem) => *elem.clone(),
+                _ => {
+                    ctx.error(format!(
+                        "next() argument must be an iterator, got '{}'",
+                        iterator.ty().display_name()
+                    ));
+                    return None;
+                }
+            };
+            return Some(HirExpr::Call {
+                func: "next".to_string(),
+                args: vec![iterator],
+                ty: Type::Union(vec![elem_ty, Type::None]),
+            });
+        }
+
         // Special handling for isinstance() built-in
         if func_name == "isinstance" {
             return lower_isinstance_call(call, ctx);

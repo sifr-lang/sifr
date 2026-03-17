@@ -1270,7 +1270,8 @@ impl RustEmitter {
                         ty,
                         Type::Alias { name: alias_name, .. }
                             if alias_name.starts_with("__compat_defaultdict_")
-                    ),
+                    )
+                    || matches!(ty.resolve_alias(), Type::Iterator(_)),
                 name: name.clone(),
                 ty: if is_generic_class
                     || match (ty, value) {
