@@ -2,7 +2,7 @@
 
 Status: open (documented 2026-03-17)
 Context: ad hoc architecture phase captured in `issues/` before roadmap-phase promotion
-Execution readiness: planning-ready; promote into an execution checklist issue before implementation begins
+Execution readiness: implementation-ready in sequence as the iterator architecture phase for the post-milestone-31.5 parity sequence; wave 1 still requires recorded entry-baseline evidence in the execution issue
 
 ## Objective
 
@@ -348,6 +348,11 @@ Every reviewed upstream test or test family must end in exactly one state:
 - Existing ownership and non-panic invariants remain green.
 - Entry-baseline evidence is recorded in the eventual execution issue before wave 1 begins.
 - The phase starts with at least one confirmed current eager-mismatch example for generators or lazy builtins recorded in the execution tracker.
+- Entry-baseline evidence must also record:
+  - the chosen first implementation strategy for generator lowering,
+  - one concrete type-system spike target for `Iterable[T]` / `Iterator[T]`,
+  - an initial CPython test-family inventory with explicit adopt/adapt/waive tracking for the first wave,
+  - one concrete borrow-safety example that the compiler must reject or sharply waive.
 
 ### Phase-wide invariants
 

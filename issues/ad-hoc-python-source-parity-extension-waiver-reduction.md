@@ -2,7 +2,7 @@
 
 Status: open (documented 2026-03-17)
 Context: continuation phase after `issues/ad-hoc-first-class-lazy-iterators-and-python-iterable-protocol.md`
-Execution readiness: planning-ready after the predecessor phase closes its protocol, builtin-lazy, and initial-`itertools` waves
+Execution readiness: implementation-ready after the predecessor phase closes its protocol, builtin-lazy, and initial-`itertools` waves
 
 ## Objective
 
@@ -188,7 +188,7 @@ Required outcome:
 
 - no builtin in this set returns eager materialized collections as its claimed parity behavior,
 - explicit materialization happens only when the user writes `list(...)`, `tuple(...)`, `set(...)`, or `dict(...)`,
-- existing `strict=` waivers for `zip` / `map` remain explicit unless closed separately.
+- any currently recorded `strict=` waivers for `zip` / `map` remain explicit unless closed separately, and this phase must revalidate that both waiver entries still correspond to real upstream-supported surfaces before phase exit.
 
 ### priority_2: `itertools` waiver replacement
 
