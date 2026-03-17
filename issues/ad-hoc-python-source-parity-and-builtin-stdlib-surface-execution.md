@@ -899,3 +899,7 @@ Status: pending
   - Reviewer file: `/Users/yaseralnajjar/.codex/worktrees/0761/codebase/reviews/wave-psp-e2-review-gap-cpython-parity-20260316.md`
   - Validation result: non-actionable stale review. It reports `wave_psp_e2` as "in progress / PR pending" even though the wave and follow-up hardening are already merged.
   - Fix status: no code changes required.
+- `wave_psp_e2` review pass 8:
+  - Reviewer file: `/Users/yaseralnajjar/.codex/worktrees/0761/codebase/reviews/wave-psp-e2-review-gap-cpython-parity-20260317-r1.md`
+  - Validation result: non-actionable stale cross-branch review. The report claims critical regressions from an older branch snapshot, but all cited surfaces are present in the active worktree and the shipped e2 demo executes successfully with inline argparse handling, ipaddress classification helpers, uuid URN/curly parsing, and graphlib sparse-node filtering.
+  - Fix status: no code changes required.
