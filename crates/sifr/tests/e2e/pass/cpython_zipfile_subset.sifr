@@ -16,6 +16,13 @@ def main():
         _w2: None = zf.write("second.txt", "second")
         names: list[str] = zf.namelist()
         assert str(len(names) == 2 and "first.txt" in names and "second.txt" in names) == "true"
+
+        try:
+            _missing_entry: str = zf.read("missing.txt")
+            _ = _missing_entry
+            assert str("read unexpectedly succeeded for missing zip entry") == "cpython_zipfile_subset: pass"
+        except IOError as e:
+            assert str(len(e.message) > 0) == "true"
     except IOError as e:
         assert str("unexpected zipfile error: " + e.message) == "cpython_zipfile_subset: pass"
 

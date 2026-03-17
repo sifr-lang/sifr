@@ -835,6 +835,10 @@ Status: pending
   - Reviewer file: `/Users/yaseralnajjar/.codex/worktrees/0761/codebase/reviews/wave-psp-d1-review-gap-cpython-parity-20260317-r1.md`
   - Validation result: partially actionable. Public parity behavior was stable, but absolute-path classification and open-mode waiver boundaries needed clearer enforcement and evidence to prevent cross-platform parity ambiguity.
   - Fix status: remediated by broadening `sifr.pathlib.is_absolute()` to recognize drive-prefixed and rooted-backslash absolute forms, extending `cpython_pathlib_subset.sifr` coverage for drive-form absolute semantics, extending `cpython_io_subset.sifr` to assert rejection of unsupported mixed read/write modes (`r+`/`w+`/`a+`), and tightening `verification/stdlib/wave_psp_d1_cpython_traceability.md` with explicit mode-matrix and internal-surface waivers.
+- `wave_psp_d1` review pass 5:
+  - Reviewer file: `/Users/yaseralnajjar/.codex/worktrees/0761/codebase/reviews/wave-psp-d1-review-gap-cpython-parity-20260317-r3.md`
+  - Validation result: partially actionable. The only valid gap was missing CPython-style evidence for `ZipFile.read()` on a non-existent entry from an existing archive.
+  - Fix status: remediated by extending `crates/sifr/tests/e2e/pass/cpython_zipfile_subset.sifr` with explicit missing-entry read assertions (`IOError` path).
 - `wave_psp_d2` review pass 1:
   - Reviewer file: `/Users/yaseralnajjar/.codex/worktrees/0761/codebase/reviews/wave-psp-d2-review-pass1.md`
   - Validation result: non-actionable stale review. It incorrectly reported d2 as pending and missing artifacts (`wave_psp_d2` traceability/demo/pass/fail fixtures) that are present and merged in PR `#1198`.
