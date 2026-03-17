@@ -61,6 +61,8 @@ def not_(a: bool) -> bool:
     return not a
 
 
+# CPython raises IndexError for out-of-bounds list access; Sifr adapts this to
+# `None` through safe list indexing semantics.
 def getitem[T](items: list[T], index: int) -> T | None:
     return items[index]
 
@@ -73,5 +75,7 @@ def contains[T](items: list[T], value: T) -> bool:
     return value in items
 
 
+# CPython accepts any object here; this wave intentionally limits `truth` to
+# list truthiness under Sifr's typed surface.
 def truth[T](value: list[T]) -> bool:
     return len(value) != 0
