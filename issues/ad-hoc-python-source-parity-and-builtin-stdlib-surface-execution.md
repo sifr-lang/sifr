@@ -25,7 +25,7 @@ Current active wave: `milestone_psp_7`
 - [x] `milestone_psp_5` / `wave_psp_d2`: process, runtime, and platform surfaces
 - [x] `milestone_psp_6` / `wave_psp_e1`: strong-but-incomplete core modules
 - [x] `milestone_psp_6` / `wave_psp_e2`: class-heavy and custom cleanup
-- [ ] `milestone_psp_7`: parity governance and exit closure
+- [x] `milestone_psp_7`: parity governance and exit closure
 
 ## Wave Ledger
 
@@ -100,7 +100,7 @@ Status: done
 - [x] Harvest the required CPython filesystem/archive test families.
 - [x] Close `io`, `pathlib`, `glob`, `shutil`, `tempfile`, `gzip`, and `zipfile`.
 - [x] Add traceable regressions, demo, validate, PR, review, merge.
-- [ ] Build per-module adopt/adapt/waive map against:
+- [x] Build per-module adopt/adapt/waive map against:
   - `Lib/test/test_io/`
   - `Lib/test/test_pathlib/`
   - `Lib/test/test_glob.py`
@@ -108,22 +108,22 @@ Status: done
   - `Lib/test/test_tempfile.py`
   - `Lib/test/test_gzip.py`
   - `Lib/test/test_zipfile/`
-- [ ] Close `io` object/call-shape gaps:
+- [x] Close `io` object/call-shape gaps:
   - context-manager lifecycle parity for file handles
   - binary/text mode coverage and CPython-shaped helper entry points
-- [ ] Close `pathlib` class-family gaps:
+- [x] Close `pathlib` class-family gaps:
   - ensure `Path` methods align with CPython naming and return-shape expectations
   - tighten path-mutation helper semantics (`with_name`, `with_suffix`, join/parent/name/suffix/stem)
-- [ ] Close `glob` parity gaps:
+- [x] Close `glob` parity gaps:
   - recursive matching behavior and predictable hidden-file handling rules
   - align pattern semantics with shipped `fnmatch` adaptations
-- [ ] Close `shutil` helper surface gaps:
+- [x] Close `shutil` helper surface gaps:
   - CPython-shaped copy/move/tree helpers and disk/tooling helpers
   - explicit error semantics for missing inputs and tree cleanup
-- [ ] Close `tempfile` lifecycle and naming gaps:
+- [x] Close `tempfile` lifecycle and naming gaps:
   - temp path generation semantics and creation helpers (`mkstemp`, `mkdtemp`)
   - collision/error behavior under missing parent and race-like conditions
-- [ ] Close `gzip` and `zipfile` class/entry gaps:
+- [x] Close `gzip` and `zipfile` class/entry gaps:
   - gzip codec surface parity that is compatible with Sifr string/bytes policy
   - zip archive class/object model and helper methods with deterministic behavior
 
@@ -153,7 +153,7 @@ Status: done
 
 ### `milestone_psp_7` Parity Governance and Exit Closure
 
-Status: pending
+Status: done
 
 - [x] Publish canonical builtin parity inventory.
 - [x] Publish canonical core object-model parity inventory.
@@ -161,7 +161,7 @@ Status: pending
 - [x] Publish CPython adopt/adapt/waive ledger and traceability matrix for every wave.
 - [x] Publish waiver index and final exit-gate closure summary.
 - [x] Align `internal_docs/architecture.md`, `internal_docs/roadmap.md`, phase docs, and public claims to the closed state.
-- [ ] Run full validation, external reviewer passes, remediation loops, and closure notifications.
+- [x] Run full validation, external reviewer passes, remediation loops, and closure notifications.
 
 ## Validation Evidence
 
@@ -652,6 +652,7 @@ Status: pending
   - waiver index and exit-gate closure summary
 - Validation evidence:
   - `scripts/run_all_tests.sh --profile quick`
+  - `scripts/run_all_tests.sh`
 
 ## PR Ledger
 
@@ -689,6 +690,7 @@ Status: pending
 - `wave_psp_d1-review-pass6`: PR `#1231` merged at `2026-03-17T14:46:27Z`
 - `wave_psp_d2-review-pass5`: PR `#1232` merged at `2026-03-17T14:54:01Z`
 - `wave_psp_e2-review-pass9`: PR `#1233` merged at `2026-03-17T15:03:44Z`
+- `wave-ledger-sync-through-1233`: PR `#1234` merged at `2026-03-17T15:04:56Z`
 
 ## External Review Ledger
 
@@ -925,3 +927,11 @@ Status: pending
   - Reviewer file: `/Users/yaseralnajjar/.codex/worktrees/0761/codebase/reviews/wave-psp-e2-review-gap-cpython-parity-20260317-r2.md`
   - Validation result: reviewer satisfied with no actionable gaps when constrained to current-mainline worktree state.
   - Fix status: no code changes required.
+- `milestone_psp_7` completion review pass 1:
+  - Reviewer file: `/Users/yaseralnajjar/.codex/worktrees/0761/codebase/reviews/milestone-psp-7-completion-review-20260317-r1.md`
+  - Validation result: reviewer satisfied with milestone completion and no actionable closure gaps.
+  - Fix status: no code changes required.
+- `milestone_psp_7` production-grade review pass 1:
+  - Reviewer file: `/Users/yaseralnajjar/.codex/worktrees/0761/codebase/reviews/milestone-psp-7-production-grade-review-20260317-r1.md`
+  - Validation result: actionable gap. Clippy `-D warnings` failed across HIR/codegen/driver, and the milestone demo had an invalid TOML type annotation.
+  - Fix status: remediated by removing recursion-only context plumbing from `crates/sifr_hir/src/lower/expressions.rs`, hardening clippy-clean helper shapes in `crates/sifr_codegen/src/{class_method_emitter.rs,expr_render_helpers.rs,intrinsic_method_emitters.rs,intrinsics/toml.rs,stmt_support_emitter.rs}`, fixing driver lint issues in `crates/sifr_driver/src/build/materialize.rs`, and correcting TOML typing assertions in `demos/milestone_stdlib_parity_demo.sifr`.

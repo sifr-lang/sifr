@@ -2844,7 +2844,7 @@ impl RustEmitter {
                         || matches!(resolved_param, Type::TypeVar(_) | Type::Any)));
 
             if requires_shared_borrow || requires_mut_borrow {
-                lowered_arg = self.clone_moved_names_in_borrowed_aggregate(arg, lowered_arg);
+                lowered_arg = Self::clone_moved_names_in_borrowed_aggregate(arg, lowered_arg);
             }
 
             if requires_shared_borrow
@@ -3059,15 +3059,13 @@ impl RustEmitter {
     }
 
     pub(crate) fn clone_moved_names_in_borrowed_aggregate(
-        &self,
         arg: &HirExpr,
         lowered: crate::RustExpr,
     ) -> crate::RustExpr {
-        self.clone_moved_names_in_borrowed_aggregate_inner(arg, lowered, false)
+        Self::clone_moved_names_in_borrowed_aggregate_inner(arg, lowered, false)
     }
 
     fn clone_moved_names_in_borrowed_aggregate_inner(
-        &self,
         arg: &HirExpr,
         lowered: crate::RustExpr,
         in_aggregate: bool,
@@ -3079,7 +3077,7 @@ impl RustEmitter {
                         .iter()
                         .zip(items)
                         .map(|(element, item)| {
-                            self.clone_moved_names_in_borrowed_aggregate_inner(element, item, true)
+                            Self::clone_moved_names_in_borrowed_aggregate_inner(element, item, true)
                         })
                         .collect(),
                 )
@@ -3090,7 +3088,7 @@ impl RustEmitter {
                         .iter()
                         .zip(items)
                         .map(|(element, item)| {
-                            self.clone_moved_names_in_borrowed_aggregate_inner(element, item, true)
+                            Self::clone_moved_names_in_borrowed_aggregate_inner(element, item, true)
                         })
                         .collect(),
                 )

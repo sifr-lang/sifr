@@ -38,10 +38,8 @@ impl RustEmitter {
             _ => None,
         };
 
-        parent_class_name.is_some_and(|class_name| {
-            self.recursive_fields
-                .contains(&(class_name, field.to_string()))
-        })
+        parent_class_name
+            .is_some_and(|class_name| self.recursive_fields.contains(&(class_name, field.clone())))
     }
 
     pub(super) fn lower_field_access_expr_with_lowered_object(
@@ -78,7 +76,7 @@ impl RustEmitter {
 
         let is_recursive_field = class_name_for_parent.as_ref().is_some_and(|class_name| {
             self.recursive_fields
-                .contains(&(class_name.clone(), field.to_string()))
+                .contains(&(class_name.clone(), field.to_owned()))
         });
 
         let suppress_self_clone = if self.pending_self_field_clone_suppression > 0
