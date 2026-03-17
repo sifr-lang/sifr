@@ -18,7 +18,11 @@ pub(crate) const MUTATING_METHODS: &[&str] = &[
     "remove",
     "push_str",
     "update",
+    "setdefault",
     "add",
+    "intersection_update",
+    "difference_update",
+    "symmetric_difference_update",
     "discard",
 ];
 
@@ -648,6 +652,48 @@ mod tests {
 
         let mutated = collect_mutated_vars(&[HirStmt::NestedFunction { func: nested }], None);
         assert!(mutated.contains("items"));
+    }
+
+    #[test]
+    fn collect_mutated_vars_marks_dict_setdefault_receiver() {
+        let stmts = vec![HirStmt::Expr {
+            expr: HirExpr::MethodCall {
+                object: Box::new(HirExpr::Name {
+                    name: "data".to_string(),
+                    ty: Type::Dict(Box::new(Type::Str), Box::new(Type::Int)),
+                }),
+                method: "setdefault".to_string(),
+                args: vec![
+                    HirExpr::StringLiteral("k".to_string()),
+                    HirExpr::IntLiteral(1),
+                ],
+                ty: Type::Int,
+            },
+        }];
+
+        let mutated = collect_mutated_vars(&stmts, None);
+        assert!(mutated.contains("data"));
+    }
+
+    #[test]
+    fn collect_mutated_vars_marks_set_update_receiver() {
+        let stmts = vec![HirStmt::Expr {
+            expr: HirExpr::MethodCall {
+                object: Box::new(HirExpr::Name {
+                    name: "seen".to_string(),
+                    ty: Type::Set(Box::new(Type::Int)),
+                }),
+                method: "intersection_update".to_string(),
+                args: vec![HirExpr::ListLiteral {
+                    elements: vec![HirExpr::IntLiteral(1), HirExpr::IntLiteral(2)],
+                    ty: Type::List(Box::new(Type::Int)),
+                }],
+                ty: Type::None,
+            },
+        }];
+
+        let mutated = collect_mutated_vars(&stmts, None);
+        assert!(mutated.contains("seen"));
     }
 
     #[test]
