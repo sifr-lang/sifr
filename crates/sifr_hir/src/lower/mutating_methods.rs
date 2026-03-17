@@ -49,7 +49,7 @@ fn method_requires_mutable_parameter_binding(object_ty: &Type, method: &str) -> 
                 | "appendleft"
                 | "remove"
         ),
-        Type::Dict(_, _) => matches!(method, "update" | "clear" | "pop"),
+        Type::Dict(_, _) => matches!(method, "update" | "clear" | "pop" | "setdefault"),
         Type::Set(_) => matches!(
             method,
             "add"
