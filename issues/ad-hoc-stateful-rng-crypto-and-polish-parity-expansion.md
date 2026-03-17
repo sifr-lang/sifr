@@ -2,7 +2,7 @@
 
 Status: open (documented 2026-03-18)
 Context: final cleanup phase after the structured/class, bytes-foundation, and runtime/file-object follow-ups
-Execution readiness: implementation-ready after `issues/ad-hoc-runtime-and-file-object-parity-expansion.md`
+Execution readiness: implementation-ready in sequence after `issues/ad-hoc-runtime-and-file-object-parity-expansion.md`; wave 1 still requires recorded RNG-state, `SystemRandom`, and dependency-audit evidence from architecture lock validation
 
 ## Objective
 
@@ -60,6 +60,8 @@ This work shares a different root cause from the earlier phases:
 - and final polish on modules that are already near closure but still carry a narrow advanced-feature waiver set.
 
 It should therefore execute after the broader object-model and runtime work, not before it.
+
+The phase design is fixed in this document. What remains before wave 1 is execution evidence for the MT19937-compatible state model, `SystemRandom` host boundary, and actual crypto dependency inventory.
 
 ## Depends on
 
@@ -268,17 +270,21 @@ Definition of done:
 - Crypto and digest surfaces must not introduce panic-prone or fake binary compatibility.
 - Every wave must update the waiver ledger before merge.
 - No module may be called “finished” in this phase unless its surviving waiver set is explicit and small.
+- Non-deterministic host-backed APIs such as `SystemRandom` are allowed only when their boundaries are explicit, non-panicking, and excluded from deterministic state-serialization claims.
 
 ## Architecture Lock Validation
 
 Before `wave_psp_rng_1` begins implementation, the phase must add:
 
+- one implementation note mapping the approved `RandomState` fields to the chosen MT19937-compatible internal state model,
+- one implementation note defining the exact host-boundary contract for `SystemRandom`,
 - one Sifr demo covering the typed `RandomState` and module-global RNG proxy model,
 - one Sifr demo covering the bytes-native digest model,
 - one negative-path test for every newly explicit permanent divergence,
 - one CPython-family mapping table proving which upstream cases are adopted, adapted, or permanently waived,
 - explicit phase test families covering `test_random`, `test_hashlib`, `test_base64`, and `test_statistics`,
-- one compile-time rejection or negative runtime case for every new typed surface that proves the remaining Sifr-safe divergence is explicit rather than accidental.
+- one compile-time rejection or negative runtime case for every new typed surface that proves the remaining Sifr-safe divergence is explicit rather than accidental,
+- one dependency audit note recording which SHA3 / SHAKE families are actually available in the Rust dependency stack at execution start.
 
 ## Local Validation Commands
 

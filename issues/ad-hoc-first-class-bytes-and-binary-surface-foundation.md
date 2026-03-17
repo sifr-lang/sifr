@@ -2,7 +2,7 @@
 
 Status: open (documented 2026-03-18)
 Context: prerequisite phase after structured/class-surface parity expansion and before runtime/file-object plus RNG/crypto follow-ups
-Execution readiness: implementation-ready after `issues/ad-hoc-structured-data-and-class-surface-parity-expansion.md`
+Execution readiness: implementation-ready in sequence after `issues/ad-hoc-structured-data-and-class-surface-parity-expansion.md`; wave 1 still requires recorded typing/lowering/codegen migration evidence from architecture lock validation
 
 ## Objective
 
@@ -68,12 +68,41 @@ The runtime/file-object phase needs one canonical binary carrier for streams, ar
 
 This phase exists to close that root cause first.
 
+The architecture target is fixed in this document. What remains before wave 1 is not a fresh design pass; it is execution evidence for the chosen type-system, HIR, lowering, codegen, and intrinsic-migration path.
+
 ## Depends on
 
 - `issues/ad-hoc-structured-data-and-class-surface-parity-expansion.md`
 - milestone-7 canonical closure inventory remains the baseline
 - Phase 27 non-regression invariants remain mandatory
 - Phase 29 local-first validation contract remains mandatory
+
+## Current Repo Reality
+
+- Parser and AST support for Python-style bytes literals already exists in:
+  - `crates/sifr_python_parser/src/string.rs`
+  - `crates/sifr_python_ast/src/nodes.rs`
+- The missing work is not bytes-literal parsing from zero. The missing work is:
+  - first-class `bytes` typing in `sifr_type_system`,
+  - HIR and stdlib signature migration away from `list[int]`,
+  - lowering and codegen for first-class `bytes` operations,
+  - and runtime/intrinsic migration of current binary helpers and file APIs.
+- Current binary intrinsics and file APIs still expose `list[int]` boundaries in:
+  - `crates/sifr_hir/src/stdlib/collections_bytes_time.rs`
+  - `crates/sifr_hir/src/stdlib/sys_fs.rs`
+  - `lib/sifr/bytes.sifr`
+  - `lib/sifr/io.sifr`
+
+## Implementation Approach
+
+This phase should be executed as a focused compiler-and-runtime migration, not as a parser project.
+
+1. Keep existing parser and AST bytes-literal support as the frontend input surface.
+2. Add a first-class `bytes` type to the type system and propagate it through HIR signatures and stdlib contracts.
+3. Lower first-class `bytes` values to one immutable owned byte-buffer runtime model.
+4. Migrate binary intrinsics and file-system intrinsics from `list[int]` to `bytes`.
+5. Rebuild `lib/sifr/bytes.sifr` as a compatibility wrapper over the first-class implementation.
+6. Only after the core type and runtime path are stable, rewire successor phase docs and ledgers to consume the new binary carrier.
 
 ## Public Surface Contract
 
@@ -95,6 +124,8 @@ This phase exists to close that root cause first.
   - `bytes.from_hex(s: str) -> Result[bytes, ParseError]`
   - `to_ints() -> list[int]`
 - No implicit coercion between `str`, `list[int]`, and `bytes`.
+- `bytes(size)` allocates a zero-filled immutable buffer of the requested length.
+- negative sizes must fail with `ValueError`.
 
 ### Text / binary conversion
 
@@ -126,6 +157,7 @@ This phase exists to close that root cause first.
 - `bytearray` is deferred in this phase.
 - `memoryview` is deferred in this phase.
 - No general CPython buffer protocol or bytes-like duck typing is introduced in this phase.
+- Zero-copy view semantics are therefore out of scope; later phases must use explicit owned `bytes` values and honest copying boundaries where needed.
 
 ## Permanent Sifr-Safe Diffs
 
@@ -237,7 +269,9 @@ Definition of done:
 
 - `bytes` is supported as a real public type,
 - indexing, slicing, iteration, concatenation, and equality are shipped or explicitly waived,
-- local tests prove panic-free bounds and conversion behavior.
+- local tests prove panic-free bounds and conversion behavior,
+- parser/AST support is reused rather than reimplemented,
+- the type-system and HIR signatures no longer route core bytes operations through `list[int]`.
 
 ### wave_psp_bytes_2: Conversion Surfaces and Compatibility Migration
 
@@ -287,6 +321,7 @@ Definition of done:
 
 Before `wave_psp_bytes_1` begins implementation, the phase must add:
 
+- one execution-note entry confirming that bytes-literal parsing and AST support already exist, so the spike scope starts at typing/lowering/codegen rather than lexing,
 - one Sifr demo covering first-class `bytes` construction, indexing, slicing, and iteration,
 - one Sifr demo covering explicit UTF-8 encode/decode and hex conversion,
 - one negative-path test for every newly explicit permanent divergence,

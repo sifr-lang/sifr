@@ -188,7 +188,7 @@ Required outcome:
 
 - no builtin in this set returns eager materialized collections as its claimed parity behavior,
 - explicit materialization happens only when the user writes `list(...)`, `tuple(...)`, `set(...)`, or `dict(...)`,
-- existing `strict=` waivers for `zip` / `map` remain explicit unless closed separately.
+- any currently recorded `strict=` waivers for `zip` / `map` remain explicit unless closed separately, and this phase must revalidate that both waiver entries still correspond to real upstream-supported surfaces before phase exit.
 
 ### priority_2: `itertools` waiver replacement
 

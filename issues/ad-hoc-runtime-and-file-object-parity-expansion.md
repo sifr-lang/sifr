@@ -2,7 +2,7 @@
 
 Status: open (documented 2026-03-18)
 Context: follow-up phase after structured/class-surface parity expansion and the bytes/binary-surface foundation
-Execution readiness: implementation-ready after `issues/ad-hoc-first-class-bytes-and-binary-surface-foundation.md`
+Execution readiness: implementation-ready in sequence after `issues/ad-hoc-first-class-bytes-and-binary-surface-foundation.md`; wave 1 still requires recorded lifecycle and cleanup prototype evidence from architecture lock validation
 
 ## Objective
 
@@ -60,6 +60,8 @@ These gaps share one architecture theme:
 - and archive/process option matrices that interact with runtime capabilities.
 
 That is a separate implementation problem from parser/class expansion and from RNG/crypto parity.
+
+The runtime and file-object design is fixed in this document. What remains before wave 1 is prototype evidence that the sealed hierarchy and cleanup model can be implemented cleanly on top of current Sifr runtime constraints.
 
 ## Depends on
 
@@ -344,13 +346,15 @@ Definition of done:
 
 Before `wave_psp_runtime_1` begins implementation, the phase must add:
 
+- one implementation note showing how current `FileHandle` enter/exit behavior generalizes into the sealed hierarchy rather than introducing an unrelated cleanup model,
 - one Sifr demo covering the sealed stream hierarchy,
 - one Sifr demo covering deterministic tempfile or zipfile lifecycle behavior,
 - one Sifr demo covering bytes-backed binary file or `BytesIO` behavior,
 - one negative-path test for every newly explicit permanent divergence,
 - one CPython-family mapping table proving which upstream cases are adopted, adapted, or permanently waived,
 - explicit phase test families covering `test_io`, `test_tempfile`, `test_zipfile`, `test_logging`, `test_time`, `test_timeit`, and `test_subprocess`,
-- one compile-time rejection or negative runtime case for every new typed surface that proves the remaining Sifr-safe divergence is explicit rather than accidental.
+- one compile-time rejection or negative runtime case for every new typed surface that proves the remaining Sifr-safe divergence is explicit rather than accidental,
+- one narrow prototype note for tempfile cleanup or binary-handle lifecycle proving the chosen cleanup strategy is implementable on top of existing Sifr runtime constraints.
 
 ## Local Validation Commands
 
