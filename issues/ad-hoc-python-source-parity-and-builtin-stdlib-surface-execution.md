@@ -754,6 +754,10 @@ Status: pending
   - Reviewer file: `/Users/yaseralnajjar/.codex/worktrees/0761/codebase/reviews/wave-psp-b2-review-gap-cpython-parity-20260317-r1.md`
   - Validation result: partially actionable. Core implementation was correct, but parity evidence needed stronger coverage for documented edge paths and an explicit compile-time guard around the typed `starmap` arity adaptation.
   - Fix status: remediated by expanding `cpython_itertools_subset.sifr` with negative edge assertions (`repeat<0`, oversized combinator `r`, empty-data replacement combos, and non-positive `islice` step), expanding `cpython_random_subset.sifr` with shipped helper coverage (`random`, `randint`, `uniform`, `gauss`, `sample` + invalid sample guard), adding fail fixture `phase_psp_b2_itertools_starmap_non_binary_callable.sifr`, and tightening `verification/stdlib/wave_psp_b2_cpython_traceability.md` to include explicit `itemgetter`/random surface coverage and the intentional binary-only `starmap` contract.
+- `wave_psp_b2` review pass 6:
+  - Reviewer file: `/Users/yaseralnajjar/.codex/worktrees/0761/codebase/reviews/wave-psp-b2-review-gap-cpython-parity-20260317-r3.md`
+  - Validation result: no new implementation gaps; reviewer flagged only low-severity documentation clarity follow-ups for already-shipped intentional adaptations.
+  - Fix status: remediated by adding explicit source-level notes in `lib/sifr/operator.sifr` (`getitem` safe-indexing `None` behavior and list-only `truth` surface), clarifying `lib/sifr/secrets.sifr::compare_digest` as non-constant-time, and tightening `verification/stdlib/wave_psp_b2_cpython_traceability.md` wording for these intentional differences.
 - `wave_psp_c1` review pass 1:
   - Reviewer file: `/Users/yaseralnajjar/.codex/worktrees/0761/codebase/reviews/wave-psp-c1-review-pass1b.md`
   - Validated findings: `ConfigParser.read(path)` only read bytes and skipped parser population, `has_option()` default fallback semantics regressed for existing sections, and class-method mutability inference missed delegated `self.read_string(...)` mutation.
