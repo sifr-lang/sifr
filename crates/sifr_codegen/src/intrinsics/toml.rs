@@ -42,8 +42,7 @@ fn toml_decode_error(message: RustExpr) -> RustExpr {
     }
 }
 
-fn toml_struct(
-    kind: &str,
+struct TomlStructFields {
     bool_value: RustExpr,
     int_value: RustExpr,
     float_value: RustExpr,
@@ -51,18 +50,34 @@ fn toml_struct(
     datetime_value: RustExpr,
     array_items: RustExpr,
     table_items: RustExpr,
-) -> RustExpr {
+}
+
+impl TomlStructFields {
+    fn empty() -> Self {
+        Self {
+            bool_value: RustExpr::Literal(RustLiteral::None),
+            int_value: RustExpr::Literal(RustLiteral::None),
+            float_value: RustExpr::Literal(RustLiteral::None),
+            str_value: RustExpr::Literal(RustLiteral::None),
+            datetime_value: RustExpr::Literal(RustLiteral::None),
+            array_items: box_expr(RustExpr::Vec(vec![])),
+            table_items: box_expr(RustExpr::Vec(vec![])),
+        }
+    }
+}
+
+fn toml_struct(kind: &str, fields: TomlStructFields) -> RustExpr {
     RustExpr::StructInit {
         name: "TomlValue".to_string(),
         fields: vec![
             ("kind".to_string(), string_expr(kind)),
-            ("bool_value".to_string(), bool_value),
-            ("int_value".to_string(), int_value),
-            ("float_value".to_string(), float_value),
-            ("str_value".to_string(), str_value),
-            ("datetime_value".to_string(), datetime_value),
-            ("array_items".to_string(), array_items),
-            ("table_items".to_string(), table_items),
+            ("bool_value".to_string(), fields.bool_value),
+            ("int_value".to_string(), fields.int_value),
+            ("float_value".to_string(), fields.float_value),
+            ("str_value".to_string(), fields.str_value),
+            ("datetime_value".to_string(), fields.datetime_value),
+            ("array_items".to_string(), fields.array_items),
+            ("table_items".to_string(), fields.table_items),
         ],
     }
 }
@@ -70,91 +85,70 @@ fn toml_struct(
 fn toml_bool_expr(value: RustExpr) -> RustExpr {
     toml_struct(
         "bool",
-        some_expr(value),
-        RustExpr::Literal(RustLiteral::None),
-        RustExpr::Literal(RustLiteral::None),
-        RustExpr::Literal(RustLiteral::None),
-        RustExpr::Literal(RustLiteral::None),
-        box_expr(RustExpr::Vec(vec![])),
-        box_expr(RustExpr::Vec(vec![])),
+        TomlStructFields {
+            bool_value: some_expr(value),
+            ..TomlStructFields::empty()
+        },
     )
 }
 
 fn toml_int_expr(value: RustExpr) -> RustExpr {
     toml_struct(
         "int",
-        RustExpr::Literal(RustLiteral::None),
-        some_expr(value),
-        RustExpr::Literal(RustLiteral::None),
-        RustExpr::Literal(RustLiteral::None),
-        RustExpr::Literal(RustLiteral::None),
-        box_expr(RustExpr::Vec(vec![])),
-        box_expr(RustExpr::Vec(vec![])),
+        TomlStructFields {
+            int_value: some_expr(value),
+            ..TomlStructFields::empty()
+        },
     )
 }
 
 fn toml_float_expr(value: RustExpr) -> RustExpr {
     toml_struct(
         "float",
-        RustExpr::Literal(RustLiteral::None),
-        RustExpr::Literal(RustLiteral::None),
-        some_expr(value),
-        RustExpr::Literal(RustLiteral::None),
-        RustExpr::Literal(RustLiteral::None),
-        box_expr(RustExpr::Vec(vec![])),
-        box_expr(RustExpr::Vec(vec![])),
+        TomlStructFields {
+            float_value: some_expr(value),
+            ..TomlStructFields::empty()
+        },
     )
 }
 
 fn toml_str_expr(value: RustExpr) -> RustExpr {
     toml_struct(
         "str",
-        RustExpr::Literal(RustLiteral::None),
-        RustExpr::Literal(RustLiteral::None),
-        RustExpr::Literal(RustLiteral::None),
-        some_expr(value),
-        RustExpr::Literal(RustLiteral::None),
-        box_expr(RustExpr::Vec(vec![])),
-        box_expr(RustExpr::Vec(vec![])),
+        TomlStructFields {
+            str_value: some_expr(value),
+            ..TomlStructFields::empty()
+        },
     )
 }
 
 fn toml_datetime_expr(value: RustExpr) -> RustExpr {
     toml_struct(
         "datetime",
-        RustExpr::Literal(RustLiteral::None),
-        RustExpr::Literal(RustLiteral::None),
-        RustExpr::Literal(RustLiteral::None),
-        RustExpr::Literal(RustLiteral::None),
-        some_expr(value),
-        box_expr(RustExpr::Vec(vec![])),
-        box_expr(RustExpr::Vec(vec![])),
+        TomlStructFields {
+            datetime_value: some_expr(value),
+            ..TomlStructFields::empty()
+        },
     )
 }
 
 fn toml_array_expr(value: RustExpr) -> RustExpr {
     toml_struct(
         "array",
-        RustExpr::Literal(RustLiteral::None),
-        RustExpr::Literal(RustLiteral::None),
-        RustExpr::Literal(RustLiteral::None),
-        RustExpr::Literal(RustLiteral::None),
-        RustExpr::Literal(RustLiteral::None),
-        box_expr(value),
-        box_expr(RustExpr::Vec(vec![])),
+        TomlStructFields {
+            array_items: box_expr(value),
+            ..TomlStructFields::empty()
+        },
     )
 }
 
 fn toml_table_expr(value: RustExpr) -> RustExpr {
     toml_struct(
         "table",
-        RustExpr::Literal(RustLiteral::None),
-        RustExpr::Literal(RustLiteral::None),
-        RustExpr::Literal(RustLiteral::None),
-        RustExpr::Literal(RustLiteral::None),
-        RustExpr::Literal(RustLiteral::None),
-        box_expr(RustExpr::Vec(vec![])),
-        box_expr(value),
+        TomlStructFields {
+            table_items: box_expr(value),
+            ..TomlStructFields::empty()
+        },
     )
 }
 

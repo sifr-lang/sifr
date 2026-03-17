@@ -123,37 +123,34 @@ fn callable_signature(expr: &HirExpr) -> Option<(Vec<Type>, Vec<ParamConvention>
     }
 }
 
-fn canonicalize_class_surface_type(ty: &Type, ctx: &LowerCtx) -> Type {
+fn canonicalize_class_surface_type(ty: &Type) -> Type {
     match ty {
-        Type::List(elem) => Type::List(Box::new(canonicalize_class_surface_type(elem, ctx))),
-        Type::Set(elem) => Type::Set(Box::new(canonicalize_class_surface_type(elem, ctx))),
+        Type::List(elem) => Type::List(Box::new(canonicalize_class_surface_type(elem))),
+        Type::Set(elem) => Type::Set(Box::new(canonicalize_class_surface_type(elem))),
         Type::Dict(key, value) => Type::Dict(
-            Box::new(canonicalize_class_surface_type(key, ctx)),
-            Box::new(canonicalize_class_surface_type(value, ctx)),
+            Box::new(canonicalize_class_surface_type(key)),
+            Box::new(canonicalize_class_surface_type(value)),
         ),
         Type::Tuple(elements) => Type::Tuple(
             elements
                 .iter()
-                .map(|element| canonicalize_class_surface_type(element, ctx))
+                .map(canonicalize_class_surface_type)
                 .collect(),
         ),
         Type::Union(members) => make_union(
             members
                 .iter()
-                .map(|member| canonicalize_class_surface_type(member, ctx))
+                .map(canonicalize_class_surface_type)
                 .collect(),
         ),
         Type::Result(ok, err) => Type::Result(
-            Box::new(canonicalize_class_surface_type(ok, ctx)),
-            Box::new(canonicalize_class_surface_type(err, ctx)),
+            Box::new(canonicalize_class_surface_type(ok)),
+            Box::new(canonicalize_class_surface_type(err)),
         ),
         Type::Callable(params, conventions, ret) => Type::Callable(
-            params
-                .iter()
-                .map(|param| canonicalize_class_surface_type(param, ctx))
-                .collect(),
+            params.iter().map(canonicalize_class_surface_type).collect(),
             conventions.clone(),
-            Box::new(canonicalize_class_surface_type(ret, ctx)),
+            Box::new(canonicalize_class_surface_type(ret)),
         ),
         Type::Function(ft) => Type::Function(FunctionType {
             params: ft
@@ -162,12 +159,12 @@ fn canonicalize_class_surface_type(ty: &Type, ctx: &LowerCtx) -> Type {
                 .map(|(name, param_ty, convention)| {
                     (
                         name.clone(),
-                        canonicalize_class_surface_type(param_ty, ctx),
+                        canonicalize_class_surface_type(param_ty),
                         *convention,
                     )
                 })
                 .collect(),
-            return_type: Box::new(canonicalize_class_surface_type(&ft.return_type, ctx)),
+            return_type: Box::new(canonicalize_class_surface_type(&ft.return_type)),
         }),
         Type::Alias {
             name,
@@ -177,9 +174,9 @@ fn canonicalize_class_surface_type(ty: &Type, ctx: &LowerCtx) -> Type {
             name: name.clone(),
             type_args: type_args
                 .iter()
-                .map(|arg| canonicalize_class_surface_type(arg, ctx))
+                .map(canonicalize_class_surface_type)
                 .collect(),
-            body: Box::new(canonicalize_class_surface_type(body, ctx)),
+            body: Box::new(canonicalize_class_surface_type(body)),
         },
         Type::Class { .. } | Type::Protocol { .. } => ty.clone(),
         _ => ty.clone(),
@@ -2189,7 +2186,7 @@ pub(super) fn lower_attribute(attr: &ExprAttribute, ctx: &mut LowerCtx) -> Optio
 
     let object = lower_expr(&attr.value, ctx)?;
     let object_ty = object.ty().clone();
-    let resolved_object_ty = canonicalize_class_surface_type(object_ty.resolve_alias(), ctx)
+    let resolved_object_ty = canonicalize_class_surface_type(object_ty.resolve_alias())
         .resolve_alias()
         .clone();
 
@@ -2315,7 +2312,7 @@ pub(super) fn lower_method_call(
 
     let mut object = lower_expr(&attr.value, ctx)?;
     let method_name = attr.attr.to_string();
-    let object_ty_for_args = canonicalize_class_surface_type(object.ty().resolve_alias(), ctx);
+    let object_ty_for_args = canonicalize_class_surface_type(object.ty().resolve_alias());
     let args = match &object_ty_for_args {
         Type::Class { name, methods, .. } => {
             if let Some((_, ft)) = methods
@@ -2476,7 +2473,7 @@ pub(super) fn resolve_method_type(
     args: &[HirExpr],
     ctx: &mut LowerCtx,
 ) -> Option<Type> {
-    let canonical_object_ty = canonicalize_class_surface_type(object_ty, ctx);
+    let canonical_object_ty = canonicalize_class_surface_type(object_ty);
     let object_ty = &canonical_object_ty;
     if let Type::Alias {
         name: alias_name,
@@ -3083,7 +3080,7 @@ pub(super) fn resolve_method_type(
                         ));
                     }
                 }
-                Some(canonicalize_class_surface_type(&ft.return_type, ctx))
+                Some(canonicalize_class_surface_type(&ft.return_type))
             } else if let Some((_, field_ty)) = fields.iter().find(|(n, _)| n == method) {
                 // Check if the field is a Callable type — allow calling it like a method
                 if let Type::Callable(param_types, _, ret_type) = field_ty {
@@ -3109,7 +3106,7 @@ pub(super) fn resolve_method_type(
                             ));
                         }
                     }
-                    Some(canonicalize_class_surface_type(ret_type, ctx))
+                    Some(canonicalize_class_surface_type(ret_type))
                 } else {
                     ctx.error(format!(
                         "field '{}' of class '{}' is not callable (type: '{}')",
@@ -3135,7 +3132,7 @@ pub(super) fn resolve_method_type(
                         args.len()
                     ));
                 }
-                Some(canonicalize_class_surface_type(&ft.return_type, ctx))
+                Some(canonicalize_class_surface_type(&ft.return_type))
             } else {
                 ctx.error(format!("protocol '{name}' has no method '{method}'"));
                 None

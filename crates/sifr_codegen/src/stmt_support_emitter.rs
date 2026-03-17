@@ -3591,7 +3591,7 @@ impl RustEmitter {
             ) || matches!(hir_arg, HirExpr::Name { name, .. } if self.mut_borrowed_params.contains(name));
 
             if needs_shared_borrow || needs_mut_borrow {
-                lowered_arg = self.clone_moved_names_in_borrowed_aggregate(hir_arg, lowered_arg);
+                lowered_arg = Self::clone_moved_names_in_borrowed_aggregate(hir_arg, lowered_arg);
             }
 
             if needs_shared_borrow && !already_borrowed {

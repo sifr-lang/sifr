@@ -8,7 +8,7 @@ use sifr_type_system::{ParamConvention, Type};
 use std::collections::HashSet;
 
 impl RustEmitter {
-    fn class_method_requires_mutable_self(&self, class: &HirClass, method: &HirFunction) -> bool {
+    fn class_method_requires_mutable_self(class: &HirClass, method: &HirFunction) -> bool {
         if method.method_kind != MethodKind::Regular || method.name == "new" {
             return false;
         }
@@ -533,7 +533,7 @@ impl RustEmitter {
         match method.method_kind {
             MethodKind::Regular if method.name != "new" => {
                 params.push(RustParam::SelfParam {
-                    mutable: self.class_method_requires_mutable_self(class, method),
+                    mutable: Self::class_method_requires_mutable_self(class, method),
                 });
             }
             _ => {}

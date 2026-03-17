@@ -2,7 +2,7 @@ use super::cargo_manifest::generate_dependency_cargo_toml;
 use super::project_codegen::GeneratedBinaryProject;
 use super::{prepare_cached_artifact, CachedArtifactEntry, PreparedArtifactCache};
 use crate::diagnostics::{CompileError, CompilePhase};
-use std::collections::BTreeMap;
+use std::collections::BTreeSet;
 use std::path::{Path, PathBuf};
 use std::process::Command;
 
@@ -89,7 +89,7 @@ fn materialize_binary_project_at_path(
 
     let output = Command::new("cargo")
         .args(["build", "--release"])
-        .current_dir(&project_path)
+        .current_dir(project_path)
         .output()
         .map_err(|error| vec![build_error(format!("failed to run cargo build: {error}"))])?;
 
@@ -143,9 +143,9 @@ fn binary_project_cache_key(
 }
 
 fn sorted_lines(values: &std::collections::HashSet<String>) -> Vec<String> {
-    let mut ordered: BTreeMap<&str, ()> = BTreeMap::new();
+    let mut ordered: BTreeSet<&str> = BTreeSet::new();
     for value in values {
-        ordered.insert(value.as_str(), ());
+        ordered.insert(value.as_str());
     }
-    ordered.into_keys().map(str::to_string).collect()
+    ordered.into_iter().map(str::to_string).collect()
 }
