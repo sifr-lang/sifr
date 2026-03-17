@@ -334,7 +334,9 @@ Before `wave_psp_runtime_1` begins implementation, the phase must add:
 - one Sifr demo covering the sealed stream hierarchy,
 - one Sifr demo covering deterministic tempfile or zipfile lifecycle behavior,
 - one negative-path test for every newly explicit permanent divergence,
-- one CPython-family mapping table proving which upstream cases are adopted, adapted, or permanently waived.
+- one CPython-family mapping table proving which upstream cases are adopted, adapted, or permanently waived,
+- explicit phase test families covering `test_io`, `test_tempfile`, `test_zipfile`, `test_logging`, `test_time`, `test_timeit`, and `test_subprocess`,
+- one compile-time rejection or negative runtime case for every new typed surface that proves the remaining Sifr-safe divergence is explicit rather than accidental.
 
 ## Local Validation Commands
 

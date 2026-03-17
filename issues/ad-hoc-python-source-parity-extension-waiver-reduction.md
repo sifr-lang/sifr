@@ -2,7 +2,7 @@
 
 Status: open (documented 2026-03-17)
 Context: continuation phase after `issues/ad-hoc-first-class-lazy-iterators-and-python-iterable-protocol.md`
-Execution readiness: planning-ready after the predecessor phase closes its protocol, builtin-lazy, and initial-`itertools` waves
+Execution readiness: implementation-ready after the predecessor phase closes its protocol, builtin-lazy, and initial-`itertools` waves
 
 ## Objective
 

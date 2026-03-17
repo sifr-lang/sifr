@@ -2,7 +2,7 @@
 
 Status: open (documented 2026-03-17)
 Context: ad hoc architecture phase captured in `issues/` before roadmap-phase promotion
-Execution readiness: planning-ready; promote into an execution checklist issue before implementation begins
+Execution readiness: implementation-ready as the iterator architecture phase for the post-milestone-31.5 parity sequence
 
 ## Objective
 
