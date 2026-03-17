@@ -1,0 +1,224 @@
+# Ad Hoc Phase: Runtime and File-Object Parity Expansion
+
+Status: open (documented 2026-03-17)
+Context: follow-up phase after structured/class-surface parity expansion
+Execution readiness: planning-ready after the structured-data/class-surface phase closes
+
+## Objective
+
+Close the next major runtime and file-object parity frontier for modules whose current shipped subset is useful but intentionally narrowed around simple helpers and lightweight wrappers.
+
+Primary module targets:
+
+- `logging`
+- `io`
+- `zipfile`
+- `tempfile`
+- `time`
+
+Secondary module target:
+
+- `subprocess`
+  - only where its remaining synchronous file-object and option-matrix work is directly entangled with the primary runtime/file-object root cause
+
+## Source of Truth
+
+- canonical parity inventory:
+  - `verification/stdlib/milestone_psp_7_parity_governance_inventory.md`
+- relevant closure wave ledgers:
+  - `verification/stdlib/wave_psp_d1_cpython_traceability.md`
+  - `verification/stdlib/wave_psp_d2_cpython_traceability.md`
+- architecture baseline:
+  - `internal_docs/architecture.md`
+  - `internal_docs/phases/07_stdlib_parity.md`
+- predecessor planning docs:
+  - `issues/ad-hoc-python-source-parity-extension-waiver-reduction.md`
+  - `issues/ad-hoc-structured-data-and-class-surface-parity-expansion.md`
+- CPython source and tests:
+  - `/Users/yaseralnajjar/work/sifr/cpython`
+  - `/Users/yaseralnajjar/work/sifr/cpython/Lib/test`
+
+Primary upstream families:
+
+- `Lib/test/test_io/`
+- `Lib/test/test_logging.py`
+- `Lib/test/test_zipfile/`
+- `Lib/test/test_tempfile.py`
+- `Lib/test/test_time.py`
+- `Lib/test/test_timeit.py`
+- `Lib/test/test_subprocess.py`
+
+## Why This Needs Its Own Phase
+
+These gaps share one architecture theme:
+
+- richer object wrappers around host resources,
+- lifecycle-sensitive file and stream semantics,
+- context-manager-like ownership boundaries,
+- host-backed clocks and logging subsystems,
+- and archive/process option matrices that interact with runtime capabilities.
+
+That is a separate implementation problem from parser/class expansion and from RNG/crypto parity. Combining them would produce a bloated and incoherent milestone.
+
+## Depends on
+
+- `issues/ad-hoc-structured-data-and-class-surface-parity-expansion.md`
+  - sequencing preference, not because of a hard type-system dependency
+- milestone-7 canonical closure inventory remains the baseline
+- Phase 27 non-regression invariants remain mandatory
+- Phase 29 local-first validation contract remains mandatory
+
+## Scope
+
+This phase owns:
+
+- `io` stream hierarchy and in-memory wrapper parity,
+- `zipfile` file-object, option-matrix, and archive-control expansion,
+- `tempfile` object-wrapper and lifecycle parity,
+- `logging` hierarchy/configuration expansion within host-limited bounds,
+- `time` / `timeit` richer object-model parity where host abstractions permit it,
+- synchronous `subprocess` file-object and option-matrix improvements that share the same runtime boundary work.
+
+This phase does not own:
+
+- async `subprocess.Popen` lifecycle or full process orchestration,
+- interpreter-mutation hooks in `sys`,
+- broad `os` API explosion beyond what this runtime/file-object work requires,
+- unrelated parser or collection expansion,
+- crypto or RNG-state work.
+
+## Non-goals
+
+- weakening host-limited classifications without real runtime support,
+- pretending full CPython parity exists where the host boundary remains intentionally narrower,
+- mixing async runtime work into this phase,
+- adding wrapper types that violate Sifr ownership and panic-free invariants.
+
+## Priority Targets
+
+### priority_1: Stream and file-object foundations
+
+Modules:
+
+- `io`
+- `tempfile`
+- `zipfile`
+
+Required closure direction:
+
+- ship the next real `io` hierarchy layer (`BytesIO`, `StringIO`, buffered/text/raw wrappers, seek/tell families) where feasible,
+- add object-oriented tempfile wrappers with deterministic cleanup and lifecycle rules,
+- expand `zipfile` beyond the current narrow create/write/read/namelist subset.
+
+### priority_2: Runtime host surfaces
+
+Modules:
+
+- `logging`
+- `time`
+
+Required closure direction:
+
+- expand logging hierarchy/configuration in ways that remain host-deterministic,
+- expand `time` / `timeit` object-level parity such as `struct_time` and richer timer surfaces where the runtime model can support them honestly.
+
+### priority_3: Synchronous process/file-object cleanup
+
+Modules:
+
+- `subprocess`
+
+Required closure direction:
+
+- close more of the synchronous option matrix that depends on the new file-object infrastructure,
+- keep async lifecycle and signal orchestration explicitly out of scope.
+
+## Waves
+
+### wave_psp_runtime_1: `io` and In-Memory Stream Hierarchy
+
+Scope:
+
+- `io`
+
+Definition of done:
+
+- core in-memory and buffered stream families are shipped or explicitly waived,
+- ownership, seek/tell, and typed error contracts are documented and covered,
+- no remaining “stream hierarchy” waiver entry stays vague.
+
+### wave_psp_runtime_2: Tempfile and Archive Object Lifecycles
+
+Scope:
+
+- `tempfile`
+- `zipfile`
+
+Definition of done:
+
+- tempfile object wrappers and lifecycle semantics are either closed or sharply waived,
+- archive object and option-matrix parity expands beyond the current narrow subset,
+- validation proves deterministic cleanup and panic-free error behavior.
+
+### wave_psp_runtime_3: Logging and Clock Object Expansion
+
+Scope:
+
+- `logging`
+- `time`
+- `timeit`
+
+Definition of done:
+
+- the next useful host-backed object-model tranche is shipped,
+- remaining host-limited behavior is explicit and defendable,
+- no public claims overstate what the runtime can actually guarantee.
+
+### wave_psp_runtime_4: Synchronous Process Boundary Cleanup and Governance Closure
+
+Scope:
+
+- `subprocess`
+- final ledger updates for the whole phase
+
+Definition of done:
+
+- synchronous process/file-object parity is materially stronger,
+- async-only gaps remain explicitly waived,
+- all owned waiver entries are updated and no owned surface remains `open`.
+
+## CPython Test Porting Targets
+
+- `Lib/test/test_io/`
+- `Lib/test/test_logging.py`
+- `Lib/test/test_zipfile/`
+- `Lib/test/test_tempfile.py`
+- `Lib/test/test_time.py`
+- `Lib/test/test_timeit.py`
+- `Lib/test/test_subprocess.py`
+
+## Quality Contract
+
+- Host-backed behavior must stay deterministic where Sifr claims determinism.
+- No object-lifecycle parity may introduce user-triggerable panics or cleanup races.
+- Every wave must include positive-path and negative-path host-boundary coverage.
+- Every waiver that survives this phase must describe the concrete remaining host or runtime blocker.
+
+## Local Validation Commands
+
+- quick gate:
+  - `scripts/run_all_tests.sh --profile quick`
+- full gate:
+  - `scripts/run_all_tests.sh`
+- targeted:
+  - `cargo test -p sifr -- <test_name>`
+  - `cargo run -q -p sifr -- run demos/<runtime-parity-demo>.sifr`
+
+## Exit Gate
+
+This phase is complete only when:
+
+- the major stream, archive, tempfile, logging, and time object-model waivers are materially reduced,
+- surviving host-limited or unsupported entries are explicit and narrow,
+- the full validation suite is green,
+- external review confirms the documented scope is production-grade.
