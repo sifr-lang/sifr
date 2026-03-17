@@ -12,9 +12,11 @@
 
 ## Classified waivers
 
+State note: `phase-tracked` marks surfaces that were previously waived in this wave but are now actively tracked in a dedicated follow-up execution phase.
+
 | Surface | State | Rationale |
 | --- | --- | --- |
-| Lazy iterator object families from `Lib/test/test_itertools.py` | `unsupported` | Sifr still lowers these helpers to eager `list[...]` materializations; closing the exact CPython iterator-object model would require a broader lazy-iterator runtime layer. |
+| Lazy iterator object families from `Lib/test/test_itertools.py` | `phase-tracked` | This surface is now tracked by `issues/ad-hoc-first-class-lazy-iterators-and-python-iterable-protocol.md` and its execution ledger instead of remaining a terminal waiver in this wave. |
 | `functools.partial`, `cmp_to_key`, and cache/decorator families | `unsupported` | Returned callable values and callable-object use inside higher-order stdlib helpers still hit separate codegen limitations outside this wave's closed direct callable-object invocation work, and the broader CPython callable-wrapper matrix also needs ParamSpec-style callable typing that the current type system does not yet expose (guarded by `phase_psp_b2_functools_partial_unsupported.sifr`). |
 | General-arity `itertools.starmap(...)` callable/row parity | `intentional-diff` | This wave ships a typed `starmap` over binary tuple rows only; non-binary callable rows are intentionally rejected at compile time (guarded by `phase_psp_b2_itertools_starmap_non_binary_callable.sifr`). |
 | `operator.attrgetter` and `operator.methodcaller` callable factories | `unsupported` | Reflective attribute and method lookup by string is not available in the current statically typed object model (guarded by `phase_psp_b2_operator_attrgetter_unsupported.sifr` and `phase_psp_b2_operator_methodcaller_unsupported.sifr`). |

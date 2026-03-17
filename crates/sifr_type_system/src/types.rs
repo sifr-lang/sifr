@@ -25,6 +25,10 @@ pub enum Type {
     Tuple(Vec<Type>),
     /// Range type (maps to `std::ops::Range<i64>` in Rust)
     Range,
+    /// Iterable protocol type (`Iterable[T]`)
+    Iterable(Box<Type>),
+    /// Iterator protocol type (`Iterator[T]`)
+    Iterator(Box<Type>),
     /// Explicit opt-out of type checking
     Any,
     /// Bottom type (function that never returns)
@@ -285,7 +289,9 @@ impl Type {
             | Self::List(_)
             | Self::Dict(_, _)
             | Self::Set(_)
-            | Self::Tuple(_) => OwnershipKind::Move,
+            | Self::Tuple(_)
+            | Self::Iterable(_)
+            | Self::Iterator(_) => OwnershipKind::Move,
             Self::LiteralStr(_) => OwnershipKind::Move,
             Self::Unknown => OwnershipKind::Move,
             Self::Class { .. } => OwnershipKind::Move,
@@ -327,6 +333,8 @@ impl Type {
                 format!("tuple[{}]", parts.join(", "))
             }
             Self::Range => "range".to_string(),
+            Self::Iterable(elem) => format!("Iterable[{}]", elem.display_name()),
+            Self::Iterator(elem) => format!("Iterator[{}]", elem.display_name()),
             Self::Any => "Any".to_string(),
             Self::Never => "Never".to_string(),
             Self::Union(members) => {
@@ -398,6 +406,8 @@ impl Type {
                 format!("({})", parts.join(", "))
             }
             Self::Range => "std::ops::Range<i64>".to_string(),
+            Self::Iterable(elem) => format!("Vec<{}>", elem.rust_type()),
+            Self::Iterator(elem) => format!("std::vec::IntoIter<{}>", elem.rust_type()),
             Self::Any => "Box<dyn std::any::Any>".to_string(),
             Self::Never => "!".to_string(),
             Self::Function(ft) => {
@@ -546,6 +556,8 @@ impl Type {
             Type::Set(_) => "Set".to_string(),
             Type::Tuple(_) => "Tuple".to_string(),
             Type::Range => "Range".to_string(),
+            Type::Iterable(_) => "Iterable".to_string(),
+            Type::Iterator(_) => "Iterator".to_string(),
             Type::Function(_) => "Fn".to_string(),
             Type::Unknown => "Unknown".to_string(),
             Type::Any => "Any".to_string(),
@@ -621,6 +633,8 @@ impl Type {
             Self::Set(elem) => Some(*elem.clone()),
             Self::Str => Some(Type::Str),
             Self::Dict(key, _) => Some(*key.clone()),
+            Self::Iterable(elem) => Some(*elem.clone()),
+            Self::Iterator(elem) => Some(*elem.clone()),
             _ => None,
         }
     }
@@ -713,7 +727,10 @@ impl Type {
         fn contains_any(ty: &Type) -> bool {
             match ty {
                 Type::Any => true,
-                Type::List(elem) | Type::Set(elem) => contains_any(elem),
+                Type::List(elem)
+                | Type::Set(elem)
+                | Type::Iterable(elem)
+                | Type::Iterator(elem) => contains_any(elem),
                 Type::Dict(key, value) => contains_any(key) || contains_any(value),
                 Type::Tuple(elems) | Type::Union(elems) | Type::Intersection(elems) => {
                     elems.iter().any(contains_any)
@@ -804,6 +821,25 @@ impl Type {
             {
                 return true;
             }
+        }
+        // Iterable/Iterator protocol assignability.
+        match (source, target_resolved) {
+            (Self::Iterator(src), Self::Iterator(dst))
+            | (Self::Iterator(src), Self::Iterable(dst))
+            | (Self::Iterable(src), Self::Iterable(dst)) => return src.is_assignable_to(dst),
+            (Self::List(src), Self::Iterable(dst)) | (Self::Set(src), Self::Iterable(dst)) => {
+                return src.is_assignable_to(dst);
+            }
+            (Self::Range, Self::Iterable(dst)) => return Type::Int.is_assignable_to(dst),
+            (Self::Str, Self::Iterable(dst)) => return Type::Str.is_assignable_to(dst),
+            (Self::Dict(key, _), Self::Iterable(dst)) => return key.is_assignable_to(dst),
+            (Self::Tuple(items), Self::Iterable(dst)) => {
+                if items.is_empty() {
+                    return true;
+                }
+                return items.iter().all(|item| item.is_assignable_to(dst));
+            }
+            _ => {}
         }
         // Mutable collections are invariant in their element/key/value types.
         // Explicit `Any` inside the collection type remains an escape hatch.
@@ -979,6 +1015,20 @@ mod tests {
         assert_eq!(list_int.display_name(), "list[int]");
         assert_eq!(list_int.rust_type(), "Vec<i64>");
         assert_eq!(list_int.iterable_element_type(), Some(Type::Int));
+    }
+
+    #[test]
+    fn test_iterator_and_iterable_type_contract() {
+        let iter_int = Type::Iterator(Box::new(Type::Int));
+        let iterable_int = Type::Iterable(Box::new(Type::Int));
+        let list_int = Type::List(Box::new(Type::Int));
+
+        assert_eq!(iter_int.display_name(), "Iterator[int]");
+        assert_eq!(iterable_int.display_name(), "Iterable[int]");
+        assert_eq!(iter_int.iterable_element_type(), Some(Type::Int));
+        assert_eq!(iterable_int.iterable_element_type(), Some(Type::Int));
+        assert!(iter_int.is_assignable_to(&iterable_int));
+        assert!(list_int.is_assignable_to(&iterable_int));
     }
 
     #[test]

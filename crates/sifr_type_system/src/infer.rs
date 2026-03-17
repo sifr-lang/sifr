@@ -32,6 +32,8 @@ pub fn resolve_type_annotation(name: &str) -> Option<Type> {
         "str" => Some(Type::Str),
         "None" => Some(Type::None),
         "Any" => Some(Type::Any),
+        "Iterable" => Some(Type::Iterable(Box::new(Type::Any))),
+        "Iterator" => Some(Type::Iterator(Box::new(Type::Any))),
         "Unknown" => Some(Type::Unknown),
         "Never" => Some(Type::Never),
         "bigint" => Some(Type::BigInt),
@@ -62,6 +64,14 @@ mod tests {
         assert_eq!(resolve_type_annotation("bool"), Some(Type::Bool));
         assert_eq!(resolve_type_annotation("None"), Some(Type::None));
         assert_eq!(resolve_type_annotation("Any"), Some(Type::Any));
+        assert_eq!(
+            resolve_type_annotation("Iterable"),
+            Some(Type::Iterable(Box::new(Type::Any)))
+        );
+        assert_eq!(
+            resolve_type_annotation("Iterator"),
+            Some(Type::Iterator(Box::new(Type::Any)))
+        );
         assert_eq!(resolve_type_annotation("Unknown"), Some(Type::Unknown));
         assert_eq!(resolve_type_annotation("Never"), Some(Type::Never));
         assert_eq!(resolve_type_annotation("decimal"), Some(Type::Decimal));

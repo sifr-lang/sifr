@@ -69,7 +69,11 @@ fn collect_type_error_refs(
                 referenced.insert(name.clone());
             }
         }
-        Type::List(inner) | Type::Set(inner) | Type::Newtype { inner, .. } => {
+        Type::List(inner)
+        | Type::Set(inner)
+        | Type::Iterable(inner)
+        | Type::Iterator(inner)
+        | Type::Newtype { inner, .. } => {
             collect_type_error_refs(inner, referenced, builtin_error_classes);
         }
         Type::Alias {
