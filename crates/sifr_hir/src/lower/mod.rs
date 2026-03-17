@@ -301,7 +301,9 @@ fn collect_type_vars(ty: &Type, vars: &mut Vec<String>) {
                 vars.push(name.clone());
             }
         }
-        Type::List(elem) | Type::Set(elem) => collect_type_vars(elem, vars),
+        Type::List(elem) | Type::Set(elem) | Type::Iterable(elem) | Type::Iterator(elem) => {
+            collect_type_vars(elem, vars)
+        }
         Type::Dict(k, v) => {
             collect_type_vars(k, vars);
             collect_type_vars(v, vars);
@@ -385,6 +387,8 @@ fn substitute_type_vars(ty: &Type, bindings: &HashMap<String, Type>) -> Type {
         Type::TypeVar(name) => bindings.get(name).cloned().unwrap_or_else(|| ty.clone()),
         Type::List(elem) => Type::List(Box::new(substitute_type_vars(elem, bindings))),
         Type::Set(elem) => Type::Set(Box::new(substitute_type_vars(elem, bindings))),
+        Type::Iterable(elem) => Type::Iterable(Box::new(substitute_type_vars(elem, bindings))),
+        Type::Iterator(elem) => Type::Iterator(Box::new(substitute_type_vars(elem, bindings))),
         Type::Dict(k, v) => Type::Dict(
             Box::new(substitute_type_vars(k, bindings)),
             Box::new(substitute_type_vars(v, bindings)),

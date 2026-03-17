@@ -165,7 +165,7 @@ fn deduplicate(types: &mut Vec<Type>) {
 
 /// Sort types for consistent ordering.
 /// Order: None, Bool, Int, Float, Str, `LiteralBool`, `LiteralInt`, `LiteralStr`,
-///        List, Dict, Tuple, Range, Function, Unknown, Any, Never, Union, Intersection, Alias
+///        List, Dict, Tuple, Range, Iterable, Iterator, Function, Unknown, Any, Never, Union, Intersection, Alias
 fn sort_members(types: &mut [Type]) {
     types.sort_by_key(type_sort_key);
 }
@@ -185,16 +185,18 @@ fn type_sort_key(ty: &Type) -> (u8, String) {
         Type::Set(_) => (10, String::new()),
         Type::Tuple(_) => (11, String::new()),
         Type::Range => (11, String::new()),
-        Type::Function(_) => (12, String::new()),
-        Type::Unknown => (13, String::new()),
-        Type::Any => (14, String::new()),
-        Type::Never => (15, String::new()),
-        Type::Union(_) => (16, String::new()),
-        Type::Intersection(_) => (17, String::new()),
+        Type::Iterable(_) => (12, String::new()),
+        Type::Iterator(_) => (13, String::new()),
+        Type::Function(_) => (14, String::new()),
+        Type::Unknown => (15, String::new()),
+        Type::Any => (16, String::new()),
+        Type::Never => (17, String::new()),
+        Type::Union(_) => (18, String::new()),
+        Type::Intersection(_) => (19, String::new()),
         Type::Alias {
             name, type_args, ..
         } => (
-            18,
+            20,
             if type_args.is_empty() {
                 name.clone()
             } else {
@@ -209,16 +211,16 @@ fn type_sort_key(ty: &Type) -> (u8, String) {
                 )
             },
         ),
-        Type::Class { name, .. } => (19, name.clone()),
-        Type::Result(_, _) => (20, String::new()),
-        Type::Protocol { name, .. } => (21, name.clone()),
-        Type::Newtype { name, .. } => (22, name.clone()),
-        Type::TypeVar(name) => (23, name.clone()),
-        Type::Callable(..) => (24, String::new()),
-        Type::Enum { name, .. } => (25, name.clone()),
-        Type::BigInt => (26, String::new()),
-        Type::Decimal => (27, String::new()),
-        Type::BigDecimal => (28, String::new()),
+        Type::Class { name, .. } => (21, name.clone()),
+        Type::Result(_, _) => (22, String::new()),
+        Type::Protocol { name, .. } => (23, name.clone()),
+        Type::Newtype { name, .. } => (24, name.clone()),
+        Type::TypeVar(name) => (25, name.clone()),
+        Type::Callable(..) => (26, String::new()),
+        Type::Enum { name, .. } => (27, name.clone()),
+        Type::BigInt => (28, String::new()),
+        Type::Decimal => (29, String::new()),
+        Type::BigDecimal => (30, String::new()),
     }
 }
 

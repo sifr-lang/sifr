@@ -25,6 +25,8 @@ fn uses_debug_display_format(ty: &Type) -> bool {
         | Type::Dict(_, _)
         | Type::Set(_)
         | Type::Tuple(_)
+        | Type::Iterable(_)
+        | Type::Iterator(_)
         | Type::Function(_)
         | Type::Callable(..)
         | Type::Result(_, _)

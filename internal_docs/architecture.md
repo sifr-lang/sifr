@@ -4,6 +4,9 @@
 
 - Authoritative phase sequencing for current execution is tracked in [`roadmap.md`](./roadmap.md), starting at **Phase 15** through **Phase 41**.
 - Authoritative entry/exit criteria, milestone quality checks, and mandatory local validation commands for execution phases are embedded in phase files `15`-`41` under `## Quality Contract`.
+- The active iterator-architecture track is currently managed as an ad-hoc issue phase:
+  - planning: `issues/ad-hoc-first-class-lazy-iterators-and-python-iterable-protocol.md`
+  - execution ledger: `issues/ad-hoc-first-class-lazy-iterators-and-python-iterable-protocol-execution.md`
 - Historical references in this architecture document may mention legacy phase numbering from earlier roadmap versions.
 - When phase-number conflicts exist, follow [`roadmap.md`](./roadmap.md) and the matching files under [`phases/`](./phases/).
 
@@ -710,7 +713,8 @@ Sifr defines a set of built-in protocols (traits) that are used across multiple 
 | `Addable`        | `Add` (+ `Sum` for `sum()`)                     | milestone_protocols (defined), milestone_generics (usable as bound)                 | Arithmetic `+` operator, `sum()` built-in                     |
 | `Display`        | `std::fmt::Display`                             | milestone_classes (auto-derived for `__str__`), milestone_protocols (explicit impl) | String representation via `str()`, f-strings, `print()`       |
 | `ContextManager` | Custom trait (`__enter__`/`__exit__` -> `Drop`) | milestone_generators (syntax), milestone_compiler_hardening (protocol enforcement)  | `with` statement resource management                          |
-| `Iterator`       | `Iterator`                                      | milestone_generics (defined), milestone_generators (yield-based, eager), milestone_lazy_iterators (lazy state machine codegen) | `for` loops, comprehensions, generator expressions, lazy iteration |
+| `Iterable`       | `IntoIterator` / iterable protocol             | ad-hoc phase `first-class-lazy-iterators-and-python-iterable-protocol` (wave 1+) | `iter(x)` entry boundary and protocol typing                 |
+| `Iterator`       | `Iterator`                                      | ad-hoc phase `first-class-lazy-iterators-and-python-iterable-protocol` (wave 1+) | `next(it)`, single-pass stateful iteration, lazy pipelines  |
 | `Hashable`       | `Hash` (+ `Eq`)                                 | milestone_classes (auto-derived)                                                    | Dict keys, set membership                                     |
 
 
@@ -725,10 +729,10 @@ Sifr defines a set of built-in protocols (traits) that are used across multiple 
 
 - milestone_classes: auto-derive `Display` and `Hashable` for classes with eligible fields
 - milestone_protocols: define `Comparable`, `Addable`, `Display` as explicit protocols; enable operator overloading via protocol impl
-- milestone_generics: enable protocols as generic bounds (`T: Comparable`); define `Iterator` protocol
-- milestone_generators: define initial `with` block syntax (scoped block desugaring); eager generator codegen (`Vec<T>`)
+- milestone_generics: enable protocols as generic bounds (`T: Comparable`)
+- milestone_generators: define initial `with` block syntax (scoped block desugaring)
+- ad-hoc first-class lazy iterator phase: introduces first-class `Iterable[T]` / `Iterator[T]` typing and protocol execution plan (`iter`, `next`, generator rewrite, lazy builtin conversion)
 - milestone_compiler_hardening (Phase 7: Stdlib Parity): define `ContextManager` protocol; enforce `with` statement compliance with `__enter__`/`__exit__` calls and compile-time protocol checking; fix `Callable`-as-struct-field (`Box<dyn Fn>`)
-- milestone_lazy_iterators (Phase 7: Stdlib Parity): replace eager generator codegen with lazy state machine implementing `Iterator<Item = T>`; `for` loops consume iterators lazily; `list(iter)` eagerly collects
 - milestone_generics_v2 (Phase 13: Type System Completion): complete generic class field/method substitution; protocol bounds on type parameters (`T: Comparable & Display`)
 - milestone_pattern_matching (Phase 13: Type System Completion): `match`/`case` syntax with exhaustiveness checking on union types, literal unions, optional types, class unions, and enum types
 - milestone_enums (Phase 13: Type System Completion): simple enum types with exhaustive pattern matching; enum values implement `Eq`, `Hash`, `Clone`, `Debug`
@@ -796,6 +800,10 @@ enum Type {
 
     // Range (milestone_control_flow)
     Range,
+
+    // Protocol iteration model (ad-hoc first-class lazy iterator phase)
+    Iterable(Box<Type>),
+    Iterator(Box<Type>),
 
     // Safe top type: must be narrowed before use (milestone_type_system)
     Unknown,

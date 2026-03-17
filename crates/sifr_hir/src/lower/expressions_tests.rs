@@ -131,6 +131,28 @@ fn test_for_range_start_end() {
 }
 
 #[test]
+fn test_iterable_annotation_accepts_list_argument() {
+    let result = lower_source(
+        "def consume(xs: Iterable[int]) -> int:\n    total: int = 0\n    for x in xs:\n        total = total + x\n    return total\n\ndef main():\n    values: list[int] = [1, 2, 3]\n    out: int = consume(values)\n    print(out)\n",
+    );
+    assert!(result.is_ok(), "{result:?}");
+}
+
+#[test]
+fn test_iterator_annotation_rejects_plain_list_argument() {
+    let result = lower_source(
+        "def consume_one(it: Iterator[int]) -> int:\n    return 1\n\ndef main():\n    values: list[int] = [1, 2, 3]\n    consume_one(values)\n",
+    );
+    assert!(result.is_err());
+    let errors = result.unwrap_err();
+    assert!(
+        errors
+            .iter()
+            .any(|e| e.message.contains("expected 'Iterator[int]', got 'list[int]'"))
+    );
+}
+
+#[test]
 fn test_sorted_accepts_iterable_keyword_and_key_none() {
     let result = lower_source(
         "def main():\n    nums: list[int] = [3, 1, 2]\n    ordered: list[int] = sorted(iterable=nums, key=None, reverse=True)\n    assert ordered == [3, 2, 1]\n",

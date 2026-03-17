@@ -28,6 +28,7 @@ fn iterable_element_type_for_builtin(arg_ty: &Type) -> Option<Type> {
         Type::Range => Some(Type::Int),
         Type::Str => Some(Type::Str),
         Type::Dict(key, _) => Some(*key.clone()),
+        Type::Iterable(elem) | Type::Iterator(elem) => Some(*elem.clone()),
         Type::Any | Type::Unknown => Some(Type::Any),
         _ => None,
     }

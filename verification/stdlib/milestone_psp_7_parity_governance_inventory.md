@@ -13,6 +13,7 @@ Terminal state legend for this milestone:
 - `intentional-diff`: intentionally divergent from CPython behavior with explicit rationale
 - `unsupported`: intentionally not shipped in this phase
 - `host-limited`: behavior depends on host/runtime boundaries
+- `phase-tracked`: no longer treated as a terminal waiver; tracked by an active follow-up phase execution loop
 
 | Builtin surface | Terminal state | Evidence | Notes |
 | --- | --- | --- | --- |
@@ -99,7 +100,7 @@ Terminal state legend for this milestone:
 | `wave_psp_a1` | `verification/stdlib/wave_psp_a1_cpython_traceability.md` | Builtin constructors/call-shape closure with explicit `strict` waivers for `zip`/`map` and tuple dynamic-shape waiver. |
 | `wave_psp_a2` | `verification/stdlib/wave_psp_a2_cpython_traceability.md` | Core object-model closure via adapted semantics and explicit `bytes`/`bytearray` unsupported classification. |
 | `wave_psp_b1` | `verification/stdlib/wave_psp_b1_cpython_traceability.md` | Collections/bisect/heapq closure with constructor and helper-family unsupported waivers. |
-| `wave_psp_b2` | `verification/stdlib/wave_psp_b2_cpython_traceability.md` | Iterator/functional/random closure with explicit lazy-iterator/callable-factory/stateful-RNG waivers. |
+| `wave_psp_b2` | `verification/stdlib/wave_psp_b2_cpython_traceability.md` | Iterator/functional/random closure; lazy iterator object parity is now promoted into the active ad-hoc iterator architecture phase. |
 | `wave_psp_c1` | `verification/stdlib/wave_psp_c1_cpython_traceability.md` | Structured parser/module closure with callback-hook/interpolation unsupported waivers. |
 | `wave_psp_c2` | `verification/stdlib/wave_psp_c2_cpython_traceability.md` | Text/pattern/module closure with explicit advanced-formatting/locale-class waivers. |
 | `wave_psp_d1` | `verification/stdlib/wave_psp_d1_cpython_traceability.md` | Filesystem/archive closure with stream hierarchy and advanced archive/class-family unsupported waivers. |
@@ -116,7 +117,7 @@ Canonical issue for revisit tracking: `issues/ad-hoc-python-source-parity-and-bu
 | --- | --- | --- | --- | --- |
 | Builtin numeric parsing (`int(str)`, `float(str)`) typed-result behavior | `intentional-diff` | Sifr safety contract uses `Result`/`Option` instead of exceptions. | Revisit only with language-contract change approval. | `internal_docs/architecture.md` |
 | `bytes` as CPython object-model equivalent | `intentional-diff` | Shipped as custom utility surface, not first-class CPython bytes object parity. | Revisit when first-class bytes type lands. | `verification/stdlib/wave_psp_a2_cpython_traceability.md` |
-| Iterator-object/lazy parity families (`itertools` broad lazy model) | `unsupported` | Current runtime intentionally closes eager typed list materialization path. | Revisit with lazy-iterator runtime architecture proposal. | `verification/stdlib/wave_psp_b2_cpython_traceability.md` |
+| Iterator-object/lazy parity families (`itertools` broad lazy model) | `phase-tracked` | Promoted out of terminal waiver state into the active execution phase for first-class `Iterable/Iterator` and lazy iterator semantics. | Follow `issues/ad-hoc-first-class-lazy-iterators-and-python-iterable-protocol.md` and its execution ledger to closure. | `verification/stdlib/wave_psp_b2_cpython_traceability.md`, `issues/ad-hoc-first-class-lazy-iterators-and-python-iterable-protocol-execution.md` |
 | `functools.partial`/wrapper-family parity | `unsupported` | Requires broader callable-wrapper typing and object runtime support. | Revisit with callable-object typing milestone. | `verification/stdlib/wave_psp_b2_cpython_traceability.md` |
 | Reflective `operator` factories (`attrgetter`, `methodcaller`) | `unsupported` | Static object model intentionally excludes string-driven reflective dispatch. | Revisit only with explicit reflection policy change. | `verification/stdlib/wave_psp_b2_cpython_traceability.md` |
 | Weighted/stateful random families (`choices(weights=...)`, `seed/getstate/setstate`) | `unsupported` | Current randomness layer intentionally avoids deterministic mutable RNG object model. | Revisit with RNG-state architecture milestone. | `verification/stdlib/wave_psp_b2_cpython_traceability.md` |
