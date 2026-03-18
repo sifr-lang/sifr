@@ -88,8 +88,8 @@ Required entry records:
 - Status: completed (external review approved; no remediation changes required)
 
 ### wave_psp_bytes_0 review_pass_2 (production-grade)
-- Reviewer artifact: pending
-- Status: pending
+- Reviewer artifact: `reviews/phase-ad-hoc-first-class-bytes-and-binary-surface-foundation-wave-psp-bytes-0-review-pass-2.md`
+- Status: completed (approved for production-grade readiness; no remediation changes required)
 
 ### closure review cycles
 - wave closure completion review: pending
