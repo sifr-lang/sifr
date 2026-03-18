@@ -61,6 +61,57 @@ def unix_dialect() -> Dialect:
     return Dialect(quoting=1)
 
 
+def _copy_dialect(dialect: Dialect) -> Dialect:
+    return Dialect(
+        delimiter=dialect.delimiter + "",
+        quotechar=dialect.quotechar + "",
+        escapechar=dialect.escapechar + "",
+        doublequote=dialect.doublequote,
+        skipinitialspace=dialect.skipinitialspace,
+        lineterminator=dialect.lineterminator + "",
+        quoting=dialect.quoting,
+    )
+
+
+class DialectRegistry:
+    _dialects: dict[str, Dialect]
+
+    def __init__(self) -> None:
+        self._dialects = {
+            "excel": excel(),
+            "excel-tab": excel_tab(),
+            "unix": unix_dialect(),
+        }
+
+    def register(self, name: str, dialect: Dialect) -> None:
+        self._dialects[name + ""] = _copy_dialect(dialect)
+
+    def unregister(self, name: str) -> bool:
+        if name in self._dialects:
+            _ = self._dialects.pop(name)
+            return True
+        return False
+
+    def get(self, name: str) -> Dialect | None:
+        if name not in self._dialects:
+            return None
+        for key, value in self._dialects.items():
+            if key != name:
+                continue
+            return _copy_dialect(value)
+        return None
+
+    def names(self) -> list[str]:
+        names: list[str] = []
+        for key in self._dialects:
+            names.append(key + "")
+        return names
+
+
+def dialect_registry() -> DialectRegistry:
+    return DialectRegistry()
+
+
 def _validate_char(name: str, value: str) -> None:
     _ = name
     _ = value
@@ -77,15 +128,7 @@ def _resolve_dialect(
     quoting: int = 0,
 ) -> Dialect:
     if dialect is not None:
-        return Dialect(
-            delimiter=dialect.delimiter + "",
-            quotechar=dialect.quotechar + "",
-            escapechar=dialect.escapechar + "",
-            doublequote=dialect.doublequote,
-            skipinitialspace=dialect.skipinitialspace,
-            lineterminator=dialect.lineterminator + "",
-            quoting=dialect.quoting,
-        )
+        return _copy_dialect(dialect)
     return Dialect(
         delimiter=delimiter,
         quotechar=quotechar,
