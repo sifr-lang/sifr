@@ -26,8 +26,8 @@ Loop per wave: Plan -> Implement -> Validate -> Demo -> PR -> External completio
 6. [x] `wave_iter_6`: parity closure, dedicated demo, governance hardening
 7. [x] wave-level extra completion review cycle done
 8. [x] wave-level extra production-grade review cycle done
-9. [ ] milestone-level completion review cycle done
-10. [ ] milestone-level production-grade review cycle done
+9. [x] milestone-level completion review cycle done
+10. [x] milestone-level production-grade review cycle done
 11. [ ] phase-level completion review cycle done
 12. [ ] phase-level production-grade review cycle done
 13. [ ] closure telegram notification sent
@@ -165,7 +165,7 @@ Required entry records:
 ### closure review cycles
 - wave closure completion review: completed (`reviews/phase-ad-hoc-first-class-lazy-iterators-and-python-iterable-protocol-wave-closure-completion-review.md`)
 - wave closure production-grade review: completed (`reviews/phase-ad-hoc-first-class-lazy-iterators-and-python-iterable-protocol-wave-closure-production-grade-review.md`)
-- milestone closure completion review: pending
-- milestone closure production-grade review: pending
+- milestone closure completion review: completed (`reviews/phase-ad-hoc-first-class-lazy-iterators-and-python-iterable-protocol-milestone-closure-completion-review.md`)
+- milestone closure production-grade review: completed (`reviews/phase-ad-hoc-first-class-lazy-iterators-and-python-iterable-protocol-milestone-closure-production-grade-review.md`)
 - phase closure completion review: pending
 - phase closure production-grade review: pending
