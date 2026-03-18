@@ -46,6 +46,124 @@ def _product_impl[T](pools: list[list[T]], index: int) -> list[list[T]]:
     return result
 
 
+def _permutations_impl[T](data: list[T], target: int) -> list[list[T]]:
+    if target == 0:
+        return [[]]
+
+    result: list[list[T]] = []
+    i: int = 0
+    while i < len(data):
+        current: T | None = data[i]
+        if current is not None:
+            rest: list[T] = []
+            j: int = 0
+            while j < len(data):
+                if j != i:
+                    item: T | None = data[j]
+                    if item is not None:
+                        rest.append(item)
+                j = j + 1
+            tails: list[list[T]] = _permutations_impl(rest, target - 1)
+            for entry in _prepend(current, tails):
+                result.append(entry)
+        i = i + 1
+    return result
+
+
+def _combinations_impl[T](data: list[T], start: int, r: int) -> list[list[T]]:
+    if r == 0:
+        return [[]]
+
+    result: list[list[T]] = []
+    i: int = start
+    while i <= len(data) - r:
+        current: T | None = data[i]
+        if current is not None:
+            tails: list[list[T]] = _combinations_impl(data, i + 1, r - 1)
+            for entry in _prepend(current, tails):
+                result.append(entry)
+        i = i + 1
+    return result
+
+
+def _combinations_with_replacement_impl[T](data: list[T], start: int, r: int) -> list[list[T]]:
+    if r == 0:
+        return [[]]
+
+    result: list[list[T]] = []
+    i: int = start
+    while i < len(data):
+        current: T | None = data[i]
+        if current is not None:
+            tails: list[list[T]] = _combinations_with_replacement_impl(data, i, r - 1)
+            for entry in _prepend(current, tails):
+                result.append(entry)
+        i = i + 1
+    return result
+
+
+def _compress_impl[T](data: list[T], selectors: list[bool]) -> list[T]:
+    result: list[T] = []
+    i: int = 0
+    while i < len(data):
+        if i >= len(selectors):
+            i = len(data)
+        else:
+            sel: bool | None = selectors[i]
+            val: T | None = data[i]
+            if sel is not None:
+                if val is not None:
+                    if sel:
+                        result.append(val)
+            i = i + 1
+    return result
+
+
+def _takewhile_impl[T](pred: Callable[[T], bool], data: list[T]) -> list[T]:
+    result: list[T] = []
+    i: int = 0
+    while i < len(data):
+        val: T | None = data[i]
+        if val is not None:
+            if pred(val):
+                result.append(val)
+            else:
+                i = len(data)
+        i = i + 1
+    return result
+
+
+def _zip_longest_impl[T](a: list[T], b: list[T], fill: T) -> list[list[T]]:
+    result: list[list[T]] = []
+    len_a: int = len(a)
+    len_b: int = len(b)
+    max_len: int = len_a
+    if len_b > max_len:
+        max_len = len_b
+    i: int = 0
+    while i < max_len:
+        pair: list[T] = []
+        if i < len_a:
+            va: T | None = a[i]
+            if va is not None:
+                pair.append(va)
+            else:
+                pair.append(fill)
+        else:
+            pair.append(fill)
+        if i < len_b:
+            vb: T | None = b[i]
+            if vb is not None:
+                pair.append(vb)
+            else:
+                pair.append(fill)
+        else:
+            pair.append(fill)
+        result.append(pair)
+        i = i + 1
+    return result
+
+
 def chain[T](*iterables: list[T]) -> Iterator[T]:
     iterables_owned: list[list[T]] = []
     for iterable in iterables:
@@ -161,135 +279,104 @@ def count(start: int = 0, step: int = 1) -> Iterator[int]:
         current = current + step
 
 
-def product[T](*iterables: list[T], repeat: int = 1) -> list[list[T]]:
-    if repeat < 0:
-        return []
-
-    pools: list[list[T]] = []
+def product[T](*iterables: list[T], repeat: int = 1) -> Iterator[list[T]]:
+    result: list[list[T]] = []
+    if repeat >= 0:
+        pools: list[list[T]] = []
+        i: int = 0
+        while i < repeat:
+            for iterable in iterables:
+                pools.append(iterable)
+            i = i + 1
+        if len(pools) == 0:
+            result = [[]]
+        else:
+            result = _product_impl(pools, 0)
     i: int = 0
-    while i < repeat:
-        for iterable in iterables:
-            pools.append(iterable)
+    while i < len(result):
+        yield result[i]
         i = i + 1
-    if len(pools) == 0:
-        return [[]]
-    return _product_impl(pools, 0)
 
 
-def permutations(data: list[T], r: int | None = None) -> list[list[T]]:
+def permutations(data: list[T], r: int | None = None) -> Iterator[list[T]]:
+    result: list[list[T]] = []
     target: int = len(data)
     if r is not None:
         target = r
-    if target < 0 or target > len(data):
-        return []
-    if target == 0:
-        return [[]]
-
-    result: list[list[T]] = []
+    if target >= 0 and target <= len(data):
+        if target == 0:
+            result = [[]]
+        else:
+            result = _permutations_impl(data, target)
     i: int = 0
-    while i < len(data):
-        current: T | None = data[i]
-        if current is not None:
-            rest: list[T] = []
-            j: int = 0
-            while j < len(data):
-                if j != i:
-                    item: T | None = data[j]
-                    if item is not None:
-                        rest.append(item)
-                j = j + 1
-            tails: list[list[T]] = permutations(rest, target - 1)
-            for entry in _prepend(current, tails):
-                result.append(entry)
+    while i < len(result):
+        yield result[i]
         i = i + 1
-    return result
 
 
-def combinations(data: list[T], r: int) -> list[list[T]]:
-    if r < 0 or r > len(data):
-        return []
-    if r == 0:
-        return [[]]
-
+def combinations(data: list[T], r: int) -> Iterator[list[T]]:
     result: list[list[T]] = []
+    if r >= 0 and r <= len(data):
+        if r == 0:
+            result = [[]]
+        else:
+            result = _combinations_impl(data, 0, r)
     i: int = 0
-    while i <= len(data) - r:
-        current: T | None = data[i]
-        if current is not None:
-            tails: list[list[T]] = combinations(data[i + 1:], r - 1)
-            for entry in _prepend(current, tails):
-                result.append(entry)
+    while i < len(result):
+        yield result[i]
         i = i + 1
-    return result
 
 
-def combinations_with_replacement(data: list[T], r: int) -> list[list[T]]:
-    if r < 0:
-        return []
-    if r == 0:
-        return [[]]
-    if len(data) == 0:
-        return []
-
+def combinations_with_replacement(data: list[T], r: int) -> Iterator[list[T]]:
     result: list[list[T]] = []
+    if r >= 0:
+        if r == 0:
+            result = [[]]
+        elif len(data) > 0:
+            result = _combinations_with_replacement_impl(data, 0, r)
     i: int = 0
-    while i < len(data):
-        current: T | None = data[i]
-        if current is not None:
-            tails: list[list[T]] = combinations_with_replacement(data[i:], r - 1)
-            for entry in _prepend(current, tails):
-                result.append(entry)
+    while i < len(result):
+        yield result[i]
         i = i + 1
-    return result
 
 
-def starmap(func: Callable[[A, B], R], pairs: list[tuple[A, B]]) -> list[R]:
+def starmap(func: Callable[[A, B], R], pairs: list[tuple[A, B]]) -> Iterator[R]:
     result: list[R] = []
     for first, second in pairs:
         result.append(func(first, second))
-    return result
-
-
-def accumulate[T: Addable](data: list[T], initial: T | None = None) -> list[T]:
-    result: list[T] = []
     i: int = 0
+    while i < len(result):
+        yield result[i]
+        i = i + 1
+
+
+def accumulate[T: Addable](data: list[T], initial: T | None = None) -> Iterator[T]:
+    result: list[T] = []
     if initial is not None:
         result.append(initial)
-    else:
-        if len(data) == 0:
-            return result
-        first: T | None = data[0]
-        if first is not None:
-            result.append(first)
-        i = 1
-    while i < len(data):
-        cur: T | None = data[i]
-        prev: T | None = result[len(result) - 1]
-        if prev is not None:
-            if cur is not None:
-                next_val: T = prev + cur
+    for item in data:
+        if len(result) == 0:
+            result.append(item)
+        else:
+            prev: T | None = result[len(result) - 1]
+            if prev is not None:
+                next_val: T = prev + item
                 result.append(next_val)
-        i = i + 1
-    return result
-
-
-def compress(data: list[T], selectors: list[bool]) -> list[T]:
-    result: list[T] = []
     i: int = 0
-    while i < len(data):
-        if i >= len(selectors):
-            return result
-        sel: bool | None = selectors[i]
-        val: T | None = data[i]
-        if sel is not None:
-            if val is not None:
-                if sel:
-                    result.append(val)
+    while i < len(result):
+        yield result[i]
         i = i + 1
-    return result
 
 
-def dropwhile(pred: Callable[[T], bool], data: list[T]) -> list[T]:
+def compress(data: list[T], selectors: list[bool]) -> Iterator[T]:
+    result: list[T] = _compress_impl(data, selectors)
+    i: int = 0
+    while i < len(result):
+        yield result[i]
+        i = i + 1
+
+
+def dropwhile(pred: Callable[[T], bool], data: list[T]) -> Iterator[T]:
     result: list[T] = []
     dropping: bool = True
     for val in data:
@@ -299,55 +386,37 @@ def dropwhile(pred: Callable[[T], bool], data: list[T]) -> list[T]:
                 result.append(val)
         else:
             result.append(val)
-    return result
+    i: int = 0
+    while i < len(result):
+        yield result[i]
+        i = i + 1
 
 
-def takewhile(pred: Callable[[T], bool], data: list[T]) -> list[T]:
-    result: list[T] = []
-    for val in data:
-        if not pred(val):
-            return result
-        result.append(val)
-    return result
+def takewhile(pred: Callable[[T], bool], data: list[T]) -> Iterator[T]:
+    result: list[T] = _takewhile_impl(pred, data)
+    i: int = 0
+    while i < len(result):
+        yield result[i]
+        i = i + 1
 
 
-def filterfalse(pred: Callable[[T], bool], data: list[T]) -> list[T]:
+def filterfalse(pred: Callable[[T], bool], data: list[T]) -> Iterator[T]:
     result: list[T] = []
     for val in data:
         if not pred(val):
             result.append(val)
-    return result
-
-
-def zip_longest(a: list[T], b: list[T], fill: T) -> list[list[T]]:
-    result: list[list[T]] = []
-    len_a: int = len(a)
-    len_b: int = len(b)
-    max_len: int = len_a
-    if len_b > max_len:
-        max_len = len_b
     i: int = 0
-    while i < max_len:
-        pair: list[T] = []
-        if i < len_a:
-            va: T | None = a[i]
-            if va is not None:
-                pair.append(va)
-            else:
-                pair.append(fill)
-        else:
-            pair.append(fill)
-        if i < len_b:
-            vb: T | None = b[i]
-            if vb is not None:
-                pair.append(vb)
-            else:
-                pair.append(fill)
-        else:
-            pair.append(fill)
-        result.append(pair)
+    while i < len(result):
+        yield result[i]
         i = i + 1
-    return result
+
+
+def zip_longest(a: list[T], b: list[T], fill: T) -> Iterator[list[T]]:
+    result: list[list[T]] = _zip_longest_impl(a, b, fill)
+    i: int = 0
+    while i < len(result):
+        yield result[i]
+        i = i + 1
 
 
 def count_from(start: int, step: int, n: int) -> Iterator[int]:
@@ -359,15 +428,17 @@ def count_from(start: int, step: int, n: int) -> Iterator[int]:
         i = i + 1
 
 
-def cycle(data: list[T], n: int) -> list[T]:
+def cycle(data: list[T], n: int) -> Iterator[T]:
     result: list[T] = []
-    if len(data) == 0:
-        return result
-    i: int = 0
-    while i < n:
-        idx: int = i % len(data)
-        val: T | None = data[idx]
-        if val is not None:
-            result.append(val)
-        i = i + 1
-    return result
+    if len(data) > 0:
+        i: int = 0
+        while i < n:
+            idx: int = i % len(data)
+            val: T | None = data[idx]
+            if val is not None:
+                result.append(val)
+            i = i + 1
+    j: int = 0
+    while j < len(result):
+        yield result[j]
+        j = j + 1

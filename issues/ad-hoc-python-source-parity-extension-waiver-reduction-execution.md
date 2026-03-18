@@ -75,11 +75,23 @@ Required entry records:
   - wave gate: `$(pwd)/scripts/run_all_tests.sh` -> PASS (2026-03-18)
 
 ### wave_psp_ext_2: `itertools` Lazy Surface Closure
-- Status: pending
+- Status: implemented (pending PR)
 - Implementation PR:
   - pending
 - Validation:
-  - pending
+  - positive path: `cargo run -q -p sifr -- run crates/sifr/tests/e2e/pass/cpython_itertools_subset.sifr` -> PASS
+  - positive path: `cargo run -q -p sifr -- run crates/sifr/tests/e2e/pass/phase_psp_b2_iterators_functional_randomness.sifr` -> PASS
+  - positive path: `cargo run -q -p sifr -- run crates/sifr/tests/e2e/pass/stdlib_itertools_consolidated.sifr` -> PASS
+  - positive path: `cargo run -q -p sifr -- run crates/sifr/tests/e2e/pass/generic_accumulate_float.sifr` -> PASS
+  - positive path: `cargo run -q -p sifr -- run crates/sifr/tests/e2e/pass/generic_accumulate_bigint.sifr` -> PASS
+  - positive path: `cargo run -q -p sifr -- run crates/sifr/tests/e2e/pass/generic_accumulate_str.sifr` -> PASS
+  - positive path: `cargo run -q -p sifr -- run crates/sifr/tests/e2e/pass/generic_callable_typevar.sifr` -> PASS
+  - positive path: `cargo run -q -p sifr -- run crates/sifr/tests/e2e/pass/generic_dropwhile_predicate.sifr` -> PASS
+  - positive path: `cargo run -q -p sifr -- run crates/sifr/tests/e2e/pass/generic_zip_longest_str.sifr` -> PASS
+  - positive path: `cargo run -q -p sifr -- run demos/ad_hoc_parity_ext_wave2_itertools_lazy_surface_demo.sifr` -> PASS
+  - negative path: `cargo run -q -p sifr -- check crates/sifr/tests/e2e/fail/phase_psp_ext_2_itertools_materialization_required.sifr` -> PASS (`type mismatch: expected 'list[int]', got 'Iterator[int]'`)
+  - negative path: `cargo run -q -p sifr -- check crates/sifr/tests/e2e/fail/phase_psp_b2_itertools_starmap_non_binary_callable.sifr` -> PASS (compile-time rejection preserved)
+  - wave gate: `$(pwd)/scripts/run_all_tests.sh` -> PASS (2026-03-18)
 
 ### wave_psp_ext_3: Regex and Filesystem Iterator Surfaces
 - Status: pending

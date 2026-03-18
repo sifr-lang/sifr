@@ -48,10 +48,10 @@ def main():
     assert next(counter) == 5
     assert next(counter) == 8
 
-    # Explicit retained eager families in this phase.
-    combos: list[list[int]] = combinations([1, 2, 3], 2)
+    # Extended itertools families are iterator-returning with explicit materialization.
+    combos: list[list[int]] = list(combinations([1, 2, 3], 2))
     assert str(combos) == "[[1, 2], [1, 3], [2, 3]]"
-    prods: list[list[int]] = product([1, 2], repeat=2)
+    prods: list[list[int]] = list(product([1, 2], repeat=2))
     assert str(prods) == "[[1, 1], [1, 2], [2, 1], [2, 2]]"
 
     print("ad_hoc_iter_wave6_parity_closure_demo: ok")
