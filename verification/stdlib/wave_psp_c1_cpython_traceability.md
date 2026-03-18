@@ -21,3 +21,14 @@ CPython family references below indicate upstream source families used for adapt
 | `tomllib` decode-position fidelity (`TOMLDecodeError.line` / `column`) | `intentional-diff` | Parse failures currently report typed decode errors with stable message semantics, while line/column metadata remains coarse (default `0/0`) in this wave. |
 | Lazy streaming behavior for `csv.reader`/`csv.DictReader` and the dialect registry API from `test_csv.py` | `unsupported` | Sifr keeps eager row materialization and direct `Dialect(...)` construction rather than a global registry and iterator-based reader lifecycle. |
 | `configparser` interpolation families, converter registration, mapping proxy protocols, and write-back formatting parity | `unsupported` | This wave closes the core parser/object/error surface only; the richer interpolation and proxy model would require additional class and callback infrastructure. |
+
+## Structured/Class-Surface Continuation Lock (2026-03-18)
+
+- Continuation phase: `issues/ad-hoc-structured-data-and-class-surface-parity-expansion.md`
+- Wave ownership: `wave_psp_struct_1` expands `json`/`configparser`/`csv` under bounded typed contracts.
+- Locked permanent diffs carried into continuation:
+  - dynamic `json` callback hooks remain `unsupported` in this continuation tranche,
+  - mutation-heavy csv dialect subclass registration remains `unsupported` in this continuation tranche.
+- Enforcement fixtures:
+  - `crates/sifr/tests/e2e/fail/phase_psp_struct_0_json_dynamic_hooks_unsupported.sifr`
+  - `crates/sifr/tests/e2e/fail/phase_psp_struct_0_csv_dynamic_registry_unsupported.sifr`

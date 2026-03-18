@@ -25,3 +25,11 @@
 
 - `Counter(iterable)` rejection: `crates/sifr/tests/e2e/fail/phase_psp_b1_counter_iterable_constructor_unsupported.sifr`
 - `Counter(**kwargs)` rejection: `crates/sifr/tests/e2e/fail/phase_psp_b1_counter_kwargs_constructor_unsupported.sifr`
+
+## Structured/Class-Surface Continuation Lock (2026-03-18)
+
+- Continuation phase: `issues/ad-hoc-structured-data-and-class-surface-parity-expansion.md`
+- Wave ownership: `wave_psp_struct_2` broadens constructor/object-model parity for `collections`.
+- Locked permanent diff carried into continuation:
+  - `Counter(**kwargs)` remains explicitly `unsupported` until generic constructor-overload support is approved.
+- Enforcement fixture: `crates/sifr/tests/e2e/fail/phase_psp_struct_0_counter_kwargs_constructor_unsupported.sifr`

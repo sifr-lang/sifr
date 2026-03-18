@@ -1,0 +1,5 @@
+from sifr.html import parser
+
+
+def main() -> None:
+    _ = parser

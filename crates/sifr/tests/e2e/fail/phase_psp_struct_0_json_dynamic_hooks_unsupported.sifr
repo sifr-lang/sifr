@@ -1,0 +1,9 @@
+from sifr.json import loads
+
+
+def _object_hook(value: str) -> str:
+    return value
+
+
+def main() -> None:
+    _decoded = loads("{\"a\":1}", _object_hook)

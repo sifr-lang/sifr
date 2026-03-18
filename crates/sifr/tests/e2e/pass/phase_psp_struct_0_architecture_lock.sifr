@@ -1,0 +1,40 @@
+from sifr.json import JsonValue, from_array, from_bool, from_int, from_object, from_str, dumps, loads
+from sifr.datetime import datetime, timezone, now
+
+
+def main() -> None:
+    payload: JsonValue = from_object(
+        [
+            ("name", from_str("sifr")),
+            ("stable", from_bool(True)),
+            ("versions", from_array([from_int(31), from_int(315)])),
+        ]
+    )
+    encoded: str = dumps(payload)
+    assert encoded == "{\"name\":\"sifr\",\"stable\":true,\"versions\":[31,315]}"
+
+    decoded_ok: bool = False
+    try:
+        decoded: JsonValue = loads(encoded)
+        name: JsonValue | None = decoded.get("name")
+        versions: JsonValue | None = decoded.get("versions")
+        decoded_ok = name is not None and versions is not None
+        if name is not None:
+            assert name.as_str() == "sifr"
+        if versions is not None:
+            v0: JsonValue | None = versions.at(0)
+            assert v0 is not None
+            if v0 is not None:
+                assert v0.as_int() == 31
+    except JSONDecodeError as e:
+        _ = str(e.message)
+    assert decoded_ok
+
+    ist: timezone = timezone(19800)
+    assert str(ist) == "UTC+05:30"
+    assert str(timezone(0)) == "UTC"
+
+    current: datetime = now()
+    assert current.year >= 1970
+    assert current.month >= 1 and current.month <= 12
+    assert current.day >= 1 and current.day <= 31

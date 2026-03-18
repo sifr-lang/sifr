@@ -18,3 +18,11 @@
 | Full `re` Match/Pattern object matrix (named groups, groupdict, and full capture-object APIs) | `unsupported` | Current `Match`/`Pattern` surfaces close high-value entry points (including `finditer`) but do not mirror every CPython capture-object API. |
 | Decimal/Fraction-specific and context-sensitive numeric semantics in `math` / `statistics` | `unsupported` | Wave e1 targets shipped float/int behavior and typed error contracts, not CPython decimal-context integration. |
 | SHA3/SHAKE constructor families and bytes-oriented digest APIs in `hashlib` | `unsupported` | Runtime currently closes the guaranteed algorithm set and explicit placeholders raise typed errors for unsupported families. |
+
+## Structured/Class-Surface Continuation Lock (2026-03-18)
+
+- Continuation phase: `issues/ad-hoc-structured-data-and-class-surface-parity-expansion.md`
+- Wave ownership: `wave_psp_struct_3` expands `datetime` under fixed-offset timezone semantics only.
+- Locked permanent diff carried into continuation:
+  - timezone-database / extensible `tzinfo` ecosystems remain explicitly `unsupported`.
+- Enforcement fixture: `crates/sifr/tests/e2e/fail/phase_psp_struct_0_datetime_tzinfo_zoneinfo_unsupported.sifr`
