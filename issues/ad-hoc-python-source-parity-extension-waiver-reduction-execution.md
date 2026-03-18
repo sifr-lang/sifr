@@ -1,6 +1,6 @@
 # Ad Hoc Phase Execution Checklist (Python Source Parity Extension and Waiver Reduction)
 
-Status: in_progress (started 2026-03-18)
+Status: completed (started 2026-03-18, completed 2026-03-18)
 Owner: ad_hoc_parity_extension execution loop
 Reference planning doc:
 - `issues/ad-hoc-python-source-parity-extension-waiver-reduction.md`
@@ -9,13 +9,13 @@ Loop per wave: Plan -> Implement -> Validate -> Demo -> PR -> External completio
 
 ## Global Gates
 - [x] Entry baseline validated before wave 1
-- [ ] Scope remains constrained to active wave
-- [ ] Root cause is fixed without compatibility shims
-- [ ] Positive-path and negative-path validation recorded for each wave
-- [ ] Demo runs before opening each wave PR
-- [ ] `$(pwd)/scripts/run_all_tests.sh` run before each wave PR
-- [ ] PR opened/reviewed/merged before next wave starts
-- [ ] Docs + traceability + waiver state updated before moving on
+- [x] Scope remains constrained to active wave
+- [x] Root cause is fixed without compatibility shims
+- [x] Positive-path and negative-path validation recorded for each wave
+- [x] Demo runs before opening each wave PR
+- [x] `$(pwd)/scripts/run_all_tests.sh` run before each wave PR
+- [x] PR opened/reviewed/merged before next wave starts
+- [x] Docs + traceability + waiver state updated before moving on
 
 ## Full Phase To-Do Plan
 1. [x] `wave_psp_ext_1`: builtin iterator return-shape re-closure (`reversed`, `enumerate`, `zip`, `map`)
@@ -27,8 +27,8 @@ Loop per wave: Plan -> Implement -> Validate -> Demo -> PR -> External completio
 7. [x] milestone-level completion review cycle done
 8. [x] milestone-level production-grade review cycle done
 9. [x] phase-level completion review cycle done
-10. [ ] phase-level production-grade review cycle done
-11. [ ] closure telegram notification sent
+10. [x] phase-level production-grade review cycle done (review artifact: reviews/phase-ad-hoc-python-source-parity-extension-waiver-reduction-phase-closure-production-grade-review.md)
+11. [x] closure telegram notification sent
 
 ## Entry Baseline Evidence (2026-03-18)
 
@@ -168,4 +168,4 @@ Required entry records:
 - milestone closure completion review: completed (`reviews/phase-ad-hoc-python-source-parity-extension-waiver-reduction-milestone-closure-completion-review.md`)
 - milestone closure production-grade review: completed (`reviews/phase-ad-hoc-python-source-parity-extension-waiver-reduction-milestone-closure-production-grade-review.md`)
 - phase closure completion review: completed (`reviews/phase-ad-hoc-python-source-parity-extension-waiver-reduction-phase-closure-completion-review.md`)
-- phase closure production-grade review: pending
+- phase closure production-grade review: completed (`reviews/phase-ad-hoc-python-source-parity-extension-waiver-reduction-phase-closure-production-grade-review.md`)
