@@ -1,6 +1,6 @@
 # Ad Hoc Phase Execution Checklist (First-Class Lazy Iterators and Python Iterable Protocol)
 
-Status: in_progress (started 2026-03-18)
+Status: completed (started 2026-03-18; closed 2026-03-18)
 Owner: ad_hoc_iterator_protocol execution loop
 Reference planning doc:
 - `issues/ad-hoc-first-class-lazy-iterators-and-python-iterable-protocol.md`
@@ -9,13 +9,13 @@ Loop per wave: Plan -> Implement -> Validate -> Demo -> PR -> External completio
 
 ## Global Gates
 - [x] Entry baseline validated before wave 1
-- [ ] Scope remains constrained to active wave
-- [ ] Root cause is fixed without compatibility shims
-- [ ] Positive-path and negative-path validation recorded for each wave
-- [ ] Demo runs before opening each wave PR
-- [ ] `$(pwd)/scripts/run_all_tests.sh` run before each wave PR
-- [ ] PR opened/reviewed/merged before next wave starts
-- [ ] Docs + traceability + waiver state updated before moving on
+- [x] Scope remains constrained to active wave
+- [x] Root cause is fixed without compatibility shims
+- [x] Positive-path and negative-path validation recorded for each wave
+- [x] Demo runs before opening each wave PR
+- [x] `$(pwd)/scripts/run_all_tests.sh` run before each wave PR
+- [x] PR opened/reviewed/merged before next wave starts
+- [x] Docs + traceability + waiver state updated before moving on
 
 ## Full Phase To-Do Plan
 1. [x] `wave_iter_1`: first-class `Iterable[T]` / `Iterator[T]` type-system + governance/doc contract
@@ -28,9 +28,9 @@ Loop per wave: Plan -> Implement -> Validate -> Demo -> PR -> External completio
 8. [x] wave-level extra production-grade review cycle done
 9. [x] milestone-level completion review cycle done
 10. [x] milestone-level production-grade review cycle done
-11. [ ] phase-level completion review cycle done
-12. [ ] phase-level production-grade review cycle done
-13. [ ] closure telegram notification sent
+11. [x] phase-level completion review cycle done
+12. [x] phase-level production-grade review cycle done
+13. [x] closure telegram notification sent
 
 ## Entry Baseline Evidence (2026-03-18)
 
@@ -167,5 +167,8 @@ Required entry records:
 - wave closure production-grade review: completed (`reviews/phase-ad-hoc-first-class-lazy-iterators-and-python-iterable-protocol-wave-closure-production-grade-review.md`)
 - milestone closure completion review: completed (`reviews/phase-ad-hoc-first-class-lazy-iterators-and-python-iterable-protocol-milestone-closure-completion-review.md`)
 - milestone closure production-grade review: completed (`reviews/phase-ad-hoc-first-class-lazy-iterators-and-python-iterable-protocol-milestone-closure-production-grade-review.md`)
-- phase closure completion review: pending
-- phase closure production-grade review: pending
+- phase closure completion review: completed (`reviews/phase-ad-hoc-first-class-lazy-iterators-and-python-iterable-protocol-phase-closure-completion-review.md`)
+- phase closure production-grade review: completed (`reviews/phase-ad-hoc-first-class-lazy-iterators-and-python-iterable-protocol-phase-closure-production-grade-review.md`)
+
+### Closure notification
+- phase closure telegram notification: sent (`message_id=117`, 2026-03-18)
