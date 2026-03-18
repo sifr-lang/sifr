@@ -1,12 +1,14 @@
 # `milestone_psp_7` Parity Governance Inventory
 
-Status: in_progress (updated by structured-data/class-surface wave_psp_struct_4 continuation on 2026-03-18)  
+Status: in_progress (updated by first-class bytes architecture-lock continuation on 2026-03-19)  
 Phase: `issues/ad-hoc-python-source-parity-and-builtin-stdlib-surface.md`  
 Execution ledger: `issues/ad-hoc-python-source-parity-and-builtin-stdlib-surface-execution.md`  
 Continuation phase (closed): `issues/ad-hoc-python-source-parity-extension-waiver-reduction.md`  
 Continuation execution ledger (closed): `issues/ad-hoc-python-source-parity-extension-waiver-reduction-execution.md`  
-Continuation phase (current): `issues/ad-hoc-structured-data-and-class-surface-parity-expansion.md`  
-Continuation execution ledger (current): `issues/ad-hoc-structured-data-and-class-surface-parity-expansion-execution.md`
+Continuation phase (closed): `issues/ad-hoc-structured-data-and-class-surface-parity-expansion.md`  
+Continuation execution ledger (closed): `issues/ad-hoc-structured-data-and-class-surface-parity-expansion-execution.md`  
+Continuation phase (current): `issues/ad-hoc-first-class-bytes-and-binary-surface-foundation.md`  
+Continuation execution ledger (current): `issues/ad-hoc-first-class-bytes-and-binary-surface-foundation-execution.md`
 
 This is the canonical closure inventory for phase 31.5 milestone 7.
 
@@ -44,7 +46,7 @@ Terminal state legend for this milestone:
 | `set` | `parity-closed` | `verification/stdlib/wave_psp_a2_cpython_traceability.md` | Variadic update/intersection/difference_update object model closed. |
 | `tuple` | `parity-closed` | `verification/stdlib/wave_psp_a2_cpython_traceability.md` | Count/index optional-bound behavior closed with typed-safe miss handling. |
 | `str` | `parity-closed` | `verification/stdlib/wave_psp_a2_cpython_traceability.md` | Split/replace and bound typing closed for shipped surface. |
-| `bytes` (custom shipped surface) | `intentional-diff` | `verification/stdlib/wave_psp_a2_cpython_traceability.md` | Classified custom utility surface; no first-class CPython `bytes` object model claim. |
+| `bytes` (custom shipped surface) | `intentional-diff` | `verification/stdlib/wave_psp_a2_cpython_traceability.md`, `verification/stdlib/phase_psp_bytes_architecture_lock.md` | Custom helper surface remains the active shipped state while first-class `bytes` migration is in progress (`wave_psp_bytes_0` architecture lock complete, migration waves pending). |
 
 ## Per-Module Closure Inventory (`lib/sifr`)
 
@@ -53,7 +55,7 @@ Terminal state legend for this milestone:
 | `argparse` | `wave_psp_e2 + wave_psp_struct_2` | `parity-closed` | `verification/stdlib/wave_psp_e2_cpython_traceability.md` |
 | `base64` | `wave_psp_c2` | `parity-closed` | `verification/stdlib/wave_psp_c2_cpython_traceability.md` |
 | `bisect` | `wave_psp_b1` | `parity-closed` | `verification/stdlib/wave_psp_b1_cpython_traceability.md` |
-| `bytes` | `wave_psp_a2` | `intentional-diff` | `verification/stdlib/wave_psp_a2_cpython_traceability.md` |
+| `bytes` | `wave_psp_a2 + wave_psp_bytes_0` | `intentional-diff` | `verification/stdlib/wave_psp_a2_cpython_traceability.md`, `verification/stdlib/wave_psp_bytes_0_cpython_traceability.md` |
 | `calendar` | `wave_psp_c2` | `parity-closed` | `verification/stdlib/wave_psp_c2_cpython_traceability.md` |
 | `collections` | `wave_psp_b1 + wave_psp_struct_2` | `parity-closed` | `verification/stdlib/wave_psp_b1_cpython_traceability.md` |
 | `configparser` | `wave_psp_c1 + wave_psp_struct_1` | `parity-closed` | `verification/stdlib/wave_psp_c1_cpython_traceability.md` |
@@ -119,6 +121,7 @@ Terminal state legend for this milestone:
 | `wave_psp_struct_2` | `issues/ad-hoc-structured-data-and-class-surface-parity-expansion-execution.md`, `verification/stdlib/wave_psp_b1_cpython_traceability.md`, `verification/stdlib/wave_psp_e2_cpython_traceability.md` | Collections/CLI class-surface expansion for `Counter`/`defaultdict` and bounded `argparse` `subparsers`/`nargs`/typed coercion. |
 | `wave_psp_struct_3` | `issues/ad-hoc-structured-data-and-class-surface-parity-expansion-execution.md`, `verification/stdlib/wave_psp_e1_cpython_traceability.md`, `verification/stdlib/wave_psp_e2_cpython_traceability.md` | Fixed-offset timezone expansion for `datetime` plus typed namespace/name-based `uuid` generation closure (`uuid3`/`uuid5`). |
 | `wave_psp_struct_4` | `issues/ad-hoc-structured-data-and-class-surface-parity-expansion-execution.md`, `verification/stdlib/wave_psp_c2_cpython_traceability.md` | Text-surface governance closure for `textwrap` adjacent `TextWrapper` options and top-level `html.escape(..., quote=...)` polish while keeping package-wide `html` expansion unsupported. |
+| `wave_psp_bytes_0` | `verification/stdlib/phase_psp_bytes_architecture_lock.md`, `issues/ad-hoc-first-class-bytes-and-binary-surface-foundation-execution.md`, `verification/stdlib/wave_psp_bytes_0_cpython_traceability.md` | Architecture lock for first-class immutable `bytes`, explicit text/binary boundary, and permanent-diff fixture enforcement before type-system/HIR/codegen migration waves. |
 
 ## Waiver Index (`intentional-diff`, `unsupported`, `host-limited`)
 
@@ -128,7 +131,7 @@ Canonical issue for revisit tracking: `issues/ad-hoc-python-source-parity-and-bu
 | Surface | Terminal state | Rationale | Revisit rule | Evidence |
 | --- | --- | --- | --- | --- |
 | Builtin numeric parsing (`int(str)`, `float(str)`) typed-result behavior | `intentional-diff` | Sifr safety contract uses `Result`/`Option` instead of exceptions. | Revisit only with language-contract change approval. | `internal_docs/architecture.md` |
-| `bytes` as CPython object-model equivalent | `intentional-diff` | Shipped as custom utility surface, not first-class CPython bytes object parity. | Revisit when first-class bytes type lands. | `verification/stdlib/wave_psp_a2_cpython_traceability.md` |
+| `bytes` as CPython object-model equivalent | `intentional-diff` | Shipped as custom utility surface, not first-class CPython bytes object parity. | Revisit when `wave_psp_bytes_1` + `wave_psp_bytes_2` migrate type-system/HIR/codegen and conversion surfaces. | `verification/stdlib/wave_psp_a2_cpython_traceability.md`, `verification/stdlib/phase_psp_bytes_architecture_lock.md`, `verification/stdlib/wave_psp_bytes_0_cpython_traceability.md` |
 | Residual advanced iterator-object families (`itertools.tee`, `itertools.groupby`) | `intentional-diff` | Core iterator architecture and approved combinator set are closed; these remaining families still require separate object-lifetime semantics and grouped-iterator runtime behavior outside this continuation scope. | Revisit only with explicit iterator-object lifetime/state expansion scope. | `verification/stdlib/wave_psp_b2_cpython_traceability.md`, `issues/ad-hoc-python-source-parity-extension-waiver-reduction.md` |
 | General-arity `itertools.starmap(...)` callable/row parity | `intentional-diff` | Current shipped contract closes binary tuple rows only; non-binary callable rows remain intentionally rejected at compile time. | Revisit with general callable-arity typing in stdlib higher-order helpers. | `verification/stdlib/wave_psp_b2_cpython_traceability.md` |
 | Bounded safety signature diffs in shipped `itertools` surface (`cycle(data, n)` finite form, `product(..., repeat<0)` empty iterator adaptation) | `intentional-diff` | Current shipped contracts prioritize deterministic bounded execution and explicit adaptation over CPython's infinite/error behavior on these edges. | Revisit only if parity policy requires strict CPython edge-case signaling for these helpers. | `verification/stdlib/wave_psp_b2_cpython_traceability.md` |

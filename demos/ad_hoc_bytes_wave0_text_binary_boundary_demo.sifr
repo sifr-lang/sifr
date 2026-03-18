@@ -1,0 +1,21 @@
+from sifr.bytes import encode_utf8, decode_utf8, bytes_from_hex
+
+
+def main() -> None:
+    encoded: list[int] = encode_utf8("sifr-bytes")
+    decode_ok: bool = False
+    try:
+        decoded: str = decode_utf8(encoded)
+        decode_ok = decoded == "sifr-bytes"
+    except ParseError as e:
+        _ = str(e.message)
+    assert decode_ok
+
+    hex_ok: bool = False
+    try:
+        parsed_hex: list[int] = bytes_from_hex("73696672")
+        decoded_hex: str = decode_utf8(parsed_hex)
+        hex_ok = decoded_hex == "sifr"
+    except ParseError as e:
+        _ = str(e.message)
+    assert hex_ok
