@@ -1,5 +1,5 @@
 # Adapted CPython glob subset for sifr.glob (canonical bool-vector format)
-from sifr.glob import glob
+from sifr.glob import glob, iglob
 from sifr.io import write_text
 from sifr.os import run_command, getpid
 from sifr.test import assert_bool_vector_eq
@@ -20,6 +20,8 @@ def collect_glob_actual() -> list[bool]:
         txt: list[str] = glob(base, "*.txt")
         txt_ok: bool = len(txt) == 2 and txt[0] == "a.txt" and txt[1] == "b.txt"
         actual.append(txt_ok)
+        txt_iter: list[str] = list(iglob(base, "*.txt"))
+        actual.append(len(txt_iter) == 2 and txt_iter[0] == "a.txt" and txt_iter[1] == "b.txt")
 
         one_char_txt: list[str] = glob(base, "?.txt")
         one_char_ok: bool = len(one_char_txt) == 2 and one_char_txt[0] == "a.txt" and one_char_txt[1] == "b.txt"
@@ -44,14 +46,14 @@ def collect_glob_actual() -> list[bool]:
         actual.append(len(missing_dir) == 0)
     except IOError as e:
         _ = str(e.message)
-        actual = [False, False, False, False, False, False, False]
+        actual = [False, False, False, False, False, False, False, False]
     finally:
         _clean: str = run_command("rm -rf " + base)
     return actual
 
 
 def main():
-    expected: list[bool] = [True, True, True, True, True, True, True]
+    expected: list[bool] = [True, True, True, True, True, True, True, True]
     actual: list[bool] = collect_glob_actual()
 
     assert_bool_vector_eq(actual, expected)

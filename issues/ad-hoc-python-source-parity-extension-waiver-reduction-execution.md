@@ -94,11 +94,22 @@ Required entry records:
   - wave gate: `$(pwd)/scripts/run_all_tests.sh` -> PASS (2026-03-18)
 
 ### wave_psp_ext_3: Regex and Filesystem Iterator Surfaces
-- Status: pending
+- Status: ready_for_pr
 - Implementation PR:
   - pending
 - Validation:
-  - pending
+  - positive path: `cargo run -q -p sifr -- run crates/sifr/tests/e2e/pass/cpython_glob_subset.sifr` -> PASS
+  - positive path: `cargo run -q -p sifr -- run crates/sifr/tests/e2e/pass/cpython_pathlib_subset.sifr` -> PASS
+  - positive path: `cargo run -q -p sifr -- run crates/sifr/tests/e2e/pass/stdlib_pathlib_consolidated.sifr` -> PASS
+  - positive path: `cargo run -q -p sifr -- run crates/sifr/tests/e2e/pass/pathlib_glob_semantics.sifr` -> PASS
+  - positive path: `cargo run -q -p sifr -- run crates/sifr/tests/e2e/pass/path_glob.sifr` -> PASS
+  - positive path: `cargo run -q -p sifr -- run crates/sifr/tests/e2e/pass/phase_psp_d1_filesystem_paths_archives.sifr` -> PASS
+  - positive path: `cargo run -q -p sifr -- run crates/sifr/tests/e2e/pass/phase_psp_ext_3_regex_filesystem_iterators.sifr` -> PASS
+  - positive path: `cargo run -q -p sifr -- run demos/ad_hoc_parity_ext_wave3_regex_filesystem_iterators_demo.sifr` -> PASS
+  - negative path: `cargo run -q -p sifr -- check crates/sifr/tests/e2e/fail/phase_psp_ext_3_pathlib_iterator_materialization_required.sifr` -> PASS (`type mismatch: expected 'list[str]', got 'Iterator[str]'`)
+  - regression spot-check: `cargo run -q -p sifr -- run crates/sifr/tests/e2e/pass/cpython_re_subset.sifr` -> PASS
+  - regression spot-check: `cargo run -q -p sifr -- run crates/sifr/tests/e2e/pass/phase_psp_e1_core_modules_numeric_patterns_crypto.sifr` -> PASS
+  - wave gate: `$(pwd)/scripts/run_all_tests.sh` -> PASS (2026-03-18)
 
 ### wave_psp_ext_4: Waiver Ledger Reduction and Exit Closure
 - Status: pending

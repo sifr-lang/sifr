@@ -78,7 +78,8 @@ def main():
     # --- pathlib.Path.glob ---
     tmp: Path = Path("/tmp")
     try:
-        matches: list[str] = tmp.glob("sifr_demo_*")
+        matches_it: Iterator[str] = tmp.glob("sifr_demo_*")
+        matches: list[str] = list(matches_it)
         print("glob found = " + str(len(matches) > 0))
     except IOError as e:
         print("glob error: " + e.message)

@@ -24,7 +24,8 @@ def collect_path_class_actual() -> list[bool]:
         content: str = filep.read_text()
         path_flow_ok = filep.exists() and filep.is_file() and content == "hello"
 
-        matches: list[str] = dirp.glob("*.txt")
+        matches_it: Iterator[str] = dirp.glob("*.txt")
+        matches: list[str] = list(matches_it)
         glob_ok = len(matches) >= 1
 
         _u: None = filep.unlink()

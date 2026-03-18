@@ -72,6 +72,49 @@ def is_absolute(path: str) -> bool:
             return True
     return False
 
+
+def _iter_list_str(own entries: list[str]) -> Iterator[str]:
+    i: int = 0
+    while i < len(entries):
+        yield entries[i]
+        i = i + 1
+
+
+def _iterdir_list(path: str) -> Result[list[str], IOError]:
+    return iterdir(path)
+
+
+def _glob_list(path: str, pattern: str) -> Result[list[str], IOError]:
+    return glob_pattern(path, pattern)
+
+
+def _rglob_list(path: str, pattern: str) -> Result[list[str], IOError]:
+    return rglob_pattern(path, pattern)
+
+
+def _iterdir_to_iter(path: str) -> Result[Iterator[str], IOError]:
+    try:
+        entries: list[str] = _iterdir_list(path)
+        return _iter_list_str(entries)
+    except IOError as e:
+        raise IOError(e.message)
+
+
+def _glob_to_iter(path: str, pattern: str) -> Result[Iterator[str], IOError]:
+    try:
+        entries: list[str] = _glob_list(path, pattern)
+        return _iter_list_str(entries)
+    except IOError as e:
+        raise IOError(e.message)
+
+
+def _rglob_to_iter(path: str, pattern: str) -> Result[Iterator[str], IOError]:
+    try:
+        entries: list[str] = _rglob_list(path, pattern)
+        return _iter_list_str(entries)
+    except IOError as e:
+        raise IOError(e.message)
+
 class Path:
     _path: str
 
@@ -129,8 +172,8 @@ class Path:
     def resolve(self) -> Result[str, IOError]:
         return resolve_path(self._path)
 
-    def iterdir(self) -> Result[list[str], IOError]:
-        return iterdir(self._path)
+    def iterdir(self) -> Result[Iterator[str], IOError]:
+        return _iterdir_to_iter(self._path)
 
     def with_name(self, name: str) -> Path:
         parent: str = dirname(self._path)
@@ -145,8 +188,8 @@ class Path:
             return Path(s + suffix)
         return Path(parent + "/" + s + suffix)
 
-    def glob(self, pattern: str) -> Result[list[str], IOError]:
-        return glob_pattern(self._path, pattern)
+    def glob(self, pattern: str) -> Result[Iterator[str], IOError]:
+        return _glob_to_iter(self._path, pattern)
 
-    def rglob(self, pattern: str) -> Result[list[str], IOError]:
-        return rglob_pattern(self._path, pattern)
+    def rglob(self, pattern: str) -> Result[Iterator[str], IOError]:
+        return _rglob_to_iter(self._path, pattern)

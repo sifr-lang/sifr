@@ -37,7 +37,8 @@ def collect_io_path_glob_actual() -> list[bool]:
         top_txt: list[str] = glob(base, "*.txt")
         glob_ok = len(top_txt) == 1 and top_txt[0] == "alpha.txt"
 
-        recursive_txt: list[str] = root.rglob("*.txt")
+        recursive_it: Iterator[str] = root.rglob("*.txt")
+        recursive_txt: list[str] = list(recursive_it)
         rglob_ok = len(recursive_txt) >= 2
     except IOError as e:
         _ = e.message
