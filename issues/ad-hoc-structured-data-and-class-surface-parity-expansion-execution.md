@@ -26,7 +26,7 @@ Loop per wave: Plan -> Implement -> Validate -> Demo -> PR -> External completio
 6. [x] wave-level extra completion review cycle done
 7. [x] wave-level extra production-grade review cycle done
 8. [x] milestone-level completion review cycle done
-9. [ ] milestone-level production-grade review cycle done
+9. [x] milestone-level production-grade review cycle done
 10. [ ] phase-level completion review cycle done
 11. [ ] phase-level production-grade review cycle done
 12. [ ] closure telegram notification sent
@@ -189,10 +189,14 @@ Required entry records:
 - Reviewer artifact: `reviews/phase-ad-hoc-structured-data-and-class-surface-parity-expansion-milestone-closure-review-pass-1.md`
 - Status: completed (approved; no corrective code changes required)
 
+### milestone_closure review_pass_2 (production-grade)
+- Reviewer artifact: `reviews/phase-ad-hoc-structured-data-and-class-surface-parity-expansion-milestone-closure-review-pass-2.md`
+- Status: completed (approved for phase-closure progression; no corrective code changes required)
+
 ### closure review cycles
 - wave closure completion review: completed
 - wave closure production-grade review: completed
 - milestone closure completion review: completed
-- milestone closure production-grade review: pending
+- milestone closure production-grade review: completed
 - phase closure completion review: pending
 - phase closure production-grade review: pending
