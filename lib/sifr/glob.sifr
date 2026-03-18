@@ -18,3 +18,11 @@ def glob(directory: str, pattern: str) -> list[str]:
         _ = str(e.message)
         return []
     return sorted(matches)
+
+
+def iglob(directory: str, pattern: str) -> Iterator[str]:
+    matches: list[str] = glob(directory, pattern)
+    i: int = 0
+    while i < len(matches):
+        yield matches[i]
+        i = i + 1

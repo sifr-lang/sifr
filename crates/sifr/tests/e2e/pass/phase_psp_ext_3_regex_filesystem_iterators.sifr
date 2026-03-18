@@ -1,0 +1,81 @@
+from sifr.re import finditer, compile, Match
+from sifr.glob import iglob
+from sifr.pathlib import Path
+from sifr.io import write_text
+from sifr.os import getpid, run_command
+from sifr.test import assert_bool_vector_eq
+
+
+def collect_regex_actual() -> list[bool]:
+    actual: list[bool] = []
+    try:
+        digit_it: Iterator[Match] = finditer("\\d+", "a12b34")
+        first: Match | None = next(digit_it)
+        second: Match | None = next(digit_it)
+        third: Match | None = next(digit_it)
+        first_ok: bool = False
+        second_ok: bool = False
+        if first is not None:
+            first_ok = first.group() == "12" and first.start() == 1 and first.end() == 3
+        if second is not None:
+            second_ok = second.group() == "34" and second.start() == 4 and second.end() == 6
+        actual.append(first_ok)
+        actual.append(second_ok)
+        actual.append(third is None)
+
+        p = compile("\\w+")
+        word_it: Iterator[Match] = p.finditer("hi all")
+        words: list[str] = []
+        for m in word_it:
+            words.append(m.group())
+        actual.append(str(words) == "[\"hi\", \"all\"]")
+    except RegexError as e:
+        _ = str(e.message)
+        actual = [False, False, False, False]
+    return actual
+
+
+def collect_filesystem_actual() -> list[bool]:
+    actual: list[bool] = []
+    base: str = "/tmp/sifr_phase_psp_ext_3_iterators_" + str(getpid())
+    try:
+        _mk: str = run_command("mkdir -p " + base + "/sub")
+        _w1: None = write_text(base + "/a.txt", "a")
+        _w2: None = write_text(base + "/b.log", "b")
+        _w3: None = write_text(base + "/sub/c.txt", "c")
+
+        ig: list[str] = list(iglob(base, "*.txt"))
+        actual.append(len(ig) == 1 and ig[0] == "a.txt")
+
+        root: Path = Path(base + "")
+        entries_it: Iterator[str] = root.iterdir()
+        entries: list[str] = list(entries_it)
+        actual.append(len(entries) >= 2)
+
+        top_txt_it: Iterator[str] = root.glob("*.txt")
+        top_txt: list[str] = list(top_txt_it)
+        actual.append(len(top_txt) == 1 and top_txt[0] == base + "/a.txt")
+
+        recursive_it: Iterator[str] = root.rglob("*.txt")
+        recursive_txt: list[str] = list(recursive_it)
+        actual.append(len(recursive_txt) == 2)
+    except IOError as e:
+        _ = str(e.message)
+        actual = [False, False, False, False]
+    finally:
+        _clean: str = run_command("rm -rf " + base)
+    return actual
+
+
+def append_all(mut target: list[bool], values: list[bool]):
+    for value in values:
+        target.append(value)
+
+
+def main():
+    expected: list[bool] = [True, True, True, True, True, True, True, True]
+    actual: list[bool] = []
+    append_all(actual, collect_regex_actual())
+    append_all(actual, collect_filesystem_actual())
+    assert_bool_vector_eq(actual, expected)
+    assert str("phase_psp_ext_3_regex_filesystem_iterators: pass") == "phase_psp_ext_3_regex_filesystem_iterators: pass"

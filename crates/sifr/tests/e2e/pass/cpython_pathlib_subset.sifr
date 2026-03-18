@@ -51,12 +51,15 @@ def collect_filesystem_actual() -> list[bool]:
 
         file_state_ok = f1.exists() and f1.is_file() and dirp.is_dir()
 
-        g: list[str] = dirp.glob("*.txt")
+        g_it: Iterator[str] = dirp.glob("*.txt")
+        g: list[str] = list(g_it)
         glob_ok = len(g) >= 1
-        rg: list[str] = dirp.rglob("*.txt")
+        rg_it: Iterator[str] = dirp.rglob("*.txt")
+        rg: list[str] = list(rg_it)
         rglob_ok = len(rg) >= 2
 
-        entries: list[str] = dirp.iterdir()
+        entries_it: Iterator[str] = dirp.iterdir()
+        entries: list[str] = list(entries_it)
         iterdir_ok = len(entries) >= 2
 
         resolved: str = dirp.resolve()

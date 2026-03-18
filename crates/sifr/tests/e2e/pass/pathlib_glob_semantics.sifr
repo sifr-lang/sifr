@@ -18,15 +18,18 @@ def main():
         _w3: None = write_text(base + "/ab.txt", "ab")
         _w4: None = write_text(base + "/.hidden.txt", "h")
 
-        q: list[str] = d.glob("?.txt")
+        q_it: Iterator[str] = d.glob("?.txt")
+        q: list[str] = list(q_it)
         q_ok: bool = len(q) == 2 and q[0] == base + "/a.txt" and q[1] == base + "/b.txt"
         actual.append(q_ok)
 
-        star: list[str] = d.glob("*")
+        star_it: Iterator[str] = d.glob("*")
+        star: list[str] = list(star_it)
         hidden_filtered: bool = len(star) == 3 and star[0] == base + "/a.txt" and star[1] == base + "/ab.txt" and star[2] == base + "/b.txt"
         actual.append(hidden_filtered)
 
-        missing_matches: list[str] = missing.glob("*.txt")
+        missing_it: Iterator[str] = missing.glob("*.txt")
+        missing_matches: list[str] = list(missing_it)
         actual.append(len(missing_matches) == 0)
     except IOError as e:
         _ = str(e.message)
