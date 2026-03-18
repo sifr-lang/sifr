@@ -63,8 +63,8 @@ Generators work but are eager: the codegen creates a `Vec<T>`, pushes every `yie
 1. **HIR:** Add `HirType::Iterator(Box<Type>)` to represent lazy iterator types. A function containing `yield` returns `Iterator[T]` instead of `list[T]`.
 2. **Codegen — state machine:** Instead of `_yields.push(val)`, emit a Rust struct that implements `Iterator<Item = T>`. Each `yield` becomes a state transition. The struct stores local variables as fields and tracks the current state via an enum.
 3. **Codegen — `for` loop integration:** `for x in lazy_iter` emits `while let Some(x) = iter.next()` instead of `for x in &vec`.
-4. **Codegen — eager collection:** `list(iter)` or assigning an iterator to `list[T]` calls `.collect::<Vec<T>>()` for backward compatibility.
-5. **Type system:** `Iterator[T]` is a first-class type. It is assignable to `list[T]` via implicit `.collect()`.
+4. **Codegen — eager collection:** `list(iter)` is the explicit materialization boundary (`.collect::<Vec<T>>()` in generated Rust).
+5. **Type system:** `Iterator[T]` is a first-class type and is **not** implicitly assignable to `list[T]`; users must call `list(...)` explicitly.
 
 ### What This Unblocks
 
@@ -78,7 +78,7 @@ Generators work but are eager: the codegen creates a `Vec<T>`, pushes every `yie
 - A generator function returns a lazy iterator, not a `Vec`
 - `for x in generator_fn()` works lazily (no full materialization)
 - `list(generator_fn())` eagerly collects into a list
-- Existing generator E2E tests pass (backward compatible via implicit collect)
+- Existing generator E2E tests pass with explicit `list(...)` materialization where eager values are required
 - New E2E tests: `lazy_generator`, `lazy_for_loop`, `lazy_collect`
 - `cargo test` passes (zero regressions)
 

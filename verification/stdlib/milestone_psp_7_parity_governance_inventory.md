@@ -1,8 +1,10 @@
 # `milestone_psp_7` Parity Governance Inventory
 
-Status: complete  
+Status: complete (updated by parity-extension continuation on 2026-03-18)  
 Phase: `issues/ad-hoc-python-source-parity-and-builtin-stdlib-surface.md`  
-Execution ledger: `issues/ad-hoc-python-source-parity-and-builtin-stdlib-surface-execution.md`
+Execution ledger: `issues/ad-hoc-python-source-parity-and-builtin-stdlib-surface-execution.md`  
+Continuation phase: `issues/ad-hoc-python-source-parity-extension-waiver-reduction.md`  
+Continuation execution ledger: `issues/ad-hoc-python-source-parity-extension-waiver-reduction-execution.md`
 
 This is the canonical closure inventory for phase 31.5 milestone 7.
 
@@ -25,9 +27,9 @@ Terminal state legend for this milestone:
 | `int(...)` / `float(...)` conversion paths | `intentional-diff` | `internal_docs/architecture.md` | Typed `Result` adaptation is a core Sifr safety contract. |
 | `len(...)` / `abs(...)` / `min(...)` / `max(...)` / `sum(...)` | `parity-closed` | `verification/stdlib/wave_psp_a1_cpython_traceability.md` | Closed in builtin parity waves with typed-safe semantics. |
 | `sorted(...)` | `parity-closed` | `verification/stdlib/wave_psp_a1_cpython_traceability.md` | Keyword/binding parity closed for shipped call shapes. |
-| `reversed(...)` | `parity-closed` | `verification/stdlib/wave_psp_a1_cpython_traceability.md` | Iterator-returning contract is closed; eager materialization is explicit (`list(...)`). |
-| `enumerate(...)` | `parity-closed` | `verification/stdlib/wave_psp_a1_cpython_traceability.md` | Positional/keyword start forms closed. |
-| `zip(...)` / `map(...)` | `parity-closed` | `verification/stdlib/wave_psp_a1_cpython_traceability.md` | Base variadic forms close on iterator-returning behavior; strict-mode waivers remain explicit. |
+| `reversed(...)` | `parity-closed` | `verification/stdlib/wave_psp_a1_cpython_traceability.md` | Iterator-returning contract is closed and re-validated by `wave_psp_ext_1`; eager materialization is explicit (`list(...)`). |
+| `enumerate(...)` | `parity-closed` | `verification/stdlib/wave_psp_a1_cpython_traceability.md` | Positional/keyword start forms closed and re-validated by `wave_psp_ext_1`. |
+| `zip(...)` / `map(...)` | `parity-closed` | `verification/stdlib/wave_psp_a1_cpython_traceability.md` | Base variadic forms close on iterator-returning behavior; `wave_psp_ext_1` re-closes iterator return shapes while strict-mode waivers remain explicit. |
 | `range(...)` | `parity-closed` | `verification/stdlib/wave_psp_a1_cpython_traceability.md` | Keyword normalization is an intentional adaptation. |
 | `any(...)` / `all(...)` | `parity-closed` | `verification/stdlib/wave_psp_a1_cpython_traceability.md` | Closed for shipped iterable surface. |
 
@@ -59,7 +61,7 @@ Terminal state legend for this milestone:
 | `env` | `wave_psp_d2` | `intentional-diff` | `verification/stdlib/wave_psp_d2_cpython_traceability.md` |
 | `fnmatch` | `wave_psp_c2` | `parity-closed` | `verification/stdlib/wave_psp_c2_cpython_traceability.md` |
 | `functools` | `wave_psp_b2` | `parity-closed` | `verification/stdlib/wave_psp_b2_cpython_traceability.md` |
-| `glob` | `wave_psp_d1` | `parity-closed` | `verification/stdlib/wave_psp_d1_cpython_traceability.md` |
+| `glob` | `wave_psp_d1 + wave_psp_ext_3` | `parity-closed` | `verification/stdlib/wave_psp_d1_cpython_traceability.md` |
 | `graphlib` | `wave_psp_e2` | `parity-closed` | `verification/stdlib/wave_psp_e2_cpython_traceability.md` |
 | `gzip` | `wave_psp_d1` | `parity-closed` | `verification/stdlib/wave_psp_d1_cpython_traceability.md` |
 | `hashlib` | `wave_psp_e1` | `parity-closed` | `verification/stdlib/wave_psp_e1_cpython_traceability.md` |
@@ -67,16 +69,16 @@ Terminal state legend for this milestone:
 | `html` | `wave_psp_c2` | `parity-closed` | `verification/stdlib/wave_psp_c2_cpython_traceability.md` |
 | `io` | `wave_psp_d1` | `parity-closed` | `verification/stdlib/wave_psp_d1_cpython_traceability.md` |
 | `ipaddress` | `wave_psp_e2` | `parity-closed` | `verification/stdlib/wave_psp_e2_cpython_traceability.md` |
-| `itertools` | `wave_psp_b2` | `parity-closed` | `verification/stdlib/wave_psp_b2_cpython_traceability.md` |
+| `itertools` | `wave_psp_b2 + wave_psp_ext_2` | `parity-closed` | `verification/stdlib/wave_psp_b2_cpython_traceability.md` |
 | `json` | `wave_psp_c1` | `parity-closed` | `verification/stdlib/wave_psp_c1_cpython_traceability.md` |
 | `logging` | `wave_psp_d2` | `host-limited` | `verification/stdlib/wave_psp_d2_cpython_traceability.md` |
 | `math` | `wave_psp_e1` | `parity-closed` | `verification/stdlib/wave_psp_e1_cpython_traceability.md` |
 | `operator` | `wave_psp_b2` | `parity-closed` | `verification/stdlib/wave_psp_b2_cpython_traceability.md` |
 | `os` | `wave_psp_d2` | `host-limited` | `verification/stdlib/wave_psp_d2_cpython_traceability.md` |
-| `pathlib` | `wave_psp_d1` | `parity-closed` | `verification/stdlib/wave_psp_d1_cpython_traceability.md` |
+| `pathlib` | `wave_psp_d1 + wave_psp_ext_3` | `parity-closed` | `verification/stdlib/wave_psp_d1_cpython_traceability.md` |
 | `platform` | `wave_psp_d2` | `host-limited` | `verification/stdlib/wave_psp_d2_cpython_traceability.md` |
 | `random` | `wave_psp_b2` | `parity-closed` | `verification/stdlib/wave_psp_b2_cpython_traceability.md` |
-| `re` | `wave_psp_e1` | `parity-closed` | `verification/stdlib/wave_psp_e1_cpython_traceability.md` |
+| `re` | `wave_psp_e1 + wave_psp_ext_3` | `parity-closed` | `verification/stdlib/wave_psp_e1_cpython_traceability.md` |
 | `secrets` | `wave_psp_b2` | `host-limited` | `verification/stdlib/wave_psp_b2_cpython_traceability.md` |
 | `shutil` | `wave_psp_d1` | `parity-closed` | `verification/stdlib/wave_psp_d1_cpython_traceability.md` |
 | `statistics` | `wave_psp_e1` | `parity-closed` | `verification/stdlib/wave_psp_e1_cpython_traceability.md` |
@@ -106,6 +108,10 @@ Terminal state legend for this milestone:
 | `wave_psp_d2` | `verification/stdlib/wave_psp_d2_cpython_traceability.md` | Process/runtime/platform closure with explicit async process and interpreter-mutation waivers. |
 | `wave_psp_e1` | `verification/stdlib/wave_psp_e1_cpython_traceability.md` | Strong-core module closure with timezone/capture-object/extended-crypto unsupported waivers. |
 | `wave_psp_e2` | `verification/stdlib/wave_psp_e2_cpython_traceability.md` | Class-heavy cleanup closure with explicit constructor and incremental-frontier intentional diffs. |
+| `wave_psp_ext_1` | `issues/ad-hoc-python-source-parity-extension-waiver-reduction-execution.md` | Builtin iterator return-shape re-closure (`reversed`/`enumerate`/`zip`/`map`) with explicit materialization boundaries. |
+| `wave_psp_ext_2` | `verification/stdlib/wave_psp_b2_cpython_traceability.md` | Approved `itertools` combinators now close on iterator-returning contracts; broad lazy waiver retired to narrow residual entries. |
+| `wave_psp_ext_3` | `verification/stdlib/wave_psp_d1_cpython_traceability.md`, `verification/stdlib/wave_psp_e1_cpython_traceability.md` | Iterator-returning closures for `glob.iglob`, `Path.iterdir/glob/rglob`, `re.finditer`, and `Pattern.finditer`. |
+| `wave_psp_ext_4` | `issues/ad-hoc-python-source-parity-extension-waiver-reduction-execution.md`, `verification/stdlib/milestone_psp_7_parity_governance_inventory.md` | Waiver-ledger reduction and phase-exit governance alignment for post-iterator parity claims. |
 
 ## Waiver Index (`intentional-diff`, `unsupported`, `host-limited`)
 
@@ -116,8 +122,10 @@ Canonical issue for revisit tracking: `issues/ad-hoc-python-source-parity-and-bu
 | --- | --- | --- | --- | --- |
 | Builtin numeric parsing (`int(str)`, `float(str)`) typed-result behavior | `intentional-diff` | Sifr safety contract uses `Result`/`Option` instead of exceptions. | Revisit only with language-contract change approval. | `internal_docs/architecture.md` |
 | `bytes` as CPython object-model equivalent | `intentional-diff` | Shipped as custom utility surface, not first-class CPython bytes object parity. | Revisit when first-class bytes type lands. | `verification/stdlib/wave_psp_a2_cpython_traceability.md` |
-| Residual advanced iterator-object families (`itertools.tee`, `itertools.groupby`, and general-arity `starmap` callable/row parity) | `intentional-diff` | Core iterator architecture and approved combinator set are closed; remaining gaps require separate typing/object-model work outside this continuation scope. | Revisit only with explicit callable-typing/object-lifetime expansion scope. | `verification/stdlib/wave_psp_b2_cpython_traceability.md`, `issues/ad-hoc-python-source-parity-extension-waiver-reduction.md` |
+| Residual advanced iterator-object families (`itertools.tee`, `itertools.groupby`) | `intentional-diff` | Core iterator architecture and approved combinator set are closed; these remaining families still require separate object-lifetime semantics and grouped-iterator runtime behavior outside this continuation scope. | Revisit only with explicit iterator-object lifetime/state expansion scope. | `verification/stdlib/wave_psp_b2_cpython_traceability.md`, `issues/ad-hoc-python-source-parity-extension-waiver-reduction.md` |
+| General-arity `itertools.starmap(...)` callable/row parity | `intentional-diff` | Current shipped contract closes binary tuple rows only; non-binary callable rows remain intentionally rejected at compile time. | Revisit with general callable-arity typing in stdlib higher-order helpers. | `verification/stdlib/wave_psp_b2_cpython_traceability.md` |
 | Bounded safety signature diffs in shipped `itertools` surface (`cycle(data, n)` finite form, `product(..., repeat<0)` empty iterator adaptation) | `intentional-diff` | Current shipped contracts prioritize deterministic bounded execution and explicit adaptation over CPython's infinite/error behavior on these edges. | Revisit only if parity policy requires strict CPython edge-case signaling for these helpers. | `verification/stdlib/wave_psp_b2_cpython_traceability.md` |
+| Materialize-then-iterate behavior behind iterator-returning regex/filesystem surfaces (`re.finditer`, `Pattern.finditer`, `glob.iglob`, `Path.iterdir/glob/rglob`) | `intentional-diff` | Public contracts are iterator-returning and type-safe, but current intrinsic layer computes full match/path lists before yielding iterator values. | Revisit when intrinsic/runtime layer supports true streaming iterator producers without pre-materialization. | `verification/stdlib/wave_psp_d1_cpython_traceability.md`, `verification/stdlib/wave_psp_e1_cpython_traceability.md`, `issues/ad-hoc-python-source-parity-extension-waiver-reduction-execution.md` |
 | `functools.partial`/wrapper-family parity | `unsupported` | Requires broader callable-wrapper typing and object runtime support. | Revisit with callable-object typing milestone. | `verification/stdlib/wave_psp_b2_cpython_traceability.md` |
 | Reflective `operator` factories (`attrgetter`, `methodcaller`) | `unsupported` | Static object model intentionally excludes string-driven reflective dispatch. | Revisit only with explicit reflection policy change. | `verification/stdlib/wave_psp_b2_cpython_traceability.md` |
 | Weighted/stateful random families (`choices(weights=...)`, `seed/getstate/setstate`) | `unsupported` | Current randomness layer intentionally avoids deterministic mutable RNG object model. | Revisit with RNG-state architecture milestone. | `verification/stdlib/wave_psp_b2_cpython_traceability.md` |
@@ -143,6 +151,6 @@ Canonical issue for revisit tracking: `issues/ad-hoc-python-source-parity-and-bu
 
 - Canonical inventories are now centralized in this document for builtins, core object models, and all shipped `lib/sifr` modules.
 - Every shipped module is assigned a terminal governance state (`parity-closed`, `intentional-diff`, or `host-limited`).
-- The per-wave CPython traceability corpus is canonically linked for all ten closure waves (`wave_psp_a1` through `wave_psp_e2`).
+- The per-wave CPython traceability corpus is canonically linked for the full closure path (`wave_psp_a1` through `wave_psp_e2`) plus parity-extension closure waves (`wave_psp_ext_1` through `wave_psp_ext_4`).
 - All residual non-parity surfaces are explicit in the waiver index with rationale and revisit rules.
 - No `open` parity state is carried in this milestone inventory.

@@ -20,7 +20,7 @@ Loop per wave: Plan -> Implement -> Validate -> Demo -> PR -> External completio
 ## Full Phase To-Do Plan
 1. [x] `wave_psp_ext_1`: builtin iterator return-shape re-closure (`reversed`, `enumerate`, `zip`, `map`)
 2. [x] `wave_psp_ext_2`: `itertools` lazy-surface closure (`accumulate`, `compress`, `dropwhile`, `takewhile`, `filterfalse`, `zip_longest`, `cycle`, `starmap`, `product`, `permutations`, `combinations`, `combinations_with_replacement`)
-3. [ ] `wave_psp_ext_3`: regex/filesystem iterator surfaces (`re.finditer`, `Pattern.finditer`, `glob.iglob`, `Path.iterdir`, `Path.glob`, `Path.rglob`)
+3. [x] `wave_psp_ext_3`: regex/filesystem iterator surfaces (`re.finditer`, `Pattern.finditer`, `glob.iglob`, `Path.iterdir`, `Path.glob`, `Path.rglob`)
 4. [ ] `wave_psp_ext_4`: waiver-ledger reduction and phase exit-closure governance updates
 5. [ ] wave-level extra completion review cycle done
 6. [ ] wave-level extra production-grade review cycle done
@@ -94,9 +94,11 @@ Required entry records:
   - wave gate: `$(pwd)/scripts/run_all_tests.sh` -> PASS (2026-03-18)
 
 ### wave_psp_ext_3: Regex and Filesystem Iterator Surfaces
-- Status: ready_for_pr
+- Status: merged
 - Implementation PR:
-  - pending
+  - `https://github.com/yaseralnajjar/sifr/pull/1259` (merged)
+  - review closure PR (pass 1): `https://github.com/yaseralnajjar/sifr/pull/1260` (merged)
+  - review closure PR (pass 2): `https://github.com/yaseralnajjar/sifr/pull/1261` (merged)
 - Validation:
   - positive path: `cargo run -q -p sifr -- run crates/sifr/tests/e2e/pass/cpython_glob_subset.sifr` -> PASS
   - positive path: `cargo run -q -p sifr -- run crates/sifr/tests/e2e/pass/cpython_pathlib_subset.sifr` -> PASS
@@ -112,11 +114,18 @@ Required entry records:
   - wave gate: `$(pwd)/scripts/run_all_tests.sh` -> PASS (2026-03-18)
 
 ### wave_psp_ext_4: Waiver Ledger Reduction and Exit Closure
-- Status: pending
+- Status: ready_for_pr
 - Implementation PR:
   - pending
 - Validation:
-  - pending
+  - governance/doc updates:
+    - `verification/stdlib/milestone_psp_7_parity_governance_inventory.md`
+    - `internal_docs/architecture.md`
+    - `internal_docs/phases/07_stdlib_parity.md`
+    - `internal_docs/phases/12_stdlib_remediation.md`
+    - `internal_docs/roadmap.md`
+    - `issues/ad-hoc-python-source-parity-extension-waiver-reduction-execution.md`
+  - wave gate: `$(pwd)/scripts/run_all_tests.sh` -> PASS (2026-03-18)
 
 ## External Review Passes
 
@@ -138,11 +147,11 @@ Required entry records:
 
 ### wave_psp_ext_3 review_pass_1 (completion-gap)
 - Reviewer artifact: `reviews/phase-ad-hoc-python-source-parity-extension-waiver-reduction-wave-psp-ext-3-review-pass-1.md`
-- Status: completed (validated; no actionable defects, informational note only: current iterator surfaces are materialize-then-iterate at intrinsic boundary)
+- Status: completed (validated; no actionable defects, informational note only: current iterator surfaces are materialize-then-iterate at intrinsic boundary; closure PR `#1260`)
 
 ### wave_psp_ext_3 review_pass_2 (production-grade)
 - Reviewer artifact: `reviews/phase-ad-hoc-python-source-parity-extension-waiver-reduction-wave-psp-ext-3-review-pass-2.md`
-- Status: completed (validated; no actionable defects, production-grade approved)
+- Status: completed (validated; no actionable defects, production-grade approved; closure PR `#1261`)
 
 ### closure review cycles
 - wave closure completion review: pending

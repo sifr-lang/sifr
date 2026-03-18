@@ -60,8 +60,8 @@ The `open()` built-in was specified in Phase 11's `milestone_stdlib_class_deepen
 
 #### Work Items
 
-- `Path.glob(pattern: str) -> Result[list[str], IOError]` — match files in directory using glob pattern
-- `Path.rglob(pattern: str) -> Result[list[str], IOError]` — recursive glob
+- `Path.glob(pattern: str) -> Result[Iterator[str], IOError]` — match files in directory using glob pattern (explicit `list(...)` materialization at call sites when eager values are needed)
+- `Path.rglob(pattern: str) -> Result[Iterator[str], IOError]` — recursive glob (explicit `list(...)` materialization at call sites when eager values are needed)
 - These require new Rust intrinsics wrapping the `glob` crate or `std::fs::read_dir` with pattern matching
 
 ### Low-Medium Priority: `re` Flags Support
@@ -107,7 +107,7 @@ The Phase 11 plan specified removing non-CPython functions. The following remain
 - `datetime.time` and `datetime.timezone` classes implemented
 - `datetime.now()` returns a `datetime` object
 - `subprocess.run` returns `CompletedProcess` with `returncode`, `stdout`, `stderr`
-- `Path.glob` and `Path.rglob` work
+- `Path.glob` and `Path.rglob` work with iterator-returning contracts and explicit materialization boundaries
 - `re` flags (`IGNORECASE`, `MULTILINE`, `DOTALL`, `VERBOSE`) work in `compile()` and standalone functions
 - `os.sep`, `os.linesep`, `os.name` exposed
 - `time.strptime`, `time.gmtime`, `time.localtime` have wrapper functions
