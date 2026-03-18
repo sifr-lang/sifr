@@ -53,8 +53,9 @@ Required entry records:
 ## Wave Progress
 
 ### wave_psp_struct_0: Architecture Lock
-- Status: ready_for_review
-- Implementation PR: pending
+- Status: merged (implementation) + review pass 1 in progress
+- Implementation PR:
+  - `https://github.com/yaseralnajjar/sifr/pull/1269` (merged)
 - Scope:
   - contract lock for `json`, `datetime`, `uuid`, `csv`, `argparse`, `collections`
   - permanent-diff classification and enforcement fixtures
@@ -69,6 +70,7 @@ Required entry records:
   - negative path: `cargo run -q -p sifr -- check crates/sifr/tests/e2e/fail/phase_psp_struct_0_csv_dynamic_registry_unsupported.sifr` -> expected compile failure (PASS)
   - negative path: `cargo run -q -p sifr -- check crates/sifr/tests/e2e/fail/phase_psp_struct_0_argparse_formatter_class_unsupported.sifr` -> expected compile failure (PASS)
   - negative path: `cargo run -q -p sifr -- check crates/sifr/tests/e2e/fail/phase_psp_struct_0_html_package_parser_unsupported.sifr` -> expected compile failure (PASS)
+  - wave gate: `$(pwd)/scripts/run_all_tests.sh` -> PASS (2026-03-18)
 
 ### wave_psp_struct_1: Parser and Serialization Surface Expansion
 - Status: pending
@@ -85,8 +87,8 @@ Required entry records:
 ## External Review Passes
 
 ### wave_psp_struct_0 review_pass_1 (completion-gap)
-- Reviewer artifact: pending
-- Status: pending
+- Reviewer artifact: `reviews/phase-ad-hoc-structured-data-and-class-surface-parity-expansion-wave-psp-struct-0-review-pass-1.md`
+- Status: completed (review note about swapped fixture content was validated and found non-reproducible in `main`; fixture contents match their filenames and both expected-fail checks remain enforced)
 
 ### wave_psp_struct_0 review_pass_2 (production-grade)
 - Reviewer artifact: pending
