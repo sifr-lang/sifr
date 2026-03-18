@@ -23,7 +23,7 @@ Loop per wave: Plan -> Implement -> Validate -> Demo -> PR -> External completio
 3. [x] `wave_iter_3`: generator rewrite to true lazy iterator semantics
 4. [x] `wave_iter_4`: lazy builtin conversion for `zip`, `enumerate`, `reversed`
 5. [x] `wave_iter_5`: lazy `itertools` subset (`chain`, `repeat`, `islice`, `count`) + explicit unsupported classification
-6. [ ] `wave_iter_6`: parity closure, dedicated demo, governance hardening
+6. [x] `wave_iter_6`: parity closure, dedicated demo, governance hardening
 7. [ ] wave-level extra completion review cycle done
 8. [ ] wave-level extra production-grade review cycle done
 9. [ ] milestone-level completion review cycle done
@@ -133,9 +133,9 @@ Required entry records:
   - wave gate: `$(pwd)/scripts/run_all_tests.sh` -> PASS (2026-03-18)
 
 ### wave_iter_6: Parity Closure, Demo, Governance
-- Status: ready_for_pr
+- Status: merged
 - Implementation PR:
-  - branch: `wave-iter-6-parity-closure`
+  - `https://github.com/yaseralnajjar/sifr/pull/1247` (merged)
 - Validation:
   - positive path: `cargo run -q -p sifr -- check demos/ad_hoc_iter_wave6_parity_closure_demo.sifr` -> `no errors found`
   - positive path: `cargo run -q -p sifr -- run demos/ad_hoc_iter_wave6_parity_closure_demo.sifr` -> `ad_hoc_iter_wave6_parity_closure_demo: ok`
