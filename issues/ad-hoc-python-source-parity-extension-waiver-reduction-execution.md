@@ -22,8 +22,8 @@ Loop per wave: Plan -> Implement -> Validate -> Demo -> PR -> External completio
 2. [x] `wave_psp_ext_2`: `itertools` lazy-surface closure (`accumulate`, `compress`, `dropwhile`, `takewhile`, `filterfalse`, `zip_longest`, `cycle`, `starmap`, `product`, `permutations`, `combinations`, `combinations_with_replacement`)
 3. [x] `wave_psp_ext_3`: regex/filesystem iterator surfaces (`re.finditer`, `Pattern.finditer`, `glob.iglob`, `Path.iterdir`, `Path.glob`, `Path.rglob`)
 4. [x] `wave_psp_ext_4`: waiver-ledger reduction and phase exit-closure governance updates
-5. [ ] wave-level extra completion review cycle done
-6. [ ] wave-level extra production-grade review cycle done
+5. [x] wave-level extra completion review cycle done
+6. [x] wave-level extra production-grade review cycle done
 7. [ ] milestone-level completion review cycle done
 8. [ ] milestone-level production-grade review cycle done
 9. [ ] phase-level completion review cycle done
@@ -163,8 +163,8 @@ Required entry records:
 - Status: completed (validated; no actionable defects, production-grade approved)
 
 ### closure review cycles
-- wave closure completion review: pending
-- wave closure production-grade review: pending
+- wave closure completion review: completed (`reviews/phase-ad-hoc-python-source-parity-extension-waiver-reduction-wave-closure-completion-review.md`)
+- wave closure production-grade review: completed (`reviews/phase-ad-hoc-python-source-parity-extension-waiver-reduction-wave-closure-production-grade-review.md`)
 - milestone closure completion review: pending
 - milestone closure production-grade review: pending
 - phase closure completion review: pending
