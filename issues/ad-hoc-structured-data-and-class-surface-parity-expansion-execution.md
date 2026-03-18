@@ -92,6 +92,8 @@ Required entry records:
 
 ### wave_psp_struct_2: Collections and CLI Class-Surface Expansion
 - Status: completed
+- Implementation PR:
+  - `https://github.com/yaseralnajjar/sifr/pull/1275` (merged)
 - Scope:
   - `collections`: add `Counter(iterable=...)` constructor parity alongside mapping input, and promote `defaultdict` to an explicit typed class surface (`ensure`, `set`, `has`, `pop`, `clear`, `keys`, `values`, `items`, `len`)
   - `argparse`: add bounded `subparsers`, `nargs` forms (`int`, `?`, `*`, `+`), typed coercion (`str`/`int`/`float`/`bool`) via `add_argument_typed`, and namespace list support (`set_list`/`get_list`)
@@ -125,6 +127,10 @@ Required entry records:
 ### wave_psp_struct_1 review_pass_2 (production-grade)
 - Reviewer artifact: `reviews/phase-ad-hoc-structured-data-and-class-surface-parity-expansion-wave-psp-struct-1-review-pass-2.md`
 - Status: completed (approved for wave progression; no corrective code changes required)
+
+### wave_psp_struct_2 review_pass_1 (completion-gap)
+- Reviewer artifact: `reviews/phase-ad-hoc-structured-data-and-class-surface-parity-expansion-wave-psp-struct-2-review-pass-1.md`
+- Status: completed (approved; no corrective code changes required)
 
 ### closure review cycles
 - wave closure completion review: pending
