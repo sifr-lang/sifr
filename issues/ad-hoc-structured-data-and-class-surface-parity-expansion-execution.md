@@ -74,7 +74,9 @@ Required entry records:
   - wave gate: `$(pwd)/scripts/run_all_tests.sh` -> PASS (2026-03-18)
 
 ### wave_psp_struct_1: Parser and Serialization Surface Expansion
-- Status: ready_for_pr
+- Status: implementation_merged_review_pass_2_pending
+- Implementation PR:
+  - `https://github.com/yaseralnajjar/sifr/pull/1272` (merged)
 - Scope:
   - `json`: add `JSONEncoder`/`JSONDecoder` typed wrapper classes with file and handle load/dump helpers
   - `configparser`: add interpolation-aware `get(..., raw=...)`, `SectionProxy`, and ini write-back surface (`to_ini_string`, `write`)
@@ -105,6 +107,10 @@ Required entry records:
 ### wave_psp_struct_0 review_pass_2 (production-grade)
 - Reviewer artifact: `reviews/phase-ad-hoc-structured-data-and-class-surface-parity-expansion-wave-psp-struct-0-review-pass-2.md`
 - Status: completed (approved for wave progression)
+
+### wave_psp_struct_1 review_pass_1 (completion-gap)
+- Reviewer artifact: `reviews/phase-ad-hoc-structured-data-and-class-surface-parity-expansion-wave-psp-struct-1-review-pass-1.md`
+- Status: completed (approved; no corrective code changes required)
 
 ### closure review cycles
 - wave closure completion review: pending
