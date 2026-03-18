@@ -12,7 +12,7 @@ from sifr.random import shuffle, sample, randrange, gauss
 from sifr.functools import reduce
 from sifr.itertools import (
     accumulate, compress, dropwhile, takewhile, filterfalse,
-    zip_longest, count_from, cycle
+    zip_longest, count, count_from, cycle
 )
 from sifr.collections import Counter, from_list
 
@@ -139,8 +139,15 @@ def main():
     zl: list[list[int]] = zip_longest(a, b, 0)
     print("zip_longest len = " + str(len(zl)))
 
-    cf: list[int] = count_from(0, 2, 5)
+    cf: list[int] = list(count_from(0, 2, 5))
     print("count_from(0,2,5) = " + str(cf))
+    ctr: Iterator[int] = count(0, 2)
+    c0: int | None = next(ctr)
+    c1: int | None = next(ctr)
+    c2: int | None = next(ctr)
+    c3: int | None = next(ctr)
+    c4: int | None = next(ctr)
+    print("count(0,2) first 5 = " + str([c0, c1, c2, c3, c4]))
 
     cyc: list[int] = cycle([1, 2, 3], 7)
     print("cycle([1,2,3], 7) = " + str(cyc))

@@ -46,21 +46,28 @@ def _product_impl[T](pools: list[list[T]], index: int) -> list[list[T]]:
     return result
 
 
-def chain[T](*iterables: list[T]) -> list[T]:
-    result: list[T] = []
+def chain[T](*iterables: list[T]) -> Iterator[T]:
+    iterables_owned: list[list[T]] = []
     for iterable in iterables:
-        for value in iterable:
-            result.append(value)
-    return result
+        iterables_owned.append(iterable)
+    outer_index: int = 0
+    inner_index: int = 0
+    while outer_index < len(iterables_owned):
+        if inner_index < len(iterables_owned[outer_index]):
+            yield iterables_owned[outer_index][inner_index]
+            inner_index = inner_index + 1
+        else:
+            outer_index = outer_index + 1
+            inner_index = 0
 
 
-def repeat(value: T, times: int) -> list[T]:
-    result: list[T] = []
+def repeat(own value: T, times: int) -> Iterator[T]:
+    holder: list[T] = [value]
     i: int = 0
     while i < times:
-        result.append(value)
+        if len(holder) > 0:
+            yield holder[0]
         i = i + 1
-    return result
 
 
 def take(n: int, data: list[T]) -> list[T]:
@@ -119,10 +126,10 @@ def batched(data: list[T], n: int) -> Result[list[list[T]], ValueError]:
     return result
 
 
-def islice(data: list[T], start_or_stop: int, stop: int | None = None, step: int = 1) -> list[T]:
-    if step <= 0:
-        return []
-
+def islice(data: list[T], start_or_stop: int, stop: int | None = None, step: int = 1) -> Iterator[T]:
+    data_owned: list[T] = []
+    for item in data:
+        data_owned.append(item)
     actual_start: int = 0
     actual_stop: int = start_or_stop
     if stop is not None:
@@ -133,16 +140,25 @@ def islice(data: list[T], start_or_stop: int, stop: int | None = None, step: int
     if actual_stop < 0:
         actual_stop = 0
 
-    result: list[T] = []
-    i: int = actual_start
-    while i < actual_stop:
-        if i >= len(data):
-            return result
-        val: T | None = data[i]
-        if val is not None:
-            result.append(val)
-        i = i + step
-    return result
+    stride: int = step
+    if stride <= 0:
+        stride = 1
+        actual_stop = actual_start
+
+    index: int = actual_start
+    while index < actual_stop:
+        if index < len(data_owned):
+            yield data_owned[index]
+        else:
+            index = actual_stop
+        index = index + stride
+
+
+def count(start: int = 0, step: int = 1) -> Iterator[int]:
+    current: int = start
+    while True:
+        yield current
+        current = current + step
 
 
 def product[T](*iterables: list[T], repeat: int = 1) -> list[list[T]]:
@@ -174,7 +190,14 @@ def permutations(data: list[T], r: int | None = None) -> list[list[T]]:
     while i < len(data):
         current: T | None = data[i]
         if current is not None:
-            rest: list[T] = chain(data[:i], data[i + 1:])
+            rest: list[T] = []
+            j: int = 0
+            while j < len(data):
+                if j != i:
+                    item: T | None = data[j]
+                    if item is not None:
+                        rest.append(item)
+                j = j + 1
             tails: list[list[T]] = permutations(rest, target - 1)
             for entry in _prepend(current, tails):
                 result.append(entry)
@@ -327,15 +350,13 @@ def zip_longest(a: list[T], b: list[T], fill: T) -> list[list[T]]:
     return result
 
 
-def count_from(start: int, step: int, n: int) -> list[int]:
-    result: list[int] = []
+def count_from(start: int, step: int, n: int) -> Iterator[int]:
     i: int = 0
-    val: int = start
+    current: int = start
     while i < n:
-        result.append(val)
-        val = val + step
+        yield current
+        current = current + step
         i = i + 1
-    return result
 
 
 def cycle(data: list[T], n: int) -> list[T]:

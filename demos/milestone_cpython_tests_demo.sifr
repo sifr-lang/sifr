@@ -116,9 +116,9 @@ def main():
     # ===== itertools =====
     a: list[int] = [1, 2]
     b: list[int] = [3, 4]
-    ch: list[int] = chain(a, b)
+    ch: list[int] = list(chain(a, b))
     assert_eq(len(ch), 4)
-    rep: list[int] = repeat(7, 3)
+    rep: list[int] = list(repeat(7, 3))
     assert_eq(len(rep), 3)
     tk: list[int] = take(2, ch)
     assert_eq(len(tk), 2)

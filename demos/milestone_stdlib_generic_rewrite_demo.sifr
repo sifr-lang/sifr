@@ -21,9 +21,9 @@ def concat(a: str, b: str) -> str:
 def main():
     # --- 1. Generic chain: works with any type ---
     print("=== Generic chain ===")
-    ints: list[int] = chain([1, 2], [3, 4])
+    ints: list[int] = list(chain([1, 2], [3, 4]))
     print(ints)
-    strs: list[str] = chain(["a", "b"], ["c", "d"])
+    strs: list[str] = list(chain(["a", "b"], ["c", "d"]))
     print(strs)
 
     # --- 2. Generic take ---

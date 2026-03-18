@@ -17,15 +17,15 @@ class Doubler:
 
 
 def main():
-    assert str(chain([1], [2], [3])) == '[1, 2, 3]'
+    assert str(list(chain([1], [2], [3]))) == '[1, 2, 3]'
     first: list[int] = [1]
     second: list[int] = [2]
     third: list[int] = [3]
-    assert str(chain(first, second, third)) == '[1, 2, 3]'
+    assert str(list(chain(first, second, third))) == '[1, 2, 3]'
     assert str(len(first)) == '1'
     assert str(len(second)) == '1'
     assert str(len(third)) == '1'
-    assert str(islice([10, 20, 30, 40, 50], 1, 5, 2)) == '[20, 40]'
+    assert str(list(islice([10, 20, 30, 40, 50], 1, 5, 2))) == '[20, 40]'
     assert str(product([1, 2], repeat=2)) == '[[1, 1], [1, 2], [2, 1], [2, 2]]'
     assert str(permutations([1, 2, 3], 2)) == '[[1, 2], [1, 3], [2, 1], [2, 3], [3, 1], [3, 2]]'
     assert str(combinations([1, 2, 3], 2)) == '[[1, 2], [1, 3], [2, 3]]'

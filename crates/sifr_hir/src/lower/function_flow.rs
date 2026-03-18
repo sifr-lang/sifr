@@ -315,7 +315,7 @@ pub(super) fn infer_function_return_type(
         if let Err(shape_error) = validate_lazy_generator_shape(body) {
             report_error(shape_error.message(function_name));
         }
-        let yielded_type = collapse_types(yielded_types, Type::Any);
+        let yielded_type = normalize_generator_yield_type(collapse_types(yielded_types, Type::Any));
         let inferred_iterator = Type::Iterator(Box::new(yielded_type.clone()));
         if has_explicit_return_annotation {
             match declared_return_type.resolve_alias() {
@@ -351,5 +351,25 @@ pub(super) fn infer_function_return_type(
         }
     } else {
         declared_return_type.clone()
+    }
+}
+
+fn normalize_generator_yield_type(yielded_type: Type) -> Type {
+    let Type::Union(members) = yielded_type else {
+        return yielded_type;
+    };
+    if members.is_empty() {
+        return Type::Union(members);
+    }
+    let non_none: Vec<Type> = members
+        .iter()
+        .filter(|member| !matches!(member, Type::None))
+        .cloned()
+        .collect();
+    let has_none = members.iter().any(|member| matches!(member, Type::None));
+    if has_none && non_none.len() == 1 {
+        non_none.into_iter().next().unwrap_or(Type::Any)
+    } else {
+        Type::Union(members)
     }
 }

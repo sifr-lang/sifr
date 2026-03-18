@@ -1,7 +1,7 @@
 # Consolidated stdlib itertools coverage for milestone_30_4 structure rules
 from sifr.itertools import (
     chain, repeat, take, flatten, pairwise, batched, islice,
-    accumulate, compress, dropwhile, takewhile, filterfalse, zip_longest, count_from, cycle
+    accumulate, compress, dropwhile, takewhile, filterfalse, zip_longest, count, count_from, cycle
 )
 from sifr.test import assert_bool_vector_eq
 
@@ -10,8 +10,8 @@ def is_small(x: int) -> bool:
 
 def collect_core_actual() -> list[bool]:
     actual: list[bool] = []
-    actual.append(str(chain([1, 2], [3, 4])) == "[1, 2, 3, 4]")
-    actual.append(str(repeat(7, 3)) == "[7, 7, 7]")
+    actual.append(str(list(chain([1, 2], [3, 4]))) == "[1, 2, 3, 4]")
+    actual.append(str(list(repeat(7, 3))) == "[7, 7, 7]")
     actual.append(str(take(3, [10, 20, 30, 40, 50])) == "[10, 20, 30]")
     actual.append(str(flatten([[1, 2], [3], [4, 5]])) == "[1, 2, 3, 4, 5]")
     actual.append(str(pairwise([1, 2, 3, 4])) == "[[1, 2], [2, 3], [3, 4]]")
@@ -23,7 +23,7 @@ def collect_core_actual() -> list[bool]:
     except ValueError as e:
         _ = str(e.message)
     actual.append(batched_ok)
-    actual.append(str(islice([10, 20, 30, 40, 50], 3)) == "[10, 20, 30]")
+    actual.append(str(list(islice([10, 20, 30, 40, 50], 3))) == "[10, 20, 30]")
     return actual
 
 def collect_extended_actual() -> list[bool]:
@@ -46,7 +46,7 @@ def collect_extended_actual() -> list[bool]:
     zl: list[list[int]] = zip_longest([1, 2, 3], [4, 5], 0)
     actual.append(len(zl) == 3)
 
-    cf: list[int] = count_from(0, 2, 5)
+    cf: list[int] = list(count_from(0, 2, 5))
     cf_first_ok: bool = False
     cf_second_ok: bool = False
     cf_first: int | None = cf[0]
@@ -56,6 +56,13 @@ def collect_extended_actual() -> list[bool]:
     if cf_second is not None:
         cf_second_ok = cf_second == 2
     actual.append(len(cf) == 5 and cf_first_ok and cf_second_ok)
+    ctr: Iterator[int] = count(0, 2)
+    c0: int | None = next(ctr)
+    c1: int | None = next(ctr)
+    c2: int | None = next(ctr)
+    c3: int | None = next(ctr)
+    c4: int | None = next(ctr)
+    actual.append(c0 == 0 and c1 == 2 and c2 == 4 and c3 == 6 and c4 == 8)
 
     cyc: list[int] = cycle([1, 2, 3], 7)
     cyc_first_ok: bool = False
@@ -88,6 +95,7 @@ def main():
     expected: list[bool] = [
         True, True, True, True, True, True, True,
         True, True, True, True, True, True, True, True,
+        True,
         True
     ]
     actual: list[bool] = []
