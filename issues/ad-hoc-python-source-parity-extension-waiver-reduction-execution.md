@@ -19,7 +19,7 @@ Loop per wave: Plan -> Implement -> Validate -> Demo -> PR -> External completio
 
 ## Full Phase To-Do Plan
 1. [x] `wave_psp_ext_1`: builtin iterator return-shape re-closure (`reversed`, `enumerate`, `zip`, `map`)
-2. [ ] `wave_psp_ext_2`: `itertools` lazy-surface closure (`accumulate`, `compress`, `dropwhile`, `takewhile`, `filterfalse`, `zip_longest`, `cycle`, `starmap`, `product`, `permutations`, `combinations`, `combinations_with_replacement`)
+2. [x] `wave_psp_ext_2`: `itertools` lazy-surface closure (`accumulate`, `compress`, `dropwhile`, `takewhile`, `filterfalse`, `zip_longest`, `cycle`, `starmap`, `product`, `permutations`, `combinations`, `combinations_with_replacement`)
 3. [ ] `wave_psp_ext_3`: regex/filesystem iterator surfaces (`re.finditer`, `Pattern.finditer`, `glob.iglob`, `Path.iterdir`, `Path.glob`, `Path.rglob`)
 4. [ ] `wave_psp_ext_4`: waiver-ledger reduction and phase exit-closure governance updates
 5. [ ] wave-level extra completion review cycle done
@@ -75,9 +75,9 @@ Required entry records:
   - wave gate: `$(pwd)/scripts/run_all_tests.sh` -> PASS (2026-03-18)
 
 ### wave_psp_ext_2: `itertools` Lazy Surface Closure
-- Status: implemented (pending PR)
+- Status: merged
 - Implementation PR:
-  - pending
+  - `https://github.com/yaseralnajjar/sifr/pull/1256` (merged)
 - Validation:
   - positive path: `cargo run -q -p sifr -- run crates/sifr/tests/e2e/pass/cpython_itertools_subset.sifr` -> PASS
   - positive path: `cargo run -q -p sifr -- run crates/sifr/tests/e2e/pass/phase_psp_b2_iterators_functional_randomness.sifr` -> PASS
@@ -116,6 +116,14 @@ Required entry records:
 ### review_pass_2 (production-grade)
 - Reviewer artifact: `reviews/phase-ad-hoc-python-source-parity-extension-waiver-reduction-wave-psp-ext-1-review-pass-2a.md`
 - Status: completed (validated; no actionable defects)
+
+### wave_psp_ext_2 review_pass_1 (completion-gap)
+- Reviewer artifact: `reviews/phase-ad-hoc-python-source-parity-extension-waiver-reduction-wave-psp-ext-2-review-pass-1.md`
+- Status: completed (validated; no actionable defects)
+
+### wave_psp_ext_2 review_pass_2 (production-grade)
+- Reviewer artifact: pending
+- Status: pending
 
 ### closure review cycles
 - wave closure completion review: pending
