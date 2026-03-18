@@ -24,8 +24,8 @@ Loop per wave: Plan -> Implement -> Validate -> Demo -> PR -> External completio
 4. [x] `wave_iter_4`: lazy builtin conversion for `zip`, `enumerate`, `reversed`
 5. [x] `wave_iter_5`: lazy `itertools` subset (`chain`, `repeat`, `islice`, `count`) + explicit unsupported classification
 6. [x] `wave_iter_6`: parity closure, dedicated demo, governance hardening
-7. [ ] wave-level extra completion review cycle done
-8. [ ] wave-level extra production-grade review cycle done
+7. [x] wave-level extra completion review cycle done
+8. [x] wave-level extra production-grade review cycle done
 9. [ ] milestone-level completion review cycle done
 10. [ ] milestone-level production-grade review cycle done
 11. [ ] phase-level completion review cycle done
@@ -163,8 +163,8 @@ Required entry records:
 - Status: completed (validated; production-grade review reported no additional defects)
 
 ### closure review cycles
-- wave closure completion review: pending
-- wave closure production-grade review: pending
+- wave closure completion review: completed (`reviews/phase-ad-hoc-first-class-lazy-iterators-and-python-iterable-protocol-wave-closure-completion-review.md`)
+- wave closure production-grade review: completed (`reviews/phase-ad-hoc-first-class-lazy-iterators-and-python-iterable-protocol-wave-closure-production-grade-review.md`)
 - milestone closure completion review: pending
 - milestone closure production-grade review: pending
 - phase closure completion review: pending
