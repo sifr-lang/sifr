@@ -12,12 +12,12 @@
 
 ## Classified waivers
 
-State note: `phase-tracked` marks surfaces that were previously waived in this wave but are now actively tracked in a dedicated follow-up execution phase.
+State note: ad-hoc iterator architecture phase closure moved core iterator/lazy surfaces out of `phase-tracked` status. Residual gaps below are now explicit terminal classifications.
 
 | Surface | State | Rationale |
 | --- | --- | --- |
-| Lazy iterator object families from `Lib/test/test_itertools.py` | `phase-tracked` | This surface is now tracked by `issues/ad-hoc-first-class-lazy-iterators-and-python-iterable-protocol.md` and its execution ledger instead of remaining a terminal waiver in this wave. |
-| Remaining eager itertools combinator families (`product`, `permutations`, `combinations`, `combinations_with_replacement`, `starmap`, `accumulate`, `cycle`, `zip_longest`, and predicate combinators) | `phase-tracked` | Wave 5 closes lazy parity only for `chain`, `repeat`, `islice`, and `count`; the rest stay list-backed until later ad-hoc wave closure. |
+| Core iterator-object/lazy parity surfaces (`iter`, `next`, protocol `for` lowering, generators, `zip`, `enumerate`, `reversed`, `chain`, `repeat`, `islice`, `count`) | `parity-closed` | Closed by `issues/ad-hoc-first-class-lazy-iterators-and-python-iterable-protocol.md` and execution ledger wave set (`wave_iter_1`-`wave_iter_6`), with dedicated closure demo and regression coverage. |
+| Remaining eager itertools combinator families (`product`, `permutations`, `combinations`, `combinations_with_replacement`, `starmap`, `accumulate`, `cycle`, `zip_longest`, and predicate combinators) | `intentional-diff` | This ad-hoc closure intentionally ships only the initial lazy subset (`chain`, `repeat`, `islice`, `count`) and keeps the rest list-backed with explicit materialization boundaries. |
 | `functools.partial`, `cmp_to_key`, and cache/decorator families | `unsupported` | Returned callable values and callable-object use inside higher-order stdlib helpers still hit separate codegen limitations outside this wave's closed direct callable-object invocation work, and the broader CPython callable-wrapper matrix also needs ParamSpec-style callable typing that the current type system does not yet expose (guarded by `phase_psp_b2_functools_partial_unsupported.sifr`). |
 | General-arity `itertools.starmap(...)` callable/row parity | `intentional-diff` | This wave ships a typed `starmap` over binary tuple rows only; non-binary callable rows are intentionally rejected at compile time (guarded by `phase_psp_b2_itertools_starmap_non_binary_callable.sifr`). |
 | `operator.attrgetter` and `operator.methodcaller` callable factories | `unsupported` | Reflective attribute and method lookup by string is not available in the current statically typed object model (guarded by `phase_psp_b2_operator_attrgetter_unsupported.sifr` and `phase_psp_b2_operator_methodcaller_unsupported.sifr`). |

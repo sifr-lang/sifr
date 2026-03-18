@@ -133,9 +133,24 @@ Required entry records:
   - wave gate: `$(pwd)/scripts/run_all_tests.sh` -> PASS (2026-03-18)
 
 ### wave_iter_6: Parity Closure, Demo, Governance
-- Status: pending
+- Status: ready_for_pr
 - Implementation PR:
-  - pending
+  - branch: `wave-iter-6-parity-closure`
+- Validation:
+  - positive path: `cargo run -q -p sifr -- check demos/ad_hoc_iter_wave6_parity_closure_demo.sifr` -> `no errors found`
+  - positive path: `cargo run -q -p sifr -- run demos/ad_hoc_iter_wave6_parity_closure_demo.sifr` -> `ad_hoc_iter_wave6_parity_closure_demo: ok`
+  - positive path: `cargo run -q -p sifr -- run demos/milestone_lazy_iterators_demo.sifr` -> PASS
+  - negative path: retained advanced `itertools` combinators stay explicitly eager/list-backed and are now governed as `intentional-diff` instead of `phase-tracked`
+  - wave gate: `$(pwd)/scripts/run_all_tests.sh` -> PASS (2026-03-18)
+
+### CPython-derived accounting refresh (phase closure)
+- `Lib/test/test_iter.py::test_iter_basic` -> adapted (covered by wave 1 protocol demo + iterator annotation tests)
+- `Lib/test/test_iter.py::test_iter_idempotency` -> adapted (covered by iterator protocol lowering/tests in wave 2)
+- `Lib/test/test_iter.py::test_iter_for_loop` -> adapted (covered by `test_for_loop_lowers_through_iter_protocol_call` + wave demos)
+- `Lib/test/test_iter.py::test_iter_independence` -> adapted (collection-backed iterable reuse validated by protocol demos)
+- `Lib/test/test_iter.py::test_nested_comprehensions_iter` -> adapted (generator/comprehension iterator typing and runtime tests in wave 3)
+- `Lib/test/test_iter.py::test_iter_class_for` -> waived (`unsupported`, user-defined dunder iterator protocol surface remains out of scope)
+- `Lib/test/test_iter.py::test_iter_class_iter` -> waived (`unsupported`, same boundary as above)
 
 ## External Review Passes
 
