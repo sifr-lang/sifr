@@ -156,7 +156,11 @@ Required entry records:
 
 ### wave_psp_ext_4 review_pass_1 (completion-gap)
 - Reviewer artifact: `reviews/phase-ad-hoc-python-source-parity-extension-waiver-reduction-wave-psp-ext-4-review-pass-1.md`
-- Status: completed (validated; applied reviewer-aligned clarity update to explicitly classify `itertools.tee`/`itertools.groupby` in `wave_psp_b2` traceability)
+- Status: completed (validated; applied reviewer-aligned clarity update to explicitly classify `itertools.tee`/`itertools.groupby` in `wave_psp_b2` traceability; closure PR `#1263`)
+
+### wave_psp_ext_4 review_pass_2 (production-grade)
+- Reviewer artifact: `reviews/phase-ad-hoc-python-source-parity-extension-waiver-reduction-wave-psp-ext-4-review-pass-2.md`
+- Status: completed (validated; no actionable defects, production-grade approved)
 
 ### closure review cycles
 - wave closure completion review: pending
