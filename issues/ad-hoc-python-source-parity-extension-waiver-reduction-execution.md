@@ -18,7 +18,7 @@ Loop per wave: Plan -> Implement -> Validate -> Demo -> PR -> External completio
 - [ ] Docs + traceability + waiver state updated before moving on
 
 ## Full Phase To-Do Plan
-1. [ ] `wave_psp_ext_1`: builtin iterator return-shape re-closure (`reversed`, `enumerate`, `zip`, `map`)
+1. [x] `wave_psp_ext_1`: builtin iterator return-shape re-closure (`reversed`, `enumerate`, `zip`, `map`)
 2. [ ] `wave_psp_ext_2`: `itertools` lazy-surface closure (`accumulate`, `compress`, `dropwhile`, `takewhile`, `filterfalse`, `zip_longest`, `cycle`, `starmap`, `product`, `permutations`, `combinations`, `combinations_with_replacement`)
 3. [ ] `wave_psp_ext_3`: regex/filesystem iterator surfaces (`re.finditer`, `Pattern.finditer`, `glob.iglob`, `Path.iterdir`, `Path.glob`, `Path.rglob`)
 4. [ ] `wave_psp_ext_4`: waiver-ledger reduction and phase exit-closure governance updates
@@ -61,9 +61,9 @@ Required entry records:
 ## Wave Progress
 
 ### wave_psp_ext_1: Builtin Iterator Re-Closure
-- Status: in_review
+- Status: merged
 - Implementation PR:
-  - pending (to be opened from this branch)
+  - `https://github.com/yaseralnajjar/sifr/pull/1254` (merged)
 - Validation:
   - positive path: `cargo test -p sifr_hir -- test_map_is_typed_as_iterator --nocapture` -> PASS
   - negative path: `cargo test -p sifr_hir -- test_map_rejects_plain_list_annotation_without_materialization --nocapture` -> PASS
@@ -98,12 +98,12 @@ Required entry records:
 ## External Review Passes
 
 ### review_pass_1 (completion-gap)
-- Reviewer artifact: pending
-- Status: pending
+- Reviewer artifact: `reviews/phase-ad-hoc-python-source-parity-extension-waiver-reduction-wave-psp-ext-1-review-pass-1.md`
+- Status: completed (validated; no actionable defects)
 
 ### review_pass_2 (production-grade)
-- Reviewer artifact: pending
-- Status: pending
+- Reviewer artifact: `reviews/phase-ad-hoc-python-source-parity-extension-waiver-reduction-wave-psp-ext-1-review-pass-2a.md`
+- Status: completed (validated; no actionable defects)
 
 ### closure review cycles
 - wave closure completion review: pending
