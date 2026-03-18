@@ -24,7 +24,7 @@ def get_sum(items: list[int]) -> int:
 # --- Section 2: Own keyword for consuming functions ---
 
 def consume_and_reverse(own items: list[int]) -> list[int]:
-    return reversed(items)
+    return list(reversed(items))
 
 # --- Section 3: Multiple borrows of same variable ---
 # Immutable borrows of the same variable are allowed

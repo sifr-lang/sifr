@@ -181,6 +181,13 @@ fn registry_iterable_to_owned_iter_expr(
     }
 }
 
+fn registry_box_iterator_expr(iter_expr: RustExpr) -> RustExpr {
+    RustExpr::FnCall {
+        func: Box::new(RustExpr::Path(vec!["Box".to_string(), "new".to_string()])),
+        args: vec![iter_expr],
+    }
+}
+
 fn registry_iterable_to_vec_expr(emitter: &mut RustEmitter, expr: &HirExpr) -> Option<RustExpr> {
     Some(RustExpr::MethodCall {
         receiver: Box::new(registry_iterable_to_owned_iter_expr(emitter, expr)?),
@@ -1599,34 +1606,35 @@ impl RustEmitter {
                     is_move: false,
                 }],
             }),
-            "reversed" if args.len() == 1 => Some(RustExpr::MethodCall {
-                receiver: Box::new(RustExpr::MethodCall {
+            "reversed" if args.len() == 1 => {
+                Some(registry_box_iterator_expr(RustExpr::MethodCall {
                     receiver: Box::new(registry_iterable_to_owned_iter_expr(self, &args[0])?),
                     method: "rev".to_string(),
                     args: vec![],
-                }),
-                method: "collect::<Vec<_>>".to_string(),
+                }))
+            }
+            "zip" if args.is_empty() => Some(registry_box_iterator_expr(RustExpr::FnCall {
+                func: Box::new(RustExpr::Path(vec![
+                    "std".to_string(),
+                    "iter".to_string(),
+                    "empty".to_string(),
+                ])),
                 args: vec![],
-            }),
-            "zip" if args.is_empty() => Some(RustExpr::Vec(vec![])),
-            "zip" if args.len() == 1 => Some(RustExpr::MethodCall {
-                receiver: Box::new(RustExpr::MethodCall {
-                    receiver: Box::new(registry_iterable_to_owned_iter_expr(self, &args[0])?),
-                    method: "map".to_string(),
-                    args: vec![RustExpr::Closure {
-                        params: vec![crate::RustParam::Named {
-                            name: "__zip_item".to_string(),
-                            ty: crate::RustType::Named("_".to_string()),
-                        }],
-                        body: Box::new(RustExpr::Tuple(vec![RustExpr::Ident(
-                            "__zip_item".to_string(),
-                        )])),
-                        is_move: false,
+            })),
+            "zip" if args.len() == 1 => Some(registry_box_iterator_expr(RustExpr::MethodCall {
+                receiver: Box::new(registry_iterable_to_owned_iter_expr(self, &args[0])?),
+                method: "map".to_string(),
+                args: vec![RustExpr::Closure {
+                    params: vec![crate::RustParam::Named {
+                        name: "__zip_item".to_string(),
+                        ty: crate::RustType::Named("_".to_string()),
                     }],
-                }),
-                method: "collect::<Vec<_>>".to_string(),
-                args: vec![],
-            }),
+                    body: Box::new(RustExpr::Tuple(vec![RustExpr::Ident(
+                        "__zip_item".to_string(),
+                    )])),
+                    is_move: false,
+                }],
+            })),
             "zip" if args.len() >= 2 => {
                 let zip_iter = registry_zip_iter_expr(self, args)?;
                 let tuple_items = (0..args.len())
@@ -1638,22 +1646,18 @@ impl RustEmitter {
                         )
                     })
                     .collect();
-                Some(RustExpr::MethodCall {
-                    receiver: Box::new(RustExpr::MethodCall {
-                        receiver: Box::new(zip_iter),
-                        method: "map".to_string(),
-                        args: vec![RustExpr::Closure {
-                            params: vec![crate::RustParam::Named {
-                                name: "__zip_item".to_string(),
-                                ty: crate::RustType::Named("_".to_string()),
-                            }],
-                            body: Box::new(RustExpr::Tuple(tuple_items)),
-                            is_move: false,
+                Some(registry_box_iterator_expr(RustExpr::MethodCall {
+                    receiver: Box::new(zip_iter),
+                    method: "map".to_string(),
+                    args: vec![RustExpr::Closure {
+                        params: vec![crate::RustParam::Named {
+                            name: "__zip_item".to_string(),
+                            ty: crate::RustType::Named("_".to_string()),
                         }],
-                    }),
-                    method: "collect::<Vec<_>>".to_string(),
-                    args: vec![],
-                })
+                        body: Box::new(RustExpr::Tuple(tuple_items)),
+                        is_move: false,
+                    }],
+                }))
             }
             "max" | "min" if args.len() == 1 => {
                 let lowered = self.try_lower_registry_expr_strict(&args[0])?;
@@ -1870,42 +1874,38 @@ impl RustEmitter {
                 } else {
                     RustExpr::Literal(crate::RustLiteral::Int(0))
                 };
-                Some(RustExpr::MethodCall {
+                Some(registry_box_iterator_expr(RustExpr::MethodCall {
                     receiver: Box::new(RustExpr::MethodCall {
-                        receiver: Box::new(RustExpr::MethodCall {
-                            receiver: Box::new(iter_expr),
-                            method: "enumerate".to_string(),
-                            args: vec![],
-                        }),
-                        method: "map".to_string(),
-                        args: vec![RustExpr::Closure {
-                            params: vec![crate::RustParam::Named {
-                                name: "__pair".to_string(),
-                                ty: crate::RustType::Named("_".to_string()),
-                            }],
-                            body: Box::new(RustExpr::Tuple(vec![
-                                RustExpr::BinOp {
-                                    left: Box::new(RustExpr::Cast {
-                                        expr: Box::new(RustExpr::Field {
-                                            expr: Box::new(RustExpr::Ident("__pair".to_string())),
-                                            field: "0".to_string(),
-                                        }),
-                                        ty: crate::RustType::I64,
-                                    }),
-                                    op: "+".to_string(),
-                                    right: Box::new(start_expr),
-                                },
-                                RustExpr::Field {
-                                    expr: Box::new(RustExpr::Ident("__pair".to_string())),
-                                    field: "1".to_string(),
-                                },
-                            ])),
-                            is_move: false,
-                        }],
+                        receiver: Box::new(iter_expr),
+                        method: "enumerate".to_string(),
+                        args: vec![],
                     }),
-                    method: "collect::<Vec<_>>".to_string(),
-                    args: vec![],
-                })
+                    method: "map".to_string(),
+                    args: vec![RustExpr::Closure {
+                        params: vec![crate::RustParam::Named {
+                            name: "__pair".to_string(),
+                            ty: crate::RustType::Named("_".to_string()),
+                        }],
+                        body: Box::new(RustExpr::Tuple(vec![
+                            RustExpr::BinOp {
+                                left: Box::new(RustExpr::Cast {
+                                    expr: Box::new(RustExpr::Field {
+                                        expr: Box::new(RustExpr::Ident("__pair".to_string())),
+                                        field: "0".to_string(),
+                                    }),
+                                    ty: crate::RustType::I64,
+                                }),
+                                op: "+".to_string(),
+                                right: Box::new(start_expr),
+                            },
+                            RustExpr::Field {
+                                expr: Box::new(RustExpr::Ident("__pair".to_string())),
+                                field: "1".to_string(),
+                            },
+                        ])),
+                        is_move: false,
+                    }],
+                }))
             }
             "map" if args.len() >= 2 => {
                 let iter_expr = registry_zip_iter_expr(self, &args[1..])?;

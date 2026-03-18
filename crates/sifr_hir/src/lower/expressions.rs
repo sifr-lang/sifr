@@ -1304,18 +1304,24 @@ pub(super) fn lower_call(call: &ExprCall, ctx: &mut LowerCtx) -> Option<HirExpr>
             });
         }
 
-        // reversed(iterable) -> list of element type
+        // reversed(iterable) -> iterator of element type
         if func_name == "reversed" {
             let arg = lower_builtin_reverseable_arg(call, "reversed", ctx)?;
-            let list_ty = callable_builtin_list_output_type(arg.ty())?;
+            let Some(elem_ty) = callable_builtin_element_type(arg.ty()) else {
+                ctx.error(format!(
+                    "reversed() argument must be an iterable with a statically-known element type, got '{}'",
+                    arg.ty().display_name()
+                ));
+                return None;
+            };
             return Some(HirExpr::Call {
                 func: "reversed".to_string(),
                 args: vec![arg],
-                ty: list_ty,
+                ty: Type::Iterator(Box::new(elem_ty)),
             });
         }
 
-        // enumerate(iterable) -> list of (int, element) tuples
+        // enumerate(iterable) -> iterator of (int, element) tuples
         if func_name == "enumerate" {
             if call.arguments.args.is_empty() || call.arguments.args.len() > 2 {
                 ctx.error("enumerate() takes 1 or 2 arguments".to_string());
@@ -1376,7 +1382,7 @@ pub(super) fn lower_call(call: &ExprCall, ctx: &mut LowerCtx) -> Option<HirExpr>
                 }
             }
             let tuple_ty = Type::Tuple(vec![Type::Int, elem_ty]);
-            let result_ty = Type::List(Box::new(tuple_ty));
+            let result_ty = Type::Iterator(Box::new(tuple_ty));
             let args = if matches!(start, HirExpr::IntLiteral(0)) {
                 vec![arg]
             } else {
@@ -1389,7 +1395,7 @@ pub(super) fn lower_call(call: &ExprCall, ctx: &mut LowerCtx) -> Option<HirExpr>
             });
         }
 
-        // zip(*iters) -> list of tuples
+        // zip(*iters) -> iterator of tuples
         if func_name == "zip" {
             if !call.arguments.keywords.is_empty() {
                 ctx.error("zip() does not accept keyword arguments in this phase".to_string());
@@ -1410,7 +1416,7 @@ pub(super) fn lower_call(call: &ExprCall, ctx: &mut LowerCtx) -> Option<HirExpr>
                 elem_types.push(elem_ty);
                 args.push(arg);
             }
-            let result_ty = Type::List(Box::new(Type::Tuple(elem_types)));
+            let result_ty = Type::Iterator(Box::new(Type::Tuple(elem_types)));
             return Some(HirExpr::Call {
                 func: "zip".to_string(),
                 args,

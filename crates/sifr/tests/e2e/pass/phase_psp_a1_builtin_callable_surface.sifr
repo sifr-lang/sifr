@@ -34,12 +34,12 @@ def main():
     assert sorted(iterable=nums, key=None) == [1, 2, 3]
     assert sorted(nums, key=neg) == [3, 2, 1]
     assert sorted(nums, reverse=True) == [3, 2, 1]
-    assert reversed(nums) == [2, 1, 3]
+    assert list(reversed(nums)) == [2, 1, 3]
 
-    indexed: list[tuple[int, str]] = enumerate(["a", "b"], start=5)
+    indexed: list[tuple[int, str]] = list(enumerate(["a", "b"], start=5))
     assert indexed == [(5, "a"), (6, "b")]
 
-    zipped: list[tuple[int, str, bool]] = zip([1, 2], ["a", "b"], [True, False])
+    zipped: list[tuple[int, str, bool]] = list(zip([1, 2], ["a", "b"], [True, False]))
     assert zipped == [(1, "a", True), (2, "b", False)]
 
     summed: list[int] = map(add, [1, 2, 3], [4, 5, 6])

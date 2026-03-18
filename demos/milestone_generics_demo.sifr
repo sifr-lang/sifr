@@ -36,16 +36,16 @@ def main():
     # --- 4. sorted, reversed ---
     unsorted: list[int] = [5, 3, 1, 4, 2]
     print(sorted(unsorted))
-    print(reversed(unsorted))
+    print(list(reversed(unsorted)))
 
     # --- 5. enumerate ---
     letters: list[str] = ["a", "b", "c"]
-    print(enumerate(letters))
+    print(list(enumerate(letters)))
 
     # --- 6. zip ---
     names: list[str] = ["Alice", "Bob"]
     ages: list[int] = [30, 25]
-    print(zip(names, ages))
+    print(list(zip(names, ages)))
 
     # --- 7. any, all ---
     bools: list[bool] = [True, False, True]
