@@ -1,0 +1,13 @@
+from sifr.bytes import decode_utf8
+
+
+class ByteLike:
+    values: list[int]
+
+    def __init__(self, values: list[int]) -> None:
+        self.values = values
+
+
+def main() -> None:
+    payload: ByteLike = ByteLike([65, 66, 67])
+    _ = decode_utf8(payload)

@@ -1,0 +1,2 @@
+def main() -> None:
+    _ = memoryview("abc")

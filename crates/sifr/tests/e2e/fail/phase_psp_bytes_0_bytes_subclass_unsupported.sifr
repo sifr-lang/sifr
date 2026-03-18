@@ -1,0 +1,6 @@
+class CustomBytes(bytes):
+    pass
+
+
+def main() -> None:
+    _ = CustomBytes
