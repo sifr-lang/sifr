@@ -8,3 +8,7 @@ def main():
 
     unesc: str = unescape(esc)
     assert str("unescaped = " + unesc) == 'unescaped = <b>Hello & World</b>'
+
+    quoted: str = 'a "quote" and \'single\''
+    esc_no_quote: str = escape(quoted, False)
+    assert str("escape_quote_false = " + esc_no_quote) == 'escape_quote_false = a "quote" and \'single\''

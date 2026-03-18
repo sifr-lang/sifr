@@ -1,8 +1,11 @@
 # sifr.html — HTML utilities
 from _sifr.html import html_escape, html_unescape
 
-def escape(s: str) -> str:
-    return html_escape(s)
+def escape(s: str, quote: bool = True) -> str:
+    escaped: str = html_escape(s)
+    if quote:
+        return escaped
+    return escaped.replace("&quot;", "\"").replace("&#x27;", "'")
 
 def unescape(s: str) -> str:
     return html_unescape(s)

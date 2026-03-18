@@ -1,6 +1,6 @@
 # Ad Hoc Phase Execution Checklist (Structured Data and Class-Surface Parity Expansion)
 
-Status: in_progress (started 2026-03-18; waves 0-3 completed)
+Status: in_progress (started 2026-03-18; waves 0-4 completed)
 Owner: ad_hoc_structured_class_surface execution loop
 Reference planning doc:
 - `issues/ad-hoc-structured-data-and-class-surface-parity-expansion.md`
@@ -22,7 +22,7 @@ Loop per wave: Plan -> Implement -> Validate -> Demo -> PR -> External completio
 2. [x] `wave_psp_struct_1`: parser and serialization surface expansion (`json`, `configparser`, `csv`)
 3. [x] `wave_psp_struct_2`: collections and CLI class-surface expansion (`collections`, `argparse`)
 4. [x] `wave_psp_struct_3`: `uuid` and `datetime` expansion under fixed-offset timezone contract
-5. [ ] `wave_psp_struct_4`: text-surface polish (`textwrap`, `html`) and governance closure
+5. [x] `wave_psp_struct_4`: text-surface polish (`textwrap`, `html`) and governance closure
 6. [ ] wave-level extra completion review cycle done
 7. [ ] wave-level extra production-grade review cycle done
 8. [ ] milestone-level completion review cycle done
@@ -120,7 +120,19 @@ Required entry records:
   - wave gate: `$(pwd)/scripts/run_all_tests.sh` -> PASS (2026-03-18)
 
 ### wave_psp_struct_4: Text-Surface Polish and Governance Closure
-- Status: pending
+- Status: completed
+- Implementation PR:
+  - pending (to be linked after PR is opened/merged)
+- Scope:
+  - `textwrap`: expand `TextWrapper` adjacent option matrix with bounded deterministic fields (`expand_tabs`, `tabsize`, `replace_whitespace`, `drop_whitespace`, `break_on_hyphens`)
+  - `html`: add top-level `escape(s, quote: bool = True)` polish while keeping package-level expansion (`html.parser`) explicitly unsupported
+  - add wave-4 coverage fixture and demo for text-surface governance closure
+- Validation:
+  - positive path: `cargo run -q -p sifr -- run crates/sifr/tests/e2e/pass/phase_psp_struct_4_text_surface_governance_closure.sifr` -> PASS
+  - positive path: `cargo run -q -p sifr -- run demos/ad_hoc_struct_wave4_text_surface_governance_closure_demo.sifr` -> PASS
+  - regression path: `stdlib_textwrap_consolidated.sifr`, `cpython_textwrap_subset.sifr`, `cpython_textwrap_textwrapper_subset.sifr`, `stdlib_html.sifr`, `demos/m30_1c_textwrap_parity_demo/main.sifr`, `demos/wave_psp_c2_text_pattern_formatting_demo.sifr` -> PASS
+  - negative boundary: `cargo run -q -p sifr -- check crates/sifr/tests/e2e/fail/phase_psp_struct_0_html_package_parser_unsupported.sifr` -> expected compile failure (PASS)
+  - wave gate: `$(pwd)/scripts/run_all_tests.sh` -> pending (run before opening PR)
 
 ## External Review Passes
 
