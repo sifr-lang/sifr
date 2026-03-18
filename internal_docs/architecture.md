@@ -4,9 +4,10 @@
 
 - Authoritative phase sequencing for current execution is tracked in [`roadmap.md`](./roadmap.md), starting at **Phase 15** through **Phase 41**.
 - Authoritative entry/exit criteria, milestone quality checks, and mandatory local validation commands for execution phases are embedded in phase files `15`-`41` under `## Quality Contract`.
-- The active iterator-architecture track is currently managed as an ad-hoc issue phase:
+- Iterator-architecture closure was executed through the ad-hoc issue phase:
   - planning: `issues/ad-hoc-first-class-lazy-iterators-and-python-iterable-protocol.md`
   - execution ledger: `issues/ad-hoc-first-class-lazy-iterators-and-python-iterable-protocol-execution.md`
+  - closure contract: core protocol/lazy surfaces are first-class; retained advanced `itertools` combinators are explicit intentional diffs (list-backed).
 - Historical references in this architecture document may mention legacy phase numbering from earlier roadmap versions.
 - When phase-number conflicts exist, follow [`roadmap.md`](./roadmap.md) and the matching files under [`phases/`](./phases/).
 
