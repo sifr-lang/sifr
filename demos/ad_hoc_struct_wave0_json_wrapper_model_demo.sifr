@@ -1,0 +1,30 @@
+from sifr.json import JsonValue, from_array, from_int, from_object, from_str, dumps, loads
+
+
+def main() -> None:
+    wrapper_payload: JsonValue = from_object(
+        [
+            ("module", from_str("json")),
+            ("items", from_array([from_int(1), from_int(2), from_int(3)])),
+        ]
+    )
+
+    encoded: str = dumps(wrapper_payload)
+    assert encoded == "{\"module\":\"json\",\"items\":[1,2,3]}"
+
+    decoded_ok: bool = False
+    try:
+        decoded: JsonValue = loads(encoded)
+        module_value: JsonValue | None = decoded.get("module")
+        items_value: JsonValue | None = decoded.get("items")
+        decoded_ok = module_value is not None and items_value is not None
+        if module_value is not None:
+            assert module_value.as_str() == "json"
+        if items_value is not None:
+            second: JsonValue | None = items_value.at(1)
+            assert second is not None
+            if second is not None:
+                assert second.as_int() == 2
+    except JSONDecodeError as e:
+        _ = str(e.message)
+    assert decoded_ok

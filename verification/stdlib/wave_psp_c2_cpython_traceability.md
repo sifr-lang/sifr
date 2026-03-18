@@ -38,3 +38,12 @@ Scope: `string`, `textwrap`, `base64`, `html`, `fnmatch`, `difflib`, `calendar`
 - `difflib` advanced class families (`Differ`, `HtmlDiff`, full opcode/group APIs) remain waived and tracked as `adapted`.
 - `difflib.SequenceMatcher` keeps a simplified constructor surface (`SequenceMatcher(a, b)` only) and does not expose CPython's `isjunk` / `autojunk` parameter matrix; this wave intentionally uses deterministic non-junk matching semantics and guards the unsupported call shape via `phase_psp_c2_difflib_sequence_matcher_isjunk_unsupported.sifr`.
 - `calendar` full rendering family and locale/platform formatting behavior remain waived; this wave closes constants/helper and core class entry surfaces only.
+
+## Structured/Class-Surface Continuation Lock (2026-03-18)
+
+- Continuation phase: `issues/ad-hoc-structured-data-and-class-surface-parity-expansion.md`
+- Wave ownership: `wave_psp_struct_4` closes adjacent `textwrap` and top-level `html` polish surfaces.
+- Locked permanent diffs carried into continuation:
+  - package-wide `html` expansion (`html.parser` families) remains `unsupported`,
+  - formatter ecosystem expansion remains explicitly bounded.
+- Enforcement fixture: `crates/sifr/tests/e2e/fail/phase_psp_struct_0_html_package_parser_unsupported.sifr`

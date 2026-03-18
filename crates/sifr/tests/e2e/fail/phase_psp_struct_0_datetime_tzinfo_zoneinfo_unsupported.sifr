@@ -1,0 +1,5 @@
+from sifr.datetime import tzinfo
+
+
+def main() -> None:
+    _ = tzinfo

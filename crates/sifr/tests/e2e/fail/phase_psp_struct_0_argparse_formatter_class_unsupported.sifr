@@ -1,0 +1,5 @@
+from sifr.argparse import ArgumentParser
+
+
+def main() -> None:
+    _parser: ArgumentParser = ArgumentParser(prog="demo", formatter_class="raw")

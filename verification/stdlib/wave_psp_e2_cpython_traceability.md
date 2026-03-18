@@ -21,3 +21,14 @@
 | `uuid` strict CPython constructor overload family (`UUID(...)` with raising validation and multi-source overloads) | `intentional-diff` | `uuid_from_hex` carries typed parse/validation behavior; raw `UUID(...)` remains pass-through in this wave. |
 | `graphlib` full CPython incremental multi-node frontier semantics | `intentional-diff` | Current typed API uses deterministic one-node `get_ready()` progression and explicit `done(node)` sequencing without dynamic hashable-node generality. |
 | `test` as CPython-equivalent public stdlib module | `intentional-diff` | `sifr.test` is compiler/runtime verification infrastructure and is not claimed as one-to-one CPython module parity. |
+
+## Structured/Class-Surface Continuation Lock (2026-03-18)
+
+- Continuation phase: `issues/ad-hoc-structured-data-and-class-surface-parity-expansion.md`
+- Wave ownership:
+  - `wave_psp_struct_2` for bounded `argparse` expansion,
+  - `wave_psp_struct_3` for `uuid` typed generation/namespace expansion.
+- Locked permanent diffs carried into continuation:
+  - `argparse` formatter-class/help-formatting ecosystems remain `unsupported`,
+  - strict raising direct `UUID(...)` constructor parity remains `intentional-diff` until constructor-lowering architecture changes.
+- Enforcement fixture: `crates/sifr/tests/e2e/fail/phase_psp_struct_0_argparse_formatter_class_unsupported.sifr`

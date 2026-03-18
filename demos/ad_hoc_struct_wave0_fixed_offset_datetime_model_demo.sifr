@@ -1,0 +1,17 @@
+from sifr.datetime import datetime, timezone, now
+
+
+def main() -> None:
+    zero: timezone = timezone(0)
+    assert str(zero) == "UTC"
+
+    plus_two_thirty: timezone = timezone(9000)
+    minus_five: timezone = timezone(-18000)
+    assert str(plus_two_thirty) == "UTC+02:30"
+    assert str(minus_five) == "UTC-05:00"
+
+    current: datetime = now()
+    assert current.year >= 1970
+    assert current.month >= 1 and current.month <= 12
+    assert current.day >= 1 and current.day <= 31
+    assert len(current.isoformat()) == 19

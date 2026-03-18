@@ -1,10 +1,12 @@
 # `milestone_psp_7` Parity Governance Inventory
 
-Status: complete (updated by parity-extension continuation on 2026-03-18)  
+Status: in_progress (updated by structured-data/class-surface architecture-lock continuation on 2026-03-18)  
 Phase: `issues/ad-hoc-python-source-parity-and-builtin-stdlib-surface.md`  
 Execution ledger: `issues/ad-hoc-python-source-parity-and-builtin-stdlib-surface-execution.md`  
-Continuation phase: `issues/ad-hoc-python-source-parity-extension-waiver-reduction.md`  
-Continuation execution ledger: `issues/ad-hoc-python-source-parity-extension-waiver-reduction-execution.md`
+Continuation phase (closed): `issues/ad-hoc-python-source-parity-extension-waiver-reduction.md`  
+Continuation execution ledger (closed): `issues/ad-hoc-python-source-parity-extension-waiver-reduction-execution.md`  
+Continuation phase (current): `issues/ad-hoc-structured-data-and-class-surface-parity-expansion.md`  
+Continuation execution ledger (current): `issues/ad-hoc-structured-data-and-class-surface-parity-expansion-execution.md`
 
 This is the canonical closure inventory for phase 31.5 milestone 7.
 
@@ -48,15 +50,15 @@ Terminal state legend for this milestone:
 
 | Module | Closure wave | Terminal state | Evidence |
 | --- | --- | --- | --- |
-| `argparse` | `wave_psp_e2` | `parity-closed` | `verification/stdlib/wave_psp_e2_cpython_traceability.md` |
+| `argparse` | `wave_psp_e2 + wave_psp_struct_2` | `parity-closed` | `verification/stdlib/wave_psp_e2_cpython_traceability.md` |
 | `base64` | `wave_psp_c2` | `parity-closed` | `verification/stdlib/wave_psp_c2_cpython_traceability.md` |
 | `bisect` | `wave_psp_b1` | `parity-closed` | `verification/stdlib/wave_psp_b1_cpython_traceability.md` |
 | `bytes` | `wave_psp_a2` | `intentional-diff` | `verification/stdlib/wave_psp_a2_cpython_traceability.md` |
 | `calendar` | `wave_psp_c2` | `parity-closed` | `verification/stdlib/wave_psp_c2_cpython_traceability.md` |
-| `collections` | `wave_psp_b1` | `parity-closed` | `verification/stdlib/wave_psp_b1_cpython_traceability.md` |
-| `configparser` | `wave_psp_c1` | `parity-closed` | `verification/stdlib/wave_psp_c1_cpython_traceability.md` |
-| `csv` | `wave_psp_c1` | `parity-closed` | `verification/stdlib/wave_psp_c1_cpython_traceability.md` |
-| `datetime` | `wave_psp_e1` | `parity-closed` | `verification/stdlib/wave_psp_e1_cpython_traceability.md` |
+| `collections` | `wave_psp_b1 + wave_psp_struct_2` | `parity-closed` | `verification/stdlib/wave_psp_b1_cpython_traceability.md` |
+| `configparser` | `wave_psp_c1 + wave_psp_struct_1` | `parity-closed` | `verification/stdlib/wave_psp_c1_cpython_traceability.md` |
+| `csv` | `wave_psp_c1 + wave_psp_struct_1` | `parity-closed` | `verification/stdlib/wave_psp_c1_cpython_traceability.md` |
+| `datetime` | `wave_psp_e1 + wave_psp_struct_3` | `parity-closed` | `verification/stdlib/wave_psp_e1_cpython_traceability.md` |
 | `difflib` | `wave_psp_c2` | `parity-closed` | `verification/stdlib/wave_psp_c2_cpython_traceability.md` |
 | `env` | `wave_psp_d2` | `intentional-diff` | `verification/stdlib/wave_psp_d2_cpython_traceability.md` |
 | `fnmatch` | `wave_psp_c2` | `parity-closed` | `verification/stdlib/wave_psp_c2_cpython_traceability.md` |
@@ -66,11 +68,11 @@ Terminal state legend for this milestone:
 | `gzip` | `wave_psp_d1` | `parity-closed` | `verification/stdlib/wave_psp_d1_cpython_traceability.md` |
 | `hashlib` | `wave_psp_e1` | `parity-closed` | `verification/stdlib/wave_psp_e1_cpython_traceability.md` |
 | `heapq` | `wave_psp_b1` | `parity-closed` | `verification/stdlib/wave_psp_b1_cpython_traceability.md` |
-| `html` | `wave_psp_c2` | `parity-closed` | `verification/stdlib/wave_psp_c2_cpython_traceability.md` |
+| `html` | `wave_psp_c2 + wave_psp_struct_4` | `parity-closed` | `verification/stdlib/wave_psp_c2_cpython_traceability.md` |
 | `io` | `wave_psp_d1` | `parity-closed` | `verification/stdlib/wave_psp_d1_cpython_traceability.md` |
 | `ipaddress` | `wave_psp_e2` | `parity-closed` | `verification/stdlib/wave_psp_e2_cpython_traceability.md` |
 | `itertools` | `wave_psp_b2 + wave_psp_ext_2` | `parity-closed` | `verification/stdlib/wave_psp_b2_cpython_traceability.md` |
-| `json` | `wave_psp_c1` | `parity-closed` | `verification/stdlib/wave_psp_c1_cpython_traceability.md` |
+| `json` | `wave_psp_c1 + wave_psp_struct_1` | `parity-closed` | `verification/stdlib/wave_psp_c1_cpython_traceability.md` |
 | `logging` | `wave_psp_d2` | `host-limited` | `verification/stdlib/wave_psp_d2_cpython_traceability.md` |
 | `math` | `wave_psp_e1` | `parity-closed` | `verification/stdlib/wave_psp_e1_cpython_traceability.md` |
 | `operator` | `wave_psp_b2` | `parity-closed` | `verification/stdlib/wave_psp_b2_cpython_traceability.md` |
@@ -87,11 +89,11 @@ Terminal state legend for this milestone:
 | `sys` | `wave_psp_d2` | `host-limited` | `verification/stdlib/wave_psp_d2_cpython_traceability.md` |
 | `tempfile` | `wave_psp_d1` | `parity-closed` | `verification/stdlib/wave_psp_d1_cpython_traceability.md` |
 | `test` | `wave_psp_e2` | `intentional-diff` | `verification/stdlib/wave_psp_e2_cpython_traceability.md` |
-| `textwrap` | `wave_psp_c2` | `parity-closed` | `verification/stdlib/wave_psp_c2_cpython_traceability.md` |
+| `textwrap` | `wave_psp_c2 + wave_psp_struct_4` | `parity-closed` | `verification/stdlib/wave_psp_c2_cpython_traceability.md` |
 | `time` | `wave_psp_d2` | `host-limited` | `verification/stdlib/wave_psp_d2_cpython_traceability.md` |
 | `timeit` | `wave_psp_d2` | `host-limited` | `verification/stdlib/wave_psp_d2_cpython_traceability.md` |
 | `tomllib` | `wave_psp_c1` | `parity-closed` | `verification/stdlib/wave_psp_c1_cpython_traceability.md` |
-| `uuid` | `wave_psp_e2` | `parity-closed` | `verification/stdlib/wave_psp_e2_cpython_traceability.md` |
+| `uuid` | `wave_psp_e2 + wave_psp_struct_3` | `parity-closed` | `verification/stdlib/wave_psp_e2_cpython_traceability.md` |
 | `zipfile` | `wave_psp_d1` | `parity-closed` | `verification/stdlib/wave_psp_d1_cpython_traceability.md` |
 
 ## Canonical CPython Adopt/Adapt/Waive Ledger (By Wave)
@@ -112,6 +114,7 @@ Terminal state legend for this milestone:
 | `wave_psp_ext_2` | `verification/stdlib/wave_psp_b2_cpython_traceability.md` | Approved `itertools` combinators now close on iterator-returning contracts; broad lazy waiver retired to narrow residual entries. |
 | `wave_psp_ext_3` | `verification/stdlib/wave_psp_d1_cpython_traceability.md`, `verification/stdlib/wave_psp_e1_cpython_traceability.md` | Iterator-returning closures for `glob.iglob`, `Path.iterdir/glob/rglob`, `re.finditer`, and `Pattern.finditer`. |
 | `wave_psp_ext_4` | `issues/ad-hoc-python-source-parity-extension-waiver-reduction-execution.md`, `verification/stdlib/milestone_psp_7_parity_governance_inventory.md` | Waiver-ledger reduction and phase-exit governance alignment for post-iterator parity claims. |
+| `wave_psp_struct_0` | `verification/stdlib/phase_psp_struct_architecture_lock.md`, `issues/ad-hoc-structured-data-and-class-surface-parity-expansion-execution.md` | Architecture lock for structured-data/class-surface continuation, including permanent-diff enforcement fixtures and CPython family wave mapping. |
 
 ## Waiver Index (`intentional-diff`, `unsupported`, `host-limited`)
 
@@ -129,9 +132,11 @@ Canonical issue for revisit tracking: `issues/ad-hoc-python-source-parity-and-bu
 | `functools.partial`/wrapper-family parity | `unsupported` | Requires broader callable-wrapper typing and object runtime support. | Revisit with callable-object typing milestone. | `verification/stdlib/wave_psp_b2_cpython_traceability.md` |
 | Reflective `operator` factories (`attrgetter`, `methodcaller`) | `unsupported` | Static object model intentionally excludes string-driven reflective dispatch. | Revisit only with explicit reflection policy change. | `verification/stdlib/wave_psp_b2_cpython_traceability.md` |
 | Weighted/stateful random families (`choices(weights=...)`, `seed/getstate/setstate`) | `unsupported` | Current randomness layer intentionally avoids deterministic mutable RNG object model. | Revisit with RNG-state architecture milestone. | `verification/stdlib/wave_psp_b2_cpython_traceability.md` |
-| `json`/`tomllib` dynamic decode-hook callback matrices | `unsupported` | Typed parsing path intentionally excludes dynamic callback injection. | Revisit with callback-safe typed hook design. | `verification/stdlib/wave_psp_c1_cpython_traceability.md` |
-| `configparser` interpolation/proxy/write-back parity family | `unsupported` | Current closure targets parser/object/error core only. | Revisit with class/proxy expansion milestone. | `verification/stdlib/wave_psp_c1_cpython_traceability.md` |
-| Advanced `string`/`textwrap` formatter option matrices | `unsupported` | Complex formatting matrix intentionally reduced in adapted surface. | Revisit with text formatting expansion wave. | `verification/stdlib/wave_psp_c2_cpython_traceability.md` |
+| `json` dynamic decode-hook callback matrices (`object_hook`, `object_pairs_hook`, `parse_float`, `parse_int`, `parse_constant`, `default`) | `unsupported` | Typed parsing path intentionally excludes dynamic callback injection. | Revisit only under explicit callback-safe typed hook model in `wave_psp_struct_1`. | `verification/stdlib/wave_psp_c1_cpython_traceability.md`, `verification/stdlib/phase_psp_struct_architecture_lock.md` |
+| `configparser` interpolation/proxy/write-back parity family | `unsupported` | Current closure targets parser/object/error core only. | Revisit with class/proxy expansion in `wave_psp_struct_1`. | `verification/stdlib/wave_psp_c1_cpython_traceability.md`, `verification/stdlib/phase_psp_struct_architecture_lock.md` |
+| Dynamic CSV dialect subclass registration/mutation-heavy registry semantics | `unsupported` | Current closure keeps typed dialect construction and bounded reader/writer surface. | Revisit with bounded registry expansion in `wave_psp_struct_1`; keep subclass-mutation semantics explicit unless runtime object-model work is approved. | `verification/stdlib/wave_psp_c1_cpython_traceability.md`, `verification/stdlib/phase_psp_struct_architecture_lock.md` |
+| Advanced `string`/`textwrap` formatter option matrices | `unsupported` | Complex formatting matrix intentionally reduced in adapted surface. | Revisit with text formatting expansion in `wave_psp_struct_4`. | `verification/stdlib/wave_psp_c2_cpython_traceability.md`, `verification/stdlib/phase_psp_struct_architecture_lock.md` |
+| Package-wide `html` expansion (`html.parser` family and parser class ecosystems) | `unsupported` | Top-level `html` module parity is the current closure boundary. | Revisit only with explicit package-level expansion scope after `wave_psp_struct_4`. | `verification/stdlib/wave_psp_c2_cpython_traceability.md`, `verification/stdlib/phase_psp_struct_architecture_lock.md` |
 | Advanced `difflib`/`calendar` class families | `unsupported` | Wave c2 closes high-value helpers/classes only. | Revisit with module-family expansion milestone. | `verification/stdlib/wave_psp_c2_cpython_traceability.md` |
 | Rich `io` stream hierarchy and in-memory wrappers | `unsupported` | Current closure targets file-handle parity and typed error boundaries. | Revisit with stream-class hierarchy design. | `verification/stdlib/wave_psp_d1_cpython_traceability.md` |
 | Full `pathlib` class specialization and URI/device semantics | `unsupported` | Single portable `Path` class is the current safe closure boundary. | Revisit with platform-specific path-type plan. | `verification/stdlib/wave_psp_d1_cpython_traceability.md` |
@@ -142,8 +147,10 @@ Canonical issue for revisit tracking: `issues/ad-hoc-python-source-parity-and-bu
 | Mutable CPython interpreter hooks in `sys` | `unsupported` | Deterministic compiler/runtime model excludes interpreter mutation hooks. | Revisit only with explicit runtime-mutability policy change. | `verification/stdlib/wave_psp_d2_cpython_traceability.md` |
 | Full `logging` config hierarchy parity | `host-limited` | Host/runtime integration is intentionally lightweight and synchronous. | Revisit with runtime logging subsystem expansion. | `verification/stdlib/wave_psp_d2_cpython_traceability.md` |
 | Rich `time`/`timeit` object model parity | `host-limited` | Functional timer surface closed; dynamic eval/object families deferred. | Revisit with runtime host-abstraction expansion. | `verification/stdlib/wave_psp_d2_cpython_traceability.md` |
-| Timezone/capture-object/extended-crypto families (`datetime`, `re`, `hashlib`) | `unsupported` | Strong shipped core is closed; advanced class-family matrices are explicitly deferred. | Revisit with targeted module-expansion milestones. | `verification/stdlib/wave_psp_e1_cpython_traceability.md` |
-| Strict raising direct constructor parity in `ipaddress`/`uuid` (`IPv4Address(...)`, `UUID(...)`) | `intentional-diff` | Factory APIs provide typed validation; direct constructors remain pass-through under current constructor-lowering constraints. | Revisit with constructor-lowering architecture changes. | `verification/stdlib/wave_psp_e2_cpython_traceability.md` |
+| Timezone database / extensible `tzinfo` ecosystems (`datetime`) | `unsupported` | Fixed-offset timezone semantics are the approved boundary for this continuation phase; no zone database, DST, or `fold` model is shipped. | Revisit only with explicit timezone-runtime scope after `wave_psp_struct_3`. | `verification/stdlib/wave_psp_e1_cpython_traceability.md`, `verification/stdlib/phase_psp_struct_architecture_lock.md` |
+| Strict raising direct constructor parity in `ipaddress`/`uuid` (`IPv4Address(...)`, `UUID(...)`) | `intentional-diff` | Factory APIs provide typed validation; direct constructors remain pass-through under current constructor-lowering constraints. | Revisit with constructor-lowering architecture changes; `wave_psp_struct_3` only expands typed generation/namespace surfaces. | `verification/stdlib/wave_psp_e2_cpython_traceability.md`, `verification/stdlib/phase_psp_struct_architecture_lock.md` |
+| `Counter(**kwargs)` constructor parity | `unsupported` | Current and planned structured/class-surface continuation keeps iterable/mapping constructor expansion while excluding kwargs matrix. | Revisit only with generic constructor-overload support beyond `wave_psp_struct_2`. | `verification/stdlib/wave_psp_b1_cpython_traceability.md`, `verification/stdlib/phase_psp_struct_architecture_lock.md` |
+| `argparse` formatter-class/help-formatting ecosystems | `unsupported` | Current parser surface focuses deterministic typed parsing behavior; formatter-class ecosystems are intentionally deferred. | Revisit only after bounded parser-feature closure in `wave_psp_struct_2`. | `verification/stdlib/wave_psp_e2_cpython_traceability.md`, `verification/stdlib/phase_psp_struct_architecture_lock.md` |
 | `graphlib` multi-node frontier incremental semantics | `intentional-diff` | Current API uses deterministic one-node `get_ready()` progression. | Revisit with broader graph object-model parity expansion. | `verification/stdlib/wave_psp_e2_cpython_traceability.md` |
 | `env` and `test` as CPython module-equivalent claims | `intentional-diff` | Both are shipped custom infrastructure surfaces, not one-to-one CPython modules. | Revisit only if module contract is redefined. | `verification/stdlib/wave_psp_d2_cpython_traceability.md`, `verification/stdlib/wave_psp_e2_cpython_traceability.md` |
 

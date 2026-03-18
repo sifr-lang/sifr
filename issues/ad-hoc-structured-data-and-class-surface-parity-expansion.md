@@ -1,8 +1,9 @@
 # Ad Hoc Phase: Structured Data and Class-Surface Parity Expansion
 
-Status: open (documented 2026-03-18)
+Status: in_progress (started 2026-03-18; architecture lock wave in progress)
 Context: follow-up phase after iterator architecture and iterator-waiver reduction
 Execution readiness: implementation-ready after `issues/ad-hoc-python-source-parity-extension-waiver-reduction.md`
+Execution ledger: `issues/ad-hoc-structured-data-and-class-surface-parity-expansion-execution.md`
 
 ## Objective
 
