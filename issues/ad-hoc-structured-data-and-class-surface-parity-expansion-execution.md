@@ -24,7 +24,7 @@ Loop per wave: Plan -> Implement -> Validate -> Demo -> PR -> External completio
 4. [x] `wave_psp_struct_3`: `uuid` and `datetime` expansion under fixed-offset timezone contract
 5. [x] `wave_psp_struct_4`: text-surface polish (`textwrap`, `html`) and governance closure
 6. [x] wave-level extra completion review cycle done
-7. [ ] wave-level extra production-grade review cycle done
+7. [x] wave-level extra production-grade review cycle done
 8. [ ] milestone-level completion review cycle done
 9. [ ] milestone-level production-grade review cycle done
 10. [ ] phase-level completion review cycle done
@@ -181,9 +181,13 @@ Required entry records:
 - Reviewer artifact: `reviews/phase-ad-hoc-structured-data-and-class-surface-parity-expansion-wave-closure-review-pass-1.md`
 - Status: completed (approved; no corrective code changes required)
 
+### wave_closure review_pass_2 (production-grade)
+- Reviewer artifact: `reviews/phase-ad-hoc-structured-data-and-class-surface-parity-expansion-wave-closure-review-pass-2.md`
+- Status: completed (approved for milestone-closure progression; no corrective code changes required)
+
 ### closure review cycles
 - wave closure completion review: completed
-- wave closure production-grade review: pending
+- wave closure production-grade review: completed
 - milestone closure completion review: pending
 - milestone closure production-grade review: pending
 - phase closure completion review: pending
