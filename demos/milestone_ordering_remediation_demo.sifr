@@ -24,17 +24,16 @@ def triple(x: int) -> int:
 
 def main():
     # ─── Gap 1: Lazy itertools ───────────────────────────────────────
-    # repeat_val is now a lazy generator (uses yield instead of list+append).
-    # When assigned to list[int], .collect() is automatically emitted.
-    repeated: list[int] = repeat(7, 3)
+    # repeat now returns Iterator[T]; eager list materialization is explicit.
+    repeated: list[int] = list(repeat(7, 3))
     print(repeated)
 
     # Lazy generators work in for-loops too (no full materialization)
     for val in repeat(42, 2):
         print(val)
 
-    # Eager functions (chain, take) remain eager due to codegen limitations
-    chained: list[int] = chain([1, 2], [3, 4])
+    # chain is now lazy too, so eager list materialization is explicit.
+    chained: list[int] = list(chain([1, 2], [3, 4]))
     print(chained)
 
     first_two: list[int] = take(2, [10, 20, 30, 40])

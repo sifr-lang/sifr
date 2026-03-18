@@ -3,7 +3,7 @@ from sifr.test import assert_bool_vector_eq
 
 def collect_core_actual() -> list[bool]:
     actual: list[bool] = []
-    actual.append(str(chain([1, 2], [3])) == "[1, 2, 3]")
+    actual.append(str(list(chain([1, 2], [3]))) == "[1, 2, 3]")
     actual.append(str(pairwise([1, 2, 3, 4])) == "[[1, 2], [2, 3], [3, 4]]")
 
     batched_ok: bool = False

@@ -3,5 +3,5 @@ from sifr.itertools import chain
 def main():
     a: list[str] = ["hello", "world"]
     b: list[str] = ["foo", "bar"]
-    result: list[str] = chain(a, b)
+    result: list[str] = list(chain(a, b))
     assert result == ["hello", "world", "foo", "bar"]

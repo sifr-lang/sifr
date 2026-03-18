@@ -4,7 +4,7 @@ from sifr.test import assert_bool_vector_eq
 
 def collect_chain_actual() -> list[bool]:
     actual: list[bool] = []
-    c: list[int] = chain([1, 2, 3], [4, 5, 6])
+    c: list[int] = list(chain([1, 2, 3], [4, 5, 6]))
     actual.append(len(c) == 6)
     actual.append(str(c) == "[1, 2, 3, 4, 5, 6]")
 
@@ -12,9 +12,9 @@ def collect_chain_actual() -> list[bool]:
     empty2: list[int] = []
     empty3: list[int] = []
     empty4: list[int] = []
-    c2: list[int] = chain(empty1, [1, 2, 3])
-    c3: list[int] = chain([1, 2, 3], empty2)
-    c4: list[int] = chain(empty3, empty4)
+    c2: list[int] = list(chain(empty1, [1, 2, 3]))
+    c3: list[int] = list(chain([1, 2, 3], empty2))
+    c4: list[int] = list(chain(empty3, empty4))
     actual.append(len(c2) == 3)
     actual.append(len(c3) == 3)
     actual.append(len(c4) == 0)
@@ -22,15 +22,15 @@ def collect_chain_actual() -> list[bool]:
 
 def collect_repeat_actual() -> list[bool]:
     actual: list[bool] = []
-    r1: list[int] = repeat(42, 5)
+    r1: list[int] = list(repeat(42, 5))
     actual.append(len(r1) == 5)
     actual.append(str(r1) == "[42, 42, 42, 42, 42]")
 
-    r2: list[int] = repeat(0, 3)
+    r2: list[int] = list(repeat(0, 3))
     actual.append(len(r2) == 3)
     actual.append(str(r2) == "[0, 0, 0]")
 
-    r3: list[int] = repeat(1, 0)
+    r3: list[int] = list(repeat(1, 0))
     actual.append(len(r3) == 0)
     return actual
 
@@ -83,14 +83,14 @@ def collect_batched_actual() -> list[bool]:
 def collect_islice_actual() -> list[bool]:
     actual: list[bool] = []
     sl_data: list[int] = [10, 20, 30, 40, 50]
-    sl: list[int] = islice(sl_data, 3)
+    sl: list[int] = list(islice(sl_data, 3))
     actual.append(len(sl) == 3)
     actual.append(str(sl) == "[10, 20, 30]")
 
-    sl2: list[int] = islice(sl_data, 0)
+    sl2: list[int] = list(islice(sl_data, 0))
     actual.append(len(sl2) == 0)
 
-    sl3: list[int] = islice(sl_data, 10)
+    sl3: list[int] = list(islice(sl_data, 10))
     actual.append(len(sl3) == 5)
     return actual
 

@@ -278,9 +278,9 @@ impl RustEmitter {
             .map(|tp| {
                 let extra = Self::extra_bounds_for_type_param(tp, &func.body);
                 let base = if needs_hash_eq {
-                    "Clone + std::fmt::Display + PartialOrd + std::hash::Hash + Eq"
+                    "Clone + std::fmt::Display + PartialOrd + std::hash::Hash + Eq + 'static"
                 } else {
-                    "Clone + std::fmt::Display + PartialOrd"
+                    "Clone + std::fmt::Display + PartialOrd + 'static"
                 };
                 RustTypeParam {
                     name: tp.clone(),
@@ -330,6 +330,86 @@ impl RustEmitter {
                     err.message
                 );
             }
+        }
+    }
+
+    fn is_option_like_type(ty: &Type) -> bool {
+        let resolved = crate::resolve_alias_type_for_plain_call(ty);
+        match resolved {
+            Type::Union(members) => {
+                members.len() == 2 && members.iter().any(|member| matches!(member, Type::None))
+            }
+            _ => false,
+        }
+    }
+
+    fn lower_conditional_generator_branch(
+        &mut self,
+        branch: &[HirStmt],
+        context: &str,
+    ) -> Vec<RustStmt> {
+        let mut lowered = Vec::new();
+        for branch_stmt in branch {
+            if let HirStmt::Yield { value } = branch_stmt {
+                let lowered_value = self.lower_stmt_expr_strict_for_function(
+                    value,
+                    "conditional generator yield value lowering",
+                );
+                let assign_value = if Self::is_option_like_type(value.ty()) {
+                    lowered_value
+                } else {
+                    RustExpr::FnCall {
+                        func: Box::new(RustExpr::Path(vec!["Some".to_string()])),
+                        args: vec![lowered_value],
+                    }
+                };
+                lowered.push(RustStmt::Assign {
+                    target: RustExpr::Ident("__yielded".to_string()),
+                    value: assign_value,
+                });
+            } else {
+                lowered.extend(self.lower_stmt_strict_for_function(branch_stmt, context));
+            }
+        }
+        lowered
+    }
+
+    fn lower_conditional_generator_if_stmt(
+        &mut self,
+        condition: &HirExpr,
+        then_body: &[HirStmt],
+        elif_clauses: &[(HirExpr, Vec<HirStmt>)],
+        else_body: Option<&[HirStmt]>,
+    ) -> RustStmt {
+        let mut lowered_else = else_body.map(|body| {
+            self.lower_conditional_generator_branch(body, "conditional generator else stmt lowering")
+        });
+
+        for (elif_cond, elif_body) in elif_clauses.iter().rev() {
+            let lowered_elif_body = self.lower_conditional_generator_branch(
+                elif_body,
+                "conditional generator elif stmt lowering",
+            );
+            lowered_else = Some(vec![RustStmt::If {
+                cond: self.lower_stmt_expr_strict_for_function(
+                    elif_cond,
+                    "conditional generator elif condition lowering",
+                ),
+                then_body: lowered_elif_body,
+                else_body: lowered_else,
+            }]);
+        }
+
+        RustStmt::If {
+            cond: self.lower_stmt_expr_strict_for_function(
+                condition,
+                "conditional generator if condition lowering",
+            ),
+            then_body: self.lower_conditional_generator_branch(
+                then_body,
+                "conditional generator branch stmt lowering",
+            ),
+            else_body: lowered_else,
         }
     }
 
@@ -394,8 +474,20 @@ impl RustEmitter {
                 .iter()
                 .any(|stmt| matches!(stmt, HirStmt::Yield { .. }))
                 && while_body_hir.iter().any(|stmt| {
-                    if let HirStmt::If { then_body, .. } = stmt {
+                    if let HirStmt::If {
+                        then_body,
+                        elif_clauses,
+                        else_body,
+                        ..
+                    } = stmt
+                    {
                         body_contains_yield(then_body)
+                            || elif_clauses
+                                .iter()
+                                .any(|(_, elif_body)| body_contains_yield(elif_body))
+                            || else_body
+                                .as_ref()
+                                .is_some_and(|else_branch| body_contains_yield(else_branch))
                     } else {
                         false
                     }
@@ -422,40 +514,25 @@ impl RustEmitter {
                     if let HirStmt::If {
                         condition: if_cond,
                         then_body,
+                        elif_clauses,
+                        else_body,
                         ..
                     } = stmt
                     {
-                        if body_contains_yield(then_body) {
-                            let mut lowered_then = Vec::new();
-                            for then_stmt in then_body {
-                                if let HirStmt::Yield { value } = then_stmt {
-                                    lowered_then.push(RustStmt::Assign {
-                                        target: RustExpr::Ident("__yielded".to_string()),
-                                        value: RustExpr::FnCall {
-                                            func: Box::new(RustExpr::Path(
-                                                vec!["Some".to_string()],
-                                            )),
-                                            args: vec![self.lower_stmt_expr_strict_for_function(
-                                                value,
-                                                "conditional generator yield value lowering",
-                                            )],
-                                        },
-                                    });
-                                } else {
-                                    lowered_then.extend(self.lower_stmt_strict_for_function(
-                                        then_stmt,
-                                        "conditional generator branch stmt lowering",
-                                    ));
-                                }
-                            }
-                            lowered_while_body.push(RustStmt::If {
-                                cond: self.lower_stmt_expr_strict_for_function(
-                                    if_cond,
-                                    "conditional generator if condition lowering",
-                                ),
-                                then_body: lowered_then,
-                                else_body: None,
-                            });
+                        let branch_has_yield = body_contains_yield(then_body)
+                            || elif_clauses
+                                .iter()
+                                .any(|(_, elif_body)| body_contains_yield(elif_body))
+                            || else_body
+                                .as_ref()
+                                .is_some_and(|else_branch| body_contains_yield(else_branch));
+                        if branch_has_yield {
+                            lowered_while_body.push(self.lower_conditional_generator_if_stmt(
+                                if_cond,
+                                then_body,
+                                elif_clauses,
+                                else_body.as_deref(),
+                            ));
                             continue;
                         }
                     }
@@ -514,25 +591,42 @@ impl RustEmitter {
                         ),
                     );
                 }
-                then_body.push(RustStmt::Let {
-                    mutable: false,
-                    name: "__yield_val".to_string(),
-                    ty: None,
-                    value: self.lower_stmt_expr_strict_for_function(
-                        yield_expr,
-                        "generator yield value lowering",
-                    ),
-                });
+                let lowered_yield_expr = self.lower_stmt_expr_strict_for_function(
+                    yield_expr,
+                    "generator yield value lowering",
+                );
+                let yield_expr_is_option = Self::is_option_like_type(yield_expr.ty());
+                if yield_expr_is_option {
+                    then_body.push(RustStmt::Let {
+                        mutable: false,
+                        name: "__yield_opt".to_string(),
+                        ty: None,
+                        value: lowered_yield_expr,
+                    });
+                } else {
+                    then_body.push(RustStmt::Let {
+                        mutable: false,
+                        name: "__yield_val".to_string(),
+                        ty: None,
+                        value: lowered_yield_expr,
+                    });
+                }
                 for stmt in post_yield {
                     then_body.extend(self.lower_stmt_strict_for_function(
                         stmt,
                         "generator post-yield stmt lowering",
                     ));
                 }
-                then_body.push(RustStmt::Return(Some(RustExpr::FnCall {
-                    func: Box::new(RustExpr::Path(vec!["Some".to_string()])),
-                    args: vec![RustExpr::Ident("__yield_val".to_string())],
-                })));
+                if yield_expr_is_option {
+                    then_body.push(RustStmt::Return(Some(RustExpr::Ident(
+                        "__yield_opt".to_string(),
+                    ))));
+                } else {
+                    then_body.push(RustStmt::Return(Some(RustExpr::FnCall {
+                        func: Box::new(RustExpr::Path(vec!["Some".to_string()])),
+                        args: vec![RustExpr::Ident("__yield_val".to_string())],
+                    })));
+                }
 
                 closure_body.push(RustStmt::If {
                     cond: self.lower_stmt_expr_strict_for_function(

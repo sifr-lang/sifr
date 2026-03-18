@@ -1398,6 +1398,17 @@ fn test_generate_rust_generator_try_except_rejected_by_lazy_generator_shape_gate
 }
 
 #[test]
+fn test_generate_rust_generator_conditional_yield_preserves_else_branch() {
+    let rust_code = generate_rust_from_source(
+        "def gen() -> Iterator[int]:\n    i: int = 0\n    while i < 4:\n        if i < 3:\n            yield i\n            i = i + 1\n        else:\n            i = i + 1\n\ndef main():\n    g: Iterator[int] = gen()\n    print(next(g))\n",
+    );
+
+    assert!(rust_code.contains("if i < (3 as i64) {"));
+    assert!(rust_code.contains("__yielded = Some(i);"));
+    assert!(rust_code.contains("} else {\n            i = i + (1 as i64);\n        }"));
+}
+
+#[test]
 fn test_generate_rust_test_uses_explicit_test_mode_context() {
     let module = HirModule {
         functions: vec![

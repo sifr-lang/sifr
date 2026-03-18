@@ -21,7 +21,7 @@ Loop per wave: Plan -> Implement -> Validate -> Demo -> PR -> External completio
 1. [x] `wave_iter_1`: first-class `Iterable[T]` / `Iterator[T]` type-system + governance/doc contract
 2. [x] `wave_iter_2`: `iter(...)` + `next(...)` builtin surfaces and protocol-driven `for` lowering
 3. [x] `wave_iter_3`: generator rewrite to true lazy iterator semantics
-4. [ ] `wave_iter_4`: lazy builtin conversion for `zip`, `enumerate`, `reversed`
+4. [x] `wave_iter_4`: lazy builtin conversion for `zip`, `enumerate`, `reversed`
 5. [ ] `wave_iter_5`: lazy `itertools` subset (`chain`, `repeat`, `islice`, `count`) + explicit unsupported classification
 6. [ ] `wave_iter_6`: parity closure, dedicated demo, governance hardening
 7. [ ] wave-level extra completion review cycle done
@@ -102,9 +102,9 @@ Required entry records:
   - wave gate: `$(pwd)/scripts/run_all_tests.sh` -> PASS (2026-03-18)
 
 ### wave_iter_4: Core Builtin Lazy Parity
-- Status: ready_for_pr
+- Status: merged
 - Implementation PR:
-  - branch: `wave-iter-4-core-builtin-lazy-parity`
+  - `https://github.com/yaseralnajjar/sifr/pull/1244` (merged)
 - Validation:
   - positive path: `cargo test -p sifr_hir -- test_reversed_enumerate_zip_are_typed_as_iterators --nocapture` -> PASS
   - positive path: `cargo run -q -p sifr -- run crates/sifr/tests/e2e/pass/builtin_enumerate_zip.sifr` -> PASS
@@ -115,9 +115,22 @@ Required entry records:
   - wave gate: `$(pwd)/scripts/run_all_tests.sh` -> PASS (2026-03-18)
 
 ### wave_iter_5: Initial `itertools` Lazy Subset
-- Status: pending
+- Status: ready_for_pr
 - Implementation PR:
-  - pending
+  - branch: `wave-iter-5-itertools-lazy-subset`
+- Validation:
+  - positive path: `cargo test -p sifr_codegen -- test_generate_rust_generator_conditional_yield_preserves_else_branch --nocapture` -> PASS
+  - positive path: `cargo run -q -p sifr -- check demos/ad_hoc_iter_wave5_itertools_lazy_subset_demo.sifr` -> `no errors found`
+  - positive path: `cargo run -q -p sifr -- run demos/ad_hoc_iter_wave5_itertools_lazy_subset_demo.sifr` -> `[1, 2, 3]`, `[7, 7, 7]`, `[20, 40]`, `5`, `7`, `9`, `11`
+  - positive path: `cargo run -q -p sifr -- run crates/sifr/tests/e2e/pass/cpython_itertools.sifr` -> PASS
+  - positive path: `cargo run -q -p sifr -- run crates/sifr/tests/e2e/pass/cpython_itertools_subset.sifr` -> PASS
+  - positive path: `cargo run -q -p sifr -- run crates/sifr/tests/e2e/pass/stdlib_itertools_consolidated.sifr` -> PASS
+  - positive path: `cargo run -q -p sifr -- run crates/sifr/tests/e2e/pass/phase_psp_b2_iterators_functional_randomness.sifr` -> PASS
+  - positive path: `cargo run -q -p sifr -- run crates/sifr/tests/e2e/pass/generic_chain_float.sifr` -> PASS
+  - positive path: `cargo run -q -p sifr -- run crates/sifr/tests/e2e/pass/generic_chain_str.sifr` -> PASS
+  - positive path: `cargo run -q -p sifr -- run crates/sifr/tests/e2e/pass/itertools_chain_own.sifr` -> PASS
+  - negative path: `islice(..., step <= 0)` now yields an empty iterator; fixtures assert explicit `[]` materialization through `list(...)`
+  - wave gate: `$(pwd)/scripts/run_all_tests.sh` -> PASS (2026-03-18)
 
 ### wave_iter_6: Parity Closure, Demo, Governance
 - Status: pending
