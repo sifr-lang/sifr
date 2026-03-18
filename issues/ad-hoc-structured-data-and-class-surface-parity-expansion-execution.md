@@ -1,6 +1,6 @@
 # Ad Hoc Phase Execution Checklist (Structured Data and Class-Surface Parity Expansion)
 
-Status: in_progress (started 2026-03-18; waves 0-4 completed)
+Status: completed (started 2026-03-18; completed 2026-03-18 with wave/milestone/phase closure reviews)
 Owner: ad_hoc_structured_class_surface execution loop
 Reference planning doc:
 - `issues/ad-hoc-structured-data-and-class-surface-parity-expansion.md`
@@ -9,13 +9,13 @@ Loop per wave: Plan -> Implement -> Validate -> Demo -> PR -> External completio
 
 ## Global Gates
 - [x] Entry baseline validated before wave 0
-- [ ] Scope remains constrained to active wave
-- [ ] Root cause is fixed without compatibility shims
-- [ ] Positive-path and negative-path validation recorded for each wave
-- [ ] Demo runs before opening each wave PR
-- [ ] `$(pwd)/scripts/run_all_tests.sh` run before each wave PR
-- [ ] PR opened/reviewed/merged before next wave starts
-- [ ] Docs + traceability + waiver state updated before moving on
+- [x] Scope remains constrained to active wave
+- [x] Root cause is fixed without compatibility shims
+- [x] Positive-path and negative-path validation recorded for each wave
+- [x] Demo runs before opening each wave PR
+- [x] `$(pwd)/scripts/run_all_tests.sh` run before each wave PR
+- [x] PR opened/reviewed/merged before next wave starts
+- [x] Docs + traceability + waiver state updated before moving on
 
 ## Full Phase To-Do Plan
 1. [x] `wave_psp_struct_0`: architecture lock and explicit waiver-boundary enforcement
@@ -28,7 +28,7 @@ Loop per wave: Plan -> Implement -> Validate -> Demo -> PR -> External completio
 8. [x] milestone-level completion review cycle done
 9. [x] milestone-level production-grade review cycle done
 10. [x] phase-level completion review cycle done
-11. [ ] phase-level production-grade review cycle done
+11. [x] phase-level production-grade review cycle done
 12. [ ] closure telegram notification sent
 
 ## Entry Baseline Evidence (2026-03-18)
@@ -197,10 +197,14 @@ Required entry records:
 - Reviewer artifact: `reviews/phase-ad-hoc-structured-data-and-class-surface-parity-expansion-phase-closure-review-pass-1.md`
 - Status: completed (approved; no corrective code changes required)
 
+### phase_closure review_pass_2 (production-grade)
+- Reviewer artifact: `reviews/phase-ad-hoc-structured-data-and-class-surface-parity-expansion-phase-closure-review-pass-2.md`
+- Status: completed (approved for long-term governance closure; no corrective code changes required)
+
 ### closure review cycles
 - wave closure completion review: completed
 - wave closure production-grade review: completed
 - milestone closure completion review: completed
 - milestone closure production-grade review: completed
 - phase closure completion review: completed
-- phase closure production-grade review: pending
+- phase closure production-grade review: completed
