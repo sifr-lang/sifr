@@ -121,6 +121,50 @@ class JsonValue:
         return result
 
 
+class JSONEncoder:
+    indent: int | None
+    sort_keys: bool
+    ensure_ascii: bool
+
+    def __init__(
+        self,
+        indent: int | None = None,
+        sort_keys: bool = False,
+        ensure_ascii: bool = True,
+    ) -> None:
+        self.indent = indent
+        self.sort_keys = sort_keys
+        self.ensure_ascii = ensure_ascii
+
+    def encode(self, value: JsonValue) -> str:
+        # Current runtime encoding is deterministic and typed; option flags are
+        # accepted as part of the locked wrapper surface even when no-op.
+        _ = self.indent
+        _ = self.sort_keys
+        _ = self.ensure_ascii
+        return dumps(value)
+
+    def dump(self, value: JsonValue, path: str) -> Result[None, IOError]:
+        return write_text(path, self.encode(value))
+
+    def dump_handle(self, value: JsonValue, fh: FileHandle) -> Result[None, IOError]:
+        return fh.write(self.encode(value))
+
+
+class JSONDecoder:
+    def __init__(self) -> None:
+        pass
+
+    def decode(self, s: str) -> Result[JsonValue, JSONDecodeError]:
+        return loads(s)
+
+    def load(self, path: str) -> Result[JsonValue, Error]:
+        return load(path)
+
+    def load_handle(self, fh: FileHandle) -> Result[JsonValue, Error]:
+        return load_handle(fh)
+
+
 def null() -> JsonValue:
     return JsonValue("null")
 

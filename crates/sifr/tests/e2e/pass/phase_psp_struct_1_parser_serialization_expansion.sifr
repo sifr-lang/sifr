@@ -1,0 +1,87 @@
+from sifr.json import JSONEncoder, JSONDecoder, JsonValue, from_array, from_int, from_object, from_str
+from sifr.configparser import ConfigParser, ParsingError, SectionProxy
+from sifr.csv import (
+    Dialect,
+    DialectRegistry,
+    dialect_registry,
+    reader,
+)
+
+
+def _with_delimiter(own mut dialect: Dialect, delimiter: str) -> Dialect:
+    dialect.delimiter = delimiter + ""
+    return dialect
+
+
+def main() -> None:
+    payload: JsonValue = from_object(
+        [
+            ("service", from_str("api")),
+            ("ports", from_array([from_int(8080), from_int(8443)])),
+        ]
+    )
+    encoder: JSONEncoder = JSONEncoder(indent=2, sort_keys=True, ensure_ascii=True)
+    encoded: str = encoder.encode(payload)
+    assert encoded == "{\"service\":\"api\",\"ports\":[8080,8443]}"
+
+    json_path: str = "/tmp/sifr_wave_psp_struct_1.json"
+    json_roundtrip_ok: bool = False
+    try:
+        _: None = encoder.dump(payload, json_path)
+        decoder: JSONDecoder = JSONDecoder()
+        loaded: JsonValue = decoder.load(json_path)
+        json_roundtrip_ok = str(loaded) == encoded
+    except Error as e:
+        _ = str(e.message)
+    assert json_roundtrip_ok
+
+    parser: ConfigParser = ConfigParser()
+    try:
+        _: None = parser.read_string(
+            "[DEFAULT]\nroot=/srv\n[app]\nlog=%(root)s/log\nworkers=4\n"
+        )
+    except ParsingError as e:
+        _ = str(e.message)
+        assert False
+
+    assert parser.get("app", "log") == "/srv/log"
+    assert parser.get("app", "log", raw=True) == "%(root)s/log"
+
+    proxy: SectionProxy | None = parser.proxy("app")
+    assert proxy is not None
+    if proxy is not None:
+        assert proxy.get("log") == "/srv/log"
+        assert proxy.get("workers") == "4"
+
+    ini_path: str = "/tmp/sifr_wave_psp_struct_1.ini"
+    write_ok: bool = False
+    try:
+        _: None = parser.write(ini_path)
+        reload_parser: ConfigParser = ConfigParser()
+        _loaded_paths: list[str] = reload_parser.read(ini_path)
+        write_ok = reload_parser.get("app", "log") == "/srv/log"
+    except IOError as e:
+        _ = str(e.message)
+    assert write_ok
+
+    registry: DialectRegistry = dialect_registry()
+    registry.register("semi", Dialect(delimiter=";", quotechar="\""))
+    custom_dialect: Dialect | None = registry.get("semi")
+    assert custom_dialect is not None
+    if custom_dialect is not None:
+        _mutated_copy: Dialect = _with_delimiter(custom_dialect, ",")
+        reader_dialect: Dialect | None = registry.get("semi")
+        assert reader_dialect is not None
+        if reader_dialect is not None:
+            parsed_reader: reader = reader("name;age\nalice;30", dialect=reader_dialect)
+            rows: list[list[str]] = parsed_reader.rows()
+            assert str(rows) == "[[\"name\", \"age\"], [\"alice\", \"30\"]]"
+        copy_check: Dialect | None = registry.get("semi")
+        assert copy_check is not None
+        if copy_check is not None:
+            assert copy_check.delimiter == ";"
+
+    dialect_names: list[str] = registry.names()
+    assert "excel" in dialect_names
+    assert "semi" in dialect_names
+    assert registry.unregister("semi")

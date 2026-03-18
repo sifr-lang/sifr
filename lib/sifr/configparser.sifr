@@ -1,4 +1,4 @@
-from sifr.io import read_text
+from sifr.io import read_text, write_text
 
 
 DEFAULTSECT: str = "DEFAULT"
@@ -143,6 +143,94 @@ def _split_option_line(
     return (key, stripped_value)
 
 
+def _char_at(text: str, index: int) -> str:
+    if index < 0 or index >= len(text):
+        return ""
+    ch: str | None = text[index]
+    if ch is None:
+        return ""
+    return ch
+
+
+def _resolve_interpolation(
+    value: str, merged: dict[str, str | None], depth: int = 0
+) -> str:
+    if depth >= 8:
+        return value + ""
+    if "%(" not in value:
+        return value + ""
+
+    result: str = ""
+    replaced: bool = False
+    i: int = 0
+    while i < len(value):
+        ch: str = _char_at(value, i)
+        if ch == "%" and i + 1 < len(value) and _char_at(value, i + 1) == "(":
+            j: int = i + 2
+            key: str = ""
+            matched: bool = False
+            while j < len(value):
+                part: str = _char_at(value, j)
+                if part == ")" and j + 1 < len(value) and _char_at(value, j + 1) == "s":
+                    matched = True
+                    normalized_key: str = _normalize_option(key)
+                    replacement: str | None = _lookup_option(merged, normalized_key)
+                    if replacement is None:
+                        result = result + "%(" + key + ")s"
+                    else:
+                        replaced = True
+                        result = result + replacement
+                    i = j + 2
+                    break
+                key = key + part
+                j = j + 1
+            if matched:
+                continue
+        result = result + ch
+        i = i + 1
+
+    if replaced:
+        return _resolve_interpolation(result, merged, depth + 1)
+    return result
+
+
+class SectionProxy:
+    name: str
+    _values: dict[str, str | None]
+
+    def __init__(self, name: str, values: dict[str, str | None]) -> None:
+        self.name = name + ""
+        self._values = _copy_values(values)
+
+    def has_option(self, option: str) -> bool:
+        return _has_option_key(self._values, _normalize_option(option))
+
+    def get(
+        self, option: str, fallback: str | None = None, raw: bool = False
+    ) -> str | None:
+        normalized: str = _normalize_option(option)
+        if _has_option_key(self._values, normalized):
+            value: str | None = _lookup_option(self._values, normalized)
+            if value is None:
+                return None
+            if raw:
+                return value
+            return _resolve_interpolation(value, self._values)
+        return _copy_optional_str(fallback)
+
+    def options(self) -> list[str]:
+        names: list[str] = []
+        for key in self._values:
+            names.append(key)
+        return names
+
+    def items(self) -> list[tuple[str, str | None]]:
+        pairs: list[tuple[str, str | None]] = []
+        for key, value in self._values.items():
+            pairs.append((key, _copy_optional_str(value)))
+        return pairs
+
+
 class ConfigParser:
     _defaults: dict[str, str | None]
     _sections: dict[str, dict[str, str | None]]
@@ -275,24 +363,42 @@ class ConfigParser:
             return normalized in self._defaults
         return False
 
-    def get(self, section: str, option: str, fallback: str | None = None) -> str | None:
+    def get(
+        self,
+        section: str,
+        option: str,
+        fallback: str | None = None,
+        raw: bool = False,
+    ) -> str | None:
         normalized: str = _normalize_option(option)
+        merged: dict[str, str | None] = self._merged_section(section)
         default_section: str = _default_section()
         if section == default_section:
-            if normalized in self._defaults:
-                return _lookup_option(self._defaults, normalized)
+            if not _has_option_key(merged, normalized):
+                return _copy_optional_str(fallback)
+            raw_value: str | None = _lookup_option(merged, normalized)
+            if raw_value is None:
+                return None
+            if raw:
+                return raw_value
+            return _resolve_interpolation(raw_value, merged)
+        if not self.has_section(section):
+            if _has_option_key(self._defaults, normalized):
+                default_value: str | None = _lookup_option(self._defaults, normalized)
+                if default_value is None:
+                    return None
+                if raw:
+                    return default_value
+                return _resolve_interpolation(default_value, merged)
             return _copy_optional_str(fallback)
-        for section_name, section_values in self._sections.items():
-            if section_name != section:
-                continue
-            if _has_option_key(section_values, normalized):
-                return _lookup_option(section_values, normalized)
-            if normalized in self._defaults:
-                return _lookup_option(self._defaults, normalized)
+        if not _has_option_key(merged, normalized):
             return _copy_optional_str(fallback)
-        if normalized in self._defaults:
-            return _lookup_option(self._defaults, normalized)
-        return _copy_optional_str(fallback)
+        raw_value2: str | None = _lookup_option(merged, normalized)
+        if raw_value2 is None:
+            return None
+        if raw:
+            return raw_value2
+        return _resolve_interpolation(raw_value2, merged)
 
     def getint(self, section: str, option: str, fallback: int | None = None) -> int | None:
         raw: str | None = self.get(section, option)
@@ -338,6 +444,16 @@ class ConfigParser:
             updated_section[normalized] = _copy_optional_str(value)
             self._sections[section_name] = updated_section
             return
+        if section not in self._sections:
+            self._sections[section] = {}
+        created_section: dict[str, str | None] = {}
+        for section_name, section_values in self._sections.items():
+            if section_name != section:
+                continue
+            created_section = _copy_values(section_values)
+            break
+        created_section[normalized] = _copy_optional_str(value)
+        self._sections[section] = created_section
 
     def add_section(self, section: str) -> None:
         default_section: str = _default_section()
@@ -372,6 +488,41 @@ class ConfigParser:
             self._sections = _without_section(self._sections, section)
             return True
         return False
+
+    def proxy(self, section: str) -> SectionProxy | None:
+        default_section: str = _default_section()
+        if section != default_section and not self.has_section(section):
+            return None
+        merged: dict[str, str | None] = self._merged_section(section)
+        return SectionProxy(section, merged)
+
+    def to_ini_string(self) -> str:
+        lines: list[str] = []
+        if len(self._defaults) > 0:
+            lines.append("[" + _default_section() + "]")
+            for key, value in self._defaults.items():
+                if value is None:
+                    lines.append(key)
+                else:
+                    lines.append(key + " = " + value)
+            lines.append("")
+        for section_name, section_values in self._sections.items():
+            lines.append("[" + section_name + "]")
+            for key, value in section_values.items():
+                if value is None:
+                    lines.append(key)
+                else:
+                    lines.append(key + " = " + value)
+            lines.append("")
+        if len(lines) > 0:
+            maybe_last: str | None = lines[len(lines) - 1]
+            if maybe_last is not None and maybe_last == "":
+                _ = lines.pop()
+        return "\n".join(lines)
+
+    def write(self, path: str) -> Result[None, IOError]:
+        payload: str = self.to_ini_string()
+        return write_text(path, payload)
 
 
 class RawConfigParser(ConfigParser):

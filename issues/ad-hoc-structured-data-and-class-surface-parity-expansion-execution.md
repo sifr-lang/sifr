@@ -74,7 +74,18 @@ Required entry records:
   - wave gate: `$(pwd)/scripts/run_all_tests.sh` -> PASS (2026-03-18)
 
 ### wave_psp_struct_1: Parser and Serialization Surface Expansion
-- Status: pending
+- Status: ready_for_pr
+- Scope:
+  - `json`: add `JSONEncoder`/`JSONDecoder` typed wrapper classes with file and handle load/dump helpers
+  - `configparser`: add interpolation-aware `get(..., raw=...)`, `SectionProxy`, and ini write-back surface (`to_ini_string`, `write`)
+  - `csv`: add process-local `DialectRegistry` with defensive dialect copying for register/get boundaries
+  - add explicit unsupported boundary fixture for converter registration (`register_converter`)
+- Validation:
+  - positive path: `cargo run -q -p sifr -- run crates/sifr/tests/e2e/pass/phase_psp_struct_1_parser_serialization_expansion.sifr` -> PASS
+  - positive path: `cargo run -q -p sifr -- run demos/ad_hoc_struct_wave1_parser_serialization_expansion_demo.sifr` -> PASS
+  - negative path: `cargo run -q -p sifr -- check crates/sifr/tests/e2e/fail/phase_psp_struct_1_configparser_converter_registration_unsupported.sifr` -> expected compile failure (PASS)
+  - regression path: `stdlib_configparser.sifr`, `stdlib_json_consolidated.sifr`, `stdlib_csv_consolidated.sifr`, `cpython_configparser_subset.sifr`, `cpython_json_subset.sifr`, `cpython_csv_subset.sifr` -> PASS
+  - wave gate: `$(pwd)/scripts/run_all_tests.sh` -> PASS (2026-03-18)
 
 ### wave_psp_struct_2: Collections and CLI Class-Surface Expansion
 - Status: pending

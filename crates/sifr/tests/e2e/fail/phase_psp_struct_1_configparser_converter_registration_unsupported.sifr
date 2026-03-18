@@ -1,0 +1,6 @@
+from sifr.configparser import ConfigParser
+
+
+def main() -> None:
+    parser: ConfigParser = ConfigParser()
+    parser.register_converter("as_int")
