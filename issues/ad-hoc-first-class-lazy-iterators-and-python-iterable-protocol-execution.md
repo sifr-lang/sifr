@@ -19,7 +19,7 @@ Loop per wave: Plan -> Implement -> Validate -> Demo -> PR -> External completio
 
 ## Full Phase To-Do Plan
 1. [x] `wave_iter_1`: first-class `Iterable[T]` / `Iterator[T]` type-system + governance/doc contract
-2. [ ] `wave_iter_2`: `iter(...)` + `next(...)` builtin surfaces and protocol-driven `for` lowering
+2. [x] `wave_iter_2`: `iter(...)` + `next(...)` builtin surfaces and protocol-driven `for` lowering
 3. [ ] `wave_iter_3`: generator rewrite to true lazy iterator semantics
 4. [ ] `wave_iter_4`: lazy builtin conversion for `zip`, `enumerate`, `reversed`
 5. [ ] `wave_iter_5`: lazy `itertools` subset (`chain`, `repeat`, `islice`, `count`) + explicit unsupported classification
@@ -74,9 +74,9 @@ Required entry records:
   - wave gate: `$(pwd)/scripts/run_all_tests.sh` -> PASS (2026-03-18)
 
 ### wave_iter_2: Builtin Protocol Entry and `for` Lowering
-- Status: ready_for_pr
+- Status: merged
 - Implementation PR:
-  - branch: `wave-iter-2-builtin-protocol-entry-and-for-lowering`
+  - `https://github.com/yaseralnajjar/sifr/pull/1242` (merged)
 - Validation:
   - positive path: `cargo test -p sifr_hir -- test_for_loop_lowers_through_iter_protocol_call` -> PASS
   - positive path: `cargo test -p sifr_hir -- test_iter_and_next_builtin_protocol_calls_lower` -> PASS
@@ -87,9 +87,19 @@ Required entry records:
   - wave gate: `$(pwd)/scripts/run_all_tests.sh` -> PASS (2026-03-18)
 
 ### wave_iter_3: Generator Rewrite
-- Status: pending
+- Status: ready_for_pr
 - Implementation PR:
-  - pending
+  - branch: `wave-iter-3-generator-rewrite-lazy-iterator`
+- Validation:
+  - positive path: `cargo test -p sifr_hir -- test_generator_function_infers_iterator_return_type --nocapture` -> PASS
+  - positive path: `cargo test -p sifr_hir -- test_generator_expression_is_typed_as_iterator --nocapture` -> PASS
+  - negative path: `cargo test -p sifr_hir -- test_generator_function_rejects_non_iterator_annotation --nocapture` -> PASS
+  - negative path: `cargo test -p sifr_hir -- test_generator_rejects_nested_yield_shape --nocapture` -> PASS
+  - negative path: `cargo test -p sifr_hir -- test_generator_rejects_trailing_statements_after_loop --nocapture` -> PASS
+  - demo check: `cargo run -q -p sifr -- check demos/ad_hoc_iter_wave3_generator_rewrite_demo.sifr` -> `no errors found`
+  - demo run: `cargo run -q -p sifr -- run demos/ad_hoc_iter_wave3_generator_rewrite_demo.sifr` -> `3`, `2`, `[1]`, `[4, 3, 2, 1]`
+  - milestone demo run: `cargo run -q -p sifr -- run demos/milestone_generators_demo.sifr` -> PASS
+  - wave gate: `$(pwd)/scripts/run_all_tests.sh` -> PASS (2026-03-18)
 
 ### wave_iter_4: Core Builtin Lazy Parity
 - Status: pending

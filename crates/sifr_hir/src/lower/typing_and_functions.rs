@@ -12,8 +12,9 @@ use std::collections::HashMap;
 use super::classes::lower_expr_simple;
 use super::diagnostics::{format_type_name, is_valid_error_type};
 use super::expressions::lower_expr;
+use super::function_flow::infer_function_return_type;
 use super::nonlocal_support::collect_declared_nonlocals;
-use super::statements::{collect_return_types, lower_stmts};
+use super::statements::lower_stmts;
 use super::{substitute_type_vars, LowerCtx};
 
 pub(super) fn register_builtins(ctx: &mut LowerCtx) {
@@ -770,27 +771,13 @@ pub(super) fn lower_function(func: &StmtFunctionDef, ctx: &mut LowerCtx) -> Opti
 
     ctx.exit_function_scope();
 
-    // Infer return type if not explicitly annotated (marked as Type::Any)
-    let inferred_return_type = if *ft.return_type == Type::Any && func.returns.is_none() {
-        let return_types = collect_return_types(&body);
-        if return_types.is_empty() {
-            Type::None // no return statements -> None
-        } else if return_types.len() == 1 {
-            return_types.into_iter().next().unwrap()
-        } else {
-            // Multiple return types -> union
-            let mut members: Vec<Type> = return_types.into_iter().collect();
-            members.sort_by_key(sifr_type_system::Type::display_name);
-            members.dedup();
-            if members.len() == 1 {
-                members.into_iter().next().unwrap()
-            } else {
-                Type::Union(members)
-            }
-        }
-    } else {
-        *ft.return_type
-    };
+    let inferred_return_type = infer_function_return_type(
+        func.name.as_ref(),
+        ft.return_type.as_ref(),
+        func.returns.is_some(),
+        &body,
+        |message| ctx.error(message),
+    );
 
     // Collect user-defined decorators (excluding classmethod/staticmethod)
     let decorators: Vec<String> = func

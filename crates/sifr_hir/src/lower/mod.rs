@@ -15,6 +15,7 @@ mod expressions;
 #[cfg(test)]
 mod expressions_tests;
 mod for_loop_safety;
+mod function_flow;
 mod function_scopes;
 mod generic_inference;
 mod guarded_index;

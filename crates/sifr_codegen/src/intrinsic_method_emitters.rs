@@ -129,12 +129,17 @@ fn registry_iterable_to_owned_iter_expr(
 ) -> Option<RustExpr> {
     let lowered = emitter.try_lower_registry_expr_strict(expr)?;
     match crate::resolve_alias_type_for_plain_call(expr.ty()) {
-        Type::List(_) | Type::Set(_) => Some(RustExpr::MethodCall {
+        Type::List(_) | Type::Set(_) | Type::Iterable(_) => Some(RustExpr::MethodCall {
             receiver: Box::new(RustExpr::MethodCall {
                 receiver: Box::new(RustExpr::Paren(Box::new(lowered))),
                 method: "clone".to_string(),
                 args: vec![],
             }),
+            method: "into_iter".to_string(),
+            args: vec![],
+        }),
+        Type::Iterator(_) => Some(RustExpr::MethodCall {
+            receiver: Box::new(RustExpr::Paren(Box::new(lowered))),
             method: "into_iter".to_string(),
             args: vec![],
         }),

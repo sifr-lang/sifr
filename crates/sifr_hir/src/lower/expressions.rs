@@ -3661,17 +3661,13 @@ pub(super) fn lower_generator_expr(gen: &ExprGenerator, ctx: &mut LowerCtx) -> O
     let iter_expr = lower_expr(&comp.iter, ctx)?;
     let iter_ty = iter_expr.ty().clone();
 
-    // Determine element type from the iterable
-    let elem_ty = match &iter_ty {
-        Type::List(elem) => *elem.clone(),
-        Type::Str => Type::Str,
-        _ => {
-            ctx.error(format!(
-                "cannot iterate over type '{}'",
-                iter_ty.display_name()
-            ));
-            return None;
-        }
+    // Determine element type from the iterable protocol.
+    let Some(elem_ty) = callable_builtin_element_type(&iter_ty) else {
+        ctx.error(format!(
+            "cannot iterate over type '{}'",
+            iter_ty.display_name()
+        ));
+        return None;
     };
 
     let (expr, expr_ty, filter) = ctx.with_pushed_scope(|ctx| {
@@ -3705,7 +3701,7 @@ pub(super) fn lower_generator_expr(gen: &ExprGenerator, ctx: &mut LowerCtx) -> O
         Some((expr, expr_ty, filter))
     })?;
 
-    let result_ty = Type::List(Box::new(expr_ty));
+    let result_ty = Type::Iterator(Box::new(expr_ty));
 
     Some(HirExpr::GeneratorExpr {
         expr: Box::new(expr),
