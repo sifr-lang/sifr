@@ -403,6 +403,28 @@ pub(super) fn intrinsic_uuid() -> IntrinsicModule {
         "uuid4".to_string(),
         FunctionType::all_borrow(vec![], Type::Str),
     );
+    // uuid3_text(namespace: str, name: str) -> str (deterministic UUID v3)
+    functions.insert(
+        "uuid3_text".to_string(),
+        FunctionType::all_borrow(
+            vec![
+                ("namespace".to_string(), Type::Str),
+                ("name".to_string(), Type::Str),
+            ],
+            Type::Str,
+        ),
+    );
+    // uuid5_text(namespace: str, name: str) -> str (deterministic UUID v5)
+    functions.insert(
+        "uuid5_text".to_string(),
+        FunctionType::all_borrow(
+            vec![
+                ("namespace".to_string(), Type::Str),
+                ("name".to_string(), Type::Str),
+            ],
+            Type::Str,
+        ),
+    );
     IntrinsicModule {
         functions,
         constants: HashMap::new(),

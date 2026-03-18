@@ -766,6 +766,11 @@ edition = "2021"
                 if !deps.contains(&"rand = \"0.8\"".to_string()) {
                     deps.push("rand = \"0.8\"".to_string());
                 }
+                let uuid_dep =
+                    "uuid = { version = \"1\", features = [\"v3\", \"v5\"] }".to_string();
+                if !deps.contains(&uuid_dep) {
+                    deps.push(uuid_dep);
+                }
             }
             "sifr.re" | "_sifr.regex" => {
                 if !deps.contains(&"regex = \"1\"".to_string()) {
@@ -873,6 +878,13 @@ edition = "2021"
             "sha1" => {
                 if !deps.contains(&"sha1 = \"0.10\"".to_string()) {
                     deps.push("sha1 = \"0.10\"".to_string());
+                }
+            }
+            "uuid" => {
+                let uuid_dep =
+                    "uuid = { version = \"1\", features = [\"v3\", \"v5\"] }".to_string();
+                if !deps.contains(&uuid_dep) {
+                    deps.push(uuid_dep);
                 }
             }
             "blake2" => {

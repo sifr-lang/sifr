@@ -1,0 +1,21 @@
+from sifr.uuid import NAMESPACE_DNS, uuid3, uuid5
+from sifr.datetime import datetime, UTC, timezone, now, from_timestamp
+
+
+def main() -> None:
+    name_v3 = uuid3(NAMESPACE_DNS(), "sifr.dev")
+    name_v5 = uuid5(NAMESPACE_DNS(), "sifr.dev")
+    assert name_v3.version() == 3
+    assert name_v5.version() == 5
+
+    utc_now = now(UTC())
+    assert utc_now.isoformat().endswith("+00:00")
+
+    plus_two = timezone(7200)
+    epoch_ok: bool = False
+    try:
+        epoch_shifted: datetime = from_timestamp(0.0, plus_two)
+        epoch_ok = epoch_shifted.isoformat() == "1970-01-01T02:00:00+02:00"
+    except ValueError:
+        epoch_ok = False
+    assert epoch_ok

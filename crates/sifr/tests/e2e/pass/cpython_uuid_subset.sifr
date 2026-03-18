@@ -1,5 +1,5 @@
 # Adapted CPython uuid subset for sifr.uuid (canonical bool-vector format)
-from sifr.uuid import uuid4, uuid4_obj, uuid_from_hex, UUID
+from sifr.uuid import uuid4, uuid4_obj, uuid_from_hex, UUID, uuid3, uuid5, NAMESPACE_DNS
 from sifr.test import assert_bool_vector_eq
 
 
@@ -114,6 +114,8 @@ def collect_class_behavior_actual() -> list[bool]:
 
     ctor_invalid_version: UUID = UUID("zzzzzzzz-zzzz-zzzz-zzzz-zzzzzzzzzzzz")
     actual.append(ctor_invalid_version.version() == -1)
+    actual.append(uuid3(NAMESPACE_DNS(), "python.org").to_str() == "6fa459ea-ee8a-3ca4-894e-db77e160355e")
+    actual.append(uuid5(NAMESPACE_DNS(), "python.org").to_str() == "886313e1-3b8a-5372-9b90-0c9aee199e5d")
     return actual
 
 
@@ -123,7 +125,7 @@ def append_all(mut target: list[bool], values: list[bool]):
 
 
 def main():
-    expected: list[bool] = [True, True, True, True, True, True, True, True, True, True, True, True, True, True]
+    expected: list[bool] = [True, True, True, True, True, True, True, True, True, True, True, True, True, True, True, True]
     actual: list[bool] = []
     append_all(actual, collect_generated_actual())
     append_all(actual, collect_parse_actual())

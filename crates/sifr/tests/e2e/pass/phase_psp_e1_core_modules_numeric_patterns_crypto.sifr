@@ -15,14 +15,14 @@ def collect_datetime_actual() -> list[bool]:
     epoch_ok: bool = False
     overflow_rejected: bool = False
     try:
-        ts0: str = from_timestamp(0.0)
-        epoch_ok = ts0 == "1970-01-01T00:00:00"
+        ts0: datetime = from_timestamp(0.0)
+        epoch_ok = ts0.isoformat() == "1970-01-01T00:00:00"
     except ValueError as e:
         _ = e.message
     actual.append(epoch_ok)
 
     try:
-        _bad: str = from_timestamp(100000000000000000000.0)
+        _bad: datetime = from_timestamp(100000000000000000000.0)
         _ = _bad
     except ValueError as e:
         _ = e.message

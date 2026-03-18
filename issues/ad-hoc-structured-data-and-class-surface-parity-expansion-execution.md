@@ -1,6 +1,6 @@
 # Ad Hoc Phase Execution Checklist (Structured Data and Class-Surface Parity Expansion)
 
-Status: in_progress (started 2026-03-18)
+Status: in_progress (started 2026-03-18; waves 0-3 completed)
 Owner: ad_hoc_structured_class_surface execution loop
 Reference planning doc:
 - `issues/ad-hoc-structured-data-and-class-surface-parity-expansion.md`
@@ -21,7 +21,7 @@ Loop per wave: Plan -> Implement -> Validate -> Demo -> PR -> External completio
 1. [x] `wave_psp_struct_0`: architecture lock and explicit waiver-boundary enforcement
 2. [x] `wave_psp_struct_1`: parser and serialization surface expansion (`json`, `configparser`, `csv`)
 3. [x] `wave_psp_struct_2`: collections and CLI class-surface expansion (`collections`, `argparse`)
-4. [ ] `wave_psp_struct_3`: `uuid` and `datetime` expansion under fixed-offset timezone contract
+4. [x] `wave_psp_struct_3`: `uuid` and `datetime` expansion under fixed-offset timezone contract
 5. [ ] `wave_psp_struct_4`: text-surface polish (`textwrap`, `html`) and governance closure
 6. [ ] wave-level extra completion review cycle done
 7. [ ] wave-level extra production-grade review cycle done
@@ -105,7 +105,18 @@ Required entry records:
   - wave gate: `$(pwd)/scripts/run_all_tests.sh` -> PASS (2026-03-18)
 
 ### wave_psp_struct_3: UUID and Datetime Expansion
-- Status: pending
+- Status: completed
+- Implementation PR:
+  - pending (to be linked after PR is opened/merged)
+- Scope:
+  - `uuid`: add typed name-based generation (`uuid3`, `uuid5`) and exported namespace accessors (`NAMESPACE_DNS`, `NAMESPACE_URL`, `NAMESPACE_OID`, `NAMESPACE_X500`)
+  - `datetime`: expand fixed-offset timezone surfaces (`UTC`, `utc`, `now(tz=...)`, `from_timestamp(..., tz=...)`, `datetime.astimezone(...)`) with explicit offset-aware ISO/timestamp behavior
+  - add wave-3 coverage fixture and demo for combined `uuid` + `datetime` expansion
+- Validation:
+  - positive path: `cargo run -q -p sifr -- run crates/sifr/tests/e2e/pass/phase_psp_struct_3_uuid_datetime_expansion.sifr` -> PASS
+  - positive path: `cargo run -q -p sifr -- run demos/ad_hoc_struct_wave3_uuid_datetime_expansion_demo.sifr` -> PASS
+  - regression path: `stdlib_uuid_consolidated.sifr`, `cpython_uuid_subset.sifr`, `stdlib_datetime_consolidated.sifr`, `cpython_datetime_subset.sifr`, `phase_psp_e1_core_modules_numeric_patterns_crypto.sifr`, `edge_case_safety.sifr`, `zero_panic_gate.sifr` -> PASS
+  - wave gate: `$(pwd)/scripts/run_all_tests.sh` -> PASS (2026-03-18)
 
 ### wave_psp_struct_4: Text-Surface Polish and Governance Closure
 - Status: pending
