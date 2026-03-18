@@ -19,7 +19,7 @@ Loop per wave: Plan -> Implement -> Validate -> Demo -> PR -> External completio
 
 ## Full Phase To-Do Plan
 1. [x] `wave_psp_struct_0`: architecture lock and explicit waiver-boundary enforcement
-2. [ ] `wave_psp_struct_1`: parser and serialization surface expansion (`json`, `configparser`, `csv`)
+2. [x] `wave_psp_struct_1`: parser and serialization surface expansion (`json`, `configparser`, `csv`)
 3. [ ] `wave_psp_struct_2`: collections and CLI class-surface expansion (`collections`, `argparse`)
 4. [ ] `wave_psp_struct_3`: `uuid` and `datetime` expansion under fixed-offset timezone contract
 5. [ ] `wave_psp_struct_4`: text-surface polish (`textwrap`, `html`) and governance closure
@@ -74,9 +74,10 @@ Required entry records:
   - wave gate: `$(pwd)/scripts/run_all_tests.sh` -> PASS (2026-03-18)
 
 ### wave_psp_struct_1: Parser and Serialization Surface Expansion
-- Status: implementation_merged_review_pass_2_pending
+- Status: completed
 - Implementation PR:
   - `https://github.com/yaseralnajjar/sifr/pull/1272` (merged)
+  - review closure PR (pass 1): `https://github.com/yaseralnajjar/sifr/pull/1273` (merged)
 - Scope:
   - `json`: add `JSONEncoder`/`JSONDecoder` typed wrapper classes with file and handle load/dump helpers
   - `configparser`: add interpolation-aware `get(..., raw=...)`, `SectionProxy`, and ini write-back surface (`to_ini_string`, `write`)
@@ -111,6 +112,10 @@ Required entry records:
 ### wave_psp_struct_1 review_pass_1 (completion-gap)
 - Reviewer artifact: `reviews/phase-ad-hoc-structured-data-and-class-surface-parity-expansion-wave-psp-struct-1-review-pass-1.md`
 - Status: completed (approved; no corrective code changes required)
+
+### wave_psp_struct_1 review_pass_2 (production-grade)
+- Reviewer artifact: `reviews/phase-ad-hoc-structured-data-and-class-surface-parity-expansion-wave-psp-struct-1-review-pass-2.md`
+- Status: completed (approved for wave progression; no corrective code changes required)
 
 ### closure review cycles
 - wave closure completion review: pending
