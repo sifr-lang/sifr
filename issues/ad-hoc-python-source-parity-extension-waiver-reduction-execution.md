@@ -26,7 +26,7 @@ Loop per wave: Plan -> Implement -> Validate -> Demo -> PR -> External completio
 6. [x] wave-level extra production-grade review cycle done
 7. [x] milestone-level completion review cycle done
 8. [x] milestone-level production-grade review cycle done
-9. [ ] phase-level completion review cycle done
+9. [x] phase-level completion review cycle done
 10. [ ] phase-level production-grade review cycle done
 11. [ ] closure telegram notification sent
 
@@ -167,5 +167,5 @@ Required entry records:
 - wave closure production-grade review: completed (`reviews/phase-ad-hoc-python-source-parity-extension-waiver-reduction-wave-closure-production-grade-review.md`)
 - milestone closure completion review: completed (`reviews/phase-ad-hoc-python-source-parity-extension-waiver-reduction-milestone-closure-completion-review.md`)
 - milestone closure production-grade review: completed (`reviews/phase-ad-hoc-python-source-parity-extension-waiver-reduction-milestone-closure-production-grade-review.md`)
-- phase closure completion review: pending
+- phase closure completion review: completed (`reviews/phase-ad-hoc-python-source-parity-extension-waiver-reduction-phase-closure-completion-review.md`)
 - phase closure production-grade review: pending
