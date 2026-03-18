@@ -273,6 +273,43 @@ fn test_generator_rejects_trailing_statements_after_loop() {
 }
 
 #[test]
+fn test_reversed_enumerate_zip_are_typed_as_iterators() {
+    let module = lower_source(
+        "def main():\n    nums: list[int] = [1, 2, 3]\n    labels: list[str] = [\"a\", \"b\", \"c\"]\n    rev: Iterator[int] = reversed(nums)\n    indexed: Iterator[tuple[int, int]] = enumerate(nums, start=1)\n    paired: Iterator[tuple[int, str]] = zip(nums, labels)\n    _rev_list: list[int] = list(rev)\n    _indexed_list: list[tuple[int, int]] = list(indexed)\n    _paired_list: list[tuple[int, str]] = list(paired)\n",
+    )
+    .unwrap();
+    let main_fn = module
+        .functions
+        .iter()
+        .find(|func| func.name == "main")
+        .expect("main function should exist");
+    let Some(HirStmt::Let { ty, .. }) = main_fn
+        .body
+        .iter()
+        .find(|stmt| matches!(stmt, HirStmt::Let { name, .. } if name == "rev"))
+    else {
+        panic!("expected let binding for rev");
+    };
+    assert!(matches!(ty, Type::Iterator(_)));
+    let Some(HirStmt::Let { ty, .. }) = main_fn
+        .body
+        .iter()
+        .find(|stmt| matches!(stmt, HirStmt::Let { name, .. } if name == "indexed"))
+    else {
+        panic!("expected let binding for indexed");
+    };
+    assert!(matches!(ty, Type::Iterator(_)));
+    let Some(HirStmt::Let { ty, .. }) = main_fn
+        .body
+        .iter()
+        .find(|stmt| matches!(stmt, HirStmt::Let { name, .. } if name == "paired"))
+    else {
+        panic!("expected let binding for paired");
+    };
+    assert!(matches!(ty, Type::Iterator(_)));
+}
+
+#[test]
 fn test_sorted_accepts_iterable_keyword_and_key_none() {
     let result = lower_source(
         "def main():\n    nums: list[int] = [3, 1, 2]\n    ordered: list[int] = sorted(iterable=nums, key=None, reverse=True)\n    assert ordered == [3, 2, 1]\n",

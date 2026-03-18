@@ -1,0 +1,15 @@
+# Ad-hoc iterator wave 4 demo: reversed/enumerate/zip now return Iterator[T].
+# Explicit list(...) materialization remains the eager boundary.
+
+def main():
+    nums: list[int] = [3, 1, 2]
+
+    rev_it: Iterator[int] = reversed(nums)
+    print(next(rev_it))
+    print(list(rev_it))
+
+    indexed_it: Iterator[tuple[int, str]] = enumerate(["a", "b"], start=5)
+    print(list(indexed_it))
+
+    zipped_it: Iterator[tuple[int, str, bool]] = zip([1, 2], ["x", "y"], [True, False])
+    print(list(zipped_it))

@@ -20,7 +20,7 @@ Loop per wave: Plan -> Implement -> Validate -> Demo -> PR -> External completio
 ## Full Phase To-Do Plan
 1. [x] `wave_iter_1`: first-class `Iterable[T]` / `Iterator[T]` type-system + governance/doc contract
 2. [x] `wave_iter_2`: `iter(...)` + `next(...)` builtin surfaces and protocol-driven `for` lowering
-3. [ ] `wave_iter_3`: generator rewrite to true lazy iterator semantics
+3. [x] `wave_iter_3`: generator rewrite to true lazy iterator semantics
 4. [ ] `wave_iter_4`: lazy builtin conversion for `zip`, `enumerate`, `reversed`
 5. [ ] `wave_iter_5`: lazy `itertools` subset (`chain`, `repeat`, `islice`, `count`) + explicit unsupported classification
 6. [ ] `wave_iter_6`: parity closure, dedicated demo, governance hardening
@@ -87,9 +87,9 @@ Required entry records:
   - wave gate: `$(pwd)/scripts/run_all_tests.sh` -> PASS (2026-03-18)
 
 ### wave_iter_3: Generator Rewrite
-- Status: ready_for_pr
+- Status: merged
 - Implementation PR:
-  - branch: `wave-iter-3-generator-rewrite-lazy-iterator`
+  - `https://github.com/yaseralnajjar/sifr/pull/1243` (merged)
 - Validation:
   - positive path: `cargo test -p sifr_hir -- test_generator_function_infers_iterator_return_type --nocapture` -> PASS
   - positive path: `cargo test -p sifr_hir -- test_generator_expression_is_typed_as_iterator --nocapture` -> PASS
@@ -102,9 +102,17 @@ Required entry records:
   - wave gate: `$(pwd)/scripts/run_all_tests.sh` -> PASS (2026-03-18)
 
 ### wave_iter_4: Core Builtin Lazy Parity
-- Status: pending
+- Status: ready_for_pr
 - Implementation PR:
-  - pending
+  - branch: `wave-iter-4-core-builtin-lazy-parity`
+- Validation:
+  - positive path: `cargo test -p sifr_hir -- test_reversed_enumerate_zip_are_typed_as_iterators --nocapture` -> PASS
+  - positive path: `cargo run -q -p sifr -- run crates/sifr/tests/e2e/pass/builtin_enumerate_zip.sifr` -> PASS
+  - positive path: `cargo run -q -p sifr -- run crates/sifr/tests/e2e/pass/phase_psp_a1_builtin_callable_surface.sifr` -> PASS
+  - negative path: compile-time behavior requires explicit materialization when assigning lazy builtin outputs to `list[...]`-typed values; updated fixtures now use `list(...)` at the eager boundary
+  - demo check: `cargo run -q -p sifr -- check demos/ad_hoc_iter_wave4_builtin_lazy_parity_demo.sifr` -> `no errors found`
+  - demo run: `cargo run -q -p sifr -- run demos/ad_hoc_iter_wave4_builtin_lazy_parity_demo.sifr` -> `2`, `[1, 3]`, `[(5, "a"), (6, "b")]`, `[(1, "x", true), (2, "y", false)]`
+  - wave gate: `$(pwd)/scripts/run_all_tests.sh` -> PASS (2026-03-18)
 
 ### wave_iter_5: Initial `itertools` Lazy Subset
 - Status: pending
