@@ -118,12 +118,12 @@ Required entry records:
 - Status: completed (validated; no actionable defects)
 
 ### wave_psp_ext_2 review_pass_1 (completion-gap)
-- Reviewer artifact: `reviews/phase-ad-hoc-python-source-parity-extension-waiver-reduction-wave-psp-ext-2-review-pass-1.md`
-- Status: completed (validated; no actionable defects)
+- Reviewer artifact: `reviews/phase-ad-hoc-python-source-parity-extension-waiver-reduction-wave-psp-ext-2-review-pass-1.md` and `reviews/phase-ad-hoc-python-source-parity-extension-waiver-reduction-wave-psp-ext-2-review-pass-1a.md`
+- Status: completed (validated; minor governance-diff documentation updates applied)
 
 ### wave_psp_ext_2 review_pass_2 (production-grade)
-- Reviewer artifact: pending
-- Status: pending
+- Reviewer artifact: `reviews/phase-ad-hoc-python-source-parity-extension-waiver-reduction-wave-psp-ext-2-review-pass-2.md`
+- Status: completed (validated; no actionable defects)
 
 ### closure review cycles
 - wave closure completion review: pending
