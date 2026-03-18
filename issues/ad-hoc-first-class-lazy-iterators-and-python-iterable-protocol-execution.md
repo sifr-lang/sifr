@@ -155,12 +155,12 @@ Required entry records:
 ## External Review Passes
 
 ### review_pass_1 (completion-gap)
-- Reviewer artifact: pending
-- Status: pending
+- Reviewer artifact: `reviews/phase-ad-hoc-first-class-lazy-iterators-and-python-iterable-protocol-review-pass-1.md`
+- Status: completed (validated; no additional code defects identified beyond merged phase scope)
 
 ### review_pass_2 (production-grade)
-- Reviewer artifact: pending
-- Status: pending
+- Reviewer artifact: pending (request sent; artifact not produced)
+- Status: blocked_on_reviewer_output
 
 ### closure review cycles
 - wave closure completion review: pending
