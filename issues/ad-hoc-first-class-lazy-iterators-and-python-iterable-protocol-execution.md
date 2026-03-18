@@ -22,7 +22,7 @@ Loop per wave: Plan -> Implement -> Validate -> Demo -> PR -> External completio
 2. [x] `wave_iter_2`: `iter(...)` + `next(...)` builtin surfaces and protocol-driven `for` lowering
 3. [x] `wave_iter_3`: generator rewrite to true lazy iterator semantics
 4. [x] `wave_iter_4`: lazy builtin conversion for `zip`, `enumerate`, `reversed`
-5. [ ] `wave_iter_5`: lazy `itertools` subset (`chain`, `repeat`, `islice`, `count`) + explicit unsupported classification
+5. [x] `wave_iter_5`: lazy `itertools` subset (`chain`, `repeat`, `islice`, `count`) + explicit unsupported classification
 6. [ ] `wave_iter_6`: parity closure, dedicated demo, governance hardening
 7. [ ] wave-level extra completion review cycle done
 8. [ ] wave-level extra production-grade review cycle done
@@ -115,9 +115,9 @@ Required entry records:
   - wave gate: `$(pwd)/scripts/run_all_tests.sh` -> PASS (2026-03-18)
 
 ### wave_iter_5: Initial `itertools` Lazy Subset
-- Status: ready_for_pr
+- Status: merged
 - Implementation PR:
-  - branch: `wave-iter-5-itertools-lazy-subset`
+  - `https://github.com/yaseralnajjar/sifr/pull/1245` (merged)
 - Validation:
   - positive path: `cargo test -p sifr_codegen -- test_generate_rust_generator_conditional_yield_preserves_else_branch --nocapture` -> PASS
   - positive path: `cargo run -q -p sifr -- check demos/ad_hoc_iter_wave5_itertools_lazy_subset_demo.sifr` -> `no errors found`
