@@ -54,7 +54,7 @@ Required entry records:
 ### wave_psp_bytes_0: Architecture Lock
 - Status: completed
 - Implementation PR:
-  - pending (open after this execution update)
+  - `#1291` (merged): https://github.com/yaseralnajjar/sifr/pull/1291
 - Scope:
   - lock first-class immutable `bytes` contract and text/binary boundary for this phase
   - classify permanent diffs (`bytearray`, `memoryview`, buffer protocol, implicit coercions, non-UTF-8 codecs)
@@ -84,8 +84,8 @@ Required entry records:
 ## External Review Passes
 
 ### wave_psp_bytes_0 review_pass_1 (completion-gap)
-- Reviewer artifact: pending
-- Status: pending
+- Reviewer artifact: `reviews/phase-ad-hoc-first-class-bytes-and-binary-surface-foundation-wave-psp-bytes-0-review-pass-1.md`
+- Status: completed (external review approved; no remediation changes required)
 
 ### wave_psp_bytes_0 review_pass_2 (production-grade)
 - Reviewer artifact: pending
