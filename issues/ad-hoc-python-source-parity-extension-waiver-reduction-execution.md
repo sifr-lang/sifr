@@ -136,6 +136,10 @@ Required entry records:
 - Reviewer artifact: `reviews/phase-ad-hoc-python-source-parity-extension-waiver-reduction-wave-psp-ext-2-review-pass-2.md`
 - Status: completed (validated; no actionable defects)
 
+### wave_psp_ext_3 review_pass_1 (completion-gap)
+- Reviewer artifact: `reviews/phase-ad-hoc-python-source-parity-extension-waiver-reduction-wave-psp-ext-3-review-pass-1.md`
+- Status: completed (validated; no actionable defects, informational note only: current iterator surfaces are materialize-then-iterate at intrinsic boundary)
+
 ### closure review cycles
 - wave closure completion review: pending
 - wave closure production-grade review: pending
