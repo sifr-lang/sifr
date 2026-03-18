@@ -310,6 +310,39 @@ fn test_reversed_enumerate_zip_are_typed_as_iterators() {
 }
 
 #[test]
+fn test_map_is_typed_as_iterator() {
+    let module = lower_source(
+        "def add(x: int, y: int) -> int:\n    return x + y\n\ndef main():\n    left: list[int] = [1, 2]\n    right: list[int] = [3, 4]\n    mapped: Iterator[int] = map(add, left, right)\n    _vals: list[int] = list(mapped)\n",
+    )
+    .unwrap();
+    let main_fn = module
+        .functions
+        .iter()
+        .find(|func| func.name == "main")
+        .expect("main function should exist");
+    let Some(HirStmt::Let { ty, .. }) = main_fn
+        .body
+        .iter()
+        .find(|stmt| matches!(stmt, HirStmt::Let { name, .. } if name == "mapped"))
+    else {
+        panic!("expected let binding for mapped");
+    };
+    assert!(matches!(ty, Type::Iterator(_)));
+}
+
+#[test]
+fn test_map_rejects_plain_list_annotation_without_materialization() {
+    let result = lower_source(
+        "def add(x: int, y: int) -> int:\n    return x + y\n\ndef main():\n    values: list[int] = map(add, [1, 2], [3, 4])\n",
+    );
+    assert!(result.is_err());
+    let errors = result.unwrap_err();
+    assert!(errors
+        .iter()
+        .any(|e| e.message.contains("expected 'list[int]', got 'Iterator[int]'")));
+}
+
+#[test]
 fn test_sorted_accepts_iterable_keyword_and_key_none() {
     let result = lower_source(
         "def main():\n    nums: list[int] = [3, 1, 2]\n    ordered: list[int] = sorted(iterable=nums, key=None, reverse=True)\n    assert ordered == [3, 2, 1]\n",

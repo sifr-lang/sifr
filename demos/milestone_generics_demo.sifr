@@ -11,7 +11,7 @@
 def main():
     # --- 1. Lambda with map/filter ---
     nums: list[int] = [1, 2, 3, 4, 5]
-    doubled: list[int] = map(lambda x: x * 2, nums)
+    doubled: list[int] = list(map(lambda x: x * 2, nums))
     print(doubled)
 
     evens: list[int] = filter(lambda x: x % 2 == 0, nums)

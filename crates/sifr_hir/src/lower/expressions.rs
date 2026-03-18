@@ -1453,7 +1453,7 @@ pub(super) fn lower_call(call: &ExprCall, ctx: &mut LowerCtx) -> Option<HirExpr>
         });
     }
 
-    // map(func, iterable) -> list
+    // map(func, iterable) -> iterator
     if func_name == "map" {
         if !call.arguments.keywords.is_empty() {
             ctx.error("map() does not accept keyword arguments in this phase".to_string());
@@ -1491,7 +1491,7 @@ pub(super) fn lower_call(call: &ExprCall, ctx: &mut LowerCtx) -> Option<HirExpr>
             ));
             return None;
         }
-        let result_ty = Type::List(Box::new(result_elem_ty));
+        let result_ty = Type::Iterator(Box::new(result_elem_ty));
         return Some(HirExpr::Call {
             func: "map".to_string(),
             args: std::iter::once(func_arg).chain(iter_args).collect(),

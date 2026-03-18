@@ -25,9 +25,9 @@ Terminal state legend for this milestone:
 | `int(...)` / `float(...)` conversion paths | `intentional-diff` | `internal_docs/architecture.md` | Typed `Result` adaptation is a core Sifr safety contract. |
 | `len(...)` / `abs(...)` / `min(...)` / `max(...)` / `sum(...)` | `parity-closed` | `verification/stdlib/wave_psp_a1_cpython_traceability.md` | Closed in builtin parity waves with typed-safe semantics. |
 | `sorted(...)` | `parity-closed` | `verification/stdlib/wave_psp_a1_cpython_traceability.md` | Keyword/binding parity closed for shipped call shapes. |
-| `reversed(...)` | `parity-closed` | `verification/stdlib/wave_psp_a1_cpython_traceability.md` | Eager list materialization is explicit adaptation. |
+| `reversed(...)` | `parity-closed` | `verification/stdlib/wave_psp_a1_cpython_traceability.md` | Iterator-returning contract is closed; eager materialization is explicit (`list(...)`). |
 | `enumerate(...)` | `parity-closed` | `verification/stdlib/wave_psp_a1_cpython_traceability.md` | Positional/keyword start forms closed. |
-| `zip(...)` / `map(...)` | `parity-closed` | `verification/stdlib/wave_psp_a1_cpython_traceability.md` | Base variadic forms closed; strict-mode waivers are explicit. |
+| `zip(...)` / `map(...)` | `parity-closed` | `verification/stdlib/wave_psp_a1_cpython_traceability.md` | Base variadic forms close on iterator-returning behavior; strict-mode waivers remain explicit. |
 | `range(...)` | `parity-closed` | `verification/stdlib/wave_psp_a1_cpython_traceability.md` | Keyword normalization is an intentional adaptation. |
 | `any(...)` / `all(...)` | `parity-closed` | `verification/stdlib/wave_psp_a1_cpython_traceability.md` | Closed for shipped iterable surface. |
 

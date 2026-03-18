@@ -1,0 +1,114 @@
+# Ad Hoc Phase Execution Checklist (Python Source Parity Extension and Waiver Reduction)
+
+Status: in_progress (started 2026-03-18)
+Owner: ad_hoc_parity_extension execution loop
+Reference planning doc:
+- `issues/ad-hoc-python-source-parity-extension-waiver-reduction.md`
+
+Loop per wave: Plan -> Implement -> Validate -> Demo -> PR -> External completion review -> Fix -> PR -> Merge -> External production-grade review -> Fix -> PR -> Merge -> Update docs -> Next wave
+
+## Global Gates
+- [x] Entry baseline validated before wave 1
+- [ ] Scope remains constrained to active wave
+- [ ] Root cause is fixed without compatibility shims
+- [ ] Positive-path and negative-path validation recorded for each wave
+- [ ] Demo runs before opening each wave PR
+- [ ] `$(pwd)/scripts/run_all_tests.sh` run before each wave PR
+- [ ] PR opened/reviewed/merged before next wave starts
+- [ ] Docs + traceability + waiver state updated before moving on
+
+## Full Phase To-Do Plan
+1. [ ] `wave_psp_ext_1`: builtin iterator return-shape re-closure (`reversed`, `enumerate`, `zip`, `map`)
+2. [ ] `wave_psp_ext_2`: `itertools` lazy-surface closure (`accumulate`, `compress`, `dropwhile`, `takewhile`, `filterfalse`, `zip_longest`, `cycle`, `starmap`, `product`, `permutations`, `combinations`, `combinations_with_replacement`)
+3. [ ] `wave_psp_ext_3`: regex/filesystem iterator surfaces (`re.finditer`, `Pattern.finditer`, `glob.iglob`, `Path.iterdir`, `Path.glob`, `Path.rglob`)
+4. [ ] `wave_psp_ext_4`: waiver-ledger reduction and phase exit-closure governance updates
+5. [ ] wave-level extra completion review cycle done
+6. [ ] wave-level extra production-grade review cycle done
+7. [ ] milestone-level completion review cycle done
+8. [ ] milestone-level production-grade review cycle done
+9. [ ] phase-level completion review cycle done
+10. [ ] phase-level production-grade review cycle done
+11. [ ] closure telegram notification sent
+
+## Entry Baseline Evidence (2026-03-18)
+
+Baseline command:
+- `$(pwd)/scripts/run_all_tests.sh --profile quick`
+
+Observed baseline result before wave edits:
+- HIR maintainability guardrails: PASS
+- `sifr_driver` maintainability guardrails: PASS
+- `cargo test -p sifr -- --skip test_e2e_pass`: PASS (`37` tests)
+- e2e fail/runtime/corpus lane: PASS (`25` tests)
+- validation contract matrix (`frontend_mode_parity`, `phase23_graph_isolation`): PASS (`7` rows)
+- e2e pass suite quick profile: PASS (`24` fixtures, report signature `e1bf653aaa770517`)
+- quick lane report: PASS (wall `36.59s`, max RSS `105.1MiB`, swaps `0`)
+
+Required entry records:
+- Current builtin iterator-return mismatch to retire in this phase:
+  - `map(...)` remains eager/list-returning while `reversed`/`enumerate`/`zip` are already iterator-returning.
+- Current `itertools` lazy-waiver debt to retire in this phase:
+  - `accumulate`, `compress`, `dropwhile`, `takewhile`, `filterfalse`, `zip_longest`, `cycle`, `starmap`, `product`, `permutations`, `combinations`, `combinations_with_replacement` still list-backed.
+- Current iterator-returning API gaps to close in this phase:
+  - `re.finditer(...)`, `Pattern.finditer(...)`, `glob.iglob(...)`, `Path.iterdir()`, `Path.glob(...)`, `Path.rglob()`.
+- Initial CPython test-family inventory for this continuation:
+  - `Lib/test/test_builtin.py` (`map` iterator contract, `zip`/`enumerate`/`reversed` iterable protocol consistency)
+  - `Lib/test/test_itertools.py` (iterator-returning combinators in approved scope)
+  - `Lib/test/test_re.py` (`finditer` behavior)
+  - `Lib/test/test_glob.py` (`iglob` behavior)
+  - `Lib/test/test_pathlib/` (iterator-returning behavior for `iterdir/glob/rglob`)
+
+## Wave Progress
+
+### wave_psp_ext_1: Builtin Iterator Re-Closure
+- Status: in_review
+- Implementation PR:
+  - pending (to be opened from this branch)
+- Validation:
+  - positive path: `cargo test -p sifr_hir -- test_map_is_typed_as_iterator --nocapture` -> PASS
+  - negative path: `cargo test -p sifr_hir -- test_map_rejects_plain_list_annotation_without_materialization --nocapture` -> PASS
+  - positive path: `cargo run -q -p sifr -- run crates/sifr/tests/e2e/pass/phase_psp_a1_builtin_callable_surface.sifr` -> PASS
+  - positive path: `cargo run -q -p sifr -- run crates/sifr/tests/e2e/pass/cpython_builtins_subset.sifr` -> PASS
+  - positive path: `cargo run -q -p sifr -- run crates/sifr/tests/e2e/pass/lambda_basic.sifr` -> PASS
+  - demo check: `cargo run -q -p sifr -- check demos/ad_hoc_parity_ext_wave1_builtin_iterator_reclosure_demo.sifr` -> `no errors found`
+  - demo run: `cargo run -q -p sifr -- run demos/ad_hoc_parity_ext_wave1_builtin_iterator_reclosure_demo.sifr` -> PASS
+  - wave gate: `$(pwd)/scripts/run_all_tests.sh` -> PASS (2026-03-18)
+
+### wave_psp_ext_2: `itertools` Lazy Surface Closure
+- Status: pending
+- Implementation PR:
+  - pending
+- Validation:
+  - pending
+
+### wave_psp_ext_3: Regex and Filesystem Iterator Surfaces
+- Status: pending
+- Implementation PR:
+  - pending
+- Validation:
+  - pending
+
+### wave_psp_ext_4: Waiver Ledger Reduction and Exit Closure
+- Status: pending
+- Implementation PR:
+  - pending
+- Validation:
+  - pending
+
+## External Review Passes
+
+### review_pass_1 (completion-gap)
+- Reviewer artifact: pending
+- Status: pending
+
+### review_pass_2 (production-grade)
+- Reviewer artifact: pending
+- Status: pending
+
+### closure review cycles
+- wave closure completion review: pending
+- wave closure production-grade review: pending
+- milestone closure completion review: pending
+- milestone closure production-grade review: pending
+- phase closure completion review: pending
+- phase closure production-grade review: pending

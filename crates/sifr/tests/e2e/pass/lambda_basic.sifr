@@ -2,7 +2,7 @@
 
 def main():
     nums: list[int] = [1, 2, 3]
-    doubled: list[int] = map(lambda x: x * 2, nums)
+    doubled: list[int] = list(map(lambda x: x * 2, nums))
     assert str(doubled) == '[2, 4, 6]'
     big: list[int] = filter(lambda x: x > 1, nums)
     assert str(big) == '[2, 3]'
