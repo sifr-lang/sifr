@@ -46,6 +46,24 @@ def main():
         assert False
     assert constrained_fill == ">>ab\n..cd\n..ef"
 
+    hyphen_break: TextWrapper = TextWrapper(8, "", "", True, 8, True, True, True)
+    assert str(hyphen_break.wrap("alpha-beta gamma")) == "[\"alpha-\", \"beta\", \"gamma\"]"
+
+    hyphen_keep: TextWrapper = TextWrapper(8, "", "", True, 8, True, True, False)
+    assert str(hyphen_keep.wrap("alpha-beta gamma")) == "[\"alpha-beta\", \"gamma\"]"
+
+    keep_whitespace: TextWrapper = TextWrapper(10, "", "", True, 8, True, False, True)
+    assert str(keep_whitespace.wrap("a  b")) == "[\"a  b\"]"
+
+    tabsize4: TextWrapper = TextWrapper(20, "", "", True, 4, False, False, True)
+    tab_lines: list[str] = tabsize4.wrap("ab\tc")
+    assert len(tab_lines) == 1
+    tab_line0: str | None = tab_lines[0]
+    tab_line_len_ok: bool = False
+    if tab_line0 is not None:
+        tab_line_len_ok = len(tab_line0) == 5
+    assert tab_line_len_ok
+
     bad_wrap: TextWrapper = TextWrapper(0)
     assert str(bad_wrap.wrap("x")) == "[]"
     assert bad_wrap.fill("x") == ""

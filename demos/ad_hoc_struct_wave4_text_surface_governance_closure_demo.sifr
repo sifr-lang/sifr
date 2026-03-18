@@ -1,0 +1,18 @@
+from sifr.textwrap import TextWrapper
+from sifr.html import escape, unescape
+
+
+def main() -> None:
+    wrapper: TextWrapper = TextWrapper(8, "", "", True, 8, True, True, False)
+    lines: list[str] = wrapper.wrap("alpha-beta gamma")
+    assert str(lines) == "[\"alpha-beta\", \"gamma\"]"
+
+    keep_ws: TextWrapper = TextWrapper(10, "", "", True, 8, True, False, True)
+    assert str(keep_ws.wrap("a  b")) == "[\"a  b\"]"
+
+    text: str = "<a href=\"x\">'ok' & done</a>"
+    escaped_default: str = escape(text)
+    escaped_no_quote: str = escape(text, False)
+    assert escaped_default == "&lt;a href=&quot;x&quot;&gt;&#x27;ok&#x27; &amp; done&lt;/a&gt;"
+    assert escaped_no_quote == "&lt;a href=\"x\"&gt;'ok' &amp; done&lt;/a&gt;"
+    assert unescape(escaped_default) == text

@@ -1,5 +1,5 @@
 # Consolidated stdlib textwrap coverage for milestone_30_4 structure rules
-from sifr.textwrap import wrap, fill, dedent, indent, shorten
+from sifr.textwrap import wrap, fill, dedent, indent, shorten, TextWrapper
 from sifr.test import assert_bool_vector_eq
 
 def collect_wrap_fill_actual() -> list[bool]:
@@ -48,15 +48,30 @@ def collect_negative_actual() -> list[bool]:
     actual.append(fill_error)
     return actual
 
+def collect_textwrapper_option_actual() -> list[bool]:
+    actual: list[bool] = []
+
+    keep_whitespace: TextWrapper = TextWrapper(10, "", "", True, 8, True, False, True)
+    actual.append(str(keep_whitespace.wrap("a  b")) == "[\"a  b\"]")
+
+    hyphen_break: TextWrapper = TextWrapper(8, "", "", True, 8, True, True, True)
+    actual.append(str(hyphen_break.wrap("alpha-beta gamma")) == "[\"alpha-\", \"beta\", \"gamma\"]")
+
+    hyphen_keep: TextWrapper = TextWrapper(8, "", "", True, 8, True, True, False)
+    actual.append(str(hyphen_keep.wrap("alpha-beta gamma")) == "[\"alpha-beta\", \"gamma\"]")
+
+    return actual
+
 def append_all(mut target: list[bool], values: list[bool]):
     for value in values:
         target.append(value)
 
 def main():
-    expected: list[bool] = [True, True, True, True, True, True, True, True]
+    expected: list[bool] = [True, True, True, True, True, True, True, True, True, True, True]
     actual: list[bool] = []
     append_all(actual, collect_wrap_fill_actual())
     append_all(actual, collect_indent_dedent_shorten_actual())
     append_all(actual, collect_negative_actual())
+    append_all(actual, collect_textwrapper_option_actual())
     assert_bool_vector_eq(actual, expected)
     assert str("stdlib_textwrap_consolidated: pass") == "stdlib_textwrap_consolidated: pass"

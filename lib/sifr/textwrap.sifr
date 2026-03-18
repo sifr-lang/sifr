@@ -1,7 +1,60 @@
 # sifr.textwrap — Text wrapping and filling (pure Sifr)
 
+def _replace_whitespace_chars(text: str, replace_tabs: bool) -> str:
+    normalized: str = text.replace("\n", " ").replace("\r", " ").replace("\v", " ").replace("\f", " ")
+    if replace_tabs:
+        return normalized.replace("\t", " ")
+    return normalized
+
+
+def _expand_tabs_impl(text: str, tabsize: int) -> str:
+    effective_tabsize: int = tabsize
+    if effective_tabsize <= 0:
+        effective_tabsize = 1
+
+    result: str = ""
+    column: int = 0
+    i: int = 0
+    while i < len(text):
+        ch_opt: str | None = text[i]
+        if ch_opt is not None:
+            ch: str = ch_opt
+            if ch == "\t":
+                spaces: int = effective_tabsize - (column % effective_tabsize)
+                if spaces <= 0:
+                    spaces = effective_tabsize
+                j: int = 0
+                while j < spaces:
+                    result = result + " "
+                    j = j + 1
+                column = column + spaces
+            elif ch == "\n" or ch == "\r":
+                result = result + ch
+                column = 0
+            else:
+                result = result + ch
+                column = column + 1
+        i = i + 1
+    return result
+
+
+def _prepare_text(
+    text: str,
+    expand_tabs: bool,
+    tabsize: int,
+    replace_whitespace: bool,
+) -> str:
+    prepared: str = text + ""
+    if expand_tabs:
+        prepared = _expand_tabs_impl(prepared, tabsize)
+    if replace_whitespace:
+        prepared = _replace_whitespace_chars(prepared, True)
+    return prepared
+
+
 def _normalize_whitespace(text: str) -> str:
-    return text.replace("\t", " ").replace("\n", " ").replace("\r", " ").replace("\v", " ").replace("\f", " ")
+    return _prepare_text(text, True, 8, True)
+
 
 def _has_non_whitespace(text: str) -> bool:
     i: int = 0
@@ -18,24 +71,56 @@ def _has_non_whitespace(text: str) -> bool:
         i = i + 1
     return False
 
+
+def _split_word_units(word: str, break_on_hyphens: bool) -> list[str]:
+    if not break_on_hyphens:
+        return [word + ""]
+
+    parts: list[str] = word.split("-")
+    if len(parts) <= 1:
+        return [word + ""]
+
+    units: list[str] = []
+    index: int = 0
+    for part in parts:
+        is_last: bool = index == len(parts) - 1
+        if is_last:
+            if len(part) > 0:
+                units.append(part)
+        else:
+            if len(part) == 0:
+                units.append("-")
+            else:
+                units.append(part + "-")
+        index = index + 1
+
+    if len(units) == 0:
+        units.append(word + "")
+    return units
+
+
+def _trim_line(line: str) -> str:
+    start: int = 0
+    while start < len(line) and line[start] == " ":
+        start = start + 1
+
+    end: int = len(line)
+    while end > start and line[end - 1] == " ":
+        end = end - 1
+
+    return line[start:end]
+
+
+def _finalize_line(line: str, drop_whitespace: bool) -> str:
+    if drop_whitespace:
+        return _trim_line(line)
+    return line + ""
+
+
 def _wrap_impl(text: str, width: int) -> list[str]:
     normalized: str = _normalize_whitespace(text)
-    words: list[str] = normalized.split(" ")
-    result: list[str] = []
-    current: str = ""
-    for word in words:
-        if len(word) == 0:
-            pass
-        elif len(current) == 0:
-            current = word
-        elif len(current) + 1 + len(word) > width:
-            result.append(current)
-            current = word
-        else:
-            current = current + " " + word
-    if len(current) > 0:
-        result.append(current)
-    return result
+    return _wrap_with_indents(normalized, width, "", "", True, True)
+
 
 def _apply_line_indents(
     lines: list[str], initial_indent: str, subsequent_indent: str
@@ -50,73 +135,129 @@ def _apply_line_indents(
         index = index + 1
     return result
 
+
 def _effective_content_width(total_width: int, indent: str) -> int:
     available: int = total_width - len(indent)
     if available <= 0:
         return 1
     return available
 
+
+def _push_current_line(
+    mut result: list[str],
+    line: str,
+    indent: str,
+    drop_whitespace: bool,
+) -> None:
+    candidate: str = _finalize_line(indent + line, drop_whitespace)
+    if drop_whitespace:
+        if len(candidate) > 0:
+            result.append(candidate)
+    else:
+        result.append(candidate)
+
+
 def _wrap_with_indents(
-    text: str, total_width: int, initial_indent: str, subsequent_indent: str
+    text: str,
+    total_width: int,
+    initial_indent: str,
+    subsequent_indent: str,
+    break_on_hyphens: bool,
+    drop_whitespace: bool,
 ) -> list[str]:
-    normalized: str = _normalize_whitespace(text)
-    words: list[str] = normalized.split(" ")
+    words: list[str] = text.split(" ")
     result: list[str] = []
     current: str = ""
     first_line: bool = True
     current_limit: int = _effective_content_width(total_width, initial_indent)
 
-    for word in words:
-        if len(word) == 0:
-            continue
-        if len(current) == 0:
-            current = word
-        elif len(current) + 1 + len(word) <= current_limit:
-            current = current + " " + word
-        else:
-            if first_line:
-                result.append(initial_indent + current)
-                first_line = False
-                current_limit = _effective_content_width(total_width, subsequent_indent)
+    for raw_word in words:
+        units: list[str] = _split_word_units(raw_word, break_on_hyphens)
+        for word in units:
+            if len(word) == 0:
+                if drop_whitespace:
+                    continue
+                if len(current) > 0:
+                    if len(current) + 1 <= current_limit:
+                        current = current + " "
+                continue
+
+            if len(current) == 0:
+                current = word
+            elif len(current) + 1 + len(word) <= current_limit:
+                current = current + " " + word
             else:
-                result.append(subsequent_indent + current)
-            current = word
+                if first_line:
+                    _push_current_line(result, current, initial_indent, drop_whitespace)
+                    first_line = False
+                    current_limit = _effective_content_width(total_width, subsequent_indent)
+                else:
+                    _push_current_line(result, current, subsequent_indent, drop_whitespace)
+                current = word
 
     if len(current) > 0:
         if first_line:
-            result.append(initial_indent + current)
+            _push_current_line(result, current, initial_indent, drop_whitespace)
         else:
-            result.append(subsequent_indent + current)
+            _push_current_line(result, current, subsequent_indent, drop_whitespace)
     return result
+
 
 class TextWrapper:
     width: int
     initial_indent: str
     subsequent_indent: str
+    expand_tabs: bool
+    tabsize: int
+    replace_whitespace: bool
+    drop_whitespace: bool
+    break_on_hyphens: bool
 
     def __init__(
         self,
         width: int = 70,
         initial_indent: str = "",
         subsequent_indent: str = "",
+        expand_tabs: bool = True,
+        tabsize: int = 8,
+        replace_whitespace: bool = True,
+        drop_whitespace: bool = True,
+        break_on_hyphens: bool = True,
     ) -> None:
         self.width = width
         self.initial_indent = initial_indent + ""
         self.subsequent_indent = subsequent_indent + ""
+        self.expand_tabs = expand_tabs
+        safe_tabsize: int = tabsize
+        if safe_tabsize <= 0:
+            safe_tabsize = 1
+        self.tabsize = safe_tabsize
+        self.replace_whitespace = replace_whitespace
+        self.drop_whitespace = drop_whitespace
+        self.break_on_hyphens = break_on_hyphens
 
     def wrap(self, text: str) -> list[str]:
         if self.width <= 0:
             return []
+        prepared: str = _prepare_text(
+            text,
+            self.expand_tabs,
+            self.tabsize,
+            self.replace_whitespace,
+        )
         return _wrap_with_indents(
-            text, self.width, self.initial_indent, self.subsequent_indent
+            prepared,
+            self.width,
+            self.initial_indent,
+            self.subsequent_indent,
+            self.break_on_hyphens,
+            self.drop_whitespace,
         )
 
     def fill(self, text: str) -> str:
         if self.width <= 0:
             return ""
-        lines: list[str] = _wrap_with_indents(
-            text, self.width, self.initial_indent, self.subsequent_indent
-        )
+        lines: list[str] = self.wrap(text)
         result: str = ""
         i: int = 0
         for line in lines:
@@ -126,10 +267,12 @@ class TextWrapper:
             i = i + 1
         return result
 
+
 def wrap(text: str, width: int) -> Result[list[str], ValueError]:
     if width <= 0:
         raise ValueError("wrap: width must be > 0")
     return _wrap_impl(text, width)
+
 
 def fill(text: str, width: int) -> Result[str, ValueError]:
     if width <= 0:
@@ -143,6 +286,7 @@ def fill(text: str, width: int) -> Result[str, ValueError]:
         result = result + line
         i = i + 1
     return result
+
 
 def dedent(text: str) -> str:
     lines: list[str] = text.split("\n")
@@ -182,6 +326,7 @@ def dedent(text: str) -> str:
             result = result + line2[min_indent:]
     return result
 
+
 def indent(text: str, prefix: str) -> str:
     lines: list[str] = text.split("\n")
     result: str = ""
@@ -195,6 +340,7 @@ def indent(text: str, prefix: str) -> str:
         else:
             result = result + line
     return result
+
 
 def shorten(text: str, width: int) -> str:
     normalized: str = _normalize_whitespace(text)
