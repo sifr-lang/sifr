@@ -1,0 +1,74 @@
+from sifr.collections import Counter, defaultdict
+from sifr.argparse import ArgumentParser, Namespace
+
+
+def main() -> None:
+    from_iterable: Counter[str] = Counter(iterable=["a", "b", "a", "c", "b", "a"])
+    assert from_iterable.get("a") == 3
+    assert from_iterable.get("b") == 2
+    assert from_iterable.total() == 6
+
+    from_mapping: Counter[str] = Counter({"x": 2, "y": 1})
+    assert from_mapping.get("x") == 2
+    assert from_mapping.get("y") == 1
+
+    counts: defaultdict[str] = defaultdict(0)
+    steps: int = counts.ensure("steps")
+    counts.set("steps", steps + 2)
+    steps_after_first: int = counts.ensure("steps")
+    counts.set("steps", steps_after_first + 3)
+    assert counts.ensure("steps") == 5
+    assert counts.ensure("other") == 0
+    assert counts.pop("other") == 0
+    assert counts.has("steps")
+    assert counts.len() == 1
+
+    parser: ArgumentParser = ArgumentParser("tool")
+    parser.add_subparsers(dest="command")
+
+    run_parser: ArgumentParser = ArgumentParser("run")
+    run_parser.add_argument_typed("--count", "count", "store", "0", "1", "int")
+    run_parser.add_argument_typed("--ratio", "ratio", "store", "1.0", "?", "float")
+    run_parser.add_argument_typed("--flag", "flag", "store", "false", "1", "bool")
+    run_parser.add_argument_typed("--tags", "tags", "store", "", "*", "str")
+    run_parser.add_argument_typed("--coords", "coords", "store", "", "2", "int")
+    run_parser.add_argument_typed("--even", "even", "store", "2", "1", "int")
+    run_parser.add_argument_typed("files", "files", "store", "", "+", "str")
+    parser.add_parser("run", run_parser)
+
+    parsed: Namespace = parser.parse_args(
+        [
+            "run",
+            "--count",
+            "3",
+            "--ratio",
+            "2.5",
+            "--flag",
+            "yes",
+            "--tags",
+            "a",
+            "b",
+            "--coords",
+            "4",
+            "9",
+            "--even",
+            "8",
+            "main.sifr",
+            "lib.sifr",
+        ]
+    )
+    assert parsed.get("command", "") == "run"
+    assert parsed.get("count", "") == "3"
+    assert parsed.get("ratio", "") == "2.5"
+    assert parsed.get_bool("flag", False)
+    assert str(parsed.get_list("tags")) == "[\"a\", \"b\"]"
+    assert str(parsed.get_list("coords")) == "[\"4\", \"9\"]"
+    assert parsed.get("even", "") == "8"
+    assert str(parsed.get_list("files")) == "[\"main.sifr\", \"lib.sifr\"]"
+
+    parsed_default: Namespace = parser.parse_args(["run", "entry.sifr"])
+    assert parsed_default.get("command", "") == "run"
+    assert parsed_default.get("count", "") == "0"
+    assert parsed_default.get("ratio", "") == "1.0"
+    assert str(parsed_default.get_list("tags")) == "[]"
+    assert str(parsed_default.get_list("files")) == "[\"entry.sifr\"]"

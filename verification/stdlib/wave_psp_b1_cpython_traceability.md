@@ -17,19 +17,23 @@
 
 | Surface | State | Rationale |
 | --- | --- | --- |
-| `Counter(iterable)` and `Counter(**kwargs)` constructor forms from `Lib/test/test_collections.py` | `unsupported` | Generic class-constructor overloading for iterable-vs-mapping-vs-keyword shapes is not yet available; `Counter(dict)` and `from_list(...)` remain the closed typed entry points in this wave. |
-| `collections.defaultdict(..., default_factory=..., **kwargs)` keyword constructor variants and class-attribute surfaces (`default_factory`, class methods, etc.) | `intentional-diff` | The closed b1 surface intentionally uses a typed compiler-lowered compat form for default-producing index access; full CPython class object-model parity is not claimed for this wave. |
+| `Counter(**kwargs)` constructor form from `Lib/test/test_collections.py` | `unsupported` | `wave_psp_struct_2` closed mapping + keyword-iterable constructor parity for the bounded typed surface, but dynamic kwargs constructor overloading remains intentionally out of scope. |
+| `collections.defaultdict(..., default_factory=..., **kwargs)` dynamic keyword/class ecosystem | `intentional-diff` | `wave_psp_struct_2` promotes `defaultdict` to an explicit typed class (`default_factory: int`, typed methods), while dynamic keyword and broad class ecosystem parity remain intentionally bounded. |
 | non-exported `heapq` private helpers `_heappush_max` / `_heappushpop_max` | `unsupported` | These private helpers are intentionally not part of the shipped compatibility surface in this wave; supported max-heap helpers remain `_heapify_max`, `_heappop_max`, and `_heapreplace_max`. |
 
 ## Waiver enforcement fixtures
 
-- `Counter(iterable)` rejection: `crates/sifr/tests/e2e/fail/phase_psp_b1_counter_iterable_constructor_unsupported.sifr`
+- `Counter(positional-iterable)` rejection: `crates/sifr/tests/e2e/fail/phase_psp_b1_counter_iterable_constructor_unsupported.sifr`
 - `Counter(**kwargs)` rejection: `crates/sifr/tests/e2e/fail/phase_psp_b1_counter_kwargs_constructor_unsupported.sifr`
 
-## Structured/Class-Surface Continuation Lock (2026-03-18)
+## Structured/Class-Surface Continuation Closure (2026-03-18)
 
 - Continuation phase: `issues/ad-hoc-structured-data-and-class-surface-parity-expansion.md`
-- Wave ownership: `wave_psp_struct_2` broadens constructor/object-model parity for `collections`.
+- Wave closure: `wave_psp_struct_2` broadens constructor/object-model parity for `collections`.
+- Closed in continuation:
+  - `Counter(iterable=...)` typed constructor form alongside mapping input.
+  - explicit typed `defaultdict` class surface with deterministic missing-key initialization (`ensure`).
+  - CPython-derived continuation fixture: `crates/sifr/tests/e2e/pass/phase_psp_struct_2_collections_argparse_expansion.sifr`
 - Locked permanent diff carried into continuation:
   - `Counter(**kwargs)` remains explicitly `unsupported` until generic constructor-overload support is approved.
 - Enforcement fixture: `crates/sifr/tests/e2e/fail/phase_psp_struct_0_counter_kwargs_constructor_unsupported.sifr`
