@@ -14,7 +14,7 @@
 
 | Surface | State | Rationale |
 | --- | --- | --- |
-| `argparse` advanced parser features (`subparsers`, `nargs` matrices, help rendering, formatter classes) | `unsupported` | Wave e2 closes typed class/object fundamentals; dynamic CLI formatting/reporting matrix is intentionally out of scope. |
+| `argparse` formatter/help ecosystem (`formatter_class`, rich help formatting subclasses) | `unsupported` | `wave_psp_struct_2` closes bounded parser expansion (`subparsers`, bounded `nargs`, typed coercion), but dynamic help-rendering ecosystems remain intentionally out of scope. |
 | `ipaddress` constructor parity for strict CPython-style `IPv4Address(...)` raising | `intentional-diff` | Factory APIs (`ip_address`, `ipv4_address`) carry typed error behavior; direct constructor remains non-raising under current Sifr constructor lowering. |
 | `ipaddress` IPv6 constructors/networks/interfaces and mixed-family parsing | `unsupported` | Current shipped surface is explicitly IPv4-focused; IPv6 class families are not shipped in this runtime. |
 | `uuid` non-v4 generation families (`uuid1`, `uuid3`, `uuid5`, `uuid6/7/8`) | `unsupported` | Runtime exposes deterministic v4 generation + canonical parse/object behavior only. |
@@ -22,12 +22,16 @@
 | `graphlib` full CPython incremental multi-node frontier semantics | `intentional-diff` | Current typed API uses deterministic one-node `get_ready()` progression and explicit `done(node)` sequencing without dynamic hashable-node generality. |
 | `test` as CPython-equivalent public stdlib module | `intentional-diff` | `sifr.test` is compiler/runtime verification infrastructure and is not claimed as one-to-one CPython module parity. |
 
-## Structured/Class-Surface Continuation Lock (2026-03-18)
+## Structured/Class-Surface Continuation Closure (2026-03-18)
 
 - Continuation phase: `issues/ad-hoc-structured-data-and-class-surface-parity-expansion.md`
 - Wave ownership:
-  - `wave_psp_struct_2` for bounded `argparse` expansion,
+  - `wave_psp_struct_2` for bounded `argparse` expansion (completed),
   - `wave_psp_struct_3` for `uuid` typed generation/namespace expansion.
+- Closed in continuation:
+  - `argparse` `subparsers` support with deterministic namespace merge behavior.
+  - bounded `nargs` support (`int`, `?`, `*`, `+`) and typed conversion for `str`/`int`/`float`/`bool`.
+  - CPython-derived continuation fixture: `crates/sifr/tests/e2e/pass/phase_psp_struct_2_collections_argparse_expansion.sifr`
 - Locked permanent diffs carried into continuation:
   - `argparse` formatter-class/help-formatting ecosystems remain `unsupported`,
   - strict raising direct `UUID(...)` constructor parity remains `intentional-diff` until constructor-lowering architecture changes.

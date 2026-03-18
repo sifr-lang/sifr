@@ -20,7 +20,7 @@ Loop per wave: Plan -> Implement -> Validate -> Demo -> PR -> External completio
 ## Full Phase To-Do Plan
 1. [x] `wave_psp_struct_0`: architecture lock and explicit waiver-boundary enforcement
 2. [x] `wave_psp_struct_1`: parser and serialization surface expansion (`json`, `configparser`, `csv`)
-3. [ ] `wave_psp_struct_2`: collections and CLI class-surface expansion (`collections`, `argparse`)
+3. [x] `wave_psp_struct_2`: collections and CLI class-surface expansion (`collections`, `argparse`)
 4. [ ] `wave_psp_struct_3`: `uuid` and `datetime` expansion under fixed-offset timezone contract
 5. [ ] `wave_psp_struct_4`: text-surface polish (`textwrap`, `html`) and governance closure
 6. [ ] wave-level extra completion review cycle done
@@ -91,7 +91,16 @@ Required entry records:
   - wave gate: `$(pwd)/scripts/run_all_tests.sh` -> PASS (2026-03-18)
 
 ### wave_psp_struct_2: Collections and CLI Class-Surface Expansion
-- Status: pending
+- Status: completed
+- Scope:
+  - `collections`: add `Counter(iterable=...)` constructor parity alongside mapping input, and promote `defaultdict` to an explicit typed class surface (`ensure`, `set`, `has`, `pop`, `clear`, `keys`, `values`, `items`, `len`)
+  - `argparse`: add bounded `subparsers`, `nargs` forms (`int`, `?`, `*`, `+`), typed coercion (`str`/`int`/`float`/`bool`) via `add_argument_typed`, and namespace list support (`set_list`/`get_list`)
+  - add wave-2 coverage fixture and demo for combined `collections` + `argparse` class-surface expansion
+- Validation:
+  - positive path: `cargo run -q -p sifr -- run crates/sifr/tests/e2e/pass/phase_psp_struct_2_collections_argparse_expansion.sifr` -> PASS
+  - positive path: `cargo run -q -p sifr -- run demos/ad_hoc_struct_wave2_collections_argparse_expansion_demo.sifr` -> PASS
+  - regression path: `stdlib_argparse.sifr`, `cpython_argparse_subset.sifr`, `stdlib_collections_consolidated.sifr`, `cpython_collections_subset.sifr`, `phase31_defaultdict_len_deque_compat.sifr`, `phase_psp_b1_collections_ordered_helpers.sifr` -> PASS
+  - wave gate: `$(pwd)/scripts/run_all_tests.sh` -> PASS (2026-03-18)
 
 ### wave_psp_struct_3: UUID and Datetime Expansion
 - Status: pending
