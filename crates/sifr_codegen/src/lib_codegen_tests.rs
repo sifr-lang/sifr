@@ -1324,13 +1324,13 @@ fn test_generate_rust_while_else_with_borrowed_condition_uses_broke_marker() {
 }
 
 #[test]
-fn test_generate_rust_generator_try_except_uses_buffered_yield_path() {
+fn test_generate_rust_generator_try_except_rejected_by_lazy_generator_shape_gate() {
     let module = HirModule {
         functions: vec![
             HirFunction {
                 name: "gen".to_string(),
                 params: vec![],
-                return_type: Type::List(Box::new(Type::Int)),
+                return_type: Type::Iterator(Box::new(Type::Int)),
                 body: vec![HirStmt::TryExcept {
                     body: vec![HirStmt::Yield {
                         value: HirExpr::IntLiteral(1),
@@ -1359,7 +1359,7 @@ fn test_generate_rust_generator_try_except_uses_buffered_yield_path() {
                     iter: HirExpr::Call {
                         func: "gen".to_string(),
                         args: vec![],
-                        ty: Type::List(Box::new(Type::Int)),
+                        ty: Type::Iterator(Box::new(Type::Int)),
                     },
                     body: vec![HirStmt::Expr {
                         expr: HirExpr::Call {
@@ -1385,11 +1385,16 @@ fn test_generate_rust_generator_try_except_uses_buffered_yield_path() {
         type_param_bounds: std::collections::HashMap::new(),
     };
 
-    let rust_code = generate_rust(&module);
-    assert!(rust_code.contains("fn gen() -> Vec<i64>"));
-    assert!(rust_code.contains("let mut _yields: Vec<i64> = Vec::new();"));
-    assert!(rust_code.contains("_yields.push(1 as i64);"));
-    assert!(rust_code.contains("_yields.push(2 as i64);"));
+    let panic = std::panic::catch_unwind(|| generate_rust(&module))
+        .expect_err("complex try/except generator shape should be rejected");
+    let panic_text = if let Some(msg) = panic.downcast_ref::<String>() {
+        msg.clone()
+    } else if let Some(msg) = panic.downcast_ref::<&str>() {
+        msg.to_string()
+    } else {
+        String::new()
+    };
+    assert!(panic_text.contains("unsupported generator shape for lazy iterator lowering"));
 }
 
 #[test]

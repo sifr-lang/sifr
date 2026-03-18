@@ -1,21 +1,10 @@
-use crate::hir_nodes::{
-    HirExceptHandler, HirExpr, HirFunction, HirMatchArm, HirParam, HirPattern, HirStmt, MethodKind,
-};
-use sifr_python_ast::{
-    BoolOp, CmpOp, ExceptHandler, Expr, Number, Operator, Pattern, Singleton, Stmt, StmtAnnAssign,
-    StmtAssign, StmtAugAssign, StmtFor, StmtIf, StmtMatch, StmtReturn, StmtWhile, UnaryOp,
-};
-use sifr_type_system::infer::resolve_type_annotation;
-use sifr_type_system::{
-    narrow_type, type_check_binary_op, FunctionType, NarrowingCondition, OwnershipKind, Type,
-};
-
 use super::binding_mutability::ensure_mutable_parameter_binding;
 use super::builtin_calls::callable_builtin_element_type;
 use super::classes::collect_literal_coverage;
 use super::diagnostics::{collect_raise_error_types, format_type_name, is_valid_error_type};
 use super::expressions::{lower_expr, lower_star_unpack_assign, lower_tuple_unpack_assign};
 use super::for_loop_safety::{is_collection_backed_iter_source, loop_body_mutates_iter_source};
+use super::function_flow::infer_function_return_type;
 use super::nonlocal_support::{
     collect_declared_nonlocals, hir_body_calls_function, lower_nonlocal, should_rebind_simple_name,
 };
@@ -34,7 +23,17 @@ use super::typing_and_functions::{
     resolve_annotation_expr,
 };
 use super::LowerCtx;
-
+use crate::hir_nodes::{
+    HirExceptHandler, HirExpr, HirFunction, HirMatchArm, HirParam, HirPattern, HirStmt, MethodKind,
+};
+use sifr_python_ast::{
+    BoolOp, CmpOp, ExceptHandler, Expr, Number, Operator, Pattern, Singleton, Stmt, StmtAnnAssign,
+    StmtAssign, StmtAugAssign, StmtFor, StmtIf, StmtMatch, StmtReturn, StmtWhile, UnaryOp,
+};
+use sifr_type_system::infer::resolve_type_annotation;
+use sifr_type_system::{
+    narrow_type, type_check_binary_op, FunctionType, NarrowingCondition, OwnershipKind, Type,
+};
 pub(super) fn lower_stmts(
     stmts: &[Stmt],
     func_type: &FunctionType,
@@ -70,7 +69,6 @@ pub(super) fn lower_stmts(
     let _ = ctx.inferred_binding_hints.pop();
     result
 }
-
 fn predeclare_nested_function_symbols(
     stmts: &[Stmt],
     inferred_types: &std::collections::HashMap<String, FunctionType>,
@@ -524,26 +522,13 @@ pub(super) fn lower_stmt(
                 ));
             }
 
-            // Infer return type if not explicitly annotated
-            let inferred_return_type = if *ft.return_type == Type::Any && func.returns.is_none() {
-                let return_types = collect_return_types(&body);
-                if return_types.is_empty() {
-                    Type::None
-                } else if return_types.len() == 1 {
-                    return_types.into_iter().next().unwrap()
-                } else {
-                    let mut members: Vec<Type> = return_types.into_iter().collect();
-                    members.sort_by_key(sifr_type_system::Type::display_name);
-                    members.dedup();
-                    if members.len() == 1 {
-                        members.into_iter().next().unwrap()
-                    } else {
-                        Type::Union(members)
-                    }
-                }
-            } else {
-                *ft.return_type
-            };
+            let inferred_return_type = infer_function_return_type(
+                func.name.as_ref(),
+                ft.return_type.as_ref(),
+                func.returns.is_some(),
+                &body,
+                |message| ctx.error(message),
+            );
 
             // Collect user-defined decorators
             let decorators: Vec<String> = func
@@ -1805,9 +1790,7 @@ pub(super) fn lower_if(
             ctx.add_sequence_guard(guard);
         }
     }
-
     ctx.clear_sequence_pointers();
-
     Some(HirStmt::If {
         condition,
         then_body,
@@ -1815,18 +1798,10 @@ pub(super) fn lower_if(
         else_body,
     })
 }
-
 /// Check if a block of statements always exits (return, break, continue, raise).
 /// Used for early-return narrowing: `if x is None: return` narrows x after the if.
 pub(super) fn then_body_always_exits(stmts: &[HirStmt]) -> bool {
     crate::cfg::flow_facts(stmts).always_exits()
-}
-
-/// Collect all return types from a list of HIR statements (recursively).
-pub(super) fn collect_return_types(stmts: &[HirStmt]) -> Vec<Type> {
-    crate::cfg::flow_facts(stmts)
-        .reachable_return_types()
-        .to_vec()
 }
 
 /// Detect a narrowing condition from an if-test expression.

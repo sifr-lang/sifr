@@ -1,5 +1,5 @@
 # Tests: generator function returns a lazy iterator
-def count_up(n: int) -> list[int]:
+def count_up(n: int) -> Iterator[int]:
     i: int = 0
     while i < n:
         yield i

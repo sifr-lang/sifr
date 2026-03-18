@@ -1063,7 +1063,7 @@ fn try_lower_simple_generator_expr(
     filter: Option<&HirExpr>,
     ty: &Type,
 ) -> Option<RustExpr> {
-    if !matches!(resolve_alias_type(ty), Type::Any | Type::List(_))
+    if !matches!(resolve_alias_type(ty), Type::Any | Type::Iterator(_))
         || filter.is_some()
         || var.contains(',')
     {
@@ -3767,7 +3767,7 @@ mod tests {
     }
 
     #[test]
-    fn lowers_generator_expr_on_typed_list_result() {
+    fn lowers_generator_expr_on_typed_iterator_result() {
         let expr = HirExpr::GeneratorExpr {
             expr: Box::new(HirExpr::Name {
                 name: "x".to_string(),
@@ -3779,7 +3779,7 @@ mod tests {
                 ty: Type::List(Box::new(Type::Int)),
             }),
             filter: None,
-            ty: Type::List(Box::new(Type::Int)),
+            ty: Type::Iterator(Box::new(Type::Int)),
         };
         assert!(try_lower_leaf_expr(&expr).is_some());
     }

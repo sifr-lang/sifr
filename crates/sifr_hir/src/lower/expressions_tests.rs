@@ -203,6 +203,76 @@ fn test_for_rejects_mutation_of_collection_with_live_iterator() {
 }
 
 #[test]
+fn test_generator_function_infers_iterator_return_type() {
+    let module = lower_source(
+        "def count_up(n: int):\n    i: int = 0\n    while i < n:\n        yield i\n        i = i + 1\n",
+    )
+    .unwrap();
+    assert_eq!(
+        module.functions[0].return_type,
+        Type::Iterator(Box::new(Type::Int))
+    );
+}
+
+#[test]
+fn test_generator_function_rejects_non_iterator_annotation() {
+    let result = lower_source(
+        "def count_up(n: int) -> list[int]:\n    i: int = 0\n    while i < n:\n        yield i\n        i = i + 1\n",
+    );
+    assert!(result.is_err());
+    let errors = result.unwrap_err();
+    assert!(errors
+        .iter()
+        .any(|e| { e.message.contains("must declare return type 'Iterator[T]'") }));
+}
+
+#[test]
+fn test_generator_expression_is_typed_as_iterator() {
+    let module = lower_source(
+        "def main():\n    nums: list[int] = [1, 2, 3]\n    g: Iterator[int] = (x * x for x in nums)\n    _first: int | None = next(g)\n",
+    )
+    .unwrap();
+    let main_fn = module
+        .functions
+        .iter()
+        .find(|func| func.name == "main")
+        .expect("main function should exist");
+    let Some(HirStmt::Let { ty, .. }) = main_fn
+        .body
+        .iter()
+        .find(|stmt| matches!(stmt, HirStmt::Let { name, .. } if name == "g"))
+    else {
+        panic!("expected let binding for generator expression");
+    };
+    assert!(matches!(ty, Type::Iterator(_)));
+}
+
+#[test]
+fn test_generator_rejects_nested_yield_shape() {
+    let result = lower_source(
+        "def bad(n: int):\n    i: int = 0\n    while i < n:\n        while i < n:\n            yield i\n            i = i + 1\n",
+    );
+    assert!(result.is_err());
+    let errors = result.unwrap_err();
+    assert!(errors
+        .iter()
+        .any(|e| { e.message.contains("unsupported lazy generator shape") }));
+}
+
+#[test]
+fn test_generator_rejects_trailing_statements_after_loop() {
+    let result = lower_source(
+        "def bad(n: int):\n    i: int = 0\n    while i < n:\n        yield i\n        i = i + 1\n    i = i + 1\n",
+    );
+    assert!(result.is_err());
+    let errors = result.unwrap_err();
+    assert!(errors.iter().any(|e| {
+        e.message
+            .contains("cannot have trailing statements after the generator while loop")
+    }));
+}
+
+#[test]
 fn test_sorted_accepts_iterable_keyword_and_key_none() {
     let result = lower_source(
         "def main():\n    nums: list[int] = [3, 1, 2]\n    ordered: list[int] = sorted(iterable=nums, key=None, reverse=True)\n    assert ordered == [3, 2, 1]\n",

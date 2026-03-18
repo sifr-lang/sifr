@@ -2,7 +2,7 @@
 # Demonstrates lazy iterator support for generator functions
 # Generators now use std::iter::from_fn instead of eager Vec collection
 
-def fibonacci(n: int) -> list[int]:
+def fibonacci(n: int) -> Iterator[int]:
     a: int = 0
     b: int = 1
     count: int = 0
@@ -17,7 +17,7 @@ def fibonacci(n: int) -> list[int]:
 # Part 2: Generator collected into a list (squares)
 # ============================================================
 
-def squares(n: int) -> list[int]:
+def squares(n: int) -> Iterator[int]:
     i: int = 0
     while i < n:
         yield i * i
@@ -27,7 +27,7 @@ def squares(n: int) -> list[int]:
 # Part 3: Conditional yield (filter pattern — evens)
 # ============================================================
 
-def evens(limit: int) -> list[int]:
+def evens(limit: int) -> Iterator[int]:
     i: int = 0
     while i < limit:
         if i % 2 == 0:
@@ -38,7 +38,7 @@ def evens(limit: int) -> list[int]:
 # Part 4: Simple count generator
 # ============================================================
 
-def count_up(n: int) -> list[int]:
+def count_up(n: int) -> Iterator[int]:
     i: int = 0
     while i < n:
         yield i
@@ -69,7 +69,7 @@ def main():
 
     # Part 2: Collect into a list
     output.append("=== Squares (collected) ===")
-    sq: list[int] = squares(5)
+    sq: list[int] = list(squares(5))
     output.append(format_int_list(sq))
 
     # Part 3: Conditional yield — only even numbers
@@ -82,7 +82,7 @@ def main():
     for c in count_up(3):
         output.append(str(c))
     output.append("=== Count (collected) ===")
-    nums: list[int] = count_up(5)
+    nums: list[int] = list(count_up(5))
     output.append(format_int_list(nums))
 
     assert output == [

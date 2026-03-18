@@ -308,18 +308,7 @@ impl RustEmitter {
         is_generator: bool,
     ) -> Option<RustType> {
         if is_generator {
-            let yield_ty = if let Type::List(elem) = &func.return_type {
-                self.rust_ir_type_with_generics(elem)
-            } else {
-                RustType::I64
-            };
-            if matches!(func.return_type, Type::List(_)) {
-                return Some(RustType::Vec(Box::new(yield_ty)));
-            }
-            return Some(RustType::Impl(format!(
-                "Iterator<Item = {}>",
-                crate::render_type(&yield_ty)
-            )));
+            return Some(self.rust_ir_type_with_generics(&func.return_type));
         }
 
         if func.return_type == Type::None {
@@ -348,49 +337,12 @@ impl RustEmitter {
         self.capture_structured_stmts(|inner| inner.emit_stmt(stmt))
     }
 
-    fn lower_buffered_generator_function_body(
-        &mut self,
-        func: &HirFunction,
-        mutable_param_shadows: &[(String, RustExpr)],
-        yield_ty: &RustType,
-    ) -> Vec<RustStmt> {
-        let mut body = Self::emit_mutable_param_shadow_stmts(mutable_param_shadows);
-
-        body.push(RustStmt::Let {
-            mutable: true,
-            name: "_yields".to_string(),
-            ty: Some(RustType::Vec(Box::new(yield_ty.clone()))),
-            value: RustExpr::FnCall {
-                func: Box::new(RustExpr::Path(vec!["Vec".to_string(), "new".to_string()])),
-                args: vec![],
-            },
-        });
-
-        for stmt in &func.body {
-            body.extend(
-                self.lower_stmt_strict_for_function(stmt, "buffered generator statement lowering"),
-            );
-        }
-
-        let return_expr = if matches!(func.return_type, Type::List(_)) {
-            RustExpr::Ident("_yields".to_string())
-        } else {
-            RustExpr::MethodCall {
-                receiver: Box::new(RustExpr::Ident("_yields".to_string())),
-                method: "into_iter".to_string(),
-                args: vec![],
-            }
-        };
-        body.push(RustStmt::Return(Some(return_expr)));
-        body
-    }
-
     fn lower_generator_function_body(
         &mut self,
         func: &HirFunction,
         mutable_param_shadows: &[(String, RustExpr)],
     ) -> Vec<RustStmt> {
-        let yield_ty = if let Type::List(elem) = &func.return_type {
+        let yield_ty = if let Type::Iterator(elem) = func.return_type.resolve_alias() {
             self.rust_ir_type_with_generics(elem)
         } else {
             RustType::I64
@@ -421,10 +373,9 @@ impl RustEmitter {
             .any(|stmt| body_contains_yield(std::slice::from_ref(*stmt)));
         let trailing_has_stmts = !trailing_stmts.is_empty();
         if while_stmt.is_none() || init_has_yield || trailing_has_stmts {
-            return self.lower_buffered_generator_function_body(
-                func,
-                mutable_param_shadows,
-                &yield_ty,
+            panic!(
+                "unsupported generator shape for lazy iterator lowering in '{}': generators must lower through a single loop body without trailing statements",
+                func.name
             );
         }
 
@@ -452,10 +403,9 @@ impl RustEmitter {
             let has_nested_yield = body_contains_yield(while_body_hir);
 
             if has_nested_yield && !has_top_level_yield && !has_conditional_yield {
-                return self.lower_buffered_generator_function_body(
-                    func,
-                    mutable_param_shadows,
-                    &yield_ty,
+                panic!(
+                    "unsupported nested generator yield shape for lazy iterator lowering in '{}'",
+                    func.name
                 );
             }
 
@@ -612,18 +562,10 @@ impl RustEmitter {
             }],
         };
 
-        let return_expr = if matches!(func.return_type, Type::List(_)) {
-            RustExpr::FnCall {
-                func: Box::new(RustExpr::Path(vec![
-                    "Vec".to_string(),
-                    "from_iter".to_string(),
-                ])),
-                args: vec![from_fn_expr],
-            }
-        } else {
-            from_fn_expr
-        };
-        body.push(RustStmt::Return(Some(return_expr)));
+        body.push(RustStmt::Return(Some(RustExpr::FnCall {
+            func: Box::new(RustExpr::Path(vec!["Box".to_string(), "new".to_string()])),
+            args: vec![from_fn_expr],
+        })));
         body
     }
 
