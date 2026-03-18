@@ -735,6 +735,7 @@ Sifr defines a set of built-in protocols (traits) that are used across multiple 
 - milestone_generics: enable protocols as generic bounds (`T: Comparable`)
 - milestone_generators: define initial `with` block syntax (scoped block desugaring)
 - ad-hoc first-class lazy iterator phase: introduces first-class `Iterable[T]` / `Iterator[T]` typing and protocol execution plan (`iter`, `next`, generator rewrite, lazy builtin conversion)
+- ad-hoc parity-extension waiver-reduction phase: re-closes iterator-returning builtin/stdlib surfaces (`map` parity, approved `itertools` combinators, `re.finditer`, `glob.iglob`, `Path.iterdir/glob/rglob`) and retires broad lazy-waiver claims to narrow residual governance entries
 - milestone_compiler_hardening (Phase 7: Stdlib Parity): define `ContextManager` protocol; enforce `with` statement compliance with `__enter__`/`__exit__` calls and compile-time protocol checking; fix `Callable`-as-struct-field (`Box<dyn Fn>`)
 - milestone_generics_v2 (Phase 13: Type System Completion): complete generic class field/method substitution; protocol bounds on type parameters (`T: Comparable & Display`)
 - milestone_pattern_matching (Phase 13: Type System Completion): `match`/`case` syntax with exhaustiveness checking on union types, literal unions, optional types, class unions, and enum types
