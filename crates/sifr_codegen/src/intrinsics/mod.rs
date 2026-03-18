@@ -244,6 +244,8 @@ fn lower_intrinsic_rendered(name: &str, args: &[RustExpr]) -> Option<LoweredIntr
         "platform_version" => (platform::lower_platform_version(args), None),
         "platform_processor" => (platform::lower_platform_processor(args), None),
         "uuid4" => (uuid::lower_uuid4(args), Some("rand")),
+        "uuid3_text" => (uuid::lower_uuid3(args), Some("uuid")),
+        "uuid5_text" => (uuid::lower_uuid5(args), Some("uuid")),
         "toml_parse" => (toml::lower_toml_parse(args), Some("toml")),
         "datetime_now" => (datetime::lower_datetime_now(args), Some("chrono")),
         "datetime_now_struct" => (datetime::lower_datetime_now_struct(args), Some("chrono")),
@@ -768,6 +770,17 @@ mod tests {
         assert!(render_expr(&uuid.expr).contains("rand::random::<u32>()"));
         assert!(render_expr(&uuid.expr).contains("format!(\"{:08x}-{:04x}-{:04x}-{:04x}-{:012x}\""));
         assert!(render_expr(&uuid.expr).contains("(rand::random::<u16>() & 4095)"));
+
+        let uuid3 = lower_intrinsic("uuid3_text", &["ns".to_string(), "name".to_string()])
+            .expect("uuid3");
+        assert_eq!(uuid3.required_crate, Some("uuid"));
+        assert!(render_expr(&uuid3.expr).contains("uuid::Uuid::parse_str"));
+        assert!(render_expr(&uuid3.expr).contains("uuid::Uuid::new_v3"));
+
+        let uuid5 = lower_intrinsic("uuid5_text", &["ns".to_string(), "name".to_string()])
+            .expect("uuid5");
+        assert_eq!(uuid5.required_crate, Some("uuid"));
+        assert!(render_expr(&uuid5.expr).contains("uuid::Uuid::new_v5"));
     }
 
     #[test]

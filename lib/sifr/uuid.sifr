@@ -1,5 +1,5 @@
 # sifr.uuid — UUID generation and manipulation
-from _sifr.uuid import uuid4
+from _sifr.uuid import uuid4, uuid3_text, uuid5_text
 
 def _to_lower_hex_char(ch: str) -> str:
     if ch == "A":
@@ -207,3 +207,27 @@ def uuid_from_hex(hex_str: str) -> Result[UUID, ValueError]:
         return UUID(canonical)
     except ValueError as e:
         raise ValueError(e.message)
+
+
+def uuid3(namespace: UUID, name: str) -> UUID:
+    return UUID(uuid3_text(namespace.to_str(), name))
+
+
+def uuid5(namespace: UUID, name: str) -> UUID:
+    return UUID(uuid5_text(namespace.to_str(), name))
+
+
+def NAMESPACE_DNS() -> UUID:
+    return UUID("6ba7b810-9dad-11d1-80b4-00c04fd430c8")
+
+
+def NAMESPACE_URL() -> UUID:
+    return UUID("6ba7b811-9dad-11d1-80b4-00c04fd430c8")
+
+
+def NAMESPACE_OID() -> UUID:
+    return UUID("6ba7b812-9dad-11d1-80b4-00c04fd430c8")
+
+
+def NAMESPACE_X500() -> UUID:
+    return UUID("6ba7b814-9dad-11d1-80b4-00c04fd430c8")

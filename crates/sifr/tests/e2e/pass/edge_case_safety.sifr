@@ -7,7 +7,7 @@ from sifr.itertools import batched
 from sifr.graphlib import topological_sort, CycleError
 from sifr.uuid import uuid_from_hex, UUID
 from sifr.ipaddress import ip_to_int
-from sifr.datetime import from_timestamp
+from sifr.datetime import from_timestamp, datetime
 
 
 def main():
@@ -173,14 +173,14 @@ def main():
     assert str("=== from_timestamp ===") == expected[len(expected) - expected_index - 1]
     expected_index = expected_index + 1
     try:
-        dt: str = from_timestamp(-99999999999999.0)
+        dt: datetime = from_timestamp(-99999999999999.0)
         assert str("unexpected") == expected[len(expected) - expected_index - 1]
         expected_index = expected_index + 1
     except ValueError as e:
         assert str(f"caught ValueError: {e.message}") == expected[len(expected) - expected_index - 1]
         expected_index = expected_index + 1
     try:
-        dt2: str = from_timestamp(0.0)
+        dt2: datetime = from_timestamp(0.0)
         assert str("from_timestamp ok") == expected[len(expected) - expected_index - 1]
         expected_index = expected_index + 1
     except ValueError as e:

@@ -16,7 +16,7 @@ from sifr.itertools import batched
 from sifr.graphlib import topological_sort, CycleError
 from sifr.uuid import uuid_from_hex, UUID
 from sifr.ipaddress import ip_to_int
-from sifr.datetime import from_timestamp
+from sifr.datetime import from_timestamp, datetime
 
 def main():
     io_errors: int = 0
@@ -182,7 +182,7 @@ def main():
         edge_errors = edge_errors + 1
 
     try:
-        ev9: str = from_timestamp(999999999999999.0)
+        ev9: datetime = from_timestamp(999999999999999.0)
     except ValueError as e:
         edge_errors = edge_errors + 1
 

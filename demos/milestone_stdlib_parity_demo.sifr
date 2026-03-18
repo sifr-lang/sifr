@@ -96,8 +96,8 @@ def main():
     dt_now: datetime = now()
     assert_true(len(str(dt_now)) > 0)
     try:
-        dt_epoch: str = from_timestamp(0.0)
-        assert_true(len(dt_epoch) > 0)
+        dt_epoch: datetime = from_timestamp(0.0)
+        assert_true(len(dt_epoch.isoformat()) > 0)
     except ValueError as e:
         print(f"error: {e.message}")
 

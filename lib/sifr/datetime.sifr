@@ -1,5 +1,6 @@
 # sifr.datetime — Date and time classes
-from _sifr.datetime import datetime_now, datetime_now_struct, datetime_format, datetime_from_timestamp
+from _sifr.datetime import datetime_now_struct, datetime_format, datetime_from_timestamp
+from _sifr.time import time_now
 
 def _is_leap_year(year: int) -> bool:
     return (year % 4 == 0 and year % 100 != 0) or (year % 400 == 0)
@@ -18,6 +19,58 @@ def _days_in_month(year: int, month: int) -> int:
     if d is not None:
         return d
     return 0
+
+
+def _substring(value: str, start: int, end: int) -> str:
+    result: str = ""
+    i: int = start
+    while i < end:
+        ch: str | None = value[i]
+        if ch is not None:
+            result = result + ch
+        i = i + 1
+    return result
+
+
+def _parse_datetime_iso(value: str) -> Result[tuple[int, int, int, int, int, int], ValueError]:
+    if len(value) < 19:
+        raise ValueError("invalid datetime string")
+    if value[4] != "-" or value[7] != "-" or value[10] != "T" or value[13] != ":" or value[16] != ":":
+        raise ValueError("invalid datetime string")
+    try:
+        year: int = int(_substring(value, 0, 4))
+        month: int = int(_substring(value, 5, 7))
+        day: int = int(_substring(value, 8, 10))
+        hour: int = int(_substring(value, 11, 13))
+        minute: int = int(_substring(value, 14, 16))
+        second: int = int(_substring(value, 17, 19))
+        return (year, month, day, hour, minute, second)
+    except ParseError:
+        raise ValueError("invalid datetime string")
+
+
+def _timezone_offset_from_text(text: str) -> Result[int, ValueError]:
+    if text == "UTC":
+        return 0
+    if len(text) != 9:
+        raise ValueError("invalid timezone string")
+    if _substring(text, 0, 3) != "UTC":
+        raise ValueError("invalid timezone string")
+    sign_value: str = _substring(text, 3, 4)
+    if sign_value != "+" and sign_value != "-":
+        raise ValueError("invalid timezone string")
+    if text[6] != ":":
+        raise ValueError("invalid timezone string")
+    try:
+        hours: int = int(_substring(text, 4, 6))
+        minutes: int = int(_substring(text, 7, 9))
+        offset: int = hours * 3600 + minutes * 60
+        if sign_value == "-":
+            offset = -offset
+        return offset
+    except ParseError:
+        raise ValueError("invalid timezone string")
+
 
 class timedelta:
     _days: int
@@ -52,17 +105,79 @@ class timedelta:
         return self.total_seconds() == other.total_seconds()
 
 
+class timezone:
+    _offset: int
+
+    def __init__(self, offset: int) -> None:
+        self._offset = offset
+
+    def offset(self) -> int:
+        return self._offset
+
+    def iso_suffix(self) -> str:
+        sign: str = "+"
+        if self._offset < 0:
+            sign = "-"
+        abs_offset: int = self._offset
+        if abs_offset < 0:
+            abs_offset = -abs_offset
+        h: int = abs_offset // 3600
+        m: int = (abs_offset % 3600) // 60
+        hs: str = str(h)
+        if len(hs) < 2:
+            hs = "0" + hs
+        ms: str = str(m)
+        if len(ms) < 2:
+            ms = "0" + ms
+        return sign + hs + ":" + ms
+
+    def __str__(self) -> str:
+        if self._offset == 0:
+            return "UTC"
+        return "UTC" + self.iso_suffix()
+
+    def __eq__(self, other: timezone) -> bool:
+        return self._offset == other._offset
+
+
+def UTC() -> timezone:
+    return timezone(0)
+
+
+def utc() -> timezone:
+    return UTC()
+
+
 class datetime:
-    # A full datetime class with year, month, day, hour, minute, second.
+    # A full datetime class with optional fixed-offset timezone.
     year: int
     month: int
     day: int
     hour: int
     minute: int
     second: int
+    _tz_offset: int | None
+
+    def __init__(
+        self,
+        year: int,
+        month: int,
+        day: int,
+        hour: int,
+        minute: int,
+        second: int,
+        tz_offset: int | None = None,
+    ) -> None:
+        self.year = year
+        self.month = month
+        self.day = day
+        self.hour = hour
+        self.minute = minute
+        self.second = second
+        self._tz_offset = tz_offset
 
     def isoformat(self) -> str:
-        # Returns ISO 8601 format: YYYY-MM-DDTHH:MM:SS
+        # Returns ISO 8601 format: YYYY-MM-DDTHH:MM:SS(+/-HH:MM for aware datetimes)
         y: str = str(self.year)
         mo: str = str(self.month)
         if len(mo) < 2:
@@ -79,10 +194,29 @@ class datetime:
         s: str = str(self.second)
         if len(s) < 2:
             s = "0" + s
-        return y + "-" + mo + "-" + d + "T" + h + ":" + mi + ":" + s
+        base: str = y + "-" + mo + "-" + d + "T" + h + ":" + mi + ":" + s
+        tz_offset_opt: int | None = self._tz_offset
+        if tz_offset_opt is not None:
+            offset: int = tz_offset_opt
+            sign: str = "+"
+            abs_offset: int = offset
+            if abs_offset < 0:
+                sign = "-"
+                abs_offset = -abs_offset
+            h_off: int = abs_offset // 3600
+            m_off: int = (abs_offset % 3600) // 60
+            hs_off: str = str(h_off)
+            if len(hs_off) < 2:
+                hs_off = "0" + hs_off
+            ms_off: str = str(m_off)
+            if len(ms_off) < 2:
+                ms_off = "0" + ms_off
+            return base + sign + hs_off + ":" + ms_off
+        return base
 
     def timestamp(self) -> int:
-        # Unix timestamp using Gregorian calendar arithmetic in local-naive time.
+        # Unix timestamp using Gregorian calendar arithmetic.
+        # For aware datetimes, normalize using the fixed offset.
         # Handles both pre- and post-epoch dates deterministically.
         days: int = 0
         if self.year >= 1970:
@@ -102,10 +236,27 @@ class datetime:
             m = m + 1
 
         days = days + self.day - 1
-        return days * 86400 + self.hour * 3600 + self.minute * 60 + self.second
+        naive_timestamp: int = days * 86400 + self.hour * 3600 + self.minute * 60 + self.second
+        tz_offset_opt: int | None = self._tz_offset
+        if tz_offset_opt is not None:
+            offset: int = tz_offset_opt
+            return naive_timestamp - offset
+        return naive_timestamp
+
+    def astimezone(self, tz: timezone | None = None) -> Result[datetime, ValueError]:
+        target: timezone = timezone(0)
+        if tz is not None:
+            try:
+                tz_text: str = str(tz)
+                target_offset: int = _timezone_offset_from_text(tz_text)
+                target = timezone(target_offset)
+            except ValueError as e:
+                raise ValueError(e.message)
+        return from_timestamp(float(self.timestamp()), target)
 
     def __eq__(self, other: datetime) -> bool:
-        return self.year == other.year and self.month == other.month and self.day == other.day and self.hour == other.hour and self.minute == other.minute and self.second == other.second
+        same_tz: bool = self._tz_offset == other._tz_offset
+        return self.year == other.year and self.month == other.month and self.day == other.day and self.hour == other.hour and self.minute == other.minute and self.second == other.second and same_tz
 
     def __str__(self) -> str:
         return self.isoformat()
@@ -157,80 +308,95 @@ class time:
         return self.isoformat()
 
 
-class timezone:
-    _offset: int
+def _from_timestamp_with_tz(ts: float, tz: timezone | None) -> Result[datetime, ValueError]:
+    try:
+        whole_seconds: int = int(ts)
+        adjusted_seconds: int = whole_seconds
+        tz_offset_value: int = 0
+        tz_has_offset: bool = False
+        if tz is not None:
+            tz_text: str = str(tz)
+            tz_offset: int = _timezone_offset_from_text(tz_text)
+            adjusted_seconds = whole_seconds + tz_offset
+            tz_offset_value = tz_offset
+            tz_has_offset = True
 
-    def __init__(self, offset: int) -> None:
-        self._offset = offset
+        rendered: str = datetime_from_timestamp(float(adjusted_seconds))
+        parts: tuple[int, int, int, int, int, int] = _parse_datetime_iso(rendered)
+        year_part: int | None = parts[0]
+        month_part: int | None = parts[1]
+        day_part: int | None = parts[2]
+        hour_part: int | None = parts[3]
+        minute_part: int | None = parts[4]
+        second_part: int | None = parts[5]
+        year: int = 0
+        month: int = 1
+        day: int = 1
+        hour: int = 0
+        minute: int = 0
+        second: int = 0
+        if year_part is not None:
+            year = year_part
+        if month_part is not None:
+            month = month_part
+        if day_part is not None:
+            day = day_part
+        if hour_part is not None:
+            hour = hour_part
+        if minute_part is not None:
+            minute = minute_part
+        if second_part is not None:
+            second = second_part
+        if tz_has_offset:
+            return datetime(year, month, day, hour, minute, second, tz_offset_value)
+        return datetime(year, month, day, hour, minute, second, None)
+    except ValueError as e:
+        raise ValueError(e.message)
 
-    def offset(self) -> int:
-        return self._offset
 
-    def __str__(self) -> str:
-        if self._offset == 0:
-            return "UTC"
-        sign: str = "+"
-        if self._offset < 0:
-            sign = "-"
-        abs_offset: int = self._offset
-        if abs_offset < 0:
-            abs_offset = -abs_offset
-        h: int = abs_offset // 3600
-        m: int = (abs_offset % 3600) // 60
-        hs: str = str(h)
-        if len(hs) < 2:
-            hs = "0" + hs
-        ms: str = str(m)
-        if len(ms) < 2:
-            ms = "0" + ms
-        return "UTC" + sign + hs + ":" + ms
-
-
-utc: timezone = timezone(0)
-
-
-def now() -> datetime:
-    parts: list[int] = datetime_now_struct()
-    yr: int = 0
-    mo: int = 1
-    dy: int = 1
-    hr: int = 0
-    mn: int = 0
-    sc: int = 0
-    for i, v in enumerate(parts):
-        if i == 0:
-            yr = v
-        if i == 1:
-            mo = v
-        if i == 2:
-            dy = v
-        if i == 3:
-            hr = v
-        if i == 4:
-            mn = v
-        if i == 5:
-            sc = v
-    return datetime(yr, mo, dy, hr, mn, sc)
+def now(tz: timezone | None = None) -> datetime:
+    current_epoch: float = time_now()
+    try:
+        current: datetime = _from_timestamp_with_tz(current_epoch, tz)
+        return current
+    except ValueError:
+        parts: list[int] = datetime_now_struct()
+        yr: int = 0
+        mo: int = 1
+        dy: int = 1
+        hr: int = 0
+        mn: int = 0
+        sc: int = 0
+        for i, v in enumerate(parts):
+            if i == 0:
+                yr = v
+            if i == 1:
+                mo = v
+            if i == 2:
+                dy = v
+            if i == 3:
+                hr = v
+            if i == 4:
+                mn = v
+            if i == 5:
+                sc = v
+        if tz is not None:
+            try:
+                parsed_offset: int = _timezone_offset_from_text(str(tz))
+                return datetime(yr, mo, dy, hr, mn, sc, parsed_offset)
+            except ValueError:
+                return datetime(yr, mo, dy, hr, mn, sc, None)
+        return datetime(yr, mo, dy, hr, mn, sc, None)
 
 
 def today() -> date:
-    parts: list[int] = datetime_now_struct()
-    yr: int = 0
-    mo: int = 1
-    dy: int = 1
-    for i, v in enumerate(parts):
-        if i == 0:
-            yr = v
-        if i == 1:
-            mo = v
-        if i == 2:
-            dy = v
-    return date(yr, mo, dy)
+    current: datetime = now()
+    return date(current.year, current.month, current.day)
 
 
 def format_datetime(dt: str, fmt: str) -> str:
     return datetime_format(dt, fmt)
 
 
-def from_timestamp(ts: float) -> Result[str, ValueError]:
-    return datetime_from_timestamp(ts)
+def from_timestamp(ts: float, tz: timezone | None = None) -> Result[datetime, ValueError]:
+    return _from_timestamp_with_tz(ts, tz)

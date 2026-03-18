@@ -1,0 +1,56 @@
+from sifr.uuid import (
+    UUID,
+    NAMESPACE_DNS,
+    NAMESPACE_URL,
+    NAMESPACE_OID,
+    NAMESPACE_X500,
+    uuid3,
+    uuid5,
+)
+from sifr.datetime import datetime, timezone, from_timestamp, UTC, utc
+
+
+def main() -> None:
+    assert NAMESPACE_DNS().to_str() == "6ba7b810-9dad-11d1-80b4-00c04fd430c8"
+    assert NAMESPACE_URL().to_str() == "6ba7b811-9dad-11d1-80b4-00c04fd430c8"
+    assert NAMESPACE_OID().to_str() == "6ba7b812-9dad-11d1-80b4-00c04fd430c8"
+    assert NAMESPACE_X500().to_str() == "6ba7b814-9dad-11d1-80b4-00c04fd430c8"
+
+    dns_v3: UUID = uuid3(NAMESPACE_DNS(), "python.org")
+    dns_v5: UUID = uuid5(NAMESPACE_DNS(), "python.org")
+    assert dns_v3.to_str() == "6fa459ea-ee8a-3ca4-894e-db77e160355e"
+    assert dns_v5.to_str() == "886313e1-3b8a-5372-9b90-0c9aee199e5d"
+
+    assert str(UTC()) == "UTC"
+    assert str(utc()) == "UTC"
+    assert UTC() == utc()
+
+    epoch_utc_ok: bool = False
+    try:
+        epoch_utc: datetime = from_timestamp(0.0, UTC())
+        epoch_utc_ok = epoch_utc.isoformat() == "1970-01-01T00:00:00+00:00"
+    except ValueError:
+        epoch_utc_ok = False
+    assert epoch_utc_ok
+
+    ist: timezone = timezone(19800)
+    epoch_ist_ok: bool = False
+    default_astimezone_ok: bool = False
+    try:
+        epoch_ist: datetime = from_timestamp(0.0, ist)
+        epoch_ist_ok = epoch_ist.isoformat() == "1970-01-01T05:30:00+05:30"
+        default_astimezone: datetime = epoch_ist.astimezone()
+        default_astimezone_ok = default_astimezone.isoformat() == "1970-01-01T00:00:00+00:00"
+    except ValueError:
+        epoch_ist_ok = False
+        default_astimezone_ok = False
+    assert epoch_ist_ok
+    assert default_astimezone_ok
+
+    invalid_rejected: bool = False
+    try:
+        _bad: datetime = from_timestamp(100000000000000000000.0, UTC())
+        _ = _bad
+    except ValueError as e:
+        invalid_rejected = len(e.message) > 0
+    assert invalid_rejected

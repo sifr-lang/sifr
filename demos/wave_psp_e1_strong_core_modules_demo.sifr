@@ -9,8 +9,8 @@ def main():
     dt: datetime = datetime(2026, 3, 16, 12, 0, 0)
     print("datetime.isoformat = " + dt.isoformat())
     try:
-        epoch: str = from_timestamp(0.0)
-        print("datetime.from_timestamp(0) = " + epoch)
+        epoch: datetime = from_timestamp(0.0)
+        print("datetime.from_timestamp(0) = " + epoch.isoformat())
     except ValueError as e:
         print("datetime error: " + e.message)
 

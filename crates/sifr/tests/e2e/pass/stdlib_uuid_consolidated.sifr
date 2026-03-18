@@ -1,5 +1,5 @@
 # Consolidated stdlib uuid coverage for milestone_30_4 structure rules
-from sifr.uuid import uuid4, uuid4_obj, uuid_from_hex, UUID
+from sifr.uuid import uuid4, uuid4_obj, uuid_from_hex, UUID, uuid3, uuid5, NAMESPACE_DNS
 from sifr.test import assert_bool_vector_eq
 
 
@@ -65,6 +65,9 @@ def collect_object_and_parse_actual() -> list[bool]:
         _ = str(e.message)
         parsed_curly_ok = False
     actual.append(parsed_curly_ok)
+
+    actual.append(uuid3(NAMESPACE_DNS(), "python.org").to_str() == "6fa459ea-ee8a-3ca4-894e-db77e160355e")
+    actual.append(uuid5(NAMESPACE_DNS(), "python.org").to_str() == "886313e1-3b8a-5372-9b90-0c9aee199e5d")
     return actual
 
 
@@ -120,7 +123,7 @@ def append_all(mut target: list[bool], values: list[bool]):
 def main():
     expected: list[bool] = [
         True, True, True,
-        True, True, True, True, True,
+        True, True, True, True, True, True, True,
         True, True, True,
         True, True, True, True, True, True
     ]
