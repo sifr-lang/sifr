@@ -1911,7 +1911,7 @@ impl RustEmitter {
                 let iter_expr = registry_zip_iter_expr(self, &args[1..])?;
                 let arg_count = args.len() - 1;
                 if arg_count == 1 {
-                    Some(RustExpr::MethodCall {
+                    Some(registry_box_iterator_expr(RustExpr::MethodCall {
                         receiver: Box::new(RustExpr::MethodCall {
                             receiver: Box::new(iter_expr),
                             method: "map".to_string(),
@@ -1934,9 +1934,9 @@ impl RustEmitter {
                                 is_move: false,
                             }],
                         }),
-                        method: "collect::<Vec<_>>".to_string(),
+                        method: "into_iter".to_string(),
                         args: vec![],
-                    })
+                    }))
                 } else {
                     let mut body = Vec::new();
                     let mut bindings = Vec::new();
@@ -1959,7 +1959,7 @@ impl RustEmitter {
                     body.push(crate::RustStmt::Return(Some(
                         registry_call_callable_with_owned_args(self, &args[0], &bindings)?,
                     )));
-                    Some(RustExpr::MethodCall {
+                    Some(registry_box_iterator_expr(RustExpr::MethodCall {
                         receiver: Box::new(RustExpr::MethodCall {
                             receiver: Box::new(iter_expr),
                             method: "map".to_string(),
@@ -1972,9 +1972,9 @@ impl RustEmitter {
                                 is_move: false,
                             }],
                         }),
-                        method: "collect::<Vec<_>>".to_string(),
+                        method: "into_iter".to_string(),
                         args: vec![],
-                    })
+                    }))
                 }
             }
             "abs" if args.len() == 1 => {

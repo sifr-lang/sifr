@@ -573,8 +573,42 @@ fn try_lower_simple_map_call_expr(args: &[HirExpr]) -> Option<RustExpr> {
     };
     let lowered_callable = try_lower_simple_callable_expr(callable)?;
     let lowered_iter = try_lower_leaf_or_name_expr(iter)?;
-    let mapped_iter = RustExpr::MethodCall {
-        receiver: Box::new(RustExpr::MethodCall {
+    let iter_source = match resolve_alias_type(iter.ty()) {
+        Type::Iterator(_) | Type::Range => RustExpr::MethodCall {
+            receiver: Box::new(lowered_iter),
+            method: "into_iter".to_string(),
+            args: vec![],
+        },
+        Type::Str => RustExpr::MethodCall {
+            receiver: Box::new(RustExpr::MethodCall {
+                receiver: Box::new(lowered_iter),
+                method: "chars".to_string(),
+                args: vec![],
+            }),
+            method: "map".to_string(),
+            args: vec![RustExpr::Closure {
+                params: vec![RustParam::Named {
+                    name: "__sifr_char".to_string(),
+                    ty: RustType::Named("_".to_string()),
+                }],
+                body: Box::new(RustExpr::MethodCall {
+                    receiver: Box::new(RustExpr::Ident("__sifr_char".to_string())),
+                    method: "to_string".to_string(),
+                    args: vec![],
+                }),
+                is_move: false,
+            }],
+        },
+        Type::Dict(_, _) => RustExpr::MethodCall {
+            receiver: Box::new(RustExpr::MethodCall {
+                receiver: Box::new(lowered_iter),
+                method: "keys".to_string(),
+                args: vec![],
+            }),
+            method: "cloned".to_string(),
+            args: vec![],
+        },
+        _ => RustExpr::MethodCall {
             receiver: Box::new(RustExpr::MethodCall {
                 receiver: Box::new(lowered_iter),
                 method: "clone".to_string(),
@@ -582,15 +616,15 @@ fn try_lower_simple_map_call_expr(args: &[HirExpr]) -> Option<RustExpr> {
             }),
             method: "into_iter".to_string(),
             args: vec![],
-        }),
+        },
+    };
+    let mapped_iter = RustExpr::MethodCall {
+        receiver: Box::new(iter_source),
         method: "map".to_string(),
         args: vec![lowered_callable],
     };
     Some(RustExpr::FnCall {
-        func: Box::new(RustExpr::Path(vec![
-            "Vec".to_string(),
-            "from_iter".to_string(),
-        ])),
+        func: Box::new(RustExpr::Path(vec!["Box".to_string(), "new".to_string()])),
         args: vec![mapped_iter],
     })
 }
@@ -3164,7 +3198,7 @@ mod tests {
                     ty: Type::List(Box::new(Type::Int)),
                 },
             ],
-            ty: Type::List(Box::new(Type::Int)),
+            ty: Type::Iterator(Box::new(Type::Int)),
         };
         assert!(try_lower_leaf_expr(&expr).is_some());
     }

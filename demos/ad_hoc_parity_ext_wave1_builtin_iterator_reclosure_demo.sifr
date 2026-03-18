@@ -1,0 +1,24 @@
+# ad_hoc parity extension wave 1 demo
+# Builtin iterator re-closure: reversed/enumerate/zip/map all return Iterator[...] with explicit list(...) materialization.
+
+
+def add(x: int, y: int) -> int:
+    return x + y
+
+
+def main():
+    rev_it: Iterator[int] = reversed([9, 7, 5])
+    assert next(rev_it) == 5
+    assert str(list(rev_it)) == "[7, 9]"
+
+    enum_it: Iterator[tuple[int, str]] = enumerate(["a", "b"], start=3)
+    assert str(list(enum_it)) == "[(3, \"a\"), (4, \"b\")]"
+
+    zip_it: Iterator[tuple[int, str]] = zip([1, 2], ["x", "y"])
+    assert str(list(zip_it)) == "[(1, \"x\"), (2, \"y\")]"
+
+    mapped_it: Iterator[int] = map(add, [1, 2, 3], [4, 5, 6])
+    assert next(mapped_it) == 5
+    assert str(list(mapped_it)) == "[7, 9]"
+
+    assert str("ad_hoc_parity_ext_wave1_builtin_iterator_reclosure_demo: ok") == "ad_hoc_parity_ext_wave1_builtin_iterator_reclosure_demo: ok"

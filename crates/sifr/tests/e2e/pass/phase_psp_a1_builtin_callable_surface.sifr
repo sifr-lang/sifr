@@ -42,7 +42,7 @@ def main():
     zipped: list[tuple[int, str, bool]] = list(zip([1, 2], ["a", "b"], [True, False]))
     assert zipped == [(1, "a", True), (2, "b", False)]
 
-    summed: list[int] = map(add, [1, 2, 3], [4, 5, 6])
+    summed: list[int] = list(map(add, [1, 2, 3], [4, 5, 6]))
     assert summed == [5, 7, 9]
 
     stepped: list[int] = list(range(start=1, stop=7, step=2))
