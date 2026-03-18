@@ -18,7 +18,7 @@ Loop per wave: Plan -> Implement -> Validate -> Demo -> PR -> External completio
 - [ ] Docs + traceability + waiver state updated before moving on
 
 ## Full Phase To-Do Plan
-1. [ ] `wave_psp_struct_0`: architecture lock and explicit waiver-boundary enforcement
+1. [x] `wave_psp_struct_0`: architecture lock and explicit waiver-boundary enforcement
 2. [ ] `wave_psp_struct_1`: parser and serialization surface expansion (`json`, `configparser`, `csv`)
 3. [ ] `wave_psp_struct_2`: collections and CLI class-surface expansion (`collections`, `argparse`)
 4. [ ] `wave_psp_struct_3`: `uuid` and `datetime` expansion under fixed-offset timezone contract
@@ -53,9 +53,10 @@ Required entry records:
 ## Wave Progress
 
 ### wave_psp_struct_0: Architecture Lock
-- Status: merged (implementation) + review pass 1 in progress
+- Status: completed
 - Implementation PR:
   - `https://github.com/yaseralnajjar/sifr/pull/1269` (merged)
+  - review closure PR (pass 1): `https://github.com/yaseralnajjar/sifr/pull/1270` (merged)
 - Scope:
   - contract lock for `json`, `datetime`, `uuid`, `csv`, `argparse`, `collections`
   - permanent-diff classification and enforcement fixtures
@@ -91,8 +92,8 @@ Required entry records:
 - Status: completed (review note about swapped fixture content was validated and found non-reproducible in `main`; fixture contents match their filenames and both expected-fail checks remain enforced)
 
 ### wave_psp_struct_0 review_pass_2 (production-grade)
-- Reviewer artifact: pending
-- Status: pending
+- Reviewer artifact: `reviews/phase-ad-hoc-structured-data-and-class-surface-parity-expansion-wave-psp-struct-0-review-pass-2.md`
+- Status: completed (approved for wave progression)
 
 ### closure review cycles
 - wave closure completion review: pending
