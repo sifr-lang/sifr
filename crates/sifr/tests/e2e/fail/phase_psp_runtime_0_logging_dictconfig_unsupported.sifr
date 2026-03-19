@@ -1,0 +1,5 @@
+from sifr.logging import dictConfig
+
+
+def main() -> None:
+    _ = dictConfig

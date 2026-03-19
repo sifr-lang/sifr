@@ -1,0 +1,42 @@
+from sifr.io import write_text, read_text, exists
+from sifr.os import remove_file
+
+
+def main():
+    path: str = "/tmp/sifr_runtime_wave0_stream_demo.txt"
+    text_ok: bool = False
+    binary_ok: bool = False
+    cleanup_ok: bool = False
+
+    try:
+        _w: None = write_text(path, "alpha\nbeta")
+        fh = open(path, "r")
+        first: str | None = fh.readline()
+        second: str | None = fh.readline()
+        third: str | None = fh.readline()
+        fh.close()
+
+        text_ok = str(first) == "alpha" and str(second) == "beta" and third is None
+
+        wb = open(path, "wb")
+        _bw: None = wb.write_bytes(b"raw-bytes")
+        wb.close()
+
+        rb = open(path, "rb")
+        payload: bytes = rb.read_bytes()
+        rb.close()
+        binary_ok = payload == b"raw-bytes"
+    except IOError as e:
+        _ = str(e.message)
+
+    try:
+        if exists(path):
+            _rm: None = remove_file(path)
+        cleanup_ok = not exists(path)
+    except IOError as e:
+        _ = str(e.message)
+
+    assert text_ok
+    assert binary_ok
+    assert cleanup_ok
+    print("ad_hoc_runtime_wave0_stream_hierarchy_contract_demo: ok")

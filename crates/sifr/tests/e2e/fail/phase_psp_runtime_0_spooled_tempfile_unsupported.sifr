@@ -1,0 +1,5 @@
+from sifr.tempfile import SpooledTemporaryFile
+
+
+def main() -> None:
+    _ = SpooledTemporaryFile
