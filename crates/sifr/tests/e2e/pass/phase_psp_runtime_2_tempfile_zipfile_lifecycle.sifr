@@ -13,9 +13,11 @@ def main() -> None:
     tempdir_cleanup_ok: bool = False
     zip_metadata_ok: bool = False
     zip_read_bytes_ok: bool = False
+    zip_read_handle_negative_size_ok: bool = False
     zip_open_unsupported_ok: bool = False
     zip_extract_unsupported: bool = False
     zip_open_write_rejected: bool = False
+    zip_invalid_mode_rejected: bool = False
     zip_is_zipfile_ok: bool = False
     zip_cleanup_ok: bool = False
 
@@ -69,6 +71,10 @@ def main() -> None:
         read_back: bytes = reader.read_bytes("bin/data.bin")
         zip_read_bytes_ok = read_back == b"xyz"
 
+        read_handle: ZipReadHandle = ZipReadHandle(b"xyz")
+        read_all_negative: bytes = read_handle.read_bytes(-1)
+        zip_read_handle_negative_size_ok = read_all_negative == b"xyz"
+
         _open_read_result: Result[ZipReadHandle, IOError] = reader.open("bin/data.bin", "r")
         try:
             _open_read_handle: ZipReadHandle = _open_read_result
@@ -103,6 +109,15 @@ def main() -> None:
 
         zip_extract_unsupported = _extract_one_unsupported and _extract_all_unsupported
 
+        invalid_writer: ZipFile = ZipFile(zip_path + "", "rw", ZIP_STORED)
+        _invalid_write_result: Result[None, IOError] = invalid_writer.write("bad.txt", "bad-mode")
+        try:
+            _invalid_write_ok: None = _invalid_write_result
+            zip_invalid_mode_rejected = False
+        except IOError as e:
+            _ = e.message
+            zip_invalid_mode_rejected = True
+
         zip_is_zipfile_ok = is_zipfile(zip_path) and (not is_zipfile(zip_path + ".missing"))
     except IOError as e:
         _ = e.message
@@ -120,11 +135,13 @@ def main() -> None:
     actual.append(tempdir_cleanup_ok)
     actual.append(zip_metadata_ok)
     actual.append(zip_read_bytes_ok)
+    actual.append(zip_read_handle_negative_size_ok)
     actual.append(zip_open_unsupported_ok)
     actual.append(zip_extract_unsupported)
     actual.append(zip_open_write_rejected)
+    actual.append(zip_invalid_mode_rejected)
     actual.append(zip_is_zipfile_ok)
     actual.append(zip_cleanup_ok)
 
-    expected: list[bool] = [True, True, True, True, True, True, True, True, True, True]
+    expected: list[bool] = [True, True, True, True, True, True, True, True, True, True, True, True]
     assert_bool_vector_eq(actual, expected)

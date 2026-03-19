@@ -99,27 +99,29 @@ class NamedTemporaryFile:
         if self._cleaned:
             return None
         if exists(self._path):
-            _rm_result: Result[None, IOError] = remove_file(self._path)
+            try:
+                _rm_done: None = remove_file(self._path)
+            except IOError as e:
+                raise IOError(e.message)
         self._cleaned = True
         return None
 
     def close(self) -> Result[None, IOError]:
         self._closed = True
         if self._delete:
-            _cleaned_now: Result[None, IOError] = self._cleanup_path()
+            return self._cleanup_path()
         return None
 
     def cleanup(self) -> Result[None, IOError]:
         self._closed = True
-        _cleaned_now: Result[None, IOError] = self._cleanup_path()
-        return None
+        return self._cleanup_path()
 
     def __enter__(self) -> NamedTemporaryFile:
         return self
 
     def __exit__(self) -> None:
         try:
-            _closed_result: Result[None, IOError] = self.close()
+            _closed_done: None = self.close()
         except IOError as e:
             _ = e.message
 
@@ -154,7 +156,10 @@ class TemporaryDirectory:
             self._closed = True
             return None
         if exists(self._path):
-            _rm_tree_result: Result[None, IOError] = rmdir_all(self._path)
+            try:
+                _rm_tree_done: None = rmdir_all(self._path)
+            except IOError as e:
+                raise IOError(e.message)
         self._cleaned = True
         self._closed = True
         return None
@@ -164,6 +169,6 @@ class TemporaryDirectory:
 
     def __exit__(self) -> None:
         try:
-            _cleaned_result: Result[None, IOError] = self.cleanup()
+            _cleaned_done: None = self.cleanup()
         except IOError as e:
             _ = e.message

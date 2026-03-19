@@ -64,7 +64,9 @@ class ZipReadHandle:
         end: int = len(self._data)
         if size is not None:
             requested_size: int = size
-            if requested_size >= 0:
+            if requested_size < 0:
+                end = len(self._data)
+            else:
                 requested_end: int = self._cursor + requested_size
                 if requested_end < end:
                     end = requested_end
@@ -85,7 +87,7 @@ class ZipFile:
         self.compression = compression
 
     def _writable_mode(self) -> bool:
-        return ("w" in self.mode) or ("a" in self.mode)
+        return self.mode == "w" or self.mode == "a" or self.mode == "wb" or self.mode == "ab"
 
     def create(self) -> Result[None, IOError]:
         return zip_create(self.path)

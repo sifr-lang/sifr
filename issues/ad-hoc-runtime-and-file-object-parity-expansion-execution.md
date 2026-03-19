@@ -1,6 +1,6 @@
 # Ad Hoc Phase Execution Checklist (Runtime and File-Object Parity Expansion)
 
-Status: in_progress (started 2026-03-19; wave `wave_psp_runtime_0` review loop completed; wave `wave_psp_runtime_1` review loop completed; wave `wave_psp_runtime_2` implementation merged with review_pass_1 approved and review_pass_2 pending)
+Status: in_progress (started 2026-03-19; wave `wave_psp_runtime_0` review loop completed; wave `wave_psp_runtime_1` review loop completed; wave `wave_psp_runtime_2` implementation merged with review_pass_1 approved; review_pass_2 remediation implemented and pending merge)
 Owner: ad_hoc_runtime_file_object execution loop
 Reference planning doc:
 - `issues/ad-hoc-runtime-and-file-object-parity-expansion.md`
@@ -97,9 +97,10 @@ Required entry records:
   - wave gate: `$(pwd)/scripts/run_all_tests.sh --profile quick` -> PASS (2026-03-19)
 
 ### wave_psp_runtime_2: Tempfile and Archive Object Lifecycles
-- Status: completed (implementation merged; completion review pass approved; production-grade review pass pending)
+- Status: completed (implementation merged; completion review pass approved; production-grade remediation implemented and pending merge)
 - Implementation PR:
   - `#1323` (merged): https://github.com/yaseralnajjar/sifr/pull/1323
+  - review-pass-2 remediation: pending (this branch)
 - Scope:
   - add deterministic lifecycle wrappers (`NamedTemporaryFile`, `TemporaryDirectory`) with explicit `close()/cleanup()` result surfaces and best-effort scope-exit cleanup
   - extend `zipfile` with bytes-backed write/read helpers plus governance surfaces (`is_zipfile`, `ZIP_STORED`, `ZIP_DEFLATED`, `ZipInfo`, `ZipReadHandle`)
@@ -115,6 +116,7 @@ Required entry records:
   - negative path: `cargo run -q -p sifr -- check crates/sifr/tests/e2e/fail/phase_psp_runtime_2_zip_ext_file_unsupported.sifr` -> expected compile failure (PASS)
   - negative path: `cargo run -q -p sifr -- check crates/sifr/tests/e2e/fail/phase_psp_runtime_2_zip_bzip2_constant_unsupported.sifr` -> expected compile failure (PASS)
   - negative regression: `cargo run -q -p sifr -- check crates/sifr/tests/e2e/fail/phase_psp_runtime_0_spooled_tempfile_unsupported.sifr` -> expected compile failure (PASS)
+  - remediation path: `NamedTemporaryFile`/`TemporaryDirectory` cleanup now propagates `remove_file`/`rmdir_all` failures via `Result`; `ZipReadHandle.read_bytes` now handles negative sizes explicitly as read-all and wave fixture/demo cover it; `ZipFile` write gating now accepts only `w`/`a`/`wb`/`ab` (rejects invalid mixed modes such as `rw`) (PASS)
   - wave gate: `$(pwd)/scripts/run_all_tests.sh --profile quick` -> PASS (2026-03-19)
 
 ## External Review Passes
@@ -140,5 +142,5 @@ Required entry records:
 - Status: completed (approved; no remediation changes required)
 
 ### wave_psp_runtime_2 review_pass_2 (production-grade)
-- Reviewer artifact: pending
-- Status: pending
+- Reviewer artifact: `reviews/phase-ad-hoc-runtime-and-file-object-parity-expansion-wave-psp-runtime-2-review-pass-2.md`
+- Status: remediation implemented for accepted findings (cleanup error propagation, explicit negative-size semantics, strict write-mode gating); constructor-time `Result` propagation remains constrained by current class-lowering behavior and is documented for wave-3 follow-up
