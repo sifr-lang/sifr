@@ -119,6 +119,8 @@ Required entry records:
 
 ### wave_psp_bytes_3: Downstream Contract Adoption and Governance Closeout
 - Status: completed
+- Implementation PR:
+  - `#1301` (merged): https://github.com/yaseralnajjar/sifr/pull/1301
 - Scope:
   - migrate current shipped `io` binary method boundaries to first-class `bytes` (`FileHandle.read_bytes` / `write_bytes`) while keeping internal intrinsic names stable
   - add explicit wave-3 pass/fail coverage proving downstream binary-carrier contract adoption (`bytes`) and compile-time rejection of stale `list[int]` payload assumptions
@@ -164,8 +166,8 @@ Required entry records:
 - Status: completed (approved for production readiness; no remediation changes required)
 
 ### wave_psp_bytes_3 review_pass_1 (completion-gap)
-- Reviewer artifact target: `reviews/phase-ad-hoc-first-class-bytes-and-binary-surface-foundation-wave-psp-bytes-3-review-pass-1.md`
-- Status: pending
+- Reviewer artifact: `reviews/phase-ad-hoc-first-class-bytes-and-binary-surface-foundation-wave-psp-bytes-3-review-pass-1.md`
+- Status: completed (approved; no remediation changes required)
 
 ### wave_psp_bytes_3 review_pass_2 (production-grade)
 - Reviewer artifact target: `reviews/phase-ad-hoc-first-class-bytes-and-binary-surface-foundation-wave-psp-bytes-3-review-pass-2.md`
