@@ -739,7 +739,7 @@ impl RustEmitter {
                             lowered_get
                         }
                     }
-                    Type::List(_) | Type::Bytes => {
+                    Type::List(_) => {
                         let object_name = "__sifr_index_list".to_string();
                         let index_name = "__sifr_index_i".to_string();
                         let normalized_name = "__sifr_index_norm".to_string();
@@ -808,6 +808,90 @@ impl RustEmitter {
                                 }),
                                 method: "cloned".to_string(),
                                 args: vec![],
+                            })),
+                        }
+                    }
+                    Type::Bytes => {
+                        let object_name = "__sifr_index_bytes".to_string();
+                        let index_name = "__sifr_index_i".to_string();
+                        let normalized_name = "__sifr_index_norm".to_string();
+                        crate::RustExpr::Block {
+                            stmts: vec![
+                                crate::RustStmt::Let {
+                                    mutable: false,
+                                    name: object_name.clone(),
+                                    ty: None,
+                                    value: crate::RustExpr::Ref {
+                                        mutable: false,
+                                        expr: Box::new(container_expr),
+                                    },
+                                },
+                                crate::RustStmt::Let {
+                                    mutable: false,
+                                    name: index_name.clone(),
+                                    ty: None,
+                                    value: lowered_index.clone(),
+                                },
+                                crate::RustStmt::Let {
+                                    mutable: false,
+                                    name: normalized_name.clone(),
+                                    ty: None,
+                                    value: crate::RustExpr::If {
+                                        cond: Box::new(crate::RustExpr::BinOp {
+                                            left: Box::new(crate::RustExpr::Ident(
+                                                index_name.clone(),
+                                            )),
+                                            op: "<".to_string(),
+                                            right: Box::new(crate::RustExpr::Literal(
+                                                crate::RustLiteral::Int(0),
+                                            )),
+                                        }),
+                                        then_expr: Box::new(crate::RustExpr::Cast {
+                                            expr: Box::new(crate::RustExpr::BinOp {
+                                                left: Box::new(crate::RustExpr::Cast {
+                                                    expr: Box::new(crate::RustExpr::MethodCall {
+                                                        receiver: Box::new(crate::RustExpr::Ident(
+                                                            object_name.clone(),
+                                                        )),
+                                                        method: "len".to_string(),
+                                                        args: vec![],
+                                                    }),
+                                                    ty: crate::RustType::I64,
+                                                }),
+                                                op: "+".to_string(),
+                                                right: Box::new(crate::RustExpr::Ident(
+                                                    index_name.clone(),
+                                                )),
+                                            }),
+                                            ty: crate::RustType::Named("usize".to_string()),
+                                        }),
+                                        else_expr: Some(Box::new(crate::RustExpr::Cast {
+                                            expr: Box::new(crate::RustExpr::Ident(index_name)),
+                                            ty: crate::RustType::Named("usize".to_string()),
+                                        })),
+                                    },
+                                },
+                            ],
+                            expr: Some(Box::new(crate::RustExpr::MethodCall {
+                                receiver: Box::new(crate::RustExpr::MethodCall {
+                                    receiver: Box::new(crate::RustExpr::Ident(object_name)),
+                                    method: "get".to_string(),
+                                    args: vec![crate::RustExpr::Ident(normalized_name)],
+                                }),
+                                method: "map".to_string(),
+                                args: vec![crate::RustExpr::Closure {
+                                    params: vec![crate::RustParam::Named {
+                                        name: "__byte".to_string(),
+                                        ty: crate::RustType::Named("_".to_string()),
+                                    }],
+                                    body: Box::new(crate::RustExpr::Cast {
+                                        expr: Box::new(crate::RustExpr::Deref(Box::new(
+                                            crate::RustExpr::Ident("__byte".to_string()),
+                                        ))),
+                                        ty: crate::RustType::I64,
+                                    }),
+                                    is_move: false,
+                                }],
                             })),
                         }
                     }
@@ -927,7 +1011,10 @@ impl RustEmitter {
             };
 
             if let Some(inner_ty) = option_inner_ty {
-                if !matches!(inner_ty, Type::Dict(_, _) | Type::List(_) | Type::Bytes | Type::Str) {
+                if !matches!(
+                    inner_ty,
+                    Type::Dict(_, _) | Type::List(_) | Type::Bytes | Type::Str
+                ) {
                     return Ok(None);
                 }
                 let Some(inner_expr) = build_inner_index(crate::RustExpr::Ident("__v".to_string()))

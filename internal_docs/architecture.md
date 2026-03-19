@@ -61,11 +61,12 @@ Sifr uses the CPython source code (`/Users/yaseralnajjar/work/sifr/cpython`) as 
 | Test suite (behavioral reference)                                                   | `Lib/test/test_<module>.py`                                             | Use as specification for expected behavior                                   |
 
 
-### Bytes Representation Note (Phase 31.5 / wave_psp_bytes_1)
+### Bytes Representation Note (Phase 31.5 / wave_psp_bytes_4)
 
 - The first-class `bytes` surface is now a distinct compiler type (`Type::Bytes`) across type checking, lowering, and codegen.
-- Current Rust codegen representation is `Vec<i64>` so iteration/indexing integrate with Sifr `int` without implicit numeric coercions.
-- This is an internal representation detail; public semantics remain immutable byte sequences with explicit text/binary boundaries.
+- Current Rust codegen representation is raw-byte storage (`Vec<u8>`) for typed bytes-native paths.
+- Indexing and iteration still yield Sifr `int`; the `u8 -> i64` widening happens at explicit read boundaries, not in stored representation.
+- Explicit construction boundaries (`bytes.from_ints`, `bytes.from_hex`, UTF-8 decode) remain responsible for runtime validation and typed error propagation.
 
 ### Safety Adaptation Rules
 

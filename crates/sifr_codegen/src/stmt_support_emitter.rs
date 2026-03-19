@@ -936,12 +936,19 @@ impl RustEmitter {
                 args,
             }));
         }
-        if let HirExpr::ListLiteral { elements, .. } = expr {
+        if let HirExpr::ListLiteral { elements, ty } = expr {
             let mut lowered_elements = Vec::with_capacity(elements.len());
+            let list_ty = crate::resolve_alias_type_for_plain_call(ty);
             for element in elements {
-                let Some(lowered_element) = self.lower_stmt_expr_for_ir(element)? else {
+                let Some(mut lowered_element) = self.lower_stmt_expr_for_ir(element)? else {
                     return Ok(None);
                 };
+                if matches!(list_ty, Type::Bytes) {
+                    lowered_element = crate::RustExpr::Cast {
+                        expr: Box::new(lowered_element),
+                        ty: crate::RustType::Named("u8".to_string()),
+                    };
+                }
                 lowered_elements.push(lowered_element);
             }
             return Ok(Some(crate::RustExpr::Vec(lowered_elements)));
@@ -2109,7 +2116,7 @@ impl RustEmitter {
                             args: vec![],
                         }
                     }
-                    Type::List(_) | Type::Bytes => crate::RustExpr::MethodCall {
+                    Type::List(_) => crate::RustExpr::MethodCall {
                         receiver: Box::new(crate::RustExpr::MethodCall {
                             receiver: Box::new(crate::RustExpr::Ident("__v".to_string())),
                             method: "get".to_string(),
@@ -2120,6 +2127,30 @@ impl RustEmitter {
                         }),
                         method: "cloned".to_string(),
                         args: vec![],
+                    },
+                    Type::Bytes => crate::RustExpr::MethodCall {
+                        receiver: Box::new(crate::RustExpr::MethodCall {
+                            receiver: Box::new(crate::RustExpr::Ident("__v".to_string())),
+                            method: "get".to_string(),
+                            args: vec![crate::RustExpr::Cast {
+                                expr: Box::new(lowered_index),
+                                ty: crate::RustType::Named("usize".to_string()),
+                            }],
+                        }),
+                        method: "map".to_string(),
+                        args: vec![crate::RustExpr::Closure {
+                            params: vec![crate::RustParam::Named {
+                                name: "__byte".to_string(),
+                                ty: crate::RustType::Named("_".to_string()),
+                            }],
+                            body: Box::new(crate::RustExpr::Cast {
+                                expr: Box::new(crate::RustExpr::Deref(Box::new(
+                                    crate::RustExpr::Ident("__byte".to_string()),
+                                ))),
+                                ty: crate::RustType::I64,
+                            }),
+                            is_move: false,
+                        }],
                     },
                     Type::Str => crate::RustExpr::MethodCall {
                         receiver: Box::new(crate::RustExpr::MethodCall {
@@ -2202,7 +2233,7 @@ impl RustEmitter {
                         },
                     ))));
                 }
-                Type::List(_) | Type::Bytes => {
+                Type::List(_) => {
                     let list_index = crate::RustExpr::Cast {
                         expr: Box::new(lowered_index),
                         ty: crate::RustType::Named("usize".to_string()),
@@ -2224,6 +2255,42 @@ impl RustEmitter {
                             index: Box::new(list_index),
                         },
                     ))));
+                }
+                Type::Bytes => {
+                    let list_index = crate::RustExpr::Cast {
+                        expr: Box::new(lowered_index),
+                        ty: crate::RustType::Named("usize".to_string()),
+                    };
+                    if index_returns_option {
+                        return Ok(Some(crate::RustExpr::MethodCall {
+                            receiver: Box::new(crate::RustExpr::MethodCall {
+                                receiver: Box::new(lowered_object),
+                                method: "get".to_string(),
+                                args: vec![list_index],
+                            }),
+                            method: "map".to_string(),
+                            args: vec![crate::RustExpr::Closure {
+                                params: vec![crate::RustParam::Named {
+                                    name: "__byte".to_string(),
+                                    ty: crate::RustType::Named("_".to_string()),
+                                }],
+                                body: Box::new(crate::RustExpr::Cast {
+                                    expr: Box::new(crate::RustExpr::Deref(Box::new(
+                                        crate::RustExpr::Ident("__byte".to_string()),
+                                    ))),
+                                    ty: crate::RustType::I64,
+                                }),
+                                is_move: false,
+                            }],
+                        }));
+                    }
+                    return Ok(Some(crate::RustExpr::Cast {
+                        expr: Box::new(crate::RustExpr::Clone(Box::new(crate::RustExpr::Index {
+                            expr: Box::new(lowered_object),
+                            index: Box::new(list_index),
+                        }))),
+                        ty: crate::RustType::I64,
+                    }));
                 }
                 Type::Str => {
                     let nth_expr = crate::RustExpr::MethodCall {
@@ -2321,13 +2388,62 @@ impl RustEmitter {
                         args: vec![key_arg],
                     }
                 }
-                Type::List(_) | Type::Bytes | Type::Set(_) | Type::Str => crate::RustExpr::MethodCall {
+                Type::List(_) | Type::Set(_) | Type::Str => crate::RustExpr::MethodCall {
                     receiver: Box::new(crate::RustExpr::Paren(Box::new(lowered_collection))),
                     method: "contains".to_string(),
                     args: vec![crate::RustExpr::Ref {
                         mutable: false,
                         expr: Box::new(crate::RustExpr::Paren(Box::new(lowered_element))),
                     }],
+                },
+                Type::Bytes => crate::RustExpr::Block {
+                    stmts: vec![crate::RustStmt::Let {
+                        mutable: false,
+                        name: "__byte_candidate".to_string(),
+                        ty: None,
+                        value: lowered_element,
+                    }],
+                    expr: Some(Box::new(crate::RustExpr::If {
+                        cond: Box::new(crate::RustExpr::BinOp {
+                            left: Box::new(crate::RustExpr::BinOp {
+                                left: Box::new(crate::RustExpr::Ident(
+                                    "__byte_candidate".to_string(),
+                                )),
+                                op: "<".to_string(),
+                                right: Box::new(crate::RustExpr::Literal(crate::RustLiteral::Int(
+                                    0,
+                                ))),
+                            }),
+                            op: "||".to_string(),
+                            right: Box::new(crate::RustExpr::BinOp {
+                                left: Box::new(crate::RustExpr::Ident(
+                                    "__byte_candidate".to_string(),
+                                )),
+                                op: ">".to_string(),
+                                right: Box::new(crate::RustExpr::Literal(crate::RustLiteral::Int(
+                                    255,
+                                ))),
+                            }),
+                        }),
+                        then_expr: Box::new(crate::RustExpr::Literal(crate::RustLiteral::Bool(
+                            false,
+                        ))),
+                        else_expr: Some(Box::new(crate::RustExpr::MethodCall {
+                            receiver: Box::new(crate::RustExpr::Paren(Box::new(
+                                lowered_collection,
+                            ))),
+                            method: "contains".to_string(),
+                            args: vec![crate::RustExpr::Ref {
+                                mutable: false,
+                                expr: Box::new(crate::RustExpr::Cast {
+                                    expr: Box::new(crate::RustExpr::Ident(
+                                        "__byte_candidate".to_string(),
+                                    )),
+                                    ty: crate::RustType::Named("u8".to_string()),
+                                }),
+                            }],
+                        })),
+                    })),
                 },
                 _ => return Ok(None),
             };
@@ -3689,7 +3805,10 @@ impl RustEmitter {
         index: &HirExpr,
     ) -> Result<Option<crate::RustExpr>, crate::CodegenError> {
         let object_ty = crate::resolve_alias_type_for_plain_call(object.ty());
-        if !matches!(object_ty, Type::Tuple(_) | Type::List(_) | Type::Bytes | Type::Str) {
+        if !matches!(
+            object_ty,
+            Type::Tuple(_) | Type::List(_) | Type::Bytes | Type::Str
+        ) {
             return Ok(None);
         }
 
@@ -3716,13 +3835,23 @@ impl RustEmitter {
                     field: idx.to_string(),
                 }
             }
-            Type::List(_) | Type::Bytes => crate::RustExpr::Clone(Box::new(crate::RustExpr::Index {
+            Type::List(_) => crate::RustExpr::Clone(Box::new(crate::RustExpr::Index {
                 expr: Box::new(lowered_object),
                 index: Box::new(crate::RustExpr::Cast {
                     expr: Box::new(lowered_index),
                     ty: crate::RustType::Named("usize".to_string()),
                 }),
             })),
+            Type::Bytes => crate::RustExpr::Cast {
+                expr: Box::new(crate::RustExpr::Clone(Box::new(crate::RustExpr::Index {
+                    expr: Box::new(lowered_object),
+                    index: Box::new(crate::RustExpr::Cast {
+                        expr: Box::new(lowered_index),
+                        ty: crate::RustType::Named("usize".to_string()),
+                    }),
+                }))),
+                ty: crate::RustType::I64,
+            },
             Type::Str => {
                 let nth_expr = crate::RustExpr::MethodCall {
                     receiver: Box::new(crate::RustExpr::MethodCall {
@@ -4500,7 +4629,7 @@ impl RustEmitter {
                     return Ok(None);
                 };
                 let iter_source = match Self::resolve_alias_type_for_loop_iter(args[0].ty()) {
-                    Type::List(_) | Type::Bytes => crate::RustExpr::MethodCall {
+                    Type::List(_) => crate::RustExpr::MethodCall {
                         receiver: Box::new(crate::RustExpr::MethodCall {
                             receiver: Box::new(lowered_arg),
                             method: "iter".to_string(),
@@ -4508,6 +4637,27 @@ impl RustEmitter {
                         }),
                         method: "cloned".to_string(),
                         args: vec![],
+                    },
+                    Type::Bytes => crate::RustExpr::MethodCall {
+                        receiver: Box::new(crate::RustExpr::MethodCall {
+                            receiver: Box::new(lowered_arg),
+                            method: "iter".to_string(),
+                            args: vec![],
+                        }),
+                        method: "map".to_string(),
+                        args: vec![crate::RustExpr::Closure {
+                            params: vec![crate::RustParam::Named {
+                                name: "__byte".to_string(),
+                                ty: crate::RustType::Named("_".to_string()),
+                            }],
+                            body: Box::new(crate::RustExpr::Cast {
+                                expr: Box::new(crate::RustExpr::Deref(Box::new(
+                                    crate::RustExpr::Ident("__byte".to_string()),
+                                ))),
+                                ty: crate::RustType::I64,
+                            }),
+                            is_move: false,
+                        }],
                     },
                     Type::Dict(_, _) => crate::RustExpr::MethodCall {
                         receiver: Box::new(crate::RustExpr::MethodCall {
@@ -4597,7 +4747,7 @@ impl RustEmitter {
         }
 
         let iterator_expr = match source_ty {
-            Type::List(_) | Type::Bytes | Type::Set(_) | Type::Iterable(_) => crate::RustExpr::MethodCall {
+            Type::List(_) | Type::Set(_) | Type::Iterable(_) => crate::RustExpr::MethodCall {
                 receiver: Box::new(crate::RustExpr::MethodCall {
                     receiver: Box::new(lowered_source),
                     method: "iter".to_string(),
@@ -4605,6 +4755,27 @@ impl RustEmitter {
                 }),
                 method: "cloned".to_string(),
                 args: vec![],
+            },
+            Type::Bytes => crate::RustExpr::MethodCall {
+                receiver: Box::new(crate::RustExpr::MethodCall {
+                    receiver: Box::new(lowered_source),
+                    method: "iter".to_string(),
+                    args: vec![],
+                }),
+                method: "map".to_string(),
+                args: vec![crate::RustExpr::Closure {
+                    params: vec![crate::RustParam::Named {
+                        name: "__byte".to_string(),
+                        ty: crate::RustType::Named("_".to_string()),
+                    }],
+                    body: Box::new(crate::RustExpr::Cast {
+                        expr: Box::new(crate::RustExpr::Deref(Box::new(crate::RustExpr::Ident(
+                            "__byte".to_string(),
+                        )))),
+                        ty: crate::RustType::I64,
+                    }),
+                    is_move: false,
+                }],
             },
             Type::Dict(_, _) => crate::RustExpr::MethodCall {
                 receiver: Box::new(crate::RustExpr::MethodCall {

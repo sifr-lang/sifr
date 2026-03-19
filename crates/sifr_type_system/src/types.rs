@@ -401,7 +401,7 @@ impl Type {
             Self::Float => "f64".to_string(),
             Self::Bool => "bool".to_string(),
             Self::Str => "String".to_string(),
-            Self::Bytes => "Vec<i64>".to_string(),
+            Self::Bytes => "Vec<u8>".to_string(),
             Self::None => "()".to_string(),
             Self::List(elem) => format!("Vec<{}>", elem.rust_type()),
             Self::Dict(key, val) => format!("HashMap<{}, {}>", key.rust_type(), val.rust_type()),

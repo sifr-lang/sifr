@@ -1,8 +1,8 @@
 # Ad Hoc Phase: First-Class Bytes and Binary Surface Foundation
 
-Status: in_progress (started 2026-03-19; initial tranche `wave_psp_bytes_0` through `wave_psp_bytes_3` completed 2026-03-19; backend-storage and FFI-readiness extension now added before successor phases begin)
+Status: in_progress (started 2026-03-19; initial tranche `wave_psp_bytes_0` through `wave_psp_bytes_3` completed 2026-03-19; extension wave `wave_psp_bytes_4` now completed and wave `wave_psp_bytes_5` remains for successor/FFI governance closeout)
 Context: prerequisite phase after structured/class-surface parity expansion and before runtime/file-object plus RNG/crypto follow-ups
-Execution readiness: waves `wave_psp_bytes_0` through `wave_psp_bytes_3` are complete; extension waves must still close raw-byte backend storage, bytes/list lowering disentanglement, and downstream + FFI-readiness governance before this phase is considered complete again
+Execution readiness: waves `wave_psp_bytes_0` through `wave_psp_bytes_4` are complete; `wave_psp_bytes_5` remains to close successor-phase and FFI-readiness governance before this phase is considered complete again
 Execution ledger: `issues/ad-hoc-first-class-bytes-and-binary-surface-foundation-execution.md`
 
 ## Objective
