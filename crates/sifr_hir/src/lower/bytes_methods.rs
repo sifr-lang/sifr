@@ -2,6 +2,47 @@ use super::LowerCtx;
 use crate::hir_nodes::HirExpr;
 use sifr_type_system::Type;
 
+fn parse_error_type(ctx: &LowerCtx) -> Type {
+    ctx.class_types
+        .get("ParseError")
+        .cloned()
+        .unwrap_or(Type::Class {
+            name: "ParseError".to_string(),
+            fields: vec![("message".to_string(), Type::Str)],
+            methods: vec![],
+            parent_class: Some("Error".to_string()),
+        })
+}
+
+pub(super) fn resolve_str_encode_method_type(args: &[HirExpr], ctx: &mut LowerCtx) -> Option<Type> {
+    if args.len() > 1 {
+        ctx.error(format!(
+            "str.encode() takes 0 or 1 argument, got {}",
+            args.len()
+        ));
+        return None;
+    }
+    if let Some(encoding) = args.first() {
+        if encoding.ty() != &Type::Str {
+            ctx.error(format!(
+                "str.encode() encoding must be 'str', got '{}'",
+                encoding.ty().display_name()
+            ));
+            return None;
+        }
+        if let HirExpr::StringLiteral(value) = encoding {
+            if !matches!(value.to_ascii_lowercase().as_str(), "utf-8" | "utf8") {
+                ctx.error("str.encode() currently supports only UTF-8".to_string());
+                return None;
+            }
+        }
+    }
+    Some(Type::Result(
+        Box::new(Type::Bytes),
+        Box::new(parse_error_type(ctx)),
+    ))
+}
+
 pub(super) fn resolve_bytes_method_type(
     method: &str,
     args: &[HirExpr],
@@ -78,9 +119,37 @@ pub(super) fn resolve_bytes_method_type(
             }
             Some(Type::List(Box::new(Type::Int)))
         }
+        "decode" => {
+            if args.len() > 1 {
+                ctx.error(format!(
+                    "bytes.decode() takes 0 or 1 argument, got {}",
+                    args.len()
+                ));
+                return None;
+            }
+            if let Some(encoding) = args.first() {
+                if encoding.ty() != &Type::Str {
+                    ctx.error(format!(
+                        "bytes.decode() encoding must be 'str', got '{}'",
+                        encoding.ty().display_name()
+                    ));
+                    return None;
+                }
+                if let HirExpr::StringLiteral(value) = encoding {
+                    if !matches!(value.to_ascii_lowercase().as_str(), "utf-8" | "utf8") {
+                        ctx.error("bytes.decode() currently supports only UTF-8".to_string());
+                        return None;
+                    }
+                }
+            }
+            Some(Type::Result(
+                Box::new(Type::Str),
+                Box::new(parse_error_type(ctx)),
+            ))
+        }
         _ => {
             ctx.error(format!(
-                "bytes has no method '{method}' (supported: len, count, contains, index, to_ints)"
+                "bytes has no method '{method}' (supported: len, count, contains, index, to_ints, decode)"
             ));
             None
         }

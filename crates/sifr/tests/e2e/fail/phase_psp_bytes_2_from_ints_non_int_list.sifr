@@ -1,0 +1,2 @@
+def main() -> None:
+    _bad: bytes = bytes.from_ints(["x", "y"])

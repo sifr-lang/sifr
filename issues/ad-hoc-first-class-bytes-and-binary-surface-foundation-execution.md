@@ -92,7 +92,28 @@ Required entry records:
   - wave gate: `$(pwd)/scripts/run_all_tests.sh` -> PASS (2026-03-19)
 
 ### wave_psp_bytes_2: Conversion Surfaces and Compatibility Migration
-- Status: pending
+- Status: in_progress (implementation + validation complete on branch; implementation PR pending merge)
+- Scope:
+  - lower `bytes(size)` to a typed `Result[bytes, ValueError]` intrinsic path
+  - lower `bytes.from_ints(list[int])` and `bytes.from_hex(str)` as first-class bytes factory calls
+  - lower `str.encode(encoding?)` and `bytes.decode(encoding?)` through typed intrinsic calls with UTF-8-only enforcement for literal and runtime codec inputs
+  - add bytes conversion-surface intrinsics in codegen registry (`bytes_with_size`, `bytes_from_ints`, `str_encode_utf8_result`, codec-aware encode/decode variants)
+  - migrate `lib/sifr/bytes.sifr` compatibility exports to delegate decode/from-hex/from-ints/size paths to first-class `bytes` surfaces
+  - add wave-2 pass/fail fixtures and wave-2 demos for conversion success/failure semantics
+- Validation:
+  - positive path: `cargo run -q -p sifr -- run crates/sifr/tests/e2e/pass/phase_psp_bytes_2_conversion_surfaces.sifr` -> PASS
+  - positive path: `cargo run -q -p sifr -- run crates/sifr/tests/e2e/pass/phase_psp_bytes_2_conversion_negative_paths.sifr` -> PASS
+  - positive path: `cargo run -q -p sifr -- run demos/ad_hoc_bytes_wave2_conversion_surface_demo.sifr` -> PASS
+  - positive path: `cargo run -q -p sifr -- run demos/ad_hoc_bytes_wave2_negative_boundary_demo.sifr` -> PASS
+  - negative path: `cargo run -q -p sifr -- check crates/sifr/tests/e2e/fail/phase_psp_bytes_2_constructor_non_int.sifr` -> expected compile failure (PASS)
+  - negative path: `cargo run -q -p sifr -- check crates/sifr/tests/e2e/fail/phase_psp_bytes_2_from_hex_non_string.sifr` -> expected compile failure (PASS)
+  - negative path: `cargo run -q -p sifr -- check crates/sifr/tests/e2e/fail/phase_psp_bytes_2_from_ints_non_int_list.sifr` -> expected compile failure (PASS)
+  - negative path: `cargo run -q -p sifr -- check crates/sifr/tests/e2e/fail/phase_psp_bytes_2_encode_non_string_codec.sifr` -> expected compile failure (PASS)
+  - negative path: `cargo run -q -p sifr -- check crates/sifr/tests/e2e/fail/phase_psp_bytes_2_decode_non_string_codec.sifr` -> expected compile failure (PASS)
+  - targeted unit lane: `cargo test -q -p sifr_codegen lowers_bytes_intrinsics_via_registry` -> PASS
+  - targeted unit lane: `cargo test -q -p sifr_hir lower:: -- --nocapture` -> PASS (`105` passed; `1` ignored)
+  - wave gate: `$(pwd)/scripts/run_all_tests.sh --profile quick` -> PASS (2026-03-19)
+  - wave gate: `$(pwd)/scripts/run_all_tests.sh` -> PASS (2026-03-19)
 
 ### wave_psp_bytes_3: Downstream Contract Adoption and Governance Closeout
 - Status: pending

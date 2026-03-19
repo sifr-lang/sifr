@@ -1,0 +1,43 @@
+def main() -> None:
+    size_ok: bool = False
+    try:
+        zeroes: bytes = bytes(4)
+        assert len(zeroes) == 4
+        assert zeroes[0] == 0
+        assert zeroes[3] == 0
+        size_ok = True
+    except ValueError as e:
+        _ = str(e.message)
+    assert size_ok
+
+    from_ints_ok: bool = False
+    try:
+        ints: list[int] = [72, 105, 33]
+        payload: bytes = bytes.from_ints(ints)
+        assert payload[0] == 72
+        assert payload[1] == 105
+        assert payload[2] == 33
+        from_ints_ok = True
+    except ValueError as e:
+        _ = str(e.message)
+    assert from_ints_ok
+
+    from_hex_ok: bool = False
+    try:
+        parsed: bytes = bytes.from_hex("53 69 66 72")
+        text: str = parsed.decode()
+        assert text == "Sifr"
+        from_hex_ok = True
+    except ParseError as e:
+        _ = str(e.message)
+    assert from_hex_ok
+
+    encode_ok: bool = False
+    try:
+        encoded: bytes = "bytes-wave2".encode("utf-8")
+        decoded: str = encoded.decode("utf-8")
+        assert decoded == "bytes-wave2"
+        encode_ok = True
+    except ParseError as e:
+        _ = str(e.message)
+    assert encode_ok

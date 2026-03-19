@@ -1,5 +1,5 @@
 use crate::hir_nodes::HirExpr;
-use sifr_python_ast::{Expr, ExprCall, Number};
+use sifr_python_ast::{Expr, ExprAttribute, ExprCall, Number};
 use sifr_type_system::{make_union, Type};
 
 use super::expressions::lower_expr;
@@ -499,7 +499,7 @@ pub(super) fn lower_bytes_constructor_call(
     ctx: &mut LowerCtx,
 ) -> Option<HirExpr> {
     if !call.arguments.keywords.is_empty() {
-        ctx.error("bytes() does not accept keyword arguments in wave_psp_bytes_1".to_string());
+        ctx.error("bytes() does not accept keyword arguments".to_string());
         return None;
     }
     if call.arguments.args.is_empty() {
@@ -508,10 +508,123 @@ pub(super) fn lower_bytes_constructor_call(
             ty: Type::Bytes,
         });
     }
-    ctx.error(
-        "bytes() with arguments is scheduled for wave_psp_bytes_2 conversion surfaces; use bytes literals in wave_psp_bytes_1".to_string(),
-    );
-    None
+    if call.arguments.args.len() != 1 {
+        ctx.error(format!(
+            "bytes() takes at most 1 positional argument, got {}",
+            call.arguments.args.len()
+        ));
+        return None;
+    }
+    let size = lower_expr(&call.arguments.args[0], ctx)?;
+    if size.ty() != &Type::Int {
+        ctx.error(format!(
+            "bytes(size) expects 'int' size, got '{}'",
+            size.ty().display_name()
+        ));
+        return None;
+    }
+    Some(HirExpr::Call {
+        func: "bytes_with_size".to_string(),
+        args: vec![size],
+        ty: Type::Result(Box::new(Type::Bytes), Box::new(value_error_type(ctx))),
+    })
+}
+
+fn parse_error_type(ctx: &LowerCtx) -> Type {
+    ctx.class_types
+        .get("ParseError")
+        .cloned()
+        .unwrap_or(Type::Class {
+            name: "ParseError".to_string(),
+            fields: vec![("message".to_string(), Type::Str)],
+            methods: vec![],
+            parent_class: Some("Error".to_string()),
+        })
+}
+
+fn value_error_type(ctx: &LowerCtx) -> Type {
+    ctx.class_types
+        .get("ValueError")
+        .cloned()
+        .unwrap_or(Type::Class {
+            name: "ValueError".to_string(),
+            fields: vec![("message".to_string(), Type::Str)],
+            methods: vec![],
+            parent_class: Some("Error".to_string()),
+        })
+}
+
+pub(super) fn lower_bytes_type_factory_call(
+    attr: &ExprAttribute,
+    call: &ExprCall,
+    ctx: &mut LowerCtx,
+) -> Option<HirExpr> {
+    let Expr::Name(type_name) = attr.value.as_ref() else {
+        return None;
+    };
+    if type_name.id != "bytes" {
+        return None;
+    }
+
+    if !call.arguments.keywords.is_empty() {
+        ctx.error(format!(
+            "bytes.{}() does not accept keyword arguments",
+            attr.attr
+        ));
+        return None;
+    }
+
+    match attr.attr.as_str() {
+        "from_hex" => {
+            if call.arguments.args.len() != 1 {
+                ctx.error(format!(
+                    "bytes.from_hex() takes exactly 1 positional argument, got {}",
+                    call.arguments.args.len()
+                ));
+                return None;
+            }
+            let hex_expr = lower_expr(&call.arguments.args[0], ctx)?;
+            if hex_expr.ty() != &Type::Str {
+                ctx.error(format!(
+                    "bytes.from_hex() expects 'str', got '{}'",
+                    hex_expr.ty().display_name()
+                ));
+                return None;
+            }
+            Some(HirExpr::Call {
+                func: "bytes_from_hex".to_string(),
+                args: vec![hex_expr],
+                ty: Type::Result(Box::new(Type::Bytes), Box::new(parse_error_type(ctx))),
+            })
+        }
+        "from_ints" => {
+            if call.arguments.args.len() != 1 {
+                ctx.error(format!(
+                    "bytes.from_ints() takes exactly 1 positional argument, got {}",
+                    call.arguments.args.len()
+                ));
+                return None;
+            }
+            let data_expr = lower_expr(&call.arguments.args[0], ctx)?;
+            let is_list_int = matches!(
+                data_expr.ty().resolve_alias(),
+                Type::List(elem) if elem.as_ref() == &Type::Int
+            );
+            if !is_list_int {
+                ctx.error(format!(
+                    "bytes.from_ints() expects 'list[int]', got '{}'",
+                    data_expr.ty().display_name()
+                ));
+                return None;
+            }
+            Some(HirExpr::Call {
+                func: "bytes_from_ints".to_string(),
+                args: vec![data_expr],
+                ty: Type::Result(Box::new(Type::Bytes), Box::new(value_error_type(ctx))),
+            })
+        }
+        _ => None,
+    }
 }
 
 pub(super) fn lower_len_call(call: &ExprCall, ctx: &mut LowerCtx) -> Option<HirExpr> {

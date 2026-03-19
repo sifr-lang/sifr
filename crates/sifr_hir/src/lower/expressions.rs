@@ -1,8 +1,9 @@
 use super::arithmetic_warnings::check_int_overflow_risk;
-use super::bytes_methods::resolve_bytes_method_type;
+use super::bytes_methods::{resolve_bytes_method_type, resolve_str_encode_method_type};
 use super::builtin_calls::{
     callable_builtin_element_type, callable_builtin_list_output_type,
-    lower_builtin_reverseable_arg, lower_bytes_constructor_call, lower_chr_call,
+    lower_builtin_reverseable_arg, lower_bytes_constructor_call, lower_bytes_type_factory_call,
+    lower_chr_call,
     lower_defaultdict_constructor_call, lower_dict_constructor_call, lower_isinstance_call, lower_len_call,
     lower_list_constructor_call, lower_ord_call, lower_range_call, lower_reveal_type_call,
     lower_set_constructor_call, lower_tuple_constructor_call, DEFAULTDICT_INT_ALIAS,
@@ -545,6 +546,9 @@ pub(super) fn lower_boolop(boolop: &ExprBoolOp, ctx: &mut LowerCtx) -> Option<Hi
 pub(super) fn lower_call(call: &ExprCall, ctx: &mut LowerCtx) -> Option<HirExpr> {
     let compat_alias = resolve_python_compat_call_alias(call, ctx);
     if let (None, Expr::Attribute(attr)) = (&compat_alias, call.func.as_ref()) {
+        if let Some(factory_call) = lower_bytes_type_factory_call(attr, call, ctx) {
+            return Some(factory_call);
+        }
         return lower_method_call(attr, call, ctx);
     }
     let func_name = if let Some(alias) = compat_alias {
@@ -2464,6 +2468,39 @@ pub(super) fn lower_method_call(
     // Resolve method return type based on object type and method name
     let return_ty = resolve_method_type(&object_ty, &method_name, &args, ctx)?;
 
+    if matches!(object_ty.resolve_alias(), Type::Str) && method_name == "encode" {
+        let mut intrinsic_args = vec![object];
+        let intrinsic_name = if args.is_empty() {
+            "str_encode_utf8_result"
+        } else {
+            "str_encode_utf8_result_with_encoding"
+        };
+        if let Some(encoding) = args.first().cloned() {
+            intrinsic_args.push(encoding);
+        }
+        return Some(HirExpr::Call {
+            func: intrinsic_name.to_string(),
+            args: intrinsic_args,
+            ty: return_ty,
+        });
+    }
+    if matches!(object_ty.resolve_alias(), Type::Bytes) && method_name == "decode" {
+        let mut intrinsic_args = vec![object];
+        let intrinsic_name = if args.is_empty() {
+            "decode_utf8"
+        } else {
+            "decode_utf8_with_encoding"
+        };
+        if let Some(encoding) = args.first().cloned() {
+            intrinsic_args.push(encoding);
+        }
+        return Some(HirExpr::Call {
+            func: intrinsic_name.to_string(),
+            args: intrinsic_args,
+            ty: return_ty,
+        });
+    }
+
     Some(HirExpr::MethodCall {
         object: Box::new(object),
         method: method_name,
@@ -3101,6 +3138,7 @@ pub(super) fn resolve_method_type(
                 // find() returns Option[int] = int | None
                 Some(Type::Union(vec![Type::Int, Type::None]))
             }
+            "encode" => resolve_str_encode_method_type(args, ctx),
             _ => {
                 ctx.error(format!("str has no method '{method}'"));
                 None
