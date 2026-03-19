@@ -1,8 +1,8 @@
 # Ad Hoc Phase: First-Class Bytes and Binary Surface Foundation
 
-Status: in_progress (started 2026-03-19; wave_psp_bytes_0 through wave_psp_bytes_3 completed; closure review cycles next)
+Status: completed (started 2026-03-19; completed 2026-03-19; wave_psp_bytes_0 through wave_psp_bytes_3 delivered with closure reviews complete)
 Context: prerequisite phase after structured/class-surface parity expansion and before runtime/file-object plus RNG/crypto follow-ups
-Execution readiness: implementation-ready in sequence after `issues/ad-hoc-structured-data-and-class-surface-parity-expansion.md`; waves 1-3 implementation evidence and downstream-contract closeout are now recorded in the execution ledger, with closure review cycles remaining
+Execution readiness: completed; waves 1-3 implementation evidence, downstream-contract closeout, and closure review cycles are recorded in the execution ledger
 Execution ledger: `issues/ad-hoc-first-class-bytes-and-binary-surface-foundation-execution.md`
 
 ## Objective

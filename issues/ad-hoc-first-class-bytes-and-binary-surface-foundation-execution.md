@@ -1,6 +1,6 @@
 # Ad Hoc Phase Execution Checklist (First-Class Bytes and Binary Surface Foundation)
 
-Status: in_progress (started 2026-03-19)
+Status: completed (started 2026-03-19; completed 2026-03-19)
 Owner: ad_hoc_first_class_bytes execution loop
 Reference planning doc:
 - `issues/ad-hoc-first-class-bytes-and-binary-surface-foundation.md`
@@ -10,7 +10,7 @@ Loop per wave: Plan -> Implement -> Validate -> Demo -> PR -> External completio
 ## Global Gates
 - [x] Entry baseline validated before wave 0
 - [x] Scope remains constrained to active wave
-- [ ] Root cause is fixed without compatibility shims
+- [x] Root cause is fixed without compatibility shims
 - [x] Positive-path and negative-path validation recorded for each wave
 - [x] Demo runs before opening each wave PR
 - [x] `$(pwd)/scripts/run_all_tests.sh` run before each wave PR
@@ -22,13 +22,13 @@ Loop per wave: Plan -> Implement -> Validate -> Demo -> PR -> External completio
 2. [x] `wave_psp_bytes_1`: first-class `bytes` type-system/HIR/lowering/codegen foundation
 3. [x] `wave_psp_bytes_2`: UTF-8/hex conversion surfaces and `sifr.bytes` compatibility delegation
 4. [x] `wave_psp_bytes_3`: downstream contract adoption and governance closeout
-5. [ ] wave-level extra completion review cycle done
-6. [ ] wave-level extra production-grade review cycle done
-7. [ ] milestone-level completion review cycle done
-8. [ ] milestone-level production-grade review cycle done
-9. [ ] phase-level completion review cycle done
-10. [ ] phase-level production-grade review cycle done
-11. [ ] closure telegram notification sent
+5. [x] wave-level extra completion review cycle done
+6. [x] wave-level extra production-grade review cycle done
+7. [x] milestone-level completion review cycle done
+8. [x] milestone-level production-grade review cycle done
+9. [x] phase-level completion review cycle done
+10. [x] phase-level production-grade review cycle done
+11. [x] closure telegram notification sent
 
 ## Entry Baseline Evidence (2026-03-19)
 
@@ -179,4 +179,5 @@ Required entry records:
 - milestone closure completion review: completed (`reviews/phase-ad-hoc-first-class-bytes-and-binary-surface-foundation-milestone-closure-completion-check-review-pass-1.md`; approved for milestone closure completion after delayed artifact arrival following initial timeout)
 - milestone closure production-grade review: completed (`reviews/phase-ad-hoc-first-class-bytes-and-binary-surface-foundation-milestone-closure-production-grade-check-review-pass-2.md`; approved for milestone-closure production readiness)
 - phase closure completion review: completed (`reviews/phase-ad-hoc-first-class-bytes-and-binary-surface-foundation-phase-closure-completion-check-review-pass-1.md`; approved for phase-closure completion readiness)
-- phase closure production-grade review: pending
+- phase closure production-grade review: completed (`reviews/phase-ad-hoc-first-class-bytes-and-binary-surface-foundation-phase-closure-production-grade-check-review-pass-2.md`; approved for phase-closure production readiness)
+- phase closure telegram notification: completed (`message_id=133`; 2026-03-19)
