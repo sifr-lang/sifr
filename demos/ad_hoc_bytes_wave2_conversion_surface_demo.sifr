@@ -1,0 +1,41 @@
+def main() -> None:
+    size_ok: bool = False
+    try:
+        zeros: bytes = bytes(6)
+        assert len(zeros) == 6
+        size_ok = True
+    except ValueError as e:
+        print("unexpected ValueError: " + e.message)
+    assert size_ok
+
+    from_ints_ok: bool = False
+    try:
+        from_list: bytes = bytes.from_ints([83, 105, 102, 114])
+        assert from_list[0] == 83
+        assert from_list[3] == 114
+        from_ints_ok = True
+    except ValueError as e:
+        print("unexpected ValueError: " + e.message)
+    assert from_ints_ok
+
+    from_hex_ok: bool = False
+    try:
+        from_hex: bytes = bytes.from_hex("53 69 66 72")
+        from_hex_text: str = from_hex.decode()
+        assert from_hex_text == "Sifr"
+        from_hex_ok = True
+    except ParseError as e:
+        print("unexpected ParseError: " + e.message)
+    assert from_hex_ok
+
+    encode_ok: bool = False
+    try:
+        encoded: bytes = "wave2-demo".encode("utf-8")
+        decoded: str = encoded.decode("utf-8")
+        assert decoded == "wave2-demo"
+        encode_ok = True
+    except ParseError as e:
+        print("unexpected ParseError: " + e.message)
+    assert encode_ok
+
+    print("ad_hoc_bytes_wave2_conversion_surface_demo: ok")

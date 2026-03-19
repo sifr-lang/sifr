@@ -1,0 +1,2 @@
+def main() -> None:
+    _bad: str = b"abc".decode(1)
