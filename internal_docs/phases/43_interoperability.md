@@ -13,6 +13,10 @@ Deliver interoperability capabilities after typed model, package, tooling, and w
 ### milestone_43_1: Interoperability (FFI)
 - Scope:
   - Rust/C FFI boundary model, safety constraints, and diagnostics.
+  - Interop notes must build on the extended bytes-foundation contract:
+    - `bytes` is the canonical owned immutable read-only byte buffer,
+    - mutable/output byte-buffer interop remains deferred until explicit mutable/view semantics exist,
+    - fixed-width integer families are an explicit interoperability design topic and must not be assumed to exist implicitly because raw-byte-backed `bytes` exists.
 - Definition of done:
   - Interop workflows are documented, test-covered, and safe-gated.
 

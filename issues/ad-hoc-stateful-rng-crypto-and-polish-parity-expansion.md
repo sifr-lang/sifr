@@ -1,8 +1,8 @@
 # Ad Hoc Phase: Stateful RNG, Crypto, and Polish Parity Expansion
 
 Status: open (documented 2026-03-18)
-Context: final cleanup phase after the structured/class, bytes-foundation, and runtime/file-object follow-ups
-Execution readiness: implementation-ready in sequence after `issues/ad-hoc-runtime-and-file-object-parity-expansion.md`; predecessor bytes-phase wave `wave_psp_bytes_3` now locks first-class `bytes` as the canonical binary carrier for downstream crypto boundaries, and wave 1 still requires recorded RNG-state, `SystemRandom`, and dependency-audit evidence from architecture lock validation
+Context: final cleanup phase after the structured/class, extended bytes-foundation, and runtime/file-object follow-ups
+Execution readiness: implementation-ready in sequence after `issues/ad-hoc-runtime-and-file-object-parity-expansion.md`; predecessor bytes-phase extension waves `wave_psp_bytes_4` and `wave_psp_bytes_5` must still lock raw-byte-backed `bytes` plus successor governance so crypto and RNG surfaces inherit the final binary contract rather than the transitional widened-integer backend
 
 ## Objective
 
@@ -91,6 +91,7 @@ The phase design is fixed in this document. What remains before wave 1 is execut
 - Module-level `seed`, `getstate`, `setstate`, `randrange`, `randint`, `random`, `choice`, `choices`, `sample`, `shuffle`, `gauss`, `uniform`, and `randbytes` delegate to one module-global `Random` instance.
 - `SystemRandom` remains non-deterministic and does not support `getstate` or `setstate`.
 - `randbytes(n: int) -> Result[bytes, ValueError]` is in scope once the deterministic object model is stable.
+- `randbytes` must return canonical raw-byte-backed `bytes` directly; it must not materialize widened integer storage internally.
 - `choices(weights=...)` stays out of scope unless the deterministic `RandomState` model lands cleanly in `wave_psp_rng_1`; otherwise it remains explicitly unsupported for this phase.
 
 ### `hashlib`
@@ -106,6 +107,7 @@ The phase design is fixed in this document. What remains before wave 1 is execut
 - `digest_bytes()` is an explicit alias for `digest()` for API clarity.
 - Add:
   - `new_bytes(name: str, data: bytes = bytes()) -> Result[HashObject, ValueError]`
+- Typed bytes-native crypto paths must operate on canonical raw-byte-backed `bytes` without per-element range validation or `i64` widening/narrowing on already-typed `bytes` values.
 - Add SHA3 / SHAKE only for algorithms already supported by the Rust dependency stack when implementation begins.
 - SHAKE APIs require explicit output length parameters and return `bytes`.
 
@@ -280,6 +282,7 @@ Before `wave_psp_rng_1` begins implementation, the phase must add:
 - one implementation note defining the exact host-boundary contract for `SystemRandom`,
 - one Sifr demo covering the typed `RandomState` and module-global RNG proxy model,
 - one Sifr demo covering the bytes-native digest model,
+- one implementation note proving bytes-native RNG/crypto paths consume raw-byte-backed `bytes` directly rather than compensating around widened integer storage,
 - one negative-path test for every newly explicit permanent divergence,
 - one CPython-family mapping table proving which upstream cases are adopted, adapted, or permanently waived,
 - explicit phase test families covering `test_random`, `test_hashlib`, `test_base64`, and `test_statistics`,

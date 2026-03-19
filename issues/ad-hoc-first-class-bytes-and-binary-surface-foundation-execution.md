@@ -1,6 +1,6 @@
 # Ad Hoc Phase Execution Checklist (First-Class Bytes and Binary Surface Foundation)
 
-Status: completed (started 2026-03-19; completed 2026-03-19)
+Status: in_progress (started 2026-03-19; initial tranche completed 2026-03-19; extension reopened for raw-byte backend and successor/FFI-readiness closeout)
 Owner: ad_hoc_first_class_bytes execution loop
 Reference planning doc:
 - `issues/ad-hoc-first-class-bytes-and-binary-surface-foundation.md`
@@ -10,7 +10,7 @@ Loop per wave: Plan -> Implement -> Validate -> Demo -> PR -> External completio
 ## Global Gates
 - [x] Entry baseline validated before wave 0
 - [x] Scope remains constrained to active wave
-- [x] Root cause is fixed without compatibility shims
+- [ ] Root cause is fixed without compatibility shims
 - [x] Positive-path and negative-path validation recorded for each wave
 - [x] Demo runs before opening each wave PR
 - [x] `$(pwd)/scripts/run_all_tests.sh` run before each wave PR
@@ -22,13 +22,15 @@ Loop per wave: Plan -> Implement -> Validate -> Demo -> PR -> External completio
 2. [x] `wave_psp_bytes_1`: first-class `bytes` type-system/HIR/lowering/codegen foundation
 3. [x] `wave_psp_bytes_2`: UTF-8/hex conversion surfaces and `sifr.bytes` compatibility delegation
 4. [x] `wave_psp_bytes_3`: downstream contract adoption and governance closeout
-5. [x] wave-level extra completion review cycle done
-6. [x] wave-level extra production-grade review cycle done
-7. [x] milestone-level completion review cycle done
-8. [x] milestone-level production-grade review cycle done
-9. [x] phase-level completion review cycle done
-10. [x] phase-level production-grade review cycle done
-11. [x] closure telegram notification sent
+5. [ ] `wave_psp_bytes_4`: raw-byte backend storage and bytes/list lowering separation
+6. [ ] `wave_psp_bytes_5`: successor-phase + FFI-readiness governance closeout
+7. [ ] wave-level extra completion review cycle done
+8. [ ] wave-level extra production-grade review cycle done
+9. [ ] milestone-level completion review cycle done
+10. [ ] milestone-level production-grade review cycle done
+11. [ ] phase-level completion review cycle done
+12. [ ] phase-level production-grade review cycle done
+13. [ ] closure telegram notification sent
 
 ## Entry Baseline Evidence (2026-03-19)
 
@@ -139,6 +141,31 @@ Required entry records:
   - wave gate: `$(pwd)/scripts/run_all_tests.sh --profile quick` -> PASS (2026-03-19)
   - wave gate: `$(pwd)/scripts/run_all_tests.sh` -> PASS (2026-03-19)
 
+### wave_psp_bytes_4: Raw-Byte Backend and Bytes/List Lowering Separation
+- Status: pending
+- Planned scope:
+  - move `Type::Bytes` backend storage off widened integer vectors onto raw-byte storage
+  - remove bytes-native dependence on generic list lowering where it preserves the widened-storage assumption
+  - eliminate redundant typed-bytes range validation / widening / narrowing on internal bytes-native paths while preserving explicit conversion-boundary checks
+- Planned validation:
+  - positive path: existing bytes waves plus targeted bytes-native file / codec regressions
+  - negative path: explicit constructor/decode/from-hex boundary failures remain intact
+  - wave gate: `$(pwd)/scripts/run_all_tests.sh --profile quick`
+  - wave gate: `$(pwd)/scripts/run_all_tests.sh`
+
+### wave_psp_bytes_5: Successor-Phase and FFI Readiness Closeout
+- Status: pending
+- Planned scope:
+  - refresh runtime/file-object successor planning to assume raw-byte-backed `bytes`
+  - refresh RNG/crypto successor planning to assume raw-byte-backed `bytes`
+  - add interoperability/FFI-readiness notes for owned immutable byte buffers and keep mutable/view semantics explicitly deferred
+  - update canonical governance so widened integer bytes storage is no longer tracked as an accepted intentional resting-state
+- Planned validation:
+  - positive path: successor doc consistency checks + representative bytes-native demos/tests
+  - negative path: unsupported mutable/view/fixed-width-family assumptions remain explicitly classified
+  - wave gate: `$(pwd)/scripts/run_all_tests.sh --profile quick`
+  - wave gate: `$(pwd)/scripts/run_all_tests.sh`
+
 ## External Review Passes
 
 ### wave_psp_bytes_0 review_pass_1 (completion-gap)
@@ -174,10 +201,11 @@ Required entry records:
 - Status: completed (conditional approval remediated by documenting internal `Type::Bytes` backend representation as an explicit intentional-diff governance item and correcting public-phase wording to match shipped implementation)
 
 ### closure review cycles
-- wave closure completion review: completed (`reviews/phase-ad-hoc-first-class-bytes-and-binary-surface-foundation-wave-closure-completion-check-review-pass-1.md`; reviewer gaps remediated via wave-1 pass-2 rerun and explicit wave-1/wave-2 CPython traceability ledgers)
-- wave closure production-grade review: completed (`reviews/phase-ad-hoc-first-class-bytes-and-binary-surface-foundation-wave-closure-production-grade-check-review-pass-2.md`; approved for wave-closure production readiness)
-- milestone closure completion review: completed (`reviews/phase-ad-hoc-first-class-bytes-and-binary-surface-foundation-milestone-closure-completion-check-review-pass-1.md`; approved for milestone closure completion after delayed artifact arrival following initial timeout)
-- milestone closure production-grade review: completed (`reviews/phase-ad-hoc-first-class-bytes-and-binary-surface-foundation-milestone-closure-production-grade-check-review-pass-2.md`; approved for milestone-closure production readiness)
-- phase closure completion review: completed (`reviews/phase-ad-hoc-first-class-bytes-and-binary-surface-foundation-phase-closure-completion-check-review-pass-1.md`; approved for phase-closure completion readiness)
-- phase closure production-grade review: completed (`reviews/phase-ad-hoc-first-class-bytes-and-binary-surface-foundation-phase-closure-production-grade-check-review-pass-2.md`; approved for phase-closure production readiness)
-- phase closure telegram notification: completed (`message_id=133`; 2026-03-19)
+- historical note: the original tranche (`wave_psp_bytes_0` through `wave_psp_bytes_3`) completed all closure review cycles on 2026-03-19; those artifacts remain valid historical evidence for the first tranche but are superseded as the final phase closure basis by this extension.
+- wave closure completion review: pending
+- wave closure production-grade review: pending
+- milestone closure completion review: pending
+- milestone closure production-grade review: pending
+- phase closure completion review: pending
+- phase closure production-grade review: pending
+- phase closure telegram notification: pending

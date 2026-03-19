@@ -1,8 +1,8 @@
 # Ad Hoc Phase: Runtime and File-Object Parity Expansion
 
 Status: open (documented 2026-03-18)
-Context: follow-up phase after structured/class-surface parity expansion and the bytes/binary-surface foundation
-Execution readiness: implementation-ready in sequence after `issues/ad-hoc-first-class-bytes-and-binary-surface-foundation.md`; predecessor wave `wave_psp_bytes_3` now locks first-class `bytes` as the canonical binary carrier for downstream runtime/file-object APIs, and wave 1 still requires recorded lifecycle and cleanup prototype evidence from architecture lock validation
+Context: follow-up phase after structured/class-surface parity expansion and the extended bytes/binary-surface foundation
+Execution readiness: implementation-ready only after the extended bytes phase completes; predecessor waves `wave_psp_bytes_4` and `wave_psp_bytes_5` must still lock raw-byte-backed `bytes` plus successor/FFI-readiness governance so runtime/file-object APIs inherit the final binary contract rather than the transitional widened-integer backend
 
 ## Objective
 
@@ -101,6 +101,8 @@ The runtime and file-object design is fixed in this document. What remains befor
 - Required binary surfaces:
   - `read_bytes(size: int | None = None) -> Result[bytes, IOError]`
   - `write_bytes(data: bytes) -> Result[int, IOError]`
+- Binary file and in-memory surfaces must consume and produce canonical raw-byte-backed `bytes`, not widened integer storage or `list[int]` stand-ins.
+- No runtime/file-object implementation in this phase may reintroduce per-element byte-domain validation for typed `bytes` inputs or outputs; only explicit untyped conversion boundaries may validate.
 - Text iteration over files is line-based and must reuse the iterator architecture from phase 1.
 - Binary surfaces must use first-class `bytes` from the predecessor phase rather than `list[int]`.
 
@@ -350,6 +352,7 @@ Before `wave_psp_runtime_1` begins implementation, the phase must add:
 - one Sifr demo covering the sealed stream hierarchy,
 - one Sifr demo covering deterministic tempfile or zipfile lifecycle behavior,
 - one Sifr demo covering bytes-backed binary file or `BytesIO` behavior,
+- one implementation note proving the sealed binary stream hierarchy consumes the raw-byte-backed `bytes` contract directly rather than compensating around widened integer storage,
 - one negative-path test for every newly explicit permanent divergence,
 - one CPython-family mapping table proving which upstream cases are adopted, adapted, or permanently waived,
 - explicit phase test families covering `test_io`, `test_tempfile`, `test_zipfile`, `test_logging`, `test_time`, `test_timeit`, and `test_subprocess`,
