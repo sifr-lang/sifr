@@ -1,6 +1,6 @@
 # Ad Hoc Phase Execution Checklist (Runtime and File-Object Parity Expansion)
 
-Status: in_progress (started 2026-03-19; wave `wave_psp_runtime_0` review loop completed; wave `wave_psp_runtime_1` review loop completed; wave `wave_psp_runtime_2` review loop completed; wave `wave_psp_runtime_3` review loop completed)
+Status: in_progress (started 2026-03-19; wave `wave_psp_runtime_0` review loop completed; wave `wave_psp_runtime_1` review loop completed; wave `wave_psp_runtime_2` review loop completed; wave `wave_psp_runtime_3` review loop completed; wave `wave_psp_runtime_4` implementation merged and review pass 1 approved)
 Owner: ad_hoc_runtime_file_object execution loop
 Reference planning doc:
 - `issues/ad-hoc-runtime-and-file-object-parity-expansion.md`
@@ -144,6 +144,24 @@ Required entry records:
   - negative regression: `cargo run -q -p sifr -- check crates/sifr/tests/e2e/fail/phase_psp_runtime_0_timezone_mutation_unsupported.sifr` -> expected compile failure (PASS)
   - wave gate: `$(pwd)/scripts/run_all_tests.sh` -> PASS (profile `pr`, report signature `2161ea8c3fd4e3df`, 2026-03-20)
 
+### wave_psp_runtime_4: Synchronous Subprocess Boundary Cleanup and Governance Closure
+- Status: in_progress (implementation merged; completion review pass approved; production-grade review pass pending)
+- Implementation PR:
+  - `#1330` (merged): https://github.com/yaseralnajjar/sifr/pull/1330
+- Scope:
+  - expand `sifr.subprocess` with synchronous subprocess constants (`PIPE`, `STDOUT`, `DEVNULL`) and helper APIs (`check_call`, `check_output`)
+  - keep deterministic sync `CompletedProcess` contract (`returncode`, `stdout`, `stderr`) while making non-zero exit behavior explicit through typed `IOError`
+  - preserve explicit async waiver boundaries (`Popen` lifecycle/orchestration unsupported) and keep typed non-string command rejection
+  - add wave-4 fixture/demo and per-wave subprocess CPython traceability matrix for final subprocess governance closure in this phase
+- Validation:
+  - positive path: `cargo run -q -p sifr -- run crates/sifr/tests/e2e/pass/phase_psp_runtime_4_subprocess_sync_boundary_governance.sifr` -> PASS
+  - positive path: `cargo run -q -p sifr -- run demos/ad_hoc_runtime_wave4_subprocess_sync_boundary_governance_demo.sifr` -> PASS (`ad_hoc_runtime_wave4_subprocess_sync_boundary_governance_demo: ok`)
+  - positive regression: `cargo run -q -p sifr -- run crates/sifr/tests/e2e/pass/cpython_subprocess_subset.sifr` -> PASS
+  - positive regression: `cargo run -q -p sifr -- run crates/sifr/tests/e2e/pass/stdlib_subprocess.sifr` -> PASS
+  - positive regression: `cargo run -q -p sifr -- run crates/sifr/tests/e2e/pass/phase_psp_d2_process_runtime_platform.sifr` -> PASS
+  - negative regression: `cargo run -q -p sifr -- check crates/sifr/tests/e2e/fail/phase_psp_d2_subprocess_non_string_cmd.sifr` -> expected compile failure (PASS)
+  - wave gate: `$(pwd)/scripts/run_all_tests.sh` -> PASS (profile `pr`, report signature `2161ea8c3fd4e3df`, 2026-03-20)
+
 ## External Review Passes
 
 ### wave_psp_runtime_0 review_pass_1 (completion-gap)
@@ -176,4 +194,8 @@ Required entry records:
 
 ### wave_psp_runtime_3 review_pass_2 (production-grade)
 - Reviewer artifact: `reviews/phase-ad-hoc-runtime-and-file-object-parity-expansion-wave-psp-runtime-3-review-pass-2.md`
+- Status: completed (approved; no remediation changes required)
+
+### wave_psp_runtime_4 review_pass_1 (completion-gap)
+- Reviewer artifact: `reviews/phase-ad-hoc-runtime-and-file-object-parity-expansion-wave-psp-runtime-4-review-pass-1.md`
 - Status: completed (approved; no remediation changes required)
