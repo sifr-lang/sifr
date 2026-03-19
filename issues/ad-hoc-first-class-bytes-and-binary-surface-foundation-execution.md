@@ -166,7 +166,7 @@ Required entry records:
 ### wave_psp_bytes_5: Successor-Phase and FFI Readiness Closeout
 - Status: completed
 - Implementation PR:
-  - pending (current working branch; PR will be linked after merge)
+  - `#1313` (merged): https://github.com/yaseralnajjar/sifr/pull/1313
 - Scope:
   - refresh runtime/file-object successor planning to assume raw-byte-backed `bytes`
   - refresh RNG/crypto successor planning to assume raw-byte-backed `bytes`
@@ -231,12 +231,12 @@ Required entry records:
 - Status: completed (approved for production readiness; no remediation changes required)
 
 ### wave_psp_bytes_5 review_pass_1 (completion-gap)
-- Reviewer artifact: pending
-- Status: pending
+- Reviewer artifact: `reviews/phase-ad-hoc-first-class-bytes-and-binary-surface-foundation-wave-psp-bytes-5-review-pass-1.md`
+- Status: completed (approved; no remediation changes required)
 
 ### wave_psp_bytes_5 review_pass_2 (production-grade)
-- Reviewer artifact: pending
-- Status: pending
+- Reviewer artifact: `reviews/phase-ad-hoc-first-class-bytes-and-binary-surface-foundation-wave-psp-bytes-5-review-pass-2.md`
+- Status: completed (approved for production readiness; no remediation changes required)
 
 ### closure review cycles
 - historical note: the original tranche (`wave_psp_bytes_0` through `wave_psp_bytes_3`) completed all closure review cycles on 2026-03-19; those artifacts remain valid historical evidence for the first tranche but are superseded as the final phase closure basis by this extension.
