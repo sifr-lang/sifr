@@ -21,7 +21,9 @@ Scope: `io` and in-memory stream hierarchy (`BytesIO`, `StringIO`)
 
 - Advanced `_pyio` hierarchy (`BufferedReader`/`BufferedWriter`/`BufferedRWPair`/`BufferedRandom`) remains `unsupported`.
 - File-handle `seek`/`tell` remain explicitly unsupported in this wave until dedicated file-position intrinsic support is introduced.
+- `BinaryFileHandle.read_bytes(size=...)` currently treats `size` as compatibility-only and reads the full remaining stream; partial-size reads are deferred until dedicated binary file-position/read-range intrinsics land.
 - `StringIO.read_bytes()` and `BytesIO.write(str)` remain intentionally rejected by typed surfaces.
+- Negative seek positions on `StringIO`/`BytesIO` are explicitly rejected with `IOError` (no silent clamp-to-zero behavior).
 
 ## Local Fixture Anchors (Wave 1)
 

@@ -1,6 +1,6 @@
 # Ad Hoc Phase Execution Checklist (Runtime and File-Object Parity Expansion)
 
-Status: in_progress (started 2026-03-19; wave `wave_psp_runtime_0` review loop completed; wave `wave_psp_runtime_1` implementation merged and completion review pass approved; production-grade review pass pending)
+Status: in_progress (started 2026-03-19; wave `wave_psp_runtime_0` review loop completed; wave `wave_psp_runtime_1` implementation and review loop completed; wave `wave_psp_runtime_2` pending)
 Owner: ad_hoc_runtime_file_object execution loop
 Reference planning doc:
 - `issues/ad-hoc-runtime-and-file-object-parity-expansion.md`
@@ -76,7 +76,7 @@ Required entry records:
   - wave gate: `$(pwd)/scripts/run_all_tests.sh --profile quick` -> PASS (2026-03-19)
 
 ### wave_psp_runtime_1: `io` and In-Memory Stream Hierarchy
-- Status: completed (implementation merged; completion review pass approved; production-grade review pass pending)
+- Status: completed (implementation merged; completion and production-grade external review passes approved)
 - Implementation PR:
   - `#1320` (merged): https://github.com/yaseralnajjar/sifr/pull/1320
 - Scope:
@@ -92,6 +92,7 @@ Required entry records:
   - positive regression: `cargo run -q -p sifr -- run demos/m30_1f_logging_parity_demo/main.sifr` -> PASS
   - negative path: `cargo run -q -p sifr -- check crates/sifr/tests/e2e/fail/phase_psp_runtime_1_stringio_read_bytes_unsupported.sifr` -> expected compile failure (PASS)
   - negative path: `cargo run -q -p sifr -- check crates/sifr/tests/e2e/fail/phase_psp_runtime_1_bytesio_text_write_unsupported.sifr` -> expected compile failure (PASS)
+  - remediation path: `StringIO.seek`/`BytesIO.seek` now reject negative offsets (explicit `IOError` instead of silent clamp), covered by wave-1 fixture/demo assertions (PASS)
   - negative regression: `cargo run -q -p sifr -- check crates/sifr/tests/e2e/fail/phase_psp_runtime_0_pyio_inheritance_unsupported.sifr` -> expected compile failure (PASS)
   - wave gate: `$(pwd)/scripts/run_all_tests.sh --profile quick` -> PASS (2026-03-19)
 
@@ -110,5 +111,5 @@ Required entry records:
 - Status: completed (approved; no remediation changes required)
 
 ### wave_psp_runtime_1 review_pass_2 (production-grade)
-- Reviewer artifact: pending
-- Status: pending
+- Reviewer artifact: `reviews/phase-ad-hoc-runtime-and-file-object-parity-expansion-wave-psp-runtime-1-review-pass-2.md`
+- Status: completed (conditional pass accepted after remediation: negative-seek behavior hardened for in-memory streams and remaining `BinaryFileHandle.read_bytes(size)` compatibility limitation documented explicitly in traceability governance)
