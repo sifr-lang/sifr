@@ -1,6 +1,6 @@
 # Ad Hoc Phase Execution Checklist (Runtime and File-Object Parity Expansion)
 
-Status: in_progress (started 2026-03-19; wave `wave_psp_runtime_0` review loop completed; wave `wave_psp_runtime_1` review loop completed; wave `wave_psp_runtime_2` implementation merged with review_pass_1 approved; review_pass_2 remediation implemented and pending merge)
+Status: in_progress (started 2026-03-19; wave `wave_psp_runtime_0` review loop completed; wave `wave_psp_runtime_1` review loop completed; wave `wave_psp_runtime_2` review loop completed)
 Owner: ad_hoc_runtime_file_object execution loop
 Reference planning doc:
 - `issues/ad-hoc-runtime-and-file-object-parity-expansion.md`
@@ -97,10 +97,10 @@ Required entry records:
   - wave gate: `$(pwd)/scripts/run_all_tests.sh --profile quick` -> PASS (2026-03-19)
 
 ### wave_psp_runtime_2: Tempfile and Archive Object Lifecycles
-- Status: completed (implementation merged; completion review pass approved; production-grade remediation implemented and pending merge)
+- Status: completed (implementation merged; completion and production-grade review passes closed)
 - Implementation PR:
   - `#1323` (merged): https://github.com/yaseralnajjar/sifr/pull/1323
-  - review-pass-2 remediation: pending (this branch)
+  - `#1325` (merged): https://github.com/yaseralnajjar/sifr/pull/1325
 - Scope:
   - add deterministic lifecycle wrappers (`NamedTemporaryFile`, `TemporaryDirectory`) with explicit `close()/cleanup()` result surfaces and best-effort scope-exit cleanup
   - extend `zipfile` with bytes-backed write/read helpers plus governance surfaces (`is_zipfile`, `ZIP_STORED`, `ZIP_DEFLATED`, `ZipInfo`, `ZipReadHandle`)
@@ -143,4 +143,4 @@ Required entry records:
 
 ### wave_psp_runtime_2 review_pass_2 (production-grade)
 - Reviewer artifact: `reviews/phase-ad-hoc-runtime-and-file-object-parity-expansion-wave-psp-runtime-2-review-pass-2.md`
-- Status: remediation implemented for accepted findings (cleanup error propagation, explicit negative-size semantics, strict write-mode gating); constructor-time `Result` propagation remains constrained by current class-lowering behavior and is documented for wave-3 follow-up
+- Status: completed (conditional pass closed via `#1325` remediation: cleanup error propagation, explicit negative-size semantics, strict write-mode gating; constructor-time `Result` propagation remains constrained by current class-lowering behavior and is documented for wave-3 follow-up)
