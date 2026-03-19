@@ -2,7 +2,7 @@
 
 Status: open (documented 2026-03-18)
 Context: final cleanup phase after the structured/class, extended bytes-foundation, and runtime/file-object follow-ups
-Execution readiness: implementation-ready in sequence after `issues/ad-hoc-runtime-and-file-object-parity-expansion.md`; predecessor bytes-phase extension waves `wave_psp_bytes_4` and `wave_psp_bytes_5` must still lock raw-byte-backed `bytes` plus successor governance so crypto and RNG surfaces inherit the final binary contract rather than the transitional widened-integer backend
+Execution readiness: implementation-ready in sequence after `issues/ad-hoc-runtime-and-file-object-parity-expansion.md`; predecessor bytes-phase extension waves `wave_psp_bytes_4` and `wave_psp_bytes_5` are completed, so crypto and RNG surfaces inherit the final raw-byte-backed `bytes` contract and successor governance baseline
 
 ## Objective
 

@@ -2,7 +2,7 @@
 
 Status: open (documented 2026-03-18)
 Context: follow-up phase after structured/class-surface parity expansion and the extended bytes/binary-surface foundation
-Execution readiness: implementation-ready only after the extended bytes phase completes; predecessor waves `wave_psp_bytes_4` and `wave_psp_bytes_5` must still lock raw-byte-backed `bytes` plus successor/FFI-readiness governance so runtime/file-object APIs inherit the final binary contract rather than the transitional widened-integer backend
+Execution readiness: implementation-ready after completion of predecessor bytes extension waves `wave_psp_bytes_4` and `wave_psp_bytes_5`; runtime/file-object APIs now inherit the final raw-byte-backed `bytes` contract and successor/FFI governance baseline
 
 ## Objective
 
