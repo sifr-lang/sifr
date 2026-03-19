@@ -79,7 +79,9 @@ pub(super) fn resolve_bytes_method_type(
             Some(Type::List(Box::new(Type::Int)))
         }
         _ => {
-            ctx.error(format!("bytes has no method '{method}'"));
+            ctx.error(format!(
+                "bytes has no method '{method}' (supported: len, count, contains, index, to_ints)"
+            ));
             None
         }
     }
