@@ -1,48 +1,427 @@
-# sifr.io — File I/O with FileHandle class
-# Provides the open() built-in, FileHandle class, and re-exports common file operations.
+# sifr.io — File and stream I/O surfaces
+# Provides open(), open_binary(), file handle classes, and in-memory stream wrappers.
 from _sifr.fs import open_file, file_read, file_write, file_readline, file_readlines, file_close, file_read_bytes, file_write_bytes
 from _sifr.fs import read_text, write_text, exists, read_lines, append_text
+
+
+def _closed_stream_error() -> str:
+    return "I/O operation on closed stream"
+
+
+def _invalid_whence_error(whence: int) -> str:
+    return "invalid whence: " + str(whence)
+
+
+def _unsupported_seek_tell_error() -> str:
+    return "seek/tell is unsupported for this stream"
+
+
+def _mode_is_readable(mode: str) -> bool:
+    return ("r" in mode) or ("+" in mode)
+
+
+def _mode_is_writable(mode: str) -> bool:
+    return ("w" in mode) or ("a" in mode) or ("+" in mode)
+
+
+class IOBase:
+    _closed: bool
+
+    def __init__(self) -> None:
+        self._closed = False
+
+    def close(self) -> None:
+        self._closed = True
+
+    def closed(self) -> bool:
+        return self._closed
+
+    def flush(self) -> Result[None, IOError]:
+        if self._closed:
+            raise IOError(_closed_stream_error())
+        return None
+
+    def seek(self, offset: int, whence: int = 0) -> Result[int, IOError]:
+        _ = offset
+        _ = whence
+        raise IOError(_unsupported_seek_tell_error())
+
+    def tell(self) -> Result[int, IOError]:
+        raise IOError(_unsupported_seek_tell_error())
+
+    def readable(self) -> bool:
+        return False
+
+    def writable(self) -> bool:
+        return False
+
+    def seekable(self) -> bool:
+        return False
+
+
+class TextIOBase(IOBase):
+    pass
+
+
+class BinaryIOBase(IOBase):
+    pass
 
 
 class FileHandle:
     _handle: int
     _mode: str
+    _closed: bool
 
     def __init__(self, handle: int, mode: str) -> None:
         self._handle = handle
         self._mode = mode
+        self._closed = False
+
+    def close(self) -> None:
+        if self._closed:
+            return
+        file_close(self._handle)
+        self._closed = True
+
+    def closed(self) -> bool:
+        return self._closed
+
+    def flush(self) -> Result[None, IOError]:
+        if self._closed:
+            raise IOError(_closed_stream_error())
+        return None
 
     def read(self) -> Result[str, IOError]:
+        if self._closed:
+            raise IOError(_closed_stream_error())
+        if not self.readable():
+            raise IOError("stream is not readable")
         return file_read(self._handle)
 
     def write(self, data: str) -> Result[None, IOError]:
+        if self._closed:
+            raise IOError(_closed_stream_error())
+        if not self.writable():
+            raise IOError("stream is not writable")
         return file_write(self._handle, data)
 
     def readline(self) -> Result[str | None, IOError]:
+        if self._closed:
+            raise IOError(_closed_stream_error())
+        if not self.readable():
+            raise IOError("stream is not readable")
         return file_readline(self._handle)
 
     def readlines(self) -> Result[list[str], IOError]:
+        if self._closed:
+            raise IOError(_closed_stream_error())
+        if not self.readable():
+            raise IOError("stream is not readable")
         return file_readlines(self._handle)
 
-    def close(self) -> None:
-        file_close(self._handle)
-
     def read_bytes(self) -> Result[bytes, IOError]:
+        if self._closed:
+            raise IOError(_closed_stream_error())
+        if not self.readable():
+            raise IOError("stream is not readable")
         return file_read_bytes(self._handle)
 
     def write_bytes(self, data: bytes) -> Result[None, IOError]:
+        if self._closed:
+            raise IOError(_closed_stream_error())
+        if not self.writable():
+            raise IOError("stream is not writable")
         return file_write_bytes(self._handle, data)
+
+    def seek(self, offset: int, whence: int = 0) -> Result[int, IOError]:
+        _ = offset
+        _ = whence
+        raise IOError(_unsupported_seek_tell_error())
+
+    def tell(self) -> Result[int, IOError]:
+        raise IOError(_unsupported_seek_tell_error())
+
+    def readable(self) -> bool:
+        return _mode_is_readable(self._mode)
+
+    def writable(self) -> bool:
+        return _mode_is_writable(self._mode)
+
+    def seekable(self) -> bool:
+        return False
 
     def __enter__(self) -> FileHandle:
         return self
 
     def __exit__(self) -> None:
+        self.close()
+
+
+class BinaryFileHandle:
+    _handle: int
+    _mode: str
+    _closed: bool
+
+    def __init__(self, handle: int, mode: str) -> None:
+        self._handle = handle
+        self._mode = mode
+        self._closed = False
+
+    def close(self) -> None:
+        if self._closed:
+            return
         file_close(self._handle)
+        self._closed = True
+
+    def closed(self) -> bool:
+        return self._closed
+
+    def flush(self) -> Result[None, IOError]:
+        if self._closed:
+            raise IOError(_closed_stream_error())
+        return None
+
+    def read_bytes(self, size: int | None = None) -> Result[bytes, IOError]:
+        _ = size
+        if self._closed:
+            raise IOError(_closed_stream_error())
+        if not self.readable():
+            raise IOError("stream is not readable")
+        return file_read_bytes(self._handle)
+
+    def write_bytes(self, data: bytes) -> Result[None, IOError]:
+        if self._closed:
+            raise IOError(_closed_stream_error())
+        if not self.writable():
+            raise IOError("stream is not writable")
+        return file_write_bytes(self._handle, data)
+
+    def seek(self, offset: int, whence: int = 0) -> Result[int, IOError]:
+        _ = offset
+        _ = whence
+        raise IOError(_unsupported_seek_tell_error())
+
+    def tell(self) -> Result[int, IOError]:
+        raise IOError(_unsupported_seek_tell_error())
+
+    def readable(self) -> bool:
+        return _mode_is_readable(self._mode)
+
+    def writable(self) -> bool:
+        return _mode_is_writable(self._mode)
+
+    def seekable(self) -> bool:
+        return False
+
+    def __enter__(self) -> BinaryFileHandle:
+        return self
+
+    def __exit__(self) -> None:
+        self.close()
+
+
+class StringIO:
+    _buffer: str
+    _cursor: int
+    _closed: bool
+
+    def __init__(self, initial: str = "") -> None:
+        self._buffer = initial + ""
+        self._cursor = 0
+        self._closed = False
+
+    def close(self) -> None:
+        self._closed = True
+
+    def closed(self) -> bool:
+        return self._closed
+
+    def flush(self) -> Result[None, IOError]:
+        if self._closed:
+            raise IOError(_closed_stream_error())
+        return None
+
+    def read(self, size: int | None = None) -> Result[str, IOError]:
+        if self._closed:
+            raise IOError(_closed_stream_error())
+        start: int = self._cursor
+        end: int = len(self._buffer)
+        if size is not None:
+            maybe_size: int = size
+            if maybe_size >= 0:
+                requested: int = start + maybe_size
+                if requested < end:
+                    end = requested
+        piece: str = self._buffer[start:end]
+        self._cursor = end
+        return piece
+
+    def write(self, data: str) -> Result[None, IOError]:
+        if self._closed:
+            raise IOError(_closed_stream_error())
+        left: str = self._buffer[:self._cursor]
+        tail_start: int = self._cursor + len(data)
+        right: str = ""
+        if tail_start < len(self._buffer):
+            right = self._buffer[tail_start:]
+        self._buffer = left + data + right
+        self._cursor = self._cursor + len(data)
+        return None
+
+    def getvalue(self) -> str:
+        return self._buffer
+
+    def seek(self, offset: int, whence: int = 0) -> Result[int, IOError]:
+        if self._closed:
+            raise IOError(_closed_stream_error())
+        origin: int = 0
+        if whence == 0:
+            origin = 0
+        elif whence == 1:
+            origin = self._cursor
+        elif whence == 2:
+            origin = len(self._buffer)
+        else:
+            raise IOError(_invalid_whence_error(whence))
+
+        next_pos: int = origin + offset
+        if next_pos < 0:
+            next_pos = 0
+        end: int = len(self._buffer)
+        if next_pos > end:
+            next_pos = end
+        self._cursor = next_pos
+        return self._cursor
+
+    def tell(self) -> Result[int, IOError]:
+        if self._closed:
+            raise IOError(_closed_stream_error())
+        return self._cursor
+
+    def readable(self) -> bool:
+        return not self._closed
+
+    def writable(self) -> bool:
+        return not self._closed
+
+    def seekable(self) -> bool:
+        return not self._closed
+
+
+class BytesIO:
+    _buffer: list[int]
+    _cursor: int
+    _closed: bool
+
+    def __init__(self, initial: bytes = b"") -> None:
+        self._buffer = initial.to_ints()
+        self._cursor = 0
+        self._closed = False
+
+    def close(self) -> None:
+        self._closed = True
+
+    def closed(self) -> bool:
+        return self._closed
+
+    def flush(self) -> Result[None, IOError]:
+        if self._closed:
+            raise IOError(_closed_stream_error())
+        return None
+
+    def _slice_to_bytes(self, values: list[int]) -> Result[bytes, IOError]:
+        try:
+            built: bytes = bytes.from_ints(values)
+            return built
+        except ValueError as e:
+            raise IOError(e.message)
+
+    def read_bytes(self, size: int | None = None) -> Result[bytes, IOError]:
+        if self._closed:
+            raise IOError(_closed_stream_error())
+        start: int = self._cursor
+        end: int = len(self._buffer)
+        if size is not None:
+            maybe_size: int = size
+            if maybe_size >= 0:
+                requested: int = start + maybe_size
+                if requested < end:
+                    end = requested
+        chunk: list[int] = self._buffer[start:end]
+        self._cursor = end
+        return self._slice_to_bytes(chunk)
+
+    def write_bytes(self, data: bytes) -> Result[None, IOError]:
+        if self._closed:
+            raise IOError(_closed_stream_error())
+        values: list[int] = data.to_ints()
+        i: int = 0
+        while i < len(values):
+            maybe_value: int | None = values[i]
+            if maybe_value is None:
+                raise IOError("bytes write invariant violation")
+            idx: int = self._cursor + i
+            if idx < len(self._buffer):
+                self._buffer[idx] = maybe_value
+            else:
+                self._buffer.append(maybe_value)
+            i = i + 1
+        self._cursor = self._cursor + len(values)
+        return None
+
+    def getvalue(self) -> Result[bytes, IOError]:
+        return self._slice_to_bytes(self._buffer)
+
+    def seek(self, offset: int, whence: int = 0) -> Result[int, IOError]:
+        if self._closed:
+            raise IOError(_closed_stream_error())
+        origin: int = 0
+        if whence == 0:
+            origin = 0
+        elif whence == 1:
+            origin = self._cursor
+        elif whence == 2:
+            origin = len(self._buffer)
+        else:
+            raise IOError(_invalid_whence_error(whence))
+
+        next_pos: int = origin + offset
+        if next_pos < 0:
+            next_pos = 0
+        end: int = len(self._buffer)
+        if next_pos > end:
+            next_pos = end
+        self._cursor = next_pos
+        return self._cursor
+
+    def tell(self) -> Result[int, IOError]:
+        if self._closed:
+            raise IOError(_closed_stream_error())
+        return self._cursor
+
+    def readable(self) -> bool:
+        return not self._closed
+
+    def writable(self) -> bool:
+        return not self._closed
+
+    def seekable(self) -> bool:
+        return not self._closed
 
 
 def open(path: str, mode: str = "r") -> Result[FileHandle, IOError]:
     try:
         handle: int = open_file(path, mode)
         return FileHandle(handle, mode)
+    except IOError as e:
+        raise IOError(e.message)
+
+
+def open_binary(path: str, mode: str = "rb") -> Result[BinaryFileHandle, IOError]:
+    if "b" not in mode:
+        raise IOError("open_binary requires binary mode")
+    try:
+        handle: int = open_file(path, mode)
+        return BinaryFileHandle(handle, mode)
     except IOError as e:
         raise IOError(e.message)

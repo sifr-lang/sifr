@@ -1,0 +1,6 @@
+from sifr.io import StringIO
+
+
+def main() -> None:
+    sio: StringIO = StringIO("hello")
+    _ = sio.read_bytes()
