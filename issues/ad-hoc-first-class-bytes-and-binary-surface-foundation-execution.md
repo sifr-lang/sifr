@@ -175,7 +175,7 @@ Required entry records:
 
 ### closure review cycles
 - wave closure completion review: completed (`reviews/phase-ad-hoc-first-class-bytes-and-binary-surface-foundation-wave-closure-completion-check-review-pass-1.md`; reviewer gaps remediated via wave-1 pass-2 rerun and explicit wave-1/wave-2 CPython traceability ledgers)
-- wave closure production-grade review: pending
+- wave closure production-grade review: completed (`reviews/phase-ad-hoc-first-class-bytes-and-binary-surface-foundation-wave-closure-production-grade-check-review-pass-2.md`; approved for wave-closure production readiness)
 - milestone closure completion review: pending
 - milestone closure production-grade review: pending
 - phase closure completion review: pending
