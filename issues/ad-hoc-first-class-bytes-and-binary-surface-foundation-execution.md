@@ -1,6 +1,6 @@
 # Ad Hoc Phase Execution Checklist (First-Class Bytes and Binary Surface Foundation)
 
-Status: in_progress (started 2026-03-19; initial tranche completed 2026-03-19; extension reopened for raw-byte backend and successor/FFI-readiness closeout)
+Status: completed (started 2026-03-19; initial tranche completed 2026-03-19; extension waves completed 2026-03-19; wave/milestone/phase closure cycles completed 2026-03-19)
 Owner: ad_hoc_first_class_bytes execution loop
 Reference planning doc:
 - `issues/ad-hoc-first-class-bytes-and-binary-surface-foundation.md`
@@ -24,13 +24,13 @@ Loop per wave: Plan -> Implement -> Validate -> Demo -> PR -> External completio
 4. [x] `wave_psp_bytes_3`: downstream contract adoption and governance closeout
 5. [x] `wave_psp_bytes_4`: raw-byte backend storage and bytes/list lowering separation
 6. [x] `wave_psp_bytes_5`: successor-phase + FFI-readiness governance closeout
-7. [ ] wave-level extra completion review cycle done
-8. [ ] wave-level extra production-grade review cycle done
-9. [ ] milestone-level completion review cycle done
-10. [ ] milestone-level production-grade review cycle done
-11. [ ] phase-level completion review cycle done
-12. [ ] phase-level production-grade review cycle done
-13. [ ] closure telegram notification sent
+7. [x] wave-level extra completion review cycle done
+8. [x] wave-level extra production-grade review cycle done
+9. [x] milestone-level completion review cycle done
+10. [x] milestone-level production-grade review cycle done
+11. [x] phase-level completion review cycle done
+12. [x] phase-level production-grade review cycle done
+13. [x] closure telegram notification sent
 
 ## Entry Baseline Evidence (2026-03-19)
 
@@ -241,10 +241,10 @@ Required entry records:
 
 ### closure review cycles
 - historical note: the original tranche (`wave_psp_bytes_0` through `wave_psp_bytes_3`) completed all closure review cycles on 2026-03-19; those artifacts remain valid historical evidence for the first tranche but are superseded as the final phase closure basis by this extension.
-- wave closure completion review: pending
-- wave closure production-grade review: pending
-- milestone closure completion review: pending
-- milestone closure production-grade review: pending
-- phase closure completion review: pending
-- phase closure production-grade review: pending
-- phase closure telegram notification: pending
+- wave closure completion review: completed (`reviews/phase-ad-hoc-first-class-bytes-and-binary-surface-foundation-wave-closure-review-pass-1.md`)
+- wave closure production-grade review: completed (`reviews/phase-ad-hoc-first-class-bytes-and-binary-surface-foundation-wave-closure-review-pass-2.md`)
+- milestone closure completion review: completed (`reviews/phase-ad-hoc-first-class-bytes-and-binary-surface-foundation-milestone-closure-review-pass-1.md`)
+- milestone closure production-grade review: completed (`reviews/phase-ad-hoc-first-class-bytes-and-binary-surface-foundation-milestone-closure-review-pass-2.md`)
+- phase closure completion review: completed (`reviews/phase-ad-hoc-first-class-bytes-and-binary-surface-foundation-phase-closure-review-pass-1.md`)
+- phase closure production-grade review: completed (`reviews/phase-ad-hoc-first-class-bytes-and-binary-surface-foundation-phase-closure-review-pass-2.md`)
+- phase closure telegram notification: completed (sent 2026-03-19; telegram `message_id=137`)
