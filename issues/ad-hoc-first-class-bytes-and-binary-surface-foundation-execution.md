@@ -107,6 +107,10 @@ Required entry records:
 - Reviewer artifact: `reviews/phase-ad-hoc-first-class-bytes-and-binary-surface-foundation-wave-psp-bytes-0-review-pass-2.md`
 - Status: completed (approved for production-grade readiness; no remediation changes required)
 
+### wave_psp_bytes_1 review_pass_1 (completion-gap)
+- Reviewer artifact: `reviews/phase-ad-hoc-first-class-bytes-and-binary-surface-foundation-wave-psp-bytes-1-review-pass-1.md`
+- Status: completed (no blockers; remediated reviewer suggestions on bytes unsupported-method diagnostics and representation documentation)
+
 ### closure review cycles
 - wave closure completion review: pending
 - wave closure production-grade review: pending
