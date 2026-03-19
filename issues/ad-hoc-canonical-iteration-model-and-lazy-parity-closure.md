@@ -57,13 +57,17 @@ Secondary target area:
   - `issues/ad-hoc-stateful-rng-crypto-and-polish-parity-expansion.md`
 - implementation hotspots:
   - `crates/sifr_type_system/src/types.rs`
+  - `crates/sifr_hir/src/hir_nodes.rs`
   - `crates/sifr_hir/src/lower/expressions.rs`
   - `crates/sifr_hir/src/lower/statements.rs`
+  - `crates/sifr_hir/src/lower/builtin_calls.rs`
   - `crates/sifr_hir/src/lower/function_flow.rs`
   - `crates/sifr_codegen/src/lower_expr.rs`
   - `crates/sifr_codegen/src/lower_stmt.rs`
+  - `crates/sifr_codegen/src/stmt_support_emitter.rs`
   - `crates/sifr_codegen/src/function_emitter.rs`
   - `crates/sifr_codegen/src/intrinsic_method_emitters.rs`
+  - `crates/sifr_codegen/src/operator_protocol_emitters.rs`
   - `lib/sifr/itertools.sifr`
 - CPython source and tests:
   - `/Users/yaseralnajjar/work/sifr/cpython`
@@ -80,6 +84,21 @@ Primary upstream families:
 - `Lib/test/test_itertools.py`
 - `Lib/test/test_tuple.py`
   - only for tuple iteration behavior relevant to the final contract
+
+Initial CPython validation focus for this phase:
+
+- `test_iter` coverage must explicitly account for:
+  - basic `iter(...)` / `next(...)` behavior,
+  - iterator-vs-iterable separation,
+  - collection re-iteration vs single-pass iterator exhaustion
+- `test_generators` coverage must explicitly account for:
+  - simple lazy yield behavior,
+  - filtered generator-expression parity where adapted,
+  - intentionally unsupported generator shapes with explicit Sifr-safe diagnostics
+- `test_itertools` coverage must explicitly account for:
+  - lazy adapter composition,
+  - materialization boundaries,
+  - explicitly buffered helpers that remain documented intentional differences
 
 ## Why This Needs Its Own Phase
 
@@ -125,8 +144,26 @@ That makes this a compiler/runtime semantics phase, not a module-by-module parit
 - `str` iterates one-character `str`
 - `bytes` iterates `int`
 - `range` iterates `int`
-- homogeneous tuples iterate their common element type
-- heterogeneous tuples are only iterable if the final type-system rule can prove a valid common element type; otherwise they are rejected explicitly
+- tuples are iterable only when the compiler can prove one statically valid element type for the whole tuple
+- homogeneous tuples therefore iterate their shared element type
+- heterogeneous tuples do not gain implicit union-yield iteration in this phase; if no single common element type can be proven, tuple iteration is rejected explicitly
+
+### Internal capability model
+
+Compiler layers in this phase must reason about iterator capabilities explicitly rather than recovering them from erased backend types.
+
+Illustrative target shape:
+
+```rust
+enum IteratorCapability {
+    SinglePass,
+    MultiPass,
+    DoubleEnded,
+    ExactSize,
+}
+```
+
+The implementation does not need to expose this enum as a public language surface, but type-system, HIR, and codegen work in this phase must agree on an equivalent internal model.
 
 ### Canonical lazy vs eager rules
 
@@ -157,7 +194,7 @@ Eager:
 
 - `next(it)` returns `T | None`; `StopIteration` is not user-facing
 - single-pass iterators must not be silently cloned to fake reusability
-- invalid reuse of consumed or uniquely borrowed iterators must be rejected or made explicit by the ownership model
+- invalid reuse of single-pass or uniquely borrowed iterators must be rejected statically when the ownership model can prove it; this phase does not treat `.clone()` as a semantic escape hatch for iterator correctness
 - collection mutation while an incompatible live iterator exists remains statically controlled
 - no silent eager fallback is allowed in lazy-returning APIs
 
@@ -277,6 +314,7 @@ Scope:
 - add reversible capability support
 - add internal iteration capability metadata for lowering and codegen
 - align assignability and tuple iterability with the frozen contract
+- make the tuple rule explicit: one statically provable element type or no tuple iteration support
 
 Definition of done:
 
@@ -312,7 +350,9 @@ Definition of done:
 
 - iterator pipelines compile end-to-end without collection-only assumptions,
 - generated Rust no longer calls `.iter()` or `.clone()` on iterator values unless semantically valid,
-- and validated failures such as `any(iter(xs))`, `filter(..., iter(xs))`, `sorted(iter(xs))`, and `reversed(iter(xs))` are closed or explicitly classified.
+- `any(iter(xs))`, `filter(..., iter(xs))`, and `sorted(iter(xs))` are required closure targets,
+- `reversed(iter(xs))` closes only for reversible / double-ended inputs and otherwise must fail through explicit capability-aware typing or diagnostics,
+- and any residual non-closure must be a documented intentional divergence rather than an accidental backend limitation.
 
 ### wave_psp_iter_fix_4: Generator Backend Unification
 
@@ -321,12 +361,14 @@ Scope:
 - replace the current narrow generator backend shape restrictions with a canonical iterator-producing backend
 - align generator functions and generator expressions with the same iterator semantics
 - support legal filtered and composed generator shapes through the canonical iteration path
+- eliminate the current implementation restriction that only supports a single top-level `while` loop with exactly one direct yield site or one direct if-guarded yield site
 
 Definition of done:
 
 - generator outputs behave as first-class iterators,
 - filtered generator expressions compile lazily,
-- and unsupported generator shapes fail with precise diagnostics instead of backend mismatch.
+- unsupported generator shapes fail with precise diagnostics instead of backend mismatch or codegen panic,
+- and no supported generator form depends on the current ad hoc top-level-while-loop shape contract.
 
 ### wave_psp_iter_fix_5: Builtin Surface Cleanup
 
