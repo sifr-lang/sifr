@@ -144,7 +144,7 @@ Required entry records:
 ### wave_psp_bytes_4: Raw-Byte Backend and Bytes/List Lowering Separation
 - Status: completed
 - Implementation PR:
-  - pending (current working branch; PR will be linked after merge)
+  - `#1311` (merged): https://github.com/yaseralnajjar/sifr/pull/1311
 - Scope:
   - move `Type::Bytes` backend storage off widened integer vectors onto raw-byte storage
   - remove bytes-native dependence on generic list lowering where it preserves the widened-storage assumption
@@ -211,12 +211,12 @@ Required entry records:
 - Status: completed (conditional approval remediated by documenting internal `Type::Bytes` backend representation as an explicit intentional-diff governance item and correcting public-phase wording to match shipped implementation)
 
 ### wave_psp_bytes_4 review_pass_1 (completion-gap)
-- Reviewer artifact: pending
-- Status: pending
+- Reviewer artifact: `reviews/phase-ad-hoc-first-class-bytes-and-binary-surface-foundation-wave-psp-bytes-4-review-pass-1.md`
+- Status: completed (approved; no remediation changes required)
 
 ### wave_psp_bytes_4 review_pass_2 (production-grade)
-- Reviewer artifact: pending
-- Status: pending
+- Reviewer artifact: `reviews/phase-ad-hoc-first-class-bytes-and-binary-surface-foundation-wave-psp-bytes-4-review-pass-2.md`
+- Status: completed (approved for production readiness; no remediation changes required)
 
 ### closure review cycles
 - historical note: the original tranche (`wave_psp_bytes_0` through `wave_psp_bytes_3`) completed all closure review cycles on 2026-03-19; those artifacts remain valid historical evidence for the first tranche but are superseded as the final phase closure basis by this extension.
