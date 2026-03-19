@@ -278,7 +278,9 @@ fn lower_intrinsic_rendered(name: &str, args: &[RustExpr]) -> Option<LoweredIntr
         "gzip_decompress" => (gzip::lower_gzip_decompress(args), Some("flate2")),
         "zip_create" => (zipfile::lower_zip_create(args), Some("zip")),
         "zip_add_file" => (zipfile::lower_zip_add_file(args), Some("zip")),
+        "zip_add_file_bytes" => (zipfile::lower_zip_add_file_bytes(args), Some("zip")),
         "zip_read_file" => (zipfile::lower_zip_read_file(args), Some("zip")),
+        "zip_read_file_bytes" => (zipfile::lower_zip_read_file_bytes(args), Some("zip")),
         "zip_namelist" => (zipfile::lower_zip_namelist(args), Some("zip")),
         "base64_encode" => (base64::lower_base64_encode(args), Some("base64")),
         "base64_decode" => (base64::lower_base64_decode(args), Some("base64")),
@@ -950,10 +952,30 @@ mod tests {
         assert_eq!(add.required_crate, Some("zip"));
         assert!(render_expr(&add.expr).contains("start_file"));
 
+        let add_bytes = lower_intrinsic(
+            "zip_add_file_bytes",
+            &[
+                "path".to_string(),
+                "name".to_string(),
+                "content_bytes".to_string(),
+            ],
+        )
+        .expect("zip_add_file_bytes");
+        assert_eq!(add_bytes.required_crate, Some("zip"));
+        assert!(render_expr(&add_bytes.expr).contains("write_all"));
+
         let read = lower_intrinsic("zip_read_file", &["path".to_string(), "name".to_string()])
             .expect("zip_read_file");
         assert_eq!(read.required_crate, Some("zip"));
         assert!(render_expr(&read.expr).contains("ZipArchive::new"));
+
+        let read_bytes = lower_intrinsic(
+            "zip_read_file_bytes",
+            &["path".to_string(), "name".to_string()],
+        )
+        .expect("zip_read_file_bytes");
+        assert_eq!(read_bytes.required_crate, Some("zip"));
+        assert!(render_expr(&read_bytes.expr).contains("read_to_end"));
 
         let names = lower_intrinsic("zip_namelist", &["path".to_string()]).expect("zip_namelist");
         assert_eq!(names.required_crate, Some("zip"));

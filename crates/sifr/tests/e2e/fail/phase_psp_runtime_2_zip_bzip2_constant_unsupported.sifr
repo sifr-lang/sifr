@@ -1,0 +1,5 @@
+from sifr.zipfile import ZIP_BZIP2
+
+
+def main() -> None:
+    _x: int = ZIP_BZIP2

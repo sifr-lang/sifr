@@ -1,0 +1,130 @@
+from sifr.tempfile import NamedTemporaryFile, TemporaryDirectory
+from sifr.zipfile import ZipFile, ZipReadHandle, is_zipfile, ZIP_STORED, ZIP_DEFLATED
+from sifr.io import exists
+from sifr.os import remove_file
+from sifr.test import assert_bool_vector_eq
+
+
+def main() -> None:
+    actual: list[bool] = []
+
+    delete_on_close_ok: bool = False
+    delete_false_cleanup_ok: bool = False
+    tempdir_cleanup_ok: bool = False
+    zip_metadata_ok: bool = False
+    zip_read_bytes_ok: bool = False
+    zip_open_unsupported_ok: bool = False
+    zip_extract_unsupported: bool = False
+    zip_open_write_rejected: bool = False
+    zip_is_zipfile_ok: bool = False
+    zip_cleanup_ok: bool = False
+
+    zip_path: str = "/tmp/sifr_phase_psp_runtime_2_archive.zip"
+
+    try:
+        ntf_delete: NamedTemporaryFile = NamedTemporaryFile("w+", True, "sifr_phase_psp_runtime_2_del_")
+        delete_path: str = ntf_delete.name()
+        before_close: bool = exists(delete_path)
+        _close_delete: None = ntf_delete.close()
+        after_close: bool = not exists(delete_path)
+        delete_on_close_ok = before_close and after_close
+    except IOError as e:
+        _ = e.message
+
+    try:
+        ntf_keep: NamedTemporaryFile = NamedTemporaryFile("wb", False, "sifr_phase_psp_runtime_2_keep_")
+        keep_path: str = ntf_keep.name()
+        _close_keep: None = ntf_keep.close()
+        exists_after_close: bool = exists(keep_path)
+        _cleanup_keep: None = ntf_keep.cleanup()
+        removed_after_cleanup: bool = not exists(keep_path)
+        delete_false_cleanup_ok = exists_after_close and removed_after_cleanup
+    except IOError as e:
+        _ = e.message
+
+    try:
+        tempdir: TemporaryDirectory = TemporaryDirectory("sifr_phase_psp_runtime_2_dir_")
+        td_path: str = tempdir.name()
+        created: bool = exists(td_path)
+        _cleanup_tempdir: None = tempdir.cleanup()
+        removed: bool = not exists(td_path)
+        tempdir_cleanup_ok = created and removed
+    except IOError as e:
+        _ = e.message
+
+    try:
+        if exists(zip_path):
+            _rm_old: None = remove_file(zip_path)
+
+        writer: ZipFile = ZipFile(zip_path + "", "w", ZIP_STORED)
+        _create: None = writer.create()
+        _write_text: None = writer.write("hello.txt", "hello-wave2")
+        _write_bytes: None = writer.write_bytes("bin/data.bin", b"xyz")
+
+        names: list[str] = writer.namelist()
+        data_entry: bytes = writer.read_bytes("bin/data.bin")
+        zip_metadata_ok = len(names) == 2 and len(data_entry) == 3 and ZIP_DEFLATED == 8
+
+        reader: ZipFile = ZipFile(zip_path + "", "r", ZIP_STORED)
+        read_back: bytes = reader.read_bytes("bin/data.bin")
+        zip_read_bytes_ok = read_back == b"xyz"
+
+        _open_read_result: Result[ZipReadHandle, IOError] = reader.open("bin/data.bin", "r")
+        try:
+            _open_read_handle: ZipReadHandle = _open_read_result
+            zip_open_unsupported_ok = False
+        except IOError as e:
+            _ = e.message
+            zip_open_unsupported_ok = True
+
+        _open_write_result: Result[ZipReadHandle, IOError] = reader.open("hello.txt", "w")
+        try:
+            _open_write_handle: ZipReadHandle = _open_write_result
+            zip_open_write_rejected = False
+        except IOError as e:
+            _ = e.message
+            zip_open_write_rejected = True
+
+        _extract_one_result: Result[str, IOError] = reader.extract("hello.txt", "/tmp")
+        _extract_one_unsupported: bool = False
+        try:
+            _extract_one_path: str = _extract_one_result
+        except IOError as e:
+            _ = e.message
+            _extract_one_unsupported = True
+
+        _extract_all_result: Result[list[str], IOError] = reader.extractall("/tmp")
+        _extract_all_unsupported: bool = False
+        try:
+            _extract_all_paths: list[str] = _extract_all_result
+        except IOError as e:
+            _ = e.message
+            _extract_all_unsupported = True
+
+        zip_extract_unsupported = _extract_one_unsupported and _extract_all_unsupported
+
+        zip_is_zipfile_ok = is_zipfile(zip_path) and (not is_zipfile(zip_path + ".missing"))
+    except IOError as e:
+        _ = e.message
+
+    try:
+        zip_cleanup_ok = True
+        if exists(zip_path):
+            _rm_zip: None = remove_file(zip_path)
+        zip_cleanup_ok = zip_cleanup_ok and (not exists(zip_path))
+    except IOError as e:
+        _ = e.message
+
+    actual.append(delete_on_close_ok)
+    actual.append(delete_false_cleanup_ok)
+    actual.append(tempdir_cleanup_ok)
+    actual.append(zip_metadata_ok)
+    actual.append(zip_read_bytes_ok)
+    actual.append(zip_open_unsupported_ok)
+    actual.append(zip_extract_unsupported)
+    actual.append(zip_open_write_rejected)
+    actual.append(zip_is_zipfile_ok)
+    actual.append(zip_cleanup_ok)
+
+    expected: list[bool] = [True, True, True, True, True, True, True, True, True, True]
+    assert_bool_vector_eq(actual, expected)

@@ -1,6 +1,6 @@
 # Ad Hoc Phase Execution Checklist (Runtime and File-Object Parity Expansion)
 
-Status: in_progress (started 2026-03-19; wave `wave_psp_runtime_0` review loop completed; wave `wave_psp_runtime_1` implementation and review loop completed; wave `wave_psp_runtime_2` pending)
+Status: in_progress (started 2026-03-19; wave `wave_psp_runtime_0` review loop completed; wave `wave_psp_runtime_1` review loop completed; wave `wave_psp_runtime_2` implementation and validation complete with review loop pending)
 Owner: ad_hoc_runtime_file_object execution loop
 Reference planning doc:
 - `issues/ad-hoc-runtime-and-file-object-parity-expansion.md`
@@ -20,7 +20,7 @@ Loop per wave: Plan -> Implement -> Validate -> Demo -> PR -> External completio
 ## Full Phase To-Do Plan
 1. [x] `wave_psp_runtime_0`: architecture lock for sealed hierarchy, lifecycle model, and permanent divergence boundaries
 2. [x] `wave_psp_runtime_1`: `io` and in-memory stream hierarchy (`BytesIO`, `StringIO`)
-3. [ ] `wave_psp_runtime_2`: tempfile and zipfile object lifecycle expansion
+3. [x] `wave_psp_runtime_2`: tempfile and zipfile object lifecycle expansion
 4. [ ] `wave_psp_runtime_3`: logging/time/timeit object-surface expansion
 5. [ ] `wave_psp_runtime_4`: synchronous subprocess boundary cleanup and final governance closure
 6. [ ] wave-level extra completion review cycle done
@@ -96,6 +96,27 @@ Required entry records:
   - negative regression: `cargo run -q -p sifr -- check crates/sifr/tests/e2e/fail/phase_psp_runtime_0_pyio_inheritance_unsupported.sifr` -> expected compile failure (PASS)
   - wave gate: `$(pwd)/scripts/run_all_tests.sh --profile quick` -> PASS (2026-03-19)
 
+### wave_psp_runtime_2: Tempfile and Archive Object Lifecycles
+- Status: completed (implementation + validation complete; PR/review cycle pending)
+- Implementation PR:
+  - pending (this branch)
+- Scope:
+  - add deterministic lifecycle wrappers (`NamedTemporaryFile`, `TemporaryDirectory`) with explicit `close()/cleanup()` result surfaces and best-effort scope-exit cleanup
+  - extend `zipfile` with bytes-backed write/read helpers plus governance surfaces (`is_zipfile`, `ZIP_STORED`, `ZIP_DEFLATED`, `ZipInfo`, `ZipReadHandle`)
+  - land byte-native zip intrinsic contracts (`zip_add_file_bytes`, `zip_read_file_bytes`) so archive payload flow stays on first-class `bytes`
+  - keep unsupported boundaries explicit (`ZipExtFile`, `ZIP_BZIP2`, `SpooledTemporaryFile`, and read-handle/extraction advanced methods not yet implemented in this tranche)
+- Validation:
+  - positive path: `cargo run -q -p sifr -- run crates/sifr/tests/e2e/pass/phase_psp_runtime_2_tempfile_zipfile_lifecycle.sifr` -> PASS
+  - positive path: `cargo run -q -p sifr -- run demos/ad_hoc_runtime_wave2_tempfile_zipfile_lifecycle_demo.sifr` -> PASS (`ad_hoc_runtime_wave2_tempfile_zipfile_lifecycle_demo: ok`)
+  - positive regression: `cargo run -q -p sifr -- run crates/sifr/tests/e2e/pass/stdlib_tempfile_consolidated.sifr` -> PASS
+  - positive regression: `cargo run -q -p sifr -- run crates/sifr/tests/e2e/pass/stdlib_zipfile.sifr` -> PASS
+  - positive regression: `cargo run -q -p sifr -- run crates/sifr/tests/e2e/pass/cpython_tempfile_subset.sifr` -> PASS
+  - positive regression: `cargo run -q -p sifr -- run crates/sifr/tests/e2e/pass/cpython_zipfile_subset.sifr` -> PASS
+  - negative path: `cargo run -q -p sifr -- check crates/sifr/tests/e2e/fail/phase_psp_runtime_2_zip_ext_file_unsupported.sifr` -> expected compile failure (PASS)
+  - negative path: `cargo run -q -p sifr -- check crates/sifr/tests/e2e/fail/phase_psp_runtime_2_zip_bzip2_constant_unsupported.sifr` -> expected compile failure (PASS)
+  - negative regression: `cargo run -q -p sifr -- check crates/sifr/tests/e2e/fail/phase_psp_runtime_0_spooled_tempfile_unsupported.sifr` -> expected compile failure (PASS)
+  - wave gate: `$(pwd)/scripts/run_all_tests.sh --profile quick` -> PASS (2026-03-19)
+
 ## External Review Passes
 
 ### wave_psp_runtime_0 review_pass_1 (completion-gap)
@@ -113,3 +134,11 @@ Required entry records:
 ### wave_psp_runtime_1 review_pass_2 (production-grade)
 - Reviewer artifact: `reviews/phase-ad-hoc-runtime-and-file-object-parity-expansion-wave-psp-runtime-1-review-pass-2.md`
 - Status: completed (conditional pass accepted after remediation: negative-seek behavior hardened for in-memory streams and remaining `BinaryFileHandle.read_bytes(size)` compatibility limitation documented explicitly in traceability governance)
+
+### wave_psp_runtime_2 review_pass_1 (completion-gap)
+- Reviewer artifact: pending
+- Status: pending
+
+### wave_psp_runtime_2 review_pass_2 (production-grade)
+- Reviewer artifact: pending
+- Status: pending

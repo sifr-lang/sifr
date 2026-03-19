@@ -1,0 +1,48 @@
+from sifr.tempfile import NamedTemporaryFile
+from sifr.zipfile import ZipFile, ZipReadHandle, is_zipfile, ZIP_STORED
+from sifr.io import exists
+from sifr.os import remove_file
+
+
+def main() -> None:
+    zip_path: str = "/tmp/sifr_runtime_wave2_demo.zip"
+    demo_ok: bool = False
+
+    try:
+        temp_file: NamedTemporaryFile = NamedTemporaryFile("wb", False, "sifr_runtime_wave2_demo_")
+        tmp_path: str = temp_file.name()
+        _close_tmp: None = temp_file.close()
+        _cleanup_tmp: None = temp_file.cleanup()
+        tempfile_ok: bool = not exists(tmp_path)
+
+        if exists(zip_path):
+            _rm_old: None = remove_file(zip_path)
+
+        writer: ZipFile = ZipFile(zip_path + "", "w", ZIP_STORED)
+        _create: None = writer.create()
+        _write_text: None = writer.write("note.txt", "runtime-wave2")
+        _write_bytes: None = writer.write_bytes("bin/raw.bin", b"\x00\x01\x02")
+
+        reader: ZipFile = ZipFile(zip_path + "", "r", ZIP_STORED)
+        payload: bytes = reader.read_bytes("bin/raw.bin")
+
+        _open_handle_result: Result[ZipReadHandle, IOError] = reader.open("bin/raw.bin", "rb")
+        open_rejected: bool = False
+        try:
+            _open_handle: ZipReadHandle = _open_handle_result
+        except IOError as e:
+            _ = e.message
+            open_rejected = True
+
+        demo_ok = tempfile_ok and is_zipfile(zip_path) and payload == b"\x00\x01\x02" and open_rejected
+    except IOError as e:
+        _ = e.message
+
+    try:
+        if exists(zip_path):
+            _rm_zip: None = remove_file(zip_path)
+    except IOError as e:
+        _ = e.message
+
+    assert demo_ok
+    print("ad_hoc_runtime_wave2_tempfile_zipfile_lifecycle_demo: ok")
