@@ -23,7 +23,7 @@ Loop per wave: Plan -> Implement -> Validate -> Demo -> PR -> External completio
 3. [x] `wave_psp_bytes_2`: UTF-8/hex conversion surfaces and `sifr.bytes` compatibility delegation
 4. [x] `wave_psp_bytes_3`: downstream contract adoption and governance closeout
 5. [x] `wave_psp_bytes_4`: raw-byte backend storage and bytes/list lowering separation
-6. [ ] `wave_psp_bytes_5`: successor-phase + FFI-readiness governance closeout
+6. [x] `wave_psp_bytes_5`: successor-phase + FFI-readiness governance closeout
 7. [ ] wave-level extra completion review cycle done
 8. [ ] wave-level extra production-grade review cycle done
 9. [ ] milestone-level completion review cycle done
@@ -164,17 +164,29 @@ Required entry records:
   - wave gate: `$(pwd)/scripts/run_all_tests.sh` -> PASS (2026-03-19)
 
 ### wave_psp_bytes_5: Successor-Phase and FFI Readiness Closeout
-- Status: pending
-- Planned scope:
+- Status: completed
+- Implementation PR:
+  - pending (current working branch; PR will be linked after merge)
+- Scope:
   - refresh runtime/file-object successor planning to assume raw-byte-backed `bytes`
   - refresh RNG/crypto successor planning to assume raw-byte-backed `bytes`
   - add interoperability/FFI-readiness notes for owned immutable byte buffers and keep mutable/view semantics explicitly deferred
   - update canonical governance so widened integer bytes storage is no longer tracked as an accepted intentional resting-state
-- Planned validation:
-  - positive path: successor doc consistency checks + representative bytes-native demos/tests
-  - negative path: unsupported mutable/view/fixed-width-family assumptions remain explicitly classified
-  - wave gate: `$(pwd)/scripts/run_all_tests.sh --profile quick`
-  - wave gate: `$(pwd)/scripts/run_all_tests.sh`
+- Validation:
+  - positive path: successor-doc contract checks:
+    - `rg -n "Execution readiness: implementation-ready after completion of predecessor bytes extension waves" issues/ad-hoc-runtime-and-file-object-parity-expansion.md` -> PASS
+    - `rg -n "predecessor bytes-phase extension waves" issues/ad-hoc-stateful-rng-crypto-and-polish-parity-expansion.md` -> PASS
+    - `rg -n "locked by" internal_docs/phases/43_interoperability.md` -> PASS
+  - positive path: representative bytes-native regressions:
+    - `cargo run -q -p sifr -- run crates/sifr/tests/e2e/pass/phase_psp_bytes_4_raw_backend_and_lowering_separation.sifr` -> PASS
+    - `cargo run -q -p sifr -- run demos/ad_hoc_bytes_wave4_raw_backend_storage_demo.sifr` -> PASS
+    - `cargo run -q -p sifr -- run crates/sifr/tests/e2e/pass/cpython_io_subset.sifr` -> PASS
+    - `cargo run -q -p sifr -- run crates/sifr/tests/e2e/pass/cpython_hashlib_object_model_subset.sifr` -> PASS
+  - negative path: unsupported mutable/view contracts remain explicit:
+    - `cargo run -q -p sifr -- check crates/sifr/tests/e2e/fail/phase_psp_bytes_0_memoryview_unsupported.sifr` -> expected compile failure (PASS)
+    - `cargo run -q -p sifr -- check crates/sifr/tests/e2e/fail/phase_psp_bytes_0_buffer_protocol_unsupported.sifr` -> expected compile failure (PASS)
+  - wave gate: `$(pwd)/scripts/run_all_tests.sh --profile quick` -> PASS (2026-03-19)
+  - wave gate: `$(pwd)/scripts/run_all_tests.sh` -> PASS (2026-03-19)
 
 ## External Review Passes
 
@@ -217,6 +229,14 @@ Required entry records:
 ### wave_psp_bytes_4 review_pass_2 (production-grade)
 - Reviewer artifact: `reviews/phase-ad-hoc-first-class-bytes-and-binary-surface-foundation-wave-psp-bytes-4-review-pass-2.md`
 - Status: completed (approved for production readiness; no remediation changes required)
+
+### wave_psp_bytes_5 review_pass_1 (completion-gap)
+- Reviewer artifact: pending
+- Status: pending
+
+### wave_psp_bytes_5 review_pass_2 (production-grade)
+- Reviewer artifact: pending
+- Status: pending
 
 ### closure review cycles
 - historical note: the original tranche (`wave_psp_bytes_0` through `wave_psp_bytes_3`) completed all closure review cycles on 2026-03-19; those artifacts remain valid historical evidence for the first tranche but are superseded as the final phase closure basis by this extension.
