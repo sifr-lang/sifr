@@ -1,8 +1,8 @@
 # Ad Hoc Phase: Stateful RNG, Crypto, and Polish Parity Expansion
 
-Status: open (documented 2026-03-18)
-Context: final cleanup phase after the structured/class, extended bytes-foundation, and runtime/file-object follow-ups
-Execution readiness: implementation-ready in sequence after `issues/ad-hoc-runtime-and-file-object-parity-expansion.md`; predecessor bytes-phase extension waves `wave_psp_bytes_4` and `wave_psp_bytes_5` are completed, so crypto and RNG surfaces inherit the final raw-byte-backed `bytes` contract and successor governance baseline
+Status: open (documented 2026-03-18; sequencing revised 2026-03-20)
+Context: final cleanup phase after the structured/class, extended bytes-foundation, runtime/file-object, and canonical iteration-model follow-ups
+Execution readiness: implementation-ready in sequence after `issues/ad-hoc-canonical-iteration-model-and-lazy-parity-closure.md`; predecessor bytes-phase extension waves `wave_psp_bytes_4` and `wave_psp_bytes_5` are completed, so crypto and RNG surfaces inherit the final raw-byte-backed `bytes` contract, stable iterator semantics, and successor governance baseline
 
 ## Objective
 
@@ -36,6 +36,7 @@ Conditional residual polish targets:
   - `issues/ad-hoc-structured-data-and-class-surface-parity-expansion.md`
   - `issues/ad-hoc-first-class-bytes-and-binary-surface-foundation.md`
   - `issues/ad-hoc-runtime-and-file-object-parity-expansion.md`
+  - `issues/ad-hoc-canonical-iteration-model-and-lazy-parity-closure.md`
 - architecture baseline:
   - `internal_docs/architecture.md`
 - CPython source and tests:
@@ -67,6 +68,7 @@ The phase design is fixed in this document. What remains before wave 1 is execut
 
 - `issues/ad-hoc-first-class-bytes-and-binary-surface-foundation.md`
 - `issues/ad-hoc-runtime-and-file-object-parity-expansion.md`
+- `issues/ad-hoc-canonical-iteration-model-and-lazy-parity-closure.md`
 - milestone-7 canonical closure inventory remains the baseline
 - prior follow-up phases should already have reduced broader parser, class, and runtime debt
 - Phase 27 non-regression invariants remain mandatory
