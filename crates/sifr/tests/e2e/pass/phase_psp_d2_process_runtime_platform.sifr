@@ -1,7 +1,7 @@
 from sifr.os import run_command, getcwd
 from sifr.env import getenv, getenv_opt, setenv, unsetenv
 from sifr.sys import argv, version, platform, maxsize
-from sifr.subprocess import run, run_with_input, CompletedProcess
+from sifr.subprocess import run, run_with_input, check_call, check_output, CompletedProcess
 from sifr.logging import getLogger, INFO, Logger
 from sifr.platform import system, machine, processor
 from sifr.time import time, strftime, strptime
@@ -55,6 +55,7 @@ def collect_process_logging_actual() -> list[bool]:
     actual: list[bool] = []
     subprocess_ok: bool = False
     stdin_ok: bool = False
+    check_helpers_ok: bool = False
     logging_ok: bool = False
     cleanup_ok: bool = False
 
@@ -71,6 +72,14 @@ def collect_process_logging_actual() -> list[bool]:
     except IOError as e:
         _ = e.message
     actual.append(stdin_ok)
+
+    try:
+        rc: int = check_call("echo psp_d2_check_call")
+        out: str = check_output("echo psp_d2_check_output")
+        check_helpers_ok = rc == 0 and out.strip() == "psp_d2_check_output"
+    except IOError as e:
+        _ = e.message
+    actual.append(check_helpers_ok)
 
     log_path: str = mktemp_path("sifr_phase_psp_d2_log_")
     try:
@@ -132,7 +141,7 @@ def append_all(mut target: list[bool], values: list[bool]):
 def main():
     expected: list[bool] = [
         True, True, True, True, True, True, True, True, True,
-        True, True, True, True,
+        True, True, True, True, True,
         True, True, True, True, True, True, True
     ]
     actual: list[bool] = []
