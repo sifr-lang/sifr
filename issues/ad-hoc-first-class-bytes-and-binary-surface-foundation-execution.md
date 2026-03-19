@@ -139,8 +139,8 @@ Required entry records:
 - Status: timed out after 2400s on 2026-03-19 (no reviewer file produced; no pass-2 remediation changes to apply)
 
 ### wave_psp_bytes_2 review_pass_1 (completion-gap)
-- Reviewer artifact target: `reviews/phase-ad-hoc-first-class-bytes-and-binary-surface-foundation-wave-psp-bytes-2-review-pass-1.md`
-- Status: pending
+- Reviewer artifact: `reviews/phase-ad-hoc-first-class-bytes-and-binary-surface-foundation-wave-psp-bytes-2-review-pass-1.md`
+- Status: completed (approved; no remediation changes required)
 
 ### wave_psp_bytes_2 review_pass_2 (production-grade)
 - Reviewer artifact target: `reviews/phase-ad-hoc-first-class-bytes-and-binary-surface-foundation-wave-psp-bytes-2-review-pass-2.md`
