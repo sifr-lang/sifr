@@ -1,6 +1,6 @@
 # Ad Hoc Phase Execution Checklist (Runtime and File-Object Parity Expansion)
 
-Status: in_progress (started 2026-03-19; wave `wave_psp_runtime_0` review loop completed; wave `wave_psp_runtime_1` implementation and validation complete with review loop pending)
+Status: in_progress (started 2026-03-19; wave `wave_psp_runtime_0` review loop completed; wave `wave_psp_runtime_1` implementation merged and completion review pass approved; production-grade review pass pending)
 Owner: ad_hoc_runtime_file_object execution loop
 Reference planning doc:
 - `issues/ad-hoc-runtime-and-file-object-parity-expansion.md`
@@ -76,9 +76,9 @@ Required entry records:
   - wave gate: `$(pwd)/scripts/run_all_tests.sh --profile quick` -> PASS (2026-03-19)
 
 ### wave_psp_runtime_1: `io` and In-Memory Stream Hierarchy
-- Status: completed (implementation + validation complete; PR/review cycle pending)
+- Status: completed (implementation merged; completion review pass approved; production-grade review pass pending)
 - Implementation PR:
-  - pending (this branch)
+  - `#1320` (merged): https://github.com/yaseralnajjar/sifr/pull/1320
 - Scope:
   - add first-class in-memory stream wrappers (`StringIO`, `BytesIO`) with typed cursor/lifecycle APIs
   - add binary-handle entry `open_binary(...) -> Result[BinaryFileHandle, IOError]` while preserving `open(...)` compatibility
@@ -106,8 +106,8 @@ Required entry records:
 - Status: completed (conditional pass accepted after governance clarifications: tempfile class timeline is explicitly anchored to wave 2 while wave 0 remains function-prototype based, and logging fail-soft file-sink behavior is explicitly documented as a host-limited policy to be finalized in wave 3)
 
 ### wave_psp_runtime_1 review_pass_1 (completion-gap)
-- Reviewer artifact: pending
-- Status: pending
+- Reviewer artifact: `reviews/phase-ad-hoc-runtime-and-file-object-parity-expansion-wave-psp-runtime-1-review-pass-1.md`
+- Status: completed (approved; no remediation changes required)
 
 ### wave_psp_runtime_1 review_pass_2 (production-grade)
 - Reviewer artifact: pending
