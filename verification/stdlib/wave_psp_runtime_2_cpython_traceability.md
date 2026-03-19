@@ -25,7 +25,9 @@ Scope: `tempfile` and `zipfile` object lifecycle expansion
 - `SpooledTemporaryFile` remains explicitly unsupported from wave-0 lock and is still enforced by `crates/sifr/tests/e2e/fail/phase_psp_runtime_0_spooled_tempfile_unsupported.sifr`.
 - `ZipFile.open(...)`, `ZipFile.infolist()`, `ZipFile.getinfo()`, `ZipFile.extract()`, and `ZipFile.extractall()` are intentionally deferred in this wave and return explicit `Result` errors.
 - `ZipInfo` is intentionally narrowed to deterministic fields (`filename`, `file_size`, `compress_type`) and does not claim full CPython metadata parity yet.
-- `ZipFile.write(...)` and `ZipFile.write_bytes(...)` enforce write/append mode (`"w"`/`"a"`); read-mode writes are rejected explicitly.
+- `ZipFile.write(...)` and `ZipFile.write_bytes(...)` enforce explicit write/append mode allowlist (`"w"`, `"a"`, `"wb"`, `"ab"`); mixed/invalid modes are rejected explicitly.
+- `ZipReadHandle.read_bytes(size)` now handles `size < 0` explicitly as read-all (matching CPython-style negative-size semantics).
+- current class-lowering does not allow constructor-time `Result` propagation for wrapper allocation paths; creation operations remain best-effort in `__init__`, while lifecycle cleanup/error surfaces (`close`/`cleanup`) remain explicit `Result` contracts.
 
 ## Local Fixture Anchors (Wave 2)
 

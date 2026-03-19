@@ -26,6 +26,10 @@ def main() -> None:
         reader: ZipFile = ZipFile(zip_path + "", "r", ZIP_STORED)
         payload: bytes = reader.read_bytes("bin/raw.bin")
 
+        handle: ZipReadHandle = ZipReadHandle(b"abc")
+        read_all: bytes = handle.read_bytes(-1)
+        handle_negative_ok: bool = read_all == b"abc"
+
         _open_handle_result: Result[ZipReadHandle, IOError] = reader.open("bin/raw.bin", "rb")
         open_rejected: bool = False
         try:
@@ -34,7 +38,16 @@ def main() -> None:
             _ = e.message
             open_rejected = True
 
-        demo_ok = tempfile_ok and is_zipfile(zip_path) and payload == b"\x00\x01\x02" and open_rejected
+        bad_mode_writer: ZipFile = ZipFile(zip_path + "", "rw", ZIP_STORED)
+        _bad_mode_write_result: Result[None, IOError] = bad_mode_writer.write("bad.txt", "bad-mode")
+        bad_mode_rejected: bool = False
+        try:
+            _bad_mode_ok: None = _bad_mode_write_result
+        except IOError as e:
+            _ = e.message
+            bad_mode_rejected = True
+
+        demo_ok = tempfile_ok and is_zipfile(zip_path) and payload == b"\x00\x01\x02" and handle_negative_ok and open_rejected and bad_mode_rejected
     except IOError as e:
         _ = e.message
 
