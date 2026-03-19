@@ -48,17 +48,22 @@ Required entry records:
   - tuple iteration mismatch where applicable
 - record the current iterator codegen fracture points in:
   - `crates/sifr_type_system/src/types.rs`
+  - `crates/sifr_hir/src/hir_nodes.rs`
   - `crates/sifr_hir/src/lower/expressions.rs`
   - `crates/sifr_hir/src/lower/statements.rs`
+  - `crates/sifr_hir/src/lower/builtin_calls.rs`
   - `crates/sifr_codegen/src/lower_expr.rs`
+  - `crates/sifr_codegen/src/stmt_support_emitter.rs`
   - `crates/sifr_codegen/src/function_emitter.rs`
   - `crates/sifr_codegen/src/intrinsic_method_emitters.rs`
+  - `crates/sifr_codegen/src/operator_protocol_emitters.rs`
 - lock the final language contract for:
   - `Iterable[T]`
   - `Iterator[T]`
   - `Reversible[T]`
   - tuple iterability
   - lazy vs eager builtin boundaries
+  - single-pass reuse rejection vs multi-pass re-iteration rules
 
 ## Wave Progress
 
@@ -70,6 +75,7 @@ Required entry records:
 - Validation target:
   - architecture + waiver artifacts updated
   - explicit baseline repro cases recorded
+  - CPython-family mapping recorded for `test_iter`, `test_generators`, `test_itertools`, and tuple-iteration coverage
 
 ### wave_psp_iter_fix_1: Type-System Capability Layer
 - Status: planned
@@ -78,7 +84,7 @@ Required entry records:
   - align tuple iterability and assignability with the frozen contract
 - Validation target:
   - positive typing tests for iterable/iterator/reversible capability use
-  - negative typing tests for invalid reversibility and tuple misuse
+  - negative typing tests for invalid reversibility, tuple misuse, and invalid single-pass reuse
 
 ### wave_psp_iter_fix_2: Canonical Iterator HIR
 - Status: planned
@@ -96,7 +102,8 @@ Required entry records:
   - centralize collection-to-iterator lowering
   - remove clone-based fake re-iteration of true iterators
 - Validation target:
-  - end-to-end closure for current known failing iterator cases
+  - end-to-end closure for `any(iter(xs))`, `filter(pred, iter(xs))`, and `sorted(iter(xs))`
+  - capability-aware acceptance/rejection for `reversed(iter(xs))`
   - generated Rust inspection confirms no invalid `.iter()` / `.clone()` assumptions on iterator values
 
 ### wave_psp_iter_fix_4: Generator Backend Unification
@@ -104,9 +111,10 @@ Required entry records:
 - Scope:
   - align generator functions and generator expressions with the canonical iterator backend
   - remove current narrow backend-shape dependence
+  - retire the current single-top-level-`while` plus single-yield-site restriction as the default supported model
 - Validation target:
   - positive generator-function and filtered generator-expression coverage
-  - negative unsupported-shape diagnostics remain precise
+  - negative unsupported-shape diagnostics remain precise and do not degenerate into backend panics
 
 ### wave_psp_iter_fix_5: Builtin Surface Cleanup
 - Status: planned
