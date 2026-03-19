@@ -1,0 +1,5 @@
+from sifr.logging import LoggerAdapter
+
+
+def main() -> None:
+    _ = LoggerAdapter

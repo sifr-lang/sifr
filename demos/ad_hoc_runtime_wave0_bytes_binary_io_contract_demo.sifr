@@ -1,0 +1,35 @@
+from sifr.io import exists
+from sifr.os import remove_file
+
+
+def main():
+    path: str = "/tmp/sifr_runtime_wave0_bytes_demo.bin"
+    payload_ok: bool = False
+    ints_ok: bool = False
+    cleanup_ok: bool = False
+
+    try:
+        writer = open(path, "wb")
+        _w: None = writer.write_bytes(b"runtime-wave0")
+        writer.close()
+
+        reader = open(path, "rb")
+        loaded: bytes = reader.read_bytes()
+        reader.close()
+
+        payload_ok = loaded == b"runtime-wave0"
+        ints_ok = str(loaded.to_ints()) == "[114, 117, 110, 116, 105, 109, 101, 45, 119, 97, 118, 101, 48]"
+    except IOError as e:
+        _ = str(e.message)
+
+    try:
+        if exists(path):
+            _rm: None = remove_file(path)
+        cleanup_ok = not exists(path)
+    except IOError as e:
+        _ = str(e.message)
+
+    assert payload_ok
+    assert ints_ok
+    assert cleanup_ok
+    print("ad_hoc_runtime_wave0_bytes_binary_io_contract_demo: ok")

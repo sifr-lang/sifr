@@ -1,14 +1,16 @@
 # `milestone_psp_7` Parity Governance Inventory
 
-Status: in_progress (updated by first-class bytes successor/FFI-governance closeout on 2026-03-19)  
+Status: in_progress (updated by runtime/file-object wave-0 architecture lock kickoff on 2026-03-19)  
 Phase: `issues/ad-hoc-python-source-parity-and-builtin-stdlib-surface.md`  
 Execution ledger: `issues/ad-hoc-python-source-parity-and-builtin-stdlib-surface-execution.md`  
 Continuation phase (closed): `issues/ad-hoc-python-source-parity-extension-waiver-reduction.md`  
 Continuation execution ledger (closed): `issues/ad-hoc-python-source-parity-extension-waiver-reduction-execution.md`  
 Continuation phase (closed): `issues/ad-hoc-structured-data-and-class-surface-parity-expansion.md`  
 Continuation execution ledger (closed): `issues/ad-hoc-structured-data-and-class-surface-parity-expansion-execution.md`  
-Continuation phase (current): `issues/ad-hoc-first-class-bytes-and-binary-surface-foundation.md`  
-Continuation execution ledger (current): `issues/ad-hoc-first-class-bytes-and-binary-surface-foundation-execution.md`
+Continuation phase (closed): `issues/ad-hoc-first-class-bytes-and-binary-surface-foundation.md`  
+Continuation execution ledger (closed): `issues/ad-hoc-first-class-bytes-and-binary-surface-foundation-execution.md`  
+Continuation phase (current): `issues/ad-hoc-runtime-and-file-object-parity-expansion.md`  
+Continuation execution ledger (current): `issues/ad-hoc-runtime-and-file-object-parity-expansion-execution.md`
 
 This is the canonical closure inventory for phase 31.5 milestone 7.
 
@@ -127,6 +129,7 @@ Terminal state legend for this milestone:
 | `wave_psp_bytes_3` | `issues/ad-hoc-first-class-bytes-and-binary-surface-foundation-execution.md`, `verification/stdlib/wave_psp_bytes_3_cpython_traceability.md` | Downstream contract adoption and governance closeout: active binary-carrier contract now anchors on first-class `bytes`, and remaining binary waivers are explicitly narrowed. |
 | `wave_psp_bytes_4` | `issues/ad-hoc-first-class-bytes-and-binary-surface-foundation-execution.md`, `verification/stdlib/wave_psp_bytes_4_cpython_traceability.md` | Raw-byte backend and bytes/list lowering disentanglement closeout: internal typed-bytes paths now store raw bytes (`Vec<u8>`), with `int` widening only at explicit read boundaries. |
 | `wave_psp_bytes_5` | `issues/ad-hoc-first-class-bytes-and-binary-surface-foundation-execution.md`, `verification/stdlib/wave_psp_bytes_5_cpython_traceability.md` | Successor-phase and FFI-readiness governance closeout: runtime/file-object, RNG/crypto, and interoperability planning now explicitly consume the same raw-byte-backed bytes ownership contract and waiver baseline. |
+| `wave_psp_runtime_0` | `issues/ad-hoc-runtime-and-file-object-parity-expansion-execution.md`, `verification/stdlib/phase_psp_runtime_architecture_lock.md`, `verification/stdlib/wave_psp_runtime_0_cpython_traceability.md` | Architecture lock kickoff for runtime/file-object continuation: sealed stream hierarchy/lifecycle model and explicit permanent divergences are locked before `io`/`tempfile`/`zipfile`/`logging`/`time` expansion waves. |
 
 ## Waiver Index (`intentional-diff`, `unsupported`, `host-limited`)
 

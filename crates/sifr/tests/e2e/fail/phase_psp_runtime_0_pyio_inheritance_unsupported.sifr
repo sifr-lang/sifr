@@ -1,0 +1,5 @@
+from sifr.io import BufferedReader
+
+
+def main() -> None:
+    _ = BufferedReader
