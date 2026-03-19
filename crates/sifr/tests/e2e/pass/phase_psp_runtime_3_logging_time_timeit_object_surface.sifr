@@ -1,0 +1,123 @@
+from sifr.logging import getLogger, Logger, Handler, StreamHandler, FileHandler, NullHandler, Formatter
+from sifr.logging import DEBUG, INFO, ERROR
+from sifr.time import gmtime_struct, localtime_struct, mktime, struct_time, TIMEZONE, ALTZONE, DAYLIGHT, TZNAME
+from sifr.timeit import Timer
+from sifr.io import write_text, read_text, exists
+from sifr.os import remove_file
+from sifr.test import assert_bool_vector_eq
+
+
+def workload() -> None:
+    i: int = 0
+    total: int = 0
+    while i < 100:
+        total = total + i
+        i = i + 1
+
+
+def all_non_negative(values: list[float]) -> bool:
+    i: int = 0
+    while i < len(values):
+        v: float | None = values[i]
+        if v is None:
+            return False
+        if v < 0.0:
+            return False
+        i = i + 1
+    return True
+
+
+def main() -> None:
+    actual: list[bool] = []
+
+    file_handler_ok: bool = False
+    null_handler_ok: bool = False
+    handler_level_ok: bool = False
+    gmtime_ok: bool = False
+    localtime_ok: bool = False
+    mktime_ok: bool = False
+    timezone_constants_ok: bool = False
+    timer_timeit_ok: bool = False
+    timer_repeat_ok: bool = False
+    timer_call_ok: bool = False
+    cleanup_ok: bool = False
+
+    log_path: str = "/tmp/sifr_phase_psp_runtime_3_logging.log"
+    null_log_path: str = "/tmp/sifr_phase_psp_runtime_3_null.log"
+
+    try:
+        _w1: None = write_text(log_path, "")
+        logger: Logger = getLogger("wave3")
+        logger.set_level(DEBUG)
+        logger.set_file(log_path)
+        fh: FileHandler = FileHandler(log_path + "", INFO)
+        logger.add_handler(fh)
+        logger.info("alpha")
+        logger.debug("beta")
+        logger.clear_handler()
+        content: str = read_text(log_path)
+        file_handler_ok = content == "INFO:wave3:alpha\n"
+    except IOError as e:
+        _ = e.message
+
+    try:
+        _w2: None = write_text(null_log_path, "")
+        null_logger: Logger = getLogger("null")
+        null_logger.set_level(DEBUG)
+        null_logger.set_file(null_log_path)
+        nh: NullHandler = NullHandler()
+        null_logger.set_null_handler(nh)
+        null_logger.error("drop")
+        null_logger.clear_handler()
+        null_content: str = read_text(null_log_path)
+        null_handler_ok = null_content == ""
+    except IOError as e:
+        _ = e.message
+
+    base_handler: Handler = Handler()
+    base_handler.set_level(ERROR)
+    stream_handler: StreamHandler = StreamHandler(INFO)
+    stream_handler.set_formatter(Formatter("%(name)s:%(message)s"))
+    handler_level_ok = base_handler.level() == ERROR and stream_handler.level() == INFO
+
+    gmt: struct_time = gmtime_struct(0.0)
+    gmtime_ok = gmt.tm_year == 1970 and gmt.tm_mon == 1 and gmt.tm_mday == 1 and gmt.tm_hour == 0 and gmt.tm_min == 0 and gmt.tm_sec == 0 and gmt.tm_wday == 3 and gmt.tm_yday == 1
+
+    local: struct_time = localtime_struct(0.0)
+    localtime_ok = local.tm_year > 0 and local.tm_mon >= 1 and local.tm_mon <= 12 and local.tm_mday >= 1 and local.tm_mday <= 31 and local.tm_yday >= 1 and local.tm_yday <= 366
+
+    epoch_tm: struct_time = struct_time(1970, 1, 1, 0, 0, 0, 3, 1, 0)
+    mktime_ok = mktime(epoch_tm) == 0.0
+
+    timezone_constants_ok = TIMEZONE == 0 and ALTZONE == 0 and DAYLIGHT == 0 and TZNAME[0] == "UTC" and TZNAME[1] == "UTC"
+
+    timer: Timer = Timer()
+    timer_timeit_ok = timer.timeit(workload, 5) >= 0.0
+    timer_results: list[float] = timer.repeat(workload, 2, 5)
+    timer_repeat_ok = len(timer_results) == 2 and all_non_negative(timer_results)
+    timer_call_ok = timer(workload, 5) >= 0.0
+
+    try:
+        cleanup_ok = True
+        if exists(log_path):
+            _rm1: None = remove_file(log_path)
+        if exists(null_log_path):
+            _rm2: None = remove_file(null_log_path)
+        cleanup_ok = cleanup_ok and (not exists(log_path)) and (not exists(null_log_path))
+    except IOError as e:
+        _ = e.message
+
+    actual.append(file_handler_ok)
+    actual.append(null_handler_ok)
+    actual.append(handler_level_ok)
+    actual.append(gmtime_ok)
+    actual.append(localtime_ok)
+    actual.append(mktime_ok)
+    actual.append(timezone_constants_ok)
+    actual.append(timer_timeit_ok)
+    actual.append(timer_repeat_ok)
+    actual.append(timer_call_ok)
+    actual.append(cleanup_ok)
+
+    expected: list[bool] = [True, True, True, True, True, True, True, True, True, True, True]
+    assert_bool_vector_eq(actual, expected)

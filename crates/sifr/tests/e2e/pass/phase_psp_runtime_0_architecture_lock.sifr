@@ -3,7 +3,7 @@ from sifr.os import remove_file, rmdir
 from sifr.tempfile import mkstemp, mkdtemp
 from sifr.zipfile import ZipFile
 from sifr.logging import getLogger, INFO, Logger
-from sifr.time import gmtime, localtime
+from sifr.time import gmtime_struct, localtime_struct
 from sifr.timeit import timeit
 from sifr.test import assert_bool_vector_eq
 
@@ -81,7 +81,9 @@ def main() -> None:
     except IOError as e:
         _ = str(e.message)
 
-    time_api_ok = len(gmtime(0.0)) > 0 and len(localtime(0.0)) > 0 and timeit(tiny_workload, 1) >= 0.0
+    gmt_now = gmtime_struct(0.0)
+    local_now = localtime_struct(0.0)
+    time_api_ok = gmt_now.tm_year > 0 and local_now.tm_year > 0 and timeit(tiny_workload, 1) >= 0.0
 
     try:
         if exists(text_path):

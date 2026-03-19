@@ -6,7 +6,7 @@ from sifr.math import erf, erfc, gamma, lgamma, frexp, ldexp, modf, nextafter, u
 from sifr.os import getpid, cpu_count
 from sifr.hashlib import sha224, sha384, blake2b, blake2s
 from sifr.platform import system, machine, processor
-from sifr.time import gmtime, localtime, strptime
+from sifr.time import gmtime_struct, localtime_struct, strptime
 from sifr.base64 import b32encode, b32decode
 from sifr.shutil import disk_usage
 
@@ -58,10 +58,10 @@ def demo_platform() -> None:
 
 def demo_time() -> None:
     print("=== time new intrinsics ===")
-    gmt: str = gmtime(0.0)
-    print("gmtime len > 0 = " + str(len(gmt) > 0))
-    lt: str = localtime(0.0)
-    print("localtime len > 0 = " + str(len(lt) > 0))
+    gmt = gmtime_struct(0.0)
+    print("gmtime year = " + str(gmt.tm_year == 1970))
+    lt = localtime_struct(0.0)
+    print("localtime yday >= 1 = " + str(lt.tm_yday >= 1))
     try:
         parsed: str = strptime("2024-01-15 10:30:00", "%Y-%m-%d %H:%M:%S")
         print("strptime ok = " + str(len(parsed) > 0))
