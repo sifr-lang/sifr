@@ -1,0 +1,61 @@
+from sifr.bytes import bytes_from_hex, bytes_to_hex
+from sifr.io import exists
+from sifr.os import remove_file
+
+
+def sum_bytes(data: bytes) -> int:
+    total: int = 0
+    for value in data:
+        total = total + value
+    return total
+
+
+def main():
+    payload: bytes = b"wave4"
+
+    second: int | None = payload[1]
+    second_ok: bool = False
+    if second is not None:
+        second_ok = second == 97
+
+    iter_ok: bool = sum_bytes(payload) == 487
+    contains_ok: bool = payload.contains(119) and (not payload.contains(512))
+    count_ok: bool = payload.count(119) == 1 and payload.count(512) == 0
+
+    hex_ok: bool = False
+    try:
+        hexed: str = bytes_to_hex(payload)
+        roundtrip: bytes = bytes_from_hex(hexed)
+        hex_ok = roundtrip == payload
+    except ParseError as e:
+        _ = str(e.message)
+
+    path: str = "/tmp/sifr_ad_hoc_bytes_wave4_demo.bin"
+    io_ok: bool = False
+    cleanup_ok: bool = False
+    try:
+        writer = open(path, "wb")
+        _w: None = writer.write_bytes(payload)
+        writer.close()
+
+        reader = open(path, "rb")
+        loaded: bytes = reader.read_bytes()
+        reader.close()
+        io_ok = loaded == payload and str(loaded.to_ints()) == "[119, 97, 118, 101, 52]"
+    except IOError as e:
+        _ = str(e.message)
+
+    try:
+        if exists(path):
+            _rm: None = remove_file(path)
+        cleanup_ok = not exists(path)
+    except IOError as e:
+        _ = str(e.message)
+
+    assert second_ok
+    assert iter_ok
+    assert contains_ok
+    assert count_ok
+    assert hex_ok
+    assert io_ok
+    assert cleanup_ok

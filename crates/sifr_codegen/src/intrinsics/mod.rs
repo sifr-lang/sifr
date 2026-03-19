@@ -199,9 +199,10 @@ fn lower_intrinsic_rendered(name: &str, args: &[RustExpr]) -> Option<LoweredIntr
         "defaultdict_set" => (collections::lower_defaultdict_set(args), Some("serde_json")),
         "encode_utf8" => (bytes::lower_encode_utf8(args), None),
         "str_encode_utf8_result" => (bytes::lower_str_encode_utf8_result(args), None),
-        "str_encode_utf8_result_with_encoding" => {
-            (bytes::lower_str_encode_utf8_result_with_encoding(args), None)
-        },
+        "str_encode_utf8_result_with_encoding" => (
+            bytes::lower_str_encode_utf8_result_with_encoding(args),
+            None,
+        ),
         "decode_utf8" => (bytes::lower_decode_utf8(args), None),
         "decode_utf8_with_encoding" => (bytes::lower_decode_utf8_with_encoding(args), None),
         "bytes_to_hex" => (bytes::lower_bytes_to_hex(args), None),
@@ -578,21 +579,23 @@ mod tests {
         let dec = lower_intrinsic("decode_utf8", &["vals".to_string()]).expect("decode_utf8");
         assert!(render_expr(&dec.expr).contains("String::from_utf8"));
 
-        let dec_with_codec =
-            lower_intrinsic("decode_utf8_with_encoding", &["vals".to_string(), "codec".to_string()])
-                .expect("decode_utf8_with_encoding");
+        let dec_with_codec = lower_intrinsic(
+            "decode_utf8_with_encoding",
+            &["vals".to_string(), "codec".to_string()],
+        )
+        .expect("decode_utf8_with_encoding");
         assert!(render_expr(&dec_with_codec.expr).contains("UTF-8 encoding"));
 
         let with_size =
             lower_intrinsic("bytes_with_size", &["n".to_string()]).expect("bytes_with_size");
         assert!(render_expr(&with_size.expr).contains("non-negative size"));
 
-        let from_ints = lower_intrinsic("bytes_from_ints", &["vals".to_string()])
-            .expect("bytes_from_ints");
+        let from_ints =
+            lower_intrinsic("bytes_from_ints", &["vals".to_string()]).expect("bytes_from_ints");
         assert!(render_expr(&from_ints.expr).contains("byte out of range at index"));
 
         let to_hex = lower_intrinsic("bytes_to_hex", &["vals".to_string()]).expect("bytes_to_hex");
-        assert!(render_expr(&to_hex.expr).contains("byte out of range"));
+        assert!(render_expr(&to_hex.expr).contains("{:02x}"));
 
         let from_hex =
             lower_intrinsic("bytes_from_hex", &["hex".to_string()]).expect("bytes_from_hex");
@@ -802,14 +805,14 @@ mod tests {
         assert!(render_expr(&uuid.expr).contains("format!(\"{:08x}-{:04x}-{:04x}-{:04x}-{:012x}\""));
         assert!(render_expr(&uuid.expr).contains("(rand::random::<u16>() & 4095)"));
 
-        let uuid3 = lower_intrinsic("uuid3_text", &["ns".to_string(), "name".to_string()])
-            .expect("uuid3");
+        let uuid3 =
+            lower_intrinsic("uuid3_text", &["ns".to_string(), "name".to_string()]).expect("uuid3");
         assert_eq!(uuid3.required_crate, Some("uuid"));
         assert!(render_expr(&uuid3.expr).contains("uuid::Uuid::parse_str"));
         assert!(render_expr(&uuid3.expr).contains("uuid::Uuid::new_v3"));
 
-        let uuid5 = lower_intrinsic("uuid5_text", &["ns".to_string(), "name".to_string()])
-            .expect("uuid5");
+        let uuid5 =
+            lower_intrinsic("uuid5_text", &["ns".to_string(), "name".to_string()]).expect("uuid5");
         assert_eq!(uuid5.required_crate, Some("uuid"));
         assert!(render_expr(&uuid5.expr).contains("uuid::Uuid::new_v5"));
     }

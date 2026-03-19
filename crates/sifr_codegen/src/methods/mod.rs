@@ -1,5 +1,6 @@
 //! Method registry and dispatch for incremental IR rollout.
 
+mod bytes;
 mod common;
 mod decimal;
 mod deque;
@@ -94,10 +95,10 @@ pub(crate) fn lower_method_with_context(
         (Type::List(_), "pop") => list::lower_pop(object, args),
         (Type::List(_), "remove") => list::lower_remove(object, args),
         (Type::List(_), "index") => list::lower_index(object, args),
-        (Type::Bytes, "count") => list::lower_count(object, args),
-        (Type::Bytes, "contains") => list::lower_contains(object, args),
-        (Type::Bytes, "index") => list::lower_index(object, args),
-        (Type::Bytes, "to_ints") => list::lower_copy(object, args),
+        (Type::Bytes, "count") => bytes::lower_count(object, args),
+        (Type::Bytes, "contains") => bytes::lower_contains(object, args),
+        (Type::Bytes, "index") => bytes::lower_index(object, args),
+        (Type::Bytes, "to_ints") => bytes::lower_to_ints(object, args),
         (Type::Dict(_, _), "keys") => dict::lower_keys(object, args),
         (Type::Dict(_, _), "values") => dict::lower_values(object, args),
         (Type::Dict(_, _), "items") => dict::lower_items(object, args),
@@ -662,5 +663,37 @@ mod tests {
         let big_is_finite =
             lower_method(&Type::BigDecimal, "is_finite", "bd", &[]).expect("bigdecimal is_finite");
         assert_eq!(render_expr(&big_is_finite.expr), "true");
+    }
+
+    #[test]
+    fn lowers_bytes_methods_with_u8_backend_boundaries() {
+        let count = lower_method(&Type::Bytes, "count", "payload", &["needle".to_string()])
+            .expect("bytes count lowers");
+        let count_rendered = render_expr(&count.expr);
+        assert!(count_rendered.contains("__needle < 0"));
+        assert!(count_rendered.contains("__needle as u8"));
+
+        let contains = lower_method(&Type::Bytes, "contains", "payload", &["needle".to_string()])
+            .expect("bytes contains lowers");
+        let contains_rendered = render_expr(&contains.expr);
+        assert!(contains_rendered.contains("__needle > 255"));
+        assert!(contains_rendered.contains("payload.contains(&(__needle as u8))"));
+
+        let index = lower_method(
+            &Type::Bytes,
+            "index",
+            "payload",
+            &["needle".to_string(), "0".to_string(), "5".to_string()],
+        )
+        .expect("bytes index lowers");
+        let index_rendered = render_expr(&index.expr);
+        assert!(index_rendered.contains("__needle as u8"));
+        assert!(index_rendered.contains("None"));
+
+        let to_ints =
+            lower_method(&Type::Bytes, "to_ints", "payload", &[]).expect("bytes to_ints lowers");
+        let to_ints_rendered = render_expr(&to_ints.expr);
+        assert!(to_ints_rendered.contains("collect::<Vec<i64>>()"));
+        assert!(to_ints_rendered.contains("as i64"));
     }
 }

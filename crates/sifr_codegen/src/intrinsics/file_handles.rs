@@ -743,26 +743,8 @@ pub(super) fn lower_file_read_bytes(args: &[RustExpr]) -> Option<RustExpr> {
             ],
         ))),
         RustStmt::Return(Some(ok_expr(RustExpr::MethodCall {
-            receiver: Box::new(RustExpr::MethodCall {
-                receiver: Box::new(RustExpr::MethodCall {
-                    receiver: Box::new(RustExpr::Ident("__buf".to_string())),
-                    method: "into_iter".to_string(),
-                    args: vec![],
-                }),
-                method: "map".to_string(),
-                args: vec![RustExpr::Closure {
-                    params: vec![RustParam::Named {
-                        name: "b".to_string(),
-                        ty: RustType::Named("u8".to_string()),
-                    }],
-                    body: Box::new(RustExpr::Cast {
-                        expr: Box::new(RustExpr::Ident("b".to_string())),
-                        ty: RustType::I64,
-                    }),
-                    is_move: false,
-                }],
-            }),
-            method: "collect".to_string(),
+            receiver: Box::new(RustExpr::Ident("__buf".to_string())),
+            method: "to_vec".to_string(),
             args: vec![],
         }))),
     ];
@@ -779,38 +761,6 @@ pub(super) fn lower_file_write_bytes(args: &[RustExpr]) -> Option<RustExpr> {
         return None;
     }
     let write_bytes_body = vec![
-        RustStmt::Let {
-            mutable: false,
-            name: "__data".to_string(),
-            ty: Some(RustType::Vec(Box::new(RustType::Named("u8".to_string())))),
-            value: RustExpr::MethodCall {
-                receiver: Box::new(RustExpr::MethodCall {
-                    receiver: Box::new(RustExpr::MethodCall {
-                        receiver: Box::new(RustExpr::MethodCall {
-                            receiver: Box::new(args[1].clone()),
-                            method: "iter".to_string(),
-                            args: vec![],
-                        }),
-                        method: "copied".to_string(),
-                        args: vec![],
-                    }),
-                    method: "map".to_string(),
-                    args: vec![RustExpr::Closure {
-                        params: vec![RustParam::Named {
-                            name: "b".to_string(),
-                            ty: RustType::I64,
-                        }],
-                        body: Box::new(RustExpr::Cast {
-                            expr: Box::new(RustExpr::Ident("b".to_string())),
-                            ty: RustType::Named("u8".to_string()),
-                        }),
-                        is_move: false,
-                    }],
-                }),
-                method: "collect".to_string(),
-                args: vec![],
-            },
-        },
         RustStmt::Expr(map_io_err_try(std_io_trait_call(
             "Write",
             "write_all",
@@ -818,7 +768,7 @@ pub(super) fn lower_file_write_bytes(args: &[RustExpr]) -> Option<RustExpr> {
                 RustExpr::Ident("__w".to_string()),
                 RustExpr::Ref {
                     mutable: false,
-                    expr: Box::new(RustExpr::Ident("__data".to_string())),
+                    expr: Box::new(args[1].clone()),
                 },
             ],
         ))),

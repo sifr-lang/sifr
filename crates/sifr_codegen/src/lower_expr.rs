@@ -264,12 +264,23 @@ pub fn try_lower_leaf_expr(expr: &HirExpr) -> Option<RustExpr> {
                 .map(try_lower_leaf_expr)
                 .collect::<Option<Vec<_>>>()?,
         )),
-        HirExpr::ListLiteral { elements, .. } => Some(RustExpr::Vec(
-            elements
+        HirExpr::ListLiteral { elements, ty } => {
+            let list_ty = resolve_alias_type(ty);
+            let mut lowered = elements
                 .iter()
                 .map(try_lower_leaf_expr)
-                .collect::<Option<Vec<_>>>()?,
-        )),
+                .collect::<Option<Vec<_>>>()?;
+            if matches!(list_ty, Type::Bytes) {
+                lowered = lowered
+                    .into_iter()
+                    .map(|element| RustExpr::Cast {
+                        expr: Box::new(element),
+                        ty: RustType::Named("u8".to_string()),
+                    })
+                    .collect();
+            }
+            Some(RustExpr::Vec(lowered))
+        }
         HirExpr::RangeLiteral {
             start, end, step, ..
         } => {

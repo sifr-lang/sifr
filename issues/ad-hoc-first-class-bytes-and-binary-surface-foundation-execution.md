@@ -10,7 +10,7 @@ Loop per wave: Plan -> Implement -> Validate -> Demo -> PR -> External completio
 ## Global Gates
 - [x] Entry baseline validated before wave 0
 - [x] Scope remains constrained to active wave
-- [ ] Root cause is fixed without compatibility shims
+- [x] Root cause is fixed without compatibility shims
 - [x] Positive-path and negative-path validation recorded for each wave
 - [x] Demo runs before opening each wave PR
 - [x] `$(pwd)/scripts/run_all_tests.sh` run before each wave PR
@@ -22,7 +22,7 @@ Loop per wave: Plan -> Implement -> Validate -> Demo -> PR -> External completio
 2. [x] `wave_psp_bytes_1`: first-class `bytes` type-system/HIR/lowering/codegen foundation
 3. [x] `wave_psp_bytes_2`: UTF-8/hex conversion surfaces and `sifr.bytes` compatibility delegation
 4. [x] `wave_psp_bytes_3`: downstream contract adoption and governance closeout
-5. [ ] `wave_psp_bytes_4`: raw-byte backend storage and bytes/list lowering separation
+5. [x] `wave_psp_bytes_4`: raw-byte backend storage and bytes/list lowering separation
 6. [ ] `wave_psp_bytes_5`: successor-phase + FFI-readiness governance closeout
 7. [ ] wave-level extra completion review cycle done
 8. [ ] wave-level extra production-grade review cycle done
@@ -142,16 +142,26 @@ Required entry records:
   - wave gate: `$(pwd)/scripts/run_all_tests.sh` -> PASS (2026-03-19)
 
 ### wave_psp_bytes_4: Raw-Byte Backend and Bytes/List Lowering Separation
-- Status: pending
-- Planned scope:
+- Status: completed
+- Implementation PR:
+  - pending (current working branch; PR will be linked after merge)
+- Scope:
   - move `Type::Bytes` backend storage off widened integer vectors onto raw-byte storage
   - remove bytes-native dependence on generic list lowering where it preserves the widened-storage assumption
   - eliminate redundant typed-bytes range validation / widening / narrowing on internal bytes-native paths while preserving explicit conversion-boundary checks
-- Planned validation:
-  - positive path: existing bytes waves plus targeted bytes-native file / codec regressions
-  - negative path: explicit constructor/decode/from-hex boundary failures remain intact
-  - wave gate: `$(pwd)/scripts/run_all_tests.sh --profile quick`
-  - wave gate: `$(pwd)/scripts/run_all_tests.sh`
+- Validation:
+  - positive path: `cargo run -q -p sifr -- run crates/sifr/tests/e2e/pass/phase_psp_bytes_4_raw_backend_and_lowering_separation.sifr` -> PASS
+  - positive path: `cargo run -q -p sifr -- run demos/ad_hoc_bytes_wave4_raw_backend_storage_demo.sifr` -> PASS
+  - positive path: `cargo run -q -p sifr -- run crates/sifr/tests/e2e/pass/cpython_hashlib_object_model_subset.sifr` -> PASS
+  - positive path: `cargo run -q -p sifr -- run crates/sifr/tests/e2e/pass/stdlib_base64_intrinsics.sifr` -> PASS
+  - negative path: `cargo run -q -p sifr -- check crates/sifr/tests/e2e/fail/phase_psp_bytes_2_from_ints_non_int_list.sifr` -> expected compile failure (PASS)
+  - negative path: `cargo run -q -p sifr -- check crates/sifr/tests/e2e/fail/phase_psp_bytes_3_write_bytes_rejects_int_list.sifr` -> expected compile failure (PASS)
+  - negative path: `cargo run -q -p sifr -- check crates/sifr/tests/e2e/fail/phase_psp_bytes_3_read_bytes_not_list.sifr` -> expected compile failure (PASS)
+  - targeted unit lane: `cargo test -q -p sifr_codegen lowers_bytes_intrinsics_via_registry` -> PASS
+  - targeted unit lane: `cargo test -q -p sifr_codegen lowers_bytes_methods_with_u8_backend_boundaries` -> PASS
+  - emitted-Rust evidence: `cargo run -q -p sifr -- emit demos/ad_hoc_bytes_wave4_raw_backend_storage_demo.sifr > /tmp/wave4_emit.rs` -> PASS (`Vec<u8>`, `read_bytes() -> Result<Vec<u8>, IOError>`, `write_bytes(&Vec<u8>)`)
+  - wave gate: `$(pwd)/scripts/run_all_tests.sh --profile quick` -> PASS (2026-03-19)
+  - wave gate: `$(pwd)/scripts/run_all_tests.sh` -> PASS (2026-03-19)
 
 ### wave_psp_bytes_5: Successor-Phase and FFI Readiness Closeout
 - Status: pending
@@ -199,6 +209,14 @@ Required entry records:
 ### wave_psp_bytes_3 review_pass_2 (production-grade)
 - Reviewer artifact: `reviews/phase-ad-hoc-first-class-bytes-and-binary-surface-foundation-wave-psp-bytes-3-review-pass-2.md`
 - Status: completed (conditional approval remediated by documenting internal `Type::Bytes` backend representation as an explicit intentional-diff governance item and correcting public-phase wording to match shipped implementation)
+
+### wave_psp_bytes_4 review_pass_1 (completion-gap)
+- Reviewer artifact: pending
+- Status: pending
+
+### wave_psp_bytes_4 review_pass_2 (production-grade)
+- Reviewer artifact: pending
+- Status: pending
 
 ### closure review cycles
 - historical note: the original tranche (`wave_psp_bytes_0` through `wave_psp_bytes_3`) completed all closure review cycles on 2026-03-19; those artifacts remain valid historical evidence for the first tranche but are superseded as the final phase closure basis by this extension.
