@@ -1,6 +1,6 @@
 # Ad Hoc Phase: Runtime and File-Object Parity Expansion
 
-Status: in_progress (started 2026-03-19; `wave_psp_runtime_0` completed with pass-1/pass-2 external reviews; `wave_psp_runtime_1` completed with pass-1/pass-2 external reviews; `wave_psp_runtime_2` completed with pass-1/pass-2 external review closure; `wave_psp_runtime_3` completed with pass-1/pass-2 external reviews; `wave_psp_runtime_4` implementation merged with pass-1 external review approval and pass-2 pending)
+Status: in_progress (started 2026-03-19; `wave_psp_runtime_0` completed with pass-1/pass-2 external reviews; `wave_psp_runtime_1` completed with pass-1/pass-2 external reviews; `wave_psp_runtime_2` completed with pass-1/pass-2 external review closure; `wave_psp_runtime_3` completed with pass-1/pass-2 external reviews; `wave_psp_runtime_4` implementation merged with pass-1/pass-2 external review approval)
 Context: follow-up phase after structured/class-surface parity expansion and the extended bytes/binary-surface foundation
 Execution readiness: implementation-ready after completion of predecessor bytes extension waves `wave_psp_bytes_4` and `wave_psp_bytes_5`; runtime/file-object APIs now inherit the final raw-byte-backed `bytes` contract and successor/FFI governance baseline
 Execution ledger: `issues/ad-hoc-runtime-and-file-object-parity-expansion-execution.md`
