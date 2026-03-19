@@ -1,0 +1,33 @@
+from sifr.io import exists
+from sifr.os import remove_file
+
+
+def main():
+    path: str = "/tmp/sifr_ad_hoc_bytes_wave3_demo.bin"
+    loaded_ok: bool = False
+    ints_ok: bool = False
+    cleanup_ok: bool = False
+
+    try:
+        writer = open(path, "wb")
+        _w: None = writer.write_bytes(b"wave3")
+        writer.close()
+
+        reader = open(path, "rb")
+        loaded: bytes = reader.read_bytes()
+        reader.close()
+        loaded_ok = loaded == b"wave3"
+        ints_ok = str(loaded.to_ints()) == "[119, 97, 118, 101, 51]"
+    except IOError as e:
+        _ = str(e.message)
+
+    try:
+        if exists(path):
+            _rm: None = remove_file(path)
+        cleanup_ok = not exists(path)
+    except IOError as e:
+        _ = str(e.message)
+
+    assert loaded_ok
+    assert ints_ok
+    assert cleanup_ok

@@ -1627,7 +1627,7 @@ pub(super) fn lower_call(call: &ExprCall, ctx: &mut LowerCtx) -> Option<HirExpr>
                     FunctionType::all_borrow(
                         vec![],
                         Type::Result(
-                            Box::new(Type::List(Box::new(Type::Int))),
+                            Box::new(Type::Bytes),
                             Box::new(io_err_ty.clone()),
                         ),
                     ),
@@ -1635,7 +1635,7 @@ pub(super) fn lower_call(call: &ExprCall, ctx: &mut LowerCtx) -> Option<HirExpr>
                 (
                     "write_bytes".to_string(),
                     FunctionType::all_borrow(
-                        vec![("data".to_string(), Type::List(Box::new(Type::Int)))],
+                        vec![("data".to_string(), Type::Bytes)],
                         Type::Result(Box::new(Type::None), Box::new(io_err_ty.clone())),
                     ),
                 ),

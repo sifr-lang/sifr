@@ -423,22 +423,22 @@ pub(super) fn intrinsic_fs() -> IntrinsicModule {
         FunctionType::all_borrow(vec![("handle".to_string(), Type::Int)], Type::None),
     );
 
-    // file_read_bytes(handle: int) -> Result[list[int], IOError]
+    // file_read_bytes(handle: int) -> Result[bytes, IOError]
     functions.insert(
         "file_read_bytes".to_string(),
         FunctionType::all_borrow(
             vec![("handle".to_string(), Type::Int)],
-            result_ty(Type::List(Box::new(Type::Int)), "IOError"),
+            result_ty(Type::Bytes, "IOError"),
         ),
     );
 
-    // file_write_bytes(handle: int, data: list[int]) -> Result[None, IOError]
+    // file_write_bytes(handle: int, data: bytes) -> Result[None, IOError]
     functions.insert(
         "file_write_bytes".to_string(),
         FunctionType::all_borrow(
             vec![
                 ("handle".to_string(), Type::Int),
-                ("data".to_string(), Type::List(Box::new(Type::Int))),
+                ("data".to_string(), Type::Bytes),
             ],
             result_ty(Type::None, "IOError"),
         ),

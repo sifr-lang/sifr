@@ -84,12 +84,12 @@ def collect_error_and_binary_actual() -> list[bool]:
 
     try:
         bw = open(binary_path, "wb")
-        _wb: None = bw.write_bytes([97, 98, 99])
+        _wb: None = bw.write_bytes(b"abc")
         bw.close()
         br = open(binary_path, "rb")
-        payload: list[int] = br.read_bytes()
+        payload: bytes = br.read_bytes()
         br.close()
-        binary_roundtrip_ok = str(payload) == "[97, 98, 99]"
+        binary_roundtrip_ok = payload == b"abc"
     except IOError as e:
         _ = str(e.message)
 

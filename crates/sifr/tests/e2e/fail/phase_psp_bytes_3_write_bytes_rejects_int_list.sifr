@@ -1,0 +1,6 @@
+def main():
+    path: str = "/tmp/sifr_phase_psp_bytes_3_write_bytes_rejects_int_list.bin"
+    fh = open(path, "wb")
+    raw: list[int] = [1, 2, 3]
+    _attempt: Result[None, IOError] = fh.write_bytes(raw)
+    fh.close()

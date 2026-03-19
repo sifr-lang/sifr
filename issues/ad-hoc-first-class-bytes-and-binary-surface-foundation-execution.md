@@ -21,7 +21,7 @@ Loop per wave: Plan -> Implement -> Validate -> Demo -> PR -> External completio
 1. [x] `wave_psp_bytes_0`: architecture lock, explicit permanent-diff fixtures, and CPython family mapping
 2. [x] `wave_psp_bytes_1`: first-class `bytes` type-system/HIR/lowering/codegen foundation
 3. [x] `wave_psp_bytes_2`: UTF-8/hex conversion surfaces and `sifr.bytes` compatibility delegation
-4. [ ] `wave_psp_bytes_3`: downstream contract adoption and governance closeout
+4. [x] `wave_psp_bytes_3`: downstream contract adoption and governance closeout
 5. [ ] wave-level extra completion review cycle done
 6. [ ] wave-level extra production-grade review cycle done
 7. [ ] milestone-level completion review cycle done
@@ -118,7 +118,24 @@ Required entry records:
   - wave gate: `$(pwd)/scripts/run_all_tests.sh` -> PASS (2026-03-19)
 
 ### wave_psp_bytes_3: Downstream Contract Adoption and Governance Closeout
-- Status: pending
+- Status: completed
+- Scope:
+  - migrate current shipped `io` binary method boundaries to first-class `bytes` (`FileHandle.read_bytes` / `write_bytes`) while keeping internal intrinsic names stable
+  - add explicit wave-3 pass/fail coverage proving downstream binary-carrier contract adoption (`bytes`) and compile-time rejection of stale `list[int]` payload assumptions
+  - add wave-3 downstream contract demo for bytes file-handle roundtrip
+  - update canonical parity governance and traceability ledgers to remove stale “custom helper over list[int]” wording and record the narrowed remaining binary waiver set
+  - re-anchor successor runtime/file-object and RNG/crypto phase readiness text on first-class `bytes` as canonical binary carrier
+- Validation:
+  - positive path: `cargo run -q -p sifr -- run crates/sifr/tests/e2e/pass/phase_psp_bytes_3_downstream_contract_alignment.sifr` -> PASS
+  - positive path: `cargo run -q -p sifr -- run demos/ad_hoc_bytes_wave3_downstream_contract_adoption_demo.sifr` -> PASS
+  - positive path: `cargo run -q -p sifr -- run crates/sifr/tests/e2e/pass/open_binary_read.sifr` -> PASS
+  - positive path: `cargo run -q -p sifr -- run crates/sifr/tests/e2e/pass/open_binary_write.sifr` -> PASS
+  - positive path: `cargo run -q -p sifr -- run crates/sifr/tests/e2e/pass/cpython_io_subset.sifr` -> PASS
+  - positive path: `cargo run -q -p sifr -- run crates/sifr/tests/e2e/pass/stdlib_io_consolidated.sifr` -> PASS
+  - negative path: `cargo run -q -p sifr -- check crates/sifr/tests/e2e/fail/phase_psp_bytes_3_write_bytes_rejects_int_list.sifr` -> expected compile failure (PASS)
+  - negative path: `cargo run -q -p sifr -- check crates/sifr/tests/e2e/fail/phase_psp_bytes_3_read_bytes_not_list.sifr` -> expected compile failure (PASS)
+  - wave gate: `$(pwd)/scripts/run_all_tests.sh --profile quick` -> PASS (2026-03-19)
+  - wave gate: `$(pwd)/scripts/run_all_tests.sh` -> PASS (2026-03-19)
 
 ## External Review Passes
 
@@ -145,6 +162,14 @@ Required entry records:
 ### wave_psp_bytes_2 review_pass_2 (production-grade)
 - Reviewer artifact: `reviews/phase-ad-hoc-first-class-bytes-and-binary-surface-foundation-wave-psp-bytes-2-review-pass-2.md`
 - Status: completed (approved for production readiness; no remediation changes required)
+
+### wave_psp_bytes_3 review_pass_1 (completion-gap)
+- Reviewer artifact target: `reviews/phase-ad-hoc-first-class-bytes-and-binary-surface-foundation-wave-psp-bytes-3-review-pass-1.md`
+- Status: pending
+
+### wave_psp_bytes_3 review_pass_2 (production-grade)
+- Reviewer artifact target: `reviews/phase-ad-hoc-first-class-bytes-and-binary-surface-foundation-wave-psp-bytes-3-review-pass-2.md`
+- Status: pending
 
 ### closure review cycles
 - wave closure completion review: pending
