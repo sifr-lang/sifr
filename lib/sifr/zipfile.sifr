@@ -1,17 +1,138 @@
 # sifr.zipfile — ZIP archive support
-from _sifr.compress import zip_create, zip_add_file, zip_read_file, zip_namelist
+from _sifr.compress import zip_create, zip_add_file, zip_add_file_bytes, zip_read_file, zip_read_file_bytes, zip_namelist
+
+ZIP_STORED: int = 0
+ZIP_DEFLATED: int = 8
+
+
+def _zip_read_only_error() -> str:
+    return "zipfile operation requires write or append mode"
+
+
+def _zip_open_mode_error(mode: str) -> str:
+    return "zipfile open supports read-only mode only, got: " + mode
+
+
+def _closed_stream_error() -> str:
+    return "I/O operation on closed stream"
+
+
+def _zip_unimplemented_error(feature: str) -> str:
+    return "zipfile " + feature + " is not implemented in this wave"
+
+
+def is_zipfile(path: str) -> bool:
+    try:
+        _names: list[str] = zip_namelist(path)
+        return True
+    except IOError as e:
+        _ = e.message
+        return False
+
+
+class ZipInfo:
+    filename: str
+    file_size: int
+    compress_type: int
+
+    def __init__(self, filename: str, file_size: int, compress_type: int = 0) -> None:
+        self.filename = filename + ""
+        self.file_size = file_size
+        self.compress_type = compress_type
+
+
+class ZipReadHandle:
+    _data: bytes
+    _cursor: int
+    _closed: bool
+
+    def __init__(self, data: bytes) -> None:
+        self._data = data
+        self._cursor = 0
+        self._closed = False
+
+    def close(self) -> None:
+        self._closed = True
+
+    def closed(self) -> bool:
+        return self._closed
+
+    def read_bytes(self, size: int | None = None) -> Result[bytes, IOError]:
+        if self._closed:
+            raise IOError(_closed_stream_error())
+
+        end: int = len(self._data)
+        if size is not None:
+            requested_size: int = size
+            if requested_size >= 0:
+                requested_end: int = self._cursor + requested_size
+                if requested_end < end:
+                    end = requested_end
+
+        out: bytes = self._data[self._cursor:end]
+        self._cursor = end
+        return out
+
 
 class ZipFile:
     path: str
+    mode: str
+    compression: int
+
+    def __init__(self, path: str, mode: str = "a", compression: int = 0) -> None:
+        self.path = path + ""
+        self.mode = mode + ""
+        self.compression = compression
+
+    def _writable_mode(self) -> bool:
+        return ("w" in self.mode) or ("a" in self.mode)
 
     def create(self) -> Result[None, IOError]:
         return zip_create(self.path)
 
     def write(self, name: str, content: str) -> Result[None, IOError]:
+        if not self._writable_mode():
+            raise IOError(_zip_read_only_error())
         return zip_add_file(self.path, name, content)
+
+    def write_bytes(self, name: str, content: bytes) -> Result[None, IOError]:
+        if not self._writable_mode():
+            raise IOError(_zip_read_only_error())
+        return zip_add_file_bytes(self.path, name, content)
 
     def read(self, name: str) -> Result[str, IOError]:
         return zip_read_file(self.path, name)
 
+    def read_bytes(self, name: str) -> Result[bytes, IOError]:
+        return zip_read_file_bytes(self.path, name)
+
     def namelist(self) -> Result[list[str], IOError]:
         return zip_namelist(self.path)
+
+    def infolist(self) -> Result[list[ZipInfo], IOError]:
+        raise IOError(_zip_unimplemented_error("infolist"))
+
+    def getinfo(self, name: str) -> Result[ZipInfo, IOError]:
+        _ = name
+        raise IOError(_zip_unimplemented_error("getinfo"))
+
+    def open(self, name: str, mode: str = "r") -> Result[ZipReadHandle, IOError]:
+        _ = name
+        if mode != "r" and mode != "rb":
+            raise IOError(_zip_open_mode_error(mode))
+        raise IOError(_zip_unimplemented_error("open"))
+
+    def extract(self, name: str, path: str = ".") -> Result[str, IOError]:
+        _ = name
+        _ = path
+        raise IOError(_zip_unimplemented_error("extract"))
+
+    def extractall(self, path: str = ".") -> Result[list[str], IOError]:
+        _ = path
+        raise IOError(_zip_unimplemented_error("extractall"))
+
+    def __enter__(self) -> ZipFile:
+        return self
+
+    def __exit__(self) -> None:
+        pass

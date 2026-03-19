@@ -234,6 +234,18 @@ pub(super) fn intrinsic_compress() -> IntrinsicModule {
             result_ty(Type::None, "IOError"),
         ),
     );
+    // zip_add_file_bytes(zip_path: str, name: str, content: bytes) -> Result[None, IOError]
+    functions.insert(
+        "zip_add_file_bytes".to_string(),
+        FunctionType::all_borrow(
+            vec![
+                ("zip_path".to_string(), Type::Str),
+                ("name".to_string(), Type::Str),
+                ("content".to_string(), Type::Bytes),
+            ],
+            result_ty(Type::None, "IOError"),
+        ),
+    );
     // zip_read_file(zip_path: str, name: str) -> Result[str, IOError]
     functions.insert(
         "zip_read_file".to_string(),
@@ -243,6 +255,17 @@ pub(super) fn intrinsic_compress() -> IntrinsicModule {
                 ("name".to_string(), Type::Str),
             ],
             result_ty(Type::Str, "IOError"),
+        ),
+    );
+    // zip_read_file_bytes(zip_path: str, name: str) -> Result[bytes, IOError]
+    functions.insert(
+        "zip_read_file_bytes".to_string(),
+        FunctionType::all_borrow(
+            vec![
+                ("zip_path".to_string(), Type::Str),
+                ("name".to_string(), Type::Str),
+            ],
+            result_ty(Type::Bytes, "IOError"),
         ),
     );
     // zip_namelist(zip_path: str) -> Result[list[str], IOError]
