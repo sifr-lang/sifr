@@ -8,6 +8,7 @@ pub fn sifr_type_to_rust_type(ty: &Type) -> RustType {
         Type::Float => RustType::F64,
         Type::Bool | Type::LiteralBool(_) => RustType::Bool,
         Type::Str | Type::LiteralStr(_) => RustType::String_,
+        Type::Bytes => RustType::Vec(Box::new(RustType::I64)),
         Type::None => RustType::Unit,
         Type::List(inner) => RustType::Vec(Box::new(sifr_type_to_rust_type(inner))),
         Type::Dict(key, value) => RustType::HashMap(

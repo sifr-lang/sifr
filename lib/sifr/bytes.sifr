@@ -1,17 +1,17 @@
 # sifr.bytes — Binary data operations
 # decode_utf8 returns Result[str, ParseError]
 # bytes_to_hex returns Result[str, ParseError]
-# bytes_from_hex returns Result[list[int], ParseError]
+# bytes_from_hex returns Result[bytes, ParseError]
 from _sifr.bytes import encode_utf8, decode_utf8, bytes_to_hex, bytes_from_hex
 
-def count_byte(data: list[int], value: int) -> int:
+def count_byte(data: bytes, value: int) -> int:
     count: int = 0
     for b in data:
         if b == value:
             count = count + 1
     return count
 
-def find_byte(data: list[int], value: int) -> int | None:
+def find_byte(data: bytes, value: int) -> int | None:
     idx: int = 0
     for b in data:
         if b == value:
@@ -19,7 +19,7 @@ def find_byte(data: list[int], value: int) -> int | None:
         idx = idx + 1
     return None
 
-def starts_with(data: list[int], prefix: list[int]) -> bool:
+def starts_with(data: bytes, prefix: bytes) -> bool:
     if len(prefix) > len(data):
         return False
     i: int = 0
@@ -35,7 +35,7 @@ def starts_with(data: list[int], prefix: list[int]) -> bool:
         i = i + 1
     return True
 
-def ends_with(data: list[int], suffix: list[int]) -> bool:
+def ends_with(data: bytes, suffix: bytes) -> bool:
     if len(suffix) > len(data):
         return False
     offset: int = len(data) - len(suffix)

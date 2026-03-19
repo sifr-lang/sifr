@@ -11,6 +11,8 @@ pub enum Type {
     Bool,
     /// String (`str` in Sifr, `String` in Rust)
     Str,
+    /// Immutable byte sequence (`bytes` in Sifr)
+    Bytes,
     /// None type (unit type `()` in Rust)
     None,
     /// Function type with parameter types and return type
@@ -285,6 +287,7 @@ impl Type {
             Self::LiteralInt(_) | Self::LiteralBool(_) => OwnershipKind::Copy,
             Self::Function(_) => OwnershipKind::Copy,
             Self::Str
+            | Self::Bytes
             | Self::Any
             | Self::List(_)
             | Self::Dict(_, _)
@@ -323,6 +326,7 @@ impl Type {
             Self::Float => "float".to_string(),
             Self::Bool => "bool".to_string(),
             Self::Str => "str".to_string(),
+            Self::Bytes => "bytes".to_string(),
             Self::None => "None".to_string(),
             Self::Function(_) => "function".to_string(),
             Self::List(elem) => format!("list[{}]", elem.display_name()),
@@ -397,6 +401,7 @@ impl Type {
             Self::Float => "f64".to_string(),
             Self::Bool => "bool".to_string(),
             Self::Str => "String".to_string(),
+            Self::Bytes => "Vec<i64>".to_string(),
             Self::None => "()".to_string(),
             Self::List(elem) => format!("Vec<{}>", elem.rust_type()),
             Self::Dict(key, val) => format!("HashMap<{}, {}>", key.rust_type(), val.rust_type()),
@@ -547,6 +552,7 @@ impl Type {
             Type::Float => "Float".to_string(),
             Type::Bool => "Bool".to_string(),
             Type::Str => "Str".to_string(),
+            Type::Bytes => "Bytes".to_string(),
             Type::None => "None".to_string(),
             Type::LiteralInt(v) => format!("LitInt{v}"),
             Type::LiteralStr(v) => format!("Lit{}", capitalize(v)),
@@ -632,6 +638,7 @@ impl Type {
             Self::List(elem) => Some(*elem.clone()),
             Self::Set(elem) => Some(*elem.clone()),
             Self::Str => Some(Type::Str),
+            Self::Bytes => Some(Type::Int),
             Self::Dict(key, _) => Some(*key.clone()),
             Self::Iterable(elem) => Some(*elem.clone()),
             Self::Iterator(elem) => Some(*elem.clone()),
@@ -695,6 +702,14 @@ impl Type {
                     None
                 }
             }
+            Self::Bytes => {
+                if index_ty == &Type::Int {
+                    // Safe indexing: returns Option[int] = int | None
+                    Some(Type::Union(vec![Type::Int, Type::None]))
+                } else {
+                    None
+                }
+            }
             // Union type: if T|None where T is indexable, unwrap and delegate
             Self::Union(members) => {
                 let non_none: Vec<&Type> = members
@@ -718,6 +733,7 @@ impl Type {
             Self::Set(elem) => Some(*elem.clone()),
             Self::Dict(key, _) => Some(*key.clone()),
             Self::Str => Some(Type::Str),
+            Self::Bytes => Some(Type::Int),
             _ => None,
         }
     }
@@ -832,6 +848,7 @@ impl Type {
             }
             (Self::Range, Self::Iterable(dst)) => return Type::Int.is_assignable_to(dst),
             (Self::Str, Self::Iterable(dst)) => return Type::Str.is_assignable_to(dst),
+            (Self::Bytes, Self::Iterable(dst)) => return Type::Int.is_assignable_to(dst),
             (Self::Dict(key, _), Self::Iterable(dst)) => return key.is_assignable_to(dst),
             (Self::Tuple(items), Self::Iterable(dst)) => {
                 if items.is_empty() {

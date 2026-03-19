@@ -148,6 +148,7 @@ impl RustEmitter {
             | Type::Decimal
             | Type::BigDecimal => false,
             Type::List(_)
+            | Type::Bytes
             | Type::Dict(_, _)
             | Type::Set(_)
             | Type::Tuple(_)
@@ -1432,7 +1433,7 @@ impl RustEmitter {
                 };
 
                 return match crate::resolve_alias_type_for_plain_call(object.ty()) {
-                    Type::List(_) => Ok(Some(crate::RustExpr::Block {
+                    Type::List(_) | Type::Bytes => Ok(Some(crate::RustExpr::Block {
                         stmts: vec![
                             crate::RustStmt::Let {
                                 mutable: false,
@@ -1949,7 +1950,7 @@ impl RustEmitter {
                         args: vec![iter],
                     }));
                 }
-                Type::List(_) => {
+                Type::List(_) | Type::Bytes => {
                     let base_iter = crate::RustExpr::MethodCall {
                         receiver: Box::new(crate::RustExpr::MethodCall {
                             receiver: Box::new(crate::RustExpr::Paren(Box::new(lowered_object))),
@@ -2108,7 +2109,7 @@ impl RustEmitter {
                             args: vec![],
                         }
                     }
-                    Type::List(_) => crate::RustExpr::MethodCall {
+                    Type::List(_) | Type::Bytes => crate::RustExpr::MethodCall {
                         receiver: Box::new(crate::RustExpr::MethodCall {
                             receiver: Box::new(crate::RustExpr::Ident("__v".to_string())),
                             method: "get".to_string(),
@@ -2201,7 +2202,7 @@ impl RustEmitter {
                         },
                     ))));
                 }
-                Type::List(_) => {
+                Type::List(_) | Type::Bytes => {
                     let list_index = crate::RustExpr::Cast {
                         expr: Box::new(lowered_index),
                         ty: crate::RustType::Named("usize".to_string()),
@@ -2320,7 +2321,7 @@ impl RustEmitter {
                         args: vec![key_arg],
                     }
                 }
-                Type::List(_) | Type::Set(_) | Type::Str => crate::RustExpr::MethodCall {
+                Type::List(_) | Type::Bytes | Type::Set(_) | Type::Str => crate::RustExpr::MethodCall {
                     receiver: Box::new(crate::RustExpr::Paren(Box::new(lowered_collection))),
                     method: "contains".to_string(),
                     args: vec![crate::RustExpr::Ref {
@@ -2534,9 +2535,12 @@ impl RustEmitter {
             }
 
             if op == "+"
-                && matches!(resolved_result_ty, Type::List(_))
-                && matches!(resolved_left_ty, Type::List(_))
-                && matches!(resolved_right_ty, Type::List(_))
+                && (matches!(resolved_result_ty, Type::List(_))
+                    || matches!(resolved_result_ty, Type::Bytes))
+                && (matches!(resolved_left_ty, Type::List(_))
+                    || matches!(resolved_left_ty, Type::Bytes))
+                && (matches!(resolved_right_ty, Type::List(_))
+                    || matches!(resolved_right_ty, Type::Bytes))
             {
                 return Ok(Some(crate::RustExpr::Block {
                     stmts: vec![
@@ -3685,7 +3689,7 @@ impl RustEmitter {
         index: &HirExpr,
     ) -> Result<Option<crate::RustExpr>, crate::CodegenError> {
         let object_ty = crate::resolve_alias_type_for_plain_call(object.ty());
-        if !matches!(object_ty, Type::Tuple(_) | Type::List(_) | Type::Str) {
+        if !matches!(object_ty, Type::Tuple(_) | Type::List(_) | Type::Bytes | Type::Str) {
             return Ok(None);
         }
 
@@ -3712,7 +3716,7 @@ impl RustEmitter {
                     field: idx.to_string(),
                 }
             }
-            Type::List(_) => crate::RustExpr::Clone(Box::new(crate::RustExpr::Index {
+            Type::List(_) | Type::Bytes => crate::RustExpr::Clone(Box::new(crate::RustExpr::Index {
                 expr: Box::new(lowered_object),
                 index: Box::new(crate::RustExpr::Cast {
                     expr: Box::new(lowered_index),
@@ -4496,7 +4500,7 @@ impl RustEmitter {
                     return Ok(None);
                 };
                 let iter_source = match Self::resolve_alias_type_for_loop_iter(args[0].ty()) {
-                    Type::List(_) => crate::RustExpr::MethodCall {
+                    Type::List(_) | Type::Bytes => crate::RustExpr::MethodCall {
                         receiver: Box::new(crate::RustExpr::MethodCall {
                             receiver: Box::new(lowered_arg),
                             method: "iter".to_string(),
@@ -4593,7 +4597,7 @@ impl RustEmitter {
         }
 
         let iterator_expr = match source_ty {
-            Type::List(_) | Type::Set(_) | Type::Iterable(_) => crate::RustExpr::MethodCall {
+            Type::List(_) | Type::Bytes | Type::Set(_) | Type::Iterable(_) => crate::RustExpr::MethodCall {
                 receiver: Box::new(crate::RustExpr::MethodCall {
                     receiver: Box::new(lowered_source),
                     method: "iter".to_string(),

@@ -4,9 +4,9 @@ from sifr.base64 import b64encode
 from sifr.test import assert_vector_eq
 
 def main():
-    # Safety behavior: out-of-range byte values return ParseError (no panic).
+    # Safety behavior: invalid UTF-8 byte sequences return ParseError (no panic).
     try:
-        bad: str = decode_utf8([256])
+        bad: str = decode_utf8(b"\xff")
         print(False)
         assert str(False) == "true"
     except ParseError as e:
@@ -21,4 +21,3 @@ def main():
         actual.append(b64encode(s))
     assert_vector_eq(actual, expected)
     print(True)
-

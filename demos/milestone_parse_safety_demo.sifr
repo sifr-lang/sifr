@@ -124,7 +124,7 @@ def demo_bytes():
 
     # decode_utf8 error — invalid bytes
     try:
-        bad_bytes: list[int] = [255, 254, 253]
+        bad_bytes: bytes = b"\xff\xfe\xfd"
         bad_text: str = decode_utf8(bad_bytes)
         print("should not reach here")
     except ParseError as e:
@@ -132,7 +132,7 @@ def demo_bytes():
 
     # bytes_from_hex success
     try:
-        hex_data: list[int] = bytes_from_hex("48656c6c6f")
+        hex_data: bytes = bytes_from_hex("48656c6c6f")
         decoded_hex: str = decode_utf8(hex_data)
         print(f"from hex: {decoded_hex}")
     except ParseError as e:
@@ -140,7 +140,7 @@ def demo_bytes():
 
     # bytes_from_hex error — invalid hex
     try:
-        bad_hex: list[int] = bytes_from_hex("ZZZZ")
+        bad_hex: bytes = bytes_from_hex("ZZZZ")
         print("should not reach here")
     except ParseError as e:
         print(f"caught hex ParseError: {e.message}")

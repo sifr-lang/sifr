@@ -4,7 +4,7 @@ from sifr.bytes import encode_utf8, decode_utf8, bytes_to_hex, bytes_from_hex
 def main():
     try:
         # Encode string to bytes
-        data: list[int] = encode_utf8("hello")
+        data: bytes = encode_utf8("hello")
         assert str(len(data)) == '5'
 
         # Decode bytes back to string
@@ -16,7 +16,7 @@ def main():
         assert str(hex_str) == '68656c6c6f'
 
         # Hex decoding
-        hex_bytes: list[int] = bytes_from_hex("68656c6c6f")
+        hex_bytes: bytes = bytes_from_hex("68656c6c6f")
         result: str = decode_utf8(hex_bytes)
         assert str(result) == 'hello'
     except ParseError as e:

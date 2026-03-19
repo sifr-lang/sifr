@@ -36,7 +36,7 @@ def b16encode(s: str) -> Result[str, ParseError]:
 
 def b16decode(s: str) -> Result[str, ParseError]:
     try:
-        data: list[int] = bytes_from_hex(s)
+        data: bytes = bytes_from_hex(s)
         return decode_utf8(data)
     except ParseError as e:
         raise e

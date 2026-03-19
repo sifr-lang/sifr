@@ -1,0 +1,26 @@
+def sum_bytes(data: bytes) -> int:
+    total: int = 0
+    for value in data:
+        total += value
+    return total
+
+def main() -> None:
+    left: bytes = b"AB"
+    right: bytes = b"\x01\x02"
+    merged: bytes = left + right
+
+    assert len(merged) == 4
+    first: int | None = merged[0]
+    assert first == 65
+
+    middle: bytes = merged[1:3]
+    assert len(middle) == 2
+    assert sum_bytes(middle) == 67
+
+    ints: list[int] = middle.to_ints()
+    first_mid: int | None = ints[0]
+    second_mid: int | None = ints[1]
+    assert first_mid == 66
+    assert second_mid == 1
+
+    assert b"ab" + b"cd" == b"abcd"

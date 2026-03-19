@@ -1,0 +1,21 @@
+# wave_psp_bytes_1 demo: iteration, equality, and index semantics
+
+def main() -> None:
+    a: bytes = b"\x01\x02\x03"
+    b: bytes = b"\x01\x02"
+    c: bytes = b + b"\x03"
+
+    assert a == c
+    assert len(a) == 3
+
+    idx0: int | None = a[0]
+    idx1: int | None = a[1]
+    idx2: int | None = a[2]
+    assert idx0 == 1
+    assert idx1 == 2
+    assert idx2 == 3
+
+    acc: int = 0
+    for item in a:
+        acc += item
+    assert acc == 6

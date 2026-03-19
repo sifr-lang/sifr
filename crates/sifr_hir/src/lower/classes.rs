@@ -864,6 +864,18 @@ pub(super) fn lower_expr_simple(expr: &Expr) -> Option<HirExpr> {
             Number::Complex { .. } => None,
         },
         Expr::StringLiteral(s) => Some(HirExpr::StringLiteral(s.value.to_str().to_string())),
+        Expr::BytesLiteral(bytes) => {
+            let mut elements = Vec::new();
+            for part in bytes.value.iter() {
+                for value in part.as_slice() {
+                    elements.push(HirExpr::IntLiteral(i64::from(*value)));
+                }
+            }
+            Some(HirExpr::ListLiteral {
+                elements,
+                ty: Type::Bytes,
+            })
+        }
         Expr::BooleanLiteral(b) => Some(HirExpr::BoolLiteral(b.value)),
         Expr::NoneLiteral(_) => Some(HirExpr::NoneLiteral),
         Expr::UnaryOp(unary) if matches!(unary.op, UnaryOp::USub) => {

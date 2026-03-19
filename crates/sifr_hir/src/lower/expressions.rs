@@ -1,8 +1,9 @@
 use super::arithmetic_warnings::check_int_overflow_risk;
+use super::bytes_methods::resolve_bytes_method_type;
 use super::builtin_calls::{
     callable_builtin_element_type, callable_builtin_list_output_type,
-    lower_builtin_reverseable_arg, lower_chr_call, lower_defaultdict_constructor_call,
-    lower_dict_constructor_call, lower_isinstance_call, lower_len_call,
+    lower_builtin_reverseable_arg, lower_bytes_constructor_call, lower_chr_call,
+    lower_defaultdict_constructor_call, lower_dict_constructor_call, lower_isinstance_call, lower_len_call,
     lower_list_constructor_call, lower_ord_call, lower_range_call, lower_reveal_type_call,
     lower_set_constructor_call, lower_tuple_constructor_call, DEFAULTDICT_INT_ALIAS,
     DEFAULTDICT_LIST_ALIAS, DEFAULTDICT_SET_ALIAS,
@@ -36,9 +37,9 @@ use super::{
 use crate::hir_nodes::{HirExpr, HirFStringPart, HirParam};
 use sifr_python_ast::{
     BoolOp, CmpOp, Expr, ExprAttribute, ExprBinOp, ExprBoolOp, ExprCall, ExprCompare, ExprDict,
-    ExprDictComp, ExprFString, ExprGenerator, ExprIf, ExprLambda, ExprList, ExprListComp, ExprName,
-    ExprNamed, ExprNumberLiteral, ExprSet, ExprSetComp, ExprSubscript, ExprTuple, ExprUnaryOp,
-    FStringElement, Number, Operator, UnaryOp,
+    ExprBytesLiteral, ExprDictComp, ExprFString, ExprGenerator, ExprIf, ExprLambda, ExprList,
+    ExprListComp, ExprName, ExprNamed, ExprNumberLiteral, ExprSet, ExprSetComp, ExprSubscript,
+    ExprTuple, ExprUnaryOp, FStringElement, Number, Operator, UnaryOp,
 };
 use sifr_type_system::{
     make_union, type_check_binary_op, type_check_bool_op, type_check_comparison,
@@ -49,6 +50,7 @@ use std::collections::HashMap;
 pub(super) fn lower_expr(expr: &Expr, ctx: &mut LowerCtx) -> Option<HirExpr> {
     match expr {
         Expr::NumberLiteral(num) => lower_number_literal(num),
+        Expr::BytesLiteral(bytes) => lower_bytes_literal(bytes),
         Expr::StringLiteral(s) => {
             let value = s.value.to_str().to_string();
             Some(HirExpr::StringLiteral(value))
@@ -91,6 +93,19 @@ pub(super) fn lower_number_literal(num: &ExprNumberLiteral) -> Option<HirExpr> {
         Number::Float(f) => Some(HirExpr::FloatLiteral(*f)),
         Number::Complex { .. } => None, // Not supported in M1
     }
+}
+
+pub(super) fn lower_bytes_literal(bytes: &ExprBytesLiteral) -> Option<HirExpr> {
+    let mut elements = Vec::new();
+    for part in bytes.value.iter() {
+        for value in part.as_slice() {
+            elements.push(HirExpr::IntLiteral(i64::from(*value)));
+        }
+    }
+    Some(HirExpr::ListLiteral {
+        elements,
+        ty: Type::Bytes,
+    })
 }
 
 fn callable_signature(expr: &HirExpr) -> Option<(Vec<Type>, Vec<ParamConvention>, Type)> {
@@ -582,6 +597,10 @@ pub(super) fn lower_call(call: &ExprCall, ctx: &mut LowerCtx) -> Option<HirExpr>
 
         if func_name == "set" {
             return lower_set_constructor_call(call, ctx);
+        }
+
+        if func_name == "bytes" {
+            return lower_bytes_constructor_call(call, ctx);
         }
 
         if func_name == "ord" {
@@ -2134,6 +2153,7 @@ pub(super) fn lower_subscript(sub: &ExprSubscript, ctx: &mut LowerCtx) -> Option
         // Determine result type for slicing
         let result_ty = match &object_ty {
             Type::List(elem_ty) => Type::List(elem_ty.clone()),
+            Type::Bytes => Type::Bytes,
             Type::Str => Type::Str,
             Type::Tuple(elems) => {
                 // Compile-time tuple slicing: indices must be integer literals
@@ -3086,6 +3106,7 @@ pub(super) fn resolve_method_type(
                 None
             }
         },
+        Type::Bytes => resolve_bytes_method_type(method, args, ctx),
         Type::Tuple(_) => match method {
             "len" => Some(Type::Int),
             "count" => {
