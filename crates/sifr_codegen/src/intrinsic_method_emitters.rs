@@ -22,6 +22,7 @@ fn registry_uses_debug_display_format(ty: &Type) -> bool {
         | Type::Decimal
         | Type::BigDecimal => false,
         Type::List(_)
+        | Type::Bytes
         | Type::Dict(_, _)
         | Type::Set(_)
         | Type::Tuple(_)
@@ -129,7 +130,7 @@ fn registry_iterable_to_owned_iter_expr(
 ) -> Option<RustExpr> {
     let lowered = emitter.try_lower_registry_expr_strict(expr)?;
     match crate::resolve_alias_type_for_plain_call(expr.ty()) {
-        Type::List(_) | Type::Set(_) | Type::Iterable(_) => Some(RustExpr::MethodCall {
+        Type::List(_) | Type::Bytes | Type::Set(_) | Type::Iterable(_) => Some(RustExpr::MethodCall {
             receiver: Box::new(RustExpr::MethodCall {
                 receiver: Box::new(RustExpr::Paren(Box::new(lowered))),
                 method: "clone".to_string(),
@@ -941,7 +942,7 @@ impl RustEmitter {
                                     args: vec![],
                                 }
                             }
-                            Type::List(_) => crate::RustExpr::MethodCall {
+                            Type::List(_) | Type::Bytes => crate::RustExpr::MethodCall {
                                 receiver: Box::new(crate::RustExpr::MethodCall {
                                     receiver: Box::new(crate::RustExpr::Ident("__v".to_string())),
                                     method: "get".to_string(),
@@ -1045,7 +1046,7 @@ impl RustEmitter {
                                 args: vec![],
                             })
                         }
-                        Type::List(_) => Some(crate::RustExpr::MethodCall {
+                        Type::List(_) | Type::Bytes => Some(crate::RustExpr::MethodCall {
                             receiver: Box::new(crate::RustExpr::MethodCall {
                                 receiver: Box::new(lowered_object),
                                 method: "get".to_string(),
@@ -1499,6 +1500,7 @@ impl RustEmitter {
             }
             "list" if args.is_empty() => Some(RustExpr::Vec(vec![])),
             "list" if args.len() == 1 => registry_iterable_to_vec_expr(self, &args[0]),
+            "bytes" if args.is_empty() => Some(RustExpr::Vec(vec![])),
             "dict" if args.is_empty() => Some(RustExpr::FnCall {
                 func: Box::new(RustExpr::Path(vec![
                     "HashMap".to_string(),
@@ -1689,6 +1691,7 @@ impl RustEmitter {
             "sorted" if matches!(args.len(), 1 | 3) => {
                 let elem_ty = match crate::resolve_alias_type_for_plain_call(args[0].ty()) {
                     Type::List(inner) => inner.as_ref().clone(),
+                    Type::Bytes => Type::Int,
                     Type::Set(inner) => inner.as_ref().clone(),
                     Type::Range => Type::Int,
                     Type::Str => Type::Str,
@@ -2200,7 +2203,7 @@ impl RustEmitter {
                         op: "!=".to_string(),
                         right: Box::new(crate::RustExpr::Literal(crate::RustLiteral::Float(0.0))),
                     }),
-                    Type::Str | Type::List(_) | Type::Dict(_, _) => {
+                    Type::Str | Type::Bytes | Type::List(_) | Type::Dict(_, _) => {
                         Some(crate::RustExpr::UnaryOp {
                             op: "!".to_string(),
                             operand: Box::new(crate::RustExpr::MethodCall {

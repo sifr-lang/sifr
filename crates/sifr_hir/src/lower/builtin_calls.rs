@@ -27,6 +27,7 @@ fn iterable_element_type_for_builtin(arg_ty: &Type) -> Option<Type> {
         Type::Tuple(elems) => homogeneous_tuple_element_type(elems),
         Type::Range => Some(Type::Int),
         Type::Str => Some(Type::Str),
+        Type::Bytes => Some(Type::Int),
         Type::Dict(key, _) => Some(*key.clone()),
         Type::Iterable(elem) | Type::Iterator(elem) => Some(*elem.clone()),
         Type::Any | Type::Unknown => Some(Type::Any),
@@ -493,6 +494,26 @@ pub(super) fn lower_set_constructor_call(call: &ExprCall, ctx: &mut LowerCtx) ->
     }
 }
 
+pub(super) fn lower_bytes_constructor_call(
+    call: &ExprCall,
+    ctx: &mut LowerCtx,
+) -> Option<HirExpr> {
+    if !call.arguments.keywords.is_empty() {
+        ctx.error("bytes() does not accept keyword arguments in wave_psp_bytes_1".to_string());
+        return None;
+    }
+    if call.arguments.args.is_empty() {
+        return Some(HirExpr::ListLiteral {
+            elements: Vec::new(),
+            ty: Type::Bytes,
+        });
+    }
+    ctx.error(
+        "bytes() with arguments is scheduled for wave_psp_bytes_2 conversion surfaces; use bytes literals in wave_psp_bytes_1".to_string(),
+    );
+    None
+}
+
 pub(super) fn lower_len_call(call: &ExprCall, ctx: &mut LowerCtx) -> Option<HirExpr> {
     if call.arguments.args.len() != 1 {
         ctx.error(format!(
@@ -518,7 +539,7 @@ pub(super) fn lower_len_call(call: &ExprCall, ctx: &mut LowerCtx) -> Option<HirE
         arg_ty.clone()
     };
     match effective_ty.resolve_alias() {
-        Type::Str | Type::List(_) | Type::Dict(_, _) | Type::Tuple(_) | Type::Set(_) => {
+        Type::Str | Type::Bytes | Type::List(_) | Type::Dict(_, _) | Type::Tuple(_) | Type::Set(_) => {
             Some(HirExpr::MethodCall {
                 object: Box::new(arg),
                 method: "len".to_string(),
@@ -536,7 +557,7 @@ pub(super) fn lower_len_call(call: &ExprCall, ctx: &mut LowerCtx) -> Option<HirE
         }
         _ => {
             ctx.error(format!(
-                "len() argument must be a string, list, dict, tuple, set, or sized class, got '{}'",
+                "len() argument must be a string, bytes, list, dict, tuple, set, or sized class, got '{}'",
                 arg_ty.display_name()
             ));
             None

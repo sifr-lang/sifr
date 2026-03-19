@@ -19,7 +19,7 @@ Loop per wave: Plan -> Implement -> Validate -> Demo -> PR -> External completio
 
 ## Full Phase To-Do Plan
 1. [x] `wave_psp_bytes_0`: architecture lock, explicit permanent-diff fixtures, and CPython family mapping
-2. [ ] `wave_psp_bytes_1`: first-class `bytes` type-system/HIR/lowering/codegen foundation
+2. [x] `wave_psp_bytes_1`: first-class `bytes` type-system/HIR/lowering/codegen foundation
 3. [ ] `wave_psp_bytes_2`: UTF-8/hex conversion surfaces and `sifr.bytes` compatibility delegation
 4. [ ] `wave_psp_bytes_3`: downstream contract adoption and governance closeout
 5. [ ] wave-level extra completion review cycle done
@@ -73,7 +73,23 @@ Required entry records:
   - wave gate: `$(pwd)/scripts/run_all_tests.sh --profile quick` -> PASS (2026-03-19)
 
 ### wave_psp_bytes_1: Core `bytes` Type and Compiler Support
-- Status: pending
+- Status: completed
+- Implementation PR:
+  - `#1294`: https://github.com/yaseralnajjar/sifr/pull/1294
+- Scope:
+  - add first-class `Type::Bytes` in type-system inference/checking/union ordering
+  - lower bytes literals and `bytes()` constructor through HIR/lowering/codegen as immutable sequence values
+  - ship bytes indexing/slicing/iteration/concatenation/equality behavior and bytes method typing/lowering (`len`, `count`, `contains`, `index`, `to_ints`)
+  - enforce bytes immutability for subscript assignment and unsupported mutating methods
+  - migrate existing pass fixtures/demos and `sifr.bytes`/`sifr.base64` signatures from `list[int]` boundaries to first-class `bytes`
+- Validation:
+  - positive path: `cargo run -q -p sifr -- run crates/sifr/tests/e2e/pass/phase_psp_bytes_1_core_type_support.sifr` -> PASS
+  - positive path: `cargo run -q -p sifr -- run demos/ad_hoc_bytes_wave1_core_type_demo.sifr` -> PASS
+  - positive path: `cargo run -q -p sifr -- run demos/ad_hoc_bytes_wave1_iteration_and_equality_demo.sifr` -> PASS
+  - negative path: `cargo run -q -p sifr -- check crates/sifr/tests/e2e/fail/phase_psp_bytes_1_subscript_assignment_unsupported.sifr` -> expected compile failure (PASS)
+  - negative path: `cargo run -q -p sifr -- check crates/sifr/tests/e2e/fail/phase_psp_bytes_1_append_unsupported.sifr` -> expected compile failure (PASS)
+  - wave gate: `$(pwd)/scripts/run_all_tests.sh --profile quick` -> PASS (2026-03-19)
+  - wave gate: `$(pwd)/scripts/run_all_tests.sh` -> PASS (2026-03-19)
 
 ### wave_psp_bytes_2: Conversion Surfaces and Compatibility Migration
 - Status: pending

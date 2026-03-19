@@ -6,6 +6,7 @@ use sifr_type_system::{make_union, FunctionType, Type};
 use std::collections::HashMap;
 mod arithmetic_warnings;
 mod binding_mutability;
+mod bytes_methods;
 mod builtin_calls;
 mod classes;
 mod compat_imports;

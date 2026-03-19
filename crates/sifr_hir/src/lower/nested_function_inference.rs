@@ -871,6 +871,7 @@ fn infer_expr_type(
             sifr_python_ast::Number::Complex { .. } => Type::Unknown,
         },
         Expr::StringLiteral(_) => Type::Str,
+        Expr::BytesLiteral(_) => Type::Bytes,
         Expr::BooleanLiteral(_) => Type::Bool,
         Expr::NoneLiteral(_) => Type::None,
         Expr::List(list) => infer_list_literal_type(&list.elts, env, states, current_function, ctx),

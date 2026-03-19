@@ -1,8 +1,8 @@
 # Ad Hoc Phase: First-Class Bytes and Binary Surface Foundation
 
-Status: in_progress (started 2026-03-19; wave_psp_bytes_0 architecture lock completed, wave_psp_bytes_1 next)
+Status: in_progress (started 2026-03-19; wave_psp_bytes_0 and wave_psp_bytes_1 completed, wave_psp_bytes_2 next)
 Context: prerequisite phase after structured/class-surface parity expansion and before runtime/file-object plus RNG/crypto follow-ups
-Execution readiness: implementation-ready in sequence after `issues/ad-hoc-structured-data-and-class-surface-parity-expansion.md`; wave 1 still requires recorded typing/lowering/codegen migration evidence from architecture lock validation
+Execution readiness: implementation-ready in sequence after `issues/ad-hoc-structured-data-and-class-surface-parity-expansion.md`; wave 1 typing/lowering/codegen migration evidence is now recorded in the execution ledger and wave 2 conversion-surface migration is next
 Execution ledger: `issues/ad-hoc-first-class-bytes-and-binary-surface-foundation-execution.md`
 
 ## Objective

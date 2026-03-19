@@ -116,6 +116,10 @@ pub fn type_check_binary_op(left: &Type, op: &str, right: &Type) -> Result<Type,
                     return Ok(Type::List(l_elem.clone()));
                 }
             }
+            // Bytes concatenation: bytes + bytes -> bytes
+            if left == &Type::Bytes && right == &Type::Bytes {
+                return Ok(Type::Bytes);
+            }
             Err(TypeError {
                 message: format!(
                     "unsupported operand type(s) for +: '{}' and '{}'",
@@ -169,6 +173,12 @@ pub fn type_check_binary_op(left: &Type, op: &str, right: &Type) -> Result<Type,
                     if right == &Type::Int {
                         return Ok(left.clone());
                     }
+                }
+                if left == &Type::Bytes && right == &Type::Int {
+                    return Ok(Type::Bytes);
+                }
+                if left == &Type::Int && right == &Type::Bytes {
+                    return Ok(Type::Bytes);
                 }
             }
             Err(TypeError {

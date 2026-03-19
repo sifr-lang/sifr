@@ -30,6 +30,7 @@ pub fn resolve_type_annotation(name: &str) -> Option<Type> {
         "float" => Some(Type::Float),
         "bool" => Some(Type::Bool),
         "str" => Some(Type::Str),
+        "bytes" => Some(Type::Bytes),
         "None" => Some(Type::None),
         "Any" => Some(Type::Any),
         "Iterable" => Some(Type::Iterable(Box::new(Type::Any))),
@@ -61,6 +62,7 @@ mod tests {
         assert_eq!(resolve_type_annotation("int"), Some(Type::Int));
         assert_eq!(resolve_type_annotation("float"), Some(Type::Float));
         assert_eq!(resolve_type_annotation("str"), Some(Type::Str));
+        assert_eq!(resolve_type_annotation("bytes"), Some(Type::Bytes));
         assert_eq!(resolve_type_annotation("bool"), Some(Type::Bool));
         assert_eq!(resolve_type_annotation("None"), Some(Type::None));
         assert_eq!(resolve_type_annotation("Any"), Some(Type::Any));

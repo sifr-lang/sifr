@@ -87,7 +87,7 @@ def main():
 
     # 9. UTF-8: invalid bytes returns ParseError
     try:
-        bad_bytes: list[int] = [255, 254, 253]
+        bad_bytes: bytes = b"\xff\xfe\xfd"
         text: str = decode_utf8(bad_bytes)
         assert str("should not reach here") == expected[len(expected) - expected_index - 1]
         expected_index = expected_index + 1
@@ -97,7 +97,7 @@ def main():
 
     # 10. UTF-8: valid bytes succeeds
     try:
-        good_bytes: list[int] = [104, 105]
+        good_bytes: bytes = b"hi"
         text2: str = decode_utf8(good_bytes)
         assert str(f"utf8 ok: {text2}") == expected[len(expected) - expected_index - 1]
         expected_index = expected_index + 1
@@ -107,7 +107,7 @@ def main():
 
     # 11. bytes_from_hex: invalid hex returns ParseError
     try:
-        bad_hex: list[int] = bytes_from_hex("ZZZZ")
+        bad_hex: bytes = bytes_from_hex("ZZZZ")
         assert str("should not reach here") == expected[len(expected) - expected_index - 1]
         expected_index = expected_index + 1
     except ParseError as e:
@@ -116,7 +116,7 @@ def main():
 
     # 12. bytes_from_hex: valid hex succeeds
     try:
-        good_hex: list[int] = bytes_from_hex("48")
+        good_hex: bytes = bytes_from_hex("48")
         assert str(f"hex ok: {good_hex[0]}") == expected[len(expected) - expected_index - 1]
         expected_index = expected_index + 1
     except ParseError as e:

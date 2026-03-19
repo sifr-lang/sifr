@@ -109,6 +109,7 @@ fn collect_type_error_refs(
         | Type::Float
         | Type::Bool
         | Type::Str
+        | Type::Bytes
         | Type::None
         | Type::Range
         | Type::Any

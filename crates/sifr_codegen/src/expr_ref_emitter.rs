@@ -22,6 +22,7 @@ fn uses_debug_display_format(ty: &Type) -> bool {
         | Type::Decimal
         | Type::BigDecimal => false,
         Type::List(_)
+        | Type::Bytes
         | Type::Dict(_, _)
         | Type::Set(_)
         | Type::Tuple(_)
@@ -77,6 +78,7 @@ fn display_option_inner_type(expr: &HirExpr) -> Option<Type> {
     if let HirExpr::Index { object, .. } = expr {
         match crate::resolve_alias_type_for_plain_call(object.ty()) {
             Type::List(elem) => return Some((**elem).clone()),
+            Type::Bytes => return Some(Type::Int),
             Type::Dict(_, value) => return Some((**value).clone()),
             Type::Str => return Some(Type::Str),
             _ => {}

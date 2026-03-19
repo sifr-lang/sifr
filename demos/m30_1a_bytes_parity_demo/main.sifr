@@ -7,7 +7,7 @@ def render_opt_int(own value: int | None) -> str:
         return "None"
     return str(value)
 
-def collect_primary_actual(payload: list[int]) -> list[str]:
+def collect_primary_actual(payload: bytes) -> list[str]:
     actual: list[str] = []
     actual.append(str(count_byte(payload, 115)))
     actual.append(render_opt_int(find_byte(payload, 45)))
@@ -15,7 +15,7 @@ def collect_primary_actual(payload: list[int]) -> list[str]:
     actual.append(str(ends_with(payload, encode_utf8("e30"))))
     return actual
 
-def bytes_to_hex_or_empty(payload: list[int]) -> str:
+def bytes_to_hex_or_empty(payload: bytes) -> str:
     try:
         hx: str = bytes_to_hex(payload)
         return hx
@@ -25,7 +25,7 @@ def bytes_to_hex_or_empty(payload: list[int]) -> str:
 
 def bytes_from_hex_to_text_or_empty(payload: str) -> str:
     try:
-        parsed: list[int] = bytes_from_hex(payload)
+        parsed: bytes = bytes_from_hex(payload)
         txt: str = decode_utf8(parsed)
         return txt
     except ParseError as e:
@@ -35,13 +35,13 @@ def bytes_from_hex_to_text_or_empty(payload: str) -> str:
 def collect_invalid_actual_ok() -> list[bool]:
     invalid_actual_ok: list[bool] = []
     try:
-        odd: list[int] = bytes_from_hex("abc")
+        odd: bytes = bytes_from_hex("abc")
         _ = str(len(odd))
         invalid_actual_ok.append(True)
     except ParseError as e:
         invalid_actual_ok.append(False)
     try:
-        bad_utf8: str = decode_utf8([300])
+        bad_utf8: str = decode_utf8(b"\xff")
         _ = str(bad_utf8)
         invalid_actual_ok.append(True)
     except ParseError as e:
@@ -49,7 +49,7 @@ def collect_invalid_actual_ok() -> list[bool]:
     return invalid_actual_ok
 
 def main():
-    payload: list[int] = encode_utf8("bytes-phase30")
+    payload: bytes = encode_utf8("bytes-phase30")
     expected: list[str] = ["2", "5", "true", "true"]
     actual: list[str] = collect_primary_actual(payload)
     assert_vector_eq(actual, expected)

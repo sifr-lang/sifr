@@ -212,39 +212,36 @@ pub(super) fn intrinsic_collections() -> IntrinsicModule {
 pub(super) fn intrinsic_bytes() -> IntrinsicModule {
     let mut functions = HashMap::new();
 
-    // encode_utf8(s: str) -> list[int]
+    // encode_utf8(s: str) -> bytes
     functions.insert(
         "encode_utf8".to_string(),
-        FunctionType::all_borrow(
-            vec![("s".to_string(), Type::Str)],
-            Type::List(Box::new(Type::Int)),
-        ),
+        FunctionType::all_borrow(vec![("s".to_string(), Type::Str)], Type::Bytes),
     );
 
-    // decode_utf8(bytes: list[int]) -> Result[str, ParseError]
+    // decode_utf8(bytes: bytes) -> Result[str, ParseError]
     functions.insert(
         "decode_utf8".to_string(),
         FunctionType::all_borrow(
-            vec![("bytes".to_string(), Type::List(Box::new(Type::Int)))],
+            vec![("bytes".to_string(), Type::Bytes)],
             result_ty(Type::Str, "ParseError"),
         ),
     );
 
-    // bytes_to_hex(bytes: list[int]) -> Result[str, ParseError]
+    // bytes_to_hex(bytes: bytes) -> Result[str, ParseError]
     functions.insert(
         "bytes_to_hex".to_string(),
         FunctionType::all_borrow(
-            vec![("bytes".to_string(), Type::List(Box::new(Type::Int)))],
+            vec![("bytes".to_string(), Type::Bytes)],
             result_ty(Type::Str, "ParseError"),
         ),
     );
 
-    // bytes_from_hex(s: str) -> Result[list[int], ParseError]
+    // bytes_from_hex(s: str) -> Result[bytes, ParseError]
     functions.insert(
         "bytes_from_hex".to_string(),
         FunctionType::all_borrow(
             vec![("s".to_string(), Type::Str)],
-            result_ty(Type::List(Box::new(Type::Int)), "ParseError"),
+            result_ty(Type::Bytes, "ParseError"),
         ),
     );
 

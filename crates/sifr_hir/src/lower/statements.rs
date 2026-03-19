@@ -1230,6 +1230,10 @@ pub(super) fn lower_assign(assign: &StmtAssign, ctx: &mut LowerCtx) -> Option<Hi
                 .lookup(&obj_name)
                 .map(|info| info.effective_type().clone())
                 .unwrap_or(Type::Unknown);
+            if matches!(obj_ty.resolve_alias(), Type::Bytes) {
+                ctx.error("bytes is immutable; subscript assignment is not supported".to_string());
+                return None;
+            }
             let outer_index = lower_expr(&inner_sub.slice, ctx)?;
             let inner_index = lower_expr(&sub.slice, ctx)?;
             let value = lower_expr(&assign.value, ctx)?;
@@ -1286,6 +1290,10 @@ pub(super) fn lower_assign(assign: &StmtAssign, ctx: &mut LowerCtx) -> Option<Hi
                     }
                 })
                 .unwrap_or(Type::Unknown);
+            if matches!(field_ty.resolve_alias(), Type::Bytes) {
+                ctx.error("bytes is immutable; subscript assignment is not supported".to_string());
+                return None;
+            }
             let index = lower_expr(&sub.slice, ctx)?;
             let value = lower_expr(&assign.value, ctx)?;
             return Some(HirStmt::AttributeSubscriptAssign {
@@ -1310,6 +1318,10 @@ pub(super) fn lower_assign(assign: &StmtAssign, ctx: &mut LowerCtx) -> Option<Hi
             .lookup(&obj_name)
             .map(|info| info.effective_type().clone())
             .unwrap_or(Type::Unknown);
+        if matches!(obj_ty.resolve_alias(), Type::Bytes) {
+            ctx.error("bytes is immutable; subscript assignment is not supported".to_string());
+            return None;
+        }
         let index = lower_expr(&sub.slice, ctx)?;
         let value = lower_expr(&assign.value, ctx)?;
         return Some(HirStmt::SubscriptAssign {
@@ -1476,6 +1488,12 @@ pub(super) fn lower_aug_assign(aug: &StmtAugAssign, ctx: &mut LowerCtx) -> Optio
             .lookup(&obj_name)
             .map(|info| info.effective_type().clone())
             .unwrap_or(Type::Unknown);
+        if matches!(obj_ty.resolve_alias(), Type::Bytes) {
+            ctx.error(
+                "bytes is immutable; augmented subscript assignment is not supported".to_string(),
+            );
+            return None;
+        }
         let index = lower_expr(&sub.slice, ctx)?;
         let value = lower_expr(&aug.value, ctx)?;
         let op_str = match aug.op {
@@ -1570,6 +1588,7 @@ pub(super) fn lower_aug_assign(aug: &StmtAugAssign, ctx: &mut LowerCtx) -> Optio
         match (&var_ty, value.ty()) {
             (Type::Str, Type::Str) => {}
             (Type::List(_), Type::List(_)) => {}
+            (Type::Bytes, Type::Bytes) => {}
             _ => {
                 if let Err(e) = type_check_binary_op(&var_ty, base_op, value.ty()) {
                     ctx.error(e.message);

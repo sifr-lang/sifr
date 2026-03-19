@@ -1,0 +1,3 @@
+def main() -> None:
+    payload: bytes = b"abc"
+    payload.append(65)
