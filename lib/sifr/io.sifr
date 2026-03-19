@@ -12,6 +12,10 @@ def _invalid_whence_error(whence: int) -> str:
     return "invalid whence: " + str(whence)
 
 
+def _negative_seek_error(offset: int) -> str:
+    return "negative seek position: " + str(offset)
+
+
 def _unsupported_seek_tell_error() -> str:
     return "seek/tell is unsupported for this stream"
 
@@ -286,7 +290,7 @@ class StringIO:
 
         next_pos: int = origin + offset
         if next_pos < 0:
-            next_pos = 0
+            raise IOError(_negative_seek_error(next_pos))
         end: int = len(self._buffer)
         if next_pos > end:
             next_pos = end
@@ -387,7 +391,7 @@ class BytesIO:
 
         next_pos: int = origin + offset
         if next_pos < 0:
-            next_pos = 0
+            raise IOError(_negative_seek_error(next_pos))
         end: int = len(self._buffer)
         if next_pos > end:
             next_pos = end

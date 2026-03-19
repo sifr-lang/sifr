@@ -8,8 +8,10 @@ def main() -> None:
 
     stringio_ok: bool = False
     stringio_closed_rejects: bool = False
+    stringio_negative_seek_rejects: bool = False
     bytesio_ok: bool = False
     bytesio_closed_rejects: bool = False
+    bytesio_negative_seek_rejects: bool = False
     binary_file_ok: bool = False
     cleanup_ok: bool = False
 
@@ -24,6 +26,13 @@ def main() -> None:
         snapshot: str = sio.getvalue()
         position: int = sio.tell()
         stringio_ok = first_two == "ab" and all_text == "abZ" and snapshot == "abZ" and position == 3 and sio.readable() and sio.writable() and sio.seekable()
+
+        try:
+            _bad_seek: int = sio.seek(-1)
+            _ = _bad_seek
+        except IOError as e:
+            _ = str(e.message)
+            stringio_negative_seek_rejects = True
 
         sio.close()
         try:
@@ -43,6 +52,13 @@ def main() -> None:
         snapshot_b: bytes = bio.getvalue()
         position_b: int = bio.tell()
         bytesio_ok = head == b"ab" and all_bytes == b"abZd" and snapshot_b == b"abZd" and position_b == 4 and bio.readable() and bio.writable() and bio.seekable()
+
+        try:
+            _bad_seek_b: int = bio.seek(-1)
+            _ = _bad_seek_b
+        except IOError as e:
+            _ = str(e.message)
+            bytesio_negative_seek_rejects = True
 
         bio.close()
         try:
@@ -75,10 +91,12 @@ def main() -> None:
 
     actual.append(stringio_ok)
     actual.append(stringio_closed_rejects)
+    actual.append(stringio_negative_seek_rejects)
     actual.append(bytesio_ok)
     actual.append(bytesio_closed_rejects)
+    actual.append(bytesio_negative_seek_rejects)
     actual.append(binary_file_ok)
     actual.append(cleanup_ok)
 
-    expected: list[bool] = [True, True, True, True, True, True]
+    expected: list[bool] = [True, True, True, True, True, True, True, True]
     assert_bool_vector_eq(actual, expected)
