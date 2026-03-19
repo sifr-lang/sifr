@@ -82,5 +82,5 @@ Required entry records:
 - Status: completed (approved; no remediation changes required)
 
 ### wave_psp_runtime_0 review_pass_2 (production-grade)
-- Reviewer artifact: pending
-- Status: pending
+- Reviewer artifact: `reviews/phase-ad-hoc-runtime-and-file-object-parity-expansion-wave-psp-runtime-0-review-pass-2.md`
+- Status: completed (conditional pass accepted after governance clarifications: tempfile class timeline is explicitly anchored to wave 2 while wave 0 remains function-prototype based, and logging fail-soft file-sink behavior is explicitly documented as a host-limited policy to be finalized in wave 3)

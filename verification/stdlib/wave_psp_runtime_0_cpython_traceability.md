@@ -31,6 +31,7 @@ Scope: architecture lock for runtime/file-object parity expansion
 - Async `subprocess.Popen` lifecycle remains `unsupported`.
 - `logging.dictConfig` and dynamic handler graph mutation remain `unsupported`.
 - Thread-aware logging ordering guarantees remain `unsupported`.
+- Logging file-sink IO failures are currently `fail-soft` (suppressed rather than surfaced) as a wave-0 host-limited baseline; wave 3 owns final logging error-policy closure.
 - `SpooledTemporaryFile` remains `unsupported`.
 - String-eval `timeit` execution remains `unsupported`.
 - Timezone mutation helpers remain `unsupported`.

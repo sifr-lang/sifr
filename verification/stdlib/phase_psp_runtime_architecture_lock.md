@@ -16,7 +16,7 @@ This lock prevents later waves from re-inventing stream hierarchy, ownership cle
 | `io` hierarchy | Use sealed Sifr hierarchy (`IOBase`, `TextIOBase`, `BinaryIOBase`, `FileHandle`, `BinaryFileHandle`, `BytesIO`, `StringIO`) as the sole expansion target for this phase. |
 | Binary stream payloads | All binary stream and archive payloads consume first-class `bytes` from the predecessor bytes phase; no `list[int]` fallback contracts are allowed. |
 | Lifecycle model | RAII scope-exit cleanup is default; explicit cleanup APIs use typed `Result` on fallible operations; implicit cleanup is best-effort and panic-free. |
-| `tempfile` wrappers | `NamedTemporaryFile` and `TemporaryDirectory` are wave-owned targets; lifecycle ownership must be explicit and deterministic. |
+| `tempfile` wrappers | `NamedTemporaryFile` and `TemporaryDirectory` are wave-owned targets for `wave_psp_runtime_2`; wave 0 intentionally uses `mkstemp`/`mkdtemp` as lifecycle prototype anchors until class wrappers are implemented. |
 | `zipfile` handles | `ZipFile.open(..., "r")` must produce binary-read handles only; streamed write-handle parity remains out of scope in this phase. |
 | `timeit` model | Callable-only timing model is locked; string-eval execution is explicitly out of scope. |
 
@@ -47,6 +47,13 @@ Prototype lifecycle for this phase:
 - explicit cleanup APIs surface typed errors (`Result`),
 - implicit scope-exit cleanup is best-effort and non-panicking,
 - ownership/deletion behavior is documented per wrapper class (`delete=True` style semantics for owned temp files).
+
+### Logging fail-soft note
+
+Current `logging` file-sink behavior is intentionally fail-soft in this architecture lock tranche:
+- file write/open failures are suppressed to preserve deterministic, panic-free execution in host-limited environments,
+- this is treated as an explicit temporary governance stance for wave progression, not as a claim of full logging parity,
+- wave 3 (`logging` expansion) owns the decision to keep, narrow, or remove this fail-soft behavior and must document the final policy explicitly.
 
 ## Permanent Sifr-Safe Diffs (Locked for This Phase)
 
