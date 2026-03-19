@@ -14,13 +14,13 @@ Loop per wave: Plan -> Implement -> Validate -> Demo -> PR -> External completio
 - [x] Positive-path and negative-path validation recorded for each wave
 - [x] Demo runs before opening each wave PR
 - [x] `$(pwd)/scripts/run_all_tests.sh` run before each wave PR
-- [ ] PR opened/reviewed/merged before next wave starts
+- [x] PR opened/reviewed/merged before next wave starts
 - [x] Docs + traceability + waiver state updated before moving on
 
 ## Full Phase To-Do Plan
 1. [x] `wave_psp_bytes_0`: architecture lock, explicit permanent-diff fixtures, and CPython family mapping
 2. [x] `wave_psp_bytes_1`: first-class `bytes` type-system/HIR/lowering/codegen foundation
-3. [ ] `wave_psp_bytes_2`: UTF-8/hex conversion surfaces and `sifr.bytes` compatibility delegation
+3. [x] `wave_psp_bytes_2`: UTF-8/hex conversion surfaces and `sifr.bytes` compatibility delegation
 4. [ ] `wave_psp_bytes_3`: downstream contract adoption and governance closeout
 5. [ ] wave-level extra completion review cycle done
 6. [ ] wave-level extra production-grade review cycle done
@@ -92,7 +92,9 @@ Required entry records:
   - wave gate: `$(pwd)/scripts/run_all_tests.sh` -> PASS (2026-03-19)
 
 ### wave_psp_bytes_2: Conversion Surfaces and Compatibility Migration
-- Status: in_progress (implementation + validation complete on branch; implementation PR pending merge)
+- Status: completed
+- Implementation PR:
+  - `#1297` (merged): https://github.com/yaseralnajjar/sifr/pull/1297
 - Scope:
   - lower `bytes(size)` to a typed `Result[bytes, ValueError]` intrinsic path
   - lower `bytes.from_ints(list[int])` and `bytes.from_hex(str)` as first-class bytes factory calls
@@ -135,6 +137,14 @@ Required entry records:
 ### wave_psp_bytes_1 review_pass_2 (production-grade)
 - Reviewer artifact target: `reviews/phase-ad-hoc-first-class-bytes-and-binary-surface-foundation-wave-psp-bytes-1-review-pass-2.md`
 - Status: timed out after 2400s on 2026-03-19 (no reviewer file produced; no pass-2 remediation changes to apply)
+
+### wave_psp_bytes_2 review_pass_1 (completion-gap)
+- Reviewer artifact target: `reviews/phase-ad-hoc-first-class-bytes-and-binary-surface-foundation-wave-psp-bytes-2-review-pass-1.md`
+- Status: pending
+
+### wave_psp_bytes_2 review_pass_2 (production-grade)
+- Reviewer artifact target: `reviews/phase-ad-hoc-first-class-bytes-and-binary-surface-foundation-wave-psp-bytes-2-review-pass-2.md`
+- Status: pending
 
 ### closure review cycles
 - wave closure completion review: pending
