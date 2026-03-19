@@ -23,6 +23,7 @@ Scope: downstream binary-carrier contract adoption and governance closeout
 | --- | --- | --- |
 | `bytearray` mutable object-model parity | `unsupported` | This phase ships immutable first-class `bytes` only; mutable byte buffers remain deferred. |
 | `memoryview` and general buffer-protocol families | `unsupported` | Zero-copy view semantics and generic buffer protocol are intentionally deferred. |
+| Internal bytes backend storage (`Type::Bytes` lowering to `Vec<i64>` instead of `Vec<u8>`) | `intentional-diff` | Public contract is first-class immutable `bytes`; current codegen backend uses `Vec<i64>` to align `int` index/iteration semantics while byte-domain invariants are enforced at construction/file-conversion boundaries. |
 | Non-UTF-8 codec matrices for `str.encode` / `bytes.decode` | `unsupported` | Wave scope intentionally keeps UTF-8-only typed conversion behavior. |
 | `hashlib` bytes-native update/digest constructor families (`update_bytes`, `digest() -> bytes`, `new_bytes`) | `unsupported` | Current runtime closes string-input/hex-digest object model; bytes-native digest expansion is deferred to RNG/crypto successor scope. |
 | Direct bytes-oriented base64 entrypoints as primary public parity claim | `unsupported` | Current closure keeps text-friendly surface with explicit bytes conversion boundaries; full bytes-first API matrix remains successor work. |
