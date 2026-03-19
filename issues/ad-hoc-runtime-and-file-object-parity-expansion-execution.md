@@ -1,6 +1,6 @@
 # Ad Hoc Phase Execution Checklist (Runtime and File-Object Parity Expansion)
 
-Status: in_progress (started 2026-03-19; wave `wave_psp_runtime_0` review loop completed; wave `wave_psp_runtime_1` review loop completed; wave `wave_psp_runtime_2` implementation and validation complete with review loop pending)
+Status: in_progress (started 2026-03-19; wave `wave_psp_runtime_0` review loop completed; wave `wave_psp_runtime_1` review loop completed; wave `wave_psp_runtime_2` implementation merged with review_pass_1 approved and review_pass_2 pending)
 Owner: ad_hoc_runtime_file_object execution loop
 Reference planning doc:
 - `issues/ad-hoc-runtime-and-file-object-parity-expansion.md`
@@ -97,9 +97,9 @@ Required entry records:
   - wave gate: `$(pwd)/scripts/run_all_tests.sh --profile quick` -> PASS (2026-03-19)
 
 ### wave_psp_runtime_2: Tempfile and Archive Object Lifecycles
-- Status: completed (implementation + validation complete; PR/review cycle pending)
+- Status: completed (implementation merged; completion review pass approved; production-grade review pass pending)
 - Implementation PR:
-  - pending (this branch)
+  - `#1323` (merged): https://github.com/yaseralnajjar/sifr/pull/1323
 - Scope:
   - add deterministic lifecycle wrappers (`NamedTemporaryFile`, `TemporaryDirectory`) with explicit `close()/cleanup()` result surfaces and best-effort scope-exit cleanup
   - extend `zipfile` with bytes-backed write/read helpers plus governance surfaces (`is_zipfile`, `ZIP_STORED`, `ZIP_DEFLATED`, `ZipInfo`, `ZipReadHandle`)
@@ -136,8 +136,8 @@ Required entry records:
 - Status: completed (conditional pass accepted after remediation: negative-seek behavior hardened for in-memory streams and remaining `BinaryFileHandle.read_bytes(size)` compatibility limitation documented explicitly in traceability governance)
 
 ### wave_psp_runtime_2 review_pass_1 (completion-gap)
-- Reviewer artifact: pending
-- Status: pending
+- Reviewer artifact: `reviews/phase-ad-hoc-runtime-and-file-object-parity-expansion-wave-psp-runtime-2-review-pass-1.md`
+- Status: completed (approved; no remediation changes required)
 
 ### wave_psp_runtime_2 review_pass_2 (production-grade)
 - Reviewer artifact: pending
