@@ -75,7 +75,7 @@ Required entry records:
 ### wave_psp_bytes_1: Core `bytes` Type and Compiler Support
 - Status: completed
 - Implementation PR:
-  - pending (this branch; link will be recorded after PR creation/merge)
+  - `#1294`: https://github.com/yaseralnajjar/sifr/pull/1294
 - Scope:
   - add first-class `Type::Bytes` in type-system inference/checking/union ordering
   - lower bytes literals and `bytes()` constructor through HIR/lowering/codegen as immutable sequence values
