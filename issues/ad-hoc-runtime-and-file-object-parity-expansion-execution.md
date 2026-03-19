@@ -14,7 +14,7 @@ Loop per wave: Plan -> Implement -> Validate -> Demo -> PR -> External completio
 - [x] Positive-path and negative-path validation recorded for each wave
 - [x] Demo runs before opening each wave PR
 - [x] `$(pwd)/scripts/run_all_tests.sh` run before each wave PR
-- [ ] PR opened/reviewed/merged before next wave starts
+- [x] PR opened/reviewed/merged before next wave starts
 - [x] Docs + traceability + waiver state updated before moving on
 
 ## Full Phase To-Do Plan
@@ -53,9 +53,9 @@ Required entry records:
 ## Wave Progress
 
 ### wave_psp_runtime_0: Architecture Lock
-- Status: completed (implementation + validation complete; PR/review cycle in progress)
+- Status: completed (implementation merged; completion review pass approved)
 - Implementation PR:
-  - pending (this branch)
+  - `#1317` (merged): https://github.com/yaseralnajjar/sifr/pull/1317
 - Scope:
   - lock sealed stream hierarchy and lifecycle-cleanup model for this phase
   - lock explicit permanent divergences (`_pyio` full inheritance, async `Popen`, `dictConfig`/dynamic graphs, thread-order claims, `SpooledTemporaryFile`, string-eval `timeit`, timezone mutation helpers)
@@ -78,8 +78,8 @@ Required entry records:
 ## External Review Passes
 
 ### wave_psp_runtime_0 review_pass_1 (completion-gap)
-- Reviewer artifact: pending
-- Status: pending
+- Reviewer artifact: `reviews/phase-ad-hoc-runtime-and-file-object-parity-expansion-wave-psp-runtime-0-review-pass-1.md`
+- Status: completed (approved; no remediation changes required)
 
 ### wave_psp_runtime_0 review_pass_2 (production-grade)
 - Reviewer artifact: pending
