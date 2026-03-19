@@ -180,6 +180,7 @@ Required entry records:
   - positive path: representative bytes-native regressions:
     - `cargo run -q -p sifr -- run crates/sifr/tests/e2e/pass/phase_psp_bytes_4_raw_backend_and_lowering_separation.sifr` -> PASS
     - `cargo run -q -p sifr -- run demos/ad_hoc_bytes_wave4_raw_backend_storage_demo.sifr` -> PASS
+    - `cargo run -q -p sifr -- run demos/ad_hoc_bytes_wave5_successor_ffi_readiness_demo.sifr` -> PASS
     - `cargo run -q -p sifr -- run crates/sifr/tests/e2e/pass/cpython_io_subset.sifr` -> PASS
     - `cargo run -q -p sifr -- run crates/sifr/tests/e2e/pass/cpython_hashlib_object_model_subset.sifr` -> PASS
   - negative path: unsupported mutable/view contracts remain explicit:
