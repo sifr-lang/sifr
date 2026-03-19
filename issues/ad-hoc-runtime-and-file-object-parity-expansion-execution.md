@@ -1,6 +1,6 @@
 # Ad Hoc Phase Execution Checklist (Runtime and File-Object Parity Expansion)
 
-Status: in_progress (started 2026-03-19; wave `wave_psp_runtime_0` review loop completed; wave `wave_psp_runtime_1` review loop completed; wave `wave_psp_runtime_2` review loop completed)
+Status: in_progress (started 2026-03-19; wave `wave_psp_runtime_0` review loop completed; wave `wave_psp_runtime_1` review loop completed; wave `wave_psp_runtime_2` review loop completed; wave `wave_psp_runtime_3` implementation merged and review pass 1 approved)
 Owner: ad_hoc_runtime_file_object execution loop
 Reference planning doc:
 - `issues/ad-hoc-runtime-and-file-object-parity-expansion.md`
@@ -119,6 +119,31 @@ Required entry records:
   - remediation path: `NamedTemporaryFile`/`TemporaryDirectory` cleanup now propagates `remove_file`/`rmdir_all` failures via `Result`; `ZipReadHandle.read_bytes` now handles negative sizes explicitly as read-all and wave fixture/demo cover it; `ZipFile` write gating now accepts only `w`/`a`/`wb`/`ab` (rejects invalid mixed modes such as `rw`) (PASS)
   - wave gate: `$(pwd)/scripts/run_all_tests.sh --profile quick` -> PASS (2026-03-19)
 
+### wave_psp_runtime_3: Logging, Clock, and Timer Object Expansion
+- Status: in_progress (implementation merged; completion review pass approved; production-grade review pass pending)
+- Implementation PR:
+  - `#1327` (merged): https://github.com/yaseralnajjar/sifr/pull/1327
+- Scope:
+  - expand `sifr.logging` with deterministic handler family (`Handler`, `StreamHandler`, `FileHandler`, `NullHandler`) and logger wiring (`add_handler`, `set_stream_handler`, `set_null_handler`, `clear_handler`) under single-process deterministic governance
+  - expand `sifr.time` with immutable `struct_time`, explicit `gmtime_struct/localtime_struct`, `mktime`, and stable timezone constants (`TIMEZONE`, `ALTZONE`, `DAYLIGHT`, `TZNAME`)
+  - expand `sifr.timeit` with callable `Timer` object surface (`timeit`, `repeat`, `__call__`) while preserving callable-only statement model
+  - add wave-3 CPython traceability matrix and phase/demo fixtures for logging/time/timeit object surfaces
+- Validation:
+  - positive path: `cargo run -q -p sifr -- run crates/sifr/tests/e2e/pass/phase_psp_runtime_3_logging_time_timeit_object_surface.sifr` -> PASS
+  - positive path: `cargo run -q -p sifr -- run demos/ad_hoc_runtime_wave3_logging_time_timeit_object_surface_demo.sifr` -> PASS (`ad_hoc_runtime_wave3_logging_time_timeit_object_surface_demo: ok`)
+  - positive regression: `cargo run -q -p sifr -- run crates/sifr/tests/e2e/pass/stdlib_logging_consolidated.sifr` -> PASS
+  - positive regression: `cargo run -q -p sifr -- run crates/sifr/tests/e2e/pass/cpython_logging_subset.sifr` -> PASS
+  - positive regression: `cargo run -q -p sifr -- run crates/sifr/tests/e2e/pass/stdlib_time_consolidated.sifr` -> PASS
+  - positive regression: `cargo run -q -p sifr -- run crates/sifr/tests/e2e/pass/cpython_time_subset.sifr` -> PASS
+  - positive regression: `cargo run -q -p sifr -- run crates/sifr/tests/e2e/pass/stdlib_timeit_consolidated.sifr` -> PASS
+  - positive regression: `cargo run -q -p sifr -- run crates/sifr/tests/e2e/pass/cpython_timeit_subset.sifr` -> PASS
+  - positive regression: `cargo run -q -p sifr -- run crates/sifr/tests/e2e/pass/phase_psp_runtime_0_architecture_lock.sifr` -> PASS
+  - negative regression: `cargo run -q -p sifr -- check crates/sifr/tests/e2e/fail/phase_psp_runtime_0_logging_dictconfig_unsupported.sifr` -> expected compile failure (PASS)
+  - negative regression: `cargo run -q -p sifr -- check crates/sifr/tests/e2e/fail/phase_psp_runtime_0_logging_loggeradapter_unsupported.sifr` -> expected compile failure (PASS)
+  - negative regression: `cargo run -q -p sifr -- check crates/sifr/tests/e2e/fail/phase_psp_runtime_0_timeit_string_eval_unsupported.sifr` -> expected compile failure (PASS)
+  - negative regression: `cargo run -q -p sifr -- check crates/sifr/tests/e2e/fail/phase_psp_runtime_0_timezone_mutation_unsupported.sifr` -> expected compile failure (PASS)
+  - wave gate: `$(pwd)/scripts/run_all_tests.sh` -> PASS (profile `pr`, report signature `2161ea8c3fd4e3df`, 2026-03-20)
+
 ## External Review Passes
 
 ### wave_psp_runtime_0 review_pass_1 (completion-gap)
@@ -144,3 +169,7 @@ Required entry records:
 ### wave_psp_runtime_2 review_pass_2 (production-grade)
 - Reviewer artifact: `reviews/phase-ad-hoc-runtime-and-file-object-parity-expansion-wave-psp-runtime-2-review-pass-2.md`
 - Status: completed (conditional pass closed via `#1325` remediation: cleanup error propagation, explicit negative-size semantics, strict write-mode gating; constructor-time `Result` propagation remains constrained by current class-lowering behavior and is documented for wave-3 follow-up)
+
+### wave_psp_runtime_3 review_pass_1 (completion-gap)
+- Reviewer artifact: `reviews/phase-ad-hoc-runtime-and-file-object-parity-expansion-wave-psp-runtime-3-review-pass-1.md`
+- Status: completed (approved; no remediation changes required)
