@@ -1,0 +1,41 @@
+# wave_psp_bytes_2 CPython Traceability Matrix
+
+Wave: `wave_psp_bytes_2`  
+Scope: typed conversion surfaces and compatibility delegation on first-class `bytes`
+
+## CPython Harvest Inputs
+
+- `Lib/test/test_bytes.py` (constructor/conversion families)
+- `Lib/test/test_codecs.py` (encode/decode codec behavior families)
+- `Lib/test/test_base64.py` (hex/text conversion adjacency)
+
+## Adopt / Adapt / Waive (Wave 2 Conversion Closure)
+
+| CPython family | Sifr surface direction | State | Local regression/demo |
+| --- | --- | --- | --- |
+| constructor and conversion families (`bytes(size)`, `bytes.from_ints`, `bytes.from_hex`) | explicit typed conversion APIs returning `Result` with safe failure semantics | `adapted` (closed for wave-2 scope) | `crates/sifr/tests/e2e/pass/phase_psp_bytes_2_conversion_surfaces.sifr`<br>`crates/sifr/tests/e2e/pass/phase_psp_bytes_2_conversion_negative_paths.sifr` |
+| text/binary boundary (`str.encode`, `bytes.decode`) | explicit UTF-8-only typed boundary with `Result` errors | `adapted` | `demos/ad_hoc_bytes_wave2_conversion_surface_demo.sifr`<br>`demos/ad_hoc_bytes_wave2_negative_boundary_demo.sifr` |
+| `lib/sifr/bytes.sifr` compatibility exports | delegate legacy helper entrypoints to first-class `bytes` conversion implementation | `adapted` (closed for compatibility migration scope) | `crates/sifr/tests/e2e/pass/stdlib_bytes.sifr`<br>`crates/sifr/tests/e2e/pass/stdlib_bytes_safety.sifr` |
+
+## Classified waivers carried from wave 2
+
+| Surface | State | Rationale |
+| --- | --- | --- |
+| Non-UTF-8 codec matrices for encode/decode | `unsupported` | Wave-2 scope intentionally enforces UTF-8-only conversion behavior. |
+| Implicit text/binary coercions | `unsupported` | Conversion remains explicit and typed; no implicit coercion is introduced. |
+| Mutable/view/buffer binary families (`bytearray`, `memoryview`, buffer protocol) | `unsupported` | These remain out of scope for this phase and are tracked across bytes governance ledgers. |
+
+## Local fixture anchors (wave 2)
+
+- Pass fixtures:
+  - `crates/sifr/tests/e2e/pass/phase_psp_bytes_2_conversion_surfaces.sifr`
+  - `crates/sifr/tests/e2e/pass/phase_psp_bytes_2_conversion_negative_paths.sifr`
+- Fail fixtures:
+  - `crates/sifr/tests/e2e/fail/phase_psp_bytes_2_constructor_non_int.sifr`
+  - `crates/sifr/tests/e2e/fail/phase_psp_bytes_2_from_hex_non_string.sifr`
+  - `crates/sifr/tests/e2e/fail/phase_psp_bytes_2_from_ints_non_int_list.sifr`
+  - `crates/sifr/tests/e2e/fail/phase_psp_bytes_2_encode_non_string_codec.sifr`
+  - `crates/sifr/tests/e2e/fail/phase_psp_bytes_2_decode_non_string_codec.sifr`
+- Demos:
+  - `demos/ad_hoc_bytes_wave2_conversion_surface_demo.sifr`
+  - `demos/ad_hoc_bytes_wave2_negative_boundary_demo.sifr`

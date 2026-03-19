@@ -154,8 +154,8 @@ Required entry records:
 - Status: completed (no blockers; remediated reviewer suggestions on bytes unsupported-method diagnostics and representation documentation)
 
 ### wave_psp_bytes_1 review_pass_2 (production-grade)
-- Reviewer artifact target: `reviews/phase-ad-hoc-first-class-bytes-and-binary-surface-foundation-wave-psp-bytes-1-review-pass-2.md`
-- Status: timed out after 2400s on 2026-03-19 (no reviewer file produced; no pass-2 remediation changes to apply)
+- Reviewer artifact: `reviews/phase-ad-hoc-first-class-bytes-and-binary-surface-foundation-wave-psp-bytes-1-review-pass-2.md`
+- Status: completed (approved for production readiness on rerun after prior timeout; no remediation changes required)
 
 ### wave_psp_bytes_2 review_pass_1 (completion-gap)
 - Reviewer artifact: `reviews/phase-ad-hoc-first-class-bytes-and-binary-surface-foundation-wave-psp-bytes-2-review-pass-1.md`
@@ -174,7 +174,7 @@ Required entry records:
 - Status: completed (conditional approval remediated by documenting internal `Type::Bytes` backend representation as an explicit intentional-diff governance item and correcting public-phase wording to match shipped implementation)
 
 ### closure review cycles
-- wave closure completion review: pending
+- wave closure completion review: completed (`reviews/phase-ad-hoc-first-class-bytes-and-binary-surface-foundation-wave-closure-completion-check-review-pass-1.md`; reviewer gaps remediated via wave-1 pass-2 rerun and explicit wave-1/wave-2 CPython traceability ledgers)
 - wave closure production-grade review: pending
 - milestone closure completion review: pending
 - milestone closure production-grade review: pending
