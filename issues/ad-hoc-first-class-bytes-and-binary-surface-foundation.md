@@ -110,7 +110,8 @@ This phase should be executed as a focused compiler-and-runtime migration, not a
 ### `bytes`
 
 - `bytes` becomes a first-class immutable value type.
-- The canonical runtime representation is an owned contiguous byte buffer compatible with Rust `Vec<u8>` semantics.
+- The canonical runtime contract is an owned immutable contiguous byte buffer.
+- Current codegen backend representation is `Vec<i64>` with enforced byte-domain (`0..255`) invariants and explicit conversion boundaries; this is an internal representation detail (see `internal_docs/architecture.md`, "Bytes Representation Note").
 - `bytes` supports:
   - equality and inequality
   - concatenation

@@ -170,8 +170,8 @@ Required entry records:
 - Status: completed (approved; no remediation changes required)
 
 ### wave_psp_bytes_3 review_pass_2 (production-grade)
-- Reviewer artifact target: `reviews/phase-ad-hoc-first-class-bytes-and-binary-surface-foundation-wave-psp-bytes-3-review-pass-2.md`
-- Status: pending
+- Reviewer artifact: `reviews/phase-ad-hoc-first-class-bytes-and-binary-surface-foundation-wave-psp-bytes-3-review-pass-2.md`
+- Status: completed (conditional approval remediated by documenting internal `Type::Bytes` backend representation as an explicit intentional-diff governance item and correcting public-phase wording to match shipped implementation)
 
 ### closure review cycles
 - wave closure completion review: pending
