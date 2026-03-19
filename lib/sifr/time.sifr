@@ -4,21 +4,292 @@ from _sifr.time import strptime as _strptime_intrinsic
 from _sifr.time import gmtime as _gmtime_intrinsic
 from _sifr.time import localtime as _localtime_intrinsic
 
+# Stable timezone constants (no timezone mutation surface in this phase).
+TIMEZONE: int = 0
+ALTZONE: int = 0
+DAYLIGHT: int = 0
+TZNAME: tuple[str, str] = ("UTC", "UTC")
+
+
+def _is_leap_year(year: int) -> bool:
+    return (year % 4 == 0 and year % 100 != 0) or (year % 400 == 0)
+
+
+def _days_in_year(year: int) -> int:
+    if _is_leap_year(year):
+        return 366
+    return 365
+
+
+def _days_in_month(year: int, month: int) -> int:
+    month_days: list[int] = [31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31]
+    idx: int = month - 1
+    d: int | None = month_days[idx]
+    if month == 2 and _is_leap_year(year):
+        return 29
+    if d is not None:
+        return d
+    return 0
+
+
+def _substring(value: str, start: int, end: int) -> str:
+    result: str = ""
+    i: int = start
+    while i < end:
+        ch: str | None = value[i]
+        if ch is not None:
+            result = result + ch
+        i = i + 1
+    return result
+
+
+def _digit_value(ch: str) -> int | None:
+    if ch == "0":
+        return 0
+    if ch == "1":
+        return 1
+    if ch == "2":
+        return 2
+    if ch == "3":
+        return 3
+    if ch == "4":
+        return 4
+    if ch == "5":
+        return 5
+    if ch == "6":
+        return 6
+    if ch == "7":
+        return 7
+    if ch == "8":
+        return 8
+    if ch == "9":
+        return 9
+    return None
+
+
+def _parse_decimal(text: str) -> int | None:
+    if len(text) == 0:
+        return None
+    out: int = 0
+    i: int = 0
+    while i < len(text):
+        ch_opt: str | None = text[i]
+        if ch_opt is None:
+            return None
+        ch: str = ch_opt
+        digit_opt: int | None = _digit_value(ch)
+        if digit_opt is None:
+            return None
+        digit: int = digit_opt
+        out = out * 10 + digit
+        i = i + 1
+    return out
+
+
+def _int_or_negative_one(value: int | None) -> int:
+    if value is None:
+        return -1
+    return value
+
+
+def _day_of_year(year: int, month: int, day: int) -> int:
+    yday: int = 0
+    m: int = 1
+    while m < month:
+        yday = yday + _days_in_month(year, m)
+        m = m + 1
+    return yday + day
+
+
+def _weekday(year: int, month: int, day: int) -> int:
+    # Monday=0 ... Sunday=6, matching CPython struct_time.
+    days_since_epoch: int = 0
+    if year >= 1970:
+        y: int = 1970
+        while y < year:
+            days_since_epoch = days_since_epoch + _days_in_year(y)
+            y = y + 1
+    else:
+        y: int = 1969
+        while y >= year:
+            days_since_epoch = days_since_epoch - _days_in_year(y)
+            y = y - 1
+
+    m: int = 1
+    while m < month:
+        days_since_epoch = days_since_epoch + _days_in_month(year, m)
+        m = m + 1
+
+    days_since_epoch = days_since_epoch + day - 1
+
+    # 1970-01-01 was Thursday (3 with Monday=0 indexing).
+    wd: int = (3 + days_since_epoch) % 7
+    if wd < 0:
+        wd = wd + 7
+    return wd
+
+
+def _valid_date(year: int, month: int, day: int) -> bool:
+    if year <= 0:
+        return False
+    if month < 1 or month > 12:
+        return False
+    max_day: int = _days_in_month(year, month)
+    return day >= 1 and day <= max_day
+
+
+class struct_time:
+    tm_year: int
+    tm_mon: int
+    tm_mday: int
+    tm_hour: int
+    tm_min: int
+    tm_sec: int
+    tm_wday: int
+    tm_yday: int
+    tm_isdst: int
+
+    def __init__(
+        self,
+        tm_year: int,
+        tm_mon: int,
+        tm_mday: int,
+        tm_hour: int,
+        tm_min: int,
+        tm_sec: int,
+        tm_wday: int,
+        tm_yday: int,
+        tm_isdst: int,
+    ) -> None:
+        self.tm_year = tm_year
+        self.tm_mon = tm_mon
+        self.tm_mday = tm_mday
+        self.tm_hour = tm_hour
+        self.tm_min = tm_min
+        self.tm_sec = tm_sec
+        self.tm_wday = tm_wday
+        self.tm_yday = tm_yday
+        self.tm_isdst = tm_isdst
+
+    def as_tuple(self) -> tuple[int, int, int, int, int, int, int, int, int]:
+        return (
+            self.tm_year,
+            self.tm_mon,
+            self.tm_mday,
+            self.tm_hour,
+            self.tm_min,
+            self.tm_sec,
+            self.tm_wday,
+            self.tm_yday,
+            self.tm_isdst,
+        )
+
+    def isoformat(self) -> str:
+        y: str = str(self.tm_year)
+        mo: str = str(self.tm_mon)
+        if len(mo) < 2:
+            mo = "0" + mo
+        d: str = str(self.tm_mday)
+        if len(d) < 2:
+            d = "0" + d
+        h: str = str(self.tm_hour)
+        if len(h) < 2:
+            h = "0" + h
+        mi: str = str(self.tm_min)
+        if len(mi) < 2:
+            mi = "0" + mi
+        s: str = str(self.tm_sec)
+        if len(s) < 2:
+            s = "0" + s
+        return y + "-" + mo + "-" + d + "T" + h + ":" + mi + ":" + s
+
+    def __str__(self) -> str:
+        return self.isoformat()
+
+    def __eq__(self, other: struct_time) -> bool:
+        return self.as_tuple() == other.as_tuple()
+
+
+def _invalid_struct_time() -> struct_time:
+    return struct_time(0, 0, 0, 0, 0, 0, 0, 0, 0)
+
+
+def _to_struct_time(rendered: str) -> struct_time:
+    if len(rendered) < 19:
+        return _invalid_struct_time()
+    if rendered[4] != "-" or rendered[7] != "-" or rendered[10] != "T" or rendered[13] != ":" or rendered[16] != ":":
+        return _invalid_struct_time()
+
+    year: int = _int_or_negative_one(_parse_decimal(_substring(rendered, 0, 4)))
+    month: int = _int_or_negative_one(_parse_decimal(_substring(rendered, 5, 7)))
+    day: int = _int_or_negative_one(_parse_decimal(_substring(rendered, 8, 10)))
+    hour: int = _int_or_negative_one(_parse_decimal(_substring(rendered, 11, 13)))
+    minute: int = _int_or_negative_one(_parse_decimal(_substring(rendered, 14, 16)))
+    second: int = _int_or_negative_one(_parse_decimal(_substring(rendered, 17, 19)))
+    if year < 0 or month < 0 or day < 0 or hour < 0 or minute < 0 or second < 0:
+        return _invalid_struct_time()
+
+    if not _valid_date(year, month, day):
+        return _invalid_struct_time()
+
+    wday: int = _weekday(year, month, day)
+    yday: int = _day_of_year(year, month, day)
+    return struct_time(year, month, day, hour, minute, second, wday, yday, 0)
+
+
 # CPython-compatible aliases
 def time() -> float:
     return time_now()
 
+
 def strftime(fmt: str, epoch: float) -> str:
     return time_format(epoch, fmt)
+
 
 def strptime(s: str, fmt: str) -> Result[str, ValueError]:
     # Parse a time string according to a format, returning ISO datetime string.
     return _strptime_intrinsic(s, fmt)
 
+
 def gmtime(epoch: float) -> str:
-    # Return UTC time as ISO string for the given epoch.
     return _gmtime_intrinsic(epoch)
 
+
 def localtime(epoch: float) -> str:
-    # Return local time as ISO string for the given epoch.
     return _localtime_intrinsic(epoch)
+
+
+def gmtime_struct(epoch: float) -> struct_time:
+    rendered: str = _gmtime_intrinsic(epoch)
+    return _to_struct_time(rendered)
+
+
+def localtime_struct(epoch: float) -> struct_time:
+    rendered: str = _localtime_intrinsic(epoch)
+    return _to_struct_time(rendered)
+
+
+def mktime(t: struct_time) -> float:
+    if not _valid_date(t.tm_year, t.tm_mon, t.tm_mday):
+        return 0.0
+
+    days: int = 0
+    if t.tm_year >= 1970:
+        y: int = 1970
+        while y < t.tm_year:
+            days = days + _days_in_year(y)
+            y = y + 1
+    else:
+        y: int = 1969
+        while y >= t.tm_year:
+            days = days - _days_in_year(y)
+            y = y - 1
+
+    m: int = 1
+    while m < t.tm_mon:
+        days = days + _days_in_month(t.tm_year, m)
+        m = m + 1
+
+    days = days + t.tm_mday - 1
+    stamp: int = days * 86400 + t.tm_hour * 3600 + t.tm_min * 60 + t.tm_sec
+    return float(stamp)

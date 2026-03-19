@@ -1,5 +1,5 @@
 # Adapted CPython timeit subset for sifr.timeit (canonical bool-vector format)
-from sifr.timeit import default_timer, timeit, repeat
+from sifr.timeit import default_timer, timeit, repeat, Timer
 from sifr.time import sleep
 from sifr.test import assert_bool_vector_eq
 
@@ -59,17 +59,32 @@ def collect_edge_actual() -> list[bool]:
     return actual
 
 
+def collect_timer_class_actual() -> list[bool]:
+    actual: list[bool] = []
+    timer: Timer = Timer()
+    elapsed: float = timer.timeit(workload, 4)
+    actual.append(elapsed >= 0.0)
+
+    repeated: list[float] = timer.repeat(workload, 2, 4)
+    actual.append(len(repeated) == 2 and all_non_negative(repeated))
+
+    called_elapsed: float = timer(workload, 4)
+    actual.append(called_elapsed >= 0.0)
+    return actual
+
+
 def append_all(mut target: list[bool], values: list[bool]):
     for value in values:
         target.append(value)
 
 
 def main():
-    expected: list[bool] = [True, True, True, True, True, True, True, True]
+    expected: list[bool] = [True, True, True, True, True, True, True, True, True, True, True]
     actual: list[bool] = []
     append_all(actual, collect_timer_actual())
     append_all(actual, collect_repeat_actual())
     append_all(actual, collect_edge_actual())
+    append_all(actual, collect_timer_class_actual())
 
     assert_bool_vector_eq(actual, expected)
     assert str("cpython_timeit_subset: pass") == "cpython_timeit_subset: pass"

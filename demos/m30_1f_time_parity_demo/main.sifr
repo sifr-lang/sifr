@@ -1,4 +1,4 @@
-from sifr.time import time_now, time, sleep, strftime, strptime, gmtime, localtime, perf_counter, monotonic
+from sifr.time import time_now, time, sleep, strftime, strptime, gmtime_struct, localtime_struct, perf_counter, monotonic, struct_time, mktime
 from sifr.test import assert_bool_vector_eq
 
 
@@ -18,10 +18,11 @@ def collect_clock_actual() -> list[bool]:
 def collect_format_actual() -> list[bool]:
     actual: list[bool] = []
     actual.append(strftime("%Y-%m-%d %H:%M:%S", 0.0) == "1970-01-01 00:00:00")
-    actual.append(gmtime(0.0) == "1970-01-01T00:00:00")
+    gmt: struct_time = gmtime_struct(0.0)
+    actual.append(gmt.tm_year == 1970 and gmt.tm_mon == 1 and gmt.tm_mday == 1 and gmt.tm_hour == 0 and gmt.tm_min == 0 and gmt.tm_sec == 0)
 
-    local: str = localtime(0.0)
-    actual.append(len(local) == 19)
+    local: struct_time = localtime_struct(0.0)
+    actual.append(local.tm_year > 0 and local.tm_yday >= 1)
     return actual
 
 
@@ -46,6 +47,9 @@ def collect_parse_and_safety_actual() -> list[bool]:
 
     sleep(-0.05)
     actual.append(True)
+
+    epoch_tm: struct_time = gmtime_struct(0.0)
+    actual.append(mktime(epoch_tm) == 0.0)
     return actual
 
 
@@ -55,7 +59,7 @@ def append_all(mut target: list[bool], values: list[bool]):
 
 
 def main():
-    expected: list[bool] = [True, True, True, True, True, True, True, True]
+    expected: list[bool] = [True, True, True, True, True, True, True, True, True]
     actual: list[bool] = []
     append_all(actual, collect_clock_actual())
     append_all(actual, collect_format_actual())

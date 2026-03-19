@@ -1,5 +1,6 @@
 # Adapted CPython time subset for sifr.time (canonical bool-vector format)
-from sifr.time import time_now, time, sleep, strftime, strptime, gmtime, localtime, perf_counter, monotonic
+from sifr.time import time_now, time, sleep, strftime, strptime, gmtime_struct, localtime_struct, perf_counter, monotonic, struct_time
+from sifr.time import mktime, TIMEZONE, ALTZONE, DAYLIGHT, TZNAME
 from sifr.test import assert_bool_vector_eq
 
 
@@ -25,12 +26,16 @@ def collect_format_actual() -> list[bool]:
     fmt_ok: bool = strftime("%Y-%m-%d %H:%M:%S", 0.0) == "1970-01-01 00:00:00"
     actual.append(fmt_ok)
 
-    gmt_ok: bool = gmtime(0.0) == "1970-01-01T00:00:00"
+    gmt: struct_time = gmtime_struct(0.0)
+    gmt_ok: bool = gmt.tm_year == 1970 and gmt.tm_mon == 1 and gmt.tm_mday == 1 and gmt.tm_hour == 0 and gmt.tm_min == 0 and gmt.tm_sec == 0
     actual.append(gmt_ok)
 
-    local: str = localtime(0.0)
-    local_shape_ok: bool = len(local) == 19
+    local: struct_time = localtime_struct(0.0)
+    local_shape_ok: bool = local.tm_year > 0 and local.tm_mon >= 1 and local.tm_mon <= 12 and local.tm_mday >= 1 and local.tm_mday <= 31 and local.tm_yday >= 1
     actual.append(local_shape_ok)
+
+    timezone_constants_ok: bool = TIMEZONE == 0 and ALTZONE == 0 and DAYLIGHT == 0 and TZNAME[0] == "UTC" and TZNAME[1] == "UTC"
+    actual.append(timezone_constants_ok)
     return actual
 
 
@@ -56,8 +61,13 @@ def collect_parse_and_safety_actual() -> list[bool]:
     sleep(-0.05)
     actual.append(True)
 
-    out_of_range_safe: bool = gmtime(1.0e20) == "" and localtime(1.0e20) == ""
+    out_of_range_gmt: struct_time = gmtime_struct(1.0e20)
+    out_of_range_local: struct_time = localtime_struct(1.0e20)
+    out_of_range_safe: bool = out_of_range_gmt.tm_year == 0 and out_of_range_local.tm_year == 0
     actual.append(out_of_range_safe)
+
+    epoch_tm: struct_time = gmtime_struct(0.0)
+    actual.append(mktime(epoch_tm) == 0.0)
     return actual
 
 
@@ -67,7 +77,7 @@ def append_all(mut target: list[bool], values: list[bool]):
 
 
 def main():
-    expected: list[bool] = [True, True, True, True, True, True, True, True, True]
+    expected: list[bool] = [True, True, True, True, True, True, True, True, True, True, True]
     actual: list[bool] = []
     append_all(actual, collect_clock_actual())
     append_all(actual, collect_format_actual())
