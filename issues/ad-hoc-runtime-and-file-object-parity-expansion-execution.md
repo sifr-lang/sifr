@@ -1,6 +1,6 @@
 # Ad Hoc Phase Execution Checklist (Runtime and File-Object Parity Expansion)
 
-Status: in_progress (started 2026-03-19; wave `wave_psp_runtime_0` architecture-lock implementation in progress)
+Status: in_progress (started 2026-03-19; wave `wave_psp_runtime_0` review loop completed; wave `wave_psp_runtime_1` implementation and validation complete with review loop pending)
 Owner: ad_hoc_runtime_file_object execution loop
 Reference planning doc:
 - `issues/ad-hoc-runtime-and-file-object-parity-expansion.md`
@@ -19,7 +19,7 @@ Loop per wave: Plan -> Implement -> Validate -> Demo -> PR -> External completio
 
 ## Full Phase To-Do Plan
 1. [x] `wave_psp_runtime_0`: architecture lock for sealed hierarchy, lifecycle model, and permanent divergence boundaries
-2. [ ] `wave_psp_runtime_1`: `io` and in-memory stream hierarchy (`BytesIO`, `StringIO`)
+2. [x] `wave_psp_runtime_1`: `io` and in-memory stream hierarchy (`BytesIO`, `StringIO`)
 3. [ ] `wave_psp_runtime_2`: tempfile and zipfile object lifecycle expansion
 4. [ ] `wave_psp_runtime_3`: logging/time/timeit object-surface expansion
 5. [ ] `wave_psp_runtime_4`: synchronous subprocess boundary cleanup and final governance closure
@@ -75,6 +75,26 @@ Required entry records:
   - negative path: `cargo run -q -p sifr -- check crates/sifr/tests/e2e/fail/phase_psp_runtime_0_timezone_mutation_unsupported.sifr` -> expected compile failure (PASS)
   - wave gate: `$(pwd)/scripts/run_all_tests.sh --profile quick` -> PASS (2026-03-19)
 
+### wave_psp_runtime_1: `io` and In-Memory Stream Hierarchy
+- Status: completed (implementation + validation complete; PR/review cycle pending)
+- Implementation PR:
+  - pending (this branch)
+- Scope:
+  - add first-class in-memory stream wrappers (`StringIO`, `BytesIO`) with typed cursor/lifecycle APIs
+  - add binary-handle entry `open_binary(...) -> Result[BinaryFileHandle, IOError]` while preserving `open(...)` compatibility
+  - extend file-handle and stream surfaces with explicit `closed`/`flush`/`seek`/`tell`/`readable`/`writable`/`seekable` contracts
+  - add wave-1 CPython traceability matrix and explicit typed-boundary negative fixtures for in-memory stream misuse
+- Validation:
+  - positive path: `cargo run -q -p sifr -- run crates/sifr/tests/e2e/pass/phase_psp_runtime_1_io_in_memory_stream_hierarchy.sifr` -> PASS
+  - positive path: `cargo run -q -p sifr -- run demos/ad_hoc_runtime_wave1_io_in_memory_hierarchy_demo.sifr` -> PASS (`ad_hoc_runtime_wave1_io_in_memory_hierarchy_demo: ok`)
+  - positive regression: `cargo run -q -p sifr -- run crates/sifr/tests/e2e/pass/phase_psp_runtime_0_architecture_lock.sifr` -> PASS
+  - positive regression: `cargo run -q -p sifr -- run crates/sifr/tests/e2e/pass/stdlib_io_consolidated.sifr` -> PASS
+  - positive regression: `cargo run -q -p sifr -- run demos/m30_1f_logging_parity_demo/main.sifr` -> PASS
+  - negative path: `cargo run -q -p sifr -- check crates/sifr/tests/e2e/fail/phase_psp_runtime_1_stringio_read_bytes_unsupported.sifr` -> expected compile failure (PASS)
+  - negative path: `cargo run -q -p sifr -- check crates/sifr/tests/e2e/fail/phase_psp_runtime_1_bytesio_text_write_unsupported.sifr` -> expected compile failure (PASS)
+  - negative regression: `cargo run -q -p sifr -- check crates/sifr/tests/e2e/fail/phase_psp_runtime_0_pyio_inheritance_unsupported.sifr` -> expected compile failure (PASS)
+  - wave gate: `$(pwd)/scripts/run_all_tests.sh --profile quick` -> PASS (2026-03-19)
+
 ## External Review Passes
 
 ### wave_psp_runtime_0 review_pass_1 (completion-gap)
@@ -84,3 +104,11 @@ Required entry records:
 ### wave_psp_runtime_0 review_pass_2 (production-grade)
 - Reviewer artifact: `reviews/phase-ad-hoc-runtime-and-file-object-parity-expansion-wave-psp-runtime-0-review-pass-2.md`
 - Status: completed (conditional pass accepted after governance clarifications: tempfile class timeline is explicitly anchored to wave 2 while wave 0 remains function-prototype based, and logging fail-soft file-sink behavior is explicitly documented as a host-limited policy to be finalized in wave 3)
+
+### wave_psp_runtime_1 review_pass_1 (completion-gap)
+- Reviewer artifact: pending
+- Status: pending
+
+### wave_psp_runtime_1 review_pass_2 (production-grade)
+- Reviewer artifact: pending
+- Status: pending
