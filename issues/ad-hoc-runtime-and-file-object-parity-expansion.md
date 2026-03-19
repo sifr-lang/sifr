@@ -2,7 +2,7 @@
 
 Status: open (documented 2026-03-18)
 Context: follow-up phase after structured/class-surface parity expansion and the bytes/binary-surface foundation
-Execution readiness: implementation-ready in sequence after `issues/ad-hoc-first-class-bytes-and-binary-surface-foundation.md`; wave 1 still requires recorded lifecycle and cleanup prototype evidence from architecture lock validation
+Execution readiness: implementation-ready in sequence after `issues/ad-hoc-first-class-bytes-and-binary-surface-foundation.md`; predecessor wave `wave_psp_bytes_3` now locks first-class `bytes` as the canonical binary carrier for downstream runtime/file-object APIs, and wave 1 still requires recorded lifecycle and cleanup prototype evidence from architecture lock validation
 
 ## Objective
 

@@ -27,10 +27,10 @@ class FileHandle:
     def close(self) -> None:
         file_close(self._handle)
 
-    def read_bytes(self) -> Result[list[int], IOError]:
+    def read_bytes(self) -> Result[bytes, IOError]:
         return file_read_bytes(self._handle)
 
-    def write_bytes(self, data: list[int]) -> Result[None, IOError]:
+    def write_bytes(self, data: bytes) -> Result[None, IOError]:
         return file_write_bytes(self._handle, data)
 
     def __enter__(self) -> FileHandle:

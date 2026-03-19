@@ -2,7 +2,7 @@
 
 Status: open (documented 2026-03-18)
 Context: final cleanup phase after the structured/class, bytes-foundation, and runtime/file-object follow-ups
-Execution readiness: implementation-ready in sequence after `issues/ad-hoc-runtime-and-file-object-parity-expansion.md`; wave 1 still requires recorded RNG-state, `SystemRandom`, and dependency-audit evidence from architecture lock validation
+Execution readiness: implementation-ready in sequence after `issues/ad-hoc-runtime-and-file-object-parity-expansion.md`; predecessor bytes-phase wave `wave_psp_bytes_3` now locks first-class `bytes` as the canonical binary carrier for downstream crypto boundaries, and wave 1 still requires recorded RNG-state, `SystemRandom`, and dependency-audit evidence from architecture lock validation
 
 ## Objective
 
