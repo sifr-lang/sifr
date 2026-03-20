@@ -1,0 +1,12 @@
+# expect-error: SIFR-TYPE-0001: argument 1 ('xs') of function 'consume': expected 'Reversible[int]', got 'set[int]'
+def consume(xs: Reversible[int]) -> int:
+    rev: Iterator[int] = reversed(xs)
+    first: int | None = next(rev)
+    if first is None:
+        return 0
+    return first
+
+
+def main() -> None:
+    values: set[int] = {1, 2, 3}
+    consume(values)

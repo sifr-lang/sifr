@@ -470,6 +470,10 @@ pub(super) fn resolve_annotation_expr(expr: &Expr, ctx: &mut LowerCtx) -> Type {
                     let elem_ty = resolve_annotation_expr(&sub.slice, ctx);
                     Type::Iterator(Box::new(elem_ty))
                 }
+                "Reversible" => {
+                    let elem_ty = resolve_annotation_expr(&sub.slice, ctx);
+                    Type::reversible(elem_ty)
+                }
                 "Result" => {
                     // Result[T, E] -- the slice is a Tuple expression
                     if let Expr::Tuple(tuple) = sub.slice.as_ref() {

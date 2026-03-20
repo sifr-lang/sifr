@@ -35,6 +35,7 @@ pub fn resolve_type_annotation(name: &str) -> Option<Type> {
         "Any" => Some(Type::Any),
         "Iterable" => Some(Type::Iterable(Box::new(Type::Any))),
         "Iterator" => Some(Type::Iterator(Box::new(Type::Any))),
+        "Reversible" => Some(Type::reversible(Type::Any)),
         "Unknown" => Some(Type::Unknown),
         "Never" => Some(Type::Never),
         "bigint" => Some(Type::BigInt),
@@ -73,6 +74,10 @@ mod tests {
         assert_eq!(
             resolve_type_annotation("Iterator"),
             Some(Type::Iterator(Box::new(Type::Any)))
+        );
+        assert_eq!(
+            resolve_type_annotation("Reversible"),
+            Some(Type::reversible(Type::Any))
         );
         assert_eq!(resolve_type_annotation("Unknown"), Some(Type::Unknown));
         assert_eq!(resolve_type_annotation("Never"), Some(Type::Never));

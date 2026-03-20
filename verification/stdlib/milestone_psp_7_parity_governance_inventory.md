@@ -1,6 +1,6 @@
 # `milestone_psp_7` Parity Governance Inventory
 
-Status: in_progress (updated by canonical-iteration wave-0 architecture lock kickoff on 2026-03-20)  
+Status: in_progress (updated by canonical-iteration wave-1 type-system capability closure implementation on 2026-03-20)  
 Phase: `issues/ad-hoc-python-source-parity-and-builtin-stdlib-surface.md`  
 Execution ledger: `issues/ad-hoc-python-source-parity-and-builtin-stdlib-surface-execution.md`  
 Continuation phase (closed): `issues/ad-hoc-python-source-parity-extension-waiver-reduction.md`  
@@ -137,6 +137,7 @@ Terminal state legend for this milestone:
 | `wave_psp_runtime_3` | `issues/ad-hoc-runtime-and-file-object-parity-expansion-execution.md`, `verification/stdlib/wave_psp_runtime_3_cpython_traceability.md` | `logging`/`time`/`timeit` object-surface expansion: deterministic handler hierarchy, immutable `struct_time`, callable `Timer`, and explicit host-limited boundaries. |
 | `wave_psp_runtime_4` | `issues/ad-hoc-runtime-and-file-object-parity-expansion-execution.md`, `verification/stdlib/wave_psp_runtime_4_cpython_traceability.md` | Sync subprocess boundary closure: ships `PIPE`/`STDOUT`/`DEVNULL`, `check_call`/`check_output`, and keeps async `Popen` explicitly unsupported. |
 | `wave_psp_iter_fix_0` | `issues/ad-hoc-canonical-iteration-model-and-lazy-parity-closure-execution.md`, `verification/stdlib/phase_psp_iter_fix_architecture_lock.md`, `verification/stdlib/wave_psp_iter_fix_0_cpython_traceability.md` | Canonical-iteration architecture lock kickoff: freezes `Iterable`/`Iterator`/`Reversible` contract, lazy/eager boundaries, tuple iteration policy, and iterator-family waivers before capability/HIR/codegen implementation waves. |
+| `wave_psp_iter_fix_1` | `issues/ad-hoc-canonical-iteration-model-and-lazy-parity-closure-execution.md`, `verification/stdlib/wave_psp_iter_fix_1_cpython_traceability.md` | Type-system capability layer closure: adds capability-aware iteration typing (`SinglePass`/`MultiPass`/`DoubleEnded`/`ExactSize`), `Reversible[T]` annotation enforcement, and homogeneous-tuple iteration typing with explicit heterogeneous rejection. |
 
 ## Waiver Index (`intentional-diff`, `unsupported`, `host-limited`)
 

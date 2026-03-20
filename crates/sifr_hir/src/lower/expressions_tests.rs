@@ -180,6 +180,47 @@ fn test_iter_and_next_builtin_protocol_calls_lower() {
 }
 
 #[test]
+fn test_iter_accepts_homogeneous_tuple_argument() {
+    let result = lower_source(
+        "def main():\n    values: tuple[int, int, int] = (1, 2, 3)\n    it: Iterator[int] = iter(values)\n    first: int | None = next(it)\n",
+    );
+    assert!(result.is_ok(), "{result:?}");
+}
+
+#[test]
+fn test_iter_rejects_heterogeneous_tuple_argument() {
+    let result = lower_source(
+        "def main():\n    values: tuple[int, str] = (1, \"x\")\n    _it = iter(values)\n",
+    );
+    assert!(result.is_err());
+    let errors = result.unwrap_err();
+    assert!(errors.iter().any(|e| {
+        e.message
+            .contains("iter() tuple argument must have one statically provable element type")
+    }));
+}
+
+#[test]
+fn test_for_accepts_homogeneous_tuple_iterable() {
+    let result = lower_source(
+        "def main():\n    values: tuple[int, int, int] = (1, 2, 3)\n    total: int = 0\n    for value in values:\n        total = total + value\n",
+    );
+    assert!(result.is_ok(), "{result:?}");
+}
+
+#[test]
+fn test_for_rejects_heterogeneous_tuple_iterable() {
+    let result =
+        lower_source("def main():\n    values: tuple[int, str] = (1, \"x\")\n    for value in values:\n        print(value)\n");
+    assert!(result.is_err());
+    let errors = result.unwrap_err();
+    assert!(errors.iter().any(|e| {
+        e.message
+            .contains("for-loop tuple iteration requires one statically provable element type")
+    }));
+}
+
+#[test]
 fn test_next_rejects_plain_iterable_argument() {
     let result = lower_source("def main():\n    values: list[int] = [1, 2, 3]\n    next(values)\n");
     assert!(result.is_err());
@@ -310,6 +351,35 @@ fn test_reversed_enumerate_zip_are_typed_as_iterators() {
 }
 
 #[test]
+fn test_reversed_rejects_non_reversible_iterator_argument() {
+    let result = lower_source(
+        "def main():\n    nums: list[int] = [1, 2, 3]\n    it: Iterator[int] = iter(nums)\n    _rev = reversed(it)\n",
+    );
+    assert!(result.is_err());
+    let errors = result.unwrap_err();
+    assert!(errors
+        .iter()
+        .any(|e| e.message.contains("reversed() argument must be reversible")));
+}
+
+#[test]
+fn test_reversible_annotation_accepts_list_and_rejects_set() {
+    let ok = lower_source(
+        "def consume(xs: Reversible[int]) -> int:\n    rev: Iterator[int] = reversed(xs)\n    first: int | None = next(rev)\n    if first is None:\n        return 0\n    return first\n\ndef main():\n    nums: list[int] = [1, 2, 3]\n    consume(nums)\n",
+    );
+    assert!(ok.is_ok(), "{ok:?}");
+
+    let err = lower_source(
+        "def consume(xs: Reversible[int]) -> int:\n    rev: Iterator[int] = reversed(xs)\n    first: int | None = next(rev)\n    if first is None:\n        return 0\n    return first\n\ndef main():\n    nums: set[int] = {1, 2, 3}\n    consume(nums)\n",
+    );
+    assert!(err.is_err());
+    let errors = err.unwrap_err();
+    assert!(errors.iter().any(|e| e
+        .message
+        .contains("expected 'Reversible[int]', got 'set[int]'")));
+}
+
+#[test]
 fn test_map_is_typed_as_iterator() {
     let module = lower_source(
         "def add(x: int, y: int) -> int:\n    return x + y\n\ndef main():\n    left: list[int] = [1, 2]\n    right: list[int] = [3, 4]\n    mapped: Iterator[int] = map(add, left, right)\n    _vals: list[int] = list(mapped)\n",
@@ -337,9 +407,9 @@ fn test_map_rejects_plain_list_annotation_without_materialization() {
     );
     assert!(result.is_err());
     let errors = result.unwrap_err();
-    assert!(errors
-        .iter()
-        .any(|e| e.message.contains("expected 'list[int]', got 'Iterator[int]'")));
+    assert!(errors.iter().any(|e| e
+        .message
+        .contains("expected 'list[int]', got 'Iterator[int]'")));
 }
 
 #[test]

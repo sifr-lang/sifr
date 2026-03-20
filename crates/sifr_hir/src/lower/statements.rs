@@ -2050,10 +2050,7 @@ pub(super) fn lower_for(
         _ => None,
     };
     let iter_source_ty = iterable_expr.ty().clone();
-    if matches!(
-        iter_source_ty.resolve_alias(),
-        Type::Any | Type::Unknown | Type::Tuple(_)
-    ) {
+    if matches!(iter_source_ty.resolve_alias(), Type::Any | Type::Unknown) {
         ctx.error(format!(
             "for-loop iterable must have a statically-known element type, got '{}'",
             iter_source_ty.display_name()
@@ -2061,6 +2058,13 @@ pub(super) fn lower_for(
         return None;
     }
     let Some(elem_ty) = callable_builtin_element_type(&iter_source_ty) else {
+        if matches!(iter_source_ty.resolve_alias(), Type::Tuple(_)) {
+            ctx.error(
+                "for-loop tuple iteration requires one statically provable element type"
+                    .to_string(),
+            );
+            return None;
+        }
         ctx.error(format!(
             "cannot iterate over type '{}'",
             iter_source_ty.display_name()

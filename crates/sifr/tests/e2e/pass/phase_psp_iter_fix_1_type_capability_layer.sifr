@@ -1,0 +1,23 @@
+# Wave 1 positive fixture: capability-aware typing + homogeneous tuple iteration.
+
+
+def sum_reversed(values: Reversible[int]) -> int:
+    total: int = 0
+    for value in reversed(values):
+        total = total + value
+    return total
+
+
+def main() -> None:
+    nums: list[int] = [1, 2, 3, 4]
+    assert sum_reversed(nums) == 10
+
+    tuple_values: tuple[int, int, int] = (5, 6, 7)
+    tuple_total: int = 0
+    for value in tuple_values:
+        tuple_total = tuple_total + value
+    assert tuple_total == 18
+
+    tuple_it: Iterator[int] = iter(tuple_values)
+    assert next(tuple_it) == 5
+    assert str(list(reversed(tuple_values))) == "[7, 6, 5]"

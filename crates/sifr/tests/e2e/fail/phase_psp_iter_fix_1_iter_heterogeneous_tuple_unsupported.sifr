@@ -1,0 +1,4 @@
+# expect-error: SIFR-TYPE-0001: iter() tuple argument must have one statically provable element type
+def main() -> None:
+    values: tuple[int, str] = (1, "x")
+    _it = iter(values)

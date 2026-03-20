@@ -124,6 +124,40 @@ fn registry_callable_signature(expr: &HirExpr) -> Option<(Vec<Type>, Vec<ParamCo
     }
 }
 
+fn registry_tuple_homogeneous_iter_expr(lowered: RustExpr, tuple_len: usize) -> Option<RustExpr> {
+    if tuple_len == 0 {
+        return None;
+    }
+    let tuple_binding = "__sifr_tuple_iter_src".to_string();
+    let tuple_items = (0..tuple_len)
+        .map(|index| RustExpr::MethodCall {
+            receiver: Box::new(RustExpr::Field {
+                expr: Box::new(RustExpr::Ident(tuple_binding.clone())),
+                field: index.to_string(),
+            }),
+            method: "clone".to_string(),
+            args: vec![],
+        })
+        .collect();
+    Some(RustExpr::Block {
+        stmts: vec![crate::RustStmt::Let {
+            mutable: false,
+            name: tuple_binding,
+            ty: None,
+            value: RustExpr::MethodCall {
+                receiver: Box::new(RustExpr::Paren(Box::new(lowered))),
+                method: "clone".to_string(),
+                args: vec![],
+            },
+        }],
+        expr: Some(Box::new(RustExpr::MethodCall {
+            receiver: Box::new(RustExpr::Vec(tuple_items)),
+            method: "into_iter".to_string(),
+            args: vec![],
+        })),
+    })
+}
+
 fn registry_iterable_to_owned_iter_expr(
     emitter: &mut RustEmitter,
     expr: &HirExpr,
@@ -203,6 +237,9 @@ fn registry_iterable_to_owned_iter_expr(
             method: "cloned".to_string(),
             args: vec![],
         }),
+        Type::Tuple(elems) if !elems.is_empty() && elems.iter().all(|elem| elem == &elems[0]) => {
+            registry_tuple_homogeneous_iter_expr(lowered, elems.len())
+        }
         _ => None,
     }
 }

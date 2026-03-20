@@ -4815,6 +4815,11 @@ impl RustEmitter {
                 method: "into_iter".to_string(),
                 args: vec![],
             },
+            Type::Tuple(elems)
+                if !elems.is_empty() && elems.iter().all(|elem| elem == &elems[0]) =>
+            {
+                Self::lower_homogeneous_tuple_iter_expr(lowered_source, elems.len())
+            }
             _ => return Ok(Some(lowered_source)),
         };
         Ok(Some(crate::RustExpr::FnCall {
@@ -4824,6 +4829,40 @@ impl RustEmitter {
             ])),
             args: vec![iterator_expr],
         }))
+    }
+
+    fn lower_homogeneous_tuple_iter_expr(
+        lowered_source: crate::RustExpr,
+        tuple_len: usize,
+    ) -> crate::RustExpr {
+        let tuple_binding = "__sifr_tuple_iter_src".to_string();
+        let tuple_items = (0..tuple_len)
+            .map(|index| crate::RustExpr::MethodCall {
+                receiver: Box::new(crate::RustExpr::Field {
+                    expr: Box::new(crate::RustExpr::Ident(tuple_binding.clone())),
+                    field: index.to_string(),
+                }),
+                method: "clone".to_string(),
+                args: vec![],
+            })
+            .collect();
+        crate::RustExpr::Block {
+            stmts: vec![crate::RustStmt::Let {
+                mutable: false,
+                name: tuple_binding,
+                ty: None,
+                value: crate::RustExpr::MethodCall {
+                    receiver: Box::new(crate::RustExpr::Paren(Box::new(lowered_source))),
+                    method: "clone".to_string(),
+                    args: vec![],
+                },
+            }],
+            expr: Some(Box::new(crate::RustExpr::MethodCall {
+                receiver: Box::new(crate::RustExpr::Vec(tuple_items)),
+                method: "into_iter".to_string(),
+                args: vec![],
+            })),
+        }
     }
 
     fn is_collect_call_expr(expr: &crate::RustExpr) -> bool {
