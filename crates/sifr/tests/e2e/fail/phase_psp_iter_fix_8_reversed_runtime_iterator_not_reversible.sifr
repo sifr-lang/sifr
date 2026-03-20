@@ -1,0 +1,13 @@
+from sifr.pathlib import Path
+
+
+def main():
+    root: Path = Path("/tmp")
+    try:
+        entries_it: Iterator[str] = root.iterdir()
+        _bad: list[str] = list(reversed(entries_it))
+    except IOError as e:
+        _ = e.message
+
+
+main()
