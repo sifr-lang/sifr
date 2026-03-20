@@ -1,6 +1,6 @@
 # Ad Hoc Phase Execution Checklist (Canonical Iteration Model and Lazy Parity Closure)
 
-Status: in_progress (started 2026-03-20; `wave_psp_iter_fix_0` implementation merged; review pass-1 approved and pass-2 pending)
+Status: in_progress (started 2026-03-20; `wave_psp_iter_fix_0` implementation merged; review pass-1 and pass-2 approved)
 Owner: ad_hoc_canonical_iteration execution loop
 Reference planning doc:
 - `issues/ad-hoc-canonical-iteration-model-and-lazy-parity-closure.md`
@@ -75,7 +75,7 @@ Contract lock for wave progression:
 ## Wave Progress
 
 ### wave_psp_iter_fix_0: Contract Freeze and Governance Lock
-- Status: completed (implementation merged; completion review pass approved; production-grade review pass pending)
+- Status: completed (implementation merged; completion and production-grade review passes approved)
 - Implementation PR:
   - `#1339` (merged): https://github.com/yaseralnajjar/sifr/pull/1339
 - Scope:
@@ -175,3 +175,7 @@ Contract lock for wave progression:
 ### wave_psp_iter_fix_0 review_pass_1 (completion-gap)
 - Reviewer artifact: `reviews/phase-ad-hoc-canonical-iteration-model-and-lazy-parity-closure-wave-psp-iter-fix-0-review-pass-1.md`
 - Status: completed (approved; no contract-lock, governance, or validation omissions found)
+
+### wave_psp_iter_fix_0 review_pass_2 (production-grade)
+- Reviewer artifact: `reviews/phase-ad-hoc-canonical-iteration-model-and-lazy-parity-closure-wave-psp-iter-fix-0-review-pass-2.md`
+- Status: completed (approved; production-grade readiness confirmed with low risk and no wave-0 remediations)
