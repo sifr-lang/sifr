@@ -1,0 +1,24 @@
+# Wave 5 demo: builtin lazy/eager boundary cleanup.
+
+
+def is_even(x: int) -> bool:
+    return x % 2 == 0
+
+
+def main() -> None:
+    nums: list[int] = [1, 2, 3, 4]
+
+    evens: Iterator[int] = filter(is_even, nums)
+    print(list(evens))
+
+    rev: Iterator[int] = reversed(nums)
+    print(list(rev))
+
+    indexed: Iterator[tuple[int, int]] = enumerate(nums, start=10)
+    print(list(indexed))
+
+    print(sum(iter(nums)))
+    print(sorted(iter(nums), reverse=True))
+
+    collected: list[int] = list(filter(is_even, nums))
+    print(collected)

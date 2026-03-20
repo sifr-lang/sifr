@@ -31,7 +31,7 @@ def main():
         print(hi)
 
     # ---- Task 2: Inline lambda in filter() ----
-    evens: list[int] = filter(lambda x: x % 2 == 0, nums)
+    evens: list[int] = list(filter(lambda x: x % 2 == 0, nums))
     print(evens)
 
     # ---- Task 3: Clean list comprehension filter pattern ----

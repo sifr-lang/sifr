@@ -1103,12 +1103,8 @@ pub(super) fn lower_call(call: &ExprCall, ctx: &mut LowerCtx) -> Option<HirExpr>
             });
         }
 
-        // --- Built-in generic functions ---
-
-        // min(iterable) or min(a, b) -> element type
         if func_name == "min" {
             if call.arguments.args.len() == 2 {
-                // min(a, b) -> std::cmp::min(a, b)
                 let a = lower_expr(&call.arguments.args[0], ctx)?;
                 let b = lower_expr(&call.arguments.args[1], ctx)?;
                 let (a, b, result_ty) = normalize_min_max_numeric_sentinels(
@@ -1125,16 +1121,13 @@ pub(super) fn lower_call(call: &ExprCall, ctx: &mut LowerCtx) -> Option<HirExpr>
                 });
             } else if call.arguments.args.len() == 1 {
                 let arg = lower_expr(&call.arguments.args[0], ctx)?;
-                let elem_ty = if let Type::List(elem) = arg.ty() {
-                    *elem.clone()
-                } else {
+                let Some(elem_ty) = callable_builtin_element_type(arg.ty()) else {
                     ctx.error(format!(
-                        "min() argument must be a list, got '{}'",
+                        "min() argument must be an iterable with a statically-known element type, got '{}'",
                         arg.ty().display_name()
                     ));
                     return None;
                 };
-                // Returns Option[T] = T | None (safe: None on empty list)
                 return Some(HirExpr::Call {
                     func: "min".to_string(),
                     args: vec![arg],
@@ -1144,11 +1137,8 @@ pub(super) fn lower_call(call: &ExprCall, ctx: &mut LowerCtx) -> Option<HirExpr>
             ctx.error("min() takes 1 or 2 arguments".to_string());
             return None;
         }
-
-        // max(iterable) or max(a, b) -> element type
         if func_name == "max" {
             if call.arguments.args.len() == 2 {
-                // max(a, b) -> std::cmp::max(a, b)
                 let a = lower_expr(&call.arguments.args[0], ctx)?;
                 let b = lower_expr(&call.arguments.args[1], ctx)?;
                 let (a, b, result_ty) = normalize_min_max_numeric_sentinels(
@@ -1165,16 +1155,13 @@ pub(super) fn lower_call(call: &ExprCall, ctx: &mut LowerCtx) -> Option<HirExpr>
                 });
             } else if call.arguments.args.len() == 1 {
                 let arg = lower_expr(&call.arguments.args[0], ctx)?;
-                let elem_ty = if let Type::List(elem) = arg.ty() {
-                    *elem.clone()
-                } else {
+                let Some(elem_ty) = callable_builtin_element_type(arg.ty()) else {
                     ctx.error(format!(
-                        "max() argument must be a list, got '{}'",
+                        "max() argument must be an iterable with a statically-known element type, got '{}'",
                         arg.ty().display_name()
                     ));
                     return None;
                 };
-                // Returns Option[T] = T | None (safe: None on empty list)
                 return Some(HirExpr::Call {
                     func: "max".to_string(),
                     args: vec![arg],
@@ -1184,19 +1171,15 @@ pub(super) fn lower_call(call: &ExprCall, ctx: &mut LowerCtx) -> Option<HirExpr>
             ctx.error("max() takes 1 or 2 arguments".to_string());
             return None;
         }
-
-        // sum(iterable) -> element type (int or float)
         if func_name == "sum" {
             if call.arguments.args.len() != 1 {
                 ctx.error("sum() takes exactly 1 argument".to_string());
                 return None;
             }
             let arg = lower_expr(&call.arguments.args[0], ctx)?;
-            let elem_ty = if let Type::List(elem) = arg.ty() {
-                *elem.clone()
-            } else {
+            let Some(elem_ty) = callable_builtin_element_type(arg.ty()) else {
                 ctx.error(format!(
-                    "sum() argument must be a list, got '{}'",
+                    "sum() argument must be an iterable with a statically-known element type, got '{}'",
                     arg.ty().display_name()
                 ));
                 return None;
@@ -1207,8 +1190,6 @@ pub(super) fn lower_call(call: &ExprCall, ctx: &mut LowerCtx) -> Option<HirExpr>
                 ty: elem_ty,
             });
         }
-
-        // sorted(iterable) -> list of element type
         if func_name == "sorted" {
             if call.arguments.args.len() > 1 {
                 ctx.error("sorted() takes at most 1 positional argument".to_string());
@@ -1525,31 +1506,49 @@ pub(super) fn lower_call(call: &ExprCall, ctx: &mut LowerCtx) -> Option<HirExpr>
             ty: result_ty,
         });
     }
-
-    // filter(func, iterable) -> list (same element type)
     if func_name == "filter" {
+        if !call.arguments.keywords.is_empty() {
+            ctx.error("filter() does not accept keyword arguments in this phase".to_string());
+            return None;
+        }
         if call.arguments.args.len() != 2 {
             ctx.error("filter() takes exactly 2 arguments (function, iterable)".to_string());
             return None;
         }
-        // Lower iterable first to get element type for contextual lambda typing
         let iter_arg = lower_expr(&call.arguments.args[1], ctx)?;
-        let elem_ty = match iter_arg.ty() {
-            Type::List(elem) => *elem.clone(),
-            _ => Type::Any,
+        let Some(elem_ty) = callable_builtin_element_type(iter_arg.ty()) else {
+            ctx.error(format!(
+                "filter() argument must be an iterable with a statically-known element type, got '{}'",
+                iter_arg.ty().display_name()
+            ));
+            return None;
         };
-        // Lower lambda with contextual typing
-        let func_arg = lower_lambda_with_context(&call.arguments.args[0], &[elem_ty], ctx)?;
-        let result_ty = iter_arg.ty().clone();
+        let func_arg =
+            lower_lambda_with_context(&call.arguments.args[0], std::slice::from_ref(&elem_ty), ctx)?;
+        let Some((param_types, _conventions, return_ty)) = callable_signature(&func_arg) else {
+            ctx.error("filter() first argument must be callable".to_string());
+            return None;
+        };
+        if param_types.len() != 1 {
+            ctx.error(format!(
+                "filter() callable expects {} argument(s), got 1 iterable(s)",
+                param_types.len()
+            ));
+            return None;
+        }
+        if !return_ty.is_assignable_to(&Type::Bool) && !Type::Bool.is_assignable_to(&return_ty) {
+            ctx.error(format!(
+                "filter() callable must return 'bool', got '{}'",
+                return_ty.display_name()
+            ));
+            return None;
+        }
         return Some(HirExpr::IteratorCall {
             op: HirIteratorOp::Filter,
             args: vec![func_arg, iter_arg],
-            ty: result_ty,
+            ty: Type::Iterator(Box::new(elem_ty)),
         });
     }
-
-    // open(path, mode="r") -> FileHandle  — built-in file open (raises IOError on failure)
-    // Matches Python's open() behavior: raises on error, returns FileHandle directly.
     if func_name == "open" {
         let n_args = call.arguments.args.len();
         let _n_kwargs = call.arguments.keywords.len();
