@@ -1,4 +1,4 @@
-from sifr.itertools import islice, accumulate, compress, dropwhile, takewhile, filterfalse
+from sifr.itertools import islice, accumulate, compress, dropwhile, takewhile, filterfalse, pairwise, batched, cycle
 from sifr.pathlib import Path
 from sifr.io import write_text
 from sifr.os import getpid, run_command
@@ -19,6 +19,14 @@ def collect_iterable_input_actual() -> list[bool]:
     actual.append(str(list(dropwhile(lt3, iter(nums)))) == "[3, 4]")
     actual.append(str(list(takewhile(lt3, iter(nums)))) == "[1, 2]")
     actual.append(str(list(filterfalse(lt3, iter(nums)))) == "[3, 4]")
+    actual.append(str(pairwise(iter(nums))) == "[[1, 2], [2, 3], [3, 4]]")
+    try:
+        batched_values: list[list[int]] = batched(iter(nums), 2)
+        actual.append(str(batched_values) == "[[1, 2], [3, 4]]")
+    except ValueError as e:
+        _ = str(e.message)
+        actual.append(False)
+    actual.append(str(list(cycle(iter(nums), 6))) == "[1, 2, 3, 4, 1, 2]")
 
     return actual
 
@@ -53,7 +61,7 @@ def append_all(mut target: list[bool], values: list[bool]):
 
 
 def main():
-    expected: list[bool] = [True, True, True, True, True, True, True, True]
+    expected: list[bool] = [True, True, True, True, True, True, True, True, True, True, True]
     actual: list[bool] = []
 
     append_all(actual, collect_iterable_input_actual())

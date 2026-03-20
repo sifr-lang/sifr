@@ -42,6 +42,7 @@ Primary references:
 Mapped behavior assertions in wave fixtures:
 
 - iterator input accepted by adapter helpers (`islice`, `accumulate`, `compress`, `dropwhile`, `takewhile`, `filterfalse`)
+- iterator input accepted by iterable-first helpers (`pairwise`, `batched`, `cycle`)
 - materialization boundary remains explicit (`list(...)`)
 - non-iterable rejection remains explicit (`islice(42, ...)` fail fixture)
 
@@ -53,3 +54,7 @@ Inherited iterator-returning runtime/file surfaces now compose with iterator-fir
 - `Path.rglob()` + `islice(...)`
 
 This is validated in `phase_psp_iter_fix_6_itertools_iterable_stdlib_closure.sifr`.
+
+Cross-check:
+
+- `demos/m30_1d_itertools_parity_demo/main.sifr` exercises `pairwise` and is expected to compile/run with this wave after the iterable-`pairwise` Option-state fix.
