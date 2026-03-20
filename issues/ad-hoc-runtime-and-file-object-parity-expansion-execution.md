@@ -1,6 +1,6 @@
 # Ad Hoc Phase Execution Checklist (Runtime and File-Object Parity Expansion)
 
-Status: in_progress (started 2026-03-19; wave `wave_psp_runtime_0` review loop completed; wave `wave_psp_runtime_1` review loop completed; wave `wave_psp_runtime_2` review loop completed; wave `wave_psp_runtime_3` review loop completed; wave `wave_psp_runtime_4` implementation merged with pass-1 and pass-2 external review approval; wave-level closure review pass-1 and pass-2 approved)
+Status: in_progress (started 2026-03-19; wave `wave_psp_runtime_0` review loop completed; wave `wave_psp_runtime_1` review loop completed; wave `wave_psp_runtime_2` review loop completed; wave `wave_psp_runtime_3` review loop completed; wave `wave_psp_runtime_4` implementation merged with pass-1 and pass-2 external review approval; wave-level closure review pass-1 and pass-2 approved; milestone-level closure review pass-1 approved)
 Owner: ad_hoc_runtime_file_object execution loop
 Reference planning doc:
 - `issues/ad-hoc-runtime-and-file-object-parity-expansion.md`
@@ -25,7 +25,7 @@ Loop per wave: Plan -> Implement -> Validate -> Demo -> PR -> External completio
 5. [x] `wave_psp_runtime_4`: synchronous subprocess boundary cleanup and final governance closure
 6. [x] wave-level extra completion review cycle done
 7. [x] wave-level extra production-grade review cycle done
-8. [ ] milestone-level completion review cycle done
+8. [x] milestone-level completion review cycle done
 9. [ ] milestone-level production-grade review cycle done
 10. [ ] phase-level completion review cycle done
 11. [ ] phase-level production-grade review cycle done
@@ -211,3 +211,7 @@ Required entry records:
 ### wave_closure review_pass_2 (production-grade)
 - Reviewer artifact: `reviews/phase-ad-hoc-runtime-and-file-object-parity-expansion-wave-closure-review-pass-2.md`
 - Status: completed (approved; production-ready wave closure with low regression risk and no evidence gaps)
+
+### milestone_closure review_pass_1 (completion-gap)
+- Reviewer artifact: `reviews/phase-ad-hoc-runtime-and-file-object-parity-expansion-milestone-closure-review-pass-1.md`
+- Status: completed (approved; milestone-level scope, governance, and evidence closure confirmed)
