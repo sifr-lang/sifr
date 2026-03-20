@@ -1,6 +1,6 @@
 # Ad Hoc Phase Execution Checklist (Runtime and File-Object Parity Expansion)
 
-Status: in_progress (started 2026-03-19; wave `wave_psp_runtime_0` review loop completed; wave `wave_psp_runtime_1` review loop completed; wave `wave_psp_runtime_2` review loop completed; wave `wave_psp_runtime_3` review loop completed; wave `wave_psp_runtime_4` implementation merged with pass-1 and pass-2 external review approval; wave-level closure review pass-1 and pass-2 approved; milestone-level closure review pass-1 and pass-2 approved)
+Status: in_progress (started 2026-03-19; wave `wave_psp_runtime_0` review loop completed; wave `wave_psp_runtime_1` review loop completed; wave `wave_psp_runtime_2` review loop completed; wave `wave_psp_runtime_3` review loop completed; wave `wave_psp_runtime_4` implementation merged with pass-1 and pass-2 external review approval; wave-level closure review pass-1 and pass-2 approved; milestone-level closure review pass-1 and pass-2 approved; phase-level closure review pass-1 approved)
 Owner: ad_hoc_runtime_file_object execution loop
 Reference planning doc:
 - `issues/ad-hoc-runtime-and-file-object-parity-expansion.md`
@@ -27,7 +27,7 @@ Loop per wave: Plan -> Implement -> Validate -> Demo -> PR -> External completio
 7. [x] wave-level extra production-grade review cycle done
 8. [x] milestone-level completion review cycle done
 9. [x] milestone-level production-grade review cycle done
-10. [ ] phase-level completion review cycle done
+10. [x] phase-level completion review cycle done
 11. [ ] phase-level production-grade review cycle done
 12. [ ] closure telegram notification sent
 
@@ -219,3 +219,7 @@ Required entry records:
 ### milestone_closure review_pass_2 (production-grade)
 - Reviewer artifact: `reviews/phase-ad-hoc-runtime-and-file-object-parity-expansion-milestone-closure-review-pass-2.md`
 - Status: completed (approved; production-grade milestone closure with low risk posture and full evidence coverage)
+
+### phase_closure review_pass_1 (completion-gap)
+- Reviewer artifact: `reviews/phase-ad-hoc-runtime-and-file-object-parity-expansion-phase-closure-review-pass-1.md`
+- Status: completed (approved; phase-level completion, governance consistency, and artifact coverage confirmed)
