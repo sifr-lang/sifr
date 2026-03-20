@@ -1,6 +1,6 @@
 # Ad Hoc Phase Execution Checklist (Canonical Iteration Model and Lazy Parity Closure)
 
-Status: in_progress (started 2026-03-20; `wave_psp_iter_fix_0` implementation merged with completion/production approvals; `wave_psp_iter_fix_1` implementation merged and completion review approved; production-grade review pending)
+Status: in_progress (started 2026-03-20; `wave_psp_iter_fix_0` implementation merged with completion/production approvals; `wave_psp_iter_fix_1` implementation merged with completion + production-grade reviews approved after remediation)
 Owner: ad_hoc_canonical_iteration execution loop
 Reference planning doc:
 - `issues/ad-hoc-canonical-iteration-model-and-lazy-parity-closure.md`
@@ -94,7 +94,7 @@ Contract lock for wave progression:
   - wave gate: `$(pwd)/scripts/run_all_tests.sh --profile quick` -> PASS (2026-03-20)
 
 ### wave_psp_iter_fix_1: Type-System Capability Layer
-- Status: implemented (local validation complete; external completion/production review passes pending)
+- Status: completed (implementation + local validation + external completion/production reviews approved)
 - Scope:
   - add reversible/capability-aware iteration typing
   - align tuple iterability and assignability with the frozen contract
@@ -121,6 +121,9 @@ Contract lock for wave progression:
     - `cargo run -q -p sifr -- check crates/sifr/tests/e2e/fail/phase_psp_iter_fix_1_reversible_annotation_rejects_set.sifr` -> PASS (expected failure)
   - wave gate:
     - `$(pwd)/scripts/run_all_tests.sh` -> PASS (2026-03-20; profile `pr`)
+  - production-grade remediation gate:
+    - `cargo clippy -p sifr_type_system -- -D warnings` -> PASS (2026-03-20)
+    - `scripts/run_all_tests.sh --profile quick` -> PASS (2026-03-20; report signature `e1bf653aaa770517`)
 
 ### wave_psp_iter_fix_2: Canonical Iterator HIR
 - Status: planned
@@ -203,3 +206,7 @@ Contract lock for wave progression:
 ### wave_psp_iter_fix_1 review_pass_1 (completion-gap)
 - Reviewer artifact: `reviews/phase-ad-hoc-canonical-iteration-model-and-lazy-parity-closure-wave-psp-iter-fix-1-review-pass-1.md`
 - Status: completed (approved; no implementation gaps found across wave scope, validation evidence, and governance alignment)
+
+### wave_psp_iter_fix_1 review_pass_2 (production-grade)
+- Reviewer artifact: `reviews/phase-ad-hoc-canonical-iteration-model-and-lazy-parity-closure-wave-psp-iter-fix-1-review-pass-2.md`
+- Status: completed (approved after remediation; clippy or-pattern style updated in `sifr_type_system/src/types.rs` and validation rerun)
