@@ -1,6 +1,6 @@
 # Ad Hoc Phase Execution Checklist (Canonical Iteration Model and Lazy Parity Closure)
 
-Status: planned (documented 2026-03-20)
+Status: in_progress (started 2026-03-20; `wave_psp_iter_fix_0` implementation and validation complete; external review loop pending)
 Owner: ad_hoc_canonical_iteration execution loop
 Reference planning doc:
 - `issues/ad-hoc-canonical-iteration-model-and-lazy-parity-closure.md`
@@ -8,17 +8,17 @@ Reference planning doc:
 Loop per wave: Plan -> Implement -> Validate -> Demo -> PR -> External completion review -> Fix -> PR -> Merge -> External production-grade review -> Fix -> PR -> Merge -> Update docs -> Next wave
 
 ## Global Gates
-- [ ] Entry baseline validated before wave 0
-- [ ] Scope remains constrained to active wave
-- [ ] Root cause is fixed without compatibility shims
-- [ ] Positive-path and negative-path validation recorded for each wave
-- [ ] Demo runs before opening each wave PR
-- [ ] `$(pwd)/scripts/run_all_tests.sh` run before each wave PR
+- [x] Entry baseline validated before wave 0
+- [x] Scope remains constrained to active wave
+- [x] Root cause is fixed without compatibility shims
+- [x] Positive-path and negative-path validation recorded for each wave
+- [x] Demo runs before opening each wave PR
+- [x] `$(pwd)/scripts/run_all_tests.sh` run before each wave PR
 - [ ] PR opened/reviewed/merged before next wave starts
 - [ ] Docs + traceability + waiver state updated before moving on
 
 ## Full Phase To-Do Plan
-1. [ ] `wave_psp_iter_fix_0`: contract freeze and governance lock
+1. [x] `wave_psp_iter_fix_0`: contract freeze and governance lock
 2. [ ] `wave_psp_iter_fix_1`: type-system capability layer
 3. [ ] `wave_psp_iter_fix_2`: canonical iterator HIR
 4. [ ] `wave_psp_iter_fix_3`: concrete iterator codegen pipelines
@@ -35,48 +35,61 @@ Loop per wave: Plan -> Implement -> Validate -> Demo -> PR -> External completio
 15. [ ] phase-level production-grade review cycle done
 16. [ ] closure telegram notification sent
 
-## Entry Baseline Evidence (pending)
+## Entry Baseline Evidence (2026-03-20)
 
 Baseline command:
 - `scripts/run_all_tests.sh --profile quick`
 
-Required entry records:
-- document the exact currently failing iterator cases that motivate the phase, including:
-  - `any(iter(xs))`
-  - `filter(pred, iter(xs))`
-  - `reversed(iter(xs))`
-  - `sorted(iter(xs))`
-  - tuple iteration mismatch where applicable
-- record the current iterator codegen fracture points in:
-  - `crates/sifr_type_system/src/types.rs`
-  - `crates/sifr_hir/src/hir_nodes.rs`
-  - `crates/sifr_hir/src/lower/expressions.rs`
-  - `crates/sifr_hir/src/lower/statements.rs`
-  - `crates/sifr_hir/src/lower/builtin_calls.rs`
-  - `crates/sifr_codegen/src/lower_expr.rs`
-  - `crates/sifr_codegen/src/stmt_support_emitter.rs`
-  - `crates/sifr_codegen/src/function_emitter.rs`
-  - `crates/sifr_codegen/src/intrinsic_method_emitters.rs`
-  - `crates/sifr_codegen/src/operator_protocol_emitters.rs`
-- lock the final language contract for:
-  - `Iterable[T]`
-  - `Iterator[T]`
-  - `Reversible[T]`
-  - tuple iterability
-  - lazy vs eager builtin boundaries
-  - single-pass reuse rejection vs multi-pass re-iteration rules
+Observed baseline result before iterator-fix waves:
+- HIR maintainability guardrails: PASS
+- `sifr_driver` maintainability guardrails: PASS
+- `cargo test -p sifr -- --skip test_e2e_pass`: PASS (`37` tests)
+- e2e fail/runtime/corpus lane: PASS (`25` tests)
+- validation contract matrix (`frontend_mode_parity`, `phase23_graph_isolation`): PASS (`7` rows)
+- e2e pass suite quick profile: PASS (`24` fixtures, report signature `e1bf653aaa770517`)
+- quick lane report: PASS (wall `42.59s`, max RSS `104.6MiB`, swaps `0`)
+
+Baseline fracture reproductions captured for wave ownership:
+- `any(iter(xs))`:
+  - `check` passes, `run` fails rust build with `no method named 'iter' found for struct 'Box<dyn Iterator<Item = i64>>'`
+- `filter(pred, iter(xs))`:
+  - `check` passes, `run` fails rust build with clone/trait-bound mismatch on `Box<dyn Iterator<Item = i64>>`
+- `reversed(iter(xs))`:
+  - `check` passes, `run` fails rust build with `dyn Iterator<Item = i64>: DoubleEndedIterator` bound failure
+- `sorted(iter(xs))`:
+  - `check` passes, `run` fails rust build with unresolved `sorted` symbol in emitted Rust
+- tuple iteration mismatch:
+  - homogeneous tuple `for`-iteration currently fails type-check (`for-loop iterable must have a statically-known element type, got 'tuple[int, int, int]'`)
+
+Architecture/governance lock artifacts added in wave 0:
+- `verification/stdlib/phase_psp_iter_fix_architecture_lock.md`
+- `verification/stdlib/wave_psp_iter_fix_0_cpython_traceability.md`
+- phase governance inventory alignment in `verification/stdlib/milestone_psp_7_parity_governance_inventory.md`
+
+Contract lock for wave progression:
+- canonical types: `Iterable[T]`, `Iterator[T]`, `Reversible[T]`
+- lazy/eager builtin boundary is fixed for all later waves
+- tuple iteration rule is explicit: homogeneous planned for support, heterogeneous implicit union-yield remains unsupported
+- capability-aware iterator semantics are required across typing/lowering/codegen (no fallback to erased backend assumptions)
 
 ## Wave Progress
 
 ### wave_psp_iter_fix_0: Contract Freeze and Governance Lock
-- Status: planned
+- Status: completed (implementation/validation complete; external review loop pending)
 - Scope:
   - freeze canonical iteration semantics and permanent divergences
   - update architecture and governance docs before implementation waves begin
 - Validation target:
-  - architecture + waiver artifacts updated
-  - explicit baseline repro cases recorded
-  - CPython-family mapping recorded for `test_iter`, `test_generators`, `test_itertools`, and tuple-iteration coverage
+  - architecture + waiver artifacts updated (PASS)
+  - explicit baseline repro cases recorded (PASS)
+  - CPython-family mapping recorded for `test_iter`, `test_generators`, `test_itertools`, and tuple-iteration coverage (PASS)
+  - positive path: `cargo run -q -p sifr -- run crates/sifr/tests/e2e/pass/phase_psp_iter_fix_0_architecture_lock.sifr` -> PASS
+  - positive path: `cargo run -q -p sifr -- run demos/ad_hoc_iter_fix_wave0_contract_lock_demo.sifr` -> PASS (`ad_hoc_iter_fix_wave0_contract_lock_demo: ok`)
+  - negative path: `cargo run -q -p sifr -- check crates/sifr/tests/e2e/fail/phase_psp_iter_fix_0_itertools_tee_unsupported.sifr` -> expected compile failure (PASS)
+  - negative path: `cargo run -q -p sifr -- check crates/sifr/tests/e2e/fail/phase_psp_iter_fix_0_itertools_groupby_unsupported.sifr` -> expected compile failure (PASS)
+  - negative path: `cargo run -q -p sifr -- check crates/sifr/tests/e2e/fail/phase_psp_iter_fix_0_tuple_heterogeneous_iteration_unsupported.sifr` -> expected compile failure (PASS)
+  - negative regression: `cargo run -q -p sifr -- check crates/sifr/tests/e2e/fail/phase_psp_b2_itertools_starmap_non_binary_callable.sifr` -> expected compile failure (PASS)
+  - wave gate: `$(pwd)/scripts/run_all_tests.sh --profile quick` -> PASS (2026-03-20)
 
 ### wave_psp_iter_fix_1: Type-System Capability Layer
 - Status: planned

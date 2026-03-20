@@ -1,0 +1,5 @@
+from sifr.itertools import groupby
+
+
+def main() -> None:
+    _ = groupby

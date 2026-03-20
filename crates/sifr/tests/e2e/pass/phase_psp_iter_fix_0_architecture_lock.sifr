@@ -1,0 +1,25 @@
+# Wave 0 architecture-lock positive fixture for canonical iteration continuation.
+
+from sifr.itertools import chain, islice
+
+
+def plus_one(n: int) -> int:
+    return n + 1
+
+
+def main() -> None:
+    nums: list[int] = [1, 2, 3, 4]
+    labels: list[str] = ["a", "b", "c", "d"]
+
+    it: Iterator[int] = iter(nums)
+    assert next(it) == 1
+    assert next(it) == 2
+
+    assert str(list(map(plus_one, nums))) == "[2, 3, 4, 5]"
+    assert str(list(filter(lambda x: x % 2 == 0, nums))) == "[2, 4]"
+    assert str(list(zip(nums, labels))) == "[(1, \"a\"), (2, \"b\"), (3, \"c\"), (4, \"d\")]"
+    assert str(list(enumerate(labels, 3))) == "[(3, \"a\"), (4, \"b\"), (5, \"c\"), (6, \"d\")]"
+    assert str(list(reversed(nums))) == "[4, 3, 2, 1]"
+
+    assert str(list(chain([1, 2], [3, 4]))) == "[1, 2, 3, 4]"
+    assert str(list(islice([10, 20, 30, 40, 50], 1, 5, 2))) == "[20, 40]"

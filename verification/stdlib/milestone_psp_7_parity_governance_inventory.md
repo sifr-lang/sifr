@@ -1,6 +1,6 @@
 # `milestone_psp_7` Parity Governance Inventory
 
-Status: in_progress (updated by runtime/file-object wave-0 architecture lock kickoff on 2026-03-19)  
+Status: in_progress (updated by canonical-iteration wave-0 architecture lock kickoff on 2026-03-20)  
 Phase: `issues/ad-hoc-python-source-parity-and-builtin-stdlib-surface.md`  
 Execution ledger: `issues/ad-hoc-python-source-parity-and-builtin-stdlib-surface-execution.md`  
 Continuation phase (closed): `issues/ad-hoc-python-source-parity-extension-waiver-reduction.md`  
@@ -9,8 +9,10 @@ Continuation phase (closed): `issues/ad-hoc-structured-data-and-class-surface-pa
 Continuation execution ledger (closed): `issues/ad-hoc-structured-data-and-class-surface-parity-expansion-execution.md`  
 Continuation phase (closed): `issues/ad-hoc-first-class-bytes-and-binary-surface-foundation.md`  
 Continuation execution ledger (closed): `issues/ad-hoc-first-class-bytes-and-binary-surface-foundation-execution.md`  
-Continuation phase (current): `issues/ad-hoc-runtime-and-file-object-parity-expansion.md`  
-Continuation execution ledger (current): `issues/ad-hoc-runtime-and-file-object-parity-expansion-execution.md`
+Continuation phase (closed): `issues/ad-hoc-runtime-and-file-object-parity-expansion.md`  
+Continuation execution ledger (closed): `issues/ad-hoc-runtime-and-file-object-parity-expansion-execution.md`  
+Continuation phase (current): `issues/ad-hoc-canonical-iteration-model-and-lazy-parity-closure.md`  
+Continuation execution ledger (current): `issues/ad-hoc-canonical-iteration-model-and-lazy-parity-closure-execution.md`
 
 This is the canonical closure inventory for phase 31.5 milestone 7.
 
@@ -73,11 +75,11 @@ Terminal state legend for this milestone:
 | `hashlib` | `wave_psp_e1` | `parity-closed` | `verification/stdlib/wave_psp_e1_cpython_traceability.md` |
 | `heapq` | `wave_psp_b1` | `parity-closed` | `verification/stdlib/wave_psp_b1_cpython_traceability.md` |
 | `html` | `wave_psp_c2 + wave_psp_struct_4` | `parity-closed` | `verification/stdlib/wave_psp_c2_cpython_traceability.md` |
-| `io` | `wave_psp_d1` | `parity-closed` | `verification/stdlib/wave_psp_d1_cpython_traceability.md` |
+| `io` | `wave_psp_runtime_1` | `parity-closed` | `verification/stdlib/wave_psp_runtime_1_cpython_traceability.md` |
 | `ipaddress` | `wave_psp_e2` | `parity-closed` | `verification/stdlib/wave_psp_e2_cpython_traceability.md` |
 | `itertools` | `wave_psp_b2 + wave_psp_ext_2` | `parity-closed` | `verification/stdlib/wave_psp_b2_cpython_traceability.md` |
 | `json` | `wave_psp_c1 + wave_psp_struct_1` | `parity-closed` | `verification/stdlib/wave_psp_c1_cpython_traceability.md` |
-| `logging` | `wave_psp_d2` | `host-limited` | `verification/stdlib/wave_psp_d2_cpython_traceability.md` |
+| `logging` | `wave_psp_runtime_3` | `host-limited` | `verification/stdlib/wave_psp_runtime_3_cpython_traceability.md` |
 | `math` | `wave_psp_e1` | `parity-closed` | `verification/stdlib/wave_psp_e1_cpython_traceability.md` |
 | `operator` | `wave_psp_b2` | `parity-closed` | `verification/stdlib/wave_psp_b2_cpython_traceability.md` |
 | `os` | `wave_psp_d2` | `host-limited` | `verification/stdlib/wave_psp_d2_cpython_traceability.md` |
@@ -89,16 +91,16 @@ Terminal state legend for this milestone:
 | `shutil` | `wave_psp_d1` | `parity-closed` | `verification/stdlib/wave_psp_d1_cpython_traceability.md` |
 | `statistics` | `wave_psp_e1` | `parity-closed` | `verification/stdlib/wave_psp_e1_cpython_traceability.md` |
 | `string` | `wave_psp_c2` | `parity-closed` | `verification/stdlib/wave_psp_c2_cpython_traceability.md` |
-| `subprocess` | `wave_psp_d2` | `host-limited` | `verification/stdlib/wave_psp_d2_cpython_traceability.md` |
+| `subprocess` | `wave_psp_runtime_4` | `host-limited` | `verification/stdlib/wave_psp_runtime_4_cpython_traceability.md` |
 | `sys` | `wave_psp_d2` | `host-limited` | `verification/stdlib/wave_psp_d2_cpython_traceability.md` |
-| `tempfile` | `wave_psp_d1` | `parity-closed` | `verification/stdlib/wave_psp_d1_cpython_traceability.md` |
+| `tempfile` | `wave_psp_runtime_2` | `parity-closed` | `verification/stdlib/wave_psp_runtime_2_cpython_traceability.md` |
 | `test` | `wave_psp_e2` | `intentional-diff` | `verification/stdlib/wave_psp_e2_cpython_traceability.md` |
 | `textwrap` | `wave_psp_c2 + wave_psp_struct_4` | `parity-closed` | `verification/stdlib/wave_psp_c2_cpython_traceability.md` |
-| `time` | `wave_psp_d2` | `host-limited` | `verification/stdlib/wave_psp_d2_cpython_traceability.md` |
-| `timeit` | `wave_psp_d2` | `host-limited` | `verification/stdlib/wave_psp_d2_cpython_traceability.md` |
+| `time` | `wave_psp_runtime_3` | `host-limited` | `verification/stdlib/wave_psp_runtime_3_cpython_traceability.md` |
+| `timeit` | `wave_psp_runtime_3` | `host-limited` | `verification/stdlib/wave_psp_runtime_3_cpython_traceability.md` |
 | `tomllib` | `wave_psp_c1` | `parity-closed` | `verification/stdlib/wave_psp_c1_cpython_traceability.md` |
 | `uuid` | `wave_psp_e2 + wave_psp_struct_3` | `parity-closed` | `verification/stdlib/wave_psp_e2_cpython_traceability.md` |
-| `zipfile` | `wave_psp_d1` | `parity-closed` | `verification/stdlib/wave_psp_d1_cpython_traceability.md` |
+| `zipfile` | `wave_psp_runtime_2` | `parity-closed` | `verification/stdlib/wave_psp_runtime_2_cpython_traceability.md` |
 
 ## Canonical CPython Adopt/Adapt/Waive Ledger (By Wave)
 
@@ -132,6 +134,9 @@ Terminal state legend for this milestone:
 | `wave_psp_runtime_0` | `issues/ad-hoc-runtime-and-file-object-parity-expansion-execution.md`, `verification/stdlib/phase_psp_runtime_architecture_lock.md`, `verification/stdlib/wave_psp_runtime_0_cpython_traceability.md` | Architecture lock kickoff for runtime/file-object continuation: sealed stream hierarchy/lifecycle model and explicit permanent divergences are locked before `io`/`tempfile`/`zipfile`/`logging`/`time` expansion waves. |
 | `wave_psp_runtime_1` | `issues/ad-hoc-runtime-and-file-object-parity-expansion-execution.md`, `verification/stdlib/wave_psp_runtime_1_cpython_traceability.md` | `io` and in-memory stream hierarchy expansion: adds typed `StringIO`/`BytesIO`, explicit stream lifecycle/cursor contracts, and binary-handle entry (`open_binary`) while preserving wave-0 governance boundaries. |
 | `wave_psp_runtime_2` | `issues/ad-hoc-runtime-and-file-object-parity-expansion-execution.md`, `verification/stdlib/wave_psp_runtime_2_cpython_traceability.md` | `tempfile` and `zipfile` object lifecycle expansion: adds deterministic wrapper ownership (`NamedTemporaryFile`, `TemporaryDirectory`) and byte-native zip intrinsic paths for first-class `bytes` payloads while keeping advanced metadata/extract/read-handle methods explicitly deferred. |
+| `wave_psp_runtime_3` | `issues/ad-hoc-runtime-and-file-object-parity-expansion-execution.md`, `verification/stdlib/wave_psp_runtime_3_cpython_traceability.md` | `logging`/`time`/`timeit` object-surface expansion: deterministic handler hierarchy, immutable `struct_time`, callable `Timer`, and explicit host-limited boundaries. |
+| `wave_psp_runtime_4` | `issues/ad-hoc-runtime-and-file-object-parity-expansion-execution.md`, `verification/stdlib/wave_psp_runtime_4_cpython_traceability.md` | Sync subprocess boundary closure: ships `PIPE`/`STDOUT`/`DEVNULL`, `check_call`/`check_output`, and keeps async `Popen` explicitly unsupported. |
+| `wave_psp_iter_fix_0` | `issues/ad-hoc-canonical-iteration-model-and-lazy-parity-closure-execution.md`, `verification/stdlib/phase_psp_iter_fix_architecture_lock.md`, `verification/stdlib/wave_psp_iter_fix_0_cpython_traceability.md` | Canonical-iteration architecture lock kickoff: freezes `Iterable`/`Iterator`/`Reversible` contract, lazy/eager boundaries, tuple iteration policy, and iterator-family waivers before capability/HIR/codegen implementation waves. |
 
 ## Waiver Index (`intentional-diff`, `unsupported`, `host-limited`)
 

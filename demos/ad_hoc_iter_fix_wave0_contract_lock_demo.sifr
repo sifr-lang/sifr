@@ -1,0 +1,32 @@
+from sifr.itertools import chain, count
+
+# Wave 0 contract-lock demo for canonical iteration continuation.
+# This demo anchors supported lazy/eager behavior while wave-1+ closes
+# backend capability fractures documented in the execution ledger.
+
+
+def square(n: int) -> int:
+    return n * n
+
+
+def main() -> None:
+    nums: list[int] = [1, 2, 3, 4]
+
+    it: Iterator[int] = iter(nums)
+    assert next(it) == 1
+    assert next(it) == 2
+
+    assert str(list(map(square, nums))) == "[1, 4, 9, 16]"
+    assert str(list(filter(lambda x: x % 2 == 0, nums))) == "[2, 4]"
+    assert str(list(zip(nums, ["a", "b", "c", "d"]))) == "[(1, \"a\"), (2, \"b\"), (3, \"c\"), (4, \"d\")]"
+    assert str(list(enumerate(["x", "y"], 10))) == "[(10, \"x\"), (11, \"y\")]"
+    assert str(list(reversed(nums))) == "[4, 3, 2, 1]"
+
+    assert str(list(chain([1, 2], [3]))) == "[1, 2, 3]"
+
+    ticker: Iterator[int] = count(3, 2)
+    assert next(ticker) == 3
+    assert next(ticker) == 5
+    assert next(ticker) == 7
+
+    print("ad_hoc_iter_fix_wave0_contract_lock_demo: ok")
