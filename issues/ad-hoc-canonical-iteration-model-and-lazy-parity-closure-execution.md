@@ -25,14 +25,15 @@ Loop per wave: Plan -> Implement -> Validate -> Demo -> PR -> External completio
 5. [ ] `wave_psp_iter_fix_4`: generator backend unification
 6. [ ] `wave_psp_iter_fix_5`: builtin surface cleanup
 7. [ ] `wave_psp_iter_fix_6`: `sifr.itertools` and iterator-returning stdlib closure
-8. [ ] `wave_psp_iter_fix_7`: user-defined iterable protocol participation and final closure
-9. [ ] wave-level extra completion review cycle done
-10. [ ] wave-level extra production-grade review cycle done
-11. [ ] milestone-level completion review cycle done
-12. [ ] milestone-level production-grade review cycle done
-13. [ ] phase-level completion review cycle done
-14. [ ] phase-level production-grade review cycle done
-15. [ ] closure telegram notification sent
+8. [ ] `wave_psp_iter_fix_7`: user-defined iterable protocol participation
+9. [ ] `wave_psp_iter_fix_8`: downstream phase alignment and final closure
+10. [ ] wave-level extra completion review cycle done
+11. [ ] wave-level extra production-grade review cycle done
+12. [ ] milestone-level completion review cycle done
+13. [ ] milestone-level production-grade review cycle done
+14. [ ] phase-level completion review cycle done
+15. [ ] phase-level production-grade review cycle done
+16. [ ] closure telegram notification sent
 
 ## Entry Baseline Evidence (pending)
 
@@ -134,11 +135,22 @@ Required entry records:
   - stdlib lazy-composition demos and e2e fixtures
   - explicit documentation for buffered helpers that remain intentionally non-streaming
 
-### wave_psp_iter_fix_7: User-Defined Iterable Protocol Participation and Final Closure
+### wave_psp_iter_fix_7: User-Defined Iterable Protocol Participation
 - Status: planned
 - Scope:
   - add user-defined iterable participation
-  - close remaining parity/governance gaps and land closure demo
+  - validate user-defined iterable protocol conformance across typing, lowering, and codegen
 - Validation target:
   - user-defined iterable positive/negative fixtures
+  - protocol-conformance diagnostics for invalid `__iter__`, `__next__`, and `__reversed__` implementations
+
+### wave_psp_iter_fix_8: Downstream Phase Alignment and Final Closure
+- Status: planned
+- Scope:
+  - audit inherited iterator-sensitive surfaces from the earlier implemented ad hoc phases
+  - revalidate bytes, runtime/file, and earlier stdlib iterator-returning APIs against the canonical iteration contract
+  - land closure demo, final negative-case coverage, and parity-governance alignment without rewriting earlier historical phase claims
+- Validation target:
+  - inherited-surface regression fixtures and demos pass under the final iterator model
+  - residual differences are documented as intentional divergences
   - full phase gate via `scripts/run_all_tests.sh`

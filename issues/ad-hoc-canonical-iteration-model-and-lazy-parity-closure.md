@@ -398,20 +398,39 @@ Definition of done:
 - list-only assumptions are removed where not semantically required,
 - and buffered combinatoric helpers are documented explicitly instead of pretending to stream.
 
-### wave_psp_iter_fix_7: User-Defined Iterable Protocol Participation and Final Closure
+### wave_psp_iter_fix_7: User-Defined Iterable Protocol Participation
 
 Scope:
 
 - define user-facing iterable protocol participation for classes
 - validate `__iter__`, `__next__`, and `__reversed__` conformance
-- close remaining parity and governance gaps
-- add milestone demo and final negative-case coverage
+- add user-defined iterable positive and negative coverage
 
 Definition of done:
 
 - user-defined iterable classes participate in the canonical pipeline,
-- protocol violations get precise diagnostics,
-- and the phase closes with no separate builtin-only iteration world left behind.
+- and protocol violations get precise diagnostics.
+
+### wave_psp_iter_fix_8: Downstream Phase Alignment and Final Closure
+
+Scope:
+
+- audit iterator-sensitive surfaces inherited from:
+  - `issues/ad-hoc-python-source-parity-extension-waiver-reduction.md`
+  - `issues/ad-hoc-structured-data-and-class-surface-parity-expansion.md`
+  - `issues/ad-hoc-first-class-bytes-and-binary-surface-foundation.md`
+  - `issues/ad-hoc-runtime-and-file-object-parity-expansion.md`
+- revalidate bytes iteration semantics against the final canonical iterator contract
+- revalidate runtime/file iterator-returning APIs against the final canonical iterator contract
+- close collection-only iterator assumptions that remain in earlier-phase stdlib surfaces
+- update parity governance, waivers, and closure demos so inherited iterator behavior is classified here rather than retroactively changing earlier phase claims
+
+Definition of done:
+
+- no iterator-sensitive surface shipped by the earlier implemented phases contradicts the canonical iteration model,
+- residual differences are documented as intentional divergences rather than accidental backend fallout,
+- the milestone demo and final negative-case coverage reflect inherited runtime, bytes, and stdlib iterator composition,
+- and the phase closes with no separate builtin-only or phase-local iterator semantics left behind.
 
 ## Required Validation
 
