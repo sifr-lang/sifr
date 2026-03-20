@@ -1,6 +1,6 @@
 # Ad Hoc Phase: Canonical Iteration Model and Lazy Parity Closure
 
-Status: in_progress (started 2026-03-20; `wave_psp_iter_fix_0` implementation/reviews merged; `wave_psp_iter_fix_1` implementation + local validation complete and in external-review loop; `wave_psp_iter_fix_2` pending)
+Status: in_progress (started 2026-03-20; `wave_psp_iter_fix_0` implementation/reviews merged; `wave_psp_iter_fix_1` implementation merged and completion review approved; production-grade review pending; `wave_psp_iter_fix_2` pending)
 Context: corrective follow-up phase inserted after runtime/file-object parity expansion and before stateful RNG/crypto/polish parity expansion
 Execution readiness: implementation-ready in sequence after `issues/ad-hoc-runtime-and-file-object-parity-expansion.md`; this phase should execute before `issues/ad-hoc-stateful-rng-crypto-and-polish-parity-expansion.md` so later stream-style, binary, and stdlib work inherits one coherent iterable model
 Execution ledger: `issues/ad-hoc-canonical-iteration-model-and-lazy-parity-closure-execution.md`
