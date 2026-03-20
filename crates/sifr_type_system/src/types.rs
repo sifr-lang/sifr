@@ -1009,10 +1009,9 @@ impl Type {
         }
         // Iterable/Iterator protocol assignability.
         match (source, target_resolved) {
-            (Self::Iterator(src), Self::Iterator(dst))
-            | (Self::Iterator(src), Self::Iterable(dst))
+            (Self::Iterator(src), Self::Iterator(dst) | Self::Iterable(dst))
             | (Self::Iterable(src), Self::Iterable(dst)) => return src.is_assignable_to(dst),
-            (Self::List(src), Self::Iterable(dst)) | (Self::Set(src), Self::Iterable(dst)) => {
+            (Self::List(src) | Self::Set(src), Self::Iterable(dst)) => {
                 return src.is_assignable_to(dst);
             }
             (Self::Range, Self::Iterable(dst)) => return Type::Int.is_assignable_to(dst),
