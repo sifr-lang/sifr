@@ -1,6 +1,6 @@
 # Ad Hoc Phase Execution Checklist (Canonical Iteration Model and Lazy Parity Closure)
 
-Status: in_progress (started 2026-03-20; `wave_psp_iter_fix_0` implementation merged with completion/production approvals; `wave_psp_iter_fix_1` implementation merged with completion + production-grade reviews approved after remediation; `wave_psp_iter_fix_2` implementation merged with completion + production-grade reviews approved)
+Status: in_progress (started 2026-03-20; `wave_psp_iter_fix_0` implementation merged with completion/production approvals; `wave_psp_iter_fix_1` implementation merged with completion + production-grade reviews approved after remediation; `wave_psp_iter_fix_2` implementation merged with completion + production-grade reviews approved; `wave_psp_iter_fix_3` implementation + local validation complete with external completion/production reviews pending)
 Owner: ad_hoc_canonical_iteration execution loop
 Reference planning doc:
 - `issues/ad-hoc-canonical-iteration-model-and-lazy-parity-closure.md`
@@ -157,15 +157,33 @@ Contract lock for wave progression:
     - `$(pwd)/scripts/run_all_tests.sh` -> PASS (2026-03-20; profile `pr`; e2e pass `64 passed, 0 failed`; report signature `2161ea8c3fd4e3df`)
 
 ### wave_psp_iter_fix_3: Concrete Iterator Codegen Pipelines
-- Status: planned
+- Status: completed (implementation + local validation complete; external completion/production review passes pending)
 - Scope:
   - emit concrete Rust iterator chains
   - centralize collection-to-iterator lowering
   - remove clone-based fake re-iteration of true iterators
-- Validation target:
-  - end-to-end closure for `any(iter(xs))`, `filter(pred, iter(xs))`, and `sorted(iter(xs))`
-  - capability-aware acceptance/rejection for `reversed(iter(xs))`
-  - generated Rust inspection confirms no invalid `.iter()` / `.clone()` assumptions on iterator values
+- Implementation notes:
+  - added explicit registry builtin lowering for `iter(...)` so canonical iterator HIR no longer falls back to unresolved plain-function calls during codegen
+  - added registry builtin lowering for `filter(callable, iterable)` in iterator-input paths with owned-argument callable invocation inside Rust `filter` closures
+  - rewired iterator consumers (`any`, `all`, `sum`, unary `min`/`max`) to consume `registry_iterable_to_owned_iter_expr(...)` instead of collection-only `.iter().cloned()` assumptions
+  - generalized `sorted(...)` element-type derivation to `iterable_element_type()` so iterator-typed inputs close without unresolved-symbol fallback
+  - added wave-3 fixture/demo/traceability artifacts:
+    - `crates/sifr/tests/e2e/pass/phase_psp_iter_fix_3_concrete_iterator_codegen.sifr`
+    - `demos/ad_hoc_iter_fix_wave3_codegen_demo.sifr`
+    - `verification/stdlib/wave_psp_iter_fix_3_cpython_traceability.md`
+- Validation evidence:
+  - positive fixture:
+    - `cargo run -q -p sifr -- run crates/sifr/tests/e2e/pass/phase_psp_iter_fix_3_concrete_iterator_codegen.sifr` -> PASS
+  - demo:
+    - `cargo run -q -p sifr -- run demos/ad_hoc_iter_fix_wave3_codegen_demo.sifr` -> PASS (prints `true`, `[5, 3, 4]`, `[1, 3, 4, 5]`)
+  - capability guard (negative):
+    - `cargo run -q -p sifr -- check crates/sifr/tests/e2e/fail/phase_psp_iter_fix_1_reversed_iterator_not_reversible.sifr` -> expected compile failure (PASS)
+  - generated Rust inspection:
+    - `cargo run -q -p sifr -- emit crates/sifr/tests/e2e/pass/phase_psp_iter_fix_3_concrete_iterator_codegen.sifr` -> PASS (`iter`/`filter`/`sorted` unresolved-symbol fallback absent; no invalid `.iter()` usage on iterator values in emitted closure paths)
+  - unit/non-pass lane:
+    - `cargo test -p sifr -- --skip test_e2e_pass` -> PASS
+  - wave gate:
+    - `$(pwd)/scripts/run_all_tests.sh` -> PASS (2026-03-20; profile `pr`; e2e pass `64 passed, 0 failed`; report signature `2161ea8c3fd4e3df`)
 
 ### wave_psp_iter_fix_4: Generator Backend Unification
 - Status: planned

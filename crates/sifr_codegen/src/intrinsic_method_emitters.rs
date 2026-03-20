@@ -1692,18 +1692,21 @@ impl RustEmitter {
                 method: "collect::<HashSet<_>>".to_string(),
                 args: vec![],
             }),
+            "iter" if args.len() == 1 => {
+                if matches!(
+                    crate::resolve_alias_type_for_plain_call(args[0].ty()),
+                    Type::Iterator(_)
+                ) {
+                    self.try_lower_registry_expr_strict(&args[0])
+                } else {
+                    Some(registry_box_iterator_expr(registry_iterable_to_owned_iter_expr(
+                        self, &args[0],
+                    )?))
+                }
+            }
             "sum" if args.len() == 1 => {
-                let lowered = self.try_lower_registry_expr_strict(&args[0])?;
                 let iter_chain = crate::RustExpr::MethodCall {
-                    receiver: Box::new(crate::RustExpr::MethodCall {
-                        receiver: Box::new(crate::RustExpr::MethodCall {
-                            receiver: Box::new(crate::RustExpr::Paren(Box::new(lowered))),
-                            method: "iter".to_string(),
-                            args: vec![],
-                        }),
-                        method: "cloned".to_string(),
-                        args: vec![],
-                    }),
+                    receiver: Box::new(registry_iterable_to_owned_iter_expr(self, &args[0])?),
                     method: if let Type::List(elem_ty) =
                         crate::resolve_alias_type_for_plain_call(args[0].ty())
                     {
@@ -1719,42 +1722,26 @@ impl RustEmitter {
                 Some(iter_chain)
             }
             "any" if args.len() == 1 => Some(crate::RustExpr::MethodCall {
-                receiver: Box::new(crate::RustExpr::MethodCall {
-                    receiver: Box::new(crate::RustExpr::Paren(Box::new(
-                        self.try_lower_registry_expr_strict(&args[0])?,
-                    ))),
-                    method: "iter".to_string(),
-                    args: vec![],
-                }),
+                receiver: Box::new(registry_iterable_to_owned_iter_expr(self, &args[0])?),
                 method: "any".to_string(),
                 args: vec![crate::RustExpr::Closure {
                     params: vec![crate::RustParam::Named {
                         name: "x".to_string(),
                         ty: crate::RustType::Named("_".to_string()),
                     }],
-                    body: Box::new(crate::RustExpr::Deref(Box::new(crate::RustExpr::Ident(
-                        "x".to_string(),
-                    )))),
+                    body: Box::new(crate::RustExpr::Ident("x".to_string())),
                     is_move: false,
                 }],
             }),
             "all" if args.len() == 1 => Some(crate::RustExpr::MethodCall {
-                receiver: Box::new(crate::RustExpr::MethodCall {
-                    receiver: Box::new(crate::RustExpr::Paren(Box::new(
-                        self.try_lower_registry_expr_strict(&args[0])?,
-                    ))),
-                    method: "iter".to_string(),
-                    args: vec![],
-                }),
+                receiver: Box::new(registry_iterable_to_owned_iter_expr(self, &args[0])?),
                 method: "all".to_string(),
                 args: vec![crate::RustExpr::Closure {
                     params: vec![crate::RustParam::Named {
                         name: "x".to_string(),
                         ty: crate::RustType::Named("_".to_string()),
                     }],
-                    body: Box::new(crate::RustExpr::Deref(Box::new(crate::RustExpr::Ident(
-                        "x".to_string(),
-                    )))),
+                    body: Box::new(crate::RustExpr::Ident("x".to_string())),
                     is_move: false,
                 }],
             }),
@@ -1812,11 +1799,9 @@ impl RustEmitter {
                 }))
             }
             "max" | "min" if args.len() == 1 => {
-                let lowered = self.try_lower_registry_expr_strict(&args[0])?;
                 let method = if matches!(
-                    crate::resolve_alias_type_for_plain_call(args[0].ty()),
-                    Type::List(inner)
-                        if matches!(crate::resolve_alias_type_for_plain_call(inner), Type::Float)
+                    crate::resolve_alias_type_for_plain_call(args[0].ty()).iterable_element_type(),
+                    Some(Type::Float)
                 ) {
                     format!(
                         "{func}_by(|a, b| a.partial_cmp(b).unwrap_or(std::cmp::Ordering::Equal))"
@@ -1825,29 +1810,14 @@ impl RustEmitter {
                     func.to_owned()
                 };
                 Some(crate::RustExpr::MethodCall {
-                    receiver: Box::new(crate::RustExpr::MethodCall {
-                        receiver: Box::new(crate::RustExpr::MethodCall {
-                            receiver: Box::new(crate::RustExpr::Paren(Box::new(lowered))),
-                            method: "iter".to_string(),
-                            args: vec![],
-                        }),
-                        method: "cloned".to_string(),
-                        args: vec![],
-                    }),
+                    receiver: Box::new(registry_iterable_to_owned_iter_expr(self, &args[0])?),
                     method,
                     args: vec![],
                 })
             }
             "sorted" if matches!(args.len(), 1 | 3) => {
-                let elem_ty = match crate::resolve_alias_type_for_plain_call(args[0].ty()) {
-                    Type::List(inner) => inner.as_ref().clone(),
-                    Type::Bytes => Type::Int,
-                    Type::Set(inner) => inner.as_ref().clone(),
-                    Type::Range => Type::Int,
-                    Type::Str => Type::Str,
-                    Type::Dict(key, _) => key.as_ref().clone(),
-                    _ => return None,
-                };
+                let elem_ty = crate::resolve_alias_type_for_plain_call(args[0].ty())
+                    .iterable_element_type()?;
                 let vec_name = "__sifr_sorted_v".to_string();
                 let collect_expr = registry_iterable_to_vec_expr(self, &args[0])?;
                 let mut stmts = vec![crate::RustStmt::Let {
@@ -2059,6 +2029,54 @@ impl RustEmitter {
                         is_move: false,
                     }],
                 }))
+            }
+            "filter" if args.len() == 2 => {
+                let item_ty = crate::resolve_alias_type_for_plain_call(args[1].ty())
+                    .iterable_element_type()?;
+                let filtered_iter = RustExpr::MethodCall {
+                    receiver: Box::new(registry_iterable_to_owned_iter_expr(self, &args[1])?),
+                    method: "filter".to_string(),
+                    args: vec![RustExpr::ClosureBlock {
+                        params: vec![crate::RustParam::Named {
+                            name: "__filter_item".to_string(),
+                            ty: crate::RustType::Named("_".to_string()),
+                        }],
+                        body: vec![
+                            crate::RustStmt::Let {
+                                mutable: false,
+                                name: "__filter_value".to_string(),
+                                ty: None,
+                                value: RustExpr::MethodCall {
+                                    receiver: Box::new(RustExpr::Ident(
+                                        "__filter_item".to_string(),
+                                    )),
+                                    method: "clone".to_string(),
+                                    args: vec![],
+                                },
+                            },
+                            crate::RustStmt::Return(Some(registry_call_callable_with_owned_args(
+                                self,
+                                &args[0],
+                                &[("__filter_value".to_string(), item_ty)],
+                            )?)),
+                        ],
+                        is_move: false,
+                    }],
+                };
+                if matches!(
+                    crate::resolve_alias_type_for_plain_call(args[1].ty()),
+                    Type::Iterator(_)
+                ) {
+                    Some(registry_box_iterator_expr(filtered_iter))
+                } else {
+                    Some(RustExpr::FnCall {
+                        func: Box::new(RustExpr::Path(vec![
+                            "Vec".to_string(),
+                            "from_iter".to_string(),
+                        ])),
+                        args: vec![filtered_iter],
+                    })
+                }
             }
             "map" if args.len() >= 2 => {
                 let iter_expr = registry_zip_iter_expr(self, &args[1..])?;
