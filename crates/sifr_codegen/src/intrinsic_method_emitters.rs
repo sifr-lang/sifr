@@ -1,5 +1,5 @@
 use crate::{intrinsics, methods, RustEmitter, RustExpr};
-use sifr_hir::{HirExpr, HirFStringPart};
+use sifr_hir::{HirExpr, HirFStringPart, HirIteratorOp};
 use sifr_type_system::{ParamConvention, Type};
 
 fn registry_uses_debug_display_format(ty: &Type) -> bool {
@@ -121,6 +121,18 @@ fn registry_callable_signature(expr: &HirExpr) -> Option<(Vec<Type>, Vec<ParamCo
             Some((params.clone(), conventions.clone(), *return_type.clone()))
         }
         _ => None,
+    }
+}
+
+fn registry_iterator_op_func_name(op: &HirIteratorOp) -> &'static str {
+    match op {
+        HirIteratorOp::Iter => "iter",
+        HirIteratorOp::Next => "next",
+        HirIteratorOp::Reversed => "reversed",
+        HirIteratorOp::Map => "map",
+        HirIteratorOp::Filter => "filter",
+        HirIteratorOp::Zip => "zip",
+        HirIteratorOp::Enumerate => "enumerate",
     }
 }
 
@@ -813,6 +825,23 @@ impl RustEmitter {
                     ty,
                     lowered_object,
                 ))
+            }
+            HirExpr::IteratorCall { op, args, .. } => {
+                let func = registry_iterator_op_func_name(op);
+                if let Some(lowered) = self.try_lower_registry_intrinsic_call_expr(func, args) {
+                    return Some(lowered);
+                }
+                if let Some(lowered) = self.try_lower_registry_builtin_call_expr(func, args) {
+                    return Some(lowered);
+                }
+                if let Some(lowered) = self.try_lower_registry_plain_call_with_signature(func, args)
+                {
+                    return Some(lowered);
+                }
+                Some(crate::RustExpr::FnCall {
+                    func: Box::new(crate::RustExpr::Ident(func.to_string())),
+                    args: self.try_lower_registry_exprs_strict(args)?,
+                })
             }
             HirExpr::Call { func, args, .. } => {
                 if let Some(lowered) = self.try_lower_registry_intrinsic_call_expr(func, args) {

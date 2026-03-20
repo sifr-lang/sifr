@@ -267,6 +267,11 @@ fn collect_expr_error_refs(
                 collect_expr_error_refs(arg, referenced, builtin_error_classes);
             }
         }
+        HirExpr::IteratorCall { args, .. } => {
+            for arg in args {
+                collect_expr_error_refs(arg, referenced, builtin_error_classes);
+            }
+        }
         HirExpr::ConstructorCall {
             class_name, args, ..
         } => {

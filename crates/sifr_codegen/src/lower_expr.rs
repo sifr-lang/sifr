@@ -1,7 +1,7 @@
 //! Expression lowering scaffolds for the IR lowering.
 
 use crate::{CodegenError, RustExpr, RustLiteral, RustParam, RustStmt, RustType};
-use sifr_hir::{HirExpr, HirFStringPart, HirParam};
+use sifr_hir::{HirExpr, HirFStringPart, HirIteratorOp, HirParam};
 use sifr_type_system::Type;
 use std::cell::RefCell;
 
@@ -31,6 +31,18 @@ fn is_allowed_plain_call(func: &str) -> bool {
 
 fn is_compat_stdlib_alias(func: &str) -> bool {
     func.starts_with("__compat_sifr_")
+}
+
+fn iterator_op_func_name(op: &HirIteratorOp) -> &'static str {
+    match op {
+        HirIteratorOp::Iter => "iter",
+        HirIteratorOp::Next => "next",
+        HirIteratorOp::Reversed => "reversed",
+        HirIteratorOp::Map => "map",
+        HirIteratorOp::Filter => "filter",
+        HirIteratorOp::Zip => "zip",
+        HirIteratorOp::Enumerate => "enumerate",
+    }
 }
 
 pub fn try_lower_leaf_expr_result(expr: &HirExpr) -> Result<Option<RustExpr>, CodegenError> {
@@ -75,7 +87,8 @@ pub(crate) fn is_leaf_expr_candidate(expr: &HirExpr) -> bool {
         | HirExpr::WalrusExpr { .. }
         | HirExpr::SuperCall { .. }
         | HirExpr::FString { .. }
-        | HirExpr::Lambda { .. } => true,
+        | HirExpr::Lambda { .. }
+        | HirExpr::IteratorCall { .. } => true,
         HirExpr::Compare {
             ops, comparators, ..
         } => !ops.is_empty() && ops.len() == comparators.len(),
@@ -362,6 +375,9 @@ pub fn try_lower_leaf_expr(expr: &HirExpr) -> Option<RustExpr> {
         HirExpr::FString { parts, .. } => try_lower_simple_fstring_expr(parts),
         HirExpr::Lambda { params, body, .. } => try_lower_simple_lambda_expr(params, body),
         HirExpr::Call { func, args, .. } => try_lower_simple_call_expr(func, args),
+        HirExpr::IteratorCall { op, args, .. } => {
+            try_lower_simple_call_expr(iterator_op_func_name(op), args)
+        }
         HirExpr::MethodCall {
             object,
             method,
@@ -1115,9 +1131,18 @@ fn try_lower_simple_generator_expr(
         return None;
     }
 
+    let iter_source = match iter {
+        HirExpr::IteratorCall {
+            op: sifr_hir::HirIteratorOp::Iter,
+            args,
+            ..
+        } if args.len() == 1 => &args[0],
+        _ => iter,
+    };
+
     let iter_chain = RustExpr::MethodCall {
         receiver: Box::new(RustExpr::MethodCall {
-            receiver: Box::new(try_lower_leaf_or_name_expr(iter)?),
+            receiver: Box::new(try_lower_leaf_or_name_expr(iter_source)?),
             method: "clone".to_string(),
             args: vec![],
         }),
