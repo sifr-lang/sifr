@@ -1,6 +1,6 @@
 # Ad Hoc Phase: Canonical Iteration Model and Lazy Parity Closure
 
-Status: in_progress (started 2026-03-20; `wave_psp_iter_fix_0` implementation/reviews merged; `wave_psp_iter_fix_1` implementation merged with completion + production-grade reviews approved after remediation; `wave_psp_iter_fix_2` implementation/reviews merged with completion + production-grade approvals; `wave_psp_iter_fix_3` implementation/reviews merged with completion + production-grade approvals after `filter(pred, iterator_variable)` regression + formatting remediation; `wave_psp_iter_fix_4` implementation/reviews merged with production-grade approval; `wave_psp_iter_fix_5` implementation/reviews merged with production-grade approval; `wave_psp_iter_fix_6` implementation/reviews merged with production-grade approval; `wave_psp_iter_fix_7` implementation/reviews merged with production-grade approval)
+Status: in_progress (started 2026-03-20; `wave_psp_iter_fix_0` implementation/reviews merged; `wave_psp_iter_fix_1` implementation merged with completion + production-grade reviews approved after remediation; `wave_psp_iter_fix_2` implementation/reviews merged with completion + production-grade approvals; `wave_psp_iter_fix_3` implementation/reviews merged with completion + production-grade approvals after `filter(pred, iterator_variable)` regression + formatting remediation; `wave_psp_iter_fix_4` implementation/reviews merged with production-grade approval; `wave_psp_iter_fix_5` implementation/reviews merged with production-grade approval; `wave_psp_iter_fix_6` implementation/reviews merged with production-grade approval; `wave_psp_iter_fix_7` implementation/reviews merged with production-grade approval; `wave_psp_iter_fix_8` implementation merged with completion review approved)
 Context: corrective follow-up phase inserted after runtime/file-object parity expansion and before stateful RNG/crypto/polish parity expansion
 Execution readiness: implementation-ready in sequence after `issues/ad-hoc-runtime-and-file-object-parity-expansion.md`; this phase should execute before `issues/ad-hoc-stateful-rng-crypto-and-polish-parity-expansion.md` so later stream-style, binary, and stdlib work inherits one coherent iterable model
 Execution ledger: `issues/ad-hoc-canonical-iteration-model-and-lazy-parity-closure-execution.md`
@@ -415,7 +415,7 @@ Definition of done:
 
 Status:
 
-- implementation complete with local validation; completion + production-grade review passes pending
+- implementation merged with completion review approved; production-grade review pass pending
 - key wave-8 artifacts:
   - `crates/sifr/tests/e2e/pass/phase_psp_iter_fix_8_downstream_alignment_closure.sifr`
   - `crates/sifr/tests/e2e/fail/phase_psp_iter_fix_8_reversed_runtime_iterator_not_reversible.sifr`
