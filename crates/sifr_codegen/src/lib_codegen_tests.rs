@@ -1398,9 +1398,30 @@ fn test_generate_rust_generator_conditional_yield_preserves_else_branch() {
         "def gen() -> Iterator[int]:\n    i: int = 0\n    while i < 4:\n        if i < 3:\n            yield i\n            i = i + 1\n        else:\n            i = i + 1\n\ndef main():\n    g: Iterator[int] = gen()\n    print(next(g))\n",
     );
 
-    assert!(rust_code.contains("if i < (3 as i64) {"));
-    assert!(rust_code.contains("_yields.push(i);"));
-    assert!(rust_code.contains("} else {\n            i = i + (1 as i64);\n        }"));
+    let cond_idx = rust_code
+        .find("if i < (3 as i64) {")
+        .expect("generator conditional branch should be emitted");
+    let cond_region = &rust_code[cond_idx..];
+
+    assert!(cond_region.contains("_yields.push(i);"));
+    assert!(
+        cond_region.contains("} else {"),
+        "generator else branch should be preserved"
+    );
+    assert!(
+        cond_region.contains("i = i + (1 as i64);"),
+        "generator else branch body should be preserved"
+    );
+}
+
+#[test]
+fn test_generate_rust_generator_expression_without_filter_lowers_to_map_chain() {
+    let rust_code = generate_rust_from_source(
+        "def main():\n    xs: list[int] = [1, 2, 3]\n    squares: Iterator[int] = (x * x for x in xs)\n    print(list(squares))\n",
+    );
+
+    assert!(rust_code.contains("let mut squares: Box<dyn Iterator<Item = i64>>"));
+    assert!(rust_code.contains("into_iter().map(|x| x * x)"));
 }
 
 #[test]
@@ -2620,8 +2641,12 @@ fn test_module_body_flows_through_assembled_body_items() {
 #[test]
 fn test_generator_init_emission_is_structured_only() {
     let stmt_support_src = include_str!("stmt_support_emitter.rs");
-    assert!(stmt_support_src.contains("match self.lower_stmt_expr_for_ir(value)"));
-    assert!(stmt_support_src.contains("match self.try_lower_structured_stmt(stmt)"));
+    assert!(stmt_support_src.contains("self.lower_stmt_expr_for_ir(value)"));
+    assert!(stmt_support_src.contains("self.try_lower_structured_stmt(stmt)"));
+    assert!(stmt_support_src.contains("structured generator-init expression emission missing for production path"));
+    assert!(
+        stmt_support_src.contains("structured generator-init statement emission missing for production path")
+    );
     assert!(!stmt_support_src.contains("self.try_emit_expr_string_"));
     assert!(!stmt_support_src.contains("self.try_emit_stmt_string_"));
     assert!(!stmt_support_src.contains("self.emit_expr(value);"));
