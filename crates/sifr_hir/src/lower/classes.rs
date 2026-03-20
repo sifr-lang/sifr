@@ -12,6 +12,156 @@ use super::statements::lower_stmts;
 use super::typing_and_functions::resolve_annotation_expr;
 use super::{parse_typevar_bound_expr, LowerCtx};
 
+fn class_method_signature<'a>(
+    methods: &'a [(String, FunctionType)],
+    method_name: &str,
+) -> Option<&'a FunctionType> {
+    methods.iter().find_map(
+        |(name, ft)| {
+            if name == method_name {
+                Some(ft)
+            } else {
+                None
+            }
+        },
+    )
+}
+
+fn option_member_type(ty: &Type) -> Option<Type> {
+    let Type::Union(members) = ty.resolve_alias() else {
+        return None;
+    };
+    let has_none = members
+        .iter()
+        .any(|member| matches!(member.resolve_alias(), Type::None));
+    let non_none: Vec<Type> = members
+        .iter()
+        .filter(|member| !matches!(member.resolve_alias(), Type::None))
+        .cloned()
+        .collect();
+    if has_none && non_none.len() == 1 {
+        non_none.first().cloned()
+    } else {
+        None
+    }
+}
+
+fn class_next_element_type(class_name: &str, methods: &[(String, FunctionType)]) -> Option<Type> {
+    let next_ft = class_method_signature(methods, "__next__")?;
+    if !next_ft.params.is_empty() {
+        return None;
+    }
+    let elem = option_member_type(next_ft.return_type.as_ref())?;
+    if matches!(elem.resolve_alias(), Type::Class { name, .. } if name == class_name) {
+        return None;
+    }
+    Some(elem)
+}
+
+fn class_iter_element_type(class_name: &str, methods: &[(String, FunctionType)]) -> Option<Type> {
+    let iter_ft = class_method_signature(methods, "__iter__")?;
+    if !iter_ft.params.is_empty() {
+        return None;
+    }
+    match iter_ft.return_type.resolve_alias() {
+        Type::Iterator(elem) | Type::Iterable(elem) => Some(*elem.clone()),
+        Type::Class { name, .. } if name == class_name => {
+            class_next_element_type(class_name, methods)
+        }
+        _ => None,
+    }
+}
+
+fn class_reversed_element_type(
+    class_name: &str,
+    methods: &[(String, FunctionType)],
+) -> Option<Type> {
+    let reversed_ft = class_method_signature(methods, "__reversed__")?;
+    if !reversed_ft.params.is_empty() {
+        return None;
+    }
+    match reversed_ft.return_type.resolve_alias() {
+        Type::Iterator(elem) | Type::Iterable(elem) => Some(*elem.clone()),
+        Type::Class { name, .. } if name == class_name => {
+            class_next_element_type(class_name, methods)
+        }
+        _ => None,
+    }
+}
+
+fn validate_iteration_protocol_methods(
+    class_name: &str,
+    methods: &[(String, FunctionType)],
+    ctx: &mut LowerCtx,
+) {
+    if let Some(iter_ft) = class_method_signature(methods, "__iter__") {
+        if !iter_ft.params.is_empty() {
+            ctx.error(format!(
+                "class '{class_name}.__iter__' must not declare parameters besides self"
+            ));
+        }
+        if class_iter_element_type(class_name, methods).is_none() {
+            ctx.error(format!(
+                "class '{class_name}.__iter__' must return 'Iterator[T]' or 'Iterable[T]'"
+            ));
+        }
+    }
+
+    if let Some(next_ft) = class_method_signature(methods, "__next__") {
+        if !next_ft.params.is_empty() {
+            ctx.error(format!(
+                "class '{class_name}.__next__' must not declare parameters besides self"
+            ));
+        }
+        if class_next_element_type(class_name, methods).is_none() {
+            ctx.error(format!(
+                "class '{class_name}.__next__' must return 'T | None'"
+            ));
+        }
+    }
+
+    if let Some(reversed_ft) = class_method_signature(methods, "__reversed__") {
+        if !reversed_ft.params.is_empty() {
+            ctx.error(format!(
+                "class '{class_name}.__reversed__' must not declare parameters besides self"
+            ));
+        }
+        if class_reversed_element_type(class_name, methods).is_none() {
+            ctx.error(format!(
+                "class '{class_name}.__reversed__' must return 'Iterator[T]' or 'Iterable[T]'"
+            ));
+        }
+    }
+
+    if let (Some(iter_elem), Some(next_elem)) = (
+        class_iter_element_type(class_name, methods),
+        class_next_element_type(class_name, methods),
+    ) {
+        if !next_elem.is_assignable_to(&iter_elem) || !iter_elem.is_assignable_to(&next_elem) {
+            ctx.error(format!(
+                "class '{class_name}' iteration protocol mismatch: '__iter__' yields '{}' but '__next__' yields '{}'",
+                iter_elem.display_name(),
+                next_elem.display_name()
+            ));
+        }
+    }
+
+    if let (Some(iter_elem), Some(reversed_elem)) = (
+        class_iter_element_type(class_name, methods),
+        class_reversed_element_type(class_name, methods),
+    ) {
+        if !reversed_elem.is_assignable_to(&iter_elem)
+            || !iter_elem.is_assignable_to(&reversed_elem)
+        {
+            ctx.error(format!(
+                "class '{class_name}' iteration protocol mismatch: '__iter__' yields '{}' but '__reversed__' yields '{}'",
+                iter_elem.display_name(),
+                reversed_elem.display_name()
+            ));
+        }
+    }
+}
+
 pub(super) fn collect_class_type(class_def: &StmtClassDef, ctx: &mut LowerCtx) {
     let class_name = class_def.name.to_string();
     let mut fields: Vec<(String, Type)> = Vec::new();
@@ -324,6 +474,8 @@ pub(super) fn collect_class_type(class_def: &StmtClassDef, ctx: &mut LowerCtx) {
             }
         }
     }
+
+    validate_iteration_protocol_methods(&class_name, &methods, ctx);
 
     let class_ty = Type::Class {
         name: class_name.clone(),

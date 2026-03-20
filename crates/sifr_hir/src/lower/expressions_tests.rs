@@ -465,6 +465,48 @@ fn test_next_rejects_plain_iterable_argument() {
 }
 
 #[test]
+fn test_user_defined_iterable_class_participates_in_builtin_iteration_surface() {
+    let result = lower_source(
+        "class Boxed:\n    items: list[int]\n\n    def __init__(self, items: list[int]):\n        self.items = items\n\n    def __iter__(self) -> Iterator[int]:\n        return iter(self.items)\n\n    def __reversed__(self) -> Iterator[int]:\n        return reversed(self.items)\n\n\ndef main():\n    boxed: Boxed = Boxed([1, 2, 3])\n    vals: list[int] = list(boxed)\n    rev_vals: list[int] = list(reversed(boxed))\n    total: int = 0\n    for value in boxed:\n        total = total + value\n",
+    );
+    assert!(result.is_ok(), "{result:?}");
+}
+
+#[test]
+fn test_next_accepts_user_defined_iterator_class() {
+    let result = lower_source(
+        "class CounterIter:\n    value: int\n\n    def __init__(self, start: int):\n        self.value = start\n\n    def __iter__(self) -> Iterator[int]:\n        return iter([self.value])\n\n    def __next__(self) -> int | None:\n        if self.value <= 0:\n            return None\n        out: int = self.value\n        self.value = self.value - 1\n        return out\n\n\ndef main():\n    it: CounterIter = CounterIter(2)\n    first: int | None = next(it)\n",
+    );
+    assert!(result.is_ok(), "{result:?}");
+}
+
+#[test]
+fn test_user_defined_iterable_protocol_rejects_invalid_iter_signature() {
+    let result = lower_source("class BadIter:\n    def __iter__(self) -> int:\n        return 1\n");
+    assert!(result.is_err());
+    let errors = result.unwrap_err();
+    assert!(errors.iter().any(|error| {
+        error
+            .message
+            .contains("class 'BadIter.__iter__' must return 'Iterator[T]' or 'Iterable[T]'")
+    }));
+}
+
+#[test]
+fn test_user_defined_iterable_protocol_rejects_invalid_next_signature() {
+    let result = lower_source(
+        "class BadNext:\n    def __iter__(self) -> Iterator[int]:\n        return iter([1])\n\n    def __next__(self) -> int:\n        return 1\n",
+    );
+    assert!(result.is_err());
+    let errors = result.unwrap_err();
+    assert!(errors.iter().any(|error| {
+        error
+            .message
+            .contains("class 'BadNext.__next__' must return 'T | None'")
+    }));
+}
+
+#[test]
 fn test_for_rejects_mutation_of_collection_with_live_iterator() {
     let result = lower_source(
         "def main():\n    values: list[int] = [1, 2, 3]\n    for value in values:\n        values.append(value)\n",

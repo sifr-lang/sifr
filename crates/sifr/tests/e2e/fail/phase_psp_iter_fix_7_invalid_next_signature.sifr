@@ -1,0 +1,11 @@
+# expect-error: SIFR-TYPE-0001: class 'BadNext.__next__' must return 'T | None'
+class BadNext:
+    def __iter__(self) -> Iterator[int]:
+        return iter([1])
+
+    def __next__(self) -> int:
+        return 1
+
+
+def main():
+    _ = BadNext()

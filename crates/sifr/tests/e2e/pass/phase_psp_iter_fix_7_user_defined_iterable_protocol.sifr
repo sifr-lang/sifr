@@ -1,0 +1,67 @@
+from sifr.test import assert_bool_vector_eq
+
+
+class CountdownIter:
+    current: int
+
+    def __init__(self, start: int):
+        self.current = start
+
+    def __iter__(self) -> Iterator[int]:
+        return iter([self.current])
+
+    def __next__(self) -> int | None:
+        if self.current <= 0:
+            return None
+        value: int = self.current
+        self.current = self.current - 1
+        return value
+
+
+class Countdown:
+    start: int
+
+    def __init__(self, start: int):
+        self.start = start
+
+    def __iter__(self) -> Iterator[int]:
+        values: list[int] = []
+        i: int = self.start
+        while i > 0:
+            values.append(i)
+            i = i - 1
+        return iter(values)
+
+    def __reversed__(self) -> Iterator[int]:
+        values: list[int] = []
+        i: int = 1
+        while i <= self.start:
+            values.append(i)
+            i = i + 1
+        return iter(values)
+
+
+def main():
+    actual: list[bool] = []
+
+    countdown: Countdown = Countdown(4)
+    actual.append(str(list(countdown)) == "[4, 3, 2, 1]")
+
+    total: int = 0
+    for value in Countdown(4):
+        total = total + value
+    actual.append(total == 10)
+
+    actual.append(str(list(reversed(countdown))) == "[1, 2, 3, 4]")
+
+    it: CountdownIter = CountdownIter(2)
+    first: int | None = next(it)
+    second: int | None = next(it)
+    third: int | None = next(it)
+    actual.append(str(first) == "2")
+    actual.append(str(second) == "1")
+    actual.append(third is None)
+
+    expected: list[bool] = [True, True, True, True, True, True]
+    assert_bool_vector_eq(actual, expected)
+    assert str("phase_psp_iter_fix_7_user_defined_iterable_protocol: pass") == "phase_psp_iter_fix_7_user_defined_iterable_protocol: pass"

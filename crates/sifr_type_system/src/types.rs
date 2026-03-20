@@ -324,6 +324,107 @@ impl Type {
         }
     }
 
+    fn class_method<'a>(
+        methods: &'a [(String, FunctionType)],
+        method_name: &str,
+    ) -> Option<&'a FunctionType> {
+        methods.iter().find_map(
+            |(name, ft)| {
+                if name == method_name {
+                    Some(ft)
+                } else {
+                    None
+                }
+            },
+        )
+    }
+
+    fn option_like_member_type(ty: &Type) -> Option<Type> {
+        let Type::Union(members) = ty.resolve_alias() else {
+            return None;
+        };
+        let has_none = members
+            .iter()
+            .any(|member| matches!(member.resolve_alias(), Type::None));
+        let non_none: Vec<Type> = members
+            .iter()
+            .filter(|member| !matches!(member.resolve_alias(), Type::None))
+            .cloned()
+            .collect();
+        if has_none && non_none.len() == 1 {
+            non_none.first().cloned()
+        } else {
+            None
+        }
+    }
+
+    fn class_next_element_type(
+        class_name: &str,
+        methods: &[(String, FunctionType)],
+    ) -> Option<Type> {
+        let next_ft = Self::class_method(methods, "__next__")?;
+        if !next_ft.params.is_empty() {
+            return None;
+        }
+        let elem = Self::option_like_member_type(next_ft.return_type.as_ref())?;
+        if matches!(elem.resolve_alias(), Type::Class { name, .. } if name == class_name) {
+            return None;
+        }
+        Some(elem)
+    }
+
+    fn class_iter_element_type(
+        class_name: &str,
+        methods: &[(String, FunctionType)],
+    ) -> Option<Type> {
+        let iter_ft = Self::class_method(methods, "__iter__")?;
+        if !iter_ft.params.is_empty() {
+            return None;
+        }
+        match iter_ft.return_type.resolve_alias() {
+            Type::Iterator(elem) | Type::Iterable(elem) => Some(*elem.clone()),
+            Type::Class {
+                name,
+                methods: ret_methods,
+                ..
+            } => {
+                if name == class_name {
+                    Self::class_next_element_type(class_name, methods)
+                } else {
+                    Self::class_iter_element_type(name, ret_methods)
+                        .or_else(|| Self::class_next_element_type(name, ret_methods))
+                }
+            }
+            _ => None,
+        }
+    }
+
+    fn class_reversed_element_type(
+        class_name: &str,
+        methods: &[(String, FunctionType)],
+    ) -> Option<Type> {
+        let reversed_ft = Self::class_method(methods, "__reversed__")?;
+        if !reversed_ft.params.is_empty() {
+            return None;
+        }
+        match reversed_ft.return_type.resolve_alias() {
+            Type::Iterator(elem) | Type::Iterable(elem) => Some(*elem.clone()),
+            Type::Class {
+                name,
+                methods: ret_methods,
+                ..
+            } => {
+                if name == class_name {
+                    Self::class_next_element_type(class_name, methods)
+                } else {
+                    Self::class_iter_element_type(name, ret_methods)
+                        .or_else(|| Self::class_next_element_type(name, ret_methods))
+                }
+            }
+            _ => None,
+        }
+    }
+
     /// Construct a non-generic type alias wrapper.
     pub fn alias(name: impl Into<String>, body: Type) -> Self {
         Self::Alias {
@@ -712,7 +813,18 @@ impl Type {
             Self::Dict(key, _) => Some(*key.clone()),
             Self::Iterable(elem) => Some(*elem.clone()),
             Self::Iterator(elem) => Some(*elem.clone()),
+            Self::Class { name, methods, .. } => Self::class_iter_element_type(name, methods)
+                .or_else(|| Self::class_next_element_type(name, methods)),
             Self::Alias { body, .. } => body.iterable_element_type(),
+            _ => None,
+        }
+    }
+
+    /// Returns the element type when this type participates in the iterator protocol.
+    pub fn iterator_element_type(&self) -> Option<Type> {
+        match self.resolve_alias() {
+            Self::Iterator(elem) => Some(*elem.clone()),
+            Self::Class { name, methods, .. } => Self::class_next_element_type(name, methods),
             _ => None,
         }
     }
@@ -792,6 +904,22 @@ impl Type {
                 element_type: *elem.clone(),
                 capabilities: vec![IterationCapability::MultiPass],
             }),
+            Self::Class { name, methods, .. } => {
+                let element_type = Self::class_iter_element_type(name, methods)
+                    .or_else(|| Self::class_next_element_type(name, methods))?;
+                let mut capabilities = if Self::class_next_element_type(name, methods).is_some() {
+                    vec![IterationCapability::SinglePass]
+                } else {
+                    vec![IterationCapability::MultiPass]
+                };
+                if Self::class_reversed_element_type(name, methods).is_some() {
+                    capabilities.push(IterationCapability::DoubleEnded);
+                }
+                Some(IterationMetadata {
+                    element_type,
+                    capabilities,
+                })
+            }
             _ => None,
         }
     }
@@ -1018,6 +1146,15 @@ impl Type {
             (Self::Str, Self::Iterable(dst)) => return Type::Str.is_assignable_to(dst),
             (Self::Bytes, Self::Iterable(dst)) => return Type::Int.is_assignable_to(dst),
             (Self::Dict(key, _), Self::Iterable(dst)) => return key.is_assignable_to(dst),
+            (Self::Class { name, methods, .. }, Self::Iterator(dst)) => {
+                return Self::class_next_element_type(name, methods)
+                    .is_some_and(|source_elem| source_elem.is_assignable_to(dst));
+            }
+            (Self::Class { name, methods, .. }, Self::Iterable(dst)) => {
+                return Self::class_iter_element_type(name, methods)
+                    .or_else(|| Self::class_next_element_type(name, methods))
+                    .is_some_and(|source_elem| source_elem.is_assignable_to(dst));
+            }
             (Self::Tuple(items), Self::Iterable(dst)) => {
                 let Some(elem) = Self::homogeneous_tuple_iter_element_type(items) else {
                     return false;
@@ -1240,6 +1377,73 @@ mod tests {
         assert_eq!(heterogeneous.iterable_element_type(), None);
         assert!(homogeneous.is_assignable_to(&Type::Iterable(Box::new(Type::Int))));
         assert!(!heterogeneous.is_assignable_to(&Type::Iterable(Box::new(Type::Any))));
+    }
+
+    #[test]
+    fn test_class_with_iter_method_is_iterable() {
+        let iterable_class = Type::Class {
+            name: "Counter".to_string(),
+            fields: vec![],
+            methods: vec![(
+                "__iter__".to_string(),
+                FunctionType::new(vec![], Type::Iterator(Box::new(Type::Int))),
+            )],
+            parent_class: None,
+        };
+
+        assert_eq!(iterable_class.iterable_element_type(), Some(Type::Int));
+        assert!(iterable_class.is_assignable_to(&Type::Iterable(Box::new(Type::Int))));
+    }
+
+    #[test]
+    fn test_class_with_next_method_is_iterator_protocol() {
+        let self_iter_type = Type::Class {
+            name: "CounterIter".to_string(),
+            fields: vec![],
+            methods: vec![],
+            parent_class: None,
+        };
+        let iterator_class = Type::Class {
+            name: "CounterIter".to_string(),
+            fields: vec![],
+            methods: vec![
+                (
+                    "__iter__".to_string(),
+                    FunctionType::new(vec![], self_iter_type),
+                ),
+                (
+                    "__next__".to_string(),
+                    FunctionType::new(vec![], Type::Union(vec![Type::Int, Type::None])),
+                ),
+            ],
+            parent_class: None,
+        };
+
+        assert_eq!(iterator_class.iterator_element_type(), Some(Type::Int));
+        assert!(iterator_class.is_assignable_to(&Type::Iterator(Box::new(Type::Int))));
+        assert!(iterator_class.is_assignable_to(&Type::Iterable(Box::new(Type::Int))));
+    }
+
+    #[test]
+    fn test_class_with_reversed_method_is_reversible_iterable() {
+        let reversible_class = Type::Class {
+            name: "Deck".to_string(),
+            fields: vec![],
+            methods: vec![
+                (
+                    "__iter__".to_string(),
+                    FunctionType::new(vec![], Type::Iterator(Box::new(Type::Int))),
+                ),
+                (
+                    "__reversed__".to_string(),
+                    FunctionType::new(vec![], Type::Iterator(Box::new(Type::Int))),
+                ),
+            ],
+            parent_class: None,
+        };
+
+        assert!(reversible_class.is_reversible_iterable());
+        assert!(reversible_class.is_assignable_to(&Type::reversible(Type::Int)));
     }
 
     #[test]

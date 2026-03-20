@@ -681,15 +681,12 @@ pub(super) fn lower_call(call: &ExprCall, ctx: &mut LowerCtx) -> Option<HirExpr>
                 return None;
             }
             let iterator = lower_expr(&call.arguments.args[0], ctx)?;
-            let elem_ty = match iterator.ty().resolve_alias() {
-                Type::Iterator(elem) => *elem.clone(),
-                _ => {
-                    ctx.error(format!(
-                        "next() argument must be an iterator, got '{}'",
-                        iterator.ty().display_name()
-                    ));
-                    return None;
-                }
+            let Some(elem_ty) = iterator.ty().iterator_element_type() else {
+                ctx.error(format!(
+                    "next() argument must be an iterator, got '{}'",
+                    iterator.ty().display_name()
+                ));
+                return None;
             };
             return Some(HirExpr::IteratorCall {
                 op: HirIteratorOp::Next,
@@ -1523,8 +1520,11 @@ pub(super) fn lower_call(call: &ExprCall, ctx: &mut LowerCtx) -> Option<HirExpr>
             ));
             return None;
         };
-        let func_arg =
-            lower_lambda_with_context(&call.arguments.args[0], std::slice::from_ref(&elem_ty), ctx)?;
+        let func_arg = lower_lambda_with_context(
+            &call.arguments.args[0],
+            std::slice::from_ref(&elem_ty),
+            ctx,
+        )?;
         let Some((param_types, _conventions, return_ty)) = callable_signature(&func_arg) else {
             ctx.error("filter() first argument must be callable".to_string());
             return None;
