@@ -3557,7 +3557,7 @@ pub(super) fn lower_list_comp(comp: &ExprListComp, ctx: &mut LowerCtx) -> Option
                 }
             };
 
-            let iter_expr = HirExpr::IteratorCall { op: HirIteratorOp::Iter, args: vec![iter_source_expr], ty: Type::Iterator(Box::new(elem_ty)) };
+            let iter_expr = lower_iterator_protocol_entry(iter_source_expr, elem_ty);
             generators.push((var_name, iter_expr, filter));
         }
 
@@ -3609,7 +3609,7 @@ pub(super) fn lower_set_comp(comp: &ExprSetComp, ctx: &mut LowerCtx) -> Option<H
             } else {
                 Some(lower_expr(&gen.ifs[0], ctx)?)
             };
-            let iter_expr = HirExpr::IteratorCall { op: HirIteratorOp::Iter, args: vec![iter_source_expr], ty: Type::Iterator(Box::new(elem_ty)) };
+            let iter_expr = lower_iterator_protocol_entry(iter_source_expr, elem_ty);
             generators.push((var_name, iter_expr, filter));
         }
         let expr = lower_expr(&comp.elt, ctx)?;
@@ -3690,7 +3690,7 @@ pub(super) fn lower_dict_comp(comp: &ExprDictComp, ctx: &mut LowerCtx) -> Option
             } else {
                 Some(lower_expr(&gen.ifs[0], ctx)?)
             };
-            let iter_expr = HirExpr::IteratorCall { op: HirIteratorOp::Iter, args: vec![iter_source_expr], ty: Type::Iterator(Box::new(elem_ty)) };
+            let iter_expr = lower_iterator_protocol_entry(iter_source_expr, elem_ty);
             generators.push((var_name, iter_expr, filter));
         }
         let key_expr = lower_expr(&comp.key, ctx)?;
@@ -3757,11 +3757,10 @@ pub(super) fn lower_generator_expr(gen: &ExprGenerator, ctx: &mut LowerCtx) -> O
                 Some(Box::new(combined))
             }
         };
-
         Some((expr, expr_ty, filter))
     })?;
     let result_ty = Type::Iterator(Box::new(expr_ty));
-    let iter_expr = HirExpr::IteratorCall { op: HirIteratorOp::Iter, args: vec![iter_source_expr], ty: Type::Iterator(Box::new(elem_ty)) };
+    let iter_expr = lower_iterator_protocol_entry(iter_source_expr, elem_ty);
     Some(HirExpr::GeneratorExpr {
         expr: Box::new(expr),
         var: var_name,
@@ -3769,6 +3768,14 @@ pub(super) fn lower_generator_expr(gen: &ExprGenerator, ctx: &mut LowerCtx) -> O
         filter,
         ty: result_ty,
     })
+}
+
+fn lower_iterator_protocol_entry(iter_source_expr: HirExpr, elem_ty: Type) -> HirExpr {
+    HirExpr::IteratorCall {
+        op: HirIteratorOp::Iter,
+        args: vec![iter_source_expr],
+        ty: Type::Iterator(Box::new(elem_ty)),
+    }
 }
 
 pub(super) fn lower_named_expr(named: &ExprNamed, ctx: &mut LowerCtx) -> Option<HirExpr> {

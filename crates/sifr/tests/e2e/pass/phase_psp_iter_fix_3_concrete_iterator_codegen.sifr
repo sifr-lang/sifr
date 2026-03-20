@@ -10,8 +10,11 @@ def main():
 
     has_true: bool = any(iter(flags))
     evens: Iterator[int] = filter(is_even, iter(xs))
+    src_it: Iterator[int] = iter(xs)
+    evens_from_it_var: Iterator[int] = filter(is_even, src_it)
     ordered: list[int] = sorted(iter(xs))
 
     assert str(has_true) == "true"
     assert str(list(evens)) == "[4, 2]"
+    assert str(list(evens_from_it_var)) == "[4, 2]"
     assert str(ordered) == "[1, 2, 3, 4]"

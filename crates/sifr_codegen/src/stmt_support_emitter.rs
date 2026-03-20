@@ -3316,7 +3316,8 @@ impl RustEmitter {
             if let Some(lowered_builtin) = self.try_lower_registry_builtin_call_expr(func, args) {
                 return Ok(Some(lowered_builtin));
             }
-            if let Some(lowered_plain) = self.try_lower_registry_plain_call_with_signature(func, args)
+            if let Some(lowered_plain) =
+                self.try_lower_registry_plain_call_with_signature(func, args)
             {
                 return Ok(Some(lowered_plain));
             }
@@ -3340,7 +3341,8 @@ impl RustEmitter {
                 };
                 lowered_args.push(self.rewrite_stdlib_constant_idents_in_expr(lowered_arg));
             }
-            lowered_args = self.adapt_plain_call_args_with_signature_for_ir(func, args, lowered_args);
+            lowered_args =
+                self.adapt_plain_call_args_with_signature_for_ir(func, args, lowered_args);
             if let Some(captures) = self.nested_fn_captures.get(func).cloned() {
                 for capture in captures {
                     lowered_args.push(self.lower_recursive_capture_arg_for_ir(&capture));

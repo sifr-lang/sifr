@@ -660,6 +660,11 @@ fn try_lower_simple_filter_call_expr(args: &[HirExpr]) -> Option<RustExpr> {
     let [callable, iter] = args else {
         return None;
     };
+    // Iterator-typed inputs require the registry lowering path so codegen can
+    // preserve iterator return shape without cloning boxed trait objects.
+    if matches!(resolve_alias_type(iter.ty()), Type::Iterator(_)) {
+        return None;
+    }
     let lowered_callable = if let HirExpr::Lambda { params, body, .. } = callable {
         if params.len() != 1 {
             return None;
