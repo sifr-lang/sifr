@@ -179,11 +179,13 @@ def chain[T](*iterables: list[T]) -> Iterator[T]:
 
 def repeat(own value: T, times: int) -> Iterator[T]:
     holder: list[T] = [value]
+    result: list[T] = []
     i: int = 0
     while i < times:
         if len(holder) > 0:
-            yield holder[0]
+            result.append(holder[0])
         i = i + 1
+    return iter(result)
 
 
 def take(n: int, data: Iterable[T]) -> list[T]:
@@ -269,10 +271,9 @@ def islice(data: Iterable[T], start_or_stop: int, stop: int | None = None, step:
     return iter(result)
 
 def count(start: int = 0, step: int = 1) -> Iterator[int]:
-    current: int = start
-    while True:
-        yield current
-        current = current + step
+    # Current generator lowering materializes yields eagerly into a finite buffer.
+    # Keep count usable by providing a large bounded stream prefix.
+    return count_from(start, step, 10000)
 
 
 def product[T](*iterables: list[T], repeat: int = 1) -> Iterator[list[T]]:
