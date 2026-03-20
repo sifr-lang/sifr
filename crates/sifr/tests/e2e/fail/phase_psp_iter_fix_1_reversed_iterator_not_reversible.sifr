@@ -1,0 +1,5 @@
+# expect-error: SIFR-TYPE-0001: reversed() argument must be reversible, got 'Iterator[int]'
+def main() -> None:
+    nums: list[int] = [1, 2, 3]
+    it: Iterator[int] = iter(nums)
+    _rev = reversed(it)

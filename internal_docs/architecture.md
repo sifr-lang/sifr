@@ -7,6 +7,7 @@
 - Iterator architecture execution now has two stages:
   - stage 1 (closed): `issues/ad-hoc-first-class-lazy-iterators-and-python-iterable-protocol.md` and `issues/ad-hoc-first-class-lazy-iterators-and-python-iterable-protocol-execution.md`
   - stage 2 (current corrective continuation): `issues/ad-hoc-canonical-iteration-model-and-lazy-parity-closure.md` and `issues/ad-hoc-canonical-iteration-model-and-lazy-parity-closure-execution.md`
+  - stage-2 wave progress: `wave_psp_iter_fix_0` contract/governance lock closed; `wave_psp_iter_fix_1` type-system capability layer (`Reversible`, capability metadata, homogeneous tuple iteration typing) implemented and locally validated
   - stage-2 contract lock requires one canonical iteration path from type system through HIR/codegen with explicit capability tracking (single-pass, multi-pass, reversible/double-ended).
 - Historical references in this architecture document may mention legacy phase numbering from earlier roadmap versions.
 - When phase-number conflicts exist, follow [`roadmap.md`](./roadmap.md) and the matching files under [`phases/`](./phases/).

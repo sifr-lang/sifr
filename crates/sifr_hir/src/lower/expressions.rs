@@ -1,14 +1,14 @@
 use super::arithmetic_warnings::check_int_overflow_risk;
-use super::bytes_methods::{resolve_bytes_method_type, resolve_str_encode_method_type};
 use super::builtin_calls::{
     callable_builtin_element_type, callable_builtin_list_output_type,
     lower_builtin_reverseable_arg, lower_bytes_constructor_call, lower_bytes_type_factory_call,
-    lower_chr_call,
-    lower_defaultdict_constructor_call, lower_dict_constructor_call, lower_isinstance_call, lower_len_call,
-    lower_list_constructor_call, lower_ord_call, lower_range_call, lower_reveal_type_call,
-    lower_set_constructor_call, lower_tuple_constructor_call, DEFAULTDICT_INT_ALIAS,
-    DEFAULTDICT_LIST_ALIAS, DEFAULTDICT_SET_ALIAS,
+    lower_chr_call, lower_defaultdict_constructor_call, lower_dict_constructor_call,
+    lower_isinstance_call, lower_len_call, lower_list_constructor_call, lower_ord_call,
+    lower_range_call, lower_reveal_type_call, lower_set_constructor_call,
+    lower_tuple_constructor_call, DEFAULTDICT_INT_ALIAS, DEFAULTDICT_LIST_ALIAS,
+    DEFAULTDICT_SET_ALIAS,
 };
+use super::bytes_methods::{resolve_bytes_method_type, resolve_str_encode_method_type};
 use super::classes::is_hashable_type;
 use super::compat_imports::{
     resolve_bare_python_compat_call_alias, resolve_python_compat_call_alias,
@@ -37,8 +37,8 @@ use super::{
 };
 use crate::hir_nodes::{HirExpr, HirFStringPart, HirParam};
 use sifr_python_ast::{
-    BoolOp, CmpOp, Expr, ExprAttribute, ExprBinOp, ExprBoolOp, ExprCall, ExprCompare, ExprDict,
-    ExprBytesLiteral, ExprDictComp, ExprFString, ExprGenerator, ExprIf, ExprLambda, ExprList,
+    BoolOp, CmpOp, Expr, ExprAttribute, ExprBinOp, ExprBoolOp, ExprBytesLiteral, ExprCall,
+    ExprCompare, ExprDict, ExprDictComp, ExprFString, ExprGenerator, ExprIf, ExprLambda, ExprList,
     ExprListComp, ExprName, ExprNamed, ExprNumberLiteral, ExprSet, ExprSetComp, ExprSubscript,
     ExprTuple, ExprUnaryOp, FStringElement, Number, Operator, UnaryOp,
 };
@@ -639,10 +639,7 @@ pub(super) fn lower_call(call: &ExprCall, ctx: &mut LowerCtx) -> Option<HirExpr>
                 return None;
             }
             let iterable = lower_expr(&call.arguments.args[0], ctx)?;
-            if matches!(
-                iterable.ty().resolve_alias(),
-                Type::Any | Type::Unknown | Type::Tuple(_)
-            ) {
+            if matches!(iterable.ty().resolve_alias(), Type::Any | Type::Unknown) {
                 ctx.error(format!(
                     "iter() argument must be an iterable with a statically-known element type, got '{}'",
                     iterable.ty().display_name()
@@ -650,6 +647,13 @@ pub(super) fn lower_call(call: &ExprCall, ctx: &mut LowerCtx) -> Option<HirExpr>
                 return None;
             }
             let Some(elem_ty) = callable_builtin_element_type(iterable.ty()) else {
+                if matches!(iterable.ty().resolve_alias(), Type::Tuple(_)) {
+                    ctx.error(
+                        "iter() tuple argument must have one statically provable element type"
+                            .to_string(),
+                    );
+                    return None;
+                }
                 ctx.error(format!(
                     "iter() argument must be iterable, got '{}'",
                     iterable.ty().display_name()
@@ -1626,10 +1630,7 @@ pub(super) fn lower_call(call: &ExprCall, ctx: &mut LowerCtx) -> Option<HirExpr>
                     "read_bytes".to_string(),
                     FunctionType::all_borrow(
                         vec![],
-                        Type::Result(
-                            Box::new(Type::Bytes),
-                            Box::new(io_err_ty.clone()),
-                        ),
+                        Type::Result(Box::new(Type::Bytes), Box::new(io_err_ty.clone())),
                     ),
                 ),
                 (

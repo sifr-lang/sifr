@@ -382,7 +382,10 @@ impl RustEmitter {
         else_body: Option<&[HirStmt]>,
     ) -> RustStmt {
         let mut lowered_else = else_body.map(|body| {
-            self.lower_conditional_generator_branch(body, "conditional generator else stmt lowering")
+            self.lower_conditional_generator_branch(
+                body,
+                "conditional generator else stmt lowering",
+            )
         });
 
         for (elif_cond, elif_body) in elif_clauses.iter().rev() {

@@ -1,6 +1,6 @@
 # Ad Hoc Phase Execution Checklist (Canonical Iteration Model and Lazy Parity Closure)
 
-Status: in_progress (started 2026-03-20; `wave_psp_iter_fix_0` implementation merged; review pass-1 and pass-2 approved)
+Status: in_progress (started 2026-03-20; `wave_psp_iter_fix_0` implementation merged with completion/production approvals; `wave_psp_iter_fix_1` implementation and local validation complete, external review passes pending)
 Owner: ad_hoc_canonical_iteration execution loop
 Reference planning doc:
 - `issues/ad-hoc-canonical-iteration-model-and-lazy-parity-closure.md`
@@ -19,7 +19,7 @@ Loop per wave: Plan -> Implement -> Validate -> Demo -> PR -> External completio
 
 ## Full Phase To-Do Plan
 1. [x] `wave_psp_iter_fix_0`: contract freeze and governance lock
-2. [ ] `wave_psp_iter_fix_1`: type-system capability layer
+2. [x] `wave_psp_iter_fix_1`: type-system capability layer
 3. [ ] `wave_psp_iter_fix_2`: canonical iterator HIR
 4. [ ] `wave_psp_iter_fix_3`: concrete iterator codegen pipelines
 5. [ ] `wave_psp_iter_fix_4`: generator backend unification
@@ -94,13 +94,33 @@ Contract lock for wave progression:
   - wave gate: `$(pwd)/scripts/run_all_tests.sh --profile quick` -> PASS (2026-03-20)
 
 ### wave_psp_iter_fix_1: Type-System Capability Layer
-- Status: planned
+- Status: implemented (local validation complete; external completion/production review passes pending)
 - Scope:
   - add reversible/capability-aware iteration typing
   - align tuple iterability and assignability with the frozen contract
-- Validation target:
-  - positive typing tests for iterable/iterator/reversible capability use
-  - negative typing tests for invalid reversibility, tuple misuse, and invalid single-pass reuse
+- Implementation notes:
+  - added type-system iteration capability metadata (`SinglePass`, `MultiPass`, `DoubleEnded`, `ExactSize`) and capability queries
+  - added first-class `Reversible[T]` annotation support via canonical alias contract + assignability enforcement
+  - `reversed(...)` now requires explicit reversible capability at type-check time
+  - homogeneous tuple iteration now lowers through protocol entry (`iter(...)`), while heterogeneous tuple iteration remains an explicit type error
+  - tuple iteration lowering in codegen now materializes a homogeneous tuple iterator path (no fallback shim)
+  - wave-1 CPython traceability artifact added:
+    - `verification/stdlib/wave_psp_iter_fix_1_cpython_traceability.md`
+- Validation evidence:
+  - type-system unit lane:
+    - `cargo test -p sifr_type_system --lib` -> PASS
+  - HIR typing/lowering lane:
+    - `cargo test -p sifr_hir expressions_tests -- --nocapture` -> PASS
+  - positive e2e fixture:
+    - `cargo run -q -p sifr -- run crates/sifr/tests/e2e/pass/phase_psp_iter_fix_1_type_capability_layer.sifr` -> PASS
+  - demo:
+    - `cargo run -q -p sifr -- run demos/ad_hoc_iter_fix_wave1_type_capability_demo.sifr` -> PASS (prints `30`, `15`, `[6, 5, 4]`)
+  - negative fixtures (expected compile failures):
+    - `cargo run -q -p sifr -- check crates/sifr/tests/e2e/fail/phase_psp_iter_fix_1_reversed_iterator_not_reversible.sifr` -> PASS (expected failure)
+    - `cargo run -q -p sifr -- check crates/sifr/tests/e2e/fail/phase_psp_iter_fix_1_iter_heterogeneous_tuple_unsupported.sifr` -> PASS (expected failure)
+    - `cargo run -q -p sifr -- check crates/sifr/tests/e2e/fail/phase_psp_iter_fix_1_reversible_annotation_rejects_set.sifr` -> PASS (expected failure)
+  - wave gate:
+    - `$(pwd)/scripts/run_all_tests.sh` -> PASS (2026-03-20; profile `pr`)
 
 ### wave_psp_iter_fix_2: Canonical Iterator HIR
 - Status: planned

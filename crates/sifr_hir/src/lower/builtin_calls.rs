@@ -1,6 +1,6 @@
 use crate::hir_nodes::HirExpr;
 use sifr_python_ast::{Expr, ExprAttribute, ExprCall, Number};
-use sifr_type_system::{make_union, Type};
+use sifr_type_system::{make_union, IterationCapability, Type};
 
 use super::expressions::lower_expr;
 use super::LowerCtx;
@@ -9,30 +9,14 @@ pub(super) const DEFAULTDICT_INT_ALIAS: &str = "__compat_defaultdict_int";
 pub(super) const DEFAULTDICT_LIST_ALIAS: &str = "__compat_defaultdict_list";
 pub(super) const DEFAULTDICT_SET_ALIAS: &str = "__compat_defaultdict_set";
 
-fn homogeneous_tuple_element_type(elems: &[Type]) -> Option<Type> {
-    if elems.is_empty() {
-        return Some(Type::Any);
-    }
-    let first = elems[0].clone();
-    if elems.iter().all(|elem| elem == &first) {
-        Some(first)
-    } else {
-        None
-    }
-}
-
 fn iterable_element_type_for_builtin(arg_ty: &Type) -> Option<Type> {
-    match arg_ty.resolve_alias() {
-        Type::List(elem) | Type::Set(elem) => Some(*elem.clone()),
-        Type::Tuple(elems) => homogeneous_tuple_element_type(elems),
-        Type::Range => Some(Type::Int),
-        Type::Str => Some(Type::Str),
-        Type::Bytes => Some(Type::Int),
-        Type::Dict(key, _) => Some(*key.clone()),
-        Type::Iterable(elem) | Type::Iterator(elem) => Some(*elem.clone()),
-        Type::Any | Type::Unknown => Some(Type::Any),
-        _ => None,
-    }
+    arg_ty.iterable_element_type().or_else(|| {
+        if matches!(arg_ty.resolve_alias(), Type::Any | Type::Unknown) {
+            Some(Type::Any)
+        } else {
+            None
+        }
+    })
 }
 
 fn list_constructor_output_type(arg_ty: &Type) -> Option<Type> {
@@ -494,10 +478,7 @@ pub(super) fn lower_set_constructor_call(call: &ExprCall, ctx: &mut LowerCtx) ->
     }
 }
 
-pub(super) fn lower_bytes_constructor_call(
-    call: &ExprCall,
-    ctx: &mut LowerCtx,
-) -> Option<HirExpr> {
+pub(super) fn lower_bytes_constructor_call(call: &ExprCall, ctx: &mut LowerCtx) -> Option<HirExpr> {
     if !call.arguments.keywords.is_empty() {
         ctx.error("bytes() does not accept keyword arguments".to_string());
         return None;
@@ -652,14 +633,17 @@ pub(super) fn lower_len_call(call: &ExprCall, ctx: &mut LowerCtx) -> Option<HirE
         arg_ty.clone()
     };
     match effective_ty.resolve_alias() {
-        Type::Str | Type::Bytes | Type::List(_) | Type::Dict(_, _) | Type::Tuple(_) | Type::Set(_) => {
-            Some(HirExpr::MethodCall {
-                object: Box::new(arg),
-                method: "len".to_string(),
-                args: vec![],
-                ty: Type::Int,
-            })
-        }
+        Type::Str
+        | Type::Bytes
+        | Type::List(_)
+        | Type::Dict(_, _)
+        | Type::Tuple(_)
+        | Type::Set(_) => Some(HirExpr::MethodCall {
+            object: Box::new(arg),
+            method: "len".to_string(),
+            args: vec![],
+            ty: Type::Int,
+        }),
         Type::Class { methods, .. } if methods.iter().any(|(name, _)| name == "len") => {
             Some(HirExpr::MethodCall {
                 object: Box::new(arg),
@@ -863,6 +847,16 @@ pub(super) fn lower_builtin_reverseable_arg(
     if callable_builtin_element_type(arg.ty()).is_none() {
         ctx.error(format!(
             "{builtin_name}() argument must be an iterable with a statically-known element type, got '{}'",
+            arg.ty().display_name()
+        ));
+        return None;
+    }
+    if !arg
+        .ty()
+        .supports_iteration_capability(IterationCapability::DoubleEnded)
+    {
+        ctx.error(format!(
+            "{builtin_name}() argument must be reversible, got '{}'",
             arg.ty().display_name()
         ));
         return None;
