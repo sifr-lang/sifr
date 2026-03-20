@@ -33,7 +33,7 @@ Scope: `string`, `textwrap`, `base64`, `html`, `fnmatch`, `difflib`, `calendar`
 ## Explicit Waivers
 
 - `string.Formatter` advanced CPython capabilities (`auto-numbering`, conversion specifiers, attribute/index lookup, format-spec mini-language) are waived for this wave and kept as `adapted` map-only formatting.
-- Residual `textwrap.TextWrapper` formatter ecosystem options (`fix_sentence_endings`, `max_lines`, `placeholder` policy matrix) remain waived and tracked as `adapted`.
+- Residual `textwrap.TextWrapper` formatter ecosystem options (`fix_sentence_endings`, `max_lines`, `placeholder` policy matrix) remain waived and tracked as `adapted`; active follow-up owner: `issues/ad-hoc-stateful-rng-crypto-and-polish-parity-expansion.md` (`wave_psp_rng_3`).
 - `fnmatch` character-class and platform path-normalization semantics (`[]`, ranges, normcase behavior) remain waived and tracked as `adapted`.
 - `difflib` advanced class families (`Differ`, `HtmlDiff`, full opcode/group APIs) remain waived and tracked as `adapted`.
 - `difflib.SequenceMatcher` keeps a simplified constructor surface (`SequenceMatcher(a, b)` only) and does not expose CPython's `isjunk` / `autojunk` parameter matrix; this wave intentionally uses deterministic non-junk matching semantics and guards the unsupported call shape via `phase_psp_c2_difflib_sequence_matcher_isjunk_unsupported.sifr`.
@@ -50,4 +50,6 @@ Scope: `string`, `textwrap`, `base64`, `html`, `fnmatch`, `difflib`, `calendar`
 - Locked permanent diffs carried into continuation:
   - package-wide `html` expansion (`html.parser` families) remains `unsupported`,
   - formatter ecosystem expansion remains explicitly bounded.
+- Successor follow-up owner:
+  - `issues/ad-hoc-stateful-rng-crypto-and-polish-parity-expansion.md` (`wave_psp_rng_3`) for residual-waiver triage/closure without broad parser redesign.
 - Enforcement fixture: `crates/sifr/tests/e2e/fail/phase_psp_struct_0_html_package_parser_unsupported.sifr`

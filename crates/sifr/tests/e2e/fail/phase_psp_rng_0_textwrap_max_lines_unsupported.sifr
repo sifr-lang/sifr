@@ -1,0 +1,6 @@
+from sifr.textwrap import TextWrapper
+
+
+def main() -> None:
+    wrapper = TextWrapper(width=10, max_lines=2)
+    _ = wrapper

@@ -17,7 +17,7 @@
 | Full timezone-aware/calendar object parity in `datetime` (fold/zoneinfo/tz database semantics) | `unsupported` | Current runtime closes fixed-offset timezone helpers only and intentionally does not ship `zoneinfo`, DST folding, or extensible `tzinfo` ecosystems. |
 | Full `re` Match/Pattern object matrix (named groups, groupdict, and full capture-object APIs) | `unsupported` | Current `Match`/`Pattern` surfaces close high-value entry points (including `finditer`) but do not mirror every CPython capture-object API. |
 | Decimal/Fraction-specific and context-sensitive numeric semantics in `math` / `statistics` | `unsupported` | Wave e1 targets shipped float/int behavior and typed error contracts, not CPython decimal-context integration. |
-| SHA3/SHAKE constructor families and bytes-oriented digest APIs in `hashlib` | `unsupported` | Runtime currently closes the guaranteed algorithm set and explicit placeholders raise typed errors for unsupported families. |
+| SHA3/SHAKE constructor families and bytes-oriented digest APIs in `hashlib` | `unsupported` | Runtime currently closes the guaranteed algorithm set and explicit placeholders raise typed errors for unsupported families. Active follow-up owner: `issues/ad-hoc-stateful-rng-crypto-and-polish-parity-expansion.md` (`wave_psp_rng_2`). |
 
 ## Structured/Class-Surface Continuation Closure (2026-03-18)
 

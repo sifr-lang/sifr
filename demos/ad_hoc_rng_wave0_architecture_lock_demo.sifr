@@ -1,0 +1,29 @@
+from sifr.random import randint
+from sifr.hashlib import sha256_obj
+from sifr.base64 import b64encode, b64decode
+
+
+def main() -> None:
+    range_ok: bool = False
+    try:
+        value: int = randint(1, 5)
+        range_ok = value >= 1 and value <= 5
+    except ValueError as e:
+        _ = str(e.message)
+    assert range_ok
+
+    payload: str = "phase-rng-wave0"
+    encoded: str = b64encode(payload)
+    decode_ok: bool = False
+    try:
+        decoded: str = b64decode(encoded)
+        decode_ok = decoded == payload
+    except ParseError as e:
+        _ = str(e.message)
+    assert decode_ok
+
+    h = sha256_obj(payload)
+    digest: str = h.hexdigest()
+    assert len(digest) == 64
+
+    print("ad_hoc_rng_wave0_architecture_lock_demo: pass")
