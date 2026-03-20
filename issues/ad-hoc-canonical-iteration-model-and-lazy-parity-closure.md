@@ -413,6 +413,15 @@ Definition of done:
 
 ### wave_psp_iter_fix_8: Downstream Phase Alignment and Final Closure
 
+Status:
+
+- implementation complete with local validation; completion + production-grade review passes pending
+- key wave-8 artifacts:
+  - `crates/sifr/tests/e2e/pass/phase_psp_iter_fix_8_downstream_alignment_closure.sifr`
+  - `crates/sifr/tests/e2e/fail/phase_psp_iter_fix_8_reversed_runtime_iterator_not_reversible.sifr`
+  - `demos/ad_hoc_iter_fix_wave8_downstream_alignment_demo.sifr`
+  - `verification/stdlib/wave_psp_iter_fix_8_cpython_traceability.md`
+
 Scope:
 
 - audit iterator-sensitive surfaces inherited from:

@@ -171,6 +171,32 @@ impl RustEmitter {
         }
     }
 
+    pub(super) fn coerce_local_value_for_target_type_for_ir(
+        &mut self,
+        target_ty: &Type,
+        value: &HirExpr,
+        lowered_value: crate::RustExpr,
+    ) -> Result<crate::RustExpr, crate::CodegenError> {
+        if matches!(
+            crate::resolve_alias_type_for_plain_call(target_ty),
+            Type::Iterable(_)
+        ) {
+            if let Some(coerced) =
+                crate::intrinsic_method_emitters::registry_iterable_to_vec_expr(self, value)
+            {
+                return Ok(coerced);
+            }
+            return Err(crate::CodegenError::new(
+                "failed to coerce iterable local binding value",
+            ));
+        }
+        Ok(Self::wrap_option_local_value_for_ir(
+            target_ty,
+            value,
+            lowered_value,
+        ))
+    }
+
     fn uses_debug_display_format_for_ir(ty: &Type) -> bool {
         match crate::resolve_alias_type_for_plain_call(ty) {
             Type::Int
@@ -4021,22 +4047,25 @@ impl RustEmitter {
         value: &HirExpr,
         return_ty: Option<&Type>,
     ) -> Result<Option<crate::RustExpr>, crate::CodegenError> {
-        let wrap_option_return = |lowered: crate::RustExpr| -> crate::RustExpr {
+        let coerce_return = |this: &mut Self,
+                             lowered: crate::RustExpr|
+         -> Result<crate::RustExpr, crate::CodegenError> {
             if let Some(target_ty) = return_ty {
-                return Self::wrap_option_local_value_for_ir(target_ty, value, lowered);
+                return this.coerce_local_value_for_target_type_for_ir(target_ty, value, lowered);
             }
-            lowered
+            Ok(lowered)
         };
         if self.current_class_name.is_some()
             && matches!(value, HirExpr::Name { name, .. } if name == "self")
         {
-            return Ok(Some(wrap_option_return(crate::RustExpr::Clone(Box::new(
-                crate::RustExpr::Ident("self".to_string()),
-            )))));
+            return Ok(Some(coerce_return(
+                self,
+                crate::RustExpr::Clone(Box::new(crate::RustExpr::Ident("self".to_string()))),
+            )?));
         }
 
         if let Some(clone_expr) = self.borrowed_return_name_clone_expr_for_ir(value) {
-            return Ok(Some(wrap_option_return(clone_expr)));
+            return Ok(Some(coerce_return(self, clone_expr)?));
         }
 
         if return_ty.is_some_and(|ty| !crate::helpers::is_option_type(ty))
@@ -4051,12 +4080,13 @@ impl RustEmitter {
         }
 
         if let Some(lowered_leaf) = crate::try_lower_leaf_or_name_expr_result(value)? {
-            return Ok(Some(wrap_option_return(lowered_leaf)));
+            return Ok(Some(coerce_return(self, lowered_leaf)?));
         }
         if let Some(lowered_expr) = self.lower_stmt_expr_for_ir(value)? {
-            return Ok(Some(wrap_option_return(
+            return Ok(Some(coerce_return(
+                self,
                 self.rewrite_stdlib_constant_idents_in_expr(lowered_expr),
-            )));
+            )?));
         }
         Ok(None)
     }
@@ -4163,7 +4193,7 @@ impl RustEmitter {
                     let Some(lowered) = self.lower_rendered_expr_for_ir(value)? else {
                         return Ok(None);
                     };
-                    Self::wrap_option_local_value_for_ir(ty, value, lowered)
+                    self.coerce_local_value_for_target_type_for_ir(ty, value, lowered)?
                 };
                 (
                     vec![RustStmt::Let {

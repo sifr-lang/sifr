@@ -347,15 +347,38 @@ Contract lock for wave progression:
     - `$(pwd)/scripts/run_all_tests.sh` -> PASS (2026-03-20; profile `pr`; e2e pass `64 passed, 0 failed`; report signature `2161ea8c3fd4e3df`; hardening `variants=18, failures=0`)
 
 ### wave_psp_iter_fix_8: Downstream Phase Alignment and Final Closure
-- Status: planned
+- Status: completed (implementation + local validation complete; completion and production-grade reviews pending)
 - Scope:
   - audit inherited iterator-sensitive surfaces from the earlier implemented ad hoc phases
   - revalidate bytes, runtime/file, and earlier stdlib iterator-returning APIs against the canonical iteration contract
   - land closure demo, final negative-case coverage, and parity-governance alignment without rewriting earlier historical phase claims
+- Implementation notes:
+  - closed iterable coercion mismatch in structured top-level and nested stmt lowering:
+    - `Iterable[T]`-typed local bindings now use the same iterable-to-collection coercion path already used by plain-call signature lowering
+    - `Iterable[T]` return sites now use the same coercion path to prevent `Iterator[T] -> Iterable[T]` Rust type mismatches
+    - simple stmt lowering now bypasses `let`/`return` for iterable targets so coercion is always handled by structured lowering
+  - added focused codegen regressions for local/return iterable coercion:
+    - `test_generate_rust_iterable_binding_from_iterator_materializes_once`
+    - `test_generate_rust_iterable_return_from_iterator_materializes_for_signature`
+  - added wave-8 fixture/demo/traceability artifacts:
+    - `crates/sifr/tests/e2e/pass/phase_psp_iter_fix_8_downstream_alignment_closure.sifr`
+    - `crates/sifr/tests/e2e/fail/phase_psp_iter_fix_8_reversed_runtime_iterator_not_reversible.sifr`
+    - `demos/ad_hoc_iter_fix_wave8_downstream_alignment_demo.sifr`
+    - `verification/stdlib/wave_psp_iter_fix_8_cpython_traceability.md`
 - Validation target:
   - inherited-surface regression fixtures and demos pass under the final iterator model
   - residual differences are documented as intentional divergences
   - full phase gate via `scripts/run_all_tests.sh`
+- Validation:
+  - focused codegen tests:
+    - `cargo test -p sifr_codegen iterable_binding_from_iterator -- --nocapture` -> PASS
+    - `cargo test -p sifr_codegen iterable_return_from_iterator -- --nocapture` -> PASS
+  - wave fixture:
+    - `cargo run -q -p sifr -- run crates/sifr/tests/e2e/pass/phase_psp_iter_fix_8_downstream_alignment_closure.sifr` -> PASS
+  - negative fixture:
+    - `cargo run -q -p sifr -- check crates/sifr/tests/e2e/fail/phase_psp_iter_fix_8_reversed_runtime_iterator_not_reversible.sifr` -> expected compile failure (PASS; `reversed() argument must be reversible, got 'Iterator[str]'`)
+  - demo:
+    - `cargo run -q -p sifr -- run demos/ad_hoc_iter_fix_wave8_downstream_alignment_demo.sifr` -> PASS (prints `[3, 4, 5]`, `[7, 8]`, `[66, 91]`, `[1, 4]`, `2`, `2`)
 
 ## External Review Passes
 

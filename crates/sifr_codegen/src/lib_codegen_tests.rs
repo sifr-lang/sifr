@@ -1436,6 +1436,25 @@ fn test_generate_rust_filter_over_list_lowers_to_lazy_boxed_iterator() {
 }
 
 #[test]
+fn test_generate_rust_iterable_binding_from_iterator_materializes_once() {
+    let rust_code = generate_rust_from_source(
+        "def main():\n    base: list[int] = [1, 2, 3]\n    it: Iterator[int] = iter(base)\n    xs: Iterable[int] = it\n    print(list(xs))\n",
+    );
+
+    assert!(rust_code.contains("let xs: Vec<i64> = (it).into_iter().collect::<Vec<_>>();"));
+}
+
+#[test]
+fn test_generate_rust_iterable_return_from_iterator_materializes_for_signature() {
+    let rust_code = generate_rust_from_source(
+        "def adapt(own it: Iterator[int]) -> Iterable[int]:\n    return it\n\ndef main():\n    base: list[int] = [1, 2]\n    it: Iterator[int] = iter(base)\n    xs: Iterable[int] = adapt(it)\n    print(list(xs))\n",
+    );
+
+    assert!(rust_code.contains("fn adapt(it: Box<dyn Iterator<Item = i64>>) -> Vec<i64> {"));
+    assert!(rust_code.contains("return (it).into_iter().collect::<Vec<_>>();"));
+}
+
+#[test]
 fn test_generate_rust_test_uses_explicit_test_mode_context() {
     let module = HirModule {
         functions: vec![

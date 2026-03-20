@@ -229,7 +229,7 @@ fn registry_tuple_homogeneous_iter_expr(lowered: RustExpr, tuple_len: usize) -> 
     })
 }
 
-fn registry_iterable_to_owned_iter_expr(
+pub(crate) fn registry_iterable_to_owned_iter_expr(
     emitter: &mut RustEmitter,
     expr: &HirExpr,
 ) -> Option<RustExpr> {
@@ -364,7 +364,10 @@ fn registry_box_iterator_expr(iter_expr: RustExpr) -> RustExpr {
     }
 }
 
-fn registry_iterable_to_vec_expr(emitter: &mut RustEmitter, expr: &HirExpr) -> Option<RustExpr> {
+pub(crate) fn registry_iterable_to_vec_expr(
+    emitter: &mut RustEmitter,
+    expr: &HirExpr,
+) -> Option<RustExpr> {
     Some(RustExpr::MethodCall {
         receiver: Box::new(registry_iterable_to_owned_iter_expr(emitter, expr)?),
         method: "collect::<Vec<_>>".to_string(),

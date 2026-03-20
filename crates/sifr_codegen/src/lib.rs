@@ -1268,9 +1268,9 @@ impl RustEmitter {
                 clone_expr
             } else {
                 if let Some(lowered) = self.lower_rendered_expr_for_ir(value)? {
-                    Self::wrap_option_local_value_for_ir(ty, value, lowered)
+                    self.coerce_local_value_for_target_type_for_ir(ty, value, lowered)?
                 } else if let Some(lowered) = self.lower_stmt_expr_for_ir(value)? {
-                    Self::wrap_option_local_value_for_ir(ty, value, lowered)
+                    self.coerce_local_value_for_target_type_for_ir(ty, value, lowered)?
                 } else {
                     return Ok(false);
                 }

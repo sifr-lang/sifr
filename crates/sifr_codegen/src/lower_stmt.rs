@@ -503,16 +503,20 @@ pub(crate) fn try_lower_simple_stmt_with_ctx(
         HirStmt::Expr { expr } => try_lower_expr_stmt(expr),
         HirStmt::Let {
             name, ty, value, ..
-        } if try_lower_simple_let_value(ty, value).is_some() => Some(vec![RustStmt::Let {
-            mutable: bindings.mutated_vars.contains(name) || should_force_mutable_binding(ty),
-            name: name.clone(),
-            ty: if should_omit_local_type_annotation(ty, value) {
-                None
-            } else {
-                Some(crate::sifr_type_to_rust_type(ty))
-            },
-            value: try_lower_simple_let_value(ty, value)?,
-        }]),
+        } if !matches!(resolve_alias_type(ty), Type::Iterable(_))
+            && try_lower_simple_let_value(ty, value).is_some() =>
+        {
+            Some(vec![RustStmt::Let {
+                mutable: bindings.mutated_vars.contains(name) || should_force_mutable_binding(ty),
+                name: name.clone(),
+                ty: if should_omit_local_type_annotation(ty, value) {
+                    None
+                } else {
+                    Some(crate::sifr_type_to_rust_type(ty))
+                },
+                value: try_lower_simple_let_value(ty, value)?,
+            }])
+        }
         HirStmt::Assign { name, value }
             if try_lower_simple_assign_value(value, bindings.borrowed_params).is_some() =>
         {
@@ -3443,6 +3447,12 @@ fn try_lower_simple_return_stmt(
     }
     let option_return = ctx.return_type.is_some_and(is_option_like_type);
     if matches!(value.ty(), Type::TypeVar(_)) {
+        return None;
+    }
+    if ctx
+        .return_type
+        .is_some_and(|ty| matches!(resolve_alias_type(ty), Type::Iterable(_)))
+    {
         return None;
     }
 
