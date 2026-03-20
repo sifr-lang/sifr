@@ -1,0 +1,51 @@
+from sifr.random import Random, RandomState, getstate, randint, randbytes, random, seed, setstate
+from sifr.test import assert_eq, assert_true
+
+
+def main():
+    stateful: Random = Random(12345)
+    checkpoint: RandomState = stateful.getstate()
+
+    try:
+        first: int = stateful.randint(0, 1000000)
+        checkpoint = stateful.getstate()
+        second: int = stateful.randint(0, 1000000)
+        _stateful_set_result: Result[None, ValueError] = stateful.setstate(checkpoint)
+        _ = _stateful_set_result
+        replay_second: int = stateful.randint(0, 1000000)
+
+        assert_eq(second, replay_second)
+        assert_true(first != second)
+
+        assert_eq(checkpoint.version, 3)
+        assert_eq(len(checkpoint.state_words), 624)
+        assert_true(checkpoint.index >= 0)
+        assert_true(checkpoint.index <= 624)
+
+        seed(2024)
+        module_a1: float = random()
+        module_a2: int = randint(0, 1000000)
+        module_state: RandomState = getstate()
+
+        module_a3: int = randint(0, 1000000)
+        _module_set_result: Result[None, ValueError] = setstate(module_state)
+        _ = _module_set_result
+        module_a3_replay: int = randint(0, 1000000)
+        assert_eq(module_a3, module_a3_replay)
+
+        seed(2024)
+        module_b1: float = random()
+        module_b2: int = randint(0, 1000000)
+        assert_eq(module_a1, module_b1)
+        assert_eq(module_a2, module_b2)
+
+        seed(909)
+        bytes_a: bytes = randbytes(8)
+        seed(909)
+        bytes_b: bytes = randbytes(8)
+        assert_eq(len(bytes_a), 8)
+        assert_eq(str(bytes_a), str(bytes_b))
+    except ValueError as e:
+        assert str("unexpected random error: " + e.message) == "phase_psp_rng_1_stateful_random_object_model: pass"
+
+    assert str("phase_psp_rng_1_stateful_random_object_model: pass") == "phase_psp_rng_1_stateful_random_object_model: pass"

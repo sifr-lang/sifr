@@ -334,6 +334,7 @@ pub fn generate_rust_with_stdlib(module: &HirModule, stdlib_code: &StdlibCode) -
     let needs_logging = emitter.used_stdlib_modules.contains("sifr.logging")
         || emitter.used_stdlib_modules.contains("_sifr.logging")
         || emitter.runtime_needs.needs_logging_state;
+    let needs_random_module_state = emitter.runtime_needs.needs_random_module_state;
 
     // Emit built-in error class struct definitions for referenced error types.
     let referenced_error_classes = collect_referenced_builtin_error_classes(
@@ -413,6 +414,9 @@ pub fn generate_rust_with_stdlib(module: &HirModule, stdlib_code: &StdlibCode) -
     if needs_logging {
         preamble_items.extend(build_logging_items());
     }
+    if needs_random_module_state {
+        preamble_items.extend(build_random_module_state_items());
+    }
 
     let mut assembled_body_items: Vec<RustItem> = Vec::new();
     if !emitter.enum_items.is_empty() {
@@ -440,6 +444,7 @@ pub fn generate_rust_with_stdlib(module: &HirModule, stdlib_code: &StdlibCode) -
         || stdlib_import_needs.runtime.numeric.needs_bigdecimal;
     let needs_mutex = needs_file_handles
         || needs_logging
+        || needs_random_module_state
         || body_import_needs.runtime.needs_mutex
         || stdlib_import_needs.runtime.needs_mutex;
 
@@ -1060,6 +1065,7 @@ struct CollectionNeeds {
 struct RuntimeNeeds {
     needs_file_handles: bool,
     needs_logging_state: bool,
+    needs_random_module_state: bool,
     needs_bigint: bool,
 }
 

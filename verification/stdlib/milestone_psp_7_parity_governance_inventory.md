@@ -1,6 +1,6 @@
 # `milestone_psp_7` Parity Governance Inventory
 
-Status: in_progress (updated by canonical-iteration wave-1 type-system capability closure implementation on 2026-03-20)  
+Status: in_progress (updated by RNG wave-1 deterministic state/object-model implementation evidence on 2026-03-21)  
 Phase: `issues/ad-hoc-python-source-parity-and-builtin-stdlib-surface.md`  
 Execution ledger: `issues/ad-hoc-python-source-parity-and-builtin-stdlib-surface-execution.md`  
 Continuation phase (closed): `issues/ad-hoc-python-source-parity-extension-waiver-reduction.md`  
@@ -11,8 +11,8 @@ Continuation phase (closed): `issues/ad-hoc-first-class-bytes-and-binary-surface
 Continuation execution ledger (closed): `issues/ad-hoc-first-class-bytes-and-binary-surface-foundation-execution.md`  
 Continuation phase (closed): `issues/ad-hoc-runtime-and-file-object-parity-expansion.md`  
 Continuation execution ledger (closed): `issues/ad-hoc-runtime-and-file-object-parity-expansion-execution.md`  
-Continuation phase (current): `issues/ad-hoc-canonical-iteration-model-and-lazy-parity-closure.md`  
-Continuation execution ledger (current): `issues/ad-hoc-canonical-iteration-model-and-lazy-parity-closure-execution.md`
+Continuation phase (current): `issues/ad-hoc-stateful-rng-crypto-and-polish-parity-expansion.md`  
+Continuation execution ledger (current): `issues/ad-hoc-stateful-rng-crypto-and-polish-parity-expansion-execution.md`
 
 This is the canonical closure inventory for phase 31.5 milestone 7.
 
@@ -85,7 +85,7 @@ Terminal state legend for this milestone:
 | `os` | `wave_psp_d2` | `host-limited` | `verification/stdlib/wave_psp_d2_cpython_traceability.md` |
 | `pathlib` | `wave_psp_d1 + wave_psp_ext_3` | `parity-closed` | `verification/stdlib/wave_psp_d1_cpython_traceability.md` |
 | `platform` | `wave_psp_d2` | `host-limited` | `verification/stdlib/wave_psp_d2_cpython_traceability.md` |
-| `random` | `wave_psp_b2` | `parity-closed` | `verification/stdlib/wave_psp_b2_cpython_traceability.md` |
+| `random` | `wave_psp_b2 + wave_psp_rng_1` | `parity-closed` | `verification/stdlib/wave_psp_b2_cpython_traceability.md`, `verification/stdlib/wave_psp_rng_1_cpython_traceability.md` |
 | `re` | `wave_psp_e1 + wave_psp_ext_3` | `parity-closed` | `verification/stdlib/wave_psp_e1_cpython_traceability.md` |
 | `secrets` | `wave_psp_b2` | `host-limited` | `verification/stdlib/wave_psp_b2_cpython_traceability.md` |
 | `shutil` | `wave_psp_d1` | `parity-closed` | `verification/stdlib/wave_psp_d1_cpython_traceability.md` |
@@ -140,6 +140,8 @@ Terminal state legend for this milestone:
 | `wave_psp_iter_fix_1` | `issues/ad-hoc-canonical-iteration-model-and-lazy-parity-closure-execution.md`, `verification/stdlib/wave_psp_iter_fix_1_cpython_traceability.md` | Type-system capability layer closure: adds capability-aware iteration typing (`SinglePass`/`MultiPass`/`DoubleEnded`/`ExactSize`), `Reversible[T]` annotation enforcement, and homogeneous-tuple iteration typing with explicit heterogeneous rejection. |
 | `wave_psp_iter_fix_2` | `issues/ad-hoc-canonical-iteration-model-and-lazy-parity-closure-execution.md`, `verification/stdlib/wave_psp_iter_fix_2_cpython_traceability.md` | Canonical iterator HIR closure: protocol-entry and iterator builtin family now lower through dedicated `IteratorCall` nodes (including comprehension/generator sources), with traversal/codegen plumbing aligned to structured iterator operations. |
 | `wave_psp_iter_fix_3` | `issues/ad-hoc-canonical-iteration-model-and-lazy-parity-closure-execution.md`, `verification/stdlib/wave_psp_iter_fix_3_cpython_traceability.md` | Concrete iterator codegen pipeline closure: iterator-consumer builtins now lower through canonical iterable-to-owned-iterator conversion paths, closing unresolved-symbol/collection-only assumptions for `any(iter(xs))`, `filter(pred, iter(xs))`, and `sorted(iter(xs))` while retaining capability-aware `reversed(iter(xs))` rejection. |
+| `wave_psp_rng_0` | `issues/ad-hoc-stateful-rng-crypto-and-polish-parity-expansion-execution.md`, `verification/stdlib/phase_psp_rng_architecture_lock.md`, `verification/stdlib/wave_psp_rng_0_cpython_traceability.md` | Architecture lock kickoff for stateful RNG/crypto/polish continuation: freezes typed `RandomState` contract, module-global delegation policy, bytes-native `hashlib` boundary, and permanent-diff ownership before implementation waves. |
+| `wave_psp_rng_1` | `issues/ad-hoc-stateful-rng-crypto-and-polish-parity-expansion-execution.md`, `verification/stdlib/wave_psp_rng_1_cpython_traceability.md` | Deterministic RNG state/object-model closure: ships typed `RandomState` + `Random` mutable-state semantics, module-global delegation, deterministic `randbytes`, and explicit `SystemRandom` state-boundary waivers. |
 
 ## Waiver Index (`intentional-diff`, `unsupported`, `host-limited`)
 
@@ -156,7 +158,7 @@ Canonical issue for revisit tracking: `issues/ad-hoc-python-source-parity-and-bu
 | Materialize-then-iterate behavior behind iterator-returning regex/filesystem surfaces (`re.finditer`, `Pattern.finditer`, `glob.iglob`, `Path.iterdir/glob/rglob`) | `intentional-diff` | Public contracts are iterator-returning and type-safe, but current intrinsic layer computes full match/path lists before yielding iterator values. | Revisit when intrinsic/runtime layer supports true streaming iterator producers without pre-materialization. | `verification/stdlib/wave_psp_d1_cpython_traceability.md`, `verification/stdlib/wave_psp_e1_cpython_traceability.md`, `issues/ad-hoc-python-source-parity-extension-waiver-reduction-execution.md` |
 | `functools.partial`/wrapper-family parity | `unsupported` | Requires broader callable-wrapper typing and object runtime support. | Revisit with callable-object typing milestone. | `verification/stdlib/wave_psp_b2_cpython_traceability.md` |
 | Reflective `operator` factories (`attrgetter`, `methodcaller`) | `unsupported` | Static object model intentionally excludes string-driven reflective dispatch. | Revisit only with explicit reflection policy change. | `verification/stdlib/wave_psp_b2_cpython_traceability.md` |
-| Weighted/stateful random families (`choices(weights=...)`, `seed/getstate/setstate`, `Random`/`SystemRandom` object model, `randbytes`) | `unsupported` | Current randomness layer remains host-random wrapper based and does not yet ship deterministic mutable RNG state objects. | Active follow-up owner: `issues/ad-hoc-stateful-rng-crypto-and-polish-parity-expansion.md` (`wave_psp_rng_1`). Keep `unsupported` until wave closure evidence lands. | `verification/stdlib/wave_psp_b2_cpython_traceability.md`, `verification/stdlib/phase_psp_rng_architecture_lock.md` |
+| Residual random waiver family (`choices(weights=...)`, `SystemRandom.getstate/setstate`) | `unsupported` | Deterministic mutable-state random object parity (`RandomState`, `Random`, module-level delegation, and `randbytes`) is now shipped by `wave_psp_rng_1`; weighted-distribution `choices(weights=...)` and host-backed `SystemRandom` state export/import remain intentionally unsupported. | Active follow-up owner: `issues/ad-hoc-stateful-rng-crypto-and-polish-parity-expansion.md`. Keep weighted `choices` unsupported unless explicit scope is approved; keep `SystemRandom` state export/import unsupported by design. | `verification/stdlib/wave_psp_b2_cpython_traceability.md`, `verification/stdlib/wave_psp_rng_1_cpython_traceability.md`, `verification/stdlib/phase_psp_rng_architecture_lock.md` |
 | Bytes-native `hashlib` digest/object APIs (`digest()->bytes`, `digest_bytes`, `update_bytes`, `new_bytes`) and SHA3/SHAKE algorithm tranche | `unsupported` | Current `hashlib` closure is still str-centric (`digest()` aliases `hexdigest()`) with explicit SHA3/SHAKE placeholders. | Active follow-up owner: `issues/ad-hoc-stateful-rng-crypto-and-polish-parity-expansion.md` (`wave_psp_rng_2`). Keep `unsupported` until bytes-native and algorithm-tranche closure evidence lands. | `verification/stdlib/wave_psp_e1_cpython_traceability.md`, `verification/stdlib/phase_psp_rng_architecture_lock.md` |
 | `json` dynamic decode-hook callback matrices (`object_hook`, `object_pairs_hook`, `parse_float`, `parse_int`, `parse_constant`, `default`) | `unsupported` | `wave_psp_struct_1` closed typed wrapper/class entry points while intentionally excluding dynamic callback injection. | Revisit only under an explicit callback-safe typed hook model beyond current structured/class-surface scope. | `verification/stdlib/wave_psp_c1_cpython_traceability.md`, `verification/stdlib/phase_psp_struct_architecture_lock.md` |
 | `configparser` dynamic converter registration/callback ecosystems | `unsupported` | `wave_psp_struct_1` closed interpolation/proxy/write-back parity, but dynamic converter callback registration remains intentionally unshipped. | Revisit only with typed-safe callback registration architecture; keep current unsupported boundary explicit. | `verification/stdlib/wave_psp_c1_cpython_traceability.md`, `verification/stdlib/phase_psp_struct_architecture_lock.md` |

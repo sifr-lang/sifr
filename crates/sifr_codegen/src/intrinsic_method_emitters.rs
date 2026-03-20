@@ -1710,6 +1710,15 @@ impl RustEmitter {
         if matches!(func, "set_global_level" | "get_global_level") {
             self.runtime_needs.needs_logging_state = true;
         }
+        if matches!(
+            func,
+            "random_module_state_words"
+                | "random_module_state_index"
+                | "random_module_state_gauss_next"
+                | "random_module_set_state"
+        ) {
+            self.runtime_needs.needs_random_module_state = true;
+        }
 
         if let Some(required_crate) = lowered.required_crate {
             self.intrinsic_registry_crates
