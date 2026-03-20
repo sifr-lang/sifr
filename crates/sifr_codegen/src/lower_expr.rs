@@ -660,59 +660,71 @@ fn try_lower_simple_filter_call_expr(args: &[HirExpr]) -> Option<RustExpr> {
     let [callable, iter] = args else {
         return None;
     };
-    // Iterator-typed inputs require the registry lowering path so codegen can
-    // preserve iterator return shape without cloning boxed trait objects.
-    if matches!(resolve_alias_type(iter.ty()), Type::Iterator(_)) {
-        return None;
-    }
-    let lowered_callable = if let HirExpr::Lambda { params, body, .. } = callable {
+    let predicate_expr = if let HirExpr::Lambda { params, body, .. } = callable {
         if params.len() != 1 {
             return None;
         }
         let param_name = params[0].name.clone();
-        RustExpr::ClosureBlock {
-            params: vec![RustParam::Named {
-                name: param_name.clone(),
-                ty: RustType::Named("_".to_string()),
+        let lowered_body = try_lower_leaf_or_name_expr(body)?;
+        RustExpr::Block {
+            stmts: vec![RustStmt::Let {
+                mutable: false,
+                name: param_name,
+                ty: None,
+                value: RustExpr::Ident("__filter_value".to_string()),
             }],
-            body: vec![
-                RustStmt::Let {
-                    mutable: false,
-                    name: param_name.clone(),
-                    ty: None,
-                    value: RustExpr::MethodCall {
-                        receiver: Box::new(RustExpr::Ident(param_name.clone())),
-                        method: "clone".to_string(),
-                        args: vec![],
-                    },
-                },
-                RustStmt::Return(Some(try_lower_leaf_or_name_expr(body)?)),
-            ],
-            is_move: false,
+            expr: Some(Box::new(lowered_body)),
         }
     } else {
-        try_lower_simple_callable_expr(callable)?
+        let lowered_callable = try_lower_simple_callable_expr(callable)?;
+        RustExpr::FnCall {
+            func: Box::new(lowered_callable),
+            args: vec![RustExpr::Ident("__filter_value".to_string())],
+        }
     };
-    let lowered_iter = try_lower_leaf_or_name_expr(iter)?;
-    let filtered_iter = RustExpr::MethodCall {
-        receiver: Box::new(RustExpr::MethodCall {
-            receiver: Box::new(RustExpr::MethodCall {
-                receiver: Box::new(lowered_iter),
-                method: "clone".to_string(),
-                args: vec![],
-            }),
-            method: "into_iter".to_string(),
-            args: vec![],
-        }),
-        method: "filter".to_string(),
-        args: vec![lowered_callable],
+
+    let iter_source = match resolve_alias_type(iter.ty()) {
+        Type::List(_) | Type::Set(_) | Type::Iterable(_) => {
+            let lowered_iter = try_lower_leaf_or_name_expr(iter)?;
+            RustExpr::MethodCall {
+                receiver: Box::new(RustExpr::MethodCall {
+                    receiver: Box::new(RustExpr::MethodCall {
+                        receiver: Box::new(lowered_iter),
+                        method: "clone".to_string(),
+                        args: vec![],
+                    }),
+                    method: "into_iter".to_string(),
+                    args: vec![],
+                }),
+                method: "filter".to_string(),
+                args: vec![RustExpr::ClosureBlock {
+                    params: vec![RustParam::Named {
+                        name: "__filter_item".to_string(),
+                        ty: RustType::Named("_".to_string()),
+                    }],
+                    body: vec![
+                        RustStmt::Let {
+                            mutable: false,
+                            name: "__filter_value".to_string(),
+                            ty: None,
+                            value: RustExpr::MethodCall {
+                                receiver: Box::new(RustExpr::Ident("__filter_item".to_string())),
+                                method: "clone".to_string(),
+                                args: vec![],
+                            },
+                        },
+                        RustStmt::Return(Some(predicate_expr)),
+                    ],
+                    is_move: false,
+                }],
+            }
+        }
+        _ => return None,
     };
+
     Some(RustExpr::FnCall {
-        func: Box::new(RustExpr::Path(vec![
-            "Vec".to_string(),
-            "from_iter".to_string(),
-        ])),
-        args: vec![filtered_iter],
+        func: Box::new(RustExpr::Path(vec!["Box".to_string(), "new".to_string()])),
+        args: vec![iter_source],
     })
 }
 

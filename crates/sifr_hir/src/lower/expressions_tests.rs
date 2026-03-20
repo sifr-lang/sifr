@@ -301,7 +301,7 @@ fn test_iterator_builtins_lower_to_canonical_iterator_call_nodes() {
     }
 
     let module = lower_source(
-        "def add(x: int, y: int) -> int:\n    return x + y\n\ndef pred(x: int) -> bool:\n    return x % 2 == 0\n\ndef main():\n    nums: list[int] = [1, 2, 3]\n    it: Iterator[int] = iter(nums)\n    first: int | None = next(it)\n    rev: Iterator[int] = reversed(nums)\n    indexed: Iterator[tuple[int, int]] = enumerate(nums)\n    zipped: Iterator[tuple[int, int]] = zip(nums, nums)\n    mapped: Iterator[int] = map(add, nums, nums)\n    filtered: list[int] = filter(pred, nums)\n    list_comp: list[int] = [x for x in nums]\n    set_comp: set[int] = {x for x in nums}\n    dict_comp: dict[int, int] = {x: x for x in nums}\n    gen_expr: Iterator[int] = (x for x in nums)\n",
+        "def add(x: int, y: int) -> int:\n    return x + y\n\ndef pred(x: int) -> bool:\n    return x % 2 == 0\n\ndef main():\n    nums: list[int] = [1, 2, 3]\n    it: Iterator[int] = iter(nums)\n    first: int | None = next(it)\n    rev: Iterator[int] = reversed(nums)\n    indexed: Iterator[tuple[int, int]] = enumerate(nums)\n    zipped: Iterator[tuple[int, int]] = zip(nums, nums)\n    mapped: Iterator[int] = map(add, nums, nums)\n    filtered: Iterator[int] = filter(pred, nums)\n    list_comp: list[int] = [x for x in nums]\n    set_comp: set[int] = {x for x in nums}\n    dict_comp: dict[int, int] = {x: x for x in nums}\n    gen_expr: Iterator[int] = (x for x in nums)\n",
     )
     .unwrap();
 
@@ -643,6 +643,47 @@ fn test_map_rejects_plain_list_annotation_without_materialization() {
     assert!(errors.iter().any(|e| e
         .message
         .contains("expected 'list[int]', got 'Iterator[int]'")));
+}
+
+#[test]
+fn test_filter_is_typed_as_iterator() {
+    let module = lower_source(
+        "def pred(x: int) -> bool:\n    return x % 2 == 0\n\ndef main():\n    nums: list[int] = [1, 2, 3, 4]\n    filtered: Iterator[int] = filter(pred, nums)\n    _vals: list[int] = list(filtered)\n",
+    )
+    .unwrap();
+    let main_fn = module
+        .functions
+        .iter()
+        .find(|func| func.name == "main")
+        .expect("main function should exist");
+    let Some(HirStmt::Let { ty, .. }) = main_fn
+        .body
+        .iter()
+        .find(|stmt| matches!(stmt, HirStmt::Let { name, .. } if name == "filtered"))
+    else {
+        panic!("expected let binding for filtered");
+    };
+    assert!(matches!(ty, Type::Iterator(_)));
+}
+
+#[test]
+fn test_filter_rejects_plain_list_annotation_without_materialization() {
+    let result = lower_source(
+        "def pred(x: int) -> bool:\n    return x % 2 == 0\n\ndef main():\n    values: list[int] = filter(pred, [1, 2, 3, 4])\n",
+    );
+    assert!(result.is_err());
+    let errors = result.unwrap_err();
+    assert!(errors.iter().any(|e| e
+        .message
+        .contains("expected 'list[int]', got 'Iterator[int]'")));
+}
+
+#[test]
+fn test_sum_min_max_accept_iterator_inputs() {
+    let result = lower_source(
+        "def main():\n    nums: list[int] = [3, 1, 2]\n    total: int = sum(iter(nums))\n    lo: int | None = min(iter(nums))\n    hi: int | None = max(iter(nums))\n",
+    );
+    assert!(result.is_ok(), "{result:?}");
 }
 
 #[test]

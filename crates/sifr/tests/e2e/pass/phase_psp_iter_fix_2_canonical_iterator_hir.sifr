@@ -14,8 +14,8 @@ def main() -> None:
     mapped: Iterator[int] = map(add_one, nums)
     assert str(list(mapped)) == "[2, 3, 4, 5]"
 
-    filtered: list[int] = filter(lambda x: x % 2 == 0, nums)
-    assert str(filtered) == "[2, 4]"
+    filtered: Iterator[int] = filter(lambda x: x % 2 == 0, nums)
+    assert str(list(filtered)) == "[2, 4]"
 
     zipped: Iterator[tuple[int, int]] = zip(nums, nums)
     assert str(list(zipped)) == "[(1, 1), (2, 2), (3, 3), (4, 4)]"

@@ -1425,6 +1425,17 @@ fn test_generate_rust_generator_expression_without_filter_lowers_to_map_chain() 
 }
 
 #[test]
+fn test_generate_rust_filter_over_list_lowers_to_lazy_boxed_iterator() {
+    let rust_code = generate_rust_from_source(
+        "def main():\n    nums: list[int] = [1, 2, 3, 4]\n    evens: Iterator[int] = filter(lambda x: x % 2 == 0, nums)\n    print(list(evens))\n",
+    );
+
+    assert!(rust_code.contains("let mut evens: Box<dyn Iterator<Item = i64>>"));
+    assert!(rust_code.contains("Box::new("));
+    assert!(rust_code.contains(".into_iter().filter("));
+}
+
+#[test]
 fn test_generate_rust_test_uses_explicit_test_mode_context() {
     let module = HirModule {
         functions: vec![
@@ -2643,10 +2654,10 @@ fn test_generator_init_emission_is_structured_only() {
     let stmt_support_src = include_str!("stmt_support_emitter.rs");
     assert!(stmt_support_src.contains("self.lower_stmt_expr_for_ir(value)"));
     assert!(stmt_support_src.contains("self.try_lower_structured_stmt(stmt)"));
-    assert!(stmt_support_src.contains("structured generator-init expression emission missing for production path"));
-    assert!(
-        stmt_support_src.contains("structured generator-init statement emission missing for production path")
-    );
+    assert!(stmt_support_src
+        .contains("structured generator-init expression emission missing for production path"));
+    assert!(stmt_support_src
+        .contains("structured generator-init statement emission missing for production path"));
     assert!(!stmt_support_src.contains("self.try_emit_expr_string_"));
     assert!(!stmt_support_src.contains("self.try_emit_stmt_string_"));
     assert!(!stmt_support_src.contains("self.emit_expr(value);"));

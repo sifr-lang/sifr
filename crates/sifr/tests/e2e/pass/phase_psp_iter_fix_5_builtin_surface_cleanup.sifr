@@ -1,0 +1,42 @@
+# Wave 5 positive fixture: builtin lazy/eager boundary cleanup and iterable-input parity.
+
+
+def is_even(x: int) -> bool:
+    return x % 2 == 0
+
+
+def add(x: int, y: int) -> int:
+    return x + y
+
+
+def main() -> None:
+    nums: list[int] = [1, 2, 3, 4]
+
+    filtered: Iterator[int] = filter(is_even, nums)
+    assert str(list(filtered)) == "[2, 4]"
+
+    mapped: Iterator[int] = map(lambda x: x * 10, nums)
+    assert str(list(mapped)) == "[10, 20, 30, 40]"
+
+    zipped: Iterator[tuple[int, str]] = zip(nums, ["a", "b", "c", "d"])
+    assert str(list(zipped)) == "[(1, \"a\"), (2, \"b\"), (3, \"c\"), (4, \"d\")]"
+
+    indexed: Iterator[tuple[int, int]] = enumerate(nums, start=5)
+    assert str(list(indexed)) == "[(5, 1), (6, 2), (7, 3), (8, 4)]"
+
+    rev: Iterator[int] = reversed(nums)
+    assert str(list(rev)) == "[4, 3, 2, 1]"
+
+    assert sum(iter(nums)) == 10
+    lo: int | None = min(iter(nums))
+    hi: int | None = max(iter(nums))
+    assert lo is not None
+    assert hi is not None
+    assert lo == 1
+    assert hi == 4
+
+    assert str(sorted(iter(nums), reverse=True)) == "[4, 3, 2, 1]"
+
+    # Explicit materialization boundary remains required for concrete collections.
+    collected: list[int] = list(filter(is_even, nums))
+    assert str(collected) == "[2, 4]"

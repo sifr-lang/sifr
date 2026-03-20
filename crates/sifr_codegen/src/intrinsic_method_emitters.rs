@@ -1705,18 +1705,21 @@ impl RustEmitter {
                 }
             }
             "sum" if args.len() == 1 => {
+                let sum_method = if let Some(elem_ty) = crate::resolve_alias_type_for_plain_call(
+                    args[0].ty(),
+                )
+                .iterable_element_type()
+                {
+                    format!(
+                        "sum::<{}>",
+                        crate::render_type(&crate::sifr_type_to_rust_type(&elem_ty))
+                    )
+                } else {
+                    "sum".to_string()
+                };
                 let iter_chain = crate::RustExpr::MethodCall {
                     receiver: Box::new(registry_iterable_to_owned_iter_expr(self, &args[0])?),
-                    method: if let Type::List(elem_ty) =
-                        crate::resolve_alias_type_for_plain_call(args[0].ty())
-                    {
-                        format!(
-                            "sum::<{}>",
-                            crate::render_type(&crate::sifr_type_to_rust_type(elem_ty))
-                        )
-                    } else {
-                        "sum".to_string()
-                    },
+                    method: sum_method,
                     args: vec![],
                 };
                 Some(iter_chain)
@@ -2063,20 +2066,7 @@ impl RustEmitter {
                         is_move: false,
                     }],
                 };
-                if matches!(
-                    crate::resolve_alias_type_for_plain_call(args[1].ty()),
-                    Type::Iterator(_)
-                ) {
-                    Some(registry_box_iterator_expr(filtered_iter))
-                } else {
-                    Some(RustExpr::FnCall {
-                        func: Box::new(RustExpr::Path(vec![
-                            "Vec".to_string(),
-                            "from_iter".to_string(),
-                        ])),
-                        args: vec![filtered_iter],
-                    })
-                }
+                Some(registry_box_iterator_expr(filtered_iter))
             }
             "map" if args.len() >= 2 => {
                 let iter_expr = registry_zip_iter_expr(self, &args[1..])?;

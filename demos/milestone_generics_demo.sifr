@@ -14,7 +14,7 @@ def main():
     doubled: list[int] = list(map(lambda x: x * 2, nums))
     print(doubled)
 
-    evens: list[int] = filter(lambda x: x % 2 == 0, nums)
+    evens: list[int] = list(filter(lambda x: x % 2 == 0, nums))
     print(evens)
 
     # --- 2. List comprehensions ---
