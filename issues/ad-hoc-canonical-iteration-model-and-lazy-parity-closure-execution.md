@@ -297,8 +297,11 @@ Contract lock for wave progression:
     - `cargo run -q -p sifr -- check crates/sifr/tests/e2e/fail/phase_psp_iter_fix_6_islice_non_iterable_input.sifr` -> expected compile failure (PASS; first diagnostic `SIFR-TYPE-0001` for non-iterable input)
   - demo:
     - `cargo run -q -p sifr -- run demos/ad_hoc_iter_fix_wave6_itertools_iterable_closure_demo.sifr` -> PASS (prints `[2, 4]`, `[1, 3, 6, 10]`, `[1, 3]`, `[1, 2]`, `1`)
+  - cross-phase/demo parity check:
+    - `cargo run -q -p sifr -- run demos/m30_1d_itertools_parity_demo/main.sifr` -> PASS (`pairwise(iter(...))` closure validated after pass-1 remediation)
   - wave gate:
     - `$(pwd)/scripts/run_all_tests.sh` -> PASS (2026-03-20; profile `pr`; e2e pass `64 passed, 0 failed`; report signature `2161ea8c3fd4e3df`; hardening `variants=18, failures=0`)
+    - `$(pwd)/scripts/run_all_tests.sh` -> PASS (2026-03-20 pass-1 remediation gate; profile `pr`; e2e pass `64 passed, 0 failed`; report signature `2161ea8c3fd4e3df`; hardening `variants=18, failures=0`)
 
 ### wave_psp_iter_fix_7: User-Defined Iterable Protocol Participation
 - Status: planned
@@ -372,7 +375,7 @@ Contract lock for wave progression:
 
 ### wave_psp_iter_fix_6 review_pass_1 (completion-gap)
 - Reviewer artifact: `reviews/phase-ad-hoc-canonical-iteration-model-and-lazy-parity-closure-wave-psp-iter-fix-6-review-pass-1.md`
-- Status: pending
+- Status: completed (approved after remediation; replaced invalid Option-state assignment in `pairwise` with explicit prior-element state, added iterator-input coverage for `pairwise`/`batched`/`cycle`, and revalidated m30 parity demo + full lane gate)
 
 ### wave_psp_iter_fix_6 review_pass_2 (production-grade)
 - Reviewer artifact: `reviews/phase-ad-hoc-canonical-iteration-model-and-lazy-parity-closure-wave-psp-iter-fix-6-review-pass-2.md`

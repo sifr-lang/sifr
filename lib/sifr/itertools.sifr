@@ -207,17 +207,18 @@ def flatten(lists: Iterable[Iterable[T]]) -> list[T]:
 
 def pairwise(data: Iterable[T]) -> list[list[T]]:
     result: list[list[T]] = []
-    has_prev: bool = False
-    prev: T | None = None
+    prev_values: list[T] = []
     for value in data:
-        if has_prev:
+        if len(prev_values) > 0:
             pair: list[T] = []
+            prev: T | None = prev_values[0]
             if prev is not None:
                 pair.append(prev)
             pair.append(value)
             result.append(pair)
-        prev = value
-        has_prev = True
+            prev_values[0] = value
+        else:
+            prev_values.append(value)
     return result
 
 
