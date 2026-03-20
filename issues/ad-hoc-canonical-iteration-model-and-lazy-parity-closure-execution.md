@@ -1,6 +1,6 @@
 # Ad Hoc Phase Execution Checklist (Canonical Iteration Model and Lazy Parity Closure)
 
-Status: in_progress (started 2026-03-20; `wave_psp_iter_fix_0` implementation merged with completion/production approvals; `wave_psp_iter_fix_1` implementation merged with completion + production-grade reviews approved after remediation; `wave_psp_iter_fix_2` implementation merged with completion + production-grade reviews approved; `wave_psp_iter_fix_3` implementation merged with completion review approved and production-grade review pending)
+Status: in_progress (started 2026-03-20; `wave_psp_iter_fix_0` implementation merged with completion/production approvals; `wave_psp_iter_fix_1` implementation merged with completion + production-grade reviews approved after remediation; `wave_psp_iter_fix_2` implementation merged with completion + production-grade reviews approved; `wave_psp_iter_fix_3` implementation merged with completion + production-grade reviews approved after `filter(pred, iterator_variable)` regression + formatting remediation)
 Owner: ad_hoc_canonical_iteration execution loop
 Reference planning doc:
 - `issues/ad-hoc-canonical-iteration-model-and-lazy-parity-closure.md`
@@ -21,7 +21,7 @@ Loop per wave: Plan -> Implement -> Validate -> Demo -> PR -> External completio
 1. [x] `wave_psp_iter_fix_0`: contract freeze and governance lock
 2. [x] `wave_psp_iter_fix_1`: type-system capability layer
 3. [x] `wave_psp_iter_fix_2`: canonical iterator HIR
-4. [ ] `wave_psp_iter_fix_3`: concrete iterator codegen pipelines
+4. [x] `wave_psp_iter_fix_3`: concrete iterator codegen pipelines
 5. [ ] `wave_psp_iter_fix_4`: generator backend unification
 6. [ ] `wave_psp_iter_fix_5`: builtin surface cleanup
 7. [ ] `wave_psp_iter_fix_6`: `sifr.itertools` and iterator-returning stdlib closure
@@ -157,7 +157,7 @@ Contract lock for wave progression:
     - `$(pwd)/scripts/run_all_tests.sh` -> PASS (2026-03-20; profile `pr`; e2e pass `64 passed, 0 failed`; report signature `2161ea8c3fd4e3df`)
 
 ### wave_psp_iter_fix_3: Concrete Iterator Codegen Pipelines
-- Status: completed (implementation merged; completion review approved; production-grade review pending)
+- Status: completed (implementation merged; completion + production-grade reviews approved after `filter(pred, iterator_variable)` regression + formatting remediation)
 - Scope:
   - emit concrete Rust iterator chains
   - centralize collection-to-iterator lowering
@@ -167,6 +167,7 @@ Contract lock for wave progression:
   - added registry builtin lowering for `filter(callable, iterable)` in iterator-input paths with owned-argument callable invocation inside Rust `filter` closures
   - rewired iterator consumers (`any`, `all`, `sum`, unary `min`/`max`) to consume `registry_iterable_to_owned_iter_expr(...)` instead of collection-only `.iter().cloned()` assumptions
   - generalized `sorted(...)` element-type derivation to `iterable_element_type()` so iterator-typed inputs close without unresolved-symbol fallback
+  - remediated production-grade regression where `filter(pred, iterator_variable)` took an incorrect simple-lowering path and emitted clone calls on `Box<dyn Iterator<...>>`; iterator-typed filter inputs now bypass simple filter lowering and route through canonical registry lowering
   - added wave-3 fixture/demo/traceability artifacts:
     - `crates/sifr/tests/e2e/pass/phase_psp_iter_fix_3_concrete_iterator_codegen.sifr`
     - `demos/ad_hoc_iter_fix_wave3_codegen_demo.sifr`
@@ -180,10 +181,17 @@ Contract lock for wave progression:
     - `cargo run -q -p sifr -- check crates/sifr/tests/e2e/fail/phase_psp_iter_fix_1_reversed_iterator_not_reversible.sifr` -> expected compile failure (PASS)
   - generated Rust inspection:
     - `cargo run -q -p sifr -- emit crates/sifr/tests/e2e/pass/phase_psp_iter_fix_3_concrete_iterator_codegen.sifr` -> PASS (`iter`/`filter`/`sorted` unresolved-symbol fallback absent; no invalid `.iter()` usage on iterator values in emitted closure paths)
+  - production-grade regression closure:
+    - `cargo run -q -p sifr -- run /tmp/wave3_regression_filter_iterator_var.sifr` -> PASS (prints `[2, 3]`; confirms `filter(pred, iterator_variable)` no longer emits clone on boxed iterator)
   - unit/non-pass lane:
     - `cargo test -p sifr -- --skip test_e2e_pass` -> PASS
   - wave gate:
     - `$(pwd)/scripts/run_all_tests.sh` -> PASS (2026-03-20; profile `pr`; e2e pass `64 passed, 0 failed`; report signature `2161ea8c3fd4e3df`)
+  - production-grade remediation gate:
+    - `cargo fmt --check` -> PASS (2026-03-20; remediates reviewer-noted formatting drift)
+    - `python3 scripts/check_hir_maintainability_guardrails.py` -> PASS (2026-03-20; post-remediation guardrail revalidation)
+    - `cargo test -p sifr -- --skip test_e2e_pass` -> PASS (2026-03-20; post-remediation verification)
+    - `$(pwd)/scripts/run_all_tests.sh` -> PASS (2026-03-20; post-remediation full lane gate; report signature `2161ea8c3fd4e3df`)
 
 ### wave_psp_iter_fix_4: Generator Backend Unification
 - Status: planned
@@ -262,3 +270,7 @@ Contract lock for wave progression:
 ### wave_psp_iter_fix_3 review_pass_1 (completion-gap)
 - Reviewer artifact: `reviews/phase-ad-hoc-canonical-iteration-model-and-lazy-parity-closure-wave-psp-iter-fix-3-review-pass-1.md`
 - Status: completed (approved; no remediation changes required)
+
+### wave_psp_iter_fix_3 review_pass_2 (production-grade)
+- Reviewer artifact: `reviews/phase-ad-hoc-canonical-iteration-model-and-lazy-parity-closure-wave-psp-iter-fix-3-review-pass-2.md`
+- Status: completed (approved after remediation; fixed `filter(pred, iterator_variable)` regression, applied `cargo fmt`, revalidated guardrails and full lane)

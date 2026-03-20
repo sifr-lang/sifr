@@ -1699,9 +1699,9 @@ impl RustEmitter {
                 ) {
                     self.try_lower_registry_expr_strict(&args[0])
                 } else {
-                    Some(registry_box_iterator_expr(registry_iterable_to_owned_iter_expr(
-                        self, &args[0],
-                    )?))
+                    Some(registry_box_iterator_expr(
+                        registry_iterable_to_owned_iter_expr(self, &args[0])?,
+                    ))
                 }
             }
             "sum" if args.len() == 1 => {

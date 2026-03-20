@@ -156,7 +156,15 @@ fn test_for_loop_lowers_through_iter_protocol_call() {
 #[test]
 fn test_iterator_builtins_lower_to_canonical_iterator_call_nodes() {
     fn call_uses_legacy_iterator_builtin(expr: &HirExpr) -> bool {
-        let legacy = ["iter", "next", "reversed", "map", "filter", "zip", "enumerate"];
+        let legacy = [
+            "iter",
+            "next",
+            "reversed",
+            "map",
+            "filter",
+            "zip",
+            "enumerate",
+        ];
         match expr {
             HirExpr::Call { func, args, .. } => {
                 legacy.contains(&func.as_str()) || args.iter().any(call_uses_legacy_iterator_builtin)
@@ -362,10 +370,19 @@ fn test_iterator_builtins_lower_to_canonical_iterator_call_nodes() {
             _ => {}
         }
     }
-    assert!(saw_list_comp, "list comprehension binding should be present");
+    assert!(
+        saw_list_comp,
+        "list comprehension binding should be present"
+    );
     assert!(saw_set_comp, "set comprehension binding should be present");
-    assert!(saw_dict_comp, "dict comprehension binding should be present");
-    assert!(saw_gen_expr, "generator expression binding should be present");
+    assert!(
+        saw_dict_comp,
+        "dict comprehension binding should be present"
+    );
+    assert!(
+        saw_gen_expr,
+        "generator expression binding should be present"
+    );
 }
 
 #[test]
