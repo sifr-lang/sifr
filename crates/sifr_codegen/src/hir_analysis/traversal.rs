@@ -97,6 +97,7 @@ where
             }
         }
         HirExpr::Call { args, .. }
+        | HirExpr::IteratorCall { args, .. }
         | HirExpr::ConstructorCall { args, .. }
         | HirExpr::SuperCall { args, .. } => {
             for arg in args {

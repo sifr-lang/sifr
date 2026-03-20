@@ -1,6 +1,6 @@
 use crate::hir_analysis::queries;
 use crate::{RustEmitter, RustExpr, RustStmt};
-use sifr_hir::{HirExceptHandler, HirExpr, HirFStringPart, HirStmt};
+use sifr_hir::{HirExceptHandler, HirExpr, HirFStringPart, HirIteratorOp, HirStmt};
 use sifr_type_system::Type;
 
 fn io_error_kind_for_handler(error_type: &str) -> Option<&'static str> {
@@ -65,6 +65,28 @@ fn canonical_constructor_class_name(class_name: &str) -> &str {
     class_name
         .strip_prefix("__compat_sifr_collections_")
         .unwrap_or(class_name)
+}
+
+fn iterator_call_func_name(op: &HirIteratorOp) -> &'static str {
+    match op {
+        HirIteratorOp::Iter => "iter",
+        HirIteratorOp::Next => "next",
+        HirIteratorOp::Reversed => "reversed",
+        HirIteratorOp::Map => "map",
+        HirIteratorOp::Filter => "filter",
+        HirIteratorOp::Zip => "zip",
+        HirIteratorOp::Enumerate => "enumerate",
+    }
+}
+
+fn call_expr_parts(expr: &HirExpr) -> Option<(&str, &[HirExpr])> {
+    match expr {
+        HirExpr::Call { func, args, .. } => Some((func.as_str(), args.as_slice())),
+        HirExpr::IteratorCall { op, args, .. } => {
+            Some((iterator_call_func_name(op), args.as_slice()))
+        }
+        _ => None,
+    }
 }
 
 fn should_omit_local_type_annotation(ty: &Type, value: &HirExpr) -> bool {
@@ -324,6 +346,11 @@ impl RustEmitter {
         &mut self,
         iter_expr: &HirExpr,
     ) -> Result<Option<RustExpr>, crate::CodegenError> {
+        if let HirExpr::IteratorCall { op, args, .. } = iter_expr {
+            if *op == HirIteratorOp::Iter && args.len() == 1 {
+                return self.lower_iter_source_expr_for_ir(&args[0]);
+            }
+        }
         if let HirExpr::RangeLiteral {
             start, end, step, ..
         } = iter_expr
@@ -788,6 +815,7 @@ impl RustEmitter {
         let skip_leaf_registry_lowering = matches!(
             expr,
             HirExpr::Call { .. }
+                | HirExpr::IteratorCall { .. }
                 | HirExpr::ConstructorCall { .. }
                 | HirExpr::MethodCall { .. }
                 | HirExpr::BinOp { .. }
@@ -1030,7 +1058,7 @@ impl RustEmitter {
         if let Some(lowered_comprehension) = self.try_lower_comprehension_expr_for_ir(expr)? {
             return Ok(Some(lowered_comprehension));
         }
-        if let HirExpr::Call { func, args, .. } = expr {
+        if let Some((func, args)) = call_expr_parts(expr) {
             if let Some(lowered_intrinsic) = self.try_lower_registry_intrinsic_call_expr(func, args)
             {
                 return Ok(Some(lowered_intrinsic));
@@ -3277,62 +3305,59 @@ impl RustEmitter {
         &mut self,
         expr: &HirExpr,
     ) -> Result<Option<crate::RustExpr>, crate::CodegenError> {
-        match expr {
-            HirExpr::Call { func, args, .. } => {
-                if func == "print" {
-                    return self.lower_print_call_expr_for_ir(args);
-                }
-                if let Some(lowered_intrinsic) =
-                    self.try_lower_registry_intrinsic_call_expr(func, args)
-                {
-                    return Ok(Some(lowered_intrinsic));
-                }
-                if let Some(lowered_builtin) = self.try_lower_registry_builtin_call_expr(func, args)
-                {
-                    return Ok(Some(lowered_builtin));
-                }
-                if let Some(lowered_plain) =
-                    self.try_lower_registry_plain_call_with_signature(func, args)
-                {
-                    return Ok(Some(lowered_plain));
-                }
-                if func == "iter" && args.len() == 1 {
-                    return self.lower_iter_source_expr_for_ir(&args[0]);
-                }
-                if func == "next" && args.len() == 1 {
-                    let Some(lowered_iterator) = self.lower_stmt_expr_for_ir(&args[0])? else {
-                        return Ok(None);
-                    };
-                    return Ok(Some(crate::RustExpr::MethodCall {
-                        receiver: Box::new(lowered_iterator),
-                        method: "next".to_string(),
-                        args: vec![],
-                    }));
-                }
-                let mut lowered_args = Vec::with_capacity(args.len());
-                for arg in args {
-                    let Some(lowered_arg) = self.lower_stmt_expr_for_ir(arg)? else {
-                        return Ok(None);
-                    };
-                    lowered_args.push(self.rewrite_stdlib_constant_idents_in_expr(lowered_arg));
-                }
-                lowered_args =
-                    self.adapt_plain_call_args_with_signature_for_ir(func, args, lowered_args);
-                if let Some(captures) = self.nested_fn_captures.get(func).cloned() {
-                    for capture in captures {
-                        lowered_args.push(self.lower_recursive_capture_arg_for_ir(&capture));
-                    }
-                }
-                let lowered_func = if func.contains("::") {
-                    crate::RustExpr::Path(func.split("::").map(str::to_string).collect())
-                } else {
-                    crate::RustExpr::Ident(func.clone())
-                };
-                Ok(Some(crate::RustExpr::FnCall {
-                    func: Box::new(lowered_func),
-                    args: lowered_args,
-                }))
+        if let Some((func, args)) = call_expr_parts(expr) {
+            if func == "print" {
+                return self.lower_print_call_expr_for_ir(args);
             }
+            if let Some(lowered_intrinsic) = self.try_lower_registry_intrinsic_call_expr(func, args)
+            {
+                return Ok(Some(lowered_intrinsic));
+            }
+            if let Some(lowered_builtin) = self.try_lower_registry_builtin_call_expr(func, args) {
+                return Ok(Some(lowered_builtin));
+            }
+            if let Some(lowered_plain) = self.try_lower_registry_plain_call_with_signature(func, args)
+            {
+                return Ok(Some(lowered_plain));
+            }
+            if func == "iter" && args.len() == 1 {
+                return self.lower_iter_source_expr_for_ir(&args[0]);
+            }
+            if func == "next" && args.len() == 1 {
+                let Some(lowered_iterator) = self.lower_stmt_expr_for_ir(&args[0])? else {
+                    return Ok(None);
+                };
+                return Ok(Some(crate::RustExpr::MethodCall {
+                    receiver: Box::new(lowered_iterator),
+                    method: "next".to_string(),
+                    args: vec![],
+                }));
+            }
+            let mut lowered_args = Vec::with_capacity(args.len());
+            for arg in args {
+                let Some(lowered_arg) = self.lower_stmt_expr_for_ir(arg)? else {
+                    return Ok(None);
+                };
+                lowered_args.push(self.rewrite_stdlib_constant_idents_in_expr(lowered_arg));
+            }
+            lowered_args = self.adapt_plain_call_args_with_signature_for_ir(func, args, lowered_args);
+            if let Some(captures) = self.nested_fn_captures.get(func).cloned() {
+                for capture in captures {
+                    lowered_args.push(self.lower_recursive_capture_arg_for_ir(&capture));
+                }
+            }
+            let lowered_func = if func.contains("::") {
+                crate::RustExpr::Path(func.split("::").map(str::to_string).collect())
+            } else {
+                crate::RustExpr::Ident(func.to_string())
+            };
+            return Ok(Some(crate::RustExpr::FnCall {
+                func: Box::new(lowered_func),
+                args: lowered_args,
+            }));
+        }
+
+        match expr {
             HirExpr::MethodCall {
                 object,
                 method,
@@ -4620,6 +4645,100 @@ impl RustEmitter {
         &mut self,
         iter: &HirExpr,
     ) -> Result<Option<crate::RustExpr>, crate::CodegenError> {
+        if let HirExpr::IteratorCall { op, args, .. } = iter {
+            if *op == HirIteratorOp::Iter && args.len() == 1 {
+                return self.lower_iter_source_expr_for_ir(&args[0]);
+            }
+            if *op == HirIteratorOp::Enumerate && args.len() == 1 {
+                let Some(lowered_arg) = self.lower_rendered_expr_for_ir(&args[0])? else {
+                    return Ok(None);
+                };
+                let iter_source = match Self::resolve_alias_type_for_loop_iter(args[0].ty()) {
+                    Type::List(_) => crate::RustExpr::MethodCall {
+                        receiver: Box::new(crate::RustExpr::MethodCall {
+                            receiver: Box::new(lowered_arg),
+                            method: "iter".to_string(),
+                            args: vec![],
+                        }),
+                        method: "cloned".to_string(),
+                        args: vec![],
+                    },
+                    Type::Bytes => crate::RustExpr::MethodCall {
+                        receiver: Box::new(crate::RustExpr::MethodCall {
+                            receiver: Box::new(lowered_arg),
+                            method: "iter".to_string(),
+                            args: vec![],
+                        }),
+                        method: "map".to_string(),
+                        args: vec![crate::RustExpr::Closure {
+                            params: vec![crate::RustParam::Named {
+                                name: "__byte".to_string(),
+                                ty: crate::RustType::Named("_".to_string()),
+                            }],
+                            body: Box::new(crate::RustExpr::Cast {
+                                expr: Box::new(crate::RustExpr::Deref(Box::new(
+                                    crate::RustExpr::Ident("__byte".to_string()),
+                                ))),
+                                ty: crate::RustType::I64,
+                            }),
+                            is_move: false,
+                        }],
+                    },
+                    Type::Dict(_, _) => crate::RustExpr::MethodCall {
+                        receiver: Box::new(crate::RustExpr::MethodCall {
+                            receiver: Box::new(lowered_arg),
+                            method: "keys".to_string(),
+                            args: vec![],
+                        }),
+                        method: "cloned".to_string(),
+                        args: vec![],
+                    },
+                    Type::Str => crate::RustExpr::MethodCall {
+                        receiver: Box::new(crate::RustExpr::MethodCall {
+                            receiver: Box::new(lowered_arg),
+                            method: "chars".to_string(),
+                            args: vec![],
+                        }),
+                        method: "map".to_string(),
+                        args: vec![crate::RustExpr::Closure {
+                            params: vec![crate::RustParam::Named {
+                                name: "c".to_string(),
+                                ty: crate::RustType::Named("_".to_string()),
+                            }],
+                            body: Box::new(crate::RustExpr::MethodCall {
+                                receiver: Box::new(crate::RustExpr::Ident("c".to_string())),
+                                method: "to_string".to_string(),
+                                args: vec![],
+                            }),
+                            is_move: false,
+                        }],
+                    },
+                    _ => lowered_arg,
+                };
+                return Ok(Some(crate::RustExpr::MethodCall {
+                    receiver: Box::new(crate::RustExpr::MethodCall {
+                        receiver: Box::new(iter_source),
+                        method: "enumerate".to_string(),
+                        args: vec![],
+                    }),
+                    method: "map".to_string(),
+                    args: vec![crate::RustExpr::Closure {
+                        params: vec![crate::RustParam::Named {
+                            name: "(i, v)".to_string(),
+                            ty: crate::RustType::Named("_".to_string()),
+                        }],
+                        body: Box::new(crate::RustExpr::Tuple(vec![
+                            crate::RustExpr::Cast {
+                                expr: Box::new(crate::RustExpr::Ident("i".to_string())),
+                                ty: crate::RustType::I64,
+                            },
+                            crate::RustExpr::Ident("v".to_string()),
+                        ])),
+                        is_move: false,
+                    }],
+                }));
+            }
+        }
         if let HirExpr::Call { func, args, .. } = iter {
             if func == "iter" && args.len() == 1 {
                 return self.lower_iter_source_expr_for_ir(&args[0]);
@@ -5045,7 +5164,7 @@ impl RustEmitter {
                         .iter()
                         .any(|expr| self.condition_uses_borrowed_name_for_ir(expr))
             }
-            HirExpr::Call { args, .. } => args
+            HirExpr::Call { args, .. } | HirExpr::IteratorCall { args, .. } => args
                 .iter()
                 .any(|expr| self.condition_uses_borrowed_name_for_ir(expr)),
             HirExpr::TupleLiteral { elements, .. } | HirExpr::ListLiteral { elements, .. } => {

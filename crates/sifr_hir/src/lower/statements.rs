@@ -24,7 +24,8 @@ use super::typing_and_functions::{
 };
 use super::LowerCtx;
 use crate::hir_nodes::{
-    HirExceptHandler, HirExpr, HirFunction, HirMatchArm, HirParam, HirPattern, HirStmt, MethodKind,
+    HirExceptHandler, HirExpr, HirFunction, HirIteratorOp, HirMatchArm, HirParam, HirPattern,
+    HirStmt, MethodKind,
 };
 use sifr_python_ast::{
     BoolOp, CmpOp, ExceptHandler, Expr, Number, Operator, Pattern, Singleton, Stmt, StmtAnnAssign,
@@ -2071,8 +2072,8 @@ pub(super) fn lower_for(
         ));
         return None;
     };
-    let iter_expr = HirExpr::Call {
-        func: "iter".to_string(),
+    let iter_expr = HirExpr::IteratorCall {
+        op: HirIteratorOp::Iter,
         args: vec![iterable_expr],
         ty: Type::Iterator(Box::new(elem_ty.clone())),
     };

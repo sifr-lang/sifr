@@ -35,7 +35,7 @@ use super::{
     collect_type_vars, decode_typevar_constraint, infer_type_var_bindings, substitute_type_vars,
     LowerCtx,
 };
-use crate::hir_nodes::{HirExpr, HirFStringPart, HirParam};
+use crate::hir_nodes::{HirExpr, HirFStringPart, HirIteratorOp, HirParam};
 use sifr_python_ast::{
     BoolOp, CmpOp, Expr, ExprAttribute, ExprBinOp, ExprBoolOp, ExprBytesLiteral, ExprCall,
     ExprCompare, ExprDict, ExprDictComp, ExprFString, ExprGenerator, ExprIf, ExprLambda, ExprList,
@@ -660,8 +660,8 @@ pub(super) fn lower_call(call: &ExprCall, ctx: &mut LowerCtx) -> Option<HirExpr>
                 ));
                 return None;
             };
-            return Some(HirExpr::Call {
-                func: "iter".to_string(),
+            return Some(HirExpr::IteratorCall {
+                op: HirIteratorOp::Iter,
                 args: vec![iterable],
                 ty: Type::Iterator(Box::new(elem_ty)),
             });
@@ -691,8 +691,8 @@ pub(super) fn lower_call(call: &ExprCall, ctx: &mut LowerCtx) -> Option<HirExpr>
                     return None;
                 }
             };
-            return Some(HirExpr::Call {
-                func: "next".to_string(),
+            return Some(HirExpr::IteratorCall {
+                op: HirIteratorOp::Next,
                 args: vec![iterator],
                 ty: Type::Union(vec![elem_ty, Type::None]),
             });
@@ -1341,8 +1341,8 @@ pub(super) fn lower_call(call: &ExprCall, ctx: &mut LowerCtx) -> Option<HirExpr>
                 ));
                 return None;
             };
-            return Some(HirExpr::Call {
-                func: "reversed".to_string(),
+            return Some(HirExpr::IteratorCall {
+                op: HirIteratorOp::Reversed,
                 args: vec![arg],
                 ty: Type::Iterator(Box::new(elem_ty)),
             });
@@ -1415,8 +1415,8 @@ pub(super) fn lower_call(call: &ExprCall, ctx: &mut LowerCtx) -> Option<HirExpr>
             } else {
                 vec![arg, start]
             };
-            return Some(HirExpr::Call {
-                func: "enumerate".to_string(),
+            return Some(HirExpr::IteratorCall {
+                op: HirIteratorOp::Enumerate,
                 args,
                 ty: result_ty,
             });
@@ -1444,8 +1444,8 @@ pub(super) fn lower_call(call: &ExprCall, ctx: &mut LowerCtx) -> Option<HirExpr>
                 args.push(arg);
             }
             let result_ty = Type::Iterator(Box::new(Type::Tuple(elem_types)));
-            return Some(HirExpr::Call {
-                func: "zip".to_string(),
+            return Some(HirExpr::IteratorCall {
+                op: HirIteratorOp::Zip,
                 args,
                 ty: result_ty,
             });
@@ -1519,8 +1519,8 @@ pub(super) fn lower_call(call: &ExprCall, ctx: &mut LowerCtx) -> Option<HirExpr>
             return None;
         }
         let result_ty = Type::Iterator(Box::new(result_elem_ty));
-        return Some(HirExpr::Call {
-            func: "map".to_string(),
+        return Some(HirExpr::IteratorCall {
+            op: HirIteratorOp::Map,
             args: std::iter::once(func_arg).chain(iter_args).collect(),
             ty: result_ty,
         });
@@ -1541,8 +1541,8 @@ pub(super) fn lower_call(call: &ExprCall, ctx: &mut LowerCtx) -> Option<HirExpr>
         // Lower lambda with contextual typing
         let func_arg = lower_lambda_with_context(&call.arguments.args[0], &[elem_ty], ctx)?;
         let result_ty = iter_arg.ty().clone();
-        return Some(HirExpr::Call {
-            func: "filter".to_string(),
+        return Some(HirExpr::IteratorCall {
+            op: HirIteratorOp::Filter,
             args: vec![func_arg, iter_arg],
             ty: result_ty,
         });
@@ -3501,8 +3501,8 @@ pub(super) fn lower_list_comp(comp: &ExprListComp, ctx: &mut LowerCtx) -> Option
                 }
             };
 
-            let iter_expr = lower_expr(&gen.iter, ctx)?;
-            let iter_ty = iter_expr.ty().clone();
+            let iter_source_expr = lower_expr(&gen.iter, ctx)?;
+            let iter_ty = iter_source_expr.ty().clone();
             let elem_ty = match &iter_ty {
                 Type::List(elem) => *elem.clone(),
                 Type::Set(elem) => *elem.clone(),
@@ -3557,6 +3557,7 @@ pub(super) fn lower_list_comp(comp: &ExprListComp, ctx: &mut LowerCtx) -> Option
                 }
             };
 
+            let iter_expr = HirExpr::IteratorCall { op: HirIteratorOp::Iter, args: vec![iter_source_expr], ty: Type::Iterator(Box::new(elem_ty)) };
             generators.push((var_name, iter_expr, filter));
         }
 
@@ -3586,8 +3587,8 @@ pub(super) fn lower_set_comp(comp: &ExprSetComp, ctx: &mut LowerCtx) -> Option<H
                 ctx.error("set comprehension target must be a simple name".to_string());
                 return None;
             };
-            let iter_expr = lower_expr(&gen.iter, ctx)?;
-            let iter_ty = iter_expr.ty().clone();
+            let iter_source_expr = lower_expr(&gen.iter, ctx)?;
+            let iter_ty = iter_source_expr.ty().clone();
             let elem_ty = match &iter_ty {
                 Type::List(elem) => *elem.clone(),
                 Type::Set(elem) => *elem.clone(),
@@ -3602,12 +3603,13 @@ pub(super) fn lower_set_comp(comp: &ExprSetComp, ctx: &mut LowerCtx) -> Option<H
             };
             ctx.scope.push();
             pushed_scopes += 1;
-            ctx.scope.define(var_name.clone(), elem_ty);
+            ctx.scope.define(var_name.clone(), elem_ty.clone());
             let filter = if gen.ifs.is_empty() {
                 None
             } else {
                 Some(lower_expr(&gen.ifs[0], ctx)?)
             };
+            let iter_expr = HirExpr::IteratorCall { op: HirIteratorOp::Iter, args: vec![iter_source_expr], ty: Type::Iterator(Box::new(elem_ty)) };
             generators.push((var_name, iter_expr, filter));
         }
         let expr = lower_expr(&comp.elt, ctx)?;
@@ -3651,8 +3653,8 @@ pub(super) fn lower_dict_comp(comp: &ExprDictComp, ctx: &mut LowerCtx) -> Option
                     return None;
                 }
             };
-            let iter_expr = lower_expr(&gen.iter, ctx)?;
-            let iter_ty = iter_expr.ty().clone();
+            let iter_source_expr = lower_expr(&gen.iter, ctx)?;
+            let iter_ty = iter_source_expr.ty().clone();
             let elem_ty = match &iter_ty {
                 Type::List(elem) => *elem.clone(),
                 Type::Set(elem) => *elem.clone(),
@@ -3681,13 +3683,14 @@ pub(super) fn lower_dict_comp(comp: &ExprDictComp, ctx: &mut LowerCtx) -> Option
                     }
                 }
             } else {
-                ctx.scope.define(var_name.clone(), elem_ty);
+                ctx.scope.define(var_name.clone(), elem_ty.clone());
             }
             let filter = if gen.ifs.is_empty() {
                 None
             } else {
                 Some(lower_expr(&gen.ifs[0], ctx)?)
             };
+            let iter_expr = HirExpr::IteratorCall { op: HirIteratorOp::Iter, args: vec![iter_source_expr], ty: Type::Iterator(Box::new(elem_ty)) };
             generators.push((var_name, iter_expr, filter));
         }
         let key_expr = lower_expr(&comp.key, ctx)?;
@@ -3715,19 +3718,14 @@ pub(super) fn lower_generator_expr(gen: &ExprGenerator, ctx: &mut LowerCtx) -> O
 
     let comp = &gen.generators[0];
 
-    // Get the variable name
     let var_name = if let Expr::Name(n) = &comp.target {
         n.id.clone()
     } else {
         ctx.error("generator target must be a simple name".to_string());
         return None;
     };
-
-    // Lower the iterable
-    let iter_expr = lower_expr(&comp.iter, ctx)?;
-    let iter_ty = iter_expr.ty().clone();
-
-    // Determine element type from the iterable protocol.
+    let iter_source_expr = lower_expr(&comp.iter, ctx)?;
+    let iter_ty = iter_source_expr.ty().clone();
     let Some(elem_ty) = callable_builtin_element_type(&iter_ty) else {
         ctx.error(format!(
             "cannot iterate over type '{}'",
@@ -3738,12 +3736,8 @@ pub(super) fn lower_generator_expr(gen: &ExprGenerator, ctx: &mut LowerCtx) -> O
 
     let (expr, expr_ty, filter) = ctx.with_pushed_scope(|ctx| {
         ctx.scope.define(var_name.clone(), elem_ty.clone());
-
-        // Lower the expression
         let expr = lower_expr(&gen.elt, ctx)?;
         let expr_ty = expr.ty().clone();
-
-        // Lower the filter condition if present
         let filter = if comp.ifs.is_empty() {
             None
         } else {
@@ -3766,9 +3760,8 @@ pub(super) fn lower_generator_expr(gen: &ExprGenerator, ctx: &mut LowerCtx) -> O
 
         Some((expr, expr_ty, filter))
     })?;
-
     let result_ty = Type::Iterator(Box::new(expr_ty));
-
+    let iter_expr = HirExpr::IteratorCall { op: HirIteratorOp::Iter, args: vec![iter_source_expr], ty: Type::Iterator(Box::new(elem_ty)) };
     Some(HirExpr::GeneratorExpr {
         expr: Box::new(expr),
         var: var_name,

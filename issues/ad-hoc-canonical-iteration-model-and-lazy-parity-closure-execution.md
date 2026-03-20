@@ -1,6 +1,6 @@
 # Ad Hoc Phase Execution Checklist (Canonical Iteration Model and Lazy Parity Closure)
 
-Status: in_progress (started 2026-03-20; `wave_psp_iter_fix_0` implementation merged with completion/production approvals; `wave_psp_iter_fix_1` implementation merged with completion + production-grade reviews approved after remediation)
+Status: in_progress (started 2026-03-20; `wave_psp_iter_fix_0` implementation merged with completion/production approvals; `wave_psp_iter_fix_1` implementation merged with completion + production-grade reviews approved after remediation; `wave_psp_iter_fix_2` implementation completed with local validation and external review loop pending)
 Owner: ad_hoc_canonical_iteration execution loop
 Reference planning doc:
 - `issues/ad-hoc-canonical-iteration-model-and-lazy-parity-closure.md`
@@ -20,7 +20,7 @@ Loop per wave: Plan -> Implement -> Validate -> Demo -> PR -> External completio
 ## Full Phase To-Do Plan
 1. [x] `wave_psp_iter_fix_0`: contract freeze and governance lock
 2. [x] `wave_psp_iter_fix_1`: type-system capability layer
-3. [ ] `wave_psp_iter_fix_2`: canonical iterator HIR
+3. [x] `wave_psp_iter_fix_2`: canonical iterator HIR
 4. [ ] `wave_psp_iter_fix_3`: concrete iterator codegen pipelines
 5. [ ] `wave_psp_iter_fix_4`: generator backend unification
 6. [ ] `wave_psp_iter_fix_5`: builtin surface cleanup
@@ -126,13 +126,35 @@ Contract lock for wave progression:
     - `scripts/run_all_tests.sh --profile quick` -> PASS (2026-03-20; report signature `e1bf653aaa770517`)
 
 ### wave_psp_iter_fix_2: Canonical Iterator HIR
-- Status: planned
+- Status: completed (implementation + local validation complete; external completion/production review passes pending)
 - Scope:
   - add dedicated iterator HIR nodes
   - lower `for`, protocol entry, iterator builtins, and generator-expression sources through canonical iterator IR
-- Validation target:
-  - HIR snapshot tests for canonical iterator forms
-  - no remaining generic builtin-call fallback for covered iterator operations
+- Implementation notes:
+  - introduced canonical `HirIteratorOp` and `HirExpr::IteratorCall` in `sifr_hir`
+  - lowered protocol entry (`for` + comprehension/generator sources) and iterator builtin family (`iter`, `next`, `reversed`, `map`, `filter`, `zip`, `enumerate`) to `IteratorCall` instead of generic stringly `Call`
+  - extended traversal/error-ref/plumbing layers in HIR/codegen to recurse through `IteratorCall`
+  - updated codegen call/lowering dispatch to handle both `Call` and `IteratorCall` uniformly while preserving existing registry-driven lowering behavior
+  - fixed bytes `for`-iteration regression exposed by full-lane validation by restoring explicit bytes iterator mapping (`u8` -> `int`) in simple for-lowering
+  - added wave-2 fixture/demo/traceability artifacts:
+    - `crates/sifr/tests/e2e/pass/phase_psp_iter_fix_2_canonical_iterator_hir.sifr`
+    - `demos/ad_hoc_iter_fix_wave2_canonical_hir_demo.sifr`
+    - `verification/stdlib/wave_psp_iter_fix_2_cpython_traceability.md`
+- Validation evidence:
+  - HIR canonical-lowering lane:
+    - `cargo test -p sifr_hir expressions_tests -- --nocapture` -> PASS
+  - structural contract assertion:
+    - `crates/sifr_hir/src/lower/expressions_tests.rs::test_iterator_builtins_lower_to_canonical_iterator_call_nodes` -> PASS (covers builtin calls + comprehension/generator sources)
+  - positive fixture:
+    - `cargo run -q -p sifr -- run crates/sifr/tests/e2e/pass/phase_psp_iter_fix_2_canonical_iterator_hir.sifr` -> PASS
+  - demo:
+    - `cargo run -q -p sifr -- run demos/ad_hoc_iter_fix_wave2_canonical_hir_demo.sifr` -> PASS (prints `[2, 3, 4, 5]`, `[4, 3, 2, 1]`, `[1, 2, 3, 4]`, `[1, 2, 3, 4]`)
+  - regression closure check:
+    - `cargo run -q -p sifr -- run crates/sifr/tests/e2e/pass/stdlib_base64_intrinsics.sifr` -> PASS
+  - unit/non-pass lane:
+    - `cargo test -p sifr -- --skip test_e2e_pass` -> PASS
+  - wave gate:
+    - `$(pwd)/scripts/run_all_tests.sh` -> PASS (2026-03-20; profile `pr`; e2e pass `64 passed, 0 failed`; report signature `2161ea8c3fd4e3df`)
 
 ### wave_psp_iter_fix_3: Concrete Iterator Codegen Pipelines
 - Status: planned
@@ -210,3 +232,11 @@ Contract lock for wave progression:
 ### wave_psp_iter_fix_1 review_pass_2 (production-grade)
 - Reviewer artifact: `reviews/phase-ad-hoc-canonical-iteration-model-and-lazy-parity-closure-wave-psp-iter-fix-1-review-pass-2.md`
 - Status: completed (approved after remediation; clippy or-pattern style updated in `sifr_type_system/src/types.rs` and validation rerun)
+
+### wave_psp_iter_fix_2 review_pass_1 (completion-gap)
+- Reviewer artifact: pending generation (`reviews/phase-ad-hoc-canonical-iteration-model-and-lazy-parity-closure-wave-psp-iter-fix-2-review-pass-1.md`)
+- Status: pending
+
+### wave_psp_iter_fix_2 review_pass_2 (production-grade)
+- Reviewer artifact: pending generation (`reviews/phase-ad-hoc-canonical-iteration-model-and-lazy-parity-closure-wave-psp-iter-fix-2-review-pass-2.md`)
+- Status: pending

@@ -307,6 +307,19 @@ pub enum HirFStringPart {
     Expr(HirExpr),
 }
 
+/// Canonical iterator operations lowered as dedicated HIR nodes instead of
+/// generic builtin-call strings.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum HirIteratorOp {
+    Iter,
+    Next,
+    Reversed,
+    Map,
+    Filter,
+    Zip,
+    Enumerate,
+}
+
 /// A typed expression.
 #[derive(Debug, Clone)]
 pub enum HirExpr {
@@ -351,6 +364,12 @@ pub enum HirExpr {
     /// Function call
     Call {
         func: String,
+        args: Vec<HirExpr>,
+        ty: Type,
+    },
+    /// Canonical iterator operation call.
+    IteratorCall {
+        op: HirIteratorOp,
         args: Vec<HirExpr>,
         ty: Type,
     },
@@ -511,6 +530,7 @@ impl HirExpr {
             | Self::Compare { ty, .. }
             | Self::BoolOp { ty, .. }
             | Self::Call { ty, .. }
+            | Self::IteratorCall { ty, .. }
             | Self::IfExpr { ty, .. }
             | Self::RangeLiteral { ty, .. }
             | Self::ListLiteral { ty, .. }

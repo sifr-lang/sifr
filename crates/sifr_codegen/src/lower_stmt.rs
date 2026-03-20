@@ -328,6 +328,7 @@ fn validate_expr_lowering_shape(expr: &HirExpr) -> Result<(), CodegenError> {
         }
         HirExpr::BoolOp { values, .. }
         | HirExpr::Call { args: values, .. }
+        | HirExpr::IteratorCall { args: values, .. }
         | HirExpr::ListLiteral {
             elements: values, ..
         }
@@ -1200,6 +1201,7 @@ fn expr_has_result_flow(expr: &HirExpr) -> bool {
         } => expr_has_result_flow(left) || comparators.iter().any(expr_has_result_flow),
         HirExpr::BoolOp { values, .. } => values.iter().any(expr_has_result_flow),
         HirExpr::Call { args, .. }
+        | HirExpr::IteratorCall { args, .. }
         | HirExpr::MethodCall { args, .. }
         | HirExpr::ConstructorCall { args, .. }
         | HirExpr::SuperCall { args, .. } => args.iter().any(expr_has_result_flow),
@@ -2052,9 +2054,18 @@ fn try_lower_simple_for_iter_expr(iter: &HirExpr) -> Option<RustExpr> {
         }
     }
 
-    let lowered_iter = try_lower_leaf_or_name_expr(iter)?;
+    let iter_source = match iter {
+        HirExpr::IteratorCall {
+            op: sifr_hir::HirIteratorOp::Iter,
+            args,
+            ..
+        } if args.len() == 1 => &args[0],
+        _ => iter,
+    };
+
+    let lowered_iter = try_lower_leaf_or_name_expr(iter_source)?;
     let lowered_iter = normalize_for_iter_expr(lowered_iter);
-    Some(match resolve_alias_type(iter.ty()) {
+    Some(match resolve_alias_type(iter_source.ty()) {
         Type::List(_) => RustExpr::MethodCall {
             receiver: Box::new(RustExpr::MethodCall {
                 receiver: Box::new(lowered_iter),
@@ -2093,6 +2104,57 @@ fn try_lower_simple_for_iter_expr(iter: &HirExpr) -> Option<RustExpr> {
                 is_move: false,
             }],
         },
+        Type::Bytes => RustExpr::MethodCall {
+            receiver: Box::new(RustExpr::MethodCall {
+                receiver: Box::new(lowered_iter),
+                method: "iter".to_string(),
+                args: vec![],
+            }),
+            method: "map".to_string(),
+            args: vec![RustExpr::Closure {
+                params: vec![RustParam::Named {
+                    name: "__byte".to_string(),
+                    ty: RustType::Named("_".to_string()),
+                }],
+                body: Box::new(RustExpr::Cast {
+                    expr: Box::new(RustExpr::Deref(Box::new(RustExpr::Ident(
+                        "__byte".to_string(),
+                    )))),
+                    ty: RustType::I64,
+                }),
+                is_move: false,
+            }],
+        },
+        Type::Tuple(elems) if !elems.is_empty() && elems.iter().all(|elem| elem == &elems[0]) => {
+            let tuple_binding = "__sifr_tuple_iter_src".to_string();
+            let tuple_items = (0..elems.len())
+                .map(|index| RustExpr::MethodCall {
+                    receiver: Box::new(RustExpr::Field {
+                        expr: Box::new(RustExpr::Ident(tuple_binding.clone())),
+                        field: index.to_string(),
+                    }),
+                    method: "clone".to_string(),
+                    args: vec![],
+                })
+                .collect();
+            RustExpr::Block {
+                stmts: vec![RustStmt::Let {
+                    mutable: false,
+                    name: tuple_binding,
+                    ty: None,
+                    value: RustExpr::MethodCall {
+                        receiver: Box::new(RustExpr::Paren(Box::new(lowered_iter))),
+                        method: "clone".to_string(),
+                        args: vec![],
+                    },
+                }],
+                expr: Some(Box::new(RustExpr::MethodCall {
+                    receiver: Box::new(RustExpr::Vec(tuple_items)),
+                    method: "into_iter".to_string(),
+                    args: vec![],
+                })),
+            }
+        }
         _ => lowered_iter,
     })
 }

@@ -146,9 +146,226 @@ fn test_for_loop_lowers_through_iter_protocol_call() {
     };
     assert!(matches!(
         iter,
-        HirExpr::Call { func, args, ty }
-            if func == "iter" && args.len() == 1 && matches!(ty, Type::Iterator(_))
+        HirExpr::IteratorCall { op, args, ty }
+            if op == &crate::hir_nodes::HirIteratorOp::Iter
+                && args.len() == 1
+                && matches!(ty, Type::Iterator(_))
     ));
+}
+
+#[test]
+fn test_iterator_builtins_lower_to_canonical_iterator_call_nodes() {
+    fn call_uses_legacy_iterator_builtin(expr: &HirExpr) -> bool {
+        let legacy = ["iter", "next", "reversed", "map", "filter", "zip", "enumerate"];
+        match expr {
+            HirExpr::Call { func, args, .. } => {
+                legacy.contains(&func.as_str()) || args.iter().any(call_uses_legacy_iterator_builtin)
+            }
+            HirExpr::IteratorCall { args, .. }
+            | HirExpr::ListLiteral { elements: args, .. }
+            | HirExpr::SetLiteral { elements: args, .. }
+            | HirExpr::TupleLiteral { elements: args, .. }
+            | HirExpr::BoolOp { values: args, .. } => {
+                args.iter().any(call_uses_legacy_iterator_builtin)
+            }
+            HirExpr::BinOp { left, right, .. } => {
+                call_uses_legacy_iterator_builtin(left) || call_uses_legacy_iterator_builtin(right)
+            }
+            HirExpr::UnaryOp { operand, .. }
+            | HirExpr::QuestionMark { expr: operand, .. }
+            | HirExpr::OkWrap { value: operand, .. }
+            | HirExpr::ErrWrap { value: operand, .. }
+            | HirExpr::WalrusExpr { value: operand, .. }
+            | HirExpr::FieldAccess {
+                object: operand, ..
+            } => call_uses_legacy_iterator_builtin(operand),
+            HirExpr::Compare {
+                left, comparators, ..
+            } => {
+                call_uses_legacy_iterator_builtin(left)
+                    || comparators
+                        .iter()
+                        .any(call_uses_legacy_iterator_builtin)
+            }
+            HirExpr::IfExpr {
+                condition,
+                then_expr,
+                else_expr,
+                ..
+            } => {
+                call_uses_legacy_iterator_builtin(condition)
+                    || call_uses_legacy_iterator_builtin(then_expr)
+                    || call_uses_legacy_iterator_builtin(else_expr)
+            }
+            HirExpr::RangeLiteral {
+                start, end, step, ..
+            } => {
+                call_uses_legacy_iterator_builtin(start)
+                    || call_uses_legacy_iterator_builtin(end)
+                    || step
+                        .as_ref()
+                        .is_some_and(|expr| call_uses_legacy_iterator_builtin(expr))
+            }
+            HirExpr::DictLiteral { keys, values, .. } => {
+                keys.iter().any(call_uses_legacy_iterator_builtin)
+                    || values.iter().any(call_uses_legacy_iterator_builtin)
+            }
+            HirExpr::Index { object, index, .. } => {
+                call_uses_legacy_iterator_builtin(object)
+                    || call_uses_legacy_iterator_builtin(index)
+            }
+            HirExpr::MethodCall { object, args, .. } => {
+                call_uses_legacy_iterator_builtin(object)
+                    || args.iter().any(call_uses_legacy_iterator_builtin)
+            }
+            HirExpr::ConstructorCall { args, .. } | HirExpr::SuperCall { args, .. } => {
+                args.iter().any(call_uses_legacy_iterator_builtin)
+            }
+            HirExpr::Slice {
+                object,
+                start,
+                stop,
+                step,
+                ..
+            } => {
+                call_uses_legacy_iterator_builtin(object)
+                    || start
+                        .as_ref()
+                        .is_some_and(|expr| call_uses_legacy_iterator_builtin(expr))
+                    || stop
+                        .as_ref()
+                        .is_some_and(|expr| call_uses_legacy_iterator_builtin(expr))
+                    || step
+                        .as_ref()
+                        .is_some_and(|expr| call_uses_legacy_iterator_builtin(expr))
+            }
+            HirExpr::GeneratorExpr {
+                expr, iter, filter, ..
+            } => {
+                call_uses_legacy_iterator_builtin(expr)
+                    || call_uses_legacy_iterator_builtin(iter)
+                    || filter
+                        .as_ref()
+                        .is_some_and(|expr| call_uses_legacy_iterator_builtin(expr))
+            }
+            HirExpr::ListComp {
+                expr, generators, ..
+            }
+            | HirExpr::SetComp {
+                expr, generators, ..
+            } => {
+                call_uses_legacy_iterator_builtin(expr)
+                    || generators.iter().any(|(_, iter, filter)| {
+                        call_uses_legacy_iterator_builtin(iter)
+                            || filter
+                                .as_ref()
+                                .is_some_and(call_uses_legacy_iterator_builtin)
+                    })
+            }
+            HirExpr::DictComp {
+                key_expr,
+                val_expr,
+                generators,
+                ..
+            } => {
+                call_uses_legacy_iterator_builtin(key_expr)
+                    || call_uses_legacy_iterator_builtin(val_expr)
+                    || generators.iter().any(|(_, iter, filter)| {
+                        call_uses_legacy_iterator_builtin(iter)
+                            || filter
+                                .as_ref()
+                                .is_some_and(call_uses_legacy_iterator_builtin)
+                    })
+            }
+            HirExpr::FString { parts, .. } => parts.iter().any(|part| {
+                matches!(part, crate::hir_nodes::HirFStringPart::Expr(expr) if call_uses_legacy_iterator_builtin(expr))
+            }),
+            HirExpr::EnumVariant { .. }
+            | HirExpr::Name { .. }
+            | HirExpr::IntLiteral(_)
+            | HirExpr::FloatLiteral(_)
+            | HirExpr::StringLiteral(_)
+            | HirExpr::BoolLiteral(_)
+            | HirExpr::NoneLiteral
+            | HirExpr::ContainsOp { .. }
+            | HirExpr::Lambda { .. } => false,
+        }
+    }
+
+    let module = lower_source(
+        "def add(x: int, y: int) -> int:\n    return x + y\n\ndef pred(x: int) -> bool:\n    return x % 2 == 0\n\ndef main():\n    nums: list[int] = [1, 2, 3]\n    it: Iterator[int] = iter(nums)\n    first: int | None = next(it)\n    rev: Iterator[int] = reversed(nums)\n    indexed: Iterator[tuple[int, int]] = enumerate(nums)\n    zipped: Iterator[tuple[int, int]] = zip(nums, nums)\n    mapped: Iterator[int] = map(add, nums, nums)\n    filtered: list[int] = filter(pred, nums)\n    list_comp: list[int] = [x for x in nums]\n    set_comp: set[int] = {x for x in nums}\n    dict_comp: dict[int, int] = {x: x for x in nums}\n    gen_expr: Iterator[int] = (x for x in nums)\n",
+    )
+    .unwrap();
+
+    let main_fn = module
+        .functions
+        .iter()
+        .find(|func| func.name == "main")
+        .expect("main function should exist");
+
+    for stmt in &main_fn.body {
+        if let HirStmt::Let { value, .. } = stmt {
+            assert!(
+                !call_uses_legacy_iterator_builtin(value),
+                "legacy iterator builtin call node found in canonical wave2 lowering: {value:?}"
+            );
+        }
+    }
+
+    let mut saw_list_comp = false;
+    let mut saw_set_comp = false;
+    let mut saw_dict_comp = false;
+    let mut saw_gen_expr = false;
+    for stmt in &main_fn.body {
+        let HirStmt::Let { name, value, .. } = stmt else {
+            continue;
+        };
+        match (name.as_str(), value) {
+            ("list_comp", HirExpr::ListComp { generators, .. }) => {
+                saw_list_comp = true;
+                assert!(generators.iter().all(|(_, iter, _)| {
+                    matches!(
+                        iter,
+                        HirExpr::IteratorCall { op, args, .. }
+                            if op == &crate::hir_nodes::HirIteratorOp::Iter && args.len() == 1
+                    )
+                }));
+            }
+            ("set_comp", HirExpr::SetComp { generators, .. }) => {
+                saw_set_comp = true;
+                assert!(generators.iter().all(|(_, iter, _)| {
+                    matches!(
+                        iter,
+                        HirExpr::IteratorCall { op, args, .. }
+                            if op == &crate::hir_nodes::HirIteratorOp::Iter && args.len() == 1
+                    )
+                }));
+            }
+            ("dict_comp", HirExpr::DictComp { generators, .. }) => {
+                saw_dict_comp = true;
+                assert!(generators.iter().all(|(_, iter, _)| {
+                    matches!(
+                        iter,
+                        HirExpr::IteratorCall { op, args, .. }
+                            if op == &crate::hir_nodes::HirIteratorOp::Iter && args.len() == 1
+                    )
+                }));
+            }
+            ("gen_expr", HirExpr::GeneratorExpr { iter, .. }) => {
+                saw_gen_expr = true;
+                assert!(matches!(
+                    iter.as_ref(),
+                    HirExpr::IteratorCall { op, args, .. }
+                        if op == &crate::hir_nodes::HirIteratorOp::Iter && args.len() == 1
+                ));
+            }
+            _ => {}
+        }
+    }
+    assert!(saw_list_comp, "list comprehension binding should be present");
+    assert!(saw_set_comp, "set comprehension binding should be present");
+    assert!(saw_dict_comp, "dict comprehension binding should be present");
+    assert!(saw_gen_expr, "generator expression binding should be present");
 }
 
 #[test]
