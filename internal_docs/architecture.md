@@ -4,10 +4,10 @@
 
 - Authoritative phase sequencing for current execution is tracked in [`roadmap.md`](./roadmap.md), starting at **Phase 15** through **Phase 41**.
 - Authoritative entry/exit criteria, milestone quality checks, and mandatory local validation commands for execution phases are embedded in phase files `15`-`41` under `## Quality Contract`.
-- Iterator-architecture closure was executed through the ad-hoc issue phase:
-  - planning: `issues/ad-hoc-first-class-lazy-iterators-and-python-iterable-protocol.md`
-  - execution ledger: `issues/ad-hoc-first-class-lazy-iterators-and-python-iterable-protocol-execution.md`
-  - closure contract: core protocol/lazy surfaces are first-class; retained advanced `itertools` combinators are explicit intentional diffs (list-backed).
+- Iterator architecture execution now has two stages:
+  - stage 1 (closed): `issues/ad-hoc-first-class-lazy-iterators-and-python-iterable-protocol.md` and `issues/ad-hoc-first-class-lazy-iterators-and-python-iterable-protocol-execution.md`
+  - stage 2 (current corrective continuation): `issues/ad-hoc-canonical-iteration-model-and-lazy-parity-closure.md` and `issues/ad-hoc-canonical-iteration-model-and-lazy-parity-closure-execution.md`
+  - stage-2 contract lock requires one canonical iteration path from type system through HIR/codegen with explicit capability tracking (single-pass, multi-pass, reversible/double-ended).
 - Historical references in this architecture document may mention legacy phase numbering from earlier roadmap versions.
 - When phase-number conflicts exist, follow [`roadmap.md`](./roadmap.md) and the matching files under [`phases/`](./phases/).
 
@@ -725,6 +725,7 @@ Sifr defines a set of built-in protocols (traits) that are used across multiple 
 | `ContextManager` | Custom trait (`__enter__`/`__exit__` -> `Drop`) | milestone_generators (syntax), milestone_compiler_hardening (protocol enforcement)  | `with` statement resource management                          |
 | `Iterable`       | `IntoIterator` / iterable protocol             | ad-hoc phase `first-class-lazy-iterators-and-python-iterable-protocol` (wave 1+) | `iter(x)` entry boundary and protocol typing                 |
 | `Iterator`       | `Box<dyn Iterator<Item = T>>` runtime surface  | ad-hoc phase `first-class-lazy-iterators-and-python-iterable-protocol` (wave 1+, builtin lowering in wave 2) | `next(it)`, single-pass stateful iteration, lazy pipelines  |
+| `Reversible`     | `DoubleEndedIterator` capability contract      | ad-hoc phase `canonical-iteration-model-and-lazy-parity-closure` (wave 0 lock, wave 1+ implementation) | capability-gated `reversed(...)` semantics                    |
 | `Hashable`       | `Hash` (+ `Eq`)                                 | milestone_classes (auto-derived)                                                    | Dict keys, set membership                                     |
 
 
@@ -743,6 +744,7 @@ Sifr defines a set of built-in protocols (traits) that are used across multiple 
 - milestone_generators: define initial `with` block syntax (scoped block desugaring)
 - ad-hoc first-class lazy iterator phase: introduces first-class `Iterable[T]` / `Iterator[T]` typing and protocol execution plan (`iter`, `next`, generator rewrite, lazy builtin conversion)
 - ad-hoc parity-extension waiver-reduction phase: re-closes iterator-returning builtin/stdlib surfaces (`map` parity, approved `itertools` combinators, `re.finditer`, `glob.iglob`, `Path.iterdir/glob/rglob`) and retires broad lazy-waiver claims to narrow residual governance entries
+- ad-hoc canonical iteration continuation phase: freezes/implements capability-aware canonical iteration semantics across type system, HIR, codegen, generators, builtins, and stdlib adapters
 - ad-hoc structured-data/class-surface parity-expansion phase: locks bounded contracts for `json`, `configparser`, `csv`, `collections`, `argparse`, `uuid`, `datetime`, `textwrap`, and `html` while keeping explicit permanent diffs (`json` dynamic hooks, timezone-db/tzinfo ecosystems, `Counter(**kwargs)`, dynamic csv registry mutation, argparse formatter ecosystems, package-wide html expansion)
 - milestone_compiler_hardening (Phase 7: Stdlib Parity): define `ContextManager` protocol; enforce `with` statement compliance with `__enter__`/`__exit__` calls and compile-time protocol checking; fix `Callable`-as-struct-field (`Box<dyn Fn>`)
 - milestone_generics_v2 (Phase 13: Type System Completion): complete generic class field/method substitution; protocol bounds on type parameters (`T: Comparable & Display`)

@@ -1,0 +1,5 @@
+from sifr.itertools import tee
+
+
+def main() -> None:
+    _ = tee
