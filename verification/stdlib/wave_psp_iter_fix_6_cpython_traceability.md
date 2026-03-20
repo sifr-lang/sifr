@@ -58,3 +58,37 @@ This is validated in `phase_psp_iter_fix_6_itertools_iterable_stdlib_closure.sif
 Cross-check:
 
 - `demos/m30_1d_itertools_parity_demo/main.sifr` exercises `pairwise` and is expected to compile/run with this wave after the iterable-`pairwise` Option-state fix.
+
+## Post-Closure Add-On (2026-03-20)
+
+Expanded CPython `test_itertools` parity-port coverage for all shipped `sifr.itertools` helpers
+was landed in:
+
+- `crates/sifr/tests/e2e/pass/cpython_itertools.sifr`
+
+Ported CPython families (adapted to Sifr contracts where intentional diffs are documented):
+
+- `TestBasicOps.test_chain`
+- `TestBasicOps.test_repeat` / `test_repeat_with_negative_times`
+- `TestBasicOps.test_batched`
+- `TestBasicOps.test_islice`
+- `TestBasicOps.test_accumulate`
+- `TestBasicOps.test_compress`
+- `TestBasicOps.test_count` / `test_count_with_step`
+- `TestBasicOps.test_cycle` (adapted to finite `cycle(data, n)`)
+- `TestBasicOps.test_takewhile` / `test_dropwhile` / `test_filterfalse`
+- `TestBasicOps.test_ziplongest`
+- `TestBasicOps.test_product`
+- `TestBasicOps.test_permutations`
+- `TestBasicOps.test_combinations`
+- `TestBasicOps.test_combinations_with_replacement`
+- `TestBasicOps.test_starmap` (binary callable-row scope)
+- `TestExamples` equivalents for the same shipped helper family
+
+Intentional-diff boundaries remain unchanged and explicitly governed:
+
+- `itertools.tee` / `itertools.groupby` remain unsupported
+- general-arity `starmap` callable rows remain unsupported
+- `cycle` remains finite (`cycle(data, n)`)
+- `product(..., repeat < 0)` remains bounded empty-iterator adaptation
+- `count(start=0, step=1)` remains a bounded-prefix iterator in Sifr (`count_from(..., 10000)`), preserving CPython-leading-value behavior while avoiding unsupported unbounded generator lowering
