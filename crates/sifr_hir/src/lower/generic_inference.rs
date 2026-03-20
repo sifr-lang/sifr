@@ -12,6 +12,16 @@ pub(super) fn infer_type_var_bindings(
                 bindings.insert(name.clone(), concrete.clone());
             }
         }
+        (Type::Iterable(p_elem), arg) => {
+            if let Some(arg_elem) = arg.iterable_element_type() {
+                infer_type_var_bindings(p_elem, &arg_elem, bindings);
+            }
+        }
+        (Type::Iterator(p_elem), arg) => {
+            if let Type::Iterator(a_elem) = arg.resolve_alias() {
+                infer_type_var_bindings(p_elem, a_elem, bindings);
+            }
+        }
         (Type::List(p_elem), Type::List(a_elem)) | (Type::Set(p_elem), Type::Set(a_elem)) => {
             infer_type_var_bindings(p_elem, a_elem, bindings);
         }
@@ -92,5 +102,41 @@ pub(super) fn infer_type_var_bindings(
             }
         }
         _ => {}
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::infer_type_var_bindings;
+    use sifr_type_system::Type;
+    use std::collections::HashMap;
+
+    #[test]
+    fn infers_iterable_typevar_from_list_argument() {
+        let param = Type::Iterable(Box::new(Type::TypeVar("T".to_string())));
+        let arg = Type::List(Box::new(Type::Int));
+        let mut bindings = HashMap::new();
+        infer_type_var_bindings(&param, &arg, &mut bindings);
+        assert_eq!(bindings.get("T"), Some(&Type::Int));
+    }
+
+    #[test]
+    fn infers_nested_iterable_typevar_from_list_of_lists() {
+        let param = Type::Iterable(Box::new(Type::Iterable(Box::new(Type::TypeVar(
+            "T".to_string(),
+        )))));
+        let arg = Type::List(Box::new(Type::List(Box::new(Type::Int))));
+        let mut bindings = HashMap::new();
+        infer_type_var_bindings(&param, &arg, &mut bindings);
+        assert_eq!(bindings.get("T"), Some(&Type::Int));
+    }
+
+    #[test]
+    fn infers_iterable_typevar_from_iterator_argument() {
+        let param = Type::Iterable(Box::new(Type::TypeVar("T".to_string())));
+        let arg = Type::Iterator(Box::new(Type::Str));
+        let mut bindings = HashMap::new();
+        infer_type_var_bindings(&param, &arg, &mut bindings);
+        assert_eq!(bindings.get("T"), Some(&Type::Str));
     }
 }

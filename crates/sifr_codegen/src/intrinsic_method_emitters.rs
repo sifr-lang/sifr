@@ -2882,6 +2882,10 @@ impl RustEmitter {
                 lowered_arg = aligned_callable;
             }
 
+            if matches!(resolved_param, Type::Iterable(_)) {
+                lowered_arg = registry_iterable_to_vec_expr(self, arg)?;
+            }
+
             if let Type::Union(members) = resolved_param {
                 if !crate::helpers::is_option_type(resolved_param)
                     && !matches!(
