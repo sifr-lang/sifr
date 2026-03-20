@@ -162,7 +162,11 @@ fn validate_iteration_protocol_methods(
     }
 }
 
-pub(super) fn collect_class_type(class_def: &StmtClassDef, ctx: &mut LowerCtx) {
+pub(super) fn collect_class_type(
+    class_def: &StmtClassDef,
+    ctx: &mut LowerCtx,
+    validate_iteration_protocols: bool,
+) {
     let class_name = class_def.name.to_string();
     let mut fields: Vec<(String, Type)> = Vec::new();
     let mut methods: Vec<(String, FunctionType)> = Vec::new();
@@ -475,7 +479,9 @@ pub(super) fn collect_class_type(class_def: &StmtClassDef, ctx: &mut LowerCtx) {
         }
     }
 
-    validate_iteration_protocol_methods(&class_name, &methods, ctx);
+    if validate_iteration_protocols {
+        validate_iteration_protocol_methods(&class_name, &methods, ctx);
+    }
 
     let class_ty = Type::Class {
         name: class_name.clone(),

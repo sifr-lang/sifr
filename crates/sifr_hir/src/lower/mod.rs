@@ -593,7 +593,7 @@ fn lower_module_impl(
     // `type Shape = Circle | Square` see concrete class fields instead of placeholder shells.
     for stmt in stmts {
         if let Stmt::ClassDef(class_def) = stmt {
-            collect_class_type(class_def, &mut ctx);
+            collect_class_type(class_def, &mut ctx, false);
         }
     }
 
@@ -603,7 +603,7 @@ fn lower_module_impl(
     // depend on aliases declared later in the module see the final alias shapes.
     for stmt in stmts {
         if let Stmt::ClassDef(class_def) = stmt {
-            collect_class_type(class_def, &mut ctx);
+            collect_class_type(class_def, &mut ctx, true);
         }
     }
 
