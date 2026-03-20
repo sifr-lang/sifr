@@ -172,6 +172,41 @@ pub(super) fn intrinsic_crypto() -> IntrinsicModule {
         ),
     );
 
+    // random_module_state_words() -> list[int]
+    functions.insert(
+        "random_module_state_words".to_string(),
+        FunctionType::all_borrow(vec![], Type::List(Box::new(Type::Int))),
+    );
+
+    // random_module_state_index() -> int
+    functions.insert(
+        "random_module_state_index".to_string(),
+        FunctionType::all_borrow(vec![], Type::Int),
+    );
+
+    // random_module_state_gauss_next() -> float | None
+    functions.insert(
+        "random_module_state_gauss_next".to_string(),
+        FunctionType::all_borrow(vec![], Type::Union(vec![Type::Float, Type::None])),
+    );
+
+    // random_module_set_state(words: list[int], index: int, gauss_next: float | None)
+    //   -> Result[None, ValueError]
+    functions.insert(
+        "random_module_set_state".to_string(),
+        FunctionType::all_borrow(
+            vec![
+                ("words".to_string(), Type::List(Box::new(Type::Int))),
+                ("index".to_string(), Type::Int),
+                (
+                    "gauss_next".to_string(),
+                    Type::Union(vec![Type::Float, Type::None]),
+                ),
+            ],
+            result_ty(Type::None, "ValueError"),
+        ),
+    );
+
     // sha224(s: str) -> str (hex digest)
     functions.insert(
         "sha224".to_string(),

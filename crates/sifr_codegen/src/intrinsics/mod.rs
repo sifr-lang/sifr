@@ -231,6 +231,12 @@ fn lower_intrinsic_rendered(name: &str, args: &[RustExpr]) -> Option<LoweredIntr
         "random_sample" => (random::lower_random_sample(args), Some("rand")),
         "random_randrange" => (random::lower_random_randrange(args), Some("rand")),
         "random_gauss" => (random::lower_random_gauss(args), Some("rand")),
+        "random_module_state_words" => (random::lower_random_module_state_words(args), None),
+        "random_module_state_index" => (random::lower_random_module_state_index(args), None),
+        "random_module_state_gauss_next" => {
+            (random::lower_random_module_state_gauss_next(args), None)
+        }
+        "random_module_set_state" => (random::lower_random_module_set_state(args), None),
         "re_match" => (re::lower_re_match(args), Some("regex")),
         "re_find" => (re::lower_re_find(args), Some("regex")),
         "re_replace" => (re::lower_re_replace(args), Some("regex")),
@@ -695,6 +701,31 @@ mod tests {
             .expect("random_gauss");
         assert!(gauss.additional_required_crates.contains(&"rand_distr"));
         assert!(render_expr(&gauss.expr).contains("rand_distr"));
+
+        let state_words =
+            lower_intrinsic("random_module_state_words", &[]).expect("random_module_state_words");
+        assert_eq!(state_words.required_crate, None);
+        assert!(render_expr(&state_words.expr).contains("__SIFR_RANDOM_MODULE_STATE"));
+        assert!(render_expr(&state_words.expr).contains(".words"));
+
+        let state_index =
+            lower_intrinsic("random_module_state_index", &[]).expect("random_module_state_index");
+        assert_eq!(state_index.required_crate, None);
+        assert!(render_expr(&state_index.expr).contains(".index"));
+
+        let state_gauss = lower_intrinsic("random_module_state_gauss_next", &[])
+            .expect("random_module_state_gauss_next");
+        assert_eq!(state_gauss.required_crate, None);
+        assert!(render_expr(&state_gauss.expr).contains(".gauss_next"));
+
+        let set_state = lower_intrinsic(
+            "random_module_set_state",
+            &["words".to_string(), "index".to_string(), "gauss".to_string()],
+        )
+        .expect("random_module_set_state");
+        assert_eq!(set_state.required_crate, None);
+        assert!(render_expr(&set_state.expr).contains("length 624"));
+        assert!(render_expr(&set_state.expr).contains("random module state index"));
     }
 
     #[test]

@@ -71,6 +71,29 @@ fn gen_range_expr(start: RustExpr, end: RustExpr) -> RustExpr {
     }
 }
 
+fn module_state_lock_expr() -> RustExpr {
+    RustExpr::MethodCall {
+        receiver: Box::new(RustExpr::MethodCall {
+            receiver: Box::new(RustExpr::Ident("__SIFR_RANDOM_MODULE_STATE".to_string())),
+            method: "lock".to_string(),
+            args: vec![],
+        }),
+        method: "unwrap_or_else".to_string(),
+        args: vec![RustExpr::Closure {
+            params: vec![RustParam::Named {
+                name: "__err".to_string(),
+                ty: RustType::Named("_".to_string()),
+            }],
+            body: Box::new(RustExpr::MethodCall {
+                receiver: Box::new(RustExpr::Ident("__err".to_string())),
+                method: "into_inner".to_string(),
+                args: vec![],
+            }),
+            is_move: false,
+        }],
+    }
+}
+
 pub(super) fn lower_random_int(args: &[RustExpr]) -> Option<RustExpr> {
     if args.len() != 2 {
         return None;
@@ -458,6 +481,168 @@ pub(super) fn lower_random_gauss(args: &[RustExpr]) -> Option<RustExpr> {
             }),
             method: "unwrap_or".to_string(),
             args: vec![RustExpr::Ident("__mu".to_string())],
+        })),
+    })
+}
+
+pub(super) fn lower_random_module_state_words(args: &[RustExpr]) -> Option<RustExpr> {
+    if !args.is_empty() {
+        return None;
+    }
+    Some(RustExpr::Block {
+        stmts: vec![RustStmt::Let {
+            mutable: false,
+            name: "__state".to_string(),
+            ty: None,
+            value: module_state_lock_expr(),
+        }],
+        expr: Some(Box::new(RustExpr::MethodCall {
+            receiver: Box::new(RustExpr::Field {
+                expr: Box::new(RustExpr::Ident("__state".to_string())),
+                field: "words".to_string(),
+            }),
+            method: "clone".to_string(),
+            args: vec![],
+        })),
+    })
+}
+
+pub(super) fn lower_random_module_state_index(args: &[RustExpr]) -> Option<RustExpr> {
+    if !args.is_empty() {
+        return None;
+    }
+    Some(RustExpr::Block {
+        stmts: vec![RustStmt::Let {
+            mutable: false,
+            name: "__state".to_string(),
+            ty: None,
+            value: module_state_lock_expr(),
+        }],
+        expr: Some(Box::new(RustExpr::Field {
+            expr: Box::new(RustExpr::Ident("__state".to_string())),
+            field: "index".to_string(),
+        })),
+    })
+}
+
+pub(super) fn lower_random_module_state_gauss_next(args: &[RustExpr]) -> Option<RustExpr> {
+    if !args.is_empty() {
+        return None;
+    }
+    Some(RustExpr::Block {
+        stmts: vec![RustStmt::Let {
+            mutable: false,
+            name: "__state".to_string(),
+            ty: None,
+            value: module_state_lock_expr(),
+        }],
+        expr: Some(Box::new(RustExpr::MethodCall {
+            receiver: Box::new(RustExpr::Field {
+                expr: Box::new(RustExpr::Ident("__state".to_string())),
+                field: "gauss_next".to_string(),
+            }),
+            method: "clone".to_string(),
+            args: vec![],
+        })),
+    })
+}
+
+pub(super) fn lower_random_module_set_state(args: &[RustExpr]) -> Option<RustExpr> {
+    if args.len() != 3 {
+        return None;
+    }
+    Some(RustExpr::Block {
+        stmts: vec![
+            RustStmt::Let {
+                mutable: false,
+                name: "__words".to_string(),
+                ty: None,
+                value: arg_expr(args, 0),
+            },
+            RustStmt::Let {
+                mutable: false,
+                name: "__index".to_string(),
+                ty: None,
+                value: arg_expr(args, 1),
+            },
+            RustStmt::Let {
+                mutable: false,
+                name: "__gauss_next".to_string(),
+                ty: None,
+                value: arg_expr(args, 2),
+            },
+        ],
+        expr: Some(Box::new(RustExpr::If {
+            cond: Box::new(RustExpr::BinOp {
+                left: Box::new(RustExpr::BinOp {
+                    left: Box::new(RustExpr::Ident("__index".to_string())),
+                    op: "<".to_string(),
+                    right: Box::new(int(0)),
+                }),
+                op: "||".to_string(),
+                right: Box::new(RustExpr::BinOp {
+                    left: Box::new(RustExpr::Ident("__index".to_string())),
+                    op: ">".to_string(),
+                    right: Box::new(int(624)),
+                }),
+            }),
+            then_expr: Box::new(err_value_error(RustExpr::MethodCall {
+                receiver: Box::new(RustExpr::Ident(
+                    "\"random module state index must be in range [0, 624]\"".to_string(),
+                )),
+                method: "to_string".to_string(),
+                args: vec![],
+            })),
+            else_expr: Some(Box::new(RustExpr::If {
+                cond: Box::new(RustExpr::BinOp {
+                    left: Box::new(RustExpr::MethodCall {
+                        receiver: Box::new(RustExpr::Ident("__words".to_string())),
+                        method: "len".to_string(),
+                        args: vec![],
+                    }),
+                    op: "!=".to_string(),
+                    right: Box::new(int(624)),
+                }),
+                then_expr: Box::new(err_value_error(RustExpr::MethodCall {
+                    receiver: Box::new(RustExpr::Ident(
+                        "\"random module state words must have length 624\"".to_string(),
+                    )),
+                    method: "to_string".to_string(),
+                    args: vec![],
+                })),
+                else_expr: Some(Box::new(RustExpr::Block {
+                    stmts: vec![
+                        RustStmt::Let {
+                            mutable: true,
+                            name: "__state".to_string(),
+                            ty: None,
+                            value: module_state_lock_expr(),
+                        },
+                        RustStmt::Assign {
+                            target: RustExpr::Field {
+                                expr: Box::new(RustExpr::Ident("__state".to_string())),
+                                field: "words".to_string(),
+                            },
+                            value: RustExpr::Ident("__words".to_string()),
+                        },
+                        RustStmt::Assign {
+                            target: RustExpr::Field {
+                                expr: Box::new(RustExpr::Ident("__state".to_string())),
+                                field: "index".to_string(),
+                            },
+                            value: RustExpr::Ident("__index".to_string()),
+                        },
+                        RustStmt::Assign {
+                            target: RustExpr::Field {
+                                expr: Box::new(RustExpr::Ident("__state".to_string())),
+                                field: "gauss_next".to_string(),
+                            },
+                            value: RustExpr::Ident("__gauss_next".to_string()),
+                        },
+                    ],
+                    expr: Some(Box::new(ok_expr(RustExpr::Literal(RustLiteral::Unit)))),
+                })),
+            })),
         })),
     })
 }

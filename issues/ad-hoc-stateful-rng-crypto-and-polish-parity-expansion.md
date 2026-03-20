@@ -1,6 +1,6 @@
 # Ad Hoc Phase: Stateful RNG, Crypto, and Polish Parity Expansion
 
-Status: in-progress (documented 2026-03-18; sequencing revised 2026-03-20; wave `wave_psp_rng_0` architecture lock in progress 2026-03-21)
+Status: in-progress (documented 2026-03-18; sequencing revised 2026-03-20; wave `wave_psp_rng_0` architecture lock completed 2026-03-21; wave `wave_psp_rng_1` deterministic RNG state/object-model implementation completed and in PR/review loop 2026-03-21)
 Context: final cleanup phase after the structured/class, extended bytes-foundation, runtime/file-object, and canonical iteration-model follow-ups
 Execution readiness: implementation-ready in sequence after `issues/ad-hoc-canonical-iteration-model-and-lazy-parity-closure.md`; predecessor bytes-phase extension waves `wave_psp_bytes_4` and `wave_psp_bytes_5` are completed, so crypto and RNG surfaces inherit the final raw-byte-backed `bytes` contract, stable iterator semantics, and successor governance baseline
 Execution ledger: `issues/ad-hoc-stateful-rng-crypto-and-polish-parity-expansion-execution.md`
@@ -31,6 +31,7 @@ Conditional residual polish targets:
   - `verification/stdlib/milestone_psp_7_parity_governance_inventory.md`
 - relevant wave ledgers:
   - `verification/stdlib/wave_psp_b2_cpython_traceability.md`
+  - `verification/stdlib/wave_psp_rng_1_cpython_traceability.md`
   - `verification/stdlib/wave_psp_c2_cpython_traceability.md`
   - `verification/stdlib/wave_psp_e1_cpython_traceability.md`
 - predecessor planning docs:
@@ -63,7 +64,7 @@ This work shares a different root cause from the earlier phases:
 
 It should therefore execute after the broader object-model and runtime work, not before it.
 
-The phase design is fixed in this document. What remains before wave 1 is execution evidence for the MT19937-compatible state model, `SystemRandom` host boundary, and actual crypto dependency inventory.
+The phase design is fixed in this document. Wave 0 is locked and wave 1 implementation is now in the review/merge loop; what remains before wave 2 is execution evidence for bytes-native `hashlib` closure and the actual crypto dependency inventory.
 
 ## Depends on
 
@@ -279,7 +280,7 @@ Definition of done:
 
 ## Architecture Lock Validation
 
-Before `wave_psp_rng_1` begins implementation, the phase must add:
+Before `wave_psp_rng_1` began implementation, the phase added:
 
 - one implementation note mapping the approved `RandomState` fields to the chosen MT19937-compatible internal state model,
 - one implementation note defining the exact host-boundary contract for `SystemRandom`,

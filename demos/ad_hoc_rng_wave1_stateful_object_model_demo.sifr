@@ -1,0 +1,32 @@
+from sifr.random import Random, RandomState, getstate, randint, random, seed, setstate
+
+
+def main():
+    rng: Random = Random(77)
+    try:
+        state_before: RandomState = rng.getstate()
+        next_one: int = rng.randint(0, 100000)
+        _rng_set_result: Result[None, ValueError] = rng.setstate(state_before)
+        _ = _rng_set_result
+        replay_one: int = rng.randint(0, 100000)
+        assert next_one == replay_one
+
+        seed(1234)
+        first_module_random: float = random()
+        second_module_int: int = randint(0, 100000)
+        module_state: RandomState = getstate()
+
+        after_state_int: int = randint(0, 100000)
+        _module_set_result: Result[None, ValueError] = setstate(module_state)
+        _ = _module_set_result
+        replay_after_state_int: int = randint(0, 100000)
+        assert after_state_int == replay_after_state_int
+
+        seed(1234)
+        assert first_module_random == random()
+        replay_second_module_int: int = randint(0, 100000)
+        assert second_module_int == replay_second_module_int
+    except ValueError as e:
+        assert str("unexpected random error: " + e.message) == "ad_hoc_rng_wave1_stateful_object_model_demo: pass"
+
+    assert str("ad_hoc_rng_wave1_stateful_object_model_demo: pass") == "ad_hoc_rng_wave1_stateful_object_model_demo: pass"

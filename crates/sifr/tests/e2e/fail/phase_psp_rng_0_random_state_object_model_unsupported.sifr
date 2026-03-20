@@ -1,5 +1,0 @@
-from sifr.random import RandomState, Random, SystemRandom, seed, getstate, setstate, randbytes
-
-
-def main() -> None:
-    _ = RandomState
