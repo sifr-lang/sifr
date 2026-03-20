@@ -1,8 +1,9 @@
 # Ad Hoc Phase: Stateful RNG, Crypto, and Polish Parity Expansion
 
-Status: open (documented 2026-03-18; sequencing revised 2026-03-20)
+Status: in-progress (documented 2026-03-18; sequencing revised 2026-03-20; wave `wave_psp_rng_0` architecture lock in progress 2026-03-21)
 Context: final cleanup phase after the structured/class, extended bytes-foundation, runtime/file-object, and canonical iteration-model follow-ups
 Execution readiness: implementation-ready in sequence after `issues/ad-hoc-canonical-iteration-model-and-lazy-parity-closure.md`; predecessor bytes-phase extension waves `wave_psp_bytes_4` and `wave_psp_bytes_5` are completed, so crypto and RNG surfaces inherit the final raw-byte-backed `bytes` contract, stable iterator semantics, and successor governance baseline
+Execution ledger: `issues/ad-hoc-stateful-rng-crypto-and-polish-parity-expansion-execution.md`
 
 ## Objective
 

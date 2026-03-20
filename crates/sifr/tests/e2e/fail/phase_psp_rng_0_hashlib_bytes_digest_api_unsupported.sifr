@@ -1,0 +1,7 @@
+from sifr.hashlib import new_bytes, sha256_obj
+
+
+def main() -> None:
+    h = sha256_obj("abc")
+    _ = h.digest_bytes()
+    _ = new_bytes("sha256")
