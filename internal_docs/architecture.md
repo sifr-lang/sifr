@@ -7,7 +7,7 @@
 - Iterator architecture execution now has two stages:
   - stage 1 (closed): `issues/ad-hoc-first-class-lazy-iterators-and-python-iterable-protocol.md` and `issues/ad-hoc-first-class-lazy-iterators-and-python-iterable-protocol-execution.md`
   - stage 2 (current corrective continuation): `issues/ad-hoc-canonical-iteration-model-and-lazy-parity-closure.md` and `issues/ad-hoc-canonical-iteration-model-and-lazy-parity-closure-execution.md`
-  - stage-2 wave progress: `wave_psp_iter_fix_0` contract/governance lock closed; `wave_psp_iter_fix_1` type-system capability layer (`Reversible`, capability metadata, homogeneous tuple iteration typing) implemented/validated; `wave_psp_iter_fix_2` canonical iterator HIR (dedicated `IteratorCall` lowering for builtin/protocol/comprehension/generator sources) implemented/validated; `wave_psp_iter_fix_3` concrete iterator codegen pipelines implemented and externally approved after remediation of the `filter(pred, iterator_variable)` regression and formatting/guardrail revalidation; `wave_psp_iter_fix_4` generator backend unification implemented/validated with completion-review remediation landed (codegen assertion brittleness removed, generator-expression-no-filter lowering test added) while production-grade reviewer artifact is still pending after one timed wait; `wave_psp_iter_fix_5` builtin surface cleanup implemented/validated locally (`filter` fully lazy iterator semantics, iterable-input parity for unary `sum`/`min`/`max`, explicit filter materialization diagnostics) and entering external review
+  - stage-2 wave progress: `wave_psp_iter_fix_0` through `wave_psp_iter_fix_5` implementation/review loops are merged and approved; `wave_psp_iter_fix_6` (`sifr.itertools` iterable-first closure + iterator-returning stdlib composition) is implemented and locally validated (including full `scripts/run_all_tests.sh`) and is entering the external review loop
   - stage-2 contract lock requires one canonical iteration path from type system through HIR/codegen with explicit capability tracking (single-pass, multi-pass, reversible/double-ended).
 - Historical references in this architecture document may mention legacy phase numbering from earlier roadmap versions.
 - When phase-number conflicts exist, follow [`roadmap.md`](./roadmap.md) and the matching files under [`phases/`](./phases/).
@@ -155,8 +155,8 @@ Several stdlib functions intentionally diverge from CPython names due to Rust ke
 | `sifr.random.shuffle` | `random.shuffle` | CPython-compatible name; returns a new shuffled list (Sifr is immutable-by-default) instead of mutating in place |
 | `sifr.operator.mod_val` | `operator.mod` | `mod` is a Rust keyword |
 | `sifr.re.Pattern.is_match` | `re.Pattern.match` | `match` is a Rust keyword (also a Sifr keyword from milestone_pattern_matching) |
-| `sifr.itertools.take` | — (no CPython equivalent) | Sifr extension; returns first N elements from a list. Kept for ergonomics. |
-| `sifr.itertools.flatten` | `itertools.chain.from_iterable` | Sifr extension; flattens a list of lists. Simpler API than CPython's `chain.from_iterable`. |
+| `sifr.itertools.take` | — (no CPython equivalent) | Sifr extension; returns first N elements from an `Iterable[T]`. Kept for ergonomics. |
+| `sifr.itertools.flatten` | `itertools.chain.from_iterable` | Sifr extension; flattens `Iterable[Iterable[T]]`. Simpler API than CPython's `chain.from_iterable`. |
 
 **Removed type-specific duplicates (Phase 13 — stdlib generic rewrite):** `chain_str`, `chain_float`, `accumulate_float`, `accumulate_str`, `counter_add`, `counter_sub`, and other monomorphic variants have been deleted. All stdlib functions are now generic — e.g., `chain[T]`, `accumulate[T: Addable]`, `Counter[T: Hashable]`, `deque[T]`, `heapq` functions with `[T: Comparable]` bounds, `reduce[T, U]`, `shuffle[T]`, `sample[T]`.
 

@@ -1,0 +1,30 @@
+from sifr.itertools import islice, accumulate, compress, takewhile
+from sifr.pathlib import Path
+from sifr.io import write_text
+from sifr.os import getpid, run_command
+
+
+def lt3(x: int) -> bool:
+    return x < 3
+
+
+def main():
+    nums: list[int] = [1, 2, 3, 4]
+    print(list(islice(iter(nums), 1, 4, 2)))
+    print(list(accumulate(iter(nums))))
+    print(list(compress(iter(nums), iter([True, False, True, False]))))
+    print(list(takewhile(lt3, iter(nums))))
+
+    base: str = "/tmp/sifr_wave_psp_iter_fix_6_demo_" + str(getpid())
+    try:
+        _mk: str = run_command("mkdir -p " + base)
+        _w: None = write_text(base + "/a.txt", "demo")
+        _w2: None = write_text(base + "/b.txt", "demo")
+
+        root: Path = Path(base)
+        entries_it: Iterator[str] = root.iterdir()
+        print(len(list(islice(entries_it, 1))))
+    except IOError as e:
+        print("ioerror: " + str(e.message))
+    finally:
+        _rm: str = run_command("rm -rf " + base)

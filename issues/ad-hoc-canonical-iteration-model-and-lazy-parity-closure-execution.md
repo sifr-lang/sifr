@@ -1,6 +1,6 @@
 # Ad Hoc Phase Execution Checklist (Canonical Iteration Model and Lazy Parity Closure)
 
-Status: in_progress (started 2026-03-20; `wave_psp_iter_fix_0` implementation merged with completion/production approvals; `wave_psp_iter_fix_1` implementation merged with completion + production-grade reviews approved after remediation; `wave_psp_iter_fix_2` implementation merged with completion + production-grade reviews approved; `wave_psp_iter_fix_3` implementation merged with completion + production-grade reviews approved after `filter(pred, iterator_variable)` regression + formatting remediation; `wave_psp_iter_fix_4` implementation/reviews merged with production-grade approval; `wave_psp_iter_fix_5` implementation/reviews merged with production-grade approval)
+Status: in_progress (started 2026-03-20; `wave_psp_iter_fix_0` implementation merged with completion/production approvals; `wave_psp_iter_fix_1` implementation merged with completion + production-grade reviews approved after remediation; `wave_psp_iter_fix_2` implementation merged with completion + production-grade reviews approved; `wave_psp_iter_fix_3` implementation merged with completion + production-grade reviews approved after `filter(pred, iterator_variable)` regression + formatting remediation; `wave_psp_iter_fix_4` implementation/reviews merged with production-grade approval; `wave_psp_iter_fix_5` implementation/reviews merged with production-grade approval; `wave_psp_iter_fix_6` implementation and local validation complete, external review loop pending)
 Owner: ad_hoc_canonical_iteration execution loop
 Reference planning doc:
 - `issues/ad-hoc-canonical-iteration-model-and-lazy-parity-closure.md`
@@ -24,7 +24,7 @@ Loop per wave: Plan -> Implement -> Validate -> Demo -> PR -> External completio
 4. [x] `wave_psp_iter_fix_3`: concrete iterator codegen pipelines
 5. [x] `wave_psp_iter_fix_4`: generator backend unification (completion and production-grade reviews approved)
 6. [x] `wave_psp_iter_fix_5`: builtin surface cleanup (completion and production-grade reviews approved)
-7. [ ] `wave_psp_iter_fix_6`: `sifr.itertools` and iterator-returning stdlib closure
+7. [x] `wave_psp_iter_fix_6`: `sifr.itertools` and iterator-returning stdlib closure (implementation + local validation complete; external completion/production reviews pending)
 8. [ ] `wave_psp_iter_fix_7`: user-defined iterable protocol participation
 9. [ ] `wave_psp_iter_fix_8`: downstream phase alignment and final closure
 10. [ ] wave-level extra completion review cycle done
@@ -266,13 +266,39 @@ Contract lock for wave progression:
     - `$(pwd)/scripts/run_all_tests.sh` -> PASS (2026-03-20; profile `pr`; e2e pass `64 passed, 0 failed`; report signature `2161ea8c3fd4e3df`)
 
 ### wave_psp_iter_fix_6: `sifr.itertools` and Iterator-Returning Stdlib Closure
-- Status: planned
+- Status: implemented (local validation + demo complete; external completion/production reviews pending)
 - Scope:
   - rewrite iterable signatures and buffering semantics where required
   - align iterator-returning stdlib APIs with builtin iterator consumers
-- Validation target:
-  - stdlib lazy-composition demos and e2e fixtures
-  - explicit documentation for buffered helpers that remain intentionally non-streaming
+- Implementation notes:
+  - generalized `sifr.itertools` helper inputs from list-only types to `Iterable[...]` where semantics are iterable-driven:
+    - `take`, `flatten`, `pairwise`, `batched`, `islice`, `permutations`, `combinations`, `combinations_with_replacement`, `starmap`, `accumulate`, `compress`, `dropwhile`, `takewhile`, `filterfalse`, `zip_longest`, `cycle`
+  - kept `chain` and `product` as list-vararg entry points in this wave because current vararg list-invariance in generic call checking blocks a safe `Iterable` vararg migration without wider type-checker refactoring
+  - added `_collect_iterable[T](Iterable[T]) -> list[T]` to centralize explicit materialization for helpers that require indexed or buffered execution
+  - generalized HIR generic inference to bind `TypeVar` from iterable-protocol parameters:
+    - `Type::Iterable(...)` now infers from any argument with `iterable_element_type()`
+    - `Type::Iterator(...)` now infers from iterator arguments
+  - generalized codegen plain-call lowering for iterable-typed params by normalizing call arguments through `registry_iterable_to_vec_expr(...)` when signature expects `Iterable[...]`
+  - added wave-6 fixture/demo/traceability artifacts:
+    - `crates/sifr/tests/e2e/pass/phase_psp_iter_fix_6_itertools_iterable_stdlib_closure.sifr`
+    - `crates/sifr/tests/e2e/fail/phase_psp_iter_fix_6_islice_non_iterable_input.sifr`
+    - `demos/ad_hoc_iter_fix_wave6_itertools_iterable_closure_demo.sifr`
+    - `verification/stdlib/wave_psp_iter_fix_6_cpython_traceability.md`
+- Validation evidence:
+  - HIR inference lane:
+    - `cargo test -p sifr_hir generic_inference -- --nocapture` -> PASS
+  - stdlib parity checks:
+    - `cargo run -q -p sifr -- check crates/sifr/tests/e2e/pass/stdlib_itertools_consolidated.sifr` -> PASS
+    - `cargo run -q -p sifr -- check crates/sifr/tests/e2e/pass/cpython_itertools_subset.sifr` -> PASS
+    - `cargo run -q -p sifr -- check crates/sifr/tests/e2e/pass/cpython_itertools.sifr` -> PASS
+  - positive fixture:
+    - `cargo run -q -p sifr -- run crates/sifr/tests/e2e/pass/phase_psp_iter_fix_6_itertools_iterable_stdlib_closure.sifr` -> PASS
+  - negative fixture (expected compile failure):
+    - `cargo run -q -p sifr -- check crates/sifr/tests/e2e/fail/phase_psp_iter_fix_6_islice_non_iterable_input.sifr` -> expected compile failure (PASS; first diagnostic `SIFR-TYPE-0001` for non-iterable input)
+  - demo:
+    - `cargo run -q -p sifr -- run demos/ad_hoc_iter_fix_wave6_itertools_iterable_closure_demo.sifr` -> PASS (prints `[2, 4]`, `[1, 3, 6, 10]`, `[1, 3]`, `[1, 2]`, `1`)
+  - wave gate:
+    - `$(pwd)/scripts/run_all_tests.sh` -> PASS (2026-03-20; profile `pr`; e2e pass `64 passed, 0 failed`; report signature `2161ea8c3fd4e3df`; hardening `variants=18, failures=0`)
 
 ### wave_psp_iter_fix_7: User-Defined Iterable Protocol Participation
 - Status: planned
@@ -343,3 +369,11 @@ Contract lock for wave progression:
 ### wave_psp_iter_fix_5 review_pass_2 (production-grade)
 - Reviewer artifact: `reviews/phase-ad-hoc-canonical-iteration-model-and-lazy-parity-closure-wave-psp-iter-fix-5-review-pass-2.md`
 - Status: completed (approved; no functional remediation required)
+
+### wave_psp_iter_fix_6 review_pass_1 (completion-gap)
+- Reviewer artifact: `reviews/phase-ad-hoc-canonical-iteration-model-and-lazy-parity-closure-wave-psp-iter-fix-6-review-pass-1.md`
+- Status: pending
+
+### wave_psp_iter_fix_6 review_pass_2 (production-grade)
+- Reviewer artifact: `reviews/phase-ad-hoc-canonical-iteration-model-and-lazy-parity-closure-wave-psp-iter-fix-6-review-pass-2.md`
+- Status: pending

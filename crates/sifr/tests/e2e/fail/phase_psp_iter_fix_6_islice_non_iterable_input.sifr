@@ -1,0 +1,7 @@
+# expect-error: SIFR-TYPE-0001: argument 1 ('data') of function 'islice': expected 'Iterable[T]', got 'int'
+from sifr.itertools import islice
+
+
+def main():
+    bad: Iterator[int] = islice(42, 2)
+    _ = bad
