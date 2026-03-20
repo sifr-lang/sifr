@@ -1,6 +1,6 @@
 # Ad Hoc Phase Execution Checklist (Canonical Iteration Model and Lazy Parity Closure)
 
-Status: in_progress (started 2026-03-20; `wave_psp_iter_fix_0` implementation merged with completion/production approvals; `wave_psp_iter_fix_1` implementation merged with completion + production-grade reviews approved after remediation; `wave_psp_iter_fix_2` implementation merged with completion + production-grade reviews approved; `wave_psp_iter_fix_3` implementation merged with completion + production-grade reviews approved after `filter(pred, iterator_variable)` regression + formatting remediation; `wave_psp_iter_fix_4` implementation/reviews merged with production-grade approval; `wave_psp_iter_fix_5` implementation/validation complete and entering external completion review)
+Status: in_progress (started 2026-03-20; `wave_psp_iter_fix_0` implementation merged with completion/production approvals; `wave_psp_iter_fix_1` implementation merged with completion + production-grade reviews approved after remediation; `wave_psp_iter_fix_2` implementation merged with completion + production-grade reviews approved; `wave_psp_iter_fix_3` implementation merged with completion + production-grade reviews approved after `filter(pred, iterator_variable)` regression + formatting remediation; `wave_psp_iter_fix_4` implementation/reviews merged with production-grade approval; `wave_psp_iter_fix_5` implementation merged with completion review approved and production-grade review pending)
 Owner: ad_hoc_canonical_iteration execution loop
 Reference planning doc:
 - `issues/ad-hoc-canonical-iteration-model-and-lazy-parity-closure.md`
@@ -23,7 +23,7 @@ Loop per wave: Plan -> Implement -> Validate -> Demo -> PR -> External completio
 3. [x] `wave_psp_iter_fix_2`: canonical iterator HIR
 4. [x] `wave_psp_iter_fix_3`: concrete iterator codegen pipelines
 5. [x] `wave_psp_iter_fix_4`: generator backend unification (completion and production-grade reviews approved)
-6. [ ] `wave_psp_iter_fix_5`: builtin surface cleanup (implementation/validation complete; completion review pending)
+6. [ ] `wave_psp_iter_fix_5`: builtin surface cleanup (completion review approved; production-grade review pending)
 7. [ ] `wave_psp_iter_fix_6`: `sifr.itertools` and iterator-returning stdlib closure
 8. [ ] `wave_psp_iter_fix_7`: user-defined iterable protocol participation
 9. [ ] `wave_psp_iter_fix_8`: downstream phase alignment and final closure
@@ -338,7 +338,7 @@ Contract lock for wave progression:
 
 ### wave_psp_iter_fix_5 review_pass_1 (completion-gap)
 - Reviewer artifact: `reviews/phase-ad-hoc-canonical-iteration-model-and-lazy-parity-closure-wave-psp-iter-fix-5-review-pass-1.md`
-- Status: pending
+- Status: completed (approved; no functional remediation required)
 
 ### wave_psp_iter_fix_5 review_pass_2 (production-grade)
 - Reviewer artifact: `reviews/phase-ad-hoc-canonical-iteration-model-and-lazy-parity-closure-wave-psp-iter-fix-5-review-pass-2.md`
