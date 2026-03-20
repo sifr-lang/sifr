@@ -1,6 +1,6 @@
 use crate::hir_analysis::traversal::{self, TraversalConfig, TraversalControl};
 use crate::ModuleFuncSignatures;
-use sifr_hir::{cfg, HirExpr, HirPattern, HirStmt};
+use sifr_hir::{cfg, HirExpr, HirIteratorOp, HirPattern, HirStmt};
 use sifr_type_system::Type;
 use std::cell::RefCell;
 use std::collections::{HashMap, HashSet};
@@ -241,6 +241,13 @@ pub(crate) fn collect_mutated_vars(
                 }
             }
         }
+        HirExpr::IteratorCall { op, args, .. } => {
+            if *op == HirIteratorOp::Next {
+                if let Some(HirExpr::Name { name, .. }) = args.first() {
+                    mutated.borrow_mut().insert(name.clone());
+                }
+            }
+        }
         _ => {}
     };
 
@@ -464,6 +471,35 @@ mod tests {
 
         let mutated = collect_mutated_vars(&stmts, Some(&sigs));
         assert!(mutated.contains("items"));
+    }
+
+    #[test]
+    fn collect_mutated_vars_marks_iterator_next_argument() {
+        let iterator_ty = Type::Class {
+            name: "CountdownIter".to_string(),
+            fields: vec![],
+            methods: vec![(
+                "__next__".to_string(),
+                sifr_type_system::FunctionType {
+                    params: vec![],
+                    return_type: Box::new(Type::Union(vec![Type::Int, Type::None])),
+                },
+            )],
+            parent_class: None,
+        };
+        let stmts = vec![HirStmt::Expr {
+            expr: HirExpr::IteratorCall {
+                op: HirIteratorOp::Next,
+                args: vec![HirExpr::Name {
+                    name: "it".to_string(),
+                    ty: iterator_ty,
+                }],
+                ty: Type::Union(vec![Type::Int, Type::None]),
+            },
+        }];
+
+        let mutated = collect_mutated_vars(&stmts, None);
+        assert!(mutated.contains("it"));
     }
 
     #[test]

@@ -14,7 +14,7 @@ use crate::{
 use sifr_hir::{
     HirExceptHandler, HirExpr, HirFStringPart, HirFunction, HirPattern, HirStmt, MethodKind,
 };
-use sifr_type_system::Type;
+use sifr_type_system::{FunctionType, Type};
 use std::collections::HashSet;
 
 pub(crate) fn is_simple_stmt_candidate(stmt: &HirStmt) -> bool {
@@ -742,10 +742,31 @@ fn should_omit_local_type_annotation(ty: &Type, value: &HirExpr) -> bool {
 }
 
 fn should_force_mutable_binding(ty: &Type) -> bool {
+    fn class_has_next_protocol(ty: &Type) -> bool {
+        let Type::Class { methods, .. } = ty.resolve_alias() else {
+            return false;
+        };
+        methods.iter().any(|(name, ft)| {
+            name == "__next__"
+                && ft.params.is_empty()
+                && matches!(ft.return_type.as_ref().resolve_alias(), Type::Union(members) if {
+                    let has_none = members
+                        .iter()
+                        .any(|member| matches!(member.resolve_alias(), Type::None));
+                    let non_none = members
+                        .iter()
+                        .filter(|member| !matches!(member.resolve_alias(), Type::None))
+                        .count();
+                    has_none && non_none == 1
+                })
+        })
+    }
+
     matches!(
         ty,
         Type::Alias { name: alias_name, .. } if alias_name.starts_with("__compat_defaultdict_")
     ) || matches!(ty.resolve_alias(), Type::Iterator(_))
+        || class_has_next_protocol(ty)
 }
 
 fn try_lower_simple_nested_function_stmt(
@@ -2054,6 +2075,74 @@ fn try_lower_simple_for_iter_expr(iter: &HirExpr) -> Option<RustExpr> {
         }
     }
 
+    fn class_method_signature<'a>(
+        methods: &'a [(String, FunctionType)],
+        method_name: &str,
+    ) -> Option<&'a FunctionType> {
+        methods.iter().find_map(
+            |(name, ft)| {
+                if name == method_name {
+                    Some(ft)
+                } else {
+                    None
+                }
+            },
+        )
+    }
+
+    fn class_has_next(methods: &[(String, FunctionType)]) -> bool {
+        class_method_signature(methods, "__next__").is_some_and(|next_ft| {
+            next_ft.params.is_empty()
+                && matches!(next_ft.return_type.as_ref().resolve_alias(), Type::Union(members) if {
+                    let has_none = members
+                        .iter()
+                        .any(|member| matches!(member.resolve_alias(), Type::None));
+                    let non_none = members
+                        .iter()
+                        .filter(|member| !matches!(member.resolve_alias(), Type::None))
+                        .count();
+                    has_none && non_none == 1
+                })
+        })
+    }
+
+    fn class_next_iter_expr(source_expr: RustExpr) -> RustExpr {
+        let state_name = "__sifr_for_iter_state".to_string();
+        RustExpr::Block {
+            stmts: vec![RustStmt::Let {
+                mutable: true,
+                name: state_name.clone(),
+                ty: None,
+                value: source_expr,
+            }],
+            expr: Some(Box::new(RustExpr::FnCall {
+                func: Box::new(RustExpr::Path(vec![
+                    "std".to_string(),
+                    "iter".to_string(),
+                    "from_fn".to_string(),
+                ])),
+                args: vec![RustExpr::Closure {
+                    params: vec![],
+                    body: Box::new(RustExpr::MethodCall {
+                        receiver: Box::new(RustExpr::Ident(state_name)),
+                        method: "__next__".to_string(),
+                        args: vec![],
+                    }),
+                    is_move: true,
+                }],
+            })),
+        }
+    }
+
+    let lowered_iter_call = match iter {
+        HirExpr::IteratorCall {
+            op: sifr_hir::HirIteratorOp::Iter,
+            args,
+            ..
+        } if args.len() == 1 => try_lower_leaf_or_name_expr(iter).map(normalize_for_iter_expr),
+        _ => None,
+    };
+
     let iter_source = match iter {
         HirExpr::IteratorCall {
             op: sifr_hir::HirIteratorOp::Iter,
@@ -2062,9 +2151,19 @@ fn try_lower_simple_for_iter_expr(iter: &HirExpr) -> Option<RustExpr> {
         } if args.len() == 1 => &args[0],
         _ => iter,
     };
+    if matches!(iter_source, HirExpr::ConstructorCall { .. }) {
+        // Constructor-backed iteration often needs full protocol-aware lowering context.
+        // Defer to structured lowering instead of emitting a potentially non-iterator source.
+        return None;
+    }
 
     let lowered_iter = try_lower_leaf_or_name_expr(iter_source)?;
     let lowered_iter = normalize_for_iter_expr(lowered_iter);
+    let fallback_iter_expr = || {
+        lowered_iter_call
+            .clone()
+            .unwrap_or_else(|| lowered_iter.clone())
+    };
     Some(match resolve_alias_type(iter_source.ty()) {
         Type::List(_) => RustExpr::MethodCall {
             receiver: Box::new(RustExpr::MethodCall {
@@ -2155,7 +2254,58 @@ fn try_lower_simple_for_iter_expr(iter: &HirExpr) -> Option<RustExpr> {
                 })),
             }
         }
-        _ => lowered_iter,
+        Type::Class { name, methods, .. } => {
+            let class_source = RustExpr::MethodCall {
+                receiver: Box::new(RustExpr::Paren(Box::new(lowered_iter.clone()))),
+                method: "clone".to_string(),
+                args: vec![],
+            };
+            if let Some(iter_ft) = class_method_signature(methods, "__iter__") {
+                if iter_ft.params.is_empty() {
+                    let iter_call = RustExpr::MethodCall {
+                        receiver: Box::new(class_source.clone()),
+                        method: "__iter__".to_string(),
+                        args: vec![],
+                    };
+                    if matches!(
+                        iter_ft.return_type.as_ref().resolve_alias(),
+                        Type::Class { name: ret_name, .. } if ret_name == name
+                    ) && class_has_next(methods)
+                    {
+                        class_next_iter_expr(iter_call)
+                    } else if let Type::Class {
+                        methods: ret_methods,
+                        ..
+                    } = iter_ft.return_type.as_ref().resolve_alias()
+                    {
+                        if class_has_next(ret_methods) {
+                            class_next_iter_expr(iter_call)
+                        } else {
+                            RustExpr::MethodCall {
+                                receiver: Box::new(iter_call),
+                                method: "into_iter".to_string(),
+                                args: vec![],
+                            }
+                        }
+                    } else {
+                        RustExpr::MethodCall {
+                            receiver: Box::new(iter_call),
+                            method: "into_iter".to_string(),
+                            args: vec![],
+                        }
+                    }
+                } else if class_has_next(methods) {
+                    class_next_iter_expr(class_source)
+                } else {
+                    fallback_iter_expr()
+                }
+            } else if class_has_next(methods) {
+                class_next_iter_expr(class_source)
+            } else {
+                fallback_iter_expr()
+            }
+        }
+        _ => fallback_iter_expr(),
     })
 }
 

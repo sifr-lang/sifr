@@ -1,0 +1,8 @@
+# expect-error: SIFR-TYPE-0001: class 'BadIter.__iter__' must return 'Iterator[T]' or 'Iterable[T]'
+class BadIter:
+    def __iter__(self) -> int:
+        return 1
+
+
+def main():
+    _ = BadIter()

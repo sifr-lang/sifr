@@ -1,6 +1,6 @@
 # Ad Hoc Phase Execution Checklist (Canonical Iteration Model and Lazy Parity Closure)
 
-Status: in_progress (started 2026-03-20; `wave_psp_iter_fix_0` implementation merged with completion/production approvals; `wave_psp_iter_fix_1` implementation merged with completion + production-grade reviews approved after remediation; `wave_psp_iter_fix_2` implementation merged with completion + production-grade reviews approved; `wave_psp_iter_fix_3` implementation merged with completion + production-grade reviews approved after `filter(pred, iterator_variable)` regression + formatting remediation; `wave_psp_iter_fix_4` implementation/reviews merged with production-grade approval; `wave_psp_iter_fix_5` implementation/reviews merged with production-grade approval; `wave_psp_iter_fix_6` implementation/reviews merged with production-grade approval)
+Status: in_progress (started 2026-03-20; `wave_psp_iter_fix_0` implementation merged with completion/production approvals; `wave_psp_iter_fix_1` implementation merged with completion + production-grade reviews approved after remediation; `wave_psp_iter_fix_2` implementation merged with completion + production-grade reviews approved; `wave_psp_iter_fix_3` implementation merged with completion + production-grade reviews approved after `filter(pred, iterator_variable)` regression + formatting remediation; `wave_psp_iter_fix_4` implementation/reviews merged with production-grade approval; `wave_psp_iter_fix_5` implementation/reviews merged with production-grade approval; `wave_psp_iter_fix_6` implementation/reviews merged with production-grade approval; `wave_psp_iter_fix_7` implementation + local validation complete, external review passes pending)
 Owner: ad_hoc_canonical_iteration execution loop
 Reference planning doc:
 - `issues/ad-hoc-canonical-iteration-model-and-lazy-parity-closure.md`
@@ -307,13 +307,44 @@ Contract lock for wave progression:
     - `$(pwd)/scripts/run_all_tests.sh` -> PASS (2026-03-20 pass-1 remediation gate; profile `pr`; e2e pass `64 passed, 0 failed`; report signature `2161ea8c3fd4e3df`; hardening `variants=18, failures=0`)
 
 ### wave_psp_iter_fix_7: User-Defined Iterable Protocol Participation
-- Status: planned
+- Status: completed (implementation + local validation complete; external completion/production review passes pending)
 - Scope:
   - add user-defined iterable participation
   - validate user-defined iterable protocol conformance across typing, lowering, and codegen
-- Validation target:
-  - user-defined iterable positive/negative fixtures
-  - protocol-conformance diagnostics for invalid `__iter__`, `__next__`, and `__reversed__` implementations
+- Implementation:
+  - type-system:
+    - `crates/sifr_type_system/src/types.rs` extends class protocol participation for iterable/iterator/reversible inference and assignability (`__iter__`, `__next__`, `__reversed__`)
+  - HIR:
+    - `crates/sifr_hir/src/lower/classes.rs` adds protocol-conformance diagnostics for malformed class iteration dunder methods
+    - `crates/sifr_hir/src/lower/expressions.rs` widens `next(...)` acceptance to user-defined iterator protocol classes
+    - `crates/sifr_hir/src/lower/expressions_tests.rs` adds positive and negative protocol coverage
+  - codegen:
+    - `crates/sifr_codegen/src/intrinsic_method_emitters.rs` supports user-class iterator protocol in builtin iterator lowering
+    - `crates/sifr_codegen/src/stmt_support_emitter.rs` adds protocol-aware `for`-loop iterator lowering for class/iterable inputs
+    - `crates/sifr_codegen/src/lower_stmt.rs` aligns simple-lowering fallback behavior and mutability forcing for protocol iterators
+    - `crates/sifr_codegen/src/hir_analysis/queries.rs` marks `next(name)` as iterator-state mutation for mutable-binding inference
+  - fixtures and demo:
+    - `crates/sifr/tests/e2e/pass/phase_psp_iter_fix_7_user_defined_iterable_protocol.sifr`
+    - `crates/sifr/tests/e2e/fail/phase_psp_iter_fix_7_invalid_iter_signature.sifr`
+    - `crates/sifr/tests/e2e/fail/phase_psp_iter_fix_7_invalid_next_signature.sifr`
+    - `crates/sifr/tests/e2e/fail/phase_psp_iter_fix_7_invalid_reversed_signature.sifr`
+    - `demos/ad_hoc_iter_fix_wave7_user_defined_iterable_protocol_demo.sifr`
+  - traceability:
+    - `verification/stdlib/wave_psp_iter_fix_7_cpython_traceability.md`
+- Validation:
+  - targeted compiler tests:
+    - `cargo test -p sifr_type_system --lib` -> PASS
+    - `cargo test -p sifr_hir expressions_tests -- --nocapture` -> PASS
+    - `cargo test -p sifr_codegen hir_analysis::queries::tests::collect_mutated_vars_marks_iterator_next_argument -- --nocapture` -> PASS
+  - wave fixtures:
+    - `cargo run -q -p sifr -- run crates/sifr/tests/e2e/pass/phase_psp_iter_fix_7_user_defined_iterable_protocol.sifr` -> PASS
+    - `cargo run -q -p sifr -- check crates/sifr/tests/e2e/fail/phase_psp_iter_fix_7_invalid_iter_signature.sifr` -> expected compile failure (PASS; `SIFR-TYPE-0001` with protocol signature diagnostic)
+    - `cargo run -q -p sifr -- check crates/sifr/tests/e2e/fail/phase_psp_iter_fix_7_invalid_next_signature.sifr` -> expected compile failure (PASS; `SIFR-TYPE-0001` with protocol signature diagnostic)
+    - `cargo run -q -p sifr -- check crates/sifr/tests/e2e/fail/phase_psp_iter_fix_7_invalid_reversed_signature.sifr` -> expected compile failure (PASS; `SIFR-TYPE-0001` with protocol signature diagnostic)
+  - demo:
+    - `cargo run -q -p sifr -- run demos/ad_hoc_iter_fix_wave7_user_defined_iterable_protocol_demo.sifr` -> PASS (prints `[4, 3, 2, 1]`, `[1, 2, 3, 4]`, `10`, `2`, `1`, `None`)
+  - wave gate:
+    - `$(pwd)/scripts/run_all_tests.sh` -> PASS (2026-03-20; profile `pr`; e2e pass `64 passed, 0 failed`; report signature `2161ea8c3fd4e3df`; hardening `variants=18, failures=0`)
 
 ### wave_psp_iter_fix_8: Downstream Phase Alignment and Final Closure
 - Status: planned

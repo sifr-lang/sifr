@@ -1,6 +1,6 @@
 use crate::{intrinsics, methods, RustEmitter, RustExpr};
 use sifr_hir::{HirExpr, HirFStringPart, HirIteratorOp};
-use sifr_type_system::{ParamConvention, Type};
+use sifr_type_system::{FunctionType, ParamConvention, Type};
 
 fn registry_uses_debug_display_format(ty: &Type) -> bool {
     match crate::resolve_alias_type_for_plain_call(ty) {
@@ -136,6 +136,65 @@ fn registry_iterator_op_func_name(op: &HirIteratorOp) -> &'static str {
     }
 }
 
+fn registry_class_method_signature<'a>(
+    methods: &'a [(String, FunctionType)],
+    method_name: &str,
+) -> Option<&'a FunctionType> {
+    methods.iter().find_map(
+        |(name, ft)| {
+            if name == method_name {
+                Some(ft)
+            } else {
+                None
+            }
+        },
+    )
+}
+
+fn registry_class_has_next(methods: &[(String, FunctionType)]) -> bool {
+    registry_class_method_signature(methods, "__next__").is_some_and(|next_ft| {
+        next_ft.params.is_empty()
+            && matches!(next_ft.return_type.as_ref().resolve_alias(), Type::Union(members) if {
+                let has_none = members
+                    .iter()
+                    .any(|member| matches!(member.resolve_alias(), Type::None));
+                let non_none = members
+                    .iter()
+                    .filter(|member| !matches!(member.resolve_alias(), Type::None))
+                    .count();
+                has_none && non_none == 1
+            })
+    })
+}
+
+fn registry_iter_from_next_method_expr(source_expr: RustExpr) -> RustExpr {
+    let state_name = "__sifr_iter_state".to_string();
+    RustExpr::Block {
+        stmts: vec![crate::RustStmt::Let {
+            mutable: true,
+            name: state_name.clone(),
+            ty: None,
+            value: source_expr,
+        }],
+        expr: Some(Box::new(RustExpr::FnCall {
+            func: Box::new(RustExpr::Path(vec![
+                "std".to_string(),
+                "iter".to_string(),
+                "from_fn".to_string(),
+            ])),
+            args: vec![RustExpr::Closure {
+                params: vec![],
+                body: Box::new(RustExpr::MethodCall {
+                    receiver: Box::new(RustExpr::Ident(state_name)),
+                    method: "__next__".to_string(),
+                    args: vec![],
+                }),
+                is_move: true,
+            }],
+        })),
+    }
+}
+
 fn registry_tuple_homogeneous_iter_expr(lowered: RustExpr, tuple_len: usize) -> Option<RustExpr> {
     if tuple_len == 0 {
         return None;
@@ -251,6 +310,48 @@ fn registry_iterable_to_owned_iter_expr(
         }),
         Type::Tuple(elems) if !elems.is_empty() && elems.iter().all(|elem| elem == &elems[0]) => {
             registry_tuple_homogeneous_iter_expr(lowered, elems.len())
+        }
+        Type::Class { name, methods, .. } => {
+            let class_source = RustExpr::MethodCall {
+                receiver: Box::new(RustExpr::Paren(Box::new(lowered))),
+                method: "clone".to_string(),
+                args: vec![],
+            };
+            if let Some(iter_ft) = registry_class_method_signature(methods, "__iter__") {
+                if iter_ft.params.is_empty() {
+                    let iter_call = RustExpr::MethodCall {
+                        receiver: Box::new(class_source.clone()),
+                        method: "__iter__".to_string(),
+                        args: vec![],
+                    };
+                    if matches!(
+                        iter_ft.return_type.as_ref().resolve_alias(),
+                        Type::Class { name: ret_name, .. } if ret_name == name
+                    ) && registry_class_has_next(methods)
+                    {
+                        return Some(registry_iter_from_next_method_expr(iter_call));
+                    }
+                    if let Type::Class {
+                        methods: ret_methods,
+                        ..
+                    } = iter_ft.return_type.as_ref().resolve_alias()
+                    {
+                        if registry_class_has_next(ret_methods) {
+                            return Some(registry_iter_from_next_method_expr(iter_call));
+                        }
+                    }
+                    return Some(RustExpr::MethodCall {
+                        receiver: Box::new(iter_call),
+                        method: "into_iter".to_string(),
+                        args: vec![],
+                    });
+                }
+            }
+            if registry_class_has_next(methods) {
+                Some(registry_iter_from_next_method_expr(class_source))
+            } else {
+                None
+            }
         }
         _ => None,
     }
@@ -1704,11 +1805,26 @@ impl RustEmitter {
                     ))
                 }
             }
+            "next" if args.len() == 1 => {
+                let lowered_arg = self.try_lower_registry_expr_strict(&args[0])?;
+                match crate::resolve_alias_type_for_plain_call(args[0].ty()) {
+                    Type::Class { methods, .. } if registry_class_has_next(methods) => {
+                        Some(RustExpr::MethodCall {
+                            receiver: Box::new(lowered_arg),
+                            method: "__next__".to_string(),
+                            args: vec![],
+                        })
+                    }
+                    _ => Some(RustExpr::MethodCall {
+                        receiver: Box::new(lowered_arg),
+                        method: "next".to_string(),
+                        args: vec![],
+                    }),
+                }
+            }
             "sum" if args.len() == 1 => {
-                let sum_method = if let Some(elem_ty) = crate::resolve_alias_type_for_plain_call(
-                    args[0].ty(),
-                )
-                .iterable_element_type()
+                let sum_method = if let Some(elem_ty) =
+                    crate::resolve_alias_type_for_plain_call(args[0].ty()).iterable_element_type()
                 {
                     format!(
                         "sum::<{}>",
@@ -1749,6 +1865,54 @@ impl RustEmitter {
                 }],
             }),
             "reversed" if args.len() == 1 => {
+                if let Type::Class { name, methods, .. } =
+                    crate::resolve_alias_type_for_plain_call(args[0].ty())
+                {
+                    if let Some(reversed_ft) =
+                        registry_class_method_signature(methods, "__reversed__")
+                    {
+                        if reversed_ft.params.is_empty() {
+                            let lowered_arg = self.try_lower_registry_expr_strict(&args[0])?;
+                            let reversed_call = RustExpr::MethodCall {
+                                receiver: Box::new(RustExpr::MethodCall {
+                                    receiver: Box::new(RustExpr::Paren(Box::new(lowered_arg))),
+                                    method: "clone".to_string(),
+                                    args: vec![],
+                                }),
+                                method: "__reversed__".to_string(),
+                                args: vec![],
+                            };
+                            let reversed_iter = if matches!(
+                                reversed_ft.return_type.as_ref().resolve_alias(),
+                                Type::Class { name: ret_name, .. } if ret_name == name
+                            ) && registry_class_has_next(methods)
+                            {
+                                registry_iter_from_next_method_expr(reversed_call)
+                            } else if let Type::Class {
+                                methods: ret_methods,
+                                ..
+                            } = reversed_ft.return_type.as_ref().resolve_alias()
+                            {
+                                if registry_class_has_next(ret_methods) {
+                                    registry_iter_from_next_method_expr(reversed_call)
+                                } else {
+                                    RustExpr::MethodCall {
+                                        receiver: Box::new(reversed_call),
+                                        method: "into_iter".to_string(),
+                                        args: vec![],
+                                    }
+                                }
+                            } else {
+                                RustExpr::MethodCall {
+                                    receiver: Box::new(reversed_call),
+                                    method: "into_iter".to_string(),
+                                    args: vec![],
+                                }
+                            };
+                            return Some(registry_box_iterator_expr(reversed_iter));
+                        }
+                    }
+                }
                 Some(registry_box_iterator_expr(RustExpr::MethodCall {
                     receiver: Box::new(registry_iterable_to_owned_iter_expr(self, &args[0])?),
                     method: "rev".to_string(),
