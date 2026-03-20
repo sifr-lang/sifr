@@ -1,6 +1,6 @@
 # Ad Hoc Phase Execution Checklist (Canonical Iteration Model and Lazy Parity Closure)
 
-Status: in_progress (started 2026-03-20; `wave_psp_iter_fix_0` implementation merged with completion/production approvals; `wave_psp_iter_fix_1` implementation merged with completion + production-grade reviews approved after remediation; `wave_psp_iter_fix_2` implementation merged with completion + production-grade reviews approved; `wave_psp_iter_fix_3` implementation + local validation complete with external completion/production reviews pending)
+Status: in_progress (started 2026-03-20; `wave_psp_iter_fix_0` implementation merged with completion/production approvals; `wave_psp_iter_fix_1` implementation merged with completion + production-grade reviews approved after remediation; `wave_psp_iter_fix_2` implementation merged with completion + production-grade reviews approved; `wave_psp_iter_fix_3` implementation merged with completion review approved and production-grade review pending)
 Owner: ad_hoc_canonical_iteration execution loop
 Reference planning doc:
 - `issues/ad-hoc-canonical-iteration-model-and-lazy-parity-closure.md`
@@ -157,7 +157,7 @@ Contract lock for wave progression:
     - `$(pwd)/scripts/run_all_tests.sh` -> PASS (2026-03-20; profile `pr`; e2e pass `64 passed, 0 failed`; report signature `2161ea8c3fd4e3df`)
 
 ### wave_psp_iter_fix_3: Concrete Iterator Codegen Pipelines
-- Status: completed (implementation + local validation complete; external completion/production review passes pending)
+- Status: completed (implementation merged; completion review approved; production-grade review pending)
 - Scope:
   - emit concrete Rust iterator chains
   - centralize collection-to-iterator lowering
@@ -257,4 +257,8 @@ Contract lock for wave progression:
 
 ### wave_psp_iter_fix_2 review_pass_2 (production-grade)
 - Reviewer artifact: `reviews/phase-ad-hoc-canonical-iteration-model-and-lazy-parity-closure-wave-psp-iter-fix-2-review-pass-2.md`
+- Status: completed (approved; no remediation changes required)
+
+### wave_psp_iter_fix_3 review_pass_1 (completion-gap)
+- Reviewer artifact: `reviews/phase-ad-hoc-canonical-iteration-model-and-lazy-parity-closure-wave-psp-iter-fix-3-review-pass-1.md`
 - Status: completed (approved; no remediation changes required)
