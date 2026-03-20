@@ -523,28 +523,27 @@ fn test_generator_expression_is_typed_as_iterator() {
 }
 
 #[test]
-fn test_generator_rejects_nested_yield_shape() {
-    let result = lower_source(
-        "def bad(n: int):\n    i: int = 0\n    while i < n:\n        while i < n:\n            yield i\n            i = i + 1\n",
+fn test_generator_accepts_nested_yield_shapes() {
+    let module = lower_source(
+        "def nested(n: int):\n    i: int = 0\n    while i < n:\n        while i < n:\n            yield i\n            i = i + 1\n",
+    )
+    .unwrap();
+    assert_eq!(
+        module.functions[0].return_type,
+        Type::Iterator(Box::new(Type::Int))
     );
-    assert!(result.is_err());
-    let errors = result.unwrap_err();
-    assert!(errors
-        .iter()
-        .any(|e| { e.message.contains("unsupported lazy generator shape") }));
 }
 
 #[test]
-fn test_generator_rejects_trailing_statements_after_loop() {
-    let result = lower_source(
-        "def bad(n: int):\n    i: int = 0\n    while i < n:\n        yield i\n        i = i + 1\n    i = i + 1\n",
+fn test_generator_accepts_trailing_statements_after_loop() {
+    let module = lower_source(
+        "def trailing(n: int):\n    i: int = 0\n    while i < n:\n        yield i\n        i = i + 1\n    i = i + 1\n",
+    )
+    .unwrap();
+    assert_eq!(
+        module.functions[0].return_type,
+        Type::Iterator(Box::new(Type::Int))
     );
-    assert!(result.is_err());
-    let errors = result.unwrap_err();
-    assert!(errors.iter().any(|e| {
-        e.message
-            .contains("cannot have trailing statements after the generator while loop")
-    }));
 }
 
 #[test]

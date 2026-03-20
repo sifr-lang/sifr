@@ -1324,7 +1324,7 @@ fn test_generate_rust_while_else_with_borrowed_condition_uses_broke_marker() {
 }
 
 #[test]
-fn test_generate_rust_generator_try_except_rejected_by_lazy_generator_shape_gate() {
+fn test_generate_rust_generator_try_except_materializes_without_shape_panic() {
     let module = HirModule {
         functions: vec![
             HirFunction {
@@ -1385,16 +1385,11 @@ fn test_generate_rust_generator_try_except_rejected_by_lazy_generator_shape_gate
         type_param_bounds: std::collections::HashMap::new(),
     };
 
-    let panic = std::panic::catch_unwind(|| generate_rust(&module))
-        .expect_err("complex try/except generator shape should be rejected");
-    let panic_text = if let Some(msg) = panic.downcast_ref::<String>() {
-        msg.clone()
-    } else if let Some(msg) = panic.downcast_ref::<&str>() {
-        msg.to_string()
-    } else {
-        String::new()
-    };
-    assert!(panic_text.contains("unsupported generator shape for lazy iterator lowering"));
+    let rust_code = generate_rust(&module);
+    assert!(rust_code.contains("if !__sifr_generator_initialized {"));
+    assert!(rust_code.contains("_yields.push(1 as i64);"));
+    assert!(rust_code.contains("_yields.push(2 as i64);"));
+    assert!(rust_code.contains("__sifr_generator_iter.next()"));
 }
 
 #[test]
@@ -1404,7 +1399,7 @@ fn test_generate_rust_generator_conditional_yield_preserves_else_branch() {
     );
 
     assert!(rust_code.contains("if i < (3 as i64) {"));
-    assert!(rust_code.contains("__yielded = Some(i);"));
+    assert!(rust_code.contains("_yields.push(i);"));
     assert!(rust_code.contains("} else {\n            i = i + (1 as i64);\n        }"));
 }
 
