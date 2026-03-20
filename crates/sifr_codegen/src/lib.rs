@@ -1344,6 +1344,23 @@ impl RustEmitter {
             self.lowering_stats.stmt_candidate_structured += 1;
             return Ok(true);
         }
+        if let HirStmt::Yield { value } = stmt {
+            let lowered_value = if let Some(lowered) = self.lower_rendered_expr_for_ir(value)? {
+                lowered
+            } else if let Some(lowered) = self.lower_stmt_expr_for_ir(value)? {
+                lowered
+            } else {
+                return Ok(false);
+            };
+            self.push_captured_stmt(&RustStmt::Expr(RustExpr::MethodCall {
+                receiver: Box::new(RustExpr::Ident("_yields".to_string())),
+                method: "push".to_string(),
+                args: vec![lowered_value],
+            }));
+            self.lowering_stats.stmt_structured += 1;
+            self.lowering_stats.stmt_candidate_structured += 1;
+            return Ok(true);
+        }
         if self.try_lower_structured_field_assign_stmt(stmt)? {
             self.lowering_stats.stmt_structured += 1;
             self.lowering_stats.stmt_candidate_structured += 1;

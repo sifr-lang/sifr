@@ -3,7 +3,7 @@ use crate::{
     body_contains_yield, collect_mutated_vars_with_sigs, RustEmitter, RustExpr, RustItem,
     RustLiteral, RustParam, RustStmt, RustType, RustTypeParam, Visibility,
 };
-use sifr_hir::{HirExpr, HirFunction, HirParam, HirStmt};
+use sifr_hir::{HirFunction, HirParam, HirStmt};
 use sifr_type_system::{OwnershipKind, ParamConvention, Type};
 
 impl RustEmitter {
@@ -317,105 +317,6 @@ impl RustEmitter {
         Some(self.rust_ir_type_with_generics(&func.return_type))
     }
 
-    fn lower_stmt_expr_strict_for_function(&mut self, expr: &HirExpr, context: &str) -> RustExpr {
-        match self.lower_stmt_expr_for_ir(expr) {
-            Ok(Some(lowered)) => self.rewrite_stdlib_constant_idents_in_expr(lowered),
-            Ok(None) => panic!(
-                "structured expression lowering missing for function IR emission ({context}): {expr:?}"
-            ),
-            Err(err) => {
-                self.lowering_stats.expr_lowering_errors += 1;
-                panic!(
-                    "structured expression lowering failed for function IR emission ({context}): {}; expr={expr:?}",
-                    err.message
-                );
-            }
-        }
-    }
-
-    fn is_option_like_type(ty: &Type) -> bool {
-        let resolved = crate::resolve_alias_type_for_plain_call(ty);
-        match resolved {
-            Type::Union(members) => {
-                members.len() == 2 && members.iter().any(|member| matches!(member, Type::None))
-            }
-            _ => false,
-        }
-    }
-
-    fn lower_conditional_generator_branch(
-        &mut self,
-        branch: &[HirStmt],
-        context: &str,
-    ) -> Vec<RustStmt> {
-        let mut lowered = Vec::new();
-        for branch_stmt in branch {
-            if let HirStmt::Yield { value } = branch_stmt {
-                let lowered_value = self.lower_stmt_expr_strict_for_function(
-                    value,
-                    "conditional generator yield value lowering",
-                );
-                let assign_value = if Self::is_option_like_type(value.ty()) {
-                    lowered_value
-                } else {
-                    RustExpr::FnCall {
-                        func: Box::new(RustExpr::Path(vec!["Some".to_string()])),
-                        args: vec![lowered_value],
-                    }
-                };
-                lowered.push(RustStmt::Assign {
-                    target: RustExpr::Ident("__yielded".to_string()),
-                    value: assign_value,
-                });
-            } else {
-                lowered.extend(self.lower_stmt_strict_for_function(branch_stmt, context));
-            }
-        }
-        lowered
-    }
-
-    fn lower_conditional_generator_if_stmt(
-        &mut self,
-        condition: &HirExpr,
-        then_body: &[HirStmt],
-        elif_clauses: &[(HirExpr, Vec<HirStmt>)],
-        else_body: Option<&[HirStmt]>,
-    ) -> RustStmt {
-        let mut lowered_else = else_body.map(|body| {
-            self.lower_conditional_generator_branch(
-                body,
-                "conditional generator else stmt lowering",
-            )
-        });
-
-        for (elif_cond, elif_body) in elif_clauses.iter().rev() {
-            let lowered_elif_body = self.lower_conditional_generator_branch(
-                elif_body,
-                "conditional generator elif stmt lowering",
-            );
-            lowered_else = Some(vec![RustStmt::If {
-                cond: self.lower_stmt_expr_strict_for_function(
-                    elif_cond,
-                    "conditional generator elif condition lowering",
-                ),
-                then_body: lowered_elif_body,
-                else_body: lowered_else,
-            }]);
-        }
-
-        RustStmt::If {
-            cond: self.lower_stmt_expr_strict_for_function(
-                condition,
-                "conditional generator if condition lowering",
-            ),
-            then_body: self.lower_conditional_generator_branch(
-                then_body,
-                "conditional generator branch stmt lowering",
-            ),
-            else_body: lowered_else,
-        }
-    }
-
     fn lower_stmt_strict_for_function(&mut self, stmt: &HirStmt, _context: &str) -> Vec<RustStmt> {
         self.capture_structured_stmts(|inner| inner.emit_stmt(stmt))
     }
@@ -432,219 +333,89 @@ impl RustEmitter {
         };
 
         let mut body = Self::emit_mutable_param_shadow_stmts(mutable_param_shadows);
+        for param in &func.params {
+            if mutable_param_shadows
+                .iter()
+                .any(|(name, _)| name == &param.name)
+                || !param.convention.is_borrowed()
+                || param.ty.ownership() == OwnershipKind::Copy
+            {
+                continue;
+            }
+            body.push(RustStmt::Let {
+                mutable: false,
+                name: param.name.clone(),
+                ty: None,
+                value: RustExpr::Clone(Box::new(RustExpr::Ident(param.name.clone()))),
+            });
+        }
+        let generator_iter_ty = RustType::Generic {
+            base: "std::vec::IntoIter".to_string(),
+            params: vec![yield_ty.clone()],
+        };
+        body.push(RustStmt::Let {
+            mutable: true,
+            name: "__sifr_generator_initialized".to_string(),
+            ty: Some(RustType::Bool),
+            value: RustExpr::Literal(RustLiteral::Bool(false)),
+        });
+        body.push(RustStmt::Let {
+            mutable: true,
+            name: "__sifr_generator_iter".to_string(),
+            ty: Some(generator_iter_ty),
+            value: RustExpr::MethodCall {
+                receiver: Box::new(RustExpr::FnCall {
+                    func: Box::new(RustExpr::Path(vec!["Vec".to_string(), "new".to_string()])),
+                    args: vec![],
+                }),
+                method: "into_iter".to_string(),
+                args: vec![],
+            },
+        });
 
-        let mut init_stmts: Vec<&HirStmt> = Vec::new();
-        let mut trailing_stmts: Vec<&HirStmt> = Vec::new();
-        let mut while_stmt: Option<(&HirExpr, &Vec<HirStmt>)> = None;
+        let mut materialize_body = vec![RustStmt::Let {
+            mutable: true,
+            name: "_yields".to_string(),
+            ty: Some(RustType::Vec(Box::new(yield_ty))),
+            value: RustExpr::FnCall {
+                func: Box::new(RustExpr::Path(vec!["Vec".to_string(), "new".to_string()])),
+                args: vec![],
+            },
+        }];
         for stmt in &func.body {
-            if while_stmt.is_none() {
-                if let HirStmt::While {
-                    condition, body, ..
-                } = stmt
-                {
-                    while_stmt = Some((condition, body));
-                } else {
-                    init_stmts.push(stmt);
-                }
-            } else {
-                trailing_stmts.push(stmt);
-            }
+            materialize_body.extend(self.lower_stmt_strict_for_function(
+                stmt,
+                "generator materialization statement lowering",
+            ));
         }
+        materialize_body.push(RustStmt::Assign {
+            target: RustExpr::Ident("__sifr_generator_iter".to_string()),
+            value: RustExpr::MethodCall {
+                receiver: Box::new(RustExpr::Ident("_yields".to_string())),
+                method: "into_iter".to_string(),
+                args: vec![],
+            },
+        });
+        materialize_body.push(RustStmt::Assign {
+            target: RustExpr::Ident("__sifr_generator_initialized".to_string()),
+            value: RustExpr::Literal(RustLiteral::Bool(true)),
+        });
 
-        let init_has_yield = init_stmts
-            .iter()
-            .any(|stmt| body_contains_yield(std::slice::from_ref(*stmt)));
-        let trailing_has_stmts = !trailing_stmts.is_empty();
-        if while_stmt.is_none() || init_has_yield || trailing_has_stmts {
-            panic!(
-                "unsupported generator shape for lazy iterator lowering in '{}': generators must lower through a single loop body without trailing statements",
-                func.name
-            );
-        }
-
-        for stmt in init_stmts {
-            body.extend(
-                self.lower_stmt_strict_for_function(stmt, "generator init statement lowering"),
-            );
-        }
-
-        let mut closure_body = Vec::new();
-        if let Some((condition, while_body_hir)) = while_stmt {
-            let has_top_level_yield = while_body_hir
-                .iter()
-                .any(|stmt| matches!(stmt, HirStmt::Yield { .. }));
-            let has_conditional_yield = !while_body_hir
-                .iter()
-                .any(|stmt| matches!(stmt, HirStmt::Yield { .. }))
-                && while_body_hir.iter().any(|stmt| {
-                    if let HirStmt::If {
-                        then_body,
-                        elif_clauses,
-                        else_body,
-                        ..
-                    } = stmt
-                    {
-                        body_contains_yield(then_body)
-                            || elif_clauses
-                                .iter()
-                                .any(|(_, elif_body)| body_contains_yield(elif_body))
-                            || else_body
-                                .as_ref()
-                                .is_some_and(|else_branch| body_contains_yield(else_branch))
-                    } else {
-                        false
-                    }
-                });
-            let has_nested_yield = body_contains_yield(while_body_hir);
-
-            if has_nested_yield && !has_top_level_yield && !has_conditional_yield {
-                panic!(
-                    "unsupported nested generator yield shape for lazy iterator lowering in '{}'",
-                    func.name
-                );
-            }
-
-            if has_conditional_yield {
-                let mut lowered_while_body = Vec::new();
-                lowered_while_body.push(RustStmt::Let {
-                    mutable: true,
-                    name: "__yielded".to_string(),
-                    ty: Some(RustType::Option(Box::new(yield_ty.clone()))),
-                    value: RustExpr::Literal(RustLiteral::None),
-                });
-
-                for stmt in while_body_hir {
-                    if let HirStmt::If {
-                        condition: if_cond,
-                        then_body,
-                        elif_clauses,
-                        else_body,
-                        ..
-                    } = stmt
-                    {
-                        let branch_has_yield = body_contains_yield(then_body)
-                            || elif_clauses
-                                .iter()
-                                .any(|(_, elif_body)| body_contains_yield(elif_body))
-                            || else_body
-                                .as_ref()
-                                .is_some_and(|else_branch| body_contains_yield(else_branch));
-                        if branch_has_yield {
-                            lowered_while_body.push(self.lower_conditional_generator_if_stmt(
-                                if_cond,
-                                then_body,
-                                elif_clauses,
-                                else_body.as_deref(),
-                            ));
-                            continue;
-                        }
-                    }
-                    lowered_while_body.extend(self.lower_stmt_strict_for_function(
-                        stmt,
-                        "conditional generator while stmt lowering",
-                    ));
-                }
-
-                lowered_while_body.push(RustStmt::IfLet {
-                    pattern: "Some(__v)".to_string(),
-                    expr: RustExpr::Ident("__yielded".to_string()),
-                    then_body: vec![RustStmt::Return(Some(RustExpr::FnCall {
-                        func: Box::new(RustExpr::Path(vec!["Some".to_string()])),
-                        args: vec![RustExpr::Ident("__v".to_string())],
-                    }))],
-                    else_body: None,
-                });
-
-                closure_body.push(RustStmt::While {
-                    cond: self.lower_stmt_expr_strict_for_function(
-                        condition,
-                        "conditional generator while condition lowering",
-                    ),
-                    body: lowered_while_body,
-                });
-                closure_body.push(RustStmt::Return(Some(RustExpr::Literal(RustLiteral::None))));
-            } else {
-                let mut pre_yield: Vec<&HirStmt> = Vec::new();
-                let mut yield_expr: Option<&HirExpr> = None;
-                let mut post_yield: Vec<&HirStmt> = Vec::new();
-                let mut found_yield = false;
-                for stmt in while_body_hir {
-                    if found_yield {
-                        post_yield.push(stmt);
-                    } else if let HirStmt::Yield { value } = stmt {
-                        yield_expr = Some(value);
-                        found_yield = true;
-                    } else {
-                        pre_yield.push(stmt);
-                    }
-                }
-
-                let Some(yield_expr) = yield_expr else {
-                    panic!(
-                        "generator lowering expected a yield statement in while body: {while_body_hir:?}"
-                    );
-                };
-
-                let mut then_body = Vec::new();
-                for stmt in pre_yield {
-                    then_body.extend(
-                        self.lower_stmt_strict_for_function(
-                            stmt,
-                            "generator pre-yield stmt lowering",
-                        ),
-                    );
-                }
-                let lowered_yield_expr = self.lower_stmt_expr_strict_for_function(
-                    yield_expr,
-                    "generator yield value lowering",
-                );
-                let yield_expr_is_option = Self::is_option_like_type(yield_expr.ty());
-                if yield_expr_is_option {
-                    then_body.push(RustStmt::Let {
-                        mutable: false,
-                        name: "__yield_opt".to_string(),
-                        ty: None,
-                        value: lowered_yield_expr,
-                    });
-                } else {
-                    then_body.push(RustStmt::Let {
-                        mutable: false,
-                        name: "__yield_val".to_string(),
-                        ty: None,
-                        value: lowered_yield_expr,
-                    });
-                }
-                for stmt in post_yield {
-                    then_body.extend(self.lower_stmt_strict_for_function(
-                        stmt,
-                        "generator post-yield stmt lowering",
-                    ));
-                }
-                if yield_expr_is_option {
-                    then_body.push(RustStmt::Return(Some(RustExpr::Ident(
-                        "__yield_opt".to_string(),
-                    ))));
-                } else {
-                    then_body.push(RustStmt::Return(Some(RustExpr::FnCall {
-                        func: Box::new(RustExpr::Path(vec!["Some".to_string()])),
-                        args: vec![RustExpr::Ident("__yield_val".to_string())],
-                    })));
-                }
-
-                closure_body.push(RustStmt::If {
-                    cond: self.lower_stmt_expr_strict_for_function(
-                        condition,
-                        "generator while condition lowering",
-                    ),
-                    then_body,
-                    else_body: Some(vec![RustStmt::Return(Some(RustExpr::Literal(
-                        RustLiteral::None,
-                    )))]),
-                });
-            }
-        } else {
-            closure_body.push(RustStmt::Return(Some(RustExpr::Literal(RustLiteral::None))));
-        }
+        let closure_body = vec![
+            RustStmt::If {
+                cond: RustExpr::UnaryOp {
+                    op: "!".to_string(),
+                    operand: Box::new(RustExpr::Ident("__sifr_generator_initialized".to_string())),
+                },
+                then_body: materialize_body,
+                else_body: None,
+            },
+            RustStmt::Return(Some(RustExpr::MethodCall {
+                receiver: Box::new(RustExpr::Ident("__sifr_generator_iter".to_string())),
+                method: "next".to_string(),
+                args: vec![],
+            })),
+        ];
 
         let from_fn_expr = RustExpr::FnCall {
             func: Box::new(RustExpr::Path(vec![

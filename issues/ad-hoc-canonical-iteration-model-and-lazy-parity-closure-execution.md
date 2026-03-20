@@ -1,6 +1,6 @@
 # Ad Hoc Phase Execution Checklist (Canonical Iteration Model and Lazy Parity Closure)
 
-Status: in_progress (started 2026-03-20; `wave_psp_iter_fix_0` implementation merged with completion/production approvals; `wave_psp_iter_fix_1` implementation merged with completion + production-grade reviews approved after remediation; `wave_psp_iter_fix_2` implementation merged with completion + production-grade reviews approved; `wave_psp_iter_fix_3` implementation merged with completion + production-grade reviews approved after `filter(pred, iterator_variable)` regression + formatting remediation)
+Status: in_progress (started 2026-03-20; `wave_psp_iter_fix_0` implementation merged with completion/production approvals; `wave_psp_iter_fix_1` implementation merged with completion + production-grade reviews approved after remediation; `wave_psp_iter_fix_2` implementation merged with completion + production-grade reviews approved; `wave_psp_iter_fix_3` implementation merged with completion + production-grade reviews approved after `filter(pred, iterator_variable)` regression + formatting remediation; `wave_psp_iter_fix_4` implementation/validation complete and entering external review loop)
 Owner: ad_hoc_canonical_iteration execution loop
 Reference planning doc:
 - `issues/ad-hoc-canonical-iteration-model-and-lazy-parity-closure.md`
@@ -194,14 +194,36 @@ Contract lock for wave progression:
     - `$(pwd)/scripts/run_all_tests.sh` -> PASS (2026-03-20; post-remediation full lane gate; report signature `2161ea8c3fd4e3df`)
 
 ### wave_psp_iter_fix_4: Generator Backend Unification
-- Status: planned
+- Status: in_review (implementation complete; local validation + demo complete; external completion/production reviews pending)
 - Scope:
   - align generator functions and generator expressions with the canonical iterator backend
   - remove current narrow backend-shape dependence
   - retire the current single-top-level-`while` plus single-yield-site restriction as the default supported model
-- Validation target:
-  - positive generator-function and filtered generator-expression coverage
-  - negative unsupported-shape diagnostics remain precise and do not degenerate into backend panics
+- Implementation notes:
+  - lowered generator expressions with optional filters through a structured `filter_map(...)` iterator chain in codegen, including `Iterator[...]`-typed result boxing for protocol parity
+  - replaced generator-function codegen’s single-top-level-while/single-yield-site specialized path with a unified iterator-producing backend:
+    - generator body materializes into `_yields: Vec<T>` inside a `from_fn` closure initialization block
+    - closure state (`__sifr_generator_initialized`, `__sifr_generator_iter`) now drives iterator return semantics
+  - added structured `Yield` statement lowering in both top-level structured statement emission and nested block lowering paths so complex-yield expressions can lower without panic
+  - cloned non-copy borrowed generator params into local owned shadows before closure capture to close returned `Box<dyn Iterator<...>>` lifetime constraints for loop-backed generator bodies
+  - removed HIR generator-shape gate that previously rejected nested/trailing/composed generator forms before codegen
+  - added wave-4 fixture/demo/traceability artifacts:
+    - `crates/sifr/tests/e2e/pass/phase_psp_iter_fix_4_generator_backend_unification.sifr`
+    - `demos/ad_hoc_iter_fix_wave4_generator_backend_demo.sifr`
+    - `verification/stdlib/wave_psp_iter_fix_4_cpython_traceability.md`
+- Validation evidence:
+  - reproduced fracture closure:
+    - `cargo run -q -p sifr -- run /tmp/w4_gen_expr_filter.sifr` -> PASS (prints `[2, 4]`)
+    - `cargo run -q -p sifr -- run /tmp/w4_gen_fn_multi_yield.sifr` -> PASS (prints `[0, 1, 2, 3, 4]`)
+    - `cargo run -q -p sifr -- run /tmp/w4_gen_fn_for_loop.sifr` -> PASS (prints `[2, 4]`)
+  - positive fixture:
+    - `cargo run -q -p sifr -- run crates/sifr/tests/e2e/pass/phase_psp_iter_fix_4_generator_backend_unification.sifr` -> PASS
+  - demo:
+    - `cargo run -q -p sifr -- run demos/ad_hoc_iter_fix_wave4_generator_backend_demo.sifr` -> PASS (prints `[4, 16]`, `[0, 1, 2, 3, 4]`, `[2, 4]`)
+  - HIR typing/lowering lane:
+    - `cargo test -p sifr_hir expressions_tests -- --nocapture` -> PASS
+  - wave gate:
+    - `$(pwd)/scripts/run_all_tests.sh` -> PASS (2026-03-20; profile `pr`; e2e pass `64 passed, 0 failed`; report signature `2161ea8c3fd4e3df`)
 
 ### wave_psp_iter_fix_5: Builtin Surface Cleanup
 - Status: planned

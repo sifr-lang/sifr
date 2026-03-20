@@ -1,0 +1,25 @@
+# wave_psp_iter_fix_4 CPython Traceability Matrix
+
+Wave: `wave_psp_iter_fix_4`  
+Scope: generator backend unification and filtered generator-expression closure
+
+## CPython Harvest Inputs
+
+- `Lib/test/test_generators.py` (generator functions with multiple yield sites and loop-backed iteration)
+- `Lib/test/test_iter.py` (iterator-protocol behavior for generator-returning surfaces)
+- `Lib/test/test_filter.py` (filtered lazy iterator behavior, adapted through generator expressions)
+
+## Adopt / Adapt / Waive (Wave 4)
+
+| CPython family | Sifr surface direction | State | Evidence |
+| --- | --- | --- | --- |
+| `test_generators` mixed-yield generator body | support loop-backed generator functions with multiple yield sites under one iterator backend | `adapted` (closed in wave 4 backend) | `crates/sifr/tests/e2e/pass/phase_psp_iter_fix_4_generator_backend_unification.sifr` |
+| `test_generators` for-loop generator body | allow generator functions that yield from `for` loops over iterable inputs | `adapted` (closed in wave 4 backend) | `crates/sifr/tests/e2e/pass/phase_psp_iter_fix_4_generator_backend_unification.sifr` |
+| `test_filter` filtered generator expressions | ensure `(expr for x in iter if cond)` lowers through canonical lazy iterator chains | `adapted` (closed in wave 4 backend) | `crates/sifr/tests/e2e/pass/phase_psp_iter_fix_4_generator_backend_unification.sifr` |
+
+## Local Fixture Anchors (Wave 4)
+
+- Positive fixture:
+  - `crates/sifr/tests/e2e/pass/phase_psp_iter_fix_4_generator_backend_unification.sifr`
+- Demo:
+  - `demos/ad_hoc_iter_fix_wave4_generator_backend_demo.sifr`

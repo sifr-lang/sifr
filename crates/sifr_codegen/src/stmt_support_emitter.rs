@@ -582,6 +582,72 @@ impl RustEmitter {
         }
     }
 
+    fn try_lower_generator_expr_for_ir(
+        &mut self,
+        value_expr: &HirExpr,
+        var: &str,
+        iter_expr: &HirExpr,
+        filter: Option<&HirExpr>,
+        result_ty: &Type,
+    ) -> Result<Option<RustExpr>, crate::CodegenError> {
+        if var.contains(',')
+            || !matches!(
+                Self::resolve_alias_type_for_loop_iter(result_ty),
+                Type::Any | Type::Iterator(_)
+            )
+        {
+            return Ok(None);
+        }
+
+        let Some(iter_chain) = self.lower_comprehension_iter_for_ir(iter_expr)? else {
+            return Ok(None);
+        };
+        let Some(lowered_value_expr) = self.lower_stmt_expr_for_ir(value_expr)? else {
+            return Ok(None);
+        };
+        let lowered_body = if let Some(filter_expr) = filter {
+            let Some(lowered_filter_expr) = self.lower_stmt_expr_for_ir(filter_expr)? else {
+                return Ok(None);
+            };
+            RustExpr::If {
+                cond: Box::new(lowered_filter_expr),
+                then_expr: Box::new(RustExpr::FnCall {
+                    func: Box::new(RustExpr::Path(vec!["Some".to_string()])),
+                    args: vec![lowered_value_expr],
+                }),
+                else_expr: Some(Box::new(RustExpr::Literal(crate::RustLiteral::None))),
+            }
+        } else {
+            RustExpr::FnCall {
+                func: Box::new(RustExpr::Path(vec!["Some".to_string()])),
+                args: vec![lowered_value_expr],
+            }
+        };
+
+        let generator_chain = RustExpr::MethodCall {
+            receiver: Box::new(iter_chain),
+            method: "filter_map".to_string(),
+            args: vec![RustExpr::Closure {
+                params: vec![crate::RustParam::Named {
+                    name: var.to_string(),
+                    ty: crate::RustType::Named("_".to_string()),
+                }],
+                body: Box::new(lowered_body),
+                is_move: false,
+            }],
+        };
+        if matches!(
+            Self::resolve_alias_type_for_loop_iter(result_ty),
+            Type::Iterator(_)
+        ) {
+            return Ok(Some(RustExpr::FnCall {
+                func: Box::new(RustExpr::Path(vec!["Box".to_string(), "new".to_string()])),
+                args: vec![generator_chain],
+            }));
+        }
+        Ok(Some(generator_chain))
+    }
+
     fn lower_structured_nested_list_subscript_assign_stmt_for_ir(
         &mut self,
         object: &str,
@@ -1057,6 +1123,20 @@ impl RustEmitter {
         }
         if let Some(lowered_comprehension) = self.try_lower_comprehension_expr_for_ir(expr)? {
             return Ok(Some(lowered_comprehension));
+        }
+        if let HirExpr::GeneratorExpr {
+            expr: value_expr,
+            var,
+            iter,
+            filter,
+            ty,
+        } = expr
+        {
+            if let Some(lowered_generator) =
+                self.try_lower_generator_expr_for_ir(value_expr, var, iter, filter.as_deref(), ty)?
+            {
+                return Ok(Some(lowered_generator));
+            }
         }
         if let Some((func, args)) = call_expr_parts(expr) {
             if let Some(lowered_intrinsic) = self.try_lower_registry_intrinsic_call_expr(func, args)
@@ -4355,6 +4435,18 @@ impl RustEmitter {
                     RustStmt::Return(None)
                 };
                 (vec![lowered_return_stmt], true)
+            } else if let HirStmt::Yield { value } = stmt {
+                let Some(lowered_value) = self.lower_stmt_expr_for_ir(value)? else {
+                    return Ok(None);
+                };
+                (
+                    vec![RustStmt::Expr(crate::RustExpr::MethodCall {
+                        receiver: Box::new(crate::RustExpr::Ident("_yields".to_string())),
+                        method: "push".to_string(),
+                        args: vec![lowered_value],
+                    })],
+                    true,
+                )
             } else if let HirStmt::Raise { value } = stmt {
                 let Some(lowered) = self.lower_stmt_expr_for_ir(value)? else {
                     return Ok(None);
