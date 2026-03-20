@@ -1,6 +1,6 @@
 # Ad Hoc Phase Execution Checklist (Canonical Iteration Model and Lazy Parity Closure)
 
-Status: in_progress (started 2026-03-20; `wave_psp_iter_fix_0` implementation and validation complete; external review loop pending)
+Status: in_progress (started 2026-03-20; `wave_psp_iter_fix_0` implementation merged; review pass-1 approved and pass-2 pending)
 Owner: ad_hoc_canonical_iteration execution loop
 Reference planning doc:
 - `issues/ad-hoc-canonical-iteration-model-and-lazy-parity-closure.md`
@@ -14,8 +14,8 @@ Loop per wave: Plan -> Implement -> Validate -> Demo -> PR -> External completio
 - [x] Positive-path and negative-path validation recorded for each wave
 - [x] Demo runs before opening each wave PR
 - [x] `$(pwd)/scripts/run_all_tests.sh` run before each wave PR
-- [ ] PR opened/reviewed/merged before next wave starts
-- [ ] Docs + traceability + waiver state updated before moving on
+- [x] PR opened/reviewed/merged before next wave starts
+- [x] Docs + traceability + waiver state updated before moving on
 
 ## Full Phase To-Do Plan
 1. [x] `wave_psp_iter_fix_0`: contract freeze and governance lock
@@ -75,7 +75,9 @@ Contract lock for wave progression:
 ## Wave Progress
 
 ### wave_psp_iter_fix_0: Contract Freeze and Governance Lock
-- Status: completed (implementation/validation complete; external review loop pending)
+- Status: completed (implementation merged; completion review pass approved; production-grade review pass pending)
+- Implementation PR:
+  - `#1339` (merged): https://github.com/yaseralnajjar/sifr/pull/1339
 - Scope:
   - freeze canonical iteration semantics and permanent divergences
   - update architecture and governance docs before implementation waves begin
@@ -167,3 +169,9 @@ Contract lock for wave progression:
   - inherited-surface regression fixtures and demos pass under the final iterator model
   - residual differences are documented as intentional divergences
   - full phase gate via `scripts/run_all_tests.sh`
+
+## External Review Passes
+
+### wave_psp_iter_fix_0 review_pass_1 (completion-gap)
+- Reviewer artifact: `reviews/phase-ad-hoc-canonical-iteration-model-and-lazy-parity-closure-wave-psp-iter-fix-0-review-pass-1.md`
+- Status: completed (approved; no contract-lock, governance, or validation omissions found)
