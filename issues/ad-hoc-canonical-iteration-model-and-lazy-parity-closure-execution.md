@@ -1,6 +1,6 @@
 # Ad Hoc Phase Execution Checklist (Canonical Iteration Model and Lazy Parity Closure)
 
-Status: in_progress (started 2026-03-20; `wave_psp_iter_fix_0` implementation merged with completion/production approvals; `wave_psp_iter_fix_1` implementation merged with completion + production-grade reviews approved after remediation; `wave_psp_iter_fix_2` implementation merged with completion + production-grade reviews approved; `wave_psp_iter_fix_3` implementation merged with completion + production-grade reviews approved after `filter(pred, iterator_variable)` regression + formatting remediation; `wave_psp_iter_fix_4` implementation/reviews merged with production-grade approval; `wave_psp_iter_fix_5` implementation/reviews merged with production-grade approval; `wave_psp_iter_fix_6` implementation/reviews merged with production-grade approval; `wave_psp_iter_fix_7` implementation/reviews merged with production-grade approval; `wave_psp_iter_fix_8` implementation/reviews merged with production-grade approval; wave-level extra completion + production-grade closure reviews approved; milestone-level completion + production-grade closure reviews approved)
+Status: in_progress (started 2026-03-20; `wave_psp_iter_fix_0` implementation merged with completion/production approvals; `wave_psp_iter_fix_1` implementation merged with completion + production-grade reviews approved after remediation; `wave_psp_iter_fix_2` implementation merged with completion + production-grade reviews approved; `wave_psp_iter_fix_3` implementation merged with completion + production-grade reviews approved after `filter(pred, iterator_variable)` regression + formatting remediation; `wave_psp_iter_fix_4` implementation/reviews merged with production-grade approval; `wave_psp_iter_fix_5` implementation/reviews merged with production-grade approval; `wave_psp_iter_fix_6` implementation/reviews merged with production-grade approval; `wave_psp_iter_fix_7` implementation/reviews merged with production-grade approval; `wave_psp_iter_fix_8` implementation/reviews merged with production-grade approval; wave-level extra completion + production-grade closure reviews approved; milestone-level completion + production-grade closure reviews approved; phase-level completion + production-grade closure reviews approved)
 Owner: ad_hoc_canonical_iteration execution loop
 Reference planning doc:
 - `issues/ad-hoc-canonical-iteration-model-and-lazy-parity-closure.md`
@@ -32,7 +32,7 @@ Loop per wave: Plan -> Implement -> Validate -> Demo -> PR -> External completio
 12. [x] milestone-level completion review cycle done
 13. [x] milestone-level production-grade review cycle done
 14. [x] phase-level completion review cycle done
-15. [ ] phase-level production-grade review cycle done
+15. [x] phase-level production-grade review cycle done
 16. [ ] closure telegram notification sent
 
 ## Entry Baseline Evidence (2026-03-20)
@@ -473,3 +473,7 @@ Contract lock for wave progression:
 ### phase_closure review_pass_1 (completion-gap)
 - Reviewer artifact: `reviews/phase-ad-hoc-canonical-iteration-model-and-lazy-parity-closure-phase-closure-review-pass-1.md`
 - Status: completed (approved; no phase-level completion gaps found)
+
+### phase_closure review_pass_2 (production-grade)
+- Reviewer artifact: `reviews/phase-ad-hoc-canonical-iteration-model-and-lazy-parity-closure-phase-closure-review-pass-2.md`
+- Status: completed (approved after remediation; addressed clippy findings in `sifr_hir` lowering paths and revalidated with `cargo clippy -p sifr_hir -- -D warnings` + `scripts/run_all_tests.sh --profile quick`)

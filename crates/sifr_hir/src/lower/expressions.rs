@@ -51,7 +51,7 @@ use std::collections::HashMap;
 pub(super) fn lower_expr(expr: &Expr, ctx: &mut LowerCtx) -> Option<HirExpr> {
     match expr {
         Expr::NumberLiteral(num) => lower_number_literal(num),
-        Expr::BytesLiteral(bytes) => lower_bytes_literal(bytes),
+        Expr::BytesLiteral(bytes) => Some(lower_bytes_literal(bytes)),
         Expr::StringLiteral(s) => {
             let value = s.value.to_str().to_string();
             Some(HirExpr::StringLiteral(value))
@@ -96,17 +96,17 @@ pub(super) fn lower_number_literal(num: &ExprNumberLiteral) -> Option<HirExpr> {
     }
 }
 
-pub(super) fn lower_bytes_literal(bytes: &ExprBytesLiteral) -> Option<HirExpr> {
+pub(super) fn lower_bytes_literal(bytes: &ExprBytesLiteral) -> HirExpr {
     let mut elements = Vec::new();
-    for part in bytes.value.iter() {
+    for part in &bytes.value {
         for value in part.as_slice() {
             elements.push(HirExpr::IntLiteral(i64::from(*value)));
         }
     }
-    Some(HirExpr::ListLiteral {
+    HirExpr::ListLiteral {
         elements,
         ty: Type::Bytes,
-    })
+    }
 }
 
 fn callable_signature(expr: &HirExpr) -> Option<(Vec<Type>, Vec<ParamConvention>, Type)> {

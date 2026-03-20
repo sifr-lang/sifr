@@ -306,7 +306,7 @@ fn collect_type_vars(ty: &Type, vars: &mut Vec<String>) {
             }
         }
         Type::List(elem) | Type::Set(elem) | Type::Iterable(elem) | Type::Iterator(elem) => {
-            collect_type_vars(elem, vars)
+            collect_type_vars(elem, vars);
         }
         Type::Dict(k, v) => {
             collect_type_vars(k, vars);
