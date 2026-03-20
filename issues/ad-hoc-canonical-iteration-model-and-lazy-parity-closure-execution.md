@@ -27,7 +27,7 @@ Loop per wave: Plan -> Implement -> Validate -> Demo -> PR -> External completio
 7. [x] `wave_psp_iter_fix_6`: `sifr.itertools` and iterator-returning stdlib closure (completion and production-grade reviews approved)
 8. [x] `wave_psp_iter_fix_7`: user-defined iterable protocol participation (completion and production-grade reviews approved)
 9. [x] `wave_psp_iter_fix_8`: downstream phase alignment and final closure
-10. [ ] wave-level extra completion review cycle done
+10. [x] wave-level extra completion review cycle done
 11. [ ] wave-level extra production-grade review cycle done
 12. [ ] milestone-level completion review cycle done
 13. [ ] milestone-level production-grade review cycle done
@@ -453,3 +453,7 @@ Contract lock for wave progression:
 ### wave_psp_iter_fix_8 review_pass_2 (production-grade)
 - Reviewer artifact: `reviews/phase-ad-hoc-canonical-iteration-model-and-lazy-parity-closure-wave-psp-iter-fix-8-review-pass-2.md`
 - Status: completed (approved; production-grade readiness confirmed with no remediation changes required)
+
+### wave_closure review_pass_1 (completion-gap)
+- Reviewer artifact: `reviews/phase-ad-hoc-canonical-iteration-model-and-lazy-parity-closure-wave-closure-review-pass-1.md`
+- Status: completed (approved; no wave-level completion gaps found)
