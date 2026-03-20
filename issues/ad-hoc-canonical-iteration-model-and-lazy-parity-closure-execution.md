@@ -1,6 +1,6 @@
 # Ad Hoc Phase Execution Checklist (Canonical Iteration Model and Lazy Parity Closure)
 
-Status: completed (started 2026-03-20; `wave_psp_iter_fix_0` implementation merged with completion/production approvals; `wave_psp_iter_fix_1` implementation merged with completion + production-grade reviews approved after remediation; `wave_psp_iter_fix_2` implementation merged with completion + production-grade reviews approved; `wave_psp_iter_fix_3` implementation merged with completion + production-grade reviews approved after `filter(pred, iterator_variable)` regression + formatting remediation; `wave_psp_iter_fix_4` implementation/reviews merged with production-grade approval; `wave_psp_iter_fix_5` implementation/reviews merged with production-grade approval; `wave_psp_iter_fix_6` implementation/reviews merged with production-grade approval; `wave_psp_iter_fix_7` implementation/reviews merged with production-grade approval; `wave_psp_iter_fix_8` implementation/reviews merged with production-grade approval; wave-level extra completion + production-grade closure reviews approved; milestone-level completion + production-grade closure reviews approved; phase-level completion + production-grade closure reviews approved; post-closure CPython `itertools` related-test port add-on completed; closure notifications dispatched)
+Status: completed (started 2026-03-20; `wave_psp_iter_fix_0` implementation merged with completion/production approvals; `wave_psp_iter_fix_1` implementation merged with completion + production-grade reviews approved after remediation; `wave_psp_iter_fix_2` implementation merged with completion + production-grade reviews approved; `wave_psp_iter_fix_3` implementation merged with completion + production-grade reviews approved after `filter(pred, iterator_variable)` regression + formatting remediation; `wave_psp_iter_fix_4` implementation/reviews merged with production-grade approval; `wave_psp_iter_fix_5` implementation/reviews merged with production-grade approval; `wave_psp_iter_fix_6` implementation/reviews merged with production-grade approval; `wave_psp_iter_fix_7` implementation/reviews merged with production-grade approval; `wave_psp_iter_fix_8` implementation/reviews merged with production-grade approval; wave-level extra completion + production-grade closure reviews approved; milestone-level completion + production-grade closure reviews approved; phase-level completion + production-grade closure reviews approved; post-closure CPython `itertools` related-test port add-on implementation + review cycles approved; closure notifications dispatched)
 Owner: ad_hoc_canonical_iteration execution loop
 Reference planning doc:
 - `issues/ad-hoc-canonical-iteration-model-and-lazy-parity-closure.md`
@@ -35,6 +35,8 @@ Loop per wave: Plan -> Implement -> Validate -> Demo -> PR -> External completio
 15. [x] phase-level production-grade review cycle done
 16. [x] closure telegram notification sent
 17. [x] post-closure add-on: port all related CPython `itertools` tests for shipped Sifr surfaces
+18. [x] post-closure add-on review pass 1 (completion/quality) approved
+19. [x] post-closure add-on review pass 2 (production-grade) approved
 
 ## Entry Baseline Evidence (2026-03-20)
 
@@ -488,7 +490,17 @@ Contract lock for wave progression:
   - `crates/sifr/tests/e2e/pass/cpython_itertools.sifr` (expanded CPython-derived fixture for shipped helper family)
   - `lib/sifr/itertools.sifr` (`count` root-cause remediation: replace unsupported unbounded `yield` loop with bounded-prefix delegation to `count_from`)
   - `verification/stdlib/wave_psp_iter_fix_6_cpython_traceability.md` (expanded mapping and intentional-diff boundary record)
+- Implementation PR:
+  - `https://github.com/yaseralnajjar/sifr/pull/1373` (merged)
 - Validation:
   - `cargo run -q -p sifr -- run crates/sifr/tests/e2e/pass/cpython_itertools.sifr` -> PASS
   - `cargo run -q -p sifr -- check crates/sifr/tests/e2e/pass/cpython_itertools_subset.sifr` -> PASS
   - `scripts/run_all_tests.sh --profile quick` -> PASS
+
+### cpython_itertools_related_port review_pass_1 (completion/quality)
+- Reviewer artifact: `reviews/phase-ad-hoc-canonical-iteration-model-and-lazy-parity-closure-post-closure-itertools-review-pass-1.md`
+- Status: completed (approved; no actionable findings)
+
+### cpython_itertools_related_port review_pass_2 (production-grade)
+- Reviewer artifact: `reviews/phase-ad-hoc-canonical-iteration-model-and-lazy-parity-closure-post-closure-itertools-review-pass-2.md`
+- Status: completed (approved; no actionable findings)
