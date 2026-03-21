@@ -12,7 +12,7 @@
 - RNG/crypto continuation is production-grade closed:
   - phase docs: `issues/ad-hoc-stateful-rng-crypto-and-polish-parity-expansion.md` and `issues/ad-hoc-stateful-rng-crypto-and-polish-parity-expansion-execution.md`
   - wave closure: `wave_psp_rng_0` through `wave_psp_rng_3` merged with external production-grade review artifacts and phase-closure pass-2 approval
-- Ownership-aware collection lowering continuation is active:
+- Ownership-aware collection lowering continuation is in closure review:
   - phase docs: `issues/ad-hoc-ownership-aware-collection-lowering-and-clone-elision.md` and `issues/ad-hoc-ownership-aware-collection-lowering-and-clone-elision-execution.md`
   - completed waves:
     - `wave_clone_0` lock/baseline artifact: `verification/stdlib/wave_clone_0_codegen_traceability.md`
@@ -25,6 +25,24 @@
     - source access mode: `Preserve | Consume`
     - yield mode: `Copy | Clone | Move | Borrow`
     - conservative generic handling remains mandatory for `TypeVar`/`Any`/move unions
+  - canonical ownership-aware collection lowering rule:
+    - classify source expression as `ValueCategory::Place` or `ValueCategory::Temporary`
+    - derive source access contract as `SourceAccessMode::Preserve` or `SourceAccessMode::Consume`
+    - resolve element ownership as `Some(Copy | Move)` or `None` when ownership is conservative/unknown
+    - choose `YieldMode` from planner contract:
+      - `Preserve + Some(Copy)` -> `Copy` (`.iter().copied()` or equivalent copy-out)
+      - `Preserve + Some(Move)` -> `Clone` (`.iter().cloned()` where owned element materialization is required)
+      - `Preserve + None` -> `Borrow` (no forced copy/clone lowering)
+      - `Consume` (or iterator source) -> `Move` (consume source directly, no pre-clone shim)
+    - emit Rust lowering from this plan only; do not bypass planner with ad hoc clone heuristics
+  - residual boundary lock:
+    - this continuation removes unnecessary clone-heavy lowering patterns for targeted surfaces
+    - it does not claim full CPython parity for move-heavy runtime representations that depend on broader runtime/model changes
+  - traceability artifacts:
+    - `verification/stdlib/wave_clone_0_codegen_traceability.md`
+    - `verification/stdlib/wave_clone_1_iterator_codegen_traceability.md`
+    - `verification/stdlib/wave_clone_2_index_slice_unpack_traceability.md`
+    - `verification/stdlib/wave_clone_3_generic_hardening_traceability.md`
 - Historical references in this architecture document may mention legacy phase numbering from earlier roadmap versions.
 - When phase-number conflicts exist, follow [`roadmap.md`](./roadmap.md) and the matching files under [`phases/`](./phases/).
 

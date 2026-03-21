@@ -10,7 +10,7 @@ Loop per wave: Plan -> Implement -> Validate -> Demo -> PR -> External completio
 ## Global Gates
 - [x] Entry baseline validated before wave 0
 - [x] Scope remains constrained to active wave
-- [ ] Root cause is fixed without compatibility shims
+- [x] Root cause is fixed without compatibility shims
 - [x] Positive-path and negative-path validation recorded for each wave
 - [x] Demo runs before opening each wave PR
 - [x] `$(pwd)/scripts/run_all_tests.sh` run before each wave PR
@@ -22,7 +22,7 @@ Loop per wave: Plan -> Implement -> Validate -> Demo -> PR -> External completio
 2. [x] `wave_clone_1`: iterator/comprehension clone-elision through shared planner
 3. [x] `wave_clone_2`: indexing/slicing/star-unpack ownership correction
 4. [x] `wave_clone_3`: generic hardening, regression lock, and phase closure
-5. [ ] wave-level extra completion review cycle done
+5. [x] wave-level extra completion review cycle done
 6. [ ] wave-level extra production-grade review cycle done
 7. [ ] milestone-level completion review cycle done
 8. [ ] milestone-level production-grade review cycle done
@@ -284,6 +284,16 @@ Secondary review paths:
     - applied actions: no wave-scoped code changes required; review approved production readiness and confirmed pass-1 follow-up closure
     - follow-up tracking (out of wave scope): pre-existing `phase_psp_iter_fix_7_user_defined_iterable_protocol` dangling-reference fix and pre-existing unrelated unit-test failures remain tracked separately
     - validation: `scripts/run_all_tests.sh`
+
+## Wave Closure Review Cycles
+
+- wave closure completion review: completed (`reviews/phase-ad-hoc-ownership-aware-collection-lowering-and-clone-elision-wave-closure-review-pass-1.md`)
+  - applied actions:
+    - documented canonical ownership-aware collection lowering decision tree in `internal_docs/architecture.md`
+    - recorded residual boundary note (clone-elision closure does not claim full CPython move-heavy runtime parity)
+    - marked global gate `Root cause is fixed without compatibility shims` as complete
+  - validation:
+    - `scripts/run_all_tests.sh`
 
 ## Suggested Regression Targets
 
