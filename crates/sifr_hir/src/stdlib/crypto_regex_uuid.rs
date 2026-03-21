@@ -38,17 +38,32 @@ pub(super) fn intrinsic_crypto() -> IntrinsicModule {
         "sha256".to_string(),
         FunctionType::all_borrow(vec![("s".to_string(), Type::Str)], Type::Str),
     );
+    // sha256_bytes(data: bytes) -> bytes
+    functions.insert(
+        "sha256_bytes".to_string(),
+        FunctionType::all_borrow(vec![("data".to_string(), Type::Bytes)], Type::Bytes),
+    );
 
     // md5(s: str) -> str (hex digest)
     functions.insert(
         "md5".to_string(),
         FunctionType::all_borrow(vec![("s".to_string(), Type::Str)], Type::Str),
     );
+    // md5_bytes(data: bytes) -> bytes
+    functions.insert(
+        "md5_bytes".to_string(),
+        FunctionType::all_borrow(vec![("data".to_string(), Type::Bytes)], Type::Bytes),
+    );
 
     // base64_encode(s: str) -> str
     functions.insert(
         "base64_encode".to_string(),
         FunctionType::all_borrow(vec![("s".to_string(), Type::Str)], Type::Str),
+    );
+    // base64_encode_bytes(data: bytes) -> bytes
+    functions.insert(
+        "base64_encode_bytes".to_string(),
+        FunctionType::all_borrow(vec![("data".to_string(), Type::Bytes)], Type::Bytes),
     );
 
     // base64_decode(s: str) -> Result[str, ParseError]
@@ -57,6 +72,14 @@ pub(super) fn intrinsic_crypto() -> IntrinsicModule {
         FunctionType::all_borrow(
             vec![("s".to_string(), Type::Str)],
             result_ty(Type::Str, "ParseError"),
+        ),
+    );
+    // base64_decode_bytes(data: bytes) -> Result[bytes, ParseError]
+    functions.insert(
+        "base64_decode_bytes".to_string(),
+        FunctionType::all_borrow(
+            vec![("data".to_string(), Type::Bytes)],
+            result_ty(Type::Bytes, "ParseError"),
         ),
     );
 
@@ -104,17 +127,32 @@ pub(super) fn intrinsic_crypto() -> IntrinsicModule {
         "sha1".to_string(),
         FunctionType::all_borrow(vec![("s".to_string(), Type::Str)], Type::Str),
     );
+    // sha1_bytes(data: bytes) -> bytes
+    functions.insert(
+        "sha1_bytes".to_string(),
+        FunctionType::all_borrow(vec![("data".to_string(), Type::Bytes)], Type::Bytes),
+    );
 
     // sha512(s: str) -> str (hex digest)
     functions.insert(
         "sha512".to_string(),
         FunctionType::all_borrow(vec![("s".to_string(), Type::Str)], Type::Str),
     );
+    // sha512_bytes(data: bytes) -> bytes
+    functions.insert(
+        "sha512_bytes".to_string(),
+        FunctionType::all_borrow(vec![("data".to_string(), Type::Bytes)], Type::Bytes),
+    );
 
     // urlsafe_b64encode(s: str) -> str
     functions.insert(
         "urlsafe_b64encode".to_string(),
         FunctionType::all_borrow(vec![("s".to_string(), Type::Str)], Type::Str),
+    );
+    // urlsafe_b64encode_bytes(data: bytes) -> bytes
+    functions.insert(
+        "urlsafe_b64encode_bytes".to_string(),
+        FunctionType::all_borrow(vec![("data".to_string(), Type::Bytes)], Type::Bytes),
     );
 
     // urlsafe_b64decode(s: str) -> Result[str, ParseError]
@@ -123,6 +161,14 @@ pub(super) fn intrinsic_crypto() -> IntrinsicModule {
         FunctionType::all_borrow(
             vec![("s".to_string(), Type::Str)],
             result_ty(Type::Str, "ParseError"),
+        ),
+    );
+    // urlsafe_b64decode_bytes(data: bytes) -> Result[bytes, ParseError]
+    functions.insert(
+        "urlsafe_b64decode_bytes".to_string(),
+        FunctionType::all_borrow(
+            vec![("data".to_string(), Type::Bytes)],
+            result_ty(Type::Bytes, "ParseError"),
         ),
     );
 
@@ -212,11 +258,21 @@ pub(super) fn intrinsic_crypto() -> IntrinsicModule {
         "sha224".to_string(),
         FunctionType::all_borrow(vec![("s".to_string(), Type::Str)], Type::Str),
     );
+    // sha224_bytes(data: bytes) -> bytes
+    functions.insert(
+        "sha224_bytes".to_string(),
+        FunctionType::all_borrow(vec![("data".to_string(), Type::Bytes)], Type::Bytes),
+    );
 
     // sha384(s: str) -> str (hex digest)
     functions.insert(
         "sha384".to_string(),
         FunctionType::all_borrow(vec![("s".to_string(), Type::Str)], Type::Str),
+    );
+    // sha384_bytes(data: bytes) -> bytes
+    functions.insert(
+        "sha384_bytes".to_string(),
+        FunctionType::all_borrow(vec![("data".to_string(), Type::Bytes)], Type::Bytes),
     );
 
     // blake2b(s: str) -> str (hex digest)
@@ -224,11 +280,21 @@ pub(super) fn intrinsic_crypto() -> IntrinsicModule {
         "blake2b".to_string(),
         FunctionType::all_borrow(vec![("s".to_string(), Type::Str)], Type::Str),
     );
+    // blake2b_bytes(data: bytes) -> bytes
+    functions.insert(
+        "blake2b_bytes".to_string(),
+        FunctionType::all_borrow(vec![("data".to_string(), Type::Bytes)], Type::Bytes),
+    );
 
     // blake2s(s: str) -> str (hex digest)
     functions.insert(
         "blake2s".to_string(),
         FunctionType::all_borrow(vec![("s".to_string(), Type::Str)], Type::Str),
+    );
+    // blake2s_bytes(data: bytes) -> bytes
+    functions.insert(
+        "blake2s_bytes".to_string(),
+        FunctionType::all_borrow(vec![("data".to_string(), Type::Bytes)], Type::Bytes),
     );
 
     // b32encode(s: str) -> str
