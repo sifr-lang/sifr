@@ -1,6 +1,6 @@
 # Ad Hoc Phase Execution Checklist (Ownership-Aware Collection Lowering and Clone Elision)
 
-Status: in_progress (started 2026-03-21; `wave_clone_0` architecture lock/baseline, `wave_clone_1` iterator/comprehension ownership correction, `wave_clone_2` index/slice/star-unpack ownership correction, and `wave_clone_3` generic hardening/regression lock completed on 2026-03-21; closure review cycles pending)
+Status: in_progress (started 2026-03-21; `wave_clone_0` architecture lock/baseline, `wave_clone_1` iterator/comprehension ownership correction, `wave_clone_2` index/slice/star-unpack ownership correction, and `wave_clone_3` generic hardening/regression lock completed on 2026-03-21; wave-closure completion and production-grade cycles completed, milestone/phase closure cycles pending)
 Owner: ad_hoc_collection_lowering_clone_elision execution loop
 Reference planning doc:
 - `issues/ad-hoc-ownership-aware-collection-lowering-and-clone-elision.md`
@@ -23,7 +23,7 @@ Loop per wave: Plan -> Implement -> Validate -> Demo -> PR -> External completio
 3. [x] `wave_clone_2`: indexing/slicing/star-unpack ownership correction
 4. [x] `wave_clone_3`: generic hardening, regression lock, and phase closure
 5. [x] wave-level extra completion review cycle done
-6. [ ] wave-level extra production-grade review cycle done
+6. [x] wave-level extra production-grade review cycle done
 7. [ ] milestone-level completion review cycle done
 8. [ ] milestone-level production-grade review cycle done
 9. [ ] phase-level completion review cycle done
@@ -292,6 +292,12 @@ Secondary review paths:
     - documented canonical ownership-aware collection lowering decision tree in `internal_docs/architecture.md`
     - recorded residual boundary note (clone-elision closure does not claim full CPython move-heavy runtime parity)
     - marked global gate `Root cause is fixed without compatibility shims` as complete
+  - validation:
+    - `scripts/run_all_tests.sh`
+- wave closure production-grade review: completed (`reviews/phase-ad-hoc-ownership-aware-collection-lowering-and-clone-elision-wave-closure-review-pass-2.md`)
+  - applied actions:
+    - confirmed pass-1 finding closure and architecture documentation completeness
+    - retained phase/milestone closure status as in-progress pending mandated downstream closure cycles
   - validation:
     - `scripts/run_all_tests.sh`
 
