@@ -4,11 +4,14 @@
 
 - Authoritative phase sequencing for current execution is tracked in [`roadmap.md`](./roadmap.md), starting at **Phase 15** through **Phase 41**.
 - Authoritative entry/exit criteria, milestone quality checks, and mandatory local validation commands for execution phases are embedded in phase files `15`-`41` under `## Quality Contract`.
-- Iterator architecture execution now has two stages:
+- Iterator architecture execution has two closed stages:
   - stage 1 (closed): `issues/ad-hoc-first-class-lazy-iterators-and-python-iterable-protocol.md` and `issues/ad-hoc-first-class-lazy-iterators-and-python-iterable-protocol-execution.md`
-  - stage 2 (current corrective continuation): `issues/ad-hoc-canonical-iteration-model-and-lazy-parity-closure.md` and `issues/ad-hoc-canonical-iteration-model-and-lazy-parity-closure-execution.md`
-  - stage-2 wave progress: `wave_psp_iter_fix_0` through `wave_psp_iter_fix_6` implementation/review loops are merged and approved (`wave_psp_iter_fix_6` closed iterable-first `sifr.itertools` surface parity plus runtime/file iterator composition, including pass-1 remediation + production-grade re-review)
-  - stage-2 contract lock requires one canonical iteration path from type system through HIR/codegen with explicit capability tracking (single-pass, multi-pass, reversible/double-ended).
+  - stage 2 (closed corrective continuation): `issues/ad-hoc-canonical-iteration-model-and-lazy-parity-closure.md` and `issues/ad-hoc-canonical-iteration-model-and-lazy-parity-closure-execution.md`
+  - stage-2 wave closure: `wave_psp_iter_fix_0` through `wave_psp_iter_fix_8` are merged and review-closed (including post-closure CPython `itertools` parity sweep/remediation passes)
+  - stage-2 contract lock enforces one canonical iteration path from type system through HIR/codegen with explicit capability tracking (single-pass, multi-pass, reversible/double-ended).
+- RNG/crypto continuation is closed at wave level and in milestone/phase closure review loop:
+  - phase docs: `issues/ad-hoc-stateful-rng-crypto-and-polish-parity-expansion.md` and `issues/ad-hoc-stateful-rng-crypto-and-polish-parity-expansion-execution.md`
+  - wave closure: `wave_psp_rng_0` through `wave_psp_rng_3` merged with external production-grade review artifacts
 - Historical references in this architecture document may mention legacy phase numbering from earlier roadmap versions.
 - When phase-number conflicts exist, follow [`roadmap.md`](./roadmap.md) and the matching files under [`phases/`](./phases/).
 

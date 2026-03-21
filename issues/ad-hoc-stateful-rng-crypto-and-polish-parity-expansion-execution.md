@@ -1,6 +1,6 @@
 # Ad Hoc Phase Execution Checklist (Stateful RNG, Crypto, and Polish Parity Expansion)
 
-Status: in-progress (started 2026-03-21; entry baseline validated; `wave_psp_rng_0` completed; `wave_psp_rng_1` merged and review-closed; `wave_psp_rng_2` merged and review-closed; `wave_psp_rng_3` merged via PR `#1382` and review-closed via PR `#1383` + external production-grade pass-2 approval)
+Status: in-progress (started 2026-03-21; entry baseline validated; `wave_psp_rng_0` completed; `wave_psp_rng_1` merged and review-closed; `wave_psp_rng_2` merged and review-closed; `wave_psp_rng_3` merged via PR `#1382` and review-closed via PR `#1383` + external production-grade pass-2 approval; milestone-closure review pass 1 completed with docs remediation)
 Owner: ad_hoc_stateful_rng_crypto execution loop
 Reference planning doc:
 - `issues/ad-hoc-stateful-rng-crypto-and-polish-parity-expansion.md`
@@ -24,7 +24,7 @@ Loop per wave: Plan -> Implement -> Validate -> Demo -> PR -> External completio
 4. [x] `wave_psp_rng_3`: final polish waiver reduction (`statistics`, residual `textwrap`, residual `html`)
 5. [x] wave-level extra completion review cycle done
 6. [x] wave-level extra production-grade review cycle done
-7. [ ] milestone-level completion review cycle done
+7. [x] milestone-level completion review cycle done
 8. [ ] milestone-level production-grade review cycle done
 9. [ ] phase-level completion review cycle done
 10. [ ] phase-level production-grade review cycle done
@@ -156,3 +156,11 @@ Required entry records:
   - pass 1 validation result: reviewer approved wave scope with no additional code changes required
   - external review pass 2 artifact: `reviews/phase-ad-hoc-stateful-rng-crypto-and-polish-parity-expansion-wave-psp-rng-3-review-pass-2.md`
   - pass 2 validation result: reviewer marked wave as production-grade with no additional code changes required
+
+## Milestone and Phase Closure Progress
+
+- milestone closure review pass 1 artifact: `reviews/phase-ad-hoc-stateful-rng-crypto-and-polish-parity-expansion-milestone-closure-review-pass-1.md`
+- milestone closure pass 1 remediation scope: roadmap/architecture/inventory status alignment plus checklist drift cleanup
+- milestone closure review pass 2: pending
+- phase closure review pass 1: pending
+- phase closure review pass 2: pending

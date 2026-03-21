@@ -1,6 +1,6 @@
 # `milestone_psp_7` Parity Governance Inventory
 
-Status: in_progress (updated by RNG wave-3 polish waiver-reduction implementation evidence on 2026-03-21)  
+Status: in_progress (updated by RNG milestone-closure review-pass-1 remediation on 2026-03-21; `wave_psp_rng_0`-`wave_psp_rng_3` are merged and production-review closed; milestone/phase closure loops are now the remaining active work)  
 Phase: `issues/ad-hoc-python-source-parity-and-builtin-stdlib-surface.md`  
 Execution ledger: `issues/ad-hoc-python-source-parity-and-builtin-stdlib-surface-execution.md`  
 Continuation phase (closed): `issues/ad-hoc-python-source-parity-extension-waiver-reduction.md`  
@@ -11,8 +11,8 @@ Continuation phase (closed): `issues/ad-hoc-first-class-bytes-and-binary-surface
 Continuation execution ledger (closed): `issues/ad-hoc-first-class-bytes-and-binary-surface-foundation-execution.md`  
 Continuation phase (closed): `issues/ad-hoc-runtime-and-file-object-parity-expansion.md`  
 Continuation execution ledger (closed): `issues/ad-hoc-runtime-and-file-object-parity-expansion-execution.md`  
-Continuation phase (current): `issues/ad-hoc-stateful-rng-crypto-and-polish-parity-expansion.md`  
-Continuation execution ledger (current): `issues/ad-hoc-stateful-rng-crypto-and-polish-parity-expansion-execution.md`
+Continuation phase (current closure loop): `issues/ad-hoc-stateful-rng-crypto-and-polish-parity-expansion.md`  
+Continuation execution ledger (current closure loop): `issues/ad-hoc-stateful-rng-crypto-and-polish-parity-expansion-execution.md`
 
 This is the canonical closure inventory for phase 31.5 milestone 7.
 
