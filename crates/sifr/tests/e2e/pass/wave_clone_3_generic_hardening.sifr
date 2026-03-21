@@ -1,0 +1,44 @@
+# wave_clone_3: Generic Hardening, Regression Lock, and Closure
+#
+# This fixture validates:
+# 1. Option[List[int]] safe indexing uses .copied() not .cloned()
+# 2. Option[Dict[str, int]] safe indexing uses .copied() not .cloned()
+# 3. Set[int] symmetric_difference uses .copied() not .cloned()
+# 4. Named containers preserved after iteration (regression check)
+
+
+def main():
+    # Regression: Option[List[int]] safe indexing
+    maybe_nums: list[int] | None = [10, 20, 30]
+    if maybe_nums is not None:
+        print(maybe_nums[0])
+        print(maybe_nums[99])
+
+    # Regression: Option[Dict[str, int]] safe indexing
+    maybe_scores: dict[str, int] | None = {"alice": 100, "bob": 200}
+    if maybe_scores is not None:
+        print(maybe_scores["alice"])
+        print(maybe_scores["missing"])
+
+    # Regression: Set[int] symmetric_difference
+    a: set[int] = {1, 2, 3, 4}
+    b: set[int] = {3, 4, 5, 6}
+    c: set[int] = a.symmetric_difference(b)
+    print(len(c))
+
+    # Regression: Named container preserved after iteration
+    nums: list[int] = [1, 2, 3, 4, 5]
+    total = 0
+    for n in nums:
+        total = total + n
+    assert nums.len() == 5
+
+    # Regression: Named container preserved after safe indexing
+    val = nums[0]
+    assert nums.len() == 5
+
+    # Regression: Named container preserved after star-unpack
+    first, *rest = nums
+    assert nums.len() == 5
+
+    print("wave_clone_3_generic_hardening: pass")

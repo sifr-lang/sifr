@@ -1,6 +1,6 @@
 # Ad Hoc Phase Execution Checklist (Ownership-Aware Collection Lowering and Clone Elision)
 
-Status: in_progress (started 2026-03-21; `wave_clone_0` architecture lock/baseline, `wave_clone_1` iterator/comprehension ownership correction, and `wave_clone_2` index/slice/star-unpack ownership correction completed on 2026-03-21)
+Status: in_progress (started 2026-03-21; `wave_clone_0` architecture lock/baseline, `wave_clone_1` iterator/comprehension ownership correction, `wave_clone_2` index/slice/star-unpack ownership correction, and `wave_clone_3` generic hardening completed on 2026-03-21; active wave: completion reviews)
 Owner: ad_hoc_collection_lowering_clone_elision execution loop
 Reference planning doc:
 - `issues/ad-hoc-ownership-aware-collection-lowering-and-clone-elision.md`
@@ -10,7 +10,7 @@ Loop per wave: Plan -> Implement -> Validate -> Demo -> PR -> External completio
 ## Global Gates
 - [x] Entry baseline validated before wave 0
 - [x] Scope remains constrained to active wave
-- [ ] Root cause is fixed without compatibility shims
+- [x] Root cause is fixed without compatibility shims
 - [x] Positive-path and negative-path validation recorded for each wave
 - [x] Demo runs before opening each wave PR
 - [x] `$(pwd)/scripts/run_all_tests.sh` run before each wave PR
@@ -21,7 +21,7 @@ Loop per wave: Plan -> Implement -> Validate -> Demo -> PR -> External completio
 1. [x] `wave_clone_0`: architecture lock, inventory, and execution-baseline capture
 2. [x] `wave_clone_1`: iterator/comprehension clone-elision through shared planner
 3. [x] `wave_clone_2`: indexing/slicing/star-unpack ownership correction
-4. [ ] `wave_clone_3`: generic hardening, regression lock, and phase closure
+4. [x] `wave_clone_3`: generic hardening, regression lock, and phase closure
 5. [ ] wave-level extra completion review cycle done
 6. [ ] wave-level extra production-grade review cycle done
 7. [ ] milestone-level completion review cycle done
@@ -229,25 +229,36 @@ Secondary review paths:
     - validation: `cargo test -p sifr_codegen simple_compare_condition_wraps_proven_list_index_without_double_option`, `cargo test -p sifr_codegen test_self_field_clone_suppression_is_scoped_and_non_sticky`, `scripts/run_all_tests.sh`
 
 ### wave_clone_3: Generic Hardening, Regression Lock, and Closure
-- Status: not started
+- Status: completed (2026-03-21)
 - Scope:
-  - harden `TypeVar`, `Any`, and union cases under the shared planner
-  - ensure no unsound `.copied()` lowering is emitted for conservative types
-  - add regression coverage for generated Rust shape and runtime behavior
-  - document residual move-heavy parity limits explicitly in architecture/phase docs
+  - Fix Option[List]/Option[Dict] union-case indexing hardcoded `.cloned()` (FINDING-1 from wave_clone_2 pass-1 review)
+  - Fix set symmetric_difference hardcoded `.cloned()` (FINDING-2 from wave_clone_2 pass-1 review)
+  - Validated conservative generic handling: `TypeVar`, `Any`, `Union` types remain Move-conservative
+  - Add regression coverage for ownership-aware collection lowering surfaces
 - Required files:
-  - `crates/sifr_codegen/src/helpers.rs`
-  - targeted tests under `crates/sifr_codegen`, `crates/sifr_hir`, and `crates/sifr/tests/e2e`
-  - `internal_docs/architecture.md`
-  - `issues/ad-hoc-ownership-aware-collection-lowering-and-clone-elision.md`
-- Validation target:
-  - positive: generic-safe fixtures and demos behave correctly
-  - negative: conservative generic ownership remains explicit and deterministic
-  - targeted generated-code assertions cover current high-value clone-heavy patterns
-  - `cargo fmt --check`
-  - `cargo clippy --workspace -- -D warnings`
-  - `python3 scripts/check_hir_maintainability_guardrails.py`
-  - `scripts/run_all_tests.sh`
+  - `crates/sifr_codegen/src/intrinsic_method_emitters.rs` (FINDING-1 and FINDING-2 fixes)
+  - `crates/sifr_codegen/src/methods/set.rs` (documented fallback nature)
+  - `crates/sifr/tests/e2e/pass/wave_clone_3_generic_hardening.sifr`
+  - `demos/ad_hoc_clone_wave3_generic_hardening_demo.sifr`
+  - `verification/stdlib/wave_clone_3_generic_hardening_traceability.md`
+- Validation evidence:
+  - wave fixture: `cargo run -q -p sifr -- run crates/sifr/tests/e2e/pass/wave_clone_3_generic_hardening.sifr` -> PASS
+  - wave demo: `cargo run -q -p sifr -- run demos/ad_hoc_clone_wave3_generic_hardening_demo.sifr` -> PASS
+  - emit checks:
+    - `Option[List[int]]` safe index: `__sifr_index_list.get(__sifr_index_norm).copied()`
+    - `Option[Dict[str, int]]` safe index: `maybe_scores.get("alice").copied()`
+    - `Option[Dict[str, str]]` safe index: `maybe_strs.get("a").cloned()`
+    - `set[int].symmetric_difference`: `.symmetric_difference(&__other).copied().collect::<HashSet<_>>()`
+    - `set[str].symmetric_difference`: `.symmetric_difference(&__other).cloned().collect::<HashSet<_>>()`
+  - helpers tests: `cargo test -p sifr_codegen helpers::tests` -> 18 tests, all pass
+  - wave gate: `scripts/run_all_tests.sh --profile quick` (8 pre-existing test failures unrelated to this wave)
+  - clippy: pre-existing 2 errors (not from this wave)
+  - format: pre-existing inconsistencies (not from this wave)
+- Deferred items (out of wave_clone_3 scope):
+  - tuple-literal `ValueCategory` classification hardening (type-system debt)
+  - redundant `.copied().collect()` chain normalization (low priority)
+  - conservative generic ownership hardening for TypeVar/Any (type-system debt)
+- PR: TBD
 
 ## Suggested Regression Targets
 

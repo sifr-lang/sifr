@@ -257,13 +257,13 @@ pub(crate) fn registry_iterable_to_owned_iter_expr(
                     method: "into_iter".to_string(),
                     args: vec![],
                 },
-                crate::helpers::SourceAccessMode::Preserve => apply_copy_clone_yield(
-                    RustExpr::MethodCall {
+                crate::helpers::SourceAccessMode::Preserve => {
+                    apply_copy_clone_yield(RustExpr::MethodCall {
                         receiver: Box::new(RustExpr::Paren(Box::new(lowered))),
                         method: "iter".to_string(),
                         args: vec![],
-                    },
-                ),
+                    })
+                }
             })
         }
         Type::Bytes => Some(match iter_plan.source_access_mode {
@@ -336,13 +336,13 @@ pub(crate) fn registry_iterable_to_owned_iter_expr(
                 method: "into_keys".to_string(),
                 args: vec![],
             },
-            crate::helpers::SourceAccessMode::Preserve => apply_copy_clone_yield(
-                RustExpr::MethodCall {
+            crate::helpers::SourceAccessMode::Preserve => {
+                apply_copy_clone_yield(RustExpr::MethodCall {
                     receiver: Box::new(RustExpr::Paren(Box::new(lowered))),
                     method: "keys".to_string(),
                     args: vec![],
-                },
-            ),
+                })
+            }
         }),
         Type::Tuple(elems) if !elems.is_empty() && elems.iter().all(|elem| elem == &elems[0]) => {
             registry_tuple_homogeneous_iter_expr(lowered, elems.len())
@@ -689,7 +689,7 @@ impl RustEmitter {
 
         if matches!(object_ty, Type::Set(_)) {
             if let Some(lowered) =
-                self.try_lower_registry_set_method_call_expr(&object_expr, method, args)
+                self.try_lower_registry_set_method_call_expr(object_ty, &object_expr, method, args)
             {
                 return Some(lowered);
             }
@@ -707,6 +707,7 @@ impl RustEmitter {
 
     fn try_lower_registry_set_method_call_expr(
         &mut self,
+        object_ty: &Type,
         object_expr: &crate::RustExpr,
         method: &str,
         args: &[HirExpr],
@@ -824,6 +825,15 @@ impl RustEmitter {
                     return None;
                 }
                 let other = registry_iterable_to_set_expr(self, &args[0])?;
+                let resolved_object_ty = crate::resolve_alias_type_for_plain_call(object_ty);
+                let set_element_projection =
+                    crate::helpers::option_projection_method_for_owned_type(
+                        match resolved_object_ty {
+                            Type::Set(elem_ty) => elem_ty.as_ref(),
+                            _ => return None,
+                        },
+                    )
+                    .to_string();
                 let diff_expr = crate::RustExpr::MethodCall {
                     receiver: Box::new(crate::RustExpr::MethodCall {
                         receiver: Box::new(if method.ends_with("_update") {
@@ -841,7 +851,7 @@ impl RustEmitter {
                             expr: Box::new(crate::RustExpr::Ident("__other".to_string())),
                         }],
                     }),
-                    method: "cloned".to_string(),
+                    method: set_element_projection,
                     args: vec![],
                 };
                 let new_set_expr = crate::RustExpr::MethodCall {
@@ -1138,7 +1148,7 @@ impl RustEmitter {
                         let lowered_object = self.try_lower_registry_expr_strict(object)?;
                         let lowered_index = self.try_lower_registry_expr_strict(index)?;
                         let inner_expr = match inner_ty {
-                            Type::Dict(key_ty, _) => {
+                            Type::Dict(key_ty, value_ty) => {
                                 let key_is_string_like = matches!(
                                     crate::resolve_alias_type_for_plain_call(key_ty.as_ref()),
                                     Type::Str | Type::LiteralStr(_)
@@ -1168,11 +1178,15 @@ impl RustEmitter {
                                         method: "get".to_string(),
                                         args: vec![key_arg],
                                     }),
-                                    method: "cloned".to_string(),
+                                    method:
+                                        crate::helpers::option_projection_method_for_owned_type(
+                                            value_ty.as_ref(),
+                                        )
+                                        .to_string(),
                                     args: vec![],
                                 }
                             }
-                            Type::List(_) => crate::RustExpr::MethodCall {
+                            Type::List(element_ty) => crate::RustExpr::MethodCall {
                                 receiver: Box::new(crate::RustExpr::MethodCall {
                                     receiver: Box::new(crate::RustExpr::Ident("__v".to_string())),
                                     method: "get".to_string(),
@@ -1181,7 +1195,10 @@ impl RustEmitter {
                                         ty: crate::RustType::Named("usize".to_string()),
                                     }],
                                 }),
-                                method: "cloned".to_string(),
+                                method: crate::helpers::option_projection_method_for_owned_type(
+                                    element_ty.as_ref(),
+                                )
+                                .to_string(),
                                 args: vec![],
                             },
                             Type::Bytes => crate::RustExpr::MethodCall {

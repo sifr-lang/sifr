@@ -25,6 +25,12 @@ fn render_borrowed_arg_expr(arg: &RustExpr) -> RustExpr {
     }
 }
 
+/// Collects the result of a set binary operation into a new `HashSet`.
+/// E.g. `a.union(b)`, `a.intersection(b)`, `a.difference(b)`, `a.symmetric_difference(b)`.
+/// Note: the registry path in `intrinsic_method_emitters.rs` handles these methods
+/// for typed `HirExpr` calls with ownership-aware element projection. These fallbacks
+/// are conservative (always use `.cloned()`) and only reached when the registry does
+/// not have type info for the set element type.
 fn lower_set_op_collect(object: &RustExpr, args: &[RustExpr], method: &str) -> Option<RustExpr> {
     if args.len() != 1 {
         return None;

@@ -1,0 +1,18 @@
+def main():
+    # Option[List[int]] safe indexing - should use .copied() not .cloned()
+    maybe_nums: list[int] | None = [10, 20, 30]
+    if maybe_nums is not None:
+        print(maybe_nums[0])
+
+    # Option[Dict[str, int]] safe indexing - should use .copied() not .cloned()
+    maybe_scores: dict[str, int] | None = {"alice": 100, "bob": 200}
+    if maybe_scores is not None:
+        print(maybe_scores["alice"])
+
+    # Set[int] symmetric_difference - should use .copied() not .cloned()
+    a: set[int] = {1, 2, 3, 4}
+    b: set[int] = {3, 4, 5, 6}
+    c: set[int] = a.symmetric_difference(b)
+    print(len(c))
+
+    print("ad_hoc_clone_wave3_generic_hardening_demo: pass")
