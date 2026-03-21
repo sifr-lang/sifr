@@ -64,6 +64,15 @@ def main():
         tab_line_len_ok = len(tab_line0) == 5
     assert tab_line_len_ok
 
+    max_lines_default: TextWrapper = TextWrapper(12, "", "", True, 8, True, True, True, False, 2)
+    assert str(max_lines_default.wrap("alpha beta gamma delta epsilon")) == "[\"alpha beta\", \"gamma [...]\"]"
+
+    max_lines_custom: TextWrapper = TextWrapper(12, "", "", True, 8, True, True, True, False, 2, "...")
+    assert str(max_lines_custom.wrap("alpha beta gamma delta epsilon")) == "[\"alpha beta\", \"gamma del...\"]"
+
+    sentence_fixed: TextWrapper = TextWrapper(40, "", "", True, 8, True, True, True, True)
+    assert sentence_fixed.fill("Hello. World. Done!") == "Hello.  World.  Done!"
+
     bad_wrap: TextWrapper = TextWrapper(0)
     assert str(bad_wrap.wrap("x")) == "[]"
     assert bad_wrap.fill("x") == ""
