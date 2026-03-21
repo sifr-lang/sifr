@@ -1,6 +1,6 @@
 # Ad Hoc Phase Execution Checklist (Ownership-Aware Collection Lowering and Clone Elision)
 
-Status: proposed on 2026-03-21
+Status: in_progress (started 2026-03-21; `wave_clone_0` architecture lock + baseline inventory completed on 2026-03-21)
 Owner: ad_hoc_collection_lowering_clone_elision execution loop
 Reference planning doc:
 - `issues/ad-hoc-ownership-aware-collection-lowering-and-clone-elision.md`
@@ -8,17 +8,17 @@ Reference planning doc:
 Loop per wave: Plan -> Implement -> Validate -> Demo -> PR -> External completion review -> Fix -> PR -> Merge -> External production-grade review -> Fix -> PR -> Merge -> Update docs -> Next wave
 
 ## Global Gates
-- [ ] Entry baseline validated before wave 0
-- [ ] Scope remains constrained to active wave
+- [x] Entry baseline validated before wave 0
+- [x] Scope remains constrained to active wave
 - [ ] Root cause is fixed without compatibility shims
-- [ ] Positive-path and negative-path validation recorded for each wave
-- [ ] Demo runs before opening each wave PR
-- [ ] `$(pwd)/scripts/run_all_tests.sh` run before each wave PR
+- [x] Positive-path and negative-path validation recorded for each wave
+- [x] Demo runs before opening each wave PR
+- [x] `$(pwd)/scripts/run_all_tests.sh` run before each wave PR
 - [ ] PR opened/reviewed/merged before next wave starts
-- [ ] Docs + traceability + roadmap/issue state updated before moving on
+- [x] Docs + traceability + roadmap/issue state updated before moving on
 
 ## Full Phase To-Do Plan
-1. [ ] `wave_clone_0`: architecture lock, inventory, and execution-baseline capture
+1. [x] `wave_clone_0`: architecture lock, inventory, and execution-baseline capture
 2. [ ] `wave_clone_1`: iterator/comprehension clone-elision through shared planner
 3. [ ] `wave_clone_2`: indexing/slicing/star-unpack ownership correction
 4. [ ] `wave_clone_3`: generic hardening, regression lock, and phase closure
@@ -29,7 +29,7 @@ Loop per wave: Plan -> Implement -> Validate -> Demo -> PR -> External completio
 9. [ ] phase-level completion review cycle done
 10. [ ] phase-level production-grade review cycle done
 
-## Entry Baseline Evidence (to capture before wave 0 starts)
+## Entry Baseline Evidence (2026-03-21)
 
 Baseline commands:
 - `scripts/run_all_tests.sh --profile quick`
@@ -55,6 +55,19 @@ Required baseline records:
 Suggested baseline capture helpers:
 - `cargo run -q -p sifr -- emit ... | grep -E '\\.clone\\(\\)\\.into_iter\\(|\\.iter\\(\\)\\.cloned\\(|\\.get\\([^)]*\\)\\.cloned\\(|Box::new\\(\\([^)]*\\.clone\\(\\)\\.into_iter\\('`
 - keep the full emitted output alongside grep-filtered excerpts; grep is only for scanability
+
+Observed baseline result before `wave_clone_1` edits:
+- quick lane command: `scripts/run_all_tests.sh --profile quick`
+- lane result: PASS
+  - HIR + `sifr_driver` maintainability guardrails: PASS
+  - `cargo test -p sifr -- --skip test_e2e_pass`: PASS (`37` tests)
+  - e2e fail/runtime lane: PASS (`25` tests)
+  - validation contract matrix (`frontend_mode_parity`, `phase23_graph_isolation`): PASS (`7` rows)
+  - e2e pass quick suite: PASS (`24` fixtures, signature `e1bf653aaa770517`)
+- clone-heavy emit evidence and ownership mapping locked in:
+  - `verification/stdlib/wave_clone_0_codegen_traceability.md`
+- residual boundary lock:
+  - borrowed move-heavy parity for CPython-style reference semantics is out of scope for this phase unless runtime representation changes later
 
 ## Implementation Inventory
 
@@ -88,7 +101,8 @@ Secondary review paths:
 ## Wave Progress
 
 ### wave_clone_0: Architecture Lock, Inventory, and Baseline
-- Status: not started
+- Status: completed
+- Implementation PR: pending (to be filled after merge)
 - Scope:
   - capture the generated-code baseline and inventory all targeted clone-heavy patterns
   - lock one canonical ownership-aware planner design before broad edits
@@ -110,6 +124,21 @@ Secondary review paths:
   - `scripts/run_all_tests.sh --profile quick`
   - `cargo run -q -p sifr -- emit ...` for representative demos/fixtures
   - at least one positive demo and one negative ownership-safety fixture selected for later regression locking
+- Validation evidence:
+  - `scripts/run_all_tests.sh --profile quick` -> PASS
+  - emit baseline captures:
+    - `cargo run -q -p sifr -- emit demos/milestone_generics_demo.sifr`
+    - `cargo run -q -p sifr -- emit demos/milestone_ergonomics_demo.sifr`
+    - `cargo run -q -p sifr -- emit demos/milestone_safe_indexing_demo.sifr`
+    - `cargo run -q -p sifr -- emit demos/milestone_control_flow_demo.sifr`
+  - positive wave-lock fixture:
+    - `cargo run -q -p sifr -- run crates/sifr/tests/e2e/pass/wave_clone_0_architecture_lock.sifr` -> PASS
+  - positive wave-lock demo:
+    - `cargo run -q -p sifr -- run demos/ad_hoc_clone_wave0_architecture_lock_demo.sifr` -> PASS (`ad_hoc_clone_wave0_architecture_lock_demo: pass`)
+  - negative ownership-safety anchor:
+    - `cargo run -q -p sifr -- check crates/sifr/tests/e2e/fail/borrow_escape_store.sifr` -> expected compile failure (PASS)
+  - baseline artifact:
+    - `verification/stdlib/wave_clone_0_codegen_traceability.md`
 
 ### wave_clone_1: Iterator and Comprehension Ownership Correction
 - Status: not started

@@ -1,0 +1,23 @@
+def double(n: int) -> int:
+    return n * 2
+
+
+def is_even(n: int) -> bool:
+    return n % 2 == 0
+
+
+def main() -> None:
+    nums: list[int] = [1, 2, 3, 4]
+
+    mapped: list[int] = list(map(double, nums))
+    filtered: list[int] = list(filter(is_even, nums))
+
+    first: int = 0
+    rest: list[int] = []
+    first, *rest = nums
+
+    print(str(mapped))
+    print(str(filtered))
+    print(str(first))
+    print(str(rest))
+    print("ad_hoc_clone_wave0_architecture_lock_demo: pass")
