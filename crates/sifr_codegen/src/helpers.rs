@@ -49,6 +49,10 @@ fn is_reusable_place_expr(expr: &HirExpr) -> bool {
                         | HirExpr::Name { .. }
                 )
         }
+        HirExpr::TupleLiteral { elements, ty } => {
+            ty.resolve_alias().ownership() == OwnershipKind::Copy
+                && elements.iter().all(is_reusable_place_expr)
+        }
         _ => false,
     }
 }
@@ -62,10 +66,26 @@ pub(crate) fn classify_value_category(expr: &HirExpr) -> ValueCategory {
 }
 
 fn iteration_element_ownership(source_ty: &Type) -> Option<OwnershipKind> {
+    fn is_conservative_element_type(ty: &Type) -> bool {
+        match ty.resolve_alias() {
+            Type::Any | Type::Unknown => true,
+            Type::Union(members) | Type::Intersection(members) => {
+                members.iter().any(is_conservative_element_type)
+            }
+            _ => false,
+        }
+    }
+
     source_ty
         .resolve_alias()
         .iteration_metadata()
-        .map(|metadata| metadata.element_type.ownership())
+        .and_then(|metadata| {
+            if is_conservative_element_type(&metadata.element_type) {
+                None
+            } else {
+                Some(metadata.element_type.ownership())
+            }
+        })
 }
 
 fn infer_source_access_mode(source_expr: &HirExpr, source_ty: &Type) -> SourceAccessMode {
@@ -118,17 +138,12 @@ pub(crate) fn plan_iterator_ownership_with_element_hint(
     element_type_hint: Option<&Type>,
 ) -> IteratorOwnershipPlan {
     let source_ty = crate::resolve_alias_type_for_plain_call(source_expr.ty());
-    let hint_ownership = element_type_hint.map(|hint| hint.resolve_alias().ownership());
-    let element_ownership = match (iteration_element_ownership(source_ty), hint_ownership) {
-        (Some(inferred), Some(OwnershipKind::Copy)) => Some(if inferred == OwnershipKind::Copy {
-            inferred
-        } else {
-            OwnershipKind::Copy
-        }),
-        (Some(inferred), _) => Some(inferred),
-        (None, Some(hint)) => Some(hint),
-        (None, None) => None,
-    };
+    let inferred_element_ownership = iteration_element_ownership(source_ty);
+    let _ = element_type_hint;
+    // Keep planner decisions conservative: if element ownership cannot be inferred
+    // from source iteration metadata, leave it unknown (`None`) and let lowering
+    // default to borrowing behavior.
+    let element_ownership = inferred_element_ownership;
     let source_access_mode = infer_source_access_mode(source_expr, source_ty);
     IteratorOwnershipPlan {
         value_category: classify_value_category(source_expr),
@@ -765,7 +780,51 @@ mod tests {
 
         assert_eq!(classify_value_category(&name_expr), ValueCategory::Place);
         assert_eq!(classify_value_category(&field_expr), ValueCategory::Place);
-        assert_eq!(classify_value_category(&temp_expr), ValueCategory::Temporary);
+        assert_eq!(
+            classify_value_category(&temp_expr),
+            ValueCategory::Temporary
+        );
+    }
+
+    #[test]
+    fn classify_value_category_treats_copy_tuple_literal_of_places_as_place() {
+        let tuple_expr = HirExpr::TupleLiteral {
+            elements: vec![
+                HirExpr::Name {
+                    name: "a".to_string(),
+                    ty: Type::Int,
+                },
+                HirExpr::Name {
+                    name: "b".to_string(),
+                    ty: Type::Bool,
+                },
+            ],
+            ty: Type::Tuple(vec![Type::Int, Type::Bool]),
+        };
+
+        assert_eq!(classify_value_category(&tuple_expr), ValueCategory::Place);
+    }
+
+    #[test]
+    fn classify_value_category_treats_move_tuple_literal_as_temporary() {
+        let tuple_expr = HirExpr::TupleLiteral {
+            elements: vec![
+                HirExpr::Name {
+                    name: "a".to_string(),
+                    ty: Type::Int,
+                },
+                HirExpr::Name {
+                    name: "b".to_string(),
+                    ty: Type::Str,
+                },
+            ],
+            ty: Type::Tuple(vec![Type::Int, Type::Str]),
+        };
+
+        assert_eq!(
+            classify_value_category(&tuple_expr),
+            ValueCategory::Temporary
+        );
     }
 
     #[test]
@@ -831,8 +890,78 @@ mod tests {
 
     #[test]
     fn option_projection_method_prefers_copy_for_copy_types() {
-        assert_eq!(option_projection_method_for_owned_type(&Type::Int), "copied");
-        assert_eq!(option_projection_method_for_owned_type(&Type::Str), "cloned");
+        assert_eq!(
+            option_projection_method_for_owned_type(&Type::Int),
+            "copied"
+        );
+        assert_eq!(
+            option_projection_method_for_owned_type(&Type::Str),
+            "cloned"
+        );
+    }
+
+    #[test]
+    fn iterator_plan_copy_hint_does_not_force_unknown_source_to_copy() {
+        let source = HirExpr::Name {
+            name: "x".to_string(),
+            ty: Type::Any,
+        };
+        let plan = plan_iterator_ownership_with_element_hint(&source, Some(&Type::Int));
+
+        assert_eq!(plan.source_access_mode, SourceAccessMode::Preserve);
+        assert_eq!(plan.yield_mode, YieldMode::Borrow);
+        assert_eq!(plan.element_ownership, None);
+    }
+
+    #[test]
+    fn iterator_plan_preserved_list_any_uses_borrow_not_clone() {
+        let source = HirExpr::Name {
+            name: "items".to_string(),
+            ty: Type::List(Box::new(Type::Any)),
+        };
+        let plan = plan_iterator_ownership(&source);
+
+        assert_eq!(plan.source_access_mode, SourceAccessMode::Preserve);
+        assert_eq!(plan.yield_mode, YieldMode::Borrow);
+        assert_eq!(plan.element_ownership, None);
+    }
+
+    #[test]
+    fn iterator_plan_typevar_hint_stays_conservative() {
+        let source = HirExpr::Name {
+            name: "xs".to_string(),
+            ty: Type::TypeVar("T".to_string()),
+        };
+        let plan = plan_iterator_ownership_with_element_hint(&source, Some(&Type::Int));
+
+        assert_eq!(plan.source_access_mode, SourceAccessMode::Preserve);
+        assert_eq!(plan.yield_mode, YieldMode::Borrow);
+        assert_eq!(plan.element_ownership, None);
+    }
+
+    #[test]
+    fn iterator_plan_list_typevar_uses_clone_yield() {
+        let source = HirExpr::Name {
+            name: "xs".to_string(),
+            ty: Type::List(Box::new(Type::TypeVar("T".to_string()))),
+        };
+        let plan = plan_iterator_ownership(&source);
+
+        assert_eq!(plan.source_access_mode, SourceAccessMode::Preserve);
+        assert_eq!(plan.yield_mode, YieldMode::Clone);
+        assert_eq!(plan.element_ownership, Some(OwnershipKind::Move));
+    }
+
+    #[test]
+    fn iterator_plan_copies_tuple_of_copy_elements() {
+        let source = HirExpr::Name {
+            name: "pairs".to_string(),
+            ty: Type::List(Box::new(Type::Tuple(vec![Type::Int, Type::Int]))),
+        };
+        let plan = plan_iterator_ownership(&source);
+
+        assert_eq!(plan.yield_mode, YieldMode::Copy);
+        assert_eq!(plan.element_ownership, Some(OwnershipKind::Copy));
     }
 
     #[test]
