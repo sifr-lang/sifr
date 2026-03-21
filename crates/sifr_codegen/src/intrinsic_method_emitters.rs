@@ -234,18 +234,59 @@ pub(crate) fn registry_iterable_to_owned_iter_expr(
     expr: &HirExpr,
 ) -> Option<RustExpr> {
     let lowered = emitter.try_lower_registry_expr_strict(expr)?;
-    match crate::resolve_alias_type_for_plain_call(expr.ty()) {
-        Type::List(_) | Type::Set(_) | Type::Iterable(_) => Some(RustExpr::MethodCall {
-            receiver: Box::new(RustExpr::MethodCall {
-                receiver: Box::new(RustExpr::Paren(Box::new(lowered))),
-                method: "clone".to_string(),
-                args: vec![],
-            }),
-            method: "into_iter".to_string(),
+    let iter_plan = crate::helpers::plan_iterator_ownership(expr);
+    let apply_copy_clone_yield = |iter_expr: RustExpr| match iter_plan.yield_mode {
+        crate::helpers::YieldMode::Copy => RustExpr::MethodCall {
+            receiver: Box::new(iter_expr),
+            method: "copied".to_string(),
             args: vec![],
-        }),
-        Type::Bytes => Some(RustExpr::MethodCall {
-            receiver: Box::new(RustExpr::MethodCall {
+        },
+        crate::helpers::YieldMode::Clone => RustExpr::MethodCall {
+            receiver: Box::new(iter_expr),
+            method: "cloned".to_string(),
+            args: vec![],
+        },
+        crate::helpers::YieldMode::Move | crate::helpers::YieldMode::Borrow => iter_expr,
+    };
+
+    match crate::resolve_alias_type_for_plain_call(expr.ty()) {
+        Type::List(_) | Type::Set(_) | Type::Iterable(_) => {
+            Some(match iter_plan.source_access_mode {
+                crate::helpers::SourceAccessMode::Consume => RustExpr::MethodCall {
+                    receiver: Box::new(RustExpr::Paren(Box::new(lowered))),
+                    method: "into_iter".to_string(),
+                    args: vec![],
+                },
+                crate::helpers::SourceAccessMode::Preserve => apply_copy_clone_yield(
+                    RustExpr::MethodCall {
+                        receiver: Box::new(RustExpr::Paren(Box::new(lowered))),
+                        method: "iter".to_string(),
+                        args: vec![],
+                    },
+                ),
+            })
+        }
+        Type::Bytes => Some(match iter_plan.source_access_mode {
+            crate::helpers::SourceAccessMode::Consume => RustExpr::MethodCall {
+                receiver: Box::new(RustExpr::MethodCall {
+                    receiver: Box::new(RustExpr::Paren(Box::new(lowered))),
+                    method: "into_iter".to_string(),
+                    args: vec![],
+                }),
+                method: "map".to_string(),
+                args: vec![RustExpr::Closure {
+                    params: vec![crate::RustParam::Named {
+                        name: "__byte".to_string(),
+                        ty: crate::RustType::Named("_".to_string()),
+                    }],
+                    body: Box::new(RustExpr::Cast {
+                        expr: Box::new(RustExpr::Ident("__byte".to_string())),
+                        ty: crate::RustType::I64,
+                    }),
+                    is_move: false,
+                }],
+            },
+            crate::helpers::SourceAccessMode::Preserve => RustExpr::MethodCall {
                 receiver: Box::new(RustExpr::MethodCall {
                     receiver: Box::new(RustExpr::Paren(Box::new(lowered))),
                     method: "iter".to_string(),
@@ -265,20 +306,10 @@ pub(crate) fn registry_iterable_to_owned_iter_expr(
                     }),
                     is_move: false,
                 }],
-            }),
-            method: "into_iter".to_string(),
-            args: vec![],
+            },
         }),
-        Type::Iterator(_) => Some(RustExpr::MethodCall {
-            receiver: Box::new(RustExpr::Paren(Box::new(lowered))),
-            method: "into_iter".to_string(),
-            args: vec![],
-        }),
-        Type::Range => Some(RustExpr::MethodCall {
-            receiver: Box::new(RustExpr::Paren(Box::new(lowered))),
-            method: "into_iter".to_string(),
-            args: vec![],
-        }),
+        Type::Iterator(_) => Some(lowered),
+        Type::Range => Some(lowered),
         Type::Str => Some(RustExpr::MethodCall {
             receiver: Box::new(RustExpr::MethodCall {
                 receiver: Box::new(RustExpr::Paren(Box::new(lowered))),
@@ -299,23 +330,31 @@ pub(crate) fn registry_iterable_to_owned_iter_expr(
                 is_move: false,
             }],
         }),
-        Type::Dict(_, _) => Some(RustExpr::MethodCall {
-            receiver: Box::new(RustExpr::MethodCall {
+        Type::Dict(_, _) => Some(match iter_plan.source_access_mode {
+            crate::helpers::SourceAccessMode::Consume => RustExpr::MethodCall {
                 receiver: Box::new(RustExpr::Paren(Box::new(lowered))),
-                method: "keys".to_string(),
+                method: "into_keys".to_string(),
                 args: vec![],
-            }),
-            method: "cloned".to_string(),
-            args: vec![],
+            },
+            crate::helpers::SourceAccessMode::Preserve => apply_copy_clone_yield(
+                RustExpr::MethodCall {
+                    receiver: Box::new(RustExpr::Paren(Box::new(lowered))),
+                    method: "keys".to_string(),
+                    args: vec![],
+                },
+            ),
         }),
         Type::Tuple(elems) if !elems.is_empty() && elems.iter().all(|elem| elem == &elems[0]) => {
             registry_tuple_homogeneous_iter_expr(lowered, elems.len())
         }
         Type::Class { name, methods, .. } => {
-            let class_source = RustExpr::MethodCall {
-                receiver: Box::new(RustExpr::Paren(Box::new(lowered))),
-                method: "clone".to_string(),
-                args: vec![],
+            let class_source = match iter_plan.source_access_mode {
+                crate::helpers::SourceAccessMode::Preserve => RustExpr::MethodCall {
+                    receiver: Box::new(RustExpr::Paren(Box::new(lowered))),
+                    method: "clone".to_string(),
+                    args: vec![],
+                },
+                crate::helpers::SourceAccessMode::Consume => lowered,
             };
             if let Some(iter_ft) = registry_class_method_signature(methods, "__iter__") {
                 if iter_ft.params.is_empty() {
@@ -340,20 +379,16 @@ pub(crate) fn registry_iterable_to_owned_iter_expr(
                             return Some(registry_iter_from_next_method_expr(iter_call));
                         }
                     }
-                    return Some(RustExpr::MethodCall {
-                        receiver: Box::new(iter_call),
-                        method: "into_iter".to_string(),
-                        args: vec![],
-                    });
+                    return Some(iter_call);
                 }
             }
             if registry_class_has_next(methods) {
                 Some(registry_iter_from_next_method_expr(class_source))
             } else {
-                None
+                Some(class_source)
             }
         }
-        _ => None,
+        _ => Some(lowered),
     }
 }
 

@@ -4,8 +4,139 @@ use crate::hir_analysis::{
     traversal::{self, TraversalConfig},
 };
 use sifr_hir::{HirExpr, HirFunction, HirModule, HirStmt};
-use sifr_type_system::{ParamConvention, Type};
+use sifr_type_system::{OwnershipKind, ParamConvention, Type};
 use std::collections::{HashMap, HashSet};
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub(crate) enum ValueCategory {
+    Place,
+    Temporary,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub(crate) enum SourceAccessMode {
+    Preserve,
+    Consume,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub(crate) enum YieldMode {
+    Copy,
+    Clone,
+    Move,
+    Borrow,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub(crate) struct IteratorOwnershipPlan {
+    pub value_category: ValueCategory,
+    pub source_access_mode: SourceAccessMode,
+    pub yield_mode: YieldMode,
+    pub element_ownership: Option<OwnershipKind>,
+}
+
+fn is_reusable_place_expr(expr: &HirExpr) -> bool {
+    match expr {
+        HirExpr::Name { .. } => true,
+        HirExpr::FieldAccess { object, .. } => is_reusable_place_expr(object),
+        HirExpr::Index { object, index, .. } => {
+            is_reusable_place_expr(object)
+                && matches!(
+                    index.as_ref(),
+                    HirExpr::IntLiteral(_)
+                        | HirExpr::StringLiteral(_)
+                        | HirExpr::BoolLiteral(_)
+                        | HirExpr::Name { .. }
+                )
+        }
+        _ => false,
+    }
+}
+
+pub(crate) fn classify_value_category(expr: &HirExpr) -> ValueCategory {
+    if is_reusable_place_expr(expr) {
+        ValueCategory::Place
+    } else {
+        ValueCategory::Temporary
+    }
+}
+
+fn iteration_element_ownership(source_ty: &Type) -> Option<OwnershipKind> {
+    source_ty
+        .resolve_alias()
+        .iteration_metadata()
+        .map(|metadata| metadata.element_type.ownership())
+}
+
+fn infer_source_access_mode(source_expr: &HirExpr, source_ty: &Type) -> SourceAccessMode {
+    let resolved = source_ty.resolve_alias();
+    if matches!(resolved, Type::Iterator(_)) {
+        return SourceAccessMode::Consume;
+    }
+    if resolved.ownership() == OwnershipKind::Copy {
+        // Copy-typed sources (for example `range`) can be consumed directly
+        // without mutating the original binding.
+        return SourceAccessMode::Consume;
+    }
+    match classify_value_category(source_expr) {
+        ValueCategory::Place => SourceAccessMode::Preserve,
+        ValueCategory::Temporary => SourceAccessMode::Consume,
+    }
+}
+
+fn infer_yield_mode(
+    source_ty: &Type,
+    source_access_mode: SourceAccessMode,
+    element_ownership: Option<OwnershipKind>,
+) -> YieldMode {
+    let resolved = source_ty.resolve_alias();
+    if matches!(resolved, Type::Iterator(_)) {
+        return YieldMode::Move;
+    }
+    match source_access_mode {
+        SourceAccessMode::Consume => YieldMode::Move,
+        SourceAccessMode::Preserve => match element_ownership {
+            Some(OwnershipKind::Copy) => YieldMode::Copy,
+            Some(OwnershipKind::Move) => YieldMode::Clone,
+            None => {
+                if matches!(resolved, Type::Str) {
+                    YieldMode::Move
+                } else {
+                    YieldMode::Borrow
+                }
+            }
+        },
+    }
+}
+
+pub(crate) fn plan_iterator_ownership(source_expr: &HirExpr) -> IteratorOwnershipPlan {
+    plan_iterator_ownership_with_element_hint(source_expr, None)
+}
+
+pub(crate) fn plan_iterator_ownership_with_element_hint(
+    source_expr: &HirExpr,
+    element_type_hint: Option<&Type>,
+) -> IteratorOwnershipPlan {
+    let source_ty = crate::resolve_alias_type_for_plain_call(source_expr.ty());
+    let hint_ownership = element_type_hint.map(|hint| hint.resolve_alias().ownership());
+    let element_ownership = match (iteration_element_ownership(source_ty), hint_ownership) {
+        (Some(inferred), Some(OwnershipKind::Copy)) => Some(if inferred == OwnershipKind::Copy {
+            inferred
+        } else {
+            OwnershipKind::Copy
+        }),
+        (Some(inferred), _) => Some(inferred),
+        (None, Some(hint)) => Some(hint),
+        (None, None) => None,
+    };
+    let source_access_mode = infer_source_access_mode(source_expr, source_ty);
+    IteratorOwnershipPlan {
+        value_category: classify_value_category(source_expr),
+        source_access_mode,
+        yield_mode: infer_yield_mode(source_ty, source_access_mode, element_ownership),
+        element_ownership,
+    }
+}
 
 /// Check if a type can be auto-formatted with `{}` (implements Display).
 /// Used to determine if auto-generated Display impl is safe for a class field.
@@ -594,6 +725,76 @@ mod tests {
             generic_functions: HashMap::new(),
             type_param_bounds: HashMap::new(),
         }
+    }
+
+    #[test]
+    fn classify_value_category_marks_names_and_fields_as_places() {
+        let name_expr = HirExpr::Name {
+            name: "xs".to_string(),
+            ty: Type::List(Box::new(Type::Int)),
+        };
+        let field_expr = HirExpr::FieldAccess {
+            object: Box::new(HirExpr::Name {
+                name: "self".to_string(),
+                ty: Type::Class {
+                    name: "C".to_string(),
+                    fields: vec![("items".to_string(), Type::List(Box::new(Type::Int)))],
+                    methods: vec![],
+                    parent_class: None,
+                },
+            }),
+            field: "items".to_string(),
+            ty: Type::List(Box::new(Type::Int)),
+        };
+        let temp_expr = HirExpr::ListLiteral {
+            elements: vec![HirExpr::IntLiteral(1)],
+            ty: Type::List(Box::new(Type::Int)),
+        };
+
+        assert_eq!(classify_value_category(&name_expr), ValueCategory::Place);
+        assert_eq!(classify_value_category(&field_expr), ValueCategory::Place);
+        assert_eq!(classify_value_category(&temp_expr), ValueCategory::Temporary);
+    }
+
+    #[test]
+    fn iterator_plan_preserves_named_copy_element_collection() {
+        let source = HirExpr::Name {
+            name: "xs".to_string(),
+            ty: Type::List(Box::new(Type::Int)),
+        };
+        let plan = plan_iterator_ownership(&source);
+
+        assert_eq!(plan.value_category, ValueCategory::Place);
+        assert_eq!(plan.source_access_mode, SourceAccessMode::Preserve);
+        assert_eq!(plan.yield_mode, YieldMode::Copy);
+        assert_eq!(plan.element_ownership, Some(OwnershipKind::Copy));
+    }
+
+    #[test]
+    fn iterator_plan_consumes_temporary_collection() {
+        let source = HirExpr::ListLiteral {
+            elements: vec![HirExpr::IntLiteral(1), HirExpr::IntLiteral(2)],
+            ty: Type::List(Box::new(Type::Int)),
+        };
+        let plan = plan_iterator_ownership(&source);
+
+        assert_eq!(plan.value_category, ValueCategory::Temporary);
+        assert_eq!(plan.source_access_mode, SourceAccessMode::Consume);
+        assert_eq!(plan.yield_mode, YieldMode::Move);
+        assert_eq!(plan.element_ownership, Some(OwnershipKind::Copy));
+    }
+
+    #[test]
+    fn iterator_plan_consumes_range_without_clone_contract() {
+        let source = HirExpr::Name {
+            name: "r".to_string(),
+            ty: Type::Range,
+        };
+        let plan = plan_iterator_ownership(&source);
+
+        assert_eq!(plan.source_access_mode, SourceAccessMode::Consume);
+        assert_eq!(plan.yield_mode, YieldMode::Move);
+        assert_eq!(plan.element_ownership, Some(OwnershipKind::Copy));
     }
 
     #[test]

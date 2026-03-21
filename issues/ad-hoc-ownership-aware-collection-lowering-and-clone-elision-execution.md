@@ -1,6 +1,6 @@
 # Ad Hoc Phase Execution Checklist (Ownership-Aware Collection Lowering and Clone Elision)
 
-Status: in_progress (started 2026-03-21; `wave_clone_0` architecture lock + baseline inventory completed on 2026-03-21)
+Status: in_progress (started 2026-03-21; `wave_clone_0` architecture lock/baseline completed and `wave_clone_1` iterator/comprehension ownership correction completed on 2026-03-21)
 Owner: ad_hoc_collection_lowering_clone_elision execution loop
 Reference planning doc:
 - `issues/ad-hoc-ownership-aware-collection-lowering-and-clone-elision.md`
@@ -19,7 +19,7 @@ Loop per wave: Plan -> Implement -> Validate -> Demo -> PR -> External completio
 
 ## Full Phase To-Do Plan
 1. [x] `wave_clone_0`: architecture lock, inventory, and execution-baseline capture
-2. [ ] `wave_clone_1`: iterator/comprehension clone-elision through shared planner
+2. [x] `wave_clone_1`: iterator/comprehension clone-elision through shared planner
 3. [ ] `wave_clone_2`: indexing/slicing/star-unpack ownership correction
 4. [ ] `wave_clone_3`: generic hardening, regression lock, and phase closure
 5. [ ] wave-level extra completion review cycle done
@@ -102,7 +102,7 @@ Secondary review paths:
 
 ### wave_clone_0: Architecture Lock, Inventory, and Baseline
 - Status: completed
-- Implementation PR: pending (to be filled after merge)
+- Implementation PR: https://github.com/yaseralnajjar/sifr/pull/1394 (merged)
 - Scope:
   - capture the generated-code baseline and inventory all targeted clone-heavy patterns
   - lock one canonical ownership-aware planner design before broad edits
@@ -141,7 +141,8 @@ Secondary review paths:
     - `verification/stdlib/wave_clone_0_codegen_traceability.md`
 
 ### wave_clone_1: Iterator and Comprehension Ownership Correction
-- Status: not started
+- Status: completed
+- Implementation PR: pending (to be filled after merge)
 - Scope:
   - implement the shared planner in `helpers.rs` or an equivalent focused support module
   - refactor iterator/comprehension lowering to derive decisions from planner output
@@ -153,6 +154,8 @@ Secondary review paths:
   - `crates/sifr_codegen/src/helpers.rs`
   - `crates/sifr_codegen/src/stmt_support_emitter.rs`
   - `crates/sifr_codegen/src/lower_expr.rs`
+  - `crates/sifr_codegen/src/lower_stmt.rs`
+  - `crates/sifr_codegen/src/intrinsic_method_emitters.rs`
 - Validation target:
   - positive: representative `for`, `map`, `filter`, and comprehension demos/fixtures run successfully
   - negative: named borrowed containers are not implicitly consumed
@@ -160,6 +163,23 @@ Secondary review paths:
   - emit inspection: targeted structural `Range` loops/comprehensions no longer emit `Box::new((range).clone().into_iter())`
   - emit inspection: borrowed `Copy` iteration no longer lowers through `.iter().cloned()` and instead uses copy-oriented iteration such as `iter().copied()` or an equivalent zero-clone shape
   - wave gate: `scripts/run_all_tests.sh --profile quick`
+- Validation evidence:
+  - wave fixture:
+    - `cargo run -q -p sifr -- run crates/sifr/tests/e2e/pass/wave_clone_1_iterator_comprehension_ownership.sifr` -> PASS (`wave_clone_1_iterator_comprehension_ownership: pass`)
+  - wave demo:
+    - `cargo run -q -p sifr -- run demos/ad_hoc_clone_wave1_iterator_comprehension_demo.sifr` -> PASS (`ad_hoc_clone_wave1_iterator_comprehension_demo: pass`)
+  - emit checks:
+    - `cargo run -q -p sifr -- emit demos/milestone_control_flow_demo.sifr`
+      - copy-oriented loop evidence: `for n in nums.iter().copied()`
+      - structural range evidence: `for i in 1 as i64..n + (1 as i64)` (no boxed range clone path)
+    - `cargo run -q -p sifr -- emit crates/sifr/tests/e2e/pass/wave_clone_1_iterator_comprehension_ownership.sifr`
+      - temporary map source evidence: `vec![...].into_iter().map(...)` (no source clone-before-into_iter)
+      - enumerate evidence: `Box::new((nums).iter().copied().enumerate().map(...))`
+  - validation lanes:
+    - `scripts/run_all_tests.sh --profile quick` -> PASS
+    - `scripts/run_all_tests.sh` -> PASS
+  - wave traceability artifact:
+    - `verification/stdlib/wave_clone_1_iterator_codegen_traceability.md`
 
 ### wave_clone_2: Indexing, Safe Indexing, Slicing, and Star-Unpack Ownership Correction
 - Status: not started
