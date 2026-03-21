@@ -1,6 +1,6 @@
 # Ad Hoc Phase Execution Checklist (Stateful RNG, Crypto, and Polish Parity Expansion)
 
-Status: in-progress (started 2026-03-21; entry baseline validated; `wave_psp_rng_0` completed; `wave_psp_rng_1` implementation + validation merged via PR #1376; external review pass loop active)
+Status: in-progress (started 2026-03-21; entry baseline validated; `wave_psp_rng_0` completed; `wave_psp_rng_1` implementation + validation merged via PR #1376; wave-level review pass 1 and production-grade pass 2 completed)
 Owner: ad_hoc_stateful_rng_crypto execution loop
 Reference planning doc:
 - `issues/ad-hoc-stateful-rng-crypto-and-polish-parity-expansion.md`
@@ -22,8 +22,8 @@ Loop per wave: Plan -> Implement -> Validate -> Demo -> PR -> External completio
 2. [x] `wave_psp_rng_1`: deterministic RNG state and object model (`RandomState`, `Random`, `SystemRandom`, module-global delegation)
 3. [ ] `wave_psp_rng_2`: advanced hash and binary-surface expansion (`hashlib`, `base64`)
 4. [ ] `wave_psp_rng_3`: final polish waiver reduction (`statistics`, residual `textwrap`, residual `html`)
-5. [ ] wave-level extra completion review cycle done
-6. [ ] wave-level extra production-grade review cycle done
+5. [x] wave-level extra completion review cycle done
+6. [x] wave-level extra production-grade review cycle done
 7. [ ] milestone-level completion review cycle done
 8. [ ] milestone-level production-grade review cycle done
 9. [ ] phase-level completion review cycle done
@@ -111,3 +111,6 @@ Required entry records:
 - Merge evidence:
   - implementation PR: `https://github.com/yaseralnajjar/sifr/pull/1376` (merged 2026-03-21)
   - external review pass 1 artifact: `reviews/phase-ad-hoc-stateful-rng-crypto-and-polish-parity-expansion-review-pass-1.md`
+  - external review pass 1 fixes PR: `https://github.com/yaseralnajjar/sifr/pull/1377` (merged 2026-03-21)
+  - external review pass 2 artifact: `reviews/phase-ad-hoc-stateful-rng-crypto-and-polish-parity-expansion-review-pass-2.md`
+  - pass 2 validation result: reviewer output was stale (claimed wave 1 absent) and contradicted merged code/docs in PR `#1376`; no additional code fix was valid from that report
