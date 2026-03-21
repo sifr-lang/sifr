@@ -12,6 +12,14 @@
 - RNG/crypto continuation is production-grade closed:
   - phase docs: `issues/ad-hoc-stateful-rng-crypto-and-polish-parity-expansion.md` and `issues/ad-hoc-stateful-rng-crypto-and-polish-parity-expansion-execution.md`
   - wave closure: `wave_psp_rng_0` through `wave_psp_rng_3` merged with external production-grade review artifacts and phase-closure pass-2 approval
+- Ownership-aware collection lowering continuation is active:
+  - phase docs: `issues/ad-hoc-ownership-aware-collection-lowering-and-clone-elision.md` and `issues/ad-hoc-ownership-aware-collection-lowering-and-clone-elision-execution.md`
+  - wave-0 lock/baseline artifact: `verification/stdlib/wave_clone_0_codegen_traceability.md`
+  - locked planner contract for implementation waves:
+    - value category: `Place | Temporary`
+    - source access mode: `Preserve | Consume`
+    - yield mode: `Copy | Clone | Move | Borrow`
+    - conservative generic handling remains mandatory for `TypeVar`/`Any`/move unions
 - Historical references in this architecture document may mention legacy phase numbering from earlier roadmap versions.
 - When phase-number conflicts exist, follow [`roadmap.md`](./roadmap.md) and the matching files under [`phases/`](./phases/).
 

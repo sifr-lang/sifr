@@ -1,6 +1,6 @@
 # Ad Hoc Phase: Ownership-Aware Collection Lowering and Clone Elision
 
-Status: proposed on 2026-03-21
+Status: in_progress (started 2026-03-21; `wave_clone_0` architecture lock and baseline inventory completed on 2026-03-21)
 Context: corrective post-closure phase after the full ad hoc parity follow-up sequence covering lazy iterators, waiver reduction, structured/class surfaces, bytes foundations, runtime/file objects, canonical iteration closure, and stateful RNG/crypto/polish expansion
 Execution readiness: design-ready after completion of the following predecessor phases:
   - `issues/ad-hoc-first-class-lazy-iterators-and-python-iterable-protocol.md`
@@ -10,7 +10,7 @@ Execution readiness: design-ready after completion of the following predecessor 
   - `issues/ad-hoc-runtime-and-file-object-parity-expansion.md`
   - `issues/ad-hoc-canonical-iteration-model-and-lazy-parity-closure.md`
   - `issues/ad-hoc-stateful-rng-crypto-and-polish-parity-expansion.md`
-This phase is not execution-ready until the execution ledger named below exists and the wave checklist is populated before implementation starts.
+This phase is implementation-ready: execution ledger is active and wave-0 architecture/baseline lock is completed.
 Execution ledger: `issues/ad-hoc-ownership-aware-collection-lowering-and-clone-elision-execution.md`
 
 ## Objective
@@ -77,6 +77,8 @@ Secondary target area:
   - `demos/milestone_control_flow_demo.rs`
 - CPython reference tree:
   - `/Users/yaseralnajjar/work/sifr/cpython`
+- wave-0 baseline and lock artifact:
+  - `verification/stdlib/wave_clone_0_codegen_traceability.md`
 
 Primary upstream families for reference only:
 

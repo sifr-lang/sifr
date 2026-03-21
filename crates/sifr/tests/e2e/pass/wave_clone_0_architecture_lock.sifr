@@ -1,0 +1,30 @@
+from sifr.test import assert_eq
+
+
+def double(n: int) -> int:
+    return n * 2
+
+
+def is_even(n: int) -> bool:
+    return n % 2 == 0
+
+
+def main() -> None:
+    nums: list[int] = [1, 2, 3, 4]
+
+    replay: list[int] = []
+    for n in nums:
+        replay.append(n)
+    assert_eq(str(replay), "[1, 2, 3, 4]")
+    assert_eq(str(nums), "[1, 2, 3, 4]")
+
+    mapped: list[int] = list(map(double, nums))
+    filtered: list[int] = list(filter(is_even, nums))
+    assert_eq(str(mapped), "[2, 4, 6, 8]")
+    assert_eq(str(filtered), "[2, 4]")
+
+    first: int = 0
+    rest: list[int] = []
+    first, *rest = nums
+    assert_eq(first, 1)
+    assert_eq(str(rest), "[2, 3, 4]")
