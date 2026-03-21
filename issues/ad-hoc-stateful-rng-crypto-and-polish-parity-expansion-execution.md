@@ -1,6 +1,6 @@
 # Ad Hoc Phase Execution Checklist (Stateful RNG, Crypto, and Polish Parity Expansion)
 
-Status: in-progress (started 2026-03-21; entry baseline validated; `wave_psp_rng_0` completed; `wave_psp_rng_1` merged and review-closed; `wave_psp_rng_2` merged and review-closed; `wave_psp_rng_3` implementation merged via PR `#1382` and in external review loop)
+Status: in-progress (started 2026-03-21; entry baseline validated; `wave_psp_rng_0` completed; `wave_psp_rng_1` merged and review-closed; `wave_psp_rng_2` merged and review-closed; `wave_psp_rng_3` merged via PR `#1382` and review-closed via PR `#1383` + external production-grade pass-2 approval)
 Owner: ad_hoc_stateful_rng_crypto execution loop
 Reference planning doc:
 - `issues/ad-hoc-stateful-rng-crypto-and-polish-parity-expansion.md`
@@ -10,7 +10,7 @@ Loop per wave: Plan -> Implement -> Validate -> Demo -> PR -> External completio
 ## Global Gates
 - [x] Entry baseline validated before wave 0
 - [x] Scope remains constrained to active wave
-- [ ] Root cause is fixed without compatibility shims
+- [x] Root cause is fixed without compatibility shims
 - [x] Positive-path and negative-path validation recorded for each wave
 - [x] Demo runs before opening each wave PR
 - [x] `$(pwd)/scripts/run_all_tests.sh` run before each wave PR
@@ -21,7 +21,7 @@ Loop per wave: Plan -> Implement -> Validate -> Demo -> PR -> External completio
 1. [x] `wave_psp_rng_0`: architecture lock for typed RNG state model, module-global proxy rules, bytes-native crypto boundary, and permanent divergence classification
 2. [x] `wave_psp_rng_1`: deterministic RNG state and object model (`RandomState`, `Random`, `SystemRandom`, module-global delegation)
 3. [x] `wave_psp_rng_2`: advanced hash and binary-surface expansion (`hashlib`, `base64`)
-4. [ ] `wave_psp_rng_3`: final polish waiver reduction (`statistics`, residual `textwrap`, residual `html`)
+4. [x] `wave_psp_rng_3`: final polish waiver reduction (`statistics`, residual `textwrap`, residual `html`)
 5. [x] wave-level extra completion review cycle done
 6. [x] wave-level extra production-grade review cycle done
 7. [ ] milestone-level completion review cycle done
@@ -137,7 +137,7 @@ Required entry records:
   - pass 2 validation result: reviewer marked wave as production-grade with no additional code changes required
 
 ### wave_psp_rng_3: Final Polish Waiver Reduction
-- Status: implementation merged; external review pass 1 validated with no code-change findings
+- Status: completed (implementation merged + external completion/production-grade review passes closed)
 - Scope:
   - ship deterministic `statistics.median_grouped(data, interval)` with typed boundaries
   - close residual `textwrap` formatter-option waivers (`fix_sentence_endings`, `max_lines`, `placeholder`)
@@ -152,4 +152,7 @@ Required entry records:
 - Merge evidence:
   - implementation PR: `https://github.com/yaseralnajjar/sifr/pull/1382` (merged 2026-03-21)
   - external review pass 1 artifact: `reviews/phase-ad-hoc-stateful-rng-crypto-and-polish-parity-expansion-wave-psp-rng-3-review-pass-1.md`
+  - pass 1 status PR: `https://github.com/yaseralnajjar/sifr/pull/1383` (merged 2026-03-21)
   - pass 1 validation result: reviewer approved wave scope with no additional code changes required
+  - external review pass 2 artifact: `reviews/phase-ad-hoc-stateful-rng-crypto-and-polish-parity-expansion-wave-psp-rng-3-review-pass-2.md`
+  - pass 2 validation result: reviewer marked wave as production-grade with no additional code changes required
