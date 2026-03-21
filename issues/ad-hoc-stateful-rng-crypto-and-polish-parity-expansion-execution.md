@@ -191,3 +191,14 @@ Required entry records:
 - validation:
   - targeted: PASS (`cpython_rng_phase_additional_subset`, `phase_psp_rng_2_hashlib_pbkdf2_hmac_unsupported`, `phase_psp_rng_2_hashlib_scrypt_unsupported`, `phase_psp_rng_3_statistics_normaldist_unsupported`)
   - full gate: `scripts/run_all_tests.sh` PASS (profile `pr`, 2026-03-21)
+
+## Post-Closure External Review Remediation (Pass 2)
+
+- review artifact: `reviews/phase-ad-hoc-stateful-rng-crypto-and-polish-parity-expansion-post-closure-cpython-review-pass-2.md`
+- status: completed (acted on reviewer low-severity opportunities for stronger CPython parity depth)
+- accepted remediation scope:
+  - add uppercase-hex numeric reference support for `html.unescape` (`&#X27;`, `&#X3C;`, `&#X3E;`) and corresponding CPython-adapted fixture coverage
+  - strengthen `random.choices` adaptation depth with 2000-draw seeded frequency bounds to detect distribution regressions
+- validation:
+  - targeted: PASS (`cpython_rng_phase_additional_subset`)
+  - full gate: `scripts/run_all_tests.sh` PASS (profile `pr`, 2026-03-21)

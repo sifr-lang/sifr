@@ -20,6 +20,14 @@ def contains(values: list[str], needle: str) -> bool:
     return False
 
 
+def count_int(values: list[int], target: int) -> int:
+    total: int = 0
+    for value in values:
+        if value == target:
+            total = total + 1
+    return total
+
+
 def clone_words(words: list[int]) -> list[int]:
     copied: list[int] = []
     for word in words:
@@ -147,6 +155,28 @@ def check_random_choices_and_gauss_model() -> None:
         str(picked),
         "[3, 2, 3, 3, 1, 3, 3, 2, 4, 3, 4, 2, 3, 2, 1, 2, 3, 4, 2, 1]",
     )
+
+    seed(321)
+    picked_many: list[int] = []
+    picked_many_ok: bool = False
+    try:
+        parsed_many: list[int] = choices([1, 2, 3, 4], 2000)
+        picked_many = parsed_many
+        picked_many_ok = True
+    except ValueError as e:
+        _ = e.message
+        picked_many_ok = False
+    assert_true(picked_many_ok)
+    assert_eq(len(picked_many), 2000)
+
+    c1: int = count_int(picked_many, 1)
+    c2: int = count_int(picked_many, 2)
+    c3: int = count_int(picked_many, 3)
+    c4: int = count_int(picked_many, 4)
+    assert_true(c1 >= 350 and c1 <= 650)
+    assert_true(c2 >= 350 and c2 <= 650)
+    assert_true(c3 >= 350 and c3 <= 650)
+    assert_true(c4 >= 350 and c4 <= 650)
 
     rng: Random = Random(99)
     first: float = rng.gauss(0.0, 1.0)
@@ -313,10 +343,13 @@ def check_html_escape_cases() -> None:
     assert_eq(unescape("no character references"), "no character references")
     assert_eq(unescape("&#39;"), "'")
     assert_eq(unescape("&#x27;"), "'")
+    assert_eq(unescape("&#X27;"), "'")
     assert_eq(unescape("&#60;"), "<")
     assert_eq(unescape("&#x3C;"), "<")
+    assert_eq(unescape("&#X3C;"), "<")
     assert_eq(unescape("&#62;"), ">")
     assert_eq(unescape("&#x3E;"), ">")
+    assert_eq(unescape("&#X3E;"), ">")
     assert_eq(unescape(escape(sample)), sample)
 
 
