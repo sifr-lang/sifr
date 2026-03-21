@@ -39,11 +39,12 @@ Scope: architecture lock and governance freeze for stateful RNG, bytes-native cr
 - Demo:
   - `demos/ad_hoc_rng_wave0_architecture_lock_demo.sifr`
 - Negative fixtures:
-  - `crates/sifr/tests/e2e/fail/phase_psp_rng_0_hashlib_bytes_digest_api_unsupported.sifr`
   - `crates/sifr/tests/e2e/fail/phase_psp_rng_0_textwrap_max_lines_unsupported.sifr`
   - `crates/sifr/tests/e2e/fail/phase_psp_struct_0_html_package_parser_unsupported.sifr`
   - `crates/sifr/tests/e2e/fail/phase_psp_b2_random_choices_weights_unsupported.sifr`
   - `crates/sifr/tests/e2e/fail/phase_psp_rng_1_system_random_state_unsupported.sifr`
+  - `crates/sifr/tests/e2e/fail/phase_psp_rng_2_sha3_object_model_unsupported.sifr`
 
 Historical note:
 - `crates/sifr/tests/e2e/fail/phase_psp_rng_0_random_state_object_model_unsupported.sifr` was retired after `wave_psp_rng_1` shipped deterministic state/object parity.
+- `crates/sifr/tests/e2e/fail/phase_psp_rng_0_hashlib_bytes_digest_api_unsupported.sifr` was retired after `wave_psp_rng_2` shipped bytes-native `hashlib` object parity.

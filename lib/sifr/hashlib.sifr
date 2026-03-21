@@ -1,35 +1,48 @@
 # sifr.hashlib — Hashing functions and hash object model
-from _sifr.crypto import sha256, md5, sha1, sha512, sha224, sha384, blake2b, blake2s
+from _sifr.bytes import encode_utf8, bytes_to_hex
+from _sifr.crypto import (
+    sha256, md5, sha1, sha512, sha224, sha384, blake2b, blake2s,
+    sha256_bytes, md5_bytes, sha1_bytes, sha512_bytes, sha224_bytes, sha384_bytes, blake2b_bytes, blake2s_bytes
+)
 from _sifr.fs import read_text
+
 
 class HashlibError(Error):
     message: str
 
+
 class HashObject:
     _algorithm: str
-    _data: str
+    _data: bytes
     name: str
     digest_size: int
     block_size: int
 
-    def __init__(self, algorithm: str, data: str, name: str, digest_size: int, block_size: int) -> None:
+    def __init__(self, algorithm: str, data: bytes, name: str, digest_size: int, block_size: int) -> None:
         self._algorithm = algorithm
         self._data = data
         self.name = name
         self.digest_size = digest_size
         self.block_size = block_size
 
+    # Compatibility helper for string callers.
     def update(self, data: str) -> None:
+        self._data = self._data + encode_utf8(data)
+
+    def update_bytes(self, data: bytes) -> None:
         self._data = self._data + data
 
     def hexdigest(self) -> str:
         return _hash_hex(self._algorithm, self._data)
 
-    # NOTE: Sifr currently uses hex-string digest representation.
-    def digest(self) -> str:
-        return self.hexdigest()
+    def digest(self) -> bytes:
+        return _hash_bytes(self._algorithm, self._data)
 
-def _build_hash(algorithm: str, data: str) -> HashObject:
+    def digest_bytes(self) -> bytes:
+        return self.digest()
+
+
+def _build_hash(algorithm: str, data: bytes) -> HashObject:
     alg: str = algorithm.lower()
     if alg == "md5":
         return HashObject(alg, data, "md5", 16, 64)
@@ -50,8 +63,10 @@ def _build_hash(algorithm: str, data: str) -> HashObject:
     # Unsupported algorithms are represented as zero-sized placeholders.
     return HashObject(alg, data, "unknown", 0, 0)
 
+
 def copy_hash(h: HashObject) -> HashObject:
     return _build_hash(h._algorithm, h._data)
+
 
 def _is_supported_algorithm(name: str) -> bool:
     n: str = name.lower()
@@ -66,37 +81,63 @@ def _is_supported_algorithm(name: str) -> bool:
         n == "blake2s"
     )
 
-def _hash_hex(algorithm: str, data: str) -> str:
-    if algorithm == "md5":
-        return md5(data)
-    elif algorithm == "sha1":
-        return sha1(data)
-    elif algorithm == "sha224":
-        return sha224(data)
-    elif algorithm == "sha256":
-        return sha256(data)
-    elif algorithm == "sha384":
-        return sha384(data)
-    elif algorithm == "sha512":
-        return sha512(data)
-    elif algorithm == "blake2b":
-        return blake2b(data)
-    elif algorithm == "blake2s":
-        return blake2s(data)
-    return ""
 
-# CPython-like constructor helpers (adapted to Sifr str input model).
+def _hash_bytes(algorithm: str, data: bytes) -> bytes:
+    if algorithm == "md5":
+        return md5_bytes(data)
+    elif algorithm == "sha1":
+        return sha1_bytes(data)
+    elif algorithm == "sha224":
+        return sha224_bytes(data)
+    elif algorithm == "sha256":
+        return sha256_bytes(data)
+    elif algorithm == "sha384":
+        return sha384_bytes(data)
+    elif algorithm == "sha512":
+        return sha512_bytes(data)
+    elif algorithm == "blake2b":
+        return blake2b_bytes(data)
+    elif algorithm == "blake2s":
+        return blake2s_bytes(data)
+    return b""
+
+
+def _bytes_to_hex_or_value_error(data: bytes) -> Result[str, ValueError]:
+    try:
+        hex_value: str = bytes_to_hex(data)
+        return hex_value
+    except ParseError as e:
+        raise ValueError("hash digest hex encoding failed: " + e.message)
+
+
+def _hash_hex(algorithm: str, data: bytes) -> str:
+    try:
+        hex_value: str = _bytes_to_hex_or_value_error(_hash_bytes(algorithm, data))
+        return hex_value
+    except ValueError as e:
+        _ = e.message
+        return ""
+
+
+# CPython-like constructor helpers (adapted to Sifr typed error boundaries).
 def new(name: str, data: str = "") -> Result[HashObject, ValueError]:
+    return new_bytes(name, encode_utf8(data))
+
+
+def new_bytes(name: str, data: bytes = b"") -> Result[HashObject, ValueError]:
     if not _is_supported_algorithm(name):
         raise ValueError("unsupported hash algorithm: " + name)
     return _build_hash(name, data)
 
+
 def algorithms_guaranteed() -> list[str]:
     return ["md5", "sha1", "sha224", "sha256", "sha384", "sha512", "blake2b", "blake2s"]
+
 
 def algorithms_available() -> list[str]:
     # Current runtime exposes the same guaranteed set.
     return algorithms_guaranteed()
+
 
 def file_digest(path: str, name: str) -> Result[str, HashlibError]:
     try:
@@ -108,39 +149,51 @@ def file_digest(path: str, name: str) -> Result[str, HashlibError]:
     except ValueError as e:
         raise HashlibError(e.message)
 
-# SHA3/SHAKE constructor placeholders for API parity planning.
+
+# SHA3/SHAKE constructor placeholders for wave-level dependency-audit gating.
 def sha3_256_obj(data: str = "") -> Result[HashObject, ValueError]:
     raise ValueError("sha3_256 is not yet supported")
+
 
 def sha3_512_obj(data: str = "") -> Result[HashObject, ValueError]:
     raise ValueError("sha3_512 is not yet supported")
 
+
 def shake_128_obj(data: str = "") -> Result[HashObject, ValueError]:
     raise ValueError("shake_128 is not yet supported")
+
 
 def shake_256_obj(data: str = "") -> Result[HashObject, ValueError]:
     raise ValueError("shake_256 is not yet supported")
 
+
 def md5_obj(data: str = "") -> HashObject:
-    return _build_hash("md5", data)
+    return _build_hash("md5", encode_utf8(data))
+
 
 def sha1_obj(data: str = "") -> HashObject:
-    return _build_hash("sha1", data)
+    return _build_hash("sha1", encode_utf8(data))
+
 
 def sha224_obj(data: str = "") -> HashObject:
-    return _build_hash("sha224", data)
+    return _build_hash("sha224", encode_utf8(data))
+
 
 def sha256_obj(data: str = "") -> HashObject:
-    return _build_hash("sha256", data)
+    return _build_hash("sha256", encode_utf8(data))
+
 
 def sha384_obj(data: str = "") -> HashObject:
-    return _build_hash("sha384", data)
+    return _build_hash("sha384", encode_utf8(data))
+
 
 def sha512_obj(data: str = "") -> HashObject:
-    return _build_hash("sha512", data)
+    return _build_hash("sha512", encode_utf8(data))
+
 
 def blake2b_obj(data: str = "") -> HashObject:
-    return _build_hash("blake2b", data)
+    return _build_hash("blake2b", encode_utf8(data))
+
 
 def blake2s_obj(data: str = "") -> HashObject:
-    return _build_hash("blake2s", data)
+    return _build_hash("blake2s", encode_utf8(data))

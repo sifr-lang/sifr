@@ -19,7 +19,7 @@ def main() -> None:
     hash_ok: bool = False
     try:
         h: HashObject = new("sha256", "abc")
-        hash_ok = len(h.hexdigest()) == 64 and h.digest() == h.hexdigest()
+        hash_ok = len(h.hexdigest()) == 64 and len(h.digest()) == 32 and h.digest_bytes() == h.digest()
     except ValueError as e:
         _ = str(e.message)
     assert hash_ok

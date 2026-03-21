@@ -106,7 +106,7 @@ def collect_hashlib_actual() -> list[bool]:
     try:
         h: HashObject = new("sha256", "abc")
         sha_ok = h.hexdigest() == "ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad"
-        digest_alias_ok = h.digest() == h.hexdigest()
+        digest_alias_ok = len(h.digest()) == 32 and h.digest_bytes() == h.digest()
     except ValueError as e:
         _ = e.message
     actual.append(sha_ok)

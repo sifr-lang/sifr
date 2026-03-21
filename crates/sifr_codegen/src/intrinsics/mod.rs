@@ -251,6 +251,8 @@ fn lower_intrinsic_rendered(name: &str, args: &[RustExpr]) -> Option<LoweredIntr
         "re_split_flags" => (re::lower_re_split_flags(args), Some("regex")),
         "sha256" => (hash::lower_sha256(args), Some("sha2")),
         "md5" => (hash::lower_md5(args), Some("md5")),
+        "sha256_bytes" => (hashlib::lower_sha256_bytes(args), Some("sha2")),
+        "md5_bytes" => (hashlib::lower_md5_bytes(args), Some("md5")),
         "platform_system" => (platform::lower_platform_system(args), None),
         "platform_arch" => (platform::lower_platform_arch(args), None),
         "platform_node" => (platform::lower_platform_node(args), None),
@@ -290,20 +292,34 @@ fn lower_intrinsic_rendered(name: &str, args: &[RustExpr]) -> Option<LoweredIntr
         "zip_namelist" => (zipfile::lower_zip_namelist(args), Some("zip")),
         "base64_encode" => (base64::lower_base64_encode(args), Some("base64")),
         "base64_decode" => (base64::lower_base64_decode(args), Some("base64")),
+        "base64_encode_bytes" => (base64::lower_base64_encode_bytes(args), Some("base64")),
+        "base64_decode_bytes" => (base64::lower_base64_decode_bytes(args), Some("base64")),
         "base64_encode_opts" => (base64::lower_base64_encode_opts(args), Some("base64")),
         "base64_decode_opts" => (base64::lower_base64_decode_opts(args), Some("base64")),
         "urlsafe_b64encode" => (base64::lower_urlsafe_b64encode(args), Some("base64")),
         "urlsafe_b64decode" => (base64::lower_urlsafe_b64decode(args), Some("base64")),
+        "urlsafe_b64encode_bytes" => {
+            (base64::lower_urlsafe_b64encode_bytes(args), Some("base64"))
+        }
+        "urlsafe_b64decode_bytes" => {
+            (base64::lower_urlsafe_b64decode_bytes(args), Some("base64"))
+        }
         "b32encode" => (base32::lower_b32encode(args), None),
         "b32decode" => (base32::lower_b32decode(args), None),
         "b32hexencode" => (base32::lower_b32hexencode(args), None),
         "b32hexdecode" => (base32::lower_b32hexdecode(args), None),
         "sha1" => (hashlib::lower_sha1(args), Some("sha1")),
+        "sha1_bytes" => (hashlib::lower_sha1_bytes(args), Some("sha1")),
         "sha512" => (hashlib::lower_sha512(args), Some("sha2")),
+        "sha512_bytes" => (hashlib::lower_sha512_bytes(args), Some("sha2")),
         "sha224" => (hashlib::lower_sha224(args), Some("sha2")),
+        "sha224_bytes" => (hashlib::lower_sha224_bytes(args), Some("sha2")),
         "sha384" => (hashlib::lower_sha384(args), Some("sha2")),
+        "sha384_bytes" => (hashlib::lower_sha384_bytes(args), Some("sha2")),
         "blake2b" => (hashlib::lower_blake2b(args), Some("blake2")),
+        "blake2b_bytes" => (hashlib::lower_blake2b_bytes(args), Some("blake2")),
         "blake2s" => (hashlib::lower_blake2s(args), Some("blake2")),
+        "blake2s_bytes" => (hashlib::lower_blake2s_bytes(args), Some("blake2")),
         "set_global_level" => (logging::lower_set_global_level(args), None),
         "get_global_level" => (logging::lower_get_global_level(args), None),
         _ => return None,
@@ -794,6 +810,17 @@ mod tests {
         assert_eq!(md5.required_crate, Some("md5"));
         assert!(render_expr(&md5.expr).contains("md5::compute"));
         assert!(render_expr(&md5.expr).contains(".as_bytes()"));
+
+        let sha_bytes = lower_intrinsic("sha256_bytes", &["payload".to_string()])
+            .expect("sha256_bytes");
+        assert_eq!(sha_bytes.required_crate, Some("sha2"));
+        assert!(render_expr(&sha_bytes.expr).contains("to_vec"));
+
+        let md5_bytes = lower_intrinsic("md5_bytes", &["payload".to_string()]).expect("md5_bytes");
+        assert_eq!(md5_bytes.required_crate, Some("md5"));
+        assert!(render_expr(&md5_bytes.expr).contains("md5::compute"));
+        assert!(render_expr(&md5_bytes.expr).contains(".0"));
+        assert!(render_expr(&md5_bytes.expr).contains("to_vec"));
     }
 
     #[test]
@@ -1025,6 +1052,16 @@ mod tests {
         assert!(render_expr(&dec.expr).contains("base64::Engine::decode"));
         assert!(render_expr(&dec.expr).contains("general_purpose::STANDARD"));
 
+        let enc_bytes = lower_intrinsic("base64_encode_bytes", &["b".to_string()])
+            .expect("base64_encode_bytes");
+        assert_eq!(enc_bytes.required_crate, Some("base64"));
+        assert!(render_expr(&enc_bytes.expr).contains("into_bytes"));
+
+        let dec_bytes = lower_intrinsic("base64_decode_bytes", &["b".to_string()])
+            .expect("base64_decode_bytes");
+        assert_eq!(dec_bytes.required_crate, Some("base64"));
+        assert!(render_expr(&dec_bytes.expr).contains("base64::Engine::decode"));
+
         let enc_opts = lower_intrinsic(
             "base64_encode_opts",
             &["s".to_string(), "alt".to_string(), "wrap".to_string()],
@@ -1057,6 +1094,16 @@ mod tests {
         assert_eq!(url_dec.required_crate, Some("base64"));
         assert!(render_expr(&url_dec.expr).contains("base64::Engine::decode"));
         assert!(render_expr(&url_dec.expr).contains("general_purpose::URL_SAFE"));
+
+        let url_enc_bytes = lower_intrinsic("urlsafe_b64encode_bytes", &["b".to_string()])
+            .expect("urlsafe_b64encode_bytes");
+        assert_eq!(url_enc_bytes.required_crate, Some("base64"));
+        assert!(render_expr(&url_enc_bytes.expr).contains("into_bytes"));
+
+        let url_dec_bytes = lower_intrinsic("urlsafe_b64decode_bytes", &["b".to_string()])
+            .expect("urlsafe_b64decode_bytes");
+        assert_eq!(url_dec_bytes.required_crate, Some("base64"));
+        assert!(render_expr(&url_dec_bytes.expr).contains("base64::Engine::decode"));
     }
 
     #[test]
@@ -1080,25 +1127,54 @@ mod tests {
         assert_eq!(sha1.required_crate, Some("sha1"));
         assert!(render_expr(&sha1.expr).contains("<sha1::Sha1 as sha1::Digest>::digest"));
 
+        let sha1_bytes = lower_intrinsic("sha1_bytes", &["b".to_string()]).expect("sha1_bytes");
+        assert_eq!(sha1_bytes.required_crate, Some("sha1"));
+        assert!(render_expr(&sha1_bytes.expr).contains("to_vec"));
+
         let sha512 = lower_intrinsic("sha512", &["s".to_string()]).expect("sha512");
         assert_eq!(sha512.required_crate, Some("sha2"));
         assert!(render_expr(&sha512.expr).contains("<sha2::Sha512 as sha2::Digest>::digest"));
+
+        let sha512_bytes =
+            lower_intrinsic("sha512_bytes", &["b".to_string()]).expect("sha512_bytes");
+        assert_eq!(sha512_bytes.required_crate, Some("sha2"));
+        assert!(render_expr(&sha512_bytes.expr).contains("to_vec"));
 
         let sha224 = lower_intrinsic("sha224", &["s".to_string()]).expect("sha224");
         assert_eq!(sha224.required_crate, Some("sha2"));
         assert!(render_expr(&sha224.expr).contains("<sha2::Sha224 as sha2::Digest>::digest"));
 
+        let sha224_bytes =
+            lower_intrinsic("sha224_bytes", &["b".to_string()]).expect("sha224_bytes");
+        assert_eq!(sha224_bytes.required_crate, Some("sha2"));
+        assert!(render_expr(&sha224_bytes.expr).contains("to_vec"));
+
         let sha384 = lower_intrinsic("sha384", &["s".to_string()]).expect("sha384");
         assert_eq!(sha384.required_crate, Some("sha2"));
         assert!(render_expr(&sha384.expr).contains("<sha2::Sha384 as sha2::Digest>::digest"));
+
+        let sha384_bytes =
+            lower_intrinsic("sha384_bytes", &["b".to_string()]).expect("sha384_bytes");
+        assert_eq!(sha384_bytes.required_crate, Some("sha2"));
+        assert!(render_expr(&sha384_bytes.expr).contains("to_vec"));
 
         let blake2b = lower_intrinsic("blake2b", &["s".to_string()]).expect("blake2b");
         assert_eq!(blake2b.required_crate, Some("blake2"));
         assert!(render_expr(&blake2b.expr).contains("Blake2b512"));
 
+        let blake2b_bytes =
+            lower_intrinsic("blake2b_bytes", &["b".to_string()]).expect("blake2b_bytes");
+        assert_eq!(blake2b_bytes.required_crate, Some("blake2"));
+        assert!(render_expr(&blake2b_bytes.expr).contains("to_vec"));
+
         let blake2s = lower_intrinsic("blake2s", &["s".to_string()]).expect("blake2s");
         assert_eq!(blake2s.required_crate, Some("blake2"));
         assert!(render_expr(&blake2s.expr).contains("Blake2s256"));
+
+        let blake2s_bytes =
+            lower_intrinsic("blake2s_bytes", &["b".to_string()]).expect("blake2s_bytes");
+        assert_eq!(blake2s_bytes.required_crate, Some("blake2"));
+        assert!(render_expr(&blake2s_bytes.expr).contains("to_vec"));
     }
 
     #[test]
