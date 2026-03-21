@@ -1,6 +1,6 @@
 # Ad Hoc Phase Execution Checklist (Stateful RNG, Crypto, and Polish Parity Expansion)
 
-Status: in-progress (started 2026-03-21; entry baseline validated; `wave_psp_rng_0` completed; `wave_psp_rng_1` merged and review-closed; `wave_psp_rng_2` merged and review-closed; `wave_psp_rng_3` merged via PR `#1382` and review-closed via PR `#1383` + external production-grade pass-2 approval; milestone-closure review passes 1/2 completed and approved; phase-closure review passes 1/2 approved and production-grade closure confirmed; final closure telegram remains pending)
+Status: closed (started 2026-03-21; entry baseline validated; `wave_psp_rng_0` completed; `wave_psp_rng_1` merged and review-closed; `wave_psp_rng_2` merged and review-closed; `wave_psp_rng_3` merged via PR `#1382` and review-closed via PR `#1383` + external production-grade pass-2 approval; milestone-closure review passes 1/2 completed and approved; phase-closure review passes 1/2 approved and production-grade closure confirmed; closure telegram sent on 2026-03-21)
 Owner: ad_hoc_stateful_rng_crypto execution loop
 Reference planning doc:
 - `issues/ad-hoc-stateful-rng-crypto-and-polish-parity-expansion.md`
@@ -28,7 +28,7 @@ Loop per wave: Plan -> Implement -> Validate -> Demo -> PR -> External completio
 8. [x] milestone-level production-grade review cycle done
 9. [x] phase-level completion review cycle done
 10. [x] phase-level production-grade review cycle done
-11. [ ] closure telegram notification sent
+11. [x] closure telegram notification sent
 
 ## Detailed Wave To-Do Plan
 
