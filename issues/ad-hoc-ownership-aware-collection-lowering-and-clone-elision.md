@@ -10,6 +10,7 @@ Execution readiness: design-ready after completion of the following predecessor 
   - `issues/ad-hoc-runtime-and-file-object-parity-expansion.md`
   - `issues/ad-hoc-canonical-iteration-model-and-lazy-parity-closure.md`
   - `issues/ad-hoc-stateful-rng-crypto-and-polish-parity-expansion.md`
+This phase is not execution-ready until the execution ledger named below exists and the wave checklist is populated before implementation starts.
 Execution ledger: `issues/ad-hoc-ownership-aware-collection-lowering-and-clone-elision-execution.md`
 
 ## Objective
@@ -236,6 +237,7 @@ This phase owns:
 
 - ownership-aware planner/helpers for collection access and iteration lowering
 - refactoring existing lowering sites to route through that planner
+- refactoring both IR-oriented and simple-lowering paths so clone decisions stop diverging between `stmt_support_emitter.rs` and `lower_expr.rs`
 - removal of whole-container clones in iterator/comprehension/map/filter paths where ownership does not require them
 - removal of `Copy`-type `.clone()` emissions in indexing and safe-indexing paths
 - star-unpack and slice lowering fixes that avoid cloning more than semantics require
@@ -271,6 +273,9 @@ Required closure direction:
 - define one internal planner for collection access and iteration
 - make lowering decisions derive from ownership, value category, and result contract
 - stop re-encoding the same ownership decision separately in each lowering function
+- ensure the planner is shared by both:
+  - `crates/sifr_codegen/src/stmt_support_emitter.rs`
+  - `crates/sifr_codegen/src/lower_expr.rs`
 
 ### priority_2: Iterator and comprehension clone elimination
 
@@ -316,6 +321,7 @@ Required closure direction:
 
 - inventory every runtime-relevant clone pattern currently emitted in targeted surfaces
 - identify the exact lowering entry points that own those decisions
+- create the execution ledger and lock the implementation checklist before wave 1 code changes begin
 - lock the invariants for:
   - place vs temporary
   - `Copy` vs `Move`
@@ -325,12 +331,16 @@ Required closure direction:
 
 Definition of done:
 
+- execution ledger exists and is populated with the wave plan
 - one canonical planner design is documented in code comments and phase notes
 - no new direct clone-heuristic branches are added outside that model
 
 ### wave_clone_1: Iterator and Comprehension Ownership Correction
 
 - refactor `for` lowering, iterator adaptation, map/filter lowering, and comprehension lowering to use the planner
+- cover both:
+  - structured IR lowering in `stmt_support_emitter.rs`
+  - simple-lowering paths in `lower_expr.rs`
 - eliminate `.clone().into_iter()` where the input is an owned temporary
 - emit copy-oriented iteration for borrowed `Copy` element containers
 
@@ -359,7 +369,7 @@ Definition of done:
 
 Definition of done:
 
-- conservative generic handling is explicit and tested
+- conservative generic handling is explicit and tested across both planner inputs and the lowering call sites that consume planner output
 - docs record what this phase fixed and what remains a later runtime concern
 - full local validation passes
 
