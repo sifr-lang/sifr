@@ -9,9 +9,9 @@
   - stage 2 (closed corrective continuation): `issues/ad-hoc-canonical-iteration-model-and-lazy-parity-closure.md` and `issues/ad-hoc-canonical-iteration-model-and-lazy-parity-closure-execution.md`
   - stage-2 wave closure: `wave_psp_iter_fix_0` through `wave_psp_iter_fix_8` are merged and review-closed (including post-closure CPython `itertools` parity sweep/remediation passes)
   - stage-2 contract lock enforces one canonical iteration path from type system through HIR/codegen with explicit capability tracking (single-pass, multi-pass, reversible/double-ended).
-- RNG/crypto continuation is closed at wave level and in milestone/phase closure review loop:
+- RNG/crypto continuation is production-grade closed:
   - phase docs: `issues/ad-hoc-stateful-rng-crypto-and-polish-parity-expansion.md` and `issues/ad-hoc-stateful-rng-crypto-and-polish-parity-expansion-execution.md`
-  - wave closure: `wave_psp_rng_0` through `wave_psp_rng_3` merged with external production-grade review artifacts
+  - wave closure: `wave_psp_rng_0` through `wave_psp_rng_3` merged with external production-grade review artifacts and phase-closure pass-2 approval
 - Historical references in this architecture document may mention legacy phase numbering from earlier roadmap versions.
 - When phase-number conflicts exist, follow [`roadmap.md`](./roadmap.md) and the matching files under [`phases/`](./phases/).
 
