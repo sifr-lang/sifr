@@ -1,0 +1,16 @@
+# Test: non-recursive nested helper can rebind an enclosing typed local with nonlocal.
+
+def accumulate(values: list[int]) -> int:
+    total = 0
+
+    def apply() -> None:
+        nonlocal total
+        for value in values:
+            total += value
+
+    apply()
+    return total
+
+
+def main():
+    assert str(accumulate([2, 7, 1, 8])) == '18'

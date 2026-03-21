@@ -1,0 +1,22 @@
+# wave_psp_bytes_1 demo: first-class bytes core behavior
+
+def total(data: bytes) -> int:
+    out: int = 0
+    for value in data:
+        out += value
+    return out
+
+def main() -> None:
+    payload: bytes = b"sifr"
+    suffix: bytes = b"\x00\x01"
+    combined: bytes = payload + suffix
+
+    assert len(combined) == 6
+    head: int | None = combined[0]
+    assert head == 115
+
+    window: bytes = combined[1:4]
+    assert total(window) == 321
+
+    raw: list[int] = window.to_ints()
+    assert raw == [105, 102, 114]

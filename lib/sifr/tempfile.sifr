@@ -1,11 +1,13 @@
 # sifr.tempfile — Temporary file and directory creation (wraps _sifr.fs + _sifr.crypto)
-# Operations return Result[str, IOError] for safe error handling.
-from _sifr.fs import mkdir, write_text, gettempdir, exists
+# Operations return Result[T, IOError] for safe error handling.
+from _sifr.fs import mkdir, write_text, gettempdir, exists, remove_file, rmdir_all
 from _sifr.crypto import random_int
+
 
 def _random_suffix() -> str:
     n: int = random_int(100000, 999999)
     return str(n)
+
 
 def mktemp_path(prefix: str) -> str:
     suffix: str = _random_suffix()
@@ -19,11 +21,14 @@ def mktemp_path(prefix: str) -> str:
                 root = root[:len(root) - 1]
     return root + "/" + prefix + suffix
 
+
 def _next_candidate(prefix: str) -> str:
     return mktemp_path(prefix)
 
+
 def _collision_message(kind: str, attempts: int) -> str:
     return "tempfile." + kind + ": failed to create unique path after " + str(attempts) + " attempts"
+
 
 def mkstemp(prefix: str) -> Result[str, IOError]:
     attempts: int = 0
@@ -38,12 +43,12 @@ def mkstemp(prefix: str) -> Result[str, IOError]:
             wrt: None = write_text(path, "")
             return path
         except IOError as e:
-            # Retry only when a race creates the same path between exists() and write_text().
             if exists(path_for_check):
                 attempts = attempts + 1
                 continue
             raise IOError(e.message)
     raise IOError(_collision_message("mkstemp", max_attempts))
+
 
 def mkdtemp(prefix: str) -> Result[str, IOError]:
     attempts: int = 0
@@ -58,9 +63,112 @@ def mkdtemp(prefix: str) -> Result[str, IOError]:
             md: None = mkdir(path)
             return path
         except IOError as e:
-            # Retry only when a race creates the same path between exists() and mkdir().
             if exists(path_for_check):
                 attempts = attempts + 1
                 continue
             raise IOError(e.message)
     raise IOError(_collision_message("mkdtemp", max_attempts))
+
+
+class NamedTemporaryFile:
+    _path: str
+    _mode: str
+    _delete: bool
+    _closed: bool
+    _cleaned: bool
+
+    def __init__(self, mode: str = "w", delete: bool = True, prefix: str = "sifr_named_tmp_") -> None:
+        candidate: str = mktemp_path(prefix)
+        while exists(candidate):
+            candidate = mktemp_path(prefix)
+        _created_result: Result[None, IOError] = write_text(candidate, "")
+
+        self._path = candidate + ""
+        self._mode = mode + ""
+        self._delete = delete
+        self._closed = False
+        self._cleaned = False
+
+    def name(self) -> str:
+        return self._path + ""
+
+    def closed(self) -> bool:
+        return self._closed
+
+    def _cleanup_path(self) -> Result[None, IOError]:
+        if self._cleaned:
+            return None
+        if exists(self._path):
+            try:
+                _rm_done: None = remove_file(self._path)
+            except IOError as e:
+                raise IOError(e.message)
+        self._cleaned = True
+        return None
+
+    def close(self) -> Result[None, IOError]:
+        self._closed = True
+        if self._delete:
+            return self._cleanup_path()
+        return None
+
+    def cleanup(self) -> Result[None, IOError]:
+        self._closed = True
+        return self._cleanup_path()
+
+    def __enter__(self) -> NamedTemporaryFile:
+        return self
+
+    def __exit__(self) -> None:
+        try:
+            _closed_done: None = self.close()
+        except IOError as e:
+            _ = e.message
+
+
+class TemporaryDirectory:
+    _path: str
+    _closed: bool
+    _cleaned: bool
+
+    def __init__(self, prefix: str = "sifr_tempdir_") -> None:
+        candidate: str = mktemp_path(prefix)
+        while exists(candidate):
+            candidate = mktemp_path(prefix)
+        _created_result: Result[None, IOError] = mkdir(candidate)
+
+        self._path = candidate + ""
+        self._closed = False
+        self._cleaned = False
+
+    def name(self) -> str:
+        return self._path + ""
+
+    def closed(self) -> bool:
+        return self._closed
+
+    def close(self) -> Result[None, IOError]:
+        self._closed = True
+        return None
+
+    def cleanup(self) -> Result[None, IOError]:
+        if self._cleaned:
+            self._closed = True
+            return None
+        if exists(self._path):
+            try:
+                _rm_tree_done: None = rmdir_all(self._path)
+            except IOError as e:
+                raise IOError(e.message)
+        self._cleaned = True
+        self._closed = True
+        return None
+
+    def __enter__(self) -> TemporaryDirectory:
+        return self
+
+    def __exit__(self) -> None:
+        try:
+            _cleaned_done: None = self.cleanup()
+        except IOError as e:
+            _ = e.message

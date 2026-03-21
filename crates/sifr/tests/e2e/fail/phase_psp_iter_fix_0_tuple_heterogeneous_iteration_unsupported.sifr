@@ -1,0 +1,4 @@
+def main() -> None:
+    values: tuple[int, str] = (1, "x")
+    for value in values:
+        print(value)

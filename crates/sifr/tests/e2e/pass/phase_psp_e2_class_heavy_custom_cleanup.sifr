@@ -1,0 +1,187 @@
+from sifr.argparse import ArgumentParser, Namespace
+from sifr.ipaddress import ip_address, AddressValueError, IPv4Address
+from sifr.uuid import uuid4_obj, uuid_from_hex, UUID
+from sifr.graphlib import TopologicalSorter, CycleError
+from sifr.test import assert_eq, assert_true, assert_bool_vector_eq
+
+
+def collect_argparse_actual() -> list[bool]:
+    actual: list[bool] = []
+    parser: ArgumentParser = ArgumentParser("phase-e2")
+    parser.add_argument("--check", "check", "store_true")
+    parser.add_argument("--mode", "mode", "store", "safe")
+    parser.add_argument("entry", "entry", "store", "missing.sifr")
+    parsed: Namespace = parser.parse_args(["--check", "--mode", "strict", "main.sifr"])
+    actual.append(parsed.get_bool("check", False))
+    actual.append(parsed.get("mode", "") == "strict")
+    actual.append(parsed.get("entry", "") == "main.sifr")
+
+    parsed_inline: Namespace = parser.parse_args(["--mode=strict-inline", "inline.sifr"])
+    actual.append(parsed_inline.get("mode", "") == "strict-inline")
+
+    parsed_after_double_dash: Namespace = parser.parse_args(["--", "--literal.sifr"])
+    actual.append(parsed_after_double_dash.get("entry", "") == "--literal.sifr")
+
+    parsed_missing: Namespace = parser.parse_args(["--mode", "--check", "fallback.sifr"])
+    actual.append(parsed_missing.get("mode", "") == "safe")
+    actual.append(parsed_missing.get_bool("check", False))
+    actual.append(parsed_missing.get("entry", "") == "fallback.sifr")
+    return actual
+
+
+def collect_ipaddress_actual() -> list[bool]:
+    actual: list[bool] = []
+    valid_ok: bool = False
+    valid_not_link_local: bool = False
+    try:
+        valid: IPv4Address = ip_address("10.0.0.8")
+        valid_ok = valid.is_private() and valid.is_global() == False and valid.to_str() == "10.0.0.8"
+        valid_not_link_local = valid.is_link_local() == False
+    except AddressValueError as e:
+        _ = e.message
+    actual.append(valid_ok)
+    invalid_rejected: bool = False
+    try:
+        _bad: IPv4Address = ip_address("500.1.1.1")
+        _ = _bad.to_str()
+    except AddressValueError as e:
+        _ = e.message
+        invalid_rejected = True
+    actual.append(invalid_rejected)
+
+    leading_zero_rejected: bool = False
+    try:
+        _leading_zero: IPv4Address = ip_address("1.02.3.4")
+        _ = _leading_zero.to_str()
+    except AddressValueError as e:
+        _ = e.message
+        leading_zero_rejected = True
+    actual.append(leading_zero_rejected)
+
+    direct_ctor_marked_invalid: bool = False
+    direct_bad: IPv4Address = IPv4Address("999.1.1.1")
+    direct_ctor_marked_invalid = direct_bad.packed_int() == -1
+    actual.append(direct_ctor_marked_invalid)
+    actual.append(valid_not_link_local)
+
+    link_local_flags_ok: bool = False
+    multicast_global_ok: bool = False
+    try:
+        link_local_addr: IPv4Address = ip_address("169.254.10.20")
+        multicast_addr: IPv4Address = ip_address("224.0.0.1")
+        link_local_flags_ok = link_local_addr.is_link_local() and link_local_addr.is_global() == False
+        multicast_global_ok = multicast_addr.is_global()
+    except AddressValueError as e:
+        _ = e.message
+    actual.append(link_local_flags_ok)
+    actual.append(multicast_global_ok)
+    return actual
+
+
+def collect_uuid_actual() -> list[bool]:
+    actual: list[bool] = []
+    generated: UUID = uuid4_obj()
+    actual.append(generated.version() == 4)
+    parsed_ok: bool = False
+    try:
+        parsed: UUID = uuid_from_hex("550e8400e29b41d4a716446655440000")
+        parsed_ok = parsed.to_str() == "550e8400-e29b-41d4-a716-446655440000"
+    except ValueError as e:
+        _ = e.message
+    actual.append(parsed_ok)
+
+    parsed_urn_ok: bool = False
+    try:
+        parsed_urn: UUID = uuid_from_hex("urn:uuid:550E8400-E29B-41D4-A716-446655440000")
+        parsed_urn_ok = parsed_urn.to_str() == "550e8400-e29b-41d4-a716-446655440000"
+    except ValueError as e:
+        _ = e.message
+    actual.append(parsed_urn_ok)
+
+    ctor_passthrough: UUID = UUID("550e8400-e29b-41d4-a716-44665544000z")
+    actual.append(ctor_passthrough.to_str() == "550e8400-e29b-41d4-a716-44665544000z")
+    return actual
+
+
+def collect_graphlib_actual() -> list[bool]:
+    actual: list[bool] = []
+    sorter: TopologicalSorter = TopologicalSorter()
+    sorter.add_many(2, [0, 1])
+    sorter.add(1, 0)
+    order_ok: bool = False
+    try:
+        order: list[int] = sorter.static_order()
+        order_ok = str(order) == "[0, 1, 2]"
+    except CycleError as e:
+        _ = e.message
+    actual.append(order_ok)
+
+    cycle_rejected: bool = False
+    bad: TopologicalSorter = TopologicalSorter()
+    bad.add(1, 0)
+    bad.add(0, 1)
+    try:
+        _prepared: None = bad.prepare()
+        _ = _prepared
+    except CycleError as e:
+        _ = e.message
+        cycle_rejected = True
+    actual.append(cycle_rejected)
+
+    sparse_ok: bool = False
+    ready_progress_ok: bool = False
+    sparse: TopologicalSorter = TopologicalSorter()
+    sparse.add_many(50, [30, 40])
+    sparse.add(30, 10)
+    sparse.add(40, 10)
+    sparse.add_many(10, [])
+    try:
+        sparse_order: list[int] = sparse.static_order()
+        sparse_ok = str(sparse_order) == "[10, 30, 40, 50]" or str(sparse_order) == "[10, 40, 30, 50]"
+    except CycleError as e:
+        _ = e.message
+    actual.append(sparse_ok)
+
+    try:
+        _prepared_sparse: None = sparse.prepare()
+        _ = _prepared_sparse
+        ready0: list[int] = sparse.get_ready()
+        if str(ready0) == "[10]":
+            sparse.done(10)
+            ready1: list[int] = sparse.get_ready()
+            ready_progress_ok = str(ready1) == "[30]" or str(ready1) == "[40]"
+    except CycleError as e:
+        _ = e.message
+    actual.append(ready_progress_ok)
+    return actual
+
+
+def collect_test_module_actual() -> list[bool]:
+    actual: list[bool] = []
+    assert_eq("stable", "stable")
+    assert_true(True)
+    actual.append(True)
+    return actual
+
+
+def append_all(mut target: list[bool], values: list[bool]):
+    for value in values:
+        target.append(value)
+
+
+def main():
+    expected: list[bool] = [
+        True, True, True, True, True, True, True, True,
+        True, True, True, True, True, True, True,
+        True, True, True, True,
+        True, True, True, True,
+        True
+    ]
+    actual: list[bool] = []
+    append_all(actual, collect_argparse_actual())
+    append_all(actual, collect_ipaddress_actual())
+    append_all(actual, collect_uuid_actual())
+    append_all(actual, collect_graphlib_actual())
+    append_all(actual, collect_test_module_actual())
+    assert_bool_vector_eq(actual, expected)
+    assert str("phase_psp_e2_class_heavy_custom_cleanup: pass") == "phase_psp_e2_class_heavy_custom_cleanup: pass"

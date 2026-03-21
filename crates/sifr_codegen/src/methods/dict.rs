@@ -107,14 +107,30 @@ pub(super) fn lower_items(object: &RustExpr, args: &[RustExpr]) -> Option<RustEx
 }
 
 pub(super) fn lower_update(object: &RustExpr, args: &[RustExpr]) -> Option<RustExpr> {
-    if args.len() != 1 {
-        return None;
+    match args {
+        [] => Some(RustExpr::Literal(crate::RustLiteral::Unit)),
+        [other] => Some(RustExpr::MethodCall {
+            receiver: Box::new(object.clone()),
+            method: "extend".to_string(),
+            args: vec![other.clone()],
+        }),
+        [other, keyword_dict] => Some(RustExpr::Block {
+            stmts: vec![
+                crate::RustStmt::Expr(RustExpr::MethodCall {
+                    receiver: Box::new(object.clone()),
+                    method: "extend".to_string(),
+                    args: vec![other.clone()],
+                }),
+                crate::RustStmt::Expr(RustExpr::MethodCall {
+                    receiver: Box::new(object.clone()),
+                    method: "extend".to_string(),
+                    args: vec![keyword_dict.clone()],
+                }),
+            ],
+            expr: Some(Box::new(RustExpr::Literal(crate::RustLiteral::Unit))),
+        }),
+        _ => None,
     }
-    Some(RustExpr::MethodCall {
-        receiver: Box::new(object.clone()),
-        method: "extend".to_string(),
-        args: vec![args[0].clone()],
-    })
 }
 
 pub(super) fn lower_clear(object: &RustExpr, args: &[RustExpr]) -> Option<RustExpr> {
@@ -179,12 +195,48 @@ pub(super) fn lower_get(object: &RustExpr, args: &[RustExpr]) -> Option<RustExpr
 }
 
 pub(super) fn lower_pop(object: &RustExpr, args: &[RustExpr]) -> Option<RustExpr> {
-    if args.len() != 1 {
-        return None;
+    match args {
+        [key] => Some(RustExpr::MethodCall {
+            receiver: Box::new(object.clone()),
+            method: "remove".to_string(),
+            args: vec![render_key_arg_expr(key)],
+        }),
+        [key, default] => Some(RustExpr::MethodCall {
+            receiver: Box::new(RustExpr::MethodCall {
+                receiver: Box::new(object.clone()),
+                method: "remove".to_string(),
+                args: vec![render_key_arg_expr(key)],
+            }),
+            method: "unwrap_or".to_string(),
+            args: vec![default.clone()],
+        }),
+        _ => None,
     }
-    Some(RustExpr::MethodCall {
-        receiver: Box::new(object.clone()),
-        method: "remove".to_string(),
-        args: vec![render_key_arg_expr(&args[0])],
-    })
+}
+
+pub(super) fn lower_setdefault(object: &RustExpr, args: &[RustExpr]) -> Option<RustExpr> {
+    match args {
+        [key, default] => Some(RustExpr::MethodCall {
+            receiver: Box::new(RustExpr::MethodCall {
+                receiver: Box::new(RustExpr::MethodCall {
+                    receiver: Box::new(object.clone()),
+                    method: "entry".to_string(),
+                    args: vec![RustExpr::MethodCall {
+                        receiver: Box::new(key.clone()),
+                        method: "clone".to_string(),
+                        args: vec![],
+                    }],
+                }),
+                method: "or_insert".to_string(),
+                args: vec![RustExpr::MethodCall {
+                    receiver: Box::new(default.clone()),
+                    method: "clone".to_string(),
+                    args: vec![],
+                }],
+            }),
+            method: "clone".to_string(),
+            args: vec![],
+        }),
+        _ => None,
+    }
 }

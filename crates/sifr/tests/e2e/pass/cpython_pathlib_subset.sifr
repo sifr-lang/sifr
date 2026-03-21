@@ -12,10 +12,12 @@ def collect_function_actual() -> list[bool]:
     actual.append(stem("/home/user/file.txt") == "file")
     absolute_checks_ok: bool = is_absolute("/tmp") and not is_absolute("tmp/file.txt")
     actual.append(absolute_checks_ok)
+    windows_absolute_checks_ok: bool = is_absolute("C:/Windows/System32") and not is_absolute("C:Windows/System32")
+    actual.append(windows_absolute_checks_ok)
     actual.append(join_path("/tmp", "demo.txt") == "/tmp/demo.txt")
 
     sample: Path = Path("/tmp/myfile.txt")
-    actual.append(sample.with_name("renamed.txt") == "/tmp/renamed.txt" and sample.with_suffix(".csv") == "/tmp/myfile.csv")
+    actual.append(sample.with_name("renamed.txt").to_str() == "/tmp/renamed.txt" and sample.with_suffix(".csv").to_str() == "/tmp/myfile.csv")
     return actual
 
 
@@ -49,12 +51,15 @@ def collect_filesystem_actual() -> list[bool]:
 
         file_state_ok = f1.exists() and f1.is_file() and dirp.is_dir()
 
-        g: list[str] = dirp.glob("*.txt")
+        g_it: Iterator[str] = dirp.glob("*.txt")
+        g: list[str] = list(g_it)
         glob_ok = len(g) >= 1
-        rg: list[str] = dirp.rglob("*.txt")
+        rg_it: Iterator[str] = dirp.rglob("*.txt")
+        rg: list[str] = list(rg_it)
         rglob_ok = len(rg) >= 2
 
-        entries: list[str] = dirp.iterdir()
+        entries_it: Iterator[str] = dirp.iterdir()
+        entries: list[str] = list(entries_it)
         iterdir_ok = len(entries) >= 2
 
         resolved: str = dirp.resolve()
@@ -96,7 +101,7 @@ def append_all(mut target: list[bool], values: list[bool]):
 
 
 def main():
-    expected: list[bool] = [True, True, True, True, True, True, True, True, True, True, True, True, True, True, True]
+    expected: list[bool] = [True, True, True, True, True, True, True, True, True, True, True, True, True, True, True, True]
     actual: list[bool] = []
     append_all(actual, collect_function_actual())
     append_all(actual, collect_filesystem_actual())

@@ -10,8 +10,8 @@ def collect_now_and_timestamp_actual() -> list[bool]:
 
     epoch_ok: bool = False
     try:
-        ts_dt: str = from_timestamp(0.0)
-        epoch_ok = len(ts_dt) > 0
+        ts_dt: datetime = from_timestamp(0.0)
+        epoch_ok = ts_dt.isoformat() == "1970-01-01T00:00:00"
     except ValueError as e:
         _ = str("error: " + e.message)
     actual.append(epoch_ok)

@@ -4,6 +4,45 @@
 
 - Authoritative phase sequencing for current execution is tracked in [`roadmap.md`](./roadmap.md), starting at **Phase 15** through **Phase 41**.
 - Authoritative entry/exit criteria, milestone quality checks, and mandatory local validation commands for execution phases are embedded in phase files `15`-`41` under `## Quality Contract`.
+- Iterator architecture execution has two closed stages:
+  - stage 1 (closed): `issues/ad-hoc-first-class-lazy-iterators-and-python-iterable-protocol.md` and `issues/ad-hoc-first-class-lazy-iterators-and-python-iterable-protocol-execution.md`
+  - stage 2 (closed corrective continuation): `issues/ad-hoc-canonical-iteration-model-and-lazy-parity-closure.md` and `issues/ad-hoc-canonical-iteration-model-and-lazy-parity-closure-execution.md`
+  - stage-2 wave closure: `wave_psp_iter_fix_0` through `wave_psp_iter_fix_8` are merged and review-closed (including post-closure CPython `itertools` parity sweep/remediation passes)
+  - stage-2 contract lock enforces one canonical iteration path from type system through HIR/codegen with explicit capability tracking (single-pass, multi-pass, reversible/double-ended).
+- RNG/crypto continuation is production-grade closed:
+  - phase docs: `issues/ad-hoc-stateful-rng-crypto-and-polish-parity-expansion.md` and `issues/ad-hoc-stateful-rng-crypto-and-polish-parity-expansion-execution.md`
+  - wave closure: `wave_psp_rng_0` through `wave_psp_rng_3` merged with external production-grade review artifacts and phase-closure pass-2 approval
+- Ownership-aware collection lowering continuation is in closure review:
+  - phase docs: `issues/ad-hoc-ownership-aware-collection-lowering-and-clone-elision.md` and `issues/ad-hoc-ownership-aware-collection-lowering-and-clone-elision-execution.md`
+  - completed waves:
+    - `wave_clone_0` lock/baseline artifact: `verification/stdlib/wave_clone_0_codegen_traceability.md`
+    - `wave_clone_1` iterator/comprehension ownership correction artifact: `verification/stdlib/wave_clone_1_iterator_codegen_traceability.md`
+    - `wave_clone_2` indexing/slicing/star-unpack ownership correction artifact: `verification/stdlib/wave_clone_2_index_slice_unpack_traceability.md`
+    - `wave_clone_3` generic hardening/regression lock artifact: `verification/stdlib/wave_clone_3_generic_hardening_traceability.md`
+  - active closure stage: external review/closure cycles after wave-level implementation completion
+  - locked planner contract for implementation waves:
+    - value category: `Place | Temporary`
+    - source access mode: `Preserve | Consume`
+    - yield mode: `Copy | Clone | Move | Borrow`
+    - conservative generic handling remains mandatory for `TypeVar`/`Any`/move unions
+  - canonical ownership-aware collection lowering rule:
+    - classify source expression as `ValueCategory::Place` or `ValueCategory::Temporary`
+    - derive source access contract as `SourceAccessMode::Preserve` or `SourceAccessMode::Consume`
+    - resolve element ownership as `Some(Copy | Move)` or `None` when ownership is conservative/unknown
+    - choose `YieldMode` from planner contract:
+      - `Preserve + Some(Copy)` -> `Copy` (`.iter().copied()` or equivalent copy-out)
+      - `Preserve + Some(Move)` -> `Clone` (`.iter().cloned()` where owned element materialization is required)
+      - `Preserve + None` -> `Borrow` (no forced copy/clone lowering)
+      - `Consume` (or iterator source) -> `Move` (consume source directly, no pre-clone shim)
+    - emit Rust lowering from this plan only; do not bypass planner with ad hoc clone heuristics
+  - residual boundary lock:
+    - this continuation removes unnecessary clone-heavy lowering patterns for targeted surfaces
+    - it does not claim full CPython parity for move-heavy runtime representations that depend on broader runtime/model changes
+  - traceability artifacts:
+    - `verification/stdlib/wave_clone_0_codegen_traceability.md`
+    - `verification/stdlib/wave_clone_1_iterator_codegen_traceability.md`
+    - `verification/stdlib/wave_clone_2_index_slice_unpack_traceability.md`
+    - `verification/stdlib/wave_clone_3_generic_hardening_traceability.md`
 - Historical references in this architecture document may mention legacy phase numbering from earlier roadmap versions.
 - When phase-number conflicts exist, follow [`roadmap.md`](./roadmap.md) and the matching files under [`phases/`](./phases/).
 
@@ -57,6 +96,13 @@ Sifr uses the CPython source code (`/Users/yaseralnajjar/work/sifr/cpython`) as 
 | Test suite (behavioral reference)                                                   | `Lib/test/test_<module>.py`                                             | Use as specification for expected behavior                                   |
 
 
+### Bytes Representation Note (Phase 31.5 / wave_psp_bytes_4)
+
+- The first-class `bytes` surface is now a distinct compiler type (`Type::Bytes`) across type checking, lowering, and codegen.
+- Current Rust codegen representation is raw-byte storage (`Vec<u8>`) for typed bytes-native paths.
+- Indexing and iteration still yield Sifr `int`; the `u8 -> i64` widening happens at explicit read boundaries, not in stored representation.
+- Explicit construction boundaries (`bytes.from_ints`, `bytes.from_hex`, UTF-8 decode) remain responsible for runtime validation and typed error propagation.
+
 ### Safety Adaptation Rules
 
 When adapting CPython behavior to Sifr, apply these rules:
@@ -78,6 +124,14 @@ Every milestone that implements built-in functions, data structure methods, or s
 4. **Compile-time rejection of unsafe patterns:** verify that operations CPython rejects at runtime (e.g., mutating a tuple, unhashable dict key) are caught at compile time in Sifr.
 
 This safety test layer is tracked in each milestone's Definition of Done as: **"CPython parity tests pass with safe error handling (no panics, Result/Option where CPython raises)"**.
+
+### Phase 31.5 Governance Artifact
+
+For the ad-hoc Python source parity closure track (roadmap phase `31.5`), the canonical parity governance source is:
+
+- `verification/stdlib/milestone_psp_7_parity_governance_inventory.md`
+
+It is the single consolidated inventory for builtin parity status, core object-model parity status, shipped-module terminal classification, CPython adopt/adapt/waive traceability links, and waiver-index governance rules.
 
 ## Python Divergences
 
@@ -129,13 +183,14 @@ Several stdlib functions intentionally diverge from CPython names due to Rust ke
 | `sifr.math.min_val` / `sifr.math.max_val` | `min` / `max` | `min`/`max` are Sifr built-ins; `min_val`/`max_val` are the float-specific intrinsics |
 | `sifr.math.round_val` | `round` | `round` is a Sifr built-in; `round_val` is the float intrinsic |
 | `sifr.itertools.repeat` | `itertools.repeat` | CPython-compatible name; `repeat_val` was the old non-CPython name (removed) |
-| `sifr.itertools.count_from` | `itertools.count` | `count` conflicts with `list.count` method name in some contexts; `count_from` is the finite-list approximation |
+| `sifr.itertools.count` | `itertools.count` | CPython-compatible lazy counter iterator |
+| `sifr.itertools.count_from` | — (bounded helper over `count`) | Sifr extension; finite convenience helper equivalent to `islice(count(start, step), n)` |
 | `sifr.os.remove_file` | `os.remove` | `remove` is used as a method name on collections; `remove_file` avoids ambiguity |
 | `sifr.random.shuffle` | `random.shuffle` | CPython-compatible name; returns a new shuffled list (Sifr is immutable-by-default) instead of mutating in place |
 | `sifr.operator.mod_val` | `operator.mod` | `mod` is a Rust keyword |
 | `sifr.re.Pattern.is_match` | `re.Pattern.match` | `match` is a Rust keyword (also a Sifr keyword from milestone_pattern_matching) |
-| `sifr.itertools.take` | — (no CPython equivalent) | Sifr extension; returns first N elements from a list. Kept for ergonomics. |
-| `sifr.itertools.flatten` | `itertools.chain.from_iterable` | Sifr extension; flattens a list of lists. Simpler API than CPython's `chain.from_iterable`. |
+| `sifr.itertools.take` | — (no CPython equivalent) | Sifr extension; returns first N elements from an `Iterable[T]`. Kept for ergonomics. |
+| `sifr.itertools.flatten` | `itertools.chain.from_iterable` | Sifr extension; flattens `Iterable[Iterable[T]]`. Simpler API than CPython's `chain.from_iterable`. |
 
 **Removed type-specific duplicates (Phase 13 — stdlib generic rewrite):** `chain_str`, `chain_float`, `accumulate_float`, `accumulate_str`, `counter_add`, `counter_sub`, and other monomorphic variants have been deleted. All stdlib functions are now generic — e.g., `chain[T]`, `accumulate[T: Addable]`, `Counter[T: Hashable]`, `deque[T]`, `heapq` functions with `[T: Comparable]` bounds, `reduce[T, U]`, `shuffle[T]`, `sample[T]`.
 
@@ -208,8 +263,22 @@ Phase 31 decomposed `sifr_driver` into the following stable internal boundaries:
 - `stdlib/`: embedded stdlib sources, intrinsic mapping, cache lifecycle, and bootstrap compilation
 - `frontend/`: single-file parse/lower/type-check entrypoints and metadata extraction
 - `project/`: import-closure discovery, reachable module parsing, export collection, and deterministic compile ordering
-- `build/`: rooted-entrypoint planning, generated-project materialization, Cargo manifest generation, and invocation workspace management
-- `test_runner/`: test root discovery, generated test harness assembly, and cargo test execution orchestration
+- `build/`: rooted-entrypoint planning, generated-project materialization, Cargo manifest generation, and generated-artifact cache management for repeated `sifr run` builds
+- `test_runner/`: test root discovery, generated test harness assembly, reusable cached Cargo test workspaces, and cargo test execution orchestration
+
+### Generated Artifact Cache Boundary
+
+Phase ad-hoc test strategy milestone 4 moved `run`/`test` away from invocation-scoped temp directories as the default cache boundary.
+
+- `sifr build` still materializes into the caller-provided output directory and does not reuse a hidden cache.
+- `sifr run` now lowers/codegens on each invocation but materializes the generated Cargo project into a content-addressed cache rooted under the system temp directory. The cache key includes:
+  - rooted entrypoint scope
+  - generated Cargo manifest and Rust sources
+  - cargo/rustc toolchain signature plus relevant build env vars
+- cache misses build inside an isolated staging directory and promote atomically into the stable cache path only after `cargo build --release` succeeds
+- cache hits execute the previously built binary directly without paying the generated-project rebuild cost again
+- `sifr test` uses the same cache discipline for generated test-runner Cargo projects: unchanged input reuses the prior workspace and its `target/` artifacts, while still running `cargo test` on every invocation
+- both paths emit explicit cache-hit/miss status lines so validation logs surface reuse and invalidation behavior
 
 ---
 
@@ -547,8 +616,9 @@ Sifr uses Python-like slicing syntax, but must define whether slicing copies or 
 - **String slicing copies:** `str[a:b]` produces a new `str`. Indices are character positions (not byte offsets). Codegen: `s.chars().skip(a).take(b - a).collect::<String>()`.
 - **Dict:** not sliceable. **Tuple:** compile-time slicing supported (milestone_ergonomics) -- the compiler can statically verify tuple slice bounds and produce a new tuple type.
 - **Views deferred:** an explicit view API (e.g., `list.view(a, b)` mapping to `&[T]`) may be added in a later milestone for performance-critical paths. Not part of MVP.
-- **`for` loop collection borrowing:** `for item in collection` borrows the collection (does not consume it). The collection remains usable after the loop. Codegen: `for item in collection.iter().cloned()` -- the collection is borrowed (not moved), elements are independent copies (Python-like semantics). Modifying the loop variable `item` does not affect the original collection. Explicit consumption would require `for item in collection.consume()` or similar -- not currently supported. For string iteration: `for ch in s` yields single-character strings via `.chars().map(|c| c.to_string())`.
+- **`for` loop protocol entry:** `for item in collection` lowers through `iter(collection)` first, then iterates the resulting iterator. Collection-backed iterables (list/set/dict/string/range/iterable wrappers) are converted to iterator objects without consuming the original collection. This preserves reusable collection behavior while making the protocol boundary explicit in HIR.
 - **For-loop element semantics (milestone_borrow_hardening):** Loop elements are independent copies (deep-copy on assignment via `.cloned()`). This matches Python's loop semantics and avoids exposing Rust's borrow/lifetime complexity to Sifr users. The practical consequence: `for x in items: x = transform(x)` does not mutate `items`. Codegen rationale: `.iter().cloned()` copies elements one-at-a-time (like Python), avoids lifetime issues with borrowed elements escaping the loop, and keeps the Sifr ownership model simple for users.
+- **Iterator mutation safety in loops (wave_iter_2):** mutating a collection while iterating over it in the same `for` body is rejected at compile time (`cannot mutate '<name>' while iterating over it in a for loop`). No eager fallback or implicit snapshot is inserted.
 
 ### 7. String Semantics (UTF-8)
 
@@ -688,7 +758,9 @@ Sifr defines a set of built-in protocols (traits) that are used across multiple 
 | `Addable`        | `Add` (+ `Sum` for `sum()`)                     | milestone_protocols (defined), milestone_generics (usable as bound)                 | Arithmetic `+` operator, `sum()` built-in                     |
 | `Display`        | `std::fmt::Display`                             | milestone_classes (auto-derived for `__str__`), milestone_protocols (explicit impl) | String representation via `str()`, f-strings, `print()`       |
 | `ContextManager` | Custom trait (`__enter__`/`__exit__` -> `Drop`) | milestone_generators (syntax), milestone_compiler_hardening (protocol enforcement)  | `with` statement resource management                          |
-| `Iterator`       | `Iterator`                                      | milestone_generics (defined), milestone_generators (yield-based, eager), milestone_lazy_iterators (lazy state machine codegen) | `for` loops, comprehensions, generator expressions, lazy iteration |
+| `Iterable`       | `IntoIterator` / iterable protocol             | ad-hoc phase `first-class-lazy-iterators-and-python-iterable-protocol` (wave 1+) | `iter(x)` entry boundary and protocol typing                 |
+| `Iterator`       | `Box<dyn Iterator<Item = T>>` runtime surface  | ad-hoc phase `first-class-lazy-iterators-and-python-iterable-protocol` (wave 1+, builtin lowering in wave 2) | `next(it)`, single-pass stateful iteration, lazy pipelines  |
+| `Reversible`     | `DoubleEndedIterator` capability contract      | ad-hoc phase `canonical-iteration-model-and-lazy-parity-closure` (wave 0 lock, wave 1+ implementation) | capability-gated `reversed(...)` semantics                    |
 | `Hashable`       | `Hash` (+ `Eq`)                                 | milestone_classes (auto-derived)                                                    | Dict keys, set membership                                     |
 
 
@@ -703,10 +775,13 @@ Sifr defines a set of built-in protocols (traits) that are used across multiple 
 
 - milestone_classes: auto-derive `Display` and `Hashable` for classes with eligible fields
 - milestone_protocols: define `Comparable`, `Addable`, `Display` as explicit protocols; enable operator overloading via protocol impl
-- milestone_generics: enable protocols as generic bounds (`T: Comparable`); define `Iterator` protocol
-- milestone_generators: define initial `with` block syntax (scoped block desugaring); eager generator codegen (`Vec<T>`)
+- milestone_generics: enable protocols as generic bounds (`T: Comparable`)
+- milestone_generators: define initial `with` block syntax (scoped block desugaring)
+- ad-hoc first-class lazy iterator phase: introduces first-class `Iterable[T]` / `Iterator[T]` typing and protocol execution plan (`iter`, `next`, generator rewrite, lazy builtin conversion)
+- ad-hoc parity-extension waiver-reduction phase: re-closes iterator-returning builtin/stdlib surfaces (`map` parity, approved `itertools` combinators, `re.finditer`, `glob.iglob`, `Path.iterdir/glob/rglob`) and retires broad lazy-waiver claims to narrow residual governance entries
+- ad-hoc canonical iteration continuation phase: freezes/implements capability-aware canonical iteration semantics across type system, HIR, codegen, generators, builtins, and stdlib adapters
+- ad-hoc structured-data/class-surface parity-expansion phase: locks bounded contracts for `json`, `configparser`, `csv`, `collections`, `argparse`, `uuid`, `datetime`, `textwrap`, and `html` while keeping explicit permanent diffs (`json` dynamic hooks, timezone-db/tzinfo ecosystems, `Counter(**kwargs)`, dynamic csv registry mutation, argparse formatter ecosystems, package-wide html expansion)
 - milestone_compiler_hardening (Phase 7: Stdlib Parity): define `ContextManager` protocol; enforce `with` statement compliance with `__enter__`/`__exit__` calls and compile-time protocol checking; fix `Callable`-as-struct-field (`Box<dyn Fn>`)
-- milestone_lazy_iterators (Phase 7: Stdlib Parity): replace eager generator codegen with lazy state machine implementing `Iterator<Item = T>`; `for` loops consume iterators lazily; `list(iter)` eagerly collects
 - milestone_generics_v2 (Phase 13: Type System Completion): complete generic class field/method substitution; protocol bounds on type parameters (`T: Comparable & Display`)
 - milestone_pattern_matching (Phase 13: Type System Completion): `match`/`case` syntax with exhaustiveness checking on union types, literal unions, optional types, class unions, and enum types
 - milestone_enums (Phase 13: Type System Completion): simple enum types with exhaustive pattern matching; enum values implement `Eq`, `Hash`, `Clone`, `Debug`
@@ -774,6 +849,10 @@ enum Type {
 
     // Range (milestone_control_flow)
     Range,
+
+    // Protocol iteration model (ad-hoc first-class lazy iterator phase)
+    Iterable(Box<Type>),
+    Iterator(Box<Type>),
 
     // Safe top type: must be narrowed before use (milestone_type_system)
     Unknown,
@@ -1020,10 +1099,13 @@ Note: `extract_expect_stdout` is retained for legacy runner compatibility only. 
 ```bash
 cargo test                                    # Run all tests (layers 1-3)
 ./scripts/run_all_tests.sh --profile quick   # Fast local-first profile
-./scripts/run_all_tests.sh --profile full    # Authoritative local-first gate
-./scripts/run_all_tests.sh --profile stress  # High-contention local parity profile
-./scripts/check_e2e_report_determinism.sh --profile quick  # Stable e2e report signature across reruns
-./scripts/run_smoke_fuzz_property.sh         # Always-on smoke property/fuzz validation
+./scripts/run_all_tests.sh --profile pr      # Authoritative merge gate
+./scripts/run_all_tests.sh --profile nightly # Broad nightly validation lane
+./scripts/run_all_tests.sh --profile release # Highest-confidence local qualification lane
+./scripts/run_all_tests.sh --profile full    # Legacy alias for `pr`
+./scripts/run_all_tests.sh --profile stress  # Legacy alias for `release`
+./scripts/check_e2e_report_determinism.sh --profile release # Stable e2e report signature across reruns
+./scripts/run_smoke_fuzz_property.sh         # Opt-in nightly smoke property/fuzz validation
 cargo test -p sifr_python_parser              # Parser snapshots
 cargo test -p sifr_type_system -- mdtest      # Type checker markdown tests
 cargo test -p sifr_codegen                    # Codegen snapshots
@@ -1033,6 +1115,10 @@ cargo test -- corpus --ignored                # Run corpus tests (slower, layer 
 cargo fuzz run parser_fuzz -- -max_total_time=300  # Run fuzz tests (layer 5, milestone_generics+)
 cargo bench                                   # Run benchmarks (layer 6, milestone_generics+)
 ```
+
+Validation-lane policy is defined in `verification/validation_lanes/manifest.json`. Representative `quick` and `pr` e2e coverage is selected through checked-in fixture manifests rather than hard-coded shell assumptions. Declarative contract-matrix coverage lives in `verification/validation_contracts/manifest.json` and is executed through `scripts/run_validation_contract_matrix.sh` plus the Rust-native `tests/validation_contracts.rs` harness.
+
+`scripts/run_all_tests.sh` also emits a per-lane runtime report under `target/validation_lane_reports/` (`<profile>.latest.json`, `<profile>.latest.log`, `<profile>.latest.time`). The report summarizes wall/CPU time, e2e compile-build-run timing, cache hits and rebuilt groups, group-skew tail behavior, cache footprints, default worker settings, and advisory resource signals such as swap activity or default-lane RSS regressions.
 
 ### Adding Tests for New Features (Agent Workflow)
 

@@ -1,5 +1,6 @@
 //! Method registry and dispatch for incremental IR rollout.
 
+mod bytes;
 mod common;
 mod decimal;
 mod deque;
@@ -34,7 +35,8 @@ pub(crate) fn lower_method_with_context(
 ) -> Option<LoweredMethod> {
     let expr = match (object_ty, method) {
         (Type::Tuple(elems), "len") => common::lower_tuple_len(elems.len(), args),
-        (Type::Tuple(_), "count") => common::lower_tuple_count_placeholder(args),
+        (Type::Tuple(elems), "count") => common::lower_tuple_count(elems.len(), object, args),
+        (Type::Tuple(elems), "index") => common::lower_tuple_index(elems.len(), object, args),
         (Type::Str, "len") => common::lower_string_char_len(object, args),
         (ty, "len") if is_option_type(ty) => common::lower_option_len(object, args),
         (_, "len") => common::lower_len(object, args),
@@ -93,6 +95,10 @@ pub(crate) fn lower_method_with_context(
         (Type::List(_), "pop") => list::lower_pop(object, args),
         (Type::List(_), "remove") => list::lower_remove(object, args),
         (Type::List(_), "index") => list::lower_index(object, args),
+        (Type::Bytes, "count") => bytes::lower_count(object, args),
+        (Type::Bytes, "contains") => bytes::lower_contains(object, args),
+        (Type::Bytes, "index") => bytes::lower_index(object, args),
+        (Type::Bytes, "to_ints") => bytes::lower_to_ints(object, args),
         (Type::Dict(_, _), "keys") => dict::lower_keys(object, args),
         (Type::Dict(_, _), "values") => dict::lower_values(object, args),
         (Type::Dict(_, _), "items") => dict::lower_items(object, args),
@@ -102,6 +108,7 @@ pub(crate) fn lower_method_with_context(
         (Type::Dict(_, _), "contains") => dict::lower_contains(object, args),
         (Type::Dict(_, _), "get") => dict::lower_get(object, args),
         (Type::Dict(_, _), "pop") => dict::lower_pop(object, args),
+        (Type::Dict(_, _), "setdefault") => dict::lower_setdefault(object, args),
         (Type::Set(_), "add") => set::lower_add(object, args),
         (Type::Set(_), "remove") => set::lower_remove(object, args),
         (Type::Set(_), "discard") => set::lower_discard(object, args),
@@ -176,7 +183,16 @@ mod tests {
             &["1".to_string()],
         )
         .expect("tuple count lowers");
-        assert_eq!(render_expr(&tuple_count.expr), "0 as i64");
+        assert!(render_expr(&tuple_count.expr).contains("__count"));
+
+        let tuple_index = lower_method(
+            &Type::Tuple(vec![Type::Int, Type::Str, Type::Bool]),
+            "index",
+            "t",
+            &["1".to_string()],
+        )
+        .expect("tuple index lowers");
+        assert!(render_expr(&tuple_index.expr).contains("__result"));
 
         let str_len = lower_method(&Type::Str, "len", "s", &[]).expect("str len lowers");
         assert_eq!(render_expr(&str_len.expr), "s.chars().count() as i64");
@@ -428,10 +444,12 @@ mod tests {
             &["1".to_string()],
         )
         .expect("list index lowers");
-        assert_eq!(
-            render_expr(&list_index.expr),
-            "xs.iter().position(|__x| *__x == 1).map(|__p| __p as i64)"
+        let list_index_rendered = render_expr(&list_index.expr);
+        assert!(
+            list_index_rendered.contains("let __result = None;")
+                || list_index_rendered.contains("let mut __result = None;")
         );
+        assert!(list_index_rendered.contains("xs.get(__i as usize)"));
 
         let dict_ty = Type::Dict(Box::new(Type::Str), Box::new(Type::Int));
         let dict_keys = lower_method(&dict_ty, "keys", "d", &[]).expect("dict keys lowers");
@@ -455,6 +473,10 @@ mod tests {
         let dict_update = lower_method(&dict_ty, "update", "d", &["other".to_string()])
             .expect("dict update lowers");
         assert_eq!(render_expr(&dict_update.expr), "d.extend(other)");
+
+        let dict_update_empty =
+            lower_method(&dict_ty, "update", "d", &[]).expect("empty update lowers");
+        assert_eq!(render_expr(&dict_update_empty.expr), "()");
 
         let dict_clear = lower_method(&dict_ty, "clear", "d", &[]).expect("dict clear lowers");
         assert_eq!(render_expr(&dict_clear.expr), "d.clear()");
@@ -492,6 +514,30 @@ mod tests {
         let dict_pop =
             lower_method(&dict_ty, "pop", "d", &["\"k\"".to_string()]).expect("dict pop lowers");
         assert_eq!(render_expr(&dict_pop.expr), "d.remove(&\"k\")");
+
+        let dict_pop_default = lower_method(
+            &dict_ty,
+            "pop",
+            "d",
+            &["\"k\"".to_string(), "0".to_string()],
+        )
+        .expect("dict pop default lowers");
+        assert_eq!(
+            render_expr(&dict_pop_default.expr),
+            "d.remove(&\"k\").unwrap_or(0)"
+        );
+
+        let dict_setdefault = lower_method(
+            &dict_ty,
+            "setdefault",
+            "d",
+            &["\"k\"".to_string(), "0".to_string()],
+        )
+        .expect("dict setdefault lowers");
+        assert_eq!(
+            render_expr(&dict_setdefault.expr),
+            "d.entry(\"k\".clone()).or_insert(0.clone()).clone()"
+        );
 
         let set_ty = Type::Set(Box::new(Type::Int));
         let set_add =
@@ -617,5 +663,37 @@ mod tests {
         let big_is_finite =
             lower_method(&Type::BigDecimal, "is_finite", "bd", &[]).expect("bigdecimal is_finite");
         assert_eq!(render_expr(&big_is_finite.expr), "true");
+    }
+
+    #[test]
+    fn lowers_bytes_methods_with_u8_backend_boundaries() {
+        let count = lower_method(&Type::Bytes, "count", "payload", &["needle".to_string()])
+            .expect("bytes count lowers");
+        let count_rendered = render_expr(&count.expr);
+        assert!(count_rendered.contains("__needle < 0"));
+        assert!(count_rendered.contains("__needle as u8"));
+
+        let contains = lower_method(&Type::Bytes, "contains", "payload", &["needle".to_string()])
+            .expect("bytes contains lowers");
+        let contains_rendered = render_expr(&contains.expr);
+        assert!(contains_rendered.contains("__needle > 255"));
+        assert!(contains_rendered.contains("payload.contains(&(__needle as u8))"));
+
+        let index = lower_method(
+            &Type::Bytes,
+            "index",
+            "payload",
+            &["needle".to_string(), "0".to_string(), "5".to_string()],
+        )
+        .expect("bytes index lowers");
+        let index_rendered = render_expr(&index.expr);
+        assert!(index_rendered.contains("__needle as u8"));
+        assert!(index_rendered.contains("None"));
+
+        let to_ints =
+            lower_method(&Type::Bytes, "to_ints", "payload", &[]).expect("bytes to_ints lowers");
+        let to_ints_rendered = render_expr(&to_ints.expr);
+        assert!(to_ints_rendered.contains("collect::<Vec<i64>>()"));
+        assert!(to_ints_rendered.contains("as i64"));
     }
 }

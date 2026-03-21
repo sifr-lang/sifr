@@ -11,7 +11,7 @@ from sifr.itertools import batched
 from sifr.graphlib import topological_sort, CycleError
 from sifr.uuid import uuid_from_hex, UUID
 from sifr.ipaddress import ip_to_int
-from sifr.datetime import from_timestamp
+from sifr.datetime import from_timestamp, datetime
 
 def main():
     # 1. random.randint: a must be <= b
@@ -114,12 +114,12 @@ def main():
     # 8. datetime.from_timestamp: validates timestamp
     print("=== 8. datetime.from_timestamp: Validates timestamp ===")
     try:
-        dt: str = from_timestamp(0.0)
+        dt: datetime = from_timestamp(0.0)
         print("from_timestamp(0.0) = ok")
     except ValueError as e:
         print(f"error: {e.message}")
     try:
-        dt2: str = from_timestamp(-99999999999999.0)
+        dt2: datetime = from_timestamp(-99999999999999.0)
         print("should not reach here")
     except ValueError as e:
         print(f"from_timestamp(invalid) -> ValueError: {e.message}")

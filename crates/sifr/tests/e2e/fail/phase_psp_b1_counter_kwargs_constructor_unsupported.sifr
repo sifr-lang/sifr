@@ -1,0 +1,4 @@
+from sifr.collections import Counter
+
+def main():
+    counts: Counter[str] = Counter(a=1, b=2)

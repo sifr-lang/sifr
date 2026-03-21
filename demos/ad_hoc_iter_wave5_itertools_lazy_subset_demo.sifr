@@ -1,0 +1,20 @@
+from sifr.itertools import chain, repeat, islice, count
+
+# Ad-hoc iterator wave 5 demo: itertools subset now returns Iterator[T].
+# chain, repeat, islice, and count are lazy; list(...) is the eager boundary.
+
+def main():
+    chained: Iterator[int] = chain([1, 2], [3])
+    print(list(chained))
+
+    repeated: Iterator[int] = repeat(7, 3)
+    print(list(repeated))
+
+    sliced: Iterator[int] = islice([10, 20, 30, 40, 50], 1, 5, 2)
+    print(list(sliced))
+
+    counter: Iterator[int] = count(5, 2)
+    print(next(counter))
+    print(next(counter))
+    print(next(counter))
+    print(next(counter))

@@ -60,6 +60,17 @@ pub struct Scope {
 }
 
 impl Scope {
+    fn lookup_var(&self, name: &str) -> Option<&VarInfo> {
+        self.frames.iter().rev().find_map(|frame| frame.get(name))
+    }
+
+    fn lookup_var_mut(&mut self, name: &str) -> Option<&mut VarInfo> {
+        self.frames
+            .iter_mut()
+            .rev()
+            .find_map(|frame| frame.get_mut(name))
+    }
+
     pub fn new() -> Self {
         Self {
             frames: vec![HashMap::new()],
@@ -76,6 +87,11 @@ impl Scope {
     /// Pop the innermost scope frame.
     pub fn pop(&mut self) {
         self.frames.pop();
+    }
+
+    /// Return the current number of scope frames.
+    pub fn frame_count(&self) -> usize {
+        self.frames.len()
     }
 
     /// Define a variable in the current (innermost) scope.
@@ -112,20 +128,26 @@ impl Scope {
 
     /// Update the declared type for an existing variable.
     pub fn set_type(&mut self, name: &str, ty: Type) -> bool {
-        for frame in self.frames.iter_mut().rev() {
-            if let Some(info) = frame.get_mut(name) {
-                info.ty = ty;
-                info.narrowed_type = None;
-                return true;
-            }
+        if let Some(info) = self.lookup_var_mut(name) {
+            info.ty = ty;
+            info.narrowed_type = None;
+            return true;
         }
         false
     }
 
     /// Look up a variable, searching from innermost to outermost scope.
     pub fn lookup(&self, name: &str) -> Option<&VarInfo> {
-        for frame in self.frames.iter().rev() {
-            if let Some(info) = frame.get(name) {
+        self.lookup_var(name)
+    }
+
+    /// Look up a variable within an inclusive frame range.
+    pub fn lookup_in_frame_range(&self, name: &str, start: usize, end: usize) -> Option<&VarInfo> {
+        if start > end || end >= self.frames.len() {
+            return None;
+        }
+        for frame_index in (start..=end).rev() {
+            if let Some(info) = self.frames[frame_index].get(name) {
                 return Some(info);
             }
         }
@@ -134,35 +156,26 @@ impl Scope {
 
     /// Mark a variable as moved (for ownership tracking).
     pub fn mark_moved(&mut self, name: &str) -> bool {
-        for frame in self.frames.iter_mut().rev() {
-            if let Some(info) = frame.get_mut(name) {
-                if info.ty.ownership() == OwnershipKind::Move {
-                    info.is_moved = true;
-                    return true;
-                }
-                return false; // Copy type, don't mark as moved
+        if let Some(info) = self.lookup_var_mut(name) {
+            if info.ty.ownership() == OwnershipKind::Move {
+                info.is_moved = true;
+                return true;
             }
+
+            return false; // Copy type, don't mark as moved
         }
         false
     }
 
     /// Check if a variable has been moved.
     pub fn is_moved(&self, name: &str) -> bool {
-        for frame in self.frames.iter().rev() {
-            if let Some(info) = frame.get(name) {
-                return info.is_moved;
-            }
-        }
-        false
+        self.lookup_var(name).is_some_and(|info| info.is_moved)
     }
 
     /// Reset moved state (e.g., when variable is reassigned).
     pub fn reset_moved(&mut self, name: &str) {
-        for frame in self.frames.iter_mut().rev() {
-            if let Some(info) = frame.get_mut(name) {
-                info.is_moved = false;
-                return;
-            }
+        if let Some(info) = self.lookup_var_mut(name) {
+            info.is_moved = false;
         }
     }
 
@@ -170,31 +183,21 @@ impl Scope {
 
     /// Mark a variable as mutably borrowed.
     pub fn mark_mut_borrowed(&mut self, name: &str) {
-        for frame in self.frames.iter_mut().rev() {
-            if let Some(info) = frame.get_mut(name) {
-                info.is_mut_borrowed = true;
-                return;
-            }
+        if let Some(info) = self.lookup_var_mut(name) {
+            info.is_mut_borrowed = true;
         }
     }
 
     /// Check if a variable is currently mutably borrowed.
     pub fn is_mut_borrowed(&self, name: &str) -> bool {
-        for frame in self.frames.iter().rev() {
-            if let Some(info) = frame.get(name) {
-                return info.is_mut_borrowed;
-            }
-        }
-        false
+        self.lookup_var(name)
+            .is_some_and(|info| info.is_mut_borrowed)
     }
 
     /// Clear the mutable borrow on a variable (after the borrowing call returns).
     pub fn clear_mut_borrow(&mut self, name: &str) {
-        for frame in self.frames.iter_mut().rev() {
-            if let Some(info) = frame.get_mut(name) {
-                info.is_mut_borrowed = false;
-                return;
-            }
+        if let Some(info) = self.lookup_var_mut(name) {
+            info.is_mut_borrowed = false;
         }
     }
 
@@ -202,21 +205,15 @@ impl Scope {
 
     /// Set the narrowed type for a variable.
     pub fn narrow_var(&mut self, name: &str, narrowed_type: Type) {
-        for frame in self.frames.iter_mut().rev() {
-            if let Some(info) = frame.get_mut(name) {
-                info.narrowed_type = Some(narrowed_type);
-                return;
-            }
+        if let Some(info) = self.lookup_var_mut(name) {
+            info.narrowed_type = Some(narrowed_type);
         }
     }
 
     /// Clear the narrowed type for a variable (restore to declared type).
     pub fn clear_narrowing(&mut self, name: &str) {
-        for frame in self.frames.iter_mut().rev() {
-            if let Some(info) = frame.get_mut(name) {
-                info.narrowed_type = None;
-                return;
-            }
+        if let Some(info) = self.lookup_var_mut(name) {
+            info.narrowed_type = None;
         }
     }
 
@@ -236,11 +233,8 @@ impl Scope {
     /// Used after exiting a branch to restore the state before the branch.
     pub fn restore_narrowing_state(&mut self, snapshot: &NarrowingSnapshot) {
         for (name, narrowed) in snapshot {
-            for frame in self.frames.iter_mut().rev() {
-                if let Some(info) = frame.get_mut(name) {
-                    info.narrowed_type.clone_from(narrowed);
-                    break;
-                }
+            if let Some(info) = self.lookup_var_mut(name) {
+                info.narrowed_type.clone_from(narrowed);
             }
         }
     }
@@ -273,11 +267,8 @@ impl Scope {
     /// Used after exiting a branch to restore the state before the branch.
     pub fn restore_moved_state(&mut self, snapshot: &MovedSnapshot) {
         for (name, was_moved) in snapshot {
-            for frame in self.frames.iter_mut().rev() {
-                if let Some(info) = frame.get_mut(name) {
-                    info.is_moved = *was_moved;
-                    break;
-                }
+            if let Some(info) = self.lookup_var_mut(name) {
+                info.is_moved = *was_moved;
             }
         }
     }

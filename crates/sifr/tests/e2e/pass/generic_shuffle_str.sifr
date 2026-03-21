@@ -2,6 +2,5 @@ from sifr.random import shuffle
 
 def main():
     items: list[str] = ["a", "b", "c", "d", "e"]
-    result: list[str] = shuffle(items)
-    assert str(len(result)) == '5'
-
+    shuffle(items)
+    assert str(len(items)) == '5'

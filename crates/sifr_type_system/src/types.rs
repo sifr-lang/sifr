@@ -11,6 +11,8 @@ pub enum Type {
     Bool,
     /// String (`str` in Sifr, `String` in Rust)
     Str,
+    /// Immutable byte sequence (`bytes` in Sifr)
+    Bytes,
     /// None type (unit type `()` in Rust)
     None,
     /// Function type with parameter types and return type
@@ -25,6 +27,10 @@ pub enum Type {
     Tuple(Vec<Type>),
     /// Range type (maps to `std::ops::Range<i64>` in Rust)
     Range,
+    /// Iterable protocol type (`Iterable[T]`)
+    Iterable(Box<Type>),
+    /// Iterator protocol type (`Iterator[T]`)
+    Iterator(Box<Type>),
     /// Explicit opt-out of type checking
     Any,
     /// Bottom type (function that never returns)
@@ -104,6 +110,33 @@ pub enum Type {
     Decimal,
     /// Arbitrary-precision decimal (`bigdecimal` in Sifr, `bigdecimal::BigDecimal` in Rust)
     BigDecimal,
+}
+
+/// Iterator/iterable capabilities carried through typing and lowering.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub enum IterationCapability {
+    /// The iterator is consumed once.
+    SinglePass,
+    /// The iterable can be traversed repeatedly.
+    MultiPass,
+    /// The iterable supports reverse traversal.
+    DoubleEnded,
+    /// The iterable knows its exact length.
+    ExactSize,
+}
+
+/// Type-level iteration metadata used by lowering/codegen decisions.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct IterationMetadata {
+    pub element_type: Type,
+    pub capabilities: Vec<IterationCapability>,
+}
+
+impl IterationMetadata {
+    #[must_use]
+    pub fn supports(&self, capability: IterationCapability) -> bool {
+        self.capabilities.contains(&capability)
+    }
 }
 
 /// Represents a function's type signature.
@@ -252,6 +285,146 @@ pub enum OwnershipKind {
 }
 
 impl Type {
+    #[must_use]
+    pub fn reversible(element_type: Type) -> Self {
+        Self::Alias {
+            name: "Reversible".to_string(),
+            type_args: vec![element_type.clone()],
+            body: Box::new(Self::Iterable(Box::new(element_type))),
+        }
+    }
+
+    fn reversible_alias_element_type(ty: &Type) -> Option<Type> {
+        let Type::Alias {
+            name,
+            type_args,
+            body,
+        } = ty
+        else {
+            return None;
+        };
+        if name != "Reversible" {
+            return None;
+        }
+        if let Some(elem) = type_args.first() {
+            return Some(elem.clone());
+        }
+        let Type::Iterable(elem) = body.resolve_alias() else {
+            return None;
+        };
+        Some(*elem.clone())
+    }
+
+    fn homogeneous_tuple_iter_element_type(elems: &[Type]) -> Option<Type> {
+        let first = elems.first()?.clone();
+        if elems.iter().all(|elem| elem == &first) {
+            Some(first)
+        } else {
+            None
+        }
+    }
+
+    fn class_method<'a>(
+        methods: &'a [(String, FunctionType)],
+        method_name: &str,
+    ) -> Option<&'a FunctionType> {
+        methods.iter().find_map(
+            |(name, ft)| {
+                if name == method_name {
+                    Some(ft)
+                } else {
+                    None
+                }
+            },
+        )
+    }
+
+    fn option_like_member_type(ty: &Type) -> Option<Type> {
+        let Type::Union(members) = ty.resolve_alias() else {
+            return None;
+        };
+        let has_none = members
+            .iter()
+            .any(|member| matches!(member.resolve_alias(), Type::None));
+        let non_none: Vec<Type> = members
+            .iter()
+            .filter(|member| !matches!(member.resolve_alias(), Type::None))
+            .cloned()
+            .collect();
+        if has_none && non_none.len() == 1 {
+            non_none.first().cloned()
+        } else {
+            None
+        }
+    }
+
+    fn class_next_element_type(
+        class_name: &str,
+        methods: &[(String, FunctionType)],
+    ) -> Option<Type> {
+        let next_ft = Self::class_method(methods, "__next__")?;
+        if !next_ft.params.is_empty() {
+            return None;
+        }
+        let elem = Self::option_like_member_type(next_ft.return_type.as_ref())?;
+        if matches!(elem.resolve_alias(), Type::Class { name, .. } if name == class_name) {
+            return None;
+        }
+        Some(elem)
+    }
+
+    fn class_iter_element_type(
+        class_name: &str,
+        methods: &[(String, FunctionType)],
+    ) -> Option<Type> {
+        let iter_ft = Self::class_method(methods, "__iter__")?;
+        if !iter_ft.params.is_empty() {
+            return None;
+        }
+        match iter_ft.return_type.resolve_alias() {
+            Type::Iterator(elem) | Type::Iterable(elem) => Some(*elem.clone()),
+            Type::Class {
+                name,
+                methods: ret_methods,
+                ..
+            } => {
+                if name == class_name {
+                    Self::class_next_element_type(class_name, methods)
+                } else {
+                    Self::class_iter_element_type(name, ret_methods)
+                        .or_else(|| Self::class_next_element_type(name, ret_methods))
+                }
+            }
+            _ => None,
+        }
+    }
+
+    fn class_reversed_element_type(
+        class_name: &str,
+        methods: &[(String, FunctionType)],
+    ) -> Option<Type> {
+        let reversed_ft = Self::class_method(methods, "__reversed__")?;
+        if !reversed_ft.params.is_empty() {
+            return None;
+        }
+        match reversed_ft.return_type.resolve_alias() {
+            Type::Iterator(elem) | Type::Iterable(elem) => Some(*elem.clone()),
+            Type::Class {
+                name,
+                methods: ret_methods,
+                ..
+            } => {
+                if name == class_name {
+                    Self::class_next_element_type(class_name, methods)
+                } else {
+                    Self::class_iter_element_type(name, ret_methods)
+                        .or_else(|| Self::class_next_element_type(name, ret_methods))
+                }
+            }
+            _ => None,
+        }
+    }
+
     /// Construct a non-generic type alias wrapper.
     pub fn alias(name: impl Into<String>, body: Type) -> Self {
         Self::Alias {
@@ -281,11 +454,23 @@ impl Type {
             Self::LiteralInt(_) | Self::LiteralBool(_) => OwnershipKind::Copy,
             Self::Function(_) => OwnershipKind::Copy,
             Self::Str
+            | Self::Bytes
             | Self::Any
             | Self::List(_)
             | Self::Dict(_, _)
             | Self::Set(_)
-            | Self::Tuple(_) => OwnershipKind::Move,
+            | Self::Iterable(_)
+            | Self::Iterator(_) => OwnershipKind::Move,
+            Self::Tuple(elems) => {
+                if elems
+                    .iter()
+                    .all(|elem| elem.ownership() == OwnershipKind::Copy)
+                {
+                    OwnershipKind::Copy
+                } else {
+                    OwnershipKind::Move
+                }
+            }
             Self::LiteralStr(_) => OwnershipKind::Move,
             Self::Unknown => OwnershipKind::Move,
             Self::Class { .. } => OwnershipKind::Move,
@@ -317,6 +502,7 @@ impl Type {
             Self::Float => "float".to_string(),
             Self::Bool => "bool".to_string(),
             Self::Str => "str".to_string(),
+            Self::Bytes => "bytes".to_string(),
             Self::None => "None".to_string(),
             Self::Function(_) => "function".to_string(),
             Self::List(elem) => format!("list[{}]", elem.display_name()),
@@ -327,6 +513,8 @@ impl Type {
                 format!("tuple[{}]", parts.join(", "))
             }
             Self::Range => "range".to_string(),
+            Self::Iterable(elem) => format!("Iterable[{}]", elem.display_name()),
+            Self::Iterator(elem) => format!("Iterator[{}]", elem.display_name()),
             Self::Any => "Any".to_string(),
             Self::Never => "Never".to_string(),
             Self::Union(members) => {
@@ -389,6 +577,7 @@ impl Type {
             Self::Float => "f64".to_string(),
             Self::Bool => "bool".to_string(),
             Self::Str => "String".to_string(),
+            Self::Bytes => "Vec<u8>".to_string(),
             Self::None => "()".to_string(),
             Self::List(elem) => format!("Vec<{}>", elem.rust_type()),
             Self::Dict(key, val) => format!("HashMap<{}, {}>", key.rust_type(), val.rust_type()),
@@ -398,6 +587,8 @@ impl Type {
                 format!("({})", parts.join(", "))
             }
             Self::Range => "std::ops::Range<i64>".to_string(),
+            Self::Iterable(elem) => format!("Vec<{}>", elem.rust_type()),
+            Self::Iterator(elem) => format!("Box<dyn Iterator<Item = {}>>", elem.rust_type()),
             Self::Any => "Box<dyn std::any::Any>".to_string(),
             Self::Never => "!".to_string(),
             Self::Function(ft) => {
@@ -537,6 +728,7 @@ impl Type {
             Type::Float => "Float".to_string(),
             Type::Bool => "Bool".to_string(),
             Type::Str => "Str".to_string(),
+            Type::Bytes => "Bytes".to_string(),
             Type::None => "None".to_string(),
             Type::LiteralInt(v) => format!("LitInt{v}"),
             Type::LiteralStr(v) => format!("Lit{}", capitalize(v)),
@@ -546,6 +738,8 @@ impl Type {
             Type::Set(_) => "Set".to_string(),
             Type::Tuple(_) => "Tuple".to_string(),
             Type::Range => "Range".to_string(),
+            Type::Iterable(_) => "Iterable".to_string(),
+            Type::Iterator(_) => "Iterator".to_string(),
             Type::Function(_) => "Fn".to_string(),
             Type::Unknown => "Unknown".to_string(),
             Type::Any => "Any".to_string(),
@@ -615,14 +809,139 @@ impl Type {
 
     /// Returns the element type if this type is iterable, or None otherwise.
     pub fn iterable_element_type(&self) -> Option<Type> {
+        if let Some(elem) = Self::reversible_alias_element_type(self) {
+            return Some(elem);
+        }
         match self {
             Self::Range => Some(Type::Int),
             Self::List(elem) => Some(*elem.clone()),
             Self::Set(elem) => Some(*elem.clone()),
+            Self::Tuple(elems) => Self::homogeneous_tuple_iter_element_type(elems),
             Self::Str => Some(Type::Str),
+            Self::Bytes => Some(Type::Int),
             Self::Dict(key, _) => Some(*key.clone()),
+            Self::Iterable(elem) => Some(*elem.clone()),
+            Self::Iterator(elem) => Some(*elem.clone()),
+            Self::Class { name, methods, .. } => Self::class_iter_element_type(name, methods)
+                .or_else(|| Self::class_next_element_type(name, methods)),
+            Self::Alias { body, .. } => body.iterable_element_type(),
             _ => None,
         }
+    }
+
+    /// Returns the element type when this type participates in the iterator protocol.
+    pub fn iterator_element_type(&self) -> Option<Type> {
+        match self.resolve_alias() {
+            Self::Iterator(elem) => Some(*elem.clone()),
+            Self::Class { name, methods, .. } => Self::class_next_element_type(name, methods),
+            _ => None,
+        }
+    }
+
+    /// Returns iteration element/capability metadata when this type participates
+    /// in the iterable protocol.
+    pub fn iteration_metadata(&self) -> Option<IterationMetadata> {
+        if let Some(elem) = Self::reversible_alias_element_type(self) {
+            return Some(IterationMetadata {
+                element_type: elem,
+                capabilities: vec![
+                    IterationCapability::MultiPass,
+                    IterationCapability::DoubleEnded,
+                ],
+            });
+        }
+        match self.resolve_alias() {
+            Self::Iterator(elem) => Some(IterationMetadata {
+                element_type: *elem.clone(),
+                capabilities: vec![IterationCapability::SinglePass],
+            }),
+            Self::List(elem) => Some(IterationMetadata {
+                element_type: *elem.clone(),
+                capabilities: vec![
+                    IterationCapability::MultiPass,
+                    IterationCapability::DoubleEnded,
+                    IterationCapability::ExactSize,
+                ],
+            }),
+            Self::Tuple(elems) => Some(IterationMetadata {
+                element_type: Self::homogeneous_tuple_iter_element_type(elems)?,
+                capabilities: vec![
+                    IterationCapability::MultiPass,
+                    IterationCapability::DoubleEnded,
+                    IterationCapability::ExactSize,
+                ],
+            }),
+            Self::Range => Some(IterationMetadata {
+                element_type: Type::Int,
+                capabilities: vec![
+                    IterationCapability::MultiPass,
+                    IterationCapability::DoubleEnded,
+                    IterationCapability::ExactSize,
+                ],
+            }),
+            Self::Str => Some(IterationMetadata {
+                element_type: Type::Str,
+                capabilities: vec![
+                    IterationCapability::MultiPass,
+                    IterationCapability::DoubleEnded,
+                    IterationCapability::ExactSize,
+                ],
+            }),
+            Self::Bytes => Some(IterationMetadata {
+                element_type: Type::Int,
+                capabilities: vec![
+                    IterationCapability::MultiPass,
+                    IterationCapability::DoubleEnded,
+                    IterationCapability::ExactSize,
+                ],
+            }),
+            Self::Dict(key, _) => Some(IterationMetadata {
+                element_type: *key.clone(),
+                capabilities: vec![
+                    IterationCapability::MultiPass,
+                    IterationCapability::ExactSize,
+                ],
+            }),
+            Self::Set(elem) => Some(IterationMetadata {
+                element_type: *elem.clone(),
+                capabilities: vec![
+                    IterationCapability::MultiPass,
+                    IterationCapability::ExactSize,
+                ],
+            }),
+            Self::Iterable(elem) => Some(IterationMetadata {
+                element_type: *elem.clone(),
+                capabilities: vec![IterationCapability::MultiPass],
+            }),
+            Self::Class { name, methods, .. } => {
+                let element_type = Self::class_iter_element_type(name, methods)
+                    .or_else(|| Self::class_next_element_type(name, methods))?;
+                let mut capabilities = if Self::class_next_element_type(name, methods).is_some() {
+                    vec![IterationCapability::SinglePass]
+                } else {
+                    vec![IterationCapability::MultiPass]
+                };
+                if Self::class_reversed_element_type(name, methods).is_some() {
+                    capabilities.push(IterationCapability::DoubleEnded);
+                }
+                Some(IterationMetadata {
+                    element_type,
+                    capabilities,
+                })
+            }
+            _ => None,
+        }
+    }
+
+    #[must_use]
+    pub fn supports_iteration_capability(&self, capability: IterationCapability) -> bool {
+        self.iteration_metadata()
+            .is_some_and(|metadata| metadata.supports(capability))
+    }
+
+    #[must_use]
+    pub fn is_reversible_iterable(&self) -> bool {
+        self.supports_iteration_capability(IterationCapability::DoubleEnded)
     }
 
     /// Returns the result type of indexing this type with the given index type.
@@ -681,6 +1000,14 @@ impl Type {
                     None
                 }
             }
+            Self::Bytes => {
+                if index_ty == &Type::Int {
+                    // Safe indexing: returns Option[int] = int | None
+                    Some(Type::Union(vec![Type::Int, Type::None]))
+                } else {
+                    None
+                }
+            }
             // Union type: if T|None where T is indexable, unwrap and delegate
             Self::Union(members) => {
                 let non_none: Vec<&Type> = members
@@ -704,6 +1031,7 @@ impl Type {
             Self::Set(elem) => Some(*elem.clone()),
             Self::Dict(key, _) => Some(*key.clone()),
             Self::Str => Some(Type::Str),
+            Self::Bytes => Some(Type::Int),
             _ => None,
         }
     }
@@ -713,7 +1041,10 @@ impl Type {
         fn contains_any(ty: &Type) -> bool {
             match ty {
                 Type::Any => true,
-                Type::List(elem) | Type::Set(elem) => contains_any(elem),
+                Type::List(elem)
+                | Type::Set(elem)
+                | Type::Iterable(elem)
+                | Type::Iterator(elem) => contains_any(elem),
                 Type::Dict(key, value) => contains_any(key) || contains_any(value),
                 Type::Tuple(elems) | Type::Union(elems) | Type::Intersection(elems) => {
                     elems.iter().any(contains_any)
@@ -762,6 +1093,14 @@ impl Type {
             return true;
         }
 
+        if let Some(target_elem) = Self::reversible_alias_element_type(target) {
+            let Some(source_metadata) = self.iteration_metadata() else {
+                return false;
+            };
+            return source_metadata.supports(IterationCapability::DoubleEnded)
+                && source_metadata.element_type.is_assignable_to(&target_elem);
+        }
+
         // Resolve aliases
         let source = self.resolve_alias();
         let target_resolved = target.resolve_alias();
@@ -804,6 +1143,34 @@ impl Type {
             {
                 return true;
             }
+        }
+        // Iterable/Iterator protocol assignability.
+        match (source, target_resolved) {
+            (Self::Iterator(src), Self::Iterator(dst) | Self::Iterable(dst))
+            | (Self::Iterable(src), Self::Iterable(dst)) => return src.is_assignable_to(dst),
+            (Self::List(src) | Self::Set(src), Self::Iterable(dst)) => {
+                return src.is_assignable_to(dst);
+            }
+            (Self::Range, Self::Iterable(dst)) => return Type::Int.is_assignable_to(dst),
+            (Self::Str, Self::Iterable(dst)) => return Type::Str.is_assignable_to(dst),
+            (Self::Bytes, Self::Iterable(dst)) => return Type::Int.is_assignable_to(dst),
+            (Self::Dict(key, _), Self::Iterable(dst)) => return key.is_assignable_to(dst),
+            (Self::Class { name, methods, .. }, Self::Iterator(dst)) => {
+                return Self::class_next_element_type(name, methods)
+                    .is_some_and(|source_elem| source_elem.is_assignable_to(dst));
+            }
+            (Self::Class { name, methods, .. }, Self::Iterable(dst)) => {
+                return Self::class_iter_element_type(name, methods)
+                    .or_else(|| Self::class_next_element_type(name, methods))
+                    .is_some_and(|source_elem| source_elem.is_assignable_to(dst));
+            }
+            (Self::Tuple(items), Self::Iterable(dst)) => {
+                let Some(elem) = Self::homogeneous_tuple_iter_element_type(items) else {
+                    return false;
+                };
+                return elem.is_assignable_to(dst);
+            }
+            _ => {}
         }
         // Mutable collections are invariant in their element/key/value types.
         // Explicit `Any` inside the collection type remains an escape hatch.
@@ -982,6 +1349,113 @@ mod tests {
     }
 
     #[test]
+    fn test_iterator_and_iterable_type_contract() {
+        let iter_int = Type::Iterator(Box::new(Type::Int));
+        let iterable_int = Type::Iterable(Box::new(Type::Int));
+        let list_int = Type::List(Box::new(Type::Int));
+
+        assert_eq!(iter_int.display_name(), "Iterator[int]");
+        assert_eq!(iterable_int.display_name(), "Iterable[int]");
+        assert_eq!(iter_int.iterable_element_type(), Some(Type::Int));
+        assert_eq!(iterable_int.iterable_element_type(), Some(Type::Int));
+        assert!(iter_int.is_assignable_to(&iterable_int));
+        assert!(list_int.is_assignable_to(&iterable_int));
+    }
+
+    #[test]
+    fn test_reversible_alias_contract() {
+        let reversible_int = Type::reversible(Type::Int);
+        let iterable_int = Type::Iterable(Box::new(Type::Int));
+        let list_int = Type::List(Box::new(Type::Int));
+        let set_int = Type::Set(Box::new(Type::Int));
+        let iterator_int = Type::Iterator(Box::new(Type::Int));
+
+        assert!(list_int.is_assignable_to(&reversible_int));
+        assert!(!set_int.is_assignable_to(&reversible_int));
+        assert!(!iterator_int.is_assignable_to(&reversible_int));
+        assert!(reversible_int.is_assignable_to(&iterable_int));
+        assert!(reversible_int.supports_iteration_capability(IterationCapability::DoubleEnded));
+    }
+
+    #[test]
+    fn test_tuple_iterability_requires_homogeneous_elements() {
+        let homogeneous = Type::Tuple(vec![Type::Int, Type::Int, Type::Int]);
+        let heterogeneous = Type::Tuple(vec![Type::Int, Type::Str]);
+
+        assert_eq!(homogeneous.iterable_element_type(), Some(Type::Int));
+        assert_eq!(heterogeneous.iterable_element_type(), None);
+        assert!(homogeneous.is_assignable_to(&Type::Iterable(Box::new(Type::Int))));
+        assert!(!heterogeneous.is_assignable_to(&Type::Iterable(Box::new(Type::Any))));
+    }
+
+    #[test]
+    fn test_class_with_iter_method_is_iterable() {
+        let iterable_class = Type::Class {
+            name: "Counter".to_string(),
+            fields: vec![],
+            methods: vec![(
+                "__iter__".to_string(),
+                FunctionType::new(vec![], Type::Iterator(Box::new(Type::Int))),
+            )],
+            parent_class: None,
+        };
+
+        assert_eq!(iterable_class.iterable_element_type(), Some(Type::Int));
+        assert!(iterable_class.is_assignable_to(&Type::Iterable(Box::new(Type::Int))));
+    }
+
+    #[test]
+    fn test_class_with_next_method_is_iterator_protocol() {
+        let self_iter_type = Type::Class {
+            name: "CounterIter".to_string(),
+            fields: vec![],
+            methods: vec![],
+            parent_class: None,
+        };
+        let iterator_class = Type::Class {
+            name: "CounterIter".to_string(),
+            fields: vec![],
+            methods: vec![
+                (
+                    "__iter__".to_string(),
+                    FunctionType::new(vec![], self_iter_type),
+                ),
+                (
+                    "__next__".to_string(),
+                    FunctionType::new(vec![], Type::Union(vec![Type::Int, Type::None])),
+                ),
+            ],
+            parent_class: None,
+        };
+
+        assert_eq!(iterator_class.iterator_element_type(), Some(Type::Int));
+        assert!(iterator_class.is_assignable_to(&Type::Iterator(Box::new(Type::Int))));
+        assert!(iterator_class.is_assignable_to(&Type::Iterable(Box::new(Type::Int))));
+    }
+
+    #[test]
+    fn test_class_with_reversed_method_is_reversible_iterable() {
+        let reversible_class = Type::Class {
+            name: "Deck".to_string(),
+            fields: vec![],
+            methods: vec![
+                (
+                    "__iter__".to_string(),
+                    FunctionType::new(vec![], Type::Iterator(Box::new(Type::Int))),
+                ),
+                (
+                    "__reversed__".to_string(),
+                    FunctionType::new(vec![], Type::Iterator(Box::new(Type::Int))),
+                ),
+            ],
+            parent_class: None,
+        };
+
+        assert!(reversible_class.is_reversible_iterable());
+        assert!(reversible_class.is_assignable_to(&Type::reversible(Type::Int)));
+    }
+
+    #[test]
     fn test_dict_type() {
         let dict_str_int = Type::Dict(Box::new(Type::Str), Box::new(Type::Int));
         assert_eq!(dict_str_int.ownership(), OwnershipKind::Move);
@@ -995,6 +1469,18 @@ mod tests {
         assert_eq!(tuple.ownership(), OwnershipKind::Move);
         assert_eq!(tuple.display_name(), "tuple[int, str]");
         assert_eq!(tuple.rust_type(), "(i64, String)");
+    }
+
+    #[test]
+    fn test_tuple_ownership_all_copy_is_copy() {
+        let tuple = Type::Tuple(vec![Type::Int, Type::Float]);
+        assert_eq!(tuple.ownership(), OwnershipKind::Copy);
+    }
+
+    #[test]
+    fn test_tuple_ownership_with_move_is_move() {
+        let tuple = Type::Tuple(vec![Type::Int, Type::Str]);
+        assert_eq!(tuple.ownership(), OwnershipKind::Move);
     }
 
     #[test]

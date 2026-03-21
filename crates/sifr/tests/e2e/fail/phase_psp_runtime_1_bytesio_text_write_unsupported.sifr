@@ -1,0 +1,6 @@
+from sifr.io import BytesIO
+
+
+def main() -> None:
+    bio: BytesIO = BytesIO()
+    _ = bio.write("hello")

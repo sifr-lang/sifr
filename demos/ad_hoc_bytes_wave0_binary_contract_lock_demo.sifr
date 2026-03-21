@@ -1,0 +1,17 @@
+from sifr.bytes import encode_utf8, decode_utf8, bytes_to_hex, bytes_from_hex, starts_with, ends_with
+
+
+def main() -> None:
+    contract_payload: bytes = encode_utf8("binary-contract")
+    assert starts_with(contract_payload, encode_utf8("binary"))
+    assert ends_with(contract_payload, encode_utf8("contract"))
+
+    conversion_ok: bool = False
+    try:
+        as_hex: str = bytes_to_hex(contract_payload)
+        restored: bytes = bytes_from_hex(as_hex)
+        text: str = decode_utf8(restored)
+        conversion_ok = text == "binary-contract"
+    except ParseError as e:
+        _ = str(e.message)
+    assert conversion_ok

@@ -165,7 +165,7 @@ fn deduplicate(types: &mut Vec<Type>) {
 
 /// Sort types for consistent ordering.
 /// Order: None, Bool, Int, Float, Str, `LiteralBool`, `LiteralInt`, `LiteralStr`,
-///        List, Dict, Tuple, Range, Function, Unknown, Any, Never, Union, Intersection, Alias
+///        List, Dict, Tuple, Range, Iterable, Iterator, Function, Unknown, Any, Never, Union, Intersection, Alias
 fn sort_members(types: &mut [Type]) {
     types.sort_by_key(type_sort_key);
 }
@@ -177,24 +177,27 @@ fn type_sort_key(ty: &Type) -> (u8, String) {
         Type::Int => (2, String::new()),
         Type::Float => (3, String::new()),
         Type::Str => (4, String::new()),
-        Type::LiteralBool(v) => (5, format!("{v}")),
-        Type::LiteralInt(v) => (6, format!("{v}")),
-        Type::LiteralStr(v) => (7, v.clone()),
-        Type::List(_) => (8, String::new()),
-        Type::Dict(_, _) => (9, String::new()),
-        Type::Set(_) => (10, String::new()),
-        Type::Tuple(_) => (11, String::new()),
-        Type::Range => (11, String::new()),
-        Type::Function(_) => (12, String::new()),
-        Type::Unknown => (13, String::new()),
-        Type::Any => (14, String::new()),
-        Type::Never => (15, String::new()),
-        Type::Union(_) => (16, String::new()),
-        Type::Intersection(_) => (17, String::new()),
+        Type::Bytes => (5, String::new()),
+        Type::LiteralBool(v) => (6, format!("{v}")),
+        Type::LiteralInt(v) => (7, format!("{v}")),
+        Type::LiteralStr(v) => (8, v.clone()),
+        Type::List(_) => (9, String::new()),
+        Type::Dict(_, _) => (10, String::new()),
+        Type::Set(_) => (11, String::new()),
+        Type::Tuple(_) => (12, String::new()),
+        Type::Range => (12, String::new()),
+        Type::Iterable(_) => (13, String::new()),
+        Type::Iterator(_) => (14, String::new()),
+        Type::Function(_) => (15, String::new()),
+        Type::Unknown => (16, String::new()),
+        Type::Any => (17, String::new()),
+        Type::Never => (18, String::new()),
+        Type::Union(_) => (19, String::new()),
+        Type::Intersection(_) => (20, String::new()),
         Type::Alias {
             name, type_args, ..
         } => (
-            18,
+            21,
             if type_args.is_empty() {
                 name.clone()
             } else {
@@ -209,16 +212,16 @@ fn type_sort_key(ty: &Type) -> (u8, String) {
                 )
             },
         ),
-        Type::Class { name, .. } => (19, name.clone()),
-        Type::Result(_, _) => (20, String::new()),
-        Type::Protocol { name, .. } => (21, name.clone()),
-        Type::Newtype { name, .. } => (22, name.clone()),
-        Type::TypeVar(name) => (23, name.clone()),
-        Type::Callable(..) => (24, String::new()),
-        Type::Enum { name, .. } => (25, name.clone()),
-        Type::BigInt => (26, String::new()),
-        Type::Decimal => (27, String::new()),
-        Type::BigDecimal => (28, String::new()),
+        Type::Class { name, .. } => (22, name.clone()),
+        Type::Result(_, _) => (23, String::new()),
+        Type::Protocol { name, .. } => (24, name.clone()),
+        Type::Newtype { name, .. } => (25, name.clone()),
+        Type::TypeVar(name) => (26, name.clone()),
+        Type::Callable(..) => (27, String::new()),
+        Type::Enum { name, .. } => (28, name.clone()),
+        Type::BigInt => (29, String::new()),
+        Type::Decimal => (30, String::new()),
+        Type::BigDecimal => (31, String::new()),
     }
 }
 

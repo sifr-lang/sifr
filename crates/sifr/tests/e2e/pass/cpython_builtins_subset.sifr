@@ -1,0 +1,59 @@
+# Adapted CPython builtin subset for wave_psp_a1 constructor/call-shape parity
+from sifr.test import assert_bool_vector_eq, assert_err, assert_ok
+
+
+def neg(x: int) -> int:
+    return 0 - x
+
+
+def add(x: int, y: int) -> int:
+    return x + y
+
+
+def collect_constructor_actual() -> list[bool]:
+    actual: list[bool] = []
+    actual.append(list("ab") == ["a", "b"])
+    actual.append(tuple([1, 2, 3]) == (1, 2, 3))
+    actual.append(dict([("a", 1)], b=2)["b"] == 2)
+    return actual
+
+
+def collect_callable_actual() -> list[bool]:
+    actual: list[bool] = []
+    nums: list[int] = [3, 1, 2]
+    actual.append(sorted(nums) == [1, 2, 3])
+    actual.append(sorted(nums, key=neg) == [3, 2, 1])
+    actual.append(list(reversed(nums)) == [2, 1, 3])
+    actual.append(list(enumerate(["x", "y"], start=3)) == [(3, "x"), (4, "y")])
+    actual.append(
+        list(zip([1, 2], ["a", "b"], [True, False])) == [(1, "a", True), (2, "b", False)]
+    )
+    actual.append(list(map(add, [1, 2, 3], [4, 5, 6])) == [5, 7, 9])
+    actual.append(list(range(start=1, stop=7, step=2)) == [1, 3, 5])
+    return actual
+
+
+def main():
+    expected: list[bool] = [
+        True, True, True,
+        True, True, True, True, True, True, True
+    ]
+    actual: list[bool] = []
+    for value in collect_constructor_actual():
+        actual.append(value)
+    for value in collect_callable_actual():
+        actual.append(value)
+    assert_bool_vector_eq(actual, expected)
+
+    assert ord("A") == 65
+    assert chr(66) == "B"
+    one: str = "Z"
+    many: str = "ZZ"
+    code_ok: int = 67
+    code_bad: int = 1114112
+    assert_ok(ord(one))
+    assert_err(ord(many))
+    assert_ok(chr(code_ok))
+    assert_err(chr(code_bad))
+
+    assert str("cpython_builtins_subset: pass") == "cpython_builtins_subset: pass"

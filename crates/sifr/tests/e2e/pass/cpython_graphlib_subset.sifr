@@ -1,0 +1,145 @@
+# Adapted CPython graphlib subset for sifr.graphlib class/object behavior
+from sifr.graphlib import TopologicalSorter, CycleError
+from sifr.test import assert_bool_vector_eq
+
+
+def collect_static_order_actual() -> list[bool]:
+    actual: list[bool] = []
+    sorter: TopologicalSorter = TopologicalSorter()
+    sorter.add(1, 0)
+    sorter.add_many(2, [0, 1])
+    sorter.add(3, 2)
+    order_ok: bool = False
+    try:
+        order: list[int] = sorter.static_order()
+        order_ok = str(order) == "[0, 1, 2, 3]"
+    except CycleError as e:
+        _ = e.message
+    actual.append(order_ok)
+    return actual
+
+
+def collect_incremental_actual() -> list[bool]:
+    actual: list[bool] = []
+    sorter: TopologicalSorter = TopologicalSorter()
+    sorter.add(1, 0)
+    sorter.add(2, 1)
+    sorter.add_many(3, [1, 2])
+    incremental_ok: bool = False
+    inactive_after_done: bool = False
+    try:
+        _prepared: None = sorter.prepare()
+        _ = _prepared
+        actual.append(sorter.is_active())
+
+        step0: list[int] = sorter.get_ready()
+        actual.append(str(step0) == "[0]")
+        sorter.done(0)
+
+        step1: list[int] = sorter.get_ready()
+        actual.append(str(step1) == "[1]")
+        sorter.done(1)
+
+        step2: list[int] = sorter.get_ready()
+        actual.append(str(step2) == "[2]")
+        sorter.done(2)
+
+        step3: list[int] = sorter.get_ready()
+        actual.append(str(step3) == "[3]")
+        sorter.done(3)
+
+        inactive_after_done = sorter.is_active() == False
+        incremental_ok = True
+    except CycleError as e:
+        _ = e.message
+    actual.append(incremental_ok)
+    actual.append(inactive_after_done)
+    return actual
+
+
+def collect_cycle_actual() -> list[bool]:
+    actual: list[bool] = []
+    sorter: TopologicalSorter = TopologicalSorter()
+    sorter.add(1, 0)
+    sorter.add(0, 1)
+    cycle_rejected: bool = False
+    try:
+        _prepared: None = sorter.prepare()
+        _ = _prepared
+    except CycleError as e:
+        _ = e.message
+        cycle_rejected = True
+    actual.append(cycle_rejected)
+    return actual
+
+
+def collect_sparse_grouped_actual() -> list[bool]:
+    actual: list[bool] = []
+    sorter: TopologicalSorter = TopologicalSorter()
+    sorter.add_many(50, [30, 40])
+    sorter.add(30, 10)
+    sorter.add(40, 10)
+    sorter.add_many(10, [])
+
+    sparse_ok: bool = False
+    second_ready_ok: bool = False
+    third_ready_ok: bool = False
+    empty_ok: bool = False
+    try:
+        _prepared: None = sorter.prepare()
+        _ = _prepared
+        first_ready: list[int] = sorter.get_ready()
+        actual.append(str(first_ready) == "[10]")
+        sorter.done(10)
+
+        second_ready: list[int] = sorter.get_ready()
+        second_ready_ok = str(second_ready) == "[30]" or str(second_ready) == "[40]"
+        actual.append(second_ready_ok)
+        if str(second_ready) == "[30]":
+            sorter.done(30)
+            third_ready: list[int] = sorter.get_ready()
+            third_ready_ok = str(third_ready) == "[40]"
+            actual.append(third_ready_ok)
+            sorter.done(40)
+        else:
+            sorter.done(40)
+            third_ready: list[int] = sorter.get_ready()
+            third_ready_ok = str(third_ready) == "[30]"
+            actual.append(third_ready_ok)
+            sorter.done(30)
+
+        fourth_ready: list[int] = sorter.get_ready()
+        actual.append(str(fourth_ready) == "[50]")
+        sorter.done(50)
+        actual.append(sorter.is_active() == False)
+
+        sparse_order: list[int] = sorter.static_order()
+        sparse_ok = str(sparse_order) == "[10, 30, 40, 50]" or str(sparse_order) == "[10, 40, 30, 50]"
+    except CycleError as e:
+        _ = e.message
+    actual.append(sparse_ok)
+
+    empty_sorter: TopologicalSorter = TopologicalSorter()
+    try:
+        empty_order: list[int] = empty_sorter.static_order()
+        empty_ok = str(empty_order) == "[]"
+    except CycleError as e:
+        _ = e.message
+    actual.append(empty_ok)
+    return actual
+
+
+def append_all(mut target: list[bool], values: list[bool]):
+    for value in values:
+        target.append(value)
+
+
+def main():
+    expected: list[bool] = [True, True, True, True, True, True, True, True, True, True, True, True, True, True, True, True]
+    actual: list[bool] = []
+    append_all(actual, collect_static_order_actual())
+    append_all(actual, collect_incremental_actual())
+    append_all(actual, collect_cycle_actual())
+    append_all(actual, collect_sparse_grouped_actual())
+    assert_bool_vector_eq(actual, expected)
+    assert str("cpython_graphlib_subset: pass") == "cpython_graphlib_subset: pass"

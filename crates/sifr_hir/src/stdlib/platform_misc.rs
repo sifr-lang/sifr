@@ -2,6 +2,28 @@ use super::{result_ty, IntrinsicModule};
 use sifr_type_system::{FunctionType, Type};
 use std::collections::HashMap;
 
+fn toml_value_stub() -> Type {
+    Type::Class {
+        name: "TomlValue".to_string(),
+        fields: vec![],
+        methods: vec![],
+        parent_class: None,
+    }
+}
+
+fn toml_decode_error_ty() -> Type {
+    Type::Class {
+        name: "TOMLDecodeError".to_string(),
+        fields: vec![
+            ("message".to_string(), Type::Str),
+            ("line".to_string(), Type::Int),
+            ("column".to_string(), Type::Int),
+        ],
+        methods: vec![],
+        parent_class: Some("Error".to_string()),
+    }
+}
+
 /// _sifr.platform — Platform information intrinsics
 pub(super) fn intrinsic_platform() -> IntrinsicModule {
     let mut functions = HashMap::new();
@@ -44,12 +66,15 @@ pub(super) fn intrinsic_platform() -> IntrinsicModule {
 /// _sifr.toml — TOML parsing intrinsics
 pub(super) fn intrinsic_toml() -> IntrinsicModule {
     let mut functions = HashMap::new();
-    // toml_parse(text: str) -> Result[str, TOMLDecodeError]
+    // toml_parse(text: str) -> Result[TomlValue, TOMLDecodeError]
     functions.insert(
         "toml_parse".to_string(),
         FunctionType::all_borrow(
             vec![("text".to_string(), Type::Str)],
-            result_ty(Type::Str, "TOMLDecodeError"),
+            Type::Result(
+                Box::new(toml_value_stub()),
+                Box::new(toml_decode_error_ty()),
+            ),
         ),
     );
     IntrinsicModule {
@@ -209,6 +234,18 @@ pub(super) fn intrinsic_compress() -> IntrinsicModule {
             result_ty(Type::None, "IOError"),
         ),
     );
+    // zip_add_file_bytes(zip_path: str, name: str, content: bytes) -> Result[None, IOError]
+    functions.insert(
+        "zip_add_file_bytes".to_string(),
+        FunctionType::all_borrow(
+            vec![
+                ("zip_path".to_string(), Type::Str),
+                ("name".to_string(), Type::Str),
+                ("content".to_string(), Type::Bytes),
+            ],
+            result_ty(Type::None, "IOError"),
+        ),
+    );
     // zip_read_file(zip_path: str, name: str) -> Result[str, IOError]
     functions.insert(
         "zip_read_file".to_string(),
@@ -218,6 +255,17 @@ pub(super) fn intrinsic_compress() -> IntrinsicModule {
                 ("name".to_string(), Type::Str),
             ],
             result_ty(Type::Str, "IOError"),
+        ),
+    );
+    // zip_read_file_bytes(zip_path: str, name: str) -> Result[bytes, IOError]
+    functions.insert(
+        "zip_read_file_bytes".to_string(),
+        FunctionType::all_borrow(
+            vec![
+                ("zip_path".to_string(), Type::Str),
+                ("name".to_string(), Type::Str),
+            ],
+            result_ty(Type::Bytes, "IOError"),
         ),
     );
     // zip_namelist(zip_path: str) -> Result[list[str], IOError]

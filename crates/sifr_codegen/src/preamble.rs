@@ -8,6 +8,7 @@ pub fn sifr_type_to_rust_type(ty: &Type) -> RustType {
         Type::Float => RustType::F64,
         Type::Bool | Type::LiteralBool(_) => RustType::Bool,
         Type::Str | Type::LiteralStr(_) => RustType::String_,
+        Type::Bytes => RustType::Vec(Box::new(RustType::Named("u8".to_string()))),
         Type::None => RustType::Unit,
         Type::List(inner) => RustType::Vec(Box::new(sifr_type_to_rust_type(inner))),
         Type::Dict(key, value) => RustType::HashMap(
@@ -489,6 +490,74 @@ pub fn build_logging_items() -> Vec<RustItem> {
     }]
 }
 
+pub fn build_random_module_state_items() -> Vec<RustItem> {
+    vec![
+        RustItem::Struct {
+            name: "__SifrRandomModuleState".to_string(),
+            visibility: Visibility::Private,
+            derives: vec!["Debug".to_string(), "Clone".to_string()],
+            fields: vec![
+                (
+                    "words".to_string(),
+                    RustType::Vec(Box::new(RustType::Named("i64".to_string()))),
+                ),
+                ("index".to_string(), RustType::I64),
+                (
+                    "gauss_next".to_string(),
+                    RustType::Option(Box::new(RustType::F64)),
+                ),
+            ],
+        },
+        RustItem::Static {
+            name: "__SIFR_RANDOM_MODULE_STATE".to_string(),
+            visibility: Visibility::Private,
+            ty: RustType::Named(
+                "std::sync::LazyLock<std::sync::Mutex<__SifrRandomModuleState>>".to_string(),
+            ),
+            value: RustExpr::FnCall {
+                func: Box::new(RustExpr::Path(vec![
+                    "std".to_string(),
+                    "sync".to_string(),
+                    "LazyLock".to_string(),
+                    "new".to_string(),
+                ])),
+                args: vec![RustExpr::Closure {
+                    params: vec![],
+                    body: Box::new(RustExpr::FnCall {
+                        func: Box::new(RustExpr::Path(vec![
+                            "std".to_string(),
+                            "sync".to_string(),
+                            "Mutex".to_string(),
+                            "new".to_string(),
+                        ])),
+                        args: vec![RustExpr::StructInit {
+                            name: "__SifrRandomModuleState".to_string(),
+                            fields: vec![
+                                (
+                                    "words".to_string(),
+                                    RustExpr::FnCall {
+                                        func: Box::new(RustExpr::Path(vec![
+                                            "Vec".to_string(),
+                                            "new".to_string(),
+                                        ])),
+                                        args: vec![],
+                                    },
+                                ),
+                                ("index".to_string(), RustExpr::Literal(crate::RustLiteral::Int(0))),
+                                (
+                                    "gauss_next".to_string(),
+                                    RustExpr::Literal(crate::RustLiteral::None),
+                                ),
+                            ],
+                        }],
+                    }),
+                    is_move: false,
+                }],
+            },
+        },
+    ]
+}
+
 fn file_handles_lock_expr() -> RustExpr {
     RustExpr::MethodCall {
         receiver: Box::new(RustExpr::MethodCall {
@@ -903,7 +972,7 @@ fn file_handle_read_bytes_method() -> RustItem {
         type_params: vec![],
         params: vec![RustParam::SelfParam { mutable: false }],
         ret: Some(RustType::Result(
-            Box::new(RustType::Vec(Box::new(RustType::I64))),
+            Box::new(RustType::Vec(Box::new(RustType::Named("u8".to_string())))),
             Box::new(RustType::Named("IOError".to_string())),
         )),
         body: vec![
@@ -970,31 +1039,7 @@ fn file_handle_read_bytes_method() -> RustItem {
                             }))),
                             RustStmt::Return(Some(RustExpr::FnCall {
                                 func: Box::new(RustExpr::Path(vec!["Ok".to_string()])),
-                                args: vec![RustExpr::MethodCall {
-                                    receiver: Box::new(RustExpr::MethodCall {
-                                        receiver: Box::new(RustExpr::MethodCall {
-                                            receiver: Box::new(RustExpr::Ident(
-                                                "__buf".to_string(),
-                                            )),
-                                            method: "into_iter".to_string(),
-                                            args: vec![],
-                                        }),
-                                        method: "map".to_string(),
-                                        args: vec![RustExpr::Closure {
-                                            params: vec![RustParam::Named {
-                                                name: "b".to_string(),
-                                                ty: RustType::Named("_".to_string()),
-                                            }],
-                                            body: Box::new(RustExpr::Cast {
-                                                expr: Box::new(RustExpr::Ident("b".to_string())),
-                                                ty: RustType::I64,
-                                            }),
-                                            is_move: false,
-                                        }],
-                                    }),
-                                    method: "collect::<Vec<i64>>".to_string(),
-                                    args: vec![],
-                                }],
+                                args: vec![RustExpr::Ident("__buf".to_string())],
                             })),
                         ],
                     },
@@ -1041,7 +1086,7 @@ fn file_handle_write_bytes_method() -> RustItem {
                 name: "data".to_string(),
                 ty: RustType::Ref {
                     mutable: false,
-                    inner: Box::new(RustType::Vec(Box::new(RustType::I64))),
+                    inner: Box::new(RustType::Vec(Box::new(RustType::Named("u8".to_string())))),
                 },
             },
         ],
@@ -1080,38 +1125,6 @@ fn file_handle_write_bytes_method() -> RustItem {
                         bindings: vec![],
                         guard: None,
                         body: vec![
-                            RustStmt::Let {
-                                mutable: false,
-                                name: "__bytes".to_string(),
-                                ty: Some(RustType::Vec(Box::new(RustType::Named(
-                                    "u8".to_string(),
-                                )))),
-                                value: RustExpr::MethodCall {
-                                    receiver: Box::new(RustExpr::MethodCall {
-                                        receiver: Box::new(RustExpr::MethodCall {
-                                            receiver: Box::new(RustExpr::Ident("data".to_string())),
-                                            method: "iter".to_string(),
-                                            args: vec![],
-                                        }),
-                                        method: "map".to_string(),
-                                        args: vec![RustExpr::Closure {
-                                            params: vec![RustParam::Named {
-                                                name: "b".to_string(),
-                                                ty: RustType::Named("_".to_string()),
-                                            }],
-                                            body: Box::new(RustExpr::Cast {
-                                                expr: Box::new(RustExpr::Deref(Box::new(
-                                                    RustExpr::Ident("b".to_string()),
-                                                ))),
-                                                ty: RustType::Named("u8".to_string()),
-                                            }),
-                                            is_move: false,
-                                        }],
-                                    }),
-                                    method: "collect::<Vec<u8>>".to_string(),
-                                    args: vec![],
-                                },
-                            },
                             RustStmt::Expr(RustExpr::Try(Box::new(RustExpr::MethodCall {
                                 receiver: Box::new(RustExpr::FnCall {
                                     func: Box::new(RustExpr::Path(vec![
@@ -1124,7 +1137,7 @@ fn file_handle_write_bytes_method() -> RustItem {
                                         RustExpr::Ident("__w".to_string()),
                                         RustExpr::Ref {
                                             mutable: false,
-                                            expr: Box::new(RustExpr::Ident("__bytes".to_string())),
+                                            expr: Box::new(RustExpr::Ident("data".to_string())),
                                         },
                                     ],
                                 }),
@@ -1641,11 +1654,22 @@ mod tests {
     }
 
     #[test]
+    fn random_module_state_items_render_core_symbols() {
+        let items = build_random_module_state_items();
+        let rendered = render_items(&items);
+        assert!(rendered.contains("struct __SifrRandomModuleState"));
+        assert!(rendered.contains("static __SIFR_RANDOM_MODULE_STATE"));
+        assert!(rendered.contains("LazyLock"));
+        assert!(rendered.contains("Mutex"));
+    }
+
+    #[test]
     fn preamble_structural_count_is_zero() {
         let mut all = build_io_error_items();
         all.extend(build_file_handle_infra_items());
         all.extend(build_file_handle_struct_items());
         all.extend(build_logging_items());
+        all.extend(build_random_module_state_items());
         let total_structural_violations: usize = all.iter().map(count_raw_in_item).sum();
         assert_eq!(total_structural_violations, 0);
     }

@@ -69,7 +69,11 @@ fn collect_type_error_refs(
                 referenced.insert(name.clone());
             }
         }
-        Type::List(inner) | Type::Set(inner) | Type::Newtype { inner, .. } => {
+        Type::List(inner)
+        | Type::Set(inner)
+        | Type::Iterable(inner)
+        | Type::Iterator(inner)
+        | Type::Newtype { inner, .. } => {
             collect_type_error_refs(inner, referenced, builtin_error_classes);
         }
         Type::Alias {
@@ -105,6 +109,7 @@ fn collect_type_error_refs(
         | Type::Float
         | Type::Bool
         | Type::Str
+        | Type::Bytes
         | Type::None
         | Type::Range
         | Type::Any
@@ -258,6 +263,11 @@ fn collect_expr_error_refs(
             if builtin_error_classes.contains(&func.as_str()) {
                 referenced.insert(func.clone());
             }
+            for arg in args {
+                collect_expr_error_refs(arg, referenced, builtin_error_classes);
+            }
+        }
+        HirExpr::IteratorCall { args, .. } => {
             for arg in args {
                 collect_expr_error_refs(arg, referenced, builtin_error_classes);
             }

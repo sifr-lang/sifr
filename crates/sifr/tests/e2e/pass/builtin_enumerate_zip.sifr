@@ -2,4 +2,4 @@
 
 def main():
     letters: list[str] = ["a", "b", "c"]
-    assert str(enumerate(letters)) == '[(0, "a"), (1, "b"), (2, "c")]'
+    assert str(list(enumerate(letters))) == '[(0, "a"), (1, "b"), (2, "c")]'

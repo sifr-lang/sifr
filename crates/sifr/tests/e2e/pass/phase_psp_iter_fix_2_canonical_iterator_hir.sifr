@@ -1,0 +1,40 @@
+# Wave 2 positive fixture: canonical iterator HIR for builtin and comprehension sources.
+
+
+def add_one(x: int) -> int:
+    return x + 1
+
+
+def main() -> None:
+    nums: list[int] = [1, 2, 3, 4]
+
+    it: Iterator[int] = iter(nums)
+    assert next(it) == 1
+
+    mapped: Iterator[int] = map(add_one, nums)
+    assert str(list(mapped)) == "[2, 3, 4, 5]"
+
+    filtered: Iterator[int] = filter(lambda x: x % 2 == 0, nums)
+    assert str(list(filtered)) == "[2, 4]"
+
+    zipped: Iterator[tuple[int, int]] = zip(nums, nums)
+    assert str(list(zipped)) == "[(1, 1), (2, 2), (3, 3), (4, 4)]"
+
+    indexed: Iterator[tuple[int, int]] = enumerate(nums)
+    assert str(list(indexed)) == "[(0, 1), (1, 2), (2, 3), (3, 4)]"
+
+    rev: Iterator[int] = reversed(nums)
+    assert str(list(rev)) == "[4, 3, 2, 1]"
+
+    list_comp: list[int] = [x for x in nums]
+    assert str(list_comp) == "[1, 2, 3, 4]"
+
+    set_comp: set[int] = {x for x in nums}
+    assert len(set_comp) == 4
+    assert 3 in set_comp
+
+    dict_comp: dict[int, int] = {x: x + 10 for x in nums}
+    assert dict_comp[1] == 11
+    assert dict_comp[4] == 14
+
+    assert str(list((x for x in nums))) == "[1, 2, 3, 4]"

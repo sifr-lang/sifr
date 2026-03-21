@@ -2,6 +2,28 @@ use super::{result_ty, IntrinsicModule};
 use sifr_type_system::{FunctionType, Type};
 use std::collections::HashMap;
 
+fn json_value_stub() -> Type {
+    Type::Class {
+        name: "JsonValue".to_string(),
+        fields: vec![],
+        methods: vec![],
+        parent_class: None,
+    }
+}
+
+fn json_decode_error_ty() -> Type {
+    Type::Class {
+        name: "JSONDecodeError".to_string(),
+        fields: vec![
+            ("message".to_string(), Type::Str),
+            ("line".to_string(), Type::Int),
+            ("column".to_string(), Type::Int),
+        ],
+        methods: vec![],
+        parent_class: Some("Error".to_string()),
+    }
+}
+
 /// _sifr.io — File I/O intrinsics
 pub(super) fn intrinsic_io() -> IntrinsicModule {
     let mut functions = HashMap::new();
@@ -52,12 +74,15 @@ pub(super) fn intrinsic_io() -> IntrinsicModule {
 pub(super) fn intrinsic_json() -> IntrinsicModule {
     let mut functions = HashMap::new();
 
-    // json_loads(s: str) -> Result[str, JSONDecodeError]
+    // json_loads(s: str) -> Result[JsonValue, JSONDecodeError]
     functions.insert(
         "json_loads".to_string(),
         FunctionType::all_borrow(
             vec![("s".to_string(), Type::Str)],
-            result_ty(Type::Str, "JSONDecodeError"),
+            Type::Result(
+                Box::new(json_value_stub()),
+                Box::new(json_decode_error_ty()),
+            ),
         ),
     );
 
@@ -65,6 +90,12 @@ pub(super) fn intrinsic_json() -> IntrinsicModule {
     functions.insert(
         "json_dumps".to_string(),
         FunctionType::all_borrow(vec![("obj".to_string(), Type::Any)], Type::Str),
+    );
+
+    // json_dumps_value(obj: JsonValue) -> str
+    functions.insert(
+        "json_dumps_value".to_string(),
+        FunctionType::all_borrow(vec![("obj".to_string(), json_value_stub())], Type::Str),
     );
 
     IntrinsicModule {

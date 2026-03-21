@@ -1,0 +1,6 @@
+def sort_array(nums: list[int]) -> list[int]:
+    def touch():
+        nums.append(1)
+
+    touch()
+    return nums

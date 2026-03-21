@@ -3,6 +3,14 @@
 class CycleError(Error):
     message: str
 
+
+def _contains_int(values: list[int], target: int) -> bool:
+    for value in values:
+        if value == target:
+            return True
+    return False
+
+
 def topological_sort(num_nodes: int, from_nodes: list[int], to_nodes: list[int]) -> Result[list[int], CycleError]:
     result: list[int] = []
     visited: list[int] = []
@@ -41,23 +49,116 @@ def topological_sort(num_nodes: int, from_nodes: list[int], to_nodes: list[int])
             raise CycleError("cycle detected in graph")
     return result
 
+
 class TopologicalSorter:
+    nodes: list[int]
     from_nodes: list[int]
     to_nodes: list[int]
     max_node: int
+    _prepared: bool
+    _ready_order: list[int]
+    _next_index: int
 
     def __init__(self):
+        self.nodes = []
         self.from_nodes = []
         self.to_nodes = []
-        self.max_node = 0
+        self.max_node = -1
+        self._prepared = False
+        self._ready_order = []
+        self._next_index = 0
 
-    def add(self, node: int, predecessor: int) -> None:
-        self.from_nodes.append(predecessor)
-        self.to_nodes.append(node)
+    def _record_node(self, node: int) -> None:
+        if not _contains_int(self.nodes, node):
+            self.nodes.append(node)
         if node > self.max_node:
             self.max_node = node
-        if predecessor > self.max_node:
-            self.max_node = predecessor
+
+    def add(self, node: int, predecessor: int) -> None:
+        self._record_node(node)
+        self._record_node(predecessor)
+        self.from_nodes.append(predecessor)
+        self.to_nodes.append(node)
+        self._prepared = False
+        self._ready_order = []
+        self._next_index = 0
+
+    def add_many(self, node: int, predecessors: list[int]) -> None:
+        self._record_node(node)
+        if len(predecessors) == 0:
+            self._prepared = False
+            self._ready_order = []
+            self._next_index = 0
+            return
+        for predecessor in predecessors:
+            self.add(node, predecessor)
+
+    def _filter_order(self, order: list[int]) -> list[int]:
+        filtered: list[int] = []
+        for candidate in order:
+            if _contains_int(self.nodes, candidate):
+                filtered.append(candidate)
+        return filtered
+
+    def prepare(self) -> Result[None, CycleError]:
+        self._prepared = False
+        self._ready_order = []
+        self._next_index = 0
+        if self.max_node < 0:
+            self._prepared = True
+            return None
+        prepare_ok: bool = False
+        try:
+            order: list[int] = topological_sort(self.max_node + 1, self.from_nodes, self.to_nodes)
+            self._ready_order = self._filter_order(order)
+            self._prepared = True
+            prepare_ok = True
+        except CycleError as e:
+            self._prepared = False
+            self._ready_order = []
+            self._next_index = 0
+            raise CycleError(e.message)
+        if prepare_ok:
+            return None
+        return None
+
+    def get_ready(self) -> Result[list[int], CycleError]:
+        if not self._prepared:
+            try:
+                _prepared: None = self.prepare()
+                _ = _prepared
+            except CycleError as e:
+                raise CycleError(e.message)
+        if self._next_index < len(self._ready_order):
+            current: int | None = self._ready_order[self._next_index]
+            if current is not None:
+                return [current]
+        return []
+
+    def done(self, node: int) -> None:
+        if not self._prepared:
+            return
+        if self._next_index >= len(self._ready_order):
+            return
+        current: int | None = self._ready_order[self._next_index]
+        if current is not None and current == node:
+            self._next_index = self._next_index + 1
+
+    def is_active(self) -> bool:
+        if not self._prepared:
+            return False
+        return self._next_index < len(self._ready_order)
+
+    def reset(self) -> None:
+        self._prepared = False
+        self._ready_order = []
+        self._next_index = 0
 
     def static_order(self) -> Result[list[int], CycleError]:
-        return topological_sort(self.max_node + 1, self.from_nodes, self.to_nodes)
+        if self.max_node < 0:
+            return []
+        try:
+            full_order: list[int] = topological_sort(self.max_node + 1, self.from_nodes, self.to_nodes)
+            return self._filter_order(full_order)
+        except CycleError as e:
+            raise CycleError(e.message)

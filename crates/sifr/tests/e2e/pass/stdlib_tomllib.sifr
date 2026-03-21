@@ -1,10 +1,17 @@
 # Test sifr.tomllib module
-from sifr.tomllib import loads
+from sifr.tomllib import TomlValue, loads
 
-def main():
+
+def main() -> None:
     try:
         toml_text: str = "name = \"test\"\nversion = 42"
-        result: str = loads(toml_text)
-        assert str(len(result) > 0) == 'true'
+        result: TomlValue = loads(toml_text)
+        name_value: TomlValue | None = result.get("name")
+        version_value: TomlValue | None = result.get("version")
+        assert name_value is not None
+        assert version_value is not None
+        if name_value is not None and version_value is not None:
+            assert name_value.as_str() == "test"
+            assert version_value.as_int() == 42
     except TOMLDecodeError as e:
-        _ = str("unexpected error: " + e.message)
+        assert False

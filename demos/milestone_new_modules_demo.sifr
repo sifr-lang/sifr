@@ -8,7 +8,7 @@ from sifr.calendar import isleap, weekday, monthrange
 from sifr.html import escape, unescape
 from sifr.sys import version, maxsize
 from sifr.subprocess import run, CompletedProcess
-from sifr.configparser import ConfigParser
+from sifr.configparser import ConfigParser, ParsingError
 from sifr.gzip import compress, decompress
 from sifr.zipfile import ZipFile
 from sifr.os import remove_file
@@ -61,9 +61,15 @@ def demo_subprocess() -> None:
 def demo_configparser() -> None:
     print("=== configparser ===")
     config: ConfigParser = ConfigParser()
-    config.read_string("[database]\nhost = db.example.com\nport = 5432\n")
-    print("host = " + config.get("database", "host"))
-    print("port = " + config.get("database", "port"))
+    try:
+        _: None = config.read_string("[database]\nhost = db.example.com\nport = 5432\n")
+    except ParsingError as e:
+        print(e.message)
+        return
+    host_value: str | None = config.get("database", "host")
+    port_value: str | None = config.get("database", "port")
+    print("host = " + str(host_value))
+    print("port = " + str(port_value))
     print("has_host = " + str(config.has_option("database", "host")))
     print("has_missing = " + str(config.has_option("database", "missing")))
 

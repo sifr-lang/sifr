@@ -1,0 +1,5 @@
+from sifr.csv import register_dialect
+
+
+def main() -> None:
+    register_dialect("custom")

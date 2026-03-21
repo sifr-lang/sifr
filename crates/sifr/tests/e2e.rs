@@ -27,7 +27,8 @@ use std::time::{Instant, SystemTime, UNIX_EPOCH};
 const E2E_CACHE_DIR: &str = "target/sifr_e2e_cache";
 const E2E_CACHE_MANIFEST: &str = "manifest.json";
 const E2E_CACHE_SCHEMA_VERSION: u32 = 1;
-const E2E_CACHE_ENV_ALLOWLIST: [&str; 8] = [
+const E2E_CACHE_TTL_SECS: u64 = 2 * 60 * 60;
+const E2E_CACHE_ENV_ALLOWLIST: [&str; 9] = [
     "RUSTFLAGS",
     "CARGO_ENCODED_RUSTFLAGS",
     "RUSTC_WRAPPER",
@@ -36,7 +37,9 @@ const E2E_CACHE_ENV_ALLOWLIST: [&str; 8] = [
     "SIFR_E2E_NEW_RUNNER",
     "SIFR_E2E_LEGACY_RUNNER",
     "SIFR_E2E_CACHE_DIR",
+    "SIFR_E2E_FIXTURE_MANIFEST",
 ];
+const E2E_FIXTURE_MANIFEST_ENV: &str = "SIFR_E2E_FIXTURE_MANIFEST";
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 enum RunnerMode {
@@ -205,6 +208,11 @@ struct FixtureSourceHash {
     hash: String,
 }
 
+#[derive(Deserialize, Debug)]
+struct FixtureSelectionManifest {
+    fixture_names: Vec<String>,
+}
+
 struct CommandCapture {
     status_ok: bool,
     stdout: String,
@@ -356,6 +364,14 @@ fn cache_dir(root: &Path) -> PathBuf {
 
 fn cache_manifest_path(root: &Path) -> PathBuf {
     cache_dir(root).join(E2E_CACHE_MANIFEST)
+}
+
+fn cache_groups_root(root: &Path) -> PathBuf {
+    cache_dir(root).join("groups")
+}
+
+fn cache_group_path(root: &Path, group_id: &str) -> PathBuf {
+    cache_groups_root(root).join(group_id)
 }
 
 fn deterministic_hash(value: &str) -> String {
@@ -691,6 +707,71 @@ fn compile_source_with_metadata_and_stats(
     }
 }
 
+fn parse_fixture_selection_manifest(raw: &str) -> Result<BTreeSet<String>, String> {
+    let manifest: FixtureSelectionManifest =
+        serde_json::from_str(raw).map_err(|err| format!("manifest parse failed: {err}"))?;
+    if manifest.fixture_names.is_empty() {
+        return Err("fixture manifest must contain at least one fixture name".to_string());
+    }
+
+    let mut selected = BTreeSet::new();
+    for fixture_name in manifest.fixture_names {
+        let trimmed = fixture_name.trim();
+        if trimmed.is_empty() {
+            return Err("fixture manifest contains an empty fixture name".to_string());
+        }
+        selected.insert(trimmed.to_string());
+    }
+    Ok(selected)
+}
+
+fn load_selected_fixture_names_from_env() -> Result<Option<BTreeSet<String>>, String> {
+    let Some(raw_path) = env::var(E2E_FIXTURE_MANIFEST_ENV)
+        .ok()
+        .map(|value| value.trim().to_string())
+        .filter(|value| !value.is_empty())
+    else {
+        return Ok(None);
+    };
+    let manifest_path = PathBuf::from(&raw_path);
+    let raw = std::fs::read_to_string(&manifest_path).map_err(|err| {
+        format!(
+            "unable to read fixture manifest {}: {err}",
+            manifest_path.display()
+        )
+    })?;
+    parse_fixture_selection_manifest(&raw).map(Some)
+}
+
+fn filter_fixtures_by_selection(
+    entries: Vec<FixtureCase>,
+    selected_fixture_names: &BTreeSet<String>,
+) -> Result<Vec<FixtureCase>, String> {
+    let available_names = entries
+        .iter()
+        .map(|fixture| fixture.name.clone())
+        .collect::<BTreeSet<_>>();
+    let missing = selected_fixture_names
+        .difference(&available_names)
+        .cloned()
+        .collect::<Vec<_>>();
+    if !missing.is_empty() {
+        return Err(format!(
+            "fixture manifest referenced unknown pass fixtures: {}",
+            missing.join(", ")
+        ));
+    }
+
+    let filtered = entries
+        .into_iter()
+        .filter(|fixture| selected_fixture_names.contains(&fixture.name))
+        .collect::<Vec<_>>();
+    if filtered.is_empty() {
+        return Err("fixture selection produced an empty pass corpus".to_string());
+    }
+    Ok(filtered)
+}
+
 fn discover_fixtures(base_dir: &Path) -> Vec<FixtureCase> {
     if !base_dir.exists() {
         return Vec::new();
@@ -725,6 +806,12 @@ fn discover_fixtures(base_dir: &Path) -> Vec<FixtureCase> {
     }
 
     entries.sort_by(|left, right| left.path.cmp(&right.path));
+    let selected_fixture_names = load_selected_fixture_names_from_env()
+        .unwrap_or_else(|err| panic!("invalid {E2E_FIXTURE_MANIFEST_ENV}: {err}"));
+    if let Some(selected_fixture_names) = selected_fixture_names {
+        return filter_fixtures_by_selection(entries, &selected_fixture_names)
+            .unwrap_or_else(|err| panic!("invalid {E2E_FIXTURE_MANIFEST_ENV}: {err}"));
+    }
     entries
 }
 
@@ -794,7 +881,9 @@ fn generate_cargo_toml(
     for module_name in stdlib_modules {
         match module_name.as_str() {
             "sifr.json" | "sifr.collections" | "_sifr.json" | "_sifr.collections" => {
-                deps.insert("serde_json = \"1\"".to_string());
+                deps.insert(
+                    "serde_json = { version = \"1\", features = [\"preserve_order\"] }".to_string(),
+                );
                 deps.insert("serde = { version = \"1\", features = [\"derive\"] }".to_string());
             }
             "sifr.time" | "_sifr.time" | "sifr.datetime" | "_sifr.datetime" => {
@@ -817,7 +906,9 @@ fn generate_cargo_toml(
                 deps.insert("base64 = \"0.22\"".to_string());
             }
             "sifr.tomllib" | "_sifr.toml" => {
-                deps.insert("toml = \"0.8\"".to_string());
+                deps.insert(
+                    "toml = { version = \"0.8\", features = [\"preserve_order\"] }".to_string(),
+                );
             }
             "sifr.gzip" | "sifr.zipfile" | "_sifr.compress" => {
                 deps.insert("flate2 = \"1\"".to_string());
@@ -834,7 +925,9 @@ fn generate_cargo_toml(
     for crate_name in required_crates {
         match crate_name.as_str() {
             "serde_json" => {
-                deps.insert("serde_json = \"1\"".to_string());
+                deps.insert(
+                    "serde_json = { version = \"1\", features = [\"preserve_order\"] }".to_string(),
+                );
                 deps.insert("serde = { version = \"1\", features = [\"derive\"] }".to_string());
             }
             "chrono" => {
@@ -865,7 +958,9 @@ fn generate_cargo_toml(
                 deps.insert("base64 = \"0.22\"".to_string());
             }
             "toml" => {
-                deps.insert("toml = \"0.8\"".to_string());
+                deps.insert(
+                    "toml = { version = \"0.8\", features = [\"preserve_order\"] }".to_string(),
+                );
             }
             "flate2" => {
                 deps.insert("flate2 = \"1\"".to_string());
@@ -1122,6 +1217,67 @@ fn write_cache_manifest(root: &Path, manifest: &CacheManifest) {
     if let Err(err) = std::fs::write(manifest_path, content) {
         eprintln!("[sifr-e2e-cache] cannot persist manifest: {err}");
     }
+}
+
+fn prune_cache_manifest(root: &Path, manifest: CacheManifest, now_unix_secs: u64) -> CacheManifest {
+    let groups_root = cache_groups_root(root);
+    let cutoff_unix_secs = now_unix_secs.saturating_sub(E2E_CACHE_TTL_SECS);
+    let mut next_manifest = CacheManifest {
+        schema_version: manifest.schema_version,
+        entries: manifest
+            .entries
+            .into_iter()
+            .filter(|(_, entry)| entry.built_at_unix_secs >= cutoff_unix_secs)
+            .collect(),
+    };
+
+    next_manifest
+        .entries
+        .retain(|_, entry| cache_group_path(root, &entry.group_id).is_dir());
+
+    let live_group_ids = next_manifest
+        .entries
+        .values()
+        .map(|entry| entry.group_id.as_str())
+        .collect::<HashSet<_>>();
+
+    match std::fs::read_dir(&groups_root) {
+        Ok(entries) => {
+            for entry in entries.flatten() {
+                let path = entry.path();
+                let Ok(file_type) = entry.file_type() else {
+                    continue;
+                };
+                if !file_type.is_dir() {
+                    continue;
+                }
+
+                let Some(group_id) = path.file_name().and_then(|name| name.to_str()) else {
+                    continue;
+                };
+
+                if live_group_ids.contains(group_id) {
+                    continue;
+                }
+
+                if let Err(err) = std::fs::remove_dir_all(&path) {
+                    eprintln!(
+                        "[sifr-e2e-cache] cannot remove stale group dir {}: {err}",
+                        path.display()
+                    );
+                }
+            }
+        }
+        Err(err) if err.kind() == std::io::ErrorKind::NotFound => {}
+        Err(err) => {
+            eprintln!(
+                "[sifr-e2e-cache] cannot list cache groups root {}: {err}",
+                groups_root.display()
+            );
+        }
+    }
+
+    next_manifest
 }
 
 fn toolchain_info() -> ToolchainInfo {
@@ -1753,7 +1909,17 @@ fn run_new_pass_suite(config: &RunnerConfig) -> PassReport {
         if let Err(err) = std::fs::create_dir_all(&config.cache.root) {
             eprintln!("[sifr-e2e-cache] cannot create cache root: {err}");
         }
-        read_cache_manifest(&config.cache.root)
+        let manifest = read_cache_manifest(&config.cache.root);
+        let pruned_manifest = prune_cache_manifest(
+            &config.cache.root,
+            manifest,
+            SystemTime::now()
+                .duration_since(UNIX_EPOCH)
+                .map(|duration| duration.as_secs())
+                .unwrap_or_default(),
+        );
+        write_cache_manifest(&config.cache.root, &pruned_manifest);
+        pruned_manifest
     } else {
         CacheManifest {
             schema_version: E2E_CACHE_SCHEMA_VERSION,
@@ -1775,6 +1941,18 @@ fn run_new_pass_suite(config: &RunnerConfig) -> PassReport {
         .iter()
         .filter(|outcome| outcome.cache_hit)
         .count();
+    let mut group_sizes = build_outcomes
+        .iter()
+        .map(|outcome| outcome.group.cases.len())
+        .collect::<Vec<_>>();
+    group_sizes.sort_unstable();
+    let group_count = group_sizes.len();
+    let largest_group_fixtures = group_sizes.iter().copied().max().unwrap_or(0);
+    let median_group_fixtures = if group_sizes.is_empty() {
+        0
+    } else {
+        group_sizes[group_sizes.len() / 2]
+    };
 
     let mut all_cases = Vec::new();
     let run_started = Instant::now();
@@ -1830,13 +2008,18 @@ fn run_new_pass_suite(config: &RunnerConfig) -> PassReport {
     };
 
     eprintln!(
-        "[sifr-e2e] timing: compile={}ms plan={}ms build={}ms build-sum={}ms run={}ms cache_hits={}",
+        "[sifr-e2e] timing: compile={}ms plan={}ms build={}ms build-sum={}ms run={}ms cache_hits={}/{}",
         compile_ms,
         plan_ms,
         build_ms,
         observed_build_ms,
         run_ms,
-        cache_hits
+        cache_hits,
+        group_count
+    );
+    eprintln!(
+        "[sifr-e2e] group_stats: groups={} largest_group_fixtures={} median_group_fixtures={}",
+        group_count, largest_group_fixtures, median_group_fixtures
     );
     eprintln!(
         "[sifr-e2e] slowest build groups:\n{}",
@@ -2779,6 +2962,52 @@ fn test_fixture_discovery_is_deterministic() {
 }
 
 #[test]
+fn test_parse_fixture_selection_manifest_requires_non_empty_fixture_names() {
+    let selected = parse_fixture_selection_manifest(r#"{"fixture_names":["beta","alpha","beta"]}"#)
+        .expect("fixture manifest should parse");
+    assert_eq!(
+        selected,
+        BTreeSet::from(["alpha".to_string(), "beta".to_string(),])
+    );
+    assert!(parse_fixture_selection_manifest(r#"{"fixture_names":[]}"#).is_err());
+    assert!(parse_fixture_selection_manifest(r#"{"fixture_names":[""]}"#).is_err());
+}
+
+#[test]
+fn test_filter_fixtures_by_selection_rejects_unknown_fixture_names() {
+    let fixtures = vec![
+        FixtureCase {
+            name: "alpha".to_string(),
+            path: PathBuf::from("alpha.sifr"),
+            source: String::new(),
+            source_hash: "a".to_string(),
+            expected_stdout: None,
+            _expected_stderr: Vec::new(),
+            _expected_errors: Vec::new(),
+        },
+        FixtureCase {
+            name: "beta".to_string(),
+            path: PathBuf::from("beta.sifr"),
+            source: String::new(),
+            source_hash: "b".to_string(),
+            expected_stdout: None,
+            _expected_stderr: Vec::new(),
+            _expected_errors: Vec::new(),
+        },
+    ];
+
+    let filtered =
+        filter_fixtures_by_selection(fixtures.clone(), &BTreeSet::from(["beta".to_string()]))
+            .expect("fixture filtering should succeed");
+    assert_eq!(filtered.len(), 1);
+    assert_eq!(filtered[0].name, "beta");
+
+    let error = filter_fixtures_by_selection(fixtures, &BTreeSet::from(["missing".to_string()]))
+        .expect_err("unknown fixtures should be rejected");
+    assert!(error.contains("unknown pass fixtures"));
+}
+
+#[test]
 fn test_dependency_fingerprint_and_cache_key_determinism() {
     let fixture = DependencyFingerprint {
         stdlib_modules: normalize_dependency_set(
@@ -2823,6 +3052,24 @@ fn test_dependency_fingerprint_and_cache_key_determinism() {
     assert!(group.id.len() > 0);
 }
 
+#[test]
+fn test_generate_cargo_toml_tomllib_uses_preserve_order_feature() {
+    let stdlib_modules = normalize_dependency_set(vec!["sifr.tomllib".to_string()].into_iter());
+    let required_crates = BTreeSet::new();
+
+    let cargo_toml = generate_cargo_toml(&stdlib_modules, &required_crates, "sifr_output");
+    assert!(cargo_toml.contains("toml = { version = \"0.8\", features = [\"preserve_order\"] }"));
+}
+
+#[test]
+fn test_generate_cargo_toml_required_toml_uses_preserve_order_feature() {
+    let stdlib_modules = BTreeSet::new();
+    let required_crates = normalize_dependency_set(vec!["toml".to_string()].into_iter());
+
+    let cargo_toml = generate_cargo_toml(&stdlib_modules, &required_crates, "sifr_output");
+    assert!(cargo_toml.contains("toml = { version = \"0.8\", features = [\"preserve_order\"] }"));
+}
+
 fn sample_cache_entry(
     group: &BatchGroup,
     toolchain: &ToolchainInfo,
@@ -2864,6 +3111,13 @@ fn sample_cache_entry(
             .map(|duration| duration.as_secs())
             .unwrap_or_default(),
     }
+}
+
+fn sample_cache_root(label: &str) -> PathBuf {
+    let now = SystemTime::now()
+        .duration_since(UNIX_EPOCH)
+        .unwrap_or_default();
+    env::temp_dir().join(format!("sifr-e2e-cache-test-{label}-{}", now.as_nanos()))
 }
 
 #[test]
@@ -2943,4 +3197,185 @@ fn test_cache_entry_invalidation_rules() {
         &toolchain,
         &env_signature,
     ));
+}
+
+#[test]
+fn test_prune_cache_manifest_removes_expired_entries_and_orphan_groups() {
+    let root = sample_cache_root("prune-expired");
+    let groups_root = cache_groups_root(&root);
+    std::fs::create_dir_all(&groups_root).expect("cache groups root");
+
+    let stale_group = "stale-group";
+    let live_group = "live-group";
+    let orphan_group = "orphan-group";
+    let missing_group = "missing-group";
+
+    for group in [stale_group, live_group, orphan_group] {
+        let group_root = cache_group_path(&root, group);
+        std::fs::create_dir_all(group_root.join("target")).expect("group root");
+    }
+
+    let now_unix_secs = 20_000;
+    let manifest = CacheManifest {
+        schema_version: E2E_CACHE_SCHEMA_VERSION,
+        entries: BTreeMap::from([
+            (
+                "stale-key".to_string(),
+                CacheEntry {
+                    schema_version: E2E_CACHE_SCHEMA_VERSION,
+                    cache_key: "stale-key".to_string(),
+                    group_id: stale_group.to_string(),
+                    group_fingerprint: "stale".to_string(),
+                    group_rust_hash: "stale".to_string(),
+                    fixture_sources: Vec::new(),
+                    compiler_signature: "toolchain".to_string(),
+                    rustc_v: "rustc".to_string(),
+                    rustc_vv: "rustc-vv".to_string(),
+                    cargo_v: "cargo".to_string(),
+                    target: "target".to_string(),
+                    os: "os".to_string(),
+                    arch: "arch".to_string(),
+                    env_signature: "env".to_string(),
+                    artifact_path: cache_group_path(&root, stale_group)
+                        .join("target")
+                        .display()
+                        .to_string(),
+                    build_log_path: None,
+                    built_at_unix_secs: now_unix_secs - E2E_CACHE_TTL_SECS - 1,
+                },
+            ),
+            (
+                "live-key".to_string(),
+                CacheEntry {
+                    schema_version: E2E_CACHE_SCHEMA_VERSION,
+                    cache_key: "live-key".to_string(),
+                    group_id: live_group.to_string(),
+                    group_fingerprint: "live".to_string(),
+                    group_rust_hash: "live".to_string(),
+                    fixture_sources: Vec::new(),
+                    compiler_signature: "toolchain".to_string(),
+                    rustc_v: "rustc".to_string(),
+                    rustc_vv: "rustc-vv".to_string(),
+                    cargo_v: "cargo".to_string(),
+                    target: "target".to_string(),
+                    os: "os".to_string(),
+                    arch: "arch".to_string(),
+                    env_signature: "env".to_string(),
+                    artifact_path: cache_group_path(&root, live_group)
+                        .join("target")
+                        .display()
+                        .to_string(),
+                    build_log_path: None,
+                    built_at_unix_secs: now_unix_secs,
+                },
+            ),
+            (
+                "missing-key".to_string(),
+                CacheEntry {
+                    schema_version: E2E_CACHE_SCHEMA_VERSION,
+                    cache_key: "missing-key".to_string(),
+                    group_id: missing_group.to_string(),
+                    group_fingerprint: "missing".to_string(),
+                    group_rust_hash: "missing".to_string(),
+                    fixture_sources: Vec::new(),
+                    compiler_signature: "toolchain".to_string(),
+                    rustc_v: "rustc".to_string(),
+                    rustc_vv: "rustc-vv".to_string(),
+                    cargo_v: "cargo".to_string(),
+                    target: "target".to_string(),
+                    os: "os".to_string(),
+                    arch: "arch".to_string(),
+                    env_signature: "env".to_string(),
+                    artifact_path: cache_group_path(&root, missing_group)
+                        .join("target")
+                        .display()
+                        .to_string(),
+                    build_log_path: None,
+                    built_at_unix_secs: now_unix_secs,
+                },
+            ),
+        ]),
+    };
+
+    let pruned = prune_cache_manifest(&root, manifest, now_unix_secs);
+    assert_eq!(pruned.entries.len(), 1);
+    assert!(pruned.entries.contains_key("live-key"));
+    assert!(cache_group_path(&root, live_group).is_dir());
+    assert!(!cache_group_path(&root, stale_group).exists());
+    assert!(!cache_group_path(&root, orphan_group).exists());
+    assert!(!pruned.entries.contains_key("missing-key"));
+
+    let _ = std::fs::remove_dir_all(root);
+}
+
+#[test]
+fn test_prune_cache_manifest_keeps_shared_live_group_for_fresh_entry() {
+    let root = sample_cache_root("prune-shared");
+    let shared_group = "shared-group";
+    std::fs::create_dir_all(cache_group_path(&root, shared_group).join("target"))
+        .expect("shared group root");
+
+    let now_unix_secs = 30_000;
+    let manifest = CacheManifest {
+        schema_version: E2E_CACHE_SCHEMA_VERSION,
+        entries: BTreeMap::from([
+            (
+                "old-key".to_string(),
+                CacheEntry {
+                    schema_version: E2E_CACHE_SCHEMA_VERSION,
+                    cache_key: "old-key".to_string(),
+                    group_id: shared_group.to_string(),
+                    group_fingerprint: "group".to_string(),
+                    group_rust_hash: "hash".to_string(),
+                    fixture_sources: Vec::new(),
+                    compiler_signature: "toolchain".to_string(),
+                    rustc_v: "rustc".to_string(),
+                    rustc_vv: "rustc-vv".to_string(),
+                    cargo_v: "cargo".to_string(),
+                    target: "target".to_string(),
+                    os: "os".to_string(),
+                    arch: "arch".to_string(),
+                    env_signature: "env".to_string(),
+                    artifact_path: cache_group_path(&root, shared_group)
+                        .join("target")
+                        .display()
+                        .to_string(),
+                    build_log_path: None,
+                    built_at_unix_secs: now_unix_secs - E2E_CACHE_TTL_SECS - 1,
+                },
+            ),
+            (
+                "fresh-key".to_string(),
+                CacheEntry {
+                    schema_version: E2E_CACHE_SCHEMA_VERSION,
+                    cache_key: "fresh-key".to_string(),
+                    group_id: shared_group.to_string(),
+                    group_fingerprint: "group".to_string(),
+                    group_rust_hash: "hash".to_string(),
+                    fixture_sources: Vec::new(),
+                    compiler_signature: "toolchain".to_string(),
+                    rustc_v: "rustc".to_string(),
+                    rustc_vv: "rustc-vv".to_string(),
+                    cargo_v: "cargo".to_string(),
+                    target: "target".to_string(),
+                    os: "os".to_string(),
+                    arch: "arch".to_string(),
+                    env_signature: "env".to_string(),
+                    artifact_path: cache_group_path(&root, shared_group)
+                        .join("target")
+                        .display()
+                        .to_string(),
+                    build_log_path: None,
+                    built_at_unix_secs: now_unix_secs,
+                },
+            ),
+        ]),
+    };
+
+    let pruned = prune_cache_manifest(&root, manifest, now_unix_secs);
+    assert_eq!(pruned.entries.len(), 1);
+    assert!(pruned.entries.contains_key("fresh-key"));
+    assert!(cache_group_path(&root, shared_group).is_dir());
+
+    let _ = std::fs::remove_dir_all(root);
 }

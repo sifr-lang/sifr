@@ -1,0 +1,11 @@
+# expect-error: SIFR-TYPE-0001: class 'BadReversed.__reversed__' must return 'Iterator[T]' or 'Iterable[T]'
+class BadReversed:
+    def __iter__(self) -> Iterator[int]:
+        return iter([1, 2])
+
+    def __reversed__(self) -> int:
+        return 0
+
+
+def main():
+    _ = BadReversed()

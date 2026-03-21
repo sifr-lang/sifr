@@ -161,6 +161,7 @@ fn lower_intrinsic_rendered(name: &str, args: &[RustExpr]) -> Option<LoweredIntr
         "file_write_bytes" => (file_handles::lower_file_write_bytes(args), None),
         "json_loads" => (json::lower_json_loads(args), Some("serde_json")),
         "json_dumps" => (json::lower_json_dumps(args), Some("serde_json")),
+        "json_dumps_value" => (json::lower_json_dumps_value(args), Some("serde_json")),
         "assert_eq" => (test::lower_assert_eq(args), None),
         "assert_ne" => (test::lower_assert_ne(args), None),
         "assert_true" => (test::lower_assert_true(args), None),
@@ -197,9 +198,18 @@ fn lower_intrinsic_rendered(name: &str, args: &[RustExpr]) -> Option<LoweredIntr
         "defaultdict_get" => (collections::lower_defaultdict_get(args), Some("serde_json")),
         "defaultdict_set" => (collections::lower_defaultdict_set(args), Some("serde_json")),
         "encode_utf8" => (bytes::lower_encode_utf8(args), None),
+        "str_encode_utf8_result" => (bytes::lower_str_encode_utf8_result(args), None),
+        "str_encode_utf8_result_with_encoding" => (
+            bytes::lower_str_encode_utf8_result_with_encoding(args),
+            None,
+        ),
         "decode_utf8" => (bytes::lower_decode_utf8(args), None),
+        "decode_utf8_with_encoding" => (bytes::lower_decode_utf8_with_encoding(args), None),
         "bytes_to_hex" => (bytes::lower_bytes_to_hex(args), None),
+        "bytes_to_hex_strict" => (bytes::lower_bytes_to_hex_strict(args), None),
         "bytes_from_hex" => (bytes::lower_bytes_from_hex(args), None),
+        "bytes_with_size" => (bytes::lower_bytes_with_size(args), None),
+        "bytes_from_ints" => (bytes::lower_bytes_from_ints(args), None),
         "time_now" => (time::lower_time_now(args), None),
         "sleep" => (time::lower_sleep(args), None),
         "time_format" => (time::lower_time_format(args), Some("chrono")),
@@ -222,6 +232,12 @@ fn lower_intrinsic_rendered(name: &str, args: &[RustExpr]) -> Option<LoweredIntr
         "random_sample" => (random::lower_random_sample(args), Some("rand")),
         "random_randrange" => (random::lower_random_randrange(args), Some("rand")),
         "random_gauss" => (random::lower_random_gauss(args), Some("rand")),
+        "random_module_state_words" => (random::lower_random_module_state_words(args), None),
+        "random_module_state_index" => (random::lower_random_module_state_index(args), None),
+        "random_module_state_gauss_next" => {
+            (random::lower_random_module_state_gauss_next(args), None)
+        }
+        "random_module_set_state" => (random::lower_random_module_set_state(args), None),
         "re_match" => (re::lower_re_match(args), Some("regex")),
         "re_find" => (re::lower_re_find(args), Some("regex")),
         "re_replace" => (re::lower_re_replace(args), Some("regex")),
@@ -236,6 +252,8 @@ fn lower_intrinsic_rendered(name: &str, args: &[RustExpr]) -> Option<LoweredIntr
         "re_split_flags" => (re::lower_re_split_flags(args), Some("regex")),
         "sha256" => (hash::lower_sha256(args), Some("sha2")),
         "md5" => (hash::lower_md5(args), Some("md5")),
+        "sha256_bytes" => (hashlib::lower_sha256_bytes(args), Some("sha2")),
+        "md5_bytes" => (hashlib::lower_md5_bytes(args), Some("md5")),
         "platform_system" => (platform::lower_platform_system(args), None),
         "platform_arch" => (platform::lower_platform_arch(args), None),
         "platform_node" => (platform::lower_platform_node(args), None),
@@ -243,6 +261,8 @@ fn lower_intrinsic_rendered(name: &str, args: &[RustExpr]) -> Option<LoweredIntr
         "platform_version" => (platform::lower_platform_version(args), None),
         "platform_processor" => (platform::lower_platform_processor(args), None),
         "uuid4" => (uuid::lower_uuid4(args), Some("rand")),
+        "uuid3_text" => (uuid::lower_uuid3(args), Some("uuid")),
+        "uuid5_text" => (uuid::lower_uuid5(args), Some("uuid")),
         "toml_parse" => (toml::lower_toml_parse(args), Some("toml")),
         "datetime_now" => (datetime::lower_datetime_now(args), Some("chrono")),
         "datetime_now_struct" => (datetime::lower_datetime_now_struct(args), Some("chrono")),
@@ -267,24 +287,40 @@ fn lower_intrinsic_rendered(name: &str, args: &[RustExpr]) -> Option<LoweredIntr
         "gzip_decompress" => (gzip::lower_gzip_decompress(args), Some("flate2")),
         "zip_create" => (zipfile::lower_zip_create(args), Some("zip")),
         "zip_add_file" => (zipfile::lower_zip_add_file(args), Some("zip")),
+        "zip_add_file_bytes" => (zipfile::lower_zip_add_file_bytes(args), Some("zip")),
         "zip_read_file" => (zipfile::lower_zip_read_file(args), Some("zip")),
+        "zip_read_file_bytes" => (zipfile::lower_zip_read_file_bytes(args), Some("zip")),
         "zip_namelist" => (zipfile::lower_zip_namelist(args), Some("zip")),
         "base64_encode" => (base64::lower_base64_encode(args), Some("base64")),
         "base64_decode" => (base64::lower_base64_decode(args), Some("base64")),
+        "base64_encode_bytes" => (base64::lower_base64_encode_bytes(args), Some("base64")),
+        "base64_decode_bytes" => (base64::lower_base64_decode_bytes(args), Some("base64")),
         "base64_encode_opts" => (base64::lower_base64_encode_opts(args), Some("base64")),
         "base64_decode_opts" => (base64::lower_base64_decode_opts(args), Some("base64")),
         "urlsafe_b64encode" => (base64::lower_urlsafe_b64encode(args), Some("base64")),
         "urlsafe_b64decode" => (base64::lower_urlsafe_b64decode(args), Some("base64")),
+        "urlsafe_b64encode_bytes" => {
+            (base64::lower_urlsafe_b64encode_bytes(args), Some("base64"))
+        }
+        "urlsafe_b64decode_bytes" => {
+            (base64::lower_urlsafe_b64decode_bytes(args), Some("base64"))
+        }
         "b32encode" => (base32::lower_b32encode(args), None),
         "b32decode" => (base32::lower_b32decode(args), None),
         "b32hexencode" => (base32::lower_b32hexencode(args), None),
         "b32hexdecode" => (base32::lower_b32hexdecode(args), None),
         "sha1" => (hashlib::lower_sha1(args), Some("sha1")),
+        "sha1_bytes" => (hashlib::lower_sha1_bytes(args), Some("sha1")),
         "sha512" => (hashlib::lower_sha512(args), Some("sha2")),
+        "sha512_bytes" => (hashlib::lower_sha512_bytes(args), Some("sha2")),
         "sha224" => (hashlib::lower_sha224(args), Some("sha2")),
+        "sha224_bytes" => (hashlib::lower_sha224_bytes(args), Some("sha2")),
         "sha384" => (hashlib::lower_sha384(args), Some("sha2")),
+        "sha384_bytes" => (hashlib::lower_sha384_bytes(args), Some("sha2")),
         "blake2b" => (hashlib::lower_blake2b(args), Some("blake2")),
+        "blake2b_bytes" => (hashlib::lower_blake2b_bytes(args), Some("blake2")),
         "blake2s" => (hashlib::lower_blake2s(args), Some("blake2")),
+        "blake2s_bytes" => (hashlib::lower_blake2s_bytes(args), Some("blake2")),
         "set_global_level" => (logging::lower_set_global_level(args), None),
         "get_global_level" => (logging::lower_get_global_level(args), None),
         _ => return None,
@@ -554,11 +590,43 @@ mod tests {
         let enc = lower_intrinsic("encode_utf8", &["s".to_string()]).expect("encode_utf8");
         assert!(render_expr(&enc.expr).contains("as_bytes()"));
 
+        let enc_result = lower_intrinsic("str_encode_utf8_result", &["s".to_string()])
+            .expect("str_encode_utf8_result");
+        assert!(render_expr(&enc_result.expr).contains("Ok"));
+
+        let enc_with_codec = lower_intrinsic(
+            "str_encode_utf8_result_with_encoding",
+            &["s".to_string(), "codec".to_string()],
+        )
+        .expect("str_encode_utf8_result_with_encoding");
+        assert!(render_expr(&enc_with_codec.expr).contains("UTF-8 encoding"));
+
         let dec = lower_intrinsic("decode_utf8", &["vals".to_string()]).expect("decode_utf8");
         assert!(render_expr(&dec.expr).contains("String::from_utf8"));
 
+        let dec_with_codec = lower_intrinsic(
+            "decode_utf8_with_encoding",
+            &["vals".to_string(), "codec".to_string()],
+        )
+        .expect("decode_utf8_with_encoding");
+        assert!(render_expr(&dec_with_codec.expr).contains("UTF-8 encoding"));
+
+        let with_size =
+            lower_intrinsic("bytes_with_size", &["n".to_string()]).expect("bytes_with_size");
+        assert!(render_expr(&with_size.expr).contains("non-negative size"));
+
+        let from_ints =
+            lower_intrinsic("bytes_from_ints", &["vals".to_string()]).expect("bytes_from_ints");
+        assert!(render_expr(&from_ints.expr).contains("byte out of range at index"));
+
         let to_hex = lower_intrinsic("bytes_to_hex", &["vals".to_string()]).expect("bytes_to_hex");
-        assert!(render_expr(&to_hex.expr).contains("byte out of range"));
+        assert!(render_expr(&to_hex.expr).contains("{:02x}"));
+        assert!(render_expr(&to_hex.expr).contains("Ok"));
+
+        let to_hex_strict =
+            lower_intrinsic("bytes_to_hex_strict", &["vals".to_string()]).expect("bytes_to_hex_strict");
+        assert!(render_expr(&to_hex_strict.expr).contains("{:02x}"));
+        assert!(!render_expr(&to_hex_strict.expr).contains("Ok"));
 
         let from_hex =
             lower_intrinsic("bytes_from_hex", &["hex".to_string()]).expect("bytes_from_hex");
@@ -656,6 +724,31 @@ mod tests {
             .expect("random_gauss");
         assert!(gauss.additional_required_crates.contains(&"rand_distr"));
         assert!(render_expr(&gauss.expr).contains("rand_distr"));
+
+        let state_words =
+            lower_intrinsic("random_module_state_words", &[]).expect("random_module_state_words");
+        assert_eq!(state_words.required_crate, None);
+        assert!(render_expr(&state_words.expr).contains("__SIFR_RANDOM_MODULE_STATE"));
+        assert!(render_expr(&state_words.expr).contains(".words"));
+
+        let state_index =
+            lower_intrinsic("random_module_state_index", &[]).expect("random_module_state_index");
+        assert_eq!(state_index.required_crate, None);
+        assert!(render_expr(&state_index.expr).contains(".index"));
+
+        let state_gauss = lower_intrinsic("random_module_state_gauss_next", &[])
+            .expect("random_module_state_gauss_next");
+        assert_eq!(state_gauss.required_crate, None);
+        assert!(render_expr(&state_gauss.expr).contains(".gauss_next"));
+
+        let set_state = lower_intrinsic(
+            "random_module_set_state",
+            &["words".to_string(), "index".to_string(), "gauss".to_string()],
+        )
+        .expect("random_module_set_state");
+        assert_eq!(set_state.required_crate, None);
+        assert!(render_expr(&set_state.expr).contains("length 624"));
+        assert!(render_expr(&set_state.expr).contains("random module state index"));
     }
 
     #[test]
@@ -724,6 +817,17 @@ mod tests {
         assert_eq!(md5.required_crate, Some("md5"));
         assert!(render_expr(&md5.expr).contains("md5::compute"));
         assert!(render_expr(&md5.expr).contains(".as_bytes()"));
+
+        let sha_bytes = lower_intrinsic("sha256_bytes", &["payload".to_string()])
+            .expect("sha256_bytes");
+        assert_eq!(sha_bytes.required_crate, Some("sha2"));
+        assert!(render_expr(&sha_bytes.expr).contains("to_vec"));
+
+        let md5_bytes = lower_intrinsic("md5_bytes", &["payload".to_string()]).expect("md5_bytes");
+        assert_eq!(md5_bytes.required_crate, Some("md5"));
+        assert!(render_expr(&md5_bytes.expr).contains("md5::compute"));
+        assert!(render_expr(&md5_bytes.expr).contains(".0"));
+        assert!(render_expr(&md5_bytes.expr).contains("to_vec"));
     }
 
     #[test]
@@ -767,6 +871,17 @@ mod tests {
         assert!(render_expr(&uuid.expr).contains("rand::random::<u32>()"));
         assert!(render_expr(&uuid.expr).contains("format!(\"{:08x}-{:04x}-{:04x}-{:04x}-{:012x}\""));
         assert!(render_expr(&uuid.expr).contains("(rand::random::<u16>() & 4095)"));
+
+        let uuid3 =
+            lower_intrinsic("uuid3_text", &["ns".to_string(), "name".to_string()]).expect("uuid3");
+        assert_eq!(uuid3.required_crate, Some("uuid"));
+        assert!(render_expr(&uuid3.expr).contains("uuid::Uuid::parse_str"));
+        assert!(render_expr(&uuid3.expr).contains("uuid::Uuid::new_v3"));
+
+        let uuid5 =
+            lower_intrinsic("uuid5_text", &["ns".to_string(), "name".to_string()]).expect("uuid5");
+        assert_eq!(uuid5.required_crate, Some("uuid"));
+        assert!(render_expr(&uuid5.expr).contains("uuid::Uuid::new_v5"));
     }
 
     #[test]
@@ -902,10 +1017,30 @@ mod tests {
         assert_eq!(add.required_crate, Some("zip"));
         assert!(render_expr(&add.expr).contains("start_file"));
 
+        let add_bytes = lower_intrinsic(
+            "zip_add_file_bytes",
+            &[
+                "path".to_string(),
+                "name".to_string(),
+                "content_bytes".to_string(),
+            ],
+        )
+        .expect("zip_add_file_bytes");
+        assert_eq!(add_bytes.required_crate, Some("zip"));
+        assert!(render_expr(&add_bytes.expr).contains("write_all"));
+
         let read = lower_intrinsic("zip_read_file", &["path".to_string(), "name".to_string()])
             .expect("zip_read_file");
         assert_eq!(read.required_crate, Some("zip"));
         assert!(render_expr(&read.expr).contains("ZipArchive::new"));
+
+        let read_bytes = lower_intrinsic(
+            "zip_read_file_bytes",
+            &["path".to_string(), "name".to_string()],
+        )
+        .expect("zip_read_file_bytes");
+        assert_eq!(read_bytes.required_crate, Some("zip"));
+        assert!(render_expr(&read_bytes.expr).contains("read_to_end"));
 
         let names = lower_intrinsic("zip_namelist", &["path".to_string()]).expect("zip_namelist");
         assert_eq!(names.required_crate, Some("zip"));
@@ -923,6 +1058,16 @@ mod tests {
         assert_eq!(dec.required_crate, Some("base64"));
         assert!(render_expr(&dec.expr).contains("base64::Engine::decode"));
         assert!(render_expr(&dec.expr).contains("general_purpose::STANDARD"));
+
+        let enc_bytes = lower_intrinsic("base64_encode_bytes", &["b".to_string()])
+            .expect("base64_encode_bytes");
+        assert_eq!(enc_bytes.required_crate, Some("base64"));
+        assert!(render_expr(&enc_bytes.expr).contains("into_bytes"));
+
+        let dec_bytes = lower_intrinsic("base64_decode_bytes", &["b".to_string()])
+            .expect("base64_decode_bytes");
+        assert_eq!(dec_bytes.required_crate, Some("base64"));
+        assert!(render_expr(&dec_bytes.expr).contains("base64::Engine::decode"));
 
         let enc_opts = lower_intrinsic(
             "base64_encode_opts",
@@ -956,6 +1101,16 @@ mod tests {
         assert_eq!(url_dec.required_crate, Some("base64"));
         assert!(render_expr(&url_dec.expr).contains("base64::Engine::decode"));
         assert!(render_expr(&url_dec.expr).contains("general_purpose::URL_SAFE"));
+
+        let url_enc_bytes = lower_intrinsic("urlsafe_b64encode_bytes", &["b".to_string()])
+            .expect("urlsafe_b64encode_bytes");
+        assert_eq!(url_enc_bytes.required_crate, Some("base64"));
+        assert!(render_expr(&url_enc_bytes.expr).contains("into_bytes"));
+
+        let url_dec_bytes = lower_intrinsic("urlsafe_b64decode_bytes", &["b".to_string()])
+            .expect("urlsafe_b64decode_bytes");
+        assert_eq!(url_dec_bytes.required_crate, Some("base64"));
+        assert!(render_expr(&url_dec_bytes.expr).contains("base64::Engine::decode"));
     }
 
     #[test]
@@ -979,25 +1134,54 @@ mod tests {
         assert_eq!(sha1.required_crate, Some("sha1"));
         assert!(render_expr(&sha1.expr).contains("<sha1::Sha1 as sha1::Digest>::digest"));
 
+        let sha1_bytes = lower_intrinsic("sha1_bytes", &["b".to_string()]).expect("sha1_bytes");
+        assert_eq!(sha1_bytes.required_crate, Some("sha1"));
+        assert!(render_expr(&sha1_bytes.expr).contains("to_vec"));
+
         let sha512 = lower_intrinsic("sha512", &["s".to_string()]).expect("sha512");
         assert_eq!(sha512.required_crate, Some("sha2"));
         assert!(render_expr(&sha512.expr).contains("<sha2::Sha512 as sha2::Digest>::digest"));
+
+        let sha512_bytes =
+            lower_intrinsic("sha512_bytes", &["b".to_string()]).expect("sha512_bytes");
+        assert_eq!(sha512_bytes.required_crate, Some("sha2"));
+        assert!(render_expr(&sha512_bytes.expr).contains("to_vec"));
 
         let sha224 = lower_intrinsic("sha224", &["s".to_string()]).expect("sha224");
         assert_eq!(sha224.required_crate, Some("sha2"));
         assert!(render_expr(&sha224.expr).contains("<sha2::Sha224 as sha2::Digest>::digest"));
 
+        let sha224_bytes =
+            lower_intrinsic("sha224_bytes", &["b".to_string()]).expect("sha224_bytes");
+        assert_eq!(sha224_bytes.required_crate, Some("sha2"));
+        assert!(render_expr(&sha224_bytes.expr).contains("to_vec"));
+
         let sha384 = lower_intrinsic("sha384", &["s".to_string()]).expect("sha384");
         assert_eq!(sha384.required_crate, Some("sha2"));
         assert!(render_expr(&sha384.expr).contains("<sha2::Sha384 as sha2::Digest>::digest"));
+
+        let sha384_bytes =
+            lower_intrinsic("sha384_bytes", &["b".to_string()]).expect("sha384_bytes");
+        assert_eq!(sha384_bytes.required_crate, Some("sha2"));
+        assert!(render_expr(&sha384_bytes.expr).contains("to_vec"));
 
         let blake2b = lower_intrinsic("blake2b", &["s".to_string()]).expect("blake2b");
         assert_eq!(blake2b.required_crate, Some("blake2"));
         assert!(render_expr(&blake2b.expr).contains("Blake2b512"));
 
+        let blake2b_bytes =
+            lower_intrinsic("blake2b_bytes", &["b".to_string()]).expect("blake2b_bytes");
+        assert_eq!(blake2b_bytes.required_crate, Some("blake2"));
+        assert!(render_expr(&blake2b_bytes.expr).contains("to_vec"));
+
         let blake2s = lower_intrinsic("blake2s", &["s".to_string()]).expect("blake2s");
         assert_eq!(blake2s.required_crate, Some("blake2"));
         assert!(render_expr(&blake2s.expr).contains("Blake2s256"));
+
+        let blake2s_bytes =
+            lower_intrinsic("blake2s_bytes", &["b".to_string()]).expect("blake2s_bytes");
+        assert_eq!(blake2s_bytes.required_crate, Some("blake2"));
+        assert!(render_expr(&blake2s_bytes.expr).contains("to_vec"));
     }
 
     #[test]

@@ -1,8 +1,8 @@
 # Ad Hoc Phase: Python Source Parity and CPython Surface Closure
 
-Status: proposed
+Status: complete
 Phase placement: ad hoc interstitial phase between Phase 31 and Phase 32
-Phase owner: must be assigned in the execution checklist issue before implementation starts
+Phase owner: Codex (GPT-5), tracked in `issues/ad-hoc-python-source-parity-and-builtin-stdlib-surface-execution.md`
 
 ## Objective
 
@@ -1003,6 +1003,10 @@ The phase must define and keep current:
 - milestone demos covering major user-visible parity expansions
 - validation evidence summary for each milestone
 - final exit-gate closure summary mapping shipped surfaces to their terminal classification
+
+Current canonical artifact path for milestone 7 governance closure:
+
+- `verification/stdlib/milestone_psp_7_parity_governance_inventory.md`
 
 ### Exit criteria
 

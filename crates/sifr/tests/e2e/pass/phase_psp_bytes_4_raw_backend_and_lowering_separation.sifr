@@ -1,0 +1,90 @@
+from sifr.bytes import bytes_from_hex, bytes_to_hex
+from sifr.io import exists
+from sifr.os import remove_file
+
+
+def sum_bytes(data: bytes) -> int:
+    total: int = 0
+    for value in data:
+        total = total + value
+    return total
+
+
+def main():
+    payload: bytes = b"ABCD"
+    index_ok: bool = False
+    iter_ok: bool = False
+    contains_ok: bool = False
+    count_ok: bool = False
+    index_miss_ok: bool = False
+    codec_ok: bool = False
+    io_ok: bool = False
+    cleanup_ok: bool = False
+    range_guard_ok: bool = False
+    utf8_guard_ok: bool = False
+    hex_guard_ok: bool = False
+
+    idx: int | None = payload[1]
+    if idx is not None:
+        index_ok = idx == 66
+
+    iter_ok = sum_bytes(payload) == 266
+    contains_ok = payload.contains(67) and (not payload.contains(300))
+    count_ok = payload.count(65) == 1 and payload.count(300) == 0
+
+    missing_idx: int | None = payload.index(300)
+    index_miss_ok = missing_idx is None
+
+    try:
+        hexed: str = bytes_to_hex(payload)
+        roundtrip: bytes = bytes_from_hex(hexed)
+        codec_ok = roundtrip == payload
+    except ParseError as e:
+        _ = str(e.message)
+
+    path: str = "/tmp/sifr_phase_psp_bytes_4_raw_backend.bin"
+    try:
+        writer = open(path, "wb")
+        _w: None = writer.write_bytes(payload)
+        writer.close()
+
+        reader = open(path, "rb")
+        loaded: bytes = reader.read_bytes()
+        reader.close()
+        io_ok = loaded == payload and str(loaded.to_ints()) == "[65, 66, 67, 68]"
+    except IOError as e:
+        _ = str(e.message)
+
+    try:
+        if exists(path):
+            _rm: None = remove_file(path)
+        cleanup_ok = not exists(path)
+    except IOError as e:
+        _ = str(e.message)
+
+    try:
+        _bad: bytes = bytes.from_ints([1, 300, 2])
+    except ValueError as e:
+        range_guard_ok = "byte out of range" in e.message
+
+    try:
+        _bad_text: str = b"\xff".decode()
+    except ParseError as e:
+        utf8_guard_ok = "utf" in e.message.lower()
+
+    try:
+        _bad_hex: bytes = bytes.from_hex("GG")
+    except ParseError as e:
+        hex_guard_ok = "invalid hex character" in e.message
+
+    assert index_ok
+    assert iter_ok
+    assert contains_ok
+    assert count_ok
+    assert index_miss_ok
+    assert codec_ok
+    assert io_ok
+    assert cleanup_ok
+    assert range_guard_ok
+    assert utf8_guard_ok
+    assert hex_guard_ok

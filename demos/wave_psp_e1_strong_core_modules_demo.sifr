@@ -1,0 +1,36 @@
+from sifr.datetime import datetime, from_timestamp
+from sifr.re import search
+from sifr.math import comb, isclose
+from sifr.statistics import mean, StatisticsError
+from sifr.hashlib import new, HashObject
+
+
+def main():
+    dt: datetime = datetime(2026, 3, 16, 12, 0, 0)
+    print("datetime.isoformat = " + dt.isoformat())
+    try:
+        epoch: datetime = from_timestamp(0.0)
+        print("datetime.from_timestamp(0) = " + epoch.isoformat())
+    except ValueError as e:
+        print("datetime error: " + e.message)
+
+    try:
+        found: str | None = search("\\d+", "sifr-1200")
+        print("re.search = " + str(found))
+    except RegexError as e:
+        print("re error: " + e.message)
+
+    print("math.comb(8, 3) = " + str(comb(8, 3)))
+    print("math.isclose(0.1+0.2, 0.3) = " + str(isclose(0.30000000000000004, 0.3, 1e-9, 0.0)))
+
+    try:
+        avg: float = mean([2.0, 4.0, 6.0, 8.0])
+        print("statistics.mean = " + str(avg))
+    except StatisticsError as e:
+        print("statistics error: " + e.message)
+
+    try:
+        h: HashObject = new("sha256", "wave_psp_e1")
+        print("hashlib.sha256 len = " + str(len(h.hexdigest())))
+    except ValueError as e:
+        print("hashlib error: " + e.message)

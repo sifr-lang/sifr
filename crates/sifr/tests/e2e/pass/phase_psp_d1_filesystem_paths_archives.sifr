@@ -1,0 +1,190 @@
+from sifr.io import open, read_text, write_text, exists
+from sifr.pathlib import Path
+from sifr.glob import glob
+from sifr.shutil import copy, move_file, rmtree, which, disk_usage
+from sifr.tempfile import mkdtemp, mkstemp
+from sifr.gzip import compress, decompress
+from sifr.zipfile import ZipFile
+from sifr.os import run_command
+from sifr.test import assert_bool_vector_eq
+
+
+def collect_io_path_glob_actual() -> list[bool]:
+    actual: list[bool] = []
+    base: str = "/tmp/sifr_phase_psp_d1_fixture_root"
+    path: str = base + "/alpha.txt"
+    sub_path: str = base + "/sub/beta.txt"
+
+    write_read_ok: bool = False
+    path_meta_ok: bool = False
+    glob_ok: bool = False
+    rglob_ok: bool = False
+    cleanup_ok: bool = False
+
+    try:
+        _mk: str = run_command("mkdir -p " + base + "/sub")
+        _w1: None = write_text(path, "line1\nline2")
+        _w2: None = write_text(sub_path, "sub")
+
+        with open(path, "r") as handle:
+            lines: list[str] = handle.readlines()
+            write_read_ok = len(lines) == 2 and lines[0] == "line1" and lines[1] == "line2"
+
+        p: Path = Path(path)
+        path_meta_ok = p.exists() and p.is_file() and p.suffix() == ".txt" and p.stem() == "alpha"
+
+        root: Path = Path(base + "")
+        top_txt: list[str] = glob(base, "*.txt")
+        glob_ok = len(top_txt) == 1 and top_txt[0] == "alpha.txt"
+
+        recursive_it: Iterator[str] = root.rglob("*.txt")
+        recursive_txt: list[str] = list(recursive_it)
+        rglob_ok = len(recursive_txt) >= 2
+    except IOError as e:
+        _ = e.message
+
+    try:
+        _cleanup: str = run_command("rm -rf " + base)
+        _ = _cleanup
+    except IOError as e:
+        _ = e.message
+    cleanup_ok = not exists(base)
+
+    actual.append(write_read_ok)
+    actual.append(path_meta_ok)
+    actual.append(glob_ok)
+    actual.append(rglob_ok)
+    actual.append(cleanup_ok)
+    return actual
+
+
+def collect_shutil_temp_actual() -> list[bool]:
+    actual: list[bool] = []
+    copy_ok: bool = False
+    move_ok: bool = False
+    which_ok: bool = False
+    usage_ok: bool = False
+    temp_exists_ok: bool = False
+    tree_cleanup_ok: bool = False
+    temp_cleanup_ok: bool = False
+
+    try:
+        tree: str = mkdtemp("sifr_phase_psp_d1_tree_")
+        src: str = tree + "/src.txt"
+        copied: str = tree + "/copied.txt"
+        moved: str = tree + "/moved.txt"
+        temp_file: str = mkstemp("sifr_phase_psp_d1_file_")
+
+        _w: None = write_text(src, "wave-d1")
+        _cp: None = copy(src, copied)
+        copied_content_ok: bool = False
+        try:
+            copied_content: str = read_text(copied)
+            copied_content_ok = copied_content == "wave-d1"
+        except IOError as e:
+            _ = e.message
+        copy_ok = exists(src) and exists(copied) and copied_content_ok
+
+        _mv: None = move_file(copied, moved)
+        move_ok = exists(moved) and (not exists(copied))
+
+        usage: list[int] = disk_usage(tree + "")
+        if len(usage) == 3:
+            total: int | None = usage[0]
+            used: int | None = usage[1]
+            free: int | None = usage[2]
+            if total is not None and used is not None and free is not None:
+                usage_ok = total > 0 and used >= 0 and free >= 0
+        shell_path: str | None = which("sh")
+        if shell_path is not None:
+            which_ok = len(shell_path) > 0
+
+        temp_exists_ok = exists(temp_file)
+        try:
+            _rt: None = rmtree(tree)
+            tree_cleanup_ok = not exists(tree)
+        except IOError as e:
+            _ = e.message
+
+        _cleanup_temp: str = run_command("rm -f " + temp_file)
+        temp_cleanup_ok = not exists(temp_file)
+    except IOError as e:
+        _ = e.message
+
+    actual.append(copy_ok)
+    actual.append(move_ok)
+    actual.append(which_ok)
+    actual.append(usage_ok)
+    actual.append(temp_exists_ok)
+    actual.append(tree_cleanup_ok)
+    actual.append(temp_cleanup_ok)
+    return actual
+
+
+def collect_gzip_zip_actual() -> list[bool]:
+    actual: list[bool] = []
+    payload: str = "wave-psp-d1"
+    compressed: list[int] = compress(payload)
+    compress_ok: bool = len(compressed) > 0
+
+    decompress_ok: bool = False
+    invalid_gzip_rejected: bool = False
+    zip_roundtrip_ok: bool = False
+    zip_cleanup_ok: bool = False
+
+    try:
+        restored: str = decompress(compressed)
+        decompress_ok = restored == payload
+    except IOError as e:
+        _ = e.message
+
+    try:
+        _bad_restore: str = decompress([1, 2, 3, 4])
+        _ = _bad_restore
+    except IOError as e:
+        _ = e.message
+        invalid_gzip_rejected = True
+
+    zip_path: str = "/tmp/sifr_phase_psp_d1_fixture_zip.zip"
+    archive: ZipFile = ZipFile(zip_path + "")
+    try:
+        _create: None = archive.create()
+        _write: None = archive.write("hello.txt", "hello")
+        names: list[str] = archive.namelist()
+        zip_roundtrip_ok = len(names) == 1 and names[0] == "hello.txt"
+    except IOError as e:
+        _ = e.message
+
+    try:
+        _zip_cleanup: str = run_command("rm -f " + zip_path)
+        _ = _zip_cleanup
+    except IOError as e:
+        _ = e.message
+    zip_cleanup_ok = not exists(zip_path)
+
+    actual.append(compress_ok)
+    actual.append(decompress_ok)
+    actual.append(invalid_gzip_rejected)
+    actual.append(zip_roundtrip_ok)
+    actual.append(zip_cleanup_ok)
+    return actual
+
+
+def append_all(mut target: list[bool], values: list[bool]):
+    for value in values:
+        target.append(value)
+
+
+def main():
+    expected: list[bool] = [
+        True, True, True, True, True,
+        True, True, True, True, True, True, True,
+        True, True, True, True, True
+    ]
+    actual: list[bool] = []
+    append_all(actual, collect_io_path_glob_actual())
+    append_all(actual, collect_shutil_temp_actual())
+    append_all(actual, collect_gzip_zip_actual())
+
+    assert_bool_vector_eq(actual, expected)
+    assert str("phase_psp_d1_filesystem_paths_archives: pass") == "phase_psp_d1_filesystem_paths_archives: pass"

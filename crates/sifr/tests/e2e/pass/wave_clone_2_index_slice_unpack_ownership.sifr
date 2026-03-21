@@ -1,0 +1,47 @@
+def main():
+    nums: list[int] = [10, 20, 30, 40]
+    first_opt: int | None = nums[0]
+    if first_opt is not None:
+        assert first_opt == 10
+    else:
+        assert False
+
+    missing_opt: int | None = nums[99]
+    if missing_opt is not None:
+        assert False
+
+    scores: dict[str, int] = {"alice": 7, "bob": 9}
+    alice_opt: int | None = scores["alice"]
+    if alice_opt is not None:
+        assert alice_opt == 7
+    else:
+        assert False
+
+    ghost_opt: int | None = scores["ghost"]
+    if ghost_opt is not None:
+        assert False
+
+    words: list[str] = ["aa", "bb", "cc"]
+    word_opt: str | None = words[1]
+    if word_opt is not None:
+        assert word_opt == "bb"
+    else:
+        assert False
+
+    # Star-unpack must not clone the whole source container first.
+    first, *middle, last = nums
+    assert first == 10
+    assert str(middle) == "[20, 30]"
+    assert last == 40
+    assert len(nums) == 4
+
+    head, *tail = [1, 2, 3]
+    assert head == 1
+    assert str(tail) == "[2, 3]"
+
+    # Slicing remains element-scoped and preserves source usage.
+    evens: list[int] = nums[::2]
+    assert str(evens) == "[10, 30]"
+    assert len(nums) == 4
+
+    print("wave_clone_2_index_slice_unpack_ownership: pass")

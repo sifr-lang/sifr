@@ -1,0 +1,5 @@
+from sifr.subprocess import Popen
+
+
+def main() -> None:
+    _ = Popen

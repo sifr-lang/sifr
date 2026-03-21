@@ -80,6 +80,11 @@ pub(super) fn detect_true_sequence_guards(expr: &Expr, ctx: &LowerCtx) -> Vec<Se
 
 pub(super) fn detect_false_exit_sequence_guards(expr: &Expr, ctx: &LowerCtx) -> Vec<SequenceGuard> {
     match expr {
+        Expr::BoolOp(boolop) if matches!(boolop.op, BoolOp::Or) => boolop
+            .values
+            .iter()
+            .flat_map(|value| detect_false_exit_sequence_guards(value, ctx))
+            .collect(),
         Expr::UnaryOp(unary) if matches!(unary.op, UnaryOp::Not) => {
             detect_true_sequence_guards(&unary.operand, ctx)
         }
@@ -88,28 +93,53 @@ pub(super) fn detect_false_exit_sequence_guards(expr: &Expr, ctx: &LowerCtx) -> 
             min_len: 1,
         }],
         Expr::Compare(cmp) if cmp.ops.len() == 1 && cmp.comparators.len() == 1 => {
-            if !matches!(&cmp.ops[0], CmpOp::Eq) {
-                return Vec::new();
-            }
-            let Some(sequence_name) = len_call_sequence_name(cmp.left.as_ref()) else {
-                return Vec::new();
-            };
-            let Some(len_value) = literal_usize(&cmp.comparators[0]) else {
-                return Vec::new();
-            };
-            let current_min_len = ctx.min_length_guard(&sequence_name);
-            if current_min_len >= len_value {
-                vec![SequenceGuard::MinLength {
-                    sequence: sequence_name,
-                    min_len: len_value + 1,
-                }]
-            } else if len_value == 0 {
-                vec![SequenceGuard::MinLength {
-                    sequence: sequence_name,
-                    min_len: 1,
-                }]
-            } else {
-                Vec::new()
+            match &cmp.ops[0] {
+                CmpOp::Eq => {
+                    let Some(sequence_name) = len_call_sequence_name(cmp.left.as_ref()) else {
+                        return Vec::new();
+                    };
+                    let Some(len_value) = literal_usize(&cmp.comparators[0]) else {
+                        return Vec::new();
+                    };
+                    let current_min_len = ctx.min_length_guard(&sequence_name);
+                    if current_min_len >= len_value {
+                        vec![SequenceGuard::MinLength {
+                            sequence: sequence_name,
+                            min_len: len_value + 1,
+                        }]
+                    } else if len_value == 0 {
+                        vec![SequenceGuard::MinLength {
+                            sequence: sequence_name,
+                            min_len: 1,
+                        }]
+                    } else {
+                        Vec::new()
+                    }
+                }
+                CmpOp::GtE => {
+                    if let (Expr::Name(index_name), Some(sequence_name)) = (
+                        cmp.left.as_ref(),
+                        len_call_sequence_name(&cmp.comparators[0]),
+                    ) {
+                        return vec![SequenceGuard::IndexVarInRange {
+                            sequence: sequence_name,
+                            index_var: index_name.id.clone(),
+                            max_offset: 0,
+                        }];
+                    }
+                    if let (Some(sequence_name), Expr::Name(index_name)) = (
+                        len_call_sequence_name(cmp.left.as_ref()),
+                        &cmp.comparators[0],
+                    ) {
+                        return vec![SequenceGuard::IndexVarInRange {
+                            sequence: sequence_name,
+                            index_var: index_name.id.clone(),
+                            max_offset: 0,
+                        }];
+                    }
+                    Vec::new()
+                }
+                _ => Vec::new(),
             }
         }
         _ => Vec::new(),
@@ -453,16 +483,27 @@ fn len_call_sequence_name(expr: &Expr) -> Option<String> {
     let Expr::Call(call) = expr else {
         return None;
     };
-    let Expr::Name(func_name) = call.func.as_ref() else {
-        return None;
-    };
-    if func_name.id.as_str() != "len" || call.arguments.args.len() != 1 {
-        return None;
+    match call.func.as_ref() {
+        Expr::Name(func_name) => {
+            if func_name.id.as_str() != "len" || call.arguments.args.len() != 1 {
+                return None;
+            }
+            let Expr::Name(sequence_name) = &call.arguments.args[0] else {
+                return None;
+            };
+            Some(sequence_name.id.clone())
+        }
+        Expr::Attribute(attr) => {
+            if attr.attr.as_str() != "len" || !call.arguments.args.is_empty() {
+                return None;
+            }
+            let Expr::Name(sequence_name) = attr.value.as_ref() else {
+                return None;
+            };
+            Some(sequence_name.id.clone())
+        }
+        _ => None,
     }
-    let Expr::Name(sequence_name) = &call.arguments.args[0] else {
-        return None;
-    };
-    Some(sequence_name.id.clone())
 }
 
 fn literal_usize(expr: &Expr) -> Option<usize> {

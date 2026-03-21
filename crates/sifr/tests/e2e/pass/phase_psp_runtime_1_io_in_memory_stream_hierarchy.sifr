@@ -1,0 +1,102 @@
+from sifr.io import StringIO, BytesIO, BinaryFileHandle, open_binary, exists, write_text
+from sifr.os import remove_file
+from sifr.test import assert_bool_vector_eq
+
+
+def main() -> None:
+    actual: list[bool] = []
+
+    stringio_ok: bool = False
+    stringio_closed_rejects: bool = False
+    stringio_negative_seek_rejects: bool = False
+    bytesio_ok: bool = False
+    bytesio_closed_rejects: bool = False
+    bytesio_negative_seek_rejects: bool = False
+    binary_file_ok: bool = False
+    cleanup_ok: bool = False
+
+    path: str = "/tmp/sifr_phase_psp_runtime_1_binary.bin"
+
+    try:
+        sio: StringIO = StringIO("abc")
+        first_two: str = sio.read(2)
+        _w: None = sio.write("Z")
+        _seek: int = sio.seek(0)
+        all_text: str = sio.read()
+        snapshot: str = sio.getvalue()
+        position: int = sio.tell()
+        stringio_ok = first_two == "ab" and all_text == "abZ" and snapshot == "abZ" and position == 3 and sio.readable() and sio.writable() and sio.seekable()
+
+        try:
+            _bad_seek: int = sio.seek(-1)
+            _ = _bad_seek
+        except IOError as e:
+            _ = str(e.message)
+            stringio_negative_seek_rejects = True
+
+        sio.close()
+        try:
+            _again: str = sio.read(1)
+        except IOError as e:
+            _ = str(e.message)
+            stringio_closed_rejects = True
+    except IOError as e:
+        _ = str(e.message)
+
+    try:
+        bio: BytesIO = BytesIO(b"abcd")
+        head: bytes = bio.read_bytes(2)
+        _wb: None = bio.write_bytes(b"Z")
+        _seek_b: int = bio.seek(0)
+        all_bytes: bytes = bio.read_bytes()
+        snapshot_b: bytes = bio.getvalue()
+        position_b: int = bio.tell()
+        bytesio_ok = head == b"ab" and all_bytes == b"abZd" and snapshot_b == b"abZd" and position_b == 4 and bio.readable() and bio.writable() and bio.seekable()
+
+        try:
+            _bad_seek_b: int = bio.seek(-1)
+            _ = _bad_seek_b
+        except IOError as e:
+            _ = str(e.message)
+            bytesio_negative_seek_rejects = True
+
+        bio.close()
+        try:
+            _after_close: bytes = bio.read_bytes(1)
+        except IOError as e:
+            _ = str(e.message)
+            bytesio_closed_rejects = True
+    except IOError as e:
+        _ = str(e.message)
+
+    try:
+        _seed: None = write_text(path, "")
+        writer: BinaryFileHandle = open_binary(path, "wb")
+        _w_file: None = writer.write_bytes(b"wave1")
+        writer.close()
+
+        reader: BinaryFileHandle = open_binary(path, "rb")
+        loaded: bytes = reader.read_bytes()
+        reader.close()
+        binary_file_ok = loaded == b"wave1"
+    except IOError as e:
+        _ = str(e.message)
+
+    try:
+        if exists(path):
+            _rm: None = remove_file(path)
+        cleanup_ok = not exists(path)
+    except IOError as e:
+        _ = str(e.message)
+
+    actual.append(stringio_ok)
+    actual.append(stringio_closed_rejects)
+    actual.append(stringio_negative_seek_rejects)
+    actual.append(bytesio_ok)
+    actual.append(bytesio_closed_rejects)
+    actual.append(bytesio_negative_seek_rejects)
+    actual.append(binary_file_ok)
+    actual.append(cleanup_ok)
+
+    expected: list[bool] = [True, True, True, True, True, True, True, True]
+    assert_bool_vector_eq(actual, expected)

@@ -1,0 +1,52 @@
+from sifr.re import finditer, compile, Match
+from sifr.glob import iglob
+from sifr.pathlib import Path
+from sifr.io import write_text
+from sifr.os import getpid, run_command
+
+
+def main():
+    try:
+        digits: Iterator[Match] = finditer("\\d+", "v1 and v22")
+        first: Match | None = next(digits)
+        second: Match | None = next(digits)
+        if first is not None:
+            assert first.group() == "1"
+        if second is not None:
+            assert second.group() == "22"
+        assert next(digits) is None
+
+        pat = compile("[a-z]+")
+        words: list[str] = []
+        word_it: Iterator[Match] = pat.finditer("alpha 123 beta")
+        for m in word_it:
+            words.append(m.group())
+        assert str(words) == "[\"alpha\", \"beta\"]"
+    except RegexError as e:
+        _ = str(e.message)
+        assert False
+
+    base: str = "/tmp/sifr_phase_psp_ext_3_demo_" + str(getpid())
+    try:
+        _mk: str = run_command("mkdir -p " + base + "/sub")
+        _w1: None = write_text(base + "/a.txt", "a")
+        _w2: None = write_text(base + "/sub/b.txt", "b")
+
+        assert str(list(iglob(base, "*.txt"))) == "[\"a.txt\"]"
+        root: Path = Path(base + "")
+        entries_it: Iterator[str] = root.iterdir()
+        entries: list[str] = list(entries_it)
+        assert len(entries) >= 2
+        top_txt_it: Iterator[str] = root.glob("*.txt")
+        top_txt: list[str] = list(top_txt_it)
+        assert str(top_txt) == "[\"" + base + "/a.txt\"]"
+        recursive_it: Iterator[str] = root.rglob("*.txt")
+        recursive_txt: list[str] = list(recursive_it)
+        assert len(recursive_txt) == 2
+    except IOError as e:
+        _ = str(e.message)
+        assert False
+    finally:
+        _clean: str = run_command("rm -rf " + base)
+
+    print("ad_hoc_parity_ext_wave3_regex_filesystem_iterators_demo: ok")

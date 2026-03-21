@@ -1,0 +1,56 @@
+from sifr.re import finditer, Match
+from sifr.pathlib import Path
+from sifr.io import write_text
+from sifr.itertools import islice
+from sifr.os import getpid, run_command
+
+
+def adapt_to_iterable(own it: Iterator[int]) -> Iterable[int]:
+    return it
+
+
+def collect_starts(own it: Iterator[Match]) -> list[int]:
+    starts: list[int] = []
+    for m in it:
+        starts.append(m.start())
+    return starts
+
+
+def main():
+    nums: Iterator[int] = iter([3, 4, 5])
+    via_binding: Iterable[int] = nums
+    print(list(via_binding))
+
+    via_return: Iterable[int] = adapt_to_iterable(iter([7, 8]))
+    print(list(via_return))
+
+    payload: bytes = b"AZ"
+    byte_iter: Iterator[int] = iter(payload)
+    mapped_bytes: list[int] = list(map(lambda b: b + 1, byte_iter))
+    print(mapped_bytes)
+
+    try:
+        matches: Iterator[Match] = finditer("\\d+", "x11y222")
+        print(collect_starts(matches))
+    except RegexError as e:
+        print(e.message)
+
+    base: str = "/tmp/sifr_wave_psp_iter_fix_8_demo_" + str(getpid())
+    try:
+        _mk: str = run_command("mkdir -p " + base + "/nested")
+        _w1: None = write_text(base + "/a.txt", "a")
+        _w2: None = write_text(base + "/nested/b.txt", "b")
+
+        root: Path = Path(base)
+        entries_it: Iterator[str] = root.iterdir()
+        print(len(list(islice(entries_it, 2))))
+
+        recursive_it: Iterator[str] = root.rglob("*.txt")
+        print(len(list(recursive_it)))
+    except IOError as e:
+        print(e.message)
+    finally:
+        _rm: str = run_command("rm -rf " + base)
+
+
+main()

@@ -1,7 +1,6 @@
-use crate::helpers::MUTATING_METHODS;
 use crate::{intrinsics, methods, RustEmitter, RustExpr};
-use sifr_hir::{HirExpr, HirFStringPart};
-use sifr_type_system::{ParamConvention, Type};
+use sifr_hir::{HirExpr, HirFStringPart, HirIteratorOp};
+use sifr_type_system::{FunctionType, ParamConvention, Type};
 
 fn registry_uses_debug_display_format(ty: &Type) -> bool {
     match crate::resolve_alias_type_for_plain_call(ty) {
@@ -23,9 +22,12 @@ fn registry_uses_debug_display_format(ty: &Type) -> bool {
         | Type::Decimal
         | Type::BigDecimal => false,
         Type::List(_)
+        | Type::Bytes
         | Type::Dict(_, _)
         | Type::Set(_)
         | Type::Tuple(_)
+        | Type::Iterable(_)
+        | Type::Iterator(_)
         | Type::Function(_)
         | Type::Callable(..)
         | Type::Result(_, _)
@@ -103,6 +105,416 @@ fn registry_defaultdict_key_arg(
         let _ = key_ty;
         RustExpr::Clone(Box::new(lowered_index))
     }
+}
+
+fn registry_callable_signature(expr: &HirExpr) -> Option<(Vec<Type>, Vec<ParamConvention>, Type)> {
+    match crate::resolve_alias_type_for_plain_call(expr.ty()) {
+        Type::Function(ft) => Some((
+            ft.params.iter().map(|(_, ty, _)| ty.clone()).collect(),
+            ft.params
+                .iter()
+                .map(|(_, _, convention)| *convention)
+                .collect(),
+            *ft.return_type.clone(),
+        )),
+        Type::Callable(params, conventions, return_type) => {
+            Some((params.clone(), conventions.clone(), *return_type.clone()))
+        }
+        _ => None,
+    }
+}
+
+fn registry_iterator_op_func_name(op: &HirIteratorOp) -> &'static str {
+    match op {
+        HirIteratorOp::Iter => "iter",
+        HirIteratorOp::Next => "next",
+        HirIteratorOp::Reversed => "reversed",
+        HirIteratorOp::Map => "map",
+        HirIteratorOp::Filter => "filter",
+        HirIteratorOp::Zip => "zip",
+        HirIteratorOp::Enumerate => "enumerate",
+    }
+}
+
+fn registry_class_method_signature<'a>(
+    methods: &'a [(String, FunctionType)],
+    method_name: &str,
+) -> Option<&'a FunctionType> {
+    methods.iter().find_map(
+        |(name, ft)| {
+            if name == method_name {
+                Some(ft)
+            } else {
+                None
+            }
+        },
+    )
+}
+
+fn registry_class_has_next(methods: &[(String, FunctionType)]) -> bool {
+    registry_class_method_signature(methods, "__next__").is_some_and(|next_ft| {
+        next_ft.params.is_empty()
+            && matches!(next_ft.return_type.as_ref().resolve_alias(), Type::Union(members) if {
+                let has_none = members
+                    .iter()
+                    .any(|member| matches!(member.resolve_alias(), Type::None));
+                let non_none = members
+                    .iter()
+                    .filter(|member| !matches!(member.resolve_alias(), Type::None))
+                    .count();
+                has_none && non_none == 1
+            })
+    })
+}
+
+fn registry_iter_from_next_method_expr(source_expr: RustExpr) -> RustExpr {
+    let state_name = "__sifr_iter_state".to_string();
+    RustExpr::Block {
+        stmts: vec![crate::RustStmt::Let {
+            mutable: true,
+            name: state_name.clone(),
+            ty: None,
+            value: source_expr,
+        }],
+        expr: Some(Box::new(RustExpr::FnCall {
+            func: Box::new(RustExpr::Path(vec![
+                "std".to_string(),
+                "iter".to_string(),
+                "from_fn".to_string(),
+            ])),
+            args: vec![RustExpr::Closure {
+                params: vec![],
+                body: Box::new(RustExpr::MethodCall {
+                    receiver: Box::new(RustExpr::Ident(state_name)),
+                    method: "__next__".to_string(),
+                    args: vec![],
+                }),
+                is_move: true,
+            }],
+        })),
+    }
+}
+
+fn registry_tuple_homogeneous_iter_expr(lowered: RustExpr, tuple_len: usize) -> Option<RustExpr> {
+    if tuple_len == 0 {
+        return None;
+    }
+    let tuple_binding = "__sifr_tuple_iter_src".to_string();
+    let tuple_items = (0..tuple_len)
+        .map(|index| RustExpr::MethodCall {
+            receiver: Box::new(RustExpr::Field {
+                expr: Box::new(RustExpr::Ident(tuple_binding.clone())),
+                field: index.to_string(),
+            }),
+            method: "clone".to_string(),
+            args: vec![],
+        })
+        .collect();
+    Some(RustExpr::Block {
+        stmts: vec![crate::RustStmt::Let {
+            mutable: false,
+            name: tuple_binding,
+            ty: None,
+            value: RustExpr::MethodCall {
+                receiver: Box::new(RustExpr::Paren(Box::new(lowered))),
+                method: "clone".to_string(),
+                args: vec![],
+            },
+        }],
+        expr: Some(Box::new(RustExpr::MethodCall {
+            receiver: Box::new(RustExpr::Vec(tuple_items)),
+            method: "into_iter".to_string(),
+            args: vec![],
+        })),
+    })
+}
+
+pub(crate) fn registry_iterable_to_owned_iter_expr(
+    emitter: &mut RustEmitter,
+    expr: &HirExpr,
+) -> Option<RustExpr> {
+    let lowered = emitter.try_lower_registry_expr_strict(expr)?;
+    let iter_plan = crate::helpers::plan_iterator_ownership(expr);
+    let apply_copy_clone_yield = |iter_expr: RustExpr| match iter_plan.yield_mode {
+        crate::helpers::YieldMode::Copy => RustExpr::MethodCall {
+            receiver: Box::new(iter_expr),
+            method: "copied".to_string(),
+            args: vec![],
+        },
+        crate::helpers::YieldMode::Clone => RustExpr::MethodCall {
+            receiver: Box::new(iter_expr),
+            method: "cloned".to_string(),
+            args: vec![],
+        },
+        crate::helpers::YieldMode::Move | crate::helpers::YieldMode::Borrow => iter_expr,
+    };
+
+    match crate::resolve_alias_type_for_plain_call(expr.ty()) {
+        Type::List(_) | Type::Set(_) | Type::Iterable(_) => {
+            Some(match iter_plan.source_access_mode {
+                crate::helpers::SourceAccessMode::Consume => RustExpr::MethodCall {
+                    receiver: Box::new(RustExpr::Paren(Box::new(lowered))),
+                    method: "into_iter".to_string(),
+                    args: vec![],
+                },
+                crate::helpers::SourceAccessMode::Preserve => apply_copy_clone_yield(
+                    RustExpr::MethodCall {
+                        receiver: Box::new(RustExpr::Paren(Box::new(lowered))),
+                        method: "iter".to_string(),
+                        args: vec![],
+                    },
+                ),
+            })
+        }
+        Type::Bytes => Some(match iter_plan.source_access_mode {
+            crate::helpers::SourceAccessMode::Consume => RustExpr::MethodCall {
+                receiver: Box::new(RustExpr::MethodCall {
+                    receiver: Box::new(RustExpr::Paren(Box::new(lowered))),
+                    method: "into_iter".to_string(),
+                    args: vec![],
+                }),
+                method: "map".to_string(),
+                args: vec![RustExpr::Closure {
+                    params: vec![crate::RustParam::Named {
+                        name: "__byte".to_string(),
+                        ty: crate::RustType::Named("_".to_string()),
+                    }],
+                    body: Box::new(RustExpr::Cast {
+                        expr: Box::new(RustExpr::Ident("__byte".to_string())),
+                        ty: crate::RustType::I64,
+                    }),
+                    is_move: false,
+                }],
+            },
+            crate::helpers::SourceAccessMode::Preserve => RustExpr::MethodCall {
+                receiver: Box::new(RustExpr::MethodCall {
+                    receiver: Box::new(RustExpr::Paren(Box::new(lowered))),
+                    method: "iter".to_string(),
+                    args: vec![],
+                }),
+                method: "map".to_string(),
+                args: vec![RustExpr::Closure {
+                    params: vec![crate::RustParam::Named {
+                        name: "__byte".to_string(),
+                        ty: crate::RustType::Named("_".to_string()),
+                    }],
+                    body: Box::new(RustExpr::Cast {
+                        expr: Box::new(RustExpr::Deref(Box::new(RustExpr::Ident(
+                            "__byte".to_string(),
+                        )))),
+                        ty: crate::RustType::I64,
+                    }),
+                    is_move: false,
+                }],
+            },
+        }),
+        Type::Iterator(_) => Some(lowered),
+        Type::Range => Some(lowered),
+        Type::Str => Some(RustExpr::MethodCall {
+            receiver: Box::new(RustExpr::MethodCall {
+                receiver: Box::new(RustExpr::Paren(Box::new(lowered))),
+                method: "chars".to_string(),
+                args: vec![],
+            }),
+            method: "map".to_string(),
+            args: vec![RustExpr::Closure {
+                params: vec![crate::RustParam::Named {
+                    name: "__sifr_char".to_string(),
+                    ty: crate::RustType::Named("_".to_string()),
+                }],
+                body: Box::new(RustExpr::MethodCall {
+                    receiver: Box::new(RustExpr::Ident("__sifr_char".to_string())),
+                    method: "to_string".to_string(),
+                    args: vec![],
+                }),
+                is_move: false,
+            }],
+        }),
+        Type::Dict(_, _) => Some(match iter_plan.source_access_mode {
+            crate::helpers::SourceAccessMode::Consume => RustExpr::MethodCall {
+                receiver: Box::new(RustExpr::Paren(Box::new(lowered))),
+                method: "into_keys".to_string(),
+                args: vec![],
+            },
+            crate::helpers::SourceAccessMode::Preserve => apply_copy_clone_yield(
+                RustExpr::MethodCall {
+                    receiver: Box::new(RustExpr::Paren(Box::new(lowered))),
+                    method: "keys".to_string(),
+                    args: vec![],
+                },
+            ),
+        }),
+        Type::Tuple(elems) if !elems.is_empty() && elems.iter().all(|elem| elem == &elems[0]) => {
+            registry_tuple_homogeneous_iter_expr(lowered, elems.len())
+        }
+        Type::Class { name, methods, .. } => {
+            let class_source = match iter_plan.source_access_mode {
+                crate::helpers::SourceAccessMode::Preserve => RustExpr::MethodCall {
+                    receiver: Box::new(RustExpr::Paren(Box::new(lowered))),
+                    method: "clone".to_string(),
+                    args: vec![],
+                },
+                crate::helpers::SourceAccessMode::Consume => lowered,
+            };
+            if let Some(iter_ft) = registry_class_method_signature(methods, "__iter__") {
+                if iter_ft.params.is_empty() {
+                    let iter_call = RustExpr::MethodCall {
+                        receiver: Box::new(class_source.clone()),
+                        method: "__iter__".to_string(),
+                        args: vec![],
+                    };
+                    if matches!(
+                        iter_ft.return_type.as_ref().resolve_alias(),
+                        Type::Class { name: ret_name, .. } if ret_name == name
+                    ) && registry_class_has_next(methods)
+                    {
+                        return Some(registry_iter_from_next_method_expr(iter_call));
+                    }
+                    if let Type::Class {
+                        methods: ret_methods,
+                        ..
+                    } = iter_ft.return_type.as_ref().resolve_alias()
+                    {
+                        if registry_class_has_next(ret_methods) {
+                            return Some(registry_iter_from_next_method_expr(iter_call));
+                        }
+                    }
+                    return Some(iter_call);
+                }
+            }
+            if registry_class_has_next(methods) {
+                Some(registry_iter_from_next_method_expr(class_source))
+            } else {
+                Some(class_source)
+            }
+        }
+        _ => Some(lowered),
+    }
+}
+
+fn registry_box_iterator_expr(iter_expr: RustExpr) -> RustExpr {
+    RustExpr::FnCall {
+        func: Box::new(RustExpr::Path(vec!["Box".to_string(), "new".to_string()])),
+        args: vec![iter_expr],
+    }
+}
+
+pub(crate) fn registry_iterable_to_vec_expr(
+    emitter: &mut RustEmitter,
+    expr: &HirExpr,
+) -> Option<RustExpr> {
+    Some(RustExpr::MethodCall {
+        receiver: Box::new(registry_iterable_to_owned_iter_expr(emitter, expr)?),
+        method: "collect::<Vec<_>>".to_string(),
+        args: vec![],
+    })
+}
+
+fn registry_iterable_to_set_expr(emitter: &mut RustEmitter, expr: &HirExpr) -> Option<RustExpr> {
+    Some(RustExpr::MethodCall {
+        receiver: Box::new(registry_iterable_to_owned_iter_expr(emitter, expr)?),
+        method: "collect::<std::collections::HashSet<_>>".to_string(),
+        args: vec![],
+    })
+}
+
+fn registry_dict_source_to_map_expr(emitter: &mut RustEmitter, expr: &HirExpr) -> Option<RustExpr> {
+    let lowered = emitter.try_lower_registry_expr_strict(expr)?;
+    match crate::resolve_alias_type_for_plain_call(expr.ty()) {
+        Type::Dict(_, _) => Some(RustExpr::MethodCall {
+            receiver: Box::new(RustExpr::Paren(Box::new(lowered))),
+            method: "clone".to_string(),
+            args: vec![],
+        }),
+        Type::List(_) | Type::Set(_) => Some(RustExpr::MethodCall {
+            receiver: Box::new(RustExpr::MethodCall {
+                receiver: Box::new(RustExpr::MethodCall {
+                    receiver: Box::new(RustExpr::Paren(Box::new(lowered))),
+                    method: "clone".to_string(),
+                    args: vec![],
+                }),
+                method: "into_iter".to_string(),
+                args: vec![],
+            }),
+            method: "collect::<HashMap<_, _>>".to_string(),
+            args: vec![],
+        }),
+        Type::Any | Type::Unknown => Some(RustExpr::MethodCall {
+            receiver: Box::new(RustExpr::MethodCall {
+                receiver: Box::new(RustExpr::Paren(Box::new(lowered))),
+                method: "into_iter".to_string(),
+                args: vec![],
+            }),
+            method: "collect::<HashMap<_, _>>".to_string(),
+            args: vec![],
+        }),
+        _ => None,
+    }
+}
+
+fn registry_call_callable_with_owned_args(
+    emitter: &mut RustEmitter,
+    callable: &HirExpr,
+    arg_bindings: &[(String, Type)],
+) -> Option<RustExpr> {
+    let callable_expr = emitter.try_lower_registry_expr_strict(callable)?;
+    let (param_types, conventions, _) = registry_callable_signature(callable)?;
+    if param_types.len() != arg_bindings.len() {
+        return None;
+    }
+    let mut lowered_args = Vec::with_capacity(arg_bindings.len());
+    for ((name, _arg_ty), convention) in arg_bindings.iter().zip(conventions.iter()) {
+        let base_expr = RustExpr::Ident(name.clone());
+        let lowered_arg = if convention.is_borrowed() {
+            RustExpr::Ref {
+                mutable: convention.is_mutable(),
+                expr: Box::new(base_expr),
+            }
+        } else {
+            base_expr
+        };
+        lowered_args.push(lowered_arg);
+    }
+    Some(RustExpr::FnCall {
+        func: Box::new(callable_expr),
+        args: lowered_args,
+    })
+}
+
+fn registry_nested_zip_field_expr(base: RustExpr, total: usize, index: usize) -> RustExpr {
+    if total == 1 {
+        return base;
+    }
+    let left_count = total - 1;
+    if index < left_count {
+        registry_nested_zip_field_expr(
+            RustExpr::Field {
+                expr: Box::new(base),
+                field: "0".to_string(),
+            },
+            left_count,
+            index,
+        )
+    } else {
+        RustExpr::Field {
+            expr: Box::new(base),
+            field: "1".to_string(),
+        }
+    }
+}
+
+fn registry_zip_iter_expr(emitter: &mut RustEmitter, args: &[HirExpr]) -> Option<RustExpr> {
+    let mut iter = args.iter();
+    let mut acc = registry_iterable_to_owned_iter_expr(emitter, iter.next()?)?;
+    for arg in iter {
+        let next_iter = registry_iterable_to_owned_iter_expr(emitter, arg)?;
+        acc = RustExpr::MethodCall {
+            receiver: Box::new(acc),
+            method: "zip".to_string(),
+            args: vec![next_iter],
+        };
+    }
+    Some(acc)
 }
 
 fn registry_can_construct_error_from_message(ty_name: &str) -> bool {
@@ -267,6 +679,22 @@ impl RustEmitter {
             }
         }
 
+        if matches!(object_ty, Type::List(_)) && method == "extend" && args.len() == 1 {
+            return Some(crate::RustExpr::MethodCall {
+                receiver: Box::new(object_expr.clone()),
+                method: "extend".to_string(),
+                args: vec![registry_iterable_to_owned_iter_expr(self, &args[0])?],
+            });
+        }
+
+        if matches!(object_ty, Type::Set(_)) {
+            if let Some(lowered) =
+                self.try_lower_registry_set_method_call_expr(&object_expr, method, args)
+            {
+                return Some(lowered);
+            }
+        }
+
         let lowered = methods::lower_method_with_context(
             object_ty,
             method,
@@ -275,6 +703,176 @@ impl RustEmitter {
             is_deque_data_field,
         )?;
         Some(lowered.expr)
+    }
+
+    fn try_lower_registry_set_method_call_expr(
+        &mut self,
+        object_expr: &crate::RustExpr,
+        method: &str,
+        args: &[HirExpr],
+    ) -> Option<crate::RustExpr> {
+        match method {
+            "update" => {
+                let mut stmts = Vec::with_capacity(args.len());
+                for arg in args {
+                    stmts.push(crate::RustStmt::Expr(crate::RustExpr::MethodCall {
+                        receiver: Box::new(object_expr.clone()),
+                        method: "extend".to_string(),
+                        args: vec![registry_iterable_to_owned_iter_expr(self, arg)
+                            .map(|expr| crate::RustExpr::Paren(Box::new(expr)))?],
+                    }));
+                }
+                return Some(crate::RustExpr::Block {
+                    stmts,
+                    expr: Some(Box::new(crate::RustExpr::Literal(crate::RustLiteral::Unit))),
+                });
+            }
+            "union" => {
+                let mut stmts = vec![crate::RustStmt::Let {
+                    mutable: true,
+                    name: "__result".to_string(),
+                    ty: None,
+                    value: crate::RustExpr::MethodCall {
+                        receiver: Box::new(object_expr.clone()),
+                        method: "clone".to_string(),
+                        args: vec![],
+                    },
+                }];
+                for arg in args {
+                    stmts.push(crate::RustStmt::Expr(crate::RustExpr::MethodCall {
+                        receiver: Box::new(crate::RustExpr::Ident("__result".to_string())),
+                        method: "extend".to_string(),
+                        args: vec![registry_iterable_to_owned_iter_expr(self, arg)
+                            .map(|expr| crate::RustExpr::Paren(Box::new(expr)))?],
+                    }));
+                }
+                return Some(crate::RustExpr::Block {
+                    stmts,
+                    expr: Some(Box::new(crate::RustExpr::Ident("__result".to_string()))),
+                });
+            }
+            "intersection" | "difference" | "intersection_update" | "difference_update" => {
+                let result_name = if method.ends_with("_update") {
+                    None
+                } else {
+                    Some("__result".to_string())
+                };
+                let mut stmts = Vec::new();
+                if let Some(result_name) = result_name.as_ref() {
+                    stmts.push(crate::RustStmt::Let {
+                        mutable: true,
+                        name: result_name.clone(),
+                        ty: None,
+                        value: crate::RustExpr::MethodCall {
+                            receiver: Box::new(object_expr.clone()),
+                            method: "clone".to_string(),
+                            args: vec![],
+                        },
+                    });
+                }
+                let target = result_name.as_ref().map_or_else(
+                    || object_expr.clone(),
+                    |name| crate::RustExpr::Ident(name.clone()),
+                );
+                let keep_on_match = method.starts_with("intersection");
+                for (index, arg) in args.iter().enumerate() {
+                    let temp_name = format!("__set_arg_{index}");
+                    stmts.push(crate::RustStmt::Let {
+                        mutable: false,
+                        name: temp_name.clone(),
+                        ty: None,
+                        value: registry_iterable_to_set_expr(self, arg)?,
+                    });
+                    stmts.push(crate::RustStmt::Expr(crate::RustExpr::MethodCall {
+                        receiver: Box::new(target.clone()),
+                        method: "retain".to_string(),
+                        args: vec![crate::RustExpr::Closure {
+                            params: vec![crate::RustParam::Named {
+                                name: "__item".to_string(),
+                                ty: crate::RustType::Named("_".to_string()),
+                            }],
+                            body: Box::new(if keep_on_match {
+                                crate::RustExpr::MethodCall {
+                                    receiver: Box::new(crate::RustExpr::Ident(temp_name)),
+                                    method: "contains".to_string(),
+                                    args: vec![crate::RustExpr::Ident("__item".to_string())],
+                                }
+                            } else {
+                                crate::RustExpr::UnaryOp {
+                                    op: "!".to_string(),
+                                    operand: Box::new(crate::RustExpr::MethodCall {
+                                        receiver: Box::new(crate::RustExpr::Ident(temp_name)),
+                                        method: "contains".to_string(),
+                                        args: vec![crate::RustExpr::Ident("__item".to_string())],
+                                    }),
+                                }
+                            }),
+                            is_move: false,
+                        }],
+                    }));
+                }
+                return Some(crate::RustExpr::Block {
+                    stmts,
+                    expr: Some(Box::new(result_name.map_or_else(
+                        || crate::RustExpr::Literal(crate::RustLiteral::Unit),
+                        crate::RustExpr::Ident,
+                    ))),
+                });
+            }
+            "symmetric_difference" | "symmetric_difference_update" => {
+                if args.len() != 1 {
+                    return None;
+                }
+                let other = registry_iterable_to_set_expr(self, &args[0])?;
+                let diff_expr = crate::RustExpr::MethodCall {
+                    receiver: Box::new(crate::RustExpr::MethodCall {
+                        receiver: Box::new(if method.ends_with("_update") {
+                            object_expr.clone()
+                        } else {
+                            crate::RustExpr::MethodCall {
+                                receiver: Box::new(object_expr.clone()),
+                                method: "clone".to_string(),
+                                args: vec![],
+                            }
+                        }),
+                        method: "symmetric_difference".to_string(),
+                        args: vec![crate::RustExpr::Ref {
+                            mutable: false,
+                            expr: Box::new(crate::RustExpr::Ident("__other".to_string())),
+                        }],
+                    }),
+                    method: "cloned".to_string(),
+                    args: vec![],
+                };
+                let new_set_expr = crate::RustExpr::MethodCall {
+                    receiver: Box::new(diff_expr),
+                    method: "collect::<std::collections::HashSet<_>>".to_string(),
+                    args: vec![],
+                };
+                let mut stmts = vec![crate::RustStmt::Let {
+                    mutable: false,
+                    name: "__other".to_string(),
+                    ty: None,
+                    value: other,
+                }];
+                if method.ends_with("_update") {
+                    stmts.push(crate::RustStmt::Assign {
+                        target: object_expr.clone(),
+                        value: new_set_expr,
+                    });
+                    return Some(crate::RustExpr::Block {
+                        stmts,
+                        expr: Some(Box::new(crate::RustExpr::Literal(crate::RustLiteral::Unit))),
+                    });
+                }
+                return Some(crate::RustExpr::Block {
+                    stmts,
+                    expr: Some(Box::new(new_set_expr)),
+                });
+            }
+            _ => {}
+        }
+        None
     }
 
     fn try_lower_defaultdict_index_method_call_expr(
@@ -359,9 +957,29 @@ impl RustEmitter {
                 {
                     return Some(lowered);
                 }
-                Some(crate::RustExpr::Field {
-                    expr: Box::new(self.try_lower_registry_expr_strict(object)?),
-                    field: field.clone(),
+                let lowered_object = self.try_lower_registry_expr_strict(object)?;
+                Some(self.lower_field_access_expr_with_lowered_object(
+                    object,
+                    field,
+                    ty,
+                    lowered_object,
+                ))
+            }
+            HirExpr::IteratorCall { op, args, .. } => {
+                let func = registry_iterator_op_func_name(op);
+                if let Some(lowered) = self.try_lower_registry_intrinsic_call_expr(func, args) {
+                    return Some(lowered);
+                }
+                if let Some(lowered) = self.try_lower_registry_builtin_call_expr(func, args) {
+                    return Some(lowered);
+                }
+                if let Some(lowered) = self.try_lower_registry_plain_call_with_signature(func, args)
+                {
+                    return Some(lowered);
+                }
+                Some(crate::RustExpr::FnCall {
+                    func: Box::new(crate::RustExpr::Ident(func.to_string())),
+                    args: self.try_lower_registry_exprs_strict(args)?,
                 })
             }
             HirExpr::Call { func, args, .. } => {
@@ -394,10 +1012,8 @@ impl RustEmitter {
                 args,
                 ..
             } => {
-                let is_self_field = matches!(object.as_ref(), HirExpr::FieldAccess { object: inner, .. }
-                    if matches!(inner.as_ref(), HirExpr::Name { name, .. } if name == "self"));
                 let needs_self_field_clone_suppression =
-                    is_self_field && MUTATING_METHODS.contains(&method.as_str());
+                    self.method_call_needs_field_clone_suppression(object, method);
                 let suppression_prev = self.pending_self_field_clone_suppression;
                 if needs_self_field_clone_suppression {
                     self.pending_self_field_clone_suppression += 1;
@@ -568,6 +1184,30 @@ impl RustEmitter {
                                 method: "cloned".to_string(),
                                 args: vec![],
                             },
+                            Type::Bytes => crate::RustExpr::MethodCall {
+                                receiver: Box::new(crate::RustExpr::MethodCall {
+                                    receiver: Box::new(crate::RustExpr::Ident("__v".to_string())),
+                                    method: "get".to_string(),
+                                    args: vec![crate::RustExpr::Cast {
+                                        expr: Box::new(lowered_index),
+                                        ty: crate::RustType::Named("usize".to_string()),
+                                    }],
+                                }),
+                                method: "map".to_string(),
+                                args: vec![crate::RustExpr::Closure {
+                                    params: vec![crate::RustParam::Named {
+                                        name: "__byte".to_string(),
+                                        ty: crate::RustType::Named("_".to_string()),
+                                    }],
+                                    body: Box::new(crate::RustExpr::Cast {
+                                        expr: Box::new(crate::RustExpr::Deref(Box::new(
+                                            crate::RustExpr::Ident("__byte".to_string()),
+                                        ))),
+                                        ty: crate::RustType::I64,
+                                    }),
+                                    is_move: false,
+                                }],
+                            },
                             Type::Str => crate::RustExpr::MethodCall {
                                 receiver: Box::new(crate::RustExpr::MethodCall {
                                     receiver: Box::new(crate::RustExpr::MethodCall {
@@ -629,7 +1269,11 @@ impl RustEmitter {
                     let lowered_object = self.try_lower_registry_expr_strict(object)?;
                     let lowered_index = self.try_lower_registry_expr_strict(index)?;
                     match object_ty {
-                        Type::Dict(key_ty, _) => {
+                        Type::Dict(key_ty, value_ty) => {
+                            let projection_method =
+                                crate::helpers::option_projection_method_for_owned_type(
+                                    value_ty.as_ref(),
+                                );
                             let key_is_string_like = matches!(
                                 crate::resolve_alias_type_for_plain_call(key_ty.as_ref()),
                                 Type::Str | Type::LiteralStr(_)
@@ -656,11 +1300,29 @@ impl RustEmitter {
                                     method: "get".to_string(),
                                     args: vec![key_arg],
                                 }),
-                                method: "cloned".to_string(),
+                                method: projection_method.to_string(),
                                 args: vec![],
                             })
                         }
-                        Type::List(_) => Some(crate::RustExpr::MethodCall {
+                        Type::List(element_ty) => {
+                            let projection_method =
+                                crate::helpers::option_projection_method_for_owned_type(
+                                    element_ty.as_ref(),
+                                );
+                            Some(crate::RustExpr::MethodCall {
+                                receiver: Box::new(crate::RustExpr::MethodCall {
+                                    receiver: Box::new(lowered_object),
+                                    method: "get".to_string(),
+                                    args: vec![crate::RustExpr::Cast {
+                                        expr: Box::new(lowered_index),
+                                        ty: crate::RustType::Named("usize".to_string()),
+                                    }],
+                                }),
+                                method: projection_method.to_string(),
+                                args: vec![],
+                            })
+                        }
+                        Type::Bytes => Some(crate::RustExpr::MethodCall {
                             receiver: Box::new(crate::RustExpr::MethodCall {
                                 receiver: Box::new(lowered_object),
                                 method: "get".to_string(),
@@ -669,8 +1331,20 @@ impl RustEmitter {
                                     ty: crate::RustType::Named("usize".to_string()),
                                 }],
                             }),
-                            method: "cloned".to_string(),
-                            args: vec![],
+                            method: "map".to_string(),
+                            args: vec![crate::RustExpr::Closure {
+                                params: vec![crate::RustParam::Named {
+                                    name: "__byte".to_string(),
+                                    ty: crate::RustType::Named("_".to_string()),
+                                }],
+                                body: Box::new(crate::RustExpr::Cast {
+                                    expr: Box::new(crate::RustExpr::Deref(Box::new(
+                                        crate::RustExpr::Ident("__byte".to_string()),
+                                    ))),
+                                    ty: crate::RustType::I64,
+                                }),
+                                is_move: false,
+                            }],
                         }),
                         Type::Str => Some(crate::RustExpr::MethodCall {
                             receiver: Box::new(crate::RustExpr::MethodCall {
@@ -909,6 +1583,29 @@ impl RustEmitter {
             HirExpr::DictLiteral { keys, values, .. } => {
                 self.try_lower_registry_dict_literal_expr(keys, values)
             }
+            HirExpr::ListLiteral { elements, ty } => {
+                let list_ty = crate::resolve_alias_type_for_plain_call(ty);
+                let mut lowered = elements
+                    .iter()
+                    .map(|element| self.try_lower_registry_expr_strict(element))
+                    .collect::<Option<Vec<_>>>()?;
+                if matches!(list_ty, Type::Bytes) {
+                    lowered = lowered
+                        .into_iter()
+                        .map(|element| crate::RustExpr::Cast {
+                            expr: Box::new(element),
+                            ty: crate::RustType::Named("u8".to_string()),
+                        })
+                        .collect();
+                }
+                Some(crate::RustExpr::Vec(lowered))
+            }
+            HirExpr::TupleLiteral { elements, .. } => Some(crate::RustExpr::Tuple(
+                elements
+                    .iter()
+                    .map(|element| self.try_lower_registry_expr_strict(element))
+                    .collect::<Option<Vec<_>>>()?,
+            )),
             HirExpr::SetLiteral { elements, .. } => {
                 self.try_lower_registry_set_literal_expr(elements)
             }
@@ -1058,6 +1755,15 @@ impl RustEmitter {
         if matches!(func, "set_global_level" | "get_global_level") {
             self.runtime_needs.needs_logging_state = true;
         }
+        if matches!(
+            func,
+            "random_module_state_words"
+                | "random_module_state_index"
+                | "random_module_state_gauss_next"
+                | "random_module_set_state"
+        ) {
+            self.runtime_needs.needs_random_module_state = true;
+        }
 
         if let Some(required_crate) = lowered.required_crate {
             self.intrinsic_registry_crates
@@ -1100,6 +1806,38 @@ impl RustEmitter {
                     args: vec![],
                 })
             }
+            "list" if args.is_empty() => Some(RustExpr::Vec(vec![])),
+            "list" if args.len() == 1 => registry_iterable_to_vec_expr(self, &args[0]),
+            "bytes" if args.is_empty() => Some(RustExpr::Vec(vec![])),
+            "dict" if args.is_empty() => Some(RustExpr::FnCall {
+                func: Box::new(RustExpr::Path(vec![
+                    "HashMap".to_string(),
+                    "new".to_string(),
+                ])),
+                args: vec![],
+            }),
+            "dict" if args.len() == 1 => registry_dict_source_to_map_expr(self, &args[0]),
+            "dict" if args.len() == 2 => {
+                let map_name = "__sifr_dict_ctor".to_string();
+                let base_map = registry_dict_source_to_map_expr(self, &args[0])?;
+                let extra_map = registry_dict_source_to_map_expr(self, &args[1])?;
+                Some(RustExpr::Block {
+                    stmts: vec![
+                        crate::RustStmt::Let {
+                            mutable: true,
+                            name: map_name.clone(),
+                            ty: None,
+                            value: base_map,
+                        },
+                        crate::RustStmt::Expr(RustExpr::MethodCall {
+                            receiver: Box::new(RustExpr::Ident(map_name.clone())),
+                            method: "extend".to_string(),
+                            args: vec![extra_map],
+                        }),
+                    ],
+                    expr: Some(Box::new(RustExpr::Ident(map_name))),
+                })
+            }
             "set" if args.is_empty() => Some(crate::RustExpr::FnCall {
                 func: Box::new(crate::RustExpr::Path(vec![
                     "HashSet".to_string(),
@@ -1107,165 +1845,187 @@ impl RustEmitter {
                 ])),
                 args: vec![],
             }),
-            "set" if args.len() == 1 => {
-                let lowered = self.try_lower_registry_expr_strict(&args[0])?;
+            "set" if args.len() == 1 => Some(RustExpr::MethodCall {
+                receiver: Box::new(registry_iterable_to_owned_iter_expr(self, &args[0])?),
+                method: "collect::<HashSet<_>>".to_string(),
+                args: vec![],
+            }),
+            "iter" if args.len() == 1 => {
+                if matches!(
+                    crate::resolve_alias_type_for_plain_call(args[0].ty()),
+                    Type::Iterator(_)
+                ) {
+                    self.try_lower_registry_expr_strict(&args[0])
+                } else {
+                    Some(registry_box_iterator_expr(
+                        registry_iterable_to_owned_iter_expr(self, &args[0])?,
+                    ))
+                }
+            }
+            "next" if args.len() == 1 => {
+                let lowered_arg = self.try_lower_registry_expr_strict(&args[0])?;
                 match crate::resolve_alias_type_for_plain_call(args[0].ty()) {
-                    Type::List(_) | Type::Set(_) | Type::Range => {
-                        Some(crate::RustExpr::MethodCall {
-                            receiver: Box::new(crate::RustExpr::MethodCall {
-                                receiver: Box::new(crate::RustExpr::MethodCall {
-                                    receiver: Box::new(crate::RustExpr::Paren(Box::new(lowered))),
-                                    method: "clone".to_string(),
-                                    args: vec![],
-                                }),
-                                method: "into_iter".to_string(),
-                                args: vec![],
-                            }),
-                            method: "collect::<HashSet<_>>".to_string(),
+                    Type::Class { methods, .. } if registry_class_has_next(methods) => {
+                        Some(RustExpr::MethodCall {
+                            receiver: Box::new(lowered_arg),
+                            method: "__next__".to_string(),
                             args: vec![],
                         })
                     }
-                    Type::Tuple(_) => Some(crate::RustExpr::MethodCall {
-                        receiver: Box::new(crate::RustExpr::MethodCall {
-                            receiver: Box::new(crate::RustExpr::Paren(Box::new(lowered))),
-                            method: "into_iter".to_string(),
-                            args: vec![],
-                        }),
-                        method: "collect::<HashSet<_>>".to_string(),
+                    _ => Some(RustExpr::MethodCall {
+                        receiver: Box::new(lowered_arg),
+                        method: "next".to_string(),
                         args: vec![],
                     }),
-                    Type::Any | Type::Unknown => Some(crate::RustExpr::MethodCall {
-                        receiver: Box::new(crate::RustExpr::MethodCall {
-                            receiver: Box::new(crate::RustExpr::Paren(Box::new(lowered))),
-                            method: "into_iter".to_string(),
-                            args: vec![],
-                        }),
-                        method: "collect::<HashSet<_>>".to_string(),
-                        args: vec![],
-                    }),
-                    _ => None,
                 }
             }
             "sum" if args.len() == 1 => {
-                let lowered = self.try_lower_registry_expr_strict(&args[0])?;
+                let sum_method = if let Some(elem_ty) =
+                    crate::resolve_alias_type_for_plain_call(args[0].ty()).iterable_element_type()
+                {
+                    format!(
+                        "sum::<{}>",
+                        crate::render_type(&crate::sifr_type_to_rust_type(&elem_ty))
+                    )
+                } else {
+                    "sum".to_string()
+                };
                 let iter_chain = crate::RustExpr::MethodCall {
-                    receiver: Box::new(crate::RustExpr::MethodCall {
-                        receiver: Box::new(crate::RustExpr::MethodCall {
-                            receiver: Box::new(crate::RustExpr::Paren(Box::new(lowered))),
-                            method: "iter".to_string(),
-                            args: vec![],
-                        }),
-                        method: "cloned".to_string(),
-                        args: vec![],
-                    }),
-                    method: if let Type::List(elem_ty) =
-                        crate::resolve_alias_type_for_plain_call(args[0].ty())
-                    {
-                        format!(
-                            "sum::<{}>",
-                            crate::render_type(&crate::sifr_type_to_rust_type(elem_ty))
-                        )
-                    } else {
-                        "sum".to_string()
-                    },
+                    receiver: Box::new(registry_iterable_to_owned_iter_expr(self, &args[0])?),
+                    method: sum_method,
                     args: vec![],
                 };
                 Some(iter_chain)
             }
             "any" if args.len() == 1 => Some(crate::RustExpr::MethodCall {
-                receiver: Box::new(crate::RustExpr::MethodCall {
-                    receiver: Box::new(crate::RustExpr::Paren(Box::new(
-                        self.try_lower_registry_expr_strict(&args[0])?,
-                    ))),
-                    method: "iter".to_string(),
-                    args: vec![],
-                }),
+                receiver: Box::new(registry_iterable_to_owned_iter_expr(self, &args[0])?),
                 method: "any".to_string(),
                 args: vec![crate::RustExpr::Closure {
                     params: vec![crate::RustParam::Named {
                         name: "x".to_string(),
                         ty: crate::RustType::Named("_".to_string()),
                     }],
-                    body: Box::new(crate::RustExpr::Deref(Box::new(crate::RustExpr::Ident(
-                        "x".to_string(),
-                    )))),
+                    body: Box::new(crate::RustExpr::Ident("x".to_string())),
                     is_move: false,
                 }],
             }),
             "all" if args.len() == 1 => Some(crate::RustExpr::MethodCall {
-                receiver: Box::new(crate::RustExpr::MethodCall {
-                    receiver: Box::new(crate::RustExpr::Paren(Box::new(
-                        self.try_lower_registry_expr_strict(&args[0])?,
-                    ))),
-                    method: "iter".to_string(),
-                    args: vec![],
-                }),
+                receiver: Box::new(registry_iterable_to_owned_iter_expr(self, &args[0])?),
                 method: "all".to_string(),
                 args: vec![crate::RustExpr::Closure {
                     params: vec![crate::RustParam::Named {
                         name: "x".to_string(),
                         ty: crate::RustType::Named("_".to_string()),
                     }],
-                    body: Box::new(crate::RustExpr::Deref(Box::new(crate::RustExpr::Ident(
-                        "x".to_string(),
-                    )))),
+                    body: Box::new(crate::RustExpr::Ident("x".to_string())),
                     is_move: false,
                 }],
             }),
-            "reversed" if args.len() == 1 => Some(crate::RustExpr::MethodCall {
-                receiver: Box::new(crate::RustExpr::MethodCall {
-                    receiver: Box::new(crate::RustExpr::MethodCall {
-                        receiver: Box::new(crate::RustExpr::MethodCall {
-                            receiver: Box::new(crate::RustExpr::Paren(Box::new(
-                                self.try_lower_registry_expr_strict(&args[0])?,
-                            ))),
-                            method: "iter".to_string(),
-                            args: vec![],
-                        }),
-                        method: "cloned".to_string(),
-                        args: vec![],
-                    }),
+            "reversed" if args.len() == 1 => {
+                if let Type::Class { name, methods, .. } =
+                    crate::resolve_alias_type_for_plain_call(args[0].ty())
+                {
+                    if let Some(reversed_ft) =
+                        registry_class_method_signature(methods, "__reversed__")
+                    {
+                        if reversed_ft.params.is_empty() {
+                            let lowered_arg = self.try_lower_registry_expr_strict(&args[0])?;
+                            let reversed_call = RustExpr::MethodCall {
+                                receiver: Box::new(RustExpr::MethodCall {
+                                    receiver: Box::new(RustExpr::Paren(Box::new(lowered_arg))),
+                                    method: "clone".to_string(),
+                                    args: vec![],
+                                }),
+                                method: "__reversed__".to_string(),
+                                args: vec![],
+                            };
+                            let reversed_iter = if matches!(
+                                reversed_ft.return_type.as_ref().resolve_alias(),
+                                Type::Class { name: ret_name, .. } if ret_name == name
+                            ) && registry_class_has_next(methods)
+                            {
+                                registry_iter_from_next_method_expr(reversed_call)
+                            } else if let Type::Class {
+                                methods: ret_methods,
+                                ..
+                            } = reversed_ft.return_type.as_ref().resolve_alias()
+                            {
+                                if registry_class_has_next(ret_methods) {
+                                    registry_iter_from_next_method_expr(reversed_call)
+                                } else {
+                                    RustExpr::MethodCall {
+                                        receiver: Box::new(reversed_call),
+                                        method: "into_iter".to_string(),
+                                        args: vec![],
+                                    }
+                                }
+                            } else {
+                                RustExpr::MethodCall {
+                                    receiver: Box::new(reversed_call),
+                                    method: "into_iter".to_string(),
+                                    args: vec![],
+                                }
+                            };
+                            return Some(registry_box_iterator_expr(reversed_iter));
+                        }
+                    }
+                }
+                Some(registry_box_iterator_expr(RustExpr::MethodCall {
+                    receiver: Box::new(registry_iterable_to_owned_iter_expr(self, &args[0])?),
                     method: "rev".to_string(),
                     args: vec![],
-                }),
-                method: "collect::<Vec<_>>".to_string(),
+                }))
+            }
+            "zip" if args.is_empty() => Some(registry_box_iterator_expr(RustExpr::FnCall {
+                func: Box::new(RustExpr::Path(vec![
+                    "std".to_string(),
+                    "iter".to_string(),
+                    "empty".to_string(),
+                ])),
                 args: vec![],
-            }),
-            "zip" if args.len() == 2 => Some(crate::RustExpr::MethodCall {
-                receiver: Box::new(crate::RustExpr::MethodCall {
-                    receiver: Box::new(crate::RustExpr::MethodCall {
-                        receiver: Box::new(crate::RustExpr::MethodCall {
-                            receiver: Box::new(crate::RustExpr::Paren(Box::new(
-                                self.try_lower_registry_expr_strict(&args[0])?,
-                            ))),
-                            method: "iter".to_string(),
-                            args: vec![],
-                        }),
-                        method: "cloned".to_string(),
-                        args: vec![],
-                    }),
-                    method: "zip".to_string(),
-                    args: vec![crate::RustExpr::MethodCall {
-                        receiver: Box::new(crate::RustExpr::MethodCall {
-                            receiver: Box::new(crate::RustExpr::Paren(Box::new(
-                                self.try_lower_registry_expr_strict(&args[1])?,
-                            ))),
-                            method: "iter".to_string(),
-                            args: vec![],
-                        }),
-                        method: "cloned".to_string(),
-                        args: vec![],
+            })),
+            "zip" if args.len() == 1 => Some(registry_box_iterator_expr(RustExpr::MethodCall {
+                receiver: Box::new(registry_iterable_to_owned_iter_expr(self, &args[0])?),
+                method: "map".to_string(),
+                args: vec![RustExpr::Closure {
+                    params: vec![crate::RustParam::Named {
+                        name: "__zip_item".to_string(),
+                        ty: crate::RustType::Named("_".to_string()),
                     }],
-                }),
-                method: "collect::<Vec<_>>".to_string(),
-                args: vec![],
-            }),
+                    body: Box::new(RustExpr::Tuple(vec![RustExpr::Ident(
+                        "__zip_item".to_string(),
+                    )])),
+                    is_move: false,
+                }],
+            })),
+            "zip" if args.len() >= 2 => {
+                let zip_iter = registry_zip_iter_expr(self, args)?;
+                let tuple_items = (0..args.len())
+                    .map(|index| {
+                        registry_nested_zip_field_expr(
+                            RustExpr::Ident("__zip_item".to_string()),
+                            args.len(),
+                            index,
+                        )
+                    })
+                    .collect();
+                Some(registry_box_iterator_expr(RustExpr::MethodCall {
+                    receiver: Box::new(zip_iter),
+                    method: "map".to_string(),
+                    args: vec![RustExpr::Closure {
+                        params: vec![crate::RustParam::Named {
+                            name: "__zip_item".to_string(),
+                            ty: crate::RustType::Named("_".to_string()),
+                        }],
+                        body: Box::new(RustExpr::Tuple(tuple_items)),
+                        is_move: false,
+                    }],
+                }))
+            }
             "max" | "min" if args.len() == 1 => {
-                let lowered = self.try_lower_registry_expr_strict(&args[0])?;
                 let method = if matches!(
-                    crate::resolve_alias_type_for_plain_call(args[0].ty()),
-                    Type::List(inner)
-                        if matches!(crate::resolve_alias_type_for_plain_call(inner), Type::Float)
+                    crate::resolve_alias_type_for_plain_call(args[0].ty()).iterable_element_type(),
+                    Some(Type::Float)
                 ) {
                     format!(
                         "{func}_by(|a, b| a.partial_cmp(b).unwrap_or(std::cmp::Ordering::Equal))"
@@ -1274,120 +2034,434 @@ impl RustEmitter {
                     func.to_owned()
                 };
                 Some(crate::RustExpr::MethodCall {
-                    receiver: Box::new(crate::RustExpr::MethodCall {
-                        receiver: Box::new(crate::RustExpr::MethodCall {
-                            receiver: Box::new(crate::RustExpr::Paren(Box::new(lowered))),
-                            method: "iter".to_string(),
-                            args: vec![],
-                        }),
-                        method: "cloned".to_string(),
-                        args: vec![],
-                    }),
+                    receiver: Box::new(registry_iterable_to_owned_iter_expr(self, &args[0])?),
                     method,
                     args: vec![],
                 })
             }
-            "sorted" if args.len() == 1 => {
-                let Type::List(elem_ty) = crate::resolve_alias_type_for_plain_call(args[0].ty())
-                else {
-                    return None;
-                };
+            "sorted" if matches!(args.len(), 1 | 3) => {
+                let elem_ty = crate::resolve_alias_type_for_plain_call(args[0].ty())
+                    .iterable_element_type()?;
                 let vec_name = "__sifr_sorted_v".to_string();
-                let collect_expr = crate::RustExpr::MethodCall {
-                    receiver: Box::new(crate::RustExpr::MethodCall {
-                        receiver: Box::new(crate::RustExpr::MethodCall {
-                            receiver: Box::new(crate::RustExpr::Paren(Box::new(
-                                self.try_lower_registry_expr_strict(&args[0])?,
-                            ))),
-                            method: "iter".to_string(),
-                            args: vec![],
-                        }),
-                        method: "cloned".to_string(),
-                        args: vec![],
-                    }),
-                    method: "collect::<Vec<_>>".to_string(),
-                    args: vec![],
-                };
-                let sort_stmt = if matches!(
-                    crate::resolve_alias_type_for_plain_call(elem_ty),
-                    Type::Float
-                ) {
-                    crate::RustStmt::Expr(crate::RustExpr::MethodCall {
-                        receiver: Box::new(crate::RustExpr::Ident(vec_name.clone())),
+                let collect_expr = registry_iterable_to_vec_expr(self, &args[0])?;
+                let mut stmts = vec![crate::RustStmt::Let {
+                    mutable: true,
+                    name: vec_name.clone(),
+                    ty: None,
+                    value: collect_expr,
+                }];
+                if args.len() == 3 && !matches!(args[1], HirExpr::NoneLiteral) {
+                    let (_param_types, _conventions, key_return_ty) =
+                        registry_callable_signature(&args[1])?;
+                    if matches!(key_return_ty, Type::Float) {
+                        let left_call = registry_call_callable_with_owned_args(
+                            self,
+                            &args[1],
+                            &[("__left_key".to_string(), elem_ty.clone())],
+                        )?;
+                        let right_call = registry_call_callable_with_owned_args(
+                            self,
+                            &args[1],
+                            &[("__right_key".to_string(), elem_ty.clone())],
+                        )?;
+                        stmts.push(crate::RustStmt::Expr(RustExpr::MethodCall {
+                            receiver: Box::new(RustExpr::Ident(vec_name.clone())),
+                            method: "sort_by".to_string(),
+                            args: vec![RustExpr::ClosureBlock {
+                                params: vec![
+                                    crate::RustParam::Named {
+                                        name: "__left".to_string(),
+                                        ty: crate::RustType::Named("_".to_string()),
+                                    },
+                                    crate::RustParam::Named {
+                                        name: "__right".to_string(),
+                                        ty: crate::RustType::Named("_".to_string()),
+                                    },
+                                ],
+                                body: vec![
+                                    crate::RustStmt::Let {
+                                        mutable: false,
+                                        name: "__left_key".to_string(),
+                                        ty: None,
+                                        value: RustExpr::MethodCall {
+                                            receiver: Box::new(RustExpr::Ident(
+                                                "__left".to_string(),
+                                            )),
+                                            method: "clone".to_string(),
+                                            args: vec![],
+                                        },
+                                    },
+                                    crate::RustStmt::Let {
+                                        mutable: false,
+                                        name: "__right_key".to_string(),
+                                        ty: None,
+                                        value: RustExpr::MethodCall {
+                                            receiver: Box::new(RustExpr::Ident(
+                                                "__right".to_string(),
+                                            )),
+                                            method: "clone".to_string(),
+                                            args: vec![],
+                                        },
+                                    },
+                                    crate::RustStmt::Return(Some(RustExpr::MethodCall {
+                                        receiver: Box::new(left_call),
+                                        method: "total_cmp".to_string(),
+                                        args: vec![RustExpr::Ref {
+                                            mutable: false,
+                                            expr: Box::new(right_call),
+                                        }],
+                                    })),
+                                ],
+                                is_move: false,
+                            }],
+                        }));
+                    } else {
+                        let left_call = registry_call_callable_with_owned_args(
+                            self,
+                            &args[1],
+                            &[("__left_key".to_string(), elem_ty.clone())],
+                        )?;
+                        let right_call = registry_call_callable_with_owned_args(
+                            self,
+                            &args[1],
+                            &[("__right_key".to_string(), elem_ty.clone())],
+                        )?;
+                        stmts.push(crate::RustStmt::Expr(RustExpr::MethodCall {
+                            receiver: Box::new(RustExpr::Ident(vec_name.clone())),
+                            method: "sort_by".to_string(),
+                            args: vec![RustExpr::ClosureBlock {
+                                params: vec![
+                                    crate::RustParam::Named {
+                                        name: "__left".to_string(),
+                                        ty: crate::RustType::Named("_".to_string()),
+                                    },
+                                    crate::RustParam::Named {
+                                        name: "__right".to_string(),
+                                        ty: crate::RustType::Named("_".to_string()),
+                                    },
+                                ],
+                                body: vec![
+                                    crate::RustStmt::Let {
+                                        mutable: false,
+                                        name: "__left_key".to_string(),
+                                        ty: None,
+                                        value: RustExpr::MethodCall {
+                                            receiver: Box::new(RustExpr::Ident(
+                                                "__left".to_string(),
+                                            )),
+                                            method: "clone".to_string(),
+                                            args: vec![],
+                                        },
+                                    },
+                                    crate::RustStmt::Let {
+                                        mutable: false,
+                                        name: "__right_key".to_string(),
+                                        ty: None,
+                                        value: RustExpr::MethodCall {
+                                            receiver: Box::new(RustExpr::Ident(
+                                                "__right".to_string(),
+                                            )),
+                                            method: "clone".to_string(),
+                                            args: vec![],
+                                        },
+                                    },
+                                    crate::RustStmt::Return(Some(RustExpr::MethodCall {
+                                        receiver: Box::new(left_call),
+                                        method: "cmp".to_string(),
+                                        args: vec![RustExpr::Ref {
+                                            mutable: false,
+                                            expr: Box::new(right_call),
+                                        }],
+                                    })),
+                                ],
+                                is_move: false,
+                            }],
+                        }));
+                    }
+                } else if matches!(elem_ty, Type::Float) {
+                    stmts.push(crate::RustStmt::Expr(RustExpr::MethodCall {
+                        receiver: Box::new(RustExpr::Ident(vec_name.clone())),
                         method: "sort_by".to_string(),
-                        args: vec![crate::RustExpr::Path(vec![
+                        args: vec![RustExpr::Path(vec![
                             "f64".to_string(),
                             "total_cmp".to_string(),
                         ])],
-                    })
+                    }));
                 } else {
-                    crate::RustStmt::Expr(crate::RustExpr::MethodCall {
-                        receiver: Box::new(crate::RustExpr::Ident(vec_name.clone())),
+                    stmts.push(crate::RustStmt::Expr(RustExpr::MethodCall {
+                        receiver: Box::new(RustExpr::Ident(vec_name.clone())),
                         method: "sort".to_string(),
                         args: vec![],
-                    })
-                };
-                Some(crate::RustExpr::Block {
-                    stmts: vec![
-                        crate::RustStmt::Let {
-                            mutable: true,
-                            name: vec_name.clone(),
-                            ty: None,
-                            value: collect_expr,
-                        },
-                        sort_stmt,
-                    ],
-                    expr: Some(Box::new(crate::RustExpr::Ident(vec_name))),
+                    }));
+                }
+                if args.len() == 3 {
+                    let reverse_expr = self.try_lower_registry_expr_strict(&args[2])?;
+                    stmts.push(crate::RustStmt::Expr(RustExpr::If {
+                        cond: Box::new(reverse_expr),
+                        then_expr: Box::new(RustExpr::Block {
+                            stmts: vec![crate::RustStmt::Expr(RustExpr::MethodCall {
+                                receiver: Box::new(RustExpr::Ident(vec_name.clone())),
+                                method: "reverse".to_string(),
+                                args: vec![],
+                            })],
+                            expr: None,
+                        }),
+                        else_expr: None,
+                    }));
+                }
+                Some(RustExpr::Block {
+                    stmts,
+                    expr: Some(Box::new(RustExpr::Ident(vec_name))),
                 })
             }
-            "enumerate" if args.len() == 1 => Some(crate::RustExpr::MethodCall {
-                receiver: Box::new(crate::RustExpr::MethodCall {
-                    receiver: Box::new(crate::RustExpr::MethodCall {
-                        receiver: Box::new(crate::RustExpr::MethodCall {
-                            receiver: Box::new(crate::RustExpr::MethodCall {
-                                receiver: Box::new(crate::RustExpr::Paren(Box::new(
-                                    self.try_lower_registry_expr_strict(&args[0])?,
-                                ))),
-                                method: "iter".to_string(),
-                                args: vec![],
-                            }),
-                            method: "cloned".to_string(),
-                            args: vec![],
-                        }),
+            "enumerate" if matches!(args.len(), 1 | 2) => {
+                let iter_expr = registry_iterable_to_owned_iter_expr(self, &args[0])?;
+                let start_expr = if args.len() == 2 {
+                    self.try_lower_registry_expr_strict(&args[1])?
+                } else {
+                    RustExpr::Literal(crate::RustLiteral::Int(0))
+                };
+                Some(registry_box_iterator_expr(RustExpr::MethodCall {
+                    receiver: Box::new(RustExpr::MethodCall {
+                        receiver: Box::new(iter_expr),
                         method: "enumerate".to_string(),
                         args: vec![],
                     }),
                     method: "map".to_string(),
-                    args: vec![crate::RustExpr::Closure {
+                    args: vec![RustExpr::Closure {
                         params: vec![crate::RustParam::Named {
                             name: "__pair".to_string(),
                             ty: crate::RustType::Named("_".to_string()),
                         }],
-                        body: Box::new(crate::RustExpr::Tuple(vec![
-                            crate::RustExpr::Cast {
-                                expr: Box::new(crate::RustExpr::Field {
-                                    expr: Box::new(crate::RustExpr::Ident("__pair".to_string())),
-                                    field: "0".to_string(),
+                        body: Box::new(RustExpr::Tuple(vec![
+                            RustExpr::BinOp {
+                                left: Box::new(RustExpr::Cast {
+                                    expr: Box::new(RustExpr::Field {
+                                        expr: Box::new(RustExpr::Ident("__pair".to_string())),
+                                        field: "0".to_string(),
+                                    }),
+                                    ty: crate::RustType::I64,
                                 }),
-                                ty: crate::RustType::I64,
+                                op: "+".to_string(),
+                                right: Box::new(start_expr),
                             },
-                            crate::RustExpr::Field {
-                                expr: Box::new(crate::RustExpr::Ident("__pair".to_string())),
+                            RustExpr::Field {
+                                expr: Box::new(RustExpr::Ident("__pair".to_string())),
                                 field: "1".to_string(),
                             },
                         ])),
                         is_move: false,
                     }],
-                }),
-                method: "collect::<Vec<_>>".to_string(),
-                args: vec![],
-            }),
+                }))
+            }
+            "filter" if args.len() == 2 => {
+                let item_ty = crate::resolve_alias_type_for_plain_call(args[1].ty())
+                    .iterable_element_type()?;
+                let filtered_iter = RustExpr::MethodCall {
+                    receiver: Box::new(registry_iterable_to_owned_iter_expr(self, &args[1])?),
+                    method: "filter".to_string(),
+                    args: vec![RustExpr::ClosureBlock {
+                        params: vec![crate::RustParam::Named {
+                            name: "__filter_item".to_string(),
+                            ty: crate::RustType::Named("_".to_string()),
+                        }],
+                        body: vec![
+                            crate::RustStmt::Let {
+                                mutable: false,
+                                name: "__filter_value".to_string(),
+                                ty: None,
+                                value: RustExpr::MethodCall {
+                                    receiver: Box::new(RustExpr::Ident(
+                                        "__filter_item".to_string(),
+                                    )),
+                                    method: "clone".to_string(),
+                                    args: vec![],
+                                },
+                            },
+                            crate::RustStmt::Return(Some(registry_call_callable_with_owned_args(
+                                self,
+                                &args[0],
+                                &[("__filter_value".to_string(), item_ty)],
+                            )?)),
+                        ],
+                        is_move: false,
+                    }],
+                };
+                Some(registry_box_iterator_expr(filtered_iter))
+            }
+            "map" if args.len() >= 2 => {
+                let iter_expr = registry_zip_iter_expr(self, &args[1..])?;
+                let arg_count = args.len() - 1;
+                if arg_count == 1 {
+                    Some(registry_box_iterator_expr(RustExpr::MethodCall {
+                        receiver: Box::new(RustExpr::MethodCall {
+                            receiver: Box::new(iter_expr),
+                            method: "map".to_string(),
+                            args: vec![RustExpr::ClosureBlock {
+                                params: vec![crate::RustParam::Named {
+                                    name: "__map_item".to_string(),
+                                    ty: crate::RustType::Named("_".to_string()),
+                                }],
+                                body: vec![crate::RustStmt::Return(Some(
+                                    registry_call_callable_with_owned_args(
+                                        self,
+                                        &args[0],
+                                        &[(
+                                            "__map_item".to_string(),
+                                            crate::resolve_alias_type_for_plain_call(args[1].ty())
+                                                .iterable_element_type()?,
+                                        )],
+                                    )?,
+                                ))],
+                                is_move: false,
+                            }],
+                        }),
+                        method: "into_iter".to_string(),
+                        args: vec![],
+                    }))
+                } else {
+                    let mut body = Vec::new();
+                    let mut bindings = Vec::new();
+                    for index in 0..arg_count {
+                        let name = format!("__map_arg_{index}");
+                        let arg_ty = crate::resolve_alias_type_for_plain_call(args[index + 1].ty())
+                            .iterable_element_type()?;
+                        bindings.push((name.clone(), arg_ty));
+                        body.push(crate::RustStmt::Let {
+                            mutable: false,
+                            name,
+                            ty: None,
+                            value: registry_nested_zip_field_expr(
+                                RustExpr::Ident("__map_item".to_string()),
+                                arg_count,
+                                index,
+                            ),
+                        });
+                    }
+                    body.push(crate::RustStmt::Return(Some(
+                        registry_call_callable_with_owned_args(self, &args[0], &bindings)?,
+                    )));
+                    Some(registry_box_iterator_expr(RustExpr::MethodCall {
+                        receiver: Box::new(RustExpr::MethodCall {
+                            receiver: Box::new(iter_expr),
+                            method: "map".to_string(),
+                            args: vec![RustExpr::ClosureBlock {
+                                params: vec![crate::RustParam::Named {
+                                    name: "__map_item".to_string(),
+                                    ty: crate::RustType::Named("_".to_string()),
+                                }],
+                                body,
+                                is_move: false,
+                            }],
+                        }),
+                        method: "into_iter".to_string(),
+                        args: vec![],
+                    }))
+                }
+            }
             "abs" if args.len() == 1 => {
                 let lowered = self.try_lower_registry_expr_strict(&args[0])?;
                 Some(crate::RustExpr::MethodCall {
                     receiver: Box::new(crate::RustExpr::Paren(Box::new(lowered))),
                     method: "abs".to_string(),
                     args: vec![],
+                })
+            }
+            "ord" if args.len() == 1 => {
+                let lowered = self.try_lower_registry_expr_strict(&args[0])?;
+                Some(RustExpr::Block {
+                    stmts: vec![crate::RustStmt::Let {
+                        mutable: false,
+                        name: "__sifr_ord_chars".to_string(),
+                        ty: None,
+                        value: RustExpr::MethodCall {
+                            receiver: Box::new(RustExpr::MethodCall {
+                                receiver: Box::new(RustExpr::Paren(Box::new(lowered))),
+                                method: "chars".to_string(),
+                                args: vec![],
+                            }),
+                            method: "collect::<Vec<char>>".to_string(),
+                            args: vec![],
+                        },
+                    }],
+                    expr: Some(Box::new(RustExpr::If {
+                        cond: Box::new(RustExpr::BinOp {
+                            left: Box::new(RustExpr::MethodCall {
+                                receiver: Box::new(RustExpr::Ident("__sifr_ord_chars".to_string())),
+                                method: "len".to_string(),
+                                args: vec![],
+                            }),
+                            op: "==".to_string(),
+                            right: Box::new(RustExpr::Literal(crate::RustLiteral::Int(1))),
+                        }),
+                        then_expr: Box::new(RustExpr::FnCall {
+                            func: Box::new(RustExpr::Path(vec!["Ok".to_string()])),
+                            args: vec![RustExpr::Cast {
+                                expr: Box::new(RustExpr::Index {
+                                    expr: Box::new(RustExpr::Ident("__sifr_ord_chars".to_string())),
+                                    index: Box::new(RustExpr::Literal(crate::RustLiteral::Int(0))),
+                                }),
+                                ty: crate::RustType::I64,
+                            }],
+                        }),
+                        else_expr: Some(Box::new(RustExpr::FnCall {
+                            func: Box::new(RustExpr::Path(vec!["Err".to_string()])),
+                            args: vec![RustExpr::StructInit {
+                                name: "ValueError".to_string(),
+                                fields: vec![(
+                                    "message".to_string(),
+                                    RustExpr::Literal(crate::RustLiteral::Str(
+                                        "ord() expected a string of length 1".to_string(),
+                                    )),
+                                )],
+                            }],
+                        })),
+                    })),
+                })
+            }
+            "chr" if args.len() == 1 => {
+                let lowered = self.try_lower_registry_expr_strict(&args[0])?;
+                Some(RustExpr::MethodCall {
+                    receiver: Box::new(RustExpr::MethodCall {
+                        receiver: Box::new(RustExpr::FnCall {
+                            func: Box::new(RustExpr::Path(vec![
+                                "std".to_string(),
+                                "char".to_string(),
+                                "from_u32".to_string(),
+                            ])),
+                            args: vec![RustExpr::Cast {
+                                expr: Box::new(RustExpr::Paren(Box::new(lowered))),
+                                ty: crate::RustType::Named("u32".to_string()),
+                            }],
+                        }),
+                        method: "map".to_string(),
+                        args: vec![RustExpr::Closure {
+                            params: vec![crate::RustParam::Named {
+                                name: "__sifr_chr".to_string(),
+                                ty: crate::RustType::Named("_".to_string()),
+                            }],
+                            body: Box::new(RustExpr::MethodCall {
+                                receiver: Box::new(RustExpr::Ident("__sifr_chr".to_string())),
+                                method: "to_string".to_string(),
+                                args: vec![],
+                            }),
+                            is_move: false,
+                        }],
+                    }),
+                    method: "ok_or_else".to_string(),
+                    args: vec![RustExpr::Closure {
+                        params: vec![],
+                        body: Box::new(RustExpr::StructInit {
+                            name: "ValueError".to_string(),
+                            fields: vec![(
+                                "message".to_string(),
+                                RustExpr::Literal(crate::RustLiteral::Str(
+                                    "chr() arg not in range(0x110000)".to_string(),
+                                )),
+                            )],
+                        }),
+                        is_move: false,
+                    }],
                 })
             }
             "round" if args.len() == 1 => {
@@ -1508,7 +2582,7 @@ impl RustEmitter {
                         op: "!=".to_string(),
                         right: Box::new(crate::RustExpr::Literal(crate::RustLiteral::Float(0.0))),
                     }),
-                    Type::Str | Type::List(_) | Type::Dict(_, _) => {
+                    Type::Str | Type::Bytes | Type::List(_) | Type::Dict(_, _) => {
                         Some(crate::RustExpr::UnaryOp {
                             op: "!".to_string(),
                             operand: Box::new(crate::RustExpr::MethodCall {
@@ -2029,6 +3103,10 @@ impl RustEmitter {
                 lowered_arg = aligned_callable;
             }
 
+            if matches!(resolved_param, Type::Iterable(_)) {
+                lowered_arg = registry_iterable_to_vec_expr(self, arg)?;
+            }
+
             if let Type::Union(members) = resolved_param {
                 if !crate::helpers::is_option_type(resolved_param)
                     && !matches!(
@@ -2158,6 +3236,10 @@ impl RustEmitter {
                     && (param_ty.ownership() != sifr_type_system::OwnershipKind::Copy
                         || matches!(resolved_param, Type::TypeVar(_) | Type::Any)));
 
+            if requires_shared_borrow || requires_mut_borrow {
+                lowered_arg = Self::clone_moved_names_in_borrowed_aggregate(arg, lowered_arg);
+            }
+
             if requires_shared_borrow
                 && !self.arg_is_already_borrowed_for_registry_call(arg, &lowered_arg)
             {
@@ -2175,6 +3257,12 @@ impl RustEmitter {
             }
 
             lowered_args.push(lowered_arg);
+        }
+
+        if let Some(captures) = self.nested_fn_captures.get(func).cloned() {
+            for capture in captures {
+                lowered_args.push(self.lower_recursive_capture_arg_for_ir(&capture));
+            }
         }
 
         Some(crate::RustExpr::FnCall {
@@ -2361,6 +3449,54 @@ impl RustEmitter {
             };
         }
         lowered_arg
+    }
+
+    pub(crate) fn clone_moved_names_in_borrowed_aggregate(
+        arg: &HirExpr,
+        lowered: crate::RustExpr,
+    ) -> crate::RustExpr {
+        Self::clone_moved_names_in_borrowed_aggregate_inner(arg, lowered, false)
+    }
+
+    fn clone_moved_names_in_borrowed_aggregate_inner(
+        arg: &HirExpr,
+        lowered: crate::RustExpr,
+        in_aggregate: bool,
+    ) -> crate::RustExpr {
+        match (arg, lowered) {
+            (HirExpr::ListLiteral { elements, .. }, crate::RustExpr::Vec(items)) => {
+                crate::RustExpr::Vec(
+                    elements
+                        .iter()
+                        .zip(items)
+                        .map(|(element, item)| {
+                            Self::clone_moved_names_in_borrowed_aggregate_inner(element, item, true)
+                        })
+                        .collect(),
+                )
+            }
+            (HirExpr::TupleLiteral { elements, .. }, crate::RustExpr::Tuple(items)) => {
+                crate::RustExpr::Tuple(
+                    elements
+                        .iter()
+                        .zip(items)
+                        .map(|(element, item)| {
+                            Self::clone_moved_names_in_borrowed_aggregate_inner(element, item, true)
+                        })
+                        .collect(),
+                )
+            }
+            (HirExpr::Name { ty, .. }, lowered_expr)
+                if in_aggregate && ty.ownership() != sifr_type_system::OwnershipKind::Copy =>
+            {
+                crate::RustExpr::MethodCall {
+                    receiver: Box::new(crate::RustExpr::Paren(Box::new(lowered_expr))),
+                    method: "clone".to_string(),
+                    args: vec![],
+                }
+            }
+            (_, lowered_expr) => lowered_expr,
+        }
     }
 
     fn arg_is_already_borrowed_for_registry_call(

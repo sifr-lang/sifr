@@ -45,29 +45,34 @@ pub(super) fn lower_html_unescape(args: &[RustExpr]) -> Option<RustExpr> {
     if args.len() != 1 {
         return None;
     }
-    Some(RustExpr::MethodCall {
-        receiver: Box::new(RustExpr::MethodCall {
-            receiver: Box::new(RustExpr::MethodCall {
-                receiver: Box::new(RustExpr::MethodCall {
-                    receiver: Box::new(RustExpr::MethodCall {
-                        receiver: Box::new(RustExpr::MethodCall {
-                            receiver: Box::new(arg_expr(args, 0)),
-                            method: "replace".to_string(),
-                            args: vec![str_lit("&amp;"), str_lit("&")],
-                        }),
-                        method: "replace".to_string(),
-                        args: vec![str_lit("&lt;"), str_lit("<")],
-                    }),
-                    method: "replace".to_string(),
-                    args: vec![str_lit("&gt;"), str_lit(">")],
-                }),
-                method: "replace".to_string(),
-                args: vec![str_lit("&quot;"), str_lit("\"")],
-            }),
+    let mut expr = arg_expr(args, 0);
+    let replacements = [
+        ("&amp;", "&"),
+        ("&lt;", "<"),
+        ("&gt;", ">"),
+        ("&quot;", "\""),
+        ("&#x27;", "'"),
+        ("&#X27;", "'"),
+        ("&#39;", "'"),
+        ("&#60;", "<"),
+        ("&#x3C;", "<"),
+        ("&#x3c;", "<"),
+        ("&#X3C;", "<"),
+        ("&#X3c;", "<"),
+        ("&#62;", ">"),
+        ("&#x3E;", ">"),
+        ("&#x3e;", ">"),
+        ("&#X3E;", ">"),
+        ("&#X3e;", ">"),
+    ];
+
+    for (from, to) in replacements {
+        expr = RustExpr::MethodCall {
+            receiver: Box::new(expr),
             method: "replace".to_string(),
-            args: vec![str_lit("&#x27;"), str_lit("'")],
-        }),
-        method: "replace".to_string(),
-        args: vec![str_lit("&#39;"), str_lit("'")],
-    })
+            args: vec![str_lit(from), str_lit(to)],
+        };
+    }
+
+    Some(expr)
 }

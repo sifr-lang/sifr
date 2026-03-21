@@ -1,6 +1,7 @@
 use sifr_python_ast::Stmt;
 use sifr_type_system::{FunctionType, Type};
 
+use super::imported_defaults::import_callable_vararg;
 use super::{ExternalDefs, LowerCtx};
 
 pub(super) fn resolve_imports_early(stmts: &[Stmt], externals: &ExternalDefs, ctx: &mut LowerCtx) {
@@ -89,6 +90,14 @@ pub(super) fn resolve_imports_early(stmts: &[Stmt], externals: &ExternalDefs, ct
                     let local = local_name_for(name);
                     if let Some(ft) = module_fns.get(name) {
                         ctx.functions.entry(local).or_insert_with(|| ft.clone());
+                        if let Some(module_varargs) = externals.function_varargs.get(&module_key) {
+                            import_callable_vararg(
+                                ctx,
+                                module_varargs,
+                                name,
+                                &local_name_for(name),
+                            );
+                        }
                     }
                 }
             }

@@ -1,0 +1,27 @@
+# ad-hoc iterator wave 3 demo
+# Verifies generator functions are typed as Iterator[T] and list materialization is explicit.
+
+def countdown(n: int) -> Iterator[int]:
+    i: int = n
+    while i > 0:
+        yield i
+        i = i - 1
+
+
+def main():
+    it: Iterator[int] = countdown(3)
+    first: int | None = next(it)
+    second: int | None = next(it)
+    remaining: list[int] = list(it)
+
+    all_values: list[int] = list(countdown(4))
+
+    assert first == 3
+    assert second == 2
+    assert remaining == [1]
+    assert all_values == [4, 3, 2, 1]
+
+    print(first)
+    print(second)
+    print(remaining)
+    print(all_values)

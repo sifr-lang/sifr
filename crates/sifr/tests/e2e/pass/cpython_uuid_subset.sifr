@@ -1,5 +1,5 @@
 # Adapted CPython uuid subset for sifr.uuid (canonical bool-vector format)
-from sifr.uuid import uuid4, uuid4_obj, uuid_from_hex, UUID
+from sifr.uuid import uuid4, uuid4_obj, uuid_from_hex, UUID, uuid3, uuid5, NAMESPACE_DNS
 from sifr.test import assert_bool_vector_eq
 
 
@@ -49,6 +49,24 @@ def collect_parse_actual() -> list[bool]:
         _ = str(e.message)
         parsed_upper_ok = False
     actual.append(parsed_upper_ok)
+
+    parsed_urn_ok: bool = False
+    try:
+        parsed_from_urn: UUID = uuid_from_hex("urn:uuid:550E8400-E29B-41D4-A716-446655440000")
+        parsed_urn_ok = parsed_from_urn.to_str() == "550e8400-e29b-41d4-a716-446655440000"
+    except ValueError as e:
+        _ = str(e.message)
+        parsed_urn_ok = False
+    actual.append(parsed_urn_ok)
+
+    parsed_curly_ok: bool = False
+    try:
+        parsed_from_curly: UUID = uuid_from_hex("{550E8400-E29B-41D4-A716-446655440000}")
+        parsed_curly_ok = parsed_from_curly.to_str() == "550e8400-e29b-41d4-a716-446655440000"
+    except ValueError as e:
+        _ = str(e.message)
+        parsed_curly_ok = False
+    actual.append(parsed_curly_ok)
     return actual
 
 
@@ -96,6 +114,8 @@ def collect_class_behavior_actual() -> list[bool]:
 
     ctor_invalid_version: UUID = UUID("zzzzzzzz-zzzz-zzzz-zzzz-zzzzzzzzzzzz")
     actual.append(ctor_invalid_version.version() == -1)
+    actual.append(uuid3(NAMESPACE_DNS(), "python.org").to_str() == "6fa459ea-ee8a-3ca4-894e-db77e160355e")
+    actual.append(uuid5(NAMESPACE_DNS(), "python.org").to_str() == "886313e1-3b8a-5372-9b90-0c9aee199e5d")
     return actual
 
 
@@ -105,7 +125,7 @@ def append_all(mut target: list[bool], values: list[bool]):
 
 
 def main():
-    expected: list[bool] = [True, True, True, True, True, True, True, True, True, True, True, True]
+    expected: list[bool] = [True, True, True, True, True, True, True, True, True, True, True, True, True, True, True, True]
     actual: list[bool] = []
     append_all(actual, collect_generated_actual())
     append_all(actual, collect_parse_actual())

@@ -1,0 +1,33 @@
+from sifr.io import exists
+from sifr.os import remove_file
+
+
+def main():
+    path: str = "/tmp/sifr_phase_psp_bytes_3_io_contract.bin"
+    wrote: bool = False
+    read_ok: bool = False
+    cleanup: bool = False
+
+    try:
+        bw = open(path, "wb")
+        _wb: None = bw.write_bytes(b"Sifr")
+        bw.close()
+        wrote = True
+
+        br = open(path, "rb")
+        payload: bytes = br.read_bytes()
+        br.close()
+        read_ok = payload == b"Sifr"
+    except IOError as e:
+        _ = str(e.message)
+
+    try:
+        if exists(path):
+            _rm: None = remove_file(path)
+        cleanup = not exists(path)
+    except IOError as e:
+        _ = str(e.message)
+
+    assert wrote
+    assert read_ok
+    assert cleanup

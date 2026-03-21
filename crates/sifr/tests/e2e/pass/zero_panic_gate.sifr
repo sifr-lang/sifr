@@ -5,8 +5,8 @@
 from sifr.io import read_text, read_lines
 from sifr.os import listdir, rmdir, remove_file, rename
 from sifr.shutil import copy
-from sifr.json import json_loads
-from sifr.tomllib import loads
+from sifr.json import JsonValue, json_loads
+from sifr.tomllib import TomlValue, loads
 from sifr.re import re_match, search, findall, split, sub
 from sifr.base64 import b64decode
 from sifr.random import randint
@@ -16,7 +16,7 @@ from sifr.itertools import batched
 from sifr.graphlib import topological_sort, CycleError
 from sifr.uuid import uuid_from_hex, UUID
 from sifr.ipaddress import ip_to_int
-from sifr.datetime import from_timestamp
+from sifr.datetime import from_timestamp, datetime
 
 def main():
     io_errors: int = 0
@@ -68,12 +68,12 @@ def main():
     # === 2. Parse Safety ===
 
     try:
-        j1: str = json_loads("not json")
+        j1: JsonValue = json_loads("not json")
     except JSONDecodeError as e:
         parse_errors = parse_errors + 1
 
     try:
-        t1: str = loads("not toml [[[")
+        t1: TomlValue = loads("not toml [[[" )
     except TOMLDecodeError as e:
         parse_errors = parse_errors + 1
 
@@ -182,7 +182,7 @@ def main():
         edge_errors = edge_errors + 1
 
     try:
-        ev9: str = from_timestamp(999999999999999.0)
+        ev9: datetime = from_timestamp(999999999999999.0)
     except ValueError as e:
         edge_errors = edge_errors + 1
 

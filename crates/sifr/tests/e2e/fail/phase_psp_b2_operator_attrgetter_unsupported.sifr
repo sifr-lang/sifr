@@ -1,0 +1,13 @@
+from sifr.operator import attrgetter
+
+
+class Point:
+    x: int
+
+    def __init__(self, x: int):
+        self.x = x
+
+
+def main():
+    get_x = attrgetter("x")
+    assert str(get_x(Point(3))) == "3"

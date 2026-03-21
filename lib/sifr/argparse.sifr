@@ -1,5 +1,5 @@
 # sifr.argparse — Command-line argument parsing (pure Sifr)
-# Simplified argument parser using function-based API.
+# Class/object-model shim over the existing helper functions.
 
 def parse_flag(args: list[str], flag: str) -> bool:
     for arg in args:
@@ -7,55 +7,629 @@ def parse_flag(args: list[str], flag: str) -> bool:
             return True
     return False
 
+
+def _split_inline_option(token: str) -> tuple[bool, str, str]:
+    key: str = ""
+    i: int = 0
+    while i < len(token):
+        ch: str | None = token[i]
+        if ch is not None and ch == "=":
+            value: str = ""
+            j: int = i + 1
+            while j < len(token):
+                part: str | None = token[j]
+                if part is not None:
+                    value = value + part
+                j = j + 1
+            return (True, key, value)
+        if ch is not None:
+            key = key + ch
+        i = i + 1
+    return (False, token + "", "")
+
+
 def parse_option(args: list[str], name: str, default: str) -> str:
     i: int = 0
-    while i < len(args) - 1:
+    while i < len(args):
         arg: str | None = args[i]
         if arg is not None:
-            if arg == name:
+            if arg == name and i + 1 < len(args):
                 next_val: str | None = args[i + 1]
                 if next_val is not None:
-                    return next_val + ""
+                    if next_val == "--" or next_val.startswith("--"):
+                        pass
+                    else:
+                        return next_val + ""
+            inline_has_value, inline_name, inline_value = _split_inline_option(arg)
+            if inline_has_value and inline_name == name:
+                return inline_value + ""
         i = i + 1
     return default + ""
+
 
 def parse_positional(args: list[str], index: int, default: str) -> str:
     positionals: list[str] = []
     skip_next: bool = False
+    force_positional: bool = False
     for arg in args:
+        if force_positional:
+            positionals.append(arg)
+            continue
         if skip_next:
             skip_next = False
-        elif len(arg) >= 2:
-            first: str | None = arg[0]
-            second: str | None = arg[1]
-            if first is not None:
-                if first == "-":
-                    if second is not None:
-                        if second == "-":
-                            # --option, skip next as value
-                            skip_next = True
-                        else:
-                            # -o, skip next as value
-                            skip_next = True
-                    else:
-                        positionals.append(arg)
-                else:
-                    positionals.append(arg)
-            else:
-                positionals.append(arg)
-        elif len(arg) >= 1:
-            first2: str | None = arg[0]
-            if first2 is not None:
-                if first2 == "-":
-                    skip_next = True
-                else:
-                    positionals.append(arg)
-            else:
-                positionals.append(arg)
+        elif arg == "--":
+            force_positional = True
+        elif arg.startswith("-"):
+            inline_has_value, inline_name, inline_value = _split_inline_option(arg)
+            if inline_has_value:
+                _ = inline_name
+                _ = inline_value
+                continue
+            skip_next = True
         else:
             positionals.append(arg)
     if index < len(positionals):
-        val: str | None = positionals[index]
-        if val is not None:
-            return val + ""
+        value: str | None = positionals[index]
+        if value is not None:
+            return value + ""
     return default + ""
+
+
+def _is_digit_string(value: str) -> bool:
+    if value == "":
+        return False
+    for ch in value:
+        if ch < "0" or ch > "9":
+            return False
+    return True
+
+
+def _normalize_nargs(nargs: str) -> str:
+    if nargs == "":
+        return "1"
+    if nargs == "?" or nargs == "*" or nargs == "+":
+        return nargs + ""
+    if _is_digit_string(nargs):
+        try:
+            parsed: int = int(nargs)
+            if parsed > 0:
+                return str(parsed)
+        except ParseError:
+            return "1"
+    return "1"
+
+
+def _nargs_is_multi(nargs: str) -> bool:
+    normalized: str = _normalize_nargs(nargs)
+    if normalized == "*" or normalized == "+":
+        return True
+    if _is_digit_string(normalized):
+        try:
+            parsed: int = int(normalized)
+            return parsed > 1
+        except ParseError:
+            return False
+    return False
+
+
+def _coerce_bool(raw: str) -> str | None:
+    normalized: str = raw.lower()
+    if (
+        normalized == "1"
+        or normalized == "true"
+        or normalized == "yes"
+        or normalized == "on"
+    ):
+        return "true" + ""
+    if (
+        normalized == "0"
+        or normalized == "false"
+        or normalized == "no"
+        or normalized == "off"
+    ):
+        return "false" + ""
+    return None
+
+
+def _copy_token(value: str | None) -> str:
+    if value is None:
+        return ""
+    return value + ""
+
+
+class ArgumentSpec:
+    name: str
+    dest: str
+    kind: str
+    default_value: str
+    nargs: str
+    type_name: str
+
+    def __init__(
+        self,
+        name: str,
+        dest: str,
+        kind: str,
+        default_value: str,
+        nargs: str,
+        type_name: str,
+    ):
+        self.name = name + ""
+        self.dest = dest + ""
+        self.kind = kind + ""
+        self.default_value = default_value + ""
+        self.nargs = _normalize_nargs(nargs)
+        self.type_name = type_name + ""
+
+
+class Namespace:
+    _str_values: list[tuple[str, str]]
+    _bool_values: list[tuple[str, bool]]
+    _list_values: list[tuple[str, list[str]]]
+
+    def __init__(self):
+        self._str_values = []
+        self._bool_values = []
+        self._list_values = []
+
+    def set(self, name: str, value: str) -> None:
+        updated: list[tuple[str, str]] = []
+        replaced: bool = False
+        for key, current in self._str_values:
+            if key == name:
+                updated.append((name + "", value + ""))
+                replaced = True
+            else:
+                updated.append((key, current))
+        if not replaced:
+            updated.append((name + "", value + ""))
+        self._str_values = updated
+
+    def set_bool(self, name: str, value: bool) -> None:
+        updated: list[tuple[str, bool]] = []
+        replaced: bool = False
+        for key, current in self._bool_values:
+            if key == name:
+                updated.append((name + "", value))
+                replaced = True
+            else:
+                updated.append((key, current))
+        if not replaced:
+            updated.append((name + "", value))
+        self._bool_values = updated
+
+    def set_list(self, name: str, values: list[str]) -> None:
+        copied: list[str] = []
+        for value in values:
+            copied.append(value + "")
+        updated: list[tuple[str, list[str]]] = []
+        for key, current in self._list_values:
+            if key == name:
+                continue
+            updated.append((key, current))
+        updated.append((name + "", copied))
+        self._list_values = updated
+
+    def get(self, name: str, default: str = "") -> str:
+        for key, value in self._str_values:
+            if key == name:
+                return value + ""
+        return default + ""
+
+    def get_bool(self, name: str, default: bool = False) -> bool:
+        for key, value in self._bool_values:
+            if key == name:
+                return value
+        for key2, value2 in self._str_values:
+            if key2 != name:
+                continue
+            normalized: str = value2.lower()
+            if (
+                normalized == "1"
+                or normalized == "true"
+                or normalized == "yes"
+                or normalized == "on"
+            ):
+                return True
+            if (
+                normalized == "0"
+                or normalized == "false"
+                or normalized == "no"
+                or normalized == "off"
+            ):
+                return False
+        return default
+
+    def get_list(self, name: str) -> list[str]:
+        for key, values in self._list_values:
+            if key != name:
+                continue
+            copied: list[str] = []
+            for value in values:
+                copied.append(value + "")
+            return copied
+        return []
+
+    def merge_from(self, other: Namespace) -> None:
+        for key, value in other._str_values:
+            self.set(key, value)
+        for key2, value2 in other._bool_values:
+            self.set_bool(key2, value2)
+        for key3, values3 in other._list_values:
+            self.set_list(key3, values3)
+
+    def copy(self) -> Namespace:
+        copied: Namespace = Namespace()
+        copied.merge_from(self)
+        return copied
+
+
+def _derive_dest(name: str) -> str:
+    if name.startswith("--"):
+        return name[2:len(name)].replace("-", "_")
+    if name.startswith("-"):
+        return name[1:len(name)].replace("-", "_")
+    return name + ""
+
+
+def _is_option_like_token(specs: list[ArgumentSpec], token: str) -> bool:
+    if token == "--":
+        return True
+    if token.startswith("--"):
+        return True
+    inline_has_value, inline_name, inline_value = _split_inline_option(token)
+    _ = inline_value
+    lookup_name: str = token + ""
+    if inline_has_value:
+        lookup_name = inline_name + ""
+    for spec in specs:
+        if spec.kind == "positional":
+            continue
+        if spec.name == lookup_name:
+            return True
+    return False
+
+
+class ArgumentParser:
+    _prog: str
+    _specs: list[ArgumentSpec]
+    _subparsers_dest: str
+    _subparsers: list[tuple[str, list[ArgumentSpec]]]
+
+    def __init__(self, prog: str = ""):
+        self._prog = prog + ""
+        self._specs = []
+        self._subparsers_dest = "command"
+        self._subparsers = []
+
+    def prog(self) -> str:
+        return self._prog + ""
+
+    def add_subparsers(self, dest: str = "command") -> None:
+        if dest != "":
+            self._subparsers_dest = dest + ""
+
+    def add_parser(self, name: str, own parser: ArgumentParser) -> None:
+        specs_copy: list[ArgumentSpec] = []
+        for spec in parser._specs:
+            specs_copy.append(spec)
+        self._subparsers.append((name + "", specs_copy))
+
+    def _append_spec(
+        self,
+        name: str,
+        dest: str,
+        action: str,
+        default: str,
+        nargs: str,
+        type_name: str,
+    ) -> None:
+        resolved_dest: str = dest + ""
+        if resolved_dest == "":
+            resolved_dest = _derive_dest(name)
+
+        kind: str = "positional"
+        if name.startswith("-"):
+            if action == "store_true":
+                kind = "flag"
+            else:
+                kind = "option"
+
+        spec: ArgumentSpec = ArgumentSpec(
+            name,
+            resolved_dest,
+            kind,
+            default,
+            nargs,
+            type_name,
+        )
+        self._specs.append(spec)
+
+    def add_argument(
+        self,
+        name: str,
+        dest: str = "",
+        action: str = "store",
+        default: str = "",
+    ) -> None:
+        self.add_argument_typed(name, dest, action, default, "1", "str")
+
+    def add_argument_typed(
+        self,
+        name: str,
+        dest: str = "",
+        action: str = "store",
+        default: str = "",
+        nargs: str = "1",
+        type_name: str = "str",
+    ) -> None:
+        normalized_type: str = type_name + ""
+        if (
+            normalized_type != "int"
+            and normalized_type != "float"
+            and normalized_type != "bool"
+            and normalized_type != "str"
+        ):
+            normalized_type = "str"
+        self._append_spec(name, dest, action, default, nargs, normalized_type)
+
+    def _find_subparser(self, name: str) -> list[ArgumentSpec] | None:
+        for parser_name, parser_specs in self._subparsers:
+            if parser_name == name:
+                return parser_specs
+        return None
+
+    def _coerce_token(self, spec: ArgumentSpec, token: str) -> str | None:
+        if spec.type_name == "int":
+            try:
+                parsed_int: int = int(token)
+                return str(parsed_int)
+            except ParseError:
+                return None
+        if spec.type_name == "float":
+            try:
+                parsed_float: float = float(token)
+                return str(parsed_float)
+            except ParseError:
+                return None
+        if spec.type_name == "bool":
+            return _coerce_bool(token)
+        return token + ""
+
+    def _collect_option_values(
+        self, args: list[str], start: int, spec: ArgumentSpec, force_positional: bool
+    ) -> tuple[list[str], int]:
+        values: list[str] = []
+        i: int = start
+
+        if spec.nargs == "?":
+            if i >= len(args):
+                return (values, i)
+            token_opt: str | None = args[i]
+            if token_opt is None:
+                return (values, i + 1)
+            token_one: str = _copy_token(token_opt)
+            if not force_positional and _is_option_like_token(self._specs, token_one):
+                return (values, i)
+            values.append(token_one)
+            return (values, i + 1)
+
+        if spec.nargs == "*" or spec.nargs == "+":
+            while i < len(args):
+                token_opt2: str | None = args[i]
+                if token_opt2 is None:
+                    i = i + 1
+                    continue
+                token_many: str = _copy_token(token_opt2)
+                if not force_positional and _is_option_like_token(self._specs, token_many):
+                    break
+                values.append(token_many)
+                i = i + 1
+            return (values, i)
+
+        exact: int = 1
+        if _is_digit_string(spec.nargs):
+            try:
+                parsed_count: int = int(spec.nargs)
+                if parsed_count > 0:
+                    exact = parsed_count
+            except ParseError:
+                exact = 1
+        count: int = 0
+        while count < exact and i < len(args):
+            token_opt3: str | None = args[i]
+            if token_opt3 is None:
+                i = i + 1
+                continue
+            token_exact: str = _copy_token(token_opt3)
+            if not force_positional and _is_option_like_token(self._specs, token_exact):
+                break
+            values.append(token_exact)
+            i = i + 1
+            count = count + 1
+        return (values, i)
+
+    def _collect_positional_values(
+        self, args: list[str], start: int, spec: ArgumentSpec, force_positional: bool
+    ) -> tuple[list[str], int]:
+        values: list[str] = []
+        i: int = start
+
+        if i >= len(args):
+            return (values, i)
+
+        if spec.nargs == "?":
+            token_opt: str | None = args[i]
+            if token_opt is not None:
+                token_one: str = _copy_token(token_opt)
+                if not force_positional and _is_option_like_token(self._specs, token_one):
+                    return (values, i)
+                values.append(token_one)
+            return (values, i + 1)
+
+        if spec.nargs == "*" or spec.nargs == "+":
+            while i < len(args):
+                token_opt2: str | None = args[i]
+                if token_opt2 is None:
+                    i = i + 1
+                    continue
+                token_many: str = _copy_token(token_opt2)
+                if not force_positional and _is_option_like_token(self._specs, token_many):
+                    break
+                values.append(token_many)
+                i = i + 1
+            return (values, i)
+
+        exact: int = 1
+        if _is_digit_string(spec.nargs):
+            try:
+                parsed_count: int = int(spec.nargs)
+                if parsed_count > 0:
+                    exact = parsed_count
+            except ParseError:
+                exact = 1
+        count: int = 0
+        while count < exact and i < len(args):
+            token_opt3: str | None = args[i]
+            if token_opt3 is not None:
+                values.append(_copy_token(token_opt3))
+                count = count + 1
+            i = i + 1
+        return (values, i)
+
+    def parse_args(self, args: list[str]) -> Namespace:
+        ns: Namespace = Namespace()
+        for spec in self._specs:
+            if spec.kind == "flag":
+                ns.set_bool(spec.dest, False)
+            elif _nargs_is_multi(spec.nargs) or spec.nargs == "*" or spec.nargs == "+":
+                ns.set_list(spec.dest, [])
+            else:
+                ns.set(spec.dest, spec.default_value)
+
+        if len(self._subparsers) > 0 and len(args) > 0:
+            first_token: str | None = args[0]
+            if first_token is not None:
+                command_name: str = _copy_token(first_token)
+                subparser_specs: list[ArgumentSpec] | None = self._find_subparser(command_name)
+                if subparser_specs is not None:
+                    ns.set(self._subparsers_dest, command_name)
+                    subparser: ArgumentParser = ArgumentParser(command_name)
+                    subparser._specs = subparser_specs
+                    child_ns: Namespace = subparser.parse_args(args[1:len(args)])
+                    ns.merge_from(child_ns)
+                    return ns
+
+        positional_specs: list[ArgumentSpec] = []
+        for spec2 in self._specs:
+            if spec2.kind == "positional":
+                positional_specs.append(spec2)
+
+        i: int = 0
+        positional_index: int = 0
+        force_positional: bool = False
+        while i < len(args):
+            token_opt: str | None = args[i]
+            if token_opt is None:
+                i = i + 1
+                continue
+            token: str = _copy_token(token_opt)
+
+            if token == "--" and not force_positional:
+                force_positional = True
+                i = i + 1
+                continue
+
+            if token.startswith("-") and not force_positional:
+                inline_has_value, inline_name, inline_value = _split_inline_option(token)
+                lookup_name: str = token + ""
+                if inline_has_value:
+                    lookup_name = inline_name + ""
+
+                handled_option: bool = False
+                for option_spec in self._specs:
+                    if option_spec.kind == "positional":
+                        continue
+                    if option_spec.name != lookup_name:
+                        continue
+                    handled_option = True
+                    if option_spec.kind == "flag":
+                        ns.set_bool(option_spec.dest, True)
+                        i = i + 1
+                        break
+
+                    values: list[str] = []
+                    if inline_has_value:
+                        values = [inline_value]
+                        i = i + 1
+                    else:
+                        values, i = self._collect_option_values(
+                            args, i + 1, option_spec, force_positional
+                        )
+                    if (
+                        _nargs_is_multi(option_spec.nargs)
+                        or option_spec.nargs == "*"
+                        or option_spec.nargs == "+"
+                    ):
+                        converted_values: list[str] = []
+                        for raw in values:
+                            coerced: str | None = self._coerce_token(option_spec, raw)
+                            if coerced is None:
+                                continue
+                            converted_values.append(_copy_token(coerced))
+                        ns.set_list(option_spec.dest, converted_values)
+                    elif len(values) > 0:
+                        first_value: str | None = values[0]
+                        if first_value is not None:
+                            token_value: str = _copy_token(first_value)
+                            coerced_first: str | None = self._coerce_token(
+                                option_spec, token_value
+                            )
+                            if coerced_first is not None:
+                                coerced_value: str = _copy_token(coerced_first)
+                                ns.set(option_spec.dest, coerced_value)
+                                if option_spec.type_name == "bool":
+                                    ns.set_bool(option_spec.dest, coerced_value == "true")
+                    break
+                if handled_option:
+                    continue
+
+            if positional_index < len(positional_specs):
+                positional_spec: ArgumentSpec | None = positional_specs[positional_index]
+                if positional_spec is not None:
+                    values2, next_i2 = self._collect_positional_values(
+                        args, i, positional_spec, force_positional
+                    )
+                    if (
+                        _nargs_is_multi(positional_spec.nargs)
+                        or positional_spec.nargs == "*"
+                        or positional_spec.nargs == "+"
+                    ):
+                        converted_values2: list[str] = []
+                        for raw2 in values2:
+                            coerced2: str | None = self._coerce_token(positional_spec, raw2)
+                            if coerced2 is None:
+                                continue
+                            converted_values2.append(_copy_token(coerced2))
+                        ns.set_list(positional_spec.dest, converted_values2)
+                    elif len(values2) > 0:
+                        first_value2: str | None = values2[0]
+                        if first_value2 is not None:
+                            token_value2: str = _copy_token(first_value2)
+                            coerced_first2: str | None = self._coerce_token(
+                                positional_spec, token_value2
+                            )
+                            if coerced_first2 is not None:
+                                coerced_value2: str = _copy_token(coerced_first2)
+                                ns.set(positional_spec.dest, coerced_value2)
+                                if positional_spec.type_name == "bool":
+                                    ns.set_bool(
+                                        positional_spec.dest, coerced_value2 == "true"
+                                    )
+                    i = next_i2
+                    positional_index = positional_index + 1
+                    continue
+
+            i = i + 1
+
+        return ns

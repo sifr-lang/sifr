@@ -17,6 +17,17 @@ fn generate_rust_from_source(source: &str) -> String {
 }
 
 #[test]
+fn test_class_method_mutable_self_propagates_through_delegation() {
+    let rust_code = generate_rust_from_source(
+        "class ConfigParser:\n    text: str\n\n    def __init__(self):\n        self.text = \"\"\n\n    def read_string(self, text: str) -> None:\n        self.text = text\n\n    def read(self, text: str) -> None:\n        self.read_string(text)\n",
+    );
+
+    assert!(rust_code.contains("fn read_string(&mut self"));
+    assert!(rust_code.contains("fn read(&mut self"));
+    assert!(!rust_code.contains("fn read(&self"));
+}
+
+#[test]
 fn test_simple_function_codegen() {
     let module = HirModule {
         functions: vec![HirFunction {
@@ -1313,13 +1324,13 @@ fn test_generate_rust_while_else_with_borrowed_condition_uses_broke_marker() {
 }
 
 #[test]
-fn test_generate_rust_generator_try_except_uses_buffered_yield_path() {
+fn test_generate_rust_generator_try_except_materializes_without_shape_panic() {
     let module = HirModule {
         functions: vec![
             HirFunction {
                 name: "gen".to_string(),
                 params: vec![],
-                return_type: Type::List(Box::new(Type::Int)),
+                return_type: Type::Iterator(Box::new(Type::Int)),
                 body: vec![HirStmt::TryExcept {
                     body: vec![HirStmt::Yield {
                         value: HirExpr::IntLiteral(1),
@@ -1348,7 +1359,7 @@ fn test_generate_rust_generator_try_except_uses_buffered_yield_path() {
                     iter: HirExpr::Call {
                         func: "gen".to_string(),
                         args: vec![],
-                        ty: Type::List(Box::new(Type::Int)),
+                        ty: Type::Iterator(Box::new(Type::Int)),
                     },
                     body: vec![HirStmt::Expr {
                         expr: HirExpr::Call {
@@ -1375,10 +1386,72 @@ fn test_generate_rust_generator_try_except_uses_buffered_yield_path() {
     };
 
     let rust_code = generate_rust(&module);
-    assert!(rust_code.contains("fn gen() -> Vec<i64>"));
-    assert!(rust_code.contains("let mut _yields: Vec<i64> = Vec::new();"));
+    assert!(rust_code.contains("if !__sifr_generator_initialized {"));
     assert!(rust_code.contains("_yields.push(1 as i64);"));
     assert!(rust_code.contains("_yields.push(2 as i64);"));
+    assert!(rust_code.contains("__sifr_generator_iter.next()"));
+}
+
+#[test]
+fn test_generate_rust_generator_conditional_yield_preserves_else_branch() {
+    let rust_code = generate_rust_from_source(
+        "def gen() -> Iterator[int]:\n    i: int = 0\n    while i < 4:\n        if i < 3:\n            yield i\n            i = i + 1\n        else:\n            i = i + 1\n\ndef main():\n    g: Iterator[int] = gen()\n    print(next(g))\n",
+    );
+
+    let cond_idx = rust_code
+        .find("if i < (3 as i64) {")
+        .expect("generator conditional branch should be emitted");
+    let cond_region = &rust_code[cond_idx..];
+
+    assert!(cond_region.contains("_yields.push(i);"));
+    assert!(
+        cond_region.contains("} else {"),
+        "generator else branch should be preserved"
+    );
+    assert!(
+        cond_region.contains("i = i + (1 as i64);"),
+        "generator else branch body should be preserved"
+    );
+}
+
+#[test]
+fn test_generate_rust_generator_expression_without_filter_lowers_to_map_chain() {
+    let rust_code = generate_rust_from_source(
+        "def main():\n    xs: list[int] = [1, 2, 3]\n    squares: Iterator[int] = (x * x for x in xs)\n    print(list(squares))\n",
+    );
+
+    assert!(rust_code.contains("let mut squares: Box<dyn Iterator<Item = i64>>"));
+    assert!(rust_code.contains("iter().copied().map(|x| x * x)"));
+}
+
+#[test]
+fn test_generate_rust_filter_over_list_lowers_to_lazy_boxed_iterator() {
+    let rust_code = generate_rust_from_source(
+        "def main():\n    nums: list[int] = [1, 2, 3, 4]\n    evens: Iterator[int] = filter(lambda x: x % 2 == 0, nums)\n    print(list(evens))\n",
+    );
+
+    assert!(rust_code.contains("let mut evens: Box<dyn Iterator<Item = i64>>"));
+    assert!(rust_code.contains("Box::new("));
+    assert!(rust_code.contains(".iter().copied().filter("));
+}
+
+#[test]
+fn test_generate_rust_iterable_binding_from_iterator_materializes_once() {
+    let rust_code = generate_rust_from_source(
+        "def main():\n    base: list[int] = [1, 2, 3]\n    it: Iterator[int] = iter(base)\n    xs: Iterable[int] = it\n    print(list(xs))\n",
+    );
+
+    assert!(rust_code.contains("let xs: Vec<i64> = (it).into_iter().collect::<Vec<_>>();"));
+}
+
+#[test]
+fn test_generate_rust_iterable_return_from_iterator_materializes_for_signature() {
+    let rust_code = generate_rust_from_source(
+        "def adapt(own it: Iterator[int]) -> Iterable[int]:\n    return it\n\ndef main():\n    base: list[int] = [1, 2]\n    it: Iterator[int] = iter(base)\n    xs: Iterable[int] = adapt(it)\n    print(list(xs))\n",
+    );
+
+    assert!(rust_code.contains("fn adapt(it: Box<dyn Iterator<Item = i64>>) -> Vec<i64> {"));
+    assert!(rust_code.contains("return (it).into_iter().collect::<Vec<_>>();"));
 }
 
 #[test]
@@ -1678,7 +1751,7 @@ fn test_self_field_clone_suppression_is_scoped_and_non_sticky() {
         "{rust_code}"
     );
     assert!(!rust_code.contains("self.items.clone().push(x)"));
-    assert!(rust_code.contains("return self.table.get(\"k\").cloned();"));
+    assert!(rust_code.contains("return self.table.get(\"k\").copied();"));
     assert!(!rust_code.contains("self.table.clone().get(\"k\")"));
     assert!(
         rust_code.contains("return self.label.clone();"),
@@ -1817,6 +1890,35 @@ fn test_stmt_path_handles_nested_function() {
 
     assert!(generated.rust_source.contains("let inner = || {"));
     assert!(generated.rust_source.contains("inner()"));
+}
+
+#[test]
+fn test_stmt_path_handles_recursive_nested_function_with_structured_captures() {
+    let generated = generate_rust_from_source(
+        r#"
+def main():
+    values: list[int] = [1, 2]
+    subset: list[int] = []
+    res: list[list[int]] = []
+
+    def dfs(i: int):
+        if i >= values.len():
+            res.append(subset.copy())
+            return
+        subset.append(i)
+        dfs(i + 1)
+        subset.pop()
+        dfs(i + 1)
+
+    dfs(0)
+"#,
+    );
+
+    assert!(generated.contains(
+        "fn dfs(i: i64, values: &Vec<i64>, subset: &mut Vec<i64>, res: &mut Vec<Vec<i64>>)"
+    ));
+    assert!(generated.contains("dfs(0 as i64, &values, &mut subset, &mut res);"));
+    assert!(generated.contains("dfs((i + 1 as i64), values, subset, res);"));
 }
 
 #[test]
@@ -2569,8 +2671,12 @@ fn test_module_body_flows_through_assembled_body_items() {
 #[test]
 fn test_generator_init_emission_is_structured_only() {
     let stmt_support_src = include_str!("stmt_support_emitter.rs");
-    assert!(stmt_support_src.contains("match self.lower_stmt_expr_for_ir(value)"));
-    assert!(stmt_support_src.contains("match self.try_lower_structured_stmt(stmt)"));
+    assert!(stmt_support_src.contains("self.lower_stmt_expr_for_ir(value)"));
+    assert!(stmt_support_src.contains("self.try_lower_structured_stmt(stmt)"));
+    assert!(stmt_support_src
+        .contains("structured generator-init expression emission missing for production path"));
+    assert!(stmt_support_src
+        .contains("structured generator-init statement emission missing for production path"));
     assert!(!stmt_support_src.contains("self.try_emit_expr_string_"));
     assert!(!stmt_support_src.contains("self.try_emit_stmt_string_"));
     assert!(!stmt_support_src.contains("self.emit_expr(value);"));

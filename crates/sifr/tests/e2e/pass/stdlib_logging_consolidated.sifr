@@ -1,5 +1,5 @@
 # Consolidated stdlib logging coverage for milestone_30_4 structure rules
-from sifr.logging import getLogger, Logger, FileHandler, Formatter
+from sifr.logging import getLogger, Logger, Handler, FileHandler, StreamHandler, NullHandler, Formatter
 from sifr.logging import DEBUG, INFO, WARNING, ERROR, CRITICAL, NOTSET
 from sifr.io import write_text, read_text, exists
 from sifr.os import run_command
@@ -83,6 +83,52 @@ def collect_constants_and_safety_actual(base: str) -> list[bool]:
     return actual
 
 
+def collect_handler_hierarchy_actual(base: str) -> list[bool]:
+    actual: list[bool] = []
+
+    hierarchy_log: str = base + "/hierarchy.log"
+    hierarchy_ok: bool = False
+    try:
+        _w_h: None = write_text(hierarchy_log, "")
+        logger: Logger = getLogger("hier")
+        logger.set_level(DEBUG)
+        logger.set_file(hierarchy_log)
+        file_handler: FileHandler = FileHandler(hierarchy_log + "", INFO)
+        logger.add_handler(file_handler)
+        logger.info("visible")
+        logger.debug("hidden")
+        logger.clear_handler()
+        hierarchy_content: str = read_text(hierarchy_log)
+        hierarchy_ok = hierarchy_content == "INFO:hier:visible\n"
+    except IOError as e:
+        _ = str(e.message)
+    actual.append(hierarchy_ok)
+
+    null_log: str = base + "/null_handler.log"
+    null_ok: bool = False
+    try:
+        _w_n: None = write_text(null_log, "")
+        null_logger: Logger = getLogger("null")
+        null_logger.set_level(DEBUG)
+        null_logger.set_file(null_log)
+        null_handler: NullHandler = NullHandler()
+        null_logger.set_null_handler(null_handler)
+        null_logger.error("drop")
+        null_logger.clear_handler()
+        null_content: str = read_text(null_log)
+        null_ok = null_content == ""
+    except IOError as e:
+        _ = str(e.message)
+    actual.append(null_ok)
+
+    base_handler: Handler = Handler()
+    base_handler.set_level(ERROR)
+    stream_handler: StreamHandler = StreamHandler(INFO)
+    stream_handler.set_formatter(Formatter("%(name)s:%(message)s"))
+    actual.append(base_handler.level() == ERROR and stream_handler.level() == INFO)
+    return actual
+
+
 def collect_cleanup_actual(base: str) -> list[bool]:
     actual: list[bool] = []
     cleanup_ok: bool = False
@@ -102,7 +148,7 @@ def append_all(mut target: list[bool], values: list[bool]):
 
 
 def main():
-    expected: list[bool] = [True, True, True, True, True, True]
+    expected: list[bool] = [True, True, True, True, True, True, True, True, True]
     actual: list[bool] = []
     base: str = mktemp_path("sifr_stdlib_logging_consolidated_")
     try:
@@ -113,6 +159,7 @@ def main():
     append_all(actual, collect_level_methods_actual(base))
     append_all(actual, collect_handler_actual(base))
     append_all(actual, collect_constants_and_safety_actual(base))
+    append_all(actual, collect_handler_hierarchy_actual(base))
     append_all(actual, collect_cleanup_actual(base))
     assert_bool_vector_eq(actual, expected)
     assert str("stdlib_logging_consolidated: pass") == "stdlib_logging_consolidated: pass"

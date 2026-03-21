@@ -3,10 +3,211 @@ use crate::{
     body_contains_yield, collect_mutated_vars_with_sigs, RustEmitter, RustExpr, RustItem,
     RustLiteral, RustParam, RustStmt, RustType, RustTypeParam, Visibility,
 };
-use sifr_hir::{HirExpr, HirFunction, HirParam, HirStmt};
+use sifr_hir::{HirFunction, HirParam, HirStmt};
 use sifr_type_system::{OwnershipKind, ParamConvention, Type};
 
 impl RustEmitter {
+    fn effective_nested_param_convention(
+        param: &HirParam,
+        mutated_vars: &std::collections::HashSet<String>,
+    ) -> ParamConvention {
+        if !mutated_vars.contains(&param.name) {
+            return param.convention;
+        }
+        if param.ty.ownership() == OwnershipKind::Copy {
+            return if param.convention.is_owned() {
+                ParamConvention::own_mut()
+            } else {
+                param.convention
+            };
+        }
+        if param.convention.is_borrowed() {
+            ParamConvention::mut_borrow()
+        } else {
+            ParamConvention::own_mut()
+        }
+    }
+
+    fn register_function_scope_binding(
+        &mut self,
+        name: &str,
+        ty: &Type,
+        convention: ParamConvention,
+    ) {
+        if convention.is_shared_borrow() && ty.ownership() != sifr_type_system::OwnershipKind::Copy
+        {
+            self.borrowed_params.insert(name.to_string());
+        }
+        if convention.is_mut_borrow() && ty.ownership() != sifr_type_system::OwnershipKind::Copy {
+            self.mut_borrowed_params.insert(name.to_string());
+        }
+        if let Type::Callable(ref param_types, ref conventions, _) = ty {
+            let conv_list: Vec<(Type, ParamConvention)> = param_types
+                .iter()
+                .zip(conventions.iter())
+                .map(|(ty, convention)| (ty.clone(), *convention))
+                .collect();
+            self.callable_var_conventions
+                .insert(name.to_string(), conv_list);
+        }
+    }
+
+    fn register_function_scope_params(&mut self, params: &[HirParam]) {
+        for param in params {
+            self.register_function_scope_binding(&param.name, &param.ty, param.convention);
+        }
+    }
+
+    pub(super) fn try_lower_structured_nested_function_stmt(&mut self, stmt: &HirStmt) -> bool {
+        let HirStmt::NestedFunction { func } = stmt else {
+            return false;
+        };
+
+        if func.method_kind != sifr_hir::MethodKind::Regular
+            || !func.decorators.is_empty()
+            || !func.type_params.is_empty()
+            || func
+                .params
+                .iter()
+                .any(|param| param.default.is_some() || param.keyword_only)
+        {
+            return false;
+        }
+
+        let is_recursive =
+            crate::hir_analysis::queries::body_calls_function(&func.body, &func.name);
+        let nested_mutated_vars = collect_mutated_vars_with_sigs(&func.body, &self.func_signatures);
+        let effective_param_conventions = func
+            .params
+            .iter()
+            .map(|param| {
+                (
+                    param.name.clone(),
+                    Self::effective_nested_param_convention(param, &nested_mutated_vars),
+                )
+            })
+            .collect::<std::collections::HashMap<_, _>>();
+        let recursive_captures = self
+            .nested_fn_captures
+            .get(&func.name)
+            .cloned()
+            .unwrap_or_default();
+        let post_stmt_callable_conventions = {
+            let mut conventions = self.callable_var_conventions.clone();
+            let params = func
+                .params
+                .iter()
+                .map(|param| {
+                    (
+                        param.ty.clone(),
+                        *effective_param_conventions
+                            .get(&param.name)
+                            .unwrap_or(&param.convention),
+                    )
+                })
+                .collect::<Vec<_>>();
+            conventions.insert(func.name.clone(), params);
+            conventions
+        };
+
+        let saved_return_type = self.current_return_type.clone();
+        let saved_mutated_vars = self.mutated_vars.clone();
+        let saved_borrowed_params = self.borrowed_params.clone();
+        let saved_mut_borrowed_params = self.mut_borrowed_params.clone();
+        let saved_callable_var_conventions = self.callable_var_conventions.clone();
+        let nested_binding_mutable = saved_mutated_vars.contains(&func.name);
+
+        self.current_return_type = Some(func.return_type.clone());
+        self.mutated_vars = nested_mutated_vars;
+        self.borrowed_params.clear();
+        self.mut_borrowed_params.clear();
+        self.callable_var_conventions
+            .clone_from(&post_stmt_callable_conventions);
+        for param in &func.params {
+            self.register_function_scope_binding(
+                &param.name,
+                &param.ty,
+                *effective_param_conventions
+                    .get(&param.name)
+                    .unwrap_or(&param.convention),
+            );
+        }
+        for capture in &recursive_captures {
+            self.register_function_scope_binding(&capture.name, &capture.ty, capture.convention);
+        }
+
+        let mut lowered_body = Vec::new();
+        for body_stmt in &func.body {
+            lowered_body.extend(self.lower_stmt_strict_for_function(
+                body_stmt,
+                "nested function body statement lowering",
+            ));
+        }
+
+        self.current_return_type = saved_return_type;
+        self.mutated_vars = saved_mutated_vars;
+        self.borrowed_params = saved_borrowed_params;
+        self.mut_borrowed_params = saved_mut_borrowed_params;
+        self.callable_var_conventions
+            .clone_from(&post_stmt_callable_conventions);
+
+        let lowered_stmt = if is_recursive {
+            let params = func
+                .params
+                .iter()
+                .map(|param| RustParam::Named {
+                    name: param.name.clone(),
+                    ty: self.lower_function_param_type(
+                        &param.ty,
+                        *effective_param_conventions
+                            .get(&param.name)
+                            .unwrap_or(&param.convention),
+                    ),
+                })
+                .chain(recursive_captures.iter().map(|capture| RustParam::Named {
+                    name: capture.name.clone(),
+                    ty: self.lower_function_param_type(&capture.ty, capture.convention),
+                }))
+                .collect::<Vec<_>>();
+            RustStmt::LocalFn {
+                name: func.name.clone(),
+                params,
+                ret: self.lower_function_return_type(func, false),
+                body: lowered_body,
+            }
+        } else {
+            let params = func
+                .params
+                .iter()
+                .map(|param| RustParam::Named {
+                    name: param.name.clone(),
+                    ty: self.lower_function_param_type(
+                        &param.ty,
+                        *effective_param_conventions
+                            .get(&param.name)
+                            .unwrap_or(&param.convention),
+                    ),
+                })
+                .collect::<Vec<_>>();
+            RustStmt::Let {
+                mutable: nested_binding_mutable,
+                name: func.name.clone(),
+                ty: None,
+                value: RustExpr::ClosureBlock {
+                    params,
+                    body: lowered_body,
+                    is_move: false,
+                },
+            }
+        };
+
+        self.callable_var_conventions = saved_callable_var_conventions;
+        self.callable_var_conventions
+            .extend(post_stmt_callable_conventions);
+        self.push_captured_stmt(&lowered_stmt);
+        true
+    }
+
     pub(super) fn lower_mutable_param_shadows(
         params: &[HirParam],
         reassigned_vars: &std::collections::HashSet<String>,
@@ -77,9 +278,9 @@ impl RustEmitter {
             .map(|tp| {
                 let extra = Self::extra_bounds_for_type_param(tp, &func.body);
                 let base = if needs_hash_eq {
-                    "Clone + std::fmt::Display + PartialOrd + std::hash::Hash + Eq"
+                    "Clone + std::fmt::Display + PartialOrd + std::hash::Hash + Eq + 'static"
                 } else {
-                    "Clone + std::fmt::Display + PartialOrd"
+                    "Clone + std::fmt::Display + PartialOrd + 'static"
                 };
                 RustTypeParam {
                     name: tp.clone(),
@@ -107,18 +308,7 @@ impl RustEmitter {
         is_generator: bool,
     ) -> Option<RustType> {
         if is_generator {
-            let yield_ty = if let Type::List(elem) = &func.return_type {
-                self.rust_ir_type_with_generics(elem)
-            } else {
-                RustType::I64
-            };
-            if matches!(func.return_type, Type::List(_)) {
-                return Some(RustType::Vec(Box::new(yield_ty)));
-            }
-            return Some(RustType::Impl(format!(
-                "Iterator<Item = {}>",
-                crate::render_type(&yield_ty)
-            )));
+            return Some(self.rust_ir_type_with_generics(&func.return_type));
         }
 
         if func.return_type == Type::None {
@@ -127,61 +317,8 @@ impl RustEmitter {
         Some(self.rust_ir_type_with_generics(&func.return_type))
     }
 
-    fn lower_stmt_expr_strict_for_function(&mut self, expr: &HirExpr, context: &str) -> RustExpr {
-        match self.lower_stmt_expr_for_ir(expr) {
-            Ok(Some(lowered)) => self.rewrite_stdlib_constant_idents_in_expr(lowered),
-            Ok(None) => panic!(
-                "structured expression lowering missing for function IR emission ({context}): {expr:?}"
-            ),
-            Err(err) => {
-                self.lowering_stats.expr_lowering_errors += 1;
-                panic!(
-                    "structured expression lowering failed for function IR emission ({context}): {}; expr={expr:?}",
-                    err.message
-                );
-            }
-        }
-    }
-
     fn lower_stmt_strict_for_function(&mut self, stmt: &HirStmt, _context: &str) -> Vec<RustStmt> {
         self.capture_structured_stmts(|inner| inner.emit_stmt(stmt))
-    }
-
-    fn lower_buffered_generator_function_body(
-        &mut self,
-        func: &HirFunction,
-        mutable_param_shadows: &[(String, RustExpr)],
-        yield_ty: &RustType,
-    ) -> Vec<RustStmt> {
-        let mut body = Self::emit_mutable_param_shadow_stmts(mutable_param_shadows);
-
-        body.push(RustStmt::Let {
-            mutable: true,
-            name: "_yields".to_string(),
-            ty: Some(RustType::Vec(Box::new(yield_ty.clone()))),
-            value: RustExpr::FnCall {
-                func: Box::new(RustExpr::Path(vec!["Vec".to_string(), "new".to_string()])),
-                args: vec![],
-            },
-        });
-
-        for stmt in &func.body {
-            body.extend(
-                self.lower_stmt_strict_for_function(stmt, "buffered generator statement lowering"),
-            );
-        }
-
-        let return_expr = if matches!(func.return_type, Type::List(_)) {
-            RustExpr::Ident("_yields".to_string())
-        } else {
-            RustExpr::MethodCall {
-                receiver: Box::new(RustExpr::Ident("_yields".to_string())),
-                method: "into_iter".to_string(),
-                args: vec![],
-            }
-        };
-        body.push(RustStmt::Return(Some(return_expr)));
-        body
     }
 
     fn lower_generator_function_body(
@@ -189,214 +326,96 @@ impl RustEmitter {
         func: &HirFunction,
         mutable_param_shadows: &[(String, RustExpr)],
     ) -> Vec<RustStmt> {
-        let yield_ty = if let Type::List(elem) = &func.return_type {
+        let yield_ty = if let Type::Iterator(elem) = func.return_type.resolve_alias() {
             self.rust_ir_type_with_generics(elem)
         } else {
             RustType::I64
         };
 
         let mut body = Self::emit_mutable_param_shadow_stmts(mutable_param_shadows);
+        for param in &func.params {
+            if mutable_param_shadows
+                .iter()
+                .any(|(name, _)| name == &param.name)
+                || !param.convention.is_borrowed()
+                || param.ty.ownership() == OwnershipKind::Copy
+            {
+                continue;
+            }
+            body.push(RustStmt::Let {
+                mutable: false,
+                name: param.name.clone(),
+                ty: None,
+                value: RustExpr::Clone(Box::new(RustExpr::Ident(param.name.clone()))),
+            });
+        }
+        let generator_iter_ty = RustType::Generic {
+            base: "std::vec::IntoIter".to_string(),
+            params: vec![yield_ty.clone()],
+        };
+        body.push(RustStmt::Let {
+            mutable: true,
+            name: "__sifr_generator_initialized".to_string(),
+            ty: Some(RustType::Bool),
+            value: RustExpr::Literal(RustLiteral::Bool(false)),
+        });
+        body.push(RustStmt::Let {
+            mutable: true,
+            name: "__sifr_generator_iter".to_string(),
+            ty: Some(generator_iter_ty),
+            value: RustExpr::MethodCall {
+                receiver: Box::new(RustExpr::FnCall {
+                    func: Box::new(RustExpr::Path(vec!["Vec".to_string(), "new".to_string()])),
+                    args: vec![],
+                }),
+                method: "into_iter".to_string(),
+                args: vec![],
+            },
+        });
 
-        let mut init_stmts: Vec<&HirStmt> = Vec::new();
-        let mut trailing_stmts: Vec<&HirStmt> = Vec::new();
-        let mut while_stmt: Option<(&HirExpr, &Vec<HirStmt>)> = None;
+        let mut materialize_body = vec![RustStmt::Let {
+            mutable: true,
+            name: "_yields".to_string(),
+            ty: Some(RustType::Vec(Box::new(yield_ty))),
+            value: RustExpr::FnCall {
+                func: Box::new(RustExpr::Path(vec!["Vec".to_string(), "new".to_string()])),
+                args: vec![],
+            },
+        }];
         for stmt in &func.body {
-            if while_stmt.is_none() {
-                if let HirStmt::While {
-                    condition, body, ..
-                } = stmt
-                {
-                    while_stmt = Some((condition, body));
-                } else {
-                    init_stmts.push(stmt);
-                }
-            } else {
-                trailing_stmts.push(stmt);
-            }
+            materialize_body.extend(self.lower_stmt_strict_for_function(
+                stmt,
+                "generator materialization statement lowering",
+            ));
         }
+        materialize_body.push(RustStmt::Assign {
+            target: RustExpr::Ident("__sifr_generator_iter".to_string()),
+            value: RustExpr::MethodCall {
+                receiver: Box::new(RustExpr::Ident("_yields".to_string())),
+                method: "into_iter".to_string(),
+                args: vec![],
+            },
+        });
+        materialize_body.push(RustStmt::Assign {
+            target: RustExpr::Ident("__sifr_generator_initialized".to_string()),
+            value: RustExpr::Literal(RustLiteral::Bool(true)),
+        });
 
-        let init_has_yield = init_stmts
-            .iter()
-            .any(|stmt| body_contains_yield(std::slice::from_ref(*stmt)));
-        let trailing_has_stmts = !trailing_stmts.is_empty();
-        if while_stmt.is_none() || init_has_yield || trailing_has_stmts {
-            return self.lower_buffered_generator_function_body(
-                func,
-                mutable_param_shadows,
-                &yield_ty,
-            );
-        }
-
-        for stmt in init_stmts {
-            body.extend(
-                self.lower_stmt_strict_for_function(stmt, "generator init statement lowering"),
-            );
-        }
-
-        let mut closure_body = Vec::new();
-        if let Some((condition, while_body_hir)) = while_stmt {
-            let has_top_level_yield = while_body_hir
-                .iter()
-                .any(|stmt| matches!(stmt, HirStmt::Yield { .. }));
-            let has_conditional_yield = !while_body_hir
-                .iter()
-                .any(|stmt| matches!(stmt, HirStmt::Yield { .. }))
-                && while_body_hir.iter().any(|stmt| {
-                    if let HirStmt::If { then_body, .. } = stmt {
-                        body_contains_yield(then_body)
-                    } else {
-                        false
-                    }
-                });
-            let has_nested_yield = body_contains_yield(while_body_hir);
-
-            if has_nested_yield && !has_top_level_yield && !has_conditional_yield {
-                return self.lower_buffered_generator_function_body(
-                    func,
-                    mutable_param_shadows,
-                    &yield_ty,
-                );
-            }
-
-            if has_conditional_yield {
-                let mut lowered_while_body = Vec::new();
-                lowered_while_body.push(RustStmt::Let {
-                    mutable: true,
-                    name: "__yielded".to_string(),
-                    ty: Some(RustType::Option(Box::new(yield_ty.clone()))),
-                    value: RustExpr::Literal(RustLiteral::None),
-                });
-
-                for stmt in while_body_hir {
-                    if let HirStmt::If {
-                        condition: if_cond,
-                        then_body,
-                        ..
-                    } = stmt
-                    {
-                        if body_contains_yield(then_body) {
-                            let mut lowered_then = Vec::new();
-                            for then_stmt in then_body {
-                                if let HirStmt::Yield { value } = then_stmt {
-                                    lowered_then.push(RustStmt::Assign {
-                                        target: RustExpr::Ident("__yielded".to_string()),
-                                        value: RustExpr::FnCall {
-                                            func: Box::new(RustExpr::Path(
-                                                vec!["Some".to_string()],
-                                            )),
-                                            args: vec![self.lower_stmt_expr_strict_for_function(
-                                                value,
-                                                "conditional generator yield value lowering",
-                                            )],
-                                        },
-                                    });
-                                } else {
-                                    lowered_then.extend(self.lower_stmt_strict_for_function(
-                                        then_stmt,
-                                        "conditional generator branch stmt lowering",
-                                    ));
-                                }
-                            }
-                            lowered_while_body.push(RustStmt::If {
-                                cond: self.lower_stmt_expr_strict_for_function(
-                                    if_cond,
-                                    "conditional generator if condition lowering",
-                                ),
-                                then_body: lowered_then,
-                                else_body: None,
-                            });
-                            continue;
-                        }
-                    }
-                    lowered_while_body.extend(self.lower_stmt_strict_for_function(
-                        stmt,
-                        "conditional generator while stmt lowering",
-                    ));
-                }
-
-                lowered_while_body.push(RustStmt::IfLet {
-                    pattern: "Some(__v)".to_string(),
-                    expr: RustExpr::Ident("__yielded".to_string()),
-                    then_body: vec![RustStmt::Return(Some(RustExpr::FnCall {
-                        func: Box::new(RustExpr::Path(vec!["Some".to_string()])),
-                        args: vec![RustExpr::Ident("__v".to_string())],
-                    }))],
-                    else_body: None,
-                });
-
-                closure_body.push(RustStmt::While {
-                    cond: self.lower_stmt_expr_strict_for_function(
-                        condition,
-                        "conditional generator while condition lowering",
-                    ),
-                    body: lowered_while_body,
-                });
-                closure_body.push(RustStmt::Return(Some(RustExpr::Literal(RustLiteral::None))));
-            } else {
-                let mut pre_yield: Vec<&HirStmt> = Vec::new();
-                let mut yield_expr: Option<&HirExpr> = None;
-                let mut post_yield: Vec<&HirStmt> = Vec::new();
-                let mut found_yield = false;
-                for stmt in while_body_hir {
-                    if found_yield {
-                        post_yield.push(stmt);
-                    } else if let HirStmt::Yield { value } = stmt {
-                        yield_expr = Some(value);
-                        found_yield = true;
-                    } else {
-                        pre_yield.push(stmt);
-                    }
-                }
-
-                let Some(yield_expr) = yield_expr else {
-                    panic!(
-                        "generator lowering expected a yield statement in while body: {while_body_hir:?}"
-                    );
-                };
-
-                let mut then_body = Vec::new();
-                for stmt in pre_yield {
-                    then_body.extend(
-                        self.lower_stmt_strict_for_function(
-                            stmt,
-                            "generator pre-yield stmt lowering",
-                        ),
-                    );
-                }
-                then_body.push(RustStmt::Let {
-                    mutable: false,
-                    name: "__yield_val".to_string(),
-                    ty: None,
-                    value: self.lower_stmt_expr_strict_for_function(
-                        yield_expr,
-                        "generator yield value lowering",
-                    ),
-                });
-                for stmt in post_yield {
-                    then_body.extend(self.lower_stmt_strict_for_function(
-                        stmt,
-                        "generator post-yield stmt lowering",
-                    ));
-                }
-                then_body.push(RustStmt::Return(Some(RustExpr::FnCall {
-                    func: Box::new(RustExpr::Path(vec!["Some".to_string()])),
-                    args: vec![RustExpr::Ident("__yield_val".to_string())],
-                })));
-
-                closure_body.push(RustStmt::If {
-                    cond: self.lower_stmt_expr_strict_for_function(
-                        condition,
-                        "generator while condition lowering",
-                    ),
-                    then_body,
-                    else_body: Some(vec![RustStmt::Return(Some(RustExpr::Literal(
-                        RustLiteral::None,
-                    )))]),
-                });
-            }
-        } else {
-            closure_body.push(RustStmt::Return(Some(RustExpr::Literal(RustLiteral::None))));
-        }
+        let closure_body = vec![
+            RustStmt::If {
+                cond: RustExpr::UnaryOp {
+                    op: "!".to_string(),
+                    operand: Box::new(RustExpr::Ident("__sifr_generator_initialized".to_string())),
+                },
+                then_body: materialize_body,
+                else_body: None,
+            },
+            RustStmt::Return(Some(RustExpr::MethodCall {
+                receiver: Box::new(RustExpr::Ident("__sifr_generator_iter".to_string())),
+                method: "next".to_string(),
+                args: vec![],
+            })),
+        ];
 
         let from_fn_expr = RustExpr::FnCall {
             func: Box::new(RustExpr::Path(vec![
@@ -411,18 +430,10 @@ impl RustEmitter {
             }],
         };
 
-        let return_expr = if matches!(func.return_type, Type::List(_)) {
-            RustExpr::FnCall {
-                func: Box::new(RustExpr::Path(vec![
-                    "Vec".to_string(),
-                    "from_iter".to_string(),
-                ])),
-                args: vec![from_fn_expr],
-            }
-        } else {
-            from_fn_expr
-        };
-        body.push(RustStmt::Return(Some(return_expr)));
+        body.push(RustStmt::Return(Some(RustExpr::FnCall {
+            func: Box::new(RustExpr::Path(vec!["Box".to_string(), "new".to_string()])),
+            args: vec![from_fn_expr],
+        })));
         body
     }
 
@@ -448,28 +459,7 @@ impl RustEmitter {
         self.borrowed_params.clear();
         self.mut_borrowed_params.clear();
         self.callable_var_conventions.clear();
-        for param in &func.params {
-            if param.convention.is_shared_borrow()
-                && param.ty.ownership() != sifr_type_system::OwnershipKind::Copy
-            {
-                self.borrowed_params.insert(param.name.clone());
-            }
-            if param.convention.is_mut_borrow()
-                && param.ty.ownership() != sifr_type_system::OwnershipKind::Copy
-            {
-                self.mut_borrowed_params.insert(param.name.clone());
-            }
-            // Register Callable-typed params for convention-aware call emission
-            if let Type::Callable(ref param_types, ref conventions, _) = param.ty {
-                let conv_list: Vec<(Type, ParamConvention)> = param_types
-                    .iter()
-                    .zip(conventions.iter())
-                    .map(|(t, c)| (t.clone(), *c))
-                    .collect();
-                self.callable_var_conventions
-                    .insert(param.name.clone(), conv_list);
-            }
-        }
+        self.register_function_scope_params(&func.params);
 
         let visibility = if !test_mode && module_public && func.name != "main" {
             Visibility::Pub

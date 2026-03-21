@@ -1,6 +1,6 @@
 use crate::hir_analysis::queries;
 use crate::{RustEmitter, RustExpr, RustStmt};
-use sifr_hir::{HirExceptHandler, HirExpr, HirFStringPart, HirStmt};
+use sifr_hir::{HirExceptHandler, HirExpr, HirFStringPart, HirIteratorOp, HirStmt};
 use sifr_type_system::Type;
 
 fn io_error_kind_for_handler(error_type: &str) -> Option<&'static str> {
@@ -67,6 +67,28 @@ fn canonical_constructor_class_name(class_name: &str) -> &str {
         .unwrap_or(class_name)
 }
 
+fn iterator_call_func_name(op: &HirIteratorOp) -> &'static str {
+    match op {
+        HirIteratorOp::Iter => "iter",
+        HirIteratorOp::Next => "next",
+        HirIteratorOp::Reversed => "reversed",
+        HirIteratorOp::Map => "map",
+        HirIteratorOp::Filter => "filter",
+        HirIteratorOp::Zip => "zip",
+        HirIteratorOp::Enumerate => "enumerate",
+    }
+}
+
+fn call_expr_parts(expr: &HirExpr) -> Option<(&str, &[HirExpr])> {
+    match expr {
+        HirExpr::Call { func, args, .. } => Some((func.as_str(), args.as_slice())),
+        HirExpr::IteratorCall { op, args, .. } => {
+            Some((iterator_call_func_name(op), args.as_slice()))
+        }
+        _ => None,
+    }
+}
+
 fn should_omit_local_type_annotation(ty: &Type, value: &HirExpr) -> bool {
     match (ty, value) {
         (resolved_ty, HirExpr::Call { func, args, .. })
@@ -101,10 +123,31 @@ fn should_omit_local_type_annotation(ty: &Type, value: &HirExpr) -> bool {
 }
 
 fn should_force_mutable_binding(ty: &Type) -> bool {
+    fn class_has_next_protocol(ty: &Type) -> bool {
+        let Type::Class { methods, .. } = ty.resolve_alias() else {
+            return false;
+        };
+        methods.iter().any(|(name, ft)| {
+            name == "__next__"
+                && ft.params.is_empty()
+                && matches!(ft.return_type.as_ref().resolve_alias(), Type::Union(members) if {
+                    let has_none = members
+                        .iter()
+                        .any(|member| matches!(member.resolve_alias(), Type::None));
+                    let non_none = members
+                        .iter()
+                        .filter(|member| !matches!(member.resolve_alias(), Type::None))
+                        .count();
+                    has_none && non_none == 1
+                })
+        })
+    }
+
     matches!(
         ty,
         Type::Alias { name: alias_name, .. } if alias_name.starts_with("__compat_defaultdict_")
-    )
+    ) || matches!(ty.resolve_alias(), Type::Iterator(_))
+        || class_has_next_protocol(ty)
 }
 
 impl RustEmitter {
@@ -128,6 +171,32 @@ impl RustEmitter {
         }
     }
 
+    pub(super) fn coerce_local_value_for_target_type_for_ir(
+        &mut self,
+        target_ty: &Type,
+        value: &HirExpr,
+        lowered_value: crate::RustExpr,
+    ) -> Result<crate::RustExpr, crate::CodegenError> {
+        if matches!(
+            crate::resolve_alias_type_for_plain_call(target_ty),
+            Type::Iterable(_)
+        ) {
+            if let Some(coerced) =
+                crate::intrinsic_method_emitters::registry_iterable_to_vec_expr(self, value)
+            {
+                return Ok(coerced);
+            }
+            return Err(crate::CodegenError::new(
+                "failed to coerce iterable local binding value",
+            ));
+        }
+        Ok(Self::wrap_option_local_value_for_ir(
+            target_ty,
+            value,
+            lowered_value,
+        ))
+    }
+
     fn uses_debug_display_format_for_ir(ty: &Type) -> bool {
         match crate::resolve_alias_type_for_plain_call(ty) {
             Type::Int
@@ -148,9 +217,12 @@ impl RustEmitter {
             | Type::Decimal
             | Type::BigDecimal => false,
             Type::List(_)
+            | Type::Bytes
             | Type::Dict(_, _)
             | Type::Set(_)
             | Type::Tuple(_)
+            | Type::Iterable(_)
+            | Type::Iterator(_)
             | Type::Function(_)
             | Type::Callable(..)
             | Type::Result(_, _)
@@ -321,31 +393,12 @@ impl RustEmitter {
         &mut self,
         iter_expr: &HirExpr,
     ) -> Result<Option<RustExpr>, crate::CodegenError> {
-        if let HirExpr::RangeLiteral {
-            start, end, step, ..
-        } = iter_expr
-        {
-            if let Some(lowered_range_iter) =
-                self.try_lower_range_iter_expr_for_ir(start, end, step.as_deref())?
-            {
-                return Ok(Some(lowered_range_iter));
+        if let HirExpr::IteratorCall { op, args, .. } = iter_expr {
+            if *op == HirIteratorOp::Iter && args.len() == 1 {
+                return self.lower_structural_iter_source_expr_for_ir(&args[0], None);
             }
         }
-        let Some(lowered_iter) = self.lower_stmt_expr_for_ir(iter_expr)? else {
-            return Ok(None);
-        };
-        if matches!(iter_expr.ty(), Type::Range) {
-            return Ok(Some(lowered_iter));
-        }
-        Ok(Some(RustExpr::MethodCall {
-            receiver: Box::new(RustExpr::MethodCall {
-                receiver: Box::new(lowered_iter),
-                method: "clone".to_string(),
-                args: vec![],
-            }),
-            method: "into_iter".to_string(),
-            args: vec![],
-        }))
+        self.lower_structural_iter_source_expr_for_ir(iter_expr, None)
     }
 
     fn try_lower_comprehension_expr_for_ir(
@@ -550,6 +603,72 @@ impl RustEmitter {
             }
             _ => Ok(None),
         }
+    }
+
+    fn try_lower_generator_expr_for_ir(
+        &mut self,
+        value_expr: &HirExpr,
+        var: &str,
+        iter_expr: &HirExpr,
+        filter: Option<&HirExpr>,
+        result_ty: &Type,
+    ) -> Result<Option<RustExpr>, crate::CodegenError> {
+        if var.contains(',')
+            || !matches!(
+                Self::resolve_alias_type_for_loop_iter(result_ty),
+                Type::Any | Type::Iterator(_)
+            )
+        {
+            return Ok(None);
+        }
+
+        let Some(iter_chain) = self.lower_comprehension_iter_for_ir(iter_expr)? else {
+            return Ok(None);
+        };
+        let Some(lowered_value_expr) = self.lower_stmt_expr_for_ir(value_expr)? else {
+            return Ok(None);
+        };
+        let lowered_body = if let Some(filter_expr) = filter {
+            let Some(lowered_filter_expr) = self.lower_stmt_expr_for_ir(filter_expr)? else {
+                return Ok(None);
+            };
+            RustExpr::If {
+                cond: Box::new(lowered_filter_expr),
+                then_expr: Box::new(RustExpr::FnCall {
+                    func: Box::new(RustExpr::Path(vec!["Some".to_string()])),
+                    args: vec![lowered_value_expr],
+                }),
+                else_expr: Some(Box::new(RustExpr::Literal(crate::RustLiteral::None))),
+            }
+        } else {
+            RustExpr::FnCall {
+                func: Box::new(RustExpr::Path(vec!["Some".to_string()])),
+                args: vec![lowered_value_expr],
+            }
+        };
+
+        let generator_chain = RustExpr::MethodCall {
+            receiver: Box::new(iter_chain),
+            method: "filter_map".to_string(),
+            args: vec![RustExpr::Closure {
+                params: vec![crate::RustParam::Named {
+                    name: var.to_string(),
+                    ty: crate::RustType::Named("_".to_string()),
+                }],
+                body: Box::new(lowered_body),
+                is_move: false,
+            }],
+        };
+        if matches!(
+            Self::resolve_alias_type_for_loop_iter(result_ty),
+            Type::Iterator(_)
+        ) {
+            return Ok(Some(RustExpr::FnCall {
+                func: Box::new(RustExpr::Path(vec!["Box".to_string(), "new".to_string()])),
+                args: vec![generator_chain],
+            }));
+        }
+        Ok(Some(generator_chain))
     }
 
     fn lower_structured_nested_list_subscript_assign_stmt_for_ir(
@@ -785,6 +904,7 @@ impl RustEmitter {
         let skip_leaf_registry_lowering = matches!(
             expr,
             HirExpr::Call { .. }
+                | HirExpr::IteratorCall { .. }
                 | HirExpr::ConstructorCall { .. }
                 | HirExpr::MethodCall { .. }
                 | HirExpr::BinOp { .. }
@@ -933,12 +1053,19 @@ impl RustEmitter {
                 args,
             }));
         }
-        if let HirExpr::ListLiteral { elements, .. } = expr {
+        if let HirExpr::ListLiteral { elements, ty } = expr {
             let mut lowered_elements = Vec::with_capacity(elements.len());
+            let list_ty = crate::resolve_alias_type_for_plain_call(ty);
             for element in elements {
-                let Some(lowered_element) = self.lower_stmt_expr_for_ir(element)? else {
+                let Some(mut lowered_element) = self.lower_stmt_expr_for_ir(element)? else {
                     return Ok(None);
                 };
+                if matches!(list_ty, Type::Bytes) {
+                    lowered_element = crate::RustExpr::Cast {
+                        expr: Box::new(lowered_element),
+                        ty: crate::RustType::Named("u8".to_string()),
+                    };
+                }
                 lowered_elements.push(lowered_element);
             }
             return Ok(Some(crate::RustExpr::Vec(lowered_elements)));
@@ -1020,7 +1147,21 @@ impl RustEmitter {
         if let Some(lowered_comprehension) = self.try_lower_comprehension_expr_for_ir(expr)? {
             return Ok(Some(lowered_comprehension));
         }
-        if let HirExpr::Call { func, args, .. } = expr {
+        if let HirExpr::GeneratorExpr {
+            expr: value_expr,
+            var,
+            iter,
+            filter,
+            ty,
+        } = expr
+        {
+            if let Some(lowered_generator) =
+                self.try_lower_generator_expr_for_ir(value_expr, var, iter, filter.as_deref(), ty)?
+            {
+                return Ok(Some(lowered_generator));
+            }
+        }
+        if let Some((func, args)) = call_expr_parts(expr) {
             if let Some(lowered_intrinsic) = self.try_lower_registry_intrinsic_call_expr(func, args)
             {
                 return Ok(Some(lowered_intrinsic));
@@ -1032,6 +1173,19 @@ impl RustEmitter {
                 self.try_lower_registry_plain_call_with_signature(func, args)
             {
                 return Ok(Some(lowered_plain));
+            }
+            if func == "iter" && args.len() == 1 {
+                return self.lower_iter_source_expr_for_ir(&args[0]);
+            }
+            if func == "next" && args.len() == 1 {
+                let Some(lowered_iterator) = self.lower_stmt_expr_for_ir(&args[0])? else {
+                    return Ok(None);
+                };
+                return Ok(Some(crate::RustExpr::MethodCall {
+                    receiver: Box::new(lowered_iterator),
+                    method: "next".to_string(),
+                    args: vec![],
+                }));
             }
             if func == "str" && args.is_empty() {
                 return Ok(Some(crate::RustExpr::FnCall {
@@ -1099,8 +1253,8 @@ impl RustEmitter {
             lowered_args =
                 self.adapt_plain_call_args_with_signature_for_ir(func, args, lowered_args);
             if let Some(captures) = self.nested_fn_captures.get(func).cloned() {
-                for (capture_name, _) in captures {
-                    lowered_args.push(crate::RustExpr::Ident(capture_name));
+                for capture in captures {
+                    lowered_args.push(self.lower_recursive_capture_arg_for_ir(&capture));
                 }
             }
             return Ok(Some(crate::RustExpr::FnCall {
@@ -1117,12 +1271,10 @@ impl RustEmitter {
             ..
         } = expr
         {
-            let is_self_field = matches!(object.as_ref(), HirExpr::FieldAccess { object: inner, .. }
-                if matches!(inner.as_ref(), HirExpr::Name { name, .. } if name == "self"));
-            let needs_self_field_clone_suppression =
-                is_self_field && crate::helpers::MUTATING_METHODS.contains(&method.as_str());
+            let needs_field_clone_suppression =
+                self.method_call_needs_field_clone_suppression(object, method);
             let suppression_prev = self.pending_self_field_clone_suppression;
-            if needs_self_field_clone_suppression {
+            if needs_field_clone_suppression {
                 self.pending_self_field_clone_suppression += 1;
             }
             let lowered_registry = self.try_lower_registry_method_call_expr(
@@ -1131,7 +1283,7 @@ impl RustEmitter {
                 method,
                 args,
             );
-            if needs_self_field_clone_suppression
+            if needs_field_clone_suppression
                 && self.pending_self_field_clone_suppression > suppression_prev
             {
                 self.pending_self_field_clone_suppression -= 1;
@@ -1419,7 +1571,17 @@ impl RustEmitter {
                 };
 
                 return match crate::resolve_alias_type_for_plain_call(object.ty()) {
-                    Type::List(_) => Ok(Some(crate::RustExpr::Block {
+                    Type::List(_) | Type::Bytes => {
+                        let copy_slice_elements = match crate::resolve_alias_type_for_plain_call(
+                            object.ty(),
+                        ) {
+                            Type::Bytes => true,
+                            Type::List(element_ty) => {
+                                crate::helpers::is_copy_type_for_codegen(element_ty.as_ref())
+                            }
+                            _ => false,
+                        };
+                        Ok(Some(crate::RustExpr::Block {
                         stmts: vec![
                             crate::RustStmt::Let {
                                 mutable: false,
@@ -1520,11 +1682,19 @@ impl RustEmitter {
                                                             "_result".to_string(),
                                                         )),
                                                         method: "push".to_string(),
-                                                        args: vec![crate::RustExpr::Clone(
-                                                            Box::new(crate::RustExpr::Ident(
-                                                                "_el".to_string(),
-                                                            )),
-                                                        )],
+                                                        args: vec![if copy_slice_elements {
+                                                            crate::RustExpr::Deref(Box::new(
+                                                                crate::RustExpr::Ident(
+                                                                    "_el".to_string(),
+                                                                ),
+                                                            ))
+                                                        } else {
+                                                            crate::RustExpr::Clone(Box::new(
+                                                                crate::RustExpr::Ident(
+                                                                    "_el".to_string(),
+                                                                ),
+                                                            ))
+                                                        }],
                                                     },
                                                 )],
                                                 else_body: None,
@@ -1610,11 +1780,19 @@ impl RustEmitter {
                                                                 ),
                                                             ),
                                                             method: "push".to_string(),
-                                                            args: vec![crate::RustExpr::Clone(
-                                                                Box::new(crate::RustExpr::Ident(
-                                                                    "_el".to_string(),
-                                                                )),
-                                                            )],
+                                                            args: vec![if copy_slice_elements {
+                                                                crate::RustExpr::Deref(Box::new(
+                                                                    crate::RustExpr::Ident(
+                                                                        "_el".to_string(),
+                                                                    ),
+                                                                ))
+                                                            } else {
+                                                                crate::RustExpr::Clone(Box::new(
+                                                                    crate::RustExpr::Ident(
+                                                                        "_el".to_string(),
+                                                                    ),
+                                                                ))
+                                                            }],
                                                         },
                                                     )],
                                                     else_body: None,
@@ -1632,7 +1810,8 @@ impl RustEmitter {
                             },
                         ],
                         expr: Some(Box::new(crate::RustExpr::Ident("_result".to_string()))),
-                    })),
+                    }))
+                    }
                     Type::Str => Ok(Some(crate::RustExpr::Block {
                         stmts: vec![
                             crate::RustStmt::Let {
@@ -1936,7 +2115,7 @@ impl RustEmitter {
                         args: vec![iter],
                     }));
                 }
-                Type::List(_) => {
+                Type::List(_) | Type::Bytes => {
                     let base_iter = crate::RustExpr::MethodCall {
                         receiver: Box::new(crate::RustExpr::MethodCall {
                             receiver: Box::new(crate::RustExpr::Paren(Box::new(lowered_object))),
@@ -2076,7 +2255,11 @@ impl RustEmitter {
                     return Ok(None);
                 };
                 let option_index_expr = match inner_ty {
-                    Type::Dict(_, _) => {
+                    Type::Dict(_, value_ty) => {
+                        let projection_method =
+                            crate::helpers::option_projection_method_for_owned_type(
+                                value_ty.as_ref(),
+                            );
                         let key_arg = if matches!(index.as_ref(), HirExpr::StringLiteral(_)) {
                             lowered_index
                         } else {
@@ -2091,11 +2274,29 @@ impl RustEmitter {
                                 method: "get".to_string(),
                                 args: vec![key_arg],
                             }),
-                            method: "cloned".to_string(),
+                            method: projection_method.to_string(),
                             args: vec![],
                         }
                     }
-                    Type::List(_) => crate::RustExpr::MethodCall {
+                    Type::List(element_ty) => {
+                        let projection_method =
+                            crate::helpers::option_projection_method_for_owned_type(
+                                element_ty.as_ref(),
+                            );
+                        crate::RustExpr::MethodCall {
+                            receiver: Box::new(crate::RustExpr::MethodCall {
+                                receiver: Box::new(crate::RustExpr::Ident("__v".to_string())),
+                                method: "get".to_string(),
+                                args: vec![crate::RustExpr::Cast {
+                                    expr: Box::new(lowered_index),
+                                    ty: crate::RustType::Named("usize".to_string()),
+                                }],
+                            }),
+                            method: projection_method.to_string(),
+                            args: vec![],
+                        }
+                    }
+                    Type::Bytes => crate::RustExpr::MethodCall {
                         receiver: Box::new(crate::RustExpr::MethodCall {
                             receiver: Box::new(crate::RustExpr::Ident("__v".to_string())),
                             method: "get".to_string(),
@@ -2104,8 +2305,20 @@ impl RustEmitter {
                                 ty: crate::RustType::Named("usize".to_string()),
                             }],
                         }),
-                        method: "cloned".to_string(),
-                        args: vec![],
+                        method: "map".to_string(),
+                        args: vec![crate::RustExpr::Closure {
+                            params: vec![crate::RustParam::Named {
+                                name: "__byte".to_string(),
+                                ty: crate::RustType::Named("_".to_string()),
+                            }],
+                            body: Box::new(crate::RustExpr::Cast {
+                                expr: Box::new(crate::RustExpr::Deref(Box::new(
+                                    crate::RustExpr::Ident("__byte".to_string()),
+                                ))),
+                                ty: crate::RustType::I64,
+                            }),
+                            is_move: false,
+                        }],
                     },
                     Type::Str => crate::RustExpr::MethodCall {
                         receiver: Box::new(crate::RustExpr::MethodCall {
@@ -2161,7 +2374,7 @@ impl RustEmitter {
                 return Ok(None);
             };
             match object_ty {
-                Type::Dict(_, _) => {
+                Type::Dict(_, value_ty) => {
                     let key_arg = if matches!(index.as_ref(), HirExpr::StringLiteral(_)) {
                         lowered_index
                     } else {
@@ -2171,24 +2384,62 @@ impl RustEmitter {
                         }
                     };
                     if index_returns_option {
+                        let projection_method =
+                            crate::helpers::option_projection_method_for_owned_type(
+                                value_ty.as_ref(),
+                            );
                         return Ok(Some(crate::RustExpr::MethodCall {
                             receiver: Box::new(crate::RustExpr::MethodCall {
                                 receiver: Box::new(lowered_object),
                                 method: "get".to_string(),
                                 args: vec![key_arg],
                             }),
-                            method: "cloned".to_string(),
+                            method: projection_method.to_string(),
                             args: vec![],
                         }));
                     }
-                    return Ok(Some(crate::RustExpr::Clone(Box::new(
-                        crate::RustExpr::Index {
-                            expr: Box::new(lowered_object),
-                            index: Box::new(key_arg),
-                        },
-                    ))));
+                    let indexed_expr = crate::RustExpr::Index {
+                        expr: Box::new(lowered_object),
+                        index: Box::new(key_arg),
+                    };
+                    return Ok(Some(if crate::helpers::is_copy_type_for_codegen(value_ty.as_ref()) {
+                        indexed_expr
+                    } else {
+                        crate::RustExpr::Clone(Box::new(indexed_expr))
+                    }));
                 }
-                Type::List(_) => {
+                Type::List(element_ty) => {
+                    let list_index = crate::RustExpr::Cast {
+                        expr: Box::new(lowered_index),
+                        ty: crate::RustType::Named("usize".to_string()),
+                    };
+                    if index_returns_option {
+                        let projection_method =
+                            crate::helpers::option_projection_method_for_owned_type(
+                                element_ty.as_ref(),
+                            );
+                        return Ok(Some(crate::RustExpr::MethodCall {
+                            receiver: Box::new(crate::RustExpr::MethodCall {
+                                receiver: Box::new(lowered_object),
+                                method: "get".to_string(),
+                                args: vec![list_index],
+                            }),
+                            method: projection_method.to_string(),
+                            args: vec![],
+                        }));
+                    }
+                    let indexed_expr = crate::RustExpr::Index {
+                        expr: Box::new(lowered_object),
+                        index: Box::new(list_index),
+                    };
+                    return Ok(Some(if crate::helpers::is_copy_type_for_codegen(element_ty.as_ref())
+                    {
+                        indexed_expr
+                    } else {
+                        crate::RustExpr::Clone(Box::new(indexed_expr))
+                    }));
+                }
+                Type::Bytes => {
                     let list_index = crate::RustExpr::Cast {
                         expr: Box::new(lowered_index),
                         ty: crate::RustType::Named("usize".to_string()),
@@ -2200,16 +2451,29 @@ impl RustEmitter {
                                 method: "get".to_string(),
                                 args: vec![list_index],
                             }),
-                            method: "cloned".to_string(),
-                            args: vec![],
+                            method: "map".to_string(),
+                            args: vec![crate::RustExpr::Closure {
+                                params: vec![crate::RustParam::Named {
+                                    name: "__byte".to_string(),
+                                    ty: crate::RustType::Named("_".to_string()),
+                                }],
+                                body: Box::new(crate::RustExpr::Cast {
+                                    expr: Box::new(crate::RustExpr::Deref(Box::new(
+                                        crate::RustExpr::Ident("__byte".to_string()),
+                                    ))),
+                                    ty: crate::RustType::I64,
+                                }),
+                                is_move: false,
+                            }],
                         }));
                     }
-                    return Ok(Some(crate::RustExpr::Clone(Box::new(
-                        crate::RustExpr::Index {
+                    return Ok(Some(crate::RustExpr::Cast {
+                        expr: Box::new(crate::RustExpr::Index {
                             expr: Box::new(lowered_object),
                             index: Box::new(list_index),
-                        },
-                    ))));
+                        }),
+                        ty: crate::RustType::I64,
+                    }));
                 }
                 Type::Str => {
                     let nth_expr = crate::RustExpr::MethodCall {
@@ -2314,6 +2578,55 @@ impl RustEmitter {
                         mutable: false,
                         expr: Box::new(crate::RustExpr::Paren(Box::new(lowered_element))),
                     }],
+                },
+                Type::Bytes => crate::RustExpr::Block {
+                    stmts: vec![crate::RustStmt::Let {
+                        mutable: false,
+                        name: "__byte_candidate".to_string(),
+                        ty: None,
+                        value: lowered_element,
+                    }],
+                    expr: Some(Box::new(crate::RustExpr::If {
+                        cond: Box::new(crate::RustExpr::BinOp {
+                            left: Box::new(crate::RustExpr::BinOp {
+                                left: Box::new(crate::RustExpr::Ident(
+                                    "__byte_candidate".to_string(),
+                                )),
+                                op: "<".to_string(),
+                                right: Box::new(crate::RustExpr::Literal(crate::RustLiteral::Int(
+                                    0,
+                                ))),
+                            }),
+                            op: "||".to_string(),
+                            right: Box::new(crate::RustExpr::BinOp {
+                                left: Box::new(crate::RustExpr::Ident(
+                                    "__byte_candidate".to_string(),
+                                )),
+                                op: ">".to_string(),
+                                right: Box::new(crate::RustExpr::Literal(crate::RustLiteral::Int(
+                                    255,
+                                ))),
+                            }),
+                        }),
+                        then_expr: Box::new(crate::RustExpr::Literal(crate::RustLiteral::Bool(
+                            false,
+                        ))),
+                        else_expr: Some(Box::new(crate::RustExpr::MethodCall {
+                            receiver: Box::new(crate::RustExpr::Paren(Box::new(
+                                lowered_collection,
+                            ))),
+                            method: "contains".to_string(),
+                            args: vec![crate::RustExpr::Ref {
+                                mutable: false,
+                                expr: Box::new(crate::RustExpr::Cast {
+                                    expr: Box::new(crate::RustExpr::Ident(
+                                        "__byte_candidate".to_string(),
+                                    )),
+                                    ty: crate::RustType::Named("u8".to_string()),
+                                }),
+                            }],
+                        })),
+                    })),
                 },
                 _ => return Ok(None),
             };
@@ -2521,9 +2834,12 @@ impl RustEmitter {
             }
 
             if op == "+"
-                && matches!(resolved_result_ty, Type::List(_))
-                && matches!(resolved_left_ty, Type::List(_))
-                && matches!(resolved_right_ty, Type::List(_))
+                && (matches!(resolved_result_ty, Type::List(_))
+                    || matches!(resolved_result_ty, Type::Bytes))
+                && (matches!(resolved_left_ty, Type::List(_))
+                    || matches!(resolved_left_ty, Type::Bytes))
+                && (matches!(resolved_right_ty, Type::List(_))
+                    || matches!(resolved_right_ty, Type::Bytes))
             {
                 return Ok(Some(crate::RustExpr::Block {
                     stmts: vec![
@@ -3144,54 +3460,69 @@ impl RustEmitter {
         &mut self,
         expr: &HirExpr,
     ) -> Result<Option<crate::RustExpr>, crate::CodegenError> {
-        match expr {
-            HirExpr::Call { func, args, .. } => {
-                if func == "print" {
-                    return self.lower_print_call_expr_for_ir(args);
-                }
-                if let Some(lowered_intrinsic) =
-                    self.try_lower_registry_intrinsic_call_expr(func, args)
-                {
-                    return Ok(Some(lowered_intrinsic));
-                }
-                if let Some(lowered_builtin) = self.try_lower_registry_builtin_call_expr(func, args)
-                {
-                    return Ok(Some(lowered_builtin));
-                }
-                if let Some(lowered_plain) =
-                    self.try_lower_registry_plain_call_with_signature(func, args)
-                {
-                    return Ok(Some(lowered_plain));
-                }
-                let mut lowered_args = Vec::with_capacity(args.len());
-                for arg in args {
-                    let Some(lowered_arg) = self.lower_stmt_expr_for_ir(arg)? else {
-                        return Ok(None);
-                    };
-                    lowered_args.push(self.rewrite_stdlib_constant_idents_in_expr(lowered_arg));
-                }
-                lowered_args =
-                    self.adapt_plain_call_args_with_signature_for_ir(func, args, lowered_args);
-                let lowered_func = if func.contains("::") {
-                    crate::RustExpr::Path(func.split("::").map(str::to_string).collect())
-                } else {
-                    crate::RustExpr::Ident(func.clone())
-                };
-                Ok(Some(crate::RustExpr::FnCall {
-                    func: Box::new(lowered_func),
-                    args: lowered_args,
-                }))
+        if let Some((func, args)) = call_expr_parts(expr) {
+            if func == "print" {
+                return self.lower_print_call_expr_for_ir(args);
             }
+            if let Some(lowered_intrinsic) = self.try_lower_registry_intrinsic_call_expr(func, args)
+            {
+                return Ok(Some(lowered_intrinsic));
+            }
+            if let Some(lowered_builtin) = self.try_lower_registry_builtin_call_expr(func, args) {
+                return Ok(Some(lowered_builtin));
+            }
+            if let Some(lowered_plain) =
+                self.try_lower_registry_plain_call_with_signature(func, args)
+            {
+                return Ok(Some(lowered_plain));
+            }
+            if func == "iter" && args.len() == 1 {
+                return self.lower_iter_source_expr_for_ir(&args[0]);
+            }
+            if func == "next" && args.len() == 1 {
+                let Some(lowered_iterator) = self.lower_stmt_expr_for_ir(&args[0])? else {
+                    return Ok(None);
+                };
+                return Ok(Some(crate::RustExpr::MethodCall {
+                    receiver: Box::new(lowered_iterator),
+                    method: "next".to_string(),
+                    args: vec![],
+                }));
+            }
+            let mut lowered_args = Vec::with_capacity(args.len());
+            for arg in args {
+                let Some(lowered_arg) = self.lower_stmt_expr_for_ir(arg)? else {
+                    return Ok(None);
+                };
+                lowered_args.push(self.rewrite_stdlib_constant_idents_in_expr(lowered_arg));
+            }
+            lowered_args =
+                self.adapt_plain_call_args_with_signature_for_ir(func, args, lowered_args);
+            if let Some(captures) = self.nested_fn_captures.get(func).cloned() {
+                for capture in captures {
+                    lowered_args.push(self.lower_recursive_capture_arg_for_ir(&capture));
+                }
+            }
+            let lowered_func = if func.contains("::") {
+                crate::RustExpr::Path(func.split("::").map(str::to_string).collect())
+            } else {
+                crate::RustExpr::Ident(func.to_string())
+            };
+            return Ok(Some(crate::RustExpr::FnCall {
+                func: Box::new(lowered_func),
+                args: lowered_args,
+            }));
+        }
+
+        match expr {
             HirExpr::MethodCall {
                 object,
                 method,
                 args,
                 ..
             } => {
-                let is_self_field = matches!(object.as_ref(), HirExpr::FieldAccess { object: inner, .. }
-                    if matches!(inner.as_ref(), HirExpr::Name { name, .. } if name == "self"));
                 let needs_self_field_clone_suppression =
-                    is_self_field && crate::helpers::MUTATING_METHODS.contains(&method.as_str());
+                    self.method_call_needs_field_clone_suppression(object, method);
                 let suppression_prev = self.pending_self_field_clone_suppression;
                 if needs_self_field_clone_suppression {
                     self.pending_self_field_clone_suppression += 1;
@@ -3589,6 +3920,10 @@ impl RustEmitter {
                 crate::RustExpr::Ref { mutable: true, .. }
             ) || matches!(hir_arg, HirExpr::Name { name, .. } if self.mut_borrowed_params.contains(name));
 
+            if needs_shared_borrow || needs_mut_borrow {
+                lowered_arg = Self::clone_moved_names_in_borrowed_aggregate(hir_arg, lowered_arg);
+            }
+
             if needs_shared_borrow && !already_borrowed {
                 lowered_arg = crate::RustExpr::Ref {
                     mutable: false,
@@ -3604,6 +3939,34 @@ impl RustEmitter {
             adapted.push(lowered_arg);
         }
         adapted
+    }
+
+    pub(crate) fn lower_recursive_capture_arg_for_ir(
+        &self,
+        capture: &crate::NestedFnCapture,
+    ) -> crate::RustExpr {
+        let ident = crate::RustExpr::Ident(capture.name.clone());
+        if capture.convention.is_mut_borrow() {
+            if self.mut_borrowed_params.contains(&capture.name) {
+                return ident;
+            }
+            return crate::RustExpr::Ref {
+                mutable: true,
+                expr: Box::new(ident),
+            };
+        }
+        if capture.convention.is_shared_borrow() {
+            if self.borrowed_params.contains(&capture.name)
+                || self.mut_borrowed_params.contains(&capture.name)
+            {
+                return ident;
+            }
+            return crate::RustExpr::Ref {
+                mutable: false,
+                expr: Box::new(ident),
+            };
+        }
+        ident
     }
 
     fn borrowed_return_name_clone_expr_for_ir(&self, value: &HirExpr) -> Option<crate::RustExpr> {
@@ -3624,7 +3987,10 @@ impl RustEmitter {
         index: &HirExpr,
     ) -> Result<Option<crate::RustExpr>, crate::CodegenError> {
         let object_ty = crate::resolve_alias_type_for_plain_call(object.ty());
-        if !matches!(object_ty, Type::Tuple(_) | Type::List(_) | Type::Str) {
+        if !matches!(
+            object_ty,
+            Type::Tuple(_) | Type::List(_) | Type::Bytes | Type::Str
+        ) {
             return Ok(None);
         }
 
@@ -3651,13 +4017,30 @@ impl RustEmitter {
                     field: idx.to_string(),
                 }
             }
-            Type::List(_) => crate::RustExpr::Clone(Box::new(crate::RustExpr::Index {
-                expr: Box::new(lowered_object),
-                index: Box::new(crate::RustExpr::Cast {
-                    expr: Box::new(lowered_index),
-                    ty: crate::RustType::Named("usize".to_string()),
+            Type::List(element_ty) => {
+                let indexed_expr = crate::RustExpr::Index {
+                    expr: Box::new(lowered_object),
+                    index: Box::new(crate::RustExpr::Cast {
+                        expr: Box::new(lowered_index),
+                        ty: crate::RustType::Named("usize".to_string()),
+                    }),
+                };
+                if crate::helpers::is_copy_type_for_codegen(element_ty.as_ref()) {
+                    indexed_expr
+                } else {
+                    crate::RustExpr::Clone(Box::new(indexed_expr))
+                }
+            }
+            Type::Bytes => crate::RustExpr::Cast {
+                expr: Box::new(crate::RustExpr::Index {
+                    expr: Box::new(lowered_object),
+                    index: Box::new(crate::RustExpr::Cast {
+                        expr: Box::new(lowered_index),
+                        ty: crate::RustType::Named("usize".to_string()),
+                    }),
                 }),
-            })),
+                ty: crate::RustType::I64,
+            },
             Type::Str => {
                 let nth_expr = crate::RustExpr::MethodCall {
                     receiver: Box::new(crate::RustExpr::MethodCall {
@@ -3699,16 +4082,25 @@ impl RustEmitter {
         value: &HirExpr,
         return_ty: Option<&Type>,
     ) -> Result<Option<crate::RustExpr>, crate::CodegenError> {
+        let coerce_return = |this: &mut Self,
+                             lowered: crate::RustExpr|
+         -> Result<crate::RustExpr, crate::CodegenError> {
+            if let Some(target_ty) = return_ty {
+                return this.coerce_local_value_for_target_type_for_ir(target_ty, value, lowered);
+            }
+            Ok(lowered)
+        };
         if self.current_class_name.is_some()
             && matches!(value, HirExpr::Name { name, .. } if name == "self")
         {
-            return Ok(Some(crate::RustExpr::Clone(Box::new(
-                crate::RustExpr::Ident("self".to_string()),
-            ))));
+            return Ok(Some(coerce_return(
+                self,
+                crate::RustExpr::Clone(Box::new(crate::RustExpr::Ident("self".to_string()))),
+            )?));
         }
 
         if let Some(clone_expr) = self.borrowed_return_name_clone_expr_for_ir(value) {
-            return Ok(Some(clone_expr));
+            return Ok(Some(coerce_return(self, clone_expr)?));
         }
 
         if return_ty.is_some_and(|ty| !crate::helpers::is_option_type(ty))
@@ -3723,12 +4115,13 @@ impl RustEmitter {
         }
 
         if let Some(lowered_leaf) = crate::try_lower_leaf_or_name_expr_result(value)? {
-            return Ok(Some(lowered_leaf));
+            return Ok(Some(coerce_return(self, lowered_leaf)?));
         }
         if let Some(lowered_expr) = self.lower_stmt_expr_for_ir(value)? {
-            return Ok(Some(
+            return Ok(Some(coerce_return(
+                self,
                 self.rewrite_stdlib_constant_idents_in_expr(lowered_expr),
-            ));
+            )?));
         }
         Ok(None)
     }
@@ -3801,10 +4194,7 @@ impl RustEmitter {
                     return Ok(None);
                 };
                 (
-                    vec![RustStmt::LetPattern {
-                        pattern: crate::tuple_unpack_pattern(targets, &self.mutated_vars),
-                        value: lowered_value,
-                    }],
+                    crate::lower_tuple_unpack_targets(targets, lowered_value, &self.mutated_vars),
                     false,
                 )
             } else if let HirStmt::Let {
@@ -3838,7 +4228,7 @@ impl RustEmitter {
                     let Some(lowered) = self.lower_rendered_expr_for_ir(value)? else {
                         return Ok(None);
                     };
-                    Self::wrap_option_local_value_for_ir(ty, value, lowered)
+                    self.coerce_local_value_for_target_type_for_ir(ty, value, lowered)?
                 };
                 (
                     vec![RustStmt::Let {
@@ -4131,6 +4521,18 @@ impl RustEmitter {
                     RustStmt::Return(None)
                 };
                 (vec![lowered_return_stmt], true)
+            } else if let HirStmt::Yield { value } = stmt {
+                let Some(lowered_value) = self.lower_stmt_expr_for_ir(value)? else {
+                    return Ok(None);
+                };
+                (
+                    vec![RustStmt::Expr(crate::RustExpr::MethodCall {
+                        receiver: Box::new(crate::RustExpr::Ident("_yields".to_string())),
+                        method: "push".to_string(),
+                        args: vec![lowered_value],
+                    })],
+                    true,
+                )
             } else if let HirStmt::Raise { value } = stmt {
                 let Some(lowered) = self.lower_stmt_expr_for_ir(value)? else {
                     return Ok(None);
@@ -4218,6 +4620,7 @@ impl RustEmitter {
                 }
             } else if let HirStmt::For {
                 target,
+                target_ty,
                 iter,
                 body,
                 else_body,
@@ -4227,7 +4630,8 @@ impl RustEmitter {
                 if else_body.is_some() {
                     return Ok(None);
                 }
-                let Some(lowered_iter) = self.try_lower_for_iter_expr_for_ir(iter)? else {
+                let Some(lowered_iter) = self.try_lower_for_iter_expr_for_ir(iter, target_ty)?
+                else {
                     return Ok(None);
                 };
                 let Some(lowered_body) = self.try_lower_stmt_block_for_ir(body)? else {
@@ -4422,108 +4826,232 @@ impl RustEmitter {
     fn try_lower_for_iter_expr_for_ir(
         &mut self,
         iter: &HirExpr,
+        target_ty: &Type,
     ) -> Result<Option<crate::RustExpr>, crate::CodegenError> {
-        fn is_collect_call_expr(expr: &crate::RustExpr) -> bool {
-            match expr {
-                crate::RustExpr::MethodCall { method, .. } => {
-                    method == "collect" || method.starts_with("collect::<")
-                }
-                crate::RustExpr::Paren(inner) => is_collect_call_expr(inner),
-                _ => false,
+        if let HirExpr::IteratorCall { op, args, .. } = iter {
+            if *op == HirIteratorOp::Iter && args.len() == 1 {
+                return self.lower_structural_iter_source_expr_for_ir(&args[0], Some(target_ty));
             }
-        }
-
-        fn normalize_for_loop_iter_expr(expr: crate::RustExpr) -> crate::RustExpr {
-            if let crate::RustExpr::MethodCall {
-                receiver,
-                method,
-                args,
-            } = expr
-            {
-                if method == "cloned" && args.is_empty() && is_collect_call_expr(&receiver) {
-                    return *receiver;
-                }
-                return crate::RustExpr::MethodCall {
-                    receiver,
-                    method,
-                    args,
-                };
+            if *op == HirIteratorOp::Enumerate && args.len() == 1 {
+                return self.lower_enumerate_for_iter_expr_for_ir(&args[0], Some(target_ty));
             }
-            expr
         }
         if let HirExpr::Call { func, args, .. } = iter {
+            if func == "iter" && args.len() == 1 {
+                return self.lower_structural_iter_source_expr_for_ir(&args[0], Some(target_ty));
+            }
             if func == "enumerate" && args.len() == 1 {
-                let Some(lowered_arg) = self.lower_rendered_expr_for_ir(&args[0])? else {
-                    return Ok(None);
-                };
-                let iter_source = match Self::resolve_alias_type_for_loop_iter(args[0].ty()) {
-                    Type::List(_) => crate::RustExpr::MethodCall {
-                        receiver: Box::new(crate::RustExpr::MethodCall {
-                            receiver: Box::new(lowered_arg),
-                            method: "iter".to_string(),
-                            args: vec![],
-                        }),
-                        method: "cloned".to_string(),
-                        args: vec![],
-                    },
-                    Type::Dict(_, _) => crate::RustExpr::MethodCall {
-                        receiver: Box::new(crate::RustExpr::MethodCall {
-                            receiver: Box::new(lowered_arg),
-                            method: "keys".to_string(),
-                            args: vec![],
-                        }),
-                        method: "cloned".to_string(),
-                        args: vec![],
-                    },
-                    Type::Str => crate::RustExpr::MethodCall {
-                        receiver: Box::new(crate::RustExpr::MethodCall {
-                            receiver: Box::new(lowered_arg),
-                            method: "chars".to_string(),
-                            args: vec![],
-                        }),
-                        method: "map".to_string(),
-                        args: vec![crate::RustExpr::Closure {
-                            params: vec![crate::RustParam::Named {
-                                name: "c".to_string(),
-                                ty: crate::RustType::Named("_".to_string()),
-                            }],
-                            body: Box::new(crate::RustExpr::MethodCall {
-                                receiver: Box::new(crate::RustExpr::Ident("c".to_string())),
-                                method: "to_string".to_string(),
-                                args: vec![],
-                            }),
-                            is_move: false,
-                        }],
-                    },
-                    _ => lowered_arg,
-                };
-                return Ok(Some(crate::RustExpr::MethodCall {
-                    receiver: Box::new(crate::RustExpr::MethodCall {
-                        receiver: Box::new(iter_source),
-                        method: "enumerate".to_string(),
-                        args: vec![],
-                    }),
-                    method: "map".to_string(),
-                    args: vec![crate::RustExpr::Closure {
-                        params: vec![crate::RustParam::Named {
-                            name: "(i, v)".to_string(),
-                            ty: crate::RustType::Named("_".to_string()),
-                        }],
-                        body: Box::new(crate::RustExpr::Tuple(vec![
-                            crate::RustExpr::Cast {
-                                expr: Box::new(crate::RustExpr::Ident("i".to_string())),
-                                ty: crate::RustType::I64,
-                            },
-                            crate::RustExpr::Ident("v".to_string()),
-                        ])),
-                        is_move: false,
-                    }],
-                }));
+                return self.lower_enumerate_for_iter_expr_for_ir(&args[0], Some(target_ty));
             }
         }
+        self.lower_structural_iter_source_expr_for_ir(iter, Some(target_ty))
+    }
+
+    fn lower_enumerate_iter_chain_for_ir(iter_source: crate::RustExpr) -> crate::RustExpr {
+        crate::RustExpr::MethodCall {
+            receiver: Box::new(crate::RustExpr::MethodCall {
+                receiver: Box::new(iter_source),
+                method: "enumerate".to_string(),
+                args: vec![],
+            }),
+            method: "map".to_string(),
+            args: vec![crate::RustExpr::Closure {
+                params: vec![crate::RustParam::Named {
+                    name: "(i, v)".to_string(),
+                    ty: crate::RustType::Named("_".to_string()),
+                }],
+                body: Box::new(crate::RustExpr::Tuple(vec![
+                    crate::RustExpr::Cast {
+                        expr: Box::new(crate::RustExpr::Ident("i".to_string())),
+                        ty: crate::RustType::I64,
+                    },
+                    crate::RustExpr::Ident("v".to_string()),
+                ])),
+                is_move: false,
+            }],
+        }
+    }
+
+    fn lower_enumerate_for_iter_expr_for_ir(
+        &mut self,
+        source: &HirExpr,
+        element_type_hint: Option<&Type>,
+    ) -> Result<Option<crate::RustExpr>, crate::CodegenError> {
+        let Some(iter_source) =
+            self.lower_structural_iter_source_expr_for_ir(source, element_type_hint)?
+        else {
+            return Ok(None);
+        };
+        Ok(Some(Self::lower_enumerate_iter_chain_for_ir(iter_source)))
+    }
+
+    fn lower_structural_iter_source_expr_for_ir(
+        &mut self,
+        source: &HirExpr,
+        element_type_hint: Option<&Type>,
+    ) -> Result<Option<crate::RustExpr>, crate::CodegenError> {
+        self.lower_iter_source_expr_for_ir_with_mode(source, false, element_type_hint)
+    }
+
+    fn lower_iter_source_expr_for_ir(
+        &mut self,
+        source: &HirExpr,
+    ) -> Result<Option<crate::RustExpr>, crate::CodegenError> {
+        self.lower_iter_source_expr_for_ir_with_mode(source, true, None)
+    }
+
+    fn class_method_signature_for_iter_for_ir<'a>(
+        methods: &'a [(String, sifr_type_system::FunctionType)],
+        method_name: &str,
+    ) -> Option<&'a sifr_type_system::FunctionType> {
+        methods.iter().find_map(
+            |(name, ft)| {
+                if name == method_name {
+                    Some(ft)
+                } else {
+                    None
+                }
+            },
+        )
+    }
+
+    fn class_has_next_for_iter_for_ir(methods: &[(String, sifr_type_system::FunctionType)]) -> bool {
+        Self::class_method_signature_for_iter_for_ir(methods, "__next__").is_some_and(|next_ft| {
+            next_ft.params.is_empty()
+                && matches!(next_ft.return_type.as_ref().resolve_alias(), Type::Union(members) if {
+                    let has_none = members
+                        .iter()
+                        .any(|member| matches!(member.resolve_alias(), Type::None));
+                    let non_none = members
+                        .iter()
+                        .filter(|member| !matches!(member.resolve_alias(), Type::None))
+                        .count();
+                    has_none && non_none == 1
+                })
+        })
+    }
+
+    fn class_next_iter_expr_for_ir(source_expr: crate::RustExpr) -> crate::RustExpr {
+        let state_name = "__sifr_for_iter_state".to_string();
+        crate::RustExpr::FnCall {
+            func: Box::new(crate::RustExpr::Path(vec![
+                "std".to_string(),
+                "iter".to_string(),
+                "from_fn".to_string(),
+            ])),
+            args: vec![crate::RustExpr::Block {
+                stmts: vec![crate::RustStmt::Let {
+                    mutable: true,
+                    name: state_name.clone(),
+                    ty: None,
+                    value: source_expr,
+                }],
+                expr: Some(Box::new(crate::RustExpr::Closure {
+                    params: vec![],
+                    body: Box::new(crate::RustExpr::MethodCall {
+                        receiver: Box::new(crate::RustExpr::Ident(state_name)),
+                        method: "__next__".to_string(),
+                        args: vec![],
+                    }),
+                    is_move: true,
+                })),
+            }],
+        }
+    }
+
+    fn apply_copy_clone_yield_mode_for_ir(
+        iter_expr: crate::RustExpr,
+        yield_mode: crate::helpers::YieldMode,
+    ) -> crate::RustExpr {
+        match yield_mode {
+            crate::helpers::YieldMode::Copy => crate::RustExpr::MethodCall {
+                receiver: Box::new(iter_expr),
+                method: "copied".to_string(),
+                args: vec![],
+            },
+            crate::helpers::YieldMode::Clone => crate::RustExpr::MethodCall {
+                receiver: Box::new(iter_expr),
+                method: "cloned".to_string(),
+                args: vec![],
+            },
+            crate::helpers::YieldMode::Move | crate::helpers::YieldMode::Borrow => iter_expr,
+        }
+    }
+
+    fn wrap_iterator_expr_for_mode_for_ir(
+        iterator_expr: crate::RustExpr,
+        prefer_boxed_iterator: bool,
+    ) -> crate::RustExpr {
+        if prefer_boxed_iterator {
+            crate::RustExpr::FnCall {
+                func: Box::new(crate::RustExpr::Path(vec![
+                    "Box".to_string(),
+                    "new".to_string(),
+                ])),
+                args: vec![iterator_expr],
+            }
+        } else {
+            iterator_expr
+        }
+    }
+
+    fn lower_homogeneous_tuple_iter_expr(
+        lowered_source: crate::RustExpr,
+        tuple_len: usize,
+        source_access_mode: crate::helpers::SourceAccessMode,
+        yield_mode: crate::helpers::YieldMode,
+    ) -> crate::RustExpr {
+        let tuple_binding = "__sifr_tuple_iter_src".to_string();
+        let bound_value = match source_access_mode {
+            crate::helpers::SourceAccessMode::Preserve => crate::RustExpr::MethodCall {
+                receiver: Box::new(crate::RustExpr::Paren(Box::new(lowered_source))),
+                method: "clone".to_string(),
+                args: vec![],
+            },
+            crate::helpers::SourceAccessMode::Consume => lowered_source,
+        };
+        let tuple_items = (0..tuple_len)
+            .map(|index| {
+                let field_expr = crate::RustExpr::Field {
+                    expr: Box::new(crate::RustExpr::Ident(tuple_binding.clone())),
+                    field: index.to_string(),
+                };
+                match yield_mode {
+                    crate::helpers::YieldMode::Copy | crate::helpers::YieldMode::Move => field_expr,
+                    crate::helpers::YieldMode::Clone | crate::helpers::YieldMode::Borrow => {
+                        crate::RustExpr::MethodCall {
+                            receiver: Box::new(field_expr),
+                            method: "clone".to_string(),
+                            args: vec![],
+                        }
+                    }
+                }
+            })
+            .collect();
+        crate::RustExpr::Block {
+            stmts: vec![crate::RustStmt::Let {
+                mutable: false,
+                name: tuple_binding,
+                ty: None,
+                value: bound_value,
+            }],
+            expr: Some(Box::new(crate::RustExpr::MethodCall {
+                receiver: Box::new(crate::RustExpr::Vec(tuple_items)),
+                method: "into_iter".to_string(),
+                args: vec![],
+            })),
+        }
+    }
+
+    fn lower_iter_source_expr_for_ir_with_mode(
+        &mut self,
+        source: &HirExpr,
+        prefer_boxed_iterator: bool,
+        element_type_hint: Option<&Type>,
+    ) -> Result<Option<crate::RustExpr>, crate::CodegenError> {
         if let HirExpr::RangeLiteral {
             start, end, step, ..
-        } = iter
+        } = source
         {
             if let Some(lowered_range_iter) =
                 self.try_lower_range_iter_expr_for_ir(start, end, step.as_deref())?
@@ -4532,40 +5060,144 @@ impl RustEmitter {
             }
         }
 
-        let Some(lowered_iter) = self.lower_rendered_expr_for_ir(iter)? else {
+        let Some(lowered_source) = self.lower_rendered_expr_for_ir(source)? else {
             return Ok(None);
         };
-        let lowered_iter = normalize_for_loop_iter_expr(lowered_iter);
-        let is_generator_expr = matches!(iter, HirExpr::GeneratorExpr { .. });
-        let is_generator_fn_call = self.is_generator_call(iter);
-        if is_generator_expr
-            || is_generator_fn_call
-            || Self::is_iterator_like_expr_for_ir(&lowered_iter)
+        let lowered_source = Self::normalize_for_loop_iter_expr(lowered_source);
+        let source_ty = Self::resolve_alias_type_for_loop_iter(source.ty());
+        let plan =
+            crate::helpers::plan_iterator_ownership_with_element_hint(source, element_type_hint);
+
+        if matches!(source_ty, Type::Iterator(_))
+            || matches!(source, HirExpr::GeneratorExpr { .. })
+            || self.is_generator_call(source)
+            || Self::is_iterator_like_expr_for_ir(&lowered_source)
         {
-            return Ok(Some(lowered_iter));
+            return Ok(Some(lowered_source));
         }
-        let lowered_iter = match Self::resolve_alias_type_for_loop_iter(iter.ty()) {
-            Type::List(_) => crate::RustExpr::MethodCall {
-                receiver: Box::new(crate::RustExpr::MethodCall {
-                    receiver: Box::new(lowered_iter),
-                    method: "iter".to_string(),
+
+        if let Type::Class { name, methods, .. } = source_ty {
+            let class_source = match plan.source_access_mode {
+                crate::helpers::SourceAccessMode::Preserve => crate::RustExpr::MethodCall {
+                    receiver: Box::new(crate::RustExpr::Paren(Box::new(lowered_source.clone()))),
+                    method: "clone".to_string(),
                     args: vec![],
-                }),
-                method: "cloned".to_string(),
-                args: vec![],
+                },
+                crate::helpers::SourceAccessMode::Consume => lowered_source.clone(),
+            };
+            if let Some(iter_ft) = Self::class_method_signature_for_iter_for_ir(methods, "__iter__")
+            {
+                if iter_ft.params.is_empty() {
+                    let iter_call = crate::RustExpr::MethodCall {
+                        receiver: Box::new(class_source.clone()),
+                        method: "__iter__".to_string(),
+                        args: vec![],
+                    };
+                    if matches!(
+                        iter_ft.return_type.as_ref().resolve_alias(),
+                        Type::Class { name: ret_name, .. } if ret_name == name
+                    ) && Self::class_has_next_for_iter_for_ir(methods)
+                    {
+                        return Ok(Some(Self::class_next_iter_expr_for_ir(iter_call)));
+                    }
+                    if let Type::Class {
+                        methods: ret_methods,
+                        ..
+                    } = iter_ft.return_type.as_ref().resolve_alias()
+                    {
+                        if Self::class_has_next_for_iter_for_ir(ret_methods) {
+                            return Ok(Some(Self::class_next_iter_expr_for_ir(iter_call)));
+                        }
+                    }
+                    return Ok(Some(iter_call));
+                }
+            }
+            if Self::class_has_next_for_iter_for_ir(methods) {
+                return Ok(Some(Self::class_next_iter_expr_for_ir(class_source)));
+            }
+            return Ok(Some(lowered_source));
+        }
+
+        let iterator_expr = match source_ty {
+            Type::List(_) | Type::Set(_) | Type::Iterable(_) => match plan.source_access_mode {
+                crate::helpers::SourceAccessMode::Consume => crate::RustExpr::MethodCall {
+                    receiver: Box::new(lowered_source),
+                    method: "into_iter".to_string(),
+                    args: vec![],
+                },
+                crate::helpers::SourceAccessMode::Preserve => {
+                    Self::apply_copy_clone_yield_mode_for_ir(
+                        crate::RustExpr::MethodCall {
+                            receiver: Box::new(lowered_source),
+                            method: "iter".to_string(),
+                            args: vec![],
+                        },
+                        plan.yield_mode,
+                    )
+                }
             },
-            Type::Dict(_, _) => crate::RustExpr::MethodCall {
-                receiver: Box::new(crate::RustExpr::MethodCall {
-                    receiver: Box::new(lowered_iter),
-                    method: "keys".to_string(),
+            Type::Bytes => match plan.source_access_mode {
+                crate::helpers::SourceAccessMode::Consume => crate::RustExpr::MethodCall {
+                    receiver: Box::new(crate::RustExpr::MethodCall {
+                        receiver: Box::new(lowered_source),
+                        method: "into_iter".to_string(),
+                        args: vec![],
+                    }),
+                    method: "map".to_string(),
+                    args: vec![crate::RustExpr::Closure {
+                        params: vec![crate::RustParam::Named {
+                            name: "__byte".to_string(),
+                            ty: crate::RustType::Named("_".to_string()),
+                        }],
+                        body: Box::new(crate::RustExpr::Cast {
+                            expr: Box::new(crate::RustExpr::Ident("__byte".to_string())),
+                            ty: crate::RustType::I64,
+                        }),
+                        is_move: false,
+                    }],
+                },
+                crate::helpers::SourceAccessMode::Preserve => crate::RustExpr::MethodCall {
+                    receiver: Box::new(crate::RustExpr::MethodCall {
+                        receiver: Box::new(lowered_source),
+                        method: "iter".to_string(),
+                        args: vec![],
+                    }),
+                    method: "map".to_string(),
+                    args: vec![crate::RustExpr::Closure {
+                        params: vec![crate::RustParam::Named {
+                            name: "__byte".to_string(),
+                            ty: crate::RustType::Named("_".to_string()),
+                        }],
+                        body: Box::new(crate::RustExpr::Cast {
+                            expr: Box::new(crate::RustExpr::Deref(Box::new(
+                                crate::RustExpr::Ident("__byte".to_string()),
+                            ))),
+                            ty: crate::RustType::I64,
+                        }),
+                        is_move: false,
+                    }],
+                },
+            },
+            Type::Dict(_, _) => match plan.source_access_mode {
+                crate::helpers::SourceAccessMode::Consume => crate::RustExpr::MethodCall {
+                    receiver: Box::new(lowered_source),
+                    method: "into_keys".to_string(),
                     args: vec![],
-                }),
-                method: "cloned".to_string(),
-                args: vec![],
+                },
+                crate::helpers::SourceAccessMode::Preserve => {
+                    Self::apply_copy_clone_yield_mode_for_ir(
+                        crate::RustExpr::MethodCall {
+                            receiver: Box::new(lowered_source),
+                            method: "keys".to_string(),
+                            args: vec![],
+                        },
+                        plan.yield_mode,
+                    )
+                }
             },
             Type::Str => crate::RustExpr::MethodCall {
                 receiver: Box::new(crate::RustExpr::MethodCall {
-                    receiver: Box::new(lowered_iter),
+                    receiver: Box::new(lowered_source),
                     method: "chars".to_string(),
                     args: vec![],
                 }),
@@ -4583,9 +5215,52 @@ impl RustEmitter {
                     is_move: false,
                 }],
             },
-            _ => lowered_iter,
+            Type::Range => lowered_source,
+            Type::Tuple(elems)
+                if !elems.is_empty() && elems.iter().all(|elem| elem == &elems[0]) =>
+            {
+                Self::lower_homogeneous_tuple_iter_expr(
+                    lowered_source,
+                    elems.len(),
+                    plan.source_access_mode,
+                    plan.yield_mode,
+                )
+            }
+            _ => return Ok(Some(lowered_source)),
         };
-        Ok(Some(lowered_iter))
+        Ok(Some(Self::wrap_iterator_expr_for_mode_for_ir(
+            iterator_expr,
+            prefer_boxed_iterator,
+        )))
+    }
+
+    fn is_collect_call_expr(expr: &crate::RustExpr) -> bool {
+        match expr {
+            crate::RustExpr::MethodCall { method, .. } => {
+                method == "collect" || method.starts_with("collect::<")
+            }
+            crate::RustExpr::Paren(inner) => Self::is_collect_call_expr(inner),
+            _ => false,
+        }
+    }
+
+    fn normalize_for_loop_iter_expr(expr: crate::RustExpr) -> crate::RustExpr {
+        if let crate::RustExpr::MethodCall {
+            receiver,
+            method,
+            args,
+        } = expr
+        {
+            if method == "cloned" && args.is_empty() && Self::is_collect_call_expr(&receiver) {
+                return *receiver;
+            }
+            return crate::RustExpr::MethodCall {
+                receiver,
+                method,
+                args,
+            };
+        }
+        expr
     }
 
     fn is_iterator_like_expr_for_ir(expr: &crate::RustExpr) -> bool {
@@ -4595,7 +5270,16 @@ impl RustEmitter {
             } => {
                 matches!(
                     method.as_str(),
-                    "into_iter" | "map" | "filter" | "zip" | "chain" | "enumerate"
+                    "into_iter"
+                        | "into_keys"
+                        | "map"
+                        | "filter"
+                        | "filter_map"
+                        | "zip"
+                        | "chain"
+                        | "enumerate"
+                        | "copied"
+                        | "cloned"
                 ) || Self::is_iterator_like_expr_for_ir(receiver)
             }
             crate::RustExpr::FnCall { func, args } => {
@@ -4739,7 +5423,7 @@ impl RustEmitter {
                         .iter()
                         .any(|expr| self.condition_uses_borrowed_name_for_ir(expr))
             }
-            HirExpr::Call { args, .. } => args
+            HirExpr::Call { args, .. } | HirExpr::IteratorCall { args, .. } => args
                 .iter()
                 .any(|expr| self.condition_uses_borrowed_name_for_ir(expr)),
             HirExpr::TupleLiteral { elements, .. } | HirExpr::ListLiteral { elements, .. } => {
@@ -5544,6 +6228,7 @@ impl RustEmitter {
     ) -> Result<bool, crate::CodegenError> {
         let HirStmt::For {
             target,
+            target_ty,
             iter,
             body,
             else_body,
@@ -5568,7 +6253,7 @@ impl RustEmitter {
         };
 
         self.loop_else_stack.push(has_else);
-        let lowered_iter = self.try_lower_for_iter_expr_for_ir(iter)?;
+        let lowered_iter = self.try_lower_for_iter_expr_for_ir(iter, target_ty)?;
         let lowered_body = self.try_lower_stmt_block_for_ir(body)?;
         let popped = self.loop_else_stack.pop();
         debug_assert!(popped.is_some(), "loop_else_stack should not underflow");
@@ -5942,6 +6627,23 @@ impl RustEmitter {
 
         let Some(value_expr) = self.lower_stmt_expr_for_ir(value)? else {
             return Ok(false);
+        };
+        let value_expr = if object == "self"
+            && self.current_class_name.as_ref().is_some_and(|class_name| {
+                self.recursive_fields
+                    .contains(&(class_name.clone(), field.clone()))
+            })
+            && !Self::is_box_new_call_expr_for_ir(&value_expr)
+        {
+            crate::RustExpr::FnCall {
+                func: Box::new(crate::RustExpr::Path(vec![
+                    "Box".to_string(),
+                    "new".to_string(),
+                ])),
+                args: vec![value_expr],
+            }
+        } else {
+            value_expr
         };
         let lowered = crate::RustStmt::Assign {
             target,

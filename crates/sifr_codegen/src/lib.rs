@@ -22,6 +22,7 @@ mod expr_ref_emitter;
 mod expr_render_helpers;
 mod field_analysis_helpers;
 mod function_emitter;
+mod function_like_lowering;
 mod generic_bounds_helpers;
 mod helpers;
 mod hir_analysis;
@@ -48,14 +49,18 @@ mod union_type_helpers;
 mod lib_codegen_tests;
 
 use error_refs::collect_referenced_builtin_error_classes;
-use helpers::{collect_mutated_vars_with_sigs, is_hashable_type_codegen, module_uses_bigint};
+use helpers::{
+    collect_locally_defined_vars, collect_mutated_vars_with_sigs,
+    collect_referenced_vars_with_types, default_param_convention, is_hashable_type_codegen,
+    module_uses_bigint,
+};
 use ir_imports::{collect_import_needs_from_items, collect_import_needs_from_source};
 use ir_optimize::remove_trivial_clones_in_items;
 use ir_validate::validate_items;
 pub(crate) use lib_support::{
     resolve_alias_type_for_plain_call, try_lower_leaf_or_name_expr_result,
 };
-use sifr_hir::{HirExpr, HirModule, HirStmt};
+use sifr_hir::{HirExpr, HirFunction, HirModule, HirStmt};
 use sifr_type_system::{ParamConvention, Type};
 use std::collections::{HashMap, HashSet};
 use std::fmt::Write as _;
@@ -71,6 +76,13 @@ type IsinstanceUnionMatch = (String, String, String, UnionVariantTypes);
 type IsNoneUnionMatch = (String, String, UnionVariantTypes);
 
 pub use entrypoints::{generate_rust, generate_rust_test, generate_rust_with_metadata};
+
+#[derive(Clone)]
+struct NestedFnCapture {
+    name: String,
+    ty: Type,
+    convention: ParamConvention,
+}
 
 /// Built-in error class names that the compiler provides.
 const BUILTIN_ERROR_CLASSES: &[&str] = &[
@@ -322,6 +334,7 @@ pub fn generate_rust_with_stdlib(module: &HirModule, stdlib_code: &StdlibCode) -
     let needs_logging = emitter.used_stdlib_modules.contains("sifr.logging")
         || emitter.used_stdlib_modules.contains("_sifr.logging")
         || emitter.runtime_needs.needs_logging_state;
+    let needs_random_module_state = emitter.runtime_needs.needs_random_module_state;
 
     // Emit built-in error class struct definitions for referenced error types.
     let referenced_error_classes = collect_referenced_builtin_error_classes(
@@ -401,6 +414,9 @@ pub fn generate_rust_with_stdlib(module: &HirModule, stdlib_code: &StdlibCode) -
     if needs_logging {
         preamble_items.extend(build_logging_items());
     }
+    if needs_random_module_state {
+        preamble_items.extend(build_random_module_state_items());
+    }
 
     let mut assembled_body_items: Vec<RustItem> = Vec::new();
     if !emitter.enum_items.is_empty() {
@@ -428,6 +444,7 @@ pub fn generate_rust_with_stdlib(module: &HirModule, stdlib_code: &StdlibCode) -
         || stdlib_import_needs.runtime.numeric.needs_bigdecimal;
     let needs_mutex = needs_file_handles
         || needs_logging
+        || needs_random_module_state
         || body_import_needs.runtime.needs_mutex
         || stdlib_import_needs.runtime.needs_mutex;
 
@@ -726,8 +743,14 @@ edition = "2021"
     for module_name in stdlib_modules {
         match module_name.as_str() {
             "sifr.json" | "sifr.collections" | "_sifr.json" | "_sifr.collections" => {
-                if !deps.contains(&"serde_json = \"1\"".to_string()) {
-                    deps.push("serde_json = \"1\"".to_string());
+                if !deps.contains(
+                    &"serde_json = { version = \"1\", features = [\"preserve_order\"] }"
+                        .to_string(),
+                ) {
+                    deps.push(
+                        "serde_json = { version = \"1\", features = [\"preserve_order\"] }"
+                            .to_string(),
+                    );
                     deps.push("serde = { version = \"1\", features = [\"derive\"] }".to_string());
                 }
             }
@@ -747,6 +770,11 @@ edition = "2021"
             "sifr.uuid" | "_sifr.uuid" => {
                 if !deps.contains(&"rand = \"0.8\"".to_string()) {
                     deps.push("rand = \"0.8\"".to_string());
+                }
+                let uuid_dep =
+                    "uuid = { version = \"1\", features = [\"v3\", \"v5\"] }".to_string();
+                if !deps.contains(&uuid_dep) {
+                    deps.push(uuid_dep);
                 }
             }
             "sifr.re" | "_sifr.regex" => {
@@ -773,8 +801,10 @@ edition = "2021"
                 }
             }
             "sifr.tomllib" | "_sifr.toml" => {
-                if !deps.contains(&"toml = \"0.8\"".to_string()) {
-                    deps.push("toml = \"0.8\"".to_string());
+                let toml_dep =
+                    "toml = { version = \"0.8\", features = [\"preserve_order\"] }".to_string();
+                if !deps.contains(&toml_dep) {
+                    deps.push(toml_dep);
                 }
             }
             "sifr.datetime" | "_sifr.datetime" => {
@@ -805,8 +835,14 @@ edition = "2021"
     for crate_name in required_crates {
         match crate_name.as_str() {
             "serde_json" => {
-                if !deps.contains(&"serde_json = \"1\"".to_string()) {
-                    deps.push("serde_json = \"1\"".to_string());
+                if !deps.contains(
+                    &"serde_json = { version = \"1\", features = [\"preserve_order\"] }"
+                        .to_string(),
+                ) {
+                    deps.push(
+                        "serde_json = { version = \"1\", features = [\"preserve_order\"] }"
+                            .to_string(),
+                    );
                 }
                 if !deps
                     .contains(&"serde = { version = \"1\", features = [\"derive\"] }".to_string())
@@ -849,6 +885,13 @@ edition = "2021"
                     deps.push("sha1 = \"0.10\"".to_string());
                 }
             }
+            "uuid" => {
+                let uuid_dep =
+                    "uuid = { version = \"1\", features = [\"v3\", \"v5\"] }".to_string();
+                if !deps.contains(&uuid_dep) {
+                    deps.push(uuid_dep);
+                }
+            }
             "blake2" => {
                 if !deps.contains(&"blake2 = \"0.10\"".to_string()) {
                     deps.push("blake2 = \"0.10\"".to_string());
@@ -860,8 +903,10 @@ edition = "2021"
                 }
             }
             "toml" => {
-                if !deps.contains(&"toml = \"0.8\"".to_string()) {
-                    deps.push("toml = \"0.8\"".to_string());
+                let toml_dep =
+                    "toml = { version = \"0.8\", features = [\"preserve_order\"] }".to_string();
+                if !deps.contains(&toml_dep) {
+                    deps.push(toml_dep);
                 }
             }
             "flate2" => {
@@ -958,7 +1003,7 @@ struct RustEmitter {
     class_field_order: HashMap<String, Vec<String>>,
     /// Map from nested function name -> list of captured variable (name, type) pairs
     /// Used to pass extra args at call sites for recursive+capturing nested functions
-    nested_fn_captures: HashMap<String, Vec<(String, Type)>>,
+    nested_fn_captures: HashMap<String, Vec<NestedFnCapture>>,
     /// Map from module-level constant name -> (type, `rust_name`)
     /// For primitives: `rust_name` is the UPPERCASE const name
     /// For strings/complex: `rust_name` is __`const_name()` function call
@@ -1020,6 +1065,7 @@ struct CollectionNeeds {
 struct RuntimeNeeds {
     needs_file_handles: bool,
     needs_logging_state: bool,
+    needs_random_module_state: bool,
     needs_bigint: bool,
 }
 
@@ -1082,6 +1128,42 @@ impl RustEmitter {
         self.stmt_capture_stack.pop().unwrap_or_default()
     }
 
+    fn collect_recursive_nested_fn_captures(&self, func: &HirFunction) -> Vec<NestedFnCapture> {
+        if !crate::hir_analysis::queries::body_calls_function(&func.body, &func.name) {
+            return Vec::new();
+        }
+
+        let param_names = func
+            .params
+            .iter()
+            .map(|param| param.name.clone())
+            .collect::<HashSet<_>>();
+        let referenced_with_types = collect_referenced_vars_with_types(&func.body);
+        let locally_defined = collect_locally_defined_vars(&func.body);
+        let mutated_captures = collect_mutated_vars_with_sigs(&func.body, &self.func_signatures);
+
+        let mut captures = referenced_with_types
+            .into_iter()
+            .filter(|(name, _)| !param_names.contains(name) && !locally_defined.contains(name))
+            .map(|(name, ty)| {
+                let convention = if ty.ownership() == sifr_type_system::OwnershipKind::Copy {
+                    ParamConvention::own()
+                } else if mutated_captures.contains(&name) {
+                    ParamConvention::mut_borrow()
+                } else {
+                    default_param_convention(&ty)
+                };
+                NestedFnCapture {
+                    name,
+                    ty,
+                    convention,
+                }
+            })
+            .collect::<Vec<_>>();
+        captures.sort_by(|left, right| left.name.cmp(&right.name));
+        captures
+    }
+
     fn emit_module(&mut self, module: &HirModule, module_public: bool, test_mode: bool) {
         // Pre-scan: detect bigint usage
         if module_uses_bigint(module) {
@@ -1111,29 +1193,11 @@ impl RustEmitter {
         };
 
         if let HirStmt::NestedFunction { func } = stmt {
-            if crate::hir_analysis::queries::body_calls_function(&func.body, &func.name) {
-                let param_names = func
-                    .params
-                    .iter()
-                    .map(|param| param.name.clone())
-                    .collect::<HashSet<_>>();
-                let referenced_with_types =
-                    crate::hir_analysis::queries::collect_referenced_vars_with_types(&func.body);
-                let locally_defined =
-                    crate::hir_analysis::queries::collect_locally_defined_vars(&func.body);
-                let captures = referenced_with_types
-                    .into_iter()
-                    .filter(|(name, _)| {
-                        !param_names.contains(name) && !locally_defined.contains(name)
-                    })
-                    .collect::<Vec<(String, Type)>>();
-                if captures.is_empty() {
-                    self.nested_fn_captures.remove(&func.name);
-                } else {
-                    self.nested_fn_captures.insert(func.name.clone(), captures);
-                }
-            } else {
+            let captures = self.collect_recursive_nested_fn_captures(func);
+            if captures.is_empty() {
                 self.nested_fn_captures.remove(&func.name);
+            } else {
+                self.nested_fn_captures.insert(func.name.clone(), captures);
             }
         }
 
@@ -1159,12 +1223,22 @@ impl RustEmitter {
             }
         }
 
+        if self.try_lower_structured_nested_function_stmt(stmt) {
+            self.lowering_stats.stmt_structured += 1;
+            self.lowering_stats.stmt_candidate_structured += 1;
+            return Ok(true);
+        }
+
         if let HirStmt::TupleUnpack { targets, value } = stmt {
             if let Some(lowered_value) = self.lower_stmt_expr_for_ir(value)? {
-                self.push_captured_stmt(&RustStmt::LetPattern {
-                    pattern: crate::tuple_unpack_pattern(targets, &self.mutated_vars),
-                    value: self.rewrite_stdlib_constant_idents_in_expr(lowered_value),
-                });
+                let lowered_stmts = crate::lower_tuple_unpack_targets(
+                    targets,
+                    self.rewrite_stdlib_constant_idents_in_expr(lowered_value),
+                    &self.mutated_vars,
+                );
+                for lowered_stmt in lowered_stmts {
+                    self.push_captured_stmt(&lowered_stmt);
+                }
                 self.lowering_stats.stmt_structured += 1;
                 self.lowering_stats.stmt_candidate_structured += 1;
                 return Ok(true);
@@ -1200,9 +1274,9 @@ impl RustEmitter {
                 clone_expr
             } else {
                 if let Some(lowered) = self.lower_rendered_expr_for_ir(value)? {
-                    Self::wrap_option_local_value_for_ir(ty, value, lowered)
+                    self.coerce_local_value_for_target_type_for_ir(ty, value, lowered)?
                 } else if let Some(lowered) = self.lower_stmt_expr_for_ir(value)? {
-                    Self::wrap_option_local_value_for_ir(ty, value, lowered)
+                    self.coerce_local_value_for_target_type_for_ir(ty, value, lowered)?
                 } else {
                     return Ok(false);
                 }
@@ -1214,7 +1288,8 @@ impl RustEmitter {
                         ty,
                         Type::Alias { name: alias_name, .. }
                             if alias_name.starts_with("__compat_defaultdict_")
-                    ),
+                    )
+                    || matches!(ty.resolve_alias(), Type::Iterator(_)),
                 name: name.clone(),
                 ty: if is_generic_class
                     || match (ty, value) {
@@ -1271,6 +1346,23 @@ impl RustEmitter {
                 target: RustExpr::Ident(name.clone()),
                 value: lowered_value,
             });
+            self.lowering_stats.stmt_structured += 1;
+            self.lowering_stats.stmt_candidate_structured += 1;
+            return Ok(true);
+        }
+        if let HirStmt::Yield { value } = stmt {
+            let lowered_value = if let Some(lowered) = self.lower_rendered_expr_for_ir(value)? {
+                lowered
+            } else if let Some(lowered) = self.lower_stmt_expr_for_ir(value)? {
+                lowered
+            } else {
+                return Ok(false);
+            };
+            self.push_captured_stmt(&RustStmt::Expr(RustExpr::MethodCall {
+                receiver: Box::new(RustExpr::Ident("_yields".to_string())),
+                method: "push".to_string(),
+                args: vec![lowered_value],
+            }));
             self.lowering_stats.stmt_structured += 1;
             self.lowering_stats.stmt_candidate_structured += 1;
             return Ok(true);

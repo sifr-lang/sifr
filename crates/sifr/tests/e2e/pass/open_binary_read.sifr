@@ -6,7 +6,7 @@ def main():
     try:
         _: None = write_text(path, "hello")
         f = open(path, "rb")
-        data: list[int] = f.read_bytes()
+        data: bytes = f.read_bytes()
         f.close()
         assert str("bytes count > 0 = " + str(len(data) > 0)) == 'bytes count > 0 = true'
         assert str("binary read ok") == 'binary read ok'

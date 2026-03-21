@@ -1,0 +1,49 @@
+from sifr.itertools import chain, combinations, islice, permutations, product, starmap
+from sifr.random import choice, choices, randrange, shuffle
+from sifr.secrets import compare_digest, randbits, token_hex
+
+
+def add(a: int, b: int) -> int:
+    return a + b
+
+
+class Doubler:
+    def __init__(self):
+        pass
+
+    def __call__(self, x: int) -> int:
+        return x * 2
+
+
+def main():
+    print("chain(*iterables) = " + str(list(chain([1], [2], [3], [4]))))
+    print("islice(start, stop, step) = " + str(list(islice([10, 20, 30, 40, 50], 1, 5, 2))))
+    print("product(repeat=2) = " + str(list(product([1, 2], repeat=2))))
+    print("permutations(r=2) = " + str(list(permutations([1, 2, 3], 2))))
+    print("combinations(r=2) = " + str(list(combinations([1, 2, 3], 2))))
+    print("starmap(add, pairs) = " + str(list(starmap(add, [(2, 3), (4, 5)]))))
+
+    doubler: Doubler = Doubler()
+    print("callable object direct = " + str(doubler(4)))
+
+    items: list[int] = [1, 2, 3, 4, 5]
+    shuffle(items)
+    print("shuffle(mut items) len = " + str(len(items)))
+
+    try:
+        picked: int = choice(items)
+        many: list[int] = choices(items, k=3)
+        rr: int = randrange(10)
+        print("choice(items) ok = " + str(picked >= 1 and picked <= 5))
+        print("choices(items, k=3) len = " + str(len(many)))
+        print("randrange(10) ok = " + str(rr >= 0 and rr < 10))
+    except ValueError as e:
+        print("random error: " + e.message)
+
+    print("secrets.compare_digest = " + str(compare_digest("abc", "abc")))
+    print("secrets.token_hex(4) len = " + str(len(token_hex(4))))
+    try:
+        bits: int = randbits(16)
+        print("secrets.randbits(16) ok = " + str(bits >= 0))
+    except ValueError as e:
+        print("secrets error: " + e.message)

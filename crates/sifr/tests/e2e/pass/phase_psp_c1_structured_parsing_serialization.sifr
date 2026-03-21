@@ -1,0 +1,292 @@
+from sifr.csv import (
+    QUOTE_ALL,
+    DictReader,
+    DictWriter,
+    Dialect,
+    format_row,
+    parse_row,
+)
+from sifr.io import read_text, write_text
+from sifr.json import JsonValue, dump, dumps, from_array, from_bool, from_int, from_object, from_str, load
+from sifr.configparser import ConfigParser, DEFAULTSECT, ParsingError
+from sifr.test import assert_bool_vector_eq
+from sifr.tomllib import TomlValue, loads
+
+
+def collect_json_actual() -> list[bool]:
+    actual: list[bool] = []
+    parsed_ok: bool = False
+    ordered_keys_ok: bool = False
+    dumped_ok: bool = False
+    file_roundtrip_ok: bool = False
+    name_value: JsonValue | None = None
+    items_value: JsonValue | None = None
+    meta_value: JsonValue | None = None
+    item_one: JsonValue | None = None
+    meta_kind: JsonValue | None = None
+
+    try:
+        source_path: str = "/tmp/sifr_wave_psp_c1_source.json"
+        _: None = write_text(source_path, "{\"name\":\"sifr\",\"items\":[1,true],\"meta\":{\"kind\":\"demo\"}}")
+        parsed: JsonValue = load(source_path)
+        name_value = parsed.get("name")
+        items_value = parsed.get("items")
+        meta_value = parsed.get("meta")
+
+        if items_value is not None:
+            item_one = items_value.at(1)
+        if meta_value is not None:
+            meta_kind = meta_value.get("kind")
+
+        if name_value is not None and item_one is not None and meta_kind is not None:
+            parsed_ok = (
+                name_value.as_str() == "sifr"
+                and item_one.as_bool() == True
+                and meta_kind.as_str() == "demo"
+            )
+        ordered_keys_ok = str(parsed.keys()) == "[\"name\", \"items\", \"meta\"]"
+
+        payload: JsonValue = from_object(
+            [
+                ("name", from_str("sifr")),
+                ("items", from_array([from_int(1), from_bool(True)])),
+            ]
+        )
+        dumped_ok = dumps(payload) == "{\"name\":\"sifr\",\"items\":[1,true]}"
+
+        path: str = "/tmp/sifr_wave_psp_c1.json"
+        _: None = dump(payload, path)
+        payload_text: str = read_text(path)
+        _: None = write_text(path, payload_text)
+        from_file: JsonValue = load(path)
+        file_items: JsonValue | None = from_file.get("items")
+        file_first: JsonValue | None = None
+        file_name: JsonValue | None = from_file.get("name")
+        if file_items is not None:
+            file_first = file_items.at(0)
+        if file_name is not None and file_first is not None:
+            file_roundtrip_ok = file_name.as_str() == "sifr" and file_first.as_int() == 1
+    except JSONDecodeError as e:
+        _ = str(e.message)
+    except IOError as e:
+        _ = str(e.message)
+    except Error as e:
+        _ = str(e.message)
+
+    invalid_rejected: bool = False
+    try:
+        invalid_path: str = "/tmp/sifr_wave_psp_c1_invalid.json"
+        _: None = write_text(invalid_path, "{")
+        _invalid: JsonValue = load(invalid_path)
+        _ = _invalid
+    except Error as e:
+        invalid_rejected = len(e.message) > 0
+
+    actual.append(parsed_ok)
+    actual.append(ordered_keys_ok)
+    actual.append(dumped_ok)
+    actual.append(file_roundtrip_ok)
+    actual.append(invalid_rejected)
+    return actual
+
+
+def collect_toml_actual() -> list[bool]:
+    actual: list[bool] = []
+    parsed_ok: bool = False
+    keys_ok: bool = False
+    invalid_rejected: bool = False
+    title_value: TomlValue | None = None
+    flags_value: TomlValue | None = None
+    owner_value: TomlValue | None = None
+    first_flag: TomlValue | None = None
+    owner_name: TomlValue | None = None
+    owner_active: TomlValue | None = None
+
+    try:
+        parsed: TomlValue = loads(
+            "title = \"sifr\"\n"
+            "flags = [true, false]\n"
+            "[owner]\n"
+            "name = \"yasir\"\n"
+            "active = true\n"
+        )
+        title_value = parsed.get("title")
+        flags_value = parsed.get("flags")
+        owner_value = parsed.get("owner")
+        if flags_value is not None:
+            first_flag = flags_value.at(0)
+        if owner_value is not None:
+            owner_name = owner_value.get("name")
+            owner_active = owner_value.get("active")
+        if (
+            title_value is not None
+            and first_flag is not None
+            and owner_name is not None
+            and owner_active is not None
+        ):
+            parsed_ok = (
+                title_value.as_str() == "sifr"
+                and first_flag.as_bool() == True
+                and owner_name.as_str() == "yasir"
+                and owner_active.as_bool() == True
+            )
+        keys_ok = str(parsed.keys()) == "[\"title\", \"flags\", \"owner\"]"
+    except TOMLDecodeError as e:
+        _ = str(e.message)
+    except IOError as e:
+        _ = str(e.message)
+    except Error as e:
+        _ = str(e.message)
+
+    try:
+        _invalid: TomlValue = loads("title = ")
+        _ = _invalid
+    except TOMLDecodeError as e:
+        invalid_rejected = len(e.message) > 0
+    except Error as e:
+        _ = str(e.message)
+
+    actual.append(parsed_ok)
+    actual.append(keys_ok)
+    actual.append(invalid_rejected)
+    return actual
+
+
+def collect_csv_actual() -> list[bool]:
+    actual: list[bool] = []
+    quoted_parse_ok: bool = False
+    writer_ok: bool = False
+    dict_reader_ok: bool = False
+    dict_writer_ok: bool = False
+
+    parsed: list[str] = parse_row("\"a,b\",c")
+    quoted_parse_ok = str(parsed) == "[\"a,b\", \"c\"]"
+
+    quoted_dialect: Dialect = Dialect(quoting=QUOTE_ALL)
+    writer_ok = format_row(["alpha", "beta"], dialect=quoted_dialect) == "\"alpha\",\"beta\""
+
+    dr: DictReader = DictReader("name,age,city\nalice,30,amman\nbob,25\n", restkey="rest", restval="missing")
+    rows: list[dict[str, str]] = dr.rows()
+    dict_reader_ok = (
+        len(rows) == 2
+        and rows[0]["name"] == "alice"
+        and rows[0]["city"] == "amman"
+        and rows[1]["city"] == "missing"
+    )
+
+    dw: DictWriter = DictWriter(["name", "age"], extrasaction="ignore")
+    dw.writeheader()
+    dw.writerow({"name": "alice", "age": "30", "city": "amman"})
+    dict_writer_ok = dw.getvalue() == "name,age\nalice,30"
+
+    actual.append(quoted_parse_ok)
+    actual.append(writer_ok)
+    actual.append(dict_reader_ok)
+    actual.append(dict_writer_ok)
+    return actual
+
+
+def collect_configparser_actual() -> list[bool]:
+    actual: list[bool] = []
+    default_section: str = DEFAULTSECT + ""
+    defaults: dict[str, str | None] = {}
+    encoding_value: str | None = "utf-8"
+    defaults["encoding"] = encoding_value
+    parser: ConfigParser = ConfigParser(defaults=defaults, strict=True, allow_no_value=True)
+    config_text: str = (
+        "[DEFAULT]\n"
+        "region = mena\n"
+        "[server]\n"
+        "host = localhost\n"
+        "port = 8080\n"
+        "enabled = true\n"
+        "feature\n"
+    )
+    parse_ok: bool = True
+    try:
+        _: None = parser.read_string(config_text)
+    except ParsingError:
+        parse_ok = False
+
+    basics_ok: bool = parse_ok and (
+        parser.get("server", "host") == "localhost"
+        and parser.get(default_section, "encoding") == "utf-8"
+        and parser.get(default_section, "region") == "mena"
+    )
+    fallback_value: str | None = "missing"
+    basics_ok = basics_ok and parser.get("server", "feature", fallback_value) is None
+    has_option_defaults_ok: bool = (
+        parser.has_option("server", "encoding")
+        and not parser.has_option("server", "missing")
+    )
+    converters_ok: bool = (
+        parser.getint("server", "port") == 8080
+        and parser.getboolean("server", "enabled") == True
+    )
+    mutation_ok: bool = False
+    mode_value: str | None = "prod"
+    parser.set("server", "mode", mode_value)
+    removed_mode: bool = parser.remove_option("server", "mode")
+    removed_section: bool = parser.remove_section("server")
+    mutation_ok = (
+        removed_mode
+        and removed_section
+        and not parser.has_section("server")
+    )
+
+    duplicate_rejected: bool = False
+    try:
+        strict_parser: ConfigParser = ConfigParser(strict=True)
+        _: None = strict_parser.read_string("[dup]\na=1\n[dup]\na=2\n")
+    except ParsingError as e:
+        duplicate_rejected = "duplicate section" in e.message
+
+    parse_error_rejected: bool = False
+    try:
+        bad_parser: ConfigParser = ConfigParser()
+        _: None = bad_parser.read_string("broken line")
+    except ParsingError as e:
+        parse_error_rejected = e.line == 1
+
+    read_file_ok: bool = False
+    try:
+        path: str = "/tmp/sifr_wave_psp_c1_configparser.ini"
+        _: None = write_text(path, "[file]\nname = sifr\n")
+        file_parser: ConfigParser = ConfigParser()
+        loaded_paths: list[str] = file_parser.read(path)
+        read_file_ok = (
+            str(loaded_paths) == "[\"" + path + "\"]"
+            and file_parser.get("file", "name") == "sifr"
+        )
+    except IOError as e:
+        _ = str(e.message)
+
+    actual.append(basics_ok)
+    actual.append(has_option_defaults_ok)
+    actual.append(converters_ok)
+    actual.append(mutation_ok)
+    actual.append(duplicate_rejected)
+    actual.append(parse_error_rejected)
+    actual.append(read_file_ok)
+    return actual
+
+
+def main() -> None:
+    expected: list[bool] = [
+        True, True, True, True, True,
+        True, True, True,
+        True, True, True, True,
+        True, True, True, True, True, True, True,
+    ]
+    actual: list[bool] = []
+    for value in collect_json_actual():
+        actual.append(value)
+    for value in collect_toml_actual():
+        actual.append(value)
+    for value in collect_csv_actual():
+        actual.append(value)
+    for value in collect_configparser_actual():
+        actual.append(value)
+
+    assert_bool_vector_eq(actual, expected)
+    assert str("phase_psp_c1_structured_parsing_serialization: pass") == "phase_psp_c1_structured_parsing_serialization: pass"

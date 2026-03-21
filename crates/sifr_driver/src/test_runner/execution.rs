@@ -1,53 +1,75 @@
 use super::artifacts::{compose_test_runner_lib, generate_test_runner_cargo_toml};
 use super::orchestrator::GeneratedTestRunnerProject;
-use crate::build::{create_invocation_workspace, InvocationWorkspaceGuard};
-use crate::diagnostics::{write_stderr, CompileError, CompilePhase};
+use crate::build::{prepare_cached_artifact, ArtifactCacheReport, PreparedArtifactCache};
+use crate::diagnostics::{write_stderr, write_stderr_line, CompileError, CompilePhase};
+use std::path::Path;
 
-pub(super) fn execute_test_runner_project(
+pub(crate) struct TestRunnerExecutionOutcome {
+    pub(crate) success: bool,
+    #[cfg_attr(not(test), allow(dead_code))]
+    pub(crate) cache_report: ArtifactCacheReport,
+}
+
+pub(crate) fn execute_test_runner_project(
     generated_project: &GeneratedTestRunnerProject,
-) -> Result<bool, Vec<CompileError>> {
-    let project_dir = create_invocation_workspace("test_runner")?;
-    let _workspace_guard = InvocationWorkspaceGuard::new(project_dir.clone());
-    let src_dir = project_dir.join("src");
-    std::fs::create_dir_all(&src_dir).map_err(|error| {
-        vec![CompileError {
-            message: format!("failed to create test directory: {error}"),
-            phase: CompilePhase::Build,
-        }]
-    })?;
-
+) -> Result<TestRunnerExecutionOutcome, Vec<CompileError>> {
     let cargo_toml = generate_test_runner_cargo_toml(
         &generated_project.all_stdlib_modules,
         &generated_project.all_required_crates,
     );
-    std::fs::write(project_dir.join("Cargo.toml"), cargo_toml).map_err(|error| {
-        vec![CompileError {
-            message: format!("failed to write Cargo.toml: {error}"),
-            phase: CompilePhase::Build,
-        }]
-    })?;
-
-    for module_name in &generated_project.support_module_names {
-        if let Some(code) = generated_project.support_rust_files.get(module_name) {
-            std::fs::write(src_dir.join(format!("{module_name}.rs")), code).map_err(|error| {
-                vec![CompileError {
-                    message: format!("failed to write {module_name}.rs: {error}"),
-                    phase: CompilePhase::Build,
-                }]
-            })?;
-        }
-    }
-
     let test_lib = compose_test_runner_lib(
         &generated_project.support_module_names,
         &generated_project.all_rust_code,
     );
-    std::fs::write(src_dir.join("lib.rs"), &test_lib).map_err(|error| {
-        vec![CompileError {
-            message: format!("failed to write lib.rs: {error}"),
-            phase: CompilePhase::Build,
-        }]
-    })?;
+    let cache_key = test_runner_cache_key(generated_project, &cargo_toml, &test_lib);
+    let required_paths = [
+        Path::new("Cargo.toml"),
+        Path::new("src/lib.rs"),
+        Path::new("target"),
+    ];
+    let prepared = prepare_cached_artifact(
+        "test_runner",
+        &generated_project.cache_scope,
+        &cache_key,
+        &required_paths,
+    )?;
+    let project_dir = prepared.workspace_root().to_path_buf();
+    if let PreparedArtifactCache::Miss(_) = &prepared {
+        let src_dir = project_dir.join("src");
+        std::fs::create_dir_all(&src_dir).map_err(|error| {
+            vec![CompileError {
+                message: format!("failed to create test directory: {error}"),
+                phase: CompilePhase::Build,
+            }]
+        })?;
+
+        std::fs::write(project_dir.join("Cargo.toml"), cargo_toml).map_err(|error| {
+            vec![CompileError {
+                message: format!("failed to write Cargo.toml: {error}"),
+                phase: CompilePhase::Build,
+            }]
+        })?;
+
+        for module_name in &generated_project.support_module_names {
+            if let Some(code) = generated_project.support_rust_files.get(module_name) {
+                std::fs::write(src_dir.join(format!("{module_name}.rs")), code).map_err(
+                    |error| {
+                        vec![CompileError {
+                            message: format!("failed to write {module_name}.rs: {error}"),
+                            phase: CompilePhase::Build,
+                        }]
+                    },
+                )?;
+            }
+        }
+
+        std::fs::write(src_dir.join("lib.rs"), &test_lib).map_err(|error| {
+            vec![CompileError {
+                message: format!("failed to write lib.rs: {error}"),
+                phase: CompilePhase::Build,
+            }]
+        })?;
+    }
 
     let output = std::process::Command::new("cargo")
         .args(["test"])
@@ -69,5 +91,50 @@ pub(super) fn execute_test_runner_project(
         write_stderr(&stderr);
     }
 
-    Ok(output.status.success())
+    let cache_report = match prepared {
+        PreparedArtifactCache::Hit(entry) => entry.report().clone(),
+        PreparedArtifactCache::Miss(entry) => entry.commit(&required_paths)?.report().clone(),
+    };
+    write_stderr_line(&cache_report.status_line());
+
+    Ok(TestRunnerExecutionOutcome {
+        success: output.status.success(),
+        cache_report,
+    })
+}
+
+fn test_runner_cache_key(
+    generated_project: &GeneratedTestRunnerProject,
+    cargo_toml: &str,
+    test_lib: &str,
+) -> String {
+    let mut support_modules: Vec<(&str, &str)> = generated_project
+        .support_rust_files
+        .iter()
+        .map(|(name, code)| (name.as_str(), code.as_str()))
+        .collect();
+    support_modules.sort_unstable_by(|left, right| left.0.cmp(right.0));
+    let support_modules = support_modules
+        .into_iter()
+        .map(|(name, code)| format!("{name}\n{code}"))
+        .collect::<Vec<_>>()
+        .join("\n===\n");
+    let mut stdlib_modules: Vec<&str> = generated_project
+        .all_stdlib_modules
+        .iter()
+        .map(String::as_str)
+        .collect();
+    stdlib_modules.sort_unstable();
+    let mut required_crates: Vec<&str> = generated_project
+        .all_required_crates
+        .iter()
+        .map(String::as_str)
+        .collect();
+    required_crates.sort_unstable();
+    format!(
+        "[scope]\n{}\n[Cargo.toml]\n{cargo_toml}\n[src/lib.rs]\n{test_lib}\n[support]\n{support_modules}\n[stdlib]\n{}\n[crates]\n{}",
+        generated_project.cache_scope.display(),
+        stdlib_modules.join("\n"),
+        required_crates.join("\n")
+    )
 }

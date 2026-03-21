@@ -5,7 +5,7 @@ def main():
     path: str = "/tmp/sifr_open_binary_write_test.txt"
     try:
         f = open(path, "wb")
-        data: list[int] = [104, 101, 108, 108, 111]
+        data: bytes = b"hello"
         _: None = f.write_bytes(data)
         f.close()
         content: str = read_text(path)

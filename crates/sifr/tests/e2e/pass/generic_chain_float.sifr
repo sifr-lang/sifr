@@ -3,5 +3,5 @@ from sifr.itertools import chain
 def main():
     a: list[float] = [1.1, 2.2]
     b: list[float] = [3.3, 4.4]
-    result: list[float] = chain(a, b)
+    result: list[float] = list(chain(a, b))
     assert result == [1.1, 2.2, 3.3, 4.4]

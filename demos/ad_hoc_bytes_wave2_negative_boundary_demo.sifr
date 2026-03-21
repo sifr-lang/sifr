@@ -1,0 +1,39 @@
+def main() -> None:
+    bad_size: bool = False
+    try:
+        _ = bytes(-1)
+    except ValueError as e:
+        bad_size = True
+
+    bad_values: bool = False
+    try:
+        _ = bytes.from_ints([0, 999])
+    except ValueError as e:
+        bad_values = True
+
+    bad_hex: bool = False
+    try:
+        _ = bytes.from_hex("GG")
+    except ParseError as e:
+        bad_hex = True
+
+    bad_codec: bool = False
+    try:
+        codec: str = "latin-1"
+        _encoded: bytes = "abc".encode(codec)
+    except ParseError as e:
+        bad_codec = True
+
+    bad_utf8: bool = False
+    try:
+        _invalid_utf8: str = b"\xff".decode()
+    except ParseError as e:
+        bad_utf8 = True
+
+    assert bad_size
+    assert bad_values
+    assert bad_hex
+    assert bad_codec
+    assert bad_utf8
+
+    print("ad_hoc_bytes_wave2_negative_boundary_demo: ok")

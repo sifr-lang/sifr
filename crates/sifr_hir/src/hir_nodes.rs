@@ -159,7 +159,7 @@ pub enum HirStmt {
     Continue,
     /// Tuple unpacking: a, b = expr
     TupleUnpack {
-        targets: Vec<(String, Type)>,
+        targets: Vec<HirTupleTarget>,
         value: HirExpr,
     },
     /// Star unpacking: first, *rest = items
@@ -307,6 +307,19 @@ pub enum HirFStringPart {
     Expr(HirExpr),
 }
 
+/// Canonical iterator operations lowered as dedicated HIR nodes instead of
+/// generic builtin-call strings.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum HirIteratorOp {
+    Iter,
+    Next,
+    Reversed,
+    Map,
+    Filter,
+    Zip,
+    Enumerate,
+}
+
 /// A typed expression.
 #[derive(Debug, Clone)]
 pub enum HirExpr {
@@ -351,6 +364,12 @@ pub enum HirExpr {
     /// Function call
     Call {
         func: String,
+        args: Vec<HirExpr>,
+        ty: Type,
+    },
+    /// Canonical iterator operation call.
+    IteratorCall {
+        op: HirIteratorOp,
         args: Vec<HirExpr>,
         ty: Type,
     },
@@ -485,6 +504,17 @@ pub enum HirExpr {
     },
 }
 
+/// A tuple-unpack target.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct HirTupleTarget {
+    /// The bound name.
+    pub name: String,
+    /// The inferred/declared element type.
+    pub ty: Type,
+    /// Whether this target rebinds an existing local/nonlocal binding.
+    pub rebind_existing: bool,
+}
+
 impl HirExpr {
     /// Get the type of this expression.
     pub fn ty(&self) -> &Type {
@@ -500,6 +530,7 @@ impl HirExpr {
             | Self::Compare { ty, .. }
             | Self::BoolOp { ty, .. }
             | Self::Call { ty, .. }
+            | Self::IteratorCall { ty, .. }
             | Self::IfExpr { ty, .. }
             | Self::RangeLiteral { ty, .. }
             | Self::ListLiteral { ty, .. }

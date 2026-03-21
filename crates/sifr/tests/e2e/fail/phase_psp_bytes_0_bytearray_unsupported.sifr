@@ -1,0 +1,2 @@
+def main() -> None:
+    _ = bytearray([1, 2, 3])

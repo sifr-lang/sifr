@@ -10,7 +10,7 @@ def collect_set_and_counter_actual() -> list[bool]:
 
     counts: Counter[str] = from_list(["x", "y", "x", "z", "x", "y"])
     actual.append(counts.get("x") == 3)
-    actual.append(str(counts.most_common(2)) == "[\"x\", \"y\"]")
+    actual.append(str(counts.most_common(2)) == "[(\"x\", 3), (\"y\", 2)]")
     return actual
 
 def collect_deque_actual() -> list[bool]:

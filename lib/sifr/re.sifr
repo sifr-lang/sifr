@@ -71,6 +71,64 @@ def split_flags(pattern: str, text: str, flags: int) -> Result[list[str], RegexE
     return re_split_flags(pattern, text, flags)
 
 
+def _iter_matches(own matches: list[Match]) -> Iterator[Match]:
+    i: int = 0
+    while i < len(matches):
+        yield matches[i]
+        i = i + 1
+
+
+def _find_index_from(text: str, needle: str, start: int) -> int:
+    if start < 0:
+        return -1
+    if len(needle) == 0:
+        if start <= len(text):
+            return start
+        return -1
+    max_start: int = len(text) - len(needle)
+    i: int = start
+    while i <= max_start:
+        if text[i:i + len(needle)] == needle:
+            return i
+        i = i + 1
+    return -1
+
+
+def _findall_for_finditer(pattern: str, text: str, flags: int) -> Result[list[str], RegexError]:
+    if flags != 0:
+        return re_findall_flags(pattern, text, flags)
+    return re_findall(pattern, text)
+
+
+def _finditer_materialize(pattern: str, text: str, flags: int) -> Result[list[Match], RegexError]:
+    try:
+        found_items: list[str] = _findall_for_finditer(pattern, text, flags)
+        matches: list[Match] = []
+        cursor: int = 0
+        for found in found_items:
+            start: int = _find_index_from(text, found, cursor)
+            if start < 0:
+                start = cursor
+            found_len: int = len(found)
+            end: int = start + found_len
+            matches.append(Match(found, start, end))
+            if found_len == 0:
+                cursor = end + 1
+            else:
+                cursor = end
+        return matches
+    except RegexError as e:
+        raise RegexError(e.message)
+
+
+def finditer(pattern: str, text: str) -> Result[Iterator[Match], RegexError]:
+    try:
+        matches: list[Match] = _finditer_materialize(pattern, text, 0)
+        return _iter_matches(matches)
+    except RegexError as e:
+        raise RegexError(e.message)
+
+
 class Pattern:
     # A compiled regular expression pattern.
     _pattern: str
@@ -100,6 +158,13 @@ class Pattern:
         if self._flags != 0:
             return re_findall_flags(self._pattern, text, self._flags)
         return re_findall(self._pattern, text)
+
+    def finditer(self, text: str) -> Result[Iterator[Match], RegexError]:
+        try:
+            matches: list[Match] = _finditer_materialize(self._pattern, text, self._flags)
+            return _iter_matches(matches)
+        except RegexError as e:
+            raise RegexError(e.message)
 
     def split(self, text: str) -> Result[list[str], RegexError]:
         if self._flags != 0:

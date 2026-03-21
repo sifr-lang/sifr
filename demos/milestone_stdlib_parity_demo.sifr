@@ -18,7 +18,7 @@ from sifr.logging import log_info
 from sifr.difflib import get_close_matches, unified_diff
 from sifr.ipaddress import is_valid_ipv4, is_private, is_loopback
 from sifr.timeit import default_timer
-from sifr.tomllib import loads
+from sifr.tomllib import loads, TomlValue
 from sifr.datetime import now, from_timestamp, datetime
 
 def main():
@@ -87,8 +87,8 @@ def main():
 
     # tomllib -- TOML parsing
     try:
-        toml_result: str = loads("key = \"value\"")
-        assert_true(len(toml_result) > 0)
+        toml_result: TomlValue = loads("key = \"value\"")
+        assert_true(len(toml_result.keys()) > 0)
     except TOMLDecodeError as err:
         print(f"toml error: {err.message}")
 
@@ -96,8 +96,8 @@ def main():
     dt_now: datetime = now()
     assert_true(len(str(dt_now)) > 0)
     try:
-        dt_epoch: str = from_timestamp(0.0)
-        assert_true(len(dt_epoch) > 0)
+        dt_epoch: datetime = from_timestamp(0.0)
+        assert_true(len(dt_epoch.isoformat()) > 0)
     except ValueError as e:
         print(f"error: {e.message}")
 

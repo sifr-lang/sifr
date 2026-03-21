@@ -1,0 +1,15 @@
+# Adapted CPython sys subset for sifr.sys (canonical bool-vector format)
+from sifr.sys import argv, version, platform, maxsize
+from sifr.test import assert_bool_vector_eq
+
+
+def main():
+    actual: list[bool] = []
+    actual.append(len(argv()) > 0)
+    actual.append(len(version()) > 0)
+    actual.append(len(platform()) > 0)
+    actual.append(maxsize() > 0)
+
+    expected: list[bool] = [True, True, True, True]
+    assert_bool_vector_eq(actual, expected)
+    assert str("cpython_sys_subset: pass") == "cpython_sys_subset: pass"

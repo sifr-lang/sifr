@@ -1,5 +1,5 @@
 # Tests: lazy generator with conditional yield (filter pattern)
-def evens(limit: int) -> list[int]:
+def evens(limit: int) -> Iterator[int]:
     i: int = 0
     while i < limit:
         if i % 2 == 0:

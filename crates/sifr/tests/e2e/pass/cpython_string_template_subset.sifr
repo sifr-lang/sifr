@@ -1,0 +1,100 @@
+# Adapted CPython string.Template / string.Formatter subset for sifr.string
+from sifr.string import Template, Formatter
+from sifr.test import assert_bool_vector_eq
+
+def collect_template_actual() -> list[bool]:
+    actual: list[bool] = []
+    template: Template = Template("$who likes ${what} worth $$100")
+    mapping: dict[str, str] = {"who": "tim", "what": "ham"}
+
+    substituted_ok: bool = False
+    try:
+        substituted: str = template.substitute(mapping)
+        substituted_ok = substituted == "tim likes ham worth $100"
+    except ValueError as e:
+        _ = e.message
+    actual.append(substituted_ok)
+
+    missing_error_ok: bool = False
+    try:
+        _missing: str = template.substitute({"who": "tim"})
+    except ValueError as e:
+        missing_error_ok = e.message.startswith("missing template value for key")
+    actual.append(missing_error_ok)
+
+    safe_missing: str = template.safe_substitute({"who": "tim"})
+    actual.append(safe_missing == "tim likes ${what} worth $100")
+
+    invalid_placeholder_ok: bool = False
+    try:
+        _bad: str = Template("bad $! token").substitute({})
+    except ValueError as e:
+        invalid_placeholder_ok = e.message.startswith("invalid template placeholder")
+    actual.append(invalid_placeholder_ok)
+
+    missing_brace_ok: bool = False
+    try:
+        _bad2: str = Template("${who").substitute({"who": "tim"})
+    except ValueError as e:
+        missing_brace_ok = e.message == "invalid template placeholder: missing closing brace"
+    actual.append(missing_brace_ok)
+
+    return actual
+
+def collect_formatter_actual() -> list[bool]:
+    actual: list[bool] = []
+    formatter: Formatter = Formatter()
+
+    formatted_ok: bool = False
+    try:
+        formatted: str = formatter.format("Hello {name}", {"name": "Sifr"})
+        formatted_ok = formatted == "Hello Sifr"
+    except ValueError as e:
+        _ = e.message
+    actual.append(formatted_ok)
+
+    escaped_ok: bool = False
+    try:
+        escaped: str = formatter.format("{{{name}}}", {"name": "Sifr"})
+        escaped_ok = escaped == "{Sifr}"
+    except ValueError as e:
+        _ = e.message
+    actual.append(escaped_ok)
+
+    missing_key_ok: bool = False
+    try:
+        _missing: str = formatter.format("Hello {name}", {})
+    except ValueError as e:
+        missing_key_ok = e.message == "formatter: missing value for key: name"
+    actual.append(missing_key_ok)
+
+    empty_field_ok: bool = False
+    try:
+        _empty: str = formatter.format("Value: {}", {"0": "x"})
+    except ValueError as e:
+        empty_field_ok = e.message == "formatter: empty replacement field is not supported"
+    actual.append(empty_field_ok)
+
+    unmatched_right_ok: bool = False
+    try:
+        _bad: str = formatter.format("oops }", {"name": "x"})
+    except ValueError as e:
+        unmatched_right_ok = e.message == "formatter: single '}' is invalid"
+    actual.append(unmatched_right_ok)
+
+    return actual
+
+def append_all(mut target: list[bool], values: list[bool]):
+    for value in values:
+        target.append(value)
+
+def main():
+    expected: list[bool] = [
+        True, True, True, True, True,
+        True, True, True, True, True,
+    ]
+    actual: list[bool] = []
+    append_all(actual, collect_template_actual())
+    append_all(actual, collect_formatter_actual())
+    assert_bool_vector_eq(actual, expected)
+    assert str("cpython_string_template_subset: pass") == "cpython_string_template_subset: pass"

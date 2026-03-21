@@ -1,0 +1,30 @@
+{
+  "schema_version": 1,
+  "lane": "quick",
+  "fixture_names": [
+    "hello_world",
+    "if_else",
+    "while_loop",
+    "for_range",
+    "list_ops",
+    "dict_ops",
+    "class_basic",
+    "class_methods",
+    "enum_simple",
+    "match_union",
+    "match_guard",
+    "optional_narrowing",
+    "generic_identity",
+    "generic_class_method",
+    "keyword_args_basic",
+    "type_alias",
+    "recursive_tree_traversal_runtime",
+    "nested_function_basic",
+    "nested_function_recursive_capture",
+    "stdlib_json_consolidated",
+    "stdlib_tomllib",
+    "stdlib_random",
+    "decimal_type_system_basic",
+    "bigint_arithmetic"
+  ]
+}

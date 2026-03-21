@@ -1,0 +1,18 @@
+# ad-hoc canonical-iteration wave 2 demo
+# Verifies canonical iterator HIR lowering for builtins, comprehensions, and generator expressions.
+
+
+def inc(x: int) -> int:
+    return x + 1
+
+
+def main() -> None:
+    nums: list[int] = [1, 2, 3, 4]
+
+    print(list(map(inc, nums)))
+    print(list(reversed(nums)))
+
+    list_comp: list[int] = [x for x in nums]
+    print(list_comp)
+
+    print(list((x for x in nums)))

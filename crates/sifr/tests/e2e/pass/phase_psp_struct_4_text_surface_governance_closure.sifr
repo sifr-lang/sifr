@@ -1,0 +1,45 @@
+from sifr.textwrap import TextWrapper, wrap, fill
+from sifr.html import escape, unescape
+
+
+def main() -> None:
+    wrapped_ok: bool = False
+    try:
+        wrapped: list[str] = wrap("alpha beta gamma", 10)
+        wrapped_ok = str(wrapped) == "[\"alpha beta\", \"gamma\"]"
+    except ValueError:
+        wrapped_ok = False
+    assert wrapped_ok
+
+    filled_ok: bool = False
+    try:
+        filled: str = fill("alpha beta gamma", 10)
+        filled_ok = filled == "alpha beta\ngamma"
+    except ValueError:
+        filled_ok = False
+    assert filled_ok
+
+    hyphen_break: TextWrapper = TextWrapper(8, "", "", True, 8, True, True, True)
+    assert str(hyphen_break.wrap("alpha-beta gamma")) == "[\"alpha-\", \"beta\", \"gamma\"]"
+
+    hyphen_keep: TextWrapper = TextWrapper(8, "", "", True, 8, True, True, False)
+    assert str(hyphen_keep.wrap("alpha-beta gamma")) == "[\"alpha-beta\", \"gamma\"]"
+
+    keep_ws: TextWrapper = TextWrapper(10, "", "", True, 8, True, False, True)
+    assert str(keep_ws.wrap("a  b")) == "[\"a  b\"]"
+
+    tabsize4: TextWrapper = TextWrapper(20, "", "", True, 4, False, False, True)
+    tab_lines: list[str] = tabsize4.wrap("ab\tc")
+    assert len(tab_lines) == 1
+    tab_line0: str | None = tab_lines[0]
+    tab_len_ok: bool = False
+    if tab_line0 is not None:
+        tab_len_ok = len(tab_line0) == 5
+    assert tab_len_ok
+
+    html_source: str = "<a href=\"x\">'ok' & done</a>"
+    escaped_default: str = escape(html_source)
+    assert escaped_default == "&lt;a href=&quot;x&quot;&gt;&#x27;ok&#x27; &amp; done&lt;/a&gt;"
+    escaped_no_quote: str = escape(html_source, False)
+    assert escaped_no_quote == "&lt;a href=\"x\"&gt;'ok' &amp; done&lt;/a&gt;"
+    assert unescape(escaped_default) == html_source

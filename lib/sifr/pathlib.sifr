@@ -57,11 +57,63 @@ def stem(path: str) -> str:
 def is_absolute(path: str) -> bool:
     if len(path) == 0:
         return False
+
+    if len(path) >= 3:
+        colon: str | None = path[1]
+        sep: str | None = path[2]
+        if colon is not None:
+            if sep is not None:
+                if colon == ":" and (sep == "/" or sep == "\\"):
+                    return True
+
     first: str | None = path[0]
     if first is not None:
-        if first == "/":
+        if first == "/" or first == "\\":
             return True
     return False
+
+
+def _iter_list_str(own entries: list[str]) -> Iterator[str]:
+    i: int = 0
+    while i < len(entries):
+        yield entries[i]
+        i = i + 1
+
+
+def _iterdir_list(path: str) -> Result[list[str], IOError]:
+    return iterdir(path)
+
+
+def _glob_list(path: str, pattern: str) -> Result[list[str], IOError]:
+    return glob_pattern(path, pattern)
+
+
+def _rglob_list(path: str, pattern: str) -> Result[list[str], IOError]:
+    return rglob_pattern(path, pattern)
+
+
+def _iterdir_to_iter(path: str) -> Result[Iterator[str], IOError]:
+    try:
+        entries: list[str] = _iterdir_list(path)
+        return _iter_list_str(entries)
+    except IOError as e:
+        raise IOError(e.message)
+
+
+def _glob_to_iter(path: str, pattern: str) -> Result[Iterator[str], IOError]:
+    try:
+        entries: list[str] = _glob_list(path, pattern)
+        return _iter_list_str(entries)
+    except IOError as e:
+        raise IOError(e.message)
+
+
+def _rglob_to_iter(path: str, pattern: str) -> Result[Iterator[str], IOError]:
+    try:
+        entries: list[str] = _rglob_list(path, pattern)
+        return _iter_list_str(entries)
+    except IOError as e:
+        raise IOError(e.message)
 
 class Path:
     _path: str
@@ -72,8 +124,8 @@ class Path:
     def name(self) -> str:
         return basename(self._path)
 
-    def parent(self) -> str:
-        return dirname(self._path)
+    def parent(self) -> Path:
+        return Path(dirname(self._path))
 
     def suffix(self) -> str:
         return extension(self._path)
@@ -102,8 +154,8 @@ class Path:
     def mkdir(self) -> Result[None, IOError]:
         return mkdir(self._path)
 
-    def joinpath(self, child: str) -> str:
-        return join_path(self._path, child)
+    def joinpath(self, child: str) -> Path:
+        return Path(join_path(self._path, child))
 
     def to_str(self) -> str:
         return self._path + ""
@@ -120,24 +172,24 @@ class Path:
     def resolve(self) -> Result[str, IOError]:
         return resolve_path(self._path)
 
-    def iterdir(self) -> Result[list[str], IOError]:
-        return iterdir(self._path)
+    def iterdir(self) -> Result[Iterator[str], IOError]:
+        return _iterdir_to_iter(self._path)
 
-    def with_name(self, name: str) -> str:
+    def with_name(self, name: str) -> Path:
         parent: str = dirname(self._path)
         if parent == "":
-            return name + ""
-        return parent + "/" + name
+            return Path(name + "")
+        return Path(parent + "/" + name)
 
-    def with_suffix(self, suffix: str) -> str:
+    def with_suffix(self, suffix: str) -> Path:
         s: str = stem(self._path)
         parent: str = dirname(self._path)
         if parent == "":
-            return s + suffix
-        return parent + "/" + s + suffix
+            return Path(s + suffix)
+        return Path(parent + "/" + s + suffix)
 
-    def glob(self, pattern: str) -> Result[list[str], IOError]:
-        return glob_pattern(self._path, pattern)
+    def glob(self, pattern: str) -> Result[Iterator[str], IOError]:
+        return _glob_to_iter(self._path, pattern)
 
-    def rglob(self, pattern: str) -> Result[list[str], IOError]:
-        return rglob_pattern(self._path, pattern)
+    def rglob(self, pattern: str) -> Result[Iterator[str], IOError]:
+        return _rglob_to_iter(self._path, pattern)

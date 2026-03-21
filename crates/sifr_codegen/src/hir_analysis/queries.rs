@@ -1,6 +1,6 @@
 use crate::hir_analysis::traversal::{self, TraversalConfig, TraversalControl};
 use crate::ModuleFuncSignatures;
-use sifr_hir::{cfg, HirExpr, HirPattern, HirStmt};
+use sifr_hir::{cfg, HirExpr, HirIteratorOp, HirPattern, HirStmt};
 use sifr_type_system::Type;
 use std::cell::RefCell;
 use std::collections::{HashMap, HashSet};
@@ -18,7 +18,11 @@ pub(crate) const MUTATING_METHODS: &[&str] = &[
     "remove",
     "push_str",
     "update",
+    "setdefault",
     "add",
+    "intersection_update",
+    "difference_update",
+    "symmetric_difference_update",
     "discard",
 ];
 
@@ -170,6 +174,19 @@ pub(crate) fn collect_mutated_vars(
         HirStmt::Assign { name, .. } | HirStmt::AugAssign { name, .. } => {
             mutated.borrow_mut().insert(name.clone());
         }
+        HirStmt::NestedFunction { func } => {
+            let param_names = func
+                .params
+                .iter()
+                .map(|param| param.name.clone())
+                .collect::<HashSet<_>>();
+            let locally_defined = collect_locally_defined_vars(&func.body);
+            let captured_mutated = collect_mutated_vars(&func.body, func_signatures)
+                .into_iter()
+                .filter(|name| !param_names.contains(name) && !locally_defined.contains(name))
+                .collect::<Vec<_>>();
+            mutated.borrow_mut().extend(captured_mutated);
+        }
         HirStmt::SubscriptAssign { object, .. }
         | HirStmt::NestedSubscriptAssign { object, .. }
         | HirStmt::SubscriptAugAssign { object, .. }
@@ -192,14 +209,19 @@ pub(crate) fn collect_mutated_vars(
             args: _,
             ..
         } => {
-            if MUTATING_METHODS.contains(&method.as_str()) {
-                if let HirExpr::Name { name, .. } = object.as_ref() {
-                    mutated.borrow_mut().insert(name.clone());
-                }
-            }
-            if matches!(object.ty(), Type::Class { .. }) {
-                if let HirExpr::Name { name, .. } = object.as_ref() {
-                    mutated.borrow_mut().insert(name.clone());
+            let root_name = match object.as_ref() {
+                HirExpr::Name { name, .. } => Some(name.clone()),
+                HirExpr::FieldAccess { object: inner, .. } => match inner.as_ref() {
+                    HirExpr::Name { name, .. } => Some(name.clone()),
+                    _ => None,
+                },
+                _ => None,
+            };
+            if MUTATING_METHODS.contains(&method.as_str())
+                || matches!(object.ty(), Type::Class { .. })
+            {
+                if let Some(name) = root_name {
+                    mutated.borrow_mut().insert(name);
                 }
             }
         }
@@ -216,6 +238,13 @@ pub(crate) fn collect_mutated_vars(
                             }
                         }
                     }
+                }
+            }
+        }
+        HirExpr::IteratorCall { op, args, .. } => {
+            if *op == HirIteratorOp::Next {
+                if let Some(HirExpr::Name { name, .. }) = args.first() {
+                    mutated.borrow_mut().insert(name.clone());
                 }
             }
         }
@@ -287,8 +316,10 @@ pub(crate) fn collect_locally_defined_vars(stmts: &[HirStmt]) -> HashSet<String>
             defined.insert(target.clone());
         }
         HirStmt::TupleUnpack { targets, .. } => {
-            for (name, _) in targets {
-                defined.insert(name.clone());
+            for target in targets {
+                if !target.rebind_existing {
+                    defined.insert(target.name.clone());
+                }
             }
         }
         HirStmt::StarUnpack {
@@ -443,6 +474,35 @@ mod tests {
     }
 
     #[test]
+    fn collect_mutated_vars_marks_iterator_next_argument() {
+        let iterator_ty = Type::Class {
+            name: "CountdownIter".to_string(),
+            fields: vec![],
+            methods: vec![(
+                "__next__".to_string(),
+                sifr_type_system::FunctionType {
+                    params: vec![],
+                    return_type: Box::new(Type::Union(vec![Type::Int, Type::None])),
+                },
+            )],
+            parent_class: None,
+        };
+        let stmts = vec![HirStmt::Expr {
+            expr: HirExpr::IteratorCall {
+                op: HirIteratorOp::Next,
+                args: vec![HirExpr::Name {
+                    name: "it".to_string(),
+                    ty: iterator_ty,
+                }],
+                ty: Type::Union(vec![Type::Int, Type::None]),
+            },
+        }];
+
+        let mutated = collect_mutated_vars(&stmts, None);
+        assert!(mutated.contains("it"));
+    }
+
+    #[test]
     fn body_calls_function_ignores_nested_function_scope() {
         let nested = HirFunction {
             name: "inner".to_string(),
@@ -582,6 +642,128 @@ mod tests {
 
         let mutated = collect_mutated_vars(&[HirStmt::NestedFunction { func: nested }], None);
         assert!(!mutated.contains("inside"));
+    }
+
+    #[test]
+    fn collect_mutated_vars_includes_captured_rebinds_from_nested_functions() {
+        let nested = HirFunction {
+            name: "inner".to_string(),
+            params: vec![],
+            return_type: Type::None,
+            body: vec![HirStmt::AugAssign {
+                name: "total".to_string(),
+                op: "+=".to_string(),
+                value: HirExpr::IntLiteral(1),
+            }],
+            method_kind: MethodKind::Regular,
+            decorators: vec![],
+            type_params: vec![],
+        };
+
+        let mutated = collect_mutated_vars(&[HirStmt::NestedFunction { func: nested }], None);
+        assert!(mutated.contains("total"));
+    }
+
+    #[test]
+    fn collect_mutated_vars_marks_captured_outer_mutation_from_nested_function() {
+        let nested = HirFunction {
+            name: "inner".to_string(),
+            params: vec![],
+            return_type: Type::None,
+            body: vec![HirStmt::Expr {
+                expr: HirExpr::MethodCall {
+                    object: Box::new(HirExpr::Name {
+                        name: "items".to_string(),
+                        ty: Type::List(Box::new(Type::Int)),
+                    }),
+                    method: "append".to_string(),
+                    args: vec![HirExpr::IntLiteral(1)],
+                    ty: Type::None,
+                },
+            }],
+            method_kind: MethodKind::Regular,
+            decorators: vec![],
+            type_params: vec![],
+        };
+
+        let mutated = collect_mutated_vars(&[HirStmt::NestedFunction { func: nested }], None);
+        assert!(mutated.contains("items"));
+    }
+
+    #[test]
+    fn collect_mutated_vars_marks_dict_setdefault_receiver() {
+        let stmts = vec![HirStmt::Expr {
+            expr: HirExpr::MethodCall {
+                object: Box::new(HirExpr::Name {
+                    name: "data".to_string(),
+                    ty: Type::Dict(Box::new(Type::Str), Box::new(Type::Int)),
+                }),
+                method: "setdefault".to_string(),
+                args: vec![
+                    HirExpr::StringLiteral("k".to_string()),
+                    HirExpr::IntLiteral(1),
+                ],
+                ty: Type::Int,
+            },
+        }];
+
+        let mutated = collect_mutated_vars(&stmts, None);
+        assert!(mutated.contains("data"));
+    }
+
+    #[test]
+    fn collect_mutated_vars_marks_set_update_receiver() {
+        let stmts = vec![HirStmt::Expr {
+            expr: HirExpr::MethodCall {
+                object: Box::new(HirExpr::Name {
+                    name: "seen".to_string(),
+                    ty: Type::Set(Box::new(Type::Int)),
+                }),
+                method: "intersection_update".to_string(),
+                args: vec![HirExpr::ListLiteral {
+                    elements: vec![HirExpr::IntLiteral(1), HirExpr::IntLiteral(2)],
+                    ty: Type::List(Box::new(Type::Int)),
+                }],
+                ty: Type::None,
+            },
+        }];
+
+        let mutated = collect_mutated_vars(&stmts, None);
+        assert!(mutated.contains("seen"));
+    }
+
+    #[test]
+    fn collect_mutated_vars_marks_self_for_delegated_field_class_method_call() {
+        let writer_ty = Type::Class {
+            name: "writer".to_string(),
+            fields: vec![],
+            methods: vec![],
+            parent_class: None,
+        };
+        let holder_ty = Type::Class {
+            name: "DictWriter".to_string(),
+            fields: vec![("_writer".to_string(), writer_ty.clone())],
+            methods: vec![],
+            parent_class: None,
+        };
+        let stmts = vec![HirStmt::Expr {
+            expr: HirExpr::MethodCall {
+                object: Box::new(HirExpr::FieldAccess {
+                    object: Box::new(HirExpr::Name {
+                        name: "self".to_string(),
+                        ty: holder_ty,
+                    }),
+                    field: "_writer".to_string(),
+                    ty: writer_ty,
+                }),
+                method: "writerow".to_string(),
+                args: vec![],
+                ty: Type::None,
+            },
+        }];
+
+        let mutated = collect_mutated_vars(&stmts, None);
+        assert!(mutated.contains("self"));
     }
 
     #[test]

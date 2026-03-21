@@ -1,11 +1,180 @@
 use crate::{
     helpers::{body_contains_field_assign_codegen, collect_mutated_vars_with_sigs},
+    hir_analysis::traversal::{self, TraversalConfig},
     RustEmitter, RustExpr, RustItem, RustParam, RustStmt, RustType, RustTypeParam, Visibility,
 };
 use sifr_hir::{HirClass, HirExpr, HirFunction, HirStmt, MethodKind};
 use sifr_type_system::{ParamConvention, Type};
+use std::collections::HashSet;
 
 impl RustEmitter {
+    fn class_method_requires_mutable_self(class: &HirClass, method: &HirFunction) -> bool {
+        if method.method_kind != MethodKind::Regular || method.name == "new" {
+            return false;
+        }
+        let mut visiting = HashSet::new();
+        Self::class_method_requires_mutable_self_recursive(class, &method.name, &mut visiting)
+    }
+
+    fn class_method_requires_mutable_self_recursive(
+        class: &HirClass,
+        method_name: &str,
+        visiting: &mut HashSet<String>,
+    ) -> bool {
+        let Some(method) = class
+            .methods
+            .iter()
+            .find(|candidate| candidate.name == method_name)
+        else {
+            return false;
+        };
+
+        if body_contains_field_assign_codegen(&method.body) {
+            return true;
+        }
+
+        if !visiting.insert(method_name.to_string()) {
+            return false;
+        }
+
+        let delegated_calls = Self::collect_direct_self_method_calls(&method.body);
+        for delegated_method in delegated_calls {
+            if Self::class_method_requires_mutable_self_recursive(
+                class,
+                &delegated_method,
+                visiting,
+            ) {
+                visiting.remove(method_name);
+                return true;
+            }
+        }
+
+        visiting.remove(method_name);
+        false
+    }
+
+    fn collect_direct_self_method_calls(stmts: &[HirStmt]) -> HashSet<String> {
+        let mut calls = HashSet::new();
+        let mut on_stmt = |_stmt: &HirStmt| {};
+        let mut on_expr = |expr: &HirExpr| {
+            if let HirExpr::MethodCall { object, method, .. } = expr {
+                if matches!(object.as_ref(), HirExpr::Name { name, .. } if name == "self") {
+                    calls.insert(method.clone());
+                }
+            }
+        };
+        traversal::walk_stmts(
+            stmts,
+            TraversalConfig::LOCAL_SCOPE_ONLY,
+            &mut on_stmt,
+            &mut on_expr,
+        );
+        calls
+    }
+
+    fn is_some_call_expr(expr: &RustExpr) -> bool {
+        matches!(
+            expr,
+            RustExpr::FnCall { func, .. }
+                if matches!(func.as_ref(), RustExpr::Path(path) if path.len() == 1 && path[0] == "Some")
+                    || matches!(func.as_ref(), RustExpr::Ident(name) if name == "Some")
+        )
+    }
+
+    fn is_box_new_call_expr(expr: &RustExpr) -> bool {
+        matches!(
+            expr,
+            RustExpr::FnCall { func, .. }
+                if matches!(func.as_ref(), RustExpr::Path(path) if path.len() == 2 && path[0] == "Box" && path[1] == "new")
+                    || matches!(func.as_ref(), RustExpr::Ident(name) if name == "Box::new")
+        )
+    }
+
+    fn ensure_some_box_inner(expr: RustExpr) -> RustExpr {
+        match expr {
+            RustExpr::FnCall { func, args }
+                if matches!(func.as_ref(), RustExpr::Path(path) if path.len() == 1 && path[0] == "Some")
+                    && args.len() == 1 =>
+            {
+                let inner = args
+                    .into_iter()
+                    .next()
+                    .expect("checked Some(_) argument count");
+                if Self::is_box_new_call_expr(&inner) {
+                    RustExpr::FnCall {
+                        func,
+                        args: vec![inner],
+                    }
+                } else {
+                    RustExpr::FnCall {
+                        func,
+                        args: vec![RustExpr::FnCall {
+                            func: Box::new(RustExpr::Path(vec![
+                                "Box".to_string(),
+                                "new".to_string(),
+                            ])),
+                            args: vec![inner],
+                        }],
+                    }
+                }
+            }
+            other => RustExpr::FnCall {
+                func: Box::new(RustExpr::Path(vec!["Some".to_string()])),
+                args: vec![RustExpr::FnCall {
+                    func: Box::new(RustExpr::Path(vec!["Box".to_string(), "new".to_string()])),
+                    args: vec![other],
+                }],
+            },
+        }
+    }
+
+    fn wrap_recursive_constructor_field_value(
+        &self,
+        class: &HirClass,
+        method: &HirFunction,
+        field_name: &str,
+        field_ty: &Type,
+        value_expr: &HirExpr,
+        lowered_value: RustExpr,
+    ) -> RustExpr {
+        let is_recursive = self
+            .recursive_fields
+            .contains(&(class.name.clone(), field_name.to_string()));
+        if !is_recursive {
+            return lowered_value;
+        }
+
+        let is_boxed_constructor_param = matches!(
+            value_expr,
+            HirExpr::Name { name, .. }
+                if method.name == "new"
+                    && name == field_name
+                    && method.params.iter().any(|param| param.name == *name)
+        );
+        if is_boxed_constructor_param {
+            return lowered_value;
+        }
+
+        if crate::helpers::is_option_type(field_ty) {
+            if matches!(value_expr, HirExpr::NoneLiteral) {
+                return lowered_value;
+            }
+            if Self::is_some_call_expr(&lowered_value) {
+                return Self::ensure_some_box_inner(lowered_value);
+            }
+            return Self::ensure_some_box_inner(lowered_value);
+        }
+
+        if Self::is_box_new_call_expr(&lowered_value) {
+            return lowered_value;
+        }
+
+        RustExpr::FnCall {
+            func: Box::new(RustExpr::Path(vec!["Box".to_string(), "new".to_string()])),
+            args: vec![lowered_value],
+        }
+    }
+
     fn lower_class_stmt_strict(&mut self, stmt: &HirStmt, _context: &str) -> Vec<RustStmt> {
         self.capture_structured_stmts(|inner| inner.emit_stmt(stmt))
     }
@@ -158,12 +327,27 @@ impl RustEmitter {
             ));
 
             for (field_name, value) in &field_inits {
+                let field_ty = class
+                    .fields
+                    .iter()
+                    .find(|(name, _)| name == field_name)
+                    .map(|(_, ty)| ty);
+                let lowered_value = self.lower_class_expr_strict(
+                    value,
+                    "class constructor field assignment value lowering",
+                );
                 fields.push((
                     (*field_name).to_string(),
-                    self.lower_class_expr_strict(
-                        value,
-                        "class constructor field assignment value lowering",
-                    ),
+                    field_ty.map_or(lowered_value.clone(), |ty| {
+                        self.wrap_recursive_constructor_field_value(
+                            class,
+                            method,
+                            field_name,
+                            ty,
+                            value,
+                            lowered_value,
+                        )
+                    }),
                 ));
             }
 
@@ -195,6 +379,11 @@ impl RustEmitter {
 
         let mut fields = Vec::new();
         for (field_name, value) in &field_inits {
+            let field_ty = class
+                .fields
+                .iter()
+                .find(|(name, _)| name == field_name)
+                .map(|(_, ty)| ty);
             let lowered_value = if class.name == "deque" && *field_name == "_data" {
                 if let HirExpr::ListLiteral { elements, .. } = value {
                     if elements.is_empty() {
@@ -232,12 +421,16 @@ impl RustEmitter {
             } else {
                 self.lower_class_expr_strict(value, "class constructor field value lowering")
             };
-
-            let field_ty = class
-                .fields
-                .iter()
-                .find(|(name, _)| name == field_name)
-                .map(|(_, ty)| ty);
+            let lowered_value = field_ty.map_or(lowered_value.clone(), |ty| {
+                self.wrap_recursive_constructor_field_value(
+                    class,
+                    method,
+                    field_name,
+                    ty,
+                    value,
+                    lowered_value,
+                )
+            });
             let final_value = if field_ty.is_some_and(|ty| matches!(ty, Type::Callable(..))) {
                 RustExpr::FnCall {
                     func: Box::new(RustExpr::Path(vec!["Box".to_string(), "new".to_string()])),
@@ -262,7 +455,17 @@ impl RustEmitter {
                     args: vec![RustExpr::Ident(field_name.clone())],
                 }
             } else {
-                RustExpr::Ident(field_name.clone())
+                self.wrap_recursive_constructor_field_value(
+                    class,
+                    method,
+                    field_name,
+                    field_ty,
+                    &HirExpr::Name {
+                        name: field_name.clone(),
+                        ty: field_ty.clone(),
+                    },
+                    RustExpr::Ident(field_name.clone()),
+                )
             };
             fields.push((field_name.clone(), value));
         }
@@ -330,7 +533,7 @@ impl RustEmitter {
         match method.method_kind {
             MethodKind::Regular if method.name != "new" => {
                 params.push(RustParam::SelfParam {
-                    mutable: body_contains_field_assign_codegen(&method.body),
+                    mutable: Self::class_method_requires_mutable_self(class, method),
                 });
             }
             _ => {}

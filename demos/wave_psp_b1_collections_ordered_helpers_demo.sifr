@@ -1,0 +1,21 @@
+from sifr.collections import Counter, deque, from_list
+from sifr.bisect import bisect, insort
+from sifr.heapq import heapify, heappushpop, heapreplace
+
+def main():
+    counts: Counter[str] = from_list(["delta", "alpha", "delta", "beta"])
+    print(counts.most_common())
+
+    queue: deque[int] = deque([1, 2, 3], maxlen=4)
+    queue.rotate()
+    queue.appendleft(0)
+    print(queue.to_list())
+
+    ordered: list[int] = [1, 3, 5]
+    insort(ordered, 4)
+    print(bisect(ordered, 4))
+
+    heap: list[int] = [1, 3, 5]
+    heapify(heap)
+    print(heappushpop(heap, 2))
+    print(heapreplace(heap, 4))

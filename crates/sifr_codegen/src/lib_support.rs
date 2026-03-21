@@ -1,4 +1,4 @@
-use crate::{try_lower_leaf_expr_result, CodegenError, RustExpr};
+use crate::{try_lower_leaf_expr_result, CodegenError, RustExpr, RustParam, RustType};
 use sifr_hir::HirExpr;
 use sifr_type_system::Type;
 use std::collections::HashSet;
@@ -51,6 +51,22 @@ pub(crate) fn type_has_typevar(ty: &Type) -> bool {
 pub(crate) fn try_lower_leaf_or_name_expr_result(
     expr: &HirExpr,
 ) -> Result<Option<RustExpr>, CodegenError> {
+    if let HirExpr::Lambda { params, body, .. } = expr {
+        let lowered_body = try_lower_leaf_or_name_expr_result(body)?
+            .ok_or_else(|| CodegenError::new("lambda body could not be lowered"))?;
+        let lowered_params = params
+            .iter()
+            .map(|param| RustParam::Named {
+                name: param.name.clone(),
+                ty: RustType::Named("_".to_string()),
+            })
+            .collect::<Vec<_>>();
+        return Ok(Some(RustExpr::Closure {
+            params: lowered_params,
+            body: Box::new(lowered_body),
+            is_move: false,
+        }));
+    }
     if let Some(lowered) = try_lower_leaf_expr_result(expr)? {
         return Ok(Some(lowered));
     }

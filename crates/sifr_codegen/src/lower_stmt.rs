@@ -14,7 +14,7 @@ use crate::{
 use sifr_hir::{
     HirExceptHandler, HirExpr, HirFStringPart, HirFunction, HirPattern, HirStmt, MethodKind,
 };
-use sifr_type_system::Type;
+use sifr_type_system::{FunctionType, Type};
 use std::collections::HashSet;
 
 pub(crate) fn is_simple_stmt_candidate(stmt: &HirStmt) -> bool {
@@ -328,6 +328,7 @@ fn validate_expr_lowering_shape(expr: &HirExpr) -> Result<(), CodegenError> {
         }
         HirExpr::BoolOp { values, .. }
         | HirExpr::Call { args: values, .. }
+        | HirExpr::IteratorCall { args: values, .. }
         | HirExpr::ListLiteral {
             elements: values, ..
         }
@@ -502,16 +503,20 @@ pub(crate) fn try_lower_simple_stmt_with_ctx(
         HirStmt::Expr { expr } => try_lower_expr_stmt(expr),
         HirStmt::Let {
             name, ty, value, ..
-        } if try_lower_simple_let_value(ty, value).is_some() => Some(vec![RustStmt::Let {
-            mutable: bindings.mutated_vars.contains(name) || should_force_mutable_binding(ty),
-            name: name.clone(),
-            ty: if should_omit_local_type_annotation(ty, value) {
-                None
-            } else {
-                Some(crate::sifr_type_to_rust_type(ty))
-            },
-            value: try_lower_simple_let_value(ty, value)?,
-        }]),
+        } if !matches!(resolve_alias_type(ty), Type::Iterable(_))
+            && try_lower_simple_let_value(ty, value).is_some() =>
+        {
+            Some(vec![RustStmt::Let {
+                mutable: bindings.mutated_vars.contains(name) || should_force_mutable_binding(ty),
+                name: name.clone(),
+                ty: if should_omit_local_type_annotation(ty, value) {
+                    None
+                } else {
+                    Some(crate::sifr_type_to_rust_type(ty))
+                },
+                value: try_lower_simple_let_value(ty, value)?,
+            }])
+        }
         HirStmt::Assign { name, value }
             if try_lower_simple_assign_value(value, bindings.borrowed_params).is_some() =>
         {
@@ -619,12 +624,14 @@ pub(crate) fn try_lower_simple_stmt_with_ctx(
         ),
         HirStmt::For {
             target,
+            target_ty,
             iter,
             body,
             else_body,
             ..
         } => try_lower_simple_for_stmt(
             target,
+            target_ty,
             iter,
             body,
             else_body.as_deref(),
@@ -741,10 +748,31 @@ fn should_omit_local_type_annotation(ty: &Type, value: &HirExpr) -> bool {
 }
 
 fn should_force_mutable_binding(ty: &Type) -> bool {
+    fn class_has_next_protocol(ty: &Type) -> bool {
+        let Type::Class { methods, .. } = ty.resolve_alias() else {
+            return false;
+        };
+        methods.iter().any(|(name, ft)| {
+            name == "__next__"
+                && ft.params.is_empty()
+                && matches!(ft.return_type.as_ref().resolve_alias(), Type::Union(members) if {
+                    let has_none = members
+                        .iter()
+                        .any(|member| matches!(member.resolve_alias(), Type::None));
+                    let non_none = members
+                        .iter()
+                        .filter(|member| !matches!(member.resolve_alias(), Type::None))
+                        .count();
+                    has_none && non_none == 1
+                })
+        })
+    }
+
     matches!(
         ty,
         Type::Alias { name: alias_name, .. } if alias_name.starts_with("__compat_defaultdict_")
-    )
+    ) || matches!(ty.resolve_alias(), Type::Iterator(_))
+        || class_has_next_protocol(ty)
 }
 
 fn try_lower_simple_nested_function_stmt(
@@ -795,6 +823,9 @@ fn try_lower_simple_nested_function_stmt(
         .into_iter()
         .filter(|(name, _)| !param_names.contains(name) && !locally_defined.contains(name))
         .collect();
+    let mutates_captures = nested_mutated_vars
+        .iter()
+        .any(|name| !param_names.contains(name) && !locally_defined.contains(name));
 
     if is_recursive {
         let capture_names = captures
@@ -839,7 +870,7 @@ fn try_lower_simple_nested_function_stmt(
         .collect::<Vec<_>>();
 
     Some(vec![RustStmt::Let {
-        mutable: outer_bindings.mutated_vars.contains(&func.name),
+        mutable: outer_bindings.mutated_vars.contains(&func.name) || mutates_captures,
         name: func.name.clone(),
         ty: None,
         value: RustExpr::ClosureBlock {
@@ -1197,6 +1228,7 @@ fn expr_has_result_flow(expr: &HirExpr) -> bool {
         } => expr_has_result_flow(left) || comparators.iter().any(expr_has_result_flow),
         HirExpr::BoolOp { values, .. } => values.iter().any(expr_has_result_flow),
         HirExpr::Call { args, .. }
+        | HirExpr::IteratorCall { args, .. }
         | HirExpr::MethodCall { args, .. }
         | HirExpr::ConstructorCall { args, .. }
         | HirExpr::SuperCall { args, .. } => args.iter().any(expr_has_result_flow),
@@ -1312,16 +1344,16 @@ fn try_lower_simple_stmt_block(
 }
 
 pub(crate) fn tuple_unpack_pattern(
-    targets: &[(String, Type)],
+    targets: &[sifr_hir::HirTupleTarget],
     mutated_vars: &HashSet<String>,
 ) -> String {
     let names = targets
         .iter()
-        .map(|(name, _)| {
-            if mutated_vars.contains(name) {
-                format!("mut {name}")
+        .map(|target| {
+            if mutated_vars.contains(&target.name) {
+                format!("mut {}", target.name)
             } else {
-                name.clone()
+                target.name.clone()
             }
         })
         .collect::<Vec<_>>()
@@ -1330,17 +1362,63 @@ pub(crate) fn tuple_unpack_pattern(
 }
 
 fn try_lower_simple_tuple_unpack_stmt(
-    targets: &[(String, Type)],
+    targets: &[sifr_hir::HirTupleTarget],
     value: &HirExpr,
     mutated_vars: &HashSet<String>,
 ) -> Option<Vec<RustStmt>> {
     if targets.is_empty() {
         return None;
     }
+    if targets.iter().any(|target| target.rebind_existing) {
+        return None;
+    }
     Some(vec![RustStmt::LetPattern {
         pattern: tuple_unpack_pattern(targets, mutated_vars),
         value: try_lower_leaf_or_name_expr(value)?,
     }])
+}
+
+pub(crate) fn lower_tuple_unpack_targets(
+    targets: &[sifr_hir::HirTupleTarget],
+    lowered_value: RustExpr,
+    mutated_vars: &HashSet<String>,
+) -> Vec<RustStmt> {
+    if targets.iter().all(|target| !target.rebind_existing) {
+        return vec![RustStmt::LetPattern {
+            pattern: tuple_unpack_pattern(targets, mutated_vars),
+            value: lowered_value,
+        }];
+    }
+
+    let temp_names = targets
+        .iter()
+        .enumerate()
+        .map(|(index, _)| format!("__sifr_tuple_unpack_{index}"))
+        .collect::<Vec<_>>();
+    let temp_pattern = format!("({})", temp_names.join(", "));
+
+    let mut lowered = vec![RustStmt::LetPattern {
+        pattern: temp_pattern,
+        value: lowered_value,
+    }];
+
+    for (target, temp_name) in targets.iter().zip(temp_names.into_iter()) {
+        if target.rebind_existing {
+            lowered.push(RustStmt::Assign {
+                target: RustExpr::Ident(target.name.clone()),
+                value: RustExpr::Ident(temp_name),
+            });
+        } else {
+            lowered.push(RustStmt::Let {
+                mutable: mutated_vars.contains(&target.name),
+                name: target.name.clone(),
+                ty: None,
+                value: RustExpr::Ident(temp_name),
+            });
+        }
+    }
+
+    lowered
 }
 
 fn try_lower_simple_star_unpack_stmt(
@@ -1350,14 +1428,17 @@ fn try_lower_simple_star_unpack_stmt(
     value: &HirExpr,
 ) -> Option<Vec<RustStmt>> {
     let lowered_value = try_lower_leaf_or_name_expr(value)?;
+    let source_plan = crate::helpers::plan_iterator_ownership(value);
     let mut lowered = vec![RustStmt::Let {
         mutable: false,
         name: "_star_tmp".to_string(),
         ty: None,
-        value: RustExpr::MethodCall {
-            receiver: Box::new(lowered_value),
-            method: "clone".to_string(),
-            args: vec![],
+        value: match source_plan.source_access_mode {
+            crate::helpers::SourceAccessMode::Preserve => RustExpr::Ref {
+                mutable: false,
+                expr: Box::new(lowered_value),
+            },
+            crate::helpers::SourceAccessMode::Consume => lowered_value,
         },
     }];
 
@@ -1368,21 +1449,25 @@ fn try_lower_simple_star_unpack_stmt(
         args: vec![],
     };
 
-    for (idx, (name, _)) in before.iter().enumerate() {
+    for (idx, (name, element_ty)) in before.iter().enumerate() {
+        let indexed_expr = RustExpr::Index {
+            expr: Box::new(tmp_ident()),
+            index: Box::new(RustExpr::Literal(RustLiteral::Int(i64::try_from(idx).ok()?))),
+        };
+        let extracted_expr = if crate::helpers::is_copy_type_for_codegen(element_ty) {
+            indexed_expr
+        } else {
+            RustExpr::MethodCall {
+                receiver: Box::new(indexed_expr),
+                method: "clone".to_string(),
+                args: vec![],
+            }
+        };
         lowered.push(RustStmt::Let {
             mutable: false,
             name: name.clone(),
             ty: None,
-            value: RustExpr::MethodCall {
-                receiver: Box::new(RustExpr::Index {
-                    expr: Box::new(tmp_ident()),
-                    index: Box::new(RustExpr::Literal(RustLiteral::Int(
-                        i64::try_from(idx).ok()?,
-                    ))),
-                }),
-                method: "clone".to_string(),
-                args: vec![],
-            },
+            value: extracted_expr,
         });
     }
 
@@ -1417,25 +1502,31 @@ fn try_lower_simple_star_unpack_stmt(
         },
     });
 
-    for (idx, (name, _)) in after.iter().enumerate() {
+    for (idx, (name, element_ty)) in after.iter().enumerate() {
+        let indexed_expr = RustExpr::Index {
+            expr: Box::new(tmp_ident()),
+            index: Box::new(RustExpr::BinOp {
+                left: Box::new(tmp_len()),
+                op: "-".to_string(),
+                right: Box::new(RustExpr::Literal(RustLiteral::Int(
+                    i64::try_from(after.len() - idx).ok()?,
+                ))),
+            }),
+        };
+        let extracted_expr = if crate::helpers::is_copy_type_for_codegen(element_ty) {
+            indexed_expr
+        } else {
+            RustExpr::MethodCall {
+                receiver: Box::new(indexed_expr),
+                method: "clone".to_string(),
+                args: vec![],
+            }
+        };
         lowered.push(RustStmt::Let {
             mutable: false,
             name: name.clone(),
             ty: None,
-            value: RustExpr::MethodCall {
-                receiver: Box::new(RustExpr::Index {
-                    expr: Box::new(tmp_ident()),
-                    index: Box::new(RustExpr::BinOp {
-                        left: Box::new(tmp_len()),
-                        op: "-".to_string(),
-                        right: Box::new(RustExpr::Literal(RustLiteral::Int(
-                            i64::try_from(after.len() - idx).ok()?,
-                        ))),
-                    }),
-                }),
-                method: "clone".to_string(),
-                args: vec![],
-            },
+            value: extracted_expr,
         });
     }
 
@@ -1911,6 +2002,7 @@ fn try_lower_simple_while_stmt(
 
 fn try_lower_simple_for_stmt(
     target: &str,
+    target_ty: &Type,
     iter: &HirExpr,
     body: &[HirStmt],
     else_body: Option<&[HirStmt]>,
@@ -1926,7 +2018,7 @@ fn try_lower_simple_for_stmt(
         return try_lower_loop_else_stmts(
             RustStmt::For {
                 var: target.to_string(),
-                iter: try_lower_simple_for_iter_expr(iter)?,
+                iter: try_lower_simple_for_iter_expr(iter, target_ty)?,
                 // Breaks in the loop body should mark this loop's `_broke`.
                 body: try_lower_simple_stmt_block(
                     body,
@@ -1945,7 +2037,7 @@ fn try_lower_simple_for_stmt(
 
     Some(vec![RustStmt::For {
         var: target.to_string(),
-        iter: try_lower_simple_for_iter_expr(iter)?,
+        iter: try_lower_simple_for_iter_expr(iter, target_ty)?,
         // Entering a nested for without else resets loop-else break marker context.
         body: try_lower_simple_stmt_block(
             body,
@@ -1957,7 +2049,7 @@ fn try_lower_simple_for_stmt(
     }])
 }
 
-fn try_lower_simple_for_iter_expr(iter: &HirExpr) -> Option<RustExpr> {
+fn try_lower_simple_for_iter_expr(iter: &HirExpr, target_ty: &Type) -> Option<RustExpr> {
     fn is_collect_call_expr(expr: &RustExpr) -> bool {
         match expr {
             RustExpr::MethodCall { method, .. } => {
@@ -2003,26 +2095,140 @@ fn try_lower_simple_for_iter_expr(iter: &HirExpr) -> Option<RustExpr> {
         }
     }
 
-    let lowered_iter = try_lower_leaf_or_name_expr(iter)?;
+    fn class_method_signature<'a>(
+        methods: &'a [(String, FunctionType)],
+        method_name: &str,
+    ) -> Option<&'a FunctionType> {
+        methods.iter().find_map(
+            |(name, ft)| {
+                if name == method_name {
+                    Some(ft)
+                } else {
+                    None
+                }
+            },
+        )
+    }
+
+    fn class_has_next(methods: &[(String, FunctionType)]) -> bool {
+        class_method_signature(methods, "__next__").is_some_and(|next_ft| {
+            next_ft.params.is_empty()
+                && matches!(next_ft.return_type.as_ref().resolve_alias(), Type::Union(members) if {
+                    let has_none = members
+                        .iter()
+                        .any(|member| matches!(member.resolve_alias(), Type::None));
+                    let non_none = members
+                        .iter()
+                        .filter(|member| !matches!(member.resolve_alias(), Type::None))
+                        .count();
+                    has_none && non_none == 1
+                })
+        })
+    }
+
+    fn class_next_iter_expr(source_expr: RustExpr) -> RustExpr {
+        let state_name = "__sifr_for_iter_state".to_string();
+        RustExpr::Block {
+            stmts: vec![RustStmt::Let {
+                mutable: true,
+                name: state_name.clone(),
+                ty: None,
+                value: source_expr,
+            }],
+            expr: Some(Box::new(RustExpr::FnCall {
+                func: Box::new(RustExpr::Path(vec![
+                    "std".to_string(),
+                    "iter".to_string(),
+                    "from_fn".to_string(),
+                ])),
+                args: vec![RustExpr::Closure {
+                    params: vec![],
+                    body: Box::new(RustExpr::MethodCall {
+                        receiver: Box::new(RustExpr::Ident(state_name)),
+                        method: "__next__".to_string(),
+                        args: vec![],
+                    }),
+                    is_move: true,
+                }],
+            })),
+        }
+    }
+
+    let lowered_iter_call = match iter {
+        HirExpr::IteratorCall {
+            op: sifr_hir::HirIteratorOp::Iter,
+            args,
+            ..
+        } if args.len() == 1 => try_lower_leaf_or_name_expr(iter).map(normalize_for_iter_expr),
+        _ => None,
+    };
+
+    let iter_source = match iter {
+        HirExpr::IteratorCall {
+            op: sifr_hir::HirIteratorOp::Iter,
+            args,
+            ..
+        } if args.len() == 1 => &args[0],
+        _ => iter,
+    };
+    if matches!(iter_source, HirExpr::ConstructorCall { .. }) {
+        // Constructor-backed iteration often needs full protocol-aware lowering context.
+        // Defer to structured lowering instead of emitting a potentially non-iterator source.
+        return None;
+    }
+
+    let lowered_iter = try_lower_leaf_or_name_expr(iter_source)?;
     let lowered_iter = normalize_for_iter_expr(lowered_iter);
-    Some(match resolve_alias_type(iter.ty()) {
-        Type::List(_) => RustExpr::MethodCall {
-            receiver: Box::new(RustExpr::MethodCall {
-                receiver: Box::new(lowered_iter),
-                method: "iter".to_string(),
-                args: vec![],
-            }),
+    let fallback_iter_expr = || {
+        lowered_iter_call
+            .clone()
+            .unwrap_or_else(|| lowered_iter.clone())
+    };
+    let iter_plan = crate::helpers::plan_iterator_ownership_with_element_hint(
+        iter_source,
+        Some(target_ty),
+    );
+    let apply_copy_clone_yield = |iter_expr: RustExpr| match iter_plan.yield_mode {
+        crate::helpers::YieldMode::Copy => RustExpr::MethodCall {
+            receiver: Box::new(iter_expr),
+            method: "copied".to_string(),
+            args: vec![],
+        },
+        crate::helpers::YieldMode::Clone => RustExpr::MethodCall {
+            receiver: Box::new(iter_expr),
             method: "cloned".to_string(),
             args: vec![],
         },
-        Type::Dict(_, _) => RustExpr::MethodCall {
-            receiver: Box::new(RustExpr::MethodCall {
+        crate::helpers::YieldMode::Move | crate::helpers::YieldMode::Borrow => iter_expr,
+    };
+    Some(match resolve_alias_type(iter_source.ty()) {
+        Type::List(_) | Type::Set(_) | Type::Iterable(_) => match iter_plan.source_access_mode {
+            crate::helpers::SourceAccessMode::Consume => RustExpr::MethodCall {
                 receiver: Box::new(lowered_iter),
-                method: "keys".to_string(),
+                method: "into_iter".to_string(),
                 args: vec![],
-            }),
-            method: "cloned".to_string(),
-            args: vec![],
+            },
+            crate::helpers::SourceAccessMode::Preserve => apply_copy_clone_yield(
+                RustExpr::MethodCall {
+                    receiver: Box::new(lowered_iter),
+                    method: "iter".to_string(),
+                    args: vec![],
+                },
+            ),
+        },
+        Type::Dict(_, _) => match iter_plan.source_access_mode {
+            crate::helpers::SourceAccessMode::Consume => RustExpr::MethodCall {
+                receiver: Box::new(lowered_iter),
+                method: "into_keys".to_string(),
+                args: vec![],
+            },
+            crate::helpers::SourceAccessMode::Preserve => apply_copy_clone_yield(
+                RustExpr::MethodCall {
+                    receiver: Box::new(lowered_iter),
+                    method: "keys".to_string(),
+                    args: vec![],
+                },
+            ),
         },
         Type::Str => RustExpr::MethodCall {
             receiver: Box::new(RustExpr::MethodCall {
@@ -2044,7 +2250,138 @@ fn try_lower_simple_for_iter_expr(iter: &HirExpr) -> Option<RustExpr> {
                 is_move: false,
             }],
         },
-        _ => lowered_iter,
+        Type::Bytes => match iter_plan.source_access_mode {
+            crate::helpers::SourceAccessMode::Consume => RustExpr::MethodCall {
+                receiver: Box::new(RustExpr::MethodCall {
+                    receiver: Box::new(lowered_iter),
+                    method: "into_iter".to_string(),
+                    args: vec![],
+                }),
+                method: "map".to_string(),
+                args: vec![RustExpr::Closure {
+                    params: vec![RustParam::Named {
+                        name: "__byte".to_string(),
+                        ty: RustType::Named("_".to_string()),
+                    }],
+                    body: Box::new(RustExpr::Cast {
+                        expr: Box::new(RustExpr::Ident("__byte".to_string())),
+                        ty: RustType::I64,
+                    }),
+                    is_move: false,
+                }],
+            },
+            crate::helpers::SourceAccessMode::Preserve => RustExpr::MethodCall {
+                receiver: Box::new(RustExpr::MethodCall {
+                    receiver: Box::new(lowered_iter),
+                    method: "iter".to_string(),
+                    args: vec![],
+                }),
+                method: "map".to_string(),
+                args: vec![RustExpr::Closure {
+                    params: vec![RustParam::Named {
+                        name: "__byte".to_string(),
+                        ty: RustType::Named("_".to_string()),
+                    }],
+                    body: Box::new(RustExpr::Cast {
+                        expr: Box::new(RustExpr::Deref(Box::new(RustExpr::Ident(
+                            "__byte".to_string(),
+                        )))),
+                        ty: RustType::I64,
+                    }),
+                    is_move: false,
+                }],
+            },
+        },
+        Type::Tuple(elems) if !elems.is_empty() && elems.iter().all(|elem| elem == &elems[0]) => {
+            let tuple_binding = "__sifr_tuple_iter_src".to_string();
+            let tuple_items = (0..elems.len())
+                .map(|index| {
+                    let field_expr = RustExpr::Field {
+                        expr: Box::new(RustExpr::Ident(tuple_binding.clone())),
+                        field: index.to_string(),
+                    };
+                    match iter_plan.yield_mode {
+                        crate::helpers::YieldMode::Copy | crate::helpers::YieldMode::Move => {
+                            field_expr
+                        }
+                        crate::helpers::YieldMode::Clone | crate::helpers::YieldMode::Borrow => {
+                            RustExpr::MethodCall {
+                                receiver: Box::new(field_expr),
+                                method: "clone".to_string(),
+                                args: vec![],
+                            }
+                        }
+                    }
+                })
+                .collect();
+            RustExpr::Block {
+                stmts: vec![RustStmt::Let {
+                    mutable: false,
+                    name: tuple_binding,
+                    ty: None,
+                    value: match iter_plan.source_access_mode {
+                        crate::helpers::SourceAccessMode::Preserve => RustExpr::MethodCall {
+                            receiver: Box::new(RustExpr::Paren(Box::new(lowered_iter))),
+                            method: "clone".to_string(),
+                            args: vec![],
+                        },
+                        crate::helpers::SourceAccessMode::Consume => lowered_iter,
+                    },
+                }],
+                expr: Some(Box::new(RustExpr::MethodCall {
+                    receiver: Box::new(RustExpr::Vec(tuple_items)),
+                    method: "into_iter".to_string(),
+                    args: vec![],
+                })),
+            }
+        }
+        Type::Class { name, methods, .. } => {
+            let class_source = match iter_plan.source_access_mode {
+                crate::helpers::SourceAccessMode::Preserve => RustExpr::MethodCall {
+                    receiver: Box::new(RustExpr::Paren(Box::new(lowered_iter.clone()))),
+                    method: "clone".to_string(),
+                    args: vec![],
+                },
+                crate::helpers::SourceAccessMode::Consume => lowered_iter.clone(),
+            };
+            if let Some(iter_ft) = class_method_signature(methods, "__iter__") {
+                if iter_ft.params.is_empty() {
+                    let iter_call = RustExpr::MethodCall {
+                        receiver: Box::new(class_source.clone()),
+                        method: "__iter__".to_string(),
+                        args: vec![],
+                    };
+                    if matches!(
+                        iter_ft.return_type.as_ref().resolve_alias(),
+                        Type::Class { name: ret_name, .. } if ret_name == name
+                    ) && class_has_next(methods)
+                    {
+                        class_next_iter_expr(iter_call)
+                    } else if let Type::Class {
+                        methods: ret_methods,
+                        ..
+                    } = iter_ft.return_type.as_ref().resolve_alias()
+                    {
+                        if class_has_next(ret_methods) {
+                            class_next_iter_expr(iter_call)
+                        } else {
+                            iter_call
+                        }
+                    } else {
+                        iter_call
+                    }
+                } else if class_has_next(methods) {
+                    class_next_iter_expr(class_source)
+                } else {
+                    fallback_iter_expr()
+                }
+            } else if class_has_next(methods) {
+                class_next_iter_expr(class_source)
+            } else {
+                fallback_iter_expr()
+            }
+        }
+        _ => fallback_iter_expr(),
     })
 }
 
@@ -2342,7 +2679,9 @@ fn try_lower_condition_index_operand_expr(
     result_ty: &Type,
 ) -> Option<RustExpr> {
     match resolve_alias_type(object.ty()) {
-        Type::Dict(_, _) => {
+        Type::Dict(_, value_ty) => {
+            let projection_method =
+                crate::helpers::option_projection_method_for_owned_type(value_ty.as_ref());
             let lowered_key = if let HirExpr::StringLiteral(value) = index {
                 RustExpr::Ident(format!("{value:?}"))
             } else {
@@ -2351,37 +2690,62 @@ fn try_lower_condition_index_operand_expr(
                     expr: Box::new(try_lower_leaf_or_name_expr(index)?),
                 }
             };
-            Some(RustExpr::MethodCall {
+            let lowered_get = RustExpr::MethodCall {
                 receiver: Box::new(RustExpr::MethodCall {
                     receiver: Box::new(try_lower_leaf_or_name_expr(object)?),
                     method: "get".to_string(),
                     args: vec![lowered_key],
                 }),
-                method: "cloned".to_string(),
+                method: projection_method.to_string(),
                 args: vec![],
-            })
+            };
+            if is_option_like_type(value_ty.as_ref()) {
+                Some(RustExpr::MethodCall {
+                    receiver: Box::new(lowered_get),
+                    method: "and_then".to_string(),
+                    args: vec![RustExpr::Closure {
+                        params: vec![RustParam::Named {
+                            name: "__v".to_string(),
+                            ty: RustType::Named("_".to_string()),
+                        }],
+                        body: Box::new(RustExpr::Ident("__v".to_string())),
+                        is_move: false,
+                    }],
+                })
+            } else {
+                Some(lowered_get)
+            }
         }
-        Type::List(_) if !is_option_like_type(result_ty) => {
-            Some(RustExpr::Clone(Box::new(RustExpr::Index {
+        Type::List(element_ty) if !is_option_like_type(result_ty) => {
+            let indexed_expr = RustExpr::Index {
                 expr: Box::new(try_lower_leaf_or_name_expr(object)?),
                 index: Box::new(RustExpr::Cast {
                     expr: Box::new(try_lower_leaf_or_name_expr(index)?),
                     ty: RustType::Named("usize".to_string()),
                 }),
-            })))
+            };
+            Some(if crate::helpers::is_copy_type_for_codegen(element_ty.as_ref()) {
+                indexed_expr
+            } else {
+                RustExpr::Clone(Box::new(indexed_expr))
+            })
         }
-        Type::List(_) => Some(RustExpr::MethodCall {
-            receiver: Box::new(RustExpr::MethodCall {
-                receiver: Box::new(try_lower_leaf_or_name_expr(object)?),
-                method: "get".to_string(),
-                args: vec![RustExpr::Cast {
-                    expr: Box::new(try_lower_leaf_or_name_expr(index)?),
-                    ty: RustType::Named("usize".to_string()),
-                }],
-            }),
-            method: "cloned".to_string(),
-            args: vec![],
-        }),
+        Type::List(element_ty) => {
+            let projection_method =
+                crate::helpers::option_projection_method_for_owned_type(element_ty.as_ref());
+            Some(RustExpr::MethodCall {
+                receiver: Box::new(RustExpr::MethodCall {
+                    receiver: Box::new(try_lower_leaf_or_name_expr(object)?),
+                    method: "get".to_string(),
+                    args: vec![RustExpr::Cast {
+                        expr: Box::new(try_lower_leaf_or_name_expr(index)?),
+                        ty: RustType::Named("usize".to_string()),
+                    }],
+                }),
+                method: projection_method.to_string(),
+                args: vec![],
+            })
+        }
         Type::Str if !is_option_like_type(result_ty) => Some(RustExpr::Block {
             stmts: vec![RustStmt::LetElse {
                 pattern: "Some(__indexed_char)".to_string(),
@@ -2561,6 +2925,20 @@ fn try_lower_leaf_or_name_expr(expr: &HirExpr) -> Option<RustExpr> {
     if let Some(lowered) = try_lower_leaf_expr(expr) {
         return Some(lowered);
     }
+    if let HirExpr::Lambda { params, body, .. } = expr {
+        let lowered_params = params
+            .iter()
+            .map(|param| RustParam::Named {
+                name: param.name.clone(),
+                ty: RustType::Named("_".to_string()),
+            })
+            .collect::<Vec<_>>();
+        return Some(RustExpr::Closure {
+            params: lowered_params,
+            body: Box::new(try_lower_leaf_or_name_expr(body)?),
+            is_move: false,
+        });
+    }
     if let Some(lowered) = try_lower_stmt_index_expr(expr) {
         return Some(lowered);
     }
@@ -2580,7 +2958,9 @@ fn try_lower_stmt_index_expr(expr: &HirExpr) -> Option<RustExpr> {
         return None;
     }
     match resolve_alias_type(object.ty()) {
-        Type::Dict(_, _) => {
+        Type::Dict(_, value_ty) => {
+            let projection_method =
+                crate::helpers::option_projection_method_for_owned_type(value_ty.as_ref());
             let lowered_key = if let HirExpr::StringLiteral(value) = index.as_ref() {
                 RustExpr::Ident(format!("{value:?}"))
             } else {
@@ -2589,28 +2969,48 @@ fn try_lower_stmt_index_expr(expr: &HirExpr) -> Option<RustExpr> {
                     expr: Box::new(try_lower_leaf_or_name_expr(index)?),
                 }
             };
-            Some(RustExpr::MethodCall {
+            let lowered_get = RustExpr::MethodCall {
                 receiver: Box::new(RustExpr::MethodCall {
                     receiver: Box::new(try_lower_leaf_or_name_expr(object)?),
                     method: "get".to_string(),
                     args: vec![lowered_key],
                 }),
-                method: "cloned".to_string(),
+                method: projection_method.to_string(),
+                args: vec![],
+            };
+            if is_option_like_type(value_ty.as_ref()) {
+                Some(RustExpr::MethodCall {
+                    receiver: Box::new(lowered_get),
+                    method: "and_then".to_string(),
+                    args: vec![RustExpr::Closure {
+                        params: vec![RustParam::Named {
+                            name: "__v".to_string(),
+                            ty: RustType::Named("_".to_string()),
+                        }],
+                        body: Box::new(RustExpr::Ident("__v".to_string())),
+                        is_move: false,
+                    }],
+                })
+            } else {
+                Some(lowered_get)
+            }
+        }
+        Type::List(element_ty) => {
+            let projection_method =
+                crate::helpers::option_projection_method_for_owned_type(element_ty.as_ref());
+            Some(RustExpr::MethodCall {
+                receiver: Box::new(RustExpr::MethodCall {
+                    receiver: Box::new(try_lower_leaf_or_name_expr(object)?),
+                    method: "get".to_string(),
+                    args: vec![RustExpr::Cast {
+                        expr: Box::new(try_lower_leaf_or_name_expr(index)?),
+                        ty: RustType::Named("usize".to_string()),
+                    }],
+                }),
+                method: projection_method.to_string(),
                 args: vec![],
             })
         }
-        Type::List(_) => Some(RustExpr::MethodCall {
-            receiver: Box::new(RustExpr::MethodCall {
-                receiver: Box::new(try_lower_leaf_or_name_expr(object)?),
-                method: "get".to_string(),
-                args: vec![RustExpr::Cast {
-                    expr: Box::new(try_lower_leaf_or_name_expr(index)?),
-                    ty: RustType::Named("usize".to_string()),
-                }],
-            }),
-            method: "cloned".to_string(),
-            args: vec![],
-        }),
         _ => None,
     }
 }
@@ -3138,6 +3538,12 @@ fn try_lower_simple_return_stmt(
     if matches!(value.ty(), Type::TypeVar(_)) {
         return None;
     }
+    if ctx
+        .return_type
+        .is_some_and(|ty| matches!(resolve_alias_type(ty), Type::Iterable(_)))
+    {
+        return None;
+    }
 
     if option_return {
         if is_option_like_type(value.ty()) && !is_none_type(value.ty()) {
@@ -3494,12 +3900,11 @@ mod tests {
                         if matches!(func.as_ref(), RustExpr::Path(path) if path == &vec!["Some".to_string()])
                             && matches!(
                                 args.as_slice(),
-                                [RustExpr::Clone(inner)]
-                                    if matches!(inner.as_ref(), RustExpr::Index { .. })
+                                [RustExpr::Index { .. }]
                             )
                 ) && matches!(
                     right.as_ref(),
-                    RustExpr::MethodCall { method, .. } if method == "cloned"
+                    RustExpr::MethodCall { method, .. } if method == "copied"
                 )
         ));
     }
@@ -3557,7 +3962,18 @@ mod tests {
     #[test]
     fn lowers_simple_tuple_unpack_stmt() {
         let tuple_unpack = HirStmt::TupleUnpack {
-            targets: vec![("a".to_string(), Type::Int), ("b".to_string(), Type::Bool)],
+            targets: vec![
+                sifr_hir::HirTupleTarget {
+                    name: "a".to_string(),
+                    ty: Type::Int,
+                    rebind_existing: false,
+                },
+                sifr_hir::HirTupleTarget {
+                    name: "b".to_string(),
+                    ty: Type::Bool,
+                    rebind_existing: false,
+                },
+            ],
             value: HirExpr::TupleLiteral {
                 elements: vec![HirExpr::IntLiteral(1), HirExpr::BoolLiteral(true)],
                 ty: Type::Tuple(vec![Type::Int, Type::Bool]),
@@ -3578,7 +3994,18 @@ mod tests {
     #[test]
     fn lowers_simple_tuple_unpack_stmt_with_mutated_bindings() {
         let tuple_unpack = HirStmt::TupleUnpack {
-            targets: vec![("l".to_string(), Type::Int), ("r".to_string(), Type::Int)],
+            targets: vec![
+                sifr_hir::HirTupleTarget {
+                    name: "l".to_string(),
+                    ty: Type::Int,
+                    rebind_existing: false,
+                },
+                sifr_hir::HirTupleTarget {
+                    name: "r".to_string(),
+                    ty: Type::Int,
+                    rebind_existing: false,
+                },
+            ],
             value: HirExpr::TupleLiteral {
                 elements: vec![HirExpr::IntLiteral(0), HirExpr::IntLiteral(4)],
                 ty: Type::Tuple(vec![Type::Int, Type::Int]),
@@ -3600,7 +4027,18 @@ mod tests {
     #[test]
     fn does_not_lower_tuple_unpack_with_non_leaf_value() {
         let tuple_unpack = HirStmt::TupleUnpack {
-            targets: vec![("a".to_string(), Type::Int), ("b".to_string(), Type::Bool)],
+            targets: vec![
+                sifr_hir::HirTupleTarget {
+                    name: "a".to_string(),
+                    ty: Type::Int,
+                    rebind_existing: false,
+                },
+                sifr_hir::HirTupleTarget {
+                    name: "b".to_string(),
+                    ty: Type::Bool,
+                    rebind_existing: false,
+                },
+            ],
             value: HirExpr::Call {
                 func: "pair".to_string(),
                 args: vec![],
@@ -3612,6 +4050,53 @@ mod tests {
             try_lower_simple_stmt(&tuple_unpack, false, &HashSet::new(), &HashSet::new(),)
                 .is_none()
         );
+    }
+
+    #[test]
+    fn lowers_tuple_unpack_with_rebind_targets_to_temp_and_assigns() {
+        let tuple_unpack = HirStmt::TupleUnpack {
+            targets: vec![
+                sifr_hir::HirTupleTarget {
+                    name: "left".to_string(),
+                    ty: Type::Int,
+                    rebind_existing: true,
+                },
+                sifr_hir::HirTupleTarget {
+                    name: "right".to_string(),
+                    ty: Type::Int,
+                    rebind_existing: false,
+                },
+            ],
+            value: HirExpr::TupleLiteral {
+                elements: vec![HirExpr::IntLiteral(1), HirExpr::IntLiteral(2)],
+                ty: Type::Tuple(vec![Type::Int, Type::Int]),
+            },
+        };
+
+        let lowered = lower_tuple_unpack_targets(
+            match &tuple_unpack {
+                HirStmt::TupleUnpack { targets, .. } => targets,
+                _ => unreachable!(),
+            },
+            RustExpr::Tuple(vec![
+                RustExpr::Literal(RustLiteral::Int(1)),
+                RustExpr::Literal(RustLiteral::Int(2)),
+            ]),
+            &HashSet::new(),
+        );
+
+        assert!(matches!(
+            lowered.as_slice(),
+            [
+                RustStmt::LetPattern { pattern, .. },
+                RustStmt::Assign { target: RustExpr::Ident(left), value: RustExpr::Ident(tmp0) },
+                RustStmt::Let { name: right, value: RustExpr::Ident(tmp1), .. }
+            ] if pattern == "(__sifr_tuple_unpack_0, __sifr_tuple_unpack_1)"
+                && left == "left"
+                && right == "right"
+                && tmp0 == "__sifr_tuple_unpack_0"
+                && tmp1 == "__sifr_tuple_unpack_1"
+        ));
     }
 
     #[test]
@@ -7399,7 +7884,7 @@ mod tests {
     }
 
     #[test]
-    fn lowers_simple_for_with_name_iter() {
+    fn lowers_simple_for_with_name_iter_using_copy_mode() {
         let for_stmt = HirStmt::For {
             target: "i".to_string(),
             target_ty: Type::Int,
@@ -7435,7 +7920,7 @@ mod tests {
                         && method == "iter"
                         && args.is_empty()
                 )
-                && method == "cloned"
+                && method == "copied"
                 && args.is_empty()
         ));
     }
@@ -7475,7 +7960,7 @@ mod tests {
                     && method == "keys"
                     && args.is_empty()
             )
-                && method == "cloned"
+                && method == "copied"
                 && args.is_empty()
         ));
     }
@@ -7558,7 +8043,7 @@ mod tests {
                     && method == "iter"
                     && args.is_empty()
             )
-                && method == "cloned"
+                && method == "copied"
                 && args.is_empty()
         ));
         assert!(matches!(lowered[2], RustStmt::If { .. }));
@@ -7993,6 +8478,38 @@ mod tests {
         assert!(matches!(
             lowered[0],
             RustStmt::LocalFn { ref name, .. } if name == "inner"
+        ));
+    }
+
+    #[test]
+    fn lowers_mutating_capture_nested_function_to_mutable_closure_binding() {
+        let stmt = HirStmt::NestedFunction {
+            func: HirFunction {
+                name: "inner".to_string(),
+                params: vec![],
+                return_type: Type::None,
+                body: vec![HirStmt::AugAssign {
+                    name: "total".to_string(),
+                    op: "+=".to_string(),
+                    value: HirExpr::IntLiteral(1),
+                }],
+                method_kind: MethodKind::Regular,
+                decorators: vec![],
+                type_params: vec![],
+            },
+        };
+
+        let lowered = try_lower_simple_stmt(&stmt, false, &HashSet::new(), &HashSet::new())
+            .expect("mutating nested function lowered");
+
+        assert!(matches!(
+            lowered[0],
+            RustStmt::Let {
+                mutable: true,
+                ref name,
+                value: RustExpr::ClosureBlock { .. },
+                ..
+            } if name == "inner"
         ));
     }
 

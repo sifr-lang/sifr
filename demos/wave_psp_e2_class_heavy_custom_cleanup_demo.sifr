@@ -1,0 +1,50 @@
+from sifr.argparse import ArgumentParser
+from sifr.ipaddress import ip_address, IPv4Address, AddressValueError
+from sifr.uuid import uuid4_obj, uuid_from_hex, UUID
+from sifr.graphlib import TopologicalSorter, CycleError
+
+
+def main():
+    parser: ArgumentParser = ArgumentParser("wave-e2-demo")
+    parser.add_argument("--strict", "strict", "store_true")
+    parser.add_argument("--mode", "mode", "store", "safe")
+    parser.add_argument("entry", "entry", "store", "demo.sifr")
+    parsed = parser.parse_args(["--strict", "--mode", "parity", "main.sifr"])
+    print("argparse.strict = " + str(parsed.get_bool("strict", False)))
+    print("argparse.mode = " + parsed.get("mode", ""))
+    print("argparse.entry = " + parsed.get("entry", ""))
+    parsed_inline = parser.parse_args(["--mode=inline", "--", "--literal.sifr"])
+    print("argparse.inline = " + parsed_inline.get("mode", ""))
+    print("argparse.literal = " + parsed_inline.get("entry", ""))
+    parsed_missing = parser.parse_args(["--mode", "--strict", "fallback.sifr"])
+    print("argparse.missing_mode = " + parsed_missing.get("mode", ""))
+    print("argparse.missing_strict = " + str(parsed_missing.get_bool("strict", False)))
+
+    try:
+        addr: IPv4Address = ip_address("8.8.8.8")
+        print("ipaddress.value = " + addr.to_str() + " global=" + str(addr.is_global()))
+        link_local: IPv4Address = ip_address("169.254.10.20")
+        print("ipaddress.link_local = " + str(link_local.is_link_local()) + " global=" + str(link_local.is_global()))
+        multicast: IPv4Address = ip_address("224.0.0.1")
+        print("ipaddress.multicast_global = " + str(multicast.is_global()))
+    except AddressValueError as e:
+        print("ipaddress.error = " + e.message)
+
+    generated = uuid4_obj()
+    print("uuid.version = " + str(generated.version()) + " text=" + generated.to_str())
+    try:
+        parsed_curly: UUID = uuid_from_hex("{550E8400-E29B-41D4-A716-446655440000}")
+        print("uuid.curly.parse = " + parsed_curly.to_str())
+    except ValueError as e:
+        print("uuid.error = " + e.message)
+
+    sorter: TopologicalSorter = TopologicalSorter()
+    sorter.add_many(50, [30, 40])
+    sorter.add(30, 10)
+    sorter.add(40, 10)
+    sorter.add_many(10, [])
+    try:
+        order: list[int] = sorter.static_order()
+        print("graphlib.order = " + str(order))
+    except CycleError as e:
+        print("graphlib.error = " + e.message)

@@ -1,29 +1,480 @@
-# sifr.random — Random number generation (generic)
-from _sifr.crypto import random_int, random_float, random_choice, random_uniform, random_shuffle, random_sample, random_randrange, random_gauss
+from _sifr.crypto import random_float, random_gauss, random_int, random_randrange, random_uniform
+from _sifr.crypto import random_module_state_words, random_module_state_index, random_module_state_gauss_next, random_module_set_state
+from _sifr.time import time_now
+from sifr.bytes import bytes_from_ints
+from sifr.math import cos, log, pi, sin, sqrt
+
 T = TypeVar("T")
 
-def randint(min: int, max: int) -> Result[int, ValueError]:
-    if min > max:
-        raise ValueError("randint: min must be <= max")
-    return random_int(min, max)
+_MT_N: int = 624
+_MT_M: int = 397
+_MT_MATRIX_A: int = 2567483615
+_MT_UPPER_MASK: int = 2147483648
+_MT_LOWER_MASK: int = 2147483647
+_MT_F: int = 1812433253
+_MT_WORD_MASK: int = 4294967295
+
+
+def _state_word_at(words: list[int], index: int) -> int:
+    value: int | None = words[index]
+    if value is not None:
+        return value
+    return 0
+
+
+def _clone_words(words: list[int]) -> list[int]:
+    copied: list[int] = []
+    for word in words:
+        copied.append(word)
+    return copied
+
+
+def _normalize_seed_input(seed_value: int | None) -> int:
+    if seed_value is not None:
+        return seed_value
+    return int(time_now() * 1000000.0)
+
+
+def _seed_words_from_seed(seed_value: int) -> list[int]:
+    words: list[int] = []
+    words.append(seed_value & _MT_WORD_MASK)
+
+    i: int = 1
+    while i < _MT_N:
+        prev: int = _state_word_at(words, i - 1)
+        next_word: int = (_MT_F * (prev ^ (prev >> 30)) + i) & _MT_WORD_MASK
+        words.append(next_word)
+        i = i + 1
+
+    return words
+
+
+def _build_state_from_module_storage() -> RandomState:
+    return RandomState(
+        3,
+        random_module_state_words(),
+        random_module_state_index(),
+        random_module_state_gauss_next(),
+    )
+
+
+def _store_state_into_module_storage(state: RandomState) -> None:
+    _set_result: Result[None, ValueError] = random_module_set_state(
+        _clone_words(state.state_words),
+        state.index,
+        state.gauss_next,
+    )
+    _ = _set_result
+
+
+def _ensure_module_state_initialized() -> None:
+    words: list[int] = random_module_state_words()
+    if len(words) == _MT_N:
+        return
+    bootstrap: Random = Random(5489)
+    _store_state_into_module_storage(bootstrap.getstate())
+
+
+class RandomState:
+    version: int
+    state_words: list[int]
+    index: int
+    gauss_next: float | None
+
+    def __init__(self, version: int, state_words: list[int], index: int, gauss_next: float | None) -> None:
+        self.version = version
+        self.state_words = state_words
+        self.index = index
+        self.gauss_next = gauss_next
+
+
+class Random:
+    _state_words: list[int]
+    _index: int
+    _gauss_next: float | None
+
+    def __init__(self, seed_value: int | None = None) -> None:
+        normalized_seed: int = _normalize_seed_input(seed_value)
+        self._state_words = _seed_words_from_seed(normalized_seed)
+        self._index = _MT_N
+        self._gauss_next = None
+
+    def seed(self, seed_value: int | None = None) -> None:
+        normalized_seed: int = _normalize_seed_input(seed_value)
+        self._state_words = _seed_words_from_seed(normalized_seed)
+        self._index = _MT_N
+        self._gauss_next = None
+
+    def _twist(self) -> None:
+        i: int = 0
+        while i < _MT_N:
+            y: int = (
+                (_state_word_at(self._state_words, i) & _MT_UPPER_MASK)
+                + (_state_word_at(self._state_words, (i + 1) % _MT_N) & _MT_LOWER_MASK)
+            )
+            x_a: int = y >> 1
+            if y % 2 != 0:
+                x_a = x_a ^ _MT_MATRIX_A
+
+            new_word: int = _state_word_at(self._state_words, (i + _MT_M) % _MT_N) ^ x_a
+            self._state_words[i] = new_word & _MT_WORD_MASK
+            i = i + 1
+
+        self._index = 0
+
+    def _next_u32(self) -> int:
+        if self._index >= _MT_N:
+            self._twist()
+
+        y: int = _state_word_at(self._state_words, self._index)
+        self._index = self._index + 1
+
+        y = y ^ (y >> 11)
+        y = y ^ ((y << 7) & 2636928640)
+        y = y ^ ((y << 15) & 4022730752)
+        y = y ^ (y >> 18)
+        return y & _MT_WORD_MASK
+
+    def random(self) -> float:
+        return float(self._next_u32()) / 4294967296.0
+
+    def uniform(self, minimum: float, maximum: float) -> float:
+        return minimum + (maximum - minimum) * self.random()
+
+    def randrange(self, start: int, stop: int | None = None, step: int = 1) -> Result[int, ValueError]:
+        if step == 0:
+            raise ValueError("randrange: step must not be zero")
+
+        actual_start: int = start
+        actual_stop: int = start
+        if stop is None:
+            actual_start = 0
+        else:
+            actual_stop = stop
+
+        width: int = actual_stop - actual_start
+        if step > 0:
+            if width <= 0:
+                raise ValueError("randrange: empty range")
+        else:
+            if width >= 0:
+                raise ValueError("randrange: empty range")
+
+        abs_width: int = width
+        if abs_width < 0:
+            abs_width = 0 - abs_width
+        abs_step: int = step
+        if abs_step < 0:
+            abs_step = 0 - abs_step
+
+        count: int = (abs_width + abs_step - 1) // abs_step
+        if count <= 0:
+            raise ValueError("randrange: empty range")
+
+        pick: int = self._next_u32() % count
+        return actual_start + pick * step
+
+    def randint(self, minimum: int, maximum: int) -> Result[int, ValueError]:
+        if minimum > maximum:
+            raise ValueError("randint: min must be <= max")
+        return self.randrange(minimum, maximum + 1, 1)
+
+    def getrandbits(self, k: int) -> Result[int, ValueError]:
+        if k < 0:
+            raise ValueError("getrandbits: number of bits must be >= 0")
+
+        result: int = 0
+        bits_left: int = k
+        while bits_left > 0:
+            word: int = self._next_u32()
+            take: int = 32
+            if bits_left < 32:
+                take = bits_left
+
+            mask: int = (1 << take) - 1
+            result = (result << take) | (word & mask)
+            bits_left = bits_left - take
+        return result
+
+    def randbytes(self, n: int) -> Result[bytes, ValueError]:
+        if n < 0:
+            raise ValueError("randbytes: n must be >= 0")
+
+        values: list[int] = []
+        i: int = 0
+        while i < n:
+            byte_value: int = self._next_u32() & 255
+            values.append(byte_value)
+            i = i + 1
+        return bytes_from_ints(values)
+
+    def gauss(self, mu: float, sigma: float) -> float:
+        cached: float | None = self._gauss_next
+        if cached is not None:
+            self._gauss_next = None
+            return mu + sigma * cached
+
+        u1: float = self.random()
+        if u1 <= 0.0:
+            u1 = 0.000000000001
+        u2: float = self.random()
+
+        radius: float = sqrt(-2.0 * log(u1))
+        theta: float = 2.0 * pi * u2
+        z0: float = radius * cos(theta)
+        z1: float = radius * sin(theta)
+        next_cached: float | None = z1
+        self._gauss_next = next_cached
+        return mu + sigma * z0
+
+    def getstate(self) -> RandomState:
+        return RandomState(3, _clone_words(self._state_words), self._index, self._gauss_next)
+
+    def setstate(self, state: RandomState) -> Result[None, ValueError]:
+        if state.version != 3:
+            raise ValueError("setstate: unsupported version")
+        if len(state.state_words) != _MT_N:
+            raise ValueError("setstate: state_words must have length 624")
+        if state.index < 0 or state.index > _MT_N:
+            raise ValueError("setstate: index must be in range [0, 624]")
+
+        normalized: list[int] = []
+        for word in state.state_words:
+            if word < 0 or word > _MT_WORD_MASK:
+                raise ValueError("setstate: word out of range")
+            normalized.append(word & _MT_WORD_MASK)
+
+        self._state_words = normalized
+        self._index = state.index
+        self._gauss_next = state.gauss_next
+        return None
+
+
+class SystemRandom:
+    def __init__(self) -> None:
+        pass
+
+    def seed(self, _seed_value: int | None = None) -> None:
+        return
+
+    def getstate(self) -> Result[RandomState, ValueError]:
+        raise ValueError("SystemRandom does not support getstate")
+
+    def setstate(self, _state: RandomState) -> Result[None, ValueError]:
+        raise ValueError("SystemRandom does not support setstate")
+
+    def random(self) -> float:
+        return random_float()
+
+    def uniform(self, minimum: float, maximum: float) -> float:
+        return random_uniform(minimum, maximum)
+
+    def randrange(self, start: int, stop: int | None = None, step: int = 1) -> Result[int, ValueError]:
+        actual_start: int = start
+        actual_stop: int = start
+        if stop is None:
+            actual_start = 0
+        else:
+            actual_stop = stop
+        return random_randrange(actual_start, actual_stop, step)
+
+    def randint(self, minimum: int, maximum: int) -> Result[int, ValueError]:
+        if minimum > maximum:
+            raise ValueError("randint: min must be <= max")
+        return random_int(minimum, maximum)
+
+    def getrandbits(self, k: int) -> Result[int, ValueError]:
+        if k < 0:
+            raise ValueError("getrandbits: number of bits must be >= 0")
+
+        result: int = 0
+        i: int = 0
+        while i < k:
+            bit: int = 0
+            if random_float() >= 0.5:
+                bit = 1
+            result = result * 2 + bit
+            i = i + 1
+        return result
+
+    def gauss(self, mu: float, sigma: float) -> float:
+        return random_gauss(mu, sigma)
+
+    def randbytes(self, n: int) -> Result[bytes, ValueError]:
+        if n < 0:
+            raise ValueError("randbytes: n must be >= 0")
+        values: list[int] = []
+        i: int = 0
+        while i < n:
+            value: int = int(random_float() * 256.0)
+            if value > 255:
+                value = 255
+            values.append(value)
+            i = i + 1
+        return bytes_from_ints(values)
+
+
+def _module_random() -> Random:
+    _ensure_module_state_initialized()
+    r: Random = Random(0)
+    try:
+        _set_result: Result[None, ValueError] = r.setstate(_build_state_from_module_storage())
+        _ = _set_result
+    except ValueError as e:
+        _ = e.message
+    return r
+
+
+def _sync_module_random(mut generator: Random) -> None:
+    _store_state_into_module_storage(generator.getstate())
+
+
+def seed(seed_value: int | None = None) -> None:
+    generator: Random = Random(seed_value)
+    _sync_module_random(generator)
+
+
+def getstate() -> RandomState:
+    _ensure_module_state_initialized()
+    return _build_state_from_module_storage()
+
+
+def setstate(state: RandomState) -> Result[None, ValueError]:
+    probe: Random = Random(0)
+    result: Result[None, ValueError] = probe.setstate(state)
+    _sync_module_random(probe)
+    return result
+
+
+def randint(minimum: int, maximum: int) -> Result[int, ValueError]:
+    generator: Random = _module_random()
+    value: Result[int, ValueError] = generator.randint(minimum, maximum)
+    _sync_module_random(generator)
+    return value
+
 
 def random() -> float:
-    return random_float()
+    generator: Random = _module_random()
+    value: float = generator.random()
+    _sync_module_random(generator)
+    return value
 
-def uniform(min: float, max: float) -> float:
-    return random_uniform(min, max)
 
-def shuffle(items: list[T]) -> list[T]:
-    return random_shuffle(items)
+def uniform(minimum: float, maximum: float) -> float:
+    generator: Random = _module_random()
+    value: float = generator.uniform(minimum, maximum)
+    _sync_module_random(generator)
+    return value
 
-def sample(items: list[T], k: int) -> Result[list[T], ValueError]:
-    return random_sample(items, k)
 
-def randrange(start: int, stop: int, step: int) -> Result[int, ValueError]:
-    return random_randrange(start, stop, step)
+def randrange(start: int, stop: int | None = None, step: int = 1) -> Result[int, ValueError]:
+    generator: Random = _module_random()
+    value: Result[int, ValueError] = generator.randrange(start, stop, step)
+    _sync_module_random(generator)
+    return value
+
+
+def getrandbits(k: int) -> Result[int, ValueError]:
+    generator: Random = _module_random()
+    value: Result[int, ValueError] = generator.getrandbits(k)
+    _sync_module_random(generator)
+    return value
+
 
 def gauss(mu: float, sigma: float) -> float:
-    return random_gauss(mu, sigma)
+    generator: Random = _module_random()
+    value: float = generator.gauss(mu, sigma)
+    _sync_module_random(generator)
+    return value
 
-def choice(items: list[T]) -> T:
-    return random_choice(items)
+
+def choice[T](items: list[T]) -> Result[T, ValueError]:
+    if len(items) == 0:
+        raise ValueError("choice: items must not be empty")
+
+    generator: Random = _module_random()
+    index: int = generator._next_u32() % len(items)
+    picked: T | None = items[index]
+    _sync_module_random(generator)
+
+    if picked is not None:
+        return picked
+    raise ValueError("choice: index out of range")
+
+
+def choices[T](items: list[T], k: int = 1) -> Result[list[T], ValueError]:
+    if k <= 0:
+        return []
+    if len(items) == 0:
+        raise ValueError("choices: items must not be empty")
+
+    generator: Random = _module_random()
+    result: list[T] = []
+    i: int = 0
+    while i < k:
+        index: int = generator._next_u32() % len(items)
+        picked: T | None = items[index]
+        if picked is not None:
+            result.append(picked)
+        else:
+            raise ValueError("choices: index out of range")
+        i = i + 1
+
+    _sync_module_random(generator)
+    return result
+
+
+def sample[T](items: list[T], k: int) -> Result[list[T], ValueError]:
+    if k < 0:
+        raise ValueError("sample: k must be >= 0")
+    if k > len(items):
+        raise ValueError("sample larger than population")
+
+    pool: list[T] = []
+    for item in items:
+        pool.append(item)
+
+    generator: Random = _module_random()
+    result: list[T] = []
+    remaining: int = len(pool)
+    i: int = 0
+    while i < k:
+        pick_index: int = generator._next_u32() % remaining
+        picked: T | None = pool[pick_index]
+        if picked is not None:
+            result.append(picked)
+
+        last: T | None = pool[remaining - 1]
+        if last is not None:
+            pool[pick_index] = last
+
+        remaining = remaining - 1
+        i = i + 1
+
+    _sync_module_random(generator)
+    return result
+
+
+def shuffle[T](mut items: list[T]) -> None:
+    generator: Random = _module_random()
+    n: int = len(items)
+    if n > 1:
+        i: int = n - 1
+        while i > 0:
+            j: int = generator._next_u32() % (i + 1)
+            left: T | None = items[i]
+            right: T | None = items[j]
+            if left is not None:
+                if right is not None:
+                    items[i] = right
+                    items[j] = left
+            i = i - 1
+
+    _sync_module_random(generator)
+
+
+def randbytes(n: int) -> Result[bytes, ValueError]:
+    generator: Random = _module_random()
+    value: Result[bytes, ValueError] = generator.randbytes(n)
+    _sync_module_random(generator)
+    return value

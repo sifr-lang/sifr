@@ -2,6 +2,10 @@ use crate::hir_nodes::HirImport;
 use sifr_python_ast::{Expr, ExprCall};
 use sifr_type_system::{FunctionType, Type};
 
+use super::imported_defaults::{
+    import_callable_defaults, import_callable_vararg, import_class_method_defaults,
+    import_class_method_varargs,
+};
 use super::{collect_type_vars, ExternalDefs, LowerCtx};
 
 pub(super) fn resolve_python_compat_call_alias(
@@ -58,10 +62,10 @@ pub(super) fn ensure_synthetic_stdlib_import(
         if let Some(ft) = module_fns.get(member_name) {
             ctx.functions.insert(alias.clone(), ft.clone());
             if let Some(module_defaults) = externals.function_defaults.get(module_name) {
-                if let Some(defaults) = module_defaults.get(member_name) {
-                    ctx.function_defaults
-                        .insert(alias.clone(), defaults.clone());
-                }
+                import_callable_defaults(ctx, module_defaults, member_name, &alias);
+            }
+            if let Some(module_varargs) = externals.function_varargs.get(module_name) {
+                import_callable_vararg(ctx, module_varargs, member_name, &alias);
             }
             if let Some(module_gf) = externals.generic_functions.get(module_name) {
                 if let Some(type_vars) = module_gf.get(member_name) {
@@ -126,10 +130,10 @@ pub(super) fn ensure_synthetic_stdlib_import(
                     };
                     ctx.functions.insert(alias.clone(), ft);
                     if let Some(module_defaults) = externals.function_defaults.get(module_name) {
-                        if let Some(defaults) = module_defaults.get(member_name) {
-                            ctx.function_defaults
-                                .insert(alias.clone(), defaults.clone());
-                        }
+                        import_class_method_defaults(ctx, module_defaults, member_name, &alias);
+                    }
+                    if let Some(module_varargs) = externals.function_varargs.get(module_name) {
+                        import_class_method_varargs(ctx, module_varargs, member_name, &alias);
                     }
                 }
                 if let Some(module_bounds) = externals.type_param_bounds.get(module_name) {

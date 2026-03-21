@@ -1,5 +1,5 @@
 # Tests: for loop consumes generator lazily
-def squares(n: int) -> list[int]:
+def squares(n: int) -> Iterator[int]:
     i: int = 1
     while i <= n:
         yield i * i

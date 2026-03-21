@@ -1,5 +1,5 @@
 # Demo: milestone_codegen_structural_passes (RawCode-zero slice for datetime intrinsics)
-from sifr.datetime import now, today, from_timestamp
+from sifr.datetime import now, today, from_timestamp, datetime
 
 
 def main():
@@ -16,17 +16,17 @@ def main():
     assert str(f"today_has_dash = {today_has_dash}") == "today_has_dash = true"
 
     try:
-        epoch: str = from_timestamp(0.0)
-        print(f"from_timestamp_ok = {epoch}")
-        assert str(f"from_timestamp_ok = {epoch}") == "from_timestamp_ok = 1970-01-01T00:00:00"
+        epoch: datetime = from_timestamp(0.0)
+        epoch_text: str = epoch.isoformat()
+        print(f"from_timestamp_ok = {epoch_text}")
+        assert str(f"from_timestamp_ok = {epoch_text}") == "from_timestamp_ok = 1970-01-01T00:00:00"
     except ValueError as e:
         print(f"unexpected_error = {e.message}")
         assert str(f"unexpected_error = {e.message}") == "from_timestamp_invalid = invalid timestamp"
 
     try:
-        bad: str = from_timestamp(-99999999999999.0)
+        bad: datetime = from_timestamp(-99999999999999.0)
         print(f"from_timestamp_invalid_unexpected = {bad}")
     except ValueError as e:
         print(f"from_timestamp_invalid = {e.message}")
-
 

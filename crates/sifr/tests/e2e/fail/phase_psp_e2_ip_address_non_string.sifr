@@ -1,0 +1,6 @@
+from sifr.ipaddress import ip_address, IPv4Address
+
+
+def main():
+    _bad: IPv4Address = ip_address(12345)
+    _ = _bad.to_str()

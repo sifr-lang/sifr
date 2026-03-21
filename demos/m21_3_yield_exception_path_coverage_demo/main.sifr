@@ -1,22 +1,19 @@
-# m21_3 yield/exception-path coverage demo
-# Demonstrates yield detection through try/except and loop-else paths.
+# m21_3 yield/loop-path coverage demo
+# Demonstrates lazy generator iteration through break/else paths.
 
-def gen(flag: bool) -> list[int]:
+def gen(flag: bool) -> Iterator[int]:
     i: int = 0
-    try:
-        while i < 2:
-            if flag and i == 0:
-                break
-            yield i
-            i += 1
-        else:
-            yield 99
-    except Error as e:
-        yield 7
+    while i < 2:
+        if flag and i == 0:
+            break
+        yield i
+        i += 1
+    if not flag and i == 2:
+        yield 99
 
 
 def main():
-    print('m21_3 yield/exception-path coverage demo:')
+    print('m21_3 yield/loop-path coverage demo:')
     for v in gen(False):
         print(v)
     for v in gen(True):

@@ -78,7 +78,8 @@ def main():
     # --- pathlib.Path.glob ---
     tmp: Path = Path("/tmp")
     try:
-        matches: list[str] = tmp.glob("sifr_demo_*")
+        matches_it: Iterator[str] = tmp.glob("sifr_demo_*")
+        matches: list[str] = list(matches_it)
         print("glob found = " + str(len(matches) > 0))
     except IOError as e:
         print("glob error: " + e.message)
@@ -102,8 +103,11 @@ def main():
 
     # --- random.choice ---
     items: list[int] = [1, 2, 3, 4, 5]
-    picked: int = choice(items)
-    print("random choice ok = " + str(picked >= 1 and picked <= 5))
+    try:
+        picked: int = choice(items)
+        print("random choice ok = " + str(picked >= 1 and picked <= 5))
+    except ValueError as e:
+        print("random choice error: " + e.message)
 
     # --- logging.basicConfig sets global log level ---
     root: Logger = basicConfig(WARNING)

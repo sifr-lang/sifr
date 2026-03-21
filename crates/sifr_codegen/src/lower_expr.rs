@@ -1,7 +1,7 @@
 //! Expression lowering scaffolds for the IR lowering.
 
 use crate::{CodegenError, RustExpr, RustLiteral, RustParam, RustStmt, RustType};
-use sifr_hir::{HirExpr, HirFStringPart, HirParam};
+use sifr_hir::{HirExpr, HirFStringPart, HirIteratorOp, HirParam};
 use sifr_type_system::Type;
 use std::cell::RefCell;
 
@@ -31,6 +31,18 @@ fn is_allowed_plain_call(func: &str) -> bool {
 
 fn is_compat_stdlib_alias(func: &str) -> bool {
     func.starts_with("__compat_sifr_")
+}
+
+fn iterator_op_func_name(op: &HirIteratorOp) -> &'static str {
+    match op {
+        HirIteratorOp::Iter => "iter",
+        HirIteratorOp::Next => "next",
+        HirIteratorOp::Reversed => "reversed",
+        HirIteratorOp::Map => "map",
+        HirIteratorOp::Filter => "filter",
+        HirIteratorOp::Zip => "zip",
+        HirIteratorOp::Enumerate => "enumerate",
+    }
 }
 
 pub fn try_lower_leaf_expr_result(expr: &HirExpr) -> Result<Option<RustExpr>, CodegenError> {
@@ -75,7 +87,8 @@ pub(crate) fn is_leaf_expr_candidate(expr: &HirExpr) -> bool {
         | HirExpr::WalrusExpr { .. }
         | HirExpr::SuperCall { .. }
         | HirExpr::FString { .. }
-        | HirExpr::Lambda { .. } => true,
+        | HirExpr::Lambda { .. }
+        | HirExpr::IteratorCall { .. } => true,
         HirExpr::Compare {
             ops, comparators, ..
         } => !ops.is_empty() && ops.len() == comparators.len(),
@@ -264,12 +277,23 @@ pub fn try_lower_leaf_expr(expr: &HirExpr) -> Option<RustExpr> {
                 .map(try_lower_leaf_expr)
                 .collect::<Option<Vec<_>>>()?,
         )),
-        HirExpr::ListLiteral { elements, .. } => Some(RustExpr::Vec(
-            elements
+        HirExpr::ListLiteral { elements, ty } => {
+            let list_ty = resolve_alias_type(ty);
+            let mut lowered = elements
                 .iter()
                 .map(try_lower_leaf_expr)
-                .collect::<Option<Vec<_>>>()?,
-        )),
+                .collect::<Option<Vec<_>>>()?;
+            if matches!(list_ty, Type::Bytes) {
+                lowered = lowered
+                    .into_iter()
+                    .map(|element| RustExpr::Cast {
+                        expr: Box::new(element),
+                        ty: RustType::Named("u8".to_string()),
+                    })
+                    .collect();
+            }
+            Some(RustExpr::Vec(lowered))
+        }
         HirExpr::RangeLiteral {
             start, end, step, ..
         } => {
@@ -351,6 +375,9 @@ pub fn try_lower_leaf_expr(expr: &HirExpr) -> Option<RustExpr> {
         HirExpr::FString { parts, .. } => try_lower_simple_fstring_expr(parts),
         HirExpr::Lambda { params, body, .. } => try_lower_simple_lambda_expr(params, body),
         HirExpr::Call { func, args, .. } => try_lower_simple_call_expr(func, args),
+        HirExpr::IteratorCall { op, args, .. } => {
+            try_lower_simple_call_expr(iterator_op_func_name(op), args)
+        }
         HirExpr::MethodCall {
             object,
             method,
@@ -567,30 +594,158 @@ fn try_lower_simple_callable_expr(expr: &HirExpr) -> Option<RustExpr> {
     try_lower_leaf_or_name_expr(expr)
 }
 
+fn unwrap_simple_iter_source_expr(expr: &HirExpr) -> &HirExpr {
+    match expr {
+        HirExpr::IteratorCall {
+            op: sifr_hir::HirIteratorOp::Iter,
+            args,
+            ..
+        } if args.len() == 1 => &args[0],
+        HirExpr::Call { func, args, .. } if func == "iter" && args.len() == 1 => &args[0],
+        _ => expr,
+    }
+}
+
+fn apply_simple_copy_clone_yield_mode(
+    iter_expr: RustExpr,
+    yield_mode: crate::helpers::YieldMode,
+) -> RustExpr {
+    match yield_mode {
+        crate::helpers::YieldMode::Copy => RustExpr::MethodCall {
+            receiver: Box::new(iter_expr),
+            method: "copied".to_string(),
+            args: vec![],
+        },
+        crate::helpers::YieldMode::Clone => RustExpr::MethodCall {
+            receiver: Box::new(iter_expr),
+            method: "cloned".to_string(),
+            args: vec![],
+        },
+        crate::helpers::YieldMode::Move | crate::helpers::YieldMode::Borrow => iter_expr,
+    }
+}
+
+fn try_lower_simple_iter_source_expr(iter_expr: &HirExpr) -> Option<RustExpr> {
+    let source_expr = unwrap_simple_iter_source_expr(iter_expr);
+    let lowered_source = try_lower_leaf_or_name_expr(source_expr)?;
+    let source_ty = resolve_alias_type(source_expr.ty());
+    let plan = crate::helpers::plan_iterator_ownership(source_expr);
+
+    if matches!(source_ty, Type::Iterator(_)) {
+        return Some(lowered_source);
+    }
+
+    match source_ty {
+        Type::List(_) | Type::Set(_) | Type::Iterable(_) => Some(match plan.source_access_mode {
+            crate::helpers::SourceAccessMode::Consume => RustExpr::MethodCall {
+                receiver: Box::new(lowered_source),
+                method: "into_iter".to_string(),
+                args: vec![],
+            },
+            crate::helpers::SourceAccessMode::Preserve => apply_simple_copy_clone_yield_mode(
+                RustExpr::MethodCall {
+                    receiver: Box::new(lowered_source),
+                    method: "iter".to_string(),
+                    args: vec![],
+                },
+                plan.yield_mode,
+            ),
+        }),
+        Type::Dict(_, _) => Some(match plan.source_access_mode {
+            crate::helpers::SourceAccessMode::Consume => RustExpr::MethodCall {
+                receiver: Box::new(lowered_source),
+                method: "into_keys".to_string(),
+                args: vec![],
+            },
+            crate::helpers::SourceAccessMode::Preserve => apply_simple_copy_clone_yield_mode(
+                RustExpr::MethodCall {
+                    receiver: Box::new(lowered_source),
+                    method: "keys".to_string(),
+                    args: vec![],
+                },
+                plan.yield_mode,
+            ),
+        }),
+        Type::Bytes => Some(match plan.source_access_mode {
+            crate::helpers::SourceAccessMode::Consume => RustExpr::MethodCall {
+                receiver: Box::new(RustExpr::MethodCall {
+                    receiver: Box::new(lowered_source),
+                    method: "into_iter".to_string(),
+                    args: vec![],
+                }),
+                method: "map".to_string(),
+                args: vec![RustExpr::Closure {
+                    params: vec![RustParam::Named {
+                        name: "__byte".to_string(),
+                        ty: RustType::Named("_".to_string()),
+                    }],
+                    body: Box::new(RustExpr::Cast {
+                        expr: Box::new(RustExpr::Ident("__byte".to_string())),
+                        ty: RustType::I64,
+                    }),
+                    is_move: false,
+                }],
+            },
+            crate::helpers::SourceAccessMode::Preserve => RustExpr::MethodCall {
+                receiver: Box::new(RustExpr::MethodCall {
+                    receiver: Box::new(lowered_source),
+                    method: "iter".to_string(),
+                    args: vec![],
+                }),
+                method: "map".to_string(),
+                args: vec![RustExpr::Closure {
+                    params: vec![RustParam::Named {
+                        name: "__byte".to_string(),
+                        ty: RustType::Named("_".to_string()),
+                    }],
+                    body: Box::new(RustExpr::Cast {
+                        expr: Box::new(RustExpr::Deref(Box::new(RustExpr::Ident(
+                            "__byte".to_string(),
+                        )))),
+                        ty: RustType::I64,
+                    }),
+                    is_move: false,
+                }],
+            },
+        }),
+        Type::Str => Some(RustExpr::MethodCall {
+            receiver: Box::new(RustExpr::MethodCall {
+                receiver: Box::new(lowered_source),
+                method: "chars".to_string(),
+                args: vec![],
+            }),
+            method: "map".to_string(),
+            args: vec![RustExpr::Closure {
+                params: vec![RustParam::Named {
+                    name: "__sifr_char".to_string(),
+                    ty: RustType::Named("_".to_string()),
+                }],
+                body: Box::new(RustExpr::MethodCall {
+                    receiver: Box::new(RustExpr::Ident("__sifr_char".to_string())),
+                    method: "to_string".to_string(),
+                    args: vec![],
+                }),
+                is_move: false,
+            }],
+        }),
+        Type::Range => Some(lowered_source),
+        _ => Some(lowered_source),
+    }
+}
+
 fn try_lower_simple_map_call_expr(args: &[HirExpr]) -> Option<RustExpr> {
     let [callable, iter] = args else {
         return None;
     };
     let lowered_callable = try_lower_simple_callable_expr(callable)?;
-    let lowered_iter = try_lower_leaf_or_name_expr(iter)?;
+    let iter_source = try_lower_simple_iter_source_expr(iter)?;
     let mapped_iter = RustExpr::MethodCall {
-        receiver: Box::new(RustExpr::MethodCall {
-            receiver: Box::new(RustExpr::MethodCall {
-                receiver: Box::new(lowered_iter),
-                method: "clone".to_string(),
-                args: vec![],
-            }),
-            method: "into_iter".to_string(),
-            args: vec![],
-        }),
+        receiver: Box::new(iter_source),
         method: "map".to_string(),
         args: vec![lowered_callable],
     };
     Some(RustExpr::FnCall {
-        func: Box::new(RustExpr::Path(vec![
-            "Vec".to_string(),
-            "from_iter".to_string(),
-        ])),
+        func: Box::new(RustExpr::Path(vec!["Box".to_string(), "new".to_string()])),
         args: vec![mapped_iter],
     })
 }
@@ -599,53 +754,65 @@ fn try_lower_simple_filter_call_expr(args: &[HirExpr]) -> Option<RustExpr> {
     let [callable, iter] = args else {
         return None;
     };
-    let lowered_callable = if let HirExpr::Lambda { params, body, .. } = callable {
+    let iter_source_expr = unwrap_simple_iter_source_expr(iter);
+    let iter_plan = crate::helpers::plan_iterator_ownership(iter_source_expr);
+    let predicate_expr = if let HirExpr::Lambda { params, body, .. } = callable {
         if params.len() != 1 {
             return None;
         }
         let param_name = params[0].name.clone();
-        RustExpr::ClosureBlock {
+        let lowered_body = try_lower_leaf_or_name_expr(body)?;
+        RustExpr::Block {
+            stmts: vec![RustStmt::Let {
+                mutable: false,
+                name: param_name,
+                ty: None,
+                value: RustExpr::Ident("__filter_value".to_string()),
+            }],
+            expr: Some(Box::new(lowered_body)),
+        }
+    } else {
+        let lowered_callable = try_lower_simple_callable_expr(callable)?;
+        RustExpr::FnCall {
+            func: Box::new(lowered_callable),
+            args: vec![RustExpr::Ident("__filter_value".to_string())],
+        }
+    };
+
+    let iter_source = try_lower_simple_iter_source_expr(iter)?;
+    let predicate_input_expr = match iter_plan.element_ownership {
+        Some(sifr_type_system::OwnershipKind::Copy) => {
+            RustExpr::Deref(Box::new(RustExpr::Ident("__filter_item".to_string())))
+        }
+        Some(sifr_type_system::OwnershipKind::Move) | None => RustExpr::MethodCall {
+            receiver: Box::new(RustExpr::Ident("__filter_item".to_string())),
+            method: "clone".to_string(),
+            args: vec![],
+        },
+    };
+    let filtered_iter = RustExpr::MethodCall {
+        receiver: Box::new(iter_source),
+        method: "filter".to_string(),
+        args: vec![RustExpr::ClosureBlock {
             params: vec![RustParam::Named {
-                name: param_name.clone(),
+                name: "__filter_item".to_string(),
                 ty: RustType::Named("_".to_string()),
             }],
             body: vec![
                 RustStmt::Let {
                     mutable: false,
-                    name: param_name.clone(),
+                    name: "__filter_value".to_string(),
                     ty: None,
-                    value: RustExpr::MethodCall {
-                        receiver: Box::new(RustExpr::Ident(param_name.clone())),
-                        method: "clone".to_string(),
-                        args: vec![],
-                    },
+                    value: predicate_input_expr,
                 },
-                RustStmt::Return(Some(try_lower_leaf_or_name_expr(body)?)),
+                RustStmt::Return(Some(predicate_expr)),
             ],
             is_move: false,
-        }
-    } else {
-        try_lower_simple_callable_expr(callable)?
+        }],
     };
-    let lowered_iter = try_lower_leaf_or_name_expr(iter)?;
-    let filtered_iter = RustExpr::MethodCall {
-        receiver: Box::new(RustExpr::MethodCall {
-            receiver: Box::new(RustExpr::MethodCall {
-                receiver: Box::new(lowered_iter),
-                method: "clone".to_string(),
-                args: vec![],
-            }),
-            method: "into_iter".to_string(),
-            args: vec![],
-        }),
-        method: "filter".to_string(),
-        args: vec![lowered_callable],
-    };
+
     Some(RustExpr::FnCall {
-        func: Box::new(RustExpr::Path(vec![
-            "Vec".to_string(),
-            "from_iter".to_string(),
-        ])),
+        func: Box::new(RustExpr::Path(vec!["Box".to_string(), "new".to_string()])),
         args: vec![filtered_iter],
     })
 }
@@ -768,15 +935,19 @@ fn try_lower_simple_index_expr(object: &HirExpr, index: &HirExpr) -> Option<Rust
         return Some(lowered);
     }
     match resolve_alias_type(object.ty()) {
-        Type::Dict(_, _) => Some(RustExpr::MethodCall {
-            receiver: Box::new(RustExpr::MethodCall {
-                receiver: Box::new(try_lower_leaf_or_name_expr(object)?),
-                method: "get".to_string(),
-                args: vec![try_lower_dict_get_key_expr(index)?],
-            }),
-            method: "cloned".to_string(),
-            args: vec![],
-        }),
+        Type::Dict(_, value_ty) => {
+            let projection_method =
+                crate::helpers::option_projection_method_for_owned_type(value_ty.as_ref());
+            Some(RustExpr::MethodCall {
+                receiver: Box::new(RustExpr::MethodCall {
+                    receiver: Box::new(try_lower_leaf_or_name_expr(object)?),
+                    method: "get".to_string(),
+                    args: vec![try_lower_dict_get_key_expr(index)?],
+                }),
+                method: projection_method.to_string(),
+                args: vec![],
+            })
+        }
         Type::Any => Some(RustExpr::Index {
             expr: Box::new(try_lower_leaf_or_name_expr(object)?),
             index: Box::new(try_lower_leaf_or_name_expr(index)?),
@@ -864,20 +1035,7 @@ fn try_lower_simple_list_comp_expr(
         if var.contains(',') {
             return None;
         }
-        let lowered_iter = try_lower_leaf_or_name_expr(iter_expr)?;
-        let iter = if matches!(iter_expr.ty(), Type::Range) {
-            lowered_iter
-        } else {
-            RustExpr::MethodCall {
-                receiver: Box::new(RustExpr::MethodCall {
-                    receiver: Box::new(lowered_iter),
-                    method: "clone".to_string(),
-                    args: vec![],
-                }),
-                method: "into_iter".to_string(),
-                args: vec![],
-            }
-        };
+        let iter = try_lower_simple_iter_source_expr(iter_expr)?;
         let loop_body = if let Some(filter) = maybe_filter {
             vec![RustStmt::If {
                 cond: try_lower_leaf_or_name_expr(filter)?,
@@ -923,20 +1081,7 @@ fn try_lower_simple_dict_comp_expr(
         return None;
     }
 
-    let lowered_iter = try_lower_leaf_or_name_expr(iter_expr)?;
-    let iter = if matches!(iter_expr.ty(), Type::Range) {
-        lowered_iter
-    } else {
-        RustExpr::MethodCall {
-            receiver: Box::new(RustExpr::MethodCall {
-                receiver: Box::new(lowered_iter),
-                method: "clone".to_string(),
-                args: vec![],
-            }),
-            method: "into_iter".to_string(),
-            args: vec![],
-        }
-    };
+    let iter = try_lower_simple_iter_source_expr(iter_expr)?;
 
     let result_ident = "__sifr_dict_comp".to_string();
     let insert_stmt = RustStmt::Expr(RustExpr::MethodCall {
@@ -998,20 +1143,7 @@ fn try_lower_simple_set_comp_expr(
         return None;
     }
 
-    let lowered_iter = try_lower_leaf_or_name_expr(iter_expr)?;
-    let iter = if matches!(iter_expr.ty(), Type::Range) {
-        lowered_iter
-    } else {
-        RustExpr::MethodCall {
-            receiver: Box::new(RustExpr::MethodCall {
-                receiver: Box::new(lowered_iter),
-                method: "clone".to_string(),
-                args: vec![],
-            }),
-            method: "into_iter".to_string(),
-            args: vec![],
-        }
-    };
+    let iter = try_lower_simple_iter_source_expr(iter_expr)?;
 
     let result_ident = "__sifr_set_comp".to_string();
     let insert_stmt = RustStmt::Expr(RustExpr::MethodCall {
@@ -1063,22 +1195,14 @@ fn try_lower_simple_generator_expr(
     filter: Option<&HirExpr>,
     ty: &Type,
 ) -> Option<RustExpr> {
-    if !matches!(resolve_alias_type(ty), Type::Any | Type::List(_))
+    if !matches!(resolve_alias_type(ty), Type::Any | Type::Iterator(_))
         || filter.is_some()
         || var.contains(',')
     {
         return None;
     }
 
-    let iter_chain = RustExpr::MethodCall {
-        receiver: Box::new(RustExpr::MethodCall {
-            receiver: Box::new(try_lower_leaf_or_name_expr(iter)?),
-            method: "clone".to_string(),
-            args: vec![],
-        }),
-        method: "into_iter".to_string(),
-        args: vec![],
-    };
+    let iter_chain = try_lower_simple_iter_source_expr(iter)?;
 
     Some(RustExpr::MethodCall {
         receiver: Box::new(iter_chain),
@@ -1099,18 +1223,23 @@ fn is_reserved_builtin_call_func(func: &str) -> bool {
         func,
         "print"
             | "isinstance"
+            | "list"
             | "str"
+            | "tuple"
             | "pow"
             | "abs"
             | "hash"
             | "round"
             | "repr"
+            | "dict"
             | "int"
             | "bigint"
             | "Decimal"
             | "BigDecimal"
             | "float"
             | "bool"
+            | "ord"
+            | "chr"
             | "min"
             | "max"
             | "sum"
@@ -3159,7 +3288,7 @@ mod tests {
                     ty: Type::List(Box::new(Type::Int)),
                 },
             ],
-            ty: Type::List(Box::new(Type::Int)),
+            ty: Type::Iterator(Box::new(Type::Int)),
         };
         assert!(try_lower_leaf_expr(&expr).is_some());
     }
@@ -3762,7 +3891,7 @@ mod tests {
     }
 
     #[test]
-    fn lowers_generator_expr_on_typed_list_result() {
+    fn lowers_generator_expr_on_typed_iterator_result() {
         let expr = HirExpr::GeneratorExpr {
             expr: Box::new(HirExpr::Name {
                 name: "x".to_string(),
@@ -3774,7 +3903,7 @@ mod tests {
                 ty: Type::List(Box::new(Type::Int)),
             }),
             filter: None,
-            ty: Type::List(Box::new(Type::Int)),
+            ty: Type::Iterator(Box::new(Type::Int)),
         };
         assert!(try_lower_leaf_expr(&expr).is_some());
     }

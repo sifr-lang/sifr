@@ -10,9 +10,11 @@ def main():
         _2: None = write_text(dir_path + "/test1.txt", "a")
         _3: None = write_text(dir_path + "/test2.txt", "b")
         p: Path = Path(dir_path)
-        files: list[str] = p.glob("*.txt")
+        files_it: Iterator[str] = p.glob("*.txt")
+        files: list[str] = list(files_it)
         assert str("glob found files = " + str(len(files) > 0)) == 'glob found files = true'
-        all_files: list[str] = p.rglob("*.txt")
+        all_files_it: Iterator[str] = p.rglob("*.txt")
+        all_files: list[str] = list(all_files_it)
         assert str("rglob found files = " + str(len(all_files) > 0)) == 'rglob found files = true'
     except IOError as e:
         _ = str("error: " + e.message)

@@ -39,8 +39,8 @@ def main():
         print("path error: " + e.message)
 
     p2: Path = Path("/tmp/myfile.txt")
-    print("with_suffix = " + p2.with_suffix(".csv"))
-    print("with_name = " + p2.with_name("other.txt"))
+    print("with_suffix = " + p2.with_suffix(".csv").to_str())
+    print("with_name = " + p2.with_name("other.txt").to_str())
 
     # --- re.Pattern ---
     try:

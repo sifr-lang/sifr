@@ -20,14 +20,14 @@ def collect_path_class_actual() -> list[bool]:
     actual: list[bool] = []
     sample: Path = Path("/tmp/myfile.txt")
     actual.append(sample.name() == "myfile.txt")
-    actual.append(sample.parent() == "/tmp")
+    actual.append(sample.parent().to_str() == "/tmp")
     actual.append(sample.suffix() == ".txt")
     actual.append(sample.stem() == "myfile")
     actual.append(sample.is_absolute())
     actual.append(sample.to_str() == "/tmp/myfile.txt")
-    actual.append(sample.joinpath("sub") == "/tmp/myfile.txt/sub")
-    actual.append(sample.with_name("renamed.txt") == "/tmp/renamed.txt")
-    actual.append(sample.with_suffix(".csv") == "/tmp/myfile.csv")
+    actual.append(sample.joinpath("sub").to_str() == "/tmp/myfile.txt/sub")
+    actual.append(sample.with_name("renamed.txt").to_str() == "/tmp/renamed.txt")
+    actual.append(sample.with_suffix(".csv").to_str() == "/tmp/myfile.csv")
     return actual
 
 
@@ -62,12 +62,15 @@ def collect_filesystem_actual() -> list[bool]:
         _touch: None = Path(base + "/touch.txt").touch()
         file_state_ok = f1.exists() and f1.is_file() and dirp.is_dir()
 
-        g: list[str] = dirp.glob("*.txt")
+        g_it: Iterator[str] = dirp.glob("*.txt")
+        g: list[str] = list(g_it)
         glob_ok = len(g) >= 2
-        rg: list[str] = dirp.rglob("*.txt")
+        rg_it: Iterator[str] = dirp.rglob("*.txt")
+        rg: list[str] = list(rg_it)
         rglob_ok = len(rg) >= 3
 
-        entries: list[str] = dirp.iterdir()
+        entries_it: Iterator[str] = dirp.iterdir()
+        entries: list[str] = list(entries_it)
         iterdir_ok = len(entries) >= 2
 
         resolved: str = dirp.resolve()

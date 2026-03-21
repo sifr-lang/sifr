@@ -1,0 +1,5 @@
+from sifr.bytes import decode_utf8
+
+
+def main() -> None:
+    _ = decode_utf8("abc")

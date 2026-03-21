@@ -1,66 +1,529 @@
-# sifr.configparser — INI-style configuration file parser
-# Parses simple key=value pairs, optionally grouped by [section] headers.
+from sifr.io import read_text, write_text
+
+
+DEFAULTSECT: str = "DEFAULT"
+
+
+class Error(Error):
+    message: str
+
+
+class NoSectionError(Error):
+    section: str
+    message: str
+
+    def __init__(self, section: str) -> None:
+        section_text: str = section + ""
+        self.section = section_text + ""
+        self.message = "no section: " + section_text
+
+
+class NoOptionError(Error):
+    section: str
+    option: str
+    message: str
+
+    def __init__(self, section: str, option: str) -> None:
+        section_text: str = section + ""
+        option_text: str = option + ""
+        self.section = section_text + ""
+        self.option = option_text + ""
+        self.message = "no option '" + option_text + "' in section: " + section_text
+
+
+class DuplicateSectionError(Error):
+    section: str
+    message: str
+
+    def __init__(self, section: str) -> None:
+        section_text: str = section + ""
+        self.section = section_text + ""
+        self.message = "duplicate section: " + section_text
+
+
+class ParsingError(Error):
+    line: int
+    message: str
+
+    def __init__(self, line: int, message: str) -> None:
+        self.line = line
+        self.message = message
+
+
+def _default_section() -> str:
+    return DEFAULTSECT + ""
+
+
+def _normalize_option(option: str) -> str:
+    return option.lower().strip()
+
+
+def _some_str(value: str) -> str | None:
+    return value + ""
+
+
+def _copy_optional_str(value: str | None) -> str | None:
+    if value is not None:
+        return _some_str(value)
+    return None
+
+
+def _has_option_key(values: dict[str, str | None], key: str) -> bool:
+    for current_key in values:
+        if current_key == key:
+            return True
+    return False
+
+
+def _lookup_option(values: dict[str, str | None], key: str) -> str | None:
+    for current_key, current_value in values.items():
+        if current_key == key:
+            return _copy_optional_str(current_value)
+    return None
+
+
+def _copy_values(values: dict[str, str | None]) -> dict[str, str | None]:
+    copied: dict[str, str | None] = {}
+    for key, value in values.items():
+        copied[key] = _copy_optional_str(value)
+    return copied
+
+
+def _without_option(
+    values: dict[str, str | None], removed_key: str
+) -> dict[str, str | None]:
+    copied: dict[str, str | None] = {}
+    for key, value in values.items():
+        if key == removed_key:
+            continue
+        copied[key] = _copy_optional_str(value)
+    return copied
+
+
+def _without_section(
+    values: dict[str, dict[str, str | None]], removed_key: str
+) -> dict[str, dict[str, str | None]]:
+    copied: dict[str, dict[str, str | None]] = {}
+    for key, section in values.items():
+        if key == removed_key:
+            continue
+        copied[key] = _copy_values(section)
+    return copied
+
+
+def _find_delimiter(line: str) -> str | None:
+    if "=" in line:
+        return "="
+    if ":" in line:
+        return ":"
+    return None
+
+
+def _split_option_line(
+    line: str, allow_no_value: bool, line_no: int
+) -> Result[tuple[str, str | None], ParsingError]:
+    delimiter: str | None = _find_delimiter(line)
+    if delimiter is None:
+        if allow_no_value:
+            return (line.strip(), None)
+        raise ParsingError(line_no, "expected key=value or key:value entry")
+    parts: list[str] = line.split(delimiter, maxsplit=1)
+    if len(parts) != 2:
+        raise ParsingError(line_no, "invalid option line")
+    raw_key: str | None = parts[0]
+    raw_value: str | None = parts[1]
+    if raw_key is None:
+        raise ParsingError(line_no, "option name is missing")
+    key: str = _normalize_option(raw_key)
+    if key == "":
+        raise ParsingError(line_no, "option name is empty")
+    if raw_value is None:
+        return (key, None)
+    stripped_value: str | None = _some_str(raw_value.strip())
+    return (key, stripped_value)
+
+
+def _char_at(text: str, index: int) -> str:
+    if index < 0 or index >= len(text):
+        return ""
+    ch: str | None = text[index]
+    if ch is None:
+        return ""
+    return ch
+
+
+def _resolve_interpolation(
+    value: str, merged: dict[str, str | None], depth: int = 0
+) -> str:
+    if depth >= 8:
+        return value + ""
+    if "%(" not in value:
+        return value + ""
+
+    result: str = ""
+    replaced: bool = False
+    i: int = 0
+    while i < len(value):
+        ch: str = _char_at(value, i)
+        if ch == "%" and i + 1 < len(value) and _char_at(value, i + 1) == "(":
+            j: int = i + 2
+            key: str = ""
+            matched: bool = False
+            while j < len(value):
+                part: str = _char_at(value, j)
+                if part == ")" and j + 1 < len(value) and _char_at(value, j + 1) == "s":
+                    matched = True
+                    normalized_key: str = _normalize_option(key)
+                    replacement: str | None = _lookup_option(merged, normalized_key)
+                    if replacement is None:
+                        result = result + "%(" + key + ")s"
+                    else:
+                        replaced = True
+                        result = result + replacement
+                    i = j + 2
+                    break
+                key = key + part
+                j = j + 1
+            if matched:
+                continue
+        result = result + ch
+        i = i + 1
+
+    if replaced:
+        return _resolve_interpolation(result, merged, depth + 1)
+    return result
+
+
+class SectionProxy:
+    name: str
+    _values: dict[str, str | None]
+
+    def __init__(self, name: str, values: dict[str, str | None]) -> None:
+        self.name = name + ""
+        self._values = _copy_values(values)
+
+    def has_option(self, option: str) -> bool:
+        return _has_option_key(self._values, _normalize_option(option))
+
+    def get(
+        self, option: str, fallback: str | None = None, raw: bool = False
+    ) -> str | None:
+        normalized: str = _normalize_option(option)
+        if _has_option_key(self._values, normalized):
+            value: str | None = _lookup_option(self._values, normalized)
+            if value is None:
+                return None
+            if raw:
+                return value
+            return _resolve_interpolation(value, self._values)
+        return _copy_optional_str(fallback)
+
+    def options(self) -> list[str]:
+        names: list[str] = []
+        for key in self._values:
+            names.append(key)
+        return names
+
+    def items(self) -> list[tuple[str, str | None]]:
+        pairs: list[tuple[str, str | None]] = []
+        for key, value in self._values.items():
+            pairs.append((key, _copy_optional_str(value)))
+        return pairs
+
 
 class ConfigParser:
-    _data: dict[str, str]
+    _defaults: dict[str, str | None]
+    _sections: dict[str, dict[str, str | None]]
+    strict: bool
+    allow_no_value: bool
 
-    def __init__(self) -> None:
-        self._data = {}
+    def __init__(
+        self,
+        defaults: dict[str, str | None] | None = None,
+        strict: bool = False,
+        allow_no_value: bool = False,
+    ) -> None:
+        defaults_map: dict[str, str | None] = {}
+        sections_map: dict[str, dict[str, str | None]] = {}
+        if defaults is not None:
+            for key, value in defaults.items():
+                normalized: str = _normalize_option(key)
+                defaults_map[normalized] = _copy_optional_str(value)
+        self.strict = strict
+        self.allow_no_value = allow_no_value
+        self._defaults = defaults_map
+        self._sections = sections_map
 
-    def read_string(self, text: str) -> None:
-        # Parse INI-format text. Keys are stored as "section.key" or just "key".
+    def defaults(self) -> dict[str, str | None]:
+        return _copy_values(self._defaults)
+
+    def read_string(self, text: str) -> Result[None, ParsingError]:
         current_section: str = ""
-        lines: list[str] = text.split("\n")
-        for line in lines:
-            stripped: str = line.strip()
-            if stripped == "" or stripped.startswith("#") or stripped.startswith(";"):
+        default_section: str = _default_section()
+        for line_no, raw_line in enumerate(text.split("\n"), start=1):
+            line: str = raw_line.strip()
+            if line == "" or line.startswith("#") or line.startswith(";"):
                 continue
-            if stripped.startswith("[") and stripped.endswith("]"):
-                current_section = stripped[1:len(stripped) - 1].strip()
-            elif "=" in stripped:
-                # Split on "=" and use first two parts
-                parts: list[str] = stripped.split("=")
-                if len(parts) >= 2:
-                    key_raw: str | None = parts[0]
-                    val_raw: str | None = parts[1]
-                    if key_raw is not None and val_raw is not None:
-                        key: str = key_raw.strip()
-                        value: str = val_raw.strip()
-                        if current_section == "":
-                            self._data[key] = value
-                        else:
-                            self._data[current_section + "." + key] = value
+            if line.startswith("[") and line.endswith("]"):
+                section_name: str = line[1:len(line) - 1].strip()
+                if section_name == "":
+                    raise ParsingError(line_no, "section name is empty")
+                if section_name == default_section:
+                    current_section = _default_section()
+                    continue
+                if self.strict and section_name in self._sections:
+                    raise ParsingError(line_no, "duplicate section: " + section_name)
+                current_section = section_name + ""
+                if section_name not in self._sections:
+                    self._sections[section_name] = {}
+                continue
 
-    def get(self, section: str, key: str) -> str:
-        full_key: str = section + "." + key
-        result: str = ""
-        if full_key in self._data:
-            raw: str | None = self._data[full_key]
-            if raw is not None:
-                result = raw
-        return result
+            try:
+                parsed_option_pair: tuple[str, str | None] = _split_option_line(
+                    line, self.allow_no_value, line_no
+                )
+                option_name, option_value = parsed_option_pair
+                if current_section == "" or current_section == default_section:
+                    self._defaults[option_name] = _copy_optional_str(option_value)
+                else:
+                    section_key: str = current_section + ""
+                    section_found: bool = False
+                    for section_name, section_values in self._sections.items():
+                        if section_name != section_key:
+                            continue
+                        if self.strict and _has_option_key(section_values, option_name):
+                            raise ParsingError(line_no, "duplicate option: " + option_name)
+                        updated_section: dict[str, str | None] = _copy_values(section_values)
+                        updated_section[option_name] = _copy_optional_str(option_value)
+                        self._sections[section_name] = updated_section
+                        section_found = True
+                        break
+            except ParsingError as e:
+                raise e
+        return None
 
-    def get_default(self, key: str) -> str:
-        result: str = ""
-        if key in self._data:
-            raw: str | None = self._data[key]
-            if raw is not None:
-                result = raw
-        return result
-
-    def has_option(self, section: str, key: str) -> bool:
-        full_key: str = section + "." + key
-        return full_key in self._data
+    def read(self, path: str) -> Result[list[str], IOError]:
+        try:
+            content: str = read_text(path)
+            try:
+                _: None = self.read_string(content)
+            except ParsingError as e:
+                raise IOError("parse error on line " + str(e.line) + ": " + e.message)
+            loaded_path: str = path + ""
+            return [loaded_path]
+        except IOError as e:
+            raise e
 
     def sections(self) -> list[str]:
-        result: list[str] = []
-        for k in self._data:
-            if "." in k:
-                parts: list[str] = k.split(".")
-                if len(parts) >= 1:
-                    sec_raw: str | None = parts[0]
-                    if sec_raw is not None:
-                        section: str = sec_raw
-                        if section not in result:
-                            result.append(section)
-        return result
+        names: list[str] = []
+        for section in self._sections:
+            names.append(section)
+        return names
+
+    def has_section(self, section: str) -> bool:
+        return section in self._sections
+
+    def options(self, section: str) -> list[str]:
+        merged: dict[str, str | None] = self._merged_section(section)
+        names: list[str] = []
+        for option in merged:
+            names.append(option)
+        return names
+
+    def items(self, section: str) -> list[tuple[str, str | None]]:
+        merged: dict[str, str | None] = self._merged_section(section)
+        items: list[tuple[str, str | None]] = []
+        for option, value in merged.items():
+            items.append((option, _copy_optional_str(value)))
+        return items
+
+    def _merged_section(self, section: str) -> dict[str, str | None]:
+        merged: dict[str, str | None] = _copy_values(self._defaults)
+        default_section: str = _default_section()
+        if section == default_section:
+            return merged
+        for section_name, section_values in self._sections.items():
+            if section_name != section:
+                continue
+            for option, value in section_values.items():
+                merged[option] = _copy_optional_str(value)
+            return merged
+        return merged
+
+    def has_option(self, section: str, option: str) -> bool:
+        normalized: str = _normalize_option(option)
+        default_section: str = _default_section()
+        if section == default_section:
+            return normalized in self._defaults
+        for section_name, section_values in self._sections.items():
+            if section_name != section:
+                continue
+            if _has_option_key(section_values, normalized):
+                return True
+            return normalized in self._defaults
+        return False
+
+    def get(
+        self,
+        section: str,
+        option: str,
+        fallback: str | None = None,
+        raw: bool = False,
+    ) -> str | None:
+        normalized: str = _normalize_option(option)
+        merged: dict[str, str | None] = self._merged_section(section)
+        default_section: str = _default_section()
+        if section == default_section:
+            if not _has_option_key(merged, normalized):
+                return _copy_optional_str(fallback)
+            raw_value: str | None = _lookup_option(merged, normalized)
+            if raw_value is None:
+                return None
+            if raw:
+                return raw_value
+            return _resolve_interpolation(raw_value, merged)
+        if not self.has_section(section):
+            if _has_option_key(self._defaults, normalized):
+                default_value: str | None = _lookup_option(self._defaults, normalized)
+                if default_value is None:
+                    return None
+                if raw:
+                    return default_value
+                return _resolve_interpolation(default_value, merged)
+            return _copy_optional_str(fallback)
+        if not _has_option_key(merged, normalized):
+            return _copy_optional_str(fallback)
+        raw_value2: str | None = _lookup_option(merged, normalized)
+        if raw_value2 is None:
+            return None
+        if raw:
+            return raw_value2
+        return _resolve_interpolation(raw_value2, merged)
+
+    def getint(self, section: str, option: str, fallback: int | None = None) -> int | None:
+        raw: str | None = self.get(section, option)
+        if raw is None:
+            return fallback
+        try:
+            parsed: int = int(raw)
+            return parsed
+        except ParseError:
+            return fallback
+
+    def getfloat(self, section: str, option: str, fallback: float | None = None) -> float | None:
+        raw: str | None = self.get(section, option)
+        if raw is None:
+            return fallback
+        try:
+            parsed: float = float(raw)
+            return parsed
+        except ParseError:
+            return fallback
+
+    def getboolean(self, section: str, option: str, fallback: bool | None = None) -> bool | None:
+        raw: str | None = self.get(section, option)
+        if raw is None:
+            return fallback
+        normalized: str = raw.lower()
+        if normalized == "1" or normalized == "yes" or normalized == "true" or normalized == "on":
+            return True
+        if normalized == "0" or normalized == "no" or normalized == "false" or normalized == "off":
+            return False
+        return fallback
+
+    def set(self, section: str, option: str, value: str | None) -> None:
+        normalized: str = _normalize_option(option)
+        default_section: str = _default_section()
+        if section == default_section:
+            self._defaults[normalized] = _copy_optional_str(value)
+            return
+        for section_name, section_values in self._sections.items():
+            if section_name != section:
+                continue
+            updated_section: dict[str, str | None] = _copy_values(section_values)
+            updated_section[normalized] = _copy_optional_str(value)
+            self._sections[section_name] = updated_section
+            return
+        if section not in self._sections:
+            self._sections[section] = {}
+        created_section: dict[str, str | None] = {}
+        for section_name, section_values in self._sections.items():
+            if section_name != section:
+                continue
+            created_section = _copy_values(section_values)
+            break
+        created_section[normalized] = _copy_optional_str(value)
+        self._sections[section] = created_section
+
+    def add_section(self, section: str) -> None:
+        default_section: str = _default_section()
+        if section == default_section:
+            return
+        if section in self._sections:
+            return
+        self._sections[section] = {}
+
+    def remove_option(self, section: str, option: str) -> bool:
+        normalized: str = _normalize_option(option)
+        default_section: str = _default_section()
+        if section == default_section:
+            if normalized in self._defaults:
+                self._defaults = _without_option(self._defaults, normalized)
+                return True
+            return False
+        for section_name, section_values in self._sections.items():
+            if section_name != section:
+                continue
+            if _has_option_key(section_values, normalized):
+                self._sections[section_name] = _without_option(section_values, normalized)
+                return True
+            return False
+        return False
+
+    def remove_section(self, section: str) -> bool:
+        default_section: str = _default_section()
+        if section == default_section:
+            return False
+        if section in self._sections:
+            self._sections = _without_section(self._sections, section)
+            return True
+        return False
+
+    def proxy(self, section: str) -> SectionProxy | None:
+        default_section: str = _default_section()
+        if section != default_section and not self.has_section(section):
+            return None
+        merged: dict[str, str | None] = self._merged_section(section)
+        return SectionProxy(section, merged)
+
+    def to_ini_string(self) -> str:
+        lines: list[str] = []
+        if len(self._defaults) > 0:
+            lines.append("[" + _default_section() + "]")
+            for key, value in self._defaults.items():
+                if value is None:
+                    lines.append(key)
+                else:
+                    lines.append(key + " = " + value)
+            lines.append("")
+        for section_name, section_values in self._sections.items():
+            lines.append("[" + section_name + "]")
+            for key, value in section_values.items():
+                if value is None:
+                    lines.append(key)
+                else:
+                    lines.append(key + " = " + value)
+            lines.append("")
+        if len(lines) > 0:
+            maybe_last: str | None = lines[len(lines) - 1]
+            if maybe_last is not None and maybe_last == "":
+                _ = lines.pop()
+        return "\n".join(lines)
+
+    def write(self, path: str) -> Result[None, IOError]:
+        payload: str = self.to_ini_string()
+        return write_text(path, payload)
+
+
+class RawConfigParser(ConfigParser):
+    pass

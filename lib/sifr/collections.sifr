@@ -5,11 +5,29 @@ class Counter[T: Hashable]:
     # A multiset (bag) mapping elements to their counts.
     counts: dict[T, int]
 
-    def get(self, key: T) -> int:
+    def __init__(
+        self, source: dict[T, int] | None = None, iterable: list[T] | None = None
+    ) -> None:
+        counts: dict[T, int] = {}
+        if source is not None:
+            for key in source.keys():
+                value: int | None = source[key]
+                if value is not None:
+                    counts[key] = value
+        if iterable is not None:
+            for item in iterable:
+                value2: int | None = counts[item]
+                if value2 is not None:
+                    counts[item] = value2 + 1
+                else:
+                    counts[item] = 1
+        self.counts = counts
+
+    def get(self, key: T, default: int = 0) -> int:
         val: int | None = self.counts[key]
         if val is not None:
             return val
-        return 0
+        return default
 
     def increment(self, key: T) -> None:
         val: int | None = self.counts[key]
@@ -24,49 +42,62 @@ class Counter[T: Hashable]:
             total = total + count
         return total
 
-    def most_common(self, n: int) -> list[T]:
-        all_keys: list[T] = self.counts.keys()
-        result: list[T] = []
-        for k in all_keys:
-            result.append(k)
+    def most_common(self, n: int | None = None) -> list[tuple[T, int]]:
+        result: list[tuple[T, int]] = []
+        for key in self.counts.keys():
+            count: int | None = self.counts[key]
+            if count is not None:
+                entry: tuple[T, int] = (key, count)
+                result.append(entry)
         sz: int = len(result)
         i: int = 0
         while i < sz:
             j: int = i + 1
             while j < sz:
-                ki: T | None = result[i]
-                kj: T | None = result[j]
-                if ki is not None:
-                    if kj is not None:
-                        ci: int | None = self.counts[ki]
-                        cj: int | None = self.counts[kj]
-                        ci_val: int = 0
-                        cj_val: int = 0
-                        if ci is not None:
-                            ci_val = ci
-                        if cj is not None:
-                            cj_val = cj
-                        if cj_val > ci_val:
-                            result[i] = kj
-                            result[j] = ki
+                left: tuple[T, int] | None = result[i]
+                right: tuple[T, int] | None = result[j]
+                if left is not None:
+                    if right is not None:
+                        if right[1] > left[1]:
+                            result[i] = right
+                            result[j] = left
                 j = j + 1
             i = i + 1
-        top: list[T] = []
-        count: int = 0
-        while count < n:
-            if count >= len(result):
+        if n is None:
+            return result
+        if n <= 0:
+            return []
+        top: list[tuple[T, int]] = []
+        index: int = 0
+        while index < n:
+            if index >= len(result):
                 return top
-            val: T | None = result[count]
-            if val is not None:
-                top.append(val)
-            count = count + 1
+            value: tuple[T, int] | None = result[index]
+            if value is not None:
+                top.append(value)
+            index = index + 1
         return top
 
     def keys(self) -> list[T]:
         return self.counts.keys()
 
+    def items(self) -> list[tuple[T, int]]:
+        result: list[tuple[T, int]] = []
+        for key in self.counts.keys():
+            value: int | None = self.counts[key]
+            if value is not None:
+                entry: tuple[T, int] = (key, value)
+                result.append(entry)
+        return result
+
     def values(self) -> list[int]:
         return self.counts.values()
+
+    def copy(self) -> Counter[T]:
+        return Counter(self.counts)
+
+    def clear(self) -> None:
+        self.counts = {}
 
     def update(self, other: Counter[T]) -> None:
         for key in other.counts.keys():
@@ -153,34 +184,94 @@ def from_list[T: Hashable](items: list[T]) -> Counter[T]:
     return Counter(counts)
 
 
+class defaultdict[K: Hashable]:
+    default_factory: int
+    _values: dict[K, int]
+
+    def __init__(self, default_factory: int = 0, initial: dict[K, int] | None = None) -> None:
+        self.default_factory = default_factory
+        values: dict[K, int] = {}
+        if initial is not None:
+            for key, value in initial.items():
+                values[key] = value
+        self._values = values
+
+    def ensure(self, key: K) -> int:
+        current: int | None = self._values[key]
+        if current is not None:
+            return current
+        self._values[key] = self.default_factory
+        created: int | None = self._values[key]
+        if created is not None:
+            return created
+        return self.default_factory
+
+    def set(self, key: K, value: int) -> None:
+        self._values[key] = value
+
+    def has(self, key: K) -> bool:
+        return key in self._values
+
+    def pop(self, key: K) -> int | None:
+        if key in self._values:
+            return self._values.pop(key)
+        return None
+
+    def clear(self) -> None:
+        self._values = {}
+
+    def keys(self) -> list[K]:
+        return self._values.keys()
+
+    def values(self) -> list[int]:
+        return self._values.values()
+
+    def items(self) -> list[tuple[K, int]]:
+        values: list[tuple[K, int]] = []
+        for key, value in self._values.items():
+            values.append((key, value))
+        return values
+
+    def len(self) -> int:
+        return len(self._values)
+
+
 class deque[T]:
     # A double-ended queue backed by VecDeque for O(1) front/back operations.
     _data: list[T]
-    _maxlen: int
+    maxlen: int | None
 
-    def __init__(self, items: list[T] = [], maxlen: int = 0) -> None:
+    def __init__(self, items: list[T] | None = None, maxlen: int | None = None) -> None:
         data: list[T] = []
-        start: int = 0
-        if maxlen > 0 and len(items) > maxlen:
-            start = len(items) - maxlen
-        i: int = start
-        while i < len(items):
-            item: T | None = items[i]
-            if item is not None:
-                data.append(item)
-            i += 1
-        self._maxlen = maxlen
+        if items is not None:
+            start: int = 0
+            if maxlen is not None:
+                if len(items) > maxlen:
+                    start = len(items) - maxlen
+            i: int = start
+            while i < len(items):
+                item: T | None = items[i]
+                if item is not None:
+                    data.append(item)
+                i += 1
+        self.maxlen = maxlen
         self._data = data
 
     def append(self, val: T) -> None:
         self._data.append(val)
-        if self._maxlen > 0 and len(self._data) > self._maxlen:
-            self._data.popleft()
+        maxlen_opt: int | None = self.maxlen
+        if maxlen_opt is not None:
+            maxlen: int = maxlen_opt
+            if len(self._data) > maxlen:
+                self._data.popleft()
 
     def appendleft(self, val: T) -> None:
         self._data.appendleft(val)
-        if self._maxlen > 0 and len(self._data) > self._maxlen:
-            self._data.pop()
+        maxlen_opt: int | None = self.maxlen
+        if maxlen_opt is not None:
+            maxlen: int = maxlen_opt
+            if len(self._data) > maxlen:
+                self._data.pop()
 
     def pop(self) -> T | None:
         if len(self._data) == 0:
@@ -202,18 +293,93 @@ class deque[T]:
         return result
 
     def clear(self) -> None:
-        self._data = []
+        self._data.clear()
 
     def extend(self, items: list[T]) -> None:
         for v in items:
             self._data.append(v)
-        if self._maxlen > 0:
-            while len(self._data) > self._maxlen:
+        maxlen_opt: int | None = self.maxlen
+        if maxlen_opt is not None:
+            maxlen: int = maxlen_opt
+            while len(self._data) > maxlen:
                 self._data.popleft()
 
     def extendleft(self, items: list[T]) -> None:
         for v in items:
             self._data.appendleft(v)
-        if self._maxlen > 0:
-            while len(self._data) > self._maxlen:
+        maxlen_opt: int | None = self.maxlen
+        if maxlen_opt is not None:
+            maxlen: int = maxlen_opt
+            while len(self._data) > maxlen:
                 self._data.pop()
+
+    def copy(self) -> deque[T]:
+        return deque(self.to_list(), maxlen=self.maxlen)
+
+    def reverse(self) -> None:
+        items: list[T] = self.to_list()
+        items.reverse()
+        self._data.clear()
+        for item in items:
+            self._data.append(item)
+
+    def rotate(self, n: int = 1) -> None:
+        length: int = len(self._data)
+        if length == 0:
+            return
+        steps: int = n % length
+        if steps < 0:
+            steps = steps + length
+        count: int = 0
+        while count < steps:
+            value: T | None = self._data.pop()
+            if value is not None:
+                self._data.appendleft(value)
+            count = count + 1
+
+    def count(self, value: T) -> int:
+        total: int = 0
+        for item in self._data:
+            if item == value:
+                total = total + 1
+        return total
+
+    def index(self, value: T, start: int = 0, stop: int | None = None) -> int | None:
+        size: int = len(self._data)
+        begin: int = start
+        if begin < 0:
+            begin = size + begin
+            if begin < 0:
+                begin = 0
+        end: int = size
+        if stop is not None:
+            end = stop
+            if end < 0:
+                end = size + end
+            if end < 0:
+                end = 0
+            if end > size:
+                end = size
+        i: int = begin
+        while i < end:
+            current: T | None = self._data[i]
+            if current is not None:
+                if current == value:
+                    return i
+            i = i + 1
+        return None
+
+    def remove(self, value: T) -> None:
+        idx: int | None = self.index(value, 0, None)
+        if idx is not None:
+            rebuilt: list[T] = []
+            i: int = 0
+            while i < len(self._data):
+                current: T | None = self._data[i]
+                if current is not None:
+                    if i != idx:
+                        rebuilt.append(current)
+                i = i + 1
+            self._data.clear()
+            for item in rebuilt:
+                self._data.append(item)

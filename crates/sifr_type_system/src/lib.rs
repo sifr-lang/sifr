@@ -14,7 +14,8 @@ pub use check::{
 };
 pub use infer::infer_literal_type;
 pub use types::{
-    FunctionType, OwnershipKind, ParamConvention, ParamMutability, ParamOwnership, Type,
+    FunctionType, IterationCapability, IterationMetadata, OwnershipKind, ParamConvention,
+    ParamMutability, ParamOwnership, Type,
 };
 pub mod narrow;
 pub use literal::{widen as widen_literal, LiteralValue};

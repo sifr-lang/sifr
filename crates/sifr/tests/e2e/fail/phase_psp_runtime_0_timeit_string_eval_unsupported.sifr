@@ -1,0 +1,5 @@
+from sifr.timeit import timeit
+
+
+def main() -> None:
+    _ = timeit("x = 1", 1)

@@ -1,4 +1,4 @@
-# sifr.logging — Simple logging with level filtering
+# sifr.logging — Deterministic single-process logging
 from _sifr.logging import set_global_level, get_global_level
 from sifr.io import FileHandle, open
 
@@ -10,15 +10,33 @@ ERROR: int = 40
 CRITICAL: int = 50
 NOTSET: int = 0
 
+
+def _level_name_to_num(level: str) -> int:
+    if level == "DEBUG":
+        return DEBUG
+    if level == "INFO":
+        return INFO
+    if level == "WARNING":
+        return WARNING
+    if level == "ERROR":
+        return ERROR
+    if level == "CRITICAL":
+        return CRITICAL
+    return NOTSET
+
+
 # Log levels: DEBUG=10, INFO=20, WARNING=30, ERROR=40, CRITICAL=50
 def log_info(msg: str) -> None:
     print("[INFO] " + msg)
 
+
 def log_warn(msg: str) -> None:
     print("[WARNING] " + msg)
 
+
 def log_error(msg: str) -> None:
     print("[ERROR] " + msg)
+
 
 def log_debug(msg: str) -> None:
     print("[DEBUG] " + msg)
@@ -30,6 +48,9 @@ class Formatter:
     def __init__(self, fmt: str) -> None:
         self._fmt = fmt
 
+    def template(self) -> str:
+        return self._fmt
+
     def format(self, level: str, name: str, msg: str) -> str:
         result: str = self._fmt
         result = result.replace("%(levelname)s", level)
@@ -38,39 +59,159 @@ class Formatter:
         return result
 
 
-class FileHandler:
-    _path: str
+class Handler:
+    _level: int
     _formatter: Formatter
 
-    def __init__(self, path: str) -> None:
-        self._path = path
+    def __init__(self, level: int = 0) -> None:
+        self._level = level
         self._formatter = Formatter("%(levelname)s:%(name)s:%(message)s")
+
+    def set_level(self, level: int) -> None:
+        self._level = level
+
+    def level(self) -> int:
+        return self._level
 
     def set_formatter(self, fmt: Formatter) -> None:
         self._formatter = Formatter(fmt._fmt + "")
 
+    def format_template(self) -> str:
+        return self._formatter.template()
+
+    def _allows(self, level_num: int) -> bool:
+        if self._level == NOTSET:
+            return True
+        return level_num >= self._level
+
     def emit(self, level: str, name: str, msg: str) -> None:
+        _ = level
+        _ = name
+        _ = msg
+
+
+class StreamHandler:
+    _level: int
+    _formatter: Formatter
+
+    def __init__(self, level: int = 0) -> None:
+        self._level = level
+        self._formatter = Formatter("%(levelname)s:%(name)s:%(message)s")
+
+    def set_level(self, level: int) -> None:
+        self._level = level
+
+    def level(self) -> int:
+        return self._level
+
+    def set_formatter(self, fmt: Formatter) -> None:
+        self._formatter = Formatter(fmt._fmt + "")
+
+    def format_template(self) -> str:
+        return self._formatter.template()
+
+    def _allows(self, level_num: int) -> bool:
+        if self._level == NOTSET:
+            return True
+        return level_num >= self._level
+
+    def emit(self, level: str, name: str, msg: str) -> None:
+        level_num: int = _level_name_to_num(level)
+        if not self._allows(level_num):
+            return
+        line: str = self._formatter.format(level, name, msg)
+        print(line)
+
+
+class FileHandler:
+    _path: str
+    _level: int
+    _formatter: Formatter
+
+    def __init__(self, path: str, level: int = 0) -> None:
+        self._path = path + ""
+        self._level = level
+        self._formatter = Formatter("%(levelname)s:%(name)s:%(message)s")
+
+    def path(self) -> str:
+        return self._path
+
+    def set_level(self, level: int) -> None:
+        self._level = level
+
+    def level(self) -> int:
+        return self._level
+
+    def set_formatter(self, fmt: Formatter) -> None:
+        self._formatter = Formatter(fmt._fmt + "")
+
+    def format_template(self) -> str:
+        return self._formatter.template()
+
+    def _allows(self, level_num: int) -> bool:
+        if self._level == NOTSET:
+            return True
+        return level_num >= self._level
+
+    def emit(self, level: str, name: str, msg: str) -> None:
+        level_num: int = _level_name_to_num(level)
+        if not self._allows(level_num):
+            return
         line: str = self._formatter.format(level, name, msg) + "\n"
         try:
             fh: FileHandle = open(self._path, "a")
             try:
                 _: None = fh.write(line)
             except IOError as e2:
-                pass
+                _ = e2.message
             fh.close()
         except IOError as e:
-            pass
+            _ = e.message
+
+
+class NullHandler:
+    _level: int
+    _formatter: Formatter
+
+    def __init__(self, level: int = 0) -> None:
+        self._level = level
+        self._formatter = Formatter("%(levelname)s:%(name)s:%(message)s")
+
+    def set_level(self, level: int) -> None:
+        self._level = level
+
+    def level(self) -> int:
+        return self._level
+
+    def set_formatter(self, fmt: Formatter) -> None:
+        self._formatter = Formatter(fmt._fmt + "")
+
+    def format_template(self) -> str:
+        return self._formatter.template()
+
+    def emit(self, level: str, name: str, msg: str) -> None:
+        _ = level
+        _ = name
+        _ = msg
 
 
 class Logger:
     _name: str
     _level: int
     _log_path: str
+    _handler_kind: str
+    _handler_path: str
+    _handler_level: int
+    _handler_fmt: str
 
     def __init__(self, name: str, level: int = 20) -> None:
         self._name = name
         self._level = level
         self._log_path = ""
+        self._handler_kind = ""
+        self._handler_path = ""
+        self._handler_level = NOTSET
+        self._handler_fmt = "%(levelname)s:%(name)s:%(message)s"
 
     def set_level(self, level: int) -> None:
         self._level = level
@@ -78,35 +219,92 @@ class Logger:
     def set_file(self, path: str) -> None:
         self._log_path = path + ""
 
+    def add_handler(self, handler: FileHandler) -> None:
+        self._handler_kind = "file"
+        self._handler_path = handler.path()
+        self._handler_level = handler.level()
+        self._handler_fmt = "%(levelname)s:%(name)s:%(message)s"
+
+    def set_stream_handler(self, handler: StreamHandler) -> None:
+        self._handler_kind = "stream"
+        self._handler_path = ""
+        self._handler_level = handler.level()
+        self._handler_fmt = "%(levelname)s:%(name)s:%(message)s"
+
+    def set_null_handler(self, handler: NullHandler) -> None:
+        self._handler_kind = "null"
+        self._handler_path = ""
+        self._handler_level = handler.level()
+        self._handler_fmt = "%(levelname)s:%(name)s:%(message)s"
+
+    def clear_handler(self) -> None:
+        self._handler_kind = ""
+        self._handler_path = ""
+        self._handler_level = NOTSET
+        self._handler_fmt = "%(levelname)s:%(name)s:%(message)s"
+
+    def _handler_allows(self, level_num: int) -> bool:
+        if self._handler_level == NOTSET:
+            return True
+        return level_num >= self._handler_level
+
+    def _handler_line(self, level: str, msg: str) -> str:
+        formatter: Formatter = Formatter(self._handler_fmt)
+        return formatter.format(level, self._name, msg)
+
     def _emit(self, level: str, level_num: int, msg: str) -> None:
-        if self._level <= level_num:
-            line: str = "[" + level + "] " + self._name + ": " + msg
-            print(line)
-            if self._log_path != "":
+        if self._level > level_num:
+            return
+
+        if self._handler_kind == "null":
+            return
+
+        if self._handler_kind == "stream":
+            if self._handler_allows(level_num):
+                print(self._handler_line(level, msg))
+            return
+
+        if self._handler_kind == "file":
+            if self._handler_allows(level_num) and self._handler_path != "":
+                line: str = self._handler_line(level, msg) + "\n"
                 try:
-                    fh: FileHandle = open(self._log_path, "a")
+                    fh: FileHandle = open(self._handler_path, "a")
                     try:
-                        _: None = fh.write(line + "\n")
+                        _: None = fh.write(line)
                     except IOError as e2:
-                        pass
+                        _ = e2.message
                     fh.close()
                 except IOError as e:
-                    pass
+                    _ = e.message
+            return
+
+        line: str = "[" + level + "] " + self._name + ": " + msg
+        print(line)
+        if self._log_path != "":
+            try:
+                fh: FileHandle = open(self._log_path, "a")
+                try:
+                    _: None = fh.write(line + "\n")
+                except IOError as e2:
+                    _ = e2.message
+                fh.close()
+            except IOError as e:
+                _ = e.message
 
     def debug(self, msg: str) -> None:
-        self._emit("DEBUG", 10, msg)
+        self._emit("DEBUG", DEBUG, msg)
 
     def info(self, msg: str) -> None:
-        self._emit("INFO", 20, msg)
+        self._emit("INFO", INFO, msg)
 
     def warning(self, msg: str) -> None:
-        self._emit("WARNING", 30, msg)
+        self._emit("WARNING", WARNING, msg)
 
     def error(self, msg: str) -> None:
-        self._emit("ERROR", 40, msg)
+        self._emit("ERROR", ERROR, msg)
 
     def critical(self, msg: str) -> None:
-        self._emit("CRITICAL", 50, msg)
+        self._emit("CRITICAL", CRITICAL, msg)
 
 
 def basicConfig(level: int) -> Logger:

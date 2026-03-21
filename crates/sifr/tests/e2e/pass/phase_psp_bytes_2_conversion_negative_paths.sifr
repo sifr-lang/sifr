@@ -1,0 +1,44 @@
+def main() -> None:
+    bad_size_rejected: bool = False
+    try:
+        _neg: bytes = bytes(-2)
+    except ValueError as e:
+        bad_size_rejected = True
+    assert bad_size_rejected
+
+    bad_value_rejected: bool = False
+    try:
+        _bad_values: bytes = bytes.from_ints([0, 256])
+    except ValueError as e:
+        bad_value_rejected = True
+    assert bad_value_rejected
+
+    bad_utf8_rejected: bool = False
+    try:
+        _invalid: str = b"\xff".decode()
+    except ParseError as e:
+        bad_utf8_rejected = True
+    assert bad_utf8_rejected
+
+    bad_hex_rejected: bool = False
+    try:
+        _bad_hex: bytes = bytes.from_hex("GG")
+    except ParseError as e:
+        bad_hex_rejected = True
+    assert bad_hex_rejected
+
+    bad_encode_codec_rejected: bool = False
+    try:
+        codec: str = "latin-1"
+        _encoded: bytes = "abc".encode(codec)
+    except ParseError as e:
+        bad_encode_codec_rejected = True
+    assert bad_encode_codec_rejected
+
+    bad_decode_codec_rejected: bool = False
+    try:
+        codec2: str = "latin-1"
+        _decoded: str = b"abc".decode(codec2)
+    except ParseError as e:
+        bad_decode_codec_rejected = True
+    assert bad_decode_codec_rejected

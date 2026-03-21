@@ -1,0 +1,48 @@
+from sifr.logging import getLogger, Logger, FileHandler, Formatter, INFO
+from sifr.time import gmtime_struct, mktime, struct_time, TIMEZONE, TZNAME
+from sifr.timeit import Timer
+from sifr.io import write_text, read_text, exists
+from sifr.os import remove_file
+
+
+def workload() -> None:
+    i: int = 0
+    total: int = 0
+    while i < 64:
+        total = total + i
+        i = i + 1
+
+
+def main() -> None:
+    demo_ok: bool = False
+    log_path: str = "/tmp/sifr_runtime_wave3_demo.log"
+
+    try:
+        _w: None = write_text(log_path, "")
+        logger: Logger = getLogger("wave3-demo")
+        logger.set_file(log_path)
+        fh: FileHandler = FileHandler(log_path + "", INFO)
+        logger.add_handler(fh)
+        logger.info("hello")
+        logger.clear_handler()
+
+        gmt: struct_time = gmtime_struct(0.0)
+        epoch_tm: struct_time = struct_time(1970, 1, 1, 0, 0, 0, 3, 1, 0)
+        epoch_ok: bool = mktime(epoch_tm) == 0.0
+
+        timer: Timer = Timer()
+        elapsed: float = timer(workload, 4)
+
+        content: str = read_text(log_path)
+        demo_ok = content == "INFO:wave3-demo:hello\n" and gmt.tm_year == 1970 and epoch_ok and elapsed >= 0.0 and TIMEZONE == 0 and TZNAME[0] == "UTC"
+    except IOError as e:
+        _ = e.message
+
+    try:
+        if exists(log_path):
+            _rm: None = remove_file(log_path)
+    except IOError as e:
+        _ = e.message
+
+    assert demo_ok
+    print("ad_hoc_runtime_wave3_logging_time_timeit_object_surface_demo: ok")

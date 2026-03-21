@@ -8,7 +8,7 @@ pub(super) fn reject_immutable_parameter_method_mutation(
     object_ty: &Type,
     method: &str,
 ) -> bool {
-    if !method_requires_mutable_parameter_binding(object_ty, method) {
+    if !is_collection_mutating_method(object_ty, method) {
         return false;
     }
 
@@ -30,9 +30,9 @@ pub(super) fn reject_immutable_parameter_method_mutation(
     false
 }
 
-fn method_requires_mutable_parameter_binding(object_ty: &Type, method: &str) -> bool {
+pub(super) fn is_collection_mutating_method(object_ty: &Type, method: &str) -> bool {
     if let Type::Alias { body, .. } = object_ty {
-        return method_requires_mutable_parameter_binding(body, method);
+        return is_collection_mutating_method(body, method);
     }
 
     match object_ty {
@@ -49,8 +49,18 @@ fn method_requires_mutable_parameter_binding(object_ty: &Type, method: &str) -> 
                 | "appendleft"
                 | "remove"
         ),
-        Type::Dict(_, _) => matches!(method, "update" | "clear" | "pop"),
-        Type::Set(_) => matches!(method, "add" | "remove" | "discard" | "clear"),
+        Type::Dict(_, _) => matches!(method, "update" | "clear" | "pop" | "setdefault"),
+        Type::Set(_) => matches!(
+            method,
+            "add"
+                | "remove"
+                | "discard"
+                | "clear"
+                | "update"
+                | "intersection_update"
+                | "difference_update"
+                | "symmetric_difference_update"
+        ),
         _ => false,
     }
 }

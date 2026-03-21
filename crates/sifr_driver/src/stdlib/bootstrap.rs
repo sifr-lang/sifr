@@ -5,7 +5,7 @@ use crate::stdlib::intrinsics::intrinsic_constant_rust_expr;
 use crate::stdlib::registry::STDLIB_FILES;
 use crate::stdlib::types::StdlibCompiled;
 use sifr_codegen::StdlibCode;
-use sifr_hir::{lower_module_stdlib_with_externals, ExternalDefs};
+use sifr_hir::{lower_module_stdlib_with_externals, ExternalDefs, HirParam};
 use sifr_python_parser::parse_module;
 use sifr_type_system::{FunctionType, ParamConvention, Type};
 use std::collections::{HashMap, HashSet};
@@ -14,12 +14,6 @@ pub(crate) fn compile_stdlib() -> Result<StdlibCompiled, Vec<CompileError>> {
     get_or_init_stdlib_cache(&STDLIB_COMPILED_CACHE, compile_stdlib_uncached)
 }
 
-#[cfg(test)]
-pub(crate) fn compile_stdlib_uncached() -> Result<StdlibCompiled, Vec<CompileError>> {
-    compile_stdlib_uncached_impl()
-}
-
-#[cfg(not(test))]
 pub(crate) fn compile_stdlib_uncached() -> Result<StdlibCompiled, Vec<CompileError>> {
     compile_stdlib_uncached_impl()
 }
@@ -73,21 +67,17 @@ fn compile_stdlib_uncached_impl() -> Result<StdlibCompiled, Vec<CompileError>> {
         let mut class_exports = HashMap::new();
         let mut class_type_param_exports = HashMap::new();
         let mut default_exports = HashMap::new();
+        let mut vararg_exports = HashMap::new();
 
         for func in &result.module.functions {
             if should_export_callable(module_name, &func.name) {
-                let params: Vec<(String, Type, ParamConvention)> = func
-                    .params
-                    .iter()
-                    .map(|p| (p.name.clone(), p.ty.clone(), p.convention))
-                    .collect();
                 fn_exports.insert(
                     func.name.clone(),
-                    FunctionType {
-                        params,
-                        return_type: Box::new(func.return_type.clone()),
-                    },
+                    function_type_from_params(&func.params, &func.return_type),
                 );
+                if let Some(vararg_index) = result.function_varargs.get(&func.name) {
+                    vararg_exports.insert(func.name.clone(), *vararg_index);
+                }
             }
         }
 
@@ -147,33 +137,17 @@ fn compile_stdlib_uncached_impl() -> Result<StdlibCompiled, Vec<CompileError>> {
                 let mut methods: Vec<(String, FunctionType)> = class
                     .methods
                     .iter()
-                    .map(|m| {
-                        let params: Vec<(String, Type, ParamConvention)> = m
-                            .params
-                            .iter()
-                            .map(|p| (p.name.clone(), p.ty.clone(), p.convention))
-                            .collect();
+                    .map(|method| {
                         (
-                            m.name.clone(),
-                            FunctionType {
-                                params,
-                                return_type: Box::new(m.return_type.clone()),
-                            },
+                            method.name.clone(),
+                            function_type_from_params(&method.params, &method.return_type),
                         )
                     })
                     .collect();
                 for (dunder_name, op_func) in &class.operator_impls {
-                    let params: Vec<(String, Type, ParamConvention)> = op_func
-                        .params
-                        .iter()
-                        .map(|p| (p.name.clone(), p.ty.clone(), p.convention))
-                        .collect();
                     methods.push((
                         dunder_name.clone(),
-                        FunctionType {
-                            params,
-                            return_type: Box::new(op_func.return_type.clone()),
-                        },
+                        function_type_from_params(&op_func.params, &op_func.return_type),
                     ));
                 }
                 let class_ty = Type::Class {
@@ -228,29 +202,17 @@ fn compile_stdlib_uncached_impl() -> Result<StdlibCompiled, Vec<CompileError>> {
             let mut sig_map = HashMap::new();
             for func in &result.module.functions {
                 if should_export_callable(module_name, &func.name) {
-                    let param_info: Vec<(Type, ParamConvention)> = func
-                        .params
-                        .iter()
-                        .map(|p| (p.ty.clone(), p.convention))
-                        .collect();
+                    let param_info = signature_params(&func.params, None);
                     sig_map.insert(func.name.clone(), (param_info, func.return_type.clone()));
                 }
             }
             for class in &result.module.classes {
                 let mut has_constructor = false;
                 for method in &class.methods {
-                    let param_info: Vec<(Type, ParamConvention)> = method
-                        .params
-                        .iter()
-                        .map(|p| {
-                            let conv = if method.name == "new" {
-                                ParamConvention::own()
-                            } else {
-                                p.convention
-                            };
-                            (p.ty.clone(), conv)
-                        })
-                        .collect();
+                    let param_info = signature_params(
+                        &method.params,
+                        (method.name == "new").then_some(ParamConvention::own()),
+                    );
                     sig_map.insert(
                         format!("{}::{}", class.name, method.name),
                         (param_info, method.return_type.clone()),
@@ -331,6 +293,11 @@ fn compile_stdlib_uncached_impl() -> Result<StdlibCompiled, Vec<CompileError>> {
                 .function_defaults
                 .insert((*module_name).to_string(), default_exports);
         }
+        if !vararg_exports.is_empty() {
+            stdlib_defs
+                .function_varargs
+                .insert((*module_name).to_string(), vararg_exports);
+        }
         if !const_exports.is_empty() {
             stdlib_defs
                 .constants
@@ -354,4 +321,79 @@ fn compile_stdlib_uncached_impl() -> Result<StdlibCompiled, Vec<CompileError>> {
         defs: stdlib_defs,
         code: stdlib_code,
     })
+}
+
+fn function_type_from_params(params: &[HirParam], return_type: &Type) -> FunctionType {
+    FunctionType {
+        params: named_params(params),
+        return_type: Box::new(return_type.clone()),
+    }
+}
+
+fn named_params(params: &[HirParam]) -> Vec<(String, Type, ParamConvention)> {
+    params
+        .iter()
+        .map(|param| (param.name.clone(), param.ty.clone(), param.convention))
+        .collect()
+}
+
+fn signature_params(
+    params: &[HirParam],
+    convention_override: Option<ParamConvention>,
+) -> Vec<(Type, ParamConvention)> {
+    params
+        .iter()
+        .map(|param| {
+            (
+                param.ty.clone(),
+                convention_override.unwrap_or(param.convention),
+            )
+        })
+        .collect()
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn sample_param(name: &str, ty: Type, convention: ParamConvention) -> HirParam {
+        HirParam {
+            name: name.to_string(),
+            ty,
+            default: None,
+            keyword_only: false,
+            convention,
+        }
+    }
+
+    #[test]
+    fn function_type_from_params_preserves_named_conventions() {
+        let params = vec![
+            sample_param("value", Type::Int, ParamConvention::borrow()),
+            sample_param("count", Type::Int, ParamConvention::own()),
+        ];
+
+        let function_type = function_type_from_params(&params, &Type::Bool);
+
+        assert_eq!(
+            function_type,
+            FunctionType {
+                params: vec![
+                    ("value".to_string(), Type::Int, ParamConvention::borrow()),
+                    ("count".to_string(), Type::Int, ParamConvention::own()),
+                ],
+                return_type: Box::new(Type::Bool),
+            }
+        );
+    }
+
+    #[test]
+    fn signature_params_can_override_constructor_conventions() {
+        let params = vec![sample_param("self", Type::Str, ParamConvention::borrow())];
+
+        assert_eq!(
+            signature_params(&params, Some(ParamConvention::own())),
+            vec![(Type::Str, ParamConvention::own())]
+        );
+    }
 }

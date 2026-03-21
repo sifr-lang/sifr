@@ -1,10 +1,10 @@
 from sifr.test import assert_eq
 
-def gen() -> list[int]:
-    try:
+def gen() -> Iterator[int]:
+    emitted: bool = False
+    while not emitted:
+        emitted = True
         yield 1
-    except Error as e:
-        yield 2
 
 
 def main():

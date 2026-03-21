@@ -1,19 +1,13 @@
-use crate::hir_nodes::{
-    HirExceptHandler, HirExpr, HirFunction, HirMatchArm, HirParam, HirPattern, HirStmt, MethodKind,
-};
-use sifr_python_ast::{
-    BoolOp, CmpOp, ExceptHandler, Expr, Number, Operator, Pattern, Singleton, Stmt, StmtAnnAssign,
-    StmtAssign, StmtAugAssign, StmtFor, StmtIf, StmtMatch, StmtReturn, StmtWhile, UnaryOp,
-};
-use sifr_type_system::infer::resolve_type_annotation;
-use sifr_type_system::{
-    narrow_type, type_check_binary_op, FunctionType, NarrowingCondition, OwnershipKind,
-    ParamConvention, Type,
-};
-
+use super::binding_mutability::ensure_mutable_parameter_binding;
+use super::builtin_calls::callable_builtin_element_type;
 use super::classes::collect_literal_coverage;
 use super::diagnostics::{collect_raise_error_types, format_type_name, is_valid_error_type};
 use super::expressions::{lower_expr, lower_star_unpack_assign, lower_tuple_unpack_assign};
+use super::for_loop_safety::{is_collection_backed_iter_source, loop_body_mutates_iter_source};
+use super::function_flow::infer_function_return_type;
+use super::nonlocal_support::{
+    collect_declared_nonlocals, hir_body_calls_function, lower_nonlocal, should_rebind_simple_name,
+};
 use super::numeric_sentinels::{
     apply_numeric_sentinel_patches, domain_typed_sentinel_expr, numeric_domain_for_type,
     numeric_sentinel_kind,
@@ -24,29 +18,33 @@ use super::sequence_guard_detection::{
 };
 use super::sequence_pointers::record_sequence_pointer_fact;
 use super::sequence_shapes::sequence_shape_fact;
-use super::typing_and_functions::{register_local_function_symbol, resolve_annotation_expr};
+use super::typing_and_functions::{
+    ast_convention_to_param, register_local_function_signature, register_local_function_symbol,
+    resolve_annotation_expr,
+};
 use super::LowerCtx;
-
-fn ensure_mutable_parameter_binding(ctx: &mut LowerCtx, name: &str, operation: &str) -> bool {
-    if ctx
-        .scope
-        .lookup(name)
-        .is_some_and(|info| info.is_parameter_binding() && !info.is_mutable_binding)
-    {
-        ctx.error(format!(
-            "cannot {operation} immutable parameter `{name}`: add `mut` to the parameter declaration"
-        ));
-        return false;
-    }
-    true
-}
-
+use crate::hir_nodes::{
+    HirExceptHandler, HirExpr, HirFunction, HirIteratorOp, HirMatchArm, HirParam, HirPattern,
+    HirStmt, MethodKind,
+};
+use sifr_python_ast::{
+    BoolOp, CmpOp, ExceptHandler, Expr, Number, Operator, Pattern, Singleton, Stmt, StmtAnnAssign,
+    StmtAssign, StmtAugAssign, StmtFor, StmtIf, StmtMatch, StmtReturn, StmtWhile, UnaryOp,
+};
+use sifr_type_system::infer::resolve_type_annotation;
+use sifr_type_system::{
+    narrow_type, type_check_binary_op, FunctionType, NarrowingCondition, OwnershipKind, Type,
+};
 pub(super) fn lower_stmts(
     stmts: &[Stmt],
     func_type: &FunctionType,
     ctx: &mut LowerCtx,
 ) -> Vec<HirStmt> {
-    predeclare_nested_function_symbols(stmts, ctx);
+    let nested_inference =
+        super::nested_function_inference::infer_nested_function_types(stmts, ctx);
+    ctx.inferred_binding_hints
+        .push(nested_inference.binding_hints.clone());
+    predeclare_nested_function_symbols(stmts, &nested_inference.function_types, ctx);
 
     let mut result = Vec::new();
     for (index, stmt) in stmts.iter().enumerate() {
@@ -69,14 +67,34 @@ pub(super) fn lower_stmts(
         }
         apply_numeric_sentinel_patches(&mut result, &mut ctx.pending_numeric_sentinel_patches);
     }
+    let _ = ctx.inferred_binding_hints.pop();
     result
 }
-
-fn predeclare_nested_function_symbols(stmts: &[Stmt], ctx: &mut LowerCtx) {
+fn predeclare_nested_function_symbols(
+    stmts: &[Stmt],
+    inferred_types: &std::collections::HashMap<String, FunctionType>,
+    ctx: &mut LowerCtx,
+) {
     for stmt in stmts {
         if let Stmt::FunctionDef(func) = stmt {
-            register_local_function_symbol(func, ctx);
+            if let Some(function_type) = inferred_types.get(func.name.as_str()).cloned() {
+                register_local_function_signature(func, function_type, ctx);
+            } else {
+                register_local_function_symbol(func, ctx);
+            }
         }
+    }
+}
+
+fn type_contains_unknown_or_any(ty: &Type) -> bool {
+    match ty {
+        Type::Unknown | Type::Any => true,
+        Type::List(elem) => type_contains_unknown_or_any(elem),
+        Type::Dict(key, value) => {
+            type_contains_unknown_or_any(key) || type_contains_unknown_or_any(value)
+        }
+        Type::Tuple(elements) => elements.iter().any(type_contains_unknown_or_any),
+        _ => false,
     }
 }
 
@@ -182,68 +200,69 @@ pub(super) fn lower_stmt(
                 ctx.error("with statement must have at least one item".to_string());
                 return None;
             }
-            let mut items = Vec::new();
-            ctx.scope.push();
-            for item in &with_stmt.items {
-                let value = lower_expr(&item.context_expr, ctx)?;
-                let var_name = if let Some(ref vars) = item.optional_vars {
-                    if let Expr::Name(n) = vars.as_ref() {
-                        n.id.clone()
-                    } else {
-                        ctx.error("with target must be a simple name".to_string());
-                        return None;
-                    }
-                } else {
-                    format!("_with_val_{}", items.len())
-                };
-                let val_ty = value.ty().clone();
-                // Check if the type implements the ContextManager protocol (__enter__/__exit__)
-                let has_context_manager = if let Type::Class { methods, .. } = &val_ty {
-                    let has_enter = methods.iter().any(|(name, _)| name == "__enter__");
-                    let has_exit = methods.iter().any(|(name, _)| name == "__exit__");
-                    if has_enter && has_exit {
-                        true
-                    } else if has_enter || has_exit {
-                        ctx.error("type used in 'with' statement must implement both __enter__ and __exit__ methods".to_string());
-                        false
-                    } else {
-                        ctx.error(format!(
-                            "type '{}' does not implement the ContextManager protocol (missing __enter__ and __exit__ methods)",
-                            match &val_ty { Type::Class { name, .. } => name.clone(), _ => "unknown".to_string() }
-                        ));
-                        false
-                    }
-                } else {
-                    // Non-class types don't have methods — can't be context managers
-                    ctx.error("type used in 'with' statement must implement the ContextManager protocol (__enter__/__exit__)".to_string());
-                    false
-                };
-                // If the type has __enter__, the variable is bound to __enter__()'s return type
-                // We resolve the actual class type from ctx.class_types to get full fields/methods
-                let bound_ty = if has_context_manager {
-                    if let Type::Class { methods, .. } = &val_ty {
-                        let ret_ty = methods
-                            .iter()
-                            .find(|(name, _)| name == "__enter__")
-                            .map(|(_, ft)| (*ft.return_type).clone())
-                            .unwrap_or(val_ty.clone());
-                        // If the return type is a class, look up the fully-defined version
-                        if let Type::Class { name: ret_name, .. } = &ret_ty {
-                            ctx.class_types.get(ret_name).cloned().unwrap_or(ret_ty)
+            let (items, body) = ctx.with_pushed_scope(|ctx| {
+                let mut items = Vec::new();
+                for item in &with_stmt.items {
+                    let value = lower_expr(&item.context_expr, ctx)?;
+                    let var_name = if let Some(ref vars) = item.optional_vars {
+                        if let Expr::Name(n) = vars.as_ref() {
+                            n.id.clone()
                         } else {
-                            ret_ty
+                            ctx.error("with target must be a simple name".to_string());
+                            return None;
+                        }
+                    } else {
+                        format!("_with_val_{}", items.len())
+                    };
+                    let val_ty = value.ty().clone();
+                    // Check if the type implements the ContextManager protocol (__enter__/__exit__)
+                    let has_context_manager = if let Type::Class { methods, .. } = &val_ty {
+                        let has_enter = methods.iter().any(|(name, _)| name == "__enter__");
+                        let has_exit = methods.iter().any(|(name, _)| name == "__exit__");
+                        if has_enter && has_exit {
+                            true
+                        } else if has_enter || has_exit {
+                            ctx.error("type used in 'with' statement must implement both __enter__ and __exit__ methods".to_string());
+                            false
+                        } else {
+                            ctx.error(format!(
+                                "type '{}' does not implement the ContextManager protocol (missing __enter__ and __exit__ methods)",
+                                match &val_ty { Type::Class { name, .. } => name.clone(), _ => "unknown".to_string() }
+                            ));
+                            false
+                        }
+                    } else {
+                        // Non-class types don't have methods — can't be context managers
+                        ctx.error("type used in 'with' statement must implement the ContextManager protocol (__enter__/__exit__)".to_string());
+                        false
+                    };
+                    // If the type has __enter__, the variable is bound to __enter__()'s return type
+                    // We resolve the actual class type from ctx.class_types to get full fields/methods
+                    let bound_ty = if has_context_manager {
+                        if let Type::Class { methods, .. } = &val_ty {
+                            let ret_ty = methods
+                                .iter()
+                                .find(|(name, _)| name == "__enter__")
+                                .map(|(_, ft)| (*ft.return_type).clone())
+                                .unwrap_or(val_ty.clone());
+                            // If the return type is a class, look up the fully-defined version
+                            if let Type::Class { name: ret_name, .. } = &ret_ty {
+                                ctx.class_types.get(ret_name).cloned().unwrap_or(ret_ty)
+                            } else {
+                                ret_ty
+                            }
+                        } else {
+                            val_ty.clone()
                         }
                     } else {
                         val_ty.clone()
-                    }
-                } else {
-                    val_ty.clone()
-                };
-                ctx.scope.define(var_name.clone(), bound_ty);
-                items.push((var_name, value, has_context_manager));
-            }
-            let body = lower_stmts(&with_stmt.body, func_type, ctx);
-            ctx.scope.pop();
+                    };
+                    ctx.scope.define(var_name.clone(), bound_ty);
+                    items.push((var_name, value, has_context_manager));
+                }
+                let body = lower_stmts(&with_stmt.body, func_type, ctx);
+                Some((items, body))
+            })?;
             Some(HirStmt::With { items, body })
         }
         Stmt::Try(try_stmt) => {
@@ -394,6 +413,10 @@ pub(super) fn lower_stmt(
                 body_error_types,
             })
         }
+        Stmt::Nonlocal(nonlocal) => {
+            lower_nonlocal(nonlocal, ctx);
+            None
+        }
         Stmt::FunctionDef(func) => {
             // Nested function definition (def inside def)
             // Extract the function type (params + return type)
@@ -404,7 +427,8 @@ pub(super) fn lower_stmt(
                 .unwrap_or_else(|| register_local_function_symbol(func, ctx));
 
             // Lower the nested function body
-            ctx.scope.push();
+            let declared_nonlocals = collect_declared_nonlocals(&func.body);
+            ctx.enter_function_scope(declared_nonlocals.clone());
 
             // Define parameters in scope
             let mut params = Vec::new();
@@ -415,14 +439,22 @@ pub(super) fn lower_stmt(
                     .get(i)
                     .map(|(_, t, _)| t.clone())
                     .unwrap_or(Type::Any);
-                ctx.scope.define(name.clone(), ty.clone());
+                let convention = ft
+                    .params
+                    .get(i)
+                    .map(|(_, _, convention)| *convention)
+                    .unwrap_or_else(|| {
+                        ast_convention_to_param(param_def.parameter.convention, &ty)
+                    });
+                ctx.scope
+                    .define_parameter(name.clone(), ty.clone(), convention.is_mutable());
                 let default = param_def.default.as_ref().and_then(|d| lower_expr(d, ctx));
                 params.push(HirParam {
                     name,
                     ty,
                     default,
                     keyword_only: false,
-                    convention: ParamConvention::default(),
+                    convention,
                 });
             }
 
@@ -435,13 +467,19 @@ pub(super) fn lower_stmt(
                     .get(regular_count)
                     .map(|(_, t, _)| t.clone())
                     .unwrap_or(Type::Any);
-                ctx.scope.define(name.clone(), ty.clone());
+                let convention = ft
+                    .params
+                    .get(regular_count)
+                    .map(|(_, _, convention)| *convention)
+                    .unwrap_or_else(|| ast_convention_to_param(vararg.convention, &ty));
+                ctx.scope
+                    .define_parameter(name.clone(), ty.clone(), convention.is_mutable());
                 params.push(HirParam {
                     name,
                     ty,
                     default: None,
                     keyword_only: false,
-                    convention: ParamConvention::default(),
+                    convention,
                 });
             }
 
@@ -455,40 +493,43 @@ pub(super) fn lower_stmt(
                     .get(regular_count + i)
                     .map(|(_, t, _)| t.clone())
                     .unwrap_or(Type::Any);
-                ctx.scope.define(name.clone(), ty.clone());
+                let convention = ft
+                    .params
+                    .get(regular_count + i)
+                    .map(|(_, _, convention)| *convention)
+                    .unwrap_or_else(|| {
+                        ast_convention_to_param(param_def.parameter.convention, &ty)
+                    });
+                ctx.scope
+                    .define_parameter(name.clone(), ty.clone(), convention.is_mutable());
                 let default = param_def.default.as_ref().and_then(|d| lower_expr(d, ctx));
                 params.push(HirParam {
                     name,
                     ty,
                     default,
                     keyword_only: true,
-                    convention: ParamConvention::default(),
+                    convention,
                 });
             }
 
             let body = lower_stmts(&func.body, &ft, ctx);
-            ctx.scope.pop();
+            ctx.exit_function_scope();
 
-            // Infer return type if not explicitly annotated
-            let inferred_return_type = if *ft.return_type == Type::Any && func.returns.is_none() {
-                let return_types = collect_return_types(&body);
-                if return_types.is_empty() {
-                    Type::None
-                } else if return_types.len() == 1 {
-                    return_types.into_iter().next().unwrap()
-                } else {
-                    let mut members: Vec<Type> = return_types.into_iter().collect();
-                    members.sort_by_key(sifr_type_system::Type::display_name);
-                    members.dedup();
-                    if members.len() == 1 {
-                        members.into_iter().next().unwrap()
-                    } else {
-                        Type::Union(members)
-                    }
-                }
-            } else {
-                *ft.return_type
-            };
+            if !declared_nonlocals.is_empty() && hir_body_calls_function(&body, func.name.as_str())
+            {
+                ctx.error(format!(
+                    "recursive nested function '{}' cannot mutate captured state with `nonlocal` yet",
+                    func.name
+                ));
+            }
+
+            let inferred_return_type = infer_function_return_type(
+                func.name.as_ref(),
+                ft.return_type.as_ref(),
+                func.returns.is_some(),
+                &body,
+                |message| ctx.error(message),
+            );
 
             // Collect user-defined decorators
             let decorators: Vec<String> = func
@@ -538,36 +579,35 @@ pub(super) fn lower_match(
 
     let mut arms = Vec::new();
     for case in &match_stmt.cases {
-        ctx.scope.push();
+        let arm = ctx.with_pushed_scope(|ctx| {
+            let pattern = lower_pattern(&case.pattern, &subject_ty, ctx)?;
 
-        let pattern = lower_pattern(&case.pattern, &subject_ty, ctx)?;
+            // Bind captured variables into scope
+            bind_pattern_vars(&pattern, ctx);
 
-        // Bind captured variables into scope
-        bind_pattern_vars(&pattern, ctx);
+            let guard = if let Some(ref g) = case.guard {
+                let guard_expr = lower_expr(g, ctx)?;
+                let guard_ty = guard_expr.ty();
+                if *guard_ty != Type::Bool && *guard_ty != Type::Any {
+                    ctx.error(format!(
+                        "match guard must be a bool expression, got '{}'",
+                        guard_ty.display_name()
+                    ));
+                }
+                Some(guard_expr)
+            } else {
+                None
+            };
 
-        let guard = if let Some(ref g) = case.guard {
-            let guard_expr = lower_expr(g, ctx)?;
-            let guard_ty = guard_expr.ty();
-            if *guard_ty != Type::Bool && *guard_ty != Type::Any {
-                ctx.error(format!(
-                    "match guard must be a bool expression, got '{}'",
-                    guard_ty.display_name()
-                ));
-            }
-            Some(guard_expr)
-        } else {
-            None
-        };
+            let body = lower_stmts(&case.body, func_type, ctx);
+            Some(HirMatchArm {
+                pattern,
+                guard,
+                body,
+            })
+        })?;
 
-        let body = lower_stmts(&case.body, func_type, ctx);
-
-        ctx.scope.pop();
-
-        arms.push(HirMatchArm {
-            pattern,
-            guard,
-            body,
-        });
+        arms.push(arm);
     }
 
     // Exhaustiveness check: verify all variants of the subject type are covered
@@ -1191,6 +1231,10 @@ pub(super) fn lower_assign(assign: &StmtAssign, ctx: &mut LowerCtx) -> Option<Hi
                 .lookup(&obj_name)
                 .map(|info| info.effective_type().clone())
                 .unwrap_or(Type::Unknown);
+            if matches!(obj_ty.resolve_alias(), Type::Bytes) {
+                ctx.error("bytes is immutable; subscript assignment is not supported".to_string());
+                return None;
+            }
             let outer_index = lower_expr(&inner_sub.slice, ctx)?;
             let inner_index = lower_expr(&sub.slice, ctx)?;
             let value = lower_expr(&assign.value, ctx)?;
@@ -1247,6 +1291,10 @@ pub(super) fn lower_assign(assign: &StmtAssign, ctx: &mut LowerCtx) -> Option<Hi
                     }
                 })
                 .unwrap_or(Type::Unknown);
+            if matches!(field_ty.resolve_alias(), Type::Bytes) {
+                ctx.error("bytes is immutable; subscript assignment is not supported".to_string());
+                return None;
+            }
             let index = lower_expr(&sub.slice, ctx)?;
             let value = lower_expr(&assign.value, ctx)?;
             return Some(HirStmt::AttributeSubscriptAssign {
@@ -1271,6 +1319,10 @@ pub(super) fn lower_assign(assign: &StmtAssign, ctx: &mut LowerCtx) -> Option<Hi
             .lookup(&obj_name)
             .map(|info| info.effective_type().clone())
             .unwrap_or(Type::Unknown);
+        if matches!(obj_ty.resolve_alias(), Type::Bytes) {
+            ctx.error("bytes is immutable; subscript assignment is not supported".to_string());
+            return None;
+        }
         let index = lower_expr(&sub.slice, ctx)?;
         let value = lower_expr(&assign.value, ctx)?;
         return Some(HirStmt::SubscriptAssign {
@@ -1314,8 +1366,18 @@ pub(super) fn lower_assign(assign: &StmtAssign, ctx: &mut LowerCtx) -> Option<Hi
         }
     }
 
+    let should_treat_as_existing_binding = if ctx.current_function_frame_start().is_some() {
+        should_rebind_simple_name(ctx, &name)
+    } else {
+        ctx.scope.lookup(&name).is_some()
+    };
+
     // Check if variable already exists
-    if let Some(info) = ctx.scope.lookup(&name) {
+    if should_treat_as_existing_binding {
+        let Some(info) = ctx.scope.lookup(&name) else {
+            ctx.error(format!("undefined variable: '{name}'"));
+            return None;
+        };
         if info.is_parameter_binding() && !info.is_mutable_binding {
             ctx.error(format!(
                 "cannot reassign immutable parameter `{name}`: add `mut` to the parameter declaration"
@@ -1343,7 +1405,14 @@ pub(super) fn lower_assign(assign: &StmtAssign, ctx: &mut LowerCtx) -> Option<Hi
         Some(HirStmt::Assign { name, value })
     } else {
         // New variable (type inferred)
-        ctx.scope.define(name.clone(), value_ty.clone());
+        let binding_ty = ctx
+            .inferred_binding_hint(&name)
+            .filter(|hint| {
+                type_contains_unknown_or_any(&value_ty) && value_ty.is_assignable_to(hint)
+            })
+            .cloned()
+            .unwrap_or_else(|| value_ty.clone());
+        ctx.scope.define(name.clone(), binding_ty.clone());
         if let Some(kind) = numeric_sentinel_kind(&assign.value) {
             ctx.record_numeric_sentinel_initializer(name.clone(), kind);
         } else {
@@ -1357,7 +1426,7 @@ pub(super) fn lower_assign(assign: &StmtAssign, ctx: &mut LowerCtx) -> Option<Hi
         record_sequence_pointer_fact(ctx, &name, &assign.value);
         Some(HirStmt::Let {
             name,
-            ty: value_ty,
+            ty: binding_ty,
             value,
             is_mutable: true,
         })
@@ -1420,6 +1489,12 @@ pub(super) fn lower_aug_assign(aug: &StmtAugAssign, ctx: &mut LowerCtx) -> Optio
             .lookup(&obj_name)
             .map(|info| info.effective_type().clone())
             .unwrap_or(Type::Unknown);
+        if matches!(obj_ty.resolve_alias(), Type::Bytes) {
+            ctx.error(
+                "bytes is immutable; augmented subscript assignment is not supported".to_string(),
+            );
+            return None;
+        }
         let index = lower_expr(&sub.slice, ctx)?;
         let value = lower_expr(&aug.value, ctx)?;
         let op_str = match aug.op {
@@ -1478,13 +1553,26 @@ pub(super) fn lower_aug_assign(aug: &StmtAugAssign, ctx: &mut LowerCtx) -> Optio
         }
     };
 
-    // Check that the variable exists
-    let var_info = ctx.scope.lookup(&name);
-    if var_info.is_none() {
+    let var_info = if ctx.current_function_frame_start().is_some() {
+        if let Some(info) = ctx.lookup_current_function_binding(&name) {
+            Some(info)
+        } else if ctx.is_declared_nonlocal(&name) {
+            ctx.lookup_outer_function_binding(&name)
+        } else if ctx.scope.lookup(&name).is_some() {
+            ctx.error(format!(
+                "captured variable `{name}` must be declared with `nonlocal` before augmented assignment"
+            ));
+            return None;
+        } else {
+            None
+        }
+    } else {
+        ctx.scope.lookup(&name)
+    };
+    let Some(var_info) = var_info else {
         ctx.error(format!("undefined variable: '{name}'"));
         return None;
-    }
-    let var_info = var_info.unwrap();
+    };
     if var_info.is_parameter_binding() && !var_info.is_mutable_binding {
         ctx.error(format!(
             "cannot reassign immutable parameter `{name}`: add `mut` to the parameter declaration"
@@ -1501,6 +1589,7 @@ pub(super) fn lower_aug_assign(aug: &StmtAugAssign, ctx: &mut LowerCtx) -> Optio
         match (&var_ty, value.ty()) {
             (Type::Str, Type::Str) => {}
             (Type::List(_), Type::List(_)) => {}
+            (Type::Bytes, Type::Bytes) => {}
             _ => {
                 if let Err(e) = type_check_binary_op(&var_ty, base_op, value.ty()) {
                     ctx.error(e.message);
@@ -1721,9 +1810,7 @@ pub(super) fn lower_if(
             ctx.add_sequence_guard(guard);
         }
     }
-
     ctx.clear_sequence_pointers();
-
     Some(HirStmt::If {
         condition,
         then_body,
@@ -1731,18 +1818,10 @@ pub(super) fn lower_if(
         else_body,
     })
 }
-
 /// Check if a block of statements always exits (return, break, continue, raise).
 /// Used for early-return narrowing: `if x is None: return` narrows x after the if.
 pub(super) fn then_body_always_exits(stmts: &[HirStmt]) -> bool {
     crate::cfg::flow_facts(stmts).always_exits()
-}
-
-/// Collect all return types from a list of HIR statements (recursively).
-pub(super) fn collect_return_types(stmts: &[HirStmt]) -> Vec<Type> {
-    crate::cfg::flow_facts(stmts)
-        .reachable_return_types()
-        .to_vec()
 }
 
 /// Detect a narrowing condition from an if-test expression.
@@ -1965,18 +2044,39 @@ pub(super) fn lower_for(
     func_type: &FunctionType,
     ctx: &mut LowerCtx,
 ) -> Option<HirStmt> {
-    // Lower the iterable expression
-    let iter_expr = lower_expr(&for_stmt.iter, ctx)?;
-    let iter_ty = iter_expr.ty().clone();
-
-    // Determine the element type from the iterable
-    let elem_ty = iter_ty.iterable_element_type().unwrap_or_else(|| {
+    // Lower the iterable expression and normalize protocol usage through `iter(...)`.
+    let iterable_expr = lower_expr(&for_stmt.iter, ctx)?;
+    let iter_source_name = match &iterable_expr {
+        HirExpr::Name { name, .. } => Some(name.clone()),
+        _ => None,
+    };
+    let iter_source_ty = iterable_expr.ty().clone();
+    if matches!(iter_source_ty.resolve_alias(), Type::Any | Type::Unknown) {
+        ctx.error(format!(
+            "for-loop iterable must have a statically-known element type, got '{}'",
+            iter_source_ty.display_name()
+        ));
+        return None;
+    }
+    let Some(elem_ty) = callable_builtin_element_type(&iter_source_ty) else {
+        if matches!(iter_source_ty.resolve_alias(), Type::Tuple(_)) {
+            ctx.error(
+                "for-loop tuple iteration requires one statically provable element type"
+                    .to_string(),
+            );
+            return None;
+        }
         ctx.error(format!(
             "cannot iterate over type '{}'",
-            iter_ty.display_name()
+            iter_source_ty.display_name()
         ));
-        Type::Any
-    });
+        return None;
+    };
+    let iter_expr = HirExpr::IteratorCall {
+        op: HirIteratorOp::Iter,
+        args: vec![iterable_expr],
+        ty: Type::Iterator(Box::new(elem_ty.clone())),
+    };
 
     // Extract the target variable name(s)
     let target_name = match for_stmt.target.as_ref() {
@@ -2048,6 +2148,17 @@ pub(super) fn lower_for(
     ctx.loop_depth -= 1;
     ctx.scope.pop();
     ctx.restore_sequence_guards(&saved_sequence_guards);
+
+    if let Some(source_name) = iter_source_name.as_deref() {
+        if is_collection_backed_iter_source(&iter_source_ty)
+            && loop_body_mutates_iter_source(&body, source_name)
+        {
+            ctx.error(format!(
+                "cannot mutate '{source_name}' while iterating over it in a for loop"
+            ));
+            return None;
+        }
+    }
 
     // Check for outer-scope variables moved inside the loop body
     let newly_moved = ctx.scope.moved_since(&moved_before_loop);

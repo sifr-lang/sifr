@@ -1,0 +1,20 @@
+def main():
+    nums: list[int] = [2, 4, 6, 8]
+
+    doubled: list[int] = list(map(lambda x: x * 2, nums))
+    evens: list[int] = list(filter(lambda x: x % 4 == 0, nums))
+    comp: list[int] = [x + 1 for x in nums]
+
+    print(doubled)
+    print(evens)
+    print(comp)
+
+    # Source container stays reusable after map/filter/comprehension lowering.
+    print(len(nums))
+    for n in nums:
+        print(n)
+
+    # Temporary source path should not need source.clone().into_iter().
+    print(list(map(lambda x: x - 1, [9, 10, 11])))
+
+    print("ad_hoc_clone_wave1_iterator_comprehension_demo: pass")

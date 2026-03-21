@@ -39,29 +39,154 @@ def get_close_matches(word: str, possibilities: list[str], n: int, cutoff: float
     return top
 
 def _similarity(a: str, b: str) -> float:
-    if len(a) == 0:
-        if len(b) == 0:
-            return 1.0
-        return 0.0
-    if len(b) == 0:
-        return 0.0
-    matches: int = 0
-    i: int = 0
-    while i < len(a):
-        ch_a: str | None = a[i]
-        if ch_a is not None:
-            j: int = 0
-            while j < len(b):
-                ch_b: str | None = b[j]
-                if ch_b is not None:
-                    if ch_a == ch_b:
-                        matches = matches + 1
-                        j = len(b)
-                j = j + 1
-        i = i + 1
     total: int = len(a) + len(b)
-    numerator: int = 2 * matches
-    return float(numerator) / float(total)
+    if total == 0:
+        return 1.0
+    matches: int = 0
+    blocks: list[tuple[int, int, int]] = _matching_blocks(a, b)
+    for block in blocks:
+        _, _, block_size = block
+        matches = matches + block_size
+    return float(2 * matches) / float(total)
+
+def _longest_common_substring_range(
+    a: str, b: str, a_start: int, a_end: int, b_start: int, b_end: int
+) -> tuple[int, int, int]:
+    best_i: int = 0
+    best_j: int = 0
+    best_len: int = 0
+    i: int = a_start
+    while i < a_end:
+        j: int = b_start
+        while j < b_end:
+            k: int = 0
+            while i + k < a_end and j + k < b_end:
+                ai: str | None = a[i + k]
+                bj: str | None = b[j + k]
+                if ai is None or bj is None:
+                    k = k + 1
+                    continue
+                if ai != bj:
+                    break
+                k = k + 1
+            if k > best_len:
+                best_len = k
+                best_i = i
+                best_j = j
+            j = j + 1
+        i = i + 1
+    return (best_i, best_j, best_len)
+
+def _sort_blocks(blocks: list[tuple[int, int, int]]) -> list[tuple[int, int, int]]:
+    sorted_blocks: list[tuple[int, int, int]] = []
+    for block in blocks:
+        bl_a, bl_b, _ = block
+        found_insert_at: bool = False
+        insert_at: int = 0
+        i: int = 0
+        for existing in sorted_blocks:
+            if not found_insert_at:
+                ex_a, ex_b, _ = existing
+                if bl_a < ex_a or (bl_a == ex_a and bl_b < ex_b):
+                    insert_at = i
+                    found_insert_at = True
+            i = i + 1
+        if found_insert_at:
+            sorted_blocks.insert(insert_at, block)
+        else:
+            sorted_blocks.append(block)
+    return sorted_blocks
+
+def _matching_blocks(a: str, b: str) -> list[tuple[int, int, int]]:
+    pending_a_start: list[int] = [0]
+    pending_a_end: list[int] = [len(a)]
+    pending_b_start: list[int] = [0]
+    pending_b_end: list[int] = [len(b)]
+    unsorted_blocks: list[tuple[int, int, int]] = []
+    while len(pending_a_start) > 0:
+        a_start_value: int | None = pending_a_start.pop()
+        a_end_value: int | None = pending_a_end.pop()
+        b_start_value: int | None = pending_b_start.pop()
+        b_end_value: int | None = pending_b_end.pop()
+        if a_start_value is not None:
+            if a_end_value is not None:
+                if b_start_value is not None:
+                    if b_end_value is not None:
+                        ai, bj, size = _longest_common_substring_range(
+                            a,
+                            b,
+                            a_start_value,
+                            a_end_value,
+                            b_start_value,
+                            b_end_value,
+                        )
+                        if size == 0:
+                            continue
+                        unsorted_blocks.append((ai, bj, size))
+                        left_a_end: int = ai
+                        left_b_end: int = bj
+                        if a_start_value < left_a_end and b_start_value < left_b_end:
+                            pending_a_start.append(a_start_value)
+                            pending_a_end.append(left_a_end)
+                            pending_b_start.append(b_start_value)
+                            pending_b_end.append(left_b_end)
+                        right_a_start: int = ai + size
+                        right_b_start: int = bj + size
+                        if right_a_start < a_end_value and right_b_start < b_end_value:
+                            pending_a_start.append(right_a_start)
+                            pending_a_end.append(a_end_value)
+                            pending_b_start.append(right_b_start)
+                            pending_b_end.append(b_end_value)
+
+    sorted_blocks: list[tuple[int, int, int]] = _sort_blocks(unsorted_blocks)
+    merged_blocks: list[tuple[int, int, int]] = []
+    have_previous: bool = False
+    prev_a: int = 0
+    prev_b: int = 0
+    prev_size: int = 0
+    for block in sorted_blocks:
+        bl_a, bl_b, bl_size = block
+        if not have_previous:
+            prev_a = bl_a
+            prev_b = bl_b
+            prev_size = bl_size
+            have_previous = True
+            continue
+        if prev_a + prev_size == bl_a and prev_b + prev_size == bl_b:
+            prev_size = prev_size + bl_size
+        else:
+            merged_blocks.append((prev_a, prev_b, prev_size))
+            prev_a = bl_a
+            prev_b = bl_b
+            prev_size = bl_size
+    if have_previous:
+        merged_blocks.append((prev_a, prev_b, prev_size))
+    merged_blocks.append((len(a), len(b), 0))
+    return merged_blocks
+
+class SequenceMatcher:
+    _a: str
+    _b: str
+
+    def __init__(self, a: str = "", b: str = "") -> None:
+        self._a = a + ""
+        self._b = b + ""
+
+    def set_seq1(self, a: str) -> None:
+        self._a = a + ""
+
+    def set_seq2(self, b: str) -> None:
+        self._b = b + ""
+
+    def set_seqs(self, a: str, b: str) -> None:
+        self._a = a + ""
+        self._b = b + ""
+
+    def ratio(self) -> float:
+        return _similarity(self._a, self._b)
+
+    def get_matching_blocks(self) -> list[tuple[int, int, int]]:
+        return _matching_blocks(self._a, self._b)
 
 def unified_diff(a: list[str], b: list[str]) -> list[str]:
     result: list[str] = []

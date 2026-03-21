@@ -1,0 +1,80 @@
+# Adapted CPython TextWrapper subset for sifr.textwrap
+from sifr.textwrap import TextWrapper
+
+def main():
+    wrapper: TextWrapper = TextWrapper(10)
+    lines: list[str] = []
+    try:
+        lines = wrapper.wrap("the quick brown fox")
+    except ValueError as e:
+        assert False
+    assert len(lines) == 2
+    assert str(lines) == "[\"the quick\", \"brown fox\"]"
+
+    filled: str = ""
+    try:
+        filled = wrapper.fill("the quick brown fox")
+    except ValueError as e:
+        assert False
+    assert filled == "the quick\nbrown fox"
+
+    wrapper_indented: TextWrapper = TextWrapper(8, "> ", ".. ")
+    indented_lines: list[str] = []
+    try:
+        indented_lines = wrapper_indented.wrap("alpha beta gamma")
+    except ValueError as e:
+        assert False
+    assert str(indented_lines) == "[\"> alpha\", \".. beta\", \".. gamma\"]"
+    indented_fill: str = ""
+    try:
+        indented_fill = wrapper_indented.fill("alpha beta gamma")
+    except ValueError as e:
+        assert False
+    assert indented_fill == "> alpha\n.. beta\n.. gamma"
+
+    width_constrained: TextWrapper = TextWrapper(5, ">>", "..")
+    constrained_lines: list[str] = []
+    try:
+        constrained_lines = width_constrained.wrap("ab cd ef")
+    except ValueError as e:
+        assert False
+    assert str(constrained_lines) == "[\">>ab\", \"..cd\", \"..ef\"]"
+    constrained_fill: str = ""
+    try:
+        constrained_fill = width_constrained.fill("ab cd ef")
+    except ValueError as e:
+        assert False
+    assert constrained_fill == ">>ab\n..cd\n..ef"
+
+    hyphen_break: TextWrapper = TextWrapper(8, "", "", True, 8, True, True, True)
+    assert str(hyphen_break.wrap("alpha-beta gamma")) == "[\"alpha-\", \"beta\", \"gamma\"]"
+
+    hyphen_keep: TextWrapper = TextWrapper(8, "", "", True, 8, True, True, False)
+    assert str(hyphen_keep.wrap("alpha-beta gamma")) == "[\"alpha-beta\", \"gamma\"]"
+
+    keep_whitespace: TextWrapper = TextWrapper(10, "", "", True, 8, True, False, True)
+    assert str(keep_whitespace.wrap("a  b")) == "[\"a  b\"]"
+
+    tabsize4: TextWrapper = TextWrapper(20, "", "", True, 4, False, False, True)
+    tab_lines: list[str] = tabsize4.wrap("ab\tc")
+    assert len(tab_lines) == 1
+    tab_line0: str | None = tab_lines[0]
+    tab_line_len_ok: bool = False
+    if tab_line0 is not None:
+        tab_line_len_ok = len(tab_line0) == 5
+    assert tab_line_len_ok
+
+    max_lines_default: TextWrapper = TextWrapper(12, "", "", True, 8, True, True, True, False, 2)
+    assert str(max_lines_default.wrap("alpha beta gamma delta epsilon")) == "[\"alpha beta\", \"gamma [...]\"]"
+
+    max_lines_custom: TextWrapper = TextWrapper(12, "", "", True, 8, True, True, True, False, 2, "...")
+    assert str(max_lines_custom.wrap("alpha beta gamma delta epsilon")) == "[\"alpha beta\", \"gamma del...\"]"
+
+    sentence_fixed: TextWrapper = TextWrapper(40, "", "", True, 8, True, True, True, True)
+    assert sentence_fixed.fill("Hello. World. Done!") == "Hello.  World.  Done!"
+
+    bad_wrap: TextWrapper = TextWrapper(0)
+    assert str(bad_wrap.wrap("x")) == "[]"
+    assert bad_wrap.fill("x") == ""
+
+    assert str("cpython_textwrap_textwrapper_subset: pass") == "cpython_textwrap_textwrapper_subset: pass"

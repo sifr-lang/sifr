@@ -1,0 +1,4 @@
+# expect-error: SIFR-TYPE-0001: range(): 'stop' was provided both positionally and as a keyword
+
+def main():
+    print(list(range(10, stop=20)))

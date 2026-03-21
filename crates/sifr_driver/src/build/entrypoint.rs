@@ -1,7 +1,10 @@
-use super::materialize::materialize_binary_project;
+use super::materialize::{
+    cached_binary_path, materialize_binary_project, materialize_cached_binary_project,
+};
 use super::project_codegen::{
     generated_project_binary_project, generated_single_file_binary_project, GeneratedBinaryProject,
 };
+use super::ArtifactCacheReport;
 use crate::diagnostics::{run_codegen_with_boundary, CompileError, CompilePhase};
 use crate::frontend::{parse_source, FrontendCompiled, FrontendDiagnosticStyle};
 use crate::project::{
@@ -23,6 +26,26 @@ enum RootedEntrypointShape {
 pub(crate) enum RootedEntrypoint<'a> {
     SingleFile { source: &'a str },
     Project { main_file: &'a Path },
+}
+
+pub struct CachedBinaryArtifact {
+    binary_path: PathBuf,
+    cache_report: ArtifactCacheReport,
+}
+
+impl CachedBinaryArtifact {
+    pub fn binary_path(&self) -> &Path {
+        &self.binary_path
+    }
+
+    pub fn cache_status_line(&self) -> String {
+        self.cache_report.status_line()
+    }
+
+    #[cfg(test)]
+    pub(crate) fn cache_report(&self) -> &ArtifactCacheReport {
+        &self.cache_report
+    }
 }
 
 pub(crate) struct RootedEntrypointPlan {
@@ -60,6 +83,47 @@ pub(crate) fn build_rooted_entrypoint_binary(
     plan.emit_frontend_diagnostics();
     let generated_project = plan.into_generated_binary_project()?;
     materialize_binary_project(output_dir, "sifr_output", generated_project)
+}
+
+pub(crate) fn build_cached_project_binary(
+    main_file: &Path,
+) -> Result<CachedBinaryArtifact, Vec<CompileError>> {
+    build_cached_rooted_entrypoint_binary(
+        &RootedEntrypoint::Project { main_file },
+        main_file.parent().unwrap_or(Path::new(".")),
+        "run",
+    )
+}
+
+pub(crate) fn build_cached_single_file_binary(
+    source: &str,
+    entrypoint_file: &Path,
+) -> Result<CachedBinaryArtifact, Vec<CompileError>> {
+    build_cached_rooted_entrypoint_binary(
+        &RootedEntrypoint::SingleFile { source },
+        entrypoint_file.parent().unwrap_or(Path::new(".")),
+        "run",
+    )
+}
+
+fn build_cached_rooted_entrypoint_binary(
+    entrypoint: &RootedEntrypoint<'_>,
+    cache_scope: &Path,
+    cache_namespace: &str,
+) -> Result<CachedBinaryArtifact, Vec<CompileError>> {
+    let plan = RootedEntrypointPlan::from_entrypoint(entrypoint)?;
+    plan.emit_frontend_diagnostics();
+    let generated_project = plan.into_generated_binary_project()?;
+    let cache_entry = materialize_cached_binary_project(
+        cache_namespace,
+        cache_scope,
+        "sifr_output",
+        generated_project,
+    )?;
+    Ok(CachedBinaryArtifact {
+        binary_path: cached_binary_path(cache_entry.workspace_root(), "sifr_output"),
+        cache_report: cache_entry.report().clone(),
+    })
 }
 
 impl RootedEntrypointPlan {
@@ -138,6 +202,7 @@ impl RootedEntrypointPlan {
         let lowering_result = LoweringResult {
             module: main_module,
             function_defaults: std::collections::HashMap::new(),
+            function_varargs: std::collections::HashMap::new(),
             reveal_types: main_diag.reveal_types,
             warnings: main_diag.warnings,
         };
@@ -337,6 +402,80 @@ def helper() -> bigint:\n    return bigint(1)\n",
 
         assert!(!generated_project.used_stdlib_modules.contains("sifr.json"));
         assert!(!generated_project.required_crates.contains("serde_json"));
+
+        let _ = std::fs::remove_dir_all(dir);
+    }
+
+    #[test]
+    fn test_cached_project_binary_reuses_workspace_for_unchanged_input() {
+        let dir = mktemp_dir("cached_project_reuse");
+        let main_file = dir.join("main.sifr");
+        std::fs::write(
+            &main_file,
+            "from helper import value\n\ndef main():\n    print(value())\n",
+        )
+        .expect("main should be written");
+        std::fs::write(
+            dir.join("helper.sifr"),
+            "def value() -> int:\n    return 11\n",
+        )
+        .expect("helper should be written");
+
+        let first =
+            build_cached_project_binary(&main_file).expect("first cached build should succeed");
+        assert!(first.binary_path().exists());
+        assert!(!first.cache_report().cache_hit());
+
+        let first_output = std::process::Command::new(first.binary_path())
+            .output()
+            .expect("first cached binary should run");
+        assert!(first_output.status.success());
+        assert_eq!(String::from_utf8_lossy(&first_output.stdout).trim(), "11");
+
+        let second =
+            build_cached_project_binary(&main_file).expect("second cached build should succeed");
+        assert!(second.cache_report().cache_hit());
+        assert_eq!(first.binary_path(), second.binary_path());
+
+        let second_output = std::process::Command::new(second.binary_path())
+            .output()
+            .expect("second cached binary should run");
+        assert!(second_output.status.success());
+        assert_eq!(String::from_utf8_lossy(&second_output.stdout).trim(), "11");
+
+        let _ = std::fs::remove_dir_all(dir);
+    }
+
+    #[test]
+    fn test_cached_project_binary_invalidates_when_sources_change() {
+        let dir = mktemp_dir("cached_project_invalidation");
+        let main_file = dir.join("main.sifr");
+        std::fs::write(
+            &main_file,
+            "from helper import value\n\ndef main():\n    print(value())\n",
+        )
+        .expect("main should be written");
+        let helper = dir.join("helper.sifr");
+        std::fs::write(&helper, "def value() -> int:\n    return 21\n")
+            .expect("helper should be written");
+
+        let first =
+            build_cached_project_binary(&main_file).expect("first cached build should succeed");
+        assert!(!first.cache_report().cache_hit());
+
+        std::fs::write(&helper, "def value() -> int:\n    return 22\n")
+            .expect("helper should be updated");
+        let second =
+            build_cached_project_binary(&main_file).expect("second cached build should succeed");
+        assert!(!second.cache_report().cache_hit());
+        assert_ne!(first.binary_path(), second.binary_path());
+        assert_ne!(first.cache_report().key(), second.cache_report().key());
+
+        let output = std::process::Command::new(second.binary_path())
+            .output()
+            .expect("updated cached binary should run");
+        assert!(output.status.success());
+        assert_eq!(String::from_utf8_lossy(&output.stdout).trim(), "22");
 
         let _ = std::fs::remove_dir_all(dir);
     }

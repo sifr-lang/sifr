@@ -1,0 +1,64 @@
+from sifr.io import StringIO, BytesIO, BinaryFileHandle, open_binary, exists
+from sifr.os import remove_file
+
+
+def main():
+    path: str = "/tmp/sifr_runtime_wave1_demo.bin"
+    stringio_ok: bool = False
+    stringio_negative_seek_ok: bool = False
+    bytesio_ok: bool = False
+    bytesio_negative_seek_ok: bool = False
+    binary_file_ok: bool = False
+    cleanup_ok: bool = False
+
+    try:
+        sio: StringIO = StringIO("wave")
+        _w: None = sio.write("1")
+        _seek: int = sio.seek(0)
+        text_value: str = sio.read()
+        stringio_ok = text_value == "1ave"
+        try:
+            _bad_seek: int = sio.seek(-1)
+            _ = _bad_seek
+        except IOError as e:
+            _ = str(e.message)
+            stringio_negative_seek_ok = True
+
+        bio: BytesIO = BytesIO(b"abc")
+        _seek_b: int = bio.seek(3)
+        _wb: None = bio.write_bytes(b"d")
+        _seek_b0: int = bio.seek(0)
+        bytes_value: bytes = bio.read_bytes()
+        bytesio_ok = bytes_value == b"abcd"
+        try:
+            _bad_seek_b: int = bio.seek(-1)
+            _ = _bad_seek_b
+        except IOError as e:
+            _ = str(e.message)
+            bytesio_negative_seek_ok = True
+
+        writer: BinaryFileHandle = open_binary(path, "wb")
+        _w_file: None = writer.write_bytes(b"runtime-wave1")
+        writer.close()
+
+        reader: BinaryFileHandle = open_binary(path, "rb")
+        loaded: bytes = reader.read_bytes()
+        reader.close()
+        binary_file_ok = loaded == b"runtime-wave1"
+    except IOError as e:
+        _ = str(e.message)
+
+    try:
+        if exists(path):
+            _rm: None = remove_file(path)
+        cleanup_ok = not exists(path)
+    except IOError as e:
+        _ = str(e.message)
+
+    assert stringio_ok
+    assert stringio_negative_seek_ok
+    assert bytesio_ok
+    assert bytesio_negative_seek_ok
+    assert binary_file_ok
+    assert cleanup_ok
+    print("ad_hoc_runtime_wave1_io_in_memory_hierarchy_demo: ok")

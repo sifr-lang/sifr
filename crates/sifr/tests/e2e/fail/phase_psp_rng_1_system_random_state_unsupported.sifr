@@ -1,0 +1,7 @@
+from sifr.random import RandomState, SystemRandom
+
+
+def main():
+    system_random: SystemRandom = SystemRandom()
+    _state: RandomState = system_random.getstate()
+    _ = _state

@@ -104,3 +104,80 @@ pub(super) fn lower_uuid4(args: &[RustExpr]) -> Option<RustExpr> {
         })),
     })
 }
+
+fn lower_name_based_uuid(args: &[RustExpr], method_name: &str) -> Option<RustExpr> {
+    if args.len() != 2 {
+        return None;
+    }
+    Some(RustExpr::Block {
+        stmts: vec![
+            RustStmt::Let {
+                mutable: false,
+                name: "__ns".to_string(),
+                ty: None,
+                value: RustExpr::MethodCall {
+                    receiver: Box::new(RustExpr::FnCall {
+                        func: Box::new(RustExpr::Path(vec![
+                            "uuid".to_string(),
+                            "Uuid".to_string(),
+                            "parse_str".to_string(),
+                        ])),
+                        args: vec![RustExpr::Ref {
+                            mutable: false,
+                            expr: Box::new(args[0].clone()),
+                        }],
+                    }),
+                    method: "unwrap_or".to_string(),
+                    args: vec![RustExpr::FnCall {
+                        func: Box::new(RustExpr::Path(vec![
+                            "uuid".to_string(),
+                            "Uuid".to_string(),
+                            "nil".to_string(),
+                        ])),
+                        args: vec![],
+                    }],
+                },
+            },
+            RustStmt::Let {
+                mutable: false,
+                name: "__id".to_string(),
+                ty: None,
+                value: RustExpr::FnCall {
+                    func: Box::new(RustExpr::Path(vec![
+                        "uuid".to_string(),
+                        "Uuid".to_string(),
+                        method_name.to_string(),
+                    ])),
+                    args: vec![
+                        RustExpr::Ref {
+                            mutable: false,
+                            expr: Box::new(RustExpr::Ident("__ns".to_string())),
+                        },
+                        RustExpr::MethodCall {
+                            receiver: Box::new(args[1].clone()),
+                            method: "as_bytes".to_string(),
+                            args: vec![],
+                        },
+                    ],
+                },
+            },
+        ],
+        expr: Some(Box::new(RustExpr::MethodCall {
+            receiver: Box::new(RustExpr::MethodCall {
+                receiver: Box::new(RustExpr::Ident("__id".to_string())),
+                method: "hyphenated".to_string(),
+                args: vec![],
+            }),
+            method: "to_string".to_string(),
+            args: vec![],
+        })),
+    })
+}
+
+pub(super) fn lower_uuid3(args: &[RustExpr]) -> Option<RustExpr> {
+    lower_name_based_uuid(args, "new_v3")
+}
+
+pub(super) fn lower_uuid5(args: &[RustExpr]) -> Option<RustExpr> {
+    lower_name_based_uuid(args, "new_v5")
+}

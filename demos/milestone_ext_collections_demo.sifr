@@ -65,7 +65,7 @@ def main():
 
     # Hex decoding
     try:
-        hex_bytes: list[int] = bytes_from_hex("536966")
+        hex_bytes: bytes = bytes_from_hex("536966")
         decoded: str = decode_utf8(hex_bytes)
         print(f"Hex '536966' decoded: {decoded}")
     except ParseError as err:

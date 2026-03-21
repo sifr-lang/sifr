@@ -1,6 +1,6 @@
 # Ad Hoc Phase: Full Nested Function Pipeline
 
-Status: in progress on 2026-03-14
+Status: completed on 2026-03-15
 
 ## Purpose
 
@@ -18,12 +18,12 @@ This phase covers the full compiler pipeline for:
 ## Execution Checklist
 
 - [x] `milestone_nested_1`: nested symbol predeclaration and typed callable representation
-- [ ] `milestone_nested_2`: usage-driven inference and recursive local helper typing
-- [ ] `milestone_nested_3`: capture typing and `nonlocal`-style state updates
-- [ ] `milestone_nested_4`: codegen, diagnostics, and unsupported-shape boundaries
-- [ ] `milestone_nested_5`: regression corpus, demos, and full-corpus closure evidence
-- [ ] external review pass 1 completed and acted on
-- [ ] production-grade review pass completed and acted on
+- [x] `milestone_nested_2`: usage-driven inference and recursive local helper typing
+- [x] `milestone_nested_3`: capture typing and `nonlocal`-style state updates
+- [x] `milestone_nested_4`: codegen, diagnostics, and unsupported-shape boundaries
+- [x] `milestone_nested_5`: regression corpus, demos, and full-corpus closure evidence
+- [x] external review pass 1 completed and acted on
+- [x] production-grade review pass completed and acted on
 
 ## Execution Log
 
@@ -31,6 +31,28 @@ This phase covers the full compiler pipeline for:
   - Execution report: `issues/ad-hoc-full-nested-function-pipeline-part1-execution.md`
   - PR: `#1139`
   - Closure basis: nested helpers are now predeclared as typed local callables during HIR lowering, forward local helper references no longer fail due to statement-order registration, and missing helper names still fail explicitly.
+- `2026-03-14`: `milestone_nested_2` completed.
+  - Execution report: `issues/ad-hoc-full-nested-function-pipeline-part2-execution.md`
+  - PR: `#1141`
+  - Closure basis: supported recursive local helpers now infer parameters and returns deterministically, conflicting local-helper inference fails explicitly, and the watched corpus has moved beyond the original nested-annotation / `Any` failure mode.
+- `2026-03-14`: `milestone_nested_3` completed.
+  - Execution report: `issues/ad-hoc-full-nested-function-pipeline-part3-execution.md`
+  - PR: `#1143`
+  - Closure basis: supported non-recursive `nonlocal` capture updates now lower and run deterministically, recursive and tuple-unpack capture updates fail explicitly before codegen, and the watched corpus has moved off the generic unsupported-statement failure mode for captured-state updates.
+- `2026-03-15`: `milestone_nested_4` completed.
+  - Execution report: `issues/ad-hoc-full-nested-function-pipeline-part4-execution.md`
+  - PR: `#1145`
+  - Closure basis: structured codegen now lowers recursive nested helpers with typed capture parameters and mutable collection captures, supported backtracking helpers no longer fall through to production panics or `Any`-driven Rust mismatches, and immutable-parameter capture mutation now fails explicitly at the language boundary.
+- `2026-03-15`: `milestone_nested_5` completed.
+  - Execution report: `issues/ad-hoc-full-nested-function-pipeline-part5-execution.md`
+  - PR: `#1146`
+  - Closure basis: the phase now has authoritative demo coverage plus permanent pass/fail nested-function regressions, and the watched audit set is classified into supported passes, explicit ownership boundaries, and unrelated residual blockers outside this pipeline.
+- `2026-03-15`: external review pass 1 completed.
+  - Review file: `reviews/phase-nested-functions-review-pass-1.md`
+  - Outcome: approved for the documented phase scope with no blocking findings and no required code changes.
+- `2026-03-15`: production-grade review pass completed.
+  - Review file: `reviews/phase-nested-functions-production-grade-review-pass-2a.md`
+  - Outcome: approved as production-ready for the documented phase scope with no blocking findings and no required code changes.
 
 ## Entry Baseline Evidence (2026-03-14)
 

@@ -1,0 +1,5 @@
+from sifr.time import tzset
+
+
+def main() -> None:
+    _ = tzset

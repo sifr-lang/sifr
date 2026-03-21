@@ -1,0 +1,11 @@
+from sifr.operator import methodcaller
+
+
+class Greeter:
+    def greet(self, who: str) -> str:
+        return "hi " + who
+
+
+def main():
+    call_greet = methodcaller("greet", "sifr")
+    assert call_greet(Greeter()) == "hi sifr"

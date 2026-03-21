@@ -1,0 +1,110 @@
+# Adapted CPython configparser subset for sifr.configparser (core parser model)
+from sifr.configparser import ConfigParser, DEFAULTSECT, ParsingError
+from sifr.io import write_text
+from sifr.test import assert_bool_vector_eq
+
+
+def collect_parser_actual() -> list[bool]:
+    actual: list[bool] = []
+    defaults: dict[str, str | None] = {}
+    encoding_value: str | None = "utf-8"
+    defaults["encoding"] = encoding_value
+    parser: ConfigParser = ConfigParser(defaults=defaults, strict=True, allow_no_value=True)
+    config_text: str = (
+        "[DEFAULT]\n"
+        "region = mena\n"
+        "[server]\n"
+        "host = localhost\n"
+        "port = 8080\n"
+        "enabled = true\n"
+        "feature\n"
+    )
+    parse_ok: bool = True
+    try:
+        _: None = parser.read_string(config_text)
+    except ParsingError:
+        parse_ok = False
+
+    default_section: str = DEFAULTSECT + ""
+    basics_ok: bool = parse_ok and (
+        parser.get("server", "host") == "localhost"
+        and parser.get(default_section, "encoding") == "utf-8"
+        and parser.get(default_section, "region") == "mena"
+    )
+    fallback_value: str | None = "missing"
+    basics_ok = basics_ok and parser.get("server", "feature", fallback_value) is None
+    has_option_defaults_ok: bool = (
+        parser.has_option("server", "encoding")
+        and not parser.has_option("server", "missing")
+    )
+
+    converters_ok: bool = (
+        parser.getint("server", "port") == 8080
+        and parser.getboolean("server", "enabled") == True
+    )
+
+    mode_value: str | None = "prod"
+    parser.set("server", "mode", mode_value)
+    removed_mode: bool = parser.remove_option("server", "mode")
+    removed_section: bool = parser.remove_section("server")
+    mutation_ok: bool = (
+        removed_mode
+        and removed_section
+        and not parser.has_section("server")
+    )
+
+    file_read_ok: bool = False
+    try:
+        path: str = "/tmp/sifr_cpython_configparser_subset.ini"
+        _: None = write_text(path, "[app]\nname = sifr\n")
+        file_parser: ConfigParser = ConfigParser()
+        loaded_paths: list[str] = file_parser.read(path)
+        file_read_ok = (
+            str(loaded_paths) == "[\"" + path + "\"]"
+            and file_parser.get("app", "name") == "sifr"
+        )
+    except IOError as e:
+        _ = str(e.message)
+
+    actual.append(basics_ok)
+    actual.append(has_option_defaults_ok)
+    actual.append(converters_ok)
+    actual.append(mutation_ok)
+    actual.append(file_read_ok)
+    return actual
+
+
+def collect_error_actual() -> list[bool]:
+    actual: list[bool] = []
+    duplicate_rejected: bool = False
+    parse_error_rejected: bool = False
+
+    try:
+        strict_parser: ConfigParser = ConfigParser(strict=True)
+        _: None = strict_parser.read_string("[dup]\na=1\n[dup]\na=2\n")
+    except ParsingError as e:
+        duplicate_rejected = "duplicate section" in e.message
+
+    try:
+        bad_parser: ConfigParser = ConfigParser()
+        _: None = bad_parser.read_string("broken line")
+    except ParsingError as e:
+        parse_error_rejected = e.line == 1
+
+    actual.append(duplicate_rejected)
+    actual.append(parse_error_rejected)
+    return actual
+
+
+def append_all(mut target: list[bool], values: list[bool]):
+    for value in values:
+        target.append(value)
+
+
+def main():
+    expected: list[bool] = [True, True, True, True, True, True, True]
+    actual: list[bool] = []
+    append_all(actual, collect_parser_actual())
+    append_all(actual, collect_error_actual())
+    assert_bool_vector_eq(actual, expected)
+    assert str("cpython_configparser_subset: pass") == "cpython_configparser_subset: pass"

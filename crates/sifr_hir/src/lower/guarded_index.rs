@@ -221,6 +221,32 @@ mod tests {
     }
 
     #[test]
+    fn test_early_return_method_len_guard_narrows_index_type() {
+        let result = lower_source_result(
+            "def pick(values: list[int], i: int) -> int:\n    if i >= values.len():\n        return 0\n    reveal_type(values[i])\n    return values[i]\n",
+        )
+        .expect("post-return method len guard should lower");
+
+        assert!(result
+            .reveal_types
+            .iter()
+            .any(|diagnostic| diagnostic == "reveal_type: int"));
+    }
+
+    #[test]
+    fn test_early_return_or_guard_narrows_index_type() {
+        let result = lower_source_result(
+            "def pick(values: list[int], i: int, limit: int) -> int:\n    if i >= len(values) or limit < 0:\n        return 0\n    reveal_type(values[i])\n    return values[i]\n",
+        )
+        .expect("post-return or guard should narrow the guarded index");
+
+        assert!(result
+            .reveal_types
+            .iter()
+            .any(|diagnostic| diagnostic == "reveal_type: int"));
+    }
+
+    #[test]
     fn test_unguarded_list_index_stays_optional() {
         let result = lower_source(
             "def main():\n    nums: list[int] = [1, 2, 3]\n    first: int = nums[0]\n",

@@ -1,0 +1,71 @@
+from sifr.test import assert_bool_vector_eq
+from sifr.re import finditer, Match
+from sifr.pathlib import Path
+from sifr.io import write_text
+from sifr.itertools import islice
+from sifr.os import getpid, run_command
+
+
+def passthrough_iterable(own it: Iterator[int]) -> Iterable[int]:
+    return it
+
+
+def materialize_iterable_from_binding(own it: Iterator[int]) -> list[int]:
+    values: Iterable[int] = it
+    return list(values)
+
+
+def materialize_iterable_from_return(own it: Iterator[int]) -> list[int]:
+    values: Iterable[int] = passthrough_iterable(it)
+    return list(values)
+
+
+def collect_match_starts(own it: Iterator[Match]) -> list[int]:
+    starts: list[int] = []
+    for m in it:
+        starts.append(m.start())
+    return starts
+
+
+def main():
+    actual: list[bool] = []
+
+    actual.append(str(materialize_iterable_from_binding(iter([1, 2, 3]))) == "[1, 2, 3]")
+    actual.append(str(materialize_iterable_from_return(iter([4, 5]))) == "[4, 5]")
+
+    payload: bytes = b"ABC"
+    byte_iter: Iterator[int] = iter(payload)
+    actual.append(str(list(map(lambda b: b + 1, byte_iter))) == "[66, 67, 68]")
+
+    try:
+        matches: Iterator[Match] = finditer("\\d+", "a12b345")
+        actual.append(str(collect_match_starts(matches)) == "[1, 4]")
+    except RegexError as e:
+        _ = e.message
+        actual.append(False)
+
+    base: str = "/tmp/sifr_phase_psp_iter_fix_8_" + str(getpid())
+    try:
+        _mk: str = run_command("mkdir -p " + base + "/sub")
+        _w1: None = write_text(base + "/a.txt", "a")
+        _w2: None = write_text(base + "/sub/b.txt", "b")
+
+        root: Path = Path(base)
+        entries_it: Iterator[str] = root.iterdir()
+        actual.append(len(list(islice(entries_it, 2))) == 2)
+
+        recursive_it: Iterator[str] = root.rglob("*.txt")
+        actual.append(len(list(recursive_it)) == 2)
+    except IOError as e:
+        _ = e.message
+        actual.append(False)
+        actual.append(False)
+    finally:
+        _rm: str = run_command("rm -rf " + base)
+
+    expected: list[bool] = [True, True, True, True, True, True]
+    assert_bool_vector_eq(actual, expected)
+    assert str("phase_psp_iter_fix_8_downstream_alignment_closure: pass") == "phase_psp_iter_fix_8_downstream_alignment_closure: pass"
+
+
+main()

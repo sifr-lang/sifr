@@ -5,6 +5,8 @@
 #   heapify(mut data)   -- convert list to a min-heap in-place
 #   heappush(mut heap, item) -- push item onto heap in-place
 #   heappop(mut heap) -> item | None -- pop smallest item, heapify in-place
+#   heapreplace(mut heap, item) -> item | None -- replace smallest item in-place
+#   heappushpop(mut heap, item) -> item | None -- push then pop in-place
 #
 # Functional API (for backward compatibility):
 #   heapify_copy(data) -> list   -- returns a new heap (copy)
@@ -176,6 +178,11 @@ def _heappop_max[T: Comparable](mut heap: list[T]) -> T | None:
         _sift_down_max(heap, 0, n2)
     return top
 
+def _heappush_max[T: Comparable](mut heap: list[T], item: T) -> None:
+    heap.append(item)
+    pos: int = len(heap) - 1
+    _sift_up_max(heap, pos)
+
 def _heapreplace_max[T: Comparable](mut heap: list[T], own item: T) -> T | None:
     """Pop and return the largest item, then push item onto the heap.
     Returns None if the heap is empty. O(log n) time."""
@@ -185,6 +192,10 @@ def _heapreplace_max[T: Comparable](mut heap: list[T], own item: T) -> T | None:
     heap[0] = item
     _sift_down_max(heap, 0, len(heap))
     return top
+
+def _heappushpop_max[T: Comparable](mut heap: list[T], item: T) -> T | None:
+    _heappush_max(heap, item)
+    return _heappop_max(heap)
 
 # ── Functional API (backward compatibility) ───────────────────────────────────
 
@@ -219,19 +230,61 @@ def heappop_rest[T: Comparable](heap: list[T]) -> list[T]:
     heappop(result)
     return result
 
-def heapreplace[T: Comparable](heap: list[T], item: T) -> T | None:
+def heapreplace[T: Comparable](mut heap: list[T], own item: T) -> T | None:
     if len(heap) == 0:
         return None
     top: T | None = heap[0]
-    rest: list[T] = heappop_rest(heap)
-    rest = heappush_copy(rest, item)
+    heap[0] = item
+    _sift_down(heap, 0, len(heap))
     return top
 
-def heappushpop[T: Comparable](heap: list[T], item: T) -> T | None:
-    # Push item then pop smallest. Equivalent to heappush + heappop but more efficient.
-    pushed: list[T] = heappush_copy(heap, item)
-    val: T | None = heappop(pushed)
-    return val
+def heappushpop[T: Comparable](mut heap: list[T], item: T) -> T | None:
+    # Push item then pop smallest. Semantics match CPython's mutating helper.
+    heappush(heap, item)
+    return heappop(heap)
+
+def merge[T: Comparable](*iterables: list[T]) -> list[T]:
+    result: list[T] = []
+    positions: list[int] = []
+    for _values in iterables:
+        positions.append(0)
+    done: bool = False
+    while not done:
+        best_index: int = -1
+        i: int = 0
+        while i < len(iterables):
+            values: list[T] | None = iterables[i]
+            if values is not None:
+                pos: int | None = positions[i]
+                if pos is not None:
+                    if pos < len(values):
+                        if best_index < 0:
+                            best_index = i
+                        else:
+                            best_values: list[T] | None = iterables[best_index]
+                            if best_values is not None:
+                                best_pos: int | None = positions[best_index]
+                                if best_pos is not None:
+                                    if best_pos < len(best_values):
+                                        current: T | None = values[pos]
+                                        chosen: T | None = best_values[best_pos]
+                                        if current is not None and chosen is not None:
+                                            if current < chosen:
+                                                best_index = i
+            i = i + 1
+        if best_index < 0:
+            done = True
+        else:
+            selected_values: list[T] | None = iterables[best_index]
+            if selected_values is not None:
+                selected_pos: int | None = positions[best_index]
+                if selected_pos is not None:
+                    if selected_pos < len(selected_values):
+                        selected_value: T | None = selected_values[selected_pos]
+                        if selected_value is not None:
+                            result.append(selected_value)
+                        positions[best_index] = selected_pos + 1
+    return result
 
 def nsmallest[T: Comparable](n: int, data: list[T]) -> list[T]:
     heap: list[T] = heapify_copy(data)

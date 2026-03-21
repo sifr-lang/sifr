@@ -1,10 +1,259 @@
-# sifr.json — JSON serialization/deserialization
-from _sifr.json import json_loads, json_dumps
+from _sifr.fs import read_text, write_text
+from _sifr.json import json_dumps, json_dumps_value, json_loads
+from sifr.io import FileHandle
 
-# CPython-compatible aliases
-def loads(s: str) -> Result[str, JSONDecodeError]:
+
+class JsonValue:
+    kind: str
+    bool_value: bool | None
+    int_value: int | None
+    float_value: float | None
+    str_value: str | None
+    array_items: list[JsonValue]
+    object_items: list[tuple[str, JsonValue]]
+
+    def __init__(
+        self,
+        kind: str,
+        bool_value: bool | None = None,
+        int_value: int | None = None,
+        float_value: float | None = None,
+        str_value: str | None = None,
+    ):
+        self.kind = kind
+        self.bool_value = bool_value
+        self.int_value = int_value
+        self.float_value = float_value
+        self.str_value = str_value
+        self.array_items = []
+        self.object_items = []
+
+    def __str__(self) -> str:
+        return json_dumps_value(self)
+
+    def is_null(self) -> bool:
+        return self.kind == "null"
+
+    def is_bool(self) -> bool:
+        return self.kind == "bool"
+
+    def is_int(self) -> bool:
+        return self.kind == "int"
+
+    def is_float(self) -> bool:
+        return self.kind == "float"
+
+    def is_str(self) -> bool:
+        return self.kind == "str"
+
+    def is_array(self) -> bool:
+        return self.kind == "array"
+
+    def is_object(self) -> bool:
+        return self.kind == "object"
+
+    def as_bool(self) -> bool | None:
+        return self.bool_value
+
+    def as_int(self) -> int | None:
+        return self.int_value
+
+    def as_float(self) -> float | None:
+        return self.float_value
+
+    def as_str(self) -> str | None:
+        return self.str_value
+
+    def as_array(self) -> list[JsonValue] | None:
+        if not self.is_array():
+            return None
+        result: list[JsonValue] = []
+        for item in self.array_items:
+            result.append(item)
+        return result
+
+    def as_object(self) -> list[tuple[str, JsonValue]] | None:
+        if not self.is_object():
+            return None
+        result: list[tuple[str, JsonValue]] = []
+        for key, value in self.object_items:
+            result.append((key, value))
+        return result
+
+    def at(self, index: int) -> JsonValue | None:
+        if not self.is_array():
+            return None
+        if index < 0 or index >= len(self.array_items):
+            return None
+        value: JsonValue | None = self.array_items[index]
+        return value
+
+    def get(self, key: str) -> JsonValue | None:
+        if not self.is_object():
+            return None
+        for item_key, item_value in self.object_items:
+            if item_key == key:
+                return item_value
+        return None
+
+    def keys(self) -> list[str]:
+        result: list[str] = []
+        if not self.is_object():
+            return result
+        for item_key, _item_value in self.object_items:
+            result.append(item_key)
+        return result
+
+    def values(self) -> list[JsonValue]:
+        result: list[JsonValue] = []
+        if not self.is_object():
+            return result
+        for _item_key, item_value in self.object_items:
+            result.append(item_value)
+        return result
+
+    def items(self) -> list[tuple[str, JsonValue]]:
+        if not self.is_object():
+            return []
+        result: list[tuple[str, JsonValue]] = []
+        for key, value in self.object_items:
+            result.append((key, value))
+        return result
+
+
+class JSONEncoder:
+    indent: int | None
+    sort_keys: bool
+    ensure_ascii: bool
+
+    def __init__(
+        self,
+        indent: int | None = None,
+        sort_keys: bool = False,
+        ensure_ascii: bool = True,
+    ) -> None:
+        self.indent = indent
+        self.sort_keys = sort_keys
+        self.ensure_ascii = ensure_ascii
+
+    def encode(self, value: JsonValue) -> str:
+        # Current runtime encoding is deterministic and typed; option flags are
+        # accepted as part of the locked wrapper surface even when no-op.
+        _ = self.indent
+        _ = self.sort_keys
+        _ = self.ensure_ascii
+        return dumps(value)
+
+    def dump(self, value: JsonValue, path: str) -> Result[None, IOError]:
+        return write_text(path, self.encode(value))
+
+    def dump_handle(self, value: JsonValue, fh: FileHandle) -> Result[None, IOError]:
+        return fh.write(self.encode(value))
+
+
+class JSONDecoder:
+    def __init__(self) -> None:
+        pass
+
+    def decode(self, s: str) -> Result[JsonValue, JSONDecodeError]:
+        return loads(s)
+
+    def load(self, path: str) -> Result[JsonValue, Error]:
+        return load(path)
+
+    def load_handle(self, fh: FileHandle) -> Result[JsonValue, Error]:
+        return load_handle(fh)
+
+
+def null() -> JsonValue:
+    return JsonValue("null")
+
+
+def from_bool(value: bool) -> JsonValue:
+    bool_value: bool | None = value
+    return JsonValue("bool", bool_value=bool_value)
+
+
+def from_int(value: int) -> JsonValue:
+    int_value: int | None = value
+    return JsonValue("int", int_value=int_value)
+
+
+def from_float(value: float) -> JsonValue:
+    float_value: float | None = value
+    return JsonValue("float", float_value=float_value)
+
+
+def from_str(value: str) -> JsonValue:
+    str_value: str | None = value + ""
+    return JsonValue("str", str_value=str_value)
+
+
+def _append_array_item(own mut value: JsonValue, own item: JsonValue) -> JsonValue:
+    value.array_items.append(item)
+    return value
+
+
+def _append_object_item(
+    own mut value: JsonValue, own key: str, own item_value: JsonValue
+) -> JsonValue:
+    value.object_items.append((key, item_value))
+    return value
+
+
+def from_array(items: list[JsonValue]) -> JsonValue:
+    value: JsonValue = JsonValue("array")
+    for item in items:
+        value = _append_array_item(value, item)
+    return value
+
+
+def from_object(items: list[tuple[str, JsonValue]]) -> JsonValue:
+    value: JsonValue = JsonValue("object")
+    for key, item_value in items:
+        value = _append_object_item(value, key, item_value)
+    return value
+
+
+def loads(s: str) -> Result[JsonValue, JSONDecodeError]:
     return json_loads(s)
 
-# Note: dumps(obj: Any) cannot be a wrapper function because Any → Box<dyn Any>
-# doesn't implement Serialize in Rust. Users should import json_dumps directly,
-# which gets inlined with the correct concrete type at the call site.
+
+def _decode_loaded_json(content: str) -> Result[JsonValue, Error]:
+    try:
+        value: JsonValue = json_loads(content)
+        return value
+    except JSONDecodeError as e:
+        raise Error(e.message)
+
+
+def load_handle(fh: FileHandle) -> Result[JsonValue, Error]:
+    content_result: Result[str, IOError] = fh.read()
+    try:
+        content: str = content_result
+        return _decode_loaded_json(content)
+    except IOError as e:
+        raise Error(e.message)
+
+
+def load(path: str) -> Result[JsonValue, Error]:
+    content_result: Result[str, IOError] = read_text(path)
+    try:
+        content: str = content_result
+        return _decode_loaded_json(content)
+    except IOError as e:
+        raise Error(e.message)
+
+
+def dumps(value: JsonValue) -> str:
+    return json_dumps_value(value)
+
+
+def dump_handle(value: JsonValue, fh: FileHandle) -> Result[None, IOError]:
+    payload: str = dumps(value)
+    return fh.write(payload)
+
+
+def dump(value: JsonValue, path: str) -> Result[None, IOError]:
+    payload: str = dumps(value)
+    return write_text(path, payload)

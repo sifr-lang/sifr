@@ -32,7 +32,7 @@ def main():
     print("=== Path ===")
     p: Path = Path("/home/user/docs/report.pdf")
     print(p.name())
-    print(p.parent())
+    print(p.parent().to_str())
     print(p.suffix())
     print(p.stem())
     print(p.is_absolute())

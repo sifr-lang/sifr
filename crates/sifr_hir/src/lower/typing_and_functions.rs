@@ -12,7 +12,9 @@ use std::collections::HashMap;
 use super::classes::lower_expr_simple;
 use super::diagnostics::{format_type_name, is_valid_error_type};
 use super::expressions::lower_expr;
-use super::statements::{collect_return_types, lower_stmts};
+use super::function_flow::infer_function_return_type;
+use super::nonlocal_support::collect_declared_nonlocals;
+use super::statements::lower_stmts;
 use super::{substitute_type_vars, LowerCtx};
 
 pub(super) fn register_builtins(ctx: &mut LowerCtx) {
@@ -249,7 +251,7 @@ fn collect_function_defaults(
         }
     }
 
-    let regular_count = func.parameters.args.len();
+    let regular_count = func.parameters.args.len() + usize::from(func.parameters.vararg.is_some());
     for (index, param) in func.parameters.kwonlyargs.iter().enumerate() {
         if let Some(default_expr) = &param.default {
             if let Some(hir_default) = lower_expr_simple(default_expr) {
@@ -266,18 +268,12 @@ fn collect_function_defaults(
     defaults
 }
 
-pub(super) fn register_local_function_symbol(
+pub(super) fn register_local_function_signature(
     func: &StmtFunctionDef,
+    ft: FunctionType,
     ctx: &mut LowerCtx,
 ) -> FunctionType {
     let function_name = func.name.to_string();
-    if let Some(existing) = ctx.functions.get(function_name.as_str()) {
-        if ctx.scope.lookup(function_name.as_str()).is_some() {
-            return existing.clone();
-        }
-    }
-
-    let ft = extract_function_type(func, ctx);
     let callable_ty = function_type_to_callable_type(&ft);
     let defaults = collect_function_defaults(func, ctx);
 
@@ -288,10 +284,24 @@ pub(super) fn register_local_function_symbol(
     ctx.scope.define(function_name.clone(), callable_ty);
     ctx.functions.insert(function_name.clone(), ft.clone());
     if func.parameters.vararg.is_some() {
-        ctx.vararg_functions.insert(function_name);
+        ctx.vararg_functions
+            .insert(function_name, func.parameters.args.len());
     }
 
     ft
+}
+
+pub(super) fn register_local_function_symbol(
+    func: &StmtFunctionDef,
+    ctx: &mut LowerCtx,
+) -> FunctionType {
+    if let Some(existing) = ctx.functions.get(func.name.as_str()) {
+        if ctx.scope.lookup(func.name.as_str()).is_some() {
+            return existing.clone();
+        }
+    }
+
+    register_local_function_signature(func, extract_function_type(func, ctx), ctx)
 }
 
 pub(super) fn extract_function_type(func: &StmtFunctionDef, ctx: &mut LowerCtx) -> FunctionType {
@@ -451,6 +461,18 @@ pub(super) fn resolve_annotation_expr(expr: &Expr, ctx: &mut LowerCtx) -> Type {
                         let elem_ty = resolve_annotation_expr(&sub.slice, ctx);
                         Type::Tuple(vec![elem_ty])
                     }
+                }
+                "Iterable" => {
+                    let elem_ty = resolve_annotation_expr(&sub.slice, ctx);
+                    Type::Iterable(Box::new(elem_ty))
+                }
+                "Iterator" => {
+                    let elem_ty = resolve_annotation_expr(&sub.slice, ctx);
+                    Type::Iterator(Box::new(elem_ty))
+                }
+                "Reversible" => {
+                    let elem_ty = resolve_annotation_expr(&sub.slice, ctx);
+                    Type::reversible(elem_ty)
                 }
                 "Result" => {
                     // Result[T, E] -- the slice is a Tuple expression
@@ -657,7 +679,7 @@ pub(super) fn resolve_annotation_expr(expr: &Expr, ctx: &mut LowerCtx) -> Type {
 pub(super) fn lower_function(func: &StmtFunctionDef, ctx: &mut LowerCtx) -> Option<HirFunction> {
     let ft = ctx.functions.get::<str>(func.name.as_ref())?.clone();
 
-    ctx.scope.push();
+    ctx.enter_function_scope(collect_declared_nonlocals(&func.body));
 
     // Define parameters in scope, handling defaults
     let mut params = Vec::new();
@@ -751,29 +773,15 @@ pub(super) fn lower_function(func: &StmtFunctionDef, ctx: &mut LowerCtx) -> Opti
 
     ctx.borrowed_params.clear();
 
-    ctx.scope.pop();
+    ctx.exit_function_scope();
 
-    // Infer return type if not explicitly annotated (marked as Type::Any)
-    let inferred_return_type = if *ft.return_type == Type::Any && func.returns.is_none() {
-        let return_types = collect_return_types(&body);
-        if return_types.is_empty() {
-            Type::None // no return statements -> None
-        } else if return_types.len() == 1 {
-            return_types.into_iter().next().unwrap()
-        } else {
-            // Multiple return types -> union
-            let mut members: Vec<Type> = return_types.into_iter().collect();
-            members.sort_by_key(sifr_type_system::Type::display_name);
-            members.dedup();
-            if members.len() == 1 {
-                members.into_iter().next().unwrap()
-            } else {
-                Type::Union(members)
-            }
-        }
-    } else {
-        *ft.return_type
-    };
+    let inferred_return_type = infer_function_return_type(
+        func.name.as_ref(),
+        ft.return_type.as_ref(),
+        func.returns.is_some(),
+        &body,
+        |message| ctx.error(message),
+    );
 
     // Collect user-defined decorators (excluding classmethod/staticmethod)
     let decorators: Vec<String> = func

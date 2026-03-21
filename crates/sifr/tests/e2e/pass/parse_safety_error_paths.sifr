@@ -1,6 +1,6 @@
 # Test parse safety error paths — all parse/decode intrinsics return Result
-from sifr.json import json_loads
-from sifr.tomllib import loads
+from sifr.json import JsonValue, json_loads
+from sifr.tomllib import TomlValue, loads
 from sifr.re import re_match
 from sifr.base64 import base64_decode
 from sifr.bytes import decode_utf8, bytes_from_hex
@@ -11,7 +11,7 @@ def main():
     expected_index: int = 0
     # 1. JSON: invalid input returns JSONDecodeError
     try:
-        val: str = json_loads("invalid json")
+        val: JsonValue = json_loads("invalid json")
         assert str("should not reach here") == expected[len(expected) - expected_index - 1]
         expected_index = expected_index + 1
     except JSONDecodeError as e:
@@ -20,7 +20,7 @@ def main():
 
     # 2. JSON: valid input succeeds
     try:
-        data: str = json_loads("{\"ok\":true}")
+        data: JsonValue = json_loads("{\"ok\":true}")
         assert str(f"json ok: {data}") == expected[len(expected) - expected_index - 1]
         expected_index = expected_index + 1
     except JSONDecodeError as e:
@@ -29,7 +29,7 @@ def main():
 
     # 3. TOML: invalid input returns TOMLDecodeError
     try:
-        tval: str = loads("invalid [toml")
+        tval: TomlValue = loads("invalid [toml")
         assert str("should not reach here") == expected[len(expected) - expected_index - 1]
         expected_index = expected_index + 1
     except TOMLDecodeError as e:
@@ -38,8 +38,12 @@ def main():
 
     # 4. TOML: valid input succeeds
     try:
-        tdata: str = loads("key = \"value\"")
-        assert str(len(tdata) > 0) == expected[len(expected) - expected_index - 1]
+        tdata: TomlValue = loads("key = \"value\"")
+        value: TomlValue | None = tdata.get("key")
+        value_ok: bool = False
+        if value is not None:
+            value_ok = value.as_str() == "value"
+        assert str(value_ok) == expected[len(expected) - expected_index - 1]
         expected_index = expected_index + 1
     except TOMLDecodeError as e:
         assert str("unexpected: " + e.message) == expected[len(expected) - expected_index - 1]
@@ -83,7 +87,7 @@ def main():
 
     # 9. UTF-8: invalid bytes returns ParseError
     try:
-        bad_bytes: list[int] = [255, 254, 253]
+        bad_bytes: bytes = b"\xff\xfe\xfd"
         text: str = decode_utf8(bad_bytes)
         assert str("should not reach here") == expected[len(expected) - expected_index - 1]
         expected_index = expected_index + 1
@@ -93,7 +97,7 @@ def main():
 
     # 10. UTF-8: valid bytes succeeds
     try:
-        good_bytes: list[int] = [104, 105]
+        good_bytes: bytes = b"hi"
         text2: str = decode_utf8(good_bytes)
         assert str(f"utf8 ok: {text2}") == expected[len(expected) - expected_index - 1]
         expected_index = expected_index + 1
@@ -103,7 +107,7 @@ def main():
 
     # 11. bytes_from_hex: invalid hex returns ParseError
     try:
-        bad_hex: list[int] = bytes_from_hex("ZZZZ")
+        bad_hex: bytes = bytes_from_hex("ZZZZ")
         assert str("should not reach here") == expected[len(expected) - expected_index - 1]
         expected_index = expected_index + 1
     except ParseError as e:
@@ -112,7 +116,7 @@ def main():
 
     # 12. bytes_from_hex: valid hex succeeds
     try:
-        good_hex: list[int] = bytes_from_hex("48")
+        good_hex: bytes = bytes_from_hex("48")
         assert str(f"hex ok: {good_hex[0]}") == expected[len(expected) - expected_index - 1]
         expected_index = expected_index + 1
     except ParseError as e:
@@ -121,4 +125,3 @@ def main():
 
     assert str("all parse safety error paths passed") == expected[len(expected) - expected_index - 1]
     expected_index = expected_index + 1
-

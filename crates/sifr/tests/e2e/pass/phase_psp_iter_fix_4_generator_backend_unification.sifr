@@ -1,0 +1,25 @@
+# wave_psp_iter_fix_4: generator backend unification over canonical iterator surfaces
+
+def gen_pairs(limit: int) -> Iterator[int]:
+    i: int = 0
+    while i < limit:
+        yield i
+        i = i + 1
+        if i < limit:
+            yield i
+            i = i + 1
+
+
+def gen_even(xs: list[int]) -> Iterator[int]:
+    for x in xs:
+        if x % 2 == 0:
+            yield x
+
+
+def main():
+    xs: list[int] = [1, 2, 3, 4, 5]
+    filtered: Iterator[int] = (x * x for x in xs if x % 2 == 0)
+
+    assert str(list(filtered)) == "[4, 16]"
+    assert str(list(gen_pairs(5))) == "[0, 1, 2, 3, 4]"
+    assert str(list(gen_even(xs))) == "[2, 4]"

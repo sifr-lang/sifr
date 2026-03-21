@@ -1,0 +1,57 @@
+from sifr.itertools import chain, repeat, islice, count, combinations, product
+
+# Ad-hoc iterator wave 6 demo: phase-closure behavior snapshot.
+# Covers protocol entry (`iter`/`next`/`for`), generator laziness,
+# lazy builtin + itertools subset parity, and explicit retained eager families.
+
+
+def odds(limit: int) -> Iterator[int]:
+    i: int = 0
+    while i < limit:
+        if i % 2 == 1:
+            yield i
+        i = i + 1
+
+
+def main():
+    nums: list[int] = [1, 2, 3, 4]
+
+    # Protocol entry: iter/next are explicit and next() is iterator-only.
+    it: Iterator[int] = iter(nums)
+    assert next(it) == 1
+    assert next(it) == 2
+
+    doubled: list[int] = []
+    for n in nums:
+        doubled.append(n * 2)
+    assert str(doubled) == "[2, 4, 6, 8]"
+
+    # Generators are lazy and single-pass.
+    odd_it: Iterator[int] = odds(7)
+    assert next(odd_it) == 1
+    assert next(odd_it) == 3
+    assert next(odd_it) == 5
+    assert next(odd_it) is None
+
+    # Core lazy builtins are iterator-returning.
+    assert str(list(zip([1, 2], ["a", "b"]))) == "[(1, \"a\"), (2, \"b\")]"
+    assert str(list(enumerate(["x", "y"], 4))) == "[(4, \"x\"), (5, \"y\")]"
+    assert str(list(reversed([9, 8, 7]))) == "[7, 8, 9]"
+
+    # Wave-5 itertools lazy subset.
+    assert str(list(chain([1, 2], [3]))) == "[1, 2, 3]"
+    assert str(list(repeat(5, 3))) == "[5, 5, 5]"
+    assert str(list(islice([10, 20, 30, 40, 50], 1, 5, 2))) == "[20, 40]"
+
+    counter: Iterator[int] = count(2, 3)
+    assert next(counter) == 2
+    assert next(counter) == 5
+    assert next(counter) == 8
+
+    # Extended itertools families are iterator-returning with explicit materialization.
+    combos: list[list[int]] = list(combinations([1, 2, 3], 2))
+    assert str(combos) == "[[1, 2], [1, 3], [2, 3]]"
+    prods: list[list[int]] = list(product([1, 2], repeat=2))
+    assert str(prods) == "[[1, 1], [1, 2], [2, 1], [2, 2]]"
+
+    print("ad_hoc_iter_wave6_parity_closure_demo: ok")

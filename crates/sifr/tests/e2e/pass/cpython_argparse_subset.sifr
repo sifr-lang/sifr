@@ -1,0 +1,79 @@
+# Adapted CPython argparse subset for sifr.argparse class-heavy surface
+from sifr.argparse import ArgumentParser, Namespace, parse_option
+from sifr.test import assert_bool_vector_eq
+
+
+def collect_argument_parser_actual() -> list[bool]:
+    actual: list[bool] = []
+
+    parser: ArgumentParser = ArgumentParser("sifr-tool")
+    parser.add_argument("--verbose", "verbose", "store_true")
+    parser.add_argument("--output", "output", "store", "default.txt")
+    parser.add_argument("input", "input", "store", "missing.sifr")
+
+    parsed: Namespace = parser.parse_args(["--verbose", "--output", "artifact.bin", "main.sifr"])
+    actual.append(parser.prog() == "sifr-tool")
+    actual.append(parsed.get_bool("verbose", False) == True)
+    actual.append(parsed.get("output", "") == "artifact.bin")
+    actual.append(parsed.get("input", "") == "main.sifr")
+
+    parsed_default: Namespace = parser.parse_args(["main_only.sifr"])
+    actual.append(parsed_default.get_bool("verbose", False) == False)
+    actual.append(parsed_default.get("output", "") == "default.txt")
+    actual.append(parsed_default.get("input", "") == "main_only.sifr")
+    return actual
+
+
+def collect_option_token_shape_actual() -> list[bool]:
+    actual: list[bool] = []
+    parser: ArgumentParser = ArgumentParser("token-shape")
+    parser.add_argument("--foo", "foo", "store", "none")
+    parser.add_argument("item", "item", "store", "missing")
+
+    parsed_inline: Namespace = parser.parse_args(["--foo=bar", "value.txt"])
+    actual.append(parsed_inline.get("foo", "") == "bar")
+    actual.append(parsed_inline.get("item", "") == "value.txt")
+
+    parsed_double_dash: Namespace = parser.parse_args(["--", "--literal.txt"])
+    actual.append(parsed_double_dash.get("foo", "") == "none")
+    actual.append(parsed_double_dash.get("item", "") == "--literal.txt")
+    return actual
+
+
+def collect_missing_option_value_actual() -> list[bool]:
+    actual: list[bool] = []
+    parser: ArgumentParser = ArgumentParser("missing-option")
+    parser.add_argument("--verbose", "verbose", "store_true")
+    parser.add_argument("--output", "output", "store", "default.txt")
+    parser.add_argument("input", "input", "store", "missing.sifr")
+
+    parsed_missing: Namespace = parser.parse_args(["--output", "--verbose", "main.sifr"])
+    actual.append(parsed_missing.get("output", "") == "default.txt")
+    actual.append(parsed_missing.get_bool("verbose", False) == True)
+    actual.append(parsed_missing.get("input", "") == "main.sifr")
+
+    parsed_with_double_dash: Namespace = parser.parse_args(["--output", "--", "main.sifr"])
+    actual.append(parsed_with_double_dash.get("output", "") == "default.txt")
+    actual.append(parsed_with_double_dash.get_bool("verbose", False) == False)
+    actual.append(parsed_with_double_dash.get("input", "") == "main.sifr")
+
+    helper_default: str = parse_option(["--output", "--verbose"], "--output", "default.txt")
+    helper_negative_number: str = parse_option(["--output", "-1"], "--output", "default.txt")
+    actual.append(helper_default == "default.txt")
+    actual.append(helper_negative_number == "-1")
+    return actual
+
+
+def append_all(mut target: list[bool], values: list[bool]):
+    for value in values:
+        target.append(value)
+
+
+def main():
+    expected: list[bool] = [True, True, True, True, True, True, True, True, True, True, True, True, True, True, True, True, True, True, True]
+    actual: list[bool] = []
+    append_all(actual, collect_argument_parser_actual())
+    append_all(actual, collect_option_token_shape_actual())
+    append_all(actual, collect_missing_option_value_actual())
+    assert_bool_vector_eq(actual, expected)
+    assert str("cpython_argparse_subset: pass") == "cpython_argparse_subset: pass"

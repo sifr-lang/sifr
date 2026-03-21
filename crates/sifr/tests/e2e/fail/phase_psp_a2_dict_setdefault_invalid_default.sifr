@@ -1,0 +1,3 @@
+def main():
+    data: dict[str, int] = {"x": 1}
+    data.setdefault("y", "bad")

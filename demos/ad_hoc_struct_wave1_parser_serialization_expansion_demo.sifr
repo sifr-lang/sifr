@@ -1,0 +1,37 @@
+from sifr.json import JSONEncoder, JSONDecoder, JsonValue, from_int, from_object, from_str
+from sifr.configparser import ConfigParser, ParsingError
+from sifr.csv import Dialect, DialectRegistry, dialect_registry, reader
+
+
+def main() -> None:
+    encoder: JSONEncoder = JSONEncoder(indent=2)
+    decoder: JSONDecoder = JSONDecoder()
+
+    payload = from_object([("module", from_str("wave1")), ("version", from_int(1))])
+    encoded: str = encoder.encode(payload)
+    assert encoded == "{\"module\":\"wave1\",\"version\":1}"
+
+    decoded_ok: bool = False
+    try:
+        decoded_value: JsonValue = decoder.decode(encoded)
+        decoded_ok = str(decoded_value) == encoded
+    except Error as e:
+        _ = str(e.message)
+    assert decoded_ok
+
+    parser: ConfigParser = ConfigParser()
+    try:
+        _: None = parser.read_string("[DEFAULT]\nbase=/tmp\n[paths]\ncache=%(base)s/cache\n")
+    except ParsingError as e:
+        _ = str(e.message)
+        assert False
+    assert parser.get("paths", "cache") == "/tmp/cache"
+
+    registry: DialectRegistry = dialect_registry()
+    registry.register("pipe", Dialect(delimiter="|"))
+    d = registry.get("pipe")
+    assert d is not None
+    if d is not None:
+        r = reader("a|b\n1|2", dialect=d)
+        assert str(r.rows()) == "[[\"a\", \"b\"], [\"1\", \"2\"]]"
+    assert registry.unregister("pipe")

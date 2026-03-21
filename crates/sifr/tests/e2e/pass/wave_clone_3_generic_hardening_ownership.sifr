@@ -1,0 +1,33 @@
+def first_or_none[T](items: list[T]) -> T | None:
+    if len(items) == 0:
+        return None
+    return items[0]
+
+
+def main():
+    pairs: list[tuple[int, int]] = [(1, 2), (3, 4)]
+    sums: list[int] = []
+    for pair in pairs:
+        sums.append(pair[0] + pair[1])
+    assert str(sums) == "[3, 7]"
+    assert len(pairs) == 2
+
+    int_first: int | None = first_or_none([9, 10])
+    if int_first is not None:
+        assert int_first == 9
+    else:
+        assert False
+
+    str_first: str | None = first_or_none(["aa", "bb"])
+    if str_first is not None:
+        assert str_first == "aa"
+    else:
+        assert False
+
+    anys: list[Any] = []
+    seen: int = 0
+    for _v in anys:
+        seen = seen + 1
+    assert seen == 0
+
+    print("wave_clone_3_generic_hardening_ownership: pass")
