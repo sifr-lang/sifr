@@ -693,6 +693,10 @@ impl RustEmitter {
             let build_inner_index = |container_expr: crate::RustExpr| -> Option<crate::RustExpr> {
                 let lowered_expr = match index_base_ty {
                     Type::Dict(key_ty, value_ty) => {
+                        let projection_method =
+                            crate::helpers::option_projection_method_for_owned_type(
+                                value_ty.as_ref(),
+                            );
                         let key_is_string_like = matches!(
                             crate::resolve_alias_type_for_plain_call(key_ty.as_ref()),
                             Type::Str | Type::LiteralStr(_)
@@ -719,7 +723,7 @@ impl RustEmitter {
                                 method: "get".to_string(),
                                 args: vec![key_arg],
                             }),
-                            method: "cloned".to_string(),
+                            method: projection_method.to_string(),
                             args: vec![],
                         };
                         if crate::helpers::is_option_type(value_ty.as_ref()) {
@@ -739,7 +743,11 @@ impl RustEmitter {
                             lowered_get
                         }
                     }
-                    Type::List(_) => {
+                    Type::List(element_ty) => {
+                        let projection_method =
+                            crate::helpers::option_projection_method_for_owned_type(
+                                element_ty.as_ref(),
+                            );
                         let object_name = "__sifr_index_list".to_string();
                         let index_name = "__sifr_index_i".to_string();
                         let normalized_name = "__sifr_index_norm".to_string();
@@ -806,7 +814,7 @@ impl RustEmitter {
                                     method: "get".to_string(),
                                     args: vec![crate::RustExpr::Ident(normalized_name)],
                                 }),
-                                method: "cloned".to_string(),
+                                method: projection_method.to_string(),
                                 args: vec![],
                             })),
                         }

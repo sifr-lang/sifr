@@ -1,6 +1,6 @@
 # Ad Hoc Phase Execution Checklist (Ownership-Aware Collection Lowering and Clone Elision)
 
-Status: in_progress (started 2026-03-21; `wave_clone_0` architecture lock/baseline completed and `wave_clone_1` iterator/comprehension ownership correction completed on 2026-03-21)
+Status: in_progress (started 2026-03-21; `wave_clone_0` architecture lock/baseline, `wave_clone_1` iterator/comprehension ownership correction, and `wave_clone_2` index/slice/star-unpack ownership correction completed on 2026-03-21)
 Owner: ad_hoc_collection_lowering_clone_elision execution loop
 Reference planning doc:
 - `issues/ad-hoc-ownership-aware-collection-lowering-and-clone-elision.md`
@@ -20,7 +20,7 @@ Loop per wave: Plan -> Implement -> Validate -> Demo -> PR -> External completio
 ## Full Phase To-Do Plan
 1. [x] `wave_clone_0`: architecture lock, inventory, and execution-baseline capture
 2. [x] `wave_clone_1`: iterator/comprehension clone-elision through shared planner
-3. [ ] `wave_clone_2`: indexing/slicing/star-unpack ownership correction
+3. [x] `wave_clone_2`: indexing/slicing/star-unpack ownership correction
 4. [ ] `wave_clone_3`: generic hardening, regression lock, and phase closure
 5. [ ] wave-level extra completion review cycle done
 6. [ ] wave-level extra production-grade review cycle done
@@ -190,22 +190,39 @@ Secondary review paths:
     - deferred to `wave_clone_3` (optional generated-code polish): normalize redundant `.copied().collect()` chains
 
 ### wave_clone_2: Indexing, Safe Indexing, Slicing, and Star-Unpack Ownership Correction
-- Status: not started
+- Status: completed
+- Implementation PR: pending (to be filled after merge)
 - Scope:
   - refactor indexing and safe-indexing extraction to use ownership-aware plans
   - remove `Copy`-element `.clone()` / `.cloned()` in targeted indexing paths
   - remove whole-source clone in simple star-unpack lowering
   - preserve correct clone/copy behavior for move-element slices and unpacking
 - Required files:
+  - `crates/sifr_codegen/src/helpers.rs`
+  - `crates/sifr_codegen/src/expr_render_helpers.rs`
   - `crates/sifr_codegen/src/lower_stmt.rs`
   - `crates/sifr_codegen/src/stmt_support_emitter.rs`
-  - `crates/sifr_codegen/src/helpers.rs`
+  - `crates/sifr_codegen/src/lower_expr.rs`
+  - `crates/sifr_codegen/src/intrinsic_method_emitters.rs`
 - Validation target:
   - positive: indexing / safe-indexing / slicing / star-unpack fixtures and demos run successfully
   - negative: ownership-safety regressions remain rejected
   - emit inspection: targeted outputs no longer contain whole-source star-unpack clone
   - emit inspection: `Copy`-element indexing no longer uses `.clone()` / `.cloned()` in targeted paths and instead uses copy-oriented extraction such as direct copy-out or `.copied()` where applicable
   - wave gate: `scripts/run_all_tests.sh --profile quick`
+- Validation evidence:
+  - wave fixture:
+    - `cargo run -q -p sifr -- run crates/sifr/tests/e2e/pass/wave_clone_2_index_slice_unpack_ownership.sifr` -> PASS (`wave_clone_2_index_slice_unpack_ownership: pass`)
+  - wave demo:
+    - `cargo run -q -p sifr -- run demos/ad_hoc_clone_wave2_index_slice_unpack_demo.sifr` -> PASS (`ad_hoc_clone_wave2_index_slice_unpack_demo: pass`)
+  - emit checks:
+    - `cargo run -q -p sifr -- emit crates/sifr/tests/e2e/pass/wave_clone_2_index_slice_unpack_ownership.sifr`
+      - copy-safe indexing evidence: `scores.get(\"alice\").copied()`
+      - move-element indexing evidence: `__sifr_index_list.get(__sifr_index_norm).cloned()`
+      - star-unpack evidence: `let _star_tmp = &nums;` and no `let _star_tmp = <source>.clone();`
+      - stepped copy-slice evidence: `_result.push(*_el);`
+  - wave traceability artifact:
+    - `verification/stdlib/wave_clone_2_index_slice_unpack_traceability.md`
 
 ### wave_clone_3: Generic Hardening, Regression Lock, and Closure
 - Status: not started

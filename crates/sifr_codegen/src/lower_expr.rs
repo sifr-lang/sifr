@@ -935,15 +935,19 @@ fn try_lower_simple_index_expr(object: &HirExpr, index: &HirExpr) -> Option<Rust
         return Some(lowered);
     }
     match resolve_alias_type(object.ty()) {
-        Type::Dict(_, _) => Some(RustExpr::MethodCall {
-            receiver: Box::new(RustExpr::MethodCall {
-                receiver: Box::new(try_lower_leaf_or_name_expr(object)?),
-                method: "get".to_string(),
-                args: vec![try_lower_dict_get_key_expr(index)?],
-            }),
-            method: "cloned".to_string(),
-            args: vec![],
-        }),
+        Type::Dict(_, value_ty) => {
+            let projection_method =
+                crate::helpers::option_projection_method_for_owned_type(value_ty.as_ref());
+            Some(RustExpr::MethodCall {
+                receiver: Box::new(RustExpr::MethodCall {
+                    receiver: Box::new(try_lower_leaf_or_name_expr(object)?),
+                    method: "get".to_string(),
+                    args: vec![try_lower_dict_get_key_expr(index)?],
+                }),
+                method: projection_method.to_string(),
+                args: vec![],
+            })
+        }
         Type::Any => Some(RustExpr::Index {
             expr: Box::new(try_lower_leaf_or_name_expr(object)?),
             index: Box::new(try_lower_leaf_or_name_expr(index)?),

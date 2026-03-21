@@ -1428,14 +1428,17 @@ fn try_lower_simple_star_unpack_stmt(
     value: &HirExpr,
 ) -> Option<Vec<RustStmt>> {
     let lowered_value = try_lower_leaf_or_name_expr(value)?;
+    let source_plan = crate::helpers::plan_iterator_ownership(value);
     let mut lowered = vec![RustStmt::Let {
         mutable: false,
         name: "_star_tmp".to_string(),
         ty: None,
-        value: RustExpr::MethodCall {
-            receiver: Box::new(lowered_value),
-            method: "clone".to_string(),
-            args: vec![],
+        value: match source_plan.source_access_mode {
+            crate::helpers::SourceAccessMode::Preserve => RustExpr::Ref {
+                mutable: false,
+                expr: Box::new(lowered_value),
+            },
+            crate::helpers::SourceAccessMode::Consume => lowered_value,
         },
     }];
 
@@ -1446,21 +1449,25 @@ fn try_lower_simple_star_unpack_stmt(
         args: vec![],
     };
 
-    for (idx, (name, _)) in before.iter().enumerate() {
+    for (idx, (name, element_ty)) in before.iter().enumerate() {
+        let indexed_expr = RustExpr::Index {
+            expr: Box::new(tmp_ident()),
+            index: Box::new(RustExpr::Literal(RustLiteral::Int(i64::try_from(idx).ok()?))),
+        };
+        let extracted_expr = if crate::helpers::is_copy_type_for_codegen(element_ty) {
+            indexed_expr
+        } else {
+            RustExpr::MethodCall {
+                receiver: Box::new(indexed_expr),
+                method: "clone".to_string(),
+                args: vec![],
+            }
+        };
         lowered.push(RustStmt::Let {
             mutable: false,
             name: name.clone(),
             ty: None,
-            value: RustExpr::MethodCall {
-                receiver: Box::new(RustExpr::Index {
-                    expr: Box::new(tmp_ident()),
-                    index: Box::new(RustExpr::Literal(RustLiteral::Int(
-                        i64::try_from(idx).ok()?,
-                    ))),
-                }),
-                method: "clone".to_string(),
-                args: vec![],
-            },
+            value: extracted_expr,
         });
     }
 
@@ -1495,25 +1502,31 @@ fn try_lower_simple_star_unpack_stmt(
         },
     });
 
-    for (idx, (name, _)) in after.iter().enumerate() {
+    for (idx, (name, element_ty)) in after.iter().enumerate() {
+        let indexed_expr = RustExpr::Index {
+            expr: Box::new(tmp_ident()),
+            index: Box::new(RustExpr::BinOp {
+                left: Box::new(tmp_len()),
+                op: "-".to_string(),
+                right: Box::new(RustExpr::Literal(RustLiteral::Int(
+                    i64::try_from(after.len() - idx).ok()?,
+                ))),
+            }),
+        };
+        let extracted_expr = if crate::helpers::is_copy_type_for_codegen(element_ty) {
+            indexed_expr
+        } else {
+            RustExpr::MethodCall {
+                receiver: Box::new(indexed_expr),
+                method: "clone".to_string(),
+                args: vec![],
+            }
+        };
         lowered.push(RustStmt::Let {
             mutable: false,
             name: name.clone(),
             ty: None,
-            value: RustExpr::MethodCall {
-                receiver: Box::new(RustExpr::Index {
-                    expr: Box::new(tmp_ident()),
-                    index: Box::new(RustExpr::BinOp {
-                        left: Box::new(tmp_len()),
-                        op: "-".to_string(),
-                        right: Box::new(RustExpr::Literal(RustLiteral::Int(
-                            i64::try_from(after.len() - idx).ok()?,
-                        ))),
-                    }),
-                }),
-                method: "clone".to_string(),
-                args: vec![],
-            },
+            value: extracted_expr,
         });
     }
 
@@ -2667,6 +2680,8 @@ fn try_lower_condition_index_operand_expr(
 ) -> Option<RustExpr> {
     match resolve_alias_type(object.ty()) {
         Type::Dict(_, value_ty) => {
+            let projection_method =
+                crate::helpers::option_projection_method_for_owned_type(value_ty.as_ref());
             let lowered_key = if let HirExpr::StringLiteral(value) = index {
                 RustExpr::Ident(format!("{value:?}"))
             } else {
@@ -2681,7 +2696,7 @@ fn try_lower_condition_index_operand_expr(
                     method: "get".to_string(),
                     args: vec![lowered_key],
                 }),
-                method: "cloned".to_string(),
+                method: projection_method.to_string(),
                 args: vec![],
             };
             if is_option_like_type(value_ty.as_ref()) {
@@ -2701,27 +2716,36 @@ fn try_lower_condition_index_operand_expr(
                 Some(lowered_get)
             }
         }
-        Type::List(_) if !is_option_like_type(result_ty) => {
-            Some(RustExpr::Clone(Box::new(RustExpr::Index {
+        Type::List(element_ty) if !is_option_like_type(result_ty) => {
+            let indexed_expr = RustExpr::Index {
                 expr: Box::new(try_lower_leaf_or_name_expr(object)?),
                 index: Box::new(RustExpr::Cast {
                     expr: Box::new(try_lower_leaf_or_name_expr(index)?),
                     ty: RustType::Named("usize".to_string()),
                 }),
-            })))
+            };
+            Some(if crate::helpers::is_copy_type_for_codegen(element_ty.as_ref()) {
+                indexed_expr
+            } else {
+                RustExpr::Clone(Box::new(indexed_expr))
+            })
         }
-        Type::List(_) => Some(RustExpr::MethodCall {
-            receiver: Box::new(RustExpr::MethodCall {
-                receiver: Box::new(try_lower_leaf_or_name_expr(object)?),
-                method: "get".to_string(),
-                args: vec![RustExpr::Cast {
-                    expr: Box::new(try_lower_leaf_or_name_expr(index)?),
-                    ty: RustType::Named("usize".to_string()),
-                }],
-            }),
-            method: "cloned".to_string(),
-            args: vec![],
-        }),
+        Type::List(element_ty) => {
+            let projection_method =
+                crate::helpers::option_projection_method_for_owned_type(element_ty.as_ref());
+            Some(RustExpr::MethodCall {
+                receiver: Box::new(RustExpr::MethodCall {
+                    receiver: Box::new(try_lower_leaf_or_name_expr(object)?),
+                    method: "get".to_string(),
+                    args: vec![RustExpr::Cast {
+                        expr: Box::new(try_lower_leaf_or_name_expr(index)?),
+                        ty: RustType::Named("usize".to_string()),
+                    }],
+                }),
+                method: projection_method.to_string(),
+                args: vec![],
+            })
+        }
         Type::Str if !is_option_like_type(result_ty) => Some(RustExpr::Block {
             stmts: vec![RustStmt::LetElse {
                 pattern: "Some(__indexed_char)".to_string(),
@@ -2935,6 +2959,8 @@ fn try_lower_stmt_index_expr(expr: &HirExpr) -> Option<RustExpr> {
     }
     match resolve_alias_type(object.ty()) {
         Type::Dict(_, value_ty) => {
+            let projection_method =
+                crate::helpers::option_projection_method_for_owned_type(value_ty.as_ref());
             let lowered_key = if let HirExpr::StringLiteral(value) = index.as_ref() {
                 RustExpr::Ident(format!("{value:?}"))
             } else {
@@ -2949,7 +2975,7 @@ fn try_lower_stmt_index_expr(expr: &HirExpr) -> Option<RustExpr> {
                     method: "get".to_string(),
                     args: vec![lowered_key],
                 }),
-                method: "cloned".to_string(),
+                method: projection_method.to_string(),
                 args: vec![],
             };
             if is_option_like_type(value_ty.as_ref()) {
@@ -2969,18 +2995,22 @@ fn try_lower_stmt_index_expr(expr: &HirExpr) -> Option<RustExpr> {
                 Some(lowered_get)
             }
         }
-        Type::List(_) => Some(RustExpr::MethodCall {
-            receiver: Box::new(RustExpr::MethodCall {
-                receiver: Box::new(try_lower_leaf_or_name_expr(object)?),
-                method: "get".to_string(),
-                args: vec![RustExpr::Cast {
-                    expr: Box::new(try_lower_leaf_or_name_expr(index)?),
-                    ty: RustType::Named("usize".to_string()),
-                }],
-            }),
-            method: "cloned".to_string(),
-            args: vec![],
-        }),
+        Type::List(element_ty) => {
+            let projection_method =
+                crate::helpers::option_projection_method_for_owned_type(element_ty.as_ref());
+            Some(RustExpr::MethodCall {
+                receiver: Box::new(RustExpr::MethodCall {
+                    receiver: Box::new(try_lower_leaf_or_name_expr(object)?),
+                    method: "get".to_string(),
+                    args: vec![RustExpr::Cast {
+                        expr: Box::new(try_lower_leaf_or_name_expr(index)?),
+                        ty: RustType::Named("usize".to_string()),
+                    }],
+                }),
+                method: projection_method.to_string(),
+                args: vec![],
+            })
+        }
         _ => None,
     }
 }
