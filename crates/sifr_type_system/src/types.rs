@@ -459,9 +459,18 @@ impl Type {
             | Self::List(_)
             | Self::Dict(_, _)
             | Self::Set(_)
-            | Self::Tuple(_)
             | Self::Iterable(_)
             | Self::Iterator(_) => OwnershipKind::Move,
+            Self::Tuple(elems) => {
+                if elems
+                    .iter()
+                    .all(|elem| elem.ownership() == OwnershipKind::Copy)
+                {
+                    OwnershipKind::Copy
+                } else {
+                    OwnershipKind::Move
+                }
+            }
             Self::LiteralStr(_) => OwnershipKind::Move,
             Self::Unknown => OwnershipKind::Move,
             Self::Class { .. } => OwnershipKind::Move,
@@ -1460,6 +1469,18 @@ mod tests {
         assert_eq!(tuple.ownership(), OwnershipKind::Move);
         assert_eq!(tuple.display_name(), "tuple[int, str]");
         assert_eq!(tuple.rust_type(), "(i64, String)");
+    }
+
+    #[test]
+    fn test_tuple_ownership_all_copy_is_copy() {
+        let tuple = Type::Tuple(vec![Type::Int, Type::Float]);
+        assert_eq!(tuple.ownership(), OwnershipKind::Copy);
+    }
+
+    #[test]
+    fn test_tuple_ownership_with_move_is_move() {
+        let tuple = Type::Tuple(vec![Type::Int, Type::Str]);
+        assert_eq!(tuple.ownership(), OwnershipKind::Move);
     }
 
     #[test]

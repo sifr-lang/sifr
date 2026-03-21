@@ -1,6 +1,6 @@
 # Ad Hoc Phase Execution Checklist (Ownership-Aware Collection Lowering and Clone Elision)
 
-Status: in_progress (started 2026-03-21; `wave_clone_0` architecture lock/baseline, `wave_clone_1` iterator/comprehension ownership correction, and `wave_clone_2` index/slice/star-unpack ownership correction completed on 2026-03-21)
+Status: in_progress (started 2026-03-21; `wave_clone_0` architecture lock/baseline, `wave_clone_1` iterator/comprehension ownership correction, `wave_clone_2` index/slice/star-unpack ownership correction, and `wave_clone_3` generic hardening/regression lock completed on 2026-03-21; closure review cycles pending)
 Owner: ad_hoc_collection_lowering_clone_elision execution loop
 Reference planning doc:
 - `issues/ad-hoc-ownership-aware-collection-lowering-and-clone-elision.md`
@@ -21,7 +21,7 @@ Loop per wave: Plan -> Implement -> Validate -> Demo -> PR -> External completio
 1. [x] `wave_clone_0`: architecture lock, inventory, and execution-baseline capture
 2. [x] `wave_clone_1`: iterator/comprehension clone-elision through shared planner
 3. [x] `wave_clone_2`: indexing/slicing/star-unpack ownership correction
-4. [ ] `wave_clone_3`: generic hardening, regression lock, and phase closure
+4. [x] `wave_clone_3`: generic hardening, regression lock, and phase closure
 5. [ ] wave-level extra completion review cycle done
 6. [ ] wave-level extra production-grade review cycle done
 7. [ ] milestone-level completion review cycle done
@@ -233,7 +233,8 @@ Secondary review paths:
     - deferred to `wave_clone_3`: tuple ownership hardening in `Type::ownership()` (copy tuples should classify as `OwnershipKind::Copy`)
 
 ### wave_clone_3: Generic Hardening, Regression Lock, and Closure
-- Status: not started
+- Status: completed
+- Implementation PR: pending (to be filled after merge)
 - Scope:
   - harden `TypeVar`, `Any`, and union cases under the shared planner
   - ensure no unsound `.copied()` lowering is emitted for conservative types
@@ -241,7 +242,11 @@ Secondary review paths:
   - document residual move-heavy parity limits explicitly in architecture/phase docs
 - Required files:
   - `crates/sifr_codegen/src/helpers.rs`
+  - `crates/sifr_type_system/src/types.rs`
   - targeted tests under `crates/sifr_codegen`, `crates/sifr_hir`, and `crates/sifr/tests/e2e`
+  - `crates/sifr/tests/e2e/pass/wave_clone_3_generic_hardening_ownership.sifr`
+  - `demos/ad_hoc_clone_wave3_generic_hardening_demo.sifr`
+  - `verification/stdlib/wave_clone_3_generic_hardening_traceability.md`
   - `internal_docs/architecture.md`
   - `issues/ad-hoc-ownership-aware-collection-lowering-and-clone-elision.md`
 - Validation target:
@@ -252,6 +257,24 @@ Secondary review paths:
   - `cargo clippy --workspace -- -D warnings`
   - `python3 scripts/check_hir_maintainability_guardrails.py`
   - `scripts/run_all_tests.sh`
+- Validation evidence:
+  - targeted type-system ownership hardening:
+    - `cargo test -p sifr_type_system test_tuple_ownership_all_copy_is_copy` -> PASS
+    - `cargo test -p sifr_type_system test_tuple_ownership_with_move_is_move` -> PASS
+  - targeted planner hardening:
+    - `cargo test -p sifr_codegen -- helpers::tests` -> PASS
+      - `iterator_plan_preserved_list_any_uses_borrow_not_clone` confirms `list[Any]` iteration stays borrow-based
+      - `iterator_plan_copies_tuple_of_copy_elements` confirms copy-yield for `list[tuple[int, int]]`
+  - wave fixture:
+    - `cargo run -q -p sifr -- run crates/sifr/tests/e2e/pass/wave_clone_3_generic_hardening_ownership.sifr` -> PASS (`wave_clone_3_generic_hardening_ownership: pass`)
+  - wave demo:
+    - `cargo run -q -p sifr -- run demos/ad_hoc_clone_wave3_generic_hardening_demo.sifr` -> PASS (`ad_hoc_clone_wave3_generic_hardening_demo: pass`)
+  - emit checks:
+    - `cargo run -q -p sifr -- emit crates/sifr/tests/e2e/pass/wave_clone_3_generic_hardening_ownership.sifr`
+      - tuple copy iteration evidence: `for pair in pairs.iter().copied()`
+      - conservative `Any` iteration evidence: `for _v in anys.iter()` (no `.cloned()` / `.copied()`)
+  - wave traceability artifact:
+    - `verification/stdlib/wave_clone_3_generic_hardening_traceability.md`
 
 ## Suggested Regression Targets
 
