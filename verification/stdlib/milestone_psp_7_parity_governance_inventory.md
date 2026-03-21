@@ -1,6 +1,6 @@
 # `milestone_psp_7` Parity Governance Inventory
 
-Status: in_progress (updated by RNG milestone-closure review-pass-1 remediation on 2026-03-21; `wave_psp_rng_0`-`wave_psp_rng_3` are merged and production-review closed; milestone/phase closure loops are now the remaining active work)  
+Status: in_progress (updated by RNG milestone-closure review-pass-2 approval on 2026-03-21; `wave_psp_rng_0`-`wave_psp_rng_3` are merged and production-review closed; phase-closure loops are now the remaining active work)  
 Phase: `issues/ad-hoc-python-source-parity-and-builtin-stdlib-surface.md`  
 Execution ledger: `issues/ad-hoc-python-source-parity-and-builtin-stdlib-surface-execution.md`  
 Continuation phase (closed): `issues/ad-hoc-python-source-parity-extension-waiver-reduction.md`  
