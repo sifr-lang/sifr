@@ -138,6 +138,18 @@ pub(crate) fn plan_iterator_ownership_with_element_hint(
     }
 }
 
+pub(crate) fn is_copy_type_for_codegen(ty: &Type) -> bool {
+    crate::resolve_alias_type_for_plain_call(ty).ownership() == OwnershipKind::Copy
+}
+
+pub(crate) fn option_projection_method_for_owned_type(ty: &Type) -> &'static str {
+    if is_copy_type_for_codegen(ty) {
+        "copied"
+    } else {
+        "cloned"
+    }
+}
+
 /// Check if a type can be auto-formatted with `{}` (implements Display).
 /// Used to determine if auto-generated Display impl is safe for a class field.
 pub(super) fn is_auto_display_type(ty: &Type) -> bool {
@@ -815,6 +827,12 @@ mod tests {
         assert_eq!(plan.source_access_mode, SourceAccessMode::Preserve);
         assert_eq!(plan.yield_mode, YieldMode::Borrow);
         assert_eq!(plan.element_ownership, None);
+    }
+
+    #[test]
+    fn option_projection_method_prefers_copy_for_copy_types() {
+        assert_eq!(option_projection_method_for_owned_type(&Type::Int), "copied");
+        assert_eq!(option_projection_method_for_owned_type(&Type::Str), "cloned");
     }
 
     #[test]

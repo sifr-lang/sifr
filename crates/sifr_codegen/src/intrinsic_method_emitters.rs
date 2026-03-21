@@ -1269,7 +1269,11 @@ impl RustEmitter {
                     let lowered_object = self.try_lower_registry_expr_strict(object)?;
                     let lowered_index = self.try_lower_registry_expr_strict(index)?;
                     match object_ty {
-                        Type::Dict(key_ty, _) => {
+                        Type::Dict(key_ty, value_ty) => {
+                            let projection_method =
+                                crate::helpers::option_projection_method_for_owned_type(
+                                    value_ty.as_ref(),
+                                );
                             let key_is_string_like = matches!(
                                 crate::resolve_alias_type_for_plain_call(key_ty.as_ref()),
                                 Type::Str | Type::LiteralStr(_)
@@ -1296,22 +1300,28 @@ impl RustEmitter {
                                     method: "get".to_string(),
                                     args: vec![key_arg],
                                 }),
-                                method: "cloned".to_string(),
+                                method: projection_method.to_string(),
                                 args: vec![],
                             })
                         }
-                        Type::List(_) => Some(crate::RustExpr::MethodCall {
-                            receiver: Box::new(crate::RustExpr::MethodCall {
-                                receiver: Box::new(lowered_object),
-                                method: "get".to_string(),
-                                args: vec![crate::RustExpr::Cast {
-                                    expr: Box::new(lowered_index),
-                                    ty: crate::RustType::Named("usize".to_string()),
-                                }],
-                            }),
-                            method: "cloned".to_string(),
-                            args: vec![],
-                        }),
+                        Type::List(element_ty) => {
+                            let projection_method =
+                                crate::helpers::option_projection_method_for_owned_type(
+                                    element_ty.as_ref(),
+                                );
+                            Some(crate::RustExpr::MethodCall {
+                                receiver: Box::new(crate::RustExpr::MethodCall {
+                                    receiver: Box::new(lowered_object),
+                                    method: "get".to_string(),
+                                    args: vec![crate::RustExpr::Cast {
+                                        expr: Box::new(lowered_index),
+                                        ty: crate::RustType::Named("usize".to_string()),
+                                    }],
+                                }),
+                                method: projection_method.to_string(),
+                                args: vec![],
+                            })
+                        }
                         Type::Bytes => Some(crate::RustExpr::MethodCall {
                             receiver: Box::new(crate::RustExpr::MethodCall {
                                 receiver: Box::new(lowered_object),

@@ -17,7 +17,8 @@
   - completed waves:
     - `wave_clone_0` lock/baseline artifact: `verification/stdlib/wave_clone_0_codegen_traceability.md`
     - `wave_clone_1` iterator/comprehension ownership correction artifact: `verification/stdlib/wave_clone_1_iterator_codegen_traceability.md`
-  - active wave: `wave_clone_2` (indexing/slicing/star-unpack ownership correction)
+    - `wave_clone_2` indexing/slicing/star-unpack ownership correction artifact: `verification/stdlib/wave_clone_2_index_slice_unpack_traceability.md`
+  - active wave: `wave_clone_3` (generic hardening, regression lock, and closure)
   - locked planner contract for implementation waves:
     - value category: `Place | Temporary`
     - source access mode: `Preserve | Consume`

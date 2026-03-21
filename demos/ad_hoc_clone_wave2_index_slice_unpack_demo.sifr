@@ -1,0 +1,18 @@
+def main():
+    nums: list[int] = [3, 6, 9, 12]
+    print(nums[0])
+    print(nums[99])
+
+    scores: dict[str, int] = {"x": 11, "y": 22}
+    print(scores["x"])
+    print(scores["z"])
+
+    a, *mid, b = nums
+    print(a)
+    print(mid)
+    print(b)
+
+    print(nums[::2])
+    print(len(nums))
+
+    print("ad_hoc_clone_wave2_index_slice_unpack_demo: pass")
