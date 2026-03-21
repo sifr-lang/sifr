@@ -17,6 +17,16 @@ Scope: deterministic RNG state/object model closure for `sifr.random`
 | `test_random` byte generation (`randbytes`) | ship deterministic bytes-generation surface returning first-class `bytes` | `adapted` (shipped) | `lib/sifr/random.sifr`, `crates/sifr/tests/e2e/pass/phase_psp_rng_1_stateful_random_object_model.sifr` |
 | `test_random` weighted-distribution `choices(weights=...)` | keep weighted branch unsupported in this wave | `unsupported` | `crates/sifr/tests/e2e/fail/phase_psp_b2_random_choices_weights_unsupported.sifr` |
 
+## CPython `test_random.py` Case Mapping (Wave 1)
+
+| CPython test case | Sifr adaptation direction | Local anchor(s) | Coverage status |
+| --- | --- | --- | --- |
+| `TestBasicOps.test_saverestore` | deterministic sequence replay through `getstate`/`setstate` | `crates/sifr/tests/e2e/pass/phase_psp_rng_1_stateful_random_object_model.sifr`, `demos/ad_hoc_rng_wave1_stateful_object_model_demo.sifr` | covered |
+| `SystemRandom_TestBasicOps.test_saverestore` | host-backed `SystemRandom` state export/import stays unsupported | `crates/sifr/tests/e2e/fail/phase_psp_rng_1_system_random_state_unsupported.sifr` | covered (adapted typed boundary) |
+| `TestBasicOps.test_randbytes` / `MersenneTwister_TestBasicOps.test_randbytes` | deterministic bytes generation on typed first-class `bytes` | `crates/sifr/tests/e2e/pass/phase_psp_rng_1_stateful_random_object_model.sifr` | covered |
+| `MersenneTwister_TestBasicOps.test_setstate_first_arg` and `test_setstate_middle_arg` | invalid state version/index/shape reject through typed `ValueError` | `lib/sifr/random.sifr`, `crates/sifr_codegen/src/intrinsics/random.rs` (`lower_random_module_set_state`) | partially covered (runtime validation shipped; dedicated fixture expansion remains tracked) |
+| `TestBasicOps.test_randrange_nonunit_step`, `test_randint`, `test_choice`, `test_sample`, `test_shuffle`, `test_gauss`, `test_getrandbits` | existing random helper-family parity remains active while wave-1 module delegation moves those helpers onto deterministic shared state | `crates/sifr/tests/e2e/pass/cpython_random_subset.sifr`, `crates/sifr/tests/e2e/pass/stdlib_random.sifr`, `crates/sifr/tests/e2e/pass/phase_psp_rng_1_stateful_random_object_model.sifr` | covered (legacy + wave-1 delegation replay) |
+
 ## Explicit Waivers / Boundaries After Wave 1
 
 - `choices(weights=...)` remains explicitly unsupported for this phase.

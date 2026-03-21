@@ -1,6 +1,6 @@
 # Ad Hoc Phase Execution Checklist (Stateful RNG, Crypto, and Polish Parity Expansion)
 
-Status: in-progress (started 2026-03-21; entry baseline validated; `wave_psp_rng_0` completed; `wave_psp_rng_1` implementation + validation completed and pending PR/review/merge loop)
+Status: in-progress (started 2026-03-21; entry baseline validated; `wave_psp_rng_0` completed; `wave_psp_rng_1` implementation + validation merged via PR #1376; external review pass loop active)
 Owner: ad_hoc_stateful_rng_crypto execution loop
 Reference planning doc:
 - `issues/ad-hoc-stateful-rng-crypto-and-polish-parity-expansion.md`
@@ -14,12 +14,12 @@ Loop per wave: Plan -> Implement -> Validate -> Demo -> PR -> External completio
 - [x] Positive-path and negative-path validation recorded for each wave
 - [x] Demo runs before opening each wave PR
 - [x] `$(pwd)/scripts/run_all_tests.sh` run before each wave PR
-- [ ] PR opened/reviewed/merged before next wave starts
+- [x] PR opened/reviewed/merged before next wave starts
 - [x] Docs + traceability + waiver state updated before moving on
 
 ## Full Phase To-Do Plan
 1. [x] `wave_psp_rng_0`: architecture lock for typed RNG state model, module-global proxy rules, bytes-native crypto boundary, and permanent divergence classification
-2. [ ] `wave_psp_rng_1`: deterministic RNG state and object model (`RandomState`, `Random`, `SystemRandom`, module-global delegation)
+2. [x] `wave_psp_rng_1`: deterministic RNG state and object model (`RandomState`, `Random`, `SystemRandom`, module-global delegation)
 3. [ ] `wave_psp_rng_2`: advanced hash and binary-surface expansion (`hashlib`, `base64`)
 4. [ ] `wave_psp_rng_3`: final polish waiver reduction (`statistics`, residual `textwrap`, residual `html`)
 5. [ ] wave-level extra completion review cycle done
@@ -41,7 +41,7 @@ Loop per wave: Plan -> Implement -> Validate -> Demo -> PR -> External completio
 - [x] Add negative fixture for `SystemRandom` state boundary.
 - [x] Run `cargo test -p sifr -- --skip test_e2e_pass`.
 - [x] Run full gate `$(pwd)/scripts/run_all_tests.sh`.
-- [ ] Open PR, review, and merge for this wave.
+- [x] Open PR, review, and merge for this wave (`https://github.com/yaseralnajjar/sifr/pull/1376`).
 
 ### `wave_psp_rng_2`
 - [ ] Expand `hashlib` to bytes-native digest/object APIs (`digest`, `digest_bytes`, `update_bytes`, `new_bytes`).
@@ -95,7 +95,7 @@ Required entry records:
   - wave gate: `$(pwd)/scripts/run_all_tests.sh` -> PASS (2026-03-21)
 
 ### wave_psp_rng_1: Deterministic RNG State and Object Model
-- Status: implementation + validation completed (pending PR/review/merge loop)
+- Status: completed (implementation + validation + merge via PR `#1376`)
 - Scope:
   - ship typed deterministic `RandomState(version, state_words, index, gauss_next)` with `Random` mutable state ownership
   - ship module-global delegation for `seed/getstate/setstate/randrange/randint/random/choice/choices/sample/shuffle/gauss/uniform/randbytes`
@@ -108,3 +108,6 @@ Required entry records:
   - negative regression: `cargo run -q -p sifr -- check crates/sifr/tests/e2e/fail/phase_psp_b2_random_choices_weights_unsupported.sifr` -> expected compile failure (PASS)
   - unit lane: `cargo test -p sifr -- --skip test_e2e_pass` -> PASS
   - wave gate: `$(pwd)/scripts/run_all_tests.sh` -> PASS (2026-03-21)
+- Merge evidence:
+  - implementation PR: `https://github.com/yaseralnajjar/sifr/pull/1376` (merged 2026-03-21)
+  - external review pass 1 artifact: `reviews/phase-ad-hoc-stateful-rng-crypto-and-polish-parity-expansion-review-pass-1.md`
