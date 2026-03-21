@@ -167,20 +167,26 @@ enum ValueCategory {
     Temporary,
 }
 
-enum ElementAccessPlan {
-    CopyOut,
-    CloneOut,
-    BorrowView,
+enum SourceAccessMode {
+    Preserve,
+    Consume,
 }
 
-enum IterPlan {
-    Consume,
-    BorrowCopy,
-    BorrowClone,
+enum YieldMode {
+    Copy,
+    Clone,
+    Move,
+    Borrow,
 }
 ```
 
-The exact enum names are not important. The invariant is.
+The exact enum names are not important. The invariant is:
+
+- classify the expression as `Place` or `Temporary`
+- decide whether the source container must be preserved or may be consumed
+- decide whether elements must be copied, cloned, moved, or only borrowed
+
+Any concrete iterator/access plan should be derived from those axes rather than from one overloaded "owned vs borrowed vs consumed" switch.
 
 ### Required decision inputs
 
@@ -189,21 +195,40 @@ Every collection-read / iteration lowering decision in this phase must consider:
 - the container expression category:
   - named place / field / reusable lvalue
   - temporary value produced in the current expression
+- the source access contract:
+  - preserve the source container
+  - consume the source container
 - the element ownership kind:
   - `Copy`
   - `Move`
-- whether the target construct semantically needs:
-  - an owned element
-  - a borrowed element view
-  - consumption of the full container
+- the element-yield contract:
+  - copy the element out
+  - clone the element out
+  - move the element out
+  - borrow the element only
 - whether the type is concrete or conservative:
   - `TypeVar`
   - `Any`
   - unions containing move members
 
+`ValueCategory` must be derived by one explicit helper rather than informal caller judgment. In particular, wave 0 must lock how the planner classifies at least:
+
+- names and other reusable places,
+- field / index / attribute-style place-like expressions where relevant,
+- constructor calls and other one-shot temporaries,
+- expressions whose values may not be implicitly consumed because later reuse is semantically observable.
+
+This phase intentionally keeps `ValueCategory` minimal:
+
+- `Place`
+- `Temporary`
+
+It does not introduce a separate `BorrowedPlace` variant. Borrowing vs consuming is a planner decision captured by `SourceAccessMode`, not by the category enum itself.
+
 ### Canonical iteration rules in this phase
 
 - temporary owned containers may lower with direct `into_iter()` where that matches Sifr ownership semantics
+- iterator-pipeline consumption and source-container consumption are separate decisions; exhausting `sum(...)`, `min(...)`, `max(...)`, or a `for` loop does not by itself imply that a named source container was consumed
 - borrowed containers with `Copy` element types should lower to copy-oriented access:
   - `iter().copied()`
   - direct deref / copy-out
@@ -218,6 +243,15 @@ Every collection-read / iteration lowering decision in this phase must consider:
 - star-unpack must not clone the whole source container up front
 - slicing must clone or copy only the elements required by the result shape
 - contiguous `Copy`-element slices should prefer copy-oriented Rust fast paths where the backend type supports them
+
+### Range-specific rule in this phase
+
+- structural loop/comprehension lowering for `Range` must not emit ownership noise such as `.clone()` or unnecessary boxing
+- this applies to structural iteration contexts such as:
+  - `for`
+  - comprehensions
+  - direct map/filter-style structural lowering where the chain is not being exposed as a first-class iterator object
+- this rule does not by itself ban boxed iterator representations for first-class `Iterator[T]` expression results where the backend intentionally uses type erasure
 
 ### Generic and conservative cases
 
@@ -271,7 +305,7 @@ Modules / crates:
 Required closure direction:
 
 - define one internal planner for collection access and iteration
-- make lowering decisions derive from ownership, value category, and result contract
+- make lowering decisions derive from ownership, value category, source access mode, and yield mode
 - stop re-encoding the same ownership decision separately in each lowering function
 - ensure the planner is shared by both:
   - `crates/sifr_codegen/src/stmt_support_emitter.rs`
@@ -322,10 +356,12 @@ Required closure direction:
 - inventory every runtime-relevant clone pattern currently emitted in targeted surfaces
 - identify the exact lowering entry points that own those decisions
 - create the execution ledger and lock the implementation checklist before wave 1 code changes begin
+- define the concrete helper contract that classifies `HirExpr` into planner-facing value categories
 - lock the invariants for:
   - place vs temporary
+  - source preserve vs source consume
   - `Copy` vs `Move`
-  - owned result vs borrowed view
+  - element yield mode (`Copy` / `Clone` / `Move` / `Borrow`)
   - generic conservative handling
 - document the planner design before broad code changes begin
 

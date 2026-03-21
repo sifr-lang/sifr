@@ -45,11 +45,16 @@ Required baseline records:
   - `.get(...).cloned()` on borrowed `Copy` collections
   - whole-source `clone()` before star-unpack
   - per-element `.clone()` in stepped slicing for `Copy` types
+  - boxed range iteration such as `Box::new((range).clone().into_iter())`
 - exact implementation ownership of those patterns in:
   - `crates/sifr_codegen/src/stmt_support_emitter.rs`
   - `crates/sifr_codegen/src/lower_expr.rs`
   - `crates/sifr_codegen/src/lower_stmt.rs`
 - explicit residual note that borrowed move-heavy collections remain out of scope for full CPython parity unless runtime representation changes later
+
+Suggested baseline capture helpers:
+- `cargo run -q -p sifr -- emit ... | grep -E '\\.clone\\(\\)\\.into_iter\\(|\\.iter\\(\\)\\.cloned\\(|\\.get\\([^)]*\\)\\.cloned\\(|Box::new\\(\\([^)]*\\.clone\\(\\)\\.into_iter\\('`
+- keep the full emitted output alongside grep-filtered excerpts; grep is only for scanability
 
 ## Implementation Inventory
 
@@ -62,6 +67,7 @@ Primary code paths that must be reviewed in this phase:
   - `try_lower_for_iter_expr_for_ir`
   - `lower_iter_source_expr_for_ir`
   - iterator/enumerate special cases
+  - boxed range iteration paths in `for` lowering
 - `crates/sifr_codegen/src/lower_expr.rs`
   - simple `map` lowering
   - simple `filter` lowering
@@ -69,7 +75,7 @@ Primary code paths that must be reviewed in this phase:
   - iterator-chain simple lowering
 - `crates/sifr_codegen/src/lower_stmt.rs`
   - `try_lower_simple_star_unpack_stmt`
-  - simple indexing / safe-indexing / slicing helpers in scope
+  - simple indexing / safe-indexing / slicing helpers in scope, including dict/list `.get(...).cloned()` paths for `Copy` values
 - `crates/sifr_codegen/src/ir_optimize.rs`
   - confirm it remains a narrow post-pass and does not become the primary semantic fix path
 
@@ -86,15 +92,19 @@ Secondary review paths:
 - Scope:
   - capture the generated-code baseline and inventory all targeted clone-heavy patterns
   - lock one canonical ownership-aware planner design before broad edits
+  - define the concrete helper contract that classifies `HirExpr` into planner-facing value categories
   - record exact ownership semantics for:
     - place vs temporary
     - `Copy` vs `Move`
-    - owned result vs borrowed view
+    - source preserve vs source consume
+    - element yield mode (`Copy` / `Clone` / `Move` / `Borrow`)
     - conservative generic handling (`TypeVar`, `Any`, unions with move members)
   - confirm that both structured IR lowering and simple lowering must route through the same planner
 - Deliverables:
   - phase execution ledger populated with baseline evidence
   - architecture comments / helper-module notes describing the planner contract
+  - explicit `ValueCategory` classification rules recorded for the planner (`Place | Temporary`)
+  - explicit `SourceAccessMode` and `YieldMode` planner contracts recorded
   - emitted-Rust before-state artifacts for representative demos
 - Validation target:
   - `scripts/run_all_tests.sh --profile quick`
@@ -107,6 +117,7 @@ Secondary review paths:
   - implement the shared planner in `helpers.rs` or an equivalent focused support module
   - refactor iterator/comprehension lowering to derive decisions from planner output
   - remove `.clone().into_iter()` for owned temporary collection pipelines
+  - remove boxed range clone paths where structural range iteration can lower natively without ownership noise
   - emit copy-oriented iteration for borrowed `Copy` element collections
   - keep borrowed move-element iteration semantically correct
 - Required files:
@@ -117,6 +128,7 @@ Secondary review paths:
   - positive: representative `for`, `map`, `filter`, and comprehension demos/fixtures run successfully
   - negative: named borrowed containers are not implicitly consumed
   - emit inspection: targeted outputs no longer contain `.clone().into_iter()` in these paths
+  - emit inspection: targeted structural `Range` loops/comprehensions no longer emit `Box::new((range).clone().into_iter())`
   - emit inspection: borrowed `Copy` iteration no longer lowers through `.iter().cloned()`
   - wave gate: `scripts/run_all_tests.sh --profile quick`
 
