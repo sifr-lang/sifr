@@ -1,5 +1,5 @@
 # sifr.hashlib — Hashing functions and hash object model
-from _sifr.bytes import encode_utf8, bytes_to_hex
+from _sifr.bytes import encode_utf8, bytes_to_hex_strict
 from _sifr.crypto import (
     sha256, md5, sha1, sha512, sha224, sha384, blake2b, blake2s,
     sha256_bytes, md5_bytes, sha1_bytes, sha512_bytes, sha224_bytes, sha384_bytes, blake2b_bytes, blake2s_bytes
@@ -102,21 +102,8 @@ def _hash_bytes(algorithm: str, data: bytes) -> bytes:
     return b""
 
 
-def _bytes_to_hex_or_value_error(data: bytes) -> Result[str, ValueError]:
-    try:
-        hex_value: str = bytes_to_hex(data)
-        return hex_value
-    except ParseError as e:
-        raise ValueError("hash digest hex encoding failed: " + e.message)
-
-
 def _hash_hex(algorithm: str, data: bytes) -> str:
-    try:
-        hex_value: str = _bytes_to_hex_or_value_error(_hash_bytes(algorithm, data))
-        return hex_value
-    except ValueError as e:
-        _ = e.message
-        return ""
+    return bytes_to_hex_strict(_hash_bytes(algorithm, data))
 
 
 # CPython-like constructor helpers (adapted to Sifr typed error boundaries).

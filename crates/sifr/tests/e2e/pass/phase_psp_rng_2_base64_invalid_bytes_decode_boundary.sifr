@@ -1,0 +1,19 @@
+from sifr.base64 import b64decode_bytes, urlsafe_b64decode_bytes
+from sifr.bytes import encode_utf8
+from sifr.test import assert_true
+
+
+def main() -> None:
+    try:
+        _decoded: bytes = b64decode_bytes(encode_utf8("@@@@"))
+        assert_true(False)
+    except ParseError as e:
+        assert_true(len(e.message) > 0)
+
+    try:
+        _urlsafe_decoded: bytes = urlsafe_b64decode_bytes(encode_utf8("%%%%"))
+        assert_true(False)
+    except ParseError as e:
+        assert_true(len(e.message) > 0)
+
+    assert str("phase_psp_rng_2_base64_invalid_bytes_decode_boundary: pass") == "phase_psp_rng_2_base64_invalid_bytes_decode_boundary: pass"

@@ -1,6 +1,6 @@
 # Ad Hoc Phase Execution Checklist (Stateful RNG, Crypto, and Polish Parity Expansion)
 
-Status: in-progress (started 2026-03-21; entry baseline validated; `wave_psp_rng_0` completed; `wave_psp_rng_1` merged and review-closed; `wave_psp_rng_2` implementation + validation completed and pending PR/review/merge loop)
+Status: in-progress (started 2026-03-21; entry baseline validated; `wave_psp_rng_0` completed; `wave_psp_rng_1` merged and review-closed; `wave_psp_rng_2` implementation merged via PR `#1379` and in external review loop)
 Owner: ad_hoc_stateful_rng_crypto execution loop
 Reference planning doc:
 - `issues/ad-hoc-stateful-rng-crypto-and-polish-parity-expansion.md`
@@ -48,7 +48,7 @@ Loop per wave: Plan -> Implement -> Validate -> Demo -> PR -> External completio
 - [x] Audit dependency support and close approved SHA3/SHAKE tranche only where runtime support is real.
 - [x] Expand `base64` residual binary-surface parity on first-class `bytes`.
 - [x] Port/adapt relevant CPython tests and lock explicit waivers for anything still deferred.
-- [ ] Run demo + full gate, then PR/review/merge.
+- [x] Run demo + full gate, then PR/review/merge.
 
 ### `wave_psp_rng_3`
 - [ ] Reduce residual `statistics` waivers on deterministic float/int-safe advanced surfaces.
@@ -116,7 +116,7 @@ Required entry records:
   - pass 2 validation result: reviewer output was stale (claimed wave 1 absent) and contradicted merged code/docs in PR `#1376`; no additional code fix was valid from that report
 
 ### wave_psp_rng_2: Advanced Hash and Binary Surface Expansion
-- Status: implementation + validation completed (pending PR/review/merge loop)
+- Status: implementation merged via PR `#1379`; external review pass 1 findings being validated in follow-up PR
 - Scope:
   - ship bytes-native `hashlib` object model (`digest() -> bytes`, `digest_bytes()`, `update_bytes()`, `new_bytes()`)
   - keep str-facing compatibility surfaces (`update(str)`, `hexdigest()`, existing constructors) on top of bytes-native internal state
@@ -128,3 +128,6 @@ Required entry records:
   - negative path: `cargo run -q -p sifr -- check crates/sifr/tests/e2e/fail/phase_psp_rng_2_sha3_object_model_unsupported.sifr` -> expected compile failure (PASS)
   - unit/non-pass lane: `cargo test -p sifr -- --skip test_e2e_pass` -> PASS
   - wave gate: `$(pwd)/scripts/run_all_tests.sh` -> PASS (2026-03-21)
+- Merge evidence:
+  - implementation PR: `https://github.com/yaseralnajjar/sifr/pull/1379` (merged 2026-03-21)
+  - external review pass 1 artifact: `reviews/phase-ad-hoc-stateful-rng-crypto-and-polish-parity-expansion-wave-psp-rng-2-review-pass-1.md`

@@ -206,6 +206,7 @@ fn lower_intrinsic_rendered(name: &str, args: &[RustExpr]) -> Option<LoweredIntr
         "decode_utf8" => (bytes::lower_decode_utf8(args), None),
         "decode_utf8_with_encoding" => (bytes::lower_decode_utf8_with_encoding(args), None),
         "bytes_to_hex" => (bytes::lower_bytes_to_hex(args), None),
+        "bytes_to_hex_strict" => (bytes::lower_bytes_to_hex_strict(args), None),
         "bytes_from_hex" => (bytes::lower_bytes_from_hex(args), None),
         "bytes_with_size" => (bytes::lower_bytes_with_size(args), None),
         "bytes_from_ints" => (bytes::lower_bytes_from_ints(args), None),
@@ -620,6 +621,12 @@ mod tests {
 
         let to_hex = lower_intrinsic("bytes_to_hex", &["vals".to_string()]).expect("bytes_to_hex");
         assert!(render_expr(&to_hex.expr).contains("{:02x}"));
+        assert!(render_expr(&to_hex.expr).contains("Ok"));
+
+        let to_hex_strict =
+            lower_intrinsic("bytes_to_hex_strict", &["vals".to_string()]).expect("bytes_to_hex_strict");
+        assert!(render_expr(&to_hex_strict.expr).contains("{:02x}"));
+        assert!(!render_expr(&to_hex_strict.expr).contains("Ok"));
 
         let from_hex =
             lower_intrinsic("bytes_from_hex", &["hex".to_string()]).expect("bytes_from_hex");

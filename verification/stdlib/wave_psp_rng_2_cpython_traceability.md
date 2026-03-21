@@ -15,6 +15,7 @@ Scope: advanced hash + binary surface expansion for `sifr.hashlib` and `sifr.bas
 | `test_hashlib` bytes-native digest/object model | ship `HashObject.digest() -> bytes`, `digest_bytes() -> bytes`, `update_bytes(bytes)`, and bytes-first constructor `new_bytes(name, data: bytes = b"")` while keeping `update(str)`/`hexdigest()` compatibility paths | `adapted` (shipped) | `lib/sifr/hashlib.sifr`, `crates/sifr/tests/e2e/pass/phase_psp_rng_2_hashlib_base64_bytes_native_surface.sifr`, `crates/sifr/tests/e2e/pass/cpython_hashlib_object_model_subset.sifr` |
 | `test_hashlib` str-facing compatibility | preserve existing string constructor/update/hexdigest behavior on top of bytes-native state ownership | `adapted` (shipped) | `lib/sifr/hashlib.sifr`, `crates/sifr/tests/e2e/pass/cpython_hashlib_api_subset.sifr`, `crates/sifr/tests/e2e/pass/phase_psp_e1_core_modules_numeric_patterns_crypto.sifr` |
 | `test_base64` binary-oriented API behavior | add bytes-native base64 encode/decode (`b64encode_bytes`, `b64decode_bytes`, standard/urlsafe bytes variants) while retaining text helpers | `adapted` (shipped) | `lib/sifr/base64.sifr`, `crates/sifr/tests/e2e/pass/phase_psp_rng_2_hashlib_base64_bytes_native_surface.sifr`, `demos/ad_hoc_rng_wave2_hashlib_base64_bytes_demo.sifr` |
+| `test_base64` invalid-bytes decode boundaries | typed decode failures on invalid base64 bytes payloads remain explicit `ParseError` boundaries for both standard and urlsafe bytes decode paths | `adapted` (shipped) | `crates/sifr/tests/e2e/pass/phase_psp_rng_2_base64_invalid_bytes_decode_boundary.sifr`, `crates/sifr/tests/e2e/pass/phase_psp_rng_2_hashlib_base64_bytes_native_surface.sifr` |
 | `test_hashlib` SHA3/SHAKE constructor families | keep SHA3/SHAKE object constructors unsupported in this wave pending explicit dependency/surface expansion | `unsupported` | `lib/sifr/hashlib.sifr`, `crates/sifr/tests/e2e/fail/phase_psp_rng_2_sha3_object_model_unsupported.sifr` |
 
 ## Dependency Audit Note (Wave 2)
@@ -35,6 +36,7 @@ Scope: advanced hash + binary surface expansion for `sifr.hashlib` and `sifr.bas
 ## Local Fixture Anchors (Wave 2)
 
 - Positive fixture:
+  - `crates/sifr/tests/e2e/pass/phase_psp_rng_2_base64_invalid_bytes_decode_boundary.sifr`
   - `crates/sifr/tests/e2e/pass/phase_psp_rng_2_hashlib_base64_bytes_native_surface.sifr`
 - Demo:
   - `demos/ad_hoc_rng_wave2_hashlib_base64_bytes_demo.sifr`
