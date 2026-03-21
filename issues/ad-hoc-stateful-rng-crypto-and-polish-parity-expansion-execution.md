@@ -1,6 +1,6 @@
 # Ad Hoc Phase Execution Checklist (Stateful RNG, Crypto, and Polish Parity Expansion)
 
-Status: in-progress (started 2026-03-21; entry baseline validated; `wave_psp_rng_0` completed; `wave_psp_rng_1` merged and review-closed; `wave_psp_rng_2` implementation merged via PR `#1379` and in external review loop)
+Status: in-progress (started 2026-03-21; entry baseline validated; `wave_psp_rng_0` completed; `wave_psp_rng_1` merged and review-closed; `wave_psp_rng_2` merged and review-closed; `wave_psp_rng_3` pending implementation)
 Owner: ad_hoc_stateful_rng_crypto execution loop
 Reference planning doc:
 - `issues/ad-hoc-stateful-rng-crypto-and-polish-parity-expansion.md`
@@ -20,7 +20,7 @@ Loop per wave: Plan -> Implement -> Validate -> Demo -> PR -> External completio
 ## Full Phase To-Do Plan
 1. [x] `wave_psp_rng_0`: architecture lock for typed RNG state model, module-global proxy rules, bytes-native crypto boundary, and permanent divergence classification
 2. [x] `wave_psp_rng_1`: deterministic RNG state and object model (`RandomState`, `Random`, `SystemRandom`, module-global delegation)
-3. [ ] `wave_psp_rng_2`: advanced hash and binary-surface expansion (`hashlib`, `base64`)
+3. [x] `wave_psp_rng_2`: advanced hash and binary-surface expansion (`hashlib`, `base64`)
 4. [ ] `wave_psp_rng_3`: final polish waiver reduction (`statistics`, residual `textwrap`, residual `html`)
 5. [x] wave-level extra completion review cycle done
 6. [x] wave-level extra production-grade review cycle done
@@ -116,7 +116,7 @@ Required entry records:
   - pass 2 validation result: reviewer output was stale (claimed wave 1 absent) and contradicted merged code/docs in PR `#1376`; no additional code fix was valid from that report
 
 ### wave_psp_rng_2: Advanced Hash and Binary Surface Expansion
-- Status: implementation merged via PR `#1379`; external review pass 1 findings being validated in follow-up PR
+- Status: completed (implementation merged + external completion/production-grade review passes closed)
 - Scope:
   - ship bytes-native `hashlib` object model (`digest() -> bytes`, `digest_bytes()`, `update_bytes()`, `new_bytes()`)
   - keep str-facing compatibility surfaces (`update(str)`, `hexdigest()`, existing constructors) on top of bytes-native internal state
@@ -131,3 +131,6 @@ Required entry records:
 - Merge evidence:
   - implementation PR: `https://github.com/yaseralnajjar/sifr/pull/1379` (merged 2026-03-21)
   - external review pass 1 artifact: `reviews/phase-ad-hoc-stateful-rng-crypto-and-polish-parity-expansion-wave-psp-rng-2-review-pass-1.md`
+  - external review pass 1 fixes PR: `https://github.com/yaseralnajjar/sifr/pull/1380` (merged 2026-03-21)
+  - external review pass 2 artifact: `reviews/phase-ad-hoc-stateful-rng-crypto-and-polish-parity-expansion-wave-psp-rng-2-review-pass-2.md`
+  - pass 2 validation result: reviewer marked wave as production-grade with no additional code changes required
