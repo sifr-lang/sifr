@@ -135,6 +135,35 @@ def median_high(data: list[float]) -> Result[float, StatisticsError]:
         return val
     raise StatisticsError("median_high: index error")
 
+
+def median_grouped(data: list[float], interval: float = 1.0) -> Result[float, StatisticsError]:
+    n: int = len(data)
+    if n == 0:
+        raise StatisticsError("median_grouped requires at least one data point")
+    if interval <= 0.0:
+        raise StatisticsError("median_grouped: interval must be > 0")
+
+    sorted_data: list[float] = sorted(data)
+    mid_index: int = n // 2
+    midpoint_opt: float | None = sorted_data[mid_index]
+    if midpoint_opt is None:
+        raise StatisticsError("median_grouped: index error")
+    midpoint: float = midpoint_opt
+
+    cf: int = 0
+    f: int = 0
+    for value in sorted_data:
+        if value < midpoint:
+            cf = cf + 1
+        elif value == midpoint:
+            f = f + 1
+
+    if f == 0:
+        raise StatisticsError("median_grouped: grouped frequency is zero")
+
+    lower: float = midpoint - interval / 2.0
+    return lower + interval * ((float(n) / 2.0 - float(cf)) / float(f))
+
 def mode(data: list[int]) -> Result[int, StatisticsError]:
     if len(data) == 0:
         raise StatisticsError("mode requires at least one data point")

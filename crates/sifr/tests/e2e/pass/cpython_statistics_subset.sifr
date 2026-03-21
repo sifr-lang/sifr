@@ -2,6 +2,7 @@
 from sifr.statistics import (
     mean, median, variance, stdev, pvariance, pstdev,
     mode, multimode, quantiles, covariance, correlation, linear_regression,
+    median_grouped,
     harmonic_mean, geometric_mean, StatisticsError
 )
 from sifr.test import assert_vector_eq, assert_bool_vector_eq
@@ -36,6 +37,15 @@ def collect_positive_actual() -> list[str]:
     except StatisticsError as e:
         median_ok = False
     actual.append(str(median_ok and near(median_v, 3.0, 0.0001)))
+
+    grouped_ok: bool = True
+    grouped_v: float = 0.0
+    try:
+        out_grouped: float = median_grouped([1.0, 2.0, 2.0, 3.0, 4.0], 1.0)
+        grouped_v = out_grouped
+    except StatisticsError as e:
+        grouped_ok = False
+    actual.append(str(grouped_ok and near(grouped_v, 2.25, 0.0001)))
 
     variance_ok: bool = True
     variance_v: float = 0.0
@@ -205,17 +215,23 @@ def collect_error_actual_ok() -> list[bool]:
         actual_ok.append(True)
     except StatisticsError as e:
         actual_ok.append(False)
+    try:
+        bad9: float = median_grouped([1.0, 2.0], 0.0)
+        _ = str(bad9)
+        actual_ok.append(True)
+    except StatisticsError as e:
+        actual_ok.append(False)
     return actual_ok
 
 def main():
     expected: list[str] = [
-        "true", "true", "true", "true", "true", "true",
+        "true", "true", "true", "true", "true", "true", "true",
         "true", "true", "true", "true", "true", "true", "true", "true"
     ]
     actual: list[str] = collect_positive_actual()
     assert_vector_eq(actual, expected)
 
-    expected_ok: list[bool] = [False, False, False, False, False, False, False, False]
+    expected_ok: list[bool] = [False, False, False, False, False, False, False, False, False]
     actual_ok: list[bool] = collect_error_actual_ok()
     assert_bool_vector_eq(actual_ok, expected_ok)
     assert str("cpython_statistics_subset: pass") == "cpython_statistics_subset: pass"

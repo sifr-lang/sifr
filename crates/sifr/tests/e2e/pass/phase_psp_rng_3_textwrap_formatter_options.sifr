@@ -1,0 +1,18 @@
+from sifr.test import assert_eq
+from sifr.textwrap import TextWrapper
+
+
+def main() -> None:
+    default_placeholder: TextWrapper = TextWrapper(width=12, max_lines=2)
+    default_lines: list[str] = default_placeholder.wrap("alpha beta gamma delta epsilon")
+    assert_eq(str(default_lines), "[\"alpha beta\", \"gamma [...]\"]")
+
+    custom_placeholder: TextWrapper = TextWrapper(width=12, max_lines=2, placeholder="...")
+    custom_lines: list[str] = custom_placeholder.wrap("alpha beta gamma delta epsilon")
+    assert_eq(str(custom_lines), "[\"alpha beta\", \"gamma del...\"]")
+
+    sentence_wrapper: TextWrapper = TextWrapper(width=40, fix_sentence_endings=True)
+    sentence_fill: str = sentence_wrapper.fill("Hello. World. Done!")
+    assert_eq(sentence_fill, "Hello.  World.  Done!")
+
+    assert str("phase_psp_rng_3_textwrap_formatter_options: pass") == "phase_psp_rng_3_textwrap_formatter_options: pass"

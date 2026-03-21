@@ -490,6 +490,74 @@ pub fn build_logging_items() -> Vec<RustItem> {
     }]
 }
 
+pub fn build_random_module_state_items() -> Vec<RustItem> {
+    vec![
+        RustItem::Struct {
+            name: "__SifrRandomModuleState".to_string(),
+            visibility: Visibility::Private,
+            derives: vec!["Debug".to_string(), "Clone".to_string()],
+            fields: vec![
+                (
+                    "words".to_string(),
+                    RustType::Vec(Box::new(RustType::Named("i64".to_string()))),
+                ),
+                ("index".to_string(), RustType::I64),
+                (
+                    "gauss_next".to_string(),
+                    RustType::Option(Box::new(RustType::F64)),
+                ),
+            ],
+        },
+        RustItem::Static {
+            name: "__SIFR_RANDOM_MODULE_STATE".to_string(),
+            visibility: Visibility::Private,
+            ty: RustType::Named(
+                "std::sync::LazyLock<std::sync::Mutex<__SifrRandomModuleState>>".to_string(),
+            ),
+            value: RustExpr::FnCall {
+                func: Box::new(RustExpr::Path(vec![
+                    "std".to_string(),
+                    "sync".to_string(),
+                    "LazyLock".to_string(),
+                    "new".to_string(),
+                ])),
+                args: vec![RustExpr::Closure {
+                    params: vec![],
+                    body: Box::new(RustExpr::FnCall {
+                        func: Box::new(RustExpr::Path(vec![
+                            "std".to_string(),
+                            "sync".to_string(),
+                            "Mutex".to_string(),
+                            "new".to_string(),
+                        ])),
+                        args: vec![RustExpr::StructInit {
+                            name: "__SifrRandomModuleState".to_string(),
+                            fields: vec![
+                                (
+                                    "words".to_string(),
+                                    RustExpr::FnCall {
+                                        func: Box::new(RustExpr::Path(vec![
+                                            "Vec".to_string(),
+                                            "new".to_string(),
+                                        ])),
+                                        args: vec![],
+                                    },
+                                ),
+                                ("index".to_string(), RustExpr::Literal(crate::RustLiteral::Int(0))),
+                                (
+                                    "gauss_next".to_string(),
+                                    RustExpr::Literal(crate::RustLiteral::None),
+                                ),
+                            ],
+                        }],
+                    }),
+                    is_move: false,
+                }],
+            },
+        },
+    ]
+}
+
 fn file_handles_lock_expr() -> RustExpr {
     RustExpr::MethodCall {
         receiver: Box::new(RustExpr::MethodCall {
@@ -1586,11 +1654,22 @@ mod tests {
     }
 
     #[test]
+    fn random_module_state_items_render_core_symbols() {
+        let items = build_random_module_state_items();
+        let rendered = render_items(&items);
+        assert!(rendered.contains("struct __SifrRandomModuleState"));
+        assert!(rendered.contains("static __SIFR_RANDOM_MODULE_STATE"));
+        assert!(rendered.contains("LazyLock"));
+        assert!(rendered.contains("Mutex"));
+    }
+
+    #[test]
     fn preamble_structural_count_is_zero() {
         let mut all = build_io_error_items();
         all.extend(build_file_handle_infra_items());
         all.extend(build_file_handle_struct_items());
         all.extend(build_logging_items());
+        all.extend(build_random_module_state_items());
         let total_structural_violations: usize = all.iter().map(count_raw_in_item).sum();
         assert_eq!(total_structural_violations, 0);
     }

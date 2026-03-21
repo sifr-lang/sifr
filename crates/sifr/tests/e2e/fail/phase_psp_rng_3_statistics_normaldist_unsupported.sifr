@@ -1,0 +1,7 @@
+from sifr.statistics import NormalDist
+
+
+def main() -> None:
+    # NormalDist remains explicitly unsupported after wave_psp_rng_3.
+    dist: NormalDist = NormalDist(0.0, 1.0)
+    _ = dist

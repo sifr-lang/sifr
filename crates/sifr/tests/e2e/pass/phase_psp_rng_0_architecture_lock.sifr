@@ -1,0 +1,50 @@
+from sifr.random import choice, randrange
+from sifr.hashlib import new, HashObject
+from sifr.base64 import b64encode, b64decode
+from sifr.statistics import mean, StatisticsError
+from sifr.textwrap import TextWrapper
+from sifr.html import escape, unescape
+
+
+def main() -> None:
+    random_ok: bool = False
+    try:
+        picked: int = choice([1, 2, 3])
+        stepped: int = randrange(1, 10, 2)
+        random_ok = picked >= 1 and picked <= 3 and stepped >= 1 and stepped < 10 and stepped % 2 == 1
+    except ValueError as e:
+        _ = str(e.message)
+    assert random_ok
+
+    hash_ok: bool = False
+    try:
+        h: HashObject = new("sha256", "abc")
+        hash_ok = len(h.hexdigest()) == 64 and len(h.digest()) == 32 and h.digest_bytes() == h.digest()
+    except ValueError as e:
+        _ = str(e.message)
+    assert hash_ok
+
+    codec_ok: bool = False
+    encoded: str = b64encode("rng-wave0")
+    try:
+        decoded: str = b64decode(encoded)
+        codec_ok = decoded == "rng-wave0"
+    except ParseError as e:
+        _ = str(e.message)
+    assert codec_ok
+
+    stats_ok: bool = False
+    try:
+        avg: float = mean([1.0, 2.0, 3.0, 4.0])
+        stats_ok = avg == 2.5
+    except StatisticsError as e:
+        _ = str(e.message)
+    assert stats_ok
+
+    wrapper: TextWrapper = TextWrapper(width=7, subsequent_indent="> ")
+    wrapped: list[str] = wrapper.wrap("alpha beta gamma")
+    assert len(wrapped) >= 2
+
+    escaped: str = escape("<a \"b\">", quote=False)
+    assert escaped == "&lt;a \"b\"&gt;"
+    assert unescape(escape("x < y")) == "x < y"

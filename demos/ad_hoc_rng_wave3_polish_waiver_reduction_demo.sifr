@@ -1,0 +1,27 @@
+from sifr.html import escape
+from sifr.statistics import StatisticsError, median_grouped
+from sifr.textwrap import TextWrapper
+
+
+def main() -> None:
+    grouped: float = 0.0
+    try:
+        grouped_value: float = median_grouped([1.0, 2.0, 2.0, 3.0, 4.0], 1.0)
+        grouped = grouped_value
+    except StatisticsError:
+        assert str("median_grouped unexpected error") == "ad_hoc_rng_wave3_polish_waiver_reduction_demo: pass"
+    assert grouped > 2.2
+    assert grouped < 2.3
+
+    wrapper: TextWrapper = TextWrapper(width=12, max_lines=2, placeholder="...")
+    wrapped: list[str] = wrapper.wrap("alpha beta gamma delta epsilon")
+    assert str(wrapped) == "[\"alpha beta\", \"gamma del...\"]"
+
+    sentence_wrapper: TextWrapper = TextWrapper(width=40, fix_sentence_endings=True)
+    filled: str = sentence_wrapper.fill("Hello. World. Done!")
+    assert filled == "Hello.  World.  Done!"
+
+    escaped: str = escape("<a \"x\">", False)
+    assert escaped == "&lt;a \"x\"&gt;"
+
+    assert str("ad_hoc_rng_wave3_polish_waiver_reduction_demo: pass") == "ad_hoc_rng_wave3_polish_waiver_reduction_demo: pass"

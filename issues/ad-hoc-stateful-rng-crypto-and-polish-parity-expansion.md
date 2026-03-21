@@ -1,8 +1,9 @@
 # Ad Hoc Phase: Stateful RNG, Crypto, and Polish Parity Expansion
 
-Status: open (documented 2026-03-18; sequencing revised 2026-03-20)
+Status: closed (documented 2026-03-18; sequencing revised 2026-03-20; wave `wave_psp_rng_0` architecture lock completed 2026-03-21; wave `wave_psp_rng_1` merged via PR #1376 on 2026-03-21; wave `wave_psp_rng_2` closed via PRs #1379/#1380 with production-grade review pass-2 approval on 2026-03-21; wave `wave_psp_rng_3` merged via PRs #1382/#1383 with production-grade review pass-2 approval on 2026-03-21; milestone closure review passes 1/2 approved on 2026-03-21; phase closure review passes 1/2 approved and production-grade closed on 2026-03-21; post-closure CPython adaptation pass completed on 2026-03-21; post-closure external review remediation pass-1 completed on 2026-03-21; post-closure external review remediation pass-2 completed on 2026-03-21)
 Context: final cleanup phase after the structured/class, extended bytes-foundation, runtime/file-object, and canonical iteration-model follow-ups
 Execution readiness: implementation-ready in sequence after `issues/ad-hoc-canonical-iteration-model-and-lazy-parity-closure.md`; predecessor bytes-phase extension waves `wave_psp_bytes_4` and `wave_psp_bytes_5` are completed, so crypto and RNG surfaces inherit the final raw-byte-backed `bytes` contract, stable iterator semantics, and successor governance baseline
+Execution ledger: `issues/ad-hoc-stateful-rng-crypto-and-polish-parity-expansion-execution.md`
 
 ## Objective
 
@@ -30,6 +31,9 @@ Conditional residual polish targets:
   - `verification/stdlib/milestone_psp_7_parity_governance_inventory.md`
 - relevant wave ledgers:
   - `verification/stdlib/wave_psp_b2_cpython_traceability.md`
+  - `verification/stdlib/wave_psp_rng_1_cpython_traceability.md`
+  - `verification/stdlib/wave_psp_rng_2_cpython_traceability.md`
+  - `verification/stdlib/wave_psp_rng_3_cpython_traceability.md`
   - `verification/stdlib/wave_psp_c2_cpython_traceability.md`
   - `verification/stdlib/wave_psp_e1_cpython_traceability.md`
 - predecessor planning docs:
@@ -62,7 +66,7 @@ This work shares a different root cause from the earlier phases:
 
 It should therefore execute after the broader object-model and runtime work, not before it.
 
-The phase design is fixed in this document. What remains before wave 1 is execution evidence for the MT19937-compatible state model, `SystemRandom` host boundary, and actual crypto dependency inventory.
+The phase design is fixed in this document. Waves 0/1/2/3 are implementation-complete, wave-level/milestone-level/phase-level review loops are closed, and the phase is production-grade closed.
 
 ## Depends on
 
@@ -94,7 +98,7 @@ The phase design is fixed in this document. What remains before wave 1 is execut
 - `SystemRandom` remains non-deterministic and does not support `getstate` or `setstate`.
 - `randbytes(n: int) -> Result[bytes, ValueError]` is in scope once the deterministic object model is stable.
 - `randbytes` must return canonical raw-byte-backed `bytes` directly; it must not materialize widened integer storage internally.
-- `choices(weights=...)` stays out of scope unless the deterministic `RandomState` model lands cleanly in `wave_psp_rng_1`; otherwise it remains explicitly unsupported for this phase.
+- `choices(weights=...)` remains out of scope and explicitly unsupported in this phase unless a later wave explicitly widens scope.
 
 ### `hashlib`
 
@@ -121,7 +125,7 @@ The phase design is fixed in this document. What remains before wave 1 is execut
 ### `statistics`
 
 - Only close narrow advanced surfaces that do not require decimal, fraction, or context-sensitive semantics.
-- `NormalDist` is in scope only if it can remain float-only and deterministic.
+- `NormalDist` did not meet the bounded wave scope and remains explicitly unsupported for this phase (tracked with a negative fixture and waiver entry).
 
 ### `textwrap` / `html`
 
@@ -278,7 +282,7 @@ Definition of done:
 
 ## Architecture Lock Validation
 
-Before `wave_psp_rng_1` begins implementation, the phase must add:
+Before `wave_psp_rng_1` began implementation, the phase added:
 
 - one implementation note mapping the approved `RandomState` fields to the chosen MT19937-compatible internal state model,
 - one implementation note defining the exact host-boundary contract for `SystemRandom`,

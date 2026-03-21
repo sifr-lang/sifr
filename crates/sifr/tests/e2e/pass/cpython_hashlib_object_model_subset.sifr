@@ -14,7 +14,8 @@ def collect_positive_actual() -> list[str]:
     h.update("a")
     h.update("bc")
     actual.append(str(h.hexdigest() == sha256("abc")))
-    actual.append(str(h.digest() == h.hexdigest()))
+    actual.append(str(len(h.digest()) == 32))
+    actual.append(str(h.digest_bytes() == h.digest()))
     actual.append(str(h.name == "sha256"))
     actual.append(str(h.digest_size))
     actual.append(str(h.block_size))
@@ -60,6 +61,7 @@ def collect_negative_actual_ok() -> list[bool]:
 
 def main():
     expected: list[str] = [
+        "true",
         "true",
         "true",
         "true",

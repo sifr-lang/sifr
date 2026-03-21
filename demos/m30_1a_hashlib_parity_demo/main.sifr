@@ -21,7 +21,7 @@ def collect_positive_actual(tmp_path: str) -> list[str]:
     h.update("a")
     h.update("bc")
     actual.append(str(h.hexdigest() == sha256("abc")))
-    actual.append(str(h.digest() == h.hexdigest()))
+    actual.append(str(len(h.digest()) == 32 and h.digest_bytes() == h.digest()))
 
     c = copy_hash(h)
     c.update("x")

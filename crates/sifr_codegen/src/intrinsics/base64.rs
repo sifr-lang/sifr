@@ -199,6 +199,17 @@ pub(super) fn lower_base64_encode(args: &[RustExpr]) -> Option<RustExpr> {
     ))
 }
 
+pub(super) fn lower_base64_encode_bytes(args: &[RustExpr]) -> Option<RustExpr> {
+    if args.len() != 1 {
+        return None;
+    }
+    Some(RustExpr::MethodCall {
+        receiver: Box::new(engine_encode(base64_engine_standard(), ref_arg(args, 0))),
+        method: "into_bytes".to_string(),
+        args: vec![],
+    })
+}
+
 pub(super) fn lower_base64_decode(args: &[RustExpr]) -> Option<RustExpr> {
     if args.len() != 1 {
         return None;
@@ -217,6 +228,16 @@ pub(super) fn lower_base64_decode(args: &[RustExpr]) -> Option<RustExpr> {
             "__bytes".to_string(),
         ))))),
     })
+}
+
+pub(super) fn lower_base64_decode_bytes(args: &[RustExpr]) -> Option<RustExpr> {
+    if args.len() != 1 {
+        return None;
+    }
+    Some(parse_map_err(engine_decode(
+        base64_engine_standard(),
+        ref_arg(args, 0),
+    )))
 }
 
 pub(super) fn lower_base64_encode_opts(args: &[RustExpr]) -> Option<RustExpr> {
@@ -737,6 +758,17 @@ pub(super) fn lower_urlsafe_b64encode(args: &[RustExpr]) -> Option<RustExpr> {
     ))
 }
 
+pub(super) fn lower_urlsafe_b64encode_bytes(args: &[RustExpr]) -> Option<RustExpr> {
+    if args.len() != 1 {
+        return None;
+    }
+    Some(RustExpr::MethodCall {
+        receiver: Box::new(engine_encode(base64_engine_url_safe(), ref_arg(args, 0))),
+        method: "into_bytes".to_string(),
+        args: vec![],
+    })
+}
+
 pub(super) fn lower_urlsafe_b64decode(args: &[RustExpr]) -> Option<RustExpr> {
     if args.len() != 1 {
         return None;
@@ -755,4 +787,14 @@ pub(super) fn lower_urlsafe_b64decode(args: &[RustExpr]) -> Option<RustExpr> {
             "__bytes".to_string(),
         ))))),
     })
+}
+
+pub(super) fn lower_urlsafe_b64decode_bytes(args: &[RustExpr]) -> Option<RustExpr> {
+    if args.len() != 1 {
+        return None;
+    }
+    Some(parse_map_err(engine_decode(
+        base64_engine_url_safe(),
+        ref_arg(args, 0),
+    )))
 }

@@ -1,5 +1,10 @@
 # sifr.base64 — Base64 encoding/decoding (renamed from sifr.encoding)
-from _sifr.crypto import base64_encode, base64_decode, base64_encode_opts, base64_decode_opts, urlsafe_b64encode, urlsafe_b64decode, b32encode, b32decode, b32hexencode, b32hexdecode
+from _sifr.crypto import (
+    base64_encode, base64_decode, base64_encode_opts, base64_decode_opts,
+    base64_encode_bytes, base64_decode_bytes,
+    urlsafe_b64encode, urlsafe_b64decode, urlsafe_b64encode_bytes, urlsafe_b64decode_bytes,
+    b32encode, b32decode, b32hexencode, b32hexdecode
+)
 from sifr.bytes import encode_utf8, decode_utf8, bytes_to_hex, bytes_from_hex
 
 # CPython-compatible aliases
@@ -8,6 +13,12 @@ def b64encode(s: str) -> str:
 
 def b64decode(s: str) -> Result[str, ParseError]:
     return base64_decode(s)
+
+def b64encode_bytes(data: bytes) -> bytes:
+    return base64_encode_bytes(data)
+
+def b64decode_bytes(data: bytes) -> Result[bytes, ParseError]:
+    return base64_decode_bytes(data)
 
 def b64encode_opts(s: str, altchars: str = "", wrapcol: int = 0) -> Result[str, ParseError]:
     return base64_encode_opts(s, altchars, wrapcol)
@@ -21,11 +32,23 @@ def standard_b64encode(s: str) -> str:
 def standard_b64decode(s: str) -> Result[str, ParseError]:
     return base64_decode(s)
 
+def standard_b64encode_bytes(data: bytes) -> bytes:
+    return base64_encode_bytes(data)
+
+def standard_b64decode_bytes(data: bytes) -> Result[bytes, ParseError]:
+    return base64_decode_bytes(data)
+
 def encodebytes(s: str) -> str:
     return base64_encode(s)
 
 def decodebytes(s: str) -> Result[str, ParseError]:
     return base64_decode(s)
+
+def encodebytes_bytes(data: bytes) -> bytes:
+    return base64_encode_bytes(data)
+
+def decodebytes_bytes(data: bytes) -> Result[bytes, ParseError]:
+    return base64_decode_bytes(data)
 
 def b16encode(s: str) -> Result[str, ParseError]:
     try:
