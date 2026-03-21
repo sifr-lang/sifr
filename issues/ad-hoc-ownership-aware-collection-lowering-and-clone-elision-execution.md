@@ -279,6 +279,11 @@ Secondary review paths:
     - artifact: `reviews/phase-ad-hoc-ownership-aware-collection-lowering-and-clone-elision-wave-clone-3-review-pass-1.md`
     - applied actions: documented conservative-typing invariants on `is_conservative_element_type` so `Any`/`Unknown` handling and `TypeVar` separation are explicit for maintainers
     - validation: `scripts/run_all_tests.sh`
+  - external review pass 2 (production-grade check):
+    - artifact: `reviews/phase-ad-hoc-ownership-aware-collection-lowering-and-clone-elision-wave-clone-3-review-pass-2.md`
+    - applied actions: no wave-scoped code changes required; review approved production readiness and confirmed pass-1 follow-up closure
+    - follow-up tracking (out of wave scope): pre-existing `phase_psp_iter_fix_7_user_defined_iterable_protocol` dangling-reference fix and pre-existing unrelated unit-test failures remain tracked separately
+    - validation: `scripts/run_all_tests.sh`
 
 ## Suggested Regression Targets
 
