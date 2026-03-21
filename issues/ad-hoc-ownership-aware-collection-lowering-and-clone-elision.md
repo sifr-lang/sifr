@@ -1,6 +1,6 @@
 # Ad Hoc Phase: Ownership-Aware Collection Lowering and Clone Elision
 
-Status: in_progress (started 2026-03-21; `wave_clone_0` architecture lock/baseline, `wave_clone_1` iterator/comprehension ownership correction, `wave_clone_2` index/slice/star-unpack ownership correction, and `wave_clone_3` generic hardening/regression lock completed on 2026-03-21; wave-closure completion and production-grade passes completed, milestone/phase closure cycles pending)
+Status: in_progress (started 2026-03-21; `wave_clone_0` architecture lock/baseline, `wave_clone_1` iterator/comprehension ownership correction, `wave_clone_2` index/slice/star-unpack ownership correction, and `wave_clone_3` generic hardening/regression lock completed on 2026-03-21; wave-closure passes and milestone-closure completion review completed, milestone production-grade + phase closure cycles pending)
 Context: corrective post-closure phase after the full ad hoc parity follow-up sequence covering lazy iterators, waiver reduction, structured/class surfaces, bytes foundations, runtime/file objects, canonical iteration closure, and stateful RNG/crypto/polish expansion
 Execution readiness: design-ready after completion of the following predecessor phases:
   - `issues/ad-hoc-first-class-lazy-iterators-and-python-iterable-protocol.md`
