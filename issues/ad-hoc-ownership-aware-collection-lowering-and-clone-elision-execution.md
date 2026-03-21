@@ -227,6 +227,10 @@ Secondary review paths:
     - artifact: `reviews/phase-ad-hoc-ownership-aware-collection-lowering-and-clone-elision-wave-clone-2-review-pass-1.md`
     - applied actions: updated stale unit-test expectations to assert copy-oriented behavior (`copied` and direct `Index`) instead of old clone-heavy shapes
     - validation: `cargo test -p sifr_codegen simple_compare_condition_wraps_proven_list_index_without_double_option`, `cargo test -p sifr_codegen test_self_field_clone_suppression_is_scoped_and_non_sticky`, `scripts/run_all_tests.sh`
+  - external review pass 2 (production-grade check):
+    - artifact: `reviews/phase-ad-hoc-ownership-aware-collection-lowering-and-clone-elision-wave-clone-2-review-pass-2.md`
+    - applied actions: updated `lowers_simple_for_with_else_and_name_iter` to assert `.copied()` for `list[int]` named-iterator lowering
+    - deferred to `wave_clone_3`: tuple ownership hardening in `Type::ownership()` (copy tuples should classify as `OwnershipKind::Copy`)
 
 ### wave_clone_3: Generic Hardening, Regression Lock, and Closure
 - Status: not started
