@@ -28,6 +28,16 @@ Scope: advanced hash + binary surface expansion for `sifr.hashlib` and `sifr.bas
 - No SHA3/SHAKE dependency is currently registered for generated runtime crates in this wave.
 - Outcome: SHA3/SHAKE remains explicitly unsupported and guarded by typed boundaries.
 
+## CPython `test_hashlib.py` / `test_base64.py` Case Mapping (Wave 2)
+
+| CPython test case | Sifr adaptation direction | Local anchor(s) | Coverage status |
+| --- | --- | --- | --- |
+| `HashLibTestCase.test_new_upper_to_lower` | constructor accepts uppercase algorithm names while normalizing to canonical internal algorithm state | `crates/sifr/tests/e2e/pass/cpython_rng_phase_additional_subset.sifr`, `lib/sifr/hashlib.sifr` | covered |
+| `HashLibTestCase.test_case_sha1_1` / `test_case_sha512_1` | deterministic digest vectors for shipped algorithms (`sha1`, `sha512`) | `crates/sifr/tests/e2e/pass/cpython_rng_phase_additional_subset.sifr`, `crates/sifr/tests/e2e/pass/cpython_hashlib_object_model_subset.sifr` | covered |
+| `HashLibTestCase.test_copy` | `copy_hash` preserves source hash state while allowing independent updates on copied object | `crates/sifr/tests/e2e/pass/cpython_rng_phase_additional_subset.sifr`, `crates/sifr/tests/e2e/pass/cpython_hashlib_object_model_subset.sifr` | covered |
+| `TestBase64.test_b64encode` / `test_b64decode` and roundtrip matrix families | shipped text+bytes base64 encode/decode surfaces preserve deterministic roundtrip behavior | `crates/sifr/tests/e2e/pass/cpython_base64_subset.sifr`, `crates/sifr/tests/e2e/pass/cpython_base64_rfc4648_vectors.sifr`, `crates/sifr/tests/e2e/pass/phase_psp_rng_2_hashlib_base64_bytes_native_surface.sifr` | covered |
+| `TestBase64.test_b64decode_invalid_chars` / strict validate families | invalid payloads remain typed `ParseError` boundaries for standard and urlsafe decode paths | `crates/sifr/tests/e2e/pass/cpython_base64_strictness_subset.sifr`, `crates/sifr/tests/e2e/pass/phase_psp_rng_2_base64_invalid_bytes_decode_boundary.sifr` | covered |
+
 ## Explicit Waivers / Boundaries After Wave 2
 
 - SHA3/SHAKE constructor families remain explicitly unsupported (`sha3_256_obj`, `sha3_512_obj`, `shake_128_obj`, `shake_256_obj`).
@@ -38,6 +48,7 @@ Scope: advanced hash + binary surface expansion for `sifr.hashlib` and `sifr.bas
 - Positive fixture:
   - `crates/sifr/tests/e2e/pass/phase_psp_rng_2_base64_invalid_bytes_decode_boundary.sifr`
   - `crates/sifr/tests/e2e/pass/phase_psp_rng_2_hashlib_base64_bytes_native_surface.sifr`
+  - `crates/sifr/tests/e2e/pass/cpython_rng_phase_additional_subset.sifr` (post-closure hashlib case/vector adaptation)
 - Demo:
   - `demos/ad_hoc_rng_wave2_hashlib_base64_bytes_demo.sifr`
 - Negative fixtures:
