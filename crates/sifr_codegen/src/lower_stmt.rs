@@ -7960,7 +7960,7 @@ mod tests {
                     && method == "keys"
                     && args.is_empty()
             )
-                && method == "cloned"
+                && method == "copied"
                 && args.is_empty()
         ));
     }
@@ -8043,7 +8043,7 @@ mod tests {
                     && method == "iter"
                     && args.is_empty()
             )
-                && method == "cloned"
+                && method == "copied"
                 && args.is_empty()
         ));
         assert!(matches!(lowered[2], RustStmt::If { .. }));
