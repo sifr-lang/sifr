@@ -203,6 +203,90 @@ def _wrap_with_indents(
     return result
 
 
+def _apply_sentence_endings_line(text: str) -> str:
+    result: str = ""
+    i: int = 0
+    while i < len(text):
+        ch_opt: str | None = text[i]
+        if ch_opt is not None:
+            ch: str = ch_opt
+            result = result + ch
+            if ch == "." or ch == "!" or ch == "?":
+                next_opt: str | None = None
+                if i + 1 < len(text):
+                    next_opt = text[i + 1]
+                next2_opt: str | None = None
+                if i + 2 < len(text):
+                    next2_opt = text[i + 2]
+                if next_opt is not None and next_opt == " ":
+                    if next2_opt is None or next2_opt != " ":
+                        result = result + " "
+        i = i + 1
+    return result
+
+
+def _apply_sentence_endings_lines(lines: list[str]) -> list[str]:
+    result: list[str] = []
+    for line in lines:
+        result.append(_apply_sentence_endings_line(line))
+    return result
+
+
+def _clone_lines(lines: list[str]) -> list[str]:
+    copied: list[str] = []
+    for line in lines:
+        copied.append(line)
+    return copied
+
+
+def _apply_max_lines(
+    lines: list[str],
+    width: int,
+    max_lines: int | None,
+    placeholder: str,
+    drop_whitespace: bool,
+) -> list[str]:
+    if max_lines is None:
+        return _clone_lines(lines)
+
+    limit: int = max_lines
+    if limit <= 0:
+        return []
+    if len(lines) <= limit:
+        return _clone_lines(lines)
+
+    result: list[str] = []
+    i: int = 0
+    while i < limit:
+        line_opt: str | None = lines[i]
+        if line_opt is not None:
+            result.append(line_opt)
+        i = i + 1
+
+    if len(result) == 0:
+        return result
+
+    effective_placeholder: str = placeholder + ""
+    if width > 0:
+        if len(effective_placeholder) > width:
+            effective_placeholder = effective_placeholder[0:width]
+
+    last_index: int = len(result) - 1
+    last_opt: str | None = result[last_index]
+    if last_opt is not None:
+        last: str = last_opt
+        base: str = _trim_line(last)
+        available: int = width - len(effective_placeholder)
+        if available < 0:
+            available = 0
+        if len(base) > available:
+            base = _trim_line(base[0:available])
+        if drop_whitespace:
+            base = _trim_line(base)
+        result[last_index] = base + effective_placeholder
+    return result
+
+
 class TextWrapper:
     width: int
     initial_indent: str
@@ -212,6 +296,9 @@ class TextWrapper:
     replace_whitespace: bool
     drop_whitespace: bool
     break_on_hyphens: bool
+    fix_sentence_endings: bool
+    max_lines: int | None
+    placeholder: str
 
     def __init__(
         self,
@@ -223,6 +310,9 @@ class TextWrapper:
         replace_whitespace: bool = True,
         drop_whitespace: bool = True,
         break_on_hyphens: bool = True,
+        fix_sentence_endings: bool = False,
+        max_lines: int | None = None,
+        placeholder: str = " [...]",
     ) -> None:
         self.width = width
         self.initial_indent = initial_indent + ""
@@ -235,6 +325,9 @@ class TextWrapper:
         self.replace_whitespace = replace_whitespace
         self.drop_whitespace = drop_whitespace
         self.break_on_hyphens = break_on_hyphens
+        self.fix_sentence_endings = fix_sentence_endings
+        self.max_lines = max_lines
+        self.placeholder = placeholder + ""
 
     def wrap(self, text: str) -> list[str]:
         if self.width <= 0:
@@ -245,12 +338,21 @@ class TextWrapper:
             self.tabsize,
             self.replace_whitespace,
         )
-        return _wrap_with_indents(
+        lines: list[str] = _wrap_with_indents(
             prepared,
             self.width,
             self.initial_indent,
             self.subsequent_indent,
             self.break_on_hyphens,
+            self.drop_whitespace,
+        )
+        if self.fix_sentence_endings:
+            lines = _apply_sentence_endings_lines(lines)
+        return _apply_max_lines(
+            lines,
+            self.width,
+            self.max_lines,
+            self.placeholder,
             self.drop_whitespace,
         )
 
