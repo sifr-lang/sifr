@@ -177,3 +177,17 @@ Required entry records:
 - validation:
   - targeted fixtures: PASS (`cpython_rng_phase_additional_subset`, `phase_psp_rng_1_stateful_random_object_model`, `phase_psp_rng_2_hashlib_base64_bytes_native_surface`, `phase_psp_rng_3_textwrap_formatter_options`)
   - full gate: `scripts/run_all_tests.sh` PASS (profile `pr`, 2026-03-21)
+
+## Post-Closure External Review Remediation (Pass 1)
+
+- review artifact: `reviews/phase-ad-hoc-stateful-rng-crypto-and-polish-parity-expansion-post-closure-cpython-review-pass-1.md`
+- status: completed (reviewer-validated gaps acted on with shipped-surface coverage + explicit unsupported boundaries)
+- accepted remediation scope:
+  - add CPython-adapted coverage for seeded `random.choices` deterministic path and `Random.gauss` cached-state behavior
+  - add CPython-adapted `hashlib` incremental large-update equivalence coverage
+  - add CPython-adapted `base64` lowercase Base32 decode (`b32decode` casefold-style) coverage
+  - extend `html.unescape` intrinsic/test coverage for numeric references (`&#60;`, `&#x3C;`, `&#62;`, `&#x3E;`)
+  - formalize unsupported boundaries with negative fixtures/docs for `statistics.NormalDist`, `hashlib.pbkdf2_hmac`, and `hashlib.scrypt`
+- validation:
+  - targeted: PASS (`cpython_rng_phase_additional_subset`, `phase_psp_rng_2_hashlib_pbkdf2_hmac_unsupported`, `phase_psp_rng_2_hashlib_scrypt_unsupported`, `phase_psp_rng_3_statistics_normaldist_unsupported`)
+  - full gate: `scripts/run_all_tests.sh` PASS (profile `pr`, 2026-03-21)
