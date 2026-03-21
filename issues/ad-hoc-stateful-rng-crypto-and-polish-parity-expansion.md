@@ -1,6 +1,6 @@
 # Ad Hoc Phase: Stateful RNG, Crypto, and Polish Parity Expansion
 
-Status: in-progress (documented 2026-03-18; sequencing revised 2026-03-20; wave `wave_psp_rng_0` architecture lock completed 2026-03-21; wave `wave_psp_rng_1` deterministic RNG state/object-model implementation completed and in PR/review loop 2026-03-21)
+Status: in-progress (documented 2026-03-18; sequencing revised 2026-03-20; wave `wave_psp_rng_0` architecture lock completed 2026-03-21; wave `wave_psp_rng_1` deterministic RNG state/object-model implementation merged via PR #1376 on 2026-03-21)
 Context: final cleanup phase after the structured/class, extended bytes-foundation, runtime/file-object, and canonical iteration-model follow-ups
 Execution readiness: implementation-ready in sequence after `issues/ad-hoc-canonical-iteration-model-and-lazy-parity-closure.md`; predecessor bytes-phase extension waves `wave_psp_bytes_4` and `wave_psp_bytes_5` are completed, so crypto and RNG surfaces inherit the final raw-byte-backed `bytes` contract, stable iterator semantics, and successor governance baseline
 Execution ledger: `issues/ad-hoc-stateful-rng-crypto-and-polish-parity-expansion-execution.md`
@@ -64,7 +64,7 @@ This work shares a different root cause from the earlier phases:
 
 It should therefore execute after the broader object-model and runtime work, not before it.
 
-The phase design is fixed in this document. Wave 0 is locked and wave 1 implementation is now in the review/merge loop; what remains before wave 2 is execution evidence for bytes-native `hashlib` closure and the actual crypto dependency inventory.
+The phase design is fixed in this document. Wave 0 is locked and wave 1 is merged; what remains before wave 2 is execution evidence for bytes-native `hashlib` closure and the actual crypto dependency inventory.
 
 ## Depends on
 
@@ -96,7 +96,7 @@ The phase design is fixed in this document. Wave 0 is locked and wave 1 implemen
 - `SystemRandom` remains non-deterministic and does not support `getstate` or `setstate`.
 - `randbytes(n: int) -> Result[bytes, ValueError]` is in scope once the deterministic object model is stable.
 - `randbytes` must return canonical raw-byte-backed `bytes` directly; it must not materialize widened integer storage internally.
-- `choices(weights=...)` stays out of scope unless the deterministic `RandomState` model lands cleanly in `wave_psp_rng_1`; otherwise it remains explicitly unsupported for this phase.
+- `choices(weights=...)` remains out of scope and explicitly unsupported in this phase unless a later wave explicitly widens scope.
 
 ### `hashlib`
 
