@@ -1,6 +1,6 @@
 # Ad Hoc Phase Execution Checklist (Stateful RNG, Crypto, and Polish Parity Expansion)
 
-Status: in-progress (started 2026-03-21; entry baseline validated; `wave_psp_rng_0` completed; `wave_psp_rng_1` merged and review-closed; `wave_psp_rng_2` merged and review-closed; `wave_psp_rng_3` implementation + validation completed and pending PR/review/merge loop)
+Status: in-progress (started 2026-03-21; entry baseline validated; `wave_psp_rng_0` completed; `wave_psp_rng_1` merged and review-closed; `wave_psp_rng_2` merged and review-closed; `wave_psp_rng_3` implementation merged via PR `#1382` and in external review loop)
 Owner: ad_hoc_stateful_rng_crypto execution loop
 Reference planning doc:
 - `issues/ad-hoc-stateful-rng-crypto-and-polish-parity-expansion.md`
@@ -55,7 +55,7 @@ Loop per wave: Plan -> Implement -> Validate -> Demo -> PR -> External completio
 - [x] Re-triage residual `textwrap`/`html` waivers and close low-risk owned gaps.
 - [x] Port/adapt relevant CPython tests and refresh waiver inventory.
 - [x] Run demo + full gate.
-- [ ] Open PR, review, and merge.
+- [x] Open PR, review, and merge.
 
 ## Entry Baseline Evidence (2026-03-21)
 
@@ -137,7 +137,7 @@ Required entry records:
   - pass 2 validation result: reviewer marked wave as production-grade with no additional code changes required
 
 ### wave_psp_rng_3: Final Polish Waiver Reduction
-- Status: implementation + validation completed (pending PR/review/merge loop)
+- Status: implementation merged; external review pass 1 validated with no code-change findings
 - Scope:
   - ship deterministic `statistics.median_grouped(data, interval)` with typed boundaries
   - close residual `textwrap` formatter-option waivers (`fix_sentence_endings`, `max_lines`, `placeholder`)
@@ -149,3 +149,7 @@ Required entry records:
   - positive path: `cargo run -q -p sifr -- run demos/ad_hoc_rng_wave3_polish_waiver_reduction_demo.sifr` -> PASS (`ad_hoc_rng_wave3_polish_waiver_reduction_demo: pass`)
   - negative boundary: `cargo run -q -p sifr -- check crates/sifr/tests/e2e/fail/phase_psp_struct_0_html_package_parser_unsupported.sifr` -> expected compile failure (PASS)
   - wave gate: `$(pwd)/scripts/run_all_tests.sh` -> PASS (2026-03-21)
+- Merge evidence:
+  - implementation PR: `https://github.com/yaseralnajjar/sifr/pull/1382` (merged 2026-03-21)
+  - external review pass 1 artifact: `reviews/phase-ad-hoc-stateful-rng-crypto-and-polish-parity-expansion-wave-psp-rng-3-review-pass-1.md`
+  - pass 1 validation result: reviewer approved wave scope with no additional code changes required
