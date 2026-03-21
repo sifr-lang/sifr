@@ -1,6 +1,6 @@
 # Ad Hoc Phase Execution Checklist (Ownership-Aware Collection Lowering and Clone Elision)
 
-Status: in_progress (started 2026-03-21; `wave_clone_0` architecture lock/baseline, `wave_clone_1` iterator/comprehension ownership correction, `wave_clone_2` index/slice/star-unpack ownership correction, and `wave_clone_3` generic hardening/regression lock completed on 2026-03-21; wave + milestone closure cycles completed, phase-closure completion review completed, phase production-grade cycle pending)
+Status: closed (started 2026-03-21; `wave_clone_0` architecture lock/baseline, `wave_clone_1` iterator/comprehension ownership correction, `wave_clone_2` index/slice/star-unpack ownership correction, and `wave_clone_3` generic hardening/regression lock completed on 2026-03-21; wave-closure pass-1/pass-2, milestone-closure pass-1/pass-2, and phase-closure pass-1/pass-2 production-grade reviews approved on 2026-03-21)
 Owner: ad_hoc_collection_lowering_clone_elision execution loop
 Reference planning doc:
 - `issues/ad-hoc-ownership-aware-collection-lowering-and-clone-elision.md`
@@ -27,7 +27,7 @@ Loop per wave: Plan -> Implement -> Validate -> Demo -> PR -> External completio
 7. [x] milestone-level completion review cycle done
 8. [x] milestone-level production-grade review cycle done
 9. [x] phase-level completion review cycle done
-10. [ ] phase-level production-grade review cycle done
+10. [x] phase-level production-grade review cycle done
 
 ## Entry Baseline Evidence (2026-03-21)
 
@@ -322,6 +322,12 @@ Secondary review paths:
   - applied actions:
     - confirmed phase-closure readiness with no open correctness findings
     - deferred final `closed` status flips (phase doc/execution/roadmap) to phase-closure production-grade pass for loop-consistent closure sequencing
+  - validation:
+    - `scripts/run_all_tests.sh`
+- phase closure production-grade review: completed (`reviews/phase-ad-hoc-ownership-aware-collection-lowering-and-clone-elision-phase-closure-review-pass-2.md`)
+  - applied actions:
+    - finalized status-line closure updates in phase doc, execution ledger, and roadmap entry wording
+    - marked phase-level production-grade cycle checklist item complete
   - validation:
     - `scripts/run_all_tests.sh`
 
