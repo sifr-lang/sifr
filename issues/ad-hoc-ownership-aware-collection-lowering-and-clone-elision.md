@@ -1,8 +1,15 @@
 # Ad Hoc Phase: Ownership-Aware Collection Lowering and Clone Elision
 
 Status: proposed on 2026-03-21
-Context: corrective follow-up phase after `issues/ad-hoc-canonical-iteration-model-and-lazy-parity-closure.md` and before any broader runtime-representation work for move-heavy CPython parity
-Execution readiness: design-ready; should begin only after the current in-flight iterator/codegen work touching the same lowering files is merged or explicitly sequenced
+Context: corrective post-closure phase after the full ad hoc parity follow-up sequence covering lazy iterators, waiver reduction, structured/class surfaces, bytes foundations, runtime/file objects, canonical iteration closure, and stateful RNG/crypto/polish expansion
+Execution readiness: design-ready after completion of the following predecessor phases:
+  - `issues/ad-hoc-first-class-lazy-iterators-and-python-iterable-protocol.md`
+  - `issues/ad-hoc-python-source-parity-extension-waiver-reduction.md`
+  - `issues/ad-hoc-structured-data-and-class-surface-parity-expansion.md`
+  - `issues/ad-hoc-first-class-bytes-and-binary-surface-foundation.md`
+  - `issues/ad-hoc-runtime-and-file-object-parity-expansion.md`
+  - `issues/ad-hoc-canonical-iteration-model-and-lazy-parity-closure.md`
+  - `issues/ad-hoc-stateful-rng-crypto-and-polish-parity-expansion.md`
 Execution ledger: `issues/ad-hoc-ownership-aware-collection-lowering-and-clone-elision-execution.md`
 
 ## Objective
@@ -43,8 +50,14 @@ Secondary target area:
   - `internal_docs/phases/10_borrow_by_default.md`
   - `internal_docs/phases/30_reliability_parity_and_performance_budgets.md`
   - `internal_docs/phases/34_generated_code_quality_and_production_readiness.md`
-- predecessor corrective phase:
+- predecessor ad hoc sequence:
+  - `issues/ad-hoc-first-class-lazy-iterators-and-python-iterable-protocol.md`
+  - `issues/ad-hoc-python-source-parity-extension-waiver-reduction.md`
+  - `issues/ad-hoc-structured-data-and-class-surface-parity-expansion.md`
+  - `issues/ad-hoc-first-class-bytes-and-binary-surface-foundation.md`
+  - `issues/ad-hoc-runtime-and-file-object-parity-expansion.md`
   - `issues/ad-hoc-canonical-iteration-model-and-lazy-parity-closure.md`
+  - `issues/ad-hoc-stateful-rng-crypto-and-polish-parity-expansion.md`
 - relevant implementation hotspots:
   - `crates/sifr_type_system/src/types.rs`
   - `crates/sifr_hir/src/lower/expressions.rs`
@@ -101,14 +114,27 @@ even where Sifr already has enough type information to do better.
 
 That makes this a compiler-semantics cleanup phase with performance wins, not a late peephole optimization pass.
 
+It also explains why this phase belongs after the earlier ad hoc sequence instead of being folded into it retroactively:
+
+- the lazy-iterator and canonical-iteration phases established the iterable model and lazy/eager boundary,
+- the bytes/runtime/file-object and RNG/crypto/polish phases expanded higher-level surfaces on top of that model,
+- and only after those phases shipped is the remaining debt clearly isolated as ownership-aware lowering quality rather than missing feature support.
+
 ## Depends on
 
+- `issues/ad-hoc-first-class-lazy-iterators-and-python-iterable-protocol.md`
+- `issues/ad-hoc-python-source-parity-extension-waiver-reduction.md`
+- `issues/ad-hoc-structured-data-and-class-surface-parity-expansion.md`
+- `issues/ad-hoc-first-class-bytes-and-binary-surface-foundation.md`
+- `issues/ad-hoc-runtime-and-file-object-parity-expansion.md`
 - `issues/ad-hoc-canonical-iteration-model-and-lazy-parity-closure.md`
-  - iteration semantics must remain canonical; this phase refines ownership-sensitive lowering inside that model
+  - iteration semantics must remain canonical; this phase refines ownership-sensitive lowering inside that model rather than redesigning it
+- `issues/ad-hoc-stateful-rng-crypto-and-polish-parity-expansion.md`
+  - this phase is intentionally later and narrower than the broad parity-expansion sequence; it hardens generated-code quality after those surfaces are already in place
 - Phase 27 non-regression invariants remain mandatory
 - Phase 29 local-first validation contract remains mandatory
 - Phase 30 performance-budget discipline remains mandatory
-- current in-flight edits in `crates/sifr_codegen` touching the same lowering paths must either land first or be merged deliberately before this phase starts
+- earlier phases should already have closed broad feature-surface gaps, leaving ownership-aware lowering quality as the bounded remaining problem
 
 ## Problem Statement
 
