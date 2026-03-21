@@ -67,7 +67,7 @@ Primary code paths that must be reviewed in this phase:
   - `try_lower_for_iter_expr_for_ir`
   - `lower_iter_source_expr_for_ir`
   - iterator/enumerate special cases
-  - boxed range iteration paths in `for` lowering
+  - boxed range iteration paths in structural range lowering (`for` / comprehensions / similar structural chains)
 - `crates/sifr_codegen/src/lower_expr.rs`
   - simple `map` lowering
   - simple `filter` lowering
@@ -129,7 +129,7 @@ Secondary review paths:
   - negative: named borrowed containers are not implicitly consumed
   - emit inspection: targeted outputs no longer contain `.clone().into_iter()` in these paths
   - emit inspection: targeted structural `Range` loops/comprehensions no longer emit `Box::new((range).clone().into_iter())`
-  - emit inspection: borrowed `Copy` iteration no longer lowers through `.iter().cloned()`
+  - emit inspection: borrowed `Copy` iteration no longer lowers through `.iter().cloned()` and instead uses copy-oriented iteration such as `iter().copied()` or an equivalent zero-clone shape
   - wave gate: `scripts/run_all_tests.sh --profile quick`
 
 ### wave_clone_2: Indexing, Safe Indexing, Slicing, and Star-Unpack Ownership Correction
@@ -147,7 +147,7 @@ Secondary review paths:
   - positive: indexing / safe-indexing / slicing / star-unpack fixtures and demos run successfully
   - negative: ownership-safety regressions remain rejected
   - emit inspection: targeted outputs no longer contain whole-source star-unpack clone
-  - emit inspection: `Copy`-element indexing no longer uses `.clone()` / `.cloned()` in targeted paths
+  - emit inspection: `Copy`-element indexing no longer uses `.clone()` / `.cloned()` in targeted paths and instead uses copy-oriented extraction such as direct copy-out or `.copied()` where applicable
   - wave gate: `scripts/run_all_tests.sh --profile quick`
 
 ### wave_clone_3: Generic Hardening, Regression Lock, and Closure

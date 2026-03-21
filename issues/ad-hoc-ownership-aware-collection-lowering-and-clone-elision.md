@@ -415,8 +415,8 @@ Definition of done:
 | --- | --- |
 | AC-1 | collection and iterator lowering decisions in scope derive from one explicit ownership-aware planning path |
 | AC-2 | generated Rust no longer emits `.clone().into_iter()` for owned temporary collection pipelines in the targeted surfaces |
-| AC-3 | borrowed collection iteration over `Copy` element types no longer emits `.iter().cloned()` in targeted surfaces |
-| AC-4 | direct indexing and safe indexing of borrowed `Copy` collections no longer emit `.clone()` / `.cloned()` in targeted surfaces |
+| AC-3 | borrowed collection iteration over `Copy` element types no longer emits `.iter().cloned()` in targeted surfaces and instead lowers through copy-oriented access such as `iter().copied()` or an equivalent zero-clone Rust shape |
+| AC-4 | direct indexing and safe indexing of borrowed `Copy` collections no longer emit `.clone()` / `.cloned()` in targeted surfaces and instead lower through copy-oriented access such as direct copy-out or `.copied()` where applicable |
 | AC-5 | star-unpack no longer clones the full source collection solely for lowering convenience |
 | AC-6 | borrowed move-element cases remain semantically correct and do not silently consume named containers |
 | AC-7 | `TypeVar` / `Any` handling remains conservative and does not introduce unsound copy-oriented lowering |
