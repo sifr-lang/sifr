@@ -164,3 +164,16 @@ Required entry records:
 - milestone closure review pass 2 artifact: `reviews/phase-ad-hoc-stateful-rng-crypto-and-polish-parity-expansion-milestone-closure-review-pass-2.md`
 - phase closure review pass 1 artifact: `reviews/phase-ad-hoc-stateful-rng-crypto-and-polish-parity-expansion-phase-closure-review-pass-1.md`
 - phase closure review pass 2 artifact: `reviews/phase-ad-hoc-stateful-rng-crypto-and-polish-parity-expansion-phase-closure-review-pass-2.md`
+
+## Post-Closure CPython Adaptation Pass
+
+- status: completed (post-closure add-on requested after phase closure to increase direct CPython test adaptation depth for shipped wave scope)
+- added fixture: `crates/sifr/tests/e2e/pass/cpython_rng_phase_additional_subset.sifr`
+- focus: additional adopted/adapted cases from `test_random` setstate-domain validation, `test_hashlib` constructor/case/vector coverage, `test_statistics` grouped interval/error boundaries, `test_textwrap` sentence-ending matrix cases, and `test_html` top-level escape coverage
+- traceability updates:
+  - `verification/stdlib/wave_psp_rng_1_cpython_traceability.md`
+  - `verification/stdlib/wave_psp_rng_2_cpython_traceability.md`
+  - `verification/stdlib/wave_psp_rng_3_cpython_traceability.md`
+- validation:
+  - targeted fixtures: PASS (`cpython_rng_phase_additional_subset`, `phase_psp_rng_1_stateful_random_object_model`, `phase_psp_rng_2_hashlib_base64_bytes_native_surface`, `phase_psp_rng_3_textwrap_formatter_options`)
+  - full gate: `scripts/run_all_tests.sh` PASS (profile `pr`, 2026-03-21)
