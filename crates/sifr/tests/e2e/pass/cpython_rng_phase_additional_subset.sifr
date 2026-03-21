@@ -1,13 +1,15 @@
 # Additional CPython-derived parity coverage for ad-hoc RNG/crypto/polish phase.
 from sifr.hashlib import HashObject, copy_hash, new, new_bytes, sha1_obj, sha512_obj
 from sifr.html import escape, unescape
-from sifr.random import Random, RandomState, getstate, setstate
+from sifr.random import Random, RandomState, choices, getstate, seed, setstate
+from sifr.base64 import b32decode
 from sifr.statistics import StatisticsError, median_grouped, mode
 from sifr.test import (
     assert_almost_eq,
     assert_eq,
     assert_true,
 )
+from sifr.hashlib import sha256_obj
 from sifr.textwrap import TextWrapper
 
 
@@ -35,6 +37,16 @@ def with_bad_first_word(words: list[int]) -> list[int]:
         else:
             mutated.append(word)
     return mutated
+
+
+def repeated_block(count: int) -> str:
+    block: str = "abcXYZ123"
+    out: str = ""
+    i: int = 0
+    while i < count:
+        out = out + block
+        i = i + 1
+    return out
 
 
 def check_random_state_boundaries() -> None:
@@ -118,6 +130,39 @@ def check_random_state_boundaries() -> None:
     assert_true(module_bad_version_rejected)
 
 
+def check_random_choices_and_gauss_model() -> None:
+    seed(123)
+
+    choices_ok: bool = False
+    picked: list[int] = []
+    try:
+        parsed_picked: list[int] = choices([1, 2, 3, 4], 20)
+        picked = parsed_picked
+        choices_ok = True
+    except ValueError as e:
+        _ = e.message
+        choices_ok = False
+    assert_true(choices_ok)
+    assert_eq(
+        str(picked),
+        "[3, 2, 3, 3, 1, 3, 3, 2, 4, 3, 4, 2, 3, 2, 1, 2, 3, 4, 2, 1]",
+    )
+
+    rng: Random = Random(99)
+    first: float = rng.gauss(0.0, 1.0)
+    after_first: RandomState = rng.getstate()
+    assert_true(after_first.gauss_next is not None)
+    second: float = rng.gauss(0.0, 1.0)
+    after_second: RandomState = rng.getstate()
+    assert_true(after_second.gauss_next is None)
+
+    replay: Random = Random(99)
+    first_replay: float = replay.gauss(0.0, 1.0)
+    second_replay: float = replay.gauss(0.0, 1.0)
+    assert_almost_eq(first, first_replay, 0.000000000001)
+    assert_almost_eq(second, second_replay, 0.000000000001)
+
+
 def check_hashlib_vectors_and_case() -> None:
     upper: HashObject = sha1_obj("")
     try:
@@ -174,6 +219,31 @@ def check_hashlib_vectors_and_case() -> None:
         _ = e.message
         unknown_rejected = True
     assert_true(unknown_rejected)
+
+
+def check_hashlib_large_incremental_update() -> None:
+    payload: str = repeated_block(3000)
+    whole: HashObject = sha256_obj(payload)
+    chunked: HashObject = sha256_obj("")
+    i: int = 0
+    while i < 3000:
+        chunked.update("abcXYZ123")
+        i = i + 1
+    assert_eq(whole.hexdigest(), chunked.hexdigest())
+
+
+def check_base64_casefold_decode() -> None:
+    decoded: str = ""
+    decode_ok: bool = False
+    try:
+        parsed_decoded: str = b32decode("mzxw6===")
+        decoded = parsed_decoded
+        decode_ok = True
+    except ParseError as e:
+        _ = e.message
+        decode_ok = False
+    assert_true(decode_ok)
+    assert_eq(decoded, "foo")
 
 
 def check_statistics_grouped_cases() -> None:
@@ -241,12 +311,21 @@ def check_html_escape_cases() -> None:
         "'&lt;script&gt;\"&amp;foo;\"&lt;/script&gt;'",
     )
     assert_eq(unescape("no character references"), "no character references")
+    assert_eq(unescape("&#39;"), "'")
+    assert_eq(unescape("&#x27;"), "'")
+    assert_eq(unescape("&#60;"), "<")
+    assert_eq(unescape("&#x3C;"), "<")
+    assert_eq(unescape("&#62;"), ">")
+    assert_eq(unescape("&#x3E;"), ">")
     assert_eq(unescape(escape(sample)), sample)
 
 
 def main() -> None:
     check_random_state_boundaries()
+    check_random_choices_and_gauss_model()
     check_hashlib_vectors_and_case()
+    check_hashlib_large_incremental_update()
+    check_base64_casefold_decode()
     check_statistics_grouped_cases()
     check_textwrap_sentence_cases()
     check_html_escape_cases()
