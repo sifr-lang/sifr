@@ -1751,7 +1751,7 @@ fn test_self_field_clone_suppression_is_scoped_and_non_sticky() {
         "{rust_code}"
     );
     assert!(!rust_code.contains("self.items.clone().push(x)"));
-    assert!(rust_code.contains("return self.table.get(\"k\").cloned();"));
+    assert!(rust_code.contains("return self.table.get(\"k\").copied();"));
     assert!(!rust_code.contains("self.table.clone().get(\"k\")"));
     assert!(
         rust_code.contains("return self.label.clone();"),

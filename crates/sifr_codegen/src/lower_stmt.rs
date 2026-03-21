@@ -3900,12 +3900,11 @@ mod tests {
                         if matches!(func.as_ref(), RustExpr::Path(path) if path == &vec!["Some".to_string()])
                             && matches!(
                                 args.as_slice(),
-                                [RustExpr::Clone(inner)]
-                                    if matches!(inner.as_ref(), RustExpr::Index { .. })
+                                [RustExpr::Index { .. }]
                             )
                 ) && matches!(
                     right.as_ref(),
-                    RustExpr::MethodCall { method, .. } if method == "cloned"
+                    RustExpr::MethodCall { method, .. } if method == "copied"
                 )
         ));
     }

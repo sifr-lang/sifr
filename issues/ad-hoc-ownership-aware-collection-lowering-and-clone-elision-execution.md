@@ -191,7 +191,7 @@ Secondary review paths:
 
 ### wave_clone_2: Indexing, Safe Indexing, Slicing, and Star-Unpack Ownership Correction
 - Status: completed
-- Implementation PR: pending (to be filled after merge)
+- Implementation PR: https://github.com/yaseralnajjar/sifr/pull/1398 (merged)
 - Scope:
   - refactor indexing and safe-indexing extraction to use ownership-aware plans
   - remove `Copy`-element `.clone()` / `.cloned()` in targeted indexing paths
@@ -223,6 +223,10 @@ Secondary review paths:
       - stepped copy-slice evidence: `_result.push(*_el);`
   - wave traceability artifact:
     - `verification/stdlib/wave_clone_2_index_slice_unpack_traceability.md`
+  - external review pass 1:
+    - artifact: `reviews/phase-ad-hoc-ownership-aware-collection-lowering-and-clone-elision-wave-clone-2-review-pass-1.md`
+    - applied actions: updated stale unit-test expectations to assert copy-oriented behavior (`copied` and direct `Index`) instead of old clone-heavy shapes
+    - validation: `cargo test -p sifr_codegen simple_compare_condition_wraps_proven_list_index_without_double_option`, `cargo test -p sifr_codegen test_self_field_clone_suppression_is_scoped_and_non_sticky`, `scripts/run_all_tests.sh`
 
 ### wave_clone_3: Generic Hardening, Regression Lock, and Closure
 - Status: not started
