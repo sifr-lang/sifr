@@ -1,6 +1,6 @@
 # Ad Hoc Phase Execution Checklist (Ownership-Aware Collection Lowering and Clone Elision)
 
-Status: in_progress (started 2026-03-21; `wave_clone_0` architecture lock/baseline, `wave_clone_1` iterator/comprehension ownership correction, `wave_clone_2` index/slice/star-unpack ownership correction, and `wave_clone_3` generic hardening/regression lock completed on 2026-03-21; wave-closure cycles completed, milestone-closure completion review completed, milestone production-grade + phase closure cycles pending)
+Status: in_progress (started 2026-03-21; `wave_clone_0` architecture lock/baseline, `wave_clone_1` iterator/comprehension ownership correction, `wave_clone_2` index/slice/star-unpack ownership correction, and `wave_clone_3` generic hardening/regression lock completed on 2026-03-21; wave and milestone closure cycles completed, phase closure cycles pending)
 Owner: ad_hoc_collection_lowering_clone_elision execution loop
 Reference planning doc:
 - `issues/ad-hoc-ownership-aware-collection-lowering-and-clone-elision.md`
@@ -25,7 +25,7 @@ Loop per wave: Plan -> Implement -> Validate -> Demo -> PR -> External completio
 5. [x] wave-level extra completion review cycle done
 6. [x] wave-level extra production-grade review cycle done
 7. [x] milestone-level completion review cycle done
-8. [ ] milestone-level production-grade review cycle done
+8. [x] milestone-level production-grade review cycle done
 9. [ ] phase-level completion review cycle done
 10. [ ] phase-level production-grade review cycle done
 
@@ -307,6 +307,12 @@ Secondary review paths:
   - applied actions:
     - confirmed milestone-level readiness with no open correctness findings
     - retained `closed` status flips for phase/roadmap/execution until milestone pass-2 and phase-level closure cycles complete
+  - validation:
+    - `scripts/run_all_tests.sh`
+- milestone closure production-grade review: completed (`reviews/phase-ad-hoc-ownership-aware-collection-lowering-and-clone-elision-milestone-closure-review-pass-2.md`)
+  - applied actions:
+    - confirmed milestone production-grade readiness with no open findings
+    - retained phase-level `closed` status flips and roadmap closure wording until phase closure review cycles are completed
   - validation:
     - `scripts/run_all_tests.sh`
 
