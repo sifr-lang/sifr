@@ -197,15 +197,12 @@ pub(super) fn lower_decode_utf8(args: &[RustExpr]) -> Option<RustExpr> {
     }))
 }
 
-pub(super) fn lower_bytes_to_hex(args: &[RustExpr]) -> Option<RustExpr> {
-    if args.len() != 1 {
-        return None;
-    }
-    Some(ok_expr(RustExpr::MethodCall {
+fn bytes_to_hex_expr(arg: RustExpr) -> RustExpr {
+    RustExpr::MethodCall {
         receiver: Box::new(RustExpr::MethodCall {
             receiver: Box::new(RustExpr::MethodCall {
                 receiver: Box::new(RustExpr::MethodCall {
-                    receiver: Box::new(args[0].clone()),
+                    receiver: Box::new(arg),
                     method: "iter".to_string(),
                     args: vec![],
                 }),
@@ -230,7 +227,21 @@ pub(super) fn lower_bytes_to_hex(args: &[RustExpr]) -> Option<RustExpr> {
         }),
         method: "join".to_string(),
         args: vec![RustExpr::Ident("\"\"".to_string())],
-    }))
+    }
+}
+
+pub(super) fn lower_bytes_to_hex(args: &[RustExpr]) -> Option<RustExpr> {
+    if args.len() != 1 {
+        return None;
+    }
+    Some(ok_expr(bytes_to_hex_expr(args[0].clone())))
+}
+
+pub(super) fn lower_bytes_to_hex_strict(args: &[RustExpr]) -> Option<RustExpr> {
+    if args.len() != 1 {
+        return None;
+    }
+    Some(bytes_to_hex_expr(args[0].clone()))
 }
 
 pub(super) fn lower_bytes_from_hex(args: &[RustExpr]) -> Option<RustExpr> {

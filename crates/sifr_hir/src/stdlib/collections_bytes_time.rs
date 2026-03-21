@@ -236,6 +236,12 @@ pub(super) fn intrinsic_bytes() -> IntrinsicModule {
         ),
     );
 
+    // bytes_to_hex_strict(bytes: bytes) -> str (infallible fast path)
+    functions.insert(
+        "bytes_to_hex_strict".to_string(),
+        FunctionType::all_borrow(vec![("bytes".to_string(), Type::Bytes)], Type::Str),
+    );
+
     // bytes_from_hex(s: str) -> Result[bytes, ParseError]
     functions.insert(
         "bytes_from_hex".to_string(),

@@ -30,6 +30,18 @@ def main() -> None:
         h_expected: HashObject = new_bytes("sha256", payload)
         assert_eq(h_text.digest(), h_expected.digest())
 
+        h_empty: HashObject = new_bytes("sha256", b"")
+        assert_eq(
+            h_empty.hexdigest(),
+            "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        )
+        assert_true(len(h_empty.digest()) == 32)
+
+        h_mixed: HashObject = new_bytes("sha256", b"")
+        h_mixed.update("ab")
+        h_mixed.update_bytes(encode_utf8("c"))
+        assert_eq(h_mixed.hexdigest(), h_expected.hexdigest())
+
         base_payload: bytes = encode_utf8("hello+bytes")
         enc: bytes = b64encode_bytes(base_payload)
         dec: bytes = b64decode_bytes(enc)
@@ -42,6 +54,12 @@ def main() -> None:
         url_enc: bytes = urlsafe_b64encode_bytes(base_payload)
         url_dec: bytes = urlsafe_b64decode_bytes(url_enc)
         assert_eq(url_dec, base_payload)
+
+        try:
+            _bad_decoded: bytes = b64decode_bytes(encode_utf8("@@@@"))
+            assert_true(False)
+        except ParseError as e:
+            assert_true(len(e.message) > 0)
     except ValueError as e:
         assert str("unexpected value error: " + e.message) == "phase_psp_rng_2_hashlib_base64_bytes_native_surface: pass"
     except ParseError as e:
