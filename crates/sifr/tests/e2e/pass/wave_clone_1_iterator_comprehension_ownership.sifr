@@ -1,0 +1,41 @@
+def main():
+    nums: list[int] = [1, 2, 3, 4]
+
+    mapped: list[int] = list(map(lambda x: x * 2, nums))
+    filtered: list[int] = list(filter(lambda x: x % 2 == 0, nums))
+    assert str(mapped) == "[2, 4, 6, 8]"
+    assert str(filtered) == "[2, 4]"
+
+    # Named sources must remain usable after iterator pipelines.
+    assert len(nums) == 4
+    total: int = 0
+    for n in nums:
+        total = total + n
+    assert total == 10
+
+    # Temporary owned containers should be consumed directly.
+    temp_mapped: list[int] = list(map(lambda x: x + 1, [5, 6]))
+    assert str(temp_mapped) == "[6, 7]"
+
+    list_comp: list[int] = [x * 3 for x in nums]
+    set_comp: set[int] = {x for x in nums}
+    dict_comp: dict[int, int] = {x: x + 10 for x in nums}
+    assert str(list_comp) == "[3, 6, 9, 12]"
+    assert len(set_comp) == 4
+    assert 1 in set_comp
+    assert 2 in set_comp
+    assert 3 in set_comp
+    assert 4 in set_comp
+    assert len(dict_comp) == 4
+    assert dict_comp[1] == 11
+    assert dict_comp[2] == 12
+    assert dict_comp[3] == 13
+    assert dict_comp[4] == 14
+
+    range_comp: list[int] = [i for i in range(1, 5)]
+    assert str(range_comp) == "[1, 2, 3, 4]"
+
+    indexed: list[tuple[int, int]] = list(enumerate(nums))
+    assert str(indexed) == "[(0, 1), (1, 2), (2, 3), (3, 4)]"
+
+    print("wave_clone_1_iterator_comprehension_ownership: pass")

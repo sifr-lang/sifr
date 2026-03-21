@@ -14,7 +14,10 @@
   - wave closure: `wave_psp_rng_0` through `wave_psp_rng_3` merged with external production-grade review artifacts and phase-closure pass-2 approval
 - Ownership-aware collection lowering continuation is active:
   - phase docs: `issues/ad-hoc-ownership-aware-collection-lowering-and-clone-elision.md` and `issues/ad-hoc-ownership-aware-collection-lowering-and-clone-elision-execution.md`
-  - wave-0 lock/baseline artifact: `verification/stdlib/wave_clone_0_codegen_traceability.md`
+  - completed waves:
+    - `wave_clone_0` lock/baseline artifact: `verification/stdlib/wave_clone_0_codegen_traceability.md`
+    - `wave_clone_1` iterator/comprehension ownership correction artifact: `verification/stdlib/wave_clone_1_iterator_codegen_traceability.md`
+  - active wave: `wave_clone_2` (indexing/slicing/star-unpack ownership correction)
   - locked planner contract for implementation waves:
     - value category: `Place | Temporary`
     - source access mode: `Preserve | Consume`

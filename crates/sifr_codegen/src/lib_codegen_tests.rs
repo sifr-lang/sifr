@@ -1421,7 +1421,7 @@ fn test_generate_rust_generator_expression_without_filter_lowers_to_map_chain() 
     );
 
     assert!(rust_code.contains("let mut squares: Box<dyn Iterator<Item = i64>>"));
-    assert!(rust_code.contains("into_iter().map(|x| x * x)"));
+    assert!(rust_code.contains("iter().copied().map(|x| x * x)"));
 }
 
 #[test]
@@ -1432,7 +1432,7 @@ fn test_generate_rust_filter_over_list_lowers_to_lazy_boxed_iterator() {
 
     assert!(rust_code.contains("let mut evens: Box<dyn Iterator<Item = i64>>"));
     assert!(rust_code.contains("Box::new("));
-    assert!(rust_code.contains(".into_iter().filter("));
+    assert!(rust_code.contains(".iter().copied().filter("));
 }
 
 #[test]
