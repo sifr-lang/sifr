@@ -771,6 +771,20 @@ mod tests {
     }
 
     #[test]
+    fn iterator_plan_clones_named_move_element_collection() {
+        let source = HirExpr::Name {
+            name: "strings".to_string(),
+            ty: Type::List(Box::new(Type::Str)),
+        };
+        let plan = plan_iterator_ownership(&source);
+
+        assert_eq!(plan.value_category, ValueCategory::Place);
+        assert_eq!(plan.source_access_mode, SourceAccessMode::Preserve);
+        assert_eq!(plan.yield_mode, YieldMode::Clone);
+        assert_eq!(plan.element_ownership, Some(OwnershipKind::Move));
+    }
+
+    #[test]
     fn iterator_plan_consumes_temporary_collection() {
         let source = HirExpr::ListLiteral {
             elements: vec![HirExpr::IntLiteral(1), HirExpr::IntLiteral(2)],
@@ -782,6 +796,25 @@ mod tests {
         assert_eq!(plan.source_access_mode, SourceAccessMode::Consume);
         assert_eq!(plan.yield_mode, YieldMode::Move);
         assert_eq!(plan.element_ownership, Some(OwnershipKind::Copy));
+    }
+
+    #[test]
+    fn iterator_plan_defaults_to_borrow_for_conservative_unknown_elements() {
+        let source = HirExpr::Name {
+            name: "unknown".to_string(),
+            ty: Type::Class {
+                name: "Unknown".to_string(),
+                fields: vec![],
+                methods: vec![],
+                parent_class: None,
+            },
+        };
+        let plan = plan_iterator_ownership(&source);
+
+        assert_eq!(plan.value_category, ValueCategory::Place);
+        assert_eq!(plan.source_access_mode, SourceAccessMode::Preserve);
+        assert_eq!(plan.yield_mode, YieldMode::Borrow);
+        assert_eq!(plan.element_ownership, None);
     }
 
     #[test]

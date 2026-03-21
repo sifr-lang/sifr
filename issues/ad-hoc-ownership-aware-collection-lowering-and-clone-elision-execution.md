@@ -14,7 +14,7 @@ Loop per wave: Plan -> Implement -> Validate -> Demo -> PR -> External completio
 - [x] Positive-path and negative-path validation recorded for each wave
 - [x] Demo runs before opening each wave PR
 - [x] `$(pwd)/scripts/run_all_tests.sh` run before each wave PR
-- [ ] PR opened/reviewed/merged before next wave starts
+- [x] PR opened/reviewed/merged before next wave starts
 - [x] Docs + traceability + roadmap/issue state updated before moving on
 
 ## Full Phase To-Do Plan
@@ -142,7 +142,7 @@ Secondary review paths:
 
 ### wave_clone_1: Iterator and Comprehension Ownership Correction
 - Status: completed
-- Implementation PR: pending (to be filled after merge)
+- Implementation PR: https://github.com/yaseralnajjar/sifr/pull/1395 (merged)
 - Scope:
   - implement the shared planner in `helpers.rs` or an equivalent focused support module
   - refactor iterator/comprehension lowering to derive decisions from planner output
@@ -180,6 +180,10 @@ Secondary review paths:
     - `scripts/run_all_tests.sh` -> PASS
   - wave traceability artifact:
     - `verification/stdlib/wave_clone_1_iterator_codegen_traceability.md`
+  - external review pass 1:
+    - artifact: `reviews/phase-ad-hoc-ownership-aware-collection-lowering-and-clone-elision-wave-clone-1-review-pass-1.md`
+    - applied actions: added explicit planner regression tests for `YieldMode::Clone` and conservative `YieldMode::Borrow` fallback
+    - deferred to `wave_clone_3`: tuple-literal `ValueCategory` classification hardening
 
 ### wave_clone_2: Indexing, Safe Indexing, Slicing, and Star-Unpack Ownership Correction
 - Status: not started
