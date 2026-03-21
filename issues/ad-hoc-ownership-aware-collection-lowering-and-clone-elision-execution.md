@@ -234,7 +234,7 @@ Secondary review paths:
 
 ### wave_clone_3: Generic Hardening, Regression Lock, and Closure
 - Status: completed
-- Implementation PR: pending (to be filled after merge)
+- Implementation PR: https://github.com/yaseralnajjar/sifr/pull/1402 (merged)
 - Scope:
   - harden `TypeVar`, `Any`, and union cases under the shared planner
   - ensure no unsound `.copied()` lowering is emitted for conservative types
@@ -275,6 +275,10 @@ Secondary review paths:
       - conservative `Any` iteration evidence: `for _v in anys.iter()` (no `.cloned()` / `.copied()`)
   - wave traceability artifact:
     - `verification/stdlib/wave_clone_3_generic_hardening_traceability.md`
+  - external review pass 1:
+    - artifact: `reviews/phase-ad-hoc-ownership-aware-collection-lowering-and-clone-elision-wave-clone-3-review-pass-1.md`
+    - applied actions: documented conservative-typing invariants on `is_conservative_element_type` so `Any`/`Unknown` handling and `TypeVar` separation are explicit for maintainers
+    - validation: `scripts/run_all_tests.sh`
 
 ## Suggested Regression Targets
 

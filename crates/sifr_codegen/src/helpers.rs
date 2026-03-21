@@ -66,6 +66,12 @@ pub(crate) fn classify_value_category(expr: &HirExpr) -> ValueCategory {
 }
 
 fn iteration_element_ownership(source_ty: &Type) -> Option<OwnershipKind> {
+    /// Returns `true` for element types where ownership cannot be inferred
+    /// soundly from iteration metadata.
+    ///
+    /// `TypeVar` is handled by `Type::ownership()` (which resolves to `Move`),
+    /// while this helper only marks dynamic/unknown shapes as conservative:
+    /// `Any`, `Unknown`, and unions/intersections that contain them.
     fn is_conservative_element_type(ty: &Type) -> bool {
         match ty.resolve_alias() {
             Type::Any | Type::Unknown => true,
