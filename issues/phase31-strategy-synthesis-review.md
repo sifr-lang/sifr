@@ -1,220 +1,280 @@
 # Phase 31 Strategy Synthesis Review
 
-Status: completed on 2026-03-14
+Status: current assessment on 2026-03-24
 
 Inputs reviewed:
+- `verification/leetcode/phase31_current_full_results_20260321.json`
 - `issues/phase31-ad-hoc-followup-milestones.md`
 - `issues/ad-hoc-full-recursive-type-feature.md`
 - `issues/ad-hoc-own-mut-parameter-convention.md`
-- `verification/leetcode/phase31_current_full_results_after_m31a_wave5_rerun.json`
-- `reviews/phase31-strategy-review-pass-1.md`
+- `issues/ad-hoc-full-nested-function-pipeline.md`
+- `issues/ad-hoc-structured-data-and-class-surface-parity-expansion.md`
+- `issues/ad-hoc-canonical-iteration-model-and-lazy-parity-closure.md`
+- `issues/ad-hoc-ownership-aware-collection-lowering-and-clone-elision.md`
 
 ## Question
 
-For the 35 still-failing Phase 31 LeetCode cases, decide case by case whether we should:
+For the current remaining Phase 31 seed-corpus failures, decide which work still belongs to:
 
-1. add or rely on a broader ad hoc language/compiler phase,
-2. fix the LeetCode fixture into canonical Sifr form,
-3. do both,
-4. or keep the work as ordinary Phase 31 compiler/runtime closure.
+1. a broader prerequisite phase,
+2. canonical Sifr fixture adaptation,
+3. ordinary compiler/runtime closure,
+4. or a combination of those.
 
-## Method
+## Current Measured State
 
-- Enumerated all 35 failing cases from `phase31_current_full_results_after_m31a_wave5_rerun.json`.
-- Validated the current milestone plan against the actual failure messages rather than milestone names alone.
-- Read representative failing fixtures directly, especially the ambiguous ones (`0043`, `0215`, `1046`, `0502`, `0743`, `1299`).
-- Ran local experiments with temporary `.sifr` files to distinguish:
-  - raw-source policy mismatches from real compiler gaps,
-  - multi-solution fixture noise from true language/runtime failures,
-  - and prerequisite language-surface work from normal closure work.
-- Spawned an external reviewer and validated their notes against the local evidence.
+Fresh current seed-corpus rerun:
 
-## Conclusion
+- `PASS=13`
+- `CHECK_ERROR=36`
+- `RUN_ERROR=1`
 
-We do **not** need any new broad ad hoc language-feature phases beyond the two already created:
+Current passing cases:
 
-- `issues/ad-hoc-full-recursive-type-feature.md`
-- `issues/ad-hoc-own-mut-parameter-convention.md`
+- `0003`
+- `0014`
+- `0039`
+- `0042`
+- `0069`
+- `0070`
+- `0198`
+- `0209`
+- `0217`
+- `1143`
+- `1456`
+- `1768`
+- `2235`
 
-What we need is a mixed strategy:
+## Current Conclusion
 
-- use those two ad hoc phases as prerequisites where the failing LeetCode cases truly depend on broader language features,
-- keep most remaining cases as ordinary Phase 31 compiler/runtime closure work,
-- and use canonical Sifr fixture rewrites only where the scraped Python source conflicts with intentional Sifr contracts or where the scraped file is not a canonical single-solution corpus fixture.
+The current strategy is:
 
-In short:
+- the only clearly remaining broad prerequisite for the Phase 31 seed corpus is the recursive-type phase
+- `own mut` is no longer a pending prerequisite because that phase is complete
+- the nested-function phase is no longer a pending prerequisite because that phase is complete
+- most of the remaining failures are now:
+  - canonical Sifr source adaptation work,
+  - ordinary residual compiler/runtime closure,
+  - or narrow follow-on bugs that remain after broader prerequisite phases already landed
 
-- **Broader prerequisite phases needed:** yes, but only the two already created
-- **Canonical Sifr fixture rewrites needed:** yes, in a small number of cases
-- **Both needed:** yes, for some cases
+## Broad Prerequisite Still Relevant
 
-## High-Level Decision
+### `prereq_recursive_types`
 
-### 1. Existing broad ad hoc phases are sufficient
+This still stands as the main remaining cross-phase dependency for the seed corpus.
 
-Only two failing surfaces justify broader feature phases:
+Current clearly recursive/tree-driven cases:
 
-- recursive types / recursive-node attribute surface
-- `own mut` parameter convention
+- `0100`
+- `0102`
+- `0235`
 
-No third cross-cutting ad hoc phase is justified by the remaining failures.
+Current failure shapes still point at recursive-type follow-on closure:
 
-### 2. Most remaining failures are ordinary compiler/runtime completion work
+- attribute-expression rejection on recursive nodes
+- `TreeNode` boundary/type resolution mismatches
+- tree helper signatures still not aligning cleanly with recursive node usage
 
-These are still the right kind of work to keep inside the Phase 31 carry-forward milestones:
+## Phases Already Consumed
 
-- container literal specialization
-- optional-flow proof completion
-- destructuring/composite lvalues
-- nested function pipeline
-- local name binding/shadowing
+These should no longer be described as pending prerequisites in the Phase 31 strategy:
 
-### 3. Some cases require both fixture adaptation and compiler work
+### `own mut`
 
-This is the main place where the earlier plan needed refinement:
+- `issues/ad-hoc-own-mut-parameter-convention.md` is complete
+- Phase 31 impact:
+  - `1299` is no longer blocked on missing language support
+  - it is now blocked on canonical fixture adaptation to explicit `own mut`
 
-- `0043` needs a canonical Sifr rewrite because raw `int(str)` violates Sifr parse-safety policy, **and** the canonical rewrite still exposes a real optional-index arithmetic gap.
-- `0215` and `1046` need fixture canonicalization because the scraped files contain multiple top-level solutions, **and** the canonicalized versions still expose real compiler gaps.
+### Nested Functions
 
-## Case-by-Case Classification
+- `issues/ad-hoc-full-nested-function-pipeline.md` is complete
+- Phase 31 impact:
+  - remaining nested-helper cases are no longer evidence that the broad nested-function phase is missing
+  - they are now residual follow-on bugs, unsupported subshapes, or downstream closure issues
 
-Legend:
-- `prereq + closure`: broader ad hoc phase first, then final Phase 31 LeetCode closure
-- `normal closure`: ordinary Phase 31 compiler/runtime work
-- `canonical + closure`: rewrite to canonical Sifr or canonical single-solution fixture, then finish remaining compiler/runtime closure
+## Current Open Buckets
 
-| ID | Current failure shape | Classification | Primary owner after review |
-| --- | --- | --- | --- |
-| `0001` | `dict[Any, Any]` indexing | normal closure | `m31_g` |
-| `0015` | local name resolves as function instead of int | normal closure | `m31_h` |
-| `0017` | nested helper leaves `Any` in dict/string indexing | normal closure | `m31_d` |
-| `0039` | nested helper leaves `Any` in comparisons/indexing | normal closure | `m31_d` |
-| `0043` | raw parse-safety mismatch + remaining optional arithmetic proof gap | canonical + closure | `m31_k` then `m31_a` |
-| `0050` | nested helper missing annotation/inference | normal closure | `m31_d` |
-| `0052` | nested helper / `nonlocal` shape | normal closure | `m31_d` |
-| `0053` | `nums[0]` remains `int | None` | normal closure | `m31_a` |
-| `0078` | nested helper leaves `Any` in control flow | normal closure | `m31_d` |
-| `0090` | nested helper leaves `Any` in indexing | normal closure | `m31_d` |
-| `0100` | recursive node attribute reads | prereq + closure | `prereq_recursive_types` then `m31_e` |
-| `0102` | recursive node attribute reads | prereq + closure | `prereq_recursive_types` then `m31_e` |
-| `0110` | recursive node attribute reads | prereq + closure | `prereq_recursive_types` then `m31_e` |
-| `0127` | `popleft()` / slice after non-empty proof | normal closure | `m31_a` |
-| `0207` | nested helper inference, with possible destructuring follow-on | normal closure | `m31_d` first |
-| `0215` | multi-solution scraped file; canonical sorting-only form still hits optional index proof gap | canonical + closure | `m31_i` then `m31_a` |
-| `0226` | recursive node attribute reads | prereq + closure | `prereq_recursive_types` then `m31_e` |
-| `0235` | recursive node attribute reads | prereq + closure | `prereq_recursive_types` then `m31_e` |
-| `0238` | list element remains `int | None` in arithmetic | normal closure | `m31_a` |
-| `0242` | empty dict specialization gap | normal closure | `m31_g` |
-| `0295` | tuple/attribute destructuring | normal closure | `m31_b` |
-| `0322` | guarded recurrence index still `int | None` | normal closure | `m31_a` |
-| `0424` | empty dict specialization gap | normal closure | `m31_g` |
-| `0502` | heap pop result remains `None | tuple[...]` | normal closure | `m31_a` |
-| `0523` | empty dict specialization gap | normal closure | `m31_g` |
-| `0560` | empty dict specialization gap | normal closure | `m31_g` |
-| `0684` | nested helper inference leaves `Any` in comparisons | normal closure | `m31_d` |
-| `0703` | tuple/attribute destructuring | normal closure | `m31_b` |
-| `0743` | heap pop result remains `None | tuple[...]` | normal closure | `m31_a` |
-| `0746` | fixed index remains `int | None` | normal closure | `m31_a` |
-| `0912` | nested helper inference missing | normal closure | `m31_d` |
-| `0997` | loop tuple target from `list[int]` | normal closure | `m31_b` |
-| `1046` | multi-solution scraped file; canonical typed form still hits optional heap/index arithmetic | canonical + closure | `m31_i` then `m31_a` |
-| `1209` | composite subscript mutation | normal closure | `m31_b` |
-| `1299` | borrowed parameter returned by value | prereq + closure | `prereq_own_mut` then `m31_j` |
+### 1. Canonical Sifr mutability / ownership adaptation
 
-## Key Experiments
+These fixtures now need explicit canonical Sifr parameter mutability or ownership at the source boundary:
 
-### `0043` is both a raw-source divergence and a real compiler gap
+- `0007`
+- `0009`
+- `0015`
+- `0043`
+- `0090`
+- `0127`
+- `0151`
+- `0215`
+- `0746`
+- `0912`
+- `1299`
 
-Evidence:
+Representative current failure shapes:
 
-- Raw fixture uses `int(num1[i1]) * int(num2[i2])`, which conflicts with intentional Sifr parse-safety (`Result[int, ParseError]`).
-- Raw fixture also uses `map(str, ...)`, and `str` is not currently available as a first-class callable.
+- `cannot reassign immutable parameter ... add mut to the parameter declaration`
+- `cannot mutate through immutable parameter ... add mut to the parameter declaration`
+- `cannot return borrowed parameter ... add own at the signature boundary or return clone()`
 
-Experiment:
+Interpretation:
 
-- A temporary canonicalized probe that replaced `int(ch)` with a safe local digit helper still failed with:
-  - `unsupported operand type(s) for %: 'int | None' and 'int'`
-  - `unsupported operand type(s) for //: 'int | None' and 'int'`
+- this is now a real current bucket in the seed corpus
+- it is mostly canonical source adaptation work, not a missing feature phase
 
-Conclusion:
+### 2. Canonical fixture normalization plus residual closure
 
-- `0043` is not just a raw-source rewrite issue.
-- It needs `m31_k` for canonical Sifr normalization **and then** `m31_a` for the remaining optional proof gap.
+These still need canonicalization before their remaining compiler bugs can be judged cleanly:
 
-### `0215` and `1046` do need fixture canonicalization
+- `0043`
+- `0215`
+- `1046`
 
-The external reviewer was directionally right that canonicalization alone does not close them, but wrong to say they are not fixture-shape issues.
+Current status:
 
-Evidence from source:
+- `0043` still mixes raw parse-safety mismatch with downstream compiler errors
+- `0215` still contains multiple top-level solution definitions and also hits mutability / return-typing follow-ons
+- `1046` still needs canonicalization and still degrades into `Any`-driven heap/math follow-ons
 
-- `0215` contains three top-level `findKthLargest` implementations.
-- `1046` contains two top-level `lastStoneWeight` implementations, one typed and one untyped.
+### 3. Container-literal / `Any` specialization closure
 
-Experiments:
+This bucket still clearly stands:
 
-- Canonical `0215` sorting-only probe still failed with:
-  - `return type mismatch: expected 'int', got 'int | None'`
-- Canonical typed `1046` probe still failed with:
-  - `abs() argument must be numeric, got 'int | None'`
-  - `unsupported operand type(s) for -: 'None | int' and 'None | int'`
+- `0001`
+- `0242`
+- `0424`
+- `0523`
+- `0560`
 
-Conclusion:
+Current representative failures:
 
-- `m31_i` is still needed to canonicalize these scraped fixtures.
-- But `m31_i` is not the final owner of passing them.
-- After canonicalization, both cases fall into ordinary compiler closure, primarily `m31_a`.
+- `cannot index type 'dict[Any, Any]' with ...`
+- `unsupported operand type(s) for +: 'int' and 'Any'`
+- `unsupported operand type(s) for -: 'int' and 'Any'`
 
-## External Reviewer Validation
+### 4. Optional-flow / arithmetic proof closure
 
-External review file:
-- `reviews/phase31-strategy-review-pass-1.md`
+This bucket still stands, although the exact cases have shifted:
 
-What the external review got right:
+- `0053`
+- `0238`
+- `0322`
+- parts of `0015`
+- parts of `0746`
 
-- the overall milestone structure is mostly sound
-- the two explicit prerequisites are the right broad ad hoc phases
-- `0043` is correctly recognized as a canonical-Sifr case
-- `m31_g`, `m31_a`, `m31_b`, `m31_d`, `m31_h`, `m31_e`, and `m31_j` are broadly the right buckets
+Current representative failures:
 
-What the external review got wrong or only partially right:
+- `type mismatch: expected 'int', got 'int | None'`
+- `unsupported operand type(s) for *: 'int | None' and 'int'`
+- `return type mismatch: expected 'int', got 'int | None'`
 
-- It said `0215` and `1046` are not multi-solution fixture issues. That is false; the fixture source files do contain multiple top-level solutions.
-- It recommended removing `0215` and `1046` from `m31_i`. That would lose the required corpus canonicalization step.
-- It treated `0043` as only a canonical rewrite issue, but the local experiments show the canonicalized form still needs `m31_a` closure.
+### 5. Residual nested-function follow-on bugs
 
-Best judgment:
+These are no longer blocked on the broad nested-function phase itself, but they still need cleanup after that phase:
 
-- keep `m31_i`, but make its role explicit: canonicalize first, then reclassify remaining failures into normal compiler milestones
-- keep `m31_k`, but make its role explicit: canonicalize `0043` first, then finish remaining compiler proof work under `m31_a`
+- `0017`
+- `0052`
+- `0078`
+- `0207`
+- `0684`
 
-## Final Recommendation
+Current representative failures:
 
-### Keep as explicit broad ad hoc prerequisites
+- `dict[str, str]` indexed by `str | None`
+- recursive nested `nonlocal` mutation still rejected explicitly
+- `Unknown`/`Any` flow into indexing
+- one run-time assertion failure:
+  - `0078`
 
-- `issues/ad-hoc-full-recursive-type-feature.md`
-- `issues/ad-hoc-own-mut-parameter-convention.md`
+### 6. Destructuring / class-surface follow-on closure
 
-### Do not add a new broad ad hoc phase
+These are still active residuals:
 
-No additional failing bucket currently justifies a third language-feature phase. The rest are either:
+- `0226`
+- `0295`
+- `0703`
+- `0743`
+- `0997`
+- `1209`
 
-- ordinary compiler/runtime closure work, or
-- corpus/canonicalization work plus ordinary compiler/runtime closure.
+Current representative failures:
 
-### Keep and tighten the Phase 31 milestones
+- `tuple unpacking target must be a simple name`
+- `for loop tuple target expects iterable elements of tuple type, got 'list[int]'`
+- class-field follow-ons like missing `large` / `minHeap`
+- composite mutation target failures
 
-- `m31_g`, `m31_a`, `m31_b`, `m31_d`, `m31_h`: keep as ordinary closure milestones
-- `m31_e`: keep as recursive-type prerequisite follow-on closure
-- `m31_j`: keep as `own mut` prerequisite follow-on closure
-- `m31_k`: keep, but explicitly mark `0043` as `canonical rewrite first, then m31_a`
-- `m31_i`: keep, but explicitly mark `0215` and `1046` as `canonicalize first, then reclassify into normal compiler milestones`
+### 7. Iterator / comparability / concrete iterable follow-on closure
+
+These cases still fail, but they should not currently be explained as missing the completed iteration-closure phases:
+
+- `0017`
+- `0207`
+- `0502`
+- `0743`
+- `1046`
+
+Current representative failures:
+
+- `for-loop iterable must have a statically-known element type`
+- `cannot iterate over type 'Iterator[tuple[int, int]]'`
+- tuple comparability / heap constraints not closing
+- `Any`-typed heap data still leaking into math and indexing
+
+### 8. Single-case residuals that have moved buckets
+
+- `0050`
+  - now a concrete float/int comparison closure bug, not primarily a nested-helper inference problem
+- `0110`
+  - now a bool/list/local-state closure bug, not primarily a recursive-attribute blocker
+
+## Current Case-by-Case Classification
+
+| ID | Current classification | Current primary owner |
+| --- | --- | --- |
+| `0001` | normal closure | container specialization |
+| `0007` | canonical fixture adaptation | explicit `mut` |
+| `0009` | canonical fixture adaptation | explicit `mut` |
+| `0015` | canonical fixture adaptation + closure | `mut` + local binding / optional-flow |
+| `0017` | normal closure | residual nested/iterable typing |
+| `0043` | canonical fixture adaptation + closure | canonical rewrite + mutability/typing cleanup |
+| `0050` | normal closure | numeric/typing cleanup |
+| `0052` | normal closure | residual nested unsupported subshape |
+| `0053` | normal closure | optional-flow |
+| `0078` | normal closure | run-time regression |
+| `0090` | canonical fixture adaptation + closure | explicit `mut` + list typing |
+| `0100` | prerequisite + closure | recursive types |
+| `0102` | prerequisite + closure | recursive types |
+| `0110` | normal closure | bool/local-state follow-on |
+| `0127` | canonical fixture adaptation + closure | `mut` + residual optional/iterable typing |
+| `0151` | canonical fixture adaptation | explicit `mut` |
+| `0207` | normal closure | residual nested/destructuring/iterable typing |
+| `0215` | canonical fixture adaptation + closure | multi-solution canonicalization + `mut` + return typing |
+| `0226` | canonical fixture adaptation + closure | ownership + destructuring follow-on |
+| `0235` | prerequisite + closure | recursive types |
+| `0238` | normal closure | optional-flow |
+| `0242` | normal closure | container specialization |
+| `0295` | normal closure | destructuring/class-surface follow-on |
+| `0322` | normal closure | optional-flow |
+| `0424` | normal closure | container specialization |
+| `0502` | normal closure | iterator/comparable residuals |
+| `0523` | normal closure | container specialization |
+| `0560` | normal closure | container specialization |
+| `0684` | normal closure | residual nested/index typing |
+| `0703` | normal closure | destructuring/class-surface follow-on |
+| `0743` | normal closure | destructuring/iterator/comparable residuals |
+| `0746` | canonical fixture adaptation + closure | `mut` + optional-flow |
+| `0912` | canonical fixture adaptation + closure | `mut` |
+| `0997` | normal closure | destructuring |
+| `1046` | canonical fixture adaptation + closure | multi-solution canonicalization + `Any`/heap residuals |
+| `1209` | normal closure | composite mutation / destructuring follow-on |
+| `1299` | canonical fixture adaptation | explicit `own mut` rewrite |
 
 ## Bottom Line
 
-The right strategy is **both**, but only in a narrow subset of cases:
+The currently valid Phase 31 strategy is:
 
-- broader ad hoc phase + closure: tree cases and `1299`
-- canonical fixture rewrite + closure: `0043`, `0215`, `1046`
-- normal compiler/runtime closure only: everything else
-
-That is the cleanest synthesis of the actual failing corpus.
+- keep recursive types as the main remaining broader prerequisite
+- treat `own mut` and nested functions as already-landed dependencies, not future blockers
+- treat a significant part of the remaining seed corpus as canonical Sifr fixture adaptation, especially around explicit `mut` / `own mut`
+- keep the rest in ordinary closure buckets: container specialization, optional-flow, destructuring/class follow-ons, iterator/comparability follow-ons, and one run-time regression
