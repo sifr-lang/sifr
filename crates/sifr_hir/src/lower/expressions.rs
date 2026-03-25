@@ -10,18 +10,11 @@ use super::builtin_calls::{
 };
 use super::bytes_methods::{resolve_bytes_method_type, resolve_str_encode_method_type};
 use super::classes::is_hashable_type;
-use super::compat_imports::{
-    resolve_bare_python_compat_call_alias, resolve_python_compat_call_alias,
-};
-use super::decimal_methods::{
-    decimal_conversion_error_type, resolve_decimal_method_type, validate_bigdecimal_string_literal,
-    validate_decimal_string_literal,
-};
+use super::compat_imports::{resolve_bare_python_compat_call_alias, resolve_python_compat_call_alias};
+use super::decimal_methods::{decimal_conversion_error_type, resolve_decimal_method_type, validate_bigdecimal_string_literal, validate_decimal_string_literal};
+use super::fstring_support::lower_fstring_expr;
 use super::guarded_index::guarded_sequence_index_result_type;
-use super::method_call_args::{
-    lower_function_call_args, lower_method_call_args, lower_signature_call_args,
-    validate_dict_update_arg, validate_list_extend_arg, validate_set_iterable_arg,
-};
+use super::method_call_args::{lower_function_call_args, lower_method_call_args, lower_signature_call_args, validate_dict_update_arg, validate_list_extend_arg, validate_set_iterable_arg};
 use super::mutating_methods::reject_immutable_parameter_method_mutation;
 use super::numeric_sentinels::{
     float_sentinel_expr, float_sentinel_kind_from_call, lower_sentinel_expr_for_name_domain,
@@ -31,16 +24,13 @@ use super::numeric_sentinels::{
 pub(super) use super::tuple_unpack::{lower_star_unpack_assign, lower_tuple_unpack_assign};
 use super::type_bounds::{type_satisfies_bound, type_satisfies_constraint};
 use super::typing_and_functions::resolve_annotation_expr;
-use super::{
-    collect_type_vars, decode_typevar_constraint, infer_type_var_bindings, substitute_type_vars,
-    LowerCtx,
-};
-use crate::hir_nodes::{HirExpr, HirFStringPart, HirIteratorOp, HirParam};
+use super::{collect_type_vars, decode_typevar_constraint, infer_type_var_bindings, substitute_type_vars, LowerCtx};
+use crate::hir_nodes::{HirExpr, HirIteratorOp, HirParam};
 use sifr_python_ast::{
     BoolOp, CmpOp, Expr, ExprAttribute, ExprBinOp, ExprBoolOp, ExprBytesLiteral, ExprCall,
-    ExprCompare, ExprDict, ExprDictComp, ExprFString, ExprGenerator, ExprIf, ExprLambda, ExprList,
+    ExprCompare, ExprDict, ExprDictComp, ExprGenerator, ExprIf, ExprLambda, ExprList,
     ExprListComp, ExprName, ExprNamed, ExprNumberLiteral, ExprSet, ExprSetComp, ExprSubscript,
-    ExprTuple, ExprUnaryOp, FStringElement, Number, Operator, UnaryOp,
+    ExprTuple, ExprUnaryOp, Number, Operator, UnaryOp,
 };
 use sifr_type_system::{
     make_union, type_check_binary_op, type_check_bool_op, type_check_comparison,
@@ -71,7 +61,7 @@ pub(super) fn lower_expr(expr: &Expr, ctx: &mut LowerCtx) -> Option<HirExpr> {
         Expr::Tuple(tuple) => lower_tuple_literal(tuple, ctx),
         Expr::Subscript(sub) => lower_subscript(sub, ctx),
         Expr::Attribute(attr) => lower_attribute(attr, ctx),
-        Expr::FString(fstring) => lower_fstring(fstring, ctx),
+        Expr::FString(fstring) => lower_fstring_expr(fstring, ctx),
         Expr::Named(named) => lower_named_expr(named, ctx),
         Expr::Lambda(lambda) => lower_lambda(lambda, ctx),
         Expr::ListComp(comp) => lower_list_comp(comp, ctx),
@@ -1970,36 +1960,6 @@ pub(super) fn lower_call(call: &ExprCall, ctx: &mut LowerCtx) -> Option<HirExpr>
     }
 }
 
-pub(super) fn lower_fstring(fstring: &ExprFString, ctx: &mut LowerCtx) -> Option<HirExpr> {
-    let mut parts = Vec::new();
-
-    for part in &fstring.value {
-        match part {
-            sifr_python_ast::FStringPart::Literal(s) => {
-                parts.push(HirFStringPart::Literal(s.to_string()));
-            }
-            sifr_python_ast::FStringPart::FString(fs) => {
-                for element in &fs.elements {
-                    match element {
-                        FStringElement::Literal(lit) => {
-                            parts.push(HirFStringPart::Literal(lit.value.to_string()));
-                        }
-                        FStringElement::Expression(expr_elem) => {
-                            let expr = lower_expr(&expr_elem.expression, ctx)?;
-                            parts.push(HirFStringPart::Expr(expr));
-                        }
-                    }
-                }
-            }
-        }
-    }
-
-    Some(HirExpr::FString {
-        parts,
-        ty: Type::Str,
-    })
-}
-
 pub(super) fn lower_list_literal(list: &ExprList, ctx: &mut LowerCtx) -> Option<HirExpr> {
     let mut elements = Vec::new();
     let mut elem_ty: Option<Type> = None;
@@ -2855,6 +2815,13 @@ pub(super) fn resolve_method_type(
                     ));
                     return None;
                 }
+                if !args[0].ty().is_assignable_to(key_ty) {
+                    ctx.error(format!(
+                        "dict.contains() key type '{}' is not compatible with dict key type '{}'",
+                        args[0].ty().display_name(),
+                        key_ty.display_name()
+                    ));
+                }
                 Some(Type::Bool)
             }
             "get" => {
@@ -2865,6 +2832,13 @@ pub(super) fn resolve_method_type(
                     ));
                     return None;
                 }
+                if !args[0].ty().is_assignable_to(key_ty) {
+                    ctx.error(format!(
+                        "dict.get() key type '{}' is not compatible with dict key type '{}'",
+                        args[0].ty().display_name(),
+                        key_ty.display_name()
+                    ));
+                }
                 if args.len() == 2 {
                     if !args[1].ty().is_assignable_to(val_ty) {
                         ctx.error(format!(
@@ -2873,8 +2847,14 @@ pub(super) fn resolve_method_type(
                             val_ty.display_name()
                         ));
                     }
-                    // dict.get(key, default) -> V (returns default if key not found)
-                    Some(*val_ty.clone())
+                    // When V is still unknown/Any (e.g. empty literal before specialization),
+                    // preserve precision from the provided default instead of leaking `Any`.
+                    if matches!(val_ty.as_ref(), Type::Any | Type::Unknown) {
+                        Some(args[1].ty().clone())
+                    } else {
+                        // dict.get(key, default) -> V (returns default if key not found)
+                        Some(*val_ty.clone())
+                    }
                 } else {
                     // dict.get(key) -> V | None
                     Some(Type::Union(vec![*val_ty.clone(), Type::None]))
@@ -2887,6 +2867,13 @@ pub(super) fn resolve_method_type(
                         args.len()
                     ));
                     return None;
+                }
+                if !args[0].ty().is_assignable_to(key_ty) {
+                    ctx.error(format!(
+                        "dict.pop() key type '{}' is not compatible with dict key type '{}'",
+                        args[0].ty().display_name(),
+                        key_ty.display_name()
+                    ));
                 }
                 if args.len() == 2 {
                     if !args[1].ty().is_assignable_to(val_ty) {
@@ -2909,6 +2896,13 @@ pub(super) fn resolve_method_type(
                         args.len()
                     ));
                     return None;
+                }
+                if !args[0].ty().is_assignable_to(key_ty) {
+                    ctx.error(format!(
+                        "dict.setdefault() key type '{}' is not compatible with dict key type '{}'",
+                        args[0].ty().display_name(),
+                        key_ty.display_name()
+                    ));
                 }
                 if !args[1].ty().is_assignable_to(val_ty) {
                     ctx.error(format!(

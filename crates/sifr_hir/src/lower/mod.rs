@@ -10,12 +10,14 @@ mod builtin_calls;
 mod bytes_methods;
 mod classes;
 mod compat_imports;
+mod container_literal_specialization;
 mod decimal_methods;
 mod diagnostics;
 mod expressions;
 #[cfg(test)]
 mod expressions_tests;
 mod for_loop_safety;
+mod fstring_support;
 mod function_flow;
 mod function_scopes;
 mod generic_inference;
@@ -130,9 +132,11 @@ pub(super) struct LowerCtx {
     sequence_pointers: Vec<SequencePointerFact>,
     numeric_sentinel_vars: HashMap<String, numeric_sentinels::NumericSentinelFact>,
     pending_numeric_sentinel_patches: HashMap<String, numeric_sentinels::NumericSentinelPatch>,
+    pending_container_specialization_patches: HashMap<String, Type>,
     sequence_shapes: Vec<sequence_shapes::SequenceShapeFact>,
     function_scopes: Vec<function_scopes::FunctionScopeState>,
     inferred_binding_hints: Vec<HashMap<String, Type>>,
+    empty_dict_specializations: HashMap<String, Type>,
 }
 impl LowerCtx {
     fn new() -> Self {
@@ -167,9 +171,11 @@ impl LowerCtx {
             sequence_pointers: Vec::new(),
             numeric_sentinel_vars: HashMap::new(),
             pending_numeric_sentinel_patches: HashMap::new(),
+            pending_container_specialization_patches: HashMap::new(),
             sequence_shapes: Vec::new(),
             function_scopes: Vec::new(),
             inferred_binding_hints: Vec::new(),
+            empty_dict_specializations: HashMap::new(),
         }
     }
     fn warn(&mut self, message: String) {

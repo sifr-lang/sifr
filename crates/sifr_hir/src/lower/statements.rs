@@ -1,27 +1,20 @@
 use super::binding_mutability::ensure_mutable_parameter_binding;
 use super::builtin_calls::callable_builtin_element_type;
 use super::classes::collect_literal_coverage;
+use super::container_literal_specialization::{apply_container_specialization_patches, type_contains_unknown_or_any, validate_subscript_assignment_target, validate_subscript_augassign_target};
 use super::diagnostics::{collect_raise_error_types, format_type_name, is_valid_error_type};
 use super::expressions::{lower_expr, lower_star_unpack_assign, lower_tuple_unpack_assign};
 use super::for_loop_safety::{is_collection_backed_iter_source, loop_body_mutates_iter_source};
 use super::function_flow::infer_function_return_type;
-use super::nonlocal_support::{
-    collect_declared_nonlocals, hir_body_calls_function, lower_nonlocal, should_rebind_simple_name,
-};
+use super::nonlocal_support::{collect_declared_nonlocals, hir_body_calls_function, lower_nonlocal, should_rebind_simple_name};
 use super::numeric_sentinels::{
     apply_numeric_sentinel_patches, domain_typed_sentinel_expr, numeric_domain_for_type,
     numeric_sentinel_kind,
 };
-use super::sequence_guard_detection::{
-    detect_false_exit_sequence_guards, detect_range_sequence_guards, detect_true_sequence_guards,
-    detect_while_sequence_guards,
-};
+use super::sequence_guard_detection::{detect_false_exit_sequence_guards, detect_range_sequence_guards, detect_true_sequence_guards, detect_while_sequence_guards};
 use super::sequence_pointers::record_sequence_pointer_fact;
 use super::sequence_shapes::sequence_shape_fact;
-use super::typing_and_functions::{
-    ast_convention_to_param, register_local_function_signature, register_local_function_symbol,
-    resolve_annotation_expr,
-};
+use super::typing_and_functions::{ast_convention_to_param, register_local_function_signature, register_local_function_symbol, resolve_annotation_expr};
 use super::LowerCtx;
 use crate::hir_nodes::{
     HirExceptHandler, HirExpr, HirFunction, HirIteratorOp, HirMatchArm, HirParam, HirPattern,
@@ -66,6 +59,10 @@ pub(super) fn lower_stmts(
             result.push(hir_stmt);
         }
         apply_numeric_sentinel_patches(&mut result, &mut ctx.pending_numeric_sentinel_patches);
+        apply_container_specialization_patches(
+            &mut result,
+            &mut ctx.pending_container_specialization_patches,
+        );
     }
     let _ = ctx.inferred_binding_hints.pop();
     result
@@ -83,18 +80,6 @@ fn predeclare_nested_function_symbols(
                 register_local_function_symbol(func, ctx);
             }
         }
-    }
-}
-
-fn type_contains_unknown_or_any(ty: &Type) -> bool {
-    match ty {
-        Type::Unknown | Type::Any => true,
-        Type::List(elem) => type_contains_unknown_or_any(elem),
-        Type::Dict(key, value) => {
-            type_contains_unknown_or_any(key) || type_contains_unknown_or_any(value)
-        }
-        Type::Tuple(elements) => elements.iter().any(type_contains_unknown_or_any),
-        _ => false,
     }
 }
 
@@ -1076,6 +1061,8 @@ pub(super) fn lower_ann_assign(ann: &StmtAnnAssign, ctx: &mut LowerCtx) -> Optio
         }
     }
 
+    ctx.empty_dict_specializations.remove(&name);
+    ctx.pending_container_specialization_patches.remove(&name);
     ctx.scope.define(name.clone(), declared_type.clone());
     if let Some(kind) = ann
         .value
@@ -1129,6 +1116,8 @@ pub(super) fn lower_chained_assign(assign: &StmtAssign, ctx: &mut LowerCtx) -> V
                 let existing = ctx.scope.lookup(&name);
                 if existing.is_some() {
                     // Reassignment
+                    ctx.empty_dict_specializations.remove(&name);
+                    ctx.pending_container_specialization_patches.remove(&name);
                     result.push(HirStmt::Assign {
                         name: name.clone(),
                         value: value.clone(),
@@ -1136,6 +1125,8 @@ pub(super) fn lower_chained_assign(assign: &StmtAssign, ctx: &mut LowerCtx) -> V
                 } else {
                     // New variable
                     ctx.scope.define(name.clone(), val_ty.clone());
+                    ctx.empty_dict_specializations.remove(&name);
+                    ctx.pending_container_specialization_patches.remove(&name);
                     result.push(HirStmt::Let {
                         name: name.clone(),
                         ty: val_ty.clone(),
@@ -1155,12 +1146,16 @@ pub(super) fn lower_chained_assign(assign: &StmtAssign, ctx: &mut LowerCtx) -> V
                 };
                 let existing = ctx.scope.lookup(&name);
                 if existing.is_some() {
+                    ctx.empty_dict_specializations.remove(&name);
+                    ctx.pending_container_specialization_patches.remove(&name);
                     result.push(HirStmt::Assign {
                         name: name.clone(),
                         value: name_expr,
                     });
                 } else {
                     ctx.scope.define(name.clone(), val_ty.clone());
+                    ctx.empty_dict_specializations.remove(&name);
+                    ctx.pending_container_specialization_patches.remove(&name);
                     result.push(HirStmt::Let {
                         name: name.clone(),
                         ty: val_ty.clone(),
@@ -1325,11 +1320,13 @@ pub(super) fn lower_assign(assign: &StmtAssign, ctx: &mut LowerCtx) -> Option<Hi
         }
         let index = lower_expr(&sub.slice, ctx)?;
         let value = lower_expr(&assign.value, ctx)?;
+        let object_ty =
+            validate_subscript_assignment_target(ctx, &obj_name, obj_ty, index.ty(), value.ty());
         return Some(HirStmt::SubscriptAssign {
             object: obj_name,
             index,
             value,
-            object_ty: obj_ty,
+            object_ty,
         });
     }
 
@@ -1402,6 +1399,8 @@ pub(super) fn lower_assign(assign: &StmtAssign, ctx: &mut LowerCtx) -> Option<Hi
         }
         ctx.clear_sequence_shape_fact(&name);
         record_sequence_pointer_fact(ctx, &name, &assign.value);
+        ctx.empty_dict_specializations.remove(&name);
+        ctx.pending_container_specialization_patches.remove(&name);
         Some(HirStmt::Assign { name, value })
     } else {
         // New variable (type inferred)
@@ -1423,6 +1422,8 @@ pub(super) fn lower_assign(assign: &StmtAssign, ctx: &mut LowerCtx) -> Option<Hi
         } else {
             ctx.clear_sequence_shape_fact(&name);
         }
+        ctx.empty_dict_specializations.remove(&name);
+        ctx.pending_container_specialization_patches.remove(&name);
         record_sequence_pointer_fact(ctx, &name, &assign.value);
         Some(HirStmt::Let {
             name,
@@ -1515,12 +1516,20 @@ pub(super) fn lower_aug_assign(aug: &StmtAugAssign, ctx: &mut LowerCtx) -> Optio
                 return None;
             }
         };
+        let object_ty = validate_subscript_augassign_target(
+            ctx,
+            &obj_name,
+            obj_ty,
+            index.ty(),
+            value.ty(),
+            op_str,
+        );
         return Some(HirStmt::SubscriptAugAssign {
             object: obj_name,
             index,
             op: op_str.to_string(),
             value,
-            object_ty: obj_ty,
+            object_ty,
         });
     }
 

@@ -122,6 +122,15 @@ These broader feature phases already exist and should no longer be treated as fu
 
 ## Execution Log
 
+- `2026-03-26`: `m31_g_container_literal_specialization_and_state_tracking` completed local validation and targeted corpus rerun.
+  - Execution report: `issues/phase31-ad-hoc-followup-milestones-execution.md`
+  - Targeted result artifact: `verification/leetcode/phase31_m31g_wave1_results.json`
+  - Targeted five-case status: `CHECK_ERROR=4`, `RUN_ERROR=1` (no remaining `dict[Any, Any]` / `Any` arithmetic failures in this slice)
+  - Reclassification summary:
+    - `0001` moved past the prior `dict[Any, Any]` check failure into run-stage optional/index follow-on closure
+    - `0242` moved past `Any` arithmetic into dict comparability / optional-key follow-on closure
+    - `0424` moved past dict/`Any` blockers into local-name follow-on closure
+    - `0523` and `0560` moved past dict/`Any` blockers into optional-flow follow-on closure
 - `2026-03-11`: `m31_c_stdlib_module_parity` slice 1 completed local validation and targeted corpus rerun.
   - Execution report: `issues/phase31-m31c-stdlib-module-parity-execution.md`
   - Targeted result artifact: `verification/leetcode/phase31_m31c_wave1_results.json`
