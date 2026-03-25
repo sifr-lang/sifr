@@ -30,6 +30,17 @@ Phase 31 itself is complete. This document is the carry-forward plan for the rem
 - Problems expected to be solvable in Sifr after this carry-forward: `37`
 - Known raw-source divergence requiring a canonical Sifr rewrite: `1` (`0043`)
 
+Current snapshot regression relative to the warmed `2026-03-13` rerun:
+
+- prior warmed state: `PASS=15`, `CHECK_ERROR=35`, `RUN_ERROR=0`
+- current snapshot: `PASS=13`, `CHECK_ERROR=36`, `RUN_ERROR=1`
+- changed ids:
+  - `0007`: `PASS -> CHECK_ERROR`
+  - `0009`: `PASS -> CHECK_ERROR`
+  - `0039`: `CHECK_ERROR -> PASS`
+  - `0078`: `CHECK_ERROR -> RUN_ERROR`
+  - `0151`: `PASS -> CHECK_ERROR`
+
 ## Planning Policy
 
 - Fix root causes, not one-off fixtures.
@@ -222,9 +233,9 @@ This order assumes the broader dependency phases are already landed and keeps th
   - support loop destructuring from known two-element items
   - support fixed-shape heterogeneous mutable cells used with subscript mutation
 - Affected ids:
-  - `0295`, `0703`, `0997`, `1209`
+  - `0226`, `0295`, `0703`, `0997`, `1209`
 - Definition of done:
-  - these four cases move past destructuring/composite-lvalue failures
+  - these five cases move past destructuring/composite-lvalue failures
   - regression coverage exists for attribute destructuring, loop tuple targets, and fixed-shape subscript augassign
 
 ### `m31_d_nested_function_pipeline_completion`
@@ -251,11 +262,10 @@ This order assumes the broader dependency phases are already landed and keeps th
   - builds on the already-landed recursive-type phase
   - verify that the landed recursive-type feature fully unblocks the tree LeetCode cases for this corpus
   - add any remaining corpus-specific regression coverage and demos needed for closure
-  - own the recursive-tree ownership follow-on for `0226` after canonical `own` adaptation at the source boundary
 - Affected ids:
-  - `0100`, `0102`, `0226`, `0235`
+  - `0100`, `0102`, `0235`
 - Definition of done:
-  - these four recursive-tree cases pass in the Phase 31 corpus on top of the landed recursive-type feature
+  - these three recursive-tree cases pass in the Phase 31 corpus on top of the landed recursive-type feature
   - any residual tree-case failure is either fixed as a narrow LeetCode closure bug or sent back to the recursive-type phase with a concrete gap report
   - regression coverage exists for the corpus-facing recursive-node behavior exercised by these problems
 

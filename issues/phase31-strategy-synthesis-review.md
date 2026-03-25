@@ -68,7 +68,7 @@ These should no longer be described as pending prerequisites in the Phase 31 str
 
 - `issues/ad-hoc-full-recursive-type-feature.md` has already landed its scoped feature work
 - Phase 31 impact:
-  - `0100`, `0102`, `0226`, and `0235` are now `m31_e` closure work, not blockers on a future prerequisite
+  - `0100`, `0102`, and `0235` are now `m31_e` closure work, not blockers on a future prerequisite
   - any residual recursive-tree failure should be treated as a concrete closure gap or sent back to the recursive-type phase with a specific gap report
 
 ### `own mut`
@@ -86,6 +86,23 @@ These should no longer be described as pending prerequisites in the Phase 31 str
   - they are now residual follow-on bugs, unsupported subshapes, or downstream closure issues
 
 ## Current Open Buckets
+
+### Snapshot Regression Note
+
+Compared with the warmed `2026-03-13` rerun (`PASS=15`, `CHECK_ERROR=35`, `RUN_ERROR=0`), the current `2026-03-21` snapshot regressed to `PASS=13`, `CHECK_ERROR=36`, `RUN_ERROR=1`.
+
+Concrete status changes:
+
+- `0007`: `PASS -> CHECK_ERROR`
+- `0009`: `PASS -> CHECK_ERROR`
+- `0039`: `CHECK_ERROR -> PASS`
+- `0078`: `CHECK_ERROR -> RUN_ERROR`
+- `0151`: `PASS -> CHECK_ERROR`
+
+Interpretation:
+
+- the current plan should treat this regression as real current scope rather than assuming the older `PASS=15` state is still authoritative
+- `0078` remains the highest-priority correctness regression because it is now the only run-time failure in the seed corpus
 
 ### 1. Canonical Sifr mutability / ownership adaptation
 
@@ -193,6 +210,7 @@ Interpretation:
 
 These are still active residuals:
 
+- `0226`
 - `0295`
 - `0703`
 - `0743`
@@ -205,6 +223,10 @@ Current representative failures:
 - `for loop tuple target expects iterable elements of tuple type, got 'list[int]'`
 - class-field follow-ons like missing `large` / `minHeap`
 - composite mutation target failures
+
+Interpretation:
+
+- `0226` is a tree-shaped case, but its current compiler blocker is attribute destructuring after canonical `own` adaptation, so the closure owner is `m31_b` rather than `m31_e`
 
 ### 7. Iterator / comparability / concrete iterable follow-on closure
 
@@ -258,7 +280,7 @@ Interpretation:
 | `0151` | canonical fixture adaptation | explicit `mut` |
 | `0207` | normal closure | residual nested/destructuring/iterable typing |
 | `0215` | canonical fixture adaptation + closure | multi-solution canonicalization + `mut` + return typing |
-| `0226` | canonical fixture adaptation + closure | recursive-tree ownership boundary + tuple-unpack follow-on |
+| `0226` | canonical fixture adaptation + closure | `own` adaptation + attribute destructuring under `m31_b` |
 | `0235` | normal closure | recursive-tree residual under `m31_e` |
 | `0238` | normal closure | optional-flow |
 | `0242` | targeted compiler feature | container specialization |
