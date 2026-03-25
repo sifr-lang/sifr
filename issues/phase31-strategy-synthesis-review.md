@@ -1,6 +1,6 @@
 # Phase 31 Strategy Synthesis Review
 
-Status: current assessment on 2026-03-24
+Status: current assessment on 2026-03-26
 
 Inputs reviewed:
 - `verification/leetcode/phase31_current_full_results_20260321.json`
@@ -19,7 +19,8 @@ For the current remaining Phase 31 seed-corpus failures, decide which work still
 1. a broader prerequisite phase,
 2. canonical Sifr fixture adaptation,
 3. ordinary compiler/runtime closure,
-4. or a combination of those.
+4. a targeted compiler feature,
+5. or a combination of those.
 
 ## Current Measured State
 
@@ -49,35 +50,26 @@ Current passing cases:
 
 The current strategy is:
 
-- the only clearly remaining broad prerequisite for the Phase 31 seed corpus is the recursive-type phase
+- no broad prerequisite phase remains open for the current seed corpus
 - `own mut` is no longer a pending prerequisite because that phase is complete
 - the nested-function phase is no longer a pending prerequisite because that phase is complete
+- container-literal specialization should be treated as a targeted compiler/type-inference feature inside the carry-forward plan, not as a trivial cleanup item
 - most of the remaining failures are now:
   - canonical Sifr source adaptation work,
   - ordinary residual compiler/runtime closure,
+  - explicit unsupported-shape boundaries that need a product decision or canonical workaround,
   - or narrow follow-on bugs that remain after broader prerequisite phases already landed
-
-## Broad Prerequisite Still Relevant
-
-### `prereq_recursive_types`
-
-This still stands as the main remaining cross-phase dependency for the seed corpus.
-
-Current clearly recursive/tree-driven cases:
-
-- `0100`
-- `0102`
-- `0235`
-
-Current failure shapes still point at recursive-type follow-on closure:
-
-- attribute-expression rejection on recursive nodes
-- `TreeNode` boundary/type resolution mismatches
-- tree helper signatures still not aligning cleanly with recursive node usage
 
 ## Phases Already Consumed
 
 These should no longer be described as pending prerequisites in the Phase 31 strategy:
+
+### Recursive Types
+
+- `issues/ad-hoc-full-recursive-type-feature.md` has already landed its scoped feature work
+- Phase 31 impact:
+  - `0100`, `0102`, `0226`, and `0235` are now `m31_e` closure work, not blockers on a future prerequisite
+  - any residual recursive-tree failure should be treated as a concrete closure gap or sent back to the recursive-type phase with a specific gap report
 
 ### `own mut`
 
@@ -107,6 +99,7 @@ These fixtures now need explicit canonical Sifr parameter mutability or ownershi
 - `0127`
 - `0151`
 - `0215`
+- `0226`
 - `0746`
 - `0912`
 - `1299`
@@ -136,7 +129,7 @@ Current status:
 - `0215` still contains multiple top-level solution definitions and also hits mutability / return-typing follow-ons
 - `1046` still needs canonicalization and still degrades into `Any`-driven heap/math follow-ons
 
-### 3. Container-literal / `Any` specialization closure
+### 3. Container-literal / `Any` specialization targeted compiler feature
 
 This bucket still clearly stands:
 
@@ -151,6 +144,11 @@ Current representative failures:
 - `cannot index type 'dict[Any, Any]' with ...`
 - `unsupported operand type(s) for +: 'int' and 'Any'`
 - `unsupported operand type(s) for -: 'int' and 'Any'`
+
+Interpretation:
+
+- this is not just ordinary closure work
+- it is a targeted compiler/type-inference feature that should still be delivered inside the Phase 31 carry-forward rather than spun into a separate broad prerequisite
 
 ### 4. Optional-flow / arithmetic proof closure
 
@@ -168,9 +166,9 @@ Current representative failures:
 - `unsupported operand type(s) for *: 'int | None' and 'int'`
 - `return type mismatch: expected 'int', got 'int | None'`
 
-### 5. Residual nested-function follow-on bugs
+### 5. Residual nested-function follow-ons and explicit boundary decisions
 
-These are no longer blocked on the broad nested-function phase itself, but they still need cleanup after that phase:
+These are no longer blocked on the broad nested-function phase itself, but they split into residual closure work and one explicit language-boundary decision:
 
 - `0017`
 - `0052`
@@ -181,16 +179,20 @@ These are no longer blocked on the broad nested-function phase itself, but they 
 Current representative failures:
 
 - `dict[str, str]` indexed by `str | None`
-- recursive nested `nonlocal` mutation still rejected explicitly
+- recursive nested `nonlocal` mutation still rejected explicitly at the current language boundary
 - `Unknown`/`Any` flow into indexing
 - one run-time assertion failure:
   - `0078`
+
+Interpretation:
+
+- `0017`, `0078`, `0207`, and `0684` remain residual compiler/runtime closure work
+- `0052` is not routine cleanup; it needs an explicit decision between extending recursive nested `nonlocal` support and adopting a canonical Sifr workaround pattern
 
 ### 6. Destructuring / class-surface follow-on closure
 
 These are still active residuals:
 
-- `0226`
 - `0295`
 - `0703`
 - `0743`
@@ -221,10 +223,16 @@ Current representative failures:
 - tuple comparability / heap constraints not closing
 - `Any`-typed heap data still leaking into math and indexing
 
-### 8. Single-case residuals that have moved buckets
+Interpretation:
+
+- `0502` is best treated as an iterator/comparability case with downstream `Any` leakage that may shrink once the container-specialization feature lands
+
+### 8. Single-case residuals and small current families
 
 - `0050`
   - now a concrete float/int comparison closure bug, not primarily a nested-helper inference problem
+- `0295`
+  - also includes a float/int comparison mismatch, so mixed numeric comparison is a small current family to watch rather than a one-off
 - `0110`
   - now a bool/list/local-state closure bug, not primarily a recursive-attribute blocker
 
@@ -232,34 +240,34 @@ Current representative failures:
 
 | ID | Current classification | Current primary owner |
 | --- | --- | --- |
-| `0001` | normal closure | container specialization |
+| `0001` | targeted compiler feature | container specialization |
 | `0007` | canonical fixture adaptation | explicit `mut` |
 | `0009` | canonical fixture adaptation | explicit `mut` |
 | `0015` | canonical fixture adaptation + closure | `mut` + local binding / optional-flow |
 | `0017` | normal closure | residual nested/iterable typing |
 | `0043` | canonical fixture adaptation + closure | canonical rewrite + mutability/typing cleanup |
 | `0050` | normal closure | numeric/typing cleanup |
-| `0052` | normal closure | residual nested unsupported subshape |
+| `0052` | explicit language-boundary decision | nested recursive `nonlocal` support or canonical workaround |
 | `0053` | normal closure | optional-flow |
 | `0078` | normal closure | run-time regression |
 | `0090` | canonical fixture adaptation + closure | explicit `mut` + list typing |
-| `0100` | prerequisite + closure | recursive types |
-| `0102` | prerequisite + closure | recursive types |
+| `0100` | normal closure | recursive-tree residual under `m31_e` |
+| `0102` | normal closure | recursive-tree residual under `m31_e` |
 | `0110` | normal closure | bool/local-state follow-on |
 | `0127` | canonical fixture adaptation + closure | `mut` + residual optional/iterable typing |
 | `0151` | canonical fixture adaptation | explicit `mut` |
 | `0207` | normal closure | residual nested/destructuring/iterable typing |
 | `0215` | canonical fixture adaptation + closure | multi-solution canonicalization + `mut` + return typing |
-| `0226` | canonical fixture adaptation + closure | ownership + destructuring follow-on |
-| `0235` | prerequisite + closure | recursive types |
+| `0226` | canonical fixture adaptation + closure | recursive-tree ownership boundary + tuple-unpack follow-on |
+| `0235` | normal closure | recursive-tree residual under `m31_e` |
 | `0238` | normal closure | optional-flow |
-| `0242` | normal closure | container specialization |
-| `0295` | normal closure | destructuring/class-surface follow-on |
+| `0242` | targeted compiler feature | container specialization |
+| `0295` | normal closure | numeric comparison + destructuring/class-surface follow-on |
 | `0322` | normal closure | optional-flow |
-| `0424` | normal closure | container specialization |
-| `0502` | normal closure | iterator/comparable residuals |
-| `0523` | normal closure | container specialization |
-| `0560` | normal closure | container specialization |
+| `0424` | targeted compiler feature + closure | container specialization + local name binding follow-on |
+| `0502` | normal closure | iterator/comparable residuals with downstream `Any` leakage |
+| `0523` | targeted compiler feature | container specialization |
+| `0560` | targeted compiler feature | container specialization |
 | `0684` | normal closure | residual nested/index typing |
 | `0703` | normal closure | destructuring/class-surface follow-on |
 | `0743` | normal closure | destructuring/iterator/comparable residuals |
@@ -274,7 +282,10 @@ Current representative failures:
 
 The currently valid Phase 31 strategy is:
 
-- keep recursive types as the main remaining broader prerequisite
+- no broad prerequisite phase remains open for the current seed corpus
 - treat `own mut` and nested functions as already-landed dependencies, not future blockers
+- treat recursive-tree failures as current `m31_e` closure work rather than waiting on another prerequisite
 - treat a significant part of the remaining seed corpus as canonical Sifr fixture adaptation, especially around explicit `mut` / `own mut`
-- keep the rest in ordinary closure buckets: container specialization, optional-flow, destructuring/class follow-ons, iterator/comparability follow-ons, and one run-time regression
+- treat container-literal specialization as a targeted compiler feature-sized item inside the carry-forward plan
+- treat `0052` as an explicit nested-function boundary decision rather than routine cleanup
+- keep the rest in ordinary closure buckets: optional-flow, destructuring/class follow-ons, iterator/comparability follow-ons, numeric follow-ons, and one run-time regression

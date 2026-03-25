@@ -1,14 +1,15 @@
 # Phase 31 Ad Hoc Follow-up Milestones
 
-Status: active follow-up plan on 2026-03-13
+Status: active follow-up plan on 2026-03-26
 Source inputs:
 
-- `verification/leetcode/phase31_current_full_results_after_m31a_wave5_rerun.json`
+- `verification/leetcode/phase31_current_full_results_20260321.json`
 - `verification/leetcode/phase31_failure_taxonomy.json`
 - `verification/leetcode/phase31_remediation_backlog.json`
 - `issues/full-leetcode-corpus-strategy-review.md`
 - `issues/ad-hoc-full-recursive-type-feature.md`
 - `issues/ad-hoc-own-mut-parameter-convention.md`
+- `issues/ad-hoc-full-nested-function-pipeline.md`
 
 ## Purpose
 
@@ -24,16 +25,16 @@ Phase 31 itself is complete. This document is the carry-forward plan for the rem
 ## Current Remaining Surface
 
 - Seed corpus size: `50`
-- Current passes: `15`
-- Remaining failing raw fixtures: `35`
-- Problems expected to be solvable in Sifr after this carry-forward: `35`
+- Current passes: `13`
+- Remaining failing raw fixtures: `37`
+- Problems expected to be solvable in Sifr after this carry-forward: `37`
 - Known raw-source divergence requiring a canonical Sifr rewrite: `1` (`0043`)
 
 ## Planning Policy
 
 - Fix root causes, not one-off fixtures.
 - Every in-scope LeetCode problem must end up solvable in Sifr.
-- If a required fix is already covered by a broader ad hoc language/compiler phase, make that phase a prerequisite and keep this Phase 31 plan focused on LeetCode closure after the prerequisite lands.
+- If a required fix is already covered by a broader ad hoc language/compiler phase, treat that phase as a dependency and keep this Phase 31 plan focused on LeetCode closure after the dependency is available.
 - A raw Python-shaped fixture may remain non-canonical only if it conflicts with an intentional Sifr language guarantee.
 - If a raw fixture is non-canonical, add a canonical Sifr variant and count that as the pass target.
 - Do not add fallback semantics that weaken ownership, type safety, or parse-safety guarantees.
@@ -65,43 +66,41 @@ Phase 31 itself is complete. This document is the carry-forward plan for the rem
 
 - When a failure is caused by a policy mismatch rather than a missing compiler capability, the milestone must target the canonical Sifr form of that problem, and the plan must record the raw fixture as a source divergence rather than treating the problem itself as unsupported.
 
-## Cross-Phase Prerequisites
+## Cross-Phase Dependencies Already Landed
 
-These are broader feature phases that must land before the related Phase 31 LeetCode closure milestones start.
+These broader feature phases already exist and should no longer be treated as future blockers in the current Phase 31 execution plan. Their remaining impact is closure work on the affected LeetCode cases.
 
-For the original 50-case seed corpus, the two prerequisites below were sufficient at plan time. A later broader corpus review showed that nested local functions are also broad enough to justify their own prerequisite phase, so `m31_d` should now be treated as follow-on LeetCode closure after that broader phase lands.
-### `prereq_recursive_types`
+### `dep_recursive_types`
 
 - Source phase: `issues/ad-hoc-full-recursive-type-feature.md`
-- Why it is a prerequisite:
-  - Phase 31 tree cases need recursive forward references and recursive-node field access
-  - the new ad hoc recursive-type phase intentionally owns the production-grade language feature and broader compiler architecture
-- Phase 31 responsibility after prerequisite lands:
-  - rerun the affected LeetCode cases
+- Current state:
+  - the broader recursive-type feature work is already landed
+  - `m31_e` now owns the remaining recursive-tree LeetCode closure work on top of that landed feature
+- Phase 31 responsibility now:
+  - rerun the affected tree cases
   - add any remaining corpus-specific regression coverage
-  - close the related Phase 31 milestone only when the LeetCode cases are passing
+  - fix the residual closure gaps or send a concrete gap report back to the recursive-type phase if the landed feature is still incomplete for those cases
 
-### `prereq_own_mut`
+### `dep_own_mut`
 
 - Source phase: `issues/ad-hoc-own-mut-parameter-convention.md`
-- Why it is a prerequisite:
-  - `1299` depends on `own mut` as a language feature, not a narrow LeetCode patch
-  - the new ad hoc `own mut` phase intentionally owns parser/HIR/codegen/ownership contract work
-- Phase 31 responsibility after prerequisite lands:
+- Current state:
+  - `own mut` support is already landed
+  - `m31_j` now owns only the canonical Sifr adaptation and closure work for `1299`
+- Phase 31 responsibility now:
   - rewrite `1299` into canonical Sifr form
   - rerun the case and lock the corpus/demo coverage
-  - close the related Phase 31 milestone only when the LeetCode case is passing
 
-### `prereq_nested_function_pipeline`
+### `dep_nested_function_pipeline`
 
 - Source phase: `issues/ad-hoc-full-nested-function-pipeline.md`
-- Why it is a prerequisite:
-  - the broader full-corpus review showed nested local functions are a real cross-cutting language/compiler feature rather than a seed-only compatibility patch
-  - the new ad hoc nested-function phase intentionally owns the production-grade lowering, inference, capture typing, and `nonlocal`-style behavior
-- Phase 31 responsibility after prerequisite lands:
+- Current state:
+  - the broader nested-function phase is already landed
+  - `m31_d` now owns only the residual seed-corpus closure work and any explicit scope-expansion decision for unsupported recursive `nonlocal` mutation
+- Phase 31 responsibility now:
   - rerun the seed nested-helper cases
   - add any remaining corpus-specific regression coverage
-  - close `m31_d` only when the Phase 31 cases are passing
+  - close `m31_d` only when the remaining Phase 31 cases are resolved or explicitly re-routed as a scoped feature-boundary decision
 
 ## Execution Log
 
@@ -165,20 +164,18 @@ For the original 50-case seed corpus, the two prerequisites below were sufficien
 
 ## Recommended Execution Order
 
-1. `prereq_recursive_types`
-2. `prereq_own_mut`
-3. `prereq_nested_function_pipeline`
-4. `m31_g_container_literal_specialization_and_state_tracking`
-5. `m31_a_optional_flow_completion`
-6. `m31_b_destructuring_and_composite_lvalues`
-7. `m31_d_nested_function_pipeline_completion`
-8. `m31_e_recursive_tree_surface_leetcode_closure`
-9. `m31_h_local_name_binding_and_shadowing`
-10. `m31_j_own_mut_leetcode_closure`
-11. `m31_k_canonical_sifr_fixture_normalization`
-12. `m31_i_corpus_fixture_canonicalization_for_multi_solution_files`
+1. `m31_g_container_literal_specialization_and_state_tracking`
+2. `m31_a_optional_flow_completion`
+3. `m31_b_destructuring_and_composite_lvalues`
+4. `m31_d_nested_function_pipeline_completion`
+5. `m31_e_recursive_tree_surface_leetcode_closure`
+6. `m31_l_tree_local_state_follow_on_closure`
+7. `m31_h_local_name_binding_and_shadowing`
+8. `m31_j_own_mut_leetcode_closure`
+9. `m31_k_canonical_sifr_fixture_normalization`
+10. `m31_i_corpus_fixture_canonicalization_for_multi_solution_files`
 
-This order starts with the broader feature prerequisites, then front-loads independent compiler wins, and keeps the related Phase 31 milestones focused on corpus closure rather than re-owning the prerequisite feature work.
+This order assumes the broader dependency phases are already landed and keeps the remaining work focused on current seed-corpus closure rather than re-owning those broader features.
 
 ## Milestones
 
@@ -187,6 +184,8 @@ This order starts with the broader feature prerequisites, then front-loads indep
 - Scope:
   - specialize empty container literals from later typed writes and reads
   - remove `Any` leakage through dictionary growth, `.get`, membership, and equality
+- Classification:
+  - this is a targeted compiler/type-inference feature inside the Phase 31 carry-forward, not a trivial one-off closure patch
 - Implementation notes:
   - use first-write specialization for empty literals
   - propagate the specialized key/value shape through subsequent reads, `.get(...)`, membership checks, and equality
@@ -231,7 +230,7 @@ This order starts with the broader feature prerequisites, then front-loads indep
 ### `m31_d_nested_function_pipeline_completion`
 
 - Scope:
-  - depends on `prereq_nested_function_pipeline`
+  - builds on the already-landed nested-function phase
   - finish lowering for remaining nested function shapes, including `nonlocal`
   - infer nested helper params/returns for the supported corpus patterns
   - eliminate generic `Any` fallback leakage from nested helper bodies
@@ -239,30 +238,46 @@ This order starts with the broader feature prerequisites, then front-loads indep
   - prefer usage-driven inference from nested helper call sites and captured-state operations rather than requiring manual annotations
   - flow argument and return expectations across recursive helpers, backtracking helpers, and captured mutable locals
   - keep this milestone corpus-driven rather than expanding into a broader nested-function feature redesign
+  - `0052` is not routine cleanup under the currently landed phase contract; closure for that case requires either a scoped nested-function feature extension for recursive `nonlocal` mutation or a canonical Sifr workaround decision
 - Affected ids:
-  - `0017`, `0039`, `0050`, `0052`, `0078`, `0090`, `0207`, `0684`, `0912`
+  - `0017`, `0050`, `0052`, `0078`, `0090`, `0207`, `0684`, `0912`
 - Definition of done:
-  - these nine cases move past nested-function and generic frontend failures
+  - these eight cases move past nested-function and generic frontend failures
   - the generic frontend bucket reaches zero for the Phase 31 corpus
 
 ### `m31_e_recursive_tree_surface_leetcode_closure`
 
 - Scope:
-  - depends on `prereq_recursive_types`
-  - verify that the recursive-type phase fully unblocks the tree LeetCode cases for this corpus
+  - builds on the already-landed recursive-type phase
+  - verify that the landed recursive-type feature fully unblocks the tree LeetCode cases for this corpus
   - add any remaining corpus-specific regression coverage and demos needed for closure
+  - own the recursive-tree ownership follow-on for `0226` after canonical `own` adaptation at the source boundary
 - Affected ids:
-  - `0100`, `0102`, `0110`, `0226`, `0235`
+  - `0100`, `0102`, `0226`, `0235`
 - Definition of done:
-  - these five tree cases pass in the Phase 31 corpus after the recursive-type prerequisite lands
+  - these four recursive-tree cases pass in the Phase 31 corpus on top of the landed recursive-type feature
   - any residual tree-case failure is either fixed as a narrow LeetCode closure bug or sent back to the recursive-type phase with a concrete gap report
   - regression coverage exists for the corpus-facing recursive-node behavior exercised by these problems
+
+### `m31_l_tree_local_state_follow_on_closure`
+
+- Scope:
+  - close tree-adjacent cases that are no longer primarily blocked on recursive-type support
+  - keep local-state, bool-flow, and helper-binding cleanup separate from the recursive-type milestone
+- Affected ids:
+  - `0110`
+- Definition of done:
+  - `0110` passes without being treated as evidence of a recursive-type gap
+  - regression coverage locks the bool/local-state behavior that blocked the case
 
 ### `m31_h_local_name_binding_and_shadowing`
 
 - Scope:
   - make local assignment shadow the enclosing function symbol immediately and consistently
   - audit same-block reads/comparisons so they resolve to the local binding
+- Follow-on note:
+  - `0015` is the primary owner case
+  - `0424` should be rechecked here if its current `undefined variable: 'r'` failure remains after `m31_g` removes the `dict[Any, Any]` blocker
 - Affected ids:
   - `0015`
 - Definition of done:
@@ -272,9 +287,9 @@ This order starts with the broader feature prerequisites, then front-loads indep
 ### `m31_j_own_mut_leetcode_closure`
 
 - Scope:
-  - depends on `prereq_own_mut`
+  - builds on the already-landed `own mut` feature
   - rewrite `1299` into canonical Sifr form using `own mut`
-  - verify corpus/demo/regression closure for the LeetCode problem after the prerequisite lands
+  - verify corpus/demo/regression closure for the LeetCode problem on top of the landed feature
 - Affected ids:
   - `1299`
 - Definition of done:
