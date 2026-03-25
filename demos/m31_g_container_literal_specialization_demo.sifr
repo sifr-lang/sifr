@@ -1,0 +1,15 @@
+# Milestone m31_g demo: empty dict literal specialization from typed writes/reads.
+
+def frequency_score(nums: list[int]) -> int:
+    counts = {}
+    for n in nums:
+        counts[n] = 1 + counts.get(n, 0)
+
+    score = 0
+    for n in nums:
+        score += counts.get(n, 0)
+    return score
+
+def main():
+    assert str(frequency_score([1, 2, 1])) == '5'
+    assert str(frequency_score([4, 4, 4])) == '9'

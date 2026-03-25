@@ -976,7 +976,10 @@ impl Type {
                 }
             }
             Self::Dict(key, val) => {
-                if index_ty == key.as_ref() {
+                if matches!(key.as_ref(), Type::Any | Type::Unknown)
+                    || index_ty.is_assignable_to(key)
+                    || key.is_assignable_to(index_ty)
+                {
                     // Safe indexing: returns Option[V] = V | None
                     Some(Type::Union(vec![*val.clone(), Type::None]))
                 } else {
@@ -1562,6 +1565,12 @@ mod tests {
             Some(Type::Union(vec![Type::Int, Type::None]))
         );
         assert_eq!(list_int.index_result_type(&Type::Str), None);
+
+        let dict_any_int = Type::Dict(Box::new(Type::Any), Box::new(Type::Int));
+        assert_eq!(
+            dict_any_int.index_result_type(&Type::Str),
+            Some(Type::Union(vec![Type::Int, Type::None]))
+        );
     }
 
     // --- M3: Union type tests ---

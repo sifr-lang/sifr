@@ -1035,3 +1035,24 @@ fn test_recursive_tree_attributes_narrow_after_truthiness_or_guard() {
         "recursive tree attributes should lower after `if not p or not q` early-return narrowing"
     );
 }
+
+#[test]
+fn test_empty_dict_literal_specializes_from_first_subscript_write_and_get_default() {
+    let result = lower_source(
+        "def main():\n    counts = {}\n    key: str = \"x\"\n    counts[key] = 1 + counts.get(key, 0)\n    value: int = counts.get(key, 0)\n    assert value == 1\n",
+    );
+    assert!(
+        result.is_ok(),
+        "empty dict literal should specialize to dict[str, int] from first write/get-default flow"
+    );
+}
+
+#[test]
+fn test_empty_dict_literal_conflicting_write_reports_deterministic_error() {
+    let result = lower_source("def main():\n    data = {}\n    data[1] = 10\n    data[\"x\"] = 20\n");
+    assert!(result.is_err());
+    let errors = result.unwrap_err();
+    assert!(errors
+        .iter()
+        .any(|error| error.message.contains("empty literal type conflict")));
+}
