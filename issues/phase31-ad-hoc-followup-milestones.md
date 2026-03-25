@@ -30,6 +30,17 @@ Phase 31 itself is complete. This document is the carry-forward plan for the rem
 - Problems expected to be solvable in Sifr after this carry-forward: `37`
 - Known raw-source divergence requiring a canonical Sifr rewrite: `1` (`0043`)
 
+Current snapshot regression relative to the warmed `2026-03-13` rerun:
+
+- prior warmed state: `PASS=15`, `CHECK_ERROR=35`, `RUN_ERROR=0`
+- current snapshot: `PASS=13`, `CHECK_ERROR=36`, `RUN_ERROR=1`
+- changed ids:
+  - `0007`: `PASS -> CHECK_ERROR`
+  - `0009`: `PASS -> CHECK_ERROR`
+  - `0039`: `CHECK_ERROR -> PASS`
+  - `0078`: `CHECK_ERROR -> RUN_ERROR`
+  - `0151`: `PASS -> CHECK_ERROR`
+
 ## Planning Policy
 
 - Fix root causes, not one-off fixtures.
@@ -44,6 +55,13 @@ Phase 31 itself is complete. This document is the carry-forward plan for the rem
   - demo evidence for the milestone scope,
   - `scripts/run_all_tests.sh --profile quick`,
   - `scripts/run_all_tests.sh`.
+
+## Language Rot Guardrails
+
+- Type-inference and narrowing milestones must implement general compositional rules, not corpus-driven pattern matches. If a general rule cannot be designed within the milestone scope, escalate the work into a broader feature phase rather than adding recognizers for seed-fixture shapes.
+- Post-phase closure milestones may fix bugs in already-landed architecture, but they must not silently extend the feature surface. If a seed-corpus case needs a new supported shape rather than a bug fix, route it back to the owning ad hoc phase with a concrete gap report.
+- Every type-inference or narrowing change must include at least one regression test on a shape that does not appear verbatim in the Phase 31 seed corpus. This guards against overfitting the compiler to the current LeetCode fixtures.
+- Canonical Sifr fixture adaptation remains the preferred path whenever the raw fixture conflicts with an intentional language guarantee and the needed source form is already supported in Sifr.
 
 ## Canonical Sifr Fixture Policy
 
@@ -187,14 +205,16 @@ This order assumes the broader dependency phases are already landed and keeps th
 - Classification:
   - this is a targeted compiler/type-inference feature inside the Phase 31 carry-forward, not a trivial one-off closure patch
 - Implementation notes:
-  - use first-write specialization for empty literals
-  - propagate the specialized key/value shape through subsequent reads, `.get(...)`, membership checks, and equality
+  - implement first-write specialization as a general forward-propagation rule in the type system, not as a recognizer for specific dict-usage idioms
+  - propagate the specialized key/value shape through subsequent reads, `.get(...)`, membership checks, equality, and other normal container consumers rather than only the exact operations observed in the current seed corpus
   - reject conflicting later writes with deterministic "empty literal type conflict" diagnostics
+  - do not add LeetCode-specific or fixture-specific branches to the type checker; the implementation must compose with the existing container type machinery
 - Affected ids:
   - `0001`, `0242`, `0424`, `0523`, `0560`
 - Definition of done:
   - these five cases move past `dict[Any, Any]` / `Any` arithmetic failures
   - regression coverage locks empty-literal specialization and conflicting-write diagnostics
+  - at least one regression case proves the specialization rule on a non-seed shape
 
 ### `m31_a_optional_flow_completion`
 
@@ -206,7 +226,8 @@ This order assumes the broader dependency phases are already landed and keeps th
   - non-empty queue/heap/list pop results under truthiness guards
   - subtractive/value-dependent recurrence indexing
 - Implementation notes:
-  - prefer a general forward-propagation rule for definite in-bounds access rather than adding more narrow special cases
+  - implement a general forward-propagation rule for definite in-bounds access; do not add narrow recognizers for individual access patterns
+  - derive narrowing from compositional proofs such as prior guards, known bounds, and arithmetic constraints rather than syntax-specific matches on seed-fixture code
   - track range/loop bounds, arithmetic offsets such as `i + 1` and `i + 2`, and first-element access after non-empty proofs
   - keep the existing no-implicit-unwrap rule outside proven-safe flow
 - Affected ids:
@@ -214,6 +235,7 @@ This order assumes the broader dependency phases are already landed and keeps th
 - Definition of done:
   - these seven cases move past `int | None`, `None | str`, and `None | tuple[...]` failures
   - regression coverage exists for guarded queue/heap pops and guarded recurrence indexing
+  - at least one regression case proves the narrowing rule on a non-seed shape
 
 ### `m31_b_destructuring_and_composite_lvalues`
 
@@ -222,9 +244,9 @@ This order assumes the broader dependency phases are already landed and keeps th
   - support loop destructuring from known two-element items
   - support fixed-shape heterogeneous mutable cells used with subscript mutation
 - Affected ids:
-  - `0295`, `0703`, `0997`, `1209`
+  - `0226`, `0295`, `0703`, `0997`, `1209`
 - Definition of done:
-  - these four cases move past destructuring/composite-lvalue failures
+  - these five cases move past destructuring/composite-lvalue failures
   - regression coverage exists for attribute destructuring, loop tuple targets, and fixed-shape subscript augassign
 
 ### `m31_d_nested_function_pipeline_completion`
@@ -237,13 +259,15 @@ This order assumes the broader dependency phases are already landed and keeps th
 - Implementation notes:
   - prefer usage-driven inference from nested helper call sites and captured-state operations rather than requiring manual annotations
   - flow argument and return expectations across recursive helpers, backtracking helpers, and captured mutable locals
-  - keep this milestone corpus-driven rather than expanding into a broader nested-function feature redesign
+  - keep this milestone focused on residual bugs in the already-landed nested-function architecture; do not add new supported shapes locally if they were outside the landed phase contract
+  - if a remaining seed case needs a genuinely new nested-function shape, send it back to the nested-function phase as a concrete gap report instead of patching it here
   - `0052` is not routine cleanup under the currently landed phase contract; closure for that case requires either a scoped nested-function feature extension for recursive `nonlocal` mutation or a canonical Sifr workaround decision
 - Affected ids:
   - `0017`, `0050`, `0052`, `0078`, `0090`, `0207`, `0684`, `0912`
 - Definition of done:
   - these eight cases move past nested-function and generic frontend failures
-  - the generic frontend bucket reaches zero for the Phase 31 corpus
+  - no Phase 31 seed case fails with a generic nested-function frontend error caused by a residual bug in the landed architecture
+  - every fix contributing to that result is a closure bug fix rather than a new special-case lowering path
 
 ### `m31_e_recursive_tree_surface_leetcode_closure`
 
@@ -251,11 +275,10 @@ This order assumes the broader dependency phases are already landed and keeps th
   - builds on the already-landed recursive-type phase
   - verify that the landed recursive-type feature fully unblocks the tree LeetCode cases for this corpus
   - add any remaining corpus-specific regression coverage and demos needed for closure
-  - own the recursive-tree ownership follow-on for `0226` after canonical `own` adaptation at the source boundary
 - Affected ids:
-  - `0100`, `0102`, `0226`, `0235`
+  - `0100`, `0102`, `0235`
 - Definition of done:
-  - these four recursive-tree cases pass in the Phase 31 corpus on top of the landed recursive-type feature
+  - these three recursive-tree cases pass in the Phase 31 corpus on top of the landed recursive-type feature
   - any residual tree-case failure is either fixed as a narrow LeetCode closure bug or sent back to the recursive-type phase with a concrete gap report
   - regression coverage exists for the corpus-facing recursive-node behavior exercised by these problems
 
