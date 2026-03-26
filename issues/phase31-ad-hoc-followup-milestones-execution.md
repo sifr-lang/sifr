@@ -375,4 +375,35 @@ Loop contract per milestone: Plan -> Implement -> Validate -> Demo -> PR -> Revi
 
 ### Slice closeout status
 - Slice 12 goal satisfied for fixed-index len-guard closure and canonical source alignment on `0053`/`0746`.
-- Remaining `m31_a` work is now the narrower set: `0127`, `0322`, `0502`, `0743`.
+- Remaining `m31_a` work was narrowed to `0127`, `0322`, `0502`, `0743`.
+
+## Milestone: `m31_a_optional_flow_completion` (slice 13: canonical coin-change bounded recurrence)
+
+### Scope for this slice
+- Close the remaining `0322` optional-flow blocker via canonical Sifr-safe bounded-index recurrence form.
+- Keep root-cause handling explicit and avoid fallback semantics.
+
+### Root-cause changes
+- Canonicalized `0322` fixture into bounded-index recurrence shape:
+  - switched DP allocation to append-based construction
+  - introduced `prev = a - c`
+  - guarded recurrence reads with `prev >= 0 and prev < len(dp)`
+  - guarded terminal index read with `if amount >= len(dp): return -1`
+  - file: `audits/leetcode/0322_coin_change.sifr`
+- Added slice demo:
+  - `demos/phase31_coin_change_canonical_bounded_recurrence_demo.sifr`
+
+### Targeted corpus evidence
+- Artifact: `verification/leetcode/phase31_m31a_wave13_canonical_coin_change_results.json`
+- Targeted ids: `0127`, `0322`, `0502`, `0743`
+- Status snapshot:
+  - `PASS=1`, `CHECK_ERROR=3`
+  - new pass: `0322`
+
+### Local validation evidence
+- `scripts/run_all_tests.sh --profile quick` (pass)
+- `scripts/run_all_tests.sh` (pass)
+
+### Slice closeout status
+- Slice 13 goal satisfied for `0322` canonical bounded-recurrence closure.
+- Remaining `m31_a` work is now the narrower set: `0127`, `0502`, `0743`.

@@ -122,6 +122,12 @@ These broader feature phases already exist and should no longer be treated as fu
 
 ## Execution Log
 
+- `2026-03-26`: `m31_a_optional_flow_completion` slice 13 completed local validation for canonical coin-change bounded recurrence closure.
+  - Execution report: `issues/phase31-m31a-canonical-coin-change-execution.md`
+  - Demo: `demos/phase31_coin_change_canonical_bounded_recurrence_demo.sifr`
+  - Targeted result artifact: `verification/leetcode/phase31_m31a_wave13_canonical_coin_change_results.json`
+  - Targeted four-case status: `PASS=1`, `CHECK_ERROR=3`
+  - Confirmed new pass: `0322_coin_change`
 - `2026-03-26`: `m31_a_optional_flow_completion` slice 12 completed local validation for fixed-index len-guard closure and canonical source alignment.
   - Execution report: `issues/phase31-m31a-fixed-index-len-guard-execution.md`
   - Demo: `demos/phase31_fixed_index_len_guard_demo.sifr`
@@ -288,20 +294,20 @@ This order assumes the broader dependency phases are already landed and keeps th
   - guarded `pop`/`popleft` reads now narrow under non-empty flow guards (`while seq:` / truthiness guards), removing optional pop leakage
   - guarded queue-pop narrowing now includes safe `pop(0)` plus deque guarded pop/popleft shapes (slice 11)
   - fixed-index len-guard closure is landed for `len(...) < / <=` false-exit proofs, and canonical fixture alignment landed `0053`/`0746` (slice 12)
+  - canonical bounded-recurrence closure is landed for `0322` (slice 13)
   - remaining optional-flow work is now the narrower closure set below
 - Remaining root-cause scope:
-  - fixed-index reads after length guards
   - non-empty queue/heap/list pop results under truthiness guards
-  - subtractive/value-dependent recurrence indexing
+  - residual optional tuple/heap-pop flow in graph/priority-queue cases
 - Implementation notes:
   - implement a general forward-propagation rule for definite in-bounds access; do not add narrow recognizers for individual access patterns
   - derive narrowing from compositional proofs such as prior guards, known bounds, and arithmetic constraints rather than syntax-specific matches on seed-fixture code
   - track range/loop bounds, arithmetic offsets such as `i + 1` and `i + 2`, and first-element access after non-empty proofs
   - keep the existing no-implicit-unwrap rule outside proven-safe flow
 - Affected ids:
-  - `0127`, `0322`, `0502`, `0743`
+  - `0127`, `0502`, `0743`
 - Definition of done:
-  - these seven cases move past `int | None`, `None | str`, and `None | tuple[...]` failures
+  - remaining owner cases move past `int | None`, `None | str`, and `None | tuple[...]` failures
   - regression coverage exists for guarded queue/heap pops and guarded recurrence indexing
   - at least one regression case proves the narrowing rule on a non-seed shape
 
