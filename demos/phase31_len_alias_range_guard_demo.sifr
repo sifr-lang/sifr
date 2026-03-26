@@ -23,9 +23,23 @@ def sum_reverse_while(nums: list[int]) -> int:
         i -= 1
     return total
 
+def append_growth_product(nums: list[int]) -> int:
+    n: int = len(nums)
+    weights: list[int] = []
+    for i in range(n):
+        weights.append(1)
+    i: int = n - 1
+    product: int = 1
+    while i >= 0:
+        product = product * weights[i]
+        i -= 1
+    return product
+
 def main():
     assert sum_forward([4, 5, 6]) == 15
     assert sum_reverse([1, 2, 3, 4]) == 10
     assert sum_reverse([]) == 0
     assert sum_reverse_while([1, 2, 3, 4]) == 10
     assert sum_reverse_while([]) == 0
+    assert append_growth_product([2, 3, 4]) == 1
+    assert append_growth_product([]) == 1

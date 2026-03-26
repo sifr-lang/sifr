@@ -5,6 +5,7 @@ use sifr_python_ast::{Expr, ExprCall, Stmt};
 use sifr_type_system::{make_union, FunctionType, Type};
 use std::collections::HashMap;
 mod arithmetic_warnings;
+mod append_growth_shapes;
 mod binding_mutability;
 mod builtin_calls;
 mod bytes_methods;
