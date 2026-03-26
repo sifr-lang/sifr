@@ -4353,6 +4353,7 @@ impl RustEmitter {
             } else if let HirStmt::FieldAssign {
                 object,
                 field,
+                field_ty,
                 value,
             } = stmt
             {
@@ -4363,6 +4364,13 @@ impl RustEmitter {
                 let Some(value_expr) = self.lower_stmt_expr_for_ir(value)? else {
                     return Ok(None);
                 };
+                let value_expr = self.adapt_field_assign_value_for_recursive_storage(
+                    object,
+                    field,
+                    field_ty,
+                    value_expr,
+                    value.ty(),
+                );
                 (
                     vec![RustStmt::Assign {
                         target,
@@ -6585,6 +6593,7 @@ impl RustEmitter {
         let HirStmt::FieldAssign {
             object,
             field,
+            field_ty,
             value,
         } = stmt
         else {
@@ -6630,29 +6639,101 @@ impl RustEmitter {
         let Some(value_expr) = self.lower_stmt_expr_for_ir(value)? else {
             return Ok(false);
         };
-        let value_expr = if object == "self"
-            && self.current_class_name.as_ref().is_some_and(|class_name| {
-                self.recursive_fields
-                    .contains(&(class_name.clone(), field.clone()))
-            })
-            && !Self::is_box_new_call_expr_for_ir(&value_expr)
-        {
-            crate::RustExpr::FnCall {
-                func: Box::new(crate::RustExpr::Path(vec![
-                    "Box".to_string(),
-                    "new".to_string(),
-                ])),
-                args: vec![value_expr],
-            }
-        } else {
-            value_expr
-        };
+        let value_expr = self.adapt_field_assign_value_for_recursive_storage(
+            object,
+            field,
+            field_ty,
+            value_expr,
+            value.ty(),
+        );
         let lowered = crate::RustStmt::Assign {
             target,
             value: value_expr,
         };
         self.emit_lowered_stmts(std::slice::from_ref(&lowered));
         Ok(true)
+    }
+
+    fn optional_recursive_class_name(field_ty: &Type) -> Option<String> {
+        let Type::Union(members) = field_ty.resolve_alias() else {
+            return None;
+        };
+        let mut class_name: Option<String> = None;
+        let mut has_none = false;
+        for member in members {
+            match member.resolve_alias() {
+                Type::Class { name, .. } => class_name = Some(name.clone()),
+                Type::None => has_none = true,
+                _ => {}
+            }
+        }
+        if has_none {
+            class_name
+        } else {
+            None
+        }
+    }
+
+    fn recursive_field_needs_boxing(&self, object: &str, field: &str, field_ty: &Type) -> bool {
+        if object == "self"
+            && self.current_class_name.as_ref().is_some_and(|class_name| {
+                self.recursive_fields
+                    .contains(&(class_name.clone(), field.to_string()))
+            })
+        {
+            return true;
+        }
+        if let Some(class_name) = Self::optional_recursive_class_name(field_ty) {
+            return self
+                .recursive_fields
+                .contains(&(class_name, field.to_string()));
+        }
+        false
+    }
+
+    fn adapt_field_assign_value_for_recursive_storage(
+        &self,
+        object: &str,
+        field: &str,
+        field_ty: &Type,
+        value_expr: RustExpr,
+        value_ty: &Type,
+    ) -> RustExpr {
+        if !self.recursive_field_needs_boxing(object, field, field_ty) {
+            return value_expr;
+        }
+
+        let Some(class_name) = Self::optional_recursive_class_name(field_ty) else {
+            if !Self::is_box_new_call_expr_for_ir(&value_expr) {
+                return RustExpr::FnCall {
+                    func: Box::new(RustExpr::Path(vec!["Box".to_string(), "new".to_string()])),
+                    args: vec![value_expr],
+                };
+            }
+            return value_expr;
+        };
+
+        let value_class_matches = matches!(
+            value_ty.resolve_alias(),
+            Type::Class { name, .. } if name == &class_name
+        );
+
+        if value_class_matches {
+            let boxed_expr = if Self::is_box_new_call_expr_for_ir(&value_expr) {
+                value_expr
+            } else {
+                RustExpr::FnCall {
+                    func: Box::new(RustExpr::Path(vec!["Box".to_string(), "new".to_string()])),
+                    args: vec![value_expr],
+                }
+            };
+            return RustExpr::FnCall {
+                func: Box::new(RustExpr::Path(vec!["Some".to_string()])),
+                args: vec![boxed_expr],
+            };
+        }
+
+        value_expr
     }
 
     pub(crate) fn try_lower_structured_attribute_subscript_assign_stmt(

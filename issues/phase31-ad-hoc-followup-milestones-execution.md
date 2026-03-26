@@ -19,7 +19,7 @@ Loop contract per milestone: Plan -> Implement -> Validate -> Demo -> PR -> Revi
 ## Full Milestone To-Do (ordered)
 1. [x] `m31_g_container_literal_specialization_and_state_tracking`
 2. [x] `m31_a_optional_flow_completion`
-3. [ ] `m31_b_destructuring_and_composite_lvalues`
+3. [x] `m31_b_destructuring_and_composite_lvalues`
 4. [ ] `m31_d_nested_function_pipeline_completion`
 5. [ ] `m31_e_recursive_tree_surface_leetcode_closure`
 6. [ ] `m31_l_tree_local_state_follow_on_closure`
@@ -518,3 +518,34 @@ Loop contract per milestone: Plan -> Implement -> Validate -> Demo -> PR -> Revi
 ### Slice closeout status
 - Slice 1 goal satisfied for tuple-attribute unpack lowering and non-tree m31_b canonical closure.
 - `m31_b` remains open for the residual `0226` run-stage boxed optional-tree lowering gap.
+
+## Milestone: `m31_b_destructuring_and_composite_lvalues` (slice 2: recursive optional field boxing closure)
+
+### Scope for this slice
+- Close the remaining `0226` run-stage boxed optional-tree field assignment gap.
+- Implement root-cause assignment coercion for recursive optional class fields instead of fixture-specific fallback logic.
+
+### Root-cause changes
+- Added field type to HIR field assignment nodes:
+  - `crates/sifr_hir/src/hir_nodes.rs`
+  - `crates/sifr_hir/src/lower/statements.rs`
+- Added recursive optional-field assignment coercion in codegen:
+  - wraps `T` into `Some(Box::new(T))` where target field is recursive `T | None`
+  - preserves direct `None` assignment
+  - files: `crates/sifr_codegen/src/stmt_support_emitter.rs`, `crates/sifr_codegen/src/lower_stmt.rs`
+- Kept targeted tuple-attribute regression coverage green after the coercion update.
+
+### Targeted corpus evidence
+- Artifact: `verification/leetcode/phase31_m31b_wave4_recursive_field_boxing_results.json`
+- Targeted ids: `0226`, `0295`, `0703`, `0997`, `1209`
+- Status snapshot:
+  - `NO_ORACLE=3`, `PASS=2`
+  - `0226` moved from `RUN_ERROR` to `NO_ORACLE`
+
+### Local validation evidence
+- `scripts/run_all_tests.sh --profile quick` (pass)
+- `scripts/run_all_tests.sh` (pass)
+
+### Slice closeout status
+- Slice 2 goal satisfied for recursive optional-field assignment boxing.
+- `m31_b_destructuring_and_composite_lvalues` is now closed.

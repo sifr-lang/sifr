@@ -189,6 +189,7 @@ pub enum HirStmt {
     FieldAssign {
         object: String,
         field: String,
+        field_ty: Type,
         value: HirExpr,
     },
     /// Subscript assignment: list[i] = val or dict[key] = val
