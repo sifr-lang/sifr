@@ -22,7 +22,7 @@ Loop contract per milestone: Plan -> Implement -> Validate -> Demo -> PR -> Revi
 3. [x] `m31_b_destructuring_and_composite_lvalues`
 4. [x] `m31_d_nested_function_pipeline_completion`
 5. [x] `m31_e_recursive_tree_surface_leetcode_closure`
-6. [ ] `m31_l_tree_local_state_follow_on_closure`
+6. [x] `m31_l_tree_local_state_follow_on_closure`
 7. [ ] `m31_h_local_name_binding_and_shadowing`
 8. [ ] `m31_j_own_mut_leetcode_closure`
 9. [ ] `m31_k_canonical_sifr_fixture_normalization`
@@ -635,3 +635,35 @@ Loop contract per milestone: Plan -> Implement -> Validate -> Demo -> PR -> Revi
 ### Slice closeout status
 - Slice 1 goal satisfied for recursive-tree owner cases in current corpus mode.
 - `m31_e_recursive_tree_surface_leetcode_closure` is now closed.
+
+## Milestone: `m31_l_tree_local_state_follow_on_closure` (slice 1: canonical bool/local-state closure on balanced tree)
+
+### Scope for this slice
+- Close `0110` as a tree-local-state follow-on, separate from recursive-type feature ownership.
+- Remove mixed bool/list local-state typing leakage in the recursive helper shape.
+
+### Root-cause changes
+- Canonicalized `0110` recursive helper from mixed `[bool, int]` list payload to sentinel-height integer recursion:
+  - file: `audits/leetcode/0110_balanced_binary_tree.sifr`
+- Added slice demo:
+  - `demos/phase31_m31l_tree_local_state_closure_demo.sifr`
+
+### Targeted corpus evidence
+- Artifact: `verification/leetcode/phase31_m31l_wave2_tree_local_state_closure_results.json`
+- Targeted ids: `0110`
+- Status snapshot:
+  - `NO_ORACLE=1`
+  - moved to green status:
+    - `0110` -> `NO_ORACLE`
+
+### Demo evidence
+- `cargo run -q -p sifr -- check demos/phase31_m31l_tree_local_state_closure_demo.sifr` (pass)
+- `cargo run -q -p sifr -- run demos/phase31_m31l_tree_local_state_closure_demo.sifr` (pass)
+
+### Local validation evidence
+- `scripts/run_all_tests.sh --profile quick` (pass)
+- `scripts/run_all_tests.sh` (pass)
+
+### Slice closeout status
+- Slice 1 goal satisfied for tree local-state follow-on closure in current corpus mode.
+- `m31_l_tree_local_state_follow_on_closure` is now closed.

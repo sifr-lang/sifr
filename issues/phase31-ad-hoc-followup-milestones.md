@@ -122,6 +122,15 @@ These broader feature phases already exist and should no longer be treated as fu
 
 ## Execution Log
 
+- `2026-03-26`: `m31_l_tree_local_state_follow_on_closure` slice 1 completed canonical tree local-state closure.
+  - Execution report: `issues/phase31-m31l-tree-local-state-closure-execution.md`
+  - Demo: `demos/phase31_m31l_tree_local_state_closure_demo.sifr`
+  - Targeted result artifact: `verification/leetcode/phase31_m31l_wave2_tree_local_state_closure_results.json`
+  - Targeted one-case status: `NO_ORACLE=1`
+  - Reclassification result:
+    - `0110_balanced_binary_tree`: `CHECK_ERROR -> NO_ORACLE`
+  - Milestone closure:
+    - `m31_l_tree_local_state_follow_on_closure` owner scope is now closed
 - `2026-03-26`: `m31_e_recursive_tree_surface_leetcode_closure` slice 1 completed canonical recursive-tree surface closure.
   - Execution report: `issues/phase31-m31e-recursive-tree-canonical-closure-execution.md`
   - Demo: `demos/phase31_m31e_recursive_tree_closure_demo.sifr`
@@ -434,11 +443,14 @@ This order assumes the broader dependency phases are already landed and keeps th
 
 ### `m31_l_tree_local_state_follow_on_closure`
 
+- Current execution status (`2026-03-26`):
+  - canonical tree local-state closure landed for `0110`
+  - owner scope is now closed
 - Scope:
   - close tree-adjacent cases that are no longer primarily blocked on recursive-type support
   - keep local-state, bool-flow, and helper-binding cleanup separate from the recursive-type milestone
 - Affected ids:
-  - `0110`
+  - `0110` (closed in slice 1)
 - Definition of done:
   - `0110` passes without being treated as evidence of a recursive-type gap
   - regression coverage locks the bool/local-state behavior that blocked the case
