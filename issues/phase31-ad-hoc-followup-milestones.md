@@ -1,6 +1,6 @@
 # Phase 31 Ad Hoc Follow-up Milestones
 
-Status: complete follow-up plan closure and review-pass hardening on 2026-03-26
+Status: complete follow-up plan closure with production-grade review confirmation on 2026-03-26
 Source inputs:
 
 - `verification/leetcode/phase31_current_full_results_20260321.json`
@@ -126,6 +126,12 @@ These broader feature phases already exist and should no longer be treated as fu
 
 ## Execution Log
 
+- `2026-03-26`: external review pass 2 production-grade check completed.
+  - Source review: `reviews/phase31-ad-hoc-followup-milestones-review-pass-2.md`
+  - Execution report: `issues/phase31-followup-review-pass2-production-grade-execution.md`
+  - Reviewer verdict: `PASS` (production-grade for phase scope)
+  - Closure result:
+    - no additional blocking fixes required after pass 1 hardening
 - `2026-03-26`: external review pass 1 closure hardening completed.
   - Source review: `reviews/phase31-ad-hoc-followup-milestones-review-pass-1.md`
   - Execution report: `issues/phase31-followup-review-pass1-oracle-upgrade-execution.md`
