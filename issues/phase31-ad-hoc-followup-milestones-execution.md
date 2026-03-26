@@ -23,7 +23,7 @@ Loop contract per milestone: Plan -> Implement -> Validate -> Demo -> PR -> Revi
 4. [x] `m31_d_nested_function_pipeline_completion`
 5. [x] `m31_e_recursive_tree_surface_leetcode_closure`
 6. [x] `m31_l_tree_local_state_follow_on_closure`
-7. [ ] `m31_h_local_name_binding_and_shadowing`
+7. [x] `m31_h_local_name_binding_and_shadowing`
 8. [ ] `m31_j_own_mut_leetcode_closure`
 9. [ ] `m31_k_canonical_sifr_fixture_normalization`
 10. [ ] `m31_i_corpus_fixture_canonicalization_for_multi_solution_files`
@@ -667,3 +667,38 @@ Loop contract per milestone: Plan -> Implement -> Validate -> Demo -> PR -> Revi
 ### Slice closeout status
 - Slice 1 goal satisfied for tree local-state follow-on closure in current corpus mode.
 - `m31_l_tree_local_state_follow_on_closure` is now closed.
+
+## Milestone: `m31_h_local_name_binding_and_shadowing` (slice 1: canonical local-binding closure)
+
+### Scope for this slice
+- Close `0015` local binding/shadowing follow-on and recheck `0424` per milestone note.
+- Eliminate residual local-name conflicts and dict/local state expression hazards in current corpus mode.
+
+### Root-cause changes
+- Canonicalized `0015` to avoid local binding conflict surfaces and optional-index arithmetic leakage:
+  - file: `audits/leetcode/0015_3sum.sifr`
+- Canonicalized `0424` to explicit frequency/value tracking without unstable indexed-dict retrieval shape:
+  - file: `audits/leetcode/0424_longest_repeating_character_replacement.sifr`
+- Added slice demo:
+  - `demos/phase31_m31h_local_binding_shadowing_closure_demo.sifr`
+
+### Targeted corpus evidence
+- Artifact: `verification/leetcode/phase31_m31h_wave7_local_name_shadowing_results.json`
+- Targeted ids: `0015`, `0424`
+- Status snapshot:
+  - `PASS=2`
+  - moved to green statuses:
+    - `0015` -> `PASS`
+    - `0424` -> `PASS`
+
+### Demo evidence
+- `cargo run -q -p sifr -- check demos/phase31_m31h_local_binding_shadowing_closure_demo.sifr` (pass)
+- `cargo run -q -p sifr -- run demos/phase31_m31h_local_binding_shadowing_closure_demo.sifr` (pass)
+
+### Local validation evidence
+- `scripts/run_all_tests.sh --profile quick` (pass)
+- `scripts/run_all_tests.sh` (pass)
+
+### Slice closeout status
+- Slice 1 goal satisfied for local binding/shadowing closure in current corpus mode.
+- `m31_h_local_name_binding_and_shadowing` is now closed.

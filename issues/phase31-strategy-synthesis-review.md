@@ -79,6 +79,11 @@ Execution delta (`2026-03-26`, `m31_l` slice 1):
 - canonical tree local-state closure landed for `0110`.
 - targeted status moved to `NO_ORACLE=1` and `m31_l_tree_local_state_follow_on_closure` owner scope is now closed.
 
+Execution delta (`2026-03-26`, `m31_h` slice 1):
+
+- canonical local-binding/shadowing closure landed for `0015` and `0424`.
+- targeted status moved to `PASS=2` and `m31_h_local_name_binding_and_shadowing` owner scope is now closed.
+
 ## Current Conclusion
 
 The current strategy is:
@@ -277,7 +282,7 @@ Interpretation:
 | `0001` | targeted compiler feature | container specialization |
 | `0007` | canonical fixture adaptation | explicit `mut` |
 | `0009` | canonical fixture adaptation | explicit `mut` |
-| `0015` | canonical fixture adaptation + closure | `mut` + local binding / optional-flow |
+| `0015` | closed in `m31_h` slice 1 | canonical local binding/shadowing closure (`PASS`) |
 | `0017` | closed in `m31_d` slice 1 | canonical nested-helper closure (`PASS`) |
 | `0043` | canonical fixture adaptation + closure | canonical rewrite + mutability/typing cleanup |
 | `0050` | closed in `m31_d` slice 1 | canonical nested-helper closure (`PASS`) |
@@ -298,7 +303,7 @@ Interpretation:
 | `0242` | targeted compiler feature | container specialization |
 | `0295` | closed in `m31_b` slice 1 | canonical sorted-surface implementation (`NO_ORACLE`) |
 | `0322` | normal closure | optional-flow |
-| `0424` | targeted compiler feature + closure | container specialization + local name binding follow-on |
+| `0424` | closed in `m31_h` slice 1 | canonical local binding/shadowing closure (`PASS`) |
 | `0502` | closed in `m31_a` slice 15 | canonical encoded-heap form (`NO_ORACLE`) |
 | `0523` | targeted compiler feature | container specialization |
 | `0560` | targeted compiler feature | container specialization |

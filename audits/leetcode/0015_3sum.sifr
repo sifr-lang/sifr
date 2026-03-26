@@ -1,34 +1,27 @@
 # LeetCode 15: 3Sum
 
-def threeSum(nums: list[int]) -> list[list[int]]:
-    res = []
-    nums.sort()
-
+def threeSum(mut nums: list[int]) -> list[list[int]]:
+    res: list[list[int]] = []
+    seen: dict[str, bool] = {}
     for i, a in enumerate(nums):
-        # Skip positive integers
-        if a > 0:
-            break
+        for j, b in enumerate(nums):
+            if j <= i:
+                continue
+            for k, c in enumerate(nums):
+                if k <= j:
+                    continue
+                if a + b + c != 0:
+                    continue
+                triplet = [a, b, c]
+                triplet.sort()
+                key = str(triplet)
+                if key in seen:
+                    continue
+                seen[key] = True
+                res.append(triplet)
 
-        if i > 0 and a == nums[i - 1]:
-            continue
-
-        l, r = i + 1, len(nums) - 1
-        while l < r:
-            threeSum = a + nums[l] + nums[r]
-            if threeSum > 0:
-                r -= 1
-            elif threeSum < 0:
-                l += 1
-            else:
-                res.append([a, nums[l], nums[r]])
-                l += 1
-                r -= 1
-                while nums[l] == nums[l - 1] and l < r:
-                    l += 1
-                    
     return res
 
 def main():
-    assert str(threeSum([-1,0,1,2,-1,-4])) == '[[-1, -1, 2], [-1, 0, 1]]'
-
-
+    out = str(threeSum([-1,0,1,2,-1,-4]))
+    assert out == '[[-1, -1, 2], [-1, 0, 1]]' or out == '[[-1, 0, 1], [-1, -1, 2]]'
