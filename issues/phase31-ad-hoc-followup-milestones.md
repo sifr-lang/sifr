@@ -122,6 +122,14 @@ These broader feature phases already exist and should no longer be treated as fu
 
 ## Execution Log
 
+- `2026-03-26`: `m31_a_optional_flow_completion` slice 9 completed local validation for append-growth sized-list shape propagation under alias-backed index guards.
+  - Execution report: `issues/phase31-m31a-append-growth-shape-execution.md`
+  - Targeted result artifact: `verification/leetcode/phase31_m31a_wave9_append_growth_results.json`
+  - Targeted seven-case status: `PASS=1`, `CHECK_ERROR=6`
+  - Confirmed new pass: `0238_product_of_array_except_self`
+  - Reclassification summary:
+    - `0238` moved fully past optional-index arithmetic blockers
+    - remaining `m31_a` blockers are now concentrated in `0053`, `0322`, and mutability/canonicalization or non-optional-flow follow-ons (`0127`, `0502`, `0743`, `0746`)
 - `2026-03-26`: `m31_a_optional_flow_completion` slice 8 completed local validation for end-pointer while-guard narrowing through `len(...)` aliases.
   - Execution report: `issues/phase31-m31a-end-pointer-len-alias-execution.md`
   - Targeted result artifact: `verification/leetcode/phase31_m31a_wave8_end_pointer_alias_results.json`
@@ -252,6 +260,7 @@ This order assumes the broader dependency phases are already landed and keeps th
   - dict membership guarded narrowing for keyed dict reads (`key in dict`, `key in dict.keys()`, and `if key not in dict: return`) is landed in slice 6
   - `len(...)` alias flow into `range(...)` bounds is landed in slice 7 (`n = len(seq)` now composes with forward/reverse range guarded indexing)
   - alias-backed end-pointer while guards are landed in slice 8 (`i = n - 1`, `while i >= 0`, `nums[i]`)
+  - append-growth shape facts are landed in slice 9 (`for i in range(n): out.append(...)` establishes `len(out) >= n` for guarded indexed reads)
   - remaining optional-flow work is now the narrower closure set below
 - Remaining root-cause scope:
   - fixed-index reads after length guards

@@ -215,3 +215,44 @@ Loop contract per milestone: Plan -> Implement -> Validate -> Demo -> PR -> Revi
 ### Slice closeout status
 - Slice 8 goal satisfied for alias-backed end-pointer while-guard narrowing.
 - `m31_a` remains open for sized-local growth proofs and subtractive/value-dependent recurrence indexing.
+
+## Milestone: `m31_a_optional_flow_completion` (slice 9: append-growth sized-list facts)
+
+### Scope for this slice
+- Recognize local append-growth loops as sequence-shape evidence.
+- Propagate that evidence into guarded index narrowing.
+- Keep matching strict to root-cause flow forms (single append per iteration over proven range bounds).
+
+### Root-cause changes
+- Added append-growth sequence-shape module:
+  - `crates/sifr_hir/src/lower/append_growth_shapes.rs`
+  - detects `for i in range(...): target.append(value)` and records `SizedByAnchor` facts
+- Integrated append-growth shape recording into for-loop lowering:
+  - `crates/sifr_hir/src/lower/statements.rs`
+- Added guarded-index regression for append-growth sized list under alias-backed while guards:
+  - `crates/sifr_hir/src/lower/guarded_index.rs`
+- Reused slice 7/8 alias and end-pointer infrastructure to compose full proof path.
+
+### Regression coverage
+- `test_append_growth_shape_allows_index_under_alias_guard`
+
+### Demo evidence
+- Demo file (updated): `demos/phase31_len_alias_range_guard_demo.sifr`
+- Demo validation:
+  - `cargo run -q -p sifr -- check demos/phase31_len_alias_range_guard_demo.sifr` (pass)
+  - `cargo run -q -p sifr -- run demos/phase31_len_alias_range_guard_demo.sifr` (pass)
+
+### Targeted corpus evidence
+- Artifact: `verification/leetcode/phase31_m31a_wave9_append_growth_results.json`
+- Targeted ids: `0053`, `0127`, `0238`, `0322`, `0502`, `0743`, `0746`
+- Status snapshot:
+  - `PASS=1`, `CHECK_ERROR=6`
+  - confirmed new pass: `0238`
+
+### Local validation evidence
+- `scripts/run_all_tests.sh --profile quick` (pass)
+- `scripts/run_all_tests.sh` (pass)
+
+### Slice closeout status
+- Slice 9 goal satisfied for append-growth sized-list shape propagation.
+- `m31_a` remains open for residual cases (`0053`, `0322`, and source-canonicalization/mutability follow-ons in `0127`, `0502`, `0743`, `0746`).

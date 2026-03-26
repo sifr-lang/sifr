@@ -2159,7 +2159,7 @@ pub(super) fn lower_for(
     ctx.loop_depth -= 1;
     ctx.scope.pop();
     ctx.restore_sequence_guards(&saved_sequence_guards);
-
+    super::append_growth_shapes::record_append_growth_sequence_shape_fact(for_stmt, &target_name, ctx);
     if let Some(source_name) = iter_source_name.as_deref() {
         if is_collection_backed_iter_source(&iter_source_ty)
             && loop_body_mutates_iter_source(&body, source_name)

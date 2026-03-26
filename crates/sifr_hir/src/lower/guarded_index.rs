@@ -241,6 +241,19 @@ mod tests {
     }
 
     #[test]
+    fn test_append_growth_shape_allows_index_under_alias_guard() {
+        let result = lower_source_result(
+            "def main():\n    nums: list[int] = [1, 2, 3]\n    n: int = len(nums)\n    result: list[int] = []\n    for i in range(n):\n        result.append(1)\n    i: int = n - 1\n    while i >= 0:\n        reveal_type(result[i])\n        i -= 1\n",
+        )
+        .expect("append-growth sized list should narrow under alias-backed index guard");
+
+        assert!(result
+            .reveal_types
+            .iter()
+            .any(|diagnostic| diagnostic == "reveal_type: int"));
+    }
+
+    #[test]
     fn test_early_return_non_empty_guard_reveals_element_type() {
         let result = lower_source_result(
             "def head(nums: list[int]) -> int:\n    if len(nums) == 0:\n        return 0\n    reveal_type(nums[0])\n    return nums[0]\n",
