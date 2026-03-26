@@ -406,4 +406,34 @@ Loop contract per milestone: Plan -> Implement -> Validate -> Demo -> PR -> Revi
 
 ### Slice closeout status
 - Slice 13 goal satisfied for `0322` canonical bounded-recurrence closure.
-- Remaining `m31_a` work is now the narrower set: `0127`, `0502`, `0743`.
+- Remaining `m31_a` work was narrowed to `0127`, `0502`, `0743`.
+
+## Milestone: `m31_a_optional_flow_completion` (slice 14: canonical word-ladder queue + bucket normalization)
+
+### Scope for this slice
+- Close `0127` with a canonical Sifr-safe queue/bucket form.
+- Preserve BFS level-order algorithm while aligning with Sifr mutability and ownership surfaces.
+
+### Root-cause changes
+- Canonicalized `0127` fixture:
+  - explicit `mut wordList` parameter
+  - typed bucket map (`dict[str, list[str]]`) and list queue (`list[str]` with `pop(0)`)
+  - `str(...)` materialization on queue/set/list insertions at ownership boundaries
+  - file: `audits/leetcode/0127_word_ladder.sifr`
+- Added slice demo:
+  - `demos/phase31_word_ladder_canonical_queue_demo.sifr`
+
+### Targeted corpus evidence
+- Artifact: `verification/leetcode/phase31_m31a_wave14_canonical_word_ladder_results.json`
+- Targeted ids: `0127`, `0322`, `0502`, `0743`
+- Status snapshot:
+  - `PASS=1`, `NO_ORACLE=1`, `CHECK_ERROR=2`
+  - `0127` reclassified from `CHECK_ERROR` to `NO_ORACLE` (check + run green, oracle comparison not configured for this case mode)
+
+### Local validation evidence
+- `scripts/run_all_tests.sh --profile quick` (pass)
+- `scripts/run_all_tests.sh` (pass)
+
+### Slice closeout status
+- Slice 14 goal satisfied for canonical `0127` closure.
+- Remaining `m31_a` work is now the narrower set: `0502`, `0743`.
