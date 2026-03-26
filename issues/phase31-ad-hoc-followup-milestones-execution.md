@@ -130,3 +130,47 @@ Loop contract per milestone: Plan -> Implement -> Validate -> Demo -> PR -> Revi
 ### Slice closeout status
 - Slice 6 goal satisfied for dict membership guarded narrowing and codegen parity.
 - `m31_a` milestone remains open for remaining optional-flow closure items listed in the parent milestone plan.
+
+## Milestone: `m31_a_optional_flow_completion` (slice 7: len-alias range guards)
+
+### Scope for this slice
+- Teach range-guard detection to compose through local aliases of `len(sequence)`.
+- Preserve existing optional behavior for unproven index shapes.
+- Keep fixes general (flow fact propagation), not fixture pattern matching.
+
+### Root-cause changes
+- Added lowering-time `len(...)` alias facts:
+  - `crates/sifr_hir/src/lower/len_aliases.rs`
+  - tracks assignments such as `n = len(nums)` and alias propagation through simple name assignment
+- Recorded/cleared len-alias facts across assignment forms:
+  - `crates/sifr_hir/src/lower/statements.rs`
+- Extended range guard detection to resolve alias-backed length anchors:
+  - `range(n)` where `n` aliases `len(seq)`
+  - `range(n - 1, -1, -1)` where `n` aliases `len(seq)`
+  - `crates/sifr_hir/src/lower/sequence_guard_detection.rs`
+
+### Regression coverage
+- `test_range_len_alias_list_index_reveals_element_type`
+- `test_reverse_range_len_alias_list_index_reveals_element_type`
+
+### Demo evidence
+- Demo file: `demos/phase31_len_alias_range_guard_demo.sifr`
+- Demo validation:
+  - `cargo run -q -p sifr -- check demos/phase31_len_alias_range_guard_demo.sifr` (pass)
+  - `cargo run -q -p sifr -- run demos/phase31_len_alias_range_guard_demo.sifr` (pass)
+
+### Targeted corpus evidence
+- Artifact: `verification/leetcode/phase31_m31a_wave7_len_alias_results.json`
+- Targeted ids: `0053`, `0127`, `0238`, `0322`, `0502`, `0743`, `0746`
+- Status snapshot:
+  - count-level status remains `CHECK_ERROR=7`
+  - `0238` reduced from three optional arithmetic errors to two; `nums[i]` under `for i in range(n)` now narrows after `n = len(nums)`
+  - remaining `0238` optional errors are localized to sized-local `result[i]` flow (next optional-flow slice)
+
+### Local validation evidence
+- `scripts/run_all_tests.sh --profile quick` (pass)
+- `scripts/run_all_tests.sh` (pass)
+
+### Slice closeout status
+- Slice 7 goal satisfied for len-alias range-guard propagation.
+- `m31_a` milestone remains open for sized-local append growth proofs, subtractive/value-dependent recurrence indexing, and residual canonicalization follow-ons.

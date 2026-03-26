@@ -185,7 +185,7 @@ pub(super) fn detect_range_sequence_guards(
     target_name: &str,
     ctx: &LowerCtx,
 ) -> Vec<SequenceGuard> {
-    let Some((sequence, max_offset)) = range_sequence_shape(for_stmt.iter.as_ref()) else {
+    let Some((sequence, max_offset)) = range_sequence_shape(for_stmt.iter.as_ref(), ctx) else {
         return Vec::new();
     };
     let mut guards = vec![SequenceGuard::IndexVarInRange {
@@ -202,7 +202,7 @@ pub(super) fn detect_range_sequence_guards(
     guards
 }
 
-fn range_sequence_shape(expr: &Expr) -> Option<(String, usize)> {
+fn range_sequence_shape(expr: &Expr, ctx: &LowerCtx) -> Option<(String, usize)> {
     let Expr::Call(call) = expr else {
         return None;
     };
@@ -213,10 +213,10 @@ fn range_sequence_shape(expr: &Expr) -> Option<(String, usize)> {
         return None;
     }
     if call.arguments.args.len() == 1 {
-        return len_anchor_with_max_offset(&call.arguments.args[0]);
+        return len_anchor_with_max_offset(&call.arguments.args[0], ctx);
     }
     if call.arguments.args.len() == 2 {
-        return len_anchor_with_max_offset(&call.arguments.args[1])
+        return len_anchor_with_max_offset(&call.arguments.args[1], ctx)
             .map(|(sequence, _)| (sequence, 0));
     }
     if call.arguments.args.len() == 3 {
@@ -224,20 +224,26 @@ fn range_sequence_shape(expr: &Expr) -> Option<(String, usize)> {
             &call.arguments.args[0],
             &call.arguments.args[1],
             &call.arguments.args[2],
+            ctx,
         );
     }
     None
 }
 
-fn reverse_len_range_shape(start: &Expr, stop: &Expr, step: &Expr) -> Option<(String, usize)> {
+fn reverse_len_range_shape(
+    start: &Expr,
+    stop: &Expr,
+    step: &Expr,
+    ctx: &LowerCtx,
+) -> Option<(String, usize)> {
     if literal_int(stop) != Some(-1) || literal_int(step) != Some(-1) {
         return None;
     }
-    len_anchor_with_max_offset(start)
+    len_anchor_with_max_offset(start, ctx)
 }
 
-fn len_anchor_with_max_offset(expr: &Expr) -> Option<(String, usize)> {
-    if let Some(sequence_name) = len_call_sequence_name(expr) {
+fn len_anchor_with_max_offset(expr: &Expr, ctx: &LowerCtx) -> Option<(String, usize)> {
+    if let Some(sequence_name) = len_anchor_name(expr, ctx) {
         return Some((sequence_name, 0));
     }
     let Expr::BinOp(binop) = expr else {
@@ -246,9 +252,16 @@ fn len_anchor_with_max_offset(expr: &Expr) -> Option<(String, usize)> {
     if !matches!(binop.op, Operator::Sub) {
         return None;
     }
-    let sequence_name = len_call_sequence_name(binop.left.as_ref())?;
+    let sequence_name = len_anchor_name(binop.left.as_ref(), ctx)?;
     let subtracted = literal_usize(binop.right.as_ref())?;
     Some((sequence_name, subtracted.saturating_sub(1)))
+}
+
+fn len_anchor_name(expr: &Expr, ctx: &LowerCtx) -> Option<String> {
+    len_call_sequence_name(expr).or_else(|| match expr {
+        Expr::Name(alias) => ctx.len_alias_sequence(alias.id.as_str()),
+        _ => None,
+    })
 }
 
 fn detect_sliding_window_pointer_guards(

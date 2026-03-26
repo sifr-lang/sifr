@@ -24,6 +24,7 @@ mod generic_inference;
 mod guarded_index;
 mod imported_defaults;
 mod imports;
+mod len_aliases;
 mod method_call_args;
 mod mutating_methods;
 mod nested_function_inference;
@@ -50,6 +51,7 @@ mod typing_and_functions;
 use classes::{collect_class_type, lower_class, lower_expr_simple};
 use generic_inference::infer_type_var_bindings;
 use imports::resolve_imports_early;
+use len_aliases::LenAliasFact;
 use sequence_guards::SequenceGuard;
 use sequence_pointers::SequencePointerFact;
 use type_aliases::{collect_type_alias_decls, predeclare_type_aliases, resolve_type_aliases};
@@ -129,6 +131,7 @@ pub(super) struct LowerCtx {
     synthetic_imports: Vec<HirImport>,
     synthetic_import_aliases: HashMap<String, String>,
     sequence_guards: Vec<SequenceGuard>,
+    len_aliases: Vec<LenAliasFact>,
     sequence_pointers: Vec<SequencePointerFact>,
     numeric_sentinel_vars: HashMap<String, numeric_sentinels::NumericSentinelFact>,
     pending_numeric_sentinel_patches: HashMap<String, numeric_sentinels::NumericSentinelPatch>,
@@ -168,6 +171,7 @@ impl LowerCtx {
             synthetic_imports: Vec::new(),
             synthetic_import_aliases: HashMap::new(),
             sequence_guards: Vec::new(),
+            len_aliases: Vec::new(),
             sequence_pointers: Vec::new(),
             numeric_sentinel_vars: HashMap::new(),
             pending_numeric_sentinel_patches: HashMap::new(),

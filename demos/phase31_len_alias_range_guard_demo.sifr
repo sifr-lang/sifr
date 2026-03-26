@@ -1,0 +1,20 @@
+# Phase 31 / m31_a slice 7 demo: range bounds inferred through len(...) aliases.
+
+def sum_forward(nums: list[int]) -> int:
+    n: int = len(nums)
+    total: int = 0
+    for i in range(n):
+        total = total + nums[i]
+    return total
+
+def sum_reverse(nums: list[int]) -> int:
+    n: int = len(nums)
+    total: int = 0
+    for i in range(n - 1, -1, -1):
+        total = total + nums[i]
+    return total
+
+def main():
+    assert sum_forward([4, 5, 6]) == 15
+    assert sum_reverse([1, 2, 3, 4]) == 10
+    assert sum_reverse([]) == 0

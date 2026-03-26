@@ -202,6 +202,32 @@ mod tests {
     }
 
     #[test]
+    fn test_range_len_alias_list_index_reveals_element_type() {
+        let result = lower_source_result(
+            "def main():\n    nums: list[int] = [1, 2, 3]\n    n: int = len(nums)\n    for i in range(n):\n        reveal_type(nums[i])\n",
+        )
+        .expect("range(len-alias) index should lower");
+
+        assert!(result
+            .reveal_types
+            .iter()
+            .any(|diagnostic| diagnostic == "reveal_type: int"));
+    }
+
+    #[test]
+    fn test_reverse_range_len_alias_list_index_reveals_element_type() {
+        let result = lower_source_result(
+            "def main():\n    nums: list[int] = [1, 2, 3]\n    n: int = len(nums)\n    for i in range(n - 1, -1, -1):\n        reveal_type(nums[i])\n",
+        )
+        .expect("reverse range(len-alias) index should lower");
+
+        assert!(result
+            .reveal_types
+            .iter()
+            .any(|diagnostic| diagnostic == "reveal_type: int"));
+    }
+
+    #[test]
     fn test_early_return_non_empty_guard_reveals_element_type() {
         let result = lower_source_result(
             "def head(nums: list[int]) -> int:\n    if len(nums) == 0:\n        return 0\n    reveal_type(nums[0])\n    return nums[0]\n",
