@@ -74,6 +74,11 @@ Execution delta (`2026-03-26`, `m31_e` slice 1):
 - canonical recursive-tree closure landed across `0100`, `0102`, and `0235`.
 - targeted status moved to `NO_ORACLE=3` and `m31_e_recursive_tree_surface_leetcode_closure` owner scope is now closed.
 
+Execution delta (`2026-03-26`, `m31_l` slice 1):
+
+- canonical tree local-state closure landed for `0110`.
+- targeted status moved to `NO_ORACLE=1` and `m31_l_tree_local_state_follow_on_closure` owner scope is now closed.
+
 ## Current Conclusion
 
 The current strategy is:
@@ -282,7 +287,7 @@ Interpretation:
 | `0090` | closed in `m31_d` slice 1 | canonical nested-helper + mutability closure (`PASS`) |
 | `0100` | closed in `m31_e` slice 1 | canonical recursive-tree closure (`NO_ORACLE`) |
 | `0102` | closed in `m31_e` slice 1 | canonical recursive-tree closure (`NO_ORACLE`) |
-| `0110` | normal closure | bool/local-state follow-on |
+| `0110` | closed in `m31_l` slice 1 | canonical tree local-state closure (`NO_ORACLE`) |
 | `0127` | canonical fixture adaptation + closure | `mut` + residual optional/iterable typing |
 | `0151` | canonical fixture adaptation | explicit `mut` |
 | `0207` | closed in `m31_d` slice 1 | canonical nested-helper closure (`NO_ORACLE`) |
