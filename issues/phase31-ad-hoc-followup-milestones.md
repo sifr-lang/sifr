@@ -1,6 +1,6 @@
 # Phase 31 Ad Hoc Follow-up Milestones
 
-Status: active follow-up plan on 2026-03-26
+Status: complete follow-up plan closure on 2026-03-26
 Source inputs:
 
 - `verification/leetcode/phase31_current_full_results_20260321.json`
@@ -122,6 +122,16 @@ These broader feature phases already exist and should no longer be treated as fu
 
 ## Execution Log
 
+- `2026-03-26`: `m31_i_corpus_fixture_canonicalization_for_multi_solution_files` slice 1 completed canonical multi-solution fixture normalization.
+  - Execution report: `issues/phase31-m31i-corpus-fixture-canonicalization-execution.md`
+  - Demo: `demos/phase31_m31i_multi_solution_fixture_canonicalization_demo.sifr`
+  - Targeted result artifact: `verification/leetcode/phase31_m31i_wave2_canonical_fixture_results.json`
+  - Targeted two-case status: `NO_ORACLE=2`
+  - Reclassification results:
+    - `0215_kth_largest_element_in_an_array`: `CHECK_ERROR -> NO_ORACLE`
+    - `1046_last_stone_weight`: `CHECK_ERROR -> NO_ORACLE`
+  - Milestone closure:
+    - `m31_i_corpus_fixture_canonicalization_for_multi_solution_files` owner scope is now closed
 - `2026-03-26`: `m31_k_canonical_sifr_fixture_normalization` slice 1 completed canonical parse-safe fixture closure.
   - Execution report: `issues/phase31-m31k-canonical-sifr-fixture-normalization-execution.md`
   - Demo: `demos/phase31_m31k_canonical_fixture_normalization_demo.sifr`
@@ -536,6 +546,9 @@ This order assumes the broader dependency phases are already landed and keeps th
 
 ### `m31_i_corpus_fixture_canonicalization_for_multi_solution_files`
 
+- Current execution status (`2026-03-26`):
+  - canonical multi-solution fixture normalization landed for `0215` and `1046`
+  - owner scope is now closed
 - Scope:
   - normalize scraped fixtures that contain multiple alternative top-level solutions
   - prefer one canonical typed / lowest-dependency solution
