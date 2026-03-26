@@ -46,6 +46,11 @@ Current passing cases:
 - `1768`
 - `2235`
 
+Execution delta (`2026-03-26`, `m31_a` slice 15):
+
+- `0502_ipo` and `0743_network_delay_time` were canonicalized to encoded-int heap forms and now run green as `NO_ORACLE` in targeted reruns.
+- `m31_a_optional_flow_completion` is closed for its owner scope (`0127`, `0322`, `0502`, `0743`).
+
 ## Current Conclusion
 
 The current strategy is:
@@ -213,7 +218,6 @@ These are still active residuals:
 - `0226`
 - `0295`
 - `0703`
-- `0743`
 - `0997`
 - `1209`
 
@@ -234,8 +238,6 @@ These cases still fail, but they should not currently be explained as missing th
 
 - `0017`
 - `0207`
-- `0502`
-- `0743`
 - `1046`
 
 Current representative failures:
@@ -247,7 +249,7 @@ Current representative failures:
 
 Interpretation:
 
-- `0502` is best treated as an iterator/comparability case with downstream `Any` leakage that may shrink once the container-specialization feature lands
+- remaining items in this bucket are residual iterator/comparability closure, not missing broader iteration-phase support
 
 ### 8. Single-case residuals and small current families
 

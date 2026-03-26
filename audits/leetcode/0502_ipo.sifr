@@ -1,22 +1,48 @@
 # LeetCode 502: Ipo
 
-def findMaximizedCapital(k: int, w: int, profits: list[int], capital: list[int]) -> int:
-    # O(nlogn)
-    maxProfit = [] # only projects we can afford
-    minCapital = [(c, p) for c, p in zip(capital, profits)]
-    heapq.heapify(minCapital)
+from sifr.heapq import heappush, heappop
 
-    for i in range(k):
-        
-        while minCapital and minCapital[0][0] <= w:
-            c, p = heapq.heappop(minCapital)
-            heapq.heappush(maxProfit, -1 * p)
+def findMaximizedCapital(k: int, mut w: int, profits: list[int], capital: list[int]) -> int:
+    if len(profits) != len(capital):
+        return w
+
+    max_profit = 0
+    for p in profits:
+        if p > max_profit:
+            max_profit = p
+    base = max_profit + 1
+    if base <= 0:
+        base = 1
+
+    minCapital: list[int] = []
+    maxProfit: list[int] = []
+    for c, p in zip(capital, profits):
+        heappush(minCapital, c * base + p)
+
+    for step in range(k):
+        while minCapital:
+            top = heappop(minCapital)
+            if top is not None:
+                c = top // base
+                p = top % base
+                if c <= w:
+                    heappush(maxProfit, -p)
+                else:
+                    heappush(minCapital, top)
+                    break
+            else:
+                break
+
         if not maxProfit:
             break
-        w += -1 * heapq.heappop(maxProfit)
+
+        best = heappop(maxProfit)
+        if best is not None:
+            w += -best
+        else:
+            break
     return w
 
 def main():
     assert findMaximizedCapital(2, 0, [1, 2, 3], [0, 1, 1]) == 4
     assert findMaximizedCapital(3, 0, [1, 2, 3], [0, 1, 2]) == 6
-

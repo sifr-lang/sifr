@@ -122,6 +122,14 @@ These broader feature phases already exist and should no longer be treated as fu
 
 ## Execution Log
 
+- `2026-03-26`: `m31_a_optional_flow_completion` slice 15 completed local validation for canonical encoded-heap closure on IPO and Network Delay Time.
+  - Execution report: `issues/phase31-m31a-encoded-heap-closure-execution.md`
+  - Demo: `demos/phase31_heap_encoded_priority_queue_demo.sifr`
+  - Targeted result artifact: `verification/leetcode/phase31_m31a_wave15_encoded_heap_closure_results.json`
+  - Targeted four-case status: `NO_ORACLE=3`, `PASS=1`
+  - Reclassification result:
+    - `0502_ipo` moved from `CHECK_ERROR` to `NO_ORACLE` (check + run green; oracle comparison not configured in current case mode)
+    - `0743_network_delay_time` moved from `CHECK_ERROR` to `NO_ORACLE` (check + run green; oracle comparison not configured in current case mode)
 - `2026-03-26`: `m31_a_optional_flow_completion` slice 14 completed local validation for canonical word-ladder queue + bucket normalization.
   - Execution report: `issues/phase31-m31a-canonical-word-ladder-execution.md`
   - Demo: `demos/phase31_word_ladder_canonical_queue_demo.sifr`
@@ -303,17 +311,17 @@ This order assumes the broader dependency phases are already landed and keeps th
   - fixed-index len-guard closure is landed for `len(...) < / <=` false-exit proofs, and canonical fixture alignment landed `0053`/`0746` (slice 12)
   - canonical bounded-recurrence closure is landed for `0322` (slice 13)
   - canonical word-ladder queue/bucket normalization is landed for `0127` (slice 14)
-  - remaining optional-flow work is now the narrower closure set below
+  - canonical encoded-heap closure is landed for `0502` and `0743` (slice 15)
+  - owner scope is now closed for this milestone
 - Remaining root-cause scope:
-  - non-empty queue/heap/list pop results under truthiness guards
-  - residual optional tuple/heap-pop flow in graph/priority-queue cases
+  - none inside `m31_a` owner cases
 - Implementation notes:
   - implement a general forward-propagation rule for definite in-bounds access; do not add narrow recognizers for individual access patterns
   - derive narrowing from compositional proofs such as prior guards, known bounds, and arithmetic constraints rather than syntax-specific matches on seed-fixture code
   - track range/loop bounds, arithmetic offsets such as `i + 1` and `i + 2`, and first-element access after non-empty proofs
   - keep the existing no-implicit-unwrap rule outside proven-safe flow
 - Affected ids:
-  - `0502`, `0743`
+  - `0502`, `0743` (closed in slice 15)
 - Definition of done:
   - remaining owner cases move past `int | None`, `None | str`, and `None | tuple[...]` failures
   - regression coverage exists for guarded queue/heap pops and guarded recurrence indexing

@@ -1,6 +1,48 @@
-# LeetCode 743: Network Delay Time
+# Phase 31 m31_a wave 15 demo:
+# canonical encoded-int heap forms for IPO and Network Delay Time.
 
 from sifr.heapq import heappush, heappop
+
+def findMaximizedCapital(k: int, mut w: int, profits: list[int], capital: list[int]) -> int:
+    if len(profits) != len(capital):
+        return w
+
+    max_profit = 0
+    for p in profits:
+        if p > max_profit:
+            max_profit = p
+    base = max_profit + 1
+    if base <= 0:
+        base = 1
+
+    minCapital: list[int] = []
+    maxProfit: list[int] = []
+    for c, p in zip(capital, profits):
+        heappush(minCapital, c * base + p)
+
+    for step in range(k):
+        while minCapital:
+            top = heappop(minCapital)
+            if top is not None:
+                c = top // base
+                p = top % base
+                if c <= w:
+                    heappush(maxProfit, -p)
+                else:
+                    heappush(minCapital, top)
+                    break
+            else:
+                break
+
+        if not maxProfit:
+            break
+
+        best = heappop(maxProfit)
+        if best is not None:
+            w += -best
+        else:
+            break
+    return w
 
 def networkDelayTime(times: list[list[int]], n: int, k: int) -> int:
     if n <= 0 or k <= 0 or k > n:
@@ -66,6 +108,8 @@ def networkDelayTime(times: list[list[int]], n: int, k: int) -> int:
     return t if len(visit) == n else -1
 
 def main():
+    assert findMaximizedCapital(2, 0, [1, 2, 3], [0, 1, 1]) == 4
+    assert findMaximizedCapital(3, 0, [1, 2, 3], [0, 1, 2]) == 6
     assert networkDelayTime([[2, 1, 1], [2, 3, 1], [3, 4, 1]], 4, 2) == 2
     assert networkDelayTime([[1, 2, 1]], 2, 1) == 1
     assert networkDelayTime([[1, 2, 1]], 2, 2) == -1

@@ -437,3 +437,33 @@ Loop contract per milestone: Plan -> Implement -> Validate -> Demo -> PR -> Revi
 ### Slice closeout status
 - Slice 14 goal satisfied for canonical `0127` closure.
 - Remaining `m31_a` work is now the narrower set: `0502`, `0743`.
+
+## Milestone: `m31_a_optional_flow_completion` (slice 15: canonical encoded-heap closure for IPO + Network Delay)
+
+### Scope for this slice
+- Close the remaining `0502` and `0743` follow-ons with canonical Sifr-safe heap forms.
+- Preserve algorithm complexity without adding fallback semantics.
+
+### Root-cause changes
+- Canonicalized `0502` source to encoded-int heap payloads:
+  - file: `audits/leetcode/0502_ipo.sifr`
+- Canonicalized `0743` source to encoded-int adjacency and priority-queue payloads:
+  - file: `audits/leetcode/0743_network_delay_time.sifr`
+- Added slice demo:
+  - `demos/phase31_heap_encoded_priority_queue_demo.sifr`
+
+### Targeted corpus evidence
+- Artifact: `verification/leetcode/phase31_m31a_wave15_encoded_heap_closure_results.json`
+- Targeted ids: `0127`, `0322`, `0502`, `0743`
+- Status snapshot:
+  - `NO_ORACLE=3`, `PASS=1`
+  - `0502` moved from `CHECK_ERROR` to `NO_ORACLE`
+  - `0743` moved from `CHECK_ERROR` to `NO_ORACLE`
+
+### Local validation evidence
+- `scripts/run_all_tests.sh --profile quick` (pass)
+- `scripts/run_all_tests.sh` (pass)
+
+### Slice closeout status
+- Slice 15 goal satisfied for canonical encoded-heap closure on `0502` and `0743`.
+- `m31_a_optional_flow_completion` is now closed; owner cases no longer have optional-flow check-stage blockers.
