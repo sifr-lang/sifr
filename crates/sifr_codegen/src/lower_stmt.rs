@@ -1346,19 +1346,60 @@ fn try_lower_simple_stmt_block(
 pub(crate) fn tuple_unpack_pattern(
     targets: &[sifr_hir::HirTupleTarget],
     mutated_vars: &HashSet<String>,
-) -> String {
-    let names = targets
-        .iter()
-        .map(|target| {
-            if mutated_vars.contains(&target.name) {
-                format!("mut {}", target.name)
-            } else {
-                target.name.clone()
+) -> Option<String> {
+    let mut names = Vec::new();
+    for target in targets {
+        let sifr_hir::HirTupleTargetBinding::Name(name) = &target.binding else {
+            return None;
+        };
+        if mutated_vars.contains(name) {
+            names.push(format!("mut {name}"));
+        } else {
+            names.push(name.clone());
+        }
+    }
+    Some(format!("({})", names.join(", ")))
+}
+
+fn tuple_unpack_field_target_expr(object: &str, field: &str) -> RustExpr {
+    RustExpr::Field {
+        expr: Box::new(RustExpr::Ident(object.to_string())),
+        field: field.to_string(),
+    }
+}
+
+fn lower_tuple_target_assignments(
+    targets: &[sifr_hir::HirTupleTarget],
+    temp_names: &[String],
+    mutated_vars: &HashSet<String>,
+) -> Vec<RustStmt> {
+    let mut lowered = Vec::new();
+    for (target, temp_name) in targets.iter().zip(temp_names.iter()) {
+        match &target.binding {
+            sifr_hir::HirTupleTargetBinding::Name(name) => {
+                if target.rebind_existing {
+                    lowered.push(RustStmt::Assign {
+                        target: RustExpr::Ident(name.clone()),
+                        value: RustExpr::Ident(temp_name.clone()),
+                    });
+                } else {
+                    lowered.push(RustStmt::Let {
+                        mutable: mutated_vars.contains(name),
+                        name: name.clone(),
+                        ty: None,
+                        value: RustExpr::Ident(temp_name.clone()),
+                    });
+                }
             }
-        })
-        .collect::<Vec<_>>()
-        .join(", ");
-    format!("({names})")
+            sifr_hir::HirTupleTargetBinding::Field { object, field } => {
+                lowered.push(RustStmt::Assign {
+                    target: tuple_unpack_field_target_expr(object, field),
+                    value: RustExpr::Ident(temp_name.clone()),
+                });
+            }
+        }
+    }
+    lowered
 }
 
 fn try_lower_simple_tuple_unpack_stmt(
@@ -1372,8 +1413,9 @@ fn try_lower_simple_tuple_unpack_stmt(
     if targets.iter().any(|target| target.rebind_existing) {
         return None;
     }
+    let pattern = tuple_unpack_pattern(targets, mutated_vars)?;
     Some(vec![RustStmt::LetPattern {
-        pattern: tuple_unpack_pattern(targets, mutated_vars),
+        pattern,
         value: try_lower_leaf_or_name_expr(value)?,
     }])
 }
@@ -1384,10 +1426,12 @@ pub(crate) fn lower_tuple_unpack_targets(
     mutated_vars: &HashSet<String>,
 ) -> Vec<RustStmt> {
     if targets.iter().all(|target| !target.rebind_existing) {
-        return vec![RustStmt::LetPattern {
-            pattern: tuple_unpack_pattern(targets, mutated_vars),
-            value: lowered_value,
-        }];
+        if let Some(pattern) = tuple_unpack_pattern(targets, mutated_vars) {
+            return vec![RustStmt::LetPattern {
+                pattern,
+                value: lowered_value,
+            }];
+        }
     }
 
     let temp_names = targets
@@ -1402,21 +1446,7 @@ pub(crate) fn lower_tuple_unpack_targets(
         value: lowered_value,
     }];
 
-    for (target, temp_name) in targets.iter().zip(temp_names.into_iter()) {
-        if target.rebind_existing {
-            lowered.push(RustStmt::Assign {
-                target: RustExpr::Ident(target.name.clone()),
-                value: RustExpr::Ident(temp_name),
-            });
-        } else {
-            lowered.push(RustStmt::Let {
-                mutable: mutated_vars.contains(&target.name),
-                name: target.name.clone(),
-                ty: None,
-                value: RustExpr::Ident(temp_name),
-            });
-        }
-    }
+    lowered.extend(lower_tuple_target_assignments(targets, &temp_names, mutated_vars));
 
     lowered
 }
@@ -3964,12 +3994,12 @@ mod tests {
         let tuple_unpack = HirStmt::TupleUnpack {
             targets: vec![
                 sifr_hir::HirTupleTarget {
-                    name: "a".to_string(),
+                    binding: sifr_hir::HirTupleTargetBinding::Name("a".to_string()),
                     ty: Type::Int,
                     rebind_existing: false,
                 },
                 sifr_hir::HirTupleTarget {
-                    name: "b".to_string(),
+                    binding: sifr_hir::HirTupleTargetBinding::Name("b".to_string()),
                     ty: Type::Bool,
                     rebind_existing: false,
                 },
@@ -3996,12 +4026,12 @@ mod tests {
         let tuple_unpack = HirStmt::TupleUnpack {
             targets: vec![
                 sifr_hir::HirTupleTarget {
-                    name: "l".to_string(),
+                    binding: sifr_hir::HirTupleTargetBinding::Name("l".to_string()),
                     ty: Type::Int,
                     rebind_existing: false,
                 },
                 sifr_hir::HirTupleTarget {
-                    name: "r".to_string(),
+                    binding: sifr_hir::HirTupleTargetBinding::Name("r".to_string()),
                     ty: Type::Int,
                     rebind_existing: false,
                 },
@@ -4029,12 +4059,12 @@ mod tests {
         let tuple_unpack = HirStmt::TupleUnpack {
             targets: vec![
                 sifr_hir::HirTupleTarget {
-                    name: "a".to_string(),
+                    binding: sifr_hir::HirTupleTargetBinding::Name("a".to_string()),
                     ty: Type::Int,
                     rebind_existing: false,
                 },
                 sifr_hir::HirTupleTarget {
-                    name: "b".to_string(),
+                    binding: sifr_hir::HirTupleTargetBinding::Name("b".to_string()),
                     ty: Type::Bool,
                     rebind_existing: false,
                 },
@@ -4057,12 +4087,12 @@ mod tests {
         let tuple_unpack = HirStmt::TupleUnpack {
             targets: vec![
                 sifr_hir::HirTupleTarget {
-                    name: "left".to_string(),
+                    binding: sifr_hir::HirTupleTargetBinding::Name("left".to_string()),
                     ty: Type::Int,
                     rebind_existing: true,
                 },
                 sifr_hir::HirTupleTarget {
-                    name: "right".to_string(),
+                    binding: sifr_hir::HirTupleTargetBinding::Name("right".to_string()),
                     ty: Type::Int,
                     rebind_existing: false,
                 },
@@ -4097,6 +4127,84 @@ mod tests {
                 && tmp0 == "__sifr_tuple_unpack_0"
                 && tmp1 == "__sifr_tuple_unpack_1"
         ));
+    }
+
+    #[test]
+    fn lowers_tuple_unpack_with_field_targets_to_temp_and_field_assigns() {
+        let tuple_unpack = HirStmt::TupleUnpack {
+            targets: vec![
+                sifr_hir::HirTupleTarget {
+                    binding: sifr_hir::HirTupleTargetBinding::Field {
+                        object: "node".to_string(),
+                        field: "left".to_string(),
+                    },
+                    ty: Type::Int,
+                    rebind_existing: false,
+                },
+                sifr_hir::HirTupleTarget {
+                    binding: sifr_hir::HirTupleTargetBinding::Field {
+                        object: "node".to_string(),
+                        field: "right".to_string(),
+                    },
+                    ty: Type::Int,
+                    rebind_existing: false,
+                },
+            ],
+            value: HirExpr::TupleLiteral {
+                elements: vec![HirExpr::IntLiteral(1), HirExpr::IntLiteral(2)],
+                ty: Type::Tuple(vec![Type::Int, Type::Int]),
+            },
+        };
+
+        let lowered = lower_tuple_unpack_targets(
+            match &tuple_unpack {
+                HirStmt::TupleUnpack { targets, .. } => targets,
+                _ => unreachable!(),
+            },
+            RustExpr::Tuple(vec![
+                RustExpr::Literal(RustLiteral::Int(1)),
+                RustExpr::Literal(RustLiteral::Int(2)),
+            ]),
+            &HashSet::new(),
+        );
+
+        assert_eq!(lowered.len(), 3);
+        let RustStmt::LetPattern { pattern, .. } = &lowered[0] else {
+            panic!("expected temp tuple pattern");
+        };
+        assert_eq!(pattern, "(__sifr_tuple_unpack_0, __sifr_tuple_unpack_1)");
+
+        let RustStmt::Assign { target, value } = &lowered[1] else {
+            panic!("expected first field assignment");
+        };
+        let RustExpr::Field { expr, field } = target else {
+            panic!("expected first field target");
+        };
+        let RustExpr::Ident(object) = expr.as_ref() else {
+            panic!("expected field base identifier");
+        };
+        assert_eq!(object, "node");
+        assert_eq!(field, "left");
+        let RustExpr::Ident(tmp0) = value else {
+            panic!("expected first tuple temp value");
+        };
+        assert_eq!(tmp0, "__sifr_tuple_unpack_0");
+
+        let RustStmt::Assign { target, value } = &lowered[2] else {
+            panic!("expected second field assignment");
+        };
+        let RustExpr::Field { expr, field } = target else {
+            panic!("expected second field target");
+        };
+        let RustExpr::Ident(object) = expr.as_ref() else {
+            panic!("expected field base identifier");
+        };
+        assert_eq!(object, "node");
+        assert_eq!(field, "right");
+        let RustExpr::Ident(tmp1) = value else {
+            panic!("expected second tuple temp value");
+        };
+        assert_eq!(tmp1, "__sifr_tuple_unpack_1");
     }
 
     #[test]

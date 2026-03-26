@@ -318,7 +318,9 @@ pub(crate) fn collect_locally_defined_vars(stmts: &[HirStmt]) -> HashSet<String>
         HirStmt::TupleUnpack { targets, .. } => {
             for target in targets {
                 if !target.rebind_existing {
-                    defined.insert(target.name.clone());
+                    if let sifr_hir::HirTupleTargetBinding::Name(name) = &target.binding {
+                        defined.insert(name.clone());
+                    }
                 }
             }
         }

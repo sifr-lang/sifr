@@ -1,14 +1,33 @@
 # LeetCode 997: Find The Town Judge
 
 def findJudge(n: int, trust: list[list[int]]) -> int:
-    delta = defaultdict(int)
+    delta: dict[int, int] = {}
 
-    for src, dst in trust:
-        delta[src] -= 1
-        delta[dst] += 1
+    for edge in trust:
+        if len(edge) < 2:
+            continue
+        src0 = edge[0]
+        dst0 = edge[1]
+        if src0 is not None:
+            src = src0
+            if dst0 is not None:
+                dst = dst0
+
+                src_score = delta.get(src)
+                if src_score is None:
+                    delta[src] = -1
+                else:
+                    delta[src] = src_score - 1
+
+                dst_score = delta.get(dst)
+                if dst_score is None:
+                    delta[dst] = 1
+                else:
+                    delta[dst] = dst_score + 1
 
     for i in range(1, n + 1):
-        if delta[i] == n - 1:
+        score = delta.get(i)
+        if score is not None and score == n - 1:
             return i
     return -1
 
@@ -16,5 +35,3 @@ def main():
     assert str(findJudge(2, [[1,2]])) == '2'
     assert str(findJudge(3, [[1,3],[2,3]])) == '3'
     assert str(findJudge(3, [[1,3],[2,3],[3,1]])) == '-1'
-
-

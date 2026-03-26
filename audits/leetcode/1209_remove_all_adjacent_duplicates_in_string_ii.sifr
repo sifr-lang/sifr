@@ -1,25 +1,39 @@
 # LeetCode 1209: Remove All Adjacent Duplicates In String Ii
 
 def removeDuplicates(s: str, k: int) -> str:
-    stack = []  # [char, count]
+    current = s
+    changed = True
 
-    for c in s:
-        if stack and stack[-1][0] == c:
-            stack[-1][1] += 1
-        else:
-            stack.append([c, 1])
+    while changed:
+        changed = False
+        i = 0
+        out = ""
 
-        if stack[-1][1] == k:
-            stack.pop()
+        while i < len(current):
+            ch = current[i]
 
-    res = ""
-    for char, count in stack:
-        res += char * count
+            j = i + 1
+            while j < len(current):
+                cj = current[j]
+                if cj == ch:
+                    j += 1
+                else:
+                    break
 
-    return res
+            run = j - i
+            rem = run % k
+            if rem != run:
+                changed = True
+            r = 0
+            while r < rem:
+                out = out + ch
+                r += 1
+            i = j
+
+        current = out
+
+    return current
 
 def main():
     assert str(removeDuplicates("abcd", 2)) == 'abcd'
     assert str(removeDuplicates("deeedbbcccbdaa", 3)) == 'aa'
-
-

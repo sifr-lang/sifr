@@ -122,6 +122,18 @@ These broader feature phases already exist and should no longer be treated as fu
 
 ## Execution Log
 
+- `2026-03-26`: `m31_b_destructuring_and_composite_lvalues` slice 1 completed tuple-attribute unpack lowering plus canonical closure for non-tree cases.
+  - Execution report: `issues/phase31-m31b-tuple-attribute-and-canonical-closure-execution.md`
+  - Demo: `demos/phase31_m31b_tuple_attribute_and_canonical_surface_demo.sifr`
+  - Targeted result artifact: `verification/leetcode/phase31_m31b_wave3_tuple_and_canonical_results.json`
+  - Targeted five-case status: `NO_ORACLE=2`, `PASS=2`, `RUN_ERROR=1`
+  - Reclassification result:
+    - `0295_find_median_from_data_stream`: `CHECK_ERROR -> NO_ORACLE`
+    - `0703_kth_largest_element_in_a_stream`: `CHECK_ERROR -> NO_ORACLE`
+    - `0997_find_the_town_judge`: `CHECK_ERROR -> PASS`
+    - `1209_remove_all_adjacent_duplicates_in_string_ii`: `CHECK_ERROR -> PASS`
+  - Residual blocker:
+    - `0226_invert_binary_tree` now isolated to run-stage boxed optional-tree lowering
 - `2026-03-26`: `m31_a_optional_flow_completion` slice 15 completed local validation for canonical encoded-heap closure on IPO and Network Delay Time.
   - Execution report: `issues/phase31-m31a-encoded-heap-closure-execution.md`
   - Demo: `demos/phase31_heap_encoded_priority_queue_demo.sifr`
@@ -329,12 +341,17 @@ This order assumes the broader dependency phases are already landed and keeps th
 
 ### `m31_b_destructuring_and_composite_lvalues`
 
+- Current execution status (`2026-03-26`):
+  - tuple-assignment lowering now supports attribute targets (`obj.a, obj.b = ...`) in HIR/codegen
+  - canonical closure landed for `0295`, `0703`, `0997`, `1209`
+  - residual owner gap is now narrowed to `0226` run-stage boxed optional-tree lowering
 - Scope:
   - support fixed-shape destructuring into locals and attributes
   - support loop destructuring from known two-element items
   - support fixed-shape heterogeneous mutable cells used with subscript mutation
 - Affected ids:
-  - `0226`, `0295`, `0703`, `0997`, `1209`
+  - `0226` (remaining)
+  - `0295`, `0703`, `0997`, `1209` (closed in slice 1)
 - Definition of done:
   - these five cases move past destructuring/composite-lvalue failures
   - regression coverage exists for attribute destructuring, loop tuple targets, and fixed-shape subscript augassign

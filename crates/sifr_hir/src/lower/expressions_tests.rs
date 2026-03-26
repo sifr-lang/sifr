@@ -996,6 +996,43 @@ fn test_tuple_unpack_non_tuple() {
 }
 
 #[test]
+fn test_tuple_unpack_allows_attribute_targets() {
+    let module = lower_source(
+        "class Pair:\n    x: int\n    y: int\n    def __init__(self):\n        self.x = 1\n        self.y = 2\n    def swap(self):\n        self.x, self.y = self.y, self.x\n",
+    )
+    .unwrap();
+    let pair_class = module
+        .classes
+        .iter()
+        .find(|class| class.name == "Pair")
+        .expect("Pair class");
+    let swap_method = pair_class
+        .methods
+        .iter()
+        .find(|method| method.name == "swap")
+        .expect("swap method");
+    let HirStmt::TupleUnpack { targets, .. } = &swap_method.body[0] else {
+        panic!("expected tuple unpack statement");
+    };
+    assert!(matches!(
+        targets.as_slice(),
+        [
+            crate::hir_nodes::HirTupleTarget {
+                binding: crate::hir_nodes::HirTupleTargetBinding::Field { object: left_obj, field: left_field },
+                ..
+            },
+            crate::hir_nodes::HirTupleTarget {
+                binding: crate::hir_nodes::HirTupleTargetBinding::Field { object: right_obj, field: right_field },
+                ..
+            }
+        ] if left_obj == "self"
+            && left_field == "x"
+            && right_obj == "self"
+            && right_field == "y"
+    ));
+}
+
+#[test]
 fn test_for_tuple_target_requires_tuple_elements() {
     let result = lower_source(
         "def main():\n    nums: list[int] = [1, 2, 3]\n    for a, b in nums:\n        print(a)\n",
