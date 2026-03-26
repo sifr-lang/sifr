@@ -1,0 +1,116 @@
+{
+  "command_prefix": [
+    "target/debug/sifr"
+  ],
+  "manifest": "verification/leetcode/phase31_seed_corpus.json",
+  "output": "verification/leetcode/phase31_review_pass1_residual_pair_results.json",
+  "phase": 31,
+  "results": [
+    {
+      "difficulty": "easy",
+      "failure_stage": null,
+      "fixture_slug": "0001_two_sum",
+      "id": "0001",
+      "oracle_mode": "embedded_asserts",
+      "primary_topic": "arrays",
+      "scope_classification": "in_scope",
+      "stages": [
+        {
+          "command": [
+            "target/debug/sifr",
+            "check",
+            "audits/leetcode/0001_two_sum.sifr"
+          ],
+          "duration_ms": 329,
+          "returncode": 0,
+          "stage": "check",
+          "stderr": "no errors found",
+          "stdout": "",
+          "timed_out": false
+        },
+        {
+          "command": [
+            "target/debug/sifr",
+            "run",
+            "audits/leetcode/0001_two_sum.sifr"
+          ],
+          "duration_ms": 393,
+          "returncode": 0,
+          "stage": "run",
+          "stderr": "[sifr-artifact-cache] namespace=run key=68151cd7ea68dcef cache_hit=true workspace=/var/folders/lq/l19_y_rn76b8vprfvdjn9zch0000gn/T/sifr_generated_artifact_cache/run/68151cd7ea68dcef",
+          "stdout": "",
+          "timed_out": false
+        }
+      ],
+      "status": "PASS",
+      "timeout_seconds": 20
+    },
+    {
+      "difficulty": "easy",
+      "failure_stage": null,
+      "fixture_slug": "0242_valid_anagram",
+      "id": "0242",
+      "oracle_mode": "embedded_asserts",
+      "primary_topic": "hash_map",
+      "scope_classification": "in_scope",
+      "stages": [
+        {
+          "command": [
+            "target/debug/sifr",
+            "check",
+            "audits/leetcode/0242_valid_anagram.sifr"
+          ],
+          "duration_ms": 330,
+          "returncode": 0,
+          "stage": "check",
+          "stderr": "no errors found",
+          "stdout": "",
+          "timed_out": false
+        },
+        {
+          "command": [
+            "target/debug/sifr",
+            "run",
+            "audits/leetcode/0242_valid_anagram.sifr"
+          ],
+          "duration_ms": 972,
+          "returncode": 0,
+          "stage": "run",
+          "stderr": "[sifr-artifact-cache] namespace=run key=db93c4a478093c70 cache_hit=false workspace=/var/folders/lq/l19_y_rn76b8vprfvdjn9zch0000gn/T/sifr_generated_artifact_cache/run/db93c4a478093c70 miss_reason=not_found",
+          "stdout": "",
+          "timed_out": false
+        }
+      ],
+      "status": "PASS",
+      "timeout_seconds": 20
+    }
+  ],
+  "summary": {
+    "case_count": 2,
+    "difficulty_counts": {
+      "easy": 2,
+      "hard": 0,
+      "medium": 0
+    },
+    "scope_counts": {
+      "blocked_feature": 0,
+      "in_scope": 2,
+      "out_of_scope_external_dep": 0
+    },
+    "status_counts": {
+      "PASS": 2
+    },
+    "topic_counts": {
+      "arrays": 1,
+      "backtracking": 0,
+      "dp": 0,
+      "graphs": 0,
+      "hash_map": 1,
+      "heap_priority_queue": 0,
+      "math": 0,
+      "strings": 0,
+      "trees": 0,
+      "two_pointers_sliding_window": 0
+    }
+  }
+}

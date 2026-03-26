@@ -1,6 +1,6 @@
 # Phase 31 Follow-up Execution Tracker
 
-Status: complete (started 2026-03-26, closed 2026-03-26)
+Status: complete (started 2026-03-26, closed 2026-03-26; review-pass hardened on 2026-03-26)
 Owner: phase31 follow-up execution loop
 References:
 - `issues/phase31-ad-hoc-followup-milestones.md`
@@ -28,6 +28,36 @@ Loop contract per milestone: Plan -> Implement -> Validate -> Demo -> PR -> Revi
 9. [x] `m31_k_canonical_sifr_fixture_normalization`
 10. [x] `m31_i_corpus_fixture_canonicalization_for_multi_solution_files`
 
+## External Review Pass 1: Oracle-Mode and Residual Closure Hardening
+
+### Scope
+- Validate and act on external review findings in `reviews/phase31-ad-hoc-followup-milestones-review-pass-1.md`.
+- Eliminate weak `NO_ORACLE` closure paths in the Phase 31 seed corpus where assertions already exist.
+- Close unresolved snapshot-regression triplet (`0007`, `0009`, `0151`) and remaining non-pass residuals.
+
+### Root-cause changes
+- Upgraded all Phase 31 seed entries with embedded assertions from `no_oracle` to `embedded_asserts`:
+  - file: `verification/leetcode/phase31_seed_corpus.json`
+- Closed regression triplet via canonical explicit-mut adaptation:
+  - `audits/leetcode/0007_reverse_integer.sifr`
+  - `audits/leetcode/0009_palindrome_number.sifr`
+  - `audits/leetcode/0151_reverse_words_in_a_string.sifr`
+- Closed remaining residual pair:
+  - `audits/leetcode/0001_two_sum.sifr`
+  - `audits/leetcode/0242_valid_anagram.sifr`
+- Corrected oracle semantics wording:
+  - `internal_docs/verification/phase31_leetcode_corpus_policy.md`
+
+### Validation evidence
+- `verification/leetcode/phase31_review_pass1_oracle_upgrade_results.json` -> `PASS=14`
+- `verification/leetcode/phase31_review_pass1_regression_triplet_results.json` -> `PASS=3`
+- `verification/leetcode/phase31_review_pass1_residual_pair_results.json` -> `PASS=2`
+- `verification/leetcode/phase31_review_pass1_full_results_v2.json` -> `PASS=50`
+
+### Closeout status
+- External review pass 1 findings were addressed with root-cause fixes and explicit rerun artifacts.
+- Phase 31 seed corpus is now fully green (`PASS=50`).
+
 ## Milestone: `m31_i_corpus_fixture_canonicalization_for_multi_solution_files` (slice 1: canonical one-solution fixtures for `0215`, `1046`)
 
 ### Scope for this slice
@@ -49,9 +79,9 @@ Loop contract per milestone: Plan -> Implement -> Validate -> Demo -> PR -> Revi
 - Artifact: `verification/leetcode/phase31_m31i_wave2_canonical_fixture_results.json`
 - Targeted ids: `0215`, `1046`
 - Status snapshot:
-  - `NO_ORACLE=2`
-  - `0215_kth_largest_element_in_an_array`: `CHECK_ERROR -> NO_ORACLE`
-  - `1046_last_stone_weight`: `CHECK_ERROR -> NO_ORACLE`
+  - `NO_ORACLE=2` at slice close; promoted to assertion-verified `PASS=2` in review pass 1
+  - `0215_kth_largest_element_in_an_array`: `CHECK_ERROR -> NO_ORACLE -> PASS`
+  - `1046_last_stone_weight`: `CHECK_ERROR -> NO_ORACLE -> PASS`
 
 ### Local validation evidence
 - `scripts/run_all_tests.sh --profile quick` (pass)

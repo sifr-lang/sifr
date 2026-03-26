@@ -321,7 +321,7 @@
       "fixture_slug": "0127_word_ladder",
       "id": "0127",
       "oracle": {
-        "mode": "no_oracle"
+        "mode": "embedded_asserts"
       },
       "primary_topic": "graphs",
       "scope_classification": "in_scope",
@@ -338,7 +338,7 @@
       "fixture_slug": "0207_course_schedule",
       "id": "0207",
       "oracle": {
-        "mode": "no_oracle"
+        "mode": "embedded_asserts"
       },
       "primary_topic": "graphs",
       "scope_classification": "in_scope",
@@ -354,7 +354,7 @@
       "fixture_slug": "0684_redundant_connection",
       "id": "0684",
       "oracle": {
-        "mode": "no_oracle"
+        "mode": "embedded_asserts"
       },
       "primary_topic": "graphs",
       "scope_classification": "in_scope",
@@ -370,7 +370,7 @@
       "fixture_slug": "0743_network_delay_time",
       "id": "0743",
       "oracle": {
-        "mode": "no_oracle"
+        "mode": "embedded_asserts"
       },
       "primary_topic": "graphs",
       "scope_classification": "in_scope",
@@ -402,7 +402,7 @@
       "fixture_slug": "0100_same_tree",
       "id": "0100",
       "oracle": {
-        "mode": "no_oracle"
+        "mode": "embedded_asserts"
       },
       "primary_topic": "trees",
       "scope_classification": "in_scope",
@@ -418,7 +418,7 @@
       "fixture_slug": "0102_binary_tree_level_order_traversal",
       "id": "0102",
       "oracle": {
-        "mode": "no_oracle"
+        "mode": "embedded_asserts"
       },
       "primary_topic": "trees",
       "scope_classification": "in_scope",
@@ -434,7 +434,7 @@
       "fixture_slug": "0110_balanced_binary_tree",
       "id": "0110",
       "oracle": {
-        "mode": "no_oracle"
+        "mode": "embedded_asserts"
       },
       "primary_topic": "trees",
       "scope_classification": "in_scope",
@@ -450,7 +450,7 @@
       "fixture_slug": "0226_invert_binary_tree",
       "id": "0226",
       "oracle": {
-        "mode": "no_oracle"
+        "mode": "embedded_asserts"
       },
       "primary_topic": "trees",
       "scope_classification": "in_scope",
@@ -466,7 +466,7 @@
       "fixture_slug": "0235_lowest_common_ancestor_of_a_binary_search_tree",
       "id": "0235",
       "oracle": {
-        "mode": "no_oracle"
+        "mode": "embedded_asserts"
       },
       "primary_topic": "trees",
       "scope_classification": "in_scope",
@@ -635,7 +635,7 @@
       "fixture_slug": "0215_kth_largest_element_in_an_array",
       "id": "0215",
       "oracle": {
-        "mode": "no_oracle"
+        "mode": "embedded_asserts"
       },
       "primary_topic": "heap_priority_queue",
       "scope_classification": "in_scope",
@@ -651,7 +651,7 @@
       "fixture_slug": "0295_find_median_from_data_stream",
       "id": "0295",
       "oracle": {
-        "mode": "no_oracle"
+        "mode": "embedded_asserts"
       },
       "primary_topic": "heap_priority_queue",
       "scope_classification": "in_scope",
@@ -667,7 +667,7 @@
       "fixture_slug": "0502_ipo",
       "id": "0502",
       "oracle": {
-        "mode": "no_oracle"
+        "mode": "embedded_asserts"
       },
       "primary_topic": "heap_priority_queue",
       "scope_classification": "in_scope",
@@ -683,7 +683,7 @@
       "fixture_slug": "0703_kth_largest_element_in_a_stream",
       "id": "0703",
       "oracle": {
-        "mode": "no_oracle"
+        "mode": "embedded_asserts"
       },
       "primary_topic": "heap_priority_queue",
       "scope_classification": "in_scope",
@@ -699,7 +699,7 @@
       "fixture_slug": "1046_last_stone_weight",
       "id": "1046",
       "oracle": {
-        "mode": "no_oracle"
+        "mode": "embedded_asserts"
       },
       "primary_topic": "heap_priority_queue",
       "scope_classification": "in_scope",

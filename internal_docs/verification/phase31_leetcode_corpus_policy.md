@@ -33,7 +33,12 @@ The seed corpus is the authoritative Phase 31 baseline for milestone `31_1`.
   - `out_of_scope_external_dep`
 - Oracle modes:
   - `embedded_asserts`: the fixture contains self-checking `assert` statements; a successful `sifr run` is a passing oracle
-  - `no_oracle`: the fixture currently has no embedded sample assertions and is tracked for compile/runtime compatibility only
+  - `no_oracle`: assertions are not used as pass/fail oracle for that entry; it is tracked for compile/runtime compatibility only
+
+Current Phase 31 seed state (`2026-03-26` review pass 1):
+
+- `embedded_asserts`: `50`
+- `no_oracle`: `0`
 
 ## Determinism Rules
 

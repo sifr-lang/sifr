@@ -1,6 +1,6 @@
 # LeetCode 151: Reverse Words In A String
 
-def reverseWords(s: str) -> str:
+def reverseWords(mut s: str) -> str:
     # Remove leading and trailing spaces
     s = s.strip()
     
@@ -17,5 +17,4 @@ def reverseWords(s: str) -> str:
 
 def main():
     assert str(reverseWords("the sky is blue")) == 'blue is sky the'
-
 

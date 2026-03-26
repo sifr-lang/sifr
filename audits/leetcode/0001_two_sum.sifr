@@ -8,10 +8,11 @@ def twoSum(nums: list[int], target: int) -> list[int]:
         if diff in prevMap:
             return [prevMap[diff], i]
         prevMap[n] = i
+    fallback: list[int] = []
+    return fallback
 
 def main():
     assert str(twoSum([2,7,11,15], 9)) == '[0, 1]'
     assert str(twoSum([3,2,4], 6)) == '[1, 2]'
     assert str(twoSum([3,3], 6)) == '[0, 1]'
-
 
