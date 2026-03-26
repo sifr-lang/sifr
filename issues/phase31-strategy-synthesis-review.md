@@ -89,6 +89,11 @@ Execution delta (`2026-03-26`, `m31_j` slice 1):
 - canonical `own mut` closure landed for `1299`.
 - targeted status moved to `PASS=1` and `m31_j_own_mut_leetcode_closure` owner scope is now closed.
 
+Execution delta (`2026-03-26`, `m31_k` slice 1):
+
+- canonical parse-safe fixture normalization landed for `0043`.
+- targeted status moved to `PASS=1` and `m31_k_canonical_sifr_fixture_normalization` owner scope is now closed.
+
 ## Current Conclusion
 
 The current strategy is:
@@ -154,7 +159,6 @@ These fixtures now need explicit canonical Sifr parameter mutability or ownershi
 - `0007`
 - `0009`
 - `0015`
-- `0043`
 - `0090`
 - `0127`
 - `0151`
@@ -179,13 +183,11 @@ Interpretation:
 
 These still need canonicalization before their remaining compiler bugs can be judged cleanly:
 
-- `0043`
 - `0215`
 - `1046`
 
 Current status:
 
-- `0043` still mixes raw parse-safety mismatch with downstream compiler errors
 - `0215` still contains multiple top-level solution definitions and also hits mutability / return-typing follow-ons
 - `1046` still needs canonicalization and still degrades into `Any`-driven heap/math follow-ons
 
@@ -289,7 +291,7 @@ Interpretation:
 | `0009` | canonical fixture adaptation | explicit `mut` |
 | `0015` | closed in `m31_h` slice 1 | canonical local binding/shadowing closure (`PASS`) |
 | `0017` | closed in `m31_d` slice 1 | canonical nested-helper closure (`PASS`) |
-| `0043` | canonical fixture adaptation + closure | canonical rewrite + mutability/typing cleanup |
+| `0043` | closed in `m31_k` slice 1 | canonical parse-safe fixture normalization (`PASS`) |
 | `0050` | closed in `m31_d` slice 1 | canonical nested-helper closure (`PASS`) |
 | `0052` | closed in `m31_d` slice 1 | canonical workaround closure for recursive `nonlocal` (`PASS`) |
 | `0053` | normal closure | optional-flow |
@@ -332,4 +334,5 @@ The currently valid Phase 31 strategy is:
 - treat a significant part of the remaining seed corpus as canonical Sifr fixture adaptation, especially around explicit `mut` / `own mut`
 - treat container-literal specialization as a targeted compiler feature-sized item inside the carry-forward plan
 - treat nested-function residual work as closed in `m31_d` slice 1 (including `0052` canonical workaround route)
+- treat canonical parse-safety fixture normalization for `0043` as closed in `m31_k` slice 1
 - keep the rest in ordinary closure buckets: local-state/tree follow-ons, local-name binding, canonical fixture normalization, and ownership-surface closure.
