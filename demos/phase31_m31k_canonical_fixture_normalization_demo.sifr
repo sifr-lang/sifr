@@ -1,4 +1,4 @@
-# LeetCode 43: Multiply Strings
+# Phase 31 m31_k Demo: Canonical Sifr Fixture Normalization (0043)
 
 def parseDigit(ch: str) -> int:
     if ch == "0":
@@ -43,5 +43,6 @@ def multiply(num1: str, num2: str) -> str:
     return str(n1 * n2)
 
 def main():
-    assert str(multiply("2", "3")) == '6'
-    assert str(multiply("123", "456")) == '56088'
+    assert str(multiply("2", "3")) == "6"
+    assert str(multiply("123", "456")) == "56088"
+

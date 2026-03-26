@@ -28,7 +28,7 @@ Phase 31 itself is complete. This document is the carry-forward plan for the rem
 - Current passes: `13`
 - Remaining failing raw fixtures: `37`
 - Problems expected to be solvable in Sifr after this carry-forward: `37`
-- Known raw-source divergence requiring a canonical Sifr rewrite: `1` (`0043`)
+- Known raw-source divergence requiring a canonical Sifr rewrite: `0`
 
 Current snapshot regression relative to the warmed `2026-03-13` rerun:
 
@@ -122,6 +122,15 @@ These broader feature phases already exist and should no longer be treated as fu
 
 ## Execution Log
 
+- `2026-03-26`: `m31_k_canonical_sifr_fixture_normalization` slice 1 completed canonical parse-safe fixture closure.
+  - Execution report: `issues/phase31-m31k-canonical-sifr-fixture-normalization-execution.md`
+  - Demo: `demos/phase31_m31k_canonical_fixture_normalization_demo.sifr`
+  - Targeted result artifact: `verification/leetcode/phase31_m31k_wave3_canonical_fixture_results.json`
+  - Targeted one-case status: `PASS=1`
+  - Reclassification result:
+    - `0043_multiply_strings`: `CHECK_ERROR -> PASS`
+  - Milestone closure:
+    - `m31_k_canonical_sifr_fixture_normalization` owner scope is now closed
 - `2026-03-26`: `m31_j_own_mut_leetcode_closure` slice 1 completed canonical `own mut` closure.
   - Execution report: `issues/phase31-m31j-own-mut-closure-execution.md`
   - Demo: `demos/phase31_m31j_own_mut_closure_demo.sifr`
@@ -509,6 +518,9 @@ This order assumes the broader dependency phases are already landed and keeps th
 
 ### `m31_k_canonical_sifr_fixture_normalization`
 
+- Current execution status (`2026-03-26`):
+  - canonical parse-safe fixture closure landed for `0043`
+  - owner scope is now closed
 - Scope:
   - define the corpus rule for raw-source policy mismatches
   - keep the problem in scope while replacing the pass target with a canonical Sifr fixture
@@ -546,7 +558,7 @@ This order assumes the broader dependency phases are already landed and keeps th
 
 These are not unsupported LeetCode problems. They are raw source shapes we do not plan to support verbatim if doing so would weaken intentional Sifr guarantees.
 
-### `0043_multiply_strings`
+### `0043_multiply_strings` (resolved in `m31_k` slice 1)
 
 - Why it is a raw-source divergence:
   - the scraped Python solution relies on unchecked `int(str)` conversion
@@ -554,7 +566,7 @@ These are not unsupported LeetCode problems. They are raw source shapes we do no
   - weakening that behavior would change the language’s error model, not just fix a compiler bug
 - Carry-forward policy:
   - keep the problem in scope
-  - add a canonical Sifr rewrite and count that as the pass target
+  - add a canonical Sifr rewrite and count that as the pass target (completed)
   - rewrite only the conflicting parse-safety surface and keep the rest of the algorithm as close as possible to the existing supported form
   - document the raw-source incompatibility as a corpus divergence
 

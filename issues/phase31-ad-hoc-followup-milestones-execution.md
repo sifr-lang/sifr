@@ -25,8 +25,39 @@ Loop contract per milestone: Plan -> Implement -> Validate -> Demo -> PR -> Revi
 6. [x] `m31_l_tree_local_state_follow_on_closure`
 7. [x] `m31_h_local_name_binding_and_shadowing`
 8. [x] `m31_j_own_mut_leetcode_closure`
-9. [ ] `m31_k_canonical_sifr_fixture_normalization`
+9. [x] `m31_k_canonical_sifr_fixture_normalization`
 10. [ ] `m31_i_corpus_fixture_canonicalization_for_multi_solution_files`
+
+## Milestone: `m31_k_canonical_sifr_fixture_normalization` (slice 1: `0043` canonical parse-safe fixture)
+
+### Scope for this slice
+- Keep `0043_multiply_strings` in-scope while replacing its raw-source parse-safety mismatch with a canonical Sifr fixture.
+- Preserve language parse-safety guarantees; do not weaken `int(str)` semantics.
+- Ensure targeted corpus status moves to green from the canonical fixture.
+
+### Root-cause changes
+- Canonicalized `0043` to explicit parse-safe helpers:
+  - `parseDigit(ch: str) -> int`
+  - `parseNumber(s: str) -> int`
+  - preserved algorithm shape as parse -> multiply -> stringify
+  - file: `audits/leetcode/0043_multiply_strings.sifr`
+- Added slice demo:
+  - `demos/phase31_m31k_canonical_fixture_normalization_demo.sifr`
+
+### Targeted corpus evidence
+- Artifact: `verification/leetcode/phase31_m31k_wave3_canonical_fixture_results.json`
+- Targeted id: `0043`
+- Status snapshot:
+  - `PASS=1`
+  - `0043_multiply_strings`: `CHECK_ERROR -> PASS`
+
+### Local validation evidence
+- `scripts/run_all_tests.sh --profile quick` (pass)
+- `scripts/run_all_tests.sh` (pass)
+
+### Slice closeout status
+- Slice 1 goal satisfied for canonical parse-safe fixture normalization on `0043`.
+- `m31_k_canonical_sifr_fixture_normalization` owner scope is now closed.
 
 ## Milestone: `m31_g_container_literal_specialization_and_state_tracking`
 
