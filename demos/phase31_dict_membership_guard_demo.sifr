@@ -1,0 +1,28 @@
+# Phase 31 / m31_a slice 6 demo: dict membership guards narrow indexed reads.
+
+def guarded_lookup(table: dict[int, int], key: int) -> int:
+    if key not in table:
+        return -1
+    value: int = table[key]
+    return value
+
+def expression_lookup(table: dict[int, int], base: int) -> int:
+    if base + 1 in table.keys():
+        value: int = table[base + 1]
+        return value
+    return -1
+
+def sum_known_keys(table: dict[int, int], keys: list[int]) -> int:
+    total: int = 0
+    for key in keys:
+        if key in table:
+            total = total + table[key]
+    return total
+
+def main():
+    t: dict[int, int] = {1: 10, 2: 20, 4: 40}
+    assert guarded_lookup(t, 2) == 20
+    assert guarded_lookup(t, 3) == -1
+    assert expression_lookup(t, 1) == 20
+    assert expression_lookup(t, 2) == -1
+    assert sum_known_keys(t, [0, 1, 2, 5]) == 30

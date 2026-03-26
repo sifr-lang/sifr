@@ -1,4 +1,4 @@
-use super::sequence_guards::SequenceGuard;
+use super::sequence_guards::{key_guard_token, SequenceGuard};
 use super::LowerCtx;
 use sifr_python_ast::visitor::{self, Visitor};
 use sifr_python_ast::{
@@ -68,6 +68,7 @@ pub(super) fn detect_true_sequence_guards(expr: &Expr, ctx: &LowerCtx) -> Vec<Se
                     }
                     Vec::new()
                 }
+                CmpOp::In => dict_contains_guard(cmp.left.as_ref(), &cmp.comparators[0]),
                 _ => Vec::new(),
             }
         }
@@ -139,11 +140,44 @@ pub(super) fn detect_false_exit_sequence_guards(expr: &Expr, ctx: &LowerCtx) -> 
                     }
                     Vec::new()
                 }
+                CmpOp::NotIn => dict_contains_guard(cmp.left.as_ref(), &cmp.comparators[0]),
                 _ => Vec::new(),
             }
         }
         _ => Vec::new(),
     }
+}
+
+fn dict_contains_guard(key_expr: &Expr, haystack_expr: &Expr) -> Vec<SequenceGuard> {
+    let Some(key_expr_debug) = key_guard_token(key_expr) else {
+        return Vec::new();
+    };
+    if let Expr::Name(dict_name) = haystack_expr {
+        return vec![SequenceGuard::DictContains {
+            dict: dict_name.id.clone(),
+            key_expr_debug: key_expr_debug.clone(),
+        }];
+    }
+
+    let Expr::Call(call) = haystack_expr else {
+        return Vec::new();
+    };
+    if !call.arguments.args.is_empty() || !call.arguments.keywords.is_empty() {
+        return Vec::new();
+    }
+    let Expr::Attribute(attr) = call.func.as_ref() else {
+        return Vec::new();
+    };
+    if attr.attr.as_str() != "keys" {
+        return Vec::new();
+    }
+    let Expr::Name(dict_name) = attr.value.as_ref() else {
+        return Vec::new();
+    };
+    vec![SequenceGuard::DictContains {
+        dict: dict_name.id.clone(),
+        key_expr_debug,
+    }]
 }
 
 pub(super) fn detect_range_sequence_guards(

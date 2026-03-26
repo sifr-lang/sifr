@@ -1,4 +1,5 @@
 use super::LowerCtx;
+use sifr_python_ast::{Expr, Number, Operator, UnaryOp};
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub(super) enum SequenceGuard {
@@ -10,6 +11,10 @@ pub(super) enum SequenceGuard {
         sequence: String,
         index_var: String,
         max_offset: usize,
+    },
+    DictContains {
+        dict: String,
+        key_expr_debug: String,
     },
 }
 
@@ -55,6 +60,27 @@ impl LowerCtx {
                     index_var,
                     max_offset,
                 });
+            }
+            SequenceGuard::DictContains {
+                dict,
+                key_expr_debug,
+            } => {
+                if self.sequence_guards.iter().any(|existing| {
+                    matches!(
+                        existing,
+                        SequenceGuard::DictContains {
+                            dict: existing_dict,
+                            key_expr_debug: existing_key,
+                        } if existing_dict == &dict && existing_key == &key_expr_debug
+                    )
+                }) {
+                    return;
+                }
+                self.sequence_guards
+                    .push(SequenceGuard::DictContains {
+                        dict,
+                        key_expr_debug,
+                    });
             }
         }
     }
@@ -103,5 +129,62 @@ impl LowerCtx {
                     && *max_offset >= offset
             )
         })
+    }
+
+    pub(super) fn has_dict_key_guard(&self, dict: &str, key_expr: &Expr) -> bool {
+        let Some(key_expr_debug) = key_guard_token(key_expr) else {
+            return false;
+        };
+        self.sequence_guards.iter().any(|guard| {
+            matches!(
+                guard,
+                SequenceGuard::DictContains {
+                    dict: guard_dict,
+                    key_expr_debug: guard_key,
+                } if guard_dict == dict && guard_key == &key_expr_debug
+            )
+        })
+    }
+}
+
+pub(super) fn key_guard_token(expr: &Expr) -> Option<String> {
+    match expr {
+        Expr::Name(name) => Some(format!("name:{}", name.id)),
+        Expr::NumberLiteral(num) => match &num.value {
+            Number::Int(value) => Some(format!("int:{}", value)),
+            Number::Float(value) => Some(format!("float:{value}")),
+            Number::Complex { .. } => None,
+        },
+        Expr::UnaryOp(unary) => {
+            let operand = key_guard_token(&unary.operand)?;
+            let op = match unary.op {
+                UnaryOp::Not => "not",
+                UnaryOp::Invert => "~",
+                UnaryOp::UAdd => "+",
+                UnaryOp::USub => "-",
+            };
+            Some(format!("({op} {operand})"))
+        }
+        Expr::BinOp(binop) => {
+            let left = key_guard_token(&binop.left)?;
+            let right = key_guard_token(&binop.right)?;
+            let op = match binop.op {
+                Operator::Add => "+",
+                Operator::Sub => "-",
+                Operator::Mult => "*",
+                Operator::Div => "/",
+                Operator::Mod => "%",
+                Operator::Pow => "**",
+                Operator::LShift => "<<",
+                Operator::RShift => ">>",
+                Operator::BitOr => "|",
+                Operator::BitXor => "^",
+                Operator::BitAnd => "&",
+                Operator::FloorDiv => "//",
+                Operator::MatMult => "@",
+            };
+            Some(format!("({left} {op} {right})"))
+        }
+        _ => None,
     }
 }

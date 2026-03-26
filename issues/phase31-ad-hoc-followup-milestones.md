@@ -122,6 +122,12 @@ These broader feature phases already exist and should no longer be treated as fu
 
 ## Execution Log
 
+- `2026-03-26`: `m31_a_optional_flow_completion` slice 6 completed local validation for dict-membership guarded index narrowing.
+  - Execution report: `issues/phase31-m31a-dict-membership-guard-execution.md`
+  - Targeted result artifact: `verification/leetcode/phase31_m31a_wave6_dict_membership_results.json`
+  - Targeted three-case status: `PASS=2`, `RUN_ERROR=1`
+  - Confirmed passes: `0523_continuous_subarray_sum`, `0560_subarray_sum_equals_k`
+  - Remaining reclassified follow-on: `0001_two_sum` now fails only on raw fixture missing guaranteed return path (canonicalization/closure follow-on), not dict-membership optional narrowing.
 - `2026-03-26`: `m31_g_container_literal_specialization_and_state_tracking` completed local validation and targeted corpus rerun.
   - Execution report: `issues/phase31-ad-hoc-followup-milestones-execution.md`
   - Targeted result artifact: `verification/leetcode/phase31_m31g_wave1_results.json`
@@ -227,8 +233,9 @@ This order assumes the broader dependency phases are already landed and keeps th
 
 ### `m31_a_optional_flow_completion`
 
-- Current execution status (`2026-03-13`):
+- Current execution status (`2026-03-26`):
   - guarded sequence indexing, two-pointer `while`, sliding-window left-pointer narrowing, sentinel normalization, and reverse-range recurrence narrowing are already landed
+  - dict membership guarded narrowing for keyed dict reads (`key in dict`, `key in dict.keys()`, and `if key not in dict: return`) is landed in slice 6
   - remaining optional-flow work is now the narrower closure set below
 - Remaining root-cause scope:
   - fixed-index reads after length guards
