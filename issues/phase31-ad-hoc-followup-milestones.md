@@ -122,6 +122,16 @@ These broader feature phases already exist and should no longer be treated as fu
 
 ## Execution Log
 
+- `2026-03-26`: `m31_h_local_name_binding_and_shadowing` slice 1 completed canonical local-binding closure.
+  - Execution report: `issues/phase31-m31h-local-binding-shadowing-closure-execution.md`
+  - Demo: `demos/phase31_m31h_local_binding_shadowing_closure_demo.sifr`
+  - Targeted result artifact: `verification/leetcode/phase31_m31h_wave7_local_name_shadowing_results.json`
+  - Targeted two-case status: `PASS=2`
+  - Reclassification results:
+    - `0015_3sum`: `CHECK_ERROR -> PASS`
+    - `0424_longest_repeating_character_replacement`: `CHECK_ERROR -> PASS`
+  - Milestone closure:
+    - `m31_h_local_name_binding_and_shadowing` owner scope is now closed
 - `2026-03-26`: `m31_l_tree_local_state_follow_on_closure` slice 1 completed canonical tree local-state closure.
   - Execution report: `issues/phase31-m31l-tree-local-state-closure-execution.md`
   - Demo: `demos/phase31_m31l_tree_local_state_closure_demo.sifr`
@@ -457,6 +467,9 @@ This order assumes the broader dependency phases are already landed and keeps th
 
 ### `m31_h_local_name_binding_and_shadowing`
 
+- Current execution status (`2026-03-26`):
+  - canonical local binding/shadowing closure landed for `0015` and `0424`
+  - owner scope is now closed
 - Scope:
   - make local assignment shadow the enclosing function symbol immediately and consistently
   - audit same-block reads/comparisons so they resolve to the local binding
@@ -464,7 +477,7 @@ This order assumes the broader dependency phases are already landed and keeps th
   - `0015` is the primary owner case
   - `0424` should be rechecked here if its current `undefined variable: 'r'` failure remains after `m31_g` removes the `dict[Any, Any]` blocker
 - Affected ids:
-  - `0015`
+  - `0015` (closed in slice 1)
 - Definition of done:
   - `0015` moves past the `function` vs `int` comparison failure
   - regression coverage locks same-name local shadowing behavior

@@ -1,0 +1,51 @@
+# Phase 31 m31_h demo: local-binding and shadowing closure
+
+def threeSum(nums: list[int]) -> list[list[int]]:
+    res: list[list[int]] = []
+    seen: dict[str, bool] = {}
+    for i, a in enumerate(nums):
+        for j, b in enumerate(nums):
+            if j <= i:
+                continue
+            for k, c in enumerate(nums):
+                if k <= j:
+                    continue
+                if a + b + c != 0:
+                    continue
+                triplet = [a, b, c]
+                triplet.sort()
+                key = str(triplet)
+                if key in seen:
+                    continue
+                seen[key] = True
+                res.append(triplet)
+    return res
+
+def characterReplacement(s: str, k: int) -> int:
+    count: dict[str, int] = {}
+    l = 0
+    maxf = 0
+    best = 0
+    for r in range(len(s)):
+        ch = s[r]
+        current_count = 1 + count.get(ch, 0)
+        count[ch] = current_count
+        if current_count > maxf:
+            maxf = current_count
+
+        while (r - l + 1) - maxf > k:
+            left = s[l]
+            left_count = count.get(left, 0)
+            count[str(left)] = left_count - 1
+            l += 1
+
+        window = r - l + 1
+        if window > best:
+            best = window
+    return best
+
+def main():
+    out = str(threeSum([-1, 0, 1, 2, -1, -4]))
+    assert out == '[[-1, -1, 2], [-1, 0, 1]]' or out == '[[-1, 0, 1], [-1, -1, 2]]'
+    assert characterReplacement("ABAB", 2) == 4
+    assert characterReplacement("AABABBA", 1) == 4
