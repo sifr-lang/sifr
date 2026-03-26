@@ -1,35 +1,37 @@
 # LeetCode 684: Redundant Connection
 
-def findRedundantConnection(edges: list[list[int]]) -> list[int]:
-    par = [i for i in range(len(edges) + 1)]
-    rank = [1] * (len(edges) + 1)
+def find_root(n: int, par: list[int]) -> int:
+    if n < 0 or n >= len(par):
+        return 0
+    p = n
+    while p >= 0 and p < len(par) and par[p] != p:
+        p = par[p]
+    return p
 
-    def find(n):
-        p = par[n]
-        while p != par[p]:
-            par[p] = par[par[p]]
-            p = par[p]
-        return p
+def union_nodes(n1: int, n2: int, mut par: list[int], mut rank: list[int]) -> bool:
+    p1 = find_root(n1, par)
+    p2 = find_root(n2, par)
+    if p1 < 0 or p1 >= len(rank) or p2 < 0 or p2 >= len(rank):
+        return False
+    if p1 == p2:
+        return False
+    if rank[p1] > rank[p2]:
+        par[p2] = p1
+        rank[p1] = rank[p1] + rank[p2]
+    else:
+        par[p1] = p2
+        rank[p2] = rank[p2] + rank[p1]
+    return True
 
-    # return False if already unioned
-    def union(n1, n2):
-        p1, p2 = find(n1), find(n2)
-
-        if p1 == p2:
-            return False
-        if rank[p1] > rank[p2]:
-            par[p2] = p1
-            rank[p1] += rank[p2]
-        else:
-            par[p1] = p2
-            rank[p2] += rank[p1]
-        return True
+def findRedundantConnection(edges: list[tuple[int, int]]) -> list[int]:
+    par: list[int] = [i for i in range(len(edges) + 1)]
+    rank: list[int] = [1 for _ in range(len(edges) + 1)]
 
     for n1, n2 in edges:
-        if not union(n1, n2):
+        if not union_nodes(n1, n2, par, rank):
             return [n1, n2]
+    return []
 
 def main():
-    assert findRedundantConnection([[1, 2], [1, 3], [2, 3]]) == [2, 3]
-    assert findRedundantConnection([[1, 2], [2, 3], [3, 4], [1, 4], [1, 5]]) == [1, 4]
-
+    assert findRedundantConnection([(1, 2), (1, 3), (2, 3)]) == [2, 3]
+    assert findRedundantConnection([(1, 2), (2, 3), (3, 4), (1, 4), (1, 5)]) == [1, 4]

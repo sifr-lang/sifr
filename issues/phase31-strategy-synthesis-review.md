@@ -63,6 +63,12 @@ Execution delta (`2026-03-26`, `m31_b` slice 2):
 - `0226_invert_binary_tree` moved from `RUN_ERROR` to `NO_ORACLE` in targeted reruns.
 - `m31_b_destructuring_and_composite_lvalues` owner scope is now closed.
 
+Execution delta (`2026-03-26`, `m31_d` slice 1):
+
+- canonical nested-helper closure landed across all eight owner cases (`0017`, `0050`, `0052`, `0078`, `0090`, `0207`, `0684`, `0912`).
+- `0052` used the documented canonical workaround route for recursive `nonlocal` mutation instead of scope-expanding nested recursive `nonlocal`.
+- targeted status moved to `PASS=6`, `NO_ORACLE=2` and `m31_d_nested_function_pipeline_completion` owner scope is now closed.
+
 ## Current Conclusion
 
 The current strategy is:
@@ -202,26 +208,17 @@ Current representative failures:
 
 ### 5. Residual nested-function follow-ons and explicit boundary decisions
 
-These are no longer blocked on the broad nested-function phase itself, but they split into residual closure work and one explicit language-boundary decision:
+These are no longer active residuals:
 
-- `0017`
-- `0052`
-- `0078`
-- `0207`
-- `0684`
+- none (m31_d owner scope closed in slice 1)
 
 Current representative failures:
 
-- `dict[str, str]` indexed by `str | None`
-- recursive nested `nonlocal` mutation still rejected explicitly at the current language boundary
-- `Unknown`/`Any` flow into indexing
-- one run-time assertion failure:
-  - `0078`
+- none remaining in this bucket
 
 Interpretation:
 
-- `0017`, `0078`, `0207`, and `0684` remain residual compiler/runtime closure work
-- `0052` is not routine cleanup; it needs an explicit decision between extending recursive nested `nonlocal` support and adopting a canonical Sifr workaround pattern
+- no active nested-function residual currently remains in this bucket
 
 ### 6. Destructuring / class-surface follow-on closure
 
@@ -271,19 +268,19 @@ Interpretation:
 | `0007` | canonical fixture adaptation | explicit `mut` |
 | `0009` | canonical fixture adaptation | explicit `mut` |
 | `0015` | canonical fixture adaptation + closure | `mut` + local binding / optional-flow |
-| `0017` | normal closure | residual nested/iterable typing |
+| `0017` | closed in `m31_d` slice 1 | canonical nested-helper closure (`PASS`) |
 | `0043` | canonical fixture adaptation + closure | canonical rewrite + mutability/typing cleanup |
-| `0050` | normal closure | numeric/typing cleanup |
-| `0052` | explicit language-boundary decision | nested recursive `nonlocal` support or canonical workaround |
+| `0050` | closed in `m31_d` slice 1 | canonical nested-helper closure (`PASS`) |
+| `0052` | closed in `m31_d` slice 1 | canonical workaround closure for recursive `nonlocal` (`PASS`) |
 | `0053` | normal closure | optional-flow |
-| `0078` | normal closure | run-time regression |
-| `0090` | canonical fixture adaptation + closure | explicit `mut` + list typing |
+| `0078` | closed in `m31_d` slice 1 | canonical assertion-order closure (`PASS`) |
+| `0090` | closed in `m31_d` slice 1 | canonical nested-helper + mutability closure (`PASS`) |
 | `0100` | normal closure | recursive-tree residual under `m31_e` |
 | `0102` | normal closure | recursive-tree residual under `m31_e` |
 | `0110` | normal closure | bool/local-state follow-on |
 | `0127` | canonical fixture adaptation + closure | `mut` + residual optional/iterable typing |
 | `0151` | canonical fixture adaptation | explicit `mut` |
-| `0207` | normal closure | residual nested/destructuring/iterable typing |
+| `0207` | closed in `m31_d` slice 1 | canonical nested-helper closure (`NO_ORACLE`) |
 | `0215` | canonical fixture adaptation + closure | multi-solution canonicalization + `mut` + return typing |
 | `0226` | closed in `m31_b` slice 2 | recursive optional-field boxing closure (`NO_ORACLE`) |
 | `0235` | normal closure | recursive-tree residual under `m31_e` |
@@ -295,11 +292,11 @@ Interpretation:
 | `0502` | closed in `m31_a` slice 15 | canonical encoded-heap form (`NO_ORACLE`) |
 | `0523` | targeted compiler feature | container specialization |
 | `0560` | targeted compiler feature | container specialization |
-| `0684` | normal closure | residual nested/index typing |
+| `0684` | closed in `m31_d` slice 1 | canonical DSU helper closure (`NO_ORACLE`) |
 | `0703` | closed in `m31_b` slice 1 | canonical sorted-surface implementation (`NO_ORACLE`) |
 | `0743` | closed in `m31_a` slice 15 | canonical encoded-heap form (`NO_ORACLE`) |
 | `0746` | canonical fixture adaptation + closure | `mut` + optional-flow |
-| `0912` | canonical fixture adaptation + closure | `mut` |
+| `0912` | closed in `m31_d` slice 1 | canonical nested-helper closure (`PASS`) |
 | `0997` | closed in `m31_b` slice 1 | canonical guarded dict-surface implementation (`PASS`) |
 | `1046` | canonical fixture adaptation + closure | multi-solution canonicalization + `Any`/heap residuals |
 | `1209` | closed in `m31_b` slice 1 | canonical string-run reduction implementation (`PASS`) |

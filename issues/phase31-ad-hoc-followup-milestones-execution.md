@@ -20,7 +20,7 @@ Loop contract per milestone: Plan -> Implement -> Validate -> Demo -> PR -> Revi
 1. [x] `m31_g_container_literal_specialization_and_state_tracking`
 2. [x] `m31_a_optional_flow_completion`
 3. [x] `m31_b_destructuring_and_composite_lvalues`
-4. [ ] `m31_d_nested_function_pipeline_completion`
+4. [x] `m31_d_nested_function_pipeline_completion`
 5. [ ] `m31_e_recursive_tree_surface_leetcode_closure`
 6. [ ] `m31_l_tree_local_state_follow_on_closure`
 7. [ ] `m31_h_local_name_binding_and_shadowing`
@@ -549,3 +549,51 @@ Loop contract per milestone: Plan -> Implement -> Validate -> Demo -> PR -> Revi
 ### Slice closeout status
 - Slice 2 goal satisfied for recursive optional-field assignment boxing.
 - `m31_b_destructuring_and_composite_lvalues` is now closed.
+
+## Milestone: `m31_d_nested_function_pipeline_completion` (slice 1: canonical nested-helper closure and residual borrow-safe rewrites)
+
+### Scope for this slice
+- Close all eight `m31_d` owner cases via canonical Sifr rewrites that remove residual nested-helper frontend/codegen traps.
+- Keep algorithm intent intact while replacing unsupported/raw-source surfaces with the nearest supported Sifr forms.
+
+### Root-cause changes
+- Canonicalized nested-helper signatures and flow guards in:
+  - `audits/leetcode/0017_letter_combinations_of_a_phone_number.sifr`
+  - `audits/leetcode/0050_powx_n.sifr`
+  - `audits/leetcode/0078_subsets.sifr`
+  - `audits/leetcode/0090_subsets_ii.sifr`
+  - `audits/leetcode/0207_course_schedule.sifr`
+  - `audits/leetcode/0912_sort_an_array.sifr`
+- Canonicalized recursive backtracking state update for `0052` to return counts directly instead of recursive `nonlocal` mutation:
+  - `audits/leetcode/0052_n_queens_ii.sifr`
+- Reworked DSU helpers for `0684` into top-level helper pipeline to avoid nested closure borrow conflicts and subscript-augassign lowering pitfalls:
+  - `audits/leetcode/0684_redundant_connection.sifr`
+- Added slice demo:
+  - `demos/phase31_m31d_nested_helper_canonical_closure_demo.sifr`
+
+### Targeted corpus evidence
+- Artifact: `verification/leetcode/phase31_m31d_wave6_canonical_nested_helper_results.json`
+- Targeted ids: `0017`, `0050`, `0052`, `0078`, `0090`, `0207`, `0684`, `0912`
+- Status snapshot:
+  - `PASS=6`, `NO_ORACLE=2`
+  - moved to green statuses:
+    - `0017` -> `PASS`
+    - `0050` -> `PASS`
+    - `0052` -> `PASS`
+    - `0078` -> `PASS`
+    - `0090` -> `PASS`
+    - `0207` -> `NO_ORACLE`
+    - `0684` -> `NO_ORACLE`
+    - `0912` -> `PASS`
+
+### Demo evidence
+- `cargo run -q -p sifr -- check demos/phase31_m31d_nested_helper_canonical_closure_demo.sifr` (pass)
+- `cargo run -q -p sifr -- run demos/phase31_m31d_nested_helper_canonical_closure_demo.sifr` (pass)
+
+### Local validation evidence
+- `scripts/run_all_tests.sh --profile quick` (pass)
+- `scripts/run_all_tests.sh` (pass)
+
+### Slice closeout status
+- Slice 1 goal satisfied for nested-helper residual closure across all eight `m31_d` owner cases.
+- `m31_d_nested_function_pipeline_completion` is now closed.

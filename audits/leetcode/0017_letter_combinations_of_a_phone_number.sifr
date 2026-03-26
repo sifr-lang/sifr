@@ -1,23 +1,26 @@
 # LeetCode 17: Letter Combinations Of A Phone Number
 
 def letterCombinations(digits: str) -> list[str]:
-    res = []
-    digitToChar = {
-        "2": "abc",
-        "3": "def",
-        "4": "ghi",
-        "5": "jkl",
-        "6": "mno",
-        "7": "qprs",
-        "8": "tuv",
-        "9": "wxyz",
+    res: list[str] = []
+    digitToChar: dict[str, list[str]] = {
+        "2": ["a", "b", "c"],
+        "3": ["d", "e", "f"],
+        "4": ["g", "h", "i"],
+        "5": ["j", "k", "l"],
+        "6": ["m", "n", "o"],
+        "7": ["p", "q", "r", "s"],
+        "8": ["t", "u", "v"],
+        "9": ["w", "x", "y", "z"],
     }
 
-    def backtrack(i, curStr):
-        if len(curStr) == len(digits):
-            res.append(curStr)
+    def backtrack(i: int, curStr: str) -> None:
+        if i >= len(digits):
+            res.append(str(curStr))
             return
-        for c in digitToChar[digits[i]]:
+        digit = digits[i]
+        if digit not in digitToChar:
+            return
+        for c in digitToChar[digit]:
             backtrack(i + 1, curStr + c)
 
     if digits:
@@ -27,5 +30,3 @@ def letterCombinations(digits: str) -> list[str]:
 
 def main():
     assert str(letterCombinations("23")) == '["ad", "ae", "af", "bd", "be", "bf", "cd", "ce", "cf"]'
-
-
