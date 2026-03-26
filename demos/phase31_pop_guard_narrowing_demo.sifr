@@ -1,0 +1,12 @@
+# Phase 31 / m31_a slice 10 demo: non-empty flow narrows list.pop() to T.
+
+def drain(mut values: list[int]) -> int:
+    total: int = 0
+    while values:
+        item: int = values.pop()
+        total = total + item
+    return total
+
+def main():
+    assert drain([1, 2, 3, 4]) == 10
+    assert drain([]) == 0

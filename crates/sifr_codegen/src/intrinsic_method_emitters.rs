@@ -602,6 +602,7 @@ impl RustEmitter {
         object: &HirExpr,
         method: &str,
         args: &[HirExpr],
+        method_return_ty: &Type,
     ) -> Option<crate::RustExpr> {
         if let Some(lowered) =
             self.try_lower_defaultdict_index_method_call_expr(object, method, args)
@@ -702,7 +703,47 @@ impl RustEmitter {
             &arg_exprs,
             is_deque_data_field,
         )?;
-        Some(lowered.expr)
+        Some(self.unwrap_compiler_verified_nonempty_pop_result(
+            object_ty,
+            method,
+            args,
+            method_return_ty,
+            lowered.expr,
+        ))
+    }
+
+    fn unwrap_compiler_verified_nonempty_pop_result(
+        &self,
+        object_ty: &Type,
+        method: &str,
+        args: &[HirExpr],
+        method_return_ty: &Type,
+        lowered_expr: crate::RustExpr,
+    ) -> crate::RustExpr {
+        if !matches!(crate::resolve_alias_type_for_plain_call(object_ty), Type::List(_)) {
+            return lowered_expr;
+        }
+        if !matches!(method, "pop" | "popleft") || !args.is_empty() {
+            return lowered_expr;
+        }
+        if crate::helpers::is_option_type(method_return_ty) {
+            return lowered_expr;
+        }
+        crate::RustExpr::Block {
+            stmts: vec![crate::RustStmt::LetElse {
+                pattern: "Some(__sifr_nonempty_pop_value)".to_string(),
+                value: lowered_expr,
+                else_body: vec![crate::RustStmt::Expr(crate::RustExpr::MacroCall {
+                    name: "unreachable".to_string(),
+                    args: vec![crate::RustExpr::Literal(crate::RustLiteral::Str(
+                        "compiler-verified non-empty pop should return Some".to_string(),
+                    ))],
+                })],
+            }],
+            expr: Some(Box::new(crate::RustExpr::Ident(
+                "__sifr_nonempty_pop_value".to_string(),
+            ))),
+        }
     }
 
     fn try_lower_registry_set_method_call_expr(
@@ -1010,7 +1051,7 @@ impl RustEmitter {
                 object,
                 method,
                 args,
-                ..
+                ty,
             } => {
                 let needs_self_field_clone_suppression =
                     self.method_call_needs_field_clone_suppression(object, method);
@@ -1052,7 +1093,13 @@ impl RustEmitter {
                     &arg_exprs,
                     self.is_deque_data_field(object),
                 ) {
-                    return Some(lowered.expr);
+                    return Some(self.unwrap_compiler_verified_nonempty_pop_result(
+                        object.ty(),
+                        method,
+                        args,
+                        ty,
+                        lowered.expr,
+                    ));
                 }
                 if let Some(method_params) =
                     self.resolve_registry_method_params(object.ty(), method)

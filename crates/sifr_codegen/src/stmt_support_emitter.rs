@@ -1282,6 +1282,7 @@ impl RustEmitter {
                 object,
                 method,
                 args,
+                expr.ty(),
             );
             if needs_field_clone_suppression
                 && self.pending_self_field_clone_suppression > suppression_prev
@@ -3533,6 +3534,7 @@ impl RustEmitter {
                     object,
                     method,
                     args,
+                    expr.ty(),
                 );
 
                 if needs_self_field_clone_suppression
