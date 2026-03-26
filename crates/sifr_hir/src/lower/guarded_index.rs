@@ -12,6 +12,13 @@ pub(super) fn guarded_sequence_index_result_type(
             Type::List(elem_ty) => {
                 guarded_element_type(sequence_name.id.as_str(), elem_ty, &sub.slice, ctx)
             }
+            Type::Dict(_, value_ty) => {
+                if ctx.has_dict_key_guard(sequence_name.id.as_str(), &sub.slice) {
+                    Some(*value_ty.clone())
+                } else {
+                    None
+                }
+            }
             Type::Str => guarded_string_index_type(sequence_name.id.as_str(), &sub.slice, ctx),
             _ => None,
         };
@@ -262,6 +269,39 @@ mod tests {
                 .message
                 .contains("type mismatch: expected 'int', got 'int | None'")
         }));
+    }
+
+    #[test]
+    fn test_dict_index_narrows_after_in_membership_guard() {
+        let result = lower_source(
+            "def main():\n    table: dict[int, int] = {1: 10}\n    key: int = 1\n    if key in table:\n        value: int = table[key]\n",
+        );
+        assert!(
+            result.is_ok(),
+            "dict index should narrow to value type when guarded by `key in dict`"
+        );
+    }
+
+    #[test]
+    fn test_dict_index_narrows_after_keys_membership_guard_with_expression_key() {
+        let result = lower_source(
+            "def main():\n    table: dict[int, int] = {1: 10}\n    base: int = 0\n    if base + 1 in table.keys():\n        value: int = table[base + 1]\n",
+        );
+        assert!(
+            result.is_ok(),
+            "dict index should narrow for matching expression key under `key in dict.keys()` guard"
+        );
+    }
+
+    #[test]
+    fn test_dict_index_narrows_after_not_in_early_return_guard() {
+        let result = lower_source(
+            "def pick(table: dict[int, int], key: int) -> int:\n    if key not in table:\n        return 0\n    return table[key]\n",
+        );
+        assert!(
+            result.is_ok(),
+            "post-guard dict index should narrow after `if key not in dict: return`"
+        );
     }
 
     #[test]

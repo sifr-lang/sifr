@@ -387,7 +387,7 @@ pub fn try_lower_leaf_expr(expr: &HirExpr) -> Option<RustExpr> {
         HirExpr::ConstructorCall {
             class_name, args, ..
         } => try_lower_simple_constructor_call_expr(class_name, args),
-        HirExpr::Index { object, index, .. } => try_lower_simple_index_expr(object, index),
+        HirExpr::Index { object, index, ty } => try_lower_simple_index_expr(object, index, ty),
         HirExpr::Slice {
             object,
             start,
@@ -930,7 +930,11 @@ fn try_lower_simple_defaultdict_index_expr(object: &HirExpr, index: &HirExpr) ->
     })
 }
 
-fn try_lower_simple_index_expr(object: &HirExpr, index: &HirExpr) -> Option<RustExpr> {
+fn try_lower_simple_index_expr(
+    object: &HirExpr,
+    index: &HirExpr,
+    result_ty: &Type,
+) -> Option<RustExpr> {
     if let Some(lowered) = try_lower_simple_defaultdict_index_expr(object, index) {
         return Some(lowered);
     }
@@ -938,7 +942,7 @@ fn try_lower_simple_index_expr(object: &HirExpr, index: &HirExpr) -> Option<Rust
         Type::Dict(_, value_ty) => {
             let projection_method =
                 crate::helpers::option_projection_method_for_owned_type(value_ty.as_ref());
-            Some(RustExpr::MethodCall {
+            let projected = RustExpr::MethodCall {
                 receiver: Box::new(RustExpr::MethodCall {
                     receiver: Box::new(try_lower_leaf_or_name_expr(object)?),
                     method: "get".to_string(),
@@ -946,7 +950,23 @@ fn try_lower_simple_index_expr(object: &HirExpr, index: &HirExpr) -> Option<Rust
                 }),
                 method: projection_method.to_string(),
                 args: vec![],
-            })
+            };
+            if is_option_like_simple(result_ty) {
+                Some(projected)
+            } else {
+                // Type checking proved this keyed read is present (e.g. guarded by `key in dict`).
+                // Keep runtime behavior explicit while avoiding Optional leakage in emitted Rust types.
+                Some(RustExpr::MethodCall {
+                    receiver: Box::new(projected),
+                    method: "expect".to_string(),
+                    args: vec![RustExpr::Ref {
+                        mutable: false,
+                        expr: Box::new(RustExpr::Literal(RustLiteral::Str(
+                            "dict index proven by guard".to_string(),
+                        ))),
+                    }],
+                })
+            }
         }
         Type::Any => Some(RustExpr::Index {
             expr: Box::new(try_lower_leaf_or_name_expr(object)?),
@@ -3428,6 +3448,49 @@ mod tests {
             ty: Type::Union(vec![Type::Int, Type::None]),
         };
         assert!(try_lower_leaf_expr(&expr).is_none());
+    }
+
+    #[test]
+    fn lowers_dict_index_to_optional_projection_for_optional_hir_type() {
+        let expr = HirExpr::Index {
+            object: Box::new(HirExpr::Name {
+                name: "table".to_string(),
+                ty: Type::Dict(Box::new(Type::Int), Box::new(Type::Int)),
+            }),
+            index: Box::new(HirExpr::IntLiteral(1)),
+            ty: Type::Union(vec![Type::Int, Type::None]),
+        };
+
+        let lowered = try_lower_leaf_expr(&expr).expect("dict index lowered");
+        assert!(matches!(
+            lowered,
+            RustExpr::MethodCall { method, .. } if method == "copied"
+        ));
+    }
+
+    #[test]
+    fn lowers_dict_index_to_expect_for_non_optional_hir_type() {
+        let expr = HirExpr::Index {
+            object: Box::new(HirExpr::Name {
+                name: "table".to_string(),
+                ty: Type::Dict(Box::new(Type::Int), Box::new(Type::Int)),
+            }),
+            index: Box::new(HirExpr::IntLiteral(1)),
+            ty: Type::Int,
+        };
+
+        let lowered = try_lower_leaf_expr(&expr).expect("dict index lowered");
+        let RustExpr::MethodCall {
+            receiver, method, ..
+        } = lowered
+        else {
+            panic!("expected method-call lowering");
+        };
+        assert_eq!(method, "expect");
+        assert!(matches!(
+            receiver.as_ref(),
+            RustExpr::MethodCall { method, .. } if method == "copied"
+        ));
     }
 
     #[test]
