@@ -720,10 +720,10 @@ impl RustEmitter {
         method_return_ty: &Type,
         lowered_expr: crate::RustExpr,
     ) -> crate::RustExpr {
-        if !matches!(crate::resolve_alias_type_for_plain_call(object_ty), Type::List(_)) {
+        if !supports_nonempty_pop_narrowing_type_for_codegen(object_ty) {
             return lowered_expr;
         }
-        if !matches!(method, "pop" | "popleft") || !args.is_empty() {
+        if !is_narrowable_pop_call_for_codegen(method, args) {
             return lowered_expr;
         }
         if crate::helpers::is_option_type(method_return_ty) {
@@ -1118,11 +1118,17 @@ impl RustEmitter {
                         }
                     }
                 }
-                Some(crate::RustExpr::MethodCall {
-                    receiver: Box::new(object_expr),
-                    method: method.clone(),
-                    args: arg_exprs,
-                })
+                Some(self.unwrap_compiler_verified_nonempty_pop_result(
+                    object.ty(),
+                    method,
+                    args,
+                    ty,
+                    crate::RustExpr::MethodCall {
+                        receiver: Box::new(object_expr),
+                        method: method.clone(),
+                        args: arg_exprs,
+                    },
+                ))
             }
             HirExpr::ConstructorCall {
                 class_name, args, ..
@@ -3799,6 +3805,22 @@ impl RustEmitter {
             method: "collect::<String>".to_string(),
             args: vec![],
         })
+    }
+}
+
+fn supports_nonempty_pop_narrowing_type_for_codegen(object_ty: &Type) -> bool {
+    match crate::resolve_alias_type_for_plain_call(object_ty) {
+        Type::List(_) => true,
+        Type::Class { name, .. } => name == "deque",
+        _ => false,
+    }
+}
+
+fn is_narrowable_pop_call_for_codegen(method: &str, args: &[HirExpr]) -> bool {
+    match method {
+        "pop" => matches!(args, [] | [HirExpr::IntLiteral(0)]),
+        "popleft" => args.is_empty(),
+        _ => false,
     }
 }
 

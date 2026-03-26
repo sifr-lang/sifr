@@ -14,7 +14,7 @@ pub(super) fn refine_nonempty_method_return_type(
         object_ty,
         object,
         method_name,
-        args.len(),
+        args,
         return_ty,
         ctx,
     )
@@ -25,20 +25,17 @@ pub(super) fn refine_nonempty_pop_return_type(
     object_ty: &Type,
     object: &HirExpr,
     method_name: &str,
-    arg_count: usize,
+    args: &[HirExpr],
     return_ty: &Type,
     ctx: &LowerCtx,
 ) -> Option<Type> {
-    if !matches!(object_ty.resolve_alias(), Type::List(_)) {
+    if !supports_nonempty_pop_narrowing_on_type(object_ty) {
         return None;
     }
     if !matches!(method_name, "pop" | "popleft") {
         return None;
     }
-    if method_name == "pop" && arg_count != 0 {
-        return None;
-    }
-    if method_name == "popleft" && arg_count != 0 {
+    if !is_narrowable_pop_call(method_name, args) {
         return None;
     }
     let HirExpr::Name { name, .. } = object else {
@@ -48,6 +45,22 @@ pub(super) fn refine_nonempty_pop_return_type(
         return None;
     }
     non_optional_union_variant(return_ty)
+}
+
+fn supports_nonempty_pop_narrowing_on_type(object_ty: &Type) -> bool {
+    match object_ty.resolve_alias() {
+        Type::List(_) => true,
+        Type::Class { name, .. } => name == "deque",
+        _ => false,
+    }
+}
+
+fn is_narrowable_pop_call(method_name: &str, args: &[HirExpr]) -> bool {
+    match method_name {
+        "pop" => matches!(args, [] | [HirExpr::IntLiteral(0)]),
+        "popleft" => args.is_empty(),
+        _ => false,
+    }
 }
 
 fn non_optional_union_variant(ty: &Type) -> Option<Type> {

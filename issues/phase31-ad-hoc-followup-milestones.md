@@ -122,6 +122,14 @@ These broader feature phases already exist and should no longer be treated as fu
 
 ## Execution Log
 
+- `2026-03-26`: `m31_a_optional_flow_completion` slice 11 completed local validation for guarded queue-pop narrowing (`pop(0)` and deque guarded pops).
+  - Execution report: `issues/phase31-m31a-guarded-queue-pop-execution.md`
+  - Demo: `demos/phase31_pop_guard_narrowing_demo.sifr`
+  - Targeted result artifact: `verification/leetcode/phase31_m31a_wave11_guarded_queue_pop_results.json`
+  - Targeted six-case status: `CHECK_ERROR=6` (count unchanged)
+  - Confirmed reclassification signal:
+    - `0127_word_ladder` moved further past optional-pop leakage:
+      - `None | T` comparison/len errors are now `T` comparison/len follow-ons
 - `2026-03-26`: `m31_a_optional_flow_completion` slice 10 completed local validation for guarded `pop`/`popleft` narrowing.
   - Execution report: `issues/phase31-m31a-pop-guard-narrowing-execution.md`
   - Demo: `demos/phase31_pop_guard_narrowing_demo.sifr`
@@ -272,6 +280,7 @@ This order assumes the broader dependency phases are already landed and keeps th
   - alias-backed end-pointer while guards are landed in slice 8 (`i = n - 1`, `while i >= 0`, `nums[i]`)
   - append-growth shape facts are landed in slice 9 (`for i in range(n): out.append(...)` establishes `len(out) >= n` for guarded indexed reads)
   - guarded `pop`/`popleft` reads now narrow under non-empty flow guards (`while seq:` / truthiness guards), removing optional pop leakage
+  - guarded queue-pop narrowing now includes safe `pop(0)` plus deque guarded pop/popleft shapes (slice 11)
   - remaining optional-flow work is now the narrower closure set below
 - Remaining root-cause scope:
   - fixed-index reads after length guards
