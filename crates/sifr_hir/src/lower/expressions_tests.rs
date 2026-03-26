@@ -127,11 +127,32 @@ fn test_guarded_list_pop_narrows_to_element_type() {
 }
 
 #[test]
+fn test_guarded_zero_index_list_pop_narrows_to_element_type() {
+    let result = lower_source(
+        "def main():\n    values: list[int] = [1, 2]\n    while values:\n        item: int = values.pop(0)\n",
+    );
+    assert!(
+        result.is_ok(),
+        "list.pop(0) under non-empty guard should narrow to element type"
+    );
+}
+
+#[test]
 fn test_unguarded_list_pop_stays_optional() {
     let result = lower_source("def main():\n    values: list[int] = [1, 2]\n    item: int = values.pop()\n");
     assert!(
         result.is_err(),
         "unguarded list.pop() should remain optional"
+    );
+}
+
+#[test]
+fn test_unguarded_zero_index_list_pop_stays_optional() {
+    let result =
+        lower_source("def main():\n    values: list[int] = [1, 2]\n    item: int = values.pop(0)\n");
+    assert!(
+        result.is_err(),
+        "unguarded list.pop(0) should remain optional"
     );
 }
 

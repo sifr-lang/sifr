@@ -38,6 +38,15 @@ fn test_generate_rust_guarded_list_pop_unwraps_compiler_verified_nonempty() {
 }
 
 #[test]
+fn test_generate_rust_guarded_list_pop_zero_unwraps_compiler_verified_nonempty() {
+    let rust_code = generate_rust_from_source(
+        "def main():\n    values: list[int] = [1, 2]\n    while values:\n        _: int = values.pop(0)\n",
+    );
+
+    assert!(rust_code.contains("compiler-verified non-empty pop should return Some"));
+}
+
+#[test]
 fn test_simple_function_codegen() {
     let module = HirModule {
         functions: vec![HirFunction {

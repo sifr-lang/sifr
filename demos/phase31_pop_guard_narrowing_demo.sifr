@@ -7,6 +7,15 @@ def drain(mut values: list[int]) -> int:
         total = total + item
     return total
 
+def drain_front(mut values: list[int]) -> int:
+    total: int = 0
+    while values:
+        item: int = values.pop(0)
+        total = total + item
+    return total
+
 def main():
     assert drain([1, 2, 3, 4]) == 10
     assert drain([]) == 0
+    assert drain_front([1, 2, 3, 4]) == 10
+    assert drain_front([]) == 0

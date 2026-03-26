@@ -297,3 +297,46 @@ Loop contract per milestone: Plan -> Implement -> Validate -> Demo -> PR -> Revi
 ### Slice closeout status
 - Slice 10 goal satisfied for guarded pop/popleft optional-flow narrowing.
 - Remaining `m31_a` work is now concentrated in fixed-index parameter head reads, subtractive recurrence indexing, and cross-milestone canonicalization/generic follow-ons.
+
+## Milestone: `m31_a_optional_flow_completion` (slice 11: guarded queue-pop narrowing)
+
+### Scope for this slice
+- Extend guarded pop narrowing to safe queue-pop shapes not covered in slice 10.
+- Keep non-zero/non-proven indexed pop behavior unchanged (`T | None`).
+
+### Root-cause changes
+- Extended non-empty pop narrowing rules in HIR:
+  - allow `list.pop(0)` under non-empty flow guards
+  - allow deque `pop`/`popleft` under non-empty flow guards
+  - file: `crates/sifr_hir/src/lower/nonempty_method_narrowing.rs`
+- Kept unsafe indexed pop calls optional:
+  - non-zero/non-literal pop indices remain `T | None`
+  - file: `crates/sifr_hir/src/lower/expressions_tests.rs`
+- Extended codegen parity bridge to this widened safe domain:
+  - file: `crates/sifr_codegen/src/intrinsic_method_emitters.rs`
+- Added codegen regression for guarded `pop(0)` lowering:
+  - file: `crates/sifr_codegen/src/lib_codegen_tests.rs`
+- Expanded demo coverage:
+  - `demos/phase31_pop_guard_narrowing_demo.sifr` now validates both `pop()` and `pop(0)`
+
+### Regression coverage
+- `test_guarded_zero_index_list_pop_narrows_to_element_type`
+- `test_unguarded_zero_index_list_pop_stays_optional`
+- `test_generate_rust_guarded_list_pop_zero_unwraps_compiler_verified_nonempty`
+
+### Targeted corpus evidence
+- Artifact: `verification/leetcode/phase31_m31a_wave11_guarded_queue_pop_results.json`
+- Targeted ids: `0053`, `0127`, `0322`, `0502`, `0743`, `0746`
+- Status snapshot:
+  - count-level status remains `CHECK_ERROR=6`
+  - `0127` moved further past optional-pop leakage:
+    - `cannot compare 'None | T' and 'str'` -> `cannot compare 'T' and 'str'`
+    - `len(... got 'None | T')` -> `len(... got 'T')`
+
+### Local validation evidence
+- `scripts/run_all_tests.sh --profile quick` (pass)
+- `scripts/run_all_tests.sh` (pass)
+
+### Slice closeout status
+- Slice 11 goal satisfied for guarded queue-pop optional-flow narrowing (`pop(0)` and deque guarded pops).
+- Remaining `m31_a` work is concentrated in fixed-index head reads without explicit guards, subtractive/value-dependent recurrence indexing, and cross-milestone canonical mutability/generic follow-ons.
