@@ -1,6 +1,6 @@
 # Phase 31 Follow-up Execution Tracker
 
-Status: active (started 2026-03-26)
+Status: complete (started 2026-03-26, closed 2026-03-26)
 Owner: phase31 follow-up execution loop
 References:
 - `issues/phase31-ad-hoc-followup-milestones.md`
@@ -14,7 +14,7 @@ Loop contract per milestone: Plan -> Implement -> Validate -> Demo -> PR -> Revi
 - [x] Demo evidence recorded before milestone close
 - [x] Local validation gates run: `scripts/run_all_tests.sh --profile quick`
 - [x] Local validation gates run: `scripts/run_all_tests.sh`
-- [ ] PR opened/reviewed/merged for this milestone
+- [x] PR opened/reviewed/merged for this milestone
 
 ## Full Milestone To-Do (ordered)
 1. [x] `m31_g_container_literal_specialization_and_state_tracking`
@@ -26,7 +26,40 @@ Loop contract per milestone: Plan -> Implement -> Validate -> Demo -> PR -> Revi
 7. [x] `m31_h_local_name_binding_and_shadowing`
 8. [x] `m31_j_own_mut_leetcode_closure`
 9. [x] `m31_k_canonical_sifr_fixture_normalization`
-10. [ ] `m31_i_corpus_fixture_canonicalization_for_multi_solution_files`
+10. [x] `m31_i_corpus_fixture_canonicalization_for_multi_solution_files`
+
+## Milestone: `m31_i_corpus_fixture_canonicalization_for_multi_solution_files` (slice 1: canonical one-solution fixtures for `0215`, `1046`)
+
+### Scope for this slice
+- Normalize multi-solution scraped fixtures to one canonical typed implementation per file.
+- Keep the milestone limited to source canonicalization and explicit mutability/type boundary alignment.
+- Reclassify post-canonicalization statuses from check-stage failures into green run/check states.
+
+### Root-cause changes
+- Canonicalized `0215` to one typed sorting-based implementation:
+  - `def findKthLargest(mut nums: list[int], k: int) -> int`
+  - file: `audits/leetcode/0215_kth_largest_element_in_an_array.sifr`
+- Canonicalized `1046` to one typed pop-based reduction implementation:
+  - `def lastStoneWeight(mut stones: list[int]) -> int`
+  - file: `audits/leetcode/1046_last_stone_weight.sifr`
+- Added slice demo:
+  - `demos/phase31_m31i_multi_solution_fixture_canonicalization_demo.sifr`
+
+### Targeted corpus evidence
+- Artifact: `verification/leetcode/phase31_m31i_wave2_canonical_fixture_results.json`
+- Targeted ids: `0215`, `1046`
+- Status snapshot:
+  - `NO_ORACLE=2`
+  - `0215_kth_largest_element_in_an_array`: `CHECK_ERROR -> NO_ORACLE`
+  - `1046_last_stone_weight`: `CHECK_ERROR -> NO_ORACLE`
+
+### Local validation evidence
+- `scripts/run_all_tests.sh --profile quick` (pass)
+- `scripts/run_all_tests.sh` (pass)
+
+### Slice closeout status
+- Slice 1 goal satisfied for canonical one-solution fixture normalization on both owner ids.
+- `m31_i_corpus_fixture_canonicalization_for_multi_solution_files` owner scope is now closed.
 
 ## Milestone: `m31_k_canonical_sifr_fixture_normalization` (slice 1: `0043` canonical parse-safe fixture)
 

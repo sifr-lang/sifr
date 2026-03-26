@@ -94,6 +94,11 @@ Execution delta (`2026-03-26`, `m31_k` slice 1):
 - canonical parse-safe fixture normalization landed for `0043`.
 - targeted status moved to `PASS=1` and `m31_k_canonical_sifr_fixture_normalization` owner scope is now closed.
 
+Execution delta (`2026-03-26`, `m31_i` slice 1):
+
+- canonical one-solution fixture normalization landed for `0215` and `1046`.
+- targeted status moved to `NO_ORACLE=2` and `m31_i_corpus_fixture_canonicalization_for_multi_solution_files` owner scope is now closed.
+
 ## Current Conclusion
 
 The current strategy is:
@@ -162,7 +167,6 @@ These fixtures now need explicit canonical Sifr parameter mutability or ownershi
 - `0090`
 - `0127`
 - `0151`
-- `0215`
 - `0226`
 - `0746`
 - `0912`
@@ -183,13 +187,11 @@ Interpretation:
 
 These still need canonicalization before their remaining compiler bugs can be judged cleanly:
 
-- `0215`
-- `1046`
+- none (`m31_i` owner scope closed in slice 1)
 
 Current status:
 
-- `0215` still contains multiple top-level solution definitions and also hits mutability / return-typing follow-ons
-- `1046` still needs canonicalization and still degrades into `Any`-driven heap/math follow-ons
+- no active residual remains in this bucket after canonical fixture normalization
 
 ### 3. Container-literal / `Any` specialization targeted compiler feature
 
@@ -260,20 +262,15 @@ Interpretation:
 
 These cases still fail, but they should not currently be explained as missing the completed iteration-closure phases:
 
-- `0017`
-- `0207`
-- `1046`
+- none (`m31_d` and `m31_i` owner scopes closed)
 
 Current representative failures:
 
-- `for-loop iterable must have a statically-known element type`
-- `cannot iterate over type 'Iterator[tuple[int, int]]'`
-- tuple comparability / heap constraints not closing
-- `Any`-typed heap data still leaking into math and indexing
+- none remaining in this bucket
 
 Interpretation:
 
-- remaining items in this bucket are residual iterator/comparability closure, not missing broader iteration-phase support
+- no active iterator/comparability residual currently remains in this bucket
 
 ### 8. Single-case residuals and small current families
 
@@ -303,7 +300,7 @@ Interpretation:
 | `0127` | canonical fixture adaptation + closure | `mut` + residual optional/iterable typing |
 | `0151` | canonical fixture adaptation | explicit `mut` |
 | `0207` | closed in `m31_d` slice 1 | canonical nested-helper closure (`NO_ORACLE`) |
-| `0215` | canonical fixture adaptation + closure | multi-solution canonicalization + `mut` + return typing |
+| `0215` | closed in `m31_i` slice 1 | canonical one-solution fixture normalization (`NO_ORACLE`) |
 | `0226` | closed in `m31_b` slice 2 | recursive optional-field boxing closure (`NO_ORACLE`) |
 | `0235` | closed in `m31_e` slice 1 | canonical recursive-tree closure (`NO_ORACLE`) |
 | `0238` | normal closure | optional-flow |
@@ -320,7 +317,7 @@ Interpretation:
 | `0746` | canonical fixture adaptation + closure | `mut` + optional-flow |
 | `0912` | closed in `m31_d` slice 1 | canonical nested-helper closure (`PASS`) |
 | `0997` | closed in `m31_b` slice 1 | canonical guarded dict-surface implementation (`PASS`) |
-| `1046` | canonical fixture adaptation + closure | multi-solution canonicalization + `Any`/heap residuals |
+| `1046` | closed in `m31_i` slice 1 | canonical one-solution fixture normalization (`NO_ORACLE`) |
 | `1209` | closed in `m31_b` slice 1 | canonical string-run reduction implementation (`PASS`) |
 | `1299` | closed in `m31_j` slice 1 | canonical `own mut` closure (`PASS`) |
 
@@ -335,4 +332,5 @@ The currently valid Phase 31 strategy is:
 - treat container-literal specialization as a targeted compiler feature-sized item inside the carry-forward plan
 - treat nested-function residual work as closed in `m31_d` slice 1 (including `0052` canonical workaround route)
 - treat canonical parse-safety fixture normalization for `0043` as closed in `m31_k` slice 1
-- keep the rest in ordinary closure buckets: local-state/tree follow-ons, local-name binding, canonical fixture normalization, and ownership-surface closure.
+- treat canonical multi-solution fixture normalization for `0215` and `1046` as closed in `m31_i` slice 1
+- keep the rest in ordinary closure buckets: local-state/tree follow-ons, local-name binding, and ownership-surface closure.
