@@ -122,6 +122,12 @@ These broader feature phases already exist and should no longer be treated as fu
 
 ## Execution Log
 
+- `2026-03-26`: `m31_a_optional_flow_completion` slice 12 completed local validation for fixed-index len-guard closure and canonical source alignment.
+  - Execution report: `issues/phase31-m31a-fixed-index-len-guard-execution.md`
+  - Demo: `demos/phase31_fixed_index_len_guard_demo.sifr`
+  - Targeted result artifact: `verification/leetcode/phase31_m31a_wave12_fixed_index_guard_results.json`
+  - Targeted six-case status: `PASS=2`, `CHECK_ERROR=4`
+  - Confirmed new passes: `0053_maximum_subarray`, `0746_min_cost_climbing_stairs`
 - `2026-03-26`: `m31_a_optional_flow_completion` slice 11 completed local validation for guarded queue-pop narrowing (`pop(0)` and deque guarded pops).
   - Execution report: `issues/phase31-m31a-guarded-queue-pop-execution.md`
   - Demo: `demos/phase31_pop_guard_narrowing_demo.sifr`
@@ -281,6 +287,7 @@ This order assumes the broader dependency phases are already landed and keeps th
   - append-growth shape facts are landed in slice 9 (`for i in range(n): out.append(...)` establishes `len(out) >= n` for guarded indexed reads)
   - guarded `pop`/`popleft` reads now narrow under non-empty flow guards (`while seq:` / truthiness guards), removing optional pop leakage
   - guarded queue-pop narrowing now includes safe `pop(0)` plus deque guarded pop/popleft shapes (slice 11)
+  - fixed-index len-guard closure is landed for `len(...) < / <=` false-exit proofs, and canonical fixture alignment landed `0053`/`0746` (slice 12)
   - remaining optional-flow work is now the narrower closure set below
 - Remaining root-cause scope:
   - fixed-index reads after length guards
@@ -292,7 +299,7 @@ This order assumes the broader dependency phases are already landed and keeps th
   - track range/loop bounds, arithmetic offsets such as `i + 1` and `i + 2`, and first-element access after non-empty proofs
   - keep the existing no-implicit-unwrap rule outside proven-safe flow
 - Affected ids:
-  - `0053`, `0127`, `0238`, `0322`, `0502`, `0743`, `0746`
+  - `0127`, `0322`, `0502`, `0743`
 - Definition of done:
   - these seven cases move past `int | None`, `None | str`, and `None | tuple[...]` failures
   - regression coverage exists for guarded queue/heap pops and guarded recurrence indexing

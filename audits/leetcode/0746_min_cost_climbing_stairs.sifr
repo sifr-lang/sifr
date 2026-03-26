@@ -1,12 +1,12 @@
 # LeetCode 746: Min Cost Climbing Stairs
 
-def minCostClimbingStairs(cost: list[int]) -> int:
+def minCostClimbingStairs(mut cost: list[int]) -> int:
+    if len(cost) < 2:
+        return 0
     for i in range(len(cost) - 3, -1, -1):
-        cost[i] += min(cost[i + 1], cost[i + 2])
+        cost[i] = cost[i] + min(cost[i + 1], cost[i + 2])
 
     return min(cost[0], cost[1])
 
 def main():
     assert str(minCostClimbingStairs([10,15,20])) == '15'
-
-
