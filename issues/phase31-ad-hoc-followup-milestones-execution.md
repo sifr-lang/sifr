@@ -340,3 +340,39 @@ Loop contract per milestone: Plan -> Implement -> Validate -> Demo -> PR -> Revi
 ### Slice closeout status
 - Slice 11 goal satisfied for guarded queue-pop optional-flow narrowing (`pop(0)` and deque guarded pops).
 - Remaining `m31_a` work is concentrated in fixed-index head reads without explicit guards, subtractive/value-dependent recurrence indexing, and cross-milestone canonical mutability/generic follow-ons.
+
+## Milestone: `m31_a_optional_flow_completion` (slice 12: fixed-index len-guard closure + canonical sources)
+
+### Scope for this slice
+- Add fixed-index narrowing for post-return `len(...) < / <=` guard forms.
+- Canonicalize residual seed fixtures whose raw form conflicts with Sifr safety/convention defaults.
+
+### Root-cause changes
+- Added false-exit min-length guard extraction:
+  - `len(seq) < K` and `len(seq) <= K` now propagate min-length facts on the fallthrough path
+  - file: `crates/sifr_hir/src/lower/sequence_guard_detection.rs`
+- Added fixed-index regressions:
+  - file: `crates/sifr_hir/src/lower/guarded_index.rs`
+- Canonicalized `0053` and `0746` sources:
+  - files: `audits/leetcode/0053_maximum_subarray.sifr`, `audits/leetcode/0746_min_cost_climbing_stairs.sifr`
+- Added slice demo:
+  - `demos/phase31_fixed_index_len_guard_demo.sifr`
+
+### Regression coverage
+- `test_early_return_len_lt_guard_narrows_fixed_index_type`
+- `test_early_return_len_lte_guard_narrows_fixed_index_type`
+
+### Targeted corpus evidence
+- Artifact: `verification/leetcode/phase31_m31a_wave12_fixed_index_guard_results.json`
+- Targeted ids: `0053`, `0127`, `0322`, `0502`, `0743`, `0746`
+- Status snapshot:
+  - `PASS=2`, `CHECK_ERROR=4`
+  - new passes: `0053`, `0746`
+
+### Local validation evidence
+- `scripts/run_all_tests.sh --profile quick` (pass)
+- `scripts/run_all_tests.sh` (pass)
+
+### Slice closeout status
+- Slice 12 goal satisfied for fixed-index len-guard closure and canonical source alignment on `0053`/`0746`.
+- Remaining `m31_a` work is now the narrower set: `0127`, `0322`, `0502`, `0743`.

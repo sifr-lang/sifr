@@ -1,0 +1,18 @@
+# Phase 31 / m31_a slice 12 demo: fixed-index reads after explicit len guards.
+
+def second_or_zero(values: list[int]) -> int:
+    if len(values) < 2:
+        return 0
+    return values[1]
+
+def min_cost_climbing(mut cost: list[int]) -> int:
+    if len(cost) < 2:
+        return 0
+    for i in range(len(cost) - 3, -1, -1):
+        cost[i] = cost[i] + min(cost[i + 1], cost[i + 2])
+    return min(cost[0], cost[1])
+
+def main():
+    assert second_or_zero([8, 13]) == 13
+    assert second_or_zero([8]) == 0
+    assert min_cost_climbing([10, 15, 20]) == 15

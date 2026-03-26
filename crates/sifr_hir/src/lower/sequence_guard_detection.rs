@@ -133,6 +133,30 @@ pub(super) fn detect_false_exit_sequence_guards(expr: &Expr, ctx: &LowerCtx) -> 
                         Vec::new()
                     }
                 }
+                CmpOp::Lt => {
+                    let Some(sequence_name) = len_call_sequence_name(cmp.left.as_ref()) else {
+                        return Vec::new();
+                    };
+                    let Some(min_len) = literal_usize(&cmp.comparators[0]) else {
+                        return Vec::new();
+                    };
+                    vec![SequenceGuard::MinLength {
+                        sequence: sequence_name,
+                        min_len,
+                    }]
+                }
+                CmpOp::LtE => {
+                    let Some(sequence_name) = len_call_sequence_name(cmp.left.as_ref()) else {
+                        return Vec::new();
+                    };
+                    let Some(max_len) = literal_usize(&cmp.comparators[0]) else {
+                        return Vec::new();
+                    };
+                    vec![SequenceGuard::MinLength {
+                        sequence: sequence_name,
+                        min_len: max_len.saturating_add(1),
+                    }]
+                }
                 CmpOp::GtE => {
                     if let (Expr::Name(index_name), Some(sequence_name)) = (
                         cmp.left.as_ref(),

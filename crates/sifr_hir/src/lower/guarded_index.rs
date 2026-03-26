@@ -293,6 +293,32 @@ mod tests {
     }
 
     #[test]
+    fn test_early_return_len_lt_guard_narrows_fixed_index_type() {
+        let result = lower_source_result(
+            "def pick(values: list[int]) -> int:\n    if len(values) < 2:\n        return 0\n    reveal_type(values[1])\n    return values[1]\n",
+        )
+        .expect("post-return len(values) < 2 guard should narrow values[1]");
+
+        assert!(result
+            .reveal_types
+            .iter()
+            .any(|diagnostic| diagnostic == "reveal_type: int"));
+    }
+
+    #[test]
+    fn test_early_return_len_lte_guard_narrows_fixed_index_type() {
+        let result = lower_source_result(
+            "def pick(values: list[int]) -> int:\n    if len(values) <= 1:\n        return 0\n    reveal_type(values[1])\n    return values[1]\n",
+        )
+        .expect("post-return len(values) <= 1 guard should narrow values[1]");
+
+        assert!(result
+            .reveal_types
+            .iter()
+            .any(|diagnostic| diagnostic == "reveal_type: int"));
+    }
+
+    #[test]
     fn test_early_return_or_guard_narrows_index_type() {
         let result = lower_source_result(
             "def pick(values: list[int], i: int, limit: int) -> int:\n    if i >= len(values) or limit < 0:\n        return 0\n    reveal_type(values[i])\n    return values[i]\n",
