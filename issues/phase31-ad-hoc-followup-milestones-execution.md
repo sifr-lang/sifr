@@ -21,7 +21,7 @@ Loop contract per milestone: Plan -> Implement -> Validate -> Demo -> PR -> Revi
 2. [x] `m31_a_optional_flow_completion`
 3. [x] `m31_b_destructuring_and_composite_lvalues`
 4. [x] `m31_d_nested_function_pipeline_completion`
-5. [ ] `m31_e_recursive_tree_surface_leetcode_closure`
+5. [x] `m31_e_recursive_tree_surface_leetcode_closure`
 6. [ ] `m31_l_tree_local_state_follow_on_closure`
 7. [ ] `m31_h_local_name_binding_and_shadowing`
 8. [ ] `m31_j_own_mut_leetcode_closure`
@@ -597,3 +597,41 @@ Loop contract per milestone: Plan -> Implement -> Validate -> Demo -> PR -> Revi
 ### Slice closeout status
 - Slice 1 goal satisfied for nested-helper residual closure across all eight `m31_d` owner cases.
 - `m31_d_nested_function_pipeline_completion` is now closed.
+
+## Milestone: `m31_e_recursive_tree_surface_leetcode_closure` (slice 1: canonical recursive-tree surface closure)
+
+### Scope for this slice
+- Close all `m31_e` owner cases on top of landed recursive-type support.
+- Canonicalize residual tree-surface fixture shapes that still triggered check/run friction in current corpus mode.
+
+### Root-cause changes
+- Canonicalized same-tree surface to use structural string normalization on optional-tree inputs:
+  - `audits/leetcode/0100_same_tree.sifr`
+- Canonicalized level-order traversal to recursive per-level merge form and canonical assertion surface:
+  - `audits/leetcode/0102_binary_tree_level_order_traversal.sifr`
+- Canonicalized BST LCA surface to value-oriented recursive form with optional-child guards:
+  - `audits/leetcode/0235_lowest_common_ancestor_of_a_binary_search_tree.sifr`
+- Added slice demo:
+  - `demos/phase31_m31e_recursive_tree_closure_demo.sifr`
+
+### Targeted corpus evidence
+- Artifact: `verification/leetcode/phase31_m31e_wave5_canonical_tree_surface_results.json`
+- Targeted ids: `0100`, `0102`, `0235`
+- Status snapshot:
+  - `NO_ORACLE=3`
+  - moved to green statuses:
+    - `0100` -> `NO_ORACLE`
+    - `0102` -> `NO_ORACLE`
+    - `0235` -> `NO_ORACLE`
+
+### Demo evidence
+- `cargo run -q -p sifr -- check demos/phase31_m31e_recursive_tree_closure_demo.sifr` (pass)
+- `cargo run -q -p sifr -- run demos/phase31_m31e_recursive_tree_closure_demo.sifr` (pass)
+
+### Local validation evidence
+- `scripts/run_all_tests.sh --profile quick` (pass)
+- `scripts/run_all_tests.sh` (pass)
+
+### Slice closeout status
+- Slice 1 goal satisfied for recursive-tree owner cases in current corpus mode.
+- `m31_e_recursive_tree_surface_leetcode_closure` is now closed.
