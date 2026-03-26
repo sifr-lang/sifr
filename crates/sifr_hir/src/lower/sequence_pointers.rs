@@ -83,7 +83,7 @@ pub(super) fn record_sequence_pointer_fact(ctx: &mut LowerCtx, name: &str, value
         ctx.set_zero_based_pointer(name.to_string());
         return;
     }
-    if let Some(sequence) = len_minus_one_sequence_name(value) {
+    if let Some(sequence) = len_minus_one_sequence_name(value, ctx) {
         ctx.set_end_pointer(name.to_string(), sequence);
     }
 }
@@ -120,7 +120,7 @@ fn expr_is_zero(expr: &Expr) -> bool {
     value.as_i64() == Some(0)
 }
 
-fn len_minus_one_sequence_name(expr: &Expr) -> Option<String> {
+fn len_minus_one_sequence_name(expr: &Expr, ctx: &LowerCtx) -> Option<String> {
     let Expr::BinOp(binop) = expr else {
         return None;
     };
@@ -130,7 +130,18 @@ fn len_minus_one_sequence_name(expr: &Expr) -> Option<String> {
     let Some(1) = literal_int(binop.right.as_ref()) else {
         return None;
     };
-    let Expr::Call(call) = binop.left.as_ref() else {
+    len_like_sequence_name(binop.left.as_ref(), ctx)
+}
+
+fn len_like_sequence_name(expr: &Expr, ctx: &LowerCtx) -> Option<String> {
+    len_call_sequence_name(expr).or_else(|| match expr {
+        Expr::Name(alias) => ctx.len_alias_sequence(alias.id.as_str()),
+        _ => None,
+    })
+}
+
+fn len_call_sequence_name(expr: &Expr) -> Option<String> {
+    let Expr::Call(call) = expr else {
         return None;
     };
     let Expr::Name(func_name) = call.func.as_ref() else {

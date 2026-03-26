@@ -122,6 +122,13 @@ These broader feature phases already exist and should no longer be treated as fu
 
 ## Execution Log
 
+- `2026-03-26`: `m31_a_optional_flow_completion` slice 8 completed local validation for end-pointer while-guard narrowing through `len(...)` aliases.
+  - Execution report: `issues/phase31-m31a-end-pointer-len-alias-execution.md`
+  - Targeted result artifact: `verification/leetcode/phase31_m31a_wave8_end_pointer_alias_results.json`
+  - Targeted seven-case status: `CHECK_ERROR=7` (count unchanged), with further narrowing in `0238`
+  - Confirmed reclassification signal:
+    - `0238_product_of_array_except_self` reduced optional arithmetic failures from 2 to 1 after `i = n - 1` / `while i >= 0` now narrows `nums[i]` via `n = len(nums)` alias-backed end-pointer flow
+    - remaining `0238` optional failure is isolated to sized-local `result[i]` growth proof
 - `2026-03-26`: `m31_a_optional_flow_completion` slice 7 completed local validation for `len(...)` alias range guard narrowing.
   - Execution report: `issues/phase31-m31a-len-alias-range-guard-execution.md`
   - Targeted result artifact: `verification/leetcode/phase31_m31a_wave7_len_alias_results.json`
@@ -244,6 +251,7 @@ This order assumes the broader dependency phases are already landed and keeps th
   - guarded sequence indexing, two-pointer `while`, sliding-window left-pointer narrowing, sentinel normalization, and reverse-range recurrence narrowing are already landed
   - dict membership guarded narrowing for keyed dict reads (`key in dict`, `key in dict.keys()`, and `if key not in dict: return`) is landed in slice 6
   - `len(...)` alias flow into `range(...)` bounds is landed in slice 7 (`n = len(seq)` now composes with forward/reverse range guarded indexing)
+  - alias-backed end-pointer while guards are landed in slice 8 (`i = n - 1`, `while i >= 0`, `nums[i]`)
   - remaining optional-flow work is now the narrower closure set below
 - Remaining root-cause scope:
   - fixed-index reads after length guards
