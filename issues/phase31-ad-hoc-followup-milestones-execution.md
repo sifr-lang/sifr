@@ -174,3 +174,44 @@ Loop contract per milestone: Plan -> Implement -> Validate -> Demo -> PR -> Revi
 ### Slice closeout status
 - Slice 7 goal satisfied for len-alias range-guard propagation.
 - `m31_a` milestone remains open for sized-local append growth proofs, subtractive/value-dependent recurrence indexing, and residual canonicalization follow-ons.
+
+## Milestone: `m31_a_optional_flow_completion` (slice 8: alias-backed end-pointer while guards)
+
+### Scope for this slice
+- Propagate end-pointer facts through `len(...)` aliases (`n = len(seq)` then `i = n - 1`).
+- Use `while i >= 0` as an in-range proof when `i` is a known end-pointer for the sequence.
+- Preserve existing optional behavior for unproven index shapes.
+
+### Root-cause changes
+- Extended sequence-pointer recording to resolve alias-backed `len(...) - 1` patterns:
+  - `crates/sifr_hir/src/lower/sequence_pointers.rs`
+- Extended true-guard detection for `i >= 0` when `i` is a known end-pointer:
+  - emits `IndexVarInRange` for the associated sequence
+  - `crates/sifr_hir/src/lower/sequence_guard_detection.rs`
+- Added guarded-index regression for while-loop end-pointer alias narrowing:
+  - `crates/sifr_hir/src/lower/guarded_index.rs`
+
+### Regression coverage
+- `test_while_end_pointer_len_alias_reveals_element_type`
+
+### Demo evidence
+- Demo file (updated): `demos/phase31_len_alias_range_guard_demo.sifr`
+- Demo validation:
+  - `cargo run -q -p sifr -- check demos/phase31_len_alias_range_guard_demo.sifr` (pass)
+  - `cargo run -q -p sifr -- run demos/phase31_len_alias_range_guard_demo.sifr` (pass)
+
+### Targeted corpus evidence
+- Artifact: `verification/leetcode/phase31_m31a_wave8_end_pointer_alias_results.json`
+- Targeted ids: `0053`, `0127`, `0238`, `0322`, `0502`, `0743`, `0746`
+- Status snapshot:
+  - count-level status remains `CHECK_ERROR=7`
+  - `0238` reduced from two optional arithmetic errors to one
+  - remaining `0238` optional failure is localized to sized-local `result[i]` flow under append growth
+
+### Local validation evidence
+- `scripts/run_all_tests.sh --profile quick` (pass)
+- `scripts/run_all_tests.sh` (pass)
+
+### Slice closeout status
+- Slice 8 goal satisfied for alias-backed end-pointer while-guard narrowing.
+- `m31_a` remains open for sized-local growth proofs and subtractive/value-dependent recurrence indexing.

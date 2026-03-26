@@ -68,6 +68,22 @@ pub(super) fn detect_true_sequence_guards(expr: &Expr, ctx: &LowerCtx) -> Vec<Se
                     }
                     Vec::new()
                 }
+                CmpOp::GtE => {
+                    if let (Expr::Name(index_name), Some(0)) =
+                        (cmp.left.as_ref(), literal_int(&cmp.comparators[0]))
+                    {
+                        if let Some(sequence_name) =
+                            ctx.end_pointer_sequence(index_name.id.as_str())
+                        {
+                            return vec![SequenceGuard::IndexVarInRange {
+                                sequence: sequence_name,
+                                index_var: index_name.id.clone(),
+                                max_offset: 0,
+                            }];
+                        }
+                    }
+                    Vec::new()
+                }
                 CmpOp::In => dict_contains_guard(cmp.left.as_ref(), &cmp.comparators[0]),
                 _ => Vec::new(),
             }
