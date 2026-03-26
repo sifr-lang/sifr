@@ -1,0 +1,195 @@
+{
+  "command_prefix": [
+    "target/debug/sifr"
+  ],
+  "manifest": "verification/leetcode/phase31_seed_corpus.json",
+  "output": "verification/leetcode/phase31_m31a_wave15_encoded_heap_closure_results.json",
+  "phase": 31,
+  "results": [
+    {
+      "difficulty": "hard",
+      "failure_stage": null,
+      "fixture_slug": "0127_word_ladder",
+      "id": "0127",
+      "oracle_mode": "no_oracle",
+      "primary_topic": "graphs",
+      "scope_classification": "in_scope",
+      "stages": [
+        {
+          "command": [
+            "target/debug/sifr",
+            "check",
+            "audits/leetcode/0127_word_ladder.sifr"
+          ],
+          "duration_ms": 336,
+          "returncode": 0,
+          "stage": "check",
+          "stderr": "no errors found",
+          "stdout": "",
+          "timed_out": false
+        },
+        {
+          "command": [
+            "target/debug/sifr",
+            "run",
+            "audits/leetcode/0127_word_ladder.sifr"
+          ],
+          "duration_ms": 410,
+          "returncode": 0,
+          "stage": "run",
+          "stderr": "[sifr-artifact-cache] namespace=run key=7d875e16d1d2144d cache_hit=true workspace=/var/folders/lq/l19_y_rn76b8vprfvdjn9zch0000gn/T/sifr_generated_artifact_cache/run/7d875e16d1d2144d",
+          "stdout": "",
+          "timed_out": false
+        }
+      ],
+      "status": "NO_ORACLE",
+      "timeout_seconds": 20
+    },
+    {
+      "difficulty": "medium",
+      "failure_stage": null,
+      "fixture_slug": "0322_coin_change",
+      "id": "0322",
+      "oracle_mode": "embedded_asserts",
+      "primary_topic": "dp",
+      "scope_classification": "in_scope",
+      "stages": [
+        {
+          "command": [
+            "target/debug/sifr",
+            "check",
+            "audits/leetcode/0322_coin_change.sifr"
+          ],
+          "duration_ms": 330,
+          "returncode": 0,
+          "stage": "check",
+          "stderr": "no errors found",
+          "stdout": "",
+          "timed_out": false
+        },
+        {
+          "command": [
+            "target/debug/sifr",
+            "run",
+            "audits/leetcode/0322_coin_change.sifr"
+          ],
+          "duration_ms": 411,
+          "returncode": 0,
+          "stage": "run",
+          "stderr": "[sifr-artifact-cache] namespace=run key=ca1978b54581ac12 cache_hit=true workspace=/var/folders/lq/l19_y_rn76b8vprfvdjn9zch0000gn/T/sifr_generated_artifact_cache/run/ca1978b54581ac12",
+          "stdout": "",
+          "timed_out": false
+        }
+      ],
+      "status": "PASS",
+      "timeout_seconds": 20
+    },
+    {
+      "difficulty": "hard",
+      "failure_stage": null,
+      "fixture_slug": "0502_ipo",
+      "id": "0502",
+      "oracle_mode": "no_oracle",
+      "primary_topic": "heap_priority_queue",
+      "scope_classification": "in_scope",
+      "stages": [
+        {
+          "command": [
+            "target/debug/sifr",
+            "check",
+            "audits/leetcode/0502_ipo.sifr"
+          ],
+          "duration_ms": 350,
+          "returncode": 0,
+          "stage": "check",
+          "stderr": "warning: int multiplication with non-constant operands may overflow i64 at runtime; consider using bigint for large values\nno errors found",
+          "stdout": "",
+          "timed_out": false
+        },
+        {
+          "command": [
+            "target/debug/sifr",
+            "run",
+            "audits/leetcode/0502_ipo.sifr"
+          ],
+          "duration_ms": 465,
+          "returncode": 0,
+          "stage": "run",
+          "stderr": "warning: int multiplication with non-constant operands may overflow i64 at runtime; consider using bigint for large values\n[sifr-artifact-cache] namespace=run key=47d300c0908ccdaf cache_hit=true workspace=/var/folders/lq/l19_y_rn76b8vprfvdjn9zch0000gn/T/sifr_generated_artifact_cache/run/47d300c0908ccdaf",
+          "stdout": "",
+          "timed_out": false
+        }
+      ],
+      "status": "NO_ORACLE",
+      "timeout_seconds": 20
+    },
+    {
+      "difficulty": "medium",
+      "failure_stage": null,
+      "fixture_slug": "0743_network_delay_time",
+      "id": "0743",
+      "oracle_mode": "no_oracle",
+      "primary_topic": "graphs",
+      "scope_classification": "in_scope",
+      "stages": [
+        {
+          "command": [
+            "target/debug/sifr",
+            "check",
+            "audits/leetcode/0743_network_delay_time.sifr"
+          ],
+          "duration_ms": 344,
+          "returncode": 0,
+          "stage": "check",
+          "stderr": "warning: int multiplication with non-constant operands may overflow i64 at runtime; consider using bigint for large values\nwarning: int multiplication with non-constant operands may overflow i64 at runtime; consider using bigint for large values\nno errors found",
+          "stdout": "",
+          "timed_out": false
+        },
+        {
+          "command": [
+            "target/debug/sifr",
+            "run",
+            "audits/leetcode/0743_network_delay_time.sifr"
+          ],
+          "duration_ms": 464,
+          "returncode": 0,
+          "stage": "run",
+          "stderr": "warning: int multiplication with non-constant operands may overflow i64 at runtime; consider using bigint for large values\nwarning: int multiplication with non-constant operands may overflow i64 at runtime; consider using bigint for large values\n[sifr-artifact-cache] namespace=run key=6828d10b3bc71bfd cache_hit=true workspace=/var/folders/lq/l19_y_rn76b8vprfvdjn9zch0000gn/T/sifr_generated_artifact_cache/run/6828d10b3bc71bfd",
+          "stdout": "",
+          "timed_out": false
+        }
+      ],
+      "status": "NO_ORACLE",
+      "timeout_seconds": 20
+    }
+  ],
+  "summary": {
+    "case_count": 4,
+    "difficulty_counts": {
+      "easy": 0,
+      "hard": 2,
+      "medium": 2
+    },
+    "scope_counts": {
+      "blocked_feature": 0,
+      "in_scope": 4,
+      "out_of_scope_external_dep": 0
+    },
+    "status_counts": {
+      "NO_ORACLE": 3,
+      "PASS": 1
+    },
+    "topic_counts": {
+      "arrays": 0,
+      "backtracking": 0,
+      "dp": 1,
+      "graphs": 2,
+      "hash_map": 0,
+      "heap_priority_queue": 1,
+      "math": 0,
+      "strings": 0,
+      "trees": 0,
+      "two_pointers_sliding_window": 0
+    }
+  }
+}
