@@ -1,5 +1,6 @@
 use crate::hir_nodes::{
-    HirClass, HirClassKind, HirExpr, HirFunction, HirParam, HirPattern, HirStmt, MethodKind,
+    HirClass, HirClassKind, HirExpr, HirFunction, HirParam, HirPattern, HirStmt,
+    HirTupleTargetBinding, MethodKind,
 };
 use sifr_python_ast::{Expr, Number, Stmt, StmtClassDef, UnaryOp};
 use sifr_type_system::{FunctionType, ParamConvention, Type};
@@ -985,9 +986,50 @@ pub(super) fn is_hashable_type(ty: &Type) -> bool {
 
 /// Check if a method body contains any field assignments (self.field = ...).
 pub(super) fn body_contains_field_assign(stmts: &[HirStmt]) -> bool {
-    stmts
-        .iter()
-        .any(|s| matches!(s, HirStmt::FieldAssign { .. }))
+    fn stmt_contains_field_assign(stmt: &HirStmt) -> bool {
+        match stmt {
+            HirStmt::FieldAssign { .. } => true,
+            HirStmt::TupleUnpack { targets, .. } => targets.iter().any(
+                |target| matches!(target.binding, HirTupleTargetBinding::Field { .. }),
+            ),
+            HirStmt::If {
+                then_body,
+                elif_clauses,
+                else_body,
+                ..
+            } => {
+                body_contains_field_assign(then_body)
+                    || elif_clauses
+                        .iter()
+                        .any(|(_, body)| body_contains_field_assign(body))
+                    || else_body
+                        .as_ref()
+                        .is_some_and(|body| body_contains_field_assign(body))
+            }
+            HirStmt::While {
+                body, else_body, ..
+            }
+            | HirStmt::For {
+                body, else_body, ..
+            } => {
+                body_contains_field_assign(body)
+                    || else_body
+                        .as_ref()
+                        .is_some_and(|body| body_contains_field_assign(body))
+            }
+            HirStmt::TryExcept { body, handlers, .. } => {
+                body_contains_field_assign(body)
+                    || handlers
+                        .iter()
+                        .any(|handler| body_contains_field_assign(&handler.body))
+            }
+            HirStmt::With { body, .. } => body_contains_field_assign(body),
+            HirStmt::Match { arms, .. } => arms.iter().any(|arm| body_contains_field_assign(&arm.body)),
+            _ => false,
+        }
+    }
+
+    stmts.iter().any(stmt_contains_field_assign)
 }
 
 pub(super) fn collect_literal_coverage(

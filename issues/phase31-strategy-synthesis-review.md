@@ -51,6 +51,12 @@ Execution delta (`2026-03-26`, `m31_a` slice 15):
 - `0502_ipo` and `0743_network_delay_time` were canonicalized to encoded-int heap forms and now run green as `NO_ORACLE` in targeted reruns.
 - `m31_a_optional_flow_completion` is closed for its owner scope (`0127`, `0322`, `0502`, `0743`).
 
+Execution delta (`2026-03-26`, `m31_b` slice 1):
+
+- tuple-unpack lowering now supports attribute targets (`obj.a, obj.b = ...`) in HIR/codegen.
+- canonical closure moved `0295`, `0703`, `0997`, and `1209` to green targeted statuses (`NO_ORACLE`/`PASS`).
+- `0226` is now isolated to a run-stage boxed optional-tree lowering gap.
+
 ## Current Conclusion
 
 The current strategy is:
@@ -216,21 +222,14 @@ Interpretation:
 These are still active residuals:
 
 - `0226`
-- `0295`
-- `0703`
-- `0997`
-- `1209`
 
 Current representative failures:
 
-- `tuple unpacking target must be a simple name`
-- `for loop tuple target expects iterable elements of tuple type, got 'list[int]'`
-- class-field follow-ons like missing `large` / `minHeap`
-- composite mutation target failures
+- run-stage Rust type mismatch on boxed optional-tree assignments after check-stage closure
 
 Interpretation:
 
-- `0226` is a tree-shaped case, but its current compiler blocker is attribute destructuring after canonical `own` adaptation, so the closure owner is `m31_b` rather than `m31_e`
+- `0226` remains owned by `m31_b` because its residual is a destructuring/class-surface lowering issue (boxed optional-tree assignment), not a broad recursive-type prerequisite
 
 ### 7. Iterator / comparability / concrete iterable follow-on closure
 
@@ -255,8 +254,6 @@ Interpretation:
 
 - `0050`
   - now a concrete float/int comparison closure bug, not primarily a nested-helper inference problem
-- `0295`
-  - also includes a float/int comparison mismatch, so mixed numeric comparison is a small current family to watch rather than a one-off
 - `0110`
   - now a bool/list/local-state closure bug, not primarily a recursive-attribute blocker
 
@@ -282,24 +279,24 @@ Interpretation:
 | `0151` | canonical fixture adaptation | explicit `mut` |
 | `0207` | normal closure | residual nested/destructuring/iterable typing |
 | `0215` | canonical fixture adaptation + closure | multi-solution canonicalization + `mut` + return typing |
-| `0226` | canonical fixture adaptation + closure | `own` adaptation + attribute destructuring under `m31_b` |
+| `0226` | normal closure | residual m31_b run-stage boxed optional-tree lowering |
 | `0235` | normal closure | recursive-tree residual under `m31_e` |
 | `0238` | normal closure | optional-flow |
 | `0242` | targeted compiler feature | container specialization |
-| `0295` | normal closure | numeric comparison + destructuring/class-surface follow-on |
+| `0295` | closed in `m31_b` slice 1 | canonical sorted-surface implementation (`NO_ORACLE`) |
 | `0322` | normal closure | optional-flow |
 | `0424` | targeted compiler feature + closure | container specialization + local name binding follow-on |
-| `0502` | normal closure | iterator/comparable residuals with downstream `Any` leakage |
+| `0502` | closed in `m31_a` slice 15 | canonical encoded-heap form (`NO_ORACLE`) |
 | `0523` | targeted compiler feature | container specialization |
 | `0560` | targeted compiler feature | container specialization |
 | `0684` | normal closure | residual nested/index typing |
-| `0703` | normal closure | destructuring/class-surface follow-on |
-| `0743` | normal closure | destructuring/iterator/comparable residuals |
+| `0703` | closed in `m31_b` slice 1 | canonical sorted-surface implementation (`NO_ORACLE`) |
+| `0743` | closed in `m31_a` slice 15 | canonical encoded-heap form (`NO_ORACLE`) |
 | `0746` | canonical fixture adaptation + closure | `mut` + optional-flow |
 | `0912` | canonical fixture adaptation + closure | `mut` |
-| `0997` | normal closure | destructuring |
+| `0997` | closed in `m31_b` slice 1 | canonical guarded dict-surface implementation (`PASS`) |
 | `1046` | canonical fixture adaptation + closure | multi-solution canonicalization + `Any`/heap residuals |
-| `1209` | normal closure | composite mutation / destructuring follow-on |
+| `1209` | closed in `m31_b` slice 1 | canonical string-run reduction implementation (`PASS`) |
 | `1299` | canonical fixture adaptation | explicit `own mut` rewrite |
 
 ## Bottom Line

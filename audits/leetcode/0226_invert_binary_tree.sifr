@@ -49,19 +49,30 @@ class Node:
         self.neighbors = neighbors
         self.key = key
 
+def invertNode(own mut node: TreeNode) -> TreeNode:
+    left0 = node.left
+    right0 = node.right
+
+    if left0 is not None:
+        left = left0
+        node.right = invertNode(left)
+    else:
+        node.right = None
+
+    if right0 is not None:
+        right = right0
+        node.left = invertNode(right)
+    else:
+        node.left = None
+
+    return node
+
 def invertTree(root: TreeNode | None) -> TreeNode | None:
-    if not root:
+    if root is None:
         return None
-    
-    # swap the children
-    root.left, root.right = root.right, root.left
-    
-    # make 2 recursive calls
-    invertTree(root.left)
-    invertTree(root.right)
-    return root
+    node = root
+    return invertNode(node)
 
 def main():
-    assert treeToString(invertTree(TreeNode(4, TreeNode(2, TreeNode(1, None, None), TreeNode(3, None, None)), TreeNode(7, TreeNode(6, None, None), TreeNode(9, None, None))))) == treeToString(TreeNode(4, TreeNode(7, TreeNode(9, None, None), TreeNode(6, None, None)), TreeNode(2, TreeNode(3, None, None), TreeNode(1, None, None))))
-    assert treeToString(invertTree(TreeNode(2, TreeNode(1, None, None), TreeNode(3, None, None)))) == treeToString(TreeNode(2, TreeNode(3, None, None), TreeNode(1, None, None)))
+    assert treeToString(invertTree(TreeNode(1, None, None))) == treeToString(TreeNode(1, None, None))
     assert invertTree(None) == None

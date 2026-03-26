@@ -1,0 +1,176 @@
+# Phase 31 m31_b wave 1 demo:
+# tuple attribute unpack lowering + canonical composite-surface fixtures.
+
+class Pair:
+    x: int
+    y: int
+
+    def __init__(self, x: int, y: int):
+        self.x = x
+        self.y = y
+
+def swap_pair(mut pair: Pair) -> None:
+    pair.x, pair.y = pair.y, pair.x
+
+class MedianFinder:
+    nums: list[int]
+
+    def __init__(self):
+        self.nums = []
+
+    def addNum(self, num: int) -> None:
+        i = 0
+        while i < len(self.nums):
+            cur = self.nums[i]
+            if cur is not None:
+                cur_val = cur
+                if num <= cur_val:
+                    break
+            i += 1
+        left = self.nums[:i]
+        right = self.nums[i:]
+        self.nums = left + [num] + right
+
+    def findMedian(self) -> float:
+        n = len(self.nums)
+        if n == 0:
+            return 0.0
+        if n % 2 == 1:
+            mid = self.nums[n // 2]
+            if mid is not None:
+                return mid / 1.0
+            return 0.0
+        left = self.nums[(n // 2) - 1]
+        right = self.nums[n // 2]
+        if left is not None and right is not None:
+            return (left + right) / 2.0
+        return 0.0
+
+class KthLargest:
+    values: list[int]
+    k: int
+
+    def __init__(self, k: int, nums: list[int]):
+        self.k = k
+        ordered: list[int] = []
+        for num in nums:
+            i = 0
+            while i < len(ordered):
+                cur = ordered[i]
+                if num <= cur:
+                    break
+                i += 1
+            ordered = ordered[:i] + [num] + ordered[i:]
+        self.values = ordered
+
+    def add(self, val: int) -> int:
+        i = 0
+        while i < len(self.values):
+            cur = self.values[i]
+            if val <= cur:
+                break
+            i += 1
+        self.values = self.values[:i] + [val] + self.values[i:]
+
+        idx = len(self.values) - self.k
+        if idx < 0:
+            idx = 0
+        if idx >= len(self.values):
+            return val
+        kth = self.values[idx]
+        if kth is None:
+            return val
+        kth_val = kth
+        return kth_val
+
+def findJudge(n: int, trust: list[list[int]]) -> int:
+    delta: dict[int, int] = {}
+
+    for edge in trust:
+        if len(edge) < 2:
+            continue
+        src0 = edge[0]
+        dst0 = edge[1]
+        if src0 is not None:
+            src = src0
+            if dst0 is not None:
+                dst = dst0
+
+                src_score = delta.get(src)
+                if src_score is None:
+                    delta[src] = -1
+                else:
+                    delta[src] = src_score - 1
+
+                dst_score = delta.get(dst)
+                if dst_score is None:
+                    delta[dst] = 1
+                else:
+                    delta[dst] = dst_score + 1
+
+    for i in range(1, n + 1):
+        score = delta.get(i)
+        if score is not None and score == n - 1:
+            return i
+    return -1
+
+def removeDuplicates(s: str, k: int) -> str:
+    current = s
+    changed = True
+
+    while changed:
+        changed = False
+        i = 0
+        out = ""
+
+        while i < len(current):
+            ch = current[i]
+
+            j = i + 1
+            while j < len(current):
+                cj = current[j]
+                if cj == ch:
+                    j += 1
+                else:
+                    break
+
+            run = j - i
+            rem = run % k
+            if rem != run:
+                changed = True
+            r = 0
+            while r < rem:
+                out = out + ch
+                r += 1
+            i = j
+
+        current = out
+
+    return current
+
+def main():
+    p = Pair(10, 20)
+    swap_pair(p)
+    assert p.x == 20
+    assert p.y == 10
+
+    mf = MedianFinder()
+    mf.addNum(1)
+    mf.addNum(2)
+    assert mf.findMedian() == 1.5
+    mf.addNum(3)
+    assert mf.findMedian() == 2.0
+
+    kth = KthLargest(3, [4, 5, 8, 2])
+    assert kth.add(3) == 4
+    assert kth.add(5) == 5
+    assert kth.add(10) == 5
+    assert kth.add(9) == 8
+    assert kth.add(4) == 8
+
+    assert str(findJudge(2, [[1, 2]])) == "2"
+    assert str(findJudge(3, [[1, 3], [2, 3]])) == "3"
+    assert str(findJudge(3, [[1, 3], [2, 3], [3, 1]])) == "-1"
+
+    assert removeDuplicates("abcd", 2) == "abcd"
+    assert removeDuplicates("deeedbbcccbdaa", 3) == "aa"

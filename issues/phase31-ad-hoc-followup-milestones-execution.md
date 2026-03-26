@@ -18,7 +18,7 @@ Loop contract per milestone: Plan -> Implement -> Validate -> Demo -> PR -> Revi
 
 ## Full Milestone To-Do (ordered)
 1. [x] `m31_g_container_literal_specialization_and_state_tracking`
-2. [ ] `m31_a_optional_flow_completion`
+2. [x] `m31_a_optional_flow_completion`
 3. [ ] `m31_b_destructuring_and_composite_lvalues`
 4. [ ] `m31_d_nested_function_pipeline_completion`
 5. [ ] `m31_e_recursive_tree_surface_leetcode_closure`
@@ -467,3 +467,54 @@ Loop contract per milestone: Plan -> Implement -> Validate -> Demo -> PR -> Revi
 ### Slice closeout status
 - Slice 15 goal satisfied for canonical encoded-heap closure on `0502` and `0743`.
 - `m31_a_optional_flow_completion` is now closed; owner cases no longer have optional-flow check-stage blockers.
+
+## Milestone: `m31_b_destructuring_and_composite_lvalues` (slice 1: tuple-attribute unpack + canonical composite-surface closure)
+
+### Scope for this slice
+- Land tuple-assignment support for attribute targets (`obj.a, obj.b = ...`) as a general lowering/codegen capability.
+- Canonicalize remaining non-tree m31_b fixtures into Sifr-safe forms without fallback semantics.
+- Rerun targeted m31_b ids and isolate residual blocker ownership.
+
+### Root-cause changes
+- Extended HIR tuple-unpack targets to support both name and attribute bindings:
+  - files: `crates/sifr_hir/src/hir_nodes.rs`, `crates/sifr_hir/src/lower/tuple_unpack.rs`
+- Extended codegen tuple-unpack lowering for field targets:
+  - files: `crates/sifr_codegen/src/lower_stmt.rs`, `crates/sifr_codegen/src/hir_analysis/queries.rs`
+- Extended class mutability scan to recognize tuple-unpack field writes:
+  - file: `crates/sifr_hir/src/lower/classes.rs`
+- Added/updated regression coverage:
+  - `test_tuple_unpack_allows_attribute_targets` (`sifr_hir`)
+  - `lowers_tuple_unpack_with_field_targets_to_temp_and_field_assigns` (`sifr_codegen`)
+- Canonicalized fixture surfaces:
+  - `audits/leetcode/0295_find_median_from_data_stream.sifr`
+  - `audits/leetcode/0703_kth_largest_element_in_a_stream.sifr`
+  - `audits/leetcode/0997_find_the_town_judge.sifr`
+  - `audits/leetcode/1209_remove_all_adjacent_duplicates_in_string_ii.sifr`
+  - `audits/leetcode/0226_invert_binary_tree.sifr` (check-stage closure; residual run-stage boxed-option follow-on remains)
+- Added slice demo:
+  - `demos/phase31_m31b_tuple_attribute_and_canonical_surface_demo.sifr`
+
+### Targeted corpus evidence
+- Artifact: `verification/leetcode/phase31_m31b_wave3_tuple_and_canonical_results.json`
+- Targeted ids: `0226`, `0295`, `0703`, `0997`, `1209`
+- Status snapshot:
+  - `NO_ORACLE=2`, `PASS=2`, `RUN_ERROR=1`
+  - moved to green statuses:
+    - `0295` -> `NO_ORACLE`
+    - `0703` -> `NO_ORACLE`
+    - `0997` -> `PASS`
+    - `1209` -> `PASS`
+  - residual:
+    - `0226` -> `RUN_ERROR` (boxed optional-tree assignment in generated Rust)
+
+### Demo evidence
+- `cargo run -q -p sifr -- check demos/phase31_m31b_tuple_attribute_and_canonical_surface_demo.sifr` (pass)
+- `cargo run -q -p sifr -- run demos/phase31_m31b_tuple_attribute_and_canonical_surface_demo.sifr` (pass)
+
+### Local validation evidence
+- `scripts/run_all_tests.sh --profile quick` (pass)
+- `scripts/run_all_tests.sh` (pass)
+
+### Slice closeout status
+- Slice 1 goal satisfied for tuple-attribute unpack lowering and non-tree m31_b canonical closure.
+- `m31_b` remains open for the residual `0226` run-stage boxed optional-tree lowering gap.

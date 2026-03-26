@@ -504,11 +504,20 @@ pub enum HirExpr {
     },
 }
 
+/// A tuple-unpack target binding destination.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum HirTupleTargetBinding {
+    /// Local name binding target.
+    Name(String),
+    /// Attribute target such as `obj.field`.
+    Field { object: String, field: String },
+}
+
 /// A tuple-unpack target.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct HirTupleTarget {
-    /// The bound name.
-    pub name: String,
+    /// The assignment destination.
+    pub binding: HirTupleTargetBinding,
     /// The inferred/declared element type.
     pub ty: Type,
     /// Whether this target rebinds an existing local/nonlocal binding.

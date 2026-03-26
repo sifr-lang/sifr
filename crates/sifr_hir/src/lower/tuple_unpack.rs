@@ -1,33 +1,64 @@
-use crate::hir_nodes::{HirStmt, HirTupleTarget};
-use sifr_python_ast::{Expr, ExprTuple};
+use crate::hir_nodes::{HirStmt, HirTupleTarget, HirTupleTargetBinding};
+use sifr_python_ast::{Expr, ExprAttribute, ExprTuple};
 
+use super::binding_mutability::ensure_mutable_parameter_binding;
 use super::expressions::lower_expr;
 use super::sequence_pointers::record_tuple_unpack_pointer_facts;
 use super::LowerCtx;
+
+#[derive(Debug, Clone)]
+enum TupleAssignTarget {
+    Name(String),
+    Field { object: String, field: String },
+}
+
+fn lower_tuple_target(elt: &Expr, ctx: &mut LowerCtx) -> Option<TupleAssignTarget> {
+    match elt {
+        Expr::Name(n) => Some(TupleAssignTarget::Name(n.id.clone())),
+        Expr::Attribute(ExprAttribute { value, attr, .. }) => {
+            let Expr::Name(object_name) = value.as_ref() else {
+                ctx.error("tuple unpacking attribute target must be rooted at a simple name".to_string());
+                return None;
+            };
+            let object = object_name.id.clone();
+            if !ensure_mutable_parameter_binding(ctx, &object, "mutate through") {
+                return None;
+            }
+            Some(TupleAssignTarget::Field {
+                object,
+                field: attr.to_string(),
+            })
+        }
+        _ => {
+            ctx.error("tuple unpacking target must be a simple name or attribute".to_string());
+            None
+        }
+    }
+}
 
 pub(super) fn lower_tuple_unpack_assign(
     tuple: &ExprTuple,
     value: &Expr,
     ctx: &mut LowerCtx,
 ) -> Option<HirStmt> {
+    let mut targets = Vec::new();
     let mut target_names = Vec::new();
     for elt in &tuple.elts {
-        if let Expr::Name(n) = elt {
-            target_names.push(n.id.clone());
-        } else {
-            ctx.error("tuple unpacking target must be a simple name".to_string());
-            return None;
+        let target = lower_tuple_target(elt, ctx)?;
+        if let TupleAssignTarget::Name(name) = &target {
+            target_names.push(name.clone());
         }
+        targets.push(target);
     }
 
     let value_expr = lower_expr(value, ctx)?;
     let value_ty = value_expr.ty().clone();
 
     let elem_types = if let sifr_type_system::Type::Tuple(elems) = &value_ty {
-        if elems.len() != target_names.len() {
+        if elems.len() != targets.len() {
             ctx.error(format!(
                 "tuple unpacking: expected {} values, got {}",
-                target_names.len(),
+                targets.len(),
                 elems.len()
             ));
             return None;
@@ -41,54 +72,65 @@ pub(super) fn lower_tuple_unpack_assign(
         return None;
     };
 
-    let mut targets = Vec::new();
     record_tuple_unpack_pointer_facts(ctx, &target_names, value);
-    for (name, ty) in target_names.into_iter().zip(elem_types.into_iter()) {
-        if ctx.is_declared_nonlocal(&name) {
-            ctx.error(
-                "tuple unpacking cannot rebind captured state with `nonlocal` yet".to_string(),
-            );
-            return None;
-        }
-        let rebind_existing = if ctx.current_function_frame_start().is_some() {
-            super::nonlocal_support::should_rebind_simple_name(ctx, &name)
-        } else {
-            ctx.scope.lookup(&name).is_some()
-        };
+    let mut lowered_targets = Vec::new();
+    for (target, ty) in targets.into_iter().zip(elem_types.into_iter()) {
+        match target {
+            TupleAssignTarget::Name(name) => {
+                if ctx.is_declared_nonlocal(&name) {
+                    ctx.error(
+                        "tuple unpacking cannot rebind captured state with `nonlocal` yet".to_string(),
+                    );
+                    return None;
+                }
+                let rebind_existing = if ctx.current_function_frame_start().is_some() {
+                    super::nonlocal_support::should_rebind_simple_name(ctx, &name)
+                } else {
+                    ctx.scope.lookup(&name).is_some()
+                };
 
-        if rebind_existing {
-            let Some(info) = ctx.scope.lookup(&name) else {
-                ctx.error(format!("undefined variable: '{name}'"));
-                return None;
-            };
-            if info.is_parameter_binding() && !info.is_mutable_binding {
-                ctx.error(format!(
-                    "cannot reassign immutable parameter `{name}`: add `mut` to the parameter declaration"
-                ));
-                return None;
-            }
-            if !ty.is_assignable_to(&info.ty) {
-                ctx.error(format!(
-                    "type mismatch: cannot assign '{}' to variable '{}' of type '{}'",
-                    ty.display_name(),
-                    name,
-                    info.ty.display_name()
-                ));
-            }
-            ctx.scope.reset_moved(&name);
-        } else {
-            ctx.scope.define(name.clone(), ty.clone());
-        }
+                if rebind_existing {
+                    let Some(info) = ctx.scope.lookup(&name) else {
+                        ctx.error(format!("undefined variable: '{name}'"));
+                        return None;
+                    };
+                    if info.is_parameter_binding() && !info.is_mutable_binding {
+                        ctx.error(format!(
+                            "cannot reassign immutable parameter `{name}`: add `mut` to the parameter declaration"
+                        ));
+                        return None;
+                    }
+                    if !ty.is_assignable_to(&info.ty) {
+                        ctx.error(format!(
+                            "type mismatch: cannot assign '{}' to variable '{}' of type '{}'",
+                            ty.display_name(),
+                            name,
+                            info.ty.display_name()
+                        ));
+                    }
+                    ctx.scope.reset_moved(&name);
+                } else {
+                    ctx.scope.define(name.clone(), ty.clone());
+                }
 
-        targets.push(HirTupleTarget {
-            name,
-            ty,
-            rebind_existing,
-        });
+                lowered_targets.push(HirTupleTarget {
+                    binding: HirTupleTargetBinding::Name(name),
+                    ty,
+                    rebind_existing,
+                });
+            }
+            TupleAssignTarget::Field { object, field } => {
+                lowered_targets.push(HirTupleTarget {
+                    binding: HirTupleTargetBinding::Field { object, field },
+                    ty,
+                    rebind_existing: false,
+                });
+            }
+        }
     }
 
     Some(HirStmt::TupleUnpack {
-        targets,
+        targets: lowered_targets,
         value: value_expr,
     })
 }
