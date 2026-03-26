@@ -32,6 +32,7 @@ mod nested_function_inference;
 #[cfg(test)]
 mod nested_function_tests;
 mod nonlocal_support;
+mod nonempty_method_narrowing;
 mod numeric_sentinels;
 #[cfg(test)]
 mod own_mut_param_tests;

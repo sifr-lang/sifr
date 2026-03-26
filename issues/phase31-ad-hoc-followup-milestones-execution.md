@@ -256,3 +256,44 @@ Loop contract per milestone: Plan -> Implement -> Validate -> Demo -> PR -> Revi
 ### Slice closeout status
 - Slice 9 goal satisfied for append-growth sized-list shape propagation.
 - `m31_a` remains open for residual cases (`0053`, `0322`, and source-canonicalization/mutability follow-ons in `0127`, `0502`, `0743`, `0746`).
+
+## Milestone: `m31_a_optional_flow_completion` (slice 10: guarded pop/popleft narrowing)
+
+### Scope for this slice
+- Remove optional leakage for `pop`/`popleft` when control flow proves a non-empty sequence.
+- Keep unguarded pop behavior unchanged (`T | None`).
+
+### Root-cause changes
+- Refined method-call return typing after method resolution:
+  - for receiver names with active non-empty guards, `pop`/`popleft` returns are narrowed from `T | None` to `T`
+  - narrowed domain is constrained to zero-arg `list/deque pop/popleft` only
+  - files: `crates/sifr_hir/src/lower/expressions.rs`, `crates/sifr_hir/src/lower/nonempty_method_narrowing.rs`
+- Added codegen parity for narrowed pop calls:
+  - compiler-proven non-empty pop expressions now unwrap `Some(...)` with invariant `unreachable!` guard
+  - files: `crates/sifr_codegen/src/intrinsic_method_emitters.rs`, `crates/sifr_codegen/src/stmt_support_emitter.rs`
+- Added regressions for guarded vs unguarded pop:
+  - file: `crates/sifr_hir/src/lower/expressions_tests.rs`
+  - coverage includes guarded indexed `list.pop(i)` and guarded `dict.pop(key)` staying optional
+- Added codegen regression:
+  - file: `crates/sifr_codegen/src/lib_codegen_tests.rs`
+- Added slice demo:
+  - `demos/phase31_pop_guard_narrowing_demo.sifr`
+
+### Regression coverage
+- `test_guarded_list_pop_narrows_to_element_type`
+- `test_unguarded_list_pop_stays_optional`
+
+### Targeted corpus evidence
+- Artifact: `verification/leetcode/phase31_m31a_wave10_pop_guard_results.json`
+- Targeted ids: `0053`, `0127`, `0322`, `0502`, `0743`, `0746`
+- Status snapshot:
+  - count-level status remains `CHECK_ERROR=6`
+  - `0127` moved past optional pop leakage (`None | T` -> `T`) and now fails only on generic-type precision plus canonical mutability (`wordList` must be `mut`)
+
+### Local validation evidence
+- `scripts/run_all_tests.sh --profile quick` (pass)
+- `scripts/run_all_tests.sh` (pass)
+
+### Slice closeout status
+- Slice 10 goal satisfied for guarded pop/popleft optional-flow narrowing.
+- Remaining `m31_a` work is now concentrated in fixed-index parameter head reads, subtractive recurrence indexing, and cross-milestone canonicalization/generic follow-ons.

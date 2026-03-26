@@ -28,6 +28,16 @@ fn test_class_method_mutable_self_propagates_through_delegation() {
 }
 
 #[test]
+fn test_generate_rust_guarded_list_pop_unwraps_compiler_verified_nonempty() {
+    let rust_code = generate_rust_from_source(
+        "def main():\n    values: list[int] = [1, 2]\n    while values:\n        _: int = values.pop()\n",
+    );
+
+    assert!(rust_code.contains("let Some(__sifr_nonempty_pop_value) = values.pop() else {"));
+    assert!(rust_code.contains("compiler-verified non-empty pop should return Some"));
+}
+
+#[test]
 fn test_simple_function_codegen() {
     let module = HirModule {
         functions: vec![HirFunction {

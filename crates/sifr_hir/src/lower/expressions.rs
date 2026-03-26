@@ -16,6 +16,7 @@ use super::fstring_support::lower_fstring_expr;
 use super::guarded_index::guarded_sequence_index_result_type;
 use super::method_call_args::{lower_function_call_args, lower_method_call_args, lower_signature_call_args, validate_dict_update_arg, validate_list_extend_arg, validate_set_iterable_arg};
 use super::mutating_methods::reject_immutable_parameter_method_mutation;
+use super::nonempty_method_narrowing::refine_nonempty_method_return_type;
 use super::numeric_sentinels::{
     float_sentinel_expr, float_sentinel_kind_from_call, lower_sentinel_expr_for_name_domain,
     maybe_resolve_numeric_sentinel_name_from_type, normalize_min_max_numeric_sentinels,
@@ -37,7 +38,6 @@ use sifr_type_system::{
     type_check_unary_op, FunctionType, OwnershipKind, ParamConvention, Type,
 };
 use std::collections::HashMap;
-
 pub(super) fn lower_expr(expr: &Expr, ctx: &mut LowerCtx) -> Option<HirExpr> {
     match expr {
         Expr::NumberLiteral(num) => lower_number_literal(num),
@@ -2426,7 +2426,14 @@ pub(super) fn lower_method_call(
     }
 
     // Resolve method return type based on object type and method name
-    let return_ty = resolve_method_type(&object_ty, &method_name, &args, ctx)?;
+    let return_ty = refine_nonempty_method_return_type(
+        &object_ty,
+        &object,
+        &method_name,
+        &args,
+        &resolve_method_type(&object_ty, &method_name, &args, ctx)?,
+        ctx,
+    );
 
     if matches!(object_ty.resolve_alias(), Type::Str) && method_name == "encode" {
         let mut intrinsic_args = vec![object];

@@ -122,6 +122,16 @@ These broader feature phases already exist and should no longer be treated as fu
 
 ## Execution Log
 
+- `2026-03-26`: `m31_a_optional_flow_completion` slice 10 completed local validation for guarded `pop`/`popleft` narrowing.
+  - Execution report: `issues/phase31-m31a-pop-guard-narrowing-execution.md`
+  - Demo: `demos/phase31_pop_guard_narrowing_demo.sifr`
+  - Targeted result artifact: `verification/leetcode/phase31_m31a_wave10_pop_guard_results.json`
+  - Targeted six-case status: `CHECK_ERROR=6` (count unchanged)
+  - Confirmed reclassification signal:
+    - `0127_word_ladder` moved past optional pop leakage (`None | T`) into narrower generic-type and canonical mutability follow-ons (`T` + `mut` requirement), confirming this slice root cause is removed
+  - Post-fix hardening:
+    - constrained narrowing to zero-arg `list/deque pop/popleft` only
+    - aligned codegen for narrowed pop paths (fixes prior `stdlib_configparser` Rust type mismatch)
 - `2026-03-26`: `m31_a_optional_flow_completion` slice 9 completed local validation for append-growth sized-list shape propagation under alias-backed index guards.
   - Execution report: `issues/phase31-m31a-append-growth-shape-execution.md`
   - Targeted result artifact: `verification/leetcode/phase31_m31a_wave9_append_growth_results.json`
@@ -261,6 +271,7 @@ This order assumes the broader dependency phases are already landed and keeps th
   - `len(...)` alias flow into `range(...)` bounds is landed in slice 7 (`n = len(seq)` now composes with forward/reverse range guarded indexing)
   - alias-backed end-pointer while guards are landed in slice 8 (`i = n - 1`, `while i >= 0`, `nums[i]`)
   - append-growth shape facts are landed in slice 9 (`for i in range(n): out.append(...)` establishes `len(out) >= n` for guarded indexed reads)
+  - guarded `pop`/`popleft` reads now narrow under non-empty flow guards (`while seq:` / truthiness guards), removing optional pop leakage
   - remaining optional-flow work is now the narrower closure set below
 - Remaining root-cause scope:
   - fixed-index reads after length guards
