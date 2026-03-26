@@ -1,6 +1,6 @@
 # Phase 31 Ad Hoc Follow-up Milestones
 
-Status: complete follow-up plan closure on 2026-03-26
+Status: complete follow-up plan closure and review-pass hardening on 2026-03-26
 Source inputs:
 
 - `verification/leetcode/phase31_current_full_results_20260321.json`
@@ -25,12 +25,12 @@ Phase 31 itself is complete. This document is the carry-forward plan for the rem
 ## Current Remaining Surface
 
 - Seed corpus size: `50`
-- Current passes: `13`
-- Remaining failing raw fixtures: `37`
-- Problems expected to be solvable in Sifr after this carry-forward: `37`
+- Current passes: `50`
+- Remaining failing raw fixtures: `0`
+- Problems expected to be solvable in Sifr after this carry-forward: `50`
 - Known raw-source divergence requiring a canonical Sifr rewrite: `0`
 
-Current snapshot regression relative to the warmed `2026-03-13` rerun:
+Historical snapshot regression relative to the warmed `2026-03-13` rerun (now resolved):
 
 - prior warmed state: `PASS=15`, `CHECK_ERROR=35`, `RUN_ERROR=0`
 - current snapshot: `PASS=13`, `CHECK_ERROR=36`, `RUN_ERROR=1`
@@ -40,6 +40,10 @@ Current snapshot regression relative to the warmed `2026-03-13` rerun:
   - `0039`: `CHECK_ERROR -> PASS`
   - `0078`: `CHECK_ERROR -> RUN_ERROR`
   - `0151`: `PASS -> CHECK_ERROR`
+
+Post-review-pass current state (`verification/leetcode/phase31_review_pass1_full_results_v2.json`):
+
+- `PASS=50`, `CHECK_ERROR=0`, `RUN_ERROR=0`
 
 ## Planning Policy
 
@@ -122,6 +126,15 @@ These broader feature phases already exist and should no longer be treated as fu
 
 ## Execution Log
 
+- `2026-03-26`: external review pass 1 closure hardening completed.
+  - Source review: `reviews/phase31-ad-hoc-followup-milestones-review-pass-1.md`
+  - Execution report: `issues/phase31-followup-review-pass1-oracle-upgrade-execution.md`
+  - Oracle-mode upgrade artifact: `verification/leetcode/phase31_review_pass1_oracle_upgrade_results.json` (`PASS=14`)
+  - Regression-triplet closure artifact: `verification/leetcode/phase31_review_pass1_regression_triplet_results.json` (`PASS=3`)
+  - Full-seed closure artifact: `verification/leetcode/phase31_review_pass1_full_results_v2.json` (`PASS=50`)
+  - Closure result:
+    - previously `NO_ORACLE` cases are now assertion-verified `PASS`
+    - residual snapshot-regression cases `0007`, `0009`, and `0151` are closed
 - `2026-03-26`: `m31_i_corpus_fixture_canonicalization_for_multi_solution_files` slice 1 completed canonical multi-solution fixture normalization.
   - Execution report: `issues/phase31-m31i-corpus-fixture-canonicalization-execution.md`
   - Demo: `demos/phase31_m31i_multi_solution_fixture_canonicalization_demo.sifr`

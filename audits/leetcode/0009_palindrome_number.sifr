@@ -1,6 +1,6 @@
 # LeetCode 9: Palindrome Number
 
-def isPalindrome(x: int) -> bool:
+def isPalindrome(mut x: int) -> bool:
     if x < 0:
         return False
     rev: int = 0
@@ -16,4 +16,3 @@ def main():
     assert str(isPalindrome(10)) == 'false'
     assert str(isPalindrome(0)) == 'true'
     assert str(isPalindrome(12321)) == 'true'
-

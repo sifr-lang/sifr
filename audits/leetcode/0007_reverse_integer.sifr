@@ -1,6 +1,6 @@
 # LeetCode 7: Reverse Integer
 
-def reverse(x: int) -> int:
+def reverse(mut x: int) -> int:
     # Integer.MAX_VALUE = 2147483647 (end with 7)
     # Integer.MIN_VALUE = -2147483648 (end with -8 )
 
@@ -25,5 +25,4 @@ def main():
     assert str(reverse(-123)) == '-321'
     assert str(reverse(120)) == '21'
     assert str(reverse(0)) == '0'
-
 

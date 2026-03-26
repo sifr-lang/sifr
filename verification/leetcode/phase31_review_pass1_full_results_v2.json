@@ -1,0 +1,1988 @@
+{
+  "command_prefix": [
+    "target/debug/sifr"
+  ],
+  "manifest": "verification/leetcode/phase31_seed_corpus.json",
+  "output": "verification/leetcode/phase31_review_pass1_full_results_v2.json",
+  "phase": 31,
+  "results": [
+    {
+      "difficulty": "easy",
+      "failure_stage": null,
+      "fixture_slug": "0001_two_sum",
+      "id": "0001",
+      "oracle_mode": "embedded_asserts",
+      "primary_topic": "arrays",
+      "scope_classification": "in_scope",
+      "stages": [
+        {
+          "command": [
+            "target/debug/sifr",
+            "check",
+            "audits/leetcode/0001_two_sum.sifr"
+          ],
+          "duration_ms": 339,
+          "returncode": 0,
+          "stage": "check",
+          "stderr": "no errors found",
+          "stdout": "",
+          "timed_out": false
+        },
+        {
+          "command": [
+            "target/debug/sifr",
+            "run",
+            "audits/leetcode/0001_two_sum.sifr"
+          ],
+          "duration_ms": 402,
+          "returncode": 0,
+          "stage": "run",
+          "stderr": "[sifr-artifact-cache] namespace=run key=68151cd7ea68dcef cache_hit=true workspace=/var/folders/lq/l19_y_rn76b8vprfvdjn9zch0000gn/T/sifr_generated_artifact_cache/run/68151cd7ea68dcef",
+          "stdout": "",
+          "timed_out": false
+        }
+      ],
+      "status": "PASS",
+      "timeout_seconds": 20
+    },
+    {
+      "difficulty": "medium",
+      "failure_stage": null,
+      "fixture_slug": "0003_longest_substring_without_repeating_characters",
+      "id": "0003",
+      "oracle_mode": "embedded_asserts",
+      "primary_topic": "hash_map",
+      "scope_classification": "in_scope",
+      "stages": [
+        {
+          "command": [
+            "target/debug/sifr",
+            "check",
+            "audits/leetcode/0003_longest_substring_without_repeating_characters.sifr"
+          ],
+          "duration_ms": 337,
+          "returncode": 0,
+          "stage": "check",
+          "stderr": "no errors found",
+          "stdout": "",
+          "timed_out": false
+        },
+        {
+          "command": [
+            "target/debug/sifr",
+            "run",
+            "audits/leetcode/0003_longest_substring_without_repeating_characters.sifr"
+          ],
+          "duration_ms": 417,
+          "returncode": 0,
+          "stage": "run",
+          "stderr": "[sifr-artifact-cache] namespace=run key=5882a6b41a718183 cache_hit=true workspace=/var/folders/lq/l19_y_rn76b8vprfvdjn9zch0000gn/T/sifr_generated_artifact_cache/run/5882a6b41a718183",
+          "stdout": "",
+          "timed_out": false
+        }
+      ],
+      "status": "PASS",
+      "timeout_seconds": 20
+    },
+    {
+      "difficulty": "medium",
+      "failure_stage": null,
+      "fixture_slug": "0007_reverse_integer",
+      "id": "0007",
+      "oracle_mode": "embedded_asserts",
+      "primary_topic": "math",
+      "scope_classification": "in_scope",
+      "stages": [
+        {
+          "command": [
+            "target/debug/sifr",
+            "check",
+            "audits/leetcode/0007_reverse_integer.sifr"
+          ],
+          "duration_ms": 342,
+          "returncode": 0,
+          "stage": "check",
+          "stderr": "no errors found",
+          "stdout": "",
+          "timed_out": false
+        },
+        {
+          "command": [
+            "target/debug/sifr",
+            "run",
+            "audits/leetcode/0007_reverse_integer.sifr"
+          ],
+          "duration_ms": 410,
+          "returncode": 0,
+          "stage": "run",
+          "stderr": "[sifr-artifact-cache] namespace=run key=184f50d612581484 cache_hit=true workspace=/var/folders/lq/l19_y_rn76b8vprfvdjn9zch0000gn/T/sifr_generated_artifact_cache/run/184f50d612581484",
+          "stdout": "",
+          "timed_out": false
+        }
+      ],
+      "status": "PASS",
+      "timeout_seconds": 20
+    },
+    {
+      "difficulty": "easy",
+      "failure_stage": null,
+      "fixture_slug": "0009_palindrome_number",
+      "id": "0009",
+      "oracle_mode": "embedded_asserts",
+      "primary_topic": "math",
+      "scope_classification": "in_scope",
+      "stages": [
+        {
+          "command": [
+            "target/debug/sifr",
+            "check",
+            "audits/leetcode/0009_palindrome_number.sifr"
+          ],
+          "duration_ms": 325,
+          "returncode": 0,
+          "stage": "check",
+          "stderr": "no errors found",
+          "stdout": "",
+          "timed_out": false
+        },
+        {
+          "command": [
+            "target/debug/sifr",
+            "run",
+            "audits/leetcode/0009_palindrome_number.sifr"
+          ],
+          "duration_ms": 401,
+          "returncode": 0,
+          "stage": "run",
+          "stderr": "[sifr-artifact-cache] namespace=run key=4f4645b3083fdbed cache_hit=true workspace=/var/folders/lq/l19_y_rn76b8vprfvdjn9zch0000gn/T/sifr_generated_artifact_cache/run/4f4645b3083fdbed",
+          "stdout": "",
+          "timed_out": false
+        }
+      ],
+      "status": "PASS",
+      "timeout_seconds": 20
+    },
+    {
+      "difficulty": "easy",
+      "failure_stage": null,
+      "fixture_slug": "0014_longest_common_prefix",
+      "id": "0014",
+      "oracle_mode": "embedded_asserts",
+      "primary_topic": "strings",
+      "scope_classification": "in_scope",
+      "stages": [
+        {
+          "command": [
+            "target/debug/sifr",
+            "check",
+            "audits/leetcode/0014_longest_common_prefix.sifr"
+          ],
+          "duration_ms": 322,
+          "returncode": 0,
+          "stage": "check",
+          "stderr": "no errors found",
+          "stdout": "",
+          "timed_out": false
+        },
+        {
+          "command": [
+            "target/debug/sifr",
+            "run",
+            "audits/leetcode/0014_longest_common_prefix.sifr"
+          ],
+          "duration_ms": 400,
+          "returncode": 0,
+          "stage": "run",
+          "stderr": "[sifr-artifact-cache] namespace=run key=dd8faeefef65e0e1 cache_hit=true workspace=/var/folders/lq/l19_y_rn76b8vprfvdjn9zch0000gn/T/sifr_generated_artifact_cache/run/dd8faeefef65e0e1",
+          "stdout": "",
+          "timed_out": false
+        }
+      ],
+      "status": "PASS",
+      "timeout_seconds": 20
+    },
+    {
+      "difficulty": "medium",
+      "failure_stage": null,
+      "fixture_slug": "0015_3sum",
+      "id": "0015",
+      "oracle_mode": "embedded_asserts",
+      "primary_topic": "two_pointers_sliding_window",
+      "scope_classification": "in_scope",
+      "stages": [
+        {
+          "command": [
+            "target/debug/sifr",
+            "check",
+            "audits/leetcode/0015_3sum.sifr"
+          ],
+          "duration_ms": 336,
+          "returncode": 0,
+          "stage": "check",
+          "stderr": "no errors found",
+          "stdout": "",
+          "timed_out": false
+        },
+        {
+          "command": [
+            "target/debug/sifr",
+            "run",
+            "audits/leetcode/0015_3sum.sifr"
+          ],
+          "duration_ms": 405,
+          "returncode": 0,
+          "stage": "run",
+          "stderr": "[sifr-artifact-cache] namespace=run key=1803bff5dc65ea02 cache_hit=true workspace=/var/folders/lq/l19_y_rn76b8vprfvdjn9zch0000gn/T/sifr_generated_artifact_cache/run/1803bff5dc65ea02",
+          "stdout": "",
+          "timed_out": false
+        }
+      ],
+      "status": "PASS",
+      "timeout_seconds": 20
+    },
+    {
+      "difficulty": "medium",
+      "failure_stage": null,
+      "fixture_slug": "0017_letter_combinations_of_a_phone_number",
+      "id": "0017",
+      "oracle_mode": "embedded_asserts",
+      "primary_topic": "backtracking",
+      "scope_classification": "in_scope",
+      "stages": [
+        {
+          "command": [
+            "target/debug/sifr",
+            "check",
+            "audits/leetcode/0017_letter_combinations_of_a_phone_number.sifr"
+          ],
+          "duration_ms": 322,
+          "returncode": 0,
+          "stage": "check",
+          "stderr": "no errors found",
+          "stdout": "",
+          "timed_out": false
+        },
+        {
+          "command": [
+            "target/debug/sifr",
+            "run",
+            "audits/leetcode/0017_letter_combinations_of_a_phone_number.sifr"
+          ],
+          "duration_ms": 398,
+          "returncode": 0,
+          "stage": "run",
+          "stderr": "[sifr-artifact-cache] namespace=run key=fab315264110e175 cache_hit=true workspace=/var/folders/lq/l19_y_rn76b8vprfvdjn9zch0000gn/T/sifr_generated_artifact_cache/run/fab315264110e175",
+          "stdout": "",
+          "timed_out": false
+        }
+      ],
+      "status": "PASS",
+      "timeout_seconds": 20
+    },
+    {
+      "difficulty": "medium",
+      "failure_stage": null,
+      "fixture_slug": "0039_combination_sum",
+      "id": "0039",
+      "oracle_mode": "embedded_asserts",
+      "primary_topic": "backtracking",
+      "scope_classification": "in_scope",
+      "stages": [
+        {
+          "command": [
+            "target/debug/sifr",
+            "check",
+            "audits/leetcode/0039_combination_sum.sifr"
+          ],
+          "duration_ms": 324,
+          "returncode": 0,
+          "stage": "check",
+          "stderr": "no errors found",
+          "stdout": "",
+          "timed_out": false
+        },
+        {
+          "command": [
+            "target/debug/sifr",
+            "run",
+            "audits/leetcode/0039_combination_sum.sifr"
+          ],
+          "duration_ms": 397,
+          "returncode": 0,
+          "stage": "run",
+          "stderr": "[sifr-artifact-cache] namespace=run key=27411f49dfd76112 cache_hit=true workspace=/var/folders/lq/l19_y_rn76b8vprfvdjn9zch0000gn/T/sifr_generated_artifact_cache/run/27411f49dfd76112",
+          "stdout": "",
+          "timed_out": false
+        }
+      ],
+      "status": "PASS",
+      "timeout_seconds": 20
+    },
+    {
+      "difficulty": "hard",
+      "failure_stage": null,
+      "fixture_slug": "0042_trapping_rain_water",
+      "id": "0042",
+      "oracle_mode": "embedded_asserts",
+      "primary_topic": "two_pointers_sliding_window",
+      "scope_classification": "in_scope",
+      "stages": [
+        {
+          "command": [
+            "target/debug/sifr",
+            "check",
+            "audits/leetcode/0042_trapping_rain_water.sifr"
+          ],
+          "duration_ms": 323,
+          "returncode": 0,
+          "stage": "check",
+          "stderr": "no errors found",
+          "stdout": "",
+          "timed_out": false
+        },
+        {
+          "command": [
+            "target/debug/sifr",
+            "run",
+            "audits/leetcode/0042_trapping_rain_water.sifr"
+          ],
+          "duration_ms": 401,
+          "returncode": 0,
+          "stage": "run",
+          "stderr": "[sifr-artifact-cache] namespace=run key=6e311ac5333a11ce cache_hit=true workspace=/var/folders/lq/l19_y_rn76b8vprfvdjn9zch0000gn/T/sifr_generated_artifact_cache/run/6e311ac5333a11ce",
+          "stdout": "",
+          "timed_out": false
+        }
+      ],
+      "status": "PASS",
+      "timeout_seconds": 20
+    },
+    {
+      "difficulty": "medium",
+      "failure_stage": null,
+      "fixture_slug": "0043_multiply_strings",
+      "id": "0043",
+      "oracle_mode": "embedded_asserts",
+      "primary_topic": "strings",
+      "scope_classification": "in_scope",
+      "stages": [
+        {
+          "command": [
+            "target/debug/sifr",
+            "check",
+            "audits/leetcode/0043_multiply_strings.sifr"
+          ],
+          "duration_ms": 324,
+          "returncode": 0,
+          "stage": "check",
+          "stderr": "warning: int multiplication with non-constant operands may overflow i64 at runtime; consider using bigint for large values\nno errors found",
+          "stdout": "",
+          "timed_out": false
+        },
+        {
+          "command": [
+            "target/debug/sifr",
+            "run",
+            "audits/leetcode/0043_multiply_strings.sifr"
+          ],
+          "duration_ms": 405,
+          "returncode": 0,
+          "stage": "run",
+          "stderr": "warning: int multiplication with non-constant operands may overflow i64 at runtime; consider using bigint for large values\n[sifr-artifact-cache] namespace=run key=9759e8310897b109 cache_hit=true workspace=/var/folders/lq/l19_y_rn76b8vprfvdjn9zch0000gn/T/sifr_generated_artifact_cache/run/9759e8310897b109",
+          "stdout": "",
+          "timed_out": false
+        }
+      ],
+      "status": "PASS",
+      "timeout_seconds": 20
+    },
+    {
+      "difficulty": "medium",
+      "failure_stage": null,
+      "fixture_slug": "0050_powx_n",
+      "id": "0050",
+      "oracle_mode": "embedded_asserts",
+      "primary_topic": "math",
+      "scope_classification": "in_scope",
+      "stages": [
+        {
+          "command": [
+            "target/debug/sifr",
+            "check",
+            "audits/leetcode/0050_powx_n.sifr"
+          ],
+          "duration_ms": 322,
+          "returncode": 0,
+          "stage": "check",
+          "stderr": "no errors found",
+          "stdout": "",
+          "timed_out": false
+        },
+        {
+          "command": [
+            "target/debug/sifr",
+            "run",
+            "audits/leetcode/0050_powx_n.sifr"
+          ],
+          "duration_ms": 397,
+          "returncode": 0,
+          "stage": "run",
+          "stderr": "[sifr-artifact-cache] namespace=run key=a7d85b4e83a23106 cache_hit=true workspace=/var/folders/lq/l19_y_rn76b8vprfvdjn9zch0000gn/T/sifr_generated_artifact_cache/run/a7d85b4e83a23106",
+          "stdout": "",
+          "timed_out": false
+        }
+      ],
+      "status": "PASS",
+      "timeout_seconds": 20
+    },
+    {
+      "difficulty": "hard",
+      "failure_stage": null,
+      "fixture_slug": "0052_n_queens_ii",
+      "id": "0052",
+      "oracle_mode": "embedded_asserts",
+      "primary_topic": "backtracking",
+      "scope_classification": "in_scope",
+      "stages": [
+        {
+          "command": [
+            "target/debug/sifr",
+            "check",
+            "audits/leetcode/0052_n_queens_ii.sifr"
+          ],
+          "duration_ms": 323,
+          "returncode": 0,
+          "stage": "check",
+          "stderr": "no errors found",
+          "stdout": "",
+          "timed_out": false
+        },
+        {
+          "command": [
+            "target/debug/sifr",
+            "run",
+            "audits/leetcode/0052_n_queens_ii.sifr"
+          ],
+          "duration_ms": 396,
+          "returncode": 0,
+          "stage": "run",
+          "stderr": "[sifr-artifact-cache] namespace=run key=fdcfb920feffd502 cache_hit=true workspace=/var/folders/lq/l19_y_rn76b8vprfvdjn9zch0000gn/T/sifr_generated_artifact_cache/run/fdcfb920feffd502",
+          "stdout": "",
+          "timed_out": false
+        }
+      ],
+      "status": "PASS",
+      "timeout_seconds": 20
+    },
+    {
+      "difficulty": "easy",
+      "failure_stage": null,
+      "fixture_slug": "0053_maximum_subarray",
+      "id": "0053",
+      "oracle_mode": "embedded_asserts",
+      "primary_topic": "arrays",
+      "scope_classification": "in_scope",
+      "stages": [
+        {
+          "command": [
+            "target/debug/sifr",
+            "check",
+            "audits/leetcode/0053_maximum_subarray.sifr"
+          ],
+          "duration_ms": 323,
+          "returncode": 0,
+          "stage": "check",
+          "stderr": "no errors found",
+          "stdout": "",
+          "timed_out": false
+        },
+        {
+          "command": [
+            "target/debug/sifr",
+            "run",
+            "audits/leetcode/0053_maximum_subarray.sifr"
+          ],
+          "duration_ms": 411,
+          "returncode": 0,
+          "stage": "run",
+          "stderr": "[sifr-artifact-cache] namespace=run key=a98157899232c3c3 cache_hit=true workspace=/var/folders/lq/l19_y_rn76b8vprfvdjn9zch0000gn/T/sifr_generated_artifact_cache/run/a98157899232c3c3",
+          "stdout": "",
+          "timed_out": false
+        }
+      ],
+      "status": "PASS",
+      "timeout_seconds": 20
+    },
+    {
+      "difficulty": "easy",
+      "failure_stage": null,
+      "fixture_slug": "0069_sqrtx",
+      "id": "0069",
+      "oracle_mode": "embedded_asserts",
+      "primary_topic": "math",
+      "scope_classification": "in_scope",
+      "stages": [
+        {
+          "command": [
+            "target/debug/sifr",
+            "check",
+            "audits/leetcode/0069_sqrtx.sifr"
+          ],
+          "duration_ms": 345,
+          "returncode": 0,
+          "stage": "check",
+          "stderr": "warning: int multiplication with non-constant operands may overflow i64 at runtime; consider using bigint for large values\nwarning: int multiplication with non-constant operands may overflow i64 at runtime; consider using bigint for large values\nno errors found",
+          "stdout": "",
+          "timed_out": false
+        },
+        {
+          "command": [
+            "target/debug/sifr",
+            "run",
+            "audits/leetcode/0069_sqrtx.sifr"
+          ],
+          "duration_ms": 419,
+          "returncode": 0,
+          "stage": "run",
+          "stderr": "warning: int multiplication with non-constant operands may overflow i64 at runtime; consider using bigint for large values\nwarning: int multiplication with non-constant operands may overflow i64 at runtime; consider using bigint for large values\n[sifr-artifact-cache] namespace=run key=2262d397bda49eea cache_hit=true workspace=/var/folders/lq/l19_y_rn76b8vprfvdjn9zch0000gn/T/sifr_generated_artifact_cache/run/2262d397bda49eea",
+          "stdout": "",
+          "timed_out": false
+        }
+      ],
+      "status": "PASS",
+      "timeout_seconds": 20
+    },
+    {
+      "difficulty": "easy",
+      "failure_stage": null,
+      "fixture_slug": "0070_climbing_stairs",
+      "id": "0070",
+      "oracle_mode": "embedded_asserts",
+      "primary_topic": "dp",
+      "scope_classification": "in_scope",
+      "stages": [
+        {
+          "command": [
+            "target/debug/sifr",
+            "check",
+            "audits/leetcode/0070_climbing_stairs.sifr"
+          ],
+          "duration_ms": 329,
+          "returncode": 0,
+          "stage": "check",
+          "stderr": "no errors found",
+          "stdout": "",
+          "timed_out": false
+        },
+        {
+          "command": [
+            "target/debug/sifr",
+            "run",
+            "audits/leetcode/0070_climbing_stairs.sifr"
+          ],
+          "duration_ms": 400,
+          "returncode": 0,
+          "stage": "run",
+          "stderr": "[sifr-artifact-cache] namespace=run key=0751263a8c59e137 cache_hit=true workspace=/var/folders/lq/l19_y_rn76b8vprfvdjn9zch0000gn/T/sifr_generated_artifact_cache/run/0751263a8c59e137",
+          "stdout": "",
+          "timed_out": false
+        }
+      ],
+      "status": "PASS",
+      "timeout_seconds": 20
+    },
+    {
+      "difficulty": "medium",
+      "failure_stage": null,
+      "fixture_slug": "0078_subsets",
+      "id": "0078",
+      "oracle_mode": "embedded_asserts",
+      "primary_topic": "backtracking",
+      "scope_classification": "in_scope",
+      "stages": [
+        {
+          "command": [
+            "target/debug/sifr",
+            "check",
+            "audits/leetcode/0078_subsets.sifr"
+          ],
+          "duration_ms": 330,
+          "returncode": 0,
+          "stage": "check",
+          "stderr": "no errors found",
+          "stdout": "",
+          "timed_out": false
+        },
+        {
+          "command": [
+            "target/debug/sifr",
+            "run",
+            "audits/leetcode/0078_subsets.sifr"
+          ],
+          "duration_ms": 401,
+          "returncode": 0,
+          "stage": "run",
+          "stderr": "[sifr-artifact-cache] namespace=run key=b2dcafa2456dc33b cache_hit=true workspace=/var/folders/lq/l19_y_rn76b8vprfvdjn9zch0000gn/T/sifr_generated_artifact_cache/run/b2dcafa2456dc33b",
+          "stdout": "",
+          "timed_out": false
+        }
+      ],
+      "status": "PASS",
+      "timeout_seconds": 20
+    },
+    {
+      "difficulty": "medium",
+      "failure_stage": null,
+      "fixture_slug": "0090_subsets_ii",
+      "id": "0090",
+      "oracle_mode": "embedded_asserts",
+      "primary_topic": "backtracking",
+      "scope_classification": "in_scope",
+      "stages": [
+        {
+          "command": [
+            "target/debug/sifr",
+            "check",
+            "audits/leetcode/0090_subsets_ii.sifr"
+          ],
+          "duration_ms": 322,
+          "returncode": 0,
+          "stage": "check",
+          "stderr": "no errors found",
+          "stdout": "",
+          "timed_out": false
+        },
+        {
+          "command": [
+            "target/debug/sifr",
+            "run",
+            "audits/leetcode/0090_subsets_ii.sifr"
+          ],
+          "duration_ms": 398,
+          "returncode": 0,
+          "stage": "run",
+          "stderr": "[sifr-artifact-cache] namespace=run key=f868021410ce7778 cache_hit=true workspace=/var/folders/lq/l19_y_rn76b8vprfvdjn9zch0000gn/T/sifr_generated_artifact_cache/run/f868021410ce7778",
+          "stdout": "",
+          "timed_out": false
+        }
+      ],
+      "status": "PASS",
+      "timeout_seconds": 20
+    },
+    {
+      "difficulty": "easy",
+      "failure_stage": null,
+      "fixture_slug": "0100_same_tree",
+      "id": "0100",
+      "oracle_mode": "embedded_asserts",
+      "primary_topic": "trees",
+      "scope_classification": "in_scope",
+      "stages": [
+        {
+          "command": [
+            "target/debug/sifr",
+            "check",
+            "audits/leetcode/0100_same_tree.sifr"
+          ],
+          "duration_ms": 324,
+          "returncode": 0,
+          "stage": "check",
+          "stderr": "no errors found",
+          "stdout": "",
+          "timed_out": false
+        },
+        {
+          "command": [
+            "target/debug/sifr",
+            "run",
+            "audits/leetcode/0100_same_tree.sifr"
+          ],
+          "duration_ms": 400,
+          "returncode": 0,
+          "stage": "run",
+          "stderr": "[sifr-artifact-cache] namespace=run key=6000f24ebb98b7fc cache_hit=true workspace=/var/folders/lq/l19_y_rn76b8vprfvdjn9zch0000gn/T/sifr_generated_artifact_cache/run/6000f24ebb98b7fc",
+          "stdout": "",
+          "timed_out": false
+        }
+      ],
+      "status": "PASS",
+      "timeout_seconds": 20
+    },
+    {
+      "difficulty": "medium",
+      "failure_stage": null,
+      "fixture_slug": "0102_binary_tree_level_order_traversal",
+      "id": "0102",
+      "oracle_mode": "embedded_asserts",
+      "primary_topic": "trees",
+      "scope_classification": "in_scope",
+      "stages": [
+        {
+          "command": [
+            "target/debug/sifr",
+            "check",
+            "audits/leetcode/0102_binary_tree_level_order_traversal.sifr"
+          ],
+          "duration_ms": 328,
+          "returncode": 0,
+          "stage": "check",
+          "stderr": "no errors found",
+          "stdout": "",
+          "timed_out": false
+        },
+        {
+          "command": [
+            "target/debug/sifr",
+            "run",
+            "audits/leetcode/0102_binary_tree_level_order_traversal.sifr"
+          ],
+          "duration_ms": 398,
+          "returncode": 0,
+          "stage": "run",
+          "stderr": "[sifr-artifact-cache] namespace=run key=55f46385063556a6 cache_hit=true workspace=/var/folders/lq/l19_y_rn76b8vprfvdjn9zch0000gn/T/sifr_generated_artifact_cache/run/55f46385063556a6",
+          "stdout": "",
+          "timed_out": false
+        }
+      ],
+      "status": "PASS",
+      "timeout_seconds": 20
+    },
+    {
+      "difficulty": "easy",
+      "failure_stage": null,
+      "fixture_slug": "0110_balanced_binary_tree",
+      "id": "0110",
+      "oracle_mode": "embedded_asserts",
+      "primary_topic": "trees",
+      "scope_classification": "in_scope",
+      "stages": [
+        {
+          "command": [
+            "target/debug/sifr",
+            "check",
+            "audits/leetcode/0110_balanced_binary_tree.sifr"
+          ],
+          "duration_ms": 328,
+          "returncode": 0,
+          "stage": "check",
+          "stderr": "no errors found",
+          "stdout": "",
+          "timed_out": false
+        },
+        {
+          "command": [
+            "target/debug/sifr",
+            "run",
+            "audits/leetcode/0110_balanced_binary_tree.sifr"
+          ],
+          "duration_ms": 404,
+          "returncode": 0,
+          "stage": "run",
+          "stderr": "[sifr-artifact-cache] namespace=run key=998993c1eb655dc6 cache_hit=true workspace=/var/folders/lq/l19_y_rn76b8vprfvdjn9zch0000gn/T/sifr_generated_artifact_cache/run/998993c1eb655dc6",
+          "stdout": "",
+          "timed_out": false
+        }
+      ],
+      "status": "PASS",
+      "timeout_seconds": 20
+    },
+    {
+      "difficulty": "hard",
+      "failure_stage": null,
+      "fixture_slug": "0127_word_ladder",
+      "id": "0127",
+      "oracle_mode": "embedded_asserts",
+      "primary_topic": "graphs",
+      "scope_classification": "in_scope",
+      "stages": [
+        {
+          "command": [
+            "target/debug/sifr",
+            "check",
+            "audits/leetcode/0127_word_ladder.sifr"
+          ],
+          "duration_ms": 324,
+          "returncode": 0,
+          "stage": "check",
+          "stderr": "no errors found",
+          "stdout": "",
+          "timed_out": false
+        },
+        {
+          "command": [
+            "target/debug/sifr",
+            "run",
+            "audits/leetcode/0127_word_ladder.sifr"
+          ],
+          "duration_ms": 400,
+          "returncode": 0,
+          "stage": "run",
+          "stderr": "[sifr-artifact-cache] namespace=run key=7d875e16d1d2144d cache_hit=true workspace=/var/folders/lq/l19_y_rn76b8vprfvdjn9zch0000gn/T/sifr_generated_artifact_cache/run/7d875e16d1d2144d",
+          "stdout": "",
+          "timed_out": false
+        }
+      ],
+      "status": "PASS",
+      "timeout_seconds": 20
+    },
+    {
+      "difficulty": "medium",
+      "failure_stage": null,
+      "fixture_slug": "0151_reverse_words_in_a_string",
+      "id": "0151",
+      "oracle_mode": "embedded_asserts",
+      "primary_topic": "strings",
+      "scope_classification": "in_scope",
+      "stages": [
+        {
+          "command": [
+            "target/debug/sifr",
+            "check",
+            "audits/leetcode/0151_reverse_words_in_a_string.sifr"
+          ],
+          "duration_ms": 331,
+          "returncode": 0,
+          "stage": "check",
+          "stderr": "no errors found",
+          "stdout": "",
+          "timed_out": false
+        },
+        {
+          "command": [
+            "target/debug/sifr",
+            "run",
+            "audits/leetcode/0151_reverse_words_in_a_string.sifr"
+          ],
+          "duration_ms": 396,
+          "returncode": 0,
+          "stage": "run",
+          "stderr": "[sifr-artifact-cache] namespace=run key=26bf6956982b6380 cache_hit=true workspace=/var/folders/lq/l19_y_rn76b8vprfvdjn9zch0000gn/T/sifr_generated_artifact_cache/run/26bf6956982b6380",
+          "stdout": "",
+          "timed_out": false
+        }
+      ],
+      "status": "PASS",
+      "timeout_seconds": 20
+    },
+    {
+      "difficulty": "medium",
+      "failure_stage": null,
+      "fixture_slug": "0198_house_robber",
+      "id": "0198",
+      "oracle_mode": "embedded_asserts",
+      "primary_topic": "dp",
+      "scope_classification": "in_scope",
+      "stages": [
+        {
+          "command": [
+            "target/debug/sifr",
+            "check",
+            "audits/leetcode/0198_house_robber.sifr"
+          ],
+          "duration_ms": 324,
+          "returncode": 0,
+          "stage": "check",
+          "stderr": "no errors found",
+          "stdout": "",
+          "timed_out": false
+        },
+        {
+          "command": [
+            "target/debug/sifr",
+            "run",
+            "audits/leetcode/0198_house_robber.sifr"
+          ],
+          "duration_ms": 400,
+          "returncode": 0,
+          "stage": "run",
+          "stderr": "[sifr-artifact-cache] namespace=run key=95ed1f3de873032b cache_hit=true workspace=/var/folders/lq/l19_y_rn76b8vprfvdjn9zch0000gn/T/sifr_generated_artifact_cache/run/95ed1f3de873032b",
+          "stdout": "",
+          "timed_out": false
+        }
+      ],
+      "status": "PASS",
+      "timeout_seconds": 20
+    },
+    {
+      "difficulty": "medium",
+      "failure_stage": null,
+      "fixture_slug": "0207_course_schedule",
+      "id": "0207",
+      "oracle_mode": "embedded_asserts",
+      "primary_topic": "graphs",
+      "scope_classification": "in_scope",
+      "stages": [
+        {
+          "command": [
+            "target/debug/sifr",
+            "check",
+            "audits/leetcode/0207_course_schedule.sifr"
+          ],
+          "duration_ms": 320,
+          "returncode": 0,
+          "stage": "check",
+          "stderr": "no errors found",
+          "stdout": "",
+          "timed_out": false
+        },
+        {
+          "command": [
+            "target/debug/sifr",
+            "run",
+            "audits/leetcode/0207_course_schedule.sifr"
+          ],
+          "duration_ms": 399,
+          "returncode": 0,
+          "stage": "run",
+          "stderr": "[sifr-artifact-cache] namespace=run key=8c4f0e2380914777 cache_hit=true workspace=/var/folders/lq/l19_y_rn76b8vprfvdjn9zch0000gn/T/sifr_generated_artifact_cache/run/8c4f0e2380914777",
+          "stdout": "",
+          "timed_out": false
+        }
+      ],
+      "status": "PASS",
+      "timeout_seconds": 20
+    },
+    {
+      "difficulty": "medium",
+      "failure_stage": null,
+      "fixture_slug": "0209_minimum_size_subarray_sum",
+      "id": "0209",
+      "oracle_mode": "embedded_asserts",
+      "primary_topic": "two_pointers_sliding_window",
+      "scope_classification": "in_scope",
+      "stages": [
+        {
+          "command": [
+            "target/debug/sifr",
+            "check",
+            "audits/leetcode/0209_minimum_size_subarray_sum.sifr"
+          ],
+          "duration_ms": 339,
+          "returncode": 0,
+          "stage": "check",
+          "stderr": "no errors found",
+          "stdout": "",
+          "timed_out": false
+        },
+        {
+          "command": [
+            "target/debug/sifr",
+            "run",
+            "audits/leetcode/0209_minimum_size_subarray_sum.sifr"
+          ],
+          "duration_ms": 415,
+          "returncode": 0,
+          "stage": "run",
+          "stderr": "[sifr-artifact-cache] namespace=run key=37fb95803fb2a8b2 cache_hit=true workspace=/var/folders/lq/l19_y_rn76b8vprfvdjn9zch0000gn/T/sifr_generated_artifact_cache/run/37fb95803fb2a8b2",
+          "stdout": "",
+          "timed_out": false
+        }
+      ],
+      "status": "PASS",
+      "timeout_seconds": 20
+    },
+    {
+      "difficulty": "medium",
+      "failure_stage": null,
+      "fixture_slug": "0215_kth_largest_element_in_an_array",
+      "id": "0215",
+      "oracle_mode": "embedded_asserts",
+      "primary_topic": "heap_priority_queue",
+      "scope_classification": "in_scope",
+      "stages": [
+        {
+          "command": [
+            "target/debug/sifr",
+            "check",
+            "audits/leetcode/0215_kth_largest_element_in_an_array.sifr"
+          ],
+          "duration_ms": 345,
+          "returncode": 0,
+          "stage": "check",
+          "stderr": "no errors found",
+          "stdout": "",
+          "timed_out": false
+        },
+        {
+          "command": [
+            "target/debug/sifr",
+            "run",
+            "audits/leetcode/0215_kth_largest_element_in_an_array.sifr"
+          ],
+          "duration_ms": 409,
+          "returncode": 0,
+          "stage": "run",
+          "stderr": "[sifr-artifact-cache] namespace=run key=e936df394d32fb80 cache_hit=true workspace=/var/folders/lq/l19_y_rn76b8vprfvdjn9zch0000gn/T/sifr_generated_artifact_cache/run/e936df394d32fb80",
+          "stdout": "",
+          "timed_out": false
+        }
+      ],
+      "status": "PASS",
+      "timeout_seconds": 20
+    },
+    {
+      "difficulty": "easy",
+      "failure_stage": null,
+      "fixture_slug": "0217_contains_duplicate",
+      "id": "0217",
+      "oracle_mode": "embedded_asserts",
+      "primary_topic": "hash_map",
+      "scope_classification": "in_scope",
+      "stages": [
+        {
+          "command": [
+            "target/debug/sifr",
+            "check",
+            "audits/leetcode/0217_contains_duplicate.sifr"
+          ],
+          "duration_ms": 326,
+          "returncode": 0,
+          "stage": "check",
+          "stderr": "no errors found",
+          "stdout": "",
+          "timed_out": false
+        },
+        {
+          "command": [
+            "target/debug/sifr",
+            "run",
+            "audits/leetcode/0217_contains_duplicate.sifr"
+          ],
+          "duration_ms": 410,
+          "returncode": 0,
+          "stage": "run",
+          "stderr": "[sifr-artifact-cache] namespace=run key=c9fc4acc8e70dcea cache_hit=true workspace=/var/folders/lq/l19_y_rn76b8vprfvdjn9zch0000gn/T/sifr_generated_artifact_cache/run/c9fc4acc8e70dcea",
+          "stdout": "",
+          "timed_out": false
+        }
+      ],
+      "status": "PASS",
+      "timeout_seconds": 20
+    },
+    {
+      "difficulty": "easy",
+      "failure_stage": null,
+      "fixture_slug": "0226_invert_binary_tree",
+      "id": "0226",
+      "oracle_mode": "embedded_asserts",
+      "primary_topic": "trees",
+      "scope_classification": "in_scope",
+      "stages": [
+        {
+          "command": [
+            "target/debug/sifr",
+            "check",
+            "audits/leetcode/0226_invert_binary_tree.sifr"
+          ],
+          "duration_ms": 328,
+          "returncode": 0,
+          "stage": "check",
+          "stderr": "no errors found",
+          "stdout": "",
+          "timed_out": false
+        },
+        {
+          "command": [
+            "target/debug/sifr",
+            "run",
+            "audits/leetcode/0226_invert_binary_tree.sifr"
+          ],
+          "duration_ms": 402,
+          "returncode": 0,
+          "stage": "run",
+          "stderr": "[sifr-artifact-cache] namespace=run key=37041e88f59352cf cache_hit=true workspace=/var/folders/lq/l19_y_rn76b8vprfvdjn9zch0000gn/T/sifr_generated_artifact_cache/run/37041e88f59352cf",
+          "stdout": "",
+          "timed_out": false
+        }
+      ],
+      "status": "PASS",
+      "timeout_seconds": 20
+    },
+    {
+      "difficulty": "medium",
+      "failure_stage": null,
+      "fixture_slug": "0235_lowest_common_ancestor_of_a_binary_search_tree",
+      "id": "0235",
+      "oracle_mode": "embedded_asserts",
+      "primary_topic": "trees",
+      "scope_classification": "in_scope",
+      "stages": [
+        {
+          "command": [
+            "target/debug/sifr",
+            "check",
+            "audits/leetcode/0235_lowest_common_ancestor_of_a_binary_search_tree.sifr"
+          ],
+          "duration_ms": 324,
+          "returncode": 0,
+          "stage": "check",
+          "stderr": "no errors found",
+          "stdout": "",
+          "timed_out": false
+        },
+        {
+          "command": [
+            "target/debug/sifr",
+            "run",
+            "audits/leetcode/0235_lowest_common_ancestor_of_a_binary_search_tree.sifr"
+          ],
+          "duration_ms": 401,
+          "returncode": 0,
+          "stage": "run",
+          "stderr": "[sifr-artifact-cache] namespace=run key=f43e4fec34efab8e cache_hit=true workspace=/var/folders/lq/l19_y_rn76b8vprfvdjn9zch0000gn/T/sifr_generated_artifact_cache/run/f43e4fec34efab8e",
+          "stdout": "",
+          "timed_out": false
+        }
+      ],
+      "status": "PASS",
+      "timeout_seconds": 20
+    },
+    {
+      "difficulty": "medium",
+      "failure_stage": null,
+      "fixture_slug": "0238_product_of_array_except_self",
+      "id": "0238",
+      "oracle_mode": "embedded_asserts",
+      "primary_topic": "arrays",
+      "scope_classification": "in_scope",
+      "stages": [
+        {
+          "command": [
+            "target/debug/sifr",
+            "check",
+            "audits/leetcode/0238_product_of_array_except_self.sifr"
+          ],
+          "duration_ms": 333,
+          "returncode": 0,
+          "stage": "check",
+          "stderr": "warning: int multiplication with non-constant operands may overflow i64 at runtime; consider using bigint for large values\nwarning: int multiplication with non-constant operands may overflow i64 at runtime; consider using bigint for large values\nwarning: int multiplication with non-constant operands may overflow i64 at runtime; consider using bigint for large values\nno errors found",
+          "stdout": "",
+          "timed_out": false
+        },
+        {
+          "command": [
+            "target/debug/sifr",
+            "run",
+            "audits/leetcode/0238_product_of_array_except_self.sifr"
+          ],
+          "duration_ms": 400,
+          "returncode": 0,
+          "stage": "run",
+          "stderr": "warning: int multiplication with non-constant operands may overflow i64 at runtime; consider using bigint for large values\nwarning: int multiplication with non-constant operands may overflow i64 at runtime; consider using bigint for large values\nwarning: int multiplication with non-constant operands may overflow i64 at runtime; consider using bigint for large values\n[sifr-artifact-cache] namespace=run key=dcec6bc06401a319 cache_hit=true workspace=/var/folders/lq/l19_y_rn76b8vprfvdjn9zch0000gn/T/sifr_generated_artifact_cache/run/dcec6bc06401a319",
+          "stdout": "",
+          "timed_out": false
+        }
+      ],
+      "status": "PASS",
+      "timeout_seconds": 20
+    },
+    {
+      "difficulty": "easy",
+      "failure_stage": null,
+      "fixture_slug": "0242_valid_anagram",
+      "id": "0242",
+      "oracle_mode": "embedded_asserts",
+      "primary_topic": "hash_map",
+      "scope_classification": "in_scope",
+      "stages": [
+        {
+          "command": [
+            "target/debug/sifr",
+            "check",
+            "audits/leetcode/0242_valid_anagram.sifr"
+          ],
+          "duration_ms": 324,
+          "returncode": 0,
+          "stage": "check",
+          "stderr": "no errors found",
+          "stdout": "",
+          "timed_out": false
+        },
+        {
+          "command": [
+            "target/debug/sifr",
+            "run",
+            "audits/leetcode/0242_valid_anagram.sifr"
+          ],
+          "duration_ms": 398,
+          "returncode": 0,
+          "stage": "run",
+          "stderr": "[sifr-artifact-cache] namespace=run key=db93c4a478093c70 cache_hit=true workspace=/var/folders/lq/l19_y_rn76b8vprfvdjn9zch0000gn/T/sifr_generated_artifact_cache/run/db93c4a478093c70",
+          "stdout": "",
+          "timed_out": false
+        }
+      ],
+      "status": "PASS",
+      "timeout_seconds": 20
+    },
+    {
+      "difficulty": "hard",
+      "failure_stage": null,
+      "fixture_slug": "0295_find_median_from_data_stream",
+      "id": "0295",
+      "oracle_mode": "embedded_asserts",
+      "primary_topic": "heap_priority_queue",
+      "scope_classification": "in_scope",
+      "stages": [
+        {
+          "command": [
+            "target/debug/sifr",
+            "check",
+            "audits/leetcode/0295_find_median_from_data_stream.sifr"
+          ],
+          "duration_ms": 325,
+          "returncode": 0,
+          "stage": "check",
+          "stderr": "no errors found",
+          "stdout": "",
+          "timed_out": false
+        },
+        {
+          "command": [
+            "target/debug/sifr",
+            "run",
+            "audits/leetcode/0295_find_median_from_data_stream.sifr"
+          ],
+          "duration_ms": 397,
+          "returncode": 0,
+          "stage": "run",
+          "stderr": "[sifr-artifact-cache] namespace=run key=38cdcf8fdf780748 cache_hit=true workspace=/var/folders/lq/l19_y_rn76b8vprfvdjn9zch0000gn/T/sifr_generated_artifact_cache/run/38cdcf8fdf780748",
+          "stdout": "",
+          "timed_out": false
+        }
+      ],
+      "status": "PASS",
+      "timeout_seconds": 20
+    },
+    {
+      "difficulty": "medium",
+      "failure_stage": null,
+      "fixture_slug": "0322_coin_change",
+      "id": "0322",
+      "oracle_mode": "embedded_asserts",
+      "primary_topic": "dp",
+      "scope_classification": "in_scope",
+      "stages": [
+        {
+          "command": [
+            "target/debug/sifr",
+            "check",
+            "audits/leetcode/0322_coin_change.sifr"
+          ],
+          "duration_ms": 323,
+          "returncode": 0,
+          "stage": "check",
+          "stderr": "no errors found",
+          "stdout": "",
+          "timed_out": false
+        },
+        {
+          "command": [
+            "target/debug/sifr",
+            "run",
+            "audits/leetcode/0322_coin_change.sifr"
+          ],
+          "duration_ms": 407,
+          "returncode": 0,
+          "stage": "run",
+          "stderr": "[sifr-artifact-cache] namespace=run key=ca1978b54581ac12 cache_hit=true workspace=/var/folders/lq/l19_y_rn76b8vprfvdjn9zch0000gn/T/sifr_generated_artifact_cache/run/ca1978b54581ac12",
+          "stdout": "",
+          "timed_out": false
+        }
+      ],
+      "status": "PASS",
+      "timeout_seconds": 20
+    },
+    {
+      "difficulty": "medium",
+      "failure_stage": null,
+      "fixture_slug": "0424_longest_repeating_character_replacement",
+      "id": "0424",
+      "oracle_mode": "embedded_asserts",
+      "primary_topic": "two_pointers_sliding_window",
+      "scope_classification": "in_scope",
+      "stages": [
+        {
+          "command": [
+            "target/debug/sifr",
+            "check",
+            "audits/leetcode/0424_longest_repeating_character_replacement.sifr"
+          ],
+          "duration_ms": 334,
+          "returncode": 0,
+          "stage": "check",
+          "stderr": "no errors found",
+          "stdout": "",
+          "timed_out": false
+        },
+        {
+          "command": [
+            "target/debug/sifr",
+            "run",
+            "audits/leetcode/0424_longest_repeating_character_replacement.sifr"
+          ],
+          "duration_ms": 397,
+          "returncode": 0,
+          "stage": "run",
+          "stderr": "[sifr-artifact-cache] namespace=run key=50ef6ced9fc32536 cache_hit=true workspace=/var/folders/lq/l19_y_rn76b8vprfvdjn9zch0000gn/T/sifr_generated_artifact_cache/run/50ef6ced9fc32536",
+          "stdout": "",
+          "timed_out": false
+        }
+      ],
+      "status": "PASS",
+      "timeout_seconds": 20
+    },
+    {
+      "difficulty": "hard",
+      "failure_stage": null,
+      "fixture_slug": "0502_ipo",
+      "id": "0502",
+      "oracle_mode": "embedded_asserts",
+      "primary_topic": "heap_priority_queue",
+      "scope_classification": "in_scope",
+      "stages": [
+        {
+          "command": [
+            "target/debug/sifr",
+            "check",
+            "audits/leetcode/0502_ipo.sifr"
+          ],
+          "duration_ms": 326,
+          "returncode": 0,
+          "stage": "check",
+          "stderr": "warning: int multiplication with non-constant operands may overflow i64 at runtime; consider using bigint for large values\nno errors found",
+          "stdout": "",
+          "timed_out": false
+        },
+        {
+          "command": [
+            "target/debug/sifr",
+            "run",
+            "audits/leetcode/0502_ipo.sifr"
+          ],
+          "duration_ms": 431,
+          "returncode": 0,
+          "stage": "run",
+          "stderr": "warning: int multiplication with non-constant operands may overflow i64 at runtime; consider using bigint for large values\n[sifr-artifact-cache] namespace=run key=47d300c0908ccdaf cache_hit=true workspace=/var/folders/lq/l19_y_rn76b8vprfvdjn9zch0000gn/T/sifr_generated_artifact_cache/run/47d300c0908ccdaf",
+          "stdout": "",
+          "timed_out": false
+        }
+      ],
+      "status": "PASS",
+      "timeout_seconds": 20
+    },
+    {
+      "difficulty": "medium",
+      "failure_stage": null,
+      "fixture_slug": "0523_continuous_subarray_sum",
+      "id": "0523",
+      "oracle_mode": "embedded_asserts",
+      "primary_topic": "hash_map",
+      "scope_classification": "in_scope",
+      "stages": [
+        {
+          "command": [
+            "target/debug/sifr",
+            "check",
+            "audits/leetcode/0523_continuous_subarray_sum.sifr"
+          ],
+          "duration_ms": 322,
+          "returncode": 0,
+          "stage": "check",
+          "stderr": "no errors found",
+          "stdout": "",
+          "timed_out": false
+        },
+        {
+          "command": [
+            "target/debug/sifr",
+            "run",
+            "audits/leetcode/0523_continuous_subarray_sum.sifr"
+          ],
+          "duration_ms": 404,
+          "returncode": 0,
+          "stage": "run",
+          "stderr": "[sifr-artifact-cache] namespace=run key=e801f80d5e6d083f cache_hit=true workspace=/var/folders/lq/l19_y_rn76b8vprfvdjn9zch0000gn/T/sifr_generated_artifact_cache/run/e801f80d5e6d083f",
+          "stdout": "",
+          "timed_out": false
+        }
+      ],
+      "status": "PASS",
+      "timeout_seconds": 20
+    },
+    {
+      "difficulty": "medium",
+      "failure_stage": null,
+      "fixture_slug": "0560_subarray_sum_equals_k",
+      "id": "0560",
+      "oracle_mode": "embedded_asserts",
+      "primary_topic": "hash_map",
+      "scope_classification": "in_scope",
+      "stages": [
+        {
+          "command": [
+            "target/debug/sifr",
+            "check",
+            "audits/leetcode/0560_subarray_sum_equals_k.sifr"
+          ],
+          "duration_ms": 323,
+          "returncode": 0,
+          "stage": "check",
+          "stderr": "no errors found",
+          "stdout": "",
+          "timed_out": false
+        },
+        {
+          "command": [
+            "target/debug/sifr",
+            "run",
+            "audits/leetcode/0560_subarray_sum_equals_k.sifr"
+          ],
+          "duration_ms": 397,
+          "returncode": 0,
+          "stage": "run",
+          "stderr": "[sifr-artifact-cache] namespace=run key=5d34503d94b70f97 cache_hit=true workspace=/var/folders/lq/l19_y_rn76b8vprfvdjn9zch0000gn/T/sifr_generated_artifact_cache/run/5d34503d94b70f97",
+          "stdout": "",
+          "timed_out": false
+        }
+      ],
+      "status": "PASS",
+      "timeout_seconds": 20
+    },
+    {
+      "difficulty": "medium",
+      "failure_stage": null,
+      "fixture_slug": "0684_redundant_connection",
+      "id": "0684",
+      "oracle_mode": "embedded_asserts",
+      "primary_topic": "graphs",
+      "scope_classification": "in_scope",
+      "stages": [
+        {
+          "command": [
+            "target/debug/sifr",
+            "check",
+            "audits/leetcode/0684_redundant_connection.sifr"
+          ],
+          "duration_ms": 339,
+          "returncode": 0,
+          "stage": "check",
+          "stderr": "no errors found",
+          "stdout": "",
+          "timed_out": false
+        },
+        {
+          "command": [
+            "target/debug/sifr",
+            "run",
+            "audits/leetcode/0684_redundant_connection.sifr"
+          ],
+          "duration_ms": 419,
+          "returncode": 0,
+          "stage": "run",
+          "stderr": "[sifr-artifact-cache] namespace=run key=5c15fad851cb5a54 cache_hit=true workspace=/var/folders/lq/l19_y_rn76b8vprfvdjn9zch0000gn/T/sifr_generated_artifact_cache/run/5c15fad851cb5a54",
+          "stdout": "",
+          "timed_out": false
+        }
+      ],
+      "status": "PASS",
+      "timeout_seconds": 20
+    },
+    {
+      "difficulty": "easy",
+      "failure_stage": null,
+      "fixture_slug": "0703_kth_largest_element_in_a_stream",
+      "id": "0703",
+      "oracle_mode": "embedded_asserts",
+      "primary_topic": "heap_priority_queue",
+      "scope_classification": "in_scope",
+      "stages": [
+        {
+          "command": [
+            "target/debug/sifr",
+            "check",
+            "audits/leetcode/0703_kth_largest_element_in_a_stream.sifr"
+          ],
+          "duration_ms": 351,
+          "returncode": 0,
+          "stage": "check",
+          "stderr": "no errors found",
+          "stdout": "",
+          "timed_out": false
+        },
+        {
+          "command": [
+            "target/debug/sifr",
+            "run",
+            "audits/leetcode/0703_kth_largest_element_in_a_stream.sifr"
+          ],
+          "duration_ms": 407,
+          "returncode": 0,
+          "stage": "run",
+          "stderr": "[sifr-artifact-cache] namespace=run key=83ee3962f3b19ad0 cache_hit=true workspace=/var/folders/lq/l19_y_rn76b8vprfvdjn9zch0000gn/T/sifr_generated_artifact_cache/run/83ee3962f3b19ad0",
+          "stdout": "",
+          "timed_out": false
+        }
+      ],
+      "status": "PASS",
+      "timeout_seconds": 20
+    },
+    {
+      "difficulty": "medium",
+      "failure_stage": null,
+      "fixture_slug": "0743_network_delay_time",
+      "id": "0743",
+      "oracle_mode": "embedded_asserts",
+      "primary_topic": "graphs",
+      "scope_classification": "in_scope",
+      "stages": [
+        {
+          "command": [
+            "target/debug/sifr",
+            "check",
+            "audits/leetcode/0743_network_delay_time.sifr"
+          ],
+          "duration_ms": 331,
+          "returncode": 0,
+          "stage": "check",
+          "stderr": "warning: int multiplication with non-constant operands may overflow i64 at runtime; consider using bigint for large values\nwarning: int multiplication with non-constant operands may overflow i64 at runtime; consider using bigint for large values\nno errors found",
+          "stdout": "",
+          "timed_out": false
+        },
+        {
+          "command": [
+            "target/debug/sifr",
+            "run",
+            "audits/leetcode/0743_network_delay_time.sifr"
+          ],
+          "duration_ms": 434,
+          "returncode": 0,
+          "stage": "run",
+          "stderr": "warning: int multiplication with non-constant operands may overflow i64 at runtime; consider using bigint for large values\nwarning: int multiplication with non-constant operands may overflow i64 at runtime; consider using bigint for large values\n[sifr-artifact-cache] namespace=run key=6828d10b3bc71bfd cache_hit=true workspace=/var/folders/lq/l19_y_rn76b8vprfvdjn9zch0000gn/T/sifr_generated_artifact_cache/run/6828d10b3bc71bfd",
+          "stdout": "",
+          "timed_out": false
+        }
+      ],
+      "status": "PASS",
+      "timeout_seconds": 20
+    },
+    {
+      "difficulty": "easy",
+      "failure_stage": null,
+      "fixture_slug": "0746_min_cost_climbing_stairs",
+      "id": "0746",
+      "oracle_mode": "embedded_asserts",
+      "primary_topic": "dp",
+      "scope_classification": "in_scope",
+      "stages": [
+        {
+          "command": [
+            "target/debug/sifr",
+            "check",
+            "audits/leetcode/0746_min_cost_climbing_stairs.sifr"
+          ],
+          "duration_ms": 326,
+          "returncode": 0,
+          "stage": "check",
+          "stderr": "no errors found",
+          "stdout": "",
+          "timed_out": false
+        },
+        {
+          "command": [
+            "target/debug/sifr",
+            "run",
+            "audits/leetcode/0746_min_cost_climbing_stairs.sifr"
+          ],
+          "duration_ms": 401,
+          "returncode": 0,
+          "stage": "run",
+          "stderr": "[sifr-artifact-cache] namespace=run key=f6cba618976d88c0 cache_hit=true workspace=/var/folders/lq/l19_y_rn76b8vprfvdjn9zch0000gn/T/sifr_generated_artifact_cache/run/f6cba618976d88c0",
+          "stdout": "",
+          "timed_out": false
+        }
+      ],
+      "status": "PASS",
+      "timeout_seconds": 20
+    },
+    {
+      "difficulty": "medium",
+      "failure_stage": null,
+      "fixture_slug": "0912_sort_an_array",
+      "id": "0912",
+      "oracle_mode": "embedded_asserts",
+      "primary_topic": "arrays",
+      "scope_classification": "in_scope",
+      "stages": [
+        {
+          "command": [
+            "target/debug/sifr",
+            "check",
+            "audits/leetcode/0912_sort_an_array.sifr"
+          ],
+          "duration_ms": 334,
+          "returncode": 0,
+          "stage": "check",
+          "stderr": "no errors found",
+          "stdout": "",
+          "timed_out": false
+        },
+        {
+          "command": [
+            "target/debug/sifr",
+            "run",
+            "audits/leetcode/0912_sort_an_array.sifr"
+          ],
+          "duration_ms": 407,
+          "returncode": 0,
+          "stage": "run",
+          "stderr": "[sifr-artifact-cache] namespace=run key=3c9235ee46087592 cache_hit=true workspace=/var/folders/lq/l19_y_rn76b8vprfvdjn9zch0000gn/T/sifr_generated_artifact_cache/run/3c9235ee46087592",
+          "stdout": "",
+          "timed_out": false
+        }
+      ],
+      "status": "PASS",
+      "timeout_seconds": 20
+    },
+    {
+      "difficulty": "easy",
+      "failure_stage": null,
+      "fixture_slug": "0997_find_the_town_judge",
+      "id": "0997",
+      "oracle_mode": "embedded_asserts",
+      "primary_topic": "graphs",
+      "scope_classification": "in_scope",
+      "stages": [
+        {
+          "command": [
+            "target/debug/sifr",
+            "check",
+            "audits/leetcode/0997_find_the_town_judge.sifr"
+          ],
+          "duration_ms": 326,
+          "returncode": 0,
+          "stage": "check",
+          "stderr": "no errors found",
+          "stdout": "",
+          "timed_out": false
+        },
+        {
+          "command": [
+            "target/debug/sifr",
+            "run",
+            "audits/leetcode/0997_find_the_town_judge.sifr"
+          ],
+          "duration_ms": 401,
+          "returncode": 0,
+          "stage": "run",
+          "stderr": "[sifr-artifact-cache] namespace=run key=f1d1068dbe04a20c cache_hit=true workspace=/var/folders/lq/l19_y_rn76b8vprfvdjn9zch0000gn/T/sifr_generated_artifact_cache/run/f1d1068dbe04a20c",
+          "stdout": "",
+          "timed_out": false
+        }
+      ],
+      "status": "PASS",
+      "timeout_seconds": 20
+    },
+    {
+      "difficulty": "easy",
+      "failure_stage": null,
+      "fixture_slug": "1046_last_stone_weight",
+      "id": "1046",
+      "oracle_mode": "embedded_asserts",
+      "primary_topic": "heap_priority_queue",
+      "scope_classification": "in_scope",
+      "stages": [
+        {
+          "command": [
+            "target/debug/sifr",
+            "check",
+            "audits/leetcode/1046_last_stone_weight.sifr"
+          ],
+          "duration_ms": 324,
+          "returncode": 0,
+          "stage": "check",
+          "stderr": "no errors found",
+          "stdout": "",
+          "timed_out": false
+        },
+        {
+          "command": [
+            "target/debug/sifr",
+            "run",
+            "audits/leetcode/1046_last_stone_weight.sifr"
+          ],
+          "duration_ms": 399,
+          "returncode": 0,
+          "stage": "run",
+          "stderr": "[sifr-artifact-cache] namespace=run key=4b87ead11006aac6 cache_hit=true workspace=/var/folders/lq/l19_y_rn76b8vprfvdjn9zch0000gn/T/sifr_generated_artifact_cache/run/4b87ead11006aac6",
+          "stdout": "",
+          "timed_out": false
+        }
+      ],
+      "status": "PASS",
+      "timeout_seconds": 20
+    },
+    {
+      "difficulty": "medium",
+      "failure_stage": null,
+      "fixture_slug": "1143_longest_common_subsequence",
+      "id": "1143",
+      "oracle_mode": "embedded_asserts",
+      "primary_topic": "dp",
+      "scope_classification": "in_scope",
+      "stages": [
+        {
+          "command": [
+            "target/debug/sifr",
+            "check",
+            "audits/leetcode/1143_longest_common_subsequence.sifr"
+          ],
+          "duration_ms": 329,
+          "returncode": 0,
+          "stage": "check",
+          "stderr": "no errors found",
+          "stdout": "",
+          "timed_out": false
+        },
+        {
+          "command": [
+            "target/debug/sifr",
+            "run",
+            "audits/leetcode/1143_longest_common_subsequence.sifr"
+          ],
+          "duration_ms": 400,
+          "returncode": 0,
+          "stage": "run",
+          "stderr": "[sifr-artifact-cache] namespace=run key=17518faa93c55421 cache_hit=true workspace=/var/folders/lq/l19_y_rn76b8vprfvdjn9zch0000gn/T/sifr_generated_artifact_cache/run/17518faa93c55421",
+          "stdout": "",
+          "timed_out": false
+        }
+      ],
+      "status": "PASS",
+      "timeout_seconds": 20
+    },
+    {
+      "difficulty": "medium",
+      "failure_stage": null,
+      "fixture_slug": "1209_remove_all_adjacent_duplicates_in_string_ii",
+      "id": "1209",
+      "oracle_mode": "embedded_asserts",
+      "primary_topic": "strings",
+      "scope_classification": "in_scope",
+      "stages": [
+        {
+          "command": [
+            "target/debug/sifr",
+            "check",
+            "audits/leetcode/1209_remove_all_adjacent_duplicates_in_string_ii.sifr"
+          ],
+          "duration_ms": 326,
+          "returncode": 0,
+          "stage": "check",
+          "stderr": "no errors found",
+          "stdout": "",
+          "timed_out": false
+        },
+        {
+          "command": [
+            "target/debug/sifr",
+            "run",
+            "audits/leetcode/1209_remove_all_adjacent_duplicates_in_string_ii.sifr"
+          ],
+          "duration_ms": 400,
+          "returncode": 0,
+          "stage": "run",
+          "stderr": "[sifr-artifact-cache] namespace=run key=9916b903cbbee2a9 cache_hit=true workspace=/var/folders/lq/l19_y_rn76b8vprfvdjn9zch0000gn/T/sifr_generated_artifact_cache/run/9916b903cbbee2a9",
+          "stdout": "",
+          "timed_out": false
+        }
+      ],
+      "status": "PASS",
+      "timeout_seconds": 20
+    },
+    {
+      "difficulty": "easy",
+      "failure_stage": null,
+      "fixture_slug": "1299_replace_elements_with_greatest_element_on_right_side",
+      "id": "1299",
+      "oracle_mode": "embedded_asserts",
+      "primary_topic": "arrays",
+      "scope_classification": "in_scope",
+      "stages": [
+        {
+          "command": [
+            "target/debug/sifr",
+            "check",
+            "audits/leetcode/1299_replace_elements_with_greatest_element_on_right_side.sifr"
+          ],
+          "duration_ms": 337,
+          "returncode": 0,
+          "stage": "check",
+          "stderr": "no errors found",
+          "stdout": "",
+          "timed_out": false
+        },
+        {
+          "command": [
+            "target/debug/sifr",
+            "run",
+            "audits/leetcode/1299_replace_elements_with_greatest_element_on_right_side.sifr"
+          ],
+          "duration_ms": 413,
+          "returncode": 0,
+          "stage": "run",
+          "stderr": "[sifr-artifact-cache] namespace=run key=590bb7d141986bf3 cache_hit=true workspace=/var/folders/lq/l19_y_rn76b8vprfvdjn9zch0000gn/T/sifr_generated_artifact_cache/run/590bb7d141986bf3",
+          "stdout": "",
+          "timed_out": false
+        }
+      ],
+      "status": "PASS",
+      "timeout_seconds": 20
+    },
+    {
+      "difficulty": "medium",
+      "failure_stage": null,
+      "fixture_slug": "1456_maximum_number_of_vowels_in_a_substring_of_given_length",
+      "id": "1456",
+      "oracle_mode": "embedded_asserts",
+      "primary_topic": "two_pointers_sliding_window",
+      "scope_classification": "in_scope",
+      "stages": [
+        {
+          "command": [
+            "target/debug/sifr",
+            "check",
+            "audits/leetcode/1456_maximum_number_of_vowels_in_a_substring_of_given_length.sifr"
+          ],
+          "duration_ms": 345,
+          "returncode": 0,
+          "stage": "check",
+          "stderr": "no errors found",
+          "stdout": "",
+          "timed_out": false
+        },
+        {
+          "command": [
+            "target/debug/sifr",
+            "run",
+            "audits/leetcode/1456_maximum_number_of_vowels_in_a_substring_of_given_length.sifr"
+          ],
+          "duration_ms": 400,
+          "returncode": 0,
+          "stage": "run",
+          "stderr": "[sifr-artifact-cache] namespace=run key=f3b0ad0b19c73309 cache_hit=true workspace=/var/folders/lq/l19_y_rn76b8vprfvdjn9zch0000gn/T/sifr_generated_artifact_cache/run/f3b0ad0b19c73309",
+          "stdout": "",
+          "timed_out": false
+        }
+      ],
+      "status": "PASS",
+      "timeout_seconds": 20
+    },
+    {
+      "difficulty": "easy",
+      "failure_stage": null,
+      "fixture_slug": "1768_merge_strings_alternately",
+      "id": "1768",
+      "oracle_mode": "embedded_asserts",
+      "primary_topic": "strings",
+      "scope_classification": "in_scope",
+      "stages": [
+        {
+          "command": [
+            "target/debug/sifr",
+            "check",
+            "audits/leetcode/1768_merge_strings_alternately.sifr"
+          ],
+          "duration_ms": 330,
+          "returncode": 0,
+          "stage": "check",
+          "stderr": "no errors found",
+          "stdout": "",
+          "timed_out": false
+        },
+        {
+          "command": [
+            "target/debug/sifr",
+            "run",
+            "audits/leetcode/1768_merge_strings_alternately.sifr"
+          ],
+          "duration_ms": 402,
+          "returncode": 0,
+          "stage": "run",
+          "stderr": "[sifr-artifact-cache] namespace=run key=cb2ce9ae22010485 cache_hit=true workspace=/var/folders/lq/l19_y_rn76b8vprfvdjn9zch0000gn/T/sifr_generated_artifact_cache/run/cb2ce9ae22010485",
+          "stdout": "",
+          "timed_out": false
+        }
+      ],
+      "status": "PASS",
+      "timeout_seconds": 20
+    },
+    {
+      "difficulty": "easy",
+      "failure_stage": null,
+      "fixture_slug": "2235_add_two_integers",
+      "id": "2235",
+      "oracle_mode": "embedded_asserts",
+      "primary_topic": "math",
+      "scope_classification": "in_scope",
+      "stages": [
+        {
+          "command": [
+            "target/debug/sifr",
+            "check",
+            "audits/leetcode/2235_add_two_integers.sifr"
+          ],
+          "duration_ms": 329,
+          "returncode": 0,
+          "stage": "check",
+          "stderr": "no errors found",
+          "stdout": "",
+          "timed_out": false
+        },
+        {
+          "command": [
+            "target/debug/sifr",
+            "run",
+            "audits/leetcode/2235_add_two_integers.sifr"
+          ],
+          "duration_ms": 398,
+          "returncode": 0,
+          "stage": "run",
+          "stderr": "[sifr-artifact-cache] namespace=run key=27fc7fda11b9966e cache_hit=true workspace=/var/folders/lq/l19_y_rn76b8vprfvdjn9zch0000gn/T/sifr_generated_artifact_cache/run/27fc7fda11b9966e",
+          "stdout": "",
+          "timed_out": false
+        }
+      ],
+      "status": "PASS",
+      "timeout_seconds": 20
+    }
+  ],
+  "summary": {
+    "case_count": 50,
+    "difficulty_counts": {
+      "easy": 18,
+      "hard": 5,
+      "medium": 27
+    },
+    "scope_counts": {
+      "blocked_feature": 0,
+      "in_scope": 50,
+      "out_of_scope_external_dep": 0
+    },
+    "status_counts": {
+      "PASS": 50
+    },
+    "topic_counts": {
+      "arrays": 5,
+      "backtracking": 5,
+      "dp": 5,
+      "graphs": 5,
+      "hash_map": 5,
+      "heap_priority_queue": 5,
+      "math": 5,
+      "strings": 5,
+      "trees": 5,
+      "two_pointers_sliding_window": 5
+    }
+  }
+}

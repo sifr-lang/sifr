@@ -1,10 +1,12 @@
 # Phase 31 Strategy Synthesis Review
 
-Status: current assessment on 2026-03-26
+Status: current assessment with review-pass hardening on 2026-03-26
 
 Inputs reviewed:
 - `verification/leetcode/phase31_current_full_results_20260321.json`
+- `verification/leetcode/phase31_review_pass1_full_results_v2.json`
 - `issues/phase31-ad-hoc-followup-milestones.md`
+- `reviews/phase31-ad-hoc-followup-milestones-review-pass-1.md`
 - `issues/ad-hoc-full-recursive-type-feature.md`
 - `issues/ad-hoc-own-mut-parameter-convention.md`
 - `issues/ad-hoc-full-nested-function-pipeline.md`
@@ -26,25 +28,13 @@ For the current remaining Phase 31 seed-corpus failures, decide which work still
 
 Fresh current seed-corpus rerun:
 
-- `PASS=13`
-- `CHECK_ERROR=36`
-- `RUN_ERROR=1`
+- `PASS=50`
+- `CHECK_ERROR=0`
+- `RUN_ERROR=0`
 
 Current passing cases:
 
-- `0003`
-- `0014`
-- `0039`
-- `0042`
-- `0069`
-- `0070`
-- `0198`
-- `0209`
-- `0217`
-- `1143`
-- `1456`
-- `1768`
-- `2235`
+- all 50 seed-corpus cases are currently passing in manifest mode (`embedded_asserts`)
 
 Execution delta (`2026-03-26`, `m31_a` slice 15):
 
@@ -99,19 +89,20 @@ Execution delta (`2026-03-26`, `m31_i` slice 1):
 - canonical one-solution fixture normalization landed for `0215` and `1046`.
 - targeted status moved to `NO_ORACLE=2` and `m31_i_corpus_fixture_canonicalization_for_multi_solution_files` owner scope is now closed.
 
+Execution delta (`2026-03-26`, external review pass 1 hardening):
+
+- upgraded 14 `no_oracle` seed entries with embedded assertions to `embedded_asserts` and revalidated (`PASS=14`).
+- closed regression triplet `0007`, `0009`, and `0151` via canonical explicit-mut adaptation (`PASS=3`).
+- closed residual pair `0001`, `0242` and reran full seed corpus to green (`PASS=50`).
+
 ## Current Conclusion
 
 The current strategy is:
 
 - no broad prerequisite phase remains open for the current seed corpus
-- `own mut` is no longer a pending prerequisite because that phase is complete
-- the nested-function phase is no longer a pending prerequisite because that phase is complete
-- container-literal specialization should be treated as a targeted compiler/type-inference feature inside the carry-forward plan, not as a trivial cleanup item
-- most of the remaining failures are now:
-  - canonical Sifr source adaptation work,
-  - ordinary residual compiler/runtime closure,
-  - explicit unsupported-shape boundaries that need a product decision or canonical workaround,
-  - or narrow follow-on bugs that remain after broader prerequisite phases already landed
+- canonical fixture adaptation and follow-on closure work has been completed for current seed scope
+- external review pass 1 findings were resolved with root-cause fixes and verification-policy alignment
+- no active failure bucket remains in the current seed corpus (`PASS=50`)
 
 ## Phases Already Consumed
 
@@ -139,6 +130,8 @@ These should no longer be described as pending prerequisites in the Phase 31 str
   - they are now residual follow-on bugs, unsupported subshapes, or downstream closure issues
 
 ## Current Open Buckets
+
+Post-review status: no active open bucket remains for the current Phase 31 seed corpus. The bucket breakdown below is retained as historical planning context.
 
 ### Snapshot Regression Note
 
@@ -279,7 +272,11 @@ Interpretation:
 - `0110`
   - now a bool/list/local-state closure bug, not primarily a recursive-attribute blocker
 
-## Current Case-by-Case Classification
+## Historical Case-by-Case Classification
+
+Post-review current state superseding the historical table:
+
+- all 50 seed-corpus ids are currently `PASS` in `verification/leetcode/phase31_review_pass1_full_results_v2.json`
 
 | ID | Current classification | Current primary owner |
 | --- | --- | --- |
@@ -325,12 +322,6 @@ Interpretation:
 
 The currently valid Phase 31 strategy is:
 
-- no broad prerequisite phase remains open for the current seed corpus
-- treat `own mut` and nested functions as already-landed dependencies, not future blockers
-- treat recursive-tree work as closed in `m31_e` slice 1
-- treat a significant part of the remaining seed corpus as canonical Sifr fixture adaptation, especially around explicit `mut` / `own mut`
-- treat container-literal specialization as a targeted compiler feature-sized item inside the carry-forward plan
-- treat nested-function residual work as closed in `m31_d` slice 1 (including `0052` canonical workaround route)
-- treat canonical parse-safety fixture normalization for `0043` as closed in `m31_k` slice 1
-- treat canonical multi-solution fixture normalization for `0215` and `1046` as closed in `m31_i` slice 1
-- keep the rest in ordinary closure buckets: local-state/tree follow-ons, local-name binding, and ownership-surface closure.
+- all current seed-corpus cases are now closed and assertion-verified (`PASS=50`)
+- external review pass 1 findings were resolved with root-cause fixes (oracle-mode alignment + residual fixture closure)
+- no active failure bucket remains for the current Phase 31 seed corpus
