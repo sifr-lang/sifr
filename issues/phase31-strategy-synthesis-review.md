@@ -57,6 +57,12 @@ Execution delta (`2026-03-26`, `m31_b` slice 1):
 - canonical closure moved `0295`, `0703`, `0997`, and `1209` to green targeted statuses (`NO_ORACLE`/`PASS`).
 - `0226` is now isolated to a run-stage boxed optional-tree lowering gap.
 
+Execution delta (`2026-03-26`, `m31_b` slice 2):
+
+- recursive optional-field assignment boxing is now handled in codegen.
+- `0226_invert_binary_tree` moved from `RUN_ERROR` to `NO_ORACLE` in targeted reruns.
+- `m31_b_destructuring_and_composite_lvalues` owner scope is now closed.
+
 ## Current Conclusion
 
 The current strategy is:
@@ -221,15 +227,15 @@ Interpretation:
 
 These are still active residuals:
 
-- `0226`
+- none (m31_b owner scope closed in slice 2)
 
 Current representative failures:
 
-- run-stage Rust type mismatch on boxed optional-tree assignments after check-stage closure
+- none remaining in this bucket
 
 Interpretation:
 
-- `0226` remains owned by `m31_b` because its residual is a destructuring/class-surface lowering issue (boxed optional-tree assignment), not a broad recursive-type prerequisite
+- no active destructuring/class-surface residual currently remains in this bucket
 
 ### 7. Iterator / comparability / concrete iterable follow-on closure
 
@@ -279,7 +285,7 @@ Interpretation:
 | `0151` | canonical fixture adaptation | explicit `mut` |
 | `0207` | normal closure | residual nested/destructuring/iterable typing |
 | `0215` | canonical fixture adaptation + closure | multi-solution canonicalization + `mut` + return typing |
-| `0226` | normal closure | residual m31_b run-stage boxed optional-tree lowering |
+| `0226` | closed in `m31_b` slice 2 | recursive optional-field boxing closure (`NO_ORACLE`) |
 | `0235` | normal closure | recursive-tree residual under `m31_e` |
 | `0238` | normal closure | optional-flow |
 | `0242` | targeted compiler feature | container specialization |

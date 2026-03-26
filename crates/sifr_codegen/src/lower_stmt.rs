@@ -545,6 +545,7 @@ pub(crate) fn try_lower_simple_stmt_with_ctx(
             object,
             field,
             value,
+            ..
         } => try_lower_simple_field_assign_stmt(object, field, value),
         HirStmt::Return { value: None } => {
             if ctx.in_display_impl {
@@ -3944,6 +3945,7 @@ mod tests {
         let stmt = HirStmt::FieldAssign {
             object: "node".to_string(),
             field: "value".to_string(),
+            field_ty: Type::Int,
             value: HirExpr::Name {
                 name: "next_value".to_string(),
                 ty: Type::Int,
@@ -3968,6 +3970,7 @@ mod tests {
         let stmt = HirStmt::FieldAssign {
             object: "self".to_string(),
             field: "value".to_string(),
+            field_ty: Type::Int,
             value: HirExpr::IntLiteral(1),
         };
 
@@ -3979,6 +3982,7 @@ mod tests {
         let stmt = HirStmt::FieldAssign {
             object: "node".to_string(),
             field: "value".to_string(),
+            field_ty: Type::Int,
             value: HirExpr::Call {
                 func: "compute".to_string(),
                 args: vec![],

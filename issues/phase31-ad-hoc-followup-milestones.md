@@ -122,6 +122,15 @@ These broader feature phases already exist and should no longer be treated as fu
 
 ## Execution Log
 
+- `2026-03-26`: `m31_b_destructuring_and_composite_lvalues` slice 2 completed recursive optional-field boxing closure.
+  - Execution report: `issues/phase31-m31b-recursive-field-boxing-execution.md`
+  - Demo: `demos/phase31_m31b_tuple_attribute_and_canonical_surface_demo.sifr`
+  - Targeted result artifact: `verification/leetcode/phase31_m31b_wave4_recursive_field_boxing_results.json`
+  - Targeted five-case status: `NO_ORACLE=3`, `PASS=2`
+  - Reclassification result:
+    - `0226_invert_binary_tree`: `RUN_ERROR -> NO_ORACLE`
+  - Milestone closure:
+    - `m31_b_destructuring_and_composite_lvalues` owner scope is now closed
 - `2026-03-26`: `m31_b_destructuring_and_composite_lvalues` slice 1 completed tuple-attribute unpack lowering plus canonical closure for non-tree cases.
   - Execution report: `issues/phase31-m31b-tuple-attribute-and-canonical-closure-execution.md`
   - Demo: `demos/phase31_m31b_tuple_attribute_and_canonical_surface_demo.sifr`
@@ -344,14 +353,14 @@ This order assumes the broader dependency phases are already landed and keeps th
 - Current execution status (`2026-03-26`):
   - tuple-assignment lowering now supports attribute targets (`obj.a, obj.b = ...`) in HIR/codegen
   - canonical closure landed for `0295`, `0703`, `0997`, `1209`
-  - residual owner gap is now narrowed to `0226` run-stage boxed optional-tree lowering
+  - recursive optional-field assignment boxing closure landed for `0226`
+  - owner scope is now closed
 - Scope:
   - support fixed-shape destructuring into locals and attributes
   - support loop destructuring from known two-element items
   - support fixed-shape heterogeneous mutable cells used with subscript mutation
 - Affected ids:
-  - `0226` (remaining)
-  - `0295`, `0703`, `0997`, `1209` (closed in slice 1)
+  - `0226`, `0295`, `0703`, `0997`, `1209` (closed across slices 1-2)
 - Definition of done:
   - these five cases move past destructuring/composite-lvalue failures
   - regression coverage exists for attribute destructuring, loop tuple targets, and fixed-shape subscript augassign

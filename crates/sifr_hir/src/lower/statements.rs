@@ -1172,6 +1172,36 @@ pub(super) fn lower_chained_assign(assign: &StmtAssign, ctx: &mut LowerCtx) -> V
     result
 }
 
+fn resolve_object_field_type(ctx: &LowerCtx, object_name: &str, field_name: &str) -> Type {
+    ctx.scope
+        .lookup(object_name)
+        .and_then(|info| {
+            let obj_ty = info.effective_type();
+            // The object may be typed as Type::Class directly (e.g. `self`)
+            // or as a named class reference.
+            if let Type::Class { fields, .. } = obj_ty {
+                fields
+                    .iter()
+                    .find(|(name, _)| name == field_name)
+                    .map(|(_, ty)| ty.clone())
+            } else if let Type::Class { name: class_name, .. } = obj_ty {
+                ctx.class_types.get(class_name).and_then(|class_ty| {
+                    if let Type::Class { fields, .. } = class_ty {
+                        fields
+                            .iter()
+                            .find(|(name, _)| name == field_name)
+                            .map(|(_, ty)| ty.clone())
+                    } else {
+                        None
+                    }
+                })
+            } else {
+                None
+            }
+        })
+        .unwrap_or(Type::Unknown)
+}
+
 pub(super) fn lower_assign(assign: &StmtAssign, ctx: &mut LowerCtx) -> Option<HirStmt> {
     if assign.targets.len() != 1 {
         ctx.error("multiple assignment targets not supported yet".to_string());
@@ -1200,10 +1230,12 @@ pub(super) fn lower_assign(assign: &StmtAssign, ctx: &mut LowerCtx) -> Option<Hi
             return None;
         }
         let field_name = attr.attr.to_string();
+        let field_ty = resolve_object_field_type(ctx, &obj_name, &field_name);
         let value = lower_expr(&assign.value, ctx)?;
         return Some(HirStmt::FieldAssign {
             object: obj_name,
             field: field_name,
+            field_ty,
             value,
         });
     }
@@ -1253,39 +1285,7 @@ pub(super) fn lower_assign(assign: &StmtAssign, ctx: &mut LowerCtx) -> Option<Hi
                 return None;
             }
             let field_name = attr.attr.to_string();
-            // Look up field type from the object's class definition
-            let field_ty = ctx
-                .scope
-                .lookup(&obj_name)
-                .and_then(|info| {
-                    let obj_ty = info.effective_type();
-                    // The object may be typed as Type::Class directly (e.g. `self`)
-                    // or as Type::Unknown for unresolved types.
-                    if let Type::Class { fields, .. } = obj_ty {
-                        fields
-                            .iter()
-                            .find(|(n, _)| n == &field_name)
-                            .map(|(_, t)| t.clone())
-                    } else if let Type::Class {
-                        name: class_name, ..
-                    } = obj_ty
-                    {
-                        // Class by name reference
-                        ctx.class_types.get(class_name).and_then(|class_ty| {
-                            if let Type::Class { fields, .. } = class_ty {
-                                fields
-                                    .iter()
-                                    .find(|(n, _)| n == &field_name)
-                                    .map(|(_, t)| t.clone())
-                            } else {
-                                None
-                            }
-                        })
-                    } else {
-                        None
-                    }
-                })
-                .unwrap_or(Type::Unknown);
+            let field_ty = resolve_object_field_type(ctx, &obj_name, &field_name);
             if matches!(field_ty.resolve_alias(), Type::Bytes) {
                 ctx.error("bytes is immutable; subscript assignment is not supported".to_string());
                 return None;
