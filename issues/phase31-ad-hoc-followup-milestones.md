@@ -122,6 +122,15 @@ These broader feature phases already exist and should no longer be treated as fu
 
 ## Execution Log
 
+- `2026-03-26`: `m31_j_own_mut_leetcode_closure` slice 1 completed canonical `own mut` closure.
+  - Execution report: `issues/phase31-m31j-own-mut-closure-execution.md`
+  - Demo: `demos/phase31_m31j_own_mut_closure_demo.sifr`
+  - Targeted result artifact: `verification/leetcode/phase31_m31j_wave3_own_mut_closure_results.json`
+  - Targeted one-case status: `PASS=1`
+  - Reclassification result:
+    - `1299_replace_elements_with_greatest_element_on_right_side`: `CHECK_ERROR -> PASS`
+  - Milestone closure:
+    - `m31_j_own_mut_leetcode_closure` owner scope is now closed
 - `2026-03-26`: `m31_h_local_name_binding_and_shadowing` slice 1 completed canonical local-binding closure.
   - Execution report: `issues/phase31-m31h-local-binding-shadowing-closure-execution.md`
   - Demo: `demos/phase31_m31h_local_binding_shadowing_closure_demo.sifr`
@@ -484,12 +493,15 @@ This order assumes the broader dependency phases are already landed and keeps th
 
 ### `m31_j_own_mut_leetcode_closure`
 
+- Current execution status (`2026-03-26`):
+  - canonical `own mut` closure landed for `1299`
+  - owner scope is now closed
 - Scope:
   - builds on the already-landed `own mut` feature
   - rewrite `1299` into canonical Sifr form using `own mut`
   - verify corpus/demo/regression closure for the LeetCode problem on top of the landed feature
 - Affected ids:
-  - `1299`
+  - `1299` (closed in slice 1)
 - Definition of done:
   - `1299` is no longer treated as a permanent divergence in the Phase 31 corpus
   - canonical `1299` Sifr source using `own mut` checks, emits, and runs successfully
