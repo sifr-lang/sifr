@@ -84,6 +84,11 @@ Execution delta (`2026-03-26`, `m31_h` slice 1):
 - canonical local-binding/shadowing closure landed for `0015` and `0424`.
 - targeted status moved to `PASS=2` and `m31_h_local_name_binding_and_shadowing` owner scope is now closed.
 
+Execution delta (`2026-03-26`, `m31_j` slice 1):
+
+- canonical `own mut` closure landed for `1299`.
+- targeted status moved to `PASS=1` and `m31_j_own_mut_leetcode_closure` owner scope is now closed.
+
 ## Current Conclusion
 
 The current strategy is:
@@ -315,7 +320,7 @@ Interpretation:
 | `0997` | closed in `m31_b` slice 1 | canonical guarded dict-surface implementation (`PASS`) |
 | `1046` | canonical fixture adaptation + closure | multi-solution canonicalization + `Any`/heap residuals |
 | `1209` | closed in `m31_b` slice 1 | canonical string-run reduction implementation (`PASS`) |
-| `1299` | canonical fixture adaptation | explicit `own mut` rewrite |
+| `1299` | closed in `m31_j` slice 1 | canonical `own mut` closure (`PASS`) |
 
 ## Bottom Line
 

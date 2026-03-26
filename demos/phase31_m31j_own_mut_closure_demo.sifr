@@ -1,8 +1,8 @@
-# LeetCode 1299: Replace Elements With Greatest Element On Right Side
+# Phase 31 m31_j demo: own mut closure
 
 def replaceElements(own mut arr: list[int]) -> list[int]:
     rightMax = -1
-    for i in range(len(arr) -1, -1, -1):
+    for i in range(len(arr) - 1, -1, -1):
         current = arr[i]
         newMax = max(rightMax, current)
         arr[i] = rightMax
@@ -10,4 +10,4 @@ def replaceElements(own mut arr: list[int]) -> list[int]:
     return arr
 
 def main():
-    assert str(replaceElements([17,18,5,4,6,1])) == '[18, 6, 6, 6, 1, -1]'
+    assert str(replaceElements([17, 18, 5, 4, 6, 1])) == '[18, 6, 6, 6, 1, -1]'

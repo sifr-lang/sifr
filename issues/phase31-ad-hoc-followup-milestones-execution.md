@@ -24,7 +24,7 @@ Loop contract per milestone: Plan -> Implement -> Validate -> Demo -> PR -> Revi
 5. [x] `m31_e_recursive_tree_surface_leetcode_closure`
 6. [x] `m31_l_tree_local_state_follow_on_closure`
 7. [x] `m31_h_local_name_binding_and_shadowing`
-8. [ ] `m31_j_own_mut_leetcode_closure`
+8. [x] `m31_j_own_mut_leetcode_closure`
 9. [ ] `m31_k_canonical_sifr_fixture_normalization`
 10. [ ] `m31_i_corpus_fixture_canonicalization_for_multi_solution_files`
 
@@ -702,3 +702,35 @@ Loop contract per milestone: Plan -> Implement -> Validate -> Demo -> PR -> Revi
 ### Slice closeout status
 - Slice 1 goal satisfied for local binding/shadowing closure in current corpus mode.
 - `m31_h_local_name_binding_and_shadowing` is now closed.
+
+## Milestone: `m31_j_own_mut_leetcode_closure` (slice 1: canonical own mut closure on 1299)
+
+### Scope for this slice
+- Close `1299` using canonical `own mut` signature surface on top of already-landed `own mut` support.
+- Remove residual borrowed-parameter mutation/escape failures for this owner case.
+
+### Root-cause changes
+- Canonicalized `1299` function boundary to explicit `own mut` and aligned right-to-left update form:
+  - file: `audits/leetcode/1299_replace_elements_with_greatest_element_on_right_side.sifr`
+- Added slice demo:
+  - `demos/phase31_m31j_own_mut_closure_demo.sifr`
+
+### Targeted corpus evidence
+- Artifact: `verification/leetcode/phase31_m31j_wave3_own_mut_closure_results.json`
+- Targeted ids: `1299`
+- Status snapshot:
+  - `PASS=1`
+  - moved to green status:
+    - `1299` -> `PASS`
+
+### Demo evidence
+- `cargo run -q -p sifr -- check demos/phase31_m31j_own_mut_closure_demo.sifr` (pass)
+- `cargo run -q -p sifr -- run demos/phase31_m31j_own_mut_closure_demo.sifr` (pass)
+
+### Local validation evidence
+- `scripts/run_all_tests.sh --profile quick` (pass)
+- `scripts/run_all_tests.sh` (pass)
+
+### Slice closeout status
+- Slice 1 goal satisfied for `1299` own-mut closure.
+- `m31_j_own_mut_leetcode_closure` is now closed.
