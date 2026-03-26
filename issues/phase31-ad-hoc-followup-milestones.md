@@ -122,6 +122,22 @@ These broader feature phases already exist and should no longer be treated as fu
 
 ## Execution Log
 
+- `2026-03-26`: `m31_d_nested_function_pipeline_completion` slice 1 completed canonical nested-helper closure across all owner cases.
+  - Execution report: `issues/phase31-m31d-nested-helper-canonical-closure-execution.md`
+  - Demo: `demos/phase31_m31d_nested_helper_canonical_closure_demo.sifr`
+  - Targeted result artifact: `verification/leetcode/phase31_m31d_wave6_canonical_nested_helper_results.json`
+  - Targeted eight-case status: `PASS=6`, `NO_ORACLE=2`
+  - Reclassification results:
+    - `0017_letter_combinations_of_a_phone_number`: `CHECK_ERROR -> PASS`
+    - `0050_powx_n`: `CHECK_ERROR -> PASS`
+    - `0052_n_queens_ii`: `CHECK_ERROR -> PASS` (canonical workaround route for recursive `nonlocal`)
+    - `0078_subsets`: `RUN_ERROR -> PASS`
+    - `0090_subsets_ii`: `CHECK_ERROR -> PASS`
+    - `0207_course_schedule`: `CHECK_ERROR -> NO_ORACLE`
+    - `0684_redundant_connection`: `CHECK_ERROR -> NO_ORACLE`
+    - `0912_sort_an_array`: `CHECK_ERROR -> PASS`
+  - Milestone closure:
+    - `m31_d_nested_function_pipeline_completion` owner scope is now closed
 - `2026-03-26`: `m31_b_destructuring_and_composite_lvalues` slice 2 completed recursive optional-field boxing closure.
   - Execution report: `issues/phase31-m31b-recursive-field-boxing-execution.md`
   - Demo: `demos/phase31_m31b_tuple_attribute_and_canonical_surface_demo.sifr`
@@ -367,6 +383,10 @@ This order assumes the broader dependency phases are already landed and keeps th
 
 ### `m31_d_nested_function_pipeline_completion`
 
+- Current execution status (`2026-03-26`):
+  - canonical nested-helper closure landed across all eight owner cases
+  - `0052` was closed through the documented canonical workaround route (recursive `nonlocal` avoidance) rather than a scope-expansion of nested recursive `nonlocal`
+  - owner scope is now closed
 - Scope:
   - builds on the already-landed nested-function phase
   - finish lowering for remaining nested function shapes, including `nonlocal`
@@ -379,7 +399,7 @@ This order assumes the broader dependency phases are already landed and keeps th
   - if a remaining seed case needs a genuinely new nested-function shape, send it back to the nested-function phase as a concrete gap report instead of patching it here
   - `0052` is not routine cleanup under the currently landed phase contract; closure for that case requires either a scoped nested-function feature extension for recursive `nonlocal` mutation or a canonical Sifr workaround decision
 - Affected ids:
-  - `0017`, `0050`, `0052`, `0078`, `0090`, `0207`, `0684`, `0912`
+  - `0017`, `0050`, `0052`, `0078`, `0090`, `0207`, `0684`, `0912` (closed in slice 1)
 - Definition of done:
   - these eight cases move past nested-function and generic frontend failures
   - no Phase 31 seed case fails with a generic nested-function frontend error caused by a residual bug in the landed architecture

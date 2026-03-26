@@ -1,23 +1,29 @@
 # LeetCode 207: Course Schedule
 
-def canFinish(numCourses: int, prerequisites: list[list[int]]) -> bool:
+def canFinish(numCourses: int, prerequisites: list[tuple[int, int]]) -> bool:
     # dfs
-    preMap = {i: [] for i in range(numCourses)}
+    preMap: dict[int, list[int]] = {i: [] for i in range(numCourses)}
 
     # map each course to : prereq list
     for crs, pre in prerequisites:
-        preMap[crs].append(pre)
+        if crs in preMap:
+            current = preMap[crs]
+            current.append(pre)
+            preMap[crs] = current
 
     visiting = set()
 
-    def dfs(crs):
+    def dfs(crs: int) -> bool:
         if crs in visiting:
             return False
-        if preMap[crs] == []:
+        if crs not in preMap:
+            return True
+        prereqs = preMap[crs]
+        if len(prereqs) == 0:
             return True
 
         visiting.add(crs)
-        for pre in preMap[crs]:
+        for pre in prereqs:
             if not dfs(pre):
                 return False
         visiting.remove(crs)
@@ -30,6 +36,5 @@ def canFinish(numCourses: int, prerequisites: list[list[int]]) -> bool:
     return True
 
 def main():
-    assert canFinish(2, [[1, 0]]) == True
-    assert canFinish(2, [[1, 0], [0, 1]]) == False
-
+    assert canFinish(2, [(1, 0)]) == True
+    assert canFinish(2, [(1, 0), (0, 1)]) == False

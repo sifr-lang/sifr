@@ -1,25 +1,23 @@
 # LeetCode 78: Subsets
 
 def subsets(nums: list[int]) -> list[list[int]]:
-    res = []
+    res: list[list[int]] = []
 
-    subset = []
+    subset: list[int] = []
 
-    def dfs(i):
+    def dfs(i: int) -> None:
         if i >= len(nums):
             res.append(subset.copy())
             return
+        # decision NOT to include nums[i]
+        dfs(i + 1)
         # decision to include nums[i]
         subset.append(nums[i])
         dfs(i + 1)
-        # decision NOT to include nums[i]
         subset.pop()
-        dfs(i + 1)
 
     dfs(0)
     return res
 
 def main():
-    assert str(subsets([1,2,3])) == '[[], [1], [1, 2], [1, 2, 3], [1, 3], [2], [2, 3], [3]]'
-
-
+    assert str(subsets([1,2,3])) == '[[], [3], [2], [2, 3], [1], [1, 3], [1, 2], [1, 2, 3]]'

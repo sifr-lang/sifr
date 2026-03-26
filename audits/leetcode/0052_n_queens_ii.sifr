@@ -1,17 +1,10 @@
 # LeetCode 52: N Queens Ii
 
 def totalNQueens(n: int) -> int:
-    answer = 0
-
-    cols = set()
-    posdiag = set()
-    negdiag = set()
-
-    def backtrack(i):
+    def backtrack(i: int, n: int, cols: set[int], posdiag: set[int], negdiag: set[int]) -> int:
         if i == n:
-            nonlocal answer
-            answer += 1
-            return
+            return 1
+        count = 0
         
         for j in range(n):
             if j in cols or (i+j) in posdiag or (i-j) in negdiag:
@@ -21,17 +14,15 @@ def totalNQueens(n: int) -> int:
             posdiag.add(i+j)
             negdiag.add(i-j)
 
-            backtrack(i+1)
+            count += backtrack(i + 1, n, cols, posdiag, negdiag)
             
             cols.remove(j)
             posdiag.remove(i+j)
             negdiag.remove(i-j)
+        return count
     
-    backtrack(0)
-    return answer
+    return backtrack(0, n, set(), set(), set())
 
 def main():
     assert str(totalNQueens(4)) == '2'
     assert str(totalNQueens(1)) == '1'
-
-

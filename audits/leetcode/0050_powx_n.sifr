@@ -1,20 +1,18 @@
 # LeetCode 50: Powx N
 
 def myPow(x: float, n: int) -> float:
-    def helper(x, n):
-        if x == 0:
-            return 0
+    def helper(x: float, n: int) -> float:
+        if x == 0.0:
+            return 0.0
         if n == 0:
-            return 1
+            return 1.0
 
         res = helper(x * x, n // 2)
-        return x * res if n % 2 else res
+        return x * res if n % 2 != 0 else res
 
     res = helper(x, abs(n))
     return res if n >= 0 else 1 / res
 
 def main():
-    assert str(myPow(2.0, 10)) == '1024.0'
-    assert str(myPow(2.0, -2)) == '0.25'
-
-
+    assert myPow(2.0, 10) == 1024.0
+    assert myPow(2.0, -2) == 0.25
