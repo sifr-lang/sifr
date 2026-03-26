@@ -1,4 +1,5 @@
-# LeetCode 127: Word Ladder
+# Phase 31 m31_a wave 14 demo:
+# canonical word-ladder BFS using typed dict buckets and list queue pop(0).
 
 def ladderLength(beginWord: str, endWord: str, mut wordList: list[str]) -> int:
     if endWord not in wordList:
@@ -36,5 +37,5 @@ def ladderLength(beginWord: str, endWord: str, mut wordList: list[str]) -> int:
     return 0
 
 def main():
-    assert ladderLength('hit', 'cog', ['hot', 'dot', 'dog', 'lot', 'log', 'cog']) == 5
-    assert ladderLength('hit', 'cog', ['hot', 'dot', 'dog', 'lot', 'log']) == 0
+    assert ladderLength("hit", "cog", ["hot", "dot", "dog", "lot", "log", "cog"]) == 5
+    assert ladderLength("hit", "cog", ["hot", "dot", "dog", "lot", "log"]) == 0

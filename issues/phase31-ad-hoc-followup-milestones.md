@@ -122,6 +122,13 @@ These broader feature phases already exist and should no longer be treated as fu
 
 ## Execution Log
 
+- `2026-03-26`: `m31_a_optional_flow_completion` slice 14 completed local validation for canonical word-ladder queue + bucket normalization.
+  - Execution report: `issues/phase31-m31a-canonical-word-ladder-execution.md`
+  - Demo: `demos/phase31_word_ladder_canonical_queue_demo.sifr`
+  - Targeted result artifact: `verification/leetcode/phase31_m31a_wave14_canonical_word_ladder_results.json`
+  - Targeted four-case status: `PASS=1`, `NO_ORACLE=1`, `CHECK_ERROR=2`
+  - Reclassification result:
+    - `0127_word_ladder` moved from `CHECK_ERROR` to `NO_ORACLE` (check + run green; oracle comparison not configured in current case mode)
 - `2026-03-26`: `m31_a_optional_flow_completion` slice 13 completed local validation for canonical coin-change bounded recurrence closure.
   - Execution report: `issues/phase31-m31a-canonical-coin-change-execution.md`
   - Demo: `demos/phase31_coin_change_canonical_bounded_recurrence_demo.sifr`
@@ -295,6 +302,7 @@ This order assumes the broader dependency phases are already landed and keeps th
   - guarded queue-pop narrowing now includes safe `pop(0)` plus deque guarded pop/popleft shapes (slice 11)
   - fixed-index len-guard closure is landed for `len(...) < / <=` false-exit proofs, and canonical fixture alignment landed `0053`/`0746` (slice 12)
   - canonical bounded-recurrence closure is landed for `0322` (slice 13)
+  - canonical word-ladder queue/bucket normalization is landed for `0127` (slice 14)
   - remaining optional-flow work is now the narrower closure set below
 - Remaining root-cause scope:
   - non-empty queue/heap/list pop results under truthiness guards
@@ -305,7 +313,7 @@ This order assumes the broader dependency phases are already landed and keeps th
   - track range/loop bounds, arithmetic offsets such as `i + 1` and `i + 2`, and first-element access after non-empty proofs
   - keep the existing no-implicit-unwrap rule outside proven-safe flow
 - Affected ids:
-  - `0127`, `0502`, `0743`
+  - `0502`, `0743`
 - Definition of done:
   - remaining owner cases move past `int | None`, `None | str`, and `None | tuple[...]` failures
   - regression coverage exists for guarded queue/heap pops and guarded recurrence indexing
