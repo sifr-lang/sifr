@@ -6,6 +6,7 @@ use super::diagnostics::{collect_raise_error_types, format_type_name, is_valid_e
 use super::expressions::{lower_expr, lower_star_unpack_assign, lower_tuple_unpack_assign};
 use super::for_loop_safety::{is_collection_backed_iter_source, loop_body_mutates_iter_source};
 use super::function_flow::infer_function_return_type;
+use super::len_aliases::record_len_alias_fact;
 use super::nonlocal_support::{collect_declared_nonlocals, hir_body_calls_function, lower_nonlocal, should_rebind_simple_name};
 use super::numeric_sentinels::{
     apply_numeric_sentinel_patches, domain_typed_sentinel_expr, numeric_domain_for_type,
@@ -1085,8 +1086,9 @@ pub(super) fn lower_ann_assign(ann: &StmtAnnAssign, ctx: &mut LowerCtx) -> Optio
     } else {
         ctx.clear_sequence_shape_fact(&name);
     }
-    record_sequence_pointer_fact(ctx, &name, ann.value.as_ref()?);
-
+    let initializer = ann.value.as_ref()?;
+    record_len_alias_fact(ctx, &name, initializer);
+    record_sequence_pointer_fact(ctx, &name, initializer);
     Some(HirStmt::Let {
         name,
         ty: declared_type,
@@ -1094,12 +1096,10 @@ pub(super) fn lower_ann_assign(ann: &StmtAnnAssign, ctx: &mut LowerCtx) -> Optio
         is_mutable: true,
     })
 }
-
 /// Handle chained assignment: x = y = z = 0
 /// Expands into: z = 0; y = z; x = y (right-to-left, last target gets the value first)
 pub(super) fn lower_chained_assign(assign: &StmtAssign, ctx: &mut LowerCtx) -> Vec<HirStmt> {
     let mut result = Vec::new();
-
     // Lower the value expression once
     let Some(value) = lower_expr(&assign.value, ctx) else {
         return result;
@@ -1141,7 +1141,7 @@ pub(super) fn lower_chained_assign(assign: &StmtAssign, ctx: &mut LowerCtx) -> V
                     _ => continue,
                 };
                 let name_expr = HirExpr::Name {
-                    name: prev_target,
+                    name: prev_target.clone(),
                     ty: val_ty.clone(),
                 };
                 let existing = ctx.scope.lookup(&name);
@@ -1398,6 +1398,7 @@ pub(super) fn lower_assign(assign: &StmtAssign, ctx: &mut LowerCtx) -> Option<Hi
             }
         }
         ctx.clear_sequence_shape_fact(&name);
+        record_len_alias_fact(ctx, &name, &assign.value);
         record_sequence_pointer_fact(ctx, &name, &assign.value);
         ctx.empty_dict_specializations.remove(&name);
         ctx.pending_container_specialization_patches.remove(&name);
@@ -1422,6 +1423,7 @@ pub(super) fn lower_assign(assign: &StmtAssign, ctx: &mut LowerCtx) -> Option<Hi
         } else {
             ctx.clear_sequence_shape_fact(&name);
         }
+        record_len_alias_fact(ctx, &name, &assign.value);
         ctx.empty_dict_specializations.remove(&name);
         ctx.pending_container_specialization_patches.remove(&name);
         record_sequence_pointer_fact(ctx, &name, &assign.value);
@@ -1532,7 +1534,6 @@ pub(super) fn lower_aug_assign(aug: &StmtAugAssign, ctx: &mut LowerCtx) -> Optio
             object_ty,
         });
     }
-
     let name = if let Expr::Name(n) = aug.target.as_ref() {
         n.id.clone()
     } else {
@@ -1542,6 +1543,7 @@ pub(super) fn lower_aug_assign(aug: &StmtAugAssign, ctx: &mut LowerCtx) -> Optio
 
     let value = lower_expr(&aug.value, ctx)?;
     ctx.clear_sequence_pointer(&name);
+    ctx.clear_len_alias(&name);
 
     let op_str = match aug.op {
         Operator::Add => "+=",
