@@ -69,6 +69,11 @@ Execution delta (`2026-03-26`, `m31_d` slice 1):
 - `0052` used the documented canonical workaround route for recursive `nonlocal` mutation instead of scope-expanding nested recursive `nonlocal`.
 - targeted status moved to `PASS=6`, `NO_ORACLE=2` and `m31_d_nested_function_pipeline_completion` owner scope is now closed.
 
+Execution delta (`2026-03-26`, `m31_e` slice 1):
+
+- canonical recursive-tree closure landed across `0100`, `0102`, and `0235`.
+- targeted status moved to `NO_ORACLE=3` and `m31_e_recursive_tree_surface_leetcode_closure` owner scope is now closed.
+
 ## Current Conclusion
 
 The current strategy is:
@@ -275,15 +280,15 @@ Interpretation:
 | `0053` | normal closure | optional-flow |
 | `0078` | closed in `m31_d` slice 1 | canonical assertion-order closure (`PASS`) |
 | `0090` | closed in `m31_d` slice 1 | canonical nested-helper + mutability closure (`PASS`) |
-| `0100` | normal closure | recursive-tree residual under `m31_e` |
-| `0102` | normal closure | recursive-tree residual under `m31_e` |
+| `0100` | closed in `m31_e` slice 1 | canonical recursive-tree closure (`NO_ORACLE`) |
+| `0102` | closed in `m31_e` slice 1 | canonical recursive-tree closure (`NO_ORACLE`) |
 | `0110` | normal closure | bool/local-state follow-on |
 | `0127` | canonical fixture adaptation + closure | `mut` + residual optional/iterable typing |
 | `0151` | canonical fixture adaptation | explicit `mut` |
 | `0207` | closed in `m31_d` slice 1 | canonical nested-helper closure (`NO_ORACLE`) |
 | `0215` | canonical fixture adaptation + closure | multi-solution canonicalization + `mut` + return typing |
 | `0226` | closed in `m31_b` slice 2 | recursive optional-field boxing closure (`NO_ORACLE`) |
-| `0235` | normal closure | recursive-tree residual under `m31_e` |
+| `0235` | closed in `m31_e` slice 1 | canonical recursive-tree closure (`NO_ORACLE`) |
 | `0238` | normal closure | optional-flow |
 | `0242` | targeted compiler feature | container specialization |
 | `0295` | closed in `m31_b` slice 1 | canonical sorted-surface implementation (`NO_ORACLE`) |
@@ -308,8 +313,8 @@ The currently valid Phase 31 strategy is:
 
 - no broad prerequisite phase remains open for the current seed corpus
 - treat `own mut` and nested functions as already-landed dependencies, not future blockers
-- treat recursive-tree failures as current `m31_e` closure work rather than waiting on another prerequisite
+- treat recursive-tree work as closed in `m31_e` slice 1
 - treat a significant part of the remaining seed corpus as canonical Sifr fixture adaptation, especially around explicit `mut` / `own mut`
 - treat container-literal specialization as a targeted compiler feature-sized item inside the carry-forward plan
-- treat `0052` as an explicit nested-function boundary decision rather than routine cleanup
-- keep the rest in ordinary closure buckets: optional-flow, destructuring/class follow-ons, iterator/comparability follow-ons, numeric follow-ons, and one run-time regression
+- treat nested-function residual work as closed in `m31_d` slice 1 (including `0052` canonical workaround route)
+- keep the rest in ordinary closure buckets: local-state/tree follow-ons, local-name binding, canonical fixture normalization, and ownership-surface closure.

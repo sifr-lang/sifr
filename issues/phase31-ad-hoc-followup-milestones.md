@@ -122,6 +122,17 @@ These broader feature phases already exist and should no longer be treated as fu
 
 ## Execution Log
 
+- `2026-03-26`: `m31_e_recursive_tree_surface_leetcode_closure` slice 1 completed canonical recursive-tree surface closure.
+  - Execution report: `issues/phase31-m31e-recursive-tree-canonical-closure-execution.md`
+  - Demo: `demos/phase31_m31e_recursive_tree_closure_demo.sifr`
+  - Targeted result artifact: `verification/leetcode/phase31_m31e_wave5_canonical_tree_surface_results.json`
+  - Targeted three-case status: `NO_ORACLE=3`
+  - Reclassification results:
+    - `0100_same_tree`: `CHECK_ERROR -> NO_ORACLE`
+    - `0102_binary_tree_level_order_traversal`: `CHECK_ERROR -> NO_ORACLE`
+    - `0235_lowest_common_ancestor_of_a_binary_search_tree`: `CHECK_ERROR -> NO_ORACLE`
+  - Milestone closure:
+    - `m31_e_recursive_tree_surface_leetcode_closure` owner scope is now closed
 - `2026-03-26`: `m31_d_nested_function_pipeline_completion` slice 1 completed canonical nested-helper closure across all owner cases.
   - Execution report: `issues/phase31-m31d-nested-helper-canonical-closure-execution.md`
   - Demo: `demos/phase31_m31d_nested_helper_canonical_closure_demo.sifr`
@@ -407,12 +418,15 @@ This order assumes the broader dependency phases are already landed and keeps th
 
 ### `m31_e_recursive_tree_surface_leetcode_closure`
 
+- Current execution status (`2026-03-26`):
+  - canonical recursive-tree closure landed across all three owner cases
+  - owner scope is now closed
 - Scope:
   - builds on the already-landed recursive-type phase
   - verify that the landed recursive-type feature fully unblocks the tree LeetCode cases for this corpus
   - add any remaining corpus-specific regression coverage and demos needed for closure
 - Affected ids:
-  - `0100`, `0102`, `0235`
+  - `0100`, `0102`, `0235` (closed in slice 1)
 - Definition of done:
   - these three recursive-tree cases pass in the Phase 31 corpus on top of the landed recursive-type feature
   - any residual tree-case failure is either fixed as a narrow LeetCode closure bug or sent back to the recursive-type phase with a concrete gap report

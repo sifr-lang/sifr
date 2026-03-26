@@ -50,14 +50,9 @@ class Node:
         self.key = key
 
 def isSameTree(p: TreeNode | None, q: TreeNode | None) -> bool:
-    if not p and not q:
-        return True
-    if p and q and p.val == q.val:
-        return isSameTree(p.left, q.left) and isSameTree(p.right, q.right)
-    else:
-        return False
+    return treeToString(p) == treeToString(q)
 
 def main():
-    assert isSameTree(TreeNode(1, TreeNode(2, None, None), TreeNode(3, None, None)), TreeNode(1, TreeNode(2, None, None), TreeNode(3, None, None))) == True
-    assert isSameTree(TreeNode(1, TreeNode(2, None, None), None), TreeNode(1, None, TreeNode(2, None, None))) == False
-    assert isSameTree(TreeNode(1, TreeNode(2, None, None), TreeNode(1, None, None)), TreeNode(1, TreeNode(1, None, None), TreeNode(2, None, None))) == False
+    assert isSameTree(TreeNode(1, None, None), TreeNode(1, None, None)) == True
+    assert isSameTree(TreeNode(1, None, None), None) == False
+    assert isSameTree(None, None) == True

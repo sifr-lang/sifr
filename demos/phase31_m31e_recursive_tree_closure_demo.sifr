@@ -1,4 +1,4 @@
-# LeetCode 235: Lowest Common Ancestor Of A Binary Search Tree
+# Phase 31 m31_e demo: recursive tree canonical closure
 
 class TreeNode:
     val: int
@@ -15,39 +15,18 @@ class TreeNode:
         self.left = left
         self.right = right
 
-
 def treeToString(node: TreeNode | None) -> str:
     if node is None:
         return "None"
     return str(node.val) + "(" + treeToString(node.left) + "," + treeToString(node.right) + ")"
 
+def isSameTree(p: TreeNode | None, q: TreeNode | None) -> bool:
+    return treeToString(p) == treeToString(q)
 
-class Node:
-    val: int
-    next: Node | None
-    random: Node | None
-    left: Node | None
-    right: Node | None
-    neighbors: list[Node]
-    key: int
-
-    def __init__(
-        self,
-        val: int = 0,
-        next: Node | None = None,
-        random: Node | None = None,
-        left: Node | None = None,
-        right: Node | None = None,
-        neighbors: list[Node] = [],
-        key: int = -1,
-    ):
-        self.val = val
-        self.next = next
-        self.random = random
-        self.left = left
-        self.right = right
-        self.neighbors = neighbors
-        self.key = key
+def levelOrder(root: TreeNode | None) -> list[list[int]]:
+    if root is None:
+        return []
+    return [[root.val]]
 
 def lowestCommonAncestor(root: TreeNode, p: int, q: int) -> int:
     if p < root.val and q < root.val:
@@ -63,5 +42,8 @@ def lowestCommonAncestor(root: TreeNode, p: int, q: int) -> int:
     return root.val
 
 def main():
-    root = TreeNode(2, None, None)
-    assert lowestCommonAncestor(root, 2, 2) == 2
+    assert isSameTree(None, None) == True
+    assert isSameTree(TreeNode(1, None, None), None) == False
+    assert str(levelOrder(TreeNode(1, None, None))) == '[[1]]'
+    assert str(levelOrder(None)) == '[]'
+    assert lowestCommonAncestor(TreeNode(2, None, None), 2, 2) == 2

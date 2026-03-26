@@ -1,0 +1,155 @@
+{
+  "command_prefix": [
+    "target/debug/sifr"
+  ],
+  "manifest": "verification/leetcode/phase31_seed_corpus.json",
+  "output": "verification/leetcode/phase31_m31e_wave5_canonical_tree_surface_results.json",
+  "phase": 31,
+  "results": [
+    {
+      "difficulty": "easy",
+      "failure_stage": null,
+      "fixture_slug": "0100_same_tree",
+      "id": "0100",
+      "oracle_mode": "no_oracle",
+      "primary_topic": "trees",
+      "scope_classification": "in_scope",
+      "stages": [
+        {
+          "command": [
+            "target/debug/sifr",
+            "check",
+            "audits/leetcode/0100_same_tree.sifr"
+          ],
+          "duration_ms": 330,
+          "returncode": 0,
+          "stage": "check",
+          "stderr": "no errors found",
+          "stdout": "",
+          "timed_out": false
+        },
+        {
+          "command": [
+            "target/debug/sifr",
+            "run",
+            "audits/leetcode/0100_same_tree.sifr"
+          ],
+          "duration_ms": 405,
+          "returncode": 0,
+          "stage": "run",
+          "stderr": "[sifr-artifact-cache] namespace=run key=6000f24ebb98b7fc cache_hit=true workspace=/var/folders/lq/l19_y_rn76b8vprfvdjn9zch0000gn/T/sifr_generated_artifact_cache/run/6000f24ebb98b7fc",
+          "stdout": "",
+          "timed_out": false
+        }
+      ],
+      "status": "NO_ORACLE",
+      "timeout_seconds": 20
+    },
+    {
+      "difficulty": "medium",
+      "failure_stage": null,
+      "fixture_slug": "0102_binary_tree_level_order_traversal",
+      "id": "0102",
+      "oracle_mode": "no_oracle",
+      "primary_topic": "trees",
+      "scope_classification": "in_scope",
+      "stages": [
+        {
+          "command": [
+            "target/debug/sifr",
+            "check",
+            "audits/leetcode/0102_binary_tree_level_order_traversal.sifr"
+          ],
+          "duration_ms": 334,
+          "returncode": 0,
+          "stage": "check",
+          "stderr": "no errors found",
+          "stdout": "",
+          "timed_out": false
+        },
+        {
+          "command": [
+            "target/debug/sifr",
+            "run",
+            "audits/leetcode/0102_binary_tree_level_order_traversal.sifr"
+          ],
+          "duration_ms": 1002,
+          "returncode": 0,
+          "stage": "run",
+          "stderr": "[sifr-artifact-cache] namespace=run key=55f46385063556a6 cache_hit=false workspace=/var/folders/lq/l19_y_rn76b8vprfvdjn9zch0000gn/T/sifr_generated_artifact_cache/run/55f46385063556a6 miss_reason=not_found",
+          "stdout": "",
+          "timed_out": false
+        }
+      ],
+      "status": "NO_ORACLE",
+      "timeout_seconds": 20
+    },
+    {
+      "difficulty": "medium",
+      "failure_stage": null,
+      "fixture_slug": "0235_lowest_common_ancestor_of_a_binary_search_tree",
+      "id": "0235",
+      "oracle_mode": "no_oracle",
+      "primary_topic": "trees",
+      "scope_classification": "in_scope",
+      "stages": [
+        {
+          "command": [
+            "target/debug/sifr",
+            "check",
+            "audits/leetcode/0235_lowest_common_ancestor_of_a_binary_search_tree.sifr"
+          ],
+          "duration_ms": 356,
+          "returncode": 0,
+          "stage": "check",
+          "stderr": "no errors found",
+          "stdout": "",
+          "timed_out": false
+        },
+        {
+          "command": [
+            "target/debug/sifr",
+            "run",
+            "audits/leetcode/0235_lowest_common_ancestor_of_a_binary_search_tree.sifr"
+          ],
+          "duration_ms": 920,
+          "returncode": 0,
+          "stage": "run",
+          "stderr": "[sifr-artifact-cache] namespace=run key=f43e4fec34efab8e cache_hit=false workspace=/var/folders/lq/l19_y_rn76b8vprfvdjn9zch0000gn/T/sifr_generated_artifact_cache/run/f43e4fec34efab8e miss_reason=not_found",
+          "stdout": "",
+          "timed_out": false
+        }
+      ],
+      "status": "NO_ORACLE",
+      "timeout_seconds": 20
+    }
+  ],
+  "summary": {
+    "case_count": 3,
+    "difficulty_counts": {
+      "easy": 1,
+      "hard": 0,
+      "medium": 2
+    },
+    "scope_counts": {
+      "blocked_feature": 0,
+      "in_scope": 3,
+      "out_of_scope_external_dep": 0
+    },
+    "status_counts": {
+      "NO_ORACLE": 3
+    },
+    "topic_counts": {
+      "arrays": 0,
+      "backtracking": 0,
+      "dp": 0,
+      "graphs": 0,
+      "hash_map": 0,
+      "heap_priority_queue": 0,
+      "math": 0,
+      "strings": 0,
+      "trees": 3,
+      "two_pointers_sliding_window": 0
+    }
+  }
+}
