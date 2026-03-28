@@ -1,0 +1,73 @@
+fn second_or_zero(values: &Vec<i64>) -> i64 {
+    if (values.len() as i64) < (2 as i64) {
+        return 0 as i64;
+    }
+    return values[(1 as i64) as usize];
+}
+
+fn min_cost_climbing(cost: &mut Vec<i64>) -> i64 {
+    if (cost.len() as i64) < (2 as i64) {
+        return 0 as i64;
+    }
+    for i in (-(1 as i64) + (1 as i64)..((cost.len() as i64) - (3 as i64)) + (1 as i64)).rev() {
+        {
+            let __assign_value = cost[i as usize] + std::cmp::min({
+    let Some(__sifr_index_value) = ({
+    let __sifr_index_list = &cost;
+    let __sifr_index_i = i + (1 as i64);
+    let __sifr_index_norm = if __sifr_index_i < 0 { ((__sifr_index_list.len() as i64) + __sifr_index_i) as usize } else { __sifr_index_i as usize };
+    __sifr_index_list.get(__sifr_index_norm).copied()
+}) else {
+        unreachable!("compiler-verified index should be in range");
+    };
+    __sifr_index_value
+}, {
+    let Some(__sifr_index_value) = ({
+    let __sifr_index_list = &cost;
+    let __sifr_index_i = i + (2 as i64);
+    let __sifr_index_norm = if __sifr_index_i < 0 { ((__sifr_index_list.len() as i64) + __sifr_index_i) as usize } else { __sifr_index_i as usize };
+    __sifr_index_list.get(__sifr_index_norm).copied()
+}) else {
+        unreachable!("compiler-verified index should be in range");
+    };
+    __sifr_index_value
+});
+            {
+                let __idx_raw = i;
+                let __idx_norm = if __idx_raw < 0 { (cost.len() as i64) + __idx_raw } else { __idx_raw };
+                if __idx_norm >= 0 {
+                    if let Some(__elem) = cost.get_mut(__idx_norm as usize) {
+                        *__elem = __assign_value;
+                    }
+                }
+            }
+        }
+    }
+    return std::cmp::min({
+    let Some(__sifr_index_value) = ({
+    let __sifr_index_list = &cost;
+    let __sifr_index_i = 0 as i64;
+    let __sifr_index_norm = if __sifr_index_i < 0 { ((__sifr_index_list.len() as i64) + __sifr_index_i) as usize } else { __sifr_index_i as usize };
+    __sifr_index_list.get(__sifr_index_norm).copied()
+}) else {
+        unreachable!("compiler-verified index should be in range");
+    };
+    __sifr_index_value
+}, {
+    let Some(__sifr_index_value) = ({
+    let __sifr_index_list = &cost;
+    let __sifr_index_i = 1 as i64;
+    let __sifr_index_norm = if __sifr_index_i < 0 { ((__sifr_index_list.len() as i64) + __sifr_index_i) as usize } else { __sifr_index_i as usize };
+    __sifr_index_list.get(__sifr_index_norm).copied()
+}) else {
+        unreachable!("compiler-verified index should be in range");
+    };
+    __sifr_index_value
+});
+}
+
+fn main() {
+    assert!(second_or_zero(&vec![8 as i64, 13 as i64]) == (13 as i64));
+    assert!(second_or_zero(&vec![8 as i64]) == (0 as i64));
+    assert!(min_cost_climbing(&mut vec![10 as i64, 15 as i64, 20 as i64]) == (15 as i64));
+}

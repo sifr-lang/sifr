@@ -1,0 +1,2 @@
+type error: undefined function: 'fetch'
+type error: unknown module 'a_consumer'

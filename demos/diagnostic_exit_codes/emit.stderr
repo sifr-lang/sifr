@@ -1,0 +1,2 @@
+type error: undefined function: 'doubled'
+type error: unknown module 'helper'
