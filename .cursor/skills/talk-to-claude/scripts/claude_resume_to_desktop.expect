@@ -1,4 +1,4 @@
-set timeout 60
+set timeout 2400
 set sid $env(CLAUDE_SESSION_ID)
 set command $env(CLAUDE_RESUME_COMMAND)
 
