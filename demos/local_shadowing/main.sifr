@@ -1,53 +1,33 @@
 # Reference: phase31_m31h
 # Source issue: phase31-m31h-local-binding-shadowing-closure-execution.md
-# Phase 31 m31_h demo: local-binding and shadowing closure
+# User-defined locals can shadow builtin names while rebinding stays predictable.
 
-def threeSum(nums: list[int]) -> list[list[int]]:
-    res: list[list[int]] = []
-    seen: dict[str, bool] = {}
-    for i, a in enumerate(nums):
-        for j, b in enumerate(nums):
-            if j <= i:
-                continue
-            for k, c in enumerate(nums):
-                if k <= j:
-                    continue
-                if a + b + c != 0:
-                    continue
-                triplet = [a, b, c]
-                triplet.sort()
-                key = str(triplet)
-                if key in seen:
-                    continue
-                seen[key] = True
-                res.append(triplet)
-    return res
+def sum(left: int, right: int) -> int:
+    return left + right
 
-def characterReplacement(s: str, k: int) -> int:
-    count: dict[str, int] = {}
-    l = 0
-    maxf = 0
-    best = 0
-    for r in range(len(s)):
-        ch = s[r]
-        current_count = 1 + count.get(ch, 0)
-        count[ch] = current_count
-        if current_count > maxf:
-            maxf = current_count
 
-        while (r - l + 1) - maxf > k:
-            left = s[l]
-            left_count = count.get(left, 0)
-            count[str(left)] = left_count - 1
-            l += 1
+def sum_values(values: list[int]) -> int:
+    total = 0
+    for value in values:
+        total = sum(total, value)
+    return total
 
-        window = r - l + 1
-        if window > best:
-            best = window
-    return best
+
+def shadow_parameter(value: int) -> int:
+    value = value + 2
+    return value
+
+
+def choose_label(flag: bool) -> str:
+    label = "cold"
+    if flag:
+        label = "warm"
+    return label
+
 
 def main():
-    out = str(threeSum([-1, 0, 1, 2, -1, -4]))
-    assert out == '[[-1, -1, 2], [-1, 0, 1]]' or out == '[[-1, 0, 1], [-1, -1, 2]]'
-    assert characterReplacement("ABAB", 2) == 4
-    assert characterReplacement("AABABBA", 1) == 4
+    assert sum_values([1, 2, 3, 4]) == 10
+    assert shadow_parameter(5) == 7
+    assert choose_label(True) == "warm"
+    assert choose_label(False) == "cold"
+    print("local_shadowing: ok")

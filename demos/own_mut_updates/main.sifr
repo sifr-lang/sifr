@@ -1,15 +1,20 @@
 # Reference: phase31_m31j
 # Source issue: phase31-m31j-own-mut-closure-execution.md
-# Phase 31 m31_j demo: own mut closure
+# `own mut` parameters can be consumed, updated in place, and returned safely.
 
-def replaceElements(own mut arr: list[int]) -> list[int]:
-    rightMax = -1
-    for i in range(len(arr) - 1, -1, -1):
-        current = arr[i]
-        newMax = max(rightMax, current)
-        arr[i] = rightMax
-        rightMax = newMax
-    return arr
+def increment_all(own mut values: list[int]) -> list[int]:
+    for i in range(len(values)):
+        values[i] = values[i] + 1
+    return values
+
+
+def clear_all(own mut values: list[int]) -> list[int]:
+    for i in range(len(values)):
+        values[i] = 0
+    return values
+
 
 def main():
-    assert str(replaceElements([17, 18, 5, 4, 6, 1])) == '[18, 6, 6, 6, 1, -1]'
+    assert str(increment_all([1, 2, 3])) == "[2, 3, 4]"
+    assert str(clear_all([4, 5, 6])) == "[0, 0, 0]"
+    print("own_mut_updates: ok")

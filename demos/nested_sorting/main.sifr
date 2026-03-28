@@ -1,33 +1,17 @@
 # Reference: phase31_m31i
 # Source issue: phase31-m31i-corpus-fixture-canonicalization-execution.md
-# Phase 31 m31_i Demo: Canonicalization for Multi-Solution Fixtures (0215, 1046)
+# Sorting nested lists should stay simple and deterministic.
 
-def findKthLargest(mut nums: list[int], k: int) -> int:
-    nums.sort()
-    i = len(nums) - 1
-    remaining = k
-    while i >= 0:
-        value = nums[i]
-        if remaining == 1:
-            return value
-        remaining -= 1
-        i -= 1
-    return 0
+def sort_nested_lists(mut groups: list[list[int]]) -> str:
+    normalized: list[str] = []
+    for group in groups:
+        group.sort()
+        normalized.append(str(group))
+    normalized.sort()
+    return str(normalized)
 
-def lastStoneWeight(mut stones: list[int]) -> int:
-    while len(stones) > 1:
-        stones.sort()
-        y = stones.pop()
-        x = stones.pop()
-        if y > x:
-            stones.append(y - x)
-    if len(stones) == 0:
-        return 0
-    return stones.pop()
 
 def main():
-    assert findKthLargest([3, 2, 1, 5, 6, 4], 2) == 5
-    assert findKthLargest([3, 2, 3, 1, 2, 4, 5, 5, 6], 4) == 4
-    assert lastStoneWeight([2, 7, 4, 1, 8, 1]) == 1
-    assert lastStoneWeight([1]) == 1
-
+    actual = sort_nested_lists([[5, 1], [4, 2], [2, 4]])
+    assert actual == "[\"[1, 5]\", \"[2, 4]\", \"[2, 4]\"]"
+    print("nested_sorting: ok")

@@ -1,14 +1,18 @@
 # Reference: ad_hoc_own_mut_parameter_convention_part3
 # Source issue: ad-hoc-own-mut-parameter-convention-part3-execution.md
-# Part 3 demo: canonical `own mut` Rust emission plus 1299-style consume-mutate-return.
+# `own mut` parameters should support simple append-and-return helpers.
 
-def replaceElements(own mut arr: list[int]) -> list[int]:
-    rightMax = -1
-    for i in range(len(arr) - 1, -1, -1):
-        newMax = max(rightMax, arr[i])
-        arr[i] = rightMax
-        rightMax = newMax
-    return arr
+def append_zero(own mut values: list[int]) -> list[int]:
+    values.append(0)
+    return values
+
+
+def append_marker(own mut words: list[str]) -> list[str]:
+    words.append("done")
+    return words
+
 
 def main():
-    print(str(replaceElements([17, 18, 5, 4, 6, 1])))
+    assert str(append_zero([2, 3, 4])) == "[2, 3, 4, 0]"
+    assert str(append_marker(["compile", "check"])) == "[\"compile\", \"check\", \"done\"]"
+    print("own_mut_appends: ok")

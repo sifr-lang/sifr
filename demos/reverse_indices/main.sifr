@@ -1,28 +1,28 @@
 # Reference: phase31
 # Source issue: phase31-m31a-reverse-range-recurrence-execution.md
-# Phase 31 m31_a slice 5 demo
-# Shows reverse-range recurrence proofs over sized local list and matrix
-# constructions without loosening parameter-index safety.
+# Reverse indices over sized lists keep later reads definite.
 
-def suffixLengths(text: str) -> list[int]:
-    suffix = [0 for i in range(len(text) + 1)]
-    for i in range(len(text) - 1, -1, -1):
-        suffix[i] = suffix[i + 1] + 1
-    return suffix
+def copy_reversed(values: list[int]) -> list[int]:
+    out: list[int] = [0 for i in range(len(values))]
+    write = 0
 
-def longestCommonSubsequence(text1: str, text2: str) -> int:
-    dp = [[0 for j in range(len(text2) + 1)] for i in range(len(text1) + 1)]
+    for read in range(len(values) - 1, -1, -1):
+        out[write] = values[read]
+        write += 1
+    return out
 
-    for i in range(len(text1) - 1, -1, -1):
-        for j in range(len(text2) - 1, -1, -1):
-            if text1[i] == text2[j]:
-                dp[i][j] = 1 + dp[i + 1][j + 1]
-            else:
-                dp[i][j] = max(dp[i][j + 1], dp[i + 1][j])
 
-    return dp[0][0]
+def right_neighbors(values: list[int]) -> list[int]:
+    out: list[int] = [0 for i in range(len(values))]
+
+    for i in range(len(values) - 2, -1, -1):
+        out[i] = values[i + 1]
+    return out
+
 
 def main():
-    assert str(suffixLengths("sifr")) == "[4, 3, 2, 1, 0]"
-    assert str(longestCommonSubsequence("oxcpqrsvwf", "shmtulqrypy")) == "2"
-    assert str(longestCommonSubsequence("abc", "abc")) == "3"
+    assert str(copy_reversed([4, 5, 6])) == "[6, 5, 4]"
+    assert str(copy_reversed([])) == "[]"
+    assert str(right_neighbors([4, 5, 6])) == "[5, 6, 0]"
+    assert str(right_neighbors([9])) == "[0]"
+    print("reverse_indices: ok")

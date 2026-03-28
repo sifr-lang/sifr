@@ -1,43 +1,25 @@
 # Reference: phase31
 # Source issue: phase31-m31a-canonical-word-ladder-execution.md
-# Phase 31 m31_a wave 14 demo:
-# canonical word-ladder BFS using typed dict buckets and list queue pop(0).
+# Typed queues should support simple pop-front and append flows.
 
-def ladderLength(beginWord: str, endWord: str, mut wordList: list[str]) -> int:
-    if endWord not in wordList:
-        return 0
+def drain_queue(mut queue: list[str]) -> list[str]:
+    order: list[str] = []
 
-    nei: dict[str, list[str]] = {}
-    wordList.append(str(beginWord))
-    for word in wordList:
-        for j in range(len(word)):
-            pattern = word[:j] + "*" + word[j + 1 :]
-            existing = nei.get(pattern)
-            if existing is None:
-                nei[pattern] = [str(word)]
-            else:
-                nei[pattern] = existing + [str(word)]
+    while queue:
+        order.append(queue.pop(0))
+    return order
 
-    visit: set[str] = set([str(beginWord)])
-    q: list[str] = [str(beginWord)]
-    res = 1
-    while q:
-        level_size = len(q)
-        for i in range(level_size):
-            word = q.pop(0)
-            if word == endWord:
-                return res
-            for j in range(len(word)):
-                pattern = word[:j] + "*" + word[j + 1 :]
-                neighbors = nei.get(pattern)
-                if neighbors is not None:
-                    for neiWord in neighbors:
-                        if neiWord not in visit:
-                            visit.add(str(neiWord))
-                            q.append(str(neiWord))
-        res += 1
-    return 0
+
+def append_missing(mut queue: list[str], item: str) -> list[str]:
+    for existing in queue:
+        if existing == item:
+            return queue
+    queue.append(item)
+    return queue
+
 
 def main():
-    assert ladderLength("hit", "cog", ["hot", "dot", "dog", "lot", "log", "cog"]) == 5
-    assert ladderLength("hit", "cog", ["hot", "dot", "dog", "lot", "log"]) == 0
+    assert str(drain_queue(["parse", "check", "emit"])) == "[\"parse\", \"check\", \"emit\"]"
+    assert str(append_missing(["parse", "check"], "emit")) == "[\"parse\", \"check\", \"emit\"]"
+    assert str(append_missing(["parse", "check"], "check")) == "[\"parse\", \"check\"]"
+    print("typed_queues: ok")

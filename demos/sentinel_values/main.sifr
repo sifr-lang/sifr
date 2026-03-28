@@ -1,36 +1,29 @@
 # Reference: phase31
 # Source issue: phase31-m31a-sentinel-domain-normalization-execution.md
-# Phase 31 m31_a slice 4 demo
-# Shows canonical infinity sentinels behaving like integer-domain accumulators
-# once later control flow proves the algorithm only ever updates them with ints.
+# Sentinel values can pass through loops and collapse back onto plain ints.
 
-def minSubArrayLen(target: int, nums: list[int]) -> int:
-    res = float("inf")
-    l, total = 0, 0
+def smallest_or_zero(values: list[int]) -> int:
+    best = float("inf")
 
-    for r in range(len(nums)):
-        total += nums[r]
-        while total >= target:
-            res = min(res, r - l + 1)
-            total -= nums[l]
-            l += 1
-    return res if res != float("inf") else 0
+    for value in values:
+        if value < best:
+            best = value
+    return best if best != float("inf") else 0
 
-def increasingTriplet(nums: list[int]) -> bool:
-    first = float("inf")
-    second = float("inf")
 
-    for num in nums:
-        if num <= first:
-            first = num
-        elif num <= second:
-            second = num
-        else:
-            return True
-    return False
+def shortest_word_length_or_zero(words: list[str]) -> int:
+    best = float("inf")
+
+    for word in words:
+        size = len(word)
+        if size < best:
+            best = size
+    return best if best != float("inf") else 0
+
 
 def main():
-    assert str(minSubArrayLen(7, [2, 3, 1, 2, 4, 3])) == "2"
-    assert str(minSubArrayLen(15, [1, 2, 3, 4, 5])) == "5"
-    assert str(increasingTriplet([2, 1, 5, 0, 4, 6])) == "true"
-    assert str(increasingTriplet([5, 4, 3, 2, 1])) == "false"
+    assert smallest_or_zero([8, 3, 7]) == 3
+    assert smallest_or_zero([]) == 0
+    assert shortest_word_length_or_zero(["compile", "run", "emit"]) == 3
+    assert shortest_word_length_or_zero([]) == 0
+    print("sentinel_values: ok")

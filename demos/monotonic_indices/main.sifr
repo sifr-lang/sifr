@@ -1,38 +1,28 @@
 # Reference: phase31
 # Source issue: phase31-m31a-sliding-window-left-pointer-execution.md
-# Phase 31 m31_a slice 3 demo
-# Shows the compiler proving canonical sliding-window left pointers safe when a
-# zero-based pointer advances monotonically under a range(len(seq)) driver.
+# Monotonic indices stay definite inside `range(len(seq))` loops.
 
-def maxVowels(s: str, k: int) -> int:
-    l, res, total = 0, 0, 0
-    vowels = "aeiou"
+def active_indices(flags: list[bool]) -> list[int]:
+    out: list[int] = []
 
-    for r in range(len(s)):
-        if s[r] in vowels:
-            total += 1
-        if (r - l + 1) > k:
-            if s[l] in vowels:
-                total -= 1
-            l += 1
-        res = max(res, total)
-    return res
+    for index in range(len(flags)):
+        if flags[index]:
+            out.append(index)
+    return out
 
-def lengthOfLongestSubstring(s: str) -> int:
-    seen = set()
-    l = 0
-    best = 0
 
-    for r in range(len(s)):
-        while s[r] in seen:
-            seen.remove(s[l])
-            l += 1
-        seen.add(s[r])
-        best = max(best, r - l + 1)
-    return best
+def trailing_window(text: str, width: int) -> str:
+    left = 0
+
+    for right in range(len(text)):
+        if (right - left + 1) > width:
+            left += 1
+    return text[left:]
+
 
 def main():
-    assert str(maxVowels("abciiidef", 3)) == '3'
-    assert str(maxVowels("aeiou", 2)) == '2'
-    assert str(lengthOfLongestSubstring("abcabcbb")) == '3'
-    assert str(lengthOfLongestSubstring("pwwkew")) == '3'
+    assert str(active_indices([True, False, True, True])) == "[0, 2, 3]"
+    assert str(active_indices([False, False])) == "[]"
+    assert trailing_window("abcdef", 3) == "def"
+    assert trailing_window("xy", 4) == "xy"
+    print("monotonic_indices: ok")

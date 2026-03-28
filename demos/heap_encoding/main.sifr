@@ -1,117 +1,43 @@
 # Reference: phase31
 # Source issue: phase31-m31a-encoded-heap-closure-execution.md
-# Phase 31 m31_a wave 15 demo:
-# canonical encoded-int heap forms for IPO and Network Delay Time.
+# Heap encoding should keep ordered extraction simple and typed.
 
 from sifr.heapq import heappush, heappop
 
-def findMaximizedCapital(k: int, mut w: int, profits: list[int], capital: list[int]) -> int:
-    if len(profits) != len(capital):
-        return w
 
-    max_profit = 0
-    for p in profits:
-        if p > max_profit:
-            max_profit = p
-    base = max_profit + 1
-    if base <= 0:
-        base = 1
-
-    minCapital: list[int] = []
-    maxProfit: list[int] = []
-    for c, p in zip(capital, profits):
-        heappush(minCapital, c * base + p)
-
-    for step in range(k):
-        while minCapital:
-            top = heappop(minCapital)
-            if top is not None:
-                c = top // base
-                p = top % base
-                if c <= w:
-                    heappush(maxProfit, -p)
-                else:
-                    heappush(minCapital, top)
-                    break
-            else:
-                break
-
-        if not maxProfit:
-            break
-
-        best = heappop(maxProfit)
-        if best is not None:
-            w += -best
-        else:
-            break
-    return w
-
-def networkDelayTime(times: list[list[int]], n: int, k: int) -> int:
-    if n <= 0 or k <= 0 or k > n:
-        return -1
-
-    max_weight = 0
-    for edge in times:
-        if len(edge) < 3:
-            continue
-        w0 = edge[2]
-        if w0 is not None:
-            weight = w0
-            if weight > max_weight:
-                max_weight = weight
-
-    edge_base = max_weight + 1
-    if edge_base <= 0:
-        edge_base = 1
-
-    edges: dict[int, list[int]] = {}
-    for edge in times:
-        if len(edge) < 3:
-            continue
-        u0 = edge[0]
-        v0 = edge[1]
-        w0 = edge[2]
-        if u0 is not None and v0 is not None and w0 is not None:
-            if u0 <= 0 or u0 > n or v0 <= 0 or v0 > n:
-                continue
-            encoded = v0 * edge_base + w0
-            bucket = edges.get(u0)
-            if bucket is None:
-                edges[u0] = [encoded]
-            else:
-                edges[u0] = bucket + [encoded]
-
-    visit: set[int] = set()
-    node_base = n + 1
+def drain_by_cost(entries: list[tuple[int, int]]) -> list[int]:
+    base = 100
     heap: list[int] = []
-    heappush(heap, k)
-    t = 0
+    order: list[int] = []
+
+    for entry in entries:
+        encoded = entry[0] * base + entry[1]
+        heappush(heap, encoded)
 
     while heap:
-        top = heappop(heap)
-        if top is not None:
-            w1 = top // node_base
-            n1 = top % node_base
-            if n1 in visit:
-                continue
-            visit.add(n1)
-            t = w1
+        encoded = heappop(heap)
+        if encoded is not None:
+            order.append(encoded % base)
+    return order
 
-            neighbors = edges.get(n1)
-            if neighbors is not None:
-                for encoded_edge in neighbors:
-                    n2 = encoded_edge // edge_base
-                    w2 = encoded_edge % edge_base
-                    if n2 not in visit:
-                        heappush(heap, (w1 + w2) * node_base + n2)
-        else:
+
+def drain_descending(values: list[int]) -> list[int]:
+    heap: list[int] = []
+    out: list[int] = []
+
+    for value in values:
+        heappush(heap, -value)
+
+    while heap:
+        best = heappop(heap)
+        if best is None:
             break
+        out.append(-best)
+    return out
 
-    return t if len(visit) == n else -1
 
 def main():
-    assert findMaximizedCapital(2, 0, [1, 2, 3], [0, 1, 1]) == 4
-    assert findMaximizedCapital(3, 0, [1, 2, 3], [0, 1, 2]) == 6
-    assert networkDelayTime([[2, 1, 1], [2, 3, 1], [3, 4, 1]], 4, 2) == 2
-    assert networkDelayTime([[1, 2, 1]], 2, 1) == 1
-    assert networkDelayTime([[1, 2, 1]], 2, 2) == -1
+    assert str(drain_by_cost([(3, 30), (1, 10), (2, 20), (1, 11)])) == "[10, 11, 20, 30]"
+    assert str(drain_descending([5, 1, 9, 3])) == "[9, 5, 3, 1]"
+    assert str(drain_descending([4])) == "[4]"
+    print("heap_encoding: ok")

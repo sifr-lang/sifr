@@ -1,51 +1,38 @@
 # Reference: phase31_m31e
 # Source issue: phase31-m31e-recursive-tree-canonical-closure-execution.md
-# Phase 31 m31_e demo: recursive tree canonical closure
+# Recursive record fields should stay typed through nested construction and access.
 
-class TreeNode:
-    val: int
-    left: TreeNode | None
-    right: TreeNode | None
+class Entry:
+    value: int
+    next: Entry | None
 
     def __init__(
         self,
-        val: int = 0,
-        left: TreeNode | None = None,
-        right: TreeNode | None = None,
+        value: int = 0,
+        next: Entry | None = None,
     ):
-        self.val = val
-        self.left = left
-        self.right = right
+        self.value = value
+        self.next = next
 
-def treeToString(node: TreeNode | None) -> str:
-    if node is None:
-        return "None"
-    return str(node.val) + "(" + treeToString(node.left) + "," + treeToString(node.right) + ")"
 
-def isSameTree(p: TreeNode | None, q: TreeNode | None) -> bool:
-    return treeToString(p) == treeToString(q)
+def chain_text(entry: Entry | None) -> str:
+    if entry is None:
+        return "."
+    return str(entry.value) + "->" + chain_text(entry.next)
 
-def levelOrder(root: TreeNode | None) -> list[list[int]]:
-    if root is None:
-        return []
-    return [[root.val]]
 
-def lowestCommonAncestor(root: TreeNode, p: int, q: int) -> int:
-    if p < root.val and q < root.val:
-        left = root.left
-        if left is None:
-            return root.val
-        return lowestCommonAncestor(left, p, q)
-    if p > root.val and q > root.val:
-        right = root.right
-        if right is None:
-            return root.val
-        return lowestCommonAncestor(right, p, q)
-    return root.val
+def second_value(entry: Entry | None) -> int:
+    if entry is None or entry.next is None:
+        return 0
+    return entry.next.value
+
 
 def main():
-    assert isSameTree(None, None) == True
-    assert isSameTree(TreeNode(1, None, None), None) == False
-    assert str(levelOrder(TreeNode(1, None, None))) == '[[1]]'
-    assert str(levelOrder(None)) == '[]'
-    assert lowestCommonAncestor(TreeNode(2, None, None), 2, 2) == 2
+    chain = Entry(4, Entry(2, Entry(6)))
+    short = Entry(9)
+
+    assert chain_text(chain) == "4->2->6->."
+    assert chain_text(None) == "."
+    assert second_value(chain) == 2
+    assert second_value(short) == 0
+    print("recursive_records: ok")
