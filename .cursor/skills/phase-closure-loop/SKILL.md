@@ -60,22 +60,28 @@ After all waves are done, run these in order:
 When phase is fully closed, run:
 - `say "Now we review"`
 
-## Reviewer Trigger Command
+## Reviewer Trigger
+
+Use the [talk-to-claude](.cursor/skills/talk-to-claude/SKILL.md) skill for all external review passes.
+
+Authoritative launch pattern for a review pass:
 
 ```bash
-PWD_NOW="$(pwd)"; uv run --project /Users/yaseralnajjar/work/talk-to-claude \
-  python /Users/yaseralnajjar/work/talk-to-claude/send_to_claude_code.py "$(cat <<PROMPT
+PWD_NOW="$(pwd)"
+TARGET_FILE="${PWD_NOW}/reviews/<review-file>.md"
+CLAUDE_SESSION_ID="$(uuidgen | tr '[:upper:]' '[:lower:]')" \
+  bash .cursor/skills/talk-to-claude/scripts/claude_resume_to_desktop.sh "$(cat <<PROMPT
 Review implementation of phase ${PHASE_NAME}
-Write the output into ${PWD_NOW}/reviews/<review-file>.md
+Write the output into ${TARGET_FILE}
 PROMPT
 )"
 ```
 
-Adjust prompt scope for the active stage (`wave`, `milestone closure`, `phase closure`, `pass 1`, `pass 2`).
+Adjust prompt scope for the active stage: `wave`, `milestone closure`, `phase closure`, `pass 1`, `pass 2`.
 
 If the target review file already exists, create a new filename with the same prefix and incremented suffix.
 
-## Review Wait Command (authoritative)
+## Review Wait Command
 
 ```bash
 PWD_NOW="$(pwd)"; uv run --project /Users/yaseralnajjar/work/talk-to-claude \
