@@ -109,7 +109,44 @@ status: accepted_after_pass_1_and_pass_2
 
 ### wave_2_runnable_demo_corpus_pass
 
-status: pending
+status: in_progress
+
+#### batch_01_statistics_json_datetime
+
+status: accepted_after_pass_1_and_pass_2
+
+- scope:
+  - `demos/statistics/idiomatic.rs`
+  - `demos/json/idiomatic.rs`
+  - `demos/datetime/idiomatic.rs`
+- selection rationale:
+  - all three are positive runnable demos
+  - all three still have large generated-style `idiomatic.rs` companions
+  - archived review history already points at real follow-up design debt rather than purely stylistic noise
+- priority tags:
+  - `prior-review-flagged`: `statistics`, `json`, `datetime`
+  - `stdlib-heavy`: `statistics`, `json`, `datetime`
+  - `hand-authored-generated-shape`: to be re-evaluated after rewrite
+- implementation summary:
+  - `statistics`: replaced math/runtime scaffolding with direct slice-based statistical helpers, explicit `StatisticsError`, and linear-time frequency counting
+  - `json`: replaced the generated IO/runtime layer with a minimal `serde_json` wrapper for `loads` and `json_dumps`
+  - `datetime`: replaced the generated date/time model with direct `chrono`-based helpers plus a small `UtcOffset` formatter
+- local validation completed:
+  - `rustfmt demos/statistics/idiomatic.rs demos/json/idiomatic.rs demos/datetime/idiomatic.rs`
+  - `rustc --edition=2021 demos/statistics/idiomatic.rs -o /tmp/sifr-idiomatic-statistics && /tmp/sifr-idiomatic-statistics`
+  - temporary Cargo compile/run for `demos/json/idiomatic.rs` with `serde_json = "1"`
+  - temporary Cargo compile/run for `demos/datetime/idiomatic.rs` with `chrono = "0.4"`
+  - `cargo run -q -p sifr -- run demos/statistics/main.sifr`
+  - `cargo run -q -p sifr -- run demos/json/main.sifr`
+  - `cargo run -q -p sifr -- run demos/datetime/main.sifr`
+  - `scripts/run_all_tests.sh`
+- review artifacts:
+  - pass 1: `reviews/phase-ad-hoc-idiomatic-rust-demo-corpus-wave-2-batch-01-review-pass-1.md`
+  - pass 2: `reviews/phase-ad-hoc-idiomatic-rust-demo-corpus-wave-2-batch-01-review-pass-2.md`
+- review application summary:
+  - pass 1 suggested collapsing the stable-order `mode`/`multimode` second pass into direct counts-map iteration
+  - no change was accepted there because the current implementation is already linear-time and the suggested rewrite would weaken encounter-order semantics
+  - pass 2 reported no actionable issues
 
 ### wave_3_fixture_and_negative_case_normalization
 

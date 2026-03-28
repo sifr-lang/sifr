@@ -216,7 +216,7 @@ Phase-close validation:
 
 ### wave_1_stabilize_the_review_standard
 
-status: in_progress
+status: completed
 
 Goals:
 
@@ -235,7 +235,7 @@ Progress update (`2026-03-29`):
 
 ### wave_2_runnable_demo_corpus_pass
 
-status: pending
+status: in_progress
 
 Goals:
 
@@ -249,6 +249,11 @@ Priority areas:
   - meaning demos whose current `idiomatic.rs` embeds substantial library-like helper code or broad utility surfaces, which makes mechanical/codegen-shaped structure more likely to survive
 - hand-authored files that still retain generated-style structure
   - meaning files that were manually edited but still visibly preserve emitted-Rust patterns such as repeated `format!` wrappers, helper-function faux-constants, `&Vec<T>`-everywhere APIs, or explicit ceremony around standard collection operations
+
+Progress update (`2026-03-29`):
+
+- `batch_01_statistics_json_datetime` selected as the first wave-2 runnable-demo batch because all three files remain large generated companions and prior review history already identified real design debt in the underlying surfaces
+- `batch_01_statistics_json_datetime` completed local validation and passed external pass-1/pass-2 review with no accepted blockers
 
 ### wave_3_fixture_and_negative_case_normalization
 
