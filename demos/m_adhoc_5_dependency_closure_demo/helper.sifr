@@ -1,10 +1,12 @@
-from sifr.tomllib import loads
+from sifr.tomllib import TomlValue, loads
 
 
 def render() -> str:
     try:
-        parsed: str = loads("name = \"phase-five\"\nvalue = 5")
-        if len(parsed) > 0:
+        parsed: TomlValue = loads("name = \"phase-five\"\nvalue = 5")
+        name_value: TomlValue | None = parsed.get("name")
+        value_value: TomlValue | None = parsed.get("value")
+        if name_value is not None and value_value is not None:
             return "adhoc milestone 5 dependency closure demo: pass"
         return "adhoc milestone 5 dependency closure demo: empty"
     except TOMLDecodeError as e:

@@ -1,4 +1,4 @@
-from sifr.json import loads, json_dumps
+from sifr.json import JsonValue, loads, json_dumps
 from sifr.test import assert_bool_vector_eq
 
 def collect_positive_actual() -> list[bool]:
@@ -7,12 +7,12 @@ def collect_positive_actual() -> list[bool]:
     parse_arr_ok: bool = False
     roundtrip_ok: bool = False
     try:
-        parsed_obj: str = loads("{\"name\":\"sifr\"}")
-        parsed_arr: str = loads("[1,2,3]")
-        parsed_roundtrip: str = loads(json_dumps(7))
-        parse_obj_ok = parsed_obj == "{\"name\":\"sifr\"}"
-        parse_arr_ok = parsed_arr == "[1,2,3]"
-        roundtrip_ok = parsed_roundtrip == "7"
+        parsed_obj: JsonValue = loads("{\"name\":\"sifr\"}")
+        parsed_arr: JsonValue = loads("[1,2,3]")
+        parsed_roundtrip: JsonValue = loads(json_dumps(7))
+        parse_obj_ok = str(parsed_obj) == "{\"name\":\"sifr\"}"
+        parse_arr_ok = str(parsed_arr) == "[1,2,3]"
+        roundtrip_ok = str(parsed_roundtrip) == "7"
     except JSONDecodeError as e:
         _ = str(e.message)
     actual.append(parse_obj_ok)
@@ -26,7 +26,7 @@ def collect_negative_actual() -> list[bool]:
     actual: list[bool] = []
     invalid_rejected: bool = False
     try:
-        _bad: str = loads("{")
+        _bad: JsonValue = loads("{")
         _ = _bad
     except JSONDecodeError as e:
         invalid_rejected = len(e.message) > 0

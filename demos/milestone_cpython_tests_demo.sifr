@@ -10,7 +10,7 @@ from sifr.fnmatch import fnmatch, fnmatch_filter
 from sifr.bisect import bisect_left, bisect_right
 from sifr.heapq import heapify, heappush, heappop
 from sifr.textwrap import wrap, fill
-from sifr.json import json_loads, json_dumps
+from sifr.json import JsonValue, json_loads, json_dumps
 from sifr.string import capwords, ascii_lowercase
 from sifr.collections import new_set, set_add, set_len, Counter, from_list
 from sifr.itertools import chain, repeat, take, flatten
@@ -90,8 +90,8 @@ def main():
 
     # ===== json =====
     try:
-        json_val: str = json_loads("42")
-        assert_eq(json_val, "42")
+        json_val: JsonValue = json_loads("42")
+        assert_eq(str(json_val), "42")
     except JSONDecodeError as err:
         print(f"json error: {err.message}")
     assert_eq(json_dumps("hello"), "\"hello\"")

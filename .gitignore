@@ -25,8 +25,9 @@ build/
 !crates/sifr_driver/src/build/**
 **/target/
 Cargo.lock
-/tmp/
 /sifr_output/
+/tmp/
+tmp_*
 
 # Demos - ignore generated/compiled artifacts, keep .sifr source files
 demos/**/sifr_output/

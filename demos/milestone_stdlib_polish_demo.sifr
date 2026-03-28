@@ -6,7 +6,7 @@ from sifr.time import perf_counter, monotonic
 from sifr.timeit import default_timer, timeit, repeat
 from sifr.glob import glob
 from sifr.shutil import copy, move_file, rmtree
-from sifr.tomllib import loads
+from sifr.tomllib import TomlValue, loads
 from sifr.io import write_text, read_text, exists
 from sifr.os import run_command
 
@@ -77,8 +77,9 @@ def main():
     # ── 5. tomllib.loads ──
     print("=== tomllib ===")
     try:
-        inline: str = loads("key = \"value\"")
-        print(len(inline) > 0)
+        inline: TomlValue = loads("key = \"value\"")
+        key_value: TomlValue | None = inline.get("key")
+        print(key_value is not None)
     except TOMLDecodeError as err:
         print(f"toml loads error: {err.message}")
 

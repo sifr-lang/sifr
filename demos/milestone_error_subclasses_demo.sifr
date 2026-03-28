@@ -5,7 +5,7 @@
 
 from sifr.io import read_text, write_text
 from sifr.os import listdir, mkdir, rmdir
-from sifr.json import loads
+from sifr.json import JsonValue, loads
 from sifr.re import re_match
 
 def demo_specific_subclass():
@@ -30,7 +30,8 @@ def demo_parent_catch_all():
 def demo_json_fields():
     print("=== 3. JSONDecodeError with line/column ===")
     try:
-        result: str = loads("{bad json")
+        result: JsonValue = loads("{bad json")
+        _ = result
     except JSONDecodeError as e:
         print(f"JSONDecodeError: {e.message}")
         print(f"Line: {e.line}, Column: {e.column}")

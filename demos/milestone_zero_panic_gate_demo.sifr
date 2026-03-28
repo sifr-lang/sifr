@@ -1,5 +1,5 @@
 from sifr.io import read_text
-from sifr.json import json_loads
+from sifr.json import JsonValue, json_loads
 from sifr.re import re_match
 from sifr.random import randint
 from sifr.textwrap import wrap
@@ -22,7 +22,8 @@ def main():
     # Section 2: Parse Safety
     print("--- 2. Parse Safety ---")
     try:
-        data: str = json_loads("{ invalid json }")
+        data: JsonValue = json_loads("{ invalid json }")
+        _ = data
         print(f"Parsed JSON: {data}")
     except JSONDecodeError as e:
         print(f"json_loads(invalid) -> JSONDecodeError: {e.message}")

@@ -3,7 +3,7 @@
 
 from typing import Callable
 from sifr.itertools import repeat, chain, take
-from sifr.json import loads
+from sifr.json import JsonValue, loads
 from sifr.re import search, sub, findall, split
 
 # ─── Gap 3: Callable field invocation ────────────────────────────────
@@ -42,7 +42,7 @@ def main():
     # ─── Gap 2: CPython-compatible names ─────────────────────────────
     # json: loads (alias for json_loads)
     try:
-        parsed: str = loads("{\"key\": 42}")
+        parsed: JsonValue = loads("{\"key\": 42}")
         print(parsed)
     except JSONDecodeError as err:
         print(f"json error: {err.message}")

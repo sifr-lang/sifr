@@ -10,7 +10,7 @@ from sifr.platform import system, machine
 from sifr.time import time
 from sifr.fnmatch import fnmatch_filter
 from sifr.re import search, findall, split, sub
-from sifr.json import loads, json_dumps
+from sifr.json import JsonValue, loads, json_dumps
 from sifr.string import capwords
 
 def main():
@@ -72,7 +72,7 @@ def main():
 
     # --- sifr.json: loads (CPython alias), json_dumps (Any-typed, inline only) ---
     try:
-        data: str = loads("{\"key\":\"value\"}")
+        data: JsonValue = loads("{\"key\":\"value\"}")
         print(data)
     except JSONDecodeError as err:
         print(f"json error: {err.message}")
@@ -81,4 +81,3 @@ def main():
 
     # --- sifr.string: capwords ---
     print(capwords("hello world from sifr"))
-
