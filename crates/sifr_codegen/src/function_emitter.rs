@@ -373,6 +373,26 @@ impl RustEmitter {
             },
         });
 
+        let cloned_borrowed_param_names: Vec<String> = func
+            .params
+            .iter()
+            .filter(|param| {
+                !mutable_param_shadows
+                    .iter()
+                    .any(|(name, _)| name == &param.name)
+                    && param.convention.is_borrowed()
+                    && param.ty.ownership() != OwnershipKind::Copy
+            })
+            .map(|param| param.name.clone())
+            .collect();
+
+        let saved_borrowed_params = self.borrowed_params.clone();
+        let saved_mut_borrowed_params = self.mut_borrowed_params.clone();
+        for name in &cloned_borrowed_param_names {
+            self.borrowed_params.remove(name);
+            self.mut_borrowed_params.remove(name);
+        }
+
         let mut materialize_body = vec![RustStmt::Let {
             mutable: true,
             name: "_yields".to_string(),
@@ -388,6 +408,8 @@ impl RustEmitter {
                 "generator materialization statement lowering",
             ));
         }
+        self.borrowed_params = saved_borrowed_params;
+        self.mut_borrowed_params = saved_mut_borrowed_params;
         materialize_body.push(RustStmt::Assign {
             target: RustExpr::Ident("__sifr_generator_iter".to_string()),
             value: RustExpr::MethodCall {

@@ -3824,7 +3824,7 @@ impl RustEmitter {
         }
     }
 
-    fn adapt_plain_call_args_with_signature_for_ir(
+    pub(crate) fn adapt_plain_call_args_with_signature_for_ir(
         &self,
         func: &str,
         hir_args: &[HirExpr],
@@ -4103,6 +4103,17 @@ impl RustEmitter {
 
         if let Some(clone_expr) = self.borrowed_return_name_clone_expr_for_ir(value) {
             return Ok(Some(coerce_return(self, clone_expr)?));
+        }
+
+        if return_ty.is_some_and(|ty| {
+            matches!(
+                crate::resolve_alias_type_for_plain_call(ty),
+                Type::Iterator(_) | Type::Iterable(_)
+            )
+        }) {
+            if let Some(lowered_iter_return) = self.lower_escaping_iter_return_expr_for_ir(value)? {
+                return Ok(Some(coerce_return(self, lowered_iter_return)?));
+            }
         }
 
         if return_ty.is_some_and(|ty| !crate::helpers::is_option_type(ty))
@@ -4900,14 +4911,50 @@ impl RustEmitter {
         source: &HirExpr,
         element_type_hint: Option<&Type>,
     ) -> Result<Option<crate::RustExpr>, crate::CodegenError> {
-        self.lower_iter_source_expr_for_ir_with_mode(source, false, element_type_hint)
+        self.lower_iter_source_expr_for_ir_with_mode(source, false, element_type_hint, None)
     }
 
     fn lower_iter_source_expr_for_ir(
         &mut self,
         source: &HirExpr,
     ) -> Result<Option<crate::RustExpr>, crate::CodegenError> {
-        self.lower_iter_source_expr_for_ir_with_mode(source, true, None)
+        self.lower_iter_source_expr_for_ir_with_mode(source, true, None, None)
+    }
+
+    fn lower_escaping_iter_return_expr_for_ir(
+        &mut self,
+        value: &HirExpr,
+    ) -> Result<Option<crate::RustExpr>, crate::CodegenError> {
+        let source = match value {
+            HirExpr::IteratorCall { op, args, .. }
+                if *op == HirIteratorOp::Iter && args.len() == 1 =>
+            {
+                &args[0]
+            }
+            HirExpr::Call { func, args, .. } if func == "iter" && args.len() == 1 => &args[0],
+            _ => return Ok(None),
+        };
+
+        let can_consume_owned_source = match source {
+            HirExpr::Name { name, .. } => {
+                !self.borrowed_params.contains(name) && !self.mut_borrowed_params.contains(name)
+            }
+            _ => matches!(
+                crate::helpers::classify_value_category(source),
+                crate::helpers::ValueCategory::Temporary
+            ),
+        };
+
+        if !can_consume_owned_source {
+            return Ok(None);
+        }
+
+        self.lower_iter_source_expr_for_ir_with_mode(
+            source,
+            true,
+            None,
+            Some(crate::helpers::SourceAccessMode::Consume),
+        )
     }
 
     fn class_method_signature_for_iter_for_ir<'a>(
@@ -5058,6 +5105,7 @@ impl RustEmitter {
         source: &HirExpr,
         prefer_boxed_iterator: bool,
         element_type_hint: Option<&Type>,
+        source_access_mode_override: Option<crate::helpers::SourceAccessMode>,
     ) -> Result<Option<crate::RustExpr>, crate::CodegenError> {
         if let HirExpr::RangeLiteral {
             start, end, step, ..
@@ -5075,8 +5123,14 @@ impl RustEmitter {
         };
         let lowered_source = Self::normalize_for_loop_iter_expr(lowered_source);
         let source_ty = Self::resolve_alias_type_for_loop_iter(source.ty());
-        let plan =
+        let mut plan =
             crate::helpers::plan_iterator_ownership_with_element_hint(source, element_type_hint);
+        if let Some(source_access_mode) = source_access_mode_override {
+            plan.source_access_mode = source_access_mode;
+            if matches!(source_access_mode, crate::helpers::SourceAccessMode::Consume) {
+                plan.yield_mode = crate::helpers::YieldMode::Move;
+            }
+        }
 
         if matches!(source_ty, Type::Iterator(_))
             || matches!(source, HirExpr::GeneratorExpr { .. })

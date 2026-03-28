@@ -1547,7 +1547,81 @@ fn test_generate_rust_iterable_return_from_iterator_materializes_for_signature()
     );
 
     assert!(rust_code.contains("fn adapt(it: Box<dyn Iterator<Item = i64>>) -> Vec<i64> {"));
-    assert!(rust_code.contains("return (it).into_iter().collect::<Vec<_>>();"));
+    assert!(rust_code.contains("return it.collect::<Vec<_>>();"));
+}
+
+#[test]
+fn test_generate_rust_iterator_return_consumes_local_list_binding() {
+    let rust_code = generate_rust_from_source(
+        "def build() -> Iterator[int]:\n    result: list[int] = [1, 2, 3]\n    return iter(result)\n\ndef main():\n    print(list(build()))\n",
+    );
+
+    assert!(rust_code.contains("fn build() -> Box<dyn Iterator<Item = i64>> {"));
+    assert!(rust_code.contains("return Box::new(result.into_iter());"));
+}
+
+#[test]
+fn test_generate_rust_iterator_return_consumes_owned_param_binding() {
+    let rust_code = generate_rust_from_source(
+        "def adapt(own items: list[int]) -> Iterator[int]:\n    return iter(items)\n\ndef main():\n    print(list(adapt([1, 2, 3])))\n",
+    );
+
+    assert!(rust_code.contains("fn adapt(items: Vec<i64>) -> Box<dyn Iterator<Item = i64>> {"));
+    assert!(rust_code.contains("return Box::new(items.into_iter());"));
+}
+
+#[test]
+fn test_generate_rust_open_uses_canonical_filehandle_constructor() {
+    let rust_code = generate_rust_from_source(
+        "def main():\n    f = open(\"/tmp/sifr_codegen_open.txt\", \"w\")\n",
+    );
+
+    assert!(rust_code.contains("struct FileHandle"));
+    assert!(rust_code.contains("fn new(_handle: i64, _mode: String) -> Self"));
+    assert!(rust_code.contains("return Ok(FileHandle::new(__handle_id, __mode.to_string()));"));
+    assert!(!rust_code.contains("return Ok(FileHandle { _handle: __handle_id, _mode: __mode.to_string() });"));
+}
+
+#[test]
+fn test_generate_rust_generator_clones_borrowed_params_into_owned_locals_before_calls() {
+    let rust_code = generate_rust_from_source(
+        "def glob(directory: str, pattern: str) -> list[str]:\n    return []\n\ndef iglob(directory: str, pattern: str) -> Iterator[str]:\n    matches: list[str] = glob(directory, pattern)\n    i: int = 0\n    while i < len(matches):\n        yield matches[i]\n        i = i + 1\n",
+    );
+
+    assert!(rust_code.contains("let directory = directory.clone();"));
+    assert!(rust_code.contains("let pattern = pattern.clone();"));
+    assert!(rust_code.contains("let matches: Vec<String> = glob(&directory, &pattern);"));
+}
+
+#[test]
+fn test_generate_rust_recursive_constructor_argument_wraps_optional_box_field() {
+    let rust_code = generate_rust_from_source(
+        "class Entry:\n    value: int\n    next: Entry | None\n\n    def __init__(self, value: int = 0, next: Entry | None = None):\n        self.value = value\n        self.next = next\n\ndef main():\n    long = Entry(4, Entry(5, Entry(6)))\n    print(long.value)\n",
+    );
+
+    assert!(rust_code.contains(
+        "let long: Entry = Entry::new(4 as i64, Some(Box::new(Entry::new(5 as i64, Some(Box::new(Entry::new(6 as i64, None)))))));"
+    ));
+}
+
+#[test]
+fn test_generate_rust_defaultdict_int_augassign_uses_entry_default() {
+    let rust_code = generate_rust_from_source(
+        "def main():\n    counts = defaultdict(int)\n    counts[\"steps\"] += 1\n    counts[\"steps\"] += 2\n    assert counts[\"steps\"] == 3\n",
+    );
+
+    assert!(rust_code.contains("let __elem = counts.entry(\"steps\".to_string()).or_insert(0);"));
+    assert!(rust_code.contains("*__elem += 1 as i64;"));
+    assert!(rust_code.contains("*__elem += 2 as i64;"));
+}
+
+#[test]
+fn test_generate_rust_tuple_field_assignment_emits_mutable_self_receiver() {
+    let rust_code = generate_rust_from_source(
+        "class RunningBounds:\n    left: int\n    right: int\n\n    def __init__(self, left: int, right: int):\n        self.left = left\n        self.right = right\n\n    def rotate(self, next_value: int) -> None:\n        self.left, self.right = self.right, next_value\n",
+    );
+
+    assert!(rust_code.contains("fn rotate(&mut self, next_value: i64)"));
 }
 
 #[test]

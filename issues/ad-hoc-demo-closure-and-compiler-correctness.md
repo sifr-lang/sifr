@@ -1,6 +1,6 @@
 # Ad Hoc Phase: Demo Closure and Compiler Correctness
 
-Status: open (documented 2026-03-28)
+Status: complete (documented 2026-03-28, closed after implementation review)
 Context: corrective follow-up phase inserted after the latest `demos/` reliability sweep and after the Phase 31 algorithmic compatibility carry-forward plan was reviewed for language-rot risk
 Execution readiness: implementation-ready in dependency order; compiler root causes must be fixed before any broad demo sweep is treated as closed
 Execution ledger: `issues/ad-hoc-demo-closure-and-compiler-correctness-execution.md`

@@ -1138,9 +1138,12 @@ impl RustEmitter {
                     .map(str::to_string)
                     .collect::<Vec<_>>();
                 path.push("new".to_string());
+                let lowered_args = self.try_lower_registry_exprs_strict(args)?;
+                let lowered_args =
+                    self.adapt_plain_call_args_with_signature_for_ir(&path.join("::"), args, lowered_args);
                 Some(crate::RustExpr::FnCall {
                     func: Box::new(crate::RustExpr::Path(path)),
-                    args: self.try_lower_registry_exprs_strict(args)?,
+                    args: lowered_args,
                 })
             }
             HirExpr::Index {

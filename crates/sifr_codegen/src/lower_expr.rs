@@ -852,25 +852,9 @@ fn try_lower_dict_get_key_expr(index: &HirExpr) -> Option<RustExpr> {
 }
 
 fn try_lower_simple_constructor_call_expr(class_name: &str, args: &[HirExpr]) -> Option<RustExpr> {
-    if !class_name.contains("::") {
-        return None;
-    }
-
-    let lowered_args = args
-        .iter()
-        .map(try_lower_leaf_or_name_expr)
-        .collect::<Option<Vec<_>>>()?;
-
-    let mut path = class_name
-        .split("::")
-        .map(str::to_string)
-        .collect::<Vec<_>>();
-    path.push("new".to_string());
-
-    Some(RustExpr::FnCall {
-        func: Box::new(RustExpr::Path(path)),
-        args: lowered_args,
-    })
+    let _ = class_name;
+    let _ = args;
+    None
 }
 
 fn try_lower_simple_defaultdict_index_expr(object: &HirExpr, index: &HirExpr) -> Option<RustExpr> {
@@ -3398,13 +3382,7 @@ mod tests {
             ty: Type::Any,
         };
 
-        let lowered = try_lower_leaf_expr(&expr).expect("constructor lowered");
-        assert!(matches!(
-            lowered,
-            RustExpr::FnCall { func, args }
-                if matches!(func.as_ref(), RustExpr::Path(path) if path == &vec!["pkg".to_string(), "Widget".to_string(), "new".to_string()])
-                    && args.len() == 1
-        ));
+        assert!(try_lower_leaf_expr(&expr).is_none());
     }
 
     #[test]

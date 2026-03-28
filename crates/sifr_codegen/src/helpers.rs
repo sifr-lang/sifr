@@ -537,6 +537,13 @@ pub(super) fn body_contains_field_assign_codegen(stmts: &[HirStmt]) -> bool {
                 | HirStmt::AttributeSubscriptAssign { .. }
         ) {
             found.set(true);
+        } else if let HirStmt::TupleUnpack { targets, .. } = stmt {
+            if targets
+                .iter()
+                .any(|target| matches!(target.binding, sifr_hir::HirTupleTargetBinding::Field { .. }))
+            {
+                found.set(true);
+            }
         }
     };
     let mut on_expr = |expr: &HirExpr| {
