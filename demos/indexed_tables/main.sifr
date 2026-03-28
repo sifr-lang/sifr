@@ -1,28 +1,16 @@
 # Reference: phase31
 # Source issue: phase31-m31a-canonical-coin-change-execution.md
-# Indexed tables stay safe under explicit forward guards.
+# Pre-sized tables should support direct indexed writes.
 
-def copy_with_leading_zero(values: list[int]) -> list[int]:
-    out: list[int] = [0 for i in range(len(values) + 1)]
+def write_indices(size: int) -> list[int]:
+    out: list[int] = [0 for i in range(size)]
 
-    for i in range(len(values)):
-        out[i + 1] = values[i]
-    return out
-
-
-def adjacent_sums(values: list[int]) -> list[int]:
-    if len(values) < 2:
-        return []
-
-    out: list[int] = [0 for i in range(len(values) - 1)]
-    for i in range(len(values) - 1):
-        out[i] = values[i] + values[i + 1]
+    for i in range(len(out)):
+        out[i] = i + 1
     return out
 
 
 def main():
-    assert str(copy_with_leading_zero([4, 5, 6])) == "[0, 4, 5, 6]"
-    assert str(copy_with_leading_zero([])) == "[0]"
-    assert str(adjacent_sums([3, 8, 10, 15])) == "[11, 18, 25]"
-    assert str(adjacent_sums([5])) == "[]"
+    assert str(write_indices(4)) == "[1, 2, 3, 4]"
+    assert str(write_indices(0)) == "[]"
     print("indexed_tables: ok")

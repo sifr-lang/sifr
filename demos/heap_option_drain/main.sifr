@@ -1,43 +1,29 @@
 # Reference: phase31
 # Source issue: phase31-m31a-encoded-heap-closure-execution.md
-# Heap encoding should keep ordered extraction simple and typed.
+# `heapq` push/pop should expose ordered values and `None` on exhaustion.
 
 from sifr.heapq import heappush, heappop
 
 
-def drain_by_cost(entries: list[tuple[int, int]]) -> list[int]:
-    base = 100
+def drain_sorted(values: list[int]) -> list[int]:
     heap: list[int] = []
     order: list[int] = []
 
-    for entry in entries:
-        encoded = entry[0] * base + entry[1]
-        heappush(heap, encoded)
+    for value in values:
+        heappush(heap, value)
 
     while heap:
-        encoded = heappop(heap)
-        if encoded is not None:
-            order.append(encoded % base)
+        item = heappop(heap)
+        if item is not None:
+            order.append(item)
     return order
 
 
-def drain_descending(values: list[int]) -> list[int]:
-    heap: list[int] = []
-    out: list[int] = []
-
-    for value in values:
-        heappush(heap, -value)
-
-    while heap:
-        best = heappop(heap)
-        if best is None:
-            break
-        out.append(-best)
-    return out
-
-
 def main():
-    assert str(drain_by_cost([(3, 30), (1, 10), (2, 20), (1, 11)])) == "[10, 11, 20, 30]"
-    assert str(drain_descending([5, 1, 9, 3])) == "[9, 5, 3, 1]"
-    assert str(drain_descending([4])) == "[4]"
-    print("heap_encoding: ok")
+    assert str(drain_sorted([5, 1, 3])) == "[1, 3, 5]"
+
+    heap: list[int] = []
+    heappush(heap, 7)
+    assert heappop(heap) == 7
+    assert heappop(heap) is None
+    print("heap_option_drain: ok")

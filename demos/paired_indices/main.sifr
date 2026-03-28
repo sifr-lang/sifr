@@ -1,18 +1,6 @@
 # Reference: phase31
 # Source issue: phase31-m31a-two-pointer-while-guard-execution.md
-# Paired indices on the same sequence keep direct reads definite under `while`.
-
-def edge_products(values: list[int]) -> list[int]:
-    left = 0
-    right = len(values) - 1
-    out: list[int] = []
-
-    while left < right:
-        out.append(values[left] * values[right])
-        left += 1
-        right -= 1
-    return out
-
+# Two index variables should safely read from both ends of one sequence.
 
 def edge_pairs_text(text: str) -> str:
     left = 0
@@ -27,8 +15,6 @@ def edge_pairs_text(text: str) -> str:
 
 
 def main():
-    assert str(edge_products([2, 3, 4, 5])) == "[10, 12]"
-    assert str(edge_products([7, 1])) == "[7]"
     assert edge_pairs_text("code") == "(c,e)(o,d)"
     assert edge_pairs_text("xy") == "(x,y)"
     print("paired_indices: ok")

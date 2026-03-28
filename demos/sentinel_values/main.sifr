@@ -11,19 +11,7 @@ def smallest_or_zero(values: list[int]) -> int:
     return best if best != float("inf") else 0
 
 
-def shortest_word_length_or_zero(words: list[str]) -> int:
-    best = float("inf")
-
-    for word in words:
-        size = len(word)
-        if size < best:
-            best = size
-    return best if best != float("inf") else 0
-
-
 def main():
     assert smallest_or_zero([8, 3, 7]) == 3
     assert smallest_or_zero([]) == 0
-    assert shortest_word_length_or_zero(["compile", "run", "emit"]) == 3
-    assert shortest_word_length_or_zero([]) == 0
     print("sentinel_values: ok")

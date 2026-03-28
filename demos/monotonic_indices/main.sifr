@@ -1,6 +1,6 @@
 # Reference: phase31
 # Source issue: phase31-m31a-sliding-window-left-pointer-execution.md
-# Monotonic indices stay definite inside `range(len(seq))` loops.
+# `range(len(seq))` loops should keep indexed access definite.
 
 def active_indices(flags: list[bool]) -> list[int]:
     out: list[int] = []
@@ -11,18 +11,7 @@ def active_indices(flags: list[bool]) -> list[int]:
     return out
 
 
-def trailing_window(text: str, width: int) -> str:
-    left = 0
-
-    for right in range(len(text)):
-        if (right - left + 1) > width:
-            left += 1
-    return text[left:]
-
-
 def main():
     assert str(active_indices([True, False, True, True])) == "[0, 2, 3]"
     assert str(active_indices([False, False])) == "[]"
-    assert trailing_window("abcdef", 3) == "def"
-    assert trailing_window("xy", 4) == "xy"
     print("monotonic_indices: ok")

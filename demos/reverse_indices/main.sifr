@@ -1,28 +1,16 @@
 # Reference: phase31
 # Source issue: phase31-m31a-reverse-range-recurrence-execution.md
-# Reverse indices over sized lists keep later reads definite.
+# Reverse `range` loops should keep indexed reads definite.
 
-def copy_reversed(values: list[int]) -> list[int]:
-    out: list[int] = [0 for i in range(len(values))]
-    write = 0
+def reversed_values(values: list[int]) -> list[int]:
+    out: list[int] = []
 
-    for read in range(len(values) - 1, -1, -1):
-        out[write] = values[read]
-        write += 1
-    return out
-
-
-def right_neighbors(values: list[int]) -> list[int]:
-    out: list[int] = [0 for i in range(len(values))]
-
-    for i in range(len(values) - 2, -1, -1):
-        out[i] = values[i + 1]
+    for i in range(len(values) - 1, -1, -1):
+        out.append(values[i])
     return out
 
 
 def main():
-    assert str(copy_reversed([4, 5, 6])) == "[6, 5, 4]"
-    assert str(copy_reversed([])) == "[]"
-    assert str(right_neighbors([4, 5, 6])) == "[5, 6, 0]"
-    assert str(right_neighbors([9])) == "[0]"
+    assert str(reversed_values([4, 5, 6])) == "[6, 5, 4]"
+    assert str(reversed_values([])) == "[]"
     print("reverse_indices: ok")

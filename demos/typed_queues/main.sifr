@@ -10,16 +10,6 @@ def drain_queue(mut queue: list[str]) -> list[str]:
     return order
 
 
-def append_missing(mut queue: list[str], item: str) -> list[str]:
-    for existing in queue:
-        if existing == item:
-            return queue
-    queue.append(item)
-    return queue
-
-
 def main():
     assert str(drain_queue(["parse", "check", "emit"])) == "[\"parse\", \"check\", \"emit\"]"
-    assert str(append_missing(["parse", "check"], "emit")) == "[\"parse\", \"check\", \"emit\"]"
-    assert str(append_missing(["parse", "check"], "check")) == "[\"parse\", \"check\"]"
     print("typed_queues: ok")

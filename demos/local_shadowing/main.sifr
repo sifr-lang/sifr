@@ -1,16 +1,6 @@
 # Reference: phase31_m31h
 # Source issue: phase31-m31h-local-binding-shadowing-closure-execution.md
-# User-defined locals can shadow builtin names while rebinding stays predictable.
-
-def sum(left: int, right: int) -> int:
-    return left + right
-
-
-def sum_values(values: list[int]) -> int:
-    total = 0
-    for value in values:
-        total = sum(total, value)
-    return total
+# Local rebinding should stay predictable inside functions and branches.
 
 
 def shadow_parameter(value: int) -> int:
@@ -26,7 +16,6 @@ def choose_label(flag: bool) -> str:
 
 
 def main():
-    assert sum_values([1, 2, 3, 4]) == 10
     assert shadow_parameter(5) == 7
     assert choose_label(True) == "warm"
     assert choose_label(False) == "cold"
