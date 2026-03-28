@@ -1,4 +1,4 @@
 interface:
   display_name: "Sifr Demo Authoring"
-  short_description: "Author feature-first Sifr demos."
-  default_prompt: "Use $sifr-demo-authoring to create or refactor Sifr demos under demos/ so they stay feature-first, assertion-driven, and free of planning or LeetCode framing."
+  short_description: "Author small, feature-first Sifr demos."
+  default_prompt: "Use $sifr-demo-authoring to create or refactor Sifr demos under demos/ so each demo teaches one visible feature with tiny assert-driven examples, preserved history headers, and no planning or algorithmic framing."

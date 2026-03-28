@@ -1,20 +1,23 @@
 ---
 name: sifr-demo-authoring
-description: Create or refactor Sifr demos under demos/ when the task is to add a new demo, rename a demo, simplify an existing demo, preserve demo history, or keep demos feature-first instead of milestone/planning/problem-solution driven. Use for runnable demo authoring, demo naming, history headers, and moving non-demo reporting artifacts out of demos/.
+description: Create or refactor Sifr demos under demos/ when the task is to add a runnable demo, rename a demo, simplify an existing demo, preserve demo history, or keep demos feature-first instead of process-, planning-, or problem-solution driven. Use for demo naming, history headers, compact assert-driven examples, and moving non-demo artifacts out of demos/.
 ---
 
 # Sifr Demo Authoring
 
-Create demos that teach one language/compiler feature clearly and fail loudly with assertions when that feature regresses.
+Create demos that teach one visible language or compiler feature clearly and fail loudly with assertions when that feature regresses.
 
-## Core Rules
+## Structure
 
 - Keep runnable demos under `demos/<name>/main.sifr`.
-- Keep the top-level demos tree flat. Do not create nested demo folders except `negative_cases/` when a demo needs explicit negative coverage.
+- Keep the top-level `demos/` tree flat.
+- Only allow nesting for explicit `negative_cases/`.
 - If a demo needs helper files, keep them directly under `demos/<name>/`.
 - Do not use `demo` in demo directory or file names.
-- Keep historical phase/milestone/wave names out of the path name.
-- Preserve history in the file header, not in the path:
+
+## History
+
+Preserve history in the file header, not in the path:
 
 ```text
 # Reference: <historical tag>
@@ -23,70 +26,38 @@ Create demos that teach one language/compiler feature clearly and fail loudly wi
 
 ## Naming
 
-Prefer names that answer "what feature does this show?"
+- Name demos by the feature they show, not by delivery process, planning state, versioning, or issue workflow.
+- Use short noun-phrase names that answer: "what feature does this show?"
+- If traceability labels matter, keep them only in `# Reference:` or `# Source issue:`.
 
-Good patterns:
+## Content
 
-- `imports`
-- `guarded_sequence_index`
-- `tuple_attributes`
-- `owned_mutation`
-- `priority_queue`
-- `structured_parsing_serialization`
+- One demo should teach one core feature, or one tight cluster of directly related features.
+- Use `assert` as the primary signal. `print` is optional and secondary.
+- Keep the demo compact. Prefer one small helper function; only add a second when it shows the same feature from another direct angle.
+- Use short, neutral names for functions, variables, and fixtures.
+- Prefer direct examples over clever ones: direct construction, direct mutation, direct indexing, direct recursion, direct stdlib calls.
+- Use tiny fixtures unless the feature truly needs more.
 
-Avoid planner/process naming in demo paths:
+Use this browsing test:
 
-- `phase31`, `milestone`, `wave`
-- `v2`, `v3`
-- `analysis`, `audit`, `closure`, `contract`
-- `hardening`, `remediation`, `governance`, `alignment`
-- `regression_matrix`, `gate`, `fixes`, `cleanup`
+- A user should be able to tell what feature the demo shows from the path and first few lines.
+- If the better summary is "this solves X", the demo is still wrong.
 
-If those labels matter for traceability, keep them only in `# Reference:` or `# Source issue:`.
+## Avoid
 
-## Demo Content
+- Full problem solutions or interview-style examples.
+- Demos that primarily teach an algorithm or trick instead of the Sifr feature.
+- Large showcase files that bundle unrelated surfaces.
+- Repeated helpers that demonstrate the same idea in multiple ways.
+- Reporting artifacts, manifests, scorecards, backlogs, or summaries inside `demos/`.
 
-- Focus on one core feature or one tight cluster of related features.
-- Prefer short, neutral helper names over problem-specific names.
-- Use `assert` as the primary signal. `print` is optional and should be secondary.
-- Keep examples compact and readable.
-- Explain the feature with one or two short header comments at the top when needed.
-- Prefer direct, concrete examples over broad showcase files.
-
-## What To Avoid
-
-- Full LeetCode or interview-problem solutions.
-- Demos that primarily teach algorithm tricks instead of the Sifr feature.
-- Reporting artifacts, scorecards, taxonomies, backlogs, or corpus manifests inside `demos/`.
-- "Kitchen sink" demos that bundle many unrelated surfaces.
-
-If a current demo is problem-shaped, keep the feature and shrink the example:
-
-- `word ladder BFS` -> tiny queue-based BFS over a small typed graph
-- `coin change DP` -> bounded local-table recurrence with neutral naming
-- `trapping rain water` -> small same-sequence two-pointer example
-- `KthLargest`/`MedianFinder` bundles -> tuple assignment or running-state examples
-
-## Refactoring Existing Demos
+## Refactoring Rule
 
 When cleaning up an existing demo:
 
 1. Identify the actual feature being demonstrated.
-2. Remove milestone/planning/problem framing from the code and comments.
-3. Rename functions and variables to neutral feature-oriented names.
-4. Replace large problem fixtures with small assert-driven inputs.
-5. Preserve the original history via `# Reference:` and `# Source issue:`.
-6. Keep any non-demo artifacts in `verification/` or `internal_docs/`, not `demos/`.
-
-## Non-Demo Artifacts
-
-Do not keep these under `demos/`:
-
-- corpus manifests
-- runner outputs
-- scorecards
-- remediation backlogs
-- failure taxonomies
-- verification summaries
-
-Place them in the canonical verification/docs location instead, usually `verification/leetcode/` or `internal_docs/verification/`.
+2. Remove process, planning, milestone, or problem framing from names and comments.
+3. Replace large fixtures with small assert-driven inputs.
+4. Keep the history via `# Reference:` and `# Source issue:`.
+5. Move non-demo artifacts to `verification/` or `internal_docs/`.
