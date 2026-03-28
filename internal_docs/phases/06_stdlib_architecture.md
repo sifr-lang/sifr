@@ -266,7 +266,7 @@ status: completed
 - `has_pure_sifr_code` check includes classes
 - `cargo test` passes (zero regressions)
 - Parity report updated
-- Demo: `demos/stdlib_polish/main.sifr`
+- Demo: `demos/stdlib_tools/main.sifr`
 
 ---
 

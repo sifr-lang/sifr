@@ -34,8 +34,8 @@ Scope: architecture lock for first-class `bytes` and binary-surface foundation
 
 - Positive lock fixture: `crates/sifr/tests/e2e/pass/phase_psp_bytes_0_architecture_lock.sifr`
 - Demos:
-  - `demos/bytes_binary_contract_lock/main.sifr`
-  - `demos/bytes_text_binary_boundary/main.sifr`
+  - `demos/bytes_roundtrip/main.sifr`
+  - `demos/text_and_bytes/main.sifr`
 - Negative lock fixtures:
   - `crates/sifr/tests/e2e/fail/phase_psp_bytes_0_bytearray_unsupported.sifr`
   - `crates/sifr/tests/e2e/fail/phase_psp_bytes_0_memoryview_unsupported.sifr`

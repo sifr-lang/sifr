@@ -22,7 +22,7 @@ status: done (2026-03-05, PR #834)
   - Dependency graph extraction intentionally follows Phase 18 import-form semantics by including only project-local `from <module> import ...` and level-1 relative imports (`from .module import ...`), while unsupported relative depths remain excluded from local graph edges.
   - Cycles are detected before lowering and reported as actionable diagnostics with the import chain path (for example, `a -> b -> a`).
   - Regression coverage added for dependency-safe ordering and cycle diagnostics in `crates/sifr_driver/src/lib.rs`.
-  - Milestone demo: `cargo run -q -p sifr -- run demos/dependency_safe_module_ordering/main.sifr`.
+  - Milestone demo: `cargo run -q -p sifr -- run demos/module_ordering/main.sifr`.
 
 ### milestone_19_2: Deterministic Assembly
 status: done (2026-03-05, PR #835)
@@ -34,7 +34,7 @@ status: done (2026-03-05, PR #835)
   - Project assembly now emits `main.rs` module declarations using deterministic dependency-safe compile order instead of `HashMap` key iteration.
   - Non-main module file emission now follows deterministic ordered module names, preventing random output ordering drift.
   - Regression test `test_assemble_project_main_rs_is_deterministic_against_hashmap_order` locks deterministic output against insertion-order variation.
-  - Milestone demo: `cargo run -q -p sifr -- run demos/deterministic_assembly/main.sifr`.
+  - Milestone demo: `cargo run -q -p sifr -- run demos/module_assembly/main.sifr`.
 
 ### milestone_19_3: Stdlib Cache for Local Loops
 status: done (2026-03-05, PR #836)
@@ -47,7 +47,7 @@ status: done (2026-03-05, PR #836)
   - Added cache regressions in `crates/sifr_driver/src/lib.rs`:
     - `test_get_or_init_stdlib_cache_reuses_successful_compilation`
     - `test_get_or_init_stdlib_cache_reuses_error_without_fallback_rebuild`
-  - Milestone demo: `cargo run -q -p sifr -- run demos/stdlib_cache_local_loops/main.sifr`.
+  - Milestone demo: `cargo run -q -p sifr -- run demos/local_imports/main.sifr`.
 
 ## Quality Contract
 - Entry criteria: Phase 18 is completed and project-mode semantics are stable.

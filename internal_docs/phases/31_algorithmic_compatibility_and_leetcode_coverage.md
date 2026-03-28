@@ -78,7 +78,7 @@ status: complete
   - `verification/leetcode/phase31_spot_audit.json`
   - `verification/leetcode/phase31_spot_audit_cases.json`
   - `verification/leetcode/phase31_failure_report.md`
-  - `demos/leetcode_taxonomy/main.md`
+  - `demos/leetcode_failures/main.md`
   - `scripts/phase31_leetcode_taxonomy.py`
   - `scripts/build_phase31_leetcode_taxonomy.py`
   - `scripts/test_phase31_leetcode_taxonomy.py`
@@ -111,7 +111,7 @@ status: complete
 - Delivered artifacts:
   - `verification/leetcode/phase31_remediation_backlog.json`
   - `verification/leetcode/phase31_remediation_backlog.md`
-  - `demos/leetcode_remediation_plan/main.md`
+  - `demos/leetcode_backlog/main.md`
   - `scripts/phase31_leetcode_remediation.py`
   - `scripts/build_phase31_leetcode_remediation_backlog.py`
   - `scripts/test_phase31_leetcode_remediation_backlog.py`
@@ -142,7 +142,7 @@ status: complete
 - Delivered artifacts:
   - `verification/leetcode/phase31_seed_results_wave1.json`
   - `verification/leetcode/phase31_wave1_delta.md`
-  - `demos/leetcode_remediation/main.md`
+  - `demos/leetcode_fixes/main.md`
   - `crates/sifr/tests/e2e/pass/phase31_builtin_shadow_sum.sifr`
   - `crates/sifr/tests/e2e/pass/phase31_mutated_borrowed_param_shadow.sifr`
   - `crates/sifr/tests/e2e/pass/phase31_tuple_unpack_mutability.sifr`
@@ -250,7 +250,7 @@ Latest execution note (`2026-03-11`):
 - Full local suite:
   - `/Users/yaseralnajjar/work/sifr/codebase/scripts/run_all_tests.sh`
 - Milestone demos:
-  - `python3 scripts/run_phase31_leetcode.py --manifest demos/leetcode_runner/corpus.json --output demos/leetcode_runner/results.json`
+  - `python3 scripts/run_phase31_leetcode.py --manifest demos/leetcode_corpus/corpus.json --output demos/leetcode_corpus/results.json`
 - LeetCode corpus runner:
   - `python3 scripts/run_phase31_leetcode.py --manifest verification/leetcode/phase31_seed_corpus.json --output verification/leetcode/phase31_seed_results.json`
 - Repeat determinism check:

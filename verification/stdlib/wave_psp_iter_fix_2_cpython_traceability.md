@@ -22,4 +22,4 @@ Scope: canonical iterator HIR for protocol entry and iterator builtins (includin
 - Positive fixture:
   - `crates/sifr/tests/e2e/pass/phase_psp_iter_fix_2_canonical_iterator_hir.sifr`
 - Demo:
-  - `demos/iter_fix_canonical_hir/main.sifr`
+  - `demos/iterator_lowering/main.sifr`

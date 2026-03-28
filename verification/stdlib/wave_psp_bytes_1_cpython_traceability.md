@@ -14,7 +14,7 @@ Scope: core first-class `bytes` type, object-model foundation, and immutability 
 | --- | --- | --- | --- |
 | `test_bytes` core immutable behaviors (`len`, equality, concat, indexing, slicing, iteration) | first-class `bytes` value type with explicit typed operations | `adapted` (closed for wave-1 scope) | `crates/sifr/tests/e2e/pass/phase_psp_bytes_1_core_type_support.sifr`<br>`crates/sifr/tests/e2e/pass/cpython_bytes_subset.sifr`<br>`crates/sifr/tests/e2e/pass/stdlib_bytes.sifr`<br>`crates/sifr/tests/e2e/pass/stdlib_bytes_safety.sifr` |
 | bytes mutation families (`append`, item assignment) | compile-time immutability enforcement for `bytes` | `adapted` (closed for wave-1 scope) | `crates/sifr/tests/e2e/fail/phase_psp_bytes_1_append_unsupported.sifr`<br>`crates/sifr/tests/e2e/fail/phase_psp_bytes_1_subscript_assignment_unsupported.sifr` |
-| compatibility helper parity (`lib/sifr/bytes.sifr`) | keep compatibility exports while moving canonical semantics to first-class `bytes` | `adapted` | `demos/bytes_core_type/main.sifr`<br>`demos/bytes_iteration_and_equality/main.sifr` |
+| compatibility helper parity (`lib/sifr/bytes.sifr`) | keep compatibility exports while moving canonical semantics to first-class `bytes` | `adapted` | `demos/bytes_basics/main.sifr`<br>`demos/bytes_iteration/main.sifr` |
 
 ## Classified waivers carried from wave 1
 
@@ -32,5 +32,5 @@ Scope: core first-class `bytes` type, object-model foundation, and immutability 
   - `crates/sifr/tests/e2e/fail/phase_psp_bytes_1_append_unsupported.sifr`
   - `crates/sifr/tests/e2e/fail/phase_psp_bytes_1_subscript_assignment_unsupported.sifr`
 - Demos:
-  - `demos/bytes_core_type/main.sifr`
-  - `demos/bytes_iteration_and_equality/main.sifr`
+  - `demos/bytes_basics/main.sifr`
+  - `demos/bytes_iteration/main.sifr`

@@ -35,7 +35,7 @@ Scope: contract freeze and governance lock for canonical iterator semantics
 - Positive fixture:
   - `crates/sifr/tests/e2e/pass/phase_psp_iter_fix_0_architecture_lock.sifr`
 - Demo:
-  - `demos/iter_fix_contract_lock/main.sifr`
+  - `demos/lazy_iterators_basics/main.sifr`
 - Negative fixtures:
   - `crates/sifr/tests/e2e/fail/phase_psp_iter_fix_0_itertools_tee_unsupported.sifr`
   - `crates/sifr/tests/e2e/fail/phase_psp_iter_fix_0_itertools_groupby_unsupported.sifr`

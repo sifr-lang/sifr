@@ -304,7 +304,7 @@ Sorting requires a `Comparable` protocol (maps to Rust's `Ord` trait):
 - E2E pass tests: generic_function, generic_class, lambda_basic, higher_order, iterator, for_loop_borrow, lazy_iterator, builtin_min_max_sum, sorted_basic, sorted_key_reverse, zip_enumerate, any_all, reduce_basic, list_comp, dict_comp, set_comp, filtered_comp, nested_comp
 - E2E fail tests: type_bound_violation, generic_mismatch, closure_move_called_twice, float_sort_rejected, comp_type_mismatch
 - CPython parity tests pass with safe error handling (no panics, `Result`/`Option` where CPython raises). Reference: `Python/bltinmodule.c` (min, max, sum, sorted, zip, enumerate, any, all), `Objects/listobject.c` (list.sort), `Lib/test/test_builtin.py`
-- Milestone demo in `./demos/generics/main.sifr`
+- Milestone demo in `./demos/iterators_and_comprehensions/main.sifr`
 
 ---
 
@@ -508,7 +508,7 @@ When a class has `describe()` and implements `Printable`, the method body is emi
 - All existing 94 E2E pass tests still pass
 - All 12 milestone demos produce correct output
 - `cargo test` passes with no regressions
-- Milestone demo in `./demos/codegen_quality_v2/main.sifr`
+- Milestone demo in `./demos/codegen_output/main.sifr`
 
 ---
 

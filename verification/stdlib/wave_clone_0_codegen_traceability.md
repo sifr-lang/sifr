@@ -19,7 +19,7 @@ Capture a reproducible clone-heavy generated-code baseline and lock one canonica
 
 Captured emit outputs from:
 
-- `demos/generics/main.sifr`
+- `demos/iterators_and_comprehensions/main.sifr`
 - `demos/ergonomics/main.sifr`
 - `demos/safe_indexing/main.sifr`
 - `demos/control_flow/main.sifr`
@@ -65,7 +65,7 @@ Implementation invariant:
 ## Wave-0 Lock Artifacts
 
 - positive fixture: `crates/sifr/tests/e2e/pass/wave_clone_0_architecture_lock.sifr`
-- demo: `demos/clone_architecture_lock/main.sifr`
+- demo: `demos/collection_cloning/main.sifr`
 - ownership-safety negative anchor selected for later regression locking:
   - `crates/sifr/tests/e2e/fail/borrow_escape_store.sifr`
 

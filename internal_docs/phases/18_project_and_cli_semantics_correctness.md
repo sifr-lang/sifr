@@ -20,7 +20,7 @@ status: done (2026-03-04, PR #818)
 - Evidence:
   - Shared CLI compilation mode resolver (`resolve_compilation_mode`) now drives both `cmd_run` and `cmd_build` in `crates/sifr/src/main.rs`.
   - Added resolver regression tests: `test_resolve_compilation_mode_project_for_main_with_siblings` and `test_resolve_compilation_mode_single_file_for_non_main_entry`.
-  - Milestone demo: `cargo run -q -p sifr -- run demos/run_build_semantics_alignment/main.sifr`.
+  - Milestone demo: `cargo run -q -p sifr -- run demos/run_and_build/main.sifr`.
 
 ### milestone_18_2: Auto-Detection Rule Tightening
 status: done (2026-03-04, PR #819)
@@ -32,7 +32,7 @@ status: done (2026-03-04, PR #819)
   - CLI project-mode detection now requires `main.sifr` with at least one resolvable local-module import (`has_local_project_imports`) instead of sibling-file count heuristics.
   - Added resolver regression tests for `main` without local imports and stdlib-only imports to keep single-file mode stable.
   - Added explicit resolver regressions proving `typing.sifr`/`enum.sifr` local files do not activate project mode for stdlib-like imports.
-  - Milestone demo: `cargo run -q -p sifr -- run demos/auto_detection_rule_tightening/main.sifr`.
+  - Milestone demo: `cargo run -q -p sifr -- run demos/auto_detection/main.sifr`.
 
 ### milestone_18_3: CLI Contract and Regression Suite
 status: done (2026-03-04, PR #820)
@@ -49,7 +49,7 @@ status: done (2026-03-04, PR #820)
     - multi-level and bare relative import single-file fallback,
     - stdlib-only/no-import single-file fallback,
     - invalid-source and missing-module single-file fallback.
-  - Milestone demo: `cargo run -q -p sifr -- run demos/cli_contract_and_regression_suite/main.sifr`.
+  - Milestone demo: `cargo run -q -p sifr -- run demos/cli_modes/main.sifr`.
 
 ### milestone_18_4: CLI Resolver Trigger-Matrix Closure
 status: done (2026-03-05, PR #831)
@@ -67,7 +67,7 @@ status: done (2026-03-05, PR #831)
     - bare relative import (`from . import helper`)
     - multi-level relative import (`from ..helper import value`)
   - CLI contract docs now include an explicit resolver trigger matrix in `docs/cli_command_semantics.md`.
-  - Milestone demo: `cargo run -q -p sifr -- run demos/cli_resolver_trigger_matrix_closure/main.sifr` (uses supported `from .helper import value`).
+  - Milestone demo: `cargo run -q -p sifr -- run demos/resolver_triggers/main.sifr` (uses supported `from .helper import value`).
 
 ## Quality Contract
 - Entry criteria: Phase 17 is completed and import/external behavior is stable.

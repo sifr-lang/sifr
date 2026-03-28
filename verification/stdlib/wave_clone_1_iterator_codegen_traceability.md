@@ -82,12 +82,12 @@ Observed shape:
 ## Wave artifacts
 
 - pass fixture: `crates/sifr/tests/e2e/pass/wave_clone_1_iterator_comprehension_ownership.sifr`
-- demo: `demos/clone_iterator_comprehension/main.sifr`
+- demo: `demos/cloned_iterators/main.sifr`
 
 ## Validation snapshot
 
 - `cargo run -q -p sifr -- run crates/sifr/tests/e2e/pass/wave_clone_1_iterator_comprehension_ownership.sifr` -> PASS
-- `cargo run -q -p sifr -- run demos/clone_iterator_comprehension/main.sifr` -> PASS
+- `cargo run -q -p sifr -- run demos/cloned_iterators/main.sifr` -> PASS
 - `scripts/run_all_tests.sh --profile quick` -> PASS
 
 Residual items intentionally deferred to later waves:

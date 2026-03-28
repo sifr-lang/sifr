@@ -158,7 +158,7 @@ As part of completing the type system, ensure `None` works fully as a standalone
 - `cargo test` passes, `cargo clippy -- -D warnings` passes, no new `unsafe` without justification
 - New E2E pass tests: `generic_class_basic`, `generic_class_field_access`, `generic_class_method`, `generic_class_auto_init`, `generic_class_inference`, `generic_bounds_comparable`, `generic_bounds_multiple`, `generic_type_alias`, `none_standalone_value`, `none_standalone_type`, `none_as_dict_key`
 - New E2E fail tests: `generic_bounds_not_satisfied`, `generic_class_missing_type_arg`, `generic_wrong_type_arg`
-- Milestone demo in `./demos/generics_v2/main.sifr`
+- Milestone demo in `./demos/generic_classes/main.sifr`
 
 ---
 
@@ -617,7 +617,7 @@ All existing E2E tests that use the monomorphic stdlib functions must be updated
 - New E2E pass tests: `generic_chain_str`, `generic_chain_float`, `generic_counter_int`, `generic_counter_custom_class`, `generic_deque_str`, `generic_deque_float`, `generic_heapq_float`, `generic_reduce_str`, `generic_accumulate_float`, `generic_dropwhile_predicate`, `generic_shuffle_str`, `generic_counter_bigint`, `generic_heapq_bigint`, `generic_accumulate_bigint`
 - New E2E fail tests: `generic_counter_unhashable` (float as Counter key), `generic_heapq_uncomparable` (type without Comparable)
 - API naming divergences table in `architecture.md` updated: remove `chain_str`, `accumulate_float`, and any other deleted type-specific entries; update `itertools.count_from` if its rationale changes
-- Milestone demo in `./demos/stdlib_generic_rewrite/main.sifr`
+- Milestone demo in `./demos/generic_stdlib/main.sifr`
 
 ---
 

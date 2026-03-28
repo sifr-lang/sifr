@@ -174,7 +174,7 @@ status: completed
 - E2E pass tests: frozenset_basic, frozenset_as_key, counter_basic, counter_arithmetic, defaultdict_basic, set_operations, bytes_literal, bytes_decode_encode, bytearray_mutate
 - E2E fail tests: frozenset_mutation_rejected, bytes_mutation_rejected, decode_invalid_utf8
 - CPython parity tests pass with safe error handling (no panics, `Result`/`Option` where CPython raises). Reference: `Objects/setobject.c`, `Objects/bytesobject.c`, `Objects/bytearrayobject.c`, `Lib/collections/__init__.py` (Counter, defaultdict), `Lib/test/test_set.py`, `Lib/test/test_bytes.py`, `Lib/test/test_collections.py`
-- Milestone demo in `./demos/ext_collections/main.sifr`
+- Milestone demo in `./demos/extended_collections/main.sifr`
 
 ---
 
@@ -209,7 +209,7 @@ status: completed
 - Generated Cargo.toml includes correct dependencies for used stdlib modules
 - E2E pass tests: math_ops, time_basic, random_gen, regex_match, hashlib_sha256, base64_encode, stream_lines, logging_basic
 - CPython parity tests pass with safe error handling (no panics, `Result`/`Option` where CPython raises). Reference: `Lib/test/test_math.py`, `Lib/test/test_time.py`, `Lib/test/test_random.py`, `Lib/test/test_re/`
-- Milestone demo in `./demos/ext_stdlib/main.sifr`
+- Milestone demo in `./demos/extended_stdlib/main.sifr`
 
 ---
 
