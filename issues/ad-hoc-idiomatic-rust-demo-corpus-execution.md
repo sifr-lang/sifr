@@ -148,6 +148,53 @@ status: accepted_after_pass_1_and_pass_2
   - no change was accepted there because the current implementation is already linear-time and the suggested rewrite would weaken encounter-order semantics
   - pass 2 reported no actionable issues
 
+#### batch_02_math_pathlib_glob
+
+status: accepted_after_pass_1_and_pass_2
+
+- scope:
+  - `demos/math/idiomatic.rs`
+  - `demos/pathlib/idiomatic.rs`
+  - `demos/glob/idiomatic.rs`
+- selection rationale:
+  - all three are positive runnable demos
+  - all three still had generated-style `idiomatic.rs` companions despite comparatively small demo-visible behavior
+  - archived review history already identified real helper/runtime and stdlib-surface debt in these areas
+- priority tags:
+  - `prior-review-flagged`: `math`, `pathlib`, `glob`
+  - `stdlib-heavy`: `pathlib`, `glob`
+  - `hand-authored-generated-shape`: `math`, `pathlib`, `glob`
+- implementation summary:
+  - `math`: replaced the generated stdlib/error scaffolding with a compact numeric helper set centered on direct `f64` methods plus focused implementations of `isclose`, compensated summation, IEEE remainder, `nextafter`, and `ulp`
+  - `pathlib`: replaced the generated path/runtime layer with a small `PathBuf`-backed wrapper over `std::fs` and a shared wildcard matcher for the demo’s `glob` behavior
+  - `glob`: replaced the generated fnmatch/glob scaffolding with a compact wildcard matcher plus sorted directory iteration that preserves hidden-file filtering and missing-directory-as-empty behavior
+- local validation completed:
+  - `rustfmt demos/math/idiomatic.rs demos/pathlib/idiomatic.rs demos/glob/idiomatic.rs`
+  - `rustc --edition=2021 demos/math/idiomatic.rs -o /tmp/sifr-idiomatic-math && /tmp/sifr-idiomatic-math`
+  - `rustc --edition=2021 demos/pathlib/idiomatic.rs -o /tmp/sifr-idiomatic-pathlib && /tmp/sifr-idiomatic-pathlib`
+  - `rustc --edition=2021 demos/glob/idiomatic.rs -o /tmp/sifr-idiomatic-glob && /tmp/sifr-idiomatic-glob`
+  - `cargo run -q -p sifr -- run demos/math/main.sifr`
+  - `cargo run -q -p sifr -- run demos/pathlib/main.sifr`
+  - `cargo run -q -p sifr -- run demos/glob/main.sifr`
+  - `scripts/run_all_tests.sh`
+  - post-pass-1 revalidation:
+    - `rustfmt demos/pathlib/idiomatic.rs demos/glob/idiomatic.rs`
+    - `rustc --edition=2021 demos/pathlib/idiomatic.rs -o /tmp/sifr-idiomatic-pathlib && /tmp/sifr-idiomatic-pathlib`
+    - `rustc --edition=2021 demos/glob/idiomatic.rs -o /tmp/sifr-idiomatic-glob && /tmp/sifr-idiomatic-glob`
+    - `cargo run -q -p sifr -- run demos/math/main.sifr`
+    - `cargo run -q -p sifr -- run demos/pathlib/main.sifr`
+    - `cargo run -q -p sifr -- run demos/glob/main.sifr`
+    - `scripts/run_all_tests.sh`
+- review artifacts:
+  - pass 1: `reviews/phase-ad-hoc-idiomatic-rust-demo-corpus-wave-2-batch-02-review-pass-1.md`
+  - pass 2: `reviews/phase-ad-hoc-idiomatic-rust-demo-corpus-wave-2-batch-02-review-pass-2.md`
+- review application summary:
+  - pass 1 valid follow-up fixes applied:
+    - `demos/pathlib/idiomatic.rs`: replaced the hand-rolled `IOError` wrapper with `std::io::Error`, switched the internal path representation to `PathBuf`, and updated constructor/join helpers to use path-native Rust shapes
+    - `demos/glob/idiomatic.rs`: changed `glob` to propagate non-`NotFound` I/O errors instead of silently collapsing every failure to an empty result
+  - pass 1 observations about broadening API flexibility beyond the demo scope were considered but not expanded further once the `PathBuf`/`std::io::Error` cleanup landed
+  - pass 2 reported no actionable issues
+
 ### wave_3_fixture_and_negative_case_normalization
 
 status: pending

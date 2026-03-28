@@ -1,447 +1,155 @@
-// --- stdlib: sifr.math ---
-fn log_base(x: f64, base: f64) -> f64 {
-    return (x).ln() / (base).ln();
+fn assert_vector_eq(actual: &[String], expected: &[String]) {
+    assert_eq!(actual, expected);
 }
+
+fn assert_bool_vector_eq(actual: &[bool], expected: &[bool]) {
+    assert_eq!(actual, expected);
+}
+
+fn log_base(x: f64, base: f64) -> f64 {
+    x.ln() / base.ln()
+}
+
 fn isclose(a: f64, b: f64, rel_tol: f64, abs_tol: f64) -> bool {
-    if rel_tol < (0.0 as f64) {
-        return false;
-    }
-    if abs_tol < (0.0 as f64) {
+    if rel_tol < 0.0 || abs_tol < 0.0 {
         return false;
     }
     if a == b {
         return true;
     }
-    if (((a).is_nan()) || ((b).is_nan())) {
+    if a.is_nan() || b.is_nan() || a.is_infinite() || b.is_infinite() {
         return false;
     }
-    if (((a).is_infinite()) || ((b).is_infinite())) {
-        return false;
-    }
-    let mut diff: f64 = a - b;
-    if diff < (0.0 as f64) {
-        diff = (0.0 as f64) - diff;
-    }
-    let mut a_abs: f64 = a;
-    if a_abs < (0.0 as f64) {
-        a_abs = (0.0 as f64) - a_abs;
-    }
-    let mut b_abs: f64 = b;
-    if b_abs < (0.0 as f64) {
-        b_abs = (0.0 as f64) - b_abs;
-    }
-    let mut rel_bound: f64 = rel_tol * (a_abs).max(b_abs);
-    if abs_tol > rel_bound {
-        rel_bound = abs_tol;
-    }
-    return diff <= rel_bound;
+
+    let diff = (a - b).abs();
+    diff <= rel_tol * a.abs().max(b.abs()) || diff <= abs_tol
 }
 
-// --- stdlib: sifr.test ---
-fn assert_eq<T: Clone + std::fmt::Display + PartialOrd + 'static>(actual: &T, expected: &T) {
-    assert!(*actual == *expected);
-}
-fn assert_vector_eq(actual: &Vec<String>, expected: &Vec<String>) {
-    assert_eq!(actual.len() as i64, expected.len() as i64);
-    let mut i: i64 = 0 as i64;
-    while i < (actual.len() as i64) {
-        assert!(Some(actual[i as usize].clone()) == expected.get(i as usize).cloned());
-        i = i + (1 as i64);
-    }
-}
-fn assert_bool_vector_eq(actual: &Vec<bool>, expected: &Vec<bool>) {
-    assert_eq!(actual.len() as i64, expected.len() as i64);
-    let mut i: i64 = 0 as i64;
-    while i < (actual.len() as i64) {
-        assert!(Some(actual[i as usize]) == expected.get(i as usize).copied());
-        i = i + (1 as i64);
-    }
+fn sumprod(lhs: &[f64], rhs: &[f64]) -> f64 {
+    lhs.iter().zip(rhs).map(|(x, y)| x * y).sum()
 }
 
-#[derive(Debug, Clone)]
-struct IOError {
-    message: String,
-    kind: String,
+fn isnormal(value: f64) -> bool {
+    value.is_normal()
 }
 
-impl IOError {
-    fn new(message: String) -> Self {
-        return Self {
-            message: message,
-            kind: "Other".to_string(),
-        };
-    }
+fn issubnormal(value: f64) -> bool {
+    value != 0.0 && value.is_finite() && !value.is_normal()
 }
 
-impl std::fmt::Display for IOError {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        return std::fmt::Display::fmt(&self.message, f);
-    }
-}
+fn round_ties_even(value: f64) -> f64 {
+    let truncated = value.trunc();
+    let fraction = value - truncated;
 
-impl std::error::Error for IOError {}
-
-fn __io_err(e: std::io::Error) -> IOError {
-    let msg = e.to_string();
-    let kind = if e.kind() == std::io::ErrorKind::NotFound {
-        "FileNotFound".to_string()
+    if fraction.abs() < 0.5 {
+        truncated
+    } else if fraction.abs() > 0.5 {
+        truncated + value.signum()
+    } else if truncated.rem_euclid(2.0) == 0.0 {
+        truncated
     } else {
-        if e.kind() == std::io::ErrorKind::PermissionDenied {
-            "PermissionDenied".to_string()
+        truncated + value.signum()
+    }
+}
+
+fn remainder(x: f64, y: f64) -> f64 {
+    if !x.is_finite() || !y.is_finite() || y == 0.0 {
+        return f64::NAN;
+    }
+    x - round_ties_even(x / y) * y
+}
+
+fn dist(lhs: &[f64], rhs: &[f64]) -> f64 {
+    if lhs.len() != rhs.len() {
+        return f64::NAN;
+    }
+
+    lhs.iter()
+        .zip(rhs)
+        .map(|(x, y)| (x - y).powi(2))
+        .sum::<f64>()
+        .sqrt()
+}
+
+fn fsum(values: &[f64]) -> f64 {
+    let mut sum = 0.0;
+    let mut compensation = 0.0;
+
+    for &value in values {
+        let tentative = sum + value;
+        if sum.abs() >= value.abs() {
+            compensation += (sum - tentative) + value;
         } else {
-            if e.kind() == std::io::ErrorKind::AlreadyExists {
-                "FileExists".to_string()
-            } else {
-                "Other".to_string()
-            }
+            compensation += (value - tentative) + sum;
         }
-    };
-    return IOError {
-        message: msg,
-        kind: kind,
-    };
-}
-
-#[derive(Debug, Clone)]
-struct ParseError {
-    message: String,
-}
-
-impl ParseError {
-    fn new(message: String) -> Self {
-        return Self { message: message };
+        sum = tentative;
     }
+
+    sum + compensation
 }
 
-impl std::fmt::Display for ParseError {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        return std::fmt::Display::fmt(&self.message, f);
+fn nextafter(from: f64, to: f64) -> f64 {
+    if from.is_nan() || to.is_nan() {
+        return f64::NAN;
     }
-}
-
-impl std::error::Error for ParseError {}
-
-#[derive(Debug, Clone)]
-struct ValueError {
-    message: String,
-}
-
-impl ValueError {
-    fn new(message: String) -> Self {
-        return Self { message: message };
+    if from == to {
+        return to;
     }
-}
-
-impl std::fmt::Display for ValueError {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        return std::fmt::Display::fmt(&self.message, f);
-    }
-}
-
-impl std::error::Error for ValueError {}
-
-#[derive(Debug, Clone)]
-struct JSONDecodeError {
-    message: String,
-    line: i64,
-    column: i64,
-}
-
-impl JSONDecodeError {
-    fn new(message: String) -> Self {
-        return Self {
-            message: message,
-            line: 0,
-            column: 0,
+    if from == 0.0 {
+        return if to.is_sign_positive() {
+            f64::from_bits(1)
+        } else {
+            -f64::from_bits(1)
         };
     }
+
+    let mut bits = from.to_bits();
+    if (to > from) == from.is_sign_positive() {
+        bits += 1;
+    } else {
+        bits -= 1;
+    }
+    f64::from_bits(bits)
 }
 
-impl std::fmt::Display for JSONDecodeError {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        return std::fmt::Display::fmt(&self.message, f);
+fn ulp(value: f64) -> f64 {
+    if value.is_nan() {
+        f64::NAN
+    } else if value.is_infinite() {
+        f64::INFINITY
+    } else {
+        (nextafter(value, f64::INFINITY) - value).abs()
     }
 }
-
-impl std::error::Error for JSONDecodeError {}
-
-#[derive(Debug, Clone)]
-struct TOMLDecodeError {
-    message: String,
-    line: i64,
-    column: i64,
-}
-
-impl TOMLDecodeError {
-    fn new(message: String) -> Self {
-        return Self {
-            message: message,
-            line: 0,
-            column: 0,
-        };
-    }
-}
-
-impl std::fmt::Display for TOMLDecodeError {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        return std::fmt::Display::fmt(&self.message, f);
-    }
-}
-
-impl std::error::Error for TOMLDecodeError {}
-
-#[derive(Debug, Clone)]
-struct RegexError {
-    message: String,
-    detail: String,
-}
-
-impl RegexError {
-    fn new(message: String) -> Self {
-        return Self {
-            message: message,
-            detail: String::new(),
-        };
-    }
-}
-
-impl std::fmt::Display for RegexError {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        return std::fmt::Display::fmt(&self.message, f);
-    }
-}
-
-impl std::error::Error for RegexError {}
 
 fn collect_positive_actual() -> Vec<String> {
-    let mut actual: Vec<String> = vec![];
-    actual.push(format!("{}", (27.0 as f64).cbrt() == (3.0 as f64)));
-    actual.push(format!("{}", (3.0 as f64).exp2() == (8.0 as f64)));
-    actual.push(format!(
-        "{}",
-        (((2.0 as f64) * (3.0 as f64)) + (4.0 as f64)) == (10.0 as f64)
-    ));
-    actual.push(format!(
-        "{}",
-        log_base(32.0 as f64, 2.0 as f64) == (5.0 as f64)
-    ));
-    actual.push(format!(
-        "{}",
-        isclose(
-            0.000000001 as f64,
-            0.0 as f64,
-            0.9 as f64,
-            0.00000001 as f64
-        )
-    ));
-    let p: Vec<f64> = vec![1.0 as f64, 2.0 as f64, 3.0 as f64];
-    let q: Vec<f64> = vec![4.0 as f64, 5.0 as f64, 6.0 as f64];
-    actual.push(format!(
-        "{}",
-        ({
-            let __p = &p;
-            let __q = &q;
-            let __len = __p.len().min(__q.len());
-            let mut __sum: f64 = 0.0;
-            for __i in 0..__len {
-                __sum += __p[__i] * __q[__i];
-            }
-            __sum
-        }) == (32.0 as f64)
-    ));
-    let tiny_subnormal: f64 = (0.000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000022250738585072014 as f64) / (2.0 as f64);
-    actual.push(format!("{}", (1.0 as f64).is_normal()));
-    actual.push(format!(
-        "{}",
-        (tiny_subnormal).is_finite() && !(tiny_subnormal).is_normal()
-    ));
-    actual.push(format!(
-        "{}",
-        ({
-            let __x: f64 = (5.5 as f64) as f64;
-            let __y: f64 = (2.0 as f64) as f64;
-            if __x.is_nan() || __y.is_nan() {
-                f64::NAN
-            } else {
-                if (__y == 0.0) || __x.is_infinite() {
-                    f64::NAN
-                } else {
-                    if __y.is_infinite() {
-                        __x
-                    } else {
-                        {
-                            let __q: f64 = __x / __y;
-                            let __n0: f64 = __q.trunc();
-                            let __frac: f64 = __q - __n0;
-                            let __abs_frac: f64 = __frac.abs();
-                            let __n: f64 = if __abs_frac < 0.5 {
-                                __n0
-                            } else {
-                                if __abs_frac > 0.5 {
-                                    __n0 + __q.signum()
-                                } else {
-                                    if ((__n0 as i64) % 2) == 0 {
-                                        __n0
-                                    } else {
-                                        __n0 + __q.signum()
-                                    }
-                                }
-                            };
-                            let __r: f64 = __x - (__n * __y);
-                            if __r == 0.0 {
-                                (0.0 as f64).copysign(__x)
-                            } else {
-                                __r
-                            }
-                        }
-                    }
-                }
-            }
-        }) < (0.0 as f64)
-    ));
-    actual.push(format!(
-        "{}",
-        ({
-            let __p = &vec![1.0 as f64, 2.0 as f64];
-            let __q = &vec![1.0 as f64];
-            if __p.len() != __q.len() {
-                f64::NAN
-            } else {
-                if __p.is_empty() {
-                    0.0
-                } else {
-                    {
-                        let mut __scale: f64 = 0.0;
-                        let mut __ssq: f64 = 1.0;
-                        for __i in 0..__p.len() {
-                            let __d: f64 = (__p[__i] - __q[__i]).abs();
-                            if __d != 0.0 {
-                                if __scale < __d {
-                                    let __r: f64 = __scale / __d;
-                                    __ssq = 1.0 + ((__ssq * __r) * __r);
-                                    __scale = __d;
-                                } else {
-                                    let __r: f64 = __d / __scale;
-                                    __ssq += __r * __r;
-                                }
-                            }
-                        }
-                        if __scale == 0.0 {
-                            0.0
-                        } else {
-                            __scale * __ssq.sqrt()
-                        }
-                    }
-                }
-            }
-        })
-        .is_nan()
-    ));
-    actual.push(format!("{}", ({
-    let __data = &vec![10000000000000000159028911097599180468360808563945281389781327557747838772170381060813469985856815104.0 as f64, 1.0 as f64, -(10000000000000000159028911097599180468360808563945281389781327557747838772170381060813469985856815104.0 as f64)];
-    let mut __sum: f64 = 0.0;
-    let mut __comp: f64 = 0.0;
-    let mut __pos_inf: bool = false;
-    let mut __neg_inf: bool = false;
-    let mut __has_nan: bool = false;
-    for __x in __data.iter() {
-        let __v: f64 = *__x;
-        if __v.is_nan() {
-            __has_nan = true;
-            continue;
-        }
-        if __v.is_infinite() {
-            if __v.is_sign_positive() {
-                __pos_inf = true;
-            } else {
-                __neg_inf = true;
-            }
-            continue;
-        }
-        let __t: f64 = __sum + __v;
-        if __sum.abs() >= __v.abs() {
-            __comp += (__sum - __t) + __v;
-        } else {
-            __comp += (__v - __t) + __sum;
-        }
-        __sum = __t;
-    }
-    if __has_nan || (__pos_inf && __neg_inf) { f64::NAN } else { if __pos_inf { f64::INFINITY } else { if __neg_inf { f64::NEG_INFINITY } else { __sum + __comp } } }
-}) == (1.0 as f64)));
-    actual.push(format!(
-        "{}",
-        ({
-            let __x: f64 = (1.0 as f64) as f64;
-            let __y: f64 = f64::INFINITY as f64;
-            if __x.is_nan() || __y.is_nan() {
-                f64::NAN
-            } else {
-                if __x == __y {
-                    __y
-                } else {
-                    if __x == 0.0 {
-                        {
-                            let __sign: u64 = if __y.is_sign_negative() {
-                                (1 as u64) << 63
-                            } else {
-                                0 as u64
-                            };
-                            f64::from_bits(__sign | (1 as u64))
-                        }
-                    } else {
-                        {
-                            let mut __bits: u64 = __x.to_bits();
-                            if (__x < __y) == (__x > 0.0) {
-                                __bits += 1 as u64;
-                            } else {
-                                __bits -= 1 as u64;
-                            }
-                            f64::from_bits(__bits)
-                        }
-                    }
-                }
-            }
-        }) > (1.0 as f64)
-    ));
-    actual.push(format!(
-        "{}",
-        ({
-            let __x: f64 = (1.0 as f64) as f64;
-            if __x.is_nan() {
-                f64::NAN
-            } else {
-                if __x.is_infinite() {
-                    f64::INFINITY
-                } else {
-                    {
-                        let __a = __x.abs();
-                        if __a == 0.0 {
-                            f64::from_bits(1 as u64)
-                        } else {
-                            if __a == f64::MAX {
-                                __a - f64::from_bits(__a.to_bits() - (1 as u64))
-                            } else {
-                                f64::from_bits(__a.to_bits() + (1 as u64)) - __a
-                            }
-                        }
-                    }
-                }
-            }
-        }) > (0.0 as f64)
-    ));
-    return actual;
+    let tiny_subnormal = 2.225_073_858_507_201_4e-308 / 2.0;
+    let p = [1.0, 2.0, 3.0];
+    let q = [4.0, 5.0, 6.0];
+
+    vec![
+        (27.0f64.cbrt() == 3.0).to_string(),
+        (3.0f64.exp2() == 8.0).to_string(),
+        (2.0f64.mul_add(3.0, 4.0) == 10.0).to_string(),
+        (log_base(32.0, 2.0) == 5.0).to_string(),
+        isclose(1e-9, 0.0, 0.9, 1e-8).to_string(),
+        (sumprod(&p, &q) == 32.0).to_string(),
+        isnormal(1.0).to_string(),
+        issubnormal(tiny_subnormal).to_string(),
+        (remainder(5.5, 2.0) < 0.0).to_string(),
+        dist(&[1.0, 2.0], &[1.0]).is_nan().to_string(),
+        (fsum(&[1e100, 1.0, -1e100]) == 1.0).to_string(),
+        (nextafter(1.0, f64::INFINITY) > 1.0).to_string(),
+        (ulp(1.0) > 0.0).to_string(),
+    ]
 }
 
 fn collect_negative_actual_false() -> Vec<bool> {
-    let actual_false: Vec<bool> = vec![
-        isclose(1.0 as f64, 1.0 as f64, -(0.1 as f64), 0.0 as f64),
-        isclose(1.0 as f64, 1.0 as f64, 0.1 as f64, -(0.1 as f64)),
-    ];
-    return actual_false;
+    vec![isclose(1.0, 1.0, -0.1, 0.0), isclose(1.0, 1.0, 0.1, -0.1)]
 }
 
 fn main() {
-    let expected: Vec<String> = vec![
+    let expected = vec![
         "true".to_string(),
         "true".to_string(),
         "true".to_string(),
@@ -456,10 +164,10 @@ fn main() {
         "true".to_string(),
         "true".to_string(),
     ];
-    let actual: Vec<String> = collect_positive_actual();
-    assert_vector_eq(&actual, &expected);
-    let expected_false: Vec<bool> = vec![false, false];
-    let actual_false: Vec<bool> = collect_negative_actual_false();
-    assert_bool_vector_eq(&actual_false, &expected_false);
+    let expected_false = vec![false, false];
+
+    assert_vector_eq(&collect_positive_actual(), &expected);
+    assert_bool_vector_eq(&collect_negative_actual_false(), &expected_false);
+
     println!("m30_1b math parity demo: pass");
 }
