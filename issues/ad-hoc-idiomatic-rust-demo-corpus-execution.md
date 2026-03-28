@@ -195,6 +195,58 @@ status: accepted_after_pass_1_and_pass_2
   - pass 1 observations about broadening API flexibility beyond the demo scope were considered but not expanded further once the `PathBuf`/`std::io::Error` cleanup landed
   - pass 2 reported no actionable issues
 
+#### batch_03_io_csv_shutil
+
+status: accepted_after_pass_1_and_pass_2
+
+- scope:
+  - `demos/io/idiomatic.rs`
+  - `demos/csv/idiomatic.rs`
+  - `demos/shutil/idiomatic.rs`
+- selection rationale:
+  - all three are positive runnable demos
+  - all three still had generated-style companions despite comparatively small file/data utility surfaces
+  - archived review history already pointed at real IO/CSV behavior and helper-shape debt rather than style-only cleanup
+- priority tags:
+  - `prior-review-flagged`: `io`, `csv`, `shutil`
+  - `stdlib-heavy`: `io`, `csv`, `shutil`
+  - `hand-authored-generated-shape`: `io`, `csv`, `shutil`
+- implementation summary:
+  - `io`: replaced the generated handle registry and error scaffolding with direct `std::fs` helpers plus a compact line-oriented read handle for the demo’s `open(...).readline()` flow
+  - `csv`: replaced the generated IO hierarchy and object scaffolding with a small Rust-first reader/writer layer and then upgraded parsing/formatting to the `csv` crate for correct RFC 4180 quoting behavior
+  - `shutil`: replaced the generated stdlib/error layers with direct filesystem wrappers, a path-search helper that checks executability, and a compact temp-path generator and disk-usage helper
+- local validation completed:
+  - `rustfmt demos/io/idiomatic.rs demos/csv/idiomatic.rs demos/shutil/idiomatic.rs`
+  - `rustc --edition=2021 demos/io/idiomatic.rs -o /tmp/sifr-idiomatic-io && /tmp/sifr-idiomatic-io`
+  - temporary Cargo compile/run for `demos/csv/idiomatic.rs` with `csv = "1"` in an isolated temp crate
+  - temporary Cargo compile/run for `demos/shutil/idiomatic.rs` with `fs2 = "0.4"` in an isolated temp crate
+  - `cargo run -q -p sifr -- run demos/io/main.sifr`
+  - `cargo run -q -p sifr -- run demos/csv/main.sifr`
+  - `cargo run -q -p sifr -- run demos/shutil/main.sifr`
+  - `scripts/run_all_tests.sh`
+  - post-pass-1 revalidation:
+    - `rustfmt demos/io/idiomatic.rs demos/csv/idiomatic.rs demos/shutil/idiomatic.rs`
+    - `rustc --edition=2021 demos/io/idiomatic.rs -o /tmp/sifr-idiomatic-io && /tmp/sifr-idiomatic-io`
+    - temporary Cargo compile/run for `demos/csv/idiomatic.rs` with `csv = "1"` in an isolated temp crate
+    - temporary Cargo compile/run for `demos/shutil/idiomatic.rs` with `fs2 = "0.4"` in an isolated temp crate
+    - `cargo run -q -p sifr -- run demos/io/main.sifr`
+    - `cargo run -q -p sifr -- run demos/csv/main.sifr`
+    - `cargo run -q -p sifr -- run demos/shutil/main.sifr`
+    - `scripts/run_all_tests.sh`
+- review artifacts:
+  - pass 1: `reviews/phase-ad-hoc-idiomatic-rust-demo-corpus-wave-2-batch-03-review-pass-1.md`
+  - pass 2: `reviews/phase-ad-hoc-idiomatic-rust-demo-corpus-wave-2-batch-03-review-pass-2.md`
+- review application summary:
+  - pass 1 valid follow-up fixes applied:
+    - `demos/io/idiomatic.rs`: removed the misleading no-op `close()` method and made the harness end the file lifetime with direct drop semantics instead
+    - `demos/csv/idiomatic.rs`: switched parsing and formatting to the `csv` crate so row/CSV helpers respect standard CSV quoting and escaping behavior
+    - `demos/shutil/idiomatic.rs`: tightened `which()` to check executability and strengthened temp-path uniqueness with a process-aware atomic suffix
+  - pass 1 observations about the `fs2` dependency and fully streaming CSV object surfaces were not accepted as blockers for this demo companion because the current shape already matches the demo-visible behavior with clear Rust-first code
+  - pass 2 reported no actionable issues
+- reviewer tooling note:
+  - direct shell-session `claude -p` launches stalled without producing review files during this batch
+  - review artifacts were captured successfully by running `claude -p --no-session-persistence --dangerously-skip-permissions ...` through a short Python subprocess wrapper and writing the returned stdout into the recorded review files
+
 ### wave_3_fixture_and_negative_case_normalization
 
 status: pending
