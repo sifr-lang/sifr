@@ -1,7 +1,6 @@
 # Reference: m27_5
 # Source issue: phase27-runtime-safety-and-diagnostics-execution.md
-# negative path: repeated diagnostics should be grouped and summarized with
-# `... +N more similar diagnostics`.
+# expect-error: SIFR-TYPE-0001: type mismatch: expected 'int', got 'str'
 
 def main():
     e1: int = "1"
