@@ -168,7 +168,7 @@ Update `audits/borrowing/POST_HARDENING_REPORT.md` to document the new ownership
 
 Create pass tests in `crates/sifr/tests/e2e/pass/`:
 
-- `borrow_default.sifr` -- function args borrowed by default, usable after call
+- `borrowed_parameters.sifr` -- function args borrowed by default, usable after call
 - `mut_param.sifr` -- `mut` parameter allows in-place mutation
 - `own_param.sifr` -- `own` parameter moves, caller loses access
 - `borrow_in_loop.sifr` -- borrowed args in loops work without issues
@@ -229,7 +229,7 @@ This milestone completes the foundation for fearless concurrency in `milestone_a
 
 - Exclusivity errors caught by `sifr check` with clear error messages
 - All 50 borrowing audit tests updated and passing/failing correctly
-- New E2E pass/fail tests for borrow_default, mut_param, own_param, exclusivity
+- New E2E pass/fail tests for borrowed_parameters, mut_param, own_param, exclusivity
 - Parser snapshot tests cover `mut`/`own` soft keyword edge cases
 - Multi-module convention tests verify `FunctionType`/`Callable` convention propagation across imports
 - Stdlib works correctly with borrow-by-default

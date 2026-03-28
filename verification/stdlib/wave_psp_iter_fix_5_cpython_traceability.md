@@ -13,15 +13,15 @@ Scope: builtin lazy/eager boundary cleanup (`filter` laziness and iterable-input
 
 | CPython family | Sifr surface direction | State | Evidence |
 | --- | --- | --- | --- |
-| `test_filter` lazy iterator contract | `filter(func, iterable)` returns lazy iterator; concrete list requires explicit `list(...)` | `adapted` (closed in wave 5) | `crates/sifr/tests/e2e/pass/phase_psp_iter_fix_5_builtin_surface_cleanup.sifr` |
-| `test_iter` builtin iterable consumers | `sum`, unary `min`, unary `max` accept general iterable inputs (including iterator values) | `adapted` (closed in wave 5) | `crates/sifr/tests/e2e/pass/phase_psp_iter_fix_5_builtin_surface_cleanup.sifr` |
-| `test_builtin` explicit collection materialization boundary | assignment to concrete list from `filter(...)` requires `list(filter(...))` | `adapted` (diagnostic closure) | `crates/sifr/tests/e2e/fail/phase_psp_iter_fix_5_filter_requires_explicit_materialization.sifr` |
+| `test_filter` lazy iterator contract | `filter(func, iterable)` returns lazy iterator; concrete list requires explicit `list(...)` | `adapted` (closed in wave 5) | `crates/sifr/tests/e2e/pass/lazy_builtins.sifr` |
+| `test_iter` builtin iterable consumers | `sum`, unary `min`, unary `max` accept general iterable inputs (including iterator values) | `adapted` (closed in wave 5) | `crates/sifr/tests/e2e/pass/lazy_builtins.sifr` |
+| `test_builtin` explicit collection materialization boundary | assignment to concrete list from `filter(...)` requires `list(filter(...))` | `adapted` (diagnostic closure) | `crates/sifr/tests/e2e/fail/filter_requires_explicit_materialization.sifr` |
 
 ## Local Fixture Anchors (Wave 5)
 
 - Positive fixture:
-  - `crates/sifr/tests/e2e/pass/phase_psp_iter_fix_5_builtin_surface_cleanup.sifr`
+  - `crates/sifr/tests/e2e/pass/lazy_builtins.sifr`
 - Negative fixture:
-  - `crates/sifr/tests/e2e/fail/phase_psp_iter_fix_5_filter_requires_explicit_materialization.sifr`
+  - `crates/sifr/tests/e2e/fail/filter_requires_explicit_materialization.sifr`
 - Demo:
   - `demos/iterator_builtins/main.sifr`

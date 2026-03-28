@@ -13,14 +13,14 @@ Scope: concrete iterator codegen pipelines for iterator-consuming builtin surfac
 
 | CPython family | Sifr surface direction | State | Evidence |
 | --- | --- | --- | --- |
-| `test_iter` iterator-consumer codegen | lower iterator consumers through canonical iterable-to-owned-iterator conversion path | `adapted` (closed in wave 3 codegen layer) | `crates/sifr/tests/e2e/pass/phase_psp_iter_fix_3_concrete_iterator_codegen.sifr` |
-| `test_filter` iterator-input closure | `filter(pred, iter(xs))` must compile through concrete iterator chain instead of unresolved builtin symbol fallback | `adapted` (closed in wave 3 codegen layer) | `crates/sifr/tests/e2e/pass/phase_psp_iter_fix_3_concrete_iterator_codegen.sifr` |
-| `test_sort` iterable-input closure | `sorted(iter(xs))` must materialize only at explicit eager boundary and accept iterator-typed sources | `adapted` (closed in wave 3 codegen layer) | `crates/sifr/tests/e2e/pass/phase_psp_iter_fix_3_concrete_iterator_codegen.sifr` |
-| `test_iter` reversible capability guard | `reversed(iter(xs))` remains rejected through explicit capability-aware typing (`Iterator[T]` is single-pass and not reversible by default) | `adapted` (guard retained) | `crates/sifr/tests/e2e/fail/phase_psp_iter_fix_1_reversed_iterator_not_reversible.sifr` |
+| `test_iter` iterator-consumer codegen | lower iterator consumers through canonical iterable-to-owned-iterator conversion path | `adapted` (closed in wave 3 codegen layer) | `crates/sifr/tests/e2e/pass/iterator_consumers.sifr` |
+| `test_filter` iterator-input closure | `filter(pred, iter(xs))` must compile through concrete iterator chain instead of unresolved builtin symbol fallback | `adapted` (closed in wave 3 codegen layer) | `crates/sifr/tests/e2e/pass/iterator_consumers.sifr` |
+| `test_sort` iterable-input closure | `sorted(iter(xs))` must materialize only at explicit eager boundary and accept iterator-typed sources | `adapted` (closed in wave 3 codegen layer) | `crates/sifr/tests/e2e/pass/iterator_consumers.sifr` |
+| `test_iter` reversible capability guard | `reversed(iter(xs))` remains rejected through explicit capability-aware typing (`Iterator[T]` is single-pass and not reversible by default) | `adapted` (guard retained) | `crates/sifr/tests/e2e/fail/reversed_iterator_not_reversible.sifr` |
 
 ## Local Fixture Anchors (Wave 3)
 
 - Positive fixture:
-  - `crates/sifr/tests/e2e/pass/phase_psp_iter_fix_3_concrete_iterator_codegen.sifr`
+  - `crates/sifr/tests/e2e/pass/iterator_consumers.sifr`
 - Demo:
   - `demos/iterator_codegen/main.sifr`

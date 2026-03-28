@@ -33,11 +33,11 @@ Scope: contract freeze and governance lock for canonical iterator semantics
 ## Local Fixture Anchors (Wave 0)
 
 - Positive fixture:
-  - `crates/sifr/tests/e2e/pass/phase_psp_iter_fix_0_architecture_lock.sifr`
+  - `crates/sifr/tests/e2e/pass/iterator_basics.sifr`
 - Demo:
   - `demos/lazy_iterators_basics/main.sifr`
 - Negative fixtures:
-  - `crates/sifr/tests/e2e/fail/phase_psp_iter_fix_0_itertools_tee_unsupported.sifr`
-  - `crates/sifr/tests/e2e/fail/phase_psp_iter_fix_0_itertools_groupby_unsupported.sifr`
-  - `crates/sifr/tests/e2e/fail/phase_psp_iter_fix_0_tuple_heterogeneous_iteration_unsupported.sifr`
-  - `crates/sifr/tests/e2e/fail/phase_psp_b2_itertools_starmap_non_binary_callable.sifr`
+  - `crates/sifr/tests/e2e/fail/itertools_tee_unsupported.sifr`
+  - `crates/sifr/tests/e2e/fail/itertools_groupby_unsupported.sifr`
+  - `crates/sifr/tests/e2e/fail/tuple_heterogeneous_iteration_unsupported.sifr`
+  - `crates/sifr/tests/e2e/fail/itertools_starmap_non_binary_callable.sifr`

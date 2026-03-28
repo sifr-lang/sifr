@@ -1,9 +1,10 @@
+# Reference: phase_psp_bytes_3_downstream_contract_alignment
 from sifr.io import exists
 from sifr.os import remove_file
 
 
 def main():
-    path: str = "/tmp/sifr_phase_psp_bytes_3_io_contract.bin"
+    path: str = "/tmp/sifr_bytes_file_io.bin"
     wrote: bool = False
     read_ok: bool = False
     cleanup: bool = False

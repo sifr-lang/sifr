@@ -1,3 +1,4 @@
+# Reference: wave_clone_1_iterator_comprehension_ownership
 def main():
     nums: list[int] = [1, 2, 3, 4]
 
@@ -38,4 +39,4 @@ def main():
     indexed: list[tuple[int, int]] = list(enumerate(nums))
     assert str(indexed) == "[(0, 1), (1, 2), (2, 3), (3, 4)]"
 
-    print("wave_clone_1_iterator_comprehension_ownership: pass")
+    print("iterator_pipeline_cloning: pass")

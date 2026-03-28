@@ -1,3 +1,4 @@
+# Reference: phase_psp_rng_1_stateful_random_object_model
 from sifr.random import Random, RandomState, getstate, randint, randbytes, random, seed, setstate
 from sifr.test import assert_eq, assert_true
 
@@ -46,6 +47,6 @@ def main():
         assert_eq(len(bytes_a), 8)
         assert_eq(str(bytes_a), str(bytes_b))
     except ValueError as e:
-        assert str("unexpected random error: " + e.message) == "phase_psp_rng_1_stateful_random_object_model: pass"
+        assert str("unexpected random error: " + e.message) == "stateful_random: pass"
 
-    assert str("phase_psp_rng_1_stateful_random_object_model: pass") == "phase_psp_rng_1_stateful_random_object_model: pass"
+    assert str("stateful_random: pass") == "stateful_random: pass"

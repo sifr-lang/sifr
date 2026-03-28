@@ -1,3 +1,4 @@
+# Reference: phase_psp_runtime_1_io_in_memory_stream_hierarchy
 from sifr.io import StringIO, BytesIO, BinaryFileHandle, open_binary, exists, write_text
 from sifr.os import remove_file
 from sifr.test import assert_bool_vector_eq
@@ -15,7 +16,7 @@ def main() -> None:
     binary_file_ok: bool = False
     cleanup_ok: bool = False
 
-    path: str = "/tmp/sifr_phase_psp_runtime_1_binary.bin"
+    path: str = "/tmp/sifr_in_memory_streams_binary.bin"
 
     try:
         sio: StringIO = StringIO("abc")

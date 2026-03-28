@@ -1,3 +1,4 @@
+# Reference: phase_psp_iter_fix_7_invalid_next_signature
 # expect-error: SIFR-TYPE-0001: class 'BadNext.__next__' must return 'T | None'
 class BadNext:
     def __iter__(self) -> Iterator[int]:

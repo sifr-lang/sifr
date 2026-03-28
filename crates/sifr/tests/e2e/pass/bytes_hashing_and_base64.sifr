@@ -1,3 +1,4 @@
+# Reference: phase_psp_rng_2_hashlib_base64_bytes_native_surface
 from sifr.base64 import (
     b64decode_bytes, b64encode_bytes,
     standard_b64decode_bytes, standard_b64encode_bytes,
@@ -61,8 +62,8 @@ def main() -> None:
         except ParseError as e:
             assert_true(len(e.message) > 0)
     except ValueError as e:
-        assert str("unexpected value error: " + e.message) == "phase_psp_rng_2_hashlib_base64_bytes_native_surface: pass"
+        assert str("unexpected value error: " + e.message) == "bytes_hashing_and_base64: pass"
     except ParseError as e:
-        assert str("unexpected parse error: " + e.message) == "phase_psp_rng_2_hashlib_base64_bytes_native_surface: pass"
+        assert str("unexpected parse error: " + e.message) == "bytes_hashing_and_base64: pass"
 
-    assert str("phase_psp_rng_2_hashlib_base64_bytes_native_surface: pass") == "phase_psp_rng_2_hashlib_base64_bytes_native_surface: pass"
+    assert str("bytes_hashing_and_base64: pass") == "bytes_hashing_and_base64: pass"

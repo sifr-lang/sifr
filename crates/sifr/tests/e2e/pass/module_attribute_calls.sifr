@@ -1,3 +1,4 @@
+# Reference: phase31_python_module_attr_compat
 # Phase 31 regression: Python-style math module attribute calls resolve without explicit imports.
 
 def reverse_last_digit(x: int) -> int:

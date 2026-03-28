@@ -1,3 +1,4 @@
+# Reference: phase_psp_iter_fix_7_invalid_reversed_signature
 # expect-error: SIFR-TYPE-0001: class 'BadReversed.__reversed__' must return 'Iterator[T]' or 'Iterable[T]'
 class BadReversed:
     def __iter__(self) -> Iterator[int]:

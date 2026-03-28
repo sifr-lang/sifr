@@ -1,3 +1,4 @@
+# Reference: phase_psp_rng_3_textwrap_formatter_options
 from sifr.test import assert_eq
 from sifr.textwrap import TextWrapper
 
@@ -15,4 +16,4 @@ def main() -> None:
     sentence_fill: str = sentence_wrapper.fill("Hello. World. Done!")
     assert_eq(sentence_fill, "Hello.  World.  Done!")
 
-    assert str("phase_psp_rng_3_textwrap_formatter_options: pass") == "phase_psp_rng_3_textwrap_formatter_options: pass"
+    assert str("textwrapper_options: pass") == "textwrapper_options: pass"

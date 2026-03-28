@@ -1,3 +1,4 @@
+# Reference: phase_psp_runtime_2_tempfile_zipfile_lifecycle
 from sifr.tempfile import NamedTemporaryFile, TemporaryDirectory
 from sifr.zipfile import ZipFile, ZipReadHandle, is_zipfile, ZIP_STORED, ZIP_DEFLATED
 from sifr.io import exists
@@ -21,10 +22,10 @@ def main() -> None:
     zip_is_zipfile_ok: bool = False
     zip_cleanup_ok: bool = False
 
-    zip_path: str = "/tmp/sifr_phase_psp_runtime_2_archive.zip"
+    zip_path: str = "/tmp/sifr_tempfile_and_zipfile_archive.zip"
 
     try:
-        ntf_delete: NamedTemporaryFile = NamedTemporaryFile("w+", True, "sifr_phase_psp_runtime_2_del_")
+        ntf_delete: NamedTemporaryFile = NamedTemporaryFile("w+", True, "sifr_tempfile_and_zipfile_del_")
         delete_path: str = ntf_delete.name()
         before_close: bool = exists(delete_path)
         _close_delete: None = ntf_delete.close()
@@ -34,7 +35,7 @@ def main() -> None:
         _ = e.message
 
     try:
-        ntf_keep: NamedTemporaryFile = NamedTemporaryFile("wb", False, "sifr_phase_psp_runtime_2_keep_")
+        ntf_keep: NamedTemporaryFile = NamedTemporaryFile("wb", False, "sifr_tempfile_and_zipfile_keep_")
         keep_path: str = ntf_keep.name()
         _close_keep: None = ntf_keep.close()
         exists_after_close: bool = exists(keep_path)
@@ -45,7 +46,7 @@ def main() -> None:
         _ = e.message
 
     try:
-        tempdir: TemporaryDirectory = TemporaryDirectory("sifr_phase_psp_runtime_2_dir_")
+        tempdir: TemporaryDirectory = TemporaryDirectory("sifr_tempfile_and_zipfile_dir_")
         td_path: str = tempdir.name()
         created: bool = exists(td_path)
         _cleanup_tempdir: None = tempdir.cleanup()

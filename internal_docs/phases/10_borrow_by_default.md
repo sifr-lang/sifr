@@ -64,7 +64,7 @@ status: completed
 - Consuming-self method receivers work correctly in codegen
 - For-loop element semantics resolved, implemented, documented, and tested
 - All 50 borrowing audit tests updated and passing/failing correctly
-- New E2E pass/fail tests for borrow_default, mut_param, own_param, exclusivity, escape-analysis, consuming-self, for-loop elements
+- New E2E pass/fail tests for borrowed_parameters, mut_param, own_param, exclusivity, escape-analysis, consuming-self, for-loop elements
 - Parser snapshot tests cover `mut`/`own` soft keyword edge cases
 - Multi-module convention tests verify `FunctionType`/`Callable` convention propagation across imports
 - 7 known codegen regressions from the borrowing audit fixed

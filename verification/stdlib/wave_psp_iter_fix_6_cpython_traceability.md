@@ -53,7 +53,7 @@ Inherited iterator-returning runtime/file surfaces now compose with iterator-fir
 - `Path.iterdir()` + `islice(...)`
 - `Path.rglob()` + `islice(...)`
 
-This is validated in `phase_psp_iter_fix_6_itertools_iterable_stdlib_closure.sifr`.
+This is validated in `iterable_stdlib.sifr`.
 
 Cross-check:
 

@@ -1,3 +1,4 @@
+# Reference: wave_clone_3_generic_hardening_ownership
 def first_or_none[T](items: list[T]) -> T | None:
     if len(items) == 0:
         return None
@@ -30,4 +31,4 @@ def main():
         seen = seen + 1
     assert seen == 0
 
-    print("wave_clone_3_generic_hardening_ownership: pass")
+    print("generic_cloning: pass")

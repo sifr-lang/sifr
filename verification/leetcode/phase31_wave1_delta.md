@@ -25,11 +25,11 @@
   - `cargo test -p sifr_codegen lowers_simple_tuple_unpack_stmt_with_mutated_bindings -- --nocapture`
   - `cargo test -p sifr_hir test_user_defined_sum_shadows_builtin`
 - E2E pass fixtures:
-  - `crates/sifr/tests/e2e/pass/phase31_tuple_unpack_mutability.sifr`
-  - `crates/sifr/tests/e2e/pass/phase31_mutated_borrowed_param_shadow.sifr`
-  - `crates/sifr/tests/e2e/pass/phase31_builtin_shadow_sum.sifr`
+  - `crates/sifr/tests/e2e/pass/tuple_unpack_reassignment.sifr`
+  - `crates/sifr/tests/e2e/pass/borrowed_param_shadowing.sifr`
+  - `crates/sifr/tests/e2e/pass/function_shadowing_builtin_sum.sifr`
 - E2E fail fixture:
-  - `crates/sifr/tests/e2e/fail/phase31_builtin_sum_wrong_arity.sifr`
+  - `crates/sifr/tests/e2e/fail/builtin_sum_wrong_arity.sifr`
 
 ## Runner Determinism Check
 

@@ -59,13 +59,13 @@ Current `logging` file-sink behavior is intentionally fail-soft in this architec
 
 | Surface | Classification | Enforcement fixture |
 | --- | --- | --- |
-| Full CPython `_pyio` inheritance graph (`BufferedReader`, `BufferedWriter`, `BufferedRWPair`, `BufferedRandom`) | `unsupported` | `crates/sifr/tests/e2e/fail/phase_psp_runtime_0_pyio_inheritance_unsupported.sifr` |
-| Async `subprocess.Popen` lifecycle/orchestration | `unsupported` | `crates/sifr/tests/e2e/fail/phase_psp_runtime_0_async_popen_unsupported.sifr` |
-| Dynamic logging graph/config APIs (`dictConfig`, dynamic handler graph wiring) | `unsupported` | `crates/sifr/tests/e2e/fail/phase_psp_runtime_0_logging_dictconfig_unsupported.sifr` |
-| Thread-aware logging ordering guarantees (`LoggerAdapter`-style threading contracts) | `unsupported` | `crates/sifr/tests/e2e/fail/phase_psp_runtime_0_logging_loggeradapter_unsupported.sifr` |
-| `SpooledTemporaryFile` parity | `unsupported` | `crates/sifr/tests/e2e/fail/phase_psp_runtime_0_spooled_tempfile_unsupported.sifr` |
-| String-eval `timeit` execution model | `unsupported` | `crates/sifr/tests/e2e/fail/phase_psp_runtime_0_timeit_string_eval_unsupported.sifr` |
-| Timezone mutation helpers (`tzset`/mutable timezone state) | `unsupported` | `crates/sifr/tests/e2e/fail/phase_psp_runtime_0_timezone_mutation_unsupported.sifr` |
+| Full CPython `_pyio` inheritance graph (`BufferedReader`, `BufferedWriter`, `BufferedRWPair`, `BufferedRandom`) | `unsupported` | `crates/sifr/tests/e2e/fail/pyio_inheritance_unsupported.sifr` |
+| Async `subprocess.Popen` lifecycle/orchestration | `unsupported` | `crates/sifr/tests/e2e/fail/async_popen_unsupported.sifr` |
+| Dynamic logging graph/config APIs (`dictConfig`, dynamic handler graph wiring) | `unsupported` | `crates/sifr/tests/e2e/fail/logging_dictconfig_unsupported.sifr` |
+| Thread-aware logging ordering guarantees (`LoggerAdapter`-style threading contracts) | `unsupported` | `crates/sifr/tests/e2e/fail/logging_loggeradapter_unsupported.sifr` |
+| `SpooledTemporaryFile` parity | `unsupported` | `crates/sifr/tests/e2e/fail/spooled_tempfile_unsupported.sifr` |
+| String-eval `timeit` execution model | `unsupported` | `crates/sifr/tests/e2e/fail/timeit_string_eval_unsupported.sifr` |
+| Timezone mutation helpers (`tzset`/mutable timezone state) | `unsupported` | `crates/sifr/tests/e2e/fail/timezone_mutation_unsupported.sifr` |
 
 ## CPython Family Mapping (Wave Ownership)
 
@@ -81,16 +81,16 @@ Current `logging` file-sink behavior is intentionally fail-soft in this architec
 
 ## Architecture-Lock Validation Artifacts (Wave 0)
 
-- Positive lock fixture: `crates/sifr/tests/e2e/pass/phase_psp_runtime_0_architecture_lock.sifr`
+- Positive lock fixture: `crates/sifr/tests/e2e/pass/runtime_file_basics.sifr`
 - Wave-0 demos:
   - `demos/file_streams/main.sifr`
   - `demos/tempfiles_and_zip/main.sifr`
   - `demos/binary_files/main.sifr`
 - Permanent-diff negative fixtures:
-  - `crates/sifr/tests/e2e/fail/phase_psp_runtime_0_pyio_inheritance_unsupported.sifr`
-  - `crates/sifr/tests/e2e/fail/phase_psp_runtime_0_async_popen_unsupported.sifr`
-  - `crates/sifr/tests/e2e/fail/phase_psp_runtime_0_logging_dictconfig_unsupported.sifr`
-  - `crates/sifr/tests/e2e/fail/phase_psp_runtime_0_logging_loggeradapter_unsupported.sifr`
-  - `crates/sifr/tests/e2e/fail/phase_psp_runtime_0_spooled_tempfile_unsupported.sifr`
-  - `crates/sifr/tests/e2e/fail/phase_psp_runtime_0_timeit_string_eval_unsupported.sifr`
-  - `crates/sifr/tests/e2e/fail/phase_psp_runtime_0_timezone_mutation_unsupported.sifr`
+  - `crates/sifr/tests/e2e/fail/pyio_inheritance_unsupported.sifr`
+  - `crates/sifr/tests/e2e/fail/async_popen_unsupported.sifr`
+  - `crates/sifr/tests/e2e/fail/logging_dictconfig_unsupported.sifr`
+  - `crates/sifr/tests/e2e/fail/logging_loggeradapter_unsupported.sifr`
+  - `crates/sifr/tests/e2e/fail/spooled_tempfile_unsupported.sifr`
+  - `crates/sifr/tests/e2e/fail/timeit_string_eval_unsupported.sifr`
+  - `crates/sifr/tests/e2e/fail/timezone_mutation_unsupported.sifr`

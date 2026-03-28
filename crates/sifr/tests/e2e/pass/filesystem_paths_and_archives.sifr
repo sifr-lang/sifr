@@ -1,3 +1,4 @@
+# Reference: phase_psp_d1_filesystem_paths_archives
 from sifr.io import open, read_text, write_text, exists
 from sifr.pathlib import Path
 from sifr.glob import glob
@@ -11,7 +12,7 @@ from sifr.test import assert_bool_vector_eq
 
 def collect_io_path_glob_actual() -> list[bool]:
     actual: list[bool] = []
-    base: str = "/tmp/sifr_phase_psp_d1_fixture_root"
+    base: str = "/tmp/sifr_filesystem_paths_and_archives_root"
     path: str = base + "/alpha.txt"
     sub_path: str = base + "/sub/beta.txt"
 
@@ -69,11 +70,11 @@ def collect_shutil_temp_actual() -> list[bool]:
     temp_cleanup_ok: bool = False
 
     try:
-        tree: str = mkdtemp("sifr_phase_psp_d1_tree_")
+        tree: str = mkdtemp("sifr_filesystem_paths_and_archives_tree_")
         src: str = tree + "/src.txt"
         copied: str = tree + "/copied.txt"
         moved: str = tree + "/moved.txt"
-        temp_file: str = mkstemp("sifr_phase_psp_d1_file_")
+        temp_file: str = mkstemp("sifr_filesystem_paths_and_archives_file_")
 
         _w: None = write_text(src, "wave-d1")
         _cp: None = copy(src, copied)
@@ -145,7 +146,7 @@ def collect_gzip_zip_actual() -> list[bool]:
         _ = e.message
         invalid_gzip_rejected = True
 
-    zip_path: str = "/tmp/sifr_phase_psp_d1_fixture_zip.zip"
+    zip_path: str = "/tmp/sifr_filesystem_paths_and_archives.zip"
     archive: ZipFile = ZipFile(zip_path + "")
     try:
         _create: None = archive.create()
@@ -187,4 +188,4 @@ def main():
     append_all(actual, collect_gzip_zip_actual())
 
     assert_bool_vector_eq(actual, expected)
-    assert str("phase_psp_d1_filesystem_paths_archives: pass") == "phase_psp_d1_filesystem_paths_archives: pass"
+    assert str("filesystem_paths_and_archives: pass") == "filesystem_paths_and_archives: pass"

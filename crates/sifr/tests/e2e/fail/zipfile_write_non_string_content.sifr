@@ -1,7 +1,8 @@
+# Reference: phase_psp_d1_zipfile_write_non_string_content
 from sifr.zipfile import ZipFile
 
 
 def main():
-    archive: ZipFile = ZipFile("/tmp/phase_psp_d1_bad.zip")
+    archive: ZipFile = ZipFile("/tmp/zipfile_write_non_string_content_bad.zip")
     _c: None = archive.create()
     _w: None = archive.write("bytes.bin", [1, 2, 3])

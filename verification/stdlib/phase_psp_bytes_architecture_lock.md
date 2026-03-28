@@ -20,12 +20,12 @@ Lock one canonical binary carrier (`bytes`), one explicit text/binary boundary, 
 
 | Surface | Classification | Enforcement fixture |
 | --- | --- | --- |
-| Mutable `bytearray` object-model parity | `unsupported` | `crates/sifr/tests/e2e/fail/phase_psp_bytes_0_bytearray_unsupported.sifr` |
-| `memoryview` object-model parity | `unsupported` | `crates/sifr/tests/e2e/fail/phase_psp_bytes_0_memoryview_unsupported.sifr` |
-| CPython buffer protocol / bytes-like duck typing | `unsupported` | `crates/sifr/tests/e2e/fail/phase_psp_bytes_0_buffer_protocol_unsupported.sifr` |
-| Implicit `str` <-> binary coercions | `unsupported` | `crates/sifr/tests/e2e/fail/phase_psp_bytes_0_implicit_str_bytes_coercion_unsupported.sifr` |
-| Non-UTF-8 codec families | `unsupported` | `crates/sifr/tests/e2e/fail/phase_psp_bytes_0_non_utf8_codec_unsupported.sifr` |
-| `bytes`/`bytearray` subclass ecosystems | `unsupported` | `crates/sifr/tests/e2e/fail/phase_psp_bytes_0_bytes_subclass_unsupported.sifr` |
+| Mutable `bytearray` object-model parity | `unsupported` | `crates/sifr/tests/e2e/fail/bytes_bytearray_unsupported.sifr` |
+| `memoryview` object-model parity | `unsupported` | `crates/sifr/tests/e2e/fail/bytes_memoryview_unsupported.sifr` |
+| CPython buffer protocol / bytes-like duck typing | `unsupported` | `crates/sifr/tests/e2e/fail/bytes_buffer_protocol_unsupported.sifr` |
+| Implicit `str` <-> binary coercions | `unsupported` | `crates/sifr/tests/e2e/fail/bytes_implicit_str_bytes_coercion_unsupported.sifr` |
+| Non-UTF-8 codec families | `unsupported` | `crates/sifr/tests/e2e/fail/bytes_non_utf8_codec_unsupported.sifr` |
+| `bytes`/`bytearray` subclass ecosystems | `unsupported` | `crates/sifr/tests/e2e/fail/bytes_bytes_subclass_unsupported.sifr` |
 
 ## Parser/AST Scope Lock (Pre-existing Support)
 
@@ -39,21 +39,21 @@ Lock one canonical binary carrier (`bytes`), one explicit text/binary boundary, 
 
 | CPython family | Direction | Owning wave | Local anchor |
 | --- | --- | --- | --- |
-| `Lib/test/test_bytes.py` core immutable object model and constructor/index/slice behaviors | `adapted` | `wave_psp_bytes_1` + `wave_psp_bytes_2` | `crates/sifr/tests/e2e/pass/phase_psp_bytes_1_core_type_support.sifr` (planned), `crates/sifr/tests/e2e/pass/phase_psp_bytes_2_conversion_migration.sifr` (planned) |
+| `Lib/test/test_bytes.py` core immutable object model and constructor/index/slice behaviors | `adapted` | `wave_psp_bytes_1` + `wave_psp_bytes_2` | `crates/sifr/tests/e2e/pass/bytes_basics.sifr`, `crates/sifr/tests/e2e/pass/bytes_constructors.sifr` |
 | `Lib/test/test_base64.py` binary payload pathways | `adapted` | `wave_psp_bytes_3` | downstream contract rewiring and parity-ledger updates |
 | `Lib/test/test_hashlib.py` digest/update binary pathways | `adapted` | `wave_psp_bytes_3` | downstream contract rewiring and parity-ledger updates |
 | `Lib/test/test_io/` binary file-handle pathways | `adapted` | `wave_psp_bytes_3` | downstream contract rewiring and parity-ledger updates |
 
 ## Architecture-Lock Validation Fixtures (Wave 0)
 
-- Positive path fixture: `crates/sifr/tests/e2e/pass/phase_psp_bytes_0_architecture_lock.sifr`
+- Positive path fixture: `crates/sifr/tests/e2e/pass/bytes_helpers.sifr`
 - Wave-0 demos:
   - `demos/bytes_roundtrip/main.sifr`
   - `demos/text_and_bytes/main.sifr`
 - Permanent-diff negative fixtures:
-  - `crates/sifr/tests/e2e/fail/phase_psp_bytes_0_bytearray_unsupported.sifr`
-  - `crates/sifr/tests/e2e/fail/phase_psp_bytes_0_memoryview_unsupported.sifr`
-  - `crates/sifr/tests/e2e/fail/phase_psp_bytes_0_buffer_protocol_unsupported.sifr`
-  - `crates/sifr/tests/e2e/fail/phase_psp_bytes_0_implicit_str_bytes_coercion_unsupported.sifr`
-  - `crates/sifr/tests/e2e/fail/phase_psp_bytes_0_non_utf8_codec_unsupported.sifr`
-  - `crates/sifr/tests/e2e/fail/phase_psp_bytes_0_bytes_subclass_unsupported.sifr`
+  - `crates/sifr/tests/e2e/fail/bytes_bytearray_unsupported.sifr`
+  - `crates/sifr/tests/e2e/fail/bytes_memoryview_unsupported.sifr`
+  - `crates/sifr/tests/e2e/fail/bytes_buffer_protocol_unsupported.sifr`
+  - `crates/sifr/tests/e2e/fail/bytes_implicit_str_bytes_coercion_unsupported.sifr`
+  - `crates/sifr/tests/e2e/fail/bytes_non_utf8_codec_unsupported.sifr`
+  - `crates/sifr/tests/e2e/fail/bytes_bytes_subclass_unsupported.sifr`

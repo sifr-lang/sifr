@@ -64,7 +64,7 @@ Implementation invariant:
 
 ## Wave-0 Lock Artifacts
 
-- positive fixture: `crates/sifr/tests/e2e/pass/wave_clone_0_architecture_lock.sifr`
+- positive fixture: `crates/sifr/tests/e2e/pass/collection_cloning.sifr`
 - demo: `demos/collection_cloning/main.sifr`
 - ownership-safety negative anchor selected for later regression locking:
   - `crates/sifr/tests/e2e/fail/borrow_escape_store.sifr`

@@ -1,3 +1,4 @@
+# Reference: zero_panic_gate
 
 # Comprehensive E2E test: every fallible stdlib function with invalid input
 # Must compile and run without panicking, handling all errors via try/except
@@ -187,7 +188,7 @@ def main():
         edge_errors = edge_errors + 1
 
     if edge_errors == 9:
-        assert str("edge_case_safety: all errors caught") == 'edge_case_safety: all errors caught'
+        assert str("panic_free_stdlib_errors: all errors caught") == 'panic_free_stdlib_errors: all errors caught'
 
     # === 5. Subscript Safety ===
 

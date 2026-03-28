@@ -1,2 +1,3 @@
+# Reference: phase_psp_bytes_0_bytearray_unsupported
 def main() -> None:
     _ = bytearray([1, 2, 3])

@@ -240,7 +240,7 @@ status: completed
 - `stdlib_invalid_module.sifr` -- import nonexistent `sifr.nonexistent`
 - `stdlib_wrong_type.sifr` -- pass wrong type to stdlib function
 - `stdlib_missing_function.sifr` -- import nonexistent function from valid module
-- `stdlib_intrinsic_direct_v2.sifr` -- another `_sifr.*` direct import attempt
+- `stdlib_intrinsic_direct_import.sifr` -- another `_sifr.*` direct import attempt
 - `stdlib_readonly_param.sifr` -- attempt to mutate a borrowed stdlib parameter
 
 ### Cleanup

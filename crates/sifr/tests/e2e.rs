@@ -2391,7 +2391,7 @@ fn test_emit_pass_fixtures_do_not_include_unwrap_or_expect() {
 #[test]
 fn test_codegen_structured_lowering_ratio_gate_stmt_expr_corpus() {
     let pass_dir = Path::new("tests/e2e/pass");
-    let corpus = ["codegen_structured_ratio_gate"];
+    let corpus = ["statement_expression_lowering"];
 
     let mut total_stmt_candidate = 0_u64;
     let mut total_stmt_candidate_structured = 0_u64;

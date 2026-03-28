@@ -14,8 +14,8 @@ Scope: raw-byte backend storage and bytes/list lowering disentanglement
 
 | CPython family | Sifr surface direction | State | Local regression/demo |
 | --- | --- | --- | --- |
-| `test_bytes` immutable bytes storage/index/iteration families | typed `bytes` remains immutable and index/iteration continue yielding `int`, with raw-byte backend (`Vec<u8>`) and widening only at read boundaries | `adapted` (closed for wave-4 scope) | `crates/sifr/tests/e2e/pass/phase_psp_bytes_4_raw_backend_and_lowering_separation.sifr`<br>`demos/binary_storage/main.sifr` |
-| `test_io` binary file-handle pathways | typed `bytes` file paths (`read_bytes`/`write_bytes`) keep public behavior and remove internal widened-storage bounce | `adapted` | `crates/sifr/tests/e2e/pass/phase_psp_bytes_4_raw_backend_and_lowering_separation.sifr`<br>`crates/sifr/tests/e2e/pass/cpython_io_subset.sifr` |
+| `test_bytes` immutable bytes storage/index/iteration families | typed `bytes` remains immutable and index/iteration continue yielding `int`, with raw-byte backend (`Vec<u8>`) and widening only at read boundaries | `adapted` (closed for wave-4 scope) | `crates/sifr/tests/e2e/pass/bytes_hex_and_binary_io.sifr`<br>`demos/binary_storage/main.sifr` |
+| `test_io` binary file-handle pathways | typed `bytes` file paths (`read_bytes`/`write_bytes`) keep public behavior and remove internal widened-storage bounce | `adapted` | `crates/sifr/tests/e2e/pass/bytes_hex_and_binary_io.sifr`<br>`crates/sifr/tests/e2e/pass/cpython_io_subset.sifr` |
 | `test_base64` binary payload boundaries | keep current text-friendly API while preserving first-class typed bytes conversion boundaries on raw-byte backend | `adapted` | `crates/sifr/tests/e2e/pass/stdlib_base64_intrinsics.sifr` |
 | `test_hashlib` binary payload boundaries | keep current string-input/hex-digest shipped surface while preserving bytes-carrier contract for successor bytes-native digest APIs | `adapted` (contract preserved) | `crates/sifr/tests/e2e/pass/cpython_hashlib_object_model_subset.sifr` |
 
@@ -32,12 +32,12 @@ Scope: raw-byte backend storage and bytes/list lowering disentanglement
 ## Local fixture anchors (wave 4)
 
 - Pass fixtures:
-  - `crates/sifr/tests/e2e/pass/phase_psp_bytes_4_raw_backend_and_lowering_separation.sifr`
+  - `crates/sifr/tests/e2e/pass/bytes_hex_and_binary_io.sifr`
   - `crates/sifr/tests/e2e/pass/cpython_hashlib_object_model_subset.sifr`
   - `crates/sifr/tests/e2e/pass/stdlib_base64_intrinsics.sifr`
 - Fail fixtures:
-  - `crates/sifr/tests/e2e/fail/phase_psp_bytes_2_from_ints_non_int_list.sifr`
-  - `crates/sifr/tests/e2e/fail/phase_psp_bytes_3_write_bytes_rejects_int_list.sifr`
-  - `crates/sifr/tests/e2e/fail/phase_psp_bytes_3_read_bytes_not_list.sifr`
+  - `crates/sifr/tests/e2e/fail/bytes_from_ints_non_int_list.sifr`
+  - `crates/sifr/tests/e2e/fail/bytes_write_bytes_rejects_int_list.sifr`
+  - `crates/sifr/tests/e2e/fail/bytes_read_bytes_not_list.sifr`
 - Demo:
   - `demos/binary_storage/main.sifr`

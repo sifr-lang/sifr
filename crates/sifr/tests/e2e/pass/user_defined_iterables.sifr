@@ -1,3 +1,4 @@
+# Reference: phase_psp_iter_fix_7_user_defined_iterable_protocol
 from sifr.test import assert_bool_vector_eq
 
 
@@ -64,4 +65,4 @@ def main():
 
     expected: list[bool] = [True, True, True, True, True, True]
     assert_bool_vector_eq(actual, expected)
-    assert str("phase_psp_iter_fix_7_user_defined_iterable_protocol: pass") == "phase_psp_iter_fix_7_user_defined_iterable_protocol: pass"
+    assert str("user_defined_iterables: pass") == "user_defined_iterables: pass"

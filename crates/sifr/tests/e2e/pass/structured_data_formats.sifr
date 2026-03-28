@@ -1,3 +1,4 @@
+# Reference: phase_psp_c1_structured_parsing_serialization
 from sifr.csv import (
     QUOTE_ALL,
     DictReader,
@@ -289,4 +290,4 @@ def main() -> None:
         actual.append(value)
 
     assert_bool_vector_eq(actual, expected)
-    assert str("phase_psp_c1_structured_parsing_serialization: pass") == "phase_psp_c1_structured_parsing_serialization: pass"
+    assert str("structured_data_formats: pass") == "structured_data_formats: pass"

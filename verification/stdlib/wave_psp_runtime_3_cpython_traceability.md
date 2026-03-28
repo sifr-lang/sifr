@@ -13,13 +13,13 @@ Scope: `logging`, `time`, and `timeit` object-surface expansion
 
 | CPython family | Sifr surface direction | State | Local anchor |
 | --- | --- | --- | --- |
-| `test_logging` logger core (`Logger`, level controls, constants, `basicConfig`, `getLogger`) | ship deterministic single-process logger object model with explicit level filtering and sink control | `adapted` | `crates/sifr/tests/e2e/pass/phase_psp_runtime_3_logging_time_timeit_object_surface.sifr`, `crates/sifr/tests/e2e/pass/stdlib_logging_consolidated.sifr` |
+| `test_logging` logger core (`Logger`, level controls, constants, `basicConfig`, `getLogger`) | ship deterministic single-process logger object model with explicit level filtering and sink control | `adapted` | `crates/sifr/tests/e2e/pass/logging_time_and_timers.sifr`, `crates/sifr/tests/e2e/pass/stdlib_logging_consolidated.sifr` |
 | `test_logging` handler classes (`Handler`, `StreamHandler`, `FileHandler`, `NullHandler`, `Formatter`) | ship class surfaces and deterministic handler gating under synchronous host model | `adapted` | `crates/sifr/tests/e2e/pass/cpython_logging_subset.sifr`, `demos/logging_and_timers/main.sifr` |
 | `test_time` structured clock objects (`struct_time`, `mktime`, timezone constants) | ship immutable `struct_time` and explicit struct wrappers (`gmtime_struct`, `localtime_struct`) over intrinsic ISO clock strings | `adapted` | `crates/sifr/tests/e2e/pass/cpython_time_subset.sifr`, `crates/sifr/tests/e2e/pass/stdlib_time_consolidated.sifr` |
 | `test_timeit` callable timing API (`default_timer`, `timeit`, `repeat`, `Timer`) | ship callable-only timer model including `Timer.timeit`, `Timer.repeat`, and `Timer.__call__` | `adapted` | `crates/sifr/tests/e2e/pass/cpython_timeit_subset.sifr`, `crates/sifr/tests/e2e/pass/stdlib_timeit_consolidated.sifr` |
-| logging graph configuration (`dictConfig`, `LoggerAdapter`) | keep explicitly unsupported (locked from wave 0) | `unsupported` | `crates/sifr/tests/e2e/fail/phase_psp_runtime_0_logging_dictconfig_unsupported.sifr`, `crates/sifr/tests/e2e/fail/phase_psp_runtime_0_logging_loggeradapter_unsupported.sifr` |
-| timeit string-eval statements | keep explicitly unsupported; callable-only execution model remains enforced | `unsupported` | `crates/sifr/tests/e2e/fail/phase_psp_runtime_0_timeit_string_eval_unsupported.sifr` |
-| timezone mutation helpers (`tzset`, mutable timezone env surfaces) | keep explicitly unsupported; stable constants only | `unsupported` | `crates/sifr/tests/e2e/fail/phase_psp_runtime_0_timezone_mutation_unsupported.sifr` |
+| logging graph configuration (`dictConfig`, `LoggerAdapter`) | keep explicitly unsupported (locked from wave 0) | `unsupported` | `crates/sifr/tests/e2e/fail/logging_dictconfig_unsupported.sifr`, `crates/sifr/tests/e2e/fail/logging_loggeradapter_unsupported.sifr` |
+| timeit string-eval statements | keep explicitly unsupported; callable-only execution model remains enforced | `unsupported` | `crates/sifr/tests/e2e/fail/timeit_string_eval_unsupported.sifr` |
+| timezone mutation helpers (`tzset`, mutable timezone env surfaces) | keep explicitly unsupported; stable constants only | `unsupported` | `crates/sifr/tests/e2e/fail/timezone_mutation_unsupported.sifr` |
 
 ## Explicit Waivers / Boundaries (Wave 3)
 
@@ -33,7 +33,7 @@ Scope: `logging`, `time`, and `timeit` object-surface expansion
 ## Local Fixture Anchors (Wave 3)
 
 - Positive fixture:
-  - `crates/sifr/tests/e2e/pass/phase_psp_runtime_3_logging_time_timeit_object_surface.sifr`
+  - `crates/sifr/tests/e2e/pass/logging_time_and_timers.sifr`
 - Demo:
   - `demos/logging_and_timers/main.sifr`
 - Consolidated/CPython regressions:
@@ -44,7 +44,7 @@ Scope: `logging`, `time`, and `timeit` object-surface expansion
   - `crates/sifr/tests/e2e/pass/stdlib_timeit_consolidated.sifr`
   - `crates/sifr/tests/e2e/pass/cpython_timeit_subset.sifr`
 - Negative fixtures:
-  - `crates/sifr/tests/e2e/fail/phase_psp_runtime_0_logging_dictconfig_unsupported.sifr`
-  - `crates/sifr/tests/e2e/fail/phase_psp_runtime_0_logging_loggeradapter_unsupported.sifr`
-  - `crates/sifr/tests/e2e/fail/phase_psp_runtime_0_timeit_string_eval_unsupported.sifr`
-  - `crates/sifr/tests/e2e/fail/phase_psp_runtime_0_timezone_mutation_unsupported.sifr`
+  - `crates/sifr/tests/e2e/fail/logging_dictconfig_unsupported.sifr`
+  - `crates/sifr/tests/e2e/fail/logging_loggeradapter_unsupported.sifr`
+  - `crates/sifr/tests/e2e/fail/timeit_string_eval_unsupported.sifr`
+  - `crates/sifr/tests/e2e/fail/timezone_mutation_unsupported.sifr`

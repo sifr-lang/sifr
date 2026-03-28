@@ -14,12 +14,12 @@ Scope: canonical iterator HIR for protocol entry and iterator builtins (includin
 | CPython family | Sifr surface direction | State | Evidence |
 | --- | --- | --- | --- |
 | `test_iter` protocol-entry lowering (`iter(...)` / `next(...)`) | lower protocol entry through canonical HIR node instead of generic string call | `adapted` (closed in wave 2 lowering layer) | `crates/sifr_hir/src/lower/expressions_tests.rs` (`test_iterator_builtins_lower_to_canonical_iterator_call_nodes`) |
-| `test_iter` lazy builtin family (`reversed`, `map`, `filter`, `zip`, `enumerate`) | lower builtin iterator operations through canonical `IteratorCall` HIR family | `adapted` (closed in wave 2 lowering layer) | `crates/sifr/tests/e2e/pass/phase_psp_iter_fix_2_canonical_iterator_hir.sifr` |
+| `test_iter` lazy builtin family (`reversed`, `map`, `filter`, `zip`, `enumerate`) | lower builtin iterator operations through canonical `IteratorCall` HIR family | `adapted` (closed in wave 2 lowering layer) | `crates/sifr/tests/e2e/pass/iterator_sources.sifr` |
 | `test_generators` generator-expression source protocol entry | canonicalize generator-expression source lowering through `IteratorCall::Iter` | `adapted` (closed in wave 2 lowering layer) | `crates/sifr_hir/src/lower/expressions_tests.rs` (`test_iterator_builtins_lower_to_canonical_iterator_call_nodes`) |
 
 ## Local Fixture Anchors (Wave 2)
 
 - Positive fixture:
-  - `crates/sifr/tests/e2e/pass/phase_psp_iter_fix_2_canonical_iterator_hir.sifr`
+  - `crates/sifr/tests/e2e/pass/iterator_sources.sifr`
 - Demo:
   - `demos/iterator_lowering/main.sifr`

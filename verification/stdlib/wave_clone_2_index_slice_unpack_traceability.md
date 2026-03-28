@@ -31,7 +31,7 @@ Phase: `issues/ad-hoc-ownership-aware-collection-lowering-and-clone-elision.md`
 
 Command:
 
-- `cargo run -q -p sifr -- emit crates/sifr/tests/e2e/pass/wave_clone_2_index_slice_unpack_ownership.sifr`
+- `cargo run -q -p sifr -- emit crates/sifr/tests/e2e/pass/indexing_and_unpacking_cloning.sifr`
 
 Observed shape:
 
@@ -50,12 +50,12 @@ Observed shape:
 
 ## Wave artifacts
 
-- pass fixture: `crates/sifr/tests/e2e/pass/wave_clone_2_index_slice_unpack_ownership.sifr`
+- pass fixture: `crates/sifr/tests/e2e/pass/indexing_and_unpacking_cloning.sifr`
 - demo: `demos/slice_unpacking/main.sifr`
 
 ## Validation snapshot
 
-- `cargo run -q -p sifr -- run crates/sifr/tests/e2e/pass/wave_clone_2_index_slice_unpack_ownership.sifr` -> PASS
+- `cargo run -q -p sifr -- run crates/sifr/tests/e2e/pass/indexing_and_unpacking_cloning.sifr` -> PASS
 - `cargo run -q -p sifr -- run demos/slice_unpacking/main.sifr` -> PASS
 
 Residual items intentionally deferred to later waves:

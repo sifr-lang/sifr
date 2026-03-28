@@ -1,3 +1,4 @@
+# Reference: phase_psp_runtime_0_architecture_lock
 from sifr.io import write_text, read_text, exists
 from sifr.os import remove_file, rmdir
 from sifr.tempfile import mkstemp, mkdtemp
@@ -27,7 +28,7 @@ def main() -> None:
     time_api_ok: bool = False
     cleanup_ok: bool = False
 
-    text_path: str = "/tmp/sifr_phase_psp_runtime_0_text.txt"
+    text_path: str = "/tmp/sifr_runtime_file_basics_text.txt"
     temp_file: str = ""
     temp_dir: str = ""
     zip_path: str = ""
@@ -53,8 +54,8 @@ def main() -> None:
         _ = str(e.message)
 
     try:
-        temp_file_created: str = mkstemp("sifr_phase_psp_runtime_0_")
-        temp_dir_created: str = mkdtemp("sifr_phase_psp_runtime_0_dir_")
+        temp_file_created: str = mkstemp("sifr_runtime_file_basics_")
+        temp_dir_created: str = mkdtemp("sifr_runtime_file_basics_dir_")
         temp_file = temp_file_created + ""
         temp_dir = temp_dir_created + ""
         tempfile_ok = exists(temp_file) and exists(temp_dir)
@@ -72,12 +73,12 @@ def main() -> None:
     try:
         log_path = text_path + ".log"
         _w_log: None = write_text(log_path, "")
-        logger: Logger = getLogger("phase_psp_runtime_0")
+        logger: Logger = getLogger("runtime_file_basics")
         logger.set_level(INFO)
         logger.set_file(log_path)
         logger.info("lock")
         log_content: str = read_text(log_path)
-        logging_ok = log_content == "[INFO] phase_psp_runtime_0: lock\n"
+        logging_ok = log_content == "[INFO] runtime_file_basics: lock\n"
     except IOError as e:
         _ = str(e.message)
 

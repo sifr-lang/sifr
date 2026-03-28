@@ -13,7 +13,7 @@ Scope: typed conversion surfaces and compatibility delegation on first-class `by
 
 | CPython family | Sifr surface direction | State | Local regression/demo |
 | --- | --- | --- | --- |
-| constructor and conversion families (`bytes(size)`, `bytes.from_ints`, `bytes.from_hex`) | explicit typed conversion APIs returning `Result` with safe failure semantics | `adapted` (closed for wave-2 scope) | `crates/sifr/tests/e2e/pass/phase_psp_bytes_2_conversion_surfaces.sifr`<br>`crates/sifr/tests/e2e/pass/phase_psp_bytes_2_conversion_negative_paths.sifr` |
+| constructor and conversion families (`bytes(size)`, `bytes.from_ints`, `bytes.from_hex`) | explicit typed conversion APIs returning `Result` with safe failure semantics | `adapted` (closed for wave-2 scope) | `crates/sifr/tests/e2e/pass/bytes_constructors.sifr`<br>`crates/sifr/tests/e2e/pass/bytes_conversion_errors.sifr` |
 | text/binary boundary (`str.encode`, `bytes.decode`) | explicit UTF-8-only typed boundary with `Result` errors | `adapted` | `demos/bytes_constructors/main.sifr`<br>`demos/bytes_errors/main.sifr` |
 | `lib/sifr/bytes.sifr` compatibility exports | delegate legacy helper entrypoints to first-class `bytes` conversion implementation | `adapted` (closed for compatibility migration scope) | `crates/sifr/tests/e2e/pass/stdlib_bytes.sifr`<br>`crates/sifr/tests/e2e/pass/stdlib_bytes_safety.sifr` |
 
@@ -28,14 +28,14 @@ Scope: typed conversion surfaces and compatibility delegation on first-class `by
 ## Local fixture anchors (wave 2)
 
 - Pass fixtures:
-  - `crates/sifr/tests/e2e/pass/phase_psp_bytes_2_conversion_surfaces.sifr`
-  - `crates/sifr/tests/e2e/pass/phase_psp_bytes_2_conversion_negative_paths.sifr`
+  - `crates/sifr/tests/e2e/pass/bytes_constructors.sifr`
+  - `crates/sifr/tests/e2e/pass/bytes_conversion_errors.sifr`
 - Fail fixtures:
-  - `crates/sifr/tests/e2e/fail/phase_psp_bytes_2_constructor_non_int.sifr`
-  - `crates/sifr/tests/e2e/fail/phase_psp_bytes_2_from_hex_non_string.sifr`
-  - `crates/sifr/tests/e2e/fail/phase_psp_bytes_2_from_ints_non_int_list.sifr`
-  - `crates/sifr/tests/e2e/fail/phase_psp_bytes_2_encode_non_string_codec.sifr`
-  - `crates/sifr/tests/e2e/fail/phase_psp_bytes_2_decode_non_string_codec.sifr`
+  - `crates/sifr/tests/e2e/fail/bytes_constructor_non_int.sifr`
+  - `crates/sifr/tests/e2e/fail/bytes_from_hex_non_string.sifr`
+  - `crates/sifr/tests/e2e/fail/bytes_from_ints_non_int_list.sifr`
+  - `crates/sifr/tests/e2e/fail/bytes_encode_non_string_codec.sifr`
+  - `crates/sifr/tests/e2e/fail/bytes_decode_non_string_codec.sifr`
 - Demos:
   - `demos/bytes_constructors/main.sifr`
   - `demos/bytes_errors/main.sifr`

@@ -38,16 +38,16 @@ Scope: architecture lock for runtime/file-object parity expansion
 
 ## Local Fixture Anchors (Wave 0)
 
-- Positive lock fixture: `crates/sifr/tests/e2e/pass/phase_psp_runtime_0_architecture_lock.sifr`
+- Positive lock fixture: `crates/sifr/tests/e2e/pass/runtime_file_basics.sifr`
 - Demos:
   - `demos/file_streams/main.sifr`
   - `demos/tempfiles_and_zip/main.sifr`
   - `demos/binary_files/main.sifr`
 - Negative lock fixtures:
-  - `crates/sifr/tests/e2e/fail/phase_psp_runtime_0_pyio_inheritance_unsupported.sifr`
-  - `crates/sifr/tests/e2e/fail/phase_psp_runtime_0_async_popen_unsupported.sifr`
-  - `crates/sifr/tests/e2e/fail/phase_psp_runtime_0_logging_dictconfig_unsupported.sifr`
-  - `crates/sifr/tests/e2e/fail/phase_psp_runtime_0_logging_loggeradapter_unsupported.sifr`
-  - `crates/sifr/tests/e2e/fail/phase_psp_runtime_0_spooled_tempfile_unsupported.sifr`
-  - `crates/sifr/tests/e2e/fail/phase_psp_runtime_0_timeit_string_eval_unsupported.sifr`
-  - `crates/sifr/tests/e2e/fail/phase_psp_runtime_0_timezone_mutation_unsupported.sifr`
+  - `crates/sifr/tests/e2e/fail/pyio_inheritance_unsupported.sifr`
+  - `crates/sifr/tests/e2e/fail/async_popen_unsupported.sifr`
+  - `crates/sifr/tests/e2e/fail/logging_dictconfig_unsupported.sifr`
+  - `crates/sifr/tests/e2e/fail/logging_loggeradapter_unsupported.sifr`
+  - `crates/sifr/tests/e2e/fail/spooled_tempfile_unsupported.sifr`
+  - `crates/sifr/tests/e2e/fail/timeit_string_eval_unsupported.sifr`
+  - `crates/sifr/tests/e2e/fail/timezone_mutation_unsupported.sifr`

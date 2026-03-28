@@ -25,36 +25,36 @@ Lock public contracts, permanent waivers, and CPython-family mapping for the str
 
 | Surface | Classification | Enforcement fixture |
 | --- | --- | --- |
-| Dynamic JSON callback hooks (`object_hook`, `object_pairs_hook`, `parse_float`, `parse_int`, `parse_constant`, `default`) | `unsupported` | `crates/sifr/tests/e2e/fail/phase_psp_struct_0_json_dynamic_hooks_unsupported.sifr` |
-| Timezone database and extensible `tzinfo` ecosystems (`zoneinfo`, DST/fold model) | `unsupported` | `crates/sifr/tests/e2e/fail/phase_psp_struct_0_datetime_tzinfo_zoneinfo_unsupported.sifr` |
-| `Counter(**kwargs)` constructor parity | `unsupported` | `crates/sifr/tests/e2e/fail/phase_psp_struct_0_counter_kwargs_constructor_unsupported.sifr` |
-| Dynamic CSV dialect subclass registration/mutation-heavy registry semantics | `unsupported` | `crates/sifr/tests/e2e/fail/phase_psp_struct_0_csv_dynamic_registry_unsupported.sifr` |
-| `argparse` formatter-class/help-formatting ecosystems | `unsupported` | `crates/sifr/tests/e2e/fail/phase_psp_struct_0_argparse_formatter_class_unsupported.sifr` |
-| Package-wide `html` expansion (`html.parser` family) | `unsupported` | `crates/sifr/tests/e2e/fail/phase_psp_struct_0_html_package_parser_unsupported.sifr` |
+| Dynamic JSON callback hooks (`object_hook`, `object_pairs_hook`, `parse_float`, `parse_int`, `parse_constant`, `default`) | `unsupported` | `crates/sifr/tests/e2e/fail/json_dynamic_hooks_unsupported.sifr` |
+| Timezone database and extensible `tzinfo` ecosystems (`zoneinfo`, DST/fold model) | `unsupported` | `crates/sifr/tests/e2e/fail/datetime_tzinfo_zoneinfo_unsupported.sifr` |
+| `Counter(**kwargs)` constructor parity | `unsupported` | `crates/sifr/tests/e2e/fail/counter_kwargs_constructor_unsupported.sifr` |
+| Dynamic CSV dialect subclass registration/mutation-heavy registry semantics | `unsupported` | `crates/sifr/tests/e2e/fail/csv_dynamic_registry_unsupported.sifr` |
+| `argparse` formatter-class/help-formatting ecosystems | `unsupported` | `crates/sifr/tests/e2e/fail/argparse_formatter_class_unsupported.sifr` |
+| Package-wide `html` expansion (`html.parser` family) | `unsupported` | `crates/sifr/tests/e2e/fail/html_package_parser_unsupported.sifr` |
 
 ## CPython Family Mapping (Wave Ownership)
 
 | CPython family | Module | Direction | Execution wave | Local fixture anchor |
 | --- | --- | --- | --- | --- |
-| `Lib/test/test_json/` | `json` | `adapted` | `wave_psp_struct_1` | `crates/sifr/tests/e2e/pass/cpython_json_subset.sifr`, `crates/sifr/tests/e2e/pass/phase_psp_struct_1_parser_serialization_expansion.sifr` (new) |
-| `Lib/test/test_configparser.py` | `configparser` | `adapted` | `wave_psp_struct_1` | `crates/sifr/tests/e2e/pass/cpython_configparser_subset.sifr`, `crates/sifr/tests/e2e/pass/phase_psp_struct_1_parser_serialization_expansion.sifr` (new) |
-| `Lib/test/test_csv.py` | `csv` | `adapted` | `wave_psp_struct_1` | `crates/sifr/tests/e2e/pass/cpython_csv_subset.sifr`, `crates/sifr/tests/e2e/pass/phase_psp_struct_1_parser_serialization_expansion.sifr` (new) |
-| `Lib/test/test_collections.py` | `collections` | `adapted` | `wave_psp_struct_2` | `crates/sifr/tests/e2e/pass/phase_psp_b1_collections_ordered_helpers.sifr`, `crates/sifr/tests/e2e/pass/phase_psp_struct_2_collections_argparse_expansion.sifr` (new) |
-| `Lib/test/test_argparse.py` | `argparse` | `adapted` | `wave_psp_struct_2` | `crates/sifr/tests/e2e/pass/cpython_argparse_subset.sifr`, `crates/sifr/tests/e2e/pass/phase_psp_struct_2_collections_argparse_expansion.sifr` (new) |
-| `Lib/test/test_uuid.py` | `uuid` | `adapted` | `wave_psp_struct_3` | `crates/sifr/tests/e2e/pass/cpython_uuid_subset.sifr`, `crates/sifr/tests/e2e/pass/phase_psp_struct_3_uuid_datetime_expansion.sifr` (new) |
-| `Lib/test/test_datetime.py` | `datetime` | `adapted` | `wave_psp_struct_3` | `crates/sifr/tests/e2e/pass/cpython_datetime_subset.sifr`, `crates/sifr/tests/e2e/pass/phase_psp_struct_3_uuid_datetime_expansion.sifr` (new) |
-| `Lib/test/test_textwrap.py` | `textwrap` | `adapted` | `wave_psp_struct_4` | `crates/sifr/tests/e2e/pass/cpython_textwrap.sifr`, `crates/sifr/tests/e2e/pass/phase_psp_struct_4_text_surface_governance_closure.sifr` (new) |
-| `Lib/test/test_html.py` | `html` | `adopted`/`adapted` | `wave_psp_struct_4` | `crates/sifr/tests/e2e/pass/stdlib_html.sifr`, `crates/sifr/tests/e2e/pass/phase_psp_struct_4_text_surface_governance_closure.sifr` (new) |
+| `Lib/test/test_json/` | `json` | `adapted` | `wave_psp_struct_1` | `crates/sifr/tests/e2e/pass/cpython_json_subset.sifr`, `crates/sifr/tests/e2e/pass/parsers_and_encoders.sifr` (new) |
+| `Lib/test/test_configparser.py` | `configparser` | `adapted` | `wave_psp_struct_1` | `crates/sifr/tests/e2e/pass/cpython_configparser_subset.sifr`, `crates/sifr/tests/e2e/pass/parsers_and_encoders.sifr` (new) |
+| `Lib/test/test_csv.py` | `csv` | `adapted` | `wave_psp_struct_1` | `crates/sifr/tests/e2e/pass/cpython_csv_subset.sifr`, `crates/sifr/tests/e2e/pass/parsers_and_encoders.sifr` (new) |
+| `Lib/test/test_collections.py` | `collections` | `adapted` | `wave_psp_struct_2` | `crates/sifr/tests/e2e/pass/ordered_collections.sifr`, `crates/sifr/tests/e2e/pass/counter_defaultdict_and_argparse.sifr` (new) |
+| `Lib/test/test_argparse.py` | `argparse` | `adapted` | `wave_psp_struct_2` | `crates/sifr/tests/e2e/pass/cpython_argparse_subset.sifr`, `crates/sifr/tests/e2e/pass/counter_defaultdict_and_argparse.sifr` (new) |
+| `Lib/test/test_uuid.py` | `uuid` | `adapted` | `wave_psp_struct_3` | `crates/sifr/tests/e2e/pass/cpython_uuid_subset.sifr`, `crates/sifr/tests/e2e/pass/uuid_and_datetime.sifr` (new) |
+| `Lib/test/test_datetime.py` | `datetime` | `adapted` | `wave_psp_struct_3` | `crates/sifr/tests/e2e/pass/cpython_datetime_subset.sifr`, `crates/sifr/tests/e2e/pass/uuid_and_datetime.sifr` (new) |
+| `Lib/test/test_textwrap.py` | `textwrap` | `adapted` | `wave_psp_struct_4` | `crates/sifr/tests/e2e/pass/cpython_textwrap.sifr`, `crates/sifr/tests/e2e/pass/text_wrapping_and_html.sifr` (new) |
+| `Lib/test/test_html.py` | `html` | `adopted`/`adapted` | `wave_psp_struct_4` | `crates/sifr/tests/e2e/pass/stdlib_html.sifr`, `crates/sifr/tests/e2e/pass/text_wrapping_and_html.sifr` (new) |
 
 ## Architecture-Lock Validation Fixtures (Wave 0)
 
-- Positive path fixture: `crates/sifr/tests/e2e/pass/phase_psp_struct_0_architecture_lock.sifr`
+- Positive path fixture: `crates/sifr/tests/e2e/pass/json_and_datetime.sifr`
 - JSON wrapper-model demo: `demos/json_values/main.sifr`
 - Fixed-offset datetime-model demo: `demos/fixed_timezones/main.sifr`
 - Permanent-diff negative fixtures:
-  - `crates/sifr/tests/e2e/fail/phase_psp_struct_0_json_dynamic_hooks_unsupported.sifr`
-  - `crates/sifr/tests/e2e/fail/phase_psp_struct_0_datetime_tzinfo_zoneinfo_unsupported.sifr`
-  - `crates/sifr/tests/e2e/fail/phase_psp_struct_0_counter_kwargs_constructor_unsupported.sifr`
-  - `crates/sifr/tests/e2e/fail/phase_psp_struct_0_csv_dynamic_registry_unsupported.sifr`
-  - `crates/sifr/tests/e2e/fail/phase_psp_struct_0_argparse_formatter_class_unsupported.sifr`
-  - `crates/sifr/tests/e2e/fail/phase_psp_struct_0_html_package_parser_unsupported.sifr`
+  - `crates/sifr/tests/e2e/fail/json_dynamic_hooks_unsupported.sifr`
+  - `crates/sifr/tests/e2e/fail/datetime_tzinfo_zoneinfo_unsupported.sifr`
+  - `crates/sifr/tests/e2e/fail/counter_kwargs_constructor_unsupported.sifr`
+  - `crates/sifr/tests/e2e/fail/csv_dynamic_registry_unsupported.sifr`
+  - `crates/sifr/tests/e2e/fail/argparse_formatter_class_unsupported.sifr`
+  - `crates/sifr/tests/e2e/fail/html_package_parser_unsupported.sifr`

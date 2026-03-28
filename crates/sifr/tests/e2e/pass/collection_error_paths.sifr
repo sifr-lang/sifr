@@ -1,3 +1,4 @@
+# Reference: collection_safety_error_paths
 # Collection safety: all error paths return Option/Result instead of panicking
 
 

@@ -13,7 +13,7 @@ Scope: downstream binary-carrier contract adoption and governance closeout
 
 | CPython family | Sifr surface direction | State | Local regression/demo |
 | --- | --- | --- | --- |
-| `test_io` binary file-handle pathways | first-class `bytes` at `FileHandle.read_bytes()` / `FileHandle.write_bytes(...)` boundaries | `adapted` (closed for carrier contract) | `crates/sifr/tests/e2e/pass/phase_psp_bytes_3_downstream_contract_alignment.sifr`<br>`crates/sifr/tests/e2e/pass/cpython_io_subset.sifr`<br>`crates/sifr/tests/e2e/pass/stdlib_io_consolidated.sifr`<br>`demos/bytes_file_io/main.sifr` |
+| `test_io` binary file-handle pathways | first-class `bytes` at `FileHandle.read_bytes()` / `FileHandle.write_bytes(...)` boundaries | `adapted` (closed for carrier contract) | `crates/sifr/tests/e2e/pass/bytes_file_io.sifr`<br>`crates/sifr/tests/e2e/pass/cpython_io_subset.sifr`<br>`crates/sifr/tests/e2e/pass/stdlib_io_consolidated.sifr`<br>`demos/bytes_file_io/main.sifr` |
 | `test_base64` binary payload pathways | keep existing text-friendly APIs while preserving bytes conversion boundary via first-class `bytes` (`bytes.from_hex`, `bytes.decode`) | `adapted` | `crates/sifr/tests/e2e/pass/cpython_base64_rfc4648_vectors.sifr`<br>`crates/sifr/tests/e2e/pass/stdlib_base64_intrinsics.sifr` |
 | `test_hashlib` binary payload pathways | downstream contract anchored to first-class `bytes`; current shipped API remains `str`-input/hex-digest with explicit unsupported bytes-native digest families | `adapted` (contract aligned; bytes-native API still waived) | `crates/sifr/tests/e2e/pass/cpython_hashlib_api_subset.sifr`<br>`crates/sifr/tests/e2e/pass/cpython_hashlib_object_model_subset.sifr` |
 
@@ -31,9 +31,9 @@ Scope: downstream binary-carrier contract adoption and governance closeout
 ## Local fixture anchors (wave 3)
 
 - Pass fixture:
-  - `crates/sifr/tests/e2e/pass/phase_psp_bytes_3_downstream_contract_alignment.sifr`
+  - `crates/sifr/tests/e2e/pass/bytes_file_io.sifr`
 - Fail fixtures:
-  - `crates/sifr/tests/e2e/fail/phase_psp_bytes_3_write_bytes_rejects_int_list.sifr`
-  - `crates/sifr/tests/e2e/fail/phase_psp_bytes_3_read_bytes_not_list.sifr`
+  - `crates/sifr/tests/e2e/fail/bytes_write_bytes_rejects_int_list.sifr`
+  - `crates/sifr/tests/e2e/fail/bytes_read_bytes_not_list.sifr`
 - Demo:
   - `demos/bytes_file_io/main.sifr`

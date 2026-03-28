@@ -1,3 +1,4 @@
+# Reference: phase_psp_e2_class_heavy_custom_cleanup
 from sifr.argparse import ArgumentParser, Namespace
 from sifr.ipaddress import ip_address, AddressValueError, IPv4Address
 from sifr.uuid import uuid4_obj, uuid_from_hex, UUID
@@ -184,4 +185,4 @@ def main():
     append_all(actual, collect_graphlib_actual())
     append_all(actual, collect_test_module_actual())
     assert_bool_vector_eq(actual, expected)
-    assert str("phase_psp_e2_class_heavy_custom_cleanup: pass") == "phase_psp_e2_class_heavy_custom_cleanup: pass"
+    assert str("class_based_stdlib: pass") == "class_based_stdlib: pass"

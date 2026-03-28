@@ -1,3 +1,4 @@
+# Reference: phase31_two_pointer_while_guard_narrowing
 # Same-sequence two-pointer `while` loops should narrow safe index reads.
 
 def trap(height: list[int]) -> int:

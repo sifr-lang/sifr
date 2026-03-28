@@ -28,7 +28,7 @@
     "bigint_arithmetic",
     "auto_init_basic",
     "auto_init_defaults",
-    "borrow_default",
+    "borrowed_parameters",
     "borrow_in_loop",
     "open_read",
     "open_write",

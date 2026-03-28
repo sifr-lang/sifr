@@ -1,8 +1,9 @@
+# Reference: phase_psp_bytes_3_read_bytes_not_list
 from sifr.io import write_text
 
 
 def main():
-    path: str = "/tmp/sifr_phase_psp_bytes_3_read_bytes_not_list.txt"
+    path: str = "/tmp/sifr_bytes_read_bytes_not_list.txt"
     _prep: Result[None, IOError] = write_text(path, "abc")
     fh = open(path, "rb")
     payload: list[int] = fh.read_bytes()

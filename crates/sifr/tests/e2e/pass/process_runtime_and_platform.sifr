@@ -1,3 +1,4 @@
+# Reference: phase_psp_d2_process_runtime_platform
 from sifr.os import run_command, getcwd
 from sifr.env import getenv, getenv_opt, setenv, unsetenv
 from sifr.sys import argv, version, platform, maxsize
@@ -81,15 +82,15 @@ def collect_process_logging_actual() -> list[bool]:
         _ = e.message
     actual.append(check_helpers_ok)
 
-    log_path: str = mktemp_path("sifr_phase_psp_d2_log_")
+    log_path: str = mktemp_path("sifr_process_runtime_and_platform_log_")
     try:
         _w: None = write_text(log_path, "")
-        logger: Logger = getLogger("phase_psp_d2")
+        logger: Logger = getLogger("process_runtime_and_platform")
         logger.set_file(log_path)
         logger.set_level(INFO)
         logger.info("hello")
         log_content: str = read_text(log_path)
-        logging_ok = log_content == "[INFO] phase_psp_d2: hello\n"
+        logging_ok = log_content == "[INFO] process_runtime_and_platform: hello\n"
     except IOError as e:
         _ = e.message
     actual.append(logging_ok)
@@ -150,4 +151,4 @@ def main():
     append_all(actual, collect_platform_time_actual())
 
     assert_bool_vector_eq(actual, expected)
-    assert str("phase_psp_d2_process_runtime_platform: pass") == "phase_psp_d2_process_runtime_platform: pass"
+    assert str("process_runtime_and_platform: pass") == "process_runtime_and_platform: pass"

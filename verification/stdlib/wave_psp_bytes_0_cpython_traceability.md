@@ -32,14 +32,14 @@ Scope: architecture lock for first-class `bytes` and binary-surface foundation
 
 ## Local Fixture Anchors (Wave 0)
 
-- Positive lock fixture: `crates/sifr/tests/e2e/pass/phase_psp_bytes_0_architecture_lock.sifr`
+- Positive lock fixture: `crates/sifr/tests/e2e/pass/bytes_helpers.sifr`
 - Demos:
   - `demos/bytes_roundtrip/main.sifr`
   - `demos/text_and_bytes/main.sifr`
 - Negative lock fixtures:
-  - `crates/sifr/tests/e2e/fail/phase_psp_bytes_0_bytearray_unsupported.sifr`
-  - `crates/sifr/tests/e2e/fail/phase_psp_bytes_0_memoryview_unsupported.sifr`
-  - `crates/sifr/tests/e2e/fail/phase_psp_bytes_0_buffer_protocol_unsupported.sifr`
-  - `crates/sifr/tests/e2e/fail/phase_psp_bytes_0_implicit_str_bytes_coercion_unsupported.sifr`
-  - `crates/sifr/tests/e2e/fail/phase_psp_bytes_0_non_utf8_codec_unsupported.sifr`
-  - `crates/sifr/tests/e2e/fail/phase_psp_bytes_0_bytes_subclass_unsupported.sifr`
+  - `crates/sifr/tests/e2e/fail/bytes_bytearray_unsupported.sifr`
+  - `crates/sifr/tests/e2e/fail/bytes_memoryview_unsupported.sifr`
+  - `crates/sifr/tests/e2e/fail/bytes_buffer_protocol_unsupported.sifr`
+  - `crates/sifr/tests/e2e/fail/bytes_implicit_str_bytes_coercion_unsupported.sifr`
+  - `crates/sifr/tests/e2e/fail/bytes_non_utf8_codec_unsupported.sifr`
+  - `crates/sifr/tests/e2e/fail/bytes_bytes_subclass_unsupported.sifr`

@@ -1,3 +1,4 @@
+# Reference: phase_psp_ext_3_regex_filesystem_iterators
 from sifr.re import finditer, compile, Match
 from sifr.glob import iglob
 from sifr.pathlib import Path
@@ -37,7 +38,7 @@ def collect_regex_actual() -> list[bool]:
 
 def collect_filesystem_actual() -> list[bool]:
     actual: list[bool] = []
-    base: str = "/tmp/sifr_phase_psp_ext_3_iterators_" + str(getpid())
+    base: str = "/tmp/sifr_regex_filesystem_iterators_" + str(getpid())
     try:
         _mk: str = run_command("mkdir -p " + base + "/sub")
         _w1: None = write_text(base + "/a.txt", "a")
@@ -78,4 +79,4 @@ def main():
     append_all(actual, collect_regex_actual())
     append_all(actual, collect_filesystem_actual())
     assert_bool_vector_eq(actual, expected)
-    assert str("phase_psp_ext_3_regex_filesystem_iterators: pass") == "phase_psp_ext_3_regex_filesystem_iterators: pass"
+    assert str("regex_filesystem_iterators: pass") == "regex_filesystem_iterators: pass"

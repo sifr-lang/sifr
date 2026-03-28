@@ -1,2 +1,3 @@
+# Reference: phase_psp_bytes_2_constructor_non_int
 def main() -> None:
     _bad: bytes = bytes("4")

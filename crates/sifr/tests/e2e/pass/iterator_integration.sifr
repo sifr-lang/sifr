@@ -1,3 +1,4 @@
+# Reference: phase_psp_iter_fix_8_downstream_alignment_closure
 from sifr.test import assert_bool_vector_eq
 from sifr.re import finditer, Match
 from sifr.pathlib import Path
@@ -44,7 +45,7 @@ def main():
         _ = e.message
         actual.append(False)
 
-    base: str = "/tmp/sifr_phase_psp_iter_fix_8_" + str(getpid())
+    base: str = "/tmp/sifr_iterator_integration_" + str(getpid())
     try:
         _mk: str = run_command("mkdir -p " + base + "/sub")
         _w1: None = write_text(base + "/a.txt", "a")
@@ -65,7 +66,7 @@ def main():
 
     expected: list[bool] = [True, True, True, True, True, True]
     assert_bool_vector_eq(actual, expected)
-    assert str("phase_psp_iter_fix_8_downstream_alignment_closure: pass") == "phase_psp_iter_fix_8_downstream_alignment_closure: pass"
+    assert str("iterator_integration: pass") == "iterator_integration: pass"
 
 
 main()

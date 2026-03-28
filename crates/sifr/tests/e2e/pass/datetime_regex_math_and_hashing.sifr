@@ -1,3 +1,4 @@
+# Reference: phase_psp_e1_core_modules_numeric_patterns_crypto
 from sifr.datetime import datetime, timedelta, from_timestamp
 from sifr.re import search, findall
 from sifr.math import comb, perm, isclose
@@ -143,4 +144,4 @@ def main():
     append_all(actual, collect_hashlib_actual())
 
     assert_bool_vector_eq(actual, expected)
-    assert str("phase_psp_e1_core_modules_numeric_patterns_crypto: pass") == "phase_psp_e1_core_modules_numeric_patterns_crypto: pass"
+    assert str("datetime_regex_math_and_hashing: pass") == "datetime_regex_math_and_hashing: pass"

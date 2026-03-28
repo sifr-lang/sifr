@@ -143,10 +143,10 @@ status: complete
   - `verification/leetcode/phase31_seed_results_wave1.json`
   - `verification/leetcode/phase31_wave1_delta.md`
   - `demos/leetcode_fixes/main.md`
-  - `crates/sifr/tests/e2e/pass/phase31_builtin_shadow_sum.sifr`
-  - `crates/sifr/tests/e2e/pass/phase31_mutated_borrowed_param_shadow.sifr`
-  - `crates/sifr/tests/e2e/pass/phase31_tuple_unpack_mutability.sifr`
-  - `crates/sifr/tests/e2e/fail/phase31_builtin_sum_wrong_arity.sifr`
+  - `crates/sifr/tests/e2e/pass/function_shadowing_builtin_sum.sifr`
+  - `crates/sifr/tests/e2e/pass/borrowed_param_shadowing.sifr`
+  - `crates/sifr/tests/e2e/pass/tuple_unpack_reassignment.sifr`
+  - `crates/sifr/tests/e2e/fail/builtin_sum_wrong_arity.sifr`
 - Wave 1 metrics (2026-03-11):
   - seed status counts: `PASS=5`, `CHECK_ERROR=45`, `RUN_ERROR=0`
   - delta vs baseline: `PASS +3`, `CHECK_ERROR -1`, `RUN_ERROR -2`

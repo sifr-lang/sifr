@@ -35,14 +35,14 @@ Scope: architecture lock and governance freeze for stateful RNG, bytes-native cr
 ## Local Fixture Anchors (Wave 0)
 
 - Positive fixture:
-  - `crates/sifr/tests/e2e/pass/phase_psp_rng_0_architecture_lock.sifr`
+  - `crates/sifr/tests/e2e/pass/random_hashing_and_text.sifr`
 - Demo:
   - `demos/random_hashing/main.sifr`
 - Negative fixtures:
-  - `crates/sifr/tests/e2e/fail/phase_psp_struct_0_html_package_parser_unsupported.sifr`
-  - `crates/sifr/tests/e2e/fail/phase_psp_b2_random_choices_weights_unsupported.sifr`
-  - `crates/sifr/tests/e2e/fail/phase_psp_rng_1_system_random_state_unsupported.sifr`
-  - `crates/sifr/tests/e2e/fail/phase_psp_rng_2_sha3_object_model_unsupported.sifr`
+  - `crates/sifr/tests/e2e/fail/html_package_parser_unsupported.sifr`
+  - `crates/sifr/tests/e2e/fail/random_choices_weights_unsupported.sifr`
+  - `crates/sifr/tests/e2e/fail/system_random_state_unsupported.sifr`
+  - `crates/sifr/tests/e2e/fail/sha3_object_model_unsupported.sifr`
 
 Historical note:
 - `crates/sifr/tests/e2e/fail/phase_psp_rng_0_random_state_object_model_unsupported.sifr` was retired after `wave_psp_rng_1` shipped deterministic state/object parity.

@@ -12,10 +12,10 @@ Scope: `io` and in-memory stream hierarchy (`BytesIO`, `StringIO`)
 
 | CPython family | Sifr surface direction | State | Local anchor |
 | --- | --- | --- | --- |
-| `test_io` `StringIO` read/write/seek/tell/getvalue behavior | ship typed in-memory `StringIO` with deterministic cursor semantics and typed error surface | `adapted` | `crates/sifr/tests/e2e/pass/phase_psp_runtime_1_io_in_memory_stream_hierarchy.sifr` |
-| `test_io` `BytesIO` read/write/seek/tell/getvalue behavior | ship typed in-memory `BytesIO` over first-class `bytes` with deterministic cursor semantics | `adapted` | `crates/sifr/tests/e2e/pass/phase_psp_runtime_1_io_in_memory_stream_hierarchy.sifr` |
+| `test_io` `StringIO` read/write/seek/tell/getvalue behavior | ship typed in-memory `StringIO` with deterministic cursor semantics and typed error surface | `adapted` | `crates/sifr/tests/e2e/pass/in_memory_streams.sifr` |
+| `test_io` `BytesIO` read/write/seek/tell/getvalue behavior | ship typed in-memory `BytesIO` over first-class `bytes` with deterministic cursor semantics | `adapted` | `crates/sifr/tests/e2e/pass/in_memory_streams.sifr` |
 | `test_io` binary file-handle entry paths | keep binary payload contract on first-class `bytes`; add `open_binary(...)` typed entry | `adapted` | `demos/in_memory_streams/main.sifr` |
-| full `_pyio` inheritance graph and advanced buffered classes | keep explicitly deferred from wave 0 lock | `unsupported` | `crates/sifr/tests/e2e/fail/phase_psp_runtime_0_pyio_inheritance_unsupported.sifr` |
+| full `_pyio` inheritance graph and advanced buffered classes | keep explicitly deferred from wave 0 lock | `unsupported` | `crates/sifr/tests/e2e/fail/pyio_inheritance_unsupported.sifr` |
 
 ## Explicit Waivers / Boundaries (Wave 1)
 
@@ -28,10 +28,10 @@ Scope: `io` and in-memory stream hierarchy (`BytesIO`, `StringIO`)
 ## Local Fixture Anchors (Wave 1)
 
 - Positive fixture:
-  - `crates/sifr/tests/e2e/pass/phase_psp_runtime_1_io_in_memory_stream_hierarchy.sifr`
+  - `crates/sifr/tests/e2e/pass/in_memory_streams.sifr`
 - Demo:
   - `demos/in_memory_streams/main.sifr`
 - Negative fixtures:
-  - `crates/sifr/tests/e2e/fail/phase_psp_runtime_1_stringio_read_bytes_unsupported.sifr`
-  - `crates/sifr/tests/e2e/fail/phase_psp_runtime_1_bytesio_text_write_unsupported.sifr`
-  - `crates/sifr/tests/e2e/fail/phase_psp_runtime_0_pyio_inheritance_unsupported.sifr`
+  - `crates/sifr/tests/e2e/fail/stringio_read_bytes_unsupported.sifr`
+  - `crates/sifr/tests/e2e/fail/bytesio_text_write_unsupported.sifr`
+  - `crates/sifr/tests/e2e/fail/pyio_inheritance_unsupported.sifr`

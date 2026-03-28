@@ -44,9 +44,9 @@ Additional baseline mismatch captured at wave 0:
 | Surface | Classification | Enforcement fixture |
 | --- | --- | --- |
 | Async iteration families (`aiter`, `anext`, `async for`) | `unsupported` | policy lock in this phase (no async iterator expansion) |
-| Advanced iterator-object families (`itertools.tee`, `itertools.groupby`) | `unsupported` | `crates/sifr/tests/e2e/fail/phase_psp_iter_fix_0_itertools_tee_unsupported.sifr`, `crates/sifr/tests/e2e/fail/phase_psp_iter_fix_0_itertools_groupby_unsupported.sifr` |
-| General-arity `itertools.starmap` callable/row parity | `unsupported` | `crates/sifr/tests/e2e/fail/phase_psp_b2_itertools_starmap_non_binary_callable.sifr` |
-| Implicit heterogeneous tuple union-yield iteration | `unsupported` | `crates/sifr/tests/e2e/fail/phase_psp_iter_fix_0_tuple_heterogeneous_iteration_unsupported.sifr` |
+| Advanced iterator-object families (`itertools.tee`, `itertools.groupby`) | `unsupported` | `crates/sifr/tests/e2e/fail/itertools_tee_unsupported.sifr`, `crates/sifr/tests/e2e/fail/itertools_groupby_unsupported.sifr` |
+| General-arity `itertools.starmap` callable/row parity | `unsupported` | `crates/sifr/tests/e2e/fail/itertools_starmap_non_binary_callable.sifr` |
+| Implicit heterogeneous tuple union-yield iteration | `unsupported` | `crates/sifr/tests/e2e/fail/tuple_heterogeneous_iteration_unsupported.sifr` |
 
 ## CPython Family Mapping (Wave Ownership)
 
@@ -61,11 +61,11 @@ Additional baseline mismatch captured at wave 0:
 
 ## Architecture-Lock Validation Artifacts (Wave 0)
 
-- Positive lock fixture: `crates/sifr/tests/e2e/pass/phase_psp_iter_fix_0_architecture_lock.sifr`
+- Positive lock fixture: `crates/sifr/tests/e2e/pass/iterator_basics.sifr`
 - Wave-0 demo:
   - `demos/lazy_iterators_basics/main.sifr`
 - Permanent-diff negative fixtures:
-  - `crates/sifr/tests/e2e/fail/phase_psp_iter_fix_0_itertools_tee_unsupported.sifr`
-  - `crates/sifr/tests/e2e/fail/phase_psp_iter_fix_0_itertools_groupby_unsupported.sifr`
-  - `crates/sifr/tests/e2e/fail/phase_psp_iter_fix_0_tuple_heterogeneous_iteration_unsupported.sifr`
-  - `crates/sifr/tests/e2e/fail/phase_psp_b2_itertools_starmap_non_binary_callable.sifr`
+  - `crates/sifr/tests/e2e/fail/itertools_tee_unsupported.sifr`
+  - `crates/sifr/tests/e2e/fail/itertools_groupby_unsupported.sifr`
+  - `crates/sifr/tests/e2e/fail/tuple_heterogeneous_iteration_unsupported.sifr`
+  - `crates/sifr/tests/e2e/fail/itertools_starmap_non_binary_callable.sifr`

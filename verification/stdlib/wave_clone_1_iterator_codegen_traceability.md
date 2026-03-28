@@ -47,7 +47,7 @@ Observed shape:
 
 Command:
 
-- `cargo run -q -p sifr -- emit crates/sifr/tests/e2e/pass/wave_clone_1_iterator_comprehension_ownership.sifr`
+- `cargo run -q -p sifr -- emit crates/sifr/tests/e2e/pass/iterator_pipeline_cloning.sifr`
 
 Observed shape:
 
@@ -71,7 +71,7 @@ Observed shape:
 
 Command:
 
-- `cargo run -q -p sifr -- emit crates/sifr/tests/e2e/pass/wave_clone_1_iterator_comprehension_ownership.sifr`
+- `cargo run -q -p sifr -- emit crates/sifr/tests/e2e/pass/iterator_pipeline_cloning.sifr`
 
 Observed shape:
 
@@ -81,12 +81,12 @@ Observed shape:
 
 ## Wave artifacts
 
-- pass fixture: `crates/sifr/tests/e2e/pass/wave_clone_1_iterator_comprehension_ownership.sifr`
+- pass fixture: `crates/sifr/tests/e2e/pass/iterator_pipeline_cloning.sifr`
 - demo: `demos/cloned_iterators/main.sifr`
 
 ## Validation snapshot
 
-- `cargo run -q -p sifr -- run crates/sifr/tests/e2e/pass/wave_clone_1_iterator_comprehension_ownership.sifr` -> PASS
+- `cargo run -q -p sifr -- run crates/sifr/tests/e2e/pass/iterator_pipeline_cloning.sifr` -> PASS
 - `cargo run -q -p sifr -- run demos/cloned_iterators/main.sifr` -> PASS
 - `scripts/run_all_tests.sh --profile quick` -> PASS
 

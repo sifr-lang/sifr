@@ -13,13 +13,13 @@ Scope: generator backend unification and filtered generator-expression closure
 
 | CPython family | Sifr surface direction | State | Evidence |
 | --- | --- | --- | --- |
-| `test_generators` mixed-yield generator body | support loop-backed generator functions with multiple yield sites under one iterator backend | `adapted` (closed in wave 4 backend) | `crates/sifr/tests/e2e/pass/phase_psp_iter_fix_4_generator_backend_unification.sifr` |
-| `test_generators` for-loop generator body | allow generator functions that yield from `for` loops over iterable inputs | `adapted` (closed in wave 4 backend) | `crates/sifr/tests/e2e/pass/phase_psp_iter_fix_4_generator_backend_unification.sifr` |
-| `test_filter` filtered generator expressions | ensure `(expr for x in iter if cond)` lowers through canonical lazy iterator chains | `adapted` (closed in wave 4 backend) | `crates/sifr/tests/e2e/pass/phase_psp_iter_fix_4_generator_backend_unification.sifr` |
+| `test_generators` mixed-yield generator body | support loop-backed generator functions with multiple yield sites under one iterator backend | `adapted` (closed in wave 4 backend) | `crates/sifr/tests/e2e/pass/generator_iterators.sifr` |
+| `test_generators` for-loop generator body | allow generator functions that yield from `for` loops over iterable inputs | `adapted` (closed in wave 4 backend) | `crates/sifr/tests/e2e/pass/generator_iterators.sifr` |
+| `test_filter` filtered generator expressions | ensure `(expr for x in iter if cond)` lowers through canonical lazy iterator chains | `adapted` (closed in wave 4 backend) | `crates/sifr/tests/e2e/pass/generator_iterators.sifr` |
 
 ## Local Fixture Anchors (Wave 4)
 
 - Positive fixture:
-  - `crates/sifr/tests/e2e/pass/phase_psp_iter_fix_4_generator_backend_unification.sifr`
+  - `crates/sifr/tests/e2e/pass/generator_iterators.sifr`
 - Demo:
   - `demos/generator_iterators/main.sifr`

@@ -1,2 +1,3 @@
+# Reference: phase_psp_bytes_0_non_utf8_codec_unsupported
 def main() -> None:
     _ = "abc".encode("latin-1")

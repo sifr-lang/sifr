@@ -36,10 +36,10 @@ Mapped behavior assertions in wave fixtures:
 ## Validation Artifacts
 
 - pass fixture:
-  - `crates/sifr/tests/e2e/pass/phase_psp_iter_fix_7_user_defined_iterable_protocol.sifr`
+  - `crates/sifr/tests/e2e/pass/user_defined_iterables.sifr`
 - fail fixtures:
-  - `crates/sifr/tests/e2e/fail/phase_psp_iter_fix_7_invalid_iter_signature.sifr`
-  - `crates/sifr/tests/e2e/fail/phase_psp_iter_fix_7_invalid_next_signature.sifr`
-  - `crates/sifr/tests/e2e/fail/phase_psp_iter_fix_7_invalid_reversed_signature.sifr`
+  - `crates/sifr/tests/e2e/fail/invalid_iter_signature.sifr`
+  - `crates/sifr/tests/e2e/fail/invalid_next_signature.sifr`
+  - `crates/sifr/tests/e2e/fail/invalid_reversed_signature.sifr`
 - demo:
   - `demos/custom_iterables/main.sifr`

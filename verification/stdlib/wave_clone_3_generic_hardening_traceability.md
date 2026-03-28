@@ -14,13 +14,13 @@ closing tuple-ownership gaps that caused unnecessary cloning in iterator surface
 - `cargo test -p sifr_type_system test_tuple_ownership_all_copy_is_copy`
 - `cargo test -p sifr_type_system test_tuple_ownership_with_move_is_move`
 - `cargo test -p sifr_codegen -- helpers::tests`
-- `cargo run -q -p sifr -- run crates/sifr/tests/e2e/pass/wave_clone_3_generic_hardening_ownership.sifr`
+- `cargo run -q -p sifr -- run crates/sifr/tests/e2e/pass/generic_cloning.sifr`
 - `cargo run -q -p sifr -- run demos/generic_cloning/main.sifr`
-- `cargo run -q -p sifr -- emit crates/sifr/tests/e2e/pass/wave_clone_3_generic_hardening_ownership.sifr`
+- `cargo run -q -p sifr -- emit crates/sifr/tests/e2e/pass/generic_cloning.sifr`
 
 ## Emitted Rust Evidence
 
-Observed from `wave_clone_3_generic_hardening_ownership.sifr`:
+Observed from `generic_cloning.sifr`:
 
 - copy tuple iteration now emits copy-oriented traversal:
   - `for pair in pairs.iter().copied() { ... }`

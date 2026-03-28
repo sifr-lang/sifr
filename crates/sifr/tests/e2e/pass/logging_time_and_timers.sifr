@@ -1,3 +1,4 @@
+# Reference: phase_psp_runtime_3_logging_time_timeit_object_surface
 from sifr.logging import getLogger, Logger, Handler, StreamHandler, FileHandler, NullHandler, Formatter
 from sifr.logging import DEBUG, INFO, ERROR
 from sifr.time import gmtime_struct, localtime_struct, mktime, struct_time, TIMEZONE, ALTZONE, DAYLIGHT, TZNAME
@@ -42,8 +43,8 @@ def main() -> None:
     timer_call_ok: bool = False
     cleanup_ok: bool = False
 
-    log_path: str = "/tmp/sifr_phase_psp_runtime_3_logging.log"
-    null_log_path: str = "/tmp/sifr_phase_psp_runtime_3_null.log"
+    log_path: str = "/tmp/sifr_logging_time_and_timers.log"
+    null_log_path: str = "/tmp/sifr_logging_time_and_timers_null.log"
 
     try:
         _w1: None = write_text(log_path, "")

@@ -1,3 +1,4 @@
+# Reference: phase_psp_bytes_4_raw_backend_and_lowering_separation
 from sifr.bytes import bytes_from_hex, bytes_to_hex
 from sifr.io import exists
 from sifr.os import remove_file
@@ -42,7 +43,7 @@ def main():
     except ParseError as e:
         _ = str(e.message)
 
-    path: str = "/tmp/sifr_phase_psp_bytes_4_raw_backend.bin"
+    path: str = "/tmp/sifr_bytes_hex_and_binary_io.bin"
     try:
         writer = open(path, "wb")
         _w: None = writer.write_bytes(payload)
