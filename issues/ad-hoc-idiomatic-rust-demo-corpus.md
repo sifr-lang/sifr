@@ -254,6 +254,8 @@ Progress update (`2026-03-29`):
 
 - `batch_01_statistics_json_datetime` selected as the first wave-2 runnable-demo batch because all three files remain large generated companions and prior review history already identified real design debt in the underlying surfaces
 - `batch_01_statistics_json_datetime` completed local validation and passed external pass-1/pass-2 review with no accepted blockers
+- `batch_02_math_pathlib_glob` selected as the second wave-2 runnable-demo batch because all three demos are positive runnable parity surfaces, still retained generated-style companions, and had archived review history pointing at real stdlib/helper-shape debt
+- `batch_02_math_pathlib_glob` completed local validation, accepted the pass-1 follow-up on path/error surface cleanup, and passed external pass-2 review with no remaining actionable issues
 
 ### wave_3_fixture_and_negative_case_normalization
 
