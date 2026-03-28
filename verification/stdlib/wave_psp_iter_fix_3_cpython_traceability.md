@@ -23,4 +23,4 @@ Scope: concrete iterator codegen pipelines for iterator-consuming builtin surfac
 - Positive fixture:
   - `crates/sifr/tests/e2e/pass/phase_psp_iter_fix_3_concrete_iterator_codegen.sifr`
 - Demo:
-  - `demos/ad_hoc_iter_fix_wave3_codegen_demo.sifr`
+  - `demos/iter_fix_codegen.sifr`

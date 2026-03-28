@@ -19,10 +19,10 @@ Capture a reproducible clone-heavy generated-code baseline and lock one canonica
 
 Captured emit outputs from:
 
-- `demos/milestone_generics_demo.sifr`
-- `demos/milestone_ergonomics_demo.sifr`
-- `demos/milestone_safe_indexing_demo.sifr`
-- `demos/milestone_control_flow_demo.sifr`
+- `demos/generics.sifr`
+- `demos/ergonomics.sifr`
+- `demos/safe_indexing.sifr`
+- `demos/control_flow.sifr`
 
 ## Clone-Heavy Pattern Baseline (Wave 0 Entry)
 
@@ -65,7 +65,7 @@ Implementation invariant:
 ## Wave-0 Lock Artifacts
 
 - positive fixture: `crates/sifr/tests/e2e/pass/wave_clone_0_architecture_lock.sifr`
-- demo: `demos/ad_hoc_clone_wave0_architecture_lock_demo.sifr`
+- demo: `demos/clone_architecture_lock.sifr`
 - ownership-safety negative anchor selected for later regression locking:
   - `crates/sifr/tests/e2e/fail/borrow_escape_store.sifr`
 

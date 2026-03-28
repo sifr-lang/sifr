@@ -116,4 +116,4 @@ The Phase 11 plan specified removing non-CPython functions. The following remain
 - All existing E2E tests still pass (no regressions)
 - `cargo test` passes, `cargo clippy -- -D warnings` passes, no new `unsafe` without justification
 - New E2E pass tests: `open_read`, `open_write`, `open_context_manager`, `open_readline`, `open_binary_read`, `open_binary_write`, `csv_reader_file`, `datetime_time_class`, `datetime_now_object`, `subprocess_completed_process`, `path_glob`, `re_flags_ignorecase`
-- Milestone demo in `./demos/milestone_stdlib_remediation_demo.sifr`
+- Milestone demo in `./demos/stdlib_remediation.sifr`

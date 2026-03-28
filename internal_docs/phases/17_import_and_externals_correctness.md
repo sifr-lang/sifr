@@ -22,7 +22,7 @@ status: done (2026-03-04, PR #813)
   - `check` now runs dedicated frontend/type-only lowering via `compile_frontend` instead of routing through `compile` codegen.
   - Frontend diagnostics printing is centralized and reused for both `check` and `compile`.
   - Regression guard: `test_check_only_reports_frontend_phases` in `crates/sifr_driver/src/lib.rs`.
-  - Milestone demo: `cargo run -q -p sifr -- run demos/m17_1_frontend_only_check_path_demo.sifr`.
+  - Milestone demo: `cargo run -q -p sifr -- run demos/frontend_only_check_path.sifr`.
 
 ### milestone_17_2: Non-Main Externals Resolution
 status: done (2026-03-04, PR #814)
@@ -41,7 +41,7 @@ status: done (2026-03-04, PR #814)
     - `test_collect_project_modules_reports_unknown_module_in_non_main` (`crates/sifr_driver/src/lib.rs`)
     - `test_collect_project_modules_cycle_reports_error` (`crates/sifr_driver/src/lib.rs`)
     - `test_generate_rust_multi_skips_stdlib_use_paths_in_non_main_modules` (`crates/sifr_codegen/src/lib_codegen_tests.rs`)
-  - Milestone demo: `cargo run -q -p sifr -- run demos/m17_2_non_main_externals_resolution_demo/main.sifr`.
+  - Milestone demo: `cargo run -q -p sifr -- run demos/non_main_externals_resolution/main.sifr`.
 
 ### milestone_17_3: Test and Constant Import Parity
 status: done (2026-03-04, PR #815)
@@ -57,7 +57,7 @@ status: done (2026-03-04, PR #815)
   - `run_tests` now builds support-module externals and lowers test modules via `lower_module_with_externals`, aligning with project compilation flow.
   - Generated test-runner crate source is now explicitly test-scoped via `compose_test_runner_lib` so non-test cargo builds do not emit unused-import/dead-code noise.
   - Test codegen now emits local-module `use crate::<module>::<name>` imports in test mode (`crates/sifr_codegen/src/entrypoints.rs`).
-  - Milestone demo: `cargo run -q -p sifr -- test demos/m17_3_test_and_constant_import_parity_demo`.
+  - Milestone demo: `cargo run -q -p sifr -- test demos/test_and_constant_import_parity`.
 
 ### milestone_17_4: Import-Form Semantics Closure
 status: done (2026-03-05, PR #828)
@@ -87,7 +87,7 @@ status: done (2026-03-05, PR #828)
     - `test_check_reports_unsupported_bare_relative_import`
     - `test_check_reports_unsupported_import_statement`
     - `test_collect_project_modules_supports_single_level_relative_import`
-  - Milestone demo: `cargo run -q -p sifr -- run demos/m17_4_import_form_semantics_closure_demo/main.sifr` (uses supported `from .helper import value`).
+  - Milestone demo: `cargo run -q -p sifr -- run demos/import_form_semantics_closure/main.sifr` (uses supported `from .helper import value`).
 
 ## Quality Contract
 - Entry criteria: Phase 16 is completed and deterministic local profiles are in place.

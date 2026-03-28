@@ -77,7 +77,7 @@ These are only generated if the class does not already define them explicitly.
 - Stdlib classes migrated where applicable (boilerplate `__init__` removed)
 - New E2E pass tests: `auto_init_basic`, `auto_init_defaults`, `auto_init_eq`, `auto_init_str`, `auto_init_explicit_override`, `auto_init_inheritance_warning`
 - New E2E fail tests: `auto_init_required_after_default` (field ordering error), `auto_init_inheritance_missing_super` (diagnostic)
-- Milestone demo in `./demos/milestone_auto_init_demo.sifr`
+- Milestone demo in `./demos/auto_init.sifr`
 
 ---
 
@@ -158,7 +158,7 @@ As part of completing the type system, ensure `None` works fully as a standalone
 - `cargo test` passes, `cargo clippy -- -D warnings` passes, no new `unsafe` without justification
 - New E2E pass tests: `generic_class_basic`, `generic_class_field_access`, `generic_class_method`, `generic_class_auto_init`, `generic_class_inference`, `generic_bounds_comparable`, `generic_bounds_multiple`, `generic_type_alias`, `none_standalone_value`, `none_standalone_type`, `none_as_dict_key`
 - New E2E fail tests: `generic_bounds_not_satisfied`, `generic_class_missing_type_arg`, `generic_wrong_type_arg`
-- Milestone demo in `./demos/milestone_generics_v2_demo.sifr`
+- Milestone demo in `./demos/generics_v2.sifr`
 
 ---
 
@@ -281,7 +281,7 @@ For reference, the existing parser infrastructure includes:
 - `cargo test` passes, `cargo clippy -- -D warnings` passes, no new `unsafe` without justification
 - New E2E pass tests: `match_literal`, `match_union`, `match_optional`, `match_class_destructure`, `match_or_pattern`, `match_guard`, `match_tuple`, `match_nested`, `match_wildcard`, `match_exhaustive_literal_union`
 - New E2E fail tests: `match_non_exhaustive_union`, `match_non_exhaustive_optional`, `match_non_exhaustive_literal`, `match_invalid_field_name`, `match_type_mismatch_guard`
-- Milestone demo in `./demos/milestone_pattern_matching_demo.sifr`
+- Milestone demo in `./demos/pattern_matching.sifr`
 
 ---
 
@@ -423,7 +423,7 @@ Sifr intentionally does NOT support enums with associated data (algebraic data t
 - `cargo test` passes, `cargo clippy -- -D warnings` passes, no new `unsafe` without justification
 - New E2E pass tests: `enum_simple`, `enum_valued`, `enum_methods`, `enum_match_exhaustive`, `enum_as_dict_key`, `enum_in_set`, `enum_value_property`
 - New E2E fail tests: `enum_match_non_exhaustive`, `enum_invalid_variant`, `enum_duplicate_value`
-- Milestone demo in `./demos/milestone_enums_demo.sifr`
+- Milestone demo in `./demos/enums.sifr`
 
 ---
 
@@ -488,7 +488,7 @@ y: bigint = factorial(1000)
 - `cargo test` passes, `cargo clippy -- -D warnings` passes, no new `unsafe` without justification
 - New E2E pass tests: `bigint_basic`, `bigint_large_value`, `bigint_arithmetic`, `bigint_comparison`, `bigint_to_int`, `int_to_bigint`, `bigint_as_dict_key`, `bigint_factorial`
 - New E2E fail tests: `bigint_int_mixed_arithmetic`, `bigint_overflow_conversion`
-- Milestone demo in `./demos/milestone_integer_safety_demo.sifr`
+- Milestone demo in `./demos/integer_safety.sifr`
 
 ---
 
@@ -617,7 +617,7 @@ All existing E2E tests that use the monomorphic stdlib functions must be updated
 - New E2E pass tests: `generic_chain_str`, `generic_chain_float`, `generic_counter_int`, `generic_counter_custom_class`, `generic_deque_str`, `generic_deque_float`, `generic_heapq_float`, `generic_reduce_str`, `generic_accumulate_float`, `generic_dropwhile_predicate`, `generic_shuffle_str`, `generic_counter_bigint`, `generic_heapq_bigint`, `generic_accumulate_bigint`
 - New E2E fail tests: `generic_counter_unhashable` (float as Counter key), `generic_heapq_uncomparable` (type without Comparable)
 - API naming divergences table in `architecture.md` updated: remove `chain_str`, `accumulate_float`, and any other deleted type-specific entries; update `itertools.count_from` if its rationale changes
-- Milestone demo in `./demos/milestone_stdlib_generic_rewrite_demo.sifr`
+- Milestone demo in `./demos/stdlib_generic_rewrite.sifr`
 
 ---
 

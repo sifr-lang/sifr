@@ -15,7 +15,7 @@ from phase31_leetcode_scorecard import (
 ROOT = Path(__file__).resolve().parent.parent
 SCORECARD_JSON = ROOT / "verification/leetcode/phase31_scorecard.json"
 SCORECARD_MD = ROOT / "verification/leetcode/phase31_scorecard.md"
-DEMO_MD = ROOT / "demos/m31_5_leetcode_scorecard_demo/report.md"
+DEMO_MD = ROOT / "demos/leetcode_scorecard/report.md"
 
 
 def main() -> None:

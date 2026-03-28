@@ -24,4 +24,4 @@ Scope: builtin lazy/eager boundary cleanup (`filter` laziness and iterable-input
 - Negative fixture:
   - `crates/sifr/tests/e2e/fail/phase_psp_iter_fix_5_filter_requires_explicit_materialization.sifr`
 - Demo:
-  - `demos/ad_hoc_iter_fix_wave5_builtin_surface_cleanup_demo.sifr`
+  - `demos/iter_fix_builtin_surface_cleanup.sifr`

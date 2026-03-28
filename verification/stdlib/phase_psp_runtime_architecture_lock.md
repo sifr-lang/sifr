@@ -83,9 +83,9 @@ Current `logging` file-sink behavior is intentionally fail-soft in this architec
 
 - Positive lock fixture: `crates/sifr/tests/e2e/pass/phase_psp_runtime_0_architecture_lock.sifr`
 - Wave-0 demos:
-  - `demos/ad_hoc_runtime_wave0_stream_hierarchy_contract_demo.sifr`
-  - `demos/ad_hoc_runtime_wave0_tempfile_zip_lifecycle_demo.sifr`
-  - `demos/ad_hoc_runtime_wave0_bytes_binary_io_contract_demo.sifr`
+  - `demos/runtime_stream_hierarchy_contract.sifr`
+  - `demos/runtime_tempfile_zip_lifecycle.sifr`
+  - `demos/runtime_bytes_binary_io_contract.sifr`
 - Permanent-diff negative fixtures:
   - `crates/sifr/tests/e2e/fail/phase_psp_runtime_0_pyio_inheritance_unsupported.sifr`
   - `crates/sifr/tests/e2e/fail/phase_psp_runtime_0_async_popen_unsupported.sifr`

@@ -57,7 +57,7 @@ This is validated in `phase_psp_iter_fix_6_itertools_iterable_stdlib_closure.sif
 
 Cross-check:
 
-- `demos/m30_1d_itertools_parity_demo/main.sifr` exercises `pairwise` and is expected to compile/run with this wave after the iterable-`pairwise` Option-state fix.
+- `demos/itertools_parity/main.sifr` exercises `pairwise` and is expected to compile/run with this wave after the iterable-`pairwise` Option-state fix.
 
 ## Post-Closure Add-On (2026-03-20)
 

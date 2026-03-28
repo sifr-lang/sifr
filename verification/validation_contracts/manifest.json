@@ -10,22 +10,22 @@
           "commands": [
             {
               "id": "positive_check",
-              "argv": ["cargo", "run", "-q", "-p", "sifr", "--", "check", "demos/m22_4_parity_regression_matrix_demo/main.sifr"],
+              "argv": ["cargo", "run", "-q", "-p", "sifr", "--", "check", "demos/parity_regression_matrix/main.sifr"],
               "expected_exit": 0
             },
             {
               "id": "positive_build",
-              "argv": ["cargo", "run", "-q", "-p", "sifr", "--", "build", "demos/m22_4_parity_regression_matrix_demo/main.sifr", "--output", "<TMP>/positive_build"],
+              "argv": ["cargo", "run", "-q", "-p", "sifr", "--", "build", "demos/parity_regression_matrix/main.sifr", "--output", "<TMP>/positive_build"],
               "expected_exit": 0
             },
             {
               "id": "positive_run",
-              "argv": ["cargo", "run", "-q", "-p", "sifr", "--", "run", "demos/m22_4_parity_regression_matrix_demo/main.sifr"],
+              "argv": ["cargo", "run", "-q", "-p", "sifr", "--", "run", "demos/parity_regression_matrix/main.sifr"],
               "expected_exit": 0
             },
             {
               "id": "positive_test",
-              "argv": ["cargo", "run", "-q", "-p", "sifr", "--", "test", "demos/m22_4_parity_regression_matrix_demo"],
+              "argv": ["cargo", "run", "-q", "-p", "sifr", "--", "test", "demos/parity_regression_matrix"],
               "expected_exit": 0
             }
           ],
@@ -49,22 +49,22 @@
           "commands": [
             {
               "id": "negative_check",
-              "argv": ["cargo", "run", "-q", "-p", "sifr", "--", "check", "demos/m22_4_parity_regression_matrix_demo/negative_cases/type_error_project/main.sifr"],
+              "argv": ["cargo", "run", "-q", "-p", "sifr", "--", "check", "demos/parity_regression_matrix/negative_cases/type_error_project/main.sifr"],
               "expected_exit": 1
             },
             {
               "id": "negative_build",
-              "argv": ["cargo", "run", "-q", "-p", "sifr", "--", "build", "demos/m22_4_parity_regression_matrix_demo/negative_cases/type_error_project/main.sifr", "--output", "<TMP>/negative_build"],
+              "argv": ["cargo", "run", "-q", "-p", "sifr", "--", "build", "demos/parity_regression_matrix/negative_cases/type_error_project/main.sifr", "--output", "<TMP>/negative_build"],
               "expected_exit": 1
             },
             {
               "id": "negative_run",
-              "argv": ["cargo", "run", "-q", "-p", "sifr", "--", "run", "demos/m22_4_parity_regression_matrix_demo/negative_cases/type_error_project/main.sifr"],
+              "argv": ["cargo", "run", "-q", "-p", "sifr", "--", "run", "demos/parity_regression_matrix/negative_cases/type_error_project/main.sifr"],
               "expected_exit": 1
             },
             {
               "id": "negative_test",
-              "argv": ["cargo", "run", "-q", "-p", "sifr", "--", "test", "demos/m22_4_parity_regression_matrix_demo/negative_cases/type_error_project"],
+              "argv": ["cargo", "run", "-q", "-p", "sifr", "--", "test", "demos/parity_regression_matrix/negative_cases/type_error_project"],
               "expected_exit": 1
             }
           ],
@@ -106,17 +106,17 @@
           "commands": [
             {
               "id": "single_check",
-              "argv": ["cargo", "run", "-q", "-p", "sifr", "--", "check", "demos/m23_5_graph_isolation_regression_matrix_demo/single_file/main.sifr"],
+              "argv": ["cargo", "run", "-q", "-p", "sifr", "--", "check", "demos/graph_isolation_regression_matrix/single_file/main.sifr"],
               "expected_exit": 0
             },
             {
               "id": "single_build",
-              "argv": ["cargo", "run", "-q", "-p", "sifr", "--", "build", "demos/m23_5_graph_isolation_regression_matrix_demo/single_file/main.sifr", "--output", "<TMP>/single_build"],
+              "argv": ["cargo", "run", "-q", "-p", "sifr", "--", "build", "demos/graph_isolation_regression_matrix/single_file/main.sifr", "--output", "<TMP>/single_build"],
               "expected_exit": 0
             },
             {
               "id": "single_run",
-              "argv": ["cargo", "run", "-q", "-p", "sifr", "--", "run", "demos/m23_5_graph_isolation_regression_matrix_demo/single_file/main.sifr"],
+              "argv": ["cargo", "run", "-q", "-p", "sifr", "--", "run", "demos/graph_isolation_regression_matrix/single_file/main.sifr"],
               "expected_exit": 0
             }
           ],
@@ -134,22 +134,22 @@
           "commands": [
             {
               "id": "multi_check",
-              "argv": ["cargo", "run", "-q", "-p", "sifr", "--", "check", "demos/m23_5_graph_isolation_regression_matrix_demo/main.sifr"],
+              "argv": ["cargo", "run", "-q", "-p", "sifr", "--", "check", "demos/graph_isolation_regression_matrix/main.sifr"],
               "expected_exit": 0
             },
             {
               "id": "multi_build",
-              "argv": ["cargo", "run", "-q", "-p", "sifr", "--", "build", "demos/m23_5_graph_isolation_regression_matrix_demo/main.sifr", "--output", "<TMP>/multi_build"],
+              "argv": ["cargo", "run", "-q", "-p", "sifr", "--", "build", "demos/graph_isolation_regression_matrix/main.sifr", "--output", "<TMP>/multi_build"],
               "expected_exit": 0
             },
             {
               "id": "multi_run",
-              "argv": ["cargo", "run", "-q", "-p", "sifr", "--", "run", "demos/m23_5_graph_isolation_regression_matrix_demo/main.sifr"],
+              "argv": ["cargo", "run", "-q", "-p", "sifr", "--", "run", "demos/graph_isolation_regression_matrix/main.sifr"],
               "expected_exit": 0
             },
             {
               "id": "multi_test",
-              "argv": ["cargo", "run", "-q", "-p", "sifr", "--", "test", "demos/m23_5_graph_isolation_regression_matrix_demo"],
+              "argv": ["cargo", "run", "-q", "-p", "sifr", "--", "test", "demos/graph_isolation_regression_matrix"],
               "expected_exit": 0
             }
           ],
@@ -173,22 +173,22 @@
           "commands": [
             {
               "id": "closure_neg_check",
-              "argv": ["cargo", "run", "-q", "-p", "sifr", "--", "check", "demos/m23_5_graph_isolation_regression_matrix_demo/negative_cases/reachable_parse_error/main.sifr"],
+              "argv": ["cargo", "run", "-q", "-p", "sifr", "--", "check", "demos/graph_isolation_regression_matrix/negative_cases/reachable_parse_error/main.sifr"],
               "expected_exit": 1
             },
             {
               "id": "closure_neg_build",
-              "argv": ["cargo", "run", "-q", "-p", "sifr", "--", "build", "demos/m23_5_graph_isolation_regression_matrix_demo/negative_cases/reachable_parse_error/main.sifr", "--output", "<TMP>/closure_neg_build"],
+              "argv": ["cargo", "run", "-q", "-p", "sifr", "--", "build", "demos/graph_isolation_regression_matrix/negative_cases/reachable_parse_error/main.sifr", "--output", "<TMP>/closure_neg_build"],
               "expected_exit": 1
             },
             {
               "id": "closure_neg_run",
-              "argv": ["cargo", "run", "-q", "-p", "sifr", "--", "run", "demos/m23_5_graph_isolation_regression_matrix_demo/negative_cases/reachable_parse_error/main.sifr"],
+              "argv": ["cargo", "run", "-q", "-p", "sifr", "--", "run", "demos/graph_isolation_regression_matrix/negative_cases/reachable_parse_error/main.sifr"],
               "expected_exit": 1
             },
             {
               "id": "closure_neg_test",
-              "argv": ["cargo", "run", "-q", "-p", "sifr", "--", "test", "demos/m23_3_project_test_discovery_parity_contract_demo/negative_cases/reachable_parse_error"],
+              "argv": ["cargo", "run", "-q", "-p", "sifr", "--", "test", "demos/project_test_discovery_parity_contract/negative_cases/reachable_parse_error"],
               "expected_exit": 1
             }
           ],
@@ -212,12 +212,12 @@
           "commands": [
             {
               "id": "cycle_check_first",
-              "argv": ["cargo", "run", "-q", "-p", "sifr", "--", "check", "demos/m23_5_graph_isolation_regression_matrix_demo/negative_cases/module_cycle/main.sifr"],
+              "argv": ["cargo", "run", "-q", "-p", "sifr", "--", "check", "demos/graph_isolation_regression_matrix/negative_cases/module_cycle/main.sifr"],
               "expected_exit": 1
             },
             {
               "id": "cycle_check_second",
-              "argv": ["cargo", "run", "-q", "-p", "sifr", "--", "check", "demos/m23_5_graph_isolation_regression_matrix_demo/negative_cases/module_cycle/main.sifr"],
+              "argv": ["cargo", "run", "-q", "-p", "sifr", "--", "check", "demos/graph_isolation_regression_matrix/negative_cases/module_cycle/main.sifr"],
               "expected_exit": 1
             }
           ],
@@ -241,25 +241,25 @@
           "commands": [
             {
               "id": "parallel_run_a",
-              "argv": ["cargo", "run", "-q", "-p", "sifr", "--", "run", "demos/m23_4_invocation_scoped_temp_workspace_isolation_demo/parallel_runs/a/main.sifr"],
+              "argv": ["cargo", "run", "-q", "-p", "sifr", "--", "run", "demos/invocation_scoped_temp_workspace_isolation/parallel_runs/a/main.sifr"],
               "expected_exit": 0,
               "parallel_group": "parallel_runs"
             },
             {
               "id": "parallel_run_b",
-              "argv": ["cargo", "run", "-q", "-p", "sifr", "--", "run", "demos/m23_4_invocation_scoped_temp_workspace_isolation_demo/parallel_runs/b/main.sifr"],
+              "argv": ["cargo", "run", "-q", "-p", "sifr", "--", "run", "demos/invocation_scoped_temp_workspace_isolation/parallel_runs/b/main.sifr"],
               "expected_exit": 0,
               "parallel_group": "parallel_runs"
             },
             {
               "id": "parallel_test_a",
-              "argv": ["cargo", "run", "-q", "-p", "sifr", "--", "test", "demos/m23_4_invocation_scoped_temp_workspace_isolation_demo/parallel_tests/a"],
+              "argv": ["cargo", "run", "-q", "-p", "sifr", "--", "test", "demos/invocation_scoped_temp_workspace_isolation/parallel_tests/a"],
               "expected_exit": 0,
               "parallel_group": "parallel_tests"
             },
             {
               "id": "parallel_test_b",
-              "argv": ["cargo", "run", "-q", "-p", "sifr", "--", "test", "demos/m23_4_invocation_scoped_temp_workspace_isolation_demo/parallel_tests/b"],
+              "argv": ["cargo", "run", "-q", "-p", "sifr", "--", "test", "demos/invocation_scoped_temp_workspace_isolation/parallel_tests/b"],
               "expected_exit": 0,
               "parallel_group": "parallel_tests"
             }
@@ -290,22 +290,22 @@
           "commands": [
             {
               "id": "m24_5_check",
-              "argv": ["cargo", "run", "-q", "-p", "sifr", "--", "check", "demos/m24_5_analysis_consolidation_regression_matrix_demo/main.sifr"],
+              "argv": ["cargo", "run", "-q", "-p", "sifr", "--", "check", "demos/analysis_consolidation_regression_matrix/main.sifr"],
               "expected_exit": 0
             },
             {
               "id": "m24_5_build",
-              "argv": ["cargo", "run", "-q", "-p", "sifr", "--", "build", "demos/m24_5_analysis_consolidation_regression_matrix_demo/main.sifr", "--output", "<TMP>/m24_5_build"],
+              "argv": ["cargo", "run", "-q", "-p", "sifr", "--", "build", "demos/analysis_consolidation_regression_matrix/main.sifr", "--output", "<TMP>/m24_5_build"],
               "expected_exit": 0
             },
             {
               "id": "m24_5_run",
-              "argv": ["cargo", "run", "-q", "-p", "sifr", "--", "run", "demos/m24_5_analysis_consolidation_regression_matrix_demo/main.sifr"],
+              "argv": ["cargo", "run", "-q", "-p", "sifr", "--", "run", "demos/analysis_consolidation_regression_matrix/main.sifr"],
               "expected_exit": 0
             },
             {
               "id": "m24_5_test",
-              "argv": ["cargo", "run", "-q", "-p", "sifr", "--", "test", "demos/m24_5_analysis_consolidation_regression_matrix_demo"],
+              "argv": ["cargo", "run", "-q", "-p", "sifr", "--", "test", "demos/analysis_consolidation_regression_matrix"],
               "expected_exit": 0
             }
           ],
@@ -335,17 +335,17 @@
           "commands": [
             {
               "id": "m24_5_neg_check",
-              "argv": ["cargo", "run", "-q", "-p", "sifr", "--", "check", "demos/m24_5_analysis_consolidation_regression_matrix_demo/negative_cases/mixed_block_type_error/main.sifr"],
+              "argv": ["cargo", "run", "-q", "-p", "sifr", "--", "check", "demos/analysis_consolidation_regression_matrix/negative_cases/mixed_block_type_error/main.sifr"],
               "expected_exit": 1
             },
             {
               "id": "m24_5_neg_build",
-              "argv": ["cargo", "run", "-q", "-p", "sifr", "--", "build", "demos/m24_5_analysis_consolidation_regression_matrix_demo/negative_cases/mixed_block_type_error/main.sifr", "--output", "<TMP>/m24_5_neg_build"],
+              "argv": ["cargo", "run", "-q", "-p", "sifr", "--", "build", "demos/analysis_consolidation_regression_matrix/negative_cases/mixed_block_type_error/main.sifr", "--output", "<TMP>/m24_5_neg_build"],
               "expected_exit": 1
             },
             {
               "id": "m24_5_neg_run",
-              "argv": ["cargo", "run", "-q", "-p", "sifr", "--", "run", "demos/m24_5_analysis_consolidation_regression_matrix_demo/negative_cases/mixed_block_type_error/main.sifr"],
+              "argv": ["cargo", "run", "-q", "-p", "sifr", "--", "run", "demos/analysis_consolidation_regression_matrix/negative_cases/mixed_block_type_error/main.sifr"],
               "expected_exit": 1
             }
           ],
@@ -375,12 +375,12 @@
           "commands": [
             {
               "id": "m24_5_neg_check_first",
-              "argv": ["cargo", "run", "-q", "-p", "sifr", "--", "check", "demos/m24_5_analysis_consolidation_regression_matrix_demo/negative_cases/mixed_block_type_error/main.sifr"],
+              "argv": ["cargo", "run", "-q", "-p", "sifr", "--", "check", "demos/analysis_consolidation_regression_matrix/negative_cases/mixed_block_type_error/main.sifr"],
               "expected_exit": 1
             },
             {
               "id": "m24_5_neg_check_second",
-              "argv": ["cargo", "run", "-q", "-p", "sifr", "--", "check", "demos/m24_5_analysis_consolidation_regression_matrix_demo/negative_cases/mixed_block_type_error/main.sifr"],
+              "argv": ["cargo", "run", "-q", "-p", "sifr", "--", "check", "demos/analysis_consolidation_regression_matrix/negative_cases/mixed_block_type_error/main.sifr"],
               "expected_exit": 1
             }
           ],
@@ -404,22 +404,22 @@
           "commands": [
             {
               "id": "m25_5_check",
-              "argv": ["cargo", "run", "-q", "-p", "sifr", "--", "check", "demos/m25_5_cfg_flow_activation_regression_matrix_demo/main.sifr"],
+              "argv": ["cargo", "run", "-q", "-p", "sifr", "--", "check", "demos/cfg_flow_activation_regression_matrix/main.sifr"],
               "expected_exit": 0
             },
             {
               "id": "m25_5_build",
-              "argv": ["cargo", "run", "-q", "-p", "sifr", "--", "build", "demos/m25_5_cfg_flow_activation_regression_matrix_demo/main.sifr", "--output", "<TMP>/m25_5_build"],
+              "argv": ["cargo", "run", "-q", "-p", "sifr", "--", "build", "demos/cfg_flow_activation_regression_matrix/main.sifr", "--output", "<TMP>/m25_5_build"],
               "expected_exit": 0
             },
             {
               "id": "m25_5_run",
-              "argv": ["cargo", "run", "-q", "-p", "sifr", "--", "run", "demos/m25_5_cfg_flow_activation_regression_matrix_demo/main.sifr"],
+              "argv": ["cargo", "run", "-q", "-p", "sifr", "--", "run", "demos/cfg_flow_activation_regression_matrix/main.sifr"],
               "expected_exit": 0
             },
             {
               "id": "m25_5_test",
-              "argv": ["cargo", "run", "-q", "-p", "sifr", "--", "test", "demos/m25_5_cfg_flow_activation_regression_matrix_demo"],
+              "argv": ["cargo", "run", "-q", "-p", "sifr", "--", "test", "demos/cfg_flow_activation_regression_matrix"],
               "expected_exit": 0
             }
           ],
@@ -466,17 +466,17 @@
           "commands": [
             {
               "id": "m25_5_neg_check",
-              "argv": ["cargo", "run", "-q", "-p", "sifr", "--", "check", "demos/m25_5_cfg_flow_activation_regression_matrix_demo/negative_cases/reachable_type_error/main.sifr"],
+              "argv": ["cargo", "run", "-q", "-p", "sifr", "--", "check", "demos/cfg_flow_activation_regression_matrix/negative_cases/reachable_type_error/main.sifr"],
               "expected_exit": 1
             },
             {
               "id": "m25_5_neg_build",
-              "argv": ["cargo", "run", "-q", "-p", "sifr", "--", "build", "demos/m25_5_cfg_flow_activation_regression_matrix_demo/negative_cases/reachable_type_error/main.sifr", "--output", "<TMP>/m25_5_neg_build"],
+              "argv": ["cargo", "run", "-q", "-p", "sifr", "--", "build", "demos/cfg_flow_activation_regression_matrix/negative_cases/reachable_type_error/main.sifr", "--output", "<TMP>/m25_5_neg_build"],
               "expected_exit": 1
             },
             {
               "id": "m25_5_neg_run",
-              "argv": ["cargo", "run", "-q", "-p", "sifr", "--", "run", "demos/m25_5_cfg_flow_activation_regression_matrix_demo/negative_cases/reachable_type_error/main.sifr"],
+              "argv": ["cargo", "run", "-q", "-p", "sifr", "--", "run", "demos/cfg_flow_activation_regression_matrix/negative_cases/reachable_type_error/main.sifr"],
               "expected_exit": 1
             }
           ],
@@ -506,12 +506,12 @@
           "commands": [
             {
               "id": "m25_5_neg_check_first",
-              "argv": ["cargo", "run", "-q", "-p", "sifr", "--", "check", "demos/m25_5_cfg_flow_activation_regression_matrix_demo/negative_cases/reachable_type_error/main.sifr"],
+              "argv": ["cargo", "run", "-q", "-p", "sifr", "--", "check", "demos/cfg_flow_activation_regression_matrix/negative_cases/reachable_type_error/main.sifr"],
               "expected_exit": 1
             },
             {
               "id": "m25_5_neg_check_second",
-              "argv": ["cargo", "run", "-q", "-p", "sifr", "--", "check", "demos/m25_5_cfg_flow_activation_regression_matrix_demo/negative_cases/reachable_type_error/main.sifr"],
+              "argv": ["cargo", "run", "-q", "-p", "sifr", "--", "check", "demos/cfg_flow_activation_regression_matrix/negative_cases/reachable_type_error/main.sifr"],
               "expected_exit": 1
             }
           ],

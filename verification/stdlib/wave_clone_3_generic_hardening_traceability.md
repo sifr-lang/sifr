@@ -15,7 +15,7 @@ closing tuple-ownership gaps that caused unnecessary cloning in iterator surface
 - `cargo test -p sifr_type_system test_tuple_ownership_with_move_is_move`
 - `cargo test -p sifr_codegen -- helpers::tests`
 - `cargo run -q -p sifr -- run crates/sifr/tests/e2e/pass/wave_clone_3_generic_hardening_ownership.sifr`
-- `cargo run -q -p sifr -- run demos/ad_hoc_clone_wave3_generic_hardening_demo.sifr`
+- `cargo run -q -p sifr -- run demos/clone_generic_hardening.sifr`
 - `cargo run -q -p sifr -- emit crates/sifr/tests/e2e/pass/wave_clone_3_generic_hardening_ownership.sifr`
 
 ## Emitted Rust Evidence

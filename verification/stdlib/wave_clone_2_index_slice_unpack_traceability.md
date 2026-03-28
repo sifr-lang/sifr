@@ -51,12 +51,12 @@ Observed shape:
 ## Wave artifacts
 
 - pass fixture: `crates/sifr/tests/e2e/pass/wave_clone_2_index_slice_unpack_ownership.sifr`
-- demo: `demos/ad_hoc_clone_wave2_index_slice_unpack_demo.sifr`
+- demo: `demos/clone_index_slice_unpack.sifr`
 
 ## Validation snapshot
 
 - `cargo run -q -p sifr -- run crates/sifr/tests/e2e/pass/wave_clone_2_index_slice_unpack_ownership.sifr` -> PASS
-- `cargo run -q -p sifr -- run demos/ad_hoc_clone_wave2_index_slice_unpack_demo.sifr` -> PASS
+- `cargo run -q -p sifr -- run demos/clone_index_slice_unpack.sifr` -> PASS
 
 Residual items intentionally deferred to later waves:
 

@@ -79,8 +79,8 @@ Run the milestone demo sample:
 
 ```bash
 python3 scripts/run_phase31_leetcode.py \
-  --manifest demos/m31_1_leetcode_runner_demo/corpus.json \
-  --output demos/m31_1_leetcode_runner_demo/results.json
+  --manifest demos/leetcode_runner/corpus.json \
+  --output demos/leetcode_runner/results.json
 ```
 
 Validate the Phase 31 contract locally:

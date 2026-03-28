@@ -21,7 +21,7 @@ Scope: type-system capability layer (`Reversible`, capability metadata, tuple it
 - Positive fixture:
   - `crates/sifr/tests/e2e/pass/phase_psp_iter_fix_1_type_capability_layer.sifr`
 - Demo:
-  - `demos/ad_hoc_iter_fix_wave1_type_capability_demo.sifr`
+  - `demos/iter_fix_type_capability.sifr`
 - Negative fixtures:
   - `crates/sifr/tests/e2e/fail/phase_psp_iter_fix_1_reversed_iterator_not_reversible.sifr`
   - `crates/sifr/tests/e2e/fail/phase_psp_iter_fix_1_iter_heterogeneous_tuple_unsupported.sifr`

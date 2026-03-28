@@ -42,4 +42,4 @@ Mapped behavior assertions in wave fixtures:
   - `crates/sifr/tests/e2e/fail/phase_psp_iter_fix_7_invalid_next_signature.sifr`
   - `crates/sifr/tests/e2e/fail/phase_psp_iter_fix_7_invalid_reversed_signature.sifr`
 - demo:
-  - `demos/ad_hoc_iter_fix_wave7_user_defined_iterable_protocol_demo.sifr`
+  - `demos/iter_fix_user_defined_iterable_protocol.sifr`

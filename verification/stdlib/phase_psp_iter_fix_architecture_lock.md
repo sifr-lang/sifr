@@ -63,7 +63,7 @@ Additional baseline mismatch captured at wave 0:
 
 - Positive lock fixture: `crates/sifr/tests/e2e/pass/phase_psp_iter_fix_0_architecture_lock.sifr`
 - Wave-0 demo:
-  - `demos/ad_hoc_iter_fix_wave0_contract_lock_demo.sifr`
+  - `demos/iter_fix_contract_lock.sifr`
 - Permanent-diff negative fixtures:
   - `crates/sifr/tests/e2e/fail/phase_psp_iter_fix_0_itertools_tee_unsupported.sifr`
   - `crates/sifr/tests/e2e/fail/phase_psp_iter_fix_0_itertools_groupby_unsupported.sifr`

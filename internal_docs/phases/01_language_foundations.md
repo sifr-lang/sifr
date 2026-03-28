@@ -762,7 +762,7 @@ if !_broke {
 - E2E pass tests: augmented_assign, ternary_expr, keyword_args_basic, keyword_args_default, keyword_only_params, for_loop_borrow, list_slice_copy, negative_index_list, negative_index_string, step_slice_basic, step_slice_reverse, step_slice_string, tuple_slice, string_char_index, string_char_len, string_slice, list_methods_concrete, dict_methods_concrete, string_replace, chained_comparison, string_multiply, pass_statement, star_unpacking, walrus_operator, power_operator, multiple_return, loop_else
 - E2E fail tests: ternary_type_mismatch, keyword_after_positional_error, missing_keyword_only_arg
 - Existing milestone_core_language/milestone_control_flow/milestone_type_system E2E tests still pass (no regressions)
-- Milestone demo in `./demos/milestone_ergonomics_demo.sifr`
+- Milestone demo in `./demos/ergonomics.sifr`
 
 ---
 
@@ -845,7 +845,7 @@ Now that classes exist with auto-derived `Hash + Eq`:
 - E2E pass tests: class_basic, class_methods, class_field_access, class_isinstance, class_union, hash_builtin
 - E2E fail tests: missing_field, use_after_move_self, unhashable_dict_key
 - Existing milestone_core_language/milestone_control_flow/milestone_type_system/milestone_ergonomics E2E tests still pass (no regressions)
-- Milestone demo in `./demos/milestone_classes_demo.sifr`
+- Milestone demo in `./demos/classes.sifr`
 
 ---
 
@@ -1008,7 +1008,7 @@ milestone_error_handling introduces pattern matching as the mechanism for `try`/
 - E2E fail tests: unhandled_error, non_exhaustive_except, unused_result_error
 - CPython parity tests pass with safe error handling (no panics, `Result`/`Option` where CPython raises). Reference: `Python/bltinmodule.c` (int/float/bool conversions, input), `Lib/test/test_builtin.py`
 - Unit tests for Result/Option type checking and inference
-- Milestone demo in `./demos/milestone_error_handling_demo.sifr`
+- Milestone demo in `./demos/error_handling.sifr`
 
 ---
 
@@ -1095,7 +1095,7 @@ del config["a"]       # removes key "a" -> config = {"b": 2}
 - E2E fail tests: unused_option_error, unused_result_error
 - CPython parity tests pass with safe error handling (no panics, `Result`/`Option` where CPython raises). Reference: `Objects/listobject.c`, `Objects/dictobject.c`, `Objects/unicodeobject.c`, `Lib/test/test_list.py`, `Lib/test/test_dict.py`, `Lib/test/test_str.py`
 - Existing E2E tests still pass (no regressions)
-- Milestone demo in `./demos/milestone_safe_indexing_demo.sifr`
+- Milestone demo in `./demos/safe_indexing.sifr`
 
 ---
 
@@ -1166,7 +1166,7 @@ def main():
 - Relative imports work within packages
 - E2E pass tests: multi_file_basic, package_import, relative_import
 - E2E fail tests: circular_import, private_access, missing_module
-- Milestone demo in `./demos/milestone_imports_demo.sifr` (multi-file project)
+- Milestone demo in `./demos/imports.sifr` (multi-file project)
 
 ---
 

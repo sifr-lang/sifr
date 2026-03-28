@@ -65,7 +65,7 @@ Generate a local error enum when a `try` block contains calls that can fail with
 - All existing E2E tests migrated from `Result[T, str]` to proper error classes
 - Multi-error-type `try` blocks generate local error enums in codegen
 - New E2E pass/fail tests for exhaustiveness checking
-- Milestone demo in `./demos/milestone_error_safety_demo.sifr`
+- Milestone demo in `./demos/error_safety.sifr`
 
 ---
 

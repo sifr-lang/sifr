@@ -12,7 +12,7 @@ Scope: deterministic RNG state/object model closure for `sifr.random`
 | CPython family | Sifr surface direction | State | Local anchor |
 | --- | --- | --- | --- |
 | `test_random` deterministic state/object model (`Random`, `seed`, `getstate`, `setstate`) | ship typed deterministic mutable-state object model (`RandomState(version, state_words, index, gauss_next)`) with MT19937-style state words and deterministic replay via state round-trips | `adapted` (shipped) | `lib/sifr/random.sifr`, `crates/sifr/tests/e2e/pass/phase_psp_rng_1_stateful_random_object_model.sifr` |
-| `test_random` module-level delegation parity | module-level `seed`, `getstate`, `setstate`, `randrange`, `randint`, `random`, `choice`, `choices`, `sample`, `shuffle`, `gauss`, `uniform`, and `randbytes` delegate through one shared module RNG state contract | `adapted` (shipped) | `lib/sifr/random.sifr`, `demos/ad_hoc_rng_wave1_stateful_object_model_demo.sifr` |
+| `test_random` module-level delegation parity | module-level `seed`, `getstate`, `setstate`, `randrange`, `randint`, `random`, `choice`, `choices`, `sample`, `shuffle`, `gauss`, `uniform`, and `randbytes` delegate through one shared module RNG state contract | `adapted` (shipped) | `lib/sifr/random.sifr`, `demos/rng_stateful_object_model.sifr` |
 | `test_random` `SystemRandom` state-boundary semantics | host-random `SystemRandom` remains non-deterministic; `getstate`/`setstate` are explicitly unsupported and typed as `Result[..., ValueError]` | `adapted` (shipped boundary) | `lib/sifr/random.sifr`, `crates/sifr/tests/e2e/fail/phase_psp_rng_1_system_random_state_unsupported.sifr` |
 | `test_random` byte generation (`randbytes`) | ship deterministic bytes-generation surface returning first-class `bytes` | `adapted` (shipped) | `lib/sifr/random.sifr`, `crates/sifr/tests/e2e/pass/phase_psp_rng_1_stateful_random_object_model.sifr` |
 | `test_random` weighted-distribution `choices(weights=...)` | keep weighted branch unsupported in this wave | `unsupported` | `crates/sifr/tests/e2e/fail/phase_psp_b2_random_choices_weights_unsupported.sifr` |
@@ -21,7 +21,7 @@ Scope: deterministic RNG state/object model closure for `sifr.random`
 
 | CPython test case | Sifr adaptation direction | Local anchor(s) | Coverage status |
 | --- | --- | --- | --- |
-| `TestBasicOps.test_saverestore` | deterministic sequence replay through `getstate`/`setstate` | `crates/sifr/tests/e2e/pass/phase_psp_rng_1_stateful_random_object_model.sifr`, `demos/ad_hoc_rng_wave1_stateful_object_model_demo.sifr` | covered |
+| `TestBasicOps.test_saverestore` | deterministic sequence replay through `getstate`/`setstate` | `crates/sifr/tests/e2e/pass/phase_psp_rng_1_stateful_random_object_model.sifr`, `demos/rng_stateful_object_model.sifr` | covered |
 | `SystemRandom_TestBasicOps.test_saverestore` | host-backed `SystemRandom` state export/import stays unsupported | `crates/sifr/tests/e2e/fail/phase_psp_rng_1_system_random_state_unsupported.sifr` | covered (adapted typed boundary) |
 | `TestBasicOps.test_randbytes` / `MersenneTwister_TestBasicOps.test_randbytes` | deterministic bytes generation on typed first-class `bytes` | `crates/sifr/tests/e2e/pass/phase_psp_rng_1_stateful_random_object_model.sifr` | covered |
 | `MersenneTwister_TestBasicOps.test_setstate_first_arg` and `test_setstate_middle_arg` | invalid state version/index/shape reject through typed `ValueError` | `lib/sifr/random.sifr`, `crates/sifr_codegen/src/intrinsics/random.rs` (`lower_random_module_set_state`), `crates/sifr/tests/e2e/pass/cpython_rng_phase_additional_subset.sifr` | covered |
@@ -40,7 +40,7 @@ Scope: deterministic RNG state/object model closure for `sifr.random`
   - `crates/sifr/tests/e2e/pass/phase_psp_rng_1_stateful_random_object_model.sifr`
   - `crates/sifr/tests/e2e/pass/cpython_rng_phase_additional_subset.sifr` (post-closure CPython state-validation adaptation)
 - Demo:
-  - `demos/ad_hoc_rng_wave1_stateful_object_model_demo.sifr`
+  - `demos/rng_stateful_object_model.sifr`
 - Negative fixtures:
   - `crates/sifr/tests/e2e/fail/phase_psp_rng_1_system_random_state_unsupported.sifr`
   - `crates/sifr/tests/e2e/fail/phase_psp_b2_random_choices_weights_unsupported.sifr`

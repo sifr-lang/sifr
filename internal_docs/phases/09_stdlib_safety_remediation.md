@@ -408,7 +408,7 @@ Affected intrinsics: `read_text`, `write_text`, `read_lines`, `append_text`, `ge
 - **Pass test: Display on all errors** — `print(e)` works for every error type via `Display`, equivalent to `print(e.message)`
 - **Fail test: incomplete subclass coverage** — `except FileNotFoundError` without covering remaining IOError subtypes is a compile error
 - **Pass test: user-defined error** — `class AppError(Error): pass`; `raise AppError("connection failed")`; `e.message` is `"connection failed"`; `print(e)` prints the same
-- **Demo file:** `demos/milestone_error_subclasses_demo.sifr` showing all patterns
+- **Demo file:** `demos/error_subclasses.sifr` showing all patterns
 
 ### Risks and Mitigations
 
@@ -458,7 +458,7 @@ Affected intrinsics: `read_text`, `write_text`, `read_lines`, `append_text`, `ge
 
 **Documentation:**
 - `architecture.md` updated with full error hierarchy, field reference, and design principles
-- Demo file: `demos/milestone_error_subclasses_demo.sifr`
+- Demo file: `demos/error_subclasses.sifr`
 
 ---
 

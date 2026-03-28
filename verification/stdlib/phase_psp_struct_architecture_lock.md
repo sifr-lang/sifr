@@ -49,8 +49,8 @@ Lock public contracts, permanent waivers, and CPython-family mapping for the str
 ## Architecture-Lock Validation Fixtures (Wave 0)
 
 - Positive path fixture: `crates/sifr/tests/e2e/pass/phase_psp_struct_0_architecture_lock.sifr`
-- JSON wrapper-model demo: `demos/ad_hoc_struct_wave0_json_wrapper_model_demo.sifr`
-- Fixed-offset datetime-model demo: `demos/ad_hoc_struct_wave0_fixed_offset_datetime_model_demo.sifr`
+- JSON wrapper-model demo: `demos/struct_json_wrapper_model.sifr`
+- Fixed-offset datetime-model demo: `demos/struct_fixed_offset_datetime_model.sifr`
 - Permanent-diff negative fixtures:
   - `crates/sifr/tests/e2e/fail/phase_psp_struct_0_json_dynamic_hooks_unsupported.sifr`
   - `crates/sifr/tests/e2e/fail/phase_psp_struct_0_datetime_tzinfo_zoneinfo_unsupported.sifr`

@@ -43,7 +43,7 @@ Scope: final polish waiver reduction for `sifr.statistics`, residual `sifr.textw
   - `crates/sifr/tests/e2e/pass/phase_psp_rng_3_textwrap_formatter_options.sifr`
   - `crates/sifr/tests/e2e/pass/cpython_rng_phase_additional_subset.sifr` (post-closure statistics/textwrap/html adaptation subset)
 - Demo:
-  - `demos/ad_hoc_rng_wave3_polish_waiver_reduction_demo.sifr`
+  - `demos/rng_polish_waiver_reduction.sifr`
 - Negative fixture:
   - `crates/sifr/tests/e2e/fail/phase_psp_rng_3_statistics_normaldist_unsupported.sifr`
   - `crates/sifr/tests/e2e/fail/phase_psp_struct_0_html_package_parser_unsupported.sifr`

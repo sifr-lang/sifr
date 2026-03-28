@@ -151,7 +151,7 @@ Convert `bisect`, `heapq`, and `itertools` from concrete `list[int]` to generic 
 - `sifr.math` coverage: ~85% → ~95%
 - ~40 new test assertions pass
 - `cargo test` passes (zero regressions)
-- Demo: `demos/milestone_stdlib_functions_demo.sifr`
+- Demo: `demos/stdlib_functions.sifr`
 
 ---
 
@@ -215,7 +215,7 @@ status: done
 - `from sifr.uuid import UUID` works; `uuid4()` returns `UUID` object
 - `from sifr.datetime import datetime, timedelta` works; `datetime.now() + timedelta(days=1)` works with operator overloading
 - `cargo test` passes (zero regressions)
-- Demo: `demos/milestone_stdlib_class_rollout_demo.sifr`
+- Demo: `demos/stdlib_class_rollout.sifr`
 
 ---
 
@@ -295,7 +295,7 @@ The plan says Callable-as-struct-field should unblock `argparse.ArgumentParser`,
 - `obj.callable_field(args)` works — lowering detects Callable fields and emits a field-call
 - `callable_struct_field.sifr` tests both storing AND calling the callback
 - `cargo test` passes (zero regressions)
-- Demo: `demos/milestone_ordering_remediation_demo.sifr`
+- Demo: `demos/ordering_remediation.sifr`
 
 ---
 
