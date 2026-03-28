@@ -3,7 +3,7 @@
 # Local rebinding should stay predictable inside functions and branches.
 
 
-def shadow_parameter(value: int) -> int:
+def shadow_parameter(mut value: int) -> int:
     value = value + 2
     return value
 
