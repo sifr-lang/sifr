@@ -2,8 +2,8 @@
   "command_prefix": [
     "/Users/yaseralnajjar/work/sifr/codebase/target/release/sifr"
   ],
-  "manifest": "demos/m31_1_leetcode_runner_demo/corpus.json",
-  "output": "demos/m31_1_leetcode_runner_demo/results.json",
+  "manifest": "verification/leetcode/phase31_demo_corpus.json",
+  "output": "verification/leetcode/phase31_demo_results.json",
   "phase": 31,
   "results": [
     {

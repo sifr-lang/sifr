@@ -1,6 +1,6 @@
 <!-- Reference: m31_4 -->
 <!-- Source issue: phase31-algorithmic-compatibility-execution.md -->
-# Phase 31 Remediation Wave 1 Demo
+# Phase 31 Remediation Wave 1 Summary
 
 ## Goal
 
@@ -28,7 +28,7 @@ python3 scripts/run_phase31_leetcode.py \
   --output verification/leetcode/phase31_seed_results_wave1.json
 ```
 
-## Demo Outcome
+## Outcome
 
 - All three selected repros run end-to-end through the canonical release binary.
 - The seed corpus gains three additional passes.

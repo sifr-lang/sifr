@@ -15,7 +15,6 @@ from phase31_leetcode_scorecard import (
 ROOT = Path(__file__).resolve().parent.parent
 SCORECARD_JSON = ROOT / "verification/leetcode/phase31_scorecard.json"
 SCORECARD_MD = ROOT / "verification/leetcode/phase31_scorecard.md"
-DEMO_MD = ROOT / "demos/leetcode_scorecard/main.md"
 
 
 def main() -> None:
@@ -31,12 +30,8 @@ def main() -> None:
 
     SCORECARD_JSON.write_text(json.dumps(scorecard, indent=2, sort_keys=True) + "\n")
     SCORECARD_MD.write_text(markdown)
-    DEMO_MD.parent.mkdir(parents=True, exist_ok=True)
-    DEMO_MD.write_text(markdown.replace("# Phase 31 Compatibility Scorecard", "# Phase 31 Scorecard Demo"))
-
     print(f"wrote {SCORECARD_JSON.relative_to(ROOT)}")
     print(f"wrote {SCORECARD_MD.relative_to(ROOT)}")
-    print(f"wrote {DEMO_MD.relative_to(ROOT)}")
 
 
 if __name__ == "__main__":

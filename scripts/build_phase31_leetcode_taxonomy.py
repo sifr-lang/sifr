@@ -47,13 +47,11 @@ def main() -> None:
     )
 
     verification_dir = REPO_ROOT / "verification" / "leetcode"
-    demo_dir = REPO_ROOT / "demos" / "leetcode_failures"
     taxonomy_json_path = verification_dir / "phase31_failure_taxonomy.json"
     repros_json_path = verification_dir / "phase31_failure_repros.json"
     spot_audit_json_path = verification_dir / "phase31_spot_audit.json"
     spot_audit_cases_path = verification_dir / "phase31_spot_audit_cases.json"
     report_md_path = verification_dir / "phase31_failure_report.md"
-    demo_report_path = demo_dir / "main.md"
 
     write_json(
         taxonomy_json_path,
@@ -88,14 +86,12 @@ def main() -> None:
         },
     )
     write_markdown(report_md_path, report_markdown)
-    write_markdown(demo_report_path, report_markdown)
 
     print(f"wrote {taxonomy_json_path.relative_to(REPO_ROOT)}")
     print(f"wrote {repros_json_path.relative_to(REPO_ROOT)}")
     print(f"wrote {spot_audit_json_path.relative_to(REPO_ROOT)}")
     print(f"wrote {spot_audit_cases_path.relative_to(REPO_ROOT)}")
     print(f"wrote {report_md_path.relative_to(REPO_ROOT)}")
-    print(f"wrote {demo_report_path.relative_to(REPO_ROOT)}")
 
 
 if __name__ == "__main__":
