@@ -216,7 +216,7 @@ Phase-close validation:
 
 ### wave_1_stabilize_the_review_standard
 
-status: pending
+status: in_progress
 
 Goals:
 
@@ -228,6 +228,10 @@ Deliverables:
 
 - authoritative review prompt shape documented in the execution ledger
 - first reviewed batch accepted under the Rust-first criterion
+
+Progress update (`2026-03-29`):
+
+- `batch_01_logging_time_timeit` completed local validation, passed external pass-1/pass-2 review, and is now accepted as the first fresh Rust-first batch for this phase
 
 ### wave_2_runnable_demo_corpus_pass
 
