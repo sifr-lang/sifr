@@ -5,7 +5,7 @@
 # ============================================================
 # This demo showcases:
 # 1. TypeVar for generic type parameters
-# 2. Generic functions with type inference
+# 2. Generic functions with type inference under safe indexing
 # 3. Callable type for higher-order functions
 # 4. Combining generics with Callable
 # ============================================================
@@ -18,8 +18,8 @@ T = TypeVar("T")
 def identity(x: T) -> T:
     return x
 
-# --- 2. Generic function operating on list[T] ---
-def first(items: list[T]) -> T:
+# --- 2. Generic function operating on list[T] with safe indexing ---
+def first(items: list[T]) -> T | None:
     return items[0]
 
 # --- 3. Higher-order function with Callable ---
@@ -46,11 +46,24 @@ def main():
     print(a)
     print(b)
 
-    # 2. Generic first - works with list[int] and list[str]
+    # 2. Generic first - safe indexing returns T | None
     nums: list[int] = [10, 20, 30]
     words: list[str] = ["alpha", "beta", "gamma"]
-    print(first(nums))
-    print(first(words))
+    empty_words: list[str] = []
+
+    first_num: int | None = first(nums)
+    if first_num is not None:
+        print(first_num)
+
+    first_word: str | None = first(words)
+    if first_word is not None:
+        print(first_word)
+
+    missing_word: str | None = first(empty_words)
+    if missing_word is None:
+        print("empty list -> None")
+    else:
+        print(missing_word)
 
     # 3. Callable - higher-order functions
     print(apply(double, 5))
