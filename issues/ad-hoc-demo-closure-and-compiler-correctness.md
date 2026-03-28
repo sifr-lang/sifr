@@ -21,6 +21,11 @@ This phase is not a request to make every current demo pass by any means necessa
 - deterministic lowering,
 - and Rust-consistent semantics rather than compatibility-shaped hacks.
 
+The 2026-03-28 full-demo `emit` audit improved this plan in two ways:
+
+- it confirmed that several current run failures are still compiler/codegen bugs in the emitted Rust rather than stale demos,
+- and it showed that many full-demo `emit` failures are a separate project/module-resolution issue in `emit` mode and therefore must not be confused with the run-failure buckets that this phase owns.
+
 ## Source of Truth
 
 - latest demo failure inventory from the 2026-03-28 rerun in the current workspace
@@ -144,16 +149,28 @@ Current root-cause classification:
   - iterator lifetime lowering bug: `12` demos
   - `FileHandle` layout drift: `3` demos
   - borrow/type mismatch in generated Rust: `2` demos
+  - mutability propagation in generated Rust: `1` demo
   - recursive lowering/access gap: `2` demos
 - demo-source adaptation:
-  - `mut_sort`: `1` demo
-- ambiguous ownership/mutability case:
-  - `tuple_assignment`: `1` demo
+  - `mut_sort`: `1` demo, tentative pending wave 3 confirmation that the current compiler behavior is intentional rather than compiler-owned
+- auditable unresolved total:
+  - `12 + 3 + 2 + 1 + 2 + 1 = 21`
 
 Out-of-scope from this phase baseline:
 
 - `demos/local_shadowing/main.sifr` is no longer failing
 - all demo-local `test` directories were already green in the latest sweep
+
+Supporting emit-audit note:
+
+- a full `demos/` emit sweep on 2026-03-28 found `24` emit-time failures across the broader demo tree:
+  - `22` are project/module-resolution failures in `emit` mode for multi-file demos
+  - `2` are real Sifr-side pre-codegen failures: `mut_sort` and `recursive_records`
+- this phase does not expand to own all `emit`-mode project resolution work
+- however, the emit audit is authoritative supporting evidence for:
+  - iterator lifetime bugs still being present in current emitted Rust
+  - `FileHandle` initializer drift still being present in current emitted Rust
+  - `tuple_assignment` being a confirmed compiler/codegen bug rather than an ambiguous demo issue
 
 ## Language Contract and Guardrails
 
@@ -177,6 +194,14 @@ A demo may be edited in this phase only if all of the following are true:
 
 This phase must not rewrite demos to paper over compiler bugs.
 
+### Emit evidence policy
+
+For single-file demos, `emit` output is valid supporting evidence for locating lowering/codegen bugs.
+
+For multi-file project demos, current `emit` behavior is not authoritative for run-scope ownership because the 2026-03-28 audit showed repeated project/module-resolution failures in `emit` mode. Until `emit` becomes project-aware, implementation in this phase must treat full-demo `emit` failures as supporting diagnostics only, not as a reason to reclassify a run failure away from its actual owning layer.
+
+When the same failure shape appears in both current `emitted.rs` output and checked-in `idiomatic.rs`, implementation in this phase must treat that as shared lowering/runtime-IR evidence. The owning fix must land in the shared compiler/runtime path and then regenerate affected artifacts, not patch per-demo Rust output.
+
 ### Compatibility policy
 
 The Phase 31 LeetCode corpus remains a verification input, not a language spec.
@@ -198,9 +223,10 @@ This phase owns:
 - iterator lifetime-safe lowering for canonical iterator pipelines
 - runtime/file-object initializer consistency for generated Rust
 - generated Rust borrow correctness at call and mutable-map access sites
+- generated Rust mutability propagation for tuple-assignment-style field updates
 - recursive demo closure when blocked by residual lowering/frontend gaps
 - one canonical demo adaptation for `mut_sort`
-- final classification and closure of `tuple_assignment`
+- concrete compiler/codegen closure for `tuple_assignment`
 - full rerun evidence for `demos/` after each bucket closure
 
 This phase does not own:
@@ -209,6 +235,7 @@ This phase does not own:
 - weakening Sifr safety principles for compatibility
 - demo churn to route around compiler defects
 - broad LeetCode corpus work beyond the guardrails already documented in Phase 31
+- broad project-aware `emit` redesign for multi-file demos beyond what is needed as supporting evidence for the run-failure buckets
 
 ## Execution Order
 
@@ -219,6 +246,7 @@ status: pending
 Root cause:
 
 - generated Rust returns boxed or adapter-backed iterators that borrow local temporaries, producing `E0515`
+- the same invalid lifetime shape is visible in both current `emitted.rs` output and checked-in `idiomatic.rs`, so the owning defect is the shared iterator-lowering/runtime-IR path rather than per-demo Rust output
 
 Affected demos:
 
@@ -239,12 +267,14 @@ Required closure:
 
 - iterator lowering must preserve ownership/lifetime validity without hidden eager materialization
 - emitted Rust must not return iterators backed by locals that go out of scope
+- the fix must land in the shared iterator-lowering/runtime-IR path and regenerate any persisted Rust IR artifacts that still encode the stale pattern
 - the implementation must follow the canonical iteration architecture rather than introducing special-case lowering for the affected demos
 
 Definition of done:
 
 - all demos in this bucket run
-- new regression coverage exists outside the current demo set
+- new regression coverage exists outside the current demo set, including at least one non-demo check that a returned iterator does not borrow a local temporary
+- regenerated Rust artifacts no longer diverge from live `emit` output for this failure family
 - no lazy API silently becomes eager as the fix mechanism
 
 ### wave_2_filehandle_layout_closure
@@ -253,7 +283,8 @@ status: pending
 
 Root cause:
 
-- generated/manual Rust initialization paths drifted from the current `FileHandle` layout and now miss `_closed`, producing `E0063`
+- direct `FileHandle` struct literals in generated/manual Rust bypass the canonical constructor path and omit `_closed`, producing `E0063`
+- the defect is not the struct definition itself; it is inconsistent construction routes across emitted code and persisted runtime/IR artifacts
 
 Affected demos:
 
@@ -263,13 +294,19 @@ Affected demos:
 
 Required closure:
 
-- one canonical initializer contract for file-handle values across runtime and codegen
+- all `FileHandle` construction must route through one canonical constructor/helper contract across runtime, codegen, and persisted runtime/IR artifacts
+- direct struct-literal construction that can drift from the canonical contract must be removed or centrally regenerated
+- for this phase, the canonical constructor symbol is `FileHandle::new(handle, mode.clone())`, and closure must explicitly cover the currently confirmed bypass families:
+  - generated open-mode match arms that return `Ok(FileHandle { ... })` after handle registration
+  - generated logging/file-handler helper closures that inline file opening and return `FileHandle { ... }`
+  - matching stale `idiomatic.rs` artifact sites for the same generated families
 - no field-by-field drift between emitted code and runtime types
 
 Definition of done:
 
 - all demos in this bucket run
-- runtime/file-object regression coverage locks the new contract
+- runtime/file-object regression coverage locks the canonical-construction rule
+- regenerated Rust artifacts no longer contain stale `FileHandle { _handle, _mode }` literals for this bucket
 
 ### wave_3_demo_adaptation_mut_sort
 
@@ -277,7 +314,7 @@ status: pending
 
 Root cause:
 
-- the demo uses an ownership/mutability shape that is stale against current Sifr semantics
+- current evidence tentatively points to the demo using an ownership/mutability shape that may be stale against current Sifr semantics, but ownership stays unconfirmed until this wave explicitly checks whether the failure is intentional compiler behavior or a misplaced compiler-owned defect
 
 Affected demo:
 
@@ -285,6 +322,7 @@ Affected demo:
 
 Required closure:
 
+- first confirm whether the current failure is intentional compiler behavior or actually belongs to a compiler-owned bucket
 - adapt the demo to canonical current semantics only if the compiler behavior is confirmed intentional
 - if investigation shows the failure is actually compiler-side, reclassify this item into the owning compiler bucket instead of forcing a demo rewrite
 
@@ -308,7 +346,7 @@ Affected demos:
 
 Required closure:
 
-- map/dict mutable access must borrow keys correctly
+- map/dict mutable access must preserve canonical borrowed-key or `entry(...).or_insert(...)` mutation shapes rather than emitting owned-key `get_mut(...)` calls
 - wrapper and helper call emission must preserve borrowed argument shapes where the Rust surface requires references
 - the fix must be generalized by emitter rule, not keyed to these call sites
 
@@ -323,7 +361,10 @@ status: pending
 
 Root cause:
 
-- residual recursive lowering/access gaps remain even after the broader recursive-type work
+- residual recursive closure gaps remain even after the broader recursive-type work
+- current evidence already splits this into at least two layers:
+  - frontend expression closure for recursive field access such as `.next`
+  - and any remaining lowering/access issues after that frontend gap is closed
 
 Affected demos:
 
@@ -332,6 +373,9 @@ Affected demos:
 
 Required closure:
 
+- close recursive-field expression support at the owning frontend layer before attributing remaining failures to later lowering
+- the only currently confirmed frontend-owned recursive expression construct in this phase is non-call recursive attribute projection such as `node.next` used as a first-class expression value
+- any broader recursive expression construct discovered during implementation must be explicitly classified before it is folded into this wave as frontend-owned
 - fix only the residual gaps that belong to already-supported recursive semantics
 - if a failing shape requires feature expansion beyond the landed recursive-type contract, route it back to the recursive-type phase as an explicit gap rather than patching it locally
 
@@ -340,25 +384,26 @@ Definition of done:
 - the demos run under one coherent recursive lowering contract
 - no `TreeNode`/`ListNode`-style special casing is introduced
 
-### wave_6_tuple_assignment_final_classification
+### wave_6_tuple_assignment_codegen_closure
 
 status: pending
 
-Open question:
+Root cause:
 
-- `demos/tuple_assignment/main.sifr` still appears more likely to be a mutability-propagation/compiler issue than a stale demo, but that judgment should be made only after the earlier buckets land
+- current emitted Rust confirms a receiver-mutability contract bug across HIR and codegen: the demo lowers a mutating method with `&self` and then assigns to fields
+- the current strongest implementation-locus evidence is that `crates/sifr_hir/src/lower/classes.rs` computes `_is_mutating` and then discards it before codegen chooses the receiver shape
 
 Required closure:
 
-- re-run after waves 1 through 5
-- classify it as either:
-  - closed incidentally,
-  - compiler-owned,
-  - or true demo adaptation
+- fix the HIR-to-codegen receiver-mutability contract so tuple-assignment field updates lower through a coherent mutable receiver contract
+- tuple-assignment field updates on `self` must not depend on ad hoc body re-scans if the owning mutability fact already exists during lowering
+- do not patch this by rewriting the demo away from tuple assignment if the current source is otherwise canonical
+- re-run after waves 1 through 5 in case earlier codegen changes partially overlap, but this bucket is compiler-owned unless new evidence disproves the current emitted-Rust diagnosis
 
 Definition of done:
 
-- the ownership of this remaining failure is explicit and justified
+- `demos/tuple_assignment/main.sifr` runs
+- regression coverage exists for tuple-assignment-driven field mutation on a non-demo shape
 - the final fix follows the same guardrails as the rest of the phase
 
 ## Validation Contract
@@ -367,6 +412,7 @@ Before closing any wave:
 
 - run the directly affected demos
 - run targeted compiler/e2e coverage for the owning root cause
+- record whether the validated fix was proven against pre-codegen diagnostics, live `emit` output, persisted `idiomatic.rs`, or a combination of those sources
 - run `cargo test -p sifr -- --skip test_e2e_pass`
 - run `scripts/run_all_tests.sh --profile quick`
 
@@ -375,6 +421,9 @@ Before closing the full phase:
 - rerun the full `demos/` sweep using the baseline discovery commands from `Entry Baseline`
 - run `scripts/run_all_tests.sh`
 - record the before/after failing-demo counts and residual explanations in the execution ledger
+- if `emit` is used as supporting evidence during implementation, distinguish:
+  - real lowering/codegen defects in emitted Rust
+  - from separate multi-file `emit` module-resolution failures that are not phase blockers for run closure
 
 ## Exit Gate
 
@@ -402,6 +451,5 @@ This phase is ready to implement now because:
 - the failing surface is already reduced to a small number of root-cause buckets,
 - the bucket ordering is dependency-aware,
 - one known demo-side fix has already been removed from scope (`local_shadowing`),
-- and the policy boundary between canonical demo adaptation and compiler work is explicit.
-
-The only intentionally deferred classification is `tuple_assignment`, and that deferral is deliberate: it should be judged only after the higher-leverage compiler buckets are closed.
+- the policy boundary between canonical demo adaptation and compiler work is explicit,
+- and the full-demo emit audit clarified which failures are true compiler/codegen defects versus separate `emit`-mode project-resolution behavior.
