@@ -17,6 +17,83 @@ fn generate_rust_from_source(source: &str) -> String {
 }
 
 #[test]
+fn test_generate_rust_preserves_loop_else_recursion_and_try_except_returns() {
+    let loop_else_recursion = generate_rust_from_source(
+        "def main():\n\
+    def recurse(n: int) -> int:\n\
+        for i in [1]:\n\
+            pass\n\
+        else:\n\
+            if n > 0:\n\
+                return recurse(n - 1)\n\
+        return 0\n\
+\n\
+    print(recurse(4))\n",
+    );
+    assert!(loop_else_recursion.contains("fn recurse(n: i64) -> i64"));
+    assert!(
+        loop_else_recursion.contains("if !_broke")
+            || loop_else_recursion.contains("if !(_broke)")
+    );
+
+    let try_except_return = generate_rust_from_source(
+        "def classify(n: int) -> int:\n\
+    try:\n\
+        if n > 0:\n\
+            return n\n\
+        else:\n\
+            raise ValueError('non-positive')\n\
+    except ValueError as e:\n\
+        return 99\n",
+    );
+    assert!(
+        try_except_return.contains("return Err(ValueError::new(\"non-positive\".to_string()));")
+    );
+    assert!(try_except_return.contains("return 99 as i64;"));
+
+    let loop_guard_narrowing = generate_rust_from_source(
+        "def summarize(values: list[int]) -> int:\n\
+    total: int = 0\n\
+    for value in values:\n\
+        if value > 10:\n\
+            total = total + value\n\
+        else:\n\
+            total = total + 1\n\
+    return total\n",
+    );
+    assert!(loop_guard_narrowing.contains("fn summarize(values: &Vec<i64>) -> i64"));
+    assert!(loop_guard_narrowing.contains("if value > (10 as i64)"));
+}
+
+#[test]
+fn test_generate_rust_elides_unreachable_returns_after_always_exit_paths() {
+    let always_exit_try = generate_rust_from_source(
+        "def classify(flag: bool) -> int:\n\
+    try:\n\
+        if flag:\n\
+            return 5\n\
+        raise ValueError('bad value')\n\
+        return 11\n\
+    except ValueError as e:\n\
+        return 77\n",
+    );
+    assert!(always_exit_try.contains("return Err(ValueError::new(\"bad value\".to_string()));"));
+    assert!(always_exit_try.contains("return 77 as i64;"));
+    assert!(!always_exit_try.contains("11 as i64"));
+
+    let unreachable_tail = generate_rust_from_source(
+        "def inferred(flag: bool):\n\
+    if flag:\n\
+        return 1\n\
+    return 2\n\
+    return 'never'\n",
+    );
+    assert!(unreachable_tail.contains("fn inferred(flag: bool) -> i64"));
+    assert!(unreachable_tail.contains("return 2 as i64;"));
+    assert!(!unreachable_tail.contains("never"));
+}
+
+#[test]
 fn test_class_method_mutable_self_propagates_through_delegation() {
     let rust_code = generate_rust_from_source(
         "class ConfigParser:\n    text: str\n\n    def __init__(self):\n        self.text = \"\"\n\n    def read_string(self, text: str) -> None:\n        self.text = text\n\n    def read(self, text: str) -> None:\n        self.read_string(text)\n",
