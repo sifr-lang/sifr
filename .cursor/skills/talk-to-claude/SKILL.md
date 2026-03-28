@@ -1,35 +1,51 @@
 ---
-name: talk-to-another-agent
-description: Talk to another agent about a specific topic.
+name: talk-to-claude
+description: Talk to Claude asynchronously about a specific task by asking it to write its response into a file, then wait for that file to appear.
 ---
 
-# Talk to Another Agent
+## Start Claude Conversation
 
-Use this skill when you need to talk to another agent.
+Choose a target file under `./tmp`, then tell Claude to write its output there.
 
-## Talk to Another Agent Command
+Use an absolute path derived from `./tmp` in the prompt so Claude has an exact output location.
+
+Authoritative launch command:
 
 ```bash
-PWD_NOW="$(pwd)"; uv run --project /Users/yaseralnajjar/work/talk-to-claude \
-  python /Users/yaseralnajjar/work/talk-to-claude/send_to_claude_code.py "$(cat <<PROMPT
+PWD_NOW="$(pwd)"
+TARGET_FILE="${PWD_NOW}/tmp/<conversation-file-name>.md"
+CLAUDE_SESSION_ID="$(uuidgen | tr '[:upper:]' '[:lower:]')" \
+  bash .cursor/skills/talk-to-claude/scripts/claude_resume_to_desktop.sh "$(cat <<PROMPT
 ${TOPIC_NAME}
-Write the output into ${PWD_NOW}/tmp/<conversation-file-name>.md
+Write the output into ${TARGET_FILE}
 PROMPT
 )"
 ```
 
-Adjust prompt scope for the active topic.
+- Replace `<conversation-file-name>.md` with a concrete file name for the active topic.
+- If the target file already exists, use a new filename with the same prefix and an incremented suffix.
+- Run the script with `bash`. Direct execution of some local script paths can be killed by the terminal host on macOS.
 
-If the target conversation file already exists, create a new filename with the same prefix and incremented suffix.
+## Wait For Output File
 
-## Wait for Conversation Output Command (authoritative)
+Use the wait command below to block until Claude writes the target file:
 
 ```bash
-PWD_NOW="$(pwd)"; uv run --project /Users/yaseralnajjar/work/talk-to-claude \
+PWD_NOW="$(pwd)"
+uv run --project /Users/yaseralnajjar/work/talk-to-claude \
   python /Users/yaseralnajjar/work/talk-to-claude/wait_for_review.py "${PWD_NOW}/tmp/<conversation-file-name>.md" \
   --timeout-seconds 2400 \
   --poll-seconds 10
 ```
 
 - Max wait: 40 minutes.
-- If file is still unavailable at timeout, stop and report blocker state.
+- If the file is still unavailable at timeout, stop and report blocker state.
+
+## Debugging
+
+If Claude does not produce the file, inspect the per-session log:
+
+```bash
+PWD_NOW="$(pwd)"
+sed -n '1,200p' "${PWD_NOW}/tmp/claude-resume-to-desktop-<session-id>.log"
+```
