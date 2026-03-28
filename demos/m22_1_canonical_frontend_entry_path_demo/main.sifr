@@ -1,3 +1,5 @@
+# Reference: m22_1
+# Source issue: phase22-frontend-mode-parity-hardening-execution.md
 # m22_1 canonical frontend entry path demo
 # Demonstrates project-mode frontend analysis with local and stdlib imports.
 

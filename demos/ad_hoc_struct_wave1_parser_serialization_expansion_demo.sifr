@@ -1,3 +1,5 @@
+# Reference: ad_hoc_struct_wave1
+# Source issue: ad-hoc-structured-data-and-class-surface-parity-expansion-execution.md
 from sifr.json import JSONEncoder, JSONDecoder, JsonValue, from_int, from_object, from_str
 from sifr.configparser import ConfigParser, ParsingError
 from sifr.csv import Dialect, DialectRegistry, dialect_registry, reader

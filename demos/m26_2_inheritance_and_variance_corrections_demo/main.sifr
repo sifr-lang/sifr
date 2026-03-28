@@ -1,3 +1,5 @@
+# Reference: m26_2
+# Source issue: phase26-type-system-soundness-execution.md
 # m26_2 inheritance and variance corrections demo
 # Demonstrates transitive inheritance assignability and explicit mutable invariance.
 

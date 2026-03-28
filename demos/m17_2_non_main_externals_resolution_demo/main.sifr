@@ -1,3 +1,5 @@
+# Reference: m17_2
+# Source issue: phase17-import-and-externals-correctness-execution.md
 # milestone_17_2 demo main module
 from worker import call
 

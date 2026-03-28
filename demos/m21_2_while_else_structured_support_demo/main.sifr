@@ -1,3 +1,5 @@
+# Reference: m21_2
+# Source issue: phase21-traversal-completeness-and-control-flow-correctness-execution.md
 # m21_2 while-else structured support demo
 # Demonstrates while-else behavior in borrowed-condition paths.
 

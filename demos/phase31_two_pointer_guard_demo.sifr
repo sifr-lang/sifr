@@ -1,3 +1,5 @@
+# Reference: phase31
+# Source issue: phase31-m31a-two-pointer-while-guard-execution.md
 # Phase 31 m31_a slice 2 demo: same-sequence two-pointer `while` guards.
 
 def trap(height: list[int]) -> int:

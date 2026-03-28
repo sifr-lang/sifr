@@ -1,3 +1,5 @@
+// Reference: milestone_ergonomics
+// Source issue: milestone-ergonomics-epic.md
 use std::collections::HashMap;
 
 fn demo_augmented_assign() {

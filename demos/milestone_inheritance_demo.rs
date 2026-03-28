@@ -1,3 +1,5 @@
+// Reference: milestone_inheritance
+// Source issue: milestone-inheritance-epic.md
     Finished `dev` profile [unoptimized + debuginfo] target(s) in 0.06s
      Running `target/debug/sifr emit demos/milestone_inheritance_demo.sifr`
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]

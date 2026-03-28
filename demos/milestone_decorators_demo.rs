@@ -1,3 +1,5 @@
+// Reference: milestone_decorators
+// Source issue: milestone-decorators-epic.md
     Finished `dev` profile [unoptimized + debuginfo] target(s) in 0.17s
      Running `target/debug/sifr emit demos/milestone_decorators_demo.sifr`
 // @log

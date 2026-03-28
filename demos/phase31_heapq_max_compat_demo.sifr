@@ -1,3 +1,5 @@
+# Reference: phase31
+# Source issue: phase31-m31c-private-heapq-max-compat-execution.md
 from sifr.heapq import _heapify_max, _heappop_max, _heapreplace_max
 
 def drain(mut heap: list[int]) -> list[int]:

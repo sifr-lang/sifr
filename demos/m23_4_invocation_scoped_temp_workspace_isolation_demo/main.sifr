@@ -1,3 +1,5 @@
+# Reference: m23_4
+# Source issue: phase23-project-graph-and-isolation-correctness-execution.md
 # m23_4 invocation-scoped temp workspace isolation demo
 
 from helper import value

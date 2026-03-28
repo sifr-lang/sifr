@@ -1,2 +1,4 @@
+# Reference: m19_1
+# Source issue: phase19-module-graph-safety-determinism-cache-execution.md
 def provided() -> int:
     return 19

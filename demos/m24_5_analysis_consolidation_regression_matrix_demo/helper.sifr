@@ -1,3 +1,5 @@
+# Reference: m24_5
+# Source issue: phase24-hir-analysis-consolidation-execution.md
 def evaluate(n: int) -> int:
     if n > 0:
         if n > 10:

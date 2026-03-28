@@ -1,3 +1,5 @@
+# Reference: m30_1d
+# Source issue: phase30-reliability-parity-and-performance-budgets-execution.md
 from sifr.datetime import timedelta, datetime, now, from_timestamp, timezone
 from sifr.test import assert_bool_vector_eq
 

@@ -1,3 +1,5 @@
+<!-- Reference: m31_4 -->
+<!-- Source issue: phase31-algorithmic-compatibility-execution.md -->
 # Phase 31 Remediation Wave 1 Demo
 
 ## Goal

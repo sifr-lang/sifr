@@ -1,3 +1,5 @@
+# Reference: m23_5
+# Source issue: phase23-project-graph-and-isolation-correctness-execution.md
 from c import value_c
 
 def value_b() -> int:

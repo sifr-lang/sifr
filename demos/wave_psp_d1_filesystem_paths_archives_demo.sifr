@@ -1,3 +1,5 @@
+# Reference: wave_psp_d1
+# Source issue: ad-hoc-python-source-parity-and-builtin-stdlib-surface-execution.md
 from sifr.io import read_text, write_text
 from sifr.pathlib import Path
 from sifr.glob import glob

@@ -1,3 +1,5 @@
+# Reference: m18_3
+# Source issue: phase18-project-and-cli-semantics-execution.md
 # milestone_18_3 demo
 # CLI contract is regression-protected by resolver tests in crates/sifr/src/main.rs.
 

@@ -1,3 +1,5 @@
+# Reference: m27_6
+# Source issue: phase27-runtime-safety-and-diagnostics-execution.md
 # negative path:
 # repeated diagnostics must stay deterministic in compact mode with stable grouping.
 

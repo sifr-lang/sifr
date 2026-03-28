@@ -1,3 +1,5 @@
+# Reference: phase31_m31j
+# Source issue: phase31-m31j-own-mut-closure-execution.md
 # Phase 31 m31_j demo: own mut closure
 
 def replaceElements(own mut arr: list[int]) -> list[int]:

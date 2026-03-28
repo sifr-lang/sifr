@@ -1,3 +1,5 @@
+# Reference: milestone_stdlib_migration
+# Source issue: milestone_stdlib_migration.md
 # milestone_stdlib_migration Demo
 #
 # All 13 stdlib modules are now resolved from .sifr files.

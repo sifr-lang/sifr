@@ -1,3 +1,5 @@
+# Reference: ad_hoc_nested_function_part4
+# Source issue: ad-hoc-full-nested-function-pipeline-part4-execution.md
 # Part 4 demo: production nested-helper lowering for recursive collection-capture patterns
 
 def combination_sum(candidates: list[int], target: int) -> list[list[int]]:

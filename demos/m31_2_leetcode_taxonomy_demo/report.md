@@ -1,3 +1,5 @@
+<!-- Reference: m31_2 -->
+<!-- Source issue: phase31-algorithmic-compatibility-execution.md -->
 # Phase 31 Failure Taxonomy Report
 
 - Classified failing seed cases: `48`

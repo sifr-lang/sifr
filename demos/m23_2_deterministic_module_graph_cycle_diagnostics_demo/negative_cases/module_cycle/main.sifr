@@ -1,3 +1,5 @@
+# Reference: m23_2
+# Source issue: phase23-project-graph-and-isolation-correctness-execution.md
 # negative path: cycle diagnostics must be explicit and deterministic.
 
 from a import value_a

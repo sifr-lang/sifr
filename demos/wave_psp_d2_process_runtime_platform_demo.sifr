@@ -1,3 +1,5 @@
+# Reference: wave_psp_d2
+# Source issue: ad-hoc-python-source-parity-and-builtin-stdlib-surface-execution.md
 from sifr.os import run_command, getcwd
 from sifr.env import getenv, setenv, unsetenv
 from sifr.sys import argv, version, platform

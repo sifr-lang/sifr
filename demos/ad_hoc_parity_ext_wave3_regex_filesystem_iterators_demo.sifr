@@ -1,3 +1,5 @@
+# Reference: ad_hoc_parity_ext_wave3
+# Source issue: ad-hoc-python-source-parity-extension-waiver-reduction-execution.md
 from sifr.re import finditer, compile, Match
 from sifr.glob import iglob
 from sifr.pathlib import Path

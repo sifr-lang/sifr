@@ -1,3 +1,5 @@
+# Reference: m_adhoc_5
+# Source issue: ad-hoc-entrypoint-compilation-unification-and-dependency-metadata-closure-execution.md
 from sifr.tomllib import TomlValue, loads
 
 

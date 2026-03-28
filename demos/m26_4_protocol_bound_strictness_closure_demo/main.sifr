@@ -1,3 +1,5 @@
+# Reference: m26_4
+# Source issue: phase26-type-system-soundness-execution.md
 # m26_4 protocol-bound strictness closure demo
 # Demonstrates strict protocol-bound validation when forwarding TypeVars.
 

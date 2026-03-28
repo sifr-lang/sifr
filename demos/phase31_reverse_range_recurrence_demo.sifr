@@ -1,3 +1,5 @@
+# Reference: phase31
+# Source issue: phase31-m31a-reverse-range-recurrence-execution.md
 # Phase 31 m31_a slice 5 demo
 # Shows reverse-range recurrence proofs over sized local list and matrix
 # constructions without loosening parameter-index safety.

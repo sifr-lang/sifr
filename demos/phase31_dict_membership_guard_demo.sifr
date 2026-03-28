@@ -1,3 +1,5 @@
+# Reference: phase31
+# Source issue: phase31-m31a-dict-membership-guard-execution.md
 # Phase 31 / m31_a slice 6 demo: dict membership guards narrow indexed reads.
 
 def guarded_lookup(table: dict[int, int], key: int) -> int:

@@ -1,3 +1,5 @@
+# Reference: m29_1
+# Source issue: phase29-verification-hardening-execution.md
 # m29_1 demo: suite taxonomy and baseline governance contracts.
 
 def main():

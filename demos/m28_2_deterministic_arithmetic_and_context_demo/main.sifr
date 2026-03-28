@@ -1,3 +1,5 @@
+# Reference: m28_2
+# Source issue: phase28-decimal-semantics-execution.md
 def main():
     print("m28_2 deterministic arithmetic and context demo")
 

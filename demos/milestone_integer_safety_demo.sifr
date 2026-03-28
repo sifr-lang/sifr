@@ -1,3 +1,5 @@
+# Reference: milestone_integer_safety
+# Source issue: 196-milestone_integer_safety.md
 # Demo: milestone_integer_safety
 # Showcases bigint type for arbitrary-precision arithmetic,
 # and compiler overflow warnings for risky int operations.

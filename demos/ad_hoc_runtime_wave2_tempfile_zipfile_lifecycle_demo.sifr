@@ -1,3 +1,5 @@
+# Reference: ad_hoc_runtime_wave2
+# Source issue: ad-hoc-runtime-and-file-object-parity-expansion-execution.md
 from sifr.tempfile import NamedTemporaryFile
 from sifr.zipfile import ZipFile, ZipReadHandle, is_zipfile, ZIP_STORED
 from sifr.io import exists

@@ -1,3 +1,5 @@
+# Reference: m27_4
+# Source issue: phase27-runtime-safety-and-diagnostics-execution.md
 # negative path: this type error should render through the canonical json diagnostic schema.
 
 def main():

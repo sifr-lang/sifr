@@ -1,3 +1,5 @@
+// Reference: milestone_rust_ir_types
+// Source issue: revised_phase_roadmap_698c629c.md
 // Milestone 14.1 demo: Rust IR type definitions.
 //
 // This milestone introduces the structured Rust IR model in

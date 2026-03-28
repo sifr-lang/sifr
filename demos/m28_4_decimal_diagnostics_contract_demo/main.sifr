@@ -1,3 +1,5 @@
+# Reference: m28_4
+# Source issue: phase28-decimal-semantics-execution.md
 def main():
     print("m28_4 decimal diagnostics contract demo")
 

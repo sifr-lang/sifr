@@ -1,3 +1,5 @@
+# Reference: phase31
+# Source issue: phase31-m31a-sliding-window-left-pointer-execution.md
 # Phase 31 m31_a slice 3 demo
 # Shows the compiler proving canonical sliding-window left pointers safe when a
 # zero-based pointer advances monotonically under a range(len(seq)) driver.

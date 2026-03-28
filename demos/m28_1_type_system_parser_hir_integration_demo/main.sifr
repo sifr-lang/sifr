@@ -1,3 +1,5 @@
+# Reference: m28_1
+# Source issue: phase28-decimal-semantics-execution.md
 def main():
     d: decimal = Decimal("12.50")
     b: bigdecimal = BigDecimal("3.25")

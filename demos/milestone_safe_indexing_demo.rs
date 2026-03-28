@@ -1,3 +1,5 @@
+// Reference: milestone_safe_indexing
+// Source issue: milestone-safe-indexing-epic.md
 use std::collections::HashMap;
 
 fn main() {

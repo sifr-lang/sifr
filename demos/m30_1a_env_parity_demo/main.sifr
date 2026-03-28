@@ -1,3 +1,5 @@
+# Reference: m30_1a
+# Source issue: phase30-reliability-parity-and-performance-budgets-execution.md
 # m30_1a env parity demo
 from sifr.env import env_get, env_set, env_unset, getenv, getenv_opt
 from sifr.test import assert_bool_vector_eq

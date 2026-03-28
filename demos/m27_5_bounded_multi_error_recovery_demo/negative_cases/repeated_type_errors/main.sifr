@@ -1,3 +1,5 @@
+# Reference: m27_5
+# Source issue: phase27-runtime-safety-and-diagnostics-execution.md
 # negative path: repeated diagnostics should be grouped and summarized with
 # `... +N more similar diagnostics`.
 

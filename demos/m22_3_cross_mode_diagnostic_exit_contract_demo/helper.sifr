@@ -1,2 +1,4 @@
+# Reference: m22_3
+# Source issue: phase22-frontend-mode-parity-hardening-execution.md
 def doubled(x: int) -> int:
     return x * 2

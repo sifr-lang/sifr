@@ -1,3 +1,5 @@
+# Reference: m25_2
+# Source issue: phase25-cfg-flow-analysis-activation-execution.md
 # m25_2 cfg validity invariants demo
 # Exercises branch/loop CFG construction paths under invariant-checked build.
 

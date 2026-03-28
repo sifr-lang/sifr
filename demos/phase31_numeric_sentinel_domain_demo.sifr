@@ -1,3 +1,5 @@
+# Reference: phase31
+# Source issue: phase31-m31a-sentinel-domain-normalization-execution.md
 # Phase 31 m31_a slice 4 demo
 # Shows canonical infinity sentinels behaving like integer-domain accumulators
 # once later control flow proves the algorithm only ever updates them with ints.

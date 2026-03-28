@@ -1,3 +1,5 @@
+// Reference: milestone_imports
+// Source issue: milestone-imports-epic.md
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub struct User {
     pub name: String,

@@ -1,3 +1,5 @@
+# Reference: phase31_m31e
+# Source issue: phase31-m31e-recursive-tree-canonical-closure-execution.md
 # Phase 31 m31_e demo: recursive tree canonical closure
 
 class TreeNode:

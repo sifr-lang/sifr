@@ -1,3 +1,5 @@
+// Reference: milestone_generators
+// Source issue: milestone-generators-epic.md
     Finished `dev` profile [unoptimized + debuginfo] target(s) in 0.12s
      Running `target/debug/sifr emit demos/milestone_generators_demo.sifr`
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]

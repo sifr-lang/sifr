@@ -1,2 +1,4 @@
+# Reference: m22_4
+# Source issue: phase22-frontend-mode-parity-hardening-execution.md
 def value(x: int) -> int:
     return 'bad'

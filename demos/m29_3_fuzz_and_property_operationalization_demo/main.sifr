@@ -1,3 +1,5 @@
+# Reference: m29_3
+# Source issue: phase29-verification-hardening-execution.md
 # m29_3 demo: fuzz and property operationalization contracts.
 
 def main():

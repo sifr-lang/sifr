@@ -1,2 +1,4 @@
+# Reference: m19_2
+# Source issue: phase19-module-graph-safety-determinism-cache-execution.md
 def a() -> str:
     return "A"

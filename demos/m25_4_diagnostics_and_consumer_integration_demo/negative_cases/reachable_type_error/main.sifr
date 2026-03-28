@@ -1,3 +1,5 @@
+# Reference: m25_4
+# Source issue: phase25-cfg-flow-analysis-activation-execution.md
 # m25_4 negative case
 # Reachable frontend diagnostics should remain deterministic and strict.
 

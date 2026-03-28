@@ -1,3 +1,5 @@
+# Reference: m26_3
+# Source issue: phase26-type-system-soundness-execution.md
 def unsafe_add_one(x: int | None) -> int:
     return x + 1
 

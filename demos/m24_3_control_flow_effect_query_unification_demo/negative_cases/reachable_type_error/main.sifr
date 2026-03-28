@@ -1,3 +1,5 @@
+# Reference: m24_3
+# Source issue: phase24-hir-analysis-consolidation-execution.md
 # m24_3 negative case
 # Reachable branch return mismatch should still be rejected.
 

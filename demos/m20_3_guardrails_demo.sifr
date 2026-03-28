@@ -1,3 +1,5 @@
+# Reference: m20_3
+# Source issue: phase20-hir-decomposition-and-maintainability-hardening-execution.md
 # milestone_20_3 demo
 # Confirms standard compilation flow remains stable while guardrails are enforced separately.
 

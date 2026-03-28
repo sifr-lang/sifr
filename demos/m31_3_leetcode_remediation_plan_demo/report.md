@@ -1,3 +1,5 @@
+<!-- Reference: m31_3 -->
+<!-- Source issue: phase31-algorithmic-compatibility-execution.md -->
 # Phase 31 Remediation Backlog
 
 ## Approval Process

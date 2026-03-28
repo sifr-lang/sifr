@@ -1,3 +1,5 @@
+# Reference: m23_2
+# Source issue: phase23-project-graph-and-isolation-correctness-execution.md
 # m23_2 deterministic module graph and cycle diagnostics demo
 # Deterministic dependency ordering must produce stable project compilation.
 

@@ -1,3 +1,5 @@
+# Reference: m30_1b
+# Source issue: phase30-reliability-parity-and-performance-budgets-execution.md
 # m30_1b statistics parity demo
 from sifr.statistics import (
     mean, median, variance, stdev,

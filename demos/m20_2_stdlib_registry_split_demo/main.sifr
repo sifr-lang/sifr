@@ -1,3 +1,5 @@
+# Reference: m20_2
+# Source issue: phase20-hir-decomposition-and-maintainability-hardening-execution.md
 # milestone_20_2 demo
 # Validates stdlib intrinsic registry behavior after stdlib.rs decomposition.
 

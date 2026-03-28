@@ -1,3 +1,5 @@
+# Reference: ad_hoc_clone_wave3
+# Source issue: ad-hoc-ownership-aware-collection-lowering-and-clone-elision-execution.md
 def main():
     pairs: list[tuple[int, int]] = [(2, 5), (4, 7)]
     totals: list[int] = []

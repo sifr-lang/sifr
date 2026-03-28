@@ -1,3 +1,5 @@
+# Reference: ad_hoc_rng_wave1
+# Source issue: ad-hoc-stateful-rng-crypto-and-polish-parity-expansion-execution.md
 from sifr.random import Random, RandomState, getstate, randint, random, seed, setstate
 
 

@@ -1,3 +1,5 @@
+# Reference: ad_hoc_rng_wave3
+# Source issue: ad-hoc-stateful-rng-crypto-and-polish-parity-expansion-execution.md
 from sifr.html import escape
 from sifr.statistics import StatisticsError, median_grouped
 from sifr.textwrap import TextWrapper

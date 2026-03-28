@@ -1,3 +1,5 @@
+# Reference: m30_1a
+# Source issue: phase30-reliability-parity-and-performance-budgets-execution.md
 # m30_1a hashlib parity demo
 from sifr.hashlib import (
     sha256, md5,

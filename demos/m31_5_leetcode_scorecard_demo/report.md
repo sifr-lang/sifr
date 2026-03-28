@@ -1,3 +1,5 @@
+<!-- Reference: m31_5 -->
+<!-- Source issue: phase31-algorithmic-compatibility-execution.md -->
 # Phase 31 Scorecard Demo
 
 - Review status: `external_review_approved`

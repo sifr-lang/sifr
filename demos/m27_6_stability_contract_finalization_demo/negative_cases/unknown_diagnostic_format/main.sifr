@@ -1,3 +1,5 @@
+# Reference: m27_6
+# Source issue: phase27-runtime-safety-and-diagnostics-execution.md
 # negative path:
 # `--diagnostic-format <unknown>` must fail with exit code 2 before semantic work.
 

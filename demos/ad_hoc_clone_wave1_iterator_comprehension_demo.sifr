@@ -1,3 +1,5 @@
+# Reference: ad_hoc_clone_wave1
+# Source issue: ad-hoc-ownership-aware-collection-lowering-and-clone-elision-execution.md
 def main():
     nums: list[int] = [2, 4, 6, 8]
 

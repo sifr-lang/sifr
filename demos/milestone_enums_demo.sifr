@@ -1,3 +1,5 @@
+# Reference: milestone_enums
+# Source issue: 195-milestone_enums.md
 # Demo: milestone_enums
 # Showcases enum types with variants, values, methods, pattern matching, and dict keys.
 

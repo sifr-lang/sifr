@@ -1,3 +1,5 @@
+# Reference: ad_hoc_runtime_wave1
+# Source issue: ad-hoc-runtime-and-file-object-parity-expansion-execution.md
 from sifr.io import StringIO, BytesIO, BinaryFileHandle, open_binary, exists
 from sifr.os import remove_file
 

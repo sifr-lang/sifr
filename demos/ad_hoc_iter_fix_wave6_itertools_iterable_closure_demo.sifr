@@ -1,3 +1,5 @@
+# Reference: ad_hoc_iter_fix_wave6
+# Source issue: ad-hoc-canonical-iteration-model-and-lazy-parity-closure-execution.md
 from sifr.itertools import islice, accumulate, compress, takewhile
 from sifr.pathlib import Path
 from sifr.io import write_text

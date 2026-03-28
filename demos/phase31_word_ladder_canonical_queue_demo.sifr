@@ -1,3 +1,5 @@
+# Reference: phase31
+# Source issue: phase31-m31a-canonical-word-ladder-execution.md
 # Phase 31 m31_a wave 14 demo:
 # canonical word-ladder BFS using typed dict buckets and list queue pop(0).
 

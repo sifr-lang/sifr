@@ -1,3 +1,5 @@
+# Reference: milestone_stdlib_remediation
+# Source issue: 191-milestone_stdlib_remediation.md
 # Demo: milestone_stdlib_remediation
 # Demonstrates Phase 12 gap closures:
 # - open() built-in with FileHandle (text + binary modes, context manager)

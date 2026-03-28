@@ -1,3 +1,5 @@
+# Reference: ad_hoc_struct_wave2
+# Source issue: ad-hoc-structured-data-and-class-surface-parity-expansion-execution.md
 from sifr.collections import Counter, defaultdict
 from sifr.argparse import ArgumentParser
 

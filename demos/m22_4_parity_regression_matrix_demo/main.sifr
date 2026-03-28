@@ -1,3 +1,5 @@
+# Reference: m22_4
+# Source issue: phase22-frontend-mode-parity-hardening-execution.md
 # m22_4 parity regression matrix demo
 # Primary positive fixture used by the parity matrix across check/build/run/test.
 

@@ -1,3 +1,5 @@
+# Reference: phase31_m31h
+# Source issue: phase31-m31h-local-binding-shadowing-closure-execution.md
 # Phase 31 m31_h demo: local-binding and shadowing closure
 
 def threeSum(nums: list[int]) -> list[list[int]]:

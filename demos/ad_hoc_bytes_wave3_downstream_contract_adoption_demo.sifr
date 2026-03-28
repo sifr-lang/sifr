@@ -1,3 +1,5 @@
+# Reference: ad_hoc_bytes_wave3
+# Source issue: ad-hoc-first-class-bytes-and-binary-surface-foundation-execution.md
 from sifr.io import exists
 from sifr.os import remove_file
 

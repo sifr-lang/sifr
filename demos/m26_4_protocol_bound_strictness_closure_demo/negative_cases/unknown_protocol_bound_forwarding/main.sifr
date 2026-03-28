@@ -1,3 +1,5 @@
+# Reference: m26_4
+# Source issue: phase26-type-system-soundness-execution.md
 def take_missing[T: MissingBound](x: T) -> T:
     return x
 

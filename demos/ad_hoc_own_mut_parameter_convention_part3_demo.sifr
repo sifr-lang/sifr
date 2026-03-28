@@ -1,3 +1,5 @@
+# Reference: ad_hoc_own_mut_parameter_convention_part3
+# Source issue: ad-hoc-own-mut-parameter-convention-part3-execution.md
 # Part 3 demo: canonical `own mut` Rust emission plus 1299-style consume-mutate-return.
 
 def replaceElements(own mut arr: list[int]) -> list[int]:

@@ -1,3 +1,5 @@
+# Reference: phase31
+# Source issue: phase31-m31c-defaultdict-len-compat-execution.md
 from sifr.collections import deque
 
 def main():

@@ -1,2 +1,4 @@
+# Reference: m18_1
+# Source issue: phase18-project-and-cli-semantics-execution.md
 def msg() -> str:
     return "aligned"

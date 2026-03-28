@@ -1,3 +1,5 @@
+# Reference: ad_hoc_rng_wave0
+# Source issue: ad-hoc-stateful-rng-crypto-and-polish-parity-expansion-execution.md
 from sifr.random import randint
 from sifr.hashlib import sha256_obj
 from sifr.base64 import b64encode, b64decode

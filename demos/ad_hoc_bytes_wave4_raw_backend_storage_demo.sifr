@@ -1,3 +1,5 @@
+# Reference: ad_hoc_bytes_wave4
+# Source issue: ad-hoc-first-class-bytes-and-binary-surface-foundation-execution.md
 from sifr.bytes import bytes_from_hex, bytes_to_hex
 from sifr.io import exists
 from sifr.os import remove_file

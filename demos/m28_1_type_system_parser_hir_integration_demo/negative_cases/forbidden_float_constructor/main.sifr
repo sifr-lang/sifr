@@ -1,3 +1,5 @@
+# Reference: m28_1
+# Source issue: phase28-decimal-semantics-execution.md
 # expect-error: [E2505] Decimal(float_value) is not allowed; use Decimal("...") for exact construction
 def main():
     x: decimal = Decimal(1.5)

@@ -1,3 +1,5 @@
+# Reference: m24_1
+# Source issue: phase24-hir-analysis-consolidation-execution.md
 # m24_1 canonical traversal layer contract demo
 # Exercises loop-else, try/except, and match arms in one executable flow.
 

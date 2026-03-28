@@ -1,3 +1,5 @@
+// Reference: milestone_generics
+// Source issue: milestone-generics-epic.md
     Finished `dev` profile [unoptimized + debuginfo] target(s) in 0.07s
      Running `target/debug/sifr emit demos/milestone_generics_demo.sifr`
 fn main() {

@@ -1,3 +1,5 @@
+# Reference: wave_psp_b1
+# Source issue: ad-hoc-python-source-parity-and-builtin-stdlib-surface-execution.md
 from sifr.collections import Counter, deque, from_list
 from sifr.bisect import bisect, insort
 from sifr.heapq import heapify, heappushpop, heapreplace

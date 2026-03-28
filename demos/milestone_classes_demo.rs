@@ -1,3 +1,5 @@
+// Reference: milestone_classes
+// Source issue: milestone-classes-epic.md
 #[derive(Debug, Clone)]
 enum CircleOrSquare {
     Circle(Circle),

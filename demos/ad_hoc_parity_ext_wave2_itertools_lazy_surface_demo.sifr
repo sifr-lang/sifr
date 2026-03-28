@@ -1,3 +1,5 @@
+# Reference: ad_hoc_parity_ext_wave2
+# Source issue: ad-hoc-python-source-parity-extension-waiver-reduction-execution.md
 from sifr.itertools import (
     accumulate, compress, dropwhile, takewhile, filterfalse, zip_longest, cycle,
     starmap, product, permutations, combinations, combinations_with_replacement

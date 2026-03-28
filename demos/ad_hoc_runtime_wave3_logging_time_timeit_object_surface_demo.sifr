@@ -1,3 +1,5 @@
+# Reference: ad_hoc_runtime_wave3
+# Source issue: ad-hoc-runtime-and-file-object-parity-expansion-execution.md
 from sifr.logging import getLogger, Logger, FileHandler, Formatter, INFO
 from sifr.time import gmtime_struct, mktime, struct_time, TIMEZONE, TZNAME
 from sifr.timeit import Timer

@@ -1,3 +1,5 @@
+// Reference: milestone_rust_ir_renderer
+// Source issue: revised_phase_roadmap_698c629c.md
 // Milestone 14.2 demo: Rust IR renderer.
 //
 // This milestone adds `crates/sifr_codegen/src/render.rs`, which pretty-prints

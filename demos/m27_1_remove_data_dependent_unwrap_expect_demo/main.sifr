@@ -1,3 +1,5 @@
+# Reference: m27_1
+# Source issue: phase27-runtime-safety-and-diagnostics-execution.md
 # m27_1 remove data-dependent unwrap/expect demo
 #
 # Positive path: safe indexing remains Option-based and does not rely on

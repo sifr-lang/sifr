@@ -1,3 +1,5 @@
+# Reference: m_driver_4
+# Source issue: phase31-sifr-driver-decomposition-and-boundary-hardening-execution.md
 def render_value() -> str:
     value: bigint = bigint(42)
     return str(value)

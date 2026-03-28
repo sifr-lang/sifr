@@ -1,3 +1,5 @@
+# Reference: ad_hoc_iter_fix_wave0
+# Source issue: ad-hoc-canonical-iteration-model-and-lazy-parity-closure-execution.md
 from sifr.itertools import chain, count
 
 # Wave 0 contract-lock demo for canonical iteration continuation.

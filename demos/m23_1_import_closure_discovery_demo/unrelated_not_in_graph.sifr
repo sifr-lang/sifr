@@ -1,2 +1,4 @@
+# Reference: m23_1
+# Source issue: phase23-project-graph-and-isolation-correctness-execution.md
 # This file is intentionally invalid and must be ignored by import-closure discovery.
 def broken(:

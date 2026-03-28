@@ -1,3 +1,5 @@
+# Reference: m24_2
+# Source issue: phase24-hir-analysis-consolidation-execution.md
 # m24_2 semantic query layer standardization demo
 # Validates canonical query behavior for call detection and local-scope analysis.
 

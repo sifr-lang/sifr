@@ -1,3 +1,5 @@
+# Reference: m21_3
+# Source issue: phase21-traversal-completeness-and-control-flow-correctness-execution.md
 # m21_3 yield/loop-path coverage demo
 # Demonstrates lazy generator iteration through break/else paths.
 

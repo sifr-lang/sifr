@@ -1,3 +1,5 @@
+# Reference: m26_3
+# Source issue: phase26-type-system-soundness-execution.md
 # m26_3 optional arithmetic soundness demo
 # Demonstrates that optional arithmetic only works after explicit narrowing.
 

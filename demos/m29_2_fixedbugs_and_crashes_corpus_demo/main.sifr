@@ -1,3 +1,5 @@
+# Reference: m29_2
+# Source issue: phase29-verification-hardening-execution.md
 # m29_2 demo: fixedbugs and crashes corpus contracts.
 
 def main():

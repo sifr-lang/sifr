@@ -1,3 +1,5 @@
+# Reference: milestone_imports
+# Source issue: milestone-imports-epic.md
 # models.sifr - Data models for the application
 
 class User:

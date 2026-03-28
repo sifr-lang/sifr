@@ -1,3 +1,5 @@
+# Reference: ad_hoc_clone_wave0
+# Source issue: ad-hoc-ownership-aware-collection-lowering-and-clone-elision-execution.md
 def double(n: int) -> int:
     return n * 2
 

@@ -1,3 +1,5 @@
+# Reference: m29_4
+# Source issue: phase29-verification-hardening-execution.md
 # m29_4 demo: curated OSS gate and broader ecosystem lane contracts.
 
 def main():
