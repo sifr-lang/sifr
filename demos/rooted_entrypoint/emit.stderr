@@ -1,0 +1,2 @@
+type error: undefined function: 'render'
+type error: unknown module 'helper'

@@ -130,7 +130,8 @@ pub(super) fn validate_subscript_augassign_target(
     op: &str,
 ) -> Type {
     let base_op = &op[..op.len() - 1];
-    match object_ty.resolve_alias().clone() {
+    let resolved_object_ty = object_ty.resolve_alias().clone();
+    match resolved_object_ty {
         Type::List(elem_ty) => {
             if index_ty != &Type::Int {
                 ctx.error(format!(
@@ -169,7 +170,18 @@ pub(super) fn validate_subscript_augassign_target(
                     ctx.error(error.message);
                 }
             }
-            Type::Dict(key_ty, value_ty_expected)
+            match object_ty {
+                Type::Alias { name, type_args, .. }
+                    if name.starts_with("__compat_defaultdict_") =>
+                {
+                    Type::Alias {
+                        name,
+                        type_args,
+                        body: Box::new(Type::Dict(key_ty, value_ty_expected)),
+                    }
+                }
+                _ => Type::Dict(key_ty, value_ty_expected),
+            }
         }
         other => {
             ctx.error(format!(

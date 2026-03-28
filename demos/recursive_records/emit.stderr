@@ -1,0 +1,2 @@
+type error: attribute access '.next' is not supported as an expression; use as a method call
+type error: attribute access '.next' is not supported as an expression; use as a method call

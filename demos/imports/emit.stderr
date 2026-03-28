@@ -1,0 +1,7 @@
+type error: undefined function: 'Product'
+type error: undefined function: 'User'
+type error: undefined variable: 'product'
+type error: undefined variable: 'user'
+type error: unknown module 'models'
+type error: unknown type: 'Product'
+type error: unknown type: 'User'

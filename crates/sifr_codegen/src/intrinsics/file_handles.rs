@@ -387,21 +387,18 @@ pub(super) fn lower_builtin_open(args: &[RustExpr]) -> Option<RustExpr> {
     if args.len() != 2 {
         return None;
     }
-    let success_value = RustExpr::StructInit {
-        name: "FileHandle".to_string(),
-        fields: vec![
-            (
-                "_handle".to_string(),
-                RustExpr::Ident("__handle_id".to_string()),
-            ),
-            (
-                "_mode".to_string(),
-                RustExpr::MethodCall {
-                    receiver: Box::new(RustExpr::Ident("__mode".to_string())),
-                    method: "to_string".to_string(),
-                    args: vec![],
-                },
-            ),
+    let success_value = RustExpr::FnCall {
+        func: Box::new(RustExpr::Path(vec![
+            "FileHandle".to_string(),
+            "new".to_string(),
+        ])),
+        args: vec![
+            RustExpr::Ident("__handle_id".to_string()),
+            RustExpr::MethodCall {
+                receiver: Box::new(RustExpr::Ident("__mode".to_string())),
+                method: "to_string".to_string(),
+                args: vec![],
+            },
         ],
     };
     let success_expr = ok_expr(success_value);

@@ -18,18 +18,22 @@ class Entry:
 def chain_text(entry: Entry | None) -> str:
     if entry is None:
         return "."
-    return str(entry.value) + "->" + chain_text(entry.next)
+    next_entry: Entry | None = entry.next
+    return str(entry.value) + "->" + chain_text(next_entry)
 
 
 def second_value(entry: Entry | None) -> int:
-    if entry is None or entry.next is None:
+    if entry is None:
         return 0
-    return entry.next.value
+    next_entry: Entry | None = entry.next
+    if next_entry is None:
+        return 0
+    return next_entry.value
 
 
 def main():
-    chain = Entry(4, Entry(2, Entry(6)))
-    short = Entry(9)
+    chain: Entry | None = Entry(4, Entry(2, Entry(6)))
+    short: Entry | None = Entry(9)
 
     assert chain_text(chain) == "4->2->6->."
     assert chain_text(None) == "."
