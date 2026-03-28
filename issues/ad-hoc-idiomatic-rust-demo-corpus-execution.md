@@ -66,6 +66,47 @@ Notes:
 - `batch_09_rustfirst_review.md` is the first explicit Rust-first review artifact and should be treated as the template for future batch judgments.
 - future batch reviews in this phase should default to the Rust-first rubric rather than the older Sifr-surface-faithful criterion.
 
+#### batch_01_logging_time_timeit
+
+status: accepted_after_pass_1_and_pass_2
+
+- scope:
+  - `demos/logging/idiomatic.rs`
+  - `demos/time/idiomatic.rs`
+  - `demos/timeit/idiomatic.rs`
+- wave role:
+  - first fresh wave-1 batch rewritten directly to the Rust-first corpus standard instead of preserving generated/runtime scaffolding
+  - chosen because the files were stdlib-heavy and still visibly codegen-shaped
+- implementation summary:
+  - replaced generated-style helper/runtime layers in `logging` with a small direct logger/file-handler model that preserves the demo outcomes while using standard `std::fs`/`OpenOptions` file handling
+  - replaced generated timing wrappers in `timeit` with direct `Instant`-based timing helpers and slice-based result checks
+  - replaced generated parsing/struct conversion scaffolding in `time` with direct `chrono`-based formatting/parsing and a compact `StructTime` representation
+- local validation completed before external review:
+  - `rustfmt demos/logging/idiomatic.rs demos/time/idiomatic.rs demos/timeit/idiomatic.rs`
+  - `rustc --edition=2021 demos/logging/idiomatic.rs -o /tmp/sifr-idiomatic-logging && /tmp/sifr-idiomatic-logging`
+  - `rustc --edition=2021 demos/timeit/idiomatic.rs -o /tmp/sifr-idiomatic-timeit && /tmp/sifr-idiomatic-timeit`
+  - temporary Cargo compile/run for `demos/time/idiomatic.rs` with `chrono = "0.4"` in an isolated temp crate
+  - `cargo run -q -p sifr -- run demos/logging/main.sifr`
+  - `cargo run -q -p sifr -- run demos/time/main.sifr`
+  - `cargo run -q -p sifr -- run demos/timeit/main.sifr`
+  - `scripts/run_all_tests.sh`
+- validation result:
+  - all targeted demo runs passed
+  - full local validation lane passed on the repo `pr` profile, including unit tests, validation contract matrix, e2e pass suite, and phase-29 verification hardening suites
+- review artifacts:
+  - pass 1: `reviews/phase-ad-hoc-idiomatic-rust-demo-corpus-wave-1-batch-01-review-pass-1.md`
+  - pass 2: `reviews/phase-ad-hoc-idiomatic-rust-demo-corpus-wave-1-batch-01-review-pass-2.md`
+- review application summary:
+  - pass 1 valid follow-up fixes applied:
+    - `demos/time/idiomatic.rs`: changed `mktime` to return `Result<f64, ValueError>` and updated the harness to assert on `Ok(0.0)`
+    - `demos/logging/idiomatic.rs`: documented best-effort log-write suppression and tightened cleanup verification so non-`NotFound` delete failures report as failure
+  - pass 2 follow-up refinement applied:
+    - `demos/logging/idiomatic.rs`: added `FileHandler::set_level` and used it in the handler sample to keep the API surface symmetric and the standalone compile path warning-free
+  - no remaining accepted blockers after pass 2
+- reviewer tooling note:
+  - the `claude_resume_to_desktop.sh` wrapper hung before producing a file in this workspace
+  - external review artifacts were produced via direct `claude -p --dangerously-skip-permissions ...` runs and then written into the recorded review files
+
 ### wave_2_runnable_demo_corpus_pass
 
 status: pending
