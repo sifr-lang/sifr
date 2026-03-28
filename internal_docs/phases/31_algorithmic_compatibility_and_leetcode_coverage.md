@@ -78,7 +78,7 @@ status: complete
   - `verification/leetcode/phase31_spot_audit.json`
   - `verification/leetcode/phase31_spot_audit_cases.json`
   - `verification/leetcode/phase31_failure_report.md`
-  - `demos/leetcode_taxonomy/report.md`
+  - `demos/leetcode_taxonomy/main.md`
   - `scripts/phase31_leetcode_taxonomy.py`
   - `scripts/build_phase31_leetcode_taxonomy.py`
   - `scripts/test_phase31_leetcode_taxonomy.py`
@@ -111,7 +111,7 @@ status: complete
 - Delivered artifacts:
   - `verification/leetcode/phase31_remediation_backlog.json`
   - `verification/leetcode/phase31_remediation_backlog.md`
-  - `demos/leetcode_remediation_plan/report.md`
+  - `demos/leetcode_remediation_plan/main.md`
   - `scripts/phase31_leetcode_remediation.py`
   - `scripts/build_phase31_leetcode_remediation_backlog.py`
   - `scripts/test_phase31_leetcode_remediation_backlog.py`
@@ -142,7 +142,7 @@ status: complete
 - Delivered artifacts:
   - `verification/leetcode/phase31_seed_results_wave1.json`
   - `verification/leetcode/phase31_wave1_delta.md`
-  - `demos/leetcode_remediation/report.md`
+  - `demos/leetcode_remediation/main.md`
   - `crates/sifr/tests/e2e/pass/phase31_builtin_shadow_sum.sifr`
   - `crates/sifr/tests/e2e/pass/phase31_mutated_borrowed_param_shadow.sifr`
   - `crates/sifr/tests/e2e/pass/phase31_tuple_unpack_mutability.sifr`
@@ -176,7 +176,7 @@ status: complete
 - Delivered artifacts:
   - `verification/leetcode/phase31_scorecard.json`
   - `verification/leetcode/phase31_scorecard.md`
-  - `demos/leetcode_scorecard/report.md`
+  - `demos/leetcode_scorecard/main.md`
   - `scripts/phase31_leetcode_scorecard.py`
   - `scripts/build_phase31_leetcode_scorecard.py`
   - `scripts/test_phase31_leetcode_scorecard.py`

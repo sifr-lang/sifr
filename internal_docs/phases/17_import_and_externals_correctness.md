@@ -22,7 +22,7 @@ status: done (2026-03-04, PR #813)
   - `check` now runs dedicated frontend/type-only lowering via `compile_frontend` instead of routing through `compile` codegen.
   - Frontend diagnostics printing is centralized and reused for both `check` and `compile`.
   - Regression guard: `test_check_only_reports_frontend_phases` in `crates/sifr_driver/src/lib.rs`.
-  - Milestone demo: `cargo run -q -p sifr -- run demos/frontend_only_check_path.sifr`.
+  - Milestone demo: `cargo run -q -p sifr -- run demos/frontend_only_check_path/main.sifr`.
 
 ### milestone_17_2: Non-Main Externals Resolution
 status: done (2026-03-04, PR #814)

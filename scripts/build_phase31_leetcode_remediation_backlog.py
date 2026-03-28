@@ -13,10 +13,10 @@ def main() -> None:
     backlog = build_backlog()
     backlog_markdown = build_backlog_markdown(backlog)
     verification_dir = REPO_ROOT / "verification" / "leetcode"
-    demo_dir = REPO_ROOT / "demos" / "m31_3_leetcode_remediation_plan_demo"
+    demo_dir = REPO_ROOT / "demos" / "leetcode_remediation_plan"
     backlog_json_path = verification_dir / "phase31_remediation_backlog.json"
     backlog_md_path = verification_dir / "phase31_remediation_backlog.md"
-    demo_report_path = demo_dir / "report.md"
+    demo_report_path = demo_dir / "main.md"
 
     write_json(backlog_json_path, backlog)
     write_markdown(backlog_md_path, backlog_markdown)

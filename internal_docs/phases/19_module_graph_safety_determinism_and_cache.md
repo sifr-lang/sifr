@@ -47,7 +47,7 @@ status: done (2026-03-05, PR #836)
   - Added cache regressions in `crates/sifr_driver/src/lib.rs`:
     - `test_get_or_init_stdlib_cache_reuses_successful_compilation`
     - `test_get_or_init_stdlib_cache_reuses_error_without_fallback_rebuild`
-  - Milestone demo: `cargo run -q -p sifr -- run demos/stdlib_cache_local_loops.sifr`.
+  - Milestone demo: `cargo run -q -p sifr -- run demos/stdlib_cache_local_loops/main.sifr`.
 
 ## Quality Contract
 - Entry criteria: Phase 18 is completed and project-mode semantics are stable.

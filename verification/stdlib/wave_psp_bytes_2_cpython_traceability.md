@@ -14,7 +14,7 @@ Scope: typed conversion surfaces and compatibility delegation on first-class `by
 | CPython family | Sifr surface direction | State | Local regression/demo |
 | --- | --- | --- | --- |
 | constructor and conversion families (`bytes(size)`, `bytes.from_ints`, `bytes.from_hex`) | explicit typed conversion APIs returning `Result` with safe failure semantics | `adapted` (closed for wave-2 scope) | `crates/sifr/tests/e2e/pass/phase_psp_bytes_2_conversion_surfaces.sifr`<br>`crates/sifr/tests/e2e/pass/phase_psp_bytes_2_conversion_negative_paths.sifr` |
-| text/binary boundary (`str.encode`, `bytes.decode`) | explicit UTF-8-only typed boundary with `Result` errors | `adapted` | `demos/bytes_conversion_surface.sifr`<br>`demos/bytes_negative_boundary.sifr` |
+| text/binary boundary (`str.encode`, `bytes.decode`) | explicit UTF-8-only typed boundary with `Result` errors | `adapted` | `demos/bytes_conversion_surface/main.sifr`<br>`demos/bytes_negative_boundary/main.sifr` |
 | `lib/sifr/bytes.sifr` compatibility exports | delegate legacy helper entrypoints to first-class `bytes` conversion implementation | `adapted` (closed for compatibility migration scope) | `crates/sifr/tests/e2e/pass/stdlib_bytes.sifr`<br>`crates/sifr/tests/e2e/pass/stdlib_bytes_safety.sifr` |
 
 ## Classified waivers carried from wave 2
@@ -37,5 +37,5 @@ Scope: typed conversion surfaces and compatibility delegation on first-class `by
   - `crates/sifr/tests/e2e/fail/phase_psp_bytes_2_encode_non_string_codec.sifr`
   - `crates/sifr/tests/e2e/fail/phase_psp_bytes_2_decode_non_string_codec.sifr`
 - Demos:
-  - `demos/bytes_conversion_surface.sifr`
-  - `demos/bytes_negative_boundary.sifr`
+  - `demos/bytes_conversion_surface/main.sifr`
+  - `demos/bytes_negative_boundary/main.sifr`

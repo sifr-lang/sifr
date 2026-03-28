@@ -110,7 +110,7 @@ new_user = User(email="new@example.com", **old_user)
 - Struct update/spread clones non-overridden fields
 - E2E pass tests: protocol_dispatch, discriminated_union, operator_overload, pattern_destructure, nested_pattern, at_binding, property_narrowing, newtype_basic, struct_update
 - E2E fail tests: protocol_not_satisfied, non_exhaustive_match, newtype_validation_error
-- Milestone demo in `./demos/protocols.sifr`
+- Milestone demo in `./demos/protocols/main.sifr`
 
 ---
 
@@ -167,7 +167,7 @@ class Dog(Animal):
 - `@property` getter/setter works
 - E2E pass tests: inheritance_basic, super_call, classmethod_basic, staticmethod_basic, property_getter_setter
 - E2E fail tests: multiple_inheritance_rejected, super_no_parent
-- Milestone demo in `./demos/inheritance.sifr`
+- Milestone demo in `./demos/inheritance/main.sifr`
 
 ---
 
@@ -304,7 +304,7 @@ Sorting requires a `Comparable` protocol (maps to Rust's `Ord` trait):
 - E2E pass tests: generic_function, generic_class, lambda_basic, higher_order, iterator, for_loop_borrow, lazy_iterator, builtin_min_max_sum, sorted_basic, sorted_key_reverse, zip_enumerate, any_all, reduce_basic, list_comp, dict_comp, set_comp, filtered_comp, nested_comp
 - E2E fail tests: type_bound_violation, generic_mismatch, closure_move_called_twice, float_sort_rejected, comp_type_mismatch
 - CPython parity tests pass with safe error handling (no panics, `Result`/`Option` where CPython raises). Reference: `Python/bltinmodule.c` (min, max, sum, sorted, zip, enumerate, any, all), `Objects/listobject.c` (list.sort), `Lib/test/test_builtin.py`
-- Milestone demo in `./demos/generics.sifr`
+- Milestone demo in `./demos/generics/main.sifr`
 
 ---
 
@@ -376,7 +376,7 @@ with open("file.txt") as f:
 - `ContextManager` protocol enforced at compile time
 - E2E pass tests: generator_expr, yield_basic, yield_infinite, yield_from_basic, yield_from_chain, with_file, with_multiple
 - E2E fail tests: yield_outside_function, with_non_context_manager
-- Milestone demo in `./demos/generators.sifr`
+- Milestone demo in `./demos/generators/main.sifr`
 
 ---
 
@@ -427,7 +427,7 @@ def hello():
 - A generic decorator can wrap functions with different signatures using `*args`/`**kwargs`
 - E2E pass tests: basic_decorator, decorator_with_args, stacked_decorators, args_kwargs_basic, generic_decorator_wrapping
 - E2E fail tests: decorator_type_mismatch
-- Milestone demo in `./demos/decorators.sifr`
+- Milestone demo in `./demos/decorators/main.sifr`
 
 ---
 
@@ -508,7 +508,7 @@ When a class has `describe()` and implements `Printable`, the method body is emi
 - All existing 94 E2E pass tests still pass
 - All 12 milestone demos produce correct output
 - `cargo test` passes with no regressions
-- Milestone demo in `./demos/codegen_quality_v2.sifr`
+- Milestone demo in `./demos/codegen_quality_v2/main.sifr`
 
 ---
 

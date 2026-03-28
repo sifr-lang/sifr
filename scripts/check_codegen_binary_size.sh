@@ -12,7 +12,7 @@ Arguments:
   baseline_ref   Git ref/commit to compare from
   candidate_ref  Git ref/commit to compare to (default: HEAD)
   demo_path      Demo .sifr path relative to repo root
-                 (default: demos/codegen_structural_passes.sifr)
+                 (default: demos/codegen_structural_passes/main.sifr)
 USAGE
 }
 
@@ -28,7 +28,7 @@ fi
 
 BASE_REF="$1"
 CANDIDATE_REF="${2:-HEAD}"
-DEMO_PATH="${3:-demos/codegen_structural_passes.sifr}"
+DEMO_PATH="${3:-demos/codegen_structural_passes/main.sifr}"
 
 REPO_ROOT="$(git rev-parse --show-toplevel)"
 

@@ -584,7 +584,7 @@ def main() -> None:
     seed_manifest_path = verification_dir / "phase31_seed_corpus.json"
     inventory_path = verification_dir / "phase31_corpus_inventory.json"
     summary_path = verification_dir / "phase31_seed_summary.json"
-    demo_manifest_path = REPO_ROOT / "demos" / "m31_1_leetcode_runner_demo" / "corpus.json"
+    demo_manifest_path = REPO_ROOT / "demos" / "leetcode_runner" / "corpus.json"
 
     seed_summary = validate_seed_manifest(SEED_CASES)
     seed_case_ids = {entry["id"] for entry in SEED_CASES}
@@ -612,7 +612,7 @@ def main() -> None:
         demo_manifest_path,
         {
             "phase": 31,
-            "name": "m31_1_leetcode_runner_demo",
+            "name": "leetcode_runner",
             "case_count": len(DEMO_CASE_IDS),
             "cases": [case for case in SEED_CASES if case["id"] in DEMO_CASE_IDS],
         },

@@ -22,4 +22,4 @@ Scope: generator backend unification and filtered generator-expression closure
 - Positive fixture:
   - `crates/sifr/tests/e2e/pass/phase_psp_iter_fix_4_generator_backend_unification.sifr`
 - Demo:
-  - `demos/iter_fix_generator_backend.sifr`
+  - `demos/iter_fix_generator_backend/main.sifr`

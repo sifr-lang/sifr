@@ -47,13 +47,13 @@ def main() -> None:
     )
 
     verification_dir = REPO_ROOT / "verification" / "leetcode"
-    demo_dir = REPO_ROOT / "demos" / "m31_2_leetcode_taxonomy_demo"
+    demo_dir = REPO_ROOT / "demos" / "leetcode_taxonomy"
     taxonomy_json_path = verification_dir / "phase31_failure_taxonomy.json"
     repros_json_path = verification_dir / "phase31_failure_repros.json"
     spot_audit_json_path = verification_dir / "phase31_spot_audit.json"
     spot_audit_cases_path = verification_dir / "phase31_spot_audit_cases.json"
     report_md_path = verification_dir / "phase31_failure_report.md"
-    demo_report_path = demo_dir / "report.md"
+    demo_report_path = demo_dir / "main.md"
 
     write_json(
         taxonomy_json_path,

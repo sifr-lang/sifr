@@ -40,9 +40,9 @@ Scope: architecture lock for runtime/file-object parity expansion
 
 - Positive lock fixture: `crates/sifr/tests/e2e/pass/phase_psp_runtime_0_architecture_lock.sifr`
 - Demos:
-  - `demos/runtime_stream_hierarchy_contract.sifr`
-  - `demos/runtime_tempfile_zip_lifecycle.sifr`
-  - `demos/runtime_bytes_binary_io_contract.sifr`
+  - `demos/runtime_stream_hierarchy_contract/main.sifr`
+  - `demos/runtime_tempfile_zip_lifecycle/main.sifr`
+  - `demos/runtime_bytes_binary_io_contract/main.sifr`
 - Negative lock fixtures:
   - `crates/sifr/tests/e2e/fail/phase_psp_runtime_0_pyio_inheritance_unsupported.sifr`
   - `crates/sifr/tests/e2e/fail/phase_psp_runtime_0_async_popen_unsupported.sifr`

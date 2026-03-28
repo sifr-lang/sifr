@@ -266,7 +266,7 @@ status: completed
 - `has_pure_sifr_code` check includes classes
 - `cargo test` passes (zero regressions)
 - Parity report updated
-- Demo: `demos/stdlib_polish.sifr`
+- Demo: `demos/stdlib_polish/main.sifr`
 
 ---
 
@@ -350,7 +350,7 @@ Existing intrinsics reused unchanged: `counter_from_list`, `counter_get`, `count
 - `crates/sifr/tests/e2e/pass/stdlib_collections_counter.sifr` — basic Counter construction + method calls
 - `crates/sifr/tests/e2e/pass/stdlib_collections_counter_mutate.sifr` — Counter mutation via `increment`
 - `crates/sifr/tests/e2e/fail/stdlib_counter_wrong_type.sifr` — wrong argument type to Counter
-- `demos/stdlib_classes.sifr` — demo showcasing Counter class usage
+- `demos/stdlib_classes/main.sifr` — demo showcasing Counter class usage
 - `audits/STDLIB_PARITY_MASTER_REPORT.md` — update metrics
 
 ### Risk Assessment
@@ -385,7 +385,7 @@ Existing intrinsics reused unchanged: `counter_from_list`, `counter_get`, `count
 - E2E fail test for wrong argument type
 - `cargo test` passes (zero regressions)
 - Parity report updated
-- Demo: `demos/stdlib_classes.sifr`
+- Demo: `demos/stdlib_classes/main.sifr`
 
 ---
 

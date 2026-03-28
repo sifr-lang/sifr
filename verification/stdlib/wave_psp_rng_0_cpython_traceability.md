@@ -37,7 +37,7 @@ Scope: architecture lock and governance freeze for stateful RNG, bytes-native cr
 - Positive fixture:
   - `crates/sifr/tests/e2e/pass/phase_psp_rng_0_architecture_lock.sifr`
 - Demo:
-  - `demos/rng_architecture_lock.sifr`
+  - `demos/rng_architecture_lock/main.sifr`
 - Negative fixtures:
   - `crates/sifr/tests/e2e/fail/phase_psp_struct_0_html_package_parser_unsupported.sifr`
   - `crates/sifr/tests/e2e/fail/phase_psp_b2_random_choices_weights_unsupported.sifr`
