@@ -2009,6 +2009,54 @@ status: accepted_after_pass_1_and_pass_2
 - reviewer tooling note:
   - batch 44 used compact per-file external review prompts and direct `claude -p` output capture because the desktop handoff wrapper and longer embedded-file prompts were unreliable in this workspace
 
+#### batch_45_generic_classes_generics_impl_forward_refs
+
+status: accepted_after_pass_1_and_pass_2
+
+- scope:
+  - `demos/generic_classes/idiomatic.rs`
+  - `demos/generics_impl/idiomatic.rs`
+  - `demos/forward_refs/idiomatic.rs`
+- selection rationale:
+  - all three are positive runnable demos
+  - all three form a cohesive remaining generics-and-forward-reference slice instead of mixing generic containers, generic higher-order helpers, and forward-declared type references with unrelated stdlib or fixture-heavy work
+  - all three still had obvious generated-shape trait bounds, indexing scaffolding, or constructor boilerplate despite being small direct type-system demos
+- priority tags:
+  - `generics-surface`: `generic_classes`, `generics_impl`
+  - `forward-ref-surface`: `forward_refs`
+  - `hand-authored-generated-shape`: `generic_classes`, `generics_impl`, `forward_refs`
+- implementation summary:
+  - `generic_classes`: reduced the demo to direct generic structs and methods, keeping cloning only where the paired Sifr ownership surface requires it and modeling `None` with `Option<()>`
+  - `generics_impl`: collapsed the identity, safe-first, and higher-order callable examples to direct generic functions and slice-based access
+  - `forward_refs`: reduced the demo to plain structs and direct borrowed-versus-owned helper signatures that match the paired Sifr ownership markers
+- local validation completed:
+  - `rustfmt demos/generic_classes/idiomatic.rs demos/generics_impl/idiomatic.rs demos/forward_refs/idiomatic.rs`
+  - `rustc --edition=2021 demos/generic_classes/idiomatic.rs -o /tmp/sifr-idiomatic-generic-classes && /tmp/sifr-idiomatic-generic-classes`
+  - `rustc --edition=2021 demos/generics_impl/idiomatic.rs -o /tmp/sifr-idiomatic-generics-impl && /tmp/sifr-idiomatic-generics-impl`
+  - `rustc --edition=2021 demos/forward_refs/idiomatic.rs -o /tmp/sifr-idiomatic-forward-refs && /tmp/sifr-idiomatic-forward-refs`
+  - `cargo run -q -p sifr -- run demos/generic_classes/main.sifr`
+  - `cargo run -q -p sifr -- run demos/generics_impl/main.sifr`
+  - `cargo run -q -p sifr -- run demos/forward_refs/main.sifr`
+  - `scripts/run_all_tests.sh`
+  - post-fix revalidation:
+    - `rustfmt demos/generic_classes/idiomatic.rs demos/generics_impl/idiomatic.rs demos/forward_refs/idiomatic.rs`
+    - `rustc --edition=2021 demos/generic_classes/idiomatic.rs -o /tmp/sifr-idiomatic-generic-classes && /tmp/sifr-idiomatic-generic-classes`
+    - `rustc --edition=2021 demos/generics_impl/idiomatic.rs -o /tmp/sifr-idiomatic-generics-impl && /tmp/sifr-idiomatic-generics-impl`
+    - `rustc --edition=2021 demos/forward_refs/idiomatic.rs -o /tmp/sifr-idiomatic-forward-refs && /tmp/sifr-idiomatic-forward-refs`
+    - `cargo run -q -p sifr -- run demos/generic_classes/main.sifr`
+    - `cargo run -q -p sifr -- run demos/generics_impl/main.sifr`
+    - `cargo run -q -p sifr -- run demos/forward_refs/main.sifr`
+    - `scripts/run_all_tests.sh`
+- review artifacts:
+  - pass 1: `reviews/phase-ad-hoc-idiomatic-rust-demo-corpus-wave-2-batch-45-review-pass-1.md`
+  - pass 2: `reviews/phase-ad-hoc-idiomatic-rust-demo-corpus-wave-2-batch-45-review-pass-2.md`
+- review application summary:
+  - pass 1 was completed and recorded, but all returned notes were rejected because they were stale or self-contradictory relative to the current Rust files
+  - pass 2 accepted one real parity fix in `generic_classes`, changing `Stack::size` to return `i64` instead of `usize`, and the full validation lane was rerun afterward
+  - pass 2 reported no remaining blockers in `generics_impl` or `forward_refs`
+- reviewer tooling note:
+  - batch 45 again required embedded-source per-file prompts because shorter path-only reviewer prompts were prone to stale or non-file-local responses in this workspace
+
 ### wave_3_fixture_and_negative_case_normalization
 
 status: pending
