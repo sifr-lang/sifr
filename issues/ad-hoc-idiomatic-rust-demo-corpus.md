@@ -332,6 +332,8 @@ Progress update (`2026-03-29`):
 - `batch_39_fixed_indexing_indexing_rules_safe_edge_cases` completed local validation, accepted a pre-review parity fix correcting the UUID invalid-chars validation order in `safe_edge_cases`, and ended external pass-1/pass-2 review with no remaining actionable issues
 - `batch_40_paired_indices_pop_narrowing_range_aliasing` selected as the fortieth wave-2 runnable-demo batch because it keeps the remaining index-and-narrowing work cohesive around two-pointer sequence reads, non-empty `pop` narrowing, and `len(...)` alias range guards
 - `batch_40_paired_indices_pop_narrowing_range_aliasing` completed local validation and ended external pass-1/pass-2 review with no accepted blockers
+- `batch_41_slice_unpacking_subscript_assignment_tuple_assignment` selected as the forty-first wave-2 runnable-demo batch because it keeps the remaining assignment-and-unpacking slice cohesive around safe indexing displays, direct subscript mutation, and tuple-style state updates
+- `batch_41_slice_unpacking_subscript_assignment_tuple_assignment` completed local validation and ended external pass-1/pass-2 review with no accepted blockers
 
 ### wave_3_fixture_and_negative_case_normalization
 

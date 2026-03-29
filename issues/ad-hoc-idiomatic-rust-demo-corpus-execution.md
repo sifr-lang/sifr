@@ -1837,6 +1837,45 @@ status: accepted_after_pass_1_and_pass_2
 - reviewer tooling note:
   - batch 40 used concise per-file external review prompts with one-line verdict constraints because that transport pattern has been the most reliable reviewer lane in this workspace
 
+#### batch_41_slice_unpacking_subscript_assignment_tuple_assignment
+
+status: accepted_after_pass_1_and_pass_2
+
+- scope:
+  - `demos/slice_unpacking/idiomatic.rs`
+  - `demos/subscript_assignment/idiomatic.rs`
+  - `demos/tuple_assignment/idiomatic.rs`
+- selection rationale:
+  - all three are positive runnable demos
+  - all three form a cohesive remaining assignment-and-unpacking slice instead of mixing safe indexing displays, direct subscript writes, and tuple-style state rotation with unrelated stdlib or compiler demos
+  - all three still had obvious generated-shape indexing or tuple-lowering scaffolding despite being small behavior-first examples
+- priority tags:
+  - `safe-index-display`: `slice_unpacking`
+  - `subscript-mutation`: `subscript_assignment`
+  - `tuple-assignment`: `tuple_assignment`
+  - `hand-authored-generated-shape`: `slice_unpacking`, `subscript_assignment`, `tuple_assignment`
+- implementation summary:
+  - `slice_unpacking`: replaced expanded safe-indexing and slicing lowering with direct `first`/`get`, `HashMap::get`, a slice-rest pattern, and `step_by(2)` collection
+  - `subscript_assignment`: collapsed nested subscript writes and augmented list updates to direct valid indexing while preserving the optional read surface with `first` and `get`
+  - `tuple_assignment`: replaced broken tuple lowering with `mem::swap`, `mem::replace`, direct tuple iteration, and a compact text formatter
+- local validation completed:
+  - `rustfmt demos/slice_unpacking/idiomatic.rs demos/subscript_assignment/idiomatic.rs demos/tuple_assignment/idiomatic.rs`
+  - `rustc --edition=2021 demos/slice_unpacking/idiomatic.rs -o /tmp/sifr-idiomatic-slice-unpacking && /tmp/sifr-idiomatic-slice-unpacking`
+  - `rustc --edition=2021 demos/subscript_assignment/idiomatic.rs -o /tmp/sifr-idiomatic-subscript-assignment && /tmp/sifr-idiomatic-subscript-assignment`
+  - `rustc --edition=2021 demos/tuple_assignment/idiomatic.rs -o /tmp/sifr-idiomatic-tuple-assignment && /tmp/sifr-idiomatic-tuple-assignment`
+  - `cargo run -q -p sifr -- run demos/slice_unpacking/main.sifr`
+  - `cargo run -q -p sifr -- run demos/subscript_assignment/main.sifr`
+  - `cargo run -q -p sifr -- run demos/tuple_assignment/main.sifr`
+  - `scripts/run_all_tests.sh`
+- review artifacts:
+  - pass 1: `reviews/phase-ad-hoc-idiomatic-rust-demo-corpus-wave-2-batch-41-review-pass-1.md`
+  - pass 2: `reviews/phase-ad-hoc-idiomatic-rust-demo-corpus-wave-2-batch-41-review-pass-2.md`
+- review application summary:
+  - pass 1 reported no accepted blockers
+  - pass 2 reported no accepted blockers
+- reviewer tooling note:
+  - batch 41 used compact per-file external review prompts after the full embedded-file batch prompt stalled before the first verdict in this workspace
+
 ### wave_3_fixture_and_negative_case_normalization
 
 status: pending
