@@ -1,35 +1,24 @@
-fn edge_pairs_text(text: &String) -> String {
-    let mut left: i64 = 0 as i64;
-    let mut right: i64 = (text.chars().count() as i64) - (1 as i64);
-    let mut out: String = "".to_string();
+fn edge_pairs_text(text: &str) -> String {
+    let chars: Vec<char> = text.chars().collect();
+    let mut out = String::new();
+    let mut left = 0usize;
+    let mut right = chars.len().saturating_sub(1);
+
     while left < right {
-        out = format!(
-            "{}{}{}{}{}{}",
-            out,
-            "(".to_string(),
-            {
-                let Some(__indexed_char) = text.chars().nth(left as usize) else {
-                    unreachable!("compiler-verified string index should be in range");
-                };
-                __indexed_char.to_string()
-            },
-            ",".to_string(),
-            {
-                let Some(__indexed_char) = text.chars().nth(right as usize) else {
-                    unreachable!("compiler-verified string index should be in range");
-                };
-                __indexed_char.to_string()
-            },
-            ")".to_string()
-        );
-        left += 1 as i64;
-        right -= 1 as i64;
+        out.push('(');
+        out.push(chars[left]);
+        out.push(',');
+        out.push(chars[right]);
+        out.push(')');
+        left += 1;
+        right -= 1;
     }
-    return out;
+
+    out
 }
 
 fn main() {
-    assert!(edge_pairs_text(&"code".to_string()) == "(c,e)(o,d)".to_string());
-    assert!(edge_pairs_text(&"xy".to_string()) == "(x,y)".to_string());
+    assert_eq!(edge_pairs_text("code"), "(c,e)(o,d)");
+    assert_eq!(edge_pairs_text("xy"), "(x,y)");
     println!("paired_indices: ok");
 }

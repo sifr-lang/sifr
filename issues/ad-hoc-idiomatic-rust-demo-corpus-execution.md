@@ -1799,6 +1799,44 @@ status: accepted_after_pass_1_and_pass_2
 - reviewer tooling note:
   - batch 39 used concise per-file external review prompts with one-line verdict constraints because that transport pattern has been the most reliable reviewer lane in this workspace
 
+#### batch_40_paired_indices_pop_narrowing_range_aliasing
+
+status: accepted_after_pass_1_and_pass_2
+
+- scope:
+  - `demos/paired_indices/idiomatic.rs`
+  - `demos/pop_narrowing/idiomatic.rs`
+  - `demos/range_aliasing/idiomatic.rs`
+- selection rationale:
+  - all three are positive runnable demos
+  - all three form a cohesive remaining index-and-narrowing slice instead of mixing two-pointer reads, non-empty `pop` narrowing, and `len(...)` aliasing with unrelated stdlib or compiler demos
+  - all three still had obvious generated-shape indexing or option scaffolding despite being small direct behavior demos
+- priority tags:
+  - `indexing-surface`: `paired_indices`, `range_aliasing`
+  - `narrowing-surface`: `pop_narrowing`
+  - `hand-authored-generated-shape`: `paired_indices`, `pop_narrowing`, `range_aliasing`
+- implementation summary:
+  - `paired_indices`: replaced repeated `chars().nth(...)` lookups and `unreachable!` scaffolding with a collected `Vec<char>` and a direct two-pointer loop
+  - `pop_narrowing`: rewrote both drain helpers around direct `while let Some(...)` narrowing, using `VecDeque::pop_front()` for the front-pop variant
+  - `range_aliasing`: reduced the forward and reverse sum helpers to direct iterator forms while keeping the reverse-while and weights-product cases as compact explicit loops
+- local validation completed:
+  - `rustfmt demos/paired_indices/idiomatic.rs demos/pop_narrowing/idiomatic.rs demos/range_aliasing/idiomatic.rs`
+  - `rustc --edition=2021 demos/paired_indices/idiomatic.rs -o /tmp/sifr-idiomatic-paired-indices && /tmp/sifr-idiomatic-paired-indices`
+  - `rustc --edition=2021 demos/pop_narrowing/idiomatic.rs -o /tmp/sifr-idiomatic-pop-narrowing && /tmp/sifr-idiomatic-pop-narrowing`
+  - `rustc --edition=2021 demos/range_aliasing/idiomatic.rs -o /tmp/sifr-idiomatic-range-aliasing && /tmp/sifr-idiomatic-range-aliasing`
+  - `cargo run -q -p sifr -- run demos/paired_indices/main.sifr`
+  - `cargo run -q -p sifr -- run demos/pop_narrowing/main.sifr`
+  - `cargo run -q -p sifr -- run demos/range_aliasing/main.sifr`
+  - `scripts/run_all_tests.sh`
+- review artifacts:
+  - pass 1: `reviews/phase-ad-hoc-idiomatic-rust-demo-corpus-wave-2-batch-40-review-pass-1.md`
+  - pass 2: `reviews/phase-ad-hoc-idiomatic-rust-demo-corpus-wave-2-batch-40-review-pass-2.md`
+- review application summary:
+  - pass 1 reported no accepted blockers
+  - pass 2 reported no accepted blockers
+- reviewer tooling note:
+  - batch 40 used concise per-file external review prompts with one-line verdict constraints because that transport pattern has been the most reliable reviewer lane in this workspace
+
 ### wave_3_fixture_and_negative_case_normalization
 
 status: pending
