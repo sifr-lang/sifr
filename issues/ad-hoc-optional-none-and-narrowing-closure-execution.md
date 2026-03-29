@@ -41,6 +41,21 @@ status: in progress
   - targeted rerun signal:
     - `cargo run -q -p sifr -- check audits/leetcode/0004_median_of_two_sorted_arrays.sifr` -> incompatible ternary Optional diagnostics reduced `4 -> 2`; remaining unproven `A[i]`/`B[j]` branches still surface `int | None`
     - `cargo run -q -p sifr -- check audits/leetcode/0013_roman_to_integer.sifr` -> unchanged (`int | None` from dict indexing)
+- 2026-03-29 local iteration (wave-2 slice):
+  - compiler changes:
+    - dict key guard tokenization now supports tuple keys and boolean tuple members
+    - dict subscript assignment records key-presence sequence guards for dominated reads
+    - exhaustive `if/else` merges retain branch-common sequence guards
+    - false-exit guard detection now captures `i == len(seq)`/`len(seq) == i` for post-return narrowing
+    - matrix shape facts now support singleton-row repetition (`[[x] * (len(y) + k) for ...]`) so nested fixed-index reads narrow correctly
+    - extracted sequence-guard helper updates into `crates/sifr_hir/src/lower/sequence_guard_updates.rs` to keep HIR maintainability guardrails passing
+  - tests/validation:
+    - `cargo test -q -p sifr_hir lower::guarded_index::tests::test_dict_key_presence_survives_exhaustive_if_branch_merge -- --nocapture` -> pass
+    - `cargo test -q -p sifr_hir lower::guarded_index::tests::test_matrix_singleton_repeat_rows_allow_nested_fixed_index_reads -- --nocapture` -> pass
+    - `scripts/run_all_tests.sh --profile quick` -> pass
+  - targeted rerun signal:
+    - `cargo run -q -p sifr -- check audits/leetcode/0004_median_of_two_sorted_arrays.sifr` -> still failing (`int | None` ternary branches)
+    - `cargo run -q -p sifr -- check audits/leetcode/0013_roman_to_integer.sifr` -> still failing (`int | None` dict index arithmetic)
 - Validation to record:
   - owning unit tests
   - non-LeetCode e2e regression(s)
@@ -49,13 +64,25 @@ status: in progress
 
 ### workstream_2_unknown_optional_stabilization
 
-status: pending
+status: in progress
 
 - Representative fixtures:
   - `0010_regular_expression_matching`
   - `0309_best_time_to_buy_and_sell_stock_with_cooldown`
   - `0494_target_sum`
   - `0518_coin_change_ii`
+- 2026-03-29 local iteration (wave-1 slice):
+  - compiler changes:
+    - nested assignment inference now refines dict/list container element types for subscript targets
+    - nested call inference now stabilizes `max`/`min` return types from unified argument evidence
+  - tests/validation:
+    - `cargo test -q -p sifr_hir lower::nested_function_tests::test_recursive_memoized_nested_helper_infers_deterministic_int_return -- --nocapture` -> pass
+    - `scripts/run_all_tests.sh --profile quick` -> pass
+  - targeted rerun signal:
+    - `cargo run -q -p sifr -- check audits/leetcode/0010_regular_expression_matching.sifr` -> pass
+    - `cargo run -q -p sifr -- check audits/leetcode/0309_best_time_to_buy_and_sell_stock_with_cooldown.sifr` -> pass
+    - `cargo run -q -p sifr -- check audits/leetcode/0494_target_sum.sifr` -> pass
+    - `cargo run -q -p sifr -- check audits/leetcode/0518_coin_change_ii.sifr` -> pass (with unreachable-block warnings only)
 - Validation to record:
   - join/inference tests
   - targeted fixture rerun results

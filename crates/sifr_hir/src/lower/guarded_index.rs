@@ -372,6 +372,17 @@ mod tests {
     }
 
     #[test]
+    fn test_dict_index_narrows_after_tuple_membership_guard() {
+        let result = lower_source(
+            "def main():\n    table: dict[tuple[int, bool], int] = {(1, True): 10}\n    i: int = 1\n    buying: bool = True\n    if (i, buying) in table:\n        value: int = table[(i, buying)]\n",
+        );
+        assert!(
+            result.is_ok(),
+            "dict index should narrow for tuple key guards used by memoization caches"
+        );
+    }
+
+    #[test]
     fn test_dict_index_narrows_after_not_in_early_return_guard() {
         let result = lower_source(
             "def pick(table: dict[int, int], key: int) -> int:\n    if key not in table:\n        return 0\n    return table[key]\n",
@@ -379,6 +390,39 @@ mod tests {
         assert!(
             result.is_ok(),
             "post-guard dict index should narrow after `if key not in dict: return`"
+        );
+    }
+
+    #[test]
+    fn test_dict_subscript_assignment_establishes_key_presence_for_following_read() {
+        let result = lower_source(
+            "def pick(i: int, buying: bool) -> int:\n    cache = {}\n    cache[(i, buying)] = 7\n    return cache[(i, buying)]\n",
+        );
+        assert!(
+            result.is_ok(),
+            "dict subscript assignment should establish key presence for a dominated read"
+        );
+    }
+
+    #[test]
+    fn test_dict_key_presence_survives_exhaustive_if_branch_merge() {
+        let result = lower_source(
+            "def pick(flag: bool, i: int, buying: bool) -> int:\n    cache = {}\n    if flag:\n        cache[(i, buying)] = 1\n    else:\n        cache[(i, buying)] = 2\n    return cache[(i, buying)]\n",
+        );
+        assert!(
+            result.is_ok(),
+            "key-presence guards established in every if branch should survive the merge"
+        );
+    }
+
+    #[test]
+    fn test_index_narrows_after_equal_len_early_return() {
+        let result = lower_source(
+            "def pick(values: list[int], i: int) -> int:\n    if i == len(values):\n        return 0\n    return values[i]\n",
+        );
+        assert!(
+            result.is_ok(),
+            "post-return `i == len(values)` should permit guarded index typing"
         );
     }
 
@@ -498,6 +542,17 @@ mod tests {
             .reveal_types
             .iter()
             .any(|diagnostic| diagnostic == "reveal_type: int"));
+    }
+
+    #[test]
+    fn test_matrix_singleton_repeat_rows_allow_nested_fixed_index_reads() {
+        let result = lower_source(
+            "def main(s: str, p: str) -> bool:\n    cache = [[False] * (len(p) + 1) for i in range(len(s) + 1)]\n    return cache[0][0]\n",
+        );
+        assert!(
+            result.is_ok(),
+            "matrix rows built from singleton-list repetition should retain inner length anchors"
+        );
     }
 
     #[test]

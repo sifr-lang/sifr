@@ -179,6 +179,39 @@ fn test_guarded_dict_pop_stays_optional() {
 }
 
 #[test]
+fn test_if_expr_optional_branch_does_not_implicitly_unwrap() {
+    let result = lower_source(
+        "def pick(x: int | None) -> int:\n    value: int = x if x is not None else 0\n    return value\n",
+    );
+    assert!(
+        result.is_err(),
+        "ternary optional branch should not implicitly unwrap Option values"
+    );
+}
+
+#[test]
+fn test_if_expr_true_branch_sequence_guard_narrows_index() {
+    let result = lower_source(
+        "def pick(values: list[int], i: int) -> int:\n    value: int = values[i] if i < len(values) else 0\n    return value\n",
+    );
+    assert!(
+        result.is_ok(),
+        "ternary true branch should honor index guard and produce definite element type"
+    );
+}
+
+#[test]
+fn test_if_expr_true_branch_sequence_guard_narrows_index_with_offset() {
+    let result = lower_source(
+        "def pick(values: list[int], i: int) -> int:\n    value: int = values[i + 1] if i + 1 < len(values) else 0\n    return value\n",
+    );
+    assert!(
+        result.is_ok(),
+        "ternary true branch should honor offset index guard and produce definite element type"
+    );
+}
+
+#[test]
 fn test_for_range() {
     let module = lower_source("def main():\n    for i in range(10):\n        print(i)\n").unwrap();
     assert_eq!(module.functions.len(), 1);

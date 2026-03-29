@@ -1,5 +1,5 @@
 use super::LowerCtx;
-use sifr_python_ast::{Expr, ExprBinOp, ExprCall, ExprListComp, Operator};
+use sifr_python_ast::{Expr, ExprBinOp, ExprCall, ExprList, ExprListComp, Operator};
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub(super) enum SequenceShapeFact {
@@ -72,6 +72,9 @@ impl SequenceShapeFact {
 }
 
 pub(super) fn sequence_shape_fact(name: &str, expr: &Expr) -> Option<SequenceShapeFact> {
+    if let Some(matrix_fact) = matrix_list_comp_fact(name, expr) {
+        return Some(matrix_fact);
+    }
     if let Some((anchor_sequence, extra_len)) = sized_list_comp_fact(expr) {
         return Some(SequenceShapeFact::SizedByAnchor {
             sequence_var: name.to_string(),
@@ -79,7 +82,7 @@ pub(super) fn sequence_shape_fact(name: &str, expr: &Expr) -> Option<SequenceSha
             extra_len,
         });
     }
-    matrix_list_comp_fact(name, expr)
+    None
 }
 
 fn matrix_list_comp_fact(name: &str, expr: &Expr) -> Option<SequenceShapeFact> {
@@ -87,10 +90,7 @@ fn matrix_list_comp_fact(name: &str, expr: &Expr) -> Option<SequenceShapeFact> {
         return None;
     };
     let (outer_anchor, outer_extra_len) = list_comp_range_shape(outer_comp)?;
-    let Expr::ListComp(inner_comp) = outer_comp.elt.as_ref() else {
-        return None;
-    };
-    let (inner_anchor, inner_extra_len) = list_comp_range_shape(inner_comp)?;
+    let (inner_anchor, inner_extra_len) = matrix_inner_shape(outer_comp.elt.as_ref())?;
     Some(SequenceShapeFact::MatrixSizedByAnchors {
         matrix_var: name.to_string(),
         outer_anchor,
@@ -98,6 +98,37 @@ fn matrix_list_comp_fact(name: &str, expr: &Expr) -> Option<SequenceShapeFact> {
         inner_anchor,
         inner_extra_len,
     })
+}
+
+fn matrix_inner_shape(expr: &Expr) -> Option<(String, usize)> {
+    match expr {
+        Expr::ListComp(inner_comp) => list_comp_range_shape(inner_comp),
+        _ => singleton_list_repeat_shape(expr),
+    }
+}
+
+fn singleton_list_repeat_shape(expr: &Expr) -> Option<(String, usize)> {
+    let Expr::BinOp(ExprBinOp {
+        left, op, right, ..
+    }) = expr
+    else {
+        return None;
+    };
+    if !matches!(op, Operator::Mult) {
+        return None;
+    }
+    singleton_list_repeat_pair(left.as_ref(), right.as_ref())
+        .or_else(|| singleton_list_repeat_pair(right.as_ref(), left.as_ref()))
+}
+
+fn singleton_list_repeat_pair(list_expr: &Expr, len_expr: &Expr) -> Option<(String, usize)> {
+    let Expr::List(ExprList { elts, .. }) = list_expr else {
+        return None;
+    };
+    if elts.len() != 1 {
+        return None;
+    }
+    len_plus_literal(len_expr)
 }
 
 fn sized_list_comp_fact(expr: &Expr) -> Option<(String, usize)> {
