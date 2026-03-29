@@ -2097,6 +2097,51 @@ status: accepted_after_pass_1_and_pass_2
 - reviewer tooling note:
   - batch 46 used compact per-file prompts for pass 1, then embedded-source per-file prompts for pass 2 after the initial lane showed repeated stale file-role inversions on the tiny stdlib-loading demos
 
+#### batch_54_safety_basics_error_safety_io_safety
+
+status: accepted_after_pass_1_and_pass_2
+
+- scope:
+  - `demos/safety_basics/idiomatic.rs`
+  - `demos/error_safety/idiomatic.rs`
+  - `demos/io_safety/idiomatic.rs`
+- selection rationale:
+  - all three are positive runnable demos
+  - they form a cohesive remaining safety-surface slice instead of mixing error handling and I/O guarantees with unrelated stdlib or fixture work
+  - `error_safety` and `io_safety` were still carrying generated-style ceremony despite compact exercised behavior, and `safety_basics` fit naturally as the small milestone-0 safety/harness check beside them
+- priority tags:
+  - `safety-demo`: `safety_basics`, `error_safety`, `io_safety`
+  - `error-surface`: `error_safety`, `io_safety`
+  - `hand-authored-generated-shape`: `error_safety`, `io_safety`
+- implementation summary:
+  - `safety_basics`: reduced the demo to direct UTF-8 failure handling plus the exact exercised base64 vector assertion
+  - `error_safety`: replaced the generated scaffold with compact custom error wrappers and direct built-in/custom error handling demonstrations matching the observed output
+  - `io_safety`: replaced the generated wrapper layer with direct file, directory, copy, append, and cwd helpers while preserving the exact printed error/output flow
+- local validation completed:
+  - `rustfmt demos/safety_basics/idiomatic.rs demos/error_safety/idiomatic.rs demos/io_safety/idiomatic.rs`
+  - temp Cargo validation for `safety_basics` with `base64 = "0.22"`
+  - `rustc demos/error_safety/idiomatic.rs -o /tmp/error_safety_idiomatic`
+  - `rustc demos/io_safety/idiomatic.rs -o /tmp/io_safety_idiomatic`
+  - `/tmp/error_safety_idiomatic`
+  - `/tmp/io_safety_idiomatic`
+  - `cargo run -q -p sifr -- run demos/safety_basics/main.sifr`
+  - `cargo run -q -p sifr -- run demos/error_safety/main.sifr`
+  - `cargo run -q -p sifr -- run demos/io_safety/main.sifr`
+  - `scripts/run_all_tests.sh`
+- review artifacts:
+  - pass 1: `reviews/phase-ad-hoc-idiomatic-rust-demo-corpus-wave-2-batch-54-review-pass-1.md`
+  - pass 2: `reviews/phase-ad-hoc-idiomatic-rust-demo-corpus-wave-2-batch-54-review-pass-2.md`
+- review application summary:
+  - pass 1 on `safety_basics` raised only an internal error-type-wrapper note around `ParseError`; it was not accepted because the paired demo-visible behavior and assertion flow already matched under all validation lanes
+  - pass 1 on `error_safety` returned `OK`
+  - pass 1 on `io_safety` reported only non-blocking wrapper-shape differences and explicitly concluded that the exercised scenarios were behaviorally aligned
+  - pass 2 on `safety_basics` repeated the same internal `ParseError` wrapper complaint and it was again not accepted
+  - pass 2 on `error_safety` returned `OK`
+  - pass 2 on `io_safety` returned `OK`
+- reviewer tooling note:
+  - batch 54 again used bounded per-file `claude -p` prompts with embedded `main.sifr` and `idiomatic.rs` sources
+  - unlike some of the larger earlier batches, this safety slice did not suffer reviewer transport timeouts; the only repeated notes were the non-blocking `ParseError` wrapper complaints on `safety_basics`
+
 #### batch_53_utility_classes_uuid_and_datetime_fixed_timezones
 
 status: accepted_after_pass_1_and_pass_2
