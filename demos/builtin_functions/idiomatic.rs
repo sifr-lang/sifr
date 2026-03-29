@@ -1,32 +1,22 @@
 fn main() {
-    println!("max(3, 7) = {}", std::cmp::max(3 as i64, 7 as i64));
-    assert!(
-        format!(
-            "{}",
-            format!("max(3, 7) = {}", std::cmp::max(3 as i64, 7 as i64))
-        ) == "max(3, 7) = 7".to_string()
-    );
-    println!("min(3, 7) = {}", std::cmp::min(3 as i64, 7 as i64));
-    assert!(
-        format!(
-            "{}",
-            format!("min(3, 7) = {}", std::cmp::min(3 as i64, 7 as i64))
-        ) == "min(3, 7) = 3".to_string()
-    );
-    println!("pow(2, 10) = {}", (2 as i64).pow((10 as i64) as u32));
-    assert!(
-        format!(
-            "{}",
-            format!("pow(2, 10) = {}", (2 as i64).pow((10 as i64) as u32))
-        ) == "pow(2, 10) = 1024".to_string()
-    );
-    let mut result: String = "".to_string();
-    for i in (0 as i64..10 as i64).step_by((2 as i64) as usize) {
-        if (result.len() as i64) > (0 as i64) {
-            result = format!("{}{}", result, " ".to_string());
-        }
-        result = format!("{}{}", result, format!("{}", i));
-    }
-    println!("{}", result);
-    assert!(format!("{}", result) == "0 2 4 6 8".to_string());
+    let max_value = 3_i64.max(7);
+    let min_value = 3_i64.min(7);
+    let power = 2_i64.pow(10);
+    let result = (0_i64..10)
+        .step_by(2)
+        .map(|value| value.to_string())
+        .collect::<Vec<_>>()
+        .join(" ");
+
+    println!("max(3, 7) = {max_value}");
+    assert_eq!(format!("max(3, 7) = {max_value}"), "max(3, 7) = 7");
+
+    println!("min(3, 7) = {min_value}");
+    assert_eq!(format!("min(3, 7) = {min_value}"), "min(3, 7) = 3");
+
+    println!("pow(2, 10) = {power}");
+    assert_eq!(format!("pow(2, 10) = {power}"), "pow(2, 10) = 1024");
+
+    println!("{result}");
+    assert_eq!(result, "0 2 4 6 8");
 }
