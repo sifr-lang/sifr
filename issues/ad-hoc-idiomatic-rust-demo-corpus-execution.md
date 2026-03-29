@@ -2335,6 +2335,52 @@ status: accepted_after_pass_1_and_pass_2
   - an embedded-source retry was also used for `stdlib_ownership` pass 1 after the initial direct prompt returned only `OK`; that narrower retry found the heap/lazy-chain issues that were actually worth fixing
   - `stdlib_ownership` pass 2 still stalled without output after repeated polls, so the artifact records that transport issue explicitly rather than inventing a clean verdict
 
+#### batch_63_enums_ergonomics_constants_classmethods_arithmetic
+
+status: accepted_after_pass_1_and_pass_2
+
+- scope:
+  - `demos/enums/idiomatic.rs`
+  - `demos/ergonomics/idiomatic.rs`
+  - `demos/constants_classmethods_arithmetic/idiomatic.rs`
+- selection rationale:
+  - all three are positive runnable demos
+  - all three form a cohesive remaining language-features slice instead of mixing enum and ergonomics work with unrelated stdlib or compiler-only surfaces
+  - `ergonomics` still carried substantial emitted slicing/indexing/default-parameter scaffolding, while `enums` and `constants_classmethods_arithmetic` were smaller language milestone companions that still benefited from the same Rust-first cleanup pass
+- priority tags:
+  - `language-features`: `enums`, `ergonomics`, `constants_classmethods_arithmetic`
+  - `milestone-demo`: `enums`, `ergonomics`, `constants_classmethods_arithmetic`
+  - `hand-authored-generated-shape`: `enums`, `ergonomics`, `constants_classmethods_arithmetic`
+- implementation summary:
+  - `enums`: replaced the emitted-style enum surface with small `repr(i64)` enums, direct `Display`/`name` helpers, and straightforward pattern matches over the demonstrated variants
+  - `ergonomics`: collapsed the generated indexing and slicing machinery to direct Rust helpers for negative indexing, step slicing, string/list/dict methods, and a small `GreetOptions` default struct to model defaults and named-call intent
+  - `constants_classmethods_arithmetic`: replaced faux-constant helpers with real module constants and a direct associated constructor on `Temperature`
+- local validation completed:
+  - `rustfmt demos/enums/idiomatic.rs demos/ergonomics/idiomatic.rs demos/constants_classmethods_arithmetic/idiomatic.rs`
+  - `rustc --edition=2021 demos/enums/idiomatic.rs -o /tmp/sifr-idiomatic-enums && /tmp/sifr-idiomatic-enums`
+  - `rustc --edition=2021 demos/ergonomics/idiomatic.rs -o /tmp/sifr-idiomatic-ergonomics && /tmp/sifr-idiomatic-ergonomics`
+  - `rustc --edition=2021 demos/constants_classmethods_arithmetic/idiomatic.rs -o /tmp/sifr-idiomatic-constants-classmethods && /tmp/sifr-idiomatic-constants-classmethods`
+  - `cargo run -q -p sifr -- run demos/enums/main.sifr`
+  - `cargo run -q -p sifr -- run demos/ergonomics/main.sifr`
+  - `cargo run -q -p sifr -- run demos/constants_classmethods_arithmetic/main.sifr`
+  - `scripts/run_all_tests.sh`
+  - post-pass-1 revalidation:
+    - `rustfmt demos/ergonomics/idiomatic.rs`
+    - `rustc --edition=2021 demos/ergonomics/idiomatic.rs -o /tmp/sifr-idiomatic-ergonomics && /tmp/sifr-idiomatic-ergonomics`
+    - `cargo run -q -p sifr -- run demos/ergonomics/main.sifr`
+    - `scripts/run_all_tests.sh`
+- review artifacts:
+  - pass 1: `reviews/phase-ad-hoc-idiomatic-rust-demo-corpus-wave-2-batch-63-review-pass-1.md`
+  - pass 2: `reviews/phase-ad-hoc-idiomatic-rust-demo-corpus-wave-2-batch-63-review-pass-2.md`
+- review application summary:
+  - pass 1 returned `OK` for `enums` and `constants_classmethods_arithmetic`
+  - pass 1 on `ergonomics` raised one real issue in substance: the original rewrite did not show a strong Rust analogue for the demo's default-argument and keyword-style `greet(...)` calls; I accepted that and introduced `GreetOptions` with `Default` plus struct-update syntax
+  - pass 1 notes about loop-else and string method surface differences were not accepted as blockers because Rust lacks those exact surface forms and the current helpers already preserve the observed behavior idiomatically
+  - all three pass-2 reviews returned `OK`
+- reviewer tooling note:
+  - batch 63 used direct per-file `claude -p --tools Read` prompts
+  - `ergonomics` pass 2 needed a short retry prompt after the initial full prompt stalled, but the retry returned a clean verdict on the final code state
+
 #### batch_62_control_flow_control_flow_paths_compiled_expressions
 
 status: accepted_after_pass_1_and_pass_2
