@@ -6,7 +6,7 @@ struct Pair {
 
 impl Pair {
     fn new(x: i64, y: i64) -> Self {
-        return Self { x: x, y: y };
+        Self { x, y }
     }
 }
 
@@ -24,25 +24,13 @@ struct RunningBounds {
 
 impl RunningBounds {
     fn new(left: i64, right: i64) -> Self {
-        return Self {
-            left: left,
-            right: right,
-        };
+        Self { left, right }
     }
-    fn rotate(&self, next_value: i64) {
-        let (__sifr_tuple_unpack_0, __sifr_tuple_unpack_1) = (self.right, next_value);
-        self.left = __sifr_tuple_unpack_0;
-        self.right = __sifr_tuple_unpack_1;
+    fn rotate(&mut self, next_value: i64) {
+        self.left = std::mem::replace(&mut self.right, next_value);
     }
     fn as_text(&self) -> String {
-        return format!(
-            "{}{}{}{}{}",
-            "(".to_string(),
-            format!("{}", self.left),
-            ", ".to_string(),
-            format!("{}", self.right),
-            ")".to_string()
-        );
+        format!("({}, {})", self.left, self.right)
     }
 }
 
@@ -53,35 +41,28 @@ impl std::fmt::Display for RunningBounds {
 }
 
 fn swap_pair(pair: &mut Pair) {
-    let (__sifr_tuple_unpack_0, __sifr_tuple_unpack_1) = (pair.y, pair.x);
-    pair.x = __sifr_tuple_unpack_0;
-    pair.y = __sifr_tuple_unpack_1;
+    std::mem::swap(&mut pair.x, &mut pair.y);
 }
 
-fn add_points(points: &Vec<(i64, i64)>) -> i64 {
-    let mut total: i64 = 0 as i64;
-    for point in points.iter().copied() {
-        total += (point).0 + (point).1;
+fn add_points(points: &[(i64, i64)]) -> i64 {
+    let mut total = 0;
+    for (x, y) in points.iter().copied() {
+        total += x + y;
     }
-    return total;
+    total
 }
 
 fn main() {
-    let mut pair: Pair = Pair::new(2 as i64, 5 as i64);
+    let mut pair = Pair::new(2, 5);
     swap_pair(&mut pair);
-    assert!(pair.x == (5 as i64));
-    assert!(pair.y == (2 as i64));
-    assert!(
-        add_points(&vec![
-            (1 as i64, 2 as i64),
-            (3 as i64, 4 as i64),
-            (5 as i64, 6 as i64)
-        ]) == (21 as i64)
-    );
-    let mut bounds: RunningBounds = RunningBounds::new(10 as i64, 20 as i64);
-    bounds.rotate(30 as i64);
-    assert!(bounds.left == (20 as i64));
-    assert!(bounds.right == (30 as i64));
-    assert!(bounds.as_text() == "(20, 30)".to_string());
+    assert_eq!(pair.x, 5);
+    assert_eq!(pair.y, 2);
+    assert_eq!(add_points(&[(1, 2), (3, 4), (5, 6)]), 21);
+
+    let mut bounds = RunningBounds::new(10, 20);
+    bounds.rotate(30);
+    assert_eq!(bounds.left, 20);
+    assert_eq!(bounds.right, 30);
+    assert_eq!(bounds.as_text(), "(20, 30)");
     println!("tuple_assignment: ok");
 }
