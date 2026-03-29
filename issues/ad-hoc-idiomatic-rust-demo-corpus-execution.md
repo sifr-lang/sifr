@@ -509,6 +509,43 @@ status: accepted_after_pass_1_and_pass_2
 - reviewer tooling note:
   - batch 09 used the stable Python subprocess capture path for `claude -p --no-session-persistence --dangerously-skip-permissions ...` for both review passes
 
+#### batch_10_bytes_basics_bytes_constructors_bytes_roundtrip
+
+status: accepted_after_pass_1_and_pass_2
+
+- scope:
+  - `demos/bytes_basics/idiomatic.rs`
+  - `demos/bytes_constructors/idiomatic.rs`
+  - `demos/bytes_roundtrip/idiomatic.rs`
+- selection rationale:
+  - all three are positive runnable demos
+  - all three expose core bytes construction and conversion behavior, so they form a coherent bytes-and-UTF-8 slice instead of mixing unrelated stdlib surfaces
+  - each companion still retained generated-style structure despite small demo-visible contracts
+- priority tags:
+  - `stdlib-heavy`: `bytes_constructors`, `bytes_roundtrip`
+  - `hand-authored-generated-shape`: `bytes_basics`, `bytes_constructors`, `bytes_roundtrip`
+- implementation summary:
+  - `bytes_basics`: replaced the vector-construction and slicing scaffolding with direct byte literals, slice access, and a compact sum helper
+  - `bytes_constructors`: replaced the larger constructor surface with localized `ValueError`/`ParseError` types and direct helpers for zero-filled bytes, integer conversion, hex decoding, and UTF-8 encode/decode
+  - `bytes_roundtrip`: replaced the generated helper surface with compact UTF-8 and hex helpers built on standard library primitives and direct `starts_with`/`ends_with` checks
+- local validation completed:
+  - `rustfmt demos/bytes_basics/idiomatic.rs demos/bytes_constructors/idiomatic.rs demos/bytes_roundtrip/idiomatic.rs`
+  - `rustc --edition=2021 demos/bytes_basics/idiomatic.rs -o /tmp/sifr-idiomatic-bytes-basics && /tmp/sifr-idiomatic-bytes-basics`
+  - `rustc --edition=2021 demos/bytes_constructors/idiomatic.rs -o /tmp/sifr-idiomatic-bytes-constructors && /tmp/sifr-idiomatic-bytes-constructors`
+  - `rustc --edition=2021 demos/bytes_roundtrip/idiomatic.rs -o /tmp/sifr-idiomatic-bytes-roundtrip && /tmp/sifr-idiomatic-bytes-roundtrip`
+  - `cargo run -q -p sifr -- run demos/bytes_basics/main.sifr`
+  - `cargo run -q -p sifr -- run demos/bytes_constructors/main.sifr`
+  - `cargo run -q -p sifr -- run demos/bytes_roundtrip/main.sifr`
+  - `scripts/run_all_tests.sh`
+- review artifacts:
+  - pass 1: `reviews/phase-ad-hoc-idiomatic-rust-demo-corpus-wave-2-batch-10-review-pass-1.md`
+  - pass 2: `reviews/phase-ad-hoc-idiomatic-rust-demo-corpus-wave-2-batch-10-review-pass-2.md`
+- review application summary:
+  - pass 1 reported no actionable issues
+  - pass 2 reported no actionable issues
+- reviewer tooling note:
+  - batch 10 used the stable Python subprocess capture path for `claude -p --no-session-persistence --dangerously-skip-permissions ...` for both review passes
+
 ### wave_3_fixture_and_negative_case_normalization
 
 status: pending
