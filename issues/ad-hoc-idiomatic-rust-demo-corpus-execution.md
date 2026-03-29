@@ -334,6 +334,55 @@ status: accepted_after_pass_1_and_pass_2
 - reviewer tooling note:
   - batch 05 continued using the Python subprocess capture path for `claude -p --no-session-persistence --dangerously-skip-permissions ...` because it remained the stable external-review transport for embedded-file batch reviews in this workspace
 
+#### batch_06_collections_itertools_heapq
+
+status: accepted_after_pass_1_and_pass_2
+
+- scope:
+  - `demos/collections/idiomatic.rs`
+  - `demos/itertools/idiomatic.rs`
+  - `demos/heapq/idiomatic.rs`
+- selection rationale:
+  - all three are positive runnable demos
+  - all three had phase-30 review history and still carried substantial generated-style companions relative to their small demo-visible behavior
+  - the group forms a coherent container-and-iteration slice instead of mixing unrelated stdlib surfaces
+- priority tags:
+  - `prior-review-flagged`: `collections`, `itertools`, `heapq`
+  - `stdlib-heavy`: `collections`, `itertools`, `heapq`
+  - `hand-authored-generated-shape`: `collections`, `itertools`, `heapq`
+- implementation summary:
+  - `collections`: replaced the generated collection helpers with a compact `Counter` that preserves encounter order for `most_common`, stable set operations over deduplicated vectors, and a small `VecDeque`-backed deque wrapper
+  - `itertools`: replaced the generated iterator scaffolding with direct slice and iterator helpers built on `chain`, `windows`, `chunks`, `scan`, and `cycle`
+  - `heapq`: replaced the hand-written sift machinery with a small `MinHeap<T>` wrapper over `BinaryHeap<Reverse<T>>` plus compact `nsmallest` and `nlargest` helpers
+- local validation completed:
+  - `rustfmt demos/collections/idiomatic.rs demos/itertools/idiomatic.rs demos/heapq/idiomatic.rs`
+  - `rustc --edition=2021 demos/collections/idiomatic.rs -o /tmp/sifr-idiomatic-collections && /tmp/sifr-idiomatic-collections`
+  - `rustc --edition=2021 demos/itertools/idiomatic.rs -o /tmp/sifr-idiomatic-itertools && /tmp/sifr-idiomatic-itertools`
+  - `rustc --edition=2021 demos/heapq/idiomatic.rs -o /tmp/sifr-idiomatic-heapq && /tmp/sifr-idiomatic-heapq`
+  - `cargo run -q -p sifr -- run demos/collections/main.sifr`
+  - `cargo run -q -p sifr -- run demos/itertools/main.sifr`
+  - `cargo run -q -p sifr -- run demos/heapq/main.sifr`
+  - `scripts/run_all_tests.sh`
+  - post-pass-1 revalidation:
+    - `rustfmt demos/collections/idiomatic.rs demos/itertools/idiomatic.rs demos/heapq/idiomatic.rs`
+    - `rustc --edition=2021 demos/collections/idiomatic.rs -o /tmp/sifr-idiomatic-collections && /tmp/sifr-idiomatic-collections`
+    - `rustc --edition=2021 demos/itertools/idiomatic.rs -o /tmp/sifr-idiomatic-itertools && /tmp/sifr-idiomatic-itertools`
+    - `rustc --edition=2021 demos/heapq/idiomatic.rs -o /tmp/sifr-idiomatic-heapq && /tmp/sifr-idiomatic-heapq`
+    - `cargo run -q -p sifr -- run demos/collections/main.sifr`
+    - `cargo run -q -p sifr -- run demos/itertools/main.sifr`
+    - `cargo run -q -p sifr -- run demos/heapq/main.sifr`
+    - `scripts/run_all_tests.sh`
+- review artifacts:
+  - pass 1: `reviews/phase-ad-hoc-idiomatic-rust-demo-corpus-wave-2-batch-06-review-pass-1.md`
+  - pass 2: `reviews/phase-ad-hoc-idiomatic-rust-demo-corpus-wave-2-batch-06-review-pass-2.md`
+- review application summary:
+  - pass 1 valid follow-up fix applied:
+    - `demos/collections/idiomatic.rs`: made the `Deque::append` zero-capacity and full-capacity boundary handling more explicit by keeping the `maxlen == 0` early return and widening the capacity check to `>=`
+  - pass 1 observations about `heapq` temporary-vector allocation in `nsmallest` and `nlargest` were not accepted as blockers because they are a small-scope tradeoff that does not weaken the demo behavior or the Rust-first design
+  - pass 2 reported no actionable issues
+- reviewer tooling note:
+  - batch 06 continued using the Python subprocess capture path for `claude -p --no-session-persistence --dangerously-skip-permissions ...` because it remained the stable external-review transport for embedded-file batch reviews in this workspace
+
 ### wave_3_fixture_and_negative_case_normalization
 
 status: pending
