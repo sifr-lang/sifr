@@ -2335,6 +2335,48 @@ status: accepted_after_pass_1_and_pass_2
   - an embedded-source retry was also used for `stdlib_ownership` pass 1 after the initial direct prompt returned only `OK`; that narrower retry found the heap/lazy-chain issues that were actually worth fixing
   - `stdlib_ownership` pass 2 still stalled without output after repeated polls, so the artifact records that transport issue explicitly rather than inventing a clean verdict
 
+#### batch_58_nested_functions_nested_helpers_nested_recursive_helpers
+
+status: accepted_after_pass_1_and_pass_2
+
+- scope:
+  - `demos/nested_functions/idiomatic.rs`
+  - `demos/nested_helpers/idiomatic.rs`
+  - `demos/nested_recursive_helpers/idiomatic.rs`
+- selection rationale:
+  - all three are positive runnable demos
+  - all three form a cohesive remaining nested-helper slice instead of mixing nested closure execution with unrelated stdlib or compiler-surface work
+  - `nested_helpers` still carried substantial emitted-style scaffolding around otherwise small backtracking and DSU routines, while the other two companions still had smaller but inconsistent closure/ownership patterns worth normalizing together
+- priority tags:
+  - `nested-functions`: `nested_functions`, `nested_helpers`, `nested_recursive_helpers`
+  - `recursive-helpers`: `nested_helpers`, `nested_recursive_helpers`
+  - `hand-authored-generated-shape`: `nested_functions`, `nested_helpers`, `nested_recursive_helpers`
+- implementation summary:
+  - `nested_functions`: simplified the milestone demo to direct closures and small inner helpers while preserving the exact six printed sections and values
+  - `nested_helpers`: replaced the emitted-style borrow/index scaffolding with direct backtracking, N-Queens, and union-find helpers over standard collections and slices
+  - `nested_recursive_helpers`: reduced the file to a tiny linked-entry struct plus a recursive local visitor over `Option<&Entry>` without the earlier cloning noise
+- local validation completed:
+  - `rustfmt demos/nested_functions/idiomatic.rs demos/nested_helpers/idiomatic.rs demos/nested_recursive_helpers/idiomatic.rs`
+  - `rustc demos/nested_functions/idiomatic.rs -o /tmp/nested_functions_idiomatic`
+  - `rustc demos/nested_helpers/idiomatic.rs -o /tmp/nested_helpers_idiomatic`
+  - `rustc demos/nested_recursive_helpers/idiomatic.rs -o /tmp/nested_recursive_helpers_idiomatic`
+  - `cargo run -q -p sifr -- run demos/nested_functions/main.sifr`
+  - `cargo run -q -p sifr -- run demos/nested_helpers/main.sifr`
+  - `cargo run -q -p sifr -- run demos/nested_recursive_helpers/main.sifr`
+  - `scripts/run_all_tests.sh`
+- review artifacts:
+  - pass 1: `reviews/phase-ad-hoc-idiomatic-rust-demo-corpus-wave-2-batch-58-review-pass-1.md`
+  - pass 2: `reviews/phase-ad-hoc-idiomatic-rust-demo-corpus-wave-2-batch-58-review-pass-2.md`
+- review application summary:
+  - pass 1 on `nested_functions` raised only a non-blocking complaint about the paired Sifr source's captured-variable comment plus a minor string-style preference; neither was accepted as a blocker because the Rust companion already matched the observed output and stayed readable
+  - pass 1 on `nested_recursive_helpers` returned `OK`
+  - pass 1 on `nested_helpers` stalled without a usable verdict and was carried as a transport note rather than treated as a blocker
+  - pass 2 returned `OK` for `nested_functions` and `nested_recursive_helpers`
+  - pass 2 on `nested_helpers` stalled again on the shorter retry prompt and was likewise carried as a transport note
+- reviewer tooling note:
+  - batch 58 used direct per-file `claude -p --tools Read` prompts
+  - `nested_helpers` stalled in both passes despite a shorter retry prompt, so the artifacts record that transport issue explicitly instead of fabricating a clean verdict
+
 #### batch_57_extended_collections_extended_itertools_itertools_iterables
 
 status: accepted_after_pass_1_and_pass_2
