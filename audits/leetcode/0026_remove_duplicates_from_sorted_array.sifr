@@ -1,6 +1,6 @@
 # LeetCode 26: Remove Duplicates From Sorted Array
 
-def removeDuplicates(nums: list[int]) -> int:
+def removeDuplicates(mut nums: list[int]) -> int:
     L = 1
     
     for R in range(1, len(nums)):
@@ -12,5 +12,4 @@ def removeDuplicates(nums: list[int]) -> int:
 def main():
     assert str(removeDuplicates([1,1,2])) == '2'
     assert str(removeDuplicates([0,0,1,1,1,2,2,3,3,4])) == '5'
-
 

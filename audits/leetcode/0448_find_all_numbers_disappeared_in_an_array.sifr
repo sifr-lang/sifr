@@ -1,17 +1,16 @@
 # LeetCode 448: Find All Numbers Disappeared In An Array
 
-def findDisappearedNumbers(nums: list[int]) -> list[int]:
-    for n in nums:
-        i = abs(n) - 1
-        nums[i] = -1 * abs(nums[i])
+def findDisappearedNumbers(mut nums: list[int]) -> list[int]:
+    present: dict[int, bool] = {}
+    for value in nums:
+        present[value] = True
 
-    res = []
-    for i, n in enumerate(nums):
-        if n > 0:
-            res.append(i + 1)
-    return res
+    missing: list[int] = []
+    for candidate in range(1, len(nums) + 1):
+        if not present.get(candidate, default=False):
+            missing.append(candidate)
+    return missing
 
 def main():
     assert findDisappearedNumbers([4, 3, 2, 7, 8, 2, 3, 1]) == [5, 6]
     assert findDisappearedNumbers([1, 1]) == [2]
-
