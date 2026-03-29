@@ -1127,6 +1127,47 @@ status: accepted_after_pass_1_and_pass_2
 - reviewer tooling note:
   - batch 23 used stable per-file external review prompts embedding both the paired Sifr source and the Rust companion because larger batch prompts remained unreliable in this workspace
 
+#### batch_24_extended_builtin_iterators_reversible_iterables_lazy_builtins
+
+status: accepted_after_pass_1_and_pass_2
+
+- scope:
+  - `demos/extended_builtin_iterators/idiomatic.rs`
+  - `demos/reversible_iterables/idiomatic.rs`
+  - `demos/lazy_builtins/idiomatic.rs`
+- selection rationale:
+  - all three are positive runnable demos
+  - all three form a cohesive remaining builtin-iterator slice instead of mixing small lazy-iterator demos with unrelated stdlib areas
+  - each companion still retained boxed iterator scaffolding, tuple-lowering artifacts, or generated-style zip/enumerate plumbing despite compact demo-visible behavior
+- priority tags:
+  - `iterator-surface`: `extended_builtin_iterators`, `reversible_iterables`, `lazy_builtins`
+  - `hand-authored-generated-shape`: `extended_builtin_iterators`, `reversible_iterables`, `lazy_builtins`
+- implementation summary:
+  - `extended_builtin_iterators`: replaced boxed iterators and lowering helpers with direct array-backed `reversed`/`enumerate`/`zip`/`map` chains and compact structural assertions
+  - `reversible_iterables`: replaced iterator boxing and tuple-lowering scaffolding with a direct `DoubleEndedIterator` helper plus small array-backed tuple materialization
+  - `lazy_builtins`: replaced boxed iterators and nested zip scaffolding with direct iterator chains for `reversed`, `enumerate`, and three-way `zip` flattening
+- local validation completed:
+  - `rustfmt demos/extended_builtin_iterators/idiomatic.rs demos/reversible_iterables/idiomatic.rs demos/lazy_builtins/idiomatic.rs`
+  - `rustc --edition=2021 demos/extended_builtin_iterators/idiomatic.rs -o /tmp/sifr-idiomatic-extended-builtin-iterators && /tmp/sifr-idiomatic-extended-builtin-iterators`
+  - `rustc --edition=2021 demos/reversible_iterables/idiomatic.rs -o /tmp/sifr-idiomatic-reversible-iterables && /tmp/sifr-idiomatic-reversible-iterables`
+  - `rustc --edition=2021 demos/lazy_builtins/idiomatic.rs -o /tmp/sifr-idiomatic-lazy-builtins && /tmp/sifr-idiomatic-lazy-builtins`
+  - `cargo run -q -p sifr -- run demos/extended_builtin_iterators/main.sifr`
+  - `cargo run -q -p sifr -- run demos/reversible_iterables/main.sifr`
+  - `cargo run -q -p sifr -- run demos/lazy_builtins/main.sifr`
+  - `scripts/run_all_tests.sh`
+- review artifacts:
+  - pass 1: `reviews/phase-ad-hoc-idiomatic-rust-demo-corpus-wave-2-batch-24-review-pass-1.md`
+  - pass 2: `reviews/phase-ad-hoc-idiomatic-rust-demo-corpus-wave-2-batch-24-review-pass-2.md`
+- review application summary:
+  - pass 1 reported no accepted blockers
+  - the pass-1 `lazy_builtins` nested-tuple note was rejected because the final `.map()` already flattened the iterator output to `(int, str, bool)` and the runtime output matched the paired Sifr demo
+  - the pass-1 `reversible_iterables` reviewer invocation timed out in this workspace without producing a usable note set
+  - pass 2 reported no accepted blockers
+  - the pass-2 `lazy_builtins` ownership note was rejected because Rust 2021 array `into_iter()` yields owned `i64` values and the file already passed local compilation
+  - the pass-2 `extended_builtin_iterators` reviewer invocation also timed out without establishing a blocker
+- reviewer tooling note:
+  - batch 24 used stable per-file external review prompts embedding both the paired Sifr source and the Rust companion because larger batch prompts remained unreliable in this workspace
+
 ### wave_3_fixture_and_negative_case_normalization
 
 status: pending
