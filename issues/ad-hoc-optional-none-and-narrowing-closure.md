@@ -26,6 +26,8 @@ The goal is to make intended Sifr Optional semantics precise enough that valid g
 - `verification/leetcode/full_corpus_current_results_20260329_live.json`
 - `verification/leetcode/full_corpus_current_results_20260329_live_after_optional_wave5.json`
 - `verification/leetcode/full_corpus_current_results_20260329_live_after_optional_wave6.json`
+- `verification/leetcode/full_corpus_current_results_20260329_live_after_optional_wave7.json`
+- `verification/leetcode/full_corpus_current_results_20260329_live_after_optional_wave8.json`
 - `issues/optional-none-category-breakdown-2026-03-29.md`
 - `issues/ad-hoc-optional-none-and-narrowing-wave7-9-root-cause-plan-2026-03-29.md`
 - `reviews/optional-none-direct-pass1.md`
@@ -75,16 +77,16 @@ Current live rerun baseline on 2026-03-29:
 - non-failing set artifact:
   - `verification/leetcode/full_corpus_nonfailing_20260329_live.json`
 
-Latest phase rerun checkpoint on 2026-03-29 (after wave-7 sequence-guard dominance slice):
+Latest phase rerun checkpoint on 2026-03-29 (after wave-8 tuple-unpack flow hygiene slice):
 
 - full corpus result:
   - `PASS=113`
   - `CHECK_ERROR=272`
   - `RUN_ERROR=26`
 - artifact:
-  - `verification/leetcode/full_corpus_current_results_20260329_live_after_optional_wave7.json`
+  - `verification/leetcode/full_corpus_current_results_20260329_live_after_optional_wave8.json`
 - non-failing set artifact:
-  - `verification/leetcode/full_corpus_nonfailing_20260329_live_after_optional_wave7.json`
+  - `verification/leetcode/full_corpus_nonfailing_20260329_live_after_optional_wave8.json`
 
 Planning baseline for this phase:
 
@@ -124,6 +126,7 @@ Important operational note:
   - inferred local reassignment now widens across `None` transitions (`T` <-> `T | None`) while preserving explicit annotation boundaries
   - boolop lowering now propagates sequence guards per short-circuit step (`and` true-path, `or` false-exit path) with guard-state restore protection
   - Wave-7 boolop guarded-index e2e pass/fail fixtures added for explicit dominance-vs-non-dominance coverage
+  - tuple-unpack assignment now records len-alias facts and clears stale sequence/container refinement state on rebinds
   - residual canary fixtures for container and recursive Optional boundary lanes were canonicalized to explicit Sifr-safe forms (`0004`, `0013`, `0023`, `0024`, `0104`, `0115`, `0133`, `0206`)
   - residual run-stability fixtures were canonicalized to remove codegen-hostile shapes (`0010`, `0028`, `0097`, `0309`, `0678`)
 - validation evidence:
@@ -133,6 +136,8 @@ Important operational note:
   - `cargo test -q -p sifr_hir lower::guarded_index::tests::test_matrix_singleton_repeat_rows_allow_nested_fixed_index_reads -- --nocapture`
   - `cargo test -q -p sifr_hir lower::nested_function_tests::test_recursive_memoized_nested_helper_infers_deterministic_int_return -- --nocapture`
   - `cargo test -q -p sifr_hir test_boolop_`
+  - `cargo test -q -p sifr_hir test_tuple_unpack_len_alias_enables_range_index_guard`
+  - `cargo test -q -p sifr_hir test_tuple_unpack_non_len_alias_does_not_enable_range_index_guard`
   - `cargo run -q -p sifr -- check crates/sifr/tests/e2e/pass/optional_boolop_guarded_index_narrowing.sifr`
   - `cargo run -q -p sifr -- run crates/sifr/tests/e2e/pass/optional_boolop_guarded_index_narrowing.sifr`
   - `cargo run -q -p sifr -- check crates/sifr/tests/e2e/fail/optional_boolop_index_without_guard.sifr`
@@ -141,12 +146,13 @@ Important operational note:
   - `cargo run -q -p sifr -- check audits/leetcode/0309_best_time_to_buy_and_sell_stock_with_cooldown.sifr`
   - `cargo run -q -p sifr -- check audits/leetcode/0494_target_sum.sifr`
   - `cargo run -q -p sifr -- check audits/leetcode/0518_coin_change_ii.sifr`
-  - full-corpus rerun command (411 fixtures, local runner): `target/release/sifr` over `audits/leetcode` emitting `verification/leetcode/full_corpus_current_results_20260329_live_after_optional_wave7.json`
+  - full-corpus rerun command (411 fixtures, local runner): `target/release/sifr` over `audits/leetcode` emitting `verification/leetcode/full_corpus_current_results_20260329_live_after_optional_wave8.json`
   - `scripts/run_all_tests.sh --profile quick`
 - targeted fixture signal:
   - representative and canary fixtures for all five workstreams now type-check (`0004`, `0013`, `0023`, `0024`, `0104`, `0115`, `0133`, `0206`, `0494`, `0518`)
   - full-corpus rerun delta vs entry baseline: `16` fixtures improved to `PASS`; `CHECK_ERROR` dropped `290 -> 272`; `RUN_ERROR` moved `24 -> 26`
   - wave-7 delta vs wave-6: `0091` moved `CHECK_ERROR -> PASS`; `0205` and `0290` moved `CHECK_ERROR -> RUN_ERROR` (now blocked by ownership move-use emission in generated Rust)
+  - wave-8 tuple-unpack flow hygiene slice produced no corpus status transitions vs wave-7 (metric-stable infrastructure cleanup)
   - wave-6 removed the prior wave-5 run-stage regressions (`0010`, `0028`, `0097`, `0309`, `0678`) with `RUN_ERROR -> PASS` transitions
   - Optional diagnostics remain a top unresolved family, so phase closeout criteria are not yet satisfied
   - reviewer-gated wave plan for unresolved Optional root causes remains active; wave-7 is implemented, and waves `8-9` remain queued
