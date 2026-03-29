@@ -214,6 +214,8 @@ status: in progress
     - taxonomy signal (`scripts/phase31_leetcode_taxonomy.py` heuristic): Optional narrowing bucket remains `75` (from baseline `84`)
   - closure note:
     - phase remains open; Optional/None unresolved family size is reduced but still not closed by criterion
+  - PR:
+    - `https://github.com/yaseralnajjar/sifr/pull/1464` (merged)
 
 - Validation to record:
   - post-wave full corpus rerun
