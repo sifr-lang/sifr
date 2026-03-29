@@ -336,6 +336,8 @@ Progress update (`2026-03-29`):
 - `batch_41_slice_unpacking_subscript_assignment_tuple_assignment` completed local validation and ended external pass-1/pass-2 review with no accepted blockers
 - `batch_42_loop_try_match_return_and_raise_paths_reachability` selected as the forty-second wave-2 runnable-demo batch because it keeps the remaining small error-and-flow-query slice cohesive around try/except-driven returns, reachability truth, and loop-else control-flow
 - `batch_42_loop_try_match_return_and_raise_paths_reachability` completed local validation, accepted a pre-review cleanup removing a dead helper type from `loop_try_match`, and ended external pass-1/pass-2 review with no accepted blockers
+- `batch_43_type_system_union_ops_union_narrowing` selected as the forty-third wave-2 runnable-demo batch because it keeps the remaining type-and-union surface cohesive around alias-backed value flow, optional arithmetic and length operations, and direct enum narrowing
+- `batch_43_type_system_union_ops_union_narrowing` completed local validation and ended external pass-1/pass-2 review with no accepted blockers
 
 ### wave_3_fixture_and_negative_case_normalization
 

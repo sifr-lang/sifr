@@ -1923,6 +1923,44 @@ status: accepted_after_pass_1_and_pass_2
 - reviewer tooling note:
   - batch 42 used compact per-file external review prompts because that transport pattern was materially more reliable than embedded-file prompts in this workspace
 
+#### batch_43_type_system_union_ops_union_narrowing
+
+status: accepted_after_pass_1_and_pass_2
+
+- scope:
+  - `demos/type_system/idiomatic.rs`
+  - `demos/union_ops/idiomatic.rs`
+  - `demos/union_narrowing/idiomatic.rs`
+- selection rationale:
+  - all three are positive runnable demos
+  - all three form a cohesive remaining type-and-union surface instead of mixing alias-backed value flow, optional arithmetic, and enum narrowing with unrelated stdlib or control-flow demos
+  - all three still had obvious generated-shape clone chains, fallback branches, or synthetic union narrowing scaffolding despite being small direct behavior demos
+- priority tags:
+  - `type-surface`: `type_system`
+  - `union-surface`: `union_ops`, `union_narrowing`
+  - `hand-authored-generated-shape`: `type_system`, `union_ops`, `union_narrowing`
+- implementation summary:
+  - `type_system`: reduced alias and union examples to direct `&str` matching, straightforward enum matching, and a compact optional lookup helper
+  - `union_ops`: replaced manual `Option` narrowing and cloned concatenation with `map_or` defaults and consuming iterator chaining
+  - `union_narrowing`: collapsed nested `if let` chains into direct enum matches, `Option::is_some_and`, and slice-based summarization
+- local validation completed:
+  - `rustfmt demos/type_system/idiomatic.rs demos/union_ops/idiomatic.rs demos/union_narrowing/idiomatic.rs`
+  - `rustc --edition=2021 demos/type_system/idiomatic.rs -o /tmp/sifr-idiomatic-type-system && /tmp/sifr-idiomatic-type-system`
+  - `rustc --edition=2021 demos/union_ops/idiomatic.rs -o /tmp/sifr-idiomatic-union-ops && /tmp/sifr-idiomatic-union-ops`
+  - `rustc --edition=2021 demos/union_narrowing/idiomatic.rs -o /tmp/sifr-idiomatic-union-narrowing && /tmp/sifr-idiomatic-union-narrowing`
+  - `cargo run -q -p sifr -- run demos/type_system/main.sifr`
+  - `cargo run -q -p sifr -- run demos/union_ops/main.sifr`
+  - `cargo run -q -p sifr -- run demos/union_narrowing/main.sifr`
+  - `scripts/run_all_tests.sh`
+- review artifacts:
+  - pass 1: `reviews/phase-ad-hoc-idiomatic-rust-demo-corpus-wave-2-batch-43-review-pass-1.md`
+  - pass 2: `reviews/phase-ad-hoc-idiomatic-rust-demo-corpus-wave-2-batch-43-review-pass-2.md`
+- review application summary:
+  - pass 1 reported no accepted blockers
+  - pass 2 reported no accepted blockers
+- reviewer tooling note:
+  - batch 43 used compact per-file external review prompts because that transport pattern was materially more reliable than embedded-file prompts in this workspace
+
 ### wave_3_fixture_and_negative_case_normalization
 
 status: pending
