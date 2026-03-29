@@ -66,19 +66,11 @@ fn collect_filesystem_actual() -> Vec<bool> {
     let base = format!("/tmp/sifr_m30_1e_os_demo_{}", getpid());
     let file_path = format!("{base}/demo.txt");
 
+    let _ = fs::remove_file(&file_path);
+    let _ = fs::remove_dir(&base);
+
     let (os_flow_ok, list_ok, stat_ok, cleanup_ok) =
         (|| -> Result<(bool, bool, bool, bool), IOError> {
-            match fs::remove_file(&file_path) {
-                Ok(()) => {}
-                Err(error) if error.kind() == io::ErrorKind::NotFound => {}
-                Err(error) => return Err(error),
-            }
-            match fs::remove_dir(&base) {
-                Ok(()) => {}
-                Err(error) if error.kind() == io::ErrorKind::NotFound => {}
-                Err(error) => return Err(error),
-            }
-
             mkdir(&base)?;
             fs::write(&file_path, "demo")?;
 

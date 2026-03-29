@@ -21,10 +21,15 @@ fn machine() -> String {
     env::consts::ARCH.to_string()
 }
 
-fn node() -> String {
+fn hostname() -> Option<String> {
     env::var("HOSTNAME")
         .or_else(|_| env::var("COMPUTERNAME"))
-        .unwrap_or_else(|_| "localhost".to_string())
+        .ok()
+        .filter(|value| !value.is_empty())
+}
+
+fn node() -> String {
+    hostname().unwrap_or_else(|| "localhost".to_string())
 }
 
 fn uname(flag: &str) -> String {

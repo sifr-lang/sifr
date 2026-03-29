@@ -1961,6 +1961,54 @@ status: accepted_after_pass_1_and_pass_2
 - reviewer tooling note:
   - batch 43 used compact per-file external review prompts because that transport pattern was materially more reliable than embedded-file prompts in this workspace
 
+#### batch_44_platform_os_system_tools
+
+status: accepted_after_pass_1_and_pass_2
+
+- scope:
+  - `demos/platform/idiomatic.rs`
+  - `demos/os/idiomatic.rs`
+  - `demos/system_tools/idiomatic.rs`
+- selection rationale:
+  - all three are positive runnable demos
+  - all three form a cohesive remaining runtime-and-system slice instead of mixing platform introspection, small filesystem and process helpers, and the integrated tools demo with unrelated ownership or compiler-surface work
+  - `system_tools` still carried especially large generated-shape stdlib scaffolding despite the paired demo exercising only a compact subset of env, sys, subprocess, logging, platform, time, and timeit behavior
+- priority tags:
+  - `runtime-surface`: `platform`, `os`, `system_tools`
+  - `stdlib-surface`: `os`, `system_tools`
+  - `hand-authored-generated-shape`: `platform`, `os`, `system_tools`
+- implementation summary:
+  - `platform`: kept a compact direct std/env/process implementation, factoring hostname lookup into a small helper while preserving the existing release and version checks
+  - `os`: kept direct filesystem and process wrappers and simplified the temporary directory setup and cleanup flow around the actual demo operations
+  - `system_tools`: replaced the large generated-style stdlib scaffold with focused direct implementations for env, sys, subprocess, logging, platform, time, and timeit behavior that match the paired demo's visible outputs
+- local validation completed:
+  - `rustfmt demos/platform/idiomatic.rs demos/os/idiomatic.rs demos/system_tools/idiomatic.rs`
+  - `rustc --edition=2021 demos/platform/idiomatic.rs -o /tmp/sifr-idiomatic-platform && /tmp/sifr-idiomatic-platform`
+  - `rustc --edition=2021 demos/os/idiomatic.rs -o /tmp/sifr-idiomatic-os && /tmp/sifr-idiomatic-os`
+  - `rustc --edition=2021 demos/system_tools/idiomatic.rs -o /tmp/sifr-idiomatic-system-tools && /tmp/sifr-idiomatic-system-tools`
+  - `cargo run -q -p sifr -- run demos/platform/main.sifr`
+  - `cargo run -q -p sifr -- run demos/os/main.sifr`
+  - `cargo run -q -p sifr -- run demos/system_tools/main.sifr`
+  - `scripts/run_all_tests.sh`
+  - post-fix revalidation:
+    - `rustfmt demos/platform/idiomatic.rs demos/os/idiomatic.rs demos/system_tools/idiomatic.rs`
+    - `rustc --edition=2021 demos/platform/idiomatic.rs -o /tmp/sifr-idiomatic-platform && /tmp/sifr-idiomatic-platform`
+    - `rustc --edition=2021 demos/os/idiomatic.rs -o /tmp/sifr-idiomatic-os && /tmp/sifr-idiomatic-os`
+    - `rustc --edition=2021 demos/system_tools/idiomatic.rs -o /tmp/sifr-idiomatic-system-tools && /tmp/sifr-idiomatic-system-tools`
+    - `cargo run -q -p sifr -- run demos/platform/main.sifr`
+    - `cargo run -q -p sifr -- run demos/os/main.sifr`
+    - `cargo run -q -p sifr -- run demos/system_tools/main.sifr`
+    - `scripts/run_all_tests.sh`
+- review artifacts:
+  - pass 1: `reviews/phase-ad-hoc-idiomatic-rust-demo-corpus-wave-2-batch-44-review-pass-1.md`
+  - pass 2: `reviews/phase-ad-hoc-idiomatic-rust-demo-corpus-wave-2-batch-44-review-pass-2.md`
+- review application summary:
+  - pre-review follow-up: accepted a parity fix in `system_tools` changing `repeat(workload, 3, 4)` to return three timed entries instead of four before rerunning the full validation lane
+  - pass 1 reported no accepted blockers
+  - pass 2 produced one `system_tools` note about `.message` error propagation that was not accepted because its cited lines did not match the claim, the current Rust code already surfaces `io::Error` via `Display`, and the follow-up rereview appended contradictory non-file-local notes after an `OK` verdict
+- reviewer tooling note:
+  - batch 44 used compact per-file external review prompts and direct `claude -p` output capture because the desktop handoff wrapper and longer embedded-file prompts were unreliable in this workspace
+
 ### wave_3_fixture_and_negative_case_normalization
 
 status: pending
