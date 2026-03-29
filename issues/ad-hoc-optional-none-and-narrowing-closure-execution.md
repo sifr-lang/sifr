@@ -223,6 +223,30 @@ status: in progress
   - justification for each surviving canonical rewrite
   - explicit note that no residual rewrite weakened Optional semantics
 
+## Planned Next Waves (Reviewer-Gated, Not Yet Implemented)
+
+Root-cause plan artifact:
+- `issues/ad-hoc-optional-none-and-narrowing-wave7-9-root-cause-plan-2026-03-29.md`
+
+Reviewer passes:
+- `reviews/ad-hoc-optional-none-wave7-9-plan-review-pass1.md` (`not ready`, corrective findings applied)
+- `reviews/ad-hoc-optional-none-wave7-9-plan-review-pass2.md` (`ready`, no blocking issues)
+
+Queued waves:
+
+- wave-7 (`workstream_1`):
+  - sequence-guard dominance and guarded-index consumption
+  - ownership: `sequence_guard_detection.rs`, `guarded_index.rs`, `sequence_guards.rs`, `expressions.rs`
+- wave-8 (`workstream_1` + `workstream_2` bridge):
+  - assignment/join stabilization via reassignment-flow owners
+  - ownership: `assignment_widening.rs`, `statements.rs`, `tuple_unpack.rs` (optional `infer.rs` only if canary evidence requires)
+- wave-9 (`workstream_3` + `workstream_4` closure lane):
+  - call-boundary and container refinement closure under explicit Optional semantics
+  - ownership: `method_call_args.rs`, `expressions.rs`, `nonempty_method_narrowing.rs`, `sequence_guard_detection.rs`, `guarded_index.rs`
+
+Implementation gate:
+- no code changes for waves `7-9` begin until reviewer pass-2 ready verdict is recorded (satisfied as of 2026-03-29).
+
 ## Closeout Criteria
 
 - workstreams `1-4` are either closed or explicitly split further with evidence
