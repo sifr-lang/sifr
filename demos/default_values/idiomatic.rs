@@ -1,34 +1,32 @@
-use std::collections::HashMap;
+use std::collections::BTreeMap;
 
-#[derive(Debug, Clone, PartialEq)]
 struct Payload {
     values: Vec<i64>,
-    counts: HashMap<String, i64>,
+    #[allow(dead_code)]
+    counts: BTreeMap<String, i64>,
 }
 
-impl Payload {
-    fn new(values: Vec<i64>, counts: HashMap<String, i64>) -> Self {
-        return Self {
-            values: values,
-            counts: counts,
-        };
+impl Default for Payload {
+    fn default() -> Self {
+        Self {
+            values: vec![1, 2],
+            counts: BTreeMap::from([("ok".to_string(), 1)]),
+        }
     }
 }
 
 fn append_default(mut items: Vec<i64>) -> Vec<i64> {
-    items.push(9 as i64);
-    return items;
+    items.push(9);
+    items
 }
 
 fn main() {
-    let first: Vec<i64> = append_default(vec![1 as i64]);
-    let second: Vec<i64> = append_default(vec![1 as i64]);
-    let payload: Payload = Payload::new(
-        vec![1 as i64, 2 as i64],
-        HashMap::from([("ok".to_string(), 1 as i64)]),
-    );
+    let first = append_default(vec![1]);
+    let second = append_default(vec![1]);
+    let payload = Payload::default();
+
     println!("m27_3 defaults and panic-to-diagnostic conversion demo:");
-    println!("{:?}", first);
-    println!("{:?}", second);
+    println!("{first:?}");
+    println!("{second:?}");
     println!("{:?}", payload.values);
 }

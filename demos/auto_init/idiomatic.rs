@@ -1,4 +1,6 @@
-#[derive(Debug, Clone, PartialEq, Eq, Hash)]
+use std::fmt::{self, Display};
+
+#[derive(Clone, PartialEq, Eq)]
 struct Point {
     x: i64,
     y: i64,
@@ -6,17 +8,17 @@ struct Point {
 
 impl Point {
     fn new(x: i64, y: i64) -> Self {
-        return Self { x: x, y: y };
+        Self { x, y }
     }
 }
 
-impl std::fmt::Display for Point {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        return write!(f, "Point(x={}, y={})", self.x, self.y);
+impl Display for Point {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "Point(x={}, y={})", self.x, self.y)
     }
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, Hash)]
+#[derive(Clone, PartialEq, Eq)]
 struct Config {
     debug: bool,
     timeout: i64,
@@ -24,26 +26,22 @@ struct Config {
 }
 
 impl Config {
-    fn new(debug: bool, timeout: i64, name: String) -> Self {
-        return Self {
-            debug: debug,
-            timeout: timeout,
-            name: name,
-        };
+    fn new(debug: bool, timeout: i64, name: impl Into<String>) -> Self {
+        Self {
+            debug,
+            timeout,
+            name: name.into(),
+        }
     }
 }
 
-impl std::fmt::Display for Config {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        return write!(
-            f,
-            "Config(debug={}, timeout={}, name={})",
-            self.debug, self.timeout, self.name
-        );
+impl Default for Config {
+    fn default() -> Self {
+        Self::new(false, 30, "default")
     }
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, Hash)]
+#[derive(Clone, PartialEq, Eq)]
 struct Person {
     first_name: String,
     last_name: String,
@@ -51,26 +49,25 @@ struct Person {
 }
 
 impl Person {
-    fn new(first_name: String, last_name: String, age: i64) -> Self {
-        return Self {
-            first_name: first_name,
-            last_name: last_name,
-            age: age,
-        };
+    fn new(first_name: impl Into<String>, last_name: impl Into<String>, age: i64) -> Self {
+        Self {
+            first_name: first_name.into(),
+            last_name: last_name.into(),
+            age,
+        }
     }
 }
 
-impl std::fmt::Display for Person {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        return write!(
+impl Display for Person {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(
             f,
             "Person(first_name={}, last_name={}, age={})",
             self.first_name, self.last_name, self.age
-        );
+        )
     }
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, Hash)]
 struct Rectangle {
     width: i64,
     height: i64,
@@ -78,111 +75,45 @@ struct Rectangle {
 
 impl Rectangle {
     fn new(width: i64, height: i64) -> Self {
-        return Self {
-            width: width,
-            height: height,
-        };
+        Self { width, height }
     }
+
     fn area(&self) -> i64 {
-        return self.width * self.height;
+        self.width * self.height
     }
 }
 
-impl std::fmt::Display for Rectangle {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        return write!(
-            f,
-            "{}",
-            format!(
-                "{}{}{}{}{}",
-                "Rectangle(".to_string(),
-                format!("{}", self.width),
-                "x".to_string(),
-                format!("{}", self.height),
-                ")".to_string()
-            )
-        );
+impl Display for Rectangle {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "Rectangle({}x{})", self.width, self.height)
     }
 }
 
 fn main() {
-    let p: Point = Point::new(3 as i64, 4 as i64);
-    println!(
-        "{}",
-        format!("{}{}", "point x = ".to_string(), format!("{}", p.x))
-    );
-    println!(
-        "{}",
-        format!("{}{}", "point y = ".to_string(), format!("{}", p.y))
-    );
-    println!(
-        "{}",
-        format!("{}{}", "point str = ".to_string(), format!("{}", p))
-    );
-    let p2: Point = Point::new(3 as i64, 4 as i64);
-    let p3: Point = Point::new(5 as i64, 6 as i64);
-    println!(
-        "{}",
-        format!("{}{}", "point eq = ".to_string(), format!("{}", p == p2))
-    );
-    println!(
-        "{}",
-        format!("{}{}", "point neq = ".to_string(), format!("{}", p == p3))
-    );
-    let c1: Config = Config::new(false, 30 as i64, "default".to_string());
-    println!(
-        "{}",
-        format!(
-            "{}{}",
-            "config debug default = ".to_string(),
-            format!("{}", c1.debug)
-        )
-    );
-    println!(
-        "{}",
-        format!(
-            "{}{}",
-            "config timeout default = ".to_string(),
-            format!("{}", c1.timeout)
-        )
-    );
-    println!(
-        "{}",
-        format!("{}{}", "config name default = ".to_string(), c1.name)
-    );
-    let c2: Config = Config::new(true, 60 as i64, "production".to_string());
-    println!(
-        "{}",
-        format!(
-            "{}{}",
-            "config debug custom = ".to_string(),
-            format!("{}", c2.debug)
-        )
-    );
-    println!(
-        "{}",
-        format!(
-            "{}{}",
-            "config timeout custom = ".to_string(),
-            format!("{}", c2.timeout)
-        )
-    );
-    println!(
-        "{}",
-        format!("{}{}", "config name custom = ".to_string(), c2.name)
-    );
-    let person: Person = Person::new("Alice".to_string(), "Smith".to_string(), 30 as i64);
-    println!(
-        "{}",
-        format!("{}{}", "person str = ".to_string(), format!("{}", person))
-    );
-    let mut r: Rectangle = Rectangle::new(5 as i64, 3 as i64);
-    println!(
-        "{}",
-        format!("{}{}", "rect area = ".to_string(), format!("{}", r.area()))
-    );
-    println!(
-        "{}",
-        format!("{}{}", "rect str = ".to_string(), format!("{}", r))
-    );
+    let p = Point::new(3, 4);
+    println!("point x = {}", p.x);
+    println!("point y = {}", p.y);
+    println!("point str = {p}");
+
+    let p2 = Point::new(3, 4);
+    let p3 = Point::new(5, 6);
+    println!("point eq = {}", p == p2);
+    println!("point neq = {}", p == p3);
+
+    let c1 = Config::default();
+    println!("config debug default = {}", c1.debug);
+    println!("config timeout default = {}", c1.timeout);
+    println!("config name default = {}", c1.name);
+
+    let c2 = Config::new(true, 60, "production");
+    println!("config debug custom = {}", c2.debug);
+    println!("config timeout custom = {}", c2.timeout);
+    println!("config name custom = {}", c2.name);
+
+    let person = Person::new("Alice", "Smith", 30);
+    println!("person str = {person}");
+
+    let rect = Rectangle::new(5, 3);
+    println!("rect area = {}", rect.area());
+    println!("rect str = {rect}");
 }
