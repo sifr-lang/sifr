@@ -284,6 +284,8 @@ Progress update (`2026-03-29`):
 - `batch_15_json_values_random_hashing_random_state` completed local validation, accepted the pass-1 follow-up on explicit typed JSON access and poison-free RNG state handling, and passed external pass-2 review with no remaining actionable issues
 - `batch_16_logging_and_timers_config_json_csv_collections_and_argparse` selected as the sixteenth wave-2 runnable-demo batch because it keeps the remaining object-wrapper and config-surface slice cohesive around logger/timer objects, structured-data parser wrappers, and collection-plus-argparse class APIs
 - `batch_16_logging_and_timers_config_json_csv_collections_and_argparse` completed local validation, accepted the pass-2 follow-up on guarding the mini argparse `store` path against a missing value panic, and passed external pass-1/pass-2 review with no remaining actionable issues
+- `batch_17_classes_protocols_pattern_matching` selected as the seventeenth wave-2 runnable-demo batch because it keeps the milestone-language slice cohesive around core struct/object behavior, protocol/operator surfaces, and direct Rust pattern matching equivalents
+- `batch_17_classes_protocols_pattern_matching` completed local validation, accepted the pass-1 follow-up on the `Port::value` getter borrowing style, and passed external pass-2 review with no remaining actionable issues
 
 ### wave_3_fixture_and_negative_case_normalization
 
