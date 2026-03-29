@@ -306,6 +306,8 @@ Progress update (`2026-03-29`):
 - `batch_26_lazy_iterators_basics_iterator_lowering_iterator_codegen` completed local validation, accepted pass-1 borrowed-iterator clarity follow-ups in `lazy_iterators_basics` and `iterator_codegen`, and ended external pass-2 review with no remaining actionable issues
 - `batch_27_recursive_calls_recursive_for_else_while_else` selected as the twenty-seventh wave-2 runnable-demo batch because it keeps the remaining small structured-control-flow slice cohesive around recursive `for-else`, direct recursion, and `while-else` branch semantics
 - `batch_27_recursive_calls_recursive_for_else_while_else` completed local validation and ended external pass-1/pass-2 review with no accepted blockers; the lone pass-1 `recursive_for_else` note was rejected because the reviewed file already printed `rec(3)` and matched the observed runtime output
+- `batch_28_borrow_by_default_borrowed_builtins_generic_cloning` selected as the twenty-eighth wave-2 runnable-demo batch because it keeps the remaining ownership/borrowing slice cohesive around borrow-by-default parameters, non-consuming builtins, and simple generic collection traversal
+- `batch_28_borrow_by_default_borrowed_builtins_generic_cloning` completed local validation and ended external pass-1/pass-2 review with no accepted blockers; the repeated `borrow_by_default` `String`-vs-`char` note was rejected because the corpus maps Sifr `str` to Rust `String` and the companion already matched the demo-visible behavior
 
 ### wave_3_fixture_and_negative_case_normalization
 

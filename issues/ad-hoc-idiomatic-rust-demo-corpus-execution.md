@@ -1296,6 +1296,44 @@ status: accepted_after_pass_1_and_pass_2
 - reviewer tooling note:
   - batch 27 used stable per-file external review prompts embedding both the paired Sifr source and the Rust companion because larger batch prompts remained unreliable in this workspace
 
+#### batch_28_borrow_by_default_borrowed_builtins_generic_cloning
+
+status: accepted_after_pass_1_and_pass_2
+
+- scope:
+  - `demos/borrow_by_default/idiomatic.rs`
+  - `demos/borrowed_builtins/idiomatic.rs`
+  - `demos/generic_cloning/idiomatic.rs`
+- selection rationale:
+  - all three are positive runnable demos
+  - all three form a cohesive remaining ownership/borrowing slice instead of mixing small borrowing demos with unrelated diagnostic or verifier demos
+  - `borrow_by_default` still retained lowered string-indexing and borrow-shape scaffolding, while the other two companions benefited from tighter borrowed-usage references
+- priority tags:
+  - `ownership-surface`: `borrow_by_default`, `borrowed_builtins`, `generic_cloning`
+  - `hand-authored-generated-shape`: `borrow_by_default`, `borrowed_builtins`, `generic_cloning`
+- implementation summary:
+  - `borrow_by_default`: replaced lowered borrow and indexing scaffolding with direct slice and `&str` helpers while preserving the visible borrow-by-default, own-parameter, and callable-borrow behaviors
+  - `borrowed_builtins`: reduced the companion to direct borrowed string and list builtin usage with compact assertions that preserve the non-consuming behavior
+  - `generic_cloning`: replaced manual accumulation scaffolding with direct iterator collection for the pair totals and a compact empty-collection count path preserving the printed output
+- local validation completed:
+  - `rustfmt demos/borrow_by_default/idiomatic.rs demos/borrowed_builtins/idiomatic.rs demos/generic_cloning/idiomatic.rs`
+  - `rustc --edition=2021 demos/borrow_by_default/idiomatic.rs -o /tmp/sifr-idiomatic-borrow-by-default && /tmp/sifr-idiomatic-borrow-by-default`
+  - `rustc --edition=2021 demos/borrowed_builtins/idiomatic.rs -o /tmp/sifr-idiomatic-borrowed-builtins && /tmp/sifr-idiomatic-borrowed-builtins`
+  - `rustc --edition=2021 demos/generic_cloning/idiomatic.rs -o /tmp/sifr-idiomatic-generic-cloning && /tmp/sifr-idiomatic-generic-cloning`
+  - `cargo run -q -p sifr -- run demos/borrow_by_default/main.sifr`
+  - `cargo run -q -p sifr -- run demos/borrowed_builtins/main.sifr`
+  - `cargo run -q -p sifr -- run demos/generic_cloning/main.sifr`
+  - `scripts/run_all_tests.sh`
+- review artifacts:
+  - pass 1: `reviews/phase-ad-hoc-idiomatic-rust-demo-corpus-wave-2-batch-28-review-pass-1.md`
+  - pass 2: `reviews/phase-ad-hoc-idiomatic-rust-demo-corpus-wave-2-batch-28-review-pass-2.md`
+- review application summary:
+  - pass 1 reported no accepted blockers
+  - the pass-1 and pass-2 `borrow_by_default` notes asking for `char` instead of `String` in `get_first_char` were rejected because this corpus consistently maps Sifr `str` to Rust `String`, and the current companion already matched the observed demo output exactly
+  - pass 2 reported no actionable issues in `borrowed_builtins` and `generic_cloning`
+- reviewer tooling note:
+  - batch 28 used stable per-file external review prompts embedding both the paired Sifr source and the Rust companion because larger batch prompts stalled repeatedly in this workspace
+
 ### wave_3_fixture_and_negative_case_normalization
 
 status: pending
