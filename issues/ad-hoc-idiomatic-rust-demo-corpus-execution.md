@@ -383,6 +383,45 @@ status: accepted_after_pass_1_and_pass_2
 - reviewer tooling note:
   - batch 06 continued using the Python subprocess capture path for `claude -p --no-session-persistence --dangerously-skip-permissions ...` because it remained the stable external-review transport for embedded-file batch reviews in this workspace
 
+#### batch_07_string_textwrap_fnmatch
+
+status: accepted_after_pass_1_and_pass_2
+
+- scope:
+  - `demos/string/idiomatic.rs`
+  - `demos/textwrap/idiomatic.rs`
+  - `demos/fnmatch/idiomatic.rs`
+- selection rationale:
+  - all three are positive runnable demos
+  - all three had phase-30 review history and still carried either faux-constant ceremony or oversized generated-style helper structure relative to their small text-processing behavior
+  - the group forms a coherent string-and-pattern-processing slice instead of mixing unrelated stdlib surfaces
+- priority tags:
+  - `prior-review-flagged`: `string`, `textwrap`, `fnmatch`
+  - `stdlib-heavy`: `textwrap`, `fnmatch`
+  - `hand-authored-generated-shape`: `string`, `textwrap`, `fnmatch`
+- implementation summary:
+  - `string`: replaced helper-function faux-constants with real constants and collapsed `capwords` to a direct `split_whitespace`-based implementation
+  - `textwrap`: replaced the generated whitespace and wrapping scaffolding with compact helpers for whitespace normalization, wrapping, filling, dedenting, indenting, and shortening that preserve the demo-visible behavior
+  - `fnmatch`: replaced the recursive/index-heavy matcher with a compact wildcard matcher plus direct filter helpers over standard iterators
+- local validation completed:
+  - `rustfmt demos/string/idiomatic.rs demos/textwrap/idiomatic.rs demos/fnmatch/idiomatic.rs`
+  - `rustc --edition=2021 demos/string/idiomatic.rs -o /tmp/sifr-idiomatic-string && /tmp/sifr-idiomatic-string`
+  - `rustc --edition=2021 demos/textwrap/idiomatic.rs -o /tmp/sifr-idiomatic-textwrap && /tmp/sifr-idiomatic-textwrap`
+  - `rustc --edition=2021 demos/fnmatch/idiomatic.rs -o /tmp/sifr-idiomatic-fnmatch && /tmp/sifr-idiomatic-fnmatch`
+  - `cargo run -q -p sifr -- run demos/string/main.sifr`
+  - `cargo run -q -p sifr -- run demos/textwrap/main.sifr`
+  - `cargo run -q -p sifr -- run demos/fnmatch/main.sifr`
+  - `scripts/run_all_tests.sh`
+- review artifacts:
+  - pass 1: `reviews/phase-ad-hoc-idiomatic-rust-demo-corpus-wave-2-batch-07-review-pass-1.md`
+  - pass 2: `reviews/phase-ad-hoc-idiomatic-rust-demo-corpus-wave-2-batch-07-review-pass-2.md`
+- review application summary:
+  - pass 1 reported no actionable issues
+  - pass 2 observations about distinguishing `fnmatch` from `fnmatchcase` using platform-dependent case-folding and about preferring iterator-style matching over indexed `Vec<char>` traversal were not accepted as blockers because the approved phase-30 scope already treats deterministic case-sensitive `fnmatch` behavior as an intentional diff from CPython's platform normalization rules, and the current matcher is already compact and readable for this demo
+  - no code changes were applied after pass 2
+- reviewer tooling note:
+  - batch 07 continued using the Python subprocess capture path for `claude -p --no-session-persistence --dangerously-skip-permissions ...` because it remained the stable external-review transport for embedded-file batch reviews in this workspace
+
 ### wave_3_fixture_and_negative_case_normalization
 
 status: pending
