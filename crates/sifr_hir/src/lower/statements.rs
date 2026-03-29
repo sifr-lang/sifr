@@ -2000,8 +2000,13 @@ pub(super) fn lower_while(
     func_type: &FunctionType,
     ctx: &mut LowerCtx,
 ) -> Option<HirStmt> {
+    let narrowing_cond = detect_narrowing_condition(&while_stmt.test, ctx);
     let condition = lower_expr(&while_stmt.test, ctx)?;
+    let saved_narrowing_state = ctx.scope.save_narrowing_state();
     let saved_sequence_guards = ctx.save_sequence_guards();
+    if let Some(ref cond) = narrowing_cond {
+        apply_narrowing(ctx, cond, true);
+    }
     for guard in detect_while_sequence_guards(while_stmt, ctx) {
         ctx.add_sequence_guard(guard);
     }
@@ -2014,6 +2019,7 @@ pub(super) fn lower_while(
     let body = lower_stmts(&while_stmt.body, func_type, ctx);
     ctx.loop_depth -= 1;
     ctx.scope.pop();
+    ctx.scope.restore_narrowing_state(&saved_narrowing_state);
     ctx.restore_sequence_guards(&saved_sequence_guards);
 
     // Check for outer-scope variables moved inside the loop body

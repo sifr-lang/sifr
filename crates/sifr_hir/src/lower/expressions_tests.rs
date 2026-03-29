@@ -212,6 +212,17 @@ fn test_if_expr_true_branch_sequence_guard_narrows_index_with_offset() {
 }
 
 #[test]
+fn test_while_not_none_narrows_optional_receiver_for_attribute_access() {
+    let result = lower_source(
+        "class Node:\n    val: int\n    next: Node | None\n\n    def __init__(self, val: int, next: Node | None):\n        self.val = val\n        self.next = next\n\ndef total(own head: Node | None) -> int:\n    cur: Node | None = head\n    acc: int = 0\n    while cur is not None:\n        acc = acc + cur.val\n        cur = cur.next\n    return acc\n",
+    );
+    assert!(
+        result.is_ok(),
+        "`while x is not None` should narrow optional receivers inside the loop body"
+    );
+}
+
+#[test]
 fn test_for_range() {
     let module = lower_source("def main():\n    for i in range(10):\n        print(i)\n").unwrap();
     assert_eq!(module.functions.len(), 1);
