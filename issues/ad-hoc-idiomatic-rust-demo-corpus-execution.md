@@ -811,6 +811,53 @@ status: accepted_after_pass_1_and_pass_2
 - reviewer tooling note:
   - batch 16 used the stable Python subprocess capture path for both review passes; the first pass-2 attempt timed out without producing a file, so the same bounded subprocess command was retried and completed successfully on the second attempt
 
+#### batch_17_classes_protocols_pattern_matching
+
+status: accepted_after_pass_1_and_pass_2
+
+- scope:
+  - `demos/classes/idiomatic.rs`
+  - `demos/protocols/idiomatic.rs`
+  - `demos/pattern_matching/idiomatic.rs`
+- selection rationale:
+  - all three are positive runnable demos
+  - all three form a cohesive milestone-language slice instead of mixing runtime wrappers with unrelated utility surfaces
+  - each companion still retained emitted-style ceremony or unused scaffolding despite relatively small, stable demo-visible behavior
+- priority tags:
+  - `milestone-language-surface`: `classes`, `protocols`, `pattern_matching`
+  - `hand-authored-generated-shape`: `classes`, `protocols`, `pattern_matching`
+- implementation summary:
+  - `classes`: replaced the remaining constructor and hash ceremony with small direct structs, methods, enum-based shape narrowing, and a focused stable-hash helper
+  - `protocols`: replaced the emitted-style trait and enum scaffolding with compact trait-based display/describe implementations, direct `Add` support for `Vec2`, and simple newtype wrappers for `Port` and `Email`
+  - `pattern_matching`: removed the unused error-wrapper preamble and replaced it with direct enum, tuple, option, and guard-pattern examples that preserve the demo output with compact Rust `match` expressions
+- local validation completed:
+  - initial validation:
+    - `rustfmt demos/classes/idiomatic.rs demos/protocols/idiomatic.rs demos/pattern_matching/idiomatic.rs`
+    - `rustc --edition=2021 demos/classes/idiomatic.rs -o /tmp/sifr-idiomatic-classes && /tmp/sifr-idiomatic-classes`
+    - `rustc --edition=2021 demos/protocols/idiomatic.rs -o /tmp/sifr-idiomatic-protocols && /tmp/sifr-idiomatic-protocols`
+    - `rustc --edition=2021 demos/pattern_matching/idiomatic.rs -o /tmp/sifr-idiomatic-pattern-matching && /tmp/sifr-idiomatic-pattern-matching`
+    - `cargo run -q -p sifr -- run demos/classes/main.sifr`
+    - `cargo run -q -p sifr -- run demos/protocols/main.sifr`
+    - `cargo run -q -p sifr -- run demos/pattern_matching/main.sifr`
+    - `scripts/run_all_tests.sh`
+  - post-pass-1 revalidation:
+    - `rustfmt demos/classes/idiomatic.rs demos/protocols/idiomatic.rs demos/pattern_matching/idiomatic.rs`
+    - `rustc --edition=2021 demos/protocols/idiomatic.rs -o /tmp/sifr-idiomatic-protocols && /tmp/sifr-idiomatic-protocols`
+    - `cargo run -q -p sifr -- run demos/classes/main.sifr`
+    - `cargo run -q -p sifr -- run demos/protocols/main.sifr`
+    - `cargo run -q -p sifr -- run demos/pattern_matching/main.sifr`
+    - `scripts/run_all_tests.sh`
+- review artifacts:
+  - pass 1: `reviews/phase-ad-hoc-idiomatic-rust-demo-corpus-wave-2-batch-17-review-pass-1.md`
+  - pass 2: `reviews/phase-ad-hoc-idiomatic-rust-demo-corpus-wave-2-batch-17-review-pass-2.md`
+- review application summary:
+  - pass 1 valid follow-up fix applied:
+    - `demos/protocols/idiomatic.rs`: changed `Port::value` to take `&self` instead of consuming the value
+  - pass 1 notes about replacing demo-visible labels with Rust-specific terminology and about switching the circle area constant to `std::f64::consts::PI` were not accepted because both would change observable output away from the checked-in Sifr demos
+  - pass 2 reported no accepted blockers; its repeated `PI` and terminology notes were rejected for the same output-parity reason, and its claimed dead-`Printable` note was not accepted because the cited trait does not exist in `demos/classes/idiomatic.rs`
+- reviewer tooling note:
+  - batch 17 used the stable Python subprocess capture path for both review passes and both completed successfully without requiring a retry
+
 ### wave_3_fixture_and_negative_case_normalization
 
 status: pending
