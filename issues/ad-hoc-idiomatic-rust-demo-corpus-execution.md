@@ -1673,6 +1673,45 @@ status: accepted_after_pass_1_and_pass_2
 - reviewer tooling note:
   - batch 36 used concise per-file external review prompts with one-line verdict constraints because that transport pattern has been the most reliable reviewer lane in this workspace
 
+#### batch_37_owned_mutation_parameters_part1_owned_mutation_parameters_part2_subscript_mutation
+
+status: accepted_after_pass_1_and_pass_2
+
+- scope:
+  - `demos/owned_mutation_parameters_part1/idiomatic.rs`
+  - `demos/owned_mutation_parameters_part2/idiomatic.rs`
+  - `demos/subscript_mutation/idiomatic.rs`
+- selection rationale:
+  - all three are positive runnable demos
+  - all three form a cohesive remaining ownership-and-mutation slice instead of mixing parameter-mode examples with unrelated stdlib or compiler demos
+  - `owned_mutation_parameters_part2` and `subscript_mutation` still had obvious generated-shape mutation scaffolding, while part 1 kept the slice centered on the orthogonal ownership/mutability parameter conventions
+- priority tags:
+  - `own-mut-surface`: `owned_mutation_parameters_part1`, `owned_mutation_parameters_part2`
+  - `mutation-surface`: `subscript_mutation`
+  - `hand-authored-generated-shape`: `owned_mutation_parameters_part2`, `subscript_mutation`
+- implementation summary:
+  - `owned_mutation_parameters_part1`: reduced the ownership-mode examples to direct slice-based borrowed views and move-through identity helpers
+  - `owned_mutation_parameters_part2`: replaced indexed mutation lowering with direct fixed-index assignments and a borrowed mutable slice helper
+  - `subscript_mutation`: collapsed list and dict subscript writes into the smallest direct Rust equivalents while preserving the same printed outputs and assertions
+- local validation completed:
+  - `rustfmt demos/owned_mutation_parameters_part1/idiomatic.rs demos/owned_mutation_parameters_part2/idiomatic.rs demos/subscript_mutation/idiomatic.rs`
+  - `rustc --edition=2021 demos/owned_mutation_parameters_part1/idiomatic.rs -o /tmp/sifr-idiomatic-owned-mutation-parameters-part1 && /tmp/sifr-idiomatic-owned-mutation-parameters-part1`
+  - `rustc --edition=2021 demos/owned_mutation_parameters_part2/idiomatic.rs -o /tmp/sifr-idiomatic-owned-mutation-parameters-part2 && /tmp/sifr-idiomatic-owned-mutation-parameters-part2`
+  - `rustc --edition=2021 demos/subscript_mutation/idiomatic.rs -o /tmp/sifr-idiomatic-subscript-mutation && /tmp/sifr-idiomatic-subscript-mutation`
+  - `cargo run -q -p sifr -- run demos/owned_mutation_parameters_part1/main.sifr`
+  - `cargo run -q -p sifr -- run demos/owned_mutation_parameters_part2/main.sifr`
+  - `cargo run -q -p sifr -- run demos/subscript_mutation/main.sifr`
+  - `scripts/run_all_tests.sh`
+- review artifacts:
+  - pass 1: `reviews/phase-ad-hoc-idiomatic-rust-demo-corpus-wave-2-batch-37-review-pass-1.md`
+  - pass 2: `reviews/phase-ad-hoc-idiomatic-rust-demo-corpus-wave-2-batch-37-review-pass-2.md`
+- review application summary:
+  - pass 1 reported no accepted blockers
+  - `subscript_mutation` needed a pass-1 retry after the reviewer returned an unusable tool-stub response instead of a verdict
+  - pass 2 reported no accepted blockers
+- reviewer tooling note:
+  - batch 37 used concise per-file external review prompts with one-line verdict constraints because that transport pattern has been the most reliable reviewer lane in this workspace
+
 ### wave_3_fixture_and_negative_case_normalization
 
 status: pending

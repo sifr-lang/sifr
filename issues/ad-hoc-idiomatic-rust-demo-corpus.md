@@ -324,6 +324,8 @@ Progress update (`2026-03-29`):
 - `batch_35_container_methods_dict_membership_ordered_collections` completed local validation and ended external pass-1/pass-2 review with no accepted blockers; the reviewer transport for `ordered_collections` was unstable in pass 2, but the final shortened retry completed cleanly with no actionable issues
 - `batch_36_typed_queues_heap_option_drain_own_mut_updates` selected as the thirty-sixth wave-2 runnable-demo batch because it keeps the remaining owned-mutation-and-drain slice cohesive around queue draining, option-safe heap draining, and `own mut` in-place list updates
 - `batch_36_typed_queues_heap_option_drain_own_mut_updates` completed local validation and ended external pass-1/pass-2 review with no accepted blockers; `typed_queues` needed a retry in pass 1 after an unusable reviewer stub, but the final verdict for all three files was clean
+- `batch_37_owned_mutation_parameters_part1_owned_mutation_parameters_part2_subscript_mutation` selected as the thirty-seventh wave-2 runnable-demo batch because it keeps the remaining ownership-and-mutation surface cohesive around parameter-mode examples and direct list/dict subscript mutation
+- `batch_37_owned_mutation_parameters_part1_owned_mutation_parameters_part2_subscript_mutation` completed local validation and ended external pass-1/pass-2 review with no accepted blockers; `subscript_mutation` needed a pass-1 retry after an unusable reviewer stub, but the final verdict for all three files was clean
 
 ### wave_3_fixture_and_negative_case_normalization
 
