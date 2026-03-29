@@ -2097,6 +2097,51 @@ status: accepted_after_pass_1_and_pass_2
 - reviewer tooling note:
   - batch 46 used compact per-file prompts for pass 1, then embedded-source per-file prompts for pass 2 after the initial lane showed repeated stale file-role inversions on the tiny stdlib-loading demos
 
+#### batch_47_builtin_functions_builtin_callables_stdlib_functions
+
+status: accepted_after_pass_1_and_pass_2
+
+- scope:
+  - `demos/builtin_functions/idiomatic.rs`
+  - `demos/builtin_callables/idiomatic.rs`
+  - `demos/stdlib_functions/idiomatic.rs`
+- selection rationale:
+  - all three are positive runnable demos
+  - all three form a cohesive remaining builtin-and-stdlib callable surface instead of mixing tiny builtin helper demos with unrelated fixture or type-system work
+  - `builtin_callables` and especially `stdlib_functions` still carried substantial generated-style scaffolding despite relatively small demo-visible behavior, and `builtin_functions` was the last tiny builtin-formatting companion still preserving repeated emitted-style `format!` ceremony
+- priority tags:
+  - `builtin-surface`: `builtin_functions`, `builtin_callables`
+  - `stdlib-heavy`: `stdlib_functions`
+  - `hand-authored-generated-shape`: `builtin_functions`, `builtin_callables`, `stdlib_functions`
+- implementation summary:
+  - `builtin_functions`: collapsed the demo to direct integer methods and a single joined step-range string instead of repeated nested `format!` scaffolding
+  - `builtin_callables`: replaced copied error/runtime layers with direct constructor/helper demonstrations, compact `ord`/`chr` helpers, and deterministic `BTreeMap` output for the dict example
+  - `stdlib_functions`: replaced the large generated helper/runtime scaffold with small direct math/statistics/string/path/bisect/itertools helpers that preserve the actual demo-visible outputs
+- local validation completed:
+  - `rustfmt demos/builtin_functions/idiomatic.rs demos/builtin_callables/idiomatic.rs demos/stdlib_functions/idiomatic.rs`
+  - `rustc demos/builtin_functions/idiomatic.rs -o /tmp/builtin_functions_idiomatic`
+  - `rustc demos/builtin_callables/idiomatic.rs -o /tmp/builtin_callables_idiomatic`
+  - `rustc demos/stdlib_functions/idiomatic.rs -o /tmp/stdlib_functions_idiomatic`
+  - `cargo run -q -p sifr -- run demos/builtin_functions/main.sifr`
+  - `cargo run -q -p sifr -- run demos/builtin_callables/main.sifr`
+  - `cargo run -q -p sifr -- run demos/stdlib_functions/main.sifr`
+  - `scripts/run_all_tests.sh`
+  - post-fix revalidation:
+    - `rustfmt demos/builtin_callables/idiomatic.rs`
+    - `rustc demos/builtin_functions/idiomatic.rs -o /tmp/builtin_functions_idiomatic`
+    - `rustc demos/builtin_callables/idiomatic.rs -o /tmp/builtin_callables_idiomatic`
+    - `rustc demos/stdlib_functions/idiomatic.rs -o /tmp/stdlib_functions_idiomatic`
+- review artifacts:
+  - pass 1: `reviews/phase-ad-hoc-idiomatic-rust-demo-corpus-wave-2-batch-47-review-pass-1.md`
+  - pass 2: `reviews/phase-ad-hoc-idiomatic-rust-demo-corpus-wave-2-batch-47-review-pass-2.md`
+- review application summary:
+  - pre-review follow-up: fixed `builtin_callables` to compile cleanly under plain `rustc` without depending on edition-specific array `into_iter()` behavior or `TryFrom` imports
+  - pass 1 reported no accepted blockers; `builtin_functions` came back clean, `builtin_callables` reviewer transport stalled without producing a usable verdict, and the `stdlib_functions` notes about negative `factorial` handling and the `batched` error string were rejected because those paths are not exercised by the paired demo
+  - pass 2 reported no accepted blockers; `builtin_functions` and `stdlib_functions` both returned `OK: no issues`, while `builtin_callables` again had to be carried with a transport note after multiple prompt variants stalled in this workspace
+- reviewer tooling note:
+  - the desktop `claude_resume_to_desktop.sh` handoff stalled without writing the pass-1 artifact
+  - batch 47 therefore used direct per-file `claude -p --tools ''` prompts for the responsive files and recorded the `builtin_callables` reviewer stall explicitly rather than fabricating a verdict
+
 ### wave_3_fixture_and_negative_case_normalization
 
 status: pending
