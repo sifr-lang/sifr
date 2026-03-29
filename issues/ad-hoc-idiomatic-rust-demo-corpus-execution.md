@@ -1634,6 +1634,45 @@ status: accepted_after_pass_1_and_pass_2
 - reviewer tooling note:
   - batch 35 used concise per-file external review prompts summarizing paired Sifr behavior because the reviewer transport was more reliable with behavior-focused prompts than with fully embedded paired-source prompts in this workspace
 
+#### batch_36_typed_queues_heap_option_drain_own_mut_updates
+
+status: accepted_after_pass_1_and_pass_2
+
+- scope:
+  - `demos/typed_queues/idiomatic.rs`
+  - `demos/heap_option_drain/idiomatic.rs`
+  - `demos/own_mut_updates/idiomatic.rs`
+- selection rationale:
+  - all three are positive runnable demos
+  - all three form a cohesive remaining owned-mutation-and-drain slice instead of mixing small container-consumption helpers with unrelated stdlib or compiler demos
+  - `typed_queues` and `heap_option_drain` still had obvious generated-shape scaffolding, while `own_mut_updates` kept the batch centered on direct `own mut` list updates
+- priority tags:
+  - `collection-drain-surface`: `typed_queues`, `heap_option_drain`
+  - `own-mut-surface`: `own_mut_updates`
+  - `hand-authored-generated-shape`: `typed_queues`, `heap_option_drain`, `own_mut_updates`
+- implementation summary:
+  - `typed_queues`: replaced indexed front-removal scaffolding with a direct `VecDeque` pop-front drain
+  - `heap_option_drain`: replaced handwritten heap primitive lowering with a direct `BinaryHeap<Reverse<i64>>` min-heap companion and simple `Option`-returning pop helper
+  - `own_mut_updates`: reduced indexed mutation lowering to direct `iter_mut()` updates for increment and clear flows
+- local validation completed:
+  - `rustfmt demos/typed_queues/idiomatic.rs demos/heap_option_drain/idiomatic.rs demos/own_mut_updates/idiomatic.rs`
+  - `rustc --edition=2021 demos/typed_queues/idiomatic.rs -o /tmp/sifr-idiomatic-typed-queues && /tmp/sifr-idiomatic-typed-queues`
+  - `rustc --edition=2021 demos/heap_option_drain/idiomatic.rs -o /tmp/sifr-idiomatic-heap-option-drain && /tmp/sifr-idiomatic-heap-option-drain`
+  - `rustc --edition=2021 demos/own_mut_updates/idiomatic.rs -o /tmp/sifr-idiomatic-own-mut-updates && /tmp/sifr-idiomatic-own-mut-updates`
+  - `cargo run -q -p sifr -- run demos/typed_queues/main.sifr`
+  - `cargo run -q -p sifr -- run demos/heap_option_drain/main.sifr`
+  - `cargo run -q -p sifr -- run demos/own_mut_updates/main.sifr`
+  - `scripts/run_all_tests.sh`
+- review artifacts:
+  - pass 1: `reviews/phase-ad-hoc-idiomatic-rust-demo-corpus-wave-2-batch-36-review-pass-1.md`
+  - pass 2: `reviews/phase-ad-hoc-idiomatic-rust-demo-corpus-wave-2-batch-36-review-pass-2.md`
+- review application summary:
+  - pass 1 reported no accepted blockers
+  - `typed_queues` needed a pass-1 retry after the reviewer returned an unusable tool-stub response instead of a verdict
+  - pass 2 reported no accepted blockers
+- reviewer tooling note:
+  - batch 36 used concise per-file external review prompts with one-line verdict constraints because that transport pattern has been the most reliable reviewer lane in this workspace
+
 ### wave_3_fixture_and_negative_case_normalization
 
 status: pending

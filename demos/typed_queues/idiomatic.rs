@@ -1,41 +1,27 @@
-fn drain_queue(queue: &mut Vec<String>) -> Vec<String> {
-    let mut order: Vec<String> = vec![];
-    while !queue.is_empty() {
-        order.push({
-            let Some(__sifr_nonempty_pop_value) = ({
-                let __len = queue.len() as i64;
-                let __index = {
-                    let __bound = 0 as i64;
-                    if __bound < 0 {
-                        (__len + __bound).max(0).min(__len)
-                    } else {
-                        __bound.min(__len)
-                    }
-                };
-                if (__index < 0) || (__index >= __len) {
-                    None
-                } else {
-                    Some(queue.remove(__index as usize))
-                }
-            }) else {
-                unreachable!("compiler-verified non-empty pop should return Some");
-            };
-            __sifr_nonempty_pop_value
-        });
+use std::collections::VecDeque;
+
+fn drain_queue(queue: Vec<String>) -> Vec<String> {
+    let mut queue: VecDeque<String> = queue.into();
+    let mut order = Vec::new();
+
+    while let Some(item) = queue.pop_front() {
+        order.push(item);
     }
-    return order;
+
+    order
 }
 
 fn main() {
-    assert!(
+    assert_eq!(
         format!(
             "{:?}",
-            drain_queue(&mut vec![
+            drain_queue(vec![
                 "parse".to_string(),
                 "check".to_string(),
-                "emit".to_string()
+                "emit".to_string(),
             ])
-        ) == "[\"parse\", \"check\", \"emit\"]".to_string()
+        ),
+        "[\"parse\", \"check\", \"emit\"]"
     );
     println!("typed_queues: ok");
 }
