@@ -308,6 +308,8 @@ Progress update (`2026-03-29`):
 - `batch_27_recursive_calls_recursive_for_else_while_else` completed local validation and ended external pass-1/pass-2 review with no accepted blockers; the lone pass-1 `recursive_for_else` note was rejected because the reviewed file already printed `rec(3)` and matched the observed runtime output
 - `batch_28_borrow_by_default_borrowed_builtins_generic_cloning` selected as the twenty-eighth wave-2 runnable-demo batch because it keeps the remaining ownership/borrowing slice cohesive around borrow-by-default parameters, non-consuming builtins, and simple generic collection traversal
 - `batch_28_borrow_by_default_borrowed_builtins_generic_cloning` completed local validation and ended external pass-1/pass-2 review with no accepted blockers; the repeated `borrow_by_default` `String`-vs-`char` note was rejected because the corpus maps Sifr `str` to Rust `String` and the companion already matched the demo-visible behavior
+- `batch_29_type_checking_constrained_typevars_protocol_bounds` selected as the twenty-ninth wave-2 runnable-demo batch because it keeps the remaining small type-system slice cohesive around frontend-only typed success, constrained `TypeVar` examples, and protocol-bound forwarding
+- `batch_29_type_checking_constrained_typevars_protocol_bounds` completed local validation, accepted pass-1/pass-2 follow-ups tightening the explicit `TypeVar` and `Comparable` constraint modeling in `constrained_typevars`, and ended external review with no remaining actionable issues
 
 ### wave_3_fixture_and_negative_case_normalization
 

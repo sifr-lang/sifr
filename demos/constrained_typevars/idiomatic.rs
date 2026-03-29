@@ -1,17 +1,27 @@
-fn echo<T: std::fmt::Display + PartialOrd + 'static>(x: T) -> T {
-    return x;
+trait EchoType {}
+
+impl EchoType for i64 {}
+impl EchoType for String {}
+
+trait Comparable: PartialOrd {}
+
+impl<T: PartialOrd> Comparable for T {}
+
+fn echo<T: EchoType>(x: T) -> T {
+    x
 }
 
-fn smallest<U: std::fmt::Display + PartialOrd + 'static>(a: U, b: U) -> U {
+fn smallest<U: Comparable>(a: U, b: U) -> U {
     if a < b {
-        return a;
+        a
+    } else {
+        b
     }
-    return b;
 }
 
 fn main() {
     println!("m26_1 typevar constraint enforcement demo:");
-    println!("{}", echo(7 as i64));
+    println!("{}", echo(7_i64));
     println!("{}", echo("ok".to_string()));
-    println!("{}", smallest(10 as i64, 3 as i64));
+    println!("{}", smallest(10_i64, 3_i64));
 }
