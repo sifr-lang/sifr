@@ -1,17 +1,27 @@
 # LeetCode 1800: Maximum Ascending Subarray Sum
 
 def maxAscendingSum(nums: list[int]) -> int:
-    curSum = results = nums[0]
+    cur_sum: int = 0
+    best_sum: int = 0
+    prev: int = 0
+    has_prev: bool = False
 
-    for i in range(1, len(nums)):
-        if nums[i] <= nums[i - 1]:
-            curSum = 0
-        curSum += nums[i]
-        results = max(curSum, results)
+    for value in nums:
+        if not has_prev:
+            cur_sum = value
+            best_sum = value
+            prev = value
+            has_prev = True
+            continue
+        if value <= prev:
+            cur_sum = value
+        else:
+            cur_sum += value
+        best_sum = max(cur_sum, best_sum)
+        prev = value
 
-    return results
+    return best_sum
 
 def main():
     assert str(maxAscendingSum([10,20,30,5,10,50])) == '65'
-
 

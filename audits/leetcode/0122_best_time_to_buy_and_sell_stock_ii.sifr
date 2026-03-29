@@ -1,15 +1,21 @@
 # LeetCode 122: Best Time To Buy And Sell Stock Ii
 
 def maxProfit(prices: list[int]) -> int:
-    max_profit = 0
-    for i in range(1, len(prices)):
-        if prices[i] > prices[i-1]:
-            max_profit += prices[i] - prices[i-1]
+    max_profit: int = 0
+    prev_price: int = 0
+    has_prev: bool = False
+    for price in prices:
+        if not has_prev:
+            prev_price = price
+            has_prev = True
+            continue
+        if price > prev_price:
+            max_profit += price - prev_price
+        prev_price = price
     return max_profit
 
 def main():
     assert str(maxProfit([7,1,5,3,6,4])) == '7'
     assert str(maxProfit([1,2,3,4,5])) == '4'
     assert str(maxProfit([7,6,4,3,1])) == '0'
-
 
