@@ -2097,6 +2097,57 @@ status: accepted_after_pass_1_and_pass_2
 - reviewer tooling note:
   - batch 46 used compact per-file prompts for pass 1, then embedded-source per-file prompts for pass 2 after the initial lane showed repeated stale file-role inversions on the tiny stdlib-loading demos
 
+#### batch_51_stdlib_fixes_pure_stdlib_generic_stdlib
+
+status: accepted_after_pass_1_and_pass_2
+
+- scope:
+  - `demos/stdlib_fixes/idiomatic.rs`
+  - `demos/pure_stdlib/idiomatic.rs`
+  - `demos/generic_stdlib/idiomatic.rs`
+- selection rationale:
+  - all three are positive runnable demos
+  - all three form a cohesive remaining stdlib-heavy milestone slice instead of mixing milestone stdlib expansions with unrelated parsing, text, or safety demos
+  - the existing companions were still large generated-style scaffolds despite the demos exercising smaller direct milestone behaviors and printed outputs
+- priority tags:
+  - `stdlib-heavy`: `stdlib_fixes`, `pure_stdlib`, `generic_stdlib`
+  - `milestone-demo`: `stdlib_fixes`, `pure_stdlib`, `generic_stdlib`
+  - `hand-authored-generated-shape`: `stdlib_fixes`, `pure_stdlib`, `generic_stdlib`
+- implementation summary:
+  - `stdlib_fixes`: replaced the large scaffold with a compact remediation demo covering file open/read/write flows, time/timezone/now formatting, subprocess results, simple tmp globbing, regex flags, cwd lookup, random choice, global logging level behavior, file-handler writes, and CSV file reading
+  - `pure_stdlib`: replaced the generated implementation with direct math/statistics/random/reduce/itertools/counter helpers that preserve the exact printed milestone output
+  - `generic_stdlib`: replaced the generated generic helper layer with compact chain/take/flatten/accumulate/dropwhile/takewhile/filterfalse/compress/zip_longest/reduce/Counter/Deque helpers matching the paired demo output
+- local validation completed:
+  - `rustfmt demos/stdlib_fixes/idiomatic.rs demos/pure_stdlib/idiomatic.rs demos/generic_stdlib/idiomatic.rs`
+  - temp Cargo validation for `stdlib_fixes` with `regex = "1"`
+  - `rustc demos/pure_stdlib/idiomatic.rs -o /tmp/pure_stdlib_idiomatic`
+  - `rustc demos/generic_stdlib/idiomatic.rs -o /tmp/generic_stdlib_idiomatic`
+  - `/tmp/pure_stdlib_idiomatic`
+  - `/tmp/generic_stdlib_idiomatic`
+  - `cargo run -q -p sifr -- run demos/stdlib_fixes/main.sifr`
+  - `cargo run -q -p sifr -- run demos/pure_stdlib/main.sifr`
+  - `cargo run -q -p sifr -- run demos/generic_stdlib/main.sifr`
+  - `scripts/run_all_tests.sh`
+  - post-pass-2 follow-up revalidation:
+    - `rustfmt demos/stdlib_fixes/idiomatic.rs`
+    - temp Cargo validation for `stdlib_fixes` with `regex = "1"`
+    - `cargo run -q -p sifr -- run demos/stdlib_fixes/main.sifr`
+    - `scripts/run_all_tests.sh`
+- review artifacts:
+  - pass 1: `reviews/phase-ad-hoc-idiomatic-rust-demo-corpus-wave-2-batch-51-review-pass-1.md`
+  - pass 2: `reviews/phase-ad-hoc-idiomatic-rust-demo-corpus-wave-2-batch-51-review-pass-2.md`
+- review application summary:
+  - pass 1 on `stdlib_fixes` stalled and did not return a usable verdict
+  - pass 1 on `pure_stdlib` returned stale/generated-shape claims about `from_list` and `linear_regression` that do not match the checked-in Rust companion, so they were not accepted
+  - pass 1 on `generic_stdlib` raised only implementation-strategy/style notes about heap usage, `accumulate`, and `Default`, none of which changed the paired demo-visible behavior
+  - pass 2 on `stdlib_fixes` raised one real parity note: the demo uses `info` calls to demonstrate warning-level suppression, so I added an explicit `Logger::info` path and the two suppressed calls while keeping the visible output unchanged
+  - pass 2 on `stdlib_fixes` also raised a `search_flags` note that was not accepted because the paired demo only exercises ignore-case through that helper and already demonstrates multiline behavior through `compile_flags(...).search(...)`
+  - pass 2 on `pure_stdlib` again returned stale/generated-shape claims and was not accepted
+  - pass 2 on `generic_stdlib` stalled and did not return a usable verdict
+- reviewer tooling note:
+  - batch 51 again used direct per-file `claude -p --tools Read` prompts because that has been the most reliable review transport in this workspace
+  - `stdlib_fixes` pass 1 and `generic_stdlib` pass 2 still stalled despite the narrower prompt shape, so those transport failures are recorded explicitly instead of being treated as blockers
+
 #### batch_50_stdlib_stdlib_expansion_stdlib_aliases
 
 status: accepted_after_pass_1_and_pass_2
