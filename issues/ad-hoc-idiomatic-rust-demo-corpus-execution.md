@@ -2335,6 +2335,52 @@ status: accepted_after_pass_1_and_pass_2
   - an embedded-source retry was also used for `stdlib_ownership` pass 1 after the initial direct prompt returned only `OK`; that narrower retry found the heap/lazy-chain issues that were actually worth fixing
   - `stdlib_ownership` pass 2 still stalled without output after repeated polls, so the artifact records that transport issue explicitly rather than inventing a clean verdict
 
+#### batch_66_decimal_types_decimal_arithmetic_decimal_conversions
+
+status: accepted_after_pass_1_and_pass_2
+
+- scope:
+  - `demos/decimal_types/idiomatic.rs`
+  - `demos/decimal_arithmetic/idiomatic.rs`
+  - `demos/decimal_conversions/idiomatic.rs`
+- selection rationale:
+  - all three are positive runnable demos
+  - all three form a cohesive first decimal milestone slice instead of mixing decimal semantics with unrelated diagnostics or fixture-only decimal folders
+  - `decimal_arithmetic` and `decimal_conversions` were still large generated-style outliers, while `decimal_types` was smaller but belonged to the same decimal-language surface
+- priority tags:
+  - `numeric-semantics`: `decimal_types`, `decimal_arithmetic`, `decimal_conversions`
+  - `milestone-demo`: `decimal_types`, `decimal_arithmetic`, `decimal_conversions`
+  - `hand-authored-generated-shape`: `decimal_types`, `decimal_arithmetic`, `decimal_conversions`
+- implementation summary:
+  - `decimal_types`: replaced the first-draft emitted-style context boilerplate with direct `rust_decimal` / `bigdecimal` literals and a single precision helper for the `BigDecimal` result shape
+  - `decimal_arithmetic`: collapsed the decimal runtime wrapper layer to focused helpers for floor-division, modulo, midpoint-half-even rounding, precision rounding, and negative-square-root error reporting
+  - `decimal_conversions`: replaced the full IO/runtime scaffold with direct decimal conversion helpers, quoted JSON-string formatting, and numeric bigint/int extraction built from decimal internals
+- local validation completed:
+  - `rustfmt demos/decimal_types/idiomatic.rs demos/decimal_arithmetic/idiomatic.rs demos/decimal_conversions/idiomatic.rs`
+  - temporary Cargo compile/run for `demos/decimal_types/idiomatic.rs` with `bigdecimal = "0.4"`, `num-bigint = "0.4"`, and `rust_decimal = { version = "1", features = ["maths"] }`
+  - temporary Cargo compile/run for `demos/decimal_arithmetic/idiomatic.rs` with `bigdecimal = "0.4"` and `rust_decimal = { version = "1", features = ["maths"] }`
+  - temporary Cargo compile/run for `demos/decimal_conversions/idiomatic.rs` with `bigdecimal = "0.4"`, `num-bigint = "0.4"`, and `rust_decimal = "1"`
+  - `cargo run -q -p sifr -- run demos/decimal_types/main.sifr`
+  - `cargo run -q -p sifr -- run demos/decimal_arithmetic/main.sifr`
+  - `cargo run -q -p sifr -- run demos/decimal_conversions/main.sifr`
+  - `scripts/run_all_tests.sh`
+  - post-pass-1 revalidation:
+    - `rustfmt demos/decimal_conversions/idiomatic.rs`
+    - temporary Cargo compile/run for `demos/decimal_conversions/idiomatic.rs` with `bigdecimal = "0.4"`, `num-bigint = "0.4"`, and `rust_decimal = "1"`
+    - `cargo run -q -p sifr -- run demos/decimal_conversions/main.sifr`
+    - `scripts/run_all_tests.sh`
+- review artifacts:
+  - pass 1: `reviews/phase-ad-hoc-idiomatic-rust-demo-corpus-wave-2-batch-66-review-pass-1.md`
+  - pass 2: `reviews/phase-ad-hoc-idiomatic-rust-demo-corpus-wave-2-batch-66-review-pass-2.md`
+- review application summary:
+  - `decimal_types` and `decimal_arithmetic` returned `OK` in pass 1
+  - pass 1 on `decimal_conversions` surfaced one real Rust-first issue in substance: the original rewrite used string splitting on `BigDecimal::to_string()` and an `i64` intermediary for integer extraction; I accepted that and rewrote the conversion helpers to use `Decimal::mantissa()` / `Decimal::scale()` and `BigDecimal::as_bigint_and_exponent()`
+  - pass 1 notes claiming `12.3400` canonicalization was lost and that message-shape consistency was a blocker were not accepted because the validated output already preserved `12.3400` and only the exercised bigdecimal out-of-range message is user-visible in this demo
+  - all three pass-2 review prompts stalled without a usable verdict after repeated retries, so the batch carries those as reviewer-transport notes rather than accepted blockers
+- reviewer tooling note:
+  - batch 66 used direct per-file `claude -p --no-session-persistence --dangerously-skip-permissions` prompts with embedded Sifr and Rust file contents
+  - the pass-2 review lane stalled repeatedly on all three decimal files after the accepted `decimal_conversions` fix, so the artifact records those stalls explicitly instead of inventing clean verdicts
+
 #### batch_65_codegen_preamble_codegen_structural_passes_intrinsic_codegen
 
 status: accepted_after_pass_1_and_pass_2
