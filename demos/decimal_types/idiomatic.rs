@@ -1,35 +1,34 @@
+use bigdecimal::{BigDecimal, Context, RoundingMode};
 use num_bigint::BigInt;
-
 use rust_decimal::Decimal;
 
-use bigdecimal::BigDecimal;
+fn dec(text: &str) -> Decimal {
+    Decimal::from_str_exact(text).expect("valid decimal literal")
+}
+
+fn big(text: &str) -> BigDecimal {
+    text.parse().expect("valid bigdecimal literal")
+}
+
+fn round_big(value: BigDecimal) -> BigDecimal {
+    Context::default()
+        .with_rounding_mode(RoundingMode::HalfEven)
+        .with_prec(28)
+        .unwrap_or_else(|| Context::default().with_rounding_mode(RoundingMode::HalfEven))
+        .round_decimal_ref(&value)
+}
 
 fn main() {
-    let d: Decimal = Decimal::from_str_exact(("12.50".to_string()).as_str())
-        .unwrap_or_else(|__e| unreachable!());
-    let b: BigDecimal = ("3.25".to_string())
-        .parse::<BigDecimal>()
-        .unwrap_or_else(|__e| unreachable!());
-    let d_plus: Decimal = d + Decimal::from(2 as i64);
-    let b_plus: BigDecimal = bigdecimal::Context::default()
-        .with_rounding_mode(bigdecimal::RoundingMode::HalfEven)
-        .with_prec(28)
-        .unwrap_or_else(|| {
-            bigdecimal::Context::default().with_rounding_mode(bigdecimal::RoundingMode::HalfEven)
-        })
-        .round_decimal_ref(&(b.clone() + BigDecimal::from(BigInt::from(4 as i64).clone())));
-    assert!(
-        d_plus
-            == Decimal::from_str_exact(("14.50".to_string()).as_str())
-                .unwrap_or_else(|__e| unreachable!())
-    );
-    assert!(
-        b_plus
-            == ("7.25".to_string())
-                .parse::<BigDecimal>()
-                .unwrap_or_else(|__e| unreachable!())
-    );
+    let d = dec("12.50");
+    let b = big("3.25");
+
+    let d_plus = d + Decimal::from(2_i64);
+    let b_plus = round_big(b + BigDecimal::from(BigInt::from(4_i64)));
+
+    assert_eq!(d_plus, dec("14.50"));
+    assert_eq!(b_plus, big("7.25"));
+
     println!("m28_1 type-system/parser/HIR integration demo");
-    println!("{}", format!("{}", d_plus));
-    println!("{}", format!("{}", b_plus));
+    println!("{d_plus}");
+    println!("{b_plus}");
 }
