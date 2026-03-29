@@ -2335,6 +2335,53 @@ status: accepted_after_pass_1_and_pass_2
   - an embedded-source retry was also used for `stdlib_ownership` pass 1 after the initial direct prompt returned only `OK`; that narrower retry found the heap/lazy-chain issues that were actually worth fixing
   - `stdlib_ownership` pass 2 still stalled without output after repeated polls, so the artifact records that transport issue explicitly rather than inventing a clean verdict
 
+#### batch_57_extended_collections_extended_itertools_itertools_iterables
+
+status: accepted_after_pass_1_and_pass_2
+
+- scope:
+  - `demos/extended_collections/idiomatic.rs`
+  - `demos/extended_itertools/idiomatic.rs`
+  - `demos/itertools_iterables/idiomatic.rs`
+- selection rationale:
+  - all three are positive runnable demos
+  - all three form a cohesive remaining iterator-and-collections expansion slice instead of mixing a larger itertools surface with unrelated stdlib-only cleanup
+  - each companion still carried more generated-style helper structure than the paired demo behavior required, especially `extended_itertools`
+- priority tags:
+  - `collections-surface`: `extended_collections`
+  - `itertools-surface`: `extended_itertools`, `itertools_iterables`
+  - `hand-authored-generated-shape`: `extended_collections`, `extended_itertools`, `itertools_iterables`
+- implementation summary:
+  - `extended_collections`: replaced the scaffold with direct `BTreeSet`/`BTreeMap`-based set and counter helpers plus small UTF-8 and hex utilities that preserve the exact printed outputs
+  - `extended_itertools`: collapsed the file to small direct helpers for the lazy-iterator surface the demo actually exercises, preserving the single `...: ok` parity line
+  - `itertools_iterables`: reduced the demo to direct iterator combinators, a tiny sorted `Path::iterdir`, and simple `write_text`/`run_command` wrappers for the filesystem roundtrip
+- local validation completed:
+  - `rustfmt demos/extended_collections/idiomatic.rs demos/extended_itertools/idiomatic.rs demos/itertools_iterables/idiomatic.rs`
+  - `rustc demos/extended_collections/idiomatic.rs -o /tmp/extended_collections_idiomatic`
+  - `rustc demos/extended_itertools/idiomatic.rs -o /tmp/extended_itertools_idiomatic`
+  - `rustc demos/itertools_iterables/idiomatic.rs -o /tmp/itertools_iterables_idiomatic`
+  - `cargo run -q -p sifr -- run demos/extended_collections/main.sifr`
+  - `cargo run -q -p sifr -- run demos/extended_itertools/main.sifr`
+  - `cargo run -q -p sifr -- run demos/itertools_iterables/main.sifr`
+  - `scripts/run_all_tests.sh`
+  - post-pass-1 revalidation:
+    - `rustfmt demos/itertools_iterables/idiomatic.rs`
+    - `rustc demos/itertools_iterables/idiomatic.rs -o /tmp/itertools_iterables_idiomatic`
+    - `cargo run -q -p sifr -- run demos/itertools_iterables/main.sifr`
+    - `scripts/run_all_tests.sh`
+- review artifacts:
+  - pass 1: `reviews/phase-ad-hoc-idiomatic-rust-demo-corpus-wave-2-batch-57-review-pass-1.md`
+  - pass 2: `reviews/phase-ad-hoc-idiomatic-rust-demo-corpus-wave-2-batch-57-review-pass-2.md`
+- review application summary:
+  - pass 1 returned `OK` for `extended_collections` and `extended_itertools`
+  - pass 1 raised one real API-parity note in `itertools_iterables`; I accepted it by removing the misleading `islice` helper, restoring predicate-first `takewhile`, and rewriting the affected call sites directly
+  - the post-fix `itertools_iterables` re-review came back `OK`
+  - pass 2 returned `OK` for `extended_itertools` and `itertools_iterables`
+  - the final `extended_collections` pass-2 response was not accepted because it inverted the Rust/Sifr file roles, analyzed the wrong source shape, and therefore did not identify a real blocker relative to the already-validated companion
+- reviewer tooling note:
+  - batch 57 used direct per-file `claude -p --tools Read` prompts
+  - `extended_collections` pass 2 stalled before eventually returning an inverted file-role analysis, so that response was recorded explicitly rather than treated as authoritative
+
 #### batch_56_stdlib_classes_stdlib_error_types_pure_sifr_stdlib
 
 status: accepted_after_pass_1_and_pass_2
