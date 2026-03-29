@@ -2,6 +2,7 @@ use crate::hir_nodes::{HirStmt, HirTupleTarget, HirTupleTargetBinding};
 use sifr_python_ast::{Expr, ExprAttribute, ExprTuple};
 
 use super::binding_mutability::ensure_mutable_parameter_binding;
+use super::assignment_widening::reconcile_optional_reassignment;
 use super::expressions::lower_expr;
 use super::sequence_pointers::record_tuple_unpack_pointer_facts;
 use super::LowerCtx;
@@ -100,12 +101,14 @@ pub(super) fn lower_tuple_unpack_assign(
                         ));
                         return None;
                     }
-                    if !ty.is_assignable_to(&info.ty) {
+                    let info_ty = info.ty.clone();
+                    let can_widen = info.is_inferred_local_binding();
+                    if !reconcile_optional_reassignment(ctx, &name, &info_ty, &ty, can_widen) {
                         ctx.error(format!(
                             "type mismatch: cannot assign '{}' to variable '{}' of type '{}'",
                             ty.display_name(),
                             name,
-                            info.ty.display_name()
+                            info_ty.display_name()
                         ));
                     }
                     ctx.scope.reset_moved(&name);

@@ -27,6 +27,8 @@ pub struct VarInfo {
     pub is_mutable_binding: bool,
     /// Whether this binding originated from a function parameter.
     pub binding_kind: BindingKind,
+    /// Whether the binding type was provided explicitly (annotation/parameter).
+    pub has_explicit_type: bool,
 }
 
 impl VarInfo {
@@ -37,6 +39,10 @@ impl VarInfo {
 
     pub fn is_parameter_binding(&self) -> bool {
         matches!(self.binding_kind, BindingKind::Parameter)
+    }
+
+    pub fn is_inferred_local_binding(&self) -> bool {
+        matches!(self.binding_kind, BindingKind::Local) && !self.has_explicit_type
     }
 }
 
@@ -96,12 +102,17 @@ impl Scope {
 
     /// Define a variable in the current (innermost) scope.
     pub fn define(&mut self, name: String, ty: Type) {
-        self.define_binding(name, ty, true, BindingKind::Local);
+        self.define_binding(name, ty, true, BindingKind::Local, false);
+    }
+
+    /// Define an explicitly-typed local variable in the current scope.
+    pub fn define_explicit_local(&mut self, name: String, ty: Type) {
+        self.define_binding(name, ty, true, BindingKind::Local, true);
     }
 
     /// Define a function parameter in the current (innermost) scope.
     pub fn define_parameter(&mut self, name: String, ty: Type, is_mutable_binding: bool) {
-        self.define_binding(name, ty, is_mutable_binding, BindingKind::Parameter);
+        self.define_binding(name, ty, is_mutable_binding, BindingKind::Parameter, true);
     }
 
     fn define_binding(
@@ -110,6 +121,7 @@ impl Scope {
         ty: Type,
         is_mutable_binding: bool,
         binding_kind: BindingKind,
+        has_explicit_type: bool,
     ) {
         if let Some(frame) = self.frames.last_mut() {
             frame.insert(
@@ -121,6 +133,7 @@ impl Scope {
                     is_mut_borrowed: false,
                     is_mutable_binding,
                     binding_kind,
+                    has_explicit_type,
                 },
             );
         }

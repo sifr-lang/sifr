@@ -102,6 +102,7 @@ Important operational note:
   - nested subscript assignment inference now refines dict/list element types
   - nested `max`/`min` inference now stabilizes return type from argument evidence
   - `while` loop lowering now applies `is None`/`is not None` narrowing facts inside loop bodies
+  - inferred local reassignment now widens across `None` transitions (`T` <-> `T | None`) while preserving explicit annotation boundaries
 - validation evidence:
   - `cargo test -p sifr_hir lower::expressions_tests::test_if_expr_true_branch_sequence_guard_narrows_index -- --nocapture`
   - `cargo test -p sifr_hir lower::expressions_tests::test_if_expr_true_branch_sequence_guard_narrows_index_with_offset -- --nocapture`
@@ -119,6 +120,7 @@ Important operational note:
   - `0013_roman_to_integer` remains open (`dict` index Optional contamination)
   - `0010_regular_expression_matching`, `0309_best_time_to_buy_and_sell_stock_with_cooldown`, `0494_target_sum`, and `0518_coin_change_ii` now type-check cleanly
   - `0206_reverse_linked_list` and `0024_swap_nodes_in_pairs` no longer emit loop-body Optional attribute-access noise after `while` narrowing; remaining failures are boundary/ownership/contract mismatches
+  - `0206_reverse_linked_list` and `0024_swap_nodes_in_pairs` also no longer emit local reassignment Optional-flow mismatches after inferred-local widening
 
 ## Core Contract and Guardrails
 

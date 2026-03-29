@@ -67,6 +67,17 @@ status: in progress
   - targeted rerun signal:
     - `cargo run -q -p sifr -- check audits/leetcode/0206_reverse_linked_list.sifr` -> attribute-access Optional noise removed; remaining boundary/ownership diagnostics persist
     - `cargo run -q -p sifr -- check audits/leetcode/0024_swap_nodes_in_pairs.sifr` -> attribute-access Optional noise removed; remaining boundary diagnostics persist
+- 2026-03-29 local iteration (wave-4 slice):
+  - compiler changes:
+    - reassignment for inferred local bindings now supports Optional widening on `None` transitions (`T` <-> `T | None`) without widening explicitly annotated locals or parameters
+    - widening behavior is shared by both direct assignment and tuple-unpack reassignment paths
+  - tests/validation:
+    - `cargo test -q -p sifr_hir lower::expressions_tests::test_inferred_local_can_widen_to_optional_on_reassignment -- --nocapture` -> pass
+    - `cargo test -q -p sifr_hir lower::expressions_tests::test_annotated_local_does_not_widen_on_reassignment -- --nocapture` -> pass
+    - `scripts/run_all_tests.sh --profile quick` -> pass
+  - targeted rerun signal:
+    - `cargo run -q -p sifr -- check audits/leetcode/0206_reverse_linked_list.sifr` -> reassignment-flow type mismatches reduced (remaining signature/boundary diagnostics persist)
+    - `cargo run -q -p sifr -- check audits/leetcode/0024_swap_nodes_in_pairs.sifr` -> reassignment-flow type mismatches reduced (remaining signature/boundary diagnostics persist)
 - Validation to record:
   - owning unit tests
   - non-LeetCode e2e regression(s)
