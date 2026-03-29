@@ -1504,6 +1504,50 @@ status: accepted_after_pass_1_and_pass_2
 - reviewer tooling note:
   - batch 32 used stable per-file external review prompts embedding both the paired Sifr source and the Rust companion because larger batch prompts remain less reliable in this workspace
 
+#### batch_33_local_shadowing_sentinel_values_set_operations
+
+status: accepted_after_pass_1_and_pass_2
+
+- scope:
+  - `demos/local_shadowing/idiomatic.rs`
+  - `demos/sentinel_values/idiomatic.rs`
+  - `demos/set_operations/idiomatic.rs`
+- selection rationale:
+  - all three are positive runnable demos
+  - all three form a cohesive remaining state-and-collections slice instead of mixing small rebinding/sentinel demos with unrelated indexing or option demos
+  - `sentinel_values` still had explicit sentinel scaffolding and `set_operations` still had small API-mapping cleanup available even though the visible demo output was already simple
+- priority tags:
+  - `local-state-surface`: `local_shadowing`, `sentinel_values`
+  - `collection-surface`: `set_operations`
+  - `hand-authored-generated-shape`: `sentinel_values`, `set_operations`
+- implementation summary:
+  - `local_shadowing`: reduced local updates and branch returns to direct Rust-first expressions while preserving the same assertions
+  - `sentinel_values`: replaced explicit sentinel bookkeeping with `min().unwrap_or(0)` as the direct Rust equivalent of the demo’s “smallest or zero” contract
+  - `set_operations`: kept the same visible operations while simplifying summation and then removing the temporary string allocation in `remove`
+- local validation completed:
+  - `rustfmt demos/local_shadowing/idiomatic.rs demos/sentinel_values/idiomatic.rs demos/set_operations/idiomatic.rs`
+  - `rustc --edition=2021 demos/local_shadowing/idiomatic.rs -o /tmp/sifr-idiomatic-local-shadowing && /tmp/sifr-idiomatic-local-shadowing`
+  - `rustc --edition=2021 demos/sentinel_values/idiomatic.rs -o /tmp/sifr-idiomatic-sentinel-values && /tmp/sifr-idiomatic-sentinel-values`
+  - `rustc --edition=2021 demos/set_operations/idiomatic.rs -o /tmp/sifr-idiomatic-set-operations && /tmp/sifr-idiomatic-set-operations`
+  - `cargo run -q -p sifr -- run demos/local_shadowing/main.sifr`
+  - `cargo run -q -p sifr -- run demos/sentinel_values/main.sifr`
+  - `cargo run -q -p sifr -- run demos/set_operations/main.sifr`
+  - `scripts/run_all_tests.sh`
+  - post-pass-2 revalidation:
+    - `rustfmt demos/local_shadowing/idiomatic.rs demos/sentinel_values/idiomatic.rs demos/set_operations/idiomatic.rs`
+    - `rustc --edition=2021 demos/set_operations/idiomatic.rs -o /tmp/sifr-idiomatic-set-operations && /tmp/sifr-idiomatic-set-operations`
+    - `cargo run -q -p sifr -- run demos/set_operations/main.sifr`
+    - `scripts/run_all_tests.sh`
+- review artifacts:
+  - pass 1: `reviews/phase-ad-hoc-idiomatic-rust-demo-corpus-wave-2-batch-33-review-pass-1.md`
+  - pass 2: `reviews/phase-ad-hoc-idiomatic-rust-demo-corpus-wave-2-batch-33-review-pass-2.md`
+- review application summary:
+  - pass 1 reported no accepted blockers
+  - pass 2 accepted one small follow-up in `demos/set_operations/idiomatic.rs` replacing `remove(&\"banana\".to_string())` with `remove(\"banana\")`
+  - `set_operations` was re-reviewed after that change and returned no actionable issues
+- reviewer tooling note:
+  - batch 33 used stable per-file external review prompts embedding both the paired Sifr source and the Rust companion because larger batch prompts remain less reliable in this workspace
+
 ### wave_3_fixture_and_negative_case_normalization
 
 status: pending
