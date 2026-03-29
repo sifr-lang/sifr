@@ -2335,6 +2335,45 @@ status: accepted_after_pass_1_and_pass_2
   - an embedded-source retry was also used for `stdlib_ownership` pass 1 after the initial direct prompt returned only `OK`; that narrower retry found the heap/lazy-chain issues that were actually worth fixing
   - `stdlib_ownership` pass 2 still stalled without output after repeated polls, so the artifact records that transport issue explicitly rather than inventing a clean verdict
 
+#### batch_64_code_generation_codegen_output_compiler_api
+
+status: accepted_after_pass_1_and_pass_2
+
+- scope:
+  - `demos/code_generation/idiomatic.rs`
+  - `demos/codegen_output/idiomatic.rs`
+  - `demos/compiler_api/idiomatic.rs`
+- selection rationale:
+  - all three are positive runnable demos
+  - all three form a cohesive remaining compiler-surface slice instead of mixing the codegen/code-output milestone demos with unrelated stdlib or language-feature companions
+  - `codegen_output` still carried visible context-manager/codegen scaffolding, while `code_generation` and `compiler_api` were smaller milestone companions that benefited from the same Rust-first cleanup pass
+- priority tags:
+  - `compiler-surface`: `code_generation`, `codegen_output`, `compiler_api`
+  - `milestone-demo`: `code_generation`, `codegen_output`, `compiler_api`
+  - `hand-authored-generated-shape`: `code_generation`, `codegen_output`, `compiler_api`
+- implementation summary:
+  - `code_generation`: collapsed the emitted-style helpers to direct tuple indexing, `Option`, `pow`, and arithmetic/formatting expressions that preserve the observable output without codegen-shaped ceremony
+  - `codegen_output`: replaced the heavier context-manager/model scaffolding with a tiny scope-bound `Timer`, a compact `Item` struct, and direct iterator/filter/format flows for the demonstrated codegen improvements
+  - `compiler_api`: reviewed the existing single direct print companion and kept it unchanged because it already matched the driver milestone API spine demo at the Rust-first bar
+- local validation completed:
+  - `rustfmt demos/code_generation/idiomatic.rs demos/codegen_output/idiomatic.rs demos/compiler_api/idiomatic.rs`
+  - `rustc --edition=2021 demos/code_generation/idiomatic.rs -o /tmp/sifr-idiomatic-code-generation && /tmp/sifr-idiomatic-code-generation`
+  - `rustc --edition=2021 demos/codegen_output/idiomatic.rs -o /tmp/sifr-idiomatic-codegen-output && /tmp/sifr-idiomatic-codegen-output`
+  - `rustc --edition=2021 demos/compiler_api/idiomatic.rs -o /tmp/sifr-idiomatic-compiler-api && /tmp/sifr-idiomatic-compiler-api`
+  - `cargo run -q -p sifr -- run demos/code_generation/main.sifr`
+  - `cargo run -q -p sifr -- run demos/codegen_output/main.sifr`
+  - `cargo run -q -p sifr -- run demos/compiler_api/main.sifr`
+  - `scripts/run_all_tests.sh`
+- review artifacts:
+  - pass 1: `reviews/phase-ad-hoc-idiomatic-rust-demo-corpus-wave-2-batch-64-review-pass-1.md`
+  - pass 2: `reviews/phase-ad-hoc-idiomatic-rust-demo-corpus-wave-2-batch-64-review-pass-2.md`
+- review application summary:
+  - pass 1 returned `OK` for `code_generation` and `compiler_api`
+  - pass 1 on `codegen_output` raised two notes that were not accepted as blockers: one incorrectly claimed that `let _timer = Timer::new("work")` drops at the end of the statement rather than at scope end in Rust, and the other objected only to inlining `"World"` inside a `format!` call even though the paired Sifr demo's observable behavior is just the final greeting output
+  - all three pass-2 reviews returned `OK`
+- reviewer tooling note:
+  - batch 64 used direct per-file `claude -p --no-session-persistence --dangerously-skip-permissions` prompts with embedded Sifr and Rust file contents
+
 #### batch_63_enums_ergonomics_constants_classmethods_arithmetic
 
 status: accepted_after_pass_1_and_pass_2

@@ -1,48 +1,48 @@
 fn main() {
-    let pair: (i64, i64) = (10 as i64, 20 as i64);
-    let a: i64 = (pair).0;
-    let b: i64 = (pair).1;
-    println!("Tuple index: {}, {}", a, b);
-    assert!(
-        format!("{}", format!("Tuple index: {}, {}", a, b)) == "Tuple index: 10, 20".to_string()
+    let pair = (10, 20);
+    println!("Tuple index: {}, {}", pair.0, pair.1);
+    assert_eq!(
+        format!("Tuple index: {}, {}", pair.0, pair.1),
+        "Tuple index: 10, 20"
     );
-    let x: i64 = 10 as i64;
-    let y: i64 = 3 as i64;
-    let result: f64 = (x as f64) / (y as f64);
-    println!("Division 10/3: {}", result);
-    assert!(
-        format!("{}", format!("Division 10/3: {}", result))
-            == "Division 10/3: 3.3333333333333335".to_string()
+
+    let result = 10.0 / 3.0;
+    println!("Division 10/3: {result}");
+    assert_eq!(
+        format!("Division 10/3: {result}"),
+        "Division 10/3: 3.3333333333333335"
     );
+
     let val: Option<i64> = None;
     if val.is_none() {
         println!("None value: None");
-    } else {
-        if let Some(val) = val {
-            println!("None value: {}", val);
-        }
+    } else if let Some(value) = val {
+        println!("None value: {value}");
     }
-    let nums: Vec<i64> = vec![1 as i64, 2 as i64, 3 as i64];
-    let empty: Vec<i64> = vec![];
+
+    let nums = [1, 2, 3];
+    let empty: [i64; 0] = [];
     println!("bool([1,2,3]): {}", !nums.is_empty());
-    assert!(
-        format!("{}", format!("bool([1,2,3]): {}", !nums.is_empty()))
-            == "bool([1,2,3]): true".to_string()
+    assert_eq!(
+        format!("bool([1,2,3]): {}", !nums.is_empty()),
+        "bool([1,2,3]): true"
     );
     println!("bool([]): {}", !empty.is_empty());
-    assert!(
-        format!("{}", format!("bool([]): {}", !empty.is_empty())) == "bool([]): false".to_string()
+    assert_eq!(
+        format!("bool([]): {}", !empty.is_empty()),
+        "bool([]): false"
     );
-    let mut base: i64 = 2 as i64;
-    base = (base).pow((3 as i64) as u32);
-    println!("2**3 = {}", base);
-    assert!(format!("{}", format!("2**3 = {}", base)) == "2**3 = 8".to_string());
-    let i: i64 = 10 as i64;
-    let f: f64 = 3.5 as f64;
-    let mixed: f64 = (i as f64) + f;
-    println!("10 + 3.5 = {}", mixed);
-    assert!(format!("{}", format!("10 + 3.5 = {}", mixed)) == "10 + 3.5 = 13.5".to_string());
-    let msg: String = "She said \"hello\"".to_string();
-    println!("{}", msg);
-    assert!(format!("{}", msg) == "She said \"hello\"".to_string());
+
+    let mut base = 2_i64;
+    base = base.pow(3);
+    println!("2**3 = {base}");
+    assert_eq!(format!("2**3 = {base}"), "2**3 = 8");
+
+    let mixed = 10.0 + 3.5;
+    println!("10 + 3.5 = {mixed}");
+    assert_eq!(format!("10 + 3.5 = {mixed}"), "10 + 3.5 = 13.5");
+
+    let msg = "She said \"hello\"";
+    println!("{msg}");
+    assert_eq!(msg, "She said \"hello\"");
 }
