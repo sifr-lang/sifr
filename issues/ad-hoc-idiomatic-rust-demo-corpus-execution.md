@@ -1876,6 +1876,53 @@ status: accepted_after_pass_1_and_pass_2
 - reviewer tooling note:
   - batch 41 used compact per-file external review prompts after the full embedded-file batch prompt stalled before the first verdict in this workspace
 
+#### batch_42_loop_try_match_return_and_raise_paths_reachability
+
+status: accepted_after_pass_1_and_pass_2
+
+- scope:
+  - `demos/loop_try_match/idiomatic.rs`
+  - `demos/return_and_raise_paths/idiomatic.rs`
+  - `demos/reachability/idiomatic.rs`
+- selection rationale:
+  - all three are positive runnable demos
+  - all three form a cohesive remaining error-and-flow-query slice instead of mixing try/except-driven returns and reachability questions with unrelated stdlib or data-structure demos
+  - all three still had obvious synthetic `Result`/exception-capture scaffolding despite their small direct control-flow behavior
+- priority tags:
+  - `try-except-flow`: `loop_try_match`, `return_and_raise_paths`, `reachability`
+  - `reachability-surface`: `reachability`
+  - `hand-authored-generated-shape`: `loop_try_match`, `return_and_raise_paths`, `reachability`
+- implementation summary:
+  - `loop_try_match`: reduced the traversal demo to direct `match`, accumulation, and explicit for-else tail behavior with no synthetic error carrier
+  - `return_and_raise_paths`: replaced try-capture lowering with a direct positive-path return and a modeled error-path fallback to `99`
+  - `reachability`: replaced synthetic `Result` capture with a direct branch that preserves the visible `5`/`77` behavior
+- local validation completed:
+  - `rustfmt demos/loop_try_match/idiomatic.rs demos/return_and_raise_paths/idiomatic.rs demos/reachability/idiomatic.rs`
+  - `rustc --edition=2021 demos/loop_try_match/idiomatic.rs -o /tmp/sifr-idiomatic-loop-try-match && /tmp/sifr-idiomatic-loop-try-match`
+  - `rustc --edition=2021 demos/return_and_raise_paths/idiomatic.rs -o /tmp/sifr-idiomatic-return-and-raise-paths && /tmp/sifr-idiomatic-return-and-raise-paths`
+  - `rustc --edition=2021 demos/reachability/idiomatic.rs -o /tmp/sifr-idiomatic-reachability && /tmp/sifr-idiomatic-reachability`
+  - `cargo run -q -p sifr -- run demos/loop_try_match/main.sifr`
+  - `cargo run -q -p sifr -- run demos/return_and_raise_paths/main.sifr`
+  - `cargo run -q -p sifr -- run demos/reachability/main.sifr`
+  - `scripts/run_all_tests.sh`
+  - post-cleanup revalidation:
+    - `rustfmt demos/loop_try_match/idiomatic.rs demos/return_and_raise_paths/idiomatic.rs demos/reachability/idiomatic.rs`
+    - `rustc --edition=2021 demos/loop_try_match/idiomatic.rs -o /tmp/sifr-idiomatic-loop-try-match && /tmp/sifr-idiomatic-loop-try-match`
+    - `rustc --edition=2021 demos/return_and_raise_paths/idiomatic.rs -o /tmp/sifr-idiomatic-return-and-raise-paths && /tmp/sifr-idiomatic-return-and-raise-paths`
+    - `rustc --edition=2021 demos/reachability/idiomatic.rs -o /tmp/sifr-idiomatic-reachability && /tmp/sifr-idiomatic-reachability`
+    - `cargo run -q -p sifr -- run demos/loop_try_match/main.sifr`
+    - `cargo run -q -p sifr -- run demos/return_and_raise_paths/main.sifr`
+    - `cargo run -q -p sifr -- run demos/reachability/main.sifr`
+    - `scripts/run_all_tests.sh`
+- review artifacts:
+  - pass 1: `reviews/phase-ad-hoc-idiomatic-rust-demo-corpus-wave-2-batch-42-review-pass-1.md`
+  - pass 2: `reviews/phase-ad-hoc-idiomatic-rust-demo-corpus-wave-2-batch-42-review-pass-2.md`
+- review application summary:
+  - pass 1 reported no accepted blockers
+  - pass 2 reported no accepted blockers
+- reviewer tooling note:
+  - batch 42 used compact per-file external review prompts because that transport pattern was materially more reliable than embedded-file prompts in this workspace
+
 ### wave_3_fixture_and_negative_case_normalization
 
 status: pending

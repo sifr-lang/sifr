@@ -334,6 +334,8 @@ Progress update (`2026-03-29`):
 - `batch_40_paired_indices_pop_narrowing_range_aliasing` completed local validation and ended external pass-1/pass-2 review with no accepted blockers
 - `batch_41_slice_unpacking_subscript_assignment_tuple_assignment` selected as the forty-first wave-2 runnable-demo batch because it keeps the remaining assignment-and-unpacking slice cohesive around safe indexing displays, direct subscript mutation, and tuple-style state updates
 - `batch_41_slice_unpacking_subscript_assignment_tuple_assignment` completed local validation and ended external pass-1/pass-2 review with no accepted blockers
+- `batch_42_loop_try_match_return_and_raise_paths_reachability` selected as the forty-second wave-2 runnable-demo batch because it keeps the remaining small error-and-flow-query slice cohesive around try/except-driven returns, reachability truth, and loop-else control-flow
+- `batch_42_loop_try_match_return_and_raise_paths_reachability` completed local validation, accepted a pre-review cleanup removing a dead helper type from `loop_try_match`, and ended external pass-1/pass-2 review with no accepted blockers
 
 ### wave_3_fixture_and_negative_case_normalization
 
