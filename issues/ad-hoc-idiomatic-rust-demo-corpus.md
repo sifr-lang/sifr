@@ -272,6 +272,8 @@ Progress update (`2026-03-29`):
 - `batch_09_binary_files_binary_hashing_binary_storage` completed local validation, accepted the pass-1 follow-up on removing an inert `binary_hashing` assertion, and passed external pass-2 review with no remaining actionable issues
 - `batch_10_bytes_basics_bytes_constructors_bytes_roundtrip` selected as the tenth wave-2 runnable-demo batch because it keeps the core bytes-and-conversion slice cohesive while targeting three small demos whose companions still retained generated-style scaffolding around simple byte, UTF-8, and hex behavior
 - `batch_10_bytes_basics_bytes_constructors_bytes_roundtrip` completed local validation and passed external pass-1/pass-2 review with no accepted blockers
+- `batch_11_subprocess_tempfile_zipfile_io` selected as the eleventh wave-2 runnable-demo batch because it keeps the runtime-and-file-lifecycle slice cohesive while targeting three still-generated companions around command execution, temp paths, and zip archive IO
+- `batch_11_subprocess_tempfile_zipfile_io` completed local validation, accepted the pass-2 follow-up on `subprocess.check_call` return semantics, and is ready to merge with no remaining actionable issues
 
 ### wave_3_fixture_and_negative_case_normalization
 
