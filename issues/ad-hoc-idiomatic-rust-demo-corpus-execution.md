@@ -2335,6 +2335,55 @@ status: accepted_after_pass_1_and_pass_2
   - an embedded-source retry was also used for `stdlib_ownership` pass 1 after the initial direct prompt returned only `OK`; that narrower retry found the heap/lazy-chain issues that were actually worth fixing
   - `stdlib_ownership` pass 2 still stalled without output after repeated polls, so the artifact records that transport issue explicitly rather than inventing a clean verdict
 
+#### batch_56_stdlib_classes_stdlib_error_types_pure_sifr_stdlib
+
+status: accepted_after_pass_1_and_pass_2
+
+- scope:
+  - `demos/stdlib_classes/idiomatic.rs`
+  - `demos/stdlib_error_types/idiomatic.rs`
+  - `demos/pure_sifr_stdlib/idiomatic.rs`
+- selection rationale:
+  - all three are positive runnable demos
+  - all three form a cohesive remaining smaller stdlib milestone slice instead of mixing class/error/migration demos with unrelated parser, text, or fixture work
+  - the existing companions were still large generated-style scaffolds despite comparatively compact demo-visible behavior and outputs
+- priority tags:
+  - `stdlib-heavy`: `stdlib_classes`, `stdlib_error_types`, `pure_sifr_stdlib`
+  - `milestone-demo`: `stdlib_classes`, `stdlib_error_types`, `pure_sifr_stdlib`
+  - `hand-authored-generated-shape`: `stdlib_classes`, `stdlib_error_types`, `pure_sifr_stdlib`
+- implementation summary:
+  - `stdlib_classes`: replaced the generated scaffold with a compact `BTreeMap`-backed `Counter` plus a direct `from_list` helper that preserves the exact printed sequence
+  - `stdlib_error_types`: replaced the broad generated helper layer with direct `StatisticsError` and `CycleError` structs plus small `compute_mean`/`topo_sort` helpers that preserve the exact module-error output
+  - `pure_sifr_stdlib`: replaced the runtime-heavy scaffold with minimal `assert_eq`/`assert_true`, `sqrt`/`PI`, `sha256`, and base64 helpers for the exercised migration path
+- local validation completed:
+  - `rustfmt demos/stdlib_classes/idiomatic.rs demos/stdlib_error_types/idiomatic.rs demos/pure_sifr_stdlib/idiomatic.rs`
+  - `rustc demos/stdlib_classes/idiomatic.rs -o /tmp/stdlib_classes_idiomatic`
+  - `rustc demos/stdlib_error_types/idiomatic.rs -o /tmp/stdlib_error_types_idiomatic`
+  - temp Cargo validation for `pure_sifr_stdlib` with `base64 = "0.22"` and `sha2 = "0.10"`
+  - `/tmp/stdlib_classes_idiomatic`
+  - `/tmp/stdlib_error_types_idiomatic`
+  - `cargo run -q -p sifr -- run demos/stdlib_classes/main.sifr`
+  - `cargo run -q -p sifr -- run demos/stdlib_error_types/main.sifr`
+  - `cargo run -q -p sifr -- run demos/pure_sifr_stdlib/main.sifr`
+  - `scripts/run_all_tests.sh`
+  - post-pass-1 follow-up revalidation:
+    - `rustfmt demos/pure_sifr_stdlib/idiomatic.rs`
+    - temp Cargo validation for `pure_sifr_stdlib` with `base64 = "0.22"` and `sha2 = "0.10"`
+    - `cargo run -q -p sifr -- run demos/pure_sifr_stdlib/main.sifr`
+    - `scripts/run_all_tests.sh`
+- review artifacts:
+  - pass 1: `reviews/phase-ad-hoc-idiomatic-rust-demo-corpus-wave-2-batch-56-review-pass-1.md`
+  - pass 2: `reviews/phase-ad-hoc-idiomatic-rust-demo-corpus-wave-2-batch-56-review-pass-2.md`
+- review application summary:
+  - pass 1 on `stdlib_classes` returned `OK`
+  - pass 1 on `stdlib_error_types` raised notes about `ParseIntError` formatting and the final mixed-error structure, but neither was accepted because the first note was incorrect (`println!("{err}")` already uses `Display`) and the second did not change the paired demo-visible behavior
+  - pass 1 on `pure_sifr_stdlib` found one real issue: the dead base64-error path still preserved the old nonsense assertion equating an error message with the success footer. I accepted that note and replaced it with a direct panic on the impossible path
+  - pass 2 on `pure_sifr_stdlib` returned `OK`
+  - pass 2 on `stdlib_classes` and `stdlib_error_types` both stalled without usable verdicts and were carried as transport notes rather than treated as blockers
+- reviewer tooling note:
+  - batch 56 used direct per-file `claude -p --allowedTools Read` prompts because that has remained the most reliable review transport in this workspace
+  - `stdlib_classes` and `stdlib_error_types` pass-2 prompts still stalled without output after repeated polls, so the artifacts record those transport failures explicitly instead of fabricating clean verdicts
+
 #### batch_50_stdlib_stdlib_expansion_stdlib_aliases
 
 status: accepted_after_pass_1_and_pass_2
