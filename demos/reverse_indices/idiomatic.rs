@@ -1,30 +1,16 @@
-fn reversed_values(values: &Vec<i64>) -> Vec<i64> {
-    let mut out: Vec<i64> = vec![];
-    for i in (-(1 as i64) + (1 as i64)..((values.len() as i64) - (1 as i64)) + (1 as i64)).rev() {
-        out.push({
-            let Some(__sifr_index_value) = ({
-                let __sifr_index_list = &values;
-                let __sifr_index_i = i;
-                let __sifr_index_norm = if __sifr_index_i < 0 {
-                    ((__sifr_index_list.len() as i64) + __sifr_index_i) as usize
-                } else {
-                    __sifr_index_i as usize
-                };
-                __sifr_index_list.get(__sifr_index_norm).copied()
-            }) else {
-                unreachable!("compiler-verified index should be in range");
-            };
-            __sifr_index_value
-        });
+fn reversed_values(values: &[i64]) -> Vec<i64> {
+    let mut out = Vec::new();
+    for i in (0..values.len()).rev() {
+        out.push(values[i]);
     }
-    return out;
+    out
 }
 
 fn main() {
-    assert!(
-        format!("{:?}", reversed_values(&vec![4 as i64, 5 as i64, 6 as i64]))
-            == "[6, 5, 4]".to_string()
+    assert_eq!(
+        format!("{:?}", reversed_values(&[4_i64, 5, 6])),
+        "[6, 5, 4]"
     );
-    assert!(format!("{:?}", reversed_values(&vec![])) == "[]".to_string());
+    assert_eq!(format!("{:?}", reversed_values(&[])), "[]");
     println!("reverse_indices: ok");
 }
