@@ -336,6 +336,39 @@ status: in progress
     - vs entry baseline: `PASS +22`, `CHECK_ERROR -22`, `RUN_ERROR ±0`
   - PR:
     - `https://github.com/yaseralnajjar/sifr/pull/1480` (merged)
+- 2026-03-29 local iteration (wave-9b residual canonicalization batch-2):
+  - root cause:
+    - selected fixtures still encoded unstated index-seed assumptions (`nums[0]`, direct first-element reads) that are invalid under explicit Sifr Optional/index semantics and therefore remained `CHECK_ERROR`
+  - reviewer gate:
+    - plan artifact: `issues/ad-hoc-optional-none-and-narrowing-wave9b-residual-canonicalization-plan-2026-03-29.md`
+    - review artifact: `reviews/ad-hoc-optional-none-wave9b-residual-canonicalization-review-pass1.md` (`ready`)
+  - residual canonicalization inventory:
+    - `0122_best_time_to_buy_and_sell_stock_ii`
+    - `0152_maximum_product_subarray`
+    - `0169_majority_element`
+    - `1800_maximum_ascending_subarray_sum`
+  - fixture adjustments:
+    - `0122`: replaced index-driven first-element seed with iterator-first previous-price flow
+    - `0152`: removed `nums[0]` seed path and used iterator-first initialization with explicit first-value capture
+    - `0169`: rewrote Boyer-Moore loop to value iteration (no indexed element reads)
+    - `1800`: rewrote to iterator-first rolling ascending-sum tracking with explicit previous-value state
+  - tests/validation:
+    - targeted `cargo run -q -p sifr -- check` and `-- run` on all four fixtures -> pass
+    - `scripts/run_all_tests.sh --profile quick` -> pass
+  - phase-level rerun:
+    - full corpus rerun against `audits/leetcode` with `target/release/sifr` -> `PASS=123`, `CHECK_ERROR=264`, `RUN_ERROR=24`
+    - artifact: `verification/leetcode/full_corpus_current_results_20260329_live_after_optional_wave9b.json`
+    - non-failing artifact: `verification/leetcode/full_corpus_nonfailing_20260329_live_after_optional_wave9b.json`
+  - rerun delta:
+    - vs wave-9a: `+4 PASS`, `-4 CHECK_ERROR`, `+0 RUN_ERROR`
+    - fixture transitions:
+      - `0122_best_time_to_buy_and_sell_stock_ii`: `CHECK_ERROR -> PASS`
+      - `0152_maximum_product_subarray`: `CHECK_ERROR -> PASS`
+      - `0169_majority_element`: `CHECK_ERROR -> PASS`
+      - `1800_maximum_ascending_subarray_sum`: `CHECK_ERROR -> PASS`
+    - vs entry baseline: `PASS +26`, `CHECK_ERROR -26`, `RUN_ERROR ±0`
+  - PR:
+    - pending (to be backfilled after publish)
 
 - Validation to record:
   - post-wave full corpus rerun
@@ -349,12 +382,14 @@ Root-cause plan artifact:
 - `issues/ad-hoc-optional-none-and-narrowing-wave7-9-root-cause-plan-2026-03-29.md`
 - `issues/ad-hoc-optional-none-and-narrowing-wave8b-run-stage-ownership-plan-2026-03-29.md`
 - `issues/ad-hoc-optional-none-and-narrowing-wave9a-residual-canonicalization-plan-2026-03-29.md`
+- `issues/ad-hoc-optional-none-and-narrowing-wave9b-residual-canonicalization-plan-2026-03-29.md`
 
 Reviewer passes:
 - `reviews/ad-hoc-optional-none-wave7-9-plan-review-pass1.md` (`not ready`, corrective findings applied)
 - `reviews/ad-hoc-optional-none-wave7-9-plan-review-pass2.md` (`ready`, no blocking issues)
 - `reviews/ad-hoc-optional-none-wave8b-run-stage-plan-review-pass1.md` (`ready`, no blocking issues)
 - `reviews/ad-hoc-optional-none-wave9a-residual-canonicalization-review-pass1.md` (`ready`, no blocking issues)
+- `reviews/ad-hoc-optional-none-wave9b-residual-canonicalization-review-pass1.md` (`ready`, no blocking issues)
 
 Wave state:
 
@@ -371,6 +406,8 @@ Wave state:
   - ownership: `assignment_widening.rs`, `statements.rs` (optional `infer.rs` only if canary evidence requires)
 - wave-9a (`workstream_5` residual canonicalization batch-1):
   - explicit Sifr-safe canonicalization landed for `0062`, `0121`, `0377`, `0540`
+- wave-9b (`workstream_5` residual canonicalization batch-2):
+  - explicit Sifr-safe canonicalization landed for `0122`, `0152`, `0169`, `1800`
 - wave-9 (`workstream_3` + `workstream_4` closure lane):
   - call-boundary and container refinement closure under explicit Optional semantics
   - ownership: `method_call_args.rs`, `expressions.rs`, `nonempty_method_narrowing.rs`, `sequence_guard_detection.rs`, `guarded_index.rs`

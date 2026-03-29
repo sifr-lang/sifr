@@ -1,12 +1,12 @@
 # LeetCode 169: Majority Element (Boyer-Moore Voting)
 
 def majorityElement(nums: list[int]) -> int:
-    candidate: int = nums[0]
+    candidate: int = 0
     count: int = 0
-    for i in range(len(nums)):
+    for value in nums:
         if count == 0:
-            candidate = nums[i]
-        if nums[i] == candidate:
+            candidate = value
+        if value == candidate:
             count += 1
         else:
             count -= 1
@@ -17,4 +17,3 @@ def main():
     assert str(majorityElement([2, 2, 1, 1, 1, 2, 2])) == '2'
     assert str(majorityElement([1])) == '1'
     assert str(majorityElement([6, 5, 5])) == '5'
-

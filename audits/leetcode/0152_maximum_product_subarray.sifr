@@ -1,11 +1,17 @@
 # LeetCode 152: Maximum Product Subarray
 
 def maxProduct(nums: list[int]) -> int:
-    result: int = nums[0]
-    cur_max: int = nums[0]
-    cur_min: int = nums[0]
-    for i in range(1, len(nums)):
-        val: int = nums[i]
+    result: int = 0
+    cur_max: int = 0
+    cur_min: int = 0
+    has_value: bool = False
+    for val in nums:
+        if not has_value:
+            result = val
+            cur_max = val
+            cur_min = val
+            has_value = True
+            continue
         # When multiplied by negative, max becomes min and vice versa
         if val < 0:
             temp: int = cur_max
@@ -28,4 +34,3 @@ def main():
     assert str(maxProduct([-2, 0, -1])) == '0'
     assert str(maxProduct([-2, 3, -4])) == '24'
     assert str(maxProduct([2, -5, -2, -4, 3])) == '24'
-
