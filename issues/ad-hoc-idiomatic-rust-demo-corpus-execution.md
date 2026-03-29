@@ -1751,6 +1751,54 @@ status: accepted_after_pass_1_and_pass_2
 - reviewer tooling note:
   - batch 38 used concise per-file external review prompts with one-line verdict constraints because that transport pattern has been the most reliable reviewer lane in this workspace
 
+#### batch_39_fixed_indexing_indexing_rules_safe_edge_cases
+
+status: accepted_after_pass_1_and_pass_2
+
+- scope:
+  - `demos/fixed_indexing/idiomatic.rs`
+  - `demos/indexing_rules/idiomatic.rs`
+  - `demos/safe_edge_cases/idiomatic.rs`
+- selection rationale:
+  - all three are positive runnable demos
+  - all three form a cohesive remaining indexing-edge-case safety slice instead of mixing len-guarded indexing work with unrelated stdlib or compiler demos
+  - `fixed_indexing` and `indexing_rules` keep the batch centered on deterministic index semantics, while `safe_edge_cases` covers the broader validation-heavy safety surface that still included generated-shape scaffolding
+- priority tags:
+  - `indexing-surface`: `fixed_indexing`, `indexing_rules`
+  - `edge-case-safety`: `safe_edge_cases`
+  - `hand-authored-generated-shape`: `fixed_indexing`, `indexing_rules`, `safe_edge_cases`
+- implementation summary:
+  - `fixed_indexing`: reduced the len-guarded fixed-index demo to direct slice indexing and a compact dynamic-programming `min_cost_climbing` implementation
+  - `indexing_rules`: replaced negative-index mutation/delete lowering with small normalization and removal helpers
+  - `safe_edge_cases`: replaced the large generated stdlib scaffold with focused validation helpers that reproduce the paired demo’s visible success and error messages, plus a safe bounds-checked subscript assignment helper
+- local validation completed:
+  - `rustfmt demos/fixed_indexing/idiomatic.rs demos/indexing_rules/idiomatic.rs demos/safe_edge_cases/idiomatic.rs`
+  - `rustc --edition=2021 demos/fixed_indexing/idiomatic.rs -o /tmp/sifr-idiomatic-fixed-indexing && /tmp/sifr-idiomatic-fixed-indexing`
+  - `rustc --edition=2021 demos/indexing_rules/idiomatic.rs -o /tmp/sifr-idiomatic-indexing-rules && /tmp/sifr-idiomatic-indexing-rules`
+  - `rustc --edition=2021 demos/safe_edge_cases/idiomatic.rs -o /tmp/sifr-idiomatic-safe-edge-cases && /tmp/sifr-idiomatic-safe-edge-cases`
+  - `cargo run -q -p sifr -- run demos/fixed_indexing/main.sifr`
+  - `cargo run -q -p sifr -- run demos/indexing_rules/main.sifr`
+  - `cargo run -q -p sifr -- run demos/safe_edge_cases/main.sifr`
+  - `scripts/run_all_tests.sh`
+  - post-fix revalidation:
+    - `rustfmt demos/fixed_indexing/idiomatic.rs demos/indexing_rules/idiomatic.rs demos/safe_edge_cases/idiomatic.rs`
+    - `rustc --edition=2021 demos/fixed_indexing/idiomatic.rs -o /tmp/sifr-idiomatic-fixed-indexing && /tmp/sifr-idiomatic-fixed-indexing`
+    - `rustc --edition=2021 demos/indexing_rules/idiomatic.rs -o /tmp/sifr-idiomatic-indexing-rules && /tmp/sifr-idiomatic-indexing-rules`
+    - `rustc --edition=2021 demos/safe_edge_cases/idiomatic.rs -o /tmp/sifr-idiomatic-safe-edge-cases && /tmp/sifr-idiomatic-safe-edge-cases`
+    - `cargo run -q -p sifr -- run demos/fixed_indexing/main.sifr`
+    - `cargo run -q -p sifr -- run demos/indexing_rules/main.sifr`
+    - `cargo run -q -p sifr -- run demos/safe_edge_cases/main.sifr`
+    - `scripts/run_all_tests.sh`
+- review artifacts:
+  - pass 1: `reviews/phase-ad-hoc-idiomatic-rust-demo-corpus-wave-2-batch-39-review-pass-1.md`
+  - pass 2: `reviews/phase-ad-hoc-idiomatic-rust-demo-corpus-wave-2-batch-39-review-pass-2.md`
+- review application summary:
+  - pass 1 reported no accepted blockers
+  - `safe_edge_cases` needed a pass-1 retry after the reviewer returned an unusable tool-stub response instead of a verdict
+  - pass 2 reported no accepted blockers
+- reviewer tooling note:
+  - batch 39 used concise per-file external review prompts with one-line verdict constraints because that transport pattern has been the most reliable reviewer lane in this workspace
+
 ### wave_3_fixture_and_negative_case_normalization
 
 status: pending
