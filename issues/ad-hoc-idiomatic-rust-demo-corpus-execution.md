@@ -1258,6 +1258,44 @@ status: accepted_after_pass_1_and_pass_2
 - reviewer tooling note:
   - batch 26 used stable per-file external review prompts embedding both the paired Sifr source and the Rust companion because larger batch prompts remained unreliable in this workspace
 
+#### batch_27_recursive_calls_recursive_for_else_while_else
+
+status: accepted_after_pass_1_and_pass_2
+
+- scope:
+  - `demos/recursive_calls/idiomatic.rs`
+  - `demos/recursive_for_else/idiomatic.rs`
+  - `demos/while_else/idiomatic.rs`
+- selection rationale:
+  - all three are positive runnable demos
+  - all three form a cohesive remaining structured-control-flow slice instead of mixing small recursion/control-flow demos with larger stdlib-heavy companions
+  - each companion still exposed compiler-lowered `_broke` scaffolding or traversal artifacts that were heavier than the demo-visible behavior
+- priority tags:
+  - `control-flow-surface`: `recursive_calls`, `recursive_for_else`, `while_else`
+  - `hand-authored-generated-shape`: `recursive_calls`, `recursive_for_else`, `while_else`
+- implementation summary:
+  - `recursive_calls`: replaced the synthetic loop-and-flag scaffolding with direct recursive control flow that preserves the visible return behavior
+  - `recursive_for_else`: reduced the companion to the minimal loop-plus-recursion shape that still reflects the paired `for-else` demo output
+  - `while_else`: replaced the lowered `_broke` flag shape with a direct empty-vs-nonempty branch that matches the observable `while-else` result
+- local validation completed:
+  - `rustfmt demos/recursive_calls/idiomatic.rs demos/recursive_for_else/idiomatic.rs demos/while_else/idiomatic.rs`
+  - `rustc --edition=2021 demos/recursive_calls/idiomatic.rs -o /tmp/sifr-idiomatic-recursive-calls && /tmp/sifr-idiomatic-recursive-calls`
+  - `rustc --edition=2021 demos/recursive_for_else/idiomatic.rs -o /tmp/sifr-idiomatic-recursive-for-else && /tmp/sifr-idiomatic-recursive-for-else`
+  - `rustc --edition=2021 demos/while_else/idiomatic.rs -o /tmp/sifr-idiomatic-while-else && /tmp/sifr-idiomatic-while-else`
+  - `cargo run -q -p sifr -- run demos/recursive_calls/main.sifr`
+  - `cargo run -q -p sifr -- run demos/recursive_for_else/main.sifr`
+  - `cargo run -q -p sifr -- run demos/while_else/main.sifr`
+  - `scripts/run_all_tests.sh`
+- review artifacts:
+  - pass 1: `reviews/phase-ad-hoc-idiomatic-rust-demo-corpus-wave-2-batch-27-review-pass-1.md`
+  - pass 2: `reviews/phase-ad-hoc-idiomatic-rust-demo-corpus-wave-2-batch-27-review-pass-2.md`
+- review application summary:
+  - pass 1 reported no accepted blockers
+  - the pass-1 `recursive_for_else` note was rejected because it incorrectly claimed `rec(3)` was not printed even though the reviewed Rust file already contains `println!("{}", rec(3));` and the validated runtime output matched the paired Sifr demo
+  - pass 2 reported no actionable issues on the final code state
+- reviewer tooling note:
+  - batch 27 used stable per-file external review prompts embedding both the paired Sifr source and the Rust companion because larger batch prompts remained unreliable in this workspace
+
 ### wave_3_fixture_and_negative_case_normalization
 
 status: pending
