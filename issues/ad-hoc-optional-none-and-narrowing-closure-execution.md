@@ -190,6 +190,30 @@ status: in progress
     - taxonomy signal (`scripts/phase31_leetcode_taxonomy.py` rule match, heuristic only): Optional narrowing bucket reduced `84 -> 75`, but remains an unresolved top-tier bucket
   - closure note:
     - phase remains open; closeout criterion requiring Optional/None no longer be dominant unresolved family is not yet met on the latest rerun
+  - PR:
+    - `https://github.com/yaseralnajjar/sifr/pull/1463` (merged)
+- 2026-03-29 local iteration (wave-6 residual run-stability slice):
+  - residual canonicalization inventory:
+    - `0010_regular_expression_matching`
+    - `0028_find_the_index_of_the_first_occurrence_in_a_string`
+    - `0097_interleaving_string`
+    - `0309_best_time_to_buy_and_sell_stock_with_cooldown`
+    - `0678_valid_parenthesis_string`
+  - fixture adjustments:
+    - removed run-stage keyword/duplicate-definition/codegen-hostile shapes and replaced with run-safe canonical forms while preserving fixture intent
+  - tests/validation:
+    - targeted `cargo run -q -p sifr -- check` and `-- run` on all five fixtures -> pass
+    - `scripts/run_all_tests.sh --profile quick` -> pass
+  - phase-level rerun:
+    - full corpus rerun against `audits/leetcode` with `target/release/sifr` -> `PASS=112`, `CHECK_ERROR=275`, `RUN_ERROR=24`
+    - artifact: `verification/leetcode/full_corpus_current_results_20260329_live_after_optional_wave6.json`
+    - non-failing artifact: `verification/leetcode/full_corpus_nonfailing_20260329_live_after_optional_wave6.json`
+  - rerun delta:
+    - vs wave-5: `5` fixtures moved `RUN_ERROR -> PASS` (`0010`, `0028`, `0097`, `0309`, `0678`); `0` regressions
+    - vs entry baseline: `PASS +15`, `CHECK_ERROR -15`, `RUN_ERROR ±0`
+    - taxonomy signal (`scripts/phase31_leetcode_taxonomy.py` heuristic): Optional narrowing bucket remains `75` (from baseline `84`)
+  - closure note:
+    - phase remains open; Optional/None unresolved family size is reduced but still not closed by criterion
 
 - Validation to record:
   - post-wave full corpus rerun

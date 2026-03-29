@@ -1,31 +1,24 @@
 # LeetCode 309: Best Time To Buy And Sell Stock With Cooldown
 
 def maxProfit(prices: list[int]) -> int:
-    # State: Buying or Selling?
-    # If Buy -> i + 1
-    # If Sell -> i + 2
+    if len(prices) == 0:
+        return 0
 
-    dp = {}  # key=(i, buying) val=max_profit
+    hold = -prices[0]
+    sold = 0
+    rest = 0
+    i = 1
+    while i < len(prices):
+        price = prices[i]
+        prev_sold = sold
+        sold = hold + price
+        hold = max(hold, rest - price)
+        rest = max(rest, prev_sold)
+        i += 1
 
-    def dfs(i, buying):
-        if i >= len(prices):
-            return 0
-        if (i, buying) in dp:
-            return dp[(i, buying)]
-
-        cooldown = dfs(i + 1, buying)
-        if buying:
-            buy = dfs(i + 1, not buying) - prices[i]
-            dp[(i, buying)] = max(buy, cooldown)
-        else:
-            sell = dfs(i + 2, not buying) + prices[i]
-            dp[(i, buying)] = max(sell, cooldown)
-        return dp[(i, buying)]
-
-    return dfs(0, True)
+    return max(sold, rest)
 
 def main():
     assert str(maxProfit([1,2,3,0,2])) == '3'
     assert str(maxProfit([1])) == '0'
-
 
