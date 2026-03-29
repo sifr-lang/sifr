@@ -422,6 +422,44 @@ status: accepted_after_pass_1_and_pass_2
 - reviewer tooling note:
   - batch 07 continued using the Python subprocess capture path for `claude -p --no-session-persistence --dangerously-skip-permissions ...` because it remained the stable external-review transport for embedded-file batch reviews in this workspace
 
+#### batch_08_bisect_defaultdict_max_heap
+
+status: accepted_after_pass_1_and_pass_2
+
+- scope:
+  - `demos/bisect/idiomatic.rs`
+  - `demos/defaultdict/idiomatic.rs`
+  - `demos/max_heap/idiomatic.rs`
+- selection rationale:
+  - all three are positive runnable demos
+  - all three expose ordered-search or heap-backed collection behavior and therefore form a coherent container-utility slice instead of mixing unrelated stdlib surfaces
+  - each companion still carried more helper or scaffolding structure than the small demo-visible behavior required
+- priority tags:
+  - `stdlib-heavy`: `defaultdict`, `max_heap`
+  - `hand-authored-generated-shape`: `bisect`, `defaultdict`, `max_heap`
+- implementation summary:
+  - `bisect`: replaced the generated helper surface with direct `partition_point`-based `bisect_left`, `bisect_right`, `insort_left`, and `insort_right` helpers plus a compact parity check
+  - `defaultdict`: replaced the oversized companion with a small generic `DefaultDict` wrapper over `HashMap::entry`, a tiny `Deque` wrapper over `VecDeque`, and direct demo-visible collection/counter assertions
+  - `max_heap`: replaced the larger heap companion with a small `BinaryHeap`-backed `MaxHeap` wrapper plus direct `heapify_max`, `heappop_max`, `heapreplace_max`, and drain helpers
+- local validation completed:
+  - `rustfmt demos/bisect/idiomatic.rs demos/defaultdict/idiomatic.rs demos/max_heap/idiomatic.rs`
+  - `rustc --edition=2021 demos/bisect/idiomatic.rs -o /tmp/sifr-idiomatic-bisect && /tmp/sifr-idiomatic-bisect`
+  - `rustc --edition=2021 demos/defaultdict/idiomatic.rs -o /tmp/sifr-idiomatic-defaultdict && /tmp/sifr-idiomatic-defaultdict`
+  - `rustc --edition=2021 demos/max_heap/idiomatic.rs -o /tmp/sifr-idiomatic-max-heap && /tmp/sifr-idiomatic-max-heap`
+  - `cargo run -q -p sifr -- run demos/bisect/main.sifr`
+  - `cargo run -q -p sifr -- run demos/defaultdict/main.sifr`
+  - `cargo run -q -p sifr -- run demos/max_heap/main.sifr`
+  - `scripts/run_all_tests.sh`
+- review artifacts:
+  - pass 1: `reviews/phase-ad-hoc-idiomatic-rust-demo-corpus-wave-2-batch-08-review-pass-1.md`
+  - pass 2: `reviews/phase-ad-hoc-idiomatic-rust-demo-corpus-wave-2-batch-08-review-pass-2.md`
+- review application summary:
+  - pass 1 reported only non-blocking observations about `bisect`'s compact self-check scaffolding and `defaultdict`'s single-borrow `get_mut` shape; no code changes were applied
+  - pass 2 reported only a non-blocking note that `defaultdict` takes keys by value and therefore re-allocates repeated owned keys in the demo; this was not accepted as a blocker because it reflects an honest Rust API tradeoff rather than a behavior or readability failure in the approved demo scope
+  - `max_heap` passed both reviews without issue
+- reviewer tooling note:
+  - batch 08 first attempted the `.cursor/skills/talk-to-claude` desktop-handoff path, but because that handoff stalled before producing the requested review file, the final pass-1/pass-2 artifacts were generated with the stable Python subprocess capture path for `claude -p --no-session-persistence --dangerously-skip-permissions ...`
+
 ### wave_3_fixture_and_negative_case_normalization
 
 status: pending

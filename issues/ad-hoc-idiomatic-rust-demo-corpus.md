@@ -266,6 +266,8 @@ Progress update (`2026-03-29`):
 - `batch_06_collections_itertools_heapq` completed local validation, accepted the pass-1 follow-up on `collections` deque-capacity boundary clarity, and passed external pass-2 review with no remaining actionable issues
 - `batch_07_string_textwrap_fnmatch` selected as the seventh wave-2 runnable-demo batch because it keeps the text-processing slice cohesive while targeting three phase-30-reviewed companions whose current implementations still ranged from faux-constant ceremony to oversized helper scaffolding
 - `batch_07_string_textwrap_fnmatch` completed local validation and passed external pass-1/pass-2 review with no accepted blockers
+- `batch_08_bisect_defaultdict_max_heap` selected as the eighth wave-2 runnable-demo batch because it keeps the ordered-lookup and heap-backed-container slice cohesive while targeting three small demos whose companions still carried more scaffolding than their demo-visible behavior required
+- `batch_08_bisect_defaultdict_max_heap` completed local validation and passed external pass-1/pass-2 review with no accepted blockers
 
 ### wave_3_fixture_and_negative_case_normalization
 
