@@ -322,6 +322,8 @@ Progress update (`2026-03-29`):
 - `batch_34_container_literals_collection_cloning_own_mut_appends` completed local validation and ended external pass-1/pass-2 review with no accepted blockers; the pass-1 `container_literals` semantics note was recorded but not accepted because the Rust companion already matched the paired demo assertions and observed runtime behavior
 - `batch_35_container_methods_dict_membership_ordered_collections` selected as the thirty-fifth wave-2 runnable-demo batch because it keeps the remaining collection-API slice cohesive around container methods, guarded dict membership reads, and ordered collection helpers
 - `batch_35_container_methods_dict_membership_ordered_collections` completed local validation and ended external pass-1/pass-2 review with no accepted blockers; the reviewer transport for `ordered_collections` was unstable in pass 2, but the final shortened retry completed cleanly with no actionable issues
+- `batch_36_typed_queues_heap_option_drain_own_mut_updates` selected as the thirty-sixth wave-2 runnable-demo batch because it keeps the remaining owned-mutation-and-drain slice cohesive around queue draining, option-safe heap draining, and `own mut` in-place list updates
+- `batch_36_typed_queues_heap_option_drain_own_mut_updates` completed local validation and ended external pass-1/pass-2 review with no accepted blockers; `typed_queues` needed a retry in pass 1 after an unusable reviewer stub, but the final verdict for all three files was clean
 
 ### wave_3_fixture_and_negative_case_normalization
 
