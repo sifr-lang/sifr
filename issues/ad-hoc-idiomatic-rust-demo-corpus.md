@@ -273,7 +273,9 @@ Progress update (`2026-03-29`):
 - `batch_10_bytes_basics_bytes_constructors_bytes_roundtrip` selected as the tenth wave-2 runnable-demo batch because it keeps the core bytes-and-conversion slice cohesive while targeting three small demos whose companions still retained generated-style scaffolding around simple byte, UTF-8, and hex behavior
 - `batch_10_bytes_basics_bytes_constructors_bytes_roundtrip` completed local validation and passed external pass-1/pass-2 review with no accepted blockers
 - `batch_11_subprocess_tempfile_zipfile_io` selected as the eleventh wave-2 runnable-demo batch because it keeps the runtime-and-file-lifecycle slice cohesive while targeting three still-generated companions around command execution, temp paths, and zip archive IO
-- `batch_11_subprocess_tempfile_zipfile_io` completed local validation, accepted the pass-2 follow-up on `subprocess.check_call` return semantics, and is ready to merge with no remaining actionable issues
+- `batch_11_subprocess_tempfile_zipfile_io` completed local validation, accepted the pass-2 follow-up on `subprocess.check_call` return semantics, and passed external pass-2 review with no remaining actionable issues
+- `batch_12_readonly_bytes_tempfiles_and_zip_filesystem_and_archives` selected as the twelfth wave-2 runnable-demo batch because it keeps the bytes-and-archive-lifecycle slice cohesive while targeting three still-generated companions around read-only byte handling, temp-path-plus-zip behavior, and filesystem/archive orchestration
+- `batch_12_readonly_bytes_tempfiles_and_zip_filesystem_and_archives` completed local validation, preserved the observed `zipfile.namelist = Ok(["inside.txt"])` output shape in `filesystem_and_archives`, and passed external pass-1/pass-2 review with no accepted blockers
 
 ### wave_3_fixture_and_negative_case_normalization
 
