@@ -2097,6 +2097,49 @@ status: accepted_after_pass_1_and_pass_2
 - reviewer tooling note:
   - batch 46 used compact per-file prompts for pass 1, then embedded-source per-file prompts for pass 2 after the initial lane showed repeated stale file-role inversions on the tiny stdlib-loading demos
 
+#### batch_53_utility_classes_uuid_and_datetime_fixed_timezones
+
+status: accepted_after_pass_1_and_pass_2
+
+- scope:
+  - `demos/utility_classes/idiomatic.rs`
+  - `demos/uuid_and_datetime/idiomatic.rs`
+  - `demos/fixed_timezones/idiomatic.rs`
+- selection rationale:
+  - all three are positive runnable demos
+  - they form a cohesive remaining utility-and-datetime class slice instead of mixing small helper surfaces with unrelated stdlib or fixture work
+  - `utility_classes` was still a large generated-style companion despite exercising a compact argparse/IP/UUID/topological-sort surface, and the two datetime-related demos were small assertion-only companions that fit naturally beside it
+- priority tags:
+  - `class-api-surface`: `utility_classes`, `uuid_and_datetime`, `fixed_timezones`
+  - `datetime-surface`: `uuid_and_datetime`, `fixed_timezones`
+  - `hand-authored-generated-shape`: `utility_classes`, `uuid_and_datetime`, `fixed_timezones`
+- implementation summary:
+  - `utility_classes`: replaced the generated scaffold with a tiny `ArgumentParser`, a small `Namespace`, direct IPv4 helpers, a `uuid`-crate-backed UUID wrapper, and a deterministic topological sorter matching the observed output
+  - `uuid_and_datetime`: replaced the scaffold with direct `uuid` v3/v5 helpers plus a compact fixed-offset datetime wrapper for the exercised UTC and epoch-shift assertions
+  - `fixed_timezones`: replaced the scaffold with a minimal fixed-offset display type and a local naive-datetime wrapper preserving the assertion-only timezone and ISO-format expectations
+- local validation completed:
+  - `rustfmt demos/utility_classes/idiomatic.rs demos/uuid_and_datetime/idiomatic.rs demos/fixed_timezones/idiomatic.rs`
+  - temp Cargo validation for `utility_classes` with `uuid = { version = "1", features = ["v3", "v4", "v5"] }`
+  - temp Cargo validation for `uuid_and_datetime` with `chrono = "0.4"` and `uuid = { version = "1", features = ["v3", "v5"] }`
+  - temp Cargo validation for `fixed_timezones` with `chrono = "0.4"`
+  - `cargo run -q -p sifr -- run demos/utility_classes/main.sifr`
+  - `cargo run -q -p sifr -- run demos/uuid_and_datetime/main.sifr`
+  - `cargo run -q -p sifr -- run demos/fixed_timezones/main.sifr`
+  - `scripts/run_all_tests.sh`
+- review artifacts:
+  - pass 1: `reviews/phase-ad-hoc-idiomatic-rust-demo-corpus-wave-2-batch-53-review-pass-1.md`
+  - pass 2: `reviews/phase-ad-hoc-idiomatic-rust-demo-corpus-wave-2-batch-53-review-pass-2.md`
+- review application summary:
+  - pass 1 on `utility_classes` timed out without returning a usable verdict
+  - pass 1 on `uuid_and_datetime` explicitly confirmed the exercised UUID and datetime behavior and reported no actionable issues
+  - pass 1 on `fixed_timezones` was clean for the fixed-timezone file but also drifted into a non-blocking `utility_classes` API-surface note that was not accepted because this corpus evaluates paired demo-visible behavior rather than library-surface identity
+  - pass 2 on `utility_classes` timed out again without returning a usable verdict
+  - pass 2 on `uuid_and_datetime` explicitly confirmed the exercised behavior and reported no actionable issues
+  - pass 2 on `fixed_timezones` returned `OK`
+- reviewer tooling note:
+  - batch 53 again used bounded per-file `claude -p` prompts with embedded `main.sifr` and `idiomatic.rs` sources because that remains the most reliable review shape in this workspace
+  - both `utility_classes` review passes still timed out despite the narrowed prompts, so those transport failures are recorded explicitly instead of being treated as blockers
+
 #### batch_52_structured_parsing_serialization_parse_safety_no_runtime_panics
 
 status: accepted_after_pass_1_and_pass_2
