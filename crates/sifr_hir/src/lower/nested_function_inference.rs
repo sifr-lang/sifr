@@ -816,6 +816,31 @@ fn analyze_assign(
                 env.bind_var(name.id.as_str(), value_ty);
             }
         }
+        Expr::Subscript(sub) => {
+            let value_ty = infer_expr_type(value, env, states, current_function, ctx);
+            let index_ty = infer_expr_type(&sub.slice, env, states, current_function, ctx);
+            let Expr::Name(object_name) = sub.value.as_ref() else {
+                return;
+            };
+            let current_object_ty = lookup_name_type(object_name.id.as_str(), env, states, ctx);
+            let refined_object_ty = match current_object_ty {
+                Type::Dict(key_ty, value_ty_current) => Type::Dict(
+                    Box::new(unify_types(*key_ty, index_ty)),
+                    Box::new(unify_types(*value_ty_current, value_ty)),
+                ),
+                Type::List(elem_ty) => {
+                    Type::List(Box::new(unify_types(*elem_ty, value_ty)))
+                }
+                other => other,
+            };
+            unify_name_binding(
+                object_name.id.as_str(),
+                refined_object_ty,
+                env,
+                states,
+                current_function,
+            );
+        }
         Expr::Tuple(tuple) => {
             if let Expr::Tuple(values) = value {
                 for (target_expr, value_expr) in tuple.elts.iter().zip(values.elts.iter()) {
@@ -1020,6 +1045,14 @@ fn infer_call_type(
                     .first()
                     .map(|arg| infer_expr_type(arg, env, states, current_function, ctx))
                     .unwrap_or(Type::Unknown);
+            }
+            if name.id == "max" || name.id == "min" {
+                let mut result = Type::Unknown;
+                for arg in &call.arguments.args {
+                    let arg_ty = infer_expr_type(arg, env, states, current_function, ctx);
+                    result = unify_types(result, arg_ty);
+                }
+                return result;
             }
             if let Some(state) = states.get(name.id.as_str()).cloned() {
                 for (index, arg) in call.arguments.args.iter().enumerate() {

@@ -30,14 +30,14 @@ pub(super) fn detect_true_sequence_guards(expr: &Expr, ctx: &LowerCtx) -> Vec<Se
         Expr::Compare(cmp) if cmp.ops.len() == 1 && cmp.comparators.len() == 1 => {
             match &cmp.ops[0] {
                 CmpOp::Lt => {
-                    if let (Expr::Name(index_name), Some(sequence_name)) = (
-                        cmp.left.as_ref(),
+                    if let (Some((index_var, max_offset)), Some(sequence_name)) = (
+                        index_var_with_nonnegative_offset(cmp.left.as_ref()),
                         len_call_sequence_name(&cmp.comparators[0]),
                     ) {
                         return vec![SequenceGuard::IndexVarInRange {
                             sequence: sequence_name,
-                            index_var: index_name.id.clone(),
-                            max_offset: 0,
+                            index_var,
+                            max_offset,
                         }];
                     }
                     Vec::new()
@@ -112,6 +112,26 @@ pub(super) fn detect_false_exit_sequence_guards(expr: &Expr, ctx: &LowerCtx) -> 
         Expr::Compare(cmp) if cmp.ops.len() == 1 && cmp.comparators.len() == 1 => {
             match &cmp.ops[0] {
                 CmpOp::Eq => {
+                    if let (Expr::Name(index_name), Some(sequence_name)) = (
+                        cmp.left.as_ref(),
+                        len_call_sequence_name(&cmp.comparators[0]),
+                    ) {
+                        return vec![SequenceGuard::IndexVarInRange {
+                            sequence: sequence_name,
+                            index_var: index_name.id.clone(),
+                            max_offset: 0,
+                        }];
+                    }
+                    if let (Some(sequence_name), Expr::Name(index_name)) = (
+                        len_call_sequence_name(cmp.left.as_ref()),
+                        &cmp.comparators[0],
+                    ) {
+                        return vec![SequenceGuard::IndexVarInRange {
+                            sequence: sequence_name,
+                            index_var: index_name.id.clone(),
+                            max_offset: 0,
+                        }];
+                    }
                     let Some(sequence_name) = len_call_sequence_name(cmp.left.as_ref()) else {
                         return Vec::new();
                     };
@@ -613,6 +633,20 @@ fn literal_int(expr: &Expr) -> Option<i64> {
         }
         Expr::UnaryOp(unary) if matches!(unary.op, UnaryOp::USub) => {
             literal_int(unary.operand.as_ref()).map(|value| -value)
+        }
+        _ => None,
+    }
+}
+
+fn index_var_with_nonnegative_offset(expr: &Expr) -> Option<(String, usize)> {
+    match expr {
+        Expr::Name(name) => Some((name.id.clone(), 0)),
+        Expr::BinOp(binop) if matches!(binop.op, Operator::Add) => {
+            let Expr::Name(name) = binop.left.as_ref() else {
+                return None;
+            };
+            let offset = literal_usize(binop.right.as_ref())?;
+            Some((name.id.clone(), offset))
         }
         _ => None,
     }

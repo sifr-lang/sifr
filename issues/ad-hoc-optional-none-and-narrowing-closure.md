@@ -88,19 +88,35 @@ Important operational note:
 
 ## Current Execution Snapshot (2026-03-29)
 
-- active lane: `workstream_1_cfg_optional_narrowing`
+- active lanes:
+  - `workstream_1_cfg_optional_narrowing`
+  - `workstream_2_unknown_optional_stabilization`
 - local slice landed:
   - ternary (`if` expression) true-branch now consumes sequence guards during lowering
   - offset guard extraction now recognizes `i + k < len(seq)` and emits `IndexVarInRange` facts
   - `lower_if_expr` moved into `crates/sifr_hir/src/lower/if_expression.rs` to keep HIR module maintainability guardrails passing
+  - dict key guard tokenization now supports tuple keys and boolean tuple members
+  - dict subscript assignment now records key-presence sequence guards
+  - exhaustive `if/else` merge now preserves branch-common sequence guards
+  - singleton-row repeated matrix shapes now retain inner-length anchors for nested fixed-index reads
+  - nested subscript assignment inference now refines dict/list element types
+  - nested `max`/`min` inference now stabilizes return type from argument evidence
 - validation evidence:
   - `cargo test -p sifr_hir lower::expressions_tests::test_if_expr_true_branch_sequence_guard_narrows_index -- --nocapture`
   - `cargo test -p sifr_hir lower::expressions_tests::test_if_expr_true_branch_sequence_guard_narrows_index_with_offset -- --nocapture`
+  - `cargo test -q -p sifr_hir lower::guarded_index::tests::test_dict_key_presence_survives_exhaustive_if_branch_merge -- --nocapture`
+  - `cargo test -q -p sifr_hir lower::guarded_index::tests::test_matrix_singleton_repeat_rows_allow_nested_fixed_index_reads -- --nocapture`
+  - `cargo test -q -p sifr_hir lower::nested_function_tests::test_recursive_memoized_nested_helper_infers_deterministic_int_return -- --nocapture`
   - `cargo run -q -p sifr -- run crates/sifr/tests/e2e/pass/optional_ifexpr_narrowing.sifr`
+  - `cargo run -q -p sifr -- check audits/leetcode/0010_regular_expression_matching.sifr`
+  - `cargo run -q -p sifr -- check audits/leetcode/0309_best_time_to_buy_and_sell_stock_with_cooldown.sifr`
+  - `cargo run -q -p sifr -- check audits/leetcode/0494_target_sum.sifr`
+  - `cargo run -q -p sifr -- check audits/leetcode/0518_coin_change_ii.sifr`
   - `scripts/run_all_tests.sh --profile quick`
 - targeted fixture signal:
   - `0004_median_of_two_sorted_arrays` Optional ternary failures reduced from `4` to `2` incompatible-branch diagnostics (remaining `A[i]`/`B[j]` paths still carry `| None`)
-  - `0013_roman_to_integer` remains unchanged (`dict` index Optional contamination)
+  - `0013_roman_to_integer` remains open (`dict` index Optional contamination)
+  - `0010_regular_expression_matching`, `0309_best_time_to_buy_and_sell_stock_with_cooldown`, `0494_target_sum`, and `0518_coin_change_ii` now type-check cleanly
 
 ## Core Contract and Guardrails
 
@@ -174,7 +190,7 @@ Validation:
 
 ### workstream_2_unknown_optional_stabilization
 
-Status: pending
+Status: in progress
 Complexity: medium
 
 Owns:
@@ -402,7 +418,7 @@ Acceptance target:
 
 ### workstream_2_unknown_optional_stabilization
 
-status: pending
+status: in progress
 
 Owner: type inference / join logic
 

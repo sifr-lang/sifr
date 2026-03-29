@@ -182,3 +182,14 @@ fn test_nested_helper_usage_refines_outer_empty_collection_types() {
     );
     assert_eq!(subset_ty, &Type::List(Box::new(Type::Int)));
 }
+
+#[test]
+fn test_recursive_memoized_nested_helper_infers_deterministic_int_return() {
+    let result = lower_source(
+        "def max_profit(prices: list[int]) -> int:\n    dp = {}\n\n    def dfs(i, buying):\n        if i >= len(prices):\n            return 0\n        if (i, buying) in dp:\n            return dp[(i, buying)]\n\n        cooldown = dfs(i + 1, buying)\n        if buying:\n            buy = dfs(i + 1, not buying) - prices[i]\n            dp[(i, buying)] = max(buy, cooldown)\n        else:\n            sell = dfs(i + 2, not buying) + prices[i]\n            dp[(i, buying)] = max(sell, cooldown)\n        return dp[(i, buying)]\n\n    return dfs(0, True)\n",
+    );
+    assert!(
+        result.is_ok(),
+        "recursive memoized helpers should infer stable int returns without Unknown/None leakage"
+    );
+}

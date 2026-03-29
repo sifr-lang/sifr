@@ -13,6 +13,9 @@ use super::numeric_sentinels::{
     numeric_sentinel_kind,
 };
 use super::sequence_guard_detection::{detect_false_exit_sequence_guards, detect_range_sequence_guards, detect_true_sequence_guards, detect_while_sequence_guards};
+use super::sequence_guard_updates::{
+    merge_exhaustive_branch_sequence_guards, maybe_record_dict_assignment_guard,
+};
 use super::sequence_pointers::record_sequence_pointer_fact;
 use super::sequence_shapes::sequence_shape_fact;
 use super::typing_and_functions::{ast_convention_to_param, register_local_function_signature, register_local_function_symbol, resolve_annotation_expr};
@@ -1322,6 +1325,7 @@ pub(super) fn lower_assign(assign: &StmtAssign, ctx: &mut LowerCtx) -> Option<Hi
         let value = lower_expr(&assign.value, ctx)?;
         let object_ty =
             validate_subscript_assignment_target(ctx, &obj_name, obj_ty, index.ty(), value.ty());
+        maybe_record_dict_assignment_guard(ctx, &object_ty, &obj_name, &sub.slice);
         return Some(HirStmt::SubscriptAssign {
             object: obj_name,
             index,
@@ -1690,18 +1694,14 @@ pub(super) fn lower_if(
     func_type: &FunctionType,
     ctx: &mut LowerCtx,
 ) -> Option<HirStmt> {
-    // Try to detect a narrowing condition from the test expression
     let narrowing_cond = detect_narrowing_condition(&if_stmt.test, ctx);
 
     let condition = lower_expr(&if_stmt.test, ctx)?;
 
-    // Save narrowing state before branches
     let saved_state = ctx.scope.save_narrowing_state();
-    // Save moved state before branches
     let saved_moved = ctx.scope.save_moved_state();
     let saved_sequence_guards = ctx.save_sequence_guards();
 
-    // Apply narrowing for then-branch (condition is true)
     if let Some(ref cond) = narrowing_cond {
         apply_narrowing(ctx, cond, true);
     }
@@ -1713,29 +1713,24 @@ pub(super) fn lower_if(
     let then_body = lower_stmts(&if_stmt.body, func_type, ctx);
     ctx.scope.pop();
 
-    // Record which vars were moved in then-branch
     let then_moved = ctx.scope.save_moved_state();
+    let then_sequence_guards = ctx.save_sequence_guards();
 
-    // Restore state before processing elif/else
     ctx.scope.restore_narrowing_state(&saved_state);
     ctx.scope.restore_moved_state(&saved_moved);
     ctx.restore_sequence_guards(&saved_sequence_guards);
 
-    // Collect all narrowing conditions (if + elifs) for cumulative negation
     let mut all_conditions: Vec<NarrowingCondition> = Vec::new();
     if let Some(ref cond) = narrowing_cond {
         all_conditions.push(cond.clone());
     }
 
-    // Track moved state from each branch for merging
     let mut branch_moved_states: Vec<_> = vec![then_moved];
+    let mut branch_sequence_states = vec![then_sequence_guards];
 
     let mut elif_clauses = Vec::new();
     for clause in &if_stmt.elif_else_clauses {
         if let Some(test) = &clause.test {
-            // For elif, apply the negation of ALL previous conditions
-            // This ensures cumulative narrowing: if A was Dog, elif B was Cat,
-            // then in elif C the type is narrowed by removing both Dog and Cat
             ctx.scope.restore_narrowing_state(&saved_state);
             ctx.scope.restore_moved_state(&saved_moved);
             ctx.restore_sequence_guards(&saved_sequence_guards);
@@ -1759,21 +1754,19 @@ pub(super) fn lower_if(
             ctx.scope.pop();
             elif_clauses.push((cond, body));
 
-            // Record moved state from this elif branch
             branch_moved_states.push(ctx.scope.save_moved_state());
+            branch_sequence_states.push(ctx.save_sequence_guards());
 
             ctx.scope.restore_narrowing_state(&elif_saved);
             ctx.scope.restore_moved_state(&saved_moved);
             ctx.restore_sequence_guards(&saved_sequence_guards);
 
-            // Track this elif's condition for subsequent branches
             if let Some(elif_cond) = elif_narrowing {
                 all_conditions.push(elif_cond);
             }
         }
     }
 
-    // For else-branch, apply negation of ALL conditions (if + all elifs)
     let else_body = if_stmt
         .elif_else_clauses
         .iter()
@@ -1788,18 +1781,15 @@ pub(super) fn lower_if(
             ctx.scope.push();
             let body = lower_stmts(&clause.body, func_type, ctx);
             ctx.scope.pop();
-            // Record moved state from else branch
             branch_moved_states.push(ctx.scope.save_moved_state());
+            branch_sequence_states.push(ctx.save_sequence_guards());
             body
         });
 
-    // Restore original narrowing state after all branches
     ctx.scope.restore_narrowing_state(&saved_state);
     ctx.scope.restore_moved_state(&saved_moved);
     ctx.restore_sequence_guards(&saved_sequence_guards);
 
-    // Merge moved state: if a variable was moved in ANY branch, mark it as moved
-    // after the if/else (conservative, matches Rust behavior for partial moves)
     for branch_state in &branch_moved_states {
         for (name, was_moved) in branch_state {
             if *was_moved {
@@ -1807,6 +1797,8 @@ pub(super) fn lower_if(
             }
         }
     }
+
+    merge_exhaustive_branch_sequence_guards(ctx, else_body.is_some(), &branch_sequence_states);
 
     // Early-return narrowing: if the then-body always exits (return/break/continue/raise),
     // apply the inverse narrowing after the if block.

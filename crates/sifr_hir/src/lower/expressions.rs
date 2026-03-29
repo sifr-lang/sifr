@@ -29,7 +29,7 @@ use super::{collect_type_vars, decode_typevar_constraint, infer_type_var_binding
 use crate::hir_nodes::{HirExpr, HirIteratorOp, HirParam};
 use sifr_python_ast::{
     BoolOp, CmpOp, Expr, ExprAttribute, ExprBinOp, ExprBoolOp, ExprBytesLiteral, ExprCall,
-    ExprCompare, ExprDict, ExprDictComp, ExprGenerator, ExprIf, ExprLambda, ExprList,
+    ExprCompare, ExprDict, ExprDictComp, ExprGenerator, ExprLambda, ExprList,
     ExprListComp, ExprName, ExprNamed, ExprNumberLiteral, ExprSet, ExprSetComp, ExprSubscript,
     ExprTuple, ExprUnaryOp, Number, Operator, UnaryOp,
 };
@@ -54,7 +54,7 @@ pub(super) fn lower_expr(expr: &Expr, ctx: &mut LowerCtx) -> Option<HirExpr> {
         Expr::Compare(cmp) => lower_compare(cmp, ctx),
         Expr::BoolOp(boolop) => lower_boolop(boolop, ctx),
         Expr::Call(call) => lower_call(call, ctx),
-        Expr::If(if_expr) => lower_if_expr(if_expr, ctx),
+        Expr::If(if_expr) => super::if_expression::lower_if_expr(if_expr, ctx),
         Expr::List(list) => lower_list_literal(list, ctx),
         Expr::Set(set) => lower_set_literal(set, ctx),
         Expr::Dict(dict) => lower_dict_literal(dict, ctx),
@@ -3337,31 +3337,6 @@ pub(super) fn resolve_method_type(
             None
         }
     }
-}
-
-pub(super) fn lower_if_expr(if_expr: &ExprIf, ctx: &mut LowerCtx) -> Option<HirExpr> {
-    let condition = lower_expr(&if_expr.test, ctx)?;
-    let then_expr = lower_expr(&if_expr.body, ctx)?;
-    let else_expr = lower_expr(&if_expr.orelse, ctx)?;
-
-    let then_ty = then_expr.ty().clone();
-    let else_ty = else_expr.ty().clone();
-
-    if !then_ty.is_assignable_to(&else_ty) && !else_ty.is_assignable_to(&then_ty) {
-        ctx.error(format!(
-            "if expression branches have incompatible types: '{}' and '{}'",
-            then_ty.display_name(),
-            else_ty.display_name()
-        ));
-        return None;
-    }
-
-    Some(HirExpr::IfExpr {
-        condition: Box::new(condition),
-        then_expr: Box::new(then_expr),
-        else_expr: Box::new(else_expr),
-        ty: then_ty,
-    })
 }
 
 /// Lower a lambda or regular expression with contextual type information for parameters.

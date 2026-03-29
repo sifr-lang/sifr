@@ -1,0 +1,15 @@
+# Test: ternary branches consume narrowing and sequence-index guards
+
+def pick_guarded_index(values: list[int], i: int) -> int:
+    value: int = values[i] if i < len(values) else 0
+    return value
+
+def pick_guarded_index_offset(values: list[int], i: int) -> int:
+    value: int = values[i + 1] if i + 1 < len(values) else 0
+    return value
+
+def main():
+    assert str(pick_guarded_index([4, 5, 6], 1)) == '5'
+    assert str(pick_guarded_index([4, 5, 6], 4)) == '0'
+    assert str(pick_guarded_index_offset([4, 5, 6], 1)) == '6'
+    assert str(pick_guarded_index_offset([4, 5, 6], 3)) == '0'

@@ -150,11 +150,19 @@ impl LowerCtx {
 pub(super) fn key_guard_token(expr: &Expr) -> Option<String> {
     match expr {
         Expr::Name(name) => Some(format!("name:{}", name.id)),
+        Expr::BooleanLiteral(value) => Some(format!("bool:{}", value.value)),
         Expr::NumberLiteral(num) => match &num.value {
             Number::Int(value) => Some(format!("int:{}", value)),
             Number::Float(value) => Some(format!("float:{value}")),
             Number::Complex { .. } => None,
         },
+        Expr::Tuple(tuple) => {
+            let mut parts = Vec::new();
+            for element in &tuple.elts {
+                parts.push(key_guard_token(element)?);
+            }
+            Some(format!("tuple:({})", parts.join(", ")))
+        }
         Expr::UnaryOp(unary) => {
             let operand = key_guard_token(&unary.operand)?;
             let op = match unary.op {
