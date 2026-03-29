@@ -2381,6 +2381,45 @@ status: accepted_after_pass_1_and_pass_2
   - batch 66 used direct per-file `claude -p --no-session-persistence --dangerously-skip-permissions` prompts with embedded Sifr and Rust file contents
   - the pass-2 review lane stalled repeatedly on all three decimal files after the accepted `decimal_conversions` fix, so the artifact records those stalls explicitly instead of inventing clean verdicts
 
+#### batch_67_import_forms_imports_external_modules
+
+status: accepted_after_pass_1_and_pass_2
+
+- scope:
+  - `demos/import_forms/idiomatic.rs`
+  - `demos/imports/idiomatic.rs`
+  - `demos/external_modules/idiomatic.rs`
+- selection rationale:
+  - all three are positive runnable demos
+  - all three form a cohesive import/module semantics slice instead of mixing the remaining cross-file import forms with unrelated decimal or compiler-surface demos
+  - none of the three had a strong Rust-first companion yet, so the batch could replace missing or absent module examples with direct standalone Rust equivalents in one pass
+- priority tags:
+  - `module-semantics`: `import_forms`, `imports`, `external_modules`
+  - `milestone-demo`: `import_forms`, `imports`, `external_modules`
+  - `missing-companion`: `import_forms`, `imports`, `external_modules`
+- implementation summary:
+  - `import_forms`: authored a tiny helper module plus direct `use helper::value;` import to preserve the alternate import-form teaching point without emitted-style scaffolding
+  - `imports`: authored a compact multi-struct `models` module and direct `use models::{Product, User};` imports so the Rust companion matches the cross-file compilation and display outcome with ordinary Rust APIs
+  - `external_modules`: authored a small non-main `worker` module and direct import to keep the external-module execution point while expressing the `floor(3.9)` result in normal Rust
+- local validation completed:
+  - `rustfmt demos/import_forms/idiomatic.rs demos/imports/idiomatic.rs demos/external_modules/idiomatic.rs`
+  - `rustc --edition=2021 demos/import_forms/idiomatic.rs -o /tmp/sifr-idiomatic-import-forms && /tmp/sifr-idiomatic-import-forms`
+  - `rustc --edition=2021 demos/imports/idiomatic.rs -o /tmp/sifr-idiomatic-imports && /tmp/sifr-idiomatic-imports`
+  - `rustc --edition=2021 demos/external_modules/idiomatic.rs -o /tmp/sifr-idiomatic-external-modules && /tmp/sifr-idiomatic-external-modules`
+  - `cargo run -q -p sifr -- run demos/import_forms/main.sifr`
+  - `cargo run -q -p sifr -- run demos/imports/main.sifr`
+  - `cargo run -q -p sifr -- run demos/external_modules/main.sifr`
+  - `scripts/run_all_tests.sh`
+- review artifacts:
+  - pass 1: `reviews/phase-ad-hoc-idiomatic-rust-demo-corpus-wave-2-batch-67-review-pass-1.md`
+  - pass 2: `reviews/phase-ad-hoc-idiomatic-rust-demo-corpus-wave-2-batch-67-review-pass-2.md`
+- review application summary:
+  - all three pass-1 reviews returned `OK`
+  - all three pass-2 reviews returned `OK`
+- reviewer tooling note:
+  - batch 67 used direct per-file `claude -p --no-session-persistence --dangerously-skip-permissions` prompts with embedded Sifr and Rust file contents
+  - the initial pass-1 `import_forms` reviewer response lagged behind the other two files, but it completed cleanly without requiring any retry or code change
+
 #### batch_65_codegen_preamble_codegen_structural_passes_intrinsic_codegen
 
 status: accepted_after_pass_1_and_pass_2
