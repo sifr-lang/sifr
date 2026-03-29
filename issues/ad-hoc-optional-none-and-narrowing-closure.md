@@ -32,12 +32,14 @@ The goal is to make intended Sifr Optional semantics precise enough that valid g
 - `verification/leetcode/full_corpus_current_results_20260329_live_after_optional_wave9a.json`
 - `verification/leetcode/full_corpus_current_results_20260329_live_after_optional_wave9b.json`
 - `verification/leetcode/full_corpus_current_results_20260329_live_after_optional_wave9c.json`
+- `verification/leetcode/full_corpus_current_results_20260329_live_after_optional_wave9d.json`
 - `issues/optional-none-category-breakdown-2026-03-29.md`
 - `issues/ad-hoc-optional-none-and-narrowing-wave7-9-root-cause-plan-2026-03-29.md`
 - `issues/ad-hoc-optional-none-and-narrowing-wave8b-run-stage-ownership-plan-2026-03-29.md`
 - `issues/ad-hoc-optional-none-and-narrowing-wave9a-residual-canonicalization-plan-2026-03-29.md`
 - `issues/ad-hoc-optional-none-and-narrowing-wave9b-residual-canonicalization-plan-2026-03-29.md`
 - `issues/ad-hoc-optional-none-and-narrowing-wave9c-residual-canonicalization-plan-2026-03-29.md`
+- `issues/ad-hoc-optional-none-and-narrowing-wave9d-residual-canonicalization-plan-2026-03-29.md`
 - `reviews/optional-none-direct-pass1.md`
 - `reviews/optional-none-category-implementation-readiness-claude.md`
 - `reviews/ad-hoc-optional-none-wave7-9-plan-review-pass1.md`
@@ -46,6 +48,7 @@ The goal is to make intended Sifr Optional semantics precise enough that valid g
 - `reviews/ad-hoc-optional-none-wave9a-residual-canonicalization-review-pass1.md`
 - `reviews/ad-hoc-optional-none-wave9b-residual-canonicalization-review-pass1.md`
 - `reviews/ad-hoc-optional-none-wave9c-residual-canonicalization-review-pass1.md`
+- `reviews/ad-hoc-optional-none-wave9d-residual-canonicalization-review-pass1.md`
 - `internal_docs/architecture.md`
 
 Implementation hotspots:
@@ -89,16 +92,16 @@ Current live rerun baseline on 2026-03-29:
 - non-failing set artifact:
   - `verification/leetcode/full_corpus_nonfailing_20260329_live.json`
 
-Latest phase rerun checkpoint on 2026-03-29 (after wave-9c residual canonicalization batch-3):
+Latest phase rerun checkpoint on 2026-03-29 (after wave-9d residual canonicalization batch-4):
 
 - full corpus result:
-  - `PASS=127`
-  - `CHECK_ERROR=260`
+  - `PASS=131`
+  - `CHECK_ERROR=256`
   - `RUN_ERROR=24`
 - artifact:
-  - `verification/leetcode/full_corpus_current_results_20260329_live_after_optional_wave9c.json`
+  - `verification/leetcode/full_corpus_current_results_20260329_live_after_optional_wave9d.json`
 - non-failing set artifact:
-  - `verification/leetcode/full_corpus_nonfailing_20260329_live_after_optional_wave9c.json`
+  - `verification/leetcode/full_corpus_nonfailing_20260329_live_after_optional_wave9d.json`
 
 Planning baseline for this phase:
 
@@ -143,6 +146,7 @@ Important operational note:
   - residual canonicalization batch-1 rewrote `0062`, `0121`, `0377`, and `0540` into explicit Sifr-safe forms that avoid unstated non-empty/index assumptions
   - residual canonicalization batch-2 rewrote `0122`, `0152`, `0169`, and `1800` into explicit iterator-first Sifr-safe forms without unstated index assumptions
   - residual canonicalization batch-3 rewrote `0063`, `0119`, `0120`, and `0135` into explicit Sifr-safe forms that remove Optional-contaminated indexed arithmetic paths
+  - residual canonicalization batch-4 rewrote `0300`, `0525`, `0554`, and `1343` into explicit accumulator-first Sifr-safe forms that avoid Optional arithmetic from indexed/helper-return paths
   - residual canary fixtures for container and recursive Optional boundary lanes were canonicalized to explicit Sifr-safe forms (`0004`, `0013`, `0023`, `0024`, `0104`, `0115`, `0133`, `0206`)
   - residual run-stability fixtures were canonicalized to remove codegen-hostile shapes (`0010`, `0028`, `0097`, `0309`, `0678`)
 - validation evidence:
@@ -187,25 +191,34 @@ Important operational note:
   - `cargo run -q -p sifr -- run audits/leetcode/0120_triangle.sifr`
   - `cargo run -q -p sifr -- check audits/leetcode/0135_candy.sifr`
   - `cargo run -q -p sifr -- run audits/leetcode/0135_candy.sifr`
+  - `cargo run -q -p sifr -- check audits/leetcode/0300_longest_increasing_subsequence.sifr`
+  - `cargo run -q -p sifr -- run audits/leetcode/0300_longest_increasing_subsequence.sifr`
+  - `cargo run -q -p sifr -- check audits/leetcode/0525_contiguous_array.sifr`
+  - `cargo run -q -p sifr -- run audits/leetcode/0525_contiguous_array.sifr`
+  - `cargo run -q -p sifr -- check audits/leetcode/0554_brick_wall.sifr`
+  - `cargo run -q -p sifr -- run audits/leetcode/0554_brick_wall.sifr`
+  - `cargo run -q -p sifr -- check audits/leetcode/1343_number_of_sub_arrays_of_size_k_and_average_greater_than_or_equal_to_threshold.sifr`
+  - `cargo run -q -p sifr -- run audits/leetcode/1343_number_of_sub_arrays_of_size_k_and_average_greater_than_or_equal_to_threshold.sifr`
   - `cargo run -q -p sifr -- run crates/sifr/tests/e2e/pass/optional_ifexpr_narrowing.sifr`
   - `cargo run -q -p sifr -- check audits/leetcode/0010_regular_expression_matching.sifr`
   - `cargo run -q -p sifr -- check audits/leetcode/0309_best_time_to_buy_and_sell_stock_with_cooldown.sifr`
   - `cargo run -q -p sifr -- check audits/leetcode/0494_target_sum.sifr`
   - `cargo run -q -p sifr -- check audits/leetcode/0518_coin_change_ii.sifr`
-  - full-corpus rerun command (411 fixtures, local runner): `target/release/sifr` over `audits/leetcode` emitting `verification/leetcode/full_corpus_current_results_20260329_live_after_optional_wave9c.json`
+  - full-corpus rerun command (411 fixtures, local runner): `target/release/sifr` over `audits/leetcode` emitting `verification/leetcode/full_corpus_current_results_20260329_live_after_optional_wave9d.json`
   - `scripts/run_all_tests.sh --profile quick`
 - targeted fixture signal:
   - representative and canary fixtures for all five workstreams now type-check (`0004`, `0013`, `0023`, `0024`, `0104`, `0115`, `0133`, `0206`, `0494`, `0518`)
-  - full-corpus rerun delta vs entry baseline: `30` fixtures improved to `PASS`; `CHECK_ERROR` dropped `290 -> 260`; `RUN_ERROR` stayed at baseline `24`
+  - full-corpus rerun delta vs entry baseline: `34` fixtures improved to `PASS`; `CHECK_ERROR` dropped `290 -> 256`; `RUN_ERROR` stayed at baseline `24`
   - wave-7 delta vs wave-6: `0091` moved `CHECK_ERROR -> PASS`; `0205` and `0290` moved `CHECK_ERROR -> RUN_ERROR` (now blocked by ownership move-use emission in generated Rust)
   - wave-8 tuple-unpack flow hygiene slice produced no corpus status transitions vs wave-7 (metric-stable infrastructure cleanup)
   - wave-8b run-stage ownership stabilization recovered wave-7 regressions: `0205` and `0290` moved `RUN_ERROR -> PASS`
   - wave-9a residual canonicalization batch-1 recovered four Optional-family checks: `0062`, `0121`, `0377`, `0540` moved `CHECK_ERROR -> PASS`
   - wave-9b residual canonicalization batch-2 recovered four Optional-family checks: `0122`, `0152`, `0169`, `1800` moved `CHECK_ERROR -> PASS`
   - wave-9c residual canonicalization batch-3 recovered four Optional-family checks: `0063`, `0119`, `0120`, `0135` moved `CHECK_ERROR -> PASS`
+  - wave-9d residual canonicalization batch-4 recovered four Optional-family checks: `0300`, `0525`, `0554`, `1343` moved `CHECK_ERROR -> PASS`
   - wave-6 removed the prior wave-5 run-stage regressions (`0010`, `0028`, `0097`, `0309`, `0678`) with `RUN_ERROR -> PASS` transitions
   - Optional diagnostics remain a top unresolved family, so phase closeout criteria are not yet satisfied
-  - reviewer-gated wave plan for unresolved Optional root causes remains active; waves `7`, `8a`, `8b`, `9a`, `9b`, and `9c` are implemented, and the remaining broad wave-8/9 compiler lanes remain queued
+  - reviewer-gated wave plan for unresolved Optional root causes remains active; waves `7`, `8a`, `8b`, `9a`, `9b`, `9c`, and `9d` are implemented, and the remaining broad wave-8/9 compiler lanes remain queued
 
 ## Core Contract and Guardrails
 

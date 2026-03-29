@@ -1,17 +1,28 @@
 # LeetCode 554: Brick Wall
 
 def leastBricks(wall: list[list[int]]) -> int:
-    countGap = { 0 : 0 }    # { Position : Gap count }
+    gap_counts: dict[int, int] = {}
+    best_gap_count: int = 0
 
-    for r in wall:
-        total = 0   # Position
-        for b in r[:-1]:
-            total += b
-            countGap[total] = 1 + countGap.get(total, 0)
+    for row in wall:
+        row_len: int = 0
+        for _ in row:
+            row_len += 1
 
-    return len(wall) - max(countGap.values())    # Total number of rows - Max gap
+        prefix: int = 0
+        index: int = 0
+        for brick in row:
+            index += 1
+            if index == row_len:
+                break
+            prefix += brick
+            count: int = gap_counts.get(prefix, default=0) + 1
+            gap_counts[prefix] = count
+            if count > best_gap_count:
+                best_gap_count = count
+
+    return len(wall) - best_gap_count
 
 def main():
     assert leastBricks([[1, 2, 2, 1], [3, 1, 2], [1, 3, 2], [2, 4], [3, 1, 2], [1, 3, 1, 1]]) == 2
     assert leastBricks([[1], [1], [1]]) == 3
-

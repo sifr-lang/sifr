@@ -401,6 +401,39 @@ status: in progress
       - `0135_candy`: `CHECK_ERROR -> PASS`
     - vs entry baseline: `PASS +30`, `CHECK_ERROR -30`, `RUN_ERROR ±0`
   - PR:
+    - `https://github.com/yaseralnajjar/sifr/pull/1484` (merged)
+- 2026-03-29 local iteration (wave-9d residual canonicalization batch-4):
+  - root cause:
+    - residual DP/sliding-window fixtures still performed arithmetic on Optional-contaminated indexed/helper-return paths (`int | None` in `+`/`-`) without explicit local proof
+  - reviewer gate:
+    - plan artifact: `issues/ad-hoc-optional-none-and-narrowing-wave9d-residual-canonicalization-plan-2026-03-29.md`
+    - review artifact: `reviews/ad-hoc-optional-none-wave9d-residual-canonicalization-review-pass1.md` (`ready`)
+  - residual canonicalization inventory:
+    - `0300_longest_increasing_subsequence`
+    - `0525_contiguous_array`
+    - `0554_brick_wall`
+    - `1343_number_of_sub_arrays_of_size_k_and_average_greater_than_or_equal_to_threshold`
+  - fixture adjustments:
+    - `0300`: replaced indexed O(n^2) DP arithmetic with explicit dict-backed position/value accumulators
+    - `0525`: replaced direct dict index reads with explicit balance map membership/default flow
+    - `0554`: removed `max(countGap.values())` Optional-return surface by tracking explicit running best gap count
+    - `1343`: replaced indexed sliding-window arithmetic with prefix-sum dict accumulation
+  - tests/validation:
+    - targeted `cargo run -q -p sifr -- check` and `-- run` on all four fixtures -> pass
+    - `scripts/run_all_tests.sh --profile quick` -> pass
+  - phase-level rerun:
+    - full corpus rerun against `audits/leetcode` with `target/release/sifr` -> `PASS=131`, `CHECK_ERROR=256`, `RUN_ERROR=24`
+    - artifact: `verification/leetcode/full_corpus_current_results_20260329_live_after_optional_wave9d.json`
+    - non-failing artifact: `verification/leetcode/full_corpus_nonfailing_20260329_live_after_optional_wave9d.json`
+  - rerun delta:
+    - vs wave-9c: `+4 PASS`, `-4 CHECK_ERROR`, `+0 RUN_ERROR`
+    - fixture transitions:
+      - `0300_longest_increasing_subsequence`: `CHECK_ERROR -> PASS`
+      - `0525_contiguous_array`: `CHECK_ERROR -> PASS`
+      - `0554_brick_wall`: `CHECK_ERROR -> PASS`
+      - `1343_number_of_sub_arrays_of_size_k_and_average_greater_than_or_equal_to_threshold`: `CHECK_ERROR -> PASS`
+    - vs entry baseline: `PASS +34`, `CHECK_ERROR -34`, `RUN_ERROR ±0`
+  - PR:
     - pending (to be backfilled after publish)
 
 - Validation to record:
@@ -417,6 +450,7 @@ Root-cause plan artifact:
 - `issues/ad-hoc-optional-none-and-narrowing-wave9a-residual-canonicalization-plan-2026-03-29.md`
 - `issues/ad-hoc-optional-none-and-narrowing-wave9b-residual-canonicalization-plan-2026-03-29.md`
 - `issues/ad-hoc-optional-none-and-narrowing-wave9c-residual-canonicalization-plan-2026-03-29.md`
+- `issues/ad-hoc-optional-none-and-narrowing-wave9d-residual-canonicalization-plan-2026-03-29.md`
 
 Reviewer passes:
 - `reviews/ad-hoc-optional-none-wave7-9-plan-review-pass1.md` (`not ready`, corrective findings applied)
@@ -425,6 +459,7 @@ Reviewer passes:
 - `reviews/ad-hoc-optional-none-wave9a-residual-canonicalization-review-pass1.md` (`ready`, no blocking issues)
 - `reviews/ad-hoc-optional-none-wave9b-residual-canonicalization-review-pass1.md` (`ready`, no blocking issues)
 - `reviews/ad-hoc-optional-none-wave9c-residual-canonicalization-review-pass1.md` (`ready`, no blocking issues)
+- `reviews/ad-hoc-optional-none-wave9d-residual-canonicalization-review-pass1.md` (`ready`, no blocking issues)
 
 Wave state:
 
@@ -445,6 +480,8 @@ Wave state:
   - explicit Sifr-safe canonicalization landed for `0122`, `0152`, `0169`, `1800`
 - wave-9c (`workstream_5` residual canonicalization batch-3):
   - explicit Sifr-safe canonicalization landed for `0063`, `0119`, `0120`, `0135`
+- wave-9d (`workstream_5` residual canonicalization batch-4):
+  - explicit Sifr-safe canonicalization landed for `0300`, `0525`, `0554`, `1343`
 - wave-9 (`workstream_3` + `workstream_4` closure lane):
   - call-boundary and container refinement closure under explicit Optional semantics
   - ownership: `method_call_args.rs`, `expressions.rs`, `nonempty_method_narrowing.rs`, `sequence_guard_detection.rs`, `guarded_index.rs`
