@@ -1,233 +1,51 @@
-// --- stdlib: sifr.heapq ---
-fn _sift_down_max<T: Clone + std::fmt::Display + PartialOrd + 'static>(
-    data: &mut Vec<T>,
-    mut pos: i64,
-    n: i64,
-) {
-    let mut done: bool = false;
-    while !done {
-        let mut largest: i64 = pos;
-        let left: i64 = ((2 as i64) * pos) + (1 as i64);
-        let right: i64 = ((2 as i64) * pos) + (2 as i64);
-        if left < n {
-            let current_val: Option<T> = {
-                let __sifr_index_list = &data;
-                let __sifr_index_i = largest;
-                let __sifr_index_norm = if __sifr_index_i < 0 {
-                    ((__sifr_index_list.len() as i64) + __sifr_index_i) as usize
-                } else {
-                    __sifr_index_i as usize
-                };
-                __sifr_index_list.get(__sifr_index_norm).cloned()
-            };
-            let left_val: Option<T> = {
-                let __sifr_index_list = &data;
-                let __sifr_index_i = left;
-                let __sifr_index_norm = if __sifr_index_i < 0 {
-                    ((__sifr_index_list.len() as i64) + __sifr_index_i) as usize
-                } else {
-                    __sifr_index_i as usize
-                };
-                __sifr_index_list.get(__sifr_index_norm).cloned()
-            };
-            if let Some(current_val) = current_val {
-                if let Some(left_val) = left_val {
-                    if left_val > current_val {
-                        largest = left;
-                    }
-                }
-            }
-        }
-        if right < n {
-            let current_val2: Option<T> = {
-                let __sifr_index_list = &data;
-                let __sifr_index_i = largest;
-                let __sifr_index_norm = if __sifr_index_i < 0 {
-                    ((__sifr_index_list.len() as i64) + __sifr_index_i) as usize
-                } else {
-                    __sifr_index_i as usize
-                };
-                __sifr_index_list.get(__sifr_index_norm).cloned()
-            };
-            let right_val: Option<T> = {
-                let __sifr_index_list = &data;
-                let __sifr_index_i = right;
-                let __sifr_index_norm = if __sifr_index_i < 0 {
-                    ((__sifr_index_list.len() as i64) + __sifr_index_i) as usize
-                } else {
-                    __sifr_index_i as usize
-                };
-                __sifr_index_list.get(__sifr_index_norm).cloned()
-            };
-            if let Some(current_val2) = current_val2 {
-                if let Some(right_val) = right_val {
-                    if right_val > current_val2 {
-                        largest = right;
-                    }
-                }
-            }
-        }
-        if largest == pos {
-            done = true;
-        } else {
-            let tmp_pos: Option<T> = {
-                let __sifr_index_list = &data;
-                let __sifr_index_i = pos;
-                let __sifr_index_norm = if __sifr_index_i < 0 {
-                    ((__sifr_index_list.len() as i64) + __sifr_index_i) as usize
-                } else {
-                    __sifr_index_i as usize
-                };
-                __sifr_index_list.get(__sifr_index_norm).cloned()
-            };
-            let tmp_largest: Option<T> = {
-                let __sifr_index_list = &data;
-                let __sifr_index_i = largest;
-                let __sifr_index_norm = if __sifr_index_i < 0 {
-                    ((__sifr_index_list.len() as i64) + __sifr_index_i) as usize
-                } else {
-                    __sifr_index_i as usize
-                };
-                __sifr_index_list.get(__sifr_index_norm).cloned()
-            };
-            if let Some(tmp_pos) = tmp_pos {
-                if let Some(tmp_largest) = tmp_largest {
-                    {
-                        let __idx_raw = pos;
-                        let __idx_norm = if __idx_raw < 0 {
-                            (data.len() as i64) + __idx_raw
-                        } else {
-                            __idx_raw
-                        };
-                        if __idx_norm >= 0 {
-                            if let Some(__elem) = data.get_mut(__idx_norm as usize) {
-                                *__elem = tmp_largest;
-                            }
-                        }
-                    }
-                    {
-                        let __idx_raw = largest;
-                        let __idx_norm = if __idx_raw < 0 {
-                            (data.len() as i64) + __idx_raw
-                        } else {
-                            __idx_raw
-                        };
-                        if __idx_norm >= 0 {
-                            if let Some(__elem) = data.get_mut(__idx_norm as usize) {
-                                *__elem = tmp_pos;
-                            }
-                        }
-                    }
-                }
-            }
-            pos = largest;
-        }
-    }
-}
-fn _heapify_max<T: Clone + std::fmt::Display + PartialOrd + 'static>(data: &mut Vec<T>) {
-    "Convert list to a max-heap in-place. O(n) time.".to_string();
-    let n: i64 = data.len() as i64;
-    let mut i: i64 = (n / (2 as i64)) - (1 as i64);
-    while i >= (0 as i64) {
-        _sift_down_max(data, i, n);
-        i = i - (1 as i64);
-    }
-}
-fn _heappop_max<T: Clone + std::fmt::Display + PartialOrd + 'static>(
-    heap: &mut Vec<T>,
-) -> Option<T> {
-    "Pop and return the largest item. Heap is modified in-place. O(log n) time.\n    Returns None if the heap is empty."
-        .to_string();
-    let n: i64 = heap.len() as i64;
-    if n == (0 as i64) {
-        return None;
-    }
-    let top: Option<T> = {
-        let __sifr_index_list = &heap;
-        let __sifr_index_i = 0 as i64;
-        let __sifr_index_norm = if __sifr_index_i < 0 {
-            ((__sifr_index_list.len() as i64) + __sifr_index_i) as usize
-        } else {
-            __sifr_index_i as usize
-        };
-        __sifr_index_list.get(__sifr_index_norm).cloned()
-    };
-    let last: Option<T> = {
-        let __sifr_index_list = &heap;
-        let __sifr_index_i = n - (1 as i64);
-        let __sifr_index_norm = if __sifr_index_i < 0 {
-            ((__sifr_index_list.len() as i64) + __sifr_index_i) as usize
-        } else {
-            __sifr_index_i as usize
-        };
-        __sifr_index_list.get(__sifr_index_norm).cloned()
-    };
-    heap.pop();
-    let n2: i64 = heap.len() as i64;
-    if n2 > (0 as i64) {
-        if let Some(last) = last {
-            {
-                let __idx_raw = 0 as i64;
-                let __idx_norm = if __idx_raw < 0 {
-                    (heap.len() as i64) + __idx_raw
-                } else {
-                    __idx_raw
-                };
-                if __idx_norm >= 0 {
-                    if let Some(__elem) = heap.get_mut(__idx_norm as usize) {
-                        *__elem = last;
-                    }
-                }
-            }
-        }
-        _sift_down_max(heap, 0 as i64, n2);
-    }
-    return top;
-}
-fn _heapreplace_max<T: Clone + std::fmt::Display + PartialOrd + 'static>(
-    heap: &mut Vec<T>,
-    item: T,
-) -> Option<T> {
-    "Pop and return the largest item, then push item onto the heap.\n    Returns None if the heap is empty. O(log n) time."
-        .to_string();
-    if (heap.len() as i64) == (0 as i64) {
-        return None;
-    }
-    let top: Option<T> = Some(heap[(0 as i64) as usize].clone());
-    {
-        let __idx_raw = 0 as i64;
-        let __idx_norm = if __idx_raw < 0 {
-            (heap.len() as i64) + __idx_raw
-        } else {
-            __idx_raw
-        };
-        if __idx_norm >= 0 {
-            if let Some(__elem) = heap.get_mut(__idx_norm as usize) {
-                *__elem = item;
-            }
-        }
-    }
-    _sift_down_max(heap, 0 as i64, heap.len() as i64);
-    return top;
+use std::collections::BinaryHeap;
+
+#[derive(Debug, Clone)]
+struct MaxHeap<T: Ord> {
+    values: BinaryHeap<T>,
 }
 
-fn drain(heap: &mut Vec<i64>) -> Vec<i64> {
-    let mut result: Vec<i64> = vec![];
-    while (heap.len() as i64) > (0 as i64) {
-        let value: Option<i64> = _heappop_max(heap);
-        if let Some(value) = value {
-            result.push(value);
+impl<T: Ord> MaxHeap<T> {
+    fn from_iter<I>(iter: I) -> Self
+    where
+        I: IntoIterator<Item = T>,
+    {
+        Self {
+            values: iter.into_iter().collect(),
         }
     }
-    return result;
+}
+
+fn heapify_max<T: Ord, I>(values: I) -> MaxHeap<T>
+where
+    I: IntoIterator<Item = T>,
+{
+    MaxHeap::from_iter(values)
+}
+
+fn heappop_max<T: Ord>(heap: &mut MaxHeap<T>) -> Option<T> {
+    heap.values.pop()
+}
+
+fn heapreplace_max<T: Ord>(heap: &mut MaxHeap<T>, item: T) -> Option<T> {
+    let removed = heap.values.pop();
+    heap.values.push(item);
+    removed
+}
+
+fn drain(heap: &mut MaxHeap<i64>) -> Vec<i64> {
+    let mut result = Vec::new();
+    while let Some(value) = heappop_max(heap) {
+        result.push(value);
+    }
+    result
 }
 
 fn main() {
-    let mut stones: Vec<i64> = vec![2 as i64, 7 as i64, 4 as i64, 1 as i64, 8 as i64, 1 as i64];
-    _heapify_max(&mut stones);
-    println!("{}", format!("{:?}", drain(&mut stones)));
-    let mut probe: Vec<i64> = vec![4 as i64, 10 as i64, 7 as i64];
-    _heapify_max(&mut probe);
-    _heapreplace_max(&mut probe, 6 as i64);
-    println!("{}", format!("{:?}", drain(&mut probe)));
+    let mut stones = heapify_max([2, 7, 4, 1, 8, 1]);
+    println!("{:?}", drain(&mut stones));
+
+    let mut probe = heapify_max([4, 10, 7]);
+    let _ = heapreplace_max(&mut probe, 6);
+    println!("{:?}", drain(&mut probe));
 }
