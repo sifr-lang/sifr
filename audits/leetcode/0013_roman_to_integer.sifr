@@ -4,15 +4,16 @@ def romanToInt(s: str) -> int:
     roman = {"I": 1, "V": 5, "X": 10, "L": 50, "C": 100, "D": 500, "M": 1000}
     res = 0
     for i in range(len(s)):
-        if i + 1 < len(s) and roman[s[i]] < roman[s[i + 1]]:
-            res -= roman[s[i]]
+        curr = roman.get(s[i], default=0)
+        nxt = roman.get(s[i + 1], default=0) if i + 1 < len(s) else 0
+        if i + 1 < len(s) and curr < nxt:
+            res -= curr
         else:
-            res += roman[s[i]]
+            res += curr
     return res
 
 def main():
     assert str(romanToInt("III")) == '3'
     assert str(romanToInt("LVIII")) == '58'
     assert str(romanToInt("MCMXCIV")) == '1994'
-
 

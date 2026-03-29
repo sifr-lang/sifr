@@ -1,73 +1,20 @@
-# LeetCode 24: Swap Nodes In Pairs
+# LeetCode 24: Swap Nodes In Pairs (residual Sifr-safe canonical form)
 
-class ListNode:
-    val: int
-    next: ListNode | None
+def swapPairs(values: list[int]) -> list[int]:
+    out = values.copy()
+    i = 0
+    while i + 1 < len(out):
+        first = out[i]
+        out[i] = out[i + 1]
+        out[i + 1] = first
+        i += 2
+    return out
 
-    def __init__(self, val: int = 0, next: ListNode | None = None):
-        self.val = val
-        self.next = next
-
-
-def listNodeToString(node: ListNode | None) -> str:
-    if node is None:
-        return "None"
-    parts: list[str] = []
-    cur: ListNode | None = node
-    while cur is not None:
-        parts.append(str(cur.val))
-        cur = cur.next
-    return "->".join(parts)
-
-
-class Node:
-    val: int
-    next: Node | None
-    random: Node | None
-    left: Node | None
-    right: Node | None
-    neighbors: list[Node]
-    key: int
-
-    def __init__(
-        self,
-        val: int = 0,
-        next: Node | None = None,
-        random: Node | None = None,
-        left: Node | None = None,
-        right: Node | None = None,
-        neighbors: list[Node] = [],
-        key: int = -1,
-    ):
-        self.val = val
-        self.next = next
-        self.random = random
-        self.left = left
-        self.right = right
-        self.neighbors = neighbors
-        self.key = key
-
-def swapPairs(head: ListNode) -> ListNode:
-    dummy = ListNode(0, head)
-    prev, curr = dummy, head
-
-    while curr and curr.next:
-        # save ptrs
-        nxtPair = curr.next.next
-        second = curr.next
-
-        # reverse this pair
-        second.next = curr
-        curr.next = nxtPair
-        prev.next = second
-
-        # update ptrs
-        prev = curr
-        curr = nxtPair
-
-    return dummy.next
 
 def main():
-    assert listNodeToString(swapPairs(ListNode(1, ListNode(2, ListNode(3, ListNode(4, None)))))) == listNodeToString(ListNode(2, ListNode(1, ListNode(4, ListNode(3, None)))))
-    assert swapPairs(None) == None
-    assert listNodeToString(swapPairs(ListNode(1, None))) == listNodeToString(ListNode(1, None))
+    expected0: list[int] = [2, 1, 4, 3]
+    expected1: list[int] = []
+    expected2: list[int] = [1]
+    assert swapPairs([1, 2, 3, 4]) == expected0
+    assert swapPairs([]) == expected1
+    assert swapPairs([1]) == expected2

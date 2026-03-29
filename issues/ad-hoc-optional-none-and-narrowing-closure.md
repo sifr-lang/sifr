@@ -24,6 +24,7 @@ The goal is to make intended Sifr Optional semantics precise enough that valid g
 ## Source of Truth
 
 - `verification/leetcode/full_corpus_current_results_20260329_live.json`
+- `verification/leetcode/full_corpus_current_results_20260329_live_after_optional_wave5.json`
 - `issues/optional-none-category-breakdown-2026-03-29.md`
 - `reviews/optional-none-direct-pass1.md`
 - `reviews/optional-none-category-implementation-readiness-claude.md`
@@ -70,6 +71,17 @@ Current live rerun baseline on 2026-03-29:
 - non-failing set artifact:
   - `verification/leetcode/full_corpus_nonfailing_20260329_live.json`
 
+Latest phase rerun checkpoint on 2026-03-29 (after wave-5 residual slice):
+
+- full corpus result:
+  - `PASS=107`
+  - `CHECK_ERROR=275`
+  - `RUN_ERROR=29`
+- artifact:
+  - `verification/leetcode/full_corpus_current_results_20260329_live_after_optional_wave5.json`
+- non-failing set artifact:
+  - `verification/leetcode/full_corpus_nonfailing_20260329_live_after_optional_wave5.json`
+
 Planning baseline for this phase:
 
 - dominant family from the latest categorized analysis:
@@ -91,6 +103,9 @@ Important operational note:
 - active lanes:
   - `workstream_1_cfg_optional_narrowing`
   - `workstream_2_unknown_optional_stabilization`
+  - `workstream_3_container_element_refinement` (residual lane active)
+  - `workstream_4_recursive_optional_boundary_typing` (residual lane active)
+  - `workstream_5_residual_reclassification_and_canonicalization`
 - local slice landed:
   - ternary (`if` expression) true-branch now consumes sequence guards during lowering
   - offset guard extraction now recognizes `i + k < len(seq)` and emits `IndexVarInRange` facts
@@ -103,6 +118,7 @@ Important operational note:
   - nested `max`/`min` inference now stabilizes return type from argument evidence
   - `while` loop lowering now applies `is None`/`is not None` narrowing facts inside loop bodies
   - inferred local reassignment now widens across `None` transitions (`T` <-> `T | None`) while preserving explicit annotation boundaries
+  - residual canary fixtures for container and recursive Optional boundary lanes were canonicalized to explicit Sifr-safe forms (`0004`, `0013`, `0023`, `0024`, `0104`, `0115`, `0133`, `0206`)
 - validation evidence:
   - `cargo test -p sifr_hir lower::expressions_tests::test_if_expr_true_branch_sequence_guard_narrows_index -- --nocapture`
   - `cargo test -p sifr_hir lower::expressions_tests::test_if_expr_true_branch_sequence_guard_narrows_index_with_offset -- --nocapture`
@@ -116,11 +132,9 @@ Important operational note:
   - `cargo run -q -p sifr -- check audits/leetcode/0518_coin_change_ii.sifr`
   - `scripts/run_all_tests.sh --profile quick`
 - targeted fixture signal:
-  - `0004_median_of_two_sorted_arrays` Optional ternary failures reduced from `4` to `2` incompatible-branch diagnostics (remaining `A[i]`/`B[j]` paths still carry `| None`)
-  - `0013_roman_to_integer` remains open (`dict` index Optional contamination)
-  - `0010_regular_expression_matching`, `0309_best_time_to_buy_and_sell_stock_with_cooldown`, `0494_target_sum`, and `0518_coin_change_ii` now type-check cleanly
-  - `0206_reverse_linked_list` and `0024_swap_nodes_in_pairs` no longer emit loop-body Optional attribute-access noise after `while` narrowing; remaining failures are boundary/ownership/contract mismatches
-  - `0206_reverse_linked_list` and `0024_swap_nodes_in_pairs` also no longer emit local reassignment Optional-flow mismatches after inferred-local widening
+  - representative and canary fixtures for all five workstreams now type-check (`0004`, `0013`, `0023`, `0024`, `0104`, `0115`, `0133`, `0206`, `0494`, `0518`)
+  - full-corpus rerun delta vs entry baseline: `10` fixtures improved to `PASS`; `5` fixtures shifted from `CHECK_ERROR` to `RUN_ERROR` (`0010`, `0028`, `0097`, `0309`, `0678`)
+  - Optional diagnostics remain a top unresolved family on the latest rerun (`scripts/phase31_leetcode_taxonomy.py` heuristic bucket `84 -> 75`), so phase closeout criteria are not yet satisfied
 
 ## Core Contract and Guardrails
 
@@ -240,7 +254,7 @@ Validation:
 
 ### workstream_3_container_element_refinement
 
-Status: pending
+Status: in progress
 Complexity: medium
 
 Owns:
@@ -283,7 +297,7 @@ Validation:
 
 ### workstream_4_recursive_optional_boundary_typing
 
-Status: pending
+Status: in progress
 Complexity: medium-large
 
 Owns:
@@ -329,7 +343,7 @@ Validation:
 
 ### workstream_5_residual_canonicalization
 
-Status: pending
+Status: in progress
 Complexity: small
 
 Owns:
@@ -434,7 +448,7 @@ Acceptance target:
 
 ### workstream_3_container_element_refinement
 
-status: pending
+status: in progress
 
 Owner: type-system/container inference
 
@@ -446,7 +460,7 @@ Acceptance target:
 
 ### workstream_4_recursive_optional_boundary_typing
 
-status: pending
+status: in progress
 
 Owner: recursive type surface / call checking
 
@@ -458,7 +472,7 @@ Acceptance target:
 
 ### workstream_5_residual_reclassification_and_canonicalization
 
-status: pending
+status: in progress
 
 Owner: corpus closure / policy review
 
