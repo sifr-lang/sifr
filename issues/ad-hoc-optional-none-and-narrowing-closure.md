@@ -27,8 +27,11 @@ The goal is to make intended Sifr Optional semantics precise enough that valid g
 - `verification/leetcode/full_corpus_current_results_20260329_live_after_optional_wave5.json`
 - `verification/leetcode/full_corpus_current_results_20260329_live_after_optional_wave6.json`
 - `issues/optional-none-category-breakdown-2026-03-29.md`
+- `issues/ad-hoc-optional-none-and-narrowing-wave7-9-root-cause-plan-2026-03-29.md`
 - `reviews/optional-none-direct-pass1.md`
 - `reviews/optional-none-category-implementation-readiness-claude.md`
+- `reviews/ad-hoc-optional-none-wave7-9-plan-review-pass1.md`
+- `reviews/ad-hoc-optional-none-wave7-9-plan-review-pass2.md`
 - `internal_docs/architecture.md`
 
 Implementation hotspots:
@@ -138,6 +141,7 @@ Important operational note:
   - full-corpus rerun delta vs entry baseline: `15` fixtures improved to `PASS`; `CHECK_ERROR` dropped `290 -> 275`; `RUN_ERROR` returned to baseline (`24`)
   - wave-6 removed the prior wave-5 run-stage regressions (`0010`, `0028`, `0097`, `0309`, `0678`) with `RUN_ERROR -> PASS` transitions
   - Optional diagnostics remain a top unresolved family on the latest rerun (`scripts/phase31_leetcode_taxonomy.py` heuristic bucket `84 -> 75`), so phase closeout criteria are not yet satisfied
+  - reviewer-gated wave plan for unresolved Optional root causes (`wave-7` through `wave-9`) is prepared and approved in pass-2 review before implementation start
 
 ## Core Contract and Guardrails
 
