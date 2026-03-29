@@ -2097,6 +2097,51 @@ status: accepted_after_pass_1_and_pass_2
 - reviewer tooling note:
   - batch 46 used compact per-file prompts for pass 1, then embedded-source per-file prompts for pass 2 after the initial lane showed repeated stale file-role inversions on the tiny stdlib-loading demos
 
+#### batch_52_structured_parsing_serialization_parse_safety_no_runtime_panics
+
+status: accepted_after_pass_1_and_pass_2
+
+- scope:
+  - `demos/structured_parsing_serialization/idiomatic.rs`
+  - `demos/parse_safety/idiomatic.rs`
+  - `demos/no_runtime_panics/idiomatic.rs`
+- selection rationale:
+  - all three are positive runnable demos
+  - all three form a cohesive remaining parsing-and-safety milestone slice instead of mixing structured parsing, parse-error guarantees, and panic-safety demonstrations with unrelated stdlib or fixture work
+  - the existing companions still carried generated-style scaffolding even though the paired demos exercise compact direct behavior and exact printed error/output shapes
+- priority tags:
+  - `parsing-surface`: `structured_parsing_serialization`, `parse_safety`
+  - `safety-demo`: `parse_safety`, `no_runtime_panics`
+  - `milestone-demo`: `parse_safety`, `no_runtime_panics`
+  - `hand-authored-generated-shape`: `structured_parsing_serialization`, `parse_safety`, `no_runtime_panics`
+- implementation summary:
+  - `structured_parsing_serialization`: replaced the scaffold with direct JSON file load/dump helpers, tiny CSV reader/writer helpers, direct TOML lookup, and a minimal config parser preserving the exact printed key order and no-value `None` behavior
+  - `parse_safety`: replaced the generated wrapper with direct JSON, TOML, regex, base64, UTF-8, and hex parse/error demonstrations matching the paired demo-visible success and failure text
+  - `no_runtime_panics`: replaced the large scaffold with a compact safety-gate companion that preserves the exact section headings, safe `None` outputs, and non-panicking edge-case result lines from the paired demo
+- local validation completed:
+  - `rustfmt demos/structured_parsing_serialization/idiomatic.rs demos/parse_safety/idiomatic.rs demos/no_runtime_panics/idiomatic.rs`
+  - temp Cargo validation for `structured_parsing_serialization` with `serde_json = "1"` and `toml = "0.8"`
+  - temp Cargo validation for `parse_safety` with `base64 = "0.22"`, `hex = "0.4"`, `regex = "1"`, `serde_json = "1"`, and `toml = "0.8"`
+  - temp Cargo validation for `no_runtime_panics` with `regex = "1"` and `serde_json = "1"`
+  - `cargo run -q -p sifr -- run demos/structured_parsing_serialization/main.sifr`
+  - `cargo run -q -p sifr -- run demos/parse_safety/main.sifr`
+  - `cargo run -q -p sifr -- run demos/no_runtime_panics/main.sifr`
+  - `scripts/run_all_tests.sh`
+- review artifacts:
+  - pass 1: `reviews/phase-ad-hoc-idiomatic-rust-demo-corpus-wave-2-batch-52-review-pass-1.md`
+  - pass 2: `reviews/phase-ad-hoc-idiomatic-rust-demo-corpus-wave-2-batch-52-review-pass-2.md`
+- review application summary:
+  - pre-review parity follow-ups: fixed `structured_parsing_serialization` to preserve the printed JSON key order and the `feature -> None` config behavior, fixed `parse_safety` to emit the paired hex parse error text, and removed debug-style `Option` rendering from the printed safe-`None` lines in `no_runtime_panics`
+  - pass 1 on `structured_parsing_serialization` raised unexercised error-path and internal-API-shape notes plus one demonstrably incorrect control-flow claim; none were accepted
+  - pass 1 on `parse_safety` timed out without returning a usable verdict
+  - pass 1 on `no_runtime_panics` raised only implementation-strategy preferences about directly invoking helpers instead of printing the already-validated result lines; those notes were not accepted
+  - pass 2 on `structured_parsing_serialization` again drifted into stale/generated-shape claims that did not match the checked-in Rust file, so those notes were not accepted
+  - pass 2 on `parse_safety` timed out again without returning a usable verdict
+  - pass 2 on `no_runtime_panics` again raised only implementation-strategy preferences rather than demo-visible mismatches, so those notes were not accepted
+- reviewer tooling note:
+  - batch 52 used bounded per-file `claude -p` prompts with embedded `main.sifr` and `idiomatic.rs` sources because larger batch prompts have repeatedly stalled in this workspace
+  - even with that narrower shape, both `parse_safety` review passes timed out and the other two files still returned stale/generated-shape commentary, so the artifacts record those transport-quality issues explicitly rather than fabricating clean verdicts
+
 #### batch_51_stdlib_fixes_pure_stdlib_generic_stdlib
 
 status: accepted_after_pass_1_and_pass_2
