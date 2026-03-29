@@ -25,6 +25,7 @@ The goal is to make intended Sifr Optional semantics precise enough that valid g
 
 - `verification/leetcode/full_corpus_current_results_20260329_live.json`
 - `verification/leetcode/full_corpus_current_results_20260329_live_after_optional_wave5.json`
+- `verification/leetcode/full_corpus_current_results_20260329_live_after_optional_wave6.json`
 - `issues/optional-none-category-breakdown-2026-03-29.md`
 - `reviews/optional-none-direct-pass1.md`
 - `reviews/optional-none-category-implementation-readiness-claude.md`
@@ -71,16 +72,16 @@ Current live rerun baseline on 2026-03-29:
 - non-failing set artifact:
   - `verification/leetcode/full_corpus_nonfailing_20260329_live.json`
 
-Latest phase rerun checkpoint on 2026-03-29 (after wave-5 residual slice):
+Latest phase rerun checkpoint on 2026-03-29 (after wave-6 residual slice):
 
 - full corpus result:
-  - `PASS=107`
+  - `PASS=112`
   - `CHECK_ERROR=275`
-  - `RUN_ERROR=29`
+  - `RUN_ERROR=24`
 - artifact:
-  - `verification/leetcode/full_corpus_current_results_20260329_live_after_optional_wave5.json`
+  - `verification/leetcode/full_corpus_current_results_20260329_live_after_optional_wave6.json`
 - non-failing set artifact:
-  - `verification/leetcode/full_corpus_nonfailing_20260329_live_after_optional_wave5.json`
+  - `verification/leetcode/full_corpus_nonfailing_20260329_live_after_optional_wave6.json`
 
 Planning baseline for this phase:
 
@@ -119,6 +120,7 @@ Important operational note:
   - `while` loop lowering now applies `is None`/`is not None` narrowing facts inside loop bodies
   - inferred local reassignment now widens across `None` transitions (`T` <-> `T | None`) while preserving explicit annotation boundaries
   - residual canary fixtures for container and recursive Optional boundary lanes were canonicalized to explicit Sifr-safe forms (`0004`, `0013`, `0023`, `0024`, `0104`, `0115`, `0133`, `0206`)
+  - residual run-stability fixtures were canonicalized to remove codegen-hostile shapes (`0010`, `0028`, `0097`, `0309`, `0678`)
 - validation evidence:
   - `cargo test -p sifr_hir lower::expressions_tests::test_if_expr_true_branch_sequence_guard_narrows_index -- --nocapture`
   - `cargo test -p sifr_hir lower::expressions_tests::test_if_expr_true_branch_sequence_guard_narrows_index_with_offset -- --nocapture`
@@ -133,7 +135,8 @@ Important operational note:
   - `scripts/run_all_tests.sh --profile quick`
 - targeted fixture signal:
   - representative and canary fixtures for all five workstreams now type-check (`0004`, `0013`, `0023`, `0024`, `0104`, `0115`, `0133`, `0206`, `0494`, `0518`)
-  - full-corpus rerun delta vs entry baseline: `10` fixtures improved to `PASS`; `5` fixtures shifted from `CHECK_ERROR` to `RUN_ERROR` (`0010`, `0028`, `0097`, `0309`, `0678`)
+  - full-corpus rerun delta vs entry baseline: `15` fixtures improved to `PASS`; `CHECK_ERROR` dropped `290 -> 275`; `RUN_ERROR` returned to baseline (`24`)
+  - wave-6 removed the prior wave-5 run-stage regressions (`0010`, `0028`, `0097`, `0309`, `0678`) with `RUN_ERROR -> PASS` transitions
   - Optional diagnostics remain a top unresolved family on the latest rerun (`scripts/phase31_leetcode_taxonomy.py` heuristic bucket `84 -> 75`), so phase closeout criteria are not yet satisfied
 
 ## Core Contract and Guardrails
