@@ -318,6 +318,8 @@ Progress update (`2026-03-29`):
 - `batch_32_monotonic_indices_reverse_indices_indexed_tables` completed local validation and ended external pass-1/pass-2 review with no accepted blockers
 - `batch_33_local_shadowing_sentinel_values_set_operations` selected as the thirty-third wave-2 runnable-demo batch because it keeps the remaining small state-and-collections slice cohesive around local rebinding, sentinel collapse, and basic set operations
 - `batch_33_local_shadowing_sentinel_values_set_operations` completed local validation, accepted a pass-2 cleanup removing an unnecessary temporary allocation in `set_operations`, and ended external review with no remaining actionable issues
+- `batch_34_container_literals_collection_cloning_own_mut_appends` selected as the thirty-fourth wave-2 runnable-demo batch because it keeps the remaining small collections-and-owned-mutation slice cohesive around typed container updates, collection-transformation cloning, and append-and-return helpers
+- `batch_34_container_literals_collection_cloning_own_mut_appends` completed local validation and ended external pass-1/pass-2 review with no accepted blockers; the pass-1 `container_literals` semantics note was recorded but not accepted because the Rust companion already matched the paired demo assertions and observed runtime behavior
 
 ### wave_3_fixture_and_negative_case_normalization
 

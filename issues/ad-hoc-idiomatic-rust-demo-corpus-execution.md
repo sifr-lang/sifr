@@ -1548,6 +1548,44 @@ status: accepted_after_pass_1_and_pass_2
 - reviewer tooling note:
   - batch 33 used stable per-file external review prompts embedding both the paired Sifr source and the Rust companion because larger batch prompts remain less reliable in this workspace
 
+#### batch_34_container_literals_collection_cloning_own_mut_appends
+
+status: accepted_after_pass_1_and_pass_2
+
+- scope:
+  - `demos/container_literals/idiomatic.rs`
+  - `demos/collection_cloning/idiomatic.rs`
+  - `demos/own_mut_appends/idiomatic.rs`
+- selection rationale:
+  - all three are positive runnable demos
+  - all three form a cohesive remaining collections-and-owned-mutation slice instead of mixing small container demos with unrelated fixture or control-flow work
+  - `container_literals` and `collection_cloning` still had generated-shape scaffolding, while `own_mut_appends` kept the slice centered on small owned append-and-return helpers
+- priority tags:
+  - `collection-surface`: `container_literals`, `collection_cloning`, `own_mut_appends`
+  - `hand-authored-generated-shape`: `container_literals`, `collection_cloning`
+- implementation summary:
+  - `container_literals`: replaced lowered keyed-assignment scaffolding with direct `HashMap::entry` counting and a direct score sum
+  - `collection_cloning`: removed boxed iterator and star-unpack-style scaffolding in favor of direct `map`, `filter`, and slice splitting
+  - `own_mut_appends`: reduced append-and-return helpers plus assertion style to the smallest direct Rust equivalents
+- local validation completed:
+  - `rustfmt demos/container_literals/idiomatic.rs demos/collection_cloning/idiomatic.rs demos/own_mut_appends/idiomatic.rs`
+  - `rustc --edition=2021 demos/container_literals/idiomatic.rs -o /tmp/sifr-idiomatic-container-literals && /tmp/sifr-idiomatic-container-literals`
+  - `rustc --edition=2021 demos/collection_cloning/idiomatic.rs -o /tmp/sifr-idiomatic-collection-cloning && /tmp/sifr-idiomatic-collection-cloning`
+  - `rustc --edition=2021 demos/own_mut_appends/idiomatic.rs -o /tmp/sifr-idiomatic-own-mut-appends && /tmp/sifr-idiomatic-own-mut-appends`
+  - `cargo run -q -p sifr -- run demos/container_literals/main.sifr`
+  - `cargo run -q -p sifr -- run demos/collection_cloning/main.sifr`
+  - `cargo run -q -p sifr -- run demos/own_mut_appends/main.sifr`
+  - `scripts/run_all_tests.sh`
+- review artifacts:
+  - pass 1: `reviews/phase-ad-hoc-idiomatic-rust-demo-corpus-wave-2-batch-34-review-pass-1.md`
+  - pass 2: `reviews/phase-ad-hoc-idiomatic-rust-demo-corpus-wave-2-batch-34-review-pass-2.md`
+- review application summary:
+  - pass 1 reported no accepted blockers
+  - the pass-1 `container_literals` note about Python-style overwrite semantics was recorded but not accepted because the Rust companion already matched the paired Sifr assertions and observed runtime behavior
+  - pass 2 reported no accepted blockers
+- reviewer tooling note:
+  - batch 34 used stable per-file external review prompts embedding both the paired Sifr source and the Rust companion because larger batch prompts remain less reliable in this workspace
+
 ### wave_3_fixture_and_negative_case_normalization
 
 status: pending
