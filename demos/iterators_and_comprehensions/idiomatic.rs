@@ -1,81 +1,61 @@
 fn main() {
-    let nums: Vec<i64> = vec![1 as i64, 2 as i64, 3 as i64, 4 as i64, 5 as i64];
-    let doubled: Vec<i64> =
-        Box::new(nums.iter().copied().map(|x| x * (2 as i64))).collect::<Vec<_>>();
-    println!("{:?}", doubled);
-    let evens: Vec<i64> = Box::new(nums.iter().copied().filter(|__filter_item| {
-        let __filter_value = *__filter_item;
-        return {
-            let x = __filter_value;
-            (x % (2 as i64)) == (0 as i64)
-        };
-    }))
-    .collect::<Vec<_>>();
-    println!("{:?}", evens);
-    let squares: Vec<i64> = {
-        let mut __sifr_list_comp = vec![];
-        for x in nums.iter().copied() {
-            __sifr_list_comp.push(x * x);
-        }
-        __sifr_list_comp
-    };
-    println!("{:?}", squares);
-    let big_squares: Vec<i64> = {
-        let mut __sifr_list_comp = vec![];
-        for x in nums.iter().copied() {
-            if x > (2 as i64) {
-                __sifr_list_comp.push(x * x);
-            }
-        }
-        __sifr_list_comp
-    };
-    println!("{:?}", big_squares);
-    let lo: Option<i64> = (nums).iter().copied().min();
-    let hi: Option<i64> = (nums).iter().copied().max();
+    let nums = [1_i64, 2, 3, 4, 5];
+
+    let doubled: Vec<i64> = nums.iter().copied().map(|value| value * 2).collect();
+    println!("{doubled:?}");
+
+    let evens: Vec<i64> = nums
+        .iter()
+        .copied()
+        .filter(|value| value % 2 == 0)
+        .collect();
+    println!("{evens:?}");
+
+    let squares: Vec<i64> = nums.iter().copied().map(|value| value * value).collect();
+    println!("{squares:?}");
+
+    let big_squares: Vec<i64> = nums
+        .iter()
+        .copied()
+        .filter(|value| *value > 2)
+        .map(|value| value * value)
+        .collect();
+    println!("{big_squares:?}");
+
+    let lo = nums.iter().copied().min();
+    let hi = nums.iter().copied().max();
     if let Some(lo) = lo {
-        println!("{}", lo);
+        println!("{lo}");
     }
     if let Some(hi) = hi {
-        println!("{}", hi);
+        println!("{hi}");
     }
-    println!("{}", (nums).iter().copied().sum::<i64>());
-    let unsorted: Vec<i64> = vec![5 as i64, 3 as i64, 1 as i64, 4 as i64, 2 as i64];
-    println!("{:?}", {
-        let mut __sifr_sorted_v = (unsorted).iter().copied().collect::<Vec<_>>();
-        __sifr_sorted_v.sort();
-        __sifr_sorted_v
-    });
-    println!(
-        "{:?}",
-        Box::new((unsorted).iter().copied().rev()).collect::<Vec<_>>()
-    );
-    let letters: Vec<String> = vec!["a".to_string(), "b".to_string(), "c".to_string()];
-    println!(
-        "{:?}",
-        Box::new(
-            (letters)
-                .iter()
-                .cloned()
-                .enumerate()
-                .map(|__pair| ((__pair.0 as i64) + 0, __pair.1))
-        )
-        .collect::<Vec<_>>()
-    );
-    let names: Vec<String> = vec!["Alice".to_string(), "Bob".to_string()];
-    let ages: Vec<i64> = vec![30 as i64, 25 as i64];
-    println!(
-        "{:?}",
-        Box::new(
-            (names)
-                .iter()
-                .cloned()
-                .zip((ages).iter().copied())
-                .map(|__zip_item| (__zip_item.0, __zip_item.1))
-        )
-        .collect::<Vec<_>>()
-    );
-    let bools: Vec<bool> = vec![true, false, true];
-    println!("{}", (bools).iter().copied().any(|x| x));
-    println!("{}", (bools).iter().copied().all(|x| x));
-    println!("{}", (vec![true, true, true]).into_iter().all(|x| x));
+    println!("{}", nums.iter().copied().sum::<i64>());
+
+    let unsorted = [5_i64, 3, 1, 4, 2];
+    let mut sorted = unsorted.to_vec();
+    sorted.sort_unstable();
+    println!("{sorted:?}");
+
+    let reversed: Vec<i64> = unsorted.iter().rev().copied().collect();
+    println!("{reversed:?}");
+
+    let letters = ["a", "b", "c"];
+    let indexed: Vec<(i64, &str)> = letters
+        .iter()
+        .copied()
+        .enumerate()
+        .map(|(index, letter)| (index as i64, letter))
+        .collect();
+    println!("{indexed:?}");
+
+    let names = ["Alice", "Bob"];
+    let ages = [30_i64, 25];
+    let paired: Vec<(&str, i64)> = names.iter().copied().zip(ages).collect();
+    println!("{paired:?}");
+
+    let bools = [true, false, true];
+    println!("{}", bools.iter().copied().any(|value| value));
+    println!("{}", bools.iter().copied().all(|value| value));
+    println!("{}", [true, true, true].into_iter().all(|value| value));
 }
