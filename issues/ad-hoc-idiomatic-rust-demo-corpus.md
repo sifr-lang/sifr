@@ -280,6 +280,8 @@ Progress update (`2026-03-29`):
 - `batch_13_bytes_errors_bytes_file_io_bytes_iteration` completed local validation and passed external pass-1/pass-2 review; the only pass-2 note was rejected because `bytes_file_io` already uses the source-aligned `wave3` path name from the demo itself
 - `batch_14_file_streams_in_memory_streams_text_and_bytes` selected as the fourteenth wave-2 runnable-demo batch because it keeps the stream-and-text/bytes slice cohesive while targeting three still-generated companions around file handles, in-memory IO surfaces, and UTF-8/hex conversion
 - `batch_14_file_streams_in_memory_streams_text_and_bytes` completed local validation and passed external pass-1/pass-2 review with no accepted blockers; both review passes raised an invalid swapped-file claim that contradicted the actual file contents and same-named Sifr demos
+- `batch_15_json_values_random_hashing_random_state` selected as the fifteenth wave-2 runnable-demo batch because it keeps the structured-data and deterministic-RNG slice cohesive while targeting three still-generated companions around JSON wrappers, hashing/base64 helpers, and explicit RNG state APIs
+- `batch_15_json_values_random_hashing_random_state` completed local validation, accepted the pass-1 follow-up on explicit typed JSON access and poison-free RNG state handling, and passed external pass-2 review with no remaining actionable issues
 
 ### wave_3_fixture_and_negative_case_normalization
 
