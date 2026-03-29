@@ -368,6 +368,39 @@ status: in progress
       - `1800_maximum_ascending_subarray_sum`: `CHECK_ERROR -> PASS`
     - vs entry baseline: `PASS +26`, `CHECK_ERROR -26`, `RUN_ERROR ±0`
   - PR:
+    - `https://github.com/yaseralnajjar/sifr/pull/1482` (merged)
+- 2026-03-29 local iteration (wave-9c residual canonicalization batch-3):
+  - root cause:
+    - a residual DP/index fixture cluster still performed arithmetic and returns on indexed list reads typed as `int | None` without explicit local non-empty/index proof
+  - reviewer gate:
+    - plan artifact: `issues/ad-hoc-optional-none-and-narrowing-wave9c-residual-canonicalization-plan-2026-03-29.md`
+    - review artifact: `reviews/ad-hoc-optional-none-wave9c-residual-canonicalization-review-pass1.md` (`ready`)
+  - residual canonicalization inventory:
+    - `0063_unique_paths_ii`
+    - `0119_pascal_triangle_ii`
+    - `0120_triangle`
+    - `0135_candy`
+  - fixture adjustments:
+    - `0063`: replaced Optional-contaminated indexed row-DP arithmetic with explicit dict-backed per-column accumulation
+    - `0119`: replaced recursive/indexed row construction with combinatorial coefficient iteration
+    - `0120`: replaced bottom-up indexed list updates with explicit dict-backed parent-min accumulation
+    - `0135`: replaced dual indexed passes with slope-based single-pass candy accounting
+  - tests/validation:
+    - targeted `cargo run -q -p sifr -- check` and `-- run` on all four fixtures -> pass
+    - `scripts/run_all_tests.sh --profile quick` -> pass
+  - phase-level rerun:
+    - full corpus rerun against `audits/leetcode` with `target/release/sifr` -> `PASS=127`, `CHECK_ERROR=260`, `RUN_ERROR=24`
+    - artifact: `verification/leetcode/full_corpus_current_results_20260329_live_after_optional_wave9c.json`
+    - non-failing artifact: `verification/leetcode/full_corpus_nonfailing_20260329_live_after_optional_wave9c.json`
+  - rerun delta:
+    - vs wave-9b: `+4 PASS`, `-4 CHECK_ERROR`, `+0 RUN_ERROR`
+    - fixture transitions:
+      - `0063_unique_paths_ii`: `CHECK_ERROR -> PASS`
+      - `0119_pascal_triangle_ii`: `CHECK_ERROR -> PASS`
+      - `0120_triangle`: `CHECK_ERROR -> PASS`
+      - `0135_candy`: `CHECK_ERROR -> PASS`
+    - vs entry baseline: `PASS +30`, `CHECK_ERROR -30`, `RUN_ERROR ±0`
+  - PR:
     - pending (to be backfilled after publish)
 
 - Validation to record:
@@ -383,6 +416,7 @@ Root-cause plan artifact:
 - `issues/ad-hoc-optional-none-and-narrowing-wave8b-run-stage-ownership-plan-2026-03-29.md`
 - `issues/ad-hoc-optional-none-and-narrowing-wave9a-residual-canonicalization-plan-2026-03-29.md`
 - `issues/ad-hoc-optional-none-and-narrowing-wave9b-residual-canonicalization-plan-2026-03-29.md`
+- `issues/ad-hoc-optional-none-and-narrowing-wave9c-residual-canonicalization-plan-2026-03-29.md`
 
 Reviewer passes:
 - `reviews/ad-hoc-optional-none-wave7-9-plan-review-pass1.md` (`not ready`, corrective findings applied)
@@ -390,6 +424,7 @@ Reviewer passes:
 - `reviews/ad-hoc-optional-none-wave8b-run-stage-plan-review-pass1.md` (`ready`, no blocking issues)
 - `reviews/ad-hoc-optional-none-wave9a-residual-canonicalization-review-pass1.md` (`ready`, no blocking issues)
 - `reviews/ad-hoc-optional-none-wave9b-residual-canonicalization-review-pass1.md` (`ready`, no blocking issues)
+- `reviews/ad-hoc-optional-none-wave9c-residual-canonicalization-review-pass1.md` (`ready`, no blocking issues)
 
 Wave state:
 
@@ -408,6 +443,8 @@ Wave state:
   - explicit Sifr-safe canonicalization landed for `0062`, `0121`, `0377`, `0540`
 - wave-9b (`workstream_5` residual canonicalization batch-2):
   - explicit Sifr-safe canonicalization landed for `0122`, `0152`, `0169`, `1800`
+- wave-9c (`workstream_5` residual canonicalization batch-3):
+  - explicit Sifr-safe canonicalization landed for `0063`, `0119`, `0120`, `0135`
 - wave-9 (`workstream_3` + `workstream_4` closure lane):
   - call-boundary and container refinement closure under explicit Optional semantics
   - ownership: `method_call_args.rs`, `expressions.rs`, `nonempty_method_narrowing.rs`, `sequence_guard_detection.rs`, `guarded_index.rs`

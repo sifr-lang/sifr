@@ -1,34 +1,32 @@
 # LeetCode 63: Unique Paths Ii
 
 def uniquePathsWithObstacles(grid: list[list[int]]) -> int:
-    M, N = len(grid), len(grid[0])
-    dp = [0] * N
-    dp[N-1] = 1
+    if not grid:
+        return 0
 
-    # Time: O(N*M), Space: O(N)
-    for r in reversed(range(M)):
-        for c in reversed(range(N)):
-            if grid[r][c]:
-                dp[c] = 0
-            elif c + 1 < N:
-                dp[c] = dp[c] + dp[c + 1]
-    return dp[0]
+    dp_by_col: dict[int, int] = {0: 1}
+    last_col: int = -1
 
+    for row in grid:
+        next_dp_by_col: dict[int, int] = {}
+        col: int = 0
+        for cell in row:
+            if cell == 1:
+                next_dp_by_col[col] = 0
+            else:
+                from_up: int = dp_by_col.get(col, default=0)
+                from_left: int = 0
+                if col > 0:
+                    from_left = next_dp_by_col.get(col - 1, default=0)
+                next_dp_by_col[col] = from_up + from_left
+            last_col = col
+            col += 1
+        dp_by_col = next_dp_by_col
 
-    # Time: O(N*M), Space: O(N*M)
-    M, N = len(grid), len(grid[0])
-    dp = {(M - 1, N - 1): 1}
-
-    def dfs(r, c):
-        if r == M or c == N or grid[r][c]:
-            return 0
-        if (r, c) in dp:
-            return dp[(r, c)]
-        dp[(r, c)] = dfs(r + 1, c) + dfs(r, c + 1)
-        return dp[(r, c)]
-    return dfs(0, 0)
+    if last_col < 0:
+        return 0
+    return dp_by_col.get(last_col, default=0)
 
 def main():
     assert str(uniquePathsWithObstacles([[0,0,0],[0,1,0],[0,0,0]])) == '2'
-
 

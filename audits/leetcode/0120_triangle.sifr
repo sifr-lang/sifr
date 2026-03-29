@@ -1,15 +1,43 @@
 # LeetCode 120: Triangle
 
 def minimumTotal(triangle: list[list[int]]) -> int:
-    dp = triangle[-1]
+    if not triangle:
+        return 0
 
-    for row in range(len(triangle) - 2, -1, -1):
-        for col in range(0, row + 1):
-            dp[col] = triangle[row][col] + min(dp[col], dp[col + 1])
+    prev_totals: dict[int, int] = {}
+    row_index: int = 0
 
-    return dp[0]
+    for row in triangle:
+        curr_totals: dict[int, int] = {}
+        col: int = 0
+        for value in row:
+            if row_index == 0:
+                curr_totals[col] = value
+            elif col == 0:
+                curr_totals[col] = prev_totals.get(col, default=0) + value
+            elif col == row_index:
+                curr_totals[col] = prev_totals.get(col - 1, default=0) + value
+            else:
+                from_left_parent: int = prev_totals.get(col - 1, default=0)
+                from_right_parent: int = prev_totals.get(col, default=0)
+                if from_left_parent < from_right_parent:
+                    curr_totals[col] = from_left_parent + value
+                else:
+                    curr_totals[col] = from_right_parent + value
+            col += 1
+        prev_totals = curr_totals
+        row_index += 1
+
+    best: int = 0
+    has_best: bool = False
+    for col_index in prev_totals:
+        total: int = prev_totals.get(col_index, default=0)
+        if not has_best:
+            best = total
+            has_best = True
+        elif total < best:
+            best = total
+    return best
 
 def main():
     assert str(minimumTotal([[2],[3,4],[6,5,7],[4,1,8,3]])) == '11'
-
-

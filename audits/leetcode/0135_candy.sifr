@@ -1,28 +1,41 @@
 # LeetCode 135: Candy
 
 def candy(ratings: list[int]) -> int:
-    n = len(ratings)
-    # Initialize with one candy becuase each child must have at least one candy.
-    candies = [1] * n 
+    total_candies: int = 0
+    up_run: int = 0
+    down_run: int = 0
+    peak_run: int = 0
+    prev_rating: int = 0
+    has_prev: bool = False
 
-    # Iterate from left to right 
-    for i in range(1, n):
-        # Check if current rating is greater than left neighbor
-        if ratings[i] > ratings[i - 1]:
-            # Rating is higher so deserves more candy than left neighbor
-            candies[i] = candies[i - 1] + 1
+    for rating in ratings:
+        if not has_prev:
+            total_candies = 1
+            prev_rating = rating
+            has_prev = True
+            continue
 
-    # Iterate from right to left
-    for i in range(n - 2, -1, -1):
-        # Check if current rating is greater than right neighbor
-        if ratings[i] > ratings[i + 1]:
-            # Take max to check if the value is already greater than its right neighbor + 1.
-            candies[i] = max(candies[i], candies[i + 1] + 1)
-    
-    return sum(candies)
+        if rating > prev_rating:
+            up_run += 1
+            peak_run = up_run
+            down_run = 0
+            total_candies += 1 + up_run
+        elif rating == prev_rating:
+            up_run = 0
+            down_run = 0
+            peak_run = 0
+            total_candies += 1
+        else:
+            up_run = 0
+            down_run += 1
+            total_candies += 1 + down_run
+            if peak_run >= down_run:
+                total_candies -= 1
+
+        prev_rating = rating
+
+    return total_candies
 
 def main():
     assert str(candy([1,0,2])) == '5'
     assert str(candy([1,2,2])) == '4'
-
-
