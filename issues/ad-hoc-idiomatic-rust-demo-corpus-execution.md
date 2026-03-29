@@ -858,6 +858,57 @@ status: accepted_after_pass_1_and_pass_2
 - reviewer tooling note:
   - batch 17 used the stable Python subprocess capture path for both review passes and both completed successfully without requiring a retry
 
+#### batch_18_iterators_and_randomness_error_handling_decorators
+
+status: accepted_after_pass_1_and_pass_2
+
+- scope:
+  - `demos/iterators_and_randomness/idiomatic.rs`
+  - `demos/error_handling/idiomatic.rs`
+  - `demos/decorators/idiomatic.rs`
+- selection rationale:
+  - all three are positive runnable demos
+  - all three form a cohesive callable-and-control-surface slice instead of mixing the remaining iterator/random helpers with unrelated stdlib areas
+  - each companion still retained generated-style scaffolding or ceremony relative to the small, stable demo-visible behavior
+- priority tags:
+  - `stdlib-heavy`: `iterators_and_randomness`, `error_handling`
+  - `milestone-language-surface`: `decorators`
+  - `hand-authored-generated-shape`: `iterators_and_randomness`, `error_handling`, `decorators`
+- implementation summary:
+  - `iterators_and_randomness`: replaced the oversized helper surface with direct iterator adapters, compact permutation/combination/product helpers, a small callable-object example, and focused `rand`-backed randomness/secrets helpers
+  - `error_handling`: replaced the generated wrappers with direct custom error structs, a compact `From<ParseIntError>` conversion, and straightforward `match`-based `Result` handling
+  - `decorators`: replaced the ceremony-heavy callable scaffolding with plain Rust functions plus preserved Sifr-side decorator comments that show the desugared callable result
+- local validation completed:
+  - initial validation:
+    - `rustfmt demos/iterators_and_randomness/idiomatic.rs demos/error_handling/idiomatic.rs demos/decorators/idiomatic.rs`
+    - temporary Cargo validation for `demos/iterators_and_randomness/idiomatic.rs` with `rand = "0.8"`
+    - `rustc --edition=2021 demos/error_handling/idiomatic.rs -o /tmp/sifr-idiomatic-error-handling && /tmp/sifr-idiomatic-error-handling`
+    - `rustc --edition=2021 demos/decorators/idiomatic.rs -o /tmp/sifr-idiomatic-decorators && /tmp/sifr-idiomatic-decorators`
+    - `cargo run -q -p sifr -- run demos/iterators_and_randomness/main.sifr`
+    - `cargo run -q -p sifr -- run demos/error_handling/main.sifr`
+    - `cargo run -q -p sifr -- run demos/decorators/main.sifr`
+    - `scripts/run_all_tests.sh`
+  - post-pass-1 revalidation:
+    - `rustfmt demos/iterators_and_randomness/idiomatic.rs demos/error_handling/idiomatic.rs demos/decorators/idiomatic.rs`
+    - temporary Cargo validation for `demos/iterators_and_randomness/idiomatic.rs` with `rand = "0.8"`
+    - `rustc --edition=2021 demos/error_handling/idiomatic.rs -o /tmp/sifr-idiomatic-error-handling && /tmp/sifr-idiomatic-error-handling`
+    - `rustc --edition=2021 demos/decorators/idiomatic.rs -o /tmp/sifr-idiomatic-decorators && /tmp/sifr-idiomatic-decorators`
+    - `cargo run -q -p sifr -- run demos/iterators_and_randomness/main.sifr`
+    - `cargo run -q -p sifr -- run demos/error_handling/main.sifr`
+    - `cargo run -q -p sifr -- run demos/decorators/main.sifr`
+    - `scripts/run_all_tests.sh`
+- review artifacts:
+  - pass 1: `reviews/phase-ad-hoc-idiomatic-rust-demo-corpus-wave-2-batch-18-review-pass-1.md`
+  - pass 2: `reviews/phase-ad-hoc-idiomatic-rust-demo-corpus-wave-2-batch-18-review-pass-2.md`
+- review application summary:
+  - pass 1 valid follow-up fixes applied:
+    - `demos/iterators_and_randomness/idiomatic.rs`: generalized `product_repeat` so non-`2` repeat counts no longer silently collapse to an empty result
+    - `demos/iterators_and_randomness/idiomatic.rs`: replaced the `compare_digest` early-exit equality check with a length-mixed bytewise comparison so the helper better matches the intended constant-time semantics of the demo surface
+  - pass 1's note about `randbits` distribution was not accepted because the current bit-by-bit implementation already yields a uniform value in `0..2^bits` without changing the demo-visible behavior
+  - pass 2 reported no accepted blockers; its RNG-state note was rejected because repeated `thread_rng()` handles still draw from the same thread-local RNG state, and its `compare_digest` note was treated as non-blocking because the helper already avoids early-exit comparison
+- reviewer tooling note:
+  - batch 18 used direct `claude -p --no-session-persistence --dangerously-skip-permissions ...` runs redirected into the recorded review files, and both passes completed successfully in that form
+
 ### wave_3_fixture_and_negative_case_normalization
 
 status: pending
