@@ -1586,6 +1586,54 @@ status: accepted_after_pass_1_and_pass_2
 - reviewer tooling note:
   - batch 34 used stable per-file external review prompts embedding both the paired Sifr source and the Rust companion because larger batch prompts remain less reliable in this workspace
 
+#### batch_35_container_methods_dict_membership_ordered_collections
+
+status: accepted_after_pass_1_and_pass_2
+
+- scope:
+  - `demos/container_methods/idiomatic.rs`
+  - `demos/dict_membership/idiomatic.rs`
+  - `demos/ordered_collections/idiomatic.rs`
+- selection rationale:
+  - all three are positive runnable demos
+  - all three form a cohesive remaining collection-API slice instead of mixing container helpers with unrelated compiler or fixture demos
+  - `container_methods` and `ordered_collections` still had obvious generated-shape scaffolding, while `dict_membership` kept the batch grounded in a small guarded-read correctness case
+- priority tags:
+  - `collection-surface`: `container_methods`, `ordered_collections`
+  - `membership-surface`: `dict_membership`
+  - `hand-authored-generated-shape`: `container_methods`, `ordered_collections`, `dict_membership`
+- implementation summary:
+  - `container_methods`: replaced expanded container-method lowering with direct `Vec`, `HashMap`, `HashSet`, tuple helper, `splitn`, and `replacen` equivalents
+  - `dict_membership`: collapsed guarded membership reads into direct `HashMap::get(...).copied().unwrap_or(...)` patterns and a summed `filter_map` path
+  - `ordered_collections`: replaced large stdlib-surface scaffolding with direct `most_common`, bounded `VecDeque`, `partition_point`-based `insort`/`bisect`, and small `BinaryHeap<Reverse<_>>` helpers
+- local validation completed:
+  - `rustfmt demos/container_methods/idiomatic.rs demos/dict_membership/idiomatic.rs demos/ordered_collections/idiomatic.rs`
+  - `rustc --edition=2021 demos/container_methods/idiomatic.rs -o /tmp/sifr-idiomatic-container-methods && /tmp/sifr-idiomatic-container-methods`
+  - `rustc --edition=2021 demos/dict_membership/idiomatic.rs -o /tmp/sifr-idiomatic-dict-membership && /tmp/sifr-idiomatic-dict-membership`
+  - `rustc --edition=2021 demos/ordered_collections/idiomatic.rs -o /tmp/sifr-idiomatic-ordered-collections && /tmp/sifr-idiomatic-ordered-collections`
+  - `cargo run -q -p sifr -- run demos/container_methods/main.sifr`
+  - `cargo run -q -p sifr -- run demos/dict_membership/main.sifr`
+  - `cargo run -q -p sifr -- run demos/ordered_collections/main.sifr`
+  - `scripts/run_all_tests.sh`
+  - post-implementation revalidation after panic-proofing cleanup:
+    - `rustfmt demos/container_methods/idiomatic.rs demos/dict_membership/idiomatic.rs demos/ordered_collections/idiomatic.rs`
+    - `rustc --edition=2021 demos/container_methods/idiomatic.rs -o /tmp/sifr-idiomatic-container-methods && /tmp/sifr-idiomatic-container-methods`
+    - `rustc --edition=2021 demos/dict_membership/idiomatic.rs -o /tmp/sifr-idiomatic-dict-membership && /tmp/sifr-idiomatic-dict-membership`
+    - `rustc --edition=2021 demos/ordered_collections/idiomatic.rs -o /tmp/sifr-idiomatic-ordered-collections && /tmp/sifr-idiomatic-ordered-collections`
+    - `cargo run -q -p sifr -- run demos/container_methods/main.sifr`
+    - `cargo run -q -p sifr -- run demos/dict_membership/main.sifr`
+    - `cargo run -q -p sifr -- run demos/ordered_collections/main.sifr`
+    - `scripts/run_all_tests.sh`
+- review artifacts:
+  - pass 1: `reviews/phase-ad-hoc-idiomatic-rust-demo-corpus-wave-2-batch-35-review-pass-1.md`
+  - pass 2: `reviews/phase-ad-hoc-idiomatic-rust-demo-corpus-wave-2-batch-35-review-pass-2.md`
+- review application summary:
+  - pass 1 reported no accepted blockers
+  - pass 2 reported no accepted blockers
+  - `ordered_collections` needed multiple pass-2 retries because the external reviewer timed out or returned an unusable partial tool-stub response before a final shortened prompt completed cleanly
+- reviewer tooling note:
+  - batch 35 used concise per-file external review prompts summarizing paired Sifr behavior because the reviewer transport was more reliable with behavior-focused prompts than with fully embedded paired-source prompts in this workspace
+
 ### wave_3_fixture_and_negative_case_normalization
 
 status: pending
