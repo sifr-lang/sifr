@@ -466,7 +466,7 @@ status: in progress
       - `0448_find_all_numbers_disappeared_in_an_array`: `CHECK_ERROR -> PASS`
     - vs entry baseline: `PASS +38`, `CHECK_ERROR -38`, `RUN_ERROR ±0`
   - PR:
-    - pending (to be backfilled after publish)
+    - `https://github.com/yaseralnajjar/sifr/pull/1486` (merged)
 
 - Validation to record:
   - post-wave full corpus rerun
