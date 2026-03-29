@@ -1,171 +1,97 @@
 #[derive(Debug, Clone)]
-struct ParseError {
-    message: String,
-}
-
-impl ParseError {
-    fn new(message: String) -> Self {
-        return Self { message: message };
-    }
-}
+struct ParseError(String);
 
 impl std::fmt::Display for ParseError {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        return std::fmt::Display::fmt(&self.message, f);
+        self.0.fmt(f)
     }
 }
 
 impl std::error::Error for ParseError {}
 
 #[derive(Debug, Clone)]
-struct ValueError {
-    message: String,
-}
-
-impl ValueError {
-    fn new(message: String) -> Self {
-        return Self { message: message };
-    }
-}
+struct ValueError(String);
 
 impl std::fmt::Display for ValueError {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        return std::fmt::Display::fmt(&self.message, f);
+        self.0.fmt(f)
     }
 }
 
 impl std::error::Error for ValueError {}
 
+fn bytes_with_size(size: i64) -> Result<Vec<u8>, ValueError> {
+    if size < 0 {
+        return Err(ValueError(
+            "bytes(size) requires a non-negative size".to_string(),
+        ));
+    }
+    Ok(vec![0; size as usize])
+}
+
+fn bytes_from_ints(values: &[i64]) -> Result<Vec<u8>, ValueError> {
+    let mut out = Vec::with_capacity(values.len());
+    for (index, value) in values.iter().copied().enumerate() {
+        let byte = u8::try_from(value)
+            .map_err(|_| ValueError(format!("byte out of range at index {index}: {value}")))?;
+        out.push(byte);
+    }
+    Ok(out)
+}
+
+fn bytes_from_hex(text: &str) -> Result<Vec<u8>, ParseError> {
+    let cleaned: String = text
+        .chars()
+        .filter(|ch| !ch.is_ascii_whitespace())
+        .collect();
+    if !cleaned.chars().all(|ch| ch.is_ascii_hexdigit()) {
+        let invalid = cleaned
+            .chars()
+            .find(|ch| !ch.is_ascii_hexdigit())
+            .unwrap_or('?');
+        return Err(ParseError(format!("invalid hex character: {invalid}")));
+    }
+    if cleaned.len() % 2 != 0 {
+        return Err(ParseError(
+            "fromhex() arg must contain an even number of hexadecimal digits".to_string(),
+        ));
+    }
+    cleaned
+        .as_bytes()
+        .chunks(2)
+        .map(|pair| {
+            let pair = std::str::from_utf8(pair).map_err(|error| ParseError(error.to_string()))?;
+            u8::from_str_radix(pair, 16).map_err(|error| ParseError(error.to_string()))
+        })
+        .collect()
+}
+
+fn encode_text(text: &str, codec: &str) -> Result<Vec<u8>, ParseError> {
+    let codec = codec.to_ascii_lowercase();
+    if codec != "utf-8" && codec != "utf8" {
+        return Err(ParseError(format!(
+            "str.encode() currently supports only UTF-8 encoding, got {codec}"
+        )));
+    }
+    Ok(text.as_bytes().to_vec())
+}
+
+fn decode_utf8(bytes: &[u8]) -> Result<String, ParseError> {
+    String::from_utf8(bytes.to_vec()).map_err(|error| ParseError(error.to_string()))
+}
+
 fn main() {
-    let mut bad_size: bool = false;
-    let __sifr_try_res: Result<(), ValueError> = (|| {
-        let _: Result<Vec<u8>, ValueError> = {
-            let __size = -(1 as i64);
-            if __size < 0 {
-                return Err(ValueError {
-                    message: "bytes(size) requires a non-negative size"
-                        .to_string()
-                        .to_string(),
-                });
-            }
-            Ok((0..__size).map(|_| 0 as u8).collect::<Vec<u8>>())
-        };
-        return Ok(());
-    })();
-    if let Err(__sifr_try_err) = __sifr_try_res {
-        let e = __sifr_try_err.clone();
-        bad_size = true;
-    }
-    let mut bad_values: bool = false;
-    let __sifr_try_res: Result<(), ValueError> = (|| {
-        let _: Result<Vec<u8>, ValueError> = {
-            let __vals = vec![0 as i64, 999 as i64];
-            let mut __out = Vec::new();
-            for __pair in __vals.iter().enumerate() {
-                if (*__pair.1 < 0) || (*__pair.1 > 255) {
-                    return Err(ValueError {
-                        message: format!("byte out of range at index {}: {}", __pair.0, *__pair.1),
-                    });
-                }
-                __out.push(*__pair.1 as u8);
-            }
-            Ok(__out)
-        };
-        return Ok(());
-    })();
-    if let Err(__sifr_try_err) = __sifr_try_res {
-        let e = __sifr_try_err.clone();
-        bad_values = true;
-    }
-    let mut bad_hex: bool = false;
-    let __sifr_try_res: Result<(), ParseError> = (|| {
-        let _: Result<Vec<u8>, ParseError> = {
-            let s: String = "GG".to_string().to_string();
-            let mut cleaned = String::new();
-            for ch in s.chars() {
-                if ch.is_ascii_whitespace() {
-                    continue;
-                }
-                if !ch.is_ascii_hexdigit() {
-                    return Err(ParseError {
-                        message: format!("invalid hex character: {}", ch),
-                    });
-                }
-                cleaned.push(ch);
-            }
-            if (cleaned.len() % 2) != 0 {
-                return Err(ParseError {
-                    message: "fromhex() arg must contain an even number of hexadecimal digits"
-                        .to_string()
-                        .to_string(),
-                });
-            }
-            let mut result = Vec::new();
-            for pair in cleaned.as_bytes().chunks(2) {
-                let pair_str = std::str::from_utf8(pair).map_err(|e| ParseError {
-                    message: e.to_string(),
-                })?;
-                result.push(u8::from_str_radix(pair_str, 16).map_err(|e| ParseError {
-                    message: e.to_string(),
-                })?);
-            }
-            Ok(result)
-        };
-        return Ok(());
-    })();
-    if let Err(__sifr_try_err) = __sifr_try_res {
-        let e = __sifr_try_err.clone();
-        bad_hex = true;
-    }
-    let mut bad_codec: bool = false;
-    let __sifr_try_res: Result<(), ParseError> = (|| {
-        let codec: String = "latin-1".to_string();
-        let _encoded: Vec<u8> = ({
-            let __encoding = codec;
-            let __encoding_lower = __encoding.to_ascii_lowercase();
-            if (__encoding_lower != "utf-8".to_string()) && (__encoding_lower != "utf8".to_string())
-            {
-                Err(ParseError {
-                    message: format!(
-                        "{} currently supports only UTF-8 encoding, got {}",
-                        "str.encode()".to_string(),
-                        __encoding
-                    ),
-                })
-            } else {
-                Ok({
-                    let __s = "abc".to_string();
-                    __s.as_bytes().to_vec()
-                })
-            }
-        })?;
-        return Ok(());
-    })();
-    if let Err(__sifr_try_err) = __sifr_try_res {
-        let e = __sifr_try_err.clone();
-        bad_codec = true;
-    }
-    let mut bad_utf8: bool = false;
-    let __sifr_try_res: Result<(), ParseError> = (|| {
-        let _invalid_utf8: String = String::from_utf8(
-            vec![(255 as i64) as u8]
-                .iter()
-                .copied()
-                .collect::<Vec<u8>>(),
-        )
-        .map_err(|e| ParseError {
-            message: e.to_string(),
-        })?;
-        return Ok(());
-    })();
-    if let Err(__sifr_try_err) = __sifr_try_res {
-        let e = __sifr_try_err.clone();
-        bad_utf8 = true;
-    }
+    let bad_size = bytes_with_size(-1).is_err();
+    let bad_values = bytes_from_ints(&[0, 999]).is_err();
+    let bad_hex = bytes_from_hex("GG").is_err();
+    let bad_codec = encode_text("abc", "latin-1").is_err();
+    let bad_utf8 = decode_utf8(&[0xff]).is_err();
+
     assert!(bad_size);
     assert!(bad_values);
     assert!(bad_hex);
     assert!(bad_codec);
     assert!(bad_utf8);
+
     println!("ad_hoc_bytes_wave2_negative_boundary_demo: ok");
 }

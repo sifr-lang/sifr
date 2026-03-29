@@ -1,22 +1,19 @@
 fn main() {
-    let a: Vec<u8> = vec![(1 as i64) as u8, (2 as i64) as u8, (3 as i64) as u8];
-    let b: Vec<u8> = vec![(1 as i64) as u8, (2 as i64) as u8];
-    let c: Vec<u8> = {
-        let mut __v = (b).clone();
-        __v.extend((vec![(3 as i64) as u8]).iter().cloned());
-        __v
-    };
-    assert!(a == c);
-    assert!((a.len() as i64) == (3 as i64));
-    let idx0: Option<i64> = a.get((0 as i64) as usize).map(|__byte| *__byte as i64);
-    let idx1: Option<i64> = a.get((1 as i64) as usize).map(|__byte| *__byte as i64);
-    let idx2: Option<i64> = a.get((2 as i64) as usize).map(|__byte| *__byte as i64);
-    assert!(idx0 == Some(1 as i64));
-    assert!(idx1 == Some(2 as i64));
-    assert!(idx2 == Some(3 as i64));
-    let mut acc: i64 = 0 as i64;
-    for item in a.iter().map(|__byte| *__byte as i64) {
-        acc += item;
-    }
-    assert!(acc == (6 as i64));
+    let a = b"\x01\x02\x03";
+    let b = b"\x01\x02";
+    let mut c = b.to_vec();
+    c.push(3);
+
+    assert_eq!(a, c.as_slice());
+    assert_eq!(a.len(), 3);
+
+    let idx0 = a.get(0).copied().map(i64::from);
+    let idx1 = a.get(1).copied().map(i64::from);
+    let idx2 = a.get(2).copied().map(i64::from);
+    assert_eq!(idx0, Some(1));
+    assert_eq!(idx1, Some(2));
+    assert_eq!(idx2, Some(3));
+
+    let acc: i64 = a.iter().map(|&byte| i64::from(byte)).sum();
+    assert_eq!(acc, 6);
 }
