@@ -56,6 +56,17 @@ status: in progress
   - targeted rerun signal:
     - `cargo run -q -p sifr -- check audits/leetcode/0004_median_of_two_sorted_arrays.sifr` -> still failing (`int | None` ternary branches)
     - `cargo run -q -p sifr -- check audits/leetcode/0013_roman_to_integer.sifr` -> still failing (`int | None` dict index arithmetic)
+  - PR:
+    - `https://github.com/yaseralnajjar/sifr/pull/1444` (merged)
+- 2026-03-29 local iteration (wave-3 slice):
+  - compiler changes:
+    - `while` lowering now applies condition-based narrowing facts to the loop body before statement lowering
+  - tests/validation:
+    - `cargo test -q -p sifr_hir lower::expressions_tests::test_while_not_none_narrows_optional_receiver_for_attribute_access -- --nocapture` -> pass
+    - `scripts/run_all_tests.sh --profile quick` -> pass
+  - targeted rerun signal:
+    - `cargo run -q -p sifr -- check audits/leetcode/0206_reverse_linked_list.sifr` -> attribute-access Optional noise removed; remaining boundary/ownership diagnostics persist
+    - `cargo run -q -p sifr -- check audits/leetcode/0024_swap_nodes_in_pairs.sifr` -> attribute-access Optional noise removed; remaining boundary diagnostics persist
 - Validation to record:
   - owning unit tests
   - non-LeetCode e2e regression(s)
