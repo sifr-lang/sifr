@@ -1,53 +1,40 @@
-const PI: f64 = 3.14159 as f64;
-
-const MAX_RETRIES: i64 = 3 as i64;
-
-fn __const_APP_NAME() -> String {
-    return "sifr".to_string().to_string();
-}
-
+const PI: f64 = 3.14159;
+const MAX_RETRIES: i64 = 3;
+const APP_NAME: &str = "sifr";
 const DEBUG: bool = true;
 
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Clone, Copy, Debug)]
 struct Temperature {
     celsius: f64,
 }
 
 impl Temperature {
     fn new(celsius: f64) -> Self {
-        return Self { celsius: celsius };
+        Self { celsius }
     }
-    fn from_fahrenheit(f: f64) -> Temperature {
-        return Temperature::new(((f - (32.0 as f64)) * (5.0 as f64)) / (9.0 as f64));
+
+    fn from_fahrenheit(fahrenheit: f64) -> Self {
+        Self::new((fahrenheit - 32.0) * 5.0 / 9.0)
     }
 }
 
-impl std::fmt::Display for Temperature {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        return write!(f, "Temperature(celsius={})", self.celsius);
-    }
-}
-
-fn circle_area(r: f64) -> f64 {
-    return (PI * r) * r;
+fn circle_area(radius: f64) -> f64 {
+    PI * radius * radius
 }
 
 fn get_config() -> String {
-    return format!(
-        "{} (debug={}, retries={})",
-        __const_APP_NAME(),
-        DEBUG,
-        MAX_RETRIES
-    );
+    format!("{APP_NAME} (debug={DEBUG}, retries={MAX_RETRIES})")
 }
 
 fn main() {
-    println!("{}", circle_area(5.0 as f64));
+    println!("{}", circle_area(5.0));
     println!("{}", get_config());
-    println!("{}", PI);
-    println!("{}", MAX_RETRIES);
-    let t: Temperature = Temperature::new(100.0 as f64);
+    println!("{PI}");
+    println!("{MAX_RETRIES}");
+
+    let t = Temperature::new(100.0);
     println!("{}", t.celsius);
-    let t2: Temperature = Temperature::from_fahrenheit(212.0 as f64);
+
+    let t2 = Temperature::from_fahrenheit(212.0);
     println!("{}", t2.celsius);
 }
