@@ -292,6 +292,8 @@ Progress update (`2026-03-29`):
 - `batch_19_env_regex_regex_and_filesystem` completed local validation and passed external pass-1/pass-2 review with no accepted blockers
 - `batch_20_iter_and_next_cloned_iterators_lazy_iterators` selected as the twentieth wave-2 runnable-demo batch because it keeps the remaining small iterator-consumption slice cohesive around direct `iter`/`next` usage, reusable borrowed iterator transforms, and lazy generator-backed iteration
 - `batch_20_iter_and_next_cloned_iterators_lazy_iterators` completed local validation and passed external pass-1/pass-2 review with no accepted blockers
+- `batch_21_iterator_basics_generic_functions_and_iterators_itertools_iterators` selected as the twenty-first wave-2 runnable-demo batch because it keeps the remaining iterator-protocol slice cohesive around explicit iterator consumption, generic helpers with iterator-heavy output, and small itertools-style iterator surfaces
+- `batch_21_iterator_basics_generic_functions_and_iterators_itertools_iterators` completed local validation, accepted pass-1/pass-2 ownership-parity follow-ups in `generic_functions_and_iterators`, and passed external pass-2 review with no remaining actionable issues
 
 ### wave_3_fixture_and_negative_case_normalization
 

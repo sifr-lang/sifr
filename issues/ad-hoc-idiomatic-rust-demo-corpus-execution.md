@@ -984,6 +984,56 @@ status: accepted_after_pass_1_and_pass_2
 - reviewer tooling note:
   - batch 20 again used stable per-file external review prompts embedding both the paired Sifr source and the Rust companion because larger batch prompts remained unreliable in this workspace
 
+#### batch_21_iterator_basics_generic_functions_and_iterators_itertools_iterators
+
+status: accepted_after_pass_1_and_pass_2
+
+- scope:
+  - `demos/iterator_basics/idiomatic.rs`
+  - `demos/generic_functions_and_iterators/idiomatic.rs`
+  - `demos/itertools_iterators/idiomatic.rs`
+- selection rationale:
+  - all three are positive runnable demos
+  - all three form a cohesive remaining iterator-and-generic-reference slice instead of mixing the last small iterator demos with unrelated stdlib areas
+  - each companion still retained generated-style iterator plumbing, borrowed/reference mismatches, or faux-itertools scaffolding despite compact demo-visible behavior
+- priority tags:
+  - `iterator-surface`: `iterator_basics`, `generic_functions_and_iterators`, `itertools_iterators`
+  - `hand-authored-generated-shape`: `iterator_basics`, `generic_functions_and_iterators`, `itertools_iterators`
+- implementation summary:
+  - `iterator_basics`: replaced boxed/generator-style scaffolding with direct iterator helpers for odd-number generation, counting, pair combinations, repeated-cartesian products, and compact borrowed iterator consumption in `main`
+  - `generic_functions_and_iterators`: replaced generated wrappers with direct Rust generics, a compact generic `Container<T>`, explicit trait-object protocol dispatch, and flattened iterator-based comprehension parity
+  - `itertools_iterators`: replaced helper scaffolding with small direct iterator adapters for repeat/count behavior and compact `chain`/slice/count output parity
+- local validation completed:
+  - `rustfmt demos/iterator_basics/idiomatic.rs demos/generic_functions_and_iterators/idiomatic.rs demos/itertools_iterators/idiomatic.rs`
+  - `rustc --edition=2021 demos/iterator_basics/idiomatic.rs -o /tmp/sifr-idiomatic-iterator-basics && /tmp/sifr-idiomatic-iterator-basics`
+  - `rustc --edition=2021 demos/generic_functions_and_iterators/idiomatic.rs -o /tmp/sifr-idiomatic-generic-functions-and-iterators && /tmp/sifr-idiomatic-generic-functions-and-iterators`
+  - `rustc --edition=2021 demos/itertools_iterators/idiomatic.rs -o /tmp/sifr-idiomatic-itertools-iterators && /tmp/sifr-idiomatic-itertools-iterators`
+  - `cargo run -q -p sifr -- run demos/iterator_basics/main.sifr`
+  - `cargo run -q -p sifr -- run demos/generic_functions_and_iterators/main.sifr`
+  - `cargo run -q -p sifr -- run demos/itertools_iterators/main.sifr`
+  - `scripts/run_all_tests.sh`
+  - post-pass-1 revalidation:
+    - `rustfmt demos/iterator_basics/idiomatic.rs demos/generic_functions_and_iterators/idiomatic.rs demos/itertools_iterators/idiomatic.rs`
+    - `rustc --edition=2021 demos/generic_functions_and_iterators/idiomatic.rs -o /tmp/sifr-idiomatic-generic-functions-and-iterators && /tmp/sifr-idiomatic-generic-functions-and-iterators`
+    - `cargo run -q -p sifr -- run demos/generic_functions_and_iterators/main.sifr`
+    - `scripts/run_all_tests.sh`
+  - post-pass-2 revalidation:
+    - `rustfmt demos/iterator_basics/idiomatic.rs demos/generic_functions_and_iterators/idiomatic.rs demos/itertools_iterators/idiomatic.rs`
+    - `rustc --edition=2021 demos/generic_functions_and_iterators/idiomatic.rs -o /tmp/sifr-idiomatic-generic-functions-and-iterators && /tmp/sifr-idiomatic-generic-functions-and-iterators`
+    - `cargo run -q -p sifr -- run demos/generic_functions_and_iterators/main.sifr`
+    - `scripts/run_all_tests.sh`
+- review artifacts:
+  - pass 1: `reviews/phase-ad-hoc-idiomatic-rust-demo-corpus-wave-2-batch-21-review-pass-1.md`
+  - pass 2: `reviews/phase-ad-hoc-idiomatic-rust-demo-corpus-wave-2-batch-21-review-pass-2.md`
+- review application summary:
+  - pass 1 accepted one follow-up in `demos/generic_functions_and_iterators/idiomatic.rs`: made protocol dispatch explicit while the batch was still under review
+  - pass 1's `itertools_iterators` per-file reviewer attempt timed out in this workspace, but no blocker was established and local validation stayed green
+  - pass 2 accepted two ownership-parity fixes in `demos/generic_functions_and_iterators/idiomatic.rs`: `Container::get` now returns by value, and `show` now consumes `Box<dyn Printable>`
+  - pass 2 re-review on the final `generic_functions_and_iterators` file reported no remaining actionable issues
+  - `iterator_basics` and `itertools_iterators` passed pass 2 with no actionable issues
+- reviewer tooling note:
+  - batch 21 used stable per-file external review prompts embedding both the paired Sifr source and the Rust companion because larger batch prompts remained unreliable in this workspace
+
 ### wave_3_fixture_and_negative_case_normalization
 
 status: pending
