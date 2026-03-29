@@ -1,66 +1,46 @@
-#[derive(Debug, Clone, PartialEq, Eq, Hash)]
+const PI: f64 = 3.14159;
+
+#[derive(Clone)]
 struct Shape {
     name: String,
     color: String,
 }
 
 impl Shape {
-    fn new(name: String, color: String) -> Self {
-        return Self {
-            name: name,
-            color: color,
-        };
+    fn new(name: impl Into<String>, color: impl Into<String>) -> Self {
+        Self {
+            name: name.into(),
+            color: color.into(),
+        }
     }
+
     fn describe(&self) -> String {
-        return format!(
-            "{}{}{}{}",
-            self.name.clone(),
-            " (".to_string(),
-            self.color.clone(),
-            ")".to_string()
-        );
+        format!("{} ({})", self.name, self.color)
     }
 }
 
-impl std::fmt::Display for Shape {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        return write!(f, "Shape(name={}, color={})", self.name, self.color);
-    }
-}
-
-#[derive(Debug, Clone, PartialEq)]
 struct Circle {
     shape: Shape,
     radius: f64,
 }
 
 impl Circle {
-    fn new(color: String, radius: f64) -> Self {
-        return Self {
-            shape: Shape::new("Circle".to_string(), color),
-            radius: radius,
-        };
+    fn new(color: &str, radius: f64) -> Self {
+        Self {
+            shape: Shape::new("Circle", color),
+            radius,
+        }
     }
+
     fn area(&self) -> f64 {
-        return ((3.14159 as f64) * self.radius) * self.radius;
+        PI * self.radius * self.radius
     }
+
     fn describe(&self) -> String {
-        return format!(
-            "{}{}{}",
-            self.shape.name.clone(),
-            " r=".to_string(),
-            format!("{}", self.radius)
-        );
+        format!("{} r={}", self.shape.name, self.radius)
     }
 }
 
-impl std::fmt::Display for Circle {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        return write!(f, "Circle(radius={})", self.radius);
-    }
-}
-
-#[derive(Debug, Clone, PartialEq)]
 struct Rectangle {
     shape: Shape,
     width: f64,
@@ -68,100 +48,81 @@ struct Rectangle {
 }
 
 impl Rectangle {
-    fn new(color: String, width: f64, height: f64) -> Self {
-        return Self {
-            shape: Shape::new("Rectangle".to_string(), color),
-            width: width,
-            height: height,
-        };
+    fn new(color: &str, width: f64, height: f64) -> Self {
+        Self {
+            shape: Shape::new("Rectangle", color),
+            width,
+            height,
+        }
     }
+
     fn area(&self) -> f64 {
-        return self.width * self.height;
+        self.width * self.height
     }
+
     fn describe(&self) -> String {
-        return format!(
-            "{}{}{}{}{}",
-            self.shape.name.clone(),
-            " ".to_string(),
-            format!("{}", self.width),
-            "x".to_string(),
-            format!("{}", self.height)
-        );
+        format!("{} {}x{}", self.shape.name, self.width, self.height)
     }
 }
 
-impl std::fmt::Display for Rectangle {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        return write!(f, "Rectangle(width={}, height={})", self.width, self.height);
-    }
-}
-
-#[derive(Debug, Clone, PartialEq)]
 struct Temperature {
     celsius: f64,
 }
 
 impl Temperature {
     fn new(celsius: f64) -> Self {
-        return Self { celsius: celsius };
+        Self { celsius }
     }
-    fn from_fahrenheit(f: f64) -> Temperature {
-        return Temperature::new(((f - (32.0 as f64)) * (5.0 as f64)) / (9.0 as f64));
+
+    fn from_fahrenheit(fahrenheit: f64) -> Self {
+        Self::new((fahrenheit - 32.0) * 5.0 / 9.0)
     }
-    fn freezing() -> Temperature {
-        return Temperature::new(0.0 as f64);
+
+    fn freezing() -> Self {
+        Self::new(0.0)
     }
+
     fn to_fahrenheit(&self) -> f64 {
-        return ((self.celsius * (9.0 as f64)) / (5.0 as f64)) + (32.0 as f64);
+        self.celsius * 9.0 / 5.0 + 32.0
     }
 }
 
-impl std::fmt::Display for Temperature {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        return write!(f, "Temperature(celsius={})", self.celsius);
-    }
-}
-
-#[derive(Debug, Clone, PartialEq, Eq, Hash)]
-struct MathHelper {}
+struct MathHelper;
 
 impl MathHelper {
     fn clamp(value: f64, low: f64, high: f64) -> f64 {
-        if value < low {
-            return low;
-        }
-        if value > high {
-            return high;
-        }
-        return value;
+        value.max(low).min(high)
     }
-    fn is_positive(x: f64) -> bool {
-        return x > (0.0 as f64);
+
+    fn is_positive(value: f64) -> bool {
+        value > 0.0
     }
 }
 
 fn main() {
-    let mut c: Circle = Circle::new("red".to_string(), 5.0 as f64);
-    let mut r: Rectangle = Rectangle::new("blue".to_string(), 3.0 as f64, 4.0 as f64);
-    println!("{}", c.describe());
-    println!("{}", c.area());
-    println!("{}", c.shape.color);
-    println!("{}", r.describe());
-    println!("{}", r.area());
-    println!("{}", r.shape.color);
-    let mut boiling: Temperature = Temperature::new(100.0 as f64);
+    let circle = Circle::new("red", 5.0);
+    let rectangle = Rectangle::new("blue", 3.0, 4.0);
+
+    println!("{}", circle.describe());
+    println!("{}", circle.area());
+    println!("{}", circle.shape.color);
+
+    println!("{}", rectangle.describe());
+    println!("{}", rectangle.area());
+    println!("{}", rectangle.shape.color);
+
+    let boiling = Temperature::new(100.0);
     println!("{}", boiling.to_fahrenheit());
-    let body: Temperature = Temperature::from_fahrenheit(98.6 as f64);
+
+    let body = Temperature::from_fahrenheit(98.6);
     println!("{}", body.celsius);
-    let zero: Temperature = Temperature::freezing();
+
+    let zero = Temperature::freezing();
     println!("{}", zero.celsius);
-    println!(
-        "{}",
-        MathHelper::clamp(15.0 as f64, 0.0 as f64, 10.0 as f64)
-    );
-    println!(
-        "{}",
-        MathHelper::clamp(-(5.0 as f64), 0.0 as f64, 10.0 as f64)
-    );
-    println!("{}", MathHelper::is_positive(42.0 as f64));
+
+    println!("{}", MathHelper::clamp(15.0, 0.0, 10.0));
+    println!("{}", MathHelper::clamp(-5.0, 0.0, 10.0));
+    println!("{}", MathHelper::is_positive(42.0));
+
+    let _ = circle.shape.describe();
 }

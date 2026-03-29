@@ -2097,6 +2097,56 @@ status: accepted_after_pass_1_and_pass_2
 - reviewer tooling note:
   - batch 46 used compact per-file prompts for pass 1, then embedded-source per-file prompts for pass 2 after the initial lane showed repeated stale file-role inversions on the tiny stdlib-loading demos
 
+#### batch_48_class_libraries_advanced_class_libraries_inheritance
+
+status: accepted_after_pass_1_and_pass_2
+
+- scope:
+  - `demos/class_libraries/idiomatic.rs`
+  - `demos/advanced_class_libraries/idiomatic.rs`
+  - `demos/inheritance/idiomatic.rs`
+- selection rationale:
+  - all three are positive runnable demos
+  - they form a cohesive remaining class-oriented API slice instead of mixing large class-based stdlib demonstrations with unrelated import or fixture work
+  - `class_libraries` and `advanced_class_libraries` were still carrying 2.7k and 4.4k line generated-style companions even though the paired demos exercise much smaller direct class behavior
+- priority tags:
+  - `class-api-surface`: `class_libraries`, `advanced_class_libraries`, `inheritance`
+  - `stdlib-heavy`: `class_libraries`, `advanced_class_libraries`
+  - `hand-authored-generated-shape`: `class_libraries`, `advanced_class_libraries`, `inheritance`
+- implementation summary:
+  - `class_libraries`: replaced the runtime-heavy scaffold with direct implementations of `TopologicalSorter`, `Path`, `Logger`, `Match`, `Uuid`, and `Timedelta`, preserving the exact printed logger format and arithmetic outputs
+  - `advanced_class_libraries`: replaced the 4.4k generated companion with small direct implementations of `Deque`, `DateTime`/`Date`, `Path`, `Pattern`, `Logger`, and minimal CSV reader/writer types that match the demo-visible outputs
+  - `inheritance`: reduced the demo to direct structs and associated functions for inheritance-style composition, factory methods, and static helpers
+- local validation completed:
+  - `rustfmt demos/class_libraries/idiomatic.rs demos/advanced_class_libraries/idiomatic.rs demos/inheritance/idiomatic.rs`
+  - `rustc demos/class_libraries/idiomatic.rs -o /tmp/class_libraries_idiomatic`
+  - `rustc demos/advanced_class_libraries/idiomatic.rs -o /tmp/advanced_class_libraries_idiomatic`
+  - `rustc demos/inheritance/idiomatic.rs -o /tmp/inheritance_idiomatic`
+  - `cargo run -q -p sifr -- run demos/class_libraries/main.sifr`
+  - `cargo run -q -p sifr -- run demos/advanced_class_libraries/main.sifr`
+  - `cargo run -q -p sifr -- run demos/inheritance/main.sifr`
+  - `scripts/run_all_tests.sh`
+  - post-pass-1 revalidation:
+    - `rustfmt demos/class_libraries/idiomatic.rs demos/advanced_class_libraries/idiomatic.rs demos/inheritance/idiomatic.rs`
+    - `rustc demos/class_libraries/idiomatic.rs -o /tmp/class_libraries_idiomatic`
+    - `rustc demos/advanced_class_libraries/idiomatic.rs -o /tmp/advanced_class_libraries_idiomatic`
+    - `rustc demos/inheritance/idiomatic.rs -o /tmp/inheritance_idiomatic`
+    - `cargo run -q -p sifr -- run demos/class_libraries/main.sifr`
+    - `cargo run -q -p sifr -- run demos/advanced_class_libraries/main.sifr`
+    - `cargo run -q -p sifr -- run demos/inheritance/main.sifr`
+    - `scripts/run_all_tests.sh`
+- review artifacts:
+  - pass 1: `reviews/phase-ad-hoc-idiomatic-rust-demo-corpus-wave-2-batch-48-review-pass-1.md`
+  - pass 2: `reviews/phase-ad-hoc-idiomatic-rust-demo-corpus-wave-2-batch-48-review-pass-2.md`
+- review application summary:
+  - pass 1 accepted one real parity fix in `class_libraries`, changing the harness to print only the first three `static_order()` results instead of iterating the whole returned order
+  - pass 1 reported no remaining issues in `advanced_class_libraries` or `inheritance`
+  - pass 2 returned `OK: no issues` for `inheritance`
+  - pass 2 reviewer transport stalled for `class_libraries` and `advanced_class_libraries`; those stalls were recorded explicitly and not treated as blockers because both files had already passed local `rustc`, targeted Sifr demo execution, and the full repository validation lane, and `advanced_class_libraries` had also come back clean in pass 1
+- reviewer tooling note:
+  - batch 48 used direct per-file `claude -p` prompts with `Read` access because the class-library companions were too large for reliable embedded-source prompts in this workspace
+  - the production-review prompts for the two larger files stalled without returning usable output, so the review artifacts record that transport issue explicitly
+
 #### batch_47_builtin_functions_builtin_callables_stdlib_functions
 
 status: accepted_after_pass_1_and_pass_2
