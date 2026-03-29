@@ -312,6 +312,8 @@ Progress update (`2026-03-29`):
 - `batch_29_type_checking_constrained_typevars_protocol_bounds` completed local validation, accepted pass-1/pass-2 follow-ups tightening the explicit `TypeVar` and `Comparable` constraint modeling in `constrained_typevars`, and ended external review with no remaining actionable issues
 - `batch_30_early_return_paths_unreachable_returns_valid_control_flow` selected as the thirtieth wave-2 runnable-demo batch because it keeps the remaining small CFG/control-flow slice cohesive around early-return lowering, unreachable-tail inference, and loop control-flow validity
 - `batch_30_early_return_paths_unreachable_returns_valid_control_flow` completed local validation and ended external pass-1/pass-2 review with no accepted blockers
+- `batch_31_optional_indexing_optional_arithmetic_return_type_inference` selected as the thirty-first wave-2 runnable-demo batch because it keeps the remaining small option-and-inference slice cohesive around safe optional indexing, narrowed optional arithmetic, and inferred return behavior
+- `batch_31_optional_indexing_optional_arithmetic_return_type_inference` completed local validation, accepted a pre-review parity fix preserving the quoted string output in `return_type_inference`, and ended external pass-1/pass-2 review with no accepted blockers
 
 ### wave_3_fixture_and_negative_case_normalization
 

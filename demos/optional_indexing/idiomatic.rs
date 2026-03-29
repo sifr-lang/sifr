@@ -1,15 +1,6 @@
 fn main() {
-    let items: Vec<i64> = vec![10 as i64, 20 as i64, 30 as i64];
-    let value: Option<i64> = {
-        let __sifr_index_list = &items;
-        let __sifr_index_i = 1 as i64;
-        let __sifr_index_norm = if __sifr_index_i < 0 {
-            ((__sifr_index_list.len() as i64) + __sifr_index_i) as usize
-        } else {
-            __sifr_index_i as usize
-        };
-        __sifr_index_list.get(__sifr_index_norm).copied()
-    };
+    let items = [10_i64, 20, 30];
+    let value = items.get(1).copied();
     if let Some(value) = value {
         println!("m27_1 remove data-dependent unwrap/expect demo:");
         println!("{}", value);
