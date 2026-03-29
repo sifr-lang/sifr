@@ -278,6 +278,8 @@ Progress update (`2026-03-29`):
 - `batch_12_readonly_bytes_tempfiles_and_zip_filesystem_and_archives` completed local validation, preserved the observed `zipfile.namelist = Ok(["inside.txt"])` output shape in `filesystem_and_archives`, and passed external pass-1/pass-2 review with no accepted blockers
 - `batch_13_bytes_errors_bytes_file_io_bytes_iteration` selected as the thirteenth wave-2 runnable-demo batch because it completes the remaining small bytes-focused runnable slice around boundary errors, binary file roundtrips, and iteration/index semantics
 - `batch_13_bytes_errors_bytes_file_io_bytes_iteration` completed local validation and passed external pass-1/pass-2 review; the only pass-2 note was rejected because `bytes_file_io` already uses the source-aligned `wave3` path name from the demo itself
+- `batch_14_file_streams_in_memory_streams_text_and_bytes` selected as the fourteenth wave-2 runnable-demo batch because it keeps the stream-and-text/bytes slice cohesive while targeting three still-generated companions around file handles, in-memory IO surfaces, and UTF-8/hex conversion
+- `batch_14_file_streams_in_memory_streams_text_and_bytes` completed local validation and passed external pass-1/pass-2 review with no accepted blockers; both review passes raised an invalid swapped-file claim that contradicted the actual file contents and same-named Sifr demos
 
 ### wave_3_fixture_and_negative_case_normalization
 
