@@ -2097,6 +2097,51 @@ status: accepted_after_pass_1_and_pass_2
 - reviewer tooling note:
   - batch 46 used compact per-file prompts for pass 1, then embedded-source per-file prompts for pass 2 after the initial lane showed repeated stale file-role inversions on the tiny stdlib-loading demos
 
+#### batch_50_stdlib_stdlib_expansion_stdlib_aliases
+
+status: accepted_after_pass_1_and_pass_2
+
+- scope:
+  - `demos/stdlib/idiomatic.rs`
+  - `demos/stdlib_expansion/idiomatic.rs`
+  - `demos/stdlib_aliases/idiomatic.rs`
+- selection rationale:
+  - all three are positive runnable demos
+  - all three form a cohesive remaining stdlib-milestone slice instead of mixing milestone-level stdlib coverage with unrelated parsing, safety, or class-surface demos
+  - the existing companions were still large generated-style scaffolds despite relatively compact demo-visible behavior and milestone outputs
+- priority tags:
+  - `stdlib-heavy`: `stdlib`, `stdlib_expansion`, `stdlib_aliases`
+  - `milestone-demo`: `stdlib`, `stdlib_expansion`, `stdlib_aliases`
+  - `hand-authored-generated-shape`: `stdlib`, `stdlib_expansion`, `stdlib_aliases`
+- implementation summary:
+  - `stdlib`: replaced the 2.8k-line scaffold with a small direct milestone demo covering cwd, digit matching, topological sort, UUID formatting, path helpers, close-match scoring, IP checks, timer access, TOML parsing, and datetime display before printing the same two-line success footer
+  - `stdlib_expansion`: replaced the 2.8k-line scaffold with compact direct helpers for bisect, reduce, token generation, statistics mean, heap access, iterator composition, text fill, CSV row handling, option parsing, and fnmatch before printing the same milestone success line
+  - `stdlib_aliases`: replaced the 2.2k-line scaffold with a direct alias-surface demo using standard Rust math plus small base64/regex/JSON/title-casing helpers that preserve the exact printed output shape
+- local validation completed:
+  - `rustfmt demos/stdlib/idiomatic.rs demos/stdlib_expansion/idiomatic.rs demos/stdlib_aliases/idiomatic.rs`
+  - `rustc demos/stdlib/idiomatic.rs -o /tmp/stdlib_idiomatic`
+  - `rustc demos/stdlib_expansion/idiomatic.rs -o /tmp/stdlib_expansion_idiomatic`
+  - temp Cargo validation for `stdlib_aliases` with `base64 = "0.22"`, `regex = "1"`, `serde_json = "1"`
+  - `/tmp/stdlib_idiomatic`
+  - `/tmp/stdlib_expansion_idiomatic`
+  - `cargo run -q -p sifr -- run demos/stdlib/main.sifr`
+  - `cargo run -q -p sifr -- run demos/stdlib_expansion/main.sifr`
+  - `cargo run -q -p sifr -- run demos/stdlib_aliases/main.sifr`
+  - `scripts/run_all_tests.sh`
+- review artifacts:
+  - pass 1: `reviews/phase-ad-hoc-idiomatic-rust-demo-corpus-wave-2-batch-50-review-pass-1.md`
+  - pass 2: `reviews/phase-ad-hoc-idiomatic-rust-demo-corpus-wave-2-batch-50-review-pass-2.md`
+- review application summary:
+  - pass 1 on `stdlib` produced an unusable stale/generated-shape comparison that inverted the file roles and was not accepted as a blocker
+  - pass 1 on `stdlib_expansion` likewise returned stale/generated-shape commentary after briefly stating `OK: no issues`; it was recorded explicitly and not accepted as a blocker
+  - pass 1 on `stdlib_aliases` raised only one unexercised `fnmatch_filter` generalization note plus two minor style notes, and none were accepted as blockers because the paired demo-visible behavior already matched
+  - pass 2 returned `OK: no issues` for `stdlib`
+  - pass 2 returned `OK: no issues` for `stdlib_expansion`
+  - pass 2 on `stdlib_aliases` raised notes about exact platform string spellings and internal helper error typing, but neither was accepted because the paired demo only checks that the platform strings are non-empty and the helper error representation is not observable in the exercised paths
+- reviewer tooling note:
+  - batch 50 again used direct per-file `claude -p --tools Read` prompts because that has been the most reliable reviewer transport in this workspace
+  - the pass-1 `stdlib` and `stdlib_expansion` responses still degraded into stale/generated-shape commentary despite the smaller prompt, so those artifacts record the unusable verdicts explicitly rather than fabricating clean pass-1 approvals
+
 #### batch_49_core_stdlib_extended_stdlib_additional_modules
 
 status: accepted_after_pass_1_and_pass_2
