@@ -1034,6 +1034,54 @@ status: accepted_after_pass_1_and_pass_2
 - reviewer tooling note:
   - batch 21 used stable per-file external review prompts embedding both the paired Sifr source and the Rust companion because larger batch prompts remained unreliable in this workspace
 
+#### batch_22_iteration_basics_iterator_builtins_iterators_and_comprehensions
+
+status: accepted_after_pass_1_and_pass_2
+
+- scope:
+  - `demos/iteration_basics/idiomatic.rs`
+  - `demos/iterator_builtins/idiomatic.rs`
+  - `demos/iterators_and_comprehensions/idiomatic.rs`
+- selection rationale:
+  - all three are positive runnable demos
+  - all three form a cohesive remaining iterator-basics slice instead of mixing small iteration demos with unrelated stdlib areas
+  - each companion still retained iterator boxing, explicit lowering scaffolds, or other generated-style ceremony despite compact demo-visible behavior
+- priority tags:
+  - `iterator-surface`: `iteration_basics`, `iterator_builtins`, `iterators_and_comprehensions`
+  - `hand-authored-generated-shape`: `iteration_basics`, `iterator_builtins`, `iterators_and_comprehensions`
+- implementation summary:
+  - `iteration_basics`: reduced the companion to direct string iteration, explicit key-list iteration, and compact output/assertion handling
+  - `iterator_builtins`: replaced boxed iterators and one-off lowering scaffolds with direct borrowed iterator chains plus a small `sorted(values, reverse)` helper mirroring the Sifr surface
+  - `iterators_and_comprehensions`: replaced comprehension scaffolding and iterator boxing with direct borrowed iterator chains for map/filter/min/max/sum/reversed/enumerate/zip/any/all parity
+- local validation completed:
+  - `rustfmt demos/iteration_basics/idiomatic.rs demos/iterator_builtins/idiomatic.rs demos/iterators_and_comprehensions/idiomatic.rs`
+  - `rustc --edition=2021 demos/iteration_basics/idiomatic.rs -o /tmp/sifr-idiomatic-iteration-basics && /tmp/sifr-idiomatic-iteration-basics`
+  - `rustc --edition=2021 demos/iterator_builtins/idiomatic.rs -o /tmp/sifr-idiomatic-iterator-builtins && /tmp/sifr-idiomatic-iterator-builtins`
+  - `rustc --edition=2021 demos/iterators_and_comprehensions/idiomatic.rs -o /tmp/sifr-idiomatic-iterators-and-comprehensions && /tmp/sifr-idiomatic-iterators-and-comprehensions`
+  - `cargo run -q -p sifr -- run demos/iteration_basics/main.sifr`
+  - `cargo run -q -p sifr -- run demos/iterator_builtins/main.sifr`
+  - `cargo run -q -p sifr -- run demos/iterators_and_comprehensions/main.sifr`
+  - `scripts/run_all_tests.sh`
+  - post-pass-1 revalidation:
+    - `rustfmt demos/iteration_basics/idiomatic.rs demos/iterator_builtins/idiomatic.rs demos/iterators_and_comprehensions/idiomatic.rs`
+    - `rustc --edition=2021 demos/iterator_builtins/idiomatic.rs -o /tmp/sifr-idiomatic-iterator-builtins && /tmp/sifr-idiomatic-iterator-builtins`
+    - `rustc --edition=2021 demos/iterators_and_comprehensions/idiomatic.rs -o /tmp/sifr-idiomatic-iterators-and-comprehensions && /tmp/sifr-idiomatic-iterators-and-comprehensions`
+    - `cargo run -q -p sifr -- run demos/iterator_builtins/main.sifr`
+    - `cargo run -q -p sifr -- run demos/iterators_and_comprehensions/main.sifr`
+    - `scripts/run_all_tests.sh`
+- review artifacts:
+  - pass 1: `reviews/phase-ad-hoc-idiomatic-rust-demo-corpus-wave-2-batch-22-review-pass-1.md`
+  - pass 2: `reviews/phase-ad-hoc-idiomatic-rust-demo-corpus-wave-2-batch-22-review-pass-2.md`
+- review application summary:
+  - pass 1 reported no issues in `iteration_basics`
+  - pass 1 follow-ups were accepted in `iterator_builtins` and `iterators_and_comprehensions` to make repeated sequence traversal explicitly borrowed and to model `sorted(..., reverse=True)` more directly
+  - pass 1's move/use-after-consume framing was not accepted as the root issue because the pre-fix files had already compiled successfully in this workspace; the applied change was taken for parity clarity instead
+  - pass 2 reported no accepted blockers
+  - the pass-2 `iteration_basics` note was rejected because the paired Sifr source iterates an explicit `keys` list, not the dictionary itself
+  - the pass-2 `iterators_and_comprehensions` `sorted()` note was rejected because the Rust companion sorts a cloned `Vec` and preserves the original unsorted sequence
+- reviewer tooling note:
+  - batch 22 used stable per-file external review prompts embedding both the paired Sifr source and the Rust companion because larger batch prompts remained unreliable in this workspace
+
 ### wave_3_fixture_and_negative_case_normalization
 
 status: pending
