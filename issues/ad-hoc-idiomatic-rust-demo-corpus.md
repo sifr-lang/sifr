@@ -264,6 +264,8 @@ Progress update (`2026-03-29`):
 - `batch_05_base64_hashlib_bytes_module` completed local validation and passed external pass-1/pass-2 review with no actionable issues
 - `batch_06_collections_itertools_heapq` selected as the sixth wave-2 runnable-demo batch because it keeps the container-and-iteration slice cohesive while targeting three phase-30-reviewed companions that still carried substantial generated-style helper structure
 - `batch_06_collections_itertools_heapq` completed local validation, accepted the pass-1 follow-up on `collections` deque-capacity boundary clarity, and passed external pass-2 review with no remaining actionable issues
+- `batch_07_string_textwrap_fnmatch` selected as the seventh wave-2 runnable-demo batch because it keeps the text-processing slice cohesive while targeting three phase-30-reviewed companions whose current implementations still ranged from faux-constant ceremony to oversized helper scaffolding
+- `batch_07_string_textwrap_fnmatch` completed local validation and passed external pass-1/pass-2 review with no accepted blockers
 
 ### wave_3_fixture_and_negative_case_normalization
 
