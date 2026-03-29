@@ -1,171 +1,110 @@
 use std::collections::HashMap;
 
+fn safe_index<T: Copy>(items: &[T], index: i64) -> Option<T> {
+    let len = items.len() as i64;
+    let normalized = if index < 0 { len + index } else { index };
+    if (0..len).contains(&normalized) {
+        items.get(normalized as usize).copied()
+    } else {
+        None
+    }
+}
+
+fn safe_char_at(text: &str, index: i64) -> Option<String> {
+    let chars: Vec<char> = text.chars().collect();
+    safe_index(&chars, index).map(|ch| ch.to_string())
+}
+
 fn main() {
     println!("=== Safe List Indexing ===");
-    let nums: Vec<i64> = vec![10 as i64, 20 as i64, 30 as i64];
-    let val: Option<i64> = {
-        let __sifr_index_list = &nums;
-        let __sifr_index_i = 1 as i64;
-        let __sifr_index_norm = if __sifr_index_i < 0 {
-            ((__sifr_index_list.len() as i64) + __sifr_index_i) as usize
-        } else {
-            __sifr_index_i as usize
-        };
-        __sifr_index_list.get(__sifr_index_norm).copied()
-    };
-    if let Some(val) = val {
-        println!("nums[1] = {}", val);
+    let nums = vec![10_i64, 20, 30];
+    if let Some(value) = safe_index(&nums, 1) {
+        println!("nums[1] = {value}");
     }
-    let oob: Option<i64> = {
-        let __sifr_index_list = &nums;
-        let __sifr_index_i = 99 as i64;
-        let __sifr_index_norm = if __sifr_index_i < 0 {
-            ((__sifr_index_list.len() as i64) + __sifr_index_i) as usize
-        } else {
-            __sifr_index_i as usize
-        };
-        __sifr_index_list.get(__sifr_index_norm).copied()
-    };
-    if let Some(oob) = oob {
-        println!("nums[99] = {}", oob);
+    if let Some(value) = safe_index(&nums, 99) {
+        println!("nums[99] = {value}");
     } else {
         println!("nums[99] = None (safe!)");
     }
+
     println!("=== Safe Dict Indexing ===");
-    let ages: HashMap<String, i64> = HashMap::from([
-        ("alice".to_string(), 25 as i64),
-        ("bob".to_string(), 30 as i64),
-    ]);
-    let a: Option<i64> = ages.get("alice").copied();
-    if let Some(a) = a {
-        println!("ages[alice] = {}", a);
+    let ages = HashMap::from([("alice".to_string(), 25_i64), ("bob".to_string(), 30)]);
+    if let Some(value) = ages.get("alice").copied() {
+        println!("ages[alice] = {value}");
     }
-    let c: Option<i64> = ages.get("charlie").copied();
-    if let Some(c) = c {
-        println!("ages[charlie] = {}", c);
+    if let Some(value) = ages.get("charlie").copied() {
+        println!("ages[charlie] = {value}");
     } else {
         println!("ages[charlie] = None (safe!)");
     }
+
     println!("=== Safe String Indexing ===");
-    let s: String = "hello".to_string();
-    let ch: Option<String> = {
-        let __sifr_index_str = &s;
-        let __sifr_index_i = 0 as i64;
-        let __sifr_index_norm = if __sifr_index_i < 0 {
-            ((__sifr_index_str.chars().count() as i64) + __sifr_index_i) as usize
-        } else {
-            __sifr_index_i as usize
-        };
-        __sifr_index_str
-            .chars()
-            .nth(__sifr_index_norm)
-            .map(|c| c.to_string())
-    };
-    if let Some(ch) = ch {
-        println!("s[0] = {}", ch);
+    let text = "hello";
+    if let Some(ch) = safe_char_at(text, 0) {
+        println!("s[0] = {ch}");
     }
-    let oob_ch: Option<String> = {
-        let __sifr_index_str = &s;
-        let __sifr_index_i = 99 as i64;
-        let __sifr_index_norm = if __sifr_index_i < 0 {
-            ((__sifr_index_str.chars().count() as i64) + __sifr_index_i) as usize
-        } else {
-            __sifr_index_i as usize
-        };
-        __sifr_index_str
-            .chars()
-            .nth(__sifr_index_norm)
-            .map(|c| c.to_string())
-    };
-    if let Some(oob_ch) = oob_ch {
-        println!("s[99] = {}", oob_ch);
+    if let Some(ch) = safe_char_at(text, 99) {
+        println!("s[99] = {ch}");
     } else {
         println!("s[99] = None (safe!)");
     }
+
     println!("=== Negative Indexing ===");
-    let items: Vec<i64> = vec![1 as i64, 2 as i64, 3 as i64, 4 as i64, 5 as i64];
-    let last: Option<i64> = {
-        let __sifr_index_list = &items;
-        let __sifr_index_i = -(1 as i64);
-        let __sifr_index_norm = if __sifr_index_i < 0 {
-            ((__sifr_index_list.len() as i64) + __sifr_index_i) as usize
-        } else {
-            __sifr_index_i as usize
-        };
-        __sifr_index_list.get(__sifr_index_norm).copied()
-    };
-    if let Some(last) = last {
-        println!("last item: {}", last);
+    let items = vec![1_i64, 2, 3, 4, 5];
+    if let Some(last) = safe_index(&items, -1) {
+        println!("last item: {last}");
     }
-    let last_ch: Option<String> = {
-        let __sifr_index_str = &s;
-        let __sifr_index_i = -(1 as i64);
-        let __sifr_index_norm = if __sifr_index_i < 0 {
-            ((__sifr_index_str.chars().count() as i64) + __sifr_index_i) as usize
-        } else {
-            __sifr_index_i as usize
-        };
-        __sifr_index_str
-            .chars()
-            .nth(__sifr_index_norm)
-            .map(|c| c.to_string())
-    };
-    if let Some(last_ch) = last_ch {
-        println!("last char: {}", last_ch);
+    if let Some(last) = safe_char_at(text, -1) {
+        println!("last char: {last}");
     }
+
     println!("=== List pop() ===");
-    let mut stack: Vec<i64> = vec![10 as i64, 20 as i64, 30 as i64];
-    let top: Option<i64> = stack.pop();
-    if let Some(top) = top {
-        println!("popped: {}", top);
+    let mut stack = vec![10_i64, 20, 30];
+    if let Some(top) = stack.pop() {
+        println!("popped: {top}");
     }
-    let _: Option<i64> = stack.pop();
-    let _: Option<i64> = stack.pop();
-    let empty: Option<i64> = stack.pop();
-    if let Some(empty) = empty {
-        println!("got: {}", empty);
+    let _ = stack.pop();
+    let _ = stack.pop();
+    if let Some(value) = stack.pop() {
+        println!("got: {value}");
     } else {
         println!("empty pop: None");
     }
+
     println!("=== Dict get() and pop() ===");
-    let mut data: HashMap<String, i64> = HashMap::from([
-        ("alice".to_string(), 25 as i64),
-        ("bob".to_string(), 30 as i64),
-    ]);
-    let g: Option<i64> = data.get(("alice".to_string()).as_str()).cloned();
-    if let Some(g) = g {
-        println!("get alice: {}", g);
+    let mut data = HashMap::from([("alice".to_string(), 25_i64), ("bob".to_string(), 30)]);
+    if let Some(value) = data.get("alice").copied() {
+        println!("get alice: {value}");
     }
-    let gm: Option<i64> = data.get(("missing".to_string()).as_str()).cloned();
-    if let Some(gm) = gm {
-        println!("get missing: {}", gm);
+    if let Some(value) = data.get("missing").copied() {
+        println!("get missing: {value}");
     } else {
         println!("get missing: None");
     }
-    let p: Option<i64> = data.remove(("bob".to_string()).as_str());
-    if let Some(p) = p {
-        println!("popped bob: {}", p);
+    if let Some(value) = data.remove("bob") {
+        println!("popped bob: {value}");
     }
+
     println!("=== String find() ===");
-    let text: String = "hello, world!".to_string();
-    let pos: Option<i64> = text.find(&"world".to_string()).map(|i| i as i64);
-    if let Some(pos) = pos {
-        println!("found world at: {}", pos);
+    let phrase = "hello, world!";
+    if let Some(pos) = phrase.find("world") {
+        println!("found world at: {pos}");
     }
-    let miss: Option<i64> = text.find(&"xyz".to_string()).map(|i| i as i64);
-    if let Some(miss) = miss {
-        println!("found xyz at: {}", miss);
+    if let Some(pos) = phrase.find("xyz") {
+        println!("found xyz at: {pos}");
     } else {
         println!("xyz not found");
     }
+
     println!("=== Del Statement ===");
-    let mut config: HashMap<String, i64> = HashMap::from([
-        ("a".to_string(), 1 as i64),
-        ("b".to_string(), 2 as i64),
-        ("c".to_string(), 3 as i64),
+    let mut config = HashMap::from([
+        ("a".to_string(), 1_i64),
+        ("b".to_string(), 2),
+        ("c".to_string(), 3),
     ]);
-    println!("before del: {}", config.len() as i64);
-    let _ = config.remove(&"b".to_string());
-    println!("after del: {}", config.len() as i64);
+    println!("before del: {}", config.len());
+    let _ = config.remove("b");
+    println!("after del: {}", config.len());
+
     println!("demo complete!");
 }
