@@ -384,6 +384,8 @@ Progress update (`2026-03-29`):
 - `batch_65_codegen_preamble_codegen_structural_passes_intrinsic_codegen` completed local validation and ended external review with no accepted blockers; all three files were clean in pass 1, `codegen_structural_passes` and `intrinsic_codegen` were clean in pass 2, and the initial `codegen_preamble` pass-2 note was rejected after a retry confirmed it had simply misread the Rust control flow around the final print
 - `batch_66_decimal_types_decimal_arithmetic_decimal_conversions` selected as the sixty-sixth wave-2 runnable-demo batch because it keeps the first decimal milestone slice cohesive around parser/type integration, arithmetic semantics, and conversion/boundary contracts
 - `batch_66_decimal_types_decimal_arithmetic_decimal_conversions` completed local validation, accepted one pass-1 follow-up in `decimal_conversions` replacing string-based integer extraction with direct numeric extraction from decimal internals, and ended external review with no remaining accepted blockers; `decimal_types` and `decimal_arithmetic` were clean in pass 1, while all three pass-2 reviewer prompts stalled without usable verdicts after repeated retries
+- `batch_67_import_forms_imports_external_modules` selected as the sixty-seventh wave-2 runnable-demo batch because it keeps the remaining import/module semantics slice cohesive around alternate import forms, cross-file model imports, and non-main external module loading
+- `batch_67_import_forms_imports_external_modules` completed local validation and ended external review with no accepted blockers; all three files were clean in both passes
 
 ### wave_3_fixture_and_negative_case_normalization
 
