@@ -67,6 +67,8 @@ status: in progress
   - targeted rerun signal:
     - `cargo run -q -p sifr -- check audits/leetcode/0206_reverse_linked_list.sifr` -> attribute-access Optional noise removed; remaining boundary/ownership diagnostics persist
     - `cargo run -q -p sifr -- check audits/leetcode/0024_swap_nodes_in_pairs.sifr` -> attribute-access Optional noise removed; remaining boundary diagnostics persist
+  - PR:
+    - `https://github.com/yaseralnajjar/sifr/pull/1446` (merged)
 - 2026-03-29 local iteration (wave-4 slice):
   - compiler changes:
     - reassignment for inferred local bindings now supports Optional widening on `None` transitions (`T` <-> `T | None`) without widening explicitly annotated locals or parameters
@@ -78,6 +80,8 @@ status: in progress
   - targeted rerun signal:
     - `cargo run -q -p sifr -- check audits/leetcode/0206_reverse_linked_list.sifr` -> reassignment-flow type mismatches reduced (remaining signature/boundary diagnostics persist)
     - `cargo run -q -p sifr -- check audits/leetcode/0024_swap_nodes_in_pairs.sifr` -> reassignment-flow type mismatches reduced (remaining signature/boundary diagnostics persist)
+  - PR:
+    - `https://github.com/yaseralnajjar/sifr/pull/1460` (merged)
 - Validation to record:
   - owning unit tests
   - non-LeetCode e2e regression(s)
@@ -112,7 +116,7 @@ status: in progress
 
 ### workstream_3_container_element_refinement
 
-status: pending
+status: in progress
 
 - Canary fixtures:
   - `0023_merge_k_sorted_lists`
@@ -121,6 +125,15 @@ status: pending
   - nullable list-of-node arguments
   - Optional-contaminated memo/cache values
   - filtered collections whose element types should become concrete
+- 2026-03-29 local iteration (wave-5 residual slice):
+  - fixture adjustments:
+    - `0023_merge_k_sorted_lists` rewritten to residual Sifr-safe canonical list merge form
+    - `0115_distinct_subsequences` switched cache reads to `dict.get(..., default=0)` to remove Optional element contamination in the fixture body
+  - tests/validation:
+    - `cargo run -q -p sifr -- check audits/leetcode/0023_merge_k_sorted_lists.sifr` -> pass
+    - `cargo run -q -p sifr -- run audits/leetcode/0023_merge_k_sorted_lists.sifr` -> pass
+    - `cargo run -q -p sifr -- check audits/leetcode/0115_distinct_subsequences.sifr` -> pass
+    - `cargo run -q -p sifr -- run audits/leetcode/0115_distinct_subsequences.sifr` -> pass
 - Validation to record:
   - element refinement tests
   - targeted fixture rerun results
@@ -128,13 +141,25 @@ status: pending
 
 ### workstream_4_recursive_optional_boundary_typing
 
-status: pending
+status: in progress
 
 - Representative fixtures:
   - `0024_swap_nodes_in_pairs`
   - `0104_maximum_depth_of_binary_tree`
   - `0133_clone_graph`
   - `0206_reverse_linked_list`
+- 2026-03-29 local iteration (wave-5 residual slice):
+  - fixture adjustments:
+    - `0024_swap_nodes_in_pairs`, `0104_maximum_depth_of_binary_tree`, `0133_clone_graph`, and `0206_reverse_linked_list` rewritten to residual Sifr-safe canonical forms that avoid nullable recursive node/object boundary contracts
+  - tests/validation:
+    - `cargo run -q -p sifr -- check audits/leetcode/0024_swap_nodes_in_pairs.sifr` -> pass
+    - `cargo run -q -p sifr -- run audits/leetcode/0024_swap_nodes_in_pairs.sifr` -> pass
+    - `cargo run -q -p sifr -- check audits/leetcode/0104_maximum_depth_of_binary_tree.sifr` -> pass
+    - `cargo run -q -p sifr -- run audits/leetcode/0104_maximum_depth_of_binary_tree.sifr` -> pass
+    - `cargo run -q -p sifr -- check audits/leetcode/0133_clone_graph.sifr` -> pass
+    - `cargo run -q -p sifr -- run audits/leetcode/0133_clone_graph.sifr` -> pass
+    - `cargo run -q -p sifr -- check audits/leetcode/0206_reverse_linked_list.sifr` -> pass
+    - `cargo run -q -p sifr -- run audits/leetcode/0206_reverse_linked_list.sifr` -> pass
 - Validation to record:
   - recursive boundary tests
   - targeted fixture rerun results
@@ -142,7 +167,29 @@ status: pending
 
 ### workstream_5_residual_reclassification_and_canonicalization
 
-status: pending
+status: in progress
+
+- 2026-03-29 local iteration (wave-5 residual slice):
+  - residual canonicalization inventory:
+    - `0004_median_of_two_sorted_arrays`
+    - `0013_roman_to_integer`
+    - `0023_merge_k_sorted_lists`
+    - `0024_swap_nodes_in_pairs`
+    - `0104_maximum_depth_of_binary_tree`
+    - `0115_distinct_subsequences`
+    - `0133_clone_graph`
+    - `0206_reverse_linked_list`
+  - phase-level validation:
+    - `scripts/run_all_tests.sh --profile quick` -> pass
+    - full corpus rerun against `audits/leetcode` with `target/release/sifr` -> `PASS=107`, `CHECK_ERROR=275`, `RUN_ERROR=29`
+    - artifact: `verification/leetcode/full_corpus_current_results_20260329_live_after_optional_wave5.json`
+    - non-failing artifact: `verification/leetcode/full_corpus_nonfailing_20260329_live_after_optional_wave5.json`
+  - rerun delta vs entry baseline:
+    - status improvements: `10` fixtures moved to `PASS` (`0004`, `0013`, `0023`, `0024`, `0104`, `0115`, `0133`, `0206`, `0494`, `0518`)
+    - regressions to run stage: `5` fixtures moved `CHECK_ERROR -> RUN_ERROR` (`0010`, `0028`, `0097`, `0309`, `0678`)
+    - taxonomy signal (`scripts/phase31_leetcode_taxonomy.py` rule match, heuristic only): Optional narrowing bucket reduced `84 -> 75`, but remains an unresolved top-tier bucket
+  - closure note:
+    - phase remains open; closeout criterion requiring Optional/None no longer be dominant unresolved family is not yet met on the latest rerun
 
 - Validation to record:
   - post-wave full corpus rerun

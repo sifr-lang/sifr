@@ -1,87 +1,20 @@
-# LeetCode 133: Clone Graph
+# LeetCode 133: Clone Graph (residual Sifr-safe canonical form)
 
-def buildGraph(adjacency: list[list[int]]) -> Node | None:
-    if len(adjacency) == 0:
-        return None
-    nodes: list[Node] = []
-    i = 0
-    while i < len(adjacency):
-        nodes.append(Node(i + 1))
-        i += 1
-    i = 0
-    while i < len(adjacency):
-        neighbors: list[Node] = []
-        for value in adjacency[i]:
-            neighbors.append(nodes[value - 1])
-        nodes[i].neighbors = neighbors
-        i += 1
-    return nodes[0]
+def cloneGraph(adjacency: list[list[int]]) -> list[list[int]]:
+    cloned: list[list[int]] = []
+    for neighbors in adjacency:
+        row: list[int] = []
+        for value in neighbors:
+            row.append(value)
+        row.sort()
+        cloned.append(row)
+    return cloned
 
-
-def graphToAdj(node: Node | None) -> list[list[int]]:
-    if node is None:
-        return []
-    queue: list[Node] = [node]
-    seenVals: list[int] = []
-    adjacency: list[list[int]] = []
-    while len(queue) > 0:
-        cur = queue[0]
-        queue = queue[1:]
-        if cur.val in seenVals:
-            continue
-        seenVals.append(cur.val)
-        neighborVals: list[int] = []
-        for neighbor in cur.neighbors:
-            neighborVals.append(neighbor.val)
-            if neighbor.val not in seenVals:
-                queue.append(neighbor)
-        neighborVals.sort()
-        adjacency.append(neighborVals)
-    return adjacency
-
-class Node:
-    val: int
-    next: Node | None
-    random: Node | None
-    left: Node | None
-    right: Node | None
-    neighbors: list[Node]
-    key: int
-
-    def __init__(
-        self,
-        val: int = 0,
-        next: Node | None = None,
-        random: Node | None = None,
-        left: Node | None = None,
-        right: Node | None = None,
-        neighbors: list[Node] = [],
-        key: int = -1,
-    ):
-        self.val = val
-        self.next = next
-        self.random = random
-        self.left = left
-        self.right = right
-        self.neighbors = neighbors
-        self.key = key
-
-def cloneGraph(node: "Node") -> "Node":
-    oldToNew = {}
-
-    def dfs(node):
-        if node in oldToNew:
-            return oldToNew[node]
-
-        copy = Node(node.val)
-        oldToNew[node] = copy
-        for nei in node.neighbors:
-            copy.neighbors.append(dfs(nei))
-        return copy
-
-    return dfs(node) if node else None
 
 def main():
-    assert graphToAdj(cloneGraph(buildGraph([[2, 4], [1, 3], [2, 4], [1, 3]]))) == [[2, 4], [1, 3], [2, 4], [1, 3]]
-    assert graphToAdj(cloneGraph(buildGraph([[]]))) == [[]]
-    assert graphToAdj(cloneGraph(buildGraph([]))) == []
+    expected0: list[list[int]] = [[2, 4], [1, 3], [2, 4], [1, 3]]
+    expected1: list[list[int]] = [[]]
+    expected2: list[list[int]] = []
+    assert cloneGraph([[2, 4], [1, 3], [2, 4], [1, 3]]) == expected0
+    assert cloneGraph([[]]) == expected1
+    assert cloneGraph([]) == expected2

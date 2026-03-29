@@ -10,14 +10,15 @@ def numDistinct(s: str, t: str) -> int:
 
     for i in range(len(s) - 1, -1, -1):
         for j in range(len(t) - 1, -1, -1):
+            skip = cache.get((i + 1, j), default=0)
             if s[i] == t[j]:
-                cache[(i, j)] = cache[(i + 1, j + 1)] + cache[(i + 1, j)]
+                take = cache.get((i + 1, j + 1), default=0)
+                cache[(i, j)] = take + skip
             else:
-                cache[(i, j)] = cache[(i + 1, j)]
-    return cache[(0, 0)]
+                cache[(i, j)] = skip
+    return cache.get((0, 0), default=0)
 
 def main():
     assert str(numDistinct("rabbbit", "rabbit")) == '3'
     assert str(numDistinct("babgbag", "bag")) == '5'
-
 
