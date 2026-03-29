@@ -179,6 +179,39 @@ fn test_guarded_dict_pop_stays_optional() {
 }
 
 #[test]
+fn test_boolop_and_short_circuit_narrows_guarded_index_operand() {
+    let result = lower_source(
+        "def main():\n    values: list[int] = [1, 2, 3]\n    i: int = 1\n    ok: bool = i < len(values) and values[i] > 0\n    assert ok == True\n",
+    );
+    assert!(
+        result.is_ok(),
+        "`and` short-circuit should apply sequence guard facts to the RHS operand"
+    );
+}
+
+#[test]
+fn test_boolop_or_short_circuit_narrows_rhs_after_not_empty_guard() {
+    let result = lower_source(
+        "def probe(stack: list[int]) -> bool:\n    return not stack or stack[0] > 0\n\ndef main():\n    assert probe([]) == True\n    assert probe([1, 2]) == True\n",
+    );
+    assert!(
+        result.is_ok(),
+        "`or` short-circuit should apply false-branch guard facts to the RHS operand"
+    );
+}
+
+#[test]
+fn test_boolop_and_without_sequence_guard_keeps_optional_index_error() {
+    let result = lower_source(
+        "def read_without_len_guard(values: list[int], i: int) -> int:\n    if True and i >= 0:\n        value: int = values[i]\n        return value\n    return 0\n",
+    );
+    assert!(
+        result.is_err(),
+        "`and` without an explicit sequence guard should not narrow index access"
+    );
+}
+
+#[test]
 fn test_if_expr_optional_branch_does_not_implicitly_unwrap() {
     let result = lower_source(
         "def pick(x: int | None) -> int:\n    value: int = x if x is not None else 0\n    return value\n",

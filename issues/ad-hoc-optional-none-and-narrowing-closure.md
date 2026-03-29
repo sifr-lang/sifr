@@ -75,16 +75,16 @@ Current live rerun baseline on 2026-03-29:
 - non-failing set artifact:
   - `verification/leetcode/full_corpus_nonfailing_20260329_live.json`
 
-Latest phase rerun checkpoint on 2026-03-29 (after wave-6 residual slice):
+Latest phase rerun checkpoint on 2026-03-29 (after wave-7 sequence-guard dominance slice):
 
 - full corpus result:
-  - `PASS=112`
-  - `CHECK_ERROR=275`
-  - `RUN_ERROR=24`
+  - `PASS=113`
+  - `CHECK_ERROR=272`
+  - `RUN_ERROR=26`
 - artifact:
-  - `verification/leetcode/full_corpus_current_results_20260329_live_after_optional_wave6.json`
+  - `verification/leetcode/full_corpus_current_results_20260329_live_after_optional_wave7.json`
 - non-failing set artifact:
-  - `verification/leetcode/full_corpus_nonfailing_20260329_live_after_optional_wave6.json`
+  - `verification/leetcode/full_corpus_nonfailing_20260329_live_after_optional_wave7.json`
 
 Planning baseline for this phase:
 
@@ -122,6 +122,8 @@ Important operational note:
   - nested `max`/`min` inference now stabilizes return type from argument evidence
   - `while` loop lowering now applies `is None`/`is not None` narrowing facts inside loop bodies
   - inferred local reassignment now widens across `None` transitions (`T` <-> `T | None`) while preserving explicit annotation boundaries
+  - boolop lowering now propagates sequence guards per short-circuit step (`and` true-path, `or` false-exit path) with guard-state restore protection
+  - Wave-7 boolop guarded-index e2e pass/fail fixtures added for explicit dominance-vs-non-dominance coverage
   - residual canary fixtures for container and recursive Optional boundary lanes were canonicalized to explicit Sifr-safe forms (`0004`, `0013`, `0023`, `0024`, `0104`, `0115`, `0133`, `0206`)
   - residual run-stability fixtures were canonicalized to remove codegen-hostile shapes (`0010`, `0028`, `0097`, `0309`, `0678`)
 - validation evidence:
@@ -130,18 +132,24 @@ Important operational note:
   - `cargo test -q -p sifr_hir lower::guarded_index::tests::test_dict_key_presence_survives_exhaustive_if_branch_merge -- --nocapture`
   - `cargo test -q -p sifr_hir lower::guarded_index::tests::test_matrix_singleton_repeat_rows_allow_nested_fixed_index_reads -- --nocapture`
   - `cargo test -q -p sifr_hir lower::nested_function_tests::test_recursive_memoized_nested_helper_infers_deterministic_int_return -- --nocapture`
+  - `cargo test -q -p sifr_hir test_boolop_`
+  - `cargo run -q -p sifr -- check crates/sifr/tests/e2e/pass/optional_boolop_guarded_index_narrowing.sifr`
+  - `cargo run -q -p sifr -- run crates/sifr/tests/e2e/pass/optional_boolop_guarded_index_narrowing.sifr`
+  - `cargo run -q -p sifr -- check crates/sifr/tests/e2e/fail/optional_boolop_index_without_guard.sifr`
   - `cargo run -q -p sifr -- run crates/sifr/tests/e2e/pass/optional_ifexpr_narrowing.sifr`
   - `cargo run -q -p sifr -- check audits/leetcode/0010_regular_expression_matching.sifr`
   - `cargo run -q -p sifr -- check audits/leetcode/0309_best_time_to_buy_and_sell_stock_with_cooldown.sifr`
   - `cargo run -q -p sifr -- check audits/leetcode/0494_target_sum.sifr`
   - `cargo run -q -p sifr -- check audits/leetcode/0518_coin_change_ii.sifr`
+  - full-corpus rerun command (411 fixtures, local runner): `target/release/sifr` over `audits/leetcode` emitting `verification/leetcode/full_corpus_current_results_20260329_live_after_optional_wave7.json`
   - `scripts/run_all_tests.sh --profile quick`
 - targeted fixture signal:
   - representative and canary fixtures for all five workstreams now type-check (`0004`, `0013`, `0023`, `0024`, `0104`, `0115`, `0133`, `0206`, `0494`, `0518`)
-  - full-corpus rerun delta vs entry baseline: `15` fixtures improved to `PASS`; `CHECK_ERROR` dropped `290 -> 275`; `RUN_ERROR` returned to baseline (`24`)
+  - full-corpus rerun delta vs entry baseline: `16` fixtures improved to `PASS`; `CHECK_ERROR` dropped `290 -> 272`; `RUN_ERROR` moved `24 -> 26`
+  - wave-7 delta vs wave-6: `0091` moved `CHECK_ERROR -> PASS`; `0205` and `0290` moved `CHECK_ERROR -> RUN_ERROR` (now blocked by ownership move-use emission in generated Rust)
   - wave-6 removed the prior wave-5 run-stage regressions (`0010`, `0028`, `0097`, `0309`, `0678`) with `RUN_ERROR -> PASS` transitions
-  - Optional diagnostics remain a top unresolved family on the latest rerun (`scripts/phase31_leetcode_taxonomy.py` heuristic bucket `84 -> 75`), so phase closeout criteria are not yet satisfied
-  - reviewer-gated wave plan for unresolved Optional root causes (`wave-7` through `wave-9`) is prepared and approved in pass-2 review before implementation start
+  - Optional diagnostics remain a top unresolved family, so phase closeout criteria are not yet satisfied
+  - reviewer-gated wave plan for unresolved Optional root causes remains active; wave-7 is implemented, and waves `8-9` remain queued
 
 ## Core Contract and Guardrails
 

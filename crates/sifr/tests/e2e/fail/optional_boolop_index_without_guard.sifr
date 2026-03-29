@@ -1,0 +1,11 @@
+# expect-error: SIFR-TYPE-0001
+# Test: bool short-circuit without explicit length guard keeps index optional
+
+def requires_guard(values: list[int], i: int) -> int:
+    if True and i >= 0:
+        value: int = values[i]
+        return value
+    return 0
+
+def main():
+    print(requires_guard([1, 2, 3], 1))

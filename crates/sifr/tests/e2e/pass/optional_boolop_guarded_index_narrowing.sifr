@@ -1,0 +1,18 @@
+# Reference: phase_optional_wave7_boolop_guarded_index_narrowing
+# Test: bool short-circuit applies sequence guards to dominated RHS index reads
+
+def first_nonnegative_prefix(values: list[int]) -> int:
+    i: int = 0
+    while i < len(values) and values[i] >= 0:
+        i = i + 1
+    return i
+
+def empty_or_positive_head(values: list[int]) -> bool:
+    return len(values) == 0 or values[0] > 0
+
+def main():
+    assert first_nonnegative_prefix([3, 2, -1, 5]) == 2
+    assert first_nonnegative_prefix([1, 2, 3]) == 3
+    assert empty_or_positive_head([]) == True
+    assert empty_or_positive_head([4, 2, 1]) == True
+    assert empty_or_positive_head([-1, 2, 3]) == False
