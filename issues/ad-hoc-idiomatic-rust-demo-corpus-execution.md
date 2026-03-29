@@ -1712,6 +1712,45 @@ status: accepted_after_pass_1_and_pass_2
 - reviewer tooling note:
   - batch 37 used concise per-file external review prompts with one-line verdict constraints because that transport pattern has been the most reliable reviewer lane in this workspace
 
+#### batch_38_safe_collections_safe_indexing_guarded_sequence_index
+
+status: accepted_after_pass_1_and_pass_2
+
+- scope:
+  - `demos/safe_collections/idiomatic.rs`
+  - `demos/safe_indexing/idiomatic.rs`
+  - `demos/guarded_sequence_index/idiomatic.rs`
+- selection rationale:
+  - all three are positive runnable demos
+  - all three form a cohesive remaining safety-and-indexing slice instead of mixing panic-free collection semantics with unrelated stdlib or compiler demos
+  - `safe_collections` and `safe_indexing` still had obvious generated safe-access scaffolding, while `guarded_sequence_index` kept the batch grounded in a small narrowing-to-definite-values example
+- priority tags:
+  - `safety-surface`: `safe_collections`, `safe_indexing`
+  - `guarded-index-surface`: `guarded_sequence_index`
+  - `hand-authored-generated-shape`: `safe_collections`, `safe_indexing`, `guarded_sequence_index`
+- implementation summary:
+  - `safe_collections`: replaced expanded safe container operations with direct `position`, `Option`, `min`/`max`, `total_cmp`, and `pop` equivalents
+  - `safe_indexing`: introduced small `safe_index` and `safe_char_at` helpers for positive and negative safe indexing, plus direct `HashMap`/`find`/`remove` usage
+  - `guarded_sequence_index`: reduced guard-proven indexing examples to direct iterator-based vowel collection, slice summation, and `first().copied().unwrap_or(0)`
+- local validation completed:
+  - `rustfmt demos/safe_collections/idiomatic.rs demos/safe_indexing/idiomatic.rs demos/guarded_sequence_index/idiomatic.rs`
+  - `rustc --edition=2021 demos/safe_collections/idiomatic.rs -o /tmp/sifr-idiomatic-safe-collections && /tmp/sifr-idiomatic-safe-collections`
+  - `rustc --edition=2021 demos/safe_indexing/idiomatic.rs -o /tmp/sifr-idiomatic-safe-indexing && /tmp/sifr-idiomatic-safe-indexing`
+  - `rustc --edition=2021 demos/guarded_sequence_index/idiomatic.rs -o /tmp/sifr-idiomatic-guarded-sequence-index && /tmp/sifr-idiomatic-guarded-sequence-index`
+  - `cargo run -q -p sifr -- run demos/safe_collections/main.sifr`
+  - `cargo run -q -p sifr -- run demos/safe_indexing/main.sifr`
+  - `cargo run -q -p sifr -- run demos/guarded_sequence_index/main.sifr`
+  - `scripts/run_all_tests.sh`
+- review artifacts:
+  - pass 1: `reviews/phase-ad-hoc-idiomatic-rust-demo-corpus-wave-2-batch-38-review-pass-1.md`
+  - pass 2: `reviews/phase-ad-hoc-idiomatic-rust-demo-corpus-wave-2-batch-38-review-pass-2.md`
+- review application summary:
+  - pass 1 reported no accepted blockers
+  - pass 2 reported no accepted blockers
+  - `safe_indexing` returned a clean no-blocker verdict with an echoed behavior sentence instead of the exact requested one-line response format
+- reviewer tooling note:
+  - batch 38 used concise per-file external review prompts with one-line verdict constraints because that transport pattern has been the most reliable reviewer lane in this workspace
+
 ### wave_3_fixture_and_negative_case_normalization
 
 status: pending
