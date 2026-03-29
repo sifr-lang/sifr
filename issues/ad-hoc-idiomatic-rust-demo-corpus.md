@@ -262,6 +262,8 @@ Progress update (`2026-03-29`):
 - `batch_04_uuid_platform_os` completed local validation, accepted the pass-1 follow-up on `uuid` borrowing and `os` cleanup handling, and passed external pass-2 review with no remaining actionable issues
 - `batch_05_base64_hashlib_bytes_module` selected as the fifth wave-2 runnable-demo batch because it keeps the encoding-and-digest utility slice cohesive while targeting three positive demos whose companions still carried generated-style helper surfaces despite small observable behavior
 - `batch_05_base64_hashlib_bytes_module` completed local validation and passed external pass-1/pass-2 review with no actionable issues
+- `batch_06_collections_itertools_heapq` selected as the sixth wave-2 runnable-demo batch because it keeps the container-and-iteration slice cohesive while targeting three phase-30-reviewed companions that still carried substantial generated-style helper structure
+- `batch_06_collections_itertools_heapq` completed local validation, accepted the pass-1 follow-up on `collections` deque-capacity boundary clarity, and passed external pass-2 review with no remaining actionable issues
 
 ### wave_3_fixture_and_negative_case_normalization
 
