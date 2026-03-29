@@ -460,6 +460,55 @@ status: accepted_after_pass_1_and_pass_2
 - reviewer tooling note:
   - batch 08 first attempted the `.cursor/skills/talk-to-claude` desktop-handoff path, but because that handoff stalled before producing the requested review file, the final pass-1/pass-2 artifacts were generated with the stable Python subprocess capture path for `claude -p --no-session-persistence --dangerously-skip-permissions ...`
 
+#### batch_09_binary_files_binary_hashing_binary_storage
+
+status: accepted_after_pass_1_and_pass_2
+
+- scope:
+  - `demos/binary_files/idiomatic.rs`
+  - `demos/binary_hashing/idiomatic.rs`
+  - `demos/binary_storage/idiomatic.rs`
+- selection rationale:
+  - all three are positive runnable demos
+  - all three expose binary-data operations and therefore form a coherent slice around file IO, hashing/base64 round-trips, and byte-hex storage behavior
+  - each companion still retained large generated-style helper surfaces relative to the small demo-visible contracts
+- priority tags:
+  - `stdlib-heavy`: `binary_files`, `binary_hashing`, `binary_storage`
+  - `hand-authored-generated-shape`: `binary_files`, `binary_hashing`, `binary_storage`
+- implementation summary:
+  - `binary_files`: replaced the file-handle registry and error-scaffolding companion with a direct file round-trip, byte-int formatting helper, and explicit cleanup check
+  - `binary_hashing`: replaced the generated hashlib/base64 surface with a compact SHA-256 digest check plus base64 round-trip over the demo payload
+  - `binary_storage`: replaced the larger bytes/runtime wrapper with direct byte-sum, range-checked membership/count helpers, hex encode/decode helpers, and a compact binary file round-trip
+- local validation completed:
+  - initial validation:
+    - `rustfmt demos/binary_files/idiomatic.rs demos/binary_hashing/idiomatic.rs demos/binary_storage/idiomatic.rs`
+    - `rustc --edition=2021 demos/binary_files/idiomatic.rs -o /tmp/sifr-idiomatic-binary-files && /tmp/sifr-idiomatic-binary-files`
+    - `rustc --edition=2021 demos/binary_storage/idiomatic.rs -o /tmp/sifr-idiomatic-binary-storage && /tmp/sifr-idiomatic-binary-storage`
+    - temporary Cargo validation for `demos/binary_hashing/idiomatic.rs` with `base64 = "0.22"` and `sha2 = "0.10"`
+    - `cargo run -q -p sifr -- run demos/binary_files/main.sifr`
+    - `cargo run -q -p sifr -- run demos/binary_hashing/main.sifr`
+    - `cargo run -q -p sifr -- run demos/binary_storage/main.sifr`
+    - `scripts/run_all_tests.sh`
+  - post-pass-1 revalidation:
+    - `rustfmt demos/binary_files/idiomatic.rs demos/binary_hashing/idiomatic.rs demos/binary_storage/idiomatic.rs`
+    - `rustc --edition=2021 demos/binary_files/idiomatic.rs -o /tmp/sifr-idiomatic-binary-files && /tmp/sifr-idiomatic-binary-files`
+    - `rustc --edition=2021 demos/binary_storage/idiomatic.rs -o /tmp/sifr-idiomatic-binary-storage && /tmp/sifr-idiomatic-binary-storage`
+    - temporary Cargo validation for `demos/binary_hashing/idiomatic.rs` with `base64 = "0.22"` and `sha2 = "0.10"`
+    - `cargo run -q -p sifr -- run demos/binary_files/main.sifr`
+    - `cargo run -q -p sifr -- run demos/binary_hashing/main.sifr`
+    - `cargo run -q -p sifr -- run demos/binary_storage/main.sifr`
+    - `scripts/run_all_tests.sh`
+- review artifacts:
+  - pass 1: `reviews/phase-ad-hoc-idiomatic-rust-demo-corpus-wave-2-batch-09-review-pass-1.md`
+  - pass 2: `reviews/phase-ad-hoc-idiomatic-rust-demo-corpus-wave-2-batch-09-review-pass-2.md`
+- review application summary:
+  - pass 1 valid follow-up fix applied:
+    - `demos/binary_hashing/idiomatic.rs`: removed the inert constant-equality assertion that proved nothing beyond the constant's own definition
+  - pass 1 observation that the digest checks validate length rather than a fixed SHA-256 value was not accepted as a blocker because the demo contract is API-shape and round-trip behavior rather than cryptographic test-vector verification
+  - pass 2 reported no actionable issues
+- reviewer tooling note:
+  - batch 09 used the stable Python subprocess capture path for `claude -p --no-session-persistence --dangerously-skip-permissions ...` for both review passes
+
 ### wave_3_fixture_and_negative_case_normalization
 
 status: pending

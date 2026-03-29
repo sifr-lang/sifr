@@ -268,6 +268,8 @@ Progress update (`2026-03-29`):
 - `batch_07_string_textwrap_fnmatch` completed local validation and passed external pass-1/pass-2 review with no accepted blockers
 - `batch_08_bisect_defaultdict_max_heap` selected as the eighth wave-2 runnable-demo batch because it keeps the ordered-lookup and heap-backed-container slice cohesive while targeting three small demos whose companions still carried more scaffolding than their demo-visible behavior required
 - `batch_08_bisect_defaultdict_max_heap` completed local validation and passed external pass-1/pass-2 review with no accepted blockers
+- `batch_09_binary_files_binary_hashing_binary_storage` selected as the ninth wave-2 runnable-demo batch because it keeps the binary-data slice cohesive while targeting three still-generated companions whose current implementations were much larger than the actual file, hashing, and hex-storage behavior each demo exposes
+- `batch_09_binary_files_binary_hashing_binary_storage` completed local validation, accepted the pass-1 follow-up on removing an inert `binary_hashing` assertion, and passed external pass-2 review with no remaining actionable issues
 
 ### wave_3_fixture_and_negative_case_normalization
 
