@@ -1,37 +1,17 @@
-use std::collections::HashMap;
-
-use std::collections::HashSet;
+use std::collections::{BTreeMap, BTreeSet};
 
 fn main() {
-    let squares: Vec<i64> = {
-        let mut __sifr_list_comp = vec![];
-        for x in 0 as i64..6 as i64 {
-            __sifr_list_comp.push(x * x);
-        }
-        __sifr_list_comp
-    };
-    println!("{}", squares.len() as i64);
-    let square_map: HashMap<i64, i64> = {
-        let mut __sifr_dict_comp = HashMap::new();
-        for x in 0 as i64..4 as i64 {
-            __sifr_dict_comp.insert(x, x * x);
-        }
-        __sifr_dict_comp
-    };
-    println!("{}", square_map.len() as i64);
-    let unique_mods: HashSet<i64> = {
-        let mut __sifr_set_comp = HashSet::new();
-        for x in 0 as i64..10 as i64 {
-            __sifr_set_comp.insert(x % (3 as i64));
-        }
-        __sifr_set_comp
-    };
-    println!("{}", unique_mods.len() as i64);
-    let pairs: Vec<(String, i64)> = vec![
-        ("alice".to_string(), 95 as i64),
-        ("bob".to_string(), 87 as i64),
-    ];
-    for (name, score) in pairs.iter().cloned() {
-        println!("{}", name);
+    let squares = (0_i64..6).map(|x| x * x).collect::<Vec<_>>();
+    println!("{}", squares.len());
+
+    let square_map = (0_i64..4).map(|x| (x, x * x)).collect::<BTreeMap<_, _>>();
+    println!("{}", square_map.len());
+
+    let unique_mods = (0_i64..10).map(|x| x % 3).collect::<BTreeSet<_>>();
+    println!("{}", unique_mods.len());
+
+    let pairs = [("alice", 95_i64), ("bob", 87_i64)];
+    for (name, _score) in pairs {
+        println!("{name}");
     }
 }
