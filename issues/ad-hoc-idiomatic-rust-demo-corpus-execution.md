@@ -546,6 +546,51 @@ status: accepted_after_pass_1_and_pass_2
 - reviewer tooling note:
   - batch 10 used the stable Python subprocess capture path for `claude -p --no-session-persistence --dangerously-skip-permissions ...` for both review passes
 
+#### batch_11_subprocess_tempfile_zipfile_io
+
+status: accepted_after_pass_1_and_pass_2
+
+- scope:
+  - `demos/subprocess/idiomatic.rs`
+  - `demos/tempfile/idiomatic.rs`
+  - `demos/zipfile_io/idiomatic.rs`
+- selection rationale:
+  - all three are positive runnable demos
+  - all three expose runtime-and-file-lifecycle behavior, so they form a coherent slice around subprocess execution, temporary paths, and zip archive IO
+  - each companion still retained generated helper or wrapper structure much larger than the demo-visible behavior
+- priority tags:
+  - `stdlib-heavy`: `subprocess`, `tempfile`, `zipfile_io`
+  - `hand-authored-generated-shape`: `subprocess`, `tempfile`, `zipfile_io`
+- implementation summary:
+  - `subprocess`: replaced the larger wrapper surface with direct `sh -c` execution helpers for `run`, `check_call`, and `check_output` plus the demo's sentinel constant check
+  - `tempfile`: replaced the randomized wrapper surface with compact unique-path helpers backed by `std::env::temp_dir`, `create_new`, and direct path cleanup
+  - `zipfile_io`: replaced the archive and temp-file scaffolding with a small `NamedTemporaryFile`, `ZipFile`, and `ZipReadHandle` set built directly on filesystem operations and the `zip` crate
+- local validation completed:
+  - initial validation:
+    - `rustfmt demos/subprocess/idiomatic.rs demos/tempfile/idiomatic.rs demos/zipfile_io/idiomatic.rs`
+    - `rustc --edition=2021 demos/subprocess/idiomatic.rs -o /tmp/sifr-idiomatic-subprocess && /tmp/sifr-idiomatic-subprocess`
+    - `rustc --edition=2021 demos/tempfile/idiomatic.rs -o /tmp/sifr-idiomatic-tempfile && /tmp/sifr-idiomatic-tempfile`
+    - temporary Cargo validation for `demos/zipfile_io/idiomatic.rs` with `zip = "0.6"`
+    - `cargo run -q -p sifr -- run demos/subprocess/main.sifr`
+    - `cargo run -q -p sifr -- run demos/tempfile/main.sifr`
+    - `cargo run -q -p sifr -- run demos/zipfile_io/main.sifr`
+    - `scripts/run_all_tests.sh`
+  - post-pass-2 revalidation:
+    - `rustfmt demos/subprocess/idiomatic.rs demos/tempfile/idiomatic.rs demos/zipfile_io/idiomatic.rs`
+    - `rustc --edition=2021 demos/subprocess/idiomatic.rs -o /tmp/sifr-idiomatic-subprocess && /tmp/sifr-idiomatic-subprocess`
+    - `cargo run -q -p sifr -- run demos/subprocess/main.sifr`
+    - `scripts/run_all_tests.sh`
+- review artifacts:
+  - pass 1: `reviews/phase-ad-hoc-idiomatic-rust-demo-corpus-wave-2-batch-11-review-pass-1.md`
+  - pass 2: `reviews/phase-ad-hoc-idiomatic-rust-demo-corpus-wave-2-batch-11-review-pass-2.md`
+- review application summary:
+  - pass 1 observations about dead subprocess sentinel constants and explicit cleanup-only semantics in `zipfile_io` were not accepted as blockers because the constants are exercised in the demo and the explicit cleanup pattern is the behavior the demo intentionally demonstrates
+  - pass 2 valid follow-up fix applied:
+    - `demos/subprocess/idiomatic.rs`: changed `check_call` to return `0` on success instead of the child exit code value so the helper matches the demo's intended semantics more closely
+  - pass 2 observations about `ZipFile::open` rejecting `"rb"` and about explicit cleanup requirements in `NamedTemporaryFile` were not accepted as blockers because both behaviors are deliberate parts of the approved demo scope
+- reviewer tooling note:
+  - batch 11 used the stable Python subprocess capture path for `claude -p --no-session-persistence --dangerously-skip-permissions ...` for both review passes
+
 ### wave_3_fixture_and_negative_case_normalization
 
 status: pending
