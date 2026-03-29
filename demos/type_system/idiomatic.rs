@@ -4,58 +4,40 @@ enum IntOrStr {
     Str(String),
 }
 
-impl std::fmt::Display for IntOrStr {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        match self {
-            IntOrStr::Int(v) => {
-                return write!(f, "{}", v);
-            }
-            IntOrStr::Str(v) => {
-                return write!(f, "{}", v);
-            }
-        }
-    }
+fn create_user(id: i64, _name: &str) -> i64 {
+    id
 }
 
-fn create_user(id: i64, name: &String) -> i64 {
-    return id;
-}
-
-fn handle_command(cmd: &String) -> String {
-    if cmd.clone() == "start".to_string() {
-        return "Starting...".to_string();
-    } else {
-        return "Unknown command".to_string();
+fn handle_command(cmd: &str) -> &'static str {
+    match cmd {
+        "start" => "Starting...",
+        _ => "Unknown command",
     }
 }
 
 fn describe(x: &IntOrStr) -> String {
-    if let IntOrStr::Int(x) = x {
-        return format!("number: {}", x + (1 as i64));
-    } else {
-        if let IntOrStr::Str(x) = x {
-            return format!("text: {}", x);
-        } else {
-            unreachable!("sifr union narrowing fell through exhaustive branch chain");
-        }
+    match x {
+        IntOrStr::Int(x) => format!("number: {}", x + 1),
+        IntOrStr::Str(x) => format!("text: {}", x),
     }
 }
 
-fn find_user(name: &String) -> Option<String> {
-    if name.clone() == "alice".to_string() {
-        return Some("Alice Smith".to_string());
+fn find_user(name: &str) -> Option<&'static str> {
+    if name == "alice" {
+        Some("Alice Smith")
+    } else {
+        None
     }
-    return None;
 }
 
 fn main() {
-    let uid: i64 = create_user(42 as i64, &"alice".to_string());
+    let uid = create_user(42, "alice");
     println!("{}", uid);
-    println!("{}", handle_command(&"start".to_string()));
-    println!("{}", handle_command(&"stop".to_string()));
-    println!("{}", describe(&IntOrStr::Int(42 as i64)));
+    println!("{}", handle_command("start"));
+    println!("{}", handle_command("stop"));
+    println!("{}", describe(&IntOrStr::Int(42)));
     println!("{}", describe(&IntOrStr::Str("hello".to_string())));
-    let user: Option<String> = find_user(&"alice".to_string());
+    let user = find_user("alice");
     if let Some(user) = user {
         println!("{}", user);
     } else {
