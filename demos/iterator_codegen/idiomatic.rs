@@ -1,22 +1,21 @@
-fn greater_than_two(x: i64) -> bool {
-    return x > (2 as i64);
+fn greater_than_two(value: i64) -> bool {
+    value > 2
 }
 
 fn main() {
-    let nums: Vec<i64> = vec![5 as i64, 1 as i64, 3 as i64, 4 as i64];
-    let flags: Vec<bool> = vec![false, true, false];
-    println!("{}", Box::new((flags).iter().copied()).any(|x| x));
+    let nums = [5_i64, 1, 3, 4];
+    let flags = [false, true, false];
+
+    println!("{}", flags.iter().copied().any(|flag| flag));
     println!(
         "{:?}",
-        Box::new(nums.iter().copied().filter(|__filter_item| {
-            let __filter_value = *__filter_item;
-            return greater_than_two(__filter_value);
-        }))
-        .collect::<Vec<_>>()
+        nums.iter()
+            .copied()
+            .filter(|value| greater_than_two(*value))
+            .collect::<Vec<_>>()
     );
-    println!("{:?}", {
-        let mut __sifr_sorted_v = Box::new((nums).iter().copied()).collect::<Vec<_>>();
-        __sifr_sorted_v.sort();
-        __sifr_sorted_v
-    });
+
+    let mut sorted = nums.to_vec();
+    sorted.sort_unstable();
+    println!("{sorted:?}");
 }
