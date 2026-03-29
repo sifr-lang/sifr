@@ -761,6 +761,56 @@ status: accepted_after_pass_1_and_pass_2
 - reviewer tooling note:
   - batch 15 used the stable Python subprocess capture path for both review passes because it continued to be the most reliable way to materialize external review files in this workspace
 
+#### batch_16_logging_and_timers_config_json_csv_collections_and_argparse
+
+status: accepted_after_pass_1_and_pass_2
+
+- scope:
+  - `demos/logging_and_timers/idiomatic.rs`
+  - `demos/config_json_csv/idiomatic.rs`
+  - `demos/collections_and_argparse/idiomatic.rs`
+- selection rationale:
+  - all three are positive runnable demos
+  - all three form a coherent remaining object-wrapper and config-surface slice instead of mixing unrelated runtime areas
+  - each companion still retained large generated-style helper or wrapper structure relative to the small demo-visible behavior
+- priority tags:
+  - `stdlib-heavy`: `logging_and_timers`, `config_json_csv`, `collections_and_argparse`
+  - `external-crate-companion`: `config_json_csv`
+  - `hand-authored-generated-shape`: `logging_and_timers`, `config_json_csv`, `collections_and_argparse`
+- implementation summary:
+  - `logging_and_timers`: replaced the generated runtime surface with direct file IO helpers, compact UTC time conversion helpers, a minimal file-backed logger, and a small `Timer` wrapper over `Instant`
+  - `config_json_csv`: replaced the large mixed helper surface with a compact ordered `JsonValue`, tiny encoder/decoder over `serde_json`, a focused interpolating `ConfigParser`, and a small delimiter-backed row reader
+  - `collections_and_argparse`: replaced the larger collection/parser scaffolding with a small `Counter`, integer `DefaultDict`, and a compact subcommand-aware argument parser backed by a `Namespace` value map
+- local validation completed:
+  - initial validation:
+    - `rustfmt demos/logging_and_timers/idiomatic.rs demos/config_json_csv/idiomatic.rs demos/collections_and_argparse/idiomatic.rs`
+    - `rustc --edition=2021 demos/logging_and_timers/idiomatic.rs -o /tmp/sifr-idiomatic-logging-and-timers && /tmp/sifr-idiomatic-logging-and-timers`
+    - `rustc --edition=2021 demos/collections_and_argparse/idiomatic.rs -o /tmp/sifr-idiomatic-collections-and-argparse && /tmp/sifr-idiomatic-collections-and-argparse`
+    - temporary Cargo validation for `demos/config_json_csv/idiomatic.rs` with `serde_json = "1"`
+    - `cargo run -q -p sifr -- run demos/logging_and_timers/main.sifr`
+    - `cargo run -q -p sifr -- run demos/config_json_csv/main.sifr`
+    - `cargo run -q -p sifr -- run demos/collections_and_argparse/main.sifr`
+    - `scripts/run_all_tests.sh`
+  - post-pass-2 revalidation:
+    - `rustfmt demos/logging_and_timers/idiomatic.rs demos/config_json_csv/idiomatic.rs demos/collections_and_argparse/idiomatic.rs`
+    - `rustc --edition=2021 demos/logging_and_timers/idiomatic.rs -o /tmp/sifr-idiomatic-logging-and-timers && /tmp/sifr-idiomatic-logging-and-timers`
+    - `rustc --edition=2021 demos/collections_and_argparse/idiomatic.rs -o /tmp/sifr-idiomatic-collections-and-argparse && /tmp/sifr-idiomatic-collections-and-argparse`
+    - temporary Cargo validation for `demos/config_json_csv/idiomatic.rs` with `serde_json = "1"`
+    - `cargo run -q -p sifr -- run demos/logging_and_timers/main.sifr`
+    - `cargo run -q -p sifr -- run demos/config_json_csv/main.sifr`
+    - `cargo run -q -p sifr -- run demos/collections_and_argparse/main.sifr`
+    - `scripts/run_all_tests.sh`
+- review artifacts:
+  - pass 1: `reviews/phase-ad-hoc-idiomatic-rust-demo-corpus-wave-2-batch-16-review-pass-1.md`
+  - pass 2: `reviews/phase-ad-hoc-idiomatic-rust-demo-corpus-wave-2-batch-16-review-pass-2.md`
+- review application summary:
+  - pass 1 reported no actionable issues
+  - pass 2 valid follow-up fix applied:
+    - `demos/collections_and_argparse/idiomatic.rs`: guarded the `store`-action path in `parse_into` so a missing value no longer indexes past the argument slice and panics
+  - pass 2's other notes were non-blocking observations about intentionally omitted demo-irrelevant surface details such as JSON indentation and default injection
+- reviewer tooling note:
+  - batch 16 used the stable Python subprocess capture path for both review passes; the first pass-2 attempt timed out without producing a file, so the same bounded subprocess command was retried and completed successfully on the second attempt
+
 ### wave_3_fixture_and_negative_case_normalization
 
 status: pending
