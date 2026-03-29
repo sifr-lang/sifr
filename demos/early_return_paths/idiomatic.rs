@@ -1,16 +1,12 @@
 fn pick_value(maybe: Option<i64>) -> i64 {
     let Some(maybe) = maybe else {
-        if true {
-            return 0 as i64;
-        } else {
-            return 1 as i64;
-        }
+        return 0;
     };
-    return maybe;
+    maybe
 }
 
 fn main() {
     println!("m25_1 cfg integration contract demo:");
-    println!("{}", pick_value(Some(41 as i64)));
+    println!("{}", pick_value(Some(41)));
     println!("{}", pick_value(None));
 }

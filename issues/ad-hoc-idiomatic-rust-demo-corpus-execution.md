@@ -1383,6 +1383,43 @@ status: accepted_after_pass_1_and_pass_2
 - reviewer tooling note:
   - batch 29 used stable per-file external review prompts embedding both the paired Sifr source and the Rust companion because larger batch prompts stalled repeatedly in this workspace
 
+#### batch_30_early_return_paths_unreachable_returns_valid_control_flow
+
+status: accepted_after_pass_1_and_pass_2
+
+- scope:
+  - `demos/early_return_paths/idiomatic.rs`
+  - `demos/unreachable_returns/idiomatic.rs`
+  - `demos/valid_control_flow/idiomatic.rs`
+- selection rationale:
+  - all three are positive runnable demos
+  - all three form a cohesive remaining CFG/control-flow slice instead of mixing small flow-analysis demos with unrelated ownership or verifier demos
+  - each companion benefited from trimming annotation noise and preserving only the visible branch/loop behavior
+- priority tags:
+  - `cfg-surface`: `early_return_paths`, `unreachable_returns`, `valid_control_flow`
+  - `hand-authored-generated-shape`: `early_return_paths`, `unreachable_returns`, `valid_control_flow`
+- implementation summary:
+  - `early_return_paths`: collapsed the always-exits lowering shape to the direct `Option` early-return path that still returns `0` for `None`
+  - `unreachable_returns`: reduced the companion to the minimal conditional return plus consumer flow, preserving the unreachable-tail inference behavior
+  - `valid_control_flow`: simplified the loop to direct `continue`/`break` control flow over `0..limit` while preserving the printed total
+- local validation completed:
+  - `rustfmt demos/early_return_paths/idiomatic.rs demos/unreachable_returns/idiomatic.rs demos/valid_control_flow/idiomatic.rs`
+  - `rustc --edition=2021 demos/early_return_paths/idiomatic.rs -o /tmp/sifr-idiomatic-early-return-paths && /tmp/sifr-idiomatic-early-return-paths`
+  - `rustc --edition=2021 demos/unreachable_returns/idiomatic.rs -o /tmp/sifr-idiomatic-unreachable-returns && /tmp/sifr-idiomatic-unreachable-returns`
+  - `rustc --edition=2021 demos/valid_control_flow/idiomatic.rs -o /tmp/sifr-idiomatic-valid-control-flow && /tmp/sifr-idiomatic-valid-control-flow`
+  - `cargo run -q -p sifr -- run demos/early_return_paths/main.sifr`
+  - `cargo run -q -p sifr -- run demos/unreachable_returns/main.sifr`
+  - `cargo run -q -p sifr -- run demos/valid_control_flow/main.sifr`
+  - `scripts/run_all_tests.sh`
+- review artifacts:
+  - pass 1: `reviews/phase-ad-hoc-idiomatic-rust-demo-corpus-wave-2-batch-30-review-pass-1.md`
+  - pass 2: `reviews/phase-ad-hoc-idiomatic-rust-demo-corpus-wave-2-batch-30-review-pass-2.md`
+- review application summary:
+  - pass 1 reported no accepted blockers
+  - pass 2 reported no accepted blockers
+- reviewer tooling note:
+  - batch 30 used stable per-file external review prompts embedding both the paired Sifr source and the Rust companion because larger batch prompts remain less reliable in this workspace
+
 ### wave_3_fixture_and_negative_case_normalization
 
 status: pending

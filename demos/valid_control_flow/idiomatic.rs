@@ -1,18 +1,18 @@
 fn compute(limit: i64) -> i64 {
-    let mut total: i64 = 0 as i64;
-    for n in 0 as i64..limit {
-        if n == (2 as i64) {
+    let mut total = 0;
+    for n in 0..limit {
+        if n == 2 {
             continue;
         }
-        if n == (4 as i64) {
+        if n == 4 {
             break;
         }
         total += n;
     }
-    return total;
+    total
 }
 
 fn main() {
     println!("m25_2 cfg validity invariants demo:");
-    println!("{}", compute(8 as i64));
+    println!("{}", compute(8));
 }
