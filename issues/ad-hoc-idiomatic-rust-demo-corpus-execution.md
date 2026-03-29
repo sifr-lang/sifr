@@ -2335,6 +2335,47 @@ status: accepted_after_pass_1_and_pass_2
   - an embedded-source retry was also used for `stdlib_ownership` pass 1 after the initial direct prompt returned only `OK`; that narrower retry found the heap/lazy-chain issues that were actually worth fixing
   - `stdlib_ownership` pass 2 still stalled without output after repeated polls, so the artifact records that transport issue explicitly rather than inventing a clean verdict
 
+#### batch_59_ordering_rules_operators_and_assignment_collection_comprehensions
+
+status: accepted_after_pass_1_and_pass_2
+
+- scope:
+  - `demos/ordering_rules/idiomatic.rs`
+  - `demos/operators_and_assignment/idiomatic.rs`
+  - `demos/collection_comprehensions/idiomatic.rs`
+- selection rationale:
+  - all three are positive runnable demos
+  - all three form a cohesive remaining expression-semantics slice instead of mixing one large language milestone companion with unrelated stdlib or nested-helper work
+  - `ordering_rules` was still a large generated-style outlier despite the paired demo only exercising a compact lazy-itertools, regex/json alias, and callable-field surface
+- priority tags:
+  - `expression-semantics`: `ordering_rules`, `operators_and_assignment`, `collection_comprehensions`
+  - `milestone-demo`: `ordering_rules`, `operators_and_assignment`, `collection_comprehensions`
+  - `hand-authored-generated-shape`: `ordering_rules`, `operators_and_assignment`, `collection_comprehensions`
+- implementation summary:
+  - `ordering_rules`: replaced the runtime-heavy scaffold with small direct helpers for `repeat`, `chain`, `take`, regex aliases, JSON loads, and callable-field invocation while preserving the exact printed output sequence
+  - `operators_and_assignment`: collapsed the file to direct bitwise/unary operations, augmented assignment, and tuple-based chained-assignment equivalence
+  - `collection_comprehensions`: reduced the demo to direct iterator collects into `Vec`, `BTreeMap`, and `BTreeSet`, preserving the same lengths and tuple-unpacking prints
+- local validation completed:
+  - `rustfmt demos/operators_and_assignment/idiomatic.rs demos/collection_comprehensions/idiomatic.rs demos/ordering_rules/idiomatic.rs`
+  - `rustc demos/operators_and_assignment/idiomatic.rs -o /tmp/operators_and_assignment_idiomatic`
+  - `rustc demos/collection_comprehensions/idiomatic.rs -o /tmp/collection_comprehensions_idiomatic`
+  - temp Cargo validation for `ordering_rules` with `regex = "1"` and `serde_json = "1"`
+  - `cargo run -q -p sifr -- run demos/operators_and_assignment/main.sifr`
+  - `cargo run -q -p sifr -- run demos/collection_comprehensions/main.sifr`
+  - `cargo run -q -p sifr -- run demos/ordering_rules/main.sifr`
+  - `scripts/run_all_tests.sh`
+- review artifacts:
+  - pass 1: `reviews/phase-ad-hoc-idiomatic-rust-demo-corpus-wave-2-batch-59-review-pass-1.md`
+  - pass 2: `reviews/phase-ad-hoc-idiomatic-rust-demo-corpus-wave-2-batch-59-review-pass-2.md`
+- review application summary:
+  - pass 1 returned `OK` for `operators_and_assignment` and `ordering_rules`
+  - pass 1 on `collection_comprehensions` raised one incorrect tuple-typing complaint in code that already compiled and matched the paired output, so it was not accepted as a blocker
+  - pass 2 returned `OK` for `operators_and_assignment` and `ordering_rules`
+  - pass 2 on `collection_comprehensions` stalled without a usable verdict and was carried as a transport note rather than treated as a blocker
+- reviewer tooling note:
+  - batch 59 used direct per-file `claude -p --tools Read` prompts
+  - `collection_comprehensions` pass 2 stalled after the pass-1 false-positive note, so the artifact records that transport issue explicitly instead of fabricating a clean verdict
+
 #### batch_58_nested_functions_nested_helpers_nested_recursive_helpers
 
 status: accepted_after_pass_1_and_pass_2
