@@ -2097,6 +2097,49 @@ status: accepted_after_pass_1_and_pass_2
 - reviewer tooling note:
   - batch 46 used compact per-file prompts for pass 1, then embedded-source per-file prompts for pass 2 after the initial lane showed repeated stale file-role inversions on the tiny stdlib-loading demos
 
+#### batch_49_core_stdlib_extended_stdlib_additional_modules
+
+status: accepted_after_pass_1_and_pass_2
+
+- scope:
+  - `demos/core_stdlib/idiomatic.rs`
+  - `demos/extended_stdlib/idiomatic.rs`
+  - `demos/additional_modules/idiomatic.rs`
+- selection rationale:
+  - all three are positive runnable demos
+  - all three form a cohesive remaining stdlib-utilities slice instead of mixing a broad stdlib surface with the currently broken `html_and_textwrap` entrypoint
+  - `core_stdlib`, `extended_stdlib`, and `additional_modules` were still carrying large generated-style companions despite relatively compact direct demo-visible behavior
+  - `html_and_textwrap` was intentionally deferred because `cargo run -q -p sifr -- run demos/html_and_textwrap/main.sifr` currently fails in the repo, so including it here would have broken the required targeted-demo validation lane for the batch
+- priority tags:
+  - `stdlib-heavy`: `core_stdlib`, `extended_stdlib`, `additional_modules`
+  - `hand-authored-generated-shape`: `core_stdlib`, `extended_stdlib`, `additional_modules`
+  - `multi-module-surface`: `core_stdlib`, `extended_stdlib`, `additional_modules`
+- implementation summary:
+  - `core_stdlib`: replaced the generated scaffold with direct file/json/env/math helpers and a tiny in-memory env store that preserves the exact demo-visible output
+  - `extended_stdlib`: replaced the large runtime wrapper with small direct time, RNG, regex, hashing, and base64 helpers while preserving the dynamic/random output shape
+  - `additional_modules`: replaced the runtime-heavy scaffold with compact operator, calendar, HTML, sys, subprocess, configparser, gzip, and zipfile helpers matching the integrated demo outputs
+- local validation completed:
+  - `rustfmt demos/core_stdlib/idiomatic.rs demos/extended_stdlib/idiomatic.rs demos/additional_modules/idiomatic.rs`
+  - temp Cargo validation for `core_stdlib` with `serde_json = "1"`
+  - temp Cargo validation for `extended_stdlib` with `base64 = "0.22"`, `md5 = "0.7"`, `regex = "1"`, `sha2 = "0.10"`
+  - temp Cargo validation for `additional_modules` with `flate2 = "1"`, `zip = "0.6"`
+  - `cargo run -q -p sifr -- run demos/core_stdlib/main.sifr`
+  - `cargo run -q -p sifr -- run demos/extended_stdlib/main.sifr`
+  - `cargo run -q -p sifr -- run demos/additional_modules/main.sifr`
+  - `scripts/run_all_tests.sh`
+- review artifacts:
+  - pass 1: `reviews/phase-ad-hoc-idiomatic-rust-demo-corpus-wave-2-batch-49-review-pass-1.md`
+  - pass 2: `reviews/phase-ad-hoc-idiomatic-rust-demo-corpus-wave-2-batch-49-review-pass-2.md`
+- review application summary:
+  - pass 1 returned clean `core_stdlib` and `additional_modules` verdicts
+  - pass 1 raised one `extended_stdlib` helper-name note that was rejected because internal helper naming is not part of the observable contract, and the same response also drifted into reviewing `main.sifr` instead of the Rust companion
+  - pass 2 returned `OK: no issues` for `core_stdlib`
+  - pass 2 repeated the same `extended_stdlib` internal helper-name note and it was again not accepted as a blocker because the file already matched the paired Sifr behavior under temp-Cargo execution, targeted demo execution, and the full repository validation lane
+  - pass 2 for `additional_modules` returned an unusable mixed response that inverted the Sifr/Rust file roles and ended with contradictory text; it was recorded explicitly and not treated as a blocker because the file had already passed temp-Cargo execution, targeted demo execution, and the full repository validation lane
+- reviewer tooling note:
+  - batch 49 used direct per-file `claude -p --tools Read` prompts with `main.sifr` and `idiomatic.rs` file-path references because that smaller prompt shape has been more reliable than embedded-source prompts in this workspace
+  - the `additional_modules` pass-2 response still degraded into a stale file-role inversion despite the narrower source-of-truth instruction, so the artifact records that transport-quality issue explicitly instead of fabricating a clean verdict
+
 #### batch_48_class_libraries_advanced_class_libraries_inheritance
 
 status: accepted_after_pass_1_and_pass_2
