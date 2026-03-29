@@ -1168,6 +1168,50 @@ status: accepted_after_pass_1_and_pass_2
 - reviewer tooling note:
   - batch 24 used stable per-file external review prompts embedding both the paired Sifr source and the Rust companion because larger batch prompts remained unreliable in this workspace
 
+#### batch_25_generators_generator_break_else_iterator_types
+
+status: accepted_after_pass_1_and_pass_2
+
+- scope:
+  - `demos/generators/idiomatic.rs`
+  - `demos/generator_break_else/idiomatic.rs`
+  - `demos/iterator_types/idiomatic.rs`
+- selection rationale:
+  - all three are positive runnable demos
+  - all three form a cohesive remaining generator/protocol slice instead of mixing generator-control-flow demos with unrelated stdlib areas
+  - each companion still retained boxed-generator scaffolding, generated control-flow state, or overly specific collection signatures despite compact demo-visible behavior
+- priority tags:
+  - `iterator-surface`: `generators`, `generator_break_else`, `iterator_types`
+  - `hand-authored-generated-shape`: `generators`, `generator_break_else`, `iterator_types`
+- implementation summary:
+  - `generators`: replaced boxed generator scaffolding with direct iterator helpers for Fibonacci and evens plus a small RAII-style timer guard matching the with-statement behavior
+  - `generator_break_else`: replaced eager boxed-generator materialization with a compact `from_fn` state machine that preserves the break/else yield behavior directly
+  - `iterator_types`: replaced collection-specific signatures with direct `IntoIterator`/generic iterator contracts and then removed an extra runtime `passthrough` call so the Rust companion matches the actual Sifr demo behavior
+- local validation completed:
+  - `rustfmt demos/generators/idiomatic.rs demos/generator_break_else/idiomatic.rs demos/iterator_types/idiomatic.rs`
+  - `rustc --edition=2021 demos/generators/idiomatic.rs -o /tmp/sifr-idiomatic-generators && /tmp/sifr-idiomatic-generators`
+  - `rustc --edition=2021 demos/generator_break_else/idiomatic.rs -o /tmp/sifr-idiomatic-generator-break-else && /tmp/sifr-idiomatic-generator-break-else`
+  - `rustc --edition=2021 demos/iterator_types/idiomatic.rs -o /tmp/sifr-idiomatic-iterator-types && /tmp/sifr-idiomatic-iterator-types`
+  - `cargo run -q -p sifr -- run demos/generators/main.sifr`
+  - `cargo run -q -p sifr -- run demos/generator_break_else/main.sifr`
+  - `cargo run -q -p sifr -- run demos/iterator_types/main.sifr`
+  - `scripts/run_all_tests.sh`
+  - post-pass-2 revalidation:
+    - `rustfmt demos/generators/idiomatic.rs demos/generator_break_else/idiomatic.rs demos/iterator_types/idiomatic.rs`
+    - `rustc --edition=2021 demos/iterator_types/idiomatic.rs -o /tmp/sifr-idiomatic-iterator-types && /tmp/sifr-idiomatic-iterator-types`
+    - `cargo run -q -p sifr -- run demos/iterator_types/main.sifr`
+    - `scripts/run_all_tests.sh`
+- review artifacts:
+  - pass 1: `reviews/phase-ad-hoc-idiomatic-rust-demo-corpus-wave-2-batch-25-review-pass-1.md`
+  - pass 2: `reviews/phase-ad-hoc-idiomatic-rust-demo-corpus-wave-2-batch-25-review-pass-2.md`
+- review application summary:
+  - pass 1 reported no accepted blockers
+  - the pass-1 `iterator_types` note was rejected because it claimed `passthrough` was called in the paired Sifr demo even though the source does not invoke it
+  - pass 2 accepted one follow-up in `demos/iterator_types/idiomatic.rs` to remove the extra runtime `passthrough` call from `main`
+  - `iterator_types` was re-reviewed after that change and returned no actionable issues
+- reviewer tooling note:
+  - batch 25 used stable per-file external review prompts embedding both the paired Sifr source and the Rust companion because larger batch prompts remained unreliable in this workspace
+
 ### wave_3_fixture_and_negative_case_normalization
 
 status: pending

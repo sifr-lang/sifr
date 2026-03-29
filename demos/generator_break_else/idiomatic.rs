@@ -1,33 +1,34 @@
-fn gen(flag: bool) -> Box<dyn Iterator<Item = i64>> {
-    let mut __sifr_generator_initialized: bool = false;
-    let mut __sifr_generator_iter: std::vec::IntoIter<i64> = Vec::new().into_iter();
-    return Box::new(std::iter::from_fn(move || {
-        if !__sifr_generator_initialized {
-            let mut _yields: Vec<i64> = Vec::new();
-            let mut i: i64 = 0 as i64;
-            while i < (2 as i64) {
-                if flag && (i == (0 as i64)) {
-                    break;
-                }
-                _yields.push(i);
-                i += 1 as i64;
+fn gen(flag: bool) -> impl Iterator<Item = i64> {
+    let mut i = 0_i64;
+    let mut emitted_else = false;
+
+    std::iter::from_fn(move || {
+        while i < 2 {
+            if flag && i == 0 {
+                i = 2;
+                break;
             }
-            if !flag && (i == (2 as i64)) {
-                _yields.push(99 as i64);
-            }
-            __sifr_generator_iter = _yields.into_iter();
-            __sifr_generator_initialized = true;
+
+            let value = i;
+            i += 1;
+            return Some(value);
         }
-        return __sifr_generator_iter.next();
-    }));
+
+        if !flag && i == 2 && !emitted_else {
+            emitted_else = true;
+            return Some(99);
+        }
+
+        None
+    })
 }
 
 fn main() {
     println!("m21_3 yield/loop-path coverage demo:");
-    for v in gen(false) {
-        println!("{}", v);
+    for value in gen(false) {
+        println!("{value}");
     }
-    for v in gen(true) {
-        println!("{}", v);
+    for value in gen(true) {
+        println!("{value}");
     }
 }

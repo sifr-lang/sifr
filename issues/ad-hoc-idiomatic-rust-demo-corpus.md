@@ -300,6 +300,8 @@ Progress update (`2026-03-29`):
 - `batch_23_generator_functions_generator_iterators_custom_iterables` completed local validation, accepted a pass-2 follow-up preserving lazy generator-expression structure in `generator_iterators`, and ended external review with no remaining actionable issues
 - `batch_24_extended_builtin_iterators_reversible_iterables_lazy_builtins` selected as the twenty-fourth wave-2 runnable-demo batch because it keeps the remaining small builtin-iterator slice cohesive around `reversed`/`enumerate`/`zip`/`map` behavior and capability-aware reversible iteration
 - `batch_24_extended_builtin_iterators_reversible_iterables_lazy_builtins` completed local validation and ended external review with no accepted blockers; reviewer timeout/ownership notes were rejected where they contradicted the paired source or actual Rust 2021 iterator semantics
+- `batch_25_generators_generator_break_else_iterator_types` selected as the twenty-fifth wave-2 runnable-demo batch because it keeps the remaining small generator/protocol slice cohesive around generator control flow, context-managed generator demos, and first-class iterator type contracts
+- `batch_25_generators_generator_break_else_iterator_types` completed local validation, accepted a pass-2 follow-up removing an extra unsourced `passthrough` call from `iterator_types`, and ended external review with no remaining actionable issues
 
 ### wave_3_fixture_and_negative_case_normalization
 
