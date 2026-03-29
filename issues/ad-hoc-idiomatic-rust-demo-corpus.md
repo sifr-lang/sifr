@@ -276,6 +276,8 @@ Progress update (`2026-03-29`):
 - `batch_11_subprocess_tempfile_zipfile_io` completed local validation, accepted the pass-2 follow-up on `subprocess.check_call` return semantics, and passed external pass-2 review with no remaining actionable issues
 - `batch_12_readonly_bytes_tempfiles_and_zip_filesystem_and_archives` selected as the twelfth wave-2 runnable-demo batch because it keeps the bytes-and-archive-lifecycle slice cohesive while targeting three still-generated companions around read-only byte handling, temp-path-plus-zip behavior, and filesystem/archive orchestration
 - `batch_12_readonly_bytes_tempfiles_and_zip_filesystem_and_archives` completed local validation, preserved the observed `zipfile.namelist = Ok(["inside.txt"])` output shape in `filesystem_and_archives`, and passed external pass-1/pass-2 review with no accepted blockers
+- `batch_13_bytes_errors_bytes_file_io_bytes_iteration` selected as the thirteenth wave-2 runnable-demo batch because it completes the remaining small bytes-focused runnable slice around boundary errors, binary file roundtrips, and iteration/index semantics
+- `batch_13_bytes_errors_bytes_file_io_bytes_iteration` completed local validation and passed external pass-1/pass-2 review; the only pass-2 note was rejected because `bytes_file_io` already uses the source-aligned `wave3` path name from the demo itself
 
 ### wave_3_fixture_and_negative_case_normalization
 

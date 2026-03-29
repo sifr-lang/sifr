@@ -634,6 +634,43 @@ status: accepted_after_pass_1_and_pass_2
 - reviewer tooling note:
   - batch 12 used the stable Python subprocess capture path for `claude -p --no-session-persistence --dangerously-skip-permissions ...` for both review passes after the desktop review handoff had already proven unreliable in this phase
 
+#### batch_13_bytes_errors_bytes_file_io_bytes_iteration
+
+status: accepted_after_pass_1_and_pass_2
+
+- scope:
+  - `demos/bytes_errors/idiomatic.rs`
+  - `demos/bytes_file_io/idiomatic.rs`
+  - `demos/bytes_iteration/idiomatic.rs`
+- selection rationale:
+  - all three are positive runnable demos
+  - all three complete the remaining compact bytes-focused runnable slice instead of mixing unrelated stdlib surfaces
+  - each companion still retained generated structure or unnecessary ceremony despite small demo-visible behavior
+- priority tags:
+  - `stdlib-heavy`: `bytes_errors`, `bytes_file_io`
+  - `hand-authored-generated-shape`: `bytes_errors`, `bytes_file_io`, `bytes_iteration`
+- implementation summary:
+  - `bytes_errors`: replaced the generated error-path scaffolding with compact `ParseError` and `ValueError` types plus focused helpers for size validation, integer conversion, hex decoding, UTF-8-only encoding, and UTF-8 decoding
+  - `bytes_file_io`: replaced the generated handle registry and IO wrapper surface with direct binary file write/read helpers plus integer-list formatting and cleanup checks
+  - `bytes_iteration`: replaced the vector-construction ceremony with a tiny byte-slice-first companion that keeps concatenation parity, optional indexing, and byte-sum iteration
+- local validation completed:
+  - `rustfmt demos/bytes_errors/idiomatic.rs demos/bytes_file_io/idiomatic.rs demos/bytes_iteration/idiomatic.rs`
+  - `rustc --edition=2021 demos/bytes_errors/idiomatic.rs -o /tmp/sifr-idiomatic-bytes-errors && /tmp/sifr-idiomatic-bytes-errors`
+  - `rustc --edition=2021 demos/bytes_file_io/idiomatic.rs -o /tmp/sifr-idiomatic-bytes-file-io && /tmp/sifr-idiomatic-bytes-file-io`
+  - `rustc --edition=2021 demos/bytes_iteration/idiomatic.rs -o /tmp/sifr-idiomatic-bytes-iteration && /tmp/sifr-idiomatic-bytes-iteration`
+  - `cargo run -q -p sifr -- run demos/bytes_errors/main.sifr`
+  - `cargo run -q -p sifr -- run demos/bytes_file_io/main.sifr`
+  - `cargo run -q -p sifr -- run demos/bytes_iteration/main.sifr`
+  - `scripts/run_all_tests.sh`
+- review artifacts:
+  - pass 1: `reviews/phase-ad-hoc-idiomatic-rust-demo-corpus-wave-2-batch-13-review-pass-1.md`
+  - pass 2: `reviews/phase-ad-hoc-idiomatic-rust-demo-corpus-wave-2-batch-13-review-pass-2.md`
+- review application summary:
+  - pass 1 reported no actionable issues
+  - pass 2 reported one claimed `bytes_file_io` path-name mismatch, but no change was accepted because `demos/bytes_file_io/main.sifr` itself uses the `ad_hoc_bytes_wave3` reference and the rewritten `/tmp/sifr_ad_hoc_bytes_wave3_demo.bin` path already matches that source-visible naming
+- reviewer tooling note:
+  - batch 13 used the stable Python subprocess capture path for `claude -p --no-session-persistence --dangerously-skip-permissions ...` for both review passes after the unbounded direct invocation again proved unreliable
+
 ### wave_3_fixture_and_negative_case_normalization
 
 status: pending
