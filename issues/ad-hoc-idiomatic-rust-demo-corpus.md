@@ -296,6 +296,8 @@ Progress update (`2026-03-29`):
 - `batch_21_iterator_basics_generic_functions_and_iterators_itertools_iterators` completed local validation, accepted pass-1/pass-2 ownership-parity follow-ups in `generic_functions_and_iterators`, and passed external pass-2 review with no remaining actionable issues
 - `batch_22_iteration_basics_iterator_builtins_iterators_and_comprehensions` selected as the twenty-second wave-2 runnable-demo batch because it keeps the remaining small iterator-basics slice cohesive around direct sequence iteration, built-in iterator helpers, and comprehension-style eager collection
 - `batch_22_iteration_basics_iterator_builtins_iterators_and_comprehensions` completed local validation, accepted pass-1 follow-ups clarifying borrowed-iterator reuse and `sorted(..., reverse=True)` parity, and passed external pass-2 review with no accepted blockers
+- `batch_23_generator_functions_generator_iterators_custom_iterables` selected as the twenty-third wave-2 runnable-demo batch because it keeps the remaining small generator-and-custom-iterable slice cohesive around lazy countdown/generator surfaces, filtered generator expressions, and explicit custom iterator state
+- `batch_23_generator_functions_generator_iterators_custom_iterables` completed local validation, accepted a pass-2 follow-up preserving lazy generator-expression structure in `generator_iterators`, and ended external review with no remaining actionable issues
 
 ### wave_3_fixture_and_negative_case_normalization
 

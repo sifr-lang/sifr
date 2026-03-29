@@ -1082,6 +1082,51 @@ status: accepted_after_pass_1_and_pass_2
 - reviewer tooling note:
   - batch 22 used stable per-file external review prompts embedding both the paired Sifr source and the Rust companion because larger batch prompts remained unreliable in this workspace
 
+#### batch_23_generator_functions_generator_iterators_custom_iterables
+
+status: accepted_after_pass_1_and_pass_2
+
+- scope:
+  - `demos/generator_functions/idiomatic.rs`
+  - `demos/generator_iterators/idiomatic.rs`
+  - `demos/custom_iterables/idiomatic.rs`
+- selection rationale:
+  - all three are positive runnable demos
+  - all three form a cohesive remaining generator-and-custom-iterator slice instead of mixing the small lazy-iteration demos with unrelated stdlib areas
+  - each companion still retained boxed-generator scaffolding, eager lowering artifacts, or faux protocol machinery despite compact demo-visible behavior
+- priority tags:
+  - `iterator-surface`: `generator_functions`, `generator_iterators`, `custom_iterables`
+  - `hand-authored-generated-shape`: `generator_functions`, `generator_iterators`, `custom_iterables`
+- implementation summary:
+  - `generator_functions`: replaced generated generator scaffolding with a direct countdown iterator plus compact `Option` formatting for the printed `next` results
+  - `generator_iterators`: replaced boxed/eager generator lowering with direct iterator adapters, then refined the file in pass 2 to keep the generator-expression path lazy and make `gen_pairs` stateful rather than a bare range
+  - `custom_iterables`: replaced the generated protocol-style helper methods with a small explicit `Iterator` implementation for `CountdownIter`, an `IntoIterator` implementation for `Countdown`, and a direct ascending `reversed` helper
+- local validation completed:
+  - `rustfmt demos/generator_functions/idiomatic.rs demos/generator_iterators/idiomatic.rs demos/custom_iterables/idiomatic.rs`
+  - `rustc --edition=2021 demos/generator_functions/idiomatic.rs -o /tmp/sifr-idiomatic-generator-functions && /tmp/sifr-idiomatic-generator-functions`
+  - `rustc --edition=2021 demos/generator_iterators/idiomatic.rs -o /tmp/sifr-idiomatic-generator-iterators && /tmp/sifr-idiomatic-generator-iterators`
+  - `rustc --edition=2021 demos/custom_iterables/idiomatic.rs -o /tmp/sifr-idiomatic-custom-iterables && /tmp/sifr-idiomatic-custom-iterables`
+  - `cargo run -q -p sifr -- run demos/generator_functions/main.sifr`
+  - `cargo run -q -p sifr -- run demos/generator_iterators/main.sifr`
+  - `cargo run -q -p sifr -- run demos/custom_iterables/main.sifr`
+  - `scripts/run_all_tests.sh`
+  - post-pass-2 revalidation:
+    - `rustfmt demos/generator_functions/idiomatic.rs demos/generator_iterators/idiomatic.rs demos/custom_iterables/idiomatic.rs`
+    - `rustc --edition=2021 demos/generator_iterators/idiomatic.rs -o /tmp/sifr-idiomatic-generator-iterators && /tmp/sifr-idiomatic-generator-iterators`
+    - `cargo run -q -p sifr -- run demos/generator_iterators/main.sifr`
+    - `scripts/run_all_tests.sh`
+- review artifacts:
+  - pass 1: `reviews/phase-ad-hoc-idiomatic-rust-demo-corpus-wave-2-batch-23-review-pass-1.md`
+  - pass 2: `reviews/phase-ad-hoc-idiomatic-rust-demo-corpus-wave-2-batch-23-review-pass-2.md`
+- review application summary:
+  - pass 1 reported no accepted blockers
+  - the pass-1 `generator_functions` single-use note was rejected because it compared two separately constructed iterators, which is allowed in both languages and does not make consumed iterator state reusable
+  - pass 2 accepted one follow-up in `demos/generator_iterators/idiomatic.rs` to preserve the generator-expression path as a lazy iterator until collection and to make `gen_pairs` a small stateful iterator helper
+  - `generator_iterators` was re-reviewed after that change and returned no actionable issues
+  - the initial pass-2 `generator_functions` reviewer attempt timed out in this workspace without yielding a usable note set
+- reviewer tooling note:
+  - batch 23 used stable per-file external review prompts embedding both the paired Sifr source and the Rust companion because larger batch prompts remained unreliable in this workspace
+
 ### wave_3_fixture_and_negative_case_normalization
 
 status: pending

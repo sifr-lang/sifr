@@ -1,89 +1,66 @@
-#[derive(Debug, Clone, PartialEq, Eq, Hash)]
 struct CountdownIter {
     current: i64,
 }
 
 impl CountdownIter {
     fn new(start: i64) -> Self {
-        return Self { current: start };
+        Self { current: start }
     }
-    fn __iter__(&self) -> Box<dyn Iterator<Item = i64>> {
-        return Box::new((vec![self.current]).into_iter());
-    }
-    fn __next__(&mut self) -> Option<i64> {
-        if self.current <= (0 as i64) {
+}
+
+impl Iterator for CountdownIter {
+    type Item = i64;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        if self.current <= 0 {
             return None;
         }
-        let value: i64 = self.current;
-        self.current = self.current - (1 as i64);
-        return Some(value);
+
+        let value = self.current;
+        self.current -= 1;
+        Some(value)
     }
 }
 
-impl std::fmt::Display for CountdownIter {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        return write!(f, "CountdownIter(current={})", self.current);
-    }
-}
-
-#[derive(Debug, Clone, PartialEq, Eq, Hash)]
 struct Countdown {
     start: i64,
 }
 
 impl Countdown {
     fn new(start: i64) -> Self {
-        return Self { start: start };
+        Self { start }
     }
-    fn __iter__(&self) -> Box<dyn Iterator<Item = i64>> {
-        let mut values: Vec<i64> = vec![];
-        let mut i: i64 = self.start;
-        while i > (0 as i64) {
-            values.push(i);
-            i = i - (1 as i64);
-        }
-        return Box::new((values).iter().copied());
-    }
-    fn __reversed__(&self) -> Box<dyn Iterator<Item = i64>> {
-        let mut values: Vec<i64> = vec![];
-        let mut i: i64 = 1 as i64;
-        while i <= self.start {
-            values.push(i);
-            i = i + (1 as i64);
-        }
-        return Box::new((values).iter().copied());
+
+    fn reversed(&self) -> impl Iterator<Item = i64> {
+        1..=self.start
     }
 }
 
-impl std::fmt::Display for Countdown {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        return write!(f, "Countdown(start={})", self.start);
+impl IntoIterator for Countdown {
+    type Item = i64;
+    type IntoIter = std::iter::Rev<std::ops::RangeInclusive<i64>>;
+
+    fn into_iter(self) -> Self::IntoIter {
+        (1..=self.start).rev()
     }
+}
+
+fn format_optional(value: Option<i64>) -> String {
+    value.map_or_else(|| "None".to_string(), |item| item.to_string())
 }
 
 fn main() {
-    let countdown: Countdown = Countdown::new(4 as i64);
-    println!("{:?}", (countdown).clone().__iter__().collect::<Vec<_>>());
-    println!(
-        "{:?}",
-        Box::new((countdown).clone().__reversed__().into_iter()).collect::<Vec<_>>()
-    );
-    let mut running_total: i64 = 0 as i64;
-    for value in Countdown::new(4 as i64).__iter__() {
-        running_total = running_total + value;
-    }
-    println!("{}", running_total);
-    let mut it: CountdownIter = CountdownIter::new(2 as i64);
-    println!(
-        "{}",
-        (it.__next__()).map_or("None".to_string().to_string(), |__v| format!("{}", __v))
-    );
-    println!(
-        "{}",
-        (it.__next__()).map_or("None".to_string().to_string(), |__v| format!("{}", __v))
-    );
-    println!(
-        "{}",
-        (it.__next__()).map_or("None".to_string().to_string(), |__v| format!("{}", __v))
-    );
+    let countdown = Countdown::new(4);
+    println!("{:?}", countdown.into_iter().collect::<Vec<_>>());
+
+    let countdown = Countdown::new(4);
+    println!("{:?}", countdown.reversed().collect::<Vec<_>>());
+
+    let running_total: i64 = Countdown::new(4).into_iter().sum();
+    println!("{running_total}");
+
+    let mut iter = CountdownIter::new(2);
+    println!("{}", format_optional(iter.next()));
+    println!("{}", format_optional(iter.next()));
+    println!("{}", format_optional(iter.next()));
 }
