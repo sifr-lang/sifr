@@ -1,50 +1,23 @@
 use std::collections::HashMap;
 
 fn guarded_lookup(table: &HashMap<i64, i64>, key: i64) -> i64 {
-    if !table.contains_key(&key) {
-        return -(1 as i64);
-    }
-    let value: i64 = table
-        .get(&key)
-        .copied()
-        .expect(&"dict index proven by guard".to_string());
-    return value;
+    table.get(&key).copied().unwrap_or(-1)
 }
 
 fn expression_lookup(table: &HashMap<i64, i64>, base: i64) -> i64 {
-    if (table.keys().cloned().collect::<Vec<_>>()).contains(&(base + (1 as i64))) {
-        let value: i64 = table
-            .get(&(base + (1 as i64)))
-            .copied()
-            .expect(&"dict index proven by guard".to_string());
-        return value;
-    }
-    return -(1 as i64);
+    table.get(&(base + 1)).copied().unwrap_or(-1)
 }
 
-fn sum_known_keys(table: &HashMap<i64, i64>, keys: &Vec<i64>) -> i64 {
-    let mut total: i64 = 0 as i64;
-    for key in keys.iter().copied() {
-        if table.contains_key(&key) {
-            total = total
-                + table
-                    .get(&key)
-                    .copied()
-                    .expect(&"dict index proven by guard".to_string());
-        }
-    }
-    return total;
+fn sum_known_keys(table: &HashMap<i64, i64>, keys: &[i64]) -> i64 {
+    keys.iter().filter_map(|key| table.get(key)).copied().sum()
 }
 
 fn main() {
-    let t: HashMap<i64, i64> = HashMap::from([
-        (1 as i64, 10 as i64),
-        (2 as i64, 20 as i64),
-        (4 as i64, 40 as i64),
-    ]);
-    assert!(guarded_lookup(&t, 2 as i64) == (20 as i64));
-    assert!(guarded_lookup(&t, 3 as i64) == -(1 as i64));
-    assert!(expression_lookup(&t, 1 as i64) == (20 as i64));
-    assert!(expression_lookup(&t, 2 as i64) == -(1 as i64));
-    assert!(sum_known_keys(&t, &vec![0 as i64, 1 as i64, 2 as i64, 5 as i64]) == (30 as i64));
+    let table = HashMap::from([(1_i64, 10_i64), (2, 20), (4, 40)]);
+
+    assert_eq!(guarded_lookup(&table, 2), 20);
+    assert_eq!(guarded_lookup(&table, 3), -1);
+    assert_eq!(expression_lookup(&table, 1), 20);
+    assert_eq!(expression_lookup(&table, 2), -1);
+    assert_eq!(sum_known_keys(&table, &[0, 1, 2, 5]), 30);
 }
