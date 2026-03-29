@@ -708,6 +708,59 @@ status: accepted_after_pass_1_and_pass_2
 - reviewer tooling note:
   - batch 14 used the stable Python subprocess capture path for both review passes; the unbounded direct invocation again stalled before reliably materializing the review file
 
+#### batch_15_json_values_random_hashing_random_state
+
+status: accepted_after_pass_1_and_pass_2
+
+- scope:
+  - `demos/json_values/idiomatic.rs`
+  - `demos/random_hashing/idiomatic.rs`
+  - `demos/random_state/idiomatic.rs`
+- selection rationale:
+  - all three are positive runnable demos
+  - all three form a coherent structured-data and deterministic-RNG slice instead of mixing unrelated stdlib surfaces
+  - each companion still retained generated-style wrapper or helper ceremony larger than the actual demo-visible behavior
+  - an earlier candidate slice around `html_and_textwrap`, `regex_and_filesystem`, and `text_and_patterns` was deferred after preflight runs showed that two of those current Sifr demos were not green under the active runnable-demo loop
+- priority tags:
+  - `stdlib-heavy`: `json_values`, `random_state`
+  - `external-crate-companion`: `json_values`, `random_hashing`
+  - `hand-authored-generated-shape`: `json_values`, `random_hashing`, `random_state`
+- implementation summary:
+  - `json_values`: replaced the larger wrapper surface with a compact `JsonValue` enum that preserves insertion order for object encoding, uses `Option` for typed accessors, and keeps `dumps`/`loads` behavior direct and explicit
+  - `random_hashing`: replaced the broader helper scaffolding with a small base64/SHA-256 companion plus a compact global RNG helper that avoids poisoned-lock panics
+  - `random_state`: replaced the generated state-management ceremony with compact `Random`/`RandomState` wrappers over a shared deterministic LCG and explicit state replay checks
+- local validation completed:
+  - initial validation:
+    - `rustfmt demos/json_values/idiomatic.rs demos/random_hashing/idiomatic.rs demos/random_state/idiomatic.rs`
+    - `rustc --edition=2021 demos/random_state/idiomatic.rs -o /tmp/sifr-idiomatic-random-state && /tmp/sifr-idiomatic-random-state`
+    - temporary Cargo validation for `demos/json_values/idiomatic.rs` with `serde_json = "1"`
+    - temporary Cargo validation for `demos/random_hashing/idiomatic.rs` with `base64 = "0.22"` and `sha2 = "0.10"`
+    - `cargo run -q -p sifr -- run demos/json_values/main.sifr`
+    - `cargo run -q -p sifr -- run demos/random_hashing/main.sifr`
+    - `cargo run -q -p sifr -- run demos/random_state/main.sifr`
+    - `scripts/run_all_tests.sh`
+  - post-pass-1 revalidation:
+    - `rustfmt demos/json_values/idiomatic.rs demos/random_hashing/idiomatic.rs demos/random_state/idiomatic.rs`
+    - `rustc --edition=2021 demos/random_state/idiomatic.rs -o /tmp/sifr-idiomatic-random-state && /tmp/sifr-idiomatic-random-state`
+    - temporary Cargo validation for `demos/json_values/idiomatic.rs` with `serde_json = "1"`
+    - temporary Cargo validation for `demos/random_hashing/idiomatic.rs` with `base64 = "0.22"` and `sha2 = "0.10"`
+    - `cargo run -q -p sifr -- run demos/json_values/main.sifr`
+    - `cargo run -q -p sifr -- run demos/random_hashing/main.sifr`
+    - `cargo run -q -p sifr -- run demos/random_state/main.sifr`
+    - `scripts/run_all_tests.sh`
+- review artifacts:
+  - pass 1: `reviews/phase-ad-hoc-idiomatic-rust-demo-corpus-wave-2-batch-15-review-pass-1.md`
+  - pass 2: `reviews/phase-ad-hoc-idiomatic-rust-demo-corpus-wave-2-batch-15-review-pass-2.md`
+- review application summary:
+  - pass 1 valid follow-up fixes applied:
+    - `demos/json_values/idiomatic.rs`: changed `as_str`/`as_int` to explicit `Option` accessors and removed silent serialization fallbacks by switching to infallible JSON string rendering
+    - `demos/random_hashing/idiomatic.rs`: replaced the global RNG mutex `.expect(...)` with poison-tolerant locking
+    - `demos/random_state/idiomatic.rs`: replaced poisoned-lock `.expect(...)` calls with poison-tolerant locking, switched `main` to `Result`-based flow, and replaced the tautological final assertion with explicit success output
+  - pass 1 also claimed that `random_hashing` was blocking because its external crates are not declared in the workspace manifest, but no change was accepted because this phase explicitly does not require `idiomatic.rs` files to compile inside the workspace Cargo graph and the batch already validated external-crate companions in isolated temp Cargo manifests
+  - pass 2 reported no actionable issues
+- reviewer tooling note:
+  - batch 15 used the stable Python subprocess capture path for both review passes because it continued to be the most reliable way to materialize external review files in this workspace
+
 ### wave_3_fixture_and_negative_case_normalization
 
 status: pending
