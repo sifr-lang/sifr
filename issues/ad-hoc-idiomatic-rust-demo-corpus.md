@@ -340,6 +340,8 @@ Progress update (`2026-03-29`):
 - `batch_43_type_system_union_ops_union_narrowing` completed local validation and ended external pass-1/pass-2 review with no accepted blockers
 - `batch_44_platform_os_system_tools` selected as the forty-fourth wave-2 runnable-demo batch because it keeps the remaining runtime-and-system surface cohesive around platform introspection, small filesystem and process helpers, and a compact integrated tools demo
 - `batch_44_platform_os_system_tools` completed local validation, accepted a pre-review parity fix correcting the `timeit.repeat` count in `system_tools`, and ended external pass-1/pass-2 review with no accepted blockers; the only pass-2 `system_tools` note was rejected because its cited lines did not match the claim and the follow-up rereview devolved into contradictory transport noise rather than a real file-local issue
+- `batch_45_generic_classes_generics_impl_forward_refs` selected as the forty-fifth wave-2 runnable-demo batch because it keeps the remaining generics-and-forward-reference surface cohesive around generic containers, generic higher-order helpers, and forward-declared type references
+- `batch_45_generic_classes_generics_impl_forward_refs` completed local validation, accepted a pass-2 parity fix changing `generic_classes::Stack::size` from `usize` to `i64`, and ended external review with no remaining actionable issues; the pass-1 lane was recorded but its notes were rejected because they were stale or self-contradictory relative to the checked-in Rust files
 
 ### wave_3_fixture_and_negative_case_normalization
 

@@ -1,124 +1,88 @@
 #[derive(Debug, Clone, PartialEq)]
-struct Pair<T: Clone + std::fmt::Display + PartialOrd> {
+struct Pair<T> {
     first: T,
     second: T,
 }
 
-impl<T: Clone + std::fmt::Display + PartialOrd> Pair<T> {
+impl<T> Pair<T> {
     fn new(first: T, second: T) -> Self {
-        return Self {
-            first: first,
-            second: second,
-        };
+        Self { first, second }
     }
-    fn swap(&self) -> Pair<T> {
-        return Pair::new(self.second.clone(), self.first.clone());
+}
+
+impl<T: Clone> Pair<T> {
+    fn swap(&self) -> Self {
+        Self::new(self.second.clone(), self.first.clone())
     }
 }
 
 #[derive(Debug, Clone, PartialEq)]
-struct Stack<T: Clone + std::fmt::Display + PartialOrd> {
+struct Stack<T> {
     items: Vec<T>,
 }
 
-impl<T: Clone + std::fmt::Display + PartialOrd> Stack<T> {
+impl<T> Stack<T> {
     fn new(items: Vec<T>) -> Self {
-        return Self { items: items };
+        Self { items }
     }
-    fn push(&mut self, item: &T) {
-        self.items.push(item.clone());
+
+    fn push(&mut self, item: T) {
+        self.items.push(item);
     }
+
     fn pop(&mut self) -> Option<T> {
-        return self.items.pop();
+        self.items.pop()
     }
+
     fn size(&self) -> i64 {
-        return self.items.clone().len() as i64;
+        self.items.len() as i64
     }
 }
 
 #[derive(Debug, Clone, PartialEq)]
-struct Wrapper<T: Clone + std::fmt::Display + PartialOrd> {
+struct Wrapper<T> {
     value: T,
 }
 
-impl<T: Clone + std::fmt::Display + PartialOrd> Wrapper<T> {
+impl<T> Wrapper<T> {
     fn new(value: T) -> Self {
-        return Self { value: value };
+        Self { value }
     }
+}
+
+impl<T: Clone> Wrapper<T> {
     fn get(&self) -> T {
-        return self.value.clone();
+        self.value.clone()
     }
 }
 
 fn main() {
-    let mut p = Pair::new(10 as i64, 20 as i64);
-    println!(
-        "{}",
-        format!("{}{}", "pair first = ".to_string(), format!("{}", p.first))
-    );
-    println!(
-        "{}",
-        format!(
-            "{}{}",
-            "pair second = ".to_string(),
-            format!("{}", p.second)
-        )
-    );
-    let p2 = p.swap();
-    println!(
-        "{}",
-        format!(
-            "{}{}",
-            "swapped first = ".to_string(),
-            format!("{}", p2.first)
-        )
-    );
-    println!(
-        "{}",
-        format!(
-            "{}{}",
-            "swapped second = ".to_string(),
-            format!("{}", p2.second)
-        )
-    );
-    let mut sp = Pair::new("hello".to_string(), "world".to_string());
-    let sp2 = sp.swap();
+    let pair = Pair::new(10_i64, 20_i64);
+    println!("pair first = {}", pair.first);
+    println!("pair second = {}", pair.second);
+
+    let swapped = pair.swap();
+    println!("swapped first = {}", swapped.first);
+    println!("swapped second = {}", swapped.second);
+
+    let string_pair = Pair::new("hello".to_string(), "world".to_string());
+    let _ = string_pair.swap();
     println!("str pair swap ok = true");
-    let mut s = Stack::new(vec![]);
-    s.push(&(1 as i64));
-    s.push(&(2 as i64));
-    s.push(&(3 as i64));
-    println!(
-        "{}",
-        format!("{}{}", "stack size = ".to_string(), format!("{}", s.size()))
-    );
-    let item: Option<i64> = s.pop();
-    if let Some(item) = item {
-        println!(
-            "{}",
-            format!("{}{}", "popped = ".to_string(), format!("{}", item))
-        );
+
+    let mut stack = Stack::new(Vec::new());
+    stack.push(1_i64);
+    stack.push(2_i64);
+    stack.push(3_i64);
+    println!("stack size = {}", stack.size());
+    if let Some(item) = stack.pop() {
+        println!("popped = {}", item);
     }
-    println!(
-        "{}",
-        format!(
-            "{}{}",
-            "stack size after pop = ".to_string(),
-            format!("{}", s.size())
-        )
-    );
-    let mut w = Wrapper::new(42 as i64);
-    println!(
-        "{}",
-        format!("{}{}", "wrapper get = ".to_string(), format!("{}", w.get()))
-    );
-    let x: () = ();
-    println!(
-        "{}",
-        format!("{}{}", "x is None = ".to_string(), format!("{}", true))
-    );
-    println!(
-        "{}",
-        format!("{}{}", "x is not None = ".to_string(), format!("{}", false))
-    );
+    println!("stack size after pop = {}", stack.size());
+
+    let wrapper = Wrapper::new(42_i64);
+    println!("wrapper get = {}", wrapper.get());
+
+    let x: Option<()> = None;
+    println!("x is None = {}", x.is_none());
+    println!("x is not None = {}", x.is_some());
 }
