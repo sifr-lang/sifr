@@ -909,6 +909,43 @@ status: accepted_after_pass_1_and_pass_2
 - reviewer tooling note:
   - batch 18 used direct `claude -p --no-session-persistence --dangerously-skip-permissions ...` runs redirected into the recorded review files, and both passes completed successfully in that form
 
+#### batch_19_env_regex_regex_and_filesystem
+
+status: accepted_after_pass_1_and_pass_2
+
+- scope:
+  - `demos/env/idiomatic.rs`
+  - `demos/regex/idiomatic.rs`
+  - `demos/regex_and_filesystem/idiomatic.rs`
+- selection rationale:
+  - all three are positive runnable demos
+  - all three form a cohesive remaining environment-and-text/filesystem slice instead of mixing the remaining regex/path helpers with unrelated stdlib areas
+  - each companion still retained generated-style helper scaffolding despite comparatively small, stable demo-visible behavior
+- priority tags:
+  - `stdlib-heavy`: `env`, `regex`, `regex_and_filesystem`
+  - `hand-authored-generated-shape`: `env`, `regex`, `regex_and_filesystem`
+- implementation summary:
+  - `env`: replaced the generated error/helper preamble with direct env-key validation, compact env get/set/unset helpers, and slice-based boolean assertion checks
+  - `regex`: replaced the generated runtime scaffolding with small `regex`-crate wrappers for match/find/replace/findall/split/flagged-search behavior plus a compact boolean-result harness
+  - `regex_and_filesystem`: replaced the generated pathlib/iterator scaffolding with direct `Regex` wrappers, a small wildcard matcher, sorted directory iteration helpers, and compact `glob`/`rglob` parity over `PathBuf`
+- local validation completed:
+  - `rustfmt demos/env/idiomatic.rs demos/regex/idiomatic.rs demos/regex_and_filesystem/idiomatic.rs`
+  - `rustc --edition=2021 demos/env/idiomatic.rs -o /tmp/sifr-idiomatic-env && /tmp/sifr-idiomatic-env`
+  - temporary Cargo validation for `demos/regex/idiomatic.rs` with `regex = "1"`
+  - temporary Cargo validation for `demos/regex_and_filesystem/idiomatic.rs` with `regex = "1"`
+  - `cargo run -q -p sifr -- run demos/env/main.sifr`
+  - `cargo run -q -p sifr -- run demos/regex/main.sifr`
+  - `cargo run -q -p sifr -- run demos/regex_and_filesystem/main.sifr`
+  - `scripts/run_all_tests.sh`
+- review artifacts:
+  - pass 1: `reviews/phase-ad-hoc-idiomatic-rust-demo-corpus-wave-2-batch-19-review-pass-1.md`
+  - pass 2: `reviews/phase-ad-hoc-idiomatic-rust-demo-corpus-wave-2-batch-19-review-pass-2.md`
+- review application summary:
+  - pass 1 reported no actionable issues
+  - pass 2 reported no actionable issues
+- reviewer tooling note:
+  - the full-batch `claude -p` review prompt repeatedly stalled in this workspace, so batch 19 used stable per-file external review prompts and then consolidated their results into the recorded batch review artifacts
+
 ### wave_3_fixture_and_negative_case_normalization
 
 status: pending
