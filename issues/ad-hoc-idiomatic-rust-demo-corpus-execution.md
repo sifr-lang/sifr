@@ -2335,6 +2335,46 @@ status: accepted_after_pass_1_and_pass_2
   - an embedded-source retry was also used for `stdlib_ownership` pass 1 after the initial direct prompt returned only `OK`; that narrower retry found the heap/lazy-chain issues that were actually worth fixing
   - `stdlib_ownership` pass 2 still stalled without output after repeated polls, so the artifact records that transport issue explicitly rather than inventing a clean verdict
 
+#### batch_65_codegen_preamble_codegen_structural_passes_intrinsic_codegen
+
+status: accepted_after_pass_1_and_pass_2
+
+- scope:
+  - `demos/codegen_preamble/idiomatic.rs`
+  - `demos/codegen_structural_passes/idiomatic.rs`
+  - `demos/intrinsic_codegen/idiomatic.rs`
+- selection rationale:
+  - all three are positive runnable demos
+  - all three form a cohesive next compiler/codegen slice instead of mixing runtime/preamble migration demos with unrelated fixtures or CLI/project semantics
+  - `codegen_preamble` and `codegen_structural_passes` were still heavily generated-style outliers, while `intrinsic_codegen` was smaller but still carried a full error-type scaffold around simple math intrinsics
+- priority tags:
+  - `compiler-surface`: `codegen_preamble`, `codegen_structural_passes`, `intrinsic_codegen`
+  - `milestone-demo`: `codegen_preamble`, `codegen_structural_passes`, `intrinsic_codegen`
+  - `hand-authored-generated-shape`: `codegen_preamble`, `codegen_structural_passes`, `intrinsic_codegen`
+- implementation summary:
+  - `codegen_preamble`: replaced the 1,100-line preamble/runtime scaffold with direct `std::fs` read/write helpers plus a tiny local `Logger` that preserves the observed file and logging output
+  - `codegen_structural_passes`: replaced the large hand-rolled datetime runtime layer with compact `DateTime`/`Date` structs plus a small Unix-timestamp-to-calendar conversion helper that keeps the demo on the standalone `rustc` path
+  - `intrinsic_codegen`: removed the unused error-type scaffolding and rewrote the demo as direct `f64` intrinsic calls with simple output assertions
+- local validation completed:
+  - `rustfmt demos/codegen_preamble/idiomatic.rs demos/codegen_structural_passes/idiomatic.rs demos/intrinsic_codegen/idiomatic.rs`
+  - `rustc --edition=2021 demos/codegen_preamble/idiomatic.rs -o /tmp/sifr-idiomatic-codegen-preamble && /tmp/sifr-idiomatic-codegen-preamble`
+  - `rustc --edition=2021 demos/codegen_structural_passes/idiomatic.rs -o /tmp/sifr-idiomatic-codegen-structural && /tmp/sifr-idiomatic-codegen-structural`
+  - `rustc --edition=2021 demos/intrinsic_codegen/idiomatic.rs -o /tmp/sifr-idiomatic-intrinsic-codegen && /tmp/sifr-idiomatic-intrinsic-codegen`
+  - `cargo run -q -p sifr -- run demos/codegen_preamble/main.sifr`
+  - `cargo run -q -p sifr -- run demos/codegen_structural_passes/main.sifr`
+  - `cargo run -q -p sifr -- run demos/intrinsic_codegen/main.sifr`
+  - `scripts/run_all_tests.sh`
+- review artifacts:
+  - pass 1: `reviews/phase-ad-hoc-idiomatic-rust-demo-corpus-wave-2-batch-65-review-pass-1.md`
+  - pass 2: `reviews/phase-ad-hoc-idiomatic-rust-demo-corpus-wave-2-batch-65-review-pass-2.md`
+- review application summary:
+  - all three pass-1 reviews returned `OK`
+  - `codegen_structural_passes` and `intrinsic_codegen` also returned `OK` in pass 2
+  - the initial `codegen_preamble` pass-2 response raised false-positive concerns about the final print path and error-shaping; those were not accepted because the final print is outside the `match`, the unreachable error assertion is not part of the observed success-path behavior, and a targeted retry returned `OK`
+- reviewer tooling note:
+  - batch 65 used direct per-file `claude -p --no-session-persistence --dangerously-skip-permissions` prompts with embedded Sifr and Rust file contents
+  - `codegen_preamble` needed a short pass-2 retry after the first response misread the actual Rust control flow
+
 #### batch_64_code_generation_codegen_output_compiler_api
 
 status: accepted_after_pass_1_and_pass_2
