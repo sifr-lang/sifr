@@ -2335,6 +2335,55 @@ status: accepted_after_pass_1_and_pass_2
   - an embedded-source retry was also used for `stdlib_ownership` pass 1 after the initial direct prompt returned only `OK`; that narrower retry found the heap/lazy-chain issues that were actually worth fixing
   - `stdlib_ownership` pass 2 still stalled without output after repeated polls, so the artifact records that transport issue explicitly rather than inventing a clean verdict
 
+#### batch_62_control_flow_control_flow_paths_compiled_expressions
+
+status: accepted_after_pass_1_and_pass_2
+
+- scope:
+  - `demos/control_flow/idiomatic.rs`
+  - `demos/control_flow_paths/idiomatic.rs`
+  - `demos/compiled_expressions/idiomatic.rs`
+- selection rationale:
+  - all three are positive runnable demos
+  - all three form a cohesive remaining control-flow/core-expressions slice instead of mixing one larger milestone control-flow demo with unrelated stdlib or compiler-API companions
+  - the paired demos collectively cover loop control, containers, CFG reachability, and small representative expression lowering, so they make a good batch-local normalization pass
+- priority tags:
+  - `control-flow`: `control_flow`, `control_flow_paths`
+  - `core-expressions`: `compiled_expressions`
+  - `milestone-demo`: `control_flow`
+  - `hand-authored-generated-shape`: `control_flow`, `control_flow_paths`, `compiled_expressions`
+- implementation summary:
+  - `control_flow`: replaced emitted indexing/formatting ceremony with direct Rust loops, collections, string operations, and a small tuple-length helper
+  - `control_flow_paths`: reduced the file to direct CFG-oriented helpers while preserving the early-return fallback and an explicit unreachable tail under `#[allow(unreachable_code)]`
+  - `compiled_expressions`: collapsed the file to a tiny `add` helper, direct branch, and small `floor` wrapper over `f64::floor`
+- local validation completed:
+  - `rustfmt demos/control_flow/idiomatic.rs demos/control_flow_paths/idiomatic.rs demos/compiled_expressions/idiomatic.rs`
+  - `rustc --edition=2021 demos/control_flow/idiomatic.rs -o /tmp/sifr-idiomatic-control-flow && /tmp/sifr-idiomatic-control-flow`
+  - `rustc --edition=2021 demos/control_flow_paths/idiomatic.rs -o /tmp/sifr-idiomatic-control-flow-paths && /tmp/sifr-idiomatic-control-flow-paths`
+  - `rustc --edition=2021 demos/compiled_expressions/idiomatic.rs -o /tmp/sifr-idiomatic-compiled-expressions && /tmp/sifr-idiomatic-compiled-expressions`
+  - `cargo run -q -p sifr -- run demos/control_flow/main.sifr`
+  - `cargo run -q -p sifr -- run demos/control_flow_paths/main.sifr`
+  - `cargo run -q -p sifr -- run demos/compiled_expressions/main.sifr`
+  - `scripts/run_all_tests.sh`
+  - post-pass-1 revalidation:
+    - `rustfmt demos/control_flow/idiomatic.rs demos/control_flow_paths/idiomatic.rs`
+    - `rustc --edition=2021 demos/control_flow/idiomatic.rs -o /tmp/sifr-idiomatic-control-flow && /tmp/sifr-idiomatic-control-flow`
+    - `rustc --edition=2021 demos/control_flow_paths/idiomatic.rs -o /tmp/sifr-idiomatic-control-flow-paths && /tmp/sifr-idiomatic-control-flow-paths`
+    - `cargo run -q -p sifr -- run demos/control_flow/main.sifr`
+    - `cargo run -q -p sifr -- run demos/control_flow_paths/main.sifr`
+    - `scripts/run_all_tests.sh`
+- review artifacts:
+  - pass 1: `reviews/phase-ad-hoc-idiomatic-rust-demo-corpus-wave-2-batch-62-review-pass-1.md`
+  - pass 2: `reviews/phase-ad-hoc-idiomatic-rust-demo-corpus-wave-2-batch-62-review-pass-2.md`
+- review application summary:
+  - pass 1 on `control_flow` raised one real cleanup note about the tuple-length print being a naked literal; I accepted it and replaced it with a small `tuple_len(&point)` helper
+  - pass 1 on `control_flow_paths` raised one real educational-parity note about preserving the syntactically present unreachable tail from the paired CFG demo; I accepted it and restored that shape with `#[allow(unreachable_code)]`
+  - pass 1 on `compiled_expressions` returned `OK`
+  - all three pass-2 reviews returned `OK`
+- reviewer tooling note:
+  - batch 62 used direct per-file `claude -p --tools Read` prompts
+  - both accepted pass-1 notes were narrow and local, so a single post-fix revalidation sweep was sufficient before the clean pass-2 run
+
 #### batch_61_core_language_core_libraries_iterator_integration
 
 status: accepted_after_pass_1_and_pass_2

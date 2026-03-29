@@ -1,153 +1,114 @@
 use std::collections::HashMap;
 
 fn sum_range(n: i64) -> i64 {
-    let mut total: i64 = 0 as i64;
-    for i in 0 as i64..n {
-        total = total + i;
-    }
-    return total;
+    (0..n).sum()
 }
 
 fn fizzbuzz(n: i64) {
-    for i in 1 as i64..n + (1 as i64) {
-        if (i % (15 as i64)) == (0 as i64) {
+    for i in 1..=n {
+        if i % 15 == 0 {
             println!("FizzBuzz");
-        }
-        if (i % (3 as i64)) == (0 as i64) {
-            if (i % (5 as i64)) != (0 as i64) {
-                println!("Fizz");
-            }
-        }
-        if (i % (5 as i64)) == (0 as i64) {
-            if (i % (3 as i64)) != (0 as i64) {
-                println!("Buzz");
-            }
-        }
-        if (i % (3 as i64)) != (0 as i64) {
-            if (i % (5 as i64)) != (0 as i64) {
-                println!("{}", i);
-            }
+        } else if i % 3 == 0 {
+            println!("Fizz");
+        } else if i % 5 == 0 {
+            println!("Buzz");
+        } else {
+            println!("{i}");
         }
     }
 }
 
 fn countdown(n: i64) {
-    let mut i: i64 = n;
-    while i > (0 as i64) {
-        println!("{}", i);
-        i = i - (1 as i64);
+    for i in (1..=n).rev() {
+        println!("{i}");
     }
     println!("Go!");
 }
 
+fn tuple_len<T1, T2, T3>(_: &(T1, T2, T3)) -> usize {
+    3
+}
+
 fn main() {
     println!("=== While Loop: Countdown ===");
-    countdown(5 as i64);
+    countdown(5);
+
     println!("=== For Loop: Sum of 0..9 ===");
-    let s: i64 = sum_range(10 as i64);
-    println!("Sum of range(10) = {}", s);
+    println!("Sum of range(10) = {}", sum_range(10));
+
     println!("=== Nested Loops: Multiplication Table ===");
-    for i in 1 as i64..4 as i64 {
-        for j in 1 as i64..4 as i64 {
-            let product: i64 = i * j;
-            println!("{} x {} = {}", i, j, product);
+    for i in 1..=3 {
+        for j in 1..=3 {
+            println!("{i} x {j} = {}", i * j);
         }
     }
+
     println!("=== Break/Continue ===");
-    let mut i: i64 = 0 as i64;
-    while i < (10 as i64) {
-        i = i + (1 as i64);
-        if i == (3 as i64) {
+    let mut i = 0;
+    while i < 10 {
+        i += 1;
+        if i == 3 {
             continue;
         }
-        if i == (7 as i64) {
+        if i == 7 {
             break;
         }
-        println!("{}", i);
+        println!("{i}");
     }
+
     println!("=== Lists ===");
-    let nums: Vec<i64> = vec![10 as i64, 20 as i64, 30 as i64, 40 as i64, 50 as i64];
-    println!("Length: {}", nums.len() as i64);
-    let first: Option<i64> = {
-        let __sifr_index_list = &nums;
-        let __sifr_index_i = 0 as i64;
-        let __sifr_index_norm = if __sifr_index_i < 0 {
-            ((__sifr_index_list.len() as i64) + __sifr_index_i) as usize
-        } else {
-            __sifr_index_i as usize
-        };
-        __sifr_index_list.get(__sifr_index_norm).copied()
-    };
-    if let Some(first) = first {
-        println!("First: {}", first);
+    let nums = vec![10, 20, 30, 40, 50];
+    println!("Length: {}", nums.len());
+    if let Some(first) = nums.first() {
+        println!("First: {first}");
     }
-    let last: Option<i64> = {
-        let __sifr_index_list = &nums;
-        let __sifr_index_i = 4 as i64;
-        let __sifr_index_norm = if __sifr_index_i < 0 {
-            ((__sifr_index_list.len() as i64) + __sifr_index_i) as usize
-        } else {
-            __sifr_index_i as usize
-        };
-        __sifr_index_list.get(__sifr_index_norm).copied()
-    };
-    if let Some(last) = last {
-        println!("Last: {}", last);
+    if let Some(last) = nums.get(4) {
+        println!("Last: {last}");
     }
-    let mut total: i64 = 0 as i64;
-    for n in nums.iter().copied() {
-        total = total + n;
-    }
-    println!("Sum: {}", total);
-    let mut fruits: Vec<String> = vec!["apple".to_string(), "banana".to_string()];
-    fruits.push("cherry".to_string());
-    println!("Fruits count: {}", fruits.len() as i64);
+    println!("Sum: {}", nums.iter().sum::<i64>());
+
+    let mut fruits = vec!["apple", "banana"];
+    fruits.push("cherry");
+    println!("Fruits count: {}", fruits.len());
+
     println!("=== Dict ===");
-    let ages: HashMap<String, i64> = HashMap::from([
-        ("Alice".to_string(), 30 as i64),
-        ("Bob".to_string(), 25 as i64),
-        ("Charlie".to_string(), 35 as i64),
-    ]);
-    let alice_age: Option<i64> = ages.get("Alice").copied();
-    if let Some(alice_age) = alice_age {
-        println!("Alice is {} years old", alice_age);
+    let ages = HashMap::from([("Alice", 30), ("Bob", 25), ("Charlie", 35)]);
+    if let Some(alice_age) = ages.get("Alice") {
+        println!("Alice is {alice_age} years old");
     }
-    let bob_age: Option<i64> = ages.get("Bob").copied();
-    if let Some(bob_age) = bob_age {
-        println!("Bob is {} years old", bob_age);
+    if let Some(bob_age) = ages.get("Bob") {
+        println!("Bob is {bob_age} years old");
     }
+
     println!("=== In Operator ===");
-    let numbers: Vec<i64> = vec![1 as i64, 2 as i64, 3 as i64, 4 as i64, 5 as i64];
-    let found: bool = numbers.contains(&(3 as i64));
-    println!("3 in list: {}", found);
-    let missing: bool = numbers.contains(&(9 as i64));
-    println!("9 in list: {}", missing);
+    let numbers = [1, 2, 3, 4, 5];
+    println!("3 in list: {}", numbers.contains(&3));
+    println!("9 in list: {}", numbers.contains(&9));
+
     println!("=== Tuples ===");
-    let point: (i64, i64, String) = (10 as i64, 20 as i64, "origin".to_string());
-    println!("Tuple length: {}", 3 as i64);
+    let point = (10, 20, "origin");
+    println!("Tuple length: {}", tuple_len(&point));
+
     println!("=== Tuple Unpacking ===");
-    let pair: (String, i64) = ("Sifr".to_string(), 2025 as i64);
-    let (name, year) = pair;
-    println!("{} was born in {}", name, year);
+    let (name, year) = ("Sifr", 2025);
+    println!("{name} was born in {year}");
+
     println!("=== F-Strings ===");
-    let a: i64 = 7 as i64;
-    let b: i64 = 8 as i64;
-    println!("{} * {} = {}", a, b, a * b);
-    println!("Is {} > {}? {}", a, b, a > b);
+    let a = 7;
+    let b = 8;
+    println!("{a} * {b} = {}", a * b);
+    println!("Is {a} > {b}? {}", a > b);
+
     println!("=== String Operations ===");
-    let greeting: String = "  Hello, World!  ".to_string();
-    println!("{}", greeting.trim().to_string());
-    println!("{}", greeting.trim().to_string().to_uppercase());
-    println!("{}", greeting.trim().to_string().to_lowercase());
-    let lang: String = "sifr-lang".to_string();
-    println!(
-        "Starts with \'sifr\': {}",
-        lang.starts_with(&"sifr".to_string())
-    );
-    println!(
-        "Ends with \'lang\': {}",
-        lang.ends_with(&"lang".to_string())
-    );
+    let greeting = "  Hello, World!  ";
+    println!("{}", greeting.trim());
+    println!("{}", greeting.trim().to_uppercase());
+    println!("{}", greeting.trim().to_lowercase());
+
+    let lang = "sifr-lang";
+    println!("Starts with 'sifr': {}", lang.starts_with("sifr"));
+    println!("Ends with 'lang': {}", lang.ends_with("lang"));
+
     println!("=== FizzBuzz (1-15) ===");
-    fizzbuzz(15 as i64);
+    fizzbuzz(15);
 }
