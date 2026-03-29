@@ -290,6 +290,8 @@ Progress update (`2026-03-29`):
 - `batch_18_iterators_and_randomness_error_handling_decorators` completed local validation, accepted the pass-1 follow-up on `iterators_and_randomness` product/digest helper semantics, and passed external pass-2 review with no remaining actionable issues
 - `batch_19_env_regex_regex_and_filesystem` selected as the nineteenth wave-2 runnable-demo batch because it keeps the remaining environment-and-text/filesystem slice cohesive around env var helpers, regex primitives, and regex-plus-path iteration parity
 - `batch_19_env_regex_regex_and_filesystem` completed local validation and passed external pass-1/pass-2 review with no accepted blockers
+- `batch_20_iter_and_next_cloned_iterators_lazy_iterators` selected as the twentieth wave-2 runnable-demo batch because it keeps the remaining small iterator-consumption slice cohesive around direct `iter`/`next` usage, reusable borrowed iterator transforms, and lazy generator-backed iteration
+- `batch_20_iter_and_next_cloned_iterators_lazy_iterators` completed local validation and passed external pass-1/pass-2 review with no accepted blockers
 
 ### wave_3_fixture_and_negative_case_normalization
 

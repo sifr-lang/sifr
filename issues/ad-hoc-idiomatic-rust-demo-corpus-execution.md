@@ -946,6 +946,44 @@ status: accepted_after_pass_1_and_pass_2
 - reviewer tooling note:
   - the full-batch `claude -p` review prompt repeatedly stalled in this workspace, so batch 19 used stable per-file external review prompts and then consolidated their results into the recorded batch review artifacts
 
+#### batch_20_iter_and_next_cloned_iterators_lazy_iterators
+
+status: accepted_after_pass_1_and_pass_2
+
+- scope:
+  - `demos/iter_and_next/idiomatic.rs`
+  - `demos/cloned_iterators/idiomatic.rs`
+  - `demos/lazy_iterators/idiomatic.rs`
+- selection rationale:
+  - all three are positive runnable demos
+  - all three form a cohesive remaining iterator-consumption slice instead of mixing small iterator demos with unrelated stdlib areas
+  - each companion still retained generated-style iterator boxing, explicit collection scaffolding, or faux-lazy generator structure despite compact demo-visible behavior
+- priority tags:
+  - `iterator-surface`: `iter_and_next`, `cloned_iterators`, `lazy_iterators`
+  - `hand-authored-generated-shape`: `iter_and_next`, `cloned_iterators`, `lazy_iterators`
+- implementation summary:
+  - `iter_and_next`: replaced boxed iterator plumbing with direct borrowed iteration, `next()` consumption, and a compact `enumerate`/`sum` flow
+  - `cloned_iterators`: replaced iterator boxing and list-comprehension scaffolding with straightforward borrowed iterator chains plus an owned temporary-array transform
+  - `lazy_iterators`: replaced eager faux-generator scaffolding with direct `impl Iterator` helpers built from `from_fn`, range maps, and simple collection formatting
+- local validation completed:
+  - `rustfmt demos/iter_and_next/idiomatic.rs demos/cloned_iterators/idiomatic.rs demos/lazy_iterators/idiomatic.rs`
+  - `rustc --edition=2021 demos/iter_and_next/idiomatic.rs -o /tmp/sifr-idiomatic-iter-and-next && /tmp/sifr-idiomatic-iter-and-next`
+  - `rustc --edition=2021 demos/cloned_iterators/idiomatic.rs -o /tmp/sifr-idiomatic-cloned-iterators && /tmp/sifr-idiomatic-cloned-iterators`
+  - `rustc --edition=2021 demos/lazy_iterators/idiomatic.rs -o /tmp/sifr-idiomatic-lazy-iterators && /tmp/sifr-idiomatic-lazy-iterators`
+  - `cargo run -q -p sifr -- run demos/iter_and_next/main.sifr`
+  - `cargo run -q -p sifr -- run demos/cloned_iterators/main.sifr`
+  - `cargo run -q -p sifr -- run demos/lazy_iterators/main.sifr`
+  - `scripts/run_all_tests.sh`
+- review artifacts:
+  - pass 1: `reviews/phase-ad-hoc-idiomatic-rust-demo-corpus-wave-2-batch-20-review-pass-1.md`
+  - pass 2: `reviews/phase-ad-hoc-idiomatic-rust-demo-corpus-wave-2-batch-20-review-pass-2.md`
+- review application summary:
+  - pass 1 reported no actionable issues
+  - pass 2 reported no accepted blockers
+  - pass 2's claimed `cloned_iterators` multiplication type error was rejected because the file had already passed standalone `rustc` validation and produced the expected runtime output in this workspace
+- reviewer tooling note:
+  - batch 20 again used stable per-file external review prompts embedding both the paired Sifr source and the Rust companion because larger batch prompts remained unreliable in this workspace
+
 ### wave_3_fixture_and_negative_case_normalization
 
 status: pending
