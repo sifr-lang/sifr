@@ -1420,6 +1420,53 @@ status: accepted_after_pass_1_and_pass_2
 - reviewer tooling note:
   - batch 30 used stable per-file external review prompts embedding both the paired Sifr source and the Rust companion because larger batch prompts remain less reliable in this workspace
 
+#### batch_31_optional_indexing_optional_arithmetic_return_type_inference
+
+status: accepted_after_pass_1_and_pass_2
+
+- scope:
+  - `demos/optional_indexing/idiomatic.rs`
+  - `demos/optional_arithmetic/idiomatic.rs`
+  - `demos/return_type_inference/idiomatic.rs`
+- selection rationale:
+  - all three are positive runnable demos
+  - all three form a cohesive remaining option-and-inference slice instead of mixing small optional-behavior demos with unrelated diagnostics or mutation demos
+  - `optional_indexing` still retained lowered indexing scaffolding, while `optional_arithmetic` and `return_type_inference` benefited from tighter Rust-first expression style and output parity cleanup
+- priority tags:
+  - `option-surface`: `optional_indexing`, `optional_arithmetic`
+  - `type-inference-surface`: `return_type_inference`
+  - `hand-authored-generated-shape`: `optional_indexing`, `optional_arithmetic`, `return_type_inference`
+- implementation summary:
+  - `optional_indexing`: replaced lowered list-index normalization scaffolding with a direct `get(1).copied()` option path
+  - `optional_arithmetic`: reduced the companion to compact `let-else` narrowing and direct arithmetic expressions preserving the same optional behavior
+  - `return_type_inference`: simplified the helper signatures and bodies to direct Rust-first expressions while preserving the observed quoted string output contract for `greet`
+- local validation completed:
+  - `rustfmt demos/optional_indexing/idiomatic.rs demos/optional_arithmetic/idiomatic.rs demos/return_type_inference/idiomatic.rs`
+  - `rustc --edition=2021 demos/optional_indexing/idiomatic.rs -o /tmp/sifr-idiomatic-optional-indexing && /tmp/sifr-idiomatic-optional-indexing`
+  - `rustc --edition=2021 demos/optional_arithmetic/idiomatic.rs -o /tmp/sifr-idiomatic-optional-arithmetic && /tmp/sifr-idiomatic-optional-arithmetic`
+  - `rustc --edition=2021 demos/return_type_inference/idiomatic.rs -o /tmp/sifr-idiomatic-return-type-inference && /tmp/sifr-idiomatic-return-type-inference`
+  - `cargo run -q -p sifr -- run demos/optional_indexing/main.sifr`
+  - `cargo run -q -p sifr -- run demos/optional_arithmetic/main.sifr`
+  - `cargo run -q -p sifr -- run demos/return_type_inference/main.sifr`
+  - `scripts/run_all_tests.sh`
+  - post-fix revalidation:
+    - `rustfmt demos/optional_indexing/idiomatic.rs demos/optional_arithmetic/idiomatic.rs demos/return_type_inference/idiomatic.rs`
+    - standalone `rustc` validation for all three companions
+    - targeted Sifr demo runs for all three demos
+    - `scripts/run_all_tests.sh`
+- review artifacts:
+  - pass 1: `reviews/phase-ad-hoc-idiomatic-rust-demo-corpus-wave-2-batch-31-review-pass-1.md`
+  - pass 2: `reviews/phase-ad-hoc-idiomatic-rust-demo-corpus-wave-2-batch-31-review-pass-2.md`
+- review application summary:
+  - a pre-review parity fix changed `return_type_inference` back to debug formatting for `greet("sifr")` after the paired Sifr run confirmed the observed output includes quotes
+  - pass 1 reported no accepted blockers
+  - the pass-1 note against `{:?}` in `return_type_inference` was rejected because the paired Sifr output in this workspace is `"hello sifr"`, so the debug-format output is the actual parity-preserving behavior
+  - pass 2 reported no accepted blockers
+  - one pass-2 attempt on `optional_indexing` returned a tool-seeking response instead of a review result, so that file was rerun directly and came back clean
+  - the pass-2 `format!` vs `+` note in `return_type_inference` was rejected because it was stylistic rather than a semantic mismatch
+- reviewer tooling note:
+  - batch 31 used stable per-file external review prompts embedding both the paired Sifr source and the Rust companion because larger combined prompts and tool-seeking outputs were less reliable in this workspace during pass 2
+
 ### wave_3_fixture_and_negative_case_normalization
 
 status: pending
