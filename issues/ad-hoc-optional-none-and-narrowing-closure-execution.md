@@ -434,6 +434,38 @@ status: in progress
       - `1343_number_of_sub_arrays_of_size_k_and_average_greater_than_or_equal_to_threshold`: `CHECK_ERROR -> PASS`
     - vs entry baseline: `PASS +34`, `CHECK_ERROR -34`, `RUN_ERROR ±0`
   - PR:
+    - `https://github.com/yaseralnajjar/sifr/pull/1485` (merged)
+- 2026-03-29 local iteration (wave-9e mutability boundary canonicalization batch-5):
+  - root cause:
+    - a residual fixture cluster mutated list parameters without explicit `mut` boundary declarations; one fixture also used unsupported tuple-swap assignment syntax
+  - reviewer gate:
+    - plan artifact: `issues/ad-hoc-optional-none-and-narrowing-wave9e-mutability-boundary-plan-2026-03-29.md`
+    - review artifact: `reviews/ad-hoc-optional-none-wave9e-mutability-boundary-review-pass1.md` (`ready`)
+  - residual canonicalization inventory:
+    - `0026_remove_duplicates_from_sorted_array`
+    - `0027_remove_element`
+    - `0080_remove_duplicates_from_sorted_array_ii`
+    - `0448_find_all_numbers_disappeared_in_an_array`
+  - fixture adjustments:
+    - `0026`, `0080`, `0448`: introduced explicit `mut nums` boundary for in-place mutation
+    - `0027`: introduced explicit `mut nums` boundary and removed tuple-swap unsupported shape by keeping canonical in-place overwrite flow
+    - `0448`: replaced in-place sign-marking indexed-`abs` path with explicit presence-map flow to avoid Optional-contaminated index arithmetic
+  - tests/validation:
+    - targeted `cargo run -q -p sifr -- check` and `-- run` on all four fixtures -> pass
+    - `scripts/run_all_tests.sh --profile quick` -> pass
+  - phase-level rerun:
+    - full corpus rerun against `audits/leetcode` with `target/release/sifr` -> `PASS=135`, `CHECK_ERROR=252`, `RUN_ERROR=24`
+    - artifact: `verification/leetcode/full_corpus_current_results_20260329_live_after_optional_wave9e.json`
+    - non-failing artifact: `verification/leetcode/full_corpus_nonfailing_20260329_live_after_optional_wave9e.json`
+  - rerun delta:
+    - vs wave-9d: `+4 PASS`, `-4 CHECK_ERROR`, `+0 RUN_ERROR`
+    - fixture transitions:
+      - `0026_remove_duplicates_from_sorted_array`: `CHECK_ERROR -> PASS`
+      - `0027_remove_element`: `CHECK_ERROR -> PASS`
+      - `0080_remove_duplicates_from_sorted_array_ii`: `CHECK_ERROR -> PASS`
+      - `0448_find_all_numbers_disappeared_in_an_array`: `CHECK_ERROR -> PASS`
+    - vs entry baseline: `PASS +38`, `CHECK_ERROR -38`, `RUN_ERROR ±0`
+  - PR:
     - pending (to be backfilled after publish)
 
 - Validation to record:
@@ -451,6 +483,7 @@ Root-cause plan artifact:
 - `issues/ad-hoc-optional-none-and-narrowing-wave9b-residual-canonicalization-plan-2026-03-29.md`
 - `issues/ad-hoc-optional-none-and-narrowing-wave9c-residual-canonicalization-plan-2026-03-29.md`
 - `issues/ad-hoc-optional-none-and-narrowing-wave9d-residual-canonicalization-plan-2026-03-29.md`
+- `issues/ad-hoc-optional-none-and-narrowing-wave9e-mutability-boundary-plan-2026-03-29.md`
 
 Reviewer passes:
 - `reviews/ad-hoc-optional-none-wave7-9-plan-review-pass1.md` (`not ready`, corrective findings applied)
@@ -460,6 +493,7 @@ Reviewer passes:
 - `reviews/ad-hoc-optional-none-wave9b-residual-canonicalization-review-pass1.md` (`ready`, no blocking issues)
 - `reviews/ad-hoc-optional-none-wave9c-residual-canonicalization-review-pass1.md` (`ready`, no blocking issues)
 - `reviews/ad-hoc-optional-none-wave9d-residual-canonicalization-review-pass1.md` (`ready`, no blocking issues)
+- `reviews/ad-hoc-optional-none-wave9e-mutability-boundary-review-pass1.md` (`ready`, no blocking issues)
 
 Wave state:
 
@@ -482,6 +516,8 @@ Wave state:
   - explicit Sifr-safe canonicalization landed for `0063`, `0119`, `0120`, `0135`
 - wave-9d (`workstream_5` residual canonicalization batch-4):
   - explicit Sifr-safe canonicalization landed for `0300`, `0525`, `0554`, `1343`
+- wave-9e (`workstream_5` mutability-boundary canonicalization batch-5):
+  - explicit Sifr mutability-boundary canonicalization landed for `0026`, `0027`, `0080`, `0448`
 - wave-9 (`workstream_3` + `workstream_4` closure lane):
   - call-boundary and container refinement closure under explicit Optional semantics
   - ownership: `method_call_args.rs`, `expressions.rs`, `nonempty_method_narrowing.rs`, `sequence_guard_detection.rs`, `guarded_index.rs`
