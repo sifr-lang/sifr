@@ -22,6 +22,7 @@ use super::numeric_sentinels::{
     maybe_resolve_numeric_sentinel_name_from_type, normalize_min_max_numeric_sentinels,
     retag_numeric_sentinel_name_expr,
 };
+use super::sequence_guard_detection::{detect_false_exit_sequence_guards, detect_true_sequence_guards};
 pub(super) use super::tuple_unpack::{lower_star_unpack_assign, lower_tuple_unpack_assign};
 use super::type_bounds::{type_satisfies_bound, type_satisfies_constraint};
 use super::typing_and_functions::resolve_annotation_expr;
@@ -512,11 +513,31 @@ pub(super) fn lower_boolop(boolop: &ExprBoolOp, ctx: &mut LowerCtx) -> Option<Hi
         BoolOp::Or => "or",
     };
 
+    let saved_sequence_guards = ctx.save_sequence_guards();
     let mut values = Vec::new();
-    for val in &boolop.values {
-        let expr = lower_expr(val, ctx)?;
+    for (index, val) in boolop.values.iter().enumerate() {
+        if index > 0 {
+            let prev_expr = &boolop.values[index - 1];
+            let guards = match boolop.op {
+                // For `a and b`, `b` is evaluated only if `a` is true.
+                BoolOp::And => detect_true_sequence_guards(prev_expr, ctx),
+                // For `a or b`, `b` is evaluated only if `a` is false.
+                BoolOp::Or => detect_false_exit_sequence_guards(prev_expr, ctx),
+            };
+            for guard in guards {
+                ctx.add_sequence_guard(guard);
+            }
+        }
+        let expr = match lower_expr(val, ctx) {
+            Some(expr) => expr,
+            None => {
+                ctx.restore_sequence_guards(&saved_sequence_guards);
+                return None;
+            }
+        };
         values.push(expr);
     }
+    ctx.restore_sequence_guards(&saved_sequence_guards);
 
     // Check all values are Bool
     for val in &values {

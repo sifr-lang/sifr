@@ -82,6 +82,37 @@ status: in progress
     - `cargo run -q -p sifr -- check audits/leetcode/0024_swap_nodes_in_pairs.sifr` -> reassignment-flow type mismatches reduced (remaining signature/boundary diagnostics persist)
   - PR:
     - `https://github.com/yaseralnajjar/sifr/pull/1460` (merged)
+- 2026-03-29 local iteration (wave-7 sequence-guard dominance slice):
+  - compiler changes:
+    - boolean short-circuit lowering now propagates sequence guards per operand:
+      - `and`: RHS lowers under true-branch guards from prior operand(s)
+      - `or`: RHS lowers under false-exit guards from prior operand(s)
+    - boolop lowering now snapshots/restores sequence guard state to avoid leakage on nested/failed lowering paths
+    - added Wave-7 positive/negative boolop narrowing tests in HIR lowering unit coverage
+    - added non-LeetCode e2e pass/fail fixtures for boolop short-circuit guarded indexing
+  - tests/validation:
+    - `cargo test -q -p sifr_hir test_boolop_` -> pass
+    - `cargo run -q -p sifr -- check crates/sifr/tests/e2e/pass/optional_boolop_guarded_index_narrowing.sifr` -> pass
+    - `cargo run -q -p sifr -- run crates/sifr/tests/e2e/pass/optional_boolop_guarded_index_narrowing.sifr` -> pass
+    - `cargo run -q -p sifr -- check crates/sifr/tests/e2e/fail/optional_boolop_index_without_guard.sifr` -> expected type error (`int | None` mismatch)
+    - `scripts/run_all_tests.sh --profile quick` -> pass
+  - targeted rerun signal:
+    - `cargo run -q -p sifr -- check audits/leetcode/0020_valid_parentheses.sifr` -> still failing (`Any | None` vs `str | None` comparison)
+    - `cargo run -q -p sifr -- check audits/leetcode/0062_unique_paths.sifr` -> still failing (return/arith Optional leak)
+    - `cargo run -q -p sifr -- check audits/leetcode/0121_best_time_to_buy_and_sell_stock.sifr` -> still failing (`int | None` assignment mismatch)
+    - `cargo run -q -p sifr -- check audits/leetcode/0287_find_the_duplicate_number.sifr` -> still failing (index operand Optional leakage)
+    - `cargo run -q -p sifr -- check audits/leetcode/0904_fruit_into_baskets.sifr` -> still failing (dict key Optional leakage)
+  - phase-level rerun:
+    - full corpus rerun against `audits/leetcode` with `target/release/sifr` -> `PASS=113`, `CHECK_ERROR=272`, `RUN_ERROR=26`
+    - artifact: `verification/leetcode/full_corpus_current_results_20260329_live_after_optional_wave7.json`
+    - non-failing artifact: `verification/leetcode/full_corpus_nonfailing_20260329_live_after_optional_wave7.json`
+  - rerun delta:
+    - vs wave-6: `+1 PASS`, `-3 CHECK_ERROR`, `+2 RUN_ERROR`
+    - fixture transitions:
+      - `0091_decode_ways`: `CHECK_ERROR -> PASS`
+      - `0205_isomorphic_strings`: `CHECK_ERROR -> RUN_ERROR` (ownership move-use emitted after check-side Optional gate removal)
+      - `0290_word_pattern`: `CHECK_ERROR -> RUN_ERROR` (ownership move-use emitted after check-side Optional gate removal)
+    - vs entry baseline: `PASS +16`, `CHECK_ERROR -18`, `RUN_ERROR +2`
 - Validation to record:
   - owning unit tests
   - non-LeetCode e2e regression(s)
@@ -223,7 +254,7 @@ status: in progress
   - justification for each surviving canonical rewrite
   - explicit note that no residual rewrite weakened Optional semantics
 
-## Planned Next Waves (Reviewer-Gated, Not Yet Implemented)
+## Next Waves (Reviewer-Gated Plan)
 
 Root-cause plan artifact:
 - `issues/ad-hoc-optional-none-and-narrowing-wave7-9-root-cause-plan-2026-03-29.md`
@@ -232,11 +263,11 @@ Reviewer passes:
 - `reviews/ad-hoc-optional-none-wave7-9-plan-review-pass1.md` (`not ready`, corrective findings applied)
 - `reviews/ad-hoc-optional-none-wave7-9-plan-review-pass2.md` (`ready`, no blocking issues)
 
-Queued waves:
+Wave state:
 
 - wave-7 (`workstream_1`):
-  - sequence-guard dominance and guarded-index consumption
-  - ownership: `sequence_guard_detection.rs`, `guarded_index.rs`, `sequence_guards.rs`, `expressions.rs`
+  - sequence-guard dominance and guarded-index consumption slice implemented; PR/merge tracked in this ledger once merged
+  - ownership: `expressions.rs` (boolop guard propagation) with validating tests and e2e fixtures
 - wave-8 (`workstream_1` + `workstream_2` bridge):
   - assignment/join stabilization via reassignment-flow owners
   - ownership: `assignment_widening.rs`, `statements.rs`, `tuple_unpack.rs` (optional `infer.rs` only if canary evidence requires)
