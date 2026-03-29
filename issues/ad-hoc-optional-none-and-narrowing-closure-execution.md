@@ -168,7 +168,7 @@ status: in progress
       - `0290_word_pattern`: `RUN_ERROR -> PASS`
     - vs entry baseline: `PASS +18`, `CHECK_ERROR -18`, `RUN_ERROR ±0`
   - PR:
-    - pending (open/merge in this loop item)
+    - `https://github.com/yaseralnajjar/sifr/pull/1477` (merged)
 - Validation to record:
   - owning unit tests
   - non-LeetCode e2e regression(s)
