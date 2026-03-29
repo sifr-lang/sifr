@@ -1334,6 +1334,55 @@ status: accepted_after_pass_1_and_pass_2
 - reviewer tooling note:
   - batch 28 used stable per-file external review prompts embedding both the paired Sifr source and the Rust companion because larger batch prompts stalled repeatedly in this workspace
 
+#### batch_29_type_checking_constrained_typevars_protocol_bounds
+
+status: accepted_after_pass_1_and_pass_2
+
+- scope:
+  - `demos/type_checking/idiomatic.rs`
+  - `demos/constrained_typevars/idiomatic.rs`
+  - `demos/protocol_bounds/idiomatic.rs`
+- selection rationale:
+  - all three are positive runnable demos
+  - all three form a cohesive remaining type-system slice instead of mixing small typing demos with unrelated ownership or control-flow companions
+  - `constrained_typevars` and `protocol_bounds` still benefited from tighter Rust-first constraint modeling, while `type_checking` was kept as the minimal typed-success reference
+- priority tags:
+  - `type-system-surface`: `type_checking`, `constrained_typevars`, `protocol_bounds`
+  - `hand-authored-generated-shape`: `constrained_typevars`, `protocol_bounds`
+- implementation summary:
+  - `type_checking`: reduced the companion to the minimal direct typed identity example with no extra annotation noise
+  - `constrained_typevars`: removed unnecessary generic bounds, then added an explicit `EchoType` marker trait for the closed `int|str` constraint and a `Comparable` wrapper over `PartialOrd` so the Rust companion mirrors the paired Sifr constraint concepts more directly
+  - `protocol_bounds`: simplified forwarding to direct by-value generic calls while preserving the protocol-bound behavior and visible output
+- local validation completed:
+  - `rustfmt demos/type_checking/idiomatic.rs demos/constrained_typevars/idiomatic.rs demos/protocol_bounds/idiomatic.rs`
+  - `rustc --edition=2021 demos/type_checking/idiomatic.rs -o /tmp/sifr-idiomatic-type-checking && /tmp/sifr-idiomatic-type-checking`
+  - `rustc --edition=2021 demos/constrained_typevars/idiomatic.rs -o /tmp/sifr-idiomatic-constrained-typevars && /tmp/sifr-idiomatic-constrained-typevars`
+  - `rustc --edition=2021 demos/protocol_bounds/idiomatic.rs -o /tmp/sifr-idiomatic-protocol-bounds && /tmp/sifr-idiomatic-protocol-bounds`
+  - `cargo run -q -p sifr -- run demos/type_checking/main.sifr`
+  - `cargo run -q -p sifr -- run demos/constrained_typevars/main.sifr`
+  - `cargo run -q -p sifr -- run demos/protocol_bounds/main.sifr`
+  - `scripts/run_all_tests.sh`
+  - post-pass-1 revalidation:
+    - `rustfmt demos/type_checking/idiomatic.rs demos/constrained_typevars/idiomatic.rs demos/protocol_bounds/idiomatic.rs`
+    - `rustc --edition=2021 demos/constrained_typevars/idiomatic.rs -o /tmp/sifr-idiomatic-constrained-typevars && /tmp/sifr-idiomatic-constrained-typevars`
+    - `cargo run -q -p sifr -- run demos/constrained_typevars/main.sifr`
+    - `scripts/run_all_tests.sh`
+  - post-pass-2 revalidation:
+    - `rustfmt demos/type_checking/idiomatic.rs demos/constrained_typevars/idiomatic.rs demos/protocol_bounds/idiomatic.rs`
+    - `rustc --edition=2021 demos/constrained_typevars/idiomatic.rs -o /tmp/sifr-idiomatic-constrained-typevars && /tmp/sifr-idiomatic-constrained-typevars`
+    - `cargo run -q -p sifr -- run demos/constrained_typevars/main.sifr`
+    - `scripts/run_all_tests.sh`
+- review artifacts:
+  - pass 1: `reviews/phase-ad-hoc-idiomatic-rust-demo-corpus-wave-2-batch-29-review-pass-1.md`
+  - pass 2: `reviews/phase-ad-hoc-idiomatic-rust-demo-corpus-wave-2-batch-29-review-pass-2.md`
+- review application summary:
+  - pass 1 accepted one follow-up in `demos/constrained_typevars/idiomatic.rs` adding an explicit marker trait so `echo` no longer accepts arbitrary types where the paired Sifr `TypeVar` is constrained to `int` and `str`
+  - pass 1 rejected the remaining `Comparable` and owned-string notes because `PartialOrd` and Rust `String` remain the established corpus mappings for those Sifr concepts
+  - pass 2 accepted one refinement in `demos/constrained_typevars/idiomatic.rs` introducing a named `Comparable` trait wrapper and clearer constraint naming for the explicit `TypeVar` marker
+  - `constrained_typevars` was re-reviewed after that change and returned no actionable issues
+- reviewer tooling note:
+  - batch 29 used stable per-file external review prompts embedding both the paired Sifr source and the Rust companion because larger batch prompts stalled repeatedly in this workspace
+
 ### wave_3_fixture_and_negative_case_normalization
 
 status: pending
