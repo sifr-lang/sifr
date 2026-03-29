@@ -2057,6 +2057,46 @@ status: accepted_after_pass_1_and_pass_2
 - reviewer tooling note:
   - batch 45 again required embedded-source per-file prompts because shorter path-only reviewer prompts were prone to stale or non-file-local responses in this workspace
 
+#### batch_46_local_imports_stdlib_loading_stdlib_modules
+
+status: accepted_after_pass_1_and_pass_2
+
+- scope:
+  - `demos/local_imports/idiomatic.rs`
+  - `demos/stdlib_loading/idiomatic.rs`
+  - `demos/stdlib_modules/idiomatic.rs`
+- selection rationale:
+  - all three are positive runnable demos
+  - all three form a cohesive remaining stdlib-loading slice instead of mixing tiny import-path smoke demos and registry-loading checks with larger broad-surface stdlib demos
+  - `local_imports` and `stdlib_loading` still carried repeated copied error boilerplate despite printing only `pi`-derived values, and `stdlib_modules` still carried a full fake stdlib scaffold despite exercising only a floored `pi` assertion and a tiny JSON string dump
+- priority tags:
+  - `stdlib-loading-surface`: `local_imports`, `stdlib_loading`, `stdlib_modules`
+  - `import-path-surface`: `local_imports`, `stdlib_loading`
+  - `registry-surface`: `stdlib_modules`
+  - `hand-authored-generated-shape`: `local_imports`, `stdlib_loading`, `stdlib_modules`
+- implementation summary:
+  - `local_imports`: removed copied error-type boilerplate and reduced the file to the direct `PI.floor()` output the demo actually exercises
+  - `stdlib_loading`: removed copied boilerplate and reduced the file to the direct `PI` print that matches the paired demo
+  - `stdlib_modules`: replaced the full fake stdlib scaffold with a small local `json_dumps` helper and a direct `PI.floor()` assertion for the exercised registry behavior
+- local validation completed:
+  - `rustfmt demos/local_imports/idiomatic.rs demos/stdlib_loading/idiomatic.rs demos/stdlib_modules/idiomatic.rs`
+  - `rustc --edition=2021 demos/local_imports/idiomatic.rs -o /tmp/sifr-idiomatic-local-imports && /tmp/sifr-idiomatic-local-imports`
+  - `rustc --edition=2021 demos/stdlib_loading/idiomatic.rs -o /tmp/sifr-idiomatic-stdlib-loading && /tmp/sifr-idiomatic-stdlib-loading`
+  - `rustc --edition=2021 demos/stdlib_modules/idiomatic.rs -o /tmp/sifr-idiomatic-stdlib-modules && /tmp/sifr-idiomatic-stdlib-modules`
+  - `cargo run -q -p sifr -- run demos/local_imports/main.sifr`
+  - `cargo run -q -p sifr -- run demos/stdlib_loading/main.sifr`
+  - `cargo run -q -p sifr -- run demos/stdlib_modules/main.sifr`
+  - `scripts/run_all_tests.sh`
+- review artifacts:
+  - pass 1: `reviews/phase-ad-hoc-idiomatic-rust-demo-corpus-wave-2-batch-46-review-pass-1.md`
+  - pass 2: `reviews/phase-ad-hoc-idiomatic-rust-demo-corpus-wave-2-batch-46-review-pass-2.md`
+- review application summary:
+  - pass 1 reported no accepted blockers; `local_imports` came back clean, while the `stdlib_loading` and `stdlib_modules` notes were rejected because they inverted the Sifr and Rust file roles
+  - pass 2 reported no accepted blockers; `local_imports` and `stdlib_modules` came back clean, and the embedded-source `stdlib_loading` verdict returned `OK: no issues`
+  - a later minimal fallback rerun on `stdlib_loading` repeated the stale file-role inversion from pass 1, so it was not accepted as a blocker
+- reviewer tooling note:
+  - batch 46 used compact per-file prompts for pass 1, then embedded-source per-file prompts for pass 2 after the initial lane showed repeated stale file-role inversions on the tiny stdlib-loading demos
+
 ### wave_3_fixture_and_negative_case_normalization
 
 status: pending
