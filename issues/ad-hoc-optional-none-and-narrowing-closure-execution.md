@@ -137,6 +137,38 @@ status: in progress
   - rerun delta:
     - vs wave-7: no status transitions (`PASS/CHECK_ERROR/RUN_ERROR` unchanged)
     - vs entry baseline: `PASS +16`, `CHECK_ERROR -18`, `RUN_ERROR +2`
+  - PR:
+    - `https://github.com/yaseralnajjar/sifr/pull/1474` (merged)
+- 2026-03-29 local iteration (wave-8b run-stage ownership stabilization slice):
+  - root cause:
+    - wave-7 removed check-side Optional gates for `0205`/`0290`, exposing an existing codegen ownership bug where non-copy `Name` operands in subscript assignment were moved and then reused by generated Rust (`E0382`)
+  - reviewer gate:
+    - plan artifact: `issues/ad-hoc-optional-none-and-narrowing-wave8b-run-stage-ownership-plan-2026-03-29.md`
+    - review artifact: `reviews/ad-hoc-optional-none-wave8b-run-stage-plan-review-pass1.md` (`ready`)
+  - compiler changes:
+    - `crates/sifr_codegen/src/lower_stmt.rs`: simple list/dict subscript assignment lowering now clones non-copy `Name` operands for index/value
+    - `crates/sifr_codegen/src/stmt_support_emitter.rs`: IR support emitter now mirrors non-copy `Name` clone behavior for list/dict subscript assignment
+    - added codegen regression test coverage for cloned non-copy dict subscript assignment value path
+  - tests/validation:
+    - `cargo test -q -p sifr_codegen lowers_simple_dict_subscript_assign_stmt` -> pass
+    - `cargo test -q -p sifr_codegen lowers_simple_dict_subscript_assign_clones_non_copy_name_value` -> pass
+    - `cargo run -q -p sifr -- check audits/leetcode/0205_isomorphic_strings.sifr` -> pass
+    - `cargo run -q -p sifr -- run audits/leetcode/0205_isomorphic_strings.sifr` -> pass
+    - `cargo run -q -p sifr -- check audits/leetcode/0290_word_pattern.sifr` -> pass
+    - `cargo run -q -p sifr -- run audits/leetcode/0290_word_pattern.sifr` -> pass
+    - `scripts/run_all_tests.sh --profile quick` -> pass
+  - phase-level rerun:
+    - full corpus rerun against `audits/leetcode` with `target/release/sifr` -> `PASS=115`, `CHECK_ERROR=272`, `RUN_ERROR=24`
+    - artifact: `verification/leetcode/full_corpus_current_results_20260329_live_after_optional_wave8b.json`
+    - non-failing artifact: `verification/leetcode/full_corpus_nonfailing_20260329_live_after_optional_wave8b.json`
+  - rerun delta:
+    - vs wave-8: `+2 PASS`, `+0 CHECK_ERROR`, `-2 RUN_ERROR`
+    - fixture transitions:
+      - `0205_isomorphic_strings`: `RUN_ERROR -> PASS`
+      - `0290_word_pattern`: `RUN_ERROR -> PASS`
+    - vs entry baseline: `PASS +18`, `CHECK_ERROR -18`, `RUN_ERROR ±0`
+  - PR:
+    - `https://github.com/yaseralnajjar/sifr/pull/1477` (merged)
 - Validation to record:
   - owning unit tests
   - non-LeetCode e2e regression(s)
@@ -282,20 +314,26 @@ status: in progress
 
 Root-cause plan artifact:
 - `issues/ad-hoc-optional-none-and-narrowing-wave7-9-root-cause-plan-2026-03-29.md`
+- `issues/ad-hoc-optional-none-and-narrowing-wave8b-run-stage-ownership-plan-2026-03-29.md`
 
 Reviewer passes:
 - `reviews/ad-hoc-optional-none-wave7-9-plan-review-pass1.md` (`not ready`, corrective findings applied)
 - `reviews/ad-hoc-optional-none-wave7-9-plan-review-pass2.md` (`ready`, no blocking issues)
+- `reviews/ad-hoc-optional-none-wave8b-run-stage-plan-review-pass1.md` (`ready`, no blocking issues)
 
 Wave state:
 
 - wave-7 (`workstream_1`):
   - sequence-guard dominance and guarded-index consumption slice implemented; PR/merge tracked in this ledger once merged
   - ownership: `expressions.rs` (boolop guard propagation) with validating tests and e2e fixtures
-- wave-8 (`workstream_1` + `workstream_2` bridge):
-  - tuple-unpack flow hygiene slice implemented; broader assignment/join stabilization remains pending
+- wave-8a (`workstream_1` + `workstream_2` bridge):
+  - tuple-unpack flow hygiene slice implemented and merged; broader assignment/join stabilization remains pending
   - ownership touched in this slice: `tuple_unpack.rs`, `len_aliases.rs`
-  - remaining ownership: `assignment_widening.rs`, `statements.rs` (optional `infer.rs` only if canary evidence requires)
+- wave-8b (`run-stage ownership stabilization`):
+  - subscript-assignment codegen ownership fix implemented; resolves wave-7 regressions in `0205`/`0290`
+  - ownership touched in this slice: `crates/sifr_codegen/src/lower_stmt.rs`, `crates/sifr_codegen/src/stmt_support_emitter.rs`
+- wave-8 (remaining broad join stabilization):
+  - ownership: `assignment_widening.rs`, `statements.rs` (optional `infer.rs` only if canary evidence requires)
 - wave-9 (`workstream_3` + `workstream_4` closure lane):
   - call-boundary and container refinement closure under explicit Optional semantics
   - ownership: `method_call_args.rs`, `expressions.rs`, `nonempty_method_narrowing.rs`, `sequence_guard_detection.rs`, `guarded_index.rs`

@@ -789,6 +789,15 @@ impl RustEmitter {
         let Some(lowered_value) = self.lower_stmt_expr_for_ir(value)? else {
             return Ok(None);
         };
+        let clone_non_copy_name = |expr: &HirExpr, lowered: crate::RustExpr| {
+            if matches!(expr, HirExpr::Name { .. })
+                && !crate::helpers::is_copy_type_for_codegen(expr.ty())
+            {
+                crate::RustExpr::Clone(Box::new(lowered))
+            } else {
+                lowered
+            }
+        };
 
         match Self::resolve_alias_type_for_loop_iter(object_ty) {
             Type::List(_) => Ok(Some(RustStmt::Block(vec![
@@ -796,7 +805,7 @@ impl RustEmitter {
                     mutable: false,
                     name: "__assign_value".to_string(),
                     ty: None,
-                    value: lowered_value,
+                    value: clone_non_copy_name(value, lowered_value),
                 },
                 crate::build_list_subscript_assign_stmt(
                     RustExpr::Ident(object.to_string()),
@@ -812,7 +821,7 @@ impl RustEmitter {
                 let lowered_index = if key_needs_clone {
                     RustExpr::Clone(Box::new(lowered_index))
                 } else {
-                    lowered_index
+                    clone_non_copy_name(index, lowered_index)
                 };
                 Ok(Some(RustStmt::Block(vec![
                     RustStmt::Let {
@@ -825,7 +834,7 @@ impl RustEmitter {
                         mutable: false,
                         name: "__assign_value".to_string(),
                         ty: None,
-                        value: lowered_value,
+                        value: clone_non_copy_name(value, lowered_value),
                     },
                     crate::build_dict_subscript_assign_stmt(
                         RustExpr::Ident(object.to_string()),

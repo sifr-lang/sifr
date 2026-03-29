@@ -3221,8 +3221,8 @@ fn try_lower_simple_subscript_assign_stmt(
     value: &HirExpr,
     object_ty: &Type,
 ) -> Option<Vec<RustStmt>> {
-    let lowered_index = try_lower_leaf_or_name_expr(index)?;
-    let lowered_value = try_lower_leaf_or_name_expr(value)?;
+    let lowered_index = maybe_clone_subscript_assignment_name(index, try_lower_leaf_or_name_expr(index)?);
+    let lowered_value = maybe_clone_subscript_assignment_name(value, try_lower_leaf_or_name_expr(value)?);
     match resolve_alias_type(object_ty) {
         Type::List(_) => Some(vec![build_list_subscript_assign_stmt(
             RustExpr::Ident(object.to_string()),
@@ -3235,6 +3235,15 @@ fn try_lower_simple_subscript_assign_stmt(
             lowered_value,
         )]),
         _ => None,
+    }
+}
+
+fn maybe_clone_subscript_assignment_name(expr: &HirExpr, lowered: RustExpr) -> RustExpr {
+    if matches!(expr, HirExpr::Name { .. }) && !crate::helpers::is_copy_type_for_codegen(expr.ty())
+    {
+        RustExpr::Clone(Box::new(lowered))
+    } else {
+        lowered
     }
 }
 
@@ -4485,8 +4494,40 @@ mod tests {
                 ref args,
             }) if method == "insert"
                 && matches!(recv.as_ref(), RustExpr::Ident(name) if name == "mapping")
-                && matches!(args.first(), Some(RustExpr::Ident(name)) if name == "key")
+                && matches!(args.first(), Some(RustExpr::Clone(inner))
+                    if matches!(inner.as_ref(), RustExpr::Ident(name) if name == "key"))
                 && matches!(args.get(1), Some(RustExpr::Ident(name)) if name == "val")
+        ));
+    }
+
+    #[test]
+    fn lowers_simple_dict_subscript_assign_clones_non_copy_name_value() {
+        let stmt = HirStmt::SubscriptAssign {
+            object: "mapping".to_string(),
+            index: HirExpr::Name {
+                name: "key".to_string(),
+                ty: Type::Str,
+            },
+            value: HirExpr::Name {
+                name: "val".to_string(),
+                ty: Type::Str,
+            },
+            object_ty: Type::Dict(Box::new(Type::Str), Box::new(Type::Str)),
+        };
+        let lowered = try_lower_simple_stmt(&stmt, false, &HashSet::new(), &HashSet::new())
+            .expect("dict subscript assign lowered");
+        assert!(matches!(
+            lowered[0],
+            RustStmt::Expr(RustExpr::MethodCall {
+                receiver: ref recv,
+                ref method,
+                ref args,
+            }) if method == "insert"
+                && matches!(recv.as_ref(), RustExpr::Ident(name) if name == "mapping")
+                && matches!(args.first(), Some(RustExpr::Clone(inner))
+                    if matches!(inner.as_ref(), RustExpr::Ident(name) if name == "key"))
+                && matches!(args.get(1), Some(RustExpr::Clone(inner))
+                    if matches!(inner.as_ref(), RustExpr::Ident(name) if name == "val"))
         ));
     }
 
