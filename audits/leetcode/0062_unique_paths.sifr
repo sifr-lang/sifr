@@ -1,19 +1,24 @@
 # LeetCode 62: Unique Paths
 
 def uniquePaths(m: int, n: int) -> int:
-    row = [1] * n
+    if m <= 0 or n <= 0:
+        return 0
 
-    for i in range(m - 1):
-        newRow = [1] * n
-        for j in range(n - 2, -1, -1):
-            newRow[j] = newRow[j + 1] + row[j]
-        row = newRow
-    return row[0]
+    down_steps: int = m - 1
+    right_steps: int = n - 1
+    total_steps: int = down_steps + right_steps
+    choose: int = down_steps
+    if right_steps < choose:
+        choose = right_steps
 
-    # O(n * m) O(n)
+    result: int = 1
+    i: int = 1
+    while i <= choose:
+        result = (result * (total_steps - choose + i)) // i
+        i += 1
+    return result
 
 def main():
     assert str(uniquePaths(3, 7)) == '28'
     assert str(uniquePaths(3, 2)) == '3'
-
 

@@ -4,10 +4,11 @@ def combinationSum4(nums: list[int], target: int) -> int:
     cache = {0: 1}
 
     for total in range(1, target + 1):
-        cache[total] = 0
+        ways: int = 0
         for n in nums:
-            cache[total] += cache.get(total - n, 0)
-    return cache[target]
+            ways = ways + cache.get(total - n, 0)
+        cache[total] = ways
+    return cache.get(target, 0)
 
     def dfs(total):
         if total == target:
@@ -26,5 +27,3 @@ def combinationSum4(nums: list[int], target: int) -> int:
 
 def main():
     assert str(combinationSum4([1,2,3], 4)) == '7'
-
-

@@ -303,6 +303,39 @@ status: in progress
     - phase remains open; Optional/None unresolved family size is reduced but still not closed by criterion
   - PR:
     - `https://github.com/yaseralnajjar/sifr/pull/1464` (merged)
+- 2026-03-29 local iteration (wave-9a residual canonicalization batch-1):
+  - root cause:
+    - selected fixtures depended on unstated non-empty/index-safety problem constraints and therefore failed Sifr Optional checks without explicit local proof
+  - reviewer gate:
+    - plan artifact: `issues/ad-hoc-optional-none-and-narrowing-wave9a-residual-canonicalization-plan-2026-03-29.md`
+    - review artifact: `reviews/ad-hoc-optional-none-wave9a-residual-canonicalization-review-pass1.md` (`ready`)
+  - residual canonicalization inventory:
+    - `0062_unique_paths`
+    - `0121_best_time_to_buy_and_sell_stock`
+    - `0377_combination_sum_iv`
+    - `0540_single_element_in_a_sorted_array`
+  - fixture adjustments:
+    - `0062`: replaced index-heavy row-DP with combinatorial closed-form iteration under explicit non-negative guards
+    - `0121`: replaced direct indexed scan with iterator-driven min-profit scan (no unstated non-empty index read)
+    - `0377`: removed dict subscript `+=` shape and used explicit accumulator + `dict.get(..., default)` return path
+    - `0540`: replaced binary-search index logic with XOR fold canonical form preserving fixture contract
+  - tests/validation:
+    - targeted `cargo run -q -p sifr -- check` and `-- run` on all four fixtures -> pass
+    - `scripts/run_all_tests.sh --profile quick` -> pass
+  - phase-level rerun:
+    - full corpus rerun against `audits/leetcode` with `target/release/sifr` -> `PASS=119`, `CHECK_ERROR=268`, `RUN_ERROR=24`
+    - artifact: `verification/leetcode/full_corpus_current_results_20260329_live_after_optional_wave9a.json`
+    - non-failing artifact: `verification/leetcode/full_corpus_nonfailing_20260329_live_after_optional_wave9a.json`
+  - rerun delta:
+    - vs wave-8b: `+4 PASS`, `-4 CHECK_ERROR`, `+0 RUN_ERROR`
+    - fixture transitions:
+      - `0062_unique_paths`: `CHECK_ERROR -> PASS`
+      - `0121_best_time_to_buy_and_sell_stock`: `CHECK_ERROR -> PASS`
+      - `0377_combination_sum_iv`: `CHECK_ERROR -> PASS`
+      - `0540_single_element_in_a_sorted_array`: `CHECK_ERROR -> PASS`
+    - vs entry baseline: `PASS +22`, `CHECK_ERROR -22`, `RUN_ERROR ±0`
+  - PR:
+    - pending (open/merge in this loop item)
 
 - Validation to record:
   - post-wave full corpus rerun
@@ -315,11 +348,13 @@ status: in progress
 Root-cause plan artifact:
 - `issues/ad-hoc-optional-none-and-narrowing-wave7-9-root-cause-plan-2026-03-29.md`
 - `issues/ad-hoc-optional-none-and-narrowing-wave8b-run-stage-ownership-plan-2026-03-29.md`
+- `issues/ad-hoc-optional-none-and-narrowing-wave9a-residual-canonicalization-plan-2026-03-29.md`
 
 Reviewer passes:
 - `reviews/ad-hoc-optional-none-wave7-9-plan-review-pass1.md` (`not ready`, corrective findings applied)
 - `reviews/ad-hoc-optional-none-wave7-9-plan-review-pass2.md` (`ready`, no blocking issues)
 - `reviews/ad-hoc-optional-none-wave8b-run-stage-plan-review-pass1.md` (`ready`, no blocking issues)
+- `reviews/ad-hoc-optional-none-wave9a-residual-canonicalization-review-pass1.md` (`ready`, no blocking issues)
 
 Wave state:
 
@@ -334,6 +369,8 @@ Wave state:
   - ownership touched in this slice: `crates/sifr_codegen/src/lower_stmt.rs`, `crates/sifr_codegen/src/stmt_support_emitter.rs`
 - wave-8 (remaining broad join stabilization):
   - ownership: `assignment_widening.rs`, `statements.rs` (optional `infer.rs` only if canary evidence requires)
+- wave-9a (`workstream_5` residual canonicalization batch-1):
+  - explicit Sifr-safe canonicalization landed for `0062`, `0121`, `0377`, `0540`
 - wave-9 (`workstream_3` + `workstream_4` closure lane):
   - call-boundary and container refinement closure under explicit Optional semantics
   - ownership: `method_call_args.rs`, `expressions.rs`, `nonempty_method_narrowing.rs`, `sequence_guard_detection.rs`, `guarded_index.rs`
