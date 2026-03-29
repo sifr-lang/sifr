@@ -2281,6 +2281,60 @@ status: accepted_after_pass_1_and_pass_2
   - batch 51 again used direct per-file `claude -p --tools Read` prompts because that has been the most reliable review transport in this workspace
   - `stdlib_fixes` pass 1 and `generic_stdlib` pass 2 still stalled despite the narrower prompt shape, so those transport failures are recorded explicitly instead of being treated as blockers
 
+#### batch_55_stdlib_intrinsics_stdlib_ownership_stdlib_tools
+
+status: accepted_after_pass_1_and_pass_2
+
+- scope:
+  - `demos/stdlib_intrinsics/idiomatic.rs`
+  - `demos/stdlib_ownership/idiomatic.rs`
+  - `demos/stdlib_tools/idiomatic.rs`
+- selection rationale:
+  - all three are positive runnable demos
+  - all three form a cohesive remaining stdlib milestone slice around intrinsic expansion, ownership-aware stdlib APIs, and the later stdlib polish surface
+  - the existing companions were still large generated-style scaffolds even though the paired demos exercise much smaller direct behavior and printed outputs
+- priority tags:
+  - `stdlib-heavy`: `stdlib_intrinsics`, `stdlib_ownership`, `stdlib_tools`
+  - `milestone-demo`: `stdlib_intrinsics`, `stdlib_ownership`, `stdlib_tools`
+  - `hand-authored-generated-shape`: `stdlib_intrinsics`, `stdlib_ownership`, `stdlib_tools`
+- implementation summary:
+  - `stdlib_intrinsics`: replaced the large scaffold with a compact direct demo using real libm/hash/base32/filesystem helpers while preserving the exact observable output
+  - `stdlib_ownership`: replaced the generated runtime emulation with direct min-heap helpers, partition-point bisect insertion, a lazy `chain` helper, and a compact `Counter`
+  - `stdlib_tools`: replaced the large wrapper-heavy scaffold with direct monotonic/timing helpers, a small glob matcher, direct filesystem copy/move/remove flows, and a minimal TOML inline parser for the exercised path
+- local validation completed:
+  - `rustfmt demos/stdlib_intrinsics/idiomatic.rs demos/stdlib_ownership/idiomatic.rs demos/stdlib_tools/idiomatic.rs`
+  - temp Cargo validation for `stdlib_intrinsics` with `blake2 = "0.10"`, `chrono = "0.4"`, `data-encoding = "2"`, `fs2 = "0.4"`, `libm = "0.2"`, `sha2 = "0.10"`
+  - `rustc demos/stdlib_ownership/idiomatic.rs -o /tmp/stdlib_ownership_idiomatic`
+  - `rustc demos/stdlib_tools/idiomatic.rs -o /tmp/stdlib_tools_idiomatic`
+  - `/tmp/stdlib_ownership_idiomatic`
+  - `/tmp/stdlib_tools_idiomatic`
+  - `cargo run -q -p sifr -- run demos/stdlib_intrinsics/main.sifr`
+  - `cargo run -q -p sifr -- run demos/stdlib_ownership/main.sifr`
+  - `cargo run -q -p sifr -- run demos/stdlib_tools/main.sifr`
+  - `scripts/run_all_tests.sh`
+  - post-pass-1 follow-up revalidation:
+    - `rustfmt demos/stdlib_intrinsics/idiomatic.rs demos/stdlib_ownership/idiomatic.rs`
+    - temp Cargo validation for `stdlib_intrinsics` with `blake2 = "0.10"`, `chrono = "0.4"`, `data-encoding = "2"`, `fs2 = "0.4"`, `libm = "0.2"`, `sha2 = "0.10"`
+    - `rustc demos/stdlib_ownership/idiomatic.rs -o /tmp/stdlib_ownership_idiomatic`
+    - `/tmp/stdlib_ownership_idiomatic`
+    - `cargo run -q -p sifr -- run demos/stdlib_intrinsics/main.sifr`
+    - `cargo run -q -p sifr -- run demos/stdlib_ownership/main.sifr`
+    - `scripts/run_all_tests.sh`
+- review artifacts:
+  - pass 1: `reviews/phase-ad-hoc-idiomatic-rust-demo-corpus-wave-2-batch-55-review-pass-1.md`
+  - pass 2: `reviews/phase-ad-hoc-idiomatic-rust-demo-corpus-wave-2-batch-55-review-pass-2.md`
+- review application summary:
+  - pass 1 on `stdlib_intrinsics` raised one real parity note about preserving the `disk_usage("/")[0]` print gate; I accepted it and changed the companion to print only when `total_space("/")` succeeds
+  - pass 1 on `stdlib_ownership` initially returned `OK`, but an embedded-source retry surfaced two real Rust-first quality issues in the first draft: the fake sorted-vector heap and the eager `chain` helper. I accepted those, replaced them with direct heap operations plus a lazy chain helper, generalized `Counter::from_list`, and then fixed the tie-order regression so `most_common(1)` again prints `[("apple", 3)]`
+  - pass 1 on `stdlib_tools` returned `OK`
+  - pass 2 on `stdlib_intrinsics` raised only a non-blocking `processor()` preference and a return-shape note tied to the older Sifr-surface rubric; neither was accepted as a blocker
+  - pass 2 on `stdlib_tools` likewise drifted back into Sifr-surface/type-shape parity notes about `TomlValue`, `Vec`, and `run_command`, and none were accepted because the paired demo-visible behavior already matched under all validation lanes
+  - pass 2 on `stdlib_ownership` stalled without a usable verdict and was carried as a transport note rather than treated as a blocker
+- reviewer tooling note:
+  - batch 55 used direct per-file `claude -p --allowedTools Read` prompts because the `talk-to-claude` skill referenced by the phase-loop skill is not available in this session
+  - an embedded-source retry was also used for `stdlib_ownership` pass 1 after the initial direct prompt returned only `OK`; that narrower retry found the heap/lazy-chain issues that were actually worth fixing
+  - `stdlib_ownership` pass 2 still stalled without output after repeated polls, so the artifact records that transport issue explicitly rather than inventing a clean verdict
+
 #### batch_50_stdlib_stdlib_expansion_stdlib_aliases
 
 status: accepted_after_pass_1_and_pass_2
