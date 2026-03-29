@@ -223,6 +223,26 @@ fn test_while_not_none_narrows_optional_receiver_for_attribute_access() {
 }
 
 #[test]
+fn test_inferred_local_can_widen_to_optional_on_reassignment() {
+    let result = lower_source(
+        "def pick(head: int | None) -> int:\n    cur = None\n    cur = head\n    if cur is None:\n        return 0\n    return cur\n",
+    );
+    assert!(
+        result.is_ok(),
+        "inferred locals should widen to Optional under reassignment from/to None"
+    );
+}
+
+#[test]
+fn test_annotated_local_does_not_widen_on_reassignment() {
+    let result = lower_source("def bad() -> int:\n    value: int = 1\n    value = None\n    return value\n");
+    assert!(
+        result.is_err(),
+        "explicitly annotated locals should keep their declared type on reassignment"
+    );
+}
+
+#[test]
 fn test_for_range() {
     let module = lower_source("def main():\n    for i in range(10):\n        print(i)\n").unwrap();
     assert_eq!(module.functions.len(), 1);

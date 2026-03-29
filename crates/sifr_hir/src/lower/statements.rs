@@ -1,6 +1,7 @@
 use super::binding_mutability::ensure_mutable_parameter_binding;
 use super::builtin_calls::callable_builtin_element_type;
 use super::classes::collect_literal_coverage;
+use super::assignment_widening::reconcile_optional_reassignment;
 use super::container_literal_specialization::{apply_container_specialization_patches, type_contains_unknown_or_any, validate_subscript_assignment_target, validate_subscript_augassign_target};
 use super::diagnostics::{collect_raise_error_types, format_type_name, is_valid_error_type};
 use super::expressions::{lower_expr, lower_star_unpack_assign, lower_tuple_unpack_assign};
@@ -1067,7 +1068,8 @@ pub(super) fn lower_ann_assign(ann: &StmtAnnAssign, ctx: &mut LowerCtx) -> Optio
 
     ctx.empty_dict_specializations.remove(&name);
     ctx.pending_container_specialization_patches.remove(&name);
-    ctx.scope.define(name.clone(), declared_type.clone());
+    ctx.scope
+        .define_explicit_local(name.clone(), declared_type.clone());
     if let Some(kind) = ann
         .value
         .as_ref()
@@ -1386,12 +1388,14 @@ pub(super) fn lower_assign(assign: &StmtAssign, ctx: &mut LowerCtx) -> Option<Hi
             return None;
         }
         // Reassignment: check type compatibility
-        if !value_ty.is_assignable_to(&info.ty) {
+        let info_ty = info.ty.clone();
+        let can_widen = info.is_inferred_local_binding();
+        if !reconcile_optional_reassignment(ctx, &name, &info_ty, &value_ty, can_widen) {
             ctx.error(format!(
                 "type mismatch: cannot assign '{}' to variable '{}' of type '{}'",
                 value_ty.display_name(),
                 name,
-                info.ty.display_name()
+                info_ty.display_name()
             ));
         }
         // Reset moved state on reassignment
@@ -1596,10 +1600,7 @@ pub(super) fn lower_aug_assign(aug: &StmtAugAssign, ctx: &mut LowerCtx) -> Optio
     }
     let var_ty = var_info.ty.clone();
 
-    // Type check the operation
-    let base_op = &op_str[..op_str.len() - 1]; // Remove '='
-                                               // For += on strings, allow str += str
-                                               // For += on lists, allow list += list
+    let base_op = &op_str[..op_str.len() - 1];
     if base_op == "+" {
         match (&var_ty, value.ty()) {
             (Type::Str, Type::Str) => {}
