@@ -2335,6 +2335,54 @@ status: accepted_after_pass_1_and_pass_2
   - an embedded-source retry was also used for `stdlib_ownership` pass 1 after the initial direct prompt returned only `OK`; that narrower retry found the heap/lazy-chain issues that were actually worth fixing
   - `stdlib_ownership` pass 2 still stalled without output after repeated polls, so the artifact records that transport issue explicitly rather than inventing a clean verdict
 
+#### batch_61_core_language_core_libraries_iterator_integration
+
+status: accepted_after_pass_1_and_pass_2
+
+- scope:
+  - `demos/core_language/idiomatic.rs`
+  - `demos/core_libraries/idiomatic.rs`
+  - `demos/iterator_integration/idiomatic.rs`
+- selection rationale:
+  - all three are positive runnable demos
+  - all three form a cohesive remaining core-surface slice instead of mixing the milestone core-language demo with unrelated error or stdlib-heavy cleanup
+  - `core_libraries` and `iterator_integration` were still large generated-style outliers despite the paired demos only exercising compact datetime/regex/math/hash and iterator/path/io behavior
+- priority tags:
+  - `core-surface`: `core_language`, `core_libraries`, `iterator_integration`
+  - `milestone-demo`: `core_language`
+  - `stdlib-heavy`: `core_libraries`, `iterator_integration`
+  - `hand-authored-generated-shape`: `core_language`, `core_libraries`, `iterator_integration`
+- implementation summary:
+  - `core_language`: reduced the file to direct recursive helpers and simple branching/printing without generated `return`/casting ceremony
+  - `core_libraries`: replaced the emitted-style library scaffold with a small direct `DateTime` model, regex search helper, combinatorics/statistics helpers, and `sha256` wrapper over `sha2`
+  - `iterator_integration`: replaced the runtime-heavy scaffold with direct iterator adapters, a lazy regex match iterator, lazy directory iteration, and a stack-based lazy recursive glob helper
+- local validation completed:
+  - `rustfmt demos/core_language/idiomatic.rs demos/core_libraries/idiomatic.rs demos/iterator_integration/idiomatic.rs`
+  - `rustc --edition=2021 demos/core_language/idiomatic.rs -o /tmp/sifr-idiomatic-core-language && /tmp/sifr-idiomatic-core-language`
+  - temp Cargo validation for `demos/core_libraries/idiomatic.rs` with `regex = "1"` and `sha2 = "0.10"`
+  - temp Cargo validation for `demos/iterator_integration/idiomatic.rs` with `regex = "1"`
+  - `cargo run -q -p sifr -- run demos/core_language/main.sifr`
+  - `cargo run -q -p sifr -- run demos/core_libraries/main.sifr`
+  - `cargo run -q -p sifr -- run demos/iterator_integration/main.sifr`
+  - `scripts/run_all_tests.sh`
+  - post-pass-1 revalidation:
+    - `rustfmt demos/iterator_integration/idiomatic.rs`
+    - temp Cargo validation for `demos/iterator_integration/idiomatic.rs` with `regex = "1"`
+    - `cargo run -q -p sifr -- run demos/iterator_integration/main.sifr`
+    - `scripts/run_all_tests.sh`
+- review artifacts:
+  - pass 1: `reviews/phase-ad-hoc-idiomatic-rust-demo-corpus-wave-2-batch-61-review-pass-1.md`
+  - pass 2: `reviews/phase-ad-hoc-idiomatic-rust-demo-corpus-wave-2-batch-61-review-pass-2.md`
+- review application summary:
+  - pass 1 returned `OK` for `core_language` and `core_libraries`
+  - pass 1 on `iterator_integration` raised one real issue in substance: the first draft had simplified `finditer`, `iterdir`, and `rglob` by materializing them eagerly instead of preserving their iterator nature; I accepted that follow-up and rewrote those helpers to stay lazy
+  - the first lazy rewrite exposed one real compile issue in temp Cargo validation: `finditer` needed an explicit lifetime parameter on the returned iterator; that was fixed before the final validation rerun
+  - pass 2 returned `OK` for `core_language` and `core_libraries`
+  - pass 2 on `iterator_integration` stalled on both the direct prompt and a shorter retry after the laziness fix, so it was carried as a transport note rather than treated as a blocker
+- reviewer tooling note:
+  - batch 61 used direct per-file `claude -p --tools Read` prompts
+  - `iterator_integration` needed an accepted pass-1 fix and then stalled in pass 2, so the artifacts record both the accepted laziness change and the final transport issue explicitly
+
 #### batch_60_auto_detection_auto_init_default_values
 
 status: accepted_after_pass_1_and_pass_2
