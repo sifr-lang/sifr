@@ -1212,6 +1212,52 @@ status: accepted_after_pass_1_and_pass_2
 - reviewer tooling note:
   - batch 25 used stable per-file external review prompts embedding both the paired Sifr source and the Rust companion because larger batch prompts remained unreliable in this workspace
 
+#### batch_26_lazy_iterators_basics_iterator_lowering_iterator_codegen
+
+status: accepted_after_pass_1_and_pass_2
+
+- scope:
+  - `demos/lazy_iterators_basics/idiomatic.rs`
+  - `demos/iterator_lowering/idiomatic.rs`
+  - `demos/iterator_codegen/idiomatic.rs`
+- selection rationale:
+  - all three are positive runnable demos
+  - all three form a cohesive remaining canonical iterator-lowering slice instead of mixing small iterator demos with larger protocol-heavy companions
+  - each companion still retained hand-authored generated-shape scaffolding or ownership-signaling patterns that were heavier than the demo-visible behavior
+- priority tags:
+  - `iterator-surface`: `lazy_iterators_basics`, `iterator_lowering`, `iterator_codegen`
+  - `hand-authored-generated-shape`: `lazy_iterators_basics`, `iterator_lowering`, `iterator_codegen`
+- implementation summary:
+  - `lazy_iterators_basics`: replaced boxed/lowered iterator scaffolding with direct Rust iterator helpers for `chain`, `count`, and compact assertion-based parity checks across `next`, `map`, `filter`, `zip`, `enumerate`, and `reversed`
+  - `iterator_lowering`: replaced lowering-oriented scaffolding with direct iterator chains and minimal collection materialization matching the printed demo behavior
+  - `iterator_codegen`: replaced custom filter/sort scaffolding with direct iterator usage, borrowed iteration for repeated traversals, and a simple cloned sort path matching the paired demo output
+- local validation completed:
+  - `rustfmt demos/lazy_iterators_basics/idiomatic.rs demos/iterator_lowering/idiomatic.rs demos/iterator_codegen/idiomatic.rs`
+  - `rustc --edition=2021 demos/lazy_iterators_basics/idiomatic.rs -o /tmp/sifr-idiomatic-lazy-iterators-basics && /tmp/sifr-idiomatic-lazy-iterators-basics`
+  - `rustc --edition=2021 demos/iterator_lowering/idiomatic.rs -o /tmp/sifr-idiomatic-iterator-lowering && /tmp/sifr-idiomatic-iterator-lowering`
+  - `rustc --edition=2021 demos/iterator_codegen/idiomatic.rs -o /tmp/sifr-idiomatic-iterator-codegen && /tmp/sifr-idiomatic-iterator-codegen`
+  - `cargo run -q -p sifr -- run demos/lazy_iterators_basics/main.sifr`
+  - `cargo run -q -p sifr -- run demos/iterator_lowering/main.sifr`
+  - `cargo run -q -p sifr -- run demos/iterator_codegen/main.sifr`
+  - `scripts/run_all_tests.sh`
+  - post-pass-1 revalidation:
+    - `rustfmt demos/lazy_iterators_basics/idiomatic.rs demos/iterator_lowering/idiomatic.rs demos/iterator_codegen/idiomatic.rs`
+    - `rustc --edition=2021 demos/lazy_iterators_basics/idiomatic.rs -o /tmp/sifr-idiomatic-lazy-iterators-basics && /tmp/sifr-idiomatic-lazy-iterators-basics`
+    - `rustc --edition=2021 demos/iterator_codegen/idiomatic.rs -o /tmp/sifr-idiomatic-iterator-codegen && /tmp/sifr-idiomatic-iterator-codegen`
+    - `cargo run -q -p sifr -- run demos/lazy_iterators_basics/main.sifr`
+    - `cargo run -q -p sifr -- run demos/iterator_codegen/main.sifr`
+    - `scripts/run_all_tests.sh`
+- review artifacts:
+  - pass 1: `reviews/phase-ad-hoc-idiomatic-rust-demo-corpus-wave-2-batch-26-review-pass-1.md`
+  - pass 2: `reviews/phase-ad-hoc-idiomatic-rust-demo-corpus-wave-2-batch-26-review-pass-2.md`
+- review application summary:
+  - pass 1 accepted borrowed-iterator clarity follow-ups in `demos/lazy_iterators_basics/idiomatic.rs` and `demos/iterator_codegen/idiomatic.rs` so repeated traversals do not rely on array-copy semantics
+  - pass 1 reported no actionable issues in `demos/iterator_lowering/idiomatic.rs`
+  - the move/use-after-consume framing from pass 1 was not accepted as the root issue because these array traversals compile via copy semantics; the accepted edits were taken for iterator-parity clarity
+  - pass 2 reported no actionable issues on the final code state
+- reviewer tooling note:
+  - batch 26 used stable per-file external review prompts embedding both the paired Sifr source and the Rust companion because larger batch prompts remained unreliable in this workspace
+
 ### wave_3_fixture_and_negative_case_normalization
 
 status: pending
