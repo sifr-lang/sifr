@@ -1,19 +1,16 @@
-fn sum_iterable(values: &Vec<i64>) -> i64 {
-    let mut total: i64 = 0 as i64;
-    for value in values.iter().copied() {
-        total = total + value;
-    }
-    return total;
+fn sum_iterable(values: impl IntoIterator<Item = i64>) -> i64 {
+    values.into_iter().sum()
 }
 
-fn passthrough(it: Box<dyn Iterator<Item = i64>>) -> Box<dyn Iterator<Item = i64>> {
-    return it;
+#[allow(dead_code)]
+fn passthrough<T>(it: T) -> T
+where
+    T: Iterator<Item = i64>,
+{
+    it
 }
 
 fn main() {
-    let nums: Vec<i64> = vec![2 as i64, 4 as i64, 6 as i64];
-    println!(
-        "{}",
-        sum_iterable(&(nums).iter().copied().collect::<Vec<_>>())
-    );
+    let nums = vec![2_i64, 4, 6];
+    println!("{}", sum_iterable(nums));
 }
