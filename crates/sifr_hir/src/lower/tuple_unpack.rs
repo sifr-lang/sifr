@@ -4,6 +4,7 @@ use sifr_python_ast::{Expr, ExprAttribute, ExprTuple};
 use super::binding_mutability::ensure_mutable_parameter_binding;
 use super::assignment_widening::reconcile_optional_reassignment;
 use super::expressions::lower_expr;
+use super::len_aliases::record_tuple_unpack_len_alias_facts;
 use super::sequence_pointers::record_tuple_unpack_pointer_facts;
 use super::LowerCtx;
 
@@ -74,6 +75,7 @@ pub(super) fn lower_tuple_unpack_assign(
     };
 
     record_tuple_unpack_pointer_facts(ctx, &target_names, value);
+    record_tuple_unpack_len_alias_facts(ctx, &target_names, value);
     let mut lowered_targets = Vec::new();
     for (target, ty) in targets.into_iter().zip(elem_types.into_iter()) {
         match target {
@@ -115,6 +117,9 @@ pub(super) fn lower_tuple_unpack_assign(
                 } else {
                     ctx.scope.define(name.clone(), ty.clone());
                 }
+                ctx.clear_sequence_shape_fact(&name);
+                ctx.empty_dict_specializations.remove(&name);
+                ctx.pending_container_specialization_patches.remove(&name);
 
                 lowered_targets.push(HirTupleTarget {
                     binding: HirTupleTargetBinding::Name(name),

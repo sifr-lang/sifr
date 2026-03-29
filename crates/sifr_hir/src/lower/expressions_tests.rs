@@ -291,6 +291,28 @@ fn test_for_range_start_end() {
 }
 
 #[test]
+fn test_tuple_unpack_len_alias_enables_range_index_guard() {
+    let result = lower_source(
+        "def sum_all(values: list[int]) -> int:\n    start, n = (0, len(values))\n    total: int = 0\n    for i in range(start, n):\n        total = total + values[i]\n    return total\n",
+    );
+    assert!(
+        result.is_ok(),
+        "tuple-unpacked len aliases should feed range-based index guards"
+    );
+}
+
+#[test]
+fn test_tuple_unpack_non_len_alias_does_not_enable_range_index_guard() {
+    let result = lower_source(
+        "def sum_all(values: list[int], n: int) -> int:\n    start, limit = (0, n)\n    total: int = 0\n    for i in range(start, limit):\n        total = total + values[i]\n    return total\n",
+    );
+    assert!(
+        result.is_err(),
+        "range-based index guards must not activate for tuple-unpacked non-len aliases"
+    );
+}
+
+#[test]
 fn test_for_loop_lowers_through_iter_protocol_call() {
     let module = lower_source(
         "def main():\n    values: list[int] = [1, 2]\n    for x in values:\n        print(x)\n",

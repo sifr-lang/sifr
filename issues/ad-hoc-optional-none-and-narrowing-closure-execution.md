@@ -113,6 +113,30 @@ status: in progress
       - `0205_isomorphic_strings`: `CHECK_ERROR -> RUN_ERROR` (ownership move-use emitted after check-side Optional gate removal)
       - `0290_word_pattern`: `CHECK_ERROR -> RUN_ERROR` (ownership move-use emitted after check-side Optional gate removal)
     - vs entry baseline: `PASS +16`, `CHECK_ERROR -18`, `RUN_ERROR +2`
+  - PR:
+    - `https://github.com/yaseralnajjar/sifr/pull/1472` (merged)
+- 2026-03-29 local iteration (wave-8 tuple-unpack flow hygiene slice):
+  - compiler changes:
+    - tuple-unpack assignment now records len-alias facts from tuple RHS elements
+    - tuple-unpack name rebind now clears sequence-shape and pending container-specialization state, matching simple assignment hygiene
+    - added tuple-unpack len-alias guard tests:
+      - positive: tuple-unpacked `len(...)` alias enables range index guards
+      - negative: tuple-unpacked non-len alias does not enable guards
+  - tests/validation:
+    - `cargo test -q -p sifr_hir test_tuple_unpack_len_alias_enables_range_index_guard` -> pass
+    - `cargo test -q -p sifr_hir test_tuple_unpack_non_len_alias_does_not_enable_range_index_guard` -> pass
+    - `scripts/run_all_tests.sh --profile quick` -> pass
+  - targeted rerun signal:
+    - `cargo run -q -p sifr -- check audits/leetcode/0062_unique_paths.sifr` -> unchanged Optional diagnostics
+    - `cargo run -q -p sifr -- check audits/leetcode/0063_unique_paths_ii.sifr` -> unchanged Optional diagnostics
+    - `cargo run -q -p sifr -- check audits/leetcode/0120_triangle.sifr` -> unchanged Optional diagnostics
+  - phase-level rerun:
+    - full corpus rerun against `audits/leetcode` with `target/release/sifr` -> `PASS=113`, `CHECK_ERROR=272`, `RUN_ERROR=26`
+    - artifact: `verification/leetcode/full_corpus_current_results_20260329_live_after_optional_wave8.json`
+    - non-failing artifact: `verification/leetcode/full_corpus_nonfailing_20260329_live_after_optional_wave8.json`
+  - rerun delta:
+    - vs wave-7: no status transitions (`PASS/CHECK_ERROR/RUN_ERROR` unchanged)
+    - vs entry baseline: `PASS +16`, `CHECK_ERROR -18`, `RUN_ERROR +2`
 - Validation to record:
   - owning unit tests
   - non-LeetCode e2e regression(s)
@@ -269,8 +293,9 @@ Wave state:
   - sequence-guard dominance and guarded-index consumption slice implemented; PR/merge tracked in this ledger once merged
   - ownership: `expressions.rs` (boolop guard propagation) with validating tests and e2e fixtures
 - wave-8 (`workstream_1` + `workstream_2` bridge):
-  - assignment/join stabilization via reassignment-flow owners
-  - ownership: `assignment_widening.rs`, `statements.rs`, `tuple_unpack.rs` (optional `infer.rs` only if canary evidence requires)
+  - tuple-unpack flow hygiene slice implemented; broader assignment/join stabilization remains pending
+  - ownership touched in this slice: `tuple_unpack.rs`, `len_aliases.rs`
+  - remaining ownership: `assignment_widening.rs`, `statements.rs` (optional `infer.rs` only if canary evidence requires)
 - wave-9 (`workstream_3` + `workstream_4` closure lane):
   - call-boundary and container refinement closure under explicit Optional semantics
   - ownership: `method_call_args.rs`, `expressions.rs`, `nonempty_method_narrowing.rs`, `sequence_guard_detection.rs`, `guarded_index.rs`

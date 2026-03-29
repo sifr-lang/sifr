@@ -35,6 +35,28 @@ pub(super) fn record_len_alias_fact(ctx: &mut LowerCtx, name: &str, value: &Expr
     }
 }
 
+pub(super) fn record_tuple_unpack_len_alias_facts(
+    ctx: &mut LowerCtx,
+    target_names: &[String],
+    value: &Expr,
+) {
+    let Expr::Tuple(value_tuple) = value else {
+        for name in target_names {
+            ctx.clear_len_alias(name);
+        }
+        return;
+    };
+    if value_tuple.elts.len() != target_names.len() {
+        for name in target_names {
+            ctx.clear_len_alias(name);
+        }
+        return;
+    }
+    for (index, name) in target_names.iter().enumerate() {
+        record_len_alias_fact(ctx, name, &value_tuple.elts[index]);
+    }
+}
+
 fn len_alias_target_sequence(value: &Expr, ctx: &LowerCtx) -> Option<String> {
     len_call_sequence_name(value).or_else(|| match value {
         Expr::Name(name) => ctx.len_alias_sequence(name.id.as_str()),
