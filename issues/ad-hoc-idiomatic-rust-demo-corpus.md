@@ -258,6 +258,8 @@ Progress update (`2026-03-29`):
 - `batch_02_math_pathlib_glob` completed local validation, accepted the pass-1 follow-up on path/error surface cleanup, and passed external pass-2 review with no remaining actionable issues
 - `batch_03_io_csv_shutil` selected as the third wave-2 runnable-demo batch because it keeps the file/data-utility slice cohesive while targeting three still-generated companions with prior review history around IO and CSV behavior
 - `batch_03_io_csv_shutil` completed local validation, accepted the pass-1 follow-up on `io` API shape and CSV correctness, and passed external pass-2 review with no remaining actionable issues
+- `batch_04_uuid_platform_os` selected as the fourth wave-2 runnable-demo batch because it keeps the runtime-wrapper slice cohesive while targeting three phase-30-reviewed companions that were still much larger than the actual demo-visible behavior
+- `batch_04_uuid_platform_os` completed local validation, accepted the pass-1 follow-up on `uuid` borrowing and `os` cleanup handling, and passed external pass-2 review with no remaining actionable issues
 
 ### wave_3_fixture_and_negative_case_normalization
 
