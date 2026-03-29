@@ -6,15 +6,12 @@ fn main() {
         "banana".to_string(),
         "cherry".to_string(),
     ]);
-    println!("{}", fruits.len() as i64);
+    println!("{}", fruits.len());
     fruits.insert("date".to_string());
-    println!("{}", fruits.contains(&"date".to_string()));
-    fruits.remove(&"banana".to_string());
-    println!("{}", fruits.len() as i64);
-    let nums: HashSet<i64> = HashSet::from([10 as i64, 20 as i64, 30 as i64]);
-    let mut total: i64 = 0 as i64;
-    for n in nums.iter().copied() {
-        total = total + n;
-    }
+    println!("{}", fruits.contains("date"));
+    fruits.remove("banana");
+    println!("{}", fruits.len());
+    let nums: HashSet<i64> = HashSet::from([10, 20, 30]);
+    let total: i64 = nums.iter().copied().sum();
     println!("{}", total);
 }
