@@ -1467,6 +1467,43 @@ status: accepted_after_pass_1_and_pass_2
 - reviewer tooling note:
   - batch 31 used stable per-file external review prompts embedding both the paired Sifr source and the Rust companion because larger combined prompts and tool-seeking outputs were less reliable in this workspace during pass 2
 
+#### batch_32_monotonic_indices_reverse_indices_indexed_tables
+
+status: accepted_after_pass_1_and_pass_2
+
+- scope:
+  - `demos/monotonic_indices/idiomatic.rs`
+  - `demos/reverse_indices/idiomatic.rs`
+  - `demos/indexed_tables/idiomatic.rs`
+- selection rationale:
+  - all three are positive runnable demos
+  - all three form a cohesive remaining index-safety slice instead of mixing small indexing demos with unrelated option or mutation companions
+  - each companion still retained obvious lowered index scaffolding or explicit normalization noise that could be replaced with direct safe Rust indexing loops
+- priority tags:
+  - `indexing-surface`: `monotonic_indices`, `reverse_indices`, `indexed_tables`
+  - `hand-authored-generated-shape`: `monotonic_indices`, `reverse_indices`, `indexed_tables`
+- implementation summary:
+  - `monotonic_indices`: replaced the integer-range-plus-cast shape with a direct forward index loop over a borrowed bool slice
+  - `reverse_indices`: replaced the lowered reverse-range and negative-index scaffolding with a direct `(0..len).rev()` loop that still indexes back into the slice
+  - `indexed_tables`: replaced the list-comprehension and normalized mutable indexing scaffolding with a direct pre-sized vector and indexed writes
+- local validation completed:
+  - `rustfmt demos/monotonic_indices/idiomatic.rs demos/reverse_indices/idiomatic.rs demos/indexed_tables/idiomatic.rs`
+  - `rustc --edition=2021 demos/monotonic_indices/idiomatic.rs -o /tmp/sifr-idiomatic-monotonic-indices && /tmp/sifr-idiomatic-monotonic-indices`
+  - `rustc --edition=2021 demos/reverse_indices/idiomatic.rs -o /tmp/sifr-idiomatic-reverse-indices && /tmp/sifr-idiomatic-reverse-indices`
+  - `rustc --edition=2021 demos/indexed_tables/idiomatic.rs -o /tmp/sifr-idiomatic-indexed-tables && /tmp/sifr-idiomatic-indexed-tables`
+  - `cargo run -q -p sifr -- run demos/monotonic_indices/main.sifr`
+  - `cargo run -q -p sifr -- run demos/reverse_indices/main.sifr`
+  - `cargo run -q -p sifr -- run demos/indexed_tables/main.sifr`
+  - `scripts/run_all_tests.sh`
+- review artifacts:
+  - pass 1: `reviews/phase-ad-hoc-idiomatic-rust-demo-corpus-wave-2-batch-32-review-pass-1.md`
+  - pass 2: `reviews/phase-ad-hoc-idiomatic-rust-demo-corpus-wave-2-batch-32-review-pass-2.md`
+- review application summary:
+  - pass 1 reported no accepted blockers
+  - pass 2 reported no accepted blockers
+- reviewer tooling note:
+  - batch 32 used stable per-file external review prompts embedding both the paired Sifr source and the Rust companion because larger batch prompts remain less reliable in this workspace
+
 ### wave_3_fixture_and_negative_case_normalization
 
 status: pending

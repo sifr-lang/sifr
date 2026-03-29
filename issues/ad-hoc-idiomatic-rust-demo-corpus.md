@@ -314,6 +314,8 @@ Progress update (`2026-03-29`):
 - `batch_30_early_return_paths_unreachable_returns_valid_control_flow` completed local validation and ended external pass-1/pass-2 review with no accepted blockers
 - `batch_31_optional_indexing_optional_arithmetic_return_type_inference` selected as the thirty-first wave-2 runnable-demo batch because it keeps the remaining small option-and-inference slice cohesive around safe optional indexing, narrowed optional arithmetic, and inferred return behavior
 - `batch_31_optional_indexing_optional_arithmetic_return_type_inference` completed local validation, accepted a pre-review parity fix preserving the quoted string output in `return_type_inference`, and ended external pass-1/pass-2 review with no accepted blockers
+- `batch_32_monotonic_indices_reverse_indices_indexed_tables` selected as the thirty-second wave-2 runnable-demo batch because it keeps the remaining index-safety slice cohesive around monotonic forward indices, reverse-range indices, and direct indexed writes into pre-sized tables
+- `batch_32_monotonic_indices_reverse_indices_indexed_tables` completed local validation and ended external pass-1/pass-2 review with no accepted blockers
 
 ### wave_3_fixture_and_negative_case_normalization
 
