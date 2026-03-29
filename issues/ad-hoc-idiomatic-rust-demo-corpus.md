@@ -282,6 +282,8 @@ Progress update (`2026-03-29`):
 - `batch_14_file_streams_in_memory_streams_text_and_bytes` completed local validation and passed external pass-1/pass-2 review with no accepted blockers; both review passes raised an invalid swapped-file claim that contradicted the actual file contents and same-named Sifr demos
 - `batch_15_json_values_random_hashing_random_state` selected as the fifteenth wave-2 runnable-demo batch because it keeps the structured-data and deterministic-RNG slice cohesive while targeting three still-generated companions around JSON wrappers, hashing/base64 helpers, and explicit RNG state APIs
 - `batch_15_json_values_random_hashing_random_state` completed local validation, accepted the pass-1 follow-up on explicit typed JSON access and poison-free RNG state handling, and passed external pass-2 review with no remaining actionable issues
+- `batch_16_logging_and_timers_config_json_csv_collections_and_argparse` selected as the sixteenth wave-2 runnable-demo batch because it keeps the remaining object-wrapper and config-surface slice cohesive around logger/timer objects, structured-data parser wrappers, and collection-plus-argparse class APIs
+- `batch_16_logging_and_timers_config_json_csv_collections_and_argparse` completed local validation, accepted the pass-2 follow-up on guarding the mini argparse `store` path against a missing value panic, and passed external pass-1/pass-2 review with no remaining actionable issues
 
 ### wave_3_fixture_and_negative_case_normalization
 
