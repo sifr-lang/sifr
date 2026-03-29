@@ -335,7 +335,7 @@ status: in progress
       - `0540_single_element_in_a_sorted_array`: `CHECK_ERROR -> PASS`
     - vs entry baseline: `PASS +22`, `CHECK_ERROR -22`, `RUN_ERROR ±0`
   - PR:
-    - pending (open/merge in this loop item)
+    - `https://github.com/yaseralnajjar/sifr/pull/1480` (merged)
 
 - Validation to record:
   - post-wave full corpus rerun
