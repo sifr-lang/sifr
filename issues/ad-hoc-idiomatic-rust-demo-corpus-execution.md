@@ -247,6 +247,55 @@ status: accepted_after_pass_1_and_pass_2
   - direct shell-session `claude -p` launches stalled without producing review files during this batch
   - review artifacts were captured successfully by running `claude -p --no-session-persistence --dangerously-skip-permissions ...` through a short Python subprocess wrapper and writing the returned stdout into the recorded review files
 
+#### batch_04_uuid_platform_os
+
+status: accepted_after_pass_1_and_pass_2
+
+- scope:
+  - `demos/uuid/idiomatic.rs`
+  - `demos/platform/idiomatic.rs`
+  - `demos/os/idiomatic.rs`
+- selection rationale:
+  - all three are positive runnable demos
+  - all three had phase-30 review history and still carried generated-style companions that were much larger than the demo-visible runtime-wrapper behavior
+  - the group forms a coherent runtime/platform slice instead of mixing unrelated library surfaces
+- priority tags:
+  - `prior-review-flagged`: `uuid`, `platform`, `os`
+  - `stdlib-heavy`: `uuid`, `platform`, `os`
+  - `hand-authored-generated-shape`: `uuid`, `platform`, `os`
+- implementation summary:
+  - `uuid`: replaced the generated hex/string helpers with a compact `UUID` wrapper over the `uuid` crate while preserving passthrough constructor semantics and the `version() == -1` behavior for malformed direct constructor text
+  - `platform`: replaced the generated error/runtime scaffolding with small host-info helpers over `std::env` plus `uname`-with-fallback wrappers
+  - `os`: replaced the generated error/type scaffolding with direct process/filesystem helpers over `Command`, `std::fs`, and `std::path`
+- local validation completed:
+  - `rustfmt demos/uuid/idiomatic.rs demos/platform/idiomatic.rs demos/os/idiomatic.rs`
+  - temporary Cargo compile/run for `demos/uuid/idiomatic.rs` with `uuid = "1"` and `v3`/`v4`/`v5` features in an isolated temp crate
+  - `rustc --edition=2021 demos/platform/idiomatic.rs -o /tmp/sifr-idiomatic-platform && /tmp/sifr-idiomatic-platform`
+  - `rustc --edition=2021 demos/os/idiomatic.rs -o /tmp/sifr-idiomatic-os && /tmp/sifr-idiomatic-os`
+  - `cargo run -q -p sifr -- run demos/uuid/main.sifr`
+  - `cargo run -q -p sifr -- run demos/platform/main.sifr`
+  - `cargo run -q -p sifr -- run demos/os/main.sifr`
+  - `scripts/run_all_tests.sh`
+  - post-pass-1 revalidation:
+    - `rustfmt demos/uuid/idiomatic.rs demos/os/idiomatic.rs`
+    - temporary Cargo compile/run for `demos/uuid/idiomatic.rs` with `uuid = "1"` and `v3`/`v4`/`v5` features in an isolated temp crate
+    - `rustc --edition=2021 demos/os/idiomatic.rs -o /tmp/sifr-idiomatic-os && /tmp/sifr-idiomatic-os`
+    - `cargo run -q -p sifr -- run demos/uuid/main.sifr`
+    - `cargo run -q -p sifr -- run demos/platform/main.sifr`
+    - `cargo run -q -p sifr -- run demos/os/main.sifr`
+    - `scripts/run_all_tests.sh`
+- review artifacts:
+  - pass 1: `reviews/phase-ad-hoc-idiomatic-rust-demo-corpus-wave-2-batch-04-review-pass-1.md`
+  - pass 2: `reviews/phase-ad-hoc-idiomatic-rust-demo-corpus-wave-2-batch-04-review-pass-2.md`
+- review application summary:
+  - pass 1 valid follow-up fixes applied:
+    - `demos/uuid/idiomatic.rs`: changed `UUID::to_str()` to borrow `&str` instead of cloning the stored string
+    - `demos/os/idiomatic.rs`: stopped silently swallowing unexpected pre-cleanup filesystem errors before the demo setup path
+  - pass 1 observations about including stderr on successful commands, surfacing `uname` fallback failures, and replacing the malformed-constructor `version() == -1` sentinel were not accepted as blockers because those behaviors are intentional for the current demo contract
+  - pass 2 reported no actionable issues
+- reviewer tooling note:
+  - batch 04 continued using the Python subprocess capture path for `claude -p --no-session-persistence --dangerously-skip-permissions ...` because that remained the stable external-review transport after the shell-session launcher stalled on batch 03
+
 ### wave_3_fixture_and_negative_case_normalization
 
 status: pending
