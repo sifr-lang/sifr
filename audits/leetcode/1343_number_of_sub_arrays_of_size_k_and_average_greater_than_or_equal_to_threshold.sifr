@@ -1,17 +1,24 @@
 # LeetCode 1343: Number Of Sub Arrays Of Size K And Average Greater Than Or Equal To Threshold
 
 def numOfSubarrays(arr: list[int], k: int, threshold: int) -> int:
-    res = 0
-    curSum = sum(arr[:k-1])
+    prefix_sum: dict[int, int] = {0: 0}
+    length: int = 0
 
-    for L in range(len(arr) - k + 1):
-        curSum += arr[L + k - 1]
-        if (curSum / k) >= threshold:
-            res += 1
-        curSum -= arr[L]
-    return res
+    for value in arr:
+        length += 1
+        prefix_sum[length] = prefix_sum.get(length - 1, default=0) + value
+
+    if k > length:
+        return 0
+
+    required_sum: int = threshold * k
+    result: int = 0
+    for right in range(k, length + 1):
+        window_sum: int = prefix_sum.get(right, default=0) - prefix_sum.get(right - k, default=0)
+        if window_sum >= required_sum:
+            result += 1
+    return result
 
 def main():
     assert str(numOfSubarrays([2,1,5,6,0,9,8], 3, 4)) == '3'
-
 

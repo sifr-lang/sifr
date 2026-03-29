@@ -1,28 +1,30 @@
 # LeetCode 525: Contiguous Array
 
 def findMaxLength(nums: list[int]) -> int:
-    zero, one = 0, 0
-    res = 0
+    first_seen: dict[int, int] = {0: -1}
+    balance: int = 0
+    best: int = 0
+    index: int = 0
 
-    diff_index = {}
+    for value in nums:
+        if value == 0:
+            balance -= 1
+        else:
+            balance += 1
 
-    for i, n in enumerate(nums):
-        if n == 0:
-            zero += 1
+        if balance in first_seen:
+            first_index: int = first_seen.get(balance, default=0)
+            length: int = index - first_index
+            if length > best:
+                best = length
         else:
-            one += 1
-        if one - zero not in diff_index:
-            diff_index[one - zero] = i
-        
-        if one == zero:
-            res = one + zero
-        else:
-            idx = diff_index[one - zero]
-            res = max(res, i - idx)
-    return res
+            first_seen[balance] = index
+
+        index += 1
+
+    return best
 
 def main():
     assert str(findMaxLength([0,1])) == '2'
     assert str(findMaxLength([0,1,0])) == '2'
-
 
