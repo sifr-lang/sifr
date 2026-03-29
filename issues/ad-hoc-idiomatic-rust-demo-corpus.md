@@ -270,6 +270,8 @@ Progress update (`2026-03-29`):
 - `batch_08_bisect_defaultdict_max_heap` completed local validation and passed external pass-1/pass-2 review with no accepted blockers
 - `batch_09_binary_files_binary_hashing_binary_storage` selected as the ninth wave-2 runnable-demo batch because it keeps the binary-data slice cohesive while targeting three still-generated companions whose current implementations were much larger than the actual file, hashing, and hex-storage behavior each demo exposes
 - `batch_09_binary_files_binary_hashing_binary_storage` completed local validation, accepted the pass-1 follow-up on removing an inert `binary_hashing` assertion, and passed external pass-2 review with no remaining actionable issues
+- `batch_10_bytes_basics_bytes_constructors_bytes_roundtrip` selected as the tenth wave-2 runnable-demo batch because it keeps the core bytes-and-conversion slice cohesive while targeting three small demos whose companions still retained generated-style scaffolding around simple byte, UTF-8, and hex behavior
+- `batch_10_bytes_basics_bytes_constructors_bytes_roundtrip` completed local validation and passed external pass-1/pass-2 review with no accepted blockers
 
 ### wave_3_fixture_and_negative_case_normalization
 
