@@ -2335,6 +2335,52 @@ status: accepted_after_pass_1_and_pass_2
   - an embedded-source retry was also used for `stdlib_ownership` pass 1 after the initial direct prompt returned only `OK`; that narrower retry found the heap/lazy-chain issues that were actually worth fixing
   - `stdlib_ownership` pass 2 still stalled without output after repeated polls, so the artifact records that transport issue explicitly rather than inventing a clean verdict
 
+#### batch_60_auto_detection_auto_init_default_values
+
+status: accepted_after_pass_1_and_pass_2
+
+- scope:
+  - `demos/auto_detection/idiomatic.rs`
+  - `demos/auto_init/idiomatic.rs`
+  - `demos/default_values/idiomatic.rs`
+- selection rationale:
+  - all three are positive runnable demos
+  - all three form a cohesive remaining constructor/defaults slice instead of mixing one small frontend-mode smoke test with unrelated core-language or stdlib-heavy companions
+  - `auto_init` still carried substantial emitted-style `format!` ceremony despite the paired demo only exercising simple constructor/default/string/equality behavior
+- priority tags:
+  - `constructor-surface`: `auto_detection`, `auto_init`, `default_values`
+  - `milestone-demo`: `auto_init`, `default_values`
+  - `hand-authored-generated-shape`: `auto_detection`, `auto_init`, `default_values`
+- implementation summary:
+  - `auto_detection`: reduced the file to a tiny direct `floor` helper plus the two demo prints
+  - `auto_init`: replaced the emitted-style formatting scaffold with direct structs, `Default`, and `Display` implementations that preserve the exact printed output
+  - `default_values`: kept the demo focused on fresh list defaults and payload defaults with a small `Default` impl and no extra runtime-only bookkeeping
+- local validation completed:
+  - `rustfmt demos/auto_detection/idiomatic.rs demos/auto_init/idiomatic.rs demos/default_values/idiomatic.rs`
+  - `rustc demos/auto_detection/idiomatic.rs -o /tmp/auto_detection_idiomatic`
+  - `rustc demos/auto_init/idiomatic.rs -o /tmp/auto_init_idiomatic`
+  - `rustc demos/default_values/idiomatic.rs -o /tmp/default_values_idiomatic`
+  - `cargo run -q -p sifr -- run demos/auto_detection/main.sifr`
+  - `cargo run -q -p sifr -- run demos/auto_init/main.sifr`
+  - `cargo run -q -p sifr -- run demos/default_values/main.sifr`
+  - `scripts/run_all_tests.sh`
+  - post-pass-1 revalidation:
+    - `rustfmt demos/default_values/idiomatic.rs`
+    - `rustc demos/default_values/idiomatic.rs -o /tmp/default_values_idiomatic`
+    - `cargo run -q -p sifr -- run demos/default_values/main.sifr`
+- review artifacts:
+  - pass 1: `reviews/phase-ad-hoc-idiomatic-rust-demo-corpus-wave-2-batch-60-review-pass-1.md`
+  - pass 2: `reviews/phase-ad-hoc-idiomatic-rust-demo-corpus-wave-2-batch-60-review-pass-2.md`
+- review application summary:
+  - pass 1 returned `OK` for `auto_detection` and `auto_init`
+  - pass 1 on `default_values` raised one real cleanup note about the throwaway `_counts_len` read; I accepted it and replaced that workaround with a targeted `#[allow(dead_code)]` on the unprinted `counts` field
+  - the `default_values` follow-up revalidation came back clean
+  - pass 2 returned `OK` for `auto_init` and `default_values`
+  - the final `auto_detection` pass-2 note was rejected because it claimed `floor(3.9)` should preserve `3.9`, which directly contradicted the paired Sifr demo output already validated in this workspace
+- reviewer tooling note:
+  - batch 60 used direct per-file `claude -p --tools Read` prompts
+  - all three pass-2 prompts initially stalled, but two resolved cleanly on the final polling window and the remaining `auto_detection` response was explicitly recorded as a non-blocking incorrect verdict
+
 #### batch_59_ordering_rules_operators_and_assignment_collection_comprehensions
 
 status: accepted_after_pass_1_and_pass_2
