@@ -2986,6 +2986,46 @@ status: accepted_after_pass_1_and_pass_2
   - batch 81 was reviewed directly from the final validated Rust files and observed Sifr outputs
   - both review passes ended with no accepted blockers across the trio
 
+#### batch_82_rooted_entrypoint_run_and_build_resolver_triggers
+
+status: accepted_after_pass_1_and_pass_2
+
+- scope:
+  - `demos/rooted_entrypoint/idiomatic.rs`
+  - `demos/run_and_build/idiomatic.rs`
+  - `demos/resolver_triggers/idiomatic.rs`
+- selection rationale:
+  - the batch clears the remaining small project-mode import-closure trio instead of scattering these related dependency-resolution demos across later unrelated batches
+  - all three demos were still missing Rust companions entirely
+  - each demo is driven by a tiny local helper module graph, so they form a tight review surface around reachable import closure and project-mode activation behavior
+- priority tags:
+  - `project-mode`: `rooted_entrypoint`, `run_and_build`, `resolver_triggers`
+  - `import-closure`: `rooted_entrypoint`, `run_and_build`, `resolver_triggers`
+  - `missing-companion`: `rooted_entrypoint`, `run_and_build`, `resolver_triggers`
+- implementation summary:
+  - `rooted_entrypoint`: authored local `shared` and `helper` modules so the Rust companion mirrors the rooted import closure and preserves the printed phase label
+  - `run_and_build`: authored a small local helper module and preserved the exact two-line run/build alignment output
+  - `resolver_triggers`: authored a compact local helper module matching the relative-import-trigger demo and preserved the printed `18` result
+- local validation completed:
+  - `rustfmt demos/rooted_entrypoint/idiomatic.rs demos/run_and_build/idiomatic.rs demos/resolver_triggers/idiomatic.rs`
+  - `rustc --edition=2021 demos/rooted_entrypoint/idiomatic.rs -o /tmp/sifr-idiomatic-rooted-entrypoint && /tmp/sifr-idiomatic-rooted-entrypoint`
+  - `rustc --edition=2021 demos/run_and_build/idiomatic.rs -o /tmp/sifr-idiomatic-run-and-build && /tmp/sifr-idiomatic-run-and-build`
+  - `rustc --edition=2021 demos/resolver_triggers/idiomatic.rs -o /tmp/sifr-idiomatic-resolver-triggers && /tmp/sifr-idiomatic-resolver-triggers`
+  - `cargo run -q -p sifr -- run demos/rooted_entrypoint/main.sifr`
+  - `cargo run -q -p sifr -- run demos/run_and_build/main.sifr`
+  - `cargo run -q -p sifr -- run demos/resolver_triggers/main.sifr`
+  - `scripts/run_all_tests.sh`
+- review artifacts:
+  - pass 1: `reviews/phase-ad-hoc-idiomatic-rust-demo-corpus-wave-2-batch-82-review-pass-1.md`
+  - pass 2: `reviews/phase-ad-hoc-idiomatic-rust-demo-corpus-wave-2-batch-82-review-pass-2.md`
+- review application summary:
+  - all three pass-1 reviews returned `OK`
+  - all three pass-2 reviews returned `OK`
+  - no follow-up code changes were needed after the initial authoring step
+- reviewer tooling note:
+  - batch 82 was reviewed directly from the final validated Rust files and observed Sifr outputs
+  - both review passes ended with no accepted blockers across the trio
+
 #### batch_65_codegen_preamble_codegen_structural_passes_intrinsic_codegen
 
 status: accepted_after_pass_1_and_pass_2
