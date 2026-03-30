@@ -394,6 +394,8 @@ Progress update (`2026-03-29`):
 - `batch_70_module_ordering_module_assembly_module_cycle_diagnostics` completed local validation, accepted one pass-1 cleanup in `module_assembly` switching the nested-module import to `crate::{a_provider, z_provider}`, and ended external review with no remaining accepted blockers; `module_ordering` and `module_cycle_diagnostics` were clean in both passes and `module_assembly` came back clean after that import-path cleanup
 - `batch_71_project_build_project_check_project_entrypoint` selected as the seventy-first wave-2 runnable-demo batch because it keeps the next project-mode/frontend slice cohesive around project build assembly, project-aware check parity, and canonical project entry analysis
 - `batch_71_project_build_project_check_project_entrypoint` completed local validation and ended external review with no accepted blockers; all three files were clean in both passes
+- `batch_72_decimal_diagnostics_decimal_verification_dependency_manifest` selected as the seventy-second wave-2 runnable-demo batch because it clears the next decimal-and-manifest slice cohesively: two remaining decimal verification demos that still carried generated-style companions plus the missing dependency-manifest closure demo
+- `batch_72_decimal_diagnostics_decimal_verification_dependency_manifest` completed local validation and ended external review with no accepted blockers; all three files were clean in both passes, with `decimal_diagnostics` needing shorter retry prompts after the longer reviewer calls stalled
 
 ### wave_3_fixture_and_negative_case_normalization
 

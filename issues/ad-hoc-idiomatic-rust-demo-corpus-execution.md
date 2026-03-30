@@ -2577,6 +2577,47 @@ status: accepted_after_pass_1_and_pass_2
   - batch 71 used direct per-file `claude -p --no-session-persistence --dangerously-skip-permissions` prompts with compact observed-output-plus-Rust-file prompts
   - no review retries or code changes were needed after the initial authored companions landed
 
+#### batch_72_decimal_diagnostics_decimal_verification_dependency_manifest
+
+status: accepted_after_pass_1_and_pass_2
+
+- scope:
+  - `demos/decimal_diagnostics/idiomatic.rs`
+  - `demos/decimal_verification/idiomatic.rs`
+  - `demos/dependency_manifest/idiomatic.rs`
+- selection rationale:
+  - the two remaining decimal demos were still uncovered and still carried generated-style or boilerplate-heavy Rust companions despite comparatively small observable contracts
+  - `dependency_manifest` was the adjacent missing project/dependency-closure companion and fit the same validation shape without introducing another unrelated subsystem slice
+  - the trio keeps this batch narrow while removing one more decimal-semantics outlier cluster from the remaining corpus
+- priority tags:
+  - `decimal-semantics`: `decimal_diagnostics`, `decimal_verification`
+  - `project-mode`: `dependency_manifest`
+  - `missing-companion`: `dependency_manifest`
+  - `hand-authored-generated-shape`: `decimal_diagnostics`, `decimal_verification`
+- implementation summary:
+  - `decimal_diagnostics`: replaced the generated-style decimal scaffolding with direct `rust_decimal` and `bigdecimal` checks for the reserved diagnostics contract and exact formatted rounding/quantization strings
+  - `decimal_verification`: replaced the giant generated stdlib/runtime layer with compact floor-division, remainder, JSON-string, and determinism helpers that preserve the exact observed decimal and bigdecimal outputs
+  - `dependency_manifest`: authored a minimal TOML-based manifest dependency-closure demo that preserves the reachable-support-module teaching point with a direct `toml::Value` parse path
+- local validation completed:
+  - `rustfmt demos/decimal_diagnostics/idiomatic.rs demos/decimal_verification/idiomatic.rs demos/dependency_manifest/idiomatic.rs`
+  - temporary Cargo compile/run for `demos/decimal_diagnostics/idiomatic.rs` with `rust_decimal = "1"` and `bigdecimal = "0.4"`
+  - temporary Cargo compile/run for `demos/decimal_verification/idiomatic.rs` with `rust_decimal = "1"`, `bigdecimal = "0.4"`, and `serde_json = "1"`
+  - temporary Cargo compile/run for `demos/dependency_manifest/idiomatic.rs` with `toml = "0.8"`
+  - `cargo run -q -p sifr -- run demos/decimal_diagnostics/main.sifr`
+  - `cargo run -q -p sifr -- run demos/decimal_verification/main.sifr`
+  - `cargo run -q -p sifr -- run demos/dependency_manifest/main.sifr`
+  - `scripts/run_all_tests.sh`
+- review artifacts:
+  - pass 1: `reviews/phase-ad-hoc-idiomatic-rust-demo-corpus-wave-2-batch-72-review-pass-1.md`
+  - pass 2: `reviews/phase-ad-hoc-idiomatic-rust-demo-corpus-wave-2-batch-72-review-pass-2.md`
+- review application summary:
+  - all three pass-1 reviews returned `OK`
+  - all three pass-2 reviews returned `OK`
+  - no code changes were needed after the initial authored companions landed
+- reviewer tooling note:
+  - batch 72 used direct per-file `claude -p --no-session-persistence --dangerously-skip-permissions` prompts through short Python subprocess wrappers with explicit timeouts
+  - `decimal_diagnostics` needed shorter retry prompts in both passes after the longer prompt shape stalled, but both retry reviews returned `OK`
+
 #### batch_65_codegen_preamble_codegen_structural_passes_intrinsic_codegen
 
 status: accepted_after_pass_1_and_pass_2

@@ -1,63 +1,35 @@
-use rust_decimal::Decimal;
-
-use bigdecimal::BigDecimal;
+use bigdecimal::{BigDecimal, RoundingMode};
+use rust_decimal::{Decimal, RoundingStrategy};
 
 fn main() {
     println!("m28_4 decimal diagnostics contract demo");
-    let d: Decimal = Decimal::from_str_exact(("10.5000".to_string()).as_str())
-        .unwrap_or_else(|__e| unreachable!());
-    let b: BigDecimal = ("20.7500".to_string())
-        .parse::<BigDecimal>()
-        .unwrap_or_else(|__e| unreachable!());
-    assert!(
-        format!(
-            "{}",
-            d.round_dp_with_strategy(
-                {
-                    let __scale = 2 as i64;
-                    (if __scale < 0 { 0 } else { __scale }) as u32
-                },
-                rust_decimal::RoundingStrategy::MidpointNearestEven
-            )
-        ) == "10.50".to_string()
+
+    let decimal = Decimal::from_str_exact("10.5000").unwrap_or_else(|_| unreachable!());
+    assert_eq!(
+        decimal
+            .round_dp_with_strategy(2, RoundingStrategy::MidpointNearestEven)
+            .to_string(),
+        "10.50"
     );
-    assert!(
-        format!(
-            "{}",
-            d.round_dp_with_strategy(
-                {
-                    let __scale = 2 as i64;
-                    (if __scale < 0 { 0 } else { __scale }) as u32
-                },
-                rust_decimal::RoundingStrategy::MidpointNearestEven
-            )
-        ) == "10.50".to_string()
+
+    let mut quantized_decimal = decimal;
+    quantized_decimal.rescale(2);
+    assert_eq!(quantized_decimal.to_string(), "10.50");
+
+    let bigdecimal: BigDecimal = "20.7500".parse().unwrap_or_else(|_| unreachable!());
+    let rounded_bigdecimal = bigdecimal
+        .with_scale_round(2, RoundingMode::HalfEven)
+        .with_scale(26);
+    assert_eq!(
+        rounded_bigdecimal.to_string(),
+        "20.75000000000000000000000000"
     );
-    assert!(
-        format!(
-            "{}",
-            bigdecimal::Context::default()
-                .with_rounding_mode(bigdecimal::RoundingMode::HalfEven)
-                .with_prec(28)
-                .unwrap_or_else(|| bigdecimal::Context::default()
-                    .with_rounding_mode(bigdecimal::RoundingMode::HalfEven))
-                .round_decimal_ref(
-                    &(b.with_scale_round(2 as i64, bigdecimal::RoundingMode::HalfEven))
-                )
-        ) == "20.75000000000000000000000000".to_string()
+
+    let quantized_bigdecimal = bigdecimal.with_scale(26);
+    assert_eq!(
+        quantized_bigdecimal.to_string(),
+        "20.75000000000000000000000000"
     );
-    assert!(
-        format!(
-            "{}",
-            bigdecimal::Context::default()
-                .with_rounding_mode(bigdecimal::RoundingMode::HalfEven)
-                .with_prec(28)
-                .unwrap_or_else(|| bigdecimal::Context::default()
-                    .with_rounding_mode(bigdecimal::RoundingMode::HalfEven))
-                .round_decimal_ref(
-                    &(b.with_scale_round(2 as i64, bigdecimal::RoundingMode::HalfEven))
-                )
-        ) == "20.75000000000000000000000000".to_string()
-    );
+
     println!("diagnostic range E2501-E2508 is reserved and enforced");
 }
