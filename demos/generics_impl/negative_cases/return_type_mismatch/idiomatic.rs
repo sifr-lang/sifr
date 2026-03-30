@@ -1,12 +1,11 @@
-//! Negative-case Sifr fixture scaffold.
+//! Tier-2 Rust scaffold for the Sifr negative fixture in this folder.
 //!
-//! Source files in this folder:
-//! - `main.sifr`
+//! The paired Sifr program is rejected because safe indexing returns `T | None`,
+//! but the generic helper `first(items: list[T])` promises plain `T`.
 //!
-//! This folder exists to preserve an intentional diagnostic or compile-fail shape.
-//! There is no single runnable Rust program that is both idiomatic and preserves
-//! the same failure contract, so this file serves as the Rust-side scaffold.
-
-#![allow(dead_code)]
+//! This fixture exists to preserve the generic return-type mismatch contract
+//! `expected 'T', got 'T | None'`. The Rust-side analogue is the need to unwrap
+//! or propagate `Option<T>` explicitly, so this file documents the Sifr
+//! type-system rule instead of inventing a different Rust error.
 
 fn main() {}

@@ -1,12 +1,12 @@
-//! Negative-case Sifr fixture scaffold.
+//! Tier-2 Rust scaffold for the Sifr negative fixture in this folder.
 //!
-//! Source files in this folder:
-//! - `return_type_mismatch.sifr`
+//! The paired Sifr program is rejected because `bad()` declares `-> int` but
+//! returns the string literal `"oops"`.
 //!
-//! This folder exists to preserve an intentional diagnostic or compile-fail shape.
-//! There is no single runnable Rust program that is both idiomatic and preserves
-//! the same failure contract, so this file serves as the Rust-side scaffold.
-
-#![allow(dead_code)]
+//! This fixture exists to preserve the direct return-type mismatch diagnostic in
+//! the smallest possible compiled-expression example. The Rust-side analogue is
+//! straightforward type mismatch, but the user-facing contract belongs to Sifr's
+//! checker, so this file records that contract rather than fabricating a separate
+//! compile-fail sample.
 
 fn main() {}
