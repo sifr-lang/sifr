@@ -410,6 +410,8 @@ Progress update (`2026-03-29`):
 - `batch_78_recursive_type_part4_recursive_type_part5_recursive_type_part6` completed local validation and ended external review with no accepted blockers; all three files were tightened into direct borrow-based recursive tree helpers and a clearer generic packet enum, and both review passes returned `OK`
 - `batch_79_nested_function_part4_nested_function_part5_recursive_types` selected as the seventy-ninth wave-2 runnable-demo batch because it clears the remaining recursion-heavy positive demos that still carried obvious generated-style residue: the last two nested-helper backtracking examples plus the standalone recursive-types milestone companion
 - `batch_79_nested_function_part4_nested_function_part5_recursive_types` completed local validation and ended external review with no accepted blockers; the backtracking demos were rewritten into direct Rust-first recursion and the recursive-types milestone was tightened into cleaner self-referential node construction, with both review passes returning `OK`
+- `batch_80_stable_codegen_statement_expression_codegen_statement_expression_mix` selected as the eightieth wave-2 runnable-demo batch because it clears the next coherent codegen-shaped slice: the stable-emission summary demo plus the two statement/expression structured-lowering milestone demos
+- `batch_80_stable_codegen_statement_expression_codegen_statement_expression_mix` completed local validation and ended external review with no accepted blockers; all three files were tightened into direct Rust-first control-flow examples and both review passes returned `OK`
 
 ### wave_3_fixture_and_negative_case_normalization
 
