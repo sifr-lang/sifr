@@ -2420,6 +2420,45 @@ status: accepted_after_pass_1_and_pass_2
   - batch 67 used direct per-file `claude -p --no-session-persistence --dangerously-skip-permissions` prompts with embedded Sifr and Rust file contents
   - the initial pass-1 `import_forms` reviewer response lagged behind the other two files, but it completed cleanly without requiring any retry or code change
 
+#### batch_68_borrow_exclusivity_borrow_lowering_compiler_safety
+
+status: accepted_after_pass_1_and_pass_2
+
+- scope:
+  - `demos/borrow_exclusivity/idiomatic.rs`
+  - `demos/borrow_lowering/idiomatic.rs`
+  - `demos/compiler_safety/idiomatic.rs`
+- selection rationale:
+  - all three are positive runnable demos
+  - all three form a cohesive borrow/compiler-hardening slice instead of mixing the remaining borrow semantics and compiler cleanup demos with unrelated CLI or decimal work
+  - all three still carried visible generated-style ceremony in the existing companions, especially borrowed container signatures, enum narrowing scaffolds, and synthetic context-manager lowering
+- priority tags:
+  - `borrow-semantics`: `borrow_exclusivity`, `borrow_lowering`, `compiler_safety`
+  - `milestone-demo`: `borrow_exclusivity`, `borrow_lowering`, `compiler_safety`
+  - `hand-authored-generated-shape`: `borrow_exclusivity`, `borrow_lowering`, `compiler_safety`
+- implementation summary:
+  - `borrow_exclusivity`: replaced borrowed-`Vec` signatures and emitted-style literals with direct slice APIs, iterator sums, and an owned reverse helper that keeps the borrow-by-default teaching point intact
+  - `borrow_lowering`: replaced the generated union scaffolding with compact enums, direct `&str` comparison, normal `Option<&str>` handling for the `None` path, and a simple consuming `String` helper
+  - `compiler_safety`: replaced the synthetic `__enter__`/`__exit__` lowering scaffolding with a small `EventLog` plus RAII `Drop` guards for file/database resources and a direct boxed callback field in `Config`
+- local validation completed:
+  - `rustfmt demos/borrow_exclusivity/idiomatic.rs demos/borrow_lowering/idiomatic.rs demos/compiler_safety/idiomatic.rs`
+  - `rustc --edition=2021 demos/borrow_exclusivity/idiomatic.rs -o /tmp/sifr-idiomatic-borrow-exclusivity && /tmp/sifr-idiomatic-borrow-exclusivity`
+  - `rustc --edition=2021 demos/borrow_lowering/idiomatic.rs -o /tmp/sifr-idiomatic-borrow-lowering && /tmp/sifr-idiomatic-borrow-lowering`
+  - `rustc --edition=2021 demos/compiler_safety/idiomatic.rs -o /tmp/sifr-idiomatic-compiler-safety && /tmp/sifr-idiomatic-compiler-safety`
+  - `cargo run -q -p sifr -- run demos/borrow_exclusivity/main.sifr`
+  - `cargo run -q -p sifr -- run demos/borrow_lowering/main.sifr`
+  - `cargo run -q -p sifr -- run demos/compiler_safety/main.sifr`
+  - `scripts/run_all_tests.sh`
+- review artifacts:
+  - pass 1: `reviews/phase-ad-hoc-idiomatic-rust-demo-corpus-wave-2-batch-68-review-pass-1.md`
+  - pass 2: `reviews/phase-ad-hoc-idiomatic-rust-demo-corpus-wave-2-batch-68-review-pass-2.md`
+- review application summary:
+  - all three pass-1 reviews returned `OK`
+  - all three pass-2 reviews returned `OK`
+- reviewer tooling note:
+  - batch 68 used direct per-file `claude -p --no-session-persistence --dangerously-skip-permissions` prompts with compact observed-output-plus-Rust-file prompts
+  - the first embedded-source reviewer processes stalled, so I reran the review with shorter prompts focused on observable behavior and the final Rust companions; those returned clean `OK` verdicts
+
 #### batch_65_codegen_preamble_codegen_structural_passes_intrinsic_codegen
 
 status: accepted_after_pass_1_and_pass_2

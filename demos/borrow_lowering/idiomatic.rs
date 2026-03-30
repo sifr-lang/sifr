@@ -1,110 +1,77 @@
-#[derive(Debug, Clone)]
-enum BoolOrIntOrStr {
-    Bool(bool),
-    Int(i64),
-    Str(String),
-}
-
-impl std::fmt::Display for BoolOrIntOrStr {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        match self {
-            BoolOrIntOrStr::Bool(v) => {
-                return write!(f, "{}", v);
-            }
-            BoolOrIntOrStr::Int(v) => {
-                return write!(f, "{}", v);
-            }
-            BoolOrIntOrStr::Str(v) => {
-                return write!(f, "{}", v);
-            }
-        }
-    }
-}
-
-#[derive(Debug, Clone)]
 enum IntOrStr {
     Int(i64),
     Str(String),
 }
 
-impl std::fmt::Display for IntOrStr {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        match self {
-            IntOrStr::Int(v) => {
-                return write!(f, "{}", v);
-            }
-            IntOrStr::Str(v) => {
-                return write!(f, "{}", v);
-            }
-        }
-    }
+enum BoolIntOrStr {
+    Bool(bool),
+    Int(i64),
+    Str(String),
 }
 
-fn find_user(name: &String) -> Option<String> {
-    if name.clone() == "alice".to_string() {
-        return Some("Alice Smith".to_string());
+fn find_user(name: &str) -> Option<&'static str> {
+    if name == "alice" {
+        Some("Alice Smith")
+    } else {
+        None
     }
-    return None;
 }
 
 fn process(x: &IntOrStr) -> String {
-    if let IntOrStr::Int(x) = x {
-        return format!("number: {}", x);
-    } else {
-        if let IntOrStr::Str(x) = x {
-            return format!("string: {}", x);
-        } else {
-            unreachable!("sifr union narrowing fell through exhaustive branch chain");
+    match x {
+        IntOrStr::Int(value) => format!("number: {value}"),
+        IntOrStr::Str(value) => format!("string: {value}"),
+    }
+}
+
+fn classify(x: &BoolIntOrStr) -> &'static str {
+    match x {
+        BoolIntOrStr::Int(value) => {
+            let _non_negative = *value >= 0;
+            "int"
+        }
+        BoolIntOrStr::Str(value) => {
+            let _is_empty = value.is_empty();
+            "str"
+        }
+        BoolIntOrStr::Bool(value) => {
+            let _flag = *value;
+            "bool"
         }
     }
 }
 
-fn classify(x: &BoolOrIntOrStr) -> String {
-    if let BoolOrIntOrStr::Int(x) = x {
-        return "int".to_string();
-    } else {
-        if let BoolOrIntOrStr::Str(x) = x {
-            return "str".to_string();
-        } else {
-            if let BoolOrIntOrStr::Bool(x) = x {
-                return "bool".to_string();
-            } else {
-                unreachable!("sifr union narrowing fell through exhaustive branch chain");
-            }
-        }
+fn process_optional(x: Option<&str>) -> String {
+    match x {
+        Some(value) => value.to_uppercase(),
+        None => "none".to_string(),
     }
-}
-
-fn process_optional(x: &Option<String>) -> String {
-    if let Some(x) = x.as_ref() {
-        return x.to_uppercase();
-    }
-    return "none".to_string();
 }
 
 fn consume(s: String) -> String {
-    return s;
+    s
 }
 
 fn main() {
-    let result: Option<String> = find_user(&"alice".to_string());
-    if let Some(result) = result {
-        println!("{}", result);
+    if let Some(result) = find_user("alice") {
+        println!("{result}");
     }
-    let missing: Option<String> = find_user(&"bob".to_string());
-    if missing.is_none() {
+
+    if find_user("bob").is_none() {
         println!("not found");
     }
-    println!("{}", process(&IntOrStr::Int(42 as i64)));
+
+    println!("{}", process(&IntOrStr::Int(42)));
     println!("{}", process(&IntOrStr::Str("hello".to_string())));
-    println!("{}", classify(&BoolOrIntOrStr::Int(1 as i64)));
-    println!("{}", classify(&BoolOrIntOrStr::Str("hi".to_string())));
-    println!("{}", classify(&BoolOrIntOrStr::Bool(true)));
-    println!("{}", process_optional(&Some("world".to_string())));
-    println!("{}", process_optional(&None));
-    let mut s: String = "hello".to_string();
-    let x: String = consume(s);
+    println!("{}", classify(&BoolIntOrStr::Int(1)));
+    println!("{}", classify(&BoolIntOrStr::Str("hi".to_string())));
+    println!("{}", classify(&BoolIntOrStr::Bool(true)));
+    println!("{}", process_optional(Some("world")));
+    println!("{}", process_optional(None));
+
+    let mut s = "hello".to_string();
+    let x = consume(s);
     s = "world".to_string();
-    println!("{}", s);
-    println!("{}", x);
+    println!("{s}");
+    println!("{x}");
 }
