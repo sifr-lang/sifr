@@ -440,6 +440,8 @@ Goals:
 - `batch_88_decimal_negative_case_scaffolds` completed local validation and ended review with no accepted blockers; all three placeholders were replaced with fixture-specific Tier 2 scaffolds, the float-constructor fixtures still fail with the intended exact-construction diagnostics, and the division-by-zero fixture still fails with the intended runtime error
 - `batch_89_imported_helper_type_error_scaffolds` selected as the next wave-3 normalization batch because three phase-22 project/frontend fixtures still used the generic placeholder even though they share one clear contract: a reachable imported helper declares a numeric return type and returns `str`, and that dependency failure must surface consistently
 - `batch_89_imported_helper_type_error_scaffolds` completed local validation and ended review with no accepted blockers; all three placeholders were replaced with fixture-specific Tier 2 scaffolds, and the paired Sifr fixtures still fail with the intended imported-helper type errors
+- `batch_90_diagnostic_renderer_scaffolds` selected as the next wave-3 normalization batch because the remaining diagnostics-focused fixtures still used the generic placeholder despite testing three distinct renderer/config contracts: compact grouping, unknown diagnostic-format rejection, and canonical json output
+- `batch_90_diagnostic_renderer_scaffolds` completed local validation and ended review with no accepted blockers; all three placeholders were replaced with fixture-specific Tier 2 scaffolds, and the paired Sifr fixtures still exercise the intended compact, usage-exit, and json-diagnostic behaviors
 
 ### wave_4_corpus_consistency_pass
 

@@ -1,12 +1,10 @@
-//! Negative-case Sifr fixture scaffold.
+//! Tier-2 Rust scaffold for the Sifr negative fixture in `main.sifr`.
 //!
-//! Source files in this folder:
-//! - `main.sifr`
+//! The paired Sifr program intentionally triggers a simple `int <- str` type
+//! mismatch so the canonical `--diagnostic-format json` schema can be validated.
 //!
-//! This folder exists to preserve an intentional diagnostic or compile-fail shape.
-//! There is no single runnable Rust program that is both idiomatic and preserves
-//! the same failure contract, so this file serves as the Rust-side scaffold.
-
-#![allow(dead_code)]
+//! A representative Rust-side analogue would also be a plain assignment type
+//! error, but the contract here is the structured JSON payload rather than the
+//! exact surface syntax.
 
 fn main() {}
