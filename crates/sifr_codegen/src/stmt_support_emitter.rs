@@ -1483,7 +1483,9 @@ impl RustEmitter {
             {
                 return Ok(Some(lowered_intrinsic));
             }
-            if let Some(lowered_builtin) = self.try_lower_registry_builtin_call_expr(func, args) {
+            if let Some(lowered_builtin) =
+                self.try_lower_registry_builtin_call_expr(func, args, Some(expr.ty()))
+            {
                 return Ok(Some(lowered_builtin));
             }
             if let Some(lowered_plain) =
@@ -1568,8 +1570,11 @@ impl RustEmitter {
                 lowered_args.push(lowered_arg);
             }
             let canonical_func = canonical_plain_call_name_for_ir(func);
-            lowered_args =
-                self.adapt_plain_call_args_with_signature_for_ir(canonical_func, args, lowered_args);
+            lowered_args = self.adapt_plain_call_args_with_signature_for_ir(
+                canonical_func,
+                args,
+                lowered_args,
+            );
             if let Some(captures) = self.nested_fn_captures.get(func).cloned() {
                 for capture in captures {
                     lowered_args.push(self.lower_recursive_capture_arg_for_ir(&capture));
@@ -1577,7 +1582,10 @@ impl RustEmitter {
             }
             return Ok(Some(crate::RustExpr::FnCall {
                 func: Box::new(crate::RustExpr::Path(
-                    canonical_func.split("::").map(ToString::to_string).collect(),
+                    canonical_func
+                        .split("::")
+                        .map(ToString::to_string)
+                        .collect(),
                 )),
                 args: lowered_args,
             }));
@@ -3063,7 +3071,9 @@ impl RustEmitter {
                             crate::resolve_alias_type_for_plain_call(rhs_expr.ty()),
                             Type::None
                         );
-                    let (lowered_left, lowered_right) =
+                    let left_ty = crate::resolve_alias_type_for_plain_call(lhs_expr.ty());
+                    let right_ty = crate::resolve_alias_type_for_plain_call(rhs_expr.ty());
+                    let (mut lowered_left, mut lowered_right) =
                         if left_is_option && !right_is_option && !right_none_like {
                             (
                                 lowered_left,
@@ -3083,6 +3093,25 @@ impl RustEmitter {
                         } else {
                             (lowered_left, lowered_right)
                         };
+                    if !left_is_option
+                        && !right_is_option
+                        && matches!(left_ty, Type::Float)
+                        && matches!(right_ty, Type::Int | Type::LiteralInt(_))
+                    {
+                        lowered_right = crate::RustExpr::Cast {
+                            expr: Box::new(crate::RustExpr::Paren(Box::new(lowered_right))),
+                            ty: crate::RustType::F64,
+                        };
+                    } else if !left_is_option
+                        && !right_is_option
+                        && matches!(right_ty, Type::Float)
+                        && matches!(left_ty, Type::Int | Type::LiteralInt(_))
+                    {
+                        lowered_left = crate::RustExpr::Cast {
+                            expr: Box::new(crate::RustExpr::Paren(Box::new(lowered_left))),
+                            ty: crate::RustType::F64,
+                        };
+                    }
                     let lowered_cmp = crate::RustExpr::BinOp {
                         left: Box::new(lowered_left),
                         op: lowered_op,
@@ -3102,7 +3131,7 @@ impl RustEmitter {
                 return Ok(lowered_chain.map(|expr| crate::RustExpr::Paren(Box::new(expr))));
             }
         }
-        if let HirExpr::BoolOp { op, values, .. } = expr {
+        if let HirExpr::BoolOp { op, values, ty } = expr {
             let lowered_op = match op.as_str() {
                 "and" => "&&",
                 "or" => "||",
@@ -3115,11 +3144,21 @@ impl RustEmitter {
             let Some(first) = iter.next() else {
                 return Ok(None);
             };
-            let Some(mut acc) = self.lower_stmt_expr_for_ir(first)? else {
+            let lower_boolop_operand =
+                |this: &mut Self,
+                 operand: &HirExpr|
+                 -> Result<Option<crate::RustExpr>, crate::CodegenError> {
+                    if matches!(crate::resolve_alias_type_for_plain_call(ty), Type::Bool) {
+                        this.lower_condition_expr_for_ir(operand)
+                    } else {
+                        this.lower_stmt_expr_for_ir(operand)
+                    }
+                };
+            let Some(mut acc) = lower_boolop_operand(self, first)? else {
                 return Ok(None);
             };
             for value in iter {
-                let Some(lowered_value) = self.lower_stmt_expr_for_ir(value)? else {
+                let Some(lowered_value) = lower_boolop_operand(self, value)? else {
                     return Ok(None);
                 };
                 acc = crate::RustExpr::BinOp {
@@ -3189,6 +3228,102 @@ impl RustEmitter {
                                 expr: Box::new(crate::RustExpr::Ident("__n".to_string())),
                                 ty: crate::RustType::Named("usize".to_string()),
                             }],
+                        })),
+                    })),
+                }));
+            }
+
+            if op == "*"
+                && (matches!(resolved_result_ty, Type::List(_))
+                    || matches!(resolved_result_ty, Type::Bytes))
+            {
+                let is_collection_like = |candidate: &Type| {
+                    matches!(candidate, Type::List(_)) || matches!(candidate, Type::Bytes)
+                };
+                let is_count_like =
+                    |candidate: &Type| matches!(candidate, Type::Int | Type::LiteralInt(_));
+                let (collection_expr, count_expr) = match (
+                    (
+                        is_collection_like(resolved_left_ty),
+                        is_count_like(resolved_right_ty),
+                    ),
+                    (
+                        is_collection_like(resolved_right_ty),
+                        is_count_like(resolved_left_ty),
+                    ),
+                ) {
+                    ((true, true), _) => (lowered_left.clone(), lowered_right.clone()),
+                    (_, (true, true)) => (lowered_right.clone(), lowered_left.clone()),
+                    _ => return Ok(None),
+                };
+                return Ok(Some(crate::RustExpr::Block {
+                    stmts: vec![
+                        crate::RustStmt::Let {
+                            mutable: false,
+                            name: "__sifr_repeat_src".to_string(),
+                            ty: None,
+                            value: crate::RustExpr::Clone(Box::new(crate::RustExpr::Paren(
+                                Box::new(collection_expr),
+                            ))),
+                        },
+                        crate::RustStmt::Let {
+                            mutable: false,
+                            name: "__sifr_repeat_n".to_string(),
+                            ty: None,
+                            value: count_expr,
+                        },
+                    ],
+                    expr: Some(Box::new(crate::RustExpr::If {
+                        cond: Box::new(crate::RustExpr::BinOp {
+                            left: Box::new(crate::RustExpr::Ident("__sifr_repeat_n".to_string())),
+                            op: "<=".to_string(),
+                            right: Box::new(crate::RustExpr::Literal(crate::RustLiteral::Int(0))),
+                        }),
+                        then_expr: Box::new(crate::RustExpr::Vec(vec![])),
+                        else_expr: Some(Box::new(crate::RustExpr::Block {
+                            stmts: vec![
+                                crate::RustStmt::Let {
+                                    mutable: true,
+                                    name: "__sifr_repeat_out".to_string(),
+                                    ty: None,
+                                    value: crate::RustExpr::Vec(vec![]),
+                                },
+                                crate::RustStmt::For {
+                                    var: "_".to_string(),
+                                    iter: crate::RustExpr::Range {
+                                        start: Box::new(crate::RustExpr::Literal(
+                                            crate::RustLiteral::Int(0),
+                                        )),
+                                        end: Box::new(crate::RustExpr::Ident(
+                                            "__sifr_repeat_n".to_string(),
+                                        )),
+                                    },
+                                    body: vec![crate::RustStmt::Expr(
+                                        crate::RustExpr::MethodCall {
+                                            receiver: Box::new(crate::RustExpr::Ident(
+                                                "__sifr_repeat_out".to_string(),
+                                            )),
+                                            method: "extend".to_string(),
+                                            args: vec![crate::RustExpr::MethodCall {
+                                                receiver: Box::new(crate::RustExpr::MethodCall {
+                                                    receiver: Box::new(crate::RustExpr::Paren(
+                                                        Box::new(crate::RustExpr::Ident(
+                                                            "__sifr_repeat_src".to_string(),
+                                                        )),
+                                                    )),
+                                                    method: "iter".to_string(),
+                                                    args: vec![],
+                                                }),
+                                                method: "cloned".to_string(),
+                                                args: vec![],
+                                            }],
+                                        },
+                                    )],
+                                },
+                            ],
+                            expr: Some(Box::new(crate::RustExpr::Ident(
+                                "__sifr_repeat_out".to_string(),
+                            ))),
                         })),
                     })),
                 }));
@@ -3829,7 +3964,9 @@ impl RustEmitter {
             {
                 return Ok(Some(lowered_intrinsic));
             }
-            if let Some(lowered_builtin) = self.try_lower_registry_builtin_call_expr(func, args) {
+            if let Some(lowered_builtin) =
+                self.try_lower_registry_builtin_call_expr(func, args, Some(expr.ty()))
+            {
                 return Ok(Some(lowered_builtin));
             }
             if let Some(lowered_plain) =
@@ -3858,8 +3995,11 @@ impl RustEmitter {
                 lowered_args.push(self.rewrite_stdlib_constant_idents_in_expr(lowered_arg));
             }
             let canonical_func = canonical_plain_call_name_for_ir(func);
-            lowered_args =
-                self.adapt_plain_call_args_with_signature_for_ir(canonical_func, args, lowered_args);
+            lowered_args = self.adapt_plain_call_args_with_signature_for_ir(
+                canonical_func,
+                args,
+                lowered_args,
+            );
             if let Some(captures) = self.nested_fn_captures.get(func).cloned() {
                 for capture in captures {
                     lowered_args.push(self.lower_recursive_capture_arg_for_ir(&capture));

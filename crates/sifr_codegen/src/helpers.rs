@@ -145,11 +145,20 @@ pub(crate) fn plan_iterator_ownership_with_element_hint(
 ) -> IteratorOwnershipPlan {
     let source_ty = crate::resolve_alias_type_for_plain_call(source_expr.ty());
     let inferred_element_ownership = iteration_element_ownership(source_ty);
-    let _ = element_type_hint;
-    // Keep planner decisions conservative: if element ownership cannot be inferred
-    // from source iteration metadata, leave it unknown (`None`) and let lowering
-    // default to borrowing behavior.
-    let element_ownership = inferred_element_ownership;
+    // Keep planner decisions conservative, but allow explicit target-element hints
+    // for concrete container sources when iteration metadata is unknown.
+    let hint_ownership = element_type_hint.and_then(|hint| match source_ty.resolve_alias() {
+        Type::List(_) | Type::Set(_) | Type::Tuple(_) | Type::Dict(_, _) | Type::Iterable(_) => {
+            let resolved_hint = hint.resolve_alias();
+            if matches!(resolved_hint, Type::Any | Type::Unknown | Type::TypeVar(_)) {
+                None
+            } else {
+                Some(resolved_hint.ownership())
+            }
+        }
+        _ => None,
+    });
+    let element_ownership = inferred_element_ownership.or(hint_ownership);
     let source_access_mode = infer_source_access_mode(source_expr, source_ty);
     IteratorOwnershipPlan {
         value_category: classify_value_category(source_expr),
@@ -538,10 +547,12 @@ pub(super) fn body_contains_field_assign_codegen(stmts: &[HirStmt]) -> bool {
         ) {
             found.set(true);
         } else if let HirStmt::TupleUnpack { targets, .. } = stmt {
-            if targets
-                .iter()
-                .any(|target| matches!(target.binding, sifr_hir::HirTupleTargetBinding::Field { .. }))
-            {
+            if targets.iter().any(|target| {
+                matches!(
+                    target.binding,
+                    sifr_hir::HirTupleTargetBinding::Field { .. }
+                )
+            }) {
                 found.set(true);
             }
         }
@@ -950,6 +961,19 @@ mod tests {
         assert_eq!(plan.source_access_mode, SourceAccessMode::Preserve);
         assert_eq!(plan.yield_mode, YieldMode::Borrow);
         assert_eq!(plan.element_ownership, None);
+    }
+
+    #[test]
+    fn iterator_plan_uses_hint_for_collection_with_unknown_elements() {
+        let source = HirExpr::Name {
+            name: "items".to_string(),
+            ty: Type::Set(Box::new(Type::Any)),
+        };
+        let plan = plan_iterator_ownership_with_element_hint(&source, Some(&Type::Str));
+
+        assert_eq!(plan.source_access_mode, SourceAccessMode::Preserve);
+        assert_eq!(plan.yield_mode, YieldMode::Clone);
+        assert_eq!(plan.element_ownership, Some(OwnershipKind::Move));
     }
 
     #[test]

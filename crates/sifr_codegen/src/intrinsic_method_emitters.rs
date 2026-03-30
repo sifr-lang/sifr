@@ -233,8 +233,17 @@ pub(crate) fn registry_iterable_to_owned_iter_expr(
     emitter: &mut RustEmitter,
     expr: &HirExpr,
 ) -> Option<RustExpr> {
+    registry_iterable_to_owned_iter_expr_with_hint(emitter, expr, None)
+}
+
+fn registry_iterable_to_owned_iter_expr_with_hint(
+    emitter: &mut RustEmitter,
+    expr: &HirExpr,
+    element_type_hint: Option<&Type>,
+) -> Option<RustExpr> {
     let lowered = emitter.try_lower_registry_expr_strict(expr)?;
-    let iter_plan = crate::helpers::plan_iterator_ownership(expr);
+    let iter_plan =
+        crate::helpers::plan_iterator_ownership_with_element_hint(expr, element_type_hint);
     let apply_copy_clone_yield = |iter_expr: RustExpr| match iter_plan.yield_mode {
         crate::helpers::YieldMode::Copy => RustExpr::MethodCall {
             receiver: Box::new(iter_expr),
@@ -257,13 +266,13 @@ pub(crate) fn registry_iterable_to_owned_iter_expr(
                     method: "into_iter".to_string(),
                     args: vec![],
                 },
-                crate::helpers::SourceAccessMode::Preserve => apply_copy_clone_yield(
-                    RustExpr::MethodCall {
+                crate::helpers::SourceAccessMode::Preserve => {
+                    apply_copy_clone_yield(RustExpr::MethodCall {
                         receiver: Box::new(RustExpr::Paren(Box::new(lowered))),
                         method: "iter".to_string(),
                         args: vec![],
-                    },
-                ),
+                    })
+                }
             })
         }
         Type::Bytes => Some(match iter_plan.source_access_mode {
@@ -336,13 +345,13 @@ pub(crate) fn registry_iterable_to_owned_iter_expr(
                 method: "into_keys".to_string(),
                 args: vec![],
             },
-            crate::helpers::SourceAccessMode::Preserve => apply_copy_clone_yield(
-                RustExpr::MethodCall {
+            crate::helpers::SourceAccessMode::Preserve => {
+                apply_copy_clone_yield(RustExpr::MethodCall {
                     receiver: Box::new(RustExpr::Paren(Box::new(lowered))),
                     method: "keys".to_string(),
                     args: vec![],
-                },
-            ),
+                })
+            }
         }),
         Type::Tuple(elems) if !elems.is_empty() && elems.iter().all(|elem| elem == &elems[0]) => {
             registry_tuple_homogeneous_iter_expr(lowered, elems.len())
@@ -403,8 +412,28 @@ pub(crate) fn registry_iterable_to_vec_expr(
     emitter: &mut RustEmitter,
     expr: &HirExpr,
 ) -> Option<RustExpr> {
+    registry_iterable_to_vec_expr_with_hint(emitter, expr, None)
+}
+
+fn registry_iterable_to_vec_expr_with_hint(
+    emitter: &mut RustEmitter,
+    expr: &HirExpr,
+    element_type_hint: Option<&Type>,
+) -> Option<RustExpr> {
+    let mut iter_expr =
+        registry_iterable_to_owned_iter_expr_with_hint(emitter, expr, element_type_hint)?;
+    if matches!(
+        &iter_expr,
+        RustExpr::MethodCall { method, .. } if method == "iter" || method == "keys"
+    ) {
+        iter_expr = RustExpr::MethodCall {
+            receiver: Box::new(iter_expr),
+            method: "cloned".to_string(),
+            args: vec![],
+        };
+    }
     Some(RustExpr::MethodCall {
-        receiver: Box::new(registry_iterable_to_owned_iter_expr(emitter, expr)?),
+        receiver: Box::new(iter_expr),
         method: "collect::<Vec<_>>".to_string(),
         args: vec![],
     })
@@ -1011,7 +1040,9 @@ impl RustEmitter {
                 if let Some(lowered) = self.try_lower_registry_intrinsic_call_expr(func, args) {
                     return Some(lowered);
                 }
-                if let Some(lowered) = self.try_lower_registry_builtin_call_expr(func, args) {
+                if let Some(lowered) =
+                    self.try_lower_registry_builtin_call_expr(func, args, Some(expr.ty()))
+                {
                     return Some(lowered);
                 }
                 if let Some(lowered) = self.try_lower_registry_plain_call_with_signature(func, args)
@@ -1027,7 +1058,9 @@ impl RustEmitter {
                 if let Some(lowered) = self.try_lower_registry_intrinsic_call_expr(func, args) {
                     return Some(lowered);
                 }
-                if let Some(lowered) = self.try_lower_registry_builtin_call_expr(func, args) {
+                if let Some(lowered) =
+                    self.try_lower_registry_builtin_call_expr(func, args, Some(expr.ty()))
+                {
                     return Some(lowered);
                 }
                 if let Some(lowered) = self.try_lower_registry_plain_call_with_signature(func, args)
@@ -1139,8 +1172,11 @@ impl RustEmitter {
                     .collect::<Vec<_>>();
                 path.push("new".to_string());
                 let lowered_args = self.try_lower_registry_exprs_strict(args)?;
-                let lowered_args =
-                    self.adapt_plain_call_args_with_signature_for_ir(&path.join("::"), args, lowered_args);
+                let lowered_args = self.adapt_plain_call_args_with_signature_for_ir(
+                    &path.join("::"),
+                    args,
+                    lowered_args,
+                );
                 Some(crate::RustExpr::FnCall {
                     func: Box::new(crate::RustExpr::Path(path)),
                     args: lowered_args,
@@ -1835,6 +1871,7 @@ impl RustEmitter {
         &mut self,
         func: &str,
         args: &[HirExpr],
+        result_ty: Option<&Type>,
     ) -> Option<crate::RustExpr> {
         match func {
             "__compat_defaultdict_int"
@@ -1863,7 +1900,15 @@ impl RustEmitter {
                 })
             }
             "list" if args.is_empty() => Some(RustExpr::Vec(vec![])),
-            "list" if args.len() == 1 => registry_iterable_to_vec_expr(self, &args[0]),
+            "list" if args.len() == 1 => {
+                let target_elem_hint = result_ty.and_then(|ty| {
+                    let Type::List(elem) = crate::resolve_alias_type_for_plain_call(ty) else {
+                        return None;
+                    };
+                    Some(elem.as_ref())
+                });
+                registry_iterable_to_vec_expr_with_hint(self, &args[0], target_elem_hint)
+            }
             "bytes" if args.is_empty() => Some(RustExpr::Vec(vec![])),
             "dict" if args.is_empty() => Some(RustExpr::FnCall {
                 func: Box::new(RustExpr::Path(vec![
@@ -1901,11 +1946,19 @@ impl RustEmitter {
                 ])),
                 args: vec![],
             }),
-            "set" if args.len() == 1 => Some(RustExpr::MethodCall {
-                receiver: Box::new(registry_iterable_to_owned_iter_expr(self, &args[0])?),
-                method: "collect::<HashSet<_>>".to_string(),
-                args: vec![],
-            }),
+            "set" if args.len() == 1 => {
+                let lowered_iter =
+                    registry_iterable_to_owned_iter_expr(self, &args[0]).or_else(|| {
+                        // Generator-style sources may fail strict registry lowering.
+                        // Fall back to stmt-support lowering for the source expression only.
+                        self.lower_stmt_expr_for_ir(&args[0]).ok().flatten()
+                    })?;
+                Some(RustExpr::MethodCall {
+                    receiver: Box::new(lowered_iter),
+                    method: "collect::<std::collections::HashSet<_>>".to_string(),
+                    args: vec![],
+                })
+            }
             "iter" if args.len() == 1 => {
                 if matches!(
                     crate::resolve_alias_type_for_plain_call(args[0].ty()),

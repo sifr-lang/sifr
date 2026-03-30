@@ -36,6 +36,7 @@ The goal is to make intended Sifr Optional semantics precise enough that valid g
 - `verification/leetcode/full_corpus_current_results_20260329_live_after_optional_wave9e.json`
 - `verification/leetcode/run_error_quartet_plus_baseline24_probe_20260330_wave_r3b1.json`
 - `verification/leetcode/run_error_quartet_plus_baseline24_probe_20260330_wave_r3a_semantic_gate.json`
+- `verification/leetcode/run_error_quartet_plus_baseline24_probe_20260330_wave_r3b2.json`
 - `issues/optional-none-category-breakdown-2026-03-29.md`
 - `issues/ad-hoc-optional-none-and-narrowing-wave7-9-root-cause-plan-2026-03-29.md`
 - `issues/ad-hoc-optional-none-and-narrowing-wave8b-run-stage-ownership-plan-2026-03-29.md`
@@ -47,6 +48,7 @@ The goal is to make intended Sifr Optional semantics precise enough that valid g
 - `issues/ad-hoc-optional-none-and-narrowing-approach-full-review-2026-03-30.md`
 - `issues/ad-hoc-optional-none-and-narrowing-majority-root-cause-2026-03-30.md`
 - `issues/ad-hoc-optional-none-and-narrowing-wave-r3-run-error-majority-plan-2026-03-30.md`
+- `issues/ad-hoc-optional-none-and-narrowing-wave-r3b2-codegen-data-shape-plan-2026-03-30.md`
 - `reviews/optional-none-direct-pass1.md`
 - `reviews/optional-none-category-implementation-readiness-claude.md`
 - `reviews/ad-hoc-optional-none-wave7-9-plan-review-pass1.md`
@@ -60,6 +62,8 @@ The goal is to make intended Sifr Optional semantics precise enough that valid g
 - `reviews/ad-hoc-optional-none-approach-full-review-pass1.md`
 - `reviews/ad-hoc-optional-none-majority-root-cause-review-pass1.md`
 - `reviews/ad-hoc-optional-none-wave-r3-run-error-majority-review-pass1.md`
+- `reviews/ad-hoc-optional-none-wave-r3b2-codegen-data-shape-review-pass1.md`
+- `reviews/ad-hoc-optional-none-wave-r3b2-codegen-data-shape-review-pass2.md`
 - `internal_docs/architecture.md`
 
 Implementation hotspots:
@@ -197,6 +201,7 @@ Important operational note:
   - wave-R3 majority run-error plan and reviewer pass-1 are now recorded; implementation gate remains open pending reviewer-requested decomposition/guardrail adjustments tracked in the plan artifact
   - wave-R3b1 codegen-hardening slice is implemented locally: augassign render normalization (`+==` closure), string-contains borrow parity, and plain-call compat canonicalization for heapq helpers; targeted fixtures show compile-stage parity defects are reduced while semantic gate failures remain for the next wave
   - wave-R3a semantic-gate slice is implemented locally: non-`None` return-path completeness diagnostics, duplicate module-function definition diagnostics, and numeric condition contract diagnostics now trigger at check stage for the owning fixture set (`0167`, `0231`, `0367`, `0416`, `0463`, `0846`)
+  - wave-R3b2 codegen data-shape slice is implemented locally: owned list-from-set collect parity, generator-safe `set(...)` fallback lowering, list-repeat lowering closure, mixed compare int->float coercion, and bool-typed boolop condition coercion; probe cohort moved `RUN_ERROR 10 -> 5` (`PASS 8 -> 13`)
   - residual canary fixtures for container and recursive Optional boundary lanes were canonicalized to explicit Sifr-safe forms (`0004`, `0013`, `0023`, `0024`, `0104`, `0115`, `0133`, `0206`)
   - residual run-stability fixtures were canonicalized to remove codegen-hostile shapes (`0010`, `0028`, `0097`, `0309`, `0678`)
 - validation evidence:
