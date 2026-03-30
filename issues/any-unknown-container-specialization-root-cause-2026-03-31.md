@@ -36,6 +36,7 @@ Stricter policy decision for this bucket:
 - every function, including nested/local helpers, should have explicit input and output types
 - function signature inference should not be a language goal for Sifr
 - therefore, untyped nested helpers should be treated the same way as untyped top-level boundaries: adaptation plus better diagnostics, not compiler expansion
+- contextual typing remains acceptable for lambdas/callbacks; this stricter rule is about named function signatures
 
 This means the bucket must not be used to justify turning Sifr into implicit dynamic Python. The correct direction is:
 
@@ -73,7 +74,7 @@ Important nuance:
 - the `21` / `15` / `22` split should be treated as **primary** root-cause classification, not proof that each fixture has only one root cause
 - a boundary adaptation may expose a secondary container/inference defect that is currently masked by the first error
 
-## Root cause 1: boundary annotations are missing and the compiler degrades to `Any`
+## Root cause 1: explicit function signatures are missing and the compiler degrades into `Any`
 
 Representative evidence:
 
@@ -94,17 +95,17 @@ Compiler evidence:
 Judgment:
 
 - This is **not** evidence that Sifr should accept untyped function boundaries.
-- It is evidence that the compiler currently reports the boundary problem too weakly and then continues with `Any`, which contaminates downstream diagnostics.
+- It is evidence that the compiler currently reports the signature problem too weakly and then continues with `Any`, which contaminates downstream diagnostics.
 
 Language decision:
 
 - **Do not broaden the language.**
-- Top-level function parameters and class/method boundaries should remain explicitly typed unless they are inferable from defaults in the intended architecture.
+- Named function inputs and outputs should remain explicitly typed unless they are inferable from defaults in the intended architecture.
 
 What should happen instead:
 
-1. Fixtures should be adapted when the failing surface is an untyped public/class boundary.
-2. The compiler should emit the annotation error as the primary hard-stop diagnostic for that boundary instead of continuing into a long tail of downstream `Any` diagnostics from the same root cause.
+1. Fixtures should be adapted when the failing surface is a missing named-function signature at a public, nested, or class boundary.
+2. The compiler should emit the missing-signature error as the primary hard-stop diagnostic instead of continuing into a long tail of downstream `Any` diagnostics from the same root cause.
 
 This lane is therefore:
 
@@ -237,9 +238,9 @@ Language decision:
 
 These patterns should be treated as canonical Sifr adaptations, not language gaps:
 
-1. untyped top-level function parameters
-2. untyped nested/local helper signatures
-3. untyped class-boundary methods and constructors
+1. missing explicit top-level function signatures
+2. missing explicit nested/local helper signatures
+3. missing explicit class-boundary method and constructor signatures
 4. empty-container usage that requires speculative, non-local, or cross-branch type guessing
 5. code that relies on downstream permissive behavior after an `Any` escape instead of preserving concrete types
 
