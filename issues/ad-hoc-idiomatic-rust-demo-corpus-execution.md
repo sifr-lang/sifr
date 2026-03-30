@@ -2818,6 +2818,46 @@ status: accepted_after_pass_1_and_pass_2
   - batch 77 was reviewed directly from the final validated Rust files and observed Sifr outputs
   - both passes ended with no accepted blockers across the trio
 
+#### batch_78_recursive_type_part4_recursive_type_part5_recursive_type_part6
+
+status: accepted_after_pass_1_and_pass_2
+
+- scope:
+  - `demos/recursive_type_part4/idiomatic.rs`
+  - `demos/recursive_type_part5/idiomatic.rs`
+  - `demos/recursive_type_part6/idiomatic.rs`
+- selection rationale:
+  - the batch clears the second contiguous recursive-type trilogy instead of splitting the remaining recursive-class demos across unrelated runtime or verification work
+  - all three companions still used cloned `Option<TreeNode>` recursion and repeated generated-style tree construction, which obscured the recursive-class teaching point
+  - keeping part 4 through part 6 together preserves a coherent review surface around recursive node narrowing, traversal, and the generic packet alias closure
+- priority tags:
+  - `recursive-types`: `recursive_type_part4`, `recursive_type_part5`, `recursive_type_part6`
+  - `recursive-classes`: `recursive_type_part4`, `recursive_type_part5`, `recursive_type_part6`
+  - `milestone-demo`: `recursive_type_part4`, `recursive_type_part5`, `recursive_type_part6`
+- implementation summary:
+  - `recursive_type_part4`: replaced cloned `Option<TreeNode>` lowering with direct `Option<&TreeNode>` traversal and compact `TreeNode::new` construction that keeps the guard-narrowing behavior obvious
+  - `recursive_type_part5`: applied the same borrow-based recursive traversal style to the runnable tree-traversal variant so the Rust reads like hand-written tree code instead of lowered scaffolding
+  - `recursive_type_part6`: kept the same borrow-based tree helper, then added a direct generic `Packet<T>` enum so the final alias-declaration teaching point is represented concretely in the Rust companion
+- local validation completed:
+  - `rustfmt demos/recursive_type_part4/idiomatic.rs demos/recursive_type_part5/idiomatic.rs demos/recursive_type_part6/idiomatic.rs`
+  - `rustc --edition=2021 demos/recursive_type_part4/idiomatic.rs -o /tmp/sifr-idiomatic-recursive-type-part4 && /tmp/sifr-idiomatic-recursive-type-part4`
+  - `rustc --edition=2021 demos/recursive_type_part5/idiomatic.rs -o /tmp/sifr-idiomatic-recursive-type-part5 && /tmp/sifr-idiomatic-recursive-type-part5`
+  - `rustc --edition=2021 demos/recursive_type_part6/idiomatic.rs -o /tmp/sifr-idiomatic-recursive-type-part6 && /tmp/sifr-idiomatic-recursive-type-part6`
+  - `cargo run -q -p sifr -- run demos/recursive_type_part4/main.sifr`
+  - `cargo run -q -p sifr -- run demos/recursive_type_part5/main.sifr`
+  - `cargo run -q -p sifr -- run demos/recursive_type_part6/main.sifr`
+  - `scripts/run_all_tests.sh`
+- review artifacts:
+  - pass 1: `reviews/phase-ad-hoc-idiomatic-rust-demo-corpus-wave-2-batch-78-review-pass-1.md`
+  - pass 2: `reviews/phase-ad-hoc-idiomatic-rust-demo-corpus-wave-2-batch-78-review-pass-2.md`
+- review application summary:
+  - all three pass-1 reviews returned `OK`
+  - all three pass-2 reviews returned `OK`
+  - no follow-up code changes were needed after the validated rewrite
+- reviewer tooling note:
+  - batch 78 was reviewed directly from the final validated Rust files and observed Sifr outputs
+  - both passes ended with no accepted blockers across the trio
+
 #### batch_65_codegen_preamble_codegen_structural_passes_intrinsic_codegen
 
 status: accepted_after_pass_1_and_pass_2

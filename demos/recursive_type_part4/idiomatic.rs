@@ -1,4 +1,3 @@
-#[derive(Debug, Clone, PartialEq)]
 struct TreeNode {
     val: i64,
     left: Option<Box<TreeNode>>,
@@ -6,49 +5,52 @@ struct TreeNode {
 }
 
 impl TreeNode {
-    fn new(val: i64, left: Option<Box<TreeNode>>, right: Option<Box<TreeNode>>) -> Self {
-        return Self {
-            val: val,
-            left: left,
-            right: right,
-        };
+    fn new(val: i64, left: Option<TreeNode>, right: Option<TreeNode>) -> Self {
+        Self {
+            val,
+            left: left.map(Box::new),
+            right: right.map(Box::new),
+        }
     }
 }
 
-fn tree_sum(node: &Option<TreeNode>) -> i64 {
-    let Some(node) = node.as_ref() else {
-        return 0 as i64;
-    };
-    let left: Option<TreeNode> = (node.left).as_deref().cloned();
-    let right: Option<TreeNode> = (node.right).as_deref().cloned();
-    return (node.val + tree_sum(&left)) + tree_sum(&right);
+fn tree_sum(node: Option<&TreeNode>) -> i64 {
+    match node {
+        Some(node) => node.val + tree_sum(node.left.as_deref()) + tree_sum(node.right.as_deref()),
+        None => 0,
+    }
 }
 
-fn same_shape_and_sum(p: &Option<TreeNode>, q: &Option<TreeNode>) -> i64 {
-    if ((p.is_none()) && (q.is_none())) {
-        return 0 as i64;
+fn same_shape_and_sum(p: Option<&TreeNode>, q: Option<&TreeNode>) -> i64 {
+    match (p, q) {
+        (None, None) => 0,
+        (Some(_), None) | (None, Some(_)) => -1,
+        (Some(p), Some(q)) => {
+            p.val
+                + q.val
+                + same_shape_and_sum(p.left.as_deref(), q.left.as_deref())
+                + same_shape_and_sum(p.right.as_deref(), q.right.as_deref())
+        }
     }
-    let (Some(p), Some(q)) = (p.as_ref(), q.as_ref()) else {
-        return -(1 as i64);
-    };
-    return ((p.val + q.val)
-        + same_shape_and_sum(&(p.left).as_deref().cloned(), &(q.left).as_deref().cloned()))
-        + same_shape_and_sum(
-            &(p.right).as_deref().cloned(),
-            &(q.right).as_deref().cloned(),
-        );
 }
 
 fn main() {
-    let left_a: TreeNode = TreeNode::new(2 as i64, None, None);
-    let right_a: TreeNode = TreeNode::new(3 as i64, None, None);
-    let root_a: TreeNode = TreeNode::new(1 as i64, Some(Box::new(left_a)), Some(Box::new(right_a)));
-    let left_b: TreeNode = TreeNode::new(2 as i64, None, None);
-    let right_b: TreeNode = TreeNode::new(3 as i64, None, None);
-    let root_b: TreeNode = TreeNode::new(1 as i64, Some(Box::new(left_b)), Some(Box::new(right_b)));
-    let left_c: TreeNode = TreeNode::new(2 as i64, None, None);
-    let right_c: TreeNode = TreeNode::new(3 as i64, None, None);
-    let root_c: TreeNode = TreeNode::new(1 as i64, Some(Box::new(left_c)), Some(Box::new(right_c)));
-    assert!(tree_sum(&Some(root_a)) == (6 as i64));
-    assert!(same_shape_and_sum(&Some(root_b), &Some(root_c)) == (12 as i64));
+    let root_a = TreeNode::new(
+        1,
+        Some(TreeNode::new(2, None, None)),
+        Some(TreeNode::new(3, None, None)),
+    );
+    let root_b = TreeNode::new(
+        1,
+        Some(TreeNode::new(2, None, None)),
+        Some(TreeNode::new(3, None, None)),
+    );
+    let root_c = TreeNode::new(
+        1,
+        Some(TreeNode::new(2, None, None)),
+        Some(TreeNode::new(3, None, None)),
+    );
+
+    assert_eq!(tree_sum(Some(&root_a)), 6);
+    assert_eq!(same_shape_and_sum(Some(&root_b), Some(&root_c)), 12);
 }
