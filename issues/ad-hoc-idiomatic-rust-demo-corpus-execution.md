@@ -2538,6 +2538,45 @@ status: accepted_after_pass_1_and_pass_2
   - batch 70 used direct per-file `claude -p --no-session-persistence --dangerously-skip-permissions` prompts with compact observed-output-plus-Rust-file prompts
   - `module_assembly` needed a shorter retry prompt in pass 2 after the longer prompt stalled repeatedly, but the final retry returned `OK`
 
+#### batch_71_project_build_project_check_project_entrypoint
+
+status: accepted_after_pass_1_and_pass_2
+
+- scope:
+  - `demos/project_build/idiomatic.rs`
+  - `demos/project_check/idiomatic.rs`
+  - `demos/project_entrypoint/idiomatic.rs`
+- selection rationale:
+  - all three are positive runnable demos
+  - all three form a cohesive project-mode/frontend slice instead of mixing the remaining project entry/build/check demos with unrelated graph-isolation or diagnostics fixtures
+  - none of the three had a Rust-first companion yet, and each one benefits from a direct local-module shape rather than preserving emitted project-loader ceremony
+- priority tags:
+  - `project-mode`: `project_build`, `project_check`, `project_entrypoint`
+  - `milestone-demo`: `project_build`, `project_check`, `project_entrypoint`
+  - `missing-companion`: `project_build`, `project_check`, `project_entrypoint`
+- implementation summary:
+  - `project_build`: authored a compact helper/formatter split using `num_bigint::BigInt` so the Rust companion still visibly exercises the external dependency that the manifest/build path must carry
+  - `project_check`: authored a tiny helper module around `std::f64::consts::PI` to preserve the project-aware local-import check parity demo without extra scaffolding
+  - `project_entrypoint`: authored a minimal helper module that preserves the canonical entry-path teaching point with the same `5 + floor(2.9) = 7` outcome in direct Rust form
+- local validation completed:
+  - `rustfmt demos/project_build/idiomatic.rs demos/project_check/idiomatic.rs demos/project_entrypoint/idiomatic.rs`
+  - temporary Cargo compile/run for `demos/project_build/idiomatic.rs` with `num-bigint = "0.4"`
+  - `rustc --edition=2021 demos/project_check/idiomatic.rs -o /tmp/sifr-idiomatic-project-check && /tmp/sifr-idiomatic-project-check`
+  - `rustc --edition=2021 demos/project_entrypoint/idiomatic.rs -o /tmp/sifr-idiomatic-project-entrypoint && /tmp/sifr-idiomatic-project-entrypoint`
+  - `cargo run -q -p sifr -- run demos/project_build/main.sifr`
+  - `cargo run -q -p sifr -- run demos/project_check/main.sifr`
+  - `cargo run -q -p sifr -- run demos/project_entrypoint/main.sifr`
+  - `scripts/run_all_tests.sh`
+- review artifacts:
+  - pass 1: `reviews/phase-ad-hoc-idiomatic-rust-demo-corpus-wave-2-batch-71-review-pass-1.md`
+  - pass 2: `reviews/phase-ad-hoc-idiomatic-rust-demo-corpus-wave-2-batch-71-review-pass-2.md`
+- review application summary:
+  - all three pass-1 reviews returned `OK`
+  - all three pass-2 reviews returned `OK`
+- reviewer tooling note:
+  - batch 71 used direct per-file `claude -p --no-session-persistence --dangerously-skip-permissions` prompts with compact observed-output-plus-Rust-file prompts
+  - no review retries or code changes were needed after the initial authored companions landed
+
 #### batch_65_codegen_preamble_codegen_structural_passes_intrinsic_codegen
 
 status: accepted_after_pass_1_and_pass_2

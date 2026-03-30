@@ -392,6 +392,8 @@ Progress update (`2026-03-29`):
 - `batch_69_branch_paths_cargo_manifest_cli_modes` completed local validation and ended external review with no accepted blockers; `branch_paths` and `cargo_manifest` were newly authored, `cli_modes` was re-reviewed and kept unchanged, and all three files were clean in both passes
 - `batch_70_module_ordering_module_assembly_module_cycle_diagnostics` selected as the seventieth wave-2 runnable-demo batch because it keeps the next module-graph slice cohesive around dependency-safe module ordering, deterministic multi-module assembly, and stable module-graph diagnostics
 - `batch_70_module_ordering_module_assembly_module_cycle_diagnostics` completed local validation, accepted one pass-1 cleanup in `module_assembly` switching the nested-module import to `crate::{a_provider, z_provider}`, and ended external review with no remaining accepted blockers; `module_ordering` and `module_cycle_diagnostics` were clean in both passes and `module_assembly` came back clean after that import-path cleanup
+- `batch_71_project_build_project_check_project_entrypoint` selected as the seventy-first wave-2 runnable-demo batch because it keeps the next project-mode/frontend slice cohesive around project build assembly, project-aware check parity, and canonical project entry analysis
+- `batch_71_project_build_project_check_project_entrypoint` completed local validation and ended external review with no accepted blockers; all three files were clean in both passes
 
 ### wave_3_fixture_and_negative_case_normalization
 
