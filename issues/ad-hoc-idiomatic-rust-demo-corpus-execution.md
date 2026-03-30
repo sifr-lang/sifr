@@ -3776,6 +3776,46 @@ status: accepted_after_pass_1_and_pass_2
   - batch 85 was reviewed directly from the final validated Rust scaffolds and the observed `sifr check` diagnostics for the paired negative fixtures
   - both review passes ended with no accepted blockers across the trio
 
+#### batch_86_reachable_type_error_scaffolds_mixed_blocks
+
+status: accepted_after_pass_1_and_pass_2
+
+- scope:
+  - `demos/stable_codegen/negative_cases/reachable_type_error/idiomatic.rs`
+  - `demos/valid_control_flow/negative_cases/reachable_type_error/idiomatic.rs`
+  - `demos/branch_paths/negative_cases/mixed_block_type_error/idiomatic.rs`
+- selection rationale:
+  - these fixtures are the next untouched members of the control-flow mismatch family and still used the generic placeholder rather than documenting the specific type mismatch that remains reachable
+  - the trio stays coherent while broadening slightly from plain `int` vs `str` mismatches to one union-member mismatch and one mixed-block mismatch
+  - each paired Sifr fixture already has a stable `sifr check` diagnostic path, so the Rust-side scaffold can be validated against observed output rather than inferred behavior
+- priority tags:
+  - `tier-2-negative-case`: `stable_codegen/reachable_type_error`, `valid_control_flow/reachable_type_error`, `branch_paths/mixed_block_type_error`
+  - `control-flow-mismatch`: `stable_codegen/reachable_type_error`, `valid_control_flow/reachable_type_error`, `branch_paths/mixed_block_type_error`
+  - `generic-placeholder-cleanup`: `stable_codegen/reachable_type_error`, `valid_control_flow/reachable_type_error`, `branch_paths/mixed_block_type_error`
+- implementation summary:
+  - `stable_codegen`: replaced the generic stub with a scaffold describing the reachable `list[int]` return that is outside the declared `int | str` union, plus a direct Rust analogue
+  - `valid_control_flow`: replaced the generic stub with a scaffold describing the final reachable `&str` return path from an `int`-typed function
+  - `branch_paths`: replaced the generic stub with a scaffold describing the mixed `try`/`if` block that keeps a reachable `&str` return inside an `int`-typed function
+- local validation completed:
+  - `rustfmt demos/stable_codegen/negative_cases/reachable_type_error/idiomatic.rs demos/valid_control_flow/negative_cases/reachable_type_error/idiomatic.rs demos/branch_paths/negative_cases/mixed_block_type_error/idiomatic.rs`
+  - `rustc --edition=2021 demos/stable_codegen/negative_cases/reachable_type_error/idiomatic.rs -o /tmp/sifr-neg-stable-codegen && /tmp/sifr-neg-stable-codegen`
+  - `rustc --edition=2021 demos/valid_control_flow/negative_cases/reachable_type_error/idiomatic.rs -o /tmp/sifr-neg-valid-control-flow && /tmp/sifr-neg-valid-control-flow`
+  - `rustc --edition=2021 demos/branch_paths/negative_cases/mixed_block_type_error/idiomatic.rs -o /tmp/sifr-neg-branch-paths && /tmp/sifr-neg-branch-paths`
+  - `cargo run -q -p sifr -- check demos/stable_codegen/negative_cases/reachable_type_error/main.sifr`
+  - `cargo run -q -p sifr -- check demos/valid_control_flow/negative_cases/reachable_type_error/main.sifr`
+  - `cargo run -q -p sifr -- check demos/branch_paths/negative_cases/mixed_block_type_error/main.sifr`
+  - `scripts/run_all_tests.sh`
+- review artifacts:
+  - pass 1: `reviews/phase-ad-hoc-idiomatic-rust-demo-corpus-wave-3-batch-86-review-pass-1.md`
+  - pass 2: `reviews/phase-ad-hoc-idiomatic-rust-demo-corpus-wave-3-batch-86-review-pass-2.md`
+- review application summary:
+  - all three pass-1 reviews returned `OK`
+  - all three pass-2 reviews returned `OK`
+  - no follow-up code changes were needed after the targeted Tier 2 rewrite
+- reviewer tooling note:
+  - batch 86 was reviewed directly from the final validated Rust scaffolds and the observed `sifr check` diagnostics for the paired negative fixtures
+  - both review passes ended with no accepted blockers across the trio
+
 ### wave_4_corpus_consistency_pass
 
 status: pending
