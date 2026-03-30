@@ -26,6 +26,7 @@ use super::method_call_args::{
     lower_function_call_args, lower_method_call_args, lower_signature_call_args,
     validate_dict_update_arg, validate_list_extend_arg, validate_set_iterable_arg,
 };
+use super::min_max_validation::validate_two_arg_min_max_operands;
 use super::mutating_methods::reject_immutable_parameter_method_mutation;
 use super::nonempty_method_narrowing::refine_nonempty_method_return_type;
 use super::numeric_sentinels::{
@@ -1138,6 +1139,9 @@ pub(super) fn lower_call(call: &ExprCall, ctx: &mut LowerCtx) -> Option<HirExpr>
                     b,
                     ctx,
                 );
+                if !validate_two_arg_min_max_operands("min", &a, &b, ctx) {
+                    return None;
+                }
                 return Some(HirExpr::Call {
                     func: "min".to_string(),
                     args: vec![a, b],
@@ -1172,6 +1176,9 @@ pub(super) fn lower_call(call: &ExprCall, ctx: &mut LowerCtx) -> Option<HirExpr>
                     b,
                     ctx,
                 );
+                if !validate_two_arg_min_max_operands("max", &a, &b, ctx) {
+                    return None;
+                }
                 return Some(HirExpr::Call {
                     func: "max".to_string(),
                     args: vec![a, b],

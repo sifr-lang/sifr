@@ -18,6 +18,7 @@ pub(super) fn refine_empty_set_binding_expr(
         return expr;
     }
     let refined_ty = Type::Set(Box::new(inferred_elem_ty));
+    let _ = ctx.scope.set_type(name, refined_ty.clone());
     ctx.scope.narrow_var(name, refined_ty.clone());
     HirExpr::Name {
         name: name.clone(),
@@ -53,6 +54,7 @@ pub(super) fn refine_empty_list_binding_expr(
         return expr;
     }
     let refined_ty = Type::List(Box::new(inferred_elem_ty));
+    let _ = ctx.scope.set_type(name, refined_ty.clone());
     ctx.scope.narrow_var(name, refined_ty.clone());
     ctx.pending_container_specialization_patches
         .insert(name.clone(), refined_ty.clone());

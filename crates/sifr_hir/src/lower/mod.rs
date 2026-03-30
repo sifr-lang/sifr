@@ -32,6 +32,7 @@ mod imported_defaults;
 mod imports;
 mod len_aliases;
 mod method_call_args;
+mod min_max_validation;
 mod module_function_registry;
 mod mutating_methods;
 mod nested_function_inference;

@@ -132,6 +132,32 @@ fn test_empty_list_specialization_rejects_mixed_append_types() {
 }
 
 #[test]
+fn test_empty_list_specialization_survives_loop_append() {
+    let result = lower_source(
+        "def collect(values: list[int]) -> list[int]:\n    res = []\n    i = 0\n    while i < len(values):\n        res.append(values[i])\n        i += 1\n    return res\n",
+    );
+    assert!(
+        result.is_ok(),
+        "loop-body append specialization should persist so return boundary sees list[int]"
+    );
+}
+
+#[test]
+fn test_empty_list_specialization_optional_append_in_loop_rejects_return_annotation() {
+    let result = lower_source(
+        "def collect(matrix: list[list[int]]) -> list[int]:\n    res = []\n    i = 0\n    while i < len(matrix):\n        res.append(matrix[i][0])\n        i += 1\n    return res\n",
+    );
+    assert!(
+        result.is_err(),
+        "optional element append should specialize to list[int|None] and fail list[int] return annotation"
+    );
+    let errors = result.unwrap_err();
+    assert!(errors
+        .iter()
+        .any(|e| e.message.contains("return type mismatch")));
+}
+
+#[test]
 fn test_copy_type_no_move() {
     let module =
         lower_source("def main():\n    x: int = 42\n    print(x)\n    print(x)\n").unwrap();
@@ -986,6 +1012,18 @@ fn test_sum_min_max_accept_iterator_inputs() {
         "def main():\n    nums: list[int] = [3, 1, 2]\n    total: int = sum(iter(nums))\n    lo: int | None = min(iter(nums))\n    hi: int | None = max(iter(nums))\n",
     );
     assert!(result.is_ok(), "{result:?}");
+}
+
+#[test]
+fn test_max_two_arg_rejects_optional_operand() {
+    let result = lower_source(
+        "def pick(d: dict[str, int], k: str) -> int:\n    best = 0\n    best = max(best, d[k])\n    return best\n",
+    );
+    assert!(result.is_err(), "max(i64, i64|None) should be rejected");
+    let errors = result.unwrap_err();
+    assert!(errors.iter().any(|e| e
+        .message
+        .contains("max() with 2 arguments does not accept optional operands")));
 }
 
 #[test]
