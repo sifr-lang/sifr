@@ -671,6 +671,8 @@ status: in progress
       - `1905`: `RUN_ERROR -> PASS`
     - remaining run-error set in probe cohort:
       - `0054`, `0071`, `0349`, `0459`, `0763`
+  - PR:
+    - `https://github.com/yaseralnajjar/sifr/pull/1539` (merged)
 
 - Validation to record:
   - post-wave full corpus rerun
