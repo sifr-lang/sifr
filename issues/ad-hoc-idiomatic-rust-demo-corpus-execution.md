@@ -2940,6 +2940,52 @@ status: accepted_after_pass_1_and_pass_2
   - batch 80 was reviewed directly from the final validated Rust files and observed Sifr outputs
   - both review passes ended with no accepted blockers across the trio
 
+#### batch_81_integer_safety_intrinsics_mut_sort
+
+status: accepted_after_pass_1_and_pass_2
+
+- scope:
+  - `demos/integer_safety/idiomatic.rs`
+  - `demos/intrinsics/idiomatic.rs`
+  - `demos/mut_sort/idiomatic.rs`
+- selection rationale:
+  - the batch clears a compact runtime-surface slice instead of dragging the larger remaining text-wrapper and verification demos into the same review window
+  - `integer_safety` and `intrinsics` were both still positive milestone demos with obvious generated-style residue around straightforward bigint and intrinsic-stdlib behavior
+  - `mut_sort` had no Rust companion at all, so it fit cleanly as the third file to close a small, focused mutable-list-method demo
+- priority tags:
+  - `runtime-surface`: `integer_safety`, `intrinsics`, `mut_sort`
+  - `milestone-demo`: `integer_safety`, `intrinsics`
+  - `missing-companion`: `mut_sort`
+  - `hand-authored-generated-shape`: `integer_safety`, `intrinsics`
+- implementation summary:
+  - `integer_safety`: rewrote the bigint demo around direct iterative `BigInt` helpers and preserved the exact printed arithmetic, factorial, Fibonacci, and overflow-warning output
+  - `intrinsics`: replaced the giant generated stdlib scaffold with small local assertion helpers and direct intrinsic checks for `sqrt` and `pi`
+  - `mut_sort`: authored a compact missing companion that sorts an owned `Vec<i64>` in place and preserves the observed `mut_sort: ok` output
+- local validation completed:
+  - `rustfmt demos/integer_safety/idiomatic.rs demos/intrinsics/idiomatic.rs demos/mut_sort/idiomatic.rs`
+  - temp Cargo validation for `integer_safety` with `num-bigint = "0.4"`
+  - `rustc --edition=2021 demos/intrinsics/idiomatic.rs -o /tmp/sifr-idiomatic-intrinsics && /tmp/sifr-idiomatic-intrinsics`
+  - `rustc --edition=2021 demos/mut_sort/idiomatic.rs -o /tmp/sifr-idiomatic-mut-sort && /tmp/sifr-idiomatic-mut-sort`
+  - `cargo run -q -p sifr -- run demos/integer_safety/main.sifr`
+  - `cargo run -q -p sifr -- run demos/intrinsics/main.sifr`
+  - `cargo run -q -p sifr -- run demos/mut_sort/main.sifr`
+  - `cargo run -q -p sifr -- run crates/sifr/tests/e2e/pass/stdlib_logging_consolidated.sifr`
+  - `scripts/run_all_tests.sh`
+- validation unblock:
+  - `lib/sifr/tempfile.sifr`: removed the slice-based trailing-slash trim path from `mktemp_path()` and returned early when the temp root already ends in `/`
+  - rationale: a cold-cache e2e rebuild of `stdlib_logging_consolidated` exposed a borrow-after-move bug in the generated Rust for the previous `root[:len(root) - 1]` path
+  - observed outcome: the previously failing `stdlib_logging_consolidated` fixture compiled and ran cleanly after the stdlib change, and the full validation lane then passed
+- review artifacts:
+  - pass 1: `reviews/phase-ad-hoc-idiomatic-rust-demo-corpus-wave-2-batch-81-review-pass-1.md`
+  - pass 2: `reviews/phase-ad-hoc-idiomatic-rust-demo-corpus-wave-2-batch-81-review-pass-2.md`
+- review application summary:
+  - all three pass-1 reviews returned `OK`
+  - all three pass-2 reviews returned `OK`
+  - no follow-up code changes were needed after the validated rewrite and tempfile fix
+- reviewer tooling note:
+  - batch 81 was reviewed directly from the final validated Rust files and observed Sifr outputs
+  - both review passes ended with no accepted blockers across the trio
+
 #### batch_65_codegen_preamble_codegen_structural_passes_intrinsic_codegen
 
 status: accepted_after_pass_1_and_pass_2
