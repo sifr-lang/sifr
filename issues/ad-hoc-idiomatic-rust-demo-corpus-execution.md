@@ -3736,6 +3736,46 @@ status: accepted_after_pass_1_and_pass_2
   - batch 84 was reviewed directly from the final validated Rust scaffolds and the observed `sifr check` diagnostics for the paired negative fixtures
   - both review passes ended with no accepted blockers across the trio
 
+#### batch_85_reachable_type_error_scaffolds_followup
+
+status: accepted_after_pass_1_and_pass_2
+
+- scope:
+  - `demos/loop_try_match/negative_cases/reachable_type_error/idiomatic.rs`
+  - `demos/return_and_raise_paths/negative_cases/reachable_type_error/idiomatic.rs`
+  - `demos/unreachable_returns/negative_cases/reachable_type_error/idiomatic.rs`
+- selection rationale:
+  - these three fixtures are the next untouched members of the same reachable-type-error family and still used the generic placeholder instead of documenting the specific branch shape that keeps the bad return reachable
+  - the batch stays within one negative-case category and avoids mixing parse, import, and protocol fixtures before the Tier 2 style is normalized
+  - each paired Sifr fixture already has a stable deterministic type-error check path, so the Rust-side scaffold can be validated directly against observed diagnostics
+- priority tags:
+  - `tier-2-negative-case`: `loop_try_match/reachable_type_error`, `return_and_raise_paths/reachable_type_error`, `unreachable_returns/reachable_type_error`
+  - `reachable-type-error`: `loop_try_match/reachable_type_error`, `return_and_raise_paths/reachable_type_error`, `unreachable_returns/reachable_type_error`
+  - `generic-placeholder-cleanup`: `loop_try_match/reachable_type_error`, `return_and_raise_paths/reachable_type_error`, `unreachable_returns/reachable_type_error`
+- implementation summary:
+  - `loop_try_match`: replaced the generic stub with a scaffold describing the nested `else` branch that returns `&str` from an `int`-typed function and a direct Rust `compile_fail` analogue
+  - `return_and_raise_paths`: replaced the generic stub with a scaffold describing the explicit `else` branch return mismatch and its Rust analogue
+  - `unreachable_returns`: replaced the generic stub with a scaffold describing the final reachable `&str` return path and its Rust analogue
+- local validation completed:
+  - `rustfmt demos/loop_try_match/negative_cases/reachable_type_error/idiomatic.rs demos/return_and_raise_paths/negative_cases/reachable_type_error/idiomatic.rs demos/unreachable_returns/negative_cases/reachable_type_error/idiomatic.rs`
+  - `rustc --edition=2021 demos/loop_try_match/negative_cases/reachable_type_error/idiomatic.rs -o /tmp/sifr-neg-loop-try-match && /tmp/sifr-neg-loop-try-match`
+  - `rustc --edition=2021 demos/return_and_raise_paths/negative_cases/reachable_type_error/idiomatic.rs -o /tmp/sifr-neg-return-and-raise-paths && /tmp/sifr-neg-return-and-raise-paths`
+  - `rustc --edition=2021 demos/unreachable_returns/negative_cases/reachable_type_error/idiomatic.rs -o /tmp/sifr-neg-unreachable-returns && /tmp/sifr-neg-unreachable-returns`
+  - `cargo run -q -p sifr -- check demos/loop_try_match/negative_cases/reachable_type_error/main.sifr`
+  - `cargo run -q -p sifr -- check demos/return_and_raise_paths/negative_cases/reachable_type_error/main.sifr`
+  - `cargo run -q -p sifr -- check demos/unreachable_returns/negative_cases/reachable_type_error/main.sifr`
+  - `scripts/run_all_tests.sh`
+- review artifacts:
+  - pass 1: `reviews/phase-ad-hoc-idiomatic-rust-demo-corpus-wave-3-batch-85-review-pass-1.md`
+  - pass 2: `reviews/phase-ad-hoc-idiomatic-rust-demo-corpus-wave-3-batch-85-review-pass-2.md`
+- review application summary:
+  - all three pass-1 reviews returned `OK`
+  - all three pass-2 reviews returned `OK`
+  - no follow-up code changes were needed after the targeted Tier 2 rewrite
+- reviewer tooling note:
+  - batch 85 was reviewed directly from the final validated Rust scaffolds and the observed `sifr check` diagnostics for the paired negative fixtures
+  - both review passes ended with no accepted blockers across the trio
+
 ### wave_4_corpus_consistency_pass
 
 status: pending
