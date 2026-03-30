@@ -766,7 +766,7 @@ status: in progress
   - residual ownership after wave-R3e:
     - residual run/check ownership from this lane: none
   - PR:
-    - `<pending>`
+    - `https://github.com/yaseralnajjar/sifr/pull/1548` (merged)
 
 - Validation to record:
   - post-wave full corpus rerun
