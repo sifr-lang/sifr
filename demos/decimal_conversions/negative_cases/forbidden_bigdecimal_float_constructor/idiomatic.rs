@@ -1,12 +1,17 @@
-//! Negative-case Sifr fixture scaffold.
+//! Tier-2 Rust scaffold for the Sifr negative fixture in `main.sifr`.
 //!
-//! Source files in this folder:
-//! - `main.sifr`
+//! The paired Sifr program is rejected because `BigDecimal(1.25)` attempts to
+//! construct an exact decimal value from a binary float.
 //!
-//! This folder exists to preserve an intentional diagnostic or compile-fail shape.
-//! There is no single runnable Rust program that is both idiomatic and preserves
-//! the same failure contract, so this file serves as the Rust-side scaffold.
-
-#![allow(dead_code)]
+//! The Rust-side analogue should use exact textual input instead:
+//! ```rust
+//! # use bigdecimal::BigDecimal;
+//! # use std::str::FromStr;
+//! let value = BigDecimal::from_str("1.25").unwrap();
+//! # let _ = value;
+//! ```
+//!
+//! This fixture exists to preserve the same exact-construction rule for
+//! `bigdecimal` values.
 
 fn main() {}
