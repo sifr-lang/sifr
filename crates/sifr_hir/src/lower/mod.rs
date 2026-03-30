@@ -4,8 +4,8 @@ use crate::scope::Scope;
 use sifr_python_ast::{Expr, ExprCall, Stmt};
 use sifr_type_system::{make_union, FunctionType, Type};
 use std::collections::HashMap;
-mod arithmetic_warnings;
 mod append_growth_shapes;
+mod arithmetic_warnings;
 mod assignment_widening;
 mod binding_mutability;
 mod builtin_calls;
@@ -13,12 +13,14 @@ mod bytes_methods;
 mod classes;
 mod compat_imports;
 mod container_literal_specialization;
+mod control_flow_conditions;
 mod decimal_methods;
 mod diagnostics;
 mod expressions;
 #[cfg(test)]
 mod expressions_tests;
 mod for_loop_safety;
+mod flow_helpers;
 mod fstring_support;
 mod function_flow;
 mod function_scopes;
@@ -29,12 +31,13 @@ mod imported_defaults;
 mod imports;
 mod len_aliases;
 mod method_call_args;
+mod module_function_registry;
 mod mutating_methods;
 mod nested_function_inference;
 #[cfg(test)]
 mod nested_function_tests;
-mod nonlocal_support;
 mod nonempty_method_narrowing;
+mod nonlocal_support;
 mod numeric_sentinels;
 #[cfg(test)]
 mod own_mut_param_tests;
@@ -42,8 +45,8 @@ mod own_mut_param_tests;
 mod own_mut_semantics_tests;
 mod scope_helpers;
 mod sequence_guard_detection;
-mod sequence_guards;
 mod sequence_guard_updates;
+mod sequence_guards;
 mod sequence_pointers;
 mod sequence_shapes;
 mod statements;
@@ -52,6 +55,7 @@ mod tuple_unpack;
 mod type_alias_tests;
 mod type_aliases;
 mod type_bounds;
+mod type_var_collection;
 mod typing_and_functions;
 use classes::{collect_class_type, lower_class, lower_expr_simple};
 use generic_inference::infer_type_var_bindings;
@@ -60,6 +64,7 @@ use len_aliases::LenAliasFact;
 use sequence_guards::SequenceGuard;
 use sequence_pointers::SequencePointerFact;
 use type_aliases::{collect_type_alias_decls, predeclare_type_aliases, resolve_type_aliases};
+use type_var_collection::collect_type_vars;
 use typing_and_functions::{
     extract_function_type, lower_function, register_builtins, resolve_annotation_expr,
 };
@@ -312,72 +317,6 @@ fn parse_typevar_declaration_specs(call: &ExprCall, ctx: &mut LowerCtx) -> Vec<S
     specs
 }
 
-/// Collect all `TypeVar` names used in a type.
-fn collect_type_vars(ty: &Type, vars: &mut Vec<String>) {
-    match ty {
-        Type::TypeVar(name) => {
-            if !vars.contains(name) {
-                vars.push(name.clone());
-            }
-        }
-        Type::List(elem) | Type::Set(elem) | Type::Iterable(elem) | Type::Iterator(elem) => {
-            collect_type_vars(elem, vars);
-        }
-        Type::Dict(k, v) => {
-            collect_type_vars(k, vars);
-            collect_type_vars(v, vars);
-        }
-        Type::Tuple(elems) => {
-            for e in elems {
-                collect_type_vars(e, vars);
-            }
-        }
-        Type::Union(members) => {
-            for m in members {
-                collect_type_vars(m, vars);
-            }
-        }
-        Type::Result(ok, err) => {
-            collect_type_vars(ok, vars);
-            collect_type_vars(err, vars);
-        }
-        Type::Alias {
-            type_args, body, ..
-        } => {
-            for arg in type_args {
-                collect_type_vars(arg, vars);
-            }
-            collect_type_vars(body, vars);
-        }
-        Type::Function(ft) => {
-            for (_, param_ty, _) in &ft.params {
-                collect_type_vars(param_ty, vars);
-            }
-            collect_type_vars(&ft.return_type, vars);
-        }
-        Type::Class {
-            fields, methods, ..
-        } => {
-            for (_, field_ty) in fields {
-                collect_type_vars(field_ty, vars);
-            }
-            for (_, method_ft) in methods {
-                for (_, param_ty, _) in &method_ft.params {
-                    collect_type_vars(param_ty, vars);
-                }
-                collect_type_vars(&method_ft.return_type, vars);
-            }
-        }
-        Type::Callable(params, _, ret) => {
-            for p in params {
-                collect_type_vars(p, vars);
-            }
-            collect_type_vars(ret, vars);
-        }
-        _ => {}
-    }
-}
-
 /// Substitute type variables in a type with concrete types.
 fn substitute_type_vars(ty: &Type, bindings: &HashMap<String, Type>) -> Type {
     fn substitute_function_type(
@@ -622,8 +561,13 @@ fn lower_module_impl(
         }
     }
 
+    let mut function_name_registry = module_function_registry::ModuleFunctionRegistry::default();
     for stmt in stmts {
         if let Stmt::FunctionDef(func) = stmt {
+            let function_name = func.name.to_string();
+            if !function_name_registry.note_module_decl(function_name.as_str(), &mut ctx) {
+                continue;
+            }
             // PEP 695: register inline type params (def f[T](...)) as type variables
             let mut pep695_type_vars = Vec::new();
             if let Some(ref type_params) = func.type_params {
@@ -636,7 +580,7 @@ fn lower_module_impl(
                             let specs = parse_typevar_bound_expr(bound, &mut ctx);
                             if !specs.is_empty() {
                                 ctx.type_param_bounds
-                                    .entry(func.name.to_string())
+                                    .entry(function_name.clone())
                                     .or_default()
                                     .entry(name)
                                     .or_default()
@@ -664,7 +608,7 @@ fn lower_module_impl(
             func_type_vars.dedup();
             if !func_type_vars.is_empty() {
                 ctx.generic_functions
-                    .insert(func.name.to_string(), func_type_vars);
+                    .insert(function_name.clone(), func_type_vars);
             }
 
             // Apply globally declared `TypeVar(...)` bounds/constraints to this function's
@@ -677,7 +621,7 @@ fn lower_module_impl(
                 for tv_name in &type_vars {
                     if let Some(specs) = ctx.declared_type_var_bounds.get(tv_name) {
                         ctx.type_param_bounds
-                            .entry(func.name.to_string())
+                            .entry(function_name.clone())
                             .or_default()
                             .entry(tv_name.clone())
                             .or_default()
@@ -719,13 +663,13 @@ fn lower_module_impl(
             }
             if !defaults.is_empty() {
                 ctx.function_defaults
-                    .insert(func.name.to_string(), defaults);
+                    .insert(function_name.clone(), defaults);
             }
-            ctx.functions.insert(func.name.to_string(), ft);
+            ctx.functions.insert(function_name.clone(), ft);
             // Track vararg functions
             if func.parameters.vararg.is_some() {
                 ctx.vararg_functions
-                    .insert(func.name.to_string(), func.parameters.args.len());
+                    .insert(function_name, func.parameters.args.len());
             }
         }
     }
@@ -1165,6 +1109,10 @@ fn lower_module_impl(
     for stmt in stmts {
         match stmt {
             Stmt::FunctionDef(func) => {
+                let function_name = func.name.to_string();
+                if !function_name_registry.note_lowering(function_name.as_str()) {
+                    continue;
+                }
                 if let Some(hir_func) = lower_function(func, &mut ctx) {
                     functions.push(hir_func);
                 }

@@ -1,0 +1,187 @@
+{
+  "baseline_artifact": "verification/leetcode/full_corpus_current_results_20260329_live_after_optional_wave9e.json",
+  "case_count": 24,
+  "elapsed_seconds": 12.51,
+  "results": [
+    {
+      "id": "0033",
+      "fixture_slug": "0033_search_in_rotated_sorted_array",
+      "sifr_path": "audits/leetcode/0033_search_in_rotated_sorted_array.sifr",
+      "status": "PASS",
+      "code": null
+    },
+    {
+      "id": "0041",
+      "fixture_slug": "0041_first_missing_positive",
+      "sifr_path": "audits/leetcode/0041_first_missing_positive.sifr",
+      "status": "PASS",
+      "code": null
+    },
+    {
+      "id": "0054",
+      "fixture_slug": "0054_spiral_matrix",
+      "sifr_path": "audits/leetcode/0054_spiral_matrix.sifr",
+      "status": "RUN_ERROR",
+      "code": "E0308"
+    },
+    {
+      "id": "0071",
+      "fixture_slug": "0071_simplify_path",
+      "sifr_path": "audits/leetcode/0071_simplify_path.sifr",
+      "status": "RUN_ERROR",
+      "code": "E0308"
+    },
+    {
+      "id": "0074",
+      "fixture_slug": "0074_search_a_2d_matrix",
+      "sifr_path": "audits/leetcode/0074_search_a_2d_matrix.sifr",
+      "status": "PASS",
+      "code": null
+    },
+    {
+      "id": "0081",
+      "fixture_slug": "0081_search_in_rotated_sorted_array_ii",
+      "sifr_path": "audits/leetcode/0081_search_in_rotated_sorted_array_ii.sifr",
+      "status": "PASS",
+      "code": null
+    },
+    {
+      "id": "0125",
+      "fixture_slug": "0125_valid_palindrome",
+      "sifr_path": "audits/leetcode/0125_valid_palindrome.sifr",
+      "status": "PASS",
+      "code": null
+    },
+    {
+      "id": "0167",
+      "fixture_slug": "0167_two_sum_ii_input_array_is_sorted",
+      "sifr_path": "audits/leetcode/0167_two_sum_ii_input_array_is_sorted.sifr",
+      "status": "RUN_ERROR",
+      "code": "E0308"
+    },
+    {
+      "id": "0187",
+      "fixture_slug": "0187_repeated_dna_sequences",
+      "sifr_path": "audits/leetcode/0187_repeated_dna_sequences.sifr",
+      "status": "RUN_ERROR",
+      "code": "E0308"
+    },
+    {
+      "id": "0231",
+      "fixture_slug": "0231_power_of_two",
+      "sifr_path": "audits/leetcode/0231_power_of_two.sifr",
+      "status": "RUN_ERROR",
+      "code": "E0428"
+    },
+    {
+      "id": "0349",
+      "fixture_slug": "0349_intersection_of_two_arrays",
+      "sifr_path": "audits/leetcode/0349_intersection_of_two_arrays.sifr",
+      "status": "RUN_ERROR",
+      "code": "E0308"
+    },
+    {
+      "id": "0367",
+      "fixture_slug": "0367_valid_perfect_square",
+      "sifr_path": "audits/leetcode/0367_valid_perfect_square.sifr",
+      "status": "RUN_ERROR",
+      "code": "E0308"
+    },
+    {
+      "id": "0416",
+      "fixture_slug": "0416_partition_equal_subset_sum",
+      "sifr_path": "audits/leetcode/0416_partition_equal_subset_sum.sifr",
+      "status": "RUN_ERROR",
+      "code": "E0308"
+    },
+    {
+      "id": "0441",
+      "fixture_slug": "0441_arranging_coins",
+      "sifr_path": "audits/leetcode/0441_arranging_coins.sifr",
+      "status": "RUN_ERROR",
+      "code": "E0308"
+    },
+    {
+      "id": "0459",
+      "fixture_slug": "0459_repeated_substring_pattern",
+      "sifr_path": "audits/leetcode/0459_repeated_substring_pattern.sifr",
+      "status": "RUN_ERROR",
+      "code": null
+    },
+    {
+      "id": "0463",
+      "fixture_slug": "0463_island_perimeter",
+      "sifr_path": "audits/leetcode/0463_island_perimeter.sifr",
+      "status": "RUN_ERROR",
+      "code": "E0308"
+    },
+    {
+      "id": "0763",
+      "fixture_slug": "0763_partition_labels",
+      "sifr_path": "audits/leetcode/0763_partition_labels.sifr",
+      "status": "RUN_ERROR",
+      "code": "E0277"
+    },
+    {
+      "id": "0791",
+      "fixture_slug": "0791_custom_sort_string",
+      "sifr_path": "audits/leetcode/0791_custom_sort_string.sifr",
+      "status": "PASS",
+      "code": null
+    },
+    {
+      "id": "0846",
+      "fixture_slug": "0846_hand_of_straights",
+      "sifr_path": "audits/leetcode/0846_hand_of_straights.sifr",
+      "status": "RUN_ERROR",
+      "code": "E0308"
+    },
+    {
+      "id": "0978",
+      "fixture_slug": "0978_longest_turbulent_subarray",
+      "sifr_path": "audits/leetcode/0978_longest_turbulent_subarray.sifr",
+      "status": "PASS",
+      "code": null
+    },
+    {
+      "id": "1461",
+      "fixture_slug": "1461_check_if_a_string_contains_all_binary_codes_of_size_k",
+      "sifr_path": "audits/leetcode/1461_check_if_a_string_contains_all_binary_codes_of_size_k.sifr",
+      "status": "RUN_ERROR",
+      "code": "E0425"
+    },
+    {
+      "id": "1582",
+      "fixture_slug": "1582_special_positions_in_a_binary_matrix",
+      "sifr_path": "audits/leetcode/1582_special_positions_in_a_binary_matrix.sifr",
+      "status": "RUN_ERROR",
+      "code": "E0369"
+    },
+    {
+      "id": "1905",
+      "fixture_slug": "1905_count_sub_islands",
+      "sifr_path": "audits/leetcode/1905_count_sub_islands.sifr",
+      "status": "RUN_ERROR",
+      "code": "E0308"
+    },
+    {
+      "id": "2554",
+      "fixture_slug": "2554_maximum_number_of_integers_to_choose_from_a_range_i",
+      "sifr_path": "audits/leetcode/2554_maximum_number_of_integers_to_choose_from_a_range_i.sifr",
+      "status": "PASS",
+      "code": null
+    }
+  ],
+  "run_error_codes": {
+    "E0277": 1,
+    "E0308": 11,
+    "E0369": 1,
+    "E0425": 1,
+    "E0428": 1,
+    "NO_CODE": 1
+  },
+  "summary": {
+    "PASS": 8,
+    "RUN_ERROR": 16
+  }
+}

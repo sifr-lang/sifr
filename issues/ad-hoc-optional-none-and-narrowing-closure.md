@@ -34,6 +34,8 @@ The goal is to make intended Sifr Optional semantics precise enough that valid g
 - `verification/leetcode/full_corpus_current_results_20260329_live_after_optional_wave9c.json`
 - `verification/leetcode/full_corpus_current_results_20260329_live_after_optional_wave9d.json`
 - `verification/leetcode/full_corpus_current_results_20260329_live_after_optional_wave9e.json`
+- `verification/leetcode/run_error_quartet_plus_baseline24_probe_20260330_wave_r3b1.json`
+- `verification/leetcode/run_error_quartet_plus_baseline24_probe_20260330_wave_r3a_semantic_gate.json`
 - `issues/optional-none-category-breakdown-2026-03-29.md`
 - `issues/ad-hoc-optional-none-and-narrowing-wave7-9-root-cause-plan-2026-03-29.md`
 - `issues/ad-hoc-optional-none-and-narrowing-wave8b-run-stage-ownership-plan-2026-03-29.md`
@@ -133,6 +135,18 @@ Latest run-stage option-bridge probe on 2026-03-30 (wave-R2 compiler slice, base
   - remaining `16/24` in probe cohort are run-stage errors with first-code distribution:
     - `E0308=11`, `E0277=2`, `E0428=1`, `E0425=1`, `E0369=1`
 
+Latest semantic-gate probe on 2026-03-30 (wave-R3a compiler slice, baseline-24 run cohort):
+
+- probe artifact:
+  - `verification/leetcode/run_error_quartet_plus_baseline24_probe_20260330_wave_r3a_semantic_gate.json`
+- result:
+  - semantic-gate fixtures moved from run-stage to check-stage diagnostics:
+    - `0167`, `0231`, `0367`, `0416`, `0463`, `0846`
+  - probe cohort summary:
+    - `PASS=8`
+    - `CHECK_ERROR=6`
+    - `RUN_ERROR=10`
+
 Planning baseline for this phase:
 
 - dominant family from the latest categorized analysis:
@@ -182,6 +196,7 @@ Important operational note:
   - wave-R2 run-stage compiler closure resolved the dominant Optional-bridge E0308 subset in the probe cohort by normalizing Option/scalar compare bridging, non-name Optional truthiness lowering, and nested string-augassign lowering parity; `8` prior run-error fixtures now pass in probe scope
   - wave-R3 majority run-error plan and reviewer pass-1 are now recorded; implementation gate remains open pending reviewer-requested decomposition/guardrail adjustments tracked in the plan artifact
   - wave-R3b1 codegen-hardening slice is implemented locally: augassign render normalization (`+==` closure), string-contains borrow parity, and plain-call compat canonicalization for heapq helpers; targeted fixtures show compile-stage parity defects are reduced while semantic gate failures remain for the next wave
+  - wave-R3a semantic-gate slice is implemented locally: non-`None` return-path completeness diagnostics, duplicate module-function definition diagnostics, and numeric condition contract diagnostics now trigger at check stage for the owning fixture set (`0167`, `0231`, `0367`, `0416`, `0463`, `0846`)
   - residual canary fixtures for container and recursive Optional boundary lanes were canonicalized to explicit Sifr-safe forms (`0004`, `0013`, `0023`, `0024`, `0104`, `0115`, `0133`, `0206`)
   - residual run-stability fixtures were canonicalized to remove codegen-hostile shapes (`0010`, `0028`, `0097`, `0309`, `0678`)
 - validation evidence:

@@ -116,6 +116,48 @@ fn test_while_loop() {
 }
 
 #[test]
+fn test_if_condition_rejects_numeric_truthiness() {
+    let result = lower_source("def main():\n    if 1:\n        pass\n");
+    assert!(result.is_err());
+    let errors = result.unwrap_err();
+    assert!(errors.iter().any(|e| e
+        .message
+        .contains("if condition must be bool or collection/string truthiness")));
+}
+
+#[test]
+fn test_while_condition_rejects_numeric_truthiness() {
+    let result = lower_source("def main():\n    while 1:\n        return\n");
+    assert!(result.is_err());
+    let errors = result.unwrap_err();
+    assert!(errors.iter().any(|e| e
+        .message
+        .contains("while condition must be bool or collection/string truthiness")));
+}
+
+#[test]
+fn test_non_none_return_annotation_requires_exhaustive_returns() {
+    let result = lower_source("def f(flag: bool) -> int:\n    if flag:\n        return 1\n");
+    assert!(result.is_err());
+    let errors = result.unwrap_err();
+    assert!(errors.iter().any(|e| e
+        .message
+        .contains("must return a value of type 'int' on all control-flow paths")));
+}
+
+#[test]
+fn test_duplicate_module_function_definition_reports_error() {
+    let result = lower_source(
+        "def same() -> bool:\n    return True\n\ndef same() -> bool:\n    return False\n",
+    );
+    assert!(result.is_err());
+    let errors = result.unwrap_err();
+    assert!(errors.iter().any(|e| e
+        .message
+        .contains("duplicate function definition in module: 'same'")));
+}
+
+#[test]
 fn test_guarded_list_pop_narrows_to_element_type() {
     let result = lower_source(
         "def main():\n    values: list[int] = [1, 2]\n    while values:\n        item: int = values.pop()\n",
@@ -139,7 +181,8 @@ fn test_guarded_zero_index_list_pop_narrows_to_element_type() {
 
 #[test]
 fn test_unguarded_list_pop_stays_optional() {
-    let result = lower_source("def main():\n    values: list[int] = [1, 2]\n    item: int = values.pop()\n");
+    let result =
+        lower_source("def main():\n    values: list[int] = [1, 2]\n    item: int = values.pop()\n");
     assert!(
         result.is_err(),
         "unguarded list.pop() should remain optional"
@@ -148,8 +191,9 @@ fn test_unguarded_list_pop_stays_optional() {
 
 #[test]
 fn test_unguarded_zero_index_list_pop_stays_optional() {
-    let result =
-        lower_source("def main():\n    values: list[int] = [1, 2]\n    item: int = values.pop(0)\n");
+    let result = lower_source(
+        "def main():\n    values: list[int] = [1, 2]\n    item: int = values.pop(0)\n",
+    );
     assert!(
         result.is_err(),
         "unguarded list.pop(0) should remain optional"
@@ -268,7 +312,8 @@ fn test_inferred_local_can_widen_to_optional_on_reassignment() {
 
 #[test]
 fn test_annotated_local_does_not_widen_on_reassignment() {
-    let result = lower_source("def bad() -> int:\n    value: int = 1\n    value = None\n    return value\n");
+    let result =
+        lower_source("def bad() -> int:\n    value: int = 1\n    value = None\n    return value\n");
     assert!(
         result.is_err(),
         "explicitly annotated locals should keep their declared type on reassignment"
@@ -1268,7 +1313,8 @@ fn test_empty_dict_literal_specializes_from_first_subscript_write_and_get_defaul
 
 #[test]
 fn test_empty_dict_literal_conflicting_write_reports_deterministic_error() {
-    let result = lower_source("def main():\n    data = {}\n    data[1] = 10\n    data[\"x\"] = 20\n");
+    let result =
+        lower_source("def main():\n    data = {}\n    data[1] = 10\n    data[\"x\"] = 20\n");
     assert!(result.is_err());
     let errors = result.unwrap_err();
     assert!(errors
