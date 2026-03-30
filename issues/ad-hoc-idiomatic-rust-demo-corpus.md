@@ -412,6 +412,8 @@ Progress update (`2026-03-29`):
 - `batch_79_nested_function_part4_nested_function_part5_recursive_types` completed local validation and ended external review with no accepted blockers; the backtracking demos were rewritten into direct Rust-first recursion and the recursive-types milestone was tightened into cleaner self-referential node construction, with both review passes returning `OK`
 - `batch_80_stable_codegen_statement_expression_codegen_statement_expression_mix` selected as the eightieth wave-2 runnable-demo batch because it clears the next coherent codegen-shaped slice: the stable-emission summary demo plus the two statement/expression structured-lowering milestone demos
 - `batch_80_stable_codegen_statement_expression_codegen_statement_expression_mix` completed local validation and ended external review with no accepted blockers; all three files were tightened into direct Rust-first control-flow examples and both review passes returned `OK`
+- `batch_81_integer_safety_intrinsics_mut_sort` selected as the eighty-first wave-2 runnable-demo batch because it clears a compact runtime-surface slice: the bigint safety milestone, the intrinsic-stdlib milestone, and the missing `mut`-sort companion without dragging in the larger remaining text and verification outliers
+- `batch_81_integer_safety_intrinsics_mut_sort` completed local validation and ended external review with no accepted blockers; all three files were tightened into direct Rust-first companions, and the batch also included a necessary `lib/sifr/tempfile.sifr` validation unblock after a cold-cache `stdlib_logging_consolidated` e2e build exposed a borrow-after-move bug in the trailing-slash trim path
 
 ### wave_3_fixture_and_negative_case_normalization
 
