@@ -2560,22 +2560,24 @@ fn test_structured_stmt_path_wraps_non_optional_string_index_into_option_local()
     let mut emitter = RustEmitter::new();
 
     let captured = emitter.capture_structured_stmts(|inner| inner.emit_stmt(&stmt));
-
+    let Some(RustStmt::Let {
+        name, ty, value, ..
+    }) = captured.first()
+    else {
+        panic!("expected structured let for optional local");
+    };
+    assert_eq!(name, "part");
+    assert!(
+        matches!(
+            ty,
+            Some(RustType::Option(inner)) if matches!(inner.as_ref(), RustType::String_)
+        ) || matches!(ty, Some(RustType::Named(named)) if named == "Option<String>")
+    );
     assert!(matches!(
-        captured.first(),
-        Some(RustStmt::Let {
-            name,
-            ty: Some(RustType::Option(inner)),
-            value:
-                RustExpr::FnCall {
-                    func,
-                    args,
-                },
-            ..
-        }) if name == "part"
-            && matches!(inner.as_ref(), RustType::String_)
-            && matches!(func.as_ref(), RustExpr::Path(path) if path == &vec!["Some".to_string()])
-            && matches!(args.as_slice(), [RustExpr::Block { .. }])
+        value,
+        RustExpr::FnCall { func, args }
+            if matches!(func.as_ref(), RustExpr::Path(path) if path == &vec!["Some".to_string()])
+                && matches!(args.as_slice(), [RustExpr::Block { .. }])
     ));
 }
 
@@ -2885,6 +2887,73 @@ fn test_structured_stmt_path_handles_chained_compare_condition_inside_loop_if() 
     let captured = emitter.capture_structured_stmts(|inner| inner.emit_stmt(&stmt));
 
     assert!(matches!(captured.first(), Some(RustStmt::While { .. })));
+}
+
+#[test]
+fn test_structured_stmt_path_lowers_option_call_truthiness_to_bool_condition() {
+    let stmt = HirStmt::If {
+        condition: HirExpr::MethodCall {
+            object: Box::new(HirExpr::Name {
+                name: "nums".to_string(),
+                ty: Type::Dict(Box::new(Type::Int), Box::new(Type::Int)),
+            }),
+            method: "get".to_string(),
+            args: vec![HirExpr::Name {
+                name: "i".to_string(),
+                ty: Type::Int,
+            }],
+            ty: Type::Union(vec![Type::Int, Type::None]),
+        },
+        then_body: vec![HirStmt::Pass],
+        elif_clauses: vec![],
+        else_body: None,
+    };
+
+    let mut emitter = RustEmitter::new();
+    let captured = emitter.capture_structured_stmts(|inner| inner.emit_stmt(&stmt));
+
+    assert!(matches!(
+        captured.first(),
+        Some(RustStmt::If {
+            cond: RustExpr::MethodCall { method, .. },
+            ..
+        }) if method == "is_some_and"
+    ));
+}
+
+#[test]
+fn test_structured_stmt_path_lowers_nested_string_augassign_to_push_str() {
+    let stmt = HirStmt::While {
+        condition: HirExpr::BoolLiteral(true),
+        body: vec![HirStmt::If {
+            condition: HirExpr::BoolLiteral(true),
+            then_body: vec![HirStmt::AugAssign {
+                name: "out".to_string(),
+                op: "+=".to_string(),
+                value: HirExpr::Name {
+                    name: "part".to_string(),
+                    ty: Type::Str,
+                },
+            }],
+            elif_clauses: vec![],
+            else_body: None,
+        }],
+        else_body: None,
+    };
+
+    let mut emitter = RustEmitter::new();
+    let captured = emitter.capture_structured_stmts(|inner| inner.emit_stmt(&stmt));
+
+    let Some(RustStmt::While { body, .. }) = captured.first() else {
+        panic!("expected while stmt");
+    };
+    let Some(RustStmt::If { then_body, .. }) = body.first() else {
+        panic!("expected nested if stmt");
+    };
+    assert!(matches!(
+        then_body.first(),
+        Some(RustStmt::Expr(RustExpr::MethodCall { method, .. })) if method == "push_str"
+    ));
 }
 
 #[test]
