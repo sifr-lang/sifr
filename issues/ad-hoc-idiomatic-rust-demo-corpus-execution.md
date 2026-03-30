@@ -4016,6 +4016,46 @@ status: accepted_after_pass_1_and_pass_2
   - batch 91 was reviewed directly from the final validated Rust scaffolds and the observed module-cycle diagnostics for the paired fixtures
   - both review passes ended with no accepted blockers across the trio
 
+#### batch_92_optional_access_scaffolds
+
+status: accepted_after_pass_1_and_pass_2
+
+- scope:
+  - `demos/optional_arithmetic/negative_cases/optional_arithmetic_without_narrowing/idiomatic.rs`
+  - `demos/optional_indexing/negative_cases/option_method_without_narrowing/idiomatic.rs`
+  - `demos/indexing_rules/negative_cases/invalid_index_type/idiomatic.rs`
+- selection rationale:
+  - these three negatives are the next untouched type-safety family and each still used the generic placeholder despite enforcing direct user-facing checker diagnostics
+  - the batch keeps phase-26 optional arithmetic with the closely related phase-27 optional-method and index-type fixtures so the Tier 2 rewrite records one coherent "unsafe access before narrowing" family
+  - each paired fixture already exposes a stable `sifr check` message, so the Rust-side scaffold can be validated directly against observed output instead of guessing at the contract
+- priority tags:
+  - `tier-2-negative-case`: `optional_arithmetic/optional_arithmetic_without_narrowing`, `optional_indexing/option_method_without_narrowing`, `indexing_rules/invalid_index_type`
+  - `type-safety`: `optional_arithmetic/optional_arithmetic_without_narrowing`, `optional_indexing/option_method_without_narrowing`, `indexing_rules/invalid_index_type`
+  - `generic-placeholder-cleanup`: `optional_arithmetic/optional_arithmetic_without_narrowing`, `optional_indexing/option_method_without_narrowing`, `indexing_rules/invalid_index_type`
+- implementation summary:
+  - `optional_arithmetic`: replaced the generic stub with a scaffold describing arithmetic on `int | None` before narrowing and the resulting declared-return-type failure
+  - `optional_indexing`: replaced the generic stub with a scaffold describing method access on `list[int] | None` before narrowing
+  - `indexing_rules`: replaced the generic stub with a scaffold describing the deterministic rejection of `list[int]["0"]`
+- local validation completed:
+  - `rustfmt demos/optional_arithmetic/negative_cases/optional_arithmetic_without_narrowing/idiomatic.rs demos/optional_indexing/negative_cases/option_method_without_narrowing/idiomatic.rs demos/indexing_rules/negative_cases/invalid_index_type/idiomatic.rs`
+  - `rustc --edition=2021 demos/optional_arithmetic/negative_cases/optional_arithmetic_without_narrowing/idiomatic.rs -o /tmp/sifr-neg-optional-arithmetic && /tmp/sifr-neg-optional-arithmetic`
+  - `rustc --edition=2021 demos/optional_indexing/negative_cases/option_method_without_narrowing/idiomatic.rs -o /tmp/sifr-neg-option-method && /tmp/sifr-neg-option-method`
+  - `rustc --edition=2021 demos/indexing_rules/negative_cases/invalid_index_type/idiomatic.rs -o /tmp/sifr-neg-invalid-index && /tmp/sifr-neg-invalid-index`
+  - `cargo run -q -p sifr -- check demos/optional_arithmetic/negative_cases/optional_arithmetic_without_narrowing/main.sifr`
+  - `cargo run -q -p sifr -- check demos/optional_indexing/negative_cases/option_method_without_narrowing/main.sifr`
+  - `cargo run -q -p sifr -- check demos/indexing_rules/negative_cases/invalid_index_type/main.sifr`
+  - `scripts/run_all_tests.sh`
+- review artifacts:
+  - pass 1: `reviews/phase-ad-hoc-idiomatic-rust-demo-corpus-wave-3-batch-92-review-pass-1.md`
+  - pass 2: `reviews/phase-ad-hoc-idiomatic-rust-demo-corpus-wave-3-batch-92-review-pass-2.md`
+- review application summary:
+  - all three pass-1 reviews returned `OK`
+  - all three pass-2 reviews returned `OK`
+  - no follow-up code changes were needed after the targeted Tier 2 rewrite
+- reviewer tooling note:
+  - batch 92 was reviewed directly from the final validated Rust scaffolds and the observed optional-access and invalid-index diagnostics for the paired fixtures
+  - both review passes ended with no accepted blockers across the trio
+
 ### wave_4_corpus_consistency_pass
 
 status: pending

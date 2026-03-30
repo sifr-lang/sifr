@@ -1,12 +1,12 @@
-//! Negative-case Sifr fixture scaffold.
+//! Tier-2 Rust scaffold for the Sifr negative fixture in this folder.
 //!
-//! Source files in this folder:
-//! - `main.sifr`
+//! The paired Sifr program is rejected because arithmetic is attempted on
+//! `int | None` before narrowing and the function therefore fails its declared
+//! `-> int` return contract on every control-flow path.
 //!
-//! This folder exists to preserve an intentional diagnostic or compile-fail shape.
-//! There is no single runnable Rust program that is both idiomatic and preserves
-//! the same failure contract, so this file serves as the Rust-side scaffold.
-
-#![allow(dead_code)]
+//! This fixture exists to preserve deterministic optional-arithmetic diagnostics.
+//! The Rust-side analogue is a type-system rejection around `Option<i64>`
+//! narrowing, so this file documents the contract instead of fabricating a
+//! misleading compile-fail sample.
 
 fn main() {}
