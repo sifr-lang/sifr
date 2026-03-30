@@ -145,7 +145,7 @@ fn isclose(a: f64, b: f64, rel_tol: f64, abs_tol: f64) -> bool {
     }
     return diff <= rel_bound;
 }
-fn prod(data: &Vec<i64>) -> i64 {
+fn prod(data: &[i64]) -> i64 {
     let mut result: i64 = 1 as i64;
     for val in data.iter().copied() {
         result = result * val;
@@ -350,14 +350,14 @@ impl std::fmt::Display for StatisticsError {
     }
 }
 impl std::error::Error for StatisticsError {}
-fn _sum(data: &Vec<f64>) -> f64 {
+fn _sum(data: &[f64]) -> f64 {
     let mut total: f64 = 0.0 as f64;
     for val in data.iter().copied() {
         total = total + val;
     }
     return total;
 }
-fn mean(data: &Vec<f64>) -> Result<f64, StatisticsError> {
+fn mean(data: &[f64]) -> Result<f64, StatisticsError> {
     let count: i64 = data.len() as i64;
     if count == (0 as i64) {
         return Err(StatisticsError::new(
@@ -367,7 +367,7 @@ fn mean(data: &Vec<f64>) -> Result<f64, StatisticsError> {
     let total: f64 = _sum(data);
     return Ok(total / (count as f64));
 }
-fn variance(data: &Vec<f64>) -> Result<f64, StatisticsError> {
+fn variance(data: &[f64]) -> Result<f64, StatisticsError> {
     let n: i64 = data.len() as i64;
     if n < (2 as i64) {
         return Err(StatisticsError::new(
@@ -382,7 +382,7 @@ fn variance(data: &Vec<f64>) -> Result<f64, StatisticsError> {
     }
     return Ok(total / ((n - (1 as i64)) as f64));
 }
-fn pvariance(data: &Vec<f64>) -> Result<f64, StatisticsError> {
+fn pvariance(data: &[f64]) -> Result<f64, StatisticsError> {
     let n: i64 = data.len() as i64;
     if n == (0 as i64) {
         return Err(StatisticsError::new(
@@ -397,7 +397,7 @@ fn pvariance(data: &Vec<f64>) -> Result<f64, StatisticsError> {
     }
     return Ok(total / (n as f64));
 }
-fn stdev(data: &Vec<f64>) -> Result<f64, StatisticsError> {
+fn stdev(data: &[f64]) -> Result<f64, StatisticsError> {
     let n: i64 = data.len() as i64;
     if n < (2 as i64) {
         return Err(StatisticsError::new(
@@ -413,7 +413,7 @@ fn stdev(data: &Vec<f64>) -> Result<f64, StatisticsError> {
     let v: f64 = total / ((n - (1 as i64)) as f64);
     return Ok((v).sqrt());
 }
-fn pstdev(data: &Vec<f64>) -> Result<f64, StatisticsError> {
+fn pstdev(data: &[f64]) -> Result<f64, StatisticsError> {
     let n: i64 = data.len() as i64;
     if n == (0 as i64) {
         return Err(StatisticsError::new(
@@ -460,64 +460,25 @@ fn main() {
         let pv: f64 = pvariance(&data)?;
         let sd: f64 = stdev(&data)?;
         let pd: f64 = pstdev(&data)?;
-        println!(
-            "{}",
-            format!("{}{}", "mean = ".to_string(), format!("{}", m))
+        println!("mean = {m}");
+        assert_eq!(format!("mean = {m}"), "mean = 5");
+        println!("sample variance = {sv}");
+        assert_eq!(
+            format!("sample variance = {sv}"),
+            "sample variance = 4.571428571428571"
         );
-        assert!(
-            format!(
-                "{}",
-                format!("{}{}", "mean = ".to_string(), format!("{}", m))
-            ) == "mean = 5".to_string()
+        println!("population variance = {pv}");
+        assert_eq!(
+            format!("population variance = {pv}"),
+            "population variance = 4"
         );
-        println!(
-            "{}",
-            format!("{}{}", "sample variance = ".to_string(), format!("{}", sv))
+        println!("sample stdev = {sd}");
+        assert_eq!(
+            format!("sample stdev = {sd}"),
+            "sample stdev = 2.138089935299395"
         );
-        assert!(
-            format!(
-                "{}",
-                format!("{}{}", "sample variance = ".to_string(), format!("{}", sv))
-            ) == "sample variance = 4.571428571428571".to_string()
-        );
-        println!(
-            "{}",
-            format!(
-                "{}{}",
-                "population variance = ".to_string(),
-                format!("{}", pv)
-            )
-        );
-        assert!(
-            format!(
-                "{}",
-                format!(
-                    "{}{}",
-                    "population variance = ".to_string(),
-                    format!("{}", pv)
-                )
-            ) == "population variance = 4".to_string()
-        );
-        println!(
-            "{}",
-            format!("{}{}", "sample stdev = ".to_string(), format!("{}", sd))
-        );
-        assert!(
-            format!(
-                "{}",
-                format!("{}{}", "sample stdev = ".to_string(), format!("{}", sd))
-            ) == "sample stdev = 2.138089935299395".to_string()
-        );
-        println!(
-            "{}",
-            format!("{}{}", "population stdev = ".to_string(), format!("{}", pd))
-        );
-        assert!(
-            format!(
-                "{}",
-                format!("{}{}", "population stdev = ".to_string(), format!("{}", pd))
-            ) == "population stdev = 2".to_string()
-        );
+        println!("population stdev = {pd}");
+        assert_eq!(format!("population stdev = {pd}"), "population stdev = 2");
         {
             let __lhs = m;
             let __rhs = 5.0 as f64;
@@ -582,15 +543,10 @@ fn main() {
     })();
     if let Err(__sifr_try_err) = __sifr_try_res {
         let e = __sifr_try_err.clone();
-        println!(
-            "{}",
-            format!("{}{}", "statistics error: ".to_string(), e.message)
-        );
-        assert!(
-            format!(
-                "{}",
-                format!("{}{}", "statistics error: ".to_string(), e.message)
-            ) == "All assertions passed!".to_string()
+        println!("statistics error: {}", e.message);
+        assert_eq!(
+            format!("statistics error: {}", e.message),
+            "All assertions passed!"
         );
     }
     assert!(

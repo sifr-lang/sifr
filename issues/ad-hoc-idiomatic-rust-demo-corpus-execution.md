@@ -4264,6 +4264,45 @@ status: accepted_after_pass_1_and_pass_2
 
 status: pending
 
+#### batch_98_slice_and_format_cleanup
+
+status: accepted_after_pass_1_and_pass_2
+
+- scope:
+  - `demos/test_helpers/idiomatic.rs`
+  - `demos/variance_rules/idiomatic.rs`
+  - `demos/stdlib_error_types/idiomatic.rs`
+- selection rationale:
+  - these three already-reviewed demos are a clean first wave-4 sweep slice because they are runnable under the authoritative validation lane and still contained the exact consistency anti-patterns called out in the phase plan
+  - the batch focuses on low-risk cleanup only: converting `&Vec<T>` APIs to slices and collapsing redundant `format!("{}", ...)` style wrappers
+  - larger candidates such as `text_and_statistics` were intentionally left out of this batch because their paired Sifr demo is not currently a clean targeted-run validation target in this workspace
+- priority tags:
+  - `wave-4-consistency`
+  - `slice-api-cleanup`
+  - `format-wrapper-cleanup`
+- implementation summary:
+  - `test_helpers`: changed statistics helpers from `&Vec<T>` to slices and replaced nested formatting chains with direct `println!` / `assert_eq!(format!(...))` expressions
+  - `variance_rules`: changed `sum_items` to accept `&[i64]` and used a direct slice call in `main`
+  - `stdlib_error_types`: simplified integer formatting from `format!("{}", value as i64)` to `(value as i64).to_string()`
+- local validation completed:
+  - `rustfmt demos/variance_rules/idiomatic.rs demos/stdlib_error_types/idiomatic.rs demos/test_helpers/idiomatic.rs`
+  - `rustc --edition=2021 demos/variance_rules/idiomatic.rs -o /tmp/sifr-wave4-variance && /tmp/sifr-wave4-variance`
+  - `rustc --edition=2021 demos/stdlib_error_types/idiomatic.rs -o /tmp/sifr-wave4-stdlib-errors && /tmp/sifr-wave4-stdlib-errors`
+  - `rustc --edition=2021 demos/test_helpers/idiomatic.rs -o /tmp/sifr-wave4-test-helpers && /tmp/sifr-wave4-test-helpers`
+  - `cargo run -q -p sifr -- run demos/variance_rules/main.sifr`
+  - `cargo run -q -p sifr -- run demos/stdlib_error_types/main.sifr`
+  - `cargo run -q -p sifr -- run demos/test_helpers/main.sifr`
+  - `scripts/run_all_tests.sh`
+- review artifacts:
+  - pass 1: `reviews/phase-ad-hoc-idiomatic-rust-demo-corpus-wave-4-batch-98-review-pass-1.md`
+  - pass 2: `reviews/phase-ad-hoc-idiomatic-rust-demo-corpus-wave-4-batch-98-review-pass-2.md`
+- review application summary:
+  - all three pass-1 reviews returned `OK`
+  - all three pass-2 reviews returned `OK`
+  - no follow-up code changes were needed after the low-risk cleanup pass
+- reviewer tooling note:
+  - batch 98 was reviewed against the final validated Rust outputs and the unchanged paired Sifr demo outputs for the three runnable demos
+
 ### wave_5_phase_closeout
 
 status: pending

@@ -472,6 +472,8 @@ Goals:
   - repeated `format!("{}", ...)` wrappers
   - redundant `.to_string()` chains
   - emitted-style ceremony around standard Rust collection operations
+- `batch_98_slice_and_format_cleanup` selected as the first wave-4 consistency batch because `test_helpers`, `variance_rules`, and `stdlib_error_types` were already validated runnable demos that still carried the exact low-risk anti-patterns called out in the phase plan: `&Vec<T>` APIs and redundant formatting ceremony
+- `batch_98_slice_and_format_cleanup` completed local validation and ended review with no accepted blockers; the targeted files now prefer slice parameters and direct formatting while preserving the same Rust output and paired Sifr demo behavior
 
 ### wave_5_phase_closeout
 

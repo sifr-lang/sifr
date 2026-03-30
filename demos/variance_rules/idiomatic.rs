@@ -57,7 +57,7 @@ impl std::fmt::Display for Employee {
     }
 }
 
-fn sum_items(values: &Vec<i64>) -> i64 {
+fn sum_items(values: &[i64]) -> i64 {
     let mut total: i64 = 0 as i64;
     for value in values.iter().copied() {
         total = total + value;
@@ -69,5 +69,5 @@ fn main() {
     println!("m26_2 inheritance and variance corrections demo:");
     let emp: Employee = Employee::new(11 as i64, "Lin".to_string(), 4 as i64);
     println!("{}", emp.person.name);
-    println!("{}", sum_items(&vec![1 as i64, 2 as i64, 3 as i64]));
+    println!("{}", sum_items(&[1 as i64, 2 as i64, 3 as i64]));
 }
