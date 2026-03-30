@@ -1,32 +1,45 @@
+use super::assignment_widening::reconcile_optional_reassignment;
 use super::binding_mutability::ensure_mutable_parameter_binding;
 use super::builtin_calls::callable_builtin_element_type;
 use super::classes::collect_literal_coverage;
-use super::assignment_widening::reconcile_optional_reassignment;
-use super::container_literal_specialization::{apply_container_specialization_patches, type_contains_unknown_or_any, validate_subscript_assignment_target, validate_subscript_augassign_target};
+use super::container_literal_specialization::{
+    apply_container_specialization_patches, type_contains_unknown_or_any,
+    validate_subscript_assignment_target, validate_subscript_augassign_target,
+};
+use super::control_flow_conditions::validate_control_flow_condition;
 use super::diagnostics::{collect_raise_error_types, format_type_name, is_valid_error_type};
 use super::expressions::{lower_expr, lower_star_unpack_assign, lower_tuple_unpack_assign};
 use super::for_loop_safety::{is_collection_backed_iter_source, loop_body_mutates_iter_source};
+use super::flow_helpers::{expr_to_literal_value, then_body_always_exits};
 use super::function_flow::infer_function_return_type;
 use super::len_aliases::record_len_alias_fact;
-use super::nonlocal_support::{collect_declared_nonlocals, hir_body_calls_function, lower_nonlocal, should_rebind_simple_name};
+use super::nonlocal_support::{
+    collect_declared_nonlocals, hir_body_calls_function, lower_nonlocal, should_rebind_simple_name,
+};
 use super::numeric_sentinels::{
     apply_numeric_sentinel_patches, domain_typed_sentinel_expr, numeric_domain_for_type,
     numeric_sentinel_kind,
 };
-use super::sequence_guard_detection::{detect_false_exit_sequence_guards, detect_range_sequence_guards, detect_true_sequence_guards, detect_while_sequence_guards};
+use super::sequence_guard_detection::{
+    detect_false_exit_sequence_guards, detect_range_sequence_guards, detect_true_sequence_guards,
+    detect_while_sequence_guards,
+};
 use super::sequence_guard_updates::{
-    merge_exhaustive_branch_sequence_guards, maybe_record_dict_assignment_guard,
+    maybe_record_dict_assignment_guard, merge_exhaustive_branch_sequence_guards,
 };
 use super::sequence_pointers::record_sequence_pointer_fact;
 use super::sequence_shapes::sequence_shape_fact;
-use super::typing_and_functions::{ast_convention_to_param, register_local_function_signature, register_local_function_symbol, resolve_annotation_expr};
+use super::typing_and_functions::{
+    ast_convention_to_param, register_local_function_signature, register_local_function_symbol,
+    resolve_annotation_expr,
+};
 use super::LowerCtx;
 use crate::hir_nodes::{
     HirExceptHandler, HirExpr, HirFunction, HirIteratorOp, HirMatchArm, HirParam, HirPattern,
     HirStmt, MethodKind,
 };
 use sifr_python_ast::{
-    BoolOp, CmpOp, ExceptHandler, Expr, Number, Operator, Pattern, Singleton, Stmt, StmtAnnAssign,
+    BoolOp, CmpOp, ExceptHandler, Expr, Operator, Pattern, Singleton, Stmt, StmtAnnAssign,
     StmtAssign, StmtAugAssign, StmtFor, StmtIf, StmtMatch, StmtReturn, StmtWhile, UnaryOp,
 };
 use sifr_type_system::infer::resolve_type_annotation;
@@ -1189,7 +1202,10 @@ fn resolve_object_field_type(ctx: &LowerCtx, object_name: &str, field_name: &str
                     .iter()
                     .find(|(name, _)| name == field_name)
                     .map(|(_, ty)| ty.clone())
-            } else if let Type::Class { name: class_name, .. } = obj_ty {
+            } else if let Type::Class {
+                name: class_name, ..
+            } = obj_ty
+            {
                 ctx.class_types.get(class_name).and_then(|class_ty| {
                     if let Type::Class { fields, .. } = class_ty {
                         fields
@@ -1698,6 +1714,7 @@ pub(super) fn lower_if(
     let narrowing_cond = detect_narrowing_condition(&if_stmt.test, ctx);
 
     let condition = lower_expr(&if_stmt.test, ctx)?;
+    validate_control_flow_condition(&condition, "if", ctx);
 
     let saved_state = ctx.scope.save_narrowing_state();
     let saved_moved = ctx.scope.save_moved_state();
@@ -1822,12 +1839,6 @@ pub(super) fn lower_if(
         else_body,
     })
 }
-/// Check if a block of statements always exits (return, break, continue, raise).
-/// Used for early-return narrowing: `if x is None: return` narrows x after the if.
-pub(super) fn then_body_always_exits(stmts: &[HirStmt]) -> bool {
-    crate::cfg::flow_facts(stmts).always_exits()
-}
-
 /// Detect a narrowing condition from an if-test expression.
 pub(super) fn detect_narrowing_condition(
     expr: &Expr,
@@ -1948,21 +1959,6 @@ pub(super) fn detect_narrowing_condition(
     }
 }
 
-/// Convert an AST expression to a `LiteralValue` (for equality narrowing).
-pub(super) fn expr_to_literal_value(expr: &Expr) -> Option<sifr_type_system::LiteralValue> {
-    match expr {
-        Expr::StringLiteral(s) => Some(sifr_type_system::LiteralValue::Str(
-            s.value.to_str().to_string(),
-        )),
-        Expr::NumberLiteral(num) => match &num.value {
-            Number::Int(i) => i.as_i64().map(sifr_type_system::LiteralValue::Int),
-            _ => None,
-        },
-        Expr::BooleanLiteral(b) => Some(sifr_type_system::LiteralValue::Bool(b.value)),
-        _ => None,
-    }
-}
-
 /// Apply narrowing to the scope based on a condition.
 pub(super) fn apply_narrowing(ctx: &mut LowerCtx, condition: &NarrowingCondition, is_true: bool) {
     match condition {
@@ -2003,6 +1999,7 @@ pub(super) fn lower_while(
 ) -> Option<HirStmt> {
     let narrowing_cond = detect_narrowing_condition(&while_stmt.test, ctx);
     let condition = lower_expr(&while_stmt.test, ctx)?;
+    validate_control_flow_condition(&condition, "while", ctx);
     let saved_narrowing_state = ctx.scope.save_narrowing_state();
     let saved_sequence_guards = ctx.save_sequence_guards();
     if let Some(ref cond) = narrowing_cond {
@@ -2158,7 +2155,11 @@ pub(super) fn lower_for(
     ctx.loop_depth -= 1;
     ctx.scope.pop();
     ctx.restore_sequence_guards(&saved_sequence_guards);
-    super::append_growth_shapes::record_append_growth_sequence_shape_fact(for_stmt, &target_name, ctx);
+    super::append_growth_shapes::record_append_growth_sequence_shape_fact(
+        for_stmt,
+        &target_name,
+        ctx,
+    );
     if let Some(source_name) = iter_source_name.as_deref() {
         if is_collection_backed_iter_source(&iter_source_ty)
             && loop_body_mutates_iter_source(&body, source_name)

@@ -12,7 +12,7 @@ use std::collections::HashMap;
 use super::classes::lower_expr_simple;
 use super::diagnostics::{format_type_name, is_valid_error_type};
 use super::expressions::lower_expr;
-use super::function_flow::infer_function_return_type;
+use super::function_flow::{collect_yield_types, infer_function_return_type};
 use super::nonlocal_support::collect_declared_nonlocals;
 use super::statements::lower_stmts;
 use super::{substitute_type_vars, LowerCtx};
@@ -775,6 +775,28 @@ pub(super) fn lower_function(func: &StmtFunctionDef, ctx: &mut LowerCtx) -> Opti
 
     ctx.exit_function_scope();
 
+    let has_yield = !collect_yield_types(&body).is_empty();
+    if !has_yield && requires_exhaustive_return_annotation(func, ft.return_type.as_ref()) {
+        match std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {
+            crate::cfg::flow_facts(&body).always_exits()
+        })) {
+            Ok(false) => {
+                ctx.error(format!(
+                    "function '{}' must return a value of type '{}' on all control-flow paths",
+                    func.name,
+                    ft.return_type.display_name()
+                ));
+            }
+            Ok(true) => {}
+            Err(_) => {
+                ctx.warn(format!(
+                    "skipped exhaustive-return validation for '{}' due to invalid internal control-flow graph shape",
+                    func.name
+                ));
+            }
+        }
+    }
+
     let inferred_return_type = infer_function_return_type(
         func.name.as_ref(),
         ft.return_type.as_ref(),
@@ -817,4 +839,17 @@ pub(super) fn lower_function(func: &StmtFunctionDef, ctx: &mut LowerCtx) -> Opti
         decorators,
         type_params,
     })
+}
+
+fn requires_exhaustive_return_annotation(func: &StmtFunctionDef, return_type: &Type) -> bool {
+    if func.returns.is_none() {
+        return false;
+    }
+    match return_type.resolve_alias() {
+        Type::None => false,
+        Type::Union(members) => !members
+            .iter()
+            .any(|member| matches!(member.resolve_alias(), Type::None)),
+        _ => true,
+    }
 }

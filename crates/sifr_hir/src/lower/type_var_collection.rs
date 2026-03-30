@@ -1,0 +1,67 @@
+use sifr_type_system::Type;
+
+/// Collect all `TypeVar` names used in a type.
+pub(super) fn collect_type_vars(ty: &Type, vars: &mut Vec<String>) {
+    match ty {
+        Type::TypeVar(name) => {
+            if !vars.contains(name) {
+                vars.push(name.clone());
+            }
+        }
+        Type::List(elem) | Type::Set(elem) | Type::Iterable(elem) | Type::Iterator(elem) => {
+            collect_type_vars(elem, vars);
+        }
+        Type::Dict(k, v) => {
+            collect_type_vars(k, vars);
+            collect_type_vars(v, vars);
+        }
+        Type::Tuple(elems) => {
+            for e in elems {
+                collect_type_vars(e, vars);
+            }
+        }
+        Type::Union(members) => {
+            for m in members {
+                collect_type_vars(m, vars);
+            }
+        }
+        Type::Result(ok, err) => {
+            collect_type_vars(ok, vars);
+            collect_type_vars(err, vars);
+        }
+        Type::Alias {
+            type_args, body, ..
+        } => {
+            for arg in type_args {
+                collect_type_vars(arg, vars);
+            }
+            collect_type_vars(body, vars);
+        }
+        Type::Function(ft) => {
+            for (_, param_ty, _) in &ft.params {
+                collect_type_vars(param_ty, vars);
+            }
+            collect_type_vars(&ft.return_type, vars);
+        }
+        Type::Class {
+            fields, methods, ..
+        } => {
+            for (_, field_ty) in fields {
+                collect_type_vars(field_ty, vars);
+            }
+            for (_, method_ft) in methods {
+                for (_, param_ty, _) in &method_ft.params {
+                    collect_type_vars(param_ty, vars);
+                }
+                collect_type_vars(&method_ft.return_type, vars);
+            }
+        }
+        Type::Callable(params, _, ret) => {
+            for p in params {
+                collect_type_vars(p, vars);
+            }
+            collect_type_vars(ret, vars);
+        }
+        _ => {}
+    }
+}

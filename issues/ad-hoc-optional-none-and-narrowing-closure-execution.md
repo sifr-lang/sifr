@@ -557,6 +557,8 @@ status: in progress
     - review: `reviews/ad-hoc-optional-none-wave-r3-run-error-majority-review-pass1.md`
   - reviewer gate:
     - pass-1 verdict: `not ready` until decomposition/guardrails are explicit (applied in updated plan artifact); implementation wave start is now pending commit/PR of this planning slice.
+  - reviewer follow-up:
+    - pass-2 review handoff was launched via `.cursor/skills/talk-to-claude/SKILL.md` with the required 40-minute wait window; reviewer output file is still pending (no artifact emitted yet).
 - 2026-03-30 local iteration (wave-R3b1 codegen-hardening slice):
   - root cause:
     - residual run errors included direct codegen parity defects independent of frontend semantics:
@@ -582,6 +584,41 @@ status: in progress
     - `0463_island_perimeter`: no `+==` emission in generated Rust; fixture now fails on residual return-completeness (`E0308`) rather than augassign render defect.
     - `0846_hand_of_straights`: emitted heapq helper call names are canonical (`heapify`/`heappop`), and unresolved compat helper-name defect is closed; fixture remains blocked by bool-condition semantics (`E0308`).
     - `0459_repeated_substring_pattern`: previous compile-stage contains borrow failure is removed; fixture now executes and exposes a separate runtime-assertion mismatch path.
+- 2026-03-30 local iteration (wave-R3a semantic-gate slice):
+  - root cause:
+    - a majority subset of residual run-stage failures were semantic-contract gaps that should have been diagnosed at `check` stage:
+      - missing guaranteed return on non-`None` return contracts,
+      - duplicate module-level function definitions,
+      - non-bool numeric condition usage in `if`/`while`.
+  - compiler changes:
+    - `crates/sifr_hir/src/lower/typing_and_functions.rs`:
+      - enforce exhaustive return-path diagnostics for explicitly annotated non-`None` function returns,
+      - skip generator functions for this check and guard CFG-truth query with panic boundary to avoid internal compiler crash paths.
+    - `crates/sifr_hir/src/lower/mod.rs`:
+      - enforce duplicate module-function definition diagnostics during registration and suppress lowering of duplicate redefinitions.
+    - `crates/sifr_hir/src/lower/statements.rs`:
+      - enforce numeric condition contract diagnostics (`if`/`while` conditions must be bool or explicit collection/string truthiness forms).
+    - decomposition/support files:
+      - `crates/sifr_hir/src/lower/control_flow_conditions.rs`
+      - `crates/sifr_hir/src/lower/flow_helpers.rs`
+      - `crates/sifr_hir/src/lower/module_function_registry.rs`
+      - `crates/sifr_hir/src/lower/type_var_collection.rs`
+    - tests:
+      - `crates/sifr_hir/src/lower/expressions_tests.rs` now includes diagnostics coverage for numeric condition rejection, exhaustive return enforcement, and duplicate module-definition rejection.
+  - tests/validation:
+    - `cargo test -q -p sifr_hir condition_rejects` -> pass
+    - `cargo test -q -p sifr_hir exhaustive_returns` -> pass
+    - `cargo test -q -p sifr_hir duplicate_module_function_definition_reports_error` -> pass
+    - `cargo test -q -p sifr --test e2e test_e2e_fail` -> pass
+    - `scripts/run_all_tests.sh --profile quick` -> pass
+  - targeted fixture signal:
+    - `0167`, `0231`, `0367`, `0416`, `0463`, and `0846` now fail deterministically at `check` stage with semantic diagnostics instead of late Rust build failures.
+  - probe artifact:
+    - `verification/leetcode/run_error_quartet_plus_baseline24_probe_20260330_wave_r3a_semantic_gate.json`
+  - probe delta vs wave-R2 baseline-24 cohort:
+    - `PASS=8` (stable),
+    - `CHECK_ERROR=6` (new semantic-gate diagnostics),
+    - `RUN_ERROR=10` (down from `16` in wave-R2 probe).
 
 - Validation to record:
   - post-wave full corpus rerun
