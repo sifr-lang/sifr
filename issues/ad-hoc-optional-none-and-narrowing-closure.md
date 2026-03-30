@@ -44,6 +44,7 @@ The goal is to make intended Sifr Optional semantics precise enough that valid g
 - `issues/ad-hoc-optional-none-and-narrowing-wave9e-mutability-boundary-plan-2026-03-29.md`
 - `issues/ad-hoc-optional-none-and-narrowing-approach-full-review-2026-03-30.md`
 - `issues/ad-hoc-optional-none-and-narrowing-majority-root-cause-2026-03-30.md`
+- `issues/ad-hoc-optional-none-and-narrowing-wave-r3-run-error-majority-plan-2026-03-30.md`
 - `reviews/optional-none-direct-pass1.md`
 - `reviews/optional-none-category-implementation-readiness-claude.md`
 - `reviews/ad-hoc-optional-none-wave7-9-plan-review-pass1.md`
@@ -56,6 +57,7 @@ The goal is to make intended Sifr Optional semantics precise enough that valid g
 - `reviews/ad-hoc-optional-none-wave9e-mutability-boundary-review-pass1.md`
 - `reviews/ad-hoc-optional-none-approach-full-review-pass1.md`
 - `reviews/ad-hoc-optional-none-majority-root-cause-review-pass1.md`
+- `reviews/ad-hoc-optional-none-wave-r3-run-error-majority-review-pass1.md`
 - `internal_docs/architecture.md`
 
 Implementation hotspots:
@@ -178,6 +180,7 @@ Important operational note:
   - mutability-boundary canonicalization batch-5 rewrote `0026`, `0027`, `0080`, and `0448` to explicit Sifr `mut` boundary forms and removed tuple-swap unsupported syntax in `0027`
   - wave-R1 run-stage compiler closure removed production codegen panics for the remaining quartet (`0041`, `0081`, `0791`, `2554`) by adding structured lowering coverage for chained compares, nested `SubscriptAugAssign`, and nested `Delete`; these fixtures now fail with ordinary Rust type diagnostics (`E0308`) instead of internal compiler panics
   - wave-R2 run-stage compiler closure resolved the dominant Optional-bridge E0308 subset in the probe cohort by normalizing Option/scalar compare bridging, non-name Optional truthiness lowering, and nested string-augassign lowering parity; `8` prior run-error fixtures now pass in probe scope
+  - wave-R3 majority run-error plan and reviewer pass-1 are now recorded; implementation gate remains open pending reviewer-requested decomposition/guardrail adjustments tracked in the plan artifact
   - residual canary fixtures for container and recursive Optional boundary lanes were canonicalized to explicit Sifr-safe forms (`0004`, `0013`, `0023`, `0024`, `0104`, `0115`, `0133`, `0206`)
   - residual run-stability fixtures were canonicalized to remove codegen-hostile shapes (`0010`, `0028`, `0097`, `0309`, `0678`)
 - validation evidence:
