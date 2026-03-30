@@ -4056,6 +4056,46 @@ status: accepted_after_pass_1_and_pass_2
   - batch 92 was reviewed directly from the final validated Rust scaffolds and the observed optional-access and invalid-index diagnostics for the paired fixtures
   - both review passes ended with no accepted blockers across the trio
 
+#### batch_93_recursive_traversal_scaffolds
+
+status: accepted_after_pass_1_and_pass_2
+
+- scope:
+  - `demos/generator_break_else/negative_cases/idiomatic.rs`
+  - `demos/recursive_calls/negative_cases/recursive_call_typo/idiomatic.rs`
+  - `demos/recursive_for_else/negative_cases/idiomatic.rs`
+- selection rationale:
+  - these three negatives are the next untouched semantic-analysis family and all still used the generic placeholder despite depending on reachable traversal through nested control flow
+  - the batch keeps the phase-21 generator and `for`-`else` negatives with the closely related phase-24 recursive typo fixture so the Tier 2 rewrite records one coherent "reachable nested path must still diagnose" contract family
+  - each paired fixture already exposes a stable `sifr check` message, so the Rust-side scaffold can be validated directly against observed output instead of inventing a synthetic Rust error
+- priority tags:
+  - `tier-2-negative-case`: `generator_break_else/negative_cases`, `recursive_calls/recursive_call_typo`, `recursive_for_else/negative_cases`
+  - `semantic-traversal`: `generator_break_else/negative_cases`, `recursive_calls/recursive_call_typo`, `recursive_for_else/negative_cases`
+  - `generic-placeholder-cleanup`: `generator_break_else/negative_cases`, `recursive_calls/recursive_call_typo`, `recursive_for_else/negative_cases`
+- implementation summary:
+  - `generator_break_else`: replaced the generic stub with a scaffold describing the reachable `except`-branch yield of undefined `missing_value` and the invalid generator return annotation
+  - `recursive_calls`: replaced the generic stub with a scaffold describing the reachable recursive typo `reccurse(...)` under `if n > 0`
+  - `recursive_for_else`: replaced the generic stub with a scaffold describing the reachable `for`-`else` recursive typo `recc(...)`
+- local validation completed:
+  - `rustfmt demos/generator_break_else/negative_cases/idiomatic.rs demos/recursive_calls/negative_cases/recursive_call_typo/idiomatic.rs demos/recursive_for_else/negative_cases/idiomatic.rs`
+  - `rustc --edition=2021 demos/generator_break_else/negative_cases/idiomatic.rs -o /tmp/sifr-neg-generator-break-else && /tmp/sifr-neg-generator-break-else`
+  - `rustc --edition=2021 demos/recursive_calls/negative_cases/recursive_call_typo/idiomatic.rs -o /tmp/sifr-neg-recursive-call-typo && /tmp/sifr-neg-recursive-call-typo`
+  - `rustc --edition=2021 demos/recursive_for_else/negative_cases/idiomatic.rs -o /tmp/sifr-neg-recursive-for-else && /tmp/sifr-neg-recursive-for-else`
+  - `cargo run -q -p sifr -- check demos/generator_break_else/negative_cases/undefined_in_except_yield.sifr`
+  - `cargo run -q -p sifr -- check demos/recursive_calls/negative_cases/recursive_call_typo/main.sifr`
+  - `cargo run -q -p sifr -- check demos/recursive_for_else/negative_cases/typo_in_for_else_recursive_call.sifr`
+  - `scripts/run_all_tests.sh`
+- review artifacts:
+  - pass 1: `reviews/phase-ad-hoc-idiomatic-rust-demo-corpus-wave-3-batch-93-review-pass-1.md`
+  - pass 2: `reviews/phase-ad-hoc-idiomatic-rust-demo-corpus-wave-3-batch-93-review-pass-2.md`
+- review application summary:
+  - all three pass-1 reviews returned `OK`
+  - all three pass-2 reviews returned `OK`
+  - no follow-up code changes were needed after the targeted Tier 2 rewrite
+- reviewer tooling note:
+  - batch 93 was reviewed directly from the final validated Rust scaffolds and the observed generator-shape and undefined-name diagnostics for the paired fixtures
+  - both review passes ended with no accepted blockers across the trio
+
 ### wave_4_corpus_consistency_pass
 
 status: pending

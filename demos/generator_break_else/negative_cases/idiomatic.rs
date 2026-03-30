@@ -1,12 +1,13 @@
-//! Negative-case Sifr fixture scaffold.
+//! Tier-2 Rust scaffold for the Sifr negative fixture in this folder.
 //!
-//! Source files in this folder:
-//! - `undefined_in_except_yield.sifr`
+//! The paired Sifr program is rejected because the generator body remains fully
+//! reachable through `try`/`except`: the function is declared as `-> list[int]`
+//! even though it yields values, and the `except` arm also yields an undefined
+//! name `missing_value`.
 //!
-//! This folder exists to preserve an intentional diagnostic or compile-fail shape.
-//! There is no single runnable Rust program that is both idiomatic and preserves
-//! the same failure contract, so this file serves as the Rust-side scaffold.
-
-#![allow(dead_code)]
+//! This fixture exists to preserve traversal completeness for reachable
+//! generator branches inside exception handling. The Rust-side analogue would
+//! require both iterator-shape lowering and name-resolution failure, so this
+//! file records the contract instead of manufacturing a misleading Rust error.
 
 fn main() {}
