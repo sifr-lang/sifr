@@ -4096,6 +4096,46 @@ status: accepted_after_pass_1_and_pass_2
   - batch 93 was reviewed directly from the final validated Rust scaffolds and the observed generator-shape and undefined-name diagnostics for the paired fixtures
   - both review passes ended with no accepted blockers across the trio
 
+#### batch_94_decimal_policy_scaffolds
+
+status: accepted_after_pass_1_and_pass_2
+
+- scope:
+  - `demos/decimal_diagnostics/negative_cases/decimal_round_scale_out_of_range/idiomatic.rs`
+  - `demos/decimal_verification/negative_cases/forbidden_float_conversion/idiomatic.rs`
+  - `demos/decimal_verification/negative_cases/forbidden_mixed_arithmetic/idiomatic.rs`
+- selection rationale:
+  - these three negatives are the next untouched decimal-specific family and all still used the generic placeholder despite enforcing stable policy-level diagnostics owned by the decimal checker
+  - the batch keeps the phase-28 scale-bound, exact-construction, and mixed-arithmetic fixtures together so the Tier 2 rewrite records one coherent decimal-policy contract family
+  - each paired fixture already exposes a stable code-bearing `sifr check` message, so the Rust-side scaffold can be validated directly against observed output instead of inferring the contract
+- priority tags:
+  - `tier-2-negative-case`: `decimal_round_scale_out_of_range`, `forbidden_float_conversion`, `forbidden_mixed_arithmetic`
+  - `decimal-policy`: `decimal_round_scale_out_of_range`, `forbidden_float_conversion`, `forbidden_mixed_arithmetic`
+  - `generic-placeholder-cleanup`: `decimal_round_scale_out_of_range`, `forbidden_float_conversion`, `forbidden_mixed_arithmetic`
+- implementation summary:
+  - `decimal_round_scale_out_of_range`: replaced the generic stub with a scaffold describing the explicit `0..=28` bound and deterministic `[E2507]` diagnostic
+  - `forbidden_float_conversion`: replaced the generic stub with a scaffold describing the exact-construction rule rejecting `Decimal(float_value)` with `[E2505]`
+  - `forbidden_mixed_arithmetic`: replaced the generic stub with a scaffold describing the explicit-conversion requirement when mixing `decimal` and `bigdecimal`, with `[E2504]`
+- local validation completed:
+  - `rustfmt demos/decimal_diagnostics/negative_cases/decimal_round_scale_out_of_range/idiomatic.rs demos/decimal_verification/negative_cases/forbidden_float_conversion/idiomatic.rs demos/decimal_verification/negative_cases/forbidden_mixed_arithmetic/idiomatic.rs`
+  - `rustc --edition=2021 demos/decimal_diagnostics/negative_cases/decimal_round_scale_out_of_range/idiomatic.rs -o /tmp/sifr-neg-decimal-round-scale && /tmp/sifr-neg-decimal-round-scale`
+  - `rustc --edition=2021 demos/decimal_verification/negative_cases/forbidden_float_conversion/idiomatic.rs -o /tmp/sifr-neg-decimal-float && /tmp/sifr-neg-decimal-float`
+  - `rustc --edition=2021 demos/decimal_verification/negative_cases/forbidden_mixed_arithmetic/idiomatic.rs -o /tmp/sifr-neg-decimal-mixed && /tmp/sifr-neg-decimal-mixed`
+  - `cargo run -q -p sifr -- check demos/decimal_diagnostics/negative_cases/decimal_round_scale_out_of_range/main.sifr`
+  - `cargo run -q -p sifr -- check demos/decimal_verification/negative_cases/forbidden_float_conversion/main.sifr`
+  - `cargo run -q -p sifr -- check demos/decimal_verification/negative_cases/forbidden_mixed_arithmetic/main.sifr`
+  - `scripts/run_all_tests.sh`
+- review artifacts:
+  - pass 1: `reviews/phase-ad-hoc-idiomatic-rust-demo-corpus-wave-3-batch-94-review-pass-1.md`
+  - pass 2: `reviews/phase-ad-hoc-idiomatic-rust-demo-corpus-wave-3-batch-94-review-pass-2.md`
+- review application summary:
+  - all three pass-1 reviews returned `OK`
+  - all three pass-2 reviews returned `OK`
+  - no follow-up code changes were needed after the targeted Tier 2 rewrite
+- reviewer tooling note:
+  - batch 94 was reviewed directly from the final validated Rust scaffolds and the observed decimal policy diagnostics for the paired fixtures
+  - both review passes ended with no accepted blockers across the trio
+
 ### wave_4_corpus_consistency_pass
 
 status: pending

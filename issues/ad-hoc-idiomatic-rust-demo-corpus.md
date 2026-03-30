@@ -448,6 +448,8 @@ Goals:
 - `batch_92_optional_access_scaffolds` completed local validation and ended review with no accepted blockers; all three placeholders were replaced with fixture-specific Tier 2 scaffolds, and the paired Sifr fixtures still fail with the intended optional-access and invalid-index diagnostics
 - `batch_93_recursive_traversal_scaffolds` selected as the next wave-3 normalization batch because three remaining semantic-analysis negatives still used the generic placeholder even though they all exercise reachable traversal through nested control flow: one generator `except` branch and two recursive typo paths
 - `batch_93_recursive_traversal_scaffolds` completed local validation and ended review with no accepted blockers; all three placeholders were replaced with fixture-specific Tier 2 scaffolds, and the paired Sifr fixtures still fail with the intended generator-shape and undefined-name diagnostics
+- `batch_94_decimal_policy_scaffolds` selected as the next wave-3 normalization batch because the remaining phase-28 decimal negatives still used the generic placeholder despite sharing one contract family: exact decimal construction, decimal scale bounds, and decimal/bigdecimal arithmetic policy must stay explicit on the Rust side
+- `batch_94_decimal_policy_scaffolds` completed local validation and ended review with no accepted blockers; all three placeholders were replaced with fixture-specific Tier 2 scaffolds, and the paired Sifr fixtures still fail with the intended `[E2504]`, `[E2505]`, and `[E2507]` decimal diagnostics
 
 ### wave_4_corpus_consistency_pass
 
