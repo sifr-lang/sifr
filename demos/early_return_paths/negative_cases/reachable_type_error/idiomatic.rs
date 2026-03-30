@@ -1,12 +1,16 @@
-//! Negative-case Sifr fixture scaffold.
+//! Tier-2 Rust scaffold for the Sifr negative fixture in `main.sifr`.
 //!
-//! Source files in this folder:
-//! - `main.sifr`
+//! The paired Sifr program is rejected because a non-exiting `None` branch leaves
+//! the function trying to return `Option<int>` where `int` is required.
 //!
-//! This folder exists to preserve an intentional diagnostic or compile-fail shape.
-//! There is no single runnable Rust program that is both idiomatic and preserves
-//! the same failure contract, so this file serves as the Rust-side scaffold.
-
-#![allow(dead_code)]
+//! A direct Rust analogue would also be rejected:
+//! ```compile_fail
+//! fn pick_value(maybe: Option<i64>) -> i64 {
+//!     if maybe.is_none() {
+//!         println!("missing value");
+//!     }
+//!     maybe
+//! }
+//! ```
 
 fn main() {}

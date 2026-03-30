@@ -1,12 +1,16 @@
-//! Negative-case Sifr fixture scaffold.
+//! Tier-2 Rust scaffold for the Sifr negative fixture in `main.sifr`.
 //!
-//! Source files in this folder:
-//! - `main.sifr`
+//! The paired Sifr program is rejected because a reachable branch returns `&str`
+//! from a function declared as `int -> int`.
 //!
-//! This folder exists to preserve an intentional diagnostic or compile-fail shape.
-//! There is no single runnable Rust program that is both idiomatic and preserves
-//! the same failure contract, so this file serves as the Rust-side scaffold.
-
-#![allow(dead_code)]
+//! A direct Rust analogue would also be rejected:
+//! ```compile_fail
+//! fn safe(seed: i64) -> i64 {
+//!     if seed > 0 {
+//!         return seed;
+//!     }
+//!     "bad"
+//! }
+//! ```
 
 fn main() {}

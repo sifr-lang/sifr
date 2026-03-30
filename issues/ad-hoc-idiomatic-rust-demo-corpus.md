@@ -421,12 +421,15 @@ Progress update (`2026-03-29`):
 
 ### wave_3_fixture_and_negative_case_normalization
 
-status: pending
+status: in_progress
 
 Goals:
 
 - review negative/test/fixture folders under the Tier 2 rules
 - replace confusing scaffolds with clearer minimal Rust equivalents where necessary
+
+- `batch_84_reachable_type_error_scaffolds` selected as the first wave-3 normalization batch because multiple phase-25 negative fixtures were still using the same generic placeholder, even though they encode distinct reachable-type-error contracts that should be documented explicitly on the Rust side
+- `batch_84_reachable_type_error_scaffolds` completed local validation and ended review with no accepted blockers; the three generic placeholders were replaced with fixture-specific Tier 2 scaffolds, and the paired Sifr fixtures still fail with the intended return-type diagnostics
 
 ### wave_4_corpus_consistency_pass
 
