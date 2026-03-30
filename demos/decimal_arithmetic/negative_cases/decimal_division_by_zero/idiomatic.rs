@@ -1,12 +1,17 @@
-//! Negative-case Sifr fixture scaffold.
+//! Tier-2 Rust scaffold for the Sifr negative fixture in `main.sifr`.
 //!
-//! Source files in this folder:
-//! - `main.sifr`
+//! The paired Sifr program fails at runtime because it performs decimal division
+//! by an exact zero divisor.
 //!
-//! This folder exists to preserve an intentional diagnostic or compile-fail shape.
-//! There is no single runnable Rust program that is both idiomatic and preserves
-//! the same failure contract, so this file serves as the Rust-side scaffold.
-
-#![allow(dead_code)]
+//! A direct Rust analogue would also fail at runtime if left unchecked:
+//! ```rust
+//! # use rust_decimal::Decimal;
+//! let x = Decimal::from_str_exact("1").unwrap();
+//! let y = Decimal::from_str_exact("0").unwrap();
+//! let _ = x / y;
+//! ```
+//!
+//! The Sifr fixture exists to ensure this case reports a runtime error instead
+//! of silently producing an invalid decimal result.
 
 fn main() {}

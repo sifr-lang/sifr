@@ -436,6 +436,8 @@ Goals:
 - `batch_86_reachable_type_error_scaffolds_mixed_blocks` completed local validation and ended review with no accepted blockers; all three placeholders were replaced with fixture-specific Tier 2 scaffolds, and the paired Sifr fixtures still fail with the intended diagnostics
 - `batch_87_reachable_parse_error_scaffolds` selected as the next wave-3 normalization batch because three phase-23 import-closure fixtures still used the generic placeholder even though they share one clear contract: the main file is valid, the local helper is reachable, and parsing the helper must fail deterministically
 - `batch_87_reachable_parse_error_scaffolds` completed local validation and ended review with no accepted blockers; all three placeholders were replaced with fixture-specific Tier 2 scaffolds, and the paired Sifr fixtures still fail with the intended helper parse errors
+- `batch_88_decimal_negative_case_scaffolds` selected as the next wave-3 normalization batch because three phase-28 decimal fixtures still used the generic placeholder while sharing one clear contract family: exact decimal construction rules and division-by-zero failure behavior need to be stated explicitly on the Rust side
+- `batch_88_decimal_negative_case_scaffolds` completed local validation and ended review with no accepted blockers; all three placeholders were replaced with fixture-specific Tier 2 scaffolds, the float-constructor fixtures still fail with the intended exact-construction diagnostics, and the division-by-zero fixture still fails with the intended runtime error
 
 ### wave_4_corpus_consistency_pass
 

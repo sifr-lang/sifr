@@ -3856,6 +3856,46 @@ status: accepted_after_pass_1_and_pass_2
   - batch 87 was reviewed directly from the final validated Rust scaffolds and the observed `sifr check` diagnostics for the paired negative fixtures
   - both review passes ended with no accepted blockers across the trio
 
+#### batch_88_decimal_negative_case_scaffolds
+
+status: accepted_after_pass_1_and_pass_2
+
+- scope:
+  - `demos/decimal_arithmetic/negative_cases/decimal_division_by_zero/idiomatic.rs`
+  - `demos/decimal_types/negative_cases/forbidden_float_constructor/idiomatic.rs`
+  - `demos/decimal_conversions/negative_cases/forbidden_bigdecimal_float_constructor/idiomatic.rs`
+- selection rationale:
+  - these three phase-28 fixtures are the next untouched negative-case family and all revolve around exact decimal semantics rather than generic type or parse failures
+  - the batch keeps decimal construction and arithmetic rules together instead of scattering them across unrelated Tier 2 cleanup work
+  - each paired fixture has a stable observable failure mode, with the constructor cases failing in `check` and the zero-divisor case failing in `run`
+- priority tags:
+  - `tier-2-negative-case`: `decimal_arithmetic/division_by_zero`, `decimal_types/forbidden_float_constructor`, `decimal_conversions/forbidden_bigdecimal_float_constructor`
+  - `decimal-semantics`: `decimal_arithmetic/division_by_zero`, `decimal_types/forbidden_float_constructor`, `decimal_conversions/forbidden_bigdecimal_float_constructor`
+  - `generic-placeholder-cleanup`: `decimal_arithmetic/division_by_zero`, `decimal_types/forbidden_float_constructor`, `decimal_conversions/forbidden_bigdecimal_float_constructor`
+- implementation summary:
+  - `decimal_arithmetic`: replaced the generic stub with a scaffold describing the runtime failure contract for exact decimal division by zero and a direct Rust analogue
+  - `decimal_types`: replaced the generic stub with a scaffold describing the ban on `Decimal(float)` construction and the exact-string Rust-side analogue
+  - `decimal_conversions`: replaced the generic stub with a scaffold describing the same exact-construction ban for `BigDecimal(float)` and its Rust-side analogue
+- local validation completed:
+  - `rustfmt demos/decimal_arithmetic/negative_cases/decimal_division_by_zero/idiomatic.rs demos/decimal_types/negative_cases/forbidden_float_constructor/idiomatic.rs demos/decimal_conversions/negative_cases/forbidden_bigdecimal_float_constructor/idiomatic.rs`
+  - `rustc --edition=2021 demos/decimal_arithmetic/negative_cases/decimal_division_by_zero/idiomatic.rs -o /tmp/sifr-neg-decimal-div-zero && /tmp/sifr-neg-decimal-div-zero`
+  - `rustc --edition=2021 demos/decimal_types/negative_cases/forbidden_float_constructor/idiomatic.rs -o /tmp/sifr-neg-decimal-float-ctor && /tmp/sifr-neg-decimal-float-ctor`
+  - `rustc --edition=2021 demos/decimal_conversions/negative_cases/forbidden_bigdecimal_float_constructor/idiomatic.rs -o /tmp/sifr-neg-bigdecimal-float-ctor && /tmp/sifr-neg-bigdecimal-float-ctor`
+  - `cargo run -q -p sifr -- run demos/decimal_arithmetic/negative_cases/decimal_division_by_zero/main.sifr`
+  - `cargo run -q -p sifr -- check demos/decimal_types/negative_cases/forbidden_float_constructor/main.sifr`
+  - `cargo run -q -p sifr -- check demos/decimal_conversions/negative_cases/forbidden_bigdecimal_float_constructor/main.sifr`
+  - `scripts/run_all_tests.sh`
+- review artifacts:
+  - pass 1: `reviews/phase-ad-hoc-idiomatic-rust-demo-corpus-wave-3-batch-88-review-pass-1.md`
+  - pass 2: `reviews/phase-ad-hoc-idiomatic-rust-demo-corpus-wave-3-batch-88-review-pass-2.md`
+- review application summary:
+  - all three pass-1 reviews returned `OK`
+  - all three pass-2 reviews returned `OK`
+  - no follow-up code changes were needed beyond correcting the `decimal_division_by_zero` scaffold wording to match the observed runtime-failure contract
+- reviewer tooling note:
+  - batch 88 was reviewed directly from the final validated Rust scaffolds and the observed decimal-specific failure modes for the paired fixtures
+  - both review passes ended with no accepted blockers across the trio
+
 ### wave_4_corpus_consistency_pass
 
 status: pending
