@@ -2957,6 +2957,99 @@ fn test_structured_stmt_path_lowers_nested_string_augassign_to_push_str() {
 }
 
 #[test]
+fn test_structured_stmt_path_string_contains_avoids_double_borrow_pattern_arg() {
+    let module = HirModule {
+        functions: vec![HirFunction {
+            name: "contains_self".to_string(),
+            params: vec![
+                HirParam {
+                    name: "text".to_string(),
+                    ty: Type::Str,
+                    default: None,
+                    keyword_only: false,
+                    convention: ParamConvention::borrow(),
+                },
+                HirParam {
+                    name: "s".to_string(),
+                    ty: Type::Str,
+                    default: None,
+                    keyword_only: false,
+                    convention: ParamConvention::borrow(),
+                },
+            ],
+            return_type: Type::Bool,
+            body: vec![HirStmt::Return {
+                value: Some(HirExpr::ContainsOp {
+                    element: Box::new(HirExpr::Name {
+                        name: "s".to_string(),
+                        ty: Type::Str,
+                    }),
+                    collection: Box::new(HirExpr::Name {
+                        name: "text".to_string(),
+                        ty: Type::Str,
+                    }),
+                    ty: Type::Bool,
+                }),
+            }],
+            method_kind: MethodKind::Regular,
+            decorators: vec![],
+            type_params: vec![],
+        }],
+        classes: vec![],
+        imports: vec![],
+        constants: vec![],
+        generic_functions: std::collections::HashMap::new(),
+        type_param_bounds: std::collections::HashMap::new(),
+    };
+
+    let generated = generate_rust_with_metadata(&module);
+    assert!(!generated.rust_source.contains(".contains(&(s))"));
+    assert!(generated.rust_source.contains(".contains("));
+    assert!(!generated.rust_source.contains(".contains(&("));
+}
+
+#[test]
+fn test_plain_call_canonicalizes_heapq_compat_symbol_name() {
+    let module = HirModule {
+        functions: vec![HirFunction {
+            name: "touch".to_string(),
+            params: vec![HirParam {
+                name: "min_h".to_string(),
+                ty: Type::List(Box::new(Type::Int)),
+                default: None,
+                keyword_only: false,
+                convention: ParamConvention::mut_borrow(),
+            }],
+            return_type: Type::None,
+            body: vec![HirStmt::Expr {
+                expr: HirExpr::Call {
+                    func: "__compat_sifr_heapq_heapify".to_string(),
+                    args: vec![HirExpr::Name {
+                        name: "min_h".to_string(),
+                        ty: Type::List(Box::new(Type::Int)),
+                    }],
+                    ty: Type::None,
+                },
+            }],
+            method_kind: MethodKind::Regular,
+            decorators: vec![],
+            type_params: vec![],
+        }],
+        classes: vec![],
+        imports: vec![],
+        constants: vec![],
+        generic_functions: std::collections::HashMap::new(),
+        type_param_bounds: std::collections::HashMap::new(),
+    };
+
+    let generated = generate_rust_with_metadata(&module);
+    assert!(generated.rust_source.contains("heapify("));
+    assert!(!generated
+        .rust_source
+        .contains("__compat_sifr_heapq_heapify("));
+}
+
+#[test]
 fn test_union_display_impl_uses_structured_ir() {
     let union_src = include_str!("union_type_helpers.rs");
     assert!(union_src.contains("RustType::Ref {"));

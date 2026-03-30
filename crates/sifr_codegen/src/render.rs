@@ -328,10 +328,15 @@ impl Renderer {
                 ));
             }
             RustStmt::AugAssign { target, op, value } => {
+                let rendered_op = if op.ends_with('=') {
+                    op.clone()
+                } else {
+                    format!("{op}=")
+                };
                 self.emit_line(&format!(
-                    "{} {}= {};",
+                    "{} {} {};",
                     Self::render_expr_string(target),
-                    op,
+                    rendered_op,
                     Self::render_expr_string(value)
                 ));
             }
@@ -1226,6 +1231,40 @@ mod tests {
             }
         }
         "###);
+    }
+
+    #[test]
+    fn renders_augassign_with_normalized_and_raw_ops_without_double_equals() {
+        let rendered = render_items(&[RustItem::Fn {
+            name: "aug_ops".to_string(),
+            visibility: Visibility::Private,
+            type_params: vec![],
+            params: vec![],
+            ret: Some(RustType::Unit),
+            body: vec![
+                RustStmt::Let {
+                    mutable: true,
+                    name: "x".to_string(),
+                    ty: Some(RustType::I64),
+                    value: RustExpr::Literal(RustLiteral::Int(0)),
+                },
+                RustStmt::AugAssign {
+                    target: RustExpr::Ident("x".to_string()),
+                    op: "+".to_string(),
+                    value: RustExpr::Literal(RustLiteral::Int(1)),
+                },
+                RustStmt::AugAssign {
+                    target: RustExpr::Ident("x".to_string()),
+                    op: "+=".to_string(),
+                    value: RustExpr::Literal(RustLiteral::Int(2)),
+                },
+            ],
+            is_async: false,
+        }]);
+
+        assert!(rendered.contains("x += 1;"));
+        assert!(rendered.contains("x += 2;"));
+        assert!(!rendered.contains("+=="));
     }
 
     #[test]
