@@ -1,15 +1,10 @@
-//! Negative-case Sifr fixture scaffold.
+//! Tier-2 Rust scaffold for the Sifr negative fixture in this folder.
 //!
-//! Source files in this folder:
-//! - `a.sifr`
-//! - `b.sifr`
-//! - `c.sifr`
-//! - `main.sifr`
+//! The paired Sifr program is rejected because the reachable import graph forms a
+//! three-node cycle: `main -> a -> b -> c -> a`.
 //!
-//! This folder exists to preserve an intentional diagnostic or compile-fail shape.
-//! There is no single runnable Rust program that is both idiomatic and preserves
-//! the same failure contract, so this file serves as the Rust-side scaffold.
-
-#![allow(dead_code)]
+//! This fixture exists to preserve deterministic module-cycle detection during
+//! graph isolation. The Rust-side analogue is a build/import graph cycle rather
+//! than a normal Rust type error, so this file remains a documentation scaffold.
 
 fn main() {}

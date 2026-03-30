@@ -3976,6 +3976,46 @@ status: accepted_after_pass_1_and_pass_2
   - batch 90 was reviewed directly from the final validated Rust scaffolds and the observed compact/json/usage-exit behaviors for the paired fixtures
   - both review passes ended with no accepted blockers across the trio
 
+#### batch_91_module_cycle_scaffolds
+
+status: accepted_after_pass_1_and_pass_2
+
+- scope:
+  - `demos/graph_isolation/negative_cases/module_cycle/idiomatic.rs`
+  - `demos/module_cycle_diagnostics/negative_cases/module_cycle/idiomatic.rs`
+  - `demos/module_ordering/negative_cases/idiomatic.rs`
+- selection rationale:
+  - these three module-graph negatives are the next untouched family and all preserve explicit cycle-detection behavior rather than ordinary type errors
+  - the batch keeps the phase-19 and phase-23 cycle fixtures together so the Tier 2 cleanup records both the smaller two-node ordering cycle and the deterministic three-node diagnostic cycle
+  - each paired fixture already exposes a stable cycle message under `sifr check`, so the Rust-side scaffold can be validated directly against observed output
+- priority tags:
+  - `tier-2-negative-case`: `graph_isolation/module_cycle`, `module_cycle_diagnostics/module_cycle`, `module_ordering/negative_cases`
+  - `module-cycle`: `graph_isolation/module_cycle`, `module_cycle_diagnostics/module_cycle`, `module_ordering/negative_cases`
+  - `generic-placeholder-cleanup`: `graph_isolation/module_cycle`, `module_cycle_diagnostics/module_cycle`, `module_ordering/negative_cases`
+- implementation summary:
+  - `graph_isolation`: replaced the generic stub with a scaffold describing the reachable three-node cycle `main -> a -> b -> c -> a`
+  - `module_cycle_diagnostics`: replaced the generic stub with a scaffold describing the same three-node cycle, but emphasizing deterministic diagnostic reporting
+  - `module_ordering`: replaced the generic stub with a scaffold describing the smaller two-node cycle `main -> a -> b -> a`
+- local validation completed:
+  - `rustfmt demos/graph_isolation/negative_cases/module_cycle/idiomatic.rs demos/module_cycle_diagnostics/negative_cases/module_cycle/idiomatic.rs demos/module_ordering/negative_cases/idiomatic.rs`
+  - `rustc --edition=2021 demos/graph_isolation/negative_cases/module_cycle/idiomatic.rs -o /tmp/sifr-neg-graph-cycle && /tmp/sifr-neg-graph-cycle`
+  - `rustc --edition=2021 demos/module_cycle_diagnostics/negative_cases/module_cycle/idiomatic.rs -o /tmp/sifr-neg-module-cycle-diagnostics && /tmp/sifr-neg-module-cycle-diagnostics`
+  - `rustc --edition=2021 demos/module_ordering/negative_cases/idiomatic.rs -o /tmp/sifr-neg-module-ordering && /tmp/sifr-neg-module-ordering`
+  - `cargo run -q -p sifr -- check demos/graph_isolation/negative_cases/module_cycle/main.sifr`
+  - `cargo run -q -p sifr -- check demos/module_cycle_diagnostics/negative_cases/module_cycle/main.sifr`
+  - `cargo run -q -p sifr -- check demos/module_ordering/negative_cases/main.sifr`
+  - `scripts/run_all_tests.sh`
+- review artifacts:
+  - pass 1: `reviews/phase-ad-hoc-idiomatic-rust-demo-corpus-wave-3-batch-91-review-pass-1.md`
+  - pass 2: `reviews/phase-ad-hoc-idiomatic-rust-demo-corpus-wave-3-batch-91-review-pass-2.md`
+- review application summary:
+  - all three pass-1 reviews returned `OK`
+  - all three pass-2 reviews returned `OK`
+  - no follow-up code changes were needed after the targeted Tier 2 rewrite
+- reviewer tooling note:
+  - batch 91 was reviewed directly from the final validated Rust scaffolds and the observed module-cycle diagnostics for the paired fixtures
+  - both review passes ended with no accepted blockers across the trio
+
 ### wave_4_corpus_consistency_pass
 
 status: pending

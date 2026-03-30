@@ -442,6 +442,8 @@ Goals:
 - `batch_89_imported_helper_type_error_scaffolds` completed local validation and ended review with no accepted blockers; all three placeholders were replaced with fixture-specific Tier 2 scaffolds, and the paired Sifr fixtures still fail with the intended imported-helper type errors
 - `batch_90_diagnostic_renderer_scaffolds` selected as the next wave-3 normalization batch because the remaining diagnostics-focused fixtures still used the generic placeholder despite testing three distinct renderer/config contracts: compact grouping, unknown diagnostic-format rejection, and canonical json output
 - `batch_90_diagnostic_renderer_scaffolds` completed local validation and ended review with no accepted blockers; all three placeholders were replaced with fixture-specific Tier 2 scaffolds, and the paired Sifr fixtures still exercise the intended compact, usage-exit, and json-diagnostic behaviors
+- `batch_91_module_cycle_scaffolds` selected as the next wave-3 normalization batch because the remaining module-graph negatives still used the generic placeholder despite sharing one deterministic cycle-detection contract across both phase-19 and phase-23 fixtures
+- `batch_91_module_cycle_scaffolds` completed local validation and ended review with no accepted blockers; all three placeholders were replaced with fixture-specific Tier 2 scaffolds, and the paired Sifr fixtures still fail with the intended explicit module-cycle diagnostics
 
 ### wave_4_corpus_consistency_pass
 
