@@ -1,12 +1,12 @@
-//! Negative-case Sifr fixture scaffold.
+//! Tier-2 Rust scaffold for the Sifr negative fixture in this folder.
 //!
-//! Source files in this folder:
-//! - `forbidden_intrinsic_import.sifr`
+//! The paired Sifr program is rejected because user code attempts to import
+//! `_sifr.math`, which is reserved for internal compiler intrinsics. The
+//! unresolved `sqrt` reference then surfaces as a secondary reachable diagnostic.
 //!
-//! This folder exists to preserve an intentional diagnostic or compile-fail shape.
-//! There is no single runnable Rust program that is both idiomatic and preserves
-//! the same failure contract, so this file serves as the Rust-side scaffold.
-
-#![allow(dead_code)]
+//! This fixture exists to preserve the explicit frontend rule that `_sifr.*`
+//! modules are not part of the user-visible standard library. The Rust-side
+//! analogue is still compiler-owned import policy rather than a standalone Rust
+//! compile error, so this file remains a contract scaffold.
 
 fn main() {}

@@ -1,12 +1,11 @@
-//! Negative-case Sifr fixture scaffold.
+//! Tier-2 Rust scaffold for the Sifr negative fixture in this folder.
 //!
-//! Source files in this folder:
-//! - `main.sifr`
+//! The paired Sifr program is rejected because `Decimal(1.5)` attempts to build
+//! an exact decimal value from a floating-point literal.
 //!
-//! This folder exists to preserve an intentional diagnostic or compile-fail shape.
-//! There is no single runnable Rust program that is both idiomatic and preserves
-//! the same failure contract, so this file serves as the Rust-side scaffold.
-
-#![allow(dead_code)]
+//! This fixture exists to preserve the phase-28 exact-construction rule and its
+//! deterministic `[E2505]` diagnostic directing users to `Decimal("...")`. The
+//! Rust-side analogue depends on Sifr's exact-construction policy rather than a
+//! direct Rust type error, so this file remains a contract scaffold.
 
 fn main() {}

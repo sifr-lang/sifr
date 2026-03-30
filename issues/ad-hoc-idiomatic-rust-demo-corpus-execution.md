@@ -3736,6 +3736,530 @@ status: accepted_after_pass_1_and_pass_2
   - batch 84 was reviewed directly from the final validated Rust scaffolds and the observed `sifr check` diagnostics for the paired negative fixtures
   - both review passes ended with no accepted blockers across the trio
 
+#### batch_85_reachable_type_error_scaffolds_followup
+
+status: accepted_after_pass_1_and_pass_2
+
+- scope:
+  - `demos/loop_try_match/negative_cases/reachable_type_error/idiomatic.rs`
+  - `demos/return_and_raise_paths/negative_cases/reachable_type_error/idiomatic.rs`
+  - `demos/unreachable_returns/negative_cases/reachable_type_error/idiomatic.rs`
+- selection rationale:
+  - these three fixtures are the next untouched members of the same reachable-type-error family and still used the generic placeholder instead of documenting the specific branch shape that keeps the bad return reachable
+  - the batch stays within one negative-case category and avoids mixing parse, import, and protocol fixtures before the Tier 2 style is normalized
+  - each paired Sifr fixture already has a stable deterministic type-error check path, so the Rust-side scaffold can be validated directly against observed diagnostics
+- priority tags:
+  - `tier-2-negative-case`: `loop_try_match/reachable_type_error`, `return_and_raise_paths/reachable_type_error`, `unreachable_returns/reachable_type_error`
+  - `reachable-type-error`: `loop_try_match/reachable_type_error`, `return_and_raise_paths/reachable_type_error`, `unreachable_returns/reachable_type_error`
+  - `generic-placeholder-cleanup`: `loop_try_match/reachable_type_error`, `return_and_raise_paths/reachable_type_error`, `unreachable_returns/reachable_type_error`
+- implementation summary:
+  - `loop_try_match`: replaced the generic stub with a scaffold describing the nested `else` branch that returns `&str` from an `int`-typed function and a direct Rust `compile_fail` analogue
+  - `return_and_raise_paths`: replaced the generic stub with a scaffold describing the explicit `else` branch return mismatch and its Rust analogue
+  - `unreachable_returns`: replaced the generic stub with a scaffold describing the final reachable `&str` return path and its Rust analogue
+- local validation completed:
+  - `rustfmt demos/loop_try_match/negative_cases/reachable_type_error/idiomatic.rs demos/return_and_raise_paths/negative_cases/reachable_type_error/idiomatic.rs demos/unreachable_returns/negative_cases/reachable_type_error/idiomatic.rs`
+  - `rustc --edition=2021 demos/loop_try_match/negative_cases/reachable_type_error/idiomatic.rs -o /tmp/sifr-neg-loop-try-match && /tmp/sifr-neg-loop-try-match`
+  - `rustc --edition=2021 demos/return_and_raise_paths/negative_cases/reachable_type_error/idiomatic.rs -o /tmp/sifr-neg-return-and-raise-paths && /tmp/sifr-neg-return-and-raise-paths`
+  - `rustc --edition=2021 demos/unreachable_returns/negative_cases/reachable_type_error/idiomatic.rs -o /tmp/sifr-neg-unreachable-returns && /tmp/sifr-neg-unreachable-returns`
+  - `cargo run -q -p sifr -- check demos/loop_try_match/negative_cases/reachable_type_error/main.sifr`
+  - `cargo run -q -p sifr -- check demos/return_and_raise_paths/negative_cases/reachable_type_error/main.sifr`
+  - `cargo run -q -p sifr -- check demos/unreachable_returns/negative_cases/reachable_type_error/main.sifr`
+  - `scripts/run_all_tests.sh`
+- review artifacts:
+  - pass 1: `reviews/phase-ad-hoc-idiomatic-rust-demo-corpus-wave-3-batch-85-review-pass-1.md`
+  - pass 2: `reviews/phase-ad-hoc-idiomatic-rust-demo-corpus-wave-3-batch-85-review-pass-2.md`
+- review application summary:
+  - all three pass-1 reviews returned `OK`
+  - all three pass-2 reviews returned `OK`
+  - no follow-up code changes were needed after the targeted Tier 2 rewrite
+- reviewer tooling note:
+  - batch 85 was reviewed directly from the final validated Rust scaffolds and the observed `sifr check` diagnostics for the paired negative fixtures
+  - both review passes ended with no accepted blockers across the trio
+
+#### batch_86_reachable_type_error_scaffolds_mixed_blocks
+
+status: accepted_after_pass_1_and_pass_2
+
+- scope:
+  - `demos/stable_codegen/negative_cases/reachable_type_error/idiomatic.rs`
+  - `demos/valid_control_flow/negative_cases/reachable_type_error/idiomatic.rs`
+  - `demos/branch_paths/negative_cases/mixed_block_type_error/idiomatic.rs`
+- selection rationale:
+  - these fixtures are the next untouched members of the control-flow mismatch family and still used the generic placeholder rather than documenting the specific type mismatch that remains reachable
+  - the trio stays coherent while broadening slightly from plain `int` vs `str` mismatches to one union-member mismatch and one mixed-block mismatch
+  - each paired Sifr fixture already has a stable `sifr check` diagnostic path, so the Rust-side scaffold can be validated against observed output rather than inferred behavior
+- priority tags:
+  - `tier-2-negative-case`: `stable_codegen/reachable_type_error`, `valid_control_flow/reachable_type_error`, `branch_paths/mixed_block_type_error`
+  - `control-flow-mismatch`: `stable_codegen/reachable_type_error`, `valid_control_flow/reachable_type_error`, `branch_paths/mixed_block_type_error`
+  - `generic-placeholder-cleanup`: `stable_codegen/reachable_type_error`, `valid_control_flow/reachable_type_error`, `branch_paths/mixed_block_type_error`
+- implementation summary:
+  - `stable_codegen`: replaced the generic stub with a scaffold describing the reachable `list[int]` return that is outside the declared `int | str` union, plus a direct Rust analogue
+  - `valid_control_flow`: replaced the generic stub with a scaffold describing the final reachable `&str` return path from an `int`-typed function
+  - `branch_paths`: replaced the generic stub with a scaffold describing the mixed `try`/`if` block that keeps a reachable `&str` return inside an `int`-typed function
+- local validation completed:
+  - `rustfmt demos/stable_codegen/negative_cases/reachable_type_error/idiomatic.rs demos/valid_control_flow/negative_cases/reachable_type_error/idiomatic.rs demos/branch_paths/negative_cases/mixed_block_type_error/idiomatic.rs`
+  - `rustc --edition=2021 demos/stable_codegen/negative_cases/reachable_type_error/idiomatic.rs -o /tmp/sifr-neg-stable-codegen && /tmp/sifr-neg-stable-codegen`
+  - `rustc --edition=2021 demos/valid_control_flow/negative_cases/reachable_type_error/idiomatic.rs -o /tmp/sifr-neg-valid-control-flow && /tmp/sifr-neg-valid-control-flow`
+  - `rustc --edition=2021 demos/branch_paths/negative_cases/mixed_block_type_error/idiomatic.rs -o /tmp/sifr-neg-branch-paths && /tmp/sifr-neg-branch-paths`
+  - `cargo run -q -p sifr -- check demos/stable_codegen/negative_cases/reachable_type_error/main.sifr`
+  - `cargo run -q -p sifr -- check demos/valid_control_flow/negative_cases/reachable_type_error/main.sifr`
+  - `cargo run -q -p sifr -- check demos/branch_paths/negative_cases/mixed_block_type_error/main.sifr`
+  - `scripts/run_all_tests.sh`
+- review artifacts:
+  - pass 1: `reviews/phase-ad-hoc-idiomatic-rust-demo-corpus-wave-3-batch-86-review-pass-1.md`
+  - pass 2: `reviews/phase-ad-hoc-idiomatic-rust-demo-corpus-wave-3-batch-86-review-pass-2.md`
+- review application summary:
+  - all three pass-1 reviews returned `OK`
+  - all three pass-2 reviews returned `OK`
+  - no follow-up code changes were needed after the targeted Tier 2 rewrite
+- reviewer tooling note:
+  - batch 86 was reviewed directly from the final validated Rust scaffolds and the observed `sifr check` diagnostics for the paired negative fixtures
+  - both review passes ended with no accepted blockers across the trio
+
+#### batch_87_reachable_parse_error_scaffolds
+
+status: accepted_after_pass_1_and_pass_2
+
+- scope:
+  - `demos/graph_isolation/negative_cases/reachable_parse_error/idiomatic.rs`
+  - `demos/temp_workspace_isolation/negative_cases/reachable_parse_error/idiomatic.rs`
+  - `demos/reachable_imports/negative_cases/reachable_dependency_parse_error/idiomatic.rs`
+- selection rationale:
+  - these three phase-23 fixtures are the next untouched negative-case family and all share the same contract: the entry file is valid, a local helper import is reachable, and the helper parse error must terminate analysis deterministically
+  - the batch stays narrow and avoids mixing parse-error fixtures with type-error, module-cycle, or protocol-bound failures
+  - each paired fixture already exposes a stable `sifr check` parse-error message with the helper path and byte range, so the Tier 2 scaffold can be validated against observed output
+- priority tags:
+  - `tier-2-negative-case`: `graph_isolation/reachable_parse_error`, `temp_workspace_isolation/reachable_parse_error`, `reachable_imports/reachable_dependency_parse_error`
+  - `reachable-parse-error`: `graph_isolation/reachable_parse_error`, `temp_workspace_isolation/reachable_parse_error`, `reachable_imports/reachable_dependency_parse_error`
+  - `generic-placeholder-cleanup`: `graph_isolation/reachable_parse_error`, `temp_workspace_isolation/reachable_parse_error`, `reachable_imports/reachable_dependency_parse_error`
+- implementation summary:
+  - `graph_isolation`: replaced the generic stub with a scaffold describing the reachable local helper parse failure from `def value(:` and a direct Rust parse-fail analogue
+  - `temp_workspace_isolation`: replaced the generic stub with a scaffold describing the same helper parse failure under invocation-scoped workspace isolation
+  - `reachable_imports`: replaced the generic stub with a scaffold describing the reachable dependency parse failure from `def compute(:` and its Rust analogue
+- local validation completed:
+  - `rustfmt demos/graph_isolation/negative_cases/reachable_parse_error/idiomatic.rs demos/temp_workspace_isolation/negative_cases/reachable_parse_error/idiomatic.rs demos/reachable_imports/negative_cases/reachable_dependency_parse_error/idiomatic.rs`
+  - `rustc --edition=2021 demos/graph_isolation/negative_cases/reachable_parse_error/idiomatic.rs -o /tmp/sifr-neg-graph-isolation-parse && /tmp/sifr-neg-graph-isolation-parse`
+  - `rustc --edition=2021 demos/temp_workspace_isolation/negative_cases/reachable_parse_error/idiomatic.rs -o /tmp/sifr-neg-temp-workspace-parse && /tmp/sifr-neg-temp-workspace-parse`
+  - `rustc --edition=2021 demos/reachable_imports/negative_cases/reachable_dependency_parse_error/idiomatic.rs -o /tmp/sifr-neg-reachable-imports-parse && /tmp/sifr-neg-reachable-imports-parse`
+  - `cargo run -q -p sifr -- check demos/graph_isolation/negative_cases/reachable_parse_error/main.sifr`
+  - `cargo run -q -p sifr -- check demos/temp_workspace_isolation/negative_cases/reachable_parse_error/main.sifr`
+  - `cargo run -q -p sifr -- check demos/reachable_imports/negative_cases/reachable_dependency_parse_error/main.sifr`
+  - `scripts/run_all_tests.sh`
+- review artifacts:
+  - pass 1: `reviews/phase-ad-hoc-idiomatic-rust-demo-corpus-wave-3-batch-87-review-pass-1.md`
+  - pass 2: `reviews/phase-ad-hoc-idiomatic-rust-demo-corpus-wave-3-batch-87-review-pass-2.md`
+- review application summary:
+  - all three pass-1 reviews returned `OK`
+  - all three pass-2 reviews returned `OK`
+  - no follow-up code changes were needed after the targeted Tier 2 rewrite
+- reviewer tooling note:
+  - batch 87 was reviewed directly from the final validated Rust scaffolds and the observed `sifr check` diagnostics for the paired negative fixtures
+  - both review passes ended with no accepted blockers across the trio
+
+#### batch_88_decimal_negative_case_scaffolds
+
+status: accepted_after_pass_1_and_pass_2
+
+- scope:
+  - `demos/decimal_arithmetic/negative_cases/decimal_division_by_zero/idiomatic.rs`
+  - `demos/decimal_types/negative_cases/forbidden_float_constructor/idiomatic.rs`
+  - `demos/decimal_conversions/negative_cases/forbidden_bigdecimal_float_constructor/idiomatic.rs`
+- selection rationale:
+  - these three phase-28 fixtures are the next untouched negative-case family and all revolve around exact decimal semantics rather than generic type or parse failures
+  - the batch keeps decimal construction and arithmetic rules together instead of scattering them across unrelated Tier 2 cleanup work
+  - each paired fixture has a stable observable failure mode, with the constructor cases failing in `check` and the zero-divisor case failing in `run`
+- priority tags:
+  - `tier-2-negative-case`: `decimal_arithmetic/division_by_zero`, `decimal_types/forbidden_float_constructor`, `decimal_conversions/forbidden_bigdecimal_float_constructor`
+  - `decimal-semantics`: `decimal_arithmetic/division_by_zero`, `decimal_types/forbidden_float_constructor`, `decimal_conversions/forbidden_bigdecimal_float_constructor`
+  - `generic-placeholder-cleanup`: `decimal_arithmetic/division_by_zero`, `decimal_types/forbidden_float_constructor`, `decimal_conversions/forbidden_bigdecimal_float_constructor`
+- implementation summary:
+  - `decimal_arithmetic`: replaced the generic stub with a scaffold describing the runtime failure contract for exact decimal division by zero and a direct Rust analogue
+  - `decimal_types`: replaced the generic stub with a scaffold describing the ban on `Decimal(float)` construction and the exact-string Rust-side analogue
+  - `decimal_conversions`: replaced the generic stub with a scaffold describing the same exact-construction ban for `BigDecimal(float)` and its Rust-side analogue
+- local validation completed:
+  - `rustfmt demos/decimal_arithmetic/negative_cases/decimal_division_by_zero/idiomatic.rs demos/decimal_types/negative_cases/forbidden_float_constructor/idiomatic.rs demos/decimal_conversions/negative_cases/forbidden_bigdecimal_float_constructor/idiomatic.rs`
+  - `rustc --edition=2021 demos/decimal_arithmetic/negative_cases/decimal_division_by_zero/idiomatic.rs -o /tmp/sifr-neg-decimal-div-zero && /tmp/sifr-neg-decimal-div-zero`
+  - `rustc --edition=2021 demos/decimal_types/negative_cases/forbidden_float_constructor/idiomatic.rs -o /tmp/sifr-neg-decimal-float-ctor && /tmp/sifr-neg-decimal-float-ctor`
+  - `rustc --edition=2021 demos/decimal_conversions/negative_cases/forbidden_bigdecimal_float_constructor/idiomatic.rs -o /tmp/sifr-neg-bigdecimal-float-ctor && /tmp/sifr-neg-bigdecimal-float-ctor`
+  - `cargo run -q -p sifr -- run demos/decimal_arithmetic/negative_cases/decimal_division_by_zero/main.sifr`
+  - `cargo run -q -p sifr -- check demos/decimal_types/negative_cases/forbidden_float_constructor/main.sifr`
+  - `cargo run -q -p sifr -- check demos/decimal_conversions/negative_cases/forbidden_bigdecimal_float_constructor/main.sifr`
+  - `scripts/run_all_tests.sh`
+- review artifacts:
+  - pass 1: `reviews/phase-ad-hoc-idiomatic-rust-demo-corpus-wave-3-batch-88-review-pass-1.md`
+  - pass 2: `reviews/phase-ad-hoc-idiomatic-rust-demo-corpus-wave-3-batch-88-review-pass-2.md`
+- review application summary:
+  - all three pass-1 reviews returned `OK`
+  - all three pass-2 reviews returned `OK`
+  - no follow-up code changes were needed beyond correcting the `decimal_division_by_zero` scaffold wording to match the observed runtime-failure contract
+- reviewer tooling note:
+  - batch 88 was reviewed directly from the final validated Rust scaffolds and the observed decimal-specific failure modes for the paired fixtures
+  - both review passes ended with no accepted blockers across the trio
+
+#### batch_89_imported_helper_type_error_scaffolds
+
+status: accepted_after_pass_1_and_pass_2
+
+- scope:
+  - `demos/diagnostic_exit_codes/negative_cases/helper_type_error/idiomatic.rs`
+  - `demos/project_check/negative_cases/helper_type_error/idiomatic.rs`
+  - `demos/project_entrypoint/negative_cases/type_error_dependency/idiomatic.rs`
+- selection rationale:
+  - these three phase-22 fixtures are the next untouched negative-case family and all share the same contract: a reachable imported helper declares a numeric return type and returns `str`
+  - the batch keeps frontend/project parity fixtures together instead of scattering dependency-type mismatches across unrelated Tier 2 cleanup work
+  - each paired fixture already exposes a stable helper-qualified type error under `sifr check`, so the Rust-side scaffold can be validated against observed output
+- priority tags:
+  - `tier-2-negative-case`: `diagnostic_exit_codes/helper_type_error`, `project_check/helper_type_error`, `project_entrypoint/type_error_dependency`
+  - `imported-helper-type-error`: `diagnostic_exit_codes/helper_type_error`, `project_check/helper_type_error`, `project_entrypoint/type_error_dependency`
+  - `generic-placeholder-cleanup`: `diagnostic_exit_codes/helper_type_error`, `project_check/helper_type_error`, `project_entrypoint/type_error_dependency`
+- implementation summary:
+  - `diagnostic_exit_codes`: replaced the generic stub with a scaffold describing the imported helper `doubled` returning `str` instead of `int`, plus a direct Rust analogue
+  - `project_check`: replaced the generic stub with a scaffold describing the imported helper `area_like` returning `str` instead of `float`
+  - `project_entrypoint`: replaced the generic stub with a scaffold describing the imported helper `adjusted` returning `str` instead of `int`
+- local validation completed:
+  - `rustfmt demos/diagnostic_exit_codes/negative_cases/helper_type_error/idiomatic.rs demos/project_check/negative_cases/helper_type_error/idiomatic.rs demos/project_entrypoint/negative_cases/type_error_dependency/idiomatic.rs`
+  - `rustc --edition=2021 demos/diagnostic_exit_codes/negative_cases/helper_type_error/idiomatic.rs -o /tmp/sifr-neg-diagnostic-helper-type && /tmp/sifr-neg-diagnostic-helper-type`
+  - `rustc --edition=2021 demos/project_check/negative_cases/helper_type_error/idiomatic.rs -o /tmp/sifr-neg-project-check-helper-type && /tmp/sifr-neg-project-check-helper-type`
+  - `rustc --edition=2021 demos/project_entrypoint/negative_cases/type_error_dependency/idiomatic.rs -o /tmp/sifr-neg-project-entry-dep-type && /tmp/sifr-neg-project-entry-dep-type`
+  - `cargo run -q -p sifr -- check demos/diagnostic_exit_codes/negative_cases/helper_type_error/main.sifr`
+  - `cargo run -q -p sifr -- check demos/project_check/negative_cases/helper_type_error/main.sifr`
+  - `cargo run -q -p sifr -- check demos/project_entrypoint/negative_cases/type_error_dependency/main.sifr`
+  - `scripts/run_all_tests.sh`
+- review artifacts:
+  - pass 1: `reviews/phase-ad-hoc-idiomatic-rust-demo-corpus-wave-3-batch-89-review-pass-1.md`
+  - pass 2: `reviews/phase-ad-hoc-idiomatic-rust-demo-corpus-wave-3-batch-89-review-pass-2.md`
+- review application summary:
+  - all three pass-1 reviews returned `OK`
+  - all three pass-2 reviews returned `OK`
+  - no follow-up code changes were needed after the targeted Tier 2 rewrite
+- reviewer tooling note:
+  - batch 89 was reviewed directly from the final validated Rust scaffolds and the observed helper-qualified type errors for the paired fixtures
+  - both review passes ended with no accepted blockers across the trio
+
+#### batch_90_diagnostic_renderer_scaffolds
+
+status: accepted_after_pass_1_and_pass_2
+
+- scope:
+  - `demos/diagnostic_options/negative_cases/compact_grouping_contract/idiomatic.rs`
+  - `demos/diagnostic_options/negative_cases/unknown_diagnostic_format/idiomatic.rs`
+  - `demos/diagnostic_schema/negative_cases/type_error_json_diagnostic/idiomatic.rs`
+- selection rationale:
+  - these three diagnostics-focused fixtures are the next untouched negative-case family and all test renderer/config behavior rather than language semantics alone
+  - the batch keeps compact grouping, invalid-format rejection, and json-schema emission together instead of scattering renderer contracts across unrelated Tier 2 cleanup work
+  - each paired fixture already has a stable observable failure mode under the CLI, so the Rust-side scaffold can be validated directly against the emitted compact/json/output contract
+- priority tags:
+  - `tier-2-negative-case`: `diagnostic_options/compact_grouping_contract`, `diagnostic_options/unknown_diagnostic_format`, `diagnostic_schema/type_error_json_diagnostic`
+  - `diagnostic-rendering`: `diagnostic_options/compact_grouping_contract`, `diagnostic_options/unknown_diagnostic_format`, `diagnostic_schema/type_error_json_diagnostic`
+  - `generic-placeholder-cleanup`: `diagnostic_options/compact_grouping_contract`, `diagnostic_options/unknown_diagnostic_format`, `diagnostic_schema/type_error_json_diagnostic`
+- implementation summary:
+  - `compact_grouping_contract`: replaced the generic stub with a scaffold describing repeated `int <- str` failures whose purpose is deterministic compact-mode grouping
+  - `unknown_diagnostic_format`: replaced the generic stub with a scaffold describing CLI argument validation that must exit with usage code `2` before semantic analysis begins
+  - `type_error_json_diagnostic`: replaced the generic stub with a scaffold describing the simple `int <- str` mismatch used to validate canonical json diagnostic output
+- local validation completed:
+  - `rustfmt demos/diagnostic_options/negative_cases/compact_grouping_contract/idiomatic.rs demos/diagnostic_options/negative_cases/unknown_diagnostic_format/idiomatic.rs demos/diagnostic_schema/negative_cases/type_error_json_diagnostic/idiomatic.rs`
+  - `rustc --edition=2021 demos/diagnostic_options/negative_cases/compact_grouping_contract/idiomatic.rs -o /tmp/sifr-neg-compact-grouping && /tmp/sifr-neg-compact-grouping`
+  - `rustc --edition=2021 demos/diagnostic_options/negative_cases/unknown_diagnostic_format/idiomatic.rs -o /tmp/sifr-neg-unknown-format && /tmp/sifr-neg-unknown-format`
+  - `rustc --edition=2021 demos/diagnostic_schema/negative_cases/type_error_json_diagnostic/idiomatic.rs -o /tmp/sifr-neg-json-diagnostic && /tmp/sifr-neg-json-diagnostic`
+  - `cargo run -q -p sifr -- --diagnostic-format compact check demos/diagnostic_options/negative_cases/compact_grouping_contract/main.sifr`
+  - `cargo run -q -p sifr -- --diagnostic-format not-a-format check demos/diagnostic_options/negative_cases/unknown_diagnostic_format/main.sifr`
+  - `cargo run -q -p sifr -- --diagnostic-format json check demos/diagnostic_schema/negative_cases/type_error_json_diagnostic/main.sifr`
+  - `scripts/run_all_tests.sh`
+- review artifacts:
+  - pass 1: `reviews/phase-ad-hoc-idiomatic-rust-demo-corpus-wave-3-batch-90-review-pass-1.md`
+  - pass 2: `reviews/phase-ad-hoc-idiomatic-rust-demo-corpus-wave-3-batch-90-review-pass-2.md`
+- review application summary:
+  - all three pass-1 reviews returned `OK`
+  - all three pass-2 reviews returned `OK`
+  - no follow-up code changes were needed after the targeted Tier 2 rewrite
+- reviewer tooling note:
+  - batch 90 was reviewed directly from the final validated Rust scaffolds and the observed compact/json/usage-exit behaviors for the paired fixtures
+  - both review passes ended with no accepted blockers across the trio
+
+#### batch_91_module_cycle_scaffolds
+
+status: accepted_after_pass_1_and_pass_2
+
+- scope:
+  - `demos/graph_isolation/negative_cases/module_cycle/idiomatic.rs`
+  - `demos/module_cycle_diagnostics/negative_cases/module_cycle/idiomatic.rs`
+  - `demos/module_ordering/negative_cases/idiomatic.rs`
+- selection rationale:
+  - these three module-graph negatives are the next untouched family and all preserve explicit cycle-detection behavior rather than ordinary type errors
+  - the batch keeps the phase-19 and phase-23 cycle fixtures together so the Tier 2 cleanup records both the smaller two-node ordering cycle and the deterministic three-node diagnostic cycle
+  - each paired fixture already exposes a stable cycle message under `sifr check`, so the Rust-side scaffold can be validated directly against observed output
+- priority tags:
+  - `tier-2-negative-case`: `graph_isolation/module_cycle`, `module_cycle_diagnostics/module_cycle`, `module_ordering/negative_cases`
+  - `module-cycle`: `graph_isolation/module_cycle`, `module_cycle_diagnostics/module_cycle`, `module_ordering/negative_cases`
+  - `generic-placeholder-cleanup`: `graph_isolation/module_cycle`, `module_cycle_diagnostics/module_cycle`, `module_ordering/negative_cases`
+- implementation summary:
+  - `graph_isolation`: replaced the generic stub with a scaffold describing the reachable three-node cycle `main -> a -> b -> c -> a`
+  - `module_cycle_diagnostics`: replaced the generic stub with a scaffold describing the same three-node cycle, but emphasizing deterministic diagnostic reporting
+  - `module_ordering`: replaced the generic stub with a scaffold describing the smaller two-node cycle `main -> a -> b -> a`
+- local validation completed:
+  - `rustfmt demos/graph_isolation/negative_cases/module_cycle/idiomatic.rs demos/module_cycle_diagnostics/negative_cases/module_cycle/idiomatic.rs demos/module_ordering/negative_cases/idiomatic.rs`
+  - `rustc --edition=2021 demos/graph_isolation/negative_cases/module_cycle/idiomatic.rs -o /tmp/sifr-neg-graph-cycle && /tmp/sifr-neg-graph-cycle`
+  - `rustc --edition=2021 demos/module_cycle_diagnostics/negative_cases/module_cycle/idiomatic.rs -o /tmp/sifr-neg-module-cycle-diagnostics && /tmp/sifr-neg-module-cycle-diagnostics`
+  - `rustc --edition=2021 demos/module_ordering/negative_cases/idiomatic.rs -o /tmp/sifr-neg-module-ordering && /tmp/sifr-neg-module-ordering`
+  - `cargo run -q -p sifr -- check demos/graph_isolation/negative_cases/module_cycle/main.sifr`
+  - `cargo run -q -p sifr -- check demos/module_cycle_diagnostics/negative_cases/module_cycle/main.sifr`
+  - `cargo run -q -p sifr -- check demos/module_ordering/negative_cases/main.sifr`
+  - `scripts/run_all_tests.sh`
+- review artifacts:
+  - pass 1: `reviews/phase-ad-hoc-idiomatic-rust-demo-corpus-wave-3-batch-91-review-pass-1.md`
+  - pass 2: `reviews/phase-ad-hoc-idiomatic-rust-demo-corpus-wave-3-batch-91-review-pass-2.md`
+- review application summary:
+  - all three pass-1 reviews returned `OK`
+  - all three pass-2 reviews returned `OK`
+  - no follow-up code changes were needed after the targeted Tier 2 rewrite
+- reviewer tooling note:
+  - batch 91 was reviewed directly from the final validated Rust scaffolds and the observed module-cycle diagnostics for the paired fixtures
+  - both review passes ended with no accepted blockers across the trio
+
+#### batch_92_optional_access_scaffolds
+
+status: accepted_after_pass_1_and_pass_2
+
+- scope:
+  - `demos/optional_arithmetic/negative_cases/optional_arithmetic_without_narrowing/idiomatic.rs`
+  - `demos/optional_indexing/negative_cases/option_method_without_narrowing/idiomatic.rs`
+  - `demos/indexing_rules/negative_cases/invalid_index_type/idiomatic.rs`
+- selection rationale:
+  - these three negatives are the next untouched type-safety family and each still used the generic placeholder despite enforcing direct user-facing checker diagnostics
+  - the batch keeps phase-26 optional arithmetic with the closely related phase-27 optional-method and index-type fixtures so the Tier 2 rewrite records one coherent "unsafe access before narrowing" family
+  - each paired fixture already exposes a stable `sifr check` message, so the Rust-side scaffold can be validated directly against observed output instead of guessing at the contract
+- priority tags:
+  - `tier-2-negative-case`: `optional_arithmetic/optional_arithmetic_without_narrowing`, `optional_indexing/option_method_without_narrowing`, `indexing_rules/invalid_index_type`
+  - `type-safety`: `optional_arithmetic/optional_arithmetic_without_narrowing`, `optional_indexing/option_method_without_narrowing`, `indexing_rules/invalid_index_type`
+  - `generic-placeholder-cleanup`: `optional_arithmetic/optional_arithmetic_without_narrowing`, `optional_indexing/option_method_without_narrowing`, `indexing_rules/invalid_index_type`
+- implementation summary:
+  - `optional_arithmetic`: replaced the generic stub with a scaffold describing arithmetic on `int | None` before narrowing and the resulting declared-return-type failure
+  - `optional_indexing`: replaced the generic stub with a scaffold describing method access on `list[int] | None` before narrowing
+  - `indexing_rules`: replaced the generic stub with a scaffold describing the deterministic rejection of `list[int]["0"]`
+- local validation completed:
+  - `rustfmt demos/optional_arithmetic/negative_cases/optional_arithmetic_without_narrowing/idiomatic.rs demos/optional_indexing/negative_cases/option_method_without_narrowing/idiomatic.rs demos/indexing_rules/negative_cases/invalid_index_type/idiomatic.rs`
+  - `rustc --edition=2021 demos/optional_arithmetic/negative_cases/optional_arithmetic_without_narrowing/idiomatic.rs -o /tmp/sifr-neg-optional-arithmetic && /tmp/sifr-neg-optional-arithmetic`
+  - `rustc --edition=2021 demos/optional_indexing/negative_cases/option_method_without_narrowing/idiomatic.rs -o /tmp/sifr-neg-option-method && /tmp/sifr-neg-option-method`
+  - `rustc --edition=2021 demos/indexing_rules/negative_cases/invalid_index_type/idiomatic.rs -o /tmp/sifr-neg-invalid-index && /tmp/sifr-neg-invalid-index`
+  - `cargo run -q -p sifr -- check demos/optional_arithmetic/negative_cases/optional_arithmetic_without_narrowing/main.sifr`
+  - `cargo run -q -p sifr -- check demos/optional_indexing/negative_cases/option_method_without_narrowing/main.sifr`
+  - `cargo run -q -p sifr -- check demos/indexing_rules/negative_cases/invalid_index_type/main.sifr`
+  - `scripts/run_all_tests.sh`
+- review artifacts:
+  - pass 1: `reviews/phase-ad-hoc-idiomatic-rust-demo-corpus-wave-3-batch-92-review-pass-1.md`
+  - pass 2: `reviews/phase-ad-hoc-idiomatic-rust-demo-corpus-wave-3-batch-92-review-pass-2.md`
+- review application summary:
+  - all three pass-1 reviews returned `OK`
+  - all three pass-2 reviews returned `OK`
+  - no follow-up code changes were needed after the targeted Tier 2 rewrite
+- reviewer tooling note:
+  - batch 92 was reviewed directly from the final validated Rust scaffolds and the observed optional-access and invalid-index diagnostics for the paired fixtures
+  - both review passes ended with no accepted blockers across the trio
+
+#### batch_93_recursive_traversal_scaffolds
+
+status: accepted_after_pass_1_and_pass_2
+
+- scope:
+  - `demos/generator_break_else/negative_cases/idiomatic.rs`
+  - `demos/recursive_calls/negative_cases/recursive_call_typo/idiomatic.rs`
+  - `demos/recursive_for_else/negative_cases/idiomatic.rs`
+- selection rationale:
+  - these three negatives are the next untouched semantic-analysis family and all still used the generic placeholder despite depending on reachable traversal through nested control flow
+  - the batch keeps the phase-21 generator and `for`-`else` negatives with the closely related phase-24 recursive typo fixture so the Tier 2 rewrite records one coherent "reachable nested path must still diagnose" contract family
+  - each paired fixture already exposes a stable `sifr check` message, so the Rust-side scaffold can be validated directly against observed output instead of inventing a synthetic Rust error
+- priority tags:
+  - `tier-2-negative-case`: `generator_break_else/negative_cases`, `recursive_calls/recursive_call_typo`, `recursive_for_else/negative_cases`
+  - `semantic-traversal`: `generator_break_else/negative_cases`, `recursive_calls/recursive_call_typo`, `recursive_for_else/negative_cases`
+  - `generic-placeholder-cleanup`: `generator_break_else/negative_cases`, `recursive_calls/recursive_call_typo`, `recursive_for_else/negative_cases`
+- implementation summary:
+  - `generator_break_else`: replaced the generic stub with a scaffold describing the reachable `except`-branch yield of undefined `missing_value` and the invalid generator return annotation
+  - `recursive_calls`: replaced the generic stub with a scaffold describing the reachable recursive typo `reccurse(...)` under `if n > 0`
+  - `recursive_for_else`: replaced the generic stub with a scaffold describing the reachable `for`-`else` recursive typo `recc(...)`
+- local validation completed:
+  - `rustfmt demos/generator_break_else/negative_cases/idiomatic.rs demos/recursive_calls/negative_cases/recursive_call_typo/idiomatic.rs demos/recursive_for_else/negative_cases/idiomatic.rs`
+  - `rustc --edition=2021 demos/generator_break_else/negative_cases/idiomatic.rs -o /tmp/sifr-neg-generator-break-else && /tmp/sifr-neg-generator-break-else`
+  - `rustc --edition=2021 demos/recursive_calls/negative_cases/recursive_call_typo/idiomatic.rs -o /tmp/sifr-neg-recursive-call-typo && /tmp/sifr-neg-recursive-call-typo`
+  - `rustc --edition=2021 demos/recursive_for_else/negative_cases/idiomatic.rs -o /tmp/sifr-neg-recursive-for-else && /tmp/sifr-neg-recursive-for-else`
+  - `cargo run -q -p sifr -- check demos/generator_break_else/negative_cases/undefined_in_except_yield.sifr`
+  - `cargo run -q -p sifr -- check demos/recursive_calls/negative_cases/recursive_call_typo/main.sifr`
+  - `cargo run -q -p sifr -- check demos/recursive_for_else/negative_cases/typo_in_for_else_recursive_call.sifr`
+  - `scripts/run_all_tests.sh`
+- review artifacts:
+  - pass 1: `reviews/phase-ad-hoc-idiomatic-rust-demo-corpus-wave-3-batch-93-review-pass-1.md`
+  - pass 2: `reviews/phase-ad-hoc-idiomatic-rust-demo-corpus-wave-3-batch-93-review-pass-2.md`
+- review application summary:
+  - all three pass-1 reviews returned `OK`
+  - all three pass-2 reviews returned `OK`
+  - no follow-up code changes were needed after the targeted Tier 2 rewrite
+- reviewer tooling note:
+  - batch 93 was reviewed directly from the final validated Rust scaffolds and the observed generator-shape and undefined-name diagnostics for the paired fixtures
+  - both review passes ended with no accepted blockers across the trio
+
+#### batch_94_decimal_policy_scaffolds
+
+status: accepted_after_pass_1_and_pass_2
+
+- scope:
+  - `demos/decimal_diagnostics/negative_cases/decimal_round_scale_out_of_range/idiomatic.rs`
+  - `demos/decimal_verification/negative_cases/forbidden_float_conversion/idiomatic.rs`
+  - `demos/decimal_verification/negative_cases/forbidden_mixed_arithmetic/idiomatic.rs`
+- selection rationale:
+  - these three negatives are the next untouched decimal-specific family and all still used the generic placeholder despite enforcing stable policy-level diagnostics owned by the decimal checker
+  - the batch keeps the phase-28 scale-bound, exact-construction, and mixed-arithmetic fixtures together so the Tier 2 rewrite records one coherent decimal-policy contract family
+  - each paired fixture already exposes a stable code-bearing `sifr check` message, so the Rust-side scaffold can be validated directly against observed output instead of inferring the contract
+- priority tags:
+  - `tier-2-negative-case`: `decimal_round_scale_out_of_range`, `forbidden_float_conversion`, `forbidden_mixed_arithmetic`
+  - `decimal-policy`: `decimal_round_scale_out_of_range`, `forbidden_float_conversion`, `forbidden_mixed_arithmetic`
+  - `generic-placeholder-cleanup`: `decimal_round_scale_out_of_range`, `forbidden_float_conversion`, `forbidden_mixed_arithmetic`
+- implementation summary:
+  - `decimal_round_scale_out_of_range`: replaced the generic stub with a scaffold describing the explicit `0..=28` bound and deterministic `[E2507]` diagnostic
+  - `forbidden_float_conversion`: replaced the generic stub with a scaffold describing the exact-construction rule rejecting `Decimal(float_value)` with `[E2505]`
+  - `forbidden_mixed_arithmetic`: replaced the generic stub with a scaffold describing the explicit-conversion requirement when mixing `decimal` and `bigdecimal`, with `[E2504]`
+- local validation completed:
+  - `rustfmt demos/decimal_diagnostics/negative_cases/decimal_round_scale_out_of_range/idiomatic.rs demos/decimal_verification/negative_cases/forbidden_float_conversion/idiomatic.rs demos/decimal_verification/negative_cases/forbidden_mixed_arithmetic/idiomatic.rs`
+  - `rustc --edition=2021 demos/decimal_diagnostics/negative_cases/decimal_round_scale_out_of_range/idiomatic.rs -o /tmp/sifr-neg-decimal-round-scale && /tmp/sifr-neg-decimal-round-scale`
+  - `rustc --edition=2021 demos/decimal_verification/negative_cases/forbidden_float_conversion/idiomatic.rs -o /tmp/sifr-neg-decimal-float && /tmp/sifr-neg-decimal-float`
+  - `rustc --edition=2021 demos/decimal_verification/negative_cases/forbidden_mixed_arithmetic/idiomatic.rs -o /tmp/sifr-neg-decimal-mixed && /tmp/sifr-neg-decimal-mixed`
+  - `cargo run -q -p sifr -- check demos/decimal_diagnostics/negative_cases/decimal_round_scale_out_of_range/main.sifr`
+  - `cargo run -q -p sifr -- check demos/decimal_verification/negative_cases/forbidden_float_conversion/main.sifr`
+  - `cargo run -q -p sifr -- check demos/decimal_verification/negative_cases/forbidden_mixed_arithmetic/main.sifr`
+  - `scripts/run_all_tests.sh`
+- review artifacts:
+  - pass 1: `reviews/phase-ad-hoc-idiomatic-rust-demo-corpus-wave-3-batch-94-review-pass-1.md`
+  - pass 2: `reviews/phase-ad-hoc-idiomatic-rust-demo-corpus-wave-3-batch-94-review-pass-2.md`
+- review application summary:
+  - all three pass-1 reviews returned `OK`
+  - all three pass-2 reviews returned `OK`
+  - no follow-up code changes were needed after the targeted Tier 2 rewrite
+- reviewer tooling note:
+  - batch 94 was reviewed directly from the final validated Rust scaffolds and the observed decimal policy diagnostics for the paired fixtures
+  - both review passes ended with no accepted blockers across the trio
+
+#### batch_95_type_parameter_scaffolds
+
+status: accepted_after_pass_1_and_pass_2
+
+- scope:
+  - `demos/compiled_expressions/negative_cases/idiomatic.rs`
+  - `demos/generics_impl/negative_cases/return_type_mismatch/idiomatic.rs`
+  - `demos/constrained_typevars/negative_cases/typevar_constraint_violation/idiomatic.rs`
+- selection rationale:
+  - these three negatives are the next untouched type-system family and all still used the generic placeholder despite enforcing stable declaration-vs-inference contracts
+  - the batch keeps the simple return mismatch, generic `T | None` mismatch, and constrained typevar violation together so the Tier 2 rewrite records one coherent "declared type must be satisfied" family
+  - each paired fixture already exposes a stable `sifr check` message, so the Rust-side scaffold can be validated directly against observed output instead of fabricating a different Rust failure
+- priority tags:
+  - `tier-2-negative-case`: `compiled_expressions/negative_cases`, `generics_impl/return_type_mismatch`, `constrained_typevars/typevar_constraint_violation`
+  - `type-system`: `compiled_expressions/negative_cases`, `generics_impl/return_type_mismatch`, `constrained_typevars/typevar_constraint_violation`
+  - `generic-placeholder-cleanup`: `compiled_expressions/negative_cases`, `generics_impl/return_type_mismatch`, `constrained_typevars/typevar_constraint_violation`
+- implementation summary:
+  - `compiled_expressions`: replaced the generic stub with a scaffold describing the direct `int` vs `str` return mismatch in `bad()`
+  - `generics_impl`: replaced the generic stub with a scaffold describing safe indexing returning `T | None` while the helper promises plain `T`
+  - `constrained_typevars`: replaced the generic stub with a scaffold describing `float` failing the `(int, str)` constraint on type parameter `T`
+- local validation completed:
+  - `rustfmt demos/compiled_expressions/negative_cases/idiomatic.rs demos/generics_impl/negative_cases/return_type_mismatch/idiomatic.rs demos/constrained_typevars/negative_cases/typevar_constraint_violation/idiomatic.rs`
+  - `rustc --edition=2021 demos/compiled_expressions/negative_cases/idiomatic.rs -o /tmp/sifr-neg-compiled-expr && /tmp/sifr-neg-compiled-expr`
+  - `rustc --edition=2021 demos/generics_impl/negative_cases/return_type_mismatch/idiomatic.rs -o /tmp/sifr-neg-generics-return && /tmp/sifr-neg-generics-return`
+  - `rustc --edition=2021 demos/constrained_typevars/negative_cases/typevar_constraint_violation/idiomatic.rs -o /tmp/sifr-neg-typevar-constraint && /tmp/sifr-neg-typevar-constraint`
+  - `cargo run -q -p sifr -- check demos/compiled_expressions/negative_cases/return_type_mismatch.sifr`
+  - `cargo run -q -p sifr -- check demos/generics_impl/negative_cases/return_type_mismatch/main.sifr`
+  - `cargo run -q -p sifr -- check demos/constrained_typevars/negative_cases/typevar_constraint_violation/main.sifr`
+  - `scripts/run_all_tests.sh`
+- review artifacts:
+  - pass 1: `reviews/phase-ad-hoc-idiomatic-rust-demo-corpus-wave-3-batch-95-review-pass-1.md`
+  - pass 2: `reviews/phase-ad-hoc-idiomatic-rust-demo-corpus-wave-3-batch-95-review-pass-2.md`
+- review application summary:
+  - all three pass-1 reviews returned `OK`
+  - all three pass-2 reviews returned `OK`
+  - no follow-up code changes were needed after the targeted Tier 2 rewrite
+- reviewer tooling note:
+  - batch 95 was reviewed directly from the final validated Rust scaffolds and the observed return-mismatch and constrained-typevar diagnostics for the paired fixtures
+  - both review passes ended with no accepted blockers across the trio
+
+#### batch_96_import_policy_scaffolds
+
+status: accepted_after_pass_1_and_pass_2
+
+- scope:
+  - `demos/import_forms/negative_cases/idiomatic.rs`
+  - `demos/resolver_triggers/negative_cases/idiomatic.rs`
+  - `demos/stdlib_modules/negative_cases/idiomatic.rs`
+- selection rationale:
+  - these three negatives are the next untouched frontend/import family and all still used the generic placeholder despite enforcing stable import-policy diagnostics
+  - the batch keeps the phase-17 import-form restrictions with the closely related phase-18 resolver-trigger fixtures and the phase-20 `_sifr.*` intrinsic-import restriction so the Tier 2 rewrite records one coherent "unsupported import syntax or namespace must fail explicitly" family
+  - each paired fixture already exposes stable `sifr check` output, so the Rust-side scaffolds can be validated directly against observed diagnostics instead of inventing a Rust module-system analogue
+- priority tags:
+  - `tier-2-negative-case`: `import_forms/negative_cases`, `resolver_triggers/negative_cases`, `stdlib_modules/negative_cases`
+  - `frontend-import-policy`: `import_forms/negative_cases`, `resolver_triggers/negative_cases`, `stdlib_modules/negative_cases`
+  - `generic-placeholder-cleanup`: `import_forms/negative_cases`, `resolver_triggers/negative_cases`, `stdlib_modules/negative_cases`
+- implementation summary:
+  - `import_forms`: replaced the generic stub with a scaffold describing unsupported bare relative imports, unsupported plain `import` statements, unsupported relative level 2 imports, and the reachable unresolved-name follow-on diagnostics
+  - `resolver_triggers`: replaced the generic stub with a scaffold describing the same unsupported import forms as resolver-mode guards that must not silently activate project compilation
+  - `stdlib_modules`: replaced the generic stub with a scaffold describing the rejection of user `_sifr.*` intrinsic imports and the reachable undefined `sqrt` follow-on diagnostic
+- local validation completed:
+  - `rustfmt demos/import_forms/negative_cases/idiomatic.rs demos/resolver_triggers/negative_cases/idiomatic.rs demos/stdlib_modules/negative_cases/idiomatic.rs`
+  - `rustc --edition=2021 demos/import_forms/negative_cases/idiomatic.rs -o /tmp/sifr-neg-import-forms && /tmp/sifr-neg-import-forms`
+  - `rustc --edition=2021 demos/resolver_triggers/negative_cases/idiomatic.rs -o /tmp/sifr-neg-resolver-triggers && /tmp/sifr-neg-resolver-triggers`
+  - `rustc --edition=2021 demos/stdlib_modules/negative_cases/idiomatic.rs -o /tmp/sifr-neg-stdlib-modules && /tmp/sifr-neg-stdlib-modules`
+  - `for f in demos/import_forms/negative_cases/*.sifr; do cargo run -q -p sifr -- check "$f"; done`
+  - `for f in demos/resolver_triggers/negative_cases/*.sifr; do cargo run -q -p sifr -- check "$f"; done`
+  - `for f in demos/stdlib_modules/negative_cases/*.sifr; do cargo run -q -p sifr -- check "$f"; done`
+  - `scripts/run_all_tests.sh`
+- review artifacts:
+  - pass 1: `reviews/phase-ad-hoc-idiomatic-rust-demo-corpus-wave-3-batch-96-review-pass-1.md`
+  - pass 2: `reviews/phase-ad-hoc-idiomatic-rust-demo-corpus-wave-3-batch-96-review-pass-2.md`
+- review application summary:
+  - all three pass-1 reviews returned `OK`
+  - all three pass-2 reviews returned `OK`
+  - no follow-up code changes were needed after the targeted Tier 2 rewrite
+- reviewer tooling note:
+  - batch 96 was reviewed directly from the final validated Rust scaffolds and the observed unsupported-import and intrinsic-import diagnostics for the paired fixtures
+  - both review passes ended with no accepted blockers across the trio
+
+#### batch_97_closeout_scaffolds
+
+status: accepted_after_pass_1_and_pass_2
+
+- scope:
+  - `demos/default_values/negative_cases/unsupported_default_call_expression/idiomatic.rs`
+  - `demos/protocol_bounds/negative_cases/unknown_protocol_bound_forwarding/idiomatic.rs`
+  - `demos/variance_rules/negative_cases/list_variance_violation/idiomatic.rs`
+  - `demos/while_else/negative_cases/idiomatic.rs`
+- selection rationale:
+  - these four folders were the last remaining generic placeholders in the corpus, so the closeout batch intentionally mixed the remaining checker negatives with the final runtime guard to finish wave 3 in one audited pass
+  - the three negative fixtures still share one useful soundness theme around rejected user-visible contracts: unsupported default expressions, unsatisfied forwarded protocol bounds, and invariant list element types
+  - the `while_else` fixture is not a checker failure but still needs an explicit Rust-side scaffold because its purpose is to guard runtime control-flow lowering rather than compare emitted Rust shape
+- priority tags:
+  - `tier-2-negative-case`: `unsupported_default_call_expression`, `unknown_protocol_bound_forwarding`, `list_variance_violation`
+  - `tier-2-guard-fixture`: `while_else/negative_cases`
+  - `generic-placeholder-cleanup`: `unsupported_default_call_expression`, `unknown_protocol_bound_forwarding`, `list_variance_violation`, `while_else/negative_cases`
+- implementation summary:
+  - `default_values`: replaced the generic stub with a scaffold describing the unsupported call-expression default and the deterministic missing-argument follow-on diagnostic
+  - `protocol_bounds`: replaced the generic stub with a scaffold describing generic forwarding through an unknown protocol bound
+  - `variance_rules`: replaced the generic stub with a scaffold describing list invariance rejecting `list[int]` where `list[int | str]` is required
+  - `while_else`: replaced the generic stub with a guard scaffold documenting that `while`-`else` must skip the `else` arm after `break` and still print `ok`
+- local validation completed:
+  - `rustfmt demos/default_values/negative_cases/unsupported_default_call_expression/idiomatic.rs demos/protocol_bounds/negative_cases/unknown_protocol_bound_forwarding/idiomatic.rs demos/variance_rules/negative_cases/list_variance_violation/idiomatic.rs demos/while_else/negative_cases/idiomatic.rs`
+  - `rustc --edition=2021 demos/default_values/negative_cases/unsupported_default_call_expression/idiomatic.rs -o /tmp/sifr-neg-default-call && /tmp/sifr-neg-default-call`
+  - `rustc --edition=2021 demos/protocol_bounds/negative_cases/unknown_protocol_bound_forwarding/idiomatic.rs -o /tmp/sifr-neg-protocol-bound && /tmp/sifr-neg-protocol-bound`
+  - `rustc --edition=2021 demos/variance_rules/negative_cases/list_variance_violation/idiomatic.rs -o /tmp/sifr-neg-variance && /tmp/sifr-neg-variance`
+  - `rustc --edition=2021 demos/while_else/negative_cases/idiomatic.rs -o /tmp/sifr-neg-while-else && /tmp/sifr-neg-while-else`
+  - `cargo run -q -p sifr -- check demos/default_values/negative_cases/unsupported_default_call_expression/main.sifr`
+  - `cargo run -q -p sifr -- check demos/protocol_bounds/negative_cases/unknown_protocol_bound_forwarding/main.sifr`
+  - `cargo run -q -p sifr -- check demos/variance_rules/negative_cases/list_variance_violation/main.sifr`
+  - `cargo run -q -p sifr -- run demos/while_else/negative_cases/break_skips_else_guard.sifr`
+  - `scripts/run_all_tests.sh`
+- review artifacts:
+  - pass 1: `reviews/phase-ad-hoc-idiomatic-rust-demo-corpus-wave-3-batch-97-review-pass-1.md`
+  - pass 2: `reviews/phase-ad-hoc-idiomatic-rust-demo-corpus-wave-3-batch-97-review-pass-2.md`
+- review application summary:
+  - all four pass-1 reviews returned `OK`
+  - all four pass-2 reviews returned `OK`
+  - no follow-up code changes were needed after the final Tier 2 rewrite
+- reviewer tooling note:
+  - batch 97 was reviewed directly from the final validated Rust scaffolds, the observed checker diagnostics for the three negative fixtures, and the observed successful `ok` runtime for the `while_else` guard fixture
+  - wave 3 ends here with zero remaining generic `Negative-case Sifr fixture scaffold` placeholders
+
 ### wave_4_corpus_consistency_pass
 
 status: pending
