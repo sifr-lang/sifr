@@ -619,6 +619,58 @@ status: in progress
     - `PASS=8` (stable),
     - `CHECK_ERROR=6` (new semantic-gate diagnostics),
     - `RUN_ERROR=10` (down from `16` in wave-R2 probe).
+- 2026-03-30 local iteration (wave-R3b2 codegen data-shape closure slice):
+  - root cause:
+    - residual run-stage failures in the probe cohort were concentrated in codegen parity/data-shape paths:
+      - borrowed iterator collect emission (`Vec<&T>` instead of `Vec<T>`) for `list(set_like)` paths,
+      - unresolved `set(generator)` fallback path in strict registry lowering,
+      - invalid list repetition emission (`Vec<T> * i64`),
+      - mixed float/int compare emission without coercion in `Compare`,
+      - bool-typed boolop lowering retaining optional operands in condition context.
+  - reviewer gate:
+    - plan artifact: `issues/ad-hoc-optional-none-and-narrowing-wave-r3b2-codegen-data-shape-plan-2026-03-30.md`
+    - review pass-1: `reviews/ad-hoc-optional-none-wave-r3b2-codegen-data-shape-review-pass1.md` (`not ready`; probe reconciliation blocker)
+    - review pass-2: `reviews/ad-hoc-optional-none-wave-r3b2-codegen-data-shape-review-pass2.md` (`ready`; no blockers)
+  - compiler changes:
+    - `crates/sifr_codegen/src/intrinsic_method_emitters.rs`:
+      - builtin call lowering now accepts call-site result type context for `list(...)` ownership hinting,
+      - `list(...)` iterable collection path now upgrades borrowed iterator views (`iter`/`keys`) to owned collection via `cloned()` before `collect::<Vec<_>>()`,
+      - `set(...)` builtin now has generator-safe fallback path through stmt-support expression lowering when strict registry lowering cannot lower the source,
+      - `set(...)` collect target is now fully-qualified (`std::collections::HashSet`) to avoid missing-import run failures.
+    - `crates/sifr_codegen/src/stmt_support_emitter.rs`:
+      - added list/bytes repetition lowering for `*` with integer count (no `Vec * i64` emission),
+      - compare lowering now performs int->float coercion for mixed numeric `Compare` operands,
+      - bool-typed boolop lowering now routes operands through condition coercion contract (Option/collection truthiness normalized to bool).
+    - `crates/sifr_codegen/src/helpers.rs`:
+      - iterator ownership planner now consumes concrete element type hints for concrete collection sources when iteration metadata is unknown.
+    - `crates/sifr_codegen/src/methods/set.rs`:
+      - set `add` lowering clones identifier arguments before insertion to avoid move-use run-stage fallout in repeated-use patterns.
+    - tests:
+      - `crates/sifr_codegen/src/lib_codegen_tests.rs`: added R3b2 regressions for list-from-set ownership, set(generator) fallback, list repeat lowering, mixed compare coercion, and boolop option coercion.
+      - `crates/sifr_codegen/src/helpers.rs`: added iterator planner hint regression coverage.
+  - tests/validation:
+    - `cargo test -q -p sifr_codegen test_list_builtin_uses_owned_collection_for_unknown_set_with_list_hint` -> pass
+    - `cargo test -q -p sifr_codegen test_set_builtin_with_generator_lowers_to_collect_not_plain_set_call` -> pass
+    - `cargo test -q -p sifr_codegen test_list_repeat_lowers_without_vec_mul_shape` -> pass
+    - `cargo test -q -p sifr_codegen test_compare_lowers_int_float_mixed_operands_with_cast` -> pass
+    - `cargo test -q -p sifr_codegen test_bool_typed_boolop_coerces_optional_operand_to_condition_bool` -> pass
+    - `cargo test -q -p sifr_codegen iterator_plan_uses_hint_for_collection_with_unknown_elements` -> pass
+    - targeted fixture reruns (`target/release/sifr run`): `0187`, `1461`, `1582`, `0441`, `1905` -> pass
+    - `scripts/run_all_tests.sh --profile quick` -> pass
+  - probe artifact:
+    - `verification/leetcode/run_error_quartet_plus_baseline24_probe_20260330_wave_r3b2.json`
+  - probe delta vs wave-R3a baseline-24 cohort:
+    - `PASS=13` (up from `8`),
+    - `CHECK_ERROR=6` (stable),
+    - `RUN_ERROR=5` (down from `10`)
+    - transitions in this slice:
+      - `0187`: `RUN_ERROR -> PASS`
+      - `0441`: `RUN_ERROR -> PASS`
+      - `1461`: `RUN_ERROR -> PASS`
+      - `1582`: `RUN_ERROR -> PASS`
+      - `1905`: `RUN_ERROR -> PASS`
+    - remaining run-error set in probe cohort:
+      - `0054`, `0071`, `0349`, `0459`, `0763`
 
 - Validation to record:
   - post-wave full corpus rerun
@@ -637,6 +689,7 @@ Root-cause plan artifact:
 - `issues/ad-hoc-optional-none-and-narrowing-wave9d-residual-canonicalization-plan-2026-03-29.md`
 - `issues/ad-hoc-optional-none-and-narrowing-wave9e-mutability-boundary-plan-2026-03-29.md`
 - `issues/ad-hoc-optional-none-and-narrowing-wave-r3-run-error-majority-plan-2026-03-30.md`
+- `issues/ad-hoc-optional-none-and-narrowing-wave-r3b2-codegen-data-shape-plan-2026-03-30.md`
 
 Reviewer passes:
 - `reviews/ad-hoc-optional-none-wave7-9-plan-review-pass1.md` (`not ready`, corrective findings applied)
@@ -648,6 +701,8 @@ Reviewer passes:
 - `reviews/ad-hoc-optional-none-wave9d-residual-canonicalization-review-pass1.md` (`ready`, no blocking issues)
 - `reviews/ad-hoc-optional-none-wave9e-mutability-boundary-review-pass1.md` (`ready`, no blocking issues)
 - `reviews/ad-hoc-optional-none-wave-r3-run-error-majority-review-pass1.md` (`not ready`, corrective decomposition requested)
+- `reviews/ad-hoc-optional-none-wave-r3b2-codegen-data-shape-review-pass1.md` (`not ready`, probe-reconciliation blocker applied)
+- `reviews/ad-hoc-optional-none-wave-r3b2-codegen-data-shape-review-pass2.md` (`ready`, no blocking issues)
 
 Wave state:
 
@@ -675,6 +730,9 @@ Wave state:
 - wave-9 (`workstream_3` + `workstream_4` closure lane):
   - call-boundary and container refinement closure under explicit Optional semantics
   - ownership: `method_call_args.rs`, `expressions.rs`, `nonempty_method_narrowing.rs`, `sequence_guard_detection.rs`, `guarded_index.rs`
+- wave-R3b2 (`codegen data-shape closure lane`):
+  - implemented and validated: `0187`, `0441`, `1461`, `1582`, `1905` moved `RUN_ERROR -> PASS` in probe scope
+  - residual run-error ownership after R3b2: `0054`, `0071`, `0349`, `0459`, `0763`
 
 Implementation gate:
 - no code changes for waves `7-9` begin until reviewer pass-2 ready verdict is recorded (satisfied as of 2026-03-29).

@@ -3050,6 +3050,246 @@ fn test_plain_call_canonicalizes_heapq_compat_symbol_name() {
 }
 
 #[test]
+fn test_list_builtin_uses_owned_collection_for_unknown_set_with_list_hint() {
+    let module = HirModule {
+        functions: vec![HirFunction {
+            name: "to_list".to_string(),
+            params: vec![HirParam {
+                name: "result".to_string(),
+                ty: Type::Set(Box::new(Type::Any)),
+                default: None,
+                keyword_only: false,
+                convention: ParamConvention::borrow(),
+            }],
+            return_type: Type::List(Box::new(Type::Str)),
+            body: vec![HirStmt::Return {
+                value: Some(HirExpr::Call {
+                    func: "list".to_string(),
+                    args: vec![HirExpr::Name {
+                        name: "result".to_string(),
+                        ty: Type::Set(Box::new(Type::Any)),
+                    }],
+                    ty: Type::List(Box::new(Type::Str)),
+                }),
+            }],
+            method_kind: MethodKind::Regular,
+            decorators: vec![],
+            type_params: vec![],
+        }],
+        classes: vec![],
+        imports: vec![],
+        constants: vec![],
+        generic_functions: std::collections::HashMap::new(),
+        type_param_bounds: std::collections::HashMap::new(),
+    };
+
+    let generated = generate_rust_with_metadata(&module);
+    assert!(generated
+        .rust_source
+        .contains(".iter().cloned().collect::<Vec<_>>()"));
+}
+
+#[test]
+fn test_set_builtin_with_generator_lowers_to_collect_not_plain_set_call() {
+    let generator = HirExpr::GeneratorExpr {
+        expr: Box::new(HirExpr::Call {
+            func: "str".to_string(),
+            args: vec![HirExpr::Name {
+                name: "i".to_string(),
+                ty: Type::Int,
+            }],
+            ty: Type::Str,
+        }),
+        var: "i".to_string(),
+        iter: Box::new(HirExpr::RangeLiteral {
+            start: Box::new(HirExpr::IntLiteral(0)),
+            end: Box::new(HirExpr::IntLiteral(3)),
+            step: None,
+            ty: Type::Range,
+        }),
+        filter: None,
+        ty: Type::Iterator(Box::new(Type::Str)),
+    };
+    let module = HirModule {
+        functions: vec![HirFunction {
+            name: "build_set".to_string(),
+            params: vec![],
+            return_type: Type::Set(Box::new(Type::Str)),
+            body: vec![HirStmt::Return {
+                value: Some(HirExpr::Call {
+                    func: "set".to_string(),
+                    args: vec![generator],
+                    ty: Type::Set(Box::new(Type::Str)),
+                }),
+            }],
+            method_kind: MethodKind::Regular,
+            decorators: vec![],
+            type_params: vec![],
+        }],
+        classes: vec![],
+        imports: vec![],
+        constants: vec![],
+        generic_functions: std::collections::HashMap::new(),
+        type_param_bounds: std::collections::HashMap::new(),
+    };
+
+    let generated = generate_rust_with_metadata(&module);
+    assert!(generated
+        .rust_source
+        .contains("collect::<std::collections::HashSet<_>>()"));
+    assert!(!generated.rust_source.contains("return set("));
+}
+
+#[test]
+fn test_list_repeat_lowers_without_vec_mul_shape() {
+    let module = HirModule {
+        functions: vec![HirFunction {
+            name: "repeat_zero".to_string(),
+            params: vec![HirParam {
+                name: "n".to_string(),
+                ty: Type::Int,
+                default: None,
+                keyword_only: false,
+                convention: ParamConvention::own(),
+            }],
+            return_type: Type::List(Box::new(Type::Int)),
+            body: vec![HirStmt::Return {
+                value: Some(HirExpr::BinOp {
+                    left: Box::new(HirExpr::ListLiteral {
+                        elements: vec![HirExpr::IntLiteral(0)],
+                        ty: Type::List(Box::new(Type::Int)),
+                    }),
+                    op: "*".to_string(),
+                    right: Box::new(HirExpr::Name {
+                        name: "n".to_string(),
+                        ty: Type::Int,
+                    }),
+                    ty: Type::List(Box::new(Type::Int)),
+                }),
+            }],
+            method_kind: MethodKind::Regular,
+            decorators: vec![],
+            type_params: vec![],
+        }],
+        classes: vec![],
+        imports: vec![],
+        constants: vec![],
+        generic_functions: std::collections::HashMap::new(),
+        type_param_bounds: std::collections::HashMap::new(),
+    };
+
+    let generated = generate_rust_with_metadata(&module);
+    assert!(!generated.rust_source.contains("vec![0 as i64] * n"));
+    assert!(generated.rust_source.contains("__sifr_repeat_out.extend("));
+}
+
+#[test]
+fn test_compare_lowers_int_float_mixed_operands_with_cast() {
+    let module = HirModule {
+        functions: vec![HirFunction {
+            name: "cmp".to_string(),
+            params: vec![
+                HirParam {
+                    name: "coins".to_string(),
+                    ty: Type::Float,
+                    default: None,
+                    keyword_only: false,
+                    convention: ParamConvention::own(),
+                },
+                HirParam {
+                    name: "n".to_string(),
+                    ty: Type::Int,
+                    default: None,
+                    keyword_only: false,
+                    convention: ParamConvention::own(),
+                },
+            ],
+            return_type: Type::Bool,
+            body: vec![HirStmt::Return {
+                value: Some(HirExpr::Compare {
+                    left: Box::new(HirExpr::Name {
+                        name: "coins".to_string(),
+                        ty: Type::Float,
+                    }),
+                    ops: vec![">".to_string()],
+                    comparators: vec![HirExpr::Name {
+                        name: "n".to_string(),
+                        ty: Type::Int,
+                    }],
+                    ty: Type::Bool,
+                }),
+            }],
+            method_kind: MethodKind::Regular,
+            decorators: vec![],
+            type_params: vec![],
+        }],
+        classes: vec![],
+        imports: vec![],
+        constants: vec![],
+        generic_functions: std::collections::HashMap::new(),
+        type_param_bounds: std::collections::HashMap::new(),
+    };
+
+    let generated = generate_rust_with_metadata(&module);
+    assert!(generated.rust_source.contains("as f64"));
+}
+
+#[test]
+fn test_bool_typed_boolop_coerces_optional_operand_to_condition_bool() {
+    let optional_index = HirExpr::Index {
+        object: Box::new(HirExpr::Name {
+            name: "grid2".to_string(),
+            ty: Type::List(Box::new(Type::Int)),
+        }),
+        index: Box::new(HirExpr::Name {
+            name: "i".to_string(),
+            ty: Type::Int,
+        }),
+        ty: Type::Union(vec![Type::Int, Type::None]),
+    };
+    let module = HirModule {
+        functions: vec![HirFunction {
+            name: "cond".to_string(),
+            params: vec![
+                HirParam {
+                    name: "grid2".to_string(),
+                    ty: Type::List(Box::new(Type::Int)),
+                    default: None,
+                    keyword_only: false,
+                    convention: ParamConvention::borrow(),
+                },
+                HirParam {
+                    name: "i".to_string(),
+                    ty: Type::Int,
+                    default: None,
+                    keyword_only: false,
+                    convention: ParamConvention::own(),
+                },
+            ],
+            return_type: Type::Bool,
+            body: vec![HirStmt::Return {
+                value: Some(HirExpr::BoolOp {
+                    op: "and".to_string(),
+                    values: vec![optional_index, HirExpr::BoolLiteral(true)],
+                    ty: Type::Bool,
+                }),
+            }],
+            method_kind: MethodKind::Regular,
+            decorators: vec![],
+            type_params: vec![],
+        }],
+        classes: vec![],
+        imports: vec![],
+        constants: vec![],
+        generic_functions: std::collections::HashMap::new(),
+        type_param_bounds: std::collections::HashMap::new(),
+    };
+
+    let generated = generate_rust_with_metadata(&module);
+    assert!(generated.rust_source.contains("is_some_and"));
+}
+
+#[test]
 fn test_union_display_impl_uses_structured_ir() {
     let union_src = include_str!("union_type_helpers.rs");
     assert!(union_src.contains("RustType::Ref {"));
