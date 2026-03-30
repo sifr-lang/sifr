@@ -1,12 +1,12 @@
-//! Negative-case Sifr fixture scaffold.
+//! Tier-2 Rust scaffold for the Sifr negative fixture in this folder.
 //!
-//! Source files in this folder:
-//! - `typo_in_for_else_recursive_call.sifr`
+//! The paired Sifr program is rejected because the recursive call in the
+//! reachable `for`-`else` branch is misspelled as `recc(...)`.
 //!
-//! This folder exists to preserve an intentional diagnostic or compile-fail shape.
-//! There is no single runnable Rust program that is both idiomatic and preserves
-//! the same failure contract, so this file serves as the Rust-side scaffold.
-
-#![allow(dead_code)]
+//! This fixture exists to preserve traversal completeness for `for`-`else`
+//! lowering: the analyzer must descend into the `else` block and surface the
+//! undefined-function diagnostic instead of treating that branch as dead or
+//! skipped. The Rust-side analogue is still name-resolution failure, so this
+//! file remains an explanatory scaffold.
 
 fn main() {}

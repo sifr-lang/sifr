@@ -446,6 +446,8 @@ Goals:
 - `batch_91_module_cycle_scaffolds` completed local validation and ended review with no accepted blockers; all three placeholders were replaced with fixture-specific Tier 2 scaffolds, and the paired Sifr fixtures still fail with the intended explicit module-cycle diagnostics
 - `batch_92_optional_access_scaffolds` selected as the next wave-3 normalization batch because the remaining phase-26 and phase-27 type-safety negatives still used the generic placeholder despite sharing one contract family: optional values must be narrowed before arithmetic or method access, and non-integer list indexes must be rejected deterministically
 - `batch_92_optional_access_scaffolds` completed local validation and ended review with no accepted blockers; all three placeholders were replaced with fixture-specific Tier 2 scaffolds, and the paired Sifr fixtures still fail with the intended optional-access and invalid-index diagnostics
+- `batch_93_recursive_traversal_scaffolds` selected as the next wave-3 normalization batch because three remaining semantic-analysis negatives still used the generic placeholder even though they all exercise reachable traversal through nested control flow: one generator `except` branch and two recursive typo paths
+- `batch_93_recursive_traversal_scaffolds` completed local validation and ended review with no accepted blockers; all three placeholders were replaced with fixture-specific Tier 2 scaffolds, and the paired Sifr fixtures still fail with the intended generator-shape and undefined-name diagnostics
 
 ### wave_4_corpus_consistency_pass
 
