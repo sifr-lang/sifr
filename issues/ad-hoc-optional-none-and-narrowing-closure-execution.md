@@ -544,6 +544,19 @@ status: in progress
       - `E0428: 1`
       - `E0425: 1`
       - `E0369: 1`
+- 2026-03-30 planning iteration (wave-R3 run-error majority decomposition):
+  - root cause refresh:
+    - residual run-errors are multi-bucket and not a single `E0308` class; decomposition now isolates:
+      - empty-collection `Any` leakage,
+      - semantics checks missing at `check` stage (bool-condition contract / return completeness / duplicate defs),
+      - codegen parity defects (set(generator), list-repeat, borrow patterns, heapq helper naming),
+      - explicit augassign render defect (`+==`),
+      - optional-boundary guarded index leakage.
+  - artifacts:
+    - plan: `issues/ad-hoc-optional-none-and-narrowing-wave-r3-run-error-majority-plan-2026-03-30.md`
+    - review: `reviews/ad-hoc-optional-none-wave-r3-run-error-majority-review-pass1.md`
+  - reviewer gate:
+    - pass-1 verdict: `not ready` until decomposition/guardrails are explicit (applied in updated plan artifact); implementation wave start is now pending commit/PR of this planning slice.
 
 - Validation to record:
   - post-wave full corpus rerun
@@ -561,6 +574,7 @@ Root-cause plan artifact:
 - `issues/ad-hoc-optional-none-and-narrowing-wave9c-residual-canonicalization-plan-2026-03-29.md`
 - `issues/ad-hoc-optional-none-and-narrowing-wave9d-residual-canonicalization-plan-2026-03-29.md`
 - `issues/ad-hoc-optional-none-and-narrowing-wave9e-mutability-boundary-plan-2026-03-29.md`
+- `issues/ad-hoc-optional-none-and-narrowing-wave-r3-run-error-majority-plan-2026-03-30.md`
 
 Reviewer passes:
 - `reviews/ad-hoc-optional-none-wave7-9-plan-review-pass1.md` (`not ready`, corrective findings applied)
@@ -571,6 +585,7 @@ Reviewer passes:
 - `reviews/ad-hoc-optional-none-wave9c-residual-canonicalization-review-pass1.md` (`ready`, no blocking issues)
 - `reviews/ad-hoc-optional-none-wave9d-residual-canonicalization-review-pass1.md` (`ready`, no blocking issues)
 - `reviews/ad-hoc-optional-none-wave9e-mutability-boundary-review-pass1.md` (`ready`, no blocking issues)
+- `reviews/ad-hoc-optional-none-wave-r3-run-error-majority-review-pass1.md` (`not ready`, corrective decomposition requested)
 
 Wave state:
 
