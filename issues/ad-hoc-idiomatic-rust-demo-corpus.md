@@ -408,6 +408,8 @@ Progress update (`2026-03-29`):
 - `batch_77_recursive_type_part1_recursive_type_part2_recursive_type_part3` completed local validation and ended external review with no accepted blockers; all three files were tightened into direct Rust-first recursive alias and enum demonstrations and both review passes returned `OK`
 - `batch_78_recursive_type_part4_recursive_type_part5_recursive_type_part6` selected as the seventy-eighth wave-2 runnable-demo batch because it clears the second contiguous recursive-type trilogy as a coherent recursive-class and packet-alias slice instead of scattering those remaining tree-structure demos across unrelated batches
 - `batch_78_recursive_type_part4_recursive_type_part5_recursive_type_part6` completed local validation and ended external review with no accepted blockers; all three files were tightened into direct borrow-based recursive tree helpers and a clearer generic packet enum, and both review passes returned `OK`
+- `batch_79_nested_function_part4_nested_function_part5_recursive_types` selected as the seventy-ninth wave-2 runnable-demo batch because it clears the remaining recursion-heavy positive demos that still carried obvious generated-style residue: the last two nested-helper backtracking examples plus the standalone recursive-types milestone companion
+- `batch_79_nested_function_part4_nested_function_part5_recursive_types` completed local validation and ended external review with no accepted blockers; the backtracking demos were rewritten into direct Rust-first recursion and the recursive-types milestone was tightened into cleaner self-referential node construction, with both review passes returning `OK`
 
 ### wave_3_fixture_and_negative_case_normalization
 

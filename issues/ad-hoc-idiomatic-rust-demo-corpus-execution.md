@@ -2858,6 +2858,47 @@ status: accepted_after_pass_1_and_pass_2
   - batch 78 was reviewed directly from the final validated Rust files and observed Sifr outputs
   - both passes ended with no accepted blockers across the trio
 
+#### batch_79_nested_function_part4_nested_function_part5_recursive_types
+
+status: accepted_after_pass_1_and_pass_2
+
+- scope:
+  - `demos/nested_function_part4/idiomatic.rs`
+  - `demos/nested_function_part5/idiomatic.rs`
+  - `demos/recursive_types/idiomatic.rs`
+- selection rationale:
+  - the batch clears the remaining recursion-heavy positive demos that still carried the clearest generated-style residue instead of scattering those backtracking and self-referential structure demos across unrelated batches
+  - `nested_function_part4` and `nested_function_part5` were the last unfinished nested-function demos and both still relied on verbose index lowering and stringified output assertions
+  - `recursive_types` fit cleanly as the third file because it was the remaining standalone recursive-types milestone demo and still used mechanically boxed construction that could be simplified without changing the observed output
+- priority tags:
+  - `nested-functions`: `nested_function_part4`, `nested_function_part5`
+  - `recursive-types`: `recursive_types`
+  - `milestone-demo`: `recursive_types`
+  - `hand-authored-generated-shape`: `nested_function_part4`, `nested_function_part5`, `recursive_types`
+- implementation summary:
+  - `nested_function_part4`: replaced lowered index scaffolding with direct slice-based backtracking helpers for `combination_sum` and `subsets`, and switched to structural `assert_eq!`
+  - `nested_function_part5`: rewrote the closure/backtracking companion into direct slice-based Rust helpers, keeping the observed ordering and outputs while removing generated casts, `&Vec`, and string comparisons
+  - `recursive_types`: tightened the linked-list and tree examples into direct recursive constructors that accept owned child nodes, preserving the printed `1` / `1` milestone output with clearer self-referential structure setup
+- local validation completed:
+  - `rustfmt demos/nested_function_part4/idiomatic.rs demos/nested_function_part5/idiomatic.rs demos/recursive_types/idiomatic.rs`
+  - `rustc --edition=2021 demos/nested_function_part4/idiomatic.rs -o /tmp/sifr-idiomatic-nested-function-part4 && /tmp/sifr-idiomatic-nested-function-part4`
+  - `rustc --edition=2021 demos/nested_function_part5/idiomatic.rs -o /tmp/sifr-idiomatic-nested-function-part5 && /tmp/sifr-idiomatic-nested-function-part5`
+  - `rustc --edition=2021 demos/recursive_types/idiomatic.rs -o /tmp/sifr-idiomatic-recursive-types && /tmp/sifr-idiomatic-recursive-types`
+  - `cargo run -q -p sifr -- run demos/nested_function_part4/main.sifr`
+  - `cargo run -q -p sifr -- run demos/nested_function_part5/main.sifr`
+  - `cargo run -q -p sifr -- run demos/recursive_types/main.sifr`
+  - `scripts/run_all_tests.sh`
+- review artifacts:
+  - pass 1: `reviews/phase-ad-hoc-idiomatic-rust-demo-corpus-wave-2-batch-79-review-pass-1.md`
+  - pass 2: `reviews/phase-ad-hoc-idiomatic-rust-demo-corpus-wave-2-batch-79-review-pass-2.md`
+- review application summary:
+  - all three pass-1 reviews returned `OK`
+  - all three pass-2 reviews returned `OK`
+  - no follow-up code changes were needed after the validated rewrite
+- reviewer tooling note:
+  - batch 79 was reviewed directly from the final validated Rust files and observed Sifr outputs
+  - both passes ended with no accepted blockers across the trio
+
 #### batch_65_codegen_preamble_codegen_structural_passes_intrinsic_codegen
 
 status: accepted_after_pass_1_and_pass_2

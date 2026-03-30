@@ -1,19 +1,17 @@
-#[derive(Debug, Clone, PartialEq)]
 struct ListNode {
     val: i64,
     next: Option<Box<ListNode>>,
 }
 
 impl ListNode {
-    fn new(val: i64, next: Option<Box<ListNode>>) -> Self {
-        return Self {
-            val: val,
-            next: next,
-        };
+    fn new(val: i64, next: Option<ListNode>) -> Self {
+        Self {
+            val,
+            next: next.map(Box::new),
+        }
     }
 }
 
-#[derive(Debug, Clone, PartialEq)]
 struct TreeNode {
     val: i64,
     left: Option<Box<TreeNode>>,
@@ -21,22 +19,26 @@ struct TreeNode {
 }
 
 impl TreeNode {
-    fn new(val: i64, left: Option<Box<TreeNode>>, right: Option<Box<TreeNode>>) -> Self {
-        return Self {
-            val: val,
-            left: left,
-            right: right,
-        };
+    fn new(val: i64, left: Option<TreeNode>, right: Option<TreeNode>) -> Self {
+        Self {
+            val,
+            left: left.map(Box::new),
+            right: right.map(Box::new),
+        }
     }
 }
 
 fn main() {
-    let n3: ListNode = ListNode::new(3 as i64, None);
-    let n2: ListNode = ListNode::new(2 as i64, Some(Box::new(n3)));
-    let n1: ListNode = ListNode::new(1 as i64, Some(Box::new(n2)));
+    let n1 = ListNode::new(1, Some(ListNode::new(2, Some(ListNode::new(3, None)))));
     println!("{}", n1.val);
-    let left: TreeNode = TreeNode::new(2 as i64, None, None);
-    let right: TreeNode = TreeNode::new(3 as i64, None, None);
-    let root: TreeNode = TreeNode::new(1 as i64, Some(Box::new(left)), Some(Box::new(right)));
+
+    let root = TreeNode::new(
+        1,
+        Some(TreeNode::new(2, None, None)),
+        Some(TreeNode::new(3, None, None)),
+    );
     println!("{}", root.val);
+
+    let _tail = &n1.next;
+    let _children = (&root.left, &root.right);
 }
