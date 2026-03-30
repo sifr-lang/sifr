@@ -50,6 +50,7 @@ The goal is to make intended Sifr Optional semantics precise enough that valid g
 - `issues/ad-hoc-optional-none-and-narrowing-wave-r3-run-error-majority-plan-2026-03-30.md`
 - `issues/ad-hoc-optional-none-and-narrowing-wave-r3b2-codegen-data-shape-plan-2026-03-30.md`
 - `issues/ad-hoc-optional-none-and-narrowing-wave-r3d-final-run-error-closure-plan-2026-03-30.md`
+- `issues/ad-hoc-optional-none-and-narrowing-wave-r3e-check-residual-canonicalization-plan-2026-03-30.md`
 - `reviews/optional-none-direct-pass1.md`
 - `reviews/optional-none-category-implementation-readiness-claude.md`
 - `reviews/ad-hoc-optional-none-wave7-9-plan-review-pass1.md`
@@ -67,6 +68,7 @@ The goal is to make intended Sifr Optional semantics precise enough that valid g
 - `reviews/ad-hoc-optional-none-wave-r3b2-codegen-data-shape-review-pass2.md`
 - `reviews/ad-hoc-optional-none-wave-r3c-review-pass1.md`
 - `reviews/ad-hoc-optional-none-wave-r3d-review-pass1.md`
+- `reviews/ad-hoc-optional-none-wave-r3e-review-pass1.md`
 - `internal_docs/architecture.md`
 
 Implementation hotspots:
@@ -207,6 +209,7 @@ Important operational note:
   - wave-R3b2 codegen data-shape slice is implemented locally: owned list-from-set collect parity, generator-safe `set(...)` fallback lowering, list-repeat lowering closure, mixed compare int->float coercion, and bool-typed boolop condition coercion; probe cohort moved `RUN_ERROR 10 -> 5` (`PASS 8 -> 13`)
   - wave-R3c container/guard/slice stabilization slice is implemented locally: empty-list method specialization/backpatching, len-alias-aware guard anchors, and negative no-step slice-bound normalization now recover `0071`, `0349`, and `0459`; residual run-error ownership narrows to `0054` and `0763`
   - wave-R3d final residual run-error closure slice is implemented locally: empty-list specialization now persists across loop narrowing boundaries, and 2-arg `max`/`min` reject Optional/incompatible operands; `0054` and `0763` move `RUN_ERROR -> CHECK_ERROR`, leaving no run-stage residuals in this lane
+  - wave-R3e residual check-stage canonicalization slice is implemented locally: reviewer-gated canonical rewrites move `0054` and `0763` from `CHECK_ERROR -> PASS` without broadening Optional narrowing semantics
   - residual canary fixtures for container and recursive Optional boundary lanes were canonicalized to explicit Sifr-safe forms (`0004`, `0013`, `0023`, `0024`, `0104`, `0115`, `0133`, `0206`)
   - residual run-stability fixtures were canonicalized to remove codegen-hostile shapes (`0010`, `0028`, `0097`, `0309`, `0678`)
 - validation evidence:

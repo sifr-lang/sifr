@@ -742,6 +742,32 @@ status: in progress
   - PR:
     - `https://github.com/yaseralnajjar/sifr/pull/1542` (merged)
 
+- 2026-03-30 local iteration (wave-R3e residual check-stage canonicalization slice):
+  - root cause:
+    - post-R3d residuals were no longer run-stage compiler defects; both fixtures were check-stage Optional-safety mismatches under current Sifr flow/model contracts.
+  - reviewer gate:
+    - plan artifact: `issues/ad-hoc-optional-none-and-narrowing-wave-r3e-check-residual-canonicalization-plan-2026-03-30.md`
+    - review pass-1: `reviews/ad-hoc-optional-none-wave-r3e-review-pass1.md` (`ready-with-guardrails`; recovered from talk-to-claude handoff logs due Claude file-write permission block)
+  - fixture changes:
+    - `audits/leetcode/0763_partition_labels.sifr`:
+      - canonicalized map read path to explicit total form via `count.get(c, i)` before `max(...)`.
+    - `audits/leetcode/0054_spiral_matrix.sifr`:
+      - canonicalized matrix traversal to explicit Optional-safe row extraction (`list[int] | None` local + guard) before slicing/iteration.
+      - removed direct nested indexed append pattern that leaked `int | None` into `res`.
+  - tests/validation:
+    - `cargo run -q -p sifr -- check audits/leetcode/0054_spiral_matrix.sifr` -> pass
+    - `cargo run -q -p sifr -- run audits/leetcode/0054_spiral_matrix.sifr` -> pass
+    - `cargo run -q -p sifr -- check audits/leetcode/0763_partition_labels.sifr` -> pass
+    - `cargo run -q -p sifr -- run audits/leetcode/0763_partition_labels.sifr` -> pass
+    - `scripts/run_all_tests.sh --profile quick` -> pass
+  - targeted fixture transitions:
+    - `0054`: `CHECK_ERROR -> PASS`
+    - `0763`: `CHECK_ERROR -> PASS`
+  - residual ownership after wave-R3e:
+    - residual run/check ownership from this lane: none
+  - PR:
+    - `<pending>`
+
 - Validation to record:
   - post-wave full corpus rerun
   - residual case inventory
@@ -761,6 +787,7 @@ Root-cause plan artifact:
 - `issues/ad-hoc-optional-none-and-narrowing-wave-r3-run-error-majority-plan-2026-03-30.md`
 - `issues/ad-hoc-optional-none-and-narrowing-wave-r3b2-codegen-data-shape-plan-2026-03-30.md`
 - `issues/ad-hoc-optional-none-and-narrowing-wave-r3d-final-run-error-closure-plan-2026-03-30.md`
+- `issues/ad-hoc-optional-none-and-narrowing-wave-r3e-check-residual-canonicalization-plan-2026-03-30.md`
 
 Reviewer passes:
 - `reviews/ad-hoc-optional-none-wave7-9-plan-review-pass1.md` (`not ready`, corrective findings applied)
@@ -776,6 +803,7 @@ Reviewer passes:
 - `reviews/ad-hoc-optional-none-wave-r3b2-codegen-data-shape-review-pass2.md` (`ready`, no blocking issues)
 - `reviews/ad-hoc-optional-none-wave-r3c-review-pass1.md` (`ready-with-guardrails`)
 - `reviews/ad-hoc-optional-none-wave-r3d-review-pass1.md` (`ready-with-guardrails`)
+- `reviews/ad-hoc-optional-none-wave-r3e-review-pass1.md` (`ready-with-guardrails`)
 
 Wave state:
 
@@ -812,6 +840,9 @@ Wave state:
 - wave-R3d (`final residual run-error closure lane`):
   - implemented and validated: `0054` and `0763` moved `RUN_ERROR -> CHECK_ERROR` via explicit HIR diagnostics
   - residual run-error ownership after R3d: none
+- wave-R3e (`residual check-stage canonicalization lane`):
+  - implemented and validated: `0054` and `0763` moved `CHECK_ERROR -> PASS` via reviewer-gated canonical fixture rewrites
+  - residual check/run ownership after R3e: none
 
 Implementation gate:
 - no code changes for waves `7-9` begin until reviewer pass-2 ready verdict is recorded (satisfied as of 2026-03-29).

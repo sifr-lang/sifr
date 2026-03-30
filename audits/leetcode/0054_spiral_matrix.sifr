@@ -1,33 +1,57 @@
 # LeetCode 54: Spiral Matrix
 
 def spiralOrder(matrix: list[list[int]]) -> list[int]:
-    res = []
-    left, right = 0, len(matrix[0])
+    res: list[int] = []
+    if len(matrix) == 0:
+        return res
+
+    first_row_opt: list[int] | None = matrix[0]
+    if first_row_opt is None:
+        return res
+    first_row = first_row_opt
+    left, right = 0, len(first_row)
     top, bottom = 0, len(matrix)
 
     while left < right and top < bottom:
-        # get every i in the top row
-        for i in range(left, right):
-            res.append(matrix[top][i])
+        top_row_opt: list[int] | None = matrix[top]
+        if top_row_opt is None:
+            return res
+        top_row = top_row_opt
+        for value in top_row[left:right]:
+            res.append(value)
         top += 1
-        # get every i in the right col
+
         for i in range(top, bottom):
-            res.append(matrix[i][right - 1])
+            row_opt: list[int] | None = matrix[i]
+            if row_opt is None:
+                return res
+            row = row_opt
+            for value in row[right - 1:right]:
+                res.append(value)
         right -= 1
+
         if not (left < right and top < bottom):
             break
-        # get every i in the bottom row
-        for i in range(right - 1, left - 1, -1):
-            res.append(matrix[bottom - 1][i])
+
+        bottom_row_opt: list[int] | None = matrix[bottom - 1]
+        if bottom_row_opt is None:
+            return res
+        bottom_row = bottom_row_opt
+        segment = bottom_row[left:right]
+        for value in reversed(segment):
+            res.append(value)
         bottom -= 1
-        # get every i in the left col
+
         for i in range(bottom - 1, top - 1, -1):
-            res.append(matrix[i][left])
+            row_opt: list[int] | None = matrix[i]
+            if row_opt is None:
+                return res
+            row = row_opt
+            for value in row[left:left + 1]:
+                res.append(value)
         left += 1
 
     return res
 
 def main():
     assert str(spiralOrder([[1,2,3],[4,5,6],[7,8,9]])) == '[1, 2, 3, 6, 9, 8, 7, 4, 5]'
-
-
