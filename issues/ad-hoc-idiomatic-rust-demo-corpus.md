@@ -414,6 +414,8 @@ Progress update (`2026-03-29`):
 - `batch_80_stable_codegen_statement_expression_codegen_statement_expression_mix` completed local validation and ended external review with no accepted blockers; all three files were tightened into direct Rust-first control-flow examples and both review passes returned `OK`
 - `batch_81_integer_safety_intrinsics_mut_sort` selected as the eighty-first wave-2 runnable-demo batch because it clears a compact runtime-surface slice: the bigint safety milestone, the intrinsic-stdlib milestone, and the missing `mut`-sort companion without dragging in the larger remaining text and verification outliers
 - `batch_81_integer_safety_intrinsics_mut_sort` completed local validation and ended external review with no accepted blockers; all three files were tightened into direct Rust-first companions, and the batch also included a necessary `lib/sifr/tempfile.sifr` validation unblock after a cold-cache `stdlib_logging_consolidated` e2e build exposed a borrow-after-move bug in the trailing-slash trim path
+- `batch_82_rooted_entrypoint_run_and_build_resolver_triggers` selected as the eighty-second wave-2 runnable-demo batch because it clears the remaining small project-mode import-closure trio together: rooted entrypoint closure, run/build alignment, and resolver-trigger activation
+- `batch_82_rooted_entrypoint_run_and_build_resolver_triggers` completed local validation and ended external review with no accepted blockers; all three missing companions were authored directly as tiny Rust module graphs and both review passes returned `OK`
 
 ### wave_3_fixture_and_negative_case_normalization
 
