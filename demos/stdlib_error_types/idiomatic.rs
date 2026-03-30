@@ -46,7 +46,7 @@ fn parse_int(text: &str) -> Result<i64, ParseIntError> {
 
 fn format_number(value: f64) -> String {
     if value.fract() == 0.0 {
-        format!("{}", value as i64)
+        (value as i64).to_string()
     } else {
         format!("{value}")
     }
