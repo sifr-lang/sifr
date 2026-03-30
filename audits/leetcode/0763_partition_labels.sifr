@@ -1,8 +1,8 @@
 # LeetCode 763: Partition Labels
 
 def partitionLabels(S: str) -> list[int]:
-    count = {}
-    res = []
+    count: dict[str, int] = {}
+    res: list[int] = []
     i, length = 0, len(S)
     for j in range(length):
         c = S[j]
@@ -12,7 +12,7 @@ def partitionLabels(S: str) -> list[int]:
     goal = 0
     while i < length:
         c = S[i]
-        goal = max(goal, count[c])
+        goal = max(goal, count.get(c, i))
         curLen += 1
 
         if goal == i:
@@ -23,5 +23,4 @@ def partitionLabels(S: str) -> list[int]:
 
 def main():
     assert str(partitionLabels("ababcbacadefegdehijhklij")) == '[9, 7, 8]'
-
 
