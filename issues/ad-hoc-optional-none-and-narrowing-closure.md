@@ -121,6 +121,16 @@ Latest run-stage panic-closure probe on 2026-03-30 (wave-R1 compiler slice):
   - all four moved from internal `codegen_panic` to ordinary Rust build diagnostics (`E0308`) at run stage
   - panic class is closed for this quartet; status remains `RUN_ERROR` pending R2 type-invariant closure
 
+Latest run-stage option-bridge probe on 2026-03-30 (wave-R2 compiler slice, baseline-24 run cohort):
+
+- probe artifact:
+  - `verification/leetcode/run_error_quartet_plus_baseline24_probe_20260330_wave_r2.json`
+- result:
+  - `8/24` run-error fixtures now pass in this probe cohort:
+    - `0033`, `0041`, `0074`, `0081`, `0125`, `0791`, `0978`, `2554`
+  - remaining `16/24` in probe cohort are run-stage errors with first-code distribution:
+    - `E0308=11`, `E0277=2`, `E0428=1`, `E0425=1`, `E0369=1`
+
 Planning baseline for this phase:
 
 - dominant family from the latest categorized analysis:
@@ -167,6 +177,7 @@ Important operational note:
   - residual canonicalization batch-4 rewrote `0300`, `0525`, `0554`, and `1343` into explicit accumulator-first Sifr-safe forms that avoid Optional arithmetic from indexed/helper-return paths
   - mutability-boundary canonicalization batch-5 rewrote `0026`, `0027`, `0080`, and `0448` to explicit Sifr `mut` boundary forms and removed tuple-swap unsupported syntax in `0027`
   - wave-R1 run-stage compiler closure removed production codegen panics for the remaining quartet (`0041`, `0081`, `0791`, `2554`) by adding structured lowering coverage for chained compares, nested `SubscriptAugAssign`, and nested `Delete`; these fixtures now fail with ordinary Rust type diagnostics (`E0308`) instead of internal compiler panics
+  - wave-R2 run-stage compiler closure resolved the dominant Optional-bridge E0308 subset in the probe cohort by normalizing Option/scalar compare bridging, non-name Optional truthiness lowering, and nested string-augassign lowering parity; `8` prior run-error fixtures now pass in probe scope
   - residual canary fixtures for container and recursive Optional boundary lanes were canonicalized to explicit Sifr-safe forms (`0004`, `0013`, `0023`, `0024`, `0104`, `0115`, `0133`, `0206`)
   - residual run-stability fixtures were canonicalized to remove codegen-hostile shapes (`0010`, `0028`, `0097`, `0309`, `0678`)
 - validation evidence:

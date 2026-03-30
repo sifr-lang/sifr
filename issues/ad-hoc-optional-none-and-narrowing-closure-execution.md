@@ -505,6 +505,45 @@ status: in progress
       - `0791_custom_sort_string`: `codegen_panic -> E0308`
       - `2554_maximum_number_of_integers_to_choose_from_a_range_i`: `codegen_panic -> E0308`
     - corpus status count unchanged at this slice boundary (`RUN_ERROR` fixtures still fail at run stage), but internal compiler panic class for this quartet is closed.
+- 2026-03-30 local iteration (wave-R2 optional-bridge and truthiness closure slice):
+  - root cause:
+    - a substantial run-stage cluster still failed with Rust `E0308` because structured lowering emitted:
+      - `Option[T]` compared directly against scalar `T` in relational/ordered compare paths,
+      - non-bool `Option` values used directly as `if` conditions in nested bool chains,
+      - nested string `+=` lowered as generic `AugAssign` instead of string-specific `push_str` path.
+  - compiler changes:
+    - `crates/sifr_codegen/src/stmt_support_emitter.rs`:
+      - compare lowering now applies Option/scalar bridging for all comparison operators (not equality-only),
+      - condition lowering now handles non-name Optional truthiness with explicit bool conversion (`is_some`/`is_none`/`is_some_and`),
+      - numeric Optional truthiness uses explicit zero-comparison under `is_some_and`,
+      - nested stmt-block `AugAssign` lowering now mirrors top-level structured behavior for string/list/pow cases.
+    - `crates/sifr_codegen/src/lib_codegen_tests.rs`:
+      - added regression tests for:
+        - option call truthiness lowering to bool condition,
+        - nested string `+=` lowering to `push_str`.
+  - tests/validation:
+    - `cargo test -q -p sifr_codegen test_structured_stmt_path_lowers_option_call_truthiness_to_bool_condition` -> pass
+    - `cargo test -q -p sifr_codegen test_structured_stmt_path_lowers_nested_string_augassign_to_push_str` -> pass
+    - `cargo test -q -p sifr_codegen test_structured_stmt_path_handles_nested_subscript_augassign_inside_loop_if` -> pass
+    - `cargo test -q -p sifr_codegen test_structured_stmt_path_handles_delete_with_name_key_inside_loop_if` -> pass
+    - `cargo test -q -p sifr_codegen test_structured_stmt_path_handles_chained_compare_condition_inside_loop_if` -> pass
+    - `scripts/run_all_tests.sh --profile quick` -> pass
+    - targeted fixture reruns:
+      - now pass: `0033`, `0041`, `0074`, `0081`, `0125`, `0791`, `0978`, `2554`
+      - still run-error in this probe slice: `0054`, `0071`, `0167`, `0187`, `0231`, `0349`, `0367`, `0416`, `0441`, `0459`, `0463`, `0763`, `0846`, `1461`, `1582`, `1905`
+  - probe artifact:
+    - `verification/leetcode/run_error_quartet_plus_baseline24_probe_20260330_wave_r2.json`
+  - rerun delta:
+    - probe scope: baseline run-error cohort (`24` fixtures) from `...wave9e` artifact
+    - status movement in probe scope:
+      - `PASS: 8`
+      - `RUN_ERROR: 16`
+    - remaining run-error first-code distribution in probe scope:
+      - `E0308: 11`
+      - `E0277: 2`
+      - `E0428: 1`
+      - `E0425: 1`
+      - `E0369: 1`
 
 - Validation to record:
   - post-wave full corpus rerun
