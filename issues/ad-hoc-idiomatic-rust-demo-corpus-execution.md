@@ -3896,6 +3896,46 @@ status: accepted_after_pass_1_and_pass_2
   - batch 88 was reviewed directly from the final validated Rust scaffolds and the observed decimal-specific failure modes for the paired fixtures
   - both review passes ended with no accepted blockers across the trio
 
+#### batch_89_imported_helper_type_error_scaffolds
+
+status: accepted_after_pass_1_and_pass_2
+
+- scope:
+  - `demos/diagnostic_exit_codes/negative_cases/helper_type_error/idiomatic.rs`
+  - `demos/project_check/negative_cases/helper_type_error/idiomatic.rs`
+  - `demos/project_entrypoint/negative_cases/type_error_dependency/idiomatic.rs`
+- selection rationale:
+  - these three phase-22 fixtures are the next untouched negative-case family and all share the same contract: a reachable imported helper declares a numeric return type and returns `str`
+  - the batch keeps frontend/project parity fixtures together instead of scattering dependency-type mismatches across unrelated Tier 2 cleanup work
+  - each paired fixture already exposes a stable helper-qualified type error under `sifr check`, so the Rust-side scaffold can be validated against observed output
+- priority tags:
+  - `tier-2-negative-case`: `diagnostic_exit_codes/helper_type_error`, `project_check/helper_type_error`, `project_entrypoint/type_error_dependency`
+  - `imported-helper-type-error`: `diagnostic_exit_codes/helper_type_error`, `project_check/helper_type_error`, `project_entrypoint/type_error_dependency`
+  - `generic-placeholder-cleanup`: `diagnostic_exit_codes/helper_type_error`, `project_check/helper_type_error`, `project_entrypoint/type_error_dependency`
+- implementation summary:
+  - `diagnostic_exit_codes`: replaced the generic stub with a scaffold describing the imported helper `doubled` returning `str` instead of `int`, plus a direct Rust analogue
+  - `project_check`: replaced the generic stub with a scaffold describing the imported helper `area_like` returning `str` instead of `float`
+  - `project_entrypoint`: replaced the generic stub with a scaffold describing the imported helper `adjusted` returning `str` instead of `int`
+- local validation completed:
+  - `rustfmt demos/diagnostic_exit_codes/negative_cases/helper_type_error/idiomatic.rs demos/project_check/negative_cases/helper_type_error/idiomatic.rs demos/project_entrypoint/negative_cases/type_error_dependency/idiomatic.rs`
+  - `rustc --edition=2021 demos/diagnostic_exit_codes/negative_cases/helper_type_error/idiomatic.rs -o /tmp/sifr-neg-diagnostic-helper-type && /tmp/sifr-neg-diagnostic-helper-type`
+  - `rustc --edition=2021 demos/project_check/negative_cases/helper_type_error/idiomatic.rs -o /tmp/sifr-neg-project-check-helper-type && /tmp/sifr-neg-project-check-helper-type`
+  - `rustc --edition=2021 demos/project_entrypoint/negative_cases/type_error_dependency/idiomatic.rs -o /tmp/sifr-neg-project-entry-dep-type && /tmp/sifr-neg-project-entry-dep-type`
+  - `cargo run -q -p sifr -- check demos/diagnostic_exit_codes/negative_cases/helper_type_error/main.sifr`
+  - `cargo run -q -p sifr -- check demos/project_check/negative_cases/helper_type_error/main.sifr`
+  - `cargo run -q -p sifr -- check demos/project_entrypoint/negative_cases/type_error_dependency/main.sifr`
+  - `scripts/run_all_tests.sh`
+- review artifacts:
+  - pass 1: `reviews/phase-ad-hoc-idiomatic-rust-demo-corpus-wave-3-batch-89-review-pass-1.md`
+  - pass 2: `reviews/phase-ad-hoc-idiomatic-rust-demo-corpus-wave-3-batch-89-review-pass-2.md`
+- review application summary:
+  - all three pass-1 reviews returned `OK`
+  - all three pass-2 reviews returned `OK`
+  - no follow-up code changes were needed after the targeted Tier 2 rewrite
+- reviewer tooling note:
+  - batch 89 was reviewed directly from the final validated Rust scaffolds and the observed helper-qualified type errors for the paired fixtures
+  - both review passes ended with no accepted blockers across the trio
+
 ### wave_4_corpus_consistency_pass
 
 status: pending
