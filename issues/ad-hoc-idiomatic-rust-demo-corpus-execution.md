@@ -2618,6 +2618,46 @@ status: accepted_after_pass_1_and_pass_2
   - batch 72 used direct per-file `claude -p --no-session-persistence --dangerously-skip-permissions` prompts through short Python subprocess wrappers with explicit timeouts
   - `decimal_diagnostics` needed shorter retry prompts in both passes after the longer prompt shape stalled, but both retry reviews returned `OK`
 
+#### batch_73_diagnostic_exit_codes_diagnostic_options_diagnostic_schema
+
+status: accepted_after_pass_1_and_pass_2
+
+- scope:
+  - `demos/diagnostic_exit_codes/idiomatic.rs`
+  - `demos/diagnostic_options/idiomatic.rs`
+  - `demos/diagnostic_schema/idiomatic.rs`
+- selection rationale:
+  - all three are positive runnable demos in the same diagnostics/frontend contract area
+  - `diagnostic_exit_codes` was still missing its Rust companion entirely
+  - `diagnostic_options` and `diagnostic_schema` already had minimal companions, so this batch could close the whole diagnostics slice by adding the missing file and re-reviewing the two existing ones against the current Rust-first standard
+- priority tags:
+  - `compiler-frontend`: `diagnostic_exit_codes`, `diagnostic_options`, `diagnostic_schema`
+  - `missing-companion`: `diagnostic_exit_codes`
+  - `milestone-demo`: `diagnostic_exit_codes`, `diagnostic_options`, `diagnostic_schema`
+- implementation summary:
+  - `diagnostic_exit_codes`: authored a compact helper-module companion that preserves the cross-mode local-import and doubled-value behavior with the exact observed output
+  - `diagnostic_options`: re-reviewed the existing tiny sum demo unchanged because it already matched the positive-path contract cleanly
+  - `diagnostic_schema`: re-reviewed the existing tiny print demo unchanged because it already matched the positive-path schema-quality contract cleanly
+- local validation completed:
+  - `rustfmt demos/diagnostic_exit_codes/idiomatic.rs demos/diagnostic_options/idiomatic.rs demos/diagnostic_schema/idiomatic.rs`
+  - `rustc --edition=2021 demos/diagnostic_exit_codes/idiomatic.rs -o /tmp/sifr-idiomatic-diagnostic-exit-codes && /tmp/sifr-idiomatic-diagnostic-exit-codes`
+  - `rustc --edition=2021 demos/diagnostic_options/idiomatic.rs -o /tmp/sifr-idiomatic-diagnostic-options && /tmp/sifr-idiomatic-diagnostic-options`
+  - `rustc --edition=2021 demos/diagnostic_schema/idiomatic.rs -o /tmp/sifr-idiomatic-diagnostic-schema && /tmp/sifr-idiomatic-diagnostic-schema`
+  - `cargo run -q -p sifr -- run demos/diagnostic_exit_codes/main.sifr`
+  - `cargo run -q -p sifr -- run demos/diagnostic_options/main.sifr`
+  - `cargo run -q -p sifr -- run demos/diagnostic_schema/main.sifr`
+  - `scripts/run_all_tests.sh`
+- review artifacts:
+  - pass 1: `reviews/phase-ad-hoc-idiomatic-rust-demo-corpus-wave-2-batch-73-review-pass-1.md`
+  - pass 2: `reviews/phase-ad-hoc-idiomatic-rust-demo-corpus-wave-2-batch-73-review-pass-2.md`
+- review application summary:
+  - all three pass-1 reviews returned `OK`
+  - all three pass-2 reviews returned `OK`
+  - no follow-up code changes were needed after the initial `diagnostic_exit_codes` authoring step
+- reviewer tooling note:
+  - batch 73 used direct per-file `claude -p --no-session-persistence --dangerously-skip-permissions` prompts through short Python subprocess wrappers with explicit timeouts
+  - the initial combined pass-2 runner stalled, so pass 2 was finalized with separate per-file retries that each returned `OK`
+
 #### batch_65_codegen_preamble_codegen_structural_passes_intrinsic_codegen
 
 status: accepted_after_pass_1_and_pass_2

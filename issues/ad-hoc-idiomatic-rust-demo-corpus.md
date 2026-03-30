@@ -396,6 +396,8 @@ Progress update (`2026-03-29`):
 - `batch_71_project_build_project_check_project_entrypoint` completed local validation and ended external review with no accepted blockers; all three files were clean in both passes
 - `batch_72_decimal_diagnostics_decimal_verification_dependency_manifest` selected as the seventy-second wave-2 runnable-demo batch because it clears the next decimal-and-manifest slice cohesively: two remaining decimal verification demos that still carried generated-style companions plus the missing dependency-manifest closure demo
 - `batch_72_decimal_diagnostics_decimal_verification_dependency_manifest` completed local validation and ended external review with no accepted blockers; all three files were clean in both passes, with `decimal_diagnostics` needing shorter retry prompts after the longer reviewer calls stalled
+- `batch_73_diagnostic_exit_codes_diagnostic_options_diagnostic_schema` selected as the seventy-third wave-2 runnable-demo batch because it clears the next diagnostics slice cohesively: the missing cross-mode exit-code companion plus the two remaining positive diagnostic-format/schema demos
+- `batch_73_diagnostic_exit_codes_diagnostic_options_diagnostic_schema` completed local validation and ended external review with no accepted blockers; `diagnostic_exit_codes` was newly authored and `diagnostic_options` plus `diagnostic_schema` were re-reviewed unchanged, with all three files clean in both passes
 
 ### wave_3_fixture_and_negative_case_normalization
 
