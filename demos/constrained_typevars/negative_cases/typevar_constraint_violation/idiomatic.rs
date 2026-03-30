@@ -1,12 +1,11 @@
-//! Negative-case Sifr fixture scaffold.
+//! Tier-2 Rust scaffold for the Sifr negative fixture in this folder.
 //!
-//! Source files in this folder:
-//! - `main.sifr`
+//! The paired Sifr program is rejected because `T` is constrained to `(int, str)`
+//! but `echo(1.5)` tries to instantiate it with `float`.
 //!
-//! This folder exists to preserve an intentional diagnostic or compile-fail shape.
-//! There is no single runnable Rust program that is both idiomatic and preserves
-//! the same failure contract, so this file serves as the Rust-side scaffold.
-
-#![allow(dead_code)]
+//! This fixture exists to preserve the constrained-typevar diagnostic for an
+//! unsatisfied argument type. The Rust-side analogue is a trait-bound or enum-like
+//! constraint failure, but the exact user-facing contract is specific to Sifr's
+//! type-parameter checker, so this file remains a contract scaffold.
 
 fn main() {}

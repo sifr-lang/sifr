@@ -4136,6 +4136,46 @@ status: accepted_after_pass_1_and_pass_2
   - batch 94 was reviewed directly from the final validated Rust scaffolds and the observed decimal policy diagnostics for the paired fixtures
   - both review passes ended with no accepted blockers across the trio
 
+#### batch_95_type_parameter_scaffolds
+
+status: accepted_after_pass_1_and_pass_2
+
+- scope:
+  - `demos/compiled_expressions/negative_cases/idiomatic.rs`
+  - `demos/generics_impl/negative_cases/return_type_mismatch/idiomatic.rs`
+  - `demos/constrained_typevars/negative_cases/typevar_constraint_violation/idiomatic.rs`
+- selection rationale:
+  - these three negatives are the next untouched type-system family and all still used the generic placeholder despite enforcing stable declaration-vs-inference contracts
+  - the batch keeps the simple return mismatch, generic `T | None` mismatch, and constrained typevar violation together so the Tier 2 rewrite records one coherent "declared type must be satisfied" family
+  - each paired fixture already exposes a stable `sifr check` message, so the Rust-side scaffold can be validated directly against observed output instead of fabricating a different Rust failure
+- priority tags:
+  - `tier-2-negative-case`: `compiled_expressions/negative_cases`, `generics_impl/return_type_mismatch`, `constrained_typevars/typevar_constraint_violation`
+  - `type-system`: `compiled_expressions/negative_cases`, `generics_impl/return_type_mismatch`, `constrained_typevars/typevar_constraint_violation`
+  - `generic-placeholder-cleanup`: `compiled_expressions/negative_cases`, `generics_impl/return_type_mismatch`, `constrained_typevars/typevar_constraint_violation`
+- implementation summary:
+  - `compiled_expressions`: replaced the generic stub with a scaffold describing the direct `int` vs `str` return mismatch in `bad()`
+  - `generics_impl`: replaced the generic stub with a scaffold describing safe indexing returning `T | None` while the helper promises plain `T`
+  - `constrained_typevars`: replaced the generic stub with a scaffold describing `float` failing the `(int, str)` constraint on type parameter `T`
+- local validation completed:
+  - `rustfmt demos/compiled_expressions/negative_cases/idiomatic.rs demos/generics_impl/negative_cases/return_type_mismatch/idiomatic.rs demos/constrained_typevars/negative_cases/typevar_constraint_violation/idiomatic.rs`
+  - `rustc --edition=2021 demos/compiled_expressions/negative_cases/idiomatic.rs -o /tmp/sifr-neg-compiled-expr && /tmp/sifr-neg-compiled-expr`
+  - `rustc --edition=2021 demos/generics_impl/negative_cases/return_type_mismatch/idiomatic.rs -o /tmp/sifr-neg-generics-return && /tmp/sifr-neg-generics-return`
+  - `rustc --edition=2021 demos/constrained_typevars/negative_cases/typevar_constraint_violation/idiomatic.rs -o /tmp/sifr-neg-typevar-constraint && /tmp/sifr-neg-typevar-constraint`
+  - `cargo run -q -p sifr -- check demos/compiled_expressions/negative_cases/return_type_mismatch.sifr`
+  - `cargo run -q -p sifr -- check demos/generics_impl/negative_cases/return_type_mismatch/main.sifr`
+  - `cargo run -q -p sifr -- check demos/constrained_typevars/negative_cases/typevar_constraint_violation/main.sifr`
+  - `scripts/run_all_tests.sh`
+- review artifacts:
+  - pass 1: `reviews/phase-ad-hoc-idiomatic-rust-demo-corpus-wave-3-batch-95-review-pass-1.md`
+  - pass 2: `reviews/phase-ad-hoc-idiomatic-rust-demo-corpus-wave-3-batch-95-review-pass-2.md`
+- review application summary:
+  - all three pass-1 reviews returned `OK`
+  - all three pass-2 reviews returned `OK`
+  - no follow-up code changes were needed after the targeted Tier 2 rewrite
+- reviewer tooling note:
+  - batch 95 was reviewed directly from the final validated Rust scaffolds and the observed return-mismatch and constrained-typevar diagnostics for the paired fixtures
+  - both review passes ended with no accepted blockers across the trio
+
 ### wave_4_corpus_consistency_pass
 
 status: pending
