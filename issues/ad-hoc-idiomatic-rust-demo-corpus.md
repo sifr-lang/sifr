@@ -432,6 +432,8 @@ Goals:
 - `batch_84_reachable_type_error_scaffolds` completed local validation and ended review with no accepted blockers; the three generic placeholders were replaced with fixture-specific Tier 2 scaffolds, and the paired Sifr fixtures still fail with the intended return-type diagnostics
 - `batch_85_reachable_type_error_scaffolds_followup` selected as the next wave-3 normalization batch because three more reachable-type-error fixtures from the phase-24/25 control-flow family were still on the untouched generic stub and should be documented with their specific branch-shape failure contracts
 - `batch_85_reachable_type_error_scaffolds_followup` completed local validation and ended review with no accepted blockers; all three placeholders were replaced with fixture-specific Tier 2 scaffolds, and the paired Sifr fixtures still fail with the intended return-type diagnostics
+- `batch_86_reachable_type_error_scaffolds_mixed_blocks` selected as the next wave-3 normalization batch because it clears the remaining small control-flow mismatch trio that still used the generic placeholder: one union-member mismatch, one plain reachable return mismatch, and one mixed try/if block mismatch
+- `batch_86_reachable_type_error_scaffolds_mixed_blocks` completed local validation and ended review with no accepted blockers; all three placeholders were replaced with fixture-specific Tier 2 scaffolds, and the paired Sifr fixtures still fail with the intended diagnostics
 
 ### wave_4_corpus_consistency_pass
 
