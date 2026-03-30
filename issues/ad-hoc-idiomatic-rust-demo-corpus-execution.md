@@ -2459,6 +2459,45 @@ status: accepted_after_pass_1_and_pass_2
   - batch 68 used direct per-file `claude -p --no-session-persistence --dangerously-skip-permissions` prompts with compact observed-output-plus-Rust-file prompts
   - the first embedded-source reviewer processes stalled, so I reran the review with shorter prompts focused on observable behavior and the final Rust companions; those returned clean `OK` verdicts
 
+#### batch_69_branch_paths_cargo_manifest_cli_modes
+
+status: accepted_after_pass_1_and_pass_2
+
+- scope:
+  - `demos/branch_paths/idiomatic.rs`
+  - `demos/cargo_manifest/idiomatic.rs`
+  - `demos/cli_modes/idiomatic.rs`
+- selection rationale:
+  - all three are positive runnable demos
+  - all three form a cohesive compiler/frontend semantics slice instead of mixing the remaining project-mode and manifest demos with unrelated borrow or decimal work
+  - `branch_paths` and `cargo_manifest` had no Rust-first companion yet, while `cli_modes` was already tiny enough that the right move was to re-review it and keep it unchanged
+- priority tags:
+  - `compiler-surface`: `branch_paths`, `cargo_manifest`, `cli_modes`
+  - `milestone-demo`: `branch_paths`, `cargo_manifest`, `cli_modes`
+  - `missing-companion`: `branch_paths`, `cargo_manifest`
+- implementation summary:
+  - `branch_paths`: authored a compact local helper module plus direct nested-branch evaluation logic that preserves the regression-matrix branch-path outputs without extra scaffolding
+  - `cargo_manifest`: authored a small helper-backed companion around `num_bigint::BigInt` so the Rust file still visibly demonstrates the external-dependency/manifest point rather than flattening it into pure std
+  - `cli_modes`: reviewed the existing single-print companion and kept it unchanged because it already matched the minimal CLI milestone bar
+- local validation completed:
+  - `rustfmt demos/branch_paths/idiomatic.rs demos/cargo_manifest/idiomatic.rs demos/cli_modes/idiomatic.rs`
+  - `rustc --edition=2021 demos/branch_paths/idiomatic.rs -o /tmp/sifr-idiomatic-branch-paths && /tmp/sifr-idiomatic-branch-paths`
+  - `rustc --edition=2021 demos/cli_modes/idiomatic.rs -o /tmp/sifr-idiomatic-cli-modes && /tmp/sifr-idiomatic-cli-modes`
+  - temporary Cargo compile/run for `demos/cargo_manifest/idiomatic.rs` with `num-bigint = "0.4"`
+  - `cargo run -q -p sifr -- run demos/branch_paths/main.sifr`
+  - `cargo run -q -p sifr -- run demos/cargo_manifest/main.sifr`
+  - `cargo run -q -p sifr -- run demos/cli_modes/main.sifr`
+  - `scripts/run_all_tests.sh`
+- review artifacts:
+  - pass 1: `reviews/phase-ad-hoc-idiomatic-rust-demo-corpus-wave-2-batch-69-review-pass-1.md`
+  - pass 2: `reviews/phase-ad-hoc-idiomatic-rust-demo-corpus-wave-2-batch-69-review-pass-2.md`
+- review application summary:
+  - all three pass-1 reviews returned `OK`
+  - all three pass-2 reviews returned `OK`
+- reviewer tooling note:
+  - batch 69 used direct per-file `claude -p --no-session-persistence --dangerously-skip-permissions` prompts with compact observed-output-plus-Rust-file prompts
+  - no review retries or code changes were needed after the initial authored companions landed
+
 #### batch_65_codegen_preamble_codegen_structural_passes_intrinsic_codegen
 
 status: accepted_after_pass_1_and_pass_2

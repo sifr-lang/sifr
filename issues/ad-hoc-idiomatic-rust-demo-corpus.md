@@ -388,6 +388,8 @@ Progress update (`2026-03-29`):
 - `batch_67_import_forms_imports_external_modules` completed local validation and ended external review with no accepted blockers; all three files were clean in both passes
 - `batch_68_borrow_exclusivity_borrow_lowering_compiler_safety` selected as the sixty-eighth wave-2 runnable-demo batch because it keeps the remaining borrow/compiler-hardening slice cohesive around borrow-by-default semantics, borrow-lowering/codegen fixes, and the compiler-safety RAII milestone demo
 - `batch_68_borrow_exclusivity_borrow_lowering_compiler_safety` completed local validation and ended external review with no accepted blockers; all three files were clean in both passes
+- `batch_69_branch_paths_cargo_manifest_cli_modes` selected as the sixty-ninth wave-2 runnable-demo batch because it keeps the next compiler/frontend slice cohesive around branch-path regression semantics, manifest/dependency closure, and the minimal CLI contract milestone
+- `batch_69_branch_paths_cargo_manifest_cli_modes` completed local validation and ended external review with no accepted blockers; `branch_paths` and `cargo_manifest` were newly authored, `cli_modes` was re-reviewed and kept unchanged, and all three files were clean in both passes
 
 ### wave_3_fixture_and_negative_case_normalization
 
