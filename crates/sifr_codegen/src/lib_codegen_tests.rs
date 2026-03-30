@@ -32,8 +32,7 @@ fn test_generate_rust_preserves_loop_else_recursion_and_try_except_returns() {
     );
     assert!(loop_else_recursion.contains("fn recurse(n: i64) -> i64"));
     assert!(
-        loop_else_recursion.contains("if !_broke")
-            || loop_else_recursion.contains("if !(_broke)")
+        loop_else_recursion.contains("if !_broke") || loop_else_recursion.contains("if !(_broke)")
     );
 
     let try_except_return = generate_rust_from_source(
@@ -1579,7 +1578,8 @@ fn test_generate_rust_open_uses_canonical_filehandle_constructor() {
     assert!(rust_code.contains("struct FileHandle"));
     assert!(rust_code.contains("fn new(_handle: i64, _mode: String) -> Self"));
     assert!(rust_code.contains("return Ok(FileHandle::new(__handle_id, __mode.to_string()));"));
-    assert!(!rust_code.contains("return Ok(FileHandle { _handle: __handle_id, _mode: __mode.to_string() });"));
+    assert!(!rust_code
+        .contains("return Ok(FileHandle { _handle: __handle_id, _mode: __mode.to_string() });"));
 }
 
 #[test]
@@ -2748,6 +2748,143 @@ fn test_capture_structured_stmts_collects_ir_without_output_writes() {
             ..
         }) if name == "x"
     ));
+}
+
+#[test]
+fn test_structured_stmt_path_handles_nested_subscript_augassign_inside_loop_if() {
+    let stmt = HirStmt::For {
+        target: "i".to_string(),
+        target_ty: Type::Int,
+        iter: HirExpr::RangeLiteral {
+            start: Box::new(HirExpr::IntLiteral(0)),
+            end: Box::new(HirExpr::IntLiteral(3)),
+            step: None,
+            ty: Type::Range,
+        },
+        body: vec![HirStmt::If {
+            condition: HirExpr::BoolLiteral(true),
+            then_body: vec![HirStmt::SubscriptAugAssign {
+                object: "values".to_string(),
+                index: HirExpr::BinOp {
+                    left: Box::new(HirExpr::Name {
+                        name: "i".to_string(),
+                        ty: Type::Int,
+                    }),
+                    op: "+".to_string(),
+                    right: Box::new(HirExpr::IntLiteral(1)),
+                    ty: Type::Int,
+                },
+                op: "*=".to_string(),
+                value: HirExpr::IntLiteral(2),
+                object_ty: Type::List(Box::new(Type::Int)),
+            }],
+            elif_clauses: vec![],
+            else_body: None,
+        }],
+        else_body: None,
+    };
+
+    let mut emitter = RustEmitter::new();
+    let captured = emitter.capture_structured_stmts(|inner| inner.emit_stmt(&stmt));
+
+    assert!(matches!(captured.first(), Some(RustStmt::For { .. })));
+}
+
+#[test]
+fn test_structured_stmt_path_handles_delete_with_name_key_inside_loop_if() {
+    let stmt = HirStmt::For {
+        target: "ch".to_string(),
+        target_ty: Type::Str,
+        iter: HirExpr::Name {
+            name: "order".to_string(),
+            ty: Type::Str,
+        },
+        body: vec![HirStmt::If {
+            condition: HirExpr::ContainsOp {
+                element: Box::new(HirExpr::Name {
+                    name: "ch".to_string(),
+                    ty: Type::Str,
+                }),
+                collection: Box::new(HirExpr::Name {
+                    name: "counts".to_string(),
+                    ty: Type::Dict(Box::new(Type::Str), Box::new(Type::Int)),
+                }),
+                ty: Type::Bool,
+            },
+            then_body: vec![HirStmt::Delete {
+                object: HirExpr::Name {
+                    name: "counts".to_string(),
+                    ty: Type::Dict(Box::new(Type::Str), Box::new(Type::Int)),
+                },
+                index: HirExpr::Name {
+                    name: "ch".to_string(),
+                    ty: Type::Str,
+                },
+            }],
+            elif_clauses: vec![],
+            else_body: None,
+        }],
+        else_body: None,
+    };
+
+    let mut emitter = RustEmitter::new();
+    let captured = emitter.capture_structured_stmts(|inner| inner.emit_stmt(&stmt));
+
+    assert!(matches!(captured.first(), Some(RustStmt::For { .. })));
+}
+
+#[test]
+fn test_structured_stmt_path_handles_chained_compare_condition_inside_loop_if() {
+    let stmt = HirStmt::While {
+        condition: HirExpr::Compare {
+            left: Box::new(HirExpr::Name {
+                name: "left".to_string(),
+                ty: Type::Int,
+            }),
+            ops: vec!["<=".to_string()],
+            comparators: vec![HirExpr::Name {
+                name: "right".to_string(),
+                ty: Type::Int,
+            }],
+            ty: Type::Bool,
+        },
+        body: vec![HirStmt::If {
+            condition: HirExpr::Compare {
+                left: Box::new(HirExpr::Name {
+                    name: "left".to_string(),
+                    ty: Type::Int,
+                }),
+                ops: vec!["<=".to_string(), "<".to_string()],
+                comparators: vec![
+                    HirExpr::Name {
+                        name: "target".to_string(),
+                        ty: Type::Int,
+                    },
+                    HirExpr::Name {
+                        name: "right".to_string(),
+                        ty: Type::Int,
+                    },
+                ],
+                ty: Type::Bool,
+            },
+            then_body: vec![HirStmt::Assign {
+                name: "left".to_string(),
+                value: HirExpr::IntLiteral(1),
+            }],
+            elif_clauses: vec![],
+            else_body: Some(vec![HirStmt::AugAssign {
+                name: "left".to_string(),
+                op: "+=".to_string(),
+                value: HirExpr::IntLiteral(1),
+            }]),
+        }],
+        else_body: None,
+    };
+
+    let mut emitter = RustEmitter::new();
+    let captured = emitter.capture_structured_stmts(|inner| inner.emit_stmt(&stmt));
+
+    assert!(matches!(captured.first(), Some(RustStmt::While { .. })));
 }
 
 #[test]

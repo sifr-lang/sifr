@@ -42,6 +42,8 @@ The goal is to make intended Sifr Optional semantics precise enough that valid g
 - `issues/ad-hoc-optional-none-and-narrowing-wave9c-residual-canonicalization-plan-2026-03-29.md`
 - `issues/ad-hoc-optional-none-and-narrowing-wave9d-residual-canonicalization-plan-2026-03-29.md`
 - `issues/ad-hoc-optional-none-and-narrowing-wave9e-mutability-boundary-plan-2026-03-29.md`
+- `issues/ad-hoc-optional-none-and-narrowing-approach-full-review-2026-03-30.md`
+- `issues/ad-hoc-optional-none-and-narrowing-majority-root-cause-2026-03-30.md`
 - `reviews/optional-none-direct-pass1.md`
 - `reviews/optional-none-category-implementation-readiness-claude.md`
 - `reviews/ad-hoc-optional-none-wave7-9-plan-review-pass1.md`
@@ -52,6 +54,8 @@ The goal is to make intended Sifr Optional semantics precise enough that valid g
 - `reviews/ad-hoc-optional-none-wave9c-residual-canonicalization-review-pass1.md`
 - `reviews/ad-hoc-optional-none-wave9d-residual-canonicalization-review-pass1.md`
 - `reviews/ad-hoc-optional-none-wave9e-mutability-boundary-review-pass1.md`
+- `reviews/ad-hoc-optional-none-approach-full-review-pass1.md`
+- `reviews/ad-hoc-optional-none-majority-root-cause-review-pass1.md`
 - `internal_docs/architecture.md`
 
 Implementation hotspots:
@@ -106,6 +110,17 @@ Latest phase rerun checkpoint on 2026-03-29 (after wave-9e mutability boundary c
 - non-failing set artifact:
   - `verification/leetcode/full_corpus_nonfailing_20260329_live_after_optional_wave9e.json`
 
+Latest run-stage panic-closure probe on 2026-03-30 (wave-R1 compiler slice):
+
+- targeted `RUN_ERROR` quartet:
+  - `0041_first_missing_positive`
+  - `0081_search_in_rotated_sorted_array_ii`
+  - `0791_custom_sort_string`
+  - `2554_maximum_number_of_integers_to_choose_from_a_range_i`
+- result:
+  - all four moved from internal `codegen_panic` to ordinary Rust build diagnostics (`E0308`) at run stage
+  - panic class is closed for this quartet; status remains `RUN_ERROR` pending R2 type-invariant closure
+
 Planning baseline for this phase:
 
 - dominant family from the latest categorized analysis:
@@ -151,6 +166,7 @@ Important operational note:
   - residual canonicalization batch-3 rewrote `0063`, `0119`, `0120`, and `0135` into explicit Sifr-safe forms that remove Optional-contaminated indexed arithmetic paths
   - residual canonicalization batch-4 rewrote `0300`, `0525`, `0554`, and `1343` into explicit accumulator-first Sifr-safe forms that avoid Optional arithmetic from indexed/helper-return paths
   - mutability-boundary canonicalization batch-5 rewrote `0026`, `0027`, `0080`, and `0448` to explicit Sifr `mut` boundary forms and removed tuple-swap unsupported syntax in `0027`
+  - wave-R1 run-stage compiler closure removed production codegen panics for the remaining quartet (`0041`, `0081`, `0791`, `2554`) by adding structured lowering coverage for chained compares, nested `SubscriptAugAssign`, and nested `Delete`; these fixtures now fail with ordinary Rust type diagnostics (`E0308`) instead of internal compiler panics
   - residual canary fixtures for container and recursive Optional boundary lanes were canonicalized to explicit Sifr-safe forms (`0004`, `0013`, `0023`, `0024`, `0104`, `0115`, `0133`, `0206`)
   - residual run-stability fixtures were canonicalized to remove codegen-hostile shapes (`0010`, `0028`, `0097`, `0309`, `0678`)
 - validation evidence:
