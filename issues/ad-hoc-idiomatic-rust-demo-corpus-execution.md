@@ -2778,6 +2778,46 @@ status: accepted_after_pass_1_and_pass_2
   - batch 76 used direct per-file `claude -p --no-session-persistence --dangerously-skip-permissions` prompts through short Python subprocess wrappers with explicit timeouts
   - the initial combined runner stalled, and `nested_function_part1` needed a shorter retry in pass 1 before returning `OK`
 
+#### batch_77_recursive_type_part1_recursive_type_part2_recursive_type_part3
+
+status: accepted_after_pass_1_and_pass_2
+
+- scope:
+  - `demos/recursive_type_part1/idiomatic.rs`
+  - `demos/recursive_type_part2/idiomatic.rs`
+  - `demos/recursive_type_part3/idiomatic.rs`
+- selection rationale:
+  - the batch clears the first contiguous recursive-type trilogy instead of mixing those focused alias-resolution demos with the unrelated remaining runtime and verification outliers
+  - all three companions were runnable and compact, but they still underplayed the recursive-type teaching surface by collapsing the Sifr aliases down to bare prints and `Vec` helpers
+  - keeping part 1 through part 3 together preserves a coherent review surface around alias resolution, accepted recursive shapes, and generic recursive lowering
+- priority tags:
+  - `recursive-types`: `recursive_type_part1`, `recursive_type_part2`, `recursive_type_part3`
+  - `milestone-demo`: `recursive_type_part1`, `recursive_type_part2`, `recursive_type_part3`
+  - `hand-authored-generated-shape`: `recursive_type_part1`, `recursive_type_part2`, `recursive_type_part3`
+- implementation summary:
+  - `recursive_type_part1`: replaced the bare `Vec` helper with direct `Payload`/`Response` aliases plus a recursive `Json` enum so the Rust companion actually demonstrates recursive alias names before printing the observed output
+  - `recursive_type_part2`: preserved the payload-size behavior while adding an explicit recursive `Node::Branch(Vec<Node>)` enum to mirror the accepted recursive-alias shape
+  - `recursive_type_part3`: replaced the single print-only stub with a generic recursive `Node<T>` enum and a small constructed value that demonstrates the preserved recursive representation directly
+- local validation completed:
+  - `rustfmt demos/recursive_type_part1/idiomatic.rs demos/recursive_type_part2/idiomatic.rs demos/recursive_type_part3/idiomatic.rs`
+  - `rustc --edition=2021 demos/recursive_type_part1/idiomatic.rs -o /tmp/sifr-idiomatic-recursive-type-part1 && /tmp/sifr-idiomatic-recursive-type-part1`
+  - `rustc --edition=2021 demos/recursive_type_part2/idiomatic.rs -o /tmp/sifr-idiomatic-recursive-type-part2 && /tmp/sifr-idiomatic-recursive-type-part2`
+  - `rustc --edition=2021 demos/recursive_type_part3/idiomatic.rs -o /tmp/sifr-idiomatic-recursive-type-part3 && /tmp/sifr-idiomatic-recursive-type-part3`
+  - `cargo run -q -p sifr -- run demos/recursive_type_part1/main.sifr`
+  - `cargo run -q -p sifr -- run demos/recursive_type_part2/main.sifr`
+  - `cargo run -q -p sifr -- run demos/recursive_type_part3/main.sifr`
+  - `scripts/run_all_tests.sh`
+- review artifacts:
+  - pass 1: `reviews/phase-ad-hoc-idiomatic-rust-demo-corpus-wave-2-batch-77-review-pass-1.md`
+  - pass 2: `reviews/phase-ad-hoc-idiomatic-rust-demo-corpus-wave-2-batch-77-review-pass-2.md`
+- review application summary:
+  - all three pass-1 reviews returned `OK`
+  - all three pass-2 reviews returned `OK`
+  - no follow-up code changes were needed after the validated rewrite
+- reviewer tooling note:
+  - batch 77 was reviewed directly from the final validated Rust files and observed Sifr outputs
+  - both passes ended with no accepted blockers across the trio
+
 #### batch_65_codegen_preamble_codegen_structural_passes_intrinsic_codegen
 
 status: accepted_after_pass_1_and_pass_2
