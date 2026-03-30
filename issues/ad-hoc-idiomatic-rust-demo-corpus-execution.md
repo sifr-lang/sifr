@@ -4216,6 +4216,50 @@ status: accepted_after_pass_1_and_pass_2
   - batch 96 was reviewed directly from the final validated Rust scaffolds and the observed unsupported-import and intrinsic-import diagnostics for the paired fixtures
   - both review passes ended with no accepted blockers across the trio
 
+#### batch_97_closeout_scaffolds
+
+status: accepted_after_pass_1_and_pass_2
+
+- scope:
+  - `demos/default_values/negative_cases/unsupported_default_call_expression/idiomatic.rs`
+  - `demos/protocol_bounds/negative_cases/unknown_protocol_bound_forwarding/idiomatic.rs`
+  - `demos/variance_rules/negative_cases/list_variance_violation/idiomatic.rs`
+  - `demos/while_else/negative_cases/idiomatic.rs`
+- selection rationale:
+  - these four folders were the last remaining generic placeholders in the corpus, so the closeout batch intentionally mixed the remaining checker negatives with the final runtime guard to finish wave 3 in one audited pass
+  - the three negative fixtures still share one useful soundness theme around rejected user-visible contracts: unsupported default expressions, unsatisfied forwarded protocol bounds, and invariant list element types
+  - the `while_else` fixture is not a checker failure but still needs an explicit Rust-side scaffold because its purpose is to guard runtime control-flow lowering rather than compare emitted Rust shape
+- priority tags:
+  - `tier-2-negative-case`: `unsupported_default_call_expression`, `unknown_protocol_bound_forwarding`, `list_variance_violation`
+  - `tier-2-guard-fixture`: `while_else/negative_cases`
+  - `generic-placeholder-cleanup`: `unsupported_default_call_expression`, `unknown_protocol_bound_forwarding`, `list_variance_violation`, `while_else/negative_cases`
+- implementation summary:
+  - `default_values`: replaced the generic stub with a scaffold describing the unsupported call-expression default and the deterministic missing-argument follow-on diagnostic
+  - `protocol_bounds`: replaced the generic stub with a scaffold describing generic forwarding through an unknown protocol bound
+  - `variance_rules`: replaced the generic stub with a scaffold describing list invariance rejecting `list[int]` where `list[int | str]` is required
+  - `while_else`: replaced the generic stub with a guard scaffold documenting that `while`-`else` must skip the `else` arm after `break` and still print `ok`
+- local validation completed:
+  - `rustfmt demos/default_values/negative_cases/unsupported_default_call_expression/idiomatic.rs demos/protocol_bounds/negative_cases/unknown_protocol_bound_forwarding/idiomatic.rs demos/variance_rules/negative_cases/list_variance_violation/idiomatic.rs demos/while_else/negative_cases/idiomatic.rs`
+  - `rustc --edition=2021 demos/default_values/negative_cases/unsupported_default_call_expression/idiomatic.rs -o /tmp/sifr-neg-default-call && /tmp/sifr-neg-default-call`
+  - `rustc --edition=2021 demos/protocol_bounds/negative_cases/unknown_protocol_bound_forwarding/idiomatic.rs -o /tmp/sifr-neg-protocol-bound && /tmp/sifr-neg-protocol-bound`
+  - `rustc --edition=2021 demos/variance_rules/negative_cases/list_variance_violation/idiomatic.rs -o /tmp/sifr-neg-variance && /tmp/sifr-neg-variance`
+  - `rustc --edition=2021 demos/while_else/negative_cases/idiomatic.rs -o /tmp/sifr-neg-while-else && /tmp/sifr-neg-while-else`
+  - `cargo run -q -p sifr -- check demos/default_values/negative_cases/unsupported_default_call_expression/main.sifr`
+  - `cargo run -q -p sifr -- check demos/protocol_bounds/negative_cases/unknown_protocol_bound_forwarding/main.sifr`
+  - `cargo run -q -p sifr -- check demos/variance_rules/negative_cases/list_variance_violation/main.sifr`
+  - `cargo run -q -p sifr -- run demos/while_else/negative_cases/break_skips_else_guard.sifr`
+  - `scripts/run_all_tests.sh`
+- review artifacts:
+  - pass 1: `reviews/phase-ad-hoc-idiomatic-rust-demo-corpus-wave-3-batch-97-review-pass-1.md`
+  - pass 2: `reviews/phase-ad-hoc-idiomatic-rust-demo-corpus-wave-3-batch-97-review-pass-2.md`
+- review application summary:
+  - all four pass-1 reviews returned `OK`
+  - all four pass-2 reviews returned `OK`
+  - no follow-up code changes were needed after the final Tier 2 rewrite
+- reviewer tooling note:
+  - batch 97 was reviewed directly from the final validated Rust scaffolds, the observed checker diagnostics for the three negative fixtures, and the observed successful `ok` runtime for the `while_else` guard fixture
+  - wave 3 ends here with zero remaining generic `Negative-case Sifr fixture scaffold` placeholders
+
 ### wave_4_corpus_consistency_pass
 
 status: pending

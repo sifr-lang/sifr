@@ -454,6 +454,8 @@ Goals:
 - `batch_95_type_parameter_scaffolds` completed local validation and ended review with no accepted blockers; all three placeholders were replaced with fixture-specific Tier 2 scaffolds, and the paired Sifr fixtures still fail with the intended direct return-mismatch and constrained-typevar diagnostics
 - `batch_96_import_policy_scaffolds` selected as the next wave-3 normalization batch because the remaining frontend/import negatives still used the generic placeholder despite sharing one contract family: unsupported user import forms and internal intrinsic imports must fail explicitly without silently changing resolver behavior
 - `batch_96_import_policy_scaffolds` completed local validation and ended review with no accepted blockers; all three placeholders were replaced with fixture-specific Tier 2 scaffolds, and the paired Sifr fixtures still fail with the intended unsupported-import and intrinsic-import diagnostics
+- `batch_97_closeout_scaffolds` selected as the final wave-3 normalization batch because the last remaining placeholders split into one coherent closeout set: unsupported default call expressions, unknown forwarded protocol bounds, list invariance, and the `while`-`else` break guard each needed folder-specific documentation before the Tier 2 backlog could be considered finished
+- `batch_97_closeout_scaffolds` completed local validation and ended review with no accepted blockers; all remaining placeholders were replaced with fixture-specific Tier 2 scaffolds, the paired Sifr fixtures still exhibit the intended default-value, protocol-bound, variance, and `while`-`else` behaviors, and the generic negative-case placeholder backlog is now `0`
 
 ### wave_4_corpus_consistency_pass
 

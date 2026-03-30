@@ -1,12 +1,11 @@
-//! Negative-case Sifr fixture scaffold.
+//! Tier-2 Rust scaffold for the Sifr negative fixture in this folder.
 //!
-//! Source files in this folder:
-//! - `main.sifr`
+//! The paired Sifr program is rejected because `relay_missing[U: MissingBound]`
+//! forwards `x: U` into `take_missing[T: MissingBound]`, but `MissingBound` is not
+//! a known protocol and therefore the forwarded type cannot satisfy `T`.
 //!
-//! This folder exists to preserve an intentional diagnostic or compile-fail shape.
-//! There is no single runnable Rust program that is both idiomatic and preserves
-//! the same failure contract, so this file serves as the Rust-side scaffold.
-
-#![allow(dead_code)]
+//! This fixture exists to preserve the protocol-bound forwarding diagnostic rather
+//! than a plain parser failure. The Rust-side analogue would be an unsatisfied
+//! trait bound on a generic call, so this file records the Sifr contract directly.
 
 fn main() {}

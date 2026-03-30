@@ -1,12 +1,11 @@
-//! Negative-case Sifr fixture scaffold.
+//! Tier-2 Rust scaffold for the Sifr guard fixture in this folder.
 //!
-//! Source files in this folder:
-//! - `break_skips_else_guard.sifr`
+//! The paired Sifr program is expected to run successfully and print `ok` because
+//! the `else` arm of a `while` loop must not execute after `break`.
 //!
-//! This folder exists to preserve an intentional diagnostic or compile-fail shape.
-//! There is no single runnable Rust program that is both idiomatic and preserves
-//! the same failure contract, so this file serves as the Rust-side scaffold.
-
-#![allow(dead_code)]
+//! This fixture exists to preserve the control-flow guard against regressions in
+//! `while`-`else` lowering. The Rust-side analogue is a runtime-behavior contract
+//! rather than a compile-fail shape, so this file remains a minimal explanatory
+//! scaffold.
 
 fn main() {}
