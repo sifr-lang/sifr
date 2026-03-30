@@ -3828,7 +3828,9 @@ fn is_narrowable_pop_call_for_codegen(method: &str, args: &[HirExpr]) -> bool {
 }
 
 fn canonicalize_compat_intrinsic_name(func: &str) -> &str {
-    func.strip_prefix("__compat_sifr_math_").unwrap_or(func)
+    func.strip_prefix("__compat_sifr_math_")
+        .or_else(|| func.strip_prefix("__compat_sifr_heapq_"))
+        .unwrap_or(func)
 }
 
 #[cfg(test)]
@@ -3872,7 +3874,7 @@ mod tests {
         assert_eq!(canonicalize_compat_intrinsic_name("fmod"), "fmod");
         assert_eq!(
             canonicalize_compat_intrinsic_name("__compat_sifr_heapq_heappush"),
-            "__compat_sifr_heapq_heappush"
+            "heappush"
         );
     }
 }

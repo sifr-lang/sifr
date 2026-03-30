@@ -557,6 +557,31 @@ status: in progress
     - review: `reviews/ad-hoc-optional-none-wave-r3-run-error-majority-review-pass1.md`
   - reviewer gate:
     - pass-1 verdict: `not ready` until decomposition/guardrails are explicit (applied in updated plan artifact); implementation wave start is now pending commit/PR of this planning slice.
+- 2026-03-30 local iteration (wave-R3b1 codegen-hardening slice):
+  - root cause:
+    - residual run errors included direct codegen parity defects independent of frontend semantics:
+      - augassign render contract emitted `+==` in one structured path,
+      - string contains lowering emitted borrow shapes that triggered trait mismatch paths,
+      - compat-prefixed heapq plain calls were not canonicalized consistently.
+  - compiler changes:
+    - `crates/sifr_codegen/src/render.rs`:
+      - hardened `RustStmt::AugAssign` rendering to support both raw (`+`) and normalized (`+=`) op forms without double equals emission.
+    - `crates/sifr_codegen/src/stmt_support_emitter.rs`:
+      - split string contains lowering from list/set contains and lower string pattern as `as_str()` to avoid double-borrow pattern args,
+      - canonicalized plain call compat names for both `__compat_sifr_math_*` and `__compat_sifr_heapq_*` prefixes.
+    - `crates/sifr_codegen/src/intrinsic_method_emitters.rs`:
+      - aligned intrinsic canonicalization to strip heapq compat prefix.
+    - `crates/sifr_codegen/src/lib_codegen_tests.rs` and `crates/sifr_codegen/src/render.rs`:
+      - added regression tests for string-contains borrow parity, heapq plain-call canonicalization, and augassign render normalization.
+  - tests/validation:
+    - `cargo test -q -p sifr_codegen test_plain_call_canonicalizes_heapq_compat_symbol_name` -> pass
+    - `cargo test -q -p sifr_codegen test_structured_stmt_path_string_contains_avoids_double_borrow_pattern_arg` -> pass
+    - `cargo test -q -p sifr_codegen renders_augassign_with_normalized_and_raw_ops_without_double_equals` -> pass
+    - `scripts/run_all_tests.sh --profile quick` -> pass
+  - targeted fixture signal:
+    - `0463_island_perimeter`: no `+==` emission in generated Rust; fixture now fails on residual return-completeness (`E0308`) rather than augassign render defect.
+    - `0846_hand_of_straights`: emitted heapq helper call names are canonical (`heapify`/`heappop`), and unresolved compat helper-name defect is closed; fixture remains blocked by bool-condition semantics (`E0308`).
+    - `0459_repeated_substring_pattern`: previous compile-stage contains borrow failure is removed; fixture now executes and exposes a separate runtime-assertion mismatch path.
 
 - Validation to record:
   - post-wave full corpus rerun

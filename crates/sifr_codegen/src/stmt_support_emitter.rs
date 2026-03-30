@@ -67,6 +67,12 @@ fn canonical_constructor_class_name(class_name: &str) -> &str {
         .unwrap_or(class_name)
 }
 
+fn canonical_plain_call_name_for_ir(func: &str) -> &str {
+    func.strip_prefix("__compat_sifr_math_")
+        .or_else(|| func.strip_prefix("__compat_sifr_heapq_"))
+        .unwrap_or(func)
+}
+
 fn iterator_call_func_name(op: &HirIteratorOp) -> &'static str {
     match op {
         HirIteratorOp::Iter => "iter",
@@ -1561,8 +1567,9 @@ impl RustEmitter {
                 };
                 lowered_args.push(lowered_arg);
             }
+            let canonical_func = canonical_plain_call_name_for_ir(func);
             lowered_args =
-                self.adapt_plain_call_args_with_signature_for_ir(func, args, lowered_args);
+                self.adapt_plain_call_args_with_signature_for_ir(canonical_func, args, lowered_args);
             if let Some(captures) = self.nested_fn_captures.get(func).cloned() {
                 for capture in captures {
                     lowered_args.push(self.lower_recursive_capture_arg_for_ir(&capture));
@@ -1570,7 +1577,7 @@ impl RustEmitter {
             }
             return Ok(Some(crate::RustExpr::FnCall {
                 func: Box::new(crate::RustExpr::Path(
-                    func.split("::").map(ToString::to_string).collect(),
+                    canonical_func.split("::").map(ToString::to_string).collect(),
                 )),
                 args: lowered_args,
             }));
@@ -2901,12 +2908,21 @@ impl RustEmitter {
                         args: vec![key_arg],
                     }
                 }
-                Type::List(_) | Type::Set(_) | Type::Str => crate::RustExpr::MethodCall {
+                Type::List(_) | Type::Set(_) => crate::RustExpr::MethodCall {
                     receiver: Box::new(crate::RustExpr::Paren(Box::new(lowered_collection))),
                     method: "contains".to_string(),
                     args: vec![crate::RustExpr::Ref {
                         mutable: false,
                         expr: Box::new(crate::RustExpr::Paren(Box::new(lowered_element))),
+                    }],
+                },
+                Type::Str => crate::RustExpr::MethodCall {
+                    receiver: Box::new(crate::RustExpr::Paren(Box::new(lowered_collection))),
+                    method: "contains".to_string(),
+                    args: vec![crate::RustExpr::MethodCall {
+                        receiver: Box::new(crate::RustExpr::Paren(Box::new(lowered_element))),
+                        method: "as_str".to_string(),
+                        args: vec![],
                     }],
                 },
                 Type::Bytes => crate::RustExpr::Block {
@@ -3841,17 +3857,18 @@ impl RustEmitter {
                 };
                 lowered_args.push(self.rewrite_stdlib_constant_idents_in_expr(lowered_arg));
             }
+            let canonical_func = canonical_plain_call_name_for_ir(func);
             lowered_args =
-                self.adapt_plain_call_args_with_signature_for_ir(func, args, lowered_args);
+                self.adapt_plain_call_args_with_signature_for_ir(canonical_func, args, lowered_args);
             if let Some(captures) = self.nested_fn_captures.get(func).cloned() {
                 for capture in captures {
                     lowered_args.push(self.lower_recursive_capture_arg_for_ir(&capture));
                 }
             }
-            let lowered_func = if func.contains("::") {
-                crate::RustExpr::Path(func.split("::").map(str::to_string).collect())
+            let lowered_func = if canonical_func.contains("::") {
+                crate::RustExpr::Path(canonical_func.split("::").map(str::to_string).collect())
             } else {
-                crate::RustExpr::Ident(func.to_string())
+                crate::RustExpr::Ident(canonical_func.to_string())
             };
             return Ok(Some(crate::RustExpr::FnCall {
                 func: Box::new(lowered_func),
