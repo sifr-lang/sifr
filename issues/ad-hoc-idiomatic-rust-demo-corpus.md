@@ -386,6 +386,8 @@ Progress update (`2026-03-29`):
 - `batch_66_decimal_types_decimal_arithmetic_decimal_conversions` completed local validation, accepted one pass-1 follow-up in `decimal_conversions` replacing string-based integer extraction with direct numeric extraction from decimal internals, and ended external review with no remaining accepted blockers; `decimal_types` and `decimal_arithmetic` were clean in pass 1, while all three pass-2 reviewer prompts stalled without usable verdicts after repeated retries
 - `batch_67_import_forms_imports_external_modules` selected as the sixty-seventh wave-2 runnable-demo batch because it keeps the remaining import/module semantics slice cohesive around alternate import forms, cross-file model imports, and non-main external module loading
 - `batch_67_import_forms_imports_external_modules` completed local validation and ended external review with no accepted blockers; all three files were clean in both passes
+- `batch_68_borrow_exclusivity_borrow_lowering_compiler_safety` selected as the sixty-eighth wave-2 runnable-demo batch because it keeps the remaining borrow/compiler-hardening slice cohesive around borrow-by-default semantics, borrow-lowering/codegen fixes, and the compiler-safety RAII milestone demo
+- `batch_68_borrow_exclusivity_borrow_lowering_compiler_safety` completed local validation and ended external review with no accepted blockers; all three files were clean in both passes
 
 ### wave_3_fixture_and_negative_case_normalization
 
