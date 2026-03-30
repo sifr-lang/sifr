@@ -467,6 +467,44 @@ status: in progress
     - vs entry baseline: `PASS +38`, `CHECK_ERROR -38`, `RUN_ERROR ±0`
   - PR:
     - `https://github.com/yaseralnajjar/sifr/pull/1486` (merged)
+- 2026-03-30 local iteration (wave-R1 run-stage panic-closure compiler slice):
+  - root cause:
+    - structured statement lowering had parity gaps between top-level and nested block paths, causing production panics for loop bodies that required:
+      - chained compare lowering,
+      - nested `SubscriptAugAssign` lowering,
+      - nested `Delete` lowering.
+  - reviewer gate:
+    - approach artifact: `issues/ad-hoc-optional-none-and-narrowing-approach-full-review-2026-03-30.md`
+    - review artifact: `reviews/ad-hoc-optional-none-approach-full-review-pass1.md` (`ready with decision recommendation`)
+  - compiler changes:
+    - `crates/sifr_codegen/src/stmt_support_emitter.rs`:
+      - added chained-compare lowering support for structured expression path (`ops.len() >= 1` compare chains lower to conjunction chain),
+      - added structured lowering helpers and handlers for `SubscriptAugAssign`,
+      - added structured lowering helpers and handlers for `Delete`,
+      - wired nested stmt-block lowering to handle these statement kinds explicitly.
+    - `crates/sifr_codegen/src/lib.rs`:
+      - registered structured top-level handlers for `SubscriptAugAssign` and `Delete`.
+    - `crates/sifr_codegen/src/lib_codegen_tests.rs`:
+      - added regression tests covering:
+        - nested `SubscriptAugAssign` inside loop/if structured lowering,
+        - `Delete` with name-key inside loop/if structured lowering,
+        - chained-compare condition inside loop/if structured lowering.
+  - tests/validation:
+    - `cargo test -q -p sifr_codegen test_structured_stmt_path_handles_nested_subscript_augassign_inside_loop_if` -> pass
+    - `cargo test -q -p sifr_codegen test_structured_stmt_path_handles_delete_with_name_key_inside_loop_if` -> pass
+    - `cargo test -q -p sifr_codegen test_structured_stmt_path_handles_chained_compare_condition_inside_loop_if` -> pass
+    - `target/release/sifr run audits/leetcode/0041_first_missing_positive.sifr` -> `RUN_ERROR` with Rust `E0308` (panic removed)
+    - `target/release/sifr run audits/leetcode/0081_search_in_rotated_sorted_array_ii.sifr` -> `RUN_ERROR` with Rust `E0308` (panic removed)
+    - `target/release/sifr run audits/leetcode/0791_custom_sort_string.sifr` -> `RUN_ERROR` with Rust `E0308` (panic removed)
+    - `target/release/sifr run audits/leetcode/2554_maximum_number_of_integers_to_choose_from_a_range_i.sifr` -> `RUN_ERROR` with Rust `E0308` (panic removed)
+    - `scripts/run_all_tests.sh --profile quick` -> pass
+  - rerun delta:
+    - targeted run-stage classification shift for the panic quartet:
+      - `0041_first_missing_positive`: `codegen_panic -> E0308`
+      - `0081_search_in_rotated_sorted_array_ii`: `codegen_panic -> E0308`
+      - `0791_custom_sort_string`: `codegen_panic -> E0308`
+      - `2554_maximum_number_of_integers_to_choose_from_a_range_i`: `codegen_panic -> E0308`
+    - corpus status count unchanged at this slice boundary (`RUN_ERROR` fixtures still fail at run stage), but internal compiler panic class for this quartet is closed.
 
 - Validation to record:
   - post-wave full corpus rerun
