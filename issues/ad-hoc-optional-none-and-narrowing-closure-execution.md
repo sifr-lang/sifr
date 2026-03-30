@@ -708,6 +708,36 @@ status: in progress
   - residual ownership after wave-R3c:
     - `0054`, `0763`
 
+- 2026-03-30 local iteration (wave-R3d final residual run-error closure slice):
+  - root cause:
+    - `0054`: empty-list specialization evidence from loop-body appends did not persist into declared binding type, leaving `res` as `list[Any]` at check stage and leaking to Rust-shape mismatch during run-stage lowering.
+    - `0763`: 2-arg `max()` path accepted optional operands without explicit Optional/type compatibility contract validation.
+  - reviewer gate:
+    - plan artifact: `issues/ad-hoc-optional-none-and-narrowing-wave-r3d-final-run-error-closure-plan-2026-03-30.md`
+    - review pass-1: `reviews/ad-hoc-optional-none-wave-r3d-review-pass1.md` (`ready-with-guardrails`; talk-to-claude wait loop invoked, no direct file output produced in-window)
+  - compiler changes:
+    - `crates/sifr_hir/src/lower/empty_collection_refinement.rs`:
+      - empty list/set refinement now updates declared binding type (`set_type`) in addition to narrowing, so specialization survives loop narrowing restoration.
+    - `crates/sifr_hir/src/lower/expressions.rs` + `crates/sifr_hir/src/lower/min_max_validation.rs` (new):
+      - 2-arg `min`/`max` now reject Optional operands and incompatible argument pairs before HIR call emission.
+    - tests:
+      - `crates/sifr_hir/src/lower/expressions_tests.rs`:
+        - loop-surviving empty-list specialization regression,
+        - optional append return-boundary mismatch regression,
+        - optional-operand 2-arg `max` rejection regression.
+  - tests/validation:
+    - `cargo test -p sifr_hir test_empty_list_specialization_survives_loop_append -- --nocapture` -> pass
+    - `cargo test -p sifr_hir test_empty_list_specialization_optional_append_in_loop_rejects_return_annotation -- --nocapture` -> pass
+    - `cargo test -p sifr_hir test_max_two_arg_rejects_optional_operand -- --nocapture` -> pass
+    - `scripts/run_all_tests.sh --profile quick` -> pass
+  - targeted fixture reruns:
+    - `0071`, `0349`, `0459` remain `PASS`
+    - `0054`: `RUN_ERROR -> CHECK_ERROR` (`return type mismatch: expected 'list[int]', got 'list[int | None]'`)
+    - `0763`: `RUN_ERROR -> CHECK_ERROR` (`max() with 2 arguments does not accept optional operands`)
+  - residual ownership after wave-R3d:
+    - run-stage residuals from this lane: none
+    - check-stage residuals requiring explicit Optional-safe author intent: `0054`, `0763`
+
 - Validation to record:
   - post-wave full corpus rerun
   - residual case inventory
@@ -726,6 +756,7 @@ Root-cause plan artifact:
 - `issues/ad-hoc-optional-none-and-narrowing-wave9e-mutability-boundary-plan-2026-03-29.md`
 - `issues/ad-hoc-optional-none-and-narrowing-wave-r3-run-error-majority-plan-2026-03-30.md`
 - `issues/ad-hoc-optional-none-and-narrowing-wave-r3b2-codegen-data-shape-plan-2026-03-30.md`
+- `issues/ad-hoc-optional-none-and-narrowing-wave-r3d-final-run-error-closure-plan-2026-03-30.md`
 
 Reviewer passes:
 - `reviews/ad-hoc-optional-none-wave7-9-plan-review-pass1.md` (`not ready`, corrective findings applied)
@@ -740,6 +771,7 @@ Reviewer passes:
 - `reviews/ad-hoc-optional-none-wave-r3b2-codegen-data-shape-review-pass1.md` (`not ready`, probe-reconciliation blocker applied)
 - `reviews/ad-hoc-optional-none-wave-r3b2-codegen-data-shape-review-pass2.md` (`ready`, no blocking issues)
 - `reviews/ad-hoc-optional-none-wave-r3c-review-pass1.md` (`ready-with-guardrails`)
+- `reviews/ad-hoc-optional-none-wave-r3d-review-pass1.md` (`ready-with-guardrails`)
 
 Wave state:
 
@@ -773,6 +805,9 @@ Wave state:
 - wave-R3c (`container/guard/slice stabilization lane`):
   - implemented and validated: `0071`, `0349`, `0459` moved `RUN_ERROR -> PASS` in targeted reruns
   - residual run-error ownership after R3c: `0054`, `0763`
+- wave-R3d (`final residual run-error closure lane`):
+  - implemented and validated: `0054` and `0763` moved `RUN_ERROR -> CHECK_ERROR` via explicit HIR diagnostics
+  - residual run-error ownership after R3d: none
 
 Implementation gate:
 - no code changes for waves `7-9` begin until reviewer pass-2 ready verdict is recorded (satisfied as of 2026-03-29).
