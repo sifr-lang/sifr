@@ -3936,6 +3936,46 @@ status: accepted_after_pass_1_and_pass_2
   - batch 89 was reviewed directly from the final validated Rust scaffolds and the observed helper-qualified type errors for the paired fixtures
   - both review passes ended with no accepted blockers across the trio
 
+#### batch_90_diagnostic_renderer_scaffolds
+
+status: accepted_after_pass_1_and_pass_2
+
+- scope:
+  - `demos/diagnostic_options/negative_cases/compact_grouping_contract/idiomatic.rs`
+  - `demos/diagnostic_options/negative_cases/unknown_diagnostic_format/idiomatic.rs`
+  - `demos/diagnostic_schema/negative_cases/type_error_json_diagnostic/idiomatic.rs`
+- selection rationale:
+  - these three diagnostics-focused fixtures are the next untouched negative-case family and all test renderer/config behavior rather than language semantics alone
+  - the batch keeps compact grouping, invalid-format rejection, and json-schema emission together instead of scattering renderer contracts across unrelated Tier 2 cleanup work
+  - each paired fixture already has a stable observable failure mode under the CLI, so the Rust-side scaffold can be validated directly against the emitted compact/json/output contract
+- priority tags:
+  - `tier-2-negative-case`: `diagnostic_options/compact_grouping_contract`, `diagnostic_options/unknown_diagnostic_format`, `diagnostic_schema/type_error_json_diagnostic`
+  - `diagnostic-rendering`: `diagnostic_options/compact_grouping_contract`, `diagnostic_options/unknown_diagnostic_format`, `diagnostic_schema/type_error_json_diagnostic`
+  - `generic-placeholder-cleanup`: `diagnostic_options/compact_grouping_contract`, `diagnostic_options/unknown_diagnostic_format`, `diagnostic_schema/type_error_json_diagnostic`
+- implementation summary:
+  - `compact_grouping_contract`: replaced the generic stub with a scaffold describing repeated `int <- str` failures whose purpose is deterministic compact-mode grouping
+  - `unknown_diagnostic_format`: replaced the generic stub with a scaffold describing CLI argument validation that must exit with usage code `2` before semantic analysis begins
+  - `type_error_json_diagnostic`: replaced the generic stub with a scaffold describing the simple `int <- str` mismatch used to validate canonical json diagnostic output
+- local validation completed:
+  - `rustfmt demos/diagnostic_options/negative_cases/compact_grouping_contract/idiomatic.rs demos/diagnostic_options/negative_cases/unknown_diagnostic_format/idiomatic.rs demos/diagnostic_schema/negative_cases/type_error_json_diagnostic/idiomatic.rs`
+  - `rustc --edition=2021 demos/diagnostic_options/negative_cases/compact_grouping_contract/idiomatic.rs -o /tmp/sifr-neg-compact-grouping && /tmp/sifr-neg-compact-grouping`
+  - `rustc --edition=2021 demos/diagnostic_options/negative_cases/unknown_diagnostic_format/idiomatic.rs -o /tmp/sifr-neg-unknown-format && /tmp/sifr-neg-unknown-format`
+  - `rustc --edition=2021 demos/diagnostic_schema/negative_cases/type_error_json_diagnostic/idiomatic.rs -o /tmp/sifr-neg-json-diagnostic && /tmp/sifr-neg-json-diagnostic`
+  - `cargo run -q -p sifr -- --diagnostic-format compact check demos/diagnostic_options/negative_cases/compact_grouping_contract/main.sifr`
+  - `cargo run -q -p sifr -- --diagnostic-format not-a-format check demos/diagnostic_options/negative_cases/unknown_diagnostic_format/main.sifr`
+  - `cargo run -q -p sifr -- --diagnostic-format json check demos/diagnostic_schema/negative_cases/type_error_json_diagnostic/main.sifr`
+  - `scripts/run_all_tests.sh`
+- review artifacts:
+  - pass 1: `reviews/phase-ad-hoc-idiomatic-rust-demo-corpus-wave-3-batch-90-review-pass-1.md`
+  - pass 2: `reviews/phase-ad-hoc-idiomatic-rust-demo-corpus-wave-3-batch-90-review-pass-2.md`
+- review application summary:
+  - all three pass-1 reviews returned `OK`
+  - all three pass-2 reviews returned `OK`
+  - no follow-up code changes were needed after the targeted Tier 2 rewrite
+- reviewer tooling note:
+  - batch 90 was reviewed directly from the final validated Rust scaffolds and the observed compact/json/usage-exit behaviors for the paired fixtures
+  - both review passes ended with no accepted blockers across the trio
+
 ### wave_4_corpus_consistency_pass
 
 status: pending
