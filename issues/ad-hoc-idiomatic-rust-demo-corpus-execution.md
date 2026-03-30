@@ -2658,6 +2658,46 @@ status: accepted_after_pass_1_and_pass_2
   - batch 73 used direct per-file `claude -p --no-session-persistence --dangerously-skip-permissions` prompts through short Python subprocess wrappers with explicit timeouts
   - the initial combined pass-2 runner stalled, so pass 2 was finalized with separate per-file retries that each returned `OK`
 
+#### batch_74_reachable_imports_project_test_discovery_graph_isolation
+
+status: accepted_after_pass_1_and_pass_2
+
+- scope:
+  - `demos/reachable_imports/idiomatic.rs`
+  - `demos/project_test_discovery/idiomatic.rs`
+  - `demos/graph_isolation/idiomatic.rs`
+- selection rationale:
+  - all three are positive runnable demos from the same phase-23 project-graph and isolation correctness area
+  - all three were still missing Rust companions entirely
+  - the trio stays tightly focused on reachable-module closure, support-module discovery parity, and graph isolation instead of mixing those frontend contracts with unrelated runtime or stdlib demos
+- priority tags:
+  - `project-graph`: `reachable_imports`, `project_test_discovery`, `graph_isolation`
+  - `missing-companion`: `reachable_imports`, `project_test_discovery`, `graph_isolation`
+  - `milestone-demo`: `reachable_imports`, `project_test_discovery`, `graph_isolation`
+- implementation summary:
+  - `reachable_imports`: authored a compact helper module that preserves the reachable import-closure demo with the same `6 * 7 = 42` result
+  - `project_test_discovery`: authored a minimal `shared` constant plus helper module so the Rust companion mirrors the support-module discovery path while keeping the output direct and small
+  - `graph_isolation`: authored a tiny helper module that preserves the isolated graph-regression matrix value without pulling in unrelated files or extra scaffolding
+- local validation completed:
+  - `rustfmt demos/reachable_imports/idiomatic.rs demos/project_test_discovery/idiomatic.rs demos/graph_isolation/idiomatic.rs`
+  - `rustc --edition=2021 demos/reachable_imports/idiomatic.rs -o /tmp/sifr-idiomatic-reachable-imports && /tmp/sifr-idiomatic-reachable-imports`
+  - `rustc --edition=2021 demos/project_test_discovery/idiomatic.rs -o /tmp/sifr-idiomatic-project-test-discovery && /tmp/sifr-idiomatic-project-test-discovery`
+  - `rustc --edition=2021 demos/graph_isolation/idiomatic.rs -o /tmp/sifr-idiomatic-graph-isolation && /tmp/sifr-idiomatic-graph-isolation`
+  - `cargo run -q -p sifr -- run demos/reachable_imports/main.sifr`
+  - `cargo run -q -p sifr -- run demos/project_test_discovery/main.sifr`
+  - `cargo run -q -p sifr -- run demos/graph_isolation/main.sifr`
+  - `scripts/run_all_tests.sh`
+- review artifacts:
+  - pass 1: `reviews/phase-ad-hoc-idiomatic-rust-demo-corpus-wave-2-batch-74-review-pass-1.md`
+  - pass 2: `reviews/phase-ad-hoc-idiomatic-rust-demo-corpus-wave-2-batch-74-review-pass-2.md`
+- review application summary:
+  - all three pass-1 reviews returned `OK`
+  - all three pass-2 reviews returned `OK`
+  - no follow-up code changes were needed after the initial authoring step
+- reviewer tooling note:
+  - batch 74 used direct per-file `claude -p --no-session-persistence --dangerously-skip-permissions` prompts through short Python subprocess wrappers with explicit timeouts
+  - the initial combined pass-1 runner stalled, and `graph_isolation` needed a shorter retry in pass 1; the separate per-file retries then returned `OK`
+
 #### batch_65_codegen_preamble_codegen_structural_passes_intrinsic_codegen
 
 status: accepted_after_pass_1_and_pass_2
