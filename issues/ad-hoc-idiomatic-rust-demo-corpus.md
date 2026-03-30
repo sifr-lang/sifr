@@ -434,6 +434,8 @@ Goals:
 - `batch_85_reachable_type_error_scaffolds_followup` completed local validation and ended review with no accepted blockers; all three placeholders were replaced with fixture-specific Tier 2 scaffolds, and the paired Sifr fixtures still fail with the intended return-type diagnostics
 - `batch_86_reachable_type_error_scaffolds_mixed_blocks` selected as the next wave-3 normalization batch because it clears the remaining small control-flow mismatch trio that still used the generic placeholder: one union-member mismatch, one plain reachable return mismatch, and one mixed try/if block mismatch
 - `batch_86_reachable_type_error_scaffolds_mixed_blocks` completed local validation and ended review with no accepted blockers; all three placeholders were replaced with fixture-specific Tier 2 scaffolds, and the paired Sifr fixtures still fail with the intended diagnostics
+- `batch_87_reachable_parse_error_scaffolds` selected as the next wave-3 normalization batch because three phase-23 import-closure fixtures still used the generic placeholder even though they share one clear contract: the main file is valid, the local helper is reachable, and parsing the helper must fail deterministically
+- `batch_87_reachable_parse_error_scaffolds` completed local validation and ended review with no accepted blockers; all three placeholders were replaced with fixture-specific Tier 2 scaffolds, and the paired Sifr fixtures still fail with the intended helper parse errors
 
 ### wave_4_corpus_consistency_pass
 

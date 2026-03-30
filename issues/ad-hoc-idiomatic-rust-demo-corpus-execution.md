@@ -3816,6 +3816,46 @@ status: accepted_after_pass_1_and_pass_2
   - batch 86 was reviewed directly from the final validated Rust scaffolds and the observed `sifr check` diagnostics for the paired negative fixtures
   - both review passes ended with no accepted blockers across the trio
 
+#### batch_87_reachable_parse_error_scaffolds
+
+status: accepted_after_pass_1_and_pass_2
+
+- scope:
+  - `demos/graph_isolation/negative_cases/reachable_parse_error/idiomatic.rs`
+  - `demos/temp_workspace_isolation/negative_cases/reachable_parse_error/idiomatic.rs`
+  - `demos/reachable_imports/negative_cases/reachable_dependency_parse_error/idiomatic.rs`
+- selection rationale:
+  - these three phase-23 fixtures are the next untouched negative-case family and all share the same contract: the entry file is valid, a local helper import is reachable, and the helper parse error must terminate analysis deterministically
+  - the batch stays narrow and avoids mixing parse-error fixtures with type-error, module-cycle, or protocol-bound failures
+  - each paired fixture already exposes a stable `sifr check` parse-error message with the helper path and byte range, so the Tier 2 scaffold can be validated against observed output
+- priority tags:
+  - `tier-2-negative-case`: `graph_isolation/reachable_parse_error`, `temp_workspace_isolation/reachable_parse_error`, `reachable_imports/reachable_dependency_parse_error`
+  - `reachable-parse-error`: `graph_isolation/reachable_parse_error`, `temp_workspace_isolation/reachable_parse_error`, `reachable_imports/reachable_dependency_parse_error`
+  - `generic-placeholder-cleanup`: `graph_isolation/reachable_parse_error`, `temp_workspace_isolation/reachable_parse_error`, `reachable_imports/reachable_dependency_parse_error`
+- implementation summary:
+  - `graph_isolation`: replaced the generic stub with a scaffold describing the reachable local helper parse failure from `def value(:` and a direct Rust parse-fail analogue
+  - `temp_workspace_isolation`: replaced the generic stub with a scaffold describing the same helper parse failure under invocation-scoped workspace isolation
+  - `reachable_imports`: replaced the generic stub with a scaffold describing the reachable dependency parse failure from `def compute(:` and its Rust analogue
+- local validation completed:
+  - `rustfmt demos/graph_isolation/negative_cases/reachable_parse_error/idiomatic.rs demos/temp_workspace_isolation/negative_cases/reachable_parse_error/idiomatic.rs demos/reachable_imports/negative_cases/reachable_dependency_parse_error/idiomatic.rs`
+  - `rustc --edition=2021 demos/graph_isolation/negative_cases/reachable_parse_error/idiomatic.rs -o /tmp/sifr-neg-graph-isolation-parse && /tmp/sifr-neg-graph-isolation-parse`
+  - `rustc --edition=2021 demos/temp_workspace_isolation/negative_cases/reachable_parse_error/idiomatic.rs -o /tmp/sifr-neg-temp-workspace-parse && /tmp/sifr-neg-temp-workspace-parse`
+  - `rustc --edition=2021 demos/reachable_imports/negative_cases/reachable_dependency_parse_error/idiomatic.rs -o /tmp/sifr-neg-reachable-imports-parse && /tmp/sifr-neg-reachable-imports-parse`
+  - `cargo run -q -p sifr -- check demos/graph_isolation/negative_cases/reachable_parse_error/main.sifr`
+  - `cargo run -q -p sifr -- check demos/temp_workspace_isolation/negative_cases/reachable_parse_error/main.sifr`
+  - `cargo run -q -p sifr -- check demos/reachable_imports/negative_cases/reachable_dependency_parse_error/main.sifr`
+  - `scripts/run_all_tests.sh`
+- review artifacts:
+  - pass 1: `reviews/phase-ad-hoc-idiomatic-rust-demo-corpus-wave-3-batch-87-review-pass-1.md`
+  - pass 2: `reviews/phase-ad-hoc-idiomatic-rust-demo-corpus-wave-3-batch-87-review-pass-2.md`
+- review application summary:
+  - all three pass-1 reviews returned `OK`
+  - all three pass-2 reviews returned `OK`
+  - no follow-up code changes were needed after the targeted Tier 2 rewrite
+- reviewer tooling note:
+  - batch 87 was reviewed directly from the final validated Rust scaffolds and the observed `sifr check` diagnostics for the paired negative fixtures
+  - both review passes ended with no accepted blockers across the trio
+
 ### wave_4_corpus_consistency_pass
 
 status: pending
