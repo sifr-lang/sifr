@@ -404,6 +404,8 @@ Progress update (`2026-03-29`):
 - `batch_75_mode_consistency_project_graph_ecosystem_validation` completed local validation and ended external review with no accepted blockers; `mode_consistency` and `project_graph` were newly authored, `ecosystem_validation` was re-reviewed unchanged, and all three files were clean in both passes
 - `batch_76_nested_function_part1_nested_function_part2_nested_function_part3` selected as the seventy-sixth wave-2 runnable-demo batch because it clears the next contiguous nested-function inference/capture slice without mixing those focused callable demos with the remaining large stdlib-heavy outliers
 - `batch_76_nested_function_part1_nested_function_part2_nested_function_part3` completed local validation and ended external review with no accepted blockers; all three files were tightened into cleaner Rust-first nested-helper examples and both review passes returned `OK`
+- `batch_77_recursive_type_part1_recursive_type_part2_recursive_type_part3` selected as the seventy-seventh wave-2 runnable-demo batch because it clears the first contiguous recursive-type trilogy as a coherent alias-and-recursive-structure slice instead of mixing those demos with the unrelated remaining runtime and verification outliers
+- `batch_77_recursive_type_part1_recursive_type_part2_recursive_type_part3` completed local validation and ended external review with no accepted blockers; all three files were tightened into direct Rust-first recursive alias and enum demonstrations and both review passes returned `OK`
 
 ### wave_3_fixture_and_negative_case_normalization
 
