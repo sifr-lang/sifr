@@ -2738,6 +2738,46 @@ status: accepted_after_pass_1_and_pass_2
   - batch 75 used direct per-file `claude -p --no-session-persistence --dangerously-skip-permissions` prompts through short Python subprocess wrappers with explicit timeouts
   - the initial combined runners stalled, and `mode_consistency` in pass 1 plus `project_graph` in pass 2 needed shorter retries before returning `OK`
 
+#### batch_76_nested_function_part1_nested_function_part2_nested_function_part3
+
+status: accepted_after_pass_1_and_pass_2
+
+- scope:
+  - `demos/nested_function_part1/idiomatic.rs`
+  - `demos/nested_function_part2/idiomatic.rs`
+  - `demos/nested_function_part3/idiomatic.rs`
+- selection rationale:
+  - the batch clears the next contiguous positive runnable demos in the nested-function pipeline instead of mixing that focused callable/closure slice with the larger remaining outliers
+  - all three companions were already close, but they still carried generated-shape residue such as `as i64`, `&Vec`, string-comparison assertions, and redundant return noise
+  - keeping the three neighboring demos together preserved a coherent review surface around nested helpers, recursion, and nonlocal capture
+- priority tags:
+  - `nested-functions`: `nested_function_part1`, `nested_function_part2`, `nested_function_part3`
+  - `hand-authored-generated-shape`: `nested_function_part1`, `nested_function_part2`, `nested_function_part3`
+  - `milestone-demo`: `nested_function_part1`, `nested_function_part2`, `nested_function_part3`
+- implementation summary:
+  - `nested_function_part1`: simplified the composed-helper flow into direct Rust closures plus a small recursive helper and replaced string assertions with direct numeric `assert_eq!`
+  - `nested_function_part2`: collapsed the recursive helpers into straightforward expression-style Rust and removed redundant casts and return noise
+  - `nested_function_part3`: changed the helper signature to take a slice instead of `&Vec`, kept the closure capture example minimal, and replaced the final string comparison with a direct Rust-first assertion
+- local validation completed:
+  - `rustfmt demos/nested_function_part1/idiomatic.rs demos/nested_function_part2/idiomatic.rs demos/nested_function_part3/idiomatic.rs`
+  - `rustc --edition=2021 demos/nested_function_part1/idiomatic.rs -o /tmp/sifr-idiomatic-nested-function-part1 && /tmp/sifr-idiomatic-nested-function-part1`
+  - `rustc --edition=2021 demos/nested_function_part2/idiomatic.rs -o /tmp/sifr-idiomatic-nested-function-part2 && /tmp/sifr-idiomatic-nested-function-part2`
+  - `rustc --edition=2021 demos/nested_function_part3/idiomatic.rs -o /tmp/sifr-idiomatic-nested-function-part3 && /tmp/sifr-idiomatic-nested-function-part3`
+  - `cargo run -q -p sifr -- run demos/nested_function_part1/main.sifr`
+  - `cargo run -q -p sifr -- run demos/nested_function_part2/main.sifr`
+  - `cargo run -q -p sifr -- run demos/nested_function_part3/main.sifr`
+  - `scripts/run_all_tests.sh`
+- review artifacts:
+  - pass 1: `reviews/phase-ad-hoc-idiomatic-rust-demo-corpus-wave-2-batch-76-review-pass-1.md`
+  - pass 2: `reviews/phase-ad-hoc-idiomatic-rust-demo-corpus-wave-2-batch-76-review-pass-2.md`
+- review application summary:
+  - all three pass-1 reviews returned `OK`
+  - all three pass-2 reviews returned `OK`
+  - no follow-up code changes were needed after the initial cleanup
+- reviewer tooling note:
+  - batch 76 used direct per-file `claude -p --no-session-persistence --dangerously-skip-permissions` prompts through short Python subprocess wrappers with explicit timeouts
+  - the initial combined runner stalled, and `nested_function_part1` needed a shorter retry in pass 1 before returning `OK`
+
 #### batch_65_codegen_preamble_codegen_structural_passes_intrinsic_codegen
 
 status: accepted_after_pass_1_and_pass_2
