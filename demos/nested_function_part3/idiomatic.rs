@@ -1,19 +1,14 @@
-fn accumulate(values: &Vec<i64>) -> i64 {
-    let mut total: i64 = 0 as i64;
+fn accumulate(values: &[i64]) -> i64 {
+    let mut total = 0;
     let mut apply = || {
         for value in values.iter().copied() {
             total += value;
         }
     };
     apply();
-    return total;
+    total
 }
 
 fn main() {
-    assert!(
-        format!(
-            "{}",
-            accumulate(&vec![3 as i64, 1 as i64, 4 as i64, 1 as i64, 5 as i64])
-        ) == "14".to_string()
-    );
+    assert_eq!(accumulate(&[3, 1, 4, 1, 5]).to_string(), "14");
 }

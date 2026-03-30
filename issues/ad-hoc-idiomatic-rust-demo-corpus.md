@@ -402,6 +402,8 @@ Progress update (`2026-03-29`):
 - `batch_74_reachable_imports_project_test_discovery_graph_isolation` completed local validation and ended external review with no accepted blockers; all three missing companions were authored directly and all three files were clean in both passes
 - `batch_75_mode_consistency_project_graph_ecosystem_validation` selected as the seventy-fifth wave-2 runnable-demo batch because it clears the next frontend/verification contract slice cohesively: mode-consistency parity, project-graph resolution, and ecosystem-lane signaling
 - `batch_75_mode_consistency_project_graph_ecosystem_validation` completed local validation and ended external review with no accepted blockers; `mode_consistency` and `project_graph` were newly authored, `ecosystem_validation` was re-reviewed unchanged, and all three files were clean in both passes
+- `batch_76_nested_function_part1_nested_function_part2_nested_function_part3` selected as the seventy-sixth wave-2 runnable-demo batch because it clears the next contiguous nested-function inference/capture slice without mixing those focused callable demos with the remaining large stdlib-heavy outliers
+- `batch_76_nested_function_part1_nested_function_part2_nested_function_part3` completed local validation and ended external review with no accepted blockers; all three files were tightened into cleaner Rust-first nested-helper examples and both review passes returned `OK`
 
 ### wave_3_fixture_and_negative_case_normalization
 
