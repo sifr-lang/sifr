@@ -828,9 +828,7 @@ fn analyze_assign(
                     Box::new(unify_types(*key_ty, index_ty)),
                     Box::new(unify_types(*value_ty_current, value_ty)),
                 ),
-                Type::List(elem_ty) => {
-                    Type::List(Box::new(unify_types(*elem_ty, value_ty)))
-                }
+                Type::List(elem_ty) => Type::List(Box::new(unify_types(*elem_ty, value_ty))),
                 other => other,
             };
             unify_name_binding(

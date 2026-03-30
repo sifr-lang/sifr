@@ -32,7 +32,7 @@ pub(super) fn detect_true_sequence_guards(expr: &Expr, ctx: &LowerCtx) -> Vec<Se
                 CmpOp::Lt => {
                     if let (Some((index_var, max_offset)), Some(sequence_name)) = (
                         index_var_with_nonnegative_offset(cmp.left.as_ref()),
-                        len_call_sequence_name(&cmp.comparators[0]),
+                        len_anchor_name(&cmp.comparators[0], ctx),
                     ) {
                         return vec![SequenceGuard::IndexVarInRange {
                             sequence: sequence_name,
@@ -44,7 +44,7 @@ pub(super) fn detect_true_sequence_guards(expr: &Expr, ctx: &LowerCtx) -> Vec<Se
                 }
                 CmpOp::Eq => {
                     if let (Some(sequence_name), Some(len_value)) = (
-                        len_call_sequence_name(cmp.left.as_ref()),
+                        len_anchor_name(cmp.left.as_ref(), ctx),
                         literal_usize(&cmp.comparators[0]),
                     ) {
                         if len_value > 0 {
@@ -58,7 +58,7 @@ pub(super) fn detect_true_sequence_guards(expr: &Expr, ctx: &LowerCtx) -> Vec<Se
                 }
                 CmpOp::Gt => {
                     if let (Some(sequence_name), Some(len_value)) = (
-                        len_call_sequence_name(cmp.left.as_ref()),
+                        len_anchor_name(cmp.left.as_ref(), ctx),
                         literal_usize(&cmp.comparators[0]),
                     ) {
                         return vec![SequenceGuard::MinLength {
@@ -112,27 +112,25 @@ pub(super) fn detect_false_exit_sequence_guards(expr: &Expr, ctx: &LowerCtx) -> 
         Expr::Compare(cmp) if cmp.ops.len() == 1 && cmp.comparators.len() == 1 => {
             match &cmp.ops[0] {
                 CmpOp::Eq => {
-                    if let (Expr::Name(index_name), Some(sequence_name)) = (
-                        cmp.left.as_ref(),
-                        len_call_sequence_name(&cmp.comparators[0]),
-                    ) {
+                    if let (Expr::Name(index_name), Some(sequence_name)) =
+                        (cmp.left.as_ref(), len_anchor_name(&cmp.comparators[0], ctx))
+                    {
                         return vec![SequenceGuard::IndexVarInRange {
                             sequence: sequence_name,
                             index_var: index_name.id.clone(),
                             max_offset: 0,
                         }];
                     }
-                    if let (Some(sequence_name), Expr::Name(index_name)) = (
-                        len_call_sequence_name(cmp.left.as_ref()),
-                        &cmp.comparators[0],
-                    ) {
+                    if let (Some(sequence_name), Expr::Name(index_name)) =
+                        (len_anchor_name(cmp.left.as_ref(), ctx), &cmp.comparators[0])
+                    {
                         return vec![SequenceGuard::IndexVarInRange {
                             sequence: sequence_name,
                             index_var: index_name.id.clone(),
                             max_offset: 0,
                         }];
                     }
-                    let Some(sequence_name) = len_call_sequence_name(cmp.left.as_ref()) else {
+                    let Some(sequence_name) = len_anchor_name(cmp.left.as_ref(), ctx) else {
                         return Vec::new();
                     };
                     let Some(len_value) = literal_usize(&cmp.comparators[0]) else {
@@ -154,7 +152,7 @@ pub(super) fn detect_false_exit_sequence_guards(expr: &Expr, ctx: &LowerCtx) -> 
                     }
                 }
                 CmpOp::Lt => {
-                    let Some(sequence_name) = len_call_sequence_name(cmp.left.as_ref()) else {
+                    let Some(sequence_name) = len_anchor_name(cmp.left.as_ref(), ctx) else {
                         return Vec::new();
                     };
                     let Some(min_len) = literal_usize(&cmp.comparators[0]) else {
@@ -166,7 +164,7 @@ pub(super) fn detect_false_exit_sequence_guards(expr: &Expr, ctx: &LowerCtx) -> 
                     }]
                 }
                 CmpOp::LtE => {
-                    let Some(sequence_name) = len_call_sequence_name(cmp.left.as_ref()) else {
+                    let Some(sequence_name) = len_anchor_name(cmp.left.as_ref(), ctx) else {
                         return Vec::new();
                     };
                     let Some(max_len) = literal_usize(&cmp.comparators[0]) else {
@@ -178,20 +176,18 @@ pub(super) fn detect_false_exit_sequence_guards(expr: &Expr, ctx: &LowerCtx) -> 
                     }]
                 }
                 CmpOp::GtE => {
-                    if let (Expr::Name(index_name), Some(sequence_name)) = (
-                        cmp.left.as_ref(),
-                        len_call_sequence_name(&cmp.comparators[0]),
-                    ) {
+                    if let (Expr::Name(index_name), Some(sequence_name)) =
+                        (cmp.left.as_ref(), len_anchor_name(&cmp.comparators[0], ctx))
+                    {
                         return vec![SequenceGuard::IndexVarInRange {
                             sequence: sequence_name,
                             index_var: index_name.id.clone(),
                             max_offset: 0,
                         }];
                     }
-                    if let (Some(sequence_name), Expr::Name(index_name)) = (
-                        len_call_sequence_name(cmp.left.as_ref()),
-                        &cmp.comparators[0],
-                    ) {
+                    if let (Some(sequence_name), Expr::Name(index_name)) =
+                        (len_anchor_name(cmp.left.as_ref(), ctx), &cmp.comparators[0])
+                    {
                         return vec![SequenceGuard::IndexVarInRange {
                             sequence: sequence_name,
                             index_var: index_name.id.clone(),

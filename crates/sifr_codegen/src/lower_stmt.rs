@@ -1447,7 +1447,11 @@ pub(crate) fn lower_tuple_unpack_targets(
         value: lowered_value,
     }];
 
-    lowered.extend(lower_tuple_target_assignments(targets, &temp_names, mutated_vars));
+    lowered.extend(lower_tuple_target_assignments(
+        targets,
+        &temp_names,
+        mutated_vars,
+    ));
 
     lowered
 }
@@ -1483,7 +1487,9 @@ fn try_lower_simple_star_unpack_stmt(
     for (idx, (name, element_ty)) in before.iter().enumerate() {
         let indexed_expr = RustExpr::Index {
             expr: Box::new(tmp_ident()),
-            index: Box::new(RustExpr::Literal(RustLiteral::Int(i64::try_from(idx).ok()?))),
+            index: Box::new(RustExpr::Literal(RustLiteral::Int(
+                i64::try_from(idx).ok()?,
+            ))),
         };
         let extracted_expr = if crate::helpers::is_copy_type_for_codegen(element_ty) {
             indexed_expr
@@ -2215,10 +2221,8 @@ fn try_lower_simple_for_iter_expr(iter: &HirExpr, target_ty: &Type) -> Option<Ru
             .clone()
             .unwrap_or_else(|| lowered_iter.clone())
     };
-    let iter_plan = crate::helpers::plan_iterator_ownership_with_element_hint(
-        iter_source,
-        Some(target_ty),
-    );
+    let iter_plan =
+        crate::helpers::plan_iterator_ownership_with_element_hint(iter_source, Some(target_ty));
     let apply_copy_clone_yield = |iter_expr: RustExpr| match iter_plan.yield_mode {
         crate::helpers::YieldMode::Copy => RustExpr::MethodCall {
             receiver: Box::new(iter_expr),
@@ -2239,13 +2243,13 @@ fn try_lower_simple_for_iter_expr(iter: &HirExpr, target_ty: &Type) -> Option<Ru
                 method: "into_iter".to_string(),
                 args: vec![],
             },
-            crate::helpers::SourceAccessMode::Preserve => apply_copy_clone_yield(
-                RustExpr::MethodCall {
+            crate::helpers::SourceAccessMode::Preserve => {
+                apply_copy_clone_yield(RustExpr::MethodCall {
                     receiver: Box::new(lowered_iter),
                     method: "iter".to_string(),
                     args: vec![],
-                },
-            ),
+                })
+            }
         },
         Type::Dict(_, _) => match iter_plan.source_access_mode {
             crate::helpers::SourceAccessMode::Consume => RustExpr::MethodCall {
@@ -2253,13 +2257,13 @@ fn try_lower_simple_for_iter_expr(iter: &HirExpr, target_ty: &Type) -> Option<Ru
                 method: "into_keys".to_string(),
                 args: vec![],
             },
-            crate::helpers::SourceAccessMode::Preserve => apply_copy_clone_yield(
-                RustExpr::MethodCall {
+            crate::helpers::SourceAccessMode::Preserve => {
+                apply_copy_clone_yield(RustExpr::MethodCall {
                     receiver: Box::new(lowered_iter),
                     method: "keys".to_string(),
                     args: vec![],
-                },
-            ),
+                })
+            }
         },
         Type::Str => RustExpr::MethodCall {
             receiver: Box::new(RustExpr::MethodCall {
@@ -2755,11 +2759,13 @@ fn try_lower_condition_index_operand_expr(
                     ty: RustType::Named("usize".to_string()),
                 }),
             };
-            Some(if crate::helpers::is_copy_type_for_codegen(element_ty.as_ref()) {
-                indexed_expr
-            } else {
-                RustExpr::Clone(Box::new(indexed_expr))
-            })
+            Some(
+                if crate::helpers::is_copy_type_for_codegen(element_ty.as_ref()) {
+                    indexed_expr
+                } else {
+                    RustExpr::Clone(Box::new(indexed_expr))
+                },
+            )
         }
         Type::List(element_ty) => {
             let projection_method =
@@ -3221,8 +3227,10 @@ fn try_lower_simple_subscript_assign_stmt(
     value: &HirExpr,
     object_ty: &Type,
 ) -> Option<Vec<RustStmt>> {
-    let lowered_index = maybe_clone_subscript_assignment_name(index, try_lower_leaf_or_name_expr(index)?);
-    let lowered_value = maybe_clone_subscript_assignment_name(value, try_lower_leaf_or_name_expr(value)?);
+    let lowered_index =
+        maybe_clone_subscript_assignment_name(index, try_lower_leaf_or_name_expr(index)?);
+    let lowered_value =
+        maybe_clone_subscript_assignment_name(value, try_lower_leaf_or_name_expr(value)?);
     match resolve_alias_type(object_ty) {
         Type::List(_) => Some(vec![build_list_subscript_assign_stmt(
             RustExpr::Ident(object.to_string()),

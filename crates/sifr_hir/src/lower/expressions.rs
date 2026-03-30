@@ -10,11 +10,22 @@ use super::builtin_calls::{
 };
 use super::bytes_methods::{resolve_bytes_method_type, resolve_str_encode_method_type};
 use super::classes::is_hashable_type;
-use super::compat_imports::{resolve_bare_python_compat_call_alias, resolve_python_compat_call_alias};
-use super::decimal_methods::{decimal_conversion_error_type, resolve_decimal_method_type, validate_bigdecimal_string_literal, validate_decimal_string_literal};
+use super::compat_imports::{
+    resolve_bare_python_compat_call_alias, resolve_python_compat_call_alias,
+};
+use super::decimal_methods::{
+    decimal_conversion_error_type, resolve_decimal_method_type, validate_bigdecimal_string_literal,
+    validate_decimal_string_literal,
+};
+use super::empty_collection_refinement::{
+    refine_empty_list_binding_expr, refine_empty_set_binding_expr,
+};
 use super::fstring_support::lower_fstring_expr;
 use super::guarded_index::guarded_sequence_index_result_type;
-use super::method_call_args::{lower_function_call_args, lower_method_call_args, lower_signature_call_args, validate_dict_update_arg, validate_list_extend_arg, validate_set_iterable_arg};
+use super::method_call_args::{
+    lower_function_call_args, lower_method_call_args, lower_signature_call_args,
+    validate_dict_update_arg, validate_list_extend_arg, validate_set_iterable_arg,
+};
 use super::mutating_methods::reject_immutable_parameter_method_mutation;
 use super::nonempty_method_narrowing::refine_nonempty_method_return_type;
 use super::numeric_sentinels::{
@@ -22,17 +33,22 @@ use super::numeric_sentinels::{
     maybe_resolve_numeric_sentinel_name_from_type, normalize_min_max_numeric_sentinels,
     retag_numeric_sentinel_name_expr,
 };
-use super::sequence_guard_detection::{detect_false_exit_sequence_guards, detect_true_sequence_guards};
+use super::sequence_guard_detection::{
+    detect_false_exit_sequence_guards, detect_true_sequence_guards,
+};
 pub(super) use super::tuple_unpack::{lower_star_unpack_assign, lower_tuple_unpack_assign};
 use super::type_bounds::{type_satisfies_bound, type_satisfies_constraint};
 use super::typing_and_functions::resolve_annotation_expr;
-use super::{collect_type_vars, decode_typevar_constraint, infer_type_var_bindings, substitute_type_vars, LowerCtx};
+use super::{
+    collect_type_vars, decode_typevar_constraint, infer_type_var_bindings, substitute_type_vars,
+    LowerCtx,
+};
 use crate::hir_nodes::{HirExpr, HirIteratorOp, HirParam};
 use sifr_python_ast::{
     BoolOp, CmpOp, Expr, ExprAttribute, ExprBinOp, ExprBoolOp, ExprBytesLiteral, ExprCall,
-    ExprCompare, ExprDict, ExprDictComp, ExprGenerator, ExprLambda, ExprList,
-    ExprListComp, ExprName, ExprNamed, ExprNumberLiteral, ExprSet, ExprSetComp, ExprSubscript,
-    ExprTuple, ExprUnaryOp, Number, Operator, UnaryOp,
+    ExprCompare, ExprDict, ExprDictComp, ExprGenerator, ExprLambda, ExprList, ExprListComp,
+    ExprName, ExprNamed, ExprNumberLiteral, ExprSet, ExprSetComp, ExprSubscript, ExprTuple,
+    ExprUnaryOp, Number, Operator, UnaryOp,
 };
 use sifr_type_system::{
     make_union, type_check_binary_op, type_check_bool_op, type_check_comparison,
@@ -2427,6 +2443,9 @@ pub(super) fn lower_method_call(
         _ => lower_method_call_args(object.ty(), &method_name, call, ctx)?,
     };
 
+    if matches!(method_name.as_str(), "append" | "insert" | "extend") {
+        object = refine_empty_list_binding_expr(object, &method_name, &args, ctx);
+    }
     if matches!(
         method_name.as_str(),
         "add" | "remove" | "discard" | "contains"
@@ -2562,28 +2581,6 @@ fn refine_defaultdict_binding_expr(
         index,
         ty: inferred_value_ty,
     })
-}
-
-fn refine_empty_set_binding_expr(
-    expr: HirExpr,
-    inferred_elem_ty: Type,
-    ctx: &mut LowerCtx,
-) -> HirExpr {
-    let HirExpr::Name { name, ty } = &expr else {
-        return expr;
-    };
-    let Type::Set(inner) = ty.resolve_alias() else {
-        return expr;
-    };
-    if !matches!(inner.as_ref(), Type::Any | Type::Unknown) {
-        return expr;
-    }
-    let refined_ty = Type::Set(Box::new(inferred_elem_ty));
-    ctx.scope.narrow_var(name, refined_ty.clone());
-    HirExpr::Name {
-        name: name.clone(),
-        ty: refined_ty,
-    }
 }
 
 /// Resolve the return type of a method call on a given type.

@@ -3290,6 +3290,25 @@ fn test_bool_typed_boolop_coerces_optional_operand_to_condition_bool() {
 }
 
 #[test]
+fn test_string_slice_negative_stop_normalizes_against_length() {
+    let rust_code = generate_rust_from_source(
+        "def repeatedSubstringPattern(s: str) -> bool:\n    return s in (s + s)[1:-1]\n",
+    );
+    assert!(
+        rust_code.contains("_slice_len_i64"),
+        "string slice lowering should materialize source length for negative-stop normalization"
+    );
+    assert!(
+        rust_code.contains("_slice_stop_i64"),
+        "string slice lowering should compute normalized stop bound"
+    );
+    assert!(
+        !rust_code.contains("((-(1 as i64)).max(0) - (1 as i64).max(0)).max(0)"),
+        "negative stop must not be clamped directly to zero"
+    );
+}
+
+#[test]
 fn test_union_display_impl_uses_structured_ir() {
     let union_src = include_str!("union_type_helpers.rs");
     assert!(union_src.contains("RustType::Ref {"));

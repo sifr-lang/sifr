@@ -989,9 +989,9 @@ pub(super) fn body_contains_field_assign(stmts: &[HirStmt]) -> bool {
     fn stmt_contains_field_assign(stmt: &HirStmt) -> bool {
         match stmt {
             HirStmt::FieldAssign { .. } => true,
-            HirStmt::TupleUnpack { targets, .. } => targets.iter().any(
-                |target| matches!(target.binding, HirTupleTargetBinding::Field { .. }),
-            ),
+            HirStmt::TupleUnpack { targets, .. } => targets
+                .iter()
+                .any(|target| matches!(target.binding, HirTupleTargetBinding::Field { .. })),
             HirStmt::If {
                 then_body,
                 elif_clauses,
@@ -1024,7 +1024,9 @@ pub(super) fn body_contains_field_assign(stmts: &[HirStmt]) -> bool {
                         .any(|handler| body_contains_field_assign(&handler.body))
             }
             HirStmt::With { body, .. } => body_contains_field_assign(body),
-            HirStmt::Match { arms, .. } => arms.iter().any(|arm| body_contains_field_assign(&arm.body)),
+            HirStmt::Match { arms, .. } => {
+                arms.iter().any(|arm| body_contains_field_assign(&arm.body))
+            }
             _ => false,
         }
     }

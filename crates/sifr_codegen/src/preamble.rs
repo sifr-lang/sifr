@@ -543,7 +543,10 @@ pub fn build_random_module_state_items() -> Vec<RustItem> {
                                         args: vec![],
                                     },
                                 ),
-                                ("index".to_string(), RustExpr::Literal(crate::RustLiteral::Int(0))),
+                                (
+                                    "index".to_string(),
+                                    RustExpr::Literal(crate::RustLiteral::Int(0)),
+                                ),
                                 (
                                     "gauss_next".to_string(),
                                     RustExpr::Literal(crate::RustLiteral::None),

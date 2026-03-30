@@ -1,8 +1,8 @@
 use crate::hir_nodes::{HirStmt, HirTupleTarget, HirTupleTargetBinding};
 use sifr_python_ast::{Expr, ExprAttribute, ExprTuple};
 
-use super::binding_mutability::ensure_mutable_parameter_binding;
 use super::assignment_widening::reconcile_optional_reassignment;
+use super::binding_mutability::ensure_mutable_parameter_binding;
 use super::expressions::lower_expr;
 use super::len_aliases::record_tuple_unpack_len_alias_facts;
 use super::sequence_pointers::record_tuple_unpack_pointer_facts;
@@ -19,7 +19,9 @@ fn lower_tuple_target(elt: &Expr, ctx: &mut LowerCtx) -> Option<TupleAssignTarge
         Expr::Name(n) => Some(TupleAssignTarget::Name(n.id.clone())),
         Expr::Attribute(ExprAttribute { value, attr, .. }) => {
             let Expr::Name(object_name) = value.as_ref() else {
-                ctx.error("tuple unpacking attribute target must be rooted at a simple name".to_string());
+                ctx.error(
+                    "tuple unpacking attribute target must be rooted at a simple name".to_string(),
+                );
                 return None;
             };
             let object = object_name.id.clone();
@@ -82,7 +84,8 @@ pub(super) fn lower_tuple_unpack_assign(
             TupleAssignTarget::Name(name) => {
                 if ctx.is_declared_nonlocal(&name) {
                     ctx.error(
-                        "tuple unpacking cannot rebind captured state with `nonlocal` yet".to_string(),
+                        "tuple unpacking cannot rebind captured state with `nonlocal` yet"
+                            .to_string(),
                     );
                     return None;
                 }

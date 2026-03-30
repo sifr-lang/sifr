@@ -79,10 +79,8 @@ pub(super) fn validate_subscript_assignment_target(
             let key_ok = index_ty.is_assignable_to(key_ty.as_ref());
             let value_ok = value_ty.is_assignable_to(value_ty_expected.as_ref());
             if !key_ok || !value_ok {
-                if let Some(Type::Dict(expected_key, expected_value)) = ctx
-                    .empty_dict_specializations
-                    .get(object_name)
-                    .cloned()
+                if let Some(Type::Dict(expected_key, expected_value)) =
+                    ctx.empty_dict_specializations.get(object_name).cloned()
                 {
                     emit_empty_literal_type_conflict(
                         ctx,
@@ -153,10 +151,8 @@ pub(super) fn validate_subscript_augassign_target(
                 ));
             }
             if let Err(error) = type_check_binary_op(value_ty_expected.as_ref(), base_op, rhs_ty) {
-                if let Some(Type::Dict(expected_key, expected_value)) = ctx
-                    .empty_dict_specializations
-                    .get(object_name)
-                    .cloned()
+                if let Some(Type::Dict(expected_key, expected_value)) =
+                    ctx.empty_dict_specializations.get(object_name).cloned()
                 {
                     emit_empty_literal_type_conflict(
                         ctx,
@@ -171,15 +167,13 @@ pub(super) fn validate_subscript_augassign_target(
                 }
             }
             match object_ty {
-                Type::Alias { name, type_args, .. }
-                    if name.starts_with("__compat_defaultdict_") =>
-                {
-                    Type::Alias {
-                        name,
-                        type_args,
-                        body: Box::new(Type::Dict(key_ty, value_ty_expected)),
-                    }
-                }
+                Type::Alias {
+                    name, type_args, ..
+                } if name.starts_with("__compat_defaultdict_") => Type::Alias {
+                    name,
+                    type_args,
+                    body: Box::new(Type::Dict(key_ty, value_ty_expected)),
+                },
                 _ => Type::Dict(key_ty, value_ty_expected),
             }
         }
@@ -211,8 +205,13 @@ fn patch_stmt_container_specialization(stmt: &mut HirStmt, pending: &mut HashMap
                 return;
             };
             *ty = patch_ty.clone();
-            if let HirExpr::DictLiteral { ty: literal_ty, .. } = value {
-                *literal_ty = patch_ty;
+            match (value, &patch_ty) {
+                (HirExpr::DictLiteral { ty: literal_ty, .. }, Type::Dict(_, _))
+                | (HirExpr::ListLiteral { ty: literal_ty, .. }, Type::List(_))
+                | (HirExpr::SetLiteral { ty: literal_ty, .. }, Type::Set(_)) => {
+                    *literal_ty = patch_ty;
+                }
+                _ => {}
             }
         }
         HirStmt::If {

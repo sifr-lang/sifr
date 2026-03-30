@@ -60,7 +60,10 @@ pub(super) fn lower_sha1_bytes(args: &[RustExpr]) -> Option<RustExpr> {
     if args.len() != 1 {
         return None;
     }
-    Some(digest_bytes("<sha1::Sha1 as sha1::Digest>::digest", &args[0]))
+    Some(digest_bytes(
+        "<sha1::Sha1 as sha1::Digest>::digest",
+        &args[0],
+    ))
 }
 
 pub(super) fn lower_sha512(args: &[RustExpr]) -> Option<RustExpr> {
