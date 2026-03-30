@@ -707,6 +707,8 @@ status: in progress
     - `0763_partition_labels` -> still `RUN_ERROR` (`E0308`: `max(i64, Option<i64>)`)
   - residual ownership after wave-R3c:
     - `0054`, `0763`
+  - PR:
+    - `https://github.com/yaseralnajjar/sifr/pull/1541` (merged)
 
 - 2026-03-30 local iteration (wave-R3d final residual run-error closure slice):
   - root cause:
@@ -737,6 +739,8 @@ status: in progress
   - residual ownership after wave-R3d:
     - run-stage residuals from this lane: none
     - check-stage residuals requiring explicit Optional-safe author intent: `0054`, `0763`
+  - PR:
+    - `https://github.com/yaseralnajjar/sifr/pull/1542` (merged)
 
 - Validation to record:
   - post-wave full corpus rerun
