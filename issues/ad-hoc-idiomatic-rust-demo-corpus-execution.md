@@ -4176,6 +4176,46 @@ status: accepted_after_pass_1_and_pass_2
   - batch 95 was reviewed directly from the final validated Rust scaffolds and the observed return-mismatch and constrained-typevar diagnostics for the paired fixtures
   - both review passes ended with no accepted blockers across the trio
 
+#### batch_96_import_policy_scaffolds
+
+status: accepted_after_pass_1_and_pass_2
+
+- scope:
+  - `demos/import_forms/negative_cases/idiomatic.rs`
+  - `demos/resolver_triggers/negative_cases/idiomatic.rs`
+  - `demos/stdlib_modules/negative_cases/idiomatic.rs`
+- selection rationale:
+  - these three negatives are the next untouched frontend/import family and all still used the generic placeholder despite enforcing stable import-policy diagnostics
+  - the batch keeps the phase-17 import-form restrictions with the closely related phase-18 resolver-trigger fixtures and the phase-20 `_sifr.*` intrinsic-import restriction so the Tier 2 rewrite records one coherent "unsupported import syntax or namespace must fail explicitly" family
+  - each paired fixture already exposes stable `sifr check` output, so the Rust-side scaffolds can be validated directly against observed diagnostics instead of inventing a Rust module-system analogue
+- priority tags:
+  - `tier-2-negative-case`: `import_forms/negative_cases`, `resolver_triggers/negative_cases`, `stdlib_modules/negative_cases`
+  - `frontend-import-policy`: `import_forms/negative_cases`, `resolver_triggers/negative_cases`, `stdlib_modules/negative_cases`
+  - `generic-placeholder-cleanup`: `import_forms/negative_cases`, `resolver_triggers/negative_cases`, `stdlib_modules/negative_cases`
+- implementation summary:
+  - `import_forms`: replaced the generic stub with a scaffold describing unsupported bare relative imports, unsupported plain `import` statements, unsupported relative level 2 imports, and the reachable unresolved-name follow-on diagnostics
+  - `resolver_triggers`: replaced the generic stub with a scaffold describing the same unsupported import forms as resolver-mode guards that must not silently activate project compilation
+  - `stdlib_modules`: replaced the generic stub with a scaffold describing the rejection of user `_sifr.*` intrinsic imports and the reachable undefined `sqrt` follow-on diagnostic
+- local validation completed:
+  - `rustfmt demos/import_forms/negative_cases/idiomatic.rs demos/resolver_triggers/negative_cases/idiomatic.rs demos/stdlib_modules/negative_cases/idiomatic.rs`
+  - `rustc --edition=2021 demos/import_forms/negative_cases/idiomatic.rs -o /tmp/sifr-neg-import-forms && /tmp/sifr-neg-import-forms`
+  - `rustc --edition=2021 demos/resolver_triggers/negative_cases/idiomatic.rs -o /tmp/sifr-neg-resolver-triggers && /tmp/sifr-neg-resolver-triggers`
+  - `rustc --edition=2021 demos/stdlib_modules/negative_cases/idiomatic.rs -o /tmp/sifr-neg-stdlib-modules && /tmp/sifr-neg-stdlib-modules`
+  - `for f in demos/import_forms/negative_cases/*.sifr; do cargo run -q -p sifr -- check "$f"; done`
+  - `for f in demos/resolver_triggers/negative_cases/*.sifr; do cargo run -q -p sifr -- check "$f"; done`
+  - `for f in demos/stdlib_modules/negative_cases/*.sifr; do cargo run -q -p sifr -- check "$f"; done`
+  - `scripts/run_all_tests.sh`
+- review artifacts:
+  - pass 1: `reviews/phase-ad-hoc-idiomatic-rust-demo-corpus-wave-3-batch-96-review-pass-1.md`
+  - pass 2: `reviews/phase-ad-hoc-idiomatic-rust-demo-corpus-wave-3-batch-96-review-pass-2.md`
+- review application summary:
+  - all three pass-1 reviews returned `OK`
+  - all three pass-2 reviews returned `OK`
+  - no follow-up code changes were needed after the targeted Tier 2 rewrite
+- reviewer tooling note:
+  - batch 96 was reviewed directly from the final validated Rust scaffolds and the observed unsupported-import and intrinsic-import diagnostics for the paired fixtures
+  - both review passes ended with no accepted blockers across the trio
+
 ### wave_4_corpus_consistency_pass
 
 status: pending

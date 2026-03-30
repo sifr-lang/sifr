@@ -1,14 +1,16 @@
-//! Negative-case Sifr fixture scaffold.
+//! Tier-2 Rust scaffold for the Sifr negative fixtures in this folder.
 //!
-//! Source files in this folder:
-//! - `unsupported_bare_relative.sifr`
-//! - `unsupported_import_statement.sifr`
-//! - `unsupported_multi_relative.sifr`
+//! The paired Sifr programs are rejected because user code may not use bare
+//! relative imports, multi-level relative imports, or plain `import helper`
+//! statements. Each fixture also leaves the imported name unresolved, so the
+//! diagnostics include the reachable `undefined variable` or `undefined function`
+//! follow-on error alongside the explicit unsupported-import message.
 //!
-//! This folder exists to preserve an intentional diagnostic or compile-fail shape.
-//! There is no single runnable Rust program that is both idiomatic and preserves
-//! the same failure contract, so this file serves as the Rust-side scaffold.
-
-#![allow(dead_code)]
+//! This folder exists to preserve the phase-17 import-form diagnostics:
+//! unsupported bare relative imports must point users at `from <module> import`,
+//! multi-level relative imports must report the rejected level explicitly, and
+//! plain `import ...` statements must remain unsupported. The Rust-side analogue
+//! is module resolution policy owned by Sifr, so this file documents the
+//! contract instead of inventing a Rust compile-fail sample.
 
 fn main() {}
