@@ -189,6 +189,19 @@ mod tests {
     }
 
     #[test]
+    fn test_tuple_unpack_len_alias_while_string_index_reveals_str() {
+        let result = lower_source_result(
+            "def main():\n    text: str = \"aeiou\"\n    i, n = 0, len(text)\n    while i < n:\n        reveal_type(text[i])\n        i += 1\n",
+        )
+        .expect("tuple-unpacked len alias should narrow while-loop string index");
+
+        assert!(result
+            .reveal_types
+            .iter()
+            .any(|diagnostic| diagnostic == "reveal_type: str"));
+    }
+
+    #[test]
     fn test_range_len_list_index_reveals_element_type() {
         let result = lower_source_result(
             "def main():\n    nums: list[int] = [1, 2, 3]\n    for i in range(len(nums)):\n        reveal_type(nums[i])\n",

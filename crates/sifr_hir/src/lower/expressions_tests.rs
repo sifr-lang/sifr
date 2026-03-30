@@ -99,6 +99,39 @@ fn test_defaultdict_list_call_resolves_without_import() {
 }
 
 #[test]
+fn test_empty_list_specializes_on_append_and_satisfies_return_type() {
+    let result = lower_source(
+        "def collect() -> list[int]:\n    res = []\n    res.append(1)\n    return res\n",
+    );
+    assert!(
+        result.is_ok(),
+        "empty list should specialize to list[int] after append"
+    );
+}
+
+#[test]
+fn test_empty_list_specializes_on_insert_and_extend() {
+    let result = lower_source(
+        "def collect() -> list[int]:\n    res = []\n    res.insert(0, 1)\n    res.extend([2, 3])\n    return res\n",
+    );
+    assert!(
+        result.is_ok(),
+        "empty list should specialize from insert/extend element types"
+    );
+}
+
+#[test]
+fn test_empty_list_specialization_rejects_mixed_append_types() {
+    let result = lower_source(
+        "def collect() -> list[int]:\n    res = []\n    res.append(1)\n    res.append(\"x\")\n    return res\n",
+    );
+    assert!(
+        result.is_err(),
+        "after first append specialization, mixed element types must fail"
+    );
+}
+
+#[test]
 fn test_copy_type_no_move() {
     let module =
         lower_source("def main():\n    x: int = 42\n    print(x)\n    print(x)\n").unwrap();

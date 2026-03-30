@@ -674,6 +674,40 @@ status: in progress
   - PR:
     - `https://github.com/yaseralnajjar/sifr/pull/1539` (merged)
 
+- 2026-03-30 local iteration (wave-R3c container/guard/slice stabilization slice):
+  - root cause:
+    - residual post-R3b2 run errors were split across three owning compiler defects:
+      - empty-list bindings initialized as `[]` were not consistently refined/backpatched to concrete element types after first mutating method usage (`append`/`insert`/`extend`),
+      - sequence guard detection recognized direct `len(seq)` anchors but missed len-alias anchors (`n = len(S)` then `i < n`) in compare/false-exit guard paths,
+      - no-step slice lowering normalized negative bounds incorrectly by clamping literal bounds before sequence-length normalization.
+  - reviewer gate:
+    - review pass-1: `reviews/ad-hoc-optional-none-wave-r3c-review-pass1.md` (`ready-with-guardrails`; recovered from talk-to-claude handoff logs due Claude file-write permission block)
+  - compiler changes:
+    - `crates/sifr_hir/src/lower/empty_collection_refinement.rs` (new):
+      - added `refine_empty_list_binding_expr(...)` for method-driven empty-list specialization on `append`/`insert`/`extend`,
+      - moved/centralized empty-collection refinement helpers, including empty-set refinement.
+    - `crates/sifr_hir/src/lower/expressions.rs`:
+      - wired empty-list/empty-set refinement helpers into method-call lowering path.
+    - `crates/sifr_hir/src/lower/container_literal_specialization.rs`:
+      - specialization patch application now backpatches `HirStmt::Let` literal types for `ListLiteral`, `DictLiteral`, and `SetLiteral`.
+    - `crates/sifr_hir/src/lower/sequence_guard_detection.rs`:
+      - compare guard detection now uses len-alias-aware anchors (`len_anchor_name(...)`) in true-path and false-exit guard sites.
+    - `crates/sifr_codegen/src/stmt_support_emitter.rs`:
+      - no-step slicing for `str`/`list`/`bytes` now normalizes negative start/stop bounds against runtime length before `skip/take` derivation.
+  - tests/validation:
+    - `cargo test -p sifr_hir empty_list_specializes -- --nocapture` -> pass
+    - `cargo test -p sifr_hir tuple_unpack_len_alias_while_string_index_reveals_str -- --nocapture` -> pass
+    - `cargo test -p sifr_codegen string_slice_negative_stop_normalizes_against_length -- --nocapture` -> pass
+    - `scripts/run_all_tests.sh --profile quick` -> pass
+  - targeted fixture reruns (`cargo run -q -p sifr -- run`):
+    - `0071_simplify_path` -> `PASS`
+    - `0349_intersection_of_two_arrays` -> `PASS`
+    - `0459_repeated_substring_pattern` -> `PASS`
+    - `0054_spiral_matrix` -> still `RUN_ERROR` (`E0308`: `Vec<Option<i64>>` vs `Vec<i64>`)
+    - `0763_partition_labels` -> still `RUN_ERROR` (`E0308`: `max(i64, Option<i64>)`)
+  - residual ownership after wave-R3c:
+    - `0054`, `0763`
+
 - Validation to record:
   - post-wave full corpus rerun
   - residual case inventory
@@ -705,6 +739,7 @@ Reviewer passes:
 - `reviews/ad-hoc-optional-none-wave-r3-run-error-majority-review-pass1.md` (`not ready`, corrective decomposition requested)
 - `reviews/ad-hoc-optional-none-wave-r3b2-codegen-data-shape-review-pass1.md` (`not ready`, probe-reconciliation blocker applied)
 - `reviews/ad-hoc-optional-none-wave-r3b2-codegen-data-shape-review-pass2.md` (`ready`, no blocking issues)
+- `reviews/ad-hoc-optional-none-wave-r3c-review-pass1.md` (`ready-with-guardrails`)
 
 Wave state:
 
@@ -735,6 +770,9 @@ Wave state:
 - wave-R3b2 (`codegen data-shape closure lane`):
   - implemented and validated: `0187`, `0441`, `1461`, `1582`, `1905` moved `RUN_ERROR -> PASS` in probe scope
   - residual run-error ownership after R3b2: `0054`, `0071`, `0349`, `0459`, `0763`
+- wave-R3c (`container/guard/slice stabilization lane`):
+  - implemented and validated: `0071`, `0349`, `0459` moved `RUN_ERROR -> PASS` in targeted reruns
+  - residual run-error ownership after R3c: `0054`, `0763`
 
 Implementation gate:
 - no code changes for waves `7-9` begin until reviewer pass-2 ready verdict is recorded (satisfied as of 2026-03-29).

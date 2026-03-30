@@ -10,15 +10,8 @@ pub(super) fn refine_nonempty_method_return_type(
     return_ty: &Type,
     ctx: &LowerCtx,
 ) -> Type {
-    refine_nonempty_pop_return_type(
-        object_ty,
-        object,
-        method_name,
-        args,
-        return_ty,
-        ctx,
-    )
-    .unwrap_or_else(|| return_ty.clone())
+    refine_nonempty_pop_return_type(object_ty, object, method_name, args, return_ty, ctx)
+        .unwrap_or_else(|| return_ty.clone())
 }
 
 pub(super) fn refine_nonempty_pop_return_type(

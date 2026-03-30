@@ -22,9 +22,9 @@ impl LowerCtx {
     }
 
     pub(super) fn len_alias_sequence(&self, alias_var: &str) -> Option<String> {
-        self.len_aliases.iter().find_map(|fact| {
-            (fact.alias_var.as_str() == alias_var).then(|| fact.sequence.clone())
-        })
+        self.len_aliases
+            .iter()
+            .find_map(|fact| (fact.alias_var.as_str() == alias_var).then(|| fact.sequence.clone()))
     }
 }
 

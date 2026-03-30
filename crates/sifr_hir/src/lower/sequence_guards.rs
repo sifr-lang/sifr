@@ -76,11 +76,10 @@ impl LowerCtx {
                 }) {
                     return;
                 }
-                self.sequence_guards
-                    .push(SequenceGuard::DictContains {
-                        dict,
-                        key_expr_debug,
-                    });
+                self.sequence_guards.push(SequenceGuard::DictContains {
+                    dict,
+                    key_expr_debug,
+                });
             }
         }
     }

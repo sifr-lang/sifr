@@ -9,8 +9,8 @@ use super::container_literal_specialization::{
 use super::control_flow_conditions::validate_control_flow_condition;
 use super::diagnostics::{collect_raise_error_types, format_type_name, is_valid_error_type};
 use super::expressions::{lower_expr, lower_star_unpack_assign, lower_tuple_unpack_assign};
-use super::for_loop_safety::{is_collection_backed_iter_source, loop_body_mutates_iter_source};
 use super::flow_helpers::{expr_to_literal_value, then_body_always_exits};
+use super::for_loop_safety::{is_collection_backed_iter_source, loop_body_mutates_iter_source};
 use super::function_flow::infer_function_return_type;
 use super::len_aliases::record_len_alias_fact;
 use super::nonlocal_support::{

@@ -64,6 +64,7 @@ The goal is to make intended Sifr Optional semantics precise enough that valid g
 - `reviews/ad-hoc-optional-none-wave-r3-run-error-majority-review-pass1.md`
 - `reviews/ad-hoc-optional-none-wave-r3b2-codegen-data-shape-review-pass1.md`
 - `reviews/ad-hoc-optional-none-wave-r3b2-codegen-data-shape-review-pass2.md`
+- `reviews/ad-hoc-optional-none-wave-r3c-review-pass1.md`
 - `internal_docs/architecture.md`
 
 Implementation hotspots:
@@ -202,6 +203,7 @@ Important operational note:
   - wave-R3b1 codegen-hardening slice is implemented locally: augassign render normalization (`+==` closure), string-contains borrow parity, and plain-call compat canonicalization for heapq helpers; targeted fixtures show compile-stage parity defects are reduced while semantic gate failures remain for the next wave
   - wave-R3a semantic-gate slice is implemented locally: non-`None` return-path completeness diagnostics, duplicate module-function definition diagnostics, and numeric condition contract diagnostics now trigger at check stage for the owning fixture set (`0167`, `0231`, `0367`, `0416`, `0463`, `0846`)
   - wave-R3b2 codegen data-shape slice is implemented locally: owned list-from-set collect parity, generator-safe `set(...)` fallback lowering, list-repeat lowering closure, mixed compare int->float coercion, and bool-typed boolop condition coercion; probe cohort moved `RUN_ERROR 10 -> 5` (`PASS 8 -> 13`)
+  - wave-R3c container/guard/slice stabilization slice is implemented locally: empty-list method specialization/backpatching, len-alias-aware guard anchors, and negative no-step slice-bound normalization now recover `0071`, `0349`, and `0459`; residual run-error ownership narrows to `0054` and `0763`
   - residual canary fixtures for container and recursive Optional boundary lanes were canonicalized to explicit Sifr-safe forms (`0004`, `0013`, `0023`, `0024`, `0104`, `0115`, `0133`, `0206`)
   - residual run-stability fixtures were canonicalized to remove codegen-hostile shapes (`0010`, `0028`, `0097`, `0309`, `0678`)
 - validation evidence:
@@ -238,6 +240,14 @@ Important operational note:
   - `cargo run -q -p sifr -- run audits/leetcode/0169_majority_element.sifr`
   - `cargo run -q -p sifr -- check audits/leetcode/1800_maximum_ascending_subarray_sum.sifr`
   - `cargo run -q -p sifr -- run audits/leetcode/1800_maximum_ascending_subarray_sum.sifr`
+  - `cargo test -p sifr_hir empty_list_specializes -- --nocapture`
+  - `cargo test -p sifr_hir tuple_unpack_len_alias_while_string_index_reveals_str -- --nocapture`
+  - `cargo test -p sifr_codegen string_slice_negative_stop_normalizes_against_length -- --nocapture`
+  - `cargo run -q -p sifr -- run audits/leetcode/0071_simplify_path.sifr`
+  - `cargo run -q -p sifr -- run audits/leetcode/0349_intersection_of_two_arrays.sifr`
+  - `cargo run -q -p sifr -- run audits/leetcode/0459_repeated_substring_pattern.sifr`
+  - `cargo run -q -p sifr -- run audits/leetcode/0054_spiral_matrix.sifr`
+  - `cargo run -q -p sifr -- run audits/leetcode/0763_partition_labels.sifr`
   - `cargo run -q -p sifr -- check audits/leetcode/0063_unique_paths_ii.sifr`
   - `cargo run -q -p sifr -- run audits/leetcode/0063_unique_paths_ii.sifr`
   - `cargo run -q -p sifr -- check audits/leetcode/0119_pascal_triangle_ii.sifr`

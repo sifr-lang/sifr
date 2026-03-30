@@ -299,12 +299,8 @@ fn lower_intrinsic_rendered(name: &str, args: &[RustExpr]) -> Option<LoweredIntr
         "base64_decode_opts" => (base64::lower_base64_decode_opts(args), Some("base64")),
         "urlsafe_b64encode" => (base64::lower_urlsafe_b64encode(args), Some("base64")),
         "urlsafe_b64decode" => (base64::lower_urlsafe_b64decode(args), Some("base64")),
-        "urlsafe_b64encode_bytes" => {
-            (base64::lower_urlsafe_b64encode_bytes(args), Some("base64"))
-        }
-        "urlsafe_b64decode_bytes" => {
-            (base64::lower_urlsafe_b64decode_bytes(args), Some("base64"))
-        }
+        "urlsafe_b64encode_bytes" => (base64::lower_urlsafe_b64encode_bytes(args), Some("base64")),
+        "urlsafe_b64decode_bytes" => (base64::lower_urlsafe_b64decode_bytes(args), Some("base64")),
         "b32encode" => (base32::lower_b32encode(args), None),
         "b32decode" => (base32::lower_b32decode(args), None),
         "b32hexencode" => (base32::lower_b32hexencode(args), None),
@@ -623,8 +619,8 @@ mod tests {
         assert!(render_expr(&to_hex.expr).contains("{:02x}"));
         assert!(render_expr(&to_hex.expr).contains("Ok"));
 
-        let to_hex_strict =
-            lower_intrinsic("bytes_to_hex_strict", &["vals".to_string()]).expect("bytes_to_hex_strict");
+        let to_hex_strict = lower_intrinsic("bytes_to_hex_strict", &["vals".to_string()])
+            .expect("bytes_to_hex_strict");
         assert!(render_expr(&to_hex_strict.expr).contains("{:02x}"));
         assert!(!render_expr(&to_hex_strict.expr).contains("Ok"));
 
@@ -743,7 +739,11 @@ mod tests {
 
         let set_state = lower_intrinsic(
             "random_module_set_state",
-            &["words".to_string(), "index".to_string(), "gauss".to_string()],
+            &[
+                "words".to_string(),
+                "index".to_string(),
+                "gauss".to_string(),
+            ],
         )
         .expect("random_module_set_state");
         assert_eq!(set_state.required_crate, None);
@@ -818,8 +818,8 @@ mod tests {
         assert!(render_expr(&md5.expr).contains("md5::compute"));
         assert!(render_expr(&md5.expr).contains(".as_bytes()"));
 
-        let sha_bytes = lower_intrinsic("sha256_bytes", &["payload".to_string()])
-            .expect("sha256_bytes");
+        let sha_bytes =
+            lower_intrinsic("sha256_bytes", &["payload".to_string()]).expect("sha256_bytes");
         assert_eq!(sha_bytes.required_crate, Some("sha2"));
         assert!(render_expr(&sha_bytes.expr).contains("to_vec"));
 

@@ -16,11 +16,12 @@ mod container_literal_specialization;
 mod control_flow_conditions;
 mod decimal_methods;
 mod diagnostics;
+mod empty_collection_refinement;
 mod expressions;
 #[cfg(test)]
 mod expressions_tests;
-mod for_loop_safety;
 mod flow_helpers;
+mod for_loop_safety;
 mod fstring_support;
 mod function_flow;
 mod function_scopes;
