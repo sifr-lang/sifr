@@ -1,12 +1,11 @@
-//! Negative-case Sifr fixture scaffold.
+//! Tier-2 Rust scaffold for the Sifr negative fixture in this folder.
 //!
-//! Source files in this folder:
-//! - `main.sifr`
+//! The paired Sifr program is rejected because `decimal.round()` is called with
+//! scale `29`, outside the supported `0..=28` range.
 //!
-//! This folder exists to preserve an intentional diagnostic or compile-fail shape.
-//! There is no single runnable Rust program that is both idiomatic and preserves
-//! the same failure contract, so this file serves as the Rust-side scaffold.
-
-#![allow(dead_code)]
+//! This fixture exists to preserve the exact phase-28 diagnostic contract,
+//! including the explicit bound check and deterministic `[E2507]` error. The
+//! Rust-side analogue would depend on Sifr-specific decimal policy rather than a
+//! standard library failure, so this file records the contract instead.
 
 fn main() {}
