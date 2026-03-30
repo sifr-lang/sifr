@@ -1,29 +1,27 @@
 fn main() {
-    let mut acc: i64 = 0 as i64;
-    let nums: Vec<i64> = vec![1 as i64, 2 as i64, 3 as i64];
-    let mut _broke = false;
-    for n in nums.iter().copied() {
+    let mut acc = 0;
+
+    for n in [1_i64, 2, 3] {
         acc += n;
     }
-    if !_broke {
-        acc += 1 as i64;
-    }
-    let mut i: i64 = 0 as i64;
-    let mut _broke = false;
-    while i < (3 as i64) {
+    acc += 1;
+
+    let mut i = 0;
+    while i < 3 {
         acc += i;
-        i += 1 as i64;
+        i += 1;
     }
-    if !_broke {
-        acc += 2 as i64;
-    }
-    let ready: bool = true;
+    acc += 2;
+
+    let ready = true;
     if ready {
-        acc += 10 as i64;
+        acc += 10;
     } else {
-        acc += 100 as i64;
+        acc += 100;
     }
-    assert!(acc > (0 as i64));
-    println!("acc = {}", acc);
-    assert!(format!("{}", format!("acc = {}", acc)) == "acc = 22".to_string());
+
+    assert!(acc > 0);
+    let line = format!("acc = {acc}");
+    println!("{line}");
+    assert_eq!(line, "acc = 22");
 }

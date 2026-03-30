@@ -2899,6 +2899,47 @@ status: accepted_after_pass_1_and_pass_2
   - batch 79 was reviewed directly from the final validated Rust files and observed Sifr outputs
   - both passes ended with no accepted blockers across the trio
 
+#### batch_80_stable_codegen_statement_expression_codegen_statement_expression_mix
+
+status: accepted_after_pass_1_and_pass_2
+
+- scope:
+  - `demos/stable_codegen/idiomatic.rs`
+  - `demos/statement_expression_codegen/idiomatic.rs`
+  - `demos/statement_expression_mix/idiomatic.rs`
+- selection rationale:
+  - the batch clears the next coherent codegen-shaped slice instead of mixing these statement/expression lowering demos with unrelated verification or runtime outliers
+  - `stable_codegen` was already small but still carried generated-style `&Vec`, casts, and return noise around a simple emission-boundary summary helper
+  - both statement/expression demos still used stringified assertions and boilerplate lowered control-flow that could be rewritten as direct Rust without changing the observed outputs
+- priority tags:
+  - `codegen-shape`: `stable_codegen`, `statement_expression_codegen`, `statement_expression_mix`
+  - `statement-expression-lowering`: `statement_expression_codegen`, `statement_expression_mix`
+  - `milestone-demo`: `statement_expression_codegen`, `statement_expression_mix`
+  - `hand-authored-generated-shape`: `stable_codegen`, `statement_expression_codegen`, `statement_expression_mix`
+- implementation summary:
+  - `stable_codegen`: simplified the helper to a slice-based summary loop with direct arithmetic and preserved the printed `33` result
+  - `statement_expression_codegen`: rewrote the demo into straightforward Rust control flow with direct formatted-string assertions instead of nested `format!` scaffolding
+  - `statement_expression_mix`: collapsed the lowered `for`/`while`-`else` scaffolding into the exact direct Rust accumulation steps that preserve the final `acc = 22` output
+- local validation completed:
+  - `rustfmt demos/stable_codegen/idiomatic.rs demos/statement_expression_codegen/idiomatic.rs demos/statement_expression_mix/idiomatic.rs`
+  - `rustc --edition=2021 demos/stable_codegen/idiomatic.rs -o /tmp/sifr-idiomatic-stable-codegen && /tmp/sifr-idiomatic-stable-codegen`
+  - `rustc --edition=2021 demos/statement_expression_codegen/idiomatic.rs -o /tmp/sifr-idiomatic-statement-expression-codegen && /tmp/sifr-idiomatic-statement-expression-codegen`
+  - `rustc --edition=2021 demos/statement_expression_mix/idiomatic.rs -o /tmp/sifr-idiomatic-statement-expression-mix && /tmp/sifr-idiomatic-statement-expression-mix`
+  - `cargo run -q -p sifr -- run demos/stable_codegen/main.sifr`
+  - `cargo run -q -p sifr -- run demos/statement_expression_codegen/main.sifr`
+  - `cargo run -q -p sifr -- run demos/statement_expression_mix/main.sifr`
+  - `scripts/run_all_tests.sh`
+- review artifacts:
+  - pass 1: `reviews/phase-ad-hoc-idiomatic-rust-demo-corpus-wave-2-batch-80-review-pass-1.md`
+  - pass 2: `reviews/phase-ad-hoc-idiomatic-rust-demo-corpus-wave-2-batch-80-review-pass-2.md`
+- review application summary:
+  - all three pass-1 reviews returned `OK`
+  - all three pass-2 reviews returned `OK`
+  - no follow-up code changes were needed after the validated rewrite
+- reviewer tooling note:
+  - batch 80 was reviewed directly from the final validated Rust files and observed Sifr outputs
+  - both review passes ended with no accepted blockers across the trio
+
 #### batch_65_codegen_preamble_codegen_structural_passes_intrinsic_codegen
 
 status: accepted_after_pass_1_and_pass_2
