@@ -1,4 +1,3 @@
-#[derive(Debug, Clone, PartialEq)]
 struct TreeNode {
     val: i64,
     left: Option<Box<TreeNode>>,
@@ -6,29 +5,40 @@ struct TreeNode {
 }
 
 impl TreeNode {
-    fn new(val: i64, left: Option<Box<TreeNode>>, right: Option<Box<TreeNode>>) -> Self {
-        return Self {
-            val: val,
-            left: left,
-            right: right,
-        };
+    fn new(val: i64, left: Option<TreeNode>, right: Option<TreeNode>) -> Self {
+        Self {
+            val,
+            left: left.map(Box::new),
+            right: right.map(Box::new),
+        }
     }
 }
 
-fn tree_sum(node: &Option<TreeNode>) -> i64 {
-    let Some(node) = node.as_ref() else {
-        return 0 as i64;
-    };
-    let left: Option<TreeNode> = (node.left).as_deref().cloned();
-    let right: Option<TreeNode> = (node.right).as_deref().cloned();
-    return (node.val + tree_sum(&left)) + tree_sum(&right);
+#[allow(dead_code)]
+enum Packet<T> {
+    Value(T),
+    List(Vec<Packet<T>>),
+}
+
+fn tree_sum(node: Option<&TreeNode>) -> i64 {
+    match node {
+        Some(node) => node.val + tree_sum(node.left.as_deref()) + tree_sum(node.right.as_deref()),
+        None => 0,
+    }
 }
 
 fn main() {
-    let left: TreeNode = TreeNode::new(2 as i64, None, None);
-    let right: TreeNode = TreeNode::new(3 as i64, None, None);
-    let root: TreeNode = TreeNode::new(1 as i64, Some(Box::new(left)), Some(Box::new(right)));
-    assert!(tree_sum(&Some(root)) == (6 as i64));
+    let root = TreeNode::new(
+        1,
+        Some(TreeNode::new(2, None, None)),
+        Some(TreeNode::new(3, None, None)),
+    );
+    let _packet = Packet::List(vec![
+        Packet::Value(1_i64),
+        Packet::List(vec![Packet::Value(2_i64)]),
+    ]);
+
+    assert_eq!(tree_sum(Some(&root)), 6);
     println!("tree sum ok");
     println!("packet alias declared");
 }
