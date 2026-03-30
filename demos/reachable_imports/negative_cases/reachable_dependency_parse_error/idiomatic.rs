@@ -1,13 +1,17 @@
-//! Negative-case Sifr fixture scaffold.
+//! Tier-2 Rust scaffold for the Sifr negative fixture in this folder.
 //!
-//! Source files in this folder:
-//! - `helper.sifr`
-//! - `main.sifr`
+//! The paired Sifr program is rejected because the imported dependency is
+//! reachable and contains a syntax error: `def compute(:`.
 //!
-//! This folder exists to preserve an intentional diagnostic or compile-fail shape.
-//! There is no single runnable Rust program that is both idiomatic and preserves
-//! the same failure contract, so this file serves as the Rust-side scaffold.
-
-#![allow(dead_code)]
+//! A direct Rust analogue would also fail while parsing the dependency module:
+//! ```compile_fail
+//! mod helper {
+//!     fn compute( {}
+//! }
+//!
+//! fn main() {
+//!     println!("{}", helper::compute(1));
+//! }
+//! ```
 
 fn main() {}
