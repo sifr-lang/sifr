@@ -109,7 +109,7 @@ status: accepted_after_pass_1_and_pass_2
 
 ### wave_2_runnable_demo_corpus_pass
 
-status: in_progress
+status: completed
 
 #### batch_01_statistics_json_datetime
 
@@ -3025,6 +3025,42 @@ status: accepted_after_pass_1_and_pass_2
 - reviewer tooling note:
   - batch 82 was reviewed directly from the final validated Rust files and observed Sifr outputs
   - both review passes ended with no accepted blockers across the trio
+
+#### batch_83_recursive_records_temp_workspace_isolation
+
+status: accepted_after_pass_1_and_pass_2
+
+- scope:
+  - `demos/recursive_records/idiomatic.rs`
+  - `demos/temp_workspace_isolation/idiomatic.rs`
+- selection rationale:
+  - the batch clears the final missing top-level runnable-demo companions instead of leaving the corpus nominally incomplete while only two positive demos remain uncovered
+  - `recursive_records` is the last recursive-record positive demo still lacking a Rust-first counterpart
+  - `temp_workspace_isolation` is the remaining invocation-scoped project-isolation demo missing its top-level companion even though its nested fixture subtrees were already covered
+- priority tags:
+  - `missing-companion`: `recursive_records`, `temp_workspace_isolation`
+  - `recursive-shape`: `recursive_records`
+  - `project-mode`: `temp_workspace_isolation`
+- implementation summary:
+  - `recursive_records`: authored a direct `Entry` struct with `Option<Box<Entry>>`, recursive text rendering via `Option<&Entry>`, and second-node access without emitted-style scaffolding
+  - `temp_workspace_isolation`: authored a tiny local helper module preserving the exact two-line project-isolation output and constant `44` result
+- local validation completed:
+  - `rustfmt demos/recursive_records/idiomatic.rs demos/temp_workspace_isolation/idiomatic.rs`
+  - `rustc --edition=2021 demos/recursive_records/idiomatic.rs -o /tmp/sifr-idiomatic-recursive-records && /tmp/sifr-idiomatic-recursive-records`
+  - `rustc --edition=2021 demos/temp_workspace_isolation/idiomatic.rs -o /tmp/sifr-idiomatic-temp-workspace-isolation && /tmp/sifr-idiomatic-temp-workspace-isolation`
+  - `cargo run -q -p sifr -- run demos/recursive_records/main.sifr`
+  - `cargo run -q -p sifr -- run demos/temp_workspace_isolation/main.sifr`
+  - `scripts/run_all_tests.sh`
+- review artifacts:
+  - pass 1: `reviews/phase-ad-hoc-idiomatic-rust-demo-corpus-wave-2-batch-83-review-pass-1.md`
+  - pass 2: `reviews/phase-ad-hoc-idiomatic-rust-demo-corpus-wave-2-batch-83-review-pass-2.md`
+- review application summary:
+  - `recursive_records` returned `OK` in pass 1 and pass 2
+  - `temp_workspace_isolation` returned `OK` in pass 1 and pass 2
+  - no follow-up code changes were needed after the initial authoring step
+- reviewer tooling note:
+  - batch 83 was reviewed directly from the final validated Rust files and observed Sifr outputs
+  - both review passes ended with no accepted blockers across the pair
 
 #### batch_65_codegen_preamble_codegen_structural_passes_intrinsic_codegen
 

@@ -235,7 +235,7 @@ Progress update (`2026-03-29`):
 
 ### wave_2_runnable_demo_corpus_pass
 
-status: in_progress
+status: completed
 
 Goals:
 
@@ -416,6 +416,8 @@ Progress update (`2026-03-29`):
 - `batch_81_integer_safety_intrinsics_mut_sort` completed local validation and ended external review with no accepted blockers; all three files were tightened into direct Rust-first companions, and the batch also included a necessary `lib/sifr/tempfile.sifr` validation unblock after a cold-cache `stdlib_logging_consolidated` e2e build exposed a borrow-after-move bug in the trailing-slash trim path
 - `batch_82_rooted_entrypoint_run_and_build_resolver_triggers` selected as the eighty-second wave-2 runnable-demo batch because it clears the remaining small project-mode import-closure trio together: rooted entrypoint closure, run/build alignment, and resolver-trigger activation
 - `batch_82_rooted_entrypoint_run_and_build_resolver_triggers` completed local validation and ended external review with no accepted blockers; all three missing companions were authored directly as tiny Rust module graphs and both review passes returned `OK`
+- `batch_83_recursive_records_temp_workspace_isolation` selected as the eighty-third wave-2 runnable-demo batch because it clears the final missing positive companions together: one recursive-record shape demo and one invocation-scoped project isolation demo, both still lacking top-level Rust-first counterparts
+- `batch_83_recursive_records_temp_workspace_isolation` completed local validation and ended external review with no accepted blockers; both missing companions were authored directly, both review passes returned `OK`, and the top-level runnable demo corpus now has full `idiomatic.rs` coverage
 
 ### wave_3_fixture_and_negative_case_normalization
 
