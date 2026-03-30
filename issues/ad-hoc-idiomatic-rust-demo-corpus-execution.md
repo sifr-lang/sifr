@@ -2698,6 +2698,46 @@ status: accepted_after_pass_1_and_pass_2
   - batch 74 used direct per-file `claude -p --no-session-persistence --dangerously-skip-permissions` prompts through short Python subprocess wrappers with explicit timeouts
   - the initial combined pass-1 runner stalled, and `graph_isolation` needed a shorter retry in pass 1; the separate per-file retries then returned `OK`
 
+#### batch_75_mode_consistency_project_graph_ecosystem_validation
+
+status: accepted_after_pass_1_and_pass_2
+
+- scope:
+  - `demos/mode_consistency/idiomatic.rs`
+  - `demos/project_graph/idiomatic.rs`
+  - `demos/ecosystem_validation/idiomatic.rs`
+- selection rationale:
+  - the batch keeps a coherent frontend/verification contract slice instead of mixing in the larger stdlib-heavy outliers still left in the corpus
+  - `mode_consistency` and `project_graph` were both still missing Rust companions and both exercise project-mode/frontend dependency resolution behavior
+  - `ecosystem_validation` was already minimal and Rust-first, so it fit cleanly as the third file by closing out a neighboring positive contract demo without forcing unrelated churn
+- priority tags:
+  - `compiler-frontend`: `mode_consistency`, `project_graph`
+  - `verification-contract`: `ecosystem_validation`
+  - `missing-companion`: `mode_consistency`, `project_graph`
+- implementation summary:
+  - `mode_consistency`: authored a compact helper module that preserves the parity-matrix teaching point and the observed `BASE + floor(2.9) + 1 = 8` result
+  - `project_graph`: authored direct `provider` and `consumer` modules that preserve the project-graph resolution path and final `42` output
+  - `ecosystem_validation`: re-reviewed the existing tiny verification-lane contract demo unchanged because it already met the Rust-first bar
+- local validation completed:
+  - `rustfmt demos/mode_consistency/idiomatic.rs demos/project_graph/idiomatic.rs demos/ecosystem_validation/idiomatic.rs`
+  - `rustc --edition=2021 demos/mode_consistency/idiomatic.rs -o /tmp/sifr-idiomatic-mode-consistency && /tmp/sifr-idiomatic-mode-consistency`
+  - `rustc --edition=2021 demos/project_graph/idiomatic.rs -o /tmp/sifr-idiomatic-project-graph && /tmp/sifr-idiomatic-project-graph`
+  - `rustc --edition=2021 demos/ecosystem_validation/idiomatic.rs -o /tmp/sifr-idiomatic-ecosystem-validation && /tmp/sifr-idiomatic-ecosystem-validation`
+  - `cargo run -q -p sifr -- run demos/mode_consistency/main.sifr`
+  - `cargo run -q -p sifr -- run demos/project_graph/main.sifr`
+  - `cargo run -q -p sifr -- run demos/ecosystem_validation/main.sifr`
+  - `scripts/run_all_tests.sh`
+- review artifacts:
+  - pass 1: `reviews/phase-ad-hoc-idiomatic-rust-demo-corpus-wave-2-batch-75-review-pass-1.md`
+  - pass 2: `reviews/phase-ad-hoc-idiomatic-rust-demo-corpus-wave-2-batch-75-review-pass-2.md`
+- review application summary:
+  - all three pass-1 reviews returned `OK`
+  - all three pass-2 reviews returned `OK`
+  - no follow-up code changes were needed after the initial authoring step
+- reviewer tooling note:
+  - batch 75 used direct per-file `claude -p --no-session-persistence --dangerously-skip-permissions` prompts through short Python subprocess wrappers with explicit timeouts
+  - the initial combined runners stalled, and `mode_consistency` in pass 1 plus `project_graph` in pass 2 needed shorter retries before returning `OK`
+
 #### batch_65_codegen_preamble_codegen_structural_passes_intrinsic_codegen
 
 status: accepted_after_pass_1_and_pass_2
