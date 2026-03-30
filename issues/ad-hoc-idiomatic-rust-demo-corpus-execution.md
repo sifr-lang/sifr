@@ -2498,6 +2498,46 @@ status: accepted_after_pass_1_and_pass_2
   - batch 69 used direct per-file `claude -p --no-session-persistence --dangerously-skip-permissions` prompts with compact observed-output-plus-Rust-file prompts
   - no review retries or code changes were needed after the initial authored companions landed
 
+#### batch_70_module_ordering_module_assembly_module_cycle_diagnostics
+
+status: accepted_after_pass_1_and_pass_2
+
+- scope:
+  - `demos/module_ordering/idiomatic.rs`
+  - `demos/module_assembly/idiomatic.rs`
+  - `demos/module_cycle_diagnostics/idiomatic.rs`
+- selection rationale:
+  - all three are positive runnable demos
+  - all three form a cohesive module-graph slice instead of mixing the remaining module-ordering/project-graph demos with unrelated diagnostics or fixture-only folders
+  - none of the three had a Rust-first top-level companion yet, and all three are small enough that the direct local-module form is the clearest equivalent
+- priority tags:
+  - `module-semantics`: `module_ordering`, `module_assembly`, `module_cycle_diagnostics`
+  - `milestone-demo`: `module_ordering`, `module_assembly`, `module_cycle_diagnostics`
+  - `missing-companion`: `module_ordering`, `module_assembly`, `module_cycle_diagnostics`
+- implementation summary:
+  - `module_ordering`: authored a small provider/consumer module split with a direct integer result that preserves the dependency-safe ordering lesson without codegen-shaped helpers
+  - `module_assembly`: authored two provider modules plus a consumer join helper and then tightened the consumer import path to `crate::{a_provider, z_provider}` after pass 1
+  - `module_cycle_diagnostics`: authored a minimal provider/consumer split that preserves the deterministic module-graph output while keeping the code straightforward and explicit
+- local validation completed:
+  - `rustfmt demos/module_ordering/idiomatic.rs demos/module_assembly/idiomatic.rs demos/module_cycle_diagnostics/idiomatic.rs`
+  - `rustc --edition=2021 demos/module_ordering/idiomatic.rs -o /tmp/sifr-idiomatic-module-ordering && /tmp/sifr-idiomatic-module-ordering`
+  - `rustc --edition=2021 demos/module_assembly/idiomatic.rs -o /tmp/sifr-idiomatic-module-assembly && /tmp/sifr-idiomatic-module-assembly`
+  - `rustc --edition=2021 demos/module_cycle_diagnostics/idiomatic.rs -o /tmp/sifr-idiomatic-module-cycle-diagnostics && /tmp/sifr-idiomatic-module-cycle-diagnostics`
+  - `cargo run -q -p sifr -- run demos/module_ordering/main.sifr`
+  - `cargo run -q -p sifr -- run demos/module_assembly/main.sifr`
+  - `cargo run -q -p sifr -- run demos/module_cycle_diagnostics/main.sifr`
+  - `scripts/run_all_tests.sh`
+- review artifacts:
+  - pass 1: `reviews/phase-ad-hoc-idiomatic-rust-demo-corpus-wave-2-batch-70-review-pass-1.md`
+  - pass 2: `reviews/phase-ad-hoc-idiomatic-rust-demo-corpus-wave-2-batch-70-review-pass-2.md`
+- review application summary:
+  - `module_ordering` and `module_cycle_diagnostics` returned `OK` in pass 1
+  - pass 1 on `module_assembly` surfaced one cleanup note about the nested-module import path; I accepted that and changed the import to `crate::{a_provider, z_provider}`
+  - all three pass-2 reviews returned `OK`
+- reviewer tooling note:
+  - batch 70 used direct per-file `claude -p --no-session-persistence --dangerously-skip-permissions` prompts with compact observed-output-plus-Rust-file prompts
+  - `module_assembly` needed a shorter retry prompt in pass 2 after the longer prompt stalled repeatedly, but the final retry returned `OK`
+
 #### batch_65_codegen_preamble_codegen_structural_passes_intrinsic_codegen
 
 status: accepted_after_pass_1_and_pass_2

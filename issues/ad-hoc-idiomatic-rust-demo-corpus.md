@@ -390,6 +390,8 @@ Progress update (`2026-03-29`):
 - `batch_68_borrow_exclusivity_borrow_lowering_compiler_safety` completed local validation and ended external review with no accepted blockers; all three files were clean in both passes
 - `batch_69_branch_paths_cargo_manifest_cli_modes` selected as the sixty-ninth wave-2 runnable-demo batch because it keeps the next compiler/frontend slice cohesive around branch-path regression semantics, manifest/dependency closure, and the minimal CLI contract milestone
 - `batch_69_branch_paths_cargo_manifest_cli_modes` completed local validation and ended external review with no accepted blockers; `branch_paths` and `cargo_manifest` were newly authored, `cli_modes` was re-reviewed and kept unchanged, and all three files were clean in both passes
+- `batch_70_module_ordering_module_assembly_module_cycle_diagnostics` selected as the seventieth wave-2 runnable-demo batch because it keeps the next module-graph slice cohesive around dependency-safe module ordering, deterministic multi-module assembly, and stable module-graph diagnostics
+- `batch_70_module_ordering_module_assembly_module_cycle_diagnostics` completed local validation, accepted one pass-1 cleanup in `module_assembly` switching the nested-module import to `crate::{a_provider, z_provider}`, and ended external review with no remaining accepted blockers; `module_ordering` and `module_cycle_diagnostics` were clean in both passes and `module_assembly` came back clean after that import-path cleanup
 
 ### wave_3_fixture_and_negative_case_normalization
 
