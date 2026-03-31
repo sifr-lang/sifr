@@ -459,7 +459,7 @@ Goals:
 
 ### wave_4_corpus_consistency_pass
 
-status: pending
+status: completed_with_explicit_deferrals
 
 Goals:
 
@@ -478,16 +478,26 @@ Goals:
 - `batch_99_string_ceremony_cleanup` completed local validation and ended review with no accepted blockers; the batch also fixed one pre-existing standalone iterator-lifetime bug in `python_regressions` so the companion now passes temp-Cargo validation instead of hiding behind the paired Sifr run lane
 - `batch_100_python_regressions_slice_cleanup` kept the next wave-4 pass focused on `python_regressions` alone because it still carried the densest remaining `&Vec<T>` surface, and the other obvious slice-cleanup candidates (`html_and_textwrap`, `text_and_patterns`, `text_and_statistics`) do not currently pass targeted paired-demo validation in this workspace
 - `batch_100_python_regressions_slice_cleanup` completed local validation and ended review with no accepted blockers; the file now uses slice parameters consistently across collection, statistics, bytes, itertools, and bisect helpers while preserving the same regression-demo output
+- wave 4 closes here with explicit deferrals rather than forced cleanup on unstable lanes: `html_and_textwrap`, `text_and_patterns`, and `text_and_statistics` remain candidates for a future consistency pass only after their targeted paired-demo validation failures are fixed upstream in the workspace
+- the remaining search hits are intentionally non-actionable for this phase: `generic_stdlib` uses clone fallback on generic non-`Copy` data, and `advanced_class_libraries` already uses an acceptable `cloned().unwrap_or_default()` row-fill idiom
 
 ### wave_5_phase_closeout
 
-status: pending
+status: completed
 
 Goals:
 
 - confirm every demo folder is accounted for
 - confirm every reviewed batch is logged
 - confirm the corpus is now fit for later emitted-vs-idiomatic comparison
+
+Closeout summary:
+
+- all `316` in-scope demo directories containing `.sifr` files now have an intentional `idiomatic.rs`
+- all reviewed corpus batches through wave 4 are recorded in the execution ledger
+- Tier 2 negative/test folders are now explicitly accepted as either minimal scaffolds or harness fixtures under the phase rubric
+- there is no remaining ambiguity about corpus intent: Tier 1 companions are Rust-first runnable counterparts, and Tier 2 companions are intentionally minimal fixture documentation
+- the corpus is now ready for emitted-vs-idiomatic comparison, with the three deferred wave-4 cleanup candidates recorded as non-blocking follow-up work rather than unresolved corpus gaps
 
 ## Exit Criteria
 
