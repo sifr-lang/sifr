@@ -273,7 +273,7 @@ impl<T: Clone + std::fmt::Display + PartialOrd + std::hash::Hash + Eq> std::ops:
     }
 }
 fn from_list<T: Clone + std::fmt::Display + PartialOrd + std::hash::Hash + Eq + 'static>(
-    items: &Vec<T>,
+    items: &[T],
 ) -> Counter<T> {
     let mut counts: HashMap<T, i64> = HashMap::from([]);
     for item in items.iter().cloned() {
@@ -467,14 +467,14 @@ impl std::fmt::Display for StatisticsError {
     }
 }
 impl std::error::Error for StatisticsError {}
-fn _sum(data: &Vec<f64>) -> f64 {
+fn _sum(data: &[f64]) -> f64 {
     let mut total: f64 = 0.0 as f64;
     for val in data.iter().copied() {
         total = total + val;
     }
     return total;
 }
-fn mean(data: &Vec<f64>) -> Result<f64, StatisticsError> {
+fn mean(data: &[f64]) -> Result<f64, StatisticsError> {
     let count: i64 = data.len() as i64;
     if count == (0 as i64) {
         return Err(StatisticsError::new(
@@ -484,7 +484,7 @@ fn mean(data: &Vec<f64>) -> Result<f64, StatisticsError> {
     let total: f64 = _sum(data);
     return Ok(total / (count as f64));
 }
-fn median(data: &Vec<f64>) -> Result<f64, StatisticsError> {
+fn median(data: &[f64]) -> Result<f64, StatisticsError> {
     let n: i64 = data.len() as i64;
     if n == (0 as i64) {
         return Err(StatisticsError::new(
@@ -541,7 +541,7 @@ fn median(data: &Vec<f64>) -> Result<f64, StatisticsError> {
         return Err(StatisticsError::new("median: index error".to_string()));
     }
 }
-fn stdev(data: &Vec<f64>) -> Result<f64, StatisticsError> {
+fn stdev(data: &[f64]) -> Result<f64, StatisticsError> {
     let n: i64 = data.len() as i64;
     if n < (2 as i64) {
         return Err(StatisticsError::new(
@@ -618,7 +618,7 @@ fn _match(name: &String, mut ni: i64, pattern: &String, mut pi: i64) -> bool {
     }
     return ni == (name.chars().count() as i64);
 }
-fn fnmatch_filter(names: &Vec<String>, pattern: &String) -> Vec<String> {
+fn fnmatch_filter(names: &[String], pattern: &String) -> Vec<String> {
     let mut result: Vec<String> = vec![];
     for name in names.iter().cloned() {
         if fnmatch(&name, pattern) {
@@ -630,9 +630,9 @@ fn fnmatch_filter(names: &Vec<String>, pattern: &String) -> Vec<String> {
 
 // --- stdlib: sifr.itertools ---
 fn chain<T: Clone + std::fmt::Display + PartialOrd + 'static>(
-    iterables: &Vec<Vec<T>>,
+    iterables: &[Vec<T>],
 ) -> Box<dyn Iterator<Item = T>> {
-    let iterables = iterables.clone();
+    let iterables = iterables.to_vec();
     let mut __sifr_generator_initialized: bool = false;
     let mut __sifr_generator_iter: std::vec::IntoIter<T> = Vec::new().into_iter();
     return Box::new(std::iter::from_fn(move || {
@@ -681,7 +681,7 @@ fn repeat<T: Clone + std::fmt::Display + PartialOrd + 'static>(
     }
     return Box::new(result.into_iter());
 }
-fn take<T: Clone + std::fmt::Display + PartialOrd + 'static>(n: i64, data: &Vec<T>) -> Vec<T> {
+fn take<T: Clone + std::fmt::Display + PartialOrd + 'static>(n: i64, data: &[T]) -> Vec<T> {
     let mut result: Vec<T> = vec![];
     let mut count: i64 = 0 as i64;
     for item in data.iter().cloned() {
@@ -693,7 +693,7 @@ fn take<T: Clone + std::fmt::Display + PartialOrd + 'static>(n: i64, data: &Vec<
     }
     return result;
 }
-fn flatten<T: Clone + std::fmt::Display + PartialOrd + 'static>(lists: &Vec<Vec<T>>) -> Vec<T> {
+fn flatten<T: Clone + std::fmt::Display + PartialOrd + 'static>(lists: &[Vec<T>]) -> Vec<T> {
     let mut result: Vec<T> = vec![];
     for inner in lists.iter().cloned() {
         for val in inner.iter().cloned() {
@@ -1373,7 +1373,7 @@ impl FileHandle {
             }
         })();
     }
-    fn write_bytes(&self, data: &Vec<u8>) -> Result<(), IOError> {
+    fn write_bytes(&self, data: &[u8]) -> Result<(), IOError> {
         if self._closed {
             return Err(IOError::new(_closed_stream_error()));
         }
@@ -1387,7 +1387,7 @@ impl FileHandle {
                 .unwrap_or_else(|__err| __err.into_inner());
             match __handles.get_mut(&__hid) {
                 Some(SifrFileHandle::BinaryWrite(ref mut __w)) => {
-                    std::io::Write::write_all(__w, &data).map_err(__io_err)?;
+                    std::io::Write::write_all(__w, data).map_err(__io_err)?;
                     return Ok(());
                 }
                 _ => {
@@ -1497,7 +1497,7 @@ impl BinaryFileHandle {
             }
         })();
     }
-    fn write_bytes(&self, data: &Vec<u8>) -> Result<(), IOError> {
+    fn write_bytes(&self, data: &[u8]) -> Result<(), IOError> {
         if self._closed {
             return Err(IOError::new(_closed_stream_error()));
         }
@@ -1511,7 +1511,7 @@ impl BinaryFileHandle {
                 .unwrap_or_else(|__err| __err.into_inner());
             match __handles.get_mut(&__hid) {
                 Some(SifrFileHandle::BinaryWrite(ref mut __w)) => {
-                    std::io::Write::write_all(__w, &data).map_err(__io_err)?;
+                    std::io::Write::write_all(__w, data).map_err(__io_err)?;
                     return Ok(());
                 }
                 _ => {
@@ -1715,7 +1715,7 @@ impl BytesIO {
         }
         return Ok(());
     }
-    fn _slice_to_bytes(&self, values: &Vec<i64>) -> Result<Vec<u8>, IOError> {
+    fn _slice_to_bytes(&self, values: &[i64]) -> Result<Vec<u8>, IOError> {
         let __sifr_try_res: Result<Result<Vec<u8>, IOError>, ValueError> = (|| {
             let built: Vec<u8> = ({
                 let __vals = values;
@@ -1771,7 +1771,7 @@ impl BytesIO {
         self._cursor = end;
         return self._slice_to_bytes(&chunk);
     }
-    fn write_bytes(&mut self, data: &Vec<u8>) -> Result<(), IOError> {
+    fn write_bytes(&mut self, data: &[u8]) -> Result<(), IOError> {
         if self._closed {
             return Err(IOError::new(_closed_stream_error()));
         }
@@ -2268,7 +2268,7 @@ impl std::fmt::Display for JsonValue {
 
 // --- stdlib: sifr.bisect ---
 fn bisect_left<T: Clone + std::fmt::Display + PartialOrd + 'static>(
-    a: &Vec<T>,
+    a: &[T],
     x: &T,
     lo: i64,
     hi: Option<i64>,
@@ -2318,7 +2318,7 @@ fn bisect_left<T: Clone + std::fmt::Display + PartialOrd + 'static>(
     return left;
 }
 fn bisect_right<T: Clone + std::fmt::Display + PartialOrd + 'static>(
-    a: &Vec<T>,
+    a: &[T],
     x: &T,
     lo: i64,
     hi: Option<i64>,
@@ -3121,7 +3121,7 @@ fn main() {
                 })
                 .and_then(|parsed| __sifr_json_value_from_serde(parsed))
         })?;
-        assert_eq!(format!("{}", json_val), "42");
+        assert_eq!(json_val.to_string(), "42");
         return Ok(());
     })();
     if let Err(__sifr_try_err) = __sifr_try_res {
