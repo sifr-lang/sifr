@@ -4303,6 +4303,67 @@ status: accepted_after_pass_1_and_pass_2
 - reviewer tooling note:
   - batch 98 was reviewed against the final validated Rust outputs and the unchanged paired Sifr demo outputs for the three runnable demos
 
+#### batch_99_string_ceremony_cleanup
+
+status: accepted_after_pass_1_and_pass_2
+
+- scope:
+  - `demos/normalized_fixtures/idiomatic.rs`
+  - `demos/error_subclasses/idiomatic.rs`
+  - `demos/python_regressions/idiomatic.rs`
+- selection rationale:
+  - these three already-reviewed runnable demos still carried the next most obvious wave-4 cleanup targets: repeated `.to_string().to_string()` chains and redundant `format!("{}", ...)` wrappers
+  - the batch stays on demos that can still clear the authoritative local validation lane after targeted Rust-only cleanup
+  - `python_regressions` was intentionally included despite its size because it concentrated the same string-ceremony anti-patterns in one place and exposed a real standalone validation bug worth fixing while the file was open
+- priority tags:
+  - `wave-4-consistency`
+  - `string-ceremony-cleanup`
+  - `format-wrapper-cleanup`
+  - `standalone-validation-unblock`
+- implementation summary:
+  - `normalized_fixtures`: replaced `format!("{}", n1 * n2)` with `(n1 * n2).to_string()` and removed redundant `format!("{}", multiply(...))` assertions
+  - `error_subclasses`: collapsed repeated `.to_string().to_string()` chains in the JSON helper and subclass-kind comparisons to single `.to_string()` calls
+  - `python_regressions`: collapsed repeated string-conversion wrappers, simplified numeric error-message formatting, and changed `repeat` to return `result.into_iter()` so the companion no longer returns an iterator that borrows a local vector
+- local validation completed:
+  - `rustfmt demos/normalized_fixtures/idiomatic.rs demos/error_subclasses/idiomatic.rs demos/python_regressions/idiomatic.rs`
+  - `rustc --edition=2021 demos/normalized_fixtures/idiomatic.rs -o /tmp/sifr-wave4-normalized-fixtures && /tmp/sifr-wave4-normalized-fixtures`
+  - `tmpdir=$(mktemp -d /tmp/sifr-wave4-error-subclasses.XXXXXX) && cp demos/error_subclasses/idiomatic.rs "$tmpdir/src.rs" && mkdir "$tmpdir/src" && mv "$tmpdir/src.rs" "$tmpdir/src/main.rs" && cat > "$tmpdir/Cargo.toml" <<'EOF'`
+  - `[package]`
+  - `name = "sifr_wave4_error_subclasses"`
+  - `version = "0.1.0"`
+  - `edition = "2021"`
+  - ``
+  - `[dependencies]`
+  - `serde_json = "1"`
+  - `regex = "1"`
+  - `EOF`
+  - `cargo run --quiet --manifest-path "$tmpdir/Cargo.toml"`
+  - `tmpdir=$(mktemp -d /tmp/sifr-wave4-python-regressions.XXXXXX) && cp demos/python_regressions/idiomatic.rs "$tmpdir/src.rs" && mkdir "$tmpdir/src" && mv "$tmpdir/src.rs" "$tmpdir/src/main.rs" && cat > "$tmpdir/Cargo.toml" <<'EOF'`
+  - `[package]`
+  - `name = "sifr_wave4_python_regressions"`
+  - `version = "0.1.0"`
+  - `edition = "2021"`
+  - ``
+  - `[dependencies]`
+  - `regex = "1"`
+  - `serde_json = "1"`
+  - `EOF`
+  - `cargo run --quiet --manifest-path "$tmpdir/Cargo.toml"`
+  - `cargo run -q -p sifr -- run demos/normalized_fixtures/main.sifr`
+  - `cargo run -q -p sifr -- run demos/error_subclasses/main.sifr`
+  - `cargo run -q -p sifr -- run demos/python_regressions/main.sifr`
+  - `scripts/run_all_tests.sh`
+- review artifacts:
+  - pass 1: `reviews/phase-ad-hoc-idiomatic-rust-demo-corpus-wave-4-batch-99-review-pass-1.md`
+  - pass 2: `reviews/phase-ad-hoc-idiomatic-rust-demo-corpus-wave-4-batch-99-review-pass-2.md`
+- review application summary:
+  - all three pass-1 reviews returned `OK`
+  - all three pass-2 reviews returned `OK`
+  - no follow-up code changes were needed after the final validated state
+- reviewer tooling note:
+  - batch 99 was reviewed against the final validated Rust outputs, including the temp-Cargo runs for the two dependency-bearing companions and the standalone iterator-lifetime fix in `python_regressions`
+  - the paired Sifr demo outputs stayed unchanged across all three runnable demos
+
 ### wave_5_phase_closeout
 
 status: pending

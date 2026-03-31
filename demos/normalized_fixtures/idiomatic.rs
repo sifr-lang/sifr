@@ -58,10 +58,10 @@ fn multiply(num1: &String, num2: &String) -> String {
     if (n1 < (0 as i64)) || (n2 < (0 as i64)) {
         return "0".to_string();
     }
-    return format!("{}", n1 * n2);
+    return (n1 * n2).to_string();
 }
 
 fn main() {
-    assert!(format!("{}", multiply(&"2".to_string(), &"3".to_string())) == "6".to_string());
-    assert!(format!("{}", multiply(&"123".to_string(), &"456".to_string())) == "56088".to_string());
+    assert!(multiply(&"2".to_string(), &"3".to_string()) == "6".to_string());
+    assert!(multiply(&"123".to_string(), &"456".to_string()) == "56088".to_string());
 }
