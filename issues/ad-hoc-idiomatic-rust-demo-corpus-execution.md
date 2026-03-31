@@ -4262,7 +4262,7 @@ status: accepted_after_pass_1_and_pass_2
 
 ### wave_4_corpus_consistency_pass
 
-status: pending
+status: completed_with_explicit_deferrals
 
 #### batch_98_slice_and_format_cleanup
 
@@ -4409,13 +4409,24 @@ status: accepted_after_pass_1_and_pass_2
   - batch 100 was reviewed against the final validated Rust output, the temp-Cargo dependency validation for the companion, and the unchanged `python_regressions` parity-demo output from the paired Sifr run
   - the intentionally single-file scope is recorded so the remaining wave-4 cleanup work can continue without mixing in upstream-broken targeted demo lanes
 
+- wave-4 deferred follow-up set:
+  - `demos/html_and_textwrap/idiomatic.rs`
+  - `demos/text_and_patterns/idiomatic.rs`
+  - `demos/text_and_statistics/idiomatic.rs`
+- explicit next action for deferred wave-4 files:
+  - revisit the remaining slice-api and string-ceremony cleanup only after each paired `cargo run -q -p sifr -- run demos/.../main.sifr` lane is green again in this workspace
+  - until then, treat their current anti-pattern hits as non-blocking consistency debt rather than open corpus-coverage work
+- non-actionable remaining search hits:
+  - `demos/generic_stdlib/idiomatic.rs`: `unwrap_or_else(|| fill.clone())` is still appropriate because the fallback value is generic and not guaranteed `Copy`
+  - `demos/advanced_class_libraries/idiomatic.rs`: `cloned().unwrap_or_default()` is an acceptable row-fill idiom and does not need further normalization for this corpus
+- wave-4 closeout note:
+  - the consistency pass is complete for all currently stable targeted-validation candidates, and the remaining deferred files are recorded above with explicit next actions
+
 ### wave_5_phase_closeout
 
-status: pending
+status: completed
 
 ## Closeout Requirements
-
-Before this ledger can be marked complete:
 
 - every reviewed batch must be recorded or linked
 - every in-scope folder must be accounted for
@@ -4425,3 +4436,19 @@ Before this ledger can be marked complete:
   - acceptable minimal scaffold,
   - acceptable harness,
   - or needing further clarification
+
+## Closeout Summary
+
+- in-scope directories accounted for:
+  - `316` directories under `demos/` contain one or more `.sifr` files
+  - `316 / 316` currently have an intentional `idiomatic.rs`
+  - there are `0` remaining in-scope directories without a companion file
+- reviewed-batch recording status:
+  - all corpus batches through wave 4 are recorded in this ledger, including review artifact links and validation summaries
+- Tier 2 disposition:
+  - acceptable minimal scaffold: all `44` Tier 2 negative-case directories under `demos/**/negative_cases/**`, validated against their paired checker/runtime behavior during wave 3
+  - acceptable harness: `demos/while_else/negative_cases`, which is intentionally a runtime guard fixture rather than a checker failure scaffold
+  - needing further clarification: none
+- final emitted-vs-idiomatic readiness note:
+  - the corpus is ready for emitted-vs-idiomatic comparison
+  - remaining follow-up work is limited to the non-blocking deferred wave-4 cleanup set recorded above, not missing companions or unresolved Tier 2 intent
