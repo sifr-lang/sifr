@@ -476,6 +476,8 @@ Goals:
 - `batch_98_slice_and_format_cleanup` completed local validation and ended review with no accepted blockers; the targeted files now prefer slice parameters and direct formatting while preserving the same Rust output and paired Sifr demo behavior
 - `batch_99_string_ceremony_cleanup` selected the next runnable-demo slice because `normalized_fixtures`, `error_subclasses`, and `python_regressions` still contained repeated `.to_string().to_string()` chains and `format!("{}", ...)` wrappers that could be simplified without changing the paired demo outputs
 - `batch_99_string_ceremony_cleanup` completed local validation and ended review with no accepted blockers; the batch also fixed one pre-existing standalone iterator-lifetime bug in `python_regressions` so the companion now passes temp-Cargo validation instead of hiding behind the paired Sifr run lane
+- `batch_100_python_regressions_slice_cleanup` kept the next wave-4 pass focused on `python_regressions` alone because it still carried the densest remaining `&Vec<T>` surface, and the other obvious slice-cleanup candidates (`html_and_textwrap`, `text_and_patterns`, `text_and_statistics`) do not currently pass targeted paired-demo validation in this workspace
+- `batch_100_python_regressions_slice_cleanup` completed local validation and ended review with no accepted blockers; the file now uses slice parameters consistently across collection, statistics, bytes, itertools, and bisect helpers while preserving the same regression-demo output
 
 ### wave_5_phase_closeout
 

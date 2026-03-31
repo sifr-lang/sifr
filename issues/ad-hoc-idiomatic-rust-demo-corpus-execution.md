@@ -4364,6 +4364,51 @@ status: accepted_after_pass_1_and_pass_2
   - batch 99 was reviewed against the final validated Rust outputs, including the temp-Cargo runs for the two dependency-bearing companions and the standalone iterator-lifetime fix in `python_regressions`
   - the paired Sifr demo outputs stayed unchanged across all three runnable demos
 
+#### batch_100_python_regressions_slice_cleanup
+
+status: accepted_after_pass_1_and_pass_2
+
+- scope:
+  - `demos/python_regressions/idiomatic.rs`
+- selection rationale:
+  - `python_regressions` still held the densest remaining wave-4 `&Vec<T>` surface after batch 99, spanning collection helpers, statistics helpers, bytes I/O helpers, itertools helpers, and bisect helpers in one validated demo
+  - the other obvious slice-cleanup candidates were intentionally deferred because their paired Sifr demos are not currently clean targeted-run validation targets in this workspace
+  - keeping the batch to one file preserved the authoritative validation bar while still removing a meaningful block of emitted-style collection APIs
+- priority tags:
+  - `wave-4-consistency`
+  - `slice-api-cleanup`
+  - `single-file-focused-batch`
+- implementation summary:
+  - changed read-only helper parameters from `&Vec<T>` to slices across `from_list`, the statistics helpers, `fnmatch_filter`, `take`, `flatten`, `bisect_left`, and `bisect_right`
+  - changed `chain` to accept `&[Vec<T>]` and snapshot the input with `to_vec()` before building the lazy iterator
+  - changed the bytes-writing and `_slice_to_bytes` helpers to accept slices, with matching direct `write_all(..., data)` calls
+  - replaced the remaining `assert_eq!(format!("{}", json_val), "42")` check with `assert_eq!(json_val.to_string(), "42")`
+- local validation completed:
+  - `rustfmt demos/python_regressions/idiomatic.rs`
+  - `tmpdir=$(mktemp -d /tmp/sifr-wave4-python-regressions.XXXXXX) && cp demos/python_regressions/idiomatic.rs "$tmpdir/src.rs" && mkdir "$tmpdir/src" && mv "$tmpdir/src.rs" "$tmpdir/src/main.rs" && cat > "$tmpdir/Cargo.toml" <<'EOF'`
+  - `[package]`
+  - `name = "sifr_wave4_python_regressions"`
+  - `version = "0.1.0"`
+  - `edition = "2021"`
+  - ``
+  - `[dependencies]`
+  - `regex = "1"`
+  - `serde_json = "1"`
+  - `EOF`
+  - `cargo run --quiet --manifest-path "$tmpdir/Cargo.toml"`
+  - `cargo run -q -p sifr -- run demos/python_regressions/main.sifr`
+  - `scripts/run_all_tests.sh`
+- review artifacts:
+  - pass 1: `reviews/phase-ad-hoc-idiomatic-rust-demo-corpus-wave-4-batch-100-review-pass-1.md`
+  - pass 2: `reviews/phase-ad-hoc-idiomatic-rust-demo-corpus-wave-4-batch-100-review-pass-2.md`
+- review application summary:
+  - pass 1 returned `OK`
+  - pass 2 returned `OK`
+  - no follow-up code changes were needed after the validated slice cleanup
+- reviewer tooling note:
+  - batch 100 was reviewed against the final validated Rust output, the temp-Cargo dependency validation for the companion, and the unchanged `python_regressions` parity-demo output from the paired Sifr run
+  - the intentionally single-file scope is recorded so the remaining wave-4 cleanup work can continue without mixing in upstream-broken targeted demo lanes
+
 ### wave_5_phase_closeout
 
 status: pending
