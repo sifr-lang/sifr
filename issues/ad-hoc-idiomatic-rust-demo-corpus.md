@@ -474,6 +474,8 @@ Goals:
   - emitted-style ceremony around standard Rust collection operations
 - `batch_98_slice_and_format_cleanup` selected as the first wave-4 consistency batch because `test_helpers`, `variance_rules`, and `stdlib_error_types` were already validated runnable demos that still carried the exact low-risk anti-patterns called out in the phase plan: `&Vec<T>` APIs and redundant formatting ceremony
 - `batch_98_slice_and_format_cleanup` completed local validation and ended review with no accepted blockers; the targeted files now prefer slice parameters and direct formatting while preserving the same Rust output and paired Sifr demo behavior
+- `batch_99_string_ceremony_cleanup` selected the next runnable-demo slice because `normalized_fixtures`, `error_subclasses`, and `python_regressions` still contained repeated `.to_string().to_string()` chains and `format!("{}", ...)` wrappers that could be simplified without changing the paired demo outputs
+- `batch_99_string_ceremony_cleanup` completed local validation and ended review with no accepted blockers; the batch also fixed one pre-existing standalone iterator-lifetime bug in `python_regressions` so the companion now passes temp-Cargo validation instead of hiding behind the paired Sifr run lane
 
 ### wave_5_phase_closeout
 

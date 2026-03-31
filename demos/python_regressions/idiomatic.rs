@@ -679,7 +679,7 @@ fn repeat<T: Clone + std::fmt::Display + PartialOrd + 'static>(
         }
         i = i + (1 as i64);
     }
-    return Box::new((result).iter().cloned());
+    return Box::new(result.into_iter());
 }
 fn take<T: Clone + std::fmt::Display + PartialOrd + 'static>(n: i64, data: &Vec<T>) -> Vec<T> {
     let mut result: Vec<T> = vec![];
@@ -705,7 +705,7 @@ fn flatten<T: Clone + std::fmt::Display + PartialOrd + 'static>(lists: &Vec<Vec<
 
 // --- stdlib: sifr.string ---
 fn __const_ascii_lowercase() -> String {
-    return "abcdefghijklmnopqrstuvwxyz".to_string().to_string();
+    return "abcdefghijklmnopqrstuvwxyz".to_string();
 }
 fn capwords(s: &String) -> String {
     let normalized: String = s
@@ -1860,17 +1860,13 @@ fn _closed_stream_error() -> String {
     return "I/O operation on closed stream".to_string();
 }
 fn _invalid_whence_error(whence: i64) -> String {
-    return format!(
-        "{}{}",
-        "invalid whence: ".to_string(),
-        format!("{}", whence)
-    );
+    return format!("{}{}", "invalid whence: ".to_string(), whence.to_string());
 }
 fn _negative_seek_error(offset: i64) -> String {
     return format!(
         "{}{}",
         "negative seek position: ".to_string(),
-        format!("{}", offset)
+        offset.to_string()
     );
 }
 fn _unsupported_seek_tell_error() -> String {
@@ -2265,7 +2261,7 @@ impl std::fmt::Display for JsonValue {
                 }
             }
             serde_json::to_string(&__sifr_json_value_to_serde(&__json_value))
-                .unwrap_or_else(|_err| "null".to_string().to_string())
+                .unwrap_or_else(|_err| "null".to_string())
         });
     }
 }
@@ -3011,7 +3007,7 @@ fn main() {
                 match value {
                     serde_json::Value::Null => {
                         return Ok(JsonValue {
-                            kind: "null".to_string().to_string(),
+                            kind: "null".to_string(),
                             bool_value: None,
                             int_value: None,
                             float_value: None,
@@ -3022,7 +3018,7 @@ fn main() {
                     }
                     serde_json::Value::Bool(b) => {
                         return Ok(JsonValue {
-                            kind: "bool".to_string().to_string(),
+                            kind: "bool".to_string(),
                             bool_value: Some(b),
                             int_value: None,
                             float_value: None,
@@ -3034,7 +3030,7 @@ fn main() {
                     serde_json::Value::Number(n) => {
                         if let Some(i) = n.as_i64() {
                             return Ok(JsonValue {
-                                kind: "int".to_string().to_string(),
+                                kind: "int".to_string(),
                                 bool_value: None,
                                 int_value: Some(i),
                                 float_value: None,
@@ -3054,7 +3050,7 @@ fn main() {
                         }
                         if let Some(f) = n.as_f64() {
                             return Ok(JsonValue {
-                                kind: "float".to_string().to_string(),
+                                kind: "float".to_string(),
                                 bool_value: None,
                                 int_value: None,
                                 float_value: Some(f),
@@ -3073,7 +3069,7 @@ fn main() {
                     }
                     serde_json::Value::String(s) => {
                         return Ok(JsonValue {
-                            kind: "str".to_string().to_string(),
+                            kind: "str".to_string(),
                             bool_value: None,
                             int_value: None,
                             float_value: None,
@@ -3088,7 +3084,7 @@ fn main() {
                             converted.push(__sifr_json_value_from_serde(item)?);
                         }
                         return Ok(JsonValue {
-                            kind: "array".to_string().to_string(),
+                            kind: "array".to_string(),
                             bool_value: None,
                             int_value: None,
                             float_value: None,
@@ -3106,7 +3102,7 @@ fn main() {
                             converted.push((entry_key, converted_value));
                         }
                         return Ok(JsonValue {
-                            kind: "object".to_string().to_string(),
+                            kind: "object".to_string(),
                             bool_value: None,
                             int_value: None,
                             float_value: None,

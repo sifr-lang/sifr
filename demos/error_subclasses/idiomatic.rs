@@ -196,7 +196,7 @@ impl std::fmt::Display for JsonValue {
                 }
             }
             serde_json::to_string(&__sifr_json_value_to_serde(&__json_value))
-                .unwrap_or_else(|_err| "null".to_string().to_string())
+                .unwrap_or_else(|_err| "null".to_string())
         });
     }
 }
@@ -209,7 +209,7 @@ fn loads(s: &String) -> Result<JsonValue, JSONDecodeError> {
             match value {
                 serde_json::Value::Null => {
                     return Ok(JsonValue {
-                        kind: "null".to_string().to_string(),
+                        kind: "null".to_string(),
                         bool_value: None,
                         int_value: None,
                         float_value: None,
@@ -220,7 +220,7 @@ fn loads(s: &String) -> Result<JsonValue, JSONDecodeError> {
                 }
                 serde_json::Value::Bool(b) => {
                     return Ok(JsonValue {
-                        kind: "bool".to_string().to_string(),
+                        kind: "bool".to_string(),
                         bool_value: Some(b),
                         int_value: None,
                         float_value: None,
@@ -232,7 +232,7 @@ fn loads(s: &String) -> Result<JsonValue, JSONDecodeError> {
                 serde_json::Value::Number(n) => {
                     if let Some(i) = n.as_i64() {
                         return Ok(JsonValue {
-                            kind: "int".to_string().to_string(),
+                            kind: "int".to_string(),
                             bool_value: None,
                             int_value: Some(i),
                             float_value: None,
@@ -252,7 +252,7 @@ fn loads(s: &String) -> Result<JsonValue, JSONDecodeError> {
                     }
                     if let Some(f) = n.as_f64() {
                         return Ok(JsonValue {
-                            kind: "float".to_string().to_string(),
+                            kind: "float".to_string(),
                             bool_value: None,
                             int_value: None,
                             float_value: Some(f),
@@ -271,7 +271,7 @@ fn loads(s: &String) -> Result<JsonValue, JSONDecodeError> {
                 }
                 serde_json::Value::String(s) => {
                     return Ok(JsonValue {
-                        kind: "str".to_string().to_string(),
+                        kind: "str".to_string(),
                         bool_value: None,
                         int_value: None,
                         float_value: None,
@@ -286,7 +286,7 @@ fn loads(s: &String) -> Result<JsonValue, JSONDecodeError> {
                         converted.push(__sifr_json_value_from_serde(item)?);
                     }
                     return Ok(JsonValue {
-                        kind: "array".to_string().to_string(),
+                        kind: "array".to_string(),
                         bool_value: None,
                         int_value: None,
                         float_value: None,
@@ -304,7 +304,7 @@ fn loads(s: &String) -> Result<JsonValue, JSONDecodeError> {
                         converted.push((entry_key, converted_value));
                     }
                     return Ok(JsonValue {
-                        kind: "object".to_string().to_string(),
+                        kind: "object".to_string(),
                         bool_value: None,
                         int_value: None,
                         float_value: None,
@@ -488,7 +488,7 @@ fn demo_specific_subclass() {
         return Ok(());
     })();
     if let Err(__sifr_try_err) = __sifr_try_res {
-        if __sifr_try_err.kind == "FileNotFound".to_string().to_string() {
+        if __sifr_try_err.kind == "FileNotFound".to_string() {
             let e = __sifr_try_err.clone();
             println!("FileNotFoundError: {}", e.message);
         } else {
@@ -556,7 +556,7 @@ fn demo_mixed_families() {
         return Ok(());
     })();
     if let Err(__sifr_try_err) = __sifr_try_res {
-        if __sifr_try_err.kind == "FileNotFound".to_string().to_string() {
+        if __sifr_try_err.kind == "FileNotFound".to_string() {
             let e = __sifr_try_err.clone();
             println!("FileNotFoundError: {}", e.message);
         } else {
