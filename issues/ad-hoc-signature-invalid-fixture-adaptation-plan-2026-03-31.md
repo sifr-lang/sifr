@@ -4,6 +4,26 @@ Date: 2026-03-31
 Owning analysis: `issues/any-unknown-container-specialization-root-cause-2026-03-31.md`
 Source run: `verification/leetcode/full_corpus_current_results_20260331_live.json`
 
+## Execution Update (2026-03-31)
+
+Status: in progress, signature adaptation pass executed for all scoped fixtures.
+
+Completed artifacts:
+
+- fixture checklist: `issues/ad-hoc-signature-invalid-fixture-adaptation-checklist-2026-03-31.md`
+- targeted validation (36 fixtures): `verification/leetcode/signature_adaptation_targeted_results_20260331.md`
+- full corpus rerun (411 fixtures): `verification/leetcode/full_corpus_current_results_20260331_live_after_signature_adaptation.json`
+- residual recategorization: `issues/ad-hoc-signature-invalid-fixture-adaptation-recategorization-2026-03-31.md`
+- reviewer follow-up update: `issues/ad-hoc-signature-invalid-fixture-adaptation-review-fixes-2026-04-02.md`
+- post-review targeted validation (36 fixtures): `verification/leetcode/signature_adaptation_targeted_results_20260402_after_review_fixes.md`
+- latest targeted loop rerun (36 fixtures): `verification/leetcode/signature_adaptation_targeted_results_20260402_loop.md`
+
+Current result snapshot:
+
+- fixtures in scope: `36`
+- cleared by current fixture adaptation work (`check` + `run` pass): `21`
+- residual failures requiring further fixture/compiler follow-up: `15`
+
 ## Goal
 
 Adapt all LeetCode fixtures that do not have clear explicit function input/output types before treating residual `Any/Unknown` failures as compiler defects.
@@ -36,8 +56,8 @@ For this adaptation phase, every named function must have explicit inputs and ou
 1. top-level functions: explicit parameter types and explicit return type
 2. nested/local helpers: explicit parameter types and explicit return type
 3. class methods: explicit parameter types and explicit return type
-4. constructors: `__init__(...) -> None`
-5. `main()` helpers in fixtures: `-> None`
+4. constructors: explicit parameter types; `None` returns are inferred by compiler policy
+5. `main()` helpers in fixtures: explicit parameter list; `None` return is inferred
 
 Out of scope:
 
