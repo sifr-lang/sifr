@@ -7,7 +7,7 @@ def searchRange(nums: list[int], target: int) -> list[int]:
 
 # leftBias=[True/False], if false, res is rightBiased
 
-def binSearch(nums, target, leftBias):
+def binSearch(nums: list[int], target: int, leftBias: bool) -> int:
     l, r = 0, len(nums) - 1
     i = -1
     while l <= r:
@@ -27,5 +27,4 @@ def binSearch(nums, target, leftBias):
 def main():
     assert str(searchRange([5,7,7,8,8,10], 8)) == '[3, 4]'
     assert str(searchRange([5,7,7,8,8,10], 6)) == '[-1, -1]'
-
 

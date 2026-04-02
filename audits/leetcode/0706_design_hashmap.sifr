@@ -28,16 +28,16 @@ class Node:
         self.key = key
 
 class ListNode:
-    def __init__(self, key=-1, val=-1, next=None):
+    def __init__(self, key: int = -1, val: int = -1, next: ListNode | None = None):
         self.key = key
         self.val = val
         self.next = next
 class MyHashMap:
     def __init__(self):
         self.map = [ListNode() for i in range(1000)]
-    def hashcode(self, key):
+    def hashcode(self, key: int) -> int:
         return key % len(self.map)
-    def put(self, key: int, value: int) -> None:
+    def put(self, key: int, value: int):
         cur = self.map[self.hashcode(key)]
         while cur.next:
             if cur.next.key == key:
@@ -52,7 +52,7 @@ class MyHashMap:
         if cur:
             return cur.val
         return -1
-    def remove(self, key: int) -> None:
+    def remove(self, key: int):
         cur = self.map[self.hashcode(key)]
         while cur.next and cur.next.key != key:
             cur = cur.next

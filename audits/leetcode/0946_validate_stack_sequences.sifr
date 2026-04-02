@@ -1,6 +1,6 @@
 # LeetCode 946: Validate Stack Sequences
 
-def validateStackSequences(pushed, popped):
+def validateStackSequences(pushed: list[int], popped: list[int]) -> bool:
     i = 0
     stack = []
     for n in pushed:
@@ -9,10 +9,8 @@ def validateStackSequences(pushed, popped):
             stack.pop()
             i += 1
 
-    return not stack
+    return len(stack) == 0
 
 def main():
     assert str(validateStackSequences([1,2,3,4,5], [4,5,3,2,1])) == 'true'
     assert str(validateStackSequences([1,2,3,4,5], [4,3,5,1,2])) == 'false'
-
-

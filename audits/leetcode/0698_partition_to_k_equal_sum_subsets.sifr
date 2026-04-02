@@ -1,16 +1,17 @@
 # LeetCode 698: Partition To K Equal Sum Subsets
 
-def canPartitionKSubsets(nums, k):
+def canPartitionKSubsets(mut nums: list[int], k: int) -> bool:
     
 
     if sum(nums) % k != 0:
         return False
 
-    nums.sort(reverse = True)
-    target = sum(nums) / k
+    nums.sort()
+    nums.reverse()
+    target = sum(nums) // k
     visited= set()
 
-    def backtrack(idx, count, currSum):
+    def backtrack(idx: int, count: int, currSum: int) -> bool:
         if count == k:
             return True
 
@@ -41,4 +42,3 @@ def canPartitionKSubsets(nums, k):
 def main():
     assert canPartitionKSubsets([4, 3, 2, 3, 5, 2, 1], 4) == True
     assert canPartitionKSubsets([1, 2, 3, 4], 3) == False
-

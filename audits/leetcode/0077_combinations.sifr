@@ -2,7 +2,7 @@
 
 def combine(n: int, k: int) -> list[list[int]]:
     res = []
-    def helper(start, comb):
+    def helper(start: int, comb: list[int]):
         if len(comb) == k:
             res.append(comb.copy())
             return
@@ -15,5 +15,4 @@ def combine(n: int, k: int) -> list[list[int]]:
 
 def main():
     assert str(combine(4, 2)) == '[[1, 2], [1, 3], [1, 4], [2, 3], [2, 4], [3, 4]]'
-
 

@@ -1,6 +1,6 @@
 # LeetCode 44: Wildcard Matching
 
-def isMatch(s, p):
+def isMatch(s: str, p: str) -> bool:
     dp = [[False] * (len(p) + 1) for _ in range(len(s) + 1)]
     dp[-1][-1] = True
     for i in range(len(s), -1, -1):
@@ -15,5 +15,4 @@ def main():
     assert str(isMatch("aa", "a")) == 'false'
     assert str(isMatch("aa", "*")) == 'true'
     assert str(isMatch("cb", "?a")) == 'false'
-
 

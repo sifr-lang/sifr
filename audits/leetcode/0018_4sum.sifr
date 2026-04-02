@@ -1,7 +1,14 @@
 # LeetCode 18: 4Sum
 
-def fourSum(nums, target):
-    def findNsum(l, r, target, N, result, results):
+def fourSum(mut nums: list[int], target: int) -> list[list[int]]:
+    def findNsum(
+        l: int,
+        r: int,
+        target: int,
+        N: int,
+        result: list[int],
+        results: list[list[int]],
+    ):
         if r-l+1 < N or N < 2 or target < nums[l]*N or target > nums[r]*N:  
             return
         if N == 2: 
@@ -22,11 +29,9 @@ def fourSum(nums, target):
                     findNsum(i+1, r, target-nums[i], N-1, result+[nums[i]], results)
 
     nums.sort()
-    results = []
+    results: list[list[int]] = []
     findNsum(0, len(nums)-1, target, 4, [], results)
     return results
 
 def main():
     assert str(fourSum([1,0,-1,0,-2,2], 0)) == '[[-2, -1, 1, 2], [-2, 0, 0, 2], [-1, 0, 0, 1]]'
-
-

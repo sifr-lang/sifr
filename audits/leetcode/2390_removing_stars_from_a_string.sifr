@@ -1,6 +1,6 @@
 # LeetCode 2390: Removing Stars From A String
 
-def removeStars(s) :
+def removeStars(s: str) -> str:
     res = []
     for c in s :
         if res and c == '*':
@@ -11,5 +11,4 @@ def removeStars(s) :
 
 def main():
     assert str(removeStars("leet**cod*e")) == 'lecoe'
-
 

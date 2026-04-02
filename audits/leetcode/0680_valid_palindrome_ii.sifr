@@ -12,7 +12,7 @@ def validPalindrome(s: str) -> bool:
     return True
 
 
-def validPalindromeUtil(s, i, j):
+def validPalindromeUtil(s: str, mut i: int, mut j: int) -> bool:
     while i < j:
         if s[i] == s[j]:
             i += 1
@@ -26,5 +26,3 @@ def main():
     assert str(validPalindrome("aba")) == 'true'
     assert str(validPalindrome("abca")) == 'true'
     assert str(validPalindrome("abc")) == 'false'
-
-
