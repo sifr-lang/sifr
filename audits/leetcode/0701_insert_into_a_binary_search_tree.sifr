@@ -49,7 +49,7 @@ class Node:
         self.neighbors = neighbors
         self.key = key
 
-def insertIntoBST(root: TreeNode | None, val: int) -> TreeNode | None:
+def insertIntoBST(own mut root: TreeNode | None, val: int) -> TreeNode | None:
     if not root:
         return TreeNode(val)
     if val > root.val:

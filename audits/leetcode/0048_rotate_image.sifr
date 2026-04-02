@@ -1,6 +1,6 @@
 # LeetCode 48: Rotate Image
 
-def rotate(matrix: list[list[int]]) -> None:
+def rotate(mut matrix: list[list[int]]) -> None:
     
     l, r = 0, len(matrix) - 1
     while l < r:

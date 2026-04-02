@@ -1,6 +1,6 @@
 # LeetCode 73: Set Matrix Zeroes
 
-def setZeroes(matrix: list[list[int]]) -> None:
+def setZeroes(mut matrix: list[list[int]]) -> None:
     # O(1)
     ROWS, COLS = len(matrix), len(matrix[0])
     rowZero = False

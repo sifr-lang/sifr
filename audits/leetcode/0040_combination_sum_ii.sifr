@@ -1,6 +1,6 @@
 # LeetCode 40: Combination Sum Ii
 
-def combinationSum2(candidates: list[int], target: int) -> list[list[int]]:
+def combinationSum2(mut candidates: list[int], target: int) -> list[list[int]]:
     candidates.sort()
 
     res = []

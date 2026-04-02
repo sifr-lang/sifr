@@ -1,6 +1,6 @@
 # LeetCode 274: H Index
 
-def hIndex(citations: list[int]) -> int:
+def hIndex(mut citations: list[int]) -> int:
     length = len(citations)
     citations.sort()
     for i in range(length):

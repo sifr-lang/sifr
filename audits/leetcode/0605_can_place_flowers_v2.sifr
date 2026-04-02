@@ -1,7 +1,7 @@
 # LeetCode 605: Can Place Flowers
 # v2: Sifr-idiomatic with safe indexing
 
-def canPlaceFlowers(flowerbed: list[int], n: int) -> bool:
+def canPlaceFlowers(mut flowerbed: list[int], n: int) -> bool:
     count: int = 0
     for i in range(len(flowerbed)):
         val: int | None = flowerbed[i]

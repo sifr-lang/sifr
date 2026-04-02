@@ -1,6 +1,6 @@
 # LeetCode 1254: Number Of Closed Islands
 
-def closedIsland(grid: list[list[int]]) -> int:
+def closedIsland(mut grid: list[list[int]]) -> int:
     r = len(grid)
     c = len(grid[0])
     seen = set()

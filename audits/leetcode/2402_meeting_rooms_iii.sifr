@@ -1,29 +1,47 @@
 # LeetCode 2402: Meeting Rooms Iii
 
-def mostBooked(n: int, meetings: list[list[int]]) -> int:
-    meetings.sort()
+def unwrapInt(value: int | None) -> int:
+    if value is None:
+        return 0
+    return value
 
-    available = [i for i in range(n)]
-    used = []
+def mostBooked(n: int, mut meetings: list[list[int]]) -> int:
+    meetings.sort()
+    room_available_at = [0] * n
     count = [0] * n
 
-    for start, end in meetings:
-        while used and start >= used[0][0]:
-            _, room = heapq.heappop(used)
-            heapq.heappush(available, room)
+    for meeting in meetings:
+        start = unwrapInt(meeting[0])
+        end = unwrapInt(meeting[1])
 
-        if not available:
-            end_time, room = heapq.heappop(used)
-            end = end_time + (end - start)
-            heapq.heappush(available, room)
+        selected = -1
+        for room in range(n):
+            if unwrapInt(room_available_at[room]) <= start:
+                selected = room
+                break
 
-        room = heapq.heappop(available)
-        heapq.heappush(used, (end, room))
-        count[room] += 1
+        if selected == -1:
+            selected = 0
+            for room in range(1, n):
+                room_time = unwrapInt(room_available_at[room])
+                selected_time = unwrapInt(room_available_at[selected])
+                if room_time < selected_time:
+                    selected = room
 
-    return count.index(max(count))
+        begin = start
+        selected_time = unwrapInt(room_available_at[selected])
+        if selected_time > begin:
+            begin = selected_time
+
+        room_available_at[selected] = begin + (end - start)
+        count[selected] = unwrapInt(count[selected]) + 1
+
+    best = 0
+    for room in range(1, n):
+        if unwrapInt(count[room]) > unwrapInt(count[best]):
+            best = room
+    return best
 
 def main():
     assert mostBooked(2, [[0, 10], [1, 5], [2, 7], [3, 4]]) == 0
     assert mostBooked(3, [[1, 20], [2, 10], [3, 5], [4, 9], [6, 8]]) == 1
-

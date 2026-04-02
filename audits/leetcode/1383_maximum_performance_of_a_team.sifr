@@ -1,25 +1,34 @@
 # LeetCode 1383: Maximum Performance Of A Team
 
+def unwrapInt(value: int | None) -> int:
+    if value is None:
+        return 0
+    return value
+
 def maxPerformance(n: int, speed: list[int], efficiency: list[int], k: int) -> int:
     mod = 10 ** 9 + 7
-    eng = []
-    for eff, spd in zip(efficiency, speed):
-        eng.append([eff, spd])
-    eng.sort(reverse = True)
+    eng: list[list[int]] = []
+    for i in range(len(speed)):
+        eng.append([unwrapInt(efficiency[i]), unwrapInt(speed[i])])
+    eng.sort()
+    eng.reverse()
     
-    res, speed = 0, 0
-    minHeap = []
+    res = 0
+    speed_sum = 0
+    minHeap: list[int] = []
     
-    for eff, spd in eng:
+    for pair in eng:
+        eff = unwrapInt(pair[0])
+        spd = unwrapInt(pair[1])
         if len(minHeap) == k:
-            speed -= heapq.heappop(minHeap)
-        speed += spd
+            popped = heapq.heappop(minHeap)
+            speed_sum -= unwrapInt(popped)
+        speed_sum += spd
         heapq.heappush(minHeap, spd)
-        res = max(res, eff * speed)
+        res = max(res, eff * speed_sum)
     return res % mod
 
 def main():
     assert maxPerformance(6, [2, 10, 3, 1, 5, 8], [5, 4, 3, 9, 7, 2], 2) == 60
     assert maxPerformance(6, [2, 10, 3, 1, 5, 8], [5, 4, 3, 9, 7, 2], 3) == 68
     assert maxPerformance(6, [2, 10, 3, 1, 5, 8], [5, 4, 3, 9, 7, 2], 4) == 72
-
