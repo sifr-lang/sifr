@@ -1,8 +1,15 @@
 # LeetCode 2017: Grid Game
 
-def gridGame(grid):
-    result = float("inf")
-    left, right = 0, sum(grid[0])
+def gridGame(grid: list[list[int]]) -> int:
+    if len(grid) < 2:
+        return 0
+    if len(grid[0]) == 0:
+        return 0
+    result = 1 << 60
+    left = 0
+    right = 0
+    for v in grid[0]:
+        right += v
 
     for a, b in zip(grid[0], grid[1]):
         right -= a
@@ -14,4 +21,3 @@ def main():
     assert gridGame([[2, 5, 4], [1, 5, 1]]) == 4
     assert gridGame([[3, 3, 1], [8, 5, 2]]) == 4
     assert gridGame([[1, 3, 1, 15], [1, 3, 3, 1]]) == 7
-

@@ -23,6 +23,23 @@
 - targeted checkpoint artifact: `verification/leetcode/signature_adaptation_batch1_checkpoint_20260402.txt`
 - result for this checkpoint subset: `8/8` check pass, `8/8` run pass
 
+## Reviewer Follow-Up: Main Example `2017_grid_game` (2026-04-02)
+
+- reviewer artifact: `reviews/signature-adaptation-grid-game-review-20260402-cli.md`
+- accepted scope adjustment:
+  - kept typed signature and inf-style sentinel (`1 << 60`)
+  - kept explicit sum loop
+- attempted recommendation to drop guard clauses, but this currently regresses fixture compile behavior under Sifr:
+  - without guards, `check` and `run` failed with optional-row narrowing and `Option<Vec<_>>` codegen mismatch
+  - guard shape is retained for current compiler compatibility in this phase
+
+## Current Phase Snapshot (Loop Rerun, 2026-04-02)
+
+- source artifact: `verification/leetcode/signature_adaptation_targeted_results_20260402_loop.md`
+- check pass: `21/36`
+- run pass: `21/36`
+- residual fixtures: `15`
+
 ## Cleared Fixtures (check + run)
 
 - `0034_find_first_and_last_position_of_element_in_sorted_array`
