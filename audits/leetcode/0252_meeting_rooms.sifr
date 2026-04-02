@@ -1,7 +1,7 @@
 # LeetCode 252: Meeting Rooms
 
-def canAttendMeetings(intervals):
-    intervals.sort(key=lambda i: i[0])
+def canAttendMeetings(mut intervals: list[list[int]]) -> bool:
+    intervals.sort()
 
     for i in range(1, len(intervals)):
         i1 = intervals[i - 1]
@@ -14,5 +14,3 @@ def canAttendMeetings(intervals):
 def main():
     assert str(canAttendMeetings([[0,30],[5,10],[15,20]])) == 'false'
     assert str(canAttendMeetings([[7,10],[2,4]])) == 'true'
-
-

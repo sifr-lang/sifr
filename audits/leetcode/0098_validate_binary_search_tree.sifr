@@ -49,8 +49,10 @@ class Node:
         self.neighbors = neighbors
         self.key = key
 
-def isValidBST(root: TreeNode) -> bool:
-    def valid(node, left, right):
+def isValidBST(root: TreeNode | None) -> bool:
+    LIMIT = 1 << 60
+
+    def valid(node: TreeNode | None, left: int, right: int) -> bool:
         if not node:
             return True
         if not (left < node.val < right):
@@ -60,7 +62,7 @@ def isValidBST(root: TreeNode) -> bool:
             node.right, node.val, right
         )
 
-    return valid(root, float("-inf"), float("inf"))
+    return valid(root, -LIMIT, LIMIT)
 
 def main():
     assert isValidBST(TreeNode(2, TreeNode(1, None, None), TreeNode(3, None, None))) == True

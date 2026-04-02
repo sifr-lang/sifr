@@ -1,34 +1,61 @@
 # LeetCode 1239: Maximum Length Of A Concatenated String With Unique Characters
 
+def charBit(ch: str) -> int:
+    alphabet = "abcdefghijklmnopqrstuvwxyz"
+    i = 0
+    while i < len(alphabet):
+        letter = alphabet[i]
+        if letter == ch:
+            return i
+        i += 1
+    return -1
+
+
+def bitCount(mut mask: int) -> int:
+    count = 0
+    while mask > 0:
+        if mask % 2 == 1:
+            count += 1
+        mask = mask // 2
+    return count
+
+
 def maxLength(arr: list[str]) -> int:
-    charSet = set()
 
-    def overlap(charSet, s):
-        c = Counter(charSet) + Counter(s)
-        return max(c.values()) > 1
-        # prev = set()
-        # for c in s:
-        #     if c in charSet or c in prev:
-        #         return True
-        #     prev.add(c)
-        # return False
+    masks: list[int] = [0]
+    best = 0
 
-    def backtrack(i):
-        if i == len(arr):
-            return len(charSet)
-        res = 0
-        if not overlap(charSet, arr[i]):
-            for c in arr[i]:
-                charSet.add(c)
-            res = backtrack(i + 1)
-            for c in arr[i]:
-                charSet.remove(c)
-        return max(res, backtrack(i + 1))  # dont concatenate arr[i]
+    for word in arr:
+        word_mask = 0
+        valid_word = True
+        for ch in word:
+            bit = charBit(ch)
+            if bit < 0:
+                valid_word = False
+                break
+            bit_mask = 1 << bit
+            if (word_mask & bit_mask) != 0:
+                valid_word = False
+                break
+            word_mask = word_mask | bit_mask
+        if not valid_word:
+            continue
 
-    return backtrack(0)
+        existing = len(masks)
+        i = 0
+        while i < existing:
+            base_mask = masks[i]
+            if (base_mask & word_mask) == 0:
+                combined = base_mask | word_mask
+                masks.append(combined)
+                combined_len = bitCount(combined)
+                if combined_len > best:
+                    best = combined_len
+            i += 1
+
+    return best
 
 def main():
     assert maxLength(['un', 'iq', 'ue']) == 4
     assert maxLength(['cha', 'r', 'act', 'ers']) == 6
     assert maxLength(['abcdefghijklmnopqrstuvwxyz']) == 26
-

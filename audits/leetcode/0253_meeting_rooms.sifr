@@ -1,12 +1,27 @@
 # LeetCode 253: Meeting Rooms
 
-def minMeetingRooms(intervals):
-    start = sorted([i[0] for i in intervals])
-    end = sorted([i[1] for i in intervals])
+def minMeetingRooms(intervals: list[list[int]]) -> int:
+    start: list[int] = []
+    end: list[int] = []
+    for interval in intervals:
+        if len(interval) < 2:
+            continue
+        start_val = interval[0]
+        end_val = interval[1]
+        resolved_start = 0
+        if start_val is not None:
+            resolved_start = start_val
+        resolved_end = 0
+        if end_val is not None:
+            resolved_end = end_val
+        start.append(resolved_start)
+        end.append(resolved_end)
+    start.sort()
+    end.sort()
 
     res, count = 0, 0
     s, e = 0, 0
-    while s < len(intervals):
+    while s < len(start) and e < len(end):
         if start[s] < end[e]:
             s += 1
             count += 1
@@ -19,4 +34,3 @@ def minMeetingRooms(intervals):
 def main():
     assert minMeetingRooms([[0, 30], [5, 10], [15, 20]]) == 2
     assert minMeetingRooms([[7, 10], [2, 4]]) == 1
-

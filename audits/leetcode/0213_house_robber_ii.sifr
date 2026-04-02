@@ -1,14 +1,28 @@
 # LeetCode 213: House Robber Ii
 
 def rob(nums: list[int]) -> int:
-    return max(nums[0], helper(nums[1:]), helper(nums[:-1]))
+    if len(nums) == 0:
+        return 0
+    if len(nums) == 1:
+        return nums[0]
+    first = nums[0]
+    left = helper(nums[1:])
+    right = helper(nums[:-1])
+    best = left
+    if right > best:
+        best = right
+    if first > best:
+        best = first
+    return best
 
 
-def helper(nums):
+def helper(nums: list[int]) -> int:
     rob1, rob2 = 0, 0
 
     for n in nums:
-        newRob = max(rob1 + n, rob2)
+        newRob = rob2
+        if rob1 + n > newRob:
+            newRob = rob1 + n
         rob1 = rob2
         rob2 = newRob
     return rob2
@@ -16,5 +30,3 @@ def helper(nums):
 def main():
     assert str(rob([2,3,2])) == '3'
     assert str(rob([1,2,3,1])) == '4'
-
-
