@@ -1,7 +1,7 @@
 use crate::helpers::collect_mutated_vars_with_sigs;
 use crate::{
-    is_simple_stmt_candidate, try_lower_simple_stmt_with_scope_result, ClassScope, RustEmitter,
-    RustStmt, ScopeContext,
+    is_simple_stmt_candidate, try_lower_simple_stmt_with_scope_result_and_bindings, ClassScope,
+    RustEmitter, RustStmt, ScopeContext,
 };
 use sifr_hir::{HirFunction, HirStmt};
 
@@ -20,11 +20,13 @@ impl RustEmitter {
         let saved_mutated_vars = self.mutated_vars.clone();
         let saved_borrowed_params = self.borrowed_params.clone();
         let saved_mut_borrowed_params = self.mut_borrowed_params.clone();
+        let saved_local_binding_types = self.local_binding_types.clone();
 
         self.current_return_type = Some(func.return_type.clone());
         self.mutated_vars = collect_mutated_vars_with_sigs(&func.body, &self.func_signatures);
         self.borrowed_params.clear();
         self.mut_borrowed_params.clear();
+        self.local_binding_types.clear();
         for param in &func.params {
             if param.convention.is_shared_borrow()
                 && param.ty.ownership() != sifr_type_system::OwnershipKind::Copy
@@ -36,7 +38,10 @@ impl RustEmitter {
             {
                 self.mut_borrowed_params.insert(param.name.clone());
             }
+            self.local_binding_types
+                .insert(param.name.clone(), param.ty.clone());
         }
+        self.register_local_body_binding_types(&func.body);
 
         let scope_ctx = ScopeContext {
             function_return_type: self.current_return_type.clone(),
@@ -52,10 +57,11 @@ impl RustEmitter {
             if is_simple_stmt_candidate(stmt) {
                 self.lowering_stats.stmt_candidate_total += 1;
             }
-            match try_lower_simple_stmt_with_scope_result(
+            match try_lower_simple_stmt_with_scope_result_and_bindings(
                 stmt,
                 &self.mutated_vars,
                 &self.borrowed_params,
+                &self.local_binding_types,
                 &scope_ctx,
             ) {
                 Ok(Some(lowered)) => {
@@ -91,6 +97,7 @@ impl RustEmitter {
         self.mutated_vars = saved_mutated_vars;
         self.borrowed_params = saved_borrowed_params;
         self.mut_borrowed_params = saved_mut_borrowed_params;
+        self.local_binding_types = saved_local_binding_types;
         lowered_body
     }
 }

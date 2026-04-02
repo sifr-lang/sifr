@@ -1048,6 +1048,9 @@ struct RustEmitter {
     /// Populated per-function from params and locals with Callable types.
     /// Used to emit correct &arg/&mut arg/arg for Callable-typed variable calls.
     callable_var_conventions: HashMap<String, Vec<(Type, ParamConvention)>>,
+    /// Map from local binding name -> declared type for the active function-like scope.
+    /// Used to preserve assignment coercions that depend on the target local type.
+    local_binding_types: HashMap<String, Type>,
     /// Stack used to capture structured statement emission as IR nodes.
     stmt_capture_stack: Vec<Vec<RustStmt>>,
     /// Recursion guard for non-structured emitter paths.
@@ -1114,6 +1117,7 @@ impl RustEmitter {
             try_closure_option_wrap: Vec::new(),
             try_closure_error_type: Vec::new(),
             callable_var_conventions: HashMap::new(),
+            local_binding_types: HashMap::new(),
             stmt_capture_stack: Vec::new(),
             lowering_stats: LoweringStats::default(),
         }
@@ -1204,10 +1208,11 @@ impl RustEmitter {
         let should_bypass_simple_lowering =
             matches!(stmt, HirStmt::Let { ty, .. } if self.type_contains_generic_class(ty));
         if !should_bypass_simple_lowering {
-            if let Some(lowered_stmts) = try_lower_simple_stmt_with_scope_result(
+            if let Some(lowered_stmts) = try_lower_simple_stmt_with_scope_result_and_bindings(
                 stmt,
                 &self.mutated_vars,
                 &self.borrowed_params,
+                &self.local_binding_types,
                 &scope_ctx,
             )? {
                 self.lowering_stats.expr_candidate_total += 1;
@@ -1336,9 +1341,17 @@ impl RustEmitter {
 
         if let HirStmt::Assign { name, value } = stmt {
             let lowered_value = if let Some(lowered) = self.lower_rendered_expr_for_ir(value)? {
-                lowered
+                if let Some(target_ty) = self.local_binding_types.get(name).cloned() {
+                    self.coerce_local_value_for_target_type_for_ir(&target_ty, value, lowered)?
+                } else {
+                    lowered
+                }
             } else if let Some(lowered) = self.lower_stmt_expr_for_ir(value)? {
-                lowered
+                if let Some(target_ty) = self.local_binding_types.get(name).cloned() {
+                    self.coerce_local_value_for_target_type_for_ir(&target_ty, value, lowered)?
+                } else {
+                    lowered
+                }
             } else {
                 return Ok(false);
             };

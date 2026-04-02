@@ -15,7 +15,7 @@ use sifr_hir::{
     HirExceptHandler, HirExpr, HirFStringPart, HirFunction, HirPattern, HirStmt, MethodKind,
 };
 use sifr_type_system::{FunctionType, Type};
-use std::collections::HashSet;
+use std::collections::{HashMap, HashSet};
 
 pub(crate) fn is_simple_stmt_candidate(stmt: &HirStmt) -> bool {
     match stmt {
@@ -92,6 +92,7 @@ pub struct SimpleStmtLoweringCtx<'a> {
 struct SimpleStmtBindings<'a> {
     mutated_vars: &'a HashSet<String>,
     borrowed_params: &'a HashSet<String>,
+    local_binding_types: &'a HashMap<String, Type>,
 }
 
 /// Lowers statement variants that are context-light and safe to convert
@@ -106,7 +107,13 @@ pub fn try_lower_simple_stmt(
         in_loop_with_else,
         ..ScopeContext::default()
     };
-    try_lower_simple_stmt_with_scope(stmt, mutated_vars, borrowed_params, &scope_ctx)
+    try_lower_simple_stmt_with_scope_and_bindings(
+        stmt,
+        mutated_vars,
+        borrowed_params,
+        &HashMap::new(),
+        &scope_ctx,
+    )
 }
 
 pub(crate) fn try_lower_simple_stmt_with_scope(
@@ -115,11 +122,28 @@ pub(crate) fn try_lower_simple_stmt_with_scope(
     borrowed_params: &HashSet<String>,
     scope_ctx: &ScopeContext,
 ) -> Option<Vec<RustStmt>> {
-    try_lower_simple_stmt_with_ctx(
+    try_lower_simple_stmt_with_scope_and_bindings(
+        stmt,
+        mutated_vars,
+        borrowed_params,
+        &HashMap::new(),
+        scope_ctx,
+    )
+}
+
+pub(crate) fn try_lower_simple_stmt_with_scope_and_bindings(
+    stmt: &HirStmt,
+    mutated_vars: &HashSet<String>,
+    borrowed_params: &HashSet<String>,
+    local_binding_types: &HashMap<String, Type>,
+    scope_ctx: &ScopeContext,
+) -> Option<Vec<RustStmt>> {
+    try_lower_simple_stmt_with_ctx_and_bindings(
         stmt,
         scope_ctx.in_loop_with_else,
         mutated_vars,
         borrowed_params,
+        local_binding_types,
         SimpleStmtLoweringCtx {
             return_type: scope_ctx.function_return_type.as_ref(),
             in_display_impl: scope_ctx.in_display_impl,
@@ -135,12 +159,29 @@ pub(crate) fn try_lower_simple_stmt_with_scope_result(
     borrowed_params: &HashSet<String>,
     scope_ctx: &ScopeContext,
 ) -> Result<Option<Vec<RustStmt>>, CodegenError> {
-    validate_scope_context(scope_ctx)?;
-    validate_stmt_lowering_shape(stmt)?;
-    Ok(try_lower_simple_stmt_with_scope(
+    try_lower_simple_stmt_with_scope_result_and_bindings(
         stmt,
         mutated_vars,
         borrowed_params,
+        &HashMap::new(),
+        scope_ctx,
+    )
+}
+
+pub(crate) fn try_lower_simple_stmt_with_scope_result_and_bindings(
+    stmt: &HirStmt,
+    mutated_vars: &HashSet<String>,
+    borrowed_params: &HashSet<String>,
+    local_binding_types: &HashMap<String, Type>,
+    scope_ctx: &ScopeContext,
+) -> Result<Option<Vec<RustStmt>>, CodegenError> {
+    validate_scope_context(scope_ctx)?;
+    validate_stmt_lowering_shape(stmt)?;
+    Ok(try_lower_simple_stmt_with_scope_and_bindings(
+        stmt,
+        mutated_vars,
+        borrowed_params,
+        local_binding_types,
         scope_ctx,
     ))
 }
@@ -495,9 +536,28 @@ pub(crate) fn try_lower_simple_stmt_with_ctx(
     borrowed_params: &HashSet<String>,
     ctx: SimpleStmtLoweringCtx<'_>,
 ) -> Option<Vec<RustStmt>> {
+    try_lower_simple_stmt_with_ctx_and_bindings(
+        stmt,
+        in_loop_with_else,
+        mutated_vars,
+        borrowed_params,
+        &HashMap::new(),
+        ctx,
+    )
+}
+
+pub(crate) fn try_lower_simple_stmt_with_ctx_and_bindings(
+    stmt: &HirStmt,
+    in_loop_with_else: bool,
+    mutated_vars: &HashSet<String>,
+    borrowed_params: &HashSet<String>,
+    local_binding_types: &HashMap<String, Type>,
+    ctx: SimpleStmtLoweringCtx<'_>,
+) -> Option<Vec<RustStmt>> {
     let bindings = SimpleStmtBindings {
         mutated_vars,
         borrowed_params,
+        local_binding_types,
     };
     match stmt {
         HirStmt::Expr { expr } => try_lower_expr_stmt(expr),
@@ -520,9 +580,15 @@ pub(crate) fn try_lower_simple_stmt_with_ctx(
         HirStmt::Assign { name, value }
             if try_lower_simple_assign_value(value, bindings.borrowed_params).is_some() =>
         {
+            let lowered_value = try_lower_simple_assign_value(value, bindings.borrowed_params)?;
+            let lowered_value = coerce_simple_assign_value_for_target_type(
+                bindings.local_binding_types.get(name),
+                value,
+                lowered_value,
+            );
             Some(vec![RustStmt::Assign {
                 target: crate::RustExpr::Ident(name.clone()),
-                value: try_lower_simple_assign_value(value, bindings.borrowed_params)?,
+                value: lowered_value,
             }])
         }
         HirStmt::AugAssign { name, op, value } => {
@@ -712,6 +778,29 @@ pub(crate) fn try_lower_simple_stmt_with_ctx(
             }
         }
         _ => None,
+    }
+}
+
+fn coerce_simple_assign_value_for_target_type(
+    target_ty: Option<&Type>,
+    value: &HirExpr,
+    lowered_value: RustExpr,
+) -> RustExpr {
+    let Some(target_ty) = target_ty else {
+        return lowered_value;
+    };
+    if !crate::helpers::is_option_type(target_ty) {
+        return lowered_value;
+    }
+    if matches!(value, HirExpr::NoneLiteral) || matches!(value.ty(), Type::None) {
+        return RustExpr::Literal(RustLiteral::None);
+    }
+    if crate::helpers::is_option_type(value.ty()) {
+        return lowered_value;
+    }
+    RustExpr::FnCall {
+        func: Box::new(RustExpr::Path(vec!["Some".to_string()])),
+        args: vec![lowered_value],
     }
 }
 

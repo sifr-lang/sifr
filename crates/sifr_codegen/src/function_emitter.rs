@@ -1,9 +1,12 @@
-use crate::helpers::collect_reassigned_vars;
 use crate::{
     body_contains_yield, collect_mutated_vars_with_sigs, RustEmitter, RustExpr, RustItem,
     RustLiteral, RustParam, RustStmt, RustType, RustTypeParam, Visibility,
 };
-use sifr_hir::{HirFunction, HirParam, HirStmt};
+use crate::{
+    helpers::collect_reassigned_vars,
+    hir_analysis::traversal::{self, TraversalConfig},
+};
+use sifr_hir::{HirExpr, HirFunction, HirParam, HirStmt};
 use sifr_type_system::{OwnershipKind, ParamConvention, Type};
 
 impl RustEmitter {
@@ -50,11 +53,32 @@ impl RustEmitter {
             self.callable_var_conventions
                 .insert(name.to_string(), conv_list);
         }
+        self.local_binding_types
+            .insert(name.to_string(), ty.clone());
     }
 
     fn register_function_scope_params(&mut self, params: &[HirParam]) {
         for param in params {
             self.register_function_scope_binding(&param.name, &param.ty, param.convention);
+        }
+    }
+
+    pub(super) fn register_local_body_binding_types(&mut self, body: &[HirStmt]) {
+        let mut bindings = Vec::new();
+        let mut on_stmt = |stmt: &HirStmt| {
+            if let HirStmt::Let { name, ty, .. } = stmt {
+                bindings.push((name.clone(), ty.clone()));
+            }
+        };
+        let mut on_expr = |_expr: &HirExpr| {};
+        traversal::walk_stmts(
+            body,
+            TraversalConfig::LOCAL_SCOPE_ONLY,
+            &mut on_stmt,
+            &mut on_expr,
+        );
+        for (name, ty) in bindings {
+            self.local_binding_types.entry(name).or_insert(ty);
         }
     }
 
@@ -115,12 +139,14 @@ impl RustEmitter {
         let saved_borrowed_params = self.borrowed_params.clone();
         let saved_mut_borrowed_params = self.mut_borrowed_params.clone();
         let saved_callable_var_conventions = self.callable_var_conventions.clone();
+        let saved_local_binding_types = self.local_binding_types.clone();
         let nested_binding_mutable = saved_mutated_vars.contains(&func.name);
 
         self.current_return_type = Some(func.return_type.clone());
         self.mutated_vars = nested_mutated_vars;
         self.borrowed_params.clear();
         self.mut_borrowed_params.clear();
+        self.local_binding_types.clear();
         self.callable_var_conventions
             .clone_from(&post_stmt_callable_conventions);
         for param in &func.params {
@@ -135,6 +161,7 @@ impl RustEmitter {
         for capture in &recursive_captures {
             self.register_function_scope_binding(&capture.name, &capture.ty, capture.convention);
         }
+        self.register_local_body_binding_types(&func.body);
 
         let mut lowered_body = Vec::new();
         for body_stmt in &func.body {
@@ -149,7 +176,8 @@ impl RustEmitter {
         self.borrowed_params = saved_borrowed_params;
         self.mut_borrowed_params = saved_mut_borrowed_params;
         self.callable_var_conventions
-            .clone_from(&post_stmt_callable_conventions);
+            .clone_from(&saved_callable_var_conventions);
+        self.local_binding_types = saved_local_binding_types;
 
         let lowered_stmt = if is_recursive {
             let params = func
@@ -475,13 +503,16 @@ impl RustEmitter {
         let saved_borrowed_params = self.borrowed_params.clone();
         let saved_mut_borrowed_params = self.mut_borrowed_params.clone();
         let saved_callable_var_conventions = self.callable_var_conventions.clone();
+        let saved_local_binding_types = self.local_binding_types.clone();
 
         self.current_return_type = Some(func.return_type.clone());
         self.mutated_vars = collect_mutated_vars_with_sigs(&func.body, &self.func_signatures);
         self.borrowed_params.clear();
         self.mut_borrowed_params.clear();
         self.callable_var_conventions.clear();
+        self.local_binding_types.clear();
         self.register_function_scope_params(&func.params);
+        self.register_local_body_binding_types(&func.body);
 
         let visibility = if !test_mode && module_public && func.name != "main" {
             Visibility::Pub
@@ -578,5 +609,6 @@ impl RustEmitter {
         self.borrowed_params = saved_borrowed_params;
         self.mut_borrowed_params = saved_mut_borrowed_params;
         self.callable_var_conventions = saved_callable_var_conventions;
+        self.local_binding_types = saved_local_binding_types;
     }
 }

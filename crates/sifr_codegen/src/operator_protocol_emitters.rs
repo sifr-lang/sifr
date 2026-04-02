@@ -1,6 +1,6 @@
 use crate::{
-    try_lower_simple_stmt_with_scope_result, ClassScope, RustEmitter, RustExpr, RustItem,
-    RustParam, RustStmt, RustType, RustTypeParam, ScopeContext, Visibility,
+    try_lower_simple_stmt_with_scope_result_and_bindings, ClassScope, RustEmitter, RustExpr,
+    RustItem, RustParam, RustStmt, RustType, RustTypeParam, ScopeContext, Visibility,
 };
 use sifr_hir::{HirClass, HirExpr, HirFunction, HirModule, HirStmt};
 use sifr_type_system::Type;
@@ -414,10 +414,11 @@ impl RustEmitter {
         };
         let mut lowered = Vec::new();
         for stmt in body {
-            match try_lower_simple_stmt_with_scope_result(
+            match try_lower_simple_stmt_with_scope_result_and_bindings(
                 stmt,
                 &self.mutated_vars,
                 &self.borrowed_params,
+                &self.local_binding_types,
                 &scope_ctx,
             ) {
                 Ok(Some(lowered_stmt)) => lowered.extend(
