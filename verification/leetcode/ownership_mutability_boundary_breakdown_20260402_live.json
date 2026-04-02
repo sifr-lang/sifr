@@ -1,0 +1,103 @@
+{
+  "name": "ownership_mutability_boundary_breakdown_20260402_live",
+  "ownership_category_count": 47,
+  "parameter_frequency": {
+    "a": 1,
+    "board": 1,
+    "candidates": 1,
+    "citations": 1,
+    "columnNumber": 1,
+    "digits": 1,
+    "flowerbed": 2,
+    "grid": 2,
+    "head": 1,
+    "intervals": 1,
+    "k": 1,
+    "left": 1,
+    "matrix": 2,
+    "meetings": 1,
+    "n": 2,
+    "node": 4,
+    "nums": 11,
+    "nums1": 2,
+    "people": 1,
+    "points": 1,
+    "postorder": 1,
+    "potions": 1,
+    "root": 2,
+    "s": 2,
+    "speed": 1,
+    "students": 1,
+    "tokens": 1
+  },
+  "source_taxonomy": "verification/leetcode/full_corpus_failure_taxonomy_20260402_live.json",
+  "subcategories": {
+    "borrowed_parameter_escape_return": {
+      "count": 2,
+      "fixtures": [
+        "0006_zigzag_conversion",
+        "0075_sort_colors"
+      ]
+    },
+    "borrowed_parameter_escape_store": {
+      "count": 4,
+      "fixtures": [
+        "0002_add_two_numbers",
+        "0141_linked_list_cycle",
+        "0160_intersection_of_two_linked_lists",
+        "0234_palindrome_linked_list"
+      ]
+    },
+    "immutable_parameter_mutation": {
+      "count": 30,
+      "fixtures": [
+        "0016_3sum_closest",
+        "0040_combination_sum_ii",
+        "0046_permutations",
+        "0048_rotate_image",
+        "0066_plus_one",
+        "0073_set_matrix_zeroes",
+        "0088_merge_sorted_array",
+        "0106_construct_binary_tree_from_inorder_and_postorder_traversal",
+        "0179_largest_number",
+        "0274_H_index",
+        "0435_non_overlapping_intervals",
+        "0452_minimum_number_of_arrows_to_burst_balloons",
+        "0605_can_place_flowers",
+        "0605_can_place_flowers_v2",
+        "0669_trim_a_binary_search_tree",
+        "0701_insert_into_a_binary_search_tree",
+        "0881_boats_to_save_people",
+        "0948_bag_of_tokens",
+        "1020_number_of_enclaves",
+        "1254_number_of_closed_islands",
+        "1498_number_of_subsequences_that_satisfy_the_given_sum_condition",
+        "1700_number_of_students_unable_to_eat_lunch",
+        "1838_frequency_of_the_most_frequent_element",
+        "1958_check_if_move_is_legal",
+        "1968_array_with_elements_not_equal_to_average_of_neighbors",
+        "1984_minimum_difference_between_highest_and_lowest_of_k_scores",
+        "2300_successful_pairs_of_spells_and_potions",
+        "2402_meeting_rooms_iii",
+        "2616_minimize_the_maximum_difference_of_pairs",
+        "2971_find_polygon_with_the_largest_perimeter"
+      ]
+    },
+    "immutable_parameter_reassignment": {
+      "count": 11,
+      "fixtures": [
+        "0005_longest_palindromic_substring",
+        "0067_add_binary",
+        "0086_partition_list",
+        "0168_excel_sheet_column_title",
+        "0189_rotate_array",
+        "0191_number_of_1_bits",
+        "0263_ugly_number",
+        "0312_burst_balloons",
+        "1383_maximum_performance_of_a_team",
+        "1888_minimum_number_of_flips_to_make_the_binary_string_alternating",
+        "2215_find_the_difference_of_two_arrays"
+      ]
+    }
+  }
+}
