@@ -1,6 +1,6 @@
 # LeetCode 605: Can Place Flowers
 
-def canPlaceFlowers(flowerbed: list[int], n: int) -> bool:
+def canPlaceFlowers(mut flowerbed: list[int], n: int) -> bool:
     count: int = 0
     for i in range(len(flowerbed)):
         if flowerbed[i] == 0:

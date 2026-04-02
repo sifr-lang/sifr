@@ -199,6 +199,13 @@ Latest execution note (`2026-03-11`):
 - Targeted six-case rerun artifact: `verification/leetcode/phase31_m31c_wave1_results.json`.
 - Measured outcome for that slice: `PASS=1`, `CHECK_ERROR=5`, `RUN_ERROR=0`, with `0007_reverse_integer` now passing and `0502_ipo` advanced past the original missing-stdlib blocker.
 
+Ownership/mutability boundary closure update (`2026-04-02`):
+- Analysis and execution ledger: `issues/ownership-mutability-boundary-root-cause-2026-04-02.md`.
+- Targeted post-fix artifact: `verification/leetcode/ownership_mutability_boundary_targeted_results_20260402_post_fix.md`.
+- Full-corpus rerun artifact: `verification/leetcode/full_corpus_current_results_20260402_live_after_ownership_boundary_closure.json`.
+- Post-closure breakdown artifact: `verification/leetcode/ownership_mutability_boundary_breakdown_20260402_live_after_closure.json`.
+- Outcome: ownership-category first-diagnostic count reduced to `0` in the corpus rerun; residual failures are secondary non-ownership defects.
+
 - Planned follow-up milestones:
   - `m31_a_optional_narrowing_core`
   - `m31_b_destructuring_target_lowering`

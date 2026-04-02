@@ -9,7 +9,7 @@ class ListNode:
         self.next = next
 
 
-def listNodeToString(node: ListNode | None) -> str:
+def listNodeToString(own node: ListNode | None) -> str:
     if node is None:
         return "None"
     parts: list[str] = []
@@ -47,23 +47,24 @@ class Node:
         self.neighbors = neighbors
         self.key = key
 
-def partition(head: ListNode | None, x: int) -> ListNode | None:
-    less_head, bigger_head = ListNode(-1), ListNode(-1)
-    less_prev, bigger_prev = less_head, bigger_head
-    while head:
+def partition(mut head: ListNode | None, x: int) -> ListNode | None:
+    less_vals = []
+    bigger_vals = []
+    while head is not None:
         if head.val < x:
-            less_prev.next = head
-            less_prev = less_prev.next
+            less_vals.append(head.val)
         else:
-            bigger_prev.next = head
-            bigger_prev = bigger_prev.next
-
+            bigger_vals.append(head.val)
         head = head.next
 
-    less_prev.next = bigger_prev.next = None
-    less_prev.next = bigger_head.next
-
-    return less_head.next
+    values = less_vals + bigger_vals
+    result = None
+    i = len(values) - 1
+    while i >= 0:
+        value = values[i]
+        result = ListNode(value, result)
+        i -= 1
+    return result
 
 def main():
     assert listNodeToString(partition(ListNode(1, ListNode(4, ListNode(3, ListNode(2, ListNode(5, ListNode(2, None)))))), 3)) == listNodeToString(ListNode(1, ListNode(2, ListNode(2, ListNode(4, ListNode(3, ListNode(5, None)))))))

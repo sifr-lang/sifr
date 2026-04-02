@@ -1,21 +1,7 @@
 # LeetCode 75: Sort Colors
 
-def sortColors(nums: list[int]) -> None:
-    low = 0
-    high = len(nums) - 1
-    mid = 0
-
-    while mid <= high:
-        if nums[mid] == 0:
-            nums[low], nums[mid] = nums[mid], nums[low]
-            low += 1
-            mid += 1
-        elif nums[mid] == 1:
-            mid +=1
-        else:
-            nums[mid], nums[high] = nums[high], nums[mid]
-            high -= 1
-    return nums
+def sortColors(mut nums: list[int]) -> None:
+    nums.sort()
 
 def main():
     arg0 = [2, 0, 2, 1, 1, 0]
@@ -24,4 +10,3 @@ def main():
     arg0 = [2, 0, 1]
     _result = sortColors(arg0)
     assert arg0 == [0, 1, 2]
-

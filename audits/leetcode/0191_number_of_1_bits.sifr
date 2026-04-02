@@ -2,8 +2,9 @@
 
 def hammingWeight(n: int) -> int:
     res = 0
-    while n:
-        n &= n - 1
+    value = n
+    while value != 0:
+        value &= value - 1
         res += 1
     return res
 

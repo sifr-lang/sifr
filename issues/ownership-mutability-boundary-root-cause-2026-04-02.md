@@ -1,5 +1,15 @@
 # Ownership/Mutability Boundary Root-Cause Analysis
 
+Status: execution complete (ownership boundary adaptations landed on 2026-04-02)
+Execution evidence:
+- `verification/leetcode/ownership_mutability_boundary_targeted_results_20260402_post_fix.md`
+- `verification/leetcode/ownership_mutability_boundary_targeted_results_20260402_post_fix.json`
+- `verification/leetcode/full_corpus_current_results_20260402_live_after_ownership_boundary_closure.json`
+- `verification/leetcode/ownership_mutability_boundary_breakdown_20260402_live_after_closure.json`
+- `verification/leetcode/ownership_mutability_boundary_breakdown_20260402_live_after_closure.md`
+- `scripts/run_all_tests.sh --profile quick` (pass)
+- `scripts/run_all_tests.sh` (pass)
+
 Date: 2026-04-02
 Source run: `verification/leetcode/full_corpus_current_results_20260402_live.json`
 Source taxonomy: `verification/leetcode/full_corpus_failure_taxonomy_20260402_live.json`
@@ -179,3 +189,60 @@ Quality improvements (not semantic relaxations):
 `47/47` in this bucket are consistent with Sifr core principles for this rerun.
 Primary action is fixture/source adaptation plus diagnostic-quality improvements.
 No language-semantics broadening is warranted.
+
+## Execution Closure (2026-04-02)
+
+### Completed Work
+
+- Adapted all `47` ownership/mutability boundary fixtures listed in `verification/leetcode/ownership_mutability_boundary_breakdown_20260402_live.json`.
+- Applied explicit parameter contracts at the fixture boundary:
+  - `mut` for in-place collection/object mutation.
+  - `own` for borrowed escape-by-return/store helper boundaries.
+  - `own mut` for compound mutate+escape tree-root cases (`0669`, `0701`).
+  - local-copy rewrites for copy-type scalar rebinding cases (`left/right`, `columnNumber`, `k`, `n`).
+- Fixed the residual four ownership diagnostics found in the first post-fix pass (`0067`, `0088`, `1020`, `1700`).
+
+### Verification Outcome
+
+- Targeted ownership bucket rerun (`47` fixtures):
+  - check pass: `12/47`
+  - run pass: `7/47`
+  - remaining ownership-category diagnostics: `0`
+- Full corpus rerun (`411` fixtures):
+  - output: `verification/leetcode/full_corpus_current_results_20260402_live_after_ownership_boundary_closure.json`
+  - status counts: `PASS=134`, `NO_ORACLE=42`, `RUN_ERROR=13`, `CHECK_ERROR=222`
+  - post-closure ownership breakdown (`first emitted diagnostic`): `0`
+  - breakdown artifact: `verification/leetcode/ownership_mutability_boundary_breakdown_20260402_live_after_closure.json`
+- Interpretation:
+  - ownership/mutability boundary failures have been fully reclassified out of this bucket.
+  - residual failures are non-ownership secondary categories already predicted by this analysis.
+
+### Local Validation Gates
+
+- `scripts/run_all_tests.sh --profile quick`: pass
+- `scripts/run_all_tests.sh`: pass
+
+## Secondary Wave 1 Progress (2026-04-02)
+
+- Scope: non-ownership secondary check failures in the same 47-fixture cohort.
+- Artifacts:
+  - `verification/leetcode/ownership_mutability_boundary_check_results_20260402_wave1.json`
+  - `verification/leetcode/ownership_mutability_boundary_check_results_20260402_wave1.md`
+- Wave 1 check-only result:
+  - check pass improved from `12/47` to `24/47` (`+12`).
+  - ownership-boundary diagnostics remain `0`.
+- Wave 1 fixtures that now check-pass:
+  - `0075_sort_colors`
+  - `0189_rotate_array`
+  - `0086_partition_list`
+  - `0067_add_binary`
+  - `0066_plus_one`
+  - `0191_number_of_1_bits`
+  - `1020_number_of_enclaves`
+  - `1700_number_of_students_unable_to_eat_lunch`
+  - `0435_non_overlapping_intervals`
+  - `1383_maximum_performance_of_a_team`
+  - `2402_meeting_rooms_iii`
+  - `1958_check_if_move_is_legal`
+- Remaining notable hard cases in this wave include:
+  - run-stage failures (`0006`, `0048`, `0669`, `0701`, `1968`)

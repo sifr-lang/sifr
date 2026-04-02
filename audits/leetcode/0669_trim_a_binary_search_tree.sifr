@@ -49,7 +49,7 @@ class Node:
         self.neighbors = neighbors
         self.key = key
 
-def trimBST(root: TreeNode | None, low: int, high: int) -> TreeNode | None:
+def trimBST(own mut root: TreeNode | None, low: int, high: int) -> TreeNode | None:
     if not root:
         return None
 
