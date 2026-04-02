@@ -5,17 +5,13 @@ def gridGame(grid: list[list[int]]) -> int:
         return 0
     if len(grid[0]) == 0:
         return 0
-    top = grid[0]
-    bottom = grid[1]
-
-    right = 0
-    for v in top:
-        right += v
-    inf = 1 << 60
-    result = inf
+    result = 1 << 60
     left = 0
+    right = 0
+    for v in grid[0]:
+        right += v
 
-    for a, b in zip(top, bottom):
+    for a, b in zip(grid[0], grid[1]):
         right -= a
         result = min(result, max(left, right))
         left += b
