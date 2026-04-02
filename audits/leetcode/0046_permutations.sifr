@@ -1,23 +1,31 @@
 # LeetCode 46: Permutations
 
+def unwrapInt(value: int | None) -> int:
+    if value is None:
+        return 0
+    return value
+
 def permute(nums: list[int]) -> list[list[int]]:
     res = []
+    used = [False] * len(nums)
+    path = []
 
-    # base case
-    if len(nums) == 1:
-        return [nums[:]]  # nums[:] is a deep copy
+    def dfs():
+        if len(path) == len(nums):
+            res.append(path[:])
+            return
+        for i in range(len(nums)):
+            if used[i]:
+                continue
+            used[i] = True
+            path.append(unwrapInt(nums[i]))
+            dfs()
+            path.pop()
+            used[i] = False
 
-    for i in range(len(nums)):
-        n = nums.pop(0)
-        perms = permute(nums)
-
-        for perm in perms:
-            perm.append(n)
-        res.extend(perms)
-        nums.append(n)
+    dfs()
     return res
 
 def main():
     assert str(permute([1,2,3])) == '[[1, 2, 3], [1, 3, 2], [2, 1, 3], [2, 3, 1], [3, 1, 2], [3, 2, 1]]'
-
 

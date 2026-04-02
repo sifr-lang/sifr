@@ -1,6 +1,11 @@
 # LeetCode 2300: Successful Pairs Of Spells And Potions
 
-def successfulPairs(spells: list[int], potions: list[int], success: int) -> list[int]:
+def unwrapInt(value: int | None) -> int:
+    if value is None:
+        return 0
+    return value
+
+def successfulPairs(spells: list[int], mut potions: list[int], success: int) -> list[int]:
     pairs = []
     potions.sort()
     n = len(potions)
@@ -10,7 +15,7 @@ def successfulPairs(spells: list[int], potions: list[int], success: int) -> list
         
         while l <= r:
             m = (l + r) // 2
-            if spells[i] * potions[m] >= success:
+            if unwrapInt(spells[i]) * unwrapInt(potions[m]) >= success:
                 r = m - 1
             else:
                 l = m + 1
@@ -23,5 +28,4 @@ def successfulPairs(spells: list[int], potions: list[int], success: int) -> list
 
 def main():
     assert str(successfulPairs([5,1,3], [1,2,3,4,5], 7)) == '[4, 0, 3]'
-
 

@@ -1,18 +1,24 @@
 # LeetCode 948: Bag Of Tokens
 
-def bagOfTokensScore(tokens: list[int], power: int) -> int:
+def unwrapInt(value: int | None) -> int:
+    if value is None:
+        return 0
+    return value
+
+def bagOfTokensScore(mut tokens: list[int], power: int) -> int:
     res = score = 0
     tokens.sort()
 
     l, r = 0, len(tokens) - 1
+    current_power = power
     while (l <= r):
-        if power >= tokens[l]:
-            power -= tokens[l]
+        if current_power >= unwrapInt(tokens[l]):
+            current_power -= unwrapInt(tokens[l])
             l += 1
             score += 1
             res = max(res, score)
         elif score > 0:
-            power += tokens[r]
+            current_power += unwrapInt(tokens[r])
             r -= 1
             score -= 1
         else:
@@ -22,5 +28,4 @@ def bagOfTokensScore(tokens: list[int], power: int) -> int:
 def main():
     assert str(bagOfTokensScore([100], 50)) == '0'
     assert str(bagOfTokensScore([200,100], 150)) == '1'
-
 

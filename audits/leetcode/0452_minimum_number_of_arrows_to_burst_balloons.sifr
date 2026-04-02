@@ -1,15 +1,28 @@
 # LeetCode 452: Minimum Number Of Arrows To Burst Balloons
 
-def findMinArrowShots(points: list[list[int]]) -> int:
+def unwrapInt(value: int | None) -> int:
+    if value is None:
+        return 0
+    return value
+
+def findMinArrowShots(mut points: list[list[int]]) -> int:
+    if len(points) == 0:
+        return 0
     points.sort()
 
     res = len(points)
     prev = points[0]
     for i in range(1, len(points)):
         curr = points[i]
-        if curr[0] <= prev[1]:
+        curr_start = unwrapInt(curr[0])
+        curr_end = unwrapInt(curr[1])
+        prev_end = unwrapInt(prev[1])
+        if curr_start <= prev_end:
             res -= 1
-            prev = [curr[0], min(curr[1], prev[1])]
+            if curr_end < prev_end:
+                prev = [curr_start, curr_end]
+            else:
+                prev = [curr_start, prev_end]
         else:
             prev = curr
         
@@ -17,5 +30,4 @@ def findMinArrowShots(points: list[list[int]]) -> int:
 
 def main():
     assert str(findMinArrowShots([[10,16],[2,8],[1,6],[7,12]])) == '2'
-
 

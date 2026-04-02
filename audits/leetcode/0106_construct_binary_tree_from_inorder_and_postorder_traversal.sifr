@@ -49,22 +49,28 @@ class Node:
         self.neighbors = neighbors
         self.key = key
 
-def buildTree(inorder: list[int], postorder: list[int]) -> TreeNode | None:
-    def buildTreeHelper(left, right):
+def unwrapInt(value: int | None) -> int:
+    if value is None:
+        return 0
+    return value
+
+def buildTree(inorder: list[int], mut postorder: list[int]) -> TreeNode | None:
+    inorderIndexMap = {}
+    for i in range(len(inorder)):
+        value = unwrapInt(inorder[i])
+        inorderIndexMap[value] = i
+
+    def buildTreeHelper(left: int, right: int) -> TreeNode | None:
         if left > right:
             return None
 
-        rootVal = postorder.pop()
+        rootVal = unwrapInt(postorder.pop())
         rootNode = TreeNode(rootVal)
 
-        idx = inorderIndexMap[rootVal]
+        idx = unwrapInt(inorderIndexMap[rootVal])
         rootNode.right = buildTreeHelper(idx + 1, right)
         rootNode.left = buildTreeHelper(left, idx - 1)
         return rootNode
-
-    inorderIndexMap = {}
-    for (i, val) in enumerate(inorder):
-        inorderIndexMap[val] = i
 
     return buildTreeHelper(0, len(postorder) - 1)
 

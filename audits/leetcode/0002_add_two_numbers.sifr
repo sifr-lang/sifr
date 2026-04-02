@@ -9,7 +9,7 @@ class ListNode:
         self.next = next
 
 
-def listNodeToString(node: ListNode | None) -> str:
+def listNodeToString(own node: ListNode | None) -> str:
     if node is None:
         return "None"
     parts: list[str] = []
@@ -47,27 +47,31 @@ class Node:
         self.neighbors = neighbors
         self.key = key
 
-def addTwoNumbers(l1: ListNode, l2: ListNode) -> ListNode:
-    dummy = ListNode()
-    cur = dummy
-
+def addTwoNumbers(mut l1: ListNode | None, mut l2: ListNode | None) -> ListNode:
+    digits = []
     carry = 0
-    while l1 or l2 or carry:
-        v1 = l1.val if l1 else 0
-        v2 = l2.val if l2 else 0
+    while l1 is not None or l2 is not None or carry != 0:
+        v1 = 0
+        if l1 is not None:
+            v1 = l1.val
+            l1 = l1.next
+        v2 = 0
+        if l2 is not None:
+            v2 = l2.val
+            l2 = l2.next
+        total = v1 + v2 + carry
+        digits.append(total % 10)
+        carry = total // 10
 
-        # new digit
-        val = v1 + v2 + carry
-        carry = val // 10
-        val = val % 10
-        cur.next = ListNode(val)
-
-        # update ptrs
-        cur = cur.next
-        l1 = l1.next if l1 else None
-        l2 = l2.next if l2 else None
-
-    return dummy.next
+    result = None
+    i = len(digits) - 1
+    while i >= 0:
+        value = digits[i]
+        result = ListNode(value, result)
+        i -= 1
+    if result is None:
+        return ListNode(0, None)
+    return result
 
 def main():
     assert listNodeToString(

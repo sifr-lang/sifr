@@ -205,6 +205,8 @@ Ownership/mutability boundary closure update (`2026-04-02`):
 - Full-corpus rerun artifact: `verification/leetcode/full_corpus_current_results_20260402_live_after_ownership_boundary_closure.json`.
 - Post-closure breakdown artifact: `verification/leetcode/ownership_mutability_boundary_breakdown_20260402_live_after_closure.json`.
 - Outcome: ownership-category first-diagnostic count reduced to `0` in the corpus rerun; residual failures are secondary non-ownership defects.
+- Secondary check-remediation wave 1 artifact: `verification/leetcode/ownership_mutability_boundary_check_results_20260402_wave1.md` (`24/47` check-pass).
+- Secondary check-remediation wave 2 artifact: `verification/leetcode/ownership_mutability_boundary_check_results_20260402_wave2.md` (`47/47` check-pass).
 
 - Planned follow-up milestones:
   - `m31_a_optional_narrowing_core`
