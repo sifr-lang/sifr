@@ -1,32 +1,32 @@
 # LeetCode 16: 3Sum Closest
 
-def threeSumClosest(nums: list[int], target: int) -> int:
+def unwrapInt(value: int | None) -> int:
+    if value is None:
+        return 0
+    return value
 
+def threeSumClosest(mut nums: list[int], target: int) -> int:
     nums.sort()
-    best = float('inf')
-    
+    best = 0
+    has_best = False
     for i in range(len(nums) - 2):
-        
-        val = nums[i]
+        val = unwrapInt(nums[i])
         left = i + 1
         right = len(nums) - 1
-        
         while left < right:
-            
-            currentGap = abs(target - (val + nums[left] + nums[right]))
-            
-            if abs(best - target) > currentGap:
-                best = val + nums[left] + nums[right]
-            if val + nums[left] + nums[right] < target:
+            sum_value = val + unwrapInt(nums[left]) + unwrapInt(nums[right])
+            current_gap = abs(target - sum_value)
+            if not has_best or abs(best - target) > current_gap:
+                best = sum_value
+                has_best = True
+            if sum_value < target:
                 left += 1
-            elif val + nums[left] + nums[right] > target:
+            elif sum_value > target:
                 right -= 1
-            else: #closest it can get 
-                return target                
-            
+            else:
+                return target
     return best
 
 def main():
     assert str(threeSumClosest([-1,2,1,-4], 1)) == '2'
-
 

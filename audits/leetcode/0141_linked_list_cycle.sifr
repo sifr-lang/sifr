@@ -9,7 +9,7 @@ class ListNode:
         self.next = next
 
 
-def listNodeToString(node: ListNode | None) -> str:
+def listNodeToString(own node: ListNode | None) -> str:
     if node is None:
         return "None"
     parts: list[str] = []
@@ -47,14 +47,14 @@ class Node:
         self.neighbors = neighbors
         self.key = key
 
-def hasCycle(head: ListNode) -> bool:
-    slow, fast = head, head
-
-    while fast and fast.next:
-        slow = slow.next
-        fast = fast.next.next
-        if slow == fast:
+def hasCycle(own head: ListNode) -> bool:
+    cur: ListNode | None = head
+    seen = set()
+    while cur is not None:
+        if cur in seen:
             return True
+        seen.add(cur)
+        cur = cur.next
     return False
 
 def main():

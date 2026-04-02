@@ -1,11 +1,16 @@
 # LeetCode 881: Boats To Save People
 
-def numRescueBoats(people: list[int], limit: int) -> int:
+def unwrapInt(value: int | None) -> int:
+    if value is None:
+        return 0
+    return value
+
+def numRescueBoats(mut people: list[int], limit: int) -> int:
     people.sort()
     right = len(people) - 1
     left = res = 0
     while left <= right:
-        if people[left] + people[right] <= limit:
+        if unwrapInt(people[left]) + unwrapInt(people[right]) <= limit:
             left += 1
         right -= 1
         res += 1
@@ -14,5 +19,4 @@ def numRescueBoats(people: list[int], limit: int) -> int:
 def main():
     assert str(numRescueBoats([1,2], 3)) == '1'
     assert str(numRescueBoats([3,2,2,1], 3)) == '3'
-
 

@@ -1,15 +1,20 @@
 # LeetCode 1838: Frequency Of The Most Frequent Element
 
-def maxFrequency(nums: list[int], k: int) -> int:
+def unwrapInt(value: int | None) -> int:
+    if value is None:
+        return 0
+    return value
+
+def maxFrequency(mut nums: list[int], k: int) -> int:
     nums.sort()
 
     l, r = 0, 0
     res, total = 0, 0
 
     while r < len(nums):
-        total += nums[r]
-        while nums[r] * (r - l + 1) > total + k:
-            total -= nums[l]
+        total += unwrapInt(nums[r])
+        while unwrapInt(nums[r]) * (r - l + 1) > total + k:
+            total -= unwrapInt(nums[l])
             l += 1
         res = max(res, r - l + 1)
         r += 1
@@ -20,4 +25,3 @@ def main():
     assert maxFrequency([1, 2, 4], 5) == 3
     assert maxFrequency([1, 4, 8, 13], 5) == 2
     assert maxFrequency([3, 9, 6], 2) == 1
-

@@ -1,13 +1,20 @@
 # LeetCode 2616: Minimize The Maximum Difference Of Pairs
 
-def minimizeMax(nums: list[int], p: int) -> int:
+def unwrapInt(value: int | None) -> int:
+    if value is None:
+        return 0
+    return value
+
+def minimizeMax(mut nums: list[int], p: int) -> int:
+    if p == 0:
+        return 0
     nums.sort()
 
     def checkPair(mid):
         count, i = 0, 0
 
         while i < len(nums) - 1:
-            if nums[i + 1] - nums[i] <= mid:
+            if unwrapInt(nums[i + 1]) - unwrapInt(nums[i]) <= mid:
                 count += 1
                 i += 2
             else:
@@ -15,7 +22,8 @@ def minimizeMax(nums: list[int], p: int) -> int:
 
         return count >= p
 
-    left, right = 0, nums[-1] - nums[0]
+    left = 0
+    right = unwrapInt(nums[len(nums) - 1]) - unwrapInt(nums[0])
 
     while left < right:
         mid = (left + right) // 2
@@ -29,5 +37,4 @@ def minimizeMax(nums: list[int], p: int) -> int:
 
 def main():
     assert str(minimizeMax([10,1,2,7,1,3], 2)) == '1'
-
 

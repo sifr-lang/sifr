@@ -246,3 +246,38 @@ No language-semantics broadening is warranted.
   - `1958_check_if_move_is_legal`
 - Remaining notable hard cases in this wave include:
   - run-stage failures (`0006`, `0048`, `0669`, `0701`, `1968`)
+
+## Secondary Wave 2 Progress (2026-04-02)
+
+- Scope: remaining non-ownership secondary check failures in the same 47-fixture cohort after wave 1.
+- Artifacts:
+  - `verification/leetcode/ownership_mutability_boundary_check_results_20260402_wave2.json`
+  - `verification/leetcode/ownership_mutability_boundary_check_results_20260402_wave2.md`
+- Wave 2 check-only result:
+  - check pass improved from `24/47` to `47/47` (`+23`).
+  - ownership-boundary diagnostics remain `0`.
+  - remaining check failures in this cohort: `0`.
+- Wave 2 fixtures that now check-pass:
+  - `0002_add_two_numbers`
+  - `0005_longest_palindromic_substring`
+  - `0016_3sum_closest`
+  - `0046_permutations`
+  - `0088_merge_sorted_array`
+  - `0106_construct_binary_tree_from_inorder_and_postorder_traversal`
+  - `0141_linked_list_cycle`
+  - `0160_intersection_of_two_linked_lists`
+  - `0168_excel_sheet_column_title`
+  - `0179_largest_number`
+  - `0234_palindrome_linked_list`
+  - `0312_burst_balloons`
+  - `0452_minimum_number_of_arrows_to_burst_balloons`
+  - `0881_boats_to_save_people`
+  - `0948_bag_of_tokens`
+  - `1498_number_of_subsequences_that_satisfy_the_given_sum_condition`
+  - `1838_frequency_of_the_most_frequent_element`
+  - `1888_minimum_number_of_flips_to_make_the_binary_string_alternating`
+  - `1984_minimum_difference_between_highest_and_lowest_of_k_scores`
+  - `2215_find_the_difference_of_two_arrays`
+  - `2300_successful_pairs_of_spells_and_potions`
+  - `2616_minimize_the_maximum_difference_of_pairs`
+  - `2971_find_polygon_with_the_largest_perimeter`

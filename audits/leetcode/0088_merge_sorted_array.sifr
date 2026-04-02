@@ -1,16 +1,25 @@
 # LeetCode 88: Merge Sorted Array
 
-def merge(nums1: list[int], m: int, nums2: list[int], n: int) -> None:
-    
-    while m > 0 and n > 0:
-        if nums1[m-1] >= nums2[n-1]:
-            nums1[m+n-1] = nums1[m-1]
-            m -= 1
+def unwrapInt(value: int | None) -> int:
+    if value is None:
+        return 0
+    return value
+
+def merge(mut nums1: list[int], m: int, nums2: list[int], n: int) -> None:
+    left = m
+    right = n
+    while left > 0 and right > 0:
+        if unwrapInt(nums1[left - 1]) >= unwrapInt(nums2[right - 1]):
+            nums1[left + right - 1] = unwrapInt(nums1[left - 1])
+            left -= 1
         else:
-            nums1[m+n-1] = nums2[n-1]
-            n -= 1
-    if n > 0:
-        nums1[:n] = nums2[:n]
+            nums1[left + right - 1] = unwrapInt(nums2[right - 1])
+            right -= 1
+    if right > 0:
+        i = 0
+        while i < right:
+            nums1[i] = unwrapInt(nums2[i])
+            i += 1
 
 def main():
     arg0 = [1, 2, 3, 0, 0, 0]
@@ -31,4 +40,3 @@ def main():
     arg3 = 1
     _result = merge(arg0, arg1, arg2, arg3)
     assert arg0 == [1]
-

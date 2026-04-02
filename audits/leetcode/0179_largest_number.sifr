@@ -1,21 +1,34 @@
 # LeetCode 179: Largest Number
 
-def largestNumber(nums: list[int]) -> str:
-    for i, n in enumerate(nums):
-        nums[i] = str(n)
+def unwrapStr(own value: str | None) -> str:
+    if value is None:
+        return ""
+    return value
 
-    def compare(n1, n2):
-        if n1 + n2 > n2 + n1:
-            return -1
-        else:
-            return 1
+def largestNumber(mut nums: list[int]) -> str:
+    values = []
+    for n in nums:
+        values.append(str(n))
 
-    nums = sorted(nums, key = cmp_to_key(compare))
+    i = 0
+    while i < len(values):
+        j = 0
+        while j + 1 < len(values) - i:
+            left = unwrapStr(values[j])
+            right = unwrapStr(values[j + 1])
+            if left + right < right + left:
+                tmp = unwrapStr(values[j])
+                values[j] = unwrapStr(values[j + 1])
+                values[j + 1] = tmp
+            j += 1
+        i += 1
 
-    return str(int("".join(nums)))
+    joined = "".join(values)
+    k = 0
+    while k + 1 < len(joined) and joined[k] == "0":
+        k += 1
+    return joined[k:]
 
 def main():
     assert str(largestNumber([10,2])) == '210'
     assert str(largestNumber([3,30,34,5,9])) == '9534330'
-
-

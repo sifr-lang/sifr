@@ -9,7 +9,7 @@ class ListNode:
         self.next = next
 
 
-def listNodeToString(node: ListNode | None) -> str:
+def listNodeToString(own node: ListNode | None) -> str:
     if node is None:
         return "None"
     parts: list[str] = []
@@ -47,30 +47,19 @@ class Node:
         self.neighbors = neighbors
         self.key = key
 
-def isPalindrome(head: ListNode) -> bool:
-    fast = head
-    slow = head
-    
-    # find the middle (slow)
-    while fast and fast.next:
-        fast = fast.next.next
-        slow = slow.next
-        
-    # reverse second half
-    prev = None
-    while slow:
-        tmp = slow.next
-        slow.next = prev
-        prev = slow
-        slow = tmp
-    
-    # check palindrome
-    left, right = head, prev
-    while right:
-        if left.val != right.val:
+def isPalindrome(own head: ListNode) -> bool:
+    values = []
+    cur: ListNode | None = head
+    while cur is not None:
+        values.append(cur.val)
+        cur = cur.next
+    left = 0
+    right = len(values) - 1
+    while left < right:
+        if values[left] != values[right]:
             return False
-        left = left.next
-        right = right.next
+        left += 1
+        right -= 1
     return True
 
 def main():
