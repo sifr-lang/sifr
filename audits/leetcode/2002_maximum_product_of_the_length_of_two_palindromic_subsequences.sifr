@@ -1,6 +1,6 @@
 # LeetCode 2002: Maximum Product Of The Length Of Two Palindromic Subsequences
 
-def maxProduct(s):
+def maxProduct(s: str) -> int:
     n = len(s)
     
     first, last = [0]*(1<<n), [0]*(1<<n)
@@ -14,8 +14,9 @@ def maxProduct(s):
             last[j] = i
     
     @lru_cache(None)
-    def dp(m):
-        if m & (m-1) == 0: return m != 0
+    def dp(m: int) -> int:
+        if m & (m - 1) == 0:
+            return 1 if m != 0 else 0
         l, f = last[m], first[m]
         lb, fb = 1<<l, 1<<f
         return max(dp(m-lb), dp(m-fb), dp(m-lb-fb) + (s[l] == s[f]) * 2)
@@ -30,4 +31,3 @@ def main():
     assert maxProduct('leetcodecom') == 9
     assert maxProduct('bb') == 1
     assert maxProduct('accbcaxxcxx') == 25
-

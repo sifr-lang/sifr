@@ -1,9 +1,10 @@
 # LeetCode 131: Palindrome Partitioning
 
 def partition(s: str) -> list[list[str]]:
-    res, part = [], []
+    res: list[list[str]] = []
+    part: list[str] = []
 
-    def dfs(i):
+    def dfs(i: int):
         if i >= len(s):
             res.append(part.copy())
             return
@@ -17,7 +18,7 @@ def partition(s: str) -> list[list[str]]:
     return res
 
 
-def isPali(s, l, r):
+def isPali(s: str, mut l: int, mut r: int) -> bool:
     while l < r:
         if s[l] != s[r]:
             return False
@@ -26,5 +27,3 @@ def isPali(s, l, r):
 
 def main():
     assert str(partition("aab")) == '[["a", "a", "b"], ["aa", "b"]]'
-
-

@@ -38,15 +38,15 @@ def findCriticalAndPseudoCriticalEdges(n: int, edges: list[list[int]]) -> list[l
 
 
 class UnionFind:
-    def __init__(self, n):
+    def __init__(self, n: int):
         self.par = [i for i in range(n)]
         self.rank = [1] * n
-    def find(self, v1):
+    def find(self, v1: int) -> int:
         while v1 != self.par[v1]:
             self.par[v1] = self.par[self.par[v1]]
             v1 = self.par[v1]
         return v1
-    def union(self, v1, v2):
+    def union(self, v1: int, v2: int) -> bool:
         p1, p2 = self.find(v1), self.find(v2)
         if p1 == p2:
             return False
@@ -61,4 +61,3 @@ class UnionFind:
 def main():
     assert findCriticalAndPseudoCriticalEdges(5, [[0, 1, 1], [1, 2, 1], [2, 3, 2], [0, 3, 2], [0, 4, 3], [3, 4, 3], [1, 4, 6]]) == [[0, 1], [2, 3, 4, 5]]
     assert findCriticalAndPseudoCriticalEdges(4, [[0, 1, 1], [1, 2, 1], [2, 3, 1], [0, 3, 1]]) == [[], [0, 1, 2, 3]]
-

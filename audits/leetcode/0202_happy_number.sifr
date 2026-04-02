@@ -11,9 +11,9 @@ def isHappy(n: int) -> bool:
     return True if fast == 1 else False
 
 
-def sumSquareDigits(n):
+def sumSquareDigits(mut n: int) -> int:
     output = 0
-    while n:
+    while n != 0:
         output += (n % 10) ** 2
         n = n // 10
     return output
@@ -21,5 +21,3 @@ def sumSquareDigits(n):
 def main():
     assert str(isHappy(19)) == 'true'
     assert str(isHappy(2)) == 'false'
-
-

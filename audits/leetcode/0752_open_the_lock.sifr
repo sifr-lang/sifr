@@ -4,7 +4,7 @@ def openLock(deadends: list[str], target: str) -> int:
     if "0000" in deadends:
         return -1
 
-    def children(wheel):
+    def children(wheel: str) -> list[str]:
         res = []
         for i in range(4):
             digit = str((int(wheel[i]) + 1) % 10)
@@ -30,4 +30,3 @@ def main():
     assert openLock(['0201', '0101', '0102', '1212', '2002'], '0202') == 6
     assert openLock(['8888'], '0009') == 1
     assert openLock(['8887', '8889', '8878', '8898', '8788', '8988', '7888', '9888'], '8888') == -1
-

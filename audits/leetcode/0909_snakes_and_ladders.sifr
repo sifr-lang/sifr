@@ -1,10 +1,10 @@
 # LeetCode 909: Snakes And Ladders
 
-def snakesAndLadders(board: list[list[int]]) -> int:
+def snakesAndLadders(mut board: list[list[int]]) -> int:
     length = len(board)
     board.reverse()
 
-    def intToPos(square):
+    def intToPos(square: int) -> list[int]:
         r = (square - 1) // length
         c = (square - 1) % length
         if r % 2:
@@ -31,4 +31,3 @@ def snakesAndLadders(board: list[list[int]]) -> int:
 def main():
     assert snakesAndLadders([[-1, -1, -1, -1, -1, -1], [-1, -1, -1, -1, -1, -1], [-1, -1, -1, -1, -1, -1], [-1, 35, -1, -1, 13, -1], [-1, -1, -1, -1, -1, -1], [-1, 15, -1, -1, -1, -1]]) == 4
     assert snakesAndLadders([[-1, -1], [-1, 3]]) == 1
-

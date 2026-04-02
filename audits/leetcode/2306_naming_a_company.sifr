@@ -1,6 +1,6 @@
 # LeetCode 2306: Naming A Company
 
-def distinctNames(ideas):
+def distinctNames(ideas: list[str]) -> int:
 
     suffixes = dict()
     for idea in ideas:
@@ -29,4 +29,3 @@ def distinctNames(ideas):
 def main():
     assert distinctNames(['coffee', 'donuts', 'time', 'toffee']) == 6
     assert distinctNames(['lack', 'back']) == 0
-

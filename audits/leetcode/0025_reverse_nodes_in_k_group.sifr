@@ -71,7 +71,7 @@ def reverseKGroup(head: ListNode, k: int) -> ListNode:
     return dummy.next
 
 
-def getKth(curr, k):
+def getKth(mut curr: ListNode | None, mut k: int) -> ListNode | None:
     while curr and k > 0:
         curr = curr.next
         k -= 1

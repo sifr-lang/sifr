@@ -9,7 +9,7 @@ def countSubstrings(s: str) -> int:
     return res
 
 
-def countPali(s, l, r):
+def countPali(s: str, mut l: int, mut r: int) -> int:
     res = 0
     while l >= 0 and r < len(s) and s[l] == s[r]:
         res += 1
@@ -20,5 +20,3 @@ def countPali(s, l, r):
 def main():
     assert str(countSubstrings("abc")) == '3'
     assert str(countSubstrings("aaa")) == '6'
-
-

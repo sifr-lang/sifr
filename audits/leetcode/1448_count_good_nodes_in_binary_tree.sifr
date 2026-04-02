@@ -50,14 +50,15 @@ class Node:
         self.key = key
 
 def goodNodes(root: TreeNode) -> int:
-    def dfs(node, maxVal):
-        if not node:
-            return 0
-
+    def dfs(node: TreeNode, maxVal: int) -> int:
         res = 1 if node.val >= maxVal else 0
-        maxVal = max(maxVal, node.val)
-        res += dfs(node.left, maxVal)
-        res += dfs(node.right, maxVal)
+        nextMax = max(maxVal, node.val)
+        left = node.left
+        if left is not None:
+            res += dfs(left, nextMax)
+        right = node.right
+        if right is not None:
+            res += dfs(right, nextMax)
         return res
 
     return dfs(root, root.val)
