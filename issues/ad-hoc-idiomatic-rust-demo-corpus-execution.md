@@ -4409,18 +4409,59 @@ status: accepted_after_pass_1_and_pass_2
   - batch 100 was reviewed against the final validated Rust output, the temp-Cargo dependency validation for the companion, and the unchanged `python_regressions` parity-demo output from the paired Sifr run
   - the intentionally single-file scope is recorded so the remaining wave-4 cleanup work can continue without mixing in upstream-broken targeted demo lanes
 
-- wave-4 deferred follow-up set:
+#### batch_102_deferred_textwrap_cleanup
+
+status: accepted_after_pass_1_and_pass_2
+
+- scope:
+  - `crates/sifr_codegen/src/lib.rs`
+  - `crates/sifr_codegen/src/function_emitter.rs`
+  - `crates/sifr_codegen/src/function_like_lowering.rs`
+  - `crates/sifr_codegen/src/class_method_emitter.rs`
+  - `crates/sifr_codegen/src/class_emitter.rs`
+  - `crates/sifr_codegen/src/stmt_support_emitter.rs`
+  - `crates/sifr_codegen/src/operator_protocol_emitters.rs`
+  - `crates/sifr_codegen/src/lower_stmt.rs`
   - `demos/html_and_textwrap/idiomatic.rs`
   - `demos/text_and_patterns/idiomatic.rs`
   - `demos/text_and_statistics/idiomatic.rs`
-- explicit next action for deferred wave-4 files:
-  - revisit the remaining slice-api and string-ceremony cleanup only after each paired `cargo run -q -p sifr -- run demos/.../main.sifr` lane is green again in this workspace
-  - until then, treat their current anti-pattern hits as non-blocking consistency debt rather than open corpus-coverage work
+- selection rationale:
+  - the last deferred wave-4 cleanup trio had a shared upstream blocker: their paired `textwrap`-backed Sifr demos still failed targeted validation because assignment into `str | None` locals skipped option coercion in plain `Assign` lowering
+  - once that root cause was fixed, the originally deferred slice/signature cleanup could be completed under the normal authoritative validation bar instead of being recorded as non-blocking debt
+- priority tags:
+  - `wave-4-consistency`
+  - `deferred-follow-up`
+  - `codegen-root-cause-fix`
+- implementation summary:
+  - added active-scope local binding type tracking in codegen and threaded it through function-like lowering so plain `Assign` statements can reuse the existing target-type coercion path
+  - fixed structured and simple assignment lowering to wrap non-optional RHS values when reassigning locals declared as `T | None`
+  - updated `html_and_textwrap`, `text_and_patterns`, and `text_and_statistics` to use slices for the remaining read-only line helpers, dropped redundant `String` clone ceremony in `TextWrapper::new` and `wrap`, and converted the remaining text/statistics slice candidates in the deferred trio
+- local validation completed:
+  - `rustfmt crates/sifr_codegen/src/lib.rs crates/sifr_codegen/src/function_emitter.rs crates/sifr_codegen/src/function_like_lowering.rs crates/sifr_codegen/src/class_method_emitter.rs crates/sifr_codegen/src/class_emitter.rs crates/sifr_codegen/src/stmt_support_emitter.rs crates/sifr_codegen/src/operator_protocol_emitters.rs crates/sifr_codegen/src/lower_stmt.rs demos/html_and_textwrap/idiomatic.rs demos/text_and_patterns/idiomatic.rs demos/text_and_statistics/idiomatic.rs`
+  - `cargo build -p sifr_codegen`
+  - `rustc --edition 2021 demos/html_and_textwrap/idiomatic.rs -o /tmp/html_and_textwrap_idiomatic_check`
+  - `tmpdir=$(mktemp -d) && mkdir -p "$tmpdir/src" && cp demos/text_and_patterns/idiomatic.rs "$tmpdir/src/main.rs" && printf '[package]\nname = "text_and_patterns_idiomatic_check"\nversion = "0.1.0"\nedition = "2021"\n\n[dependencies]\nbase64 = "0.22"\n' > "$tmpdir/Cargo.toml" && cargo build --manifest-path "$tmpdir/Cargo.toml"`
+  - `rustc --edition 2021 demos/text_and_statistics/idiomatic.rs -o /tmp/text_and_statistics_idiomatic_check`
+  - `cargo run -q -p sifr -- run demos/html_and_textwrap/main.sifr`
+  - `cargo run -q -p sifr -- run demos/text_and_patterns/main.sifr`
+  - `cargo run -q -p sifr -- run demos/text_and_statistics/main.sifr`
+  - `scripts/run_all_tests.sh`
+- review artifacts:
+  - pass 1: `reviews/phase-ad-hoc-idiomatic-rust-demo-corpus-wave-4-batch-102-review-pass-1.md`
+  - pass 2: `reviews/phase-ad-hoc-idiomatic-rust-demo-corpus-wave-4-batch-102-review-pass-2.md`
+- review application summary:
+  - pass 1 returned `OK`
+  - pass 2 returned `OK`
+  - no follow-up code changes were needed after the final validated state
+- reviewer tooling note:
+  - batch 102 review covered both the codegen root-cause fix and the formerly deferred companion cleanup, and it was run against the final state after the three paired Sifr demo lanes and the full repository suite were green
+  - the old wave-4 deferred follow-up set is now closed rather than carried forward
+
 - non-actionable remaining search hits:
   - `demos/generic_stdlib/idiomatic.rs`: `unwrap_or_else(|| fill.clone())` is still appropriate because the fallback value is generic and not guaranteed `Copy`
   - `demos/advanced_class_libraries/idiomatic.rs`: `cloned().unwrap_or_default()` is an acceptable row-fill idiom and does not need further normalization for this corpus
 - wave-4 closeout note:
-  - the consistency pass is complete for all currently stable targeted-validation candidates, and the remaining deferred files are recorded above with explicit next actions
+  - the consistency pass is now fully complete, including the former deferred `textwrap`-backed trio, and no wave-4 follow-up set remains
 
 ### wave_5_phase_closeout
 
@@ -4451,4 +4492,4 @@ status: completed
   - needing further clarification: none
 - final emitted-vs-idiomatic readiness note:
   - the corpus is ready for emitted-vs-idiomatic comparison
-  - remaining follow-up work is limited to the non-blocking deferred wave-4 cleanup set recorded above, not missing companions or unresolved Tier 2 intent
+  - no remaining follow-up work is required for corpus coverage or wave-4 consistency; any future cleanup would be optional polish rather than unresolved phase debt

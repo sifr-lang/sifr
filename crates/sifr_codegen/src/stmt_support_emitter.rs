@@ -4820,10 +4820,11 @@ impl RustEmitter {
         let mut lowered_block = Vec::new();
         for stmt in stmts {
             let maybe_simple_lowered = if self.try_closure_depth == 0 {
-                crate::try_lower_simple_stmt_with_scope_result(
+                crate::try_lower_simple_stmt_with_scope_result_and_bindings(
                     stmt,
                     &self.mutated_vars,
                     &self.borrowed_params,
+                    &self.local_binding_types,
                     &scope_ctx,
                 )?
             } else {
@@ -4898,6 +4899,16 @@ impl RustEmitter {
                 let Some(lowered_value) = self.lower_rendered_expr_for_ir(value)? else {
                     return Ok(None);
                 };
+                let lowered_value =
+                    if let Some(target_ty) = self.local_binding_types.get(name).cloned() {
+                        self.coerce_local_value_for_target_type_for_ir(
+                            &target_ty,
+                            value,
+                            lowered_value,
+                        )?
+                    } else {
+                        lowered_value
+                    };
                 (
                     vec![RustStmt::Assign {
                         target: crate::RustExpr::Ident(name.clone()),

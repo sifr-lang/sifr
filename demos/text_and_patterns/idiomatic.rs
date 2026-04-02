@@ -35,8 +35,8 @@ impl TextWrapper {
         }
         return Self {
             width: width,
-            initial_indent: format!("{}{}", initial_indent, "".to_string()),
-            subsequent_indent: format!("{}{}", subsequent_indent, "".to_string()),
+            initial_indent,
+            subsequent_indent,
             expand_tabs: expand_tabs,
             tabsize: safe_tabsize,
             replace_whitespace: replace_whitespace,
@@ -44,7 +44,7 @@ impl TextWrapper {
             break_on_hyphens: break_on_hyphens,
             fix_sentence_endings: fix_sentence_endings,
             max_lines: max_lines,
-            placeholder: format!("{}{}", placeholder, "".to_string()),
+            placeholder,
         };
     }
     fn wrap(&self, text: &String) -> Vec<String> {
@@ -60,8 +60,8 @@ impl TextWrapper {
         let mut lines: Vec<String> = _wrap_with_indents(
             &prepared,
             self.width,
-            &self.initial_indent.clone(),
-            &self.subsequent_indent.clone(),
+            &self.initial_indent,
+            &self.subsequent_indent,
             self.break_on_hyphens,
             self.drop_whitespace,
         );
@@ -72,7 +72,7 @@ impl TextWrapper {
             &lines,
             self.width,
             self.max_lines,
-            &self.placeholder.clone(),
+            &self.placeholder,
             self.drop_whitespace,
         );
     }
@@ -387,25 +387,20 @@ fn _apply_sentence_endings_line(text: &String) -> String {
     }
     return result;
 }
-fn _apply_sentence_endings_lines(lines: &Vec<String>) -> Vec<String> {
-    let mut result: Vec<String> = vec![];
-    for line in lines.iter().cloned() {
-        result.push(_apply_sentence_endings_line(&line));
-    }
-    return result;
+fn _apply_sentence_endings_lines(lines: &[String]) -> Vec<String> {
+    return lines
+        .iter()
+        .map(_apply_sentence_endings_line)
+        .collect::<Vec<String>>();
 }
-fn _clone_lines(lines: &Vec<String>) -> Vec<String> {
-    let mut copied: Vec<String> = vec![];
-    for line in lines.iter().cloned() {
-        copied.push(line);
-    }
-    return copied;
+fn _clone_lines(lines: &[String]) -> Vec<String> {
+    return lines.to_vec();
 }
 fn _apply_max_lines(
-    lines: &Vec<String>,
+    lines: &[String],
     width: i64,
     max_lines: Option<i64>,
-    placeholder: &String,
+    placeholder: &str,
     drop_whitespace: bool,
 ) -> Vec<String> {
     let Some(max_lines) = max_lines else {
@@ -439,7 +434,7 @@ fn _apply_max_lines(
     if (result.len() as i64) == (0 as i64) {
         return result;
     }
-    let mut effective_placeholder: String = format!("{}{}", placeholder, "".to_string());
+    let mut effective_placeholder: String = placeholder.to_string();
     if width > (0 as i64) {
         if (effective_placeholder.chars().count() as i64) > width {
             effective_placeholder = String::from_iter(

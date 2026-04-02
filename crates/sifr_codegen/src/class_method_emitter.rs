@@ -488,12 +488,14 @@ impl RustEmitter {
         let saved_borrowed_params = self.borrowed_params.clone();
         let saved_mut_borrowed_params = self.mut_borrowed_params.clone();
         let saved_callable_var_conventions = self.callable_var_conventions.clone();
+        let saved_local_binding_types = self.local_binding_types.clone();
 
         self.current_return_type = Some(method.return_type.clone());
         self.mutated_vars = collect_mutated_vars_with_sigs(&method.body, &self.func_signatures);
         self.borrowed_params.clear();
         self.mut_borrowed_params.clear();
         self.callable_var_conventions.clear();
+        self.local_binding_types.clear();
 
         for param in &method.params {
             let effective_convention = if method.name == "new" {
@@ -521,7 +523,10 @@ impl RustEmitter {
                 self.callable_var_conventions
                     .insert(param.name.clone(), conv_list);
             }
+            self.local_binding_types
+                .insert(param.name.clone(), param.ty.clone());
         }
+        self.register_local_body_binding_types(&method.body);
 
         let visibility = if module_public {
             Visibility::Pub
@@ -588,6 +593,7 @@ impl RustEmitter {
         self.borrowed_params = saved_borrowed_params;
         self.mut_borrowed_params = saved_mut_borrowed_params;
         self.callable_var_conventions = saved_callable_var_conventions;
+        self.local_binding_types = saved_local_binding_types;
 
         RustItem::Fn {
             name: method.name.clone(),
