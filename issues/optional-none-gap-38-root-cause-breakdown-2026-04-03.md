@@ -17,6 +17,7 @@
 - Post-fix sweep (closure to 27 pass / 11 fail): `verification/leetcode/optional_none_gap_38_full_diagnostics_20260403_post_1980_closure_to_27_pass.tsv`
 - Post-fix sweep (closure to 28 pass / 10 fail): `verification/leetcode/optional_none_gap_38_full_diagnostics_20260403_post_1980_closure_to_28_pass.tsv`
 - Post-fix sweep (final closure to 38 pass / 0 fail): `verification/leetcode/optional_none_gap_38_full_diagnostics_20260403_post_1980.tsv`
+- Phase closure PR (2026-04-03): `https://github.com/yaseralnajjar/sifr/pull/1573`
 
 ## Decision Summary
 - `compiler_fix`: `25`
