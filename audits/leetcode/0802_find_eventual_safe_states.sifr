@@ -28,20 +28,26 @@ class Node:
         self.key = key
 
 def eventualSafeNodes(graph: list[list[int]]) -> list[int]:
-    n = len(graph)
-    safe = {}
-    res = []
-    def dfs(i):
+    safe: dict[int, bool] = {}
+    res: list[int] = []
+
+    def dfs(i: int) -> bool:
         if i in safe:
-            return safe[i]
+            return safe.get(i, False)
         safe[i] = False
-        for nei in graph[i]:
+        neighbors0 = graph[i]
+        if neighbors0 is None:
+            safe[i] = True
+            return True
+        for nei in neighbors0:
             if not dfs(nei):
-                return safe[i]
+                return False
         safe[i] = True
-        return safe[i]
+        return True
+
     for i in range(len(graph)):
-        if dfs(i): res.append(i)
+        if dfs(i):
+            res.append(i)
     return res
 
 def main():

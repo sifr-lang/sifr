@@ -1,0 +1,39 @@
+fixture_slug	exit_code	first_line
+0002_add_two_numbers	0	no errors found
+0046_permutations	0	no errors found
+0047_permutations_ii	0	no errors found
+0057_insert_interval	1	type error: min() with 2 arguments does not accept optional operands; got 'int | None' and 'int | None' (guard or unwrap first)
+0064_minimum_path_sum	1	type error: min() with 2 arguments does not accept optional operands; got 'float | None' and 'float | None' (guard or unwrap first)
+0088_merge_sorted_array	0	no errors found
+0103_binary_tree_zigzag_level_order_traversal	0	no errors found
+0105_construct_binary_tree_from_preorder_and_inorder_traversal	1	type error: unsupported operand type(s) for +: 'int | None' and 'int'
+0106_construct_binary_tree_from_inorder_and_postorder_traversal	0	no errors found
+0108_convert_sorted_array_to_binary_search_tree	1	type error: argument 1 ('val') of function 'TreeNode': expected 'int', got 'int | None'
+0139_word_break	1	type error: list subscript assignment value type 'bool | None' is not compatible with list element type 'bool'
+0150_evaluate_reverse_polish_notation	1	type error: return type mismatch: expected 'int', got 'Result[int, ParseError] | None'
+0261_graph_valid_tree	1	type error: argument 1 of callable 'union': expected 'int', got 'int | None'
+0287_find_the_duplicate_number	1	type error: cannot index type 'list[int]' with 'None | int'
+0304_range_sum_query_2d_immutable	1	type error: cannot compare 'None' and 'int' with ==
+0329_longest_increasing_path_in_a_matrix	1	type error: argument 3 of callable 'dfs': expected 'int', got 'int | None'
+0394_decode_string	1	type error: type 'None | str' has no method 'isdigit'
+0417_pacific_atlantic_water_flow	1	type error: argument 4 of callable 'dfs': expected 'int', got 'int | None'
+0438_find_all_anagrams_in_a_string	1	type error: 'in' operator: element type 'str | None' is not compatible with collection element type 'str'
+0452_minimum_number_of_arrows_to_burst_balloons	0	no errors found
+0567_permutation_in_string	1	type error: ord() argument must be 'str', got 'str | None'
+0778_swim_in_rising_water	1	type error: cannot unpack non-tuple type 'None | list[int | None]'
+0802_find_eventual_safe_states	1	type error: cannot iterate over type 'list[int] | None'
+0875_koko_eating_bananas	1	type error: return type mismatch: expected 'int', got 'int | None'
+0881_boats_to_save_people	0	no errors found
+0904_fruit_into_baskets	1	type error: dict subscript assignment key type 'int | None' is not compatible with dict key type 'int'
+0948_bag_of_tokens	0	no errors found
+0977_squares_of_a_sorted_array	1	type error: abs() argument must be numeric, got 'int | None'
+1203_sort_items_by_groups_respecting_dependencies	1	type error: argument 1 ('items') of function '__compat_sifr_collections_deque': expected 'None | list[T]', got 'Iterator[int]'
+1397_find_all_good_strings	1	type error: cannot index type 'str' with 'int | None'
+1423_maximum_points_you_can_obtain_from_cards	1	type error: unsupported operand type(s) for -: 'int | None' and 'int | None'
+1498_number_of_subsequences_that_satisfy_the_given_sum_condition	0	warning: int left shift (<<) with non-constant shift amount may overflow i64 at runtime; consider using bigint
+1584_min_cost_to_connect_all_points	1	type error: cannot unpack non-tuple type 'None | list[int]'
+1631_path_with_minimum_effort	1	type error: cannot unpack non-tuple type 'None | tuple[int, int, int]'
+1700_number_of_students_unable_to_eat_lunch	0	no errors found
+1838_frequency_of_the_most_frequent_element	0	warning: int multiplication with non-constant operands may overflow i64 at runtime; consider using bigint for large values
+1980_find_unique_binary_string	0	no errors found
+2300_successful_pairs_of_spells_and_potions	0	warning: int multiplication with non-constant operands may overflow i64 at runtime; consider using bigint for large values

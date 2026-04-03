@@ -8,14 +8,19 @@ def wordBreak(s: str, wordDict: list[str]) -> bool:
     for i in range(len(s) - 1, -1, -1):
         for w in wordDict:
             if (i + len(w)) <= len(s) and s[i : i + len(w)] == w:
-                dp[i] = dp[i + len(w)]
-            if dp[i]:
+                next_ok = dp[i + len(w)]
+                if next_ok is not None and next_ok:
+                    dp[i] = True
+            curr = dp[i]
+            if curr is not None and curr:
                 break
 
-    return dp[0]
+    result = dp[0]
+    if result is not None:
+        return result
+    return False
 
 def main():
     assert str(wordBreak("leetcode", ["leet","code"])) == 'true'
     assert str(wordBreak("applepenapple", ["apple","pen"])) == 'true'
-
 

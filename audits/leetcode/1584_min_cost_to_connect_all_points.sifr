@@ -1,32 +1,78 @@
 # LeetCode 1584: Min Cost To Connect All Points
 
-def minCostConnectPoints(points: list[list[int]]) -> int:
-    N = len(points)
-    adj = {i: [] for i in range(N)}  # i : list of [cost, node]
-    for i in range(N):
-        x1, y1 = points[i]
-        for j in range(i + 1, N):
-            x2, y2 = points[j]
-            dist = abs(x1 - x2) + abs(y1 - y2)
-            adj[i].append([dist, j])
-            adj[j].append([dist, i])
+def unwrapInt(value: int | None) -> int:
+    if value is None:
+        return 0
+    return value
 
-    # Prim's
-    res = 0
-    visit = set()
-    minH = [[0, 0]]  # [cost, point]
-    while len(visit) < N:
-        cost, i = heapq.heappop(minH)
-        if i in visit:
-            continue
-        res += cost
-        visit.add(i)
-        for neiCost, nei in adj[i]:
-            if nei not in visit:
-                heapq.heappush(minH, [neiCost, nei])
-    return res
+def unwrapBool(value: bool | None) -> bool:
+    if value is None:
+        return False
+    return value
+
+def getIntAt(arr: list[int], idx: int) -> int:
+    return unwrapInt(arr[idx])
+
+def setIntAt(mut arr: list[int], idx: int, value: int) -> None:
+    arr[idx] = value
+
+def getBoolAt(arr: list[bool], idx: int) -> bool:
+    return unwrapBool(arr[idx])
+
+def setBoolAt(mut arr: list[bool], idx: int, value: bool) -> None:
+    arr[idx] = value
+
+def coord(points: list[list[int]], i: int, axis: int) -> int:
+    row = points[i]
+    if row is None:
+        return 0
+    return unwrapInt(row[axis])
+
+def minCostConnectPoints(points: list[list[int]]) -> int:
+    n = len(points)
+    if n <= 1:
+        return 0
+
+    inf = 1_000_000_000
+    in_mst: list[bool] = [False] * n
+    min_dist: list[int] = [inf] * n
+    setIntAt(min_dist, 0, 0)
+
+    total = 0
+
+    for _ in range(n):
+        u = -1
+        best = inf
+        for i in range(n):
+            if getBoolAt(in_mst, i):
+                continue
+            d = getIntAt(min_dist, i)
+            if d < best:
+                best = d
+                u = i
+
+        if u == -1:
+            break
+
+        setBoolAt(in_mst, u, True)
+        total += best
+
+        ux = coord(points, u, 0)
+        uy = coord(points, u, 1)
+
+        for v in range(n):
+            if getBoolAt(in_mst, v):
+                continue
+
+            vx = coord(points, v, 0)
+            vy = coord(points, v, 1)
+            dist = abs(ux - vx) + abs(uy - vy)
+
+            if dist < getIntAt(min_dist, v):
+                setIntAt(min_dist, v, dist)
+
+    return total
 
 def main():
     assert minCostConnectPoints([[0, 0], [2, 2], [3, 10], [5, 2], [7, 0]]) == 20
     assert minCostConnectPoints([[3, 12], [-2, 5], [-4, 1]]) == 18
-

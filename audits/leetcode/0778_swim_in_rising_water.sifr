@@ -1,30 +1,123 @@
 # LeetCode 778: Swim In Rising Water
 
-def swimInWater(grid: list[list[int]]) -> int:
-    N = len(grid)
-    visit = set()
-    minH = [[grid[0][0], 0, 0]]  # (time/max-height, r, c)
-    directions = [[0, 1], [0, -1], [1, 0], [-1, 0]]
+def unwrapInt(value: int | None) -> int:
+    if value is None:
+        return 0
+    return value
 
-    visit.add((0, 0))
-    while minH:
-        t, r, c = heapq.heappop(minH)
-        if r == N - 1 and c == N - 1:
-            return t
-        for dr, dc in directions:
-            neiR, neiC = r + dr, c + dc
-            if (
-                neiR < 0
-                or neiC < 0
-                or neiR == N
-                or neiC == N
-                or (neiR, neiC) in visit
-            ):
+def getBoolCell(matrix: list[list[bool]], r: int, c: int) -> bool:
+    row = matrix[r]
+    if row is None:
+        return False
+    value = row[c]
+    if value is None:
+        return False
+    return value
+
+def setBoolCell(mut matrix: list[list[bool]], r: int, c: int, value: bool) -> None:
+    row = matrix[r]
+    if row is None:
+        return
+    row[c] = value
+    matrix[r] = row
+
+def getIntCell(matrix: list[list[int]], r: int, c: int) -> int:
+    row = matrix[r]
+    if row is None:
+        return 0
+    return unwrapInt(row[c])
+
+def setIntCell(mut matrix: list[list[int]], r: int, c: int, value: int) -> None:
+    row = matrix[r]
+    if row is None:
+        return
+    row[c] = value
+    matrix[r] = row
+
+def swimInWater(grid: list[list[int]]) -> int:
+    n = len(grid)
+    if n == 0:
+        return 0
+
+    inf = 1_000_000_000
+    best: list[list[int]] = []
+    seen: list[list[bool]] = []
+    for _ in range(n):
+        best.append([inf] * n)
+        seen.append([False] * n)
+
+    first_row = grid[0]
+    if first_row is None:
+        return 0
+    start = unwrapInt(first_row[0])
+    setIntCell(best, 0, 0, start)
+
+    for _ in range(n * n):
+        cur_cost = inf
+        cur_r = -1
+        cur_c = -1
+
+        for r in range(n):
+            best_row = best[r]
+            seen_row = seen[r]
+            if best_row is None or seen_row is None:
                 continue
-            visit.add((neiR, neiC))
-            heapq.heappush(minH, [max(t, grid[neiR][neiC]), neiR, neiC])
+            for c in range(n):
+                if getBoolCell(seen, r, c):
+                    continue
+                cand = getIntCell(best, r, c)
+                if cand < cur_cost:
+                    cur_cost = cand
+                    cur_r = r
+                    cur_c = c
+
+        if cur_r == -1 or cur_c == -1:
+            break
+
+        setBoolCell(seen, cur_r, cur_c, True)
+
+        if cur_r == n - 1 and cur_c == n - 1:
+            return cur_cost
+
+        directions: list[tuple[int, int]] = [(1, 0), (-1, 0), (0, 1), (0, -1)]
+        for direction in directions:
+            dr = direction[0]
+            dc = direction[1]
+            if dr is None or dc is None:
+                continue
+
+            nr = cur_r + dr
+            nc = cur_c + dc
+            if nr < 0 or nc < 0 or nr >= n or nc >= n:
+                continue
+
+            if getBoolCell(seen, nr, nc):
+                continue
+
+            grid_row = grid[nr]
+            if grid_row is None:
+                continue
+
+            height = unwrapInt(grid_row[nc])
+            effort = cur_cost
+            if height > effort:
+                effort = height
+
+            old_effort = getIntCell(best, nr, nc)
+            if effort < old_effort:
+                setIntCell(best, nr, nc, effort)
+
+    last_row = best[n - 1]
+    if last_row is None:
+        return 0
+    return unwrapInt(last_row[n - 1])
 
 def main():
     assert swimInWater([[0, 2], [1, 3]]) == 3
-    assert swimInWater([[0, 1, 2, 3, 4], [24, 23, 22, 21, 5], [12, 13, 14, 15, 16], [11, 17, 18, 19, 20], [10, 9, 8, 7, 6]]) == 16
-
+    assert swimInWater([
+        [0, 1, 2, 3, 4],
+        [24, 23, 22, 21, 5],
+        [12, 13, 14, 15, 16],
+        [11, 17, 18, 19, 20],
+        [10, 9, 8, 7, 6],
+    ]) == 16

@@ -1,41 +1,85 @@
 # LeetCode 567: Permutation In String
 
+ALPHA = "abcdefghijklmnopqrstuvwxyz"
+
+def unwrapInt(value: int | None) -> int:
+    if value is None:
+        return 0
+    return value
+
+def charAt(s: str, index: int) -> str:
+    ch = s[index]
+    if ch is None:
+        return ""
+    return ch
+
+def alphaIndex(ch: str) -> int:
+    for i in range(26):
+        c = ALPHA[i]
+        if c is not None and c == ch:
+            return i
+    return -1
+
+def valueAt(arr: list[int], idx: int) -> int:
+    if idx < 0 or idx >= len(arr):
+        return 0
+    value = arr[idx]
+    if value is None:
+        return 0
+    return value
+
+def addAt(mut arr: list[int], idx: int, delta: int) -> None:
+    if idx < 0 or idx >= len(arr):
+        return
+    arr[idx] = valueAt(arr, idx) + delta
+
 def checkInclusion(s1: str, s2: str) -> bool:
     if len(s1) > len(s2):
         return False
 
-    s1Count, s2Count = [0] * 26, [0] * 26
+    s1Count: list[int] = [0] * 26
+    s2Count: list[int] = [0] * 26
+
     for i in range(len(s1)):
-        s1Count[ord(s1[i]) - ord("a")] += 1
-        s2Count[ord(s2[i]) - ord("a")] += 1
+        addAt(s1Count, alphaIndex(charAt(s1, i)), 1)
+        addAt(s2Count, alphaIndex(charAt(s2, i)), 1)
 
     matches = 0
     for i in range(26):
-        matches += 1 if s1Count[i] == s2Count[i] else 0
+        if valueAt(s1Count, i) == valueAt(s2Count, i):
+            matches += 1
 
-    l = 0
-    for r in range(len(s1), len(s2)):
+    left = 0
+    for right in range(len(s1), len(s2)):
         if matches == 26:
             return True
 
-        index = ord(s2[r]) - ord("a")
-        s2Count[index] += 1
-        if s1Count[index] == s2Count[index]:
+        add_idx = alphaIndex(charAt(s2, right))
+        before_add = valueAt(s2Count, add_idx)
+        addAt(s2Count, add_idx, 1)
+        after_add = valueAt(s2Count, add_idx)
+        target_add = valueAt(s1Count, add_idx)
+
+        if target_add == after_add:
             matches += 1
-        elif s1Count[index] + 1 == s2Count[index]:
+        elif target_add == before_add:
             matches -= 1
 
-        index = ord(s2[l]) - ord("a")
-        s2Count[index] -= 1
-        if s1Count[index] == s2Count[index]:
+        remove_idx = alphaIndex(charAt(s2, left))
+        before_remove = valueAt(s2Count, remove_idx)
+        addAt(s2Count, remove_idx, -1)
+        after_remove = valueAt(s2Count, remove_idx)
+        target_remove = valueAt(s1Count, remove_idx)
+
+        if target_remove == after_remove:
             matches += 1
-        elif s1Count[index] - 1 == s2Count[index]:
+        elif target_remove == before_remove:
             matches -= 1
-        l += 1
+
+        left += 1
+
     return matches == 26
 
 def main():
-    assert str(checkInclusion("ab", "eidbaooo")) == 'true'
-    assert str(checkInclusion("ab", "eidboaoo")) == 'false'
-
-
+    assert checkInclusion("ab", "eidbaooo") == True
+    assert checkInclusion("ab", "eidboaoo") == False

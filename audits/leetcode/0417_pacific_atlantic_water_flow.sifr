@@ -1,8 +1,18 @@
 # LeetCode 417: Pacific Atlantic Water Flow
 
 def pacificAtlantic(heights: list[list[int]]) -> list[list[int]]:
-    ROWS, COLS = len(heights), len(heights[0])
-    pac, atl = set(), set()
+    ROWS = len(heights)
+    if ROWS == 0:
+        return []
+    COLS = len(heights[0])
+    pac: set[tuple[int, int]] = set()
+    atl: set[tuple[int, int]] = set()
+
+    def heightAt(r: int, c: int) -> int:
+        v = heights[r][c]
+        if v is not None:
+            return v
+        return 0
 
     def dfs(r: int, c: int, visit: set[tuple[int, int]], prevHeight: int):
         if (
@@ -11,24 +21,26 @@ def pacificAtlantic(heights: list[list[int]]) -> list[list[int]]:
             or c < 0
             or r == ROWS
             or c == COLS
-            or heights[r][c] < prevHeight
         ):
             return
+        current = heightAt(r, c)
+        if current < prevHeight:
+            return
         visit.add((r, c))
-        dfs(r + 1, c, visit, heights[r][c])
-        dfs(r - 1, c, visit, heights[r][c])
-        dfs(r, c + 1, visit, heights[r][c])
-        dfs(r, c - 1, visit, heights[r][c])
+        dfs(r + 1, c, visit, current)
+        dfs(r - 1, c, visit, current)
+        dfs(r, c + 1, visit, current)
+        dfs(r, c - 1, visit, current)
 
     for c in range(COLS):
-        dfs(0, c, pac, heights[0][c])
-        dfs(ROWS - 1, c, atl, heights[ROWS - 1][c])
+        dfs(0, c, pac, heightAt(0, c))
+        dfs(ROWS - 1, c, atl, heightAt(ROWS - 1, c))
 
     for r in range(ROWS):
-        dfs(r, 0, pac, heights[r][0])
-        dfs(r, COLS - 1, atl, heights[r][COLS - 1])
+        dfs(r, 0, pac, heightAt(r, 0))
+        dfs(r, COLS - 1, atl, heightAt(r, COLS - 1))
 
-    res = []
+    res: list[list[int]] = []
     for r in range(ROWS):
         for c in range(COLS):
             if (r, c) in pac and (r, c) in atl:

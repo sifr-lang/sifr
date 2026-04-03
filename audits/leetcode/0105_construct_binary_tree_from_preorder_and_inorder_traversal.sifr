@@ -53,8 +53,16 @@ def buildTree(preorder: list[int], inorder: list[int]) -> TreeNode | None:
     if not preorder or not inorder:
         return None
 
-    root = TreeNode(preorder[0])
-    mid = inorder.index(preorder[0])
+    root_val0 = preorder[0]
+    if root_val0 is None:
+        return None
+    root = TreeNode(root_val0)
+
+    mid0 = inorder.index(root_val0)
+    if mid0 is None:
+        return None
+    mid = mid0
+
     root.left = buildTree(preorder[1 : mid + 1], inorder[:mid])
     root.right = buildTree(preorder[mid + 1 :], inorder[mid + 1 :])
     return root

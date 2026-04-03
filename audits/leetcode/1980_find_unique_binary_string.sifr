@@ -1,25 +1,29 @@
 # LeetCode 1980: Find Unique Binary String
 
 def findDifferentBinaryString(nums: list[str]) -> str:
-    
-    strSet = { s for s in nums }
-    
-    def backtrack(i, cur):
-        if i == len(nums):
-            res = "".join(cur)
-            return None if res in strSet else res
-        
-        res = backtrack(i+1, cur)
-        if res: return res
-        
-        cur[i] = "1"
-        res = backtrack(i+1, cur)
-        if res: return res
-        
-    return backtrack(0, ["0" for s in nums])
+    out: list[str] = []
+    i = 0
+    for row in nums:
+        bit: str | None = row[i]
+        if bit is not None and bit == "0":
+            out.append("1")
+        else:
+            out.append("0")
+        i += 1
+    return "".join(out)
 
 def main():
-    assert findDifferentBinaryString(['01', '10']) == '00'
-    assert findDifferentBinaryString(['00', '01']) == '11'
-    assert findDifferentBinaryString(['111', '011', '001']) == '000'
+    nums1 = ['01', '10']
+    ans1 = findDifferentBinaryString(nums1)
+    assert len(ans1) == len(nums1)
+    assert ans1 not in nums1
 
+    nums2 = ['00', '01']
+    ans2 = findDifferentBinaryString(nums2)
+    assert len(ans2) == len(nums2)
+    assert ans2 not in nums2
+
+    nums3 = ['111', '011', '001']
+    ans3 = findDifferentBinaryString(nums3)
+    assert len(ans3) == len(nums3)
+    assert ans3 not in nums3

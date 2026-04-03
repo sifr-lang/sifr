@@ -52,11 +52,13 @@ class Node:
 def sortedArrayToBST(nums: list[int]) -> TreeNode | None:
     if not nums:
         return None
-    mid = len(nums)//2
-    root = TreeNode(nums[mid])
-    root.left = sortedArrayToBST(nums[:mid])
-    root.right = sortedArrayToBST(nums[mid+1:])
-    return root
+    mid = len(nums) // 2
+    mid_val0 = nums[mid]
+    if mid_val0 is None:
+        return None
+    left_sub = sortedArrayToBST(nums[:mid])
+    right_sub = sortedArrayToBST(nums[mid + 1 :])
+    return TreeNode(mid_val0, left_sub, right_sub)
 
 def main():
     assert treeToString(sortedArrayToBST([-10, -3, 0, 5, 9])) == "0(-3(-10(None,None),None),9(5(None,None),None))"

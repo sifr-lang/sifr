@@ -1,55 +1,117 @@
 # LeetCode 1397: Find All Good Strings
 
+MOD = 1_000_000_007
+ALPHA = "abcdefghijklmnopqrstuvwxyz"
+
+def unwrapInt(value: int | None) -> int:
+    if value is None:
+        return 0
+    return value
+
+def charAt(s: str, index: int) -> str:
+    ch = s[index]
+    if ch is None:
+        return ""
+    return ch
+
+def alphaIndex(ch: str) -> int:
+    for i in range(26):
+        c = ALPHA[i]
+        if c is not None and c == ch:
+            return i
+    return -1
+
+def lpsAt(lps: list[int], index: int) -> int:
+    return unwrapInt(lps[index])
+
+def setLpsAt(mut lps: list[int], index: int, value: int) -> None:
+    lps[index] = value
+
+def boolToInt(value: bool) -> int:
+    if value:
+        return 1
+    return 0
+
+def advanceMatch(evil: str, lps: list[int], mut matched: int, ch: str) -> int:
+    while matched > 0 and charAt(evil, matched) != ch:
+        matched = lpsAt(lps, matched - 1)
+
+    if charAt(evil, matched) == ch:
+        matched += 1
+    return matched
+
+def dpCount(
+    pos: int,
+    tightLow: bool,
+    tightHigh: bool,
+    matched: int,
+    n: int,
+    s1: str,
+    s2: str,
+    evil: str,
+    lps: list[int],
+    mut memo: dict[int, int],
+) -> int:
+    evil_len = len(evil)
+    if matched == evil_len:
+        return 0
+    if pos == n:
+        return 1
+
+    key = (((pos * 2 + boolToInt(tightLow)) * 2 + boolToInt(tightHigh)) * (evil_len + 1)) + matched
+    cached = memo.get(key)
+    if cached is not None:
+        return cached
+
+    lower_bound = 0
+    if tightLow:
+        lower_bound = alphaIndex(charAt(s1, pos))
+        if lower_bound < 0:
+            lower_bound = 0
+
+    upper_bound = 25
+    if tightHigh:
+        upper_bound = alphaIndex(charAt(s2, pos))
+        if upper_bound < 0:
+            upper_bound = 25
+
+    ans = 0
+    for idx in range(lower_bound, upper_bound + 1):
+        ch = charAt(ALPHA, idx)
+        if ch == "":
+            continue
+
+        next_matched = advanceMatch(evil, lps, matched, ch)
+        if next_matched == evil_len:
+            continue
+
+        next_low = tightLow and idx == lower_bound
+        next_high = tightHigh and idx == upper_bound
+
+        ans = (ans + dpCount(pos + 1, next_low, next_high, next_matched, n, s1, s2, evil, lps, memo)) % MOD
+
+    memo[key] = ans
+    return ans
+
 def findGoodStrings(n: int, s1: str, s2: str, evil: str) -> int:
-    a = ord('a')
-    z = ord('z')
-    
-    arr_e = list(map(ord, evil))
-    len_e = len(evil)
-    next = [0] * len_e
+    if len(evil) == 0:
+        return 0
 
-    for i in range(1, len_e):
-        j = next[i - 1]
-        while j > 0 and evil[i] != evil[j]:
-            j = next[j - 1]
-        if evil[i] == evil[j]:
-            next[i] = j + 1
+    evil_len = len(evil)
+    lps: list[int] = [0] * evil_len
 
-    def good(s):
-        arr = list(map(ord, s))
-        len_a = len(arr)
+    for i in range(1, evil_len):
+        j = lpsAt(lps, i - 1)
+        ci = charAt(evil, i)
+        while j > 0 and ci != charAt(evil, j):
+            j = lpsAt(lps, j - 1)
+        if ci == charAt(evil, j):
+            setLpsAt(lps, i, j + 1)
 
-        @cache
-        def f(i, skip, reach, e):
-            if e == len_e:
-                return 0
-            if i == len_a:
-                return 0 if skip else 1
-
-            limit = arr[i] if reach else z
-            ans = 0
-
-            if skip:
-                ans += f(i + 1, True, False, 0)
-
-            for c in range(a, limit + 1):
-                ee = e
-                while ee > 0 and arr_e[ee] != c:
-                    ee = next[ee - 1] 
-
-                if arr_e[ee] == c:
-                    ee += 1
-
-                ans += f(i + 1, False, reach and c == limit, ee)
-
-            return ans % int(1e9 + 7)
-
-        return f(0, True, True, 0)
-
-    return (good(s2) - good(s1) + int(evil not in s1)) % int(1e9 + 7)
+    memo: dict[int, int] = {}
+    return dpCount(0, True, True, 0, n, s1, s2, evil, lps, memo)
 
 def main():
-    assert findGoodStrings(2, 'aa', 'da', 'b') == 51
-    assert findGoodStrings(8, 'leetcode', 'leetgoes', 'leet') == 0
-    assert findGoodStrings(2, 'gx', 'gz', 'x') == 2
-
+    assert findGoodStrings(2, "aa", "da", "b") == 51
+    assert findGoodStrings(8, "leetcode", "leetgoes", "leet") == 0
+    assert findGoodStrings(2, "gx", "gz", "x") == 2
