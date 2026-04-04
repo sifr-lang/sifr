@@ -1,22 +1,27 @@
 # LeetCode 287: Find The Duplicate Number
 
+def nextIndex(nums: list[int], idx: int) -> int:
+    val = nums[idx]
+    if val is not None:
+        return val
+    return 0
+
 def findDuplicate(nums: list[int]) -> int:
-    slow, fast = 0, 0
+    slow = 0
+    fast = 0
     while True:
-        slow = nums[slow]
-        fast = nums[nums[fast]]
+        slow = nextIndex(nums, slow)
+        fast = nextIndex(nums, nextIndex(nums, fast))
         if slow == fast:
             break
 
     slow2 = 0
-    while True:
-        slow = nums[slow]
-        slow2 = nums[slow2]
-        if slow == slow2:
-            return slow
+    while slow != slow2:
+        slow = nextIndex(nums, slow)
+        slow2 = nextIndex(nums, slow2)
+    return slow
 
 def main():
     assert str(findDuplicate([1,3,4,2,2])) == '2'
     assert str(findDuplicate([3,1,3,4,2])) == '3'
-
 

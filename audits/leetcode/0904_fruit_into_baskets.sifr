@@ -1,25 +1,33 @@
 # LeetCode 904: 0904_Fruit_Into_Baskets
 
 def totalFruit(fruits: list[int]) -> int:
-    tr = {}
-    l = r = 0
+    tr: dict[int, int] = {}
+    window: list[int] = []
     res = 0
-    while r < len(fruits):
-        if fruits[r] not in tr:
-            tr[fruits[r]] = 1
-        else:
-            tr[fruits[r]] += 1
+    for right_fruit in fruits:
+        window.append(right_fruit)
+        tr[right_fruit] = tr.get(right_fruit, 0) + 1
+
         while len(tr) > 2:
-            tr[fruits[l]] -= 1
-            if tr[fruits[l]] == 0:
-                del tr[fruits[l]]
-            l += 1
-        res = max(res, r-l+1)
-        r += 1
+            left_fruit0 = window.pop(0)
+            left_fruit: int = 0
+            if left_fruit0 is not None:
+                left_fruit = left_fruit0
+            else:
+                continue
+
+            next_count = tr.get(left_fruit, 0) - 1
+            if next_count <= 0:
+                if left_fruit in tr:
+                    del tr[left_fruit]
+            else:
+                tr[left_fruit] = next_count
+
+        if len(window) > res:
+            res = len(window)
     return res
 
 def main():
     assert totalFruit([1, 2, 1]) == 3
     assert totalFruit([0, 1, 2, 2]) == 3
     assert totalFruit([1, 2, 3, 2, 2]) == 4
-

@@ -1,27 +1,40 @@
 # LeetCode 47: Permutations Ii
 
 def permuteUnique(nums: list[int]) -> list[list[int]]:
-    result = []
-    counter = collections.Counter(nums)
+    result: list[list[int]] = []
+    counter: dict[int, int] = {}
+    for n in nums:
+        prev = counter.get(n, 0)
+        counter[n] = prev + 1
+    perm: list[int] = []
+    keys: list[int] = []
+    sorted_nums = nums.copy()
+    sorted_nums.sort()
+    for n in sorted_nums:
+        if len(keys) == 0:
+            keys.append(n)
+        else:
+            last = keys[len(keys) - 1]
+            if last is not None and last != n:
+                keys.append(n)
 
-    def backtrack(perm, counter):
+    def backtrack() -> None:
         if len(perm) == len(nums):
             result.append(perm.copy())
+            return
 
-        for n in counter:
-            if counter[n] == 0:
-                continue
-            perm.append(n)
-            counter[n] -= 1
-            backtrack(perm, counter)
-            perm.pop()
-            counter[n] += 1
+        for n in keys:
+            count_n = counter.get(n, 0)
+            if count_n > 0:
+                perm.append(n)
+                counter[n] = count_n - 1
+                backtrack()
+                perm.pop()
+                counter[n] = count_n
 
-    backtrack([], counter)
+    backtrack()
 
     return result
 
 def main():
     assert str(permuteUnique([1,1,2])) == '[[1, 1, 2], [1, 2, 1], [2, 1, 1]]'
-
-

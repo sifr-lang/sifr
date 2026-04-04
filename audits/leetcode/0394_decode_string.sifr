@@ -1,27 +1,87 @@
 # LeetCode 394: Decode String
 
+def popStr(mut stack: list[str]) -> str:
+    value = stack.pop()
+    if value is None:
+        return ""
+    return value
+
+def peekStr(stack: list[str]) -> str:
+    if len(stack) == 0:
+        return ""
+    value = stack[len(stack) - 1]
+    if value is None:
+        return ""
+    return value
+
+def isDigit(ch: str) -> bool:
+    return ch == "0" or ch == "1" or ch == "2" or ch == "3" or ch == "4" or ch == "5" or ch == "6" or ch == "7" or ch == "8" or ch == "9"
+
+def digitValue(ch: str) -> int:
+    if ch == "0":
+        return 0
+    if ch == "1":
+        return 1
+    if ch == "2":
+        return 2
+    if ch == "3":
+        return 3
+    if ch == "4":
+        return 4
+    if ch == "5":
+        return 5
+    if ch == "6":
+        return 6
+    if ch == "7":
+        return 7
+    if ch == "8":
+        return 8
+    if ch == "9":
+        return 9
+    return 0
+
+def parsePositiveInt(token: str) -> int:
+    if len(token) == 0:
+        return 1
+    value = 0
+    for i in range(len(token)):
+        ch = token[i]
+        if ch is None:
+            continue
+        value = value * 10 + digitValue(ch)
+    return value
+
+def repeatString(unit: str, count: int) -> str:
+    out = ""
+    for _ in range(count):
+        out += unit
+    return out
+
 def decodeString(s: str) -> str:
-    stack = []
+    stack: list[str] = []
 
-    for char in s:
-        if char is not "]":
-            stack.append(char)
-        else:
-            sub_str = ""
-            while stack[-1] is not "[":
-                sub_str = stack.pop() + sub_str
-            stack.pop()
+    for ch in s:
+        if ch != "]":
+            stack.append(ch)
+            continue
 
-            multiplier = ""
-            while stack and stack[-1].isdigit():
-                multiplier = stack.pop() + multiplier
+        segment = ""
+        while len(stack) > 0 and peekStr(stack) != "[":
+            segment = popStr(stack) + segment
 
-            stack.append(int(multiplier) * sub_str)
+        if len(stack) > 0 and peekStr(stack) == "[":
+            _ = popStr(stack)
+
+        multiplier = ""
+        while len(stack) > 0 and isDigit(peekStr(stack)):
+            multiplier = popStr(stack) + multiplier
+
+        repeat = parsePositiveInt(multiplier)
+        stack.append(repeatString(segment, repeat))
 
     return "".join(stack)
 
 def main():
-    assert str(decodeString("3[a]2[bc]")) == 'aaabcbc'
-    assert str(decodeString("3[a2[c]]")) == 'accaccacc'
-
-
+    assert decodeString("3[a]2[bc]") == "aaabcbc"
+    assert decodeString("3[a2[c]]") == "accaccacc"
+    assert decodeString("2[abc]3[cd]ef") == "abcabccdcdcdef"

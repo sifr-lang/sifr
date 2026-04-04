@@ -1,22 +1,59 @@
 # LeetCode 304: Range Sum Query 2D Immutable
 
+def unwrapInt(value: int | None) -> int:
+    if value is None:
+        return 0
+    return value
+
 class NumMatrix:
-    def __init__(self, matrix):
-        self.sum_ = [[0] * (len(matrix[0]) + 1) for _ in range(len(matrix) + 1)]
-        for i, line in enumerate(matrix):
-            previous = 0
-            for j, num in enumerate(line):
-                previous += num
-                above = self.sum_[i][j + 1]
-                self.sum_[i + 1][j + 1] = previous + above
-    def sumRegion(self, row1, col1, row2, col2):
-        sum_col2 = self.sum_[row2 + 1][col2 + 1] - self.sum_[row1][col2 + 1]
-        sum_col1 = self.sum_[row2 + 1][col1] - self.sum_[row1][col1]
+    sum_: list[list[int]]
+
+    def __init__(self, matrix: list[list[int]]):
+        rows = len(matrix)
+        cols = 0
+        if rows > 0:
+            first_row = matrix[0]
+            if first_row is not None:
+                cols = len(first_row)
+
+        self.sum_ = []
+        self.sum_.append([0] * (cols + 1))
+
+        for i in range(rows):
+            running = 0
+            prefix_row: list[int] = [0]
+            row_values = matrix[i]
+            if row_values is None:
+                row_values = []
+            prev_row = self.sum_[i]
+            if prev_row is None:
+                prev_row = [0] * (cols + 1)
+
+            for j in range(cols):
+                running += unwrapInt(row_values[j])
+                above = unwrapInt(prev_row[j + 1])
+                prefix_row.append(running + above)
+
+            self.sum_.append(prefix_row)
+
+    def sumRegion(self, row1: int, col1: int, row2: int, col2: int) -> int:
+        bottom_row = self.sum_[row2 + 1]
+        top_row = self.sum_[row1]
+        if bottom_row is None or top_row is None:
+            return 0
+
+        sum_col2 = unwrapInt(bottom_row[col2 + 1]) - unwrapInt(top_row[col2 + 1])
+        sum_col1 = unwrapInt(bottom_row[col1]) - unwrapInt(top_row[col1])
         return sum_col2 - sum_col1
 
 def main():
-    obj = NumMatrix([[3, 0, 1, 4, 2], [5, 6, 3, 2, 1], [1, 2, 0, 1, 5], [4, 1, 0, 1, 7], [1, 0, 3, 0, 5]])
+    obj = NumMatrix([
+        [3, 0, 1, 4, 2],
+        [5, 6, 3, 2, 1],
+        [1, 2, 0, 1, 5],
+        [4, 1, 0, 1, 7],
+        [1, 0, 3, 0, 5],
+    ])
     assert obj.sumRegion(2, 1, 4, 3) == 8
     assert obj.sumRegion(1, 1, 2, 2) == 11
     assert obj.sumRegion(1, 2, 2, 4) == 12
-

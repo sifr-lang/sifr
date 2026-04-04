@@ -1,30 +1,49 @@
 # LeetCode 329: Longest Increasing Path In A Matrix
 
 def longestIncreasingPath(matrix: list[list[int]]) -> int:
-    ROWS, COLS = len(matrix), len(matrix[0])
-    dp = {}  # (r, c) -> LIP
+    ROWS = len(matrix)
+    if ROWS == 0:
+        return 0
+    COLS = len(matrix[0])
+    dp: dict[tuple[int, int], int] = {}  # (r, c) -> LIP
 
-    def dfs(r, c, prevVal):
-        if r < 0 or r == ROWS or c < 0 or c == COLS or matrix[r][c] <= prevVal:
+    def dfs(r: int, c: int, prevVal: int) -> int:
+        if r < 0 or r == ROWS or c < 0 or c == COLS:
+            return 0
+        curr0 = matrix[r][c]
+        if curr0 is None:
+            return 0
+        curr = curr0
+        if curr <= prevVal:
             return 0
         if (r, c) in dp:
-            return dp[(r, c)]
+            return dp.get((r, c), 0)
 
-        res = 1
-        res = max(res, 1 + dfs(r + 1, c, matrix[r][c]))
-        res = max(res, 1 + dfs(r - 1, c, matrix[r][c]))
-        res = max(res, 1 + dfs(r, c + 1, matrix[r][c]))
-        res = max(res, 1 + dfs(r, c - 1, matrix[r][c]))
+        down = dfs(r + 1, c, curr)
+        up = dfs(r - 1, c, curr)
+        right = dfs(r, c + 1, curr)
+        left = dfs(r, c - 1, curr)
+
+        best_child = down
+        if up > best_child:
+            best_child = up
+        if right > best_child:
+            best_child = right
+        if left > best_child:
+            best_child = left
+        res = 1 + best_child
         dp[(r, c)] = res
         return res
 
+    best = 0
     for r in range(ROWS):
         for c in range(COLS):
-            dfs(r, c, -1)
-    return max(dp.values())
+            cand = dfs(r, c, -1)
+            if cand > best:
+                best = cand
+    return best
 
 def main():
     assert longestIncreasingPath([[9, 9, 4], [6, 6, 8], [2, 1, 1]]) == 4
     assert longestIncreasingPath([[3, 4, 5], [3, 2, 6], [2, 2, 1]]) == 4
     assert longestIncreasingPath([[1]]) == 1
-

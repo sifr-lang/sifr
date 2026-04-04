@@ -1,0 +1,39 @@
+fixture_slug	exit_code	first_line
+0002_add_two_numbers	0	no errors found
+0046_permutations	0	no errors found
+0047_permutations_ii	0	no errors found
+0057_insert_interval	0	no errors found
+0064_minimum_path_sum	0	no errors found
+0088_merge_sorted_array	0	no errors found
+0103_binary_tree_zigzag_level_order_traversal	0	no errors found
+0105_construct_binary_tree_from_preorder_and_inorder_traversal	0	no errors found
+0106_construct_binary_tree_from_inorder_and_postorder_traversal	0	no errors found
+0108_convert_sorted_array_to_binary_search_tree	0	no errors found
+0139_word_break	0	no errors found
+0150_evaluate_reverse_polish_notation	0	warning: int multiplication with non-constant operands may overflow i64 at runtime; consider using bigint for large values
+0261_graph_valid_tree	0	no errors found
+0287_find_the_duplicate_number	0	no errors found
+0304_range_sum_query_2d_immutable	0	no errors found
+0329_longest_increasing_path_in_a_matrix	0	no errors found
+0394_decode_string	0	no errors found
+0417_pacific_atlantic_water_flow	0	no errors found
+0438_find_all_anagrams_in_a_string	0	no errors found
+0452_minimum_number_of_arrows_to_burst_balloons	0	no errors found
+0567_permutation_in_string	0	no errors found
+0778_swim_in_rising_water	0	warning: int multiplication with non-constant operands may overflow i64 at runtime; consider using bigint for large values
+0802_find_eventual_safe_states	0	no errors found
+0875_koko_eating_bananas	0	no errors found
+0881_boats_to_save_people	0	no errors found
+0904_fruit_into_baskets	0	no errors found
+0948_bag_of_tokens	0	no errors found
+0977_squares_of_a_sorted_array	0	warning: int multiplication with non-constant operands may overflow i64 at runtime; consider using bigint for large values
+1203_sort_items_by_groups_respecting_dependencies	0	no errors found
+1397_find_all_good_strings	0	warning: int multiplication with non-constant operands may overflow i64 at runtime; consider using bigint for large values
+1423_maximum_points_you_can_obtain_from_cards	0	no errors found
+1498_number_of_subsequences_that_satisfy_the_given_sum_condition	0	warning: int left shift (<<) with non-constant shift amount may overflow i64 at runtime; consider using bigint
+1584_min_cost_to_connect_all_points	0	no errors found
+1631_path_with_minimum_effort	0	warning: int multiplication with non-constant operands may overflow i64 at runtime; consider using bigint for large values
+1700_number_of_students_unable_to_eat_lunch	0	no errors found
+1838_frequency_of_the_most_frequent_element	0	warning: int multiplication with non-constant operands may overflow i64 at runtime; consider using bigint for large values
+1980_find_unique_binary_string	0	no errors found
+2300_successful_pairs_of_spells_and_potions	0	warning: int multiplication with non-constant operands may overflow i64 at runtime; consider using bigint for large values

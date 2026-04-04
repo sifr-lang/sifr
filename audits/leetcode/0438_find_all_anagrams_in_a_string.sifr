@@ -1,32 +1,43 @@
 # LeetCode 438: Find All Anagrams In A String
 
 def findAnagrams(s: str, p: str) -> list[int]:
-    
-    startIndex = 0
-    pMap, sMap = {}, {}
-    res = []
-    
+    pMap: dict[str, int] = {}
+    sMap: dict[str, int] = {}
+    res: list[int] = []
+
     for char in p:
         pMap[char] = 1 + pMap.get(char, 0)
-    
-    for i in range(len(s)):
-        sMap[s[i]] = 1 + sMap.get(s[i], 0)
 
-        if i >= len(p) - 1:
-            if sMap == pMap:
-                res.append(startIndex)
-            
-            # If current character is in sMap, remove it and re-update the map.
-            if s[startIndex] in sMap:
-                sMap[s[startIndex]] -= 1
-                if sMap[s[startIndex]] == 0:
-                    del sMap[s[startIndex]]
-            startIndex += 1
-    
+    window: list[str] = []
+    target_len = len(p)
+
+    for i, ch in enumerate(s):
+        window.append(ch)
+        latest0 = window[len(window) - 1]
+        latest = ""
+        if latest0 is not None:
+            latest = latest0
+        else:
+            continue
+        sMap[latest] = 1 + sMap.get(latest, 0)
+
+        if len(window) > target_len:
+            old_ch0 = window.pop(0)
+            old_ch = ""
+            if old_ch0 is not None:
+                old_ch = old_ch0
+            else:
+                continue
+            if old_ch in sMap:
+                sMap[old_ch] -= 1
+                if sMap[old_ch] == 0:
+                    del sMap[old_ch]
+
+        if len(window) == target_len and sMap == pMap:
+            res.append(i - target_len + 1)
+
     return res
 
 def main():
     assert str(findAnagrams("cbaebabacd", "abc")) == '[0, 6]'
     assert str(findAnagrams("abab", "ab")) == '[0, 1, 2]'
-
-

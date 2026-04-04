@@ -2,20 +2,33 @@
 
 def sortedSquares(nums: list[int]) -> list[int]:
     n = len(nums)
-    res = [0] * n
-    l, r = 0, n - 1
-    
+    res: list[int] = [0] * n
+    l = 0
+    r = n - 1
+
     while l <= r:
-        left, right = abs(nums[l]), abs(nums[r])
+        left_raw = nums[l]
+        left = 0
+        if left_raw is not None:
+            left = abs(left_raw)
+        else:
+            l += 1
+            continue
+        right_raw = nums[r]
+        right = 0
+        if right_raw is not None:
+            right = abs(right_raw)
+        else:
+            r -= 1
+            continue
+        idx = r - l
         if left > right:
-            res[r - l] = left * left
+            res[idx] = left * left
             l += 1
         else:
-            res[r - l] = right * right
+            res[idx] = right * right
             r -= 1
     return res
 
 def main():
     assert str(sortedSquares([-4,-1,0,3,10])) == '[0, 1, 9, 16, 100]'
-
-

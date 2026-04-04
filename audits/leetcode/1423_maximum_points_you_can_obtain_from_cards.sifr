@@ -2,16 +2,32 @@
 
 def maxScore(cardPoints: list[int], k: int) -> int:
     n = len(cardPoints)
+    if n == 0 or k == 0:
+        return 0
 
-    score = maxScore = sum(cardPoints[:k])
+    score = 0
+    for i in range(k):
+        val0 = cardPoints[i]
+        if val0 is not None:
+            score += val0
+    best = score
 
     for i in range(1, k + 1):
-        score += cardPoints[-i] - cardPoints[k - i]
-        maxScore = max(maxScore, score)
+        right0 = cardPoints[-i]
+        left0 = cardPoints[k - i]
+        right = 0
+        left = 0
+        if right0 is not None and left0 is not None:
+            right = right0
+            left = left0
+        else:
+            continue
 
-    return maxScore
+        score += right - left
+        if score > best:
+            best = score
+
+    return best
 
 def main():
     assert str(maxScore([1,2,3,4,5,6,1], 3)) == '12'
-
-

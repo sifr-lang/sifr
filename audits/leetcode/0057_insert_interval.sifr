@@ -1,28 +1,51 @@
 # LeetCode 57: Insert Interval
 
-def insert(
-    self, intervals: list[list[int]], newInterval: list[int]
-) -> list[list[int]]:
-    res = []
+def insert(intervals: list[list[int]], newInterval: list[int]) -> list[list[int]]:
+    res: list[list[int]] = []
+    new_start0 = newInterval[0]
+    new_end0 = newInterval[1]
+    curr_start: int = 0
+    if new_start0 is not None:
+        curr_start = new_start0
+    else:
+        return []
+    curr_end: int = 0
+    if new_end0 is not None:
+        curr_end = new_end0
+    else:
+        return []
 
     for i in range(len(intervals)):
-        if newInterval[1] < intervals[i][0]:
-            res.append(newInterval)
-            return res + intervals[i:]
-        elif newInterval[0] > intervals[i][1]:
-            res.append(intervals[i])
+        current = intervals[i]
+        current_start = current[0]
+        current_end = current[1]
+        current_start_val: int = 0
+        if current_start is not None:
+            current_start_val = current_start
         else:
-            newInterval = [
-                min(newInterval[0], intervals[i][0]),
-                max(newInterval[1], intervals[i][1]),
-            ]
-    res.append(newInterval)
+            continue
+        current_end_val: int = 0
+        if current_end is not None:
+            current_end_val = current_end
+        else:
+            continue
+
+        if curr_end < current_start_val:
+            res.append([curr_start, curr_end])
+            return res + intervals[i:]
+        elif curr_start > current_end_val:
+            res.append(current)
+        else:
+            if current_start_val < curr_start:
+                curr_start = current_start_val
+            if current_end_val > curr_end:
+                curr_end = current_end_val
+    res.append([curr_start, curr_end])
     return res
 
 def main():
-    assert insert(None, [[1, 3], [6, 9]], [2, 5]) == [[1, 5], [6, 9]]
+    assert insert([[1, 3], [6, 9]], [2, 5]) == [[1, 5], [6, 9]]
     assert insert(
-        None,
         [[1, 2], [3, 5], [6, 7], [8, 10], [12, 16]],
         [4, 8],
     ) == [[1, 2], [3, 10], [12, 16]]

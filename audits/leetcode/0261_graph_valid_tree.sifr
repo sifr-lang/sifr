@@ -1,32 +1,3 @@
-# LeetCode 261: Graph Valid Tree
-
-def validTree(n, edges):
-    if not n:
-        return True
-    adj = {i: [] for i in range(n)}
-    for n1, n2 in edges:
-        adj[n1].append(n2)
-        adj[n2].append(n1)
-
-    visit = set()
-
-    def dfs(i, prev):
-        if i in visit:
-            return False
-
-        visit.add(i)
-        for j in adj[i]:
-            if j == prev:
-                continue
-            if not dfs(j, i):
-                return False
-        return True
-
-    return dfs(0, -1) and n == len(visit)
-
-
-# alternative solution via DSU. It avoids building an adjacency walk stack
-# and instead rejects cycles while tracking connected components directly.
 def validTreeDsu(n: int, edges: list[list[int]]) -> bool:
     if n == 0:
         return True
@@ -36,32 +7,56 @@ def validTreeDsu(n: int, edges: list[list[int]]) -> bool:
     components = n
 
     def find(node: int) -> int:
-        while node != parents[node]:
-            parents[node] = parents[parents[node]]
-            node = parents[node]
-        return node
+        parent0 = parents[node]
+        if parent0 is None:
+            return node
+        parent = parent0
+        if parent == node:
+            return node
+        root = find(parent)
+        parents[node] = root
+        return root
 
-    def union(a: int, b: int) -> bool:
-        nonlocal components
+    for edge in edges:
+        a0 = edge[0]
+        b0 = edge[1]
+        a = 0
+        b = 0
+        if a0 is not None and b0 is not None:
+            a = a0
+            b = b0
+        else:
+            continue
+
         rootA = find(a)
         rootB = find(b)
         if rootA == rootB:
             return False
-        if ranks[rootA] < ranks[rootB]:
+
+        rankA0 = ranks[rootA]
+        rankB0 = ranks[rootB]
+        rankA = 0
+        rankB = 0
+        if rankA0 is not None and rankB0 is not None:
+            rankA = rankA0
+            rankB = rankB0
+        else:
+            continue
+
+        if rankA < rankB:
             parents[rootA] = rootB
-        elif ranks[rootA] > ranks[rootB]:
+        elif rankA > rankB:
             parents[rootB] = rootA
         else:
             parents[rootB] = rootA
-            ranks[rootA] += 1
+            ranks[rootA] = rankA + 1
         components -= 1
-        return True
-
-    for edge in edges:
-        if not union(edge[0], edge[1]):
-            return False
 
     return components == 1
+
+# Canonical entrypoint for this fixture.
+def validTree(n: int, edges: list[list[int]]) -> bool:
+    return validTreeDsu(n, edges)
 
 def main():
     assert validTree(5, [[0, 1], [0, 2], [0, 3], [1, 4]]) == True

@@ -1,35 +1,116 @@
 # LeetCode 1631: Path With Minimum Effort
 
+def unwrapInt(value: int | None) -> int:
+    if value is None:
+        return 0
+    return value
+
+def unwrapBool(value: bool | None) -> bool:
+    if value is None:
+        return False
+    return value
+
+def getIntCell(matrix: list[list[int]], r: int, c: int) -> int:
+    row = matrix[r]
+    if row is None:
+        return 0
+    return unwrapInt(row[c])
+
+def setIntCell(mut matrix: list[list[int]], r: int, c: int, value: int) -> None:
+    row = matrix[r]
+    if row is None:
+        return
+    row[c] = value
+    matrix[r] = row
+
+def getBoolCell(matrix: list[list[bool]], r: int, c: int) -> bool:
+    row = matrix[r]
+    if row is None:
+        return False
+    return unwrapBool(row[c])
+
+def setBoolCell(mut matrix: list[list[bool]], r: int, c: int, value: bool) -> None:
+    row = matrix[r]
+    if row is None:
+        return
+    row[c] = value
+    matrix[r] = row
+
 def minimumEffortPath(heights: list[list[int]]) -> int:
-    m, n = len(heights), len(heights[0])
-    
-    efforts = [[float('inf')] * n for _ in range(m)]
-    directions = [(-1, 0), (1, 0), (0, -1), (0, 1)]
-    
-    efforts[0][0] = 0
-    pq = [(0, 0, 0)]  # (effort, row, col)
-    
-    while pq:
-        curEffort, i, j = heapq.heappop(pq)
-        
-        # reached the bottom-right corner => return the effort
-        if i == m - 1 and j == n - 1:
-            return curEffort
-        
-        for dx, dy in directions:
-            x, y = i + dx, j + dy
-            
-            if 0 <= x < m and 0 <= y < n:
-                newEffort = max(abs(heights[x][y] - heights[i][j]), curEffort)
-                
-                if newEffort < efforts[x][y]:
-                    efforts[x][y] = newEffort
-                    heapq.heappush(pq, (newEffort, x, y))
-    
-    return efforts[m - 1][n - 1]
+    m = len(heights)
+    if m == 0:
+        return 0
+
+    first_row = heights[0]
+    if first_row is None:
+        return 0
+    n = len(first_row)
+    if n == 0:
+        return 0
+
+    inf = 1_000_000_000
+    dist: list[list[int]] = []
+    used: list[list[bool]] = []
+    for _ in range(m):
+        dist.append([inf] * n)
+        used.append([False] * n)
+    setIntCell(dist, 0, 0, 0)
+
+    for _ in range(m * n):
+        best = inf
+        r = -1
+        c = -1
+
+        for i in range(m):
+            for j in range(n):
+                if getBoolCell(used, i, j):
+                    continue
+                cand = getIntCell(dist, i, j)
+                if cand < best:
+                    best = cand
+                    r = i
+                    c = j
+
+        if r == -1 or c == -1:
+            break
+
+        setBoolCell(used, r, c, True)
+        if r == m - 1 and c == n - 1:
+            return best
+
+        directions: list[tuple[int, int]] = [(1, 0), (-1, 0), (0, 1), (0, -1)]
+        for direction in directions:
+            dr = direction[0]
+            dc = direction[1]
+            if dr is None or dc is None:
+                continue
+
+            nr = r + dr
+            nc = c + dc
+            if nr < 0 or nc < 0 or nr >= m or nc >= n:
+                continue
+            if getBoolCell(used, nr, nc):
+                continue
+
+            height_cur = getIntCell(heights, r, c)
+            height_next = getIntCell(heights, nr, nc)
+            edge = abs(height_next - height_cur)
+            effort = best
+            if edge > effort:
+                effort = edge
+
+            if effort < getIntCell(dist, nr, nc):
+                setIntCell(dist, nr, nc, effort)
+
+    return getIntCell(dist, m - 1, n - 1)
 
 def main():
     assert minimumEffortPath([[1, 2, 2], [3, 8, 2], [5, 3, 5]]) == 2
     assert minimumEffortPath([[1, 2, 3], [3, 8, 4], [5, 3, 5]]) == 1
-    assert minimumEffortPath([[1, 2, 1, 1, 1], [1, 2, 1, 2, 1], [1, 2, 1, 2, 1], [1, 2, 1, 2, 1], [1, 1, 1, 2, 1]]) == 0
-
+    assert minimumEffortPath([
+        [1, 2, 1, 1, 1],
+        [1, 2, 1, 2, 1],
+        [1, 2, 1, 2, 1],
+        [1, 2, 1, 2, 1],
+        [1, 1, 1, 2, 1],
+    ]) == 0

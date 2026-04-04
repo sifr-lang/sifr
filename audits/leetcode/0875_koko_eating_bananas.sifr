@@ -1,15 +1,21 @@
 # LeetCode 875: Koko Eating Bananas
 
 def minEatingSpeed(piles: list[int], h: int) -> int:
-    l, r = 1, max(piles)
-    res = r
+    max_p = max(piles)
+    if max_p is None:
+        return 0
+
+    l: int = 1
+    r: int = max_p
+    res: int = r
+    k: int = 1
 
     while l <= r:
         k = (l + r) // 2
 
-        totalTime = 0
+        totalTime: int = 0
         for p in piles:
-            totalTime += math.ceil(float(p) / k)
+            totalTime += (p + k - 1) // k
         if totalTime <= h:
             res = k
             r = k - 1
@@ -20,5 +26,4 @@ def minEatingSpeed(piles: list[int], h: int) -> int:
 def main():
     assert str(minEatingSpeed([3,6,7,11], 8)) == '4'
     assert str(minEatingSpeed([30,11,23,4,20], 5)) == '30'
-
 
