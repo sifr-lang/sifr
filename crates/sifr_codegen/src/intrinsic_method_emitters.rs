@@ -633,6 +633,20 @@ impl RustEmitter {
         object.ty().clone()
     }
 
+    fn effective_registry_expr_ty(&self, expr: &HirExpr) -> Type {
+        if let HirExpr::Name { name, ty } = expr {
+            if matches!(
+                crate::resolve_alias_type_for_plain_call(ty),
+                Type::Any | Type::Unknown
+            ) {
+                if let Some(bound_ty) = self.local_binding_types.get(name) {
+                    return bound_ty.clone();
+                }
+            }
+        }
+        expr.ty().clone()
+    }
+
     /// Check if a name is a stdlib constant.
     pub(crate) fn is_stdlib_constant(&self, name: &str) -> bool {
         matches!(name, "pi" | "e" | "tau" | "inf" | "nan")
@@ -3678,6 +3692,8 @@ impl RustEmitter {
         let mut chained: Option<crate::RustExpr> = None;
         for (idx, op) in ops.iter().enumerate() {
             let rhs_expr = comparators.get(idx)?;
+            let lhs_ty = self.effective_registry_expr_ty(lhs_expr);
+            let rhs_ty = self.effective_registry_expr_ty(rhs_expr);
             let lowered_op = match op.as_str() {
                 "==" | "!=" | "<" | "<=" | ">" | ">=" => op.clone(),
                 "is" => "==".to_string(),
@@ -3686,12 +3702,12 @@ impl RustEmitter {
             };
             let lhs_none_like = matches!(lhs_expr, HirExpr::NoneLiteral)
                 || matches!(
-                    crate::resolve_alias_type_for_plain_call(lhs_expr.ty()),
+                    crate::resolve_alias_type_for_plain_call(&lhs_ty),
                     Type::None
                 );
             let rhs_none_like = matches!(rhs_expr, HirExpr::NoneLiteral)
                 || matches!(
-                    crate::resolve_alias_type_for_plain_call(rhs_expr.ty()),
+                    crate::resolve_alias_type_for_plain_call(&rhs_ty),
                     Type::None
                 );
             if (op == "is" || op == "is not") && lhs_none_like && rhs_none_like {
@@ -3714,8 +3730,8 @@ impl RustEmitter {
             let is_comparison_op =
                 matches!(lowered_op.as_str(), "==" | "!=" | "<" | "<=" | ">" | ">=");
             if is_comparison_op
-                && registry_option_inner_type(lhs_expr.ty()).is_some()
-                && registry_option_inner_type(rhs_expr.ty()).is_none()
+                && registry_option_inner_type(&lhs_ty).is_some()
+                && registry_option_inner_type(&rhs_ty).is_none()
                 && !rhs_none_like
             {
                 lowered_right = crate::RustExpr::FnCall {
@@ -3723,16 +3739,16 @@ impl RustEmitter {
                     args: vec![lowered_right],
                 };
             } else if is_comparison_op
-                && registry_option_inner_type(lhs_expr.ty()).is_none()
-                && registry_option_inner_type(rhs_expr.ty()).is_some()
+                && registry_option_inner_type(&lhs_ty).is_none()
+                && registry_option_inner_type(&rhs_ty).is_some()
                 && !lhs_none_like
             {
                 lowered_left = crate::RustExpr::FnCall {
                     func: Box::new(crate::RustExpr::Path(vec!["Some".to_string()])),
                     args: vec![lowered_left],
                 };
-            } else if registry_is_string_like_type(lhs_expr.ty())
-                && registry_is_string_like_type(rhs_expr.ty())
+            } else if registry_is_string_like_type(&lhs_ty)
+                && registry_is_string_like_type(&rhs_ty)
             {
                 lowered_left = crate::RustExpr::MethodCall {
                     receiver: Box::new(crate::RustExpr::Paren(Box::new(lowered_left))),
@@ -3836,7 +3852,11 @@ impl RustEmitter {
             return None;
         }
 
-        let lowered_option = self.try_lower_registry_expr_strict(option_side)?;
+        let lowered_option = if let HirExpr::Name { name, .. } = option_side {
+            crate::RustExpr::Ident(name.clone())
+        } else {
+            self.try_lower_registry_expr_strict(option_side)?
+        };
         let mut lowered_other = self.try_lower_registry_expr_strict(other_side)?;
         if !crate::helpers::is_copy_type_for_codegen(other_side.ty()) {
             lowered_other = crate::RustExpr::MethodCall {

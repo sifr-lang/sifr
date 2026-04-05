@@ -62,3 +62,20 @@ Owning phase: `issues/ad-hoc-codegen-runtime-build-gap-closure-phase-2026-04-05.
   - `0567_permutation_in_string` remains blocked on option-vs-scalar compare emission in guarded conjunction (`c is not None and c == ch` lowering currently emits `Option<String> == String`).
   - attempted `Some(mut x)` let-else narrowing tweak for `detect_is_none_var` to remove `0729` `E0596`; this removed `E0596` but introduced broad `E0507` regressions (including `0783`) and was reverted.
   - post-revert confirmation artifact: `verification/leetcode/codegen_runtime_build_gap_ws1_targeted_20260405_wave1_after_patch5.json` (`3 pass / 17 fail`, no delta vs patchset B steady state).
+
+### 2026-04-05 wave-3 (ws1 type-contract patchset C)
+- scope:
+  - close borrowed-name guarded compare emission where effective local binding type is `Option<T>` while peer side is scalar (`0567` pattern)
+  - keep borrow semantics safe by cloning non-`Copy` borrowed scalars before wrapping with `Some(...)`
+  - route guarded option-compare lowering to preserve plain name identity where the guard already established option context
+- compiler files touched:
+  - `crates/sifr_codegen/src/stmt_support_emitter.rs`
+  - `crates/sifr_codegen/src/lower_expr.rs`
+  - `crates/sifr_codegen/src/intrinsic_method_emitters.rs`
+- artifacts:
+  - after patchset C: `verification/leetcode/codegen_runtime_build_gap_ws1_targeted_20260405_wave2_after_patch6.json`
+    - summary: `4 pass / 16 fail`
+- observed deltas vs wave-2 steady state (`wave1_after_patch5`):
+  - `0567_permutation_in_string`: FAIL (`E0308`) -> PASS
+- PR:
+  - draft: https://github.com/yaseralnajjar/sifr/pull/1575

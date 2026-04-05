@@ -1601,7 +1601,11 @@ fn try_lower_guarded_option_compare_expr(expr: &HirExpr, guarded_name: &str) -> 
     if matches!(other_side, HirExpr::NoneLiteral) {
         return None;
     }
-    let lowered_option = try_lower_simple_compare_operand_expr(option_side)?;
+    let lowered_option = if let HirExpr::Name { name, .. } = option_side {
+        RustExpr::Ident(name.clone())
+    } else {
+        try_lower_simple_compare_operand_expr(option_side)?
+    };
     let mut lowered_other = try_lower_simple_compare_operand_expr(other_side)?;
     if !crate::helpers::is_copy_type_for_codegen(other_side.ty()) {
         lowered_other = RustExpr::MethodCall {

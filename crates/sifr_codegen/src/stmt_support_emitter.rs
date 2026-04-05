@@ -6298,27 +6298,78 @@ impl RustEmitter {
             "is not" => "!=",
             _ => return None,
         };
+        let effective_name_ty = |operand: &HirExpr, emitter: &Self| -> Option<Type> {
+            let HirExpr::Name { name, ty } = operand else {
+                return None;
+            };
+            if matches!(
+                crate::resolve_alias_type_for_plain_call(ty),
+                Type::Any | Type::Unknown
+            ) {
+                if let Some(bound_ty) = emitter.local_binding_types.get(name) {
+                    return Some(bound_ty.clone());
+                }
+            }
+            Some(ty.clone())
+        };
 
         let lower_operand =
-            |operand: &HirExpr, emitter: &Self| -> Option<(crate::RustExpr, bool)> {
+            |operand: &HirExpr, emitter: &Self| -> Option<(crate::RustExpr, bool, Type)> {
                 let HirExpr::Name { name, .. } = operand else {
                     return None;
                 };
                 let borrowed = emitter.borrowed_params.contains(name)
                     || emitter.mut_borrowed_params.contains(name);
+                let effective_ty = effective_name_ty(operand, emitter)?;
                 let ident = crate::RustExpr::Ident(name.clone());
                 let lowered = if borrowed {
                     crate::RustExpr::Deref(Box::new(ident))
                 } else {
                     ident
                 };
-                Some((lowered, borrowed))
+                Some((lowered, borrowed, effective_ty))
             };
 
-        let (lowered_left, left_borrowed) = lower_operand(left, self)?;
-        let (lowered_right, right_borrowed) = lower_operand(rhs, self)?;
+        let (mut lowered_left, left_borrowed, left_ty) = lower_operand(left, self)?;
+        let (mut lowered_right, right_borrowed, right_ty) = lower_operand(rhs, self)?;
         if !left_borrowed && !right_borrowed {
             return None;
+        }
+        let left_is_option = crate::helpers::is_option_type(&left_ty);
+        let right_is_option = crate::helpers::is_option_type(&right_ty);
+        let left_none_like = matches!(crate::resolve_alias_type_for_plain_call(&left_ty), Type::None);
+        let right_none_like = matches!(crate::resolve_alias_type_for_plain_call(&right_ty), Type::None);
+
+        if left_is_option && !right_is_option && !right_none_like {
+            if right_borrowed
+                && crate::resolve_alias_type_for_plain_call(&right_ty).ownership()
+                    != sifr_type_system::OwnershipKind::Copy
+            {
+                lowered_right = crate::RustExpr::MethodCall {
+                    receiver: Box::new(crate::RustExpr::Paren(Box::new(lowered_right))),
+                    method: "clone".to_string(),
+                    args: vec![],
+                };
+            }
+            lowered_right = crate::RustExpr::FnCall {
+                func: Box::new(crate::RustExpr::Path(vec!["Some".to_string()])),
+                args: vec![lowered_right],
+            };
+        } else if !left_is_option && right_is_option && !left_none_like {
+            if left_borrowed
+                && crate::resolve_alias_type_for_plain_call(&left_ty).ownership()
+                    != sifr_type_system::OwnershipKind::Copy
+            {
+                lowered_left = crate::RustExpr::MethodCall {
+                    receiver: Box::new(crate::RustExpr::Paren(Box::new(lowered_left))),
+                    method: "clone".to_string(),
+                    args: vec![],
+                };
+            }
+            lowered_left = crate::RustExpr::FnCall {
+                func: Box::new(crate::RustExpr::Path(vec!["Some".to_string()])),
+                args: vec![lowered_left],
+            };
         }
 
         Some(crate::RustExpr::BinOp {
