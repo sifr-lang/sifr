@@ -50,29 +50,19 @@ class Node:
         self.key = key
 
 def isSymmetric(root: TreeNode | None) -> bool:
-    if not root.left and not root.right:
+    if root is None:
         return True
-    queueLeft = deque()
-    queueRight = deque()
 
-    queueLeft.appendleft(root.left)
-    queueRight.appendleft(root.right)
-
-    while queueLeft and queueRight:
-        nodeLeft, nodeRight = queueLeft.pop(), queueRight.pop()
-        if not nodeLeft and not nodeRight:
-            continue
-        # both node must exist
-        # if exists thet must have the same value
-        if not nodeLeft or not nodeRight or nodeLeft.val != nodeRight.val:
+    def is_mirror(left: TreeNode | None, right: TreeNode | None) -> bool:
+        if left is None and right is None:
+            return True
+        if left is None or right is None:
             return False
+        if left.val != right.val:
+            return False
+        return is_mirror(left.left, right.right) and is_mirror(left.right, right.left)
 
-        queueLeft.appendleft(nodeLeft.left)
-        queueLeft.appendleft(nodeLeft.right)
-
-        queueRight.appendleft(nodeRight.right)
-        queueRight.appendleft(nodeRight.left)
-    return not (queueLeft or queueRight)
+    return is_mirror(root.left, root.right)
 
 def main():
     assert isSymmetric(TreeNode(1, TreeNode(2, TreeNode(3, None, None), TreeNode(4, None, None)), TreeNode(2, TreeNode(4, None, None), TreeNode(3, None, None)))) == True

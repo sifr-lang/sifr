@@ -21,7 +21,8 @@ use super::empty_collection_refinement::{
     refine_empty_list_binding_expr, refine_empty_set_binding_expr,
 };
 use super::fstring_support::lower_fstring_expr;
-use super::guarded_index::guarded_sequence_index_result_type;
+use super::generic_receiver_specialization::refine_generic_class_binding_expr;
+use super::generic_constructor_specialization::refine_constructor_return_type_from_args;
 use super::method_call_args::{
     lower_function_call_args, lower_method_call_args, lower_signature_call_args,
     validate_dict_update_arg, validate_list_extend_arg, validate_set_iterable_arg,
@@ -37,6 +38,7 @@ use super::numeric_sentinels::{
 use super::sequence_guard_detection::{
     detect_false_exit_sequence_guards, detect_true_sequence_guards,
 };
+use super::subscript_type::resolve_subscript_result_type;
 pub(super) use super::tuple_unpack::{lower_star_unpack_assign, lower_tuple_unpack_assign};
 use super::type_bounds::{type_satisfies_bound, type_satisfies_constraint};
 use super::typing_and_functions::resolve_annotation_expr;
@@ -1980,13 +1982,15 @@ pub(super) fn lower_call(call: &ExprCall, ctx: &mut LowerCtx) -> Option<HirExpr>
             ctx.error(err);
         }
         if bindings.is_empty() {
-            *ft.return_type
+            ft.return_type.as_ref().clone()
         } else {
             substitute_type_vars(&ft.return_type, &bindings)
         }
     } else {
-        *ft.return_type
+        ft.return_type.as_ref().clone()
     };
+
+    let return_type = refine_constructor_return_type_from_args(&ft, &args, &return_type);
 
     // If this is a class constructor call, emit ConstructorCall
     if ctx.class_types.contains_key(&func_name) {
@@ -2247,19 +2251,7 @@ pub(super) fn lower_subscript(sub: &ExprSubscript, ctx: &mut LowerCtx) -> Option
     let index = lower_expr(&sub.slice, ctx)?;
     let index_ty = index.ty().clone();
 
-    let result_ty =
-        if let Some(guarded_ty) = guarded_sequence_index_result_type(sub, &object_ty, ctx) {
-            guarded_ty
-        } else {
-            object_ty.index_result_type(&index_ty).unwrap_or_else(|| {
-                ctx.error(format!(
-                    "cannot index type '{}' with '{}'",
-                    object_ty.display_name(),
-                    index_ty.display_name()
-                ));
-                Type::Any
-            })
-        };
+    let result_ty = resolve_subscript_result_type(sub, &object_ty, &index, &index_ty, ctx);
 
     Some(HirExpr::Index {
         object: Box::new(object),
@@ -2453,10 +2445,7 @@ pub(super) fn lower_method_call(
     if matches!(method_name.as_str(), "append" | "insert" | "extend") {
         object = refine_empty_list_binding_expr(object, &method_name, &args, ctx);
     }
-    if matches!(
-        method_name.as_str(),
-        "add" | "remove" | "discard" | "contains"
-    ) {
+    if matches!(method_name.as_str(), "add" | "remove" | "discard" | "contains") {
         if let Some(first_arg_ty) = args.first().map(|arg| arg.ty().clone()) {
             object = refine_empty_set_binding_expr(object, first_arg_ty, ctx);
         }
@@ -2466,12 +2455,11 @@ pub(super) fn lower_method_call(
     {
         object = refined_object;
     }
+    object = refine_generic_class_binding_expr(object, &method_name, &args, ctx);
     let object_ty = object.ty().clone();
-
     if reject_immutable_parameter_method_mutation(ctx, &object, &object_ty, &method_name) {
         return None;
     }
-
     // Resolve method return type based on object type and method name
     let return_ty = refine_nonempty_method_return_type(
         &object_ty,
@@ -2481,7 +2469,6 @@ pub(super) fn lower_method_call(
         &resolve_method_type(&object_ty, &method_name, &args, ctx)?,
         ctx,
     );
-
     if matches!(object_ty.resolve_alias(), Type::Str) && method_name == "encode" {
         let mut intrinsic_args = vec![object];
         let intrinsic_name = if args.is_empty() {

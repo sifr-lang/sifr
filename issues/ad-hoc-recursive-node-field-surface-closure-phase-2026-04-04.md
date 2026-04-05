@@ -144,5 +144,80 @@ Phase gates:
 - Updated recursive node/field inventory CSV
 - Short phase execution log documenting per-wave deltas
 
-## Ready-to-implement verdict
-This phase is implementation-ready with corrected ownership (`both=27`, `sifr_adaptation=5`, `compiler_fix=2`) and compiler-first sequencing.
+## Execution status (2026-04-04 wave-1)
+- workstream focus: `workstream_rnfs_1_field_expression_surface` + `workstream_rnfs_3_nullable_node_container_refinement`
+- compiler changes landed locally:
+  - method-call receiver specialization now refines unresolved generic class instances from concrete method arguments (unblocks `deque`/node flows from staying as unresolved `T`)
+  - non-empty `pop`/`popleft` narrowing now preserves element-level optionality (`list[T | None]` stays optional under non-empty guard instead of collapsing to `T`)
+- targeted signal:
+  - `audits/leetcode/0513_find_bottom_left_tree_value.sifr` no longer reports `deque.append(... expected T)` or node-field expression errors from unresolved `T`; residuals are now `while ... got 'deque'`, duplicate function definition, and return optionality
+  - `audits/leetcode/0662_maximum_width_of_binary_tree.sifr` remains blocked by nullable tuple element refinement and index-shape typing (next wave)
+- local validation:
+  - `scripts/run_all_tests.sh --profile quick` passed
+
+## Execution status (2026-04-04 wave-2)
+- workstream focus: `workstream_rnfs_1_field_expression_surface` + `workstream_rnfs_3_nullable_node_container_refinement` + adaptation-owned residual lane
+- compiler changes landed locally:
+  - tuple subscript typing fixed (literal index -> exact element type, non-literal int index -> union of tuple element types)
+  - class/protocol truthiness enabled in control-flow condition checks and bool/unary-not checks
+  - constructor return specialization added for unresolved generic constructor returns
+- adaptation-owned fixture status:
+  - `0021`, `0203`, `0606`, `0617`, `0894` all check clean after canonicalization
+- diagnostics artifacts:
+  - `tmp/recursive_node_field_34_diagnostics_20260404_wave2_start.txt`
+  - `tmp/recursive_node_field_34_diagnostics_20260404_wave2_after_adapt.txt`
+
+## Execution status (2026-04-04 wave-3)
+- workstream focus: `workstream_rnfs_2_recursive_nullable_boundaries` (generic inference closure for optional constructor parameters)
+- compiler changes landed locally:
+  - `infer_type_var_bindings` now handles union parameters/arguments with optional (`None`) branches to bind concrete non-`None` type variables
+  - regressions added for union-based constructor inference in:
+    - `crates/sifr_hir/src/lower/generic_inference.rs`
+    - `crates/sifr_hir/src/lower/expressions_tests.rs`
+- targeted signal:
+  - `0199_binary_tree_right_side_view`: first diagnostic shifted from field-expression unsupported to deque nullable-element mismatch
+  - 34-fixture first-diagnostic count for `attribute access ... unsupported` dropped `24 -> 23`
+- diagnostics artifacts:
+  - `tmp/recursive_node_field_34_diagnostics_20260404_wave3.txt`
+  - `tmp/recursive_node_field_34_diagnostics_20260404_wave4.txt`
+
+## Execution status (2026-04-04 wave-4)
+- workstream focus: `workstream_rnfs_4_adaptation_residuals` applied to selected `both` residuals
+- fixture closures landed locally:
+  - `0199_binary_tree_right_side_view` -> pass
+  - `0513_find_bottom_left_tree_value` -> pass
+- diagnostics artifact:
+  - `tmp/recursive_node_field_34_diagnostics_20260404_wave5.txt`
+- bucket signal:
+  - failing-first-diagnostic fixture count: `29 -> 27`
+  - first-diagnostic `attribute access ... unsupported` remained `23`
+
+## Execution status (2026-04-04 wave-5)
+- workstream focus: recursive nullable boundary canonicalization for remaining `both` residuals
+- fixture closure landed locally:
+  - `0124_binary_tree_maximum_path_sum` -> pass
+- diagnostics artifact:
+  - `tmp/recursive_node_field_34_diagnostics_20260404_wave6.txt`
+- bucket signal:
+  - failing-first-diagnostic fixture count: `27 -> 26`
+  - first-diagnostic `attribute access ... unsupported`: `23` (next dominant lane)
+
+## Execution status (2026-04-04 wave-6 to wave-11)
+- workstream focus: closure of residual `both` fixtures after compiler-first deltas
+- major fixture closure set landed locally across these waves:
+  - `0094`, `0112`, `0572`, `0662`, `0729`, `0783`, `0297`, `0876`, `0083`, `0019`, `0061`, `0025`, `0092`, `0147`, `0148`, `0143`
+  - final remaining closures in wave-10/wave-11: `0138`, `0146`, `0450`, `1609`, `1669`, `1721`, `2130`
+- diagnostics artifacts:
+  - `tmp/recursive_node_field_34_diagnostics_20260404_wave7.txt`
+  - `tmp/recursive_node_field_34_diagnostics_20260404_wave8.txt`
+  - `tmp/recursive_node_field_34_diagnostics_20260404_wave9.txt`
+  - `tmp/recursive_node_field_34_diagnostics_20260404_wave10_valid.txt`
+  - `tmp/recursive_node_field_34_diagnostics_20260404_wave11.txt`
+- bucket signal:
+  - wave-10-valid inventory sweep: `34 total, 27 pass, 7 fail`
+  - wave-11 inventory sweep: `34 total, 34 pass, 0 fail`
+- validation gate:
+  - `scripts/run_all_tests.sh --profile quick` passed after wave-11 closure
+
+## Phase closure verdict
+Phase is closed for the tracked 34-fixture bucket (`recursive_node_and_field_expression_surface` inventory from 2026-04-04): all fixtures now check clean in wave-11 with required quick validation passing.

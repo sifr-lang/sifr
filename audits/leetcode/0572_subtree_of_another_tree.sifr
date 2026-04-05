@@ -61,12 +61,13 @@ def isSubtree(root: TreeNode | None, subRoot: TreeNode | None) -> bool:
 
 
 def isSameTree(p: TreeNode | None, q: TreeNode | None) -> bool:
-    if not p and not q:
+    if p is None and q is None:
         return True
-    if p and q and p.val == q.val:
-        return isSameTree(p.left, q.left) and isSameTree(p.right, q.right)
-    else:
+    if p is None or q is None:
         return False
+    if p.val != q.val:
+        return False
+    return isSameTree(p.left, q.left) and isSameTree(p.right, q.right)
 
 def main():
     assert isSubtree(TreeNode(3, TreeNode(4, TreeNode(1, None, None), TreeNode(2, None, None)), TreeNode(5, None, None)), TreeNode(4, TreeNode(1, None, None), TreeNode(2, None, None))) == True

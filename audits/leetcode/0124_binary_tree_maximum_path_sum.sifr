@@ -49,12 +49,14 @@ class Node:
         self.neighbors = neighbors
         self.key = key
 
-def maxPathSum(root: TreeNode) -> int:
-    res = [root.val]
+def maxPathSum(root: TreeNode | None) -> int:
+    if root is None:
+        return 0
+    res: list[int] = [root.val]
 
     # return max path sum without split
-    def dfs(root):
-        if not root:
+    def dfs(root: TreeNode | None) -> int:
+        if root is None:
             return 0
 
         leftMax = dfs(root.left)
@@ -63,11 +65,16 @@ def maxPathSum(root: TreeNode) -> int:
         rightMax = max(rightMax, 0)
 
         # compute max path sum WITH split
-        res[0] = max(res[0], root.val + leftMax + rightMax)
+        current_best: int | None = res[0]
+        if current_best is not None:
+            res[0] = max(current_best, root.val + leftMax + rightMax)
         return root.val + max(leftMax, rightMax)
 
     dfs(root)
-    return res[0]
+    answer: int | None = res[0]
+    if answer is not None:
+        return answer
+    return 0
 
 def main():
     assert maxPathSum(TreeNode(1, TreeNode(2, None, None), TreeNode(3, None, None))) == 6

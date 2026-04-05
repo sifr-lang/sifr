@@ -9,7 +9,7 @@ class ListNode:
         self.next = next
 
 
-def listNodeToString(node: ListNode | None) -> str:
+def listNodeToString(own node: ListNode | None) -> str:
     if node is None:
         return "None"
     parts: list[str] = []
@@ -47,13 +47,25 @@ class Node:
         self.neighbors = neighbors
         self.key = key
 
-def deleteDuplicates(head: ListNode | None) -> ListNode | None:
-    cur = head
-    while cur:
-        while cur.next and cur.next.val == cur.val:
-            cur.next = cur.next.next
+def deleteDuplicates(own head: ListNode | None) -> ListNode | None:
+    values: list[int] = []
+    cur: ListNode | None = head
+    prev: int | None = None
+    while cur is not None:
+        value: int = cur.val
+        if prev is None or value != prev:
+            values.append(value)
+            prev = value
         cur = cur.next
-    return head
+
+    result: ListNode | None = None
+    i: int = len(values) - 1
+    while i >= 0:
+        value_opt: int | None = values[i]
+        if value_opt is not None:
+            result = ListNode(value_opt, result)
+        i = i - 1
+    return result
 
 def main():
     assert listNodeToString(deleteDuplicates(ListNode(1, ListNode(1, ListNode(2, None))))) == listNodeToString(ListNode(1, ListNode(2, None)))

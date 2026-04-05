@@ -515,7 +515,13 @@ pub fn type_check_unary_op(op: &str, operand: &Type) -> Result<Type, TypeError> 
             }
             // Collection truthiness: `not list_var`, `not dict_var`, etc.
             match operand {
-                Type::List(_) | Type::Dict(_, _) | Type::Set(_) | Type::Tuple(_) | Type::Str => {
+                Type::List(_)
+                | Type::Dict(_, _)
+                | Type::Set(_)
+                | Type::Tuple(_)
+                | Type::Str
+                | Type::Class { .. }
+                | Type::Protocol { .. } => {
                     return Ok(Type::Bool);
                 }
                 // Allow `not x` where x is Optional (T | None)
@@ -572,6 +578,8 @@ pub fn type_check_bool_op(left: &Type, op: &str, right: &Type) -> Result<Type, T
                 | Type::Set(_)
                 | Type::Tuple(_)
                 | Type::Str
+                | Type::Class { .. }
+                | Type::Protocol { .. }
                 | Type::Any
                 | Type::Unknown
         ) || union_contains_none(ty)

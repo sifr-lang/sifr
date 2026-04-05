@@ -10,31 +10,16 @@ class TreeNode:
         self.left = left
         self.right = right
 
-def hasPathSum(root, sum):
-    if not root:
+def hasPathSum(root: TreeNode | None, sum: int) -> bool:
+    if root is None:
         return False
-    sum -= root.val
-    if not root.left and not root.right:
-        return sum == 0
-    return hasPathSum(root.left, sum) or hasPathSum(root.right, sum)
-  
-# Iterative Solution
 
-def hasPathSum(root, sum):
-    if not root:
-        return False
-    de = [
-        (root, sum - root.val),
-    ]
-    while de:
-        node, curr_sum = de.pop()
-        if not node.left and not node.right and curr_sum == 0:
-            return True
-        if node.right:
-            de.append((node.right, curr_sum - node.right.val))
-        if node.left:
-            de.append((node.left, curr_sum - node.left.val))
-    return False
+    remaining: int = sum - root.val
+    left: TreeNode | None = root.left
+    right: TreeNode | None = root.right
+    if left is None and right is None:
+        return remaining == 0
+    return hasPathSum(left, remaining) or hasPathSum(right, remaining)
 
 def main():
     root = TreeNode(

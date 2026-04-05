@@ -1,0 +1,70 @@
+use super::guarded_index::guarded_sequence_index_result_type;
+use super::LowerCtx;
+use crate::hir_nodes::HirExpr;
+use sifr_python_ast::ExprSubscript;
+use sifr_type_system::{make_union, Type};
+
+fn tuple_members_for_subscript(object_ty: &Type) -> Option<Vec<Type>> {
+    match object_ty.resolve_alias() {
+        Type::Tuple(elems) => Some(elems.clone()),
+        Type::Union(members) => {
+            let non_none: Vec<&Type> = members
+                .iter()
+                .filter(|member| !matches!(member.resolve_alias(), Type::None))
+                .collect();
+            if non_none.len() != 1 {
+                return None;
+            }
+            let Type::Tuple(elems) = non_none[0].resolve_alias() else {
+                return None;
+            };
+            Some(elems.clone())
+        }
+        _ => None,
+    }
+}
+
+pub(super) fn resolve_subscript_result_type(
+    sub: &ExprSubscript,
+    object_ty: &Type,
+    index: &HirExpr,
+    index_ty: &Type,
+    ctx: &mut LowerCtx,
+) -> Type {
+    if let Some(elems) = tuple_members_for_subscript(object_ty) {
+        if let HirExpr::IntLiteral(raw_index) = index {
+            let Ok(len_i64) = i64::try_from(elems.len()) else {
+                ctx.error("tuple too large for indexing".to_string());
+                return Type::Any;
+            };
+            let normalized = if *raw_index < 0 {
+                len_i64 + *raw_index
+            } else {
+                *raw_index
+            };
+            if let Ok(idx) = usize::try_from(normalized) {
+                if idx < elems.len() {
+                    return elems[idx].clone();
+                }
+            }
+            ctx.error("tuple index out of range".to_string());
+            return Type::Any;
+        }
+        if index_ty == &Type::Int && !elems.is_empty() {
+            return make_union(elems.clone());
+        }
+    }
+
+    if let Some(guarded_ty) = guarded_sequence_index_result_type(sub, object_ty, ctx) {
+        return guarded_ty;
+    }
+
+    object_ty.index_result_type(index_ty).unwrap_or_else(|| {
+        ctx.error(format!(
+            "cannot index type '{}' with '{}'",
+            object_ty.display_name(),
+            index_ty.display_name()
+        ));
+        Type::Any
+    })
+}

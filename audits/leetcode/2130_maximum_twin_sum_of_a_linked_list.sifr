@@ -9,7 +9,7 @@ class ListNode:
         self.next = next
 
 
-def listNodeToString(node: ListNode | None) -> str:
+def listNodeToString(own node: ListNode | None) -> str:
     if node is None:
         return "None"
     parts: list[str] = []
@@ -47,22 +47,26 @@ class Node:
         self.neighbors = neighbors
         self.key = key
 
-def pairSum(head: ListNode | None) -> int:
-    slow, fast = head, head
-    prev = None
-    while fast and fast.next:
-        fast = fast.next.next
-        tmp = slow.next
-        slow.next = prev
-        prev = slow
-        slow = tmp
+def pairSum(own head: ListNode | None) -> int:
+    values: list[int] = []
+    cur: ListNode | None = head
+    while cur is not None:
+        values.append(cur.val)
+        cur = cur.next
 
-    res = 0
-    while slow:
-        res = max(res, prev.val + slow.val)
-        prev = prev.next
-        slow = slow.next
-    return res
+    left = 0
+    right = len(values) - 1
+    best = 0
+    while left < right:
+        left_value: int | None = values[left]
+        right_value: int | None = values[right]
+        if left_value is not None and right_value is not None:
+            pair_sum = left_value + right_value
+            if pair_sum > best:
+                best = pair_sum
+        left += 1
+        right -= 1
+    return best
 
 def main():
     assert pairSum(ListNode(5, ListNode(4, ListNode(2, ListNode(1, None))))) == 6

@@ -17,6 +17,10 @@ pub(super) fn validate_control_flow_condition(
             | Type::Tuple(_)
             | Type::Str
             | Type::Bytes
+            | Type::Class { .. }
+            | Type::Protocol { .. }
+            | Type::Any
+            | Type::Unknown
     ) || union_contains_none(condition.ty());
     if !is_supported {
         ctx.error(format!(

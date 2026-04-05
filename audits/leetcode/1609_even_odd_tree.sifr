@@ -49,25 +49,38 @@ class Node:
         self.neighbors = neighbors
         self.key = key
 
-def isEvenOddTree(root: TreeNode | None) -> bool:
+def isEvenOddTree(own root: TreeNode | None) -> bool:
+    if root is None:
+        return True
+
+    root_node: TreeNode = root
     even = True
-    q = deque([root])
+    q = deque([root_node])
 
-    while q:
-        prev = float("-inf") if even else float("inf")
-        for _ in range(len(q)):
+    while len(q) > 0:
+        prev_set = False
+        prev = 0
+        level_size = len(q)
+        i = 0
+        while i < level_size:
             node = q.popleft()
+            value = node.val
 
-            if even and (node.val % 2 == 0 or node.val <= prev):
+            if even and (value % 2 == 0 or (prev_set and value <= prev)):
                 return False
-            elif not even and (node.val % 2 == 1 or node.val >= prev):
+            elif not even and (value % 2 == 1 or (prev_set and value >= prev)):
                 return False
-            
-            if node.left:
-                q.append(node.left)
-            if node.right:
-                q.append(node.right)
-            prev = node.val
+
+            left_child: TreeNode | None = node.left
+            right_child: TreeNode | None = node.right
+            if left_child is not None:
+                q.append(left_child)
+            if right_child is not None:
+                q.append(right_child)
+
+            prev = value
+            prev_set = True
+            i += 1
         even = not even
     return True
 

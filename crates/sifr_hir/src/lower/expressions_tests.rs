@@ -88,6 +88,18 @@ fn test_bare_deque_call_resolves_without_import() {
 }
 
 #[test]
+fn test_generic_constructor_infers_typevar_from_optional_union_param() {
+    let result = lower_source(
+        "class Bucket[T]:\n    items: list[T]\n\n    def __init__(self, items: list[T] | None = None):\n        if items is None:\n            self.items = []\n        else:\n            self.items = items\n\n    def first(self) -> T | None:\n        if len(self.items) == 0:\n            return None\n        return self.items[0]\n\ndef main() -> int:\n    bucket = Bucket([1])\n    value = bucket.first()\n    if value is None:\n        return 0\n    return value + 1\n",
+    );
+    assert!(
+        result.is_ok(),
+        "constructor call should infer T from list[T] | None parameter when called with list[int]: {:?}",
+        result.err()
+    );
+}
+
+#[test]
 fn test_defaultdict_list_call_resolves_without_import() {
     let result = lower_source(
         "def main():\n    groups = defaultdict(list)\n    groups[\"a\"].append(\"x\")\n    assert len(groups[\"a\"]) == 1\n",
@@ -139,6 +151,28 @@ fn test_empty_list_specialization_survives_loop_append() {
     assert!(
         result.is_ok(),
         "loop-body append specialization should persist so return boundary sees list[int]"
+    );
+}
+
+#[test]
+fn test_generic_class_receiver_refines_from_method_arguments() {
+    let result = lower_source(
+        "class Bucket[T]:\n    items: list[T]\n\n    def __init__(self):\n        self.items = []\n\n    def push(self, value: T) -> None:\n        self.items.append(value)\n\n    def first(self) -> T | None:\n        if len(self.items) == 0:\n            return None\n        return self.items[0]\n\ndef main() -> int:\n    bucket = Bucket()\n    bucket.push(1)\n    value = bucket.first()\n    if value is None:\n        return 0\n    return value + 1\n",
+    );
+    assert!(
+        result.is_ok(),
+        "receiver generic type vars should refine from method arguments"
+    );
+}
+
+#[test]
+fn test_generic_class_receiver_refinement_rejects_mixed_argument_types() {
+    let result = lower_source(
+        "class Bucket[T]:\n    items: list[T]\n\n    def __init__(self):\n        self.items = []\n\n    def push(self, value: T) -> None:\n        self.items.append(value)\n\ndef main() -> None:\n    bucket = Bucket()\n    bucket.push(1)\n    bucket.push(\"x\")\n",
+    );
+    assert!(
+        result.is_err(),
+        "once method-driven specialization binds T, incompatible argument types must fail"
     );
 }
 
@@ -195,6 +229,17 @@ fn test_while_condition_rejects_numeric_truthiness() {
 }
 
 #[test]
+fn test_class_truthiness_allowed_in_if_while_and_boolop() {
+    let result = lower_source(
+        "class Node:\n    val: int\n    def __init__(self, val: int):\n        self.val = val\n\ndef probe(a: Node, b: Node) -> bool:\n    seen: bool = False\n    if a:\n        seen = True\n    while b:\n        break\n    return a and b and seen\n",
+    );
+    assert!(
+        result.is_ok(),
+        "class instances should be valid truthiness operands in control-flow and boolops"
+    );
+}
+
+#[test]
 fn test_non_none_return_annotation_requires_exhaustive_returns() {
     let result = lower_source("def f(flag: bool) -> int:\n    if flag:\n        return 1\n");
     assert!(result.is_err());
@@ -235,6 +280,28 @@ fn test_guarded_zero_index_list_pop_narrows_to_element_type() {
     assert!(
         result.is_ok(),
         "list.pop(0) under non-empty guard should narrow to element type"
+    );
+}
+
+#[test]
+fn test_guarded_list_pop_preserves_optional_element_none() {
+    let result = lower_source(
+        "def main():\n    values: list[int | None] = []\n    values.append(1)\n    values.append(None)\n    while values:\n        item: int | None = values.pop()\n",
+    );
+    assert!(
+        result.is_ok(),
+        "list.pop() under non-empty guard should keep element-level optionality"
+    );
+}
+
+#[test]
+fn test_guarded_list_pop_optional_element_rejects_non_optional_annotation() {
+    let result = lower_source(
+        "def main():\n    values: list[int | None] = []\n    values.append(1)\n    values.append(None)\n    while values:\n        item: int = values.pop()\n",
+    );
+    assert!(
+        result.is_err(),
+        "non-empty guard must not erase element-level None from list[int|None].pop()"
     );
 }
 
@@ -311,6 +378,28 @@ fn test_boolop_and_without_sequence_guard_keeps_optional_index_error() {
     assert!(
         result.is_err(),
         "`and` without an explicit sequence guard should not narrow index access"
+    );
+}
+
+#[test]
+fn test_tuple_literal_index_uses_exact_position_type() {
+    let result = lower_source(
+        "def main() -> int:\n    pair: tuple[str, int] = (\"x\", 7)\n    value: int = pair[1]\n    return value\n",
+    );
+    assert!(
+        result.is_ok(),
+        "tuple[1] should resolve to the second element type"
+    );
+}
+
+#[test]
+fn test_tuple_nonliteral_index_uses_union_of_element_types() {
+    let result = lower_source(
+        "def bad(i: int) -> int:\n    pair: tuple[int, str] = (1, \"x\")\n    value: int = pair[i]\n    return value\n",
+    );
+    assert!(
+        result.is_err(),
+        "non-literal tuple index should be typed as a union of element types"
     );
 }
 

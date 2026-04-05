@@ -1,4 +1,5 @@
 //! Core type definitions for the Sifr type system.
+use crate::union::make_union;
 
 /// Represents a type in the Sifr language.
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
@@ -987,10 +988,10 @@ impl Type {
                 }
             }
             Self::Tuple(elems) => {
-                // Tuple indexing requires a literal int, but at type level we just return Any
-                // The actual positional type is resolved during lowering
+                // Lowering resolves literal tuple indices precisely.
+                // For non-literal int indices, conservatively return the union of element types.
                 if index_ty == &Type::Int && !elems.is_empty() {
-                    Some(elems[0].clone()) // Placeholder; real resolution happens in lowering
+                    Some(make_union(elems.clone()))
                 } else {
                     None
                 }

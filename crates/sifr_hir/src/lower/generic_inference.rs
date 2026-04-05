@@ -34,6 +34,34 @@ pub(super) fn infer_type_var_bindings(
                 infer_type_var_bindings(p, a, bindings);
             }
         }
+        (Type::Union(param_members), other) => {
+            let has_none_branch = param_members
+                .iter()
+                .any(|member| matches!(member.resolve_alias(), Type::None));
+            if has_none_branch {
+                if !matches!(other.resolve_alias(), Type::None) {
+                    for member in param_members {
+                        if !matches!(member.resolve_alias(), Type::None) {
+                            infer_type_var_bindings(member, other, bindings);
+                        }
+                    }
+                }
+                return;
+            }
+            for member in param_members {
+                if other.is_assignable_to(member) || member.is_assignable_to(other) {
+                    infer_type_var_bindings(member, other, bindings);
+                }
+            }
+        }
+        (param, Type::Union(arg_members)) => {
+            for member in arg_members {
+                if matches!(member.resolve_alias(), Type::None) {
+                    continue;
+                }
+                infer_type_var_bindings(param, member, bindings);
+            }
+        }
         (Type::Result(p_ok, p_err), Type::Result(a_ok, a_err)) => {
             infer_type_var_bindings(p_ok, a_ok, bindings);
             infer_type_var_bindings(p_err, a_err, bindings);
@@ -138,5 +166,29 @@ mod tests {
         let mut bindings = HashMap::new();
         infer_type_var_bindings(&param, &arg, &mut bindings);
         assert_eq!(bindings.get("T"), Some(&Type::Str));
+    }
+
+    #[test]
+    fn infers_typevar_from_optional_union_parameter_non_none_branch() {
+        let param = Type::Union(vec![
+            Type::List(Box::new(Type::TypeVar("T".to_string()))),
+            Type::None,
+        ]);
+        let arg = Type::List(Box::new(Type::Int));
+        let mut bindings = HashMap::new();
+        infer_type_var_bindings(&param, &arg, &mut bindings);
+        assert_eq!(bindings.get("T"), Some(&Type::Int));
+    }
+
+    #[test]
+    fn optional_union_parameter_does_not_bind_typevar_from_none_argument() {
+        let param = Type::Union(vec![
+            Type::List(Box::new(Type::TypeVar("T".to_string()))),
+            Type::None,
+        ]);
+        let arg = Type::None;
+        let mut bindings = HashMap::new();
+        infer_type_var_bindings(&param, &arg, &mut bindings);
+        assert!(bindings.is_empty());
     }
 }
