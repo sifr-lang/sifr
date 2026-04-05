@@ -3963,20 +3963,13 @@ fn try_lower_simple_assign_value(
 }
 
 fn try_lower_simple_field_assign_stmt(
-    object: &str,
-    field: &str,
-    value: &HirExpr,
+    _object: &str,
+    _field: &str,
+    _value: &HirExpr,
 ) -> Option<Vec<RustStmt>> {
-    if object == "self" {
-        return None;
-    }
-    Some(vec![RustStmt::Assign {
-        target: RustExpr::Field {
-            expr: Box::new(RustExpr::Ident(object.to_string())),
-            field: field.to_string(),
-        },
-        value: try_lower_leaf_or_name_expr(value)?,
-    }])
+    // Keep field assignments on the structured path so class/recursive storage
+    // adaptations (boxing and option handling) are consistently applied.
+    None
 }
 
 fn try_lower_simple_aug_assign_value(op: &str, value: &HirExpr) -> Option<RustExpr> {

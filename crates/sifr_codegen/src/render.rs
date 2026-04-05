@@ -886,7 +886,10 @@ impl Renderer {
         }
         // `assert!`/`assert_eq!`/`assert_ne!` message format arguments must be
         // literal tokens, not owned `String` expressions.
-        if matches!(name, "assert" | "assert_eq" | "assert_ne" | "unreachable") {
+        if matches!(
+            name,
+            "assert" | "assert_eq" | "assert_ne" | "unreachable" | "compile_error"
+        ) {
             if let RustExpr::Literal(RustLiteral::Str(value)) = arg {
                 return format!("\"{}\"", value.escape_default());
             }

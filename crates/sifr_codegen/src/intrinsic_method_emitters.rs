@@ -492,15 +492,42 @@ fn registry_call_callable_with_owned_args(
         return None;
     }
     let mut lowered_args = Vec::with_capacity(arg_bindings.len());
-    for ((name, _arg_ty), convention) in arg_bindings.iter().zip(conventions.iter()) {
-        let base_expr = RustExpr::Ident(name.clone());
-        let lowered_arg = if convention.is_borrowed() {
+    for (((name, arg_ty), param_ty), convention) in arg_bindings
+        .iter()
+        .zip(param_types.iter())
+        .zip(conventions.iter())
+    {
+        let mut lowered_arg = RustExpr::Ident(name.clone());
+        let arg_is_option = crate::helpers::is_option_type(arg_ty);
+        let param_is_option = crate::helpers::is_option_type(param_ty);
+        if param_is_option && !arg_is_option {
+            lowered_arg = RustExpr::FnCall {
+                func: Box::new(RustExpr::Path(vec!["Some".to_string()])),
+                args: vec![lowered_arg],
+            };
+        } else if !param_is_option && arg_is_option {
+            lowered_arg = RustEmitter::force_unwrap_option_expr_for_ir(
+                lowered_arg,
+                "compiler-verified callable argument should be Some",
+            );
+        }
+
+        if param_ty.rust_type().starts_with("Box<")
+            && !matches!(&lowered_arg, RustExpr::FnCall { func, .. } if registry_is_box_new_ctor(func.as_ref()))
+        {
+            lowered_arg = RustExpr::FnCall {
+                func: Box::new(RustExpr::Path(vec!["Box".to_string(), "new".to_string()])),
+                args: vec![lowered_arg],
+            };
+        }
+
+        lowered_arg = if convention.is_borrowed() {
             RustExpr::Ref {
                 mutable: convention.is_mutable(),
-                expr: Box::new(base_expr),
+                expr: Box::new(lowered_arg),
             }
         } else {
-            base_expr
+            lowered_arg
         };
         lowered_args.push(lowered_arg);
     }
@@ -633,7 +660,7 @@ impl RustEmitter {
         object.ty().clone()
     }
 
-    fn effective_registry_expr_ty(&self, expr: &HirExpr) -> Type {
+    pub(crate) fn effective_registry_expr_ty(&self, expr: &HirExpr) -> Type {
         if let HirExpr::Name { name, ty } = expr {
             if matches!(
                 crate::resolve_alias_type_for_plain_call(ty),
@@ -1129,6 +1156,43 @@ impl RustEmitter {
                 }
                 let effective_object_ty = self.effective_method_object_ty(object);
                 let mut arg_exprs = self.try_lower_registry_exprs_strict(args)?;
+                if let Type::List(element_ty) =
+                    crate::resolve_alias_type_for_plain_call(&effective_object_ty)
+                {
+                    if method == "append" && arg_exprs.len() == 1 && args.len() == 1 {
+                        let arg_ty = if let HirExpr::Name { name, ty } = &args[0] {
+                            self.local_binding_types
+                                .get(name)
+                                .cloned()
+                                .unwrap_or_else(|| ty.clone())
+                        } else {
+                            args[0].ty().clone()
+                        };
+                        let expects_option = crate::helpers::is_option_type(element_ty.as_ref());
+                        let has_option = crate::helpers::is_option_type(&arg_ty);
+                        let mut adjusted = arg_exprs[0].clone();
+                        if expects_option && !has_option && !matches!(args[0], HirExpr::NoneLiteral)
+                        {
+                            adjusted = crate::RustExpr::FnCall {
+                                func: Box::new(crate::RustExpr::Path(vec!["Some".to_string()])),
+                                args: vec![adjusted],
+                            };
+                        } else if !expects_option && has_option {
+                            if !crate::helpers::is_copy_type_for_codegen(&arg_ty) {
+                                adjusted = crate::RustExpr::MethodCall {
+                                    receiver: Box::new(crate::RustExpr::Paren(Box::new(adjusted))),
+                                    method: "clone".to_string(),
+                                    args: vec![],
+                                };
+                            }
+                            adjusted = Self::force_unwrap_option_expr_for_ir(
+                                adjusted,
+                                "compiler-verified list append element should be Some",
+                            );
+                        }
+                        arg_exprs[0] = adjusted;
+                    }
+                }
                 if let Type::Class {
                     fields, methods, ..
                 } = crate::resolve_alias_type_for_plain_call(&effective_object_ty)
@@ -3244,6 +3308,8 @@ impl RustEmitter {
         let ctor_class_name = func.strip_suffix("::new");
         for (idx, ((param_ty, convention), arg)) in param_info.iter().zip(args.iter()).enumerate() {
             let resolved_param = crate::resolve_alias_type_for_plain_call(param_ty);
+            let effective_arg_ty = self.effective_registry_expr_ty(arg);
+            let arg_is_option = crate::helpers::is_option_type(&effective_arg_ty);
             let mut lowered_arg = self.try_lower_registry_expr_strict(arg)?;
             if let Some(aligned_callable) = self
                 .try_build_registry_callable_convention_alignment_expr(
@@ -3262,11 +3328,13 @@ impl RustEmitter {
             if let Type::Union(members) = resolved_param {
                 if !crate::helpers::is_option_type(resolved_param)
                     && !matches!(
-                        crate::resolve_alias_type_for_plain_call(arg.ty()),
+                        crate::resolve_alias_type_for_plain_call(&effective_arg_ty),
                         Type::Union(_)
                     )
                 {
-                    if let Some(variant) = crate::helpers::find_union_variant(members, arg.ty()) {
+                    if let Some(variant) =
+                        crate::helpers::find_union_variant(members, &effective_arg_ty)
+                    {
                         lowered_arg = crate::RustExpr::FnCall {
                             func: Box::new(crate::RustExpr::Path(vec![
                                 resolved_param.union_enum_name(),
@@ -3292,8 +3360,14 @@ impl RustEmitter {
                     .unwrap_or(false);
                 let needs_box_inner =
                     param_ty.rust_type().starts_with("Option<Box<") || is_recursive_ctor_param;
-                if !crate::helpers::is_option_type(arg.ty()) && !matches!(arg, HirExpr::NoneLiteral)
-                {
+                if !arg_is_option && !matches!(arg, HirExpr::NoneLiteral) {
+                    if !crate::helpers::is_copy_type_for_codegen(&effective_arg_ty) {
+                        lowered_arg = crate::RustExpr::MethodCall {
+                            receiver: Box::new(crate::RustExpr::Paren(Box::new(lowered_arg))),
+                            method: "clone".to_string(),
+                            args: vec![],
+                        };
+                    }
                     lowered_arg = if needs_box_inner {
                         registry_ensure_some_box_inner(lowered_arg)
                     } else {
@@ -3305,11 +3379,23 @@ impl RustEmitter {
                 } else if needs_box_inner && registry_is_some_expr(&lowered_arg) {
                     lowered_arg = registry_ensure_some_box_inner(lowered_arg);
                 }
+            } else if arg_is_option {
+                if !crate::helpers::is_copy_type_for_codegen(&effective_arg_ty) {
+                    lowered_arg = crate::RustExpr::MethodCall {
+                        receiver: Box::new(crate::RustExpr::Paren(Box::new(lowered_arg))),
+                        method: "clone".to_string(),
+                        args: vec![],
+                    };
+                }
+                lowered_arg = Self::force_unwrap_option_expr_for_ir(
+                    lowered_arg,
+                    "compiler-verified option argument should be Some",
+                );
             }
 
             let param_rust_type = param_ty.rust_type();
-            if param_rust_type.starts_with("Box<dyn ")
-                && !arg.ty().rust_type().starts_with("Box<dyn ")
+            if param_rust_type.starts_with("Box<")
+                && !matches!(&lowered_arg, RustExpr::FnCall { func, .. } if registry_is_box_new_ctor(func.as_ref()))
             {
                 lowered_arg = crate::RustExpr::FnCall {
                     func: Box::new(crate::RustExpr::Path(vec![
@@ -3568,6 +3654,37 @@ impl RustEmitter {
         mut lowered_arg: crate::RustExpr,
     ) -> crate::RustExpr {
         let resolved_param = crate::resolve_alias_type_for_plain_call(param_ty);
+        let effective_arg_ty = self.effective_registry_expr_ty(arg);
+        let arg_is_option = crate::helpers::is_option_type(&effective_arg_ty);
+        if crate::helpers::is_option_type(param_ty)
+            && !arg_is_option
+            && !matches!(arg, HirExpr::NoneLiteral)
+        {
+            if !crate::helpers::is_copy_type_for_codegen(&effective_arg_ty) {
+                lowered_arg = crate::RustExpr::MethodCall {
+                    receiver: Box::new(crate::RustExpr::Paren(Box::new(lowered_arg))),
+                    method: "clone".to_string(),
+                    args: vec![],
+                };
+            }
+            lowered_arg = crate::RustExpr::FnCall {
+                func: Box::new(crate::RustExpr::Path(vec!["Some".to_string()])),
+                args: vec![lowered_arg],
+            };
+        } else if arg_is_option && !crate::helpers::is_option_type(param_ty) {
+            if !crate::helpers::is_copy_type_for_codegen(&effective_arg_ty) {
+                lowered_arg = crate::RustExpr::MethodCall {
+                    receiver: Box::new(crate::RustExpr::Paren(Box::new(lowered_arg))),
+                    method: "clone".to_string(),
+                    args: vec![],
+                };
+            }
+            lowered_arg = Self::force_unwrap_option_expr_for_ir(
+                lowered_arg,
+                "compiler-verified option argument should be Some",
+            );
+        }
+
         let requires_shared_borrow = convention.is_shared_borrow()
             && (param_ty.ownership() != sifr_type_system::OwnershipKind::Copy
                 || matches!(resolved_param, Type::TypeVar(_)));
@@ -3588,16 +3705,6 @@ impl RustEmitter {
             lowered_arg = crate::RustExpr::Ref {
                 mutable: true,
                 expr: Box::new(lowered_arg),
-            };
-        }
-
-        if crate::helpers::is_option_type(param_ty)
-            && !crate::helpers::is_option_type(arg.ty())
-            && !matches!(arg, HirExpr::NoneLiteral)
-        {
-            lowered_arg = crate::RustExpr::FnCall {
-                func: Box::new(crate::RustExpr::Path(vec!["Some".to_string()])),
-                args: vec![lowered_arg],
             };
         }
         lowered_arg
@@ -3659,7 +3766,11 @@ impl RustEmitter {
         if matches!(lowered, crate::RustExpr::Ref { .. }) {
             return true;
         }
-        if let HirExpr::Name { name, .. } = arg {
+        if let (HirExpr::Name { name, .. }, crate::RustExpr::Ident(lowered_name)) = (arg, lowered)
+        {
+            if lowered_name != name {
+                return false;
+            }
             return self.borrowed_params.contains(name) || self.mut_borrowed_params.contains(name);
         }
         false
@@ -3673,7 +3784,11 @@ impl RustEmitter {
         if let crate::RustExpr::Ref { mutable, .. } = lowered {
             return *mutable;
         }
-        if let HirExpr::Name { name, .. } = arg {
+        if let (HirExpr::Name { name, .. }, crate::RustExpr::Ident(lowered_name)) = (arg, lowered)
+        {
+            if lowered_name != name {
+                return false;
+            }
             return self.mut_borrowed_params.contains(name);
         }
         false

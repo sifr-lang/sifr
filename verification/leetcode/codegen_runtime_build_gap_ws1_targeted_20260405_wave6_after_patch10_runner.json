@@ -1,0 +1,819 @@
+{
+  "command_prefix": [
+    "/Users/yaseralnajjar/work/sifr/codebase/target/release/sifr"
+  ],
+  "manifest": "verification/leetcode/full_corpus_manifest_20260402_live.json",
+  "output": "verification/leetcode/codegen_runtime_build_gap_ws1_targeted_20260405_wave6_after_patch10_runner.json",
+  "phase": 31,
+  "results": [
+    {
+      "difficulty": "medium",
+      "failure_stage": null,
+      "fixture_slug": "0006_zigzag_conversion",
+      "id": "0006",
+      "oracle_mode": "embedded_asserts",
+      "primary_topic": "arrays",
+      "scope_classification": "in_scope",
+      "stages": [
+        {
+          "command": [
+            "/Users/yaseralnajjar/work/sifr/codebase/target/release/sifr",
+            "check",
+            "audits/leetcode/0006_zigzag_conversion.sifr"
+          ],
+          "duration_ms": 988,
+          "returncode": 0,
+          "stage": "check",
+          "stderr": "no errors found",
+          "stdout": "",
+          "timed_out": false
+        },
+        {
+          "command": [
+            "/Users/yaseralnajjar/work/sifr/codebase/target/release/sifr",
+            "run",
+            "audits/leetcode/0006_zigzag_conversion.sifr"
+          ],
+          "duration_ms": 192,
+          "returncode": 0,
+          "stage": "run",
+          "stderr": "[sifr-artifact-cache] namespace=run key=e86d503e9cba6ec0 cache_hit=true workspace=/var/folders/lq/l19_y_rn76b8vprfvdjn9zch0000gn/T/sifr_generated_artifact_cache/run/e86d503e9cba6ec0",
+          "stdout": "",
+          "timed_out": false
+        }
+      ],
+      "status": "PASS",
+      "timeout_seconds": 20
+    },
+    {
+      "difficulty": "medium",
+      "failure_stage": null,
+      "fixture_slug": "0046_permutations",
+      "id": "0046",
+      "oracle_mode": "embedded_asserts",
+      "primary_topic": "arrays",
+      "scope_classification": "in_scope",
+      "stages": [
+        {
+          "command": [
+            "/Users/yaseralnajjar/work/sifr/codebase/target/release/sifr",
+            "check",
+            "audits/leetcode/0046_permutations.sifr"
+          ],
+          "duration_ms": 108,
+          "returncode": 0,
+          "stage": "check",
+          "stderr": "no errors found",
+          "stdout": "",
+          "timed_out": false
+        },
+        {
+          "command": [
+            "/Users/yaseralnajjar/work/sifr/codebase/target/release/sifr",
+            "run",
+            "audits/leetcode/0046_permutations.sifr"
+          ],
+          "duration_ms": 190,
+          "returncode": 0,
+          "stage": "run",
+          "stderr": "[sifr-artifact-cache] namespace=run key=139a8ddb781a6257 cache_hit=true workspace=/var/folders/lq/l19_y_rn76b8vprfvdjn9zch0000gn/T/sifr_generated_artifact_cache/run/139a8ddb781a6257",
+          "stdout": "",
+          "timed_out": false
+        }
+      ],
+      "status": "PASS",
+      "timeout_seconds": 20
+    },
+    {
+      "difficulty": "medium",
+      "failure_stage": null,
+      "fixture_slug": "0048_rotate_image",
+      "id": "0048",
+      "oracle_mode": "no_oracle",
+      "primary_topic": "arrays",
+      "scope_classification": "in_scope",
+      "stages": [
+        {
+          "command": [
+            "/Users/yaseralnajjar/work/sifr/codebase/target/release/sifr",
+            "check",
+            "audits/leetcode/0048_rotate_image.sifr"
+          ],
+          "duration_ms": 110,
+          "returncode": 0,
+          "stage": "check",
+          "stderr": "no errors found",
+          "stdout": "",
+          "timed_out": false
+        },
+        {
+          "command": [
+            "/Users/yaseralnajjar/work/sifr/codebase/target/release/sifr",
+            "run",
+            "audits/leetcode/0048_rotate_image.sifr"
+          ],
+          "duration_ms": 198,
+          "returncode": 0,
+          "stage": "run",
+          "stderr": "[sifr-artifact-cache] namespace=run key=9172974a492e2206 cache_hit=true workspace=/var/folders/lq/l19_y_rn76b8vprfvdjn9zch0000gn/T/sifr_generated_artifact_cache/run/9172974a492e2206",
+          "stdout": "",
+          "timed_out": false
+        }
+      ],
+      "status": "NO_ORACLE",
+      "timeout_seconds": 20
+    },
+    {
+      "difficulty": "medium",
+      "failure_stage": null,
+      "fixture_slug": "0105_construct_binary_tree_from_preorder_and_inorder_traversal",
+      "id": "0105",
+      "oracle_mode": "no_oracle",
+      "primary_topic": "arrays",
+      "scope_classification": "in_scope",
+      "stages": [
+        {
+          "command": [
+            "/Users/yaseralnajjar/work/sifr/codebase/target/release/sifr",
+            "check",
+            "audits/leetcode/0105_construct_binary_tree_from_preorder_and_inorder_traversal.sifr"
+          ],
+          "duration_ms": 110,
+          "returncode": 0,
+          "stage": "check",
+          "stderr": "no errors found",
+          "stdout": "",
+          "timed_out": false
+        },
+        {
+          "command": [
+            "/Users/yaseralnajjar/work/sifr/codebase/target/release/sifr",
+            "run",
+            "audits/leetcode/0105_construct_binary_tree_from_preorder_and_inorder_traversal.sifr"
+          ],
+          "duration_ms": 191,
+          "returncode": 0,
+          "stage": "run",
+          "stderr": "[sifr-artifact-cache] namespace=run key=189084a5fbb8976c cache_hit=true workspace=/var/folders/lq/l19_y_rn76b8vprfvdjn9zch0000gn/T/sifr_generated_artifact_cache/run/189084a5fbb8976c",
+          "stdout": "",
+          "timed_out": false
+        }
+      ],
+      "status": "NO_ORACLE",
+      "timeout_seconds": 20
+    },
+    {
+      "difficulty": "medium",
+      "failure_stage": null,
+      "fixture_slug": "0106_construct_binary_tree_from_inorder_and_postorder_traversal",
+      "id": "0106",
+      "oracle_mode": "no_oracle",
+      "primary_topic": "arrays",
+      "scope_classification": "in_scope",
+      "stages": [
+        {
+          "command": [
+            "/Users/yaseralnajjar/work/sifr/codebase/target/release/sifr",
+            "check",
+            "audits/leetcode/0106_construct_binary_tree_from_inorder_and_postorder_traversal.sifr"
+          ],
+          "duration_ms": 110,
+          "returncode": 0,
+          "stage": "check",
+          "stderr": "no errors found",
+          "stdout": "",
+          "timed_out": false
+        },
+        {
+          "command": [
+            "/Users/yaseralnajjar/work/sifr/codebase/target/release/sifr",
+            "run",
+            "audits/leetcode/0106_construct_binary_tree_from_inorder_and_postorder_traversal.sifr"
+          ],
+          "duration_ms": 196,
+          "returncode": 0,
+          "stage": "run",
+          "stderr": "[sifr-artifact-cache] namespace=run key=c15f6fe8db8639f8 cache_hit=true workspace=/var/folders/lq/l19_y_rn76b8vprfvdjn9zch0000gn/T/sifr_generated_artifact_cache/run/c15f6fe8db8639f8",
+          "stdout": "",
+          "timed_out": false
+        }
+      ],
+      "status": "NO_ORACLE",
+      "timeout_seconds": 20
+    },
+    {
+      "difficulty": "medium",
+      "failure_stage": null,
+      "fixture_slug": "0108_convert_sorted_array_to_binary_search_tree",
+      "id": "0108",
+      "oracle_mode": "no_oracle",
+      "primary_topic": "arrays",
+      "scope_classification": "in_scope",
+      "stages": [
+        {
+          "command": [
+            "/Users/yaseralnajjar/work/sifr/codebase/target/release/sifr",
+            "check",
+            "audits/leetcode/0108_convert_sorted_array_to_binary_search_tree.sifr"
+          ],
+          "duration_ms": 108,
+          "returncode": 0,
+          "stage": "check",
+          "stderr": "no errors found",
+          "stdout": "",
+          "timed_out": false
+        },
+        {
+          "command": [
+            "/Users/yaseralnajjar/work/sifr/codebase/target/release/sifr",
+            "run",
+            "audits/leetcode/0108_convert_sorted_array_to_binary_search_tree.sifr"
+          ],
+          "duration_ms": 195,
+          "returncode": 0,
+          "stage": "run",
+          "stderr": "[sifr-artifact-cache] namespace=run key=6593bf019e7303e7 cache_hit=true workspace=/var/folders/lq/l19_y_rn76b8vprfvdjn9zch0000gn/T/sifr_generated_artifact_cache/run/6593bf019e7303e7",
+          "stdout": "",
+          "timed_out": false
+        }
+      ],
+      "status": "NO_ORACLE",
+      "timeout_seconds": 20
+    },
+    {
+      "difficulty": "medium",
+      "failure_stage": null,
+      "fixture_slug": "0124_binary_tree_maximum_path_sum",
+      "id": "0124",
+      "oracle_mode": "no_oracle",
+      "primary_topic": "arrays",
+      "scope_classification": "in_scope",
+      "stages": [
+        {
+          "command": [
+            "/Users/yaseralnajjar/work/sifr/codebase/target/release/sifr",
+            "check",
+            "audits/leetcode/0124_binary_tree_maximum_path_sum.sifr"
+          ],
+          "duration_ms": 107,
+          "returncode": 0,
+          "stage": "check",
+          "stderr": "no errors found",
+          "stdout": "",
+          "timed_out": false
+        },
+        {
+          "command": [
+            "/Users/yaseralnajjar/work/sifr/codebase/target/release/sifr",
+            "run",
+            "audits/leetcode/0124_binary_tree_maximum_path_sum.sifr"
+          ],
+          "duration_ms": 190,
+          "returncode": 0,
+          "stage": "run",
+          "stderr": "[sifr-artifact-cache] namespace=run key=eefcce65e4ceea85 cache_hit=true workspace=/var/folders/lq/l19_y_rn76b8vprfvdjn9zch0000gn/T/sifr_generated_artifact_cache/run/eefcce65e4ceea85",
+          "stdout": "",
+          "timed_out": false
+        }
+      ],
+      "status": "NO_ORACLE",
+      "timeout_seconds": 20
+    },
+    {
+      "difficulty": "medium",
+      "failure_stage": null,
+      "fixture_slug": "0138_copy_list_with_random_pointer",
+      "id": "0138",
+      "oracle_mode": "no_oracle",
+      "primary_topic": "arrays",
+      "scope_classification": "in_scope",
+      "stages": [
+        {
+          "command": [
+            "/Users/yaseralnajjar/work/sifr/codebase/target/release/sifr",
+            "check",
+            "audits/leetcode/0138_copy_list_with_random_pointer.sifr"
+          ],
+          "duration_ms": 109,
+          "returncode": 0,
+          "stage": "check",
+          "stderr": "no errors found",
+          "stdout": "",
+          "timed_out": false
+        },
+        {
+          "command": [
+            "/Users/yaseralnajjar/work/sifr/codebase/target/release/sifr",
+            "run",
+            "audits/leetcode/0138_copy_list_with_random_pointer.sifr"
+          ],
+          "duration_ms": 193,
+          "returncode": 0,
+          "stage": "run",
+          "stderr": "[sifr-artifact-cache] namespace=run key=350dd1b6bff523ef cache_hit=true workspace=/var/folders/lq/l19_y_rn76b8vprfvdjn9zch0000gn/T/sifr_generated_artifact_cache/run/350dd1b6bff523ef",
+          "stdout": "",
+          "timed_out": false
+        }
+      ],
+      "status": "NO_ORACLE",
+      "timeout_seconds": 20
+    },
+    {
+      "difficulty": "medium",
+      "failure_stage": null,
+      "fixture_slug": "0189_rotate_array",
+      "id": "0189",
+      "oracle_mode": "no_oracle",
+      "primary_topic": "arrays",
+      "scope_classification": "in_scope",
+      "stages": [
+        {
+          "command": [
+            "/Users/yaseralnajjar/work/sifr/codebase/target/release/sifr",
+            "check",
+            "audits/leetcode/0189_rotate_array.sifr"
+          ],
+          "duration_ms": 112,
+          "returncode": 0,
+          "stage": "check",
+          "stderr": "no errors found",
+          "stdout": "",
+          "timed_out": false
+        },
+        {
+          "command": [
+            "/Users/yaseralnajjar/work/sifr/codebase/target/release/sifr",
+            "run",
+            "audits/leetcode/0189_rotate_array.sifr"
+          ],
+          "duration_ms": 188,
+          "returncode": 0,
+          "stage": "run",
+          "stderr": "[sifr-artifact-cache] namespace=run key=3e10b87deddc4327 cache_hit=true workspace=/var/folders/lq/l19_y_rn76b8vprfvdjn9zch0000gn/T/sifr_generated_artifact_cache/run/3e10b87deddc4327",
+          "stdout": "",
+          "timed_out": false
+        }
+      ],
+      "status": "NO_ORACLE",
+      "timeout_seconds": 20
+    },
+    {
+      "difficulty": "medium",
+      "failure_stage": null,
+      "fixture_slug": "0211_design_add_and_search_words_data_structure",
+      "id": "0211",
+      "oracle_mode": "no_oracle",
+      "primary_topic": "arrays",
+      "scope_classification": "in_scope",
+      "stages": [
+        {
+          "command": [
+            "/Users/yaseralnajjar/work/sifr/codebase/target/release/sifr",
+            "check",
+            "audits/leetcode/0211_design_add_and_search_words_data_structure.sifr"
+          ],
+          "duration_ms": 109,
+          "returncode": 0,
+          "stage": "check",
+          "stderr": "no errors found",
+          "stdout": "",
+          "timed_out": false
+        },
+        {
+          "command": [
+            "/Users/yaseralnajjar/work/sifr/codebase/target/release/sifr",
+            "run",
+            "audits/leetcode/0211_design_add_and_search_words_data_structure.sifr"
+          ],
+          "duration_ms": 190,
+          "returncode": 0,
+          "stage": "run",
+          "stderr": "[sifr-artifact-cache] namespace=run key=715959b1d24c94c5 cache_hit=true workspace=/var/folders/lq/l19_y_rn76b8vprfvdjn9zch0000gn/T/sifr_generated_artifact_cache/run/715959b1d24c94c5",
+          "stdout": "",
+          "timed_out": false
+        }
+      ],
+      "status": "NO_ORACLE",
+      "timeout_seconds": 20
+    },
+    {
+      "difficulty": "medium",
+      "failure_stage": null,
+      "fixture_slug": "0435_non_overlapping_intervals",
+      "id": "0435",
+      "oracle_mode": "embedded_asserts",
+      "primary_topic": "arrays",
+      "scope_classification": "in_scope",
+      "stages": [
+        {
+          "command": [
+            "/Users/yaseralnajjar/work/sifr/codebase/target/release/sifr",
+            "check",
+            "audits/leetcode/0435_non_overlapping_intervals.sifr"
+          ],
+          "duration_ms": 112,
+          "returncode": 0,
+          "stage": "check",
+          "stderr": "no errors found",
+          "stdout": "",
+          "timed_out": false
+        },
+        {
+          "command": [
+            "/Users/yaseralnajjar/work/sifr/codebase/target/release/sifr",
+            "run",
+            "audits/leetcode/0435_non_overlapping_intervals.sifr"
+          ],
+          "duration_ms": 187,
+          "returncode": 0,
+          "stage": "run",
+          "stderr": "[sifr-artifact-cache] namespace=run key=bcb0068f7ef3afaa cache_hit=true workspace=/var/folders/lq/l19_y_rn76b8vprfvdjn9zch0000gn/T/sifr_generated_artifact_cache/run/bcb0068f7ef3afaa",
+          "stdout": "",
+          "timed_out": false
+        }
+      ],
+      "status": "PASS",
+      "timeout_seconds": 20
+    },
+    {
+      "difficulty": "medium",
+      "failure_stage": null,
+      "fixture_slug": "0450_delete_node_in_a_bst",
+      "id": "0450",
+      "oracle_mode": "no_oracle",
+      "primary_topic": "arrays",
+      "scope_classification": "in_scope",
+      "stages": [
+        {
+          "command": [
+            "/Users/yaseralnajjar/work/sifr/codebase/target/release/sifr",
+            "check",
+            "audits/leetcode/0450_delete_node_in_a_bst.sifr"
+          ],
+          "duration_ms": 112,
+          "returncode": 0,
+          "stage": "check",
+          "stderr": "no errors found",
+          "stdout": "",
+          "timed_out": false
+        },
+        {
+          "command": [
+            "/Users/yaseralnajjar/work/sifr/codebase/target/release/sifr",
+            "run",
+            "audits/leetcode/0450_delete_node_in_a_bst.sifr"
+          ],
+          "duration_ms": 194,
+          "returncode": 0,
+          "stage": "run",
+          "stderr": "[sifr-artifact-cache] namespace=run key=0c71bd40416dc8b4 cache_hit=true workspace=/var/folders/lq/l19_y_rn76b8vprfvdjn9zch0000gn/T/sifr_generated_artifact_cache/run/0c71bd40416dc8b4",
+          "stdout": "",
+          "timed_out": false
+        }
+      ],
+      "status": "NO_ORACLE",
+      "timeout_seconds": 20
+    },
+    {
+      "difficulty": "medium",
+      "failure_stage": null,
+      "fixture_slug": "0567_permutation_in_string",
+      "id": "0567",
+      "oracle_mode": "embedded_asserts",
+      "primary_topic": "arrays",
+      "scope_classification": "in_scope",
+      "stages": [
+        {
+          "command": [
+            "/Users/yaseralnajjar/work/sifr/codebase/target/release/sifr",
+            "check",
+            "audits/leetcode/0567_permutation_in_string.sifr"
+          ],
+          "duration_ms": 109,
+          "returncode": 0,
+          "stage": "check",
+          "stderr": "no errors found",
+          "stdout": "",
+          "timed_out": false
+        },
+        {
+          "command": [
+            "/Users/yaseralnajjar/work/sifr/codebase/target/release/sifr",
+            "run",
+            "audits/leetcode/0567_permutation_in_string.sifr"
+          ],
+          "duration_ms": 193,
+          "returncode": 0,
+          "stage": "run",
+          "stderr": "[sifr-artifact-cache] namespace=run key=2ce35d58f86bfabf cache_hit=true workspace=/var/folders/lq/l19_y_rn76b8vprfvdjn9zch0000gn/T/sifr_generated_artifact_cache/run/2ce35d58f86bfabf",
+          "stdout": "",
+          "timed_out": false
+        }
+      ],
+      "status": "PASS",
+      "timeout_seconds": 20
+    },
+    {
+      "difficulty": "medium",
+      "failure_stage": null,
+      "fixture_slug": "0572_subtree_of_another_tree",
+      "id": "0572",
+      "oracle_mode": "no_oracle",
+      "primary_topic": "arrays",
+      "scope_classification": "in_scope",
+      "stages": [
+        {
+          "command": [
+            "/Users/yaseralnajjar/work/sifr/codebase/target/release/sifr",
+            "check",
+            "audits/leetcode/0572_subtree_of_another_tree.sifr"
+          ],
+          "duration_ms": 107,
+          "returncode": 0,
+          "stage": "check",
+          "stderr": "no errors found",
+          "stdout": "",
+          "timed_out": false
+        },
+        {
+          "command": [
+            "/Users/yaseralnajjar/work/sifr/codebase/target/release/sifr",
+            "run",
+            "audits/leetcode/0572_subtree_of_another_tree.sifr"
+          ],
+          "duration_ms": 188,
+          "returncode": 0,
+          "stage": "run",
+          "stderr": "[sifr-artifact-cache] namespace=run key=317c62343157297d cache_hit=true workspace=/var/folders/lq/l19_y_rn76b8vprfvdjn9zch0000gn/T/sifr_generated_artifact_cache/run/317c62343157297d",
+          "stdout": "",
+          "timed_out": false
+        }
+      ],
+      "status": "NO_ORACLE",
+      "timeout_seconds": 20
+    },
+    {
+      "difficulty": "medium",
+      "failure_stage": null,
+      "fixture_slug": "0617_merge_two_binary_trees",
+      "id": "0617",
+      "oracle_mode": "no_oracle",
+      "primary_topic": "arrays",
+      "scope_classification": "in_scope",
+      "stages": [
+        {
+          "command": [
+            "/Users/yaseralnajjar/work/sifr/codebase/target/release/sifr",
+            "check",
+            "audits/leetcode/0617_merge_two_binary_trees.sifr"
+          ],
+          "duration_ms": 111,
+          "returncode": 0,
+          "stage": "check",
+          "stderr": "no errors found",
+          "stdout": "",
+          "timed_out": false
+        },
+        {
+          "command": [
+            "/Users/yaseralnajjar/work/sifr/codebase/target/release/sifr",
+            "run",
+            "audits/leetcode/0617_merge_two_binary_trees.sifr"
+          ],
+          "duration_ms": 230,
+          "returncode": 0,
+          "stage": "run",
+          "stderr": "[sifr-artifact-cache] namespace=run key=824b12efa3c93018 cache_hit=true workspace=/var/folders/lq/l19_y_rn76b8vprfvdjn9zch0000gn/T/sifr_generated_artifact_cache/run/824b12efa3c93018",
+          "stdout": "",
+          "timed_out": false
+        }
+      ],
+      "status": "NO_ORACLE",
+      "timeout_seconds": 20
+    },
+    {
+      "difficulty": "medium",
+      "failure_stage": null,
+      "fixture_slug": "0701_insert_into_a_binary_search_tree",
+      "id": "0701",
+      "oracle_mode": "no_oracle",
+      "primary_topic": "arrays",
+      "scope_classification": "in_scope",
+      "stages": [
+        {
+          "command": [
+            "/Users/yaseralnajjar/work/sifr/codebase/target/release/sifr",
+            "check",
+            "audits/leetcode/0701_insert_into_a_binary_search_tree.sifr"
+          ],
+          "duration_ms": 123,
+          "returncode": 0,
+          "stage": "check",
+          "stderr": "no errors found",
+          "stdout": "",
+          "timed_out": false
+        },
+        {
+          "command": [
+            "/Users/yaseralnajjar/work/sifr/codebase/target/release/sifr",
+            "run",
+            "audits/leetcode/0701_insert_into_a_binary_search_tree.sifr"
+          ],
+          "duration_ms": 190,
+          "returncode": 0,
+          "stage": "run",
+          "stderr": "[sifr-artifact-cache] namespace=run key=35c5cefe7533e113 cache_hit=true workspace=/var/folders/lq/l19_y_rn76b8vprfvdjn9zch0000gn/T/sifr_generated_artifact_cache/run/35c5cefe7533e113",
+          "stdout": "",
+          "timed_out": false
+        }
+      ],
+      "status": "NO_ORACLE",
+      "timeout_seconds": 20
+    },
+    {
+      "difficulty": "medium",
+      "failure_stage": null,
+      "fixture_slug": "0729_my_calendar_i",
+      "id": "0729",
+      "oracle_mode": "no_oracle",
+      "primary_topic": "arrays",
+      "scope_classification": "in_scope",
+      "stages": [
+        {
+          "command": [
+            "/Users/yaseralnajjar/work/sifr/codebase/target/release/sifr",
+            "check",
+            "audits/leetcode/0729_my_calendar_i.sifr"
+          ],
+          "duration_ms": 108,
+          "returncode": 0,
+          "stage": "check",
+          "stderr": "no errors found",
+          "stdout": "",
+          "timed_out": false
+        },
+        {
+          "command": [
+            "/Users/yaseralnajjar/work/sifr/codebase/target/release/sifr",
+            "run",
+            "audits/leetcode/0729_my_calendar_i.sifr"
+          ],
+          "duration_ms": 186,
+          "returncode": 0,
+          "stage": "run",
+          "stderr": "[sifr-artifact-cache] namespace=run key=d4a768b489ff0fef cache_hit=true workspace=/var/folders/lq/l19_y_rn76b8vprfvdjn9zch0000gn/T/sifr_generated_artifact_cache/run/d4a768b489ff0fef",
+          "stdout": "",
+          "timed_out": false
+        }
+      ],
+      "status": "NO_ORACLE",
+      "timeout_seconds": 20
+    },
+    {
+      "difficulty": "medium",
+      "failure_stage": null,
+      "fixture_slug": "0783_minimum_distance_between_bst_nodes",
+      "id": "0783",
+      "oracle_mode": "no_oracle",
+      "primary_topic": "arrays",
+      "scope_classification": "in_scope",
+      "stages": [
+        {
+          "command": [
+            "/Users/yaseralnajjar/work/sifr/codebase/target/release/sifr",
+            "check",
+            "audits/leetcode/0783_minimum_distance_between_bst_nodes.sifr"
+          ],
+          "duration_ms": 108,
+          "returncode": 0,
+          "stage": "check",
+          "stderr": "no errors found",
+          "stdout": "",
+          "timed_out": false
+        },
+        {
+          "command": [
+            "/Users/yaseralnajjar/work/sifr/codebase/target/release/sifr",
+            "run",
+            "audits/leetcode/0783_minimum_distance_between_bst_nodes.sifr"
+          ],
+          "duration_ms": 191,
+          "returncode": 0,
+          "stage": "run",
+          "stderr": "[sifr-artifact-cache] namespace=run key=a270092b95da8dfc cache_hit=true workspace=/var/folders/lq/l19_y_rn76b8vprfvdjn9zch0000gn/T/sifr_generated_artifact_cache/run/a270092b95da8dfc",
+          "stdout": "",
+          "timed_out": false
+        }
+      ],
+      "status": "NO_ORACLE",
+      "timeout_seconds": 20
+    },
+    {
+      "difficulty": "medium",
+      "failure_stage": null,
+      "fixture_slug": "0894_all_possible_full_binary_trees",
+      "id": "0894",
+      "oracle_mode": "no_oracle",
+      "primary_topic": "arrays",
+      "scope_classification": "in_scope",
+      "stages": [
+        {
+          "command": [
+            "/Users/yaseralnajjar/work/sifr/codebase/target/release/sifr",
+            "check",
+            "audits/leetcode/0894_all_possible_full_binary_trees.sifr"
+          ],
+          "duration_ms": 109,
+          "returncode": 0,
+          "stage": "check",
+          "stderr": "no errors found",
+          "stdout": "",
+          "timed_out": false
+        },
+        {
+          "command": [
+            "/Users/yaseralnajjar/work/sifr/codebase/target/release/sifr",
+            "run",
+            "audits/leetcode/0894_all_possible_full_binary_trees.sifr"
+          ],
+          "duration_ms": 190,
+          "returncode": 0,
+          "stage": "run",
+          "stderr": "[sifr-artifact-cache] namespace=run key=5c9fcfba74c0b7c6 cache_hit=true workspace=/var/folders/lq/l19_y_rn76b8vprfvdjn9zch0000gn/T/sifr_generated_artifact_cache/run/5c9fcfba74c0b7c6",
+          "stdout": "",
+          "timed_out": false
+        }
+      ],
+      "status": "NO_ORACLE",
+      "timeout_seconds": 20
+    },
+    {
+      "difficulty": "medium",
+      "failure_stage": null,
+      "fixture_slug": "1958_check_if_move_is_legal",
+      "id": "1958",
+      "oracle_mode": "no_oracle",
+      "primary_topic": "arrays",
+      "scope_classification": "in_scope",
+      "stages": [
+        {
+          "command": [
+            "/Users/yaseralnajjar/work/sifr/codebase/target/release/sifr",
+            "check",
+            "audits/leetcode/1958_check_if_move_is_legal.sifr"
+          ],
+          "duration_ms": 111,
+          "returncode": 0,
+          "stage": "check",
+          "stderr": "no errors found",
+          "stdout": "",
+          "timed_out": false
+        },
+        {
+          "command": [
+            "/Users/yaseralnajjar/work/sifr/codebase/target/release/sifr",
+            "run",
+            "audits/leetcode/1958_check_if_move_is_legal.sifr"
+          ],
+          "duration_ms": 187,
+          "returncode": 0,
+          "stage": "run",
+          "stderr": "[sifr-artifact-cache] namespace=run key=aa3965e013348bb3 cache_hit=true workspace=/var/folders/lq/l19_y_rn76b8vprfvdjn9zch0000gn/T/sifr_generated_artifact_cache/run/aa3965e013348bb3",
+          "stdout": "",
+          "timed_out": false
+        }
+      ],
+      "status": "NO_ORACLE",
+      "timeout_seconds": 20
+    }
+  ],
+  "summary": {
+    "case_count": 20,
+    "difficulty_counts": {
+      "easy": 0,
+      "hard": 0,
+      "medium": 20
+    },
+    "scope_counts": {
+      "blocked_feature": 0,
+      "in_scope": 20,
+      "out_of_scope_external_dep": 0
+    },
+    "status_counts": {
+      "NO_ORACLE": 16,
+      "PASS": 4
+    },
+    "topic_counts": {
+      "arrays": 20,
+      "backtracking": 0,
+      "dp": 0,
+      "graphs": 0,
+      "hash_map": 0,
+      "heap_priority_queue": 0,
+      "math": 0,
+      "strings": 0,
+      "trees": 0,
+      "two_pointers_sliding_window": 0
+    }
+  }
+}

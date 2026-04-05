@@ -9,14 +9,36 @@ class ListNode:
         self.next = next
 
 
+def nodeVal(node: ListNode | None) -> int:
+    if node is None:
+        return 0
+    return node.val
+
+
+def nodeNext(node: ListNode | None) -> ListNode | None:
+    if node is None:
+        return None
+    return node.next
+
+
+def hasNode(node: ListNode | None) -> bool:
+    return node is not None
+
+
+def unwrapInt(value: int | None) -> int:
+    if value is None:
+        return 0
+    return value
+
+
 def listNodeToString(own node: ListNode | None) -> str:
     if node is None:
         return "None"
     parts: list[str] = []
     cur: ListNode | None = node
-    while cur is not None:
-        parts.append(str(cur.val))
-        cur = cur.next
+    while hasNode(cur):
+        parts.append(str(nodeVal(cur)))
+        cur = nodeNext(cur)
     return "->".join(parts)
 
 
@@ -50,21 +72,21 @@ class Node:
 def mergeInBetween(own list1: ListNode, a: int, b: int, own list2: ListNode) -> ListNode | None:
     values1: list[int] = []
     cur1: ListNode | None = list1
-    while cur1 is not None:
-        values1.append(cur1.val)
-        cur1 = cur1.next
+    while hasNode(cur1):
+        values1.append(nodeVal(cur1))
+        cur1 = nodeNext(cur1)
 
     values2: list[int] = []
     cur2: ListNode | None = list2
-    while cur2 is not None:
-        values2.append(cur2.val)
-        cur2 = cur2.next
+    while hasNode(cur2):
+        values2.append(nodeVal(cur2))
+        cur2 = nodeNext(cur2)
 
     result_values: list[int] = []
     i = 0
     while i < a:
-        value_i: int | None = values1[i]
-        if value_i is not None:
+        value_i: int = unwrapInt(values1[i])
+        if True:
             result_values.append(value_i)
         i += 1
 
@@ -73,16 +95,16 @@ def mergeInBetween(own list1: ListNode, a: int, b: int, own list2: ListNode) -> 
 
     i = b + 1
     while i < len(values1):
-        value_i: int | None = values1[i]
-        if value_i is not None:
+        value_i: int = unwrapInt(values1[i])
+        if True:
             result_values.append(value_i)
         i += 1
 
     result: ListNode | None = None
     i = len(result_values) - 1
     while i >= 0:
-        value_i: int | None = result_values[i]
-        if value_i is not None:
+        value_i: int = unwrapInt(result_values[i])
+        if True:
             result = ListNode(value_i, result)
         i -= 1
     return result

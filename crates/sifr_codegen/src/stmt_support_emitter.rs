@@ -203,6 +203,27 @@ impl RustEmitter {
         ))
     }
 
+    pub(crate) fn force_unwrap_option_expr_for_ir(
+        value_expr: crate::RustExpr,
+        guard_message: &str,
+    ) -> crate::RustExpr {
+        crate::RustExpr::Block {
+            stmts: vec![crate::RustStmt::LetElse {
+                pattern: "Some(__sifr_unwrapped_option_value)".to_string(),
+                value: value_expr,
+                else_body: vec![crate::RustStmt::Expr(crate::RustExpr::MacroCall {
+                    name: "unreachable".to_string(),
+                    args: vec![crate::RustExpr::Literal(crate::RustLiteral::Str(
+                        guard_message.to_string(),
+                    ))],
+                })],
+            }],
+            expr: Some(Box::new(crate::RustExpr::Ident(
+                "__sifr_unwrapped_option_value".to_string(),
+            ))),
+        }
+    }
+
     fn uses_debug_display_format_for_ir(ty: &Type) -> bool {
         match crate::resolve_alias_type_for_plain_call(ty) {
             Type::Int
@@ -694,6 +715,18 @@ impl RustEmitter {
         let Some(lowered_value) = self.lower_stmt_expr_for_ir(value)? else {
             return Ok(None);
         };
+        let lowered_value = Self::clone_non_copy_name_expr_for_ir(value, lowered_value);
+        let lowered_value = if value.ty().rust_type().starts_with('&')
+            && !target_elem_ty.rust_type().starts_with('&')
+        {
+            crate::RustExpr::MethodCall {
+                receiver: Box::new(crate::RustExpr::Paren(Box::new(lowered_value))),
+                method: "clone".to_string(),
+                args: vec![],
+            }
+        } else {
+            lowered_value
+        };
 
         let value_is_option = if crate::helpers::is_option_type(value.ty()) {
             true
@@ -880,7 +913,7 @@ impl RustEmitter {
         }
     }
 
-    fn clone_non_copy_name_expr_for_ir(
+    pub(crate) fn clone_non_copy_name_expr_for_ir(
         expr: &HirExpr,
         lowered: crate::RustExpr,
     ) -> crate::RustExpr {
@@ -1365,8 +1398,34 @@ impl RustEmitter {
                                     self.recursive_fields
                                         .contains(&(class_name.clone(), field_name.clone()))
                                 });
+                            let is_recursive_container_param = matches!(
+                                crate::resolve_alias_type_for_plain_call(param_ty),
+                                Type::List(elem)
+                                    if matches!(
+                                        crate::resolve_alias_type_for_plain_call(elem.as_ref()),
+                                        Type::Class { name, .. } if name == class_name
+                                    )
+                            ) || matches!(
+                                crate::resolve_alias_type_for_plain_call(param_ty),
+                                Type::Dict(_, value_ty)
+                                    if matches!(
+                                        crate::resolve_alias_type_for_plain_call(value_ty.as_ref()),
+                                        Type::Class { name, .. } if name == class_name
+                                    )
+                            );
                             let resolved_param = crate::resolve_alias_type_for_plain_call(param_ty);
                             if !crate::helpers::is_option_type(resolved_param) {
+                                if (is_recursive_ctor_field || is_recursive_container_param)
+                                    && !Self::is_box_new_call_expr_for_ir(lowered_arg)
+                                {
+                                    *lowered_arg = crate::RustExpr::FnCall {
+                                        func: Box::new(crate::RustExpr::Path(vec![
+                                            "Box".to_string(),
+                                            "new".to_string(),
+                                        ])),
+                                        args: vec![lowered_arg.clone()],
+                                    };
+                                }
                                 continue;
                             }
                             let needs_box_inner = param_ty.rust_type().starts_with("Option<Box<")
@@ -1415,14 +1474,37 @@ impl RustEmitter {
                         self.recursive_fields
                             .contains(&(class_name.clone(), field_name.clone()))
                     });
-                if !is_recursive_ctor_field || matches!(args[idx], HirExpr::NoneLiteral) {
+                let is_recursive_container_arg = matches!(
+                    crate::resolve_alias_type_for_plain_call(args[idx].ty()),
+                    Type::List(elem)
+                        if matches!(
+                            crate::resolve_alias_type_for_plain_call(elem.as_ref()),
+                            Type::Class { name, .. } if name == class_name
+                        )
+                ) || matches!(
+                    crate::resolve_alias_type_for_plain_call(args[idx].ty()),
+                    Type::Dict(_, value_ty)
+                        if matches!(
+                            crate::resolve_alias_type_for_plain_call(value_ty.as_ref()),
+                            Type::Class { name, .. } if name == class_name
+                        )
+                );
+                if (!is_recursive_ctor_field && !is_recursive_container_arg)
+                    || matches!(args[idx], HirExpr::NoneLiteral)
+                {
                     continue;
                 }
-                let arg_is_option = crate::helpers::is_option_type(args[idx].ty());
-                if arg_is_option {
+                let resolved_arg_ty = crate::resolve_alias_type_for_plain_call(args[idx].ty());
+                if crate::helpers::is_option_type(resolved_arg_ty) {
                     *lowered_arg = Self::ensure_option_box_inner_for_ir(lowered_arg.clone());
-                } else {
-                    *lowered_arg = Self::ensure_some_box_inner_for_ir(lowered_arg.clone());
+                } else if !Self::is_box_new_call_expr_for_ir(lowered_arg) {
+                    *lowered_arg = crate::RustExpr::FnCall {
+                        func: Box::new(crate::RustExpr::Path(vec![
+                            "Box".to_string(),
+                            "new".to_string(),
+                        ])),
+                        args: vec![lowered_arg.clone()],
+                    };
                 }
             }
             return Ok(Some(crate::RustExpr::FnCall {
@@ -3228,6 +3310,10 @@ impl RustEmitter {
                         args: vec![],
                     }));
                 }
+                if let Some(lowered) = Self::try_lower_collection_truthiness_condition_for_ir(expr)
+                {
+                    return Ok(Some(lowered));
+                }
             }
             let Some(lowered_operand) = self.lower_stmt_expr_for_ir(operand)? else {
                 return Ok(None);
@@ -4607,6 +4693,22 @@ impl RustEmitter {
             .enumerate()
         {
             let resolved_param = crate::resolve_alias_type_for_plain_call(param_ty);
+            let effective_arg_ty = if let HirExpr::Name { name, ty } = hir_arg {
+                if matches!(
+                    crate::resolve_alias_type_for_plain_call(ty),
+                    Type::Any | Type::Unknown
+                ) {
+                    self.local_binding_types
+                        .get(name)
+                        .cloned()
+                        .unwrap_or_else(|| ty.clone())
+                } else {
+                    ty.clone()
+                }
+            } else {
+                hir_arg.ty().clone()
+            };
+            let arg_is_option = crate::helpers::is_option_type(&effective_arg_ty);
             let borrowed_name_arg = matches!(hir_arg, HirExpr::Name { name, ty }
                 if self.borrowed_params.contains(name)
                     || self.mut_borrowed_params.contains(name)
@@ -4626,25 +4728,36 @@ impl RustEmitter {
                     .unwrap_or(false);
                 let needs_box_inner =
                     param_ty.rust_type().starts_with("Option<Box<") || is_recursive_ctor_param;
-                if !crate::helpers::is_option_type(hir_arg.ty())
-                    && !matches!(hir_arg, HirExpr::NoneLiteral)
-                {
+                if !arg_is_option && !matches!(hir_arg, HirExpr::NoneLiteral) {
+                    let wrapped_inner = Self::clone_non_copy_name_expr_for_ir(hir_arg, lowered_arg);
                     lowered_arg = if needs_box_inner {
-                        Self::ensure_some_box_inner_for_ir(lowered_arg)
+                        Self::ensure_some_box_inner_for_ir(wrapped_inner)
                     } else {
                         crate::RustExpr::FnCall {
                             func: Box::new(crate::RustExpr::Path(vec!["Some".to_string()])),
-                            args: vec![lowered_arg],
+                            args: vec![wrapped_inner],
                         }
                     };
                 } else if needs_box_inner {
                     lowered_arg = Self::ensure_option_box_inner_for_ir(lowered_arg);
                 }
+            } else if arg_is_option {
+                if !crate::helpers::is_copy_type_for_codegen(&effective_arg_ty) {
+                    lowered_arg = crate::RustExpr::MethodCall {
+                        receiver: Box::new(crate::RustExpr::Paren(Box::new(lowered_arg))),
+                        method: "clone".to_string(),
+                        args: vec![],
+                    };
+                }
+                lowered_arg = Self::force_unwrap_option_expr_for_ir(
+                    lowered_arg,
+                    "compiler-verified option argument should be Some",
+                );
             }
 
             let param_rust_type = param_ty.rust_type();
-            if param_rust_type.starts_with("Box<dyn ")
-                && !hir_arg.ty().rust_type().starts_with("Box<dyn ")
+            if param_rust_type.starts_with("Box<")
+                && !Self::is_box_new_call_expr_for_ir(&lowered_arg)
             {
                 lowered_arg = crate::RustExpr::FnCall {
                     func: Box::new(crate::RustExpr::Path(vec![
@@ -4675,12 +4788,25 @@ impl RustEmitter {
                     && (param_ty.ownership() != sifr_type_system::OwnershipKind::Copy
                         || matches!(resolved_param, Type::TypeVar(_) | Type::Any)));
             let already_borrowed = matches!(lowered_arg, crate::RustExpr::Ref { .. })
-                || matches!(hir_arg, HirExpr::Name { name, .. }
-                    if self.borrowed_params.contains(name) || self.mut_borrowed_params.contains(name));
+                || matches!(
+                    (hir_arg, &lowered_arg),
+                    (
+                        HirExpr::Name { name, .. },
+                        crate::RustExpr::Ident(lowered_name)
+                    ) if lowered_name == name
+                        && (self.borrowed_params.contains(name)
+                            || self.mut_borrowed_params.contains(name))
+                );
             let already_mut_borrowed = matches!(
                 lowered_arg,
                 crate::RustExpr::Ref { mutable: true, .. }
-            ) || matches!(hir_arg, HirExpr::Name { name, .. } if self.mut_borrowed_params.contains(name));
+            ) || matches!(
+                (hir_arg, &lowered_arg),
+                (
+                    HirExpr::Name { name, .. },
+                    crate::RustExpr::Ident(lowered_name)
+                ) if lowered_name == name && self.mut_borrowed_params.contains(name)
+            );
 
             if needs_shared_borrow || needs_mut_borrow {
                 lowered_arg = Self::clone_moved_names_in_borrowed_aggregate(hir_arg, lowered_arg);
@@ -4955,7 +5081,12 @@ impl RustEmitter {
             };
 
             let should_bypass_simple_lowering =
-                matches!(stmt, HirStmt::Let { ty, .. } if self.type_contains_generic_class(ty));
+                matches!(
+                    stmt,
+                    HirStmt::NestedFunction { .. }
+                        | HirStmt::Assign { .. }
+                )
+                || matches!(stmt, HirStmt::Let { ty, .. } if self.type_contains_generic_class(ty));
             let maybe_simple_lowered = if should_bypass_simple_lowering {
                 None
             } else {
@@ -5024,11 +5155,28 @@ impl RustEmitter {
                 };
                 let lowered_value =
                     if let Some(target_ty) = self.local_binding_types.get(name).cloned() {
-                        self.coerce_local_value_for_target_type_for_ir(
+                        let mut lowered = self.coerce_local_value_for_target_type_for_ir(
                             &target_ty,
                             value,
                             lowered_value,
-                        )?
+                        )?;
+                        if !crate::helpers::is_option_type(&target_ty)
+                            && crate::helpers::is_option_type(value.ty())
+                        {
+                            let fallback = if crate::helpers::is_copy_type_for_codegen(&target_ty) {
+                                crate::RustExpr::Ident(name.clone())
+                            } else {
+                                crate::RustExpr::Clone(Box::new(crate::RustExpr::Ident(
+                                    name.clone(),
+                                )))
+                            };
+                            lowered = crate::RustExpr::MethodCall {
+                                receiver: Box::new(crate::RustExpr::Paren(Box::new(lowered))),
+                                method: "unwrap_or".to_string(),
+                                args: vec![fallback],
+                            };
+                        }
+                        lowered
                     } else {
                         lowered_value
                     };
@@ -5613,6 +5761,23 @@ impl RustEmitter {
             let Some(lowered_option_expr) = self.lower_stmt_expr_for_ir(condition)? else {
                 return Ok(None);
             };
+            if matches!(
+                crate::resolve_alias_type_for_plain_call(option_inner_ty),
+                Type::Bool | Type::LiteralBool(_)
+            ) {
+                return Ok(Some(crate::RustExpr::MethodCall {
+                    receiver: Box::new(lowered_option_expr),
+                    method: "is_some_and".to_string(),
+                    args: vec![crate::RustExpr::Closure {
+                        params: vec![crate::RustParam::Named {
+                            name: "__v".to_string(),
+                            ty: crate::RustType::Named("_".to_string()),
+                        }],
+                        body: Box::new(crate::RustExpr::Ident("__v".to_string())),
+                        is_move: false,
+                    }],
+                }));
+            }
             if matches!(
                 crate::resolve_alias_type_for_plain_call(option_inner_ty),
                 Type::Int | Type::LiteralInt(_) | Type::BigInt | Type::Float
@@ -6609,7 +6774,7 @@ impl RustEmitter {
             let Some(lowered_then_body) = self.try_lower_stmt_block_for_ir(then_body)? else {
                 return Ok(None);
             };
-            if let Some(option_vars) = crate::helpers::detect_or_is_none_vars(condition) {
+            if let Some(option_vars) = self.detect_or_is_none_vars_with_bindings_for_ir(condition) {
                 let pattern = format!(
                     "({})",
                     option_vars
@@ -6759,6 +6924,50 @@ impl RustEmitter {
             then_body: lowered_then_body,
             else_body: nested_else,
         }))
+    }
+
+    fn detect_or_is_none_vars_with_bindings_for_ir(&self, expr: &HirExpr) -> Option<Vec<String>> {
+        let HirExpr::BoolOp { op, values, .. } = expr else {
+            return crate::helpers::detect_or_is_none_vars(expr);
+        };
+        if op != "or" {
+            return crate::helpers::detect_or_is_none_vars(expr);
+        }
+        let mut vars = Vec::new();
+        for value in values {
+            let HirExpr::Compare {
+                left,
+                ops,
+                comparators,
+                ..
+            } = value
+            else {
+                return None;
+            };
+            if ops.len() != 1
+                || !(ops[0] == "is" || ops[0] == "==")
+                || !matches!(comparators[0], HirExpr::NoneLiteral)
+            {
+                return None;
+            }
+            let HirExpr::Name { name, ty } = left.as_ref() else {
+                return None;
+            };
+            let option_like = crate::helpers::is_option_type(ty)
+                || self
+                    .local_binding_types
+                    .get(name)
+                    .is_some_and(crate::helpers::is_option_type);
+            if !option_like {
+                return None;
+            }
+            vars.push(name.clone());
+        }
+        if vars.len() >= 2 {
+            Some(vars)
+        } else {
+            None
+        }
     }
 
     /// Emit a generator initialization statement (always mutable for closure capture)

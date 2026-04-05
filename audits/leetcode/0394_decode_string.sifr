@@ -15,7 +15,27 @@ def peekStr(stack: list[str]) -> str:
     return value
 
 def isDigit(ch: str) -> bool:
-    return ch == "0" or ch == "1" or ch == "2" or ch == "3" or ch == "4" or ch == "5" or ch == "6" or ch == "7" or ch == "8" or ch == "9"
+    if ch == "0":
+        return True
+    if ch == "1":
+        return True
+    if ch == "2":
+        return True
+    if ch == "3":
+        return True
+    if ch == "4":
+        return True
+    if ch == "5":
+        return True
+    if ch == "6":
+        return True
+    if ch == "7":
+        return True
+    if ch == "8":
+        return True
+    if ch == "9":
+        return True
+    return False
 
 def digitValue(ch: str) -> int:
     if ch == "0":

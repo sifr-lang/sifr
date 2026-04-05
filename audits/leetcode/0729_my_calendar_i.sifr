@@ -1,69 +1,21 @@
 # LeetCode 729: My Calendar I
 
-class Node:
-    val: int
-    next: Node | None
-    random: Node | None
-    left: Node | None
-    right: Node | None
-    neighbors: list[Node]
-    key: int
-
-    def __init__(
-        self,
-        val: int = 0,
-        next: Node | None = None,
-        random: Node | None = None,
-        left: Node | None = None,
-        right: Node | None = None,
-        neighbors: list[Node] = [],
-        key: int = -1,
-    ):
-        self.val = val
-        self.next = next
-        self.random = random
-        self.left = left
-        self.right = right
-        self.neighbors = neighbors
-        self.key = key
-
-class CalendarNode:
-    start: int
-    end: int
-    left: CalendarNode | None
-    right: CalendarNode | None
-
-    def __init__(self, start: int, end: int):
-        self.start = start
-        self.end = end
-        self.left = None
-        self.right = None
-
-
 class MyCalendar:
-    calendar: CalendarNode
+    bookings: list[list[int]]
 
     def __init__(self):
-        self.calendar = CalendarNode(-1, -1)
+        self.bookings = []
 
     def book(self, start: int, end: int) -> bool:
-        def bookHelper(cur: CalendarNode, targetStart: int, targetEnd: int) -> bool:
-            if targetStart > cur.end:
-                right_child: CalendarNode | None = cur.right
-                if right_child is None:
-                    cur.right = CalendarNode(targetStart, targetEnd)
-                    return True
-                return bookHelper(right_child, targetStart, targetEnd)
-            if targetEnd < cur.start:
-                left_child: CalendarNode | None = cur.left
-                if left_child is None:
-                    cur.left = CalendarNode(targetStart, targetEnd)
-                    return True
-                return bookHelper(left_child, targetStart, targetEnd)
-            return False
-
-        # "end - 1" because calendar intervals here are end-exclusive.
-        return bookHelper(self.calendar, start, end - 1)
+        for booking in self.bookings:
+            left: int | None = booking[0]
+            right: int | None = booking[1]
+            if left is None or right is None:
+                continue
+            if start < right and end > left:
+                return False
+        self.bookings.append([start, end])
+        return True
 
 def main():
     obj = MyCalendar()

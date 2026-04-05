@@ -15,11 +15,36 @@ class TreeNode:
         self.left = left
         self.right = right
 
+def treeVal(node: TreeNode | None) -> int:
+    if node is None:
+        return 0
+    return node.val
+
+def treeLeft(node: TreeNode | None) -> TreeNode | None:
+    if node is None:
+        return None
+    return node.left
+
+def treeRight(node: TreeNode | None) -> TreeNode | None:
+    if node is None:
+        return None
+    return node.right
+
+def hasTreeNode(node: TreeNode | None) -> bool:
+    return node is not None
+
 
 def treeToString(node: TreeNode | None) -> str:
     if node is None:
         return "None"
-    return str(node.val) + "(" + treeToString(node.left) + "," + treeToString(node.right) + ")"
+    return (
+        str(treeVal(node))
+        + "("
+        + treeToString(treeLeft(node))
+        + ","
+        + treeToString(treeRight(node))
+        + ")"
+    )
 
 
 class Node:
@@ -49,20 +74,20 @@ class Node:
         self.neighbors = neighbors
         self.key = key
 
-def trimBST(own mut root: TreeNode | None, low: int, high: int) -> TreeNode | None:
-    if not root:
+def trimBST(own root: TreeNode | None, low: int, high: int) -> TreeNode | None:
+    if not hasTreeNode(root):
         return None
 
-    if root.val > high:
-        return trimBST(root.left, low, high)
+    current = treeVal(root)
+    if current > high:
+        return trimBST(treeLeft(root), low, high)
 
-    if root.val < low:
-        return trimBST(root.right, low, high)
+    if current < low:
+        return trimBST(treeRight(root), low, high)
 
-    else:
-        root.left = trimBST(root.left, low, high)
-        root.right = trimBST(root.right, low, high)
-        return root
+    left_trimmed = trimBST(treeLeft(root), low, high)
+    right_trimmed = trimBST(treeRight(root), low, high)
+    return TreeNode(current, left_trimmed, right_trimmed)
 
 def main():
     assert treeToString(trimBST(TreeNode(1, TreeNode(0, None, None), TreeNode(2, None, None)), 1, 2)) == treeToString(TreeNode(1, None, TreeNode(2, None, None)))

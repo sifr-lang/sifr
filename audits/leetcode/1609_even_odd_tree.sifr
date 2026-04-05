@@ -55,7 +55,7 @@ def isEvenOddTree(own root: TreeNode | None) -> bool:
 
     root_node: TreeNode = root
     even = True
-    q = deque([root_node])
+    q: list[TreeNode] = [root_node]
 
     while len(q) > 0:
         prev_set = False
@@ -63,7 +63,11 @@ def isEvenOddTree(own root: TreeNode | None) -> bool:
         level_size = len(q)
         i = 0
         while i < level_size:
-            node = q.popleft()
+            node0 = q.pop(0)
+            if node0 is None:
+                i += 1
+                continue
+            node = node0
             value = node.val
 
             if even and (value % 2 == 0 or (prev_set and value <= prev)):

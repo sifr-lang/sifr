@@ -2,13 +2,19 @@
 
 def pushDominoes(dominoes: str) -> str:
     dom = list(dominoes)
-    q = collections.deque()
+    q: list[tuple[int, str]] = []
     for i, d in enumerate(dom):
         if d != '.':
             q.append((i, d))
     
-    while q:
-        i, d = q.popleft()
+    while len(q) > 0:
+        pair0 = q.pop(0)
+        if pair0 is None:
+            continue
+        i = pair0[0]
+        d = pair0[1]
+        if i is None or d is None:
+            continue
 
         if d == 'L' and i > 0 and dom[i - 1] == '.':
             q.append((i - 1, 'L'))
@@ -16,7 +22,7 @@ def pushDominoes(dominoes: str) -> str:
         elif d == 'R':
             if i + 1 < len(dom) and dom[i + 1] == '.':
                 if i + 2 < len(dom) and dom[i + 2] == 'L':
-                    q.popleft()
+                    _ = q.pop(0)
                 else:
                     q.append((i + 1, 'R'))
                     dom[i + 1] = 'R'
@@ -26,4 +32,3 @@ def pushDominoes(dominoes: str) -> str:
 def main():
     assert pushDominoes('RR.L') == 'RR.L'
     assert pushDominoes('.L.R...LR..L..') == 'LL.RR.LLRRLL..'
-

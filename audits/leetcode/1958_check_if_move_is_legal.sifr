@@ -1,33 +1,33 @@
 # LeetCode 1958: Check If Move Is Legal
 
+def expectInt(value: int | None) -> int:
+    if value is None:
+        return 0
+    return value
+
 def checkMove(mut board: list[list[str]], rMove: int, cMove: int, color: str) -> bool:
     ROWS, COLS = len(board), len(board[0])
     direction = [[1, 0], [-1, 0], [0, 1], [0, -1],
                  [1, 1], [-1, -1], [1, -1], [-1, 1]]
-    board[rMove][cMove] = color
-    
-    def legal(row, col, color, direc):
-        dr = direc[0]
-        dc = direc[1]
-        if dr is None or dc is None:
-            return False
-        next_row = row + dr
-        next_col = col + dc
+    board[rMove][cMove] = color + ""
+
+    for direc in direction:
+        dr = expectInt(direc[0])
+        dc = expectInt(direc[1])
+        next_row = rMove + dr
+        next_col = cMove + dc
         length = 1
-        
+
         while next_row >= 0 and next_row < ROWS and next_col >= 0 and next_col < COLS:
             length += 1
             if board[next_row][next_col] == '.':
-                return False
+                break
             if board[next_row][next_col] == color:
-                return length >= 3
+                if length >= 3:
+                    return True
+                break
             next_row = next_row + dr
             next_col = next_col + dc
-        return False
-    
-    for d in direction:
-        if legal(rMove, cMove, color, d):
-            return True
     return False
 
 def main():
