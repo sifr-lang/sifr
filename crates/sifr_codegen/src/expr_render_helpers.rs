@@ -59,6 +59,61 @@ impl RustEmitter {
             };
         }
 
+        let effective_object_ty = if let HirExpr::Name { name, ty } = object {
+            if matches!(
+                crate::resolve_alias_type_for_plain_call(ty),
+                Type::Any | Type::Unknown
+            ) {
+                self.local_binding_types
+                    .get(name)
+                    .cloned()
+                    .unwrap_or_else(|| ty.clone())
+            } else {
+                ty.clone()
+            }
+        } else {
+            object.ty().clone()
+        };
+        let option_inner_object_ty = if let Type::Union(members) =
+            crate::resolve_alias_type_for_plain_call(&effective_object_ty)
+        {
+            let mut inner = None;
+            for member in members {
+                if matches!(crate::resolve_alias_type_for_plain_call(member), Type::None) {
+                    continue;
+                }
+                if inner.is_some() {
+                    inner = None;
+                    break;
+                }
+                inner = Some(member.clone());
+            }
+            inner
+        } else {
+            None
+        };
+        let effective_base_object_ty = option_inner_object_ty
+            .clone()
+            .unwrap_or_else(|| effective_object_ty.clone());
+        let mut lowered_object = lowered_object;
+        if option_inner_object_ty.is_some() {
+            let option_expr = if matches!(object, HirExpr::Name { .. })
+                && !crate::helpers::is_copy_type_for_codegen(&effective_object_ty)
+            {
+                crate::RustExpr::MethodCall {
+                    receiver: Box::new(crate::RustExpr::Paren(Box::new(lowered_object))),
+                    method: "clone".to_string(),
+                    args: vec![],
+                }
+            } else {
+                lowered_object
+            };
+            lowered_object = Self::force_unwrap_option_expr_for_ir(
+                option_expr,
+                "compiler-verified option field base should be Some",
+            );
+        }
+
         let is_self_access = matches!(object, HirExpr::Name { name, .. } if name == "self");
         let class_name_for_parent = if let Some(ref current_class_name) = self.current_class_name {
             if is_self_access {
@@ -69,7 +124,7 @@ impl RustEmitter {
         } else {
             None
         }
-        .or_else(|| match object.ty() {
+        .or_else(|| match crate::resolve_alias_type_for_plain_call(&effective_base_object_ty) {
             Type::Class { name, .. } => Some(name.clone()),
             _ => None,
         });

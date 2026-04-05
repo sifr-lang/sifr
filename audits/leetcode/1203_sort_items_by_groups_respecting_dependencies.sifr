@@ -68,10 +68,12 @@ def sortItems(n: int, mut m: int, mut group: list[int], beforeItems: list[list[i
             before_group = getIntAt(group, before)
             if current_group == before_group:
                 appendEdge(successors_item, before, item)
-                setIntAt(predecessors_count_item, item, getIntAt(predecessors_count_item, item) + 1)
+                item_degree = getIntAt(predecessors_count_item, item)
+                setIntAt(predecessors_count_item, item, item_degree + 1)
             else:
                 appendEdge(successors_group, before_group, current_group)
-                setIntAt(predecessors_count_group, current_group, getIntAt(predecessors_count_group, current_group) + 1)
+                group_degree = getIntAt(predecessors_count_group, current_group)
+                setIntAt(predecessors_count_group, current_group, group_degree + 1)
 
     groups_order = topologicalSort(successors_group, predecessors_count_group, m)
     items_order = topologicalSort(successors_item, predecessors_count_item, n)

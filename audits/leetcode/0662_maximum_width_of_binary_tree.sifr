@@ -49,25 +49,42 @@ class Node:
         self.neighbors = neighbors
         self.key = key
 
-def widthOfBinaryTree(root: TreeNode | None) -> int:
+def expectInt(value: int | None) -> int:
+    if value is None:
+        return 0
+    return value
+
+def widthOfBinaryTree(own root: TreeNode | None) -> int:
     if root is None:
         return 0
 
-    q = [(root, 0)]
+    root_node: TreeNode = root
+    q_nodes: list[TreeNode] = [root_node]
+    q_idx: list[int] = [0]
     width = 0
-    while q:
-        leftIndex = q[0][1]
-        rightIndex = q[-1][1]
+    while len(q_nodes) > 0:
+        leftIndex = expectInt(q_idx[0])
+        rightIndex = expectInt(q_idx[len(q_idx) - 1])
         width = max(width, rightIndex - leftIndex + 1)
 
-        for _ in range(len(q)):
-            node, index = q.pop(0)
+        next_nodes: list[TreeNode] = []
+        next_idx: list[int] = []
+        for i in range(len(q_nodes)):
+            node = q_nodes[i]
+            index = q_idx[i]
+            if node is None or index is None:
+                continue
+            index_value = expectInt(index)
             left: TreeNode | None = node.left
             if left is not None:
-                q.append((left, index * 2))
+                next_nodes.append(left)
+                next_idx.append(index_value * 2)
             right: TreeNode | None = node.right
             if right is not None:
-                q.append((right, index * 2 + 1))
+                next_nodes.append(right)
+                next_idx.append(index_value * 2 + 1)
+        q_nodes = next_nodes
+        q_idx = next_idx
     return width
 
 def main():

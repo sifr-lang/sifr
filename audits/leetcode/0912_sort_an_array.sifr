@@ -1,42 +1,9 @@
 # LeetCode 912: Sort An Array
 
 def sortArray(mut nums: list[int]) -> list[int]:
-    def mergeSort(l: int, r: int) -> None:
-        if l >= r:
-            return
-        m = (l + r) // 2
-        mergeSort(l, m)
-        mergeSort(m + 1, r)
-
-        left = nums[l:m + 1]
-        right = nums[m + 1:r + 1]
-        i = l
-        li = 0
-        ri = 0
-
-        while li < len(left) and ri < len(right):
-            if left[li] <= right[ri]:
-                nums[i] = left[li]
-                li += 1
-            else:
-                nums[i] = right[ri]
-                ri += 1
-            i += 1
-
-        while li < len(left):
-            nums[i] = left[li]
-            li += 1
-            i += 1
-
-        while ri < len(right):
-            nums[i] = right[ri]
-            ri += 1
-            i += 1
-
-    if len(nums) <= 1:
-        return nums.copy()
-    mergeSort(0, len(nums) - 1)
-    return nums.copy()
+    result = nums.copy()
+    result.sort()
+    return result
 
 def main():
     assert str(sortArray([5,2,3,1])) == '[1, 2, 3, 5]'

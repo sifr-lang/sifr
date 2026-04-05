@@ -33,7 +33,8 @@ pub(crate) fn lower_method_with_context(
     args: &[RustExpr],
     is_deque_data_field: bool,
 ) -> Option<LoweredMethod> {
-    let expr = match (object_ty, method) {
+    let resolved_object_ty = object_ty.resolve_alias();
+    let expr = match (resolved_object_ty, method) {
         (Type::Tuple(elems), "len") => common::lower_tuple_len(elems.len(), args),
         (Type::Tuple(elems), "count") => common::lower_tuple_count(elems.len(), object, args),
         (Type::Tuple(elems), "index") => common::lower_tuple_index(elems.len(), object, args),

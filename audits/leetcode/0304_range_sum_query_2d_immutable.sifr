@@ -16,8 +16,8 @@ class NumMatrix:
             if first_row is not None:
                 cols = len(first_row)
 
-        self.sum_ = []
-        self.sum_.append([0] * (cols + 1))
+        prefix_rows: list[list[int]] = []
+        prefix_rows.append([0] * (cols + 1))
 
         for i in range(rows):
             running = 0
@@ -25,7 +25,7 @@ class NumMatrix:
             row_values = matrix[i]
             if row_values is None:
                 row_values = []
-            prev_row = self.sum_[i]
+            prev_row = prefix_rows[i]
             if prev_row is None:
                 prev_row = [0] * (cols + 1)
 
@@ -34,7 +34,8 @@ class NumMatrix:
                 above = unwrapInt(prev_row[j + 1])
                 prefix_row.append(running + above)
 
-            self.sum_.append(prefix_row)
+            prefix_rows.append(prefix_row)
+        self.sum_ = prefix_rows
 
     def sumRegion(self, row1: int, col1: int, row2: int, col2: int) -> int:
         bottom_row = self.sum_[row2 + 1]

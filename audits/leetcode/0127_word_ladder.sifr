@@ -1,37 +1,57 @@
 # LeetCode 127: Word Ladder
 
-def ladderLength(beginWord: str, endWord: str, mut wordList: list[str]) -> int:
+def differsByOne(a: str, b: str) -> bool:
+    if len(a) != len(b):
+        return False
+
+    diff = 0
+    for i in range(len(a)):
+        left = a[i]
+        if left is None:
+            return False
+        right = b[i]
+        if right is None:
+            return False
+        left_ch = left
+        if left_ch is None:
+            return False
+        right_ch = right
+        if right_ch is None:
+            return False
+        if left_ch != right_ch:
+            diff += 1
+            if diff > 1:
+                return False
+    return diff == 1
+
+def ladderLength(beginWord: str, endWord: str, wordList: list[str]) -> int:
     if endWord not in wordList:
         return 0
 
-    nei: dict[str, list[str]] = {}
-    wordList.append(str(beginWord))
-    for word in wordList:
-        for j in range(len(word)):
-            pattern = word[:j] + "*" + word[j + 1 :]
-            existing = nei.get(pattern)
-            if existing is None:
-                nei[pattern] = [str(word)]
-            else:
-                nei[pattern] = existing + [str(word)]
+    words = wordList.copy()
+    if beginWord not in words:
+        words.append(str(beginWord))
 
     visit: set[str] = set([str(beginWord)])
     q: list[str] = [str(beginWord)]
+    head = 0
     res = 1
-    while q:
-        level_size = len(q)
-        for i in range(level_size):
-            word = q.pop(0)
+    while head < len(q):
+        level_end = len(q)
+        while head < level_end:
+            word = q[head]
+            if word is None:
+                head += 1
+                continue
+            head += 1
             if word == endWord:
                 return res
-            for j in range(len(word)):
-                pattern = word[:j] + "*" + word[j + 1 :]
-                neighbors = nei.get(pattern)
-                if neighbors is not None:
-                    for neiWord in neighbors:
-                        if neiWord not in visit:
-                            visit.add(str(neiWord))
-                            q.append(str(neiWord))
+            for nextWord in words:
+                if nextWord in visit:
+                    continue
+                if differsByOne(word, nextWord):
+                    visit.add(str(nextWord))
+                    q.append(str(nextWord))
         res += 1
     return 0
 

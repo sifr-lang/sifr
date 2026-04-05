@@ -1,18 +1,19 @@
 # LeetCode 435: Non Overlapping Intervals
 
+def expectInt(value: int | None) -> int:
+    if value is None:
+        return 0
+    return value
+
 def eraseOverlapIntervals(mut intervals: list[list[int]]) -> int:
     if len(intervals) == 0:
         return 0
     intervals.sort()
     res = 0
-    prevEnd = intervals[0][1]
-    if prevEnd is None:
-        return 0
+    prevEnd = expectInt(intervals[0][1])
     for interval in intervals[1:]:
-        start = interval[0]
-        end = interval[1]
-        if start is None or end is None:
-            continue
+        start = expectInt(interval[0])
+        end = expectInt(interval[1])
         if start >= prevEnd:
             prevEnd = end
         else:

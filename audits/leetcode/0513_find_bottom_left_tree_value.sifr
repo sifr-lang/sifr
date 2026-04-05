@@ -49,30 +49,29 @@ class Node:
         self.neighbors = neighbors
         self.key = key
 
-def findBottomLeftValue(root: TreeNode | None) -> int:
+def findBottomLeftValue(own root: TreeNode | None) -> int:
     if root is None:
         return 0
 
-    def left_child(node: TreeNode) -> TreeNode | None:
-        return node.left
-
-    def right_child(node: TreeNode) -> TreeNode | None:
-        return node.right
-
-    q = deque([root])
-    answer: int = root.val
-    while q:
+    root_node: TreeNode = root
+    answer: int = root_node.val
+    q: list[TreeNode] = [root_node]
+    while len(q) > 0:
         level_count: int = len(q)
         i: int = 0
         while i < level_count:
-            node = q.popleft()
+            node0 = q.pop(0)
+            if node0 is None:
+                i = i + 1
+                continue
+            node = node0
             if i == 0:
                 answer = node.val
 
-            left: TreeNode | None = left_child(node)
+            left: TreeNode | None = node.left
             if left is not None:
                 q.append(left)
-            right: TreeNode | None = right_child(node)
+            right: TreeNode | None = node.right
             if right is not None:
                 q.append(right)
             i = i + 1

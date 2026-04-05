@@ -190,7 +190,9 @@ pub(crate) fn collect_mutated_vars(
         HirStmt::SubscriptAssign { object, .. }
         | HirStmt::NestedSubscriptAssign { object, .. }
         | HirStmt::SubscriptAugAssign { object, .. }
-        | HirStmt::AttributeAugAssign { object, .. } => {
+        | HirStmt::AttributeAugAssign { object, .. }
+        | HirStmt::FieldAssign { object, .. }
+        | HirStmt::AttributeSubscriptAssign { object, .. } => {
             mutated.borrow_mut().insert(object.clone());
         }
         HirStmt::Delete {
@@ -766,6 +768,19 @@ mod tests {
 
         let mutated = collect_mutated_vars(&stmts, None);
         assert!(mutated.contains("self"));
+    }
+
+    #[test]
+    fn collect_mutated_vars_marks_field_assign_object() {
+        let stmts = vec![HirStmt::FieldAssign {
+            object: "root".to_string(),
+            field: "left".to_string(),
+            field_ty: Type::Int,
+            value: HirExpr::IntLiteral(1),
+        }];
+
+        let mutated = collect_mutated_vars(&stmts, None);
+        assert!(mutated.contains("root"));
     }
 
     #[test]

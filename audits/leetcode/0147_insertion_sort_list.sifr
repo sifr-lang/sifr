@@ -9,14 +9,36 @@ class ListNode:
         self.next = next
 
 
+def nodeVal(node: ListNode | None) -> int:
+    if node is None:
+        return 0
+    return node.val
+
+
+def nodeNext(node: ListNode | None) -> ListNode | None:
+    if node is None:
+        return None
+    return node.next
+
+
+def hasNode(node: ListNode | None) -> bool:
+    return node is not None
+
+
+def unwrapInt(value: int | None) -> int:
+    if value is None:
+        return 0
+    return value
+
+
 def listNodeToString(own node: ListNode | None) -> str:
     if node is None:
         return "None"
     parts: list[str] = []
     cur: ListNode | None = node
-    while cur is not None:
-        parts.append(str(cur.val))
-        cur = cur.next
+    while hasNode(cur):
+        parts.append(str(nodeVal(cur)))
+        cur = nodeNext(cur)
     return "->".join(parts)
 
 
@@ -50,16 +72,16 @@ class Node:
 def insertionSortList(own head: ListNode | None) -> ListNode | None:
     values: list[int] = []
     cur: ListNode | None = head
-    while cur is not None:
-        values.append(cur.val)
-        cur = cur.next
+    while hasNode(cur):
+        values.append(nodeVal(cur))
+        cur = nodeNext(cur)
 
     ordered: list[int] = sorted(values)
     result: ListNode | None = None
     i: int = len(ordered) - 1
     while i >= 0:
-        value: int | None = ordered[i]
-        if value is not None:
+        value: int = unwrapInt(ordered[i])
+        if True:
             result = ListNode(value, result)
         i = i - 1
     return result

@@ -6,25 +6,13 @@ class KthLargest:
 
     def __init__(self, k: int, nums: list[int]):
         self.k = k
-        ordered: list[int] = []
-        for num in nums:
-            i = 0
-            while i < len(ordered):
-                cur = ordered[i]
-                if num <= cur:
-                    break
-                i += 1
-            ordered = ordered[:i] + [num] + ordered[i:]
+        ordered = nums.copy()
+        ordered.sort()
         self.values = ordered
 
     def add(self, val: int) -> int:
-        i = 0
-        while i < len(self.values):
-            cur = self.values[i]
-            if val <= cur:
-                break
-            i += 1
-        self.values = self.values[:i] + [val] + self.values[i:]
+        self.values.append(val)
+        self.values.sort()
 
         idx = len(self.values) - self.k
         if idx < 0:

@@ -252,7 +252,6 @@ pub(super) fn detect_is_not_none_var(expr: &HirExpr) -> Option<String> {
             && matches!(comparators[0], HirExpr::NoneLiteral)
         {
             if let HirExpr::Name { name, ty } = left.as_ref() {
-                // Only match for Option types (2-member unions with None)
                 if is_option_type(ty) {
                     return Some(name.clone());
                 }
@@ -289,6 +288,19 @@ pub(super) fn detect_or_not_option_truthiness_vars(expr: &HirExpr) -> Option<Vec
                 .iter()
                 .filter_map(detect_not_option_truthiness)
                 .collect();
+            if vars.len() >= 2 {
+                return Some(vars);
+            }
+        }
+    }
+    None
+}
+
+/// Detect compound `a is None or b is None` where both names are Option values.
+pub(super) fn detect_or_is_none_vars(expr: &HirExpr) -> Option<Vec<String>> {
+    if let HirExpr::BoolOp { op, values, .. } = expr {
+        if op == "or" {
+            let vars: Vec<String> = values.iter().filter_map(detect_is_none_var).collect();
             if vars.len() >= 2 {
                 return Some(vars);
             }
@@ -379,7 +391,6 @@ pub(super) fn detect_is_none_var(expr: &HirExpr) -> Option<String> {
             && matches!(comparators[0], HirExpr::NoneLiteral)
         {
             if let HirExpr::Name { name, ty } = left.as_ref() {
-                // Only match for Option types (2-member unions with None)
                 if is_option_type(ty) {
                     return Some(name.clone());
                 }

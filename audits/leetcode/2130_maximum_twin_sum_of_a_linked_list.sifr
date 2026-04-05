@@ -9,14 +9,36 @@ class ListNode:
         self.next = next
 
 
+def nodeVal(node: ListNode | None) -> int:
+    if node is None:
+        return 0
+    return node.val
+
+
+def nodeNext(node: ListNode | None) -> ListNode | None:
+    if node is None:
+        return None
+    return node.next
+
+
+def hasNode(node: ListNode | None) -> bool:
+    return node is not None
+
+
+def unwrapInt(value: int | None) -> int:
+    if value is None:
+        return 0
+    return value
+
+
 def listNodeToString(own node: ListNode | None) -> str:
     if node is None:
         return "None"
     parts: list[str] = []
     cur: ListNode | None = node
-    while cur is not None:
-        parts.append(str(cur.val))
-        cur = cur.next
+    while hasNode(cur):
+        parts.append(str(nodeVal(cur)))
+        cur = nodeNext(cur)
     return "->".join(parts)
 
 
@@ -50,17 +72,17 @@ class Node:
 def pairSum(own head: ListNode | None) -> int:
     values: list[int] = []
     cur: ListNode | None = head
-    while cur is not None:
-        values.append(cur.val)
-        cur = cur.next
+    while hasNode(cur):
+        values.append(nodeVal(cur))
+        cur = nodeNext(cur)
 
     left = 0
     right = len(values) - 1
     best = 0
     while left < right:
-        left_value: int | None = values[left]
-        right_value: int | None = values[right]
-        if left_value is not None and right_value is not None:
+        left_value: int = unwrapInt(values[left])
+        right_value: int = unwrapInt(values[right])
+        if True:
             pair_sum = left_value + right_value
             if pair_sum > best:
                 best = pair_sum

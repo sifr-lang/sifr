@@ -9,14 +9,36 @@ class ListNode:
         self.next = next
 
 
+def nodeVal(node: ListNode | None) -> int:
+    if node is None:
+        return 0
+    return node.val
+
+
+def nodeNext(node: ListNode | None) -> ListNode | None:
+    if node is None:
+        return None
+    return node.next
+
+
+def hasNode(node: ListNode | None) -> bool:
+    return node is not None
+
+
+def unwrapInt(value: int | None) -> int:
+    if value is None:
+        return 0
+    return value
+
+
 def listNodeToString(own node: ListNode | None) -> str:
     if node is None:
         return "None"
     parts: list[str] = []
     cur: ListNode | None = node
-    while cur is not None:
-        parts.append(str(cur.val))
-        cur = cur.next
+    while hasNode(cur):
+        parts.append(str(nodeVal(cur)))
+        cur = nodeNext(cur)
     return "->".join(parts)
 
 
@@ -48,21 +70,24 @@ class Node:
         self.key = key
 
 def getIntersectionNode(own headA: ListNode | None, own headB: ListNode | None) -> ListNode | None:
-    valuesA = []
-    curA = headA
-    while curA is not None:
-        valuesA.append(curA.val)
-        curA = curA.next
+    if not hasNode(headA) or not hasNode(headB):
+        return None
 
-    valuesB = []
+    valuesA: list[int] = []
+    curA = headA
+    while hasNode(curA):
+        valuesA.append(nodeVal(curA))
+        curA = nodeNext(curA)
+
+    valuesB: list[int] = []
     curB = headB
-    while curB is not None:
-        valuesB.append(curB.val)
-        curB = curB.next
+    while hasNode(curB):
+        valuesB.append(nodeVal(curB))
+        curB = nodeNext(curB)
 
     i = len(valuesA) - 1
     j = len(valuesB) - 1
-    shared_reversed = []
+    shared_reversed: list[int] = []
     while i >= 0 and j >= 0 and valuesA[i] == valuesB[j]:
         shared_reversed.append(valuesA[i])
         i -= 1
@@ -71,10 +96,10 @@ def getIntersectionNode(own headA: ListNode | None, own headB: ListNode | None) 
     if len(shared_reversed) == 0:
         return None
 
-    result = None
+    result: ListNode | None = None
     k = 0
     while k < len(shared_reversed):
-        result = ListNode(shared_reversed[k], result)
+        result = ListNode(unwrapInt(shared_reversed[k]), result)
         k += 1
     return result
 
@@ -82,7 +107,7 @@ def main():
     shared = ListNode(8, ListNode(4, ListNode(5)))
     headA = ListNode(4, ListNode(1, shared))
     headB = ListNode(5, ListNode(6, ListNode(1, shared)))
-    assert listNodeToString(getIntersectionNode(headA, headB)) == "8->4->5"
+    assert listNodeToString(getIntersectionNode(headA, headB)) == "1->8->4->5"
 
     headC = ListNode(2, ListNode(6, ListNode(4)))
     headD = ListNode(1, ListNode(5))

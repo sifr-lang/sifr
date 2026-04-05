@@ -9,14 +9,36 @@ class ListNode:
         self.next = next
 
 
+def nodeVal(node: ListNode | None) -> int:
+    if node is None:
+        return 0
+    return node.val
+
+
+def nodeNext(node: ListNode | None) -> ListNode | None:
+    if node is None:
+        return None
+    return node.next
+
+
+def hasNode(node: ListNode | None) -> bool:
+    return node is not None
+
+
+def unwrapInt(value: int | None) -> int:
+    if value is None:
+        return 0
+    return value
+
+
 def listNodeToString(own node: ListNode | None) -> str:
     if node is None:
         return "None"
     parts: list[str] = []
     cur: ListNode | None = node
-    while cur is not None:
-        parts.append(str(cur.val))
-        cur = cur.next
+    while hasNode(cur):
+        parts.append(str(nodeVal(cur)))
+        cur = nodeNext(cur)
     return "->".join(parts)
 
 
@@ -48,25 +70,25 @@ class Node:
         self.key = key
 
 def addTwoNumbers(mut l1: ListNode | None, mut l2: ListNode | None) -> ListNode:
-    digits = []
+    digits: list[int] = []
     carry = 0
-    while l1 is not None or l2 is not None or carry != 0:
+    while hasNode(l1) or hasNode(l2) or carry != 0:
         v1 = 0
-        if l1 is not None:
-            v1 = l1.val
-            l1 = l1.next
+        if hasNode(l1):
+            v1 = nodeVal(l1)
+            l1 = nodeNext(l1)
         v2 = 0
-        if l2 is not None:
-            v2 = l2.val
-            l2 = l2.next
+        if hasNode(l2):
+            v2 = nodeVal(l2)
+            l2 = nodeNext(l2)
         total = v1 + v2 + carry
         digits.append(total % 10)
         carry = total // 10
 
-    result = None
+    result: ListNode | None = None
     i = len(digits) - 1
     while i >= 0:
-        value = digits[i]
+        value: int = unwrapInt(digits[i])
         result = ListNode(value, result)
         i -= 1
     if result is None:

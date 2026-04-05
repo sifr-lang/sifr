@@ -7,6 +7,22 @@ use sifr_hir::{HirClass, HirFunction, HirModule};
 use sifr_type_system::Type;
 
 impl RustEmitter {
+    fn auto_display_format_spec_for_field(&self, field_ty: &Type) -> &'static str {
+        match field_ty.resolve_alias() {
+            Type::Int
+            | Type::Float
+            | Type::Bool
+            | Type::Str
+            | Type::None
+            | Type::LiteralInt(_)
+            | Type::LiteralBool(_)
+            | Type::LiteralStr(_)
+            | Type::Newtype { .. } => "{}",
+            Type::Class { name, .. } if self.display_classes.contains(name) => "{}",
+            _ => "{:?}",
+        }
+    }
+
     fn class_visibility(module_public: bool) -> Visibility {
         if module_public {
             Visibility::Pub
@@ -219,14 +235,19 @@ impl RustEmitter {
         }
     }
 
-    fn build_display_impl_for_auto_fields(class: &HirClass) -> RustItem {
+    fn build_display_impl_for_auto_fields(&self, class: &HirClass) -> RustItem {
         let format_str = format!(
             "{}({})",
             class.name,
             class
                 .fields
                 .iter()
-                .map(|(name, _)| format!("{name}={{}}"))
+                .map(|(name, ty)| {
+                    format!(
+                        "{name}={}",
+                        self.auto_display_format_spec_for_field(ty)
+                    )
+                })
                 .collect::<Vec<_>>()
                 .join(", ")
         );
@@ -391,7 +412,7 @@ impl RustEmitter {
             && class.fields.iter().all(|(_, ty)| is_auto_display_type(ty))
         {
             self.body_items
-                .push(Self::build_display_impl_for_auto_fields(class));
+                .push(self.build_display_impl_for_auto_fields(class));
         }
 
         self.emit_protocol_impls(class, module);

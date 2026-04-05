@@ -1205,8 +1205,11 @@ impl RustEmitter {
             }
         }
 
-        let should_bypass_simple_lowering =
-            matches!(stmt, HirStmt::Let { ty, .. } if self.type_contains_generic_class(ty));
+        let should_bypass_simple_lowering = matches!(
+            stmt,
+            HirStmt::NestedFunction { .. } | HirStmt::Assign { .. }
+        )
+            || matches!(stmt, HirStmt::Let { ty, .. } if self.type_contains_generic_class(ty));
         if !should_bypass_simple_lowering {
             if let Some(lowered_stmts) = try_lower_simple_stmt_with_scope_result_and_bindings(
                 stmt,
@@ -1342,13 +1345,45 @@ impl RustEmitter {
         if let HirStmt::Assign { name, value } = stmt {
             let lowered_value = if let Some(lowered) = self.lower_rendered_expr_for_ir(value)? {
                 if let Some(target_ty) = self.local_binding_types.get(name).cloned() {
-                    self.coerce_local_value_for_target_type_for_ir(&target_ty, value, lowered)?
+                    let mut lowered =
+                        self.coerce_local_value_for_target_type_for_ir(&target_ty, value, lowered)?;
+                    if !crate::helpers::is_option_type(&target_ty)
+                        && crate::helpers::is_option_type(value.ty())
+                    {
+                        let fallback = if crate::helpers::is_copy_type_for_codegen(&target_ty) {
+                            RustExpr::Ident(name.clone())
+                        } else {
+                            RustExpr::Clone(Box::new(RustExpr::Ident(name.clone())))
+                        };
+                        lowered = RustExpr::MethodCall {
+                            receiver: Box::new(RustExpr::Paren(Box::new(lowered))),
+                            method: "unwrap_or".to_string(),
+                            args: vec![fallback],
+                        };
+                    }
+                    lowered
                 } else {
                     lowered
                 }
             } else if let Some(lowered) = self.lower_stmt_expr_for_ir(value)? {
                 if let Some(target_ty) = self.local_binding_types.get(name).cloned() {
-                    self.coerce_local_value_for_target_type_for_ir(&target_ty, value, lowered)?
+                    let mut lowered =
+                        self.coerce_local_value_for_target_type_for_ir(&target_ty, value, lowered)?;
+                    if !crate::helpers::is_option_type(&target_ty)
+                        && crate::helpers::is_option_type(value.ty())
+                    {
+                        let fallback = if crate::helpers::is_copy_type_for_codegen(&target_ty) {
+                            RustExpr::Ident(name.clone())
+                        } else {
+                            RustExpr::Clone(Box::new(RustExpr::Ident(name.clone())))
+                        };
+                        lowered = RustExpr::MethodCall {
+                            receiver: Box::new(RustExpr::Paren(Box::new(lowered))),
+                            method: "unwrap_or".to_string(),
+                            args: vec![fallback],
+                        };
+                    }
+                    lowered
                 } else {
                     lowered
                 }
@@ -1489,11 +1524,22 @@ impl RustEmitter {
         match self.try_lower_structured_stmt(stmt) {
             Ok(true) => {}
             Ok(false) => {
-                panic!("structured statement emission missing for production path: {stmt:?}");
-            }
-            Err(_) => {
                 self.lowering_stats.stmt_lowering_errors += 1;
-                panic!("structured statement lowering failed for production path: {stmt:?}");
+                self.push_captured_stmt(&RustStmt::Expr(RustExpr::MacroCall {
+                    name: "compile_error".to_string(),
+                    args: vec![RustExpr::Literal(RustLiteral::Str(format!(
+                        "structured statement emission missing for production path: {stmt:?}"
+                    )))],
+                }));
+            }
+            Err(err) => {
+                self.lowering_stats.stmt_lowering_errors += 1;
+                self.push_captured_stmt(&RustStmt::Expr(RustExpr::MacroCall {
+                    name: "compile_error".to_string(),
+                    args: vec![RustExpr::Literal(RustLiteral::Str(format!(
+                        "structured statement lowering failed for production path: {stmt:?}; error={err}"
+                    )))],
+                }));
             }
         }
     }

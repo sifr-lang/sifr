@@ -9,14 +9,36 @@ class ListNode:
         self.next = next
 
 
+def nodeVal(node: ListNode | None) -> int:
+    if node is None:
+        return 0
+    return node.val
+
+
+def nodeNext(node: ListNode | None) -> ListNode | None:
+    if node is None:
+        return None
+    return node.next
+
+
+def hasNode(node: ListNode | None) -> bool:
+    return node is not None
+
+
+def unwrapInt(value: int | None) -> int:
+    if value is None:
+        return 0
+    return value
+
+
 def listNodeToString(own node: ListNode | None) -> str:
     if node is None:
         return "None"
     parts: list[str] = []
     cur: ListNode | None = node
-    while cur is not None:
-        parts.append(str(cur.val))
-        cur = cur.next
+    while hasNode(cur):
+        parts.append(str(nodeVal(cur)))
+        cur = nodeNext(cur)
     return "->".join(parts)
 
 
@@ -52,14 +74,14 @@ def mergeTwoLists(own list1: ListNode | None, own list2: ListNode | None) -> Lis
     vals2: list[int] = []
 
     cur1: ListNode | None = list1
-    while cur1 is not None:
-        vals1.append(cur1.val)
-        cur1 = cur1.next
+    while hasNode(cur1):
+        vals1.append(nodeVal(cur1))
+        cur1 = nodeNext(cur1)
 
     cur2: ListNode | None = list2
-    while cur2 is not None:
-        vals2.append(cur2.val)
-        cur2 = cur2.next
+    while hasNode(cur2):
+        vals2.append(nodeVal(cur2))
+        cur2 = nodeNext(cur2)
 
     merged: list[int] = []
     for v in vals1:
@@ -71,8 +93,8 @@ def mergeTwoLists(own list1: ListNode | None, own list2: ListNode | None) -> Lis
     result: ListNode | None = None
     k: int = len(merged) - 1
     while k >= 0:
-        value: int | None = merged[k]
-        if value is not None:
+        value: int = unwrapInt(merged[k])
+        if True:
             result = ListNode(value, result)
         k = k - 1
     return result
