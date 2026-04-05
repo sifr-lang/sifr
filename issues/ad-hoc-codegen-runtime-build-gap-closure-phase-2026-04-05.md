@@ -161,6 +161,7 @@ Phase exit gate:
 - Updated taxonomy JSON (new dated artifact)
 - Final closure report linking compiler changes and adaptation patches
 - Closure report artifact: `issues/codegen-runtime-build-gap-closure-report-2026-04-06.md`
+- Closure PR: https://github.com/yaseralnajjar/sifr/pull/1575 (merged `2026-04-06`)
 
 ## Ready-to-implement Checklist
 - [x] Create execution issue for this phase and track wave status.

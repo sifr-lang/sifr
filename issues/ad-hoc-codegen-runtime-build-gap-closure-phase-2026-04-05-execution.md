@@ -79,6 +79,7 @@ Owning phase: `issues/ad-hoc-codegen-runtime-build-gap-closure-phase-2026-04-05.
   - `0567_permutation_in_string`: FAIL (`E0308`) -> PASS
 - PR:
   - draft: https://github.com/yaseralnajjar/sifr/pull/1575
+  - merged: https://github.com/yaseralnajjar/sifr/pull/1575 (`2026-04-06`, squash)
 
 ### 2026-04-05 wave-4 (ws1 type-contract patchset D)
 - scope:
