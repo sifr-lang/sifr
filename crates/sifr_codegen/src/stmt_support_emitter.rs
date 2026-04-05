@@ -683,6 +683,7 @@ impl RustEmitter {
         outer_index: &HirExpr,
         inner_index: &HirExpr,
         value: &HirExpr,
+        target_elem_ty: &Type,
     ) -> Result<Option<RustStmt>, crate::CodegenError> {
         let Some(lowered_outer_index) = self.lower_stmt_expr_for_ir(outer_index)? else {
             return Ok(None);
@@ -693,6 +694,37 @@ impl RustEmitter {
         let Some(lowered_value) = self.lower_stmt_expr_for_ir(value)? else {
             return Ok(None);
         };
+
+        let value_is_option = if crate::helpers::is_option_type(value.ty()) {
+            true
+        } else if let HirExpr::Name { name, ty } = value {
+            matches!(
+                crate::resolve_alias_type_for_plain_call(ty),
+                Type::Any | Type::Unknown
+            ) && self
+                .local_binding_types
+                .get(name)
+                .is_some_and(crate::helpers::is_option_type)
+        } else {
+            false
+        };
+        let assign_into_elem =
+            if value_is_option && !crate::helpers::is_option_type(target_elem_ty) {
+            RustStmt::IfLet {
+                pattern: "Some(__nested_assign_value)".to_string(),
+                expr: RustExpr::Ident("__nested_assign_value".to_string()),
+                then_body: vec![RustStmt::Assign {
+                    target: RustExpr::Deref(Box::new(RustExpr::Ident("__elem".to_string()))),
+                    value: RustExpr::Ident("__nested_assign_value".to_string()),
+                }],
+                else_body: None,
+            }
+            } else {
+                RustStmt::Assign {
+                    target: RustExpr::Deref(Box::new(RustExpr::Ident("__elem".to_string()))),
+                    value: RustExpr::Ident("__nested_assign_value".to_string()),
+                }
+            };
 
         Ok(Some(RustStmt::Block(vec![
             RustStmt::Let {
@@ -764,12 +796,7 @@ impl RustEmitter {
                                         ty: crate::RustType::Named("usize".to_string()),
                                     }],
                                 },
-                                then_body: vec![RustStmt::Assign {
-                                    target: RustExpr::Deref(Box::new(RustExpr::Ident(
-                                        "__elem".to_string(),
-                                    ))),
-                                    value: RustExpr::Ident("__nested_assign_value".to_string()),
-                                }],
+                                then_body: vec![assign_into_elem],
                                 else_body: None,
                             }],
                             else_body: None,
@@ -1222,15 +1249,16 @@ impl RustEmitter {
         let Type::List(inner) = Self::resolve_alias_type_for_loop_iter(object_ty) else {
             return Ok(false);
         };
-        if !matches!(Self::resolve_alias_type_for_loop_iter(inner), Type::List(_)) {
+        let Type::List(elem) = Self::resolve_alias_type_for_loop_iter(inner) else {
             return Ok(false);
-        }
+        };
 
         let Some(lowered) = self.lower_structured_nested_list_subscript_assign_stmt_for_ir(
             object,
             outer_index,
             inner_index,
             value,
+            elem,
         )?
         else {
             return Ok(false);
@@ -5128,15 +5156,16 @@ impl RustEmitter {
                 let Type::List(inner) = Self::resolve_alias_type_for_loop_iter(object_ty) else {
                     return Ok(None);
                 };
-                if !matches!(Self::resolve_alias_type_for_loop_iter(inner), Type::List(_)) {
+                let Type::List(elem) = Self::resolve_alias_type_for_loop_iter(inner) else {
                     return Ok(None);
-                }
+                };
                 let Some(lowered_stmt) = self
                     .lower_structured_nested_list_subscript_assign_stmt_for_ir(
                         object,
                         outer_index,
                         inner_index,
                         value,
+                        elem,
                     )?
                 else {
                     return Ok(None);

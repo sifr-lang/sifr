@@ -103,3 +103,16 @@ Owning phase: `issues/ad-hoc-codegen-runtime-build-gap-closure-phase-2026-04-05.
   - `0894_all_possible_full_binary_trees`: FAIL (`E0308/E0599/E0631`) -> FAIL (`E0382/E0599/E0631`)
 - notes:
   - ws1 remaining failures are now split between runtime semantics (`0046`, `0211`, `0729`) and reduced compile-surface residuals (`0048`, `0124`, `0138`, `0435`, `0572`, `0894`, `1958`).
+
+### 2026-04-05 wave-5 (ws1 type-contract patchset E)
+- scope:
+  - close nested-list subscript assignment type mismatch when source expression is `Option<T>` and destination element is `T`
+  - align both structured and simple nested-subscript assignment lowering to guard assignment behind `Some(...)` in option-valued source paths
+- compiler files touched:
+  - `crates/sifr_codegen/src/stmt_support_emitter.rs`
+  - `crates/sifr_codegen/src/lower_stmt.rs`
+- artifacts:
+  - after patchset E: `verification/leetcode/codegen_runtime_build_gap_ws1_targeted_20260405_wave4_after_patch8.json`
+    - summary: `11 pass / 9 fail`
+- observed deltas vs wave-4 patchset D (`wave3_after_patch7`):
+  - `0048_rotate_image`: FAIL (`E0308`) -> PASS

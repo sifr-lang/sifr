@@ -770,8 +770,14 @@ pub(crate) fn try_lower_simple_stmt_with_ctx_and_bindings(
             outer_index,
             inner_index,
             value,
-            object_ty: _,
-        } => try_lower_simple_nested_subscript_assign_stmt(object, outer_index, inner_index, value),
+            object_ty,
+        } => try_lower_simple_nested_subscript_assign_stmt(
+            object,
+            outer_index,
+            inner_index,
+            value,
+            object_ty,
+        ),
         HirStmt::SubscriptAugAssign {
             object,
             index,
@@ -3552,7 +3558,31 @@ fn try_lower_simple_nested_subscript_assign_stmt(
     outer_index: &HirExpr,
     inner_index: &HirExpr,
     value: &HirExpr,
+    object_ty: &Type,
 ) -> Option<Vec<RustStmt>> {
+    let target_elem_is_option = matches!(
+        resolve_alias_type(object_ty),
+        Type::List(inner)
+            if matches!(resolve_alias_type(inner), Type::List(elem) if is_option_like_type(elem))
+    );
+    let lowered_value = try_lower_leaf_or_name_expr(value)?;
+    let assign_elem_stmt = if is_option_like_type(value.ty()) && !target_elem_is_option {
+        RustStmt::IfLet {
+            pattern: "Some(__nested_assign_value)".to_string(),
+            expr: lowered_value,
+            then_body: vec![RustStmt::Assign {
+                target: RustExpr::Deref(Box::new(RustExpr::Ident("__elem".to_string()))),
+                value: RustExpr::Ident("__nested_assign_value".to_string()),
+            }],
+            else_body: None,
+        }
+    } else {
+        RustStmt::Assign {
+            target: RustExpr::Deref(Box::new(RustExpr::Ident("__elem".to_string()))),
+            value: lowered_value,
+        }
+    };
+
     Some(vec![RustStmt::Block(vec![
         RustStmt::Let {
             mutable: false,
@@ -3617,12 +3647,7 @@ fn try_lower_simple_nested_subscript_assign_stmt(
                                     ty: RustType::Named("usize".to_string()),
                                 }],
                             },
-                            then_body: vec![RustStmt::Assign {
-                                target: RustExpr::Deref(Box::new(RustExpr::Ident(
-                                    "__elem".to_string(),
-                                ))),
-                                value: try_lower_leaf_or_name_expr(value)?,
-                            }],
+                            then_body: vec![assign_elem_stmt],
                             else_body: None,
                         }],
                         else_body: None,
