@@ -60,3 +60,5 @@ Owning phase: `issues/ad-hoc-codegen-runtime-build-gap-closure-phase-2026-04-05.
 - notes:
   - `0046` now compiles; residual is runtime behavior (`[]` produced), indicating follow-up semantic bug in option-bool/index truthiness handling rather than Rust build-gap emission.
   - `0567_permutation_in_string` remains blocked on option-vs-scalar compare emission in guarded conjunction (`c is not None and c == ch` lowering currently emits `Option<String> == String`).
+  - attempted `Some(mut x)` let-else narrowing tweak for `detect_is_none_var` to remove `0729` `E0596`; this removed `E0596` but introduced broad `E0507` regressions (including `0783`) and was reverted.
+  - post-revert confirmation artifact: `verification/leetcode/codegen_runtime_build_gap_ws1_targeted_20260405_wave1_after_patch5.json` (`3 pass / 17 fail`, no delta vs patchset B steady state).
