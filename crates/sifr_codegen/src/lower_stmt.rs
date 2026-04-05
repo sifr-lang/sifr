@@ -2564,6 +2564,13 @@ fn try_lower_simple_if_stmt(
     bindings: SimpleStmtBindings<'_>,
     ctx: SimpleStmtLoweringCtx<'_>,
 ) -> Option<Vec<RustStmt>> {
+    let option_binding_pattern = |name: &str| {
+        if bindings.borrowed_params.contains(name) {
+            format!("Some({name})")
+        } else {
+            format!("Some(mut {name})")
+        }
+    };
     if elif_clauses.is_empty() && maybe_else_body.is_none() && codegen_body_always_exits(then_body)
     {
         if let Some(option_vars) = detect_or_is_none_vars(condition) {
@@ -2578,7 +2585,7 @@ fn try_lower_simple_if_stmt(
                 "({})",
                 option_vars
                     .iter()
-                    .map(|option_var| format!("Some({option_var})"))
+                    .map(|option_var| option_binding_pattern(option_var))
                     .collect::<Vec<_>>()
                     .join(", ")
             );
@@ -2602,7 +2609,7 @@ fn try_lower_simple_if_stmt(
                 ctx,
             )?;
             return Some(vec![RustStmt::LetElse {
-                pattern: format!("Some({option_var})"),
+                pattern: option_binding_pattern(&option_var),
                 value: RustExpr::Ident(option_var),
                 else_body: lowered_then_body,
             }]);
@@ -2650,6 +2657,13 @@ fn try_lower_simple_if_clause(
     bindings: SimpleStmtBindings<'_>,
     ctx: SimpleStmtLoweringCtx<'_>,
 ) -> Option<RustStmt> {
+    let option_binding_pattern = |name: &str| {
+        if bindings.borrowed_params.contains(name) {
+            format!("Some({name})")
+        } else {
+            format!("Some(mut {name})")
+        }
+    };
     let lowered_then_body = try_lower_simple_stmt_block(
         then_body,
         in_loop_with_else,
@@ -2660,7 +2674,7 @@ fn try_lower_simple_if_clause(
 
     if let Some(option_var) = detect_is_not_none_var(condition) {
         return Some(RustStmt::IfLet {
-            pattern: format!("Some({option_var})"),
+            pattern: option_binding_pattern(&option_var),
             expr: RustExpr::Ident(option_var),
             then_body: lowered_then_body,
             else_body: nested_else,
@@ -2668,12 +2682,17 @@ fn try_lower_simple_if_clause(
     }
 
     if let Some(option_vars) = detect_and_not_none_vars(condition) {
-        return lower_if_not_none_chain(&option_vars, lowered_then_body, nested_else);
+        return lower_if_not_none_chain(
+            &option_vars,
+            lowered_then_body,
+            nested_else,
+            bindings.mutated_vars,
+        );
     }
 
     if let Some(option_var) = detect_option_truthiness_alias(condition) {
         return Some(RustStmt::IfLet {
-            pattern: format!("Some({option_var})"),
+            pattern: option_binding_pattern(&option_var),
             expr: RustExpr::Ident(option_var),
             then_body: lowered_then_body,
             else_body: nested_else,
@@ -2685,7 +2704,7 @@ fn try_lower_simple_if_clause(
             try_lower_simple_condition_test_expr(condition, bindings.borrowed_params)?;
         let lowered_else = nested_else.map(|else_body| {
             vec![RustStmt::IfLet {
-                pattern: format!("Some({option_var})"),
+                pattern: option_binding_pattern(&option_var),
                 expr: RustExpr::Ident(option_var.clone()),
                 then_body: else_body,
                 else_body: None,
@@ -3104,11 +3123,17 @@ fn lower_if_not_none_chain(
     option_vars: &[String],
     lowered_then_body: Vec<RustStmt>,
     nested_else: Option<Vec<RustStmt>>,
+    mutated_vars: &HashSet<String>,
 ) -> Option<RustStmt> {
     let mut chain_then = lowered_then_body;
     for option_var in option_vars.iter().rev() {
+        let pattern = if mutated_vars.contains(option_var) {
+            format!("Some(mut {option_var})")
+        } else {
+            format!("Some({option_var})")
+        };
         chain_then = vec![RustStmt::IfLet {
-            pattern: format!("Some({option_var})"),
+            pattern,
             expr: RustExpr::Ident(option_var.clone()),
             then_body: chain_then,
             else_body: None,

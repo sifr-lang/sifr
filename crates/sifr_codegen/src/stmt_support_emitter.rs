@@ -1348,10 +1348,8 @@ impl RustEmitter {
                             }
                             let arg_is_option = crate::helpers::is_option_type(args[idx].ty());
                             if arg_is_option {
-                                if Self::is_some_call_expr_for_ir(lowered_arg) {
-                                    *lowered_arg =
-                                        Self::ensure_some_box_inner_for_ir(lowered_arg.clone());
-                                }
+                                *lowered_arg =
+                                    Self::ensure_option_box_inner_for_ir(lowered_arg.clone());
                             } else {
                                 *lowered_arg =
                                     Self::ensure_some_box_inner_for_ir(lowered_arg.clone());
@@ -1394,9 +1392,7 @@ impl RustEmitter {
                 }
                 let arg_is_option = crate::helpers::is_option_type(args[idx].ty());
                 if arg_is_option {
-                    if Self::is_some_call_expr_for_ir(lowered_arg) {
-                        *lowered_arg = Self::ensure_some_box_inner_for_ir(lowered_arg.clone());
-                    }
+                    *lowered_arg = Self::ensure_option_box_inner_for_ir(lowered_arg.clone());
                 } else {
                     *lowered_arg = Self::ensure_some_box_inner_for_ir(lowered_arg.clone());
                 }
@@ -4533,6 +4529,33 @@ impl RustEmitter {
         }
     }
 
+    fn ensure_option_box_inner_for_ir(expr: crate::RustExpr) -> crate::RustExpr {
+        if matches!(expr, crate::RustExpr::Literal(crate::RustLiteral::None)) {
+            return expr;
+        }
+        if Self::is_some_call_expr_for_ir(&expr) {
+            return Self::ensure_some_box_inner_for_ir(expr);
+        }
+        crate::RustExpr::MethodCall {
+            receiver: Box::new(expr),
+            method: "map".to_string(),
+            args: vec![crate::RustExpr::Closure {
+                params: vec![crate::RustParam::Named {
+                    name: "__sifr_option_value".to_string(),
+                    ty: crate::RustType::Named("_".to_string()),
+                }],
+                body: Box::new(crate::RustExpr::FnCall {
+                    func: Box::new(crate::RustExpr::Path(vec![
+                        "Box".to_string(),
+                        "new".to_string(),
+                    ])),
+                    args: vec![crate::RustExpr::Ident("__sifr_option_value".to_string())],
+                }),
+                is_move: false,
+            }],
+        }
+    }
+
     pub(crate) fn adapt_plain_call_args_with_signature_for_ir(
         &self,
         func: &str,
@@ -4586,8 +4609,8 @@ impl RustEmitter {
                             args: vec![lowered_arg],
                         }
                     };
-                } else if needs_box_inner && Self::is_some_call_expr_for_ir(&lowered_arg) {
-                    lowered_arg = Self::ensure_some_box_inner_for_ir(lowered_arg);
+                } else if needs_box_inner {
+                    lowered_arg = Self::ensure_option_box_inner_for_ir(lowered_arg);
                 }
             }
 
@@ -5625,6 +5648,16 @@ impl RustEmitter {
         }
     }
 
+    fn option_binding_pattern_for_ir(&self, option_var: &str) -> String {
+        let is_borrowed_param = self.borrowed_params.contains(option_var)
+            || self.mut_borrowed_params.contains(option_var);
+        if !is_borrowed_param {
+            format!("Some(mut {option_var})")
+        } else {
+            format!("Some({option_var})")
+        }
+    }
+
     fn try_lower_collection_truthiness_condition_for_ir(
         condition: &HirExpr,
     ) -> Option<crate::RustExpr> {
@@ -6552,7 +6585,7 @@ impl RustEmitter {
                     "({})",
                     option_vars
                         .iter()
-                        .map(|option_var| format!("Some({option_var})"))
+                        .map(|option_var| self.option_binding_pattern_for_ir(option_var))
                         .collect::<Vec<_>>()
                         .join(", ")
                 );
@@ -6572,7 +6605,7 @@ impl RustEmitter {
                 .or_else(|| crate::helpers::detect_not_option_truthiness(condition))
             {
                 return Ok(Some(RustStmt::LetElse {
-                    pattern: format!("Some({option_var})"),
+                    pattern: self.option_binding_pattern_for_ir(&option_var),
                     value: self.option_binding_value_expr_for_ir(&option_var),
                     else_body: lowered_then_body,
                 }));
@@ -6584,7 +6617,7 @@ impl RustEmitter {
                     "({})",
                     option_vars
                         .iter()
-                        .map(|option_var| format!("Some({option_var})"))
+                        .map(|option_var| self.option_binding_pattern_for_ir(option_var))
                         .collect::<Vec<_>>()
                         .join(", ")
                 );
@@ -6635,7 +6668,7 @@ impl RustEmitter {
 
         if let Some(option_var) = crate::helpers::detect_is_not_none_var(condition) {
             return Ok(Some(RustStmt::IfLet {
-                pattern: format!("Some({option_var})"),
+                pattern: self.option_binding_pattern_for_ir(&option_var),
                 expr: self.option_binding_value_expr_for_ir(&option_var),
                 then_body: lowered_then_body,
                 else_body: nested_else,
@@ -6646,7 +6679,7 @@ impl RustEmitter {
             let mut chain_then = lowered_then_body;
             for option_var in option_vars.iter().rev() {
                 chain_then = vec![RustStmt::IfLet {
-                    pattern: format!("Some({option_var})"),
+                    pattern: self.option_binding_pattern_for_ir(option_var),
                     expr: self.option_binding_value_expr_for_ir(option_var),
                     then_body: chain_then,
                     else_body: None,
@@ -6663,7 +6696,7 @@ impl RustEmitter {
 
         if let Some(option_var) = crate::helpers::detect_option_truthiness(condition) {
             return Ok(Some(RustStmt::IfLet {
-                pattern: format!("Some({option_var})"),
+                pattern: self.option_binding_pattern_for_ir(&option_var),
                 expr: self.option_binding_value_expr_for_ir(&option_var),
                 then_body: lowered_then_body,
                 else_body: nested_else,
@@ -6676,7 +6709,7 @@ impl RustEmitter {
             };
             let lowered_else = nested_else.map(|else_body| {
                 vec![RustStmt::IfLet {
-                    pattern: format!("Some({option_var})"),
+                    pattern: self.option_binding_pattern_for_ir(&option_var),
                     expr: self.option_binding_value_expr_for_ir(&option_var),
                     then_body: else_body,
                     else_body: None,
@@ -7673,6 +7706,29 @@ impl RustEmitter {
         }
     }
 
+    fn optional_class_name(ty: &Type) -> Option<String> {
+        let Type::Union(members) = ty.resolve_alias() else {
+            return None;
+        };
+        if members.len() != 2 {
+            return None;
+        }
+        let mut class_name: Option<String> = None;
+        let mut has_none = false;
+        for member in members {
+            match member.resolve_alias() {
+                Type::Class { name, .. } => class_name = Some(name.clone()),
+                Type::None => has_none = true,
+                _ => return None,
+            }
+        }
+        if has_none {
+            class_name
+        } else {
+            None
+        }
+    }
+
     fn recursive_field_needs_boxing(&self, object: &str, field: &str, field_ty: &Type) -> bool {
         if object == "self"
             && self.current_class_name.as_ref().is_some_and(|class_name| {
@@ -7729,6 +7785,24 @@ impl RustEmitter {
             return RustExpr::FnCall {
                 func: Box::new(RustExpr::Path(vec!["Some".to_string()])),
                 args: vec![boxed_expr],
+            };
+        }
+
+        if Self::optional_class_name(value_ty).as_deref() == Some(class_name.as_str()) {
+            return RustExpr::MethodCall {
+                receiver: Box::new(value_expr),
+                method: "map".to_string(),
+                args: vec![RustExpr::Closure {
+                    params: vec![crate::RustParam::Named {
+                        name: "__sifr_recursive_value".to_string(),
+                        ty: crate::RustType::Named("_".to_string()),
+                    }],
+                    body: Box::new(RustExpr::FnCall {
+                        func: Box::new(RustExpr::Path(vec!["Box".to_string(), "new".to_string()])),
+                        args: vec![RustExpr::Ident("__sifr_recursive_value".to_string())],
+                    }),
+                    is_move: false,
+                }],
             };
         }
 

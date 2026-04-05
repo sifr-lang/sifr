@@ -1,0 +1,191 @@
+{
+  "name": "codegen_runtime_build_gap_ws1_targeted_wave3_after_patch7",
+  "date": "2026-04-05",
+  "source_csv": "verification/leetcode/codegen_runtime_build_gap_breakdown_20260405_v3.csv",
+  "summary": {
+    "total": 20,
+    "pass": 10,
+    "fail": 10,
+    "elapsed_seconds": 27.91
+  },
+  "results": [
+    {
+      "fixture_slug": "0006_zigzag_conversion",
+      "path": "audits/leetcode/0006_zigzag_conversion.sifr",
+      "exit_code": 0,
+      "status": "PASS",
+      "rust_error_codes": [],
+      "first_output_line": "[sifr-artifact-cache] namespace=run key=e86d503e9cba6ec0 cache_hit=true workspace=/var/folders/lq/l19_y_rn76b8vprfvdjn9zch0000gn/T/sifr_generated_artifact_cache/run/e86d503e9cba6ec0"
+    },
+    {
+      "fixture_slug": "0046_permutations",
+      "path": "audits/leetcode/0046_permutations.sifr",
+      "exit_code": 1,
+      "status": "FAIL",
+      "rust_error_codes": [],
+      "first_output_line": "[sifr-artifact-cache] namespace=run key=afb57e8d9aeda179 cache_hit=true workspace=/var/folders/lq/l19_y_rn76b8vprfvdjn9zch0000gn/T/sifr_generated_artifact_cache/run/afb57e8d9aeda179"
+    },
+    {
+      "fixture_slug": "0048_rotate_image",
+      "path": "audits/leetcode/0048_rotate_image.sifr",
+      "exit_code": 1,
+      "status": "FAIL",
+      "rust_error_codes": [
+        "E0308"
+      ],
+      "first_output_line": "build error: cargo build failed:"
+    },
+    {
+      "fixture_slug": "0105_construct_binary_tree_from_preorder_and_inorder_traversal",
+      "path": "audits/leetcode/0105_construct_binary_tree_from_preorder_and_inorder_traversal.sifr",
+      "exit_code": 0,
+      "status": "PASS",
+      "rust_error_codes": [],
+      "first_output_line": "[sifr-artifact-cache] namespace=run key=189084a5fbb8976c cache_hit=false workspace=/var/folders/lq/l19_y_rn76b8vprfvdjn9zch0000gn/T/sifr_generated_artifact_cache/run/189084a5fbb8976c miss_reason=not_found"
+    },
+    {
+      "fixture_slug": "0106_construct_binary_tree_from_inorder_and_postorder_traversal",
+      "path": "audits/leetcode/0106_construct_binary_tree_from_inorder_and_postorder_traversal.sifr",
+      "exit_code": 0,
+      "status": "PASS",
+      "rust_error_codes": [],
+      "first_output_line": "[sifr-artifact-cache] namespace=run key=c15f6fe8db8639f8 cache_hit=false workspace=/var/folders/lq/l19_y_rn76b8vprfvdjn9zch0000gn/T/sifr_generated_artifact_cache/run/c15f6fe8db8639f8 miss_reason=not_found"
+    },
+    {
+      "fixture_slug": "0108_convert_sorted_array_to_binary_search_tree",
+      "path": "audits/leetcode/0108_convert_sorted_array_to_binary_search_tree.sifr",
+      "exit_code": 0,
+      "status": "PASS",
+      "rust_error_codes": [],
+      "first_output_line": "[sifr-artifact-cache] namespace=run key=6593bf019e7303e7 cache_hit=false workspace=/var/folders/lq/l19_y_rn76b8vprfvdjn9zch0000gn/T/sifr_generated_artifact_cache/run/6593bf019e7303e7 miss_reason=not_found"
+    },
+    {
+      "fixture_slug": "0124_binary_tree_maximum_path_sum",
+      "path": "audits/leetcode/0124_binary_tree_maximum_path_sum.sifr",
+      "exit_code": 1,
+      "status": "FAIL",
+      "rust_error_codes": [
+        "E0308"
+      ],
+      "first_output_line": "build error: cargo build failed:"
+    },
+    {
+      "fixture_slug": "0138_copy_list_with_random_pointer",
+      "path": "audits/leetcode/0138_copy_list_with_random_pointer.sifr",
+      "exit_code": 1,
+      "status": "FAIL",
+      "rust_error_codes": [
+        "E0308",
+        "E0609"
+      ],
+      "first_output_line": "build error: cargo build failed:"
+    },
+    {
+      "fixture_slug": "0189_rotate_array",
+      "path": "audits/leetcode/0189_rotate_array.sifr",
+      "exit_code": 0,
+      "status": "PASS",
+      "rust_error_codes": [],
+      "first_output_line": "[sifr-artifact-cache] namespace=run key=3e10b87deddc4327 cache_hit=true workspace=/var/folders/lq/l19_y_rn76b8vprfvdjn9zch0000gn/T/sifr_generated_artifact_cache/run/3e10b87deddc4327"
+    },
+    {
+      "fixture_slug": "0211_design_add_and_search_words_data_structure",
+      "path": "audits/leetcode/0211_design_add_and_search_words_data_structure.sifr",
+      "exit_code": 1,
+      "status": "FAIL",
+      "rust_error_codes": [],
+      "first_output_line": "[sifr-artifact-cache] namespace=run key=b0bd07fa6913384c cache_hit=true workspace=/var/folders/lq/l19_y_rn76b8vprfvdjn9zch0000gn/T/sifr_generated_artifact_cache/run/b0bd07fa6913384c"
+    },
+    {
+      "fixture_slug": "0435_non_overlapping_intervals",
+      "path": "audits/leetcode/0435_non_overlapping_intervals.sifr",
+      "exit_code": 1,
+      "status": "FAIL",
+      "rust_error_codes": [
+        "E0308"
+      ],
+      "first_output_line": "build error: cargo build failed:"
+    },
+    {
+      "fixture_slug": "0450_delete_node_in_a_bst",
+      "path": "audits/leetcode/0450_delete_node_in_a_bst.sifr",
+      "exit_code": 0,
+      "status": "PASS",
+      "rust_error_codes": [],
+      "first_output_line": "[sifr-artifact-cache] namespace=run key=716087520bad43ff cache_hit=true workspace=/var/folders/lq/l19_y_rn76b8vprfvdjn9zch0000gn/T/sifr_generated_artifact_cache/run/716087520bad43ff"
+    },
+    {
+      "fixture_slug": "0567_permutation_in_string",
+      "path": "audits/leetcode/0567_permutation_in_string.sifr",
+      "exit_code": 0,
+      "status": "PASS",
+      "rust_error_codes": [],
+      "first_output_line": "[sifr-artifact-cache] namespace=run key=2ce35d58f86bfabf cache_hit=false workspace=/var/folders/lq/l19_y_rn76b8vprfvdjn9zch0000gn/T/sifr_generated_artifact_cache/run/2ce35d58f86bfabf miss_reason=not_found"
+    },
+    {
+      "fixture_slug": "0572_subtree_of_another_tree",
+      "path": "audits/leetcode/0572_subtree_of_another_tree.sifr",
+      "exit_code": 1,
+      "status": "FAIL",
+      "rust_error_codes": [
+        "E0308"
+      ],
+      "first_output_line": "build error: cargo build failed:"
+    },
+    {
+      "fixture_slug": "0617_merge_two_binary_trees",
+      "path": "audits/leetcode/0617_merge_two_binary_trees.sifr",
+      "exit_code": 0,
+      "status": "PASS",
+      "rust_error_codes": [],
+      "first_output_line": "[sifr-artifact-cache] namespace=run key=ff6b2d2d13de8a26 cache_hit=false workspace=/var/folders/lq/l19_y_rn76b8vprfvdjn9zch0000gn/T/sifr_generated_artifact_cache/run/ff6b2d2d13de8a26 miss_reason=not_found"
+    },
+    {
+      "fixture_slug": "0701_insert_into_a_binary_search_tree",
+      "path": "audits/leetcode/0701_insert_into_a_binary_search_tree.sifr",
+      "exit_code": 0,
+      "status": "PASS",
+      "rust_error_codes": [],
+      "first_output_line": "[sifr-artifact-cache] namespace=run key=d0ae293b0bbd9111 cache_hit=false workspace=/var/folders/lq/l19_y_rn76b8vprfvdjn9zch0000gn/T/sifr_generated_artifact_cache/run/d0ae293b0bbd9111 miss_reason=not_found"
+    },
+    {
+      "fixture_slug": "0729_my_calendar_i",
+      "path": "audits/leetcode/0729_my_calendar_i.sifr",
+      "exit_code": 1,
+      "status": "FAIL",
+      "rust_error_codes": [],
+      "first_output_line": "[sifr-artifact-cache] namespace=run key=1268402f0babfd1f cache_hit=true workspace=/var/folders/lq/l19_y_rn76b8vprfvdjn9zch0000gn/T/sifr_generated_artifact_cache/run/1268402f0babfd1f"
+    },
+    {
+      "fixture_slug": "0783_minimum_distance_between_bst_nodes",
+      "path": "audits/leetcode/0783_minimum_distance_between_bst_nodes.sifr",
+      "exit_code": 0,
+      "status": "PASS",
+      "rust_error_codes": [],
+      "first_output_line": "[sifr-artifact-cache] namespace=run key=38e1c0079a84ba32 cache_hit=true workspace=/var/folders/lq/l19_y_rn76b8vprfvdjn9zch0000gn/T/sifr_generated_artifact_cache/run/38e1c0079a84ba32"
+    },
+    {
+      "fixture_slug": "0894_all_possible_full_binary_trees",
+      "path": "audits/leetcode/0894_all_possible_full_binary_trees.sifr",
+      "exit_code": 1,
+      "status": "FAIL",
+      "rust_error_codes": [
+        "E0382",
+        "E0599",
+        "E0631"
+      ],
+      "first_output_line": "build error: cargo build failed:"
+    },
+    {
+      "fixture_slug": "1958_check_if_move_is_legal",
+      "path": "audits/leetcode/1958_check_if_move_is_legal.sifr",
+      "exit_code": 1,
+      "status": "FAIL",
+      "rust_error_codes": [
+        "E0282",
+        "E0308"
+      ],
+      "first_output_line": "build error: cargo build failed:"
+    }
+  ]
+}

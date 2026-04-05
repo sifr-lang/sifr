@@ -79,3 +79,27 @@ Owning phase: `issues/ad-hoc-codegen-runtime-build-gap-closure-phase-2026-04-05.
   - `0567_permutation_in_string`: FAIL (`E0308`) -> PASS
 - PR:
   - draft: https://github.com/yaseralnajjar/sifr/pull/1575
+
+### 2026-04-05 wave-4 (ws1 type-contract patchset D)
+- scope:
+  - close recursive optional-field assignment mismatch (`Option<T>` -> `Option<Box<T>>`) for both direct field writes and constructor-call argument adaptation
+  - include field assignments in mutation analysis so class-instance locals become mutable when fields are reassigned
+  - harden option-pattern lowering to use mutable bindings for non-borrowed option locals, eliminating residual `E0594/E0596` mutability errors in narrowed paths
+- compiler files touched:
+  - `crates/sifr_codegen/src/stmt_support_emitter.rs`
+  - `crates/sifr_codegen/src/hir_analysis/queries.rs`
+  - `crates/sifr_codegen/src/lower_stmt.rs`
+- artifacts:
+  - after patchset D: `verification/leetcode/codegen_runtime_build_gap_ws1_targeted_20260405_wave3_after_patch7.json`
+    - summary: `10 pass / 10 fail`
+- observed deltas vs wave-3 patchset C (`wave2_after_patch6`):
+  - `0105_construct_binary_tree_from_preorder_and_inorder_traversal`: FAIL (`E0308`) -> PASS
+  - `0106_construct_binary_tree_from_inorder_and_postorder_traversal`: FAIL (`E0308`) -> PASS
+  - `0108_convert_sorted_array_to_binary_search_tree`: FAIL (`E0308`) -> PASS
+  - `0450_delete_node_in_a_bst`: FAIL (`E0308`) -> PASS
+  - `0617_merge_two_binary_trees`: FAIL (`E0308`) -> PASS
+  - `0701_insert_into_a_binary_search_tree`: FAIL (`E0308`) -> PASS
+  - `0729_my_calendar_i`: FAIL (`E0596`) -> FAIL (runtime assertion; no Rust error code)
+  - `0894_all_possible_full_binary_trees`: FAIL (`E0308/E0599/E0631`) -> FAIL (`E0382/E0599/E0631`)
+- notes:
+  - ws1 remaining failures are now split between runtime semantics (`0046`, `0211`, `0729`) and reduced compile-surface residuals (`0048`, `0124`, `0138`, `0435`, `0572`, `0894`, `1958`).
