@@ -62,10 +62,12 @@ def widthOfBinaryTree(root: TreeNode | None) -> int:
 
         for _ in range(len(q)):
             node, index = q.pop(0)
-            if node.left:
-                q.append((node.left, index * 2))
-            if node.right:
-                q.append((node.right, index * 2 + 1))
+            left: TreeNode | None = node.left
+            if left is not None:
+                q.append((left, index * 2))
+            right: TreeNode | None = node.right
+            if right is not None:
+                q.append((right, index * 2 + 1))
     return width
 
 def main():

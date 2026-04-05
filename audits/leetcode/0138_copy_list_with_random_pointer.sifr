@@ -5,21 +5,35 @@ def buildRandomList(spec: list[tuple[int, int]]) -> Node | None:
         return None
     nodes: list[Node] = []
     for pair in spec:
-        nodes.append(Node(pair[0]))
+        value: int | None = pair[0]
+        if value is not None:
+            nodes.append(Node(value))
     i = 0
     while i + 1 < len(nodes):
-        nodes[i].next = nodes[i + 1]
+        node_i: Node | None = nodes[i]
+        node_next: Node | None = nodes[i + 1]
+        if node_i is not None and node_next is not None:
+            node_i.next = node_next
         i += 1
     i = 0
     while i < len(spec):
-        randomIndex = spec[i][1]
+        pair_i: tuple[int, int] | None = spec[i]
+        randomIndex = -1
+        if pair_i is not None:
+            second: int | None = pair_i[1]
+            if second is not None:
+                randomIndex = second
         if randomIndex >= 0:
-            nodes[i].random = nodes[randomIndex]
+            node_i: Node | None = nodes[i]
+            node_random: Node | None = nodes[randomIndex]
+            if node_i is not None and node_random is not None:
+                node_i.random = node_random
         i += 1
-    return nodes[0]
+    first_node: Node | None = nodes[0]
+    return first_node
 
 
-def randomListToPairs(head: Node | None) -> list[tuple[int, int]]:
+def randomListToPairs(own head: Node | None) -> list[tuple[int, int]]:
     nodes: list[Node] = []
     cur = head
     while cur is not None:
@@ -28,15 +42,21 @@ def randomListToPairs(head: Node | None) -> list[tuple[int, int]]:
     pairs: list[tuple[int, int]] = []
     i = 0
     while i < len(nodes):
+        node_i: Node | None = nodes[i]
         randomIndex = -1
-        if nodes[i].random is not None:
+        random_node: Node | None = None
+        if node_i is not None:
+            random_node = node_i.random
+        if random_node is not None:
             j = 0
             while j < len(nodes):
-                if nodes[j] is nodes[i].random:
+                candidate: Node | None = nodes[j]
+                if candidate is not None and candidate is random_node:
                     randomIndex = j
                     break
                 j += 1
-        pairs.append((nodes[i].val, randomIndex))
+        if node_i is not None:
+            pairs.append((node_i.val, randomIndex))
         i += 1
     return pairs
 
@@ -67,21 +87,52 @@ class Node:
         self.neighbors = neighbors
         self.key = key
 
-def copyRandomList(head: "Node") -> "Node":
-    oldToCopy = {None: None}
+def copyRandomList(own head: Node | None) -> Node | None:
+    if head is None:
+        return None
 
-    cur = head
-    while cur:
-        copy = Node(cur.val)
-        oldToCopy[cur] = copy
+    nodes: list[Node] = []
+    cur: Node | None = head
+    while cur is not None:
+        nodes.append(cur)
         cur = cur.next
-    cur = head
-    while cur:
-        copy = oldToCopy[cur]
-        copy.next = oldToCopy[cur.next]
-        copy.random = oldToCopy[cur.random]
-        cur = cur.next
-    return oldToCopy[head]
+
+    copies: list[Node] = []
+    i = 0
+    while i < len(nodes):
+        original: Node | None = nodes[i]
+        if original is not None:
+            copies.append(Node(original.val))
+        i += 1
+
+    i = 0
+    while i + 1 < len(copies):
+        copy_node: Node | None = copies[i]
+        next_copy: Node | None = copies[i + 1]
+        if copy_node is not None and next_copy is not None:
+            copy_node.next = next_copy
+        i += 1
+
+    i = 0
+    while i < len(nodes):
+        original: Node | None = nodes[i]
+        copy_node: Node | None = copies[i]
+        if original is not None and copy_node is not None:
+            random_node: Node | None = original.random
+            if random_node is not None:
+                j = 0
+                while j < len(nodes):
+                    candidate: Node | None = nodes[j]
+                    if candidate is not None and candidate is random_node:
+                        copy_random: Node | None = copies[j]
+                        if copy_random is not None:
+                            copy_node.random = copy_random
+                        break
+                    j += 1
+        i += 1
+
+    first_copy: Node | None = copies[0]
+    return first_copy
 
 def main():
     assert randomListToPairs(copyRandomList(buildRandomList([(7, -1), (13, 0), (11, 4), (10, 2), (1, 0)]))) == [(7, -1), (13, 0), (11, 4), (10, 2), (1, 0)]

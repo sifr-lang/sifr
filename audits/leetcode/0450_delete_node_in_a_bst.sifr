@@ -49,26 +49,36 @@ class Node:
         self.neighbors = neighbors
         self.key = key
 
-def deleteNode(root: TreeNode | None, key: int) -> TreeNode | None:
-    if not root:
+def minValue(node: TreeNode | None) -> int:
+    if node is None:
+        return 0
+    left_child: TreeNode | None = node.left
+    if left_child is None:
+        return node.val
+    return minValue(left_child)
+
+
+def deleteNode(own mut root: TreeNode | None, key: int) -> TreeNode | None:
+    if root is None:
         return root
-    
+
     if key > root.val:
         root.right = deleteNode(root.right, key)
+        return root
     elif key < root.val:
         root.left = deleteNode(root.left, key)
-    else:
-        if not root.left:
-            return root.right
-        elif not root.right:
-            return root.left
-        
-        # Find the min from right subtree
-        cur = root.right
-        while cur.left:
-            cur = cur.left 
-        root.val = cur.val
-        root.right = deleteNode(root.right, root.val)
+        return root
+
+    left_child: TreeNode | None = root.left
+    if left_child is None:
+        return root.right
+
+    if root.right is None:
+        return left_child
+
+    successor_value = minValue(root.right)
+    root.val = successor_value
+    root.right = deleteNode(root.right, successor_value)
     return root
 
 def main():

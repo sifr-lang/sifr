@@ -50,34 +50,16 @@ class Node:
         self.key = key
 
 def tree2str(root: TreeNode | None) -> str:
-    # Solution with O(n) time and space complexity
-    res = []
-    dfs(root, res)
-    return "".join(res)
+    if root is None:
+        return ""
 
-
-def dfs(t: TreeNode, res: list):
-    # If the current node is None, do nothing and return
-    if t is None:
-        return
-    res.append(str(t.val))
-
-    # If both left and right children are None, return as there are no more branches to explore
-    if t.left is None and t.right is None:
-        return
-    res.append('(')
-
-    # Recursively call the DFS function for the left child
-    dfs(t.left, res)
-    res.append(')')
-
-    # If the right child exists, process it
-    if t.right is not None:
-        res.append('(')
-
-        # Recursively call the DFS function for the right child
-        dfs(t.right, res)
-        res.append(')')
+    left_repr: str = tree2str(root.left)
+    right_repr: str = tree2str(root.right)
+    if right_repr != "":
+        return str(root.val) + "(" + left_repr + ")" + "(" + right_repr + ")"
+    if left_repr != "":
+        return str(root.val) + "(" + left_repr + ")"
+    return str(root.val)
 
 def main():
     assert tree2str(TreeNode(1, TreeNode(2, TreeNode(4, None, None), None), TreeNode(3, None, None))) == '1(2(4))(3)'

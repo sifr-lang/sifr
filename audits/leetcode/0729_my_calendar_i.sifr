@@ -27,29 +27,43 @@ class Node:
         self.neighbors = neighbors
         self.key = key
 
-class MyCalendar:
-    def __init__(self):
-        self.calendar = CalendarNode(-1, -1)
-    def book(self, start: int, end: int) -> bool:
-        def bookHelper(cur, targetStart, targetEnd):
-            if targetStart > cur.end:
-                if not cur.right:
-                    cur.right = CalendarNode(targetStart, targetEnd)
-                    return True
-                return bookHelper(cur.right, targetStart, targetEnd)
-            elif targetEnd < cur.start:
-                if not cur.left:
-                    cur.left = CalendarNode(targetStart, targetEnd)
-                    return True
-                return bookHelper(cur.left, targetStart, targetEnd)
-            return False
-        return bookHelper(self.calendar, start, end-1) # "end-1" because "end" bound is exclusive (see example 1) 
 class CalendarNode:
-    def __init__(self, start, end):
+    start: int
+    end: int
+    left: CalendarNode | None
+    right: CalendarNode | None
+
+    def __init__(self, start: int, end: int):
         self.start = start
         self.end = end
         self.left = None
         self.right = None
+
+
+class MyCalendar:
+    calendar: CalendarNode
+
+    def __init__(self):
+        self.calendar = CalendarNode(-1, -1)
+
+    def book(self, start: int, end: int) -> bool:
+        def bookHelper(cur: CalendarNode, targetStart: int, targetEnd: int) -> bool:
+            if targetStart > cur.end:
+                right_child: CalendarNode | None = cur.right
+                if right_child is None:
+                    cur.right = CalendarNode(targetStart, targetEnd)
+                    return True
+                return bookHelper(right_child, targetStart, targetEnd)
+            if targetEnd < cur.start:
+                left_child: CalendarNode | None = cur.left
+                if left_child is None:
+                    cur.left = CalendarNode(targetStart, targetEnd)
+                    return True
+                return bookHelper(left_child, targetStart, targetEnd)
+            return False
+
+        # "end - 1" because calendar intervals here are end-exclusive.
+        return bookHelper(self.calendar, start, end - 1)
 
 def main():
     obj = MyCalendar()

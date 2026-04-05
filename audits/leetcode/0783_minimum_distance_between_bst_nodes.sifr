@@ -50,21 +50,35 @@ class Node:
         self.key = key
 
 def minDiffInBST(root: TreeNode | None) -> int:
-    curr_smallest, prev = float("inf"), None
-    
-    def inorder(node):
-        nonlocal curr_smallest, prev
+    values: list[int] = []
+
+    def inorder(node: TreeNode | None) -> None:
         if node is None:
             return
-        
+
         inorder(node.left)
-        if prev is not None:
-            curr_smallest = min(curr_smallest, node.val-prev.val)
-        prev = node
+        values.append(node.val)
         inorder(node.right)
 
     inorder(root)
-    return curr_smallest
+    if len(values) < 2:
+        return 0
+
+    first_val: int | None = values[0]
+    second_val: int | None = values[1]
+    if first_val is None or second_val is None:
+        return 0
+    best: int = second_val - first_val
+    i: int = 2
+    while i < len(values):
+        curr_val: int | None = values[i]
+        prev_val: int | None = values[i - 1]
+        if curr_val is not None and prev_val is not None:
+            diff: int = curr_val - prev_val
+            if diff < best:
+                best = diff
+        i = i + 1
+    return best
 
 def main():
     assert minDiffInBST(TreeNode(4, TreeNode(2, TreeNode(1, None, None), TreeNode(3, None, None)), TreeNode(6, None, None))) == 1

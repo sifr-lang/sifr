@@ -49,22 +49,18 @@ class Node:
         self.neighbors = neighbors
         self.key = key
 
-def rightSideView(root: TreeNode) -> list[int]:
-    res = []
-    q = collections.deque([root])
+def rightSideView(root: TreeNode | None) -> list[int]:
+    res: list[int] = []
 
-    while q:
-        rightSide = None
-        qLen = len(q)
+    def dfs(node: TreeNode | None, depth: int) -> None:
+        if node is None:
+            return
+        if depth == len(res):
+            res.append(node.val)
+        dfs(node.right, depth + 1)
+        dfs(node.left, depth + 1)
 
-        for i in range(qLen):
-            node = q.popleft()
-            if node:
-                rightSide = node
-                q.append(node.left)
-                q.append(node.right)
-        if rightSide:
-            res.append(rightSide.val)
+    dfs(root, 0)
     return res
 
 def main():

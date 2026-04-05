@@ -1,37 +1,55 @@
 # LeetCode 146: Lru Cache
 
-class Node:
-    def __init__(self, key, val):
-        self.key, self.val = key, val
-        self.prev = self.next = None
 class LRUCache:
+    cap: int
+    keys: list[int]
+    values: list[int]
+
     def __init__(self, capacity: int):
         self.cap = capacity
-        self.cache = {}  # map key to node
-        self.left, self.right = Node(0, 0), Node(0, 0)
-        self.left.next, self.right.prev = self.right, self.left
-    def remove(self, node):
-        prev, nxt = node.prev, node.next
-        prev.next, nxt.prev = nxt, prev
-    def insert(self, node):
-        prev, nxt = self.right.prev, self.right
-        prev.next = nxt.prev = node
-        node.next, node.prev = nxt, prev
-    def get(self, key: int) -> int:
-        if key in self.cache:
-            self.remove(self.cache[key])
-            self.insert(self.cache[key])
-            return self.cache[key].val
+        self.keys = []
+        self.values = []
+
+    def findIndex(self, key: int) -> int:
+        i = 0
+        while i < len(self.keys):
+            key_i: int | None = self.keys[i]
+            if key_i is not None and key_i == key:
+                return i
+            i += 1
         return -1
+
+    def moveToMostRecent(self, index: int) -> None:
+        key_value: int | None = self.keys.pop(index)
+        cached_value: int | None = self.values.pop(index)
+        if key_value is not None and cached_value is not None:
+            self.keys.append(key_value)
+            self.values.append(cached_value)
+
+    def get(self, key: int) -> int:
+        idx = self.findIndex(key)
+        if idx < 0:
+            return -1
+
+        value_opt: int | None = self.values[idx]
+        result = -1
+        if value_opt is not None:
+            result = value_opt
+        self.moveToMostRecent(idx)
+        return result
+
     def put(self, key: int, value: int) -> None:
-        if key in self.cache:
-            self.remove(self.cache[key])
-        self.cache[key] = Node(key, value)
-        self.insert(self.cache[key])
-        if len(self.cache) > self.cap:
-            lru = self.left.next
-            self.remove(lru)
-            del self.cache[lru.key]
+        idx = self.findIndex(key)
+        if idx >= 0:
+            self.keys.pop(idx)
+            self.values.pop(idx)
+
+        self.keys.append(key)
+        self.values.append(value)
+
+        if len(self.keys) > self.cap:
+            self.keys.pop(0)
+            self.values.pop(0)
 
 def main():
     obj = LRUCache(2)
@@ -44,4 +62,3 @@ def main():
     assert obj.get(1) == -1
     assert obj.get(3) == 3
     assert obj.get(4) == 4
-

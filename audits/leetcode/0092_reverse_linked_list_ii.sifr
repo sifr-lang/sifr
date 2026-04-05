@@ -9,7 +9,7 @@ class ListNode:
         self.next = next
 
 
-def listNodeToString(node: ListNode | None) -> str:
+def listNodeToString(own node: ListNode | None) -> str:
     if node is None:
         return "None"
     parts: list[str] = []
@@ -47,36 +47,43 @@ class Node:
         self.neighbors = neighbors
         self.key = key
 
-def reverseBetween(
-    self, head: ListNode | None, left: int, right: int
-) -> ListNode | None:
-    dummy = ListNode(0, head)
+def reverseBetween(own head: ListNode | None, left: int, right: int) -> ListNode | None:
+    values: list[int] = []
+    cur: ListNode | None = head
+    while cur is not None:
+        values.append(cur.val)
+        cur = cur.next
 
-    # 1) reach node at position "left"
-    leftPrev, cur = dummy, head
-    for i in range(left - 1):
-        leftPrev, cur = cur, cur.next
+    start: int = left - 1
+    end: int = right - 1
+    if start < 0:
+        start = 0
+    if end >= len(values):
+        end = len(values) - 1
+    while start < end:
+        left_value: int | None = values[start]
+        right_value: int | None = values[end]
+        if left_value is not None and right_value is not None:
+            values[start] = right_value
+            values[end] = left_value
+        start = start + 1
+        end = end - 1
 
-    # Now cur="left", leftPrev="node before left"
-    # 2) reverse from left to right
-    prev = None
-    for i in range(right - left + 1):
-        tmpNext = cur.next
-        cur.next = prev
-        prev, cur = cur, tmpNext
-
-    # 3) Update pointers
-    leftPrev.next.next = cur  # cur is node after "right"
-    leftPrev.next = prev  # prev is "right"
-    return dummy.next
+    result: ListNode | None = None
+    i: int = len(values) - 1
+    while i >= 0:
+        value: int | None = values[i]
+        if value is not None:
+            result = ListNode(value, result)
+        i = i - 1
+    return result
 
 def main():
     assert listNodeToString(
         reverseBetween(
-            None,
             ListNode(1, ListNode(2, ListNode(3, ListNode(4, ListNode(5))))),
             2,
             4,
         )
     ) == "1->4->3->2->5"
-    assert listNodeToString(reverseBetween(None, ListNode(5), 1, 1)) == "5"
+    assert listNodeToString(reverseBetween(ListNode(5), 1, 1)) == "5"

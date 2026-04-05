@@ -25,6 +25,8 @@ mod for_loop_safety;
 mod fstring_support;
 mod function_flow;
 mod function_scopes;
+mod generic_constructor_specialization;
+mod generic_receiver_specialization;
 mod generic_inference;
 mod guarded_index;
 mod if_expression;
@@ -52,6 +54,7 @@ mod sequence_guards;
 mod sequence_pointers;
 mod sequence_shapes;
 mod statements;
+mod subscript_type;
 mod tuple_unpack;
 #[cfg(test)]
 mod type_alias_tests;

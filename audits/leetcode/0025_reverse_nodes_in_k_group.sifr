@@ -9,7 +9,7 @@ class ListNode:
         self.next = next
 
 
-def listNodeToString(node: ListNode | None) -> str:
+def listNodeToString(own node: ListNode | None) -> str:
     if node is None:
         return "None"
     parts: list[str] = []
@@ -47,35 +47,39 @@ class Node:
         self.neighbors = neighbors
         self.key = key
 
-def reverseKGroup(head: ListNode, k: int) -> ListNode:
-    dummy = ListNode(0, head)
-    groupPrev = dummy
+def reverseKGroup(own head: ListNode | None, k: int) -> ListNode | None:
+    values: list[int] = []
+    cur: ListNode | None = head
+    while cur is not None:
+        values.append(cur.val)
+        cur = cur.next
 
-    while True:
-        kth = getKth(groupPrev, k)
-        if not kth:
-            break
-        groupNext = kth.next
+    group_size: int = k
+    if group_size <= 1:
+        group_size = 1
 
-        # reverse group
-        prev, curr = kth.next, groupPrev.next
-        while curr != groupNext:
-            tmp = curr.next
-            curr.next = prev
-            prev = curr
-            curr = tmp
+    i: int = 0
+    while i + group_size <= len(values):
+        left: int = i
+        right: int = i + group_size - 1
+        while left < right:
+            left_value: int | None = values[left]
+            right_value: int | None = values[right]
+            if left_value is not None and right_value is not None:
+                values[left] = right_value
+                values[right] = left_value
+            left = left + 1
+            right = right - 1
+        i = i + group_size
 
-        tmp = groupPrev.next
-        groupPrev.next = kth
-        groupPrev = tmp
-    return dummy.next
-
-
-def getKth(mut curr: ListNode | None, mut k: int) -> ListNode | None:
-    while curr and k > 0:
-        curr = curr.next
-        k -= 1
-    return curr
+    result: ListNode | None = None
+    idx: int = len(values) - 1
+    while idx >= 0:
+        value: int | None = values[idx]
+        if value is not None:
+            result = ListNode(value, result)
+        idx = idx - 1
+    return result
 
 def main():
     assert listNodeToString(reverseKGroup(ListNode(1, ListNode(2, ListNode(3, ListNode(4, ListNode(5, None))))), 2)) == listNodeToString(ListNode(2, ListNode(1, ListNode(4, ListNode(3, ListNode(5, None))))))

@@ -9,7 +9,7 @@ class ListNode:
         self.next = next
 
 
-def listNodeToString(node: ListNode | None) -> str:
+def listNodeToString(own node: ListNode | None) -> str:
     if node is None:
         return "None"
     parts: list[str] = []
@@ -47,54 +47,22 @@ class Node:
         self.neighbors = neighbors
         self.key = key
 
-def sortList(head: ListNode | None) -> ListNode | None:
-    if not head or not head.next:
-        return head
+def sortList(own head: ListNode | None) -> ListNode | None:
+    values: list[int] = []
+    cur: ListNode | None = head
+    while cur is not None:
+        values.append(cur.val)
+        cur = cur.next
 
-    mid = get_mid(head)
-    left, right = sortList(head), sortList(mid)
-
-    return merge_two_sorted(left, right)
-
-
-
-def merge_two_sorted(list1: ListNode | None, list2: ListNode | None) -> ListNode | None:
-    if not list1:
-        return list2
-
-    if not list2:
-        return list1
-
-    sentinel = ListNode()
-    prev = sentinel
-    while list1 and list2:
-        if list1.val < list2.val:
-            prev.next = list1
-            list1 = list1.next
-        else:
-            prev.next = list2
-            list2 = list2.next
-        prev = prev.next
-
-    if list1:
-        prev.next = list1
-    else:
-        prev.next = list2
-
-    return sentinel.next
-
-
-
-def get_mid(head: ListNode | None) -> ListNode | None:
-    mid_prev = None
-    while head and head.next:
-        mid_prev = mid_prev.next if mid_prev else head
-        head = head.next.next
-
-    mid = mid_prev.next
-    mid_prev.next = None
-
-    return mid
+    ordered: list[int] = sorted(values)
+    result: ListNode | None = None
+    i: int = len(ordered) - 1
+    while i >= 0:
+        value: int | None = ordered[i]
+        if value is not None:
+            result = ListNode(value, result)
+        i = i - 1
+    return result
 
 def main():
     assert listNodeToString(sortList(ListNode(4, ListNode(2, ListNode(1, ListNode(3, None)))))) == listNodeToString(ListNode(1, ListNode(2, ListNode(3, ListNode(4, None)))))

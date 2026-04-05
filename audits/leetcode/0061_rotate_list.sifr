@@ -9,7 +9,7 @@ class ListNode:
         self.next = next
 
 
-def listNodeToString(node: ListNode | None) -> str:
+def listNodeToString(own node: ListNode | None) -> str:
     if node is None:
         return "None"
     parts: list[str] = []
@@ -47,31 +47,35 @@ class Node:
         self.neighbors = neighbors
         self.key = key
 
-def rotateRight(head: ListNode | None, k: int) -> ListNode | None:
-    if not head or not head.next or k == 0:
-        return head
+def rotateRight(own head: ListNode | None, k: int) -> ListNode | None:
+    values: list[int] = []
+    cur: ListNode | None = head
+    while cur is not None:
+        values.append(cur.val)
+        cur = cur.next
 
-    old_head = head
+    length: int = len(values)
+    if length == 0:
+        return None
 
-    curr, size = head, 0
-    while curr:
-        curr, size = curr.next, size + 1
+    shift: int = k % length
+    if shift == 0:
+        shift = 0
+    split: int = length - shift
 
-    if k % size == 0:
-        return head
-
-    k %= size
-    slow = fast = head
-    while fast and fast.next:
-        if k <= 0:
-            slow = slow.next
-        fast = fast.next
-        k -= 1
-
-    new_tail, new_head, old_tail = slow, slow.next, fast
-    new_tail.next, old_tail.next = None, old_head
-
-    return new_head
+    result: ListNode | None = None
+    i: int = length - 1
+    while i >= 0:
+        source_index: int = i
+        if i >= split:
+            source_index = i - split
+        else:
+            source_index = i + shift
+        value: int | None = values[source_index]
+        if value is not None:
+            result = ListNode(value, result)
+        i = i - 1
+    return result
 
 def main():
     assert listNodeToString(rotateRight(ListNode(1, ListNode(2, ListNode(3, ListNode(4, ListNode(5, None))))), 2)) == listNodeToString(ListNode(4, ListNode(5, ListNode(1, ListNode(2, ListNode(3, None))))))
