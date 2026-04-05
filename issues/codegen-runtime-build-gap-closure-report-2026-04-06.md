@@ -25,3 +25,6 @@ Execution log: `issues/ad-hoc-codegen-runtime-build-gap-closure-phase-2026-04-05
 
 ## Validation
 - `scripts/run_all_tests.sh --profile quick` -> PASS
+
+## PR
+- Merged: https://github.com/yaseralnajjar/sifr/pull/1575
