@@ -1,0 +1,59 @@
+fixture_slug,status,codes,root_cause_family,resolution_lane,rust_error_line,first_line
+0002_add_two_numbers,RUN_ERROR,"E0308,E0609",recursive_field_access_surface_leaks_to_codegen,both,error[E0609]: no field `val` on type `Option<ListNode>`,build error: cargo build failed:
+0006_zigzag_conversion,RUN_ERROR,E0308,type_contract_mismatch_reaching_codegen,both,error[E0308]: mismatched types,build error: cargo build failed:
+0014_longest_common_prefix,RUN_ERROR,E0382,ownership_move_reuse_in_generated_rust,compiler_fix,error[E0382]: borrow of moved value: `prefix`,build error: cargo build failed:
+0014_longest_common_prefix_v2,RUN_ERROR,E0382,ownership_move_reuse_in_generated_rust,compiler_fix,error[E0382]: borrow of moved value: `prefix`,build error: cargo build failed:
+0019_remove_nth_node_from_end_of_list,RUN_ERROR,"E0308,E0609",recursive_field_access_surface_leaks_to_codegen,both,error[E0609]: no field `val` on type `Option<ListNode>`,build error: cargo build failed:
+0020_valid_parentheses,RUN_ERROR,E0600,truthiness_not_lowering_to_bool_contract,compiler_fix,error[E0600]: cannot apply unary operator `!` to type `Vec<String>`,build error: cargo build failed:
+0021_merge_two_sorted_lists,RUN_ERROR,"E0308,E0609",recursive_field_access_surface_leaks_to_codegen,both,error[E0609]: no field `val` on type `Option<ListNode>`,build error: cargo build failed:
+0025_reverse_nodes_in_k_group,RUN_ERROR,"E0308,E0609",recursive_field_access_surface_leaks_to_codegen,both,error[E0609]: no field `val` on type `Option<ListNode>`,build error: cargo build failed:
+0046_permutations,RUN_ERROR,E0308,type_contract_mismatch_reaching_codegen,both,error[E0308]: mismatched types,build error: cargo build failed:
+0048_rotate_image,RUN_ERROR,E0308,type_contract_mismatch_reaching_codegen,both,error[E0308]: mismatched types,build error: cargo build failed:
+0051_n_queens,RUN_ERROR,E0425,missing_or_mis_scoped_binding_in_codegen_output,compiler_fix,error[E0425]: cannot find value `row` in this scope,build error: cargo build failed:
+0061_rotate_list,RUN_ERROR,"E0308,E0609",recursive_field_access_surface_leaks_to_codegen,both,error[E0609]: no field `val` on type `Option<ListNode>`,build error: cargo build failed:
+0083_remove_duplicates_from_sorted_list,RUN_ERROR,"E0308,E0609",recursive_field_access_surface_leaks_to_codegen,both,error[E0609]: no field `val` on type `Option<ListNode>`,build error: cargo build failed:
+0086_partition_list,RUN_ERROR,"E0308,E0609",recursive_field_access_surface_leaks_to_codegen,both,error[E0609]: no field `val` on type `Option<ListNode>`,build error: cargo build failed:
+0092_reverse_linked_list_ii,RUN_ERROR,"E0308,E0609",recursive_field_access_surface_leaks_to_codegen,both,error[E0609]: no field `val` on type `Option<ListNode>`,build error: cargo build failed:
+0101_symmetric_tree,RUN_ERROR,E0609,recursive_field_access_surface_leaks_to_codegen,both,error[E0609]: no field `val` on type `&Option<TreeNode>`,build error: cargo build failed:
+0105_construct_binary_tree_from_preorder_and_inorder_traversal,RUN_ERROR,E0308,type_contract_mismatch_reaching_codegen,both,error[E0308]: mismatched types,build error: cargo build failed:
+0106_construct_binary_tree_from_inorder_and_postorder_traversal,RUN_ERROR,E0308,type_contract_mismatch_reaching_codegen,both,error[E0308]: mismatched types,build error: cargo build failed:
+0108_convert_sorted_array_to_binary_search_tree,RUN_ERROR,E0308,type_contract_mismatch_reaching_codegen,both,error[E0308]: arguments to this function are incorrect,build error: cargo build failed:
+0124_binary_tree_maximum_path_sum,RUN_ERROR,E0308,type_contract_mismatch_reaching_codegen,both,error[E0308]: mismatched types,build error: cargo build failed:
+0127_word_ladder,RUN_ERROR,E0382,ownership_move_reuse_in_generated_rust,compiler_fix,error[E0382]: use of moved value: `word`,build error: cargo build failed:
+0138_copy_list_with_random_pointer,RUN_ERROR,E0308,type_contract_mismatch_reaching_codegen,both,error[E0308]: mismatched ...<truncated>,build error: cargo build failed:
+0141_linked_list_cycle,RUN_ERROR,"E0277,E0609",recursive_field_access_surface_leaks_to_codegen,both,error[E0609]: no field `val` on type `Option<ListNode>`,build error: cargo build failed:
+0143_reorder_list,RUN_ERROR,"E0308,E0609",recursive_field_access_surface_leaks_to_codegen,both,error[E0609]: no field `val` on type `Option<ListNode>`,build error: cargo build failed:
+0147_insertion_sort_list,RUN_ERROR,"E0308,E0609",recursive_field_access_surface_leaks_to_codegen,both,error[E0609]: no field `val` on type `Option<ListNode>`,build error: cargo build failed:
+0148_sort_list,RUN_ERROR,"E0308,E0609",recursive_field_access_surface_leaks_to_codegen,both,error[E0609]: no field `val` on type `Option<ListNode>`,build error: cargo build failed:
+0160_intersection_of_two_linked_lists,RUN_ERROR,"E0308,E0609",recursive_field_access_surface_leaks_to_codegen,both,error[E0609]: no field `val` on type `Option<ListNode>`,build error: cargo build failed:
+0189_rotate_array,RUN_ERROR,E0308,type_contract_mismatch_reaching_codegen,both,error[E0308]: mismatched types,build error: cargo build failed:
+0203_remove_linked_list_elements,RUN_ERROR,"E0308,E0609",recursive_field_access_surface_leaks_to_codegen,both,error[E0609]: no field `val` on type `Option<ListNode>`,build error: cargo build failed:
+0211_design_add_and_search_words_data_structure,RUN_ERROR,"E0277,E0382",ownership_move_reuse_in_generated_rust,compiler_fix,error[E0277]: can't compare `String` with `Option<_>`,build error: cargo build failed:
+0234_palindrome_linked_list,RUN_ERROR,E0609,recursive_field_access_surface_leaks_to_codegen,both,error[E0609]: no field `val` on type `Option<ListNode>`,build error: cargo build failed:
+0304_range_sum_query_2d_immutable,RUN_ERROR,"E0277,E0282,E0424",missing_or_mis_scoped_binding_in_codegen_output,compiler_fix,"error[E0424]: expected value, found module `self`",build error: cargo build failed:
+0394_decode_string,RUN_ERROR,NO_RUST_CODE,non_standard_rust_build_failure_without_error_code,compiler_fix,,build error: cargo build failed:
+0417_pacific_atlantic_water_flow,RUN_ERROR,"E0434,E0596",missing_or_mis_scoped_binding_in_codegen_output,compiler_fix,error[E0434]: can't capture dynamic environment in a fn item,build error: cargo build failed:
+0435_non_overlapping_intervals,RUN_ERROR,E0308,type_contract_mismatch_reaching_codegen,both,error[E0308]: mismatched types,build error: cargo build failed:
+0450_delete_node_in_a_bst,RUN_ERROR,E0308,type_contract_mismatch_reaching_codegen,both,error[E0308]: mismatched types,build error: cargo build failed:
+0513_find_bottom_left_tree_value,RUN_ERROR,NO_RUST_CODE,non_standard_rust_build_failure_without_error_code,compiler_fix,,build error: cargo build failed:
+0567_permutation_in_string,RUN_ERROR,E0308,type_contract_mismatch_reaching_codegen,both,error[E0308]: mismatched types,build error: cargo build failed:
+0572_subtree_of_another_tree,RUN_ERROR,E0308,type_contract_mismatch_reaching_codegen,both,error[E0308]: arguments to this function are incorrect,build error: cargo build failed:
+0617_merge_two_binary_trees,RUN_ERROR,E0308,type_contract_mismatch_reaching_codegen,both,error[E0308]: mismatched types,build error: cargo build failed:
+0662_maximum_width_of_binary_tree,RUN_ERROR,NO_RUST_CODE,non_standard_rust_build_failure_without_error_code,compiler_fix,,thread 'main' (81792820) panicked at crates/sifr_codegen/src/lib.rs:1492:17:
+0669_trim_a_binary_search_tree,RUN_ERROR,"E0308,E0609",recursive_field_access_surface_leaks_to_codegen,both,error[E0609]: no field `val` on type `Option<TreeNode>`,build error: cargo build failed:
+0701_insert_into_a_binary_search_tree,RUN_ERROR,E0308,type_contract_mismatch_reaching_codegen,both,error[E0308]: mismatched types,build error: cargo build failed:
+0703_kth_largest_element_in_a_stream,RUN_ERROR,E0382,ownership_move_reuse_in_generated_rust,compiler_fix,error[E0382]: use of moved value: `ordered`,build error: cargo build failed:
+0729_my_calendar_i,RUN_ERROR,"E0277,E0596",rust_build_contract_breakage_misc,compiler_fix,error[E0277]: `CalendarNode` doesn't implement `std::fmt::Display`,build error: cargo build failed:
+0783_minimum_distance_between_bst_nodes,RUN_ERROR,E0369,rust_build_contract_breakage_misc,compiler_fix,error[E0369]: cannot subtract `Option<i64>` from `Option<i64>`,build error: cargo build failed:
+0838_push_dominoes,RUN_ERROR,NO_RUST_CODE,non_standard_rust_build_failure_without_error_code,compiler_fix,,build error: cargo build failed:
+0876_middle_of_the_linked_list,RUN_ERROR,"E0308,E0609",recursive_field_access_surface_leaks_to_codegen,both,error[E0609]: no field `val` on type `Option<ListNode>`,build error: cargo build failed:
+0894_all_possible_full_binary_trees,RUN_ERROR,"E0308,E0599,E0631",type_contract_mismatch_reaching_codegen,both,error[E0308]: arguments to this function are incorrect,build error: cargo build failed:
+0912_sort_an_array,RUN_ERROR,E0382,ownership_move_reuse_in_generated_rust,compiler_fix,error[E0382]: use of moved value: `nums`,build error: cargo build failed:
+1203_sort_items_by_groups_respecting_dependencies,RUN_ERROR,E0502,rust_build_contract_breakage_misc,compiler_fix,error[E0502]: cannot borrow `predecessors_count_item` as immutable because it is also borrowed as mutable,build error: cargo build failed:
+1609_even_odd_tree,RUN_ERROR,NO_RUST_CODE,non_standard_rust_build_failure_without_error_code,compiler_fix,,build error: cargo build failed:
+1669_merge_in_between_linked_lists,RUN_ERROR,"E0308,E0609",recursive_field_access_surface_leaks_to_codegen,both,error[E0609]: no field `val` on type `Option<ListNode>`,build error: cargo build failed:
+1721_swapping_nodes_in_a_linked_list,RUN_ERROR,"E0308,E0609",recursive_field_access_surface_leaks_to_codegen,both,error[E0609]: no field `val` on type `Option<ListNode>`,build error: cargo build failed:
+1958_check_if_move_is_legal,RUN_ERROR,"E0282,E0308",type_contract_mismatch_reaching_codegen,both,error[E0308]: mismatched types,build error: cargo build failed:
+1968_array_with_elements_not_equal_to_average_of_neighbors,RUN_ERROR,NO_RUST_CODE,non_standard_rust_build_failure_without_error_code,compiler_fix,,[sifr-artifact-cache] namespace=run key=b6d8c46106fc61b3 cache_hit=true workspace=/var/folders/lq/l19_y_rn76b8vprfvdjn9zch0000gn/T/sifr_generated_artifact_cache/run/b6d8c46106fc61b3
+2130_maximum_twin_sum_of_a_linked_list,RUN_ERROR,E0609,recursive_field_access_surface_leaks_to_codegen,both,error[E0609]: no field `val` on type `Option<ListNode>`,build error: cargo build failed:
+2215_find_the_difference_of_two_arrays,RUN_ERROR,NO_RUST_CODE,non_standard_rust_build_failure_without_error_code,compiler_fix,,[sifr-artifact-cache] namespace=run key=3a1d6576145bf5f1 cache_hit=true workspace=/var/folders/lq/l19_y_rn76b8vprfvdjn9zch0000gn/T/sifr_generated_artifact_cache/run/3a1d6576145bf5f1

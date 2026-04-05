@@ -194,6 +194,16 @@ status: complete
 
 Phase 31 is closed, but its unresolved compatibility backlog now has a concrete carry-forward execution plan in `issues/phase31-ad-hoc-followup-milestones.md`.
 
+Latest closure-track plan (`2026-04-05`):
+- `issues/ad-hoc-codegen-runtime-build-gap-closure-phase-2026-04-05.md` is marked `ready_to_implement` for the live `codegen_runtime_build_gap=58` baseline.
+- Source artifacts:
+  - `verification/leetcode/full_corpus_current_results_20260405_live_rerun1.json`
+  - `verification/leetcode/full_corpus_failure_taxonomy_20260405_live_rerun1.json`
+  - `verification/leetcode/codegen_runtime_build_gap_breakdown_20260405_v3.csv`
+- External review sign-off for this breakdown/phase basis:
+  - `reviews/codegen-runtime-build-gap-root-cause-review-pass3.md` (`READY`)
+  - `reviews/codegen-runtime-build-gap-root-cause-review-pass4.md` (`READY`)
+
 Latest execution note (`2026-03-11`):
 - `m31_c_stdlib_module_parity` slice 1 is locally validated and tracked in `issues/phase31-m31c-stdlib-module-parity-execution.md`.
 - Targeted six-case rerun artifact: `verification/leetcode/phase31_m31c_wave1_results.json`.
