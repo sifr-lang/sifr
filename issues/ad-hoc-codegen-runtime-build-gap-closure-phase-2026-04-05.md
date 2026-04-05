@@ -1,6 +1,6 @@
 # Ad-hoc Phase: Codegen Runtime Build Gap Closure (2026-04-05)
 
-status: ready_to_implement
+status: in_progress
 
 ## Goal
 Close the `codegen_runtime_build_gap` category from `58` to `0` for the current full LeetCode corpus baseline, while preserving Sifr core guarantees and avoiding unsupported semantic broadening.
@@ -162,7 +162,7 @@ Phase exit gate:
 - Final closure report linking compiler changes and adaptation patches
 
 ## Ready-to-implement Checklist
-- [ ] Create execution issue for this phase and track wave status.
+- [x] Create execution issue for this phase and track wave status.
 - [ ] Implement `workstream_crbg_1` and publish targeted delta artifact.
 - [ ] Implement `workstream_crbg_2` and publish targeted delta artifact.
 - [ ] Implement `workstream_crbg_4` and publish targeted delta artifact.

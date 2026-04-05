@@ -297,6 +297,19 @@ pub(super) fn detect_or_not_option_truthiness_vars(expr: &HirExpr) -> Option<Vec
     None
 }
 
+/// Detect compound `a is None or b is None` where both names are Option values.
+pub(super) fn detect_or_is_none_vars(expr: &HirExpr) -> Option<Vec<String>> {
+    if let HirExpr::BoolOp { op, values, .. } = expr {
+        if op == "or" {
+            let vars: Vec<String> = values.iter().filter_map(detect_is_none_var).collect();
+            if vars.len() >= 2 {
+                return Some(vars);
+            }
+        }
+    }
+    None
+}
+
 /// Detect `isinstance(x, type)` where x is a non-Option union type.
 /// Returns (`var_name`, `variant_name`, `enum_name`, `other_variants`: Vec<(`variant_name`, type)>).
 pub(super) fn detect_isinstance_union(expr: &HirExpr) -> Option<IsinstanceUnionMatch> {

@@ -2,6 +2,7 @@
 
 use crate::helpers::{
     codegen_body_always_exits, detect_and_not_none_vars, detect_is_none_var, detect_is_not_none_var,
+    detect_or_is_none_vars,
 };
 use crate::hir_analysis::queries::{
     body_calls_function, collect_locally_defined_vars, collect_mutated_vars,
@@ -56,6 +57,40 @@ pub fn try_lower_expr_stmt(expr: &HirExpr) -> Option<Vec<RustStmt>> {
         return Some(vec![lowered_print]);
     }
     try_lower_leaf_expr(expr).map(|lowered_expr| vec![RustStmt::Expr(lowered_expr)])
+}
+
+fn try_lower_expr_stmt_with_bindings(
+    expr: &HirExpr,
+    local_binding_types: &HashMap<String, Type>,
+) -> Option<Vec<RustStmt>> {
+    if let HirExpr::MethodCall {
+        object,
+        method,
+        args,
+        ..
+    } = expr
+    {
+        if let HirExpr::Name { name, ty } = object.as_ref() {
+            if matches!(resolve_alias_type(ty), Type::Any | Type::Unknown) {
+                if let Some(bound_ty) = local_binding_types.get(name) {
+                    let lowered_object = try_lower_leaf_or_name_expr(object)?;
+                    let lowered_args = args
+                        .iter()
+                        .map(try_lower_leaf_or_name_expr)
+                        .collect::<Option<Vec<_>>>()?;
+                    if let Some(lowered) = crate::methods::lower_method(
+                        bound_ty,
+                        method,
+                        &lowered_object,
+                        &lowered_args,
+                    ) {
+                        return Some(vec![RustStmt::Expr(lowered.expr)]);
+                    }
+                }
+            }
+        }
+    }
+    try_lower_expr_stmt(expr)
 }
 
 fn try_lower_simple_print_expr_stmt(expr: &HirExpr) -> Option<RustStmt> {
@@ -560,7 +595,7 @@ pub(crate) fn try_lower_simple_stmt_with_ctx_and_bindings(
         local_binding_types,
     };
     match stmt {
-        HirStmt::Expr { expr } => try_lower_expr_stmt(expr),
+        HirStmt::Expr { expr } => try_lower_expr_stmt_with_bindings(expr, bindings.local_binding_types),
         HirStmt::Let {
             name, ty, value, ..
         } if !matches!(resolve_alias_type(ty), Type::Iterable(_))
@@ -887,25 +922,6 @@ fn try_lower_simple_nested_function_stmt(
     let nested_mutated_vars = collect_mutated_vars(&func.body, None);
     let nested_borrowed_params: HashSet<String> = HashSet::new();
     let is_recursive = body_calls_function(&func.body, &func.name);
-    let allowed_calls = if is_recursive {
-        vec![func.name.clone()]
-    } else {
-        vec![]
-    };
-    let mut lowered_body = crate::with_allowed_plain_calls(&allowed_calls, || {
-        try_lower_simple_stmt_block(
-            &func.body,
-            in_loop_with_else,
-            &nested_mutated_vars,
-            &nested_borrowed_params,
-            SimpleStmtLoweringCtx {
-                return_type: Some(&func.return_type),
-                in_display_impl: false,
-                in_class_scope: false,
-                in_generator_closure: false,
-            },
-        )
-    })?;
     let param_names: HashSet<String> = func.params.iter().map(|param| param.name.clone()).collect();
     let referenced_with_types = collect_referenced_vars_with_types(&func.body);
     let locally_defined = collect_locally_defined_vars(&func.body);
@@ -913,6 +929,36 @@ fn try_lower_simple_nested_function_stmt(
         .into_iter()
         .filter(|(name, _)| !param_names.contains(name) && !locally_defined.contains(name))
         .collect();
+    let allowed_calls = if is_recursive {
+        vec![func.name.clone()]
+    } else {
+        vec![]
+    };
+    let nested_local_binding_types: HashMap<String, Type> = func
+        .params
+        .iter()
+        .map(|param| (param.name.clone(), param.ty.clone()))
+        .chain(captures.iter().cloned())
+        .collect();
+    let mut lowered_body = crate::with_allowed_plain_calls(&allowed_calls, || {
+        let mut lowered = Vec::new();
+        for stmt in &func.body {
+            lowered.extend(try_lower_simple_stmt_with_ctx_and_bindings(
+                stmt,
+                in_loop_with_else,
+                &nested_mutated_vars,
+                &nested_borrowed_params,
+                &nested_local_binding_types,
+                SimpleStmtLoweringCtx {
+                    return_type: Some(&func.return_type),
+                    in_display_impl: false,
+                    in_class_scope: false,
+                    in_generator_closure: false,
+                },
+            )?);
+        }
+        Some(lowered)
+    })?;
     let mutates_captures = nested_mutated_vars
         .iter()
         .any(|name| !param_names.contains(name) && !locally_defined.contains(name));
@@ -2520,6 +2566,33 @@ fn try_lower_simple_if_stmt(
 ) -> Option<Vec<RustStmt>> {
     if elif_clauses.is_empty() && maybe_else_body.is_none() && codegen_body_always_exits(then_body)
     {
+        if let Some(option_vars) = detect_or_is_none_vars(condition) {
+            let lowered_then_body = try_lower_simple_stmt_block(
+                then_body,
+                in_loop_with_else,
+                bindings.mutated_vars,
+                bindings.borrowed_params,
+                ctx,
+            )?;
+            let pattern = format!(
+                "({})",
+                option_vars
+                    .iter()
+                    .map(|option_var| format!("Some({option_var})"))
+                    .collect::<Vec<_>>()
+                    .join(", ")
+            );
+            return Some(vec![RustStmt::LetElse {
+                pattern,
+                value: RustExpr::Tuple(
+                    option_vars
+                        .iter()
+                        .map(|option_var| RustExpr::Ident(option_var.clone()))
+                        .collect(),
+                ),
+                else_body: lowered_then_body,
+            }]);
+        }
         if let Some(option_var) = detect_is_none_var(condition) {
             let lowered_then_body = try_lower_simple_stmt_block(
                 then_body,
@@ -2729,6 +2802,31 @@ fn try_lower_structured_compare_condition_expr(expr: &HirExpr) -> Option<RustExp
         "is not" => "!=",
         _ => return None,
     };
+    if matches!(left.as_ref(), HirExpr::NoneLiteral) || matches!(rhs_expr, HirExpr::NoneLiteral) {
+        let other = if matches!(rhs_expr, HirExpr::NoneLiteral) {
+            left.as_ref()
+        } else {
+            rhs_expr
+        };
+        let is_equal_op = lowered_op == "==";
+        if is_option_like_type(other.ty()) {
+            let lowered_other = try_lower_condition_operand_expr(other)?;
+            return Some(RustExpr::MethodCall {
+                receiver: Box::new(lowered_other),
+                method: if is_equal_op { "is_none" } else { "is_some" }.to_string(),
+                args: vec![],
+            });
+        }
+        if is_none_type(other.ty()) {
+            return Some(RustExpr::Literal(RustLiteral::Bool(is_equal_op)));
+        }
+        if !matches!(
+            resolve_alias_type(other.ty()),
+            Type::Any | Type::Unknown | Type::TypeVar(_)
+        ) {
+            return Some(RustExpr::Literal(RustLiteral::Bool(!is_equal_op)));
+        }
+    }
     let mut lowered_left = try_lower_condition_operand_expr(left)?;
     let mut lowered_right = try_lower_condition_operand_expr(rhs_expr)?;
     if is_option_like_type(left.ty())
@@ -3554,6 +3652,34 @@ fn try_lower_simple_subscript_augassign_stmt(
     }
     let lowered_index = try_lower_leaf_or_name_expr(index)?;
     let lowered_value = try_lower_leaf_or_name_expr(value)?;
+
+    if op == "+="
+        && matches!(
+            resolve_alias_type(object_ty),
+            Type::List(element_ty)
+                if matches!(resolve_alias_type(element_ty.as_ref()), Type::Str | Type::LiteralStr(_))
+        )
+    {
+        let push_arg = if matches!(value, HirExpr::StringLiteral(_)) {
+            lowered_value
+        } else {
+            RustExpr::MethodCall {
+                receiver: Box::new(RustExpr::Paren(Box::new(lowered_value))),
+                method: "as_str".to_string(),
+                args: vec![],
+            }
+        };
+        return Some(vec![build_list_get_mut_block_stmt(
+            RustExpr::Ident(object.to_string()),
+            lowered_index,
+            RustStmt::Expr(RustExpr::MethodCall {
+                receiver: Box::new(RustExpr::Ident("__elem".to_string())),
+                method: "push_str".to_string(),
+                args: vec![push_arg],
+            }),
+        )]);
+    }
+
     let lowered_body_stmt = build_subscript_augassign_elem_stmt(op, lowered_value);
 
     if matches!(
@@ -4913,6 +5039,52 @@ mod tests {
                     }) if matches!(target.as_ref(), RustExpr::Ident(name) if name == "__elem")
                         && op == "+"
                         && rhs == "delta"
+                )
+            )
+        ));
+    }
+
+    #[test]
+    fn lowers_simple_string_list_subscript_augassign_plus_equal_stmt() {
+        let stmt = HirStmt::SubscriptAugAssign {
+            object: "rows".to_string(),
+            index: HirExpr::IntLiteral(0),
+            op: "+=".to_string(),
+            value: HirExpr::Name {
+                name: "c".to_string(),
+                ty: Type::Str,
+            },
+            object_ty: Type::List(Box::new(Type::Str)),
+        };
+        let lowered = try_lower_simple_stmt(&stmt, false, &HashSet::new(), &HashSet::new())
+            .expect("string list subscript augassign lowered");
+        let RustStmt::Block(stmts) = &lowered[0] else {
+            panic!("expected block-lowered string list subscript augassign");
+        };
+        assert!(matches!(
+            &stmts[2],
+            RustStmt::If {
+                then_body,
+                ..
+            } if matches!(
+                then_body.first(),
+                Some(RustStmt::IfLet { then_body, .. }) if matches!(
+                    then_body.first(),
+                    Some(RustStmt::Expr(RustExpr::MethodCall { receiver, method, args }))
+                        if matches!(receiver.as_ref(), RustExpr::Ident(name) if name == "__elem")
+                            && method == "push_str"
+                            && matches!(
+                                args.first(),
+                                Some(RustExpr::MethodCall {
+                                    receiver: inner_receiver,
+                                    method: inner_method,
+                                    args: inner_args,
+                                }) if matches!(
+                                    inner_receiver.as_ref(),
+                                    RustExpr::Paren(expr)
+                                        if matches!(expr.as_ref(), RustExpr::Ident(name) if name == "c")
+                                ) && inner_method == "as_str" && inner_args.is_empty()
+                            )
                 )
             )
         ));

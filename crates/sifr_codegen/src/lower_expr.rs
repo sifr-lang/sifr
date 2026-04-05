@@ -249,6 +249,19 @@ pub fn try_lower_leaf_expr(expr: &HirExpr) -> Option<RustExpr> {
                 "or" => "||",
                 _ => return None,
             };
+            if op == "and" && values.len() == 2 {
+                if let Some(guarded_name) = detect_is_some_guard_name(&values[0]) {
+                    if let Some(lowered_guarded_compare) =
+                        try_lower_guarded_option_compare_expr(&values[1], &guarded_name)
+                    {
+                        return Some(RustExpr::BinOp {
+                            left: Box::new(try_lower_leaf_expr(&values[0])?),
+                            op: lowered_op.to_string(),
+                            right: Box::new(lowered_guarded_compare),
+                        });
+                    }
+                }
+            }
 
             let mut iter = values.iter();
             let mut lowered = try_lower_leaf_expr(iter.next()?)?;
@@ -822,23 +835,12 @@ fn try_lower_simple_method_call_expr(
     method: &str,
     args: &[HirExpr],
 ) -> Option<RustExpr> {
-    // Typed method calls are handled by the method emission path because they
-    // frequently need type-specific rewrites.
-    if object.ty() != &Type::Any || method == "len" {
-        return None;
-    }
-
-    let lowered_object = try_lower_leaf_or_name_expr(object)?;
-    let lowered_args = args
-        .iter()
-        .map(try_lower_leaf_or_name_expr)
-        .collect::<Option<Vec<_>>>()?;
-
-    Some(RustExpr::MethodCall {
-        receiver: Box::new(lowered_object),
-        method: method.to_string(),
-        args: lowered_args,
-    })
+    let _ = object;
+    let _ = method;
+    let _ = args;
+    // Method-call lowering is ownership- and type-convention-sensitive.
+    // Keep it on the structured emitter path where binding context is available.
+    None
 }
 
 fn try_lower_dict_get_key_expr(index: &HirExpr) -> Option<RustExpr> {
@@ -1352,6 +1354,45 @@ fn is_option_like_simple(ty: &Type) -> bool {
     }
 }
 
+fn detect_is_some_guard_name(expr: &HirExpr) -> Option<String> {
+    if let HirExpr::MethodCall {
+        object,
+        method,
+        args,
+        ..
+    } = expr
+    {
+        if method != "is_some" || !args.is_empty() {
+            return None;
+        }
+        let HirExpr::Name { name, .. } = object.as_ref() else {
+            return None;
+        };
+        return Some(name.clone());
+    }
+    let HirExpr::Compare {
+        left,
+        ops,
+        comparators,
+        ..
+    } = expr
+    else {
+        return None;
+    };
+    if ops.len() != 1
+        || comparators.len() != 1
+        || !matches!(ops[0].as_str(), "is not" | "!=")
+    {
+        return None;
+    }
+    let rhs = comparators.first()?;
+    match (left.as_ref(), rhs) {
+        (HirExpr::Name { name, .. }, HirExpr::NoneLiteral)
+        | (HirExpr::NoneLiteral, HirExpr::Name { name, .. }) => Some(name.clone()),
+        _ => None,
+    }
+}
+
 fn normalize_compare_op(op: &str) -> &str {
     match op {
         "is" => "==",
@@ -1487,8 +1528,8 @@ fn try_lower_option_none_compare_expr(
         return None;
     }
     let method = match op {
-        "is" => "is_none",
-        "is not" => "is_some",
+        "is" | "==" => "is_none",
+        "is not" | "!=" => "is_some",
         _ => return None,
     };
     Some(RustExpr::MethodCall {
@@ -1503,9 +1544,10 @@ fn try_lower_none_identity_compare_expr(
     op: &str,
     right: &HirExpr,
 ) -> Option<RustExpr> {
-    if !matches!(op, "is" | "is not") {
+    if !matches!(op, "is" | "is not" | "==" | "!=") {
         return None;
     }
+    let is_equal_op = matches!(op, "is" | "==");
     let other = if matches!(right, HirExpr::NoneLiteral) {
         left
     } else if matches!(left, HirExpr::NoneLiteral) {
@@ -1513,12 +1555,75 @@ fn try_lower_none_identity_compare_expr(
     } else {
         return None;
     };
-    if !(matches!(other, HirExpr::NoneLiteral)
-        || matches!(resolve_alias_type(other.ty()), Type::None))
+    if matches!(other, HirExpr::NoneLiteral) || matches!(resolve_alias_type(other.ty()), Type::None)
     {
+        return Some(RustExpr::Literal(RustLiteral::Bool(is_equal_op)));
+    }
+    if is_option_like_simple(other.ty()) {
+        return Some(RustExpr::MethodCall {
+            receiver: Box::new(try_lower_simple_compare_operand_expr(other)?),
+            method: if is_equal_op { "is_none" } else { "is_some" }.to_string(),
+            args: vec![],
+        });
+    }
+    if !matches!(
+        resolve_alias_type(other.ty()),
+        Type::Any | Type::Unknown | Type::TypeVar(_)
+    ) {
+        return Some(RustExpr::Literal(RustLiteral::Bool(!is_equal_op)));
+    }
+    None
+}
+
+fn try_lower_guarded_option_compare_expr(expr: &HirExpr, guarded_name: &str) -> Option<RustExpr> {
+    let HirExpr::Compare {
+        left,
+        ops,
+        comparators,
+        ..
+    } = expr
+    else {
+        return None;
+    };
+    if ops.len() != 1 || comparators.len() != 1 {
         return None;
     }
-    Some(RustExpr::Literal(RustLiteral::Bool(op == "is")))
+    let normalized_op = normalize_compare_op(&ops[0]);
+    if !matches!(normalized_op, "==" | "!=") {
+        return None;
+    }
+    let rhs_expr = comparators.first()?;
+    let (option_side, other_side, option_is_left) = match (left.as_ref(), rhs_expr) {
+        (HirExpr::Name { name, .. }, other) if name == guarded_name => (left.as_ref(), other, true),
+        (other, HirExpr::Name { name, .. }) if name == guarded_name => (rhs_expr, other, false),
+        _ => return None,
+    };
+    if matches!(other_side, HirExpr::NoneLiteral) {
+        return None;
+    }
+    let lowered_option = try_lower_simple_compare_operand_expr(option_side)?;
+    let mut lowered_other = try_lower_simple_compare_operand_expr(other_side)?;
+    if !crate::helpers::is_copy_type_for_codegen(other_side.ty()) {
+        lowered_other = RustExpr::MethodCall {
+            receiver: Box::new(RustExpr::Paren(Box::new(lowered_other))),
+            method: "clone".to_string(),
+            args: vec![],
+        };
+    }
+    let lowered_some = RustExpr::FnCall {
+        func: Box::new(RustExpr::Path(vec!["Some".to_string()])),
+        args: vec![lowered_other],
+    };
+    let (lowered_left, lowered_right) = if option_is_left {
+        (lowered_option, lowered_some)
+    } else {
+        (lowered_some, lowered_option)
+    };
+    Some(RustExpr::BinOp {
+        left: Box::new(lowered_left),
+        op: normalized_op.to_string(),
+        right: Box::new(lowered_right),
+    })
 }
 
 fn try_lower_simple_range_operand_expr(expr: &HirExpr) -> Option<RustExpr> {
@@ -3322,7 +3427,7 @@ mod tests {
     }
 
     #[test]
-    fn lowers_simple_method_call_on_any_with_leaf_args() {
+    fn does_not_lower_method_call_on_any_with_leaf_args() {
         let expr = HirExpr::MethodCall {
             object: Box::new(HirExpr::Name {
                 name: "obj".to_string(),
@@ -3332,18 +3437,7 @@ mod tests {
             args: vec![HirExpr::IntLiteral(2)],
             ty: Type::Any,
         };
-
-        let lowered = try_lower_leaf_expr(&expr).expect("method call lowered");
-        assert!(matches!(
-            lowered,
-            RustExpr::MethodCall {
-                receiver,
-                method,
-                args
-            } if matches!(receiver.as_ref(), RustExpr::Ident(name) if name == "obj")
-                && method == "work"
-                && args.len() == 1
-        ));
+        assert!(try_lower_leaf_expr(&expr).is_none());
     }
 
     #[test]

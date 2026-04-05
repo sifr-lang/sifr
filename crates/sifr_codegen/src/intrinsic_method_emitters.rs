@@ -619,6 +619,20 @@ fn registry_ensure_some_box_inner(expr: RustExpr) -> RustExpr {
 }
 
 impl RustEmitter {
+    pub(crate) fn effective_method_object_ty(&self, object: &HirExpr) -> Type {
+        if matches!(
+            crate::resolve_alias_type_for_plain_call(object.ty()),
+            Type::Any | Type::Unknown
+        ) {
+            if let HirExpr::Name { name, .. } = object {
+                if let Some(bound_ty) = self.local_binding_types.get(name) {
+                    return bound_ty.clone();
+                }
+            }
+        }
+        object.ty().clone()
+    }
+
     /// Check if a name is a stdlib constant.
     pub(crate) fn is_stdlib_constant(&self, name: &str) -> bool {
         matches!(name, "pi" | "e" | "tau" | "inf" | "nan")
@@ -627,12 +641,13 @@ impl RustEmitter {
 
     pub(crate) fn try_lower_registry_method_call_expr(
         &mut self,
-        object_ty: &Type,
         object: &HirExpr,
         method: &str,
         args: &[HirExpr],
         method_return_ty: &Type,
     ) -> Option<crate::RustExpr> {
+        let effective_object_ty = self.effective_method_object_ty(object);
+        let object_ty = crate::resolve_alias_type_for_plain_call(&effective_object_ty);
         if let Some(lowered) =
             self.try_lower_defaultdict_index_method_call_expr(object, method, args)
         {
@@ -1098,10 +1113,11 @@ impl RustEmitter {
                 {
                     self.pending_self_field_clone_suppression -= 1;
                 }
+                let effective_object_ty = self.effective_method_object_ty(object);
                 let mut arg_exprs = self.try_lower_registry_exprs_strict(args)?;
                 if let Type::Class {
                     fields, methods, ..
-                } = crate::resolve_alias_type_for_plain_call(object.ty())
+                } = crate::resolve_alias_type_for_plain_call(&effective_object_ty)
                 {
                     let is_callable_field = !methods.iter().any(|(name, _)| name == method)
                         && fields
@@ -1120,14 +1136,14 @@ impl RustEmitter {
                     }
                 }
                 if let Some(lowered) = methods::lower_method_with_context(
-                    object.ty(),
+                    &effective_object_ty,
                     method,
                     &object_expr,
                     &arg_exprs,
                     self.is_deque_data_field(object),
                 ) {
                     return Some(self.unwrap_compiler_verified_nonempty_pop_result(
-                        object.ty(),
+                        &effective_object_ty,
                         method,
                         args,
                         ty,
@@ -1135,7 +1151,7 @@ impl RustEmitter {
                     ));
                 }
                 if let Some(method_params) =
-                    self.resolve_registry_method_params(object.ty(), method)
+                    self.resolve_registry_method_params(&effective_object_ty, method)
                 {
                     for (idx, arg_expr) in arg_exprs.iter_mut().enumerate() {
                         if let (Some((param_ty, convention)), Some(arg)) =
@@ -1546,6 +1562,19 @@ impl RustEmitter {
                     "or" => "||",
                     _ => return None,
                 };
+                if op == "and" && values.len() == 2 {
+                    if let Some(guarded_name) = Self::registry_detect_is_some_guard_name(&values[0]) {
+                        if let Some(guarded_compare) =
+                            self.try_lower_registry_guarded_option_compare_expr(&values[1], &guarded_name)
+                        {
+                            return Some(crate::RustExpr::BinOp {
+                                left: Box::new(self.try_lower_registry_expr_strict(&values[0])?),
+                                op: lowered_op.to_string(),
+                                right: Box::new(guarded_compare),
+                            });
+                        }
+                    }
+                }
                 let mut iter = values.iter();
                 let mut lowered = self.try_lower_registry_expr_strict(iter.next()?)?;
                 for value in iter {
@@ -3733,6 +3762,103 @@ impl RustEmitter {
             lhs_expr = rhs_expr;
         }
         chained
+    }
+
+    fn registry_detect_is_some_guard_name(expr: &HirExpr) -> Option<String> {
+        if let HirExpr::MethodCall {
+            object,
+            method,
+            args,
+            ..
+        } = expr
+        {
+            if method != "is_some" || !args.is_empty() {
+                return None;
+            }
+            let HirExpr::Name { name, .. } = object.as_ref() else {
+                return None;
+            };
+            return Some(name.clone());
+        }
+        let HirExpr::Compare {
+            left,
+            ops,
+            comparators,
+            ..
+        } = expr
+        else {
+            return None;
+        };
+        if ops.len() != 1
+            || comparators.len() != 1
+            || !matches!(ops[0].as_str(), "is not" | "!=")
+        {
+            return None;
+        }
+        let rhs = comparators.first()?;
+        match (left.as_ref(), rhs) {
+            (HirExpr::Name { name, .. }, HirExpr::NoneLiteral)
+            | (HirExpr::NoneLiteral, HirExpr::Name { name, .. }) => Some(name.clone()),
+            _ => None,
+        }
+    }
+
+    fn try_lower_registry_guarded_option_compare_expr(
+        &mut self,
+        expr: &HirExpr,
+        guarded_name: &str,
+    ) -> Option<crate::RustExpr> {
+        let HirExpr::Compare {
+            left,
+            ops,
+            comparators,
+            ..
+        } = expr
+        else {
+            return None;
+        };
+        if ops.len() != 1 || comparators.len() != 1 {
+            return None;
+        }
+        let lowered_op = match ops[0].as_str() {
+            "==" | "!=" => ops[0].clone(),
+            "is" => "==".to_string(),
+            "is not" => "!=".to_string(),
+            _ => return None,
+        };
+        let rhs_expr = comparators.first()?;
+        let (option_side, other_side, option_is_left) = match (left.as_ref(), rhs_expr) {
+            (HirExpr::Name { name, .. }, other) if name == guarded_name => (left.as_ref(), other, true),
+            (other, HirExpr::Name { name, .. }) if name == guarded_name => (rhs_expr, other, false),
+            _ => return None,
+        };
+        if matches!(other_side, HirExpr::NoneLiteral) {
+            return None;
+        }
+
+        let lowered_option = self.try_lower_registry_expr_strict(option_side)?;
+        let mut lowered_other = self.try_lower_registry_expr_strict(other_side)?;
+        if !crate::helpers::is_copy_type_for_codegen(other_side.ty()) {
+            lowered_other = crate::RustExpr::MethodCall {
+                receiver: Box::new(crate::RustExpr::Paren(Box::new(lowered_other))),
+                method: "clone".to_string(),
+                args: vec![],
+            };
+        }
+        let lowered_some = crate::RustExpr::FnCall {
+            func: Box::new(crate::RustExpr::Path(vec!["Some".to_string()])),
+            args: vec![lowered_other],
+        };
+        let (left_expr, right_expr) = if option_is_left {
+            (lowered_option, lowered_some)
+        } else {
+            (lowered_some, lowered_option)
+        };
+        Some(crate::RustExpr::BinOp {
+            left: Box::new(left_expr),
+            op: lowered_op,
+            right: Box::new(right_expr),
+        })
     }
 
     fn try_eval_const_int_expr(expr: &HirExpr) -> Option<i64> {

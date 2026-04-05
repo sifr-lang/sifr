@@ -943,6 +943,68 @@ impl RustEmitter {
         let Some(lowered_value) = self.lower_stmt_expr_for_ir(value)? else {
             return Ok(None);
         };
+        if op == "+="
+            && matches!(
+                Self::resolve_alias_type_for_loop_iter(object_ty),
+                Type::List(elem_ty)
+                    if matches!(
+                        crate::resolve_alias_type_for_plain_call(elem_ty.as_ref()),
+                        Type::Str | Type::LiteralStr(_)
+                    )
+            )
+        {
+            let push_arg = if let HirExpr::StringLiteral(val) = value {
+                crate::RustExpr::Ident(format!("{val:?}"))
+            } else {
+                crate::RustExpr::MethodCall {
+                    receiver: Box::new(crate::RustExpr::Paren(Box::new(lowered_value))),
+                    method: "as_str".to_string(),
+                    args: vec![],
+                }
+            };
+            return Ok(Some(RustStmt::Block(vec![
+                RustStmt::Let {
+                    mutable: false,
+                    name: "__idx_raw".to_string(),
+                    ty: None,
+                    value: lowered_index,
+                },
+                RustStmt::Let {
+                    mutable: false,
+                    name: "__idx_norm".to_string(),
+                    ty: None,
+                    value: crate::build_normalized_list_index_i64_expr(
+                        crate::RustExpr::Ident(object.to_string()),
+                        "__idx_raw",
+                    ),
+                },
+                RustStmt::If {
+                    cond: crate::RustExpr::BinOp {
+                        left: Box::new(crate::RustExpr::Ident("__idx_norm".to_string())),
+                        op: ">=".to_string(),
+                        right: Box::new(crate::RustExpr::Literal(crate::RustLiteral::Int(0))),
+                    },
+                    then_body: vec![RustStmt::IfLet {
+                        pattern: "Some(__elem)".to_string(),
+                        expr: crate::RustExpr::MethodCall {
+                            receiver: Box::new(crate::RustExpr::Ident(object.to_string())),
+                            method: "get_mut".to_string(),
+                            args: vec![crate::RustExpr::Cast {
+                                expr: Box::new(crate::RustExpr::Ident("__idx_norm".to_string())),
+                                ty: crate::RustType::Named("usize".to_string()),
+                            }],
+                        },
+                        then_body: vec![RustStmt::Expr(crate::RustExpr::MethodCall {
+                            receiver: Box::new(crate::RustExpr::Ident("__elem".to_string())),
+                            method: "push_str".to_string(),
+                            args: vec![push_arg],
+                        })],
+                        else_body: None,
+                    }],
+                    else_body: None,
+                },
+            ])));
+        }
         let lowered_value = Self::clone_non_copy_name_expr_for_ir(value, lowered_value);
         let Some(lowered_body_stmt) =
             Self::build_subscript_augassign_elem_stmt_for_ir(op, lowered_value)
@@ -1603,13 +1665,8 @@ impl RustEmitter {
             if needs_field_clone_suppression {
                 self.pending_self_field_clone_suppression += 1;
             }
-            let lowered_registry = self.try_lower_registry_method_call_expr(
-                crate::resolve_alias_type_for_plain_call(object.ty()),
-                object,
-                method,
-                args,
-                expr.ty(),
-            );
+            let lowered_registry =
+                self.try_lower_registry_method_call_expr(object, method, args, expr.ty());
             if needs_field_clone_suppression
                 && self.pending_self_field_clone_suppression > suppression_prev
             {
@@ -1629,10 +1686,24 @@ impl RustEmitter {
                 };
                 lowered_args.push(lowered_arg);
             }
+            let effective_object_ty = self.effective_method_object_ty(object);
+            if method == "append"
+                && lowered_args.len() == 1
+                && matches!(
+                    crate::resolve_alias_type_for_plain_call(&effective_object_ty),
+                    Type::List(_)
+                )
+            {
+                return Ok(Some(crate::RustExpr::MethodCall {
+                    receiver: Box::new(lowered_object),
+                    method: "push".to_string(),
+                    args: lowered_args,
+                }));
+            }
             if method == "cloned"
                 && lowered_args.is_empty()
                 && matches!(
-                    crate::resolve_alias_type_for_plain_call(object.ty()),
+                    crate::resolve_alias_type_for_plain_call(&effective_object_ty),
                     Type::List(_)
                 )
             {
@@ -1660,7 +1731,9 @@ impl RustEmitter {
                     return Ok(Some(lowered_object));
                 }
             }
-            if let Some(method_params) = self.resolve_registry_method_params(object.ty(), method) {
+            if let Some(method_params) =
+                self.resolve_registry_method_params(&effective_object_ty, method)
+            {
                 for (idx, lowered_arg) in lowered_args.iter_mut().enumerate() {
                     if let (Some((param_ty, convention)), Some(arg)) =
                         (method_params.get(idx), args.get(idx))
@@ -4167,7 +4240,6 @@ impl RustEmitter {
                 }
 
                 let lowered = self.try_lower_registry_method_call_expr(
-                    crate::resolve_alias_type_for_plain_call(object.ty()),
                     object,
                     method,
                     args,
@@ -5081,11 +5153,16 @@ impl RustEmitter {
                 let key_needs_clone = matches!(key_ty.as_ref(), Type::Str | Type::TypeVar(_))
                     && matches!(index, HirExpr::Name { name, .. }
                             if self.borrowed_params.contains(name.as_str()) || self.mut_borrowed_params.contains(name.as_str()));
+                let key_is_non_copy_name = matches!(index, HirExpr::Name { .. })
+                    && matches!(
+                        crate::resolve_alias_type_for_plain_call(index.ty()),
+                        Type::Str | Type::LiteralStr(_)
+                    );
 
                 let Some(mut index_expr) = self.lower_rendered_expr_for_ir(index)? else {
                     return Ok(None);
                 };
-                if key_needs_clone {
+                if key_needs_clone || key_is_non_copy_name {
                     index_expr = crate::RustExpr::Clone(Box::new(index_expr));
                 }
                 let Some(value_expr) = self.lower_rendered_expr_for_ir(value)? else {
@@ -6419,6 +6496,27 @@ impl RustEmitter {
             let Some(lowered_then_body) = self.try_lower_stmt_block_for_ir(then_body)? else {
                 return Ok(None);
             };
+            if let Some(option_vars) = crate::helpers::detect_or_is_none_vars(condition) {
+                let pattern = format!(
+                    "({})",
+                    option_vars
+                        .iter()
+                        .map(|option_var| format!("Some({option_var})"))
+                        .collect::<Vec<_>>()
+                        .join(", ")
+                );
+                let value = crate::RustExpr::Tuple(
+                    option_vars
+                        .iter()
+                        .map(|option_var| self.option_binding_value_expr_for_ir(option_var))
+                        .collect(),
+                );
+                return Ok(Some(RustStmt::LetElse {
+                    pattern,
+                    value,
+                    else_body: lowered_then_body,
+                }));
+            }
             if let Some(option_var) = crate::helpers::detect_is_none_var(condition)
                 .or_else(|| crate::helpers::detect_not_option_truthiness(condition))
             {
@@ -7607,11 +7705,16 @@ impl RustEmitter {
         let key_needs_clone = matches!(key_ty.as_ref(), Type::Str | Type::TypeVar(_))
             && matches!(index, HirExpr::Name { name, .. }
                 if self.borrowed_params.contains(name.as_str()) || self.mut_borrowed_params.contains(name.as_str()));
+        let key_is_non_copy_name = matches!(index, HirExpr::Name { .. })
+            && matches!(
+                crate::resolve_alias_type_for_plain_call(index.ty()),
+                Type::Str | Type::LiteralStr(_)
+            );
 
         let Some(mut index_expr) = self.lower_stmt_expr_for_ir(index)? else {
             return Ok(false);
         };
-        if key_needs_clone {
+        if key_needs_clone || key_is_non_copy_name {
             index_expr = crate::RustExpr::Clone(Box::new(index_expr));
         }
         let Some(value_expr) = self.lower_stmt_expr_for_ir(value)? else {
