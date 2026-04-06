@@ -9,6 +9,8 @@
   - `RF-2-loop_local_scope_resolution_bug`
 - Adaptation lane closed in this batch:
   - `RF-1-duplicate_solution_definitions` (fixture canonicalization)
+  - `DS-4-unpack_target_shape_restriction`
+  - `DS-5-chained_assignment_restriction`
 - Compiler RF-3 lane progress in this batch:
   - return-completeness primary presence reduced from `10/11` to `4/11` by removing missing-return cascades caused by failed return-expression lowering
 - Focus4 subset rerun now reports `CHECK_ERROR=87, PASS=2, RUN_ERROR=1`; remaining failures are dominated by unresolved compiler/adaptation workstreams (`AU-*`, `RF-3`, `DS-1/2/4/5`, and multi-workstream convergence cases).

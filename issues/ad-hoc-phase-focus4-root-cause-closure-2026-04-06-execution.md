@@ -32,8 +32,8 @@ Status legend:
 - [x] compiler lane: `DS-3-augassign_subscript_lowering_gap`
 - [ ] mixed lane: `DS-1-list_pair_destructure_requires_tuple`
 - [ ] mixed lane: `DS-2-list_unpack_requires_tuple`
-- [ ] adaptation lane: `DS-4-unpack_target_shape_restriction`
-- [ ] adaptation lane: `DS-5-chained_assignment_restriction`
+- [x] adaptation lane: `DS-4-unpack_target_shape_restriction`
+- [x] adaptation lane: `DS-5-chained_assignment_restriction`
 
 ## Workstream E: Fixture canonicalization
 
@@ -189,3 +189,27 @@ outside focus-4 scope. Exclude them from focus-4 pass-rate calculations.
     - `reviews/focus4-root-cause-closure-review-pass8-wave-b2.md`
   - PR:
     - `https://github.com/yaseralnajjar/sifr/pull/1582`
+
+- Wave D2/E2 (adaptation): policy canonicalization for DS-4/DS-5 fixtures
+  - Canonicalized tuple-swap/chained-assignment forms into simple assignment targets:
+    - `audits/leetcode/0280_wiggle_sort.sifr`
+    - `audits/leetcode/0283_move_zeroes.sifr`
+    - `audits/leetcode/0344_reverse_string.sifr`
+    - `audits/leetcode/0622_design_circular_queue.sifr`
+  - Focus4 subset artifact:
+    - `/tmp/phase_apr06_focus4_wave9_ds45_canonicalization.json`
+  - Primary diagnostic deltas:
+    - `DS-4-unpack_target_shape_restriction`: `3/3 -> 0/3`
+    - `DS-5-chained_assignment_restriction`: `1/1 -> 0/1`
+  - Status-count delta (wave8 -> wave9):
+    - `CHECK_ERROR: 87 -> 84`
+    - `PASS: 2 -> 2`
+    - `NO_ORACLE: 0 -> 2`
+    - `RUN_ERROR: 1 -> 2`
+  - Validation:
+    - targeted `check` confirms DS-4/DS-5 primary diagnostics removed for all four fixtures
+    - `scripts/run_all_tests.sh --profile quick` passed
+  - Reviewer logs:
+    - `reviews/focus4-root-cause-closure-review-pass9-wave-de2.md`
+  - PR:
+    - pending
