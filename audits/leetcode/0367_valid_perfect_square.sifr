@@ -6,6 +6,7 @@ def isPerfectSquare(num: int) -> bool:
             return True
         if i* i > num:
             return False
+    return False
 
 
 
@@ -25,5 +26,4 @@ def isPerfectSquare_2(num: int) -> bool:
 def main():
     assert str(isPerfectSquare(16)) == 'true'
     assert str(isPerfectSquare(14)) == 'false'
-
 

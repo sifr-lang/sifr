@@ -1,9 +1,9 @@
 # LeetCode 1137: N Th Tribonacci Number
 
-Memo = {}
+Memo: dict[int, int] = {}
 
 
-def tribonacci(n: int):
+def tribonacci(n: int) -> int:
     if n in Memo:
         return Memo[n]
     if n == 0:
@@ -20,5 +20,4 @@ def tribonacci(n: int):
 def main():
     assert str(tribonacci(4)) == '4'
     assert str(tribonacci(25)) == '1389537'
-
 

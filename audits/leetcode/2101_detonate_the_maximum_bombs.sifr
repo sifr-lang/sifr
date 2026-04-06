@@ -2,26 +2,30 @@
 
 def maximumDetonation(bombs: list[list[int]]) -> int:
     n = len(bombs)
-    graph = [[] for _ in range(n)]
+    graph: list[list[int]] = [[] for _ in range(n)]
 
     for i in range(n):
         for j in range(n):
             if i != j:
-                x1, y1, r1 = bombs[i]
-                x2, y2, _ = bombs[j]
+                x1 = bombs[i][0]
+                y1 = bombs[i][1]
+                r1 = bombs[i][2]
+                x2 = bombs[j][0]
+                y2 = bombs[j][1]
+                dx = x1 - x2
+                dy = y1 - y2
+                dstSq = dx * dx + dy * dy
 
-                dst = sqrt((x1 - x2) ** 2 + (y1 - y2) ** 2)
-
-                if dst <= r1:
+                if dstSq <= r1 * r1:
                     graph[i].append(j)
 
     def dfs(node: int, vis: list[bool]) -> int:
         vis[node] = True
         count = 1
 
-        for nbh in graph[node]:
-            if not vis[nbh]:
-                count += dfs(nbh, vis)
+        for neighbor in graph[node]:
+            if not vis[neighbor]:
+                count += dfs(neighbor, vis)
                 
         return count
 

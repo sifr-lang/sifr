@@ -1,9 +1,9 @@
 # LeetCode 463: Island Perimeter
 
 def islandPerimeter(grid: list[list[int]]) -> int:
-    visit = set()
+    visit: set[tuple[int, int]] = set()
 
-    def dfs(i, j):
+    def dfs(i: int, j: int) -> int:
         if i >= len(grid) or j >= len(grid[0]) or i < 0 or j < 0 or grid[i][j] == 0:
             return 1
         if (i, j) in visit:
@@ -20,9 +20,9 @@ def islandPerimeter(grid: list[list[int]]) -> int:
         for j in range(len(grid[0])):
             if grid[i][j]:
                 return dfs(i, j)
+    return 0
 
 def main():
     assert islandPerimeter([[0, 1, 0, 0], [1, 1, 1, 0], [0, 1, 0, 0], [1, 1, 0, 0]]) == 16
     assert islandPerimeter([[1]]) == 4
     assert islandPerimeter([[1, 0]]) == 4
-

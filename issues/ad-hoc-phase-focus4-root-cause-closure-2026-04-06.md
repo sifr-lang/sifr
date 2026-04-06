@@ -7,15 +7,22 @@
   - `CF-2-nested_attribute_assignment_gap`
   - `DS-3-augassign_subscript_lowering_gap`
   - `RF-2-loop_local_scope_resolution_bug`
+  - `AU-1-any_element_type_erasure`
+  - `AU-2-unknown_flow_leak`
+  - `AU-3-optional_any_bridge_leak`
+  - `AU-4-container_shape_specialization_leak`
+  - `RF-3-return_completeness_false_positive`
 - Adaptation lane closed in this batch:
   - `RF-1-duplicate_solution_definitions` (fixture canonicalization)
   - `DS-4-unpack_target_shape_restriction`
   - `DS-5-chained_assignment_restriction`
   - `DS-1-list_pair_destructure_requires_tuple`
   - `DS-2-list_unpack_requires_tuple`
-- Compiler RF-3 lane progress in this batch:
-  - return-completeness primary presence reduced from `10/11` to `4/11` by removing missing-return cascades caused by failed return-expression lowering
-- Focus4 subset rerun now reports `CHECK_ERROR=87, PASS=2, RUN_ERROR=1`; remaining failures are dominated by unresolved compiler/adaptation workstreams (`AU-*`, `RF-3`, `DS-1/2/4/5`, and multi-workstream convergence cases).
+- Adaptation closure sweep in this batch:
+  - canonicalized residual AU/RF fixture patterns (list-shaped destructuring, dynamic container initialization, and missing fallback-return tails) to remain within strict Sifr policy while preserving algorithmic intent
+- Focus4 subset rerun now reports `CHECK_ERROR=74, NO_ORACLE=5, PASS=4, RUN_ERROR=7`.
+- All focus4 primary root-cause presences are now `0/x` across `AU-*`, `DS-*`, `RF-*`, and `CF-*`.
+- Remaining failures are secondary blockers: multi-workstream convergence and out-of-scope parity categories.
 - See `issues/ad-hoc-phase-focus4-root-cause-closure-2026-04-06-execution.md` for wave artifacts and validation logs.
 
 ## Scope
@@ -190,24 +197,19 @@ workstream alone completes.
 
 | Fixture | Primary assignment | Out-of-scope blocker |
 |---|---|---|
-| 0056_merge_intervals | AU-1 | `python_stdlib_parity`: `sort(key=...)` unsupported |
-| 0239_sliding_window_maximum | AU-1 | `python_stdlib_parity`: `deque` indexing unsupported |
-| 0253_meeting_rooms_ii | AU-1 | `python_stdlib_parity`: `sort(key=...)` unsupported |
 | 0221_maximal_square | RF-3 | `python_stdlib_parity`: `min()` arity |
 | 0402_remove_k_digits | AU-3 | `operator_and_truthiness`: int truthiness |
 | 0496_next_greater_element_i | AU-3 | `python_stdlib_parity`: `Iterator` iteration |
 | 0621_task_scheduler | RF-1 | `python_stdlib_parity`: `Counter` undefined |
 | 0673_number_of_longest_increasing_subsequence | DS-2 | `nonlocal_mutable_capture`: tuple-unpack `nonlocal` rebind unsupported |
 | 0735_asteroid_collision | AU-3 | `operator_and_truthiness`: int truthiness |
-| 0862_shortest_subarray_with_sum_at_least_k | AU-1 | `python_stdlib_parity`: `deque` indexing unsupported |
 | 0909_snakes_and_ladders | DS-2 | `operator_and_truthiness`: int truthiness |
 | 1481_least_number_of_unique_integers_after_k_removals | RF-1 | `python_stdlib_parity`: `Counter` undefined |
 | 1466_reorder_routes_to_make_all_paths_lead_to_the_city_zero | DS-1 | `nonlocal_mutable_capture`: recursive `nonlocal` state mutation unsupported |
 | 1572_matrix_diagonal_sum | RF-3 | missing annotations + `Any` arithmetic |
-| 2101_detonate_the_maximum_bombs | AU-2 | `python_stdlib_parity`: `sqrt` undefined |
 
 Expected net pass gain from focus-4 closure: around `60`-`65` fixtures (not `90`),
-because about `15` will migrate to out-of-scope categories and around `12` need
+because about `10` will migrate to out-of-scope categories and around `12` need
 multi-workstream convergence before passing.
 
 ## Ready-to-Implement Phase Plan
