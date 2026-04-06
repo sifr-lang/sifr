@@ -8,21 +8,7 @@ def maximumOddBinaryNumber(s: str) -> str:
     
     return (count - 1) * "1" + (len(s) - count) * "0" + "1"
 
-# Traverse and swap indices
-
-def maximumOddBinaryNumber(s: str) -> str:
-    s = [c for c in s]
-    left = 0
-
-    for i in range(len(s)):
-        if s[i] == "1":
-            s[i], s[left] = s[left], s[i]
-            left += 1
-    s[left - 1], s[len(s) - 1] = s[len(s) - 1], s[left - 1]
-    return "".join(s)
-
 def main():
     assert str(maximumOddBinaryNumber("010")) == '001'
     assert str(maximumOddBinaryNumber("0101")) == '1001'
-
 
