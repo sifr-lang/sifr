@@ -1,38 +1,6 @@
 # LeetCode 658: Find K Closest Elements
 
 def findClosestElements(arr: list[int], k: int, x: int) -> list[int]:
-    l, r = 0, len(arr) - 1
-
-    # Find index of x or the closest val to x
-    val, idx = arr[0], 0
-    while l <= r:
-        m = (l + r) // 2
-        curDiff, resDiff = abs(arr[m] - x), abs(val - x)
-        if curDiff < resDiff or (curDiff == resDiff and arr[m] < val):
-            val, idx = arr[m], m
-
-        if arr[m] < x:
-            l = m + 1
-        elif arr[m] > x:
-            r = m - 1
-        else:
-            break
-
-    l = r = idx
-    for i in range(k - 1):
-        if l == 0:
-            r += 1
-        elif r == len(arr) - 1 or x - arr[l - 1] <= arr[r + 1] - x:
-            l -= 1
-        else:
-            r += 1
-    return arr[l : r + 1]
-
-
-# Log(n-k) + k
-# Elegant but very difficult to understand
-
-def findClosestElements(arr: list[int], k: int, x: int) -> list[int]:
     l, r = 0, len(arr) - k
 
     while l < r:
@@ -45,5 +13,4 @@ def findClosestElements(arr: list[int], k: int, x: int) -> list[int]:
 
 def main():
     assert str(findClosestElements([1,2,3,4,5], 4, 3)) == '[1, 2, 3, 4]'
-
 

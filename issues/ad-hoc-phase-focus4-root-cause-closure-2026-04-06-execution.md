@@ -37,7 +37,7 @@ Status legend:
 
 ## Workstream E: Fixture canonicalization
 
-- [ ] `RF-1-duplicate_solution_definitions`
+- [x] `RF-1-duplicate_solution_definitions`
 - [ ] policy-restricted destructuring/chained-assignment canonicalization
 
 ## Multi-Workstream Convergence Tracking
@@ -114,3 +114,29 @@ outside focus-4 scope. Exclude them from focus-4 pass-rate calculations.
     - `reviews/focus4-root-cause-closure-review-pass5-wave-cd.md`
   - PR:
     - `https://github.com/yaseralnajjar/sifr/pull/1577` (merged)
+
+- Wave E1 (adaptation): duplicate-solution canonicalization for RF-1 fixtures
+  - Canonicalized to one top-level solution per module:
+    - `audits/leetcode/0049_group_anagrams.sifr`
+    - `audits/leetcode/0231_power_of_two.sifr`
+    - `audits/leetcode/0338_counting_bits.sifr`
+    - `audits/leetcode/0621_task_scheduler.sifr`
+    - `audits/leetcode/0658_find_k_closest_elements.sifr`
+    - `audits/leetcode/1481_least_number_of_unique_integers_after_k_removals.sifr`
+    - `audits/leetcode/2864_maximum_odd_binary_number.sifr`
+  - Focus4 subset artifact:
+    - `/tmp/phase_apr06_focus4_wave6_rf1_canonicalization.json`
+  - Primary diagnostic deltas:
+    - RF-1 fixtures with `duplicate function definition in module`: `7 -> 0`
+    - All-focus4 duplicate-definition occurrences: `8 -> 1` (residual: `0516_longest_palindromic_subsequence`, non-RF-1 primary)
+  - Status-count delta (wave5 -> wave6):
+    - `CHECK_ERROR: 89 -> 87`
+    - `PASS: 0 -> 2`
+    - `RUN_ERROR: 1 -> 1`
+  - Validation:
+    - targeted `sifr check` over all RF-1 fixtures passed primary-diagnostic gate
+    - `scripts/run_all_tests.sh --profile quick` passed
+  - Reviewer logs:
+    - `reviews/focus4-root-cause-closure-review-pass6-wave-e1.md`
+  - PR:
+    - `https://github.com/yaseralnajjar/sifr/pull/1580`
