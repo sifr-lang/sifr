@@ -2,7 +2,9 @@
 
 def countComponents(n: int, edges: list[list[int]]) -> int:
     dsu = UnionFind()
-    for a, b in edges:
+    for edge in edges:
+        a = edge[0]
+        b = edge[1]
         dsu.union(a, b)
     return len(set(dsu.findParent(x) for x in range(n)))
 
@@ -13,7 +15,9 @@ class UnionFind:
     def findParent(self, x):
         y = self.f.get(x, x)
         if x != y:
-            y = self.f[x] = self.findParent(y)
+            parent = self.findParent(y)
+            self.f[x] = parent
+            y = parent
         return y
     def union(self, x, y):
         self.f[self.findParent(x)] = self.findParent(y)
@@ -21,4 +25,3 @@ class UnionFind:
 def main():
     assert countComponents(5, [[0, 1], [1, 2], [3, 4]]) == 2
     assert countComponents(5, [[0, 1], [1, 2], [2, 3], [3, 4]]) == 1
-

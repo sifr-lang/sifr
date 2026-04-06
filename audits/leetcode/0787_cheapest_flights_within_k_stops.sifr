@@ -9,7 +9,10 @@ def findCheapestPrice(
     for i in range(k + 1):
         tmpPrices = prices.copy()
 
-        for s, d, p in flights:  # s=source, d=dest, p=price
+        for flight in flights:  # source, dest, price
+            s = flight[0]
+            d = flight[1]
+            p = flight[2]
             if prices[s] == float("inf"):
                 continue
             if prices[s] + p < tmpPrices[d]:

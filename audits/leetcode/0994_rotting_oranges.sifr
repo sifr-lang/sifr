@@ -12,13 +12,15 @@ def orangesRotting(grid: list[list[int]]) -> int:
             if grid[r][c] == 2:
                 q.append((r, c))
 
-    directions = [[0, 1], [0, -1], [1, 0], [-1, 0]]
+    directions = [(0, 1), (0, -1), (1, 0), (-1, 0)]
     while fresh > 0 and q:
         length = len(q)
         for i in range(length):
             r, c = q.popleft()
 
-            for dr, dc in directions:
+            for direction in directions:
+                dr = direction[0]
+                dc = direction[1]
                 row, col = r + dr, c + dc
                 # if in bounds and nonrotten, make rotten
                 # and add to q
@@ -37,4 +39,3 @@ def main():
     assert orangesRotting([[2, 1, 1], [1, 1, 0], [0, 1, 1]]) == 4
     assert orangesRotting([[2, 1, 1], [0, 1, 1], [1, 0, 1]]) == -1
     assert orangesRotting([[0, 2]]) == 0
-

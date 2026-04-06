@@ -17,7 +17,9 @@ def intToRoman(num: int) -> str:
         ["M", 1000],
     ]
     res = ""
-    for sym, val in reversed(symList):
+    for pair in reversed(symList):
+        sym = pair[0]
+        val = pair[1]
         if num // val:
             count = num // val
             res += sym * count
@@ -28,5 +30,4 @@ def main():
     assert str(intToRoman(3749)) == 'MMMDCCXLIX'
     assert str(intToRoman(58)) == 'LVIII'
     assert str(intToRoman(1994)) == 'MCMXCIV'
-
 

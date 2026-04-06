@@ -1,12 +1,18 @@
 # LeetCode 1466: Reorder Routes To Make All Paths Lead To The City Zero
 
 def minReorder(n: int, connections: list[list[int]]) -> int:
-    edges = {(a,b) for a, b in connections}
+    edges = set()
+    for edge in connections:
+        a = edge[0]
+        b = edge[1]
+        edges.add((a, b))
     neighbors = defaultdict(list)
     visit = set()
     changes = 0
 
-    for a, b in connections:
+    for edge in connections:
+        a = edge[0]
+        b = edge[1]
         neighbors[a].append(b)
         neighbors[b].append(a)
     
@@ -29,4 +35,3 @@ def main():
     assert minReorder(6, [[0, 1], [1, 3], [2, 3], [4, 0], [4, 5]]) == 3
     assert minReorder(5, [[1, 0], [1, 2], [3, 2], [3, 4]]) == 2
     assert minReorder(3, [[1, 0], [2, 0]]) == 0
-
