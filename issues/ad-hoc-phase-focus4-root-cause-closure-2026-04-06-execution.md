@@ -355,4 +355,4 @@ outside focus-4 scope. Exclude them from focus-4 pass-rate calculations.
   - Reviewer logs:
     - `reviews/focus4-root-cause-closure-review-pass13-wave-g1.md`
   - PR:
-    - `https://github.com/yaseralnajjar/sifr/pull/1588`
+    - `https://github.com/yaseralnajjar/sifr/pull/1588` (merged)
