@@ -1,17 +1,26 @@
 # LeetCode 253: Meeting Rooms Ii
 
+def _nz_int(value: int | None) -> int:
+    if value is None:
+        return 0
+    return value
+
 def minMeetingRooms(intervals: list[list[int]]) -> int:
         time: list[tuple[int, int]] = []
         for interval in intervals:
-            start = interval[0]
-            end = interval[1]
+            if interval is None:
+                continue
+            start = _nz_int(interval[0])
+            end = _nz_int(interval[1])
             time.append((start, 1))
             time.append((end, -1))
         time.sort()
         count = 0
         max_count = 0
         for event in time:
-            count += event[1]
+            if event is None:
+                continue
+            count += _nz_int(event[1])
             max_count = max(max_count, count)
         return max_count
 

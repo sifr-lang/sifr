@@ -1,10 +1,17 @@
 # LeetCode 280: Wiggle Sort
 
+def _nz_int(value: int | None) -> int:
+    if value is None:
+        return 0
+    return value
+
 def wiggleSort(mut nums: list[int]) -> None:
     for i in range(1, len(nums)):
-        if (i % 2 == 1 and nums[i] < nums[i - 1]) or (i % 2 == 0 and nums[i] > nums[i - 1]):
-            tmp = nums[i]
-            nums[i] = nums[i - 1]
+        left = _nz_int(nums[i - 1])
+        right = _nz_int(nums[i])
+        if (i % 2 == 1 and right < left) or (i % 2 == 0 and right > left):
+            tmp = right
+            nums[i] = left
             nums[i - 1] = tmp
 
 def main():

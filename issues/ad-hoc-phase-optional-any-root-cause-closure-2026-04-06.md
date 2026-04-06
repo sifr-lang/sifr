@@ -651,3 +651,36 @@ Residual root-cause shape after wave20 (CHECK_ERROR only):
 Closure note:
 
 - `ON-2` is fully cleared from `CHECK_ERROR` in the focused manifest.
+
+### Wave21: ON-3 closure completion (`0253`, `0280`, `0456`) (fixture adaptation)
+
+Artifacts:
+
+- `/tmp/phase_apr06_on_au_wave21_on3_full_closure_coldcache.json`
+
+Key changes:
+
+- Closed all ON-3 fixtures with explicit element-domain canonicalization:
+  - `0253_meeting_rooms_ii`
+  - `0280_wiggle_sort`
+  - `0456_132_pattern`
+- Replaced optional list/tuple element propagation with explicit integer extraction at append/assignment boundaries.
+- `0456` additionally moved to typed tuple stack with explicit guarded element reads.
+
+Focused result summary (cold-cache):
+
+- `CHECK_ERROR=21`, `PASS=14`, `NO_ORACLE=23`
+- Changed from wave20:
+  - `0253`: `CHECK_ERROR -> NO_ORACLE`
+  - `0280`: `CHECK_ERROR -> NO_ORACLE`
+  - `0456`: `CHECK_ERROR -> PASS`
+
+Residual root-cause shape after wave21 (CHECK_ERROR only):
+
+- `AU-2`: `12`
+- `AU-3`: `5`
+- `AU-1`: `4`
+
+Closure note:
+
+- `ON-3` is fully cleared from `CHECK_ERROR` in the focused manifest.

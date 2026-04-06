@@ -1,16 +1,36 @@
 # LeetCode 456: 132 Pattern
 
+def _nz_int(value: int | None) -> int:
+    if value is None:
+        return 0
+    return value
+
 def find132pattern(nums: list[int]) -> bool:
-    stack = [] # pair [num, curLeftMin], mono-decreasing stack
-    curMin = nums[0]
+    if len(nums) == 0:
+        return False
+    stack: list[tuple[int, int]] = [] # pair (num, curLeftMin), mono-decreasing stack
+    curMin = _nz_int(nums[0])
 
-    for n in nums:
-        while stack and n >= stack[-1][0]:
-            stack.pop()
-        if stack and n < stack[-1][0] and n > stack[-1][1]:
-            return True
+    for idx in range(len(nums)):
+        n = _nz_int(nums[idx])
+        while len(stack) > 0:
+            top = stack[-1]
+            if top is None:
+                stack.pop()
+                continue
+            if n >= _nz_int(top[0]):
+                stack.pop()
+            else:
+                break
+        if len(stack) > 0:
+            top = stack[-1]
+            if top is not None:
+                top_num = _nz_int(top[0])
+                top_min = _nz_int(top[1])
+                if n < top_num and n > top_min:
+                    return True
 
-        stack.append([n, curMin]) 
+        stack.append((n, curMin))
         curMin = min(n, curMin)
 
     return False
@@ -18,5 +38,4 @@ def find132pattern(nums: list[int]) -> bool:
 def main():
     assert str(find132pattern([1,2,3,4])) == 'false'
     assert str(find132pattern([3,1,4,2])) == 'true'
-
 
