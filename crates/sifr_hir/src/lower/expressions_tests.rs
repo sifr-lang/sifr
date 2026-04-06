@@ -409,6 +409,23 @@ fn test_non_none_return_annotation_requires_exhaustive_returns() {
 }
 
 #[test]
+fn test_invalid_return_expression_does_not_emit_missing_return_cascade() {
+    let result = lower_source("def main(xs: list[int]) -> int:\n    return xs[0] + xs[0]\n");
+    assert!(result.is_err());
+    let errors = result.unwrap_err();
+    assert!(errors
+        .iter()
+        .any(|e| e.message.contains("unsupported operand type(s) for +")));
+    assert!(
+        !errors.iter().any(|e| {
+            e.message
+                .contains("must return a value of type 'int' on all control-flow paths")
+        }),
+        "invalid return expressions should not trigger a return-completeness cascade: {errors:?}"
+    );
+}
+
+#[test]
 fn test_duplicate_module_function_definition_reports_error() {
     let result = lower_source(
         "def same() -> bool:\n    return True\n\ndef same() -> bool:\n    return False\n",

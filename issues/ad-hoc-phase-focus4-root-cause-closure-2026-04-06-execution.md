@@ -168,3 +168,24 @@ outside focus-4 scope. Exclude them from focus-4 pass-rate calculations.
     - `reviews/focus4-root-cause-closure-review-pass7-wave-b1.md`
   - PR:
     - `https://github.com/yaseralnajjar/sifr/pull/1581`
+
+- Wave B2 (compiler): suppress return-completeness cascades from failed return expression lowering
+  - Compiler changes:
+    - preserve `return` control-flow shape when return-value lowering fails so flow analysis does not emit synthetic missing-return diagnostics
+  - Focus4 subset artifact:
+    - `/tmp/phase_apr06_focus4_wave8_rf3_return_expr_cascade.json`
+  - Primary diagnostic deltas:
+    - `RF-3-return_completeness_false_positive`: `10/11 -> 4/11` primary presence
+    - cleared RF-3 primaries: `0118`, `0153`, `0162`, `0221`, `0918`, `1572`
+    - residual RF-3 primaries: `0167`, `0347`, `0367`, `0463`
+  - Status-count delta (wave7 -> wave8):
+    - `CHECK_ERROR: 87 -> 87`
+    - `PASS: 2 -> 2`
+    - `RUN_ERROR: 1 -> 1`
+  - Validation:
+    - `cargo test -p sifr_hir invalid_return_expression_does_not_emit_missing_return_cascade -- --nocapture`
+    - `scripts/run_all_tests.sh --profile quick` passed
+  - Reviewer logs:
+    - `reviews/focus4-root-cause-closure-review-pass8-wave-b2.md`
+  - PR:
+    - `https://github.com/yaseralnajjar/sifr/pull/1582`

@@ -1546,7 +1546,15 @@ pub(super) fn lower_return(
     ctx: &mut LowerCtx,
 ) -> Option<HirStmt> {
     let value = if let Some(val) = &ret.value {
-        let expr = lower_expr(val, ctx)?;
+        let expr = if let Some(expr) = lower_expr(val, ctx) {
+            expr
+        } else {
+            // Keep control-flow shape intact after expression diagnostics so
+            // return-completeness analysis does not emit a cascade error.
+            return Some(HirStmt::Return {
+                value: Some(HirExpr::NoneLiteral),
+            });
+        };
         let expr_ty = expr.ty().clone();
 
         // Escape analysis: returning a borrowed parameter is a compile error.
