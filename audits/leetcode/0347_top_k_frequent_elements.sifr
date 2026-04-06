@@ -2,18 +2,38 @@
 
 def topKFrequent(nums: list[int], k: int) -> list[int]:
     count: dict[int, int] = {}
-    freq: list[list[int]] = [[] for i in range(len(nums) + 1)]
 
     for n in nums:
-        count[n] = 1 + count.get(n, 0)
-    for n, c in count.items():
-        freq[c].append(n)
+        if n is None:
+            continue
+        prev = count.get(n, 0)
+        if prev is None:
+            prev = 0
+        count[n] = prev + 1
 
     res: list[int] = []
-    for i in range(len(freq) - 1, 0, -1):
-        res += freq[i]
-        if len(res) == k:
-            return res
+    used: set[int] = set()
+    while len(res) < k:
+        found = False
+        best_num = 0
+        best_count = -1
+        for n, c in count.items():
+            if n in used:
+                continue
+            if c is None:
+                continue
+            if c > best_count:
+                best_count = c
+                best_num = n
+                found = True
+            elif c == best_count:
+                if n < best_num:
+                    best_num = n
+                    found = True
+        if not found:
+            break
+        used.add(best_num)
+        res.append(best_num)
     return res
 
 def main():

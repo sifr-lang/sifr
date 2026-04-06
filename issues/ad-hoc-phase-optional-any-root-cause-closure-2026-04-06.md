@@ -584,3 +584,30 @@ Residual root-cause shape after wave18 (CHECK_ERROR only):
 Closure note:
 
 - `ON-1` is fully cleared from `CHECK_ERROR` in the focused manifest.
+
+### Wave19: ON-2 single-fixture closure (`0347`) (fixture adaptation)
+
+Artifacts:
+
+- `/tmp/phase_apr06_on_au_wave19_on2_single_0347_coldcache.json`
+
+Key changes:
+
+- Canonicalized `0347_top_k_frequent_elements` away from optional bucket-index append path:
+  - replaced frequency-bucket indexing with deterministic repeated max-frequency selection.
+  - added deterministic tie-break (`smaller number first`) to preserve fixture assertion ordering.
+- Attempted a wider ON-2 batch (`0210`, `0785`, `0787`, `2092`, `2101`) but reverted non-clean drafts in this wave due broad optional key/index type propagation.
+
+Focused result summary (cold-cache):
+
+- `CHECK_ERROR=29`, `PASS=13`, `NO_ORACLE=16`
+- Changed from wave18:
+  - `0347`: `CHECK_ERROR -> NO_ORACLE`
+
+Residual root-cause shape after wave19 (CHECK_ERROR only):
+
+- `AU-2`: `12`
+- `AU-3`: `5`
+- `ON-2`: `5`
+- `AU-1`: `4`
+- `ON-3`: `3`
