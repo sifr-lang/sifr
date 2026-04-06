@@ -27,6 +27,11 @@
   - `verification/leetcode/full_corpus_current_results_20260406_live_rerun3.json`
   - `verification/leetcode/full_corpus_failure_taxonomy_20260406_live_rerun3.json`
   - `verification/leetcode/full_corpus_failure_taxonomy_20260406_live_rerun3_delta_vs_rerun2.md`
+- Multi-workstream convergence closure completed in rerun4:
+  - all 12 tracked convergence fixtures are now non-failing (`NO_ORACLE`)
+  - `verification/leetcode/full_corpus_current_results_20260406_live_rerun4.json`
+  - `verification/leetcode/full_corpus_failure_taxonomy_20260406_live_rerun4.json`
+  - `verification/leetcode/full_corpus_failure_taxonomy_20260406_live_rerun4_delta_vs_rerun3.md`
 - See `issues/ad-hoc-phase-focus4-root-cause-closure-2026-04-06-execution.md` for wave artifacts and validation logs.
 
 ## Scope

@@ -1,34 +1,92 @@
 # LeetCode 355: Design Twitter
 
+def unwrapTweet(value: tuple[int, int] | None) -> tuple[int, int]:
+    if value is None:
+        return (0, 0)
+    return value
+
+
+def unwrapPosition(value: tuple[int, int] | None) -> tuple[int, int]:
+    if value is None:
+        return (0, 0)
+    return value
+
+
 class Twitter:
+    count: int
+    tweetMap: dict[int, list[tuple[int, int]]]
+    followMap: dict[int, list[int]]
+
     def __init__(self):
         self.count = 0
-        self.tweetMap = defaultdict(list)  # userId -> list of [count, tweetIds]
-        self.followMap = defaultdict(set)  # userId -> set of followeeId
+        self.tweetMap = {}
+        self.followMap = {}
+
     def postTweet(self, userId: int, tweetId: int) -> None:
-        self.tweetMap[userId].append([self.count, tweetId])
+        tweets = self.tweetMap.get(userId, [])
+        tweets.append((self.count, tweetId))
+        self.tweetMap[userId] = tweets
         self.count -= 1
+
+    def _tweetAt(self, userId: int, index: int) -> tuple[int, int]:
+        tweets = self.tweetMap.get(userId, [])
+        return unwrapTweet(tweets[index])
+
     def getNewsFeed(self, userId: int) -> list[int]:
-        res = []
-        minHeap = []
-        self.followMap[userId].add(userId)
-        for followeeId in self.followMap[userId]:
-            if followeeId in self.tweetMap:
-                index = len(self.tweetMap[followeeId]) - 1
-                count, tweetId = self.tweetMap[followeeId][index]
-                heapq.heappush(minHeap, [count, tweetId, followeeId, index - 1])
-        while minHeap and len(res) < 10:
-            count, tweetId, followeeId, index = heapq.heappop(minHeap)
-            res.append(tweetId)
-            if index >= 0:
-                count, tweetId = self.tweetMap[followeeId][index]
-                heapq.heappush(minHeap, [count, tweetId, followeeId, index - 1])
+        user_follows = self.followMap.get(userId, [])
+        if userId not in user_follows:
+            user_follows.append(userId)
+            self.followMap[userId] = user_follows
+
+        follows = self.followMap.get(userId, [])
+
+        positions: list[tuple[int, int]] = []
+        for followeeId in follows:
+            tweets = self.tweetMap.get(followeeId, [])
+            if len(tweets) > 0:
+                positions.append((followeeId, len(tweets) - 1))
+
+        res: list[int] = []
+        while len(res) < 10 and len(positions) > 0:
+            best_pos = 0
+            best_followee, best_index = unwrapPosition(positions[0])
+            best_count, best_tweet_id = self._tweetAt(best_followee, best_index)
+
+            pos_idx = 1
+            while pos_idx < len(positions):
+                cur_followee, cur_index = unwrapPosition(positions[pos_idx])
+                cur_count, cur_tweet_id = self._tweetAt(cur_followee, cur_index)
+                if cur_count < best_count:
+                    best_count = cur_count
+                    best_tweet_id = cur_tweet_id
+                    best_pos = pos_idx
+                    best_followee = cur_followee
+                    best_index = cur_index
+                pos_idx += 1
+
+            res.append(best_tweet_id)
+            next_index = best_index - 1
+            if next_index >= 0:
+                positions[best_pos] = (best_followee, next_index)
+            else:
+                positions.pop(best_pos)
+
         return res
+
     def follow(self, followerId: int, followeeId: int) -> None:
-        self.followMap[followerId].add(followeeId)
+        user_follows = self.followMap.get(followerId, [])
+        if followeeId not in user_follows:
+            user_follows.append(followeeId)
+            self.followMap[followerId] = user_follows
+
     def unfollow(self, followerId: int, followeeId: int) -> None:
-        if followeeId in self.followMap[followerId]:
-            self.followMap[followerId].remove(followeeId)
+        follows = self.followMap.get(followerId, [])
+        filtered: list[int] = []
+        for fid in follows:
+            if fid != followeeId:
+                filtered.append(fid)
+        self.followMap[followerId] = filtered
+
 
 def main():
     obj = Twitter()
@@ -39,4 +97,3 @@ def main():
     assert obj.getNewsFeed(1) == [6, 5]
     obj.unfollow(1, 2)
     assert obj.getNewsFeed(1) == [5]
-

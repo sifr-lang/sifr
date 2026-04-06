@@ -1,23 +1,44 @@
 # LeetCode 895: Maximum Frequency Stack
 
 class FreqStack:
+    cnt: dict[int, int]
+    maxCnt: int
+    stacks: dict[int, list[int]]
+
     def __init__(self):
         self.cnt = {}
         self.maxCnt = 0
         self.stacks = {}
+
     def push(self, val: int) -> None:
-        valCnt = 1 + self.cnt.get(val, 0)
+        valCnt = self.cnt.get(val, 0) + 1
         self.cnt[val] = valCnt
+
         if valCnt > self.maxCnt:
             self.maxCnt = valCnt
-            self.stacks[valCnt] = []
-        self.stacks[valCnt].append(val)
+
+        stack = self.stacks.get(valCnt, [])
+        stack.append(val)
+        self.stacks[valCnt] = stack
+
     def pop(self) -> int:
-        res = self.stacks[self.maxCnt].pop()
-        self.cnt[res] -= 1
-        if not self.stacks[self.maxCnt]:
+        stack = self.stacks.get(self.maxCnt, [])
+        if len(stack) == 0:
+            return 0
+
+        res = stack.pop()
+        stack_len = len(stack)
+        self.stacks[self.maxCnt] = stack
+
+        current = self.cnt.get(res, 0)
+        if current > 0:
+            self.cnt[res] = current - 1
+
+        if stack_len == 0:
             self.maxCnt -= 1
+
         return res
+
 
 def main():
     obj = FreqStack()
@@ -31,4 +52,3 @@ def main():
     assert obj.pop() == 7
     assert obj.pop() == 5
     assert obj.pop() == 4
-

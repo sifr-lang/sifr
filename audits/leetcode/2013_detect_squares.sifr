@@ -1,28 +1,46 @@
 # LeetCode 2013: Detect Squares
 
 class DetectSquares:
+    ptsCount: dict[str, int]
+    pts: list[tuple[int, int]]
+
     def __init__(self):
-        self.ptsCount = defaultdict(int)
+        self.ptsCount = {}
         self.pts = []
-    def add(self, point: list[int]) -> None:
-        self.ptsCount[tuple(point)] += 1
-        self.pts.append(point)
-    def count(self, point: list[int]) -> int:
+
+    def _key(self, x: int, y: int) -> str:
+        return str(x) + '#' + str(y)
+
+    def add(self, point: tuple[int, int]) -> None:
+        x, y = point
+        key = self._key(x, y)
+        self.ptsCount[key] = self.ptsCount.get(key, 0) + 1
+        self.pts.append((x, y))
+
+    def count(self, point: tuple[int, int]) -> int:
         res = 0
         px, py = point
+
         for x, y in self.pts:
-            if (abs(py - y) != abs(px - x)) or x == px or y == py:
+            if abs(py - y) != abs(px - x) or x == px or y == py:
                 continue
-            res += self.ptsCount[(x, py)] * self.ptsCount[(px, y)]
+
+            key1 = self._key(x, py)
+            key2 = self._key(px, y)
+            c1 = self.ptsCount.get(key1, 0)
+            c2 = self.ptsCount.get(key2, 0)
+
+            res += c1 * c2
+
         return res
+
 
 def main():
     obj = DetectSquares()
-    obj.add([3, 10])
-    obj.add([11, 2])
-    obj.add([3, 2])
-    assert obj.count([11, 10]) == 1
-    assert obj.count([14, 8]) == 0
-    obj.add([11, 2])
-    assert obj.count([11, 10]) == 2
-
+    obj.add((3, 10))
+    obj.add((11, 2))
+    obj.add((3, 2))
+    assert obj.count((11, 10)) == 1
+    assert obj.count((14, 8)) == 0
+    obj.add((11, 2))
+    assert obj.count((11, 10)) == 2

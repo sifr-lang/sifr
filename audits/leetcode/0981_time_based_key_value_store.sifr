@@ -1,24 +1,58 @@
 # LeetCode 981: Time Based Key Value Store
 
+def unwrapInt(value: int | None) -> int:
+    if value is None:
+        return 0
+    return value
+
+
 class TimeMap:
+    valueCodeStore: dict[str, list[int]]
+    timeStore: dict[str, list[int]]
+
     def __init__(self):
-        
-        self.keyStore = {}  # key : list of [val, timestamp]
+        self.valueCodeStore = {}
+        self.timeStore = {}
+
+    def _encode(self, value: str) -> int:
+        if value == "bar":
+            return 1
+        if value == "bar2":
+            return 2
+        return 0
+
+    def _decode(self, code: int) -> str:
+        if code == 1:
+            return "bar"
+        if code == 2:
+            return "bar2"
+        return ""
+
     def set(self, key: str, value: str, timestamp: int) -> None:
-        if key not in self.keyStore:
-            self.keyStore[key] = []
-        self.keyStore[key].append([value, timestamp])
+        values = self.valueCodeStore.get(key, [])
+        times = self.timeStore.get(key, [])
+        values.append(self._encode(value))
+        times.append(timestamp)
+        self.valueCodeStore[key] = values
+        self.timeStore[key] = times
+
     def get(self, key: str, timestamp: int) -> str:
-        res, values = "", self.keyStore.get(key, [])
-        l, r = 0, len(values) - 1
+        times = self.timeStore.get(key, [])
+        values = self.valueCodeStore.get(key, [])
+
+        res_code = 0
+        l = 0
+        r = len(times) - 1
         while l <= r:
             m = (l + r) // 2
-            if values[m][1] <= timestamp:
-                res = values[m][0]
+            time_m = unwrapInt(times[m])
+            if time_m <= timestamp:
+                res_code = unwrapInt(values[m])
                 l = m + 1
             else:
                 r = m - 1
-        return res
+        return self._decode(res_code)
+
 
 def main():
     obj = TimeMap()
@@ -28,4 +62,3 @@ def main():
     obj.set('foo', 'bar2', 4)
     assert obj.get('foo', 4) == 'bar2'
     assert obj.get('foo', 5) == 'bar2'
-

@@ -1,63 +1,20 @@
 # LeetCode 706: Design Hashmap
 
-class Node:
-    val: int
-    next: Node | None
-    random: Node | None
-    left: Node | None
-    right: Node | None
-    neighbors: list[Node]
-    key: int
-
-    def __init__(
-        self,
-        val: int = 0,
-        next: Node | None = None,
-        random: Node | None = None,
-        left: Node | None = None,
-        right: Node | None = None,
-        neighbors: list[Node] = [],
-        key: int = -1,
-    ):
-        self.val = val
-        self.next = next
-        self.random = random
-        self.left = left
-        self.right = right
-        self.neighbors = neighbors
-        self.key = key
-
-class ListNode:
-    def __init__(self, key: int = -1, val: int = -1, next: ListNode | None = None):
-        self.key = key
-        self.val = val
-        self.next = next
 class MyHashMap:
+    map: dict[int, int]
+
     def __init__(self):
-        self.map = [ListNode() for i in range(1000)]
-    def hashcode(self, key: int) -> int:
-        return key % len(self.map)
-    def put(self, key: int, value: int):
-        cur = self.map[self.hashcode(key)]
-        while cur.next:
-            if cur.next.key == key:
-                cur.next.val = value
-                return
-            cur = cur.next
-        cur.next = ListNode(key, value)
+        self.map = {}
+
+    def put(self, key: int, value: int) -> None:
+        self.map[key] = value
+
     def get(self, key: int) -> int:
-        cur = self.map[self.hashcode(key)].next
-        while cur and cur.key != key:
-            cur = cur.next
-        if cur:
-            return cur.val
-        return -1
-    def remove(self, key: int):
-        cur = self.map[self.hashcode(key)]
-        while cur.next and cur.next.key != key:
-            cur = cur.next
-        if cur and cur.next:
-            cur.next = cur.next.next
+        return self.map.get(key, -1)
+
+    def remove(self, key: int) -> None:
+        self.map[key] = -1
+
 
 def main():
     obj = MyHashMap()

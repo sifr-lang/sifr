@@ -1,51 +1,67 @@
 # LeetCode 2709: Greatest Common Divisor Traversal
 
-def canTraverseAllPairs(nums: list[int]) -> bool:
-    uf = UnionFind(len(nums))
+def unwrapInt(value: int | None) -> int:
+    if value is None:
+        return 0
+    return value
 
-    factor_index = {}
-    for i, n in enumerate(nums):
+
+def find(mut par: list[int], x: int) -> int:
+    cur = x
+    while unwrapInt(par[cur]) != cur:
+        parent = unwrapInt(par[cur])
+        grand = unwrapInt(par[parent])
+        par[cur] = grand
+        cur = parent
+    return cur
+
+
+def union(mut par: list[int], mut size: list[int], x: int, y: int) -> int:
+    px = find(par, x)
+    py = find(par, y)
+    if px == py:
+        return 0
+
+    sx = unwrapInt(size[px])
+    sy = unwrapInt(size[py])
+    if sx < sy:
+        par[px] = py
+        size[py] = sx + sy
+    else:
+        par[py] = px
+        size[px] = sx + sy
+    return 1
+
+
+def canTraverseAllPairs(nums: list[int]) -> bool:
+    n = len(nums)
+    par = [i for i in range(n)]
+    size = [1] * n
+    components = n
+
+    factor_index: dict[int, int] = {}
+    for i, value in enumerate(nums):
+        cur = value
         f = 2
-        while f * f <= n:
-            if n % f == 0:
+        while f * f <= cur:
+            if cur % f == 0:
                 if f in factor_index:
-                    uf.union(i, factor_index[f])
+                    components -= union(par, size, i, factor_index.get(f, 0))
                 else:
                     factor_index[f] = i
-                while n % f == 0:
-                    n = n // f
+                while cur % f == 0:
+                    cur = cur // f
             f += 1
-        if n > 1:
-            if n in factor_index:
-                uf.union(i, factor_index[n])
+        if cur > 1:
+            if cur in factor_index:
+                components -= union(par, size, i, factor_index.get(cur, 0))
             else:
-                factor_index[n] = i
-    return uf.count == 1
+                factor_index[cur] = i
 
+    return components == 1
 
-class UnionFind:
-    def __init__(self, n):
-        self.par = [i for i in range(n)]
-        self.size = [1] * n
-        self.count = n
-    def find(self, x):
-        if self.par[x] != x:
-            self.par[x] = self.find(self.par[x])
-        return self.par[x]
-    def union(self, x, y):
-        px, py = self.find(x), self.find(y)
-        if px == py:
-            return
-        if self.size[px] < self.size[py]:
-            self.par[px] = py
-            self.size[py] += self.size[px]
-        else:
-            self.par[py] = px
-            self.size[px] += self.size[py]
-        self.count -=1
 
 def main():
     assert canTraverseAllPairs([2, 3, 6]) == True
     assert canTraverseAllPairs([3, 9, 5]) == False
     assert canTraverseAllPairs([4, 3, 12, 8]) == True
-

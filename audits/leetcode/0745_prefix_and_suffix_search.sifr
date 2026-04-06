@@ -1,57 +1,32 @@
 # LeetCode 745: Prefix And Suffix Search
 
-class Node:
-    val: int
-    next: Node | None
-    random: Node | None
-    left: Node | None
-    right: Node | None
-    neighbors: list[Node]
-    key: int
-
-    def __init__(
-        self,
-        val: int = 0,
-        next: Node | None = None,
-        random: Node | None = None,
-        left: Node | None = None,
-        right: Node | None = None,
-        neighbors: list[Node] = [],
-        key: int = -1,
-    ):
-        self.val = val
-        self.next = next
-        self.random = random
-        self.left = left
-        self.right = right
-        self.neighbors = neighbors
-        self.key = key
-
-class TrieNode:
-    def __init__(self):
-        self.children = {}  # Dictionary to store child nodes
-        self.word = -1  # Store the index of the word at this node
 class WordFilter:
-    def __init__(self, words: list[str]):
-        self.root = TrieNode()
-        for index, word in enumerate(words):
-            for i in range(len(word) + 1):
-                for j in range(len(word) + 1):
-                    key = word[i:] + '{' + word[:j]
-                    cur = self.root
-                    for c in key:
-                        if c not in cur.children:
-                            cur.children[c] = TrieNode()
-                        cur = cur.children[c]
-                    cur.word = index  # Store the index of the word at this node
+    words: list[str]
+
+    def __init__(self, own words: list[str]):
+        self.words = words
+
+    def _startsWith(self, word: str, pref: str) -> bool:
+        if len(pref) > len(word):
+            return False
+        return word[:len(pref)] == pref
+
+    def _endsWith(self, word: str, suff: str) -> bool:
+        if len(suff) > len(word):
+            return False
+        return word[len(word) - len(suff):] == suff
+
     def f(self, pref: str, suff: str) -> int:
-        key = suff + '{' + pref
-        cur = self.root
-        for c in key:
-            if c not in cur.children:
-                return -1  # If combination doesn't exist, return -1
-            cur = cur.children[c]
-        return cur.word  # Return the largest index found for the valid combination
+        i = len(self.words) - 1
+        while i >= 0:
+            word_opt = self.words[i]
+            if word_opt is not None:
+                word = word_opt
+                if self._startsWith(word, pref) and self._endsWith(word, suff):
+                    return i
+            i -= 1
+        return -1
+
 
 def main():
     obj = WordFilter(['apple'])

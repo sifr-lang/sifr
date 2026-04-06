@@ -2,17 +2,26 @@
 
 class ParkingSystem:
     def __init__(self, big: int, medium: int, small: int):
-        self.parking = {
-            1: [0 ,big],
-            2: [0, medium],
-            3: [0, small]
-        }
+        self.big = big
+        self.medium = medium
+        self.small = small
+
     def addCar(self, carType: int) -> bool:
-        new_total = self.parking[carType][0] + 1
-        if new_total <= self.parking[carType][1]:
-            self.parking[carType][0] += 1
+        if carType == 1:
+            if self.big > 0:
+                self.big -= 1
+                return True
+            return False
+        if carType == 2:
+            if self.medium > 0:
+                self.medium -= 1
+                return True
+            return False
+        if self.small > 0:
+            self.small -= 1
             return True
         return False
+
 
 def main():
     obj = ParkingSystem(1, 1, 0)
@@ -20,4 +29,3 @@ def main():
     assert obj.addCar(2) == True
     assert obj.addCar(3) == False
     assert obj.addCar(1) == False
-
