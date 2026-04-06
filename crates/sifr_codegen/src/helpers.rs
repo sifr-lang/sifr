@@ -474,7 +474,9 @@ pub(super) fn module_uses_bigint(module: &HirModule) -> bool {
             HirStmt::SubscriptAssign { object_ty, .. }
             | HirStmt::NestedSubscriptAssign { object_ty, .. }
             | HirStmt::SubscriptAugAssign { object_ty, .. } => type_has_bigint(object_ty),
-            HirStmt::AttributeSubscriptAssign { field_ty, .. } => type_has_bigint(field_ty),
+            HirStmt::AttributeNestedSubscriptAssign { field_ty, .. }
+            | HirStmt::AttributeSubscriptAssign { field_ty, .. } => type_has_bigint(field_ty),
+            HirStmt::NestedFieldAssign { nested_field_ty, .. } => type_has_bigint(nested_field_ty),
             HirStmt::Match { subject_ty, .. } => type_has_bigint(subject_ty),
             HirStmt::NestedFunction { func } => {
                 func.params.iter().any(|param| type_has_bigint(&param.ty))
@@ -553,7 +555,9 @@ pub(super) fn body_contains_field_assign_codegen(stmts: &[HirStmt]) -> bool {
         if matches!(
             stmt,
             HirStmt::FieldAssign { .. }
+                | HirStmt::NestedFieldAssign { .. }
                 | HirStmt::AttributeAugAssign { .. }
+                | HirStmt::AttributeNestedSubscriptAssign { .. }
                 | HirStmt::AttributeSubscriptAssign { .. }
         ) {
             found.set(true);

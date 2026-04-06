@@ -741,8 +741,8 @@ impl RustEmitter {
         } else {
             false
         };
-        let assign_into_elem =
-            if value_is_option && !crate::helpers::is_option_type(target_elem_ty) {
+        let assign_into_elem = if value_is_option && !crate::helpers::is_option_type(target_elem_ty)
+        {
             RustStmt::IfLet {
                 pattern: "Some(__nested_assign_value)".to_string(),
                 expr: RustExpr::Ident("__nested_assign_value".to_string()),
@@ -752,12 +752,12 @@ impl RustEmitter {
                 }],
                 else_body: None,
             }
-            } else {
-                RustStmt::Assign {
-                    target: RustExpr::Deref(Box::new(RustExpr::Ident("__elem".to_string()))),
-                    value: RustExpr::Ident("__nested_assign_value".to_string()),
-                }
-            };
+        } else {
+            RustStmt::Assign {
+                target: RustExpr::Deref(Box::new(RustExpr::Ident("__elem".to_string()))),
+                value: RustExpr::Ident("__nested_assign_value".to_string()),
+            }
+        };
 
         Ok(Some(RustStmt::Block(vec![
             RustStmt::Let {
@@ -791,6 +791,158 @@ impl RustEmitter {
                     pattern: "Some(__row)".to_string(),
                     expr: RustExpr::MethodCall {
                         receiver: Box::new(RustExpr::Ident(object.to_string())),
+                        method: "get_mut".to_string(),
+                        args: vec![RustExpr::Cast {
+                            expr: Box::new(RustExpr::Ident("__oi_norm".to_string())),
+                            ty: crate::RustType::Named("usize".to_string()),
+                        }],
+                    },
+                    then_body: vec![
+                        RustStmt::Let {
+                            mutable: false,
+                            name: "__ii_raw".to_string(),
+                            ty: None,
+                            value: lowered_inner_index,
+                        },
+                        RustStmt::Let {
+                            mutable: false,
+                            name: "__ii_norm".to_string(),
+                            ty: None,
+                            value: crate::build_normalized_list_index_i64_expr(
+                                RustExpr::Ident("__row".to_string()),
+                                "__ii_raw",
+                            ),
+                        },
+                        RustStmt::If {
+                            cond: RustExpr::BinOp {
+                                left: Box::new(RustExpr::Ident("__ii_norm".to_string())),
+                                op: ">=".to_string(),
+                                right: Box::new(RustExpr::Literal(crate::RustLiteral::Int(0))),
+                            },
+                            then_body: vec![RustStmt::IfLet {
+                                pattern: "Some(__elem)".to_string(),
+                                expr: RustExpr::MethodCall {
+                                    receiver: Box::new(RustExpr::Ident("__row".to_string())),
+                                    method: "get_mut".to_string(),
+                                    args: vec![RustExpr::Cast {
+                                        expr: Box::new(RustExpr::Ident("__ii_norm".to_string())),
+                                        ty: crate::RustType::Named("usize".to_string()),
+                                    }],
+                                },
+                                then_body: vec![assign_into_elem],
+                                else_body: None,
+                            }],
+                            else_body: None,
+                        },
+                    ],
+                    else_body: None,
+                }],
+                else_body: None,
+            },
+        ])))
+    }
+
+    fn lower_structured_attribute_nested_list_subscript_assign_stmt_for_ir(
+        &mut self,
+        object: &str,
+        field: &str,
+        outer_index: &HirExpr,
+        inner_index: &HirExpr,
+        value: &HirExpr,
+        field_ty: &Type,
+    ) -> Result<Option<RustStmt>, crate::CodegenError> {
+        let Type::List(inner) = Self::resolve_alias_type_for_loop_iter(field_ty) else {
+            return Ok(None);
+        };
+        let Type::List(target_elem_ty) = Self::resolve_alias_type_for_loop_iter(inner) else {
+            return Ok(None);
+        };
+        let Some(lowered_outer_index) = self.lower_stmt_expr_for_ir(outer_index)? else {
+            return Ok(None);
+        };
+        let Some(lowered_inner_index) = self.lower_stmt_expr_for_ir(inner_index)? else {
+            return Ok(None);
+        };
+        let Some(lowered_value) = self.lower_stmt_expr_for_ir(value)? else {
+            return Ok(None);
+        };
+        let lowered_value = Self::clone_non_copy_name_expr_for_ir(value, lowered_value);
+        let lowered_value = if value.ty().rust_type().starts_with('&')
+            && !target_elem_ty.rust_type().starts_with('&')
+        {
+            crate::RustExpr::MethodCall {
+                receiver: Box::new(crate::RustExpr::Paren(Box::new(lowered_value))),
+                method: "clone".to_string(),
+                args: vec![],
+            }
+        } else {
+            lowered_value
+        };
+
+        let value_is_option = if crate::helpers::is_option_type(value.ty()) {
+            true
+        } else if let HirExpr::Name { name, ty } = value {
+            matches!(
+                crate::resolve_alias_type_for_plain_call(ty),
+                Type::Any | Type::Unknown
+            ) && self
+                .local_binding_types
+                .get(name)
+                .is_some_and(crate::helpers::is_option_type)
+        } else {
+            false
+        };
+        let assign_into_elem =
+            if value_is_option && !crate::helpers::is_option_type(target_elem_ty.as_ref()) {
+                RustStmt::IfLet {
+                    pattern: "Some(__nested_assign_value)".to_string(),
+                    expr: RustExpr::Ident("__nested_assign_value".to_string()),
+                    then_body: vec![RustStmt::Assign {
+                        target: RustExpr::Deref(Box::new(RustExpr::Ident("__elem".to_string()))),
+                        value: RustExpr::Ident("__nested_assign_value".to_string()),
+                    }],
+                    else_body: None,
+                }
+            } else {
+                RustStmt::Assign {
+                    target: RustExpr::Deref(Box::new(RustExpr::Ident("__elem".to_string()))),
+                    value: RustExpr::Ident("__nested_assign_value".to_string()),
+                }
+            };
+        let field_receiver = || RustExpr::Field {
+            expr: Box::new(Self::object_name_expr_for_ir(object)),
+            field: field.to_string(),
+        };
+
+        Ok(Some(RustStmt::Block(vec![
+            RustStmt::Let {
+                mutable: false,
+                name: "__nested_assign_value".to_string(),
+                ty: None,
+                value: lowered_value,
+            },
+            RustStmt::Let {
+                mutable: false,
+                name: "__oi_raw".to_string(),
+                ty: None,
+                value: lowered_outer_index,
+            },
+            RustStmt::Let {
+                mutable: false,
+                name: "__oi_norm".to_string(),
+                ty: None,
+                value: crate::build_normalized_list_index_i64_expr(field_receiver(), "__oi_raw"),
+            },
+            RustStmt::If {
+                cond: RustExpr::BinOp {
+                    left: Box::new(RustExpr::Ident("__oi_norm".to_string())),
+                    op: ">=".to_string(),
+                    right: Box::new(RustExpr::Literal(crate::RustLiteral::Int(0))),
+                },
+                then_body: vec![RustStmt::IfLet {
+                    pattern: "Some(__row)".to_string(),
+                    expr: RustExpr::MethodCall {
+                        receiver: Box::new(field_receiver()),
                         method: "get_mut".to_string(),
                         args: vec![RustExpr::Cast {
                             expr: Box::new(RustExpr::Ident("__oi_norm".to_string())),
@@ -4349,12 +4501,8 @@ impl RustEmitter {
                     self.pending_self_field_clone_suppression += 1;
                 }
 
-                let lowered = self.try_lower_registry_method_call_expr(
-                    object,
-                    method,
-                    args,
-                    expr.ty(),
-                );
+                let lowered =
+                    self.try_lower_registry_method_call_expr(object, method, args, expr.ty());
 
                 if needs_self_field_clone_suppression
                     && self.pending_self_field_clone_suppression > suppression_prev
@@ -4797,16 +4945,15 @@ impl RustEmitter {
                         && (self.borrowed_params.contains(name)
                             || self.mut_borrowed_params.contains(name))
                 );
-            let already_mut_borrowed = matches!(
-                lowered_arg,
-                crate::RustExpr::Ref { mutable: true, .. }
-            ) || matches!(
-                (hir_arg, &lowered_arg),
-                (
-                    HirExpr::Name { name, .. },
-                    crate::RustExpr::Ident(lowered_name)
-                ) if lowered_name == name && self.mut_borrowed_params.contains(name)
-            );
+            let already_mut_borrowed =
+                matches!(lowered_arg, crate::RustExpr::Ref { mutable: true, .. })
+                    || matches!(
+                        (hir_arg, &lowered_arg),
+                        (
+                            HirExpr::Name { name, .. },
+                            crate::RustExpr::Ident(lowered_name)
+                        ) if lowered_name == name && self.mut_borrowed_params.contains(name)
+                    );
 
             if needs_shared_borrow || needs_mut_borrow {
                 lowered_arg = Self::clone_moved_names_in_borrowed_aggregate(hir_arg, lowered_arg);
@@ -5080,13 +5227,10 @@ impl RustEmitter {
                 None
             };
 
-            let should_bypass_simple_lowering =
-                matches!(
-                    stmt,
-                    HirStmt::NestedFunction { .. }
-                        | HirStmt::Assign { .. }
-                )
-                || matches!(stmt, HirStmt::Let { ty, .. } if self.type_contains_generic_class(ty));
+            let should_bypass_simple_lowering = matches!(
+                stmt,
+                HirStmt::NestedFunction { .. } | HirStmt::Assign { .. }
+            ) || matches!(stmt, HirStmt::Let { ty, .. } if self.type_contains_generic_class(ty));
             let maybe_simple_lowered = if should_bypass_simple_lowering {
                 None
             } else {
@@ -5153,33 +5297,32 @@ impl RustEmitter {
                 let Some(lowered_value) = self.lower_rendered_expr_for_ir(value)? else {
                     return Ok(None);
                 };
-                let lowered_value =
-                    if let Some(target_ty) = self.local_binding_types.get(name).cloned() {
-                        let mut lowered = self.coerce_local_value_for_target_type_for_ir(
-                            &target_ty,
-                            value,
-                            lowered_value,
-                        )?;
-                        if !crate::helpers::is_option_type(&target_ty)
-                            && crate::helpers::is_option_type(value.ty())
-                        {
-                            let fallback = if crate::helpers::is_copy_type_for_codegen(&target_ty) {
-                                crate::RustExpr::Ident(name.clone())
-                            } else {
-                                crate::RustExpr::Clone(Box::new(crate::RustExpr::Ident(
-                                    name.clone(),
-                                )))
-                            };
-                            lowered = crate::RustExpr::MethodCall {
-                                receiver: Box::new(crate::RustExpr::Paren(Box::new(lowered))),
-                                method: "unwrap_or".to_string(),
-                                args: vec![fallback],
-                            };
-                        }
-                        lowered
-                    } else {
-                        lowered_value
-                    };
+                let lowered_value = if let Some(target_ty) =
+                    self.local_binding_types.get(name).cloned()
+                {
+                    let mut lowered = self.coerce_local_value_for_target_type_for_ir(
+                        &target_ty,
+                        value,
+                        lowered_value,
+                    )?;
+                    if !crate::helpers::is_option_type(&target_ty)
+                        && crate::helpers::is_option_type(value.ty())
+                    {
+                        let fallback = if crate::helpers::is_copy_type_for_codegen(&target_ty) {
+                            crate::RustExpr::Ident(name.clone())
+                        } else {
+                            crate::RustExpr::Clone(Box::new(crate::RustExpr::Ident(name.clone())))
+                        };
+                        lowered = crate::RustExpr::MethodCall {
+                            receiver: Box::new(crate::RustExpr::Paren(Box::new(lowered))),
+                            method: "unwrap_or".to_string(),
+                            args: vec![fallback],
+                        };
+                    }
+                    lowered
+                } else {
+                    lowered_value
+                };
                 (
                     vec![RustStmt::Assign {
                         target: crate::RustExpr::Ident(name.clone()),
@@ -5319,6 +5462,28 @@ impl RustEmitter {
                     return Ok(None);
                 };
                 (vec![lowered_stmt], true)
+            } else if let HirStmt::AttributeNestedSubscriptAssign {
+                object,
+                field,
+                outer_index,
+                inner_index,
+                value,
+                field_ty,
+            } = stmt
+            {
+                let Some(lowered_stmt) = self
+                    .lower_structured_attribute_nested_list_subscript_assign_stmt_for_ir(
+                        object,
+                        field,
+                        outer_index,
+                        inner_index,
+                        value,
+                        field_ty,
+                    )?
+                else {
+                    return Ok(None);
+                };
+                (vec![lowered_stmt], true)
             } else if let HirStmt::SubscriptAugAssign {
                 object,
                 index,
@@ -5409,6 +5574,27 @@ impl RustEmitter {
                     }],
                     true,
                 )
+            } else if let HirStmt::NestedFieldAssign {
+                object,
+                field,
+                field_ty,
+                nested_field,
+                nested_field_ty,
+                value,
+            } = stmt
+            {
+                let Some(lowered_stmt) = self.lower_nested_field_assign_stmt_for_ir(
+                    object,
+                    field,
+                    field_ty,
+                    nested_field,
+                    nested_field_ty,
+                    value,
+                )?
+                else {
+                    return Ok(None);
+                };
+                (vec![lowered_stmt], true)
             } else if let HirStmt::Assert { test, msg } = stmt {
                 let Some(lowered_test) = self.lower_rendered_expr_for_ir(test)? else {
                     return Ok(None);
@@ -6564,8 +6750,14 @@ impl RustEmitter {
         }
         let left_is_option = crate::helpers::is_option_type(&left_ty);
         let right_is_option = crate::helpers::is_option_type(&right_ty);
-        let left_none_like = matches!(crate::resolve_alias_type_for_plain_call(&left_ty), Type::None);
-        let right_none_like = matches!(crate::resolve_alias_type_for_plain_call(&right_ty), Type::None);
+        let left_none_like = matches!(
+            crate::resolve_alias_type_for_plain_call(&left_ty),
+            Type::None
+        );
+        let right_none_like = matches!(
+            crate::resolve_alias_type_for_plain_call(&right_ty),
+            Type::None
+        );
 
         if left_is_option && !right_is_option && !right_none_like {
             if right_borrowed
@@ -7924,6 +8116,86 @@ impl RustEmitter {
         Ok(true)
     }
 
+    fn lower_nested_field_assign_stmt_for_ir(
+        &mut self,
+        object: &str,
+        field: &str,
+        field_ty: &Type,
+        nested_field: &str,
+        nested_field_ty: &Type,
+        value: &HirExpr,
+    ) -> Result<Option<RustStmt>, crate::CodegenError> {
+        let Some(value_expr) = self.lower_stmt_expr_for_ir(value)? else {
+            return Ok(None);
+        };
+        let value_expr = self.adapt_field_assign_value_for_recursive_storage(
+            object,
+            nested_field,
+            nested_field_ty,
+            value_expr,
+            value.ty(),
+        );
+        let outer_target = crate::RustExpr::Field {
+            expr: Box::new(Self::object_name_expr_for_ir(object)),
+            field: field.to_string(),
+        };
+        if crate::helpers::is_option_type(field_ty) {
+            return Ok(Some(crate::RustStmt::IfLet {
+                pattern: "Some(__nested_obj)".to_string(),
+                expr: crate::RustExpr::MethodCall {
+                    receiver: Box::new(outer_target),
+                    method: "as_mut".to_string(),
+                    args: vec![],
+                },
+                then_body: vec![RustStmt::Assign {
+                    target: crate::RustExpr::Field {
+                        expr: Box::new(crate::RustExpr::Ident("__nested_obj".to_string())),
+                        field: nested_field.to_string(),
+                    },
+                    value: value_expr,
+                }],
+                else_body: None,
+            }));
+        }
+        Ok(Some(RustStmt::Assign {
+            target: crate::RustExpr::Field {
+                expr: Box::new(outer_target),
+                field: nested_field.to_string(),
+            },
+            value: value_expr,
+        }))
+    }
+
+    pub(crate) fn try_lower_structured_nested_field_assign_stmt(
+        &mut self,
+        stmt: &HirStmt,
+    ) -> Result<bool, crate::CodegenError> {
+        let HirStmt::NestedFieldAssign {
+            object,
+            field,
+            field_ty,
+            nested_field,
+            nested_field_ty,
+            value,
+        } = stmt
+        else {
+            return Ok(false);
+        };
+        let Some(lowered) = self.lower_nested_field_assign_stmt_for_ir(
+            object,
+            field,
+            field_ty,
+            nested_field,
+            nested_field_ty,
+            value,
+        )?
+        else {
+            return Ok(false);
+        };
+        self.emit_lowered_stmts(std::slice::from_ref(&lowered));
+        Ok(true)
+    }
+
     fn optional_recursive_class_name(field_ty: &Type) -> Option<String> {
         let Type::Union(members) = field_ty.resolve_alias() else {
             return None;
@@ -8093,6 +8365,38 @@ impl RustEmitter {
             method: "insert".to_string(),
             args: vec![index_expr, value_expr],
         });
+        self.emit_lowered_stmts(std::slice::from_ref(&lowered));
+        Ok(true)
+    }
+
+    pub(crate) fn try_lower_structured_attribute_nested_subscript_assign_stmt(
+        &mut self,
+        stmt: &HirStmt,
+    ) -> Result<bool, crate::CodegenError> {
+        let HirStmt::AttributeNestedSubscriptAssign {
+            object,
+            field,
+            outer_index,
+            inner_index,
+            value,
+            field_ty,
+        } = stmt
+        else {
+            return Ok(false);
+        };
+
+        let Some(lowered) = self
+            .lower_structured_attribute_nested_list_subscript_assign_stmt_for_ir(
+                object,
+                field,
+                outer_index,
+                inner_index,
+                value,
+                field_ty,
+            )?
+        else {
+            return Ok(false);
+        };
         self.emit_lowered_stmts(std::slice::from_ref(&lowered));
         Ok(true)
     }

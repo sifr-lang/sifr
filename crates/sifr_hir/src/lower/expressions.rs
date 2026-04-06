@@ -21,8 +21,8 @@ use super::empty_collection_refinement::{
     refine_empty_list_binding_expr, refine_empty_set_binding_expr,
 };
 use super::fstring_support::lower_fstring_expr;
-use super::generic_receiver_specialization::refine_generic_class_binding_expr;
 use super::generic_constructor_specialization::refine_constructor_return_type_from_args;
+use super::generic_receiver_specialization::refine_generic_class_binding_expr;
 use super::method_call_args::{
     lower_function_call_args, lower_method_call_args, lower_signature_call_args,
     validate_dict_update_arg, validate_list_extend_arg, validate_set_iterable_arg,
@@ -2305,6 +2305,16 @@ pub(super) fn lower_attribute(attr: &ExprAttribute, ctx: &mut LowerCtx) -> Optio
         return None;
     }
 
+    if let Some(field_ty) =
+        super::attribute_access::optional_class_union_field_type(&resolved_object_ty, &field_name)
+    {
+        return Some(HirExpr::FieldAccess {
+            object: Box::new(object),
+            field: field_name,
+            ty: field_ty,
+        });
+    }
+
     // Check if the object is an enum instance - access .name or .value
     if let Type::Enum {
         name: enum_name, ..
@@ -2445,7 +2455,10 @@ pub(super) fn lower_method_call(
     if matches!(method_name.as_str(), "append" | "insert" | "extend") {
         object = refine_empty_list_binding_expr(object, &method_name, &args, ctx);
     }
-    if matches!(method_name.as_str(), "add" | "remove" | "discard" | "contains") {
+    if matches!(
+        method_name.as_str(),
+        "add" | "remove" | "discard" | "contains"
+    ) {
         if let Some(first_arg_ty) = args.first().map(|arg| arg.ty().clone()) {
             object = refine_empty_set_binding_expr(object, first_arg_ty, ctx);
         }

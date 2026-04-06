@@ -1208,8 +1208,7 @@ impl RustEmitter {
         let should_bypass_simple_lowering = matches!(
             stmt,
             HirStmt::NestedFunction { .. } | HirStmt::Assign { .. }
-        )
-            || matches!(stmt, HirStmt::Let { ty, .. } if self.type_contains_generic_class(ty));
+        ) || matches!(stmt, HirStmt::Let { ty, .. } if self.type_contains_generic_class(ty));
         if !should_bypass_simple_lowering {
             if let Some(lowered_stmts) = try_lower_simple_stmt_with_scope_result_and_bindings(
                 stmt,
@@ -1420,12 +1419,22 @@ impl RustEmitter {
             self.lowering_stats.stmt_candidate_structured += 1;
             return Ok(true);
         }
+        if self.try_lower_structured_nested_field_assign_stmt(stmt)? {
+            self.lowering_stats.stmt_structured += 1;
+            self.lowering_stats.stmt_candidate_structured += 1;
+            return Ok(true);
+        }
         if self.try_lower_structured_subscript_assign_stmt(stmt)? {
             self.lowering_stats.stmt_structured += 1;
             self.lowering_stats.stmt_candidate_structured += 1;
             return Ok(true);
         }
         if self.try_lower_structured_nested_subscript_assign_stmt(stmt)? {
+            self.lowering_stats.stmt_structured += 1;
+            self.lowering_stats.stmt_candidate_structured += 1;
+            return Ok(true);
+        }
+        if self.try_lower_structured_attribute_nested_subscript_assign_stmt(stmt)? {
             self.lowering_stats.stmt_structured += 1;
             self.lowering_stats.stmt_candidate_structured += 1;
             return Ok(true);

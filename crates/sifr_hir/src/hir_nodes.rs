@@ -192,6 +192,15 @@ pub enum HirStmt {
         field_ty: Type,
         value: HirExpr,
     },
+    /// Nested field assignment: obj.field.inner = value
+    NestedFieldAssign {
+        object: String,
+        field: String,
+        field_ty: Type,
+        nested_field: String,
+        nested_field_ty: Type,
+        value: HirExpr,
+    },
     /// Subscript assignment: list[i] = val or dict[key] = val
     SubscriptAssign {
         object: String,
@@ -206,6 +215,15 @@ pub enum HirStmt {
         inner_index: HirExpr,
         value: HirExpr,
         object_ty: Type,
+    },
+    /// Nested subscript assignment on an attribute: self.field[key][i] = val
+    AttributeNestedSubscriptAssign {
+        object: String,
+        field: String,
+        outer_index: HirExpr,
+        inner_index: HirExpr,
+        value: HirExpr,
+        field_ty: Type,
     },
     /// Subscript augmented assignment: list[i] += val
     SubscriptAugAssign {

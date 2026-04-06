@@ -4,11 +4,13 @@ use crate::hir_nodes::{
 };
 use sifr_python_ast::{Expr, Number, Stmt, StmtClassDef, UnaryOp};
 use sifr_type_system::{FunctionType, ParamConvention, Type};
+use std::collections::HashMap;
 
 use super::diagnostics::{
     collect_enum_variants, get_newtype_inner, get_parent_class, has_decorator, is_enum_class,
     is_error_class, is_operator_dunder, is_protocol_class,
 };
+use super::class_field_inference::collect_constructor_self_field_assignments;
 use super::statements::lower_stmts;
 use super::typing_and_functions::resolve_annotation_expr;
 use super::{parse_typevar_bound_expr, LowerCtx};
@@ -393,6 +395,7 @@ pub(super) fn collect_class_type(
                 if method_name == "__init__" {
                     // Constructor: extract params (skip `self`)
                     let mut params = Vec::new();
+                    let mut constructor_locals: HashMap<String, Type> = HashMap::new();
                     for param in func.parameters.args.iter().skip(1) {
                         let param_name = param.parameter.name.to_string();
                         let param_ty = if let Some(ref ann) = param.parameter.annotation {
@@ -403,12 +406,20 @@ pub(super) fn collect_class_type(
                             ));
                             Type::Any
                         };
+                        constructor_locals.insert(param_name.clone(), param_ty.clone());
                         params.push((param_name, param_ty));
                     }
                     // Constructor returns the class type (registered below)
                     // We store it as a function for call resolution
                     let constructor_ft = FunctionType::new(params.clone(), Type::None); // placeholder, updated below
                     ctx.functions.insert(class_name.clone(), constructor_ft);
+
+                    collect_constructor_self_field_assignments(
+                        &func.body,
+                        &mut constructor_locals,
+                        &mut fields,
+                        ctx,
+                    );
 
                     // Collect defaults for constructor
                     let mut defaults = Vec::new();
@@ -434,6 +445,7 @@ pub(super) fn collect_class_type(
                     let is_static = has_decorator(func, "staticmethod");
                     let skip_count = usize::from(!is_static);
                     let mut params = Vec::new();
+                    let mut method_locals: HashMap<String, Type> = HashMap::new();
                     for param in func.parameters.args.iter().skip(skip_count) {
                         let param_name = param.parameter.name.to_string();
                         let param_ty = if let Some(ref ann) = param.parameter.annotation {
@@ -444,6 +456,7 @@ pub(super) fn collect_class_type(
                             ));
                             Type::Any
                         };
+                        method_locals.insert(param_name.clone(), param_ty.clone());
                         params.push((param_name, param_ty));
                     }
                     let return_ty = if let Some(ref ret_ann) = func.returns {
@@ -469,6 +482,13 @@ pub(super) fn collect_class_type(
                             .insert(format!("{class_name}.{method_name}"), defaults);
                     }
                     methods.push((method_name, FunctionType::new(params, return_ty)));
+
+                    collect_constructor_self_field_assignments(
+                        &func.body,
+                        &mut method_locals,
+                        &mut fields,
+                        ctx,
+                    );
                 }
             }
             Stmt::Pass(_) => {} // Allow pass in class body
@@ -988,7 +1008,7 @@ pub(super) fn is_hashable_type(ty: &Type) -> bool {
 pub(super) fn body_contains_field_assign(stmts: &[HirStmt]) -> bool {
     fn stmt_contains_field_assign(stmt: &HirStmt) -> bool {
         match stmt {
-            HirStmt::FieldAssign { .. } => true,
+            HirStmt::FieldAssign { .. } | HirStmt::NestedFieldAssign { .. } => true,
             HirStmt::TupleUnpack { targets, .. } => targets
                 .iter()
                 .any(|target| matches!(target.binding, HirTupleTargetBinding::Field { .. })),

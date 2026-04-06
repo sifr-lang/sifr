@@ -24,12 +24,12 @@ Status legend:
 
 ## Workstream C: Class field registration and nested-attribute assignment
 
-- [ ] `CF-1-class_field_registration_gap`
-- [ ] `CF-2-nested_attribute_assignment_gap`
+- [x] `CF-1-class_field_registration_gap`
+- [x] `CF-2-nested_attribute_assignment_gap`
 
 ## Workstream D: Destructuring and subscript-augassign closure
 
-- [ ] compiler lane: `DS-3-augassign_subscript_lowering_gap`
+- [x] compiler lane: `DS-3-augassign_subscript_lowering_gap`
 - [ ] mixed lane: `DS-1-list_pair_destructure_requires_tuple`
 - [ ] mixed lane: `DS-2-list_unpack_requires_tuple`
 - [ ] adaptation lane: `DS-4-unpack_target_shape_restriction`
@@ -81,7 +81,34 @@ outside focus-4 scope. Exclude them from focus-4 pass-rate calculations.
 
 ## Validation and Reporting
 
-- [ ] targeted reruns after each sub-root-cause closure
+- [x] targeted reruns after each sub-root-cause closure
 - [ ] full corpus rerun after each workstream
 - [ ] taxonomy regeneration and delta report after each full rerun
-- [ ] reviewer pass log references added per workstream
+- [x] reviewer pass log references added per workstream
+
+## Wave Log
+
+- Wave C1/D3 (compiler): constructor-assigned field registration + nested subscript augassign lowering
+  - Focus4 subset artifacts:
+    - `/tmp/phase_apr06_focus4_wave1_cf1.json`
+    - `/tmp/phase_apr06_focus4_wave2_cf1_ds3.json`
+    - `/tmp/phase_apr06_focus4_wave3_cf1_ds3_attrnested.json`
+  - Primary diagnostic deltas:
+    - `augmented subscript assignment target must be a simple name`: `7 -> 0` (all DS-3 primaries cleared)
+    - `has no field` reduced to residual multi-root fixtures (primary CF-1 diagnostics cleared)
+
+- Wave C2 + maintainability split (compiler): nested attribute assignment lowering + HIR module extractions
+  - Added nested attribute assignment support (`NestedFieldAssign`) and optional-class attribute field access lowering.
+  - Extracted HIR lowering modules to satisfy guardrails:
+    - `crates/sifr_hir/src/lower/class_field_inference.rs`
+    - `crates/sifr_hir/src/lower/aug_assign_lowering.rs`
+    - `crates/sifr_hir/src/lower/attribute_access.rs`
+  - Focus4 subset artifact:
+    - `/tmp/phase_apr06_focus4_wave5_cf2_guardrailsplit.json`
+  - Primary diagnostic deltas:
+    - `attribute assignment target must be a simple name`: `2 -> 0` (all CF-2 primaries cleared)
+  - Validation:
+    - `cargo build --release -p sifr` passed
+    - `scripts/run_all_tests.sh --profile quick` passed
+  - Reviewer logs:
+    - `reviews/focus4-root-cause-closure-review-pass5-wave-cd.md`

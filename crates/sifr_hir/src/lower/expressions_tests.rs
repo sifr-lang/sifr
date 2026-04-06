@@ -111,6 +111,107 @@ fn test_defaultdict_list_call_resolves_without_import() {
 }
 
 #[test]
+fn test_constructor_assigned_fields_infer_class_instance_types() {
+    let result = lower_source(
+        "class Node:\n    def __init__(self):\n        self.marked = False\n\nclass Trie:\n    def __init__(self):\n        self.root = Node()\n\n    def is_marked(self) -> bool:\n        return self.root.marked\n\ndef main() -> bool:\n    trie = Trie()\n    return trie.is_marked()\n",
+    );
+    assert!(
+        result.is_ok(),
+        "constructor-assigned class instance fields should be registered and typed"
+    );
+}
+
+#[test]
+fn test_constructor_branch_assignments_register_all_fields() {
+    let module = lower_source(
+        "class Pair:\n    def __init__(self, flag: bool):\n        if flag:\n            self.left = 1\n        else:\n            self.right = 2\n",
+    )
+    .expect("constructor field registration should succeed");
+    let pair = module
+        .classes
+        .iter()
+        .find(|class| class.name == "Pair")
+        .expect("Pair class should lower");
+    assert!(pair.fields.iter().any(|(name, _)| name == "left"));
+    assert!(pair.fields.iter().any(|(name, _)| name == "right"));
+}
+
+#[test]
+fn test_attribute_subscript_augassign_lowers_for_class_fields() {
+    let result = lower_source(
+        "class Counter:\n    def __init__(self):\n        self.counts = {}\n\n    def bump(self, key: int) -> None:\n        if key not in self.counts:\n            self.counts[key] = 0\n        self.counts[key] += 1\n\ndef main() -> None:\n    c = Counter()\n    c.bump(1)\n",
+    );
+    assert!(
+        result.is_err(),
+        "fixture should still fail due optional indexing semantics"
+    );
+    let errors = result.unwrap_err();
+    assert!(
+        !errors.iter().any(|error| {
+            error
+                .message
+                .contains("augmented subscript assignment target must be a simple name")
+        }),
+        "attribute subscript augassign should lower past target-shape validation: {errors:?}"
+    );
+    assert!(
+        errors
+            .iter()
+            .any(|error| error.message.contains("unsupported operand type(s) for +")),
+        "lowering should reach operand typing for attribute subscript augassign: {errors:?}"
+    );
+}
+
+#[test]
+fn test_nested_subscript_augassign_lowers_for_name_targets() {
+    let result =
+        lower_source("def bump(mut grid: list[list[int]]) -> None:\n    grid[0][0] += 1\n");
+    assert!(
+        result.is_err(),
+        "fixture should still fail due optional indexing semantics"
+    );
+    let errors = result.unwrap_err();
+    assert!(
+        !errors.iter().any(|error| {
+            error
+                .message
+                .contains("augmented subscript assignment target must be a simple name")
+        }),
+        "nested subscript augassign should lower past target-shape validation: {errors:?}"
+    );
+    assert!(
+        errors
+            .iter()
+            .any(|error| error.message.contains("unsupported operand type(s) for +")),
+        "lowering should reach operand typing for nested subscript augassign: {errors:?}"
+    );
+}
+
+#[test]
+fn test_nested_attribute_assignment_target_lowers_for_self_fields() {
+    let result = lower_source(
+        "class ListNode:\n    next: ListNode | None\n\n    def __init__(self):\n        self.next = None\n\nclass Wrapper:\n    head: ListNode\n\n    def __init__(self):\n        self.head = ListNode()\n        self.head.next = ListNode()\n",
+    );
+    assert!(
+        result.is_ok(),
+        "nested attribute assignment on class fields should lower: {:?}",
+        result.err()
+    );
+}
+
+#[test]
+fn test_nested_attribute_assignment_lowers_for_optional_field_base() {
+    let result = lower_source(
+        "class ListNode:\n    next: ListNode | None\n    prev: ListNode | None\n\n    def __init__(self):\n        self.next = None\n        self.prev = None\n\ndef relink(mut node: ListNode) -> None:\n    if node.prev is not None:\n        node.prev.next = node.next\n",
+    );
+    assert!(
+        result.is_ok(),
+        "nested attribute assignment through optional field bases should lower under explicit narrowing: {:?}",
+        result.err()
+    );
+}
+
+#[test]
 fn test_empty_list_specializes_on_append_and_satisfies_return_type() {
     let result = lower_source(
         "def collect() -> list[int]:\n    res = []\n    res.append(1)\n    return res\n",
