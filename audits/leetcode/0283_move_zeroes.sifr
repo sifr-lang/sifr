@@ -1,12 +1,14 @@
 # LeetCode 283: Move Zeroes
 
-def moveZeroes(nums: list[int]) -> None:
+def moveZeroes(mut nums: list[int]) -> None:
     
     slow = 0
     for fast in range(len(nums)):
         
         if nums[fast] != 0 and nums[slow] == 0:
-            nums[slow], nums[fast] = nums[fast], nums[slow]
+            tmp = nums[slow]
+            nums[slow] = nums[fast]
+            nums[fast] = tmp
 
         if nums[slow] != 0:
             slow += 1
@@ -18,4 +20,3 @@ def main():
     arg0 = [0]
     _result = moveZeroes(arg0)
     assert arg0 == [0]
-
