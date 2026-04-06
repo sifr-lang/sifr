@@ -8,7 +8,7 @@ def reverse(mut x: int) -> int:
     MAX = 2147483647  #  2^31 - 1
 
     res = 0
-    while x:
+    while x != 0:
         digit = int(math.fmod(x, 10))  # (python dumb) -1 %  10 = 9
         x = int(x / 10)  # (python dumb) -1 // 10 = -1
 
@@ -25,4 +25,3 @@ def main():
     assert str(reverse(-123)) == '-321'
     assert str(reverse(120)) == '21'
     assert str(reverse(0)) == '0'
-

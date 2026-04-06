@@ -9,17 +9,30 @@ def fullJustify(words: list[str], maxWidth: int) -> list[str]:
         if length + len(line) + len(words[i]) > maxWidth:
             # Line complete
             extra_space = maxWidth - length
+            if len(line) == 1:
+                only = line[0]
+                if only is None:
+                    return []
+                res.append(only + (" " * extra_space))
+                line, length = [], 0
+                continue
+
             word_cnt = len(line) - 1
-            spaces = extra_space // max(1, word_cnt)
-            remainder = extra_space % max(1, word_cnt)
+            spaces = extra_space // word_cnt
+            remainder = extra_space % word_cnt
+            built = ""
+            for j in range(len(line)):
+                word = line[j]
+                if word is None:
+                    return []
+                built = built + word
+                if j < len(line) - 1:
+                    built = built + (" " * spaces)
+                    if remainder != 0:
+                        built = built + " "
+                        remainder -= 1
 
-            for j in range(max(1, len(line) - 1)):
-                line[j] += " " * spaces
-                if remainder:
-                    line[j] += " "
-                    remainder -= 1
-
-            res.append("".join(line))
+            res.append(built)
             line, length = [], 0  # Reset line and length
         
         line.append(words[i])
@@ -27,9 +40,16 @@ def fullJustify(words: list[str], maxWidth: int) -> list[str]:
         i += 1
 
     # Handling the last line
-    last_line = " ".join(line)
+    last_line = ""
+    for j in range(len(line)):
+        word = line[j]
+        if word is None:
+            return []
+        if j != 0:
+            last_line = last_line + " "
+        last_line = last_line + word
     trail_spaces = maxWidth - len(last_line)
-    res.append(last_line + (trail_spaces * " "))
+    res.append(last_line + (" " * trail_spaces))
 
     return res
 
@@ -37,4 +57,3 @@ def main():
     assert fullJustify(['This', 'is', 'an', 'example', 'of', 'text', 'justification.'], 16) == ['This    is    an', 'example  of text', 'justification.  ']
     assert fullJustify(['What', 'must', 'be', 'acknowledgment', 'shall', 'be'], 16) == ['What   must   be', 'acknowledgment  ', 'shall be        ']
     assert fullJustify(['Science', 'is', 'what', 'we', 'understand', 'well', 'enough', 'to', 'explain', 'to', 'a', 'computer.', 'Art', 'is', 'everything', 'else', 'we', 'do'], 20) == ['Science  is  what we', 'understand      well', 'enough to explain to', 'a  computer.  Art is', 'everything  else  we', 'do                  ']
-
