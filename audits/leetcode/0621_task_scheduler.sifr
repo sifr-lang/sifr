@@ -1,24 +1,25 @@
 # LeetCode 621: Task Scheduler
 
+def _nz_int(value: int | None) -> int:
+    if value is None:
+        return 0
+    return value
+
 def leastInterval(tasks: list[str], n: int) -> int:
     count = Counter(tasks)
-    maxHeap = [-cnt for cnt in count.values()]
-    heapq.heapify(maxHeap)
-
-    time = 0
-    q = deque()  # pairs of [-cnt, idleTime]
-    while maxHeap or q:
-        time += 1
-
-        if not maxHeap:
-            time = q[0][1]
-        else:
-            cnt = 1 + heapq.heappop(maxHeap)
-            if cnt:
-                q.append([cnt, time + n])
-        if q and q[0][1] == time:
-            heapq.heappush(maxHeap, q.popleft()[0])
-    return time
+    max_freq = 0
+    max_count = 0
+    for freq in count.values():
+        f = _nz_int(freq)
+        if f > max_freq:
+            max_freq = f
+            max_count = 1
+        elif f == max_freq:
+            max_count += 1
+    slots = (max_freq - 1) * (n + 1) + max_count
+    if slots < len(tasks):
+        return len(tasks)
+    return slots
 
 def main():
     assert leastInterval(['A', 'A', 'A', 'B', 'B', 'B'], 2) == 8

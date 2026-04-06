@@ -16,7 +16,9 @@
   - closed in this lane: `0347`, `0210`, `0785`, `0787`, `2092`, `2101`, `0253`, `0280`, `0456`
 - [ ] `W3-AU-flow-stabilization-and-operator-safety`
   - progress: AU-3 residual reduced `5 -> 4` (`1642` closed in wave22)
-- [ ] `W4-AU-compat-container-contract-typing`
+- [x] `W4-AU-compat-container-contract-typing`
+  - progress: AU-1 residual reduced `4 -> 0` across wave23..wave24
+  - closed in this lane: `0621`, `0767`, `1481`, `1985`
 - [ ] `W5-ON-contract-return-closure`
 - [x] `A1-signature-annotation-required`
 - [x] `A2-explicit-guard-canonicalization`
@@ -52,6 +54,8 @@
 - completed: focused ON-2 full closure rerun (`0210`, `0785`, `0787`, `2092`, `2101`) -> `/tmp/phase_apr06_on_au_wave20_on2_full_closure_coldcache.json`
 - completed: focused ON-3 full closure rerun (`0253`, `0280`, `0456`) -> `/tmp/phase_apr06_on_au_wave21_on3_full_closure_coldcache.json`
 - completed: focused AU-3 single closure rerun (`1642`) -> `/tmp/phase_apr06_on_au_wave22_au3_single_1642_coldcache.json`
+- completed: focused AU-1 single closure rerun (`0621`) -> `/tmp/phase_apr06_on_au_wave23_au1_single_0621_coldcache.json`
+- completed: focused AU-1 full closure rerun (`0767`, `1481`, `1985`) -> `/tmp/phase_apr06_on_au_wave24_au1_full_closure_coldcache.json`
 - completed: local validation gate -> `scripts/run_all_tests.sh --profile quick` (pass)
 - pending: full-corpus rerun
 - pending: taxonomy refresh

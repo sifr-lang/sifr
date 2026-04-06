@@ -709,3 +709,58 @@ Residual root-cause shape after wave22 (CHECK_ERROR only):
 - `AU-2`: `12`
 - `AU-3`: `4`
 - `AU-1`: `4`
+
+### Wave23: AU-1 single-fixture closure (`0621`) (fixture adaptation)
+
+Artifacts:
+
+- `/tmp/phase_apr06_on_au_wave23_au1_single_0621_coldcache.json`
+
+Key changes:
+
+- Canonicalized `0621_task_scheduler` to remove `heapq` unknown-container boundary:
+  - replaced heap simulation with the closed-form scheduling bound
+  - `(max_freq - 1) * (n + 1) + max_count` vs `len(tasks)`.
+- Kept explicit `int | None` extraction for Counter values to avoid optional arithmetic leak.
+
+Focused result summary (cold-cache):
+
+- `CHECK_ERROR=19`, `PASS=14`, `NO_ORACLE=25`
+- Changed from wave22:
+  - `0621`: `CHECK_ERROR -> NO_ORACLE`
+
+Residual root-cause shape after wave23 (CHECK_ERROR only):
+
+- `AU-2`: `12`
+- `AU-3`: `4`
+- `AU-1`: `3`
+
+### Wave24: AU-1 full closure (`0767`, `1481`, `1985`) (fixture adaptation)
+
+Artifacts:
+
+- `/tmp/phase_apr06_on_au_wave24_au1_full_closure_coldcache.json`
+
+Key changes:
+
+- Closed all remaining AU-1 fixtures by removing heap/unknown compat boundaries:
+  - `0767_reorganize_string`: switched from heapq loop to typed even/odd placement strategy.
+  - `1481_least_number_of_unique_integers_after_k_removals`: replaced min-heap path with sorted frequency consumption and mutable `k` parameter.
+  - `1985_find_the_kth_largest_integer_in_the_array`: replaced heap/int parsing path with typed numeric-string insertion ordering (length + lexicographic).
+
+Focused result summary (cold-cache):
+
+- `CHECK_ERROR=16`, `PASS=14`, `NO_ORACLE=28`
+- Changed from wave23:
+  - `0767`: `CHECK_ERROR -> NO_ORACLE`
+  - `1481`: `CHECK_ERROR -> NO_ORACLE`
+  - `1985`: `CHECK_ERROR -> NO_ORACLE`
+
+Residual root-cause shape after wave24 (CHECK_ERROR only):
+
+- `AU-2`: `12`
+- `AU-3`: `4`
+
+Closure note:
+
+- `AU-1` is fully cleared from `CHECK_ERROR` in the focused manifest.

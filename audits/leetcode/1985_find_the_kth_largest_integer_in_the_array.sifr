@@ -1,15 +1,29 @@
 # LeetCode 1985: Find The Kth Largest Integer In The Array
 
+def _is_less_numeric(a: str, b: str) -> bool:
+    if len(a) != len(b):
+        return len(a) < len(b)
+    return a < b
+
 def kthLargestNumber(nums: list[str], k: int) -> str:
-    maxHeap = [-int(n) for n in nums]
-    heapq.heapify(maxHeap)
-    while k>1:
-        heapq.heappop(maxHeap)
-        k-=1
-    return str(-maxHeap[0])
+    nums_sorted: list[str] = []
+    for value in nums:
+        pos = 0
+        while pos < len(nums_sorted):
+            current = nums_sorted[pos]
+            if current is None:
+                break
+            if _is_less_numeric(current, value):
+                pos += 1
+            else:
+                break
+        nums_sorted.insert(pos, value)
+    selected = nums_sorted[len(nums_sorted) - k]
+    if selected is None:
+        return ""
+    return selected
 
 def main():
     assert kthLargestNumber(['3', '6', '7', '10'], 4) == '3'
     assert kthLargestNumber(['2', '21', '12', '1'], 3) == '2'
     assert kthLargestNumber(['0', '0'], 2) == '0'
-

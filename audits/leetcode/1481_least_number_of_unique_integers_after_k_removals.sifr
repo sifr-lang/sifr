@@ -1,16 +1,24 @@
 # LeetCode 1481: Least Number Of Unique Integers After K Removals
 
-def findLeastNumOfUniqueInts(arr: list[int], k: int) -> int: 
-    freq = Counter(arr)
-    heap = list(freq.values())
-    heapq.heapify(heap)
+def _nz_int(value: int | None) -> int:
+    if value is None:
+        return 0
+    return value
 
-    res = len(heap)
-    while k > 0 and heap:
-        f = heapq.heappop(heap)
+def findLeastNumOfUniqueInts(arr: list[int], mut k: int) -> int:
+    freq = Counter(arr)
+    counts = []
+    for value in freq.values():
+        counts.append(_nz_int(value))
+    counts.sort()
+
+    res = len(counts)
+    for f in counts:
         if k >= f:
             k -= f
             res -= 1
+        else:
+            break
     return res
 
 def main():

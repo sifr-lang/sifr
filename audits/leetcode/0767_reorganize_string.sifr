@@ -1,28 +1,44 @@
 # LeetCode 767: Reorganize String
 
+def _nz_int(value: int | None) -> int:
+    if value is None:
+        return 0
+    return value
+
 def reorganizeString(s: str) -> str:
-    count = Counter(s)  # Hashmap, count each char
-    maxHeap = [[-cnt, char] for char, cnt in count.items()]
-    heapq.heapify(maxHeap)  # O(n)
+    count = Counter(s)
+    n = len(s)
+    max_char = ""
+    max_freq = 0
+    for char, freq in count.items():
+        f = _nz_int(freq)
+        if f > max_freq:
+            max_freq = f
+            max_char = char
+    if max_freq > (n + 1) // 2:
+        return ""
 
-    prev = None
-    res = ""
-    while maxHeap or prev:
-        if prev and not maxHeap:
-            return ""
-        # most frequent, except prev
-        cnt, char = heapq.heappop(maxHeap)
-        res += char
-        cnt += 1
+    res = ["" for _ in range(n)]
+    idx = 0
 
-        if prev:
-            heapq.heappush(maxHeap, prev)
-            prev = None
-        if cnt != 0:
-            prev = [cnt, char]
-    return res
+    remaining = max_freq
+    while remaining > 0:
+        res[idx] = max_char
+        idx += 2
+        remaining -= 1
+
+    for char, freq in count.items():
+        f = _nz_int(freq)
+        if char == max_char:
+            f -= max_freq
+        while f > 0:
+            if idx >= n:
+                idx = 1
+            res[idx] = char
+            idx += 2
+            f -= 1
+    return "".join(res)
 
 def main():
     assert reorganizeString('aab') == 'aba'
     assert reorganizeString('aaab') == ''
-
