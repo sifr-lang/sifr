@@ -2,11 +2,15 @@
 
 def removeCoveredIntervals(intervals: list[list[int]]) -> int:
     # sort on the basis of inc li first and then on the basis of dec length (=> -ri)
-    intervals.sort(key=lambda x: (x[0], -x[1]))
+    ordered: list[tuple[int, int]] = []
+    for interval in intervals:
+        ordered.append((interval[0], -interval[1]))
+    ordered.sort()
     
     covered, maxri = 0, 0
     
-    for _, ri in intervals:
+    for pair in ordered:
+        ri = -pair[1]
         if ri > maxri:
             maxri = ri
         else:
@@ -16,5 +20,4 @@ def removeCoveredIntervals(intervals: list[list[int]]) -> int:
 
 def main():
     assert str(removeCoveredIntervals([[1,4],[3,6],[2,8]])) == '2'
-
 

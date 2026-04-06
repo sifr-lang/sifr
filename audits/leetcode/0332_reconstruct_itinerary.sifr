@@ -1,16 +1,22 @@
 # LeetCode 332: Reconstruct Itinerary
 
 def findItinerary(tickets: list[list[str]]) -> list[str]:
-    adj = {src: [] for src, dst in tickets}
-    res = []
+    adj: dict[str, list[str]] = {}
+    res: list[str] = []
 
-    for src, dst in tickets:
+    for ticket in tickets:
+        src = ticket[0]
+        if src not in adj:
+            adj[src] = []
+    for ticket in tickets:
+        src = ticket[0]
+        dst = ticket[1]
         adj[src].append(dst)
 
     for key in adj:
         adj[key].sort()
 
-    def dfs(adj: dict[str, list[str]], src: str):
+    def dfs(adj: dict[str, list[str]], src: str) -> None:
         if src in adj:
             destinations = adj[src][:]
             while destinations:

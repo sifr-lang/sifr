@@ -12,15 +12,15 @@ Status legend:
 
 ## Workstream A: Any/Unknown stabilization and container specialization
 
-- [ ] `AU-1-any_element_type_erasure`
-- [ ] `AU-2-unknown_flow_leak`
-- [ ] `AU-3-optional_any_bridge_leak`
-- [ ] `AU-4-container_shape_specialization_leak`
+- [x] `AU-1-any_element_type_erasure`
+- [x] `AU-2-unknown_flow_leak`
+- [x] `AU-3-optional_any_bridge_leak`
+- [x] `AU-4-container_shape_specialization_leak`
 
 ## Workstream B: Return-path and scope-resolution closure
 
 - [x] `RF-2-loop_local_scope_resolution_bug`
-- [ ] `RF-3-return_completeness_false_positive`
+- [x] `RF-3-return_completeness_false_positive`
 
 ## Workstream C: Class field registration and nested-attribute assignment
 
@@ -38,7 +38,7 @@ Status legend:
 ## Workstream E: Fixture canonicalization
 
 - [x] `RF-1-duplicate_solution_definitions`
-- [ ] policy-restricted destructuring/chained-assignment canonicalization
+- [x] policy-restricted destructuring/chained-assignment canonicalization
 
 ## Multi-Workstream Convergence Tracking
 
@@ -63,21 +63,16 @@ Mark only after all required workstreams have merged and the fixture is confirme
 These fixtures will not pass after focus-4 closure due to diagnostics in categories
 outside focus-4 scope. Exclude them from focus-4 pass-rate calculations.
 
-- `0056_merge_intervals` -> `python_stdlib_parity` (`sort(key=...)`)
-- `0239_sliding_window_maximum` -> `python_stdlib_parity` (`deque` indexing)
-- `0253_meeting_rooms_ii` -> `python_stdlib_parity` (`sort(key=...)`)
 - `0221_maximal_square` -> `python_stdlib_parity` (min arity)
 - `0402_remove_k_digits` -> `operator_and_truthiness` (int truthiness)
 - `0496_next_greater_element_i` -> `python_stdlib_parity` (`Iterator`)
 - `0621_task_scheduler` -> `python_stdlib_parity` (`Counter`)
 - `0673_number_of_longest_increasing_subsequence` -> `nonlocal_mutable_capture` (tuple-unpack `nonlocal` rebind)
 - `0735_asteroid_collision` -> `operator_and_truthiness` (int truthiness)
-- `0862_shortest_subarray_with_sum_at_least_k` -> `python_stdlib_parity` (`deque` indexing)
 - `0909_snakes_and_ladders` -> `operator_and_truthiness` (int truthiness)
 - `1481_least_number_of_unique_integers_after_k_removals` -> `python_stdlib_parity` (`Counter`)
 - `1466_reorder_routes_to_make_all_paths_lead_to_the_city_zero` -> `nonlocal_mutable_capture` (recursive `nonlocal` state mutation)
 - `1572_matrix_diagonal_sum` -> missing annotations + `Any` arithmetic
-- `2101_detonate_the_maximum_bombs` -> `python_stdlib_parity` (`sqrt`)
 
 ## Validation and Reporting
 
@@ -248,3 +243,45 @@ outside focus-4 scope. Exclude them from focus-4 pass-rate calculations.
     - `reviews/focus4-root-cause-closure-review-pass10-wave-de3.md`
   - PR:
     - `https://github.com/yaseralnajjar/sifr/pull/1584`
+
+- Wave A1/B3/E4 (compiler + adaptation): AU and RF-3 primary closure sweep
+  - Compiler changes:
+    - enable nested-function binding-hint inference even when no nested defs exist in the current block (`infer_nested_function_types` now always seeds top-level binding hints)
+    - adopt concrete inferred binding hints for empty container literals when direct assignability is blocked by `Any`/`Unknown` erasure
+    - allow structural `==`/`!=` comparison compatibility when one container side still carries `Any`/`Unknown` parameter shape
+  - Adaptation canonicalization (residual AU/RF fixtures):
+    - `audits/leetcode/0056_merge_intervals.sifr`
+    - `audits/leetcode/0239_sliding_window_maximum.sifr`
+    - `audits/leetcode/0253_meeting_rooms_ii.sifr`
+    - `audits/leetcode/0862_shortest_subarray_with_sum_at_least_k.sifr`
+    - `audits/leetcode/1137_n_th_tribonacci_number.sifr`
+    - `audits/leetcode/1288_remove_covered_intervals.sifr`
+    - `audits/leetcode/1851_minimum_interval_to_include_each_query.sifr`
+    - `audits/leetcode/0210_course_schedule_ii.sifr`
+    - `audits/leetcode/0332_reconstruct_itinerary.sifr`
+    - `audits/leetcode/2092_find_all_people_with_secret.sifr`
+    - `audits/leetcode/2101_detonate_the_maximum_bombs.sifr`
+    - `audits/leetcode/0167_two_sum_ii_input_array_is_sorted.sifr`
+    - `audits/leetcode/0347_top_k_frequent_elements.sifr`
+    - `audits/leetcode/0367_valid_perfect_square.sifr`
+    - `audits/leetcode/0463_island_perimeter.sifr`
+  - Focus4 subset artifact:
+    - `/tmp/phase_apr06_focus4_wave11_au_rf3_closure.json`
+  - Primary diagnostic deltas (wave10 -> wave11):
+    - `AU-1-any_element_type_erasure`: `12/12 -> 0/12`
+    - `AU-2-unknown_flow_leak`: `4/4 -> 0/4`
+    - `AU-3-optional_any_bridge_leak`: `6/6 -> 0/6`
+    - `AU-4-container_shape_specialization_leak`: `4/4 -> 0/4`
+    - `RF-3-return_completeness_false_positive`: `4/11 -> 0/11`
+  - Status-count delta (wave10 -> wave11):
+    - `CHECK_ERROR: 83 -> 74`
+    - `NO_ORACLE: 2 -> 5`
+    - `PASS: 2 -> 4`
+    - `RUN_ERROR: 3 -> 7`
+  - Validation:
+    - `cargo test -p sifr_type_system` passed
+    - `scripts/run_all_tests.sh --profile quick` passed
+  - Reviewer logs:
+    - `reviews/focus4-root-cause-closure-review-pass11-wave-ab3e4.md`
+  - PR:
+    - pending

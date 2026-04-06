@@ -110,9 +110,11 @@ pub(super) fn infer_nested_function_types(
 ) -> NestedFunctionInference {
     let mut states = collect_nested_function_states(stmts, ctx);
     if states.is_empty() {
+        let mut env = FunctionEnv::default();
+        analyze_block(stmts, &mut env, &mut states, None, ctx);
         return NestedFunctionInference {
             function_types: HashMap::new(),
-            binding_hints: HashMap::new(),
+            binding_hints: env.vars,
         };
     }
 

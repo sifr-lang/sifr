@@ -392,8 +392,9 @@ pub fn type_check_comparison(left: &Type, op: &str, right: &Type) -> Result<Type
                     },
                 });
             }
-            // Equality comparison works on same types
-            if left == right || left == &Type::Any || right == &Type::Any {
+            // Equality comparison works on same types and on structurally matching
+            // containers when one side still carries Any/Unknown element shape.
+            if equality_comparable(left, right) {
                 return Ok(Type::Bool);
             }
             // Allow T|None vs T comparisons (and T vs T|None)
@@ -488,6 +489,38 @@ pub fn type_check_comparison(left: &Type, op: &str, right: &Type) -> Result<Type
                 ty: Box::new(left.clone()),
             },
         }),
+    }
+}
+
+fn equality_comparable(left: &Type, right: &Type) -> bool {
+    let left = left.resolve_alias();
+    let right = right.resolve_alias();
+
+    if left == right {
+        return true;
+    }
+    if matches!(left, Type::Any | Type::Unknown) || matches!(right, Type::Any | Type::Unknown) {
+        return true;
+    }
+
+    match (left, right) {
+        (Type::List(left_elem), Type::List(right_elem))
+        | (Type::Set(left_elem), Type::Set(right_elem)) => {
+            equality_comparable(left_elem.as_ref(), right_elem.as_ref())
+        }
+        (Type::Dict(left_key, left_value), Type::Dict(right_key, right_value)) => {
+            equality_comparable(left_key.as_ref(), right_key.as_ref())
+                && equality_comparable(left_value.as_ref(), right_value.as_ref())
+        }
+        (Type::Tuple(left_items), Type::Tuple(right_items))
+            if left_items.len() == right_items.len() =>
+        {
+            left_items
+                .iter()
+                .zip(right_items.iter())
+                .all(|(left_item, right_item)| equality_comparable(left_item, right_item))
+        }
+        _ => false,
     }
 }
 
@@ -700,6 +733,28 @@ mod tests {
             Type::Bool
         );
         assert!(type_check_comparison(&Type::Int, "==", &Type::Str).is_err());
+    }
+
+    #[test]
+    fn test_equality_allows_container_any_shape_mismatch() {
+        assert!(type_check_comparison(
+            &Type::List(Box::new(Type::Int)),
+            "==",
+            &Type::List(Box::new(Type::Any)),
+        )
+        .is_ok());
+        assert!(type_check_comparison(
+            &Type::List(Box::new(Type::List(Box::new(Type::Int)))),
+            "==",
+            &Type::List(Box::new(Type::List(Box::new(Type::Any)))),
+        )
+        .is_ok());
+        assert!(type_check_comparison(
+            &Type::Dict(Box::new(Type::Str), Box::new(Type::Int)),
+            "==",
+            &Type::Dict(Box::new(Type::Str), Box::new(Type::Any)),
+        )
+        .is_ok());
     }
 
     #[test]
