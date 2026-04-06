@@ -9,6 +9,7 @@
 ## Workstream Checklist
 
 - [ ] `W1-ON-arithmetic-and-operator-narrowing`
+  - progress: focused residual reduced `15 -> 12` in latest cold-cache wave (`0134`, `0338`, `2482` closed)
 - [ ] `W2-ON-container-boundary-and-element-refinement`
 - [ ] `W3-AU-flow-stabilization-and-operator-safety`
 - [ ] `W4-AU-compat-container-contract-typing`
@@ -37,5 +38,6 @@
 - completed: focused compiler follow-up rerun -> `/tmp/phase_apr06_on_au_wave8_subscript_guard_defaultdict_coldcache.json`
 - completed: focused A2 residual batch rerun -> `/tmp/phase_apr06_on_au_wave9_a2_residual_batch_coldcache.json`
 - completed: focused A2 closure + stability rerun -> `/tmp/phase_apr06_on_au_wave11_a2_full6_plus_0350_stability_coldcache.json`
+- completed: focused ON-1 adaptation subset rerun -> `/tmp/phase_apr06_on_au_wave13_on1_adaptation_subset3_coldcache.json`
 - pending: full-corpus rerun
 - pending: taxonomy refresh

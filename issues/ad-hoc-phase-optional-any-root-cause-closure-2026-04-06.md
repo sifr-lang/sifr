@@ -422,3 +422,38 @@ Residual root-cause shape after wave11 (CHECK_ERROR only):
 Closure note:
 
 - `ON-4` and `ON-5` are fully cleared from `CHECK_ERROR` in the focused manifest.
+
+### Wave13: ON-1 canonicalization subset (fixture adaptation)
+
+Artifacts:
+
+- `/tmp/phase_apr06_on_au_wave13_on1_adaptation_subset3_coldcache.json`
+
+Key changes:
+
+- Canonicalized residual ON-1 fixtures with explicit optional-index guards in:
+  - `0134_gas_station`
+  - `0338_counting_bits`
+  - `2482_difference_between_ones_and_zeros_in_row_and_column`
+- Continued ON-1 adaptation probes for:
+  - `0149_max_points_on_a_line`
+  - `1288_remove_covered_intervals`
+  - `2001_number_of_pairs_of_interchangeable_rectangles`
+  (still unresolved in this wave)
+
+Focused result summary (cold-cache):
+
+- `CHECK_ERROR=42`, `PASS=6`, `NO_ORACLE=10`
+- Changed from wave11:
+  - `0134`: `CHECK_ERROR -> PASS`
+  - `0338`: `CHECK_ERROR -> PASS`
+  - `2482`: `CHECK_ERROR -> NO_ORACLE`
+
+Residual root-cause shape after wave13 (CHECK_ERROR only):
+
+- `ON-1`: `12`
+- `AU-2`: `12`
+- `ON-2`: `6`
+- `AU-3`: `5`
+- `AU-1`: `4`
+- `ON-3`: `3`

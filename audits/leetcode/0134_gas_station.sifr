@@ -1,16 +1,21 @@
 # LeetCode 134: Gas Station
+# Canonicalized for explicit optional-index narrowing
 
 def canCompleteCircuit(gas: list[int], cost: list[int]) -> int:
     total_tank: int = 0
     current_tank: int = 0
     start: int = 0
     for i in range(len(gas)):
-        diff: int = gas[i] - cost[i]
-        total_tank += diff
-        current_tank += diff
-        if current_tank < 0:
-            start = i + 1
-            current_tank = 0
+        g: int | None = gas[i]
+        c: int | None = cost[i]
+        if g is not None:
+            if c is not None:
+                diff: int = g - c
+                total_tank += diff
+                current_tank += diff
+                if current_tank < 0:
+                    start = i + 1
+                    current_tank = 0
     if total_tank >= 0:
         return start
     return -1
@@ -19,4 +24,3 @@ def main():
     assert str(canCompleteCircuit([1, 2, 3, 4, 5], [3, 4, 5, 1, 2])) == '3'
     assert str(canCompleteCircuit([2, 3, 4], [3, 4, 3])) == '-1'
     assert str(canCompleteCircuit([5, 1, 2, 3, 4], [4, 4, 1, 5, 1])) == '4'
-
