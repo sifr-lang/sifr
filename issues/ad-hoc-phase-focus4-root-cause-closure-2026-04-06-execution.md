@@ -112,3 +112,5 @@ outside focus-4 scope. Exclude them from focus-4 pass-rate calculations.
     - `scripts/run_all_tests.sh --profile quick` passed
   - Reviewer logs:
     - `reviews/focus4-root-cause-closure-review-pass5-wave-cd.md`
+  - PR:
+    - `https://github.com/yaseralnajjar/sifr/pull/1577` (merged)
