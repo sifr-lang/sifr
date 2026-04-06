@@ -17,7 +17,9 @@ def openLock(deadends: list[str], target: str) -> int:
     visit = set(deadends)
     q.append(["0000", 0])  # [wheel, turns]
     while q:
-        wheel, turns = q.popleft()
+        state = q.popleft()
+        wheel = state[0]
+        turns = state[1]
         if wheel == target:
             return turns
         for child in children(wheel):

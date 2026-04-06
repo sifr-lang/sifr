@@ -15,10 +15,14 @@ def snakesAndLadders(mut board: list[list[int]]) -> int:
     q.append([1, 0])  # [square, moves]
     visit = set()
     while q:
-        square, moves = q.popleft()
+        state = q.popleft()
+        square = state[0]
+        moves = state[1]
         for i in range(1, 7):
             nextSquare = square + i
-            r, c = intToPos(nextSquare)
+            pos = intToPos(nextSquare)
+            r = pos[0]
+            c = pos[1]
             if board[r][c] != -1:
                 nextSquare = board[r][c]
             if nextSquare == length * length:

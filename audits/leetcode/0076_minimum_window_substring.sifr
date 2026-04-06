@@ -28,11 +28,11 @@ def minWindow(s: str, t: str) -> str:
             if s[l] in countT and window[s[l]] < countT[s[l]]:
                 have -= 1
             l += 1
-    l, r = res
+    l = res[0]
+    r = res[1]
     return s[l : r + 1] if resLen != float("infinity") else ""
 
 def main():
     assert minWindow('ADOBECODEBANC', 'ABC') == 'BANC'
     assert minWindow('a', 'a') == 'a'
     assert minWindow('a', 'aa') == ''
-

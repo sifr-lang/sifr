@@ -26,7 +26,9 @@ def walls_and_gates(mut rooms: list[list[int]]):
     dist = 0
     while q:
         for i in range(len(q)):
-            r, c = q.popleft()
+            cell = q.popleft()
+            r = cell[0]
+            c = cell[1]
             rooms[r][c] = dist
             addRooms(r + 1, c)
             addRooms(r - 1, c)

@@ -12,7 +12,9 @@ def shiftGrid(grid: list[list[int]], k: int) -> list[list[int]]:
     for r in range(M):
         for c in range(N):
             newVal = (posToVal(r, c) + k) % (M * N)
-            newR, newC = valToPos(newVal)
+            pos = valToPos(newVal)
+            newR = pos[0]
+            newC = pos[1]
             res[newR][newC] = grid[r][c]
     return res
 
@@ -20,4 +22,3 @@ def main():
     assert shiftGrid([[1, 2, 3], [4, 5, 6], [7, 8, 9]], 1) == [[9, 1, 2], [3, 4, 5], [6, 7, 8]]
     assert shiftGrid([[3, 8, 1, 9], [19, 7, 2, 5], [4, 6, 11, 10], [12, 0, 21, 13]], 4) == [[12, 0, 21, 13], [3, 8, 1, 9], [19, 7, 2, 5], [4, 6, 11, 10]]
     assert shiftGrid([[1, 2, 3], [4, 5, 6], [7, 8, 9]], 9) == [[1, 2, 3], [4, 5, 6], [7, 8, 9]]
-

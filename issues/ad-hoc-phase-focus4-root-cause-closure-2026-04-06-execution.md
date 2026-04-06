@@ -30,8 +30,8 @@ Status legend:
 ## Workstream D: Destructuring and subscript-augassign closure
 
 - [x] compiler lane: `DS-3-augassign_subscript_lowering_gap`
-- [ ] mixed lane: `DS-1-list_pair_destructure_requires_tuple`
-- [ ] mixed lane: `DS-2-list_unpack_requires_tuple`
+- [x] mixed lane: `DS-1-list_pair_destructure_requires_tuple`
+- [x] mixed lane: `DS-2-list_unpack_requires_tuple`
 - [x] adaptation lane: `DS-4-unpack_target_shape_restriction`
 - [x] adaptation lane: `DS-5-chained_assignment_restriction`
 
@@ -213,3 +213,38 @@ outside focus-4 scope. Exclude them from focus-4 pass-rate calculations.
     - `reviews/focus4-root-cause-closure-review-pass9-wave-de2.md`
   - PR:
     - `https://github.com/yaseralnajjar/sifr/pull/1583`
+
+- Wave D3/E3 (adaptation): list-shaped destructuring canonicalization for DS-1/DS-2 fixtures
+  - Canonicalized list-based tuple destructuring and list unpacking forms into index-based extraction or tuple-shaped carriers in:
+    - `audits/leetcode/0012_integer_to_roman.sifr`
+    - `audits/leetcode/0323_number_of_connected_components_in_an_undirected_graph.sifr`
+    - `audits/leetcode/0787_cheapest_flights_within_k_stops.sifr`
+    - `audits/leetcode/0994_rotting_oranges.sifr`
+    - `audits/leetcode/1091_shortest_path_in_binary_matrix.sifr`
+    - `audits/leetcode/1462_course_schedule_iv.sifr`
+    - `audits/leetcode/1466_reorder_routes_to_make_all_paths_lead_to_the_city_zero.sifr`
+    - `audits/leetcode/2001_number_of_pairs_of_interchangeable_rectangles.sifr`
+    - `audits/leetcode/0076_minimum_window_substring.sifr`
+    - `audits/leetcode/0286_walls_and_gates.sifr`
+    - `audits/leetcode/0673_number_of_longest_increasing_subsequence.sifr`
+    - `audits/leetcode/0752_open_the_lock.sifr`
+    - `audits/leetcode/0909_snakes_and_ladders.sifr`
+    - `audits/leetcode/0929_unique_email_addresses.sifr`
+    - `audits/leetcode/1260_shift_2d_grid.sifr`
+  - Focus4 subset artifact:
+    - `/tmp/phase_apr06_focus4_wave10_ds12_canonicalization.json`
+  - Primary diagnostic deltas:
+    - `DS-1-list_pair_destructure_requires_tuple`: `8/8 -> 0/8`
+    - `DS-2-list_unpack_requires_tuple`: `7/7 -> 0/7`
+  - Status-count delta (wave9 -> wave10):
+    - `CHECK_ERROR: 84 -> 83`
+    - `NO_ORACLE: 2 -> 2`
+    - `PASS: 2 -> 2`
+    - `RUN_ERROR: 2 -> 3`
+  - Validation:
+    - targeted checks removed both DS-1/DS-2 primary diagnostics across all 15 fixtures
+    - `scripts/run_all_tests.sh --profile quick` passed
+  - Reviewer logs:
+    - `reviews/focus4-root-cause-closure-review-pass10-wave-de3.md`
+  - PR:
+    - `https://github.com/yaseralnajjar/sifr/pull/1584`
