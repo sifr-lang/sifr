@@ -1,0 +1,481 @@
+{
+  "category_subcategory_counts": {
+    "callable_argument_contract_mismatch": {
+      "generic": 1
+    },
+    "codegen_runtime_build_gap": {
+      "other_build_failure": 4,
+      "rust_missing_binding_emission": 1
+    },
+    "destructuring_and_assignment_target_surface_gap": {
+      "generic": 1
+    },
+    "nonlocal_mutable_capture_not_supported": {
+      "generic": 2
+    },
+    "operator_and_truthiness_typing_gap": {
+      "generic": 11
+    },
+    "optional_none_flow_and_narrowing_gap": {
+      "generic": 1
+    },
+    "other_type_surface_and_api_mismatch": {
+      "generic": 11
+    },
+    "ownership_and_mutability_boundary": {
+      "generic": 4
+    },
+    "python_stdlib_and_builtin_parity_gap": {
+      "generic": 10
+    },
+    "recursive_node_and_field_expression_surface": {
+      "generic": 2
+    },
+    "return_path_and_function_contract_gap": {
+      "generic": 2
+    },
+    "signature_invalid_fixture_surface": {
+      "generic": 2
+    }
+  },
+  "failures": [
+    {
+      "category": "callable_argument_contract_mismatch",
+      "failure_stage": "check",
+      "first_diagnostic": "type error: argument 2 of callable 'Path': expected 'int', got 'float'",
+      "fixture_slug": "0931_minimum_falling_path_sum",
+      "status": "CHECK_ERROR",
+      "subcategory": "generic"
+    },
+    {
+      "category": "codegen_runtime_build_gap",
+      "failure_stage": "run",
+      "first_diagnostic": "no errors found",
+      "fixture_slug": "0049_group_anagrams",
+      "status": "RUN_ERROR",
+      "subcategory": "other_build_failure"
+    },
+    {
+      "category": "codegen_runtime_build_gap",
+      "failure_stage": "run",
+      "first_diagnostic": "no errors found",
+      "fixture_slug": "0144_binary_tree_preorder_traversal",
+      "status": "RUN_ERROR",
+      "subcategory": "other_build_failure"
+    },
+    {
+      "category": "codegen_runtime_build_gap",
+      "failure_stage": "run",
+      "first_diagnostic": "no errors found",
+      "fixture_slug": "0145_binary_tree_postorder_traversal",
+      "status": "RUN_ERROR",
+      "subcategory": "other_build_failure"
+    },
+    {
+      "category": "codegen_runtime_build_gap",
+      "failure_stage": "run",
+      "first_diagnostic": "no errors found",
+      "fixture_slug": "0705_design_hashset",
+      "status": "RUN_ERROR",
+      "subcategory": "other_build_failure"
+    },
+    {
+      "category": "codegen_runtime_build_gap",
+      "failure_stage": "run",
+      "first_diagnostic": "no errors found",
+      "fixture_slug": "1137_n_th_tribonacci_number",
+      "status": "RUN_ERROR",
+      "subcategory": "rust_missing_binding_emission"
+    },
+    {
+      "category": "destructuring_and_assignment_target_surface_gap",
+      "failure_stage": "check",
+      "first_diagnostic": "type error: for loop tuple target expects iterable elements of tuple type, got 'list[int]'",
+      "fixture_slug": "1029_two_city_scheduling",
+      "status": "CHECK_ERROR",
+      "subcategory": "generic"
+    },
+    {
+      "category": "nonlocal_mutable_capture_not_supported",
+      "failure_stage": "check",
+      "first_diagnostic": "type error: recursive nested function 'dfs' cannot mutate captured state with `nonlocal` yet",
+      "fixture_slug": "0543_diameter_of_binary_tree",
+      "status": "CHECK_ERROR",
+      "subcategory": "generic"
+    },
+    {
+      "category": "nonlocal_mutable_capture_not_supported",
+      "failure_stage": "check",
+      "first_diagnostic": "type error: recursive nested function 'dfs' cannot mutate captured state with `nonlocal` yet",
+      "fixture_slug": "0673_number_of_longest_increasing_subsequence",
+      "status": "CHECK_ERROR",
+      "subcategory": "generic"
+    },
+    {
+      "category": "operator_and_truthiness_typing_gap",
+      "failure_stage": "check",
+      "first_diagnostic": "type error: while condition must be bool or collection/string truthiness, got 'int'",
+      "fixture_slug": "0007_reverse_integer",
+      "status": "CHECK_ERROR",
+      "subcategory": "generic"
+    },
+    {
+      "category": "operator_and_truthiness_typing_gap",
+      "failure_stage": "check",
+      "first_diagnostic": "type error: if condition must be bool or collection/string truthiness, got 'int'",
+      "fixture_slug": "0068_text_justification",
+      "status": "CHECK_ERROR",
+      "subcategory": "generic"
+    },
+    {
+      "category": "operator_and_truthiness_typing_gap",
+      "failure_stage": "check",
+      "first_diagnostic": "type error: bad operand type for unary not: 'int'",
+      "fixture_slug": "0201_bitwise_and_of_numbers_range",
+      "status": "CHECK_ERROR",
+      "subcategory": "generic"
+    },
+    {
+      "category": "operator_and_truthiness_typing_gap",
+      "failure_stage": "check",
+      "first_diagnostic": "type error: '<' not supported between instances of 'bool' and 'int'",
+      "fixture_slug": "0371_sum_of_two_integers",
+      "status": "CHECK_ERROR",
+      "subcategory": "generic"
+    },
+    {
+      "category": "operator_and_truthiness_typing_gap",
+      "failure_stage": "check",
+      "first_diagnostic": "type error: if condition must be bool or collection/string truthiness, got 'int'",
+      "fixture_slug": "0416_partition_equal_subset_sum",
+      "status": "CHECK_ERROR",
+      "subcategory": "generic"
+    },
+    {
+      "category": "operator_and_truthiness_typing_gap",
+      "failure_stage": "check",
+      "first_diagnostic": "type error: cannot compare 'float' and 'int' with !=",
+      "fixture_slug": "0473_matchsticks_to_square",
+      "status": "CHECK_ERROR",
+      "subcategory": "generic"
+    },
+    {
+      "category": "operator_and_truthiness_typing_gap",
+      "failure_stage": "check",
+      "first_diagnostic": "type error: if condition must be bool or collection/string truthiness, got 'int'",
+      "fixture_slug": "0735_asteroid_collision",
+      "status": "CHECK_ERROR",
+      "subcategory": "generic"
+    },
+    {
+      "category": "operator_and_truthiness_typing_gap",
+      "failure_stage": "check",
+      "first_diagnostic": "type error: if condition must be bool or collection/string truthiness, got 'int'",
+      "fixture_slug": "0846_hand_of_straights",
+      "status": "CHECK_ERROR",
+      "subcategory": "generic"
+    },
+    {
+      "category": "operator_and_truthiness_typing_gap",
+      "failure_stage": "check",
+      "first_diagnostic": "type error: cannot compare 'list[list[int]]' and 'list[tuple[int, int]]' with ==",
+      "fixture_slug": "0973_k_closest_points_to_origin",
+      "status": "CHECK_ERROR",
+      "subcategory": "generic"
+    },
+    {
+      "category": "operator_and_truthiness_typing_gap",
+      "failure_stage": "check",
+      "first_diagnostic": "type error: cannot compare 'Never' and 'str' with ==",
+      "fixture_slug": "1220_count_vowels_permutation",
+      "status": "CHECK_ERROR",
+      "subcategory": "generic"
+    },
+    {
+      "category": "operator_and_truthiness_typing_gap",
+      "failure_stage": "check",
+      "first_diagnostic": "type error: cannot compare 'float' and 'int' with ==",
+      "fixture_slug": "1514_path_with_maximum_probability",
+      "status": "CHECK_ERROR",
+      "subcategory": "generic"
+    },
+    {
+      "category": "optional_none_flow_and_narrowing_gap",
+      "failure_stage": "check",
+      "first_diagnostic": "type error: cannot index type 'list[int]' with 'int | None'",
+      "fixture_slug": "0721_accounts_merge",
+      "status": "CHECK_ERROR",
+      "subcategory": "generic"
+    },
+    {
+      "category": "other_type_surface_and_api_mismatch",
+      "failure_stage": "check",
+      "first_diagnostic": "type error: list element type mismatch: expected 'str', got 'int'",
+      "fixture_slug": "0012_integer_to_roman",
+      "status": "CHECK_ERROR",
+      "subcategory": "generic"
+    },
+    {
+      "category": "other_type_surface_and_api_mismatch",
+      "failure_stage": "run",
+      "first_diagnostic": "warning: int multiplication with non-constant operands may overflow i64 at runtime; consider using bigint for large values",
+      "fixture_slug": "0150_evaluate_reverse_polish_notation",
+      "status": "RUN_ERROR",
+      "subcategory": "generic"
+    },
+    {
+      "category": "other_type_surface_and_api_mismatch",
+      "failure_stage": "check",
+      "first_diagnostic": "type error: 'in' operator: element type 'str' is not compatible with collection element type 'int'",
+      "fixture_slug": "0290_word_pattern",
+      "status": "CHECK_ERROR",
+      "subcategory": "generic"
+    },
+    {
+      "category": "other_type_surface_and_api_mismatch",
+      "failure_stage": "run",
+      "first_diagnostic": "warning: int multiplication with non-constant operands may overflow i64 at runtime; consider using bigint for large values",
+      "fixture_slug": "0297_serialize_and_deserialize_binary_tree",
+      "status": "RUN_ERROR",
+      "subcategory": "generic"
+    },
+    {
+      "category": "other_type_surface_and_api_mismatch",
+      "failure_stage": "check",
+      "first_diagnostic": "type error: list.append() argument type 'Result[int, ParseError]' is not compatible with list element type 'int'",
+      "fixture_slug": "0682_baseball_game",
+      "status": "CHECK_ERROR",
+      "subcategory": "generic"
+    },
+    {
+      "category": "other_type_surface_and_api_mismatch",
+      "failure_stage": "check",
+      "first_diagnostic": "type error: 'not in' operator: element type 'tuple[int, int]' is not compatible with collection element type 'int'",
+      "fixture_slug": "1091_shortest_path_in_binary_matrix",
+      "status": "CHECK_ERROR",
+      "subcategory": "generic"
+    },
+    {
+      "category": "other_type_surface_and_api_mismatch",
+      "failure_stage": "run",
+      "first_diagnostic": "warning: int multiplication with non-constant operands may overflow i64 at runtime; consider using bigint for large values",
+      "fixture_slug": "1260_shift_2d_grid",
+      "status": "RUN_ERROR",
+      "subcategory": "generic"
+    },
+    {
+      "category": "other_type_surface_and_api_mismatch",
+      "failure_stage": "run",
+      "first_diagnostic": "warning: int multiplication with non-constant operands may overflow i64 at runtime; consider using bigint for large values",
+      "fixture_slug": "1383_maximum_performance_of_a_team",
+      "status": "RUN_ERROR",
+      "subcategory": "generic"
+    },
+    {
+      "category": "other_type_surface_and_api_mismatch",
+      "failure_stage": "run",
+      "first_diagnostic": "warning: int left shift (<<) with non-constant shift amount may overflow i64 at runtime; consider using bigint",
+      "fixture_slug": "1498_number_of_subsequences_that_satisfy_the_given_sum_condition",
+      "status": "RUN_ERROR",
+      "subcategory": "generic"
+    },
+    {
+      "category": "other_type_surface_and_api_mismatch",
+      "failure_stage": "check",
+      "first_diagnostic": "type error: type 'tuple[int, int]' does not implement protocol 'Comparable' required by type parameter 'T'",
+      "fixture_slug": "1851_minimum_interval_to_include_each_query",
+      "status": "CHECK_ERROR",
+      "subcategory": "generic"
+    },
+    {
+      "category": "other_type_surface_and_api_mismatch",
+      "failure_stage": "check",
+      "first_diagnostic": "type error: max() takes 1 or 2 arguments",
+      "fixture_slug": "2002_maximum_product_of_the_length_of_two_palindromic_subsequences",
+      "status": "CHECK_ERROR",
+      "subcategory": "generic"
+    },
+    {
+      "category": "ownership_and_mutability_boundary",
+      "failure_stage": "check",
+      "first_diagnostic": "type error: cannot reassign immutable parameter `l`: add `mut` to the parameter declaration",
+      "fixture_slug": "0018_4sum",
+      "status": "CHECK_ERROR",
+      "subcategory": "generic"
+    },
+    {
+      "category": "ownership_and_mutability_boundary",
+      "failure_stage": "check",
+      "first_diagnostic": "type error: cannot mutate through immutable parameter `intervals`: add `mut` to the parameter declaration",
+      "fixture_slug": "0056_merge_intervals",
+      "status": "CHECK_ERROR",
+      "subcategory": "generic"
+    },
+    {
+      "category": "ownership_and_mutability_boundary",
+      "failure_stage": "check",
+      "first_diagnostic": "type error: cannot reassign immutable parameter `k`: add `mut` to the parameter declaration",
+      "fixture_slug": "0402_remove_k_digits",
+      "status": "CHECK_ERROR",
+      "subcategory": "generic"
+    },
+    {
+      "category": "ownership_and_mutability_boundary",
+      "failure_stage": "check",
+      "first_diagnostic": "type error: cannot mutate through immutable parameter `nums`: add `mut` to the parameter declaration",
+      "fixture_slug": "0442_find_all_duplicates_in_an_array",
+      "status": "CHECK_ERROR",
+      "subcategory": "generic"
+    },
+    {
+      "category": "python_stdlib_and_builtin_parity_gap",
+      "failure_stage": "check",
+      "first_diagnostic": "type error: min() takes 1 or 2 arguments",
+      "fixture_slug": "0072_edit_distance",
+      "status": "CHECK_ERROR",
+      "subcategory": "generic"
+    },
+    {
+      "category": "python_stdlib_and_builtin_parity_gap",
+      "failure_stage": "check",
+      "first_diagnostic": "type error: 'in' operator not supported for type 'range'",
+      "fixture_slug": "0130_surrounded_regions",
+      "status": "CHECK_ERROR",
+      "subcategory": "generic"
+    },
+    {
+      "category": "python_stdlib_and_builtin_parity_gap",
+      "failure_stage": "check",
+      "first_diagnostic": "type error: 'not in' operator not supported for type 'range'",
+      "fixture_slug": "0200_number_of_islands",
+      "status": "CHECK_ERROR",
+      "subcategory": "generic"
+    },
+    {
+      "category": "python_stdlib_and_builtin_parity_gap",
+      "failure_stage": "check",
+      "first_diagnostic": "type error: 'not in' operator not supported for type 'range'",
+      "fixture_slug": "0212_word_search_ii",
+      "status": "CHECK_ERROR",
+      "subcategory": "generic"
+    },
+    {
+      "category": "python_stdlib_and_builtin_parity_gap",
+      "failure_stage": "check",
+      "first_diagnostic": "type error: min() takes 1 or 2 arguments",
+      "fixture_slug": "0221_maximal_square",
+      "status": "CHECK_ERROR",
+      "subcategory": "generic"
+    },
+    {
+      "category": "python_stdlib_and_builtin_parity_gap",
+      "failure_stage": "check",
+      "first_diagnostic": "type error: cannot iterate over type 'bool'",
+      "fixture_slug": "0241_different_ways_to_add_parentheses",
+      "status": "CHECK_ERROR",
+      "subcategory": "generic"
+    },
+    {
+      "category": "python_stdlib_and_builtin_parity_gap",
+      "failure_stage": "check",
+      "first_diagnostic": "type error: cannot iterate over type 'Iterator[tuple[int, int]]'",
+      "fixture_slug": "0853_car_fleet",
+      "status": "CHECK_ERROR",
+      "subcategory": "generic"
+    },
+    {
+      "category": "python_stdlib_and_builtin_parity_gap",
+      "failure_stage": "check",
+      "first_diagnostic": "type error: 'in' operator not supported for type 'range'",
+      "fixture_slug": "0994_rotting_oranges",
+      "status": "CHECK_ERROR",
+      "subcategory": "generic"
+    },
+    {
+      "category": "python_stdlib_and_builtin_parity_gap",
+      "failure_stage": "check",
+      "first_diagnostic": "type error: 'in' operator not supported for type '__compat_defaultdict_list'",
+      "fixture_slug": "1345_jump_game_iv",
+      "status": "CHECK_ERROR",
+      "subcategory": "generic"
+    },
+    {
+      "category": "python_stdlib_and_builtin_parity_gap",
+      "failure_stage": "check",
+      "first_diagnostic": "type error: cannot iterate over type 'Iterator[tuple[int, list[int]]]'",
+      "fixture_slug": "1834_single_threaded_cpu",
+      "status": "CHECK_ERROR",
+      "subcategory": "generic"
+    },
+    {
+      "category": "recursive_node_and_field_expression_surface",
+      "failure_stage": "check",
+      "first_diagnostic": "type error: attribute access '.right' is not supported as an expression; use as a method call",
+      "fixture_slug": "0230_kth_smallest_element_in_a_bst",
+      "status": "CHECK_ERROR",
+      "subcategory": "generic"
+    },
+    {
+      "category": "recursive_node_and_field_expression_surface",
+      "failure_stage": "check",
+      "first_diagnostic": "type error: attribute access '.next' is not supported as an expression; use as a method call",
+      "fixture_slug": "0707_design_linked_list",
+      "status": "CHECK_ERROR",
+      "subcategory": "generic"
+    },
+    {
+      "category": "return_path_and_function_contract_gap",
+      "failure_stage": "check",
+      "first_diagnostic": "type error: undefined variable: 'mid'",
+      "fixture_slug": "0162_find_peak_element",
+      "status": "CHECK_ERROR",
+      "subcategory": "generic"
+    },
+    {
+      "category": "return_path_and_function_contract_gap",
+      "failure_stage": "check",
+      "first_diagnostic": "type error: duplicate function definition in module: 'longestPalindromeSubseq'",
+      "fixture_slug": "0516_longest_palindromic_subsequence",
+      "status": "CHECK_ERROR",
+      "subcategory": "generic"
+    },
+    {
+      "category": "signature_invalid_fixture_surface",
+      "failure_stage": "check",
+      "first_diagnostic": "type error: argument 2 of callable 'dfs': expected 'int', got 'Result[int, ParseError]'",
+      "fixture_slug": "1849_splitting_a_string_into_descending_consecutive_values",
+      "status": "CHECK_ERROR",
+      "subcategory": "generic"
+    },
+    {
+      "category": "signature_invalid_fixture_surface",
+      "failure_stage": "check",
+      "first_diagnostic": "type error: str has no method 'rfind'",
+      "fixture_slug": "1930_unique_length_3_palindromic_subsequences",
+      "status": "CHECK_ERROR",
+      "subcategory": "generic"
+    }
+  ],
+  "name": "full_corpus_failure_taxonomy_20260407_live_rerun1",
+  "summary": {
+    "category_count": 12,
+    "category_counts": {
+      "callable_argument_contract_mismatch": 1,
+      "codegen_runtime_build_gap": 5,
+      "destructuring_and_assignment_target_surface_gap": 1,
+      "nonlocal_mutable_capture_not_supported": 2,
+      "operator_and_truthiness_typing_gap": 11,
+      "optional_none_flow_and_narrowing_gap": 1,
+      "other_type_surface_and_api_mismatch": 11,
+      "ownership_and_mutability_boundary": 4,
+      "python_stdlib_and_builtin_parity_gap": 10,
+      "recursive_node_and_field_expression_surface": 2,
+      "return_path_and_function_contract_gap": 2,
+      "signature_invalid_fixture_surface": 2
+    },
+    "failing_cases": 52,
+    "generated_on": "2026-04-07",
+    "source_results": "verification/leetcode/full_corpus_current_results_20260407_live_rerun1.json",
+    "total_cases": 411
+  }
+}
