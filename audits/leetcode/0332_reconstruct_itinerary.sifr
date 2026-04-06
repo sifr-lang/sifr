@@ -1,39 +1,39 @@
 # LeetCode 332: Reconstruct Itinerary
 
-def findItinerary(tickets: list[list[str]]) -> list[str]:
+def findItinerary(tickets: list[tuple[str, str]]) -> list[str]:
+    ordered: list[tuple[str, str]] = tickets[:]
+    ordered.sort()
+
     adj: dict[str, list[str]] = {}
-    res: list[str] = []
+    for src, dst in ordered:
+        if src is None or dst is None:
+            continue
+        values = adj.get(src, [])
+        values.append(dst)
+        adj[src] = values
 
-    for ticket in tickets:
-        src = ticket[0]
-        if src not in adj:
-            adj[src] = []
-    for ticket in tickets:
-        src = ticket[0]
-        dst = ticket[1]
-        adj[src].append(dst)
+    route: list[str] = []
+    stack: list[str] = ['JFK']
+    while stack:
+        src = stack.pop()
+        if src is None:
+            continue
+        values = adj.get(src, [])
+        if len(values) == 0:
+            route.append(src)
+            continue
+        stack.append(str(src))
+        next_stop = values[0]
+        adj[src] = values[1:]
+        if next_stop is None:
+            continue
+        stack.append(str(next_stop))
 
-    for key in adj:
-        adj[key].sort()
-
-    def dfs(adj: dict[str, list[str]], src: str) -> None:
-        if src in adj:
-            destinations = adj[src][:]
-            while destinations:
-                dest = destinations[0]
-                adj[src].pop(0)
-                dfs(adj, dest)
-                destinations = adj[src][:]
-        res.append(src)
-
-    dfs(adj, "JFK")
-    res.reverse()
-
-    if len(res) != len(tickets) + 1:
+    route.reverse()
+    if len(route) != len(tickets) + 1:
         return []
-
-    return res
+    return route
 
 def main():
-    assert findItinerary([['MUC', 'LHR'], ['JFK', 'MUC'], ['SFO', 'SJC'], ['LHR', 'SFO']]) == ['JFK', 'MUC', 'LHR', 'SFO', 'SJC']
-    assert findItinerary([['JFK', 'SFO'], ['JFK', 'ATL'], ['SFO', 'ATL'], ['ATL', 'JFK'], ['ATL', 'SFO']]) == ['JFK', 'ATL', 'JFK', 'SFO', 'ATL', 'SFO']
+    assert findItinerary([('MUC', 'LHR'), ('JFK', 'MUC'), ('SFO', 'SJC'), ('LHR', 'SFO')]) == ['JFK', 'MUC', 'LHR', 'SFO', 'SJC']
+    assert findItinerary([('JFK', 'SFO'), ('JFK', 'ATL'), ('SFO', 'ATL'), ('ATL', 'JFK'), ('ATL', 'SFO')]) == ['JFK', 'ATL', 'JFK', 'SFO', 'ATL', 'SFO']

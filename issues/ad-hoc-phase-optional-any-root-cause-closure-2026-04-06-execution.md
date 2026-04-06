@@ -13,8 +13,9 @@
 - [ ] `W3-AU-flow-stabilization-and-operator-safety`
 - [ ] `W4-AU-compat-container-contract-typing`
 - [ ] `W5-ON-contract-return-closure`
-- [ ] `A1-signature-annotation-required`
-- [ ] `A2-explicit-guard-canonicalization`
+- [x] `A1-signature-annotation-required`
+- [x] `A2-explicit-guard-canonicalization`
+  - closed residual fixtures: `0208`, `0332`, `0752`, `0929`, `1466`, `1845`
 
 ## Suggested Execution Order
 
@@ -32,6 +33,9 @@
 
 ## Rerun Log
 
-- pending: focused 58-fixture rerun
+- completed: focused 58-fixture rerun -> `/tmp/phase_apr06_on_au_wave7b_a1_adaptation_1472_coldcache.json`
+- completed: focused compiler follow-up rerun -> `/tmp/phase_apr06_on_au_wave8_subscript_guard_defaultdict_coldcache.json`
+- completed: focused A2 residual batch rerun -> `/tmp/phase_apr06_on_au_wave9_a2_residual_batch_coldcache.json`
+- completed: focused A2 closure + stability rerun -> `/tmp/phase_apr06_on_au_wave11_a2_full6_plus_0350_stability_coldcache.json`
 - pending: full-corpus rerun
 - pending: taxonomy refresh

@@ -258,3 +258,167 @@ Acceptance:
 - Close the compiler-owned majority (`51/58`) directly.
 - Minimize adaptation to explicit policy-consistent cases (`<=7`, currently projected `1` mandatory + residual guard cases only if still needed).
 - Produce a measurable reduction in both `optional_none_flow_and_narrowing_gap` and `any_unknown_typing_and_container_specialization_gap` in the next full run.
+
+## Execution Log (2026-04-06)
+
+### Wave4: Counter codegen/index/builtin-min closure
+
+Artifacts:
+
+- `/tmp/phase_apr06_on_au_wave4_counter_iter_min_fixes.json`
+
+Key changes:
+
+- Fixed structured bool-op condition lowering in stmt emitter.
+- Fixed optional tuple index lowering in codegen helpers.
+- Added class/protocol index lowering through `__getitem__`.
+- Added borrow-aware `__getitem__` arg passing in codegen.
+- Fixed builtin `min/max` fallback lowering to avoid unresolved plain `min(...)` emission.
+- Stabilized `Counter` stdlib path (`__getitem__`, constructor compatibility, iterator-return handling path updates).
+
+Focused result summary:
+
+- `CHECK_ERROR=53`, `PASS=4`, `NO_ORACLE=1`
+- Changed from prior wave:
+  - `0383`: `RUN_ERROR -> PASS`
+  - `1189`: `RUN_ERROR -> NO_ORACLE`
+
+### Wave5: AU-4 defaultdict/Counter contract bridge
+
+Artifacts:
+
+- `/tmp/phase_apr06_on_au_wave5b_defaultdict_counter_bridge.json`
+
+Key changes:
+
+- Added HIR defaultdict constructor bridge for `defaultdict(int, Counter(...))` compatibility surface.
+- Added deterministic ordering for `Counter.keys()` in stdlib to stabilize downstream `items()` iteration order used by fixture assertions.
+- Added HIR regression coverage for Counter-backed defaultdict constructor lowering.
+
+Focused result summary:
+
+- `CHECK_ERROR=52`, `PASS=4`, `NO_ORACLE=2`
+- Changed from wave4:
+  - `0350`: `CHECK_ERROR -> NO_ORACLE`
+
+### Wave7: A1 signature-annotation-required adaptation (1472)
+
+Artifacts:
+
+- `/tmp/phase_apr06_on_au_wave7b_a1_adaptation_1472_coldcache.json`
+
+Key changes:
+
+- Canonicalized `1472_design_browser_history.sifr` for current Sifr policy:
+  - added explicit parameter annotations in `ListNode.__init__`
+  - removed duplicate `BrowserHistory` class definition
+  - replaced optional-index return sites with explicit `None` guards
+  - rewrote history overwrite path to append/pop canonical form
+  - used explicit `str(url)` append form to satisfy ownership/lowering constraints
+- Cleared generated run artifact cache before focused rerun to avoid stale cache-hit contamination in status attribution.
+
+Focused result summary:
+
+- `CHECK_ERROR=51`, `PASS=4`, `NO_ORACLE=3`
+- Changed from wave6d baseline:
+  - `1472`: `CHECK_ERROR -> NO_ORACLE`
+
+### Wave8: Subscript-guard and defaultdict-index typing lane (compiler)
+
+Artifacts:
+
+- `/tmp/phase_apr06_on_au_wave8_subscript_guard_defaultdict_coldcache.json`
+
+Key changes:
+
+- Added sequence-guard support for attribute targets (`self.field`) in guard detection/index narrowing and non-empty pop narrowing.
+- Added subscript non-None guard propagation for repeated reads after:
+  - `if seq[i] is None: return ...`
+  - `if seq[i] is not None: ...`
+- Added non-optional `defaultdict` index typing in HIR subscript resolution.
+- Added/updated targeted HIR regression tests for:
+  - attribute non-empty index narrowing
+  - field-access `pop()` narrowing
+  - subscript non-None guard narrowing
+  - imported `Counter(list[T])` unsupported policy guard
+  - `defaultdict` non-optional index read typing
+
+Focused result summary:
+
+- `CHECK_ERROR=51`, `PASS=4`, `NO_ORACLE=3`
+- Changed from wave7b:
+  - no fixture status deltas (behavior-neutral for current focused manifest).
+
+### Wave9: A2 residual guard-canonicalization batch (fixture adaptation)
+
+Artifacts:
+
+- `/tmp/phase_apr06_on_au_wave9_a2_residual_batch_coldcache.json`
+
+Key changes:
+
+- Canonicalized residual `ON-4` / `ON-5` fixtures toward explicit policy-compatible contracts and guard surfaces.
+- Closed fixtures:
+  - `0208_implement_trie_prefix_tree`
+  - `0752_open_the_lock`
+  - `0929_unique_email_addresses`
+  - `1466_reorder_routes_to_make_all_paths_lead_to_the_city_zero`
+  - `1845_seat_reservation_manager`
+- Remaining residual adaptation candidate:
+  - `0332_reconstruct_itinerary`
+
+Focused result summary (cold-cache):
+
+- `CHECK_ERROR=46`, `PASS=4`, `NO_ORACLE=8`
+- Changed from wave8:
+  - `0208`: `CHECK_ERROR -> NO_ORACLE`
+  - `0752`: `CHECK_ERROR -> NO_ORACLE`
+  - `0929`: `CHECK_ERROR -> NO_ORACLE`
+  - `1466`: `CHECK_ERROR -> NO_ORACLE`
+  - `1845`: `CHECK_ERROR -> NO_ORACLE`
+
+Residual root-cause shape after wave9 (CHECK_ERROR only):
+
+- `ON-1`: `15`
+- `AU-2`: `12`
+- `ON-2`: `6`
+- `AU-3`: `5`
+- `AU-1`: `4`
+- `ON-3`: `3`
+- `ON-5`: `1` (`0332`)
+
+### Wave11: A2 closure completion + run-stability normalization
+
+Artifacts:
+
+- `/tmp/phase_apr06_on_au_wave11_a2_full6_plus_0350_stability_coldcache.json`
+
+Key changes:
+
+- Closed the remaining residual adaptation fixture `0332_reconstruct_itinerary`.
+- Added deterministic ordering normalization for `0350_intersection_of_two_arrays_ii` to prevent cold-cache run-stage order flake (`intersection.sort()`), preserving prior `NO_ORACLE` stability.
+- Re-ran focused 58-fixture manifest with cold run-cache for stable attribution.
+
+Focused result summary (cold-cache):
+
+- `CHECK_ERROR=45`, `PASS=4`, `NO_ORACLE=9`
+- Changed from wave8:
+  - `0208`: `CHECK_ERROR -> NO_ORACLE`
+  - `0332`: `CHECK_ERROR -> NO_ORACLE`
+  - `0752`: `CHECK_ERROR -> NO_ORACLE`
+  - `0929`: `CHECK_ERROR -> NO_ORACLE`
+  - `1466`: `CHECK_ERROR -> NO_ORACLE`
+  - `1845`: `CHECK_ERROR -> NO_ORACLE`
+
+Residual root-cause shape after wave11 (CHECK_ERROR only):
+
+- `ON-1`: `15`
+- `AU-2`: `12`
+- `ON-2`: `6`
+- `AU-3`: `5`
+- `AU-1`: `4`
+- `ON-3`: `3`
+
+Closure note:
+
+- `ON-4` and `ON-5` are fully cleared from `CHECK_ERROR` in the focused manifest.

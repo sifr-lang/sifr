@@ -1,15 +1,23 @@
 # LeetCode 929: Unique Email Addresses
 
+def splitEmail(email: str) -> tuple[str, str]:
+    at = email.find('@')
+    if at is None:
+        return ('', '')
+    return (email[:at], email[at + 1 :])
+
 def numUniqueEmails(emails: list[str]) -> int:
     unique_emails: set[str] = set()
     for email in emails:
-        parts = email.split('@')
-        local_name = parts[0]
-        domain_name = parts[1]
-        local_name = local_name.split('+')[0]
+        local_name, domain_name = splitEmail(email)
+
+        plus_idx = local_name.find('+')
+        if plus_idx is not None:
+            local_name = local_name[:plus_idx]
+
         local_name = local_name.replace('.', '')
-        email = local_name + '@' + domain_name
-        unique_emails.add(email)
+        normalized = local_name + '@' + domain_name
+        unique_emails.add(normalized)
     return len(unique_emails)
 
 def main():
