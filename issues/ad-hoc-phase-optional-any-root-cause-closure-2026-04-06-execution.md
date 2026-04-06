@@ -61,6 +61,7 @@
 - completed: focused AU-3 full closure rerun (`0155`, `0232`, `0303`, `0535`) -> `/tmp/phase_apr06_on_au_wave25_au3_full_closure_coldcache.json`
 - completed: focused AU-2 full closure rerun (`0079`, `0118`, `0225`, `0269`, `0496`, `0901`, `0909`, `0953`, `1049`, `1462`, `1572`, `2306`) -> `/tmp/phase_apr06_on_au_wave26_au2_full_closure_coldcache.json`
 - completed: local validation gate -> `scripts/run_all_tests.sh --profile quick` (pass)
+- completed: full validation gate -> `scripts/run_all_tests.sh` (pass; profile `pr`)
 - completed: full-corpus rerun -> `verification/leetcode/full_corpus_current_results_20260406_live_rerun2.json`
 - completed: taxonomy refresh + delta report ->
   - `verification/leetcode/full_corpus_failure_taxonomy_20260406_live_rerun2.json`
