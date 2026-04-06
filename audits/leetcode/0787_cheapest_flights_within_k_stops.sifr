@@ -1,29 +1,37 @@
 # LeetCode 787: Cheapest Flights Within K Stops
 
-def findCheapestPrice(
-    self, n: int, flights: list[list[int]], src: int, dst: int, k: int
-) -> int:
-    prices = [float("inf")] * n
+def _nz_int(value: int | None) -> int:
+    if value is None:
+        return 0
+    return value
+
+def findCheapestPrice(n: int, flights: list[list[int]], src: int, dst: int, k: int) -> int:
+    inf = 10 ** 15
+    prices = [inf] * n
     prices[src] = 0
 
-    for i in range(k + 1):
+    for _ in range(k + 1):
         tmpPrices = prices.copy()
 
         for flight in flights:  # source, dest, price
-            s = flight[0]
-            d = flight[1]
-            p = flight[2]
-            if prices[s] == float("inf"):
+            if flight is None:
                 continue
-            if prices[s] + p < tmpPrices[d]:
-                tmpPrices[d] = prices[s] + p
+            s = _nz_int(flight[0])
+            d = _nz_int(flight[1])
+            p = _nz_int(flight[2])
+            if prices[s] == inf:
+                continue
+            candidate = _nz_int(prices[s]) + p
+            if candidate < _nz_int(tmpPrices[d]):
+                tmpPrices[d] = candidate
         prices = tmpPrices
-    return -1 if prices[dst] == float("inf") else prices[dst]
+    if prices[dst] == inf:
+        return -1
+    return _nz_int(prices[dst])
 
 def main():
     assert (
         findCheapestPrice(
-            None,
             4,
             [[0, 1, 100], [1, 2, 100], [2, 0, 100], [1, 3, 600], [2, 3, 200]],
             0,
@@ -34,7 +42,6 @@ def main():
     )
     assert (
         findCheapestPrice(
-            None,
             3,
             [[0, 1, 100], [1, 2, 100], [0, 2, 500]],
             0,
@@ -45,7 +52,6 @@ def main():
     )
     assert (
         findCheapestPrice(
-            None,
             3,
             [[0, 1, 100], [1, 2, 100], [0, 2, 500]],
             0,

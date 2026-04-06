@@ -611,3 +611,43 @@ Residual root-cause shape after wave19 (CHECK_ERROR only):
 - `ON-2`: `5`
 - `AU-1`: `4`
 - `ON-3`: `3`
+
+### Wave20: ON-2 closure completion (`0210`, `0785`, `0787`, `2092`, `2101`) (fixture adaptation)
+
+Artifacts:
+
+- `/tmp/phase_apr06_on_au_wave20_on2_full_closure_coldcache.json`
+
+Key changes:
+
+- Closed remaining ON-2 fixtures with explicit optional extraction and container-boundary canonicalization:
+  - `0210_course_schedule_ii`
+  - `0785_is_graph_bipartite`
+  - `0787_cheapest_flights_within_k_stops`
+  - `2092_find_all_people_with_secret`
+  - `2101_detonate_the_maximum_bombs`
+- Stabilization details:
+  - `0787`: dropped untyped `self` parameter and switched to integer-sentinel Bellman-Ford form.
+  - `2092`: replaced nested `time -> person -> neighbors` map with `time -> edge-list` grouping plus per-time graph expansion.
+  - `2101`: replaced optional nested adjacency list append path with edge-list traversal to avoid container boundary optional leakage.
+
+Focused result summary (cold-cache):
+
+- `CHECK_ERROR=24`, `PASS=13`, `NO_ORACLE=21`
+- Changed from wave19:
+  - `0210`: `CHECK_ERROR -> NO_ORACLE`
+  - `0785`: `CHECK_ERROR -> NO_ORACLE`
+  - `0787`: `CHECK_ERROR -> NO_ORACLE`
+  - `2092`: `CHECK_ERROR -> NO_ORACLE`
+  - `2101`: `CHECK_ERROR -> NO_ORACLE`
+
+Residual root-cause shape after wave20 (CHECK_ERROR only):
+
+- `AU-2`: `12`
+- `AU-3`: `5`
+- `AU-1`: `4`
+- `ON-3`: `3`
+
+Closure note:
+
+- `ON-2` is fully cleared from `CHECK_ERROR` in the focused manifest.
