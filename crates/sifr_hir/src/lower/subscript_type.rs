@@ -1,3 +1,4 @@
+use super::builtin_calls::{DEFAULTDICT_INT_ALIAS, DEFAULTDICT_LIST_ALIAS, DEFAULTDICT_SET_ALIAS};
 use super::guarded_index::guarded_sequence_index_result_type;
 use super::LowerCtx;
 use crate::hir_nodes::HirExpr;
@@ -31,6 +32,17 @@ pub(super) fn resolve_subscript_result_type(
     index_ty: &Type,
     ctx: &mut LowerCtx,
 ) -> Type {
+    if let Type::Alias { name, body, .. } = object_ty {
+        if matches!(
+            name.as_str(),
+            DEFAULTDICT_INT_ALIAS | DEFAULTDICT_LIST_ALIAS | DEFAULTDICT_SET_ALIAS
+        ) {
+            if let Type::Dict(_, value_ty) = body.resolve_alias() {
+                return *value_ty.clone();
+            }
+        }
+    }
+
     if let Some(elems) = tuple_members_for_subscript(object_ty) {
         if let HirExpr::IntLiteral(raw_index) = index {
             let Ok(len_i64) = i64::try_from(elems.len()) else {

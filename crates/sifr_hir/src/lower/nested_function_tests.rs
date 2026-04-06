@@ -193,3 +193,15 @@ fn test_recursive_memoized_nested_helper_infers_deterministic_int_return() {
         "recursive memoized helpers should infer stable int returns without Unknown/None leakage"
     );
 }
+
+#[test]
+fn test_tuple_for_target_inference_specializes_empty_dict_for_membership_index_pattern() {
+    let result = lower_source(
+        "def two_sum(nums: list[int], target: int) -> list[int]:\n    prev_map = {}\n    for i, n in enumerate(nums):\n        diff = target - n\n        if diff in prev_map:\n            return [prev_map[diff], i]\n        prev_map[n] = i\n    fallback: list[int] = []\n    return fallback\n",
+    );
+    assert!(
+        result.is_ok(),
+        "tuple-target for-loop inference should specialize dict key/value types early enough for guarded indexed reads: {:?}",
+        result.err()
+    );
+}

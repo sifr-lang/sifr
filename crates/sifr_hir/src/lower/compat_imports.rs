@@ -35,9 +35,16 @@ pub(super) fn resolve_bare_python_compat_call_alias(
     func_name: &str,
     ctx: &mut LowerCtx,
 ) -> Option<String> {
+    if ctx.scope.lookup(func_name).is_some()
+        || ctx.functions.contains_key(func_name)
+        || ctx.class_types.contains_key(func_name)
+    {
+        return None;
+    }
     let (module_name, member_name) = match func_name {
         "defaultdict" => return Some("defaultdict".to_string()),
         "deque" => ("sifr.collections", "deque"),
+        "Counter" => ("sifr.collections", "Counter"),
         _ => return None,
     };
     let externals = ctx.externals.clone();

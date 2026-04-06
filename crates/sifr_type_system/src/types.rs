@@ -1012,6 +1012,21 @@ impl Type {
                     None
                 }
             }
+            Self::Class { methods, .. } | Self::Protocol { methods, .. } => {
+                let (_, getitem_ft) = methods.iter().find(|(name, _)| name == "__getitem__")?;
+                if getitem_ft.params.len() != 1 {
+                    return None;
+                }
+                let param_ty = &getitem_ft.params[0].1;
+                if matches!(param_ty.resolve_alias(), Type::TypeVar(_))
+                    || index_ty.is_assignable_to(param_ty)
+                    || param_ty.is_assignable_to(index_ty)
+                {
+                    Some((*getitem_ft.return_type).clone())
+                } else {
+                    None
+                }
+            }
             // Union type: if T|None where T is indexable, unwrap and delegate
             Self::Union(members) => {
                 let non_none: Vec<&Type> = members

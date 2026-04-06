@@ -3331,6 +3331,29 @@ impl RustEmitter {
                         field: idx.to_string(),
                     }));
                 }
+                Type::Class { methods, .. } | Type::Protocol { methods, .. } => {
+                    if let Some((_, getitem_ft)) = methods
+                        .iter()
+                        .find(|(name, ft)| name == "__getitem__" && ft.params.len() == 1)
+                    {
+                        let key_convention = getitem_ft.params[0].2;
+                        let index_arg = if key_convention.is_shared_borrow()
+                            || key_convention.is_mut_borrow()
+                        {
+                            crate::RustExpr::Ref {
+                                mutable: key_convention.is_mut_borrow(),
+                                expr: Box::new(crate::RustExpr::Paren(Box::new(lowered_index))),
+                            }
+                        } else {
+                            lowered_index
+                        };
+                        return Ok(Some(crate::RustExpr::MethodCall {
+                            receiver: Box::new(lowered_object),
+                            method: "__getitem__".to_string(),
+                            args: vec![index_arg],
+                        }));
+                    }
+                }
                 _ => {}
             }
         }
@@ -5138,14 +5161,33 @@ impl RustEmitter {
             return Ok(Some(coerce_return(self, clone_expr)?));
         }
 
-        if return_ty.is_some_and(|ty| {
-            matches!(
-                crate::resolve_alias_type_for_plain_call(ty),
+        if let Some(target_ty) = return_ty {
+            if matches!(
+                crate::resolve_alias_type_for_plain_call(target_ty),
                 Type::Iterator(_) | Type::Iterable(_)
-            )
-        }) {
-            if let Some(lowered_iter_return) = self.lower_escaping_iter_return_expr_for_ir(value)? {
-                return Ok(Some(coerce_return(self, lowered_iter_return)?));
+            ) {
+                if let Some(lowered_iter_return) =
+                    self.lower_escaping_iter_return_expr_for_ir(value)?
+                {
+                    return Ok(Some(coerce_return(self, lowered_iter_return)?));
+                }
+            }
+
+            if matches!(
+                crate::resolve_alias_type_for_plain_call(target_ty),
+                Type::Iterator(_)
+            ) && !matches!(
+                crate::resolve_alias_type_for_plain_call(value.ty()),
+                Type::Iterator(_)
+            ) && crate::resolve_alias_type_for_plain_call(value.ty())
+                .iterable_element_type()
+                .is_some()
+            {
+                if let Some(lowered_iter_source) =
+                    self.lower_iter_source_expr_for_ir_with_mode(value, true, None, None)?
+                {
+                    return Ok(Some(coerce_return(self, lowered_iter_source)?));
+                }
             }
         }
 
@@ -5917,6 +5959,32 @@ impl RustEmitter {
         &mut self,
         condition: &HirExpr,
     ) -> Result<Option<crate::RustExpr>, crate::CodegenError> {
+        if let HirExpr::BoolOp { op, values, .. } = condition {
+            let lowered_op = match op.as_str() {
+                "and" => "&&",
+                "or" => "||",
+                _ => return Ok(None),
+            };
+            let mut lowered_values = Vec::with_capacity(values.len());
+            for value in values {
+                let Some(lowered_value) = self.lower_condition_expr_for_ir(value)? else {
+                    return Ok(None);
+                };
+                lowered_values.push(lowered_value);
+            }
+            let mut lowered_values_iter = lowered_values.into_iter();
+            let Some(mut iter_expr) = lowered_values_iter.next() else {
+                return Ok(None);
+            };
+            for rhs in lowered_values_iter {
+                iter_expr = crate::RustExpr::BinOp {
+                    left: Box::new(iter_expr),
+                    op: lowered_op.to_string(),
+                    right: Box::new(rhs),
+                };
+            }
+            return Ok(Some(iter_expr));
+        }
         if let Some(option_var) = crate::helpers::detect_option_truthiness(condition) {
             return Ok(Some(crate::RustExpr::MethodCall {
                 receiver: Box::new(crate::RustExpr::Ident(option_var)),
@@ -6087,15 +6155,65 @@ impl RustEmitter {
                 op: "!=".to_string(),
                 right: Box::new(Self::zero_literal_for_numeric_truthiness_type_for_ir(ty)?),
             }),
-            HirExpr::UnaryOp { op, operand, .. } if op == "not" => {
-                let HirExpr::Name { name, ty } = operand.as_ref() else {
+            HirExpr::MethodCall {
+                object,
+                method,
+                args,
+                ty,
+            } if method == "len" && args.is_empty() => {
+                let HirExpr::Name { name, .. } = object.as_ref() else {
                     return None;
                 };
+                let lhs = crate::RustExpr::Cast {
+                    expr: Box::new(crate::RustExpr::MethodCall {
+                        receiver: Box::new(crate::RustExpr::Ident(name.clone())),
+                        method: "len".to_string(),
+                        args: vec![],
+                    }),
+                    ty: crate::RustType::I64,
+                };
                 Some(crate::RustExpr::BinOp {
-                    left: Box::new(crate::RustExpr::Ident(name.clone())),
-                    op: "==".to_string(),
+                    left: Box::new(lhs),
+                    op: "!=".to_string(),
                     right: Box::new(Self::zero_literal_for_numeric_truthiness_type_for_ir(ty)?),
                 })
+            }
+            HirExpr::UnaryOp { op, operand, .. } if op == "not" => {
+                match operand.as_ref() {
+                    HirExpr::Name { name, ty } => Some(crate::RustExpr::BinOp {
+                        left: Box::new(crate::RustExpr::Ident(name.clone())),
+                        op: "==".to_string(),
+                        right: Box::new(Self::zero_literal_for_numeric_truthiness_type_for_ir(
+                            ty,
+                        )?),
+                    }),
+                    HirExpr::MethodCall {
+                        object,
+                        method,
+                        args,
+                        ty,
+                    } if method == "len" && args.is_empty() => {
+                        let HirExpr::Name { name, .. } = object.as_ref() else {
+                            return None;
+                        };
+                        let lhs = crate::RustExpr::Cast {
+                            expr: Box::new(crate::RustExpr::MethodCall {
+                                receiver: Box::new(crate::RustExpr::Ident(name.clone())),
+                                method: "len".to_string(),
+                                args: vec![],
+                            }),
+                            ty: crate::RustType::I64,
+                        };
+                        Some(crate::RustExpr::BinOp {
+                            left: Box::new(lhs),
+                            op: "==".to_string(),
+                            right: Box::new(
+                                Self::zero_literal_for_numeric_truthiness_type_for_ir(ty)?,
+                            ),
+                        })
+                    }
+                    _ => None,
+                }
             }
             _ => None,
         }
@@ -6220,6 +6338,7 @@ impl RustEmitter {
             HirExpr::Name { name, .. } => {
                 !self.borrowed_params.contains(name) && !self.mut_borrowed_params.contains(name)
             }
+            HirExpr::FieldAccess { .. } | HirExpr::MethodCall { .. } => true,
             _ => matches!(
                 crate::helpers::classify_value_category(source),
                 crate::helpers::ValueCategory::Temporary

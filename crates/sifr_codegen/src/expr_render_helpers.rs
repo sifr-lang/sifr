@@ -124,9 +124,11 @@ impl RustEmitter {
         } else {
             None
         }
-        .or_else(|| match crate::resolve_alias_type_for_plain_call(&effective_base_object_ty) {
-            Type::Class { name, .. } => Some(name.clone()),
-            _ => None,
+        .or_else(|| {
+            match crate::resolve_alias_type_for_plain_call(&effective_base_object_ty) {
+                Type::Class { name, .. } => Some(name.clone()),
+                _ => None,
+            }
         });
 
         let is_recursive_field = class_name_for_parent.as_ref().is_some_and(|class_name| {
@@ -701,7 +703,7 @@ impl RustEmitter {
             Some(object_ty)
         } else if matches!(
             option_inner_ty,
-            Some(Type::Dict(_, _) | Type::List(_) | Type::Str)
+            Some(Type::Dict(_, _) | Type::List(_) | Type::Str | Type::Tuple(_))
         ) {
             option_inner_ty
         } else {
@@ -1076,7 +1078,7 @@ impl RustEmitter {
             if let Some(inner_ty) = option_inner_ty {
                 if !matches!(
                     inner_ty,
-                    Type::Dict(_, _) | Type::List(_) | Type::Bytes | Type::Str
+                    Type::Dict(_, _) | Type::List(_) | Type::Bytes | Type::Str | Type::Tuple(_)
                 ) {
                     return Ok(None);
                 }
@@ -1084,13 +1086,18 @@ impl RustEmitter {
                 else {
                     return Ok(None);
                 };
+                let projection_method = if matches!(inner_ty, Type::Tuple(_)) {
+                    "map"
+                } else {
+                    "and_then"
+                };
                 let option_expr = crate::RustExpr::MethodCall {
                     receiver: Box::new(crate::RustExpr::MethodCall {
                         receiver: Box::new(crate::RustExpr::Paren(Box::new(lowered_object))),
                         method: "as_ref".to_string(),
                         args: vec![],
                     }),
-                    method: "and_then".to_string(),
+                    method: projection_method.to_string(),
                     args: vec![crate::RustExpr::Closure {
                         params: vec![crate::RustParam::Named {
                             name: "__v".to_string(),
@@ -1102,6 +1109,13 @@ impl RustEmitter {
                 };
                 if crate::helpers::is_option_type(result_ty) {
                     return Ok(Some(option_expr));
+                }
+                if matches!(inner_ty, Type::Tuple(_)) {
+                    return Ok(Some(Self::lower_proven_index_option_expr_for_ir(
+                        option_expr,
+                        "__sifr_index_value",
+                        "compiler-verified tuple index should be in range",
+                    )));
                 }
                 return Err(crate::CodegenError::new(
                     "internal codegen invariant violated: index on optional list/dict/bytes/str produced non-optional result type",

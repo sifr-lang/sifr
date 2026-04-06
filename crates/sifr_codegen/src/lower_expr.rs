@@ -1377,10 +1377,7 @@ fn detect_is_some_guard_name(expr: &HirExpr) -> Option<String> {
     else {
         return None;
     };
-    if ops.len() != 1
-        || comparators.len() != 1
-        || !matches!(ops[0].as_str(), "is not" | "!=")
-    {
+    if ops.len() != 1 || comparators.len() != 1 || !matches!(ops[0].as_str(), "is not" | "!=") {
         return None;
     }
     let rhs = comparators.first()?;

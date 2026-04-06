@@ -23,10 +23,26 @@ pub(super) fn detect_true_sequence_guards(expr: &Expr, ctx: &LowerCtx) -> Vec<Se
             .iter()
             .flat_map(|value| detect_true_sequence_guards(value, ctx))
             .collect(),
+        Expr::Call(_) => len_call_sequence_name(expr)
+            .map(|sequence| {
+                vec![SequenceGuard::MinLength {
+                    sequence,
+                    min_len: 1,
+                }]
+            })
+            .unwrap_or_default(),
         Expr::Name(name) => vec![SequenceGuard::MinLength {
             sequence: name.id.clone(),
             min_len: 1,
         }],
+        Expr::Attribute(_) => sequence_guard_target_name(expr)
+            .map(|sequence| {
+                vec![SequenceGuard::MinLength {
+                    sequence,
+                    min_len: 1,
+                }]
+            })
+            .unwrap_or_default(),
         Expr::Compare(cmp) if cmp.ops.len() == 1 && cmp.comparators.len() == 1 => {
             match &cmp.ops[0] {
                 CmpOp::Lt => {
@@ -84,6 +100,10 @@ pub(super) fn detect_true_sequence_guards(expr: &Expr, ctx: &LowerCtx) -> Vec<Se
                     }
                     Vec::new()
                 }
+                CmpOp::IsNot => subscript_present_guard_from_non_none_compare(
+                    cmp.left.as_ref(),
+                    &cmp.comparators[0],
+                ),
                 CmpOp::In => dict_contains_guard(cmp.left.as_ref(), &cmp.comparators[0]),
                 _ => Vec::new(),
             }
@@ -105,6 +125,14 @@ pub(super) fn detect_false_exit_sequence_guards(expr: &Expr, ctx: &LowerCtx) -> 
         Expr::UnaryOp(unary) if matches!(unary.op, UnaryOp::Not) => {
             detect_true_sequence_guards(&unary.operand, ctx)
         }
+        Expr::Call(_) => len_call_sequence_name(expr)
+            .map(|sequence| {
+                vec![SequenceGuard::MinLength {
+                    sequence,
+                    min_len: 1,
+                }]
+            })
+            .unwrap_or_default(),
         Expr::Name(name) => vec![SequenceGuard::MinLength {
             sequence: name.id.clone(),
             min_len: 1,
@@ -197,6 +225,10 @@ pub(super) fn detect_false_exit_sequence_guards(expr: &Expr, ctx: &LowerCtx) -> 
                     Vec::new()
                 }
                 CmpOp::NotIn => dict_contains_guard(cmp.left.as_ref(), &cmp.comparators[0]),
+                CmpOp::Is => subscript_present_guard_from_non_none_compare(
+                    cmp.left.as_ref(),
+                    &cmp.comparators[0],
+                ),
                 _ => Vec::new(),
             }
         }
@@ -204,13 +236,39 @@ pub(super) fn detect_false_exit_sequence_guards(expr: &Expr, ctx: &LowerCtx) -> 
     }
 }
 
+fn subscript_present_guard_from_non_none_compare(left: &Expr, right: &Expr) -> Vec<SequenceGuard> {
+    if matches!(right, Expr::NoneLiteral(_)) {
+        return subscript_present_guard(left);
+    }
+    if matches!(left, Expr::NoneLiteral(_)) {
+        return subscript_present_guard(right);
+    }
+    Vec::new()
+}
+
+fn subscript_present_guard(expr: &Expr) -> Vec<SequenceGuard> {
+    let Expr::Subscript(subscript) = expr else {
+        return Vec::new();
+    };
+    let Some(sequence) = sequence_guard_target_name(subscript.value.as_ref()) else {
+        return Vec::new();
+    };
+    let Some(index_expr_debug) = key_guard_token(subscript.slice.as_ref()) else {
+        return Vec::new();
+    };
+    vec![SequenceGuard::SubscriptPresent {
+        sequence,
+        index_expr_debug,
+    }]
+}
+
 fn dict_contains_guard(key_expr: &Expr, haystack_expr: &Expr) -> Vec<SequenceGuard> {
     let Some(key_expr_debug) = key_guard_token(key_expr) else {
         return Vec::new();
     };
-    if let Expr::Name(dict_name) = haystack_expr {
+    if let Some(dict_name) = sequence_guard_target_name(haystack_expr) {
         return vec![SequenceGuard::DictContains {
-            dict: dict_name.id.clone(),
+            dict: dict_name,
             key_expr_debug: key_expr_debug.clone(),
         }];
     }
@@ -227,11 +285,11 @@ fn dict_contains_guard(key_expr: &Expr, haystack_expr: &Expr) -> Vec<SequenceGua
     if attr.attr.as_str() != "keys" {
         return Vec::new();
     }
-    let Expr::Name(dict_name) = attr.value.as_ref() else {
+    let Some(dict_name) = sequence_guard_target_name(attr.value.as_ref()) else {
         return Vec::new();
     };
     vec![SequenceGuard::DictContains {
-        dict: dict_name.id.clone(),
+        dict: dict_name,
         key_expr_debug,
     }]
 }
@@ -591,19 +649,24 @@ fn len_call_sequence_name(expr: &Expr) -> Option<String> {
             if func_name.id.as_str() != "len" || call.arguments.args.len() != 1 {
                 return None;
             }
-            let Expr::Name(sequence_name) = &call.arguments.args[0] else {
-                return None;
-            };
-            Some(sequence_name.id.clone())
+            sequence_guard_target_name(&call.arguments.args[0])
         }
         Expr::Attribute(attr) => {
             if attr.attr.as_str() != "len" || !call.arguments.args.is_empty() {
                 return None;
             }
-            let Expr::Name(sequence_name) = attr.value.as_ref() else {
-                return None;
-            };
-            Some(sequence_name.id.clone())
+            sequence_guard_target_name(attr.value.as_ref())
+        }
+        _ => None,
+    }
+}
+
+fn sequence_guard_target_name(expr: &Expr) -> Option<String> {
+    match expr {
+        Expr::Name(name) => Some(name.id.clone()),
+        Expr::Attribute(attr) => {
+            let base = sequence_guard_target_name(attr.value.as_ref())?;
+            Some(format!("{base}.{}", attr.attr))
         }
         _ => None,
     }
