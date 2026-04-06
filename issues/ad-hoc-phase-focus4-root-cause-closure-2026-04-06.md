@@ -1,5 +1,14 @@
 # Ad-hoc Phase: Focus4 Root-Cause Closure (2026-04-06)
 
+## Progress Snapshot (2026-04-06)
+
+- Compiler lanes closed in this batch:
+  - `CF-1-class_field_registration_gap`
+  - `CF-2-nested_attribute_assignment_gap`
+  - `DS-3-augassign_subscript_lowering_gap`
+- Focus4 subset rerun remains `CHECK_ERROR=89, RUN_ERROR=1` because remaining failures are dominated by other workstreams (`AU-*`, `RF-*`, `DS-1/2/4/5`, adaptation lanes, and multi-workstream convergence cases).
+- See `issues/ad-hoc-phase-focus4-root-cause-closure-2026-04-06-execution.md` for wave artifacts and validation logs.
+
 ## Scope
 
 Target buckets from `verification/leetcode/full_corpus_failure_taxonomy_20260406_live_rerun1.json`:

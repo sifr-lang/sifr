@@ -59,8 +59,10 @@ pub(super) fn collect_yield_types(stmts: &[HirStmt]) -> Vec<Type> {
                 | HirStmt::StarUnpack { .. }
                 | HirStmt::Assert { .. }
                 | HirStmt::FieldAssign { .. }
+                | HirStmt::NestedFieldAssign { .. }
                 | HirStmt::SubscriptAssign { .. }
                 | HirStmt::NestedSubscriptAssign { .. }
+                | HirStmt::AttributeNestedSubscriptAssign { .. }
                 | HirStmt::SubscriptAugAssign { .. }
                 | HirStmt::AttributeAugAssign { .. }
                 | HirStmt::AttributeSubscriptAssign { .. }

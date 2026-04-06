@@ -25,6 +25,9 @@ pub(super) fn loop_body_mutates_iter_source(stmts: &[HirStmt], source_name: &str
 fn stmt_mutates_iter_source(stmt: &HirStmt, source_name: &str) -> bool {
     match stmt {
         HirStmt::Assign { name, .. } | HirStmt::AugAssign { name, .. } => name == source_name,
+        HirStmt::FieldAssign { object, .. } | HirStmt::NestedFieldAssign { object, .. } => {
+            object == source_name
+        }
         HirStmt::SubscriptAssign { object, .. }
         | HirStmt::NestedSubscriptAssign { object, .. }
         | HirStmt::SubscriptAugAssign { object, .. } => object == source_name,

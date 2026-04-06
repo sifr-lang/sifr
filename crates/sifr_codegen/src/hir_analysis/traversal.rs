@@ -361,6 +361,7 @@ where
         | HirStmt::AugAssign { value, .. }
         | HirStmt::AttributeAugAssign { value, .. }
         | HirStmt::FieldAssign { value, .. }
+        | HirStmt::NestedFieldAssign { value, .. }
         | HirStmt::Raise { value }
         | HirStmt::Yield { value } => {
             if matches!(walk_expr_until(value, on_expr), TraversalControl::Stop) {
@@ -503,6 +504,28 @@ where
             }
         }
         HirStmt::NestedSubscriptAssign {
+            outer_index,
+            inner_index,
+            value,
+            ..
+        } => {
+            if matches!(
+                walk_expr_until(outer_index, on_expr),
+                TraversalControl::Stop
+            ) {
+                return TraversalControl::Stop;
+            }
+            if matches!(
+                walk_expr_until(inner_index, on_expr),
+                TraversalControl::Stop
+            ) {
+                return TraversalControl::Stop;
+            }
+            if matches!(walk_expr_until(value, on_expr), TraversalControl::Stop) {
+                return TraversalControl::Stop;
+            }
+        }
+        HirStmt::AttributeNestedSubscriptAssign {
             outer_index,
             inner_index,
             value,

@@ -137,6 +137,7 @@ fn collect_stmt_error_refs(
             | HirStmt::AugAssign { value, .. }
             | HirStmt::AttributeAugAssign { value, .. }
             | HirStmt::FieldAssign { value, .. }
+            | HirStmt::NestedFieldAssign { value, .. }
             | HirStmt::Raise { value }
             | HirStmt::Yield { value } => {
                 collect_expr_error_refs(value, referenced, builtin_error_classes);
@@ -215,6 +216,16 @@ fn collect_stmt_error_refs(
                 collect_expr_error_refs(value, referenced, builtin_error_classes);
             }
             HirStmt::NestedSubscriptAssign {
+                outer_index,
+                inner_index,
+                value,
+                ..
+            } => {
+                collect_expr_error_refs(outer_index, referenced, builtin_error_classes);
+                collect_expr_error_refs(inner_index, referenced, builtin_error_classes);
+                collect_expr_error_refs(value, referenced, builtin_error_classes);
+            }
+            HirStmt::AttributeNestedSubscriptAssign {
                 outer_index,
                 inner_index,
                 value,

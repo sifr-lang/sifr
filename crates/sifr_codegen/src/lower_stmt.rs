@@ -1,8 +1,8 @@
 //! Statement lowering scaffolds for the IR lowering.
 
 use crate::helpers::{
-    codegen_body_always_exits, detect_and_not_none_vars, detect_is_none_var, detect_is_not_none_var,
-    detect_or_is_none_vars,
+    codegen_body_always_exits, detect_and_not_none_vars, detect_is_none_var,
+    detect_is_not_none_var, detect_or_is_none_vars,
 };
 use crate::hir_analysis::queries::{
     body_calls_function, collect_locally_defined_vars, collect_mutated_vars,
@@ -26,6 +26,7 @@ pub(crate) fn is_simple_stmt_candidate(stmt: &HirStmt) -> bool {
         | HirStmt::AugAssign { .. }
         | HirStmt::AttributeAugAssign { .. }
         | HirStmt::FieldAssign { .. }
+        | HirStmt::NestedFieldAssign { .. }
         | HirStmt::Return { .. }
         | HirStmt::Assert { .. }
         | HirStmt::Raise { .. }
@@ -39,6 +40,7 @@ pub(crate) fn is_simple_stmt_candidate(stmt: &HirStmt) -> bool {
         | HirStmt::StarUnpack { .. }
         | HirStmt::SubscriptAssign { .. }
         | HirStmt::NestedSubscriptAssign { .. }
+        | HirStmt::AttributeNestedSubscriptAssign { .. }
         | HirStmt::SubscriptAugAssign { .. }
         | HirStmt::AttributeSubscriptAssign { .. }
         | HirStmt::Delete { .. }
@@ -237,6 +239,7 @@ fn validate_stmt_lowering_shape(stmt: &HirStmt) -> Result<(), CodegenError> {
         | HirStmt::AugAssign { value, .. }
         | HirStmt::AttributeAugAssign { value, .. }
         | HirStmt::FieldAssign { value, .. }
+        | HirStmt::NestedFieldAssign { value, .. }
         | HirStmt::Raise { value }
         | HirStmt::Yield { value }
         | HirStmt::TupleUnpack { value, .. }
@@ -299,6 +302,16 @@ fn validate_stmt_lowering_shape(stmt: &HirStmt) -> Result<(), CodegenError> {
             validate_expr_lowering_shape(value)
         }
         HirStmt::NestedSubscriptAssign {
+            outer_index,
+            inner_index,
+            value,
+            ..
+        } => {
+            validate_expr_lowering_shape(outer_index)?;
+            validate_expr_lowering_shape(inner_index)?;
+            validate_expr_lowering_shape(value)
+        }
+        HirStmt::AttributeNestedSubscriptAssign {
             outer_index,
             inner_index,
             value,
@@ -595,7 +608,9 @@ pub(crate) fn try_lower_simple_stmt_with_ctx_and_bindings(
         local_binding_types,
     };
     match stmt {
-        HirStmt::Expr { expr } => try_lower_expr_stmt_with_bindings(expr, bindings.local_binding_types),
+        HirStmt::Expr { expr } => {
+            try_lower_expr_stmt_with_bindings(expr, bindings.local_binding_types)
+        }
         HirStmt::Let {
             name, ty, value, ..
         } if !matches!(resolve_alias_type(ty), Type::Iterable(_))
@@ -648,6 +663,7 @@ pub(crate) fn try_lower_simple_stmt_with_ctx_and_bindings(
             value,
             ..
         } => try_lower_simple_field_assign_stmt(object, field, value),
+        HirStmt::NestedFieldAssign { .. } => None,
         HirStmt::Return { value: None } => {
             if ctx.in_display_impl {
                 return None;
@@ -777,6 +793,21 @@ pub(crate) fn try_lower_simple_stmt_with_ctx_and_bindings(
             inner_index,
             value,
             object_ty,
+        ),
+        HirStmt::AttributeNestedSubscriptAssign {
+            object,
+            field,
+            outer_index,
+            inner_index,
+            value,
+            field_ty,
+        } => try_lower_simple_attribute_nested_subscript_assign_stmt(
+            object,
+            field,
+            outer_index,
+            inner_index,
+            value,
+            field_ty,
         ),
         HirStmt::SubscriptAugAssign {
             object,
@@ -1308,12 +1339,14 @@ fn is_simple_try_except_body_stmt(stmt: &HirStmt) -> bool {
             | HirStmt::AugAssign { .. }
             | HirStmt::AttributeAugAssign { .. }
             | HirStmt::FieldAssign { .. }
+            | HirStmt::NestedFieldAssign { .. }
             | HirStmt::Assert { .. }
             | HirStmt::Raise { .. }
             | HirStmt::TupleUnpack { .. }
             | HirStmt::StarUnpack { .. }
             | HirStmt::SubscriptAssign { .. }
             | HirStmt::NestedSubscriptAssign { .. }
+            | HirStmt::AttributeNestedSubscriptAssign { .. }
             | HirStmt::SubscriptAugAssign { .. }
             | HirStmt::AttributeSubscriptAssign { .. }
             | HirStmt::Delete { .. }
@@ -1328,10 +1361,12 @@ fn stmt_has_result_flow(stmt: &HirStmt) -> bool {
         HirStmt::Let { value, .. }
         | HirStmt::Assign { value, .. }
         | HirStmt::AugAssign { value, .. }
-        | HirStmt::FieldAssign { value, .. } => expr_has_result_flow(value),
+        | HirStmt::FieldAssign { value, .. }
+        | HirStmt::NestedFieldAssign { value, .. } => expr_has_result_flow(value),
         HirStmt::AttributeAugAssign { value, .. }
         | HirStmt::SubscriptAssign { value, .. }
         | HirStmt::NestedSubscriptAssign { value, .. }
+        | HirStmt::AttributeNestedSubscriptAssign { value, .. }
         | HirStmt::SubscriptAugAssign { value, .. }
         | HirStmt::AttributeSubscriptAssign { value, .. } => expr_has_result_flow(value),
         HirStmt::Assert { test, msg } => {
@@ -3688,6 +3723,114 @@ fn try_lower_simple_attribute_subscript_assign_stmt(
         )]),
         _ => None,
     }
+}
+
+fn try_lower_simple_attribute_nested_subscript_assign_stmt(
+    object: &str,
+    field: &str,
+    outer_index: &HirExpr,
+    inner_index: &HirExpr,
+    value: &HirExpr,
+    field_ty: &Type,
+) -> Option<Vec<RustStmt>> {
+    let target_elem_is_option = matches!(
+        resolve_alias_type(field_ty),
+        Type::List(inner)
+            if matches!(resolve_alias_type(inner), Type::List(elem) if is_option_like_type(elem))
+    );
+    let lowered_value = try_lower_leaf_or_name_expr(value)?;
+    let assign_elem_stmt = if is_option_like_type(value.ty()) && !target_elem_is_option {
+        RustStmt::IfLet {
+            pattern: "Some(__nested_assign_value)".to_string(),
+            expr: lowered_value,
+            then_body: vec![RustStmt::Assign {
+                target: RustExpr::Deref(Box::new(RustExpr::Ident("__elem".to_string()))),
+                value: RustExpr::Ident("__nested_assign_value".to_string()),
+            }],
+            else_body: None,
+        }
+    } else {
+        RustStmt::Assign {
+            target: RustExpr::Deref(Box::new(RustExpr::Ident("__elem".to_string()))),
+            value: lowered_value,
+        }
+    };
+    let receiver = || RustExpr::Field {
+        expr: Box::new(RustExpr::Ident(object.to_string())),
+        field: field.to_string(),
+    };
+    Some(vec![RustStmt::Block(vec![
+        RustStmt::Let {
+            mutable: false,
+            name: "__oi_raw".to_string(),
+            ty: None,
+            value: try_lower_leaf_or_name_expr(outer_index)?,
+        },
+        RustStmt::Let {
+            mutable: false,
+            name: "__oi_norm".to_string(),
+            ty: None,
+            value: build_normalized_list_index_i64_expr(receiver(), "__oi_raw"),
+        },
+        RustStmt::If {
+            cond: RustExpr::BinOp {
+                left: Box::new(RustExpr::Ident("__oi_norm".to_string())),
+                op: ">=".to_string(),
+                right: Box::new(RustExpr::Literal(RustLiteral::Int(0))),
+            },
+            then_body: vec![RustStmt::IfLet {
+                pattern: "Some(__row)".to_string(),
+                expr: RustExpr::MethodCall {
+                    receiver: Box::new(receiver()),
+                    method: "get_mut".to_string(),
+                    args: vec![RustExpr::Cast {
+                        expr: Box::new(RustExpr::Ident("__oi_norm".to_string())),
+                        ty: RustType::Named("usize".to_string()),
+                    }],
+                },
+                then_body: vec![
+                    RustStmt::Let {
+                        mutable: false,
+                        name: "__ii_raw".to_string(),
+                        ty: None,
+                        value: try_lower_leaf_or_name_expr(inner_index)?,
+                    },
+                    RustStmt::Let {
+                        mutable: false,
+                        name: "__ii_norm".to_string(),
+                        ty: None,
+                        value: build_normalized_list_index_i64_expr(
+                            RustExpr::Ident("__row".to_string()),
+                            "__ii_raw",
+                        ),
+                    },
+                    RustStmt::If {
+                        cond: RustExpr::BinOp {
+                            left: Box::new(RustExpr::Ident("__ii_norm".to_string())),
+                            op: ">=".to_string(),
+                            right: Box::new(RustExpr::Literal(RustLiteral::Int(0))),
+                        },
+                        then_body: vec![RustStmt::IfLet {
+                            pattern: "Some(__elem)".to_string(),
+                            expr: RustExpr::MethodCall {
+                                receiver: Box::new(RustExpr::Ident("__row".to_string())),
+                                method: "get_mut".to_string(),
+                                args: vec![RustExpr::Cast {
+                                    expr: Box::new(RustExpr::Ident("__ii_norm".to_string())),
+                                    ty: RustType::Named("usize".to_string()),
+                                }],
+                            },
+                            then_body: vec![assign_elem_stmt],
+                            else_body: None,
+                        }],
+                        else_body: None,
+                    },
+                ],
+                else_body: None,
+            }],
+            else_body: None,
+        },
+    ])])
 }
 
 fn try_lower_simple_subscript_augassign_stmt(

@@ -189,9 +189,11 @@ pub(crate) fn collect_mutated_vars(
         }
         HirStmt::SubscriptAssign { object, .. }
         | HirStmt::NestedSubscriptAssign { object, .. }
+        | HirStmt::AttributeNestedSubscriptAssign { object, .. }
         | HirStmt::SubscriptAugAssign { object, .. }
         | HirStmt::AttributeAugAssign { object, .. }
         | HirStmt::FieldAssign { object, .. }
+        | HirStmt::NestedFieldAssign { object, .. }
         | HirStmt::AttributeSubscriptAssign { object, .. } => {
             mutated.borrow_mut().insert(object.clone());
         }

@@ -279,8 +279,10 @@ fn patch_stmt_numeric_sentinels(
         | HirStmt::TupleUnpack { .. }
         | HirStmt::SubscriptAssign { .. }
         | HirStmt::NestedSubscriptAssign { .. }
+        | HirStmt::AttributeNestedSubscriptAssign { .. }
         | HirStmt::SubscriptAugAssign { .. }
         | HirStmt::FieldAssign { .. }
+        | HirStmt::NestedFieldAssign { .. }
         | HirStmt::AttributeAugAssign { .. }
         | HirStmt::AttributeSubscriptAssign { .. }
         | HirStmt::Delete { .. }

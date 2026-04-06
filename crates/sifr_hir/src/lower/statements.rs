@@ -1,10 +1,11 @@
 use super::assignment_widening::reconcile_optional_reassignment;
+use super::aug_assign_lowering::lower_aug_assign as lower_aug_assign_impl;
 use super::binding_mutability::ensure_mutable_parameter_binding;
 use super::builtin_calls::callable_builtin_element_type;
 use super::classes::collect_literal_coverage;
 use super::container_literal_specialization::{
     apply_container_specialization_patches, type_contains_unknown_or_any,
-    validate_subscript_assignment_target, validate_subscript_augassign_target,
+    validate_subscript_assignment_target,
 };
 use super::control_flow_conditions::validate_control_flow_condition;
 use super::diagnostics::{collect_raise_error_types, format_type_name, is_valid_error_type};
@@ -39,12 +40,12 @@ use crate::hir_nodes::{
     HirStmt, MethodKind,
 };
 use sifr_python_ast::{
-    BoolOp, CmpOp, ExceptHandler, Expr, Operator, Pattern, Singleton, Stmt, StmtAnnAssign,
-    StmtAssign, StmtAugAssign, StmtFor, StmtIf, StmtMatch, StmtReturn, StmtWhile, UnaryOp,
+    BoolOp, CmpOp, ExceptHandler, Expr, Pattern, Singleton, Stmt, StmtAnnAssign, StmtAssign,
+    StmtAugAssign, StmtFor, StmtIf, StmtMatch, StmtReturn, StmtWhile, UnaryOp,
 };
 use sifr_type_system::infer::resolve_type_annotation;
 use sifr_type_system::{
-    narrow_type, type_check_binary_op, FunctionType, NarrowingCondition, OwnershipKind, Type,
+    make_union, narrow_type, FunctionType, NarrowingCondition, OwnershipKind, Type,
 };
 pub(super) fn lower_stmts(
     stmts: &[Stmt],
@@ -1190,36 +1191,48 @@ pub(super) fn lower_chained_assign(assign: &StmtAssign, ctx: &mut LowerCtx) -> V
     result
 }
 
-fn resolve_object_field_type(ctx: &LowerCtx, object_name: &str, field_name: &str) -> Type {
+fn resolve_field_type_from_type(object_ty: &Type, field_name: &str) -> Option<Type> {
+    let resolved = object_ty.resolve_alias();
+    if let Type::Class { fields, .. } = resolved {
+        return fields
+            .iter()
+            .find(|(name, _)| name == field_name)
+            .map(|(_, ty)| ty.clone());
+    }
+    if let Type::Union(members) = resolved {
+        let mut field_members = Vec::new();
+        let mut has_none = false;
+        for member in members {
+            match member.resolve_alias() {
+                Type::None => {
+                    has_none = true;
+                }
+                Type::Class { fields, .. } => {
+                    let Some((_, member_field_ty)) =
+                        fields.iter().find(|(name, _)| name == field_name)
+                    else {
+                        return None;
+                    };
+                    field_members.push(member_field_ty.clone());
+                }
+                _ => return None,
+            }
+        }
+        if field_members.is_empty() {
+            return None;
+        }
+        if has_none {
+            field_members.push(Type::None);
+        }
+        return Some(make_union(field_members));
+    }
+    None
+}
+
+pub(super) fn resolve_object_field_type(ctx: &LowerCtx, object_name: &str, field_name: &str) -> Type {
     ctx.scope
         .lookup(object_name)
-        .and_then(|info| {
-            let obj_ty = info.effective_type();
-            // The object may be typed as Type::Class directly (e.g. `self`)
-            // or as a named class reference.
-            if let Type::Class { fields, .. } = obj_ty {
-                fields
-                    .iter()
-                    .find(|(name, _)| name == field_name)
-                    .map(|(_, ty)| ty.clone())
-            } else if let Type::Class {
-                name: class_name, ..
-            } = obj_ty
-            {
-                ctx.class_types.get(class_name).and_then(|class_ty| {
-                    if let Type::Class { fields, .. } = class_ty {
-                        fields
-                            .iter()
-                            .find(|(name, _)| name == field_name)
-                            .map(|(_, ty)| ty.clone())
-                    } else {
-                        None
-                    }
-                })
-            } else {
-                None
-            }
-        })
+        .and_then(|info| resolve_field_type_from_type(info.effective_type(), field_name))
         .unwrap_or(Type::Unknown)
 }
 
@@ -1241,6 +1254,31 @@ pub(super) fn lower_assign(assign: &StmtAssign, ctx: &mut LowerCtx) -> Option<Hi
 
     // Handle attribute assignment: self.field = value or obj.field = value
     if let Expr::Attribute(attr) = &assign.targets[0] {
+        if let Expr::Attribute(inner_attr) = attr.value.as_ref() {
+            let obj_name = if let Expr::Name(n) = inner_attr.value.as_ref() {
+                n.id.clone()
+            } else {
+                ctx.error("attribute assignment target must be a simple name".to_string());
+                return None;
+            };
+            if !ensure_mutable_parameter_binding(ctx, &obj_name, "mutate through") {
+                return None;
+            }
+            let field_name = inner_attr.attr.to_string();
+            let field_ty = resolve_object_field_type(ctx, &obj_name, &field_name);
+            let nested_field_name = attr.attr.to_string();
+            let nested_field_ty =
+                resolve_field_type_from_type(&field_ty, &nested_field_name).unwrap_or(Type::Unknown);
+            let value = lower_expr(&assign.value, ctx)?;
+            return Some(HirStmt::NestedFieldAssign {
+                object: obj_name,
+                field: field_name,
+                field_ty,
+                nested_field: nested_field_name,
+                nested_field_ty,
+                value,
+            });
+        }
         let obj_name = if let Expr::Name(n) = attr.value.as_ref() {
             n.id.clone()
         } else {
@@ -1461,184 +1499,7 @@ pub(super) fn lower_assign(assign: &StmtAssign, ctx: &mut LowerCtx) -> Option<Hi
 }
 
 pub(super) fn lower_aug_assign(aug: &StmtAugAssign, ctx: &mut LowerCtx) -> Option<HirStmt> {
-    // Handle augmented assignment on attributes: self.field += val
-    if let Expr::Attribute(attr) = aug.target.as_ref() {
-        let obj_name = if let Expr::Name(n) = attr.value.as_ref() {
-            n.id.clone()
-        } else {
-            ctx.error("augmented attribute assignment target must be a simple name".to_string());
-            return None;
-        };
-        if !ensure_mutable_parameter_binding(ctx, &obj_name, "mutate through") {
-            return None;
-        }
-        let field_name = attr.attr.to_string();
-        let value = lower_expr(&aug.value, ctx)?;
-        let op_str = match aug.op {
-            Operator::Add => "+=",
-            Operator::Sub => "-=",
-            Operator::Mult => "*=",
-            Operator::Div => "/=",
-            Operator::Mod => "%=",
-            Operator::Pow => "**=",
-            Operator::BitAnd => "&=",
-            Operator::BitOr => "|=",
-            Operator::BitXor => "^=",
-            Operator::LShift => "<<=",
-            Operator::RShift => ">>=",
-            Operator::FloorDiv => "//=",
-            Operator::MatMult => {
-                ctx.error("matrix multiplication operator (@) is not supported".to_string());
-                return None;
-            }
-        };
-        return Some(HirStmt::AttributeAugAssign {
-            object: obj_name,
-            field: field_name,
-            op: op_str.to_string(),
-            value,
-        });
-    }
-
-    // Handle augmented assignment on subscript: list[i] += val
-    if let Expr::Subscript(sub) = aug.target.as_ref() {
-        let obj_name = if let Expr::Name(n) = sub.value.as_ref() {
-            n.id.clone()
-        } else {
-            ctx.error("augmented subscript assignment target must be a simple name".to_string());
-            return None;
-        };
-        if !ensure_mutable_parameter_binding(ctx, &obj_name, "mutate through") {
-            return None;
-        }
-        let obj_ty = ctx
-            .scope
-            .lookup(&obj_name)
-            .map(|info| info.effective_type().clone())
-            .unwrap_or(Type::Unknown);
-        if matches!(obj_ty.resolve_alias(), Type::Bytes) {
-            ctx.error(
-                "bytes is immutable; augmented subscript assignment is not supported".to_string(),
-            );
-            return None;
-        }
-        let index = lower_expr(&sub.slice, ctx)?;
-        let value = lower_expr(&aug.value, ctx)?;
-        let op_str = match aug.op {
-            Operator::Add => "+=",
-            Operator::Sub => "-=",
-            Operator::Mult => "*=",
-            Operator::Div => "/=",
-            Operator::Mod => "%=",
-            Operator::Pow => "**=",
-            Operator::BitAnd => "&=",
-            Operator::BitOr => "|=",
-            Operator::BitXor => "^=",
-            Operator::LShift => "<<=",
-            Operator::RShift => ">>=",
-            Operator::FloorDiv => "//=",
-            Operator::MatMult => {
-                ctx.error("matrix multiplication operator (@) is not supported".to_string());
-                return None;
-            }
-        };
-        let object_ty = validate_subscript_augassign_target(
-            ctx,
-            &obj_name,
-            obj_ty,
-            index.ty(),
-            value.ty(),
-            op_str,
-        );
-        return Some(HirStmt::SubscriptAugAssign {
-            object: obj_name,
-            index,
-            op: op_str.to_string(),
-            value,
-            object_ty,
-        });
-    }
-    let name = if let Expr::Name(n) = aug.target.as_ref() {
-        n.id.clone()
-    } else {
-        ctx.error("augmented assignment target must be a simple name".to_string());
-        return None;
-    };
-
-    let value = lower_expr(&aug.value, ctx)?;
-    ctx.clear_sequence_pointer(&name);
-    ctx.clear_len_alias(&name);
-
-    let op_str = match aug.op {
-        Operator::Add => "+=",
-        Operator::Sub => "-=",
-        Operator::Mult => "*=",
-        Operator::Div => "/=",
-        Operator::FloorDiv => "//=",
-        Operator::Mod => "%=",
-        Operator::Pow => "**=",
-        Operator::BitAnd => "&=",
-        Operator::BitOr => "|=",
-        Operator::BitXor => "^=",
-        Operator::LShift => "<<=",
-        Operator::RShift => ">>=",
-        Operator::MatMult => {
-            ctx.error("matrix multiplication operator (@) is not supported".to_string());
-            return None;
-        }
-    };
-
-    let var_info = if ctx.current_function_frame_start().is_some() {
-        if let Some(info) = ctx.lookup_current_function_binding(&name) {
-            Some(info)
-        } else if ctx.is_declared_nonlocal(&name) {
-            ctx.lookup_outer_function_binding(&name)
-        } else if ctx.scope.lookup(&name).is_some() {
-            ctx.error(format!(
-                "captured variable `{name}` must be declared with `nonlocal` before augmented assignment"
-            ));
-            return None;
-        } else {
-            None
-        }
-    } else {
-        ctx.scope.lookup(&name)
-    };
-    let Some(var_info) = var_info else {
-        ctx.error(format!("undefined variable: '{name}'"));
-        return None;
-    };
-    if var_info.is_parameter_binding() && !var_info.is_mutable_binding {
-        ctx.error(format!(
-            "cannot reassign immutable parameter `{name}`: add `mut` to the parameter declaration"
-        ));
-        return None;
-    }
-    let var_ty = var_info.ty.clone();
-
-    let base_op = &op_str[..op_str.len() - 1];
-    if base_op == "+" {
-        match (&var_ty, value.ty()) {
-            (Type::Str, Type::Str) => {}
-            (Type::List(_), Type::List(_)) => {}
-            (Type::Bytes, Type::Bytes) => {}
-            _ => {
-                if let Err(e) = type_check_binary_op(&var_ty, base_op, value.ty()) {
-                    ctx.error(e.message);
-                    return None;
-                }
-            }
-        }
-    } else if let Err(e) = type_check_binary_op(&var_ty, base_op, value.ty()) {
-        ctx.error(e.message);
-        return None;
-    }
-
-    Some(HirStmt::AugAssign {
-        name,
-        op: op_str.to_string(),
-        value,
-    })
+    lower_aug_assign_impl(aug, ctx)
 }
 
 pub(super) fn lower_return(

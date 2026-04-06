@@ -95,6 +95,7 @@ fn hir_stmt_calls_function(stmt: &HirStmt, func_name: &str) -> bool {
         | HirStmt::AugAssign { value, .. }
         | HirStmt::AttributeAugAssign { value, .. }
         | HirStmt::FieldAssign { value, .. }
+        | HirStmt::NestedFieldAssign { value, .. }
         | HirStmt::Raise { value }
         | HirStmt::Yield { value }
         | HirStmt::TupleUnpack { value, .. }
@@ -154,6 +155,12 @@ fn hir_stmt_calls_function(stmt: &HirStmt, func_name: &str) -> bool {
             hir_expr_calls_function(index, func_name) || hir_expr_calls_function(value, func_name)
         }
         HirStmt::NestedSubscriptAssign {
+            outer_index,
+            inner_index,
+            value,
+            ..
+        }
+        | HirStmt::AttributeNestedSubscriptAssign {
             outer_index,
             inner_index,
             value,
