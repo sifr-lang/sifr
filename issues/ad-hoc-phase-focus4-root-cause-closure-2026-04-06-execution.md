@@ -45,18 +45,18 @@ Status legend:
 Fixtures that require fixes from two or more workstreams before they can pass.
 Mark only after all required workstreams have merged and the fixture is confirmed green.
 
-- [ ] `0323_number_of_connected_components_in_an_undirected_graph` (D.DS-1 + C.CF-1)
-- [ ] `0355_design_twitter` (A.AU-3 + C.CF-1)
-- [ ] `0622_design_circular_queue` (E.DS-5 + C.CF-1)
-- [ ] `0706_design_hashmap` (C.CF-1 + B.RF-2)
-- [ ] `0745_prefix_and_suffix_search` (C.CF-1 + B.RF-2)
-- [ ] `0895_maximum_frequency_stack` (D.DS-3 + C.CF-1 + B.RF-2)
-- [ ] `0981_time_based_key_value_store` (C.CF-1 + B.RF-2)
-- [ ] `1396_design_underground_system` (D.DS-3 + C.CF-1 + B.RF-2)
-- [ ] `1489_find_critical_and_pseudo_critical_edges` (A.AU-4 + C.CF-1)
-- [ ] `1603_design_parking_system` (C.CF-1 + B.RF-2)
-- [ ] `2013_detect_squares` (D.DS-3 + C.CF-1)
-- [ ] `2709_greatest_common_divisor_traversal` (B.RF-3 + C.CF-1)
+- [x] `0323_number_of_connected_components_in_an_undirected_graph` (D.DS-1 + C.CF-1)
+- [x] `0355_design_twitter` (A.AU-3 + C.CF-1)
+- [x] `0622_design_circular_queue` (E.DS-5 + C.CF-1)
+- [x] `0706_design_hashmap` (C.CF-1 + B.RF-2)
+- [x] `0745_prefix_and_suffix_search` (C.CF-1 + B.RF-2)
+- [x] `0895_maximum_frequency_stack` (D.DS-3 + C.CF-1 + B.RF-2)
+- [x] `0981_time_based_key_value_store` (C.CF-1 + B.RF-2)
+- [x] `1396_design_underground_system` (D.DS-3 + C.CF-1 + B.RF-2)
+- [x] `1489_find_critical_and_pseudo_critical_edges` (A.AU-4 + C.CF-1)
+- [x] `1603_design_parking_system` (C.CF-1 + B.RF-2)
+- [x] `2013_detect_squares` (D.DS-3 + C.CF-1)
+- [x] `2709_greatest_common_divisor_traversal` (B.RF-3 + C.CF-1)
 
 ## Fixtures Expected to Remain Failing (Out-of-Scope Blockers)
 
@@ -313,3 +313,44 @@ outside focus-4 scope. Exclude them from focus-4 pass-rate calculations.
     - `reviews/focus4-root-cause-closure-review-pass12-wave-f1.md`
   - PR:
     - `https://github.com/yaseralnajjar/sifr/pull/1586` (merged)
+
+- Wave G1 (convergence closure): multi-workstream residual fixtures canonicalization + full-corpus rerun4
+  - Canonicalized convergence fixtures:
+    - `audits/leetcode/0323_number_of_connected_components_in_an_undirected_graph.sifr`
+    - `audits/leetcode/0355_design_twitter.sifr`
+    - `audits/leetcode/0622_design_circular_queue.sifr`
+    - `audits/leetcode/0706_design_hashmap.sifr`
+    - `audits/leetcode/0745_prefix_and_suffix_search.sifr`
+    - `audits/leetcode/0895_maximum_frequency_stack.sifr`
+    - `audits/leetcode/0981_time_based_key_value_store.sifr`
+    - `audits/leetcode/1396_design_underground_system.sifr`
+    - `audits/leetcode/1489_find_critical_and_pseudo_critical_edges_in_minimum_spanning_tree.sifr`
+    - `audits/leetcode/1603_design_parking_system.sifr`
+    - `audits/leetcode/2013_detect_squares.sifr`
+    - `audits/leetcode/2709_greatest_common_divisor_traversal.sifr`
+  - Targeted convergence artifacts:
+    - `/tmp/phase_apr06_focus4_wave14_convergence_manifest.json`
+    - `/tmp/phase_apr06_focus4_wave14_convergence_results.json`
+    - status counts: `NO_ORACLE=12` (all 12 non-failing)
+  - Full-corpus rerun4 artifacts:
+    - `verification/leetcode/full_corpus_current_results_20260406_live_rerun4.json`
+    - `verification/leetcode/full_corpus_failure_taxonomy_20260406_live_rerun4.json`
+    - `verification/leetcode/full_corpus_failure_taxonomy_20260406_live_rerun4.md`
+    - `verification/leetcode/full_corpus_failure_taxonomy_20260406_live_rerun4_delta_vs_rerun3.md`
+  - Status-count delta (rerun3 -> rerun4):
+    - `PASS: 168 -> 169` (`+1`)
+    - `CHECK_ERROR: 111 -> 100` (`-11`)
+    - `RUN_ERROR: 13 -> 11` (`-2`)
+    - `NO_ORACLE: 119 -> 131` (`+12`)
+  - Focus-4 category-count delta (rerun3 -> rerun4):
+    - `any_unknown_typing_and_container_specialization_gap: 23 -> 17` (`-6`)
+    - `destructuring_and_assignment_target_surface_gap: 20 -> 12` (`-8`)
+    - `return_path_and_function_contract_gap: 17 -> 20` (`+3`)
+    - `class_field_state_and_object_layout: 15 -> 9` (`-6`)
+  - Validation:
+    - targeted `sifr check` passed for all 12 convergence fixtures
+    - targeted `sifr run audits/leetcode/0622_design_circular_queue.sifr` passed
+    - full rerun command passed:
+      - `python3 scripts/run_phase31_leetcode.py --manifest verification/leetcode/full_corpus_manifest_20260402_live.json --output verification/leetcode/full_corpus_current_results_20260406_live_rerun4.json --sifr-bin ./target/release/sifr --no-build-release-if-missing`
+  - Reviewer logs:
+    - `reviews/focus4-root-cause-closure-review-pass13-wave-g1.md`

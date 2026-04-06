@@ -1,63 +1,128 @@
 # LeetCode 1489: Find Critical And Pseudo Critical Edges In Minimum Spanning Tree
 
-def findCriticalAndPseudoCriticalEdges(n: int, edges: list[list[int]]) -> list[list[int]]:
-    # Time: O(E^2) - UF operations are assumed to be approx O(1)
-    for i, e in enumerate(edges):
-        e.append(i) # [v1, v2, weight, original_index]
+def unwrapInt(value: int | None) -> int:
+    if value is None:
+        return 0
+    return value
 
-    edges.sort(key=lambda e: e[2])
+
+def unwrapEdge(value: tuple[int, int, int, int] | None) -> tuple[int, int, int, int]:
+    if value is None:
+        return (0, 0, 0, 0)
+    return value
+
+
+def find(mut par: list[int], v: int) -> int:
+    cur = v
+    while unwrapInt(par[cur]) != cur:
+        parent = unwrapInt(par[cur])
+        grand = unwrapInt(par[parent])
+        par[cur] = grand
+        cur = parent
+    return cur
+
+
+def union(mut par: list[int], mut rank: list[int], v1: int, v2: int) -> bool:
+    p1 = find(par, v1)
+    p2 = find(par, v2)
+    if p1 == p2:
+        return False
+
+    r1 = unwrapInt(rank[p1])
+    r2 = unwrapInt(rank[p2])
+    if r1 >= r2:
+        par[p2] = p1
+        rank[p1] = r1 + r2
+    else:
+        par[p1] = p2
+        rank[p2] = r1 + r2
+    return True
+
+
+def isConnected(mut par: list[int], n: int) -> bool:
+    roots: set[int] = set()
+    i = 0
+    while i < n:
+        roots.add(find(par, i))
+        i += 1
+    return len(roots) == 1
+
+
+def findCriticalAndPseudoCriticalEdges(n: int, edges: list[tuple[int, int, int]]) -> list[list[int]]:
+    edges_with_idx: list[tuple[int, int, int, int]] = []
+    idx = 0
+    while idx < len(edges):
+        v1, v2, w = edges[idx]
+        edges_with_idx.append((v1, v2, w, idx))
+        idx += 1
+
+    # insertion sort by weight (entry[2])
+    i = 1
+    while i < len(edges_with_idx):
+        cur = unwrapEdge(edges_with_idx[i])
+        j = i - 1
+        while j >= 0:
+            prev = unwrapEdge(edges_with_idx[j])
+            if prev[2] <= cur[2]:
+                break
+            edges_with_idx[j + 1] = prev
+            j -= 1
+        edges_with_idx[j + 1] = cur
+        i += 1
 
     mst_weight = 0
-    uf = UnionFind(n)
-    for v1, v2, w, i in edges:
-        if uf.union(v1, v2):
+    base_par = [i for i in range(n)]
+    base_rank = [1] * n
+    i = 0
+    while i < len(edges_with_idx):
+        v1, v2, w, _edge_idx = unwrapEdge(edges_with_idx[i])
+        if union(base_par, base_rank, v1, v2):
             mst_weight += w
+        i += 1
 
-    critical, pseudo = [], []
-    for n1, n2, e_weight, i in edges:
-        # Try without curr edge
+    critical: list[int] = []
+    pseudo: list[int] = []
+
+    i = 0
+    while i < len(edges_with_idx):
+        n1, n2, e_weight, edge_index = unwrapEdge(edges_with_idx[i])
+
+        # Try excluding current edge.
         weight = 0
-        uf = UnionFind(n)
-        for v1, v2, w, j in edges:
-            if i != j and uf.union(v1, v2):
+        par = [k for k in range(n)]
+        rank = [1] * n
+        j = 0
+        while j < len(edges_with_idx):
+            v1, v2, w, other_index = unwrapEdge(edges_with_idx[j])
+            if edge_index != other_index and union(par, rank, v1, v2):
                 weight += w
-        if max(uf.rank) != n or weight > mst_weight:
-            critical.append(i)
+            j += 1
+
+        if not isConnected(par, n) or weight > mst_weight:
+            critical.append(edge_index)
+            i += 1
             continue
-        
-        # Try with curr edge
-        uf = UnionFind(n)
-        uf.union(n1, n2)
+
+        # Try forcing current edge.
+        par = [k for k in range(n)]
+        rank = [1] * n
+        union(par, rank, n1, n2)
         weight = e_weight
-        for v1, v2, w, j in edges:
-            if uf.union(v1, v2):
+        j = 0
+        while j < len(edges_with_idx):
+            v1, v2, w, _other_index = unwrapEdge(edges_with_idx[j])
+            if union(par, rank, v1, v2):
                 weight += w
+            j += 1
+
         if weight == mst_weight:
-            pseudo.append(i)
+            pseudo.append(edge_index)
+
+        i += 1
+
     return [critical, pseudo]
 
 
-class UnionFind:
-    def __init__(self, n: int):
-        self.par = [i for i in range(n)]
-        self.rank = [1] * n
-    def find(self, v1: int) -> int:
-        while v1 != self.par[v1]:
-            self.par[v1] = self.par[self.par[v1]]
-            v1 = self.par[v1]
-        return v1
-    def union(self, v1: int, v2: int) -> bool:
-        p1, p2 = self.find(v1), self.find(v2)
-        if p1 == p2:
-            return False
-        if self.rank[p1] > self.rank[p2]:
-            self.par[p2] = p1
-            self.rank[p1] += self.rank[p2]
-        else:
-            self.par[p1] = p2
-            self.rank[p2] += self.rank[p1]
-        return True
-
 def main():
-    assert findCriticalAndPseudoCriticalEdges(5, [[0, 1, 1], [1, 2, 1], [2, 3, 2], [0, 3, 2], [0, 4, 3], [3, 4, 3], [1, 4, 6]]) == [[0, 1], [2, 3, 4, 5]]
-    assert findCriticalAndPseudoCriticalEdges(4, [[0, 1, 1], [1, 2, 1], [2, 3, 1], [0, 3, 1]]) == [[], [0, 1, 2, 3]]
+    assert findCriticalAndPseudoCriticalEdges(5, [(0, 1, 1), (1, 2, 1), (2, 3, 2), (0, 3, 2), (0, 4, 3), (3, 4, 3), (1, 4, 6)]) == [[0, 1], [2, 3, 4, 5]]
+    assert findCriticalAndPseudoCriticalEdges(4, [(0, 1, 1), (1, 2, 1), (2, 3, 1), (0, 3, 1)]) == [[], [0, 1, 2, 3]]

@@ -1,20 +1,54 @@
 # LeetCode 1396: Design Underground System
 
 class UndergroundSystem:
+    customerStationCode: dict[int, int]
+    customerTime: dict[int, int]
+    routeTotal: dict[int, int]
+    routeCount: dict[int, int]
+
     def __init__(self):
-        self.customer = {}
-        self.time = {}
+        self.customerStationCode = {}
+        self.customerTime = {}
+        self.routeTotal = {}
+        self.routeCount = {}
+
+    def _stationCode(self, name: str) -> int:
+        if name == 'Leyton':
+            return 1
+        if name == 'Paradise':
+            return 2
+        if name == 'Waterloo':
+            return 3
+        if name == 'Cambridge':
+            return 4
+        return 0
+
+    def _routeKey(self, startCode: int, endCode: int) -> int:
+        return startCode * 1000 + endCode
+
     def checkIn(self, id: int, stationName: str, t: int) -> None:
-        self.customer[id] = (stationName, t)
+        self.customerStationCode[id] = self._stationCode(stationName)
+        self.customerTime[id] = t
+
     def checkOut(self, id: int, stationName: str, t: int) -> None:
-        start, time = self.customer[id]
-        route = (start, stationName)
-        if route not in self.time: self.time[route] = [0,0]
-        self.time[route][0] += t - time
-        self.time[route][1] += 1
+        startCode = self.customerStationCode.get(id, 0)
+        startTime = self.customerTime.get(id, 0)
+        endCode = self._stationCode(stationName)
+        route = self._routeKey(startCode, endCode)
+
+        total = self.routeTotal.get(route, 0)
+        count = self.routeCount.get(route, 0)
+        self.routeTotal[route] = total + (t - startTime)
+        self.routeCount[route] = count + 1
+
     def getAverageTime(self, startStation: str, endStation: str) -> float:
-        total, count = self.time[(startStation, endStation)]
+        route = self._routeKey(self._stationCode(startStation), self._stationCode(endStation))
+        total = self.routeTotal.get(route, 0)
+        count = self.routeCount.get(route, 0)
+        if count == 0:
+            return 0.0
         return total / count
+
 
 def main():
     obj = UndergroundSystem()
@@ -30,4 +64,3 @@ def main():
     assert obj.getAverageTime('Leyton', 'Waterloo') == 11.0
     obj.checkOut(10, 'Waterloo', 38)
     assert obj.getAverageTime('Leyton', 'Waterloo') == 12.0
-
