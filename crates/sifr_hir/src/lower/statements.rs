@@ -13,6 +13,9 @@ use super::expressions::{lower_expr, lower_star_unpack_assign, lower_tuple_unpac
 use super::flow_helpers::{expr_to_literal_value, then_body_always_exits};
 use super::for_loop_safety::{is_collection_backed_iter_source, loop_body_mutates_iter_source};
 use super::function_flow::infer_function_return_type;
+use super::if_branch_bindings::{
+    predeclare_exhaustive_if_assigned_names, seed_exhaustive_if_bindings,
+};
 use super::len_aliases::record_len_alias_fact;
 use super::nonlocal_support::{
     collect_declared_nonlocals, hir_body_calls_function, lower_nonlocal, should_rebind_simple_name,
@@ -1007,6 +1010,23 @@ pub(super) fn bind_pattern_vars(pattern: &HirPattern, ctx: &mut LowerCtx) {
     }
 }
 
+fn seed_binding_after_failed_initializer(
+    ctx: &mut LowerCtx,
+    name: &str,
+    ty: Type,
+    is_explicit_local: bool,
+) {
+    if is_explicit_local {
+        ctx.scope.define_explicit_local(name.to_string(), ty);
+    } else {
+        ctx.scope.define(name.to_string(), ty);
+    }
+    ctx.empty_dict_specializations.remove(name);
+    ctx.pending_container_specialization_patches.remove(name);
+    ctx.clear_numeric_sentinel_var(name);
+    ctx.clear_sequence_shape_fact(name);
+}
+
 pub(super) fn lower_ann_assign(ann: &StmtAnnAssign, ctx: &mut LowerCtx) -> Option<HirStmt> {
     let name = if let Expr::Name(n) = ann.target.as_ref() {
         n.id.clone()
@@ -1021,11 +1041,22 @@ pub(super) fn lower_ann_assign(ann: &StmtAnnAssign, ctx: &mut LowerCtx) -> Optio
         let mut expr = if let Some(kind) = numeric_sentinel_kind(val) {
             if let Some(domain) = numeric_domain_for_type(&declared_type) {
                 domain_typed_sentinel_expr(kind, domain)
+            } else if let Some(expr) = lower_expr(val, ctx) {
+                expr
             } else {
-                lower_expr(val, ctx)?
+                seed_binding_after_failed_initializer(
+                    ctx,
+                    &name,
+                    declared_type.clone(),
+                    true,
+                );
+                return None;
             }
+        } else if let Some(expr) = lower_expr(val, ctx) {
+            expr
         } else {
-            lower_expr(val, ctx)?
+            seed_binding_after_failed_initializer(ctx, &name, declared_type.clone(), true);
+            return None;
         };
         let expr_ty = expr.ty().clone();
         // Inside try blocks, auto-unwrap Result[T, E] when declared type is T
@@ -1409,7 +1440,20 @@ pub(super) fn lower_assign(assign: &StmtAssign, ctx: &mut LowerCtx) -> Option<Hi
         });
     }
 
-    let value = lower_expr(&assign.value, ctx)?;
+    let should_treat_as_existing_binding = if ctx.current_function_frame_start().is_some() {
+        should_rebind_simple_name(ctx, &name)
+    } else {
+        ctx.scope.lookup(&name).is_some()
+    };
+    let value = if let Some(value) = lower_expr(&assign.value, ctx) {
+        value
+    } else {
+        if !should_treat_as_existing_binding {
+            let fallback_ty = ctx.inferred_binding_hint(&name).cloned().unwrap_or(Type::Unknown);
+            seed_binding_after_failed_initializer(ctx, &name, fallback_ty, false);
+        }
+        return None;
+    };
     let value_ty = value.ty().clone();
 
     // Track move: if RHS is a variable name with Move ownership, mark it as moved
@@ -1422,12 +1466,6 @@ pub(super) fn lower_assign(assign: &StmtAssign, ctx: &mut LowerCtx) -> Option<Hi
             ctx.scope.mark_moved(src_name);
         }
     }
-
-    let should_treat_as_existing_binding = if ctx.current_function_frame_start().is_some() {
-        should_rebind_simple_name(ctx, &name)
-    } else {
-        ctx.scope.lookup(&name).is_some()
-    };
 
     // Check if variable already exists
     if should_treat_as_existing_binding {
@@ -1576,6 +1614,7 @@ pub(super) fn lower_if(
 
     let condition = lower_expr(&if_stmt.test, ctx)?;
     validate_control_flow_condition(&condition, "if", ctx);
+    predeclare_exhaustive_if_assigned_names(if_stmt, ctx);
 
     let saved_state = ctx.scope.save_narrowing_state();
     let saved_moved = ctx.scope.save_moved_state();
@@ -1677,6 +1716,7 @@ pub(super) fn lower_if(
         }
     }
 
+    seed_exhaustive_if_bindings(ctx, &then_body, &elif_clauses, else_body.as_ref());
     merge_exhaustive_branch_sequence_guards(ctx, else_body.is_some(), &branch_sequence_states);
 
     // Early-return narrowing: if the then-body always exits (return/break/continue/raise),
@@ -1700,6 +1740,7 @@ pub(super) fn lower_if(
         else_body,
     })
 }
+
 /// Detect a narrowing condition from an if-test expression.
 pub(super) fn detect_narrowing_condition(
     expr: &Expr,

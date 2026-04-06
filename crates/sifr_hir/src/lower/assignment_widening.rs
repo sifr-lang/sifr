@@ -8,11 +8,19 @@ pub(super) fn reconcile_optional_reassignment(
     incoming_ty: &Type,
     can_widen: bool,
 ) -> bool {
+    if matches!(current_ty.resolve_alias(), Type::Unknown | Type::Any)
+        && !matches!(incoming_ty.resolve_alias(), Type::Unknown | Type::Any)
+    {
+        return ctx.scope.set_type(name, incoming_ty.clone());
+    }
     if incoming_ty.is_assignable_to(current_ty) {
         return true;
     }
     if !can_widen {
         return false;
+    }
+    if matches!(incoming_ty.resolve_alias(), Type::Unknown | Type::Any) {
+        return true;
     }
     if !(current_ty == &Type::None
         || incoming_ty == &Type::None

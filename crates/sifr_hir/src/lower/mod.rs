@@ -35,6 +35,7 @@ mod guarded_index;
 mod if_expression;
 mod imported_defaults;
 mod imports;
+mod if_branch_bindings;
 mod len_aliases;
 mod method_call_args;
 mod min_max_validation;

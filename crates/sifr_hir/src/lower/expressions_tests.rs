@@ -34,6 +34,52 @@ fn test_undefined_variable() {
 }
 
 #[test]
+fn test_failed_assignment_rhs_still_seeds_followup_binding() {
+    let result = lower_source(
+        "def main(xs: list[int]) -> int:\n    s = xs[0] + xs[0]\n    return s\n",
+    );
+    assert!(result.is_err());
+    let errors = result.unwrap_err();
+    assert!(errors
+        .iter()
+        .any(|e| e.message.contains("unsupported operand type(s) for +")));
+    assert!(
+        !errors.iter().any(|e| e.message == "undefined variable: 's'"),
+        "failed initializer should not cascade to undefined-name errors: {errors:?}"
+    );
+    assert!(
+        !errors.iter().any(|e| {
+            e.message
+                .contains("must return a value of type 'int' on all control-flow paths")
+        }),
+        "failed initializer should not trigger a synthetic missing-return diagnostic: {errors:?}"
+    );
+}
+
+#[test]
+fn test_failed_annotated_assignment_rhs_still_seeds_followup_binding() {
+    let result = lower_source(
+        "def main(xs: list[int]) -> int:\n    s: int = xs[0] + xs[0]\n    return s\n",
+    );
+    assert!(result.is_err());
+    let errors = result.unwrap_err();
+    assert!(errors
+        .iter()
+        .any(|e| e.message.contains("unsupported operand type(s) for +")));
+    assert!(
+        !errors.iter().any(|e| e.message == "undefined variable: 's'"),
+        "failed annotated initializer should not cascade to undefined-name errors: {errors:?}"
+    );
+    assert!(
+        !errors.iter().any(|e| {
+            e.message
+                .contains("must return a value of type 'int' on all control-flow paths")
+        }),
+        "failed annotated initializer should not trigger a synthetic missing-return diagnostic: {errors:?}"
+    );
+}
+
+#[test]
 fn test_use_after_move() {
     let result = lower_source(
         "def consume(own s: str) -> str:\n    return s\ndef main():\n    s: str = \"hello\"\n    x: str = consume(s)\n    print(s)\n",
@@ -307,6 +353,18 @@ fn test_while_loop() {
     assert_eq!(module.functions.len(), 1);
     assert!(module.functions[0].body.len() >= 2);
     assert!(matches!(module.functions[0].body[1], HirStmt::While { .. }));
+}
+
+#[test]
+fn test_if_else_branch_bindings_are_visible_after_if() {
+    let result = lower_source(
+        "def main(flag: bool) -> int:\n    if flag:\n        value = 1\n    else:\n        value = 2\n    return value\n",
+    );
+    assert!(
+        result.is_ok(),
+        "exhaustive if/else branch-local bindings should be visible after the conditional: {:?}",
+        result.err()
+    );
 }
 
 #[test]

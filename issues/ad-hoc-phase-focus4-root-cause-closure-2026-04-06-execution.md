@@ -19,7 +19,7 @@ Status legend:
 
 ## Workstream B: Return-path and scope-resolution closure
 
-- [ ] `RF-2-loop_local_scope_resolution_bug`
+- [x] `RF-2-loop_local_scope_resolution_bug`
 - [ ] `RF-3-return_completeness_false_positive`
 
 ## Workstream C: Class field registration and nested-attribute assignment
@@ -140,3 +140,31 @@ outside focus-4 scope. Exclude them from focus-4 pass-rate calculations.
     - `reviews/focus4-root-cause-closure-review-pass6-wave-e1.md`
   - PR:
     - `https://github.com/yaseralnajjar/sifr/pull/1580`
+
+- Wave B1 (compiler): failed-initializer binding seeding + exhaustive if/else branch binding propagation
+  - Compiler changes:
+    - seed a local binding when initializer lowering fails (`assign`/`ann_assign`) to avoid cascading undefined-name diagnostics
+    - predeclare names assigned in all branches of exhaustive `if/elif/else` blocks
+    - seed merged branch bindings from exhaustive-if branch locals
+    - allow inferred `Unknown`/`Any` locals to refine to concrete assignment types on reassignment
+  - HIR maintainability split:
+    - extracted `crates/sifr_hir/src/lower/if_branch_bindings.rs`
+  - Tests added:
+    - `test_failed_assignment_rhs_still_seeds_followup_binding`
+    - `test_failed_annotated_assignment_rhs_still_seeds_followup_binding`
+    - `test_if_else_branch_bindings_are_visible_after_if`
+  - Focus4 subset artifact:
+    - `/tmp/phase_apr06_focus4_wave7_rf2_scope_and_branch_bindings.json`
+  - Primary diagnostic deltas:
+    - `RF-2-loop_local_scope_resolution_bug`: `6/6 -> 0/6` primary presence
+  - Status-count delta (wave6 -> wave7):
+    - `CHECK_ERROR: 87 -> 87`
+    - `PASS: 2 -> 2`
+    - `RUN_ERROR: 1 -> 1`
+  - Validation:
+    - targeted `check` on RF-2 fixtures no longer emits `undefined variable`
+    - `scripts/run_all_tests.sh --profile quick` passed
+  - Reviewer logs:
+    - `reviews/focus4-root-cause-closure-review-pass7-wave-b1.md`
+  - PR:
+    - pending
