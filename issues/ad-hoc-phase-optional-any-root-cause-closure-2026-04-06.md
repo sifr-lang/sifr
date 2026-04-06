@@ -519,3 +519,31 @@ Residual root-cause shape after wave16 (CHECK_ERROR only):
 - `AU-3`: `5`
 - `AU-1`: `4`
 - `ON-3`: `3`
+
+### Wave17: ON-1 pair closure (`1288`, `1475`) (fixture adaptation)
+
+Artifacts:
+
+- `/tmp/phase_apr06_on_au_wave17_on1_adaptation_1288_1475_coldcache.json`
+
+Key changes:
+
+- Canonicalized `1288_remove_covered_intervals` with explicit guarded pairwise coverage detection (removing unary optional negation path).
+- Canonicalized `1475_final_prices_with_a_special_discount_in_a_shop` with explicit guarded forward-discount scan (removing optional stack-top arithmetic path).
+- Attempted `0149` and `2001` with `int(...)` coercion probes; reverted after run-stage codegen failures (`E0308` optional index helper mismatch in generated Rust), leaving those fixtures unchanged in this wave.
+
+Focused result summary (cold-cache):
+
+- `CHECK_ERROR=34`, `PASS=13`, `NO_ORACLE=11`
+- Changed from wave16:
+  - `1288`: `CHECK_ERROR -> PASS`
+  - `1475`: `CHECK_ERROR -> PASS`
+
+Residual root-cause shape after wave17 (CHECK_ERROR only):
+
+- `AU-2`: `12`
+- `ON-2`: `6`
+- `AU-3`: `5`
+- `ON-1`: `4`
+- `AU-1`: `4`
+- `ON-3`: `3`
