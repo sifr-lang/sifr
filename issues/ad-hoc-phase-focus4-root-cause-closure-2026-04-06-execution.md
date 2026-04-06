@@ -284,4 +284,4 @@ outside focus-4 scope. Exclude them from focus-4 pass-rate calculations.
   - Reviewer logs:
     - `reviews/focus4-root-cause-closure-review-pass11-wave-ab3e4.md`
   - PR:
-    - pending
+    - `https://github.com/yaseralnajjar/sifr/pull/1585`
