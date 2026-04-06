@@ -23,6 +23,10 @@
 - Focus4 subset rerun now reports `CHECK_ERROR=74, NO_ORACLE=5, PASS=4, RUN_ERROR=7`.
 - All focus4 primary root-cause presences are now `0/x` across `AU-*`, `DS-*`, `RF-*`, and `CF-*`.
 - Remaining failures are secondary blockers: multi-workstream convergence and out-of-scope parity categories.
+- Full-corpus reporting closure completed with rerun3 + taxonomy + delta artifacts:
+  - `verification/leetcode/full_corpus_current_results_20260406_live_rerun3.json`
+  - `verification/leetcode/full_corpus_failure_taxonomy_20260406_live_rerun3.json`
+  - `verification/leetcode/full_corpus_failure_taxonomy_20260406_live_rerun3_delta_vs_rerun2.md`
 - See `issues/ad-hoc-phase-focus4-root-cause-closure-2026-04-06-execution.md` for wave artifacts and validation logs.
 
 ## Scope

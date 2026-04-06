@@ -77,8 +77,8 @@ outside focus-4 scope. Exclude them from focus-4 pass-rate calculations.
 ## Validation and Reporting
 
 - [x] targeted reruns after each sub-root-cause closure
-- [ ] full corpus rerun after each workstream
-- [ ] taxonomy regeneration and delta report after each full rerun
+- [x] full corpus rerun after each workstream
+- [x] taxonomy regeneration and delta report after each full rerun
 - [x] reviewer pass log references added per workstream
 
 ## Wave Log
@@ -285,3 +285,29 @@ outside focus-4 scope. Exclude them from focus-4 pass-rate calculations.
     - `reviews/focus4-root-cause-closure-review-pass11-wave-ab3e4.md`
   - PR:
     - `https://github.com/yaseralnajjar/sifr/pull/1585`
+
+- Wave F1 (phase reporting closure): full-corpus rerun3 + taxonomy regeneration + delta report
+  - Full-corpus rerun artifact:
+    - `verification/leetcode/full_corpus_current_results_20260406_live_rerun3.json`
+  - Taxonomy artifacts:
+    - `verification/leetcode/full_corpus_failure_taxonomy_20260406_live_rerun3.json`
+    - `verification/leetcode/full_corpus_failure_taxonomy_20260406_live_rerun3.md`
+    - `verification/leetcode/full_corpus_failure_taxonomy_20260406_live_rerun3_delta_vs_rerun2.md`
+  - Status-count delta (rerun2 -> rerun3):
+    - `PASS: 168 -> 168` (`+0`)
+    - `CHECK_ERROR: 125 -> 111` (`-14`)
+    - `RUN_ERROR: 4 -> 13` (`+9`)
+    - `NO_ORACLE: 114 -> 119` (`+5`)
+  - Focus-4 category-count delta (rerun2 -> rerun3):
+    - `any_unknown_typing_and_container_specialization_gap: 26 -> 23` (`-3`)
+    - `destructuring_and_assignment_target_surface_gap: 24 -> 20` (`-4`)
+    - `return_path_and_function_contract_gap: 24 -> 17` (`-7`)
+    - `class_field_state_and_object_layout: 16 -> 15` (`-1`)
+  - Convergence tracker audit:
+    - all 12 tracked multi-workstream fixtures remain non-green in rerun3 and stay unchecked pending future closure work
+  - Validation:
+    - `cargo build --release -p sifr` passed
+    - full rerun command passed:
+      - `python3 scripts/run_phase31_leetcode.py --manifest verification/leetcode/full_corpus_manifest_20260402_live.json --output verification/leetcode/full_corpus_current_results_20260406_live_rerun3.json --sifr-bin ./target/release/sifr --no-build-release-if-missing`
+  - Reviewer logs:
+    - `reviews/focus4-root-cause-closure-review-pass12-wave-f1.md`
