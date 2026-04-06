@@ -6,17 +6,28 @@ def minWindow(s: str, t: str) -> str:
 
     countT, window = {}, {}
     for c in t:
-        countT[c] = 1 + countT.get(c, 0)
+        prev_count = countT.get(c, 0)
+        if prev_count is None:
+            prev_count = 0
+        countT[c] = prev_count + 1
 
     have, need = 0, len(countT)
-    res, resLen = [-1, -1], float("infinity")
+    res = [-1, -1]
+    resLen = len(s) + 1
     l = 0
     for r in range(len(s)):
         c = s[r]
-        window[c] = 1 + window.get(c, 0)
+        prev_window = window.get(c, 0)
+        if prev_window is None:
+            prev_window = 0
+        next_window = prev_window + 1
+        window[c] = next_window
 
-        if c in countT and window[c] == countT[c]:
-            have += 1
+        need_count = countT.get(c, 0)
+        if need_count is None:
+            need_count = 0
+        if c in countT and next_window == need_count:
+            have = have + 1
 
         while have == need:
             # update our result
@@ -24,13 +35,26 @@ def minWindow(s: str, t: str) -> str:
                 res = [l, r]
                 resLen = r - l + 1
             # pop from the left of our window
-            window[s[l]] -= 1
-            if s[l] in countT and window[s[l]] < countT[s[l]]:
-                have -= 1
-            l += 1
-    l = res[0]
-    r = res[1]
-    return s[l : r + 1] if resLen != float("infinity") else ""
+            left_char = s[l]
+            left_count = window.get(left_char, 0)
+            if left_count is None:
+                left_count = 0
+            new_left_count = left_count - 1
+            window[left_char] = new_left_count
+            left_need = countT.get(left_char, 0)
+            if left_need is None:
+                left_need = 0
+            if left_char in countT and new_left_count < left_need:
+                have = have - 1
+            l = l + 1
+    if resLen == len(s) + 1:
+        return ""
+    left_idx = res[0]
+    if left_idx is not None:
+        right_idx = res[1]
+        if right_idx is not None:
+            return s[left_idx : right_idx + 1]
+    return ""
 
 def main():
     assert minWindow('ADOBECODEBANC', 'ABC') == 'BANC'

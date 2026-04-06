@@ -1,25 +1,29 @@
 # LeetCode 153: Find Minimum In Rotated Sorted Array
 
 def findMin(nums: list[int]) -> int:
-    start , end = 0, len(nums) - 1 
-    curr_min = float("inf")
-    
-    while start  <  end :
-        mid = start + (end - start ) // 2
-        curr_min = min(curr_min,nums[mid])
-        
-        # right has the min 
-        if nums[mid] > nums[end]:
+    if len(nums) == 0:
+        return 0
+
+    start, end = 0, len(nums) - 1
+    while start < end:
+        mid = start + (end - start) // 2
+        mid_val = nums[mid]
+        end_val = nums[end]
+        if mid_val is None:
+            return 0
+        if end_val is None:
+            return 0
+        if mid_val > end_val:
             start = mid + 1
-            
-        # left has the  min 
         else:
-            end = mid - 1 
-            
-    return min(curr_min,nums[start])
+            end = mid
+
+    result = nums[start]
+    if result is None:
+        return 0
+    return result
 
 def main():
     assert str(findMin([3,4,5,1,2])) == '1'
     assert str(findMin([4,5,6,7,0,1,2])) == '0'
-
 

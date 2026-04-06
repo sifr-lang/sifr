@@ -457,3 +457,65 @@ Residual root-cause shape after wave13 (CHECK_ERROR only):
 - `AU-3`: `5`
 - `AU-1`: `4`
 - `ON-3`: `3`
+
+### Wave14: ON-1 canonicalization follow-up (fixture adaptation)
+
+Artifacts:
+
+- `/tmp/phase_apr06_on_au_wave14_on1_adaptation_subset3b_coldcache.json`
+
+Key changes:
+
+- Canonicalized additional ON-1 fixtures with explicit optional-index guards in:
+  - `0153_find_minimum_in_rotated_sorted_array`
+  - `0658_find_k_closest_elements`
+  - `0918_maximum_sum_circular_subarray`
+
+Focused result summary (cold-cache):
+
+- `CHECK_ERROR=39`, `PASS=9`, `NO_ORACLE=10`
+- Changed from wave13:
+  - `0153`: `CHECK_ERROR -> PASS`
+  - `0658`: `CHECK_ERROR -> PASS`
+  - `0918`: `CHECK_ERROR -> PASS`
+
+Residual root-cause shape after wave14 (CHECK_ERROR only):
+
+- `ON-1`: `9`
+- `AU-2`: `12`
+- `ON-2`: `6`
+- `AU-3`: `5`
+- `AU-1`: `4`
+- `ON-3`: `3`
+
+### Wave16: ON-1 subset expansion + run fix stabilization (fixture adaptation)
+
+Artifacts:
+
+- `/tmp/phase_apr06_on_au_wave15_on1_adaptation_subset6_coldcache.json`
+- `/tmp/phase_apr06_on_au_wave16_on1_adaptation_subset6_plus_0076_runfix_coldcache.json`
+
+Key changes:
+
+- Canonicalized additional ON-1 fixtures:
+  - `0410_split_array_largest_sum`
+  - `1011_capacity_to_ship_packages_within_d_days`
+- Stabilized `0076_minimum_window_substring` after transient run-stage mutability failure by replacing tuple target updates with mutable list-state + guarded index extraction.
+- Kept unresolved ON-1 probes (`0149`, `0286`, `1074`, `1288`, `1475`, `2001`) unchanged in this wave after non-clean drafts.
+
+Focused result summary (cold-cache, wave16):
+
+- `CHECK_ERROR=36`, `PASS=11`, `NO_ORACLE=11`
+- Changed from wave14:
+  - `0076`: `CHECK_ERROR -> NO_ORACLE`
+  - `0410`: `CHECK_ERROR -> PASS`
+  - `1011`: `CHECK_ERROR -> PASS`
+
+Residual root-cause shape after wave16 (CHECK_ERROR only):
+
+- `AU-2`: `12`
+- `ON-1`: `6`
+- `ON-2`: `6`
+- `AU-3`: `5`
+- `AU-1`: `4`
+- `ON-3`: `3`

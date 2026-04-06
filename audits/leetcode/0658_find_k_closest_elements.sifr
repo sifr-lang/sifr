@@ -5,12 +5,19 @@ def findClosestElements(arr: list[int], k: int, x: int) -> list[int]:
 
     while l < r:
         m = (l + r) // 2
-        if x - arr[m] > arr[m + k] - x:
-            l = m + 1
-        else:
+        left = arr[m]
+        right = arr[m + k]
+        if left is None:
             r = m
+        else:
+            if right is None:
+                r = m
+            else:
+                if x - left > right - x:
+                    l = m + 1
+                else:
+                    r = m
     return arr[l : l + k]
 
 def main():
     assert str(findClosestElements([1,2,3,4,5], 4, 3)) == '[1, 2, 3, 4]'
-
