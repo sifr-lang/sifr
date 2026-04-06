@@ -1,40 +1,81 @@
 # LeetCode 286: Walls And Gates
 
-def walls_and_gates(mut rooms: list[list[int]]):
-    ROWS, COLS = len(rooms), len(rooms[0])
-    visit = set()
-    q = deque()
+def _nz_int(value: int | None) -> int:
+    if value is None:
+        return 0
+    return value
 
-    def addRooms(r: int, c: int):
-        if (
-            min(r, c) < 0
-            or r == ROWS
-            or c == COLS
-            or (r, c) in visit
-            or rooms[r][c] == -1
-        ):
-            return
-        visit.add((r, c))
-        q.append([r, c])
+def walls_and_gates(mut rooms: list[list[int]]) -> None:
+    if len(rooms) == 0:
+        return
+    first_row = rooms[0]
+    if first_row is None:
+        return
+    if len(first_row) == 0:
+        return
 
-    for r in range(ROWS):
-        for c in range(COLS):
-            if rooms[r][c] == 0:
-                q.append([r, c])
-                visit.add((r, c))
+    rows = len(rooms)
+    cols = len(first_row)
+    inf = 2147483647
+    q: list[tuple[int, int]] = []
+    head = 0
 
-    dist = 0
-    while q:
-        for i in range(len(q)):
-            cell = q.popleft()
-            r = cell[0]
-            c = cell[1]
-            rooms[r][c] = dist
-            addRooms(r + 1, c)
-            addRooms(r - 1, c)
-            addRooms(r, c + 1)
-            addRooms(r, c - 1)
-        dist += 1
+    for r in range(rows):
+        row = rooms[r]
+        if row is None:
+            continue
+        for c in range(cols):
+            cell = row[c]
+            if cell is None:
+                continue
+            if cell == 0:
+                q.append((r, c))
+
+    while head < len(q):
+        pair = q[head]
+        head += 1
+        if pair is None:
+            continue
+        r = _nz_int(pair[0])
+        c = _nz_int(pair[1])
+        row = rooms[r]
+        if row is None:
+            continue
+        dist = row[c]
+        if dist is None:
+            continue
+
+        nr = r + 1
+        nc = c
+        if nr >= 0 and nr < rows and nc >= 0 and nc < cols:
+            next_cell = rooms[nr][nc]
+            if next_cell is not None and next_cell == inf:
+                rooms[nr][nc] = _nz_int(dist) + 1
+                q.append((nr, nc))
+
+        nr = r - 1
+        nc = c
+        if nr >= 0 and nr < rows and nc >= 0 and nc < cols:
+            next_cell = rooms[nr][nc]
+            if next_cell is not None and next_cell == inf:
+                rooms[nr][nc] = _nz_int(dist) + 1
+                q.append((nr, nc))
+
+        nr = r
+        nc = c + 1
+        if nr >= 0 and nr < rows and nc >= 0 and nc < cols:
+            next_cell = rooms[nr][nc]
+            if next_cell is not None and next_cell == inf:
+                rooms[nr][nc] = _nz_int(dist) + 1
+                q.append((nr, nc))
+
+        nr = r
+        nc = c - 1
+        if nr >= 0 and nr < rows and nc >= 0 and nc < cols:
+            next_cell = rooms[nr][nc]
+            if next_cell is not None and next_cell == inf:
+                rooms[nr][nc] = _nz_int(dist) + 1
+                q.append((nr, nc))
 
 def main():
     arg0 = [[2147483647, -1, 0, 2147483647], [2147483647, 2147483647, 2147483647, -1], [2147483647, -1, 2147483647, -1], [0, -1, 2147483647, 2147483647]]

@@ -1,45 +1,53 @@
 # LeetCode 79: Word Search
 
-def exist(board: list[list[str]], word: str) -> bool:
-    ROWS, COLS = len(board), len(board[0])
-    path = set()
+def _nz_str(value: str | None) -> str:
+    if value is None:
+        return ""
+    return str(value)
 
-    def dfs(r, c, i):
+def _cell_key(r: int, c: int) -> str:
+    return str(r) + "," + str(c)
+
+def exist(board: list[list[str]], word: str) -> bool:
+    rows = len(board)
+    if rows == 0:
+        return False
+    cols = len(board[0])
+    if cols == 0:
+        return False
+
+    def dfs(r: int, c: int, i: int, visited: set[str]) -> bool:
         if i == len(word):
             return True
-        if (
-            min(r, c) < 0
-            or r >= ROWS
-            or c >= COLS
-            or word[i] != board[r][c]
-            or (r, c) in path
-        ):
+        if r < 0 or c < 0 or r >= rows or c >= cols:
             return False
-        path.add((r, c))
-        res = (
-            dfs(r + 1, c, i + 1)
-            or dfs(r - 1, c, i + 1)
-            or dfs(r, c + 1, i + 1)
-            or dfs(r, c - 1, i + 1)
-        )
-        path.remove((r, c))
-        return res
 
-    # To prevent TLE,reverse the word if frequency of the first letter is more than the last letter's
-    count = sum(map(Counter, board), Counter())
-    if count[word[0]] > count[word[-1]]:
-        word = word[::-1]
-        
-    for r in range(ROWS):
-        for c in range(COLS):
-            if dfs(r, c, 0):
+        board_char = _nz_str(board[r][c])
+        word_char = _nz_str(word[i])
+        if board_char != word_char:
+            return False
+
+        key = _cell_key(r, c)
+        if key in visited:
+            return False
+
+        visited.add(key)
+        found = (
+            dfs(r + 1, c, i + 1, visited)
+            or dfs(r - 1, c, i + 1, visited)
+            or dfs(r, c + 1, i + 1, visited)
+            or dfs(r, c - 1, i + 1, visited)
+        )
+        visited.remove(key)
+        return found
+
+    for r in range(rows):
+        for c in range(cols):
+            if dfs(r, c, 0, set()):
                 return True
     return False
-
-# O(n * m * 4^n)
 
 def main():
     assert exist([['A', 'B', 'C', 'E'], ['S', 'F', 'C', 'S'], ['A', 'D', 'E', 'E']], 'ABCCED') == True
     assert exist([['A', 'B', 'C', 'E'], ['S', 'F', 'C', 'S'], ['A', 'D', 'E', 'E']], 'SEE') == True
     assert exist([['A', 'B', 'C', 'E'], ['S', 'F', 'C', 'S'], ['A', 'D', 'E', 'E']], 'ABCB') == False
-

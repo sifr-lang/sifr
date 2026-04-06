@@ -1,27 +1,46 @@
 # LeetCode 2482: Difference Between Ones And Zeros In Row And Column
 
 def onesMinusZeros(grid: list[list[int]]) -> list[list[int]]:
-    m , n = len(grid), len(grid[0])
-    rowCount = [[0, 0] for _ in range(m)] # (zeros, ones)
-    colCount = [[0, 0] for _ in range(n)]
+    if len(grid) == 0:
+        return []
+
+    first_row = grid[0]
+    if first_row is None:
+        return []
+
+    row_ones = [0 for _ in range(len(grid))]
+    col_ones = [0 for _ in range(len(first_row))]
+
+    for r in range(len(row_ones)):
+        row = grid[r]
+        if row is None:
+            continue
+        for c in range(len(col_ones)):
+            cell = row[c]
+            if cell is None:
+                continue
+            if cell == 1:
+                row_ones[r] += 1
+                col_ones[c] += 1
+
     res = []
-    for r in range(m):
-        for c in range(n):
-            if grid[r][c] == 1:
-                rowCount[r][1] += 1
-                colCount[c][1] += 1
-            else:
-                rowCount[r][0] += 1
-                colCount[c][0] += 1
-    for r in range(m):
-        row =[]
-        for c in range(n):
-            row.append(rowCount[r][1] + colCount[c][1] - 
-                        rowCount[r][0] - colCount[c][0])
-        res.append(row)
+    n = len(col_ones)
+    m = len(row_ones)
+    for r in range(len(row_ones)):
+        ones_row = row_ones[r]
+        if ones_row is None:
+            ones_row = 0
+        zeros_row = n - ones_row
+        out_row = []
+        for c in range(len(col_ones)):
+            ones_col = col_ones[c]
+            if ones_col is None:
+                ones_col = 0
+            zeros_col = m - ones_col
+            out_row.append(ones_row + ones_col - zeros_row - zeros_col)
+        res.append(out_row)
     return res
 
 def main():
     assert onesMinusZeros([[0, 1, 1], [1, 0, 1], [0, 0, 1]]) == [[0, 0, 4], [0, 0, 4], [-2, -2, 2]]
     assert onesMinusZeros([[1, 1, 1], [1, 1, 1]]) == [[5, 5, 5], [5, 5, 5]]
-

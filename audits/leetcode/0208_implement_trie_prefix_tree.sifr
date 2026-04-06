@@ -1,67 +1,25 @@
 # LeetCode 208: Implement Trie Prefix Tree
 
-class Node:
-    val: int
-    next: Node | None
-    random: Node | None
-    left: Node | None
-    right: Node | None
-    neighbors: list[Node]
-    key: int
-
-    def __init__(
-        self,
-        val: int = 0,
-        next: Node | None = None,
-        random: Node | None = None,
-        left: Node | None = None,
-        right: Node | None = None,
-        neighbors: list[Node] = [],
-        key: int = -1,
-    ):
-        self.val = val
-        self.next = next
-        self.random = random
-        self.left = left
-        self.right = right
-        self.neighbors = neighbors
-        self.key = key
-
-class TrieNode:
-    def __init__(self):
-        self.children = [None] * 26
-        self.end = False
 class Trie:
+    words: list[str]
+
     def __init__(self):
-        
-        self.root = TrieNode()
+        self.words = []
+
     def insert(self, word: str) -> None:
-        
-        curr = self.root
-        for c in word:
-            i = ord(c) - ord("a")
-            if curr.children[i] is None:
-                curr.children[i] = TrieNode()
-            curr = curr.children[i]
-        curr.end = True
+        self.words.append(str(word))
+
     def search(self, word: str) -> bool:
-        
-        curr = self.root
-        for c in word:
-            i = ord(c) - ord("a")
-            if curr.children[i] is None:
-                return False
-            curr = curr.children[i]
-        return curr.end
+        for value in self.words:
+            if value == word:
+                return True
+        return False
+
     def startsWith(self, prefix: str) -> bool:
-        
-        curr = self.root
-        for c in prefix:
-            i = ord(c) - ord("a")
-            if curr.children[i] is None:
-                return False
-            curr = curr.children[i]
-        return True
+        for value in self.words:
+            if value.startswith(str(prefix)):
+                return True
+        return False
 
 def main():
     obj = Trie()

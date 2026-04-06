@@ -1,44 +1,94 @@
 # LeetCode 269: Alien Dictionary
 
+def _nz_str(value: str | None) -> str:
+    if value is None:
+        return ""
+    return str(value)
+
+def _nz_bool(value: bool | None) -> bool:
+    if value is None:
+        return False
+    return value
+
+def _nz_int(value: int | None) -> int:
+    if value is None:
+        return 0
+    return value
+
+def _char_index(ch: str) -> int:
+    alphabet = "abcdefghijklmnopqrstuvwxyz"
+    i = 0
+    while i < len(alphabet):
+        if _nz_str(alphabet[i]) == ch:
+            return i
+        i += 1
+    return 0
+
+def _index_char(i: int) -> str:
+    alphabet = "abcdefghijklmnopqrstuvwxyz"
+    return _nz_str(alphabet[i])
+
 def alienOrder(words: list[str]) -> str:
-    adj = {char: set() for word in words for char in word}
+    present = [False for _ in range(26)]
+    edges = []
+    for _ in range(26):
+        edges.append([False for _ in range(26)])
+    indegree = [0 for _ in range(26)]
 
-    for i in range(len(words) - 1):
-        w1, w2 = words[i], words[i + 1]
-        minLen = min(len(w1), len(w2))
-        if len(w1) > len(w2) and w1[:minLen] == w2[:minLen]:
-            return ""
-        for j in range(minLen):
-            if w1[j] != w2[j]:
-                print(w1[j], w2[j])
-                adj[w1[j]].add(w2[j])
+    for word in words:
+        for ch in word:
+            present[_char_index(ch)] = True
+
+    i = 0
+    while i + 1 < len(words):
+        w1 = words[i]
+        w2 = words[i + 1]
+        min_len = min(len(w1), len(w2))
+
+        j = 0
+        found_diff = False
+        while j < min_len:
+            c1 = _nz_str(w1[j])
+            c2 = _nz_str(w2[j])
+            if c1 != c2:
+                u = _char_index(c1)
+                v = _char_index(c2)
+                if not _nz_bool(edges[u][v]):
+                    edges[u][v] = True
+                    indegree[v] = _nz_int(indegree[v]) + 1
+                found_diff = True
                 break
-
-    visited = {}  # {char: bool} False visited, True current path
-    res = []
-
-    def dfs(char):
-        if char in visited:
-            return visited[char]
-
-        visited[char] = True
-
-        for neighChar in adj[char]:
-            if dfs(neighChar):
-                return True
-
-        visited[char] = False
-        res.append(char)
-
-    for char in adj:
-        if dfs(char):
+            j += 1
+        if not found_diff and len(w1) > len(w2):
             return ""
+        i += 1
 
-    res.reverse()
-    return "".join(res)
+    queue = []
+    for idx in range(26):
+        if _nz_bool(present[idx]) and _nz_int(indegree[idx]) == 0:
+            queue.append(idx)
+
+    res = ""
+    head = 0
+    while head < len(queue):
+        u = _nz_int(queue[head])
+        head += 1
+        res += _index_char(u)
+        for v in range(26):
+            if _nz_bool(edges[u][v]):
+                indegree[v] = _nz_int(indegree[v]) - 1
+                if _nz_int(indegree[v]) == 0:
+                    queue.append(v)
+
+    present_count = 0
+    for idx in range(26):
+        if _nz_bool(present[idx]):
+            present_count += 1
+    if len(res) != present_count:
+        return ""
+    return res
 
 def main():
     assert alienOrder(['wrt', 'wrf', 'er', 'ett', 'rftt']) == 'wertf'
     assert alienOrder(['z', 'x']) == 'zx'
     assert alienOrder(['z', 'x', 'z']) == ''
-

@@ -1,12 +1,19 @@
 # LeetCode 1011: Capacity To Ship Packages Within D Days
 
 def shipWithinDays(weights: list[int], days: int) -> int:
-    l, r = max(weights), sum(weights)
+    if len(weights) == 0:
+        return 0
+    max_weight = max(weights)
+    if max_weight is None:
+        return 0
+    l, r = max_weight, sum(weights)
     min_cap = r
 
-    def canShip(cap):
+    def canShip(cap: int) -> bool:
         ships, curCap = 1, cap
         for w in weights:
+            if w is None:
+                continue
             if curCap - w < 0:
                 ships += 1
                 curCap = cap
@@ -25,5 +32,4 @@ def shipWithinDays(weights: list[int], days: int) -> int:
 
 def main():
     assert str(shipWithinDays([1,2,3,4,5,6,7,8,9,10], 5)) == '15'
-
 

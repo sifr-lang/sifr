@@ -1,25 +1,40 @@
 # LeetCode 953: Verifying An Alien Dictionary
 
+def _nz_str(value: str | None) -> str:
+    if value is None:
+        return ""
+    return str(value)
+
+def _nz_int(value: int | None) -> int:
+    if value is None:
+        return 0
+    return value
+
 def isAlienSorted(words: list[str], order: str) -> bool:
-    # first differing char
-    # if word A is prefix of word B, word B must be AFTER word A
-    orderInd = { c : i for i, c in enumerate(order)}
-    
+    rank = {}
+    for i in range(len(order)):
+        ch = _nz_str(order[i])
+        rank[ch] = i
+
     for i in range(len(words) - 1):
-        w1, w2 = words[i], words[i + 1]
-        
-        for j in range(len(w1)):
-            if j == len(w2):
-                return False
-            
-            if w1[j] != w2[j]:
-                if orderInd[w2[j]] < orderInd[w1[j]]:
+        w1 = words[i]
+        w2 = words[i + 1]
+        compared = False
+        j = 0
+        while j < len(w1) and j < len(w2):
+            c1 = _nz_str(w1[j])
+            c2 = _nz_str(w2[j])
+            if c1 != c2:
+                if _nz_int(rank[c1]) > _nz_int(rank[c2]):
                     return False
+                compared = True
                 break
+            j += 1
+        if not compared and len(w1) > len(w2):
+            return False
     return True
 
 def main():
     assert isAlienSorted(['hello', 'leetcode'], 'hlabcdefgijkmnopqrstuvwxyz') == True
     assert isAlienSorted(['word', 'world', 'row'], 'worldabcefghijkmnpqstuvxyz') == False
     assert isAlienSorted(['apple', 'app'], 'abcdefghijklmnopqrstuvwxyz') == False
-

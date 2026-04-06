@@ -1,30 +1,43 @@
 # LeetCode 210: Course Schedule Ii
 
+def _nz_int(value: int | None) -> int:
+    if value is None:
+        return 0
+    return value
+
 def findOrder(numCourses: int, prerequisites: list[list[int]]) -> list[int]:
     prereq: dict[int, list[int]] = {}
     for c in range(numCourses):
         prereq[c] = []
     for pair in prerequisites:
-        crs = pair[0]
-        pre = pair[1]
-        prereq[crs].append(pre)
+        if pair is None:
+            continue
+        crs = _nz_int(pair[0])
+        pre = _nz_int(pair[1])
+        deps = prereq.get(crs, [])
+        if deps is None:
+            deps = []
+        deps.append(pre)
+        prereq[crs] = deps
 
     output: list[int] = []
-    visit: set[int] = set()
-    cycle: set[int] = set()
+    state = [0] * numCourses  # 0=unvisited, 1=visiting, 2=done
 
     def dfs(crs: int) -> bool:
-        if crs in cycle:
+        if state[crs] == 1:
             return False
-        if crs in visit:
+        if state[crs] == 2:
             return True
 
-        cycle.add(crs)
-        for pre in prereq[crs]:
+        state[crs] = 1
+        deps = prereq.get(crs, [])
+        if deps is None:
+            deps = []
+        for idx in range(len(deps)):
+            pre = _nz_int(deps[idx])
             if dfs(pre) == False:
                 return False
-        cycle.remove(crs)
-        visit.add(crs)
+        state[crs] = 2
         output.append(crs)
         return True
 

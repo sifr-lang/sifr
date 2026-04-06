@@ -1,25 +1,22 @@
 # LeetCode 1475: Final Prices With A Special Discount In A Shop
 
 def finalPrices(prices: list[int]) -> list[int]:
-    stack = []
     res = []
-    for i in range(len(prices) - 1, -1, -1):
-        if len(stack) == 0:
-            res.append(prices[i])
-        elif len(stack) and stack[-1] <= prices[i]:
-            res.append(prices[i] - stack[-1])
-        elif len(stack) and stack[-1] > prices[i]:
-            while len(stack) and stack[-1] > prices[i]:
-                stack.pop()
-            if len(stack) == 0:
-                res.append(prices[i])
-            else: 
-                res.append(prices[i] - stack[-1])
-        stack.append(prices[i])
-    res.reverse()
+    for i in range(len(prices)):
+        price = prices[i]
+        if price is None:
+            continue
+        final_price = price
+        for j in range(i + 1, len(prices)):
+            discount = prices[j]
+            if discount is None:
+                continue
+            if discount <= price:
+                final_price = price - discount
+                break
+        res.append(final_price)
     return res
 
 def main():
     assert str(finalPrices([8,4,6,2,3])) == '[4, 2, 4, 2, 3]'
-
 

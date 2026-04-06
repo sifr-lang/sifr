@@ -1,23 +1,40 @@
 # LeetCode 1288: Remove Covered Intervals
 
 def removeCoveredIntervals(intervals: list[list[int]]) -> int:
-    # sort on the basis of inc li first and then on the basis of dec length (=> -ri)
-    ordered: list[tuple[int, int]] = []
-    for interval in intervals:
-        ordered.append((interval[0], -interval[1]))
-    ordered.sort()
-    
-    covered, maxri = 0, 0
-    
-    for pair in ordered:
-        ri = -pair[1]
-        if ri > maxri:
-            maxri = ri
-        else:
-            covered += 1
-            
-    return len(intervals) - covered
+    covered = [False for _ in range(len(intervals))]
+    for i in range(len(intervals)):
+        a = intervals[i]
+        if a is None:
+            continue
+        a_left = a[0]
+        a_right = a[1]
+        if a_left is None:
+            continue
+        if a_right is None:
+            continue
+        for j in range(len(intervals)):
+            if i == j:
+                continue
+            b = intervals[j]
+            if b is None:
+                continue
+            b_left = b[0]
+            b_right = b[1]
+            if b_left is None:
+                continue
+            if b_right is None:
+                continue
+            if b_left <= a_left and a_right <= b_right:
+                covered[i] = True
+                break
+
+    remaining = 0
+    for flag in covered:
+        if flag is None:
+            continue
+        if not flag:
+            remaining += 1
+    return remaining
 
 def main():
     assert str(removeCoveredIntervals([[1,4],[3,6],[2,8]])) == '2'
-

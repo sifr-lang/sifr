@@ -1,49 +1,38 @@
 # LeetCode 785: Is Graph Bipartite
 
+def _nz_int(value: int | None) -> int:
+    if value is None:
+        return 0
+    return value
+
 def isBipartiteBFS(graph: list[list[int]]) -> bool:
     colors = [-1] * len(graph)
     
     for i in range(len(graph)):
-        if colors[i] == -1:
-            q = deque([i])
-            colors[i] = 0
-            
-            while q:
-                node = q.popleft()
-                
-                for nbh in graph[node]:
-                    if colors[nbh] == -1:
-                        colors[nbh] = 1 - colors[node]
-                        q.append(nbh)
-                    elif colors[nbh] == colors[node]:
-                        return False  
-    
-    return True
+        if colors[i] != -1:
+            continue
+        q = [i]
+        head = 0
+        colors[i] = 0
 
-
-def isBipartiteDFS(graph: list[list[int]]) -> bool:
-    colors = [-1] * len(graph)
-
-    def dfs(node, c):
-        colors[node] = c
-        
-        for nbh in graph[node]:
-            if colors[nbh] == -1:
-                if not dfs(nbh, 1 - c):
+        while head < len(q):
+            node = _nz_int(q[head])
+            head += 1
+            neighbors = graph[node]
+            if neighbors is None:
+                continue
+            node_color = _nz_int(colors[node])
+            for idx in range(len(neighbors)):
+                nbh = _nz_int(neighbors[idx])
+                nbh_color = _nz_int(colors[nbh])
+                if nbh_color == -1:
+                    colors[nbh] = 1 - node_color
+                    q.append(nbh)
+                elif nbh_color == node_color:
                     return False
-            elif colors[nbh] == colors[node]:
-                return False
-        
-        return True
-
-    for i in range(len(graph)):
-        if colors[i] == -1:
-            if not dfs(i, 0):
-                return False
     
     return True
 
 def main():
     assert isBipartiteBFS([[1, 2, 3], [0, 2], [0, 1, 3], [0, 2]]) == False
     assert isBipartiteBFS([[1, 3], [0, 2], [1, 3], [0, 2]]) == True
-

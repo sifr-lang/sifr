@@ -1,37 +1,38 @@
 # LeetCode 1466: Reorder Routes To Make All Paths Lead To The City Zero
 
-def minReorder(n: int, connections: list[list[int]]) -> int:
-    edges = set()
+def minReorder(n: int, connections: list[tuple[int, int]]) -> int:
+    edges: set[tuple[int, int]] = set()
+    neighbors = defaultdict(list)
+
     for edge in connections:
         a = edge[0]
         b = edge[1]
         edges.add((a, b))
-    neighbors = defaultdict(list)
-    visit = set()
-    changes = 0
-
-    for edge in connections:
-        a = edge[0]
-        b = edge[1]
         neighbors[a].append(b)
         neighbors[b].append(a)
-    
-    def dfs(city):
-        nonlocal changes
 
-        for neighbor in neighbors[city]:
+    changes: int = 0
+    visit: set[int] = set([0])
+    stack: list[int] = [0]
+
+    while stack:
+        city = stack.pop()
+        if city is None:
+            continue
+        city_neighbors = neighbors[city]
+        if city_neighbors is None:
+            continue
+        for neighbor in city_neighbors:
             if neighbor in visit:
                 continue
-            # check if this neighbor can reach city 0
             if (neighbor, city) not in edges:
                 changes += 1
             visit.add(neighbor)
-            dfs(neighbor)
-    visit.add(0)
-    dfs(0)
+            stack.append(neighbor)
+
     return changes
 
 def main():
-    assert minReorder(6, [[0, 1], [1, 3], [2, 3], [4, 0], [4, 5]]) == 3
-    assert minReorder(5, [[1, 0], [1, 2], [3, 2], [3, 4]]) == 2
-    assert minReorder(3, [[1, 0], [2, 0]]) == 0
+    assert minReorder(6, [(0, 1), (1, 3), (2, 3), (4, 0), (4, 5)]) == 3
+    assert minReorder(5, [(1, 0), (1, 2), (3, 2), (3, 4)]) == 2
+    assert minReorder(3, [(1, 0), (2, 0)]) == 0

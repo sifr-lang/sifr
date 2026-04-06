@@ -1,21 +1,29 @@
 # LeetCode 1642: Furthest Building You Can Reach
 
+def _nz_int(value: int | None) -> int:
+    if value is None:
+        return 0
+    return value
+
 def furthestBuilding(heights: list[int], bricks: int, ladders: int) -> int:
-    heap = []
+    climbs: list[int] = []
+    remaining_bricks = bricks
 
     for i in range(len(heights) - 1):
-        diff = heights[i + 1] - heights[i]
+        next_height = _nz_int(heights[i + 1])
+        curr_height = _nz_int(heights[i])
+        diff = next_height - curr_height
         if diff <= 0:
             continue
 
-        bricks -= diff
-        heapq.heappush(heap, -diff)
-
-        if bricks < 0:
-            if ladders == 0:
+        climbs.append(diff)
+        climbs.sort()
+        if len(climbs) > ladders:
+            smallest = climbs[0]
+            climbs = climbs[1:]
+            remaining_bricks -= _nz_int(smallest)
+            if remaining_bricks < 0:
                 return i
-            ladders -= 1
-            bricks += -heapq.heappop(heap)
         
     return len(heights) - 1
 
@@ -23,4 +31,3 @@ def main():
     assert furthestBuilding([4, 2, 7, 6, 9, 14, 12], 5, 1) == 4
     assert furthestBuilding([4, 12, 2, 7, 3, 18, 20, 3, 19], 10, 2) == 7
     assert furthestBuilding([14, 3, 19, 3], 17, 0) == 3
-

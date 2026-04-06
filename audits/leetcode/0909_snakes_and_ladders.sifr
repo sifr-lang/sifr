@@ -1,35 +1,50 @@
 # LeetCode 909: Snakes And Ladders
 
+def _nz_int(value: int | None) -> int:
+    if value is None:
+        return 0
+    return value
+
+def _int_to_pos(square: int, length: int) -> list[int]:
+    r = (square - 1) // length
+    c = (square - 1) % length
+    if r % 2 == 1:
+        c = length - 1 - c
+    return [r, c]
+
 def snakesAndLadders(mut board: list[list[int]]) -> int:
     length = len(board)
     board.reverse()
 
-    def intToPos(square: int) -> list[int]:
-        r = (square - 1) // length
-        c = (square - 1) % length
-        if r % 2:
-            c = length - 1 - c
-        return [r, c]
+    q = [[1, 0]]
+    head = 0
+    visited = set([1])
+    target = length * length
 
-    q = deque()
-    q.append([1, 0])  # [square, moves]
-    visit = set()
-    while q:
-        state = q.popleft()
-        square = state[0]
-        moves = state[1]
-        for i in range(1, 7):
-            nextSquare = square + i
-            pos = intToPos(nextSquare)
-            r = pos[0]
-            c = pos[1]
-            if board[r][c] != -1:
-                nextSquare = board[r][c]
-            if nextSquare == length * length:
+    while head < len(q):
+        state = q[head]
+        head += 1
+        square = _nz_int(state[0])
+        moves = _nz_int(state[1])
+
+        for step in range(1, 7):
+            next_square = square + step
+            if next_square > target:
+                continue
+
+            pos = _int_to_pos(next_square, length)
+            r = _nz_int(pos[0])
+            c = _nz_int(pos[1])
+            cell = _nz_int(board[r][c])
+            if cell != -1:
+                next_square = cell
+
+            if next_square == target:
                 return moves + 1
-            if nextSquare not in visit:
-                visit.add(nextSquare)
-                q.append([nextSquare, moves + 1])
+            if next_square not in visited:
+                visited.add(next_square)
+                q.append([next_square, moves + 1])
+
     return -1
 
 def main():

@@ -1,14 +1,29 @@
 # LeetCode 901: Online Stock Span
 
+def _last_int(values: list[int]) -> int:
+    if len(values) == 0:
+        return 0
+    value = values[len(values) - 1]
+    if value is None:
+        return 0
+    return value
+
 class StockSpanner:
+    prices: list[int]
+    spans: list[int]
+
     def __init__(self):
-        self.stack = []  # pair: (price, span)
+        self.prices = []
+        self.spans = []
+
     def next(self, price: int) -> int:
         span = 1
-        while self.stack and self.stack[-1][0] <= price:
-            span += self.stack[-1][1]
-            self.stack.pop()
-        self.stack.append((price, span))
+        while len(self.prices) > 0 and _last_int(self.prices) <= price:
+            span += _last_int(self.spans)
+            self.prices.pop()
+            self.spans.pop()
+        self.prices.append(price)
+        self.spans.append(span)
         return span
 
 def main():
@@ -20,4 +35,3 @@ def main():
     assert obj.next(60) == 1
     assert obj.next(75) == 4
     assert obj.next(85) == 6
-

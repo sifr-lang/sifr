@@ -1,11 +1,20 @@
 # LeetCode 918: Maximum Sum Circular Subarray
 
 def maxSubarraySumCircular(nums: list[int]) -> int:
-    globMax, globMin = nums[0], nums[0]
+    if len(nums) == 0:
+        return 0
+
+    first = nums[0]
+    if first is None:
+        return 0
+
+    globMax, globMin = first, first
     curMax, curMin = 0, 0
     total = 0
     
-    for i, n in enumerate(nums):
+    for n in nums:
+        if n is None:
+            continue
         curMax = max(curMax + n, n)
         curMin = min(curMin + n, n)
         total += n
@@ -18,5 +27,4 @@ def main():
     assert str(maxSubarraySumCircular([1,-2,3,-2])) == '3'
     assert str(maxSubarraySumCircular([5,-3,5])) == '10'
     assert str(maxSubarraySumCircular([-3,-2,-3])) == '-2'
-
 

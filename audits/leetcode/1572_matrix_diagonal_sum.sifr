@@ -1,31 +1,19 @@
 # LeetCode 1572: Matrix Diagonal Sum
 
-def PrimeSum(mat):
-    cnt = 0
-    for i in range(len(mat)):
-        cnt += mat[i][i]
-    return cnt
-
-
-def CrossSum(mat):
-    cnt = 0
-    for i in range(len(mat)):
-        cnt += mat[i][len(mat) - i - 1]
-    return cnt
-
+def _nz_int(value: int | None) -> int:
+    if value is None:
+        return 0
+    return value
 
 def diagonalSum(mat: list[list[int]]) -> int:
-    prime = PrimeSum(mat)
-    cross = CrossSum(mat)
-
-    if len(mat) % 2 == 0:
-        return prime + cross
-    else:
-        mid = len(mat) // 2
-        mid_ele = mat[mid][mid]
-        return prime + cross - mid_ele
+    n = len(mat)
+    total = 0
+    for i in range(n):
+        total += _nz_int(mat[i][i])
+        j = n - 1 - i
+        if j != i:
+            total += _nz_int(mat[i][j])
+    return total
 
 def main():
-    assert str(diagonalSum([[1,2,3],[4,5,6],[7,8,9]])) == '25'
-
-
+    assert str(diagonalSum([[1, 2, 3], [4, 5, 6], [7, 8, 9]])) == '25'

@@ -15,6 +15,7 @@ def intersect(nums1: list[int], nums2: list[int]) -> list[int]:
         if min_freq > 0:
             intersection.extend([num] * min_freq)
 
+    intersection.sort()
     return intersection
 
 def main():

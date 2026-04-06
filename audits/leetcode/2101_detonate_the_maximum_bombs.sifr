@@ -1,39 +1,56 @@
 # LeetCode 2101: Detonate The Maximum Bombs
 
+def _nz_int(value: int | None) -> int:
+    if value is None:
+        return 0
+    return value
+
 def maximumDetonation(bombs: list[list[int]]) -> int:
     n = len(bombs)
-    graph: list[list[int]] = [[] for _ in range(n)]
+    edges: list[tuple[int, int]] = []
 
     for i in range(n):
+        bi = bombs[i]
+        if bi is None:
+            continue
+        x1 = _nz_int(bi[0])
+        y1 = _nz_int(bi[1])
+        r1 = _nz_int(bi[2])
         for j in range(n):
             if i != j:
-                x1 = bombs[i][0]
-                y1 = bombs[i][1]
-                r1 = bombs[i][2]
-                x2 = bombs[j][0]
-                y2 = bombs[j][1]
+                bj = bombs[j]
+                if bj is None:
+                    continue
+                x2 = _nz_int(bj[0])
+                y2 = _nz_int(bj[1])
                 dx = x1 - x2
                 dy = y1 - y2
                 dstSq = dx * dx + dy * dy
 
                 if dstSq <= r1 * r1:
-                    graph[i].append(j)
-
-    def dfs(node: int, vis: list[bool]) -> int:
-        vis[node] = True
-        count = 1
-
-        for neighbor in graph[node]:
-            if not vis[neighbor]:
-                count += dfs(neighbor, vis)
-                
-        return count
+                    edges.append((i, j))
 
     detonated = 0
 
     for i in range(n):
-        visited = [False] * n
-        detonated = max(detonated, dfs(i, visited))
+        visited: set[int] = set()
+        stack = [i]
+        while len(stack) > 0:
+            node = stack.pop()
+            if node is None:
+                continue
+            node_idx = _nz_int(node)
+            if node_idx in visited:
+                continue
+            visited.add(node_idx)
+            for edge in edges:
+                if edge is None:
+                    continue
+                src = _nz_int(edge[0])
+                dst = _nz_int(edge[1])
+                if src == node_idx and dst not in visited:
+                    stack.append(dst)
+        detonated = max(detonated, len(visited))
     
     return detonated
 

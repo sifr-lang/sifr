@@ -1,31 +1,81 @@
 # LeetCode 752: Open The Lock
 
+def nextDigit(ch: str) -> str:
+    if ch == '0':
+        return '1'
+    if ch == '1':
+        return '2'
+    if ch == '2':
+        return '3'
+    if ch == '3':
+        return '4'
+    if ch == '4':
+        return '5'
+    if ch == '5':
+        return '6'
+    if ch == '6':
+        return '7'
+    if ch == '7':
+        return '8'
+    if ch == '8':
+        return '9'
+    return '0'
+
+def prevDigit(ch: str) -> str:
+    if ch == '0':
+        return '9'
+    if ch == '1':
+        return '0'
+    if ch == '2':
+        return '1'
+    if ch == '3':
+        return '2'
+    if ch == '4':
+        return '3'
+    if ch == '5':
+        return '4'
+    if ch == '6':
+        return '5'
+    if ch == '7':
+        return '6'
+    if ch == '8':
+        return '7'
+    return '8'
+
 def openLock(deadends: list[str], target: str) -> int:
-    if "0000" in deadends:
+    if '0000' in deadends:
         return -1
 
-    def children(wheel: str) -> list[str]:
-        res = []
-        for i in range(4):
-            digit = str((int(wheel[i]) + 1) % 10)
-            res.append(wheel[:i] + digit + wheel[i + 1 :])
-            digit = str((int(wheel[i]) + 10 - 1) % 10)
-            res.append(wheel[:i] + digit + wheel[i + 1 :])
-        return res
+    q: list[tuple[str, int]] = [('0000', 0)]
+    visit: set[str] = set(deadends)
+    visit.add('0000')
+    head: int = 0
 
-    q = deque()
-    visit = set(deadends)
-    q.append(["0000", 0])  # [wheel, turns]
-    while q:
-        state = q.popleft()
+    while head < len(q):
+        state = q[head]
+        head += 1
+        if state is None:
+            continue
         wheel = state[0]
         turns = state[1]
         if wheel == target:
             return turns
-        for child in children(wheel):
-            if child not in visit:
-                visit.add(child)
-                q.append([child, turns + 1])
+
+        if len(wheel) != 4:
+            continue
+        for i in range(len(wheel)):
+            ch = wheel[i]
+            if ch is None:
+                continue
+            up = str(wheel)[:i] + nextDigit(ch) + str(wheel)[i + 1 :]
+            down = str(wheel)[:i] + prevDigit(ch) + str(wheel)[i + 1 :]
+
+            if up not in visit:
+                visit.add(up)
+                q.append((up, turns + 1))
+            if down not in visit:
+                visit.add(down)
+                q.append((down, turns + 1))
     return -1
 
 def main():
