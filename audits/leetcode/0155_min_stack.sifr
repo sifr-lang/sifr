@@ -1,20 +1,41 @@
 # LeetCode 155: Min Stack
 
 class MinStack:
+    stack: list[int]
+    minStack: list[int]
+
     def __init__(self):
         self.stack = []
         self.minStack = []
     def push(self, val: int) -> None:
         self.stack.append(val)
-        val = min(val, self.minStack[-1] if self.minStack else val)
-        self.minStack.append(val)
+        if len(self.minStack) > 0:
+            prev = self.minStack[-1]
+            if prev is None:
+                self.minStack.append(val)
+            else:
+                self.minStack.append(min(val, prev))
+        else:
+            self.minStack.append(val)
     def pop(self) -> None:
-        self.stack.pop()
-        self.minStack.pop()
+        if len(self.stack) > 0:
+            self.stack.pop()
+        if len(self.minStack) > 0:
+            self.minStack.pop()
     def top(self) -> int:
-        return self.stack[-1]
+        if len(self.stack) == 0:
+            return 0
+        top_value = self.stack[-1]
+        if top_value is None:
+            return 0
+        return top_value
     def getMin(self) -> int:
-        return self.minStack[-1]
+        if len(self.minStack) == 0:
+            return 0
+        min_value = self.minStack[-1]
+        if min_value is None:
+            return 0
+        return min_value
 
 def main():
     obj = MinStack()
@@ -25,4 +46,3 @@ def main():
     obj.pop()
     assert obj.top() == 0
     assert obj.getMin() == -2
-

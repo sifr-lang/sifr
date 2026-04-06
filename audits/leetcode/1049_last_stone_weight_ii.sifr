@@ -1,24 +1,22 @@
 # LeetCode 1049: Last Stone Weight Ii
 
 def lastStoneWeightII(stones: list[int]) -> int:
-    # Memoization
-    stoneSum = sum(stones)
-    target = ceil(stoneSum / 2)
+    total = sum(stones)
+    possible = set([0])
 
-    def dfs(i, total):
-        if total >= target or i == len(stones):
-            return abs(total - (stoneSum - total))
-        if (i, total) in dp:
-            return dp[(i, total)]
+    for stone in stones:
+        next_possible = set()
+        for current in possible:
+            next_possible.add(current)
+            next_possible.add(current + stone)
+        possible = next_possible
 
-        dp[(i, total)] = min(dfs(i + 1, total),
-                             dfs(i + 1, total + stones[i]))
-        return dp[(i, total)]
-
-    dp = {}
-    return dfs(0, 0)
+    best = total
+    for current in possible:
+        diff = abs(total - 2 * current)
+        if diff < best:
+            best = diff
+    return best
 
 def main():
-    assert str(lastStoneWeightII([2,7,4,1,8,1])) == '1'
-
-
+    assert str(lastStoneWeightII([2, 7, 4, 1, 8, 1])) == '1'

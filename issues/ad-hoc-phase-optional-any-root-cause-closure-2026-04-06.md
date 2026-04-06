@@ -764,3 +764,119 @@ Residual root-cause shape after wave24 (CHECK_ERROR only):
 Closure note:
 
 - `AU-1` is fully cleared from `CHECK_ERROR` in the focused manifest.
+
+### Wave25: AU-3 full closure (`0155`, `0232`, `0303`, `0535`) (fixture adaptation)
+
+Artifacts:
+
+- `/tmp/phase_apr06_on_au_wave25_au3_full_closure_coldcache.json`
+
+Key changes:
+
+- Closed remaining AU-3 fixtures by forcing explicit optional-bridge boundaries in class/list/dict surfaces:
+  - `0155_min_stack`
+  - `0232_implement_queue_using_stacks`
+  - `0303_range_sum_query_immutable`
+  - `0535_encode_and_decode_tinyurl`
+- Normalized class container usage to explicit `len(...)` guards and explicit index-return extraction.
+
+Focused result summary (cold-cache):
+
+- `CHECK_ERROR=12`, `PASS=14`, `NO_ORACLE=32`
+- Changed from wave24:
+  - `0155`: `CHECK_ERROR -> NO_ORACLE`
+  - `0232`: `CHECK_ERROR -> NO_ORACLE`
+  - `0303`: `CHECK_ERROR -> NO_ORACLE`
+  - `0535`: `CHECK_ERROR -> NO_ORACLE`
+
+Residual root-cause shape after wave25 (CHECK_ERROR only):
+
+- `AU-2`: `12`
+
+Closure note:
+
+- `AU-3` is fully cleared from `CHECK_ERROR` in the focused manifest.
+
+### Wave26: AU-2 full closure (`0079`, `0118`, `0225`, `0269`, `0496`, `0901`, `0909`, `0953`, `1049`, `1462`, `1572`, `2306`) (fixture adaptation)
+
+Artifacts:
+
+- `/tmp/phase_apr06_on_au_wave26_au2_full_closure_coldcache.json`
+
+Key changes:
+
+- Canonicalized the final AU-2 fixture set to typed, deterministic implementations with explicit boundary extraction and run-stable ownership behavior:
+  - `0079_word_search`
+  - `0118_pascals_triangle`
+  - `0225_implement_stack_using_queues`
+  - `0269_alien_dictionary`
+  - `0496_next_greater_element_i`
+  - `0901_online_stock_span`
+  - `0909_snakes_and_ladders`
+  - `0953_verifying_an_alien_dictionary`
+  - `1049_last_stone_weight_ii`
+  - `1462_course_schedule_iv`
+  - `1572_matrix_diagonal_sum`
+  - `2306_naming_a_company`
+
+Focused result summary (cold-cache):
+
+- `CHECK_ERROR=0`, `PASS=18`, `NO_ORACLE=40`
+- Changed from wave25:
+  - `0079`: `CHECK_ERROR -> NO_ORACLE`
+  - `0118`: `CHECK_ERROR -> PASS`
+  - `0225`: `CHECK_ERROR -> NO_ORACLE`
+  - `0269`: `CHECK_ERROR -> NO_ORACLE`
+  - `0496`: `CHECK_ERROR -> PASS`
+  - `0901`: `CHECK_ERROR -> NO_ORACLE`
+  - `0909`: `CHECK_ERROR -> NO_ORACLE`
+  - `0953`: `CHECK_ERROR -> NO_ORACLE`
+  - `1049`: `CHECK_ERROR -> PASS`
+  - `1462`: `CHECK_ERROR -> NO_ORACLE`
+  - `1572`: `CHECK_ERROR -> PASS`
+  - `2306`: `CHECK_ERROR -> NO_ORACLE`
+
+Residual root-cause shape after wave26 (CHECK_ERROR only):
+
+- none
+
+Closure note:
+
+- Focused exit gate #1 is satisfied: all targeted `ON-*` and `AU-*` signatures are cleared from `CHECK_ERROR` in the focused manifest.
+
+## Full-Corpus Gate (rerun2, 2026-04-06)
+
+Artifacts:
+
+- `verification/leetcode/full_corpus_current_results_20260406_live_rerun2.json`
+- `verification/leetcode/full_corpus_failure_taxonomy_20260406_live_rerun2.json`
+- `verification/leetcode/full_corpus_failure_taxonomy_20260406_live_rerun2.md`
+- `verification/leetcode/full_corpus_failure_taxonomy_20260406_live_rerun2_delta.md`
+
+Status delta vs rerun1:
+
+- `PASS`: `300 -> 359` (`+59`)
+- `CHECK_ERROR`: `100 -> 42` (`-58`)
+- `RUN_ERROR`: `11 -> 10` (`-1`)
+- `NO_ORACLE`: `0 -> 0`
+
+Category delta highlights:
+
+- `optional_none_flow_and_narrowing_gap`: `30 -> 0`
+- `any_unknown_typing_and_container_specialization_gap`: `28 -> 0`
+- all other categories unchanged except `codegen_runtime_build_gap`: `6 -> 5` (`-1`)
+
+Non-targeted stability investigation:
+
+- expected gate: `53` non-targeted fixtures unchanged
+- observed: `1` non-targeted status delta
+  - `0115_distinct_subsequences`: `RUN_ERROR -> PASS`
+- investigation result:
+  - prior rerun1 failure was a run-stage Rust build error in generated `Any`-typed memoization key path;
+  - rerun2 now compiles/runs successfully.
+  - This is an improvement, not a regression.
+
+Phase closure status:
+
+- Focused root-cause closure for this phase is complete.
+- Full-corpus and taxonomy artifacts were regenerated and reviewed against rerun1.

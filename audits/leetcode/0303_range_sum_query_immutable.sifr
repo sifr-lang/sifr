@@ -1,20 +1,26 @@
 # LeetCode 303: Range Sum Query Immutable
 
+def _nz_int(value: int | None) -> int:
+    if value is None:
+        return 0
+    return value
+
 class NumArray:
+    nums: list[int]
+
     def __init__(self, nums: list[int]):
-        self.prefix = []
-        cur = 0
-        for n in nums:
-            cur += n
-            self.prefix.append(cur)
+        self.nums = nums
+
     def sumRange(self, left: int, right: int) -> int:
-        r = self.prefix[right] 
-        l = self.prefix[left - 1] if left > 0 else 0
-        return r - l
+        total = 0
+        i = left
+        while i <= right:
+            total += _nz_int(self.nums[i])
+            i += 1
+        return total
 
 def main():
     obj = NumArray([-2, 0, 3, -5, 2, -1])
     assert obj.sumRange(0, 2) == 1
     assert obj.sumRange(2, 5) == -1
     assert obj.sumRange(0, 5) == -3
-

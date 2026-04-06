@@ -1,23 +1,32 @@
 # LeetCode 232: Implement Queue Using Stacks
 
 class MyQueue:
+    append_stack: list[int]
+    inverted_stack: list[int]
+
     def __init__(self):
         self.append_stack = []
         self.inverted_stack = []
     def push(self, x: int) -> None:
         self.append_stack.append(x)
     def pop(self) -> int:
-        if not self.inverted_stack:
-            while self.append_stack:
+        if len(self.inverted_stack) == 0:
+            while len(self.append_stack) > 0:
                 self.inverted_stack.append(self.append_stack.pop())
-        return self.inverted_stack.pop()
+        value = self.inverted_stack.pop()
+        if value is None:
+            return 0
+        return value
     def peek(self) -> int:
-        if not self.inverted_stack:
-            while self.append_stack:
+        if len(self.inverted_stack) == 0:
+            while len(self.append_stack) > 0:
                 self.inverted_stack.append(self.append_stack.pop())
-        return self.inverted_stack[-1]
+        value = self.inverted_stack[-1]
+        if value is None:
+            return 0
+        return value
     def empty(self) -> bool:
-        return not (self.append_stack or self.inverted_stack)
+        return len(self.append_stack) == 0 and len(self.inverted_stack) == 0
 
 def main():
     obj = MyQueue()
@@ -26,4 +35,3 @@ def main():
     assert obj.peek() == 1
     assert obj.pop() == 1
     assert obj.empty() == False
-

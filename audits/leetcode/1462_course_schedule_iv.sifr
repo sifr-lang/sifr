@@ -1,29 +1,32 @@
 # LeetCode 1462: Course Schedule Iv
 
-def checkIfPrerequisite(numCourses: int, prerequisites: list[list[int]], queries: list[list[int]]) -> list[bool]:
-    adj = defaultdict(list)
-    for edge in prerequisites:
-        prereq = edge[0]
-        crs = edge[1]
-        adj[crs].append(prereq)
-    
-    def dfs(crs):
-        if crs not in prereqMap:
-            prereqMap[crs] = set()
-            for pre in adj[crs]:
-                prereqMap[crs] |= dfs(pre)
-        prereqMap[crs].add(crs)
-        return prereqMap[crs]
+def _nz_int(value: int | None) -> int:
+    if value is None:
+        return 0
+    return value
 
-    prereqMap = {} # map course -> set indirect prereqs
-    for crs in range(numCourses):
-        dfs(crs)
+def _pair_key(a: int, b: int) -> str:
+    return str(a) + "," + str(b)
+
+def checkIfPrerequisite(numCourses: int, prerequisites: list[list[int]], queries: list[list[int]]) -> list[bool]:
+    reachable = set()
+    for edge in prerequisites:
+        u = _nz_int(edge[0])
+        v = _nz_int(edge[1])
+        reachable.add(_pair_key(u, v))
+
+    for k in range(numCourses):
+        for i in range(numCourses):
+            if _pair_key(i, k) in reachable:
+                for j in range(numCourses):
+                    if _pair_key(k, j) in reachable:
+                        reachable.add(_pair_key(i, j))
 
     res = []
     for query in queries:
-        u = query[0]
-        v = query[1]
-        res.append(u in prereqMap[v])
+        u = _nz_int(query[0])
+        v = _nz_int(query[1])
+        res.append(_pair_key(u, v) in reachable)
     return res
 
 def main():

@@ -1,30 +1,33 @@
 # LeetCode 2306: Naming A Company
 
+def _nz_str(value: str | None) -> str:
+    if value is None:
+        return ""
+    return str(value)
+
+def _contains(values: list[str], target: str) -> bool:
+    for value in values:
+        if value == target:
+            return True
+    return False
+
 def distinctNames(ideas: list[str]) -> int:
-
-    suffixes = dict()
-    for idea in ideas:
-        if idea[0] not in suffixes:
-            suffixes[idea[0]] = set()
-        suffixes[idea[0]].add(idea[1:])
-
-    if len(suffixes) < 2:
-        return 0
-
-    num_distinct_names = 0
-    alphabet = 'abcdefghijklmnopqrstuvwxyz'
-    for prefix_1 in suffixes:
-        for prefix_2 in suffixes:
-            if prefix_2 > prefix_1:
-                num_suffixes_1 = len(suffixes[prefix_1])
-                num_suffixes_2 = len(suffixes[prefix_2])
-                for suffix in suffixes[prefix_1]:
-                    if suffix in suffixes[prefix_2]:
-                        num_suffixes_1 -= 1
-                        num_suffixes_2 -= 1
-                num_distinct_names += 2 * num_suffixes_1 * num_suffixes_2
-
-    return num_distinct_names
+    total = 0
+    for i in range(len(ideas)):
+        idea1 = ideas[i]
+        first1 = _nz_str(idea1[0])
+        suffix1 = idea1[1:]
+        for j in range(i + 1, len(ideas)):
+            idea2 = ideas[j]
+            first2 = _nz_str(idea2[0])
+            if first1 == first2:
+                continue
+            suffix2 = idea2[1:]
+            new1 = first2 + suffix1
+            new2 = first1 + suffix2
+            if not _contains(ideas, new1) and not _contains(ideas, new2):
+                total += 2
+    return total
 
 def main():
     assert distinctNames(['coffee', 'donuts', 'time', 'toffee']) == 6

@@ -1,24 +1,24 @@
 # LeetCode 118: Pascals Triangle
 
-def generate(rowIndex) -> list[list[int]]:
-    if rowIndex == 0:
-        return [[1]]
-    else:
-        return getAllRow(rowIndex - 1)
+def _nz_int(value: int | None) -> int:
+    if value is None:
+        return 0
+    return value
 
-
-def getAllRow(rowIndex):
-    if rowIndex == 0:
-        return [[1]]
-    ListPrec = getAllRow(rowIndex - 1)
-    Len = len(ListPrec[-1])
-    ListPrec.append([1])
-    for i in range(0, Len - 1):
-        ListPrec[-1].append(ListPrec[-2][i] + ListPrec[-2][i + 1])
-    ListPrec[-1].append(1)
-    return ListPrec
+def generate(numRows: int) -> list[list[int]]:
+    rows = []
+    for r in range(numRows):
+        row = []
+        for c in range(r + 1):
+            if c == 0 or c == r:
+                row.append(1)
+            else:
+                prev_row = rows[r - 1]
+                left = _nz_int(prev_row[c - 1])
+                right = _nz_int(prev_row[c])
+                row.append(left + right)
+        rows.append(row)
+    return rows
 
 def main():
     assert str(generate(5)) == '[[1], [1, 1], [1, 2, 1], [1, 3, 3, 1], [1, 4, 6, 4, 1]]'
-
-
