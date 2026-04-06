@@ -547,3 +547,40 @@ Residual root-cause shape after wave17 (CHECK_ERROR only):
 - `ON-1`: `4`
 - `AU-1`: `4`
 - `ON-3`: `3`
+
+### Wave18: ON-1 closure completion (`0149`, `0286`, `1074`, `2001`) (fixture adaptation)
+
+Artifacts:
+
+- `/tmp/phase_apr06_on_au_wave18_on1_full_closure_coldcache.json`
+
+Key changes:
+
+- Closed remaining ON-1 fixtures with explicit optional-int extraction and non-float-key canonicalizations:
+  - `0149_max_points_on_a_line`
+  - `0286_walls_and_gates`
+  - `1074_number_of_submatrices_that_sum_to_target`
+  - `2001_number_of_pairs_of_interchangeable_rectangles`
+- For `0149` and `2001`, replaced float key maps with normalized rational string keys to avoid Rust `HashMap<f64, _>` codegen constraints (`Eq`/`Hash` not satisfied).
+- For `0286`, replaced alias row writes with direct `rooms[nr][nc]` writes to eliminate runtime non-termination in queue expansion.
+
+Focused result summary (cold-cache):
+
+- `CHECK_ERROR=30`, `PASS=13`, `NO_ORACLE=15`
+- Changed from wave17:
+  - `0149`: `CHECK_ERROR -> NO_ORACLE`
+  - `0286`: `CHECK_ERROR -> NO_ORACLE`
+  - `1074`: `CHECK_ERROR -> NO_ORACLE`
+  - `2001`: `CHECK_ERROR -> NO_ORACLE`
+
+Residual root-cause shape after wave18 (CHECK_ERROR only):
+
+- `AU-2`: `12`
+- `ON-2`: `6`
+- `AU-3`: `5`
+- `AU-1`: `4`
+- `ON-3`: `3`
+
+Closure note:
+
+- `ON-1` is fully cleared from `CHECK_ERROR` in the focused manifest.

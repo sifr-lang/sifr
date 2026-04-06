@@ -1,5 +1,39 @@
 # LeetCode 149: Max Points On A Line
 
+def _nz_int(value: int | None) -> int:
+    if value is None:
+        return 0
+    return value
+
+def _abs_int(value: int) -> int:
+    if value < 0:
+        return -value
+    return value
+
+def _gcd(a: int, b: int) -> int:
+    x = _abs_int(a)
+    y = _abs_int(b)
+    while y != 0:
+        tmp = x % y
+        x = y
+        y = tmp
+    if x == 0:
+        return 1
+    return x
+
+def _slope_key(dx: int, dy: int) -> str:
+    if dx == 0:
+        return "1/0"
+    if dy == 0:
+        return "0/1"
+    nx = dx
+    ny = dy
+    if nx < 0:
+        nx = -nx
+        ny = -ny
+    g = _gcd(ny, nx)
+    return str(ny // g) + "/" + str(nx // g)
+
 def maxPoints(points: list[list[int]]) -> int:
     # 1. For each pt determine if it lies on the longest line
     # 2. Count all pts with same slope
@@ -8,18 +42,28 @@ def maxPoints(points: list[list[int]]) -> int:
     res = 1
     for i in range(len(points)):
         p1 = points[i]
-        count = collections.defaultdict(int)
+        if p1 is None:
+            continue
+        p1x = _nz_int(p1[0])
+        p1y = _nz_int(p1[1])
+        count: dict[str, int] = {}
         for j in range(i + 1, len(points)):
             p2 = points[j]
-            if p2[0] == p1[0]:
-                slope = float("inf")
-            else:
-                slope = (p2[1] - p1[1]) / (p2[0] - p1[0])
-            count[slope] += 1
-            res = max(res, count[slope] + 1)
+            if p2 is None:
+                continue
+            p2x = _nz_int(p2[0])
+            p2y = _nz_int(p2[1])
+            dx = p2x - p1x
+            dy = p2y - p1y
+            key = _slope_key(dx, dy)
+            prev = count.get(key, 0)
+            if prev is None:
+                prev = 0
+            next_count = prev + 1
+            count[key] = next_count
+            res = max(res, next_count + 1)
     return res
 
 def main():
     assert maxPoints([[1, 1], [2, 2], [3, 3]]) == 3
     assert maxPoints([[1, 1], [3, 2], [5, 3], [4, 1], [2, 3], [1, 4]]) == 4
-

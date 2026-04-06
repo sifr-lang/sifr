@@ -1,28 +1,55 @@
 # LeetCode 1074: Number Of Submatrices That Sum To Target
 
-def numSubmatrixSumTarget(matrix: list[list[int]], target: int) -> int:
-    ROWS, COLS = len(matrix), len(matrix[0])
-    sub_sum = [[0 for i in range(COLS)] for j in range(ROWS)]
+def _nz_int(value: int | None) -> int:
+    if value is None:
+        return 0
+    return value
 
-    for r in range(ROWS):
-        for c in range(COLS):
-            top = sub_sum[r - 1][c] if r > 0 else 0
-            left = sub_sum[r][c - 1] if c > 0 else 0
-            top_left = sub_sum[r - 1][c - 1] if min(r, c) > 0 else 0
-            sub_sum[r][c] = matrix[r][c] + top + left - top_left
-    
+def numSubmatrixSumTarget(matrix: list[list[int]], target: int) -> int:
+    if len(matrix) == 0:
+        return 0
+    first_row = matrix[0]
+    if first_row is None:
+        return 0
+    if len(first_row) == 0:
+        return 0
+
+    rows = len(matrix)
+    cols = len(first_row)
+    prefix = []
+
+    for r in range(rows):
+        row = matrix[r]
+        if row is None:
+            prefix.append([0 for _ in range(cols + 1)])
+            continue
+        row_prefix = [0]
+        running = 0
+        for c in range(cols):
+            running += _nz_int(row[c])
+            row_prefix.append(running)
+        prefix.append(row_prefix)
+
     res = 0
-    for r1 in range(ROWS):
-        for r2 in range(r1, ROWS):
-            count = defaultdict(int) # prefix_sum -> count
-            count[0] = 1
-            for c in range(COLS):
-                cur_sum = sub_sum[r2][c] - (
-                    sub_sum[r1 - 1][c] if r1 > 0 else 0
-                )
-                diff = cur_sum - target
-                res += count[diff]
-                count[cur_sum] += 1
+    for left in range(cols):
+        for right in range(left, cols):
+            count = {0: 1}
+            curr = 0
+            for r in range(rows):
+                prow = prefix[r]
+                if prow is None:
+                    continue
+                row_sum = _nz_int(prow[right + 1]) - _nz_int(prow[left])
+                curr += row_sum
+                diff = curr - target
+                found = count.get(diff, 0)
+                if found is None:
+                    found = 0
+                res += found
+                prev = count.get(curr, 0)
+                if prev is None:
+                    prev = 0
+                count[curr] = prev + 1
 
     return res
 
@@ -30,4 +57,3 @@ def main():
     assert numSubmatrixSumTarget([[0, 1, 0], [1, 1, 1], [0, 1, 0]], 0) == 4
     assert numSubmatrixSumTarget([[1, -1], [-1, 1]], 0) == 5
     assert numSubmatrixSumTarget([[904]], 0) == 0
-

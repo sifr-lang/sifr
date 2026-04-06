@@ -1,16 +1,47 @@
 # LeetCode 2001: Number Of Pairs Of Interchangeable Rectangles
 
+def _nz_int(value: int | None) -> int:
+    if value is None:
+        return 0
+    return value
+
+def _abs_int(value: int) -> int:
+    if value < 0:
+        return -value
+    return value
+
+def _gcd(a: int, b: int) -> int:
+    x = _abs_int(a)
+    y = _abs_int(b)
+    while y != 0:
+        tmp = x % y
+        x = y
+        y = tmp
+    if x == 0:
+        return 1
+    return x
+
 def interchangeableRectangles(rectangles: list[list[int]]) -> int:
-    count = {}  # { W / H : Count }
+    count: dict[str, int] = {}
     res = 0
 
     for rect in rectangles:
-        w = rect[0]
-        h = rect[1]
-        # Increment the count for the ratio
-        count[w / h] = 1 + count.get(w / h, 0)
+        if rect is None:
+            continue
+        w = _nz_int(rect[0])
+        h = _nz_int(rect[1])
+        if h == 0:
+            continue
+        g = _gcd(w, h)
+        key = str(w // g) + "/" + str(h // g)
+        prev = count.get(key, 0)
+        if prev is None:
+            prev = 0
+        count[key] = prev + 1
 
     for c in count.values():
+        if c is None:
+            continue
         res += (c * (c - 1)) // 2
 
     return res
