@@ -684,3 +684,28 @@ Residual root-cause shape after wave21 (CHECK_ERROR only):
 Closure note:
 
 - `ON-3` is fully cleared from `CHECK_ERROR` in the focused manifest.
+
+### Wave22: AU-3 single-fixture closure (`1642`) (fixture adaptation)
+
+Artifacts:
+
+- `/tmp/phase_apr06_on_au_wave22_au3_single_1642_coldcache.json`
+
+Key changes:
+
+- Canonicalized `1642_furthest_building_you_can_reach` by removing `heapq` unknown bridge in favor of typed sorted-climb allocation:
+  - track positive climbs in a sorted list,
+  - consume bricks on smallest climbs once climb-count exceeds available ladders.
+- Attempted a broader AU-3 batch (`0155`, `0232`, `0303`, `0535`) but reverted non-clean drafts in this wave due run-stage class/method codegen constraints.
+
+Focused result summary (cold-cache):
+
+- `CHECK_ERROR=20`, `PASS=14`, `NO_ORACLE=24`
+- Changed from wave21:
+  - `1642`: `CHECK_ERROR -> NO_ORACLE`
+
+Residual root-cause shape after wave22 (CHECK_ERROR only):
+
+- `AU-2`: `12`
+- `AU-3`: `4`
+- `AU-1`: `4`
