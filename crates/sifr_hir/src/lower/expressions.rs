@@ -17,6 +17,7 @@ use super::decimal_methods::{
     decimal_conversion_error_type, resolve_decimal_method_type, validate_bigdecimal_string_literal,
     validate_decimal_string_literal,
 };
+use super::defaultdict_refinement::refine_defaultdict_binding_expr;
 use super::empty_collection_refinement::{
     refine_empty_list_binding_expr, refine_empty_set_binding_expr,
 };
@@ -1797,6 +1798,9 @@ pub(super) fn lower_call(call: &ExprCall, ctx: &mut LowerCtx) -> Option<HirExpr>
         None
     })?;
 
+    let call_defaults = ctx.function_defaults.get(&func_name).cloned();
+    let call_vararg = ctx.vararg_functions.get(&func_name).copied();
+
     // Resolve keyword arguments to positional order
     let args = if func_name == "print" {
         let mut args = Vec::with_capacity(call.arguments.args.len());
@@ -1804,14 +1808,59 @@ pub(super) fn lower_call(call: &ExprCall, ctx: &mut LowerCtx) -> Option<HirExpr>
             args.push(lower_expr(arg, ctx)?);
         }
         args
+    } else if func_name.ends_with("_Counter")
+        && ft.params.len() == 2
+        && call.arguments.args.len() == 1
+        && call.arguments.keywords.is_empty()
+    {
+        let lowered_arg = lower_expr(&call.arguments.args[0], ctx)?;
+        let source_ty = &ft.params[0].1;
+        let iterable_ty = &ft.params[1].1;
+        if lowered_arg.ty().is_assignable_to(source_ty)
+            || is_compatible_with_unresolved_typevars(lowered_arg.ty(), source_ty)
+        {
+            vec![lowered_arg, HirExpr::NoneLiteral]
+        } else if lowered_arg.ty().is_assignable_to(iterable_ty)
+            || is_compatible_with_unresolved_typevars(lowered_arg.ty(), iterable_ty)
+        {
+            vec![HirExpr::NoneLiteral, lowered_arg]
+        } else if matches!(lowered_arg.ty().resolve_alias(), Type::Str) {
+            let iterable_arg = HirExpr::Call {
+                func: "list".to_string(),
+                args: vec![lowered_arg],
+                ty: Type::List(Box::new(Type::Str)),
+            };
+            if iterable_arg.ty().is_assignable_to(iterable_ty)
+                || is_compatible_with_unresolved_typevars(iterable_arg.ty(), iterable_ty)
+            {
+                vec![HirExpr::NoneLiteral, iterable_arg]
+            } else {
+                lower_function_call_args(
+                    call,
+                    &func_name,
+                    &ft,
+                    call_defaults.as_deref(),
+                    call_vararg,
+                    ctx,
+                )?
+            }
+        } else {
+            lower_function_call_args(
+                call,
+                &func_name,
+                &ft,
+                call_defaults.as_deref(),
+                call_vararg,
+                ctx,
+            )?
+        }
     } else {
-        let defaults = ctx.function_defaults.get(&func_name).cloned();
         lower_function_call_args(
             call,
             &func_name,
             &ft,
-            defaults.as_deref(),
-            ctx.vararg_functions.get(&func_name).copied(),
+            call_defaults.as_deref(),
+            call_vararg,
             ctx,
         )?
     };
@@ -2520,73 +2569,6 @@ pub(super) fn lower_method_call(
         method: method_name,
         args,
         ty: return_ty,
-    })
-}
-
-fn refine_defaultdict_binding_expr(
-    expr: HirExpr,
-    method_name: &str,
-    args: &[HirExpr],
-    ctx: &mut LowerCtx,
-) -> Option<HirExpr> {
-    let inferred_value_ty = match method_name {
-        "append" if args.len() == 1 => Type::List(Box::new(args[0].ty().clone())),
-        "add" if args.len() == 1 => Type::Set(Box::new(args[0].ty().clone())),
-        _ => return None,
-    };
-    let HirExpr::Index { object, index, .. } = expr else {
-        return None;
-    };
-    let HirExpr::Name { name, ty } = object.as_ref() else {
-        return None;
-    };
-    let Type::Alias {
-        name: alias_name,
-        body,
-        ..
-    } = ty
-    else {
-        return None;
-    };
-    if !matches!(
-        alias_name.as_str(),
-        DEFAULTDICT_INT_ALIAS | DEFAULTDICT_LIST_ALIAS | DEFAULTDICT_SET_ALIAS
-    ) {
-        return None;
-    }
-    let Type::Dict(key_ty, value_ty) = body.as_ref() else {
-        return None;
-    };
-    let expected_unrefined = match alias_name.as_str() {
-        DEFAULTDICT_LIST_ALIAS => Type::List(Box::new(Type::Any)),
-        DEFAULTDICT_SET_ALIAS => Type::Set(Box::new(Type::Any)),
-        DEFAULTDICT_INT_ALIAS => Type::Int,
-        _ => return None,
-    };
-    if *value_ty.as_ref() != expected_unrefined {
-        return None;
-    }
-    let refined_key_ty = if matches!(key_ty.as_ref(), Type::Any | Type::Unknown) {
-        index.ty().clone()
-    } else {
-        *key_ty.clone()
-    };
-    let refined_ty = Type::Alias {
-        name: alias_name.clone(),
-        type_args: Vec::new(),
-        body: Box::new(Type::Dict(
-            Box::new(refined_key_ty),
-            Box::new(inferred_value_ty.clone()),
-        )),
-    };
-    ctx.scope.narrow_var(name, refined_ty.clone());
-    Some(HirExpr::Index {
-        object: Box::new(HirExpr::Name {
-            name: name.clone(),
-            ty: refined_ty,
-        }),
-        index,
-        ty: inferred_value_ty,
     })
 }
 

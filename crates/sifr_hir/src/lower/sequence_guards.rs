@@ -16,6 +16,10 @@ pub(super) enum SequenceGuard {
         dict: String,
         key_expr_debug: String,
     },
+    SubscriptPresent {
+        sequence: String,
+        index_expr_debug: String,
+    },
 }
 
 impl LowerCtx {
@@ -81,6 +85,26 @@ impl LowerCtx {
                     key_expr_debug,
                 });
             }
+            SequenceGuard::SubscriptPresent {
+                sequence,
+                index_expr_debug,
+            } => {
+                if self.sequence_guards.iter().any(|existing| {
+                    matches!(
+                        existing,
+                        SequenceGuard::SubscriptPresent {
+                            sequence: existing_sequence,
+                            index_expr_debug: existing_index,
+                        } if existing_sequence == &sequence && existing_index == &index_expr_debug
+                    )
+                }) {
+                    return;
+                }
+                self.sequence_guards.push(SequenceGuard::SubscriptPresent {
+                    sequence,
+                    index_expr_debug,
+                });
+            }
         }
     }
 
@@ -141,6 +165,21 @@ impl LowerCtx {
                     dict: guard_dict,
                     key_expr_debug: guard_key,
                 } if guard_dict == dict && guard_key == &key_expr_debug
+            )
+        })
+    }
+
+    pub(super) fn has_subscript_guard(&self, sequence: &str, index_expr: &Expr) -> bool {
+        let Some(index_expr_debug) = key_guard_token(index_expr) else {
+            return false;
+        };
+        self.sequence_guards.iter().any(|guard| {
+            matches!(
+                guard,
+                SequenceGuard::SubscriptPresent {
+                    sequence: guard_sequence,
+                    index_expr_debug: guard_index,
+                } if guard_sequence == sequence && guard_index == &index_expr_debug
             )
         })
     }

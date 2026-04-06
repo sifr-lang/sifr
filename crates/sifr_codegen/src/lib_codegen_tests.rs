@@ -2890,6 +2890,64 @@ fn test_structured_stmt_path_handles_chained_compare_condition_inside_loop_if() 
 }
 
 #[test]
+fn test_structured_stmt_path_lowers_collection_truthiness_inside_boolop_condition() {
+    let tuple_ty = Type::Tuple(vec![Type::Int, Type::Int]);
+    let stmt = HirStmt::While {
+        condition: HirExpr::BoolOp {
+            op: "and".to_string(),
+            values: vec![
+                HirExpr::Name {
+                    name: "stack".to_string(),
+                    ty: Type::List(Box::new(tuple_ty.clone())),
+                },
+                HirExpr::Compare {
+                    left: Box::new(HirExpr::Index {
+                        object: Box::new(HirExpr::Index {
+                            object: Box::new(HirExpr::Name {
+                                name: "stack".to_string(),
+                                ty: Type::List(Box::new(tuple_ty.clone())),
+                            }),
+                            index: Box::new(HirExpr::UnaryOp {
+                                op: "-".to_string(),
+                                operand: Box::new(HirExpr::IntLiteral(1)),
+                                ty: Type::Int,
+                            }),
+                            ty: Type::Union(vec![tuple_ty.clone(), Type::None]),
+                        }),
+                        index: Box::new(HirExpr::IntLiteral(1)),
+                        ty: Type::Int,
+                    }),
+                    ops: vec![">".to_string()],
+                    comparators: vec![HirExpr::Name {
+                        name: "h".to_string(),
+                        ty: Type::Int,
+                    }],
+                    ty: Type::Bool,
+                },
+            ],
+            ty: Type::Bool,
+        },
+        body: vec![HirStmt::Let {
+            name: "x".to_string(),
+            ty: Type::Int,
+            value: HirExpr::IntLiteral(1),
+            is_mutable: true,
+        }],
+        else_body: None,
+    };
+
+    let mut emitter = RustEmitter::new();
+    let captured = emitter.capture_structured_stmts(|inner| inner.emit_stmt(&stmt));
+
+    let Some(RustStmt::While { cond, .. }) = captured.first() else {
+        panic!("expected while stmt");
+    };
+    let rendered = crate::render_expr(cond);
+    assert!(rendered.contains("is_empty"));
+    assert!(rendered.contains("&&"));
+}
+
+#[test]
 fn test_structured_stmt_path_lowers_option_call_truthiness_to_bool_condition() {
     let stmt = HirStmt::If {
         condition: HirExpr::MethodCall {

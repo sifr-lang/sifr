@@ -476,7 +476,9 @@ pub(super) fn module_uses_bigint(module: &HirModule) -> bool {
             | HirStmt::SubscriptAugAssign { object_ty, .. } => type_has_bigint(object_ty),
             HirStmt::AttributeNestedSubscriptAssign { field_ty, .. }
             | HirStmt::AttributeSubscriptAssign { field_ty, .. } => type_has_bigint(field_ty),
-            HirStmt::NestedFieldAssign { nested_field_ty, .. } => type_has_bigint(nested_field_ty),
+            HirStmt::NestedFieldAssign {
+                nested_field_ty, ..
+            } => type_has_bigint(nested_field_ty),
             HirStmt::Match { subject_ty, .. } => type_has_bigint(subject_ty),
             HirStmt::NestedFunction { func } => {
                 func.params.iter().any(|param| type_has_bigint(&param.ty))

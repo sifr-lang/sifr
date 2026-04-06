@@ -1,25 +1,27 @@
 use super::LowerCtx;
 use sifr_python_ast::{Expr, ExprBinOp, ExprSubscript, Number, Operator};
-use sifr_type_system::Type;
+use sifr_type_system::{remove_none_from_union, Type};
 
 pub(super) fn guarded_sequence_index_result_type(
     sub: &ExprSubscript,
     object_ty: &Type,
     ctx: &LowerCtx,
 ) -> Option<Type> {
-    if let Expr::Name(sequence_name) = sub.value.as_ref() {
+    if let Some(sequence_name) = sequence_guard_target_name(sub.value.as_ref()) {
         return match object_ty.resolve_alias() {
             Type::List(elem_ty) => {
-                guarded_element_type(sequence_name.id.as_str(), elem_ty, &sub.slice, ctx)
+                guarded_element_type(sequence_name.as_str(), elem_ty, &sub.slice, ctx)
             }
             Type::Dict(_, value_ty) => {
-                if ctx.has_dict_key_guard(sequence_name.id.as_str(), &sub.slice) {
+                if ctx.has_dict_key_guard(sequence_name.as_str(), &sub.slice) {
                     Some(*value_ty.clone())
+                } else if ctx.has_subscript_guard(sequence_name.as_str(), &sub.slice) {
+                    Some(remove_none_from_union(value_ty.as_ref()))
                 } else {
                     None
                 }
             }
-            Type::Str => guarded_string_index_type(sequence_name.id.as_str(), &sub.slice, ctx),
+            Type::Str => guarded_string_index_type(sequence_name.as_str(), &sub.slice, ctx),
             _ => None,
         };
     }
@@ -59,6 +61,9 @@ fn guarded_element_type(
     index_expr: &Expr,
     ctx: &LowerCtx,
 ) -> Option<Type> {
+    if ctx.has_subscript_guard(sequence_name, index_expr) {
+        return Some(remove_none_from_union(elem_ty));
+    }
     if has_guarded_sequence_index(sequence_name, index_expr, ctx) {
         Some(elem_ty.clone())
     } else {
@@ -79,6 +84,9 @@ fn guarded_string_index_type(
 }
 
 fn has_guarded_sequence_index(sequence_name: &str, index_expr: &Expr, ctx: &LowerCtx) -> bool {
+    if ctx.has_subscript_guard(sequence_name, index_expr) {
+        return true;
+    }
     if index_expr_is_safe_for_anchor(index_expr, sequence_name, 0, ctx) {
         return true;
     }
@@ -110,22 +118,6 @@ fn index_expr_is_safe_for_anchor(
                             && ctx.min_length_guard(anchor_sequence) > 0
                     })
         }
-        Expr::NumberLiteral(num) => {
-            let Number::Int(value) = &num.value else {
-                return false;
-            };
-            let Some(index_value) = value.as_i64() else {
-                return false;
-            };
-            let Ok(index_value) = usize::try_from(index_value) else {
-                return false;
-            };
-            if index_value < extra_len {
-                true
-            } else {
-                ctx.min_length_guard(anchor_sequence) > index_value - extra_len
-            }
-        }
         Expr::BinOp(ExprBinOp {
             left, op, right, ..
         }) => {
@@ -145,6 +137,22 @@ fn index_expr_is_safe_for_anchor(
                 _ => false,
             }
         }
+        Expr::NumberLiteral(num) => {
+            let Number::Int(value) = &num.value else {
+                return false;
+            };
+            let Some(index_value) = value.as_i64() else {
+                return false;
+            };
+            let Ok(index_value) = usize::try_from(index_value) else {
+                return false;
+            };
+            if index_value < extra_len {
+                true
+            } else {
+                ctx.min_length_guard(anchor_sequence) > index_value - extra_len
+            }
+        }
         _ => false,
     }
 }
@@ -157,6 +165,17 @@ fn literal_usize(expr: &Expr) -> Option<usize> {
         return None;
     };
     value.as_i64().and_then(|value| usize::try_from(value).ok())
+}
+
+fn sequence_guard_target_name(expr: &Expr) -> Option<String> {
+    match expr {
+        Expr::Name(name) => Some(name.id.clone()),
+        Expr::Attribute(attr) => {
+            let base = sequence_guard_target_name(attr.value.as_ref())?;
+            Some(format!("{base}.{}", attr.attr))
+        }
+        _ => None,
+    }
 }
 
 #[cfg(test)]
@@ -363,6 +382,28 @@ mod tests {
     }
 
     #[test]
+    fn test_subscript_none_guard_after_early_return_narrows_repeated_read() {
+        let result = lower_source(
+            "def pick(children: list[int | None], i: int) -> int:\n    if children[i] is None:\n        return 0\n    value: int = children[i]\n    return value\n",
+        );
+        assert!(
+            result.is_ok(),
+            "post-return `if seq[i] is None` guard should narrow repeated subscript reads"
+        );
+    }
+
+    #[test]
+    fn test_subscript_is_not_none_guard_narrows_true_branch_read() {
+        let result = lower_source(
+            "def pick(children: list[int | None], i: int) -> int:\n    if children[i] is not None:\n        return children[i]\n    return 0\n",
+        );
+        assert!(
+            result.is_ok(),
+            "`if seq[i] is not None` should narrow repeated subscript reads in the true branch"
+        );
+    }
+
+    #[test]
     fn test_dict_index_narrows_after_in_membership_guard() {
         let result = lower_source(
             "def main():\n    table: dict[int, int] = {1: 10}\n    key: int = 1\n    if key in table:\n        value: int = table[key]\n",
@@ -488,6 +529,19 @@ mod tests {
     }
 
     #[test]
+    fn test_attribute_non_empty_guard_reveals_head_index_type() {
+        let result = lower_source_result(
+            "class Box:\n    values: list[int]\n\n    def __init__(self):\n        self.values = [1, 2]\n\n    def head(self) -> int:\n        if not self.values:\n            return 0\n        reveal_type(self.values[0])\n        return self.values[0]\n",
+        )
+        .expect("non-empty attribute guard should narrow head index");
+
+        assert!(result
+            .reveal_types
+            .iter()
+            .any(|diagnostic| diagnostic == "reveal_type: int"));
+    }
+
+    #[test]
     fn test_sliding_window_left_pointer_reveals_element_type_before_single_step_increment() {
         let result = lower_source_result(
             "def main(text: str, k: int) -> int:\n    l: int = 0\n    total: int = 0\n    for r in range(len(text)):\n        if (r - l + 1) > k:\n            reveal_type(text[l])\n            l += 1\n        if text[r] == \"a\":\n            total += 1\n    return total\n",
@@ -598,4 +652,5 @@ mod tests {
                 .contains("type mismatch: expected 'int', got 'int | None'")
         }));
     }
+
 }

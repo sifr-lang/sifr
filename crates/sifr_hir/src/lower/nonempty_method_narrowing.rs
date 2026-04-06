@@ -31,13 +31,24 @@ pub(super) fn refine_nonempty_pop_return_type(
     if !is_narrowable_pop_call(method_name, args) {
         return None;
     }
-    let HirExpr::Name { name, .. } = object else {
+    let Some(sequence_name) = sequence_guard_name_from_hir_expr(object) else {
         return None;
     };
-    if ctx.min_length_guard(name.as_str()) == 0 {
+    if ctx.min_length_guard(sequence_name.as_str()) == 0 {
         return None;
     }
     nonempty_pop_element_type(object_ty).or_else(|| non_optional_union_variant(return_ty))
+}
+
+fn sequence_guard_name_from_hir_expr(expr: &HirExpr) -> Option<String> {
+    match expr {
+        HirExpr::Name { name, .. } => Some(name.clone()),
+        HirExpr::FieldAccess { object, field, .. } => {
+            let base = sequence_guard_name_from_hir_expr(object)?;
+            Some(format!("{base}.{field}"))
+        }
+        _ => None,
+    }
 }
 
 fn supports_nonempty_pop_narrowing_on_type(object_ty: &Type) -> bool {
@@ -51,17 +62,17 @@ fn supports_nonempty_pop_narrowing_on_type(object_ty: &Type) -> bool {
 fn nonempty_pop_element_type(object_ty: &Type) -> Option<Type> {
     match object_ty.resolve_alias() {
         Type::List(elem) => Some(*elem.clone()),
-        Type::Class {
-            name, fields, ..
-        } if name == "deque" => fields.iter().find_map(|(field_name, field_ty)| {
-            if field_name != "_data" {
-                return None;
-            }
-            let Type::List(elem) = field_ty.resolve_alias() else {
-                return None;
-            };
-            Some(*elem.clone())
-        }),
+        Type::Class { name, fields, .. } if name == "deque" => {
+            fields.iter().find_map(|(field_name, field_ty)| {
+                if field_name != "_data" {
+                    return None;
+                }
+                let Type::List(elem) = field_ty.resolve_alias() else {
+                    return None;
+                };
+                Some(*elem.clone())
+            })
+        }
         _ => None,
     }
 }

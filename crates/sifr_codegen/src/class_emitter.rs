@@ -243,10 +243,7 @@ impl RustEmitter {
                 .fields
                 .iter()
                 .map(|(name, ty)| {
-                    format!(
-                        "{name}={}",
-                        self.auto_display_format_spec_for_field(ty)
-                    )
+                    format!("{name}={}", self.auto_display_format_spec_for_field(ty))
                 })
                 .collect::<Vec<_>>()
                 .join(", ")

@@ -417,15 +417,59 @@ pub(super) fn lower_defaultdict_constructor_call(
     let mut args = Vec::new();
     let dict_ty = if call.arguments.args.len() == 2 {
         let mapping = lower_expr(&call.arguments.args[1], ctx)?;
-        let Type::Dict(key_ty, mapping_value_ty) = mapping.ty().resolve_alias() else {
-            ctx.error(format!(
-                "defaultdict() initial mapping must be a dict, got '{}'",
-                mapping.ty().display_name()
-            ));
-            return None;
+        if factory_name == "int"
+            && matches!(
+                mapping.ty().resolve_alias(),
+                Type::Class { name, .. } if name == "Counter" || name.ends_with(".Counter")
+            )
+        {
+            // Counter already provides zero-default indexing semantics.
+            // Preserve the Counter type surface for downstream assignment flow.
+            return Some(mapping);
+        }
+        let mapping_ty = mapping.ty().clone();
+        let (mapping_expr, key_ty, mapping_value_ty) = match mapping_ty.resolve_alias() {
+            Type::Dict(key_ty, mapping_value_ty) => {
+                (mapping, key_ty.clone(), mapping_value_ty.clone())
+            }
+            Type::Class { name, fields, .. } if name == "Counter" || name.ends_with(".Counter") => {
+                let Some((_, counts_ty)) =
+                    fields.iter().find(|(field_name, _)| field_name == "counts")
+                else {
+                    ctx.error(format!(
+                        "defaultdict() initial mapping must be a dict, got '{}'",
+                        mapping.ty().display_name()
+                    ));
+                    return None;
+                };
+                let counts_ty = counts_ty.clone();
+                let Type::Dict(key_ty, mapping_value_ty) = counts_ty.resolve_alias() else {
+                    ctx.error(format!(
+                        "defaultdict() initial mapping must be a dict, got '{}'",
+                        mapping.ty().display_name()
+                    ));
+                    return None;
+                };
+                (
+                    HirExpr::FieldAccess {
+                        object: Box::new(mapping),
+                        field: "counts".to_string(),
+                        ty: counts_ty.clone(),
+                    },
+                    key_ty.clone(),
+                    mapping_value_ty.clone(),
+                )
+            }
+            _ => {
+                ctx.error(format!(
+                    "defaultdict() initial mapping must be a dict, got '{}'",
+                    mapping.ty().display_name()
+                ));
+                return None;
+            }
         };
         if !mapping_value_ty.is_assignable_to(&value_ty)
-            && !value_ty.is_assignable_to(mapping_value_ty)
+            && !value_ty.is_assignable_to(&mapping_value_ty)
         {
             ctx.error(format!(
                 "defaultdict() initial mapping value type '{}' is not compatible with factory '{}'",
@@ -434,9 +478,8 @@ pub(super) fn lower_defaultdict_constructor_call(
             ));
             return None;
         }
-        let dict_key_ty = key_ty.clone();
-        args.push(mapping);
-        Type::Dict(dict_key_ty, Box::new(value_ty))
+        args.push(mapping_expr);
+        Type::Dict(key_ty, Box::new(value_ty))
     } else {
         Type::Dict(Box::new(Type::Any), Box::new(value_ty))
     };

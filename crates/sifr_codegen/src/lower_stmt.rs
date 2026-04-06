@@ -2825,15 +2825,57 @@ fn try_lower_numeric_truthiness_condition_expr(expr: &HirExpr) -> Option<RustExp
             op: "!=".to_string(),
             right: Box::new(zero_literal_for_type(ty)?),
         }),
-        HirExpr::UnaryOp { op, operand, .. } if op == "not" => {
-            let HirExpr::Name { name, ty } = operand.as_ref() else {
-                return None;
+        HirExpr::MethodCall {
+            object,
+            method,
+            args,
+            ty,
+        } if method == "len" && args.is_empty() => {
+            let receiver = try_lower_leaf_expr(object.as_ref())?;
+            let lhs = RustExpr::Cast {
+                expr: Box::new(RustExpr::MethodCall {
+                    receiver: Box::new(receiver),
+                    method: "len".to_string(),
+                    args: vec![],
+                }),
+                ty: RustType::I64,
             };
             Some(RustExpr::BinOp {
-                left: Box::new(RustExpr::Ident(name.clone())),
-                op: "==".to_string(),
+                left: Box::new(lhs),
+                op: "!=".to_string(),
                 right: Box::new(zero_literal_for_type(ty)?),
             })
+        }
+        HirExpr::UnaryOp { op, operand, .. } if op == "not" => {
+            match operand.as_ref() {
+                HirExpr::Name { name, ty } => Some(RustExpr::BinOp {
+                    left: Box::new(RustExpr::Ident(name.clone())),
+                    op: "==".to_string(),
+                    right: Box::new(zero_literal_for_type(ty)?),
+                }),
+                HirExpr::MethodCall {
+                    object,
+                    method,
+                    args,
+                    ty,
+                } if method == "len" && args.is_empty() => {
+                    let receiver = try_lower_leaf_expr(object.as_ref())?;
+                    let lhs = RustExpr::Cast {
+                        expr: Box::new(RustExpr::MethodCall {
+                            receiver: Box::new(receiver),
+                            method: "len".to_string(),
+                            args: vec![],
+                        }),
+                        ty: RustType::I64,
+                    };
+                    Some(RustExpr::BinOp {
+                        left: Box::new(lhs),
+                        op: "==".to_string(),
+                        right: Box::new(zero_literal_for_type(ty)?),
+                    })
+                }
+                _ => None,
+            }
         }
         _ => None,
     }
@@ -3994,10 +4036,12 @@ fn try_lower_simple_return_stmt(
     if matches!(value.ty(), Type::TypeVar(_)) {
         return None;
     }
-    if ctx
-        .return_type
-        .is_some_and(|ty| matches!(resolve_alias_type(ty), Type::Iterable(_)))
-    {
+    if ctx.return_type.is_some_and(|ty| {
+        matches!(
+            resolve_alias_type(ty),
+            Type::Iterable(_) | Type::Iterator(_)
+        )
+    }) {
         return None;
     }
 

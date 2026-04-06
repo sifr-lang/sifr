@@ -116,7 +116,10 @@ pub(super) fn seed_exhaustive_if_bindings(
         branch_bindings.push(collect_top_level_let_bindings(body));
     }
     branch_bindings.push(collect_top_level_let_bindings(else_body));
-    if branch_bindings.iter().any(std::collections::HashMap::is_empty) {
+    if branch_bindings
+        .iter()
+        .any(std::collections::HashMap::is_empty)
+    {
         return;
     }
 

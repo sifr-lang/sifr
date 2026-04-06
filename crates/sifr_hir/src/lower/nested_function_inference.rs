@@ -733,8 +733,27 @@ fn analyze_stmt(
             let iter_ty = infer_expr_type(&for_stmt.iter, env, states, current_function, ctx);
             let elem_ty = iter_ty.iterable_element_type().unwrap_or(Type::Unknown);
             let mut body_env = env.clone();
-            if let Expr::Name(name) = for_stmt.target.as_ref() {
-                body_env.bind_var(name.id.as_str(), elem_ty);
+            match for_stmt.target.as_ref() {
+                Expr::Name(name) => {
+                    body_env.bind_var(name.id.as_str(), elem_ty);
+                }
+                Expr::Tuple(tuple) => {
+                    let tuple_member_tys = match &elem_ty {
+                        Type::Tuple(member_tys) => member_tys.clone(),
+                        _ => vec![Type::Unknown; tuple.elts.len()],
+                    };
+                    for (index, elt) in tuple.elts.iter().enumerate() {
+                        let Expr::Name(name) = elt else {
+                            continue;
+                        };
+                        let binding_ty = tuple_member_tys
+                            .get(index)
+                            .cloned()
+                            .unwrap_or(Type::Unknown);
+                        body_env.bind_var(name.id.as_str(), binding_ty);
+                    }
+                }
+                _ => {}
             }
             analyze_block(&for_stmt.body, &mut body_env, states, current_function, ctx);
             merge_env_types(env, &body_env);
@@ -1032,6 +1051,96 @@ fn infer_call_type(
 ) -> Type {
     match call.func.as_ref() {
         Expr::Name(name) => {
+            if name.id == "range" {
+                for arg in &call.arguments.args {
+                    let _ = infer_expr_type(arg, env, states, current_function, ctx);
+                }
+                return Type::Range;
+            }
+            if name.id == "enumerate" {
+                let elem_ty = call
+                    .arguments
+                    .args
+                    .first()
+                    .map(|arg| infer_expr_type(arg, env, states, current_function, ctx))
+                    .and_then(|arg_ty| arg_ty.iterable_element_type())
+                    .unwrap_or(Type::Unknown);
+                return Type::Iterator(Box::new(Type::Tuple(vec![Type::Int, elem_ty])));
+            }
+            if name.id == "zip" {
+                let tuple_members = call
+                    .arguments
+                    .args
+                    .iter()
+                    .map(|arg| infer_expr_type(arg, env, states, current_function, ctx))
+                    .map(|arg_ty| arg_ty.iterable_element_type().unwrap_or(Type::Unknown))
+                    .collect::<Vec<_>>();
+                return Type::Iterator(Box::new(Type::Tuple(tuple_members)));
+            }
+            if name.id == "list" {
+                let elem_ty = call
+                    .arguments
+                    .args
+                    .first()
+                    .map(|arg| infer_expr_type(arg, env, states, current_function, ctx))
+                    .and_then(|arg_ty| arg_ty.iterable_element_type())
+                    .unwrap_or(Type::Unknown);
+                return Type::List(Box::new(elem_ty));
+            }
+            if name.id == "set" {
+                let elem_ty = call
+                    .arguments
+                    .args
+                    .first()
+                    .map(|arg| infer_expr_type(arg, env, states, current_function, ctx))
+                    .and_then(|arg_ty| arg_ty.iterable_element_type())
+                    .unwrap_or(Type::Unknown);
+                return Type::Set(Box::new(elem_ty));
+            }
+            if name.id == "dict" {
+                if let Some(arg) = call.arguments.args.first() {
+                    let arg_ty = infer_expr_type(arg, env, states, current_function, ctx);
+                    let item_ty = arg_ty.iterable_element_type().unwrap_or(Type::Unknown);
+                    if let Type::Tuple(item_members) = item_ty {
+                        if item_members.len() == 2 {
+                            return Type::Dict(
+                                Box::new(item_members[0].clone()),
+                                Box::new(item_members[1].clone()),
+                            );
+                        }
+                    }
+                }
+                return Type::Dict(Box::new(Type::Unknown), Box::new(Type::Unknown));
+            }
+            if name.id == "sorted" {
+                let elem_ty = call
+                    .arguments
+                    .args
+                    .first()
+                    .map(|arg| infer_expr_type(arg, env, states, current_function, ctx))
+                    .and_then(|arg_ty| arg_ty.iterable_element_type())
+                    .unwrap_or(Type::Unknown);
+                return Type::List(Box::new(elem_ty));
+            }
+            if name.id == "sum" {
+                return call
+                    .arguments
+                    .args
+                    .first()
+                    .map(|arg| infer_expr_type(arg, env, states, current_function, ctx))
+                    .and_then(|arg_ty| arg_ty.iterable_element_type())
+                    .unwrap_or(Type::Unknown);
+            }
+            if name.id == "Counter" {
+                let key_ty = call
+                    .arguments
+                    .args
+                    .first()
+                    .map(|arg| infer_expr_type(arg, env, states, current_function, ctx))
+                    .and_then(|arg_ty| arg_ty.iterable_element_type())
+                    .unwrap_or(Type::Unknown);
+                return Type::Dict(Box::new(key_ty), Box::new(Type::Int));
+            }
             if name.id == "len" {
                 if let Some(arg) = call.arguments.args.first() {
                     let _ = infer_expr_type(arg, env, states, current_function, ctx);
@@ -1098,6 +1207,33 @@ fn infer_attribute_call_type(
     current_function: Option<&str>,
     ctx: &LowerCtx,
 ) -> Type {
+    if let Expr::Name(module_name) = object {
+        match (module_name.id.as_str(), method) {
+            ("heapq", "heapify") => {
+                if let Some(arg) = args.first() {
+                    let _ = infer_expr_type(arg, env, states, current_function, ctx);
+                }
+                return Type::None;
+            }
+            ("heapq", "heappop") => {
+                if let Some(arg) = args.first() {
+                    let arg_ty = infer_expr_type(arg, env, states, current_function, ctx);
+                    if let Type::List(elem_ty) = arg_ty {
+                        return *elem_ty;
+                    }
+                }
+                return Type::Unknown;
+            }
+            ("heapq", "heappush") => {
+                for arg in args {
+                    let _ = infer_expr_type(arg, env, states, current_function, ctx);
+                }
+                return Type::None;
+            }
+            _ => {}
+        }
+    }
+
     let object_ty = infer_expr_type(object, env, states, current_function, ctx);
     let arg_types = args
         .iter()
@@ -1143,13 +1279,71 @@ fn infer_attribute_call_type(
             "sort" => {
                 return Type::None;
             }
+            "keys" => {
+                if let Type::Dict(key_ty, _) = &object_ty {
+                    return Type::List(Box::new(*key_ty.clone()));
+                }
+                return Type::List(Box::new(Type::Unknown));
+            }
+            "values" => {
+                if let Type::Dict(_, value_ty) = &object_ty {
+                    return Type::List(Box::new(*value_ty.clone()));
+                }
+                return Type::List(Box::new(Type::Unknown));
+            }
+            "items" => {
+                if let Type::Dict(key_ty, value_ty) = &object_ty {
+                    return Type::List(Box::new(Type::Tuple(vec![
+                        *key_ty.clone(),
+                        *value_ty.clone(),
+                    ])));
+                }
+                return Type::List(Box::new(Type::Tuple(vec![Type::Unknown, Type::Unknown])));
+            }
+            "get" => {
+                if let Type::Dict(key_ty, value_ty) = &object_ty {
+                    if let Some(key_arg_ty) = arg_types.first() {
+                        let refined_key = unify_types(*key_ty.clone(), key_arg_ty.clone());
+                        unify_name_binding(
+                            name.id.as_str(),
+                            Type::Dict(Box::new(refined_key), value_ty.clone()),
+                            env,
+                            states,
+                            current_function,
+                        );
+                    }
+                    if arg_types.len() == 2 {
+                        return unify_types(*value_ty.clone(), arg_types[1].clone());
+                    }
+                    return *value_ty.clone();
+                }
+                if arg_types.len() == 2 {
+                    return arg_types[1].clone();
+                }
+                return Type::Unknown;
+            }
+            "setdefault" => {
+                if arg_types.len() == 2 {
+                    let key_ty = arg_types[0].clone();
+                    let value_ty = arg_types[1].clone();
+                    unify_name_binding(
+                        name.id.as_str(),
+                        Type::Dict(Box::new(key_ty), Box::new(value_ty.clone())),
+                        env,
+                        states,
+                        current_function,
+                    );
+                    return value_ty;
+                }
+                return Type::Unknown;
+            }
             _ => {}
         }
     }
 
     match method {
         "copy" => object_ty,
-        "append" | "pop" | "sort" => Type::None,
+        "append" | "pop" | "sort" | "heapify" | "heappush" => Type::None,
         _ => Type::Unknown,
     }
 }

@@ -35,16 +35,17 @@ fn test_undefined_variable() {
 
 #[test]
 fn test_failed_assignment_rhs_still_seeds_followup_binding() {
-    let result = lower_source(
-        "def main(xs: list[int]) -> int:\n    s = xs[0] + xs[0]\n    return s\n",
-    );
+    let result =
+        lower_source("def main(xs: list[int]) -> int:\n    s = xs[0] + xs[0]\n    return s\n");
     assert!(result.is_err());
     let errors = result.unwrap_err();
     assert!(errors
         .iter()
         .any(|e| e.message.contains("unsupported operand type(s) for +")));
     assert!(
-        !errors.iter().any(|e| e.message == "undefined variable: 's'"),
+        !errors
+            .iter()
+            .any(|e| e.message == "undefined variable: 's'"),
         "failed initializer should not cascade to undefined-name errors: {errors:?}"
     );
     assert!(
@@ -58,16 +59,17 @@ fn test_failed_assignment_rhs_still_seeds_followup_binding() {
 
 #[test]
 fn test_failed_annotated_assignment_rhs_still_seeds_followup_binding() {
-    let result = lower_source(
-        "def main(xs: list[int]) -> int:\n    s: int = xs[0] + xs[0]\n    return s\n",
-    );
+    let result =
+        lower_source("def main(xs: list[int]) -> int:\n    s: int = xs[0] + xs[0]\n    return s\n");
     assert!(result.is_err());
     let errors = result.unwrap_err();
     assert!(errors
         .iter()
         .any(|e| e.message.contains("unsupported operand type(s) for +")));
     assert!(
-        !errors.iter().any(|e| e.message == "undefined variable: 's'"),
+        !errors
+            .iter()
+            .any(|e| e.message == "undefined variable: 's'"),
         "failed annotated initializer should not cascade to undefined-name errors: {errors:?}"
     );
     assert!(
@@ -153,6 +155,40 @@ fn test_defaultdict_list_call_resolves_without_import() {
     assert!(
         result.is_ok(),
         "defaultdict(list) should resolve through the compat builtin surface"
+    );
+}
+
+#[test]
+fn test_defaultdict_accepts_counter_initial_mapping() {
+    let result = lower_source(
+        "class Counter[K: Hashable]:\n    counts: dict[K, int]\n\n    def __init__(self):\n        self.counts = {}\n\ndef main():\n    c = Counter()\n    d = defaultdict(int, c)\n    assert d is not None\n",
+    );
+    assert!(
+        result.is_ok(),
+        "defaultdict(int, Counter(...)) should lower via Counter.counts mapping bridge: {:?}",
+        result.err()
+    );
+}
+
+#[test]
+fn test_defaultdict_subscript_read_is_non_optional_value_type() {
+    let result = lower_source(
+        "def main() -> int:\n    counts = defaultdict(int)\n    counts[1] += 1\n    value: int = counts[2]\n    return value\n",
+    );
+    assert!(
+        result.is_ok(),
+        "defaultdict index reads should resolve to the factory value type, not Optional"
+    );
+}
+
+#[test]
+fn test_imported_counter_iterable_constructor_remains_unsupported() {
+    let result = lower_source(
+        "from sifr.collections import Counter\n\ndef main():\n    c: Counter[str] = Counter([\"a\", \"b\", \"a\"])\n",
+    );
+    assert!(
+        result.is_err(),
+        "imported sifr.collections.Counter(list[T]) should remain unsupported in this slice"
     );
 }
 
@@ -456,6 +492,17 @@ fn test_guarded_zero_index_list_pop_narrows_to_element_type() {
     assert!(
         result.is_ok(),
         "list.pop(0) under non-empty guard should narrow to element type"
+    );
+}
+
+#[test]
+fn test_guarded_list_pop_on_field_access_narrows_to_element_type() {
+    let result = lower_source(
+        "class Q:\n    data: list[int]\n\n    def __init__(self):\n        self.data = [1, 2]\n\n    def pop_one(self) -> int:\n        while self.data:\n            item: int = self.data.pop()\n            return item\n        return 0\n",
+    );
+    assert!(
+        result.is_ok(),
+        "list.pop() under non-empty field guard should narrow to element type"
     );
 }
 

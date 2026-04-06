@@ -6,11 +6,11 @@ use sifr_python_ast::{Expr, Number, Stmt, StmtClassDef, UnaryOp};
 use sifr_type_system::{FunctionType, ParamConvention, Type};
 use std::collections::HashMap;
 
+use super::class_field_inference::collect_constructor_self_field_assignments;
 use super::diagnostics::{
     collect_enum_variants, get_newtype_inner, get_parent_class, has_decorator, is_enum_class,
     is_error_class, is_operator_dunder, is_protocol_class,
 };
-use super::class_field_inference::collect_constructor_self_field_assignments;
 use super::statements::lower_stmts;
 use super::typing_and_functions::resolve_annotation_expr;
 use super::{parse_typevar_bound_expr, LowerCtx};

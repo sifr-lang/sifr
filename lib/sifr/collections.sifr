@@ -23,6 +23,15 @@ class Counter[T: Hashable]:
                     counts[item] = 1
         self.counts = counts
 
+    def __iter__(self) -> Iterable[T]:
+        return iter(self.counts.keys())
+
+    def __getitem__(self, key: T) -> int:
+        val: int | None = self.counts[key]
+        if val is not None:
+            return val
+        return 0
+
     def get(self, key: T, default: int = 0) -> int:
         val: int | None = self.counts[key]
         if val is not None:
@@ -79,7 +88,22 @@ class Counter[T: Hashable]:
         return top
 
     def keys(self) -> list[T]:
-        return self.counts.keys()
+        result: list[T] = self.counts.keys()
+        sz: int = len(result)
+        i: int = 0
+        while i < sz:
+            j: int = i + 1
+            while j < sz:
+                left: T | None = result[i]
+                right: T | None = result[j]
+                if left is not None:
+                    if right is not None:
+                        if right < left:
+                            result[i] = right
+                            result[j] = left
+                j = j + 1
+            i = i + 1
+        return result
 
     def items(self) -> list[tuple[T, int]]:
         result: list[tuple[T, int]] = []
@@ -94,7 +118,7 @@ class Counter[T: Hashable]:
         return self.counts.values()
 
     def copy(self) -> Counter[T]:
-        return Counter(self.counts)
+        return Counter(source=self.counts)
 
     def clear(self) -> None:
         self.counts = {}
@@ -156,7 +180,7 @@ class Counter[T: Hashable]:
                 if b_val2 is not None:
                     if b_val2 > 0:
                         new_counts[key2] = b_val2
-        return Counter(new_counts)
+        return Counter(source=new_counts)
 
     def __sub__(self, other: Counter[T]) -> Counter[T]:
         new_counts: dict[T, int] = {}
@@ -170,7 +194,7 @@ class Counter[T: Hashable]:
                 diff: int = a_val - b_count
                 if diff > 0:
                     new_counts[key] = diff
-        return Counter(new_counts)
+        return Counter(source=new_counts)
 
 
 def from_list[T: Hashable](items: list[T]) -> Counter[T]:
@@ -181,7 +205,7 @@ def from_list[T: Hashable](items: list[T]) -> Counter[T]:
             counts[item] = val + 1
         else:
             counts[item] = 1
-    return Counter(counts)
+    return Counter(source=counts)
 
 
 class defaultdict[K: Hashable]:

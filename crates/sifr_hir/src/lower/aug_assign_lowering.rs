@@ -59,46 +59,46 @@ pub(super) fn lower_aug_assign(aug: &StmtAugAssign, ctx: &mut LowerCtx) -> Optio
     // Handle augmented assignment on subscript: list[i] += val
     if let Expr::Subscript(sub) = aug.target.as_ref() {
         if let Expr::Subscript(inner_sub) = sub.value.as_ref() {
-            let (obj_name, nested_field_name, obj_ty, nested_object_expr) =
-                if let Expr::Name(n) = inner_sub.value.as_ref() {
-                    let obj_ty = ctx
-                        .scope
-                        .lookup(&n.id)
-                        .map(|info| info.effective_type().clone())
-                        .unwrap_or(Type::Unknown);
-                    (
-                        n.id.clone(),
-                        None,
-                        obj_ty.clone(),
-                        HirExpr::Name {
-                            name: n.id.clone(),
-                            ty: obj_ty,
-                        },
-                    )
-                } else if let Expr::Attribute(attr) = inner_sub.value.as_ref() {
-                    let obj_name = if let Expr::Name(n) = attr.value.as_ref() {
-                        n.id.clone()
-                    } else {
-                        ctx.error(
-                            "augmented subscript assignment target must be a simple name"
-                                .to_string(),
-                        );
-                        return None;
-                    };
-                    let field_name = attr.attr.to_string();
-                    let field_ty = resolve_object_field_type(ctx, &obj_name, &field_name);
-                    let object_expr = HirExpr::FieldAccess {
-                        object: Box::new(lower_expr(attr.value.as_ref(), ctx)?),
-                        field: field_name.clone(),
-                        ty: field_ty.clone(),
-                    };
-                    (obj_name, Some(field_name), field_ty, object_expr)
+            let (obj_name, nested_field_name, obj_ty, nested_object_expr) = if let Expr::Name(n) =
+                inner_sub.value.as_ref()
+            {
+                let obj_ty = ctx
+                    .scope
+                    .lookup(&n.id)
+                    .map(|info| info.effective_type().clone())
+                    .unwrap_or(Type::Unknown);
+                (
+                    n.id.clone(),
+                    None,
+                    obj_ty.clone(),
+                    HirExpr::Name {
+                        name: n.id.clone(),
+                        ty: obj_ty,
+                    },
+                )
+            } else if let Expr::Attribute(attr) = inner_sub.value.as_ref() {
+                let obj_name = if let Expr::Name(n) = attr.value.as_ref() {
+                    n.id.clone()
                 } else {
                     ctx.error(
                         "augmented subscript assignment target must be a simple name".to_string(),
                     );
                     return None;
                 };
+                let field_name = attr.attr.to_string();
+                let field_ty = resolve_object_field_type(ctx, &obj_name, &field_name);
+                let object_expr = HirExpr::FieldAccess {
+                    object: Box::new(lower_expr(attr.value.as_ref(), ctx)?),
+                    field: field_name.clone(),
+                    ty: field_ty.clone(),
+                };
+                (obj_name, Some(field_name), field_ty, object_expr)
+            } else {
+                ctx.error(
+                    "augmented subscript assignment target must be a simple name".to_string(),
+                );
+                return None;
+            };
             if !ensure_mutable_parameter_binding(ctx, &obj_name, "mutate through") {
                 return None;
             }

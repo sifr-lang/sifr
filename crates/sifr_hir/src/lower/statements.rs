@@ -1101,12 +1101,7 @@ pub(super) fn lower_ann_assign(ann: &StmtAnnAssign, ctx: &mut LowerCtx) -> Optio
             } else if let Some(expr) = lower_expr(val, ctx) {
                 expr
             } else {
-                seed_binding_after_failed_initializer(
-                    ctx,
-                    &name,
-                    declared_type.clone(),
-                    true,
-                );
+                seed_binding_after_failed_initializer(ctx, &name, declared_type.clone(), true);
                 return None;
             }
         } else if let Some(expr) = lower_expr(val, ctx) {
@@ -1317,7 +1312,11 @@ fn resolve_field_type_from_type(object_ty: &Type, field_name: &str) -> Option<Ty
     None
 }
 
-pub(super) fn resolve_object_field_type(ctx: &LowerCtx, object_name: &str, field_name: &str) -> Type {
+pub(super) fn resolve_object_field_type(
+    ctx: &LowerCtx,
+    object_name: &str,
+    field_name: &str,
+) -> Type {
     ctx.scope
         .lookup(object_name)
         .and_then(|info| resolve_field_type_from_type(info.effective_type(), field_name))
@@ -1355,8 +1354,8 @@ pub(super) fn lower_assign(assign: &StmtAssign, ctx: &mut LowerCtx) -> Option<Hi
             let field_name = inner_attr.attr.to_string();
             let field_ty = resolve_object_field_type(ctx, &obj_name, &field_name);
             let nested_field_name = attr.attr.to_string();
-            let nested_field_ty =
-                resolve_field_type_from_type(&field_ty, &nested_field_name).unwrap_or(Type::Unknown);
+            let nested_field_ty = resolve_field_type_from_type(&field_ty, &nested_field_name)
+                .unwrap_or(Type::Unknown);
             let value = lower_expr(&assign.value, ctx)?;
             return Some(HirStmt::NestedFieldAssign {
                 object: obj_name,
@@ -1506,7 +1505,10 @@ pub(super) fn lower_assign(assign: &StmtAssign, ctx: &mut LowerCtx) -> Option<Hi
         value
     } else {
         if !should_treat_as_existing_binding {
-            let fallback_ty = ctx.inferred_binding_hint(&name).cloned().unwrap_or(Type::Unknown);
+            let fallback_ty = ctx
+                .inferred_binding_hint(&name)
+                .cloned()
+                .unwrap_or(Type::Unknown);
             seed_binding_after_failed_initializer(ctx, &name, fallback_ty, false);
         }
         return None;
