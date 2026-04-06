@@ -1,5 +1,12 @@
 # Ad-hoc Phase: Optional/Any Root-Cause Closure (2026-04-06)
 
+## Phase Status
+
+- status: `DONE` (closed on `2026-04-06`)
+- focused gate: `CHECK_ERROR=0` on wave26 (`/tmp/phase_apr06_on_au_wave26_au2_full_closure_coldcache.json`)
+- full-corpus gate: refreshed on rerun2 (`verification/leetcode/full_corpus_current_results_20260406_live_rerun2.json`)
+- taxonomy gate: refreshed (`verification/leetcode/full_corpus_failure_taxonomy_20260406_live_rerun2.json`)
+
 ## Snapshot
 
 Source baseline:

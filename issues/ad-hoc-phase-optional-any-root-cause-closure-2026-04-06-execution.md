@@ -1,5 +1,13 @@
 # Execution Ledger: Optional/Any Root-Cause Closure (2026-04-06)
 
+## Closure Summary
+
+- phase state: `DONE`
+- focused residual status: `CHECK_ERROR=0` (wave26)
+- local validation: `scripts/run_all_tests.sh --profile quick` passed
+- full validation: `scripts/run_all_tests.sh` passed
+- full-corpus rerun/taxonomy refresh completed (rerun2 artifacts)
+
 ## Baseline
 
 - source run: `verification/leetcode/full_corpus_current_results_20260406_live_rerun1.json`
