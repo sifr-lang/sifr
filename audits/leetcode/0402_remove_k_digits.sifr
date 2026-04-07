@@ -1,20 +1,50 @@
 # LeetCode 402: Remove K Digits
 
-def removeKdigits(num: str, k: int) -> str:
-    stack = []
-    for i in num:
-        while stack and stack[-1] > i and k > 0:
+def toDigit(ch: str) -> int:
+    if ch == "0":
+        return 0
+    if ch == "1":
+        return 1
+    if ch == "2":
+        return 2
+    if ch == "3":
+        return 3
+    if ch == "4":
+        return 4
+    if ch == "5":
+        return 5
+    if ch == "6":
+        return 6
+    if ch == "7":
+        return 7
+    if ch == "8":
+        return 8
+    if ch == "9":
+        return 9
+    return 0
+
+def removeKdigits(num: str, mut k: int) -> str:
+    stack: list[int] = []
+    for ch in num:
+        digit = toDigit(ch)
+        while len(stack) > 0 and stack[-1] > digit and k > 0:
             k -= 1
             stack.pop()
-        if stack or i is not "0":
-            stack.append(i)
-    if k:
-        stack = stack[:-k]
-    return ''.join(stack) or '0'
+        if len(stack) > 0 or digit != 0:
+            stack.append(digit)
+    if k > 0:
+        if k >= len(stack):
+            stack = []
+        else:
+            stack = stack[:-k]
+    out = ""
+    for digit in stack:
+        out = out + str(digit)
+    if out == "":
+        return "0"
+    return out
 
 def main():
     assert str(removeKdigits("1432219", 3)) == '1219'
     assert str(removeKdigits("10200", 1)) == '200'
     assert str(removeKdigits("10", 2)) == '0'
-
-

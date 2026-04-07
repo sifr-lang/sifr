@@ -50,21 +50,17 @@ class Node:
         self.key = key
 
 def diameterOfBinaryTree(root: TreeNode | None) -> int:
-    res = 0
+    def dfs(node: TreeNode | None) -> tuple[int, int]:
+        if node is None:
+            return (0, 0)
+        left_h, left_d = dfs(node.left)
+        right_h, right_d = dfs(node.right)
+        height = 1 + max(left_h, right_h)
+        diameter = max(left_d, right_d, left_h + right_h)
+        return (height, diameter)
 
-    def dfs(root):
-        nonlocal res
-
-        if not root:
-            return 0
-        left = dfs(root.left)
-        right = dfs(root.right)
-        res = max(res, left + right)
-
-        return 1 + max(left, right)
-
-    dfs(root)
-    return res
+    _, diameter = dfs(root)
+    return diameter
 
 def main():
     assert diameterOfBinaryTree(TreeNode(1, TreeNode(2, TreeNode(4, None, None), TreeNode(5, None, None)), TreeNode(3, None, None))) == 3

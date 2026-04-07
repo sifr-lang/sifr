@@ -1,64 +1,67 @@
 # LeetCode 673: Number Of Longest Increasing Subsequence
 
+def valueAt(values: list[int], index: int) -> int:
+    i = 0
+    for value in values:
+        if i == index:
+            return value
+        i += 1
+    return 0
+
 def findNumberOfLIS(nums: list[int]) -> int:
-    # 1. O(n^2) Recursive solution with Caching
+    n = len(nums)
+    if n == 0:
+        return 0
 
-    dp = {}  # key = index, value = [length of LIS, count]
-    lenLIS, res = 0, 0  # length of LIS, count of LIS
+    lengths: dict[int, int] = {}
+    counts: dict[int, int] = {}
+    i = 0
+    while i < n:
+        lengths[i] = 1
+        counts[i] = 1
+        i += 1
 
-    def dfs(i):
-        if i in dp:
-            return dp[i]
+    i = 0
+    while i < n:
+        num_i = valueAt(nums, i)
+        j = 0
+        while j < i:
+            num_j = valueAt(nums, j)
+            if num_j < num_i:
+                len_i = 1
+                len_j = 1
+                cnt_i = 1
+                cnt_j = 1
+                if i in lengths:
+                    len_i = lengths[i]
+                if j in lengths:
+                    len_j = lengths[j]
+                if i in counts:
+                    cnt_i = counts[i]
+                if j in counts:
+                    cnt_j = counts[j]
 
-        maxLen, maxCnt = 1, 1  # length and count of LIS
-        for j in range(i + 1, len(nums)):
-            if nums[j] > nums[i]:  # make sure increasing order
-                pair = dfs(j)
-                length = pair[0]
-                count = pair[1]
-                if length + 1 > maxLen:
-                    maxLen, maxCnt = length + 1, count
-                elif length + 1 == maxLen:
-                    maxCnt += count
-        nonlocal lenLIS, res
-        if maxLen > lenLIS:
-            lenLIS, res = maxLen, maxCnt
-        elif maxLen == lenLIS:
-            res += maxCnt
-        dp[i] = [maxLen, maxCnt]
-        return dp[i]
+                if len_j + 1 > len_i:
+                    lengths[i] = len_j + 1
+                    counts[i] = cnt_j
+                elif len_j + 1 == len_i:
+                    counts[i] = cnt_i + cnt_j
+            j += 1
+        i += 1
 
-    for i in range(len(nums)):
-        dfs(i)
-    return res
+    longest = 0
+    for length in lengths.values():
+        if length > longest:
+            longest = length
 
-    # 2. O(n^2) Dynamic Programming
-
-    dp = {}  # key = index, value = [length of LIS, count]
-    lenLIS, res = 0, 0  # length of LIS, count of LIS
-
-    # i = start of subseq
-    for i in range(len(nums) - 1, -1, -1):
-        maxLen, maxCnt = 1, 1  # len, cnt of LIS start from i
-
-        for j in range(i + 1, len(nums)):
-            if nums[j] > nums[i]:
-                pair = dp[j]  # len, cnt of LIS start from j
-                length = pair[0]
-                count = pair[1]
-                if length + 1 > maxLen:
-                    maxLen, maxCnt = length + 1, count
-                elif length + 1 == maxLen:
-                    maxCnt += count
-        if maxLen > lenLIS:
-            lenLIS, res = maxLen, maxCnt
-        elif maxLen == lenLIS:
-            res += maxCnt
-        dp[i] = [maxLen, maxCnt]
-
-    return res
+    total = 0
+    i = 0
+    while i < n:
+        if i in lengths and lengths[i] == longest and i in counts:
+            total += counts[i]
+        i += 1
+    return total
 
 def main():
     assert str(findNumberOfLIS([1,3,5,4,7])) == '2'
     assert str(findNumberOfLIS([2,2,2,2,2])) == '5'
-

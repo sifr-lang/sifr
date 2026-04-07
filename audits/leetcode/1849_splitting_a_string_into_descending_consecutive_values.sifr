@@ -1,19 +1,28 @@
 # LeetCode 1849: Splitting A String Into Descending Consecutive Values
 
+def parseDecimal(part: str) -> int:
+    digits = "0123456789"
+    value = 0
+    for ch in part:
+        idx = digits.find(ch)
+        if idx is None:
+            return 0
+        value = value * 10 + idx
+    return value
+
 def splitString(s: str) -> bool:
-    
-    def dfs(index, prev):
+    def dfs(index: int, prev: int) -> bool:
         if index == len(s):
             return True
-    
+
         for j in range(index, len(s)):
-            val = int(s[index:j+1])
+            val = parseDecimal(s[index:j+1])
             if val + 1 == prev and dfs(j+1, val):
                 return True
         return False
 
     for i in range(len(s) - 1):
-        val = int(s[:i + 1])
+        val = parseDecimal(s[:i + 1])
         if dfs(i+1, val): return True
             
     return False
@@ -21,5 +30,3 @@ def splitString(s: str) -> bool:
 def main():
     assert str(splitString("1234")) == 'false'
     assert str(splitString("050043")) == 'true'
-
-
