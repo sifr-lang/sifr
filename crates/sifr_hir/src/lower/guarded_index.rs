@@ -652,5 +652,4 @@ mod tests {
                 .contains("type mismatch: expected 'int', got 'int | None'")
         }));
     }
-
 }
