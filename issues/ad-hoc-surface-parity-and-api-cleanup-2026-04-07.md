@@ -610,3 +610,7 @@ Project validation gates:
 
 - `scripts/run_all_tests.sh --profile quick`: pass
 - `scripts/run_all_tests.sh` (profile `pr`): pass
+
+## Merged PRs
+
+- https://github.com/yaseralnajjar/sifr/pull/1600
