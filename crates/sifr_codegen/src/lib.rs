@@ -1051,6 +1051,8 @@ struct RustEmitter {
     /// Map from local binding name -> declared type for the active function-like scope.
     /// Used to preserve assignment coercions that depend on the target local type.
     local_binding_types: HashMap<String, Type>,
+    /// Local names widened to `T | None` due `name = None` reassignment in current scope.
+    none_widened_local_bindings: HashSet<String>,
     /// Stack used to capture structured statement emission as IR nodes.
     stmt_capture_stack: Vec<Vec<RustStmt>>,
     /// Recursion guard for non-structured emitter paths.
@@ -1118,6 +1120,7 @@ impl RustEmitter {
             try_closure_error_type: Vec::new(),
             callable_var_conventions: HashMap::new(),
             local_binding_types: HashMap::new(),
+            none_widened_local_bindings: HashSet::new(),
             stmt_capture_stack: Vec::new(),
             lowering_stats: LoweringStats::default(),
         }
@@ -1256,8 +1259,20 @@ impl RustEmitter {
             name, ty, value, ..
         } = stmt
         {
-            let is_generic_class = matches!(ty, Type::Class { name: class_name, .. } if self.generic_classes.contains(class_name));
-            let lowered_value = if ty.ownership() == sifr_type_system::OwnershipKind::Move {
+            let effective_ty = self
+                .local_binding_types
+                .get(name)
+                .cloned()
+                .unwrap_or_else(|| ty.clone());
+            let is_generic_class = matches!(
+                &effective_ty,
+                Type::Class {
+                    name: class_name,
+                    ..
+                } if self.generic_classes.contains(class_name)
+            );
+            let lowered_value = if effective_ty.ownership() == sifr_type_system::OwnershipKind::Move
+            {
                 if let HirExpr::Name {
                     name: value_name, ..
                 } = value
@@ -1281,9 +1296,9 @@ impl RustEmitter {
                 clone_expr
             } else {
                 if let Some(lowered) = self.lower_rendered_expr_for_ir(value)? {
-                    self.coerce_local_value_for_target_type_for_ir(ty, value, lowered)?
+                    self.coerce_local_value_for_target_type_for_ir(&effective_ty, value, lowered)?
                 } else if let Some(lowered) = self.lower_stmt_expr_for_ir(value)? {
-                    self.coerce_local_value_for_target_type_for_ir(ty, value, lowered)?
+                    self.coerce_local_value_for_target_type_for_ir(&effective_ty, value, lowered)?
                 } else {
                     return Ok(false);
                 }
@@ -1292,14 +1307,15 @@ impl RustEmitter {
             self.push_captured_stmt(&RustStmt::Let {
                 mutable: self.mutated_vars.contains(name)
                     || matches!(
-                        ty,
+                        &effective_ty,
                         Type::Alias { name: alias_name, .. }
                             if alias_name.starts_with("__compat_defaultdict_")
                     )
-                    || matches!(ty.resolve_alias(), Type::Iterator(_)),
+                    || matches!(effective_ty.resolve_alias(), Type::Iterator(_)),
                 name: name.clone(),
-                ty: if is_generic_class
-                    || match (ty, value) {
+                ty: if name == "_"
+                    || is_generic_class
+                    || match (&effective_ty, value) {
                         (resolved_ty, HirExpr::Call { func, args, .. })
                             if matches!(resolve_alias_type_for_plain_call(resolved_ty), Type::Set(_))
                                 && func == "set"
@@ -1332,7 +1348,7 @@ impl RustEmitter {
                 {
                     None
                 } else {
-                    Some(self.rust_ir_type_with_generics(ty))
+                    Some(self.rust_ir_type_with_generics(&effective_ty))
                 },
                 value: lowered_value,
             });

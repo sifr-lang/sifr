@@ -1,6 +1,6 @@
 # Ad-hoc Phase: Surface Parity And API Cleanup (2026-04-07)
 
-Status: ready
+Status: done
 Owner: phase_ad_hoc_surface_parity_and_api_cleanup
 Source run artifact: `verification/leetcode/full_corpus_current_results_20260407_live_rerun2.json`
 Source taxonomy artifact: `verification/leetcode/full_corpus_failure_taxonomy_20260407_live_rerun2.json`
@@ -569,3 +569,44 @@ Reasoning:
 - [x] trigger-label vs actual-root-cause mismatches are documented
 - [x] cross-bucket blockers are called out so exit expectations stay realistic
 - [x] Claude review loop completed
+
+## Execution Progress
+
+- [x] WS1: Builtin parity closure for variadic `min` / `max`
+- [x] WS2: Membership parity for `range` and compat mapping wrappers
+- [x] WS3: Iterator consumer stabilization and tuple heap comparability
+- [x] WS4: Empty-container specialization repair
+- [x] WS5: Scoped codegen defect closure
+- [x] WS6: Canonical Sifr adaptation sweep
+
+## Closure Validation (2026-04-07)
+
+Scoped fixture rerun (`22` fixtures listed in this phase): `22/22` pass.
+
+- `0012_integer_to_roman`
+- `0072_edit_distance`
+- `0130_surrounded_regions`
+- `0150_evaluate_reverse_polish_notation`
+- `0200_number_of_islands`
+- `0212_word_search_ii`
+- `0221_maximal_square`
+- `0241_different_ways_to_add_parentheses`
+- `0290_word_pattern`
+- `0297_serialize_and_deserialize_binary_tree`
+- `0682_baseball_game`
+- `0853_car_fleet`
+- `0994_rotting_oranges`
+- `1029_two_city_scheduling`
+- `1091_shortest_path_in_binary_matrix`
+- `1260_shift_2d_grid`
+- `1345_jump_game_iv`
+- `1383_maximum_performance_of_a_team`
+- `1498_number_of_subsequences_that_satisfy_the_given_sum_condition`
+- `1834_single_threaded_cpu`
+- `1851_minimum_interval_to_include_each_query`
+- `2002_maximum_product_of_the_length_of_two_palindromic_subsequences`
+
+Project validation gates:
+
+- `scripts/run_all_tests.sh --profile quick`: pass
+- `scripts/run_all_tests.sh` (profile `pr`): pass

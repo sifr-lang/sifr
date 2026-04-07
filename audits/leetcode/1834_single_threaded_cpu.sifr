@@ -1,25 +1,62 @@
 # LeetCode 1834: Single Threaded Cpu
 
+def _nz_int(value: int | None) -> int:
+    if value is None:
+        return 0
+    return value
+
 def getOrder(tasks: list[list[int]]) -> list[int]:
-    tasks = sorted([(t[0], t[1], i) for i, t in enumerate(tasks)])
-    result, heap = [], []
-    cur_task_index = 0
-    cur_time = tasks[0][0]
-    
-    while len(result) < len(tasks):
-        while (cur_task_index < len(tasks)) and (tasks[cur_task_index][0] <= cur_time):
-            heapq.heappush(heap, (tasks[cur_task_index][1], tasks[cur_task_index][2]))
-            cur_task_index += 1
-        if heap:
-            time_difference, original_index = heapq.heappop(heap)
-            cur_time += time_difference
-            result.append(original_index)
-        elif cur_task_index < len(tasks):
-            cur_time = tasks[cur_task_index][0]
-            
+    jobs: list[tuple[int, int, int]] = []
+    for i in range(len(tasks)):
+        row = tasks[i]
+        jobs.append((_nz_int(row[0]), _nz_int(row[1]), i))
+    jobs.sort()
+
+    n = len(jobs)
+    done: set[int] = set()
+    result: list[int] = []
+    if n == 0:
+        return result
+
+    cur_time = jobs[0][0]
+    while len(result) < n:
+        best_idx = -1
+        best_proc = 0
+        best_orig = 0
+
+        for j in range(n):
+            if j in done:
+                continue
+            enqueue = jobs[j][0]
+            proc = jobs[j][1]
+            orig = jobs[j][2]
+            if enqueue <= cur_time:
+                if (
+                    best_idx == -1
+                    or proc < best_proc
+                    or (proc == best_proc and orig < best_orig)
+                ):
+                    best_idx = j
+                    best_proc = proc
+                    best_orig = orig
+
+        if best_idx == -1:
+            next_time = -1
+            for j in range(n):
+                if j in done:
+                    continue
+                enqueue = jobs[j][0]
+                if next_time == -1 or enqueue < next_time:
+                    next_time = enqueue
+            cur_time = next_time
+            continue
+
+        done.add(best_idx)
+        result.append(best_orig)
+        cur_time += best_proc
+
     return result
 
 def main():
     assert getOrder([[1, 2], [2, 4], [3, 2], [4, 1]]) == [0, 2, 3, 1]
     assert getOrder([[7, 10], [7, 12], [7, 5], [7, 4], [7, 2]]) == [4, 3, 2, 0, 1]
-

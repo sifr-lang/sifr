@@ -52,11 +52,7 @@ def parseIntToken(token: str) -> int:
 def truncDiv(dividend: int, divisor: int) -> int:
     if divisor == 0:
         return 0
-    q = dividend // divisor
-    r = dividend % divisor
-    if r != 0 and ((dividend < 0 and divisor > 0) or (dividend > 0 and divisor < 0)):
-        return q + 1
-    return q
+    return dividend // divisor
 
 def evalRPN(tokens: list[str]) -> int:
     stack: list[int] = []

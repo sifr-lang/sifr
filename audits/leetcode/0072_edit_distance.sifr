@@ -1,23 +1,31 @@
 # LeetCode 72: Edit Distance
 
-def minDistance(word1: str, word2: str) -> int:
-    dp = [[float("inf")] * (len(word2) + 1) for i in range(len(word1) + 1)]
+def _nz_int(value: int | None) -> int:
+    if value is None:
+        return 0
+    return value
 
-    for j in range(len(word2) + 1):
+def minDistance(word1: str, word2: str) -> int:
+    rows = len(word1) + 1
+    cols = len(word2) + 1
+    large = rows + cols
+    dp: list[list[int]] = [[large for _ in range(cols)] for _ in range(rows)]
+
+    for j in range(cols):
         dp[len(word1)][j] = len(word2) - j
-    for i in range(len(word1) + 1):
+    for i in range(rows):
         dp[i][len(word2)] = len(word1) - i
 
     for i in range(len(word1) - 1, -1, -1):
         for j in range(len(word2) - 1, -1, -1):
             if word1[i] == word2[j]:
-                dp[i][j] = dp[i + 1][j + 1]
+                dp[i][j] = _nz_int(dp[i + 1][j + 1])
             else:
-                dp[i][j] = 1 + min(dp[i + 1][j], dp[i][j + 1], dp[i + 1][j + 1])
-    return dp[0][0]
+                best = min(_nz_int(dp[i + 1][j]), _nz_int(dp[i][j + 1]))
+                best = min(best, _nz_int(dp[i + 1][j + 1]))
+                dp[i][j] = 1 + best
+    return _nz_int(dp[0][0])
 
 def main():
-    assert str(minDistance("horse", "ros")) == '3'
-    assert str(minDistance("intention", "execution")) == '5'
-
-
+    assert minDistance("horse", "ros") == 3
+    assert minDistance("intention", "execution") == 5

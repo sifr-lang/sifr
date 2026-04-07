@@ -1,33 +1,51 @@
 # LeetCode 2002: Maximum Product Of The Length Of Two Palindromic Subsequences
 
+def _nz_int(value: int | None) -> int:
+    if value is None:
+        return 0
+    return value
+
+def _pal_len_for_mask(s: str, mask: int) -> int:
+    chars: list[str] = []
+    for i in range(len(s)):
+        if (mask & (1 << i)) != 0:
+            ch = s[i]
+            if ch is None:
+                return 0
+            chars.append(ch)
+
+    left = 0
+    right = len(chars) - 1
+    while left < right:
+        if chars[left] != chars[right]:
+            return 0
+        left += 1
+        right -= 1
+    return len(chars)
+
 def maxProduct(s: str) -> int:
     n = len(s)
-    
-    first, last = [0]*(1<<n), [0]*(1<<n)
-    
-    for i in range(n):
-        for j in range(1<<i, 1<<(i+1)):
-            first[j] = i
+    limit = 1 << n
+    pal_len: list[int] = [0 for _ in range(limit)]
 
-    for i in range(n):
-        for j in range(1<<i, 1<<n, 1<<(i+1)):
-            last[j] = i
-    
-    @lru_cache(None)
-    def dp(m: int) -> int:
-        if m & (m - 1) == 0:
-            return 1 if m != 0 else 0
-        l, f = last[m], first[m]
-        lb, fb = 1<<l, 1<<f
-        return max(dp(m-lb), dp(m-fb), dp(m-lb-fb) + (s[l] == s[f]) * 2)
-   
+    for mask in range(1, limit):
+        pal_len[mask] = _pal_len_for_mask(s, mask)
+
     ans = 0
-    for m in range(1, 1<<n):
-        ans = max(ans, dp(m)*dp((1<<n) - 1 - m))
-        
+    for m1 in range(1, limit):
+        len1 = _nz_int(pal_len[m1])
+        if len1 == 0:
+            continue
+        for m2 in range(m1 + 1, limit):
+            if (m1 & m2) != 0:
+                continue
+            len2 = _nz_int(pal_len[m2])
+            prod = len1 * len2
+            if prod > ans:
+                ans = prod
     return ans
 
 def main():
-    assert maxProduct('leetcodecom') == 9
-    assert maxProduct('bb') == 1
-    assert maxProduct('accbcaxxcxx') == 25
+    assert maxProduct("leetcodecom") == 9
+    assert maxProduct("bb") == 1
+    assert maxProduct("accbcaxxcxx") == 25

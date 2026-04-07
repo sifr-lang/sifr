@@ -37,7 +37,11 @@ impl Renderer {
         match item {
             RustItem::Use(path) => self.emit_line(&format!("use {};", path.join("::"))),
             RustItem::UseAlias { path, alias } => {
-                self.emit_line(&format!("use {} as {};", path.join("::"), alias));
+                self.emit_line(&format!(
+                    "use {} as {};",
+                    path.join("::"),
+                    Self::render_identifier(alias)
+                ));
             }
             RustItem::Struct {
                 name,
@@ -49,13 +53,13 @@ impl Renderer {
                 self.emit_line(&format!(
                     "{}struct {} {{",
                     Self::render_visibility(visibility),
-                    name
+                    Self::render_identifier(name)
                 ));
                 self.indent();
                 for (field_name, field_ty) in fields {
                     self.emit_line(&format!(
                         "{}: {},",
-                        field_name,
+                        Self::render_identifier(field_name),
                         Self::render_type_string(field_ty)
                     ));
                 }
@@ -72,7 +76,7 @@ impl Renderer {
                 self.emit_line(&format!(
                     "{}struct {}({});",
                     Self::render_visibility(visibility),
-                    name,
+                    Self::render_identifier(name),
                     Self::render_type_string(inner)
                 ));
             }
@@ -90,7 +94,7 @@ impl Renderer {
                 self.emit_line(&format!(
                     "{}enum {} {{",
                     Self::render_visibility(visibility),
-                    name
+                    Self::render_identifier(name)
                 ));
                 self.indent();
                 for variant in variants {
@@ -101,19 +105,33 @@ impl Renderer {
                             .map(Self::render_type_string)
                             .collect::<Vec<_>>()
                             .join(", ");
-                        format!("{}({})", variant.name, fields)
+                        format!("{}({})", Self::render_identifier(&variant.name), fields)
                     } else if !variant.fields.is_empty() {
                         let fields = variant
                             .fields
                             .iter()
-                            .map(|(f, t)| format!("{f}: {}", Self::render_type_string(t)))
+                            .map(|(f, t)| {
+                                format!(
+                                    "{}: {}",
+                                    Self::render_identifier(f),
+                                    Self::render_type_string(t)
+                                )
+                            })
                             .collect::<Vec<_>>()
                             .join(", ");
-                        format!("{} {{ {} }}", variant.name, fields)
+                        format!(
+                            "{} {{ {} }}",
+                            Self::render_identifier(&variant.name),
+                            fields
+                        )
                     } else if let Some(value) = &variant.value {
-                        format!("{} = {}", variant.name, Self::render_expr_string(value))
+                        format!(
+                            "{} = {}",
+                            Self::render_identifier(&variant.name),
+                            Self::render_expr_string(value)
+                        )
                     } else {
-                        variant.name.clone()
+                        Self::render_identifier(&variant.name)
                     };
                     self.emit_line(&format!("{rendered},"));
                 }
@@ -134,7 +152,7 @@ impl Renderer {
                 self.emit_line(&format!(
                     "{}trait {}{} {{",
                     Self::render_visibility(visibility),
-                    name,
+                    Self::render_identifier(name),
                     supers
                 ));
                 self.indent();
@@ -167,9 +185,12 @@ impl Renderer {
                     format!("<{params}>")
                 };
                 let head = if let Some(trait_name) = trait_ {
-                    format!("impl{generics} {trait_name} for {target} {{")
+                    format!(
+                        "impl{generics} {trait_name} for {} {{",
+                        Self::render_identifier(target)
+                    )
                 } else {
-                    format!("impl{generics} {target} {{")
+                    format!("impl{generics} {} {{", Self::render_identifier(target))
                 };
                 self.emit_line(&head);
                 self.indent();
@@ -221,7 +242,7 @@ impl Renderer {
                     "{}{}fn {}{}({}){} {{",
                     Self::render_visibility(visibility),
                     async_prefix,
-                    name,
+                    Self::render_identifier(name),
                     type_params,
                     params,
                     ret
@@ -243,10 +264,17 @@ impl Renderer {
                     .as_ref()
                     .map(|t| format!(" -> {}", Self::render_type_string(t)))
                     .unwrap_or_default();
-                self.emit_line(&format!("fn {name}({params}){ret};"));
+                self.emit_line(&format!(
+                    "fn {}({params}){ret};",
+                    Self::render_identifier(name)
+                ));
             }
             RustItem::TypeAlias { name, ty } => {
-                self.emit_line(&format!("type {name} = {};", Self::render_type_string(ty)));
+                self.emit_line(&format!(
+                    "type {} = {};",
+                    Self::render_identifier(name),
+                    Self::render_type_string(ty)
+                ));
             }
             RustItem::Const {
                 name,
@@ -257,7 +285,7 @@ impl Renderer {
                 self.emit_line(&format!(
                     "{}const {}: {} = {};",
                     Self::render_visibility(visibility),
-                    name,
+                    Self::render_identifier(name),
                     Self::render_type_string(ty),
                     Self::render_expr_string(value)
                 ));
@@ -271,7 +299,7 @@ impl Renderer {
                 self.emit_line(&format!(
                     "{}static {}: {} = {};",
                     Self::render_visibility(visibility),
-                    name,
+                    Self::render_identifier(name),
                     Self::render_type_string(ty),
                     Self::render_expr_string(value)
                 ));
@@ -294,14 +322,16 @@ impl Renderer {
                     .map(|t| format!(": {}", Self::render_type_string(t)))
                     .unwrap_or_default();
                 self.emit_line(&format!(
-                    "let {mutability}{name}{ty} = {};",
-                    Self::render_expr_string(value)
+                    "let {mutability}{name}{ty} = {value};",
+                    name = Self::render_identifier(name),
+                    value = Self::render_expr_string(value)
                 ));
             }
             RustStmt::LetPattern { pattern, value } => {
                 self.emit_line(&format!(
-                    "let {pattern} = {};",
-                    Self::render_expr_string(value)
+                    "let {pattern} = {value};",
+                    pattern = Self::render_pattern_string(pattern),
+                    value = Self::render_expr_string(value)
                 ));
             }
             RustStmt::LetElse {
@@ -418,7 +448,8 @@ impl Renderer {
             }
             RustStmt::For { var, iter, body } => {
                 self.emit_line(&format!(
-                    "for {var} in {} {{",
+                    "for {} in {} {{",
+                    Self::render_identifier(var),
                     Self::render_expr_string(iter)
                 ));
                 self.indent();
@@ -495,11 +526,15 @@ impl Renderer {
                     .join(", ");
                 if let Some(ret) = ret {
                     self.emit_line(&format!(
-                        "fn {name}({rendered_params}) -> {} {{",
+                        "fn {}({rendered_params}) -> {} {{",
+                        Self::render_identifier(name),
                         Self::render_type_string(ret)
                     ));
                 } else {
-                    self.emit_line(&format!("fn {name}({rendered_params}) {{"));
+                    self.emit_line(&format!(
+                        "fn {}({rendered_params}) {{",
+                        Self::render_identifier(name)
+                    ));
                 }
                 self.indent();
                 for stmt in body {
@@ -577,9 +612,19 @@ impl Renderer {
                 }
             }
             RustParam::SelfValue => "self".to_string(),
-            RustParam::Named { name, ty } => format!("{name}: {}", Self::render_type_string(ty)),
+            RustParam::Named { name, ty } => {
+                format!(
+                    "{}: {}",
+                    Self::render_identifier(name),
+                    Self::render_type_string(ty)
+                )
+            }
             RustParam::NamedMut { name, ty } => {
-                format!("mut {name}: {}", Self::render_type_string(ty))
+                format!(
+                    "mut {}: {}",
+                    Self::render_identifier(name),
+                    Self::render_type_string(ty)
+                )
             }
         }
     }
@@ -652,7 +697,7 @@ impl Renderer {
     fn render_expr_string(expr: &RustExpr) -> String {
         match expr {
             RustExpr::Literal(lit) => Self::render_literal(lit),
-            RustExpr::Ident(name) => name.clone(),
+            RustExpr::Ident(name) => Self::render_identifier(name),
             RustExpr::Path(parts) => parts.join("::"),
             RustExpr::MethodCall {
                 receiver,
@@ -704,7 +749,13 @@ impl Renderer {
                 format!("{} {op} {}", Self::wrap_expr(left), Self::wrap_expr(right))
             }
             RustExpr::UnaryOp { op, operand } => format!("{op}{}", Self::wrap_expr(operand)),
-            RustExpr::Field { expr, field } => format!("{}.{}", Self::wrap_expr(expr), field),
+            RustExpr::Field { expr, field } => {
+                format!(
+                    "{}.{}",
+                    Self::wrap_expr(expr),
+                    Self::render_identifier(field)
+                )
+            }
             RustExpr::Index { expr, index } => {
                 format!(
                     "{}[{}]",
@@ -807,7 +858,13 @@ impl Renderer {
                 "{name} {{ {} }}",
                 fields
                     .iter()
-                    .map(|(field, value)| format!("{field}: {}", Self::render_expr_string(value)))
+                    .map(|(field, value)| {
+                        format!(
+                            "{}: {}",
+                            Self::render_identifier(field),
+                            Self::render_expr_string(value)
+                        )
+                    })
                     .collect::<Vec<_>>()
                     .join(", ")
             ),
@@ -933,8 +990,112 @@ impl Renderer {
     fn render_closure_param_string(param: &RustParam) -> String {
         match param {
             RustParam::SelfParam { .. } | RustParam::SelfValue => "self".to_string(),
-            RustParam::Named { name, .. } | RustParam::NamedMut { name, .. } => name.clone(),
+            RustParam::Named { name, .. } | RustParam::NamedMut { name, .. } => {
+                Self::render_identifier(name)
+            }
         }
+    }
+
+    fn render_pattern_string(pattern: &str) -> String {
+        let mut out = String::new();
+        let mut token = String::new();
+        let flush_token = |out: &mut String, token: &mut String| {
+            if token.is_empty() {
+                return;
+            }
+            if matches!(token.as_str(), "mut" | "ref") {
+                out.push_str(token);
+            } else {
+                out.push_str(&Self::render_identifier(token));
+            }
+            token.clear();
+        };
+
+        for ch in pattern.chars() {
+            if ch == '_' || ch.is_ascii_alphanumeric() {
+                token.push(ch);
+            } else {
+                flush_token(&mut out, &mut token);
+                out.push(ch);
+            }
+        }
+        flush_token(&mut out, &mut token);
+        out
+    }
+
+    fn render_identifier(name: &str) -> String {
+        if name.starts_with("r#") || !Self::is_plain_ascii_identifier(name) {
+            return name.to_string();
+        }
+        if Self::is_escape_required_keyword(name) {
+            format!("r#{name}")
+        } else {
+            name.to_string()
+        }
+    }
+
+    fn is_plain_ascii_identifier(name: &str) -> bool {
+        let mut chars = name.chars();
+        let Some(first) = chars.next() else {
+            return false;
+        };
+        if !(first == '_' || first.is_ascii_alphabetic()) {
+            return false;
+        }
+        chars.all(|ch| ch == '_' || ch.is_ascii_alphanumeric())
+    }
+
+    fn is_escape_required_keyword(name: &str) -> bool {
+        matches!(
+            name,
+            "as" | "break"
+                | "const"
+                | "continue"
+                | "else"
+                | "enum"
+                | "extern"
+                | "false"
+                | "fn"
+                | "for"
+                | "if"
+                | "impl"
+                | "in"
+                | "let"
+                | "loop"
+                | "match"
+                | "mod"
+                | "move"
+                | "mut"
+                | "pub"
+                | "ref"
+                | "return"
+                | "static"
+                | "struct"
+                | "trait"
+                | "true"
+                | "type"
+                | "unsafe"
+                | "use"
+                | "where"
+                | "while"
+                | "async"
+                | "await"
+                | "dyn"
+                | "union"
+                | "abstract"
+                | "become"
+                | "box"
+                | "do"
+                | "final"
+                | "macro"
+                | "override"
+                | "priv"
+                | "try"
+                | "typeof"
+                | "unsized"
+                | "virtual"
+                | "yield"
+        )
     }
 
     fn render_block_expr(stmts: &[RustStmt], trailing_expr: Option<&RustExpr>) -> String {
@@ -1443,6 +1604,37 @@ mod tests {
         assert_snapshot!(rendered, @r###"
         assert!(true);
         assert!(false, "{}", "boom".to_string());
+        "###);
+    }
+
+    #[test]
+    fn render_stmts_escapes_keyword_identifiers_and_patterns() {
+        let stmts = vec![
+            RustStmt::Let {
+                mutable: true,
+                name: "mod".to_string(),
+                ty: Some(RustType::I64),
+                value: RustExpr::Literal(RustLiteral::Int(7)),
+            },
+            RustStmt::LetPattern {
+                pattern: "(mut res, mod)".to_string(),
+                value: RustExpr::Tuple(vec![
+                    RustExpr::Literal(RustLiteral::Int(1)),
+                    RustExpr::Literal(RustLiteral::Int(2)),
+                ]),
+            },
+            RustStmt::Expr(RustExpr::BinOp {
+                left: Box::new(RustExpr::Ident("res".to_string())),
+                op: "%".to_string(),
+                right: Box::new(RustExpr::Ident("mod".to_string())),
+            }),
+        ];
+
+        let rendered = render_stmts(&stmts);
+        assert_snapshot!(rendered, @r###"
+        let mut r#mod: i64 = 7;
+        let (mut res, r#mod) = (1, 2);
+        res % r#mod;
         "###);
     }
 }

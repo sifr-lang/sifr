@@ -1,24 +1,51 @@
 # LeetCode 1091: Shortest Path In Binary Matrix
 
+def _nz_int(value: int | None) -> int:
+    if value is None:
+        return 0
+    return value
+
 def shortestPathBinaryMatrix(grid: list[list[int]]) -> int:
-    N = len(grid)
-    q = deque([(0, 0, 1)]) # r, c, length
-    visit = set((0, 0))
-    direct = [(0, 1), (1, 0), (0, -1), (-1, 0),
-              (1, 1), (-1, -1), (1, -1), (-1, 1)]
-    while q:
-        r, c, length = q.popleft()
-        if (min(r, c) < 0 or max(r, c) >= N or
-            grid[r][c]):
+    n = len(grid)
+    if n == 0:
+        return -1
+
+    q: list[tuple[int, int, int]] = [(0, 0, 1)]  # r, c, length
+    head = 0
+    visit: set[tuple[int, int]] = set()
+    visit.add((0, 0))
+    directions: list[tuple[int, int]] = [
+        (0, 1),
+        (1, 0),
+        (0, -1),
+        (-1, 0),
+        (1, 1),
+        (-1, -1),
+        (1, -1),
+        (-1, 1),
+    ]
+
+    while head < len(q):
+        state = q[head]
+        head += 1
+        r = state[0]
+        c = state[1]
+        length = state[2]
+
+        if r < 0 or c < 0 or r >= n or c >= n:
             continue
-        if r == N - 1 and c == N - 1:
+        if _nz_int(grid[r][c]) != 0:
+            continue
+        if r == n - 1 and c == n - 1:
             return length
-        for direction in direct:
-            dr = direction[0]
-            dc = direction[1]
-            if (r + dr, c + dc) not in visit:
-                q.append((r + dr, c + dc, length + 1))
-                visit.add((r + dr, c + dc))
+
+        for dr, dc in directions:
+            nr = r + dr
+            nc = c + dc
+            if (nr, nc) not in visit:
+                q.append((nr, nc, length + 1))
+                visit.add((nr, nc))
+
     return -1
 
 def main():

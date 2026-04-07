@@ -658,11 +658,16 @@ fn registry_ensure_some_box_inner(expr: RustExpr) -> RustExpr {
 
 impl RustEmitter {
     pub(crate) fn effective_method_object_ty(&self, object: &HirExpr) -> Type {
-        if matches!(
-            crate::resolve_alias_type_for_plain_call(object.ty()),
-            Type::Any | Type::Unknown
-        ) {
-            if let HirExpr::Name { name, .. } = object {
+        if let HirExpr::Name { name, ty } = object {
+            if self.none_widened_local_bindings.contains(name) {
+                if let Some(bound_ty) = self.local_binding_types.get(name) {
+                    return bound_ty.clone();
+                }
+            }
+            if matches!(
+                crate::resolve_alias_type_for_plain_call(ty),
+                Type::Any | Type::Unknown
+            ) {
                 if let Some(bound_ty) = self.local_binding_types.get(name) {
                     return bound_ty.clone();
                 }
@@ -673,6 +678,11 @@ impl RustEmitter {
 
     pub(crate) fn effective_registry_expr_ty(&self, expr: &HirExpr) -> Type {
         if let HirExpr::Name { name, ty } = expr {
+            if self.none_widened_local_bindings.contains(name) {
+                if let Some(bound_ty) = self.local_binding_types.get(name) {
+                    return bound_ty.clone();
+                }
+            }
             if matches!(
                 crate::resolve_alias_type_for_plain_call(ty),
                 Type::Any | Type::Unknown
@@ -3998,6 +4008,9 @@ impl RustEmitter {
             (other, HirExpr::Name { name, .. }) if name == guarded_name => (rhs_expr, other, false),
             _ => return None,
         };
+        if !crate::helpers::is_option_type(option_side.ty()) {
+            return None;
+        }
         if matches!(other_side, HirExpr::NoneLiteral) {
             return None;
         }

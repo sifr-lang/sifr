@@ -343,7 +343,7 @@ impl RustEmitter {
         self.current_class_name = Some(class.name.clone());
         let mut impl_items = Vec::new();
         let has_constructor = class.methods.iter().any(|method| method.name == "new");
-        if !has_constructor && !class.fields.is_empty() {
+        if !has_constructor && class.parent_class.is_none() {
             impl_items.push(self.lower_default_constructor_item(class, module_public));
         }
         for method in &class.methods {

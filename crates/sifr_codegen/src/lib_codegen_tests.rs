@@ -765,6 +765,70 @@ fn test_mut_on_mutating_method_call() {
 }
 
 #[test]
+fn test_mut_on_local_nested_function_mutborrow_call_argument() {
+    let rust_code = generate_rust_from_source(
+        "def main():\n\
+    vals: list[str] = [\"x\"]\n\
+    def dfs(vals: list[str]) -> None:\n\
+        vals.pop(0)\n\
+    dfs(vals)\n",
+    );
+
+    assert!(
+        rust_code.contains("let mut vals: Vec<String>"),
+        "local nested mut-borrow call should mark argument binding mutable"
+    );
+    assert!(rust_code.contains("dfs(&mut vals);"));
+}
+
+#[test]
+fn test_fieldless_class_gets_default_constructor() {
+    let rust_code = generate_rust_from_source(
+        "class Codec:\n\
+    pass\n\
+\n\
+def main():\n\
+    codec = Codec()\n",
+    );
+
+    assert!(rust_code.contains("impl Codec {"));
+    assert!(rust_code.contains("fn new() -> Self {"));
+    assert!(rust_code.contains("let codec: Codec = Codec::new();"));
+}
+
+#[test]
+fn test_non_option_local_widened_to_option_when_reassigned_none() {
+    let rust_code = generate_rust_from_source(
+        "class TreeNode:\n\
+    val: int\n\
+\n\
+    def __init__(self, val: int = 0):\n\
+        self.val = val\n\
+\n\
+def main():\n\
+    root = TreeNode(1)\n\
+    root = None\n",
+    );
+
+    assert!(rust_code.contains("let mut root: Option<TreeNode> = Some("));
+    assert!(rust_code.contains("root = None;"));
+}
+
+#[test]
+fn test_guarded_non_option_compare_does_not_emit_some_wrapping() {
+    let rust_code = generate_rust_from_source(
+        "def parseIntToken(token: str) -> int:\n\
+    first = token[0]\n\
+    if first is not None and first == \"-\":\n\
+        return -1\n\
+    return 0\n",
+    );
+
+    assert!(!rust_code.contains("first == Some("));
+    assert!(rust_code.contains("first == \"-\".to_string()"));
+}
+
+#[test]
 fn test_empty_print() {
     // print() should emit println!() not println!("{}", "")
     let module = HirModule {

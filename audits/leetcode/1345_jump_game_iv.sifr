@@ -1,56 +1,46 @@
 # LeetCode 1345: Jump Game Iv
 
-# Time O(n) - Space O(n)
+def _nz_int(value: int | None) -> int:
+    if value is None:
+        return 0
+    return value
 
 def minJumps(arr: list[int]) -> int:
     n = len(arr)
-    # Base case.
     if n < 2:
         return 0
-    # A dictionary of vertices indexed by values.
-    d = defaultdict(list)
-    for i in reversed(range(n)):
-        d[arr[i]].append(i)
 
-    # A function that gets all neighbors of a node that we have not
-    # queued yet.
-    def getUnqueuedNeighbors(i: int) -> list[int]:
-        adj = []
-        # We can reach the element before.
-        if 0 < i and not seen[i - 1]:
-            seen[i - 1] = True
-            adj.append(i - 1)
-        # We can reach the element after.
-        if i < n - 1 and not seen[i + 1]:
-            seen[i + 1] = True
-            adj.append(i + 1)
-        # We can also reach any element with the same value.
-        if arr[i] in d:
-            for node in d[arr[i]]:
-                if node != i:
-                    adj.append(node)
-                    seen[node] = True
-            d.pop(arr[i])
-        return adj
+    visited: set[int] = set()
+    visited.add(0)
+    q: list[tuple[int, int]] = [(0, 0)]  # (index, steps)
+    head = 0
 
-    # A list of nodes that we have visited already.
-    seen = [False] * n
-    seen[0] = True
-    # BFS starting at 0 and counting the steps until we reach n-1.
-    steps, level = 0, deque([0])
-    while level:
-        steps += 1
-        # Process an entire level.
-        for _ in range(len(level)):
-            current = level.popleft()
-            for nei in getUnqueuedNeighbors(current):
-                # If this is the target node, return.
-                if nei == n - 1:
-                    return steps
-                level.append(nei)
+    while head < len(q):
+        state = q[head]
+        head += 1
+        current = state[0]
+        steps = state[1]
+        if current == n - 1:
+            return steps
+
+        left = current - 1
+        right = current + 1
+        if left >= 0 and left not in visited:
+            visited.add(left)
+            q.append((left, steps + 1))
+        if right < n and right not in visited:
+            visited.add(right)
+            q.append((right, steps + 1))
+
+        current_val = _nz_int(arr[current])
+        for idx in range(n):
+            if idx != current and idx not in visited and _nz_int(arr[idx]) == current_val:
+                visited.add(idx)
+                q.append((idx, steps + 1))
+
+    return 0
 
 def main():
     assert minJumps([100, -23, -23, 404, 100, 23, 23, 23, 3, 404]) == 3
     assert minJumps([7]) == 0
     assert minJumps([7, 6, 9, 6, 9, 6, 9, 7]) == 1
-

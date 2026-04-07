@@ -1,16 +1,30 @@
 # LeetCode 853: Car Fleet
 
+def _nz_int(value: int | None) -> int:
+    if value is None:
+        return 0
+    return value
+
+def _nz_float(value: float | None) -> float:
+    if value is None:
+        return 0.0
+    return value
+
 def carFleet(target: int, position: list[int], speed: list[int]) -> int:
-    pair = [(p, s) for p, s in zip(position, speed)]
-    pair.sort(reverse=True)
-    stack = []
-    for p, s in pair:  # Reverse Sorted Order
-        stack.append((target - p) / s)
-        if len(stack) >= 2 and stack[-1] <= stack[-2]:
+    pair: list[tuple[int, int]] = []
+    for i in range(len(position)):
+        pair.append((_nz_int(position[i]), _nz_int(speed[i])))
+
+    pair.sort()
+    pair.reverse()
+
+    stack: list[float] = []
+    for p, s in pair:
+        travel_time = (target - p) / s
+        stack.append(travel_time)
+        if len(stack) >= 2 and _nz_float(stack[-1]) <= _nz_float(stack[-2]):
             stack.pop()
     return len(stack)
 
 def main():
-    assert str(carFleet(12, [10,8,0,5,3], [2,4,1,1,3])) == '3'
-
-
+    assert carFleet(12, [10, 8, 0, 5, 3], [2, 4, 1, 1, 3]) == 3
