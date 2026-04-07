@@ -1,9 +1,30 @@
 # Ad-hoc Phase: Operator/Truthiness + Callable/Return Contract Closure (2026-04-07)
 
-Status: implementation_ready_candidate
+Status: done
 Owner: phase_ad_hoc_operator_truthiness_contract_closure
 Source run artifact: `verification/leetcode/full_corpus_current_results_20260407_live_rerun1.json`
 Source taxonomy artifact: `verification/leetcode/full_corpus_failure_taxonomy_20260407_live_rerun1.json`
+
+## Closure Snapshot (2026-04-07)
+
+- scoped 14 fixtures: `PASS` on both `check` and `run`:
+  - `verification/leetcode/ad_hoc_operator_truthiness_contract_closure_20260407_scoped_check_run_rerun2.tsv`
+- full-corpus rerun2 artifacts:
+  - `verification/leetcode/full_corpus_current_results_20260407_live_rerun2.json`
+  - `verification/leetcode/full_corpus_failure_taxonomy_20260407_live_rerun2.json`
+  - `verification/leetcode/full_corpus_failure_taxonomy_20260407_live_rerun2.md`
+  - `verification/leetcode/full_corpus_failure_taxonomy_20260407_live_rerun2_delta_vs_rerun1.md`
+- exit-criteria deltas:
+  - `failing_cases`: `52 -> 38` (`-14`)
+  - no-regression gates held:
+    - `codegen_runtime_build_gap`: `5 -> 5`
+    - `optional_none_flow_and_narrowing_gap`: `1 -> 1`
+    - `destructuring_and_assignment_target_surface_gap`: `1 -> 1`
+    - `python_stdlib_and_builtin_parity_gap`: `10 -> 10`
+- implementation PRs:
+  - `https://github.com/yaseralnajjar/sifr/pull/1592` (WS1)
+  - `https://github.com/yaseralnajjar/sifr/pull/1593` (WS2)
+  - `https://github.com/yaseralnajjar/sifr/pull/1594` (WS3)
 
 ## Scope
 
@@ -271,10 +292,10 @@ Command anchors:
 
 ## Execution Checklist
 
-- [ ] WS1 implemented and validated
-- [ ] WS2 implemented and validated
-- [ ] WS3 implemented and validated
-- [ ] Scoped 14-fixture PASS confirmation (`check` + `run`)
-- [ ] Full-corpus rerun completed
-- [ ] Taxonomy + delta report refreshed
-- [ ] Phase close note recorded in `issues/`
+- [x] WS1 implemented and validated
+- [x] WS2 implemented and validated
+- [x] WS3 implemented and validated
+- [x] Scoped 14-fixture PASS confirmation (`check` + `run`)
+- [x] Full-corpus rerun completed
+- [x] Taxonomy + delta report refreshed
+- [x] Phase close note recorded in `issues/`

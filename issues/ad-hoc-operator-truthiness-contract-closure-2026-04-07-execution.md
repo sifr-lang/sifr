@@ -1,6 +1,6 @@
 # Execution Ledger: Ad-hoc Operator/Truthiness + Callable/Return Contract Closure (2026-04-07)
 
-Status: review_in_progress
+Status: done
 Owning phase doc: `issues/ad-hoc-operator-truthiness-contract-closure-2026-04-07.md`
 
 ## Baseline
@@ -39,3 +39,50 @@ Owning phase doc: `issues/ad-hoc-operator-truthiness-contract-closure-2026-04-07
 - 2026-04-07: applied requested editorial clarification in phase doc for `0473` and `1514` category notes and overlap note.
 - 2026-04-07: reviewer pass4 (final confirmation wording) returned `NOT READY` because implementation checklist is still unchecked (execution not started).
 - 2026-04-07: interpretation: pass4 assessed execution completion readiness, not planning completeness; pass3 remains authoritative for implementation-plan readiness.
+- 2026-04-07: WS1 implemented, validated, reviewed, and merged via PR `#1592`.
+- 2026-04-07: WS2 implemented, validated, reviewed, and merged via PR `#1593`.
+- 2026-04-07: WS3 implemented, validated, reviewed, and merged via PR `#1594`.
+- 2026-04-07: scoped 14-fixture `check`/`run` confirmation reached full PASS:
+  - `verification/leetcode/ad_hoc_operator_truthiness_contract_closure_20260407_scoped_check_run_rerun2.tsv`
+- 2026-04-07: full-corpus rerun2 completed:
+  - `verification/leetcode/full_corpus_current_results_20260407_live_rerun2.json`
+- 2026-04-07: taxonomy refresh completed:
+  - `verification/leetcode/full_corpus_failure_taxonomy_20260407_live_rerun2.json`
+  - `verification/leetcode/full_corpus_failure_taxonomy_20260407_live_rerun2.md`
+  - `verification/leetcode/full_corpus_failure_taxonomy_20260407_live_rerun2_delta_vs_rerun1.md`
+- 2026-04-07: exit criteria audit:
+  - `failing_cases`: `52 -> 38` (`-14`, gate satisfied)
+  - no-regression categories unchanged:
+    - `codegen_runtime_build_gap`: `5 -> 5`
+    - `optional_none_flow_and_narrowing_gap`: `1 -> 1`
+    - `destructuring_and_assignment_target_surface_gap`: `1 -> 1`
+    - `python_stdlib_and_builtin_parity_gap`: `10 -> 10`
+
+## Wave Log
+
+- Wave WS1 (simple truthiness canonicalization)
+  - Fixtures: `0007`, `0068`, `0416`, `0846`
+  - Validation: targeted `check` + `run` all PASS
+  - PR: `https://github.com/yaseralnajjar/sifr/pull/1592` (merged)
+
+- Wave WS2 (callable/return contract closure)
+  - Fixtures: `0201`, `0371`, `1220`, `0931`, `0162`
+  - Validation: targeted `check` + `run` all PASS
+  - PR: `https://github.com/yaseralnajjar/sifr/pull/1593` (merged)
+
+- Wave WS3 (structural rewrite closure)
+  - Fixtures: `0473`, `0735`, `0973`, `1514`, `0516`
+  - Validation: targeted `check` + `run` all PASS
+  - PR: `https://github.com/yaseralnajjar/sifr/pull/1594` (merged)
+
+- Wave WS4 (phase close validation/reporting)
+  - Scoped confirmation artifact:
+    - `verification/leetcode/ad_hoc_operator_truthiness_contract_closure_20260407_scoped_check_run_rerun2.tsv`
+  - Full-corpus artifacts:
+    - `verification/leetcode/full_corpus_current_results_20260407_live_rerun2.json`
+    - `verification/leetcode/full_corpus_failure_taxonomy_20260407_live_rerun2.json`
+    - `verification/leetcode/full_corpus_failure_taxonomy_20260407_live_rerun2.md`
+    - `verification/leetcode/full_corpus_failure_taxonomy_20260407_live_rerun2_delta_vs_rerun1.md`
+  - Local validation:
+    - `scripts/run_all_tests.sh --profile quick` passed
+    - `scripts/run_all_tests.sh` passed

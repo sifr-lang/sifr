@@ -1,0 +1,15 @@
+fixture	check	run
+0007_reverse_integer	PASS	PASS
+0068_text_justification	PASS	PASS
+0201_bitwise_and_of_numbers_range	PASS	PASS
+0371_sum_of_two_integers	PASS	PASS
+0416_partition_equal_subset_sum	PASS	PASS
+0473_matchsticks_to_square	PASS	PASS
+0735_asteroid_collision	PASS	PASS
+0846_hand_of_straights	PASS	PASS
+0973_k_closest_points_to_origin	PASS	PASS
+1220_count_vowels_permutation	PASS	PASS
+1514_path_with_maximum_probability	PASS	PASS
+0931_minimum_falling_path_sum	PASS	PASS
+0162_find_peak_element	PASS	PASS
+0516_longest_palindromic_subsequence	PASS	PASS
