@@ -5,7 +5,7 @@ def rangeBitwiseAnd(left: int, right: int) -> int:
 
     for i in range(32):
         bit = (left >> i) & 1
-        if not bit:
+        if bit == 0:
             continue
         
         remain = left % (1 << (i + 1))
@@ -14,18 +14,7 @@ def rangeBitwiseAnd(left: int, right: int) -> int:
             res = res | (1 << i)
     return res
 
-# find the longest matching prefix of set bits between left and right
-
-def rangeBitwiseAnd(left: int, right: int) -> int:
-    i = 0
-    while left != right:
-        left = left >> 1
-        right = right >> 1
-        i += 1
-    return left << i
-
 def main():
     assert rangeBitwiseAnd(5, 7) == 4
     assert rangeBitwiseAnd(0, 0) == 0
     assert rangeBitwiseAnd(1, 2147483647) == 0
-
