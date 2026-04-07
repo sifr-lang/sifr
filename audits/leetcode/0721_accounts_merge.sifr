@@ -1,50 +1,103 @@
 # LeetCode 721: Accounts Merge
 
+
+def normalizeAccounts(accounts: list[list[str]]) -> list[str]:
+    normalized: list[str] = []
+    for account in accounts:
+        normalized.append(",".join(account))
+    normalized.sort()
+    return normalized
+
+
+def accountName(account: list[str]) -> str:
+    pos = 0
+    for item in account:
+        if pos == 0:
+            return item
+        pos += 1
+    return ""
+
+
+def mapGetInt(mapping: dict[int, int], key: int, default_value: int) -> int:
+    if key in mapping:
+        return mapping[key]
+    return default_value
+
+
+def findLeader(mut parent: dict[int, int], mut x: int) -> int:
+    while x != mapGetInt(parent, x, x):
+        px = mapGetInt(parent, x, x)
+        ppx = mapGetInt(parent, px, px)
+        parent[x] = ppx
+        x = ppx
+    return x
+
+
+def unionLeaders(mut parent: dict[int, int], mut size: dict[int, int], a: int, b: int) -> None:
+    ra = findLeader(parent, a)
+    rb = findLeader(parent, b)
+    if ra == rb:
+        return
+
+    size_ra = mapGetInt(size, ra, 1)
+    size_rb = mapGetInt(size, rb, 1)
+    if size_ra < size_rb:
+        tmp = ra
+        ra = rb
+        rb = tmp
+        tmp_size = size_ra
+        size_ra = size_rb
+        size_rb = tmp_size
+
+    parent[rb] = ra
+    size[ra] = size_ra + size_rb
+
+
 def accountsMerge(accounts: list[list[str]]) -> list[list[str]]:
-    uf = UnionFind(len(accounts))
-    emailToAcc = {} # email -> index of acc
+    parent: dict[int, int] = {}
+    size: dict[int, int] = {}
 
-    for i, a in enumerate(accounts):
-        for e in a[1:]:
-            if e in emailToAcc:
-                uf.union(i, emailToAcc[e])
-            else:
-                emailToAcc[e] = i
+    i = 0
+    while i < len(accounts):
+        parent[i] = i
+        size[i] = 1
+        i += 1
 
-    emailGroup = defaultdict(list) # index of acc -> list of emails
-    for e, i in emailToAcc.items():
-        leader = uf.find(i)
-        emailGroup[leader].append(e)
+    email_owner: dict[str, int] = {}
+    for i, account in enumerate(accounts):
+        pos = 0
+        for item in account:
+            if pos > 0:
+                email = item
+                if email in email_owner:
+                    unionLeaders(parent, size, i, email_owner[email])
+                else:
+                    email_owner[email] = i
+            pos += 1
 
-    res = []
-    for i, emails in emailGroup.items():
-        name = accounts[i][0]
-        res.append([name] + sorted(emailGroup[i])) # array concat
-    return res
-  
-
-
-class UnionFind:
-    def __init__(self, n: int):
-        self.par = [i for i in range(n)]
-        self.rank = [1] * n
-    def find(self, x: int) -> int:
-        while x != self.par[x]:
-            self.par[x] = self.par[self.par[x]]
-            x = self.par[x]
-        return x
-    def union(self, x1: int, x2: int) -> bool:
-        p1, p2 = self.find(x1), self.find(x2)
-        if p1 == p2:
-            return False
-        if self.rank[p1] > self.rank[p2]:
-            self.par[p2] = p1
-            self.rank[p1] += self.rank[p2]
+    grouped: dict[int, list[str]] = {}
+    for email, owner in email_owner.items():
+        leader = findLeader(parent, owner)
+        if leader in grouped:
+            grouped[leader].append(email)
         else:
-            self.par[p1] = p2
-            self.rank[p2] += self.rank[p1]
-        return True
+            grouped[leader] = [email]
+
+    merged: list[list[str]] = []
+    for leader, emails in grouped.items():
+        sorted_emails = sorted(emails)
+        name = ""
+        idx = 0
+        for account in accounts:
+            if idx == leader:
+                name = accountName(account)
+                break
+            idx += 1
+        merged.append([name] + sorted_emails)
+
+    return merged
+
 
 def main():
-    assert accountsMerge([['John', 'johnsmith@mail.com', 'john_newyork@mail.com'], ['John', 'johnsmith@mail.com', 'john00@mail.com'], ['Mary', 'mary@mail.com'], ['John', 'johnnybravo@mail.com']]) == [['John', 'john00@mail.com', 'john_newyork@mail.com', 'johnsmith@mail.com'], ['Mary', 'mary@mail.com'], ['John', 'johnnybravo@mail.com']]
-    assert accountsMerge([['Gabe', 'Gabe0@m.co', 'Gabe3@m.co', 'Gabe1@m.co'], ['Kevin', 'Kevin3@m.co', 'Kevin5@m.co', 'Kevin0@m.co'], ['Ethan', 'Ethan5@m.co', 'Ethan4@m.co', 'Ethan0@m.co'], ['Hanzo', 'Hanzo3@m.co', 'Hanzo1@m.co', 'Hanzo0@m.co'], ['Fern', 'Fern5@m.co', 'Fern1@m.co', 'Fern0@m.co']]) == [['Gabe', 'Gabe0@m.co', 'Gabe1@m.co', 'Gabe3@m.co'], ['Kevin', 'Kevin0@m.co', 'Kevin3@m.co', 'Kevin5@m.co'], ['Ethan', 'Ethan0@m.co', 'Ethan4@m.co', 'Ethan5@m.co'], ['Hanzo', 'Hanzo0@m.co', 'Hanzo1@m.co', 'Hanzo3@m.co'], ['Fern', 'Fern0@m.co', 'Fern1@m.co', 'Fern5@m.co']]
+    assert normalizeAccounts(accountsMerge([['John', 'johnsmith@mail.com', 'john_newyork@mail.com'], ['John', 'johnsmith@mail.com', 'john00@mail.com'], ['Mary', 'mary@mail.com'], ['John', 'johnnybravo@mail.com']])) == normalizeAccounts([['John', 'john00@mail.com', 'john_newyork@mail.com', 'johnsmith@mail.com'], ['Mary', 'mary@mail.com'], ['John', 'johnnybravo@mail.com']])
+    assert normalizeAccounts(accountsMerge([['Gabe', 'Gabe0@m.co', 'Gabe3@m.co', 'Gabe1@m.co'], ['Kevin', 'Kevin3@m.co', 'Kevin5@m.co', 'Kevin0@m.co'], ['Ethan', 'Ethan5@m.co', 'Ethan4@m.co', 'Ethan0@m.co'], ['Hanzo', 'Hanzo3@m.co', 'Hanzo1@m.co', 'Hanzo0@m.co'], ['Fern', 'Fern5@m.co', 'Fern1@m.co', 'Fern0@m.co']])) == normalizeAccounts([['Gabe', 'Gabe0@m.co', 'Gabe1@m.co', 'Gabe3@m.co'], ['Kevin', 'Kevin0@m.co', 'Kevin3@m.co', 'Kevin5@m.co'], ['Ethan', 'Ethan0@m.co', 'Ethan4@m.co', 'Ethan5@m.co'], ['Hanzo', 'Hanzo0@m.co', 'Hanzo1@m.co', 'Hanzo3@m.co'], ['Fern', 'Fern0@m.co', 'Fern1@m.co', 'Fern5@m.co']])

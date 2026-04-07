@@ -1,23 +1,49 @@
 # LeetCode 56: Merge Intervals
 
-def merge(intervals: list[list[int]]) -> list[list[int]]:
-    intervals.sort()
-    output = [intervals[0]]
-    i = 0
-    while i < len(intervals):
-        interval = intervals[i]
-        start = interval[0]
-        end = interval[1]
-        lastEnd = output[-1][1]
+def intervalStart(interval: list[int]) -> int:
+    idx = 0
+    for value in interval:
+        if idx == 0:
+            return value
+        idx += 1
+    return 0
 
-        if start <= lastEnd:
-            # merge
-            output[-1][1] = max(lastEnd, end)
+def intervalEnd(interval: list[int]) -> int:
+    idx = 0
+    for value in interval:
+        if idx == 1:
+            return value
+        idx += 1
+    return 0
+
+def merge(mut intervals: list[list[int]]) -> list[list[int]]:
+    if len(intervals) == 0:
+        return []
+    intervals.sort()
+    output: list[list[int]] = []
+    has_current = False
+    current_start = 0
+    current_end = 0
+
+    for interval in intervals:
+        start = intervalStart(interval)
+        end = intervalEnd(interval)
+        if not has_current:
+            current_start = start
+            current_end = end
+            has_current = True
+            continue
+
+        if start <= current_end:
+            current_end = max(current_end, end)
         else:
-            output.append([start, end])
-        i += 1
+            output.append([current_start, current_end])
+            current_start = start
+            current_end = end
+
+    if has_current:
+        output.append([current_start, current_end])
     return output
 
 def main():
     assert str(merge([[1,3],[2,6],[8,10],[15,18]])) == '[[1, 6], [8, 10], [15, 18]]'
-

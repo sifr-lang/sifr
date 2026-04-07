@@ -50,18 +50,22 @@ class Node:
         self.key = key
 
 def kthSmallest(root: TreeNode, k: int) -> int:
-    stack = []
-    curr = root
+    values: list[int] = []
 
-    while stack or curr:
-        while curr:
-            stack.append(curr)
-            curr = curr.left
-        curr = stack.pop()
-        k -= 1
-        if k == 0:
-            return curr.val
-        curr = curr.right
+    def inorder(node: TreeNode | None, mut values: list[int]) -> None:
+        if node is None:
+            return
+        inorder(node.left, values)
+        values.append(node.val)
+        inorder(node.right, values)
+
+    inorder(root, values)
+    idx = 0
+    for value in values:
+        if idx == k - 1:
+            return value
+        idx += 1
+    return 0
 
 def main():
     assert kthSmallest(TreeNode(3, TreeNode(1, None, TreeNode(2, None, None)), TreeNode(4, None, None)), 1) == 1

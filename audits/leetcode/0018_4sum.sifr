@@ -1,36 +1,54 @@
 # LeetCode 18: 4Sum
 
+def valueAt(values: list[int], index: int) -> int:
+    i = 0
+    for value in values:
+        if i == index:
+            return value
+        i += 1
+    return 0
+
 def fourSum(mut nums: list[int], target: int) -> list[list[int]]:
-    def findNsum(
-        l: int,
-        r: int,
-        target: int,
-        N: int,
-        result: list[int],
-        results: list[list[int]],
-    ):
-        if r-l+1 < N or N < 2 or target < nums[l]*N or target > nums[r]*N:  
-            return
-        if N == 2: 
+
+    nums.sort()
+    results: list[list[int]] = []
+    n = len(nums)
+
+    i = 0
+    while i < n:
+        a = valueAt(nums, i)
+        if i > 0 and a == valueAt(nums, i - 1):
+            i += 1
+            continue
+
+        j = i + 1
+        while j < n:
+            b = valueAt(nums, j)
+            if j > i + 1 and b == valueAt(nums, j - 1):
+                j += 1
+                continue
+
+            l = j + 1
+            r = n - 1
             while l < r:
-                s = nums[l] + nums[r]
+                c = valueAt(nums, l)
+                d = valueAt(nums, r)
+                s = a + b + c + d
                 if s == target:
-                    results.append(result + [nums[l], nums[r]])
+                    results.append([a, b, c, d])
                     l += 1
-                    while l < r and nums[l] == nums[l-1]:
+                    r -= 1
+                    while l < r and valueAt(nums, l) == valueAt(nums, l - 1):
                         l += 1
+                    while l < r and valueAt(nums, r) == valueAt(nums, r + 1):
+                        r -= 1
                 elif s < target:
                     l += 1
                 else:
                     r -= 1
-        else:
-            for i in range(l, r+1):
-                if i == l or (i > l and nums[i-1] != nums[i]):
-                    findNsum(i+1, r, target-nums[i], N-1, result+[nums[i]], results)
+            j += 1
+        i += 1
 
-    nums.sort()
-    results: list[list[int]] = []
-    findNsum(0, len(nums)-1, target, 4, [], results)
     return results
 
 def main():
