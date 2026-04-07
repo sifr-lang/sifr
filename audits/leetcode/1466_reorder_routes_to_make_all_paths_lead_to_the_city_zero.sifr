@@ -2,14 +2,20 @@
 
 def minReorder(n: int, connections: list[tuple[int, int]]) -> int:
     edges: set[tuple[int, int]] = set()
-    neighbors = defaultdict(list)
+    neighbors: dict[int, list[int]] = {}
 
     for edge in connections:
         a = edge[0]
         b = edge[1]
         edges.add((a, b))
-        neighbors[a].append(b)
-        neighbors[b].append(a)
+        if a in neighbors:
+            neighbors[a].append(b)
+        else:
+            neighbors[a] = [b]
+        if b in neighbors:
+            neighbors[b].append(a)
+        else:
+            neighbors[b] = [a]
 
     changes: int = 0
     visit: set[int] = set([0])
@@ -19,9 +25,9 @@ def minReorder(n: int, connections: list[tuple[int, int]]) -> int:
         city = stack.pop()
         if city is None:
             continue
-        city_neighbors = neighbors[city]
-        if city_neighbors is None:
-            continue
+        city_neighbors: list[int] = []
+        if city in neighbors:
+            city_neighbors = neighbors[city]
         for neighbor in city_neighbors:
             if neighbor in visit:
                 continue
