@@ -49,16 +49,16 @@ class Node:
         self.neighbors = neighbors
         self.key = key
 
-def preorderTraversal(root: TreeNode | None) -> list[int]:
-    cur, stack = root, []
-    res = []
-    while cur or stack:
-        if cur:
-            res.append(cur.val)
-            stack.append(cur.right)
-            cur = cur.left
-        else:
-            cur = stack.pop()
+def preorderDfs(node: TreeNode | None, mut out: list[int]) -> None:
+    if node is None:
+        return
+    out.append(node.val)
+    preorderDfs(node.left, out)
+    preorderDfs(node.right, out)
+
+def preorderTraversal(own root: TreeNode | None) -> list[int]:
+    res: list[int] = []
+    preorderDfs(root, res)
     return res
 
 def main():

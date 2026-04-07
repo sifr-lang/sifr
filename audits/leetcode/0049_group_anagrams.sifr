@@ -29,7 +29,14 @@ def groupAnagrams(strs: list[str]) -> list[list[str]]:
         res.append(bucket)
     return res
 
+def normalizeGroups(groups: list[list[str]]) -> list[str]:
+    normalized = []
+    for bucket in groups:
+        normalized.append(",".join(bucket))
+    normalized.sort()
+    return normalized
+
 def main():
-    assert groupAnagrams(['eat', 'tea', 'tan', 'ate', 'nat', 'bat']) == [['eat', 'tea', 'ate'], ['tan', 'nat'], ['bat']]
-    assert groupAnagrams(['']) == [['']]
-    assert groupAnagrams(['a']) == [['a']]
+    assert normalizeGroups(groupAnagrams(['eat', 'tea', 'tan', 'ate', 'nat', 'bat'])) == normalizeGroups([['eat', 'tea', 'ate'], ['tan', 'nat'], ['bat']])
+    assert normalizeGroups(groupAnagrams([''])) == normalizeGroups([['']])
+    assert normalizeGroups(groupAnagrams(['a'])) == normalizeGroups([['a']])

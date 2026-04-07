@@ -156,6 +156,33 @@ fn should_force_mutable_binding(ty: &Type) -> bool {
         || class_has_next_protocol(ty)
 }
 
+fn type_contains_any_or_unknown(ty: &Type) -> bool {
+    match crate::resolve_alias_type_for_plain_call(ty) {
+        Type::Any | Type::Unknown => true,
+        Type::List(inner)
+        | Type::Set(inner)
+        | Type::Iterable(inner)
+        | Type::Iterator(inner)
+        | Type::Alias { body: inner, .. } => type_contains_any_or_unknown(inner),
+        Type::Dict(key, value) | Type::Result(key, value) => {
+            type_contains_any_or_unknown(key) || type_contains_any_or_unknown(value)
+        }
+        Type::Tuple(elements) | Type::Union(elements) | Type::Intersection(elements) => {
+            elements.iter().any(type_contains_any_or_unknown)
+        }
+        Type::Callable(params, _, ret) => {
+            params.iter().any(type_contains_any_or_unknown) || type_contains_any_or_unknown(ret)
+        }
+        Type::Function(ft) => {
+            ft.params
+                .iter()
+                .any(|(_, param_ty, _)| type_contains_any_or_unknown(param_ty))
+                || type_contains_any_or_unknown(&ft.return_type)
+        }
+        _ => false,
+    }
+}
+
 impl RustEmitter {
     pub(super) fn wrap_option_local_value_for_ir(
         target_ty: &Type,
@@ -1829,6 +1856,7 @@ impl RustEmitter {
                 let Some(mut lowered_element) = self.lower_stmt_expr_for_ir(element)? else {
                     return Ok(None);
                 };
+                lowered_element = Self::clone_non_copy_name_expr_for_ir(element, lowered_element);
                 if matches!(list_ty, Type::Bytes) {
                     lowered_element = crate::RustExpr::Cast {
                         expr: Box::new(lowered_element),
@@ -1845,7 +1873,8 @@ impl RustEmitter {
                 let Some(lowered_element) = self.lower_stmt_expr_for_ir(element)? else {
                     return Ok(None);
                 };
-                lowered_elements.push(lowered_element);
+                lowered_elements
+                    .push(Self::clone_non_copy_name_expr_for_ir(element, lowered_element));
             }
             return Ok(Some(crate::RustExpr::Tuple(lowered_elements)));
         }
@@ -2049,6 +2078,60 @@ impl RustEmitter {
             ..
         } = expr
         {
+            if method == "append" && args.len() == 1 {
+                if let HirExpr::Index {
+                    object: index_object,
+                    index,
+                    ..
+                } = object.as_ref()
+                {
+                    let index_object_ty =
+                        crate::resolve_alias_type_for_plain_call(index_object.ty());
+                    if let Type::Dict(_, value_ty) = index_object_ty {
+                        if matches!(
+                            crate::resolve_alias_type_for_plain_call(value_ty.as_ref()),
+                            Type::List(_)
+                        ) {
+                            let Some(lowered_object) = self.lower_stmt_expr_for_ir(index_object)?
+                            else {
+                                return Ok(None);
+                            };
+                            let Some(lowered_index) = self.lower_stmt_expr_for_ir(index)? else {
+                                return Ok(None);
+                            };
+                            let Some(lowered_arg) = self.lower_stmt_expr_for_ir(&args[0])? else {
+                                return Ok(None);
+                            };
+                            let lowered_index =
+                                Self::clone_non_copy_name_expr_for_ir(index, lowered_index);
+                            let lowered_arg =
+                                Self::clone_non_copy_name_expr_for_ir(&args[0], lowered_arg);
+                            let key_arg = Self::build_dict_lookup_key_arg_for_ir(lowered_index);
+                            return Ok(Some(crate::RustExpr::Block {
+                                stmts: vec![crate::RustStmt::IfLet {
+                                    pattern: "Some(__elem)".to_string(),
+                                    expr: crate::RustExpr::MethodCall {
+                                        receiver: Box::new(lowered_object),
+                                        method: "get_mut".to_string(),
+                                        args: vec![key_arg],
+                                    },
+                                    then_body: vec![crate::RustStmt::Expr(
+                                        crate::RustExpr::MethodCall {
+                                            receiver: Box::new(crate::RustExpr::Ident(
+                                                "__elem".to_string(),
+                                            )),
+                                            method: "push".to_string(),
+                                            args: vec![lowered_arg],
+                                        },
+                                    )],
+                                    else_body: None,
+                                }],
+                                expr: None,
+                            }));
+                        }
+                    }
+                }
+            }
             let needs_field_clone_suppression =
                 self.method_call_needs_field_clone_suppression(object, method);
             let suppression_prev = self.pending_self_field_clone_suppression;
@@ -5429,11 +5512,14 @@ impl RustEmitter {
                 name, ty, value, ..
             } = stmt
             {
-                let effective_ty = self
-                    .local_binding_types
-                    .get(name)
-                    .cloned()
-                    .unwrap_or_else(|| ty.clone());
+                let effective_ty = if type_contains_any_or_unknown(ty) {
+                    self.local_binding_types
+                        .get(name)
+                        .cloned()
+                        .unwrap_or_else(|| ty.clone())
+                } else {
+                    ty.clone()
+                };
                 let is_generic_class = matches!(
                     &effective_ty,
                     Type::Class {
