@@ -2676,9 +2676,21 @@ pub(super) fn resolve_method_type(
                 Some(Type::None)
             }
             "sort" => {
-                if !args.is_empty() {
-                    ctx.error("list.sort() takes no arguments in this milestone".to_string());
+                if args.len() > 1 {
+                    ctx.error(format!(
+                        "list.sort() takes at most 1 argument, got {}",
+                        args.len()
+                    ));
                     return None;
+                }
+                if let Some(reverse_arg) = args.first() {
+                    if reverse_arg.ty() != &Type::Bool {
+                        ctx.error(format!(
+                            "list.sort() argument 'reverse' must be 'bool', got '{}'",
+                            reverse_arg.ty().display_name()
+                        ));
+                        return None;
+                    }
                 }
                 Some(Type::None)
             }
@@ -3505,20 +3517,12 @@ pub(super) fn lower_list_comp(comp: &ExprListComp, ctx: &mut LowerCtx) -> Option
 
             let iter_source_expr = lower_expr(&gen.iter, ctx)?;
             let iter_ty = iter_source_expr.ty().clone();
-            let elem_ty = match &iter_ty {
-                Type::List(elem) => *elem.clone(),
-                Type::Set(elem) => *elem.clone(),
-                Type::Str => Type::Str,
-                Type::Range => Type::Int,
-                Type::Dict(key, _) => *key.clone(),
-                Type::Tuple(elems) if !elems.is_empty() => elems[0].clone(),
-                _ => {
-                    ctx.error(format!(
-                        "cannot iterate over type '{}'",
-                        iter_ty.display_name()
-                    ));
-                    return None;
-                }
+            let Some(elem_ty) = callable_builtin_element_type(&iter_ty) else {
+                ctx.error(format!(
+                    "cannot iterate over type '{}'",
+                    iter_ty.display_name()
+                ));
+                return None;
             };
 
             ctx.scope.push();
@@ -3591,17 +3595,12 @@ pub(super) fn lower_set_comp(comp: &ExprSetComp, ctx: &mut LowerCtx) -> Option<H
             };
             let iter_source_expr = lower_expr(&gen.iter, ctx)?;
             let iter_ty = iter_source_expr.ty().clone();
-            let elem_ty = match &iter_ty {
-                Type::List(elem) => *elem.clone(),
-                Type::Set(elem) => *elem.clone(),
-                Type::Range => Type::Int,
-                _ => {
-                    ctx.error(format!(
-                        "cannot iterate over type '{}'",
-                        iter_ty.display_name()
-                    ));
-                    return None;
-                }
+            let Some(elem_ty) = callable_builtin_element_type(&iter_ty) else {
+                ctx.error(format!(
+                    "cannot iterate over type '{}'",
+                    iter_ty.display_name()
+                ));
+                return None;
             };
             ctx.scope.push();
             pushed_scopes += 1;
@@ -3657,18 +3656,12 @@ pub(super) fn lower_dict_comp(comp: &ExprDictComp, ctx: &mut LowerCtx) -> Option
             };
             let iter_source_expr = lower_expr(&gen.iter, ctx)?;
             let iter_ty = iter_source_expr.ty().clone();
-            let elem_ty = match &iter_ty {
-                Type::List(elem) => *elem.clone(),
-                Type::Set(elem) => *elem.clone(),
-                Type::Range => Type::Int,
-                Type::Dict(key, _) => *key.clone(),
-                _ => {
-                    ctx.error(format!(
-                        "cannot iterate over type '{}'",
-                        iter_ty.display_name()
-                    ));
-                    return None;
-                }
+            let Some(elem_ty) = callable_builtin_element_type(&iter_ty) else {
+                ctx.error(format!(
+                    "cannot iterate over type '{}'",
+                    iter_ty.display_name()
+                ));
+                return None;
             };
             ctx.scope.push();
             pushed_scopes += 1;
