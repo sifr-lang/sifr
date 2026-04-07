@@ -1,19 +1,26 @@
 # LeetCode 1029: Two City Scheduling
 
+def _nz_int(value: int | None) -> int:
+    if value is None:
+        return 0
+    return value
+
 def twoCitySchedCost(costs: list[list[int]]) -> int:
-    diffs = []
-    for c1, c2 in costs:
-        diffs.append([c2 - c1, c1, c2])
+    diffs: list[tuple[int, int, int]] = []
+    for row in costs:
+        c1 = _nz_int(row[0])
+        c2 = _nz_int(row[1])
+        diffs.append((c2 - c1, c1, c2))
+
     diffs.sort()
+    half = len(diffs) // 2
     res = 0
     for i in range(len(diffs)):
-        if i < len(diffs) / 2:
+        if i < half:
             res += diffs[i][2]
         else:
             res += diffs[i][1]
     return res
 
 def main():
-    assert str(twoCitySchedCost([[10,20],[30,200],[400,50],[30,20]])) == '110'
-
-
+    assert twoCitySchedCost([[10, 20], [30, 200], [400, 50], [30, 20]]) == 110

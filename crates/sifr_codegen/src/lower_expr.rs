@@ -1593,6 +1593,9 @@ fn try_lower_guarded_option_compare_expr(expr: &HirExpr, guarded_name: &str) -> 
         (other, HirExpr::Name { name, .. }) if name == guarded_name => (rhs_expr, other, false),
         _ => return None,
     };
+    if !crate::helpers::is_option_type(option_side.ty()) {
+        return None;
+    }
     if matches!(other_side, HirExpr::NoneLiteral) {
         return None;
     }
@@ -2245,6 +2248,47 @@ mod tests {
         assert!(matches!(
             try_lower_leaf_expr(&or_expr),
             Some(RustExpr::BinOp { op, .. }) if op == "||"
+        ));
+    }
+
+    #[test]
+    fn guarded_non_option_compare_does_not_wrap_rhs_in_some() {
+        let expr = HirExpr::BoolOp {
+            op: "and".to_string(),
+            values: vec![
+                HirExpr::Compare {
+                    left: Box::new(HirExpr::Name {
+                        name: "first".to_string(),
+                        ty: Type::Str,
+                    }),
+                    ops: vec!["is not".to_string()],
+                    comparators: vec![HirExpr::NoneLiteral],
+                    ty: Type::Bool,
+                },
+                HirExpr::Compare {
+                    left: Box::new(HirExpr::Name {
+                        name: "first".to_string(),
+                        ty: Type::Str,
+                    }),
+                    ops: vec!["==".to_string()],
+                    comparators: vec![HirExpr::StringLiteral("-".to_string())],
+                    ty: Type::Bool,
+                },
+            ],
+            ty: Type::Bool,
+        };
+
+        let lowered = try_lower_leaf_expr(&expr).expect("guarded bool op lowered");
+        assert!(matches!(
+            lowered,
+            RustExpr::BinOp { right, .. }
+                if matches!(
+                    right.as_ref(),
+                    RustExpr::BinOp { left, op, right }
+                        if op == "=="
+                            && matches!(left.as_ref(), RustExpr::Ident(name) if name == "first")
+                            && matches!(right.as_ref(), RustExpr::Literal(RustLiteral::Str(s)) if s == "-")
+                )
         ));
     }
 

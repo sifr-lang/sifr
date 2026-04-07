@@ -7,7 +7,8 @@ use crate::{
     hir_analysis::traversal::{self, TraversalConfig},
 };
 use sifr_hir::{HirExpr, HirFunction, HirParam, HirStmt};
-use sifr_type_system::{OwnershipKind, ParamConvention, Type};
+use sifr_type_system::{make_union, OwnershipKind, ParamConvention, Type};
+use std::collections::{HashMap, HashSet};
 
 impl RustEmitter {
     fn effective_nested_param_convention(
@@ -64,11 +65,23 @@ impl RustEmitter {
     }
 
     pub(super) fn register_local_body_binding_types(&mut self, body: &[HirStmt]) {
-        let mut bindings = Vec::new();
-        let mut on_stmt = |stmt: &HirStmt| {
-            if let HirStmt::Let { name, ty, .. } = stmt {
-                bindings.push((name.clone(), ty.clone()));
+        let mut bindings = HashMap::new();
+        let mut widened_bindings = HashSet::new();
+        let mut on_stmt = |stmt: &HirStmt| match stmt {
+            HirStmt::Let { name, ty, .. } => {
+                bindings.entry(name.clone()).or_insert_with(|| ty.clone());
             }
+            HirStmt::Assign { name, value }
+                if matches!(value, HirExpr::NoneLiteral) || matches!(value.ty(), Type::None) =>
+            {
+                if let Some(existing) = bindings.get(name).cloned() {
+                    if !crate::helpers::is_option_type(&existing) {
+                        bindings.insert(name.clone(), make_union(vec![existing, Type::None]));
+                        widened_bindings.insert(name.clone());
+                    }
+                }
+            }
+            _ => {}
         };
         let mut on_expr = |_expr: &HirExpr| {};
         traversal::walk_stmts(
@@ -80,6 +93,7 @@ impl RustEmitter {
         for (name, ty) in bindings {
             self.local_binding_types.entry(name).or_insert(ty);
         }
+        self.none_widened_local_bindings.extend(widened_bindings);
     }
 
     pub(super) fn try_lower_structured_nested_function_stmt(&mut self, stmt: &HirStmt) -> bool {
@@ -140,6 +154,7 @@ impl RustEmitter {
         let saved_mut_borrowed_params = self.mut_borrowed_params.clone();
         let saved_callable_var_conventions = self.callable_var_conventions.clone();
         let saved_local_binding_types = self.local_binding_types.clone();
+        let saved_none_widened_local_bindings = self.none_widened_local_bindings.clone();
         let nested_binding_mutable = saved_mutated_vars.contains(&func.name);
 
         self.current_return_type = Some(func.return_type.clone());
@@ -147,6 +162,7 @@ impl RustEmitter {
         self.borrowed_params.clear();
         self.mut_borrowed_params.clear();
         self.local_binding_types.clear();
+        self.none_widened_local_bindings.clear();
         self.callable_var_conventions
             .clone_from(&post_stmt_callable_conventions);
         for param in &func.params {
@@ -178,6 +194,7 @@ impl RustEmitter {
         self.callable_var_conventions
             .clone_from(&saved_callable_var_conventions);
         self.local_binding_types = saved_local_binding_types;
+        self.none_widened_local_bindings = saved_none_widened_local_bindings;
 
         let lowered_stmt = if is_recursive {
             let params = func
@@ -504,6 +521,7 @@ impl RustEmitter {
         let saved_mut_borrowed_params = self.mut_borrowed_params.clone();
         let saved_callable_var_conventions = self.callable_var_conventions.clone();
         let saved_local_binding_types = self.local_binding_types.clone();
+        let saved_none_widened_local_bindings = self.none_widened_local_bindings.clone();
 
         self.current_return_type = Some(func.return_type.clone());
         self.mutated_vars = collect_mutated_vars_with_sigs(&func.body, &self.func_signatures);
@@ -511,6 +529,7 @@ impl RustEmitter {
         self.mut_borrowed_params.clear();
         self.callable_var_conventions.clear();
         self.local_binding_types.clear();
+        self.none_widened_local_bindings.clear();
         self.register_function_scope_params(&func.params);
         self.register_local_body_binding_types(&func.body);
 
@@ -610,5 +629,6 @@ impl RustEmitter {
         self.mut_borrowed_params = saved_mut_borrowed_params;
         self.callable_var_conventions = saved_callable_var_conventions;
         self.local_binding_types = saved_local_binding_types;
+        self.none_widened_local_bindings = saved_none_widened_local_bindings;
     }
 }

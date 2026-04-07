@@ -1,7 +1,7 @@
 # LeetCode 994: Rotting Oranges
 
-def orangesRotting(grid: list[list[int]]) -> int:
-    q = collections.deque()
+def orangesRotting(mut grid: list[list[int]]) -> int:
+    q: list[tuple[int, int]] = []
     fresh = 0
     time = 0
 
@@ -12,28 +12,33 @@ def orangesRotting(grid: list[list[int]]) -> int:
             if grid[r][c] == 2:
                 q.append((r, c))
 
-    directions = [(0, 1), (0, -1), (1, 0), (-1, 0)]
-    while fresh > 0 and q:
-        length = len(q)
-        for i in range(length):
-            r, c = q.popleft()
-
-            for direction in directions:
-                dr = direction[0]
-                dc = direction[1]
-                row, col = r + dr, c + dc
-                # if in bounds and nonrotten, make rotten
-                # and add to q
+    directions: list[tuple[int, int]] = [(0, 1), (0, -1), (1, 0), (-1, 0)]
+    head = 0
+    while fresh > 0 and head < len(q):
+        level_end = len(q)
+        while head < level_end:
+            cell = q[head]
+            head += 1
+            r = cell[0]
+            c = cell[1]
+            for dr, dc in directions:
+                row = r + dr
+                col = c + dc
                 if (
-                    row in range(len(grid))
-                    and col in range(len(grid[0]))
+                    row >= 0
+                    and col >= 0
+                    and row < len(grid)
+                    and col < len(grid[0])
                     and grid[row][col] == 1
                 ):
                     grid[row][col] = 2
                     q.append((row, col))
                     fresh -= 1
         time += 1
-    return time if fresh == 0 else -1
+
+    if fresh == 0:
+        return time
+    return -1
 
 def main():
     assert orangesRotting([[2, 1, 1], [1, 1, 0], [0, 1, 1]]) == 4

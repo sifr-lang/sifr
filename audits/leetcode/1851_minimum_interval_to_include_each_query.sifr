@@ -1,24 +1,22 @@
 # LeetCode 1851: Minimum Interval To Include Each Query
 
-def minInterval(mut intervals: list[list[int]], queries: list[int]) -> list[int]:
-    intervals.sort()
-    minHeap: list[tuple[int, int]] = []
-    res: dict[int, int] = {}
-    i = 0
-    for q in sorted(queries):
-        while i < len(intervals) and intervals[i][0] <= q:
-            l = intervals[i][0]
-            r = intervals[i][1]
-            heapq.heappush(minHeap, (r - l + 1, r))
-            i += 1
+def _nz_int(value: int | None) -> int:
+    if value is None:
+        return 0
+    return value
 
-        while minHeap and minHeap[0][1] < q:
-            heapq.heappop(minHeap)
-        res[q] = minHeap[0][0] if minHeap else -1
-
+def minInterval(intervals: list[list[int]], queries: list[int]) -> list[int]:
     out: list[int] = []
     for q in queries:
-        out.append(res[q] if q in res else -1)
+        best = -1
+        for interval in intervals:
+            l = _nz_int(interval[0])
+            r = _nz_int(interval[1])
+            if l <= q and q <= r:
+                size = r - l + 1
+                if best == -1 or size < best:
+                    best = size
+        out.append(best)
     return out
 
 def main():

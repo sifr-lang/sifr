@@ -1,7 +1,7 @@
 use crate::hir_analysis::traversal::{self, TraversalConfig, TraversalControl};
 use crate::ModuleFuncSignatures;
 use sifr_hir::{cfg, HirExpr, HirIteratorOp, HirPattern, HirStmt};
-use sifr_type_system::Type;
+use sifr_type_system::{ParamConvention, Type};
 use std::cell::RefCell;
 use std::collections::{HashMap, HashSet};
 
@@ -168,6 +168,83 @@ pub(crate) fn collect_mutated_vars(
     stmts: &[HirStmt],
     func_signatures: Option<&ModuleFuncSignatures>,
 ) -> HashSet<String> {
+    fn collect_nested_assign_targets(stmts: &[HirStmt]) -> HashSet<String> {
+        let mut assigned = HashSet::new();
+        let mut on_stmt = |stmt: &HirStmt| {
+            if let HirStmt::Assign { name, .. } = stmt {
+                assigned.insert(name.clone());
+            }
+        };
+        let mut on_expr = |_expr: &HirExpr| {};
+        traversal::walk_stmts(
+            stmts,
+            TraversalConfig::LOCAL_SCOPE_ONLY,
+            &mut on_stmt,
+            &mut on_expr,
+        );
+        assigned
+    }
+
+    fn canonical_mutating_call_name(func: &str) -> &str {
+        let canonical = func.strip_prefix("__compat_sifr_heapq_").unwrap_or(func);
+        canonical.rsplit('.').next().unwrap_or(canonical)
+    }
+
+    fn effective_nested_param_convention(
+        param_convention: ParamConvention,
+        param_ty: &Type,
+        nested_mutated_vars: &HashSet<String>,
+        param_name: &str,
+    ) -> ParamConvention {
+        if !nested_mutated_vars.contains(param_name) {
+            return param_convention;
+        }
+        if param_ty.ownership() == sifr_type_system::OwnershipKind::Copy {
+            return if param_convention.is_owned() {
+                ParamConvention::own_mut()
+            } else {
+                param_convention
+            };
+        }
+        if param_convention.is_borrowed() {
+            ParamConvention::mut_borrow()
+        } else {
+            ParamConvention::own_mut()
+        }
+    }
+
+    fn collect_local_function_param_conventions(
+        stmts: &[HirStmt],
+        func_signatures: Option<&ModuleFuncSignatures>,
+    ) -> HashMap<String, Vec<(Type, ParamConvention)>> {
+        let mut local = HashMap::new();
+        for stmt in stmts {
+            let HirStmt::NestedFunction { func } = stmt else {
+                continue;
+            };
+            let nested_mutated_vars = collect_mutated_vars(&func.body, func_signatures);
+            let params = func
+                .params
+                .iter()
+                .map(|param| {
+                    (
+                        param.ty.clone(),
+                        effective_nested_param_convention(
+                            param.convention,
+                            &param.ty,
+                            &nested_mutated_vars,
+                            &param.name,
+                        ),
+                    )
+                })
+                .collect::<Vec<_>>();
+            local.insert(func.name.clone(), params);
+        }
+        local
+    }
+
+    let local_func_param_conventions =
+        collect_local_function_param_conventions(stmts, func_signatures);
     let mutated = RefCell::new(HashSet::new());
 
     let mut on_stmt = |stmt: &HirStmt| match stmt {
@@ -181,9 +258,14 @@ pub(crate) fn collect_mutated_vars(
                 .map(|param| param.name.clone())
                 .collect::<HashSet<_>>();
             let locally_defined = collect_locally_defined_vars(&func.body);
+            let assigned_in_nested = collect_nested_assign_targets(&func.body);
             let captured_mutated = collect_mutated_vars(&func.body, func_signatures)
                 .into_iter()
-                .filter(|name| !param_names.contains(name) && !locally_defined.contains(name))
+                .filter(|name| {
+                    !param_names.contains(name)
+                        && !locally_defined.contains(name)
+                        && !assigned_in_nested.contains(name)
+                })
                 .collect::<Vec<_>>();
             mutated.borrow_mut().extend(captured_mutated);
         }
@@ -230,18 +312,46 @@ pub(crate) fn collect_mutated_vars(
             }
         }
         HirExpr::Call { func, args, .. } => {
-            if let Some(sigs) = func_signatures {
-                if let Some((param_convs, _)) = sigs.get(func) {
-                    for (idx, arg) in args.iter().enumerate() {
-                        if param_convs
-                            .get(idx)
-                            .is_some_and(|(_, convention)| convention.is_mut_borrow())
-                        {
-                            if let HirExpr::Name { name, .. } = arg {
-                                mutated.borrow_mut().insert(name.clone());
-                            }
+            let canonical_func = canonical_mutating_call_name(func);
+            let param_convs = func_signatures
+                .and_then(|sigs| {
+                    sigs.get(func)
+                        .map(|(param_convs, _)| param_convs.as_slice())
+                })
+                .or_else(|| {
+                    func_signatures.and_then(|sigs| {
+                        sigs.get(canonical_func)
+                            .map(|(param_convs, _)| param_convs.as_slice())
+                    })
+                })
+                .or_else(|| {
+                    local_func_param_conventions
+                        .get(func)
+                        .map(|param_convs| param_convs.as_slice())
+                })
+                .or_else(|| {
+                    local_func_param_conventions
+                        .get(canonical_func)
+                        .map(|param_convs| param_convs.as_slice())
+                });
+            if let Some(param_convs) = param_convs {
+                for (idx, arg) in args.iter().enumerate() {
+                    if param_convs
+                        .get(idx)
+                        .is_some_and(|(_, convention)| convention.is_mutable())
+                    {
+                        if let HirExpr::Name { name, .. } = arg {
+                            mutated.borrow_mut().insert(name.clone());
                         }
                     }
+                }
+            }
+            if matches!(
+                canonical_func,
+                "heappush" | "heappop" | "heapify" | "heapreplace" | "heappushpop"
+            ) {
+                if let Some(HirExpr::Name { name, .. }) = args.first() {
+                    mutated.borrow_mut().insert(name.clone());
                 }
             }
         }
@@ -476,6 +586,52 @@ mod tests {
         );
 
         let mutated = collect_mutated_vars(&stmts, Some(&sigs));
+        assert!(mutated.contains("items"));
+    }
+
+    #[test]
+    fn collect_mutated_vars_marks_local_nested_function_mutborrow_call_argument() {
+        let nested = HirFunction {
+            name: "touch_local".to_string(),
+            params: vec![HirParam {
+                name: "xs".to_string(),
+                ty: Type::List(Box::new(Type::Int)),
+                default: None,
+                keyword_only: false,
+                convention: ParamConvention::own(),
+            }],
+            return_type: Type::None,
+            body: vec![HirStmt::Expr {
+                expr: HirExpr::MethodCall {
+                    object: Box::new(HirExpr::Name {
+                        name: "xs".to_string(),
+                        ty: Type::List(Box::new(Type::Int)),
+                    }),
+                    method: "append".to_string(),
+                    args: vec![HirExpr::IntLiteral(1)],
+                    ty: Type::None,
+                },
+            }],
+            method_kind: MethodKind::Regular,
+            decorators: vec![],
+            type_params: vec![],
+        };
+
+        let stmts = vec![
+            HirStmt::NestedFunction { func: nested },
+            HirStmt::Expr {
+                expr: HirExpr::Call {
+                    func: "touch_local".to_string(),
+                    args: vec![HirExpr::Name {
+                        name: "items".to_string(),
+                        ty: Type::List(Box::new(Type::Int)),
+                    }],
+                    ty: Type::None,
+                },
+            },
+        ];
+
+        let mutated = collect_mutated_vars(&stmts, None);
         assert!(mutated.contains("items"));
     }
 

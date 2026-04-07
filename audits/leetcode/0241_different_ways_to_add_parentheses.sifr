@@ -1,18 +1,57 @@
 # LeetCode 241: Different Ways To Add Parentheses
 
+def _digit_value(ch: str) -> int:
+    if ch == "0":
+        return 0
+    if ch == "1":
+        return 1
+    if ch == "2":
+        return 2
+    if ch == "3":
+        return 3
+    if ch == "4":
+        return 4
+    if ch == "5":
+        return 5
+    if ch == "6":
+        return 6
+    if ch == "7":
+        return 7
+    if ch == "8":
+        return 8
+    if ch == "9":
+        return 9
+    return 0
+
+def _parse_positive_int(token: str) -> int:
+    value = 0
+    for ch in token:
+        value = value * 10 + _digit_value(ch)
+    return value
+
 def diffWaysToCompute(s: str) -> list[int]:
-    def f(s):
-        res = []
-        for i, c in enumerate(s):
-            if c in '+-*':
-                for l in f(s[:i]):
-                    for r in f(s[i + 1:]):
-                        res.append(eval(f'{l}{c}{r}'))
-        
-        return res or [int(s)]
-    return f(s)
+    def solve(expr: str) -> list[int]:
+        res: list[int] = []
+        for i in range(len(expr)):
+            op = expr[i]
+            if op is None:
+                continue
+            if op == "+" or op == "-" or op == "*":
+                left = solve(expr[:i])
+                right = solve(expr[i + 1 :])
+                for l in left:
+                    for r in right:
+                        if op == "+":
+                            res.append(l + r)
+                        elif op == "-":
+                            res.append(l - r)
+                        else:
+                            res.append(l * r)
+        if len(res) == 0:
+            res.append(_parse_positive_int(expr))
+        return res
+
+    return solve(s)
 
 def main():
-    assert str(diffWaysToCompute("2-1-1")) == '[0, 2]'
-
-
+    assert sorted(diffWaysToCompute("2-1-1")) == [0, 2]
