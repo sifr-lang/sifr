@@ -100,7 +100,7 @@ Phase exit validation:
 - 2026-04-08: reviewer pass-2 returned `READY TO IMPLEMENT` with no remaining critical corrections.
 - 2026-04-08: `WS1` implemented, validated, reviewed, and merged via PR `#1605`.
 - 2026-04-08: `WS3` implemented, validated, reviewed, and merged via PR `#1606`.
-- 2026-04-08: `WS2` + `WS4` implemented with closure validation artifacts and final phase/doc updates.
+- 2026-04-08: `WS2` + `WS4` implemented, validated, reviewed, and merged via PR `#1607`.
 - 2026-04-08: scoped phase target reached zero compiler/runtime failures (`NO_ORACLE: 12`, `PASS: 6`).
 - 2026-04-08: full corpus closure rerun reached zero failures (`PASS: 208`, `NO_ORACLE: 203`).
 - 2026-04-08: local validation gates passed for closure wave:
@@ -141,3 +141,5 @@ Phase exit validation:
     - `cargo run -q -p sifr -- run audits/leetcode/1466_reorder_routes_to_make_all_paths_lead_to_the_city_zero.sifr`
     - `scripts/run_all_tests.sh --profile quick`
     - `scripts/run_all_tests.sh`
+  - PR:
+    - `https://github.com/yaseralnajjar/sifr/pull/1607` (merged)
