@@ -2754,35 +2754,43 @@ impl RustEmitter {
                     })
                 }
             }
-            "max" | "min" if args.len() == 2 => {
-                let left = self
-                    .try_lower_registry_expr_strict(&args[0])
-                    .or_else(|| self.lower_stmt_expr_for_ir(&args[0]).ok().flatten())?;
-                let right = self
-                    .try_lower_registry_expr_strict(&args[1])
-                    .or_else(|| self.lower_stmt_expr_for_ir(&args[1]).ok().flatten())?;
-                if matches!(
-                    crate::resolve_alias_type_for_plain_call(args[0].ty()),
-                    Type::Float
-                ) || matches!(
-                    crate::resolve_alias_type_for_plain_call(args[1].ty()),
-                    Type::Float
-                ) {
-                    Some(crate::RustExpr::MethodCall {
-                        receiver: Box::new(left),
-                        method: func.to_string(),
-                        args: vec![right],
-                    })
-                } else {
-                    Some(crate::RustExpr::FnCall {
-                        func: Box::new(crate::RustExpr::Path(vec![
-                            "std".to_string(),
-                            "cmp".to_string(),
-                            func.to_string(),
-                        ])),
-                        args: vec![left, right],
-                    })
+            "max" | "min" if args.len() >= 2 => {
+                let mut lowered_args = Vec::with_capacity(args.len());
+                for arg in args {
+                    let lowered = self
+                        .try_lower_registry_expr_strict(arg)
+                        .or_else(|| self.lower_stmt_expr_for_ir(arg).ok().flatten())?;
+                    lowered_args.push(lowered);
                 }
+
+                let use_float_comparison = args.iter().any(|arg| {
+                    matches!(
+                        crate::resolve_alias_type_for_plain_call(arg.ty()),
+                        Type::Float
+                    )
+                });
+                let mut iter = lowered_args.into_iter();
+                let mut reduced = iter.next()?;
+                for next in iter {
+                    reduced = if use_float_comparison {
+                        crate::RustExpr::MethodCall {
+                            receiver: Box::new(reduced),
+                            method: func.to_string(),
+                            args: vec![next],
+                        }
+                    } else {
+                        crate::RustExpr::FnCall {
+                            func: Box::new(crate::RustExpr::Path(vec![
+                                "std".to_string(),
+                                "cmp".to_string(),
+                                func.to_string(),
+                            ])),
+                            args: vec![reduced, next],
+                        }
+                    };
+                }
+
+                Some(reduced)
             }
             "pow" if args.len() == 2 => {
                 let base = self.try_lower_registry_expr_strict(&args[0])?;

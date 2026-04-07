@@ -3648,3 +3648,65 @@ fn test_float_min_max_parenthesize_cast_receivers() {
         "invalid Rust precedence should not be emitted"
     );
 }
+
+#[test]
+fn test_variadic_min_max_lower_to_nested_calls() {
+    let module = HirModule {
+        functions: vec![HirFunction {
+            name: "main".to_string(),
+            params: vec![],
+            return_type: Type::None,
+            body: vec![
+                HirStmt::Expr {
+                    expr: HirExpr::Call {
+                        func: "print".to_string(),
+                        args: vec![HirExpr::Call {
+                            func: "min".to_string(),
+                            args: vec![
+                                HirExpr::IntLiteral(3),
+                                HirExpr::IntLiteral(1),
+                                HirExpr::IntLiteral(2),
+                            ],
+                            ty: Type::Int,
+                        }],
+                        ty: Type::None,
+                    },
+                },
+                HirStmt::Expr {
+                    expr: HirExpr::Call {
+                        func: "print".to_string(),
+                        args: vec![HirExpr::Call {
+                            func: "max".to_string(),
+                            args: vec![
+                                HirExpr::IntLiteral(1),
+                                HirExpr::IntLiteral(5),
+                                HirExpr::IntLiteral(2),
+                                HirExpr::IntLiteral(4),
+                            ],
+                            ty: Type::Int,
+                        }],
+                        ty: Type::None,
+                    },
+                },
+            ],
+            method_kind: MethodKind::Regular,
+            decorators: vec![],
+            type_params: vec![],
+        }],
+        classes: vec![],
+        imports: vec![],
+        constants: vec![],
+        generic_functions: std::collections::HashMap::new(),
+        type_param_bounds: std::collections::HashMap::new(),
+    };
+
+    let rust_code = generate_rust(&module);
+    assert!(
+        rust_code.matches("std::cmp::min").count() >= 2,
+        "variadic min should lower to nested std::cmp::min calls: {rust_code}"
+    );
+    assert!(
+        rust_code.matches("std::cmp::max").count() >= 3,
+        "variadic max should lower to nested std::cmp::max calls: {rust_code}"
+    );
+}

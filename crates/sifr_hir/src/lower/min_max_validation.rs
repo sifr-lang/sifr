@@ -26,3 +26,24 @@ pub(super) fn validate_two_arg_min_max_operands(
     }
     true
 }
+
+pub(super) fn validate_variadic_min_max_operands(
+    func_name: &str,
+    operands: &[HirExpr],
+    ctx: &mut LowerCtx,
+) -> bool {
+    if operands.len() < 2 {
+        return true;
+    }
+
+    for window in operands.windows(2) {
+        let [left, right] = window else {
+            continue;
+        };
+        if !validate_two_arg_min_max_operands(func_name, left, right, ctx) {
+            return false;
+        }
+    }
+
+    true
+}

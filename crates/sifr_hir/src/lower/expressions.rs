@@ -28,7 +28,7 @@ use super::method_call_args::{
     lower_function_call_args, lower_method_call_args, lower_signature_call_args,
     validate_dict_update_arg, validate_list_extend_arg, validate_set_iterable_arg,
 };
-use super::min_max_validation::validate_two_arg_min_max_operands;
+use super::min_max_validation::validate_variadic_min_max_operands;
 use super::mutating_methods::reject_immutable_parameter_method_mutation;
 use super::nonempty_method_narrowing::refine_nonempty_method_return_type;
 use super::numeric_sentinels::{
@@ -1132,22 +1132,32 @@ pub(super) fn lower_call(call: &ExprCall, ctx: &mut LowerCtx) -> Option<HirExpr>
         }
 
         if func_name == "min" {
-            if call.arguments.args.len() == 2 {
-                let a = lower_expr(&call.arguments.args[0], ctx)?;
-                let b = lower_expr(&call.arguments.args[1], ctx)?;
-                let (a, b, result_ty) = normalize_min_max_numeric_sentinels(
-                    &call.arguments.args[0],
-                    &call.arguments.args[1],
-                    a,
-                    b,
-                    ctx,
-                );
-                if !validate_two_arg_min_max_operands("min", &a, &b, ctx) {
+            if call.arguments.args.len() >= 2 {
+                let mut args = Vec::with_capacity(call.arguments.args.len());
+                for arg in &call.arguments.args {
+                    args.push(lower_expr(arg, ctx)?);
+                }
+
+                let mut result_ty = args[0].ty().clone();
+                for index in 1..args.len() {
+                    let (left, right, pair_result_ty) = normalize_min_max_numeric_sentinels(
+                        &call.arguments.args[index - 1],
+                        &call.arguments.args[index],
+                        args[index - 1].clone(),
+                        args[index].clone(),
+                        ctx,
+                    );
+                    args[index - 1] = left;
+                    args[index] = right;
+                    result_ty = pair_result_ty;
+                }
+
+                if !validate_variadic_min_max_operands("min", &args, ctx) {
                     return None;
                 }
                 return Some(HirExpr::Call {
                     func: "min".to_string(),
-                    args: vec![a, b],
+                    args,
                     ty: result_ty,
                 });
             } else if call.arguments.args.len() == 1 {
@@ -1165,26 +1175,36 @@ pub(super) fn lower_call(call: &ExprCall, ctx: &mut LowerCtx) -> Option<HirExpr>
                     ty: Type::Union(vec![elem_ty, Type::None]),
                 });
             }
-            ctx.error("min() takes 1 or 2 arguments".to_string());
+            ctx.error("min() takes at least 1 argument".to_string());
             return None;
         }
         if func_name == "max" {
-            if call.arguments.args.len() == 2 {
-                let a = lower_expr(&call.arguments.args[0], ctx)?;
-                let b = lower_expr(&call.arguments.args[1], ctx)?;
-                let (a, b, result_ty) = normalize_min_max_numeric_sentinels(
-                    &call.arguments.args[0],
-                    &call.arguments.args[1],
-                    a,
-                    b,
-                    ctx,
-                );
-                if !validate_two_arg_min_max_operands("max", &a, &b, ctx) {
+            if call.arguments.args.len() >= 2 {
+                let mut args = Vec::with_capacity(call.arguments.args.len());
+                for arg in &call.arguments.args {
+                    args.push(lower_expr(arg, ctx)?);
+                }
+
+                let mut result_ty = args[0].ty().clone();
+                for index in 1..args.len() {
+                    let (left, right, pair_result_ty) = normalize_min_max_numeric_sentinels(
+                        &call.arguments.args[index - 1],
+                        &call.arguments.args[index],
+                        args[index - 1].clone(),
+                        args[index].clone(),
+                        ctx,
+                    );
+                    args[index - 1] = left;
+                    args[index] = right;
+                    result_ty = pair_result_ty;
+                }
+
+                if !validate_variadic_min_max_operands("max", &args, ctx) {
                     return None;
                 }
                 return Some(HirExpr::Call {
                     func: "max".to_string(),
-                    args: vec![a, b],
+                    args,
                     ty: result_ty,
                 });
             } else if call.arguments.args.len() == 1 {
@@ -1202,7 +1222,7 @@ pub(super) fn lower_call(call: &ExprCall, ctx: &mut LowerCtx) -> Option<HirExpr>
                     ty: Type::Union(vec![elem_ty, Type::None]),
                 });
             }
-            ctx.error("max() takes 1 or 2 arguments".to_string());
+            ctx.error("max() takes at least 1 argument".to_string());
             return None;
         }
         if func_name == "sum" {
