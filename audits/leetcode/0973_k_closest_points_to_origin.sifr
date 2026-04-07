@@ -1,19 +1,50 @@
 # LeetCode 973: K Closest Points To Origin
 
 def kClosest(points: list[list[int]], k: int) -> list[list[int]]:
-    minHeap = []
-    for x, y in points:
-        dist = (x ** 2) + (y ** 2)
-        minHeap.append((dist, x, y))
-    
-    heapq.heapify(minHeap)
-    res = []
+    res: list[list[int]] = []
+    used = set()
+
     for _ in range(k):
-        _, x, y = heapq.heappop(minHeap)
-        res.append((x, y))
+        best_idx = -1
+        best_dist = 0
+        for idx in range(len(points)):
+            if idx in used:
+                continue
+            point = points[idx]
+            if point is None:
+                continue
+            x0 = point[0]
+            y0 = point[1]
+            x = 0
+            y = 0
+            if x0 is not None and y0 is not None:
+                x = x0
+                y = y0
+            else:
+                continue
+            dist = (x * x) + (y * y)
+            if best_idx == -1 or dist < best_dist:
+                best_idx = idx
+                best_dist = dist
+        if best_idx == -1:
+            break
+
+        used.add(best_idx)
+        point = points[best_idx]
+        if point is None:
+            continue
+        x0 = point[0]
+        y0 = point[1]
+        x = 0
+        y = 0
+        if x0 is not None and y0 is not None:
+            x = x0
+            y = y0
+        else:
+            continue
+        res.append([x, y])
     return res
 
 def main():
-    assert kClosest([[1, 3], [-2, 2]], 1) == [(-2, 2)]
-    assert kClosest([[3, 3], [5, -1], [-2, 4]], 2) == [(3, 3), (-2, 4)]
-
+    assert kClosest([[1, 3], [-2, 2]], 1) == [[-2, 2]]
+    assert kClosest([[3, 3], [5, -1], [-2, 4]], 2) == [[3, 3], [-2, 4]]

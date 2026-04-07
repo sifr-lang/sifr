@@ -1,28 +1,56 @@
 # LeetCode 1514: Path With Maximum Probability
 
 def maxProbability(n: int, edges: list[list[int]], succProb: list[float], start: int, end: int) -> float:
-    adj = collections.defaultdict(list)
-    for i in range(len(edges)):
-        src, dst = edges[i]
-        adj[src].append([dst, succProb[i]])
-        adj[dst].append([src, succProb[i]])
+    if n <= 0 or start < 0 or end < 0 or start >= n or end >= n:
+        return 0.0
 
-    pq = [(-1, start)]
-    visit = set()
+    best = {start: 1.0}
 
-    while pq:
-        prob, cur = heapq.heappop(pq)
-        visit.add(cur)
+    for _ in range(n - 1):
+        updated = False
+        nextBest = dict(best)
 
-        if cur == end:
-            return prob * -1
-        for nei, edgeProb in adj[cur]:
-            if nei not in visit:
-                heapq.heappush(pq, (prob * edgeProb, nei))
-    return 0
+        for i in range(len(edges)):
+            edge = edges[i]
+            if edge is None:
+                continue
+            src0 = edge[0]
+            dst0 = edge[1]
+            src = 0
+            dst = 0
+            if src0 is not None and dst0 is not None:
+                src = src0
+                dst = dst0
+            else:
+                continue
+
+            prob0 = succProb[i]
+            prob = 0.0
+            if prob0 is not None:
+                prob = prob0
+            else:
+                continue
+
+            srcBest = best.get(src, 0.0)
+            dstBest = best.get(dst, 0.0)
+
+            toDst = srcBest * prob
+            if toDst > nextBest.get(dst, 0.0):
+                nextBest[dst] = toDst
+                updated = True
+
+            toSrc = dstBest * prob
+            if toSrc > nextBest.get(src, 0.0):
+                nextBest[src] = toSrc
+                updated = True
+
+        best = nextBest
+        if not updated:
+            break
+
+    return best.get(end, 0.0)
 
 def main():
     assert maxProbability(3, [[0, 1], [1, 2], [0, 2]], [0.5, 0.5, 0.2], 0, 2) == 0.25
     assert maxProbability(3, [[0, 1], [1, 2], [0, 2]], [0.5, 0.5, 0.3], 0, 2) == 0.3
-    assert maxProbability(3, [[0, 1]], [0.5], 0, 2) == 0
-
+    assert maxProbability(3, [[0, 1]], [0.5], 0, 2) == 0.0
