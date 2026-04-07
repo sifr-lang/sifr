@@ -579,6 +579,14 @@ Reasoning:
 - [x] WS5: Scoped codegen defect closure
 - [x] WS6: Canonical Sifr adaptation sweep
 
+## Wave/PR Ledger (Merged)
+
+- WS1: [#1596](https://github.com/yaseralnajjar/sifr/pull/1596)
+- WS2: [#1597](https://github.com/yaseralnajjar/sifr/pull/1597)
+- WS4: [#1598](https://github.com/yaseralnajjar/sifr/pull/1598)
+- WS3: [#1599](https://github.com/yaseralnajjar/sifr/pull/1599)
+- WS5 + WS6 + phase closure validation: [#1600](https://github.com/yaseralnajjar/sifr/pull/1600)
+
 ## Closure Validation (2026-04-07)
 
 Scoped fixture rerun (`22` fixtures listed in this phase): `22/22` pass.
