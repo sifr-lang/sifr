@@ -620,6 +620,21 @@ mod tests {
     }
 
     #[test]
+    fn lower_method_supports_list_sort_with_reverse_flag() {
+        let lowered = super::lower_method(
+            &Type::List(Box::new(Type::Int)),
+            "sort",
+            &RustExpr::Ident("xs".to_string()),
+            &[RustExpr::Ident("desc".to_string())],
+        )
+        .expect("list sort reverse lowers");
+        let rendered = render_expr(&lowered.expr);
+        assert!(rendered.contains("if desc"));
+        assert!(rendered.contains("xs.sort()"));
+        assert!(rendered.contains("xs.reverse()"));
+    }
+
+    #[test]
     fn lowers_decimal_and_bigdecimal_methods_via_registry() {
         let decimal_quantize =
             lower_method(&Type::Decimal, "quantize", "d", &["scale".to_string()])

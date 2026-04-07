@@ -92,16 +92,23 @@ fn typevar_satisfies_spec(tv_name: &str, target_spec: &str, ctx: &LowerCtx) -> b
         })
 }
 
+fn type_satisfies_comparable_bound(ty: &Type, ctx: &LowerCtx) -> bool {
+    match ty.resolve_alias() {
+        Type::Int | Type::Float | Type::Str | Type::Bool | Type::BigInt => true,
+        Type::Tuple(elements) => elements
+            .iter()
+            .all(|element| type_satisfies_bound(element, "Comparable", ctx)),
+        _ => false,
+    }
+}
+
 /// Check if a type satisfies a named bound (hard requirement).
 pub(super) fn type_satisfies_bound(ty: &Type, bound: &str, ctx: &LowerCtx) -> bool {
     if let Type::TypeVar(tv_name) = ty {
         return typevar_satisfies_spec(tv_name, bound, ctx);
     }
     match bound {
-        "Comparable" => matches!(
-            ty,
-            Type::Int | Type::Float | Type::Str | Type::Bool | Type::BigInt
-        ),
+        "Comparable" => type_satisfies_comparable_bound(ty, ctx),
         "Addable" => matches!(ty, Type::Int | Type::Float | Type::Str | Type::BigInt),
         "Hashable" => matches!(
             ty,

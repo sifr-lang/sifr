@@ -137,14 +137,37 @@ pub(super) fn lower_reverse(object: &RustExpr, args: &[RustExpr]) -> Option<Rust
 }
 
 pub(super) fn lower_sort(object: &RustExpr, args: &[RustExpr]) -> Option<RustExpr> {
-    if !args.is_empty() {
-        return None;
+    match args {
+        [] => Some(RustExpr::MethodCall {
+            receiver: Box::new(object.clone()),
+            method: "sort".to_string(),
+            args: vec![],
+        }),
+        [reverse] => Some(RustExpr::If {
+            cond: Box::new(reverse.clone()),
+            then_expr: Box::new(RustExpr::Block {
+                stmts: vec![
+                    RustStmt::Expr(RustExpr::MethodCall {
+                        receiver: Box::new(object.clone()),
+                        method: "sort".to_string(),
+                        args: vec![],
+                    }),
+                    RustStmt::Expr(RustExpr::MethodCall {
+                        receiver: Box::new(object.clone()),
+                        method: "reverse".to_string(),
+                        args: vec![],
+                    }),
+                ],
+                expr: None,
+            }),
+            else_expr: Some(Box::new(RustExpr::MethodCall {
+                receiver: Box::new(object.clone()),
+                method: "sort".to_string(),
+                args: vec![],
+            })),
+        }),
+        _ => None,
     }
-    Some(RustExpr::MethodCall {
-        receiver: Box::new(object.clone()),
-        method: "sort".to_string(),
-        args: vec![],
-    })
 }
 
 pub(super) fn lower_count(object: &RustExpr, args: &[RustExpr]) -> Option<RustExpr> {

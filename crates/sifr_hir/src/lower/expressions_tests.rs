@@ -195,9 +195,8 @@ fn test_defaultdict_membership_checks_lower() {
 
 #[test]
 fn test_range_membership_checks_lower() {
-    let result = lower_source(
-        "def main() -> bool:\n    return (2 in range(5)) and (9 not in range(5))\n",
-    );
+    let result =
+        lower_source("def main() -> bool:\n    return (2 in range(5)) and (9 not in range(5))\n");
     assert!(result.is_ok(), "{result:?}");
 }
 
@@ -1273,6 +1272,14 @@ fn test_reversible_annotation_accepts_list_and_rejects_set() {
 }
 
 #[test]
+fn test_comprehensions_accept_iterator_inputs() {
+    let result = lower_source(
+        "def main():\n    nums: list[int] = [1, 2, 3]\n    it_list: Iterator[int] = iter(nums)\n    list_comp: list[int] = [x for x in it_list]\n    it_set: Iterator[int] = iter(nums)\n    set_comp: set[int] = {x for x in it_set}\n    it_dict: Iterator[tuple[int, int]] = enumerate(nums)\n    dict_comp: dict[int, int] = {i: x for i, x in it_dict}\n",
+    );
+    assert!(result.is_ok(), "{result:?}");
+}
+
+#[test]
 fn test_map_is_typed_as_iterator() {
     let module = lower_source(
         "def add(x: int, y: int) -> int:\n    return x + y\n\ndef main():\n    left: list[int] = [1, 2]\n    right: list[int] = [3, 4]\n    mapped: Iterator[int] = map(add, left, right)\n    _vals: list[int] = list(mapped)\n",
@@ -1384,6 +1391,24 @@ fn test_sorted_rejects_duplicate_iterable_argument() {
     assert!(errors.iter().any(|e| e
         .message
         .contains("sorted() got multiple values for argument 'iterable'")));
+}
+
+#[test]
+fn test_list_sort_accepts_reverse_keyword() {
+    let result =
+        lower_source("def main():\n    nums: list[int] = [3, 1, 2]\n    nums.sort(reverse=True)\n");
+    assert!(result.is_ok(), "{result:?}");
+}
+
+#[test]
+fn test_list_sort_rejects_non_bool_reverse_keyword() {
+    let result =
+        lower_source("def main():\n    nums: list[int] = [3, 1, 2]\n    nums.sort(reverse=1)\n");
+    assert!(result.is_err());
+    let errors = result.unwrap_err();
+    assert!(errors.iter().any(|e| e
+        .message
+        .contains("list.sort() argument 'reverse' must be 'bool'")));
 }
 
 #[test]
@@ -1698,6 +1723,14 @@ fn test_protocol_bound_forwarding_rejects_non_conforming_typevar() {
     assert!(errors
         .iter()
         .any(|e| e.message.contains("does not implement protocol 'Readable'")));
+}
+
+#[test]
+fn test_comparable_bound_accepts_homogeneous_tuples() {
+    let result = lower_source(
+        "def choose[T: Comparable](x: T, y: T) -> T:\n    return x if x > y else y\n\ndef main():\n    left: tuple[int, int] = (1, 2)\n    right: tuple[int, int] = (2, 1)\n    out: tuple[int, int] = choose(left, right)\n    print(out)\n",
+    );
+    assert!(result.is_ok(), "{result:?}");
 }
 
 #[test]

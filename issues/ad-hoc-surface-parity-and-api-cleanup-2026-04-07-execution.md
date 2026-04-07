@@ -76,6 +76,7 @@ Current scoped fixture total: `22`
 
 - 2026-04-07: `WS1` implemented, validated, reviewed, and merged via PR `#1596`.
 - 2026-04-07: `WS2` implemented, validated, reviewed, and merged via PR `#1597`.
+- 2026-04-07: `WS4` implemented, validated, reviewed, and merged via PR `#1598`.
 
 ## Wave Log
 
@@ -128,3 +129,51 @@ Current scoped fixture total: `22`
     - compat mapping membership diagnostic (`__compat_defaultdict_list`) is removed
   - PR:
     - `https://github.com/yaseralnajjar/sifr/pull/1597` (merged)
+
+- Wave WS4 (empty-container specialization repair)
+  - Compiler changes:
+    - nested inference now recognizes `str.split(...) -> list[str]` (instead of `list[Unknown]`)
+    - empty-dict specialization no longer drifts to incompatible key/value types in split+zip dict patterns
+  - Tests:
+    - `crates/sifr_hir/src/lower/expressions_tests.rs`
+      - `test_empty_dict_specialization_with_split_zip_word_pattern_shape`
+  - Validation:
+    - `cargo test -p sifr_hir test_empty_dict_specialization_with_split_zip_word_pattern_shape -- --nocapture`
+    - `cargo test -p sifr_hir test_tuple_for_target_inference_specializes_empty_dict_for_membership_index_pattern -- --nocapture`
+    - `cargo run -q -p sifr -- check audits/leetcode/0290_word_pattern.sifr`
+    - `cargo run -q -p sifr -- check audits/leetcode/1345_jump_game_iv.sifr`
+  - Scope delta:
+    - `0290_word_pattern` now passes; scoped dict-specialization drift is removed
+    - `1345_jump_game_iv` still has residual non-WS4 blockers
+  - PR:
+    - `https://github.com/yaseralnajjar/sifr/pull/1598` (merged)
+
+- Wave WS3 (iterator consumer stabilization and tuple heap comparability)
+  - Compiler changes:
+    - list/set/dict comprehension lowering now accepts iterator-protocol inputs via canonical iterable element discovery
+    - tuple lexicographic `Comparable` bound support added when all tuple elements satisfy `Comparable`
+    - `list.sort(reverse=...)` now accepted in HIR method-call normalization/type-checking
+    - list method codegen now lowers `sort(reverse=expr)` to conditional in-place reverse ordering
+  - Tests:
+    - `crates/sifr_hir/src/lower/expressions_tests.rs`
+      - `test_comprehensions_accept_iterator_inputs`
+      - `test_list_sort_accepts_reverse_keyword`
+      - `test_list_sort_rejects_non_bool_reverse_keyword`
+      - `test_comparable_bound_accepts_homogeneous_tuples`
+    - `crates/sifr_codegen/src/methods/mod.rs`
+      - `lower_method_supports_list_sort_with_reverse_flag`
+  - Validation:
+    - `cargo test -p sifr_hir test_comprehensions_accept_iterator_inputs -- --nocapture`
+    - `cargo test -p sifr_hir test_list_sort_rejects_non_bool_reverse_keyword -- --nocapture`
+    - `cargo test -p sifr_hir test_comparable_bound_accepts_homogeneous_tuples -- --nocapture`
+    - `cargo test -p sifr_codegen lower_method_supports_list_sort_with_reverse_flag -- --nocapture`
+    - `cargo run -q -p sifr -- check audits/leetcode/0853_car_fleet.sifr`
+    - `cargo run -q -p sifr -- check audits/leetcode/1834_single_threaded_cpu.sifr`
+    - `cargo run -q -p sifr -- check audits/leetcode/1851_minimum_interval_to_include_each_query.sifr`
+    - `scripts/run_all_tests.sh --profile quick`
+  - Scope delta:
+    - `0853_car_fleet` now passes (iterator comprehension + `sort(reverse=True)` parity closed)
+    - `1834_single_threaded_cpu` no longer fails on iterator-consumer parity; residual issues are secondary (`mut` param and `heapq` optional/Any typing flow)
+    - `1851_minimum_interval_to_include_each_query` no longer fails on tuple comparability; residual issue is optional arithmetic narrowing
+  - PR:
+    - pending

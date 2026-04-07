@@ -328,7 +328,19 @@ fn normalize_list_method_args(
     keywords: &mut LoweredKeywords,
     ctx: &mut LowerCtx,
 ) -> Option<Vec<HirExpr>> {
-    normalize_index_method_args(method, positional, keywords, ctx)
+    match method {
+        "sort" => {
+            let mut args = positional;
+            if let Some(reverse) = take_keyword(keywords, "reverse") {
+                if !args.is_empty() {
+                    return duplicate_argument_error(method, "reverse", ctx);
+                }
+                args.push(reverse);
+            }
+            Some(args)
+        }
+        _ => normalize_index_method_args(method, positional, keywords, ctx),
+    }
 }
 
 fn normalize_dict_method_args(
