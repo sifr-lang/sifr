@@ -1,23 +1,49 @@
 # LeetCode 473: Matchsticks To Square
 
-def makesquare(matchsticks: list[int]) -> bool:
-    length = sum(matchsticks) // 4
-    sides = [0] * 4
-
-    if sum(matchsticks) / 4 != length:
+def makesquare(mut matchsticks: list[int]) -> bool:
+    total = sum(matchsticks)
+    if (total % 4) != 0:
         return False
-    matchsticks.sort(reverse=True)
 
-    def backtrack(i):
+    length = total // 4
+    sides = [0, 0, 0, 0]
+    matchsticks.sort()
+    matchsticks.reverse()
+
+    def backtrack(i: int) -> bool:
         if i == len(matchsticks):
-            return True
+            side0 = sides[0]
+            side1 = sides[1]
+            side2 = sides[2]
+            side3 = sides[3]
+            if side0 is None or side1 is None or side2 is None or side3 is None:
+                return False
+            return side0 == length and side1 == length and side2 == length and side3 == length
+
+        stick_raw = matchsticks[i]
+        stick = 0
+        if stick_raw is not None:
+            stick = stick_raw
+        else:
+            return False
 
         for j in range(4):
-            if sides[j] + matchsticks[i] <= length:
-                sides[j] += matchsticks[i]
+            side_raw = sides[j]
+            side = 0
+            if side_raw is not None:
+                side = side_raw
+            else:
+                continue
+            if side + stick <= length:
+                sides[j] = side + stick
                 if backtrack(i + 1):
                     return True
-                sides[j] -= matchsticks[i]
+                side_raw = sides[j]
+                if side_raw is not None:
+                    side = side_raw
+                else:
+                    return False
+                sides[j] = side - stick
         return False
 
     return backtrack(0)
@@ -25,4 +51,3 @@ def makesquare(matchsticks: list[int]) -> bool:
 def main():
     assert makesquare([1, 1, 2, 2, 2]) == True
     assert makesquare([3, 3, 3, 3, 4]) == False
-
