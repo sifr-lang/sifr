@@ -1,9 +1,32 @@
 # Ad-hoc Phase: LeetCode 18-Failure Root-Cause Closure (2026-04-08)
 
-Status: ready_to_implement
+Status: done
 Owner: phase_ad_hoc_leetcode_18_failure_root_cause_closure
-Source run artifact: `verification/leetcode/full_corpus_current_results_20260408_live_rerun1.json`
-Source taxonomy artifact: `verification/leetcode/full_corpus_failure_taxonomy_20260408_live_rerun1.json`
+Source run artifact: `verification/leetcode/full_corpus_current_results_20260408_live_rerun3.json`
+Source taxonomy artifact: `verification/leetcode/full_corpus_failure_taxonomy_20260408_live_rerun3.json`
+
+## Closure Snapshot
+
+Final corpus summary from closure artifacts:
+
+- total cases: `411`
+- failing cases: `0`
+- pass: `208`
+- no oracle: `203`
+
+Closure artifacts:
+
+- `verification/leetcode/ad_hoc_phase_leetcode18_targeted_after_all_fixes.json`
+- `verification/leetcode/full_corpus_current_results_20260408_live_rerun3.json`
+- `verification/leetcode/full_corpus_failure_taxonomy_20260408_live_rerun3.json`
+- `verification/leetcode/full_corpus_failure_taxonomy_20260408_live_rerun3.md`
+- `verification/leetcode/full_corpus_failure_taxonomy_20260408_live_rerun3_delta_vs_rerun1.md`
+
+Merged PR ledger:
+
+- `WS1_codegen_soundness_run_stage`: `https://github.com/yaseralnajjar/sifr/pull/1605`
+- `WS3_canonical_adaptation_sweep`: `https://github.com/yaseralnajjar/sifr/pull/1606`
+- `WS2_field_surface_and_optional_flow_core` + `WS4_closure_and_reclassification`: tracked in the execution ledger for the closure wave PR
 
 ## Scope Snapshot
 
@@ -214,4 +237,4 @@ Reviewer conclusions applied:
   - add mixed-lane ownership split table
  - reviewer pass-2 verdict: `READY TO IMPLEMENT` with no remaining critical corrections
 
-Final readiness verdict: `READY_TO_IMPLEMENT`
+Final readiness verdict: `DONE`
