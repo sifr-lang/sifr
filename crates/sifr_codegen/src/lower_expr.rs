@@ -337,7 +337,7 @@ pub fn try_lower_leaf_expr(expr: &HirExpr) -> Option<RustExpr> {
             let collection_ty = resolve_alias_type(collection.ty());
             let method = match collection_ty {
                 Type::Dict(_, _) => "contains_key",
-                Type::List(_) | Type::Set(_) | Type::Str => "contains",
+                Type::List(_) | Type::Set(_) | Type::Range | Type::Str => "contains",
                 _ => return None,
             };
             let arg = RustExpr::Ref {
@@ -3199,6 +3199,30 @@ mod tests {
                     Some(RustExpr::Ref { expr, .. })
                         if matches!(expr.as_ref(), RustExpr::Ident(name) if name == "needle")
                 )
+        ));
+    }
+
+    #[test]
+    fn lowers_contains_for_range_collection() {
+        let expr = HirExpr::ContainsOp {
+            element: Box::new(HirExpr::IntLiteral(3)),
+            collection: Box::new(HirExpr::RangeLiteral {
+                start: Box::new(HirExpr::IntLiteral(0)),
+                end: Box::new(HirExpr::IntLiteral(5)),
+                step: None,
+                ty: Type::Range,
+            }),
+            ty: Type::Bool,
+        };
+
+        let lowered = try_lower_leaf_expr(&expr).expect("range contains lowered");
+        assert!(matches!(
+            lowered,
+            RustExpr::MethodCall {
+                method,
+                args,
+                ..
+            } if method == "contains" && matches!(args.first(), Some(RustExpr::Ref { .. }))
         ));
     }
 

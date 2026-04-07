@@ -1,6 +1,6 @@
 # Ad-hoc Phase Execution: Surface Parity And API Cleanup (2026-04-07)
 
-Status: ready_to_start
+Status: in_progress
 Parent phase: `issues/ad-hoc-surface-parity-and-api-cleanup-2026-04-07.md`
 
 ## Scope Gate
@@ -71,3 +71,31 @@ Current scoped fixture total: `22`
 - `0212_word_search_ii` stays in phase with dependency flags; do not count it as a clean closure until its secondary blockers are addressed.
 - `1345_jump_game_iv`, `1851_minimum_interval_to_include_each_query`, and `2002_maximum_product_of_the_length_of_two_palindromic_subsequences` may still expose secondary categories after their in-phase blockers close.
 - `callable_argument_contract_mismatch` is currently `0`; keep no dedicated workstream for it unless it reappears in the next full rerun.
+
+## Work Log
+
+- 2026-04-07: `WS1` implemented, validated, reviewed, and merged via PR `#1596`.
+
+## Wave Log
+
+- Wave WS1 (variadic builtin parity for `min` / `max`)
+  - Compiler changes:
+    - variadic scalar lowering for `min`/`max` in HIR (3+ operands)
+    - pairwise variadic operand validation retained for optional/comparability checks
+    - codegen lowering updated to emit nested Rust comparisons for variadic scalar forms
+  - Tests:
+    - `crates/sifr_hir/src/lower/expressions_tests.rs`
+      - `test_min_max_accept_variadic_scalar_inputs`
+    - `crates/sifr_codegen/src/lib_codegen_tests.rs`
+      - `test_variadic_min_max_lower_to_nested_calls`
+  - Validation:
+    - `cargo test -p sifr_hir test_min_max_accept_variadic_scalar_inputs -- --nocapture`
+    - `cargo test -p sifr_hir test_max_two_arg_rejects_optional_operand -- --nocapture`
+    - `cargo test -p sifr_codegen test_variadic_min_max_lower_to_nested_calls -- --nocapture`
+    - `cargo run -q -p sifr -- check audits/leetcode/0072_edit_distance.sifr`
+    - `cargo run -q -p sifr -- check audits/leetcode/0221_maximal_square.sifr`
+    - `cargo run -q -p sifr -- check audits/leetcode/2002_maximum_product_of_the_length_of_two_palindromic_subsequences.sifr`
+  - Scope delta:
+    - scoped fixtures no longer emit `min()/max() takes 1 or 2 arguments`; residual diagnostics are secondary non-WS1 blockers
+  - PR:
+    - `https://github.com/yaseralnajjar/sifr/pull/1596` (merged)

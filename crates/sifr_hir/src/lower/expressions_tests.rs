@@ -182,6 +182,26 @@ fn test_defaultdict_subscript_read_is_non_optional_value_type() {
 }
 
 #[test]
+fn test_defaultdict_membership_checks_lower() {
+    let result = lower_source(
+        "def main() -> bool:\n    groups = defaultdict(list)\n    groups[\"a\"].append(1)\n    return \"a\" in groups and \"b\" not in groups\n",
+    );
+    assert!(
+        result.is_ok(),
+        "defaultdict membership checks should lower through compat mapping surface: {:?}",
+        result.err()
+    );
+}
+
+#[test]
+fn test_range_membership_checks_lower() {
+    let result = lower_source(
+        "def main() -> bool:\n    return (2 in range(5)) and (9 not in range(5))\n",
+    );
+    assert!(result.is_ok(), "{result:?}");
+}
+
+#[test]
 fn test_imported_counter_iterable_constructor_remains_unsupported() {
     let result = lower_source(
         "from sifr.collections import Counter\n\ndef main():\n    c: Counter[str] = Counter([\"a\", \"b\", \"a\"])\n",
