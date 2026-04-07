@@ -75,6 +75,7 @@ Current scoped fixture total: `22`
 ## Work Log
 
 - 2026-04-07: `WS1` implemented, validated, reviewed, and merged via PR `#1596`.
+- 2026-04-07: `WS2` implemented, validated, reviewed, and merged via PR `#1597`.
 
 ## Wave Log
 
@@ -99,3 +100,31 @@ Current scoped fixture total: `22`
     - scoped fixtures no longer emit `min()/max() takes 1 or 2 arguments`; residual diagnostics are secondary non-WS1 blockers
   - PR:
     - `https://github.com/yaseralnajjar/sifr/pull/1596` (merged)
+
+- Wave WS2 (membership parity for `range` and compat mapping wrappers)
+  - Compiler changes:
+    - `Type::contains_element_type()` now supports `range`, compat `defaultdict` aliases, and nullable-container unions
+    - leaf/structured codegen `ContainsOp` lowering now supports `range` collections
+  - Tests:
+    - `crates/sifr_type_system/src/types.rs`
+      - `test_contains_element_type_range_and_compat_defaultdict`
+    - `crates/sifr_hir/src/lower/expressions_tests.rs`
+      - `test_range_membership_checks_lower`
+      - `test_defaultdict_membership_checks_lower`
+    - `crates/sifr_codegen/src/lower_expr.rs`
+      - `lowers_contains_for_range_collection`
+  - Validation:
+    - `cargo test -p sifr_type_system test_contains_element_type_range_and_compat_defaultdict -- --nocapture`
+    - `cargo test -p sifr_hir test_range_membership_checks_lower -- --nocapture`
+    - `cargo test -p sifr_hir test_defaultdict_membership_checks_lower -- --nocapture`
+    - `cargo test -p sifr_codegen lowers_contains_for_range_collection -- --nocapture`
+    - `cargo run -q -p sifr -- check audits/leetcode/0130_surrounded_regions.sifr`
+    - `cargo run -q -p sifr -- check audits/leetcode/0200_number_of_islands.sifr`
+    - `cargo run -q -p sifr -- check audits/leetcode/0212_word_search_ii.sifr`
+    - `cargo run -q -p sifr -- check audits/leetcode/0994_rotting_oranges.sifr`
+    - `cargo run -q -p sifr -- check audits/leetcode/1345_jump_game_iv.sifr`
+  - Scope delta:
+    - scoped fixtures no longer emit `range` membership diagnostics
+    - compat mapping membership diagnostic (`__compat_defaultdict_list`) is removed
+  - PR:
+    - `https://github.com/yaseralnajjar/sifr/pull/1597` (merged)

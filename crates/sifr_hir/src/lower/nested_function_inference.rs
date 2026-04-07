@@ -1343,6 +1343,13 @@ fn infer_attribute_call_type(
 
     match method {
         "copy" => object_ty,
+        "split" => {
+            if matches!(object_ty, Type::Str) {
+                Type::List(Box::new(Type::Str))
+            } else {
+                Type::List(Box::new(Type::Unknown))
+            }
+        }
         "append" | "pop" | "sort" | "heapify" | "heappush" => Type::None,
         _ => Type::Unknown,
     }

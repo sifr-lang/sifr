@@ -1732,3 +1732,15 @@ fn test_empty_dict_literal_conflicting_write_reports_deterministic_error() {
         .iter()
         .any(|error| error.message.contains("empty literal type conflict")));
 }
+
+#[test]
+fn test_empty_dict_specialization_with_split_zip_word_pattern_shape() {
+    let result = lower_source(
+        "def wordPattern(pattern: str, s: str) -> bool:\n    words = s.split(\" \")\n    if len(pattern) != len(words):\n        return False\n    charToWord = {}\n    wordToChar = {}\n    for c, w in zip(pattern, words):\n        if c in charToWord and charToWord[c] != w:\n            return False\n        if w in wordToChar and wordToChar[w] != c:\n            return False\n        charToWord[c] = w\n        wordToChar[w] = c\n    return True\n",
+    );
+    assert!(
+        result.is_ok(),
+        "word-pattern split/zip flow should specialize empty dicts to dict[str, str]: {:?}",
+        result.err()
+    );
+}
