@@ -49,23 +49,16 @@ class Node:
         self.neighbors = neighbors
         self.key = key
 
-def postorderTraversal(root: TreeNode | None) -> list[int]:
-    stack = [root]
-    visit = [False]
-    res = []
+def postorderDfs(node: TreeNode | None, mut out: list[int]) -> None:
+    if node is None:
+        return
+    postorderDfs(node.left, out)
+    postorderDfs(node.right, out)
+    out.append(node.val)
 
-    while stack:
-        cur, v = stack.pop(), visit.pop()
-        if cur:
-            if v:
-                res.append(cur.val)
-            else:
-                stack.append(cur)
-                visit.append(True)
-                stack.append(cur.right)
-                visit.append(False)
-                stack.append(cur.left)
-                visit.append(False)
+def postorderTraversal(own root: TreeNode | None) -> list[int]:
+    res: list[int] = []
+    postorderDfs(root, res)
     return res
 
 def main():
