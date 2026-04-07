@@ -1327,6 +1327,14 @@ fn test_sum_min_max_accept_iterator_inputs() {
 }
 
 #[test]
+fn test_min_max_accept_variadic_scalar_inputs() {
+    let result = lower_source(
+        "def main() -> int:\n    lo: int = min(3, 1, 2)\n    hi: int = max(1, 5, 2, 4)\n    return lo + hi\n",
+    );
+    assert!(result.is_ok(), "{result:?}");
+}
+
+#[test]
 fn test_max_two_arg_rejects_optional_operand() {
     let result = lower_source(
         "def pick(d: dict[str, int], k: str) -> int:\n    best = 0\n    best = max(best, d[k])\n    return best\n",
