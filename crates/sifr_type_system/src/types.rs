@@ -1046,11 +1046,34 @@ impl Type {
     /// Returns the result type of the `in` operator for this collection type.
     pub fn contains_element_type(&self) -> Option<Type> {
         match self {
+            Self::Alias {
+                name: alias_name,
+                body,
+                ..
+            } if alias_name.starts_with("__compat_defaultdict_") => {
+                let Self::Dict(key, _) = body.resolve_alias() else {
+                    return None;
+                };
+                Some(*key.clone())
+            }
+            Self::Alias { body, .. } => body.contains_element_type(),
             Self::List(elem) => Some(*elem.clone()),
             Self::Set(elem) => Some(*elem.clone()),
             Self::Dict(key, _) => Some(*key.clone()),
+            Self::Range => Some(Type::Int),
             Self::Str => Some(Type::Str),
             Self::Bytes => Some(Type::Int),
+            Self::Union(members) => {
+                let non_none: Vec<&Type> = members
+                    .iter()
+                    .filter(|member| !matches!(member, Type::None))
+                    .collect();
+                if non_none.len() == 1 {
+                    non_none[0].contains_element_type()
+                } else {
+                    None
+                }
+            }
             _ => None,
         }
     }
@@ -1587,6 +1610,21 @@ mod tests {
             dict_any_int.index_result_type(&Type::Str),
             Some(Type::Union(vec![Type::Int, Type::None]))
         );
+    }
+
+    #[test]
+    fn test_contains_element_type_range_and_compat_defaultdict() {
+        assert_eq!(Type::Range.contains_element_type(), Some(Type::Int));
+
+        let compat_defaultdict = Type::Alias {
+            name: "__compat_defaultdict_list".to_string(),
+            type_args: Vec::new(),
+            body: Box::new(Type::Dict(
+                Box::new(Type::Str),
+                Box::new(Type::List(Box::new(Type::Int))),
+            )),
+        };
+        assert_eq!(compat_defaultdict.contains_element_type(), Some(Type::Str));
     }
 
     // --- M3: Union type tests ---

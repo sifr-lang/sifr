@@ -3406,7 +3406,7 @@ impl RustEmitter {
                         args: vec![key_arg],
                     }
                 }
-                Type::List(_) | Type::Set(_) => crate::RustExpr::MethodCall {
+                Type::List(_) | Type::Set(_) | Type::Range => crate::RustExpr::MethodCall {
                     receiver: Box::new(crate::RustExpr::Paren(Box::new(lowered_collection))),
                     method: "contains".to_string(),
                     args: vec![crate::RustExpr::Ref {
