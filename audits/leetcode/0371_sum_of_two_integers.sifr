@@ -1,9 +1,11 @@
 # LeetCode 371: Sum Of Two Integers
 
 def getSum(a: int, b: int) -> int:
-    def add(a, b):
-        if not a or not b:
-            return a or b
+    def add(a: int, b: int) -> int:
+        if a == 0:
+            return b
+        if b == 0:
+            return a
         return add(a ^ b, (a & b) << 1)
 
     if a * b < 0:  # assume a < 0, b > 0
@@ -19,4 +21,3 @@ def getSum(a: int, b: int) -> int:
 def main():
     assert getSum(1, 2) == 3
     assert getSum(2, 3) == 5
-
