@@ -176,4 +176,4 @@ Current scoped fixture total: `22`
     - `1834_single_threaded_cpu` no longer fails on iterator-consumer parity; residual issues are secondary (`mut` param and `heapq` optional/Any typing flow)
     - `1851_minimum_interval_to_include_each_query` no longer fails on tuple comparability; residual issue is optional arithmetic narrowing
   - PR:
-    - pending
+    - `https://github.com/yaseralnajjar/sifr/pull/1599` (open)
