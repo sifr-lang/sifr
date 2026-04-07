@@ -1,6 +1,6 @@
 # Ad-hoc Phase Execution: Surface Parity And API Cleanup (2026-04-07)
 
-Status: in_progress
+Status: done
 Parent phase: `issues/ad-hoc-surface-parity-and-api-cleanup-2026-04-07.md`
 
 ## Scope Gate
@@ -77,6 +77,13 @@ Current scoped fixture total: `22`
 - 2026-04-07: `WS1` implemented, validated, reviewed, and merged via PR `#1596`.
 - 2026-04-07: `WS2` implemented, validated, reviewed, and merged via PR `#1597`.
 - 2026-04-07: `WS4` implemented, validated, reviewed, and merged via PR `#1598`.
+- 2026-04-07: `WS3` implemented, validated, reviewed, and merged via PR `#1599`.
+- 2026-04-07: `WS5` and `WS6` implemented, validated, reviewed, and merged via PR `#1600`.
+- 2026-04-07: scoped phase fixtures reached full pass (`22/22`) after WS5/WS6 closure.
+- 2026-04-07: project validation gates passed:
+  - `scripts/run_all_tests.sh --profile quick`
+  - `scripts/run_all_tests.sh` (profile `pr`)
+- 2026-04-07: phase closure doc updated with merged PR ledger links via PR `#1602`.
 
 ## Wave Log
 
@@ -176,4 +183,26 @@ Current scoped fixture total: `22`
     - `1834_single_threaded_cpu` no longer fails on iterator-consumer parity; residual issues are secondary (`mut` param and `heapq` optional/Any typing flow)
     - `1851_minimum_interval_to_include_each_query` no longer fails on tuple comparability; residual issue is optional arithmetic narrowing
   - PR:
-    - `https://github.com/yaseralnajjar/sifr/pull/1599` (open)
+    - `https://github.com/yaseralnajjar/sifr/pull/1599` (merged)
+
+- Wave WS5 + WS6 (codegen defect closure + canonical adaptation sweep)
+  - Compiler/codegen closure:
+    - narrowed value vs `Option` compare lowering corrected
+    - index normalization lowering corrected for optional-tainted arithmetic
+    - Rust keyword escaping for locals hardened in renderer/codegen paths
+    - option-widening flow and scoped widened-binding usage stabilized
+  - Adaptation closure:
+    - canonicalized adaptation-owned and mixed fixtures without policy relaxation
+    - explicit mutability, explicit option/result handling, canonical tuple/list shapes
+  - Validation:
+    - scoped `22`-fixture rerun: `22/22` pass
+    - `scripts/run_all_tests.sh --profile quick` pass
+    - `scripts/run_all_tests.sh` (profile `pr`) pass
+  - PR:
+    - `https://github.com/yaseralnajjar/sifr/pull/1600` (merged)
+
+- Wave WS7 (documentation closure consistency)
+  - Change:
+    - parent phase doc updated with merged PR ledger section for WS1-WS6
+  - PR:
+    - `https://github.com/yaseralnajjar/sifr/pull/1602` (merged)
