@@ -1,22 +1,20 @@
 # LeetCode 2554: Maximum Number Of Integers To Choose From A Range I
 
 def maxCount(banned: list[int], n: int, maxSum: int) -> int:
-    nums = {x:1 for x in range(1, n + 1)} # hashmap for storing the required elements
-    for i in banned:
-        if nums.get(i):
-            del nums[i]
+    # Do not iterate dict keys here: Sifr dict order is intentionally unspecified.
+    banned_set = {x for x in banned}
     sum = 0
     count = 0
-    for i in nums:
-        sum += i
-        if sum <= maxSum:
-            count += 1
-        else:
+    for i in range(1, n + 1):
+        if i in banned_set:
+            continue
+        if sum + i > maxSum:
             break
+        sum += i
+        count += 1
     return count
 
 def main():
     assert maxCount([1, 6, 5], 5, 6) == 2
     assert maxCount([1, 2, 3, 4, 5, 6, 7], 8, 1) == 0
     assert maxCount([11], 7, 50) == 7
-
