@@ -1,0 +1,28 @@
+{
+  "category_subcategory_counts": {
+    "runtime_semantic_correctness_gap": {
+      "embedded_assert_regression": 1
+    }
+  },
+  "failures": [
+    {
+      "category": "runtime_semantic_correctness_gap",
+      "failure_stage": "run",
+      "first_diagnostic": "thread 'main' (110792868) panicked at src/main.rs:30:5:",
+      "fixture_slug": "2554_maximum_number_of_integers_to_choose_from_a_range_i",
+      "status": "RUN_ERROR",
+      "subcategory": "embedded_assert_regression"
+    }
+  ],
+  "name": "full_corpus_failure_taxonomy_20260408_live_rerun2",
+  "summary": {
+    "category_count": 1,
+    "category_counts": {
+      "runtime_semantic_correctness_gap": 1
+    },
+    "failing_cases": 1,
+    "generated_on": "2026-04-08",
+    "source_results": "verification/leetcode/full_corpus_current_results_20260408_live_rerun2.json",
+    "total_cases": 411
+  }
+}
