@@ -700,9 +700,10 @@ Local gate:
 
 ## WS4 0146 LRU Cache Rewrite
 
-Status: opened PR
+Status: merged
 Branch: `ws4-0146-lru-rewrite`
 PR: `https://github.com/yaseralnajjar/sifr/pull/1623`
+Merged: `https://github.com/yaseralnajjar/sifr/pull/1623`
 
 ### Scope
 
@@ -741,6 +742,57 @@ Targeted validation:
 - `cargo run -q -p sifr -- check audits/leetcode/0146_lru_cache.sifr` PASS
 - `cargo run -q -p sifr -- run audits/leetcode/0146_lru_cache.sifr` PASS
 - `python3 scripts/scan_leetcode_pair_diffs.py --output verification/leetcode/leetcode_pair_diff_scan_20260424.json --top 80` PASS
+
+Local gate:
+
+- `scripts/run_all_tests.sh --profile quick` PASS
+
+## WS4 0004 Binary Median Rewrite
+
+Status: opened PR
+Branch: `ws4-0004-binary-median`
+PR: `https://github.com/yaseralnajjar/sifr/pull/1624`
+
+### Scope
+
+Rewrite the median-of-two-sorted-arrays fixture to use binary partitioning:
+
+- `audits/leetcode/0004_median_of_two_sorted_arrays.py`
+- `audits/leetcode/0004_median_of_two_sorted_arrays.sifr`
+
+### Changes
+
+- Replaced the Sifr full merge with a count-based binary partition over the shorter input.
+- Used explicit numeric sentinels for empty partition sides instead of merged-array indexing.
+- Added odd, even, empty-side, all-zero, and negative-value assertions to the paired fixtures.
+- Avoided storing borrowed parameter lists into local list variables by selecting the shorter input with lengths and a boolean selector.
+
+### Pair Scan Movement
+
+Previous stats from `origin/main` scan artifact:
+
+| Fixture | Previous changed_total | Previous changed_py | Previous changed_sifr | Previous lines py/sifr |
+| --- | ---: | ---: | ---: | --- |
+| `0004_median_of_two_sorted_arrays` | 63 | 32 | 31 | 42/41 |
+
+Regenerated artifact: `verification/leetcode/leetcode_pair_diff_scan_20260424.json`
+
+| Fixture | Current changed_total | Current changed_py | Current changed_sifr | Current lines py/sifr |
+| --- | ---: | ---: | ---: | --- |
+| `0004_median_of_two_sorted_arrays` | 105 | 33 | 72 | 47/86 |
+
+The raw line diff increases because the canonical binary-partition algorithm needs explicit optional indexing and boundary sentinels in Sifr. This wave closes the structural rewrite criterion: the Sifr fixture no longer performs a full merge and covers odd/even plus empty-side cases.
+
+### Validation
+
+Targeted validation:
+
+- `python3 audits/leetcode/0004_median_of_two_sorted_arrays.py` PASS
+- `cargo run -q -p sifr -- check audits/leetcode/0004_median_of_two_sorted_arrays.sifr` PASS
+- `cargo run -q -p sifr -- run audits/leetcode/0004_median_of_two_sorted_arrays.sifr` PASS
+- `python3 scripts/scan_leetcode_pair_diffs.py --output verification/leetcode/leetcode_pair_diff_scan_20260424.json --top 80` PASS
+- `cargo fmt --check` PASS
+- `git diff --check` PASS
 
 Local gate:
 
