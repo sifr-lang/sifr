@@ -1,4 +1,5 @@
 # LeetCode 752: Open The Lock
+from sifr.collections import deque
 
 def nextDigit(ch: str) -> str:
     if ch == '0':
@@ -46,16 +47,12 @@ def openLock(deadends: list[str], target: str) -> int:
     if '0000' in deadends:
         return -1
 
-    q: list[tuple[str, int]] = [('0000', 0)]
+    q: deque[tuple[str, int]] = deque([('0000', 0)])
     visit: set[str] = set(deadends)
     visit.add('0000')
-    head: int = 0
 
-    while head < len(q):
-        state = q[head]
-        head += 1
-        if state is None:
-            continue
+    while q.len() > 0:
+        state: tuple[str, int] = q.popleft()
         wheel = state[0]
         turns = state[1]
         if wheel == target:

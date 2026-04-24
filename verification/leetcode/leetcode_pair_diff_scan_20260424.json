@@ -461,18 +461,6 @@
       "similarity_ratio": 0.17094017094017094
     },
     {
-      "stem": "0752_open_the_lock",
-      "py_relpath": "audits/leetcode/0752_open_the_lock.py",
-      "sifr_relpath": "audits/leetcode/0752_open_the_lock.sifr",
-      "py_lines": 40,
-      "sifr_lines": 84,
-      "changed_py_lines": 26,
-      "changed_sifr_lines": 70,
-      "changed_total_lines": 96,
-      "length_delta": 44,
-      "similarity_ratio": 0.22580645161290322
-    },
-    {
       "stem": "0261_graph_valid_tree",
       "py_relpath": "audits/leetcode/0261_graph_valid_tree.py",
       "sifr_relpath": "audits/leetcode/0261_graph_valid_tree.sifr",
@@ -495,6 +483,18 @@
       "changed_total_lines": 94,
       "length_delta": 34,
       "similarity_ratio": 0.265625
+    },
+    {
+      "stem": "0752_open_the_lock",
+      "py_relpath": "audits/leetcode/0752_open_the_lock.py",
+      "sifr_relpath": "audits/leetcode/0752_open_the_lock.sifr",
+      "py_lines": 40,
+      "sifr_lines": 81,
+      "changed_py_lines": 26,
+      "changed_sifr_lines": 67,
+      "changed_total_lines": 93,
+      "length_delta": 41,
+      "similarity_ratio": 0.23140495867768596
     },
     {
       "stem": "0150_evaluate_reverse_polish_notation",

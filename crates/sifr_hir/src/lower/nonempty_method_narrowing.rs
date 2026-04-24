@@ -52,7 +52,7 @@ fn sequence_guard_name_from_hir_expr(expr: &HirExpr) -> Option<String> {
 fn supports_nonempty_pop_narrowing_on_type(object_ty: &Type) -> bool {
     match object_ty.resolve_alias() {
         Type::List(_) => true,
-        Type::Class { name, .. } => name == "deque",
+        Type::Class { name, .. } => name == "deque" || name.ends_with(".deque"),
         _ => false,
     }
 }
@@ -60,7 +60,7 @@ fn supports_nonempty_pop_narrowing_on_type(object_ty: &Type) -> bool {
 fn nonempty_pop_element_type(object_ty: &Type) -> Option<Type> {
     match object_ty.resolve_alias() {
         Type::List(elem) => Some(*elem.clone()),
-        Type::Class { name, fields, .. } if name == "deque" => {
+        Type::Class { name, fields, .. } if name == "deque" || name.ends_with(".deque") => {
             fields.iter().find_map(|(field_name, field_ty)| {
                 if field_name != "_data" {
                     return None;
