@@ -1,30 +1,44 @@
 # LeetCode 838: Push Dominoes
 
+def pairIndex(pair: tuple[int, int] | None) -> int:
+    if pair is None:
+        return 0
+    value = pair[0]
+    if value is None:
+        return 0
+    return value
+
+def pairDirection(pair: tuple[int, int] | None) -> int:
+    if pair is None:
+        return 0
+    value = pair[1]
+    if value is None:
+        return 0
+    return value
+
 def pushDominoes(dominoes: str) -> str:
     dom = list(dominoes)
-    q: list[tuple[int, str]] = []
+    q: list[tuple[int, int]] = []
     for i, d in enumerate(dom):
-        if d != '.':
-            q.append((i, d))
+        if d == 'L':
+            q.append((i, -1))
+        elif d == 'R':
+            q.append((i, 1))
     
     while len(q) > 0:
         pair0 = q.pop(0)
-        if pair0 is None:
-            continue
-        i = pair0[0]
-        d = pair0[1]
-        if i is None or d is None:
-            continue
+        i = pairIndex(pair0)
+        d = pairDirection(pair0)
 
-        if d == 'L' and i > 0 and dom[i - 1] == '.':
-            q.append((i - 1, 'L'))
+        if d == -1 and i > 0 and dom[i - 1] == '.':
+            q.append((i - 1, -1))
             dom[i - 1] = 'L'
-        elif d == 'R':
+        elif d == 1:
             if i + 1 < len(dom) and dom[i + 1] == '.':
                 if i + 2 < len(dom) and dom[i + 2] == 'L':
                     _ = q.pop(0)
                 else:
-                    q.append((i + 1, 'R'))
+                    q.append((i + 1, 1))
                     dom[i + 1] = 'R'
 
     return ''.join(dom)

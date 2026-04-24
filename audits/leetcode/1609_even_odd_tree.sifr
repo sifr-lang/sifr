@@ -21,6 +21,14 @@ def treeToString(node: TreeNode | None) -> str:
         return "None"
     return str(node.val) + "(" + treeToString(node.left) + "," + treeToString(node.right) + ")"
 
+def nodeValue(node: TreeNode | None) -> int:
+    if node is None:
+        return 0
+    value = node.val
+    if value is None:
+        return 0
+    return value
+
 
 class Node:
     val: int
@@ -64,11 +72,8 @@ def isEvenOddTree(own root: TreeNode | None) -> bool:
         i = 0
         while i < level_size:
             node0 = q.pop(0)
-            if node0 is None:
-                i += 1
-                continue
             node = node0
-            value = node.val
+            value = nodeValue(node)
 
             if even and (value % 2 == 0 or (prev_set and value <= prev)):
                 return False

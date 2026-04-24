@@ -341,6 +341,18 @@
       "similarity_ratio": 0.33540372670807456
     },
     {
+      "stem": "0513_find_bottom_left_tree_value",
+      "py_relpath": "audits/leetcode/0513_find_bottom_left_tree_value.py",
+      "sifr_relpath": "audits/leetcode/0513_find_bottom_left_tree_value.sifr",
+      "py_lines": 87,
+      "sifr_lines": 90,
+      "changed_py_lines": 52,
+      "changed_sifr_lines": 55,
+      "changed_total_lines": 107,
+      "length_delta": 3,
+      "similarity_ratio": 0.3954802259887006
+    },
+    {
       "stem": "0004_median_of_two_sorted_arrays",
       "py_relpath": "audits/leetcode/0004_median_of_two_sorted_arrays.py",
       "sifr_relpath": "audits/leetcode/0004_median_of_two_sorted_arrays.sifr",
@@ -423,18 +435,6 @@
       "changed_total_lines": 99,
       "length_delta": 45,
       "similarity_ratio": 0.1951219512195122
-    },
-    {
-      "stem": "0513_find_bottom_left_tree_value",
-      "py_relpath": "audits/leetcode/0513_find_bottom_left_tree_value.py",
-      "sifr_relpath": "audits/leetcode/0513_find_bottom_left_tree_value.sifr",
-      "py_lines": 87,
-      "sifr_lines": 82,
-      "changed_py_lines": 52,
-      "changed_sifr_lines": 47,
-      "changed_total_lines": 99,
-      "length_delta": 5,
-      "similarity_ratio": 0.41420118343195267
     },
     {
       "stem": "0083_remove_duplicates_from_sorted_list",
@@ -521,6 +521,18 @@
       "similarity_ratio": 0.23140495867768596
     },
     {
+      "stem": "1609_even_odd_tree",
+      "py_relpath": "audits/leetcode/1609_even_odd_tree.py",
+      "sifr_relpath": "audits/leetcode/1609_even_odd_tree.sifr",
+      "py_lines": 73,
+      "sifr_lines": 99,
+      "changed_py_lines": 32,
+      "changed_sifr_lines": 58,
+      "changed_total_lines": 90,
+      "length_delta": 26,
+      "similarity_ratio": 0.47674418604651164
+    },
+    {
       "stem": "2709_greatest_common_divisor_traversal",
       "py_relpath": "audits/leetcode/2709_greatest_common_divisor_traversal.py",
       "sifr_relpath": "audits/leetcode/2709_greatest_common_divisor_traversal.sifr",
@@ -555,18 +567,6 @@
       "changed_total_lines": 87,
       "length_delta": 31,
       "similarity_ratio": 0.445859872611465
-    },
-    {
-      "stem": "1609_even_odd_tree",
-      "py_relpath": "audits/leetcode/1609_even_odd_tree.py",
-      "sifr_relpath": "audits/leetcode/1609_even_odd_tree.sifr",
-      "py_lines": 73,
-      "sifr_lines": 94,
-      "changed_py_lines": 32,
-      "changed_sifr_lines": 53,
-      "changed_total_lines": 85,
-      "length_delta": 21,
-      "similarity_ratio": 0.49101796407185627
     },
     {
       "stem": "0743_network_delay_time",
@@ -737,6 +737,18 @@
       "similarity_ratio": 0.23529411764705882
     },
     {
+      "stem": "0103_binary_tree_zigzag_level_order_traversal",
+      "py_relpath": "audits/leetcode/0103_binary_tree_zigzag_level_order_traversal.py",
+      "sifr_relpath": "audits/leetcode/0103_binary_tree_zigzag_level_order_traversal.sifr",
+      "py_lines": 68,
+      "sifr_lines": 88,
+      "changed_py_lines": 29,
+      "changed_sifr_lines": 49,
+      "changed_total_lines": 78,
+      "length_delta": 20,
+      "similarity_ratio": 0.5
+    },
+    {
       "stem": "0235_lowest_common_ancestor_of_a_binary_search_tree",
       "py_relpath": "audits/leetcode/0235_lowest_common_ancestor_of_a_binary_search_tree.py",
       "sifr_relpath": "audits/leetcode/0235_lowest_common_ancestor_of_a_binary_search_tree.sifr",
@@ -783,6 +795,18 @@
       "changed_total_lines": 75,
       "length_delta": 13,
       "similarity_ratio": 0.4827586206896552
+    },
+    {
+      "stem": "1466_reorder_routes_to_make_all_paths_lead_to_the_city_zero",
+      "py_relpath": "audits/leetcode/1466_reorder_routes_to_make_all_paths_lead_to_the_city_zero.py",
+      "sifr_relpath": "audits/leetcode/1466_reorder_routes_to_make_all_paths_lead_to_the_city_zero.sifr",
+      "py_lines": 39,
+      "sifr_lines": 59,
+      "changed_py_lines": 27,
+      "changed_sifr_lines": 47,
+      "changed_total_lines": 74,
+      "length_delta": 20,
+      "similarity_ratio": 0.24489795918367346
     },
     {
       "stem": "0682_baseball_game",
@@ -843,6 +867,18 @@
       "changed_total_lines": 71,
       "length_delta": 15,
       "similarity_ratio": 0.5359477124183006
+    },
+    {
+      "stem": "0332_reconstruct_itinerary",
+      "py_relpath": "audits/leetcode/0332_reconstruct_itinerary.py",
+      "sifr_relpath": "audits/leetcode/0332_reconstruct_itinerary.sifr",
+      "py_lines": 40,
+      "sifr_lines": 46,
+      "changed_py_lines": 32,
+      "changed_sifr_lines": 38,
+      "changed_total_lines": 70,
+      "length_delta": 6,
+      "similarity_ratio": 0.18604651162790697
     },
     {
       "stem": "0208_implement_trie_prefix_tree",
@@ -977,18 +1013,6 @@
       "similarity_ratio": 0.2608695652173913
     },
     {
-      "stem": "0103_binary_tree_zigzag_level_order_traversal",
-      "py_relpath": "audits/leetcode/0103_binary_tree_zigzag_level_order_traversal.py",
-      "sifr_relpath": "audits/leetcode/0103_binary_tree_zigzag_level_order_traversal.sifr",
-      "py_lines": 68,
-      "sifr_lines": 80,
-      "changed_py_lines": 28,
-      "changed_sifr_lines": 40,
-      "changed_total_lines": 68,
-      "length_delta": 12,
-      "similarity_ratio": 0.5405405405405406
-    },
-    {
       "stem": "0149_max_points_on_a_line",
       "py_relpath": "audits/leetcode/0149_max_points_on_a_line.py",
       "sifr_relpath": "audits/leetcode/0149_max_points_on_a_line.sifr",
@@ -1083,18 +1107,6 @@
       "changed_total_lines": 65,
       "length_delta": 47,
       "similarity_ratio": 0.08450704225352113
-    },
-    {
-      "stem": "0332_reconstruct_itinerary",
-      "py_relpath": "audits/leetcode/0332_reconstruct_itinerary.py",
-      "sifr_relpath": "audits/leetcode/0332_reconstruct_itinerary.sifr",
-      "py_lines": 40,
-      "sifr_lines": 39,
-      "changed_py_lines": 33,
-      "changed_sifr_lines": 32,
-      "changed_total_lines": 65,
-      "length_delta": 1,
-      "similarity_ratio": 0.17721518987341772
     },
     {
       "stem": "1091_shortest_path_in_binary_matrix",
@@ -1359,18 +1371,6 @@
       "changed_total_lines": 60,
       "length_delta": 4,
       "similarity_ratio": 0.5238095238095238
-    },
-    {
-      "stem": "1466_reorder_routes_to_make_all_paths_lead_to_the_city_zero",
-      "py_relpath": "audits/leetcode/1466_reorder_routes_to_make_all_paths_lead_to_the_city_zero.py",
-      "sifr_relpath": "audits/leetcode/1466_reorder_routes_to_make_all_paths_lead_to_the_city_zero.sifr",
-      "py_lines": 39,
-      "sifr_lines": 44,
-      "changed_py_lines": 27,
-      "changed_sifr_lines": 32,
-      "changed_total_lines": 59,
-      "length_delta": 5,
-      "similarity_ratio": 0.2891566265060241
     },
     {
       "stem": "0054_spiral_matrix",
@@ -1769,6 +1769,18 @@
       "similarity_ratio": 0.5048543689320388
     },
     {
+      "stem": "1046_last_stone_weight",
+      "py_relpath": "audits/leetcode/1046_last_stone_weight.py",
+      "sifr_relpath": "audits/leetcode/1046_last_stone_weight.sifr",
+      "py_lines": 42,
+      "sifr_lines": 22,
+      "changed_py_lines": 35,
+      "changed_sifr_lines": 15,
+      "changed_total_lines": 50,
+      "length_delta": 20,
+      "similarity_ratio": 0.21875
+    },
+    {
       "stem": "0221_maximal_square",
       "py_relpath": "audits/leetcode/0221_maximal_square.py",
       "sifr_relpath": "audits/leetcode/0221_maximal_square.sifr",
@@ -1877,6 +1889,18 @@
       "similarity_ratio": 0.3684210526315789
     },
     {
+      "stem": "0838_push_dominoes",
+      "py_relpath": "audits/leetcode/0838_push_dominoes.py",
+      "sifr_relpath": "audits/leetcode/0838_push_dominoes.sifr",
+      "py_lines": 36,
+      "sifr_lines": 48,
+      "changed_py_lines": 18,
+      "changed_sifr_lines": 30,
+      "changed_total_lines": 48,
+      "length_delta": 12,
+      "similarity_ratio": 0.42857142857142855
+    },
+    {
       "stem": "0572_subtree_of_another_tree",
       "py_relpath": "audits/leetcode/0572_subtree_of_another_tree.py",
       "sifr_relpath": "audits/leetcode/0572_subtree_of_another_tree.sifr",
@@ -1887,18 +1911,6 @@
       "changed_total_lines": 48,
       "length_delta": 6,
       "similarity_ratio": 0.6619718309859155
-    },
-    {
-      "stem": "1046_last_stone_weight",
-      "py_relpath": "audits/leetcode/1046_last_stone_weight.py",
-      "sifr_relpath": "audits/leetcode/1046_last_stone_weight.sifr",
-      "py_lines": 42,
-      "sifr_lines": 17,
-      "changed_py_lines": 36,
-      "changed_sifr_lines": 11,
-      "changed_total_lines": 47,
-      "length_delta": 25,
-      "similarity_ratio": 0.2033898305084746
     },
     {
       "stem": "0120_triangle",
@@ -2081,6 +2093,18 @@
       "similarity_ratio": 0.18181818181818182
     },
     {
+      "stem": "0735_asteroid_collision",
+      "py_relpath": "audits/leetcode/0735_asteroid_collision.py",
+      "sifr_relpath": "audits/leetcode/0735_asteroid_collision.sifr",
+      "py_lines": 31,
+      "sifr_lines": 34,
+      "changed_py_lines": 21,
+      "changed_sifr_lines": 24,
+      "changed_total_lines": 45,
+      "length_delta": 3,
+      "similarity_ratio": 0.3076923076923077
+    },
+    {
       "stem": "0016_3sum_closest",
       "py_relpath": "audits/leetcode/0016_3sum_closest.py",
       "sifr_relpath": "audits/leetcode/0016_3sum_closest.sifr",
@@ -2115,18 +2139,6 @@
       "changed_total_lines": 44,
       "length_delta": 22,
       "similarity_ratio": 0.3125
-    },
-    {
-      "stem": "0735_asteroid_collision",
-      "py_relpath": "audits/leetcode/0735_asteroid_collision.py",
-      "sifr_relpath": "audits/leetcode/0735_asteroid_collision.sifr",
-      "py_lines": 31,
-      "sifr_lines": 32,
-      "changed_py_lines": 21,
-      "changed_sifr_lines": 22,
-      "changed_total_lines": 43,
-      "length_delta": 1,
-      "similarity_ratio": 0.31746031746031744
     },
     {
       "stem": "0997_find_the_town_judge",
@@ -2175,6 +2187,18 @@
       "changed_total_lines": 43,
       "length_delta": 1,
       "similarity_ratio": 0.5376344086021505
+    },
+    {
+      "stem": "0895_maximum_frequency_stack",
+      "py_relpath": "audits/leetcode/0895_maximum_frequency_stack.py",
+      "sifr_relpath": "audits/leetcode/0895_maximum_frequency_stack.sifr",
+      "py_lines": 38,
+      "sifr_lines": 59,
+      "changed_py_lines": 11,
+      "changed_sifr_lines": 32,
+      "changed_total_lines": 43,
+      "length_delta": 21,
+      "similarity_ratio": 0.5567010309278351
     },
     {
       "stem": "0665_non_decreasing_array",
@@ -2355,18 +2379,6 @@
       "changed_total_lines": 38,
       "length_delta": 16,
       "similarity_ratio": 0.525
-    },
-    {
-      "stem": "0895_maximum_frequency_stack",
-      "py_relpath": "audits/leetcode/0895_maximum_frequency_stack.py",
-      "sifr_relpath": "audits/leetcode/0895_maximum_frequency_stack.sifr",
-      "py_lines": 38,
-      "sifr_lines": 54,
-      "changed_py_lines": 11,
-      "changed_sifr_lines": 27,
-      "changed_total_lines": 38,
-      "length_delta": 16,
-      "similarity_ratio": 0.5869565217391305
     },
     {
       "stem": "0540_single_element_in_a_sorted_array",
@@ -2573,6 +2585,18 @@
       "similarity_ratio": 0.4
     },
     {
+      "stem": "0232_implement_queue_using_stacks",
+      "py_relpath": "audits/leetcode/0232_implement_queue_using_stacks.py",
+      "sifr_relpath": "audits/leetcode/0232_implement_queue_using_stacks.sifr",
+      "py_lines": 33,
+      "sifr_lines": 38,
+      "changed_py_lines": 14,
+      "changed_sifr_lines": 19,
+      "changed_total_lines": 33,
+      "length_delta": 5,
+      "similarity_ratio": 0.5352112676056338
+    },
+    {
       "stem": "0119_pascal_triangle_ii",
       "py_relpath": "audits/leetcode/0119_pascal_triangle_ii.py",
       "sifr_relpath": "audits/leetcode/0119_pascal_triangle_ii.sifr",
@@ -2703,6 +2727,18 @@
       "changed_total_lines": 31,
       "length_delta": 7,
       "similarity_ratio": 0.45614035087719296
+    },
+    {
+      "stem": "0084_largest_rectangle_in_histogram",
+      "py_relpath": "audits/leetcode/0084_largest_rectangle_in_histogram.py",
+      "sifr_relpath": "audits/leetcode/0084_largest_rectangle_in_histogram.sifr",
+      "py_lines": 28,
+      "sifr_lines": 39,
+      "changed_py_lines": 10,
+      "changed_sifr_lines": 21,
+      "changed_total_lines": 31,
+      "length_delta": 11,
+      "similarity_ratio": 0.5373134328358209
     },
     {
       "stem": "0207_course_schedule",
@@ -2909,16 +2945,16 @@
       "similarity_ratio": 0.46153846153846156
     },
     {
-      "stem": "0232_implement_queue_using_stacks",
-      "py_relpath": "audits/leetcode/0232_implement_queue_using_stacks.py",
-      "sifr_relpath": "audits/leetcode/0232_implement_queue_using_stacks.sifr",
-      "py_lines": 33,
-      "sifr_lines": 37,
-      "changed_py_lines": 12,
-      "changed_sifr_lines": 16,
+      "stem": "0739_daily_temperatures",
+      "py_relpath": "audits/leetcode/0739_daily_temperatures.py",
+      "sifr_relpath": "audits/leetcode/0739_daily_temperatures.sifr",
+      "py_lines": 22,
+      "sifr_lines": 32,
+      "changed_py_lines": 9,
+      "changed_sifr_lines": 19,
       "changed_total_lines": 28,
-      "length_delta": 4,
-      "similarity_ratio": 0.6
+      "length_delta": 10,
+      "similarity_ratio": 0.48148148148148145
     },
     {
       "stem": "0231_power_of_two",
@@ -3219,18 +3255,6 @@
       "changed_total_lines": 22,
       "length_delta": 2,
       "similarity_ratio": 0.6764705882352942
-    },
-    {
-      "stem": "0838_push_dominoes",
-      "py_relpath": "audits/leetcode/0838_push_dominoes.py",
-      "sifr_relpath": "audits/leetcode/0838_push_dominoes.sifr",
-      "py_lines": 36,
-      "sifr_lines": 34,
-      "changed_py_lines": 12,
-      "changed_sifr_lines": 10,
-      "changed_total_lines": 22,
-      "length_delta": 2,
-      "similarity_ratio": 0.6857142857142857
     },
     {
       "stem": "0169_majority_element",
@@ -4313,18 +4337,6 @@
       "similarity_ratio": 0.7755102040816326
     },
     {
-      "stem": "0084_largest_rectangle_in_histogram",
-      "py_relpath": "audits/leetcode/0084_largest_rectangle_in_histogram.py",
-      "sifr_relpath": "audits/leetcode/0084_largest_rectangle_in_histogram.sifr",
-      "py_lines": 28,
-      "sifr_lines": 23,
-      "changed_py_lines": 8,
-      "changed_sifr_lines": 3,
-      "changed_total_lines": 11,
-      "length_delta": 5,
-      "similarity_ratio": 0.7843137254901961
-    },
-    {
       "stem": "0290_word_pattern",
       "py_relpath": "audits/leetcode/0290_word_pattern.py",
       "sifr_relpath": "audits/leetcode/0290_word_pattern.sifr",
@@ -4503,18 +4515,6 @@
       "changed_total_lines": 10,
       "length_delta": 6,
       "similarity_ratio": 0.8780487804878049
-    },
-    {
-      "stem": "0739_daily_temperatures",
-      "py_relpath": "audits/leetcode/0739_daily_temperatures.py",
-      "sifr_relpath": "audits/leetcode/0739_daily_temperatures.sifr",
-      "py_lines": 22,
-      "sifr_lines": 17,
-      "changed_py_lines": 7,
-      "changed_sifr_lines": 2,
-      "changed_total_lines": 9,
-      "length_delta": 5,
-      "similarity_ratio": 0.7692307692307693
     },
     {
       "stem": "1899_merge_triplets_to_form_target_triplet",

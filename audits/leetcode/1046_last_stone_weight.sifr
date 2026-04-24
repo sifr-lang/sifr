@@ -1,16 +1,21 @@
 # LeetCode 1046: Last Stone Weight
 
+def unwrapInt(value: int | None) -> int:
+    if value is None:
+        return 0
+    return value
+
 def lastStoneWeight(mut stones: list[int]) -> int:
     while len(stones) > 1:
         stones.sort()
-        y = stones.pop()
-        x = stones.pop()
+        y = unwrapInt(stones.pop())
+        x = unwrapInt(stones.pop())
         if y > x:
             stones.append(y - x)
 
     if len(stones) == 0:
         return 0
-    return stones.pop()
+    return unwrapInt(stones.pop())
 
 def main():
     assert lastStoneWeight([2, 7, 4, 1, 8, 1]) == 1

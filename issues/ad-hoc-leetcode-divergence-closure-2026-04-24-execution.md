@@ -1,6 +1,6 @@
 # Ad-hoc Phase Execution: LeetCode Divergence Closure
 
-Status: in_progress
+Status: closure_pr_opened
 Started: 2026-04-24
 Phase plan: `issues/ad-hoc-leetcode-divergence-closure-2026-04-24.md`
 
@@ -8,11 +8,11 @@ Phase plan: `issues/ad-hoc-leetcode-divergence-closure-2026-04-24.md`
 
 - [x] WS0 corpus normalization and baseline refresh
 - [x] WS1 narrowing design and first compiler slices
-- [ ] WS2 heap / DSU / collection stdlib parity
-- [ ] WS3 owned-chain helper convention and cursor slices
-- [ ] WS4 canonical rewrite debt
+- [x] WS2 heap / DSU / collection stdlib parity
+- [x] WS3 owned-chain helper convention and cursor slices
+- [x] WS4 canonical rewrite debt
 - [x] WS5 architecture boundary documentation
-- [ ] WS6 final rerun, scorecard, and closure review
+- [x] WS6 final rerun, scorecard, and closure review
 
 ## WS0 Corpus Normalization And Baseline Refresh
 
@@ -83,9 +83,10 @@ Local gate:
 
 ## WS5 Architecture Boundary Classification
 
-Status: opened PR
+Status: merged
 Branch: `ws5-architecture-boundary-classification`
 PR: `https://github.com/yaseralnajjar/sifr/pull/1631`
+Merged: `https://github.com/yaseralnajjar/sifr/pull/1631`
 
 ### Scope
 
@@ -110,6 +111,102 @@ Docs/tracking validation:
 Local gate:
 
 - `scripts/run_all_tests.sh --profile quick` PASS
+
+## WS6 Final Rerun, Scorecard, And Closure Review
+
+Status: closure PR opened
+Branch: `ws6-final-leetcode-closure`
+PR: `TBD`
+
+### Scope
+
+Close the phase with final corpus artifacts, taxonomy/scorecard evidence, closure review, and remediation for failures exposed by the final full corpus rerun.
+
+Artifacts:
+
+- `verification/leetcode/full_corpus_current_results_20260424_leetcode_divergence_closure.json`
+- `verification/leetcode/full_corpus_failure_taxonomy_20260424_leetcode_divergence_closure.json`
+- `verification/leetcode/full_corpus_failure_taxonomy_20260424_leetcode_divergence_closure.md`
+- `verification/leetcode/full_corpus_failure_taxonomy_20260424_leetcode_divergence_closure_delta_vs_20260409.md`
+- `verification/leetcode/leetcode_pair_diff_scan_20260424.json`
+- `verification/leetcode/leetcode_divergence_closure_scorecard_20260424.md`
+- `reviews/ad-hoc-leetcode-divergence-closure-2026-04-24-review-pass3.md`
+
+### Closure Remediation
+
+The first WS6 full corpus run exposed 12 legacy fixture failures around optional `pop`, subscript, tuple-index, and node-field access under the stricter proof surface. WS6 made explicit fixture-local handling in:
+
+- `0084_largest_rectangle_in_histogram`
+- `0103_binary_tree_zigzag_level_order_traversal`
+- `0232_implement_queue_using_stacks`
+- `0332_reconstruct_itinerary`
+- `0513_find_bottom_left_tree_value`
+- `0735_asteroid_collision`
+- `0739_daily_temperatures`
+- `0838_push_dominoes`
+- `0895_maximum_frequency_stack`
+- `1046_last_stone_weight`
+- `1466_reorder_routes_to_make_all_paths_lead_to_the_city_zero`
+- `1609_even_odd_tree`
+
+Targeted `check` and `run` passed for all 12 before the final full corpus rerun.
+
+### Final Corpus Result
+
+Command:
+
+- `python3 scripts/run_phase31_leetcode.py --manifest verification/leetcode/full_corpus_manifest_20260402_live.json --output verification/leetcode/full_corpus_current_results_20260424_leetcode_divergence_closure.json --sifr-bin ./target/release/sifr --no-build-release-if-missing`
+
+Summary:
+
+- Cases: `411`
+- `PASS`: `208`
+- `NO_ORACLE`: `203`
+- `CHECK_ERROR`: `0`
+- `RUN_ERROR`: `0`
+- `TIMEOUT`: `0`
+
+### Final Pair Scan
+
+Command:
+
+- `python3 scripts/scan_leetcode_pair_diffs.py --output verification/leetcode/leetcode_pair_diff_scan_20260424.json --top 80`
+
+Summary:
+
+- Paired cases: `395`
+- Python-only cases: `1`
+- Sifr-only cases: `16`
+
+### Closure Review
+
+Review file:
+
+- `reviews/ad-hoc-leetcode-divergence-closure-2026-04-24-review-pass3.md`
+
+Verdict:
+
+- PASS with `0148_sort_list` explicitly tracked as a follow-up blocker in `issues/leetcode-0148-owned-merge-sort-blocker-2026-04-24.md`.
+
+### Validation
+
+Targeted remediation:
+
+- Targeted `check` and `run` for the 12 WS6-remediated fixtures PASS
+
+Artifact generation:
+
+- `cargo build --release -p sifr` PASS
+- `python3 scripts/run_phase31_leetcode.py --manifest verification/leetcode/full_corpus_manifest_20260402_live.json --output verification/leetcode/full_corpus_current_results_20260424_leetcode_divergence_closure.json --sifr-bin ./target/release/sifr --no-build-release-if-missing` PASS
+- `python3 scripts/build_full_corpus_failure_taxonomy.py --results verification/leetcode/full_corpus_current_results_20260424_leetcode_divergence_closure.json --output-json verification/leetcode/full_corpus_failure_taxonomy_20260424_leetcode_divergence_closure.json --output-md verification/leetcode/full_corpus_failure_taxonomy_20260424_leetcode_divergence_closure.md --baseline-taxonomy verification/leetcode/full_corpus_failure_taxonomy_20260409_live_rerun1.json --generated-on 2026-04-24` PASS
+- `python3 scripts/scan_leetcode_pair_diffs.py --output verification/leetcode/leetcode_pair_diff_scan_20260424.json --top 80` PASS
+
+Required gates:
+
+- `cargo fmt --check` PASS
+- `git diff --check` PASS
+- `scripts/run_all_tests.sh --profile quick` PASS
+- `scripts/run_all_tests.sh` PASS
 
 ## WS1 D0 Narrowing Invalidation Design
 

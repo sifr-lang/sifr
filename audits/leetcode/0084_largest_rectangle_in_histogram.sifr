@@ -1,5 +1,21 @@
 # LeetCode 84: Largest Rectangle In Histogram
 
+def pairIndex(pair: tuple[int, int] | None) -> int:
+    if pair is None:
+        return 0
+    value = pair[0]
+    if value is None:
+        return 0
+    return value
+
+def pairHeight(pair: tuple[int, int] | None) -> int:
+    if pair is None:
+        return 0
+    value = pair[1]
+    if value is None:
+        return 0
+    return value
+
 def largestRectangleArea(heights: list[int]) -> int:
     maxArea = 0
     stack = []  # pair: (index, height)
@@ -7,7 +23,9 @@ def largestRectangleArea(heights: list[int]) -> int:
     for i, h in enumerate(heights):
         start = i
         while stack and stack[-1][1] > h:
-            index, height = stack.pop()
+            pair = stack.pop()
+            index = pairIndex(pair)
+            height = pairHeight(pair)
             maxArea = max(maxArea, height * (i - index))
             start = index
         stack.append((start, h))
@@ -19,5 +37,3 @@ def largestRectangleArea(heights: list[int]) -> int:
 def main():
     assert str(largestRectangleArea([2,1,5,6,2,3])) == '10'
     assert str(largestRectangleArea([2,4])) == '4'
-
-
