@@ -13,6 +13,7 @@ pub enum BindingKind {
 }
 
 /// Tracks variable state for ownership and narrowing.
+#[allow(clippy::struct_excessive_bools)]
 #[derive(Debug, Clone)]
 pub struct VarInfo {
     /// The declared type (from annotation or inference).

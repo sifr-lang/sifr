@@ -10,7 +10,7 @@ use super::statements::resolve_object_field_type;
 use super::subscript_type::resolve_subscript_result_type;
 use super::LowerCtx;
 
-fn op_to_augassign_string(op: &Operator, ctx: &mut LowerCtx) -> Option<&'static str> {
+fn op_to_augassign_string(op: Operator, ctx: &mut LowerCtx) -> Option<&'static str> {
     match op {
         Operator::Add => Some("+="),
         Operator::Sub => Some("-="),
@@ -45,9 +45,7 @@ pub(super) fn lower_aug_assign(aug: &StmtAugAssign, ctx: &mut LowerCtx) -> Optio
         }
         let field_name = attr.attr.to_string();
         let value = lower_expr(&aug.value, ctx)?;
-        let Some(op_str) = op_to_augassign_string(&aug.op, ctx) else {
-            return None;
-        };
+        let op_str = op_to_augassign_string(aug.op, ctx)?;
         return Some(HirStmt::AttributeAugAssign {
             object: obj_name,
             field: field_name,
@@ -112,9 +110,7 @@ pub(super) fn lower_aug_assign(aug: &StmtAugAssign, ctx: &mut LowerCtx) -> Optio
             let outer_index = lower_expr(&inner_sub.slice, ctx)?;
             let inner_index = lower_expr(&sub.slice, ctx)?;
             let value = lower_expr(&aug.value, ctx)?;
-            let Some(op_str) = op_to_augassign_string(&aug.op, ctx) else {
-                return None;
-            };
+            let op_str = op_to_augassign_string(aug.op, ctx)?;
             let outer_elem_ty = resolve_subscript_result_type(
                 inner_sub,
                 &obj_ty,
@@ -195,9 +191,7 @@ pub(super) fn lower_aug_assign(aug: &StmtAugAssign, ctx: &mut LowerCtx) -> Optio
             let object_expr = lower_expr(attr.value.as_ref(), ctx)?;
             let index = lower_expr(&sub.slice, ctx)?;
             let value = lower_expr(&aug.value, ctx)?;
-            let Some(op_str) = op_to_augassign_string(&aug.op, ctx) else {
-                return None;
-            };
+            let op_str = op_to_augassign_string(aug.op, ctx)?;
 
             let element_ty = resolve_subscript_result_type(sub, &field_ty, &index, index.ty(), ctx);
             let base_op = &op_str[..op_str.len() - 1];
@@ -256,9 +250,7 @@ pub(super) fn lower_aug_assign(aug: &StmtAugAssign, ctx: &mut LowerCtx) -> Optio
         }
         let index = lower_expr(&sub.slice, ctx)?;
         let value = lower_expr(&aug.value, ctx)?;
-        let Some(op_str) = op_to_augassign_string(&aug.op, ctx) else {
-            return None;
-        };
+        let op_str = op_to_augassign_string(aug.op, ctx)?;
         let object_ty = validate_subscript_augassign_target(
             ctx,
             &obj_name,
@@ -286,9 +278,7 @@ pub(super) fn lower_aug_assign(aug: &StmtAugAssign, ctx: &mut LowerCtx) -> Optio
     ctx.clear_sequence_pointer(&name);
     ctx.clear_len_alias(&name);
 
-    let Some(op_str) = op_to_augassign_string(&aug.op, ctx) else {
-        return None;
-    };
+    let op_str = op_to_augassign_string(aug.op, ctx)?;
 
     let var_info = if ctx.current_function_frame_start().is_some() {
         if let Some(info) = ctx.lookup_current_function_binding(&name) {

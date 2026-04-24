@@ -1066,6 +1066,7 @@ struct CollectionNeeds {
     needs_vecdeque: bool,
 }
 
+#[allow(clippy::struct_excessive_bools)]
 #[derive(Default)]
 struct RuntimeNeeds {
     needs_file_handles: bool,

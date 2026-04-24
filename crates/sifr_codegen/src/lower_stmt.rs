@@ -2217,6 +2217,7 @@ fn try_lower_simple_while_stmt(
     }])
 }
 
+#[allow(clippy::too_many_arguments)]
 fn try_lower_simple_for_stmt(
     target: &str,
     target_ty: &Type,

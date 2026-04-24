@@ -1084,6 +1084,11 @@ fn seed_binding_after_failed_initializer(
     ctx.clear_sequence_shape_fact(name);
 }
 
+fn invalidate_rebound_binding_facts(ctx: &mut LowerCtx, name: &str) {
+    ctx.scope.clear_narrowing(name);
+    ctx.clear_sequence_guards_for_binding(name);
+}
+
 pub(super) fn lower_ann_assign(ann: &StmtAnnAssign, ctx: &mut LowerCtx) -> Option<HirStmt> {
     let name = if let Expr::Name(n) = ann.target.as_ref() {
         n.id.clone()
@@ -1218,6 +1223,7 @@ pub(super) fn lower_chained_assign(assign: &StmtAssign, ctx: &mut LowerCtx) -> V
                 let existing = ctx.scope.lookup(&name);
                 if existing.is_some() {
                     // Reassignment
+                    invalidate_rebound_binding_facts(ctx, &name);
                     ctx.empty_dict_specializations.remove(&name);
                     ctx.pending_container_specialization_patches.remove(&name);
                     result.push(HirStmt::Assign {
@@ -1248,6 +1254,7 @@ pub(super) fn lower_chained_assign(assign: &StmtAssign, ctx: &mut LowerCtx) -> V
                 };
                 let existing = ctx.scope.lookup(&name);
                 if existing.is_some() {
+                    invalidate_rebound_binding_facts(ctx, &name);
                     ctx.empty_dict_specializations.remove(&name);
                     ctx.pending_container_specialization_patches.remove(&name);
                     result.push(HirStmt::Assign {
@@ -1291,11 +1298,8 @@ fn resolve_field_type_from_type(object_ty: &Type, field_name: &str) -> Option<Ty
                     has_none = true;
                 }
                 Type::Class { fields, .. } => {
-                    let Some((_, member_field_ty)) =
-                        fields.iter().find(|(name, _)| name == field_name)
-                    else {
-                        return None;
-                    };
+                    let (_, member_field_ty) =
+                        fields.iter().find(|(name, _)| name == field_name)?;
                     field_members.push(member_field_ty.clone());
                 }
                 _ => return None,
@@ -1467,7 +1471,7 @@ pub(super) fn lower_assign(assign: &StmtAssign, ctx: &mut LowerCtx) -> Option<Hi
         let index = lower_expr(&sub.slice, ctx)?;
         let value = lower_expr(&assign.value, ctx)?;
         let object_ty =
-            validate_subscript_assignment_target(ctx, &obj_name, obj_ty, index.ty(), value.ty());
+            validate_subscript_assignment_target(ctx, &obj_name, &obj_ty, index.ty(), value.ty());
         maybe_record_dict_assignment_guard(ctx, &object_ty, &obj_name, &sub.slice);
         return Some(HirStmt::SubscriptAssign {
             object: obj_name,
@@ -1501,9 +1505,7 @@ pub(super) fn lower_assign(assign: &StmtAssign, ctx: &mut LowerCtx) -> Option<Hi
     } else {
         ctx.scope.lookup(&name).is_some()
     };
-    let value = if let Some(value) = lower_expr(&assign.value, ctx) {
-        value
-    } else {
+    let Some(value) = lower_expr(&assign.value, ctx) else {
         if !should_treat_as_existing_binding {
             let fallback_ty = ctx
                 .inferred_binding_hint(&name)
@@ -1551,6 +1553,7 @@ pub(super) fn lower_assign(assign: &StmtAssign, ctx: &mut LowerCtx) -> Option<Hi
         }
         // Reset moved state on reassignment
         ctx.scope.reset_moved(&name);
+        invalidate_rebound_binding_facts(ctx, &name);
         if ctx.numeric_sentinel_fact(&name).is_some() {
             if let Some(domain) = numeric_domain_for_type(&value_ty) {
                 ctx.resolve_numeric_sentinel_domain(&name, domain);
@@ -1597,15 +1600,14 @@ pub(super) fn lower_aug_assign(aug: &StmtAugAssign, ctx: &mut LowerCtx) -> Optio
     lower_aug_assign_impl(aug, ctx)
 }
 
+#[allow(clippy::unnecessary_wraps)]
 pub(super) fn lower_return(
     ret: &StmtReturn,
     func_type: &FunctionType,
     ctx: &mut LowerCtx,
 ) -> Option<HirStmt> {
     let value = if let Some(val) = &ret.value {
-        let expr = if let Some(expr) = lower_expr(val, ctx) {
-            expr
-        } else {
+        let Some(expr) = lower_expr(val, ctx) else {
             // Keep control-flow shape intact after expression diagnostics so
             // return-completeness analysis does not emit a cascade error.
             return Some(HirStmt::Return {
