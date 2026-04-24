@@ -903,8 +903,9 @@ Local gate:
 
 ## WS4 0147 Insertion Sort List Rewrite
 
-Status: validated locally
+Status: opened PR
 Branch: `ws4-0147-insertion-sort-list`
+PR: `https://github.com/yaseralnajjar/sifr/pull/1627`
 
 ### Scope
 
