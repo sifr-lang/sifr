@@ -180,6 +180,7 @@ Local gate:
 
 Status: validated locally
 Branch: `ws2-s2-dsu-stdlib`
+PR: `https://github.com/yaseralnajjar/sifr/pull/1612`
 
 ### Scope
 
