@@ -19,7 +19,7 @@ def findMedianSortedArrays(nums1: list[int], nums2: list[int]) -> float:
     min_sentinel = -2147483648
     max_sentinel = 2147483647
 
-    while True:
+    while lo <= hi:
         a_count = (lo + hi) // 2
         b_count = half - a_count
 
