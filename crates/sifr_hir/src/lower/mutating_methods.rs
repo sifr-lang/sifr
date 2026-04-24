@@ -12,19 +12,17 @@ pub(super) fn reject_immutable_parameter_method_mutation(
         return false;
     }
 
-    let HirExpr::Name { name, .. } = object else {
-        return false;
-    };
-
-    if ctx
-        .scope
-        .lookup(name)
-        .is_some_and(|info| info.is_parameter_binding() && !info.is_mutable_binding)
-    {
-        ctx.error(format!(
-            "cannot mutate through immutable parameter `{name}`: add `mut` to the parameter declaration"
-        ));
-        return true;
+    if let HirExpr::Name { name, .. } = object {
+        if ctx
+            .scope
+            .lookup(name)
+            .is_some_and(|info| info.is_parameter_binding() && !info.is_mutable_binding)
+        {
+            ctx.error(format!(
+                "cannot mutate through immutable parameter `{name}`: add `mut` to the parameter declaration"
+            ));
+            return true;
+        }
     }
 
     invalidate_collection_flow_facts_for_method(ctx, object, object_ty, method);

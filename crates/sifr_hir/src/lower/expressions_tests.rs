@@ -745,6 +745,17 @@ fn test_shrinking_collection_method_invalidates_index_guard() {
 }
 
 #[test]
+fn test_shrinking_field_collection_method_invalidates_index_guard() {
+    let result = lower_source(
+        "class Box:\n    values: list[int]\n\n    def __init__(self, values: list[int]):\n        self.values = values\n\n    def bad(mut self, i: int) -> int:\n        if i < len(self.values):\n            self.values.clear()\n            value: int = self.values[i]\n            return value\n        return 0\n",
+    );
+    assert!(
+        result.is_err(),
+        "a shrinking collection mutation on a field must invalidate field index facts"
+    );
+}
+
+#[test]
 fn test_annotated_local_does_not_widen_on_reassignment() {
     let result =
         lower_source("def bad() -> int:\n    value: int = 1\n    value = None\n    return value\n");

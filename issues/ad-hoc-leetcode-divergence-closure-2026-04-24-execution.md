@@ -107,12 +107,13 @@ Regression coverage:
 - Sequence rebinding invalidates prior index guards.
 - Index rebinding invalidates prior index guards.
 - Shrinking collection mutation invalidates prior index guards.
+- Shrinking field-collection mutation invalidates prior field index guards.
 
 ### Validation
 
 Targeted validation:
 
-- `cargo test -p sifr_hir invalidates -- --nocapture` PASS
+- `cargo test -p sifr_hir invalidates -- --nocapture` PASS (`5` tests)
 - CLI repro checks for optional rebinding, sequence rebinding, and shrinking collection mutation now reject unsafe access with type errors.
 
 Required Rust/HIR validation:
