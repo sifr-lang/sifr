@@ -546,9 +546,10 @@ Local gate:
 
 ## WS4 0212 Trie Board-Search Rewrite
 
-Status: validated locally
+Status: merged
 Branch: `ws4-0212-trie-board-search`
 PR: `https://github.com/yaseralnajjar/sifr/pull/1619`
+Merged: `https://github.com/yaseralnajjar/sifr/pull/1619`
 
 ### Scope
 
@@ -587,6 +588,33 @@ Targeted validation:
 - `cargo run -q -p sifr -- run audits/leetcode/0212_word_search_ii.sifr` PASS
 - `cargo run -q -p sifr -- run crates/sifr/tests/e2e/pass/stdlib_trie.sifr` PASS
 - `python3 scripts/scan_leetcode_pair_diffs.py --output verification/leetcode/leetcode_pair_diff_scan_20260424.json --top 80` PASS
+
+Local gate:
+
+- `scripts/run_all_tests.sh --profile quick` PASS
+
+## WS4 0146 Recency Structure Design
+
+Status: validated locally
+Branch: `ws4-0146-recency-design`
+PR: `https://github.com/yaseralnajjar/sifr/pull/1620`
+
+### Scope
+
+Choose the O(1) recency representation before rewriting the LRU cache fixture:
+
+- `internal_docs/leetcode_0146_lru_recency_design.md`
+
+### Decision
+
+Use integer node handles plus maps for the recency list: `key_to_node`, `node_key`, `node_value`, `prev`, and `next`, with fixed `head` / `tail` sentinel node ids and monotonically allocated entry node ids. Absence is determined through `key_to_node`, not a stored sentinel value, so real cached value `-1` remains representable.
+
+### Validation
+
+Docs/design validation:
+
+- `cargo fmt --check` PASS
+- `git diff --check` PASS
 
 Local gate:
 
