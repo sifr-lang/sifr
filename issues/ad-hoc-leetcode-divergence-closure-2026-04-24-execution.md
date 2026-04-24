@@ -700,8 +700,9 @@ Local gate:
 
 ## WS4 0146 LRU Cache Rewrite
 
-Status: validated locally
+Status: opened PR
 Branch: `ws4-0146-lru-rewrite`
+PR: `https://github.com/yaseralnajjar/sifr/pull/1623`
 
 ### Scope
 
