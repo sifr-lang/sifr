@@ -298,6 +298,7 @@ Local gate:
 
 Status: validated locally
 Branch: `ws2-s4-char-predicate-consumption`
+PR: `https://github.com/yaseralnajjar/sifr/pull/1614`
 
 ### Scope
 
