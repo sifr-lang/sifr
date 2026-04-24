@@ -1,26 +1,39 @@
 # LeetCode 211: Design Add And Search Words Data Structure
 
-class WordDictionary:
-    words: list[str]
+from sifr.trie import Trie
 
-    def __init__(self):
-        self.words = []
+def searchFrom(trie: Trie, pattern: str, index: int, node: int) -> bool:
+    if index == len(pattern):
+        return trie.is_terminal(node)
 
-    def addWord(self, word: str) -> None:
-        self.words.append(word + "")
+    ch: str | None = pattern[index]
+    if ch is None:
+        return False
 
-    def search(self, pattern: str) -> bool:
-        for word in self.words:
-            if len(word) != len(pattern):
-                continue
-            ok = True
-            for pch, wch in zip(pattern, word):
-                if pch != "." and pch != wch:
-                    ok = False
-                    break
-            if ok:
+    if ch == ".":
+        for child in trie.children(node):
+            if searchFrom(trie, pattern, index + 1, child):
                 return True
         return False
+
+    next_node: int | None = trie.child(node, ch)
+    if next_node is None:
+        return False
+    return searchFrom(trie, pattern, index + 1, next_node)
+
+class WordDictionary:
+    trie: Trie
+
+    def __init__(self):
+        self.trie = Trie()
+
+    def addWord(self, word: str) -> None:
+        trie: Trie = self.trie
+        trie.insert(word)
+        self.trie = trie
+
+    def search(self, pattern: str) -> bool:
+        return searchFrom(self.trie, pattern, 0, 0)
 
 def main():
     obj = WordDictionary()

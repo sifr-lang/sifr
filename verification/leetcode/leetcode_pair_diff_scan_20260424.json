@@ -593,6 +593,18 @@
       "similarity_ratio": 0.4779874213836478
     },
     {
+      "stem": "0211_design_add_and_search_words_data_structure",
+      "py_relpath": "audits/leetcode/0211_design_add_and_search_words_data_structure.py",
+      "sifr_relpath": "audits/leetcode/0211_design_add_and_search_words_data_structure.sifr",
+      "py_lines": 66,
+      "sifr_lines": 46,
+      "changed_py_lines": 51,
+      "changed_sifr_lines": 31,
+      "changed_total_lines": 82,
+      "length_delta": 20,
+      "similarity_ratio": 0.26785714285714285
+    },
+    {
       "stem": "0662_maximum_width_of_binary_tree",
       "py_relpath": "audits/leetcode/0662_maximum_width_of_binary_tree.py",
       "sifr_relpath": "audits/leetcode/0662_maximum_width_of_binary_tree.sifr",
@@ -819,18 +831,6 @@
       "changed_total_lines": 71,
       "length_delta": 37,
       "similarity_ratio": 0.07792207792207792
-    },
-    {
-      "stem": "0211_design_add_and_search_words_data_structure",
-      "py_relpath": "audits/leetcode/0211_design_add_and_search_words_data_structure.py",
-      "sifr_relpath": "audits/leetcode/0211_design_add_and_search_words_data_structure.sifr",
-      "py_lines": 66,
-      "sifr_lines": 33,
-      "changed_py_lines": 52,
-      "changed_sifr_lines": 19,
-      "changed_total_lines": 71,
-      "length_delta": 33,
-      "similarity_ratio": 0.2828282828282828
     },
     {
       "stem": "0535_encode_and_decode_tinyurl",
