@@ -100,7 +100,7 @@ pub(super) fn lower_tuple_unpack_assign(
                         ctx.error(format!("undefined variable: '{name}'"));
                         return None;
                     };
-                    if info.is_parameter_binding() && !info.is_mutable_binding {
+                    if info.is_parameter_binding() && !info.is_mutable_binding() {
                         ctx.error(format!(
                             "cannot reassign immutable parameter `{name}`: add `mut` to the parameter declaration"
                         ));

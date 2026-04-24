@@ -16,7 +16,7 @@ pub(super) fn reject_immutable_parameter_method_mutation(
         if ctx
             .scope
             .lookup(name)
-            .is_some_and(|info| info.is_parameter_binding() && !info.is_mutable_binding)
+            .is_some_and(|info| info.is_parameter_binding() && !info.is_mutable_binding())
         {
             ctx.error(format!(
                 "cannot mutate through immutable parameter `{name}`: add `mut` to the parameter declaration"

@@ -12,8 +12,19 @@ pub enum BindingKind {
     Parameter,
 }
 
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum BindingMutability {
+    Mutable,
+    Immutable,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum BindingTypeSource {
+    Explicit,
+    Inferred,
+}
+
 /// Tracks variable state for ownership and narrowing.
-#[allow(clippy::struct_excessive_bools)]
 #[derive(Debug, Clone)]
 pub struct VarInfo {
     /// The declared type (from annotation or inference).
@@ -25,11 +36,11 @@ pub struct VarInfo {
     /// Whether the variable is currently mutably borrowed.
     pub is_mut_borrowed: bool,
     /// Whether the binding itself is mutable.
-    pub is_mutable_binding: bool,
+    pub mutability: BindingMutability,
     /// Whether this binding originated from a function parameter.
     pub binding_kind: BindingKind,
     /// Whether the binding type was provided explicitly (annotation/parameter).
-    pub has_explicit_type: bool,
+    pub type_source: BindingTypeSource,
 }
 
 impl VarInfo {
@@ -42,8 +53,13 @@ impl VarInfo {
         matches!(self.binding_kind, BindingKind::Parameter)
     }
 
+    pub fn is_mutable_binding(&self) -> bool {
+        matches!(self.mutability, BindingMutability::Mutable)
+    }
+
     pub fn is_inferred_local_binding(&self) -> bool {
-        matches!(self.binding_kind, BindingKind::Local) && !self.has_explicit_type
+        matches!(self.binding_kind, BindingKind::Local)
+            && matches!(self.type_source, BindingTypeSource::Inferred)
     }
 }
 
@@ -125,6 +141,16 @@ impl Scope {
         has_explicit_type: bool,
     ) {
         if let Some(frame) = self.frames.last_mut() {
+            let mutability = if is_mutable_binding {
+                BindingMutability::Mutable
+            } else {
+                BindingMutability::Immutable
+            };
+            let type_source = if has_explicit_type {
+                BindingTypeSource::Explicit
+            } else {
+                BindingTypeSource::Inferred
+            };
             frame.insert(
                 name,
                 VarInfo {
@@ -132,9 +158,9 @@ impl Scope {
                     narrowed_type: None,
                     is_moved: false,
                     is_mut_borrowed: false,
-                    is_mutable_binding,
+                    mutability,
                     binding_kind,
-                    has_explicit_type,
+                    type_source,
                 },
             );
         }
@@ -260,7 +286,7 @@ impl Scope {
 
     /// Check whether an existing binding is mutable.
     pub fn is_mutable_binding(&self, name: &str) -> Option<bool> {
-        self.lookup(name).map(|info| info.is_mutable_binding)
+        self.lookup(name).map(VarInfo::is_mutable_binding)
     }
 
     // --- Moved state snapshot support ---

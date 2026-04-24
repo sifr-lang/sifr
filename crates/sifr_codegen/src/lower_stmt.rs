@@ -752,12 +752,14 @@ pub(crate) fn try_lower_simple_stmt_with_ctx_and_bindings(
             else_body,
             ..
         } => try_lower_simple_for_stmt(
-            target,
-            target_ty,
-            iter,
-            body,
-            else_body.as_deref(),
-            in_loop_with_else,
+            SimpleForStmtParts {
+                target,
+                target_ty,
+                iter,
+                body,
+                else_body: else_body.as_deref(),
+                in_loop_with_else,
+            },
             bindings,
             ctx,
         ),
@@ -2217,29 +2219,33 @@ fn try_lower_simple_while_stmt(
     }])
 }
 
-#[allow(clippy::too_many_arguments)]
-fn try_lower_simple_for_stmt(
-    target: &str,
-    target_ty: &Type,
-    iter: &HirExpr,
-    body: &[HirStmt],
-    else_body: Option<&[HirStmt]>,
+#[derive(Clone, Copy)]
+struct SimpleForStmtParts<'a> {
+    target: &'a str,
+    target_ty: &'a Type,
+    iter: &'a HirExpr,
+    body: &'a [HirStmt],
+    else_body: Option<&'a [HirStmt]>,
     in_loop_with_else: bool,
+}
+
+fn try_lower_simple_for_stmt(
+    parts: SimpleForStmtParts<'_>,
     bindings: SimpleStmtBindings<'_>,
     ctx: SimpleStmtLoweringCtx<'_>,
 ) -> Option<Vec<RustStmt>> {
-    if target.contains(',') {
+    if parts.target.contains(',') {
         return None;
     }
 
-    if let Some(else_body) = else_body {
+    if let Some(else_body) = parts.else_body {
         return try_lower_loop_else_stmts(
             RustStmt::For {
-                var: target.to_string(),
-                iter: try_lower_simple_for_iter_expr(iter, target_ty)?,
+                var: parts.target.to_string(),
+                iter: try_lower_simple_for_iter_expr(parts.iter, parts.target_ty)?,
                 // Breaks in the loop body should mark this loop's `_broke`.
                 body: try_lower_simple_stmt_block(
-                    body,
+                    parts.body,
                     true,
                     bindings.mutated_vars,
                     bindings.borrowed_params,
@@ -2247,18 +2253,18 @@ fn try_lower_simple_for_stmt(
                 )?,
             },
             else_body,
-            in_loop_with_else,
+            parts.in_loop_with_else,
             bindings,
             ctx,
         );
     }
 
     Some(vec![RustStmt::For {
-        var: target.to_string(),
-        iter: try_lower_simple_for_iter_expr(iter, target_ty)?,
+        var: parts.target.to_string(),
+        iter: try_lower_simple_for_iter_expr(parts.iter, parts.target_ty)?,
         // Entering a nested for without else resets loop-else break marker context.
         body: try_lower_simple_stmt_block(
-            body,
+            parts.body,
             false,
             bindings.mutated_vars,
             bindings.borrowed_params,

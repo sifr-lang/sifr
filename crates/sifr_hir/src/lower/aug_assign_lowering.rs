@@ -300,7 +300,7 @@ pub(super) fn lower_aug_assign(aug: &StmtAugAssign, ctx: &mut LowerCtx) -> Optio
         ctx.error(format!("undefined variable: '{name}'"));
         return None;
     };
-    if var_info.is_parameter_binding() && !var_info.is_mutable_binding {
+    if var_info.is_parameter_binding() && !var_info.is_mutable_binding() {
         ctx.error(format!(
             "cannot reassign immutable parameter `{name}`: add `mut` to the parameter declaration"
         ));
