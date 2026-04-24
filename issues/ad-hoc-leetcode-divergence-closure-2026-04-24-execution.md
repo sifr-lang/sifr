@@ -499,6 +499,7 @@ Local gate:
 
 Status: validated locally
 Branch: `ws4-0211-trie-wildcard-rewrite`
+PR: `https://github.com/yaseralnajjar/sifr/pull/1618`
 
 ### Scope
 
