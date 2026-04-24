@@ -1,19 +1,75 @@
 # LeetCode 706: Design Hashmap
 
+BUCKET_COUNT = 769
+
+def makeBuckets() -> list[list[tuple[int, int]]]:
+    buckets: list[list[tuple[int, int]]] = []
+    for _i in range(BUCKET_COUNT):
+        bucket: list[tuple[int, int]] = []
+        buckets.append(bucket)
+    return buckets
+
 class MyHashMap:
-    map: dict[int, int]
+    buckets: list[list[tuple[int, int]]]
 
     def __init__(self):
-        self.map = {}
+        self.buckets = makeBuckets()
+
+    def hashcode(self, key: int) -> int:
+        size = len(self.buckets)
+        if size == 0:
+            return 0
+        index = key % size
+        if index < 0:
+            return index + size
+        return index
 
     def put(self, key: int, value: int) -> None:
-        self.map[key] = value
+        index = self.hashcode(key)
+        bucket: list[tuple[int, int]] | None = self.buckets[index]
+        if bucket is None:
+            return
+
+        next_bucket: list[tuple[int, int]] = []
+        replaced = False
+        for existing_key, existing_value in bucket:
+            if existing_key == key:
+                next_bucket.append((key, value))
+                replaced = True
+            else:
+                next_bucket.append((existing_key, existing_value))
+
+        if not replaced:
+            next_bucket.append((key, value))
+
+        buckets: list[list[tuple[int, int]]] = self.buckets
+        buckets[index] = next_bucket
+        self.buckets = buckets
 
     def get(self, key: int) -> int:
-        return self.map.get(key, -1)
+        index = self.hashcode(key)
+        bucket: list[tuple[int, int]] | None = self.buckets[index]
+        if bucket is None:
+            return -1
+        for existing_key, existing_value in bucket:
+            if existing_key == key:
+                return existing_value
+        return -1
 
     def remove(self, key: int) -> None:
-        self.map[key] = -1
+        index = self.hashcode(key)
+        bucket: list[tuple[int, int]] | None = self.buckets[index]
+        if bucket is None:
+            return
+
+        next_bucket: list[tuple[int, int]] = []
+        for existing_key, existing_value in bucket:
+            if existing_key != key:
+                next_bucket.append((existing_key, existing_value))
+
+        buckets: list[list[tuple[int, int]]] = self.buckets
+        buckets[index] = next_bucket
+        self.buckets = buckets
 
 
 def main():
@@ -26,3 +82,9 @@ def main():
     assert obj.get(2) == 1
     obj.remove(2)
     assert obj.get(2) == -1
+    obj.put(5, -1)
+    assert obj.get(5) == -1
+    obj.put(5, 7)
+    assert obj.get(5) == 7
+    obj.remove(5)
+    assert obj.get(5) == -1

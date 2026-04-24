@@ -623,9 +623,10 @@ Local gate:
 
 ## WS4 0706 HashMap Storage Design
 
-Status: validated locally
+Status: merged
 Branch: `ws4-0706-hashmap-storage-design`
 PR: `https://github.com/yaseralnajjar/sifr/pull/1621`
+Merged: `https://github.com/yaseralnajjar/sifr/pull/1621`
 
 ### Scope
 
@@ -643,6 +644,54 @@ Docs/design validation:
 
 - `cargo fmt --check` PASS
 - `git diff --check` PASS
+
+Local gate:
+
+- `scripts/run_all_tests.sh --profile quick` PASS
+
+## WS4 0706 HashMap Rewrite
+
+Status: validated locally
+Branch: `ws4-0706-hashmap-rewrite`
+PR: `https://github.com/yaseralnajjar/sifr/pull/1622`
+
+### Scope
+
+Rewrite the design-hashmap fixture to stop delegating storage to built-in `dict`:
+
+- `audits/leetcode/0706_design_hashmap.sifr`
+
+### Changes
+
+- Replaced `dict[int, int]` storage with explicit `list[list[tuple[int, int]]]` buckets.
+- Implemented bucket-local `put`, `get`, and `remove` operations.
+- Made `remove` rebuild the target bucket without the removed key instead of writing `-1`.
+- Added assertions for storing and updating a real `-1` value.
+
+### Pair Scan Movement
+
+Previous stats from `origin/main` scan artifact:
+
+| Fixture | Previous changed_total | Previous changed_py | Previous changed_sifr | Previous lines py/sifr |
+| --- | ---: | ---: | ---: | --- |
+| `0706_design_hashmap` | 62 | 51 | 11 | 68/28 |
+
+Regenerated artifact: `verification/leetcode/leetcode_pair_diff_scan_20260424.json`
+
+| Fixture | Current changed_total | Current changed_py | Current changed_sifr | Current lines py/sifr |
+| --- | ---: | ---: | ---: | --- |
+| `0706_design_hashmap` | 118 | 48 | 70 | 68/90 |
+
+The raw line diff increases because the previous Sifr fixture delegated to a built-in dictionary. This wave closes the structural rewrite criterion: storage is explicit bucket chaining, `get` / `put` / `remove` scan only one bucket, and removal deletes entries rather than writing sentinel values.
+
+### Validation
+
+Targeted validation:
+
+- `python3 audits/leetcode/0706_design_hashmap.py` PASS
+- `cargo run -q -p sifr -- check audits/leetcode/0706_design_hashmap.sifr` PASS
+- `cargo run -q -p sifr -- run audits/leetcode/0706_design_hashmap.sifr` PASS
+- `python3 scripts/scan_leetcode_pair_diffs.py --output verification/leetcode/leetcode_pair_diff_scan_20260424.json --top 80` PASS
 
 Local gate:
 

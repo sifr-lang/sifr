@@ -233,6 +233,18 @@
       "similarity_ratio": 0.18055555555555555
     },
     {
+      "stem": "0706_design_hashmap",
+      "py_relpath": "audits/leetcode/0706_design_hashmap.py",
+      "sifr_relpath": "audits/leetcode/0706_design_hashmap.sifr",
+      "py_lines": 68,
+      "sifr_lines": 90,
+      "changed_py_lines": 48,
+      "changed_sifr_lines": 70,
+      "changed_total_lines": 118,
+      "length_delta": 22,
+      "similarity_ratio": 0.25316455696202533
+    },
+    {
       "stem": "0673_number_of_longest_increasing_subsequence",
       "py_relpath": "audits/leetcode/0673_number_of_longest_increasing_subsequence.py",
       "sifr_relpath": "audits/leetcode/0673_number_of_longest_increasing_subsequence.sifr",
@@ -1263,18 +1275,6 @@
       "changed_total_lines": 62,
       "length_delta": 16,
       "similarity_ratio": 0.27906976744186046
-    },
-    {
-      "stem": "0706_design_hashmap",
-      "py_relpath": "audits/leetcode/0706_design_hashmap.py",
-      "sifr_relpath": "audits/leetcode/0706_design_hashmap.sifr",
-      "py_lines": 68,
-      "sifr_lines": 28,
-      "changed_py_lines": 51,
-      "changed_sifr_lines": 11,
-      "changed_total_lines": 62,
-      "length_delta": 40,
-      "similarity_ratio": 0.3541666666666667
     },
     {
       "stem": "0094_binary_tree_inorder_traversal",
