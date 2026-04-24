@@ -345,6 +345,7 @@ Local gate:
 
 Status: validated locally
 Branch: `ws2-s5-int-parse-consumption`
+PR: `https://github.com/yaseralnajjar/sifr/pull/1615`
 
 ### Scope
 
