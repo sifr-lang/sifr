@@ -11,7 +11,7 @@ Phase plan: `issues/ad-hoc-leetcode-divergence-closure-2026-04-24.md`
 - [ ] WS2 heap / DSU / collection stdlib parity
 - [ ] WS3 owned-chain helper convention and cursor slices
 - [ ] WS4 canonical rewrite debt
-- [ ] WS5 architecture boundary documentation
+- [x] WS5 architecture boundary documentation
 - [ ] WS6 final rerun, scorecard, and closure review
 
 ## WS0 Corpus Normalization And Baseline Refresh
@@ -76,6 +76,35 @@ Targeted Sifr fixture checks:
 Scan regeneration:
 
 - `python3 scripts/scan_leetcode_pair_diffs.py --output verification/leetcode/leetcode_pair_diff_scan_20260424.json --top 80`
+
+Local gate:
+
+- `scripts/run_all_tests.sh --profile quick` PASS
+
+## WS5 Architecture Boundary Classification
+
+Status: validated locally
+Branch: `ws5-architecture-boundary-classification`
+
+### Scope
+
+Record explicit Category 4 architecture-boundary classifications:
+
+- `verification/leetcode/leetcode_architecture_boundary_classification_20260424.md`
+
+### Changes
+
+- Documented mutable `nonlocal` capture boundary for `0673` and below-cutoff continuity fixtures.
+- Documented object-identity/shared-ownership boundary for `0133`, `0138`, `0141`, `0160`, and `0894`.
+- Marked vacuous/acyclic `0141` tests as boundary-limited rather than canonical cycle-input evidence.
+- Stated the closure rule for future safe arena/handle or nonlocal-capture designs.
+
+### Validation
+
+Docs/tracking validation:
+
+- `cargo fmt --check` PASS
+- `git diff --check` PASS
 
 Local gate:
 
