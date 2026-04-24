@@ -257,6 +257,18 @@
       "similarity_ratio": 0.25316455696202533
     },
     {
+      "stem": "0023_merge_k_sorted_lists",
+      "py_relpath": "audits/leetcode/0023_merge_k_sorted_lists.py",
+      "sifr_relpath": "audits/leetcode/0023_merge_k_sorted_lists.sifr",
+      "py_lines": 73,
+      "sifr_lines": 78,
+      "changed_py_lines": 56,
+      "changed_sifr_lines": 61,
+      "changed_total_lines": 117,
+      "length_delta": 5,
+      "similarity_ratio": 0.2251655629139073
+    },
+    {
       "stem": "0673_number_of_longest_increasing_subsequence",
       "py_relpath": "audits/leetcode/0673_number_of_longest_increasing_subsequence.py",
       "sifr_relpath": "audits/leetcode/0673_number_of_longest_increasing_subsequence.sifr",
@@ -387,18 +399,6 @@
       "changed_total_lines": 104,
       "length_delta": 32,
       "similarity_ratio": 0.35
-    },
-    {
-      "stem": "0023_merge_k_sorted_lists",
-      "py_relpath": "audits/leetcode/0023_merge_k_sorted_lists.py",
-      "sifr_relpath": "audits/leetcode/0023_merge_k_sorted_lists.sifr",
-      "py_lines": 92,
-      "sifr_lines": 17,
-      "changed_py_lines": 88,
-      "changed_sifr_lines": 13,
-      "changed_total_lines": 101,
-      "length_delta": 75,
-      "similarity_ratio": 0.07339449541284404
     },
     {
       "stem": "0203_remove_linked_list_elements",
