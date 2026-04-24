@@ -1006,8 +1006,9 @@ Local gate:
 
 ## WS4 0023 Merge K Sorted Lists Rewrite
 
-Status: validated locally
+Status: opened PR
 Branch: `ws4-0023-merge-k-lists-heap`
+PR: `https://github.com/yaseralnajjar/sifr/pull/1629`
 
 ### Scope
 
