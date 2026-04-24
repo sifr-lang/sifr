@@ -852,9 +852,10 @@ Local gate:
 
 ## WS4 0024 Swap Nodes In Pairs Rewrite
 
-Status: opened PR
+Status: merged
 Branch: `ws4-0024-swap-pairs`
 PR: `https://github.com/yaseralnajjar/sifr/pull/1626`
+Merged: `https://github.com/yaseralnajjar/sifr/pull/1626`
 
 ### Scope
 
@@ -892,6 +893,55 @@ Targeted validation:
 - `python3 audits/leetcode/0024_swap_nodes_in_pairs.py` PASS
 - `cargo run -q -p sifr -- check audits/leetcode/0024_swap_nodes_in_pairs.sifr` PASS
 - `cargo run -q -p sifr -- run audits/leetcode/0024_swap_nodes_in_pairs.sifr` PASS
+- `python3 scripts/scan_leetcode_pair_diffs.py --output verification/leetcode/leetcode_pair_diff_scan_20260424.json --top 80` PASS
+- `cargo fmt --check` PASS
+- `git diff --check` PASS
+
+Local gate:
+
+- `scripts/run_all_tests.sh --profile quick` PASS
+
+## WS4 0147 Insertion Sort List Rewrite
+
+Status: validated locally
+Branch: `ws4-0147-insertion-sort-list`
+
+### Scope
+
+Rewrite the insertion-sort-list fixture to sort the owned node chain directly:
+
+- `audits/leetcode/0147_insertion_sort_list.py`
+- `audits/leetcode/0147_insertion_sort_list.sifr`
+
+### Changes
+
+- Replaced the Sifr drain/sort/rebuild implementation with recursive owned-node insertion sort.
+- Added `insertSorted` and `sortInto` helpers that move nodes by rewiring `.next`.
+- Removed unused `Node` / `unwrapInt` helper baggage from the paired fixtures.
+
+### Pair Scan Movement
+
+Previous stats from `origin/main` scan artifact:
+
+| Fixture | Previous changed_total | Previous changed_py | Previous changed_sifr | Previous lines py/sifr |
+| --- | ---: | ---: | ---: | --- |
+| `0147_insertion_sort_list` | 102 | 36 | 66 | 61/91 |
+
+Regenerated artifact: `verification/leetcode/leetcode_pair_diff_scan_20260424.json`
+
+| Fixture | Current changed_total | Current changed_py | Current changed_sifr | Current lines py/sifr |
+| --- | ---: | ---: | ---: | --- |
+| `0147_insertion_sort_list` | 79 | 29 | 50 | 42/63 |
+
+This wave closes the structural rewrite criterion: the Sifr fixture no longer drains values into a list, calls `sorted`, or rebuilds a new result chain.
+
+### Validation
+
+Targeted validation:
+
+- `python3 audits/leetcode/0147_insertion_sort_list.py` PASS
+- `cargo run -q -p sifr -- check audits/leetcode/0147_insertion_sort_list.sifr` PASS
+- `cargo run -q -p sifr -- run audits/leetcode/0147_insertion_sort_list.sifr` PASS
 - `python3 scripts/scan_leetcode_pair_diffs.py --output verification/leetcode/leetcode_pair_diff_scan_20260424.json --top 80` PASS
 - `cargo fmt --check` PASS
 - `git diff --check` PASS

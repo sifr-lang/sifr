@@ -25,12 +25,6 @@ def hasNode(node: ListNode | None) -> bool:
     return node is not None
 
 
-def unwrapInt(value: int | None) -> int:
-    if value is None:
-        return 0
-    return value
-
-
 def listNodeToString(own node: ListNode | None) -> str:
     if node is None:
         return "None"
@@ -42,49 +36,27 @@ def listNodeToString(own node: ListNode | None) -> str:
     return "->".join(parts)
 
 
-class Node:
-    val: int
-    next: Node | None
-    random: Node | None
-    left: Node | None
-    right: Node | None
-    neighbors: list[Node]
-    key: int
+def insertSorted(own mut sorted: ListNode | None, own mut node: ListNode) -> ListNode | None:
+    if sorted is None:
+        node.next = None
+        return node
+    if node.val <= sorted.val:
+        node.next = sorted
+        return node
+    sorted_next: ListNode | None = sorted.next
+    sorted.next = insertSorted(sorted_next, node)
+    return sorted
 
-    def __init__(
-        self,
-        val: int = 0,
-        next: Node | None = None,
-        random: Node | None = None,
-        left: Node | None = None,
-        right: Node | None = None,
-        neighbors: list[Node] = [],
-        key: int = -1,
-    ):
-        self.val = val
-        self.next = next
-        self.random = random
-        self.left = left
-        self.right = right
-        self.neighbors = neighbors
-        self.key = key
+
+def sortInto(own mut cur: ListNode | None, own sorted: ListNode | None) -> ListNode | None:
+    if cur is None:
+        return sorted
+    next_node: ListNode | None = cur.next
+    cur.next = None
+    return sortInto(next_node, insertSorted(sorted, cur))
 
 def insertionSortList(own head: ListNode | None) -> ListNode | None:
-    values: list[int] = []
-    cur: ListNode | None = head
-    while hasNode(cur):
-        values.append(nodeVal(cur))
-        cur = nodeNext(cur)
-
-    ordered: list[int] = sorted(values)
-    result: ListNode | None = None
-    i: int = len(ordered) - 1
-    while i >= 0:
-        value: int = unwrapInt(ordered[i])
-        if True:
-            result = ListNode(value, result)
-        i = i - 1
-    return result
+    return sortInto(head, None)
 
 def main():
     assert listNodeToString(insertionSortList(ListNode(4, ListNode(2, ListNode(1, ListNode(3, None)))))) == listNodeToString(ListNode(1, ListNode(2, ListNode(3, ListNode(4, None)))))
