@@ -76,9 +76,16 @@ fn canonical_plain_call_name_for_ir(func: &str) -> &str {
 fn supports_nonempty_pop_narrowing_type_for_ir(object_ty: &Type) -> bool {
     match crate::resolve_alias_type_for_plain_call(object_ty) {
         Type::List(_) => true,
-        Type::Class { name, .. } => name == "deque" || name.ends_with(".deque"),
+        Type::Class { name, .. } => is_deque_class_name_for_ir(name),
         _ => false,
     }
+}
+
+fn is_deque_class_name_for_ir(name: &str) -> bool {
+    name == "deque"
+        || name
+            .rsplit_once('.')
+            .is_some_and(|(_, tail)| tail == "deque")
 }
 
 fn is_narrowable_pop_call_for_ir(method: &str, args: &[HirExpr]) -> bool {

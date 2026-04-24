@@ -1,29 +1,12 @@
 # LeetCode 1466: Reorder Routes To Make All Paths Lead To The City Zero
 
-def tupleFirst(edge: tuple[int, int]) -> int:
-    value = edge[0]
-    if value is None:
-        return 0
-    return value
-
-def tupleSecond(edge: tuple[int, int]) -> int:
-    value = edge[1]
-    if value is None:
-        return 0
-    return value
-
-def unwrapInt(value: int | None) -> int:
-    if value is None:
-        return -1
-    return value
-
 def minReorder(n: int, connections: list[tuple[int, int]]) -> int:
     edges: set[tuple[int, int]] = set()
     neighbors: dict[int, list[int]] = {}
 
     for edge in connections:
-        a = tupleFirst(edge)
-        b = tupleSecond(edge)
+        a = edge[0]
+        b = edge[1]
         edges.add((a, b))
         if a in neighbors:
             neighbors[a].append(b)
@@ -39,9 +22,7 @@ def minReorder(n: int, connections: list[tuple[int, int]]) -> int:
     stack: list[int] = [0]
 
     while stack:
-        city = unwrapInt(stack.pop())
-        if city < 0:
-            continue
+        city = stack.pop()
         city_neighbors = neighbors.get(city, [])
         for neighbor in city_neighbors:
             if neighbor in visit:

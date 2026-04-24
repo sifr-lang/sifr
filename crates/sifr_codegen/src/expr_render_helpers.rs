@@ -1082,10 +1082,24 @@ impl RustEmitter {
                 ) {
                     return Ok(None);
                 }
-                let Some(inner_expr) = build_inner_index(crate::RustExpr::Ident("__v".to_string()))
+                let Some(mut inner_expr) =
+                    build_inner_index(crate::RustExpr::Ident("__v".to_string()))
                 else {
                     return Ok(None);
                 };
+                if let (Type::Tuple(elements), HirExpr::IntLiteral(raw_idx)) = (inner_ty, index) {
+                    if let Ok(idx) = usize::try_from(*raw_idx) {
+                        if let Some(element_ty) = elements.get(idx) {
+                            if !crate::helpers::is_copy_type_for_codegen(element_ty) {
+                                inner_expr = crate::RustExpr::MethodCall {
+                                    receiver: Box::new(inner_expr),
+                                    method: "clone".to_string(),
+                                    args: vec![],
+                                };
+                            }
+                        }
+                    }
+                }
                 let projection_method = if matches!(inner_ty, Type::Tuple(_)) {
                     "map"
                 } else {

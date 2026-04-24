@@ -1,17 +1,12 @@
 # LeetCode 735: Asteroid Collision
 
-def unwrapInt(value: int | None) -> int:
-    if value is None:
-        return 0
-    return value
-
 def asteroidCollision(asteroids: list[int]) -> list[int]:
     stack: list[int] = []
 
     for a in asteroids:
         alive = True
         while alive and a < 0 and len(stack) > 0:
-            top_val = unwrapInt(stack.pop())
+            top_val = stack.pop()
 
             if top_val < 0:
                 stack.append(top_val)

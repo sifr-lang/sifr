@@ -25,7 +25,6 @@ pub(super) fn reject_immutable_parameter_method_mutation(
         }
     }
 
-    invalidate_collection_flow_facts_for_method(ctx, object, object_ty, method);
     false
 }
 
