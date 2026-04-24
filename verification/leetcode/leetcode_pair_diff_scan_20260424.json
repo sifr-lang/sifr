@@ -245,18 +245,6 @@
       "similarity_ratio": 0.18055555555555555
     },
     {
-      "stem": "0261_graph_valid_tree",
-      "py_relpath": "audits/leetcode/0261_graph_valid_tree.py",
-      "sifr_relpath": "audits/leetcode/0261_graph_valid_tree.sifr",
-      "py_lines": 82,
-      "sifr_lines": 65,
-      "changed_py_lines": 67,
-      "changed_sifr_lines": 50,
-      "changed_total_lines": 117,
-      "length_delta": 17,
-      "similarity_ratio": 0.20408163265306123
-    },
-    {
       "stem": "0673_number_of_longest_increasing_subsequence",
       "py_relpath": "audits/leetcode/0673_number_of_longest_increasing_subsequence.py",
       "sifr_relpath": "audits/leetcode/0673_number_of_longest_increasing_subsequence.sifr",
@@ -483,6 +471,18 @@
       "changed_total_lines": 96,
       "length_delta": 44,
       "similarity_ratio": 0.22580645161290322
+    },
+    {
+      "stem": "0261_graph_valid_tree",
+      "py_relpath": "audits/leetcode/0261_graph_valid_tree.py",
+      "sifr_relpath": "audits/leetcode/0261_graph_valid_tree.sifr",
+      "py_lines": 82,
+      "sifr_lines": 33,
+      "changed_py_lines": 72,
+      "changed_sifr_lines": 23,
+      "changed_total_lines": 95,
+      "length_delta": 49,
+      "similarity_ratio": 0.17391304347826086
     },
     {
       "stem": "0417_pacific_atlantic_water_flow",

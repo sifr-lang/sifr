@@ -1,21 +1,10 @@
+from sifr.dsu import UnionFind
+
 def validTreeDsu(n: int, edges: list[list[int]]) -> bool:
     if n == 0:
         return True
 
-    parents = [i for i in range(n)]
-    ranks = [1] * n
-    components = n
-
-    def find(node: int) -> int:
-        parent0 = parents[node]
-        if parent0 is None:
-            return node
-        parent = parent0
-        if parent == node:
-            return node
-        root = find(parent)
-        parents[node] = root
-        return root
+    dsu = UnionFind(n)
 
     for edge in edges:
         a0 = edge[0]
@@ -28,31 +17,10 @@ def validTreeDsu(n: int, edges: list[list[int]]) -> bool:
         else:
             continue
 
-        rootA = find(a)
-        rootB = find(b)
-        if rootA == rootB:
+        if not dsu.union(a, b):
             return False
 
-        rankA0 = ranks[rootA]
-        rankB0 = ranks[rootB]
-        rankA = 0
-        rankB = 0
-        if rankA0 is not None and rankB0 is not None:
-            rankA = rankA0
-            rankB = rankB0
-        else:
-            continue
-
-        if rankA < rankB:
-            parents[rootA] = rootB
-        elif rankA > rankB:
-            parents[rootB] = rootA
-        else:
-            parents[rootB] = rootA
-            ranks[rootA] = rankA + 1
-        components -= 1
-
-    return components == 1
+    return dsu.component_count() == 1
 
 # Canonical entrypoint for this fixture.
 def validTree(n: int, edges: list[list[int]]) -> bool:
