@@ -240,9 +240,10 @@ Known unrelated validation note:
 
 ## WS2 S3 Deque Consumption And Nonempty Popleft Codegen
 
-Status: validated locally
+Status: merged
 Branch: `ws2-s3-deque-consumption`
 PR: `https://github.com/yaseralnajjar/sifr/pull/1613`
+Merged: `https://github.com/yaseralnajjar/sifr/pull/1613`
 
 ### Scope
 
@@ -288,3 +289,53 @@ Targeted validation:
 - `cargo run -q -p sifr -- check crates/sifr/tests/e2e/pass/deque_nonempty_popleft_narrowing.sifr` PASS
 - `cargo run -q -p sifr -- run crates/sifr/tests/e2e/pass/deque_nonempty_popleft_narrowing.sifr` PASS
 - `python3 scripts/scan_leetcode_pair_diffs.py --output verification/leetcode/leetcode_pair_diff_scan_20260424.json --top 80` PASS
+
+Local gate:
+
+- `scripts/run_all_tests.sh --profile quick` PASS
+
+## WS2 S4 Character Predicate Consumption
+
+Status: validated locally
+Branch: `ws2-s4-char-predicate-consumption`
+PR: `https://github.com/yaseralnajjar/sifr/pull/1614`
+
+### Scope
+
+The compiler already supports string predicate methods including `.isdigit()`, with e2e coverage in `string_case_predicates`. This wave consumes that surface in a representative decode-stack fixture:
+
+- `audits/leetcode/0394_decode_string.sifr`
+
+### Changes
+
+- Removed the fixture-local `isDigit` digit ladder.
+- Replaced the multiplier scan guard with `peekStr(stack).isdigit()`.
+- Kept `digitValue` / manual integer accumulation in place because whole-token integer parsing belongs to `S5`.
+
+### Pair Scan Movement
+
+Previous stats from `origin/main` scan artifact:
+
+| Fixture | Previous changed_total | Previous changed_py | Previous changed_sifr | Previous lines py/sifr |
+| --- | ---: | ---: | ---: | --- |
+| `0394_decode_string` | 119 | 22 | 97 | 32/107 |
+
+Regenerated artifact: `verification/leetcode/leetcode_pair_diff_scan_20260424.json`
+
+| Fixture | Current changed_total | Current changed_py | Current changed_sifr | Current lines py/sifr |
+| --- | ---: | ---: | ---: | --- |
+| `0394_decode_string` | 96 | 22 | 74 | 32/84 |
+
+### Validation
+
+Targeted validation:
+
+- `python3 audits/leetcode/0394_decode_string.py` PASS
+- `cargo run -q -p sifr -- check audits/leetcode/0394_decode_string.sifr` PASS
+- `cargo run -q -p sifr -- run audits/leetcode/0394_decode_string.sifr` PASS
+- `cargo run -q -p sifr -- run crates/sifr/tests/e2e/pass/string_case_predicates.sifr` PASS
+- `python3 scripts/scan_leetcode_pair_diffs.py --output verification/leetcode/leetcode_pair_diff_scan_20260424.json --top 80` PASS
+
+Local gate:
+
+- `scripts/run_all_tests.sh --profile quick` PASS

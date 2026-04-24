@@ -14,29 +14,6 @@ def peekStr(stack: list[str]) -> str:
         return ""
     return value
 
-def isDigit(ch: str) -> bool:
-    if ch == "0":
-        return True
-    if ch == "1":
-        return True
-    if ch == "2":
-        return True
-    if ch == "3":
-        return True
-    if ch == "4":
-        return True
-    if ch == "5":
-        return True
-    if ch == "6":
-        return True
-    if ch == "7":
-        return True
-    if ch == "8":
-        return True
-    if ch == "9":
-        return True
-    return False
-
 def digitValue(ch: str) -> int:
     if ch == "0":
         return 0
@@ -93,7 +70,7 @@ def decodeString(s: str) -> str:
             _ = popStr(stack)
 
         multiplier = ""
-        while len(stack) > 0 and isDigit(peekStr(stack)):
+        while len(stack) > 0 and peekStr(stack).isdigit():
             multiplier = popStr(stack) + multiplier
 
         repeat = parsePositiveInt(multiplier)
