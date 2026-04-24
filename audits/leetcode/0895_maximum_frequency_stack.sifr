@@ -1,10 +1,5 @@
 # LeetCode 895: Maximum Frequency Stack
 
-def unwrapInt(value: int | None) -> int:
-    if value is None:
-        return 0
-    return value
-
 class FreqStack:
     cnt: dict[int, int]
     maxCnt: int
@@ -31,7 +26,7 @@ class FreqStack:
         if len(stack) == 0:
             return 0
 
-        res = unwrapInt(stack.pop())
+        res = stack.pop()
         stack_len = len(stack)
         self.stacks[self.maxCnt] = stack
 

@@ -29,7 +29,9 @@ use super::method_call_args::{
     validate_dict_update_arg, validate_list_extend_arg, validate_set_iterable_arg,
 };
 use super::min_max_validation::validate_variadic_min_max_operands;
-use super::mutating_methods::reject_immutable_parameter_method_mutation;
+use super::mutating_methods::{
+    invalidate_collection_flow_facts_for_method, reject_immutable_parameter_method_mutation,
+};
 use super::nonempty_method_narrowing::refine_nonempty_method_return_type;
 use super::numeric_sentinels::{
     float_sentinel_expr, float_sentinel_kind_from_call, lower_sentinel_expr_for_name_domain,
@@ -2548,6 +2550,7 @@ pub(super) fn lower_method_call(
         &resolve_method_type(&object_ty, &method_name, &args, ctx)?,
         ctx,
     );
+    invalidate_collection_flow_facts_for_method(ctx, &object, &object_ty, &method_name);
     if matches!(object_ty.resolve_alias(), Type::Str) && method_name == "encode" {
         let mut intrinsic_args = vec![object];
         let intrinsic_name = if args.is_empty() {

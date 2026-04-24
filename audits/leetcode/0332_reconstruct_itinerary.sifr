@@ -1,20 +1,13 @@
 # LeetCode 332: Reconstruct Itinerary
 
-def unwrapStr(own value: str | None) -> str:
-    if value is None:
-        return ""
-    return value
-
 def findItinerary(tickets: list[tuple[str, str]]) -> list[str]:
     ordered: list[tuple[str, str]] = tickets[:]
     ordered.sort()
 
     adj: dict[str, list[str]] = {}
     for ticket in ordered:
-        src = unwrapStr(ticket[0])
-        dst = unwrapStr(ticket[1])
-        if src == "" or dst == "":
-            continue
+        src = ticket[0]
+        dst = ticket[1]
         values = adj.get(src, [])
         values.append(dst)
         adj[src] = values
@@ -22,18 +15,14 @@ def findItinerary(tickets: list[tuple[str, str]]) -> list[str]:
     route: list[str] = []
     stack: list[str] = ['JFK']
     while stack:
-        src = unwrapStr(stack.pop())
-        if src == "":
-            continue
+        src = stack.pop()
         values = adj.get(src, [])
         if len(values) == 0:
             route.append(src)
             continue
         stack.append(str(src))
-        next_stop = unwrapStr(values[0])
+        next_stop = values[0]
         adj[src] = values[1:]
-        if next_stop == "":
-            continue
         stack.append(str(next_stop))
 
     route.reverse()

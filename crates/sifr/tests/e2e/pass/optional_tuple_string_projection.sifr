@@ -1,0 +1,6 @@
+def main():
+    values: list[tuple[int, str]] = [(1, "L")]
+    while values:
+        item = values.pop(0)
+        direction: str = item[1]
+        assert direction == "L"
