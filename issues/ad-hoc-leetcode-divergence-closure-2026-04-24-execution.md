@@ -852,8 +852,9 @@ Local gate:
 
 ## WS4 0024 Swap Nodes In Pairs Rewrite
 
-Status: validated locally
+Status: opened PR
 Branch: `ws4-0024-swap-pairs`
+PR: `https://github.com/yaseralnajjar/sifr/pull/1626`
 
 ### Scope
 
