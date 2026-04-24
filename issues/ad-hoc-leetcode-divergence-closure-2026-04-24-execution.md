@@ -597,6 +597,7 @@ Local gate:
 
 Status: validated locally
 Branch: `ws4-0146-recency-design`
+PR: `https://github.com/yaseralnajjar/sifr/pull/1620`
 
 ### Scope
 
