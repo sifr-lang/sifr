@@ -595,9 +595,10 @@ Local gate:
 
 ## WS4 0146 Recency Structure Design
 
-Status: validated locally
+Status: merged
 Branch: `ws4-0146-recency-design`
 PR: `https://github.com/yaseralnajjar/sifr/pull/1620`
+Merged: `https://github.com/yaseralnajjar/sifr/pull/1620`
 
 ### Scope
 
@@ -608,6 +609,33 @@ Choose the O(1) recency representation before rewriting the LRU cache fixture:
 ### Decision
 
 Use integer node handles plus maps for the recency list: `key_to_node`, `node_key`, `node_value`, `prev`, and `next`, with fixed `head` / `tail` sentinel node ids and monotonically allocated entry node ids. Absence is determined through `key_to_node`, not a stored sentinel value, so real cached value `-1` remains representable.
+
+### Validation
+
+Docs/design validation:
+
+- `cargo fmt --check` PASS
+- `git diff --check` PASS
+
+Local gate:
+
+- `scripts/run_all_tests.sh --profile quick` PASS
+
+## WS4 0706 HashMap Storage Design
+
+Status: validated locally
+Branch: `ws4-0706-hashmap-storage-design`
+PR: `https://github.com/yaseralnajjar/sifr/pull/1621`
+
+### Scope
+
+Choose the storage representation before rewriting the design-hashmap fixture:
+
+- `internal_docs/leetcode_0706_hashmap_storage_design.md`
+
+### Decision
+
+Use separate chaining with explicit `list[list[tuple[int, int]]]` buckets and a fixed prime bucket count. `get`, `put`, and `remove` scan only one bucket; `remove` rebuilds the bucket without the key instead of writing a sentinel value. Real stored value `-1` remains representable because absence is determined by key lookup.
 
 ### Validation
 
