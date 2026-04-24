@@ -47,6 +47,7 @@ pub(super) const STDLIB_FILES: &[(&str, &str)] = &[
         "sifr.graphlib",
         include_str!("../../../../lib/sifr/graphlib.sifr"),
     ),
+    ("sifr.trie", include_str!("../../../../lib/sifr/trie.sifr")),
     ("sifr.uuid", include_str!("../../../../lib/sifr/uuid.sifr")),
     (
         "sifr.platform",

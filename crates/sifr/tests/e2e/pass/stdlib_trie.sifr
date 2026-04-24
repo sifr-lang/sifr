@@ -1,0 +1,30 @@
+from sifr.trie import Trie
+
+def main():
+    trie = Trie()
+
+    assert trie.node_count() == 1
+    assert trie.contains("apple") == False
+    assert trie.starts_with("") == True
+
+    trie.insert("apple")
+    assert trie.contains("apple") == True
+    assert trie.contains("app") == False
+    assert trie.starts_with("app") == True
+
+    app_node: int | None = trie.find_node("app")
+    assert app_node is not None
+    if app_node is not None:
+        assert trie.is_terminal(app_node) == False
+        assert len(trie.children(app_node)) == 1
+
+    trie.insert("app")
+    assert trie.contains("app") == True
+    if app_node is not None:
+        assert trie.is_terminal(app_node) == True
+
+    root_child: int | None = trie.child(0, "a")
+    assert root_child is not None
+    assert trie.child(0, "z") is None
+    assert trie.child(-1, "a") is None
+    assert len(trie.children(-1)) == 0

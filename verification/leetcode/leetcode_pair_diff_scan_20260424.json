@@ -617,18 +617,6 @@
       "similarity_ratio": 0.09195402298850575
     },
     {
-      "stem": "0208_implement_trie_prefix_tree",
-      "py_relpath": "audits/leetcode/0208_implement_trie_prefix_tree.py",
-      "sifr_relpath": "audits/leetcode/0208_implement_trie_prefix_tree.sifr",
-      "py_lines": 78,
-      "sifr_lines": 31,
-      "changed_py_lines": 63,
-      "changed_sifr_lines": 16,
-      "changed_total_lines": 79,
-      "length_delta": 47,
-      "similarity_ratio": 0.27522935779816515
-    },
-    {
       "stem": "1345_jump_game_iv",
       "py_relpath": "audits/leetcode/1345_jump_game_iv.py",
       "sifr_relpath": "audits/leetcode/1345_jump_game_iv.sifr",
@@ -855,6 +843,18 @@
       "changed_total_lines": 71,
       "length_delta": 15,
       "similarity_ratio": 0.5359477124183006
+    },
+    {
+      "stem": "0208_implement_trie_prefix_tree",
+      "py_relpath": "audits/leetcode/0208_implement_trie_prefix_tree.py",
+      "sifr_relpath": "audits/leetcode/0208_implement_trie_prefix_tree.sifr",
+      "py_lines": 78,
+      "sifr_lines": 12,
+      "changed_py_lines": 68,
+      "changed_sifr_lines": 2,
+      "changed_total_lines": 70,
+      "length_delta": 66,
+      "similarity_ratio": 0.2222222222222222
     },
     {
       "stem": "0127_word_ladder",
