@@ -548,6 +548,7 @@ Local gate:
 
 Status: validated locally
 Branch: `ws4-0212-trie-board-search`
+PR: `https://github.com/yaseralnajjar/sifr/pull/1619`
 
 ### Scope
 
