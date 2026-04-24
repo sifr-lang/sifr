@@ -446,9 +446,10 @@ Local gate:
 
 ## WS3 B1 Fixture Helper Convention
 
-Status: validated locally
+Status: merged
 Branch: `ws3-b1-fixture-helper-convention`
 PR: `https://github.com/yaseralnajjar/sifr/pull/1617`
+Merged: `https://github.com/yaseralnajjar/sifr/pull/1617`
 
 ### Scope
 
@@ -488,6 +489,54 @@ Targeted validation:
 - `python3 audits/leetcode/0021_merge_two_sorted_lists.py` PASS
 - `cargo run -q -p sifr -- check audits/leetcode/0021_merge_two_sorted_lists.sifr` PASS
 - `cargo run -q -p sifr -- run audits/leetcode/0021_merge_two_sorted_lists.sifr` PASS
+- `python3 scripts/scan_leetcode_pair_diffs.py --output verification/leetcode/leetcode_pair_diff_scan_20260424.json --top 80` PASS
+
+Local gate:
+
+- `scripts/run_all_tests.sh --profile quick` PASS
+
+## WS4 0211 Trie Wildcard Rewrite
+
+Status: validated locally
+Branch: `ws4-0211-trie-wildcard-rewrite`
+PR: `https://github.com/yaseralnajjar/sifr/pull/1618`
+
+### Scope
+
+Use the WS2 S6 trie API to rewrite the wildcard word dictionary fixture:
+
+- `audits/leetcode/0211_design_add_and_search_words_data_structure.sifr`
+
+### Changes
+
+- Replaced the fixture-local `list[str]` storage and per-word linear wildcard scan with a `sifr.trie.Trie`.
+- Added explicit wildcard DFS over trie node indices using `children`, `child`, and `is_terminal`.
+- Preserved explicit field write-back after insertion because mutating a copied class field value does not update the stored field.
+
+### Pair Scan Movement
+
+Previous stats from `origin/main` scan artifact:
+
+| Fixture | Previous changed_total | Previous changed_py | Previous changed_sifr | Previous lines py/sifr |
+| --- | ---: | ---: | ---: | --- |
+| `0211_design_add_and_search_words_data_structure` | 71 | 52 | 19 | 66/33 |
+
+Regenerated artifact: `verification/leetcode/leetcode_pair_diff_scan_20260424.json`
+
+| Fixture | Current changed_total | Current changed_py | Current changed_sifr | Current lines py/sifr |
+| --- | ---: | ---: | ---: | --- |
+| `0211_design_add_and_search_words_data_structure` | 82 | 51 | 31 | 66/46 |
+
+The raw line diff increases because the previous Sifr fixture used a short word-list scan. This wave closes the structural rewrite criterion: the fixture now uses trie traversal with wildcard DFS and no per-word full scan.
+
+### Validation
+
+Targeted validation:
+
+- `python3 audits/leetcode/0211_design_add_and_search_words_data_structure.py` PASS
+- `cargo run -q -p sifr -- check audits/leetcode/0211_design_add_and_search_words_data_structure.sifr` PASS
+- `cargo run -q -p sifr -- run audits/leetcode/0211_design_add_and_search_words_data_structure.sifr` PASS
+- `cargo run -q -p sifr -- run crates/sifr/tests/e2e/pass/stdlib_trie.sifr` PASS
 - `python3 scripts/scan_leetcode_pair_diffs.py --output verification/leetcode/leetcode_pair_diff_scan_20260424.json --top 80` PASS
 
 Local gate:
