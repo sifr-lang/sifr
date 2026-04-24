@@ -805,8 +805,9 @@ Local gate:
 
 ## WS4 0206 Reverse Linked List Rewrite
 
-Status: validated locally
+Status: opened PR
 Branch: `ws4-0206-reverse-linked-list`
+PR: `https://github.com/yaseralnajjar/sifr/pull/1625`
 
 ### Scope
 
