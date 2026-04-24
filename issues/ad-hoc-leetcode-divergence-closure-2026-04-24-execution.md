@@ -242,6 +242,7 @@ Known unrelated validation note:
 
 Status: validated locally
 Branch: `ws2-s3-deque-consumption`
+PR: `https://github.com/yaseralnajjar/sifr/pull/1613`
 
 ### Scope
 
