@@ -7,7 +7,7 @@ Phase plan: `issues/ad-hoc-leetcode-divergence-closure-2026-04-24.md`
 ## Wave Checklist
 
 - [x] WS0 corpus normalization and baseline refresh
-- [ ] WS1 narrowing design and first compiler slices
+- [x] WS1 narrowing design and first compiler slices
 - [ ] WS2 heap / DSU / collection stdlib parity
 - [ ] WS3 owned-chain helper convention and cursor slices
 - [ ] WS4 canonical rewrite debt
@@ -83,9 +83,10 @@ Local gate:
 
 ## WS1 D0 Narrowing Invalidation Design
 
-Status: validated locally
+Status: merged
 Branch: `ws1-narrowing-invalidation-design`
 PR: `https://github.com/yaseralnajjar/sifr/pull/1610`
+Merged: `https://github.com/yaseralnajjar/sifr/pull/1610`
 
 ### Scope
 
@@ -121,6 +122,54 @@ Required Rust/HIR validation:
 - `cargo fmt --check` PASS
 - `python3 scripts/check_hir_maintainability_guardrails.py` PASS
 - `cargo clippy --workspace -- -D warnings` PASS
+
+Local gate:
+
+- `scripts/run_all_tests.sh --profile quick` PASS
+
+## WS2 S1 Heap Stdlib Consumption
+
+Status: validated locally
+Branch: `ws2-s1-heap-stdlib`
+PR: `https://github.com/yaseralnajjar/sifr/pull/1611`
+
+### Scope
+
+The repo already had a pure Sifr `sifr.heapq` implementation with min-heap, max-heap helpers, CPython heapq compatibility imports, and e2e coverage. This wave consumes that existing stdlib surface in a representative rewrite:
+
+- `audits/leetcode/0295_find_median_from_data_stream.sifr`
+
+### Changes
+
+- Rewrote `0295` from sorted-array insertion to the canonical two-heap median finder shape.
+- Uses `sifr.heapq.heappush` / `heappop`.
+- Keeps the max side as negated integers, matching the canonical Python fixture's max-heap-over-min-heap encoding.
+- Uses local heap copies before assigning fields back, because direct mutating calls on field access do not currently mutate the stored field in place.
+
+### Pair Scan Movement
+
+Previous stats from `origin/main` scan artifact:
+
+| Fixture | Previous changed_total | Previous changed_py | Previous changed_sifr | Previous lines py/sifr |
+| --- | ---: | ---: | ---: | --- |
+| `0295_find_median_from_data_stream` | 56 | 26 | 30 | 39/43 |
+
+Regenerated artifact: `verification/leetcode/leetcode_pair_diff_scan_20260424.json`
+
+| Fixture | Current changed_total | Current changed_py | Current changed_sifr | Current lines py/sifr |
+| --- | ---: | ---: | ---: | --- |
+| `0295_find_median_from_data_stream` | 66 | 24 | 42 | 39/57 |
+
+The raw diff grows because the Sifr fixture now preserves the canonical two-heap public model instead of using a shorter sorted-array workaround.
+
+### Validation
+
+Targeted validation:
+
+- `python3 audits/leetcode/0295_find_median_from_data_stream.py` PASS
+- `cargo run -q -p sifr -- check audits/leetcode/0295_find_median_from_data_stream.sifr` PASS
+- `cargo run -q -p sifr -- run audits/leetcode/0295_find_median_from_data_stream.sifr` PASS
+- `python3 scripts/scan_leetcode_pair_diffs.py --output verification/leetcode/leetcode_pair_diff_scan_20260424.json --top 80` PASS
 
 Local gate:
 
