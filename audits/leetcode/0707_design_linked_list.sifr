@@ -1,55 +1,86 @@
 # LeetCode 707: Design Linked List
 
+class ListNode:
+    val: int
+    next: ListNode | None
+
+    def __init__(self, val: int = 0, next: ListNode | None = None):
+        self.val = val
+        self.next = next
+
+
+def getAt(node: ListNode | None, index: int) -> int:
+    if node is None:
+        return -1
+    if index == 0:
+        return node.val
+    return getAt(node.next, index - 1)
+
+
+def appendTail(own mut node: ListNode | None, val: int) -> ListNode | None:
+    if node is None:
+        return ListNode(val, None)
+    node.next = appendTail(node.next, val)
+    return node
+
+
+def insertAt(own mut node: ListNode | None, index: int, val: int) -> ListNode | None:
+    if index <= 0:
+        return ListNode(val, node)
+    if node is None:
+        return None
+    node.next = insertAt(node.next, index - 1, val)
+    return node
+
+
+def deleteAt(own mut node: ListNode | None, index: int) -> ListNode | None:
+    if node is None:
+        return None
+    if index == 0:
+        return node.next
+    node.next = deleteAt(node.next, index - 1)
+    return node
+
+
 class MyLinkedList:
-    values: list[int]
+    head: ListNode | None
+    size: int
 
     def __init__(self):
-        self.values = []
+        self.head = None
+        self.size = 0
 
     def get(self, index: int) -> int:
-        if index < 0 or index >= len(self.values):
+        if index < 0 or index >= self.size:
             return -1
-        i = 0
-        for value in self.values:
-            if i == index:
-                return value
-            i += 1
-        return -1
+        return getAt(self.head, index)
 
     def addAtHead(self, val: int) -> None:
-        self.values = [val] + self.values
+        head: ListNode | None = self.head
+        self.head = insertAt(head, 0, val)
+        self.size = self.size + 1
 
     def addAtTail(self, val: int) -> None:
-        self.values.append(val)
+        head: ListNode | None = self.head
+        self.head = appendTail(head, val)
+        self.size = self.size + 1
 
     def addAtIndex(self, index: int, val: int) -> None:
         idx = index
         if idx < 0:
             idx = 0
-        if idx > len(self.values):
+        if idx > self.size:
             return
-
-        left: list[int] = []
-        right: list[int] = []
-        i = 0
-        for value in self.values:
-            if i < idx:
-                left.append(value)
-            else:
-                right.append(value)
-            i += 1
-        self.values = left + [val] + right
+        head: ListNode | None = self.head
+        self.head = insertAt(head, idx, val)
+        self.size = self.size + 1
 
     def deleteAtIndex(self, index: int) -> None:
-        if index < 0 or index >= len(self.values):
+        if index < 0 or index >= self.size:
             return
-        next_values: list[int] = []
-        i = 0
-        for value in self.values:
-            if i != index:
-                next_values.append(value)
-            i += 1
-        self.values = next_values
+        head: ListNode | None = self.head
+        self.head = deleteAt(head, index)
+        self.size = self.size - 1
 
 
 def main():
@@ -60,3 +91,9 @@ def main():
     assert obj.get(1) == 2
     obj.deleteAtIndex(1)
     assert obj.get(1) == 3
+    obj.addAtIndex(3, 4)
+    assert obj.get(3) == -1
+    obj.addAtIndex(-1, 5)
+    assert obj.get(0) == 5
+    obj.deleteAtIndex(0)
+    assert obj.get(0) == 1
