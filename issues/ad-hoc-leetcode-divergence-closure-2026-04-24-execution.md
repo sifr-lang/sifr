@@ -296,9 +296,10 @@ Local gate:
 
 ## WS2 S4 Character Predicate Consumption
 
-Status: validated locally
+Status: merged
 Branch: `ws2-s4-char-predicate-consumption`
 PR: `https://github.com/yaseralnajjar/sifr/pull/1614`
+Merged: `https://github.com/yaseralnajjar/sifr/pull/1614`
 
 ### Scope
 
@@ -334,6 +335,51 @@ Targeted validation:
 - `cargo run -q -p sifr -- check audits/leetcode/0394_decode_string.sifr` PASS
 - `cargo run -q -p sifr -- run audits/leetcode/0394_decode_string.sifr` PASS
 - `cargo run -q -p sifr -- run crates/sifr/tests/e2e/pass/string_case_predicates.sifr` PASS
+- `python3 scripts/scan_leetcode_pair_diffs.py --output verification/leetcode/leetcode_pair_diff_scan_20260424.json --top 80` PASS
+
+Local gate:
+
+- `scripts/run_all_tests.sh --profile quick` PASS
+
+## WS2 S5 Integer Parse Consumption
+
+Status: validated locally
+Branch: `ws2-s5-int-parse-consumption`
+
+### Scope
+
+The compiler already supports fallible `int(str)` parsing through `Result[int, ParseError]` / `try` handling. This wave consumes that surface in a representative RPN fixture:
+
+- `audits/leetcode/0150_evaluate_reverse_polish_notation.sifr`
+
+### Changes
+
+- Removed fixture-local digit-value and signed-token parsing boilerplate.
+- Replaced it with `int(token)` inside an explicit `try` / `except ParseError` block.
+- Preserved the fixture's existing invalid-token fallback behavior by returning `0` on parse failure.
+
+### Pair Scan Movement
+
+Previous stats from `origin/main` scan artifact:
+
+| Fixture | Previous changed_total | Previous changed_py | Previous changed_sifr | Previous lines py/sifr |
+| --- | ---: | ---: | ---: | --- |
+| `0150_evaluate_reverse_polish_notation` | 90 | 16 | 74 | 28/86 |
+
+Regenerated artifact: `verification/leetcode/leetcode_pair_diff_scan_20260424.json`
+
+| Fixture | Current changed_total | Current changed_py | Current changed_sifr | Current lines py/sifr |
+| --- | ---: | ---: | ---: | --- |
+| `0150_evaluate_reverse_polish_notation` | 54 | 16 | 38 | 28/50 |
+
+### Validation
+
+Targeted validation:
+
+- `python3 audits/leetcode/0150_evaluate_reverse_polish_notation.py` PASS
+- `cargo run -q -p sifr -- check audits/leetcode/0150_evaluate_reverse_polish_notation.sifr` PASS
+- `cargo run -q -p sifr -- run audits/leetcode/0150_evaluate_reverse_polish_notation.sifr` PASS
+- `cargo run -q -p sifr -- run crates/sifr/tests/e2e/pass/result_basic.sifr` PASS
 - `python3 scripts/scan_leetcode_pair_diffs.py --output verification/leetcode/leetcode_pair_diff_scan_20260424.json --top 80` PASS
 
 Local gate:
