@@ -281,6 +281,18 @@
       "similarity_ratio": 0.3615819209039548
     },
     {
+      "stem": "0707_design_linked_list",
+      "py_relpath": "audits/leetcode/0707_design_linked_list.py",
+      "sifr_relpath": "audits/leetcode/0707_design_linked_list.sifr",
+      "py_lines": 86,
+      "sifr_lines": 99,
+      "changed_py_lines": 50,
+      "changed_sifr_lines": 63,
+      "changed_total_lines": 113,
+      "length_delta": 13,
+      "similarity_ratio": 0.3891891891891892
+    },
+    {
       "stem": "0286_walls_and_gates",
       "py_relpath": "audits/leetcode/0286_walls_and_gates.py",
       "sifr_relpath": "audits/leetcode/0286_walls_and_gates.sifr",
@@ -303,18 +315,6 @@
       "changed_total_lines": 109,
       "length_delta": 39,
       "similarity_ratio": 0.32298136645962733
-    },
-    {
-      "stem": "0707_design_linked_list",
-      "py_relpath": "audits/leetcode/0707_design_linked_list.py",
-      "sifr_relpath": "audits/leetcode/0707_design_linked_list.sifr",
-      "py_lines": 82,
-      "sifr_lines": 62,
-      "changed_py_lines": 64,
-      "changed_sifr_lines": 44,
-      "changed_total_lines": 108,
-      "length_delta": 20,
-      "similarity_ratio": 0.25
     },
     {
       "stem": "0019_remove_nth_node_from_end_of_list",

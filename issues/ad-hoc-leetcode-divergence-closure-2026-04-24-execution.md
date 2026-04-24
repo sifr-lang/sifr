@@ -903,9 +903,10 @@ Local gate:
 
 ## WS4 0147 Insertion Sort List Rewrite
 
-Status: opened PR
+Status: merged
 Branch: `ws4-0147-insertion-sort-list`
 PR: `https://github.com/yaseralnajjar/sifr/pull/1627`
+Merged: `https://github.com/yaseralnajjar/sifr/pull/1627`
 
 ### Scope
 
@@ -943,6 +944,57 @@ Targeted validation:
 - `python3 audits/leetcode/0147_insertion_sort_list.py` PASS
 - `cargo run -q -p sifr -- check audits/leetcode/0147_insertion_sort_list.sifr` PASS
 - `cargo run -q -p sifr -- run audits/leetcode/0147_insertion_sort_list.sifr` PASS
+- `python3 scripts/scan_leetcode_pair_diffs.py --output verification/leetcode/leetcode_pair_diff_scan_20260424.json --top 80` PASS
+- `cargo fmt --check` PASS
+- `git diff --check` PASS
+
+Local gate:
+
+- `scripts/run_all_tests.sh --profile quick` PASS
+
+## WS4 0707 Linked List Design Rewrite
+
+Status: opened PR
+Branch: `ws4-0707-linked-list-design`
+PR: `https://github.com/yaseralnajjar/sifr/pull/1628`
+
+### Scope
+
+Rewrite the design-linked-list fixture to use linked-list storage rather than an array-backed public model:
+
+- `audits/leetcode/0707_design_linked_list.py`
+- `audits/leetcode/0707_design_linked_list.sifr`
+
+### Changes
+
+- Replaced the Sifr `list[int]` storage with a singly owned `ListNode` chain plus explicit `size`.
+- Implemented `get`, `addAtHead`, `addAtTail`, `addAtIndex`, and `deleteAtIndex` through recursive chain helpers.
+- Aligned the Python fixture with LeetCode index semantics by tracking `size`, rejecting `index > size`, and treating negative insert indexes as head insertion.
+- Added assertions for out-of-range insert, negative-index head insertion, and delete-at-head behavior.
+
+### Pair Scan Movement
+
+Previous stats from `origin/main` scan artifact:
+
+| Fixture | Previous changed_total | Previous changed_py | Previous changed_sifr | Previous lines py/sifr |
+| --- | ---: | ---: | ---: | --- |
+| `0707_design_linked_list` | 108 | 64 | 44 | 82/62 |
+
+Regenerated artifact: `verification/leetcode/leetcode_pair_diff_scan_20260424.json`
+
+| Fixture | Current changed_total | Current changed_py | Current changed_sifr | Current lines py/sifr |
+| --- | ---: | ---: | ---: | --- |
+| `0707_design_linked_list` | 113 | 50 | 63 | 86/99 |
+
+The raw line diff increases slightly because the Sifr fixture now carries explicit node helpers and size bookkeeping. This wave closes the structural rewrite criterion: operations use a linked node chain instead of array slicing, concatenation, or filtering.
+
+### Validation
+
+Targeted validation:
+
+- `python3 audits/leetcode/0707_design_linked_list.py` PASS
+- `cargo run -q -p sifr -- check audits/leetcode/0707_design_linked_list.sifr` PASS
+- `cargo run -q -p sifr -- run audits/leetcode/0707_design_linked_list.sifr` PASS
 - `python3 scripts/scan_leetcode_pair_diffs.py --output verification/leetcode/leetcode_pair_diff_scan_20260424.json --top 80` PASS
 - `cargo fmt --check` PASS
 - `git diff --check` PASS
