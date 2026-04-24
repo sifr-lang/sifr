@@ -954,8 +954,9 @@ Local gate:
 
 ## WS4 0707 Linked List Design Rewrite
 
-Status: validated locally
+Status: opened PR
 Branch: `ws4-0707-linked-list-design`
+PR: `https://github.com/yaseralnajjar/sifr/pull/1628`
 
 ### Scope
 
