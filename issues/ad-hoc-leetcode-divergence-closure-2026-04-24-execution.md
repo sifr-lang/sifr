@@ -1006,9 +1006,10 @@ Local gate:
 
 ## WS4 0023 Merge K Sorted Lists Rewrite
 
-Status: opened PR
+Status: merged
 Branch: `ws4-0023-merge-k-lists-heap`
 PR: `https://github.com/yaseralnajjar/sifr/pull/1629`
+Merged: `https://github.com/yaseralnajjar/sifr/pull/1629`
 
 ### Scope
 
@@ -1047,6 +1048,35 @@ Targeted validation:
 - `cargo run -q -p sifr -- check audits/leetcode/0023_merge_k_sorted_lists.sifr` PASS
 - `cargo run -q -p sifr -- run audits/leetcode/0023_merge_k_sorted_lists.sifr` PASS
 - `python3 scripts/scan_leetcode_pair_diffs.py --output verification/leetcode/leetcode_pair_diff_scan_20260424.json --top 80` PASS
+- `cargo fmt --check` PASS
+- `git diff --check` PASS
+
+Local gate:
+
+- `scripts/run_all_tests.sh --profile quick` PASS
+
+## WS4 0148 Merge Sort Blocker Tracking
+
+Status: opened PR
+Branch: `ws4-0148-blocker-note`
+PR: `https://github.com/yaseralnajjar/sifr/pull/1630`
+
+### Scope
+
+Track the remaining canonical linked-list merge sort blocker:
+
+- `issues/leetcode-0148-owned-merge-sort-blocker-2026-04-24.md`
+
+### Decision
+
+`0148_sort_list` remains the only WS4 rewrite item not safely closed in this phase. Direct owned-node insertion sort is expressible (`0147`), and single-chain rewiring is expressible (`0206`, `0024`, `0707`), but the canonical `0148` merge requires moving one of two owned list heads across sibling branches. The checker currently reports moved-value errors for both optional and non-optional two-list merge helper shapes.
+
+The fixture must not be replaced by another drain/sort/rebuild workaround. It is now separately tracked as an owned two-list merge/cursor capability gap.
+
+### Validation
+
+Docs/tracking validation:
+
 - `cargo fmt --check` PASS
 - `git diff --check` PASS
 
