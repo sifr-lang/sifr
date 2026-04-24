@@ -1,0 +1,9 @@
+from sifr.collections import deque
+
+def main():
+    q: deque[int] = deque([1, 2, 3])
+    total: int = 0
+    while q.len() > 0:
+        item: int = q.popleft()
+        total = total + item
+    assert total == 6

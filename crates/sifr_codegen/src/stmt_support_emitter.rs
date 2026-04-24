@@ -73,6 +73,55 @@ fn canonical_plain_call_name_for_ir(func: &str) -> &str {
         .unwrap_or(func)
 }
 
+fn supports_nonempty_pop_narrowing_type_for_ir(object_ty: &Type) -> bool {
+    match crate::resolve_alias_type_for_plain_call(object_ty) {
+        Type::List(_) => true,
+        Type::Class { name, .. } => name == "deque" || name.ends_with(".deque"),
+        _ => false,
+    }
+}
+
+fn is_narrowable_pop_call_for_ir(method: &str, args: &[HirExpr]) -> bool {
+    match method {
+        "pop" => matches!(args, [] | [HirExpr::IntLiteral(0)]),
+        "popleft" => args.is_empty(),
+        _ => false,
+    }
+}
+
+fn unwrap_compiler_verified_nonempty_pop_result_for_ir(
+    object_ty: &Type,
+    method: &str,
+    args: &[HirExpr],
+    method_return_ty: &Type,
+    lowered_expr: RustExpr,
+) -> RustExpr {
+    if !supports_nonempty_pop_narrowing_type_for_ir(object_ty) {
+        return lowered_expr;
+    }
+    if !is_narrowable_pop_call_for_ir(method, args) {
+        return lowered_expr;
+    }
+    if crate::helpers::is_option_type(method_return_ty) {
+        return lowered_expr;
+    }
+    RustExpr::Block {
+        stmts: vec![RustStmt::LetElse {
+            pattern: "Some(__sifr_nonempty_pop_value)".to_string(),
+            value: lowered_expr,
+            else_body: vec![RustStmt::Expr(RustExpr::MacroCall {
+                name: "unreachable".to_string(),
+                args: vec![RustExpr::Literal(crate::RustLiteral::Str(
+                    "compiler-verified non-empty pop should return Some".to_string(),
+                ))],
+            })],
+        }],
+        expr: Some(Box::new(RustExpr::Ident(
+            "__sifr_nonempty_pop_value".to_string(),
+        ))),
+    }
+}
+
 fn iterator_call_func_name(op: &HirIteratorOp) -> &'static str {
     match op {
         HirIteratorOp::Iter => "iter",
@@ -2225,6 +2274,13 @@ impl RustEmitter {
                 method: method.clone(),
                 args: lowered_args,
             };
+            let lowered_method = unwrap_compiler_verified_nonempty_pop_result_for_ir(
+                &effective_object_ty,
+                method,
+                args,
+                expr.ty(),
+                lowered_method,
+            );
             if matches!(
                 crate::resolve_alias_type_for_plain_call(expr.ty()),
                 Type::Int

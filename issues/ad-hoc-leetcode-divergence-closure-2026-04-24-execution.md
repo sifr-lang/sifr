@@ -178,9 +178,10 @@ Local gate:
 
 ## WS2 S2 DSU Stdlib And First Fixture Consumption
 
-Status: validated locally
+Status: merged
 Branch: `ws2-s2-dsu-stdlib`
 PR: `https://github.com/yaseralnajjar/sifr/pull/1612`
+Merged: `https://github.com/yaseralnajjar/sifr/pull/1612`
 
 ### Scope
 
@@ -236,3 +237,54 @@ Targeted Rust export tests:
 Known unrelated validation note:
 
 - `cargo test -p sifr_driver stdlib -- --nocapture` FAILS in existing `tests::project_build_check::test_build_project_includes_reachable_support_module_stdlib_crates_in_manifest` with `[helper] type mismatch: expected 'str', got 'Result[TomlValue, TOMLDecodeError]`; this broad filter failure is unrelated to the DSU module and is not introduced by this slice.
+
+## WS2 S3 Deque Consumption And Nonempty Popleft Codegen
+
+Status: validated locally
+Branch: `ws2-s3-deque-consumption`
+PR: `https://github.com/yaseralnajjar/sifr/pull/1613`
+
+### Scope
+
+The repo already had `sifr.collections.deque` and e2e coverage. This wave consumes that existing stdlib surface in one representative BFS fixture and fixes the imported-deque lowering path needed for the canonical queue shape:
+
+- `audits/leetcode/0752_open_the_lock.sifr`
+- `crates/sifr/tests/e2e/pass/deque_nonempty_popleft_narrowing.sifr`
+
+Compiler support:
+
+- `crates/sifr_hir/src/lower/nonempty_method_narrowing.rs`
+- `crates/sifr_codegen/src/intrinsic_method_emitters.rs`
+- `crates/sifr_codegen/src/stmt_support_emitter.rs`
+
+### Changes
+
+- Rewrote `0752_open_the_lock` from `list + head` queue emulation to `sifr.collections.deque`.
+- Preserved explicit digit stepping because whole-token integer parsing belongs to `S5`.
+- Taught non-empty pop narrowing/codegen to recognize imported `sifr.collections.deque` class names, so `while q.len() > 0: item = q.popleft()` lowers with the existing compiler-verified unwrap instead of producing mismatched Rust.
+- Added a focused e2e regression for imported deque `popleft()` under a non-empty guard.
+
+### Pair Scan Movement
+
+Previous stats from `origin/main` scan artifact:
+
+| Fixture | Previous changed_total | Previous changed_py | Previous changed_sifr | Previous lines py/sifr |
+| --- | ---: | ---: | ---: | --- |
+| `0752_open_the_lock` | 96 | 26 | 70 | 40/84 |
+
+Regenerated artifact: `verification/leetcode/leetcode_pair_diff_scan_20260424.json`
+
+| Fixture | Current changed_total | Current changed_py | Current changed_sifr | Current lines py/sifr |
+| --- | ---: | ---: | ---: | --- |
+| `0752_open_the_lock` | 93 | 26 | 67 | 40/81 |
+
+### Validation
+
+Targeted validation:
+
+- `python3 audits/leetcode/0752_open_the_lock.py` PASS
+- `cargo run -q -p sifr -- check audits/leetcode/0752_open_the_lock.sifr` PASS
+- `cargo run -q -p sifr -- run audits/leetcode/0752_open_the_lock.sifr` PASS
+- `cargo run -q -p sifr -- check crates/sifr/tests/e2e/pass/deque_nonempty_popleft_narrowing.sifr` PASS
+- `cargo run -q -p sifr -- run crates/sifr/tests/e2e/pass/deque_nonempty_popleft_narrowing.sifr` PASS
+- `python3 scripts/scan_leetcode_pair_diffs.py --output verification/leetcode/leetcode_pair_diff_scan_20260424.json --top 80` PASS

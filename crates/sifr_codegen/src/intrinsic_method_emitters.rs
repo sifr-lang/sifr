@@ -4177,7 +4177,7 @@ impl RustEmitter {
 fn supports_nonempty_pop_narrowing_type_for_codegen(object_ty: &Type) -> bool {
     match crate::resolve_alias_type_for_plain_call(object_ty) {
         Type::List(_) => true,
-        Type::Class { name, .. } => name == "deque",
+        Type::Class { name, .. } => name == "deque" || name.ends_with(".deque"),
         _ => false,
     }
 }
