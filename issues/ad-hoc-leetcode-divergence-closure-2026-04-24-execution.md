@@ -1057,8 +1057,9 @@ Local gate:
 
 ## WS4 0148 Merge Sort Blocker Tracking
 
-Status: validated locally
+Status: opened PR
 Branch: `ws4-0148-blocker-note`
+PR: `https://github.com/yaseralnajjar/sifr/pull/1630`
 
 ### Scope
 
