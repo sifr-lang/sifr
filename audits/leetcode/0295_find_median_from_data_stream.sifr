@@ -1,37 +1,51 @@
 # LeetCode 295: Find Median From Data Stream
+from sifr.heapq import heappush, heappop
 
 class MedianFinder:
-    nums: list[int]
+    small: list[int]
+    large: list[int]
 
     def __init__(self):
-        self.nums = []
+        self.small = []
+        self.large = []
 
     def addNum(self, num: int) -> None:
-        i = 0
-        while i < len(self.nums):
-            cur = self.nums[i]
-            if cur is not None:
-                cur_val = cur
-                if num <= cur_val:
-                    break
-            i += 1
-        left = self.nums[:i]
-        right = self.nums[i:]
-        self.nums = left + [num] + right
+        small: list[int] = self.small
+        large: list[int] = self.large
+        large_top: int | None = large[0]
+        if large_top is not None and num > large_top:
+            heappush(large, num)
+        else:
+            heappush(small, -num)
+
+        if len(small) > len(large) + 1:
+            moved: int | None = heappop(small)
+            if moved is not None:
+                heappush(large, -moved)
+
+        if len(large) > len(small) + 1:
+            moved2: int | None = heappop(large)
+            if moved2 is not None:
+                heappush(small, -moved2)
+
+        self.small = small
+        self.large = large
 
     def findMedian(self) -> float:
-        n = len(self.nums)
-        if n == 0:
+        if len(self.small) > len(self.large):
+            small_top: int | None = self.small[0]
+            if small_top is not None:
+                return -small_top / 1.0
             return 0.0
-        if n % 2 == 1:
-            mid = self.nums[n // 2]
-            if mid is not None:
-                return mid / 1.0
+        if len(self.large) > len(self.small):
+            large_top: int | None = self.large[0]
+            if large_top is not None:
+                return large_top / 1.0
             return 0.0
-        left = self.nums[(n // 2) - 1]
-        right = self.nums[n // 2]
+        left: int | None = self.small[0]
+        right: int | None = self.large[0]
         if left is not None and right is not None:
-            return (left + right) / 2.0
+            return (-left + right) / 2.0
         return 0.0
 
 def main():
