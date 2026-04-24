@@ -2,7 +2,7 @@
 # LeetCode 516: Longest Palindromic Subsequence
 # Python version
 
-def longestPalindromeSubseq(s: str) -> int:   
+def longestPalindromeSubseq(s: str) -> int:
     t = s[::-1]
     memo = {}
 
@@ -23,7 +23,6 @@ def longestPalindromeSubseq(s: str) -> int:
         return ans
 
     return lcs(0, 0)
-
 
 
 def main():

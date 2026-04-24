@@ -54,7 +54,7 @@ Regenerated artifact: `verification/leetcode/leetcode_pair_diff_scan_20260424.js
 | `0104_maximum_depth_of_binary_tree` | 13 | 7 | 6 | 28/27 |
 | `0130_surrounded_regions` | 46 | 20 | 26 | 36/42 |
 | `0200_number_of_islands` | 46 | 25 | 21 | 38/34 |
-| `0516_longest_palindromic_subsequence` | 25 | 13 | 12 | 34/33 |
+| `0516_longest_palindromic_subsequence` | 20 | 10 | 10 | 33/33 |
 
 ### Validation
 

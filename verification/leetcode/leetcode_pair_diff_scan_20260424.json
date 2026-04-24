@@ -3041,18 +3041,6 @@
       "similarity_ratio": 0.4897959183673469
     },
     {
-      "stem": "0516_longest_palindromic_subsequence",
-      "py_relpath": "audits/leetcode/0516_longest_palindromic_subsequence.py",
-      "sifr_relpath": "audits/leetcode/0516_longest_palindromic_subsequence.sifr",
-      "py_lines": 34,
-      "sifr_lines": 33,
-      "changed_py_lines": 13,
-      "changed_sifr_lines": 12,
-      "changed_total_lines": 25,
-      "length_delta": 1,
-      "similarity_ratio": 0.6268656716417911
-    },
-    {
       "stem": "0263_ugly_number",
       "py_relpath": "audits/leetcode/0263_ugly_number.py",
       "sifr_relpath": "audits/leetcode/0263_ugly_number.sifr",
@@ -3279,6 +3267,18 @@
       "changed_total_lines": 21,
       "length_delta": 3,
       "similarity_ratio": 0.631578947368421
+    },
+    {
+      "stem": "0516_longest_palindromic_subsequence",
+      "py_relpath": "audits/leetcode/0516_longest_palindromic_subsequence.py",
+      "sifr_relpath": "audits/leetcode/0516_longest_palindromic_subsequence.sifr",
+      "py_lines": 33,
+      "sifr_lines": 33,
+      "changed_py_lines": 10,
+      "changed_sifr_lines": 10,
+      "changed_total_lines": 20,
+      "length_delta": 0,
+      "similarity_ratio": 0.696969696969697
     },
     {
       "stem": "1020_number_of_enclaves",
