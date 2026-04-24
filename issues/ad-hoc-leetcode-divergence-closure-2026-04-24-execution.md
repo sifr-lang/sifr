@@ -116,7 +116,7 @@ Local gate:
 
 Status: closure PR opened
 Branch: `ws6-final-leetcode-closure`
-PR: `TBD`
+PR: `https://github.com/yaseralnajjar/sifr/pull/1632`
 
 ### Scope
 
