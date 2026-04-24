@@ -129,9 +129,10 @@ Local gate:
 
 ## WS2 S1 Heap Stdlib Consumption
 
-Status: validated locally
+Status: merged
 Branch: `ws2-s1-heap-stdlib`
 PR: `https://github.com/yaseralnajjar/sifr/pull/1611`
+Merged: `https://github.com/yaseralnajjar/sifr/pull/1611`
 
 ### Scope
 
@@ -174,3 +175,62 @@ Targeted validation:
 Local gate:
 
 - `scripts/run_all_tests.sh --profile quick` PASS
+
+## WS2 S2 DSU Stdlib And First Fixture Consumption
+
+Status: validated locally
+Branch: `ws2-s2-dsu-stdlib`
+
+### Scope
+
+Added a pure Sifr integer union-find helper and consumed it in one representative DSU fixture:
+
+- `lib/sifr/dsu.sifr`
+- `audits/leetcode/0261_graph_valid_tree.sifr`
+
+Registry and regression coverage:
+
+- `crates/sifr_driver/src/stdlib/registry.rs`
+- `crates/sifr_driver/src/tests/stdlib_exports.rs`
+- `crates/sifr/tests/e2e/pass/stdlib_dsu.sifr`
+
+### Changes
+
+- Added `sifr.dsu.UnionFind` with `find`, `union`, `connected`, and `component_count`.
+- Uses union-by-size and path compression.
+- Keeps list-field mutation explicit by copying list fields into locals and assigning fields back after mutation, matching the field-mutation constraint observed in `S1`.
+- Rewrote `0261_graph_valid_tree` to use `UnionFind` instead of fixture-local parent/rank helpers.
+
+### Pair Scan Movement
+
+Previous stats from `origin/main` scan artifact:
+
+| Fixture | Previous changed_total | Previous changed_py | Previous changed_sifr | Previous lines py/sifr |
+| --- | ---: | ---: | ---: | --- |
+| `0261_graph_valid_tree` | 117 | 67 | 50 | 82/65 |
+
+Regenerated artifact: `verification/leetcode/leetcode_pair_diff_scan_20260424.json`
+
+| Fixture | Current changed_total | Current changed_py | Current changed_sifr | Current lines py/sifr |
+| --- | ---: | ---: | ---: | --- |
+| `0261_graph_valid_tree` | 95 | 72 | 23 | 82/33 |
+
+### Validation
+
+Targeted validation:
+
+- `python3 audits/leetcode/0261_graph_valid_tree.py` PASS
+- `cargo run -q -p sifr -- check crates/sifr/tests/e2e/pass/stdlib_dsu.sifr` PASS
+- `cargo run -q -p sifr -- run crates/sifr/tests/e2e/pass/stdlib_dsu.sifr` PASS
+- `cargo run -q -p sifr -- check audits/leetcode/0261_graph_valid_tree.sifr` PASS
+- `cargo run -q -p sifr -- run audits/leetcode/0261_graph_valid_tree.sifr` PASS
+- `python3 scripts/scan_leetcode_pair_diffs.py --output verification/leetcode/leetcode_pair_diff_scan_20260424.json --top 80` PASS
+
+Targeted Rust export tests:
+
+- `cargo test -p sifr_driver stdlib_dsu_exports_union_find_class -- --nocapture` PASS
+- `cargo test -p sifr_driver stdlib_heapq_exports_allowlisted_private_max_heap_helpers -- --nocapture` PASS
+
+Known unrelated validation note:
+
+- `cargo test -p sifr_driver stdlib -- --nocapture` FAILS in existing `tests::project_build_check::test_build_project_includes_reachable_support_module_stdlib_crates_in_manifest` with `[helper] type mismatch: expected 'str', got 'Result[TomlValue, TOMLDecodeError]`; this broad filter failure is unrelated to the DSU module and is not introduced by this slice.
