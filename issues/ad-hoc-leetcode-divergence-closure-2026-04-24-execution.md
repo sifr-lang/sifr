@@ -749,8 +749,9 @@ Local gate:
 
 ## WS4 0004 Binary Median Rewrite
 
-Status: validated locally
+Status: opened PR
 Branch: `ws4-0004-binary-median`
+PR: `https://github.com/yaseralnajjar/sifr/pull/1624`
 
 ### Scope
 
