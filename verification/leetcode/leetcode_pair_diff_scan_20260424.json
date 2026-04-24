@@ -173,6 +173,18 @@
       "similarity_ratio": 0.43119266055045874
     },
     {
+      "stem": "0021_merge_two_sorted_lists",
+      "py_relpath": "audits/leetcode/0021_merge_two_sorted_lists.py",
+      "sifr_relpath": "audits/leetcode/0021_merge_two_sorted_lists.sifr",
+      "py_lines": 74,
+      "sifr_lines": 77,
+      "changed_py_lines": 60,
+      "changed_sifr_lines": 63,
+      "changed_total_lines": 123,
+      "length_delta": 3,
+      "similarity_ratio": 0.18543046357615894
+    },
+    {
       "stem": "0092_reverse_linked_list_ii",
       "py_relpath": "audits/leetcode/0092_reverse_linked_list_ii.py",
       "sifr_relpath": "audits/leetcode/0092_reverse_linked_list_ii.sifr",
@@ -195,18 +207,6 @@
       "changed_total_lines": 123,
       "length_delta": 63,
       "similarity_ratio": 0.4225352112676056
-    },
-    {
-      "stem": "0021_merge_two_sorted_lists",
-      "py_relpath": "audits/leetcode/0021_merge_two_sorted_lists.py",
-      "sifr_relpath": "audits/leetcode/0021_merge_two_sorted_lists.sifr",
-      "py_lines": 74,
-      "sifr_lines": 105,
-      "changed_py_lines": 45,
-      "changed_sifr_lines": 76,
-      "changed_total_lines": 121,
-      "length_delta": 31,
-      "similarity_ratio": 0.3240223463687151
     },
     {
       "stem": "1669_merge_in_between_linked_lists",
