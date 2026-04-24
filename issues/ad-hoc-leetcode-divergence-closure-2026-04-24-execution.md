@@ -18,7 +18,7 @@ Phase plan: `issues/ad-hoc-leetcode-divergence-closure-2026-04-24.md`
 
 Status: validated locally
 Branch: `ws0-leetcode-corpus-noise-normalization`
-PR: pending
+PR: `https://github.com/yaseralnajjar/sifr/pull/1609`
 
 ### Scope
 
