@@ -83,8 +83,9 @@ Local gate:
 
 ## WS5 Architecture Boundary Classification
 
-Status: validated locally
+Status: opened PR
 Branch: `ws5-architecture-boundary-classification`
+PR: `https://github.com/yaseralnajjar/sifr/pull/1631`
 
 ### Scope
 
