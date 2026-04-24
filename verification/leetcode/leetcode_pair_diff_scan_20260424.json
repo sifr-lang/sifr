@@ -221,18 +221,6 @@
       "similarity_ratio": 0.3258426966292135
     },
     {
-      "stem": "0394_decode_string",
-      "py_relpath": "audits/leetcode/0394_decode_string.py",
-      "sifr_relpath": "audits/leetcode/0394_decode_string.sifr",
-      "py_lines": 32,
-      "sifr_lines": 107,
-      "changed_py_lines": 22,
-      "changed_sifr_lines": 97,
-      "changed_total_lines": 119,
-      "length_delta": 75,
-      "similarity_ratio": 0.14388489208633093
-    },
-    {
       "stem": "0269_alien_dictionary",
       "py_relpath": "audits/leetcode/0269_alien_dictionary.py",
       "sifr_relpath": "audits/leetcode/0269_alien_dictionary.sifr",
@@ -459,6 +447,18 @@
       "changed_total_lines": 97,
       "length_delta": 39,
       "similarity_ratio": 0.17094017094017094
+    },
+    {
+      "stem": "0394_decode_string",
+      "py_relpath": "audits/leetcode/0394_decode_string.py",
+      "sifr_relpath": "audits/leetcode/0394_decode_string.sifr",
+      "py_lines": 32,
+      "sifr_lines": 84,
+      "changed_py_lines": 22,
+      "changed_sifr_lines": 74,
+      "changed_total_lines": 96,
+      "length_delta": 52,
+      "similarity_ratio": 0.1724137931034483
     },
     {
       "stem": "0261_graph_valid_tree",
