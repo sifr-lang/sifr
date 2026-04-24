@@ -16,9 +16,10 @@ Phase plan: `issues/ad-hoc-leetcode-divergence-closure-2026-04-24.md`
 
 ## WS0 Corpus Normalization And Baseline Refresh
 
-Status: validated locally
+Status: merged
 Branch: `ws0-leetcode-corpus-noise-normalization`
 PR: `https://github.com/yaseralnajjar/sifr/pull/1609`
+Merged: `https://github.com/yaseralnajjar/sifr/pull/1609`
 
 ### Scope
 
@@ -75,6 +76,51 @@ Targeted Sifr fixture checks:
 Scan regeneration:
 
 - `python3 scripts/scan_leetcode_pair_diffs.py --output verification/leetcode/leetcode_pair_diff_scan_20260424.json --top 80`
+
+Local gate:
+
+- `scripts/run_all_tests.sh --profile quick` PASS
+
+## WS1 D0 Narrowing Invalidation Design
+
+Status: validated locally
+Branch: `ws1-narrowing-invalidation-design`
+PR: `https://github.com/yaseralnajjar/sifr/pull/1610`
+
+### Scope
+
+Added the D0 design note and initial safety guardrails for existing narrowing facts.
+
+Design note:
+
+- `internal_docs/narrowing_flow_facts_design.md`
+
+Compiler changes:
+
+- Added shared sequence/dict guard invalidation when a dependent binding is rebound.
+- Cleared optional binding narrowing on rebinding.
+- Cleared collection flow facts after collection methods that can remove entries.
+
+Regression coverage:
+
+- Optional rebinding invalidates prior `is not None` narrowing.
+- Sequence rebinding invalidates prior index guards.
+- Index rebinding invalidates prior index guards.
+- Shrinking collection mutation invalidates prior index guards.
+- Shrinking field-collection mutation invalidates prior field index guards.
+
+### Validation
+
+Targeted validation:
+
+- `cargo test -p sifr_hir invalidates -- --nocapture` PASS (`5` tests)
+- CLI repro checks for optional rebinding, sequence rebinding, and shrinking collection mutation now reject unsafe access with type errors.
+
+Required Rust/HIR validation:
+
+- `cargo fmt --check` PASS
+- `python3 scripts/check_hir_maintainability_guardrails.py` PASS
+- `cargo clippy --workspace -- -D warnings` PASS
 
 Local gate:
 

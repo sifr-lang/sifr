@@ -39,7 +39,7 @@ fn emit_empty_literal_type_conflict(
 pub(super) fn validate_subscript_assignment_target(
     ctx: &mut LowerCtx,
     object_name: &str,
-    object_ty: Type,
+    object_ty: &Type,
     index_ty: &Type,
     value_ty: &Type,
 ) -> Type {

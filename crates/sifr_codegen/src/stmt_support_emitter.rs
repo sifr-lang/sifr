@@ -225,12 +225,12 @@ impl RustEmitter {
             ));
         }
         let value_ty = if let HirExpr::Name { name, ty } = value {
-            if self.none_widened_local_bindings.contains(name) {
-                self.local_binding_types.get(name).unwrap_or(ty)
-            } else if matches!(
-                crate::resolve_alias_type_for_plain_call(ty),
-                Type::Any | Type::Unknown
-            ) {
+            if self.none_widened_local_bindings.contains(name)
+                || matches!(
+                    crate::resolve_alias_type_for_plain_call(ty),
+                    Type::Any | Type::Unknown
+                )
+            {
                 self.local_binding_types.get(name).unwrap_or(ty)
             } else {
                 ty
@@ -1284,9 +1284,7 @@ impl RustEmitter {
                 },
             });
         }
-        let Some(rust_op) = op.strip_suffix('=') else {
-            return None;
-        };
+        let rust_op = op.strip_suffix('=')?;
         Some(crate::RustStmt::AugAssign {
             target: crate::RustExpr::Deref(Box::new(crate::RustExpr::Ident("__elem".to_string()))),
             op: rust_op.to_string(),
@@ -1873,8 +1871,10 @@ impl RustEmitter {
                 let Some(lowered_element) = self.lower_stmt_expr_for_ir(element)? else {
                     return Ok(None);
                 };
-                lowered_elements
-                    .push(Self::clone_non_copy_name_expr_for_ir(element, lowered_element));
+                lowered_elements.push(Self::clone_non_copy_name_expr_for_ir(
+                    element,
+                    lowered_element,
+                ));
             }
             return Ok(Some(crate::RustExpr::Tuple(lowered_elements)));
         }
@@ -6337,10 +6337,10 @@ impl RustEmitter {
     fn option_binding_pattern_for_ir(&self, option_var: &str) -> String {
         let is_borrowed_param = self.borrowed_params.contains(option_var)
             || self.mut_borrowed_params.contains(option_var);
-        if !is_borrowed_param {
-            format!("Some(mut {option_var})")
-        } else {
+        if is_borrowed_param {
             format!("Some({option_var})")
+        } else {
+            format!("Some(mut {option_var})")
         }
     }
 

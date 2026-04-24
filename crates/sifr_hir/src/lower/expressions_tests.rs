@@ -701,6 +701,61 @@ fn test_inferred_local_can_widen_to_optional_on_reassignment() {
 }
 
 #[test]
+fn test_optional_reassignment_invalidates_non_none_narrowing() {
+    let result = lower_source(
+        "def bad(mut x: int | None) -> int:\n    if x is not None:\n        x = None\n        return x\n    return 0\n",
+    );
+    assert!(
+        result.is_err(),
+        "rebinding an Optional must invalidate prior non-None narrowing"
+    );
+}
+
+#[test]
+fn test_sequence_reassignment_invalidates_index_guard() {
+    let result = lower_source(
+        "def bad(mut values: list[int], i: int) -> int:\n    if i < len(values):\n        values = []\n        value: int = values[i]\n        return value\n    return 0\n",
+    );
+    assert!(
+        result.is_err(),
+        "rebinding a guarded sequence must invalidate prior index facts"
+    );
+}
+
+#[test]
+fn test_index_reassignment_invalidates_index_guard() {
+    let result = lower_source(
+        "def bad(values: list[int], mut i: int) -> int:\n    if i < len(values):\n        i = len(values)\n        value: int = values[i]\n        return value\n    return 0\n",
+    );
+    assert!(
+        result.is_err(),
+        "rebinding a guarded index variable must invalidate prior index facts"
+    );
+}
+
+#[test]
+fn test_shrinking_collection_method_invalidates_index_guard() {
+    let result = lower_source(
+        "def bad(mut values: list[int], i: int) -> int:\n    if i < len(values):\n        values.clear()\n        value: int = values[i]\n        return value\n    return 0\n",
+    );
+    assert!(
+        result.is_err(),
+        "a shrinking collection mutation must invalidate prior index facts"
+    );
+}
+
+#[test]
+fn test_shrinking_field_collection_method_invalidates_index_guard() {
+    let result = lower_source(
+        "class Box:\n    values: list[int]\n\n    def __init__(self, values: list[int]):\n        self.values = values\n\n    def bad(mut self, i: int) -> int:\n        if i < len(self.values):\n            self.values.clear()\n            value: int = self.values[i]\n            return value\n        return 0\n",
+    );
+    assert!(
+        result.is_err(),
+        "a shrinking collection mutation on a field must invalidate field index facts"
+    );
+}
+
+#[test]
 fn test_annotated_local_does_not_widen_on_reassignment() {
     let result =
         lower_source("def bad() -> int:\n    value: int = 1\n    value = None\n    return value\n");

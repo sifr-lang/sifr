@@ -324,15 +324,11 @@ pub(crate) fn collect_mutated_vars(
                             .map(|(param_convs, _)| param_convs.as_slice())
                     })
                 })
-                .or_else(|| {
-                    local_func_param_conventions
-                        .get(func)
-                        .map(|param_convs| param_convs.as_slice())
-                })
+                .or_else(|| local_func_param_conventions.get(func).map(Vec::as_slice))
                 .or_else(|| {
                     local_func_param_conventions
                         .get(canonical_func)
-                        .map(|param_convs| param_convs.as_slice())
+                        .map(Vec::as_slice)
                 });
             if let Some(param_convs) = param_convs {
                 for (idx, arg) in args.iter().enumerate() {

@@ -548,12 +548,9 @@ pub(super) fn lower_boolop(boolop: &ExprBoolOp, ctx: &mut LowerCtx) -> Option<Hi
                 ctx.add_sequence_guard(guard);
             }
         }
-        let expr = match lower_expr(val, ctx) {
-            Some(expr) => expr,
-            None => {
-                ctx.restore_sequence_guards(&saved_sequence_guards);
-                return None;
-            }
+        let Some(expr) = lower_expr(val, ctx) else {
+            ctx.restore_sequence_guards(&saved_sequence_guards);
+            return None;
         };
         values.push(expr);
     }

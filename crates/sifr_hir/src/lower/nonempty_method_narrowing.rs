@@ -31,9 +31,7 @@ pub(super) fn refine_nonempty_pop_return_type(
     if !is_narrowable_pop_call(method_name, args) {
         return None;
     }
-    let Some(sequence_name) = sequence_guard_name_from_hir_expr(object) else {
-        return None;
-    };
+    let sequence_name = sequence_guard_name_from_hir_expr(object)?;
     if ctx.min_length_guard(sequence_name.as_str()) == 0 {
         return None;
     }

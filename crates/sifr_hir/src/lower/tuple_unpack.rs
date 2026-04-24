@@ -117,6 +117,8 @@ pub(super) fn lower_tuple_unpack_assign(
                         ));
                     }
                     ctx.scope.reset_moved(&name);
+                    ctx.scope.clear_narrowing(&name);
+                    ctx.clear_sequence_guards_for_binding(&name);
                 } else {
                     ctx.scope.define(name.clone(), ty.clone());
                 }

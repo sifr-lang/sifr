@@ -1,4 +1,5 @@
 use super::LowerCtx;
+use crate::hir_nodes::HirExpr;
 use sifr_python_ast::{Expr, Number, Operator, UnaryOp};
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -116,6 +117,16 @@ impl LowerCtx {
         self.sequence_guards = snapshot.to_vec();
     }
 
+    pub(super) fn clear_sequence_guards_for_binding(&mut self, binding: &str) {
+        self.sequence_guards
+            .retain(|guard| !guard_depends_on_binding(guard, binding));
+    }
+
+    pub(super) fn clear_sequence_guards_for_target(&mut self, target: &str) {
+        self.sequence_guards
+            .retain(|guard| !guard_depends_on_target(guard, target));
+    }
+
     pub(super) fn min_length_guard(&self, sequence: &str) -> usize {
         self.sequence_guards
             .iter()
@@ -185,12 +196,68 @@ impl LowerCtx {
     }
 }
 
+fn guard_depends_on_binding(guard: &SequenceGuard, binding: &str) -> bool {
+    match guard {
+        SequenceGuard::MinLength { sequence, .. } => path_depends_on_binding(sequence, binding),
+        SequenceGuard::IndexVarInRange {
+            sequence,
+            index_var,
+            ..
+        } => path_depends_on_binding(sequence, binding) || index_var == binding,
+        SequenceGuard::DictContains {
+            dict,
+            key_expr_debug,
+        } => path_depends_on_binding(dict, binding) || token_mentions_name(key_expr_debug, binding),
+        SequenceGuard::SubscriptPresent {
+            sequence,
+            index_expr_debug,
+        } => {
+            path_depends_on_binding(sequence, binding)
+                || token_mentions_name(index_expr_debug, binding)
+        }
+    }
+}
+
+fn guard_depends_on_target(guard: &SequenceGuard, target: &str) -> bool {
+    match guard {
+        SequenceGuard::MinLength { sequence, .. }
+        | SequenceGuard::IndexVarInRange { sequence, .. }
+        | SequenceGuard::SubscriptPresent { sequence, .. } => {
+            path_depends_on_target(sequence, target)
+        }
+        SequenceGuard::DictContains { dict, .. } => path_depends_on_target(dict, target),
+    }
+}
+
+fn path_depends_on_binding(path: &str, binding: &str) -> bool {
+    path == binding || path.starts_with(&format!("{binding}."))
+}
+
+fn path_depends_on_target(path: &str, target: &str) -> bool {
+    path == target || path.starts_with(&format!("{target}."))
+}
+
+fn token_mentions_name(token: &str, binding: &str) -> bool {
+    token == format!("name:{binding}") || token.contains(&format!("name:{binding}"))
+}
+
+pub(super) fn hir_sequence_guard_target_name(expr: &HirExpr) -> Option<String> {
+    match expr {
+        HirExpr::Name { name, .. } => Some(name.clone()),
+        HirExpr::FieldAccess { object, field, .. } => {
+            let base = hir_sequence_guard_target_name(object)?;
+            Some(format!("{base}.{field}"))
+        }
+        _ => None,
+    }
+}
+
 pub(super) fn key_guard_token(expr: &Expr) -> Option<String> {
     match expr {
         Expr::Name(name) => Some(format!("name:{}", name.id)),
         Expr::BooleanLiteral(value) => Some(format!("bool:{}", value.value)),
         Expr::NumberLiteral(num) => match &num.value {
-            Number::Int(value) => Some(format!("int:{}", value)),
+            Number::Int(value) => Some(format!("int:{value}")),
             Number::Float(value) => Some(format!("float:{value}")),
             Number::Complex { .. } => None,
         },

@@ -177,7 +177,7 @@ fn infer_constructor_expr_type(
                 let elem_ty = iter_ty.iterable_element_type().unwrap_or(Type::Any);
                 match &generator.target {
                     Expr::Name(name) => {
-                        nested_locals.insert(name.id.to_string(), elem_ty);
+                        nested_locals.insert(name.id.clone(), elem_ty);
                     }
                     Expr::Tuple(tuple) => {
                         let Type::Tuple(elem_types) = elem_ty else {
@@ -186,7 +186,7 @@ fn infer_constructor_expr_type(
                         for (idx, target_elt) in tuple.elts.iter().enumerate() {
                             if let Expr::Name(name) = target_elt {
                                 let target_ty = elem_types.get(idx).cloned().unwrap_or(Type::Any);
-                                nested_locals.insert(name.id.to_string(), target_ty);
+                                nested_locals.insert(name.id.clone(), target_ty);
                             }
                         }
                     }
@@ -217,7 +217,7 @@ fn bind_simple_target_type(
     local_bindings: &mut HashMap<String, Type>,
 ) {
     if let Expr::Name(name) = target {
-        local_bindings.insert(name.id.to_string(), value_ty.clone());
+        local_bindings.insert(name.id.clone(), value_ty.clone());
     }
 }
 

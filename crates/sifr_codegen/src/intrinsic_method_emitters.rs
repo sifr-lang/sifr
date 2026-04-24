@@ -830,6 +830,7 @@ impl RustEmitter {
         Some(lowered_expr)
     }
 
+    #[allow(clippy::unused_self)]
     fn unwrap_compiler_verified_nonempty_pop_result(
         &self,
         object_ty: &Type,
