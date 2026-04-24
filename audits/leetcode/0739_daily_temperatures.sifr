@@ -1,17 +1,32 @@
 # LeetCode 739: Daily Temperatures
 
+def pairTemp(pair: tuple[int, int] | None) -> int:
+    if pair is None:
+        return 0
+    value = pair[0]
+    if value is None:
+        return 0
+    return value
+
+def pairIndex(pair: tuple[int, int] | None) -> int:
+    if pair is None:
+        return 0
+    value = pair[1]
+    if value is None:
+        return 0
+    return value
+
 def dailyTemperatures(temperatures: list[int]) -> list[int]:
     res = [0] * len(temperatures)
     stack = []  # pair: [temp, index]
 
     for i, t in enumerate(temperatures):
         while stack and t > stack[-1][0]:
-            stackT, stackInd = stack.pop()
+            pair = stack.pop()
+            stackInd = pairIndex(pair)
             res[stackInd] = i - stackInd
         stack.append((t, i))
     return res
 
 def main():
     assert str(dailyTemperatures([73,74,75,71,69,72,76,73])) == '[1, 1, 4, 2, 1, 1, 0, 0]'
-
-

@@ -21,6 +21,14 @@ def treeToString(node: TreeNode | None) -> str:
         return "None"
     return str(node.val) + "(" + treeToString(node.left) + "," + treeToString(node.right) + ")"
 
+def nodeValue(node: TreeNode | None) -> int:
+    if node is None:
+        return 0
+    value = node.val
+    if value is None:
+        return 0
+    return value
+
 
 class Node:
     val: int
@@ -54,7 +62,7 @@ def findBottomLeftValue(own root: TreeNode | None) -> int:
         return 0
 
     root_node: TreeNode = root
-    answer: int = root_node.val
+    answer: int = nodeValue(root_node)
     q: list[TreeNode] = [root_node]
     while len(q) > 0:
         level_count: int = len(q)
@@ -66,7 +74,7 @@ def findBottomLeftValue(own root: TreeNode | None) -> int:
                 continue
             node = node0
             if i == 0:
-                answer = node.val
+                answer = nodeValue(node)
 
             left: TreeNode | None = node.left
             if left is not None:

@@ -21,6 +21,14 @@ def treeToString(node: TreeNode | None) -> str:
         return "None"
     return str(node.val) + "(" + treeToString(node.left) + "," + treeToString(node.right) + ")"
 
+def nodeValue(node: TreeNode | None) -> int:
+    if node is None:
+        return 0
+    value = node.val
+    if value is None:
+        return 0
+    return value
+
 
 class Node:
     val: int
@@ -61,7 +69,7 @@ def zigzagLevelOrder(own root: TreeNode | None) -> list[list[int]]:
         queueLength: int = len(q)
         for i in range(queueLength):
             node = q.pop(0)
-            level.append(node.val)
+            level.append(nodeValue(node))
             left_child = node.left
             if left_child is not None:
                 q.append(left_child)
