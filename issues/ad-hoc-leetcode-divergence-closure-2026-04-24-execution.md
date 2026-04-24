@@ -651,9 +651,10 @@ Local gate:
 
 ## WS4 0706 HashMap Rewrite
 
-Status: validated locally
+Status: merged
 Branch: `ws4-0706-hashmap-rewrite`
 PR: `https://github.com/yaseralnajjar/sifr/pull/1622`
+Merged: `https://github.com/yaseralnajjar/sifr/pull/1622`
 
 ### Scope
 
@@ -691,6 +692,53 @@ Targeted validation:
 - `python3 audits/leetcode/0706_design_hashmap.py` PASS
 - `cargo run -q -p sifr -- check audits/leetcode/0706_design_hashmap.sifr` PASS
 - `cargo run -q -p sifr -- run audits/leetcode/0706_design_hashmap.sifr` PASS
+- `python3 scripts/scan_leetcode_pair_diffs.py --output verification/leetcode/leetcode_pair_diff_scan_20260424.json --top 80` PASS
+
+Local gate:
+
+- `scripts/run_all_tests.sh --profile quick` PASS
+
+## WS4 0146 LRU Cache Rewrite
+
+Status: validated locally
+Branch: `ws4-0146-lru-rewrite`
+
+### Scope
+
+Rewrite the LRU cache fixture to use the accepted O(1) recency representation:
+
+- `audits/leetcode/0146_lru_cache.sifr`
+
+### Changes
+
+- Replaced parallel `keys` / `values` arrays and shifting/popping recency operations with map-backed integer node handles.
+- Added `detach`, `insertAfter`, `moveToFront`, and `evictLru` helper methods over `prev` / `next` maps.
+- Preserved explicit field write-back for mutated maps to avoid copied-field mutation loss.
+- Added assertions for storing, reading, updating, and evicting a real `-1` value.
+
+### Pair Scan Movement
+
+Previous stats from `origin/main` scan artifact:
+
+| Fixture | Previous changed_total | Previous changed_py | Previous changed_sifr | Previous lines py/sifr |
+| --- | ---: | ---: | ---: | --- |
+| `0146_lru_cache` | 79 | 33 | 46 | 51/64 |
+
+Regenerated artifact: `verification/leetcode/leetcode_pair_diff_scan_20260424.json`
+
+| Fixture | Current changed_total | Current changed_py | Current changed_sifr | Current lines py/sifr |
+| --- | ---: | ---: | ---: | --- |
+| `0146_lru_cache` | 147 | 33 | 114 | 51/132 |
+
+The raw line diff increases because the previous Sifr fixture used compact array shifts. This wave closes the structural rewrite criterion: `get`, `put`, update, and eviction use map lookups plus recency-list rewiring instead of linear scans or array shifts.
+
+### Validation
+
+Targeted validation:
+
+- `python3 audits/leetcode/0146_lru_cache.py` PASS
+- `cargo run -q -p sifr -- check audits/leetcode/0146_lru_cache.sifr` PASS
+- `cargo run -q -p sifr -- run audits/leetcode/0146_lru_cache.sifr` PASS
 - `python3 scripts/scan_leetcode_pair_diffs.py --output verification/leetcode/leetcode_pair_diff_scan_20260424.json --top 80` PASS
 
 Local gate:

@@ -2,54 +2,116 @@
 
 class LRUCache:
     cap: int
-    keys: list[int]
-    values: list[int]
+    head: int
+    tail: int
+    next_id: int
+    key_to_node: dict[int, int]
+    node_key: dict[int, int]
+    node_value: dict[int, int]
+    prev: dict[int, int]
+    next: dict[int, int]
 
     def __init__(self, capacity: int):
         self.cap = capacity
-        self.keys = []
-        self.values = []
+        self.head = 0
+        self.tail = 1
+        self.next_id = 2
+        self.key_to_node = {}
+        self.node_key = {}
+        self.node_value = {}
+        self.prev = {1: 0}
+        self.next = {0: 1}
 
-    def findIndex(self, key: int) -> int:
-        i = 0
-        while i < len(self.keys):
-            key_i: int | None = self.keys[i]
-            if key_i is not None and key_i == key:
-                return i
-            i += 1
-        return -1
+    def detach(self, node: int) -> None:
+        prev: dict[int, int] = self.prev
+        next: dict[int, int] = self.next
+        left: int | None = prev[node]
+        right: int | None = next[node]
+        if left is None or right is None:
+            return
+        next[left] = right
+        prev[right] = left
+        del prev[node]
+        del next[node]
+        self.prev = prev
+        self.next = next
 
-    def moveToMostRecent(self, index: int) -> None:
-        key_value: int | None = self.keys.pop(index)
-        cached_value: int | None = self.values.pop(index)
-        if key_value is not None and cached_value is not None:
-            self.keys.append(key_value)
-            self.values.append(cached_value)
+    def insertAfter(self, node: int, left: int) -> None:
+        prev: dict[int, int] = self.prev
+        next: dict[int, int] = self.next
+        right: int | None = next[left]
+        if right is None:
+            return
+        prev[node] = left
+        next[node] = right
+        next[left] = node
+        prev[right] = node
+        self.prev = prev
+        self.next = next
+
+    def moveToFront(self, node: int) -> None:
+        self.detach(node)
+        self.insertAfter(node, self.head)
+
+    def evictLru(self) -> None:
+        node_opt: int | None = self.prev[self.tail]
+        if node_opt is None:
+            return
+        node: int = node_opt
+        if node == self.head:
+            return
+
+        key: int | None = self.node_key[node]
+        if key is not None:
+            key_to_node: dict[int, int] = self.key_to_node
+            del key_to_node[key]
+            self.key_to_node = key_to_node
+        node_key: dict[int, int] = self.node_key
+        node_value: dict[int, int] = self.node_value
+        del node_key[node]
+        del node_value[node]
+        self.node_key = node_key
+        self.node_value = node_value
+        self.detach(node)
 
     def get(self, key: int) -> int:
-        idx = self.findIndex(key)
-        if idx < 0:
+        node: int | None = self.key_to_node[key]
+        if node is None:
             return -1
 
-        value_opt: int | None = self.values[idx]
-        result = -1
-        if value_opt is not None:
-            result = value_opt
-        self.moveToMostRecent(idx)
-        return result
+        value: int | None = self.node_value[node]
+        if value is None:
+            return -1
+        self.moveToFront(node)
+        return value
 
     def put(self, key: int, value: int) -> None:
-        idx = self.findIndex(key)
-        if idx >= 0:
-            self.keys.pop(idx)
-            self.values.pop(idx)
+        if self.cap <= 0:
+            return
 
-        self.keys.append(key)
-        self.values.append(value)
+        existing: int | None = self.key_to_node[key]
+        if existing is not None:
+            node_value: dict[int, int] = self.node_value
+            node_value[existing] = value
+            self.node_value = node_value
+            self.moveToFront(existing)
+            return
 
-        if len(self.keys) > self.cap:
-            self.keys.pop(0)
-            self.values.pop(0)
+        if len(self.key_to_node) >= self.cap:
+            self.evictLru()
+
+        node = self.next_id
+        self.next_id = self.next_id + 1
+        key_to_node: dict[int, int] = self.key_to_node
+        node_key: dict[int, int] = self.node_key
+        node_value: dict[int, int] = self.node_value
+        key_to_node[key] = node
+        node_key[node] = key
+        node_value[node] = value
+        self.key_to_node = key_to_node
+        self.node_key = node_key
+        self.node_value = node_value
+        self.insertAfter(node, self.head)
 
 def main():
     obj = LRUCache(2)
@@ -62,3 +124,9 @@ def main():
     assert obj.get(1) == -1
     assert obj.get(3) == 3
     assert obj.get(4) == 4
+    obj2 = LRUCache(1)
+    obj2.put(8, -1)
+    assert obj2.get(8) == -1
+    obj2.put(9, 9)
+    assert obj2.get(8) == -1
+    assert obj2.get(9) == 9
