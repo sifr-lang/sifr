@@ -497,18 +497,6 @@
       "similarity_ratio": 0.23140495867768596
     },
     {
-      "stem": "0150_evaluate_reverse_polish_notation",
-      "py_relpath": "audits/leetcode/0150_evaluate_reverse_polish_notation.py",
-      "sifr_relpath": "audits/leetcode/0150_evaluate_reverse_polish_notation.sifr",
-      "py_lines": 28,
-      "sifr_lines": 86,
-      "changed_py_lines": 16,
-      "changed_sifr_lines": 74,
-      "changed_total_lines": 90,
-      "length_delta": 58,
-      "similarity_ratio": 0.21052631578947367
-    },
-    {
       "stem": "2709_greatest_common_divisor_traversal",
       "py_relpath": "audits/leetcode/2709_greatest_common_divisor_traversal.py",
       "sifr_relpath": "audits/leetcode/2709_greatest_common_divisor_traversal.sifr",
@@ -1599,6 +1587,18 @@
       "changed_total_lines": 54,
       "length_delta": 22,
       "similarity_ratio": 0.2702702702702703
+    },
+    {
+      "stem": "0150_evaluate_reverse_polish_notation",
+      "py_relpath": "audits/leetcode/0150_evaluate_reverse_polish_notation.py",
+      "sifr_relpath": "audits/leetcode/0150_evaluate_reverse_polish_notation.sifr",
+      "py_lines": 28,
+      "sifr_lines": 50,
+      "changed_py_lines": 16,
+      "changed_sifr_lines": 38,
+      "changed_total_lines": 54,
+      "length_delta": 22,
+      "similarity_ratio": 0.3076923076923077
     },
     {
       "stem": "2215_find_the_difference_of_two_arrays",
