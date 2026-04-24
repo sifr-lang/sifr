@@ -329,6 +329,18 @@
       "similarity_ratio": 0.33540372670807456
     },
     {
+      "stem": "0004_median_of_two_sorted_arrays",
+      "py_relpath": "audits/leetcode/0004_median_of_two_sorted_arrays.py",
+      "sifr_relpath": "audits/leetcode/0004_median_of_two_sorted_arrays.sifr",
+      "py_lines": 47,
+      "sifr_lines": 86,
+      "changed_py_lines": 33,
+      "changed_sifr_lines": 72,
+      "changed_total_lines": 105,
+      "length_delta": 39,
+      "similarity_ratio": 0.21052631578947367
+    },
+    {
       "stem": "0355_design_twitter",
       "py_relpath": "audits/leetcode/0355_design_twitter.py",
       "sifr_relpath": "audits/leetcode/0355_design_twitter.sifr",
@@ -1179,18 +1191,6 @@
       "changed_total_lines": 63,
       "length_delta": 11,
       "similarity_ratio": 0.2222222222222222
-    },
-    {
-      "stem": "0004_median_of_two_sorted_arrays",
-      "py_relpath": "audits/leetcode/0004_median_of_two_sorted_arrays.py",
-      "sifr_relpath": "audits/leetcode/0004_median_of_two_sorted_arrays.sifr",
-      "py_lines": 42,
-      "sifr_lines": 41,
-      "changed_py_lines": 32,
-      "changed_sifr_lines": 31,
-      "changed_total_lines": 63,
-      "length_delta": 1,
-      "similarity_ratio": 0.24096385542168675
     },
     {
       "stem": "0018_4sum",

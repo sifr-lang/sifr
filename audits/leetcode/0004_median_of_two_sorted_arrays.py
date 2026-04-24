@@ -37,6 +37,11 @@ def findMedianSortedArrays(nums1: list[int], nums2: list[int]) -> float:
 def main():
     assert findMedianSortedArrays([1,3], [2]) == 2
     assert findMedianSortedArrays([1,2], [3,4]) == 2.5
+    assert findMedianSortedArrays([], [1]) == 1
+    assert findMedianSortedArrays([2], []) == 2
+    assert findMedianSortedArrays([], [2,3]) == 2.5
+    assert findMedianSortedArrays([0,0], [0,0]) == 0
+    assert findMedianSortedArrays([-5,-3], [-4]) == -4
 
 if __name__ == "__main__":
     main()
