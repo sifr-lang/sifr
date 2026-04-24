@@ -6,30 +6,46 @@ class UnionFind:
     components: int
 
     def __init__(self, n: int) -> None:
-        self.parent = [i for i in range(n)]
-        self.size = [1] * n
-        self.components = n
+        count: int = n
+        if count < 0:
+            count = 0
+        self.parent = [i for i in range(count)]
+        self.size = [1] * count
+        self.components = count
 
     def find(self, x: int) -> int:
         parent: list[int] = self.parent
+        if x < 0 or x >= len(parent):
+            return x
         cur: int = x
         done: bool = False
-        while not done:
+        steps: int = 0
+        limit: int = len(parent) + 1
+        while not done and steps < limit:
             next_parent: int | None = parent[cur]
             if next_parent is None:
                 self.parent = parent
                 return cur
             if next_parent == cur:
                 done = True
+            elif next_parent < 0 or next_parent >= len(parent):
+                self.parent = parent
+                return cur
             else:
                 grand_parent: int | None = parent[next_parent]
                 if grand_parent is not None:
                     parent[cur] = grand_parent
                 cur = next_parent
+            steps = steps + 1
         self.parent = parent
         return cur
 
     def union(self, x: int, y: int) -> bool:
+        if x < 0 or y < 0:
+            return False
+        if x >= len(self.parent) or y >= len(self.parent):
+            return False
+
         root_x: int = self.find(x)
         root_y: int = self.find(y)
         if root_x == root_y:
@@ -54,6 +70,10 @@ class UnionFind:
         return True
 
     def connected(self, x: int, y: int) -> bool:
+        if x < 0 or y < 0:
+            return False
+        if x >= len(self.parent) or y >= len(self.parent):
+            return False
         return self.find(x) == self.find(y)
 
     def component_count(self) -> int:

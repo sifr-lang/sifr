@@ -199,6 +199,7 @@ Registry and regression coverage:
 
 - Added `sifr.dsu.UnionFind` with `find`, `union`, `connected`, and `component_count`.
 - Uses union-by-size and path compression.
+- Treats negative, out-of-range, and negative-size inputs as safe no-op/empty cases rather than relying on list subscript behavior.
 - Keeps list-field mutation explicit by copying list fields into locals and assigning fields back after mutation, matching the field-mutation constraint observed in `S1`.
 - Rewrote `0261_graph_valid_tree` to use `UnionFind` instead of fixture-local parent/rank helpers.
 

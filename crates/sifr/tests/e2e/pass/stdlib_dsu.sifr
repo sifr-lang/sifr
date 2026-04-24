@@ -11,3 +11,9 @@ def main():
     assert dsu.component_count() == 3
     assert dsu.union(3, 4) == True
     assert dsu.component_count() == 2
+    assert dsu.union(-1, 4) == False
+    assert dsu.union(0, 9) == False
+    assert dsu.connected(-1, 0) == False
+    empty = UnionFind(-3)
+    assert empty.component_count() == 0
+    assert empty.union(0, 1) == False
