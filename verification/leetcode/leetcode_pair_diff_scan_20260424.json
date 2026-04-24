@@ -77,6 +77,18 @@
       "similarity_ratio": 0.10778443113772455
     },
     {
+      "stem": "0146_lru_cache",
+      "py_relpath": "audits/leetcode/0146_lru_cache.py",
+      "sifr_relpath": "audits/leetcode/0146_lru_cache.sifr",
+      "py_lines": 51,
+      "sifr_lines": 132,
+      "changed_py_lines": 33,
+      "changed_sifr_lines": 114,
+      "changed_total_lines": 147,
+      "length_delta": 81,
+      "similarity_ratio": 0.19672131147540983
+    },
+    {
       "stem": "1631_path_with_minimum_effort",
       "py_relpath": "audits/leetcode/1631_path_with_minimum_effort.py",
       "sifr_relpath": "audits/leetcode/1631_path_with_minimum_effort.sifr",
@@ -651,18 +663,6 @@
       "changed_total_lines": 79,
       "length_delta": 17,
       "similarity_ratio": 0.27522935779816515
-    },
-    {
-      "stem": "0146_lru_cache",
-      "py_relpath": "audits/leetcode/0146_lru_cache.py",
-      "sifr_relpath": "audits/leetcode/0146_lru_cache.sifr",
-      "py_lines": 51,
-      "sifr_lines": 64,
-      "changed_py_lines": 33,
-      "changed_sifr_lines": 46,
-      "changed_total_lines": 79,
-      "length_delta": 13,
-      "similarity_ratio": 0.3130434782608696
     },
     {
       "stem": "0141_linked_list_cycle",
