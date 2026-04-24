@@ -621,10 +621,6 @@ Local gate:
 
 - `scripts/run_all_tests.sh --profile quick` PASS
 
-Local gate:
-
-- `scripts/run_all_tests.sh --profile quick` PASS
-
 ## WS4 0706 HashMap Storage Design
 
 Status: validated locally
@@ -647,3 +643,7 @@ Docs/design validation:
 
 - `cargo fmt --check` PASS
 - `git diff --check` PASS
+
+Local gate:
+
+- `scripts/run_all_tests.sh --profile quick` PASS
