@@ -41,34 +41,6 @@ def listNodeToString(own node: ListNode | None) -> str:
         cur = nodeNext(cur)
     return "->".join(parts)
 
-
-class Node:
-    val: int
-    next: Node | None
-    random: Node | None
-    left: Node | None
-    right: Node | None
-    neighbors: list[Node]
-    key: int
-
-    def __init__(
-        self,
-        val: int = 0,
-        next: Node | None = None,
-        random: Node | None = None,
-        left: Node | None = None,
-        right: Node | None = None,
-        neighbors: list[Node] = [],
-        key: int = -1,
-    ):
-        self.val = val
-        self.next = next
-        self.random = random
-        self.left = left
-        self.right = right
-        self.neighbors = neighbors
-        self.key = key
-
 def mergeTwoLists(own list1: ListNode | None, own list2: ListNode | None) -> ListNode | None:
     vals1: list[int] = []
     vals2: list[int] = []

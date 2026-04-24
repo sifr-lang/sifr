@@ -390,9 +390,10 @@ Local gate:
 
 ## WS2 S6 Trie Decision And API
 
-Status: validated locally
+Status: merged
 Branch: `ws2-s6-trie-decision`
 PR: `https://github.com/yaseralnajjar/sifr/pull/1616`
+Merged: `https://github.com/yaseralnajjar/sifr/pull/1616`
 
 ### Scope
 
@@ -437,6 +438,56 @@ Targeted validation:
 - `cargo run -q -p sifr -- check audits/leetcode/0208_implement_trie_prefix_tree.sifr` PASS
 - `cargo run -q -p sifr -- run audits/leetcode/0208_implement_trie_prefix_tree.sifr` PASS
 - `cargo test -p sifr_driver stdlib_trie_exports_trie_class -- --nocapture` PASS
+- `python3 scripts/scan_leetcode_pair_diffs.py --output verification/leetcode/leetcode_pair_diff_scan_20260424.json --top 80` PASS
+
+Local gate:
+
+- `scripts/run_all_tests.sh --profile quick` PASS
+
+## WS3 B1 Fixture Helper Convention
+
+Status: validated locally
+Branch: `ws3-b1-fixture-helper-convention`
+PR: `https://github.com/yaseralnajjar/sifr/pull/1617`
+
+### Scope
+
+Choose the linked-list/tree fixture helper strategy and pilot it without introducing new cursor semantics:
+
+- `internal_docs/leetcode_fixture_helper_convention.md`
+- `audits/leetcode/0021_merge_two_sorted_lists.sifr`
+
+### Decision
+
+Use self-contained fixture boilerplate with a strict inline helper template. Import-based helper modules are blocked for current LeetCode root fixtures because non-`main.sifr` entries intentionally compile in single-file mode, so sibling imports are not resolved by the CLI. The accepted convention keeps only used structural helpers inline and removes unrelated catch-all node scaffolding.
+
+### Changes
+
+- Documented the WS3 B1 helper convention and the current CLI constraint that prevents shared sibling helper imports for non-`main.sifr` fixture entries.
+- Removed unused catch-all `Node` scaffolding from the `0021` pilot.
+- Kept the existing drain/sort/rebuild algorithm unchanged; owned-chain cursor behavior belongs to later WS3 slices.
+
+### Pair Scan Movement
+
+Previous stats from `origin/main` scan artifact:
+
+| Fixture | Previous changed_total | Previous changed_py | Previous changed_sifr | Previous lines py/sifr |
+| --- | ---: | ---: | ---: | --- |
+| `0021_merge_two_sorted_lists` | 121 | 45 | 76 | 74/105 |
+
+Regenerated artifact: `verification/leetcode/leetcode_pair_diff_scan_20260424.json`
+
+| Fixture | Current changed_total | Current changed_py | Current changed_sifr | Current lines py/sifr |
+| --- | ---: | ---: | ---: | --- |
+| `0021_merge_two_sorted_lists` | 123 | 60 | 63 | 74/77 |
+
+### Validation
+
+Targeted validation:
+
+- `python3 audits/leetcode/0021_merge_two_sorted_lists.py` PASS
+- `cargo run -q -p sifr -- check audits/leetcode/0021_merge_two_sorted_lists.sifr` PASS
+- `cargo run -q -p sifr -- run audits/leetcode/0021_merge_two_sorted_lists.sifr` PASS
 - `python3 scripts/scan_leetcode_pair_diffs.py --output verification/leetcode/leetcode_pair_diff_scan_20260424.json --top 80` PASS
 
 Local gate:
