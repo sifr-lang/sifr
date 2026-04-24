@@ -801,9 +801,10 @@ Local gate:
 
 ## WS4 0206 Reverse Linked List Rewrite
 
-Status: opened PR
+Status: merged
 Branch: `ws4-0206-reverse-linked-list`
 PR: `https://github.com/yaseralnajjar/sifr/pull/1625`
+Merged: `https://github.com/yaseralnajjar/sifr/pull/1625`
 
 ### Scope
 
@@ -844,3 +845,57 @@ Targeted validation:
 - `python3 scripts/scan_leetcode_pair_diffs.py --output verification/leetcode/leetcode_pair_diff_scan_20260424.json --top 80` PASS
 - `cargo fmt --check` PASS
 - `git diff --check` PASS
+
+Local gate:
+
+- `scripts/run_all_tests.sh --profile quick` PASS
+
+## WS4 0024 Swap Nodes In Pairs Rewrite
+
+Status: opened PR
+Branch: `ws4-0024-swap-pairs`
+PR: `https://github.com/yaseralnajjar/sifr/pull/1626`
+
+### Scope
+
+Rewrite the swap-pairs fixture to use the canonical `ListNode` public model and owned node rewiring:
+
+- `audits/leetcode/0024_swap_nodes_in_pairs.py`
+- `audits/leetcode/0024_swap_nodes_in_pairs.sifr`
+
+### Changes
+
+- Replaced the Sifr `list[int]` public model with the shared `ListNode` fixture helper shape.
+- Implemented recursive pair swapping by rewiring `head.next` and `second.next`.
+- Removed the unused catch-all `Node` helper from the Python pair and made the Python signature explicitly nullable.
+
+### Pair Scan Movement
+
+Previous stats from `origin/main` scan artifact:
+
+| Fixture | Previous changed_total | Previous changed_py | Previous changed_sifr | Previous lines py/sifr |
+| --- | ---: | ---: | ---: | --- |
+| `0024_swap_nodes_in_pairs` | 79 | 63 | 16 | 67/20 |
+
+Regenerated artifact: `verification/leetcode/leetcode_pair_diff_scan_20260424.json`
+
+| Fixture | Current changed_total | Current changed_py | Current changed_sifr | Current lines py/sifr |
+| --- | ---: | ---: | ---: | --- |
+| `0024_swap_nodes_in_pairs` | 66 | 30 | 36 | 48/54 |
+
+This wave closes the structural rewrite criterion: the Sifr fixture no longer exposes `list[int]` and swaps adjacent owned nodes by rewiring links.
+
+### Validation
+
+Targeted validation:
+
+- `python3 audits/leetcode/0024_swap_nodes_in_pairs.py` PASS
+- `cargo run -q -p sifr -- check audits/leetcode/0024_swap_nodes_in_pairs.sifr` PASS
+- `cargo run -q -p sifr -- run audits/leetcode/0024_swap_nodes_in_pairs.sifr` PASS
+- `python3 scripts/scan_leetcode_pair_diffs.py --output verification/leetcode/leetcode_pair_diff_scan_20260424.json --top 80` PASS
+- `cargo fmt --check` PASS
+- `git diff --check` PASS
+
+Local gate:
+
+- `scripts/run_all_tests.sh --profile quick` PASS

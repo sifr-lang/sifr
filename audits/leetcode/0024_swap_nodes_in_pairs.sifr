@@ -1,20 +1,54 @@
-# LeetCode 24: Swap Nodes In Pairs (residual Sifr-safe canonical form)
+# LeetCode 24: Swap Nodes In Pairs
 
-def swapPairs(values: list[int]) -> list[int]:
-    out = values.copy()
-    i = 0
-    while i + 1 < len(out):
-        first = out[i]
-        out[i] = out[i + 1]
-        out[i + 1] = first
-        i += 2
-    return out
+class ListNode:
+    val: int
+    next: ListNode | None
+
+    def __init__(self, val: int = 0, next: ListNode | None = None):
+        self.val = val
+        self.next = next
+
+
+def nodeVal(node: ListNode | None) -> int:
+    if node is None:
+        return 0
+    return node.val
+
+
+def nodeNext(node: ListNode | None) -> ListNode | None:
+    if node is None:
+        return None
+    return node.next
+
+
+def hasNode(node: ListNode | None) -> bool:
+    return node is not None
+
+
+def listNodeToString(own node: ListNode | None) -> str:
+    if node is None:
+        return "None"
+    parts: list[str] = []
+    cur: ListNode | None = node
+    while hasNode(cur):
+        parts.append(str(nodeVal(cur)))
+        cur = nodeNext(cur)
+    return "->".join(parts)
+
+
+def swapPairs(own mut head: ListNode | None) -> ListNode | None:
+    if head is None:
+        return None
+    second: ListNode | None = head.next
+    if second is None:
+        return head
+    rest: ListNode | None = second.next
+    head.next = swapPairs(rest)
+    second.next = head
+    return second
 
 
 def main():
-    expected0: list[int] = [2, 1, 4, 3]
-    expected1: list[int] = []
-    expected2: list[int] = [1]
-    assert swapPairs([1, 2, 3, 4]) == expected0
-    assert swapPairs([]) == expected1
-    assert swapPairs([1]) == expected2
+    assert listNodeToString(swapPairs(ListNode(1, ListNode(2, ListNode(3, ListNode(4, None)))))) == listNodeToString(ListNode(2, ListNode(1, ListNode(4, ListNode(3, None)))))
+    assert swapPairs(None) == None
+    assert listNodeToString(swapPairs(ListNode(1, None))) == listNodeToString(ListNode(1, None))

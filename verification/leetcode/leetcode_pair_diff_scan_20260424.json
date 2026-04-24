@@ -653,18 +653,6 @@
       "similarity_ratio": 0.5061728395061729
     },
     {
-      "stem": "0024_swap_nodes_in_pairs",
-      "py_relpath": "audits/leetcode/0024_swap_nodes_in_pairs.py",
-      "sifr_relpath": "audits/leetcode/0024_swap_nodes_in_pairs.sifr",
-      "py_lines": 67,
-      "sifr_lines": 20,
-      "changed_py_lines": 63,
-      "changed_sifr_lines": 16,
-      "changed_total_lines": 79,
-      "length_delta": 47,
-      "similarity_ratio": 0.09195402298850575
-    },
-    {
       "stem": "1345_jump_game_iv",
       "py_relpath": "audits/leetcode/1345_jump_game_iv.py",
       "sifr_relpath": "audits/leetcode/1345_jump_game_iv.sifr",
@@ -1047,6 +1035,18 @@
       "changed_total_lines": 66,
       "length_delta": 6,
       "similarity_ratio": 0.3125
+    },
+    {
+      "stem": "0024_swap_nodes_in_pairs",
+      "py_relpath": "audits/leetcode/0024_swap_nodes_in_pairs.py",
+      "sifr_relpath": "audits/leetcode/0024_swap_nodes_in_pairs.sifr",
+      "py_lines": 48,
+      "sifr_lines": 54,
+      "changed_py_lines": 30,
+      "changed_sifr_lines": 36,
+      "changed_total_lines": 66,
+      "length_delta": 6,
+      "similarity_ratio": 0.35294117647058826
     },
     {
       "stem": "2101_detonate_the_maximum_bombs",
