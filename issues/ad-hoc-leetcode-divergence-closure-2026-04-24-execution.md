@@ -392,6 +392,7 @@ Local gate:
 
 Status: validated locally
 Branch: `ws2-s6-trie-decision`
+PR: `https://github.com/yaseralnajjar/sifr/pull/1616`
 
 ### Scope
 
