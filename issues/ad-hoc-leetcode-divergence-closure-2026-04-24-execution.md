@@ -799,10 +799,6 @@ Local gate:
 
 - `scripts/run_all_tests.sh --profile quick` PASS
 
-Local gate:
-
-- `scripts/run_all_tests.sh --profile quick` PASS
-
 ## WS4 0206 Reverse Linked List Rewrite
 
 Status: opened PR
