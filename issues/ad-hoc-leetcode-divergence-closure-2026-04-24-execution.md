@@ -343,9 +343,10 @@ Local gate:
 
 ## WS2 S5 Integer Parse Consumption
 
-Status: validated locally
+Status: merged
 Branch: `ws2-s5-int-parse-consumption`
 PR: `https://github.com/yaseralnajjar/sifr/pull/1615`
+Merged: `https://github.com/yaseralnajjar/sifr/pull/1615`
 
 ### Scope
 
@@ -381,6 +382,60 @@ Targeted validation:
 - `cargo run -q -p sifr -- check audits/leetcode/0150_evaluate_reverse_polish_notation.sifr` PASS
 - `cargo run -q -p sifr -- run audits/leetcode/0150_evaluate_reverse_polish_notation.sifr` PASS
 - `cargo run -q -p sifr -- run crates/sifr/tests/e2e/pass/result_basic.sifr` PASS
+- `python3 scripts/scan_leetcode_pair_diffs.py --output verification/leetcode/leetcode_pair_diff_scan_20260424.json --top 80` PASS
+
+Local gate:
+
+- `scripts/run_all_tests.sh --profile quick` PASS
+
+## WS2 S6 Trie Decision And API
+
+Status: validated locally
+Branch: `ws2-s6-trie-decision`
+
+### Scope
+
+Add an explicit trie stdlib surface and consume it in the first trie-dependent fixture:
+
+- `internal_docs/trie_stdlib_design.md`
+- `lib/sifr/trie.sifr`
+- `audits/leetcode/0208_implement_trie_prefix_tree.sifr`
+
+### Decision
+
+`sifr.trie.Trie` uses owned node indices backed by owned edge lists plus terminal markers. `insert` is the only node-creating operation; traversal APIs return `int | None` for missing edges or invalid node indices. This rejects auto-insert-on-read while leaving enough API surface for later `0211` wildcard DFS and `0212` board-prefix pruning rewrites.
+
+### Changes
+
+- Added `sifr.trie.Trie` with whole-word APIs (`insert`, `contains`, `search`, `starts_with`, `startsWith`) and node traversal APIs (`find_node`, `child`, `children`, `is_terminal`, `node_count`).
+- Registered `sifr.trie` in the embedded stdlib registry and added an export regression for the class.
+- Added `stdlib_trie` e2e coverage for word lookup, prefix lookup, terminal markers, child traversal, and invalid node handling.
+- Rewrote `0208_implement_trie_prefix_tree.sifr` to import `sifr.trie.Trie` directly instead of scanning a word list.
+
+### Pair Scan Movement
+
+Previous stats from `origin/main` scan artifact:
+
+| Fixture | Previous changed_total | Previous changed_py | Previous changed_sifr | Previous lines py/sifr |
+| --- | ---: | ---: | ---: | --- |
+| `0208_implement_trie_prefix_tree` | 79 | 63 | 16 | 78/31 |
+
+Regenerated artifact: `verification/leetcode/leetcode_pair_diff_scan_20260424.json`
+
+| Fixture | Current changed_total | Current changed_py | Current changed_sifr | Current lines py/sifr |
+| --- | ---: | ---: | ---: | --- |
+| `0208_implement_trie_prefix_tree` | 70 | 68 | 2 | 78/12 |
+
+### Validation
+
+Targeted validation:
+
+- `python3 audits/leetcode/0208_implement_trie_prefix_tree.py` PASS
+- `cargo run -q -p sifr -- check crates/sifr/tests/e2e/pass/stdlib_trie.sifr` PASS
+- `cargo run -q -p sifr -- run crates/sifr/tests/e2e/pass/stdlib_trie.sifr` PASS
+- `cargo run -q -p sifr -- check audits/leetcode/0208_implement_trie_prefix_tree.sifr` PASS
+- `cargo run -q -p sifr -- run audits/leetcode/0208_implement_trie_prefix_tree.sifr` PASS
+- `cargo test -p sifr_driver stdlib_trie_exports_trie_class -- --nocapture` PASS
 - `python3 scripts/scan_leetcode_pair_diffs.py --output verification/leetcode/leetcode_pair_diff_scan_20260424.json --top 80` PASS
 
 Local gate:

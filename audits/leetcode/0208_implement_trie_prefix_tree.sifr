@@ -1,25 +1,6 @@
 # LeetCode 208: Implement Trie Prefix Tree
 
-class Trie:
-    words: list[str]
-
-    def __init__(self):
-        self.words = []
-
-    def insert(self, word: str) -> None:
-        self.words.append(str(word))
-
-    def search(self, word: str) -> bool:
-        for value in self.words:
-            if value == word:
-                return True
-        return False
-
-    def startsWith(self, prefix: str) -> bool:
-        for value in self.words:
-            if value.startswith(str(prefix)):
-                return True
-        return False
+from sifr.trie import Trie
 
 def main():
     obj = Trie()
