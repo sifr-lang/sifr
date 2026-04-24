@@ -85,7 +85,7 @@ Local gate:
 
 Status: validated locally
 Branch: `ws1-narrowing-invalidation-design`
-PR: pending
+PR: `https://github.com/yaseralnajjar/sifr/pull/1610`
 
 ### Scope
 
