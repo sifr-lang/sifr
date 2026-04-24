@@ -1,49 +1,75 @@
 # LeetCode 212: Word Search Ii
 
-def _word_exists(board: list[list[str]], word: str) -> bool:
-    if len(word) == 0:
-        return True
-    if len(board) == 0 or len(board[0]) == 0:
-        return False
+from sifr.trie import Trie
 
-    rows = len(board)
-    cols = len(board[0])
+def boardChar(board: list[list[str]], r: int, c: int) -> str | None:
+    row: list[str] | None = board[r]
+    if row is None:
+        return None
+    return row[c]
 
-    def dfs(r: int, c: int, idx: int, mut visit: set[tuple[int, int]]) -> bool:
-        if idx == len(word):
-            return True
-        if r < 0 or c < 0 or r >= rows or c >= cols:
-            return False
-        if (r, c) in visit:
-            return False
-
-        letter = word[idx]
-        if letter is None:
-            return False
-        if board[r][c] != letter:
-            return False
-
-        visit.add((r, c))
-        found = (
-            dfs(r + 1, c, idx + 1, visit)
-            or dfs(r - 1, c, idx + 1, visit)
-            or dfs(r, c + 1, idx + 1, visit)
-            or dfs(r, c - 1, idx + 1, visit)
-        )
-        visit.remove((r, c))
+def collectWords(
+    board: list[list[str]],
+    rows: int,
+    cols: int,
+    trie: Trie,
+    node: int,
+    prefix: str,
+    r: int,
+    c: int,
+    mut visit: set[tuple[int, int]],
+    own mut found: dict[str, bool],
+) -> dict[str, bool]:
+    if r < 0 or c < 0 or r >= rows or c >= cols:
+        return found
+    if (r, c) in visit:
         return found
 
-    for r in range(rows):
-        for c in range(cols):
-            if dfs(r, c, 0, set()):
-                return True
-    return False
+    letter: str | None = boardChar(board, r, c)
+    if letter is None:
+        return found
+
+    next_node: int | None = trie.child(node, letter)
+    if next_node is None:
+        return found
+
+    next_prefix: str = prefix + letter
+    if trie.is_terminal(next_node):
+        found[next_prefix] = True
+
+    visit.add((r, c))
+    found = collectWords(board, rows, cols, trie, next_node, next_prefix, r + 1, c, visit, found)
+    found = collectWords(board, rows, cols, trie, next_node, next_prefix, r - 1, c, visit, found)
+    found = collectWords(board, rows, cols, trie, next_node, next_prefix, r, c + 1, visit, found)
+    found = collectWords(board, rows, cols, trie, next_node, next_prefix, r, c - 1, visit, found)
+    visit.remove((r, c))
+    return found
 
 def findWords(board: list[list[str]], words: list[str]) -> list[str]:
+    if len(board) == 0:
+        return []
+    first_row: list[str] | None = board[0]
+    if first_row is None:
+        return []
+    if len(first_row) == 0:
+        return []
+
+    rows = len(board)
+    cols = len(first_row)
+    trie = Trie()
+    for word in words:
+        trie.insert(word)
+
+    found: dict[str, bool] = {}
+    for r in range(rows):
+        for c in range(cols):
+            found = collectWords(board, rows, cols, trie, 0, "", r, c, set(), found)
+
     out: list[str] = []
-    for w in words:
-        if _word_exists(board, w):
-            out.append(w)
+    for word in words:
+        present: bool | None = found[word]
+        if present is not None:
+            out.append(word)
     return out
 
 def main():

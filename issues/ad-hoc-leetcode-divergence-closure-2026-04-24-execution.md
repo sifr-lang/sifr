@@ -497,9 +497,10 @@ Local gate:
 
 ## WS4 0211 Trie Wildcard Rewrite
 
-Status: validated locally
+Status: merged
 Branch: `ws4-0211-trie-wildcard-rewrite`
 PR: `https://github.com/yaseralnajjar/sifr/pull/1618`
+Merged: `https://github.com/yaseralnajjar/sifr/pull/1618`
 
 ### Scope
 
@@ -536,6 +537,54 @@ Targeted validation:
 - `python3 audits/leetcode/0211_design_add_and_search_words_data_structure.py` PASS
 - `cargo run -q -p sifr -- check audits/leetcode/0211_design_add_and_search_words_data_structure.sifr` PASS
 - `cargo run -q -p sifr -- run audits/leetcode/0211_design_add_and_search_words_data_structure.sifr` PASS
+- `cargo run -q -p sifr -- run crates/sifr/tests/e2e/pass/stdlib_trie.sifr` PASS
+- `python3 scripts/scan_leetcode_pair_diffs.py --output verification/leetcode/leetcode_pair_diff_scan_20260424.json --top 80` PASS
+
+Local gate:
+
+- `scripts/run_all_tests.sh --profile quick` PASS
+
+## WS4 0212 Trie Board-Search Rewrite
+
+Status: validated locally
+Branch: `ws4-0212-trie-board-search`
+PR: `https://github.com/yaseralnajjar/sifr/pull/1619`
+
+### Scope
+
+Use the WS2 S6 trie API to replace per-word board searches with prefix-pruned trie traversal:
+
+- `audits/leetcode/0212_word_search_ii.sifr`
+
+### Changes
+
+- Replaced `_word_exists` per-word full-board search with one trie build and board DFS from each cell.
+- Added prefix-pruned traversal through `Trie.child` and terminal detection through `Trie.is_terminal`.
+- Used an owned `found` accumulator map through recursive DFS to avoid mutable nonlocal capture.
+
+### Pair Scan Movement
+
+Previous stats from `origin/main` scan artifact:
+
+| Fixture | Previous changed_total | Previous changed_py | Previous changed_sifr | Previous lines py/sifr |
+| --- | ---: | ---: | ---: | --- |
+| `0212_word_search_ii` | 127 | 83 | 44 | 90/51 |
+
+Regenerated artifact: `verification/leetcode/leetcode_pair_diff_scan_20260424.json`
+
+| Fixture | Current changed_total | Current changed_py | Current changed_sifr | Current lines py/sifr |
+| --- | ---: | ---: | ---: | --- |
+| `0212_word_search_ii` | 149 | 81 | 68 | 90/77 |
+
+The raw line diff increases because the previous Sifr fixture was a shorter per-word search. This wave closes the structural rewrite criterion: the fixture now builds one trie and prunes board DFS by prefix instead of running a full-board search for each word.
+
+### Validation
+
+Targeted validation:
+
+- `python3 audits/leetcode/0212_word_search_ii.py` PASS
+- `cargo run -q -p sifr -- check audits/leetcode/0212_word_search_ii.sifr` PASS
+- `cargo run -q -p sifr -- run audits/leetcode/0212_word_search_ii.sifr` PASS
 - `cargo run -q -p sifr -- run crates/sifr/tests/e2e/pass/stdlib_trie.sifr` PASS
 - `python3 scripts/scan_leetcode_pair_diffs.py --output verification/leetcode/leetcode_pair_diff_scan_20260424.json --top 80` PASS
 

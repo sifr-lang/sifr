@@ -65,6 +65,18 @@
       "similarity_ratio": 0.12643678160919541
     },
     {
+      "stem": "0212_word_search_ii",
+      "py_relpath": "audits/leetcode/0212_word_search_ii.py",
+      "sifr_relpath": "audits/leetcode/0212_word_search_ii.sifr",
+      "py_lines": 90,
+      "sifr_lines": 77,
+      "changed_py_lines": 81,
+      "changed_sifr_lines": 68,
+      "changed_total_lines": 149,
+      "length_delta": 13,
+      "similarity_ratio": 0.10778443113772455
+    },
+    {
       "stem": "1631_path_with_minimum_effort",
       "py_relpath": "audits/leetcode/1631_path_with_minimum_effort.py",
       "sifr_relpath": "audits/leetcode/1631_path_with_minimum_effort.sifr",
@@ -123,18 +135,6 @@
       "changed_total_lines": 130,
       "length_delta": 32,
       "similarity_ratio": 0.29347826086956524
-    },
-    {
-      "stem": "0212_word_search_ii",
-      "py_relpath": "audits/leetcode/0212_word_search_ii.py",
-      "sifr_relpath": "audits/leetcode/0212_word_search_ii.sifr",
-      "py_lines": 90,
-      "sifr_lines": 51,
-      "changed_py_lines": 83,
-      "changed_sifr_lines": 44,
-      "changed_total_lines": 127,
-      "length_delta": 39,
-      "similarity_ratio": 0.09929078014184398
     },
     {
       "stem": "0143_reorder_list",
