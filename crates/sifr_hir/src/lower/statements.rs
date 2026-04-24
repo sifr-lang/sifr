@@ -171,7 +171,7 @@ pub(super) fn lower_stmt(
         Stmt::AnnAssign(ann) => lower_ann_assign(ann, ctx),
         Stmt::Assign(assign) => lower_assign(assign, ctx),
         Stmt::AugAssign(aug) => lower_aug_assign(aug, ctx),
-        Stmt::Return(ret) => lower_return(ret, func_type, ctx),
+        Stmt::Return(ret) => Some(lower_return(ret, func_type, ctx)),
         Stmt::Expr(expr_stmt) => {
             // Check if this is a yield expression used as a statement
             if let Expr::Yield(yield_expr) = expr_stmt.value.as_ref() {
@@ -1534,7 +1534,7 @@ pub(super) fn lower_assign(assign: &StmtAssign, ctx: &mut LowerCtx) -> Option<Hi
             ctx.error(format!("undefined variable: '{name}'"));
             return None;
         };
-        if info.is_parameter_binding() && !info.is_mutable_binding {
+        if info.is_parameter_binding() && !info.is_mutable_binding() {
             ctx.error(format!(
                 "cannot reassign immutable parameter `{name}`: add `mut` to the parameter declaration"
             ));
@@ -1600,19 +1600,18 @@ pub(super) fn lower_aug_assign(aug: &StmtAugAssign, ctx: &mut LowerCtx) -> Optio
     lower_aug_assign_impl(aug, ctx)
 }
 
-#[allow(clippy::unnecessary_wraps)]
 pub(super) fn lower_return(
     ret: &StmtReturn,
     func_type: &FunctionType,
     ctx: &mut LowerCtx,
-) -> Option<HirStmt> {
+) -> HirStmt {
     let value = if let Some(val) = &ret.value {
         let Some(expr) = lower_expr(val, ctx) else {
             // Keep control-flow shape intact after expression diagnostics so
             // return-completeness analysis does not emit a cascade error.
-            return Some(HirStmt::Return {
+            return HirStmt::Return {
                 value: Some(HirExpr::NoneLiteral),
-            });
+            };
         };
         let expr_ty = expr.ty().clone();
 
@@ -1631,12 +1630,12 @@ pub(super) fn lower_return(
         if let Type::Result(ref ok_ty, _) = *func_type.return_type {
             if expr_ty.is_assignable_to(ok_ty) && !matches!(expr_ty, Type::Result(_, _)) {
                 // Wrap in Ok()
-                return Some(HirStmt::Return {
+                return HirStmt::Return {
                     value: Some(HirExpr::OkWrap {
                         ty: func_type.return_type.as_ref().clone(),
                         value: Box::new(expr),
                     }),
-                });
+                };
             }
         }
 
@@ -1653,12 +1652,12 @@ pub(super) fn lower_return(
             // If function returns Result[(), E], wrap in Ok(())
             if let Type::Result(ref ok_ty, _) = *func_type.return_type {
                 if **ok_ty == Type::None {
-                    return Some(HirStmt::Return {
+                    return HirStmt::Return {
                         value: Some(HirExpr::OkWrap {
                             ty: func_type.return_type.as_ref().clone(),
                             value: Box::new(HirExpr::NoneLiteral),
                         }),
-                    });
+                    };
                 }
             }
             ctx.error(format!(
@@ -1669,7 +1668,7 @@ pub(super) fn lower_return(
         None
     };
 
-    Some(HirStmt::Return { value })
+    HirStmt::Return { value }
 }
 
 pub(super) fn lower_if(

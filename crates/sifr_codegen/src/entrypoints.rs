@@ -122,7 +122,7 @@ pub fn generate_rust_test(module: &HirModule) -> CodegenResult {
         used_intrinsic_modules: emitter.used_stdlib_modules,
         required_crates: {
             let mut crates = emitter.intrinsic_registry_crates;
-            if emitter.runtime_needs.needs_bigint || import_needs.runtime.numeric.needs_bigint {
+            if emitter.runtime_needs.bigint() || import_needs.runtime.numeric.needs_bigint {
                 crates.insert("num-bigint".to_string());
                 crates.insert("num-traits".to_string());
             }

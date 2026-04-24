@@ -330,11 +330,11 @@ pub fn generate_rust_with_stdlib(module: &HirModule, stdlib_code: &StdlibCode) -
     }
 
     // Compute broad feature needs first, then refine imports structurally from preamble IR.
-    let needs_file_handles = emitter.runtime_needs.needs_file_handles || stdlib_needs_file_handles;
+    let needs_file_handles = emitter.runtime_needs.file_handles() || stdlib_needs_file_handles;
     let needs_logging = emitter.used_stdlib_modules.contains("sifr.logging")
         || emitter.used_stdlib_modules.contains("_sifr.logging")
-        || emitter.runtime_needs.needs_logging_state;
-    let needs_random_module_state = emitter.runtime_needs.needs_random_module_state;
+        || emitter.runtime_needs.logging_state();
+    let needs_random_module_state = emitter.runtime_needs.random_module_state();
 
     // Emit built-in error class struct definitions for referenced error types.
     let referenced_error_classes = collect_referenced_builtin_error_classes(
@@ -1066,13 +1066,43 @@ struct CollectionNeeds {
     needs_vecdeque: bool,
 }
 
-#[allow(clippy::struct_excessive_bools)]
 #[derive(Default)]
 struct RuntimeNeeds {
-    needs_file_handles: bool,
-    needs_logging_state: bool,
-    needs_random_module_state: bool,
-    needs_bigint: bool,
+    flags: HashSet<RuntimeNeed>,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+enum RuntimeNeed {
+    FileHandles,
+    LoggingState,
+    RandomModuleState,
+    BigInt,
+}
+
+impl RuntimeNeeds {
+    fn require(&mut self, need: RuntimeNeed) {
+        self.flags.insert(need);
+    }
+
+    fn contains(&self, need: RuntimeNeed) -> bool {
+        self.flags.contains(&need)
+    }
+
+    fn file_handles(&self) -> bool {
+        self.contains(RuntimeNeed::FileHandles)
+    }
+
+    fn logging_state(&self) -> bool {
+        self.contains(RuntimeNeed::LoggingState)
+    }
+
+    fn random_module_state(&self) -> bool {
+        self.contains(RuntimeNeed::RandomModuleState)
+    }
+
+    fn bigint(&self) -> bool {
+        self.contains(RuntimeNeed::BigInt)
+    }
 }
 
 #[derive(Default)]
@@ -1175,7 +1205,7 @@ impl RustEmitter {
     fn emit_module(&mut self, module: &HirModule, module_public: bool, test_mode: bool) {
         // Pre-scan: detect bigint usage
         if module_uses_bigint(module) {
-            self.runtime_needs.needs_bigint = true;
+            self.runtime_needs.require(RuntimeNeed::BigInt);
         }
 
         self.prescan_module_metadata(module);

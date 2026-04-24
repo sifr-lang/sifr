@@ -809,7 +809,7 @@ impl RustEmitter {
             &arg_exprs,
             is_deque_data_field,
         )?;
-        let lowered_expr = self.unwrap_compiler_verified_nonempty_pop_result(
+        let lowered_expr = Self::unwrap_compiler_verified_nonempty_pop_result(
             object_ty,
             method,
             args,
@@ -830,9 +830,7 @@ impl RustEmitter {
         Some(lowered_expr)
     }
 
-    #[allow(clippy::unused_self)]
     fn unwrap_compiler_verified_nonempty_pop_result(
-        &self,
         object_ty: &Type,
         method: &str,
         args: &[HirExpr],
@@ -1254,7 +1252,7 @@ impl RustEmitter {
                     &arg_exprs,
                     self.is_deque_data_field(object),
                 ) {
-                    return Some(self.unwrap_compiler_verified_nonempty_pop_result(
+                    return Some(Self::unwrap_compiler_verified_nonempty_pop_result(
                         &effective_object_ty,
                         method,
                         args,
@@ -1279,7 +1277,7 @@ impl RustEmitter {
                         }
                     }
                 }
-                Some(self.unwrap_compiler_verified_nonempty_pop_result(
+                Some(Self::unwrap_compiler_verified_nonempty_pop_result(
                     object.ty(),
                     method,
                     args,
@@ -1984,13 +1982,13 @@ impl RustEmitter {
                 | "file_read_bytes"
                 | "file_write_bytes"
         ) {
-            self.runtime_needs.needs_file_handles = true;
+            self.runtime_needs.require(crate::RuntimeNeed::FileHandles);
         }
         if func == "builtin_open" {
             self.used_stdlib_modules.insert("io".to_string());
         }
         if matches!(func, "set_global_level" | "get_global_level") {
-            self.runtime_needs.needs_logging_state = true;
+            self.runtime_needs.require(crate::RuntimeNeed::LoggingState);
         }
         if matches!(
             func,
@@ -1999,7 +1997,8 @@ impl RustEmitter {
                 | "random_module_state_gauss_next"
                 | "random_module_set_state"
         ) {
-            self.runtime_needs.needs_random_module_state = true;
+            self.runtime_needs
+                .require(crate::RuntimeNeed::RandomModuleState);
         }
 
         if let Some(required_crate) = lowered.required_crate {
