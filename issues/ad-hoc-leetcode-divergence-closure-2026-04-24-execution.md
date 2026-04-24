@@ -209,6 +209,14 @@ Required gates:
 - `scripts/run_all_tests.sh --profile quick` PASS
 - `scripts/run_all_tests.sh` PASS
 
+### Post-Closure Review Follow-Up
+
+Reviewer feedback after closure flagged the WS6 optional-remediation helpers as a silent-fallback anti-pattern. The phase remains closed because the full corpus result is clean and the residual issue is now explicitly tracked rather than hidden in the backlog.
+
+Follow-up issue:
+
+- `issues/leetcode-ws6-silent-fallback-remediation-2026-04-25.md`
+
 ## WS1 D0 Narrowing Invalidation Design
 
 Status: merged

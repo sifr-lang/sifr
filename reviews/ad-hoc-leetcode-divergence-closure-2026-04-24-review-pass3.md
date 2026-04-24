@@ -25,3 +25,4 @@ The phase no longer has full-corpus compile/runtime failures attributable to the
 
 - Some successful fixtures are `NO_ORACLE`; they compile/run but do not assert semantic output in the corpus runner.
 - `0148_sort_list` must not be silently replaced by drain/sort/rebuild; its closure requires the tracked owned two-list merge capability or an approved helper abstraction.
+- WS6 optional-remediation helpers are temporary corpus debt and must not become fixture style; tracked by `issues/leetcode-ws6-silent-fallback-remediation-2026-04-25.md`.
