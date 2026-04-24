@@ -1,6 +1,6 @@
 # Ad-hoc Phase: LeetCode Divergence Closure And Canonical Fixture Plan (2026-04-24)
 
-Status: closure_pr_opened
+Status: closed
 Owner: ad_hoc_leetcode_divergence_closure
 Source analysis: `verification/leetcode/leetcode_divergence_decision_analysis_20260409.md`
 Source scan: `verification/leetcode/leetcode_pair_diff_scan_20260409.json`

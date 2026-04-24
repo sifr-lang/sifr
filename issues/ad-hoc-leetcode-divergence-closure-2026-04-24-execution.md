@@ -1,6 +1,6 @@
 # Ad-hoc Phase Execution: LeetCode Divergence Closure
 
-Status: closure_pr_opened
+Status: closed
 Started: 2026-04-24
 Phase plan: `issues/ad-hoc-leetcode-divergence-closure-2026-04-24.md`
 
@@ -114,9 +114,10 @@ Local gate:
 
 ## WS6 Final Rerun, Scorecard, And Closure Review
 
-Status: closure PR opened
+Status: merged
 Branch: `ws6-final-leetcode-closure`
 PR: `https://github.com/yaseralnajjar/sifr/pull/1632`
+Merged: `https://github.com/yaseralnajjar/sifr/pull/1632`
 
 ### Scope
 
