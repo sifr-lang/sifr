@@ -954,9 +954,10 @@ Local gate:
 
 ## WS4 0707 Linked List Design Rewrite
 
-Status: opened PR
+Status: merged
 Branch: `ws4-0707-linked-list-design`
 PR: `https://github.com/yaseralnajjar/sifr/pull/1628`
+Merged: `https://github.com/yaseralnajjar/sifr/pull/1628`
 
 ### Scope
 
@@ -995,6 +996,55 @@ Targeted validation:
 - `python3 audits/leetcode/0707_design_linked_list.py` PASS
 - `cargo run -q -p sifr -- check audits/leetcode/0707_design_linked_list.sifr` PASS
 - `cargo run -q -p sifr -- run audits/leetcode/0707_design_linked_list.sifr` PASS
+- `python3 scripts/scan_leetcode_pair_diffs.py --output verification/leetcode/leetcode_pair_diff_scan_20260424.json --top 80` PASS
+- `cargo fmt --check` PASS
+- `git diff --check` PASS
+
+Local gate:
+
+- `scripts/run_all_tests.sh --profile quick` PASS
+
+## WS4 0023 Merge K Sorted Lists Rewrite
+
+Status: validated locally
+Branch: `ws4-0023-merge-k-lists-heap`
+
+### Scope
+
+Rewrite the merge-k-sorted-lists fixture to use the `ListNode` public model and heap-backed ordering:
+
+- `audits/leetcode/0023_merge_k_sorted_lists.py`
+- `audits/leetcode/0023_merge_k_sorted_lists.sifr`
+
+### Changes
+
+- Replaced the Sifr `list[list[int]]` public model with `ListNode` helpers and `list[ListNode | None]` input.
+- Used `sifr.heapq.heappush` / `heappop` to collect node values in sorted order instead of calling `merged.sort()`.
+- Rebuilt the result as a `ListNode` chain and removed unused Python catch-all `Node` helper baggage.
+
+### Pair Scan Movement
+
+Previous stats from `origin/main` scan artifact:
+
+| Fixture | Previous changed_total | Previous changed_py | Previous changed_sifr | Previous lines py/sifr |
+| --- | ---: | ---: | ---: | --- |
+| `0023_merge_k_sorted_lists` | 101 | 88 | 13 | 92/17 |
+
+Regenerated artifact: `verification/leetcode/leetcode_pair_diff_scan_20260424.json`
+
+| Fixture | Current changed_total | Current changed_py | Current changed_sifr | Current lines py/sifr |
+| --- | ---: | ---: | ---: | --- |
+| `0023_merge_k_sorted_lists` | 117 | 56 | 61 | 73/78 |
+
+The raw line diff increases because the Sifr fixture now includes the linked-list helper surface. This wave closes the public-model criterion and removes the full-array `sort()` workaround by using heap ordering.
+
+### Validation
+
+Targeted validation:
+
+- `python3 audits/leetcode/0023_merge_k_sorted_lists.py` PASS
+- `cargo run -q -p sifr -- check audits/leetcode/0023_merge_k_sorted_lists.sifr` PASS
+- `cargo run -q -p sifr -- run audits/leetcode/0023_merge_k_sorted_lists.sifr` PASS
 - `python3 scripts/scan_leetcode_pair_diffs.py --output verification/leetcode/leetcode_pair_diff_scan_20260424.json --top 80` PASS
 - `cargo fmt --check` PASS
 - `git diff --check` PASS

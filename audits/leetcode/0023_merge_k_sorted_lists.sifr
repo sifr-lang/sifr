@@ -1,17 +1,78 @@
-# LeetCode 23: Merge K Sorted Lists (residual Sifr-safe canonical form)
+# LeetCode 23: Merge K Sorted Lists
+from sifr.heapq import heappush, heappop
 
-def mergeKLists(lists: list[list[int]]) -> list[int]:
-    merged: list[int] = []
-    for row in lists:
-        for value in row:
-            merged.append(value)
-    merged.sort()
-    return merged
+class ListNode:
+    val: int
+    next: ListNode | None
+
+    def __init__(self, val: int = 0, next: ListNode | None = None):
+        self.val = val
+        self.next = next
+
+
+def nodeVal(node: ListNode | None) -> int:
+    if node is None:
+        return 0
+    return node.val
+
+
+def nodeNext(node: ListNode | None) -> ListNode | None:
+    if node is None:
+        return None
+    return node.next
+
+
+def hasNode(node: ListNode | None) -> bool:
+    return node is not None
+
+
+def appendTail(own mut node: ListNode | None, val: int) -> ListNode | None:
+    if node is None:
+        return ListNode(val, None)
+    node.next = appendTail(node.next, val)
+    return node
+
+
+def buildListNode(values: list[int]) -> ListNode | None:
+    result: ListNode | None = None
+    for value in values:
+        result = appendTail(result, value)
+    return result
+
+
+def listNodeToString(own node: ListNode | None) -> str:
+    if node is None:
+        return "None"
+    parts: list[str] = []
+    cur: ListNode | None = node
+    while hasNode(cur):
+        parts.append(str(nodeVal(cur)))
+        cur = nodeNext(cur)
+    return "->".join(parts)
+
+
+def mergeKLists(lists: list[ListNode | None]) -> ListNode | None:
+    heap: list[int] = []
+    for node in lists:
+        cur: ListNode | None = node
+        while hasNode(cur):
+            heappush(heap, nodeVal(cur))
+            cur = nodeNext(cur)
+
+    result: ListNode | None = None
+    while len(heap) > 0:
+        value: int | None = heappop(heap)
+        if value is not None:
+            result = appendTail(result, value)
+    return result
 
 
 def main():
-    lists: list[list[int]] = [[1, 4, 5], [1, 3, 4], [2, 6]]
-    expected0: list[int] = [1, 1, 2, 3, 4, 4, 5, 6]
-    expected1: list[int] = []
-    assert mergeKLists(lists) == expected0
-    assert mergeKLists([]) == expected1
+    lists: list[ListNode | None] = [
+        buildListNode([1, 4, 5]),
+        buildListNode([1, 3, 4]),
+        buildListNode([2, 6]),
+    ]
+    assert listNodeToString(mergeKLists(lists)) == "1->1->2->3->4->4->5->6"
+    empty: list[ListNode | None] = []
+    assert mergeKLists(empty) == None
