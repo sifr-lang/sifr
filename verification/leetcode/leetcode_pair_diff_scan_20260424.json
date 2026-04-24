@@ -389,18 +389,6 @@
       "similarity_ratio": 0.35
     },
     {
-      "stem": "0147_insertion_sort_list",
-      "py_relpath": "audits/leetcode/0147_insertion_sort_list.py",
-      "sifr_relpath": "audits/leetcode/0147_insertion_sort_list.sifr",
-      "py_lines": 61,
-      "sifr_lines": 91,
-      "changed_py_lines": 36,
-      "changed_sifr_lines": 66,
-      "changed_total_lines": 102,
-      "length_delta": 30,
-      "similarity_ratio": 0.32894736842105265
-    },
-    {
       "stem": "0023_merge_k_sorted_lists",
       "py_relpath": "audits/leetcode/0023_merge_k_sorted_lists.py",
       "sifr_relpath": "audits/leetcode/0023_merge_k_sorted_lists.sifr",
@@ -651,6 +639,18 @@
       "changed_total_lines": 80,
       "length_delta": 24,
       "similarity_ratio": 0.5061728395061729
+    },
+    {
+      "stem": "0147_insertion_sort_list",
+      "py_relpath": "audits/leetcode/0147_insertion_sort_list.py",
+      "sifr_relpath": "audits/leetcode/0147_insertion_sort_list.sifr",
+      "py_lines": 42,
+      "sifr_lines": 63,
+      "changed_py_lines": 29,
+      "changed_sifr_lines": 50,
+      "changed_total_lines": 79,
+      "length_delta": 21,
+      "similarity_ratio": 0.24761904761904763
     },
     {
       "stem": "1345_jump_game_iv",
