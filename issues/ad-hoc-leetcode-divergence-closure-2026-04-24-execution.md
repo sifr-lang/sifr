@@ -629,6 +629,7 @@ Local gate:
 
 Status: validated locally
 Branch: `ws4-0706-hashmap-storage-design`
+PR: `https://github.com/yaseralnajjar/sifr/pull/1621`
 
 ### Scope
 
