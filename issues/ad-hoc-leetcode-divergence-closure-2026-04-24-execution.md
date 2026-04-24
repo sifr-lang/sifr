@@ -131,7 +131,7 @@ Local gate:
 
 Status: validated locally
 Branch: `ws2-s1-heap-stdlib`
-PR: pending
+PR: `https://github.com/yaseralnajjar/sifr/pull/1611`
 
 ### Scope
 
