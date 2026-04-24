@@ -845,18 +845,6 @@
       "similarity_ratio": 0.4857142857142857
     },
     {
-      "stem": "0206_reverse_linked_list",
-      "py_relpath": "audits/leetcode/0206_reverse_linked_list.py",
-      "sifr_relpath": "audits/leetcode/0206_reverse_linked_list.sifr",
-      "py_lines": 57,
-      "sifr_lines": 20,
-      "changed_py_lines": 54,
-      "changed_sifr_lines": 17,
-      "changed_total_lines": 71,
-      "length_delta": 37,
-      "similarity_ratio": 0.07792207792207792
-    },
-    {
       "stem": "0535_encode_and_decode_tinyurl",
       "py_relpath": "audits/leetcode/0535_encode_and_decode_tinyurl.py",
       "sifr_relpath": "audits/leetcode/0535_encode_and_decode_tinyurl.sifr",
@@ -1275,6 +1263,18 @@
       "changed_total_lines": 62,
       "length_delta": 16,
       "similarity_ratio": 0.27906976744186046
+    },
+    {
+      "stem": "0206_reverse_linked_list",
+      "py_relpath": "audits/leetcode/0206_reverse_linked_list.py",
+      "sifr_relpath": "audits/leetcode/0206_reverse_linked_list.sifr",
+      "py_lines": 38,
+      "sifr_lines": 54,
+      "changed_py_lines": 23,
+      "changed_sifr_lines": 39,
+      "changed_total_lines": 62,
+      "length_delta": 16,
+      "similarity_ratio": 0.32608695652173914
     },
     {
       "stem": "0094_binary_tree_inorder_traversal",

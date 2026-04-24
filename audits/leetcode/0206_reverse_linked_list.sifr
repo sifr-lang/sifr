@@ -1,20 +1,54 @@
-# LeetCode 206: Reverse Linked List (residual Sifr-safe canonical form)
+# LeetCode 206: Reverse Linked List
 
-def reverseList(values: list[int]) -> list[int]:
-    out = values.copy()
-    left, right = 0, len(out) - 1
-    while left < right:
-        temp = out[left]
-        out[left] = out[right]
-        out[right] = temp
-        left += 1
-        right -= 1
-    return out
+class ListNode:
+    val: int
+    next: ListNode | None
+
+    def __init__(self, val: int = 0, next: ListNode | None = None):
+        self.val = val
+        self.next = next
+
+
+def nodeVal(node: ListNode | None) -> int:
+    if node is None:
+        return 0
+    return node.val
+
+
+def nodeNext(node: ListNode | None) -> ListNode | None:
+    if node is None:
+        return None
+    return node.next
+
+
+def hasNode(node: ListNode | None) -> bool:
+    return node is not None
+
+
+def listNodeToString(own node: ListNode | None) -> str:
+    if node is None:
+        return "None"
+    parts: list[str] = []
+    cur: ListNode | None = node
+    while hasNode(cur):
+        parts.append(str(nodeVal(cur)))
+        cur = nodeNext(cur)
+    return "->".join(parts)
+
+
+def reverseInto(own mut cur: ListNode | None, own prev: ListNode | None) -> ListNode | None:
+    if cur is None:
+        return prev
+    next_node: ListNode | None = cur.next
+    cur.next = prev
+    return reverseInto(next_node, cur)
+
+
+def reverseList(own head: ListNode | None) -> ListNode | None:
+    return reverseInto(head, None)
+
 
 def main():
-    expected0: list[int] = [5, 4, 3, 2, 1]
-    expected1: list[int] = [2, 1]
-    expected2: list[int] = []
-    assert reverseList([1, 2, 3, 4, 5]) == expected0
-    assert reverseList([1, 2]) == expected1
-    assert reverseList([]) == expected2
+    assert listNodeToString(reverseList(ListNode(1, ListNode(2, ListNode(3, ListNode(4, ListNode(5, None))))))) == listNodeToString(ListNode(5, ListNode(4, ListNode(3, ListNode(2, ListNode(1, None))))))
+    assert listNodeToString(reverseList(ListNode(1, ListNode(2, None)))) == listNodeToString(ListNode(2, ListNode(1, None)))
+    assert reverseList(None) == None
