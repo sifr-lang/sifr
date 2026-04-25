@@ -1,14 +1,5 @@
 # LeetCode 112: Path Sum
-
-class TreeNode:
-    val: int
-    left: TreeNode | None
-    right: TreeNode | None
-
-    def __init__(self, val: int = 0, left: TreeNode | None = None, right: TreeNode | None = None):
-        self.val = val
-        self.left = left
-        self.right = right
+from helpers.tree_node import TreeNode, treeToString
 
 def hasPathSum(root: TreeNode | None, sum: int) -> bool:
     if root is None:

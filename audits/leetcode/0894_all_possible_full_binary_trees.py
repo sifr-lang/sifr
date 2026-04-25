@@ -13,32 +13,10 @@ class TreeNode:
         self.left = left
         self.right = right
 
-
 def tree_to_string(node: TreeNode | None) -> str:
     if node is None:
         return "None"
     return f"{node.val}({tree_to_string(node.left)},{tree_to_string(node.right)})"
-
-
-class Node:
-    def __init__(
-        self,
-        val: int = 0,
-        next: 'Node | None' = None,
-        random: 'Node | None' = None,
-        left: 'Node | None' = None,
-        right: 'Node | None' = None,
-        neighbors: list['Node'] | None = None,
-        key: int = -1,
-    ):
-        self.val = val
-        self.next = next
-        self.random = random
-        self.left = left
-        self.right = right
-        self.neighbors = [] if neighbors is None else neighbors
-        self.key = key
-
 def allPossibleFBT(n: int) -> list[TreeNode | None]:
     dp = { 0 : [], 1 : [ TreeNode() ] }
 
@@ -59,10 +37,8 @@ def allPossibleFBT(n: int) -> list[TreeNode | None]:
     
     return backtrack(n)
 
-
 def sorted_tree_strings(nodes: list[TreeNode | None]) -> list[str]:
     return sorted(tree_to_string(node) for node in nodes)
-
 
 def main():
     assert sorted_tree_strings(allPossibleFBT(7)) == [

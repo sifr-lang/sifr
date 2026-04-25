@@ -1,13 +1,5 @@
 # LeetCode 707: Design Linked List
-
-class ListNode:
-    val: int
-    next: ListNode | None
-
-    def __init__(self, val: int = 0, next: ListNode | None = None):
-        self.val = val
-        self.next = next
-
+from helpers.list_node import ListNode, nodeVal, nodeNext, hasNode, listNodeToString
 
 def getAt(node: ListNode | None, index: int) -> int:
     if node is None:
@@ -16,13 +8,11 @@ def getAt(node: ListNode | None, index: int) -> int:
         return node.val
     return getAt(node.next, index - 1)
 
-
 def appendTail(own mut node: ListNode | None, val: int) -> ListNode | None:
     if node is None:
         return ListNode(val, None)
     node.next = appendTail(node.next, val)
     return node
-
 
 def insertAt(own mut node: ListNode | None, index: int, val: int) -> ListNode | None:
     if index <= 0:
@@ -32,7 +22,6 @@ def insertAt(own mut node: ListNode | None, index: int, val: int) -> ListNode | 
     node.next = insertAt(node.next, index - 1, val)
     return node
 
-
 def deleteAt(own mut node: ListNode | None, index: int) -> ListNode | None:
     if node is None:
         return None
@@ -40,7 +29,6 @@ def deleteAt(own mut node: ListNode | None, index: int) -> ListNode | None:
         return node.next
     node.next = deleteAt(node.next, index - 1)
     return node
-
 
 class MyLinkedList:
     head: ListNode | None
@@ -81,7 +69,6 @@ class MyLinkedList:
         head: ListNode | None = self.head
         self.head = deleteAt(head, index)
         self.size = self.size - 1
-
 
 def main():
     obj = MyLinkedList()

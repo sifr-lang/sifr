@@ -149,4 +149,32 @@ impl RustEmitter {
             }
         }
     }
+
+    pub(crate) fn register_external_class_fields(
+        &mut self,
+        local_class_name: &str,
+        source_class_name: &str,
+        fields: &[(String, sifr_type_system::Type)],
+    ) {
+        self.class_field_order.insert(
+            local_class_name.to_string(),
+            fields.iter().map(|(name, _)| name.clone()).collect(),
+        );
+
+        // Imported recursive metadata currently models self-recursive classes.
+        // Mutually recursive imported classes should graduate to the full SCC
+        // analysis used by `detect_recursive_fields`.
+        let same_class_names =
+            HashSet::from([local_class_name.to_string(), source_class_name.to_string()]);
+        for (field_name, field_ty) in fields {
+            if type_references_any_class(field_ty, &same_class_names) {
+                let key = (local_class_name.to_string(), field_name.clone());
+                self.recursive_fields.insert(key.clone());
+                self.recursive_field_rust_types.insert(
+                    key,
+                    self.recursive_field_storage_rust_type(field_ty, &same_class_names),
+                );
+            }
+        }
+    }
 }

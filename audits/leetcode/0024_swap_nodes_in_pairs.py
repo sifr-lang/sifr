@@ -1,21 +1,7 @@
 
 # LeetCode 24: Swap Nodes In Pairs
 # Python version
-
-class ListNode:
-    def __init__(self, val: int = 0, next: 'ListNode | None' = None):
-        self.val = val
-        self.next = next
-
-
-def list_node_to_string(node: ListNode | None) -> str:
-    parts = []
-    cur = node
-    while cur is not None:
-        parts.append(str(cur.val))
-        cur = cur.next
-    return "->".join(parts) if parts else "None"
-
+from helpers.list_node import ListNode, list_node_to_string
 
 def swapPairs(head: ListNode | None) -> ListNode | None:
     dummy = ListNode(0, head)
@@ -36,8 +22,6 @@ def swapPairs(head: ListNode | None) -> ListNode | None:
         curr = nxtPair
 
     return dummy.next
-
-
 
 def main():
     assert list_node_to_string(swapPairs(ListNode(1, ListNode(2, ListNode(3, ListNode(4, None)))))) == list_node_to_string(ListNode(2, ListNode(1, ListNode(4, ListNode(3, None)))))

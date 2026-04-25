@@ -4,7 +4,8 @@ Status: accepted for LeetCode fixture scope
 
 ## Decision
 
-Keep the explicit trie helper in the LeetCode audit fixtures instead of adding a public `sifr.trie` stdlib module.
+Keep the explicit trie helper in `audits/leetcode/helpers/trie.sifr` instead of adding a public
+`sifr.trie` stdlib module.
 
 The helper is backed by owned node indices:
 
@@ -27,15 +28,25 @@ The helper is backed by owned node indices:
 
 ## Rationale
 
-The trie is needed to make the LeetCode trie fixtures canonical, but it is not a general Sifr stdlib commitment. Shipping it in `lib/sifr` would prematurely expand the public stdlib surface for a corpus-specific helper.
+The trie is needed to make the LeetCode trie fixtures canonical, but it is not a general Sifr
+stdlib commitment. Shipping it in `lib/sifr` would prematurely expand the public stdlib surface
+for a corpus-specific helper and would create a false Python parity claim.
 
-Sibling helper imports are currently not available for non-`main.sifr` LeetCode root fixtures; the CLI checks those files in single-file mode. Until that changes, trie-dependent LeetCode fixtures keep the helper inline, following the fixture-helper convention for self-contained boilerplate.
+Workspace source-root resolution now supports helper imports from non-`main.sifr` LeetCode root
+fixtures. Trie-dependent Sifr fixtures import the shared helper with:
 
-The implementation keeps mutation explicit: `insert` is the only operation that creates nodes. Reads return `Option` values for missing edges or invalid node indices, so wildcard DFS and board-search rewrites remain proof-gated without implicit unwraps or user-triggerable panics.
+```sifr
+from helpers.trie import Trie
+```
+
+The implementation keeps mutation explicit: `insert` is the only operation that creates nodes.
+Reads return optional values for missing edges or invalid node indices, so wildcard DFS and
+board-search rewrites remain proof-gated without implicit unwraps or user-triggerable panics.
 
 ## Fixture Implications
 
-- `0208_implement_trie_prefix_tree` defines the helper inline and preserves LeetCode-compatible method names.
-- `0211_design_add_and_search_words_data_structure` defines the helper inline and uses `child`, `children`, and `is_terminal` for wildcard DFS without per-word linear scans.
-- `0212_word_search_ii` defines the helper inline and uses node indices to prune board DFS by prefix.
+- `0208_implement_trie_prefix_tree` imports the helper and preserves LeetCode-compatible method names.
+- `0211_design_add_and_search_words_data_structure` imports the helper and uses `child`,
+  `children`, and `is_terminal` for wildcard DFS without per-word linear scans.
+- `0212_word_search_ii` imports the helper and uses node indices to prune board DFS by prefix.
 - `1397_find_all_good_strings` remains better served by KMP/lps state than by a trie for this phase.

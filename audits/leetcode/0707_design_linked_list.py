@@ -1,12 +1,8 @@
 
 # LeetCode 707: Design Linked List
 # Python version
+from helpers.list_node import ListNode, list_node_to_string
 
-class ListNode:
-    def __init__(self, val):
-        self.val = val
-        self.prev = None
-        self.next = None
 class MyLinkedList:
     def __init__(self):
         self.left = ListNode(0)

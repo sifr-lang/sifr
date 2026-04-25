@@ -1,12 +1,7 @@
 
 # LeetCode 23: Merge K Sorted Lists
 # Python version
-
-class ListNode:
-    def __init__(self, val: int = 0, next: 'ListNode | None' = None):
-        self.val = val
-        self.next = next
-
+from helpers.list_node import ListNode, list_node_to_string
 
 def build_list_node(values: list[int]) -> ListNode | None:
     dummy = ListNode()
@@ -15,17 +10,6 @@ def build_list_node(values: list[int]) -> ListNode | None:
         tail.next = ListNode(value)
         tail = tail.next
     return dummy.next
-
-
-def list_node_to_string(node: ListNode | None) -> str:
-    parts = []
-    cur = node
-    while cur is not None:
-        parts.append(str(cur.val))
-        cur = cur.next
-    return "->".join(parts) if parts else "None"
-
-
 def mergeKLists(lists: list[ListNode | None]) -> ListNode | None:
     if not lists or len(lists) == 0:
         return None
@@ -38,7 +22,6 @@ def mergeKLists(lists: list[ListNode | None]) -> ListNode | None:
             mergedLists.append(mergeList(l1, l2))
         lists = mergedLists
     return lists[0]
-
 
 def mergeList(l1, l2):
     dummy = ListNode()
@@ -57,8 +40,6 @@ def mergeList(l1, l2):
     if l2:
         tail.next = l2
     return dummy.next
-
-
 
 def main():
     lists = [

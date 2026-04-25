@@ -1,56 +1,18 @@
 # LeetCode 23: Merge K Sorted Lists
+from helpers.list_node import ListNode, nodeVal, nodeNext, hasNode, listNodeToString
+
 from sifr.heapq import heappush, heappop
-
-class ListNode:
-    val: int
-    next: ListNode | None
-
-    def __init__(self, val: int = 0, next: ListNode | None = None):
-        self.val = val
-        self.next = next
-
-
-def nodeVal(node: ListNode | None) -> int:
-    if node is None:
-        return 0
-    return node.val
-
-
-def nodeNext(node: ListNode | None) -> ListNode | None:
-    if node is None:
-        return None
-    return node.next
-
-
-def hasNode(node: ListNode | None) -> bool:
-    return node is not None
-
-
 def appendTail(own mut node: ListNode | None, val: int) -> ListNode | None:
     if node is None:
         return ListNode(val, None)
     node.next = appendTail(node.next, val)
     return node
 
-
 def buildListNode(values: list[int]) -> ListNode | None:
     result: ListNode | None = None
     for value in values:
         result = appendTail(result, value)
     return result
-
-
-def listNodeToString(own node: ListNode | None) -> str:
-    if node is None:
-        return "None"
-    parts: list[str] = []
-    cur: ListNode | None = node
-    while hasNode(cur):
-        parts.append(str(nodeVal(cur)))
-        cur = nodeNext(cur)
-    return "->".join(parts)
-
-
 def mergeKLists(lists: list[ListNode | None]) -> ListNode | None:
     heap: list[int] = []
     for node in lists:
@@ -65,7 +27,6 @@ def mergeKLists(lists: list[ListNode | None]) -> ListNode | None:
         if value is not None:
             result = appendTail(result, value)
     return result
-
 
 def main():
     lists: list[ListNode | None] = [

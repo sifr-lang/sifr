@@ -16,18 +16,3 @@ fn stdlib_heapq_exports_allowlisted_private_max_heap_helpers() {
         );
     }
 }
-
-#[test]
-fn stdlib_dsu_exports_union_find_class() {
-    let compiled = compile_stdlib().expect("stdlib should compile");
-    let dsu_classes = compiled
-        .defs
-        .classes
-        .get("sifr.dsu")
-        .expect("sifr.dsu exports should exist");
-
-    assert!(
-        dsu_classes.contains_key("UnionFind"),
-        "expected sifr.dsu export 'UnionFind' to be visible for stdlib imports"
-    );
-}

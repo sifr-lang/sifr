@@ -178,6 +178,7 @@ fn compile_stdlib_uncached_impl() -> Result<StdlibCompiled, Vec<CompileError>> {
                 transitive_deps: stdlib_code.transitive_deps.clone(),
                 generator_functions: stdlib_code.generator_functions.clone(),
                 generic_classes: stdlib_code.generic_classes.clone(),
+                module_class_fields: stdlib_code.module_class_fields.clone(),
             };
             let codegen_result = run_codegen_with_boundary(
                 format!(
@@ -266,6 +267,15 @@ fn compile_stdlib_uncached_impl() -> Result<StdlibCompiled, Vec<CompileError>> {
                     stdlib_code.generic_classes.insert(class.name.clone());
                 }
             }
+            let class_fields = result
+                .module
+                .classes
+                .iter()
+                .map(|class| (class.name.clone(), class.fields.clone()))
+                .collect();
+            stdlib_code
+                .module_class_fields
+                .insert((*module_name).to_string(), class_fields);
         }
 
         stdlib_code

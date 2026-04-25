@@ -1,45 +1,9 @@
+from helpers.tree_node import TreeNode, tree_to_string
+
 from collections import deque
 
 # LeetCode 1609: Even Odd Tree
 # Python version
-
-class TreeNode:
-    def __init__(
-        self,
-        val: int = 0,
-        left: 'TreeNode | None' = None,
-        right: 'TreeNode | None' = None,
-    ):
-        self.val = val
-        self.left = left
-        self.right = right
-
-
-def tree_to_string(node: TreeNode | None) -> str:
-    if node is None:
-        return "None"
-    return f"{node.val}({tree_to_string(node.left)},{tree_to_string(node.right)})"
-
-
-class Node:
-    def __init__(
-        self,
-        val: int = 0,
-        next: 'Node | None' = None,
-        random: 'Node | None' = None,
-        left: 'Node | None' = None,
-        right: 'Node | None' = None,
-        neighbors: list['Node'] | None = None,
-        key: int = -1,
-    ):
-        self.val = val
-        self.next = next
-        self.random = random
-        self.left = left
-        self.right = right
-        self.neighbors = [] if neighbors is None else neighbors
-        self.key = key
-
 def isEvenOddTree(root: TreeNode | None) -> bool:
     even = True
     q = deque([root])
@@ -61,8 +25,6 @@ def isEvenOddTree(root: TreeNode | None) -> bool:
             prev = node.val
         even = not even
     return True
-
-
 
 def main():
     assert isEvenOddTree(TreeNode(1, TreeNode(10, TreeNode(3, TreeNode(12, None, None), TreeNode(8, None, None)), None), TreeNode(4, TreeNode(7, TreeNode(6, None, None), None), TreeNode(9, None, TreeNode(2, None, None))))) == True

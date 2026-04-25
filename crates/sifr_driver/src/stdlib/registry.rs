@@ -64,7 +64,6 @@ pub(super) const STDLIB_FILES: &[(&str, &str)] = &[
         "sifr.heapq",
         include_str!("../../../../lib/sifr/heapq.sifr"),
     ),
-    ("sifr.dsu", include_str!("../../../../lib/sifr/dsu.sifr")),
     (
         "sifr.itertools",
         include_str!("../../../../lib/sifr/itertools.sifr"),
