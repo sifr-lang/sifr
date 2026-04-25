@@ -4,6 +4,62 @@ use sifr_python_parser::parse_module;
 use std::collections::{BTreeMap, BTreeSet, HashMap};
 use std::path::{Path, PathBuf};
 
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub(crate) enum ModuleOrigin {
+    EntryParent,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub(crate) struct ResolvedModule {
+    pub(crate) module_name: String,
+    pub(crate) path: PathBuf,
+    pub(crate) origin: ModuleOrigin,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub(crate) struct ResolutionError {
+    pub(crate) module_name: String,
+    pub(crate) tried_paths: Vec<PathBuf>,
+    pub(crate) matches: Vec<PathBuf>,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub(crate) struct ModuleResolver {
+    entry_parent: PathBuf,
+}
+
+impl ModuleResolver {
+    pub(crate) fn entry_parent(entry_parent: impl Into<PathBuf>) -> Self {
+        Self {
+            entry_parent: entry_parent.into(),
+        }
+    }
+
+    pub(crate) fn module_source_path(&self, module_name: &str) -> PathBuf {
+        self.entry_parent.join(format!("{module_name}.sifr"))
+    }
+
+    pub(crate) fn resolve_if_exists(&self, module_name: &str) -> Option<ResolvedModule> {
+        let path = self.module_source_path(module_name);
+        path.is_file().then(|| ResolvedModule {
+            module_name: module_name.to_string(),
+            path,
+            origin: ModuleOrigin::EntryParent,
+        })
+    }
+
+    pub(crate) fn resolve(&self, module_name: &str) -> Result<ResolvedModule, ResolutionError> {
+        self.resolve_if_exists(module_name).ok_or_else(|| {
+            let path = self.module_source_path(module_name);
+            ResolutionError {
+                module_name: module_name.to_string(),
+                tried_paths: vec![path],
+                matches: Vec::new(),
+            }
+        })
+    }
+}
+
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub(crate) enum DiscoveryDiagnosticStyle {
     ModuleName,
@@ -37,10 +93,6 @@ pub(crate) fn discover_test_root_modules(test_dir: &Path) -> BTreeMap<String, Pa
         }
     }
     test_files_by_module
-}
-
-fn module_source_path(project_dir: &Path, module_name: &str) -> PathBuf {
-    project_dir.join(format!("{module_name}.sifr"))
 }
 
 fn discovery_label(
@@ -80,7 +132,7 @@ fn collect_import_closure_module_dependencies(stmts: &[Stmt]) -> BTreeSet<String
 }
 
 pub(crate) fn parse_import_closure_modules(
-    project_dir: &Path,
+    resolver: &ModuleResolver,
     root_modules: &BTreeSet<String>,
     diagnostic_style: DiscoveryDiagnosticStyle,
 ) -> Result<HashMap<String, Vec<Stmt>>, Vec<CompileError>> {
@@ -93,7 +145,14 @@ pub(crate) fn parse_import_closure_modules(
             continue;
         }
 
-        let path = module_source_path(project_dir, &module_name);
+        let path = match resolver.resolve(&module_name) {
+            Ok(resolved) => resolved.path,
+            Err(error) => error
+                .tried_paths
+                .into_iter()
+                .next()
+                .unwrap_or_else(|| resolver.module_source_path(&module_name)),
+        };
         let source = std::fs::read_to_string(&path).map_err(|e| {
             vec![CompileError {
                 message: format!("failed to read '{}': {}", path.display(), e),
@@ -128,7 +187,7 @@ pub(crate) fn parse_import_closure_modules(
             if parsed_names.contains(dependency.as_str()) {
                 continue;
             }
-            if module_source_path(project_dir, &dependency).is_file() {
+            if resolver.resolve_if_exists(&dependency).is_some() {
                 pending.insert(dependency);
             }
         }

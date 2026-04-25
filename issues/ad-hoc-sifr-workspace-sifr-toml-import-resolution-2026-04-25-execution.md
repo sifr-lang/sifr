@@ -9,7 +9,7 @@ Source issue: `issues/sifr-workspace-sifr-toml-import-resolution-2026-04-25.md`
 
 - [x] WS0 workspace discovery and config validation
 - [ ] WS1 workspace-aware compilation mode
-- [ ] WS2 module resolver refactor with no behavior change
+- [x] WS2 module resolver refactor with no behavior change
 - [ ] WS3 workspace source resolution and diagnostics
 - [ ] WS4 build/run/check/emit wiring and cache correctness
 - [ ] WS5 verification-suite fixtures, design note, and LeetCode pilot
@@ -17,10 +17,10 @@ Source issue: `issues/sifr-workspace-sifr-toml-import-resolution-2026-04-25.md`
 
 ## WS0 Workspace Discovery And Config Validation
 
-Status: implemented_pending_pr
+Status: merged
 Branch: ad-hoc/sifr-workspace-ws0
 PR: https://github.com/yaseralnajjar/sifr/pull/1639
-Merged: tbd
+Merged: 2026-04-25
 
 ### Planned Scope
 
@@ -39,8 +39,8 @@ Merged: tbd
 
 ## WS1 Workspace-Aware Compilation Mode
 
-Status: not_started
-Branch: tbd
+Status: implemented_pending_pr
+Branch: ad-hoc/sifr-workspace-ws2
 PR: tbd
 Merged: tbd
 
@@ -73,10 +73,10 @@ Merged: tbd
 
 ### Validation Evidence
 
-- [ ] `cargo fmt --check`
-- [ ] `cargo clippy --workspace -- -D warnings`
-- [ ] `cargo test -p sifr_driver discovery -- --nocapture` or equivalent targeted selector
-- [ ] Test-runner targeted selector proving no discovery-scope change
+- [x] `cargo fmt --check`
+- [x] `cargo clippy --workspace -- -D warnings`
+- [x] `cargo test -p sifr_driver discovery -- --nocapture`
+- [x] `cargo test -p sifr_driver test_runner -- --nocapture`
 
 ## WS3 Workspace Source Resolution And Diagnostics
 

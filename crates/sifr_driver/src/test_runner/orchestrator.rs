@@ -5,7 +5,7 @@ use crate::diagnostics::{
 use crate::frontend::{lower_frontend_module, FrontendDiagnosticStyle};
 use crate::project::{
     collect_project_hir_modules, discover_test_root_modules, parse_import_closure_modules,
-    DiscoveryDiagnosticStyle,
+    DiscoveryDiagnosticStyle, ModuleResolver,
 };
 use crate::stdlib::compile_stdlib;
 use sifr_codegen::{generate_rust_multi_with_metadata, generate_rust_test};
@@ -45,8 +45,9 @@ pub(crate) fn build_test_runner_project(
     test_files_by_module: &BTreeMap<String, PathBuf>,
 ) -> Result<GeneratedTestRunnerProject, Vec<CompileError>> {
     let test_roots: BTreeSet<String> = test_files_by_module.keys().cloned().collect();
+    let resolver = ModuleResolver::entry_parent(test_dir);
     let parsed_modules =
-        parse_import_closure_modules(test_dir, &test_roots, DiscoveryDiagnosticStyle::FilePath)?;
+        parse_import_closure_modules(&resolver, &test_roots, DiscoveryDiagnosticStyle::FilePath)?;
     let mut support_modules: HashMap<String, Vec<Stmt>> = HashMap::new();
     let mut test_modules: HashMap<String, Vec<Stmt>> = HashMap::new();
     for (module_name, suite) in parsed_modules {
