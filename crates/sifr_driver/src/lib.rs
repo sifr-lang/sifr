@@ -41,7 +41,7 @@ pub(crate) use frontend::FrontendDiagnosticStyle;
 pub(crate) use project::{
     assemble_project_main_rs, collect_project_hir_modules, compile_frontend_modules,
     compute_module_compile_order, discover_test_root_modules, parse_import_closure_modules,
-    DiscoveryDiagnosticStyle,
+    DiscoveryDiagnosticStyle, ModuleResolver,
 };
 #[cfg(test)]
 pub(crate) use stdlib::compile_stdlib;

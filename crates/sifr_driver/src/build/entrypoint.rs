@@ -9,7 +9,7 @@ use crate::diagnostics::{run_codegen_with_boundary, CompileError, CompilePhase};
 use crate::frontend::{parse_source, FrontendCompiled, FrontendDiagnosticStyle};
 use crate::project::{
     collect_project_hir_modules, compile_frontend_modules, emit_project_frontend_diagnostics,
-    parse_import_closure_modules, DiscoveryDiagnosticStyle, ProjectLowering,
+    parse_import_closure_modules, DiscoveryDiagnosticStyle, ModuleResolver, ProjectLowering,
 };
 use crate::stdlib::{compile_stdlib, StdlibCompiled};
 use sifr_codegen::generate_rust_with_stdlib;
@@ -156,8 +156,9 @@ impl RootedEntrypointPlan {
                     }]);
                 };
                 let root_modules = BTreeSet::from([main_module_name]);
+                let resolver = ModuleResolver::entry_parent(project_dir);
                 let parsed_modules = parse_import_closure_modules(
-                    project_dir,
+                    &resolver,
                     &root_modules,
                     DiscoveryDiagnosticStyle::ModuleName,
                 )?;

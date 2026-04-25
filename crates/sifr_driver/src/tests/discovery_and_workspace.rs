@@ -1,6 +1,6 @@
 use crate::{
     create_invocation_workspace, discover_test_root_modules, parse_import_closure_modules,
-    DiscoveryDiagnosticStyle,
+    DiscoveryDiagnosticStyle, ModuleResolver,
 };
 use std::collections::BTreeSet;
 
@@ -80,11 +80,15 @@ fn test_project_and_test_discovery_share_import_closure_membership() {
 
     let project_roots = BTreeSet::from(["main".to_string()]);
     let test_roots = BTreeSet::from(["test_parity".to_string()]);
-    let project_modules =
-        parse_import_closure_modules(&dir, &project_roots, DiscoveryDiagnosticStyle::ModuleName)
-            .expect("project closure discovery should succeed");
+    let resolver = ModuleResolver::entry_parent(&dir);
+    let project_modules = parse_import_closure_modules(
+        &resolver,
+        &project_roots,
+        DiscoveryDiagnosticStyle::ModuleName,
+    )
+    .expect("project closure discovery should succeed");
     let test_modules =
-        parse_import_closure_modules(&dir, &test_roots, DiscoveryDiagnosticStyle::ModuleName)
+        parse_import_closure_modules(&resolver, &test_roots, DiscoveryDiagnosticStyle::ModuleName)
             .expect("test closure discovery should succeed");
 
     let project_support: BTreeSet<String> = project_modules
@@ -139,13 +143,17 @@ fn test_project_and_test_discovery_parity_reports_reachable_parse_errors() {
 
     let project_roots = BTreeSet::from(["main".to_string()]);
     let test_roots = BTreeSet::from(["test_parity".to_string()]);
+    let resolver = ModuleResolver::entry_parent(&dir);
 
-    let project_errors =
-        parse_import_closure_modules(&dir, &project_roots, DiscoveryDiagnosticStyle::ModuleName)
-            .err()
-            .expect("project closure should fail on reachable parse error");
+    let project_errors = parse_import_closure_modules(
+        &resolver,
+        &project_roots,
+        DiscoveryDiagnosticStyle::ModuleName,
+    )
+    .err()
+    .expect("project closure should fail on reachable parse error");
     let test_errors =
-        parse_import_closure_modules(&dir, &test_roots, DiscoveryDiagnosticStyle::ModuleName)
+        parse_import_closure_modules(&resolver, &test_roots, DiscoveryDiagnosticStyle::ModuleName)
             .err()
             .expect("test closure should fail on reachable parse error");
 
