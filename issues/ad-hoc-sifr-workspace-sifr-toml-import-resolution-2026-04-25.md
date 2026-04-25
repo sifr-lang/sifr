@@ -1,10 +1,10 @@
 # Ad-hoc Phase: Sifr Workspace Resolution Via `sifr.toml` (2026-04-25)
 
-Status: ready_to_implement
+Status: closed
 Owner: ad_hoc_sifr_workspace_sifr_toml_import_resolution
 Source issue: `issues/sifr-workspace-sifr-toml-import-resolution-2026-04-25.md`
 Execution checklist: `issues/ad-hoc-sifr-workspace-sifr-toml-import-resolution-2026-04-25-execution.md`
-Review status: pass-4 READY (`reviews/sifr-workspace-sifr-toml-import-resolution-2026-04-25-review-pass4.md`)
+Review status: pass-4 READY (`reviews/sifr-workspace-sifr-toml-import-resolution-2026-04-25-review-pass4.md`); WS6 local gate passed on 2026-04-25.
 
 ## Purpose
 
@@ -164,7 +164,7 @@ Regression requirements:
 
 ### WS0: Workspace Discovery And Config Validation
 
-Status: ready
+Status: completed
 
 Scope:
 
@@ -196,7 +196,7 @@ Acceptance criteria:
 
 ### WS1: Workspace-Aware Compilation Mode
 
-Status: ready
+Status: completed
 
 Scope:
 
@@ -223,7 +223,7 @@ Acceptance criteria:
 
 ### WS2: Module Resolver Refactor With No Behavior Change
 
-Status: ready
+Status: completed
 
 Scope:
 
@@ -251,7 +251,7 @@ Acceptance criteria:
 
 ### WS3: Workspace Source Resolution And Diagnostics
 
-Status: ready
+Status: completed
 
 Scope:
 
@@ -293,7 +293,7 @@ Acceptance criteria:
 
 ### WS4: Build/Run/Check/Emit Wiring And Cache Correctness
 
-Status: ready
+Status: completed
 
 Scope:
 
@@ -319,7 +319,7 @@ Acceptance criteria:
 
 ### WS5: Verification-Suite Fixtures, Design Note, And LeetCode Pilot
 
-Status: ready
+Status: completed
 
 Scope:
 
@@ -358,7 +358,7 @@ Acceptance criteria:
 
 ### WS6: Final Gate, Review, And Closure
 
-Status: ready
+Status: completed
 
 Scope:
 
@@ -429,21 +429,21 @@ Exit gate:
 
 ## Implementation Checklist
 
-- [ ] Add workspace config parser/discovery module.
-- [ ] Add workspace discovery unit tests.
-- [ ] Refactor module discovery to `ModuleResolver` with no behavior change.
-- [ ] Update `test_runner/orchestrator.rs` to use entry-parent-only `ModuleResolver` with no scope change.
-- [ ] Activate workspace-driven project mode in the CLI.
-- [ ] Make compilation-mode resolution error-carrying so malformed workspace config cannot silently fall back.
-- [ ] Add workspace source roots to the resolver.
-- [ ] Add ambiguity and unresolved-import diagnostics.
-- [ ] Add dotted module Rust layout helper and namespace-conflict diagnostic.
-- [ ] Wire workspace context through build/check/run/emit.
-- [ ] Materialize dotted modules as nested Rust module trees.
-- [ ] Add cache invalidation regression for workspace helper changes.
-- [ ] Add verification-suite pass/fail workspace fixtures.
-- [ ] Add `internal_docs/sifr_workspace_design.md`.
-- [ ] Update `internal_docs/architecture.md`.
-- [ ] Add LeetCode helper pilot and regenerate corpus artifacts.
-- [ ] Run required local validation.
-- [ ] Complete external review and close this phase.
+- [x] Add workspace config parser/discovery module.
+- [x] Add workspace discovery unit tests.
+- [x] Refactor module discovery to `ModuleResolver` with no behavior change.
+- [x] Update `test_runner/orchestrator.rs` to use entry-parent-only `ModuleResolver` with no scope change.
+- [x] Activate workspace-driven project mode in the CLI.
+- [x] Make compilation-mode resolution error-carrying so malformed workspace config cannot silently fall back.
+- [x] Add workspace source roots to the resolver.
+- [x] Add ambiguity and unresolved-import diagnostics.
+- [x] Add dotted module Rust layout helper and namespace-conflict diagnostic.
+- [x] Wire workspace context through build/check/run/emit.
+- [x] Materialize dotted modules as nested Rust module trees.
+- [x] Add cache invalidation regression for workspace helper changes.
+- [x] Add verification-suite pass/fail workspace fixtures.
+- [x] Add `internal_docs/sifr_workspace_design.md`.
+- [x] Update `internal_docs/architecture.md`.
+- [x] Add LeetCode helper pilot and regenerate corpus artifacts.
+- [x] Run required local validation.
+- [x] Complete external review and close this phase.

@@ -2,7 +2,7 @@
   {
     "code": "SIFR-TYPE-0001",
     "severity": "Error",
-    "message": "[E2501] Decimal() received invalid exact literal '12.34.56'",
+    "message": "[main] [E2501] Decimal() received invalid exact literal '12.34.56'",
     "url": "https://sifr.dev/docs/errors/SIFR-TYPE-0001",
     "primary_span": null,
     "related_spans": [],

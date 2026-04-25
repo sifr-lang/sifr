@@ -1,6 +1,6 @@
 # Ad-hoc Phase Execution: Sifr Workspace Resolution Via `sifr.toml`
 
-Status: in_progress
+Status: closed
 Started: 2026-04-25
 Phase plan: `issues/ad-hoc-sifr-workspace-sifr-toml-import-resolution-2026-04-25.md`
 Source issue: `issues/sifr-workspace-sifr-toml-import-resolution-2026-04-25.md`
@@ -13,7 +13,7 @@ Source issue: `issues/sifr-workspace-sifr-toml-import-resolution-2026-04-25.md`
 - [x] WS3 workspace source resolution and diagnostics
 - [x] WS4 build/run/check/emit wiring and cache correctness
 - [x] WS5 verification-suite fixtures, design note, and LeetCode pilot
-- [ ] WS6 final gate, review, and closure
+- [x] WS6 final gate, review, and closure
 
 ## WS0 Workspace Discovery And Config Validation
 
@@ -39,10 +39,10 @@ Merged: 2026-04-25
 
 ## WS1 Workspace-Aware Compilation Mode
 
-Status: implemented_pending_pr
+Status: merged
 Branch: ad-hoc/sifr-workspace-ws1
 PR: https://github.com/yaseralnajjar/sifr/pull/1642
-Merged: tbd
+Merged: 2026-04-25
 
 ### Planned Scope
 
@@ -103,10 +103,10 @@ Merged: 2026-04-25
 
 ## WS4 Build/Run/Check/Emit Wiring And Cache Correctness
 
-Status: implemented_pending_pr
+Status: merged
 Branch: ad-hoc/sifr-workspace-ws4
 PR: https://github.com/yaseralnajjar/sifr/pull/1643
-Merged: tbd
+Merged: 2026-04-25
 
 ### Planned Scope
 
@@ -124,10 +124,10 @@ Merged: tbd
 
 ## WS5 Verification-Suite Fixtures, Design Note, And LeetCode Pilot
 
-Status: implemented_pending_pr
+Status: merged
 Branch: ad-hoc/sifr-workspace-ws5
 PR: https://github.com/yaseralnajjar/sifr/pull/1644
-Merged: tbd
+Merged: 2026-04-25
 
 ### Planned Scope
 
@@ -149,30 +149,43 @@ Merged: tbd
 
 ## WS6 Final Gate, Review, And Closure
 
-Status: not_started
-Branch: tbd
-PR: tbd
-Merged: tbd
+Status: merged
+Branch: ad-hoc/sifr-workspace-ws6
+PR: https://github.com/yaseralnajjar/sifr/pull/1645
+Merged: 2026-04-25
 
 ### Planned Scope
 
 - Run required local validation.
+- Split workspace unit tests out of `crates/sifr_driver/src/workspace/mod.rs` so the final merged tree satisfies the `sifr_driver` maintainability guardrail.
+- Refresh stale validation-contract and diagnostic baselines for module-scoped `[main]` diagnostics.
 - Record final review result and links.
 - Update phase and roadmap status.
 - Update `internal_docs/roadmap.md` Phase 31.6 status and dependency notes for closure.
 
 ### Required Final Validation
 
-- [ ] `cargo fmt --check`
-- [ ] `cargo clippy --workspace -- -D warnings`
-- [ ] `python3 scripts/check_hir_maintainability_guardrails.py`
-- [ ] `scripts/run_all_tests.sh --profile quick`
-- [ ] `scripts/run_all_tests.sh`
-- [ ] Full LeetCode corpus rerun with no new `CHECK_ERROR`, `RUN_ERROR`, or `TIMEOUT`
+- [x] `cargo fmt --check`
+- [x] `cargo clippy --workspace -- -D warnings`
+- [x] `python3 scripts/check_hir_maintainability_guardrails.py`
+- [x] `scripts/run_all_tests.sh --profile quick`
+- [x] `scripts/run_all_tests.sh`
+- [x] Full LeetCode corpus rerun with no new `CHECK_ERROR`, `RUN_ERROR`, or `TIMEOUT`
 
 ### Validation Evidence
 
-- tbd
+- [x] `cargo fmt --check`
+- [x] `cargo clippy --workspace -- -D warnings`
+- [x] `python3 scripts/check_hir_maintainability_guardrails.py`
+- [x] `python3 scripts/check_sifr_driver_maintainability_guardrails.py`
+- [x] `cargo test -p sifr_driver workspace -- --nocapture`
+- [x] `cargo test -p sifr test_emit_entrypoint_uses_project_mode_for_project_like_main -- --nocapture`
+- [x] `bash scripts/run_validation_contract_matrix.sh`
+- [x] `python3 scripts/run_verification_hardening.py --profile pr --suite diagnostics --result-json target/verification/ws6-diagnostics-after-baseline-fix.json`
+- [x] `scripts/run_all_tests.sh --profile quick`; report `target/validation_lane_reports/quick.latest.json`, wall time 74.36s, 0 failures.
+- [x] `scripts/run_all_tests.sh`; report `target/validation_lane_reports/pr.latest.json`, wall time 96.82s, hardening `variants = 28`, `failures = 0`, `blocking_failures = 0`.
+- [x] `cargo build --release -p sifr`
+- [x] `python3 scripts/run_phase31_leetcode.py --manifest verification/leetcode/full_corpus_manifest_20260402_live.json --output verification/leetcode/full_corpus_current_results_20260425_workspace_closure.json --timeout-seconds 30 --no-build-release-if-missing`; summary `case_count = 411`, `PASS = 208`, `NO_ORACLE = 203`, no `CHECK_ERROR`, `RUN_ERROR`, or `TIMEOUT`.
 
 ## External Reviews
 
