@@ -1,0 +1,4 @@
+from helpers.value import answer
+
+def main():
+    print(answer())

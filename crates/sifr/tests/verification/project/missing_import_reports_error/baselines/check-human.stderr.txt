@@ -1,2 +1,1 @@
-type error: undefined function: 'add'
-type error: unknown module 'missing_math_utils'
+error: could not resolve import 'missing_math_utils'; tried entry-relative '<WORKSPACE>/crates/sifr/tests/verification/project/missing_import_reports_error/missing_math_utils.sifr' and workspace-relative '<WORKSPACE>/audits/leetcode/missing_math_utils.sifr', '<WORKSPACE>/./missing_math_utils.sifr'

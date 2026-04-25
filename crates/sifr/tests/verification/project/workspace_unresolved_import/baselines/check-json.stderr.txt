@@ -1,0 +1,13 @@
+[
+  {
+    "code": "SIFR-WORKSPACE-0101",
+    "severity": "Error",
+    "message": "could not resolve import 'missing.helper'; tried entry-relative '<WORKSPACE>/crates/sifr/tests/verification/project/workspace_unresolved_import/missing/helper.sifr' and workspace-relative '<WORKSPACE>/crates/sifr/tests/verification/project/workspace_unresolved_import/lib/missing/helper.sifr', '<WORKSPACE>/crates/sifr/tests/verification/project/workspace_unresolved_import/./missing/helper.sifr'",
+    "url": "https://sifr.dev/docs/errors/SIFR-WORKSPACE-0101",
+    "primary_span": null,
+    "related_spans": [],
+    "children": [],
+    "help": null,
+    "suggestions": []
+  }
+]

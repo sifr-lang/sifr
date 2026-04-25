@@ -42,6 +42,45 @@
             "json",
             "compact"
           ]
+        },
+        {
+          "id": "workspace_dotted_helper_run",
+          "entry": "crates/sifr/tests/verification/project/workspace_dotted_helper_run/app.sifr",
+          "command": "run",
+          "expect_exit_code": 0
+        },
+        {
+          "id": "workspace_ambiguous_import",
+          "entry": "crates/sifr/tests/verification/project/workspace_ambiguous_import/main.sifr",
+          "command": "check",
+          "expect_exit_code": 1,
+          "diagnostic_formats": [
+            "human",
+            "json",
+            "compact"
+          ]
+        },
+        {
+          "id": "workspace_malformed_manifest",
+          "entry": "crates/sifr/tests/verification/project/workspace_malformed_manifest/main.sifr",
+          "command": "check",
+          "expect_exit_code": 1,
+          "diagnostic_formats": [
+            "human",
+            "json",
+            "compact"
+          ]
+        },
+        {
+          "id": "workspace_unresolved_import",
+          "entry": "crates/sifr/tests/verification/project/workspace_unresolved_import/main.sifr",
+          "command": "check",
+          "expect_exit_code": 1,
+          "diagnostic_formats": [
+            "human",
+            "json",
+            "compact"
+          ]
         }
       ]
     },
