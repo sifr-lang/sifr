@@ -12,7 +12,7 @@ Source issue: `issues/sifr-workspace-sifr-toml-import-resolution-2026-04-25.md`
 - [x] WS2 module resolver refactor with no behavior change
 - [x] WS3 workspace source resolution and diagnostics
 - [x] WS4 build/run/check/emit wiring and cache correctness
-- [ ] WS5 verification-suite fixtures, design note, and LeetCode pilot
+- [x] WS5 verification-suite fixtures, design note, and LeetCode pilot
 - [ ] WS6 final gate, review, and closure
 
 ## WS0 Workspace Discovery And Config Validation
@@ -124,9 +124,9 @@ Merged: tbd
 
 ## WS5 Verification-Suite Fixtures, Design Note, And LeetCode Pilot
 
-Status: not_started
-Branch: tbd
-PR: tbd
+Status: implemented_pending_pr
+Branch: ad-hoc/sifr-workspace-ws5
+PR: https://github.com/yaseralnajjar/sifr/pull/1644
 Merged: tbd
 
 ### Planned Scope
@@ -140,12 +140,12 @@ Merged: tbd
 
 ### Validation Evidence
 
-- [ ] `cargo fmt --check`
-- [ ] `cargo clippy --workspace -- -D warnings`
-- [ ] Project verification-suite command with workspace cases
-- [ ] Targeted LeetCode pilot `check` and `run`
-- [ ] Pair scan regeneration
-- [ ] Full corpus rerun summary
+- [x] `cargo fmt --check`
+- [x] `cargo clippy --workspace -- -D warnings`
+- [x] `python3 scripts/run_verification_hardening.py --suite project --result-json target/verification/ws5-project-after-root.json`
+- [x] Targeted LeetCode pilot `cargo run -q -p sifr -- check audits/leetcode/0021_merge_two_sorted_lists.sifr` and `cargo run -q -p sifr -- run audits/leetcode/0021_merge_two_sorted_lists.sifr`
+- [x] Pair scan regenerated at `verification/leetcode/leetcode_pair_diff_scan_20260425.json`; `0021_merge_two_sorted_lists` now reports `sifr_lines = 9`.
+- [x] Full corpus rerun regenerated at `verification/leetcode/full_corpus_current_results_20260425_workspace_pilot.json`; summary `PASS = 208`, `NO_ORACLE = 203`, with no `CHECK_ERROR`, `RUN_ERROR`, or `TIMEOUT`.
 
 ## WS6 Final Gate, Review, And Closure
 

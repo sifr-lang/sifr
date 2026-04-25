@@ -1,77 +1,9 @@
 # LeetCode 21: Merge Two Sorted Lists
 
-class ListNode:
-    val: int
-    next: ListNode | None
+from helpers.list_node import listNodeToString, mergeTwoLists, sampleListA, sampleListB, singleZeroList
 
-    def __init__(self, val: int = 0, next: ListNode | None = None):
-        self.val = val
-        self.next = next
-
-
-def nodeVal(node: ListNode | None) -> int:
-    if node is None:
-        return 0
-    return node.val
-
-
-def nodeNext(node: ListNode | None) -> ListNode | None:
-    if node is None:
-        return None
-    return node.next
-
-
-def hasNode(node: ListNode | None) -> bool:
-    return node is not None
-
-
-def unwrapInt(value: int | None) -> int:
-    if value is None:
-        return 0
-    return value
-
-
-def listNodeToString(own node: ListNode | None) -> str:
-    if node is None:
-        return "None"
-    parts: list[str] = []
-    cur: ListNode | None = node
-    while hasNode(cur):
-        parts.append(str(nodeVal(cur)))
-        cur = nodeNext(cur)
-    return "->".join(parts)
-
-def mergeTwoLists(own list1: ListNode | None, own list2: ListNode | None) -> ListNode | None:
-    vals1: list[int] = []
-    vals2: list[int] = []
-
-    cur1: ListNode | None = list1
-    while hasNode(cur1):
-        vals1.append(nodeVal(cur1))
-        cur1 = nodeNext(cur1)
-
-    cur2: ListNode | None = list2
-    while hasNode(cur2):
-        vals2.append(nodeVal(cur2))
-        cur2 = nodeNext(cur2)
-
-    merged: list[int] = []
-    for v in vals1:
-        merged.append(v)
-    for v in vals2:
-        merged.append(v)
-    merged = sorted(merged)
-
-    result: ListNode | None = None
-    k: int = len(merged) - 1
-    while k >= 0:
-        value: int = unwrapInt(merged[k])
-        if True:
-            result = ListNode(value, result)
-        k = k - 1
-    return result
 
 def main():
-    assert listNodeToString(mergeTwoLists(ListNode(1, ListNode(2, ListNode(4, None))), ListNode(1, ListNode(3, ListNode(4, None))))) == listNodeToString(ListNode(1, ListNode(1, ListNode(2, ListNode(3, ListNode(4, ListNode(4, None)))))))
+    assert listNodeToString(mergeTwoLists(sampleListA(), sampleListB())) == "1->1->2->3->4->4"
     assert mergeTwoLists(None, None) == None
-    assert listNodeToString(mergeTwoLists(None, ListNode(0, None))) == listNodeToString(ListNode(0, None))
+    assert listNodeToString(mergeTwoLists(None, singleZeroList())) == "0"
