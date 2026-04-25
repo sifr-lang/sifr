@@ -46,7 +46,6 @@ impl ModuleResolver {
         }
     }
 
-    #[allow(dead_code)]
     pub(crate) fn with_workspace(
         entry_parent: impl Into<PathBuf>,
         workspace: WorkspaceRoot,

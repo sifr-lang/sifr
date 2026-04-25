@@ -1,4 +1,4 @@
-use crate::{build_project, check_project};
+use crate::{build_cached_project, build_project, check_project, emit_project, CompileResult};
 use std::path::PathBuf;
 
 fn mktemp_dir(name: &str) -> PathBuf {
@@ -46,6 +46,127 @@ def area(radius: float) -> float:
     );
 
     let _ = std::fs::remove_dir_all(&dir);
+}
+
+#[test]
+fn test_check_project_resolves_workspace_source_import_for_non_main_entry() {
+    let dir = mktemp_dir("workspace_check_non_main");
+    std::fs::create_dir_all(dir.join("cases")).expect("cases dir should be created");
+    std::fs::create_dir_all(dir.join("lib")).expect("lib dir should be created");
+    std::fs::write(dir.join("sifr.toml"), "[source]\nroots = [\"lib\"]\n")
+        .expect("manifest should be written");
+    std::fs::write(
+        dir.join("cases/app.sifr"),
+        "from helper import value\n\ndef main():\n    print(value())\n",
+    )
+    .expect("entry should be written");
+    std::fs::write(
+        dir.join("lib/helper.sifr"),
+        "def value() -> int:\n    return 42\n",
+    )
+    .expect("helper should be written");
+
+    let errors = check_project(&dir.join("cases/app.sifr"));
+
+    assert!(
+        errors.is_empty(),
+        "workspace check should succeed: {errors:?}"
+    );
+
+    let _ = std::fs::remove_dir_all(dir);
+}
+
+#[test]
+fn test_build_project_materializes_dotted_workspace_modules() {
+    let dir = mktemp_dir("workspace_dotted_build");
+    let main_file = dir.join("cases/app.sifr");
+    let build_out = dir.join("build_out");
+    std::fs::create_dir_all(dir.join("cases")).expect("cases dir should be created");
+    std::fs::create_dir_all(dir.join("lib/helpers")).expect("helpers dir should be created");
+    std::fs::write(dir.join("sifr.toml"), "[source]\nroots = [\"lib\"]\n")
+        .expect("manifest should be written");
+    std::fs::write(
+        &main_file,
+        "from helpers.value import answer\n\ndef main():\n    print(answer())\n",
+    )
+    .expect("entry should be written");
+    std::fs::write(
+        dir.join("lib/helpers/value.sifr"),
+        "def answer() -> int:\n    return 42\n",
+    )
+    .expect("helper should be written");
+
+    let binary = build_project(&main_file, &build_out)
+        .expect("workspace dotted project should build successfully");
+
+    assert!(binary.exists());
+    let src_dir = build_out.join("sifr_output/src");
+    let main_rs = std::fs::read_to_string(src_dir.join("main.rs")).expect("main.rs should exist");
+    let helpers_mod =
+        std::fs::read_to_string(src_dir.join("helpers/mod.rs")).expect("helpers mod should exist");
+    assert!(main_rs.contains("mod helpers;"));
+    assert_eq!(helpers_mod, "pub mod value;\n");
+    assert!(src_dir.join("helpers/value.rs").is_file());
+
+    let _ = std::fs::remove_dir_all(dir);
+}
+
+#[test]
+fn test_emit_project_includes_workspace_support_modules() {
+    let dir = mktemp_dir("workspace_emit");
+    let main_file = dir.join("cases/app.sifr");
+    std::fs::create_dir_all(dir.join("cases")).expect("cases dir should be created");
+    std::fs::create_dir_all(dir.join("lib/helpers")).expect("helpers dir should be created");
+    std::fs::write(dir.join("sifr.toml"), "[source]\nroots = [\"lib\"]\n")
+        .expect("manifest should be written");
+    std::fs::write(
+        &main_file,
+        "from helpers.value import answer\n\ndef main():\n    print(answer())\n",
+    )
+    .expect("entry should be written");
+    std::fs::write(
+        dir.join("lib/helpers/value.sifr"),
+        "def answer() -> int:\n    return 7\n",
+    )
+    .expect("helper should be written");
+
+    let emitted = emit_project(&main_file);
+
+    let CompileResult::Success { rust_source } = emitted else {
+        panic!("workspace project emit should succeed");
+    };
+    assert!(rust_source.contains("// src/main.rs"));
+    assert!(rust_source.contains("mod helpers;"));
+    assert!(rust_source.contains("// src/helpers/value.rs"));
+
+    let _ = std::fs::remove_dir_all(dir);
+}
+
+#[test]
+fn test_cached_project_invalidates_when_workspace_helper_changes() {
+    let dir = mktemp_dir("workspace_cache_invalidation");
+    let main_file = dir.join("cases/app.sifr");
+    let helper_file = dir.join("lib/helpers/value.sifr");
+    std::fs::create_dir_all(dir.join("cases")).expect("cases dir should be created");
+    std::fs::create_dir_all(dir.join("lib/helpers")).expect("helpers dir should be created");
+    std::fs::write(dir.join("sifr.toml"), "[source]\nroots = [\"lib\"]\n")
+        .expect("manifest should be written");
+    std::fs::write(
+        &main_file,
+        "from helpers.value import answer\n\ndef main():\n    print(answer())\n",
+    )
+    .expect("entry should be written");
+    std::fs::write(&helper_file, "def answer() -> int:\n    return 10\n")
+        .expect("helper should be written");
+
+    let first = build_cached_project(&main_file).expect("first workspace build should succeed");
+    std::fs::write(&helper_file, "def answer() -> int:\n    return 11\n")
+        .expect("helper should be updated");
+    let second = build_cached_project(&main_file).expect("second workspace build should succeed");
+
+    assert_ne!(first.cache_report().key(), second.cache_report().key());
+
+    let _ = std::fs::remove_dir_all(dir);
 }
 
 #[test]
@@ -215,8 +336,8 @@ fn test_build_project_includes_reachable_support_module_stdlib_crates_in_manifes
     .expect("main should be written");
     std::fs::write(
         dir.join("helper.sifr"),
-        "from sifr.tomllib import loads\n\n\
-def render() -> str:\n    try:\n        parsed: str = loads(\"name = \\\"phase-five\\\"\\nvalue = 5\")\n        return parsed\n    except TOMLDecodeError as e:\n        return e.message\n",
+        "from sifr.tomllib import TomlValue, loads\n\n\
+def render() -> str:\n    try:\n        parsed: TomlValue = loads(\"name = \\\"phase-five\\\"\\nvalue = 5\")\n        return \"ok\"\n    except TOMLDecodeError as e:\n        return e.message\n",
     )
     .expect("helper should be written");
 

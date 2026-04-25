@@ -2,6 +2,7 @@ use super::cargo_manifest::generate_dependency_cargo_toml;
 use super::project_codegen::GeneratedBinaryProject;
 use super::{prepare_cached_artifact, CachedArtifactEntry, PreparedArtifactCache};
 use crate::diagnostics::{CompileError, CompilePhase};
+use crate::project::{namespace_module_files, rust_module_file_path};
 use std::collections::BTreeSet;
 use std::path::{Path, PathBuf};
 use std::process::Command;
@@ -82,9 +83,29 @@ fn materialize_binary_project_at_path(
         "main.rs",
     )?;
 
+    let support_module_names: Vec<String> =
+        generated_project.support_modules.keys().cloned().collect();
+    for namespace_file in namespace_module_files(&support_module_names) {
+        let mut contents = String::new();
+        for module_name in &namespace_file.declarations {
+            contents.push_str("pub mod ");
+            contents.push_str(module_name);
+            contents.push_str(";\n");
+        }
+        write_project_file(
+            &src_dir.join(&namespace_file.path),
+            contents,
+            &namespace_file.path.display().to_string(),
+        )?;
+    }
+
     for (module_name, code) in generated_project.support_modules {
-        let file_name = format!("{module_name}.rs");
-        write_project_file(&src_dir.join(&file_name), code, &file_name)?;
+        let file_name = rust_module_file_path(&module_name);
+        write_project_file(
+            &src_dir.join(&file_name),
+            code,
+            &file_name.display().to_string(),
+        )?;
     }
 
     let output = Command::new("cargo")
@@ -105,6 +126,10 @@ fn write_project_file(
     contents: impl AsRef<[u8]>,
     label: &str,
 ) -> Result<(), Vec<CompileError>> {
+    if let Some(parent) = path.parent() {
+        std::fs::create_dir_all(parent)
+            .map_err(|error| vec![build_error(format!("failed to create {label}: {error}"))])?;
+    }
     std::fs::write(path, contents)
         .map_err(|error| vec![build_error(format!("failed to write {label}: {error}"))])
 }
