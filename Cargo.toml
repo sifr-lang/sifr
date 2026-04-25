@@ -54,6 +54,7 @@ serde = { version = "1.0.197", features = ["derive"] }
 serde_json = { version = "1.0.113", features = ["preserve_order"] }
 serde_test = { version = "1.0.152" }
 static_assertions = { version = "1.1.0" }
+toml = { version = "0.8" }
 unic-ucd-category = { version = "0.9" }
 unicode-ident = { version = "1.0.12" }
 unicode_names2 = { version = "1.2.2" }
