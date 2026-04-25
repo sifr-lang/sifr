@@ -31,18 +31,3 @@ fn stdlib_dsu_exports_union_find_class() {
         "expected sifr.dsu export 'UnionFind' to be visible for stdlib imports"
     );
 }
-
-#[test]
-fn stdlib_trie_exports_trie_class() {
-    let compiled = compile_stdlib().expect("stdlib should compile");
-    let trie_classes = compiled
-        .defs
-        .classes
-        .get("sifr.trie")
-        .expect("sifr.trie exports should exist");
-
-    assert!(
-        trie_classes.contains_key("Trie"),
-        "expected sifr.trie export 'Trie' to be visible for stdlib imports"
-    );
-}

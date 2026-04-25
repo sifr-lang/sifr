@@ -1,6 +1,99 @@
 # LeetCode 212: Word Search Ii
 
-from sifr.trie import Trie
+class Trie:
+    _children: list[list[tuple[str, int]]]
+    _terminal: list[bool]
+
+    def __init__(self) -> None:
+        self._children = [[]]
+        self._terminal = [False]
+
+    def insert(self, word: str) -> None:
+        node: int = 0
+        children: list[list[tuple[str, int]]] = self._children
+        terminal: list[bool] = self._terminal
+
+        for ch in word:
+            row: list[tuple[str, int]] | None = children[node]
+            if row is None:
+                self._children = children
+                self._terminal = terminal
+                return
+
+            existing: int | None = self._row_child(row, ch)
+            if existing is None:
+                created: int = len(children)
+                row.append((ch, created))
+                children[node] = row
+                children.append([])
+                terminal.append(False)
+                node = created
+            else:
+                node = existing
+
+        terminal[node] = True
+        self._children = children
+        self._terminal = terminal
+
+    def find_node(self, text: str) -> int | None:
+        node: int = 0
+        for ch in text:
+            next_node: int | None = self.child(node, ch)
+            if next_node is None:
+                return None
+            node = next_node
+        return node
+
+    def contains(self, word: str) -> bool:
+        node: int | None = self.find_node(word)
+        if node is None:
+            return False
+        return self.is_terminal(node)
+
+    def search(self, word: str) -> bool:
+        return self.contains(word)
+
+    def starts_with(self, prefix: str) -> bool:
+        return self.find_node(prefix) is not None
+
+    def startsWith(self, prefix: str) -> bool:
+        return self.starts_with(prefix)
+
+    def child(self, node: int, ch: str) -> int | None:
+        if node < 0 or node >= len(self._children):
+            return None
+        row: list[tuple[str, int]] | None = self._children[node]
+        if row is None:
+            return None
+        return self._row_child(row, ch)
+
+    def children(self, node: int) -> list[int]:
+        result: list[int] = []
+        if node < 0 or node >= len(self._children):
+            return result
+        row: list[tuple[str, int]] | None = self._children[node]
+        if row is None:
+            return result
+        for _key, child_node in row:
+            result.append(child_node)
+        return result
+
+    def is_terminal(self, node: int) -> bool:
+        if node < 0 or node >= len(self._terminal):
+            return False
+        value: bool | None = self._terminal[node]
+        if value is not None:
+            return value
+        return False
+
+    def node_count(self) -> int:
+        return len(self._children)
+
+    def _row_child(self, row: list[tuple[str, int]], ch: str) -> int | None:
+        for edge_ch, edge_node in row:
+            if edge_ch == ch:
+                return edge_node
+        return None
 
 def boardChar(board: list[list[str]], r: int, c: int) -> str | None:
     row: list[str] | None = board[r]

@@ -524,31 +524,31 @@ Local gate:
 
 - `scripts/run_all_tests.sh --profile quick` PASS
 
-## WS2 S6 Trie Decision And API
+## WS2 S6 Trie Helper Decision
 
-Status: merged
+Status: merged; corrected by `move-trie-to-leetcode-helper`
 Branch: `ws2-s6-trie-decision`
 PR: `https://github.com/yaseralnajjar/sifr/pull/1616`
 Merged: `https://github.com/yaseralnajjar/sifr/pull/1616`
 
 ### Scope
 
-Add an explicit trie stdlib surface and consume it in the first trie-dependent fixture:
+Add an explicit LeetCode-local trie helper shape and consume it in the trie-dependent fixtures:
 
-- `internal_docs/trie_stdlib_design.md`
-- `lib/sifr/trie.sifr`
+- `internal_docs/leetcode_trie_helper_design.md`
 - `audits/leetcode/0208_implement_trie_prefix_tree.sifr`
 
 ### Decision
 
-`sifr.trie.Trie` uses owned node indices backed by owned edge lists plus terminal markers. `insert` is the only node-creating operation; traversal APIs return `int | None` for missing edges or invalid node indices. This rejects auto-insert-on-read while leaving enough API surface for later `0211` wildcard DFS and `0212` board-prefix pruning rewrites.
+The LeetCode trie helper uses owned node indices backed by owned edge lists plus terminal markers. `insert` is the only node-creating operation; traversal APIs return `int | None` for missing edges or invalid node indices. This rejects auto-insert-on-read while leaving enough API surface for `0211` wildcard DFS and `0212` board-prefix pruning rewrites.
+
+Correction: the helper does not belong in the public Sifr stdlib. It is kept inline in trie-dependent LeetCode fixtures because non-`main.sifr` LeetCode roots still compile in single-file mode and cannot import sibling helper modules through the CLI.
 
 ### Changes
 
-- Added `sifr.trie.Trie` with whole-word APIs (`insert`, `contains`, `search`, `starts_with`, `startsWith`) and node traversal APIs (`find_node`, `child`, `children`, `is_terminal`, `node_count`).
-- Registered `sifr.trie` in the embedded stdlib registry and added an export regression for the class.
-- Added `stdlib_trie` e2e coverage for word lookup, prefix lookup, terminal markers, child traversal, and invalid node handling.
-- Rewrote `0208_implement_trie_prefix_tree.sifr` to import `sifr.trie.Trie` directly instead of scanning a word list.
+- Added a LeetCode-local `Trie` helper shape with whole-word APIs (`insert`, `contains`, `search`, `starts_with`, `startsWith`) and node traversal APIs (`find_node`, `child`, `children`, `is_terminal`, `node_count`).
+- Rewrote `0208_implement_trie_prefix_tree.sifr` to use the helper directly instead of scanning a word list.
+- Removed the public `sifr.trie` stdlib module, registry entry, stdlib export regression, and `stdlib_trie` e2e fixture in the follow-up correction.
 
 ### Pair Scan Movement
 
@@ -569,11 +569,8 @@ Regenerated artifact: `verification/leetcode/leetcode_pair_diff_scan_20260424.js
 Targeted validation:
 
 - `python3 audits/leetcode/0208_implement_trie_prefix_tree.py` PASS
-- `cargo run -q -p sifr -- check crates/sifr/tests/e2e/pass/stdlib_trie.sifr` PASS
-- `cargo run -q -p sifr -- run crates/sifr/tests/e2e/pass/stdlib_trie.sifr` PASS
 - `cargo run -q -p sifr -- check audits/leetcode/0208_implement_trie_prefix_tree.sifr` PASS
 - `cargo run -q -p sifr -- run audits/leetcode/0208_implement_trie_prefix_tree.sifr` PASS
-- `cargo test -p sifr_driver stdlib_trie_exports_trie_class -- --nocapture` PASS
 - `python3 scripts/scan_leetcode_pair_diffs.py --output verification/leetcode/leetcode_pair_diff_scan_20260424.json --top 80` PASS
 
 Local gate:
@@ -640,13 +637,13 @@ Merged: `https://github.com/yaseralnajjar/sifr/pull/1618`
 
 ### Scope
 
-Use the WS2 S6 trie API to rewrite the wildcard word dictionary fixture:
+Use the WS2 S6 LeetCode trie helper to rewrite the wildcard word dictionary fixture:
 
 - `audits/leetcode/0211_design_add_and_search_words_data_structure.sifr`
 
 ### Changes
 
-- Replaced the fixture-local `list[str]` storage and per-word linear wildcard scan with a `sifr.trie.Trie`.
+- Replaced the fixture-local `list[str]` storage and per-word linear wildcard scan with an inline LeetCode trie helper.
 - Added explicit wildcard DFS over trie node indices using `children`, `child`, and `is_terminal`.
 - Preserved explicit field write-back after insertion because mutating a copied class field value does not update the stored field.
 
@@ -673,7 +670,6 @@ Targeted validation:
 - `python3 audits/leetcode/0211_design_add_and_search_words_data_structure.py` PASS
 - `cargo run -q -p sifr -- check audits/leetcode/0211_design_add_and_search_words_data_structure.sifr` PASS
 - `cargo run -q -p sifr -- run audits/leetcode/0211_design_add_and_search_words_data_structure.sifr` PASS
-- `cargo run -q -p sifr -- run crates/sifr/tests/e2e/pass/stdlib_trie.sifr` PASS
 - `python3 scripts/scan_leetcode_pair_diffs.py --output verification/leetcode/leetcode_pair_diff_scan_20260424.json --top 80` PASS
 
 Local gate:
@@ -689,7 +685,7 @@ Merged: `https://github.com/yaseralnajjar/sifr/pull/1619`
 
 ### Scope
 
-Use the WS2 S6 trie API to replace per-word board searches with prefix-pruned trie traversal:
+Use the WS2 S6 LeetCode trie helper to replace per-word board searches with prefix-pruned trie traversal:
 
 - `audits/leetcode/0212_word_search_ii.sifr`
 
@@ -722,7 +718,6 @@ Targeted validation:
 - `python3 audits/leetcode/0212_word_search_ii.py` PASS
 - `cargo run -q -p sifr -- check audits/leetcode/0212_word_search_ii.sifr` PASS
 - `cargo run -q -p sifr -- run audits/leetcode/0212_word_search_ii.sifr` PASS
-- `cargo run -q -p sifr -- run crates/sifr/tests/e2e/pass/stdlib_trie.sifr` PASS
 - `python3 scripts/scan_leetcode_pair_diffs.py --output verification/leetcode/leetcode_pair_diff_scan_20260424.json --top 80` PASS
 
 Local gate:
