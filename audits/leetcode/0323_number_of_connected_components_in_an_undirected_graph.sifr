@@ -1,28 +1,12 @@
 # LeetCode 323: Number Of Connected Components In An Undirected Graph
 
+from helpers.dsu import UnionFind
+
 def countComponents(n: int, edges: list[tuple[int, int]]) -> int:
-    dsu = UnionFind()
+    dsu = UnionFind(n)
     for a, b in edges:
         dsu.union(a, b)
-    return len(set(dsu.findParent(x) for x in range(n)))
-
-
-class UnionFind:
-    f: dict[int, int]
-
-    def __init__(self):
-        self.f = {}
-    def findParent(self, x: int) -> int:
-        y = self.f.get(x, x)
-        if x != y:
-            parent = self.findParent(y)
-            self.f[x] = parent
-            y = parent
-        return y
-    def union(self, x: int, y: int) -> None:
-        px = self.findParent(x)
-        py = self.findParent(y)
-        self.f[px] = py
+    return dsu.component_count()
 
 def main():
     assert countComponents(5, [(0, 1), (1, 2), (3, 4)]) == 2

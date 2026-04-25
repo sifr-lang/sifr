@@ -112,6 +112,63 @@ fn test_build_project_materializes_dotted_workspace_modules() {
 }
 
 #[test]
+fn test_build_project_preserves_imported_class_constructors_and_signatures() {
+    let dir = mktemp_dir("workspace_imported_class_codegen");
+    let main_file = dir.join("cases/app.sifr");
+    let build_out = dir.join("build_out");
+    std::fs::create_dir_all(dir.join("cases")).expect("cases dir should be created");
+    std::fs::create_dir_all(dir.join("lib/helpers")).expect("helpers dir should be created");
+    std::fs::write(dir.join("sifr.toml"), "[source]\nroots = [\"lib\"]\n")
+        .expect("manifest should be written");
+    std::fs::write(
+        &main_file,
+        r#"
+from helpers.list_node import Bag, ListNode, nodeVal
+
+def main():
+    bag = Bag()
+    assert bag.count() == 0
+    head = ListNode(1, ListNode(2, None))
+    assert nodeVal(head) == 1
+"#,
+    )
+    .expect("entry should be written");
+    std::fs::write(
+        dir.join("lib/helpers/list_node.sifr"),
+        r#"
+class ListNode:
+    val: int
+    next: ListNode | None
+
+    def __init__(self, val: int = 0, next: ListNode | None = None):
+        self.val = val
+        self.next = next
+
+class Bag:
+    items: list[int]
+
+    def __init__(self):
+        self.items = []
+
+    def count(self) -> int:
+        return len(self.items)
+
+def nodeVal(node: ListNode | None) -> int:
+    if node is None:
+        return 0
+    return node.val
+"#,
+    )
+    .expect("helper should be written");
+
+    let binary = build_project(&main_file, &build_out)
+        .expect("imported class constructors should build successfully");
+
+    assert!(binary.exists());
+    let _ = std::fs::remove_dir_all(dir);
+}
+
+#[test]
 fn test_emit_project_includes_workspace_support_modules() {
     let dir = mktemp_dir("workspace_emit");
     let main_file = dir.join("cases/app.sifr");

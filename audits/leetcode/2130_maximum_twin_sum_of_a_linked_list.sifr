@@ -1,74 +1,10 @@
 # LeetCode 2130: Maximum Twin Sum Of A Linked List
-
-class ListNode:
-    val: int
-    next: ListNode | None
-
-    def __init__(self, val: int = 0, next: ListNode | None = None):
-        self.val = val
-        self.next = next
-
-
-def nodeVal(node: ListNode | None) -> int:
-    if node is None:
-        return 0
-    return node.val
-
-
-def nodeNext(node: ListNode | None) -> ListNode | None:
-    if node is None:
-        return None
-    return node.next
-
-
-def hasNode(node: ListNode | None) -> bool:
-    return node is not None
-
+from helpers.list_node import ListNode, nodeVal, nodeNext, hasNode, listNodeToString
 
 def unwrapInt(value: int | None) -> int:
     if value is None:
         return 0
     return value
-
-
-def listNodeToString(own node: ListNode | None) -> str:
-    if node is None:
-        return "None"
-    parts: list[str] = []
-    cur: ListNode | None = node
-    while hasNode(cur):
-        parts.append(str(nodeVal(cur)))
-        cur = nodeNext(cur)
-    return "->".join(parts)
-
-
-class Node:
-    val: int
-    next: Node | None
-    random: Node | None
-    left: Node | None
-    right: Node | None
-    neighbors: list[Node]
-    key: int
-
-    def __init__(
-        self,
-        val: int = 0,
-        next: Node | None = None,
-        random: Node | None = None,
-        left: Node | None = None,
-        right: Node | None = None,
-        neighbors: list[Node] = [],
-        key: int = -1,
-    ):
-        self.val = val
-        self.next = next
-        self.random = random
-        self.left = left
-        self.right = right
-        self.neighbors = neighbors
-        self.key = key
-
 def pairSum(own head: ListNode | None) -> int:
     values: list[int] = []
     cur: ListNode | None = head

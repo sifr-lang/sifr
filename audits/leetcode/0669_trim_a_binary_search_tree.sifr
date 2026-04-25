@@ -1,19 +1,5 @@
 # LeetCode 669: Trim A Binary Search Tree
-
-class TreeNode:
-    val: int
-    left: TreeNode | None
-    right: TreeNode | None
-
-    def __init__(
-        self,
-        val: int = 0,
-        left: TreeNode | None = None,
-        right: TreeNode | None = None,
-    ):
-        self.val = val
-        self.left = left
-        self.right = right
+from helpers.tree_node import TreeNode, treeToString
 
 def treeVal(node: TreeNode | None) -> int:
     if node is None:
@@ -32,48 +18,6 @@ def treeRight(node: TreeNode | None) -> TreeNode | None:
 
 def hasTreeNode(node: TreeNode | None) -> bool:
     return node is not None
-
-
-def treeToString(node: TreeNode | None) -> str:
-    if node is None:
-        return "None"
-    return (
-        str(treeVal(node))
-        + "("
-        + treeToString(treeLeft(node))
-        + ","
-        + treeToString(treeRight(node))
-        + ")"
-    )
-
-
-class Node:
-    val: int
-    next: Node | None
-    random: Node | None
-    left: Node | None
-    right: Node | None
-    neighbors: list[Node]
-    key: int
-
-    def __init__(
-        self,
-        val: int = 0,
-        next: Node | None = None,
-        random: Node | None = None,
-        left: Node | None = None,
-        right: Node | None = None,
-        neighbors: list[Node] = [],
-        key: int = -1,
-    ):
-        self.val = val
-        self.next = next
-        self.random = random
-        self.left = left
-        self.right = right
-        self.neighbors = neighbors
-        self.key = key
-
 def trimBST(own root: TreeNode | None, low: int, high: int) -> TreeNode | None:
     if not hasTreeNode(root):
         return None

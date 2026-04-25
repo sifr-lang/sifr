@@ -2,6 +2,8 @@
 # LeetCode 1489: Find Critical And Pseudo Critical Edges In Minimum Spanning Tree
 # Python version
 
+from helpers.dsu import UnionFind
+
 def findCriticalAndPseudoCriticalEdges(n: int, edges: list[list[int]]) -> list[list[int]]:
     # Time: O(E^2) - UF operations are assumed to be approx O(1)
     for i, e in enumerate(edges):
@@ -37,29 +39,6 @@ def findCriticalAndPseudoCriticalEdges(n: int, edges: list[list[int]]) -> list[l
         if weight == mst_weight:
             pseudo.append(i)
     return [critical, pseudo]
-
-
-class UnionFind:
-    def __init__(self, n):
-        self.par = [i for i in range(n)]
-        self.rank = [1] * n
-    def find(self, v1):
-        while v1 != self.par[v1]:
-            self.par[v1] = self.par[self.par[v1]]
-            v1 = self.par[v1]
-        return v1
-    def union(self, v1, v2):
-        p1, p2 = self.find(v1), self.find(v2)
-        if p1 == p2:
-            return False
-        if self.rank[p1] > self.rank[p2]:
-            self.par[p2] = p1
-            self.rank[p1] += self.rank[p2]
-        else:
-            self.par[p1] = p2
-            self.rank[p2] += self.rank[p1]
-        return True
-
 def main():
     assert findCriticalAndPseudoCriticalEdges(5, [[0, 1, 1], [1, 2, 1], [2, 3, 2], [0, 3, 2], [0, 4, 3], [3, 4, 3], [1, 4, 6]]) == [[0, 1], [2, 3, 4, 5]]
     assert findCriticalAndPseudoCriticalEdges(4, [[0, 1, 1], [1, 2, 1], [2, 3, 1], [0, 3, 1]]) == [[], [0, 1, 2, 3]]

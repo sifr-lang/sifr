@@ -1,41 +1,7 @@
 
 # LeetCode 61: Rotate List
 # Python version
-
-class ListNode:
-    def __init__(self, val: int = 0, next: 'ListNode | None' = None):
-        self.val = val
-        self.next = next
-
-
-def list_node_to_string(node: ListNode | None) -> str:
-    parts = []
-    cur = node
-    while cur is not None:
-        parts.append(str(cur.val))
-        cur = cur.next
-    return "->".join(parts) if parts else "None"
-
-
-class Node:
-    def __init__(
-        self,
-        val: int = 0,
-        next: 'Node | None' = None,
-        random: 'Node | None' = None,
-        left: 'Node | None' = None,
-        right: 'Node | None' = None,
-        neighbors: list['Node'] | None = None,
-        key: int = -1,
-    ):
-        self.val = val
-        self.next = next
-        self.random = random
-        self.left = left
-        self.right = right
-        self.neighbors = [] if neighbors is None else neighbors
-        self.key = key
-
+from helpers.list_node import ListNode, list_node_to_string
 def rotateRight(head: ListNode | None, k: int) -> ListNode | None:
     if not head or not head.next or k == 0:
         return head
@@ -61,8 +27,6 @@ def rotateRight(head: ListNode | None, k: int) -> ListNode | None:
     new_tail.next, old_tail.next = None, old_head
 
     return new_head
-
-
 
 def main():
     assert list_node_to_string(rotateRight(ListNode(1, ListNode(2, ListNode(3, ListNode(4, ListNode(5, None))))), 2)) == list_node_to_string(ListNode(4, ListNode(5, ListNode(1, ListNode(2, ListNode(3, None))))))

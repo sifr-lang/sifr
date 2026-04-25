@@ -1,21 +1,7 @@
 
 # LeetCode 147: Insertion Sort List
 # Python version
-
-class ListNode:
-    def __init__(self, val: int = 0, next: 'ListNode | None' = None):
-        self.val = val
-        self.next = next
-
-
-def list_node_to_string(node: ListNode | None) -> str:
-    parts = []
-    cur = node
-    while cur is not None:
-        parts.append(str(cur.val))
-        cur = cur.next
-    return "->".join(parts) if parts else "None"
-
+from helpers.list_node import ListNode, list_node_to_string
 
 def insertionSortList(head: ListNode | None) -> ListNode | None:
     if not head or not head.next:
@@ -31,8 +17,6 @@ def insertionSortList(head: ListNode | None) -> ListNode | None:
         curr.next, prev.next, curr = prev.next, curr, curr.next
 
     return sentinel.next
-
-
 
 def main():
     assert list_node_to_string(insertionSortList(ListNode(4, ListNode(2, ListNode(1, ListNode(3, None)))))) == list_node_to_string(ListNode(1, ListNode(2, ListNode(3, ListNode(4, None)))))

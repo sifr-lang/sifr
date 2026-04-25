@@ -47,7 +47,6 @@ pub(crate) fn collect_module_exports(
             let mut methods: Vec<(String, FunctionType)> = class
                 .methods
                 .iter()
-                .filter(|m| m.name != "new")
                 .map(|m| {
                     let params: Vec<(String, Type, ParamConvention)> = m
                         .params

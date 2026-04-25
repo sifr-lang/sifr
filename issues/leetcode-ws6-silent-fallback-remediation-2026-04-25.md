@@ -84,6 +84,9 @@ Use one of these approaches instead:
 3. Close recursive node field projection gaps.
    - Covers `0103`, `0513`, and `1609`.
    - Non-optional fields on a proven node should not need value sentinels.
+   - Follow-up from helper extraction: reassess shared `helpers.list_node` accessors
+     (`nodeVal`, `nodeNext`, `hasNode`) once cursor/narrowing support is strong enough
+     for fixtures to read proven non-`None` nodes directly.
 
 4. Restore `0838_push_dominoes` to a canonical direction representation if compiler support allows it.
    - Prefer `tuple[int, str]` with `'L'` / `'R'` over encoded `-1` / `1`.

@@ -1,42 +1,64 @@
 # LeetCode Fixture Helper Convention
 
-Status: accepted for WS3 B1
+Status: accepted for workspace helper imports
 
 ## Decision
 
-Use self-contained fixture boilerplate with a strict shared template for `ListNode` and `TreeNode` helpers.
+LeetCode audit fixtures may share canonical structural helpers from `audits/leetcode/helpers/`.
+The repository root `sifr.toml` includes `audits/leetcode` as a source root, so non-`main.sifr`
+fixtures can import helpers with paths such as:
 
-Root LeetCode fixtures are not named `main.sifr`, so the CLI intentionally treats them as single-file entries. That means sibling fixture-helper imports are not available without changing frontend mode resolution. Until that compiler behavior changes, linked-list and tree fixtures keep their structural helpers inline.
+```sifr
+from helpers.list_node import ListNode, nodeVal, nodeNext, hasNode, listNodeToString
+from helpers.tree_node import TreeNode, treeToString
+```
 
-The approved convention is:
+Python fixture pairs use mirror helpers from the same directory:
 
-- keep a single `ListNode` or `TreeNode` definition at the top of each structural fixture
-- keep only the helper functions the fixture actually uses
-- use the same helper names across fixtures (`nodeVal`, `nodeNext`, `hasNode`, `listNodeToString`, `treeToString`)
-- delete unrelated catch-all `Node` scaffolding unless the fixture itself needs it
-- do not hide algorithm logic in helpers
+```python
+from helpers.list_node import ListNode, list_node_to_string
+from helpers.tree_node import TreeNode, tree_to_string
+```
 
-## Scope
+## Approved Helpers
 
-Inline helpers may contain:
+- `helpers/list_node.sifr` and `helpers/list_node.py`: canonical linked-list node shape and serialization/accessor helpers.
+- `helpers/tree_node.sifr` and `helpers/tree_node.py`: canonical binary-tree node shape and serialization helpers.
+- `helpers/trie.sifr`: LeetCode-only explicit trie helper backed by node indices.
+- `helpers/dsu.sifr` and `helpers/dsu.py`: LeetCode-only disjoint-set helper.
 
-- canonical fixture data structures such as `ListNode` and `TreeNode`
-- value/next accessors needed until narrowing and cursor ergonomics remove that ceremony
-- assertion and serialization helpers used only by fixture tests
+The Python mirrors intentionally expose only the helpers Python fixtures use. Sifr-side accessors
+such as `nodeVal`, `nodeNext`, `hasNode`, `connected`, and `component_count` exist to work around
+current Sifr ownership/narrowing ergonomics; do not add Python mirrors just for symmetry.
 
-Inline helpers must not contain:
+## Rules
 
-- algorithm implementations for a LeetCode problem
-- alternate solutions
-- hidden mutable global state
-- ownership shortcuts or object-identity emulation
+Shared helpers may contain:
 
-## Rationale
+- canonical fixture data structures such as `ListNode`, `TreeNode`, `Trie`, and `UnionFind`;
+- accessors needed until narrowing and cursor ergonomics remove that ceremony;
+- assertion/serialization helpers used by fixture tests.
 
-Self-contained duplication made early fixture generation simple, but inconsistent boilerplate obscures the actual algorithm deltas and makes linked-list/tree rewrites noisy. A strict inline template keeps structural scaffolding consistent while preserving each root fixture as the source of the algorithm under review.
+Shared helpers must not contain:
 
-The original preferred import-based approach is blocked by current single-file entry semantics for non-`main.sifr` files. The strict inline template keeps the phase moving without changing CLI mode resolution as a side effect of fixture cleanup. A later compiler/frontend slice can revisit shared imports for non-main fixture entries.
+- algorithm implementations for a LeetCode problem;
+- fixture-specific sample builders or test data;
+- alternate solutions;
+- silent fallback helpers such as `unwrapInt`, `unwrapStr`, or sentinel-returning `nodeValue`;
+- hidden mutable global state or object-identity emulation.
 
-## Pilot
+The Sifr linked-list accessors are temporary ergonomics helpers, not a precedent for new sentinel
+unwrap helpers. Revisit them when WS6 narrowing/cursor work removes the need for optional accessors.
 
-`0021_merge_two_sorted_lists.sifr` is the pilot migration. It keeps the current drain/sort/rebuild algorithm unchanged, retains only the helpers that algorithm uses, and removes unrelated catch-all `Node` scaffolding. Cursor and owned-chain algorithm improvements belong to later WS3 slices.
+## Boundary Fixtures
+
+Architecture-boundary fixtures keep inline shapes when the inline definition documents an ownership
+or identity limitation:
+
+- `0141_linked_list_cycle`
+- `0160_intersection_of_two_linked_lists`
+- `0894_all_possible_full_binary_trees`
+- specialized `Node` shapes in `0133_clone_graph`, `0138_copy_list_with_random_pointer`,
+  `0146_lru_cache`, and `0622_design_circular_queue`
+
+Dead catch-all `Node` scaffolding should be deleted rather than moved into a helper.

@@ -42,13 +42,19 @@ Canonical Python preserves arbitrary `random` pointers across heap nodes. Sifr's
 
 Cycle detection is boundary-limited because a true cyclic linked list requires shared ownership or a handle graph. Tests that only exercise acyclic lists are smoke checks, not evidence of canonical cycle-input support.
 
+Helper extraction note: keep this fixture's `ListNode` shape inline. Importing the shared linked-list helper would obscure that the fixture is intentionally smoke-only under the current ownership model.
+
 ### `0160_intersection_of_two_linked_lists`
 
 The canonical problem is about two list heads sharing tail node identity. Sifr-owned chains cannot share the same tail node under two owners. A value-equality or copied-tail fixture is a supported alternate, not canonical object-identity parity.
 
+Helper extraction note: keep this fixture's `ListNode` shape inline. The local definition documents the shared-tail identity boundary rather than a generic linked-list algorithm helper.
+
 ### `0894_all_possible_full_binary_trees`
 
 Python can memoize and reuse subtree objects across many generated parent trees. Sifr must clone subtrees to preserve single ownership. This is the intended ownership boundary; do not introduce shared ownership or interior mutability just to emulate Python subtree aliasing.
+
+Helper extraction note: keep this fixture's `TreeNode` shape inline. The cloned-subtree construction is the ownership boundary under review, so the fixture should remain self-describing.
 
 ## Closure Rule
 

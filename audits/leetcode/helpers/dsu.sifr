@@ -1,5 +1,3 @@
-# sifr.dsu - Disjoint-set union / union-find helpers.
-
 class UnionFind:
     parent: list[int]
     size: list[int]

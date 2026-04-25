@@ -7,7 +7,6 @@ class ListNode:
         self.val = val
         self.next = next
 
-
 def list_node_to_string(node: ListNode | None) -> str:
     parts = []
     cur = node
@@ -15,27 +14,6 @@ def list_node_to_string(node: ListNode | None) -> str:
         parts.append(str(cur.val))
         cur = cur.next
     return "->".join(parts) if parts else "None"
-
-
-class Node:
-    def __init__(
-        self,
-        val: int = 0,
-        next: 'Node | None' = None,
-        random: 'Node | None' = None,
-        left: 'Node | None' = None,
-        right: 'Node | None' = None,
-        neighbors: list['Node'] | None = None,
-        key: int = -1,
-    ):
-        self.val = val
-        self.next = next
-        self.random = random
-        self.left = left
-        self.right = right
-        self.neighbors = [] if neighbors is None else neighbors
-        self.key = key
-
 def getIntersectionNode(
     self, headA: ListNode, headB: ListNode
 ) -> ListNode | None:
@@ -44,8 +22,6 @@ def getIntersectionNode(
         l1 = l1.next if l1 else headB
         l2 = l2.next if l2 else headA
     return l1
-
-
 
 def main():
     shared = ListNode(8, ListNode(4, ListNode(5)))

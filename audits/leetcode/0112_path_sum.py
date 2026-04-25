@@ -1,12 +1,7 @@
 
 # LeetCode 112: Path Sum
 # Python version
-
-class TreeNode:
-    def __init__(self, val: int = 0, left=None, right=None):
-        self.val = val
-        self.left = left
-        self.right = right
+from helpers.tree_node import TreeNode, tree_to_string
 
 def hasPathSum(root, sum):
     if not root:
@@ -33,7 +28,6 @@ def hasPathSum(root, sum):
         if node.left:
             de.append((node.left, curr_sum - node.left.val))
     return False
-
 
 def main():
     root = TreeNode(

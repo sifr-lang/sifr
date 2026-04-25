@@ -1,4 +1,4 @@
-from sifr.dsu import UnionFind
+from helpers.dsu import UnionFind
 
 def validTreeDsu(n: int, edges: list[list[int]]) -> bool:
     if n == 0:

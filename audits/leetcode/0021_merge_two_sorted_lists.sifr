@@ -1,6 +1,46 @@
 # LeetCode 21: Merge Two Sorted Lists
 
-from helpers.list_node import listNodeToString, mergeTwoLists, sampleListA, sampleListB, singleZeroList
+from helpers.list_node import ListNode, nodeVal, nodeNext, hasNode, listNodeToString
+
+
+def mergeTwoLists(own list1: ListNode | None, own list2: ListNode | None) -> ListNode | None:
+    vals1: list[int] = []
+    vals2: list[int] = []
+
+    cur1: ListNode | None = list1
+    while hasNode(cur1):
+        vals1.append(nodeVal(cur1))
+        cur1 = nodeNext(cur1)
+
+    cur2: ListNode | None = list2
+    while hasNode(cur2):
+        vals2.append(nodeVal(cur2))
+        cur2 = nodeNext(cur2)
+
+    merged: list[int] = []
+    for v in vals1:
+        merged.append(v)
+    for v in vals2:
+        merged.append(v)
+    merged = sorted(merged)
+
+    result: ListNode | None = None
+    while merged:
+        value = merged.pop()
+        result = ListNode(value, result)
+    return result
+
+
+def sampleListA() -> ListNode | None:
+    return ListNode(1, ListNode(2, ListNode(4, None)))
+
+
+def sampleListB() -> ListNode | None:
+    return ListNode(1, ListNode(3, ListNode(4, None)))
+
+
+def singleZeroList() -> ListNode | None:
+    return ListNode(0, None)
 
 
 def main():

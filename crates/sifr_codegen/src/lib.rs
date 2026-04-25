@@ -178,6 +178,73 @@ pub struct StdlibCode {
     pub generator_functions: HashMap<String, HashSet<String>>,
     /// Set of class names that have generic type parameters across all stdlib modules.
     pub generic_classes: HashSet<String>,
+    /// Map of `module_name` -> (`class_name` -> ordered class fields).
+    /// Multi-module project codegen also uses this for local helper modules.
+    pub module_class_fields: HashMap<String, HashMap<String, Vec<(String, Type)>>>,
+}
+
+fn module_func_signatures(module: &HirModule) -> ModuleFuncSignatures {
+    let mut sig_map = HashMap::new();
+    for func in &module.functions {
+        let params = func
+            .params
+            .iter()
+            .map(|param| (param.ty.clone(), param.convention))
+            .collect::<Vec<_>>();
+        sig_map.insert(func.name.clone(), (params, func.return_type.clone()));
+    }
+    for class in &module.classes {
+        let mut has_constructor = false;
+        for method in &class.methods {
+            let params = method
+                .params
+                .iter()
+                .map(|param| {
+                    let convention = if method.name == "new" {
+                        ParamConvention::own()
+                    } else {
+                        param.convention
+                    };
+                    (param.ty.clone(), convention)
+                })
+                .collect::<Vec<_>>();
+            sig_map.insert(
+                format!("{}::{}", class.name, method.name),
+                (params, method.return_type.clone()),
+            );
+            if method.name == "new" {
+                has_constructor = true;
+            }
+        }
+        if !has_constructor {
+            let ctor_params = class
+                .fields
+                .iter()
+                .map(|(_, ty)| (ty.clone(), ParamConvention::own()))
+                .collect::<Vec<_>>();
+            sig_map.insert(
+                format!("{}::new", class.name),
+                (
+                    ctor_params,
+                    Type::Class {
+                        name: class.name.clone(),
+                        fields: class.fields.clone(),
+                        methods: Vec::new(),
+                        parent_class: class.parent_class.clone(),
+                    },
+                ),
+            );
+        }
+    }
+    sig_map
+}
+
+fn module_class_fields(module: &HirModule) -> HashMap<String, Vec<(String, Type)>> {
+    module
+        .classes
+        .iter()
+        .map(|class| (class.name.clone(), class.fields.clone()))
+        .collect()
 }
 
 /// Generate Rust source code from a HIR module with compiled stdlib code.
@@ -221,6 +288,19 @@ pub fn generate_rust_with_stdlib(module: &HirModule, stdlib_code: &StdlibCode) -
             for (key, sig) in sig_map {
                 if key.contains("::") && !emitter.func_signatures.contains_key(key) {
                     emitter.func_signatures.insert(key.clone(), sig.clone());
+                }
+            }
+        }
+        if let Some(class_fields) = stdlib_code.module_class_fields.get(&import.module) {
+            for name in &import.names {
+                if let Some(fields) = class_fields.get(name) {
+                    let local_name = import
+                        .aliases
+                        .iter()
+                        .find(|(original, _)| original == name)
+                        .map(|(_, alias)| alias.as_str())
+                        .unwrap_or(name);
+                    emitter.register_external_class_fields(local_name, name, fields);
                 }
             }
         }
@@ -674,10 +754,20 @@ pub fn generate_rust_multi_with_metadata(
     let mut files = HashMap::new();
     let mut used_stdlib_modules = HashSet::new();
     let mut required_crates = HashSet::new();
+    let mut project_codegen_code = stdlib_code.clone();
+
+    for (module_name, module) in modules {
+        project_codegen_code
+            .func_signatures
+            .insert((*module_name).to_string(), module_func_signatures(module));
+        project_codegen_code
+            .module_class_fields
+            .insert((*module_name).to_string(), module_class_fields(module));
+    }
 
     for (module_name, module) in modules {
         let module_public = *module_name != "main";
-        let codegen_result = generate_rust_with_stdlib(module, stdlib_code);
+        let codegen_result = generate_rust_with_stdlib(module, &project_codegen_code);
         let local_imports = render_local_module_imports(module);
         let mut rust_source = if module_public {
             publicize_generated_module_source(&codegen_result.rust_source)
