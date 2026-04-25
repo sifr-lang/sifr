@@ -99,6 +99,9 @@ python3 "${SCRIPT_DIR}/check_sifr_driver_maintainability_guardrails.py"
 echo "Running unit tests and non-pass e2e tests (cargo test -p sifr -- --skip test_e2e_pass)"
 cargo test -p sifr -- --skip test_e2e_pass
 
+echo "Running sifr_driver library tests"
+cargo test -p sifr_driver --lib
+
 if [[ -n "${CONTRACT_SUITES}" ]]; then
   echo "Running validation contract matrix suites"
   CONTRACT_ARGS=()

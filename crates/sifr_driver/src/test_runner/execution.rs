@@ -2,6 +2,7 @@ use super::artifacts::{compose_test_runner_lib, generate_test_runner_cargo_toml}
 use super::orchestrator::GeneratedTestRunnerProject;
 use crate::build::{prepare_cached_artifact, ArtifactCacheReport, PreparedArtifactCache};
 use crate::diagnostics::{write_stderr, write_stderr_line, CompileError, CompilePhase};
+use crate::project::{namespace_module_files, rust_module_file_path};
 use std::path::Path;
 
 pub(crate) struct TestRunnerExecutionOutcome {
@@ -52,15 +53,59 @@ pub(crate) fn execute_test_runner_project(
 
         for module_name in &generated_project.support_module_names {
             if let Some(code) = generated_project.support_rust_files.get(module_name) {
-                std::fs::write(src_dir.join(format!("{module_name}.rs")), code).map_err(
-                    |error| {
+                let module_path = rust_module_file_path(module_name);
+                let output_path = src_dir.join(&module_path);
+                if let Some(parent) = output_path.parent() {
+                    std::fs::create_dir_all(parent).map_err(|error| {
                         vec![CompileError {
-                            message: format!("failed to write {module_name}.rs: {error}"),
+                            message: format!(
+                                "failed to create test support module directory '{}': {error}",
+                                parent.display()
+                            ),
                             phase: CompilePhase::Build,
                         }]
-                    },
-                )?;
+                    })?;
+                }
+                std::fs::write(&output_path, code).map_err(|error| {
+                    vec![CompileError {
+                        message: format!(
+                            "failed to write test support module '{}': {error}",
+                            output_path.display()
+                        ),
+                        phase: CompilePhase::Build,
+                    }]
+                })?;
             }
+        }
+
+        for namespace_file in namespace_module_files(&generated_project.support_module_names) {
+            let output_path = src_dir.join(&namespace_file.path);
+            if let Some(parent) = output_path.parent() {
+                std::fs::create_dir_all(parent).map_err(|error| {
+                    vec![CompileError {
+                        message: format!(
+                            "failed to create test support namespace directory '{}': {error}",
+                            parent.display()
+                        ),
+                        phase: CompilePhase::Build,
+                    }]
+                })?;
+            }
+            let mut contents = String::new();
+            for declaration in namespace_file.declarations {
+                contents.push_str("pub mod ");
+                contents.push_str(&declaration);
+                contents.push_str(";\n");
+            }
+            std::fs::write(&output_path, contents).map_err(|error| {
+                vec![CompileError {
+                    message: format!(
+                        "failed to write test support namespace '{}': {error}",
+                        output_path.display()
+                    ),
+                    phase: CompilePhase::Build,
+                }]
+            })?;
         }
 
         std::fs::write(src_dir.join("lib.rs"), &test_lib).map_err(|error| {
