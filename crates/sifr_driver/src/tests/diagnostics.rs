@@ -37,6 +37,37 @@ fn test_compile_errors_to_diagnostics_preserves_order() {
 }
 
 #[test]
+fn test_workspace_resolution_errors_have_stable_codes_and_urls() {
+    let cases = [
+        (
+            "could not resolve import 'helper'; tried entry-relative '/tmp/helper.sifr' and workspace-relative '/tmp/lib/helper.sifr'",
+            "SIFR-WORKSPACE-0101",
+        ),
+        (
+            "module 'helper' is ambiguous in workspace '/tmp/ws': matches '/tmp/a/helper.sifr' and '/tmp/b/helper.sifr'; reorder [source].roots or rename one module to disambiguate",
+            "SIFR-WORKSPACE-0102",
+        ),
+        (
+            "module 'helpers.list_node' resolves to file '/tmp/ws/lib/helpers/list_node.sifr' but parent name 'helpers' is also a module file '/tmp/ws/lib/helpers.sifr'; package directories are not supported in this phase",
+            "SIFR-WORKSPACE-0103",
+        ),
+    ];
+
+    for (message, code) in cases {
+        let diagnostic = CompileError {
+            message: message.to_string(),
+            phase: CompilePhase::Build,
+        }
+        .to_diagnostic();
+        assert_eq!(diagnostic.code, code);
+        assert_eq!(
+            diagnostic.url,
+            format!("https://sifr.dev/docs/errors/{code}")
+        );
+    }
+}
+
+#[test]
 fn test_apply_diagnostic_recovery_limits_summarizes_similar_diagnostics() {
     let mut diagnostics = Vec::new();
     for idx in 0..8 {

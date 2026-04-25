@@ -10,7 +10,7 @@ Source issue: `issues/sifr-workspace-sifr-toml-import-resolution-2026-04-25.md`
 - [x] WS0 workspace discovery and config validation
 - [ ] WS1 workspace-aware compilation mode
 - [x] WS2 module resolver refactor with no behavior change
-- [ ] WS3 workspace source resolution and diagnostics
+- [x] WS3 workspace source resolution and diagnostics
 - [ ] WS4 build/run/check/emit wiring and cache correctness
 - [ ] WS5 verification-suite fixtures, design note, and LeetCode pilot
 - [ ] WS6 final gate, review, and closure
@@ -59,9 +59,9 @@ Merged: tbd
 
 ## WS2 Module Resolver Refactor With No Behavior Change
 
-Status: not_started
-Branch: tbd
-PR: tbd
+Status: implemented_pending_pr
+Branch: ad-hoc/sifr-workspace-ws3
+PR: https://github.com/yaseralnajjar/sifr/pull/1641
 Merged: tbd
 
 ### Planned Scope
@@ -95,11 +95,11 @@ Merged: tbd
 
 ### Validation Evidence
 
-- [ ] `cargo fmt --check`
-- [ ] `cargo clippy --workspace -- -D warnings`
-- [ ] `cargo test -p sifr_driver workspace -- --nocapture` or equivalent targeted selector
-- [ ] `cargo test -p sifr_driver discovery -- --nocapture` or equivalent targeted selector
-- [ ] Snapshot evidence for diagnostic codes and URLs
+- [x] `cargo fmt --check`
+- [x] `cargo clippy --workspace -- -D warnings`
+- [x] `cargo test -p sifr_driver workspace -- --nocapture`
+- [x] `cargo test -p sifr_driver discovery -- --nocapture`
+- [x] Diagnostic code and URL unit coverage for `SIFR-WORKSPACE-0101`, `SIFR-WORKSPACE-0102`, and `SIFR-WORKSPACE-0103`
 
 ## WS4 Build/Run/Check/Emit Wiring And Cache Correctness
 

@@ -112,6 +112,18 @@ impl CompileError {
                 return Some("SIFR-WORKSPACE-0004");
             }
         }
+        if message.starts_with("could not resolve import ") {
+            return Some("SIFR-WORKSPACE-0101");
+        }
+        if message.starts_with("module ") && message.contains(" is ambiguous in workspace ") {
+            return Some("SIFR-WORKSPACE-0102");
+        }
+        if message.starts_with("module ")
+            && message.contains(" resolves to file ")
+            && message.contains("package directories are not supported in this phase")
+        {
+            return Some("SIFR-WORKSPACE-0103");
+        }
         None
     }
 

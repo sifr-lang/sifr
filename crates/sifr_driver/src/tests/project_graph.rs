@@ -334,6 +334,22 @@ fn test_assemble_project_main_rs_is_deterministic_against_hashmap_order() {
 }
 
 #[test]
+fn test_assemble_project_main_rs_declares_dotted_modules_by_top_level_namespace() {
+    let compile_order = vec!["helpers.list_node".to_string(), "main".to_string()];
+
+    let mut rust_files = HashMap::new();
+    rust_files.insert("main".to_string(), "fn main() {}\n".to_string());
+    rust_files.insert(
+        "helpers.list_node".to_string(),
+        "pub struct ListNode;\n".to_string(),
+    );
+
+    let main_rs = assemble_project_main_rs(&compile_order, &rust_files);
+
+    assert_eq!(main_rs, "mod helpers;\n\nfn main() {}\n");
+}
+
+#[test]
 fn test_collect_project_modules_reports_unknown_module_in_non_main() {
     let mut parsed_modules = HashMap::new();
     parsed_modules.insert(
