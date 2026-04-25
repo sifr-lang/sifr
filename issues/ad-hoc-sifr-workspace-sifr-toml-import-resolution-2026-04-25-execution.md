@@ -11,7 +11,7 @@ Source issue: `issues/sifr-workspace-sifr-toml-import-resolution-2026-04-25.md`
 - [x] WS1 workspace-aware compilation mode
 - [x] WS2 module resolver refactor with no behavior change
 - [x] WS3 workspace source resolution and diagnostics
-- [ ] WS4 build/run/check/emit wiring and cache correctness
+- [x] WS4 build/run/check/emit wiring and cache correctness
 - [ ] WS5 verification-suite fixtures, design note, and LeetCode pilot
 - [ ] WS6 final gate, review, and closure
 
@@ -103,8 +103,8 @@ Merged: 2026-04-25
 
 ## WS4 Build/Run/Check/Emit Wiring And Cache Correctness
 
-Status: not_started
-Branch: tbd
+Status: implemented_pending_pr
+Branch: ad-hoc/sifr-workspace-ws4
 PR: tbd
 Merged: tbd
 
@@ -117,10 +117,10 @@ Merged: tbd
 
 ### Validation Evidence
 
-- [ ] `cargo fmt --check`
-- [ ] `cargo clippy --workspace -- -D warnings`
-- [ ] `cargo test -p sifr_driver project_build_check -- --nocapture` or equivalent targeted selector
-- [ ] Cache-key regression proving dotted helper content invalidates cached runs
+- [x] `cargo fmt --check`
+- [x] `cargo clippy --workspace -- -D warnings`
+- [x] `cargo test -p sifr_driver project_build_check -- --nocapture`
+- [x] Cache-key regression covered by `test_cached_project_invalidates_when_workspace_helper_changes`.
 
 ## WS5 Verification-Suite Fixtures, Design Note, And LeetCode Pilot
 

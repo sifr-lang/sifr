@@ -5,13 +5,14 @@ use super::project_codegen::{
     generated_project_binary_project, generated_single_file_binary_project, GeneratedBinaryProject,
 };
 use super::ArtifactCacheReport;
-use crate::diagnostics::{run_codegen_with_boundary, CompileError, CompilePhase};
+use crate::diagnostics::{run_codegen_with_boundary, CompileError, CompilePhase, CompileResult};
 use crate::frontend::{parse_source, FrontendCompiled, FrontendDiagnosticStyle};
 use crate::project::{
     collect_project_hir_modules, compile_frontend_modules, emit_project_frontend_diagnostics,
     parse_import_closure_modules, DiscoveryDiagnosticStyle, ModuleResolver, ProjectLowering,
 };
 use crate::stdlib::{compile_stdlib, StdlibCompiled};
+use crate::workspace::find_workspace_root;
 use sifr_codegen::generate_rust_with_stdlib;
 use sifr_hir::LoweringResult;
 use std::collections::{BTreeSet, HashMap};
@@ -73,6 +74,20 @@ pub(crate) fn resolve_project_entrypoint_plan(
     main_file: &Path,
 ) -> Result<RootedEntrypointPlan, Vec<CompileError>> {
     RootedEntrypointPlan::from_entrypoint(&RootedEntrypoint::Project { main_file })
+}
+
+pub(crate) fn emit_project_entrypoint(main_file: &Path) -> CompileResult {
+    let plan = match resolve_project_entrypoint_plan(main_file) {
+        Ok(plan) => plan,
+        Err(errors) => return CompileResult::Errors { errors },
+    };
+    plan.emit_frontend_diagnostics();
+    match plan.into_generated_binary_project() {
+        Ok(generated_project) => CompileResult::Success {
+            rust_source: generated_project.emit_source_listing(),
+        },
+        Err(errors) => CompileResult::Errors { errors },
+    }
 }
 
 pub(crate) fn build_rooted_entrypoint_binary(
@@ -155,13 +170,23 @@ impl RootedEntrypointPlan {
                         phase: CompilePhase::Build,
                     }]);
                 };
-                let root_modules = BTreeSet::from([main_module_name]);
-                let resolver = ModuleResolver::entry_parent(project_dir);
-                let parsed_modules = parse_import_closure_modules(
+                let root_modules = BTreeSet::from([main_module_name.clone()]);
+                let resolver = match find_workspace_root(main_file)? {
+                    Some(workspace_root) => {
+                        ModuleResolver::with_workspace(project_dir, workspace_root)
+                    }
+                    None => ModuleResolver::entry_parent(project_dir),
+                };
+                let mut parsed_modules = parse_import_closure_modules(
                     &resolver,
                     &root_modules,
                     DiscoveryDiagnosticStyle::ModuleName,
                 )?;
+                if main_module_name != "main" {
+                    if let Some(entry_suite) = parsed_modules.remove(&main_module_name) {
+                        parsed_modules.insert("main".to_string(), entry_suite);
+                    }
+                }
                 let project_lowering =
                     collect_project_hir_modules(&parsed_modules, stdlib.defs.clone())?;
                 (RootedEntrypointShape::Project, project_lowering)

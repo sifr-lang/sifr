@@ -1,5 +1,7 @@
 use crate::diagnostics::{run_codegen_with_boundary, CompileError};
-use crate::project::{assemble_project_main_rs, ordered_non_main_module_names, ProjectLowering};
+use crate::project::{
+    assemble_project_main_rs, ordered_non_main_module_names, rust_module_file_path, ProjectLowering,
+};
 use sifr_codegen::{generate_rust_multi_with_metadata, StdlibCode};
 use sifr_hir::HirModule;
 use std::collections::{BTreeMap, HashSet};
@@ -9,6 +11,27 @@ pub(super) struct GeneratedBinaryProject {
     pub(super) support_modules: BTreeMap<String, String>,
     pub(super) used_stdlib_modules: HashSet<String>,
     pub(super) required_crates: HashSet<String>,
+}
+
+impl GeneratedBinaryProject {
+    pub(super) fn emit_source_listing(&self) -> String {
+        let mut listing = String::new();
+        listing.push_str("// src/main.rs\n");
+        listing.push_str(&self.main_rs);
+        if !self.main_rs.ends_with('\n') {
+            listing.push('\n');
+        }
+        for (module_name, code) in &self.support_modules {
+            listing.push_str("\n// src/");
+            listing.push_str(&rust_module_file_path(module_name).display().to_string());
+            listing.push('\n');
+            listing.push_str(code);
+            if !code.ends_with('\n') {
+                listing.push('\n');
+            }
+        }
+        listing
+    }
 }
 
 pub(super) fn generated_single_file_binary_project(

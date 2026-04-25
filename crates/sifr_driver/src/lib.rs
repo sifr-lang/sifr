@@ -17,7 +17,7 @@ mod workspace;
 
 pub use build::{
     build, build_cached_project, build_cached_single_file, build_project, check_project,
-    CachedBinaryArtifact,
+    emit_project, CachedBinaryArtifact,
 };
 pub use diagnostics::{
     apply_diagnostic_recovery_limits, compile_errors_to_diagnostics, CompileError, CompilePhase,

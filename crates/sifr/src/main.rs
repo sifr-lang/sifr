@@ -8,7 +8,7 @@
 use clap::{Parser, Subcommand, ValueEnum};
 use sifr_driver::{
     apply_diagnostic_recovery_limits, build, build_cached_project, build_cached_single_file,
-    build_project, check, check_project, compile, compile_errors_to_diagnostics,
+    build_project, check, check_project, compile, compile_errors_to_diagnostics, emit_project,
     find_workspace_root, run_tests, CachedBinaryArtifact, CompileError, CompilePhase,
     CompileResult, CompilerDiagnostic, Severity,
 };
@@ -573,17 +573,12 @@ fn emit_entrypoint(file: &Path) -> CompileResult {
         Ok(mode) => mode,
         Err(errors) => return CompileResult::Errors { errors },
     };
-    let source = read_source(file);
     match mode {
-        CompilationMode::Project => {
-            let errors = check_project(file);
-            if errors.is_empty() {
-                compile(&source)
-            } else {
-                CompileResult::Errors { errors }
-            }
+        CompilationMode::Project => emit_project(file),
+        CompilationMode::SingleFile => {
+            let source = read_source(file);
+            compile(&source)
         }
-        CompilationMode::SingleFile => compile(&source),
     }
 }
 

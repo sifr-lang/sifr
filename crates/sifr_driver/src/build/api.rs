@@ -1,8 +1,9 @@
 use crate::build::{
     build_cached_project_binary, build_cached_single_file_binary, build_rooted_entrypoint_binary,
-    resolve_project_entrypoint_plan, CachedBinaryArtifact, RootedEntrypoint,
+    emit_project_entrypoint, resolve_project_entrypoint_plan, CachedBinaryArtifact,
+    RootedEntrypoint,
 };
-use crate::diagnostics::CompileError;
+use crate::diagnostics::{CompileError, CompileResult};
 use std::path::{Path, PathBuf};
 
 pub fn build_project(main_file: &Path, output_dir: &Path) -> Result<PathBuf, Vec<CompileError>> {
@@ -17,6 +18,10 @@ pub fn check_project(main_file: &Path) -> Vec<CompileError> {
         }
         Err(errors) => errors,
     }
+}
+
+pub fn emit_project(main_file: &Path) -> CompileResult {
+    emit_project_entrypoint(main_file)
 }
 
 pub fn build(source: &str, output_dir: &Path) -> Result<PathBuf, Vec<CompileError>> {

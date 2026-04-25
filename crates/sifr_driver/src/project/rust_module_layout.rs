@@ -2,13 +2,11 @@ use std::collections::BTreeSet;
 use std::path::PathBuf;
 
 #[derive(Clone, Debug, PartialEq, Eq)]
-#[allow(dead_code)]
 pub(crate) struct NamespaceModuleFile {
     pub(crate) path: PathBuf,
     pub(crate) declarations: Vec<String>,
 }
 
-#[allow(dead_code)]
 pub(crate) fn rust_module_file_path(module_id: &str) -> PathBuf {
     let mut path = PathBuf::new();
     for component in module_id.split('.') {
@@ -28,7 +26,6 @@ pub(crate) fn top_level_module_declarations(module_ids: &[String]) -> Vec<String
         .collect()
 }
 
-#[allow(dead_code)]
 pub(crate) fn namespace_module_files(module_ids: &[String]) -> Vec<NamespaceModuleFile> {
     let mut namespace_children: std::collections::BTreeMap<String, BTreeSet<String>> =
         std::collections::BTreeMap::new();
