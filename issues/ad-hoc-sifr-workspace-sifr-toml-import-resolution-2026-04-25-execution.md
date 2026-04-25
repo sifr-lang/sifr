@@ -19,7 +19,7 @@ Source issue: `issues/sifr-workspace-sifr-toml-import-resolution-2026-04-25.md`
 
 Status: implemented_pending_pr
 Branch: ad-hoc/sifr-workspace-ws0
-PR: tbd
+PR: https://github.com/yaseralnajjar/sifr/pull/1639
 Merged: tbd
 
 ### Planned Scope
