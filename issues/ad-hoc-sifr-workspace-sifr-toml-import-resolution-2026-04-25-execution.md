@@ -8,7 +8,7 @@ Source issue: `issues/sifr-workspace-sifr-toml-import-resolution-2026-04-25.md`
 ## Wave Checklist
 
 - [x] WS0 workspace discovery and config validation
-- [ ] WS1 workspace-aware compilation mode
+- [x] WS1 workspace-aware compilation mode
 - [x] WS2 module resolver refactor with no behavior change
 - [x] WS3 workspace source resolution and diagnostics
 - [ ] WS4 build/run/check/emit wiring and cache correctness
@@ -40,8 +40,8 @@ Merged: 2026-04-25
 ## WS1 Workspace-Aware Compilation Mode
 
 Status: implemented_pending_pr
-Branch: ad-hoc/sifr-workspace-ws2
-PR: https://github.com/yaseralnajjar/sifr/pull/1640
+Branch: ad-hoc/sifr-workspace-ws1
+PR: https://github.com/yaseralnajjar/sifr/pull/1642
 Merged: tbd
 
 ### Planned Scope
@@ -52,17 +52,17 @@ Merged: tbd
 
 ### Validation Evidence
 
-- [ ] `cargo fmt --check`
-- [ ] `cargo clippy --workspace -- -D warnings`
-- [ ] `cargo test -p sifr -- resolve_compilation_mode -- --nocapture` or equivalent targeted selector
-- [ ] CLI malformed-workspace diagnostic check recorded in PR notes
+- [x] `cargo fmt --check`
+- [x] `cargo clippy --workspace -- -D warnings`
+- [x] `cargo test -p sifr -- resolve_compilation_mode -- --nocapture`
+- [x] CLI malformed-workspace diagnostic path covered by `test_resolve_compilation_mode_reports_malformed_workspace_manifest`.
 
 ## WS2 Module Resolver Refactor With No Behavior Change
 
-Status: implemented_pending_pr
-Branch: ad-hoc/sifr-workspace-ws3
-PR: https://github.com/yaseralnajjar/sifr/pull/1641
-Merged: tbd
+Status: merged
+Branch: ad-hoc/sifr-workspace-ws2
+PR: https://github.com/yaseralnajjar/sifr/pull/1640
+Merged: 2026-04-25
 
 ### Planned Scope
 
@@ -80,10 +80,10 @@ Merged: tbd
 
 ## WS3 Workspace Source Resolution And Diagnostics
 
-Status: not_started
-Branch: tbd
-PR: tbd
-Merged: tbd
+Status: merged
+Branch: ad-hoc/sifr-workspace-ws3
+PR: https://github.com/yaseralnajjar/sifr/pull/1641
+Merged: 2026-04-25
 
 ### Planned Scope
 

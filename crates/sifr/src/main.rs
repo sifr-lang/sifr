@@ -8,8 +8,9 @@
 use clap::{Parser, Subcommand, ValueEnum};
 use sifr_driver::{
     apply_diagnostic_recovery_limits, build, build_cached_project, build_cached_single_file,
-    build_project, check, check_project, compile, compile_errors_to_diagnostics, run_tests,
-    CachedBinaryArtifact, CompileError, CompilePhase, CompileResult, CompilerDiagnostic, Severity,
+    build_project, check, check_project, compile, compile_errors_to_diagnostics,
+    find_workspace_root, run_tests, CachedBinaryArtifact, CompileError, CompilePhase,
+    CompileResult, CompilerDiagnostic, Severity,
 };
 use sifr_python_ast::Stmt;
 use sifr_python_parser::parse_module;
@@ -103,14 +104,18 @@ fn run_cli(cli: Cli) -> i32 {
     }
 }
 
-fn resolve_compilation_mode(file: &Path) -> CompilationMode {
+fn resolve_compilation_mode(file: &Path) -> Result<CompilationMode, Vec<CompileError>> {
+    if find_workspace_root(file)?.is_some() {
+        return Ok(CompilationMode::Project);
+    }
+
     let is_project_entry =
         file.file_stem().is_some_and(|stem| stem == "main") && has_local_project_imports(file);
 
     if is_project_entry {
-        CompilationMode::Project
+        Ok(CompilationMode::Project)
     } else {
-        CompilationMode::SingleFile
+        Ok(CompilationMode::SingleFile)
     }
 }
 
@@ -533,7 +538,7 @@ fn cmd_emit(file: &Path, diagnostic_format: DiagnosticFormat) -> i32 {
 }
 
 fn compile_entrypoint(file: &Path, output: &Path) -> Result<PathBuf, Vec<CompileError>> {
-    match resolve_compilation_mode(file) {
+    match resolve_compilation_mode(file)? {
         CompilationMode::Project => build_project(file, output),
         CompilationMode::SingleFile => {
             let source = read_source(file);
@@ -543,7 +548,7 @@ fn compile_entrypoint(file: &Path, output: &Path) -> Result<PathBuf, Vec<Compile
 }
 
 fn build_run_artifact(file: &Path) -> Result<CachedBinaryArtifact, Vec<CompileError>> {
-    match resolve_compilation_mode(file) {
+    match resolve_compilation_mode(file)? {
         CompilationMode::Project => build_cached_project(file),
         CompilationMode::SingleFile => {
             let source = read_source(file);
@@ -554,8 +559,9 @@ fn build_run_artifact(file: &Path) -> Result<CachedBinaryArtifact, Vec<CompileEr
 
 fn check_entrypoint(file: &Path) -> Vec<CompileError> {
     match resolve_compilation_mode(file) {
-        CompilationMode::Project => check_project(file),
-        CompilationMode::SingleFile => {
+        Err(errors) => errors,
+        Ok(CompilationMode::Project) => check_project(file),
+        Ok(CompilationMode::SingleFile) => {
             let source = read_source(file);
             check(&source)
         }
@@ -563,8 +569,22 @@ fn check_entrypoint(file: &Path) -> Vec<CompileError> {
 }
 
 fn emit_entrypoint(file: &Path) -> CompileResult {
+    let mode = match resolve_compilation_mode(file) {
+        Ok(mode) => mode,
+        Err(errors) => return CompileResult::Errors { errors },
+    };
     let source = read_source(file);
-    compile(&source)
+    match mode {
+        CompilationMode::Project => {
+            let errors = check_project(file);
+            if errors.is_empty() {
+                compile(&source)
+            } else {
+                CompileResult::Errors { errors }
+            }
+        }
+        CompilationMode::SingleFile => compile(&source),
+    }
 }
 
 #[cfg(test)]
@@ -583,6 +603,10 @@ mod tests {
         let dir = std::env::temp_dir().join(unique);
         std::fs::create_dir_all(&dir).expect("temp dir should be created");
         dir
+    }
+
+    fn resolved_mode(file: &Path) -> CompilationMode {
+        resolve_compilation_mode(file).expect("compilation mode should resolve")
     }
 
     struct TestProject {
@@ -638,7 +662,7 @@ mod tests {
             "helper file should be written",
         );
 
-        assert_eq!(resolve_compilation_mode(&main), CompilationMode::Project);
+        assert_eq!(resolved_mode(&main), CompilationMode::Project);
     }
 
     #[test]
@@ -655,7 +679,49 @@ mod tests {
             "helper file should be written",
         );
 
-        assert_eq!(resolve_compilation_mode(&app), CompilationMode::SingleFile);
+        assert_eq!(resolved_mode(&app), CompilationMode::SingleFile);
+    }
+
+    #[test]
+    fn test_resolve_compilation_mode_project_for_non_main_entry_in_workspace() {
+        let project = TestProject::new("workspace_non_main");
+        project.write(
+            "sifr.toml",
+            "[source]\nroots = [\"src\"]\n",
+            "manifest should be written",
+        );
+        project.write(
+            "src/helper.sifr",
+            "VALUE: int = 1\n",
+            "helper should be written",
+        );
+        let app = project.write(
+            "src/app.sifr",
+            "from helper import VALUE\n\ndef main():\n    print(VALUE)\n",
+            "app file should be written",
+        );
+
+        assert_eq!(resolved_mode(&app), CompilationMode::Project);
+    }
+
+    #[test]
+    fn test_resolve_compilation_mode_reports_malformed_workspace_manifest() {
+        let project = TestProject::new("workspace_malformed");
+        project.write(
+            "sifr.toml",
+            "[source\nroots = [\".\"]\n",
+            "manifest should be written",
+        );
+        let app = project.write(
+            "app.sifr",
+            "def main():\n    pass\n",
+            "app should be written",
+        );
+
+        let errors = resolve_compilation_mode(&app)
+            .expect_err("malformed manifest should prevent single-file fallback");
+
+        assert!(errors[0].message.contains("could not parse sifr.toml"));
     }
 
     #[test]
@@ -672,7 +738,7 @@ mod tests {
             "scratch file should be written",
         );
 
-        assert_eq!(resolve_compilation_mode(&main), CompilationMode::SingleFile);
+        assert_eq!(resolved_mode(&main), CompilationMode::SingleFile);
     }
 
     #[test]
@@ -689,7 +755,7 @@ mod tests {
             "helper file should be written",
         );
 
-        assert_eq!(resolve_compilation_mode(&main), CompilationMode::SingleFile);
+        assert_eq!(resolved_mode(&main), CompilationMode::SingleFile);
     }
 
     #[test]
@@ -701,7 +767,7 @@ mod tests {
             "main file should be written",
         );
 
-        assert_eq!(resolve_compilation_mode(&main), CompilationMode::SingleFile);
+        assert_eq!(resolved_mode(&main), CompilationMode::SingleFile);
     }
 
     #[test]
@@ -718,7 +784,7 @@ mod tests {
             "helper file should be written",
         );
 
-        assert_eq!(resolve_compilation_mode(&main), CompilationMode::SingleFile);
+        assert_eq!(resolved_mode(&main), CompilationMode::SingleFile);
     }
 
     #[test]
@@ -731,7 +797,7 @@ mod tests {
             "helper file should be written",
         );
 
-        assert_eq!(resolve_compilation_mode(&main), CompilationMode::SingleFile);
+        assert_eq!(resolved_mode(&main), CompilationMode::SingleFile);
     }
 
     #[test]
@@ -748,7 +814,7 @@ mod tests {
             "helper file should be written",
         );
 
-        assert_eq!(resolve_compilation_mode(&main), CompilationMode::SingleFile);
+        assert_eq!(resolved_mode(&main), CompilationMode::SingleFile);
     }
 
     #[test]
@@ -765,7 +831,7 @@ mod tests {
             "typing file should be written",
         );
 
-        assert_eq!(resolve_compilation_mode(&main), CompilationMode::SingleFile);
+        assert_eq!(resolved_mode(&main), CompilationMode::SingleFile);
     }
 
     #[test]
@@ -782,7 +848,7 @@ mod tests {
             "helper file should be written",
         );
 
-        assert_eq!(resolve_compilation_mode(&main), CompilationMode::SingleFile);
+        assert_eq!(resolved_mode(&main), CompilationMode::SingleFile);
     }
 
     #[test]
@@ -799,7 +865,7 @@ mod tests {
             "enum file should be written",
         );
 
-        assert_eq!(resolve_compilation_mode(&main), CompilationMode::SingleFile);
+        assert_eq!(resolved_mode(&main), CompilationMode::SingleFile);
     }
 
     #[test]
@@ -816,7 +882,7 @@ mod tests {
             "pkg init should be written",
         );
 
-        assert_eq!(resolve_compilation_mode(&main), CompilationMode::SingleFile);
+        assert_eq!(resolved_mode(&main), CompilationMode::SingleFile);
     }
 
     #[test]
@@ -833,7 +899,7 @@ mod tests {
             "helper file should be written",
         );
 
-        assert_eq!(resolve_compilation_mode(&main), CompilationMode::Project);
+        assert_eq!(resolved_mode(&main), CompilationMode::Project);
     }
 
     #[test]
@@ -845,7 +911,7 @@ mod tests {
             "main file should be written",
         );
 
-        assert_eq!(resolve_compilation_mode(&main), CompilationMode::SingleFile);
+        assert_eq!(resolved_mode(&main), CompilationMode::SingleFile);
     }
 
     #[test]
@@ -862,7 +928,7 @@ mod tests {
             "helper file should be written",
         );
 
-        assert_eq!(resolve_compilation_mode(&main), CompilationMode::SingleFile);
+        assert_eq!(resolved_mode(&main), CompilationMode::SingleFile);
     }
 
     #[test]
@@ -874,7 +940,7 @@ mod tests {
             "main file should be written",
         );
 
-        assert_eq!(resolve_compilation_mode(&main), CompilationMode::SingleFile);
+        assert_eq!(resolved_mode(&main), CompilationMode::SingleFile);
     }
 
     #[test]
