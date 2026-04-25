@@ -3,6 +3,7 @@ mod compile_order;
 mod discovery;
 mod exports;
 mod frontend;
+mod rust_module_layout;
 
 pub(crate) use assembly::{assemble_project_main_rs, ordered_non_main_module_names};
 pub(crate) use discovery::{

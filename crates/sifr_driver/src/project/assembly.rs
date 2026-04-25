@@ -1,3 +1,4 @@
+use super::rust_module_layout::top_level_module_declarations;
 use std::collections::HashMap;
 
 pub(crate) fn ordered_non_main_module_names(
@@ -18,9 +19,9 @@ pub(crate) fn assemble_project_main_rs(
 ) -> String {
     let mut main_rs = String::new();
     let ordered_non_main = ordered_non_main_module_names(compile_order, rust_files);
-    for module_name in &ordered_non_main {
+    for module_name in top_level_module_declarations(&ordered_non_main) {
         main_rs.push_str("mod ");
-        main_rs.push_str(module_name);
+        main_rs.push_str(&module_name);
         main_rs.push_str(";\n");
     }
     if !ordered_non_main.is_empty() && rust_files.contains_key("main") {
