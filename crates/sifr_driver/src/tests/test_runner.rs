@@ -47,6 +47,44 @@ def test_import_parity():
 }
 
 #[test]
+fn test_run_tests_resolves_dotted_local_support_modules() {
+    let unique = format!(
+        "sifr_test_dotted_import_{}_{}",
+        std::process::id(),
+        std::time::SystemTime::now()
+            .duration_since(std::time::UNIX_EPOCH)
+            .expect("time should move forward")
+            .as_nanos()
+    );
+    let test_dir = std::env::temp_dir().join(unique);
+    std::fs::create_dir_all(test_dir.join("helpers")).expect("test helper dir should be created");
+
+    std::fs::write(
+        test_dir.join("helpers").join("list_node.sifr"),
+        r#"
+def value() -> int:
+    return 41
+"#,
+    )
+    .expect("dotted helper module should be written");
+    std::fs::write(
+        test_dir.join("test_dotted_imports.sifr"),
+        r#"
+from helpers.list_node import value
+
+def test_dotted_import():
+    assert value() == 41
+"#,
+    )
+    .expect("test module should be written");
+
+    let result = run_tests(&test_dir).expect("test runner should compile dotted support modules");
+    assert!(result, "sifr test run should succeed");
+
+    let _ = std::fs::remove_dir_all(&test_dir);
+}
+
+#[test]
 fn test_run_tests_reuses_cached_workspace_for_unchanged_project() {
     let unique = format!(
         "sifr_test_cache_reuse_{}_{}",
@@ -358,5 +396,23 @@ fn test_compose_test_runner_lib_is_test_scoped() {
     let lib_source = compose_test_runner_lib(&support_modules, all_rust_code);
     assert!(lib_source.starts_with("#![cfg(test)]"));
     assert!(lib_source.contains("mod helper;"));
+    assert!(lib_source.contains("#[test]\nfn smoke() {}"));
+}
+
+#[test]
+fn test_compose_test_runner_lib_declares_dotted_modules_by_namespace() {
+    let support_modules = vec![
+        "helpers.list_node".to_string(),
+        "helpers.tree_node".to_string(),
+        "math".to_string(),
+    ];
+    let all_rust_code = "#[test]\nfn smoke() {}\n";
+
+    let lib_source = compose_test_runner_lib(&support_modules, all_rust_code);
+
+    assert!(lib_source.starts_with("#![cfg(test)]"));
+    assert!(lib_source.contains("mod helpers;\n"));
+    assert!(lib_source.contains("mod math;\n"));
+    assert!(!lib_source.contains("mod helpers.list_node;"));
     assert!(lib_source.contains("#[test]\nfn smoke() {}"));
 }

@@ -1,4 +1,5 @@
 use crate::build::generate_dependency_cargo_toml;
+use crate::project::top_level_module_declarations;
 use std::collections::HashSet;
 
 pub(crate) fn compose_test_runner_lib(
@@ -6,9 +7,9 @@ pub(crate) fn compose_test_runner_lib(
     all_rust_code: &str,
 ) -> String {
     let mut test_lib = String::from("#![cfg(test)]\n\n");
-    for module_name in support_module_names {
+    for module_name in top_level_module_declarations(support_module_names) {
         test_lib.push_str("mod ");
-        test_lib.push_str(module_name);
+        test_lib.push_str(&module_name);
         test_lib.push_str(";\n");
     }
     if !support_module_names.is_empty() {

@@ -186,6 +186,12 @@ Merged: 2026-04-25
 - [x] `scripts/run_all_tests.sh`; report `target/validation_lane_reports/pr.latest.json`, wall time 96.82s, hardening `variants = 28`, `failures = 0`, `blocking_failures = 0`.
 - [x] `cargo build --release -p sifr`
 - [x] `python3 scripts/run_phase31_leetcode.py --manifest verification/leetcode/full_corpus_manifest_20260402_live.json --output verification/leetcode/full_corpus_current_results_20260425_workspace_closure.json --timeout-seconds 30 --no-build-release-if-missing`; summary `case_count = 411`, `PASS = 208`, `NO_ORACLE = 203`, no `CHECK_ERROR`, `RUN_ERROR`, or `TIMEOUT`.
+- [x] Post-pass-5 blocker fix validation: `cargo test -p sifr_driver --lib`; 97 passed, 0 failed.
+- [x] Post-pass-5 blocker fix validation: `cargo test -p sifr_driver test_run_tests_resolves_dotted_local_support_modules -- --nocapture`.
+- [x] Post-pass-5 blocker fix validation: `cargo fmt --check`.
+- [x] Post-pass-5 blocker fix validation: `cargo clippy --workspace -- -D warnings`.
+- [x] Post-pass-5 blocker fix validation: `scripts/run_all_tests.sh --profile quick`; report `target/validation_lane_reports/quick.latest.json`, wall time 87.03s, 0 failures, includes `cargo test -p sifr_driver --lib`.
+- [x] Post-pass-5 blocker fix validation: `scripts/run_all_tests.sh`; report `target/validation_lane_reports/pr.latest.json`, wall time 108.06s, hardening `variants = 28`, `failures = 0`, `blocking_failures = 0`, includes `cargo test -p sifr_driver --lib`.
 
 ## External Reviews
 
@@ -193,5 +199,6 @@ Merged: 2026-04-25
 - historical pass 2: `reviews/sifr-workspace-pyproject-import-resolution-2026-04-25-review-pass2.md` returned NOT READY; blockers were dotted Rust module materialization and incompatible flat e2e fixture placement.
 - historical pass 3: `reviews/sifr-workspace-pyproject-import-resolution-2026-04-25-review-pass3.md` returned READY for the old pyproject-targeted plan. A fresh review is required after switching this phase to native `sifr.toml`.
 - pass 4: `reviews/sifr-workspace-sifr-toml-import-resolution-2026-04-25-review-pass4.md` returned READY with no blocking findings for the native `sifr.toml` plan.
-- pass 5: `reviews/sifr-workspace-sifr-toml-import-resolution-2026-04-25-review-pass5.md` returned READY post-merge with no blocking findings; observations are forward-looking follow-up hygiene.
-- pass 6: `reviews/sifr-workspace-sifr-toml-import-resolution-2026-04-25-review-pass6.md` returned READY with no blockers and explicitly closed the review loop with no further rounds needed.
+- pass 5: `reviews/sifr-workspace-sifr-toml-import-resolution-2026-04-25-review-pass5.md` superseded the earlier pass-5 draft and returned NOT READY; blockers were the stale `sifr_driver` deterministic assembly test, the missing `sifr_driver` lib-test gate in `scripts/run_all_tests.sh`, and missing dotted support-module materialization in the test runner.
+- pass 6: `reviews/sifr-workspace-sifr-toml-import-resolution-2026-04-25-review-pass6.md` reviewed the earlier pass-5 READY draft before the corrected NOT READY pass-5 artifact landed; treat it as superseded by pass 5 and the follow-up blocker-fix work.
+- pass 7: `reviews/sifr-workspace-sifr-toml-import-resolution-2026-04-25-review-pass7.md` returned READY; B1, B2, and B3 from the corrected pass-5 review are resolved and no further blocker-fix review rounds are required.

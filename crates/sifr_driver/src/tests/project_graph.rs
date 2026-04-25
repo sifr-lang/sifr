@@ -330,7 +330,7 @@ fn test_assemble_project_main_rs_is_deterministic_against_hashmap_order() {
     let main_a = assemble_project_main_rs(&compile_order, &rust_files_a);
     let main_b = assemble_project_main_rs(&compile_order, &rust_files_b);
     assert_eq!(main_a, main_b);
-    assert_eq!(main_a, "mod provider;\nmod consumer;\n\nfn main() {}\n");
+    assert_eq!(main_a, "mod consumer;\nmod provider;\n\nfn main() {}\n");
 }
 
 #[test]
