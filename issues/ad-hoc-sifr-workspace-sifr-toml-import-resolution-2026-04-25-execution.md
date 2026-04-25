@@ -61,7 +61,7 @@ Merged: tbd
 
 Status: implemented_pending_pr
 Branch: ad-hoc/sifr-workspace-ws3
-PR: tbd
+PR: https://github.com/yaseralnajjar/sifr/pull/1641
 Merged: tbd
 
 ### Planned Scope
