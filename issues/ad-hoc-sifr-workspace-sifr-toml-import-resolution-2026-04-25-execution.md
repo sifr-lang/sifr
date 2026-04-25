@@ -1,13 +1,13 @@
 # Ad-hoc Phase Execution: Sifr Workspace Resolution Via `sifr.toml`
 
-Status: not_started
-Started: tbd
+Status: in_progress
+Started: 2026-04-25
 Phase plan: `issues/ad-hoc-sifr-workspace-sifr-toml-import-resolution-2026-04-25.md`
 Source issue: `issues/sifr-workspace-sifr-toml-import-resolution-2026-04-25.md`
 
 ## Wave Checklist
 
-- [ ] WS0 workspace discovery and config validation
+- [x] WS0 workspace discovery and config validation
 - [ ] WS1 workspace-aware compilation mode
 - [ ] WS2 module resolver refactor with no behavior change
 - [ ] WS3 workspace source resolution and diagnostics
@@ -17,9 +17,9 @@ Source issue: `issues/sifr-workspace-sifr-toml-import-resolution-2026-04-25.md`
 
 ## WS0 Workspace Discovery And Config Validation
 
-Status: not_started
-Branch: tbd
-PR: tbd
+Status: implemented_pending_pr
+Branch: ad-hoc/sifr-workspace-ws0
+PR: https://github.com/yaseralnajjar/sifr/pull/1639
 Merged: tbd
 
 ### Planned Scope
@@ -32,10 +32,10 @@ Merged: tbd
 
 ### Validation Evidence
 
-- [ ] `cargo fmt --check`
-- [ ] `cargo clippy --workspace -- -D warnings`
-- [ ] `cargo test -p sifr_driver workspace -- --nocapture` or equivalent targeted selector
-- [ ] Negative-path config validation tests recorded in PR notes
+- [x] `cargo fmt --check`
+- [x] `cargo clippy --workspace -- -D warnings`
+- [x] `cargo test -p sifr_driver workspace -- --nocapture`
+- [x] Negative-path config validation tests cover malformed TOML, wrong `package.name` type, wrong `source.roots` type, source escape, absolute path, empty path, missing directory, and file path.
 
 ## WS1 Workspace-Aware Compilation Mode
 

@@ -28,7 +28,7 @@ pub struct CompileError {
     pub phase: CompilePhase,
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub enum CompilePhase {
     Parse,
     TypeCheck,
@@ -93,7 +93,32 @@ pub struct CompilerDiagnostic {
 }
 
 impl CompileError {
+    fn workspace_diagnostic_code(&self) -> Option<&'static str> {
+        if self.phase != CompilePhase::Build {
+            return None;
+        }
+        let message = self.message.as_str();
+        if message.starts_with("could not parse sifr.toml at ") {
+            return Some("SIFR-WORKSPACE-0001");
+        }
+        if message.starts_with("[source].roots entry ") {
+            if message.contains(" escapes the workspace root via '..'") {
+                return Some("SIFR-WORKSPACE-0002");
+            }
+            if message.contains(" is not a directory under the workspace root") {
+                return Some("SIFR-WORKSPACE-0003");
+            }
+            if message.contains(" must be a relative non-empty path under the workspace root") {
+                return Some("SIFR-WORKSPACE-0004");
+            }
+        }
+        None
+    }
+
     fn diagnostic_code(&self) -> &'static str {
+        if let Some(code) = self.workspace_diagnostic_code() {
+            return code;
+        }
         match self.phase {
             CompilePhase::Parse => "SIFR-PARSE-0001",
             CompilePhase::TypeCheck => "SIFR-TYPE-0001",

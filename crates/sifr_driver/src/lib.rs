@@ -13,6 +13,7 @@ mod frontend;
 mod project;
 mod stdlib;
 mod test_runner;
+mod workspace;
 
 pub use build::{
     build, build_cached_project, build_cached_single_file, build_project, check_project,
@@ -28,6 +29,7 @@ pub use frontend::{
 };
 pub use sifr_codegen::LoweringStats;
 pub use test_runner::run_tests;
+pub use workspace::{find_workspace_root, SifrWorkspaceConfig, WorkspaceRoot};
 
 #[cfg(test)]
 pub(crate) use build::create_invocation_workspace;
