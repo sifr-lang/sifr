@@ -366,7 +366,7 @@
               "kind": "contains",
               "command_id": "m24_5_neg_check",
               "stream": "stderr",
-              "text": "type error: return type mismatch: expected 'int', got 'str'"
+              "text": "type error: [main] return type mismatch: expected 'int', got 'str'"
             }
           ]
         },
@@ -497,7 +497,7 @@
               "kind": "contains",
               "command_id": "m25_5_neg_check",
               "stream": "stderr",
-              "text": "type error: return type mismatch: expected 'int', got 'str'"
+              "text": "type error: [main] return type mismatch: expected 'int', got 'str'"
             }
           ]
         },

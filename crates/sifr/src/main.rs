@@ -1137,8 +1137,8 @@ mod tests {
     }
 
     #[test]
-    fn test_emit_entrypoint_preserves_single_file_boundary_for_project_like_main() {
-        let dir = mktemp_dir("emit_single_file_boundary");
+    fn test_emit_entrypoint_uses_project_mode_for_project_like_main() {
+        let dir = mktemp_dir("emit_project_boundary");
         let main = dir.join("main.sifr");
         let helper = dir.join("helper.sifr");
         std::fs::write(
@@ -1156,16 +1156,14 @@ mod tests {
         );
 
         let emit_result = emit_entrypoint(&main);
-        let emit_errors = match emit_result {
-            CompileResult::Success { .. } => {
-                panic!("emit should stay single-file and fail on local project imports")
+        let rust_source = match emit_result {
+            CompileResult::Success { rust_source } => rust_source,
+            CompileResult::Errors { errors } => {
+                panic!("emit should use project mode successfully: {errors:?}")
             }
-            CompileResult::Errors { errors } => errors,
         };
-        let emit_messages: Vec<String> = emit_errors.iter().map(ToString::to_string).collect();
-        assert!(emit_messages
-            .iter()
-            .any(|message| message.contains("unknown module 'helper'")));
+        assert!(rust_source.contains("// src/main.rs"));
+        assert!(rust_source.contains("// src/helper.rs"));
 
         let _ = std::fs::remove_dir_all(dir);
     }
