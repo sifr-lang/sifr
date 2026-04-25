@@ -96,7 +96,7 @@ Use one of these approaches instead:
 
 ## Non-Issues From The Same Review
 
-- `lib/sifr/trie.sifr` checking `_terminal[node] is not None` is required by the current list-subscript contract, which intentionally returns optional values.
+- The LeetCode-local trie helper checking `_terminal[node] is not None` is required by the current list-subscript contract, which intentionally returns optional values.
 - `lib/sifr/dsu.sifr` bounding `find` by `len(parent) + 1` is an invariant guard against corrupted parent chains; it should not be copied as generic corpus style, but it is not the same as substituting a user-visible sentinel result for an impossible `None`.
 
 ## Exit Criteria

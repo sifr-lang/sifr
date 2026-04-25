@@ -141,7 +141,7 @@ Feature IDs:
 - `S3`: deque
 - `S4`: character predicates
 - `S5`: whole-token integer parsing returning `Result`
-- `S6`: explicit trie decision and API
+- `S6`: explicit LeetCode trie helper decision
 
 Scope:
 
@@ -175,7 +175,7 @@ Exit criteria:
 
 - Canonical heap/DSU/deque/trie algorithms can be expressed without fixture-local encoded queues/heaps or linear scans.
 - `int` parsing remains `Result`-returning; fixtures handle parse failure explicitly.
-- Trie support is either an explicit `Trie` type or explicit nested-dict helpers. Auto-insert-on-read is rejected.
+- Trie-dependent LeetCode fixtures use an explicit local `Trie` helper or explicit nested-dict helpers. Auto-insert-on-read is rejected, and no public stdlib trie surface is introduced for this phase.
 
 ### WS3: Owned Chain Cursor Ergonomics And Fixture Helper Convention
 
