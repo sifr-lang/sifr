@@ -41,7 +41,7 @@ Merged: 2026-04-25
 
 Status: implemented_pending_pr
 Branch: ad-hoc/sifr-workspace-ws1
-PR: tbd
+PR: https://github.com/yaseralnajjar/sifr/pull/1642
 Merged: tbd
 
 ### Planned Scope
