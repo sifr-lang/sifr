@@ -6,7 +6,7 @@ Use the following guidelines to manage github project Backlog items.
 
 To get all project items from GitHub, use this command:
 ```
-gh project item-list 2 --owner yaseralnajjar
+gh project item-list 2 --owner sifr-lang
 ```
 
 ## Available field-id and single-selection-option-id
@@ -21,5 +21,5 @@ Edit ticket fields (Priority and Status):
 
 2. Change highly prioritized tickets `Status` into `Ready`:
 ```
-gh project item-edit --project-id PVT_kwHOAKAfcc4BPKkL --id <item-id> --field-id <field-id> --single-select-option-id <single-select-option-id>
+gh project item-edit --project-id PVT_kwDOD7GYsM4BVyfV --id <item-id> --field-id <field-id> --single-select-option-id <single-select-option-id>
 ```
