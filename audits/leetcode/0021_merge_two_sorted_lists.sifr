@@ -4,46 +4,39 @@ from helpers.list_node import ListNode, nodeVal, nodeNext, hasNode, listNodeToSt
 
 
 def mergeTwoLists(own list1: ListNode | None, own list2: ListNode | None) -> ListNode | None:
-    vals1: list[int] = []
-    vals2: list[int] = []
-
     cur1: ListNode | None = list1
+    cur2: ListNode | None = list2
+    merged: list[int] = []
+
+    while hasNode(cur1) and hasNode(cur2):
+        v1 = nodeVal(cur1)
+        v2 = nodeVal(cur2)
+        if v1 < v2:
+            merged.append(v1)
+            cur1 = nodeNext(cur1)
+        else:
+            merged.append(v2)
+            cur2 = nodeNext(cur2)
+
     while hasNode(cur1):
-        vals1.append(nodeVal(cur1))
+        merged.append(nodeVal(cur1))
         cur1 = nodeNext(cur1)
 
-    cur2: ListNode | None = list2
     while hasNode(cur2):
-        vals2.append(nodeVal(cur2))
+        merged.append(nodeVal(cur2))
         cur2 = nodeNext(cur2)
 
-    merged: list[int] = []
-    for v in vals1:
-        merged.append(v)
-    for v in vals2:
-        merged.append(v)
-    merged = sorted(merged)
-
     result: ListNode | None = None
-    while merged:
-        value = merged.pop()
-        result = ListNode(value, result)
+    i = len(merged) - 1
+    while i >= 0:
+        value: int | None = merged[i]
+        if value is not None:
+            result = ListNode(value, result)
+        i -= 1
     return result
 
 
-def sampleListA() -> ListNode | None:
-    return ListNode(1, ListNode(2, ListNode(4, None)))
-
-
-def sampleListB() -> ListNode | None:
-    return ListNode(1, ListNode(3, ListNode(4, None)))
-
-
-def singleZeroList() -> ListNode | None:
-    return ListNode(0, None)
-
-
 def main():
-    assert listNodeToString(mergeTwoLists(sampleListA(), sampleListB())) == "1->1->2->3->4->4"
+    assert listNodeToString(mergeTwoLists(ListNode(1, ListNode(2, ListNode(4, None))), ListNode(1, ListNode(3, ListNode(4, None))))) == listNodeToString(ListNode(1, ListNode(1, ListNode(2, ListNode(3, ListNode(4, ListNode(4, None)))))))
     assert mergeTwoLists(None, None) == None
-    assert listNodeToString(mergeTwoLists(None, singleZeroList())) == "0"
+    assert listNodeToString(mergeTwoLists(None, ListNode(0, None))) == listNodeToString(ListNode(0, None))

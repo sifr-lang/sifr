@@ -25,5 +25,6 @@ def invertTree(root: TreeNode | None) -> TreeNode | None:
     return invertNode(node)
 
 def main():
-    assert treeToString(invertTree(TreeNode(1, None, None))) == treeToString(TreeNode(1, None, None))
+    assert treeToString(invertTree(TreeNode(4, TreeNode(2, TreeNode(1, None, None), TreeNode(3, None, None)), TreeNode(7, TreeNode(6, None, None), TreeNode(9, None, None))))) == treeToString(TreeNode(4, TreeNode(7, TreeNode(9, None, None), TreeNode(6, None, None)), TreeNode(2, TreeNode(3, None, None), TreeNode(1, None, None))))
+    assert treeToString(invertTree(TreeNode(2, TreeNode(1, None, None), TreeNode(3, None, None)))) == treeToString(TreeNode(2, TreeNode(3, None, None), TreeNode(1, None, None)))
     assert invertTree(None) == None

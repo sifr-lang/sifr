@@ -1,27 +1,56 @@
 # LeetCode 236: Lowest Common Ancestor Of A Binary Tree
 from helpers.tree_node import TreeNode, treeToString
-def lowestCommonAncestor(root: TreeNode | None, p: int, q: int) -> int:
-    def lca(node: TreeNode | None, p: int, q: int) -> int | None:
+
+def nodeVal(node: TreeNode | None) -> int:
+    if node is None:
+        return 0
+    return node.val
+
+def cloneTree(node: TreeNode | None) -> TreeNode | None:
+    if node is None:
+        return None
+    return TreeNode(node.val, cloneTree(node.left), cloneTree(node.right))
+
+def cloneNodeByValue(node: TreeNode | None, value: int) -> TreeNode | None:
+    if node is None:
+        return None
+    if node.val == value:
+        return cloneTree(node)
+    left = cloneNodeByValue(node.left, value)
+    if left is not None:
+        return left
+    return cloneNodeByValue(node.right, value)
+
+def lowestCommonAncestor(root: TreeNode | None, p: TreeNode | None, q: TreeNode | None) -> TreeNode | None:
+    # Return a cloned subtree because borrowed input nodes cannot escape.
+    p_val = nodeVal(p)
+    q_val = nodeVal(q)
+
+    def lcaValue(node: TreeNode | None) -> int | None:
         if node is None:
             return None
-        if node.val == p or node.val == q:
+        if node.val == p_val or node.val == q_val:
             return node.val
 
-        left: int | None = lca(node.left, p, q)
-        right: int | None = lca(node.right, p, q)
-
+        left = lcaValue(node.left)
+        right = lcaValue(node.right)
         if left is not None and right is not None:
             return node.val
         if left is not None:
             return left
         return right
 
-    result: int | None = lca(root, p, q)
-    if result is not None:
-        return result
-    return -1
+    value = lcaValue(root)
+    if value is None:
+        return None
+    return cloneNodeByValue(root, value)
 
 def main():
-    assert lowestCommonAncestor(TreeNode(3, TreeNode(5, TreeNode(6, None, None), TreeNode(2, TreeNode(7, None, None), TreeNode(4, None, None))), TreeNode(1, TreeNode(0, None, None), TreeNode(8, None, None))), 5, 1) == 3
-    assert lowestCommonAncestor(TreeNode(3, TreeNode(5, TreeNode(6, None, None), TreeNode(2, TreeNode(7, None, None), TreeNode(4, None, None))), TreeNode(1, TreeNode(0, None, None), TreeNode(8, None, None))), 5, 4) == 5
-    assert lowestCommonAncestor(TreeNode(1, TreeNode(2, None, None), None), 1, 2) == 1
+    root = TreeNode(
+        3,
+        TreeNode(5, TreeNode(6, None, None), TreeNode(2, TreeNode(7, None, None), TreeNode(4, None, None))),
+        TreeNode(1, TreeNode(0, None, None), TreeNode(8, None, None)),
+    )
+    assert treeToString(lowestCommonAncestor(root, TreeNode(5, None, None), TreeNode(1, None, None))) == treeToString(root)
+    assert treeToString(lowestCommonAncestor(root, TreeNode(5, None, None), TreeNode(4, None, None))) == treeToString(TreeNode(5, TreeNode(6, None, None), TreeNode(2, TreeNode(7, None, None), TreeNode(4, None, None))))
+    assert treeToString(lowestCommonAncestor(TreeNode(1, TreeNode(2, None, None), None), TreeNode(1, None, None), TreeNode(2, None, None))) == treeToString(TreeNode(1, TreeNode(2, None, None), None))

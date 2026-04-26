@@ -1,18 +1,39 @@
 # LeetCode 235: Lowest Common Ancestor Of A Binary Search Tree
 from helpers.tree_node import TreeNode, treeToString
-def lowestCommonAncestor(root: TreeNode, p: int, q: int) -> int:
-    if p < root.val and q < root.val:
+def nodeVal(node: TreeNode | None) -> int:
+    if node is None:
+        return 0
+    return node.val
+
+def cloneTree(node: TreeNode | None) -> TreeNode | None:
+    if node is None:
+        return None
+    return TreeNode(node.val, cloneTree(node.left), cloneTree(node.right))
+
+def lowestCommonAncestor(root: TreeNode | None, p: TreeNode | None, q: TreeNode | None) -> TreeNode | None:
+    # Return a cloned subtree because borrowed input nodes cannot escape.
+    if root is None:
+        return None
+    p_val = nodeVal(p)
+    q_val = nodeVal(q)
+    if p_val < root.val and q_val < root.val:
         left = root.left
         if left is None:
-            return root.val
+            return cloneTree(root)
         return lowestCommonAncestor(left, p, q)
-    if p > root.val and q > root.val:
+    if p_val > root.val and q_val > root.val:
         right = root.right
         if right is None:
-            return root.val
+            return cloneTree(root)
         return lowestCommonAncestor(right, p, q)
-    return root.val
+    return cloneTree(root)
 
 def main():
-    root = TreeNode(2, None, None)
-    assert lowestCommonAncestor(root, 2, 2) == 2
+    root = TreeNode(
+        6,
+        TreeNode(2, TreeNode(0, None, None), TreeNode(4, TreeNode(3, None, None), TreeNode(5, None, None))),
+        TreeNode(8, TreeNode(7, None, None), TreeNode(9, None, None)),
+    )
+    assert treeToString(lowestCommonAncestor(root, TreeNode(2, None, None), TreeNode(8, None, None))) == treeToString(root)
+    assert treeToString(lowestCommonAncestor(root, TreeNode(2, None, None), TreeNode(4, None, None))) == treeToString(TreeNode(2, TreeNode(0, None, None), TreeNode(4, TreeNode(3, None, None), TreeNode(5, None, None))))
+    assert treeToString(lowestCommonAncestor(TreeNode(2, TreeNode(1, None, None), None), TreeNode(2, None, None), TreeNode(1, None, None))) == treeToString(TreeNode(2, TreeNode(1, None, None), None))

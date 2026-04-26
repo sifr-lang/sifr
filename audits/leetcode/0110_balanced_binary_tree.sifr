@@ -17,5 +17,6 @@ def isBalanced(root: TreeNode | None) -> bool:
     return treeHeight(root) != -1
 
 def main():
+    assert isBalanced(TreeNode(3, TreeNode(9, None, None), TreeNode(20, TreeNode(15, None, None), TreeNode(7, None, None)))) == True
+    assert isBalanced(TreeNode(1, TreeNode(2, TreeNode(3, TreeNode(4, None, None), TreeNode(4, None, None)), TreeNode(3, None, None)), TreeNode(2, None, None))) == False
     assert isBalanced(None) == True
-    assert isBalanced(TreeNode(1, None, None)) == True

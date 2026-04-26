@@ -1,9 +1,15 @@
 # LeetCode 100: Same Tree
-from helpers.tree_node import TreeNode, treeToString
+from helpers.tree_node import TreeNode
 def isSameTree(p: TreeNode | None, q: TreeNode | None) -> bool:
-    return treeToString(p) == treeToString(q)
+    if p is None and q is None:
+        return True
+    if p is None or q is None:
+        return False
+    if p.val != q.val:
+        return False
+    return isSameTree(p.left, q.left) and isSameTree(p.right, q.right)
 
 def main():
-    assert isSameTree(TreeNode(1, None, None), TreeNode(1, None, None)) == True
-    assert isSameTree(TreeNode(1, None, None), None) == False
-    assert isSameTree(None, None) == True
+    assert isSameTree(TreeNode(1, TreeNode(2, None, None), TreeNode(3, None, None)), TreeNode(1, TreeNode(2, None, None), TreeNode(3, None, None))) == True
+    assert isSameTree(TreeNode(1, TreeNode(2, None, None), None), TreeNode(1, None, TreeNode(2, None, None))) == False
+    assert isSameTree(TreeNode(1, TreeNode(2, None, None), TreeNode(1, None, None)), TreeNode(1, TreeNode(1, None, None), TreeNode(2, None, None))) == False

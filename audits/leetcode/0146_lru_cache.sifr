@@ -1,5 +1,7 @@
 # LeetCode 146: Lru Cache
 
+# Use integer node ids instead of a cyclic Node graph; this keeps the fixture
+# ownership-safe while preserving the doubly-linked-list LRU behavior.
 class LRUCache:
     cap: int
     head: int

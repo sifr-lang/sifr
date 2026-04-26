@@ -5,10 +5,12 @@
 class ListNode:
     val: int
     next: ListNode | None
+    node_id: int
 
-    def __init__(self, val: int = 0, next: ListNode | None = None):
+    def __init__(self, val: int = 0, next: ListNode | None = None, node_id: int = 0):
         self.val = val
         self.next = next
+        self.node_id = node_id
 
 def nodeVal(node: ListNode | None) -> int:
     if node is None:
@@ -19,6 +21,11 @@ def nodeNext(node: ListNode | None) -> ListNode | None:
     if node is None:
         return None
     return node.next
+
+def nodeId(node: ListNode | None) -> int:
+    if node is None:
+        return -1
+    return node.node_id
 
 def hasNode(node: ListNode | None) -> bool:
     return node is not None
@@ -32,48 +39,39 @@ def listNodeToString(own node: ListNode | None) -> str:
         parts.append(str(nodeVal(cur)))
         cur = nodeNext(cur)
     return "->".join(parts)
+
+def cloneList(node: ListNode | None) -> ListNode | None:
+    if node is None:
+        return None
+    return ListNode(node.val, cloneList(node.next), node.node_id)
+
 def getIntersectionNode(own headA: ListNode | None, own headB: ListNode | None) -> ListNode | None:
+    # Sifr cannot share the same owned tail between two list heads here, so the
+    # fixture uses stable node ids to model the Python identity-based contract.
     if not hasNode(headA) or not hasNode(headB):
         return None
 
-    valuesA: list[int] = []
+    idsA: set[int] = set()
     curA = headA
     while hasNode(curA):
-        valuesA.append(nodeVal(curA))
+        idsA.add(nodeId(curA))
         curA = nodeNext(curA)
 
-    valuesB: list[int] = []
     curB = headB
     while hasNode(curB):
-        valuesB.append(nodeVal(curB))
+        if nodeId(curB) in idsA:
+            return cloneList(curB)
         curB = nodeNext(curB)
 
-    i = len(valuesA) - 1
-    j = len(valuesB) - 1
-    shared_reversed: list[int] = []
-    while i >= 0 and j >= 0 and valuesA[i] == valuesB[j]:
-        shared_reversed.append(valuesA[i])
-        i -= 1
-        j -= 1
-
-    if len(shared_reversed) == 0:
-        return None
-
-    result: ListNode | None = None
-    k = 0
-    while k < len(shared_reversed):
-        value: int | None = shared_reversed[k]
-        if value is not None:
-            result = ListNode(value, result)
-        k += 1
-    return result
+    return None
 
 def main():
-    shared = ListNode(8, ListNode(4, ListNode(5)))
-    headA = ListNode(4, ListNode(1, shared))
-    headB = ListNode(5, ListNode(6, ListNode(1, shared)))
-    assert listNodeToString(getIntersectionNode(headA, headB)) == "1->8->4->5"
+    sharedA = ListNode(8, ListNode(4, ListNode(5, None, 5), 4), 3)
+    sharedB = ListNode(8, ListNode(4, ListNode(5, None, 5), 4), 3)
+    headA = ListNode(4, ListNode(1, sharedA, 2), 1)
+    headB = ListNode(5, ListNode(6, ListNode(1, sharedB, 6), 7), 8)
+    assert listNodeToString(getIntersectionNode(headA, headB)) == "8->4->5"
 
-    headC = ListNode(2, ListNode(6, ListNode(4)))
-    headD = ListNode(1, ListNode(5))
+    headC = ListNode(2, ListNode(6, ListNode(4, None, 12), 11), 10)
+    headD = ListNode(1, ListNode(5, None, 14), 13)
     assert listNodeToString(getIntersectionNode(headC, headD)) == "None"

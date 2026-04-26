@@ -1,5 +1,5 @@
 # LeetCode 102: Binary Tree Level Order Traversal
-from helpers.tree_node import TreeNode, treeToString
+from helpers.tree_node import TreeNode
 def levelOrder(root: TreeNode | None) -> list[list[int]]:
     if root is None:
         return []
@@ -20,5 +20,7 @@ def levelOrder(root: TreeNode | None) -> list[list[int]]:
     return res
 
 def main():
-    assert str(levelOrder(TreeNode(1, None, None))) == '[[1]]'
-    assert str(levelOrder(None)) == '[]'
+    expected_empty: list[list[int]] = []
+    assert levelOrder(TreeNode(3, TreeNode(9, None, None), TreeNode(20, TreeNode(15, None, None), TreeNode(7, None, None)))) == [[3], [9, 20], [15, 7]]
+    assert levelOrder(TreeNode(1, None, None)) == [[1]]
+    assert levelOrder(None) == expected_empty

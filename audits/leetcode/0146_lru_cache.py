@@ -46,6 +46,12 @@ def main():
     assert obj.get(1) == -1
     assert obj.get(3) == 3
     assert obj.get(4) == 4
+    obj2 = LRUCache(1)
+    obj2.put(8, -1)
+    assert obj2.get(8) == -1
+    obj2.put(9, 9)
+    assert obj2.get(8) == -1
+    assert obj2.get(9) == 9
 
 if __name__ == "__main__":
     main()

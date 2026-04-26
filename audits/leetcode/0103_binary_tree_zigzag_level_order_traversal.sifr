@@ -1,13 +1,6 @@
 # LeetCode 103: Binary Tree Zigzag Level Order Traversal
-from helpers.tree_node import TreeNode, treeToString
+from helpers.tree_node import TreeNode
 
-def nodeValue(node: TreeNode | None) -> int:
-    if node is None:
-        return 0
-    value = node.val
-    if value is None:
-        return 0
-    return value
 def zigzagLevelOrder(own root: TreeNode | None) -> list[list[int]]:
     if root is None:
         return []
@@ -20,7 +13,7 @@ def zigzagLevelOrder(own root: TreeNode | None) -> list[list[int]]:
         queueLength: int = len(q)
         for i in range(queueLength):
             node = q.pop(0)
-            level.append(nodeValue(node))
+            level.append(node.val)
             left_child = node.left
             if left_child is not None:
                 q.append(left_child)
@@ -34,6 +27,7 @@ def zigzagLevelOrder(own root: TreeNode | None) -> list[list[int]]:
     return result
 
 def main():
+    expected_empty: list[list[int]] = []
     assert zigzagLevelOrder(TreeNode(3, TreeNode(9, None, None), TreeNode(20, TreeNode(15, None, None), TreeNode(7, None, None)))) == [[3], [20, 9], [15, 7]]
     assert zigzagLevelOrder(TreeNode(1, None, None)) == [[1]]
-    assert len(zigzagLevelOrder(None)) == 0
+    assert zigzagLevelOrder(None) == expected_empty

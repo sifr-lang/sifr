@@ -22,7 +22,7 @@
       "fixture_slug": "0002_add_two_numbers",
       "id": "0002",
       "oracle": {
-        "mode": "no_oracle"
+        "mode": "embedded_asserts"
       },
       "primary_topic": "arrays",
       "scope_classification": "in_scope",
@@ -129,7 +129,7 @@
       "fixture_slug": "0010_regular_expression_matching",
       "id": "0010",
       "oracle": {
-        "mode": "no_oracle"
+        "mode": "embedded_asserts"
       },
       "primary_topic": "arrays",
       "scope_classification": "in_scope",
@@ -281,7 +281,7 @@
       "fixture_slug": "0019_remove_nth_node_from_end_of_list",
       "id": "0019",
       "oracle": {
-        "mode": "no_oracle"
+        "mode": "embedded_asserts"
       },
       "primary_topic": "arrays",
       "scope_classification": "in_scope",
@@ -311,7 +311,7 @@
       "fixture_slug": "0021_merge_two_sorted_lists",
       "id": "0021",
       "oracle": {
-        "mode": "no_oracle"
+        "mode": "embedded_asserts"
       },
       "primary_topic": "arrays",
       "scope_classification": "in_scope",
@@ -341,7 +341,7 @@
       "fixture_slug": "0023_merge_k_sorted_lists",
       "id": "0023",
       "oracle": {
-        "mode": "no_oracle"
+        "mode": "embedded_asserts"
       },
       "primary_topic": "arrays",
       "scope_classification": "in_scope",
@@ -356,7 +356,7 @@
       "fixture_slug": "0024_swap_nodes_in_pairs",
       "id": "0024",
       "oracle": {
-        "mode": "no_oracle"
+        "mode": "embedded_asserts"
       },
       "primary_topic": "arrays",
       "scope_classification": "in_scope",
@@ -371,7 +371,7 @@
       "fixture_slug": "0025_reverse_nodes_in_k_group",
       "id": "0025",
       "oracle": {
-        "mode": "no_oracle"
+        "mode": "embedded_asserts"
       },
       "primary_topic": "arrays",
       "scope_classification": "in_scope",
@@ -476,7 +476,7 @@
       "fixture_slug": "0036_valid_sudoku",
       "id": "0036",
       "oracle": {
-        "mode": "no_oracle"
+        "mode": "embedded_asserts"
       },
       "primary_topic": "arrays",
       "scope_classification": "in_scope",
@@ -643,7 +643,7 @@
       "fixture_slug": "0048_rotate_image",
       "id": "0048",
       "oracle": {
-        "mode": "no_oracle"
+        "mode": "embedded_asserts"
       },
       "primary_topic": "arrays",
       "scope_classification": "in_scope",
@@ -658,7 +658,7 @@
       "fixture_slug": "0049_group_anagrams",
       "id": "0049",
       "oracle": {
-        "mode": "no_oracle"
+        "mode": "embedded_asserts"
       },
       "primary_topic": "arrays",
       "scope_classification": "in_scope",
@@ -689,7 +689,7 @@
       "fixture_slug": "0051_n_queens",
       "id": "0051",
       "oracle": {
-        "mode": "no_oracle"
+        "mode": "embedded_asserts"
       },
       "primary_topic": "arrays",
       "scope_classification": "in_scope",
@@ -811,7 +811,7 @@
       "fixture_slug": "0057_insert_interval",
       "id": "0057",
       "oracle": {
-        "mode": "no_oracle"
+        "mode": "embedded_asserts"
       },
       "primary_topic": "arrays",
       "scope_classification": "in_scope",
@@ -856,7 +856,7 @@
       "fixture_slug": "0061_rotate_list",
       "id": "0061",
       "oracle": {
-        "mode": "no_oracle"
+        "mode": "embedded_asserts"
       },
       "primary_topic": "arrays",
       "scope_classification": "in_scope",
@@ -946,7 +946,7 @@
       "fixture_slug": "0068_text_justification",
       "id": "0068",
       "oracle": {
-        "mode": "no_oracle"
+        "mode": "embedded_asserts"
       },
       "primary_topic": "arrays",
       "scope_classification": "in_scope",
@@ -992,7 +992,7 @@
       "fixture_slug": "0071_simplify_path",
       "id": "0071",
       "oracle": {
-        "mode": "no_oracle"
+        "mode": "embedded_asserts"
       },
       "primary_topic": "arrays",
       "scope_classification": "in_scope",
@@ -1022,7 +1022,7 @@
       "fixture_slug": "0073_set_matrix_zeroes",
       "id": "0073",
       "oracle": {
-        "mode": "no_oracle"
+        "mode": "embedded_asserts"
       },
       "primary_topic": "arrays",
       "scope_classification": "in_scope",
@@ -1052,7 +1052,7 @@
       "fixture_slug": "0075_sort_colors",
       "id": "0075",
       "oracle": {
-        "mode": "no_oracle"
+        "mode": "embedded_asserts"
       },
       "primary_topic": "arrays",
       "scope_classification": "in_scope",
@@ -1067,7 +1067,7 @@
       "fixture_slug": "0076_minimum_window_substring",
       "id": "0076",
       "oracle": {
-        "mode": "no_oracle"
+        "mode": "embedded_asserts"
       },
       "primary_topic": "arrays",
       "scope_classification": "in_scope",
@@ -1112,7 +1112,7 @@
       "fixture_slug": "0079_word_search",
       "id": "0079",
       "oracle": {
-        "mode": "no_oracle"
+        "mode": "embedded_asserts"
       },
       "primary_topic": "arrays",
       "scope_classification": "in_scope",
@@ -1157,7 +1157,7 @@
       "fixture_slug": "0083_remove_duplicates_from_sorted_list",
       "id": "0083",
       "oracle": {
-        "mode": "no_oracle"
+        "mode": "embedded_asserts"
       },
       "primary_topic": "arrays",
       "scope_classification": "in_scope",
@@ -1187,7 +1187,7 @@
       "fixture_slug": "0086_partition_list",
       "id": "0086",
       "oracle": {
-        "mode": "no_oracle"
+        "mode": "embedded_asserts"
       },
       "primary_topic": "arrays",
       "scope_classification": "in_scope",
@@ -1202,7 +1202,7 @@
       "fixture_slug": "0088_merge_sorted_array",
       "id": "0088",
       "oracle": {
-        "mode": "no_oracle"
+        "mode": "embedded_asserts"
       },
       "primary_topic": "arrays",
       "scope_classification": "in_scope",
@@ -1247,7 +1247,7 @@
       "fixture_slug": "0092_reverse_linked_list_ii",
       "id": "0092",
       "oracle": {
-        "mode": "no_oracle"
+        "mode": "embedded_asserts"
       },
       "primary_topic": "arrays",
       "scope_classification": "in_scope",
@@ -1262,7 +1262,7 @@
       "fixture_slug": "0094_binary_tree_inorder_traversal",
       "id": "0094",
       "oracle": {
-        "mode": "no_oracle"
+        "mode": "embedded_asserts"
       },
       "primary_topic": "arrays",
       "scope_classification": "in_scope",
@@ -1292,7 +1292,7 @@
       "fixture_slug": "0098_validate_binary_search_tree",
       "id": "0098",
       "oracle": {
-        "mode": "no_oracle"
+        "mode": "embedded_asserts"
       },
       "primary_topic": "arrays",
       "scope_classification": "in_scope",
@@ -1307,7 +1307,7 @@
       "fixture_slug": "0100_same_tree",
       "id": "0100",
       "oracle": {
-        "mode": "no_oracle"
+        "mode": "embedded_asserts"
       },
       "primary_topic": "trees",
       "scope_classification": "in_scope",
@@ -1323,7 +1323,7 @@
       "fixture_slug": "0101_symmetric_tree",
       "id": "0101",
       "oracle": {
-        "mode": "no_oracle"
+        "mode": "embedded_asserts"
       },
       "primary_topic": "arrays",
       "scope_classification": "in_scope",
@@ -1338,7 +1338,7 @@
       "fixture_slug": "0102_binary_tree_level_order_traversal",
       "id": "0102",
       "oracle": {
-        "mode": "no_oracle"
+        "mode": "embedded_asserts"
       },
       "primary_topic": "trees",
       "scope_classification": "in_scope",
@@ -1354,7 +1354,7 @@
       "fixture_slug": "0103_binary_tree_zigzag_level_order_traversal",
       "id": "0103",
       "oracle": {
-        "mode": "no_oracle"
+        "mode": "embedded_asserts"
       },
       "primary_topic": "arrays",
       "scope_classification": "in_scope",
@@ -1369,7 +1369,7 @@
       "fixture_slug": "0104_maximum_depth_of_binary_tree",
       "id": "0104",
       "oracle": {
-        "mode": "no_oracle"
+        "mode": "embedded_asserts"
       },
       "primary_topic": "arrays",
       "scope_classification": "in_scope",
@@ -1384,7 +1384,7 @@
       "fixture_slug": "0105_construct_binary_tree_from_preorder_and_inorder_traversal",
       "id": "0105",
       "oracle": {
-        "mode": "no_oracle"
+        "mode": "embedded_asserts"
       },
       "primary_topic": "arrays",
       "scope_classification": "in_scope",
@@ -1399,7 +1399,7 @@
       "fixture_slug": "0106_construct_binary_tree_from_inorder_and_postorder_traversal",
       "id": "0106",
       "oracle": {
-        "mode": "no_oracle"
+        "mode": "embedded_asserts"
       },
       "primary_topic": "arrays",
       "scope_classification": "in_scope",
@@ -1414,7 +1414,7 @@
       "fixture_slug": "0108_convert_sorted_array_to_binary_search_tree",
       "id": "0108",
       "oracle": {
-        "mode": "no_oracle"
+        "mode": "embedded_asserts"
       },
       "primary_topic": "arrays",
       "scope_classification": "in_scope",
@@ -1429,7 +1429,7 @@
       "fixture_slug": "0110_balanced_binary_tree",
       "id": "0110",
       "oracle": {
-        "mode": "no_oracle"
+        "mode": "embedded_asserts"
       },
       "primary_topic": "trees",
       "scope_classification": "in_scope",
@@ -1445,7 +1445,7 @@
       "fixture_slug": "0112_path_sum",
       "id": "0112",
       "oracle": {
-        "mode": "no_oracle"
+        "mode": "embedded_asserts"
       },
       "primary_topic": "arrays",
       "scope_classification": "in_scope",
@@ -1565,7 +1565,7 @@
       "fixture_slug": "0124_binary_tree_maximum_path_sum",
       "id": "0124",
       "oracle": {
-        "mode": "no_oracle"
+        "mode": "embedded_asserts"
       },
       "primary_topic": "arrays",
       "scope_classification": "in_scope",
@@ -1595,7 +1595,7 @@
       "fixture_slug": "0127_word_ladder",
       "id": "0127",
       "oracle": {
-        "mode": "no_oracle"
+        "mode": "embedded_asserts"
       },
       "primary_topic": "graphs",
       "scope_classification": "in_scope",
@@ -1627,7 +1627,7 @@
       "fixture_slug": "0130_surrounded_regions",
       "id": "0130",
       "oracle": {
-        "mode": "no_oracle"
+        "mode": "embedded_asserts"
       },
       "primary_topic": "arrays",
       "scope_classification": "in_scope",
@@ -1657,7 +1657,7 @@
       "fixture_slug": "0133_clone_graph",
       "id": "0133",
       "oracle": {
-        "mode": "no_oracle"
+        "mode": "embedded_asserts"
       },
       "primary_topic": "arrays",
       "scope_classification": "in_scope",
@@ -1732,7 +1732,7 @@
       "fixture_slug": "0138_copy_list_with_random_pointer",
       "id": "0138",
       "oracle": {
-        "mode": "no_oracle"
+        "mode": "embedded_asserts"
       },
       "primary_topic": "arrays",
       "scope_classification": "in_scope",
@@ -1762,7 +1762,7 @@
       "fixture_slug": "0141_linked_list_cycle",
       "id": "0141",
       "oracle": {
-        "mode": "no_oracle"
+        "mode": "embedded_asserts"
       },
       "primary_topic": "arrays",
       "scope_classification": "in_scope",
@@ -1777,7 +1777,7 @@
       "fixture_slug": "0143_reorder_list",
       "id": "0143",
       "oracle": {
-        "mode": "no_oracle"
+        "mode": "embedded_asserts"
       },
       "primary_topic": "arrays",
       "scope_classification": "in_scope",
@@ -1792,7 +1792,7 @@
       "fixture_slug": "0144_binary_tree_preorder_traversal",
       "id": "0144",
       "oracle": {
-        "mode": "no_oracle"
+        "mode": "embedded_asserts"
       },
       "primary_topic": "arrays",
       "scope_classification": "in_scope",
@@ -1807,7 +1807,7 @@
       "fixture_slug": "0145_binary_tree_postorder_traversal",
       "id": "0145",
       "oracle": {
-        "mode": "no_oracle"
+        "mode": "embedded_asserts"
       },
       "primary_topic": "arrays",
       "scope_classification": "in_scope",
@@ -1822,7 +1822,7 @@
       "fixture_slug": "0146_lru_cache",
       "id": "0146",
       "oracle": {
-        "mode": "no_oracle"
+        "mode": "embedded_asserts"
       },
       "primary_topic": "arrays",
       "scope_classification": "in_scope",
@@ -1837,7 +1837,7 @@
       "fixture_slug": "0147_insertion_sort_list",
       "id": "0147",
       "oracle": {
-        "mode": "no_oracle"
+        "mode": "embedded_asserts"
       },
       "primary_topic": "arrays",
       "scope_classification": "in_scope",
@@ -1852,7 +1852,7 @@
       "fixture_slug": "0148_sort_list",
       "id": "0148",
       "oracle": {
-        "mode": "no_oracle"
+        "mode": "embedded_asserts"
       },
       "primary_topic": "arrays",
       "scope_classification": "in_scope",
@@ -1867,7 +1867,7 @@
       "fixture_slug": "0149_max_points_on_a_line",
       "id": "0149",
       "oracle": {
-        "mode": "no_oracle"
+        "mode": "embedded_asserts"
       },
       "primary_topic": "arrays",
       "scope_classification": "in_scope",
@@ -1958,7 +1958,7 @@
       "fixture_slug": "0155_min_stack",
       "id": "0155",
       "oracle": {
-        "mode": "no_oracle"
+        "mode": "embedded_asserts"
       },
       "primary_topic": "arrays",
       "scope_classification": "in_scope",
@@ -1973,7 +1973,7 @@
       "fixture_slug": "0160_intersection_of_two_linked_lists",
       "id": "0160",
       "oracle": {
-        "mode": "no_oracle"
+        "mode": "embedded_asserts"
       },
       "primary_topic": "arrays",
       "scope_classification": "in_scope",
@@ -2078,7 +2078,7 @@
       "fixture_slug": "0187_repeated_dna_sequences",
       "id": "0187",
       "oracle": {
-        "mode": "no_oracle"
+        "mode": "embedded_asserts"
       },
       "primary_topic": "arrays",
       "scope_classification": "in_scope",
@@ -2093,7 +2093,7 @@
       "fixture_slug": "0189_rotate_array",
       "id": "0189",
       "oracle": {
-        "mode": "no_oracle"
+        "mode": "embedded_asserts"
       },
       "primary_topic": "arrays",
       "scope_classification": "in_scope",
@@ -2108,7 +2108,7 @@
       "fixture_slug": "0190_reverse_bits",
       "id": "0190",
       "oracle": {
-        "mode": "no_oracle"
+        "mode": "embedded_asserts"
       },
       "primary_topic": "arrays",
       "scope_classification": "in_scope",
@@ -2123,7 +2123,7 @@
       "fixture_slug": "0191_number_of_1_bits",
       "id": "0191",
       "oracle": {
-        "mode": "no_oracle"
+        "mode": "embedded_asserts"
       },
       "primary_topic": "arrays",
       "scope_classification": "in_scope",
@@ -2168,7 +2168,7 @@
       "fixture_slug": "0199_binary_tree_right_side_view",
       "id": "0199",
       "oracle": {
-        "mode": "no_oracle"
+        "mode": "embedded_asserts"
       },
       "primary_topic": "arrays",
       "scope_classification": "in_scope",
@@ -2183,7 +2183,7 @@
       "fixture_slug": "0200_number_of_islands",
       "id": "0200",
       "oracle": {
-        "mode": "no_oracle"
+        "mode": "embedded_asserts"
       },
       "primary_topic": "arrays",
       "scope_classification": "in_scope",
@@ -2198,7 +2198,7 @@
       "fixture_slug": "0201_bitwise_and_of_numbers_range",
       "id": "0201",
       "oracle": {
-        "mode": "no_oracle"
+        "mode": "embedded_asserts"
       },
       "primary_topic": "arrays",
       "scope_classification": "in_scope",
@@ -2228,7 +2228,7 @@
       "fixture_slug": "0203_remove_linked_list_elements",
       "id": "0203",
       "oracle": {
-        "mode": "no_oracle"
+        "mode": "embedded_asserts"
       },
       "primary_topic": "arrays",
       "scope_classification": "in_scope",
@@ -2258,7 +2258,7 @@
       "fixture_slug": "0206_reverse_linked_list",
       "id": "0206",
       "oracle": {
-        "mode": "no_oracle"
+        "mode": "embedded_asserts"
       },
       "primary_topic": "arrays",
       "scope_classification": "in_scope",
@@ -2273,7 +2273,7 @@
       "fixture_slug": "0207_course_schedule",
       "id": "0207",
       "oracle": {
-        "mode": "no_oracle"
+        "mode": "embedded_asserts"
       },
       "primary_topic": "graphs",
       "scope_classification": "in_scope",
@@ -2289,7 +2289,7 @@
       "fixture_slug": "0208_implement_trie_prefix_tree",
       "id": "0208",
       "oracle": {
-        "mode": "no_oracle"
+        "mode": "embedded_asserts"
       },
       "primary_topic": "arrays",
       "scope_classification": "in_scope",
@@ -2320,7 +2320,7 @@
       "fixture_slug": "0210_course_schedule_ii",
       "id": "0210",
       "oracle": {
-        "mode": "no_oracle"
+        "mode": "embedded_asserts"
       },
       "primary_topic": "arrays",
       "scope_classification": "in_scope",
@@ -2335,7 +2335,7 @@
       "fixture_slug": "0211_design_add_and_search_words_data_structure",
       "id": "0211",
       "oracle": {
-        "mode": "no_oracle"
+        "mode": "embedded_asserts"
       },
       "primary_topic": "arrays",
       "scope_classification": "in_scope",
@@ -2350,7 +2350,7 @@
       "fixture_slug": "0212_word_search_ii",
       "id": "0212",
       "oracle": {
-        "mode": "no_oracle"
+        "mode": "embedded_asserts"
       },
       "primary_topic": "arrays",
       "scope_classification": "in_scope",
@@ -2380,7 +2380,7 @@
       "fixture_slug": "0215_kth_largest_element_in_an_array",
       "id": "0215",
       "oracle": {
-        "mode": "no_oracle"
+        "mode": "embedded_asserts"
       },
       "primary_topic": "heap_priority_queue",
       "scope_classification": "in_scope",
@@ -2427,7 +2427,7 @@
       "fixture_slug": "0221_maximal_square",
       "id": "0221",
       "oracle": {
-        "mode": "no_oracle"
+        "mode": "embedded_asserts"
       },
       "primary_topic": "arrays",
       "scope_classification": "in_scope",
@@ -2442,7 +2442,7 @@
       "fixture_slug": "0225_implement_stack_using_queues",
       "id": "0225",
       "oracle": {
-        "mode": "no_oracle"
+        "mode": "embedded_asserts"
       },
       "primary_topic": "arrays",
       "scope_classification": "in_scope",
@@ -2457,7 +2457,7 @@
       "fixture_slug": "0226_invert_binary_tree",
       "id": "0226",
       "oracle": {
-        "mode": "no_oracle"
+        "mode": "embedded_asserts"
       },
       "primary_topic": "trees",
       "scope_classification": "in_scope",
@@ -2473,7 +2473,7 @@
       "fixture_slug": "0230_kth_smallest_element_in_a_bst",
       "id": "0230",
       "oracle": {
-        "mode": "no_oracle"
+        "mode": "embedded_asserts"
       },
       "primary_topic": "arrays",
       "scope_classification": "in_scope",
@@ -2503,7 +2503,7 @@
       "fixture_slug": "0232_implement_queue_using_stacks",
       "id": "0232",
       "oracle": {
-        "mode": "no_oracle"
+        "mode": "embedded_asserts"
       },
       "primary_topic": "arrays",
       "scope_classification": "in_scope",
@@ -2518,7 +2518,7 @@
       "fixture_slug": "0234_palindrome_linked_list",
       "id": "0234",
       "oracle": {
-        "mode": "no_oracle"
+        "mode": "embedded_asserts"
       },
       "primary_topic": "arrays",
       "scope_classification": "in_scope",
@@ -2533,7 +2533,7 @@
       "fixture_slug": "0235_lowest_common_ancestor_of_a_binary_search_tree",
       "id": "0235",
       "oracle": {
-        "mode": "no_oracle"
+        "mode": "embedded_asserts"
       },
       "primary_topic": "trees",
       "scope_classification": "in_scope",
@@ -2549,7 +2549,7 @@
       "fixture_slug": "0236_lowest_common_ancestor_of_a_binary_tree",
       "id": "0236",
       "oracle": {
-        "mode": "no_oracle"
+        "mode": "embedded_asserts"
       },
       "primary_topic": "arrays",
       "scope_classification": "in_scope",
@@ -2596,7 +2596,7 @@
       "fixture_slug": "0239_sliding_window_maximum",
       "id": "0239",
       "oracle": {
-        "mode": "no_oracle"
+        "mode": "embedded_asserts"
       },
       "primary_topic": "arrays",
       "scope_classification": "in_scope",
@@ -2657,7 +2657,7 @@
       "fixture_slug": "0253_meeting_rooms",
       "id": "0253",
       "oracle": {
-        "mode": "no_oracle"
+        "mode": "embedded_asserts"
       },
       "primary_topic": "arrays",
       "scope_classification": "in_scope",
@@ -2672,7 +2672,7 @@
       "fixture_slug": "0253_meeting_rooms_ii",
       "id": "0253",
       "oracle": {
-        "mode": "no_oracle"
+        "mode": "embedded_asserts"
       },
       "primary_topic": "arrays",
       "scope_classification": "in_scope",
@@ -2687,7 +2687,7 @@
       "fixture_slug": "0261_graph_valid_tree",
       "id": "0261",
       "oracle": {
-        "mode": "no_oracle"
+        "mode": "embedded_asserts"
       },
       "primary_topic": "arrays",
       "scope_classification": "in_scope",
@@ -2732,7 +2732,7 @@
       "fixture_slug": "0269_alien_dictionary",
       "id": "0269",
       "oracle": {
-        "mode": "no_oracle"
+        "mode": "embedded_asserts"
       },
       "primary_topic": "arrays",
       "scope_classification": "in_scope",
@@ -2747,7 +2747,7 @@
       "fixture_slug": "0271_encode_and_decode_strings",
       "id": "0271",
       "oracle": {
-        "mode": "no_oracle"
+        "mode": "embedded_asserts"
       },
       "primary_topic": "arrays",
       "scope_classification": "in_scope",
@@ -2777,7 +2777,7 @@
       "fixture_slug": "0278_first_bad_version",
       "id": "0278",
       "oracle": {
-        "mode": "no_oracle"
+        "mode": "embedded_asserts"
       },
       "primary_topic": "arrays",
       "scope_classification": "in_scope",
@@ -2792,7 +2792,7 @@
       "fixture_slug": "0280_wiggle_sort",
       "id": "0280",
       "oracle": {
-        "mode": "no_oracle"
+        "mode": "embedded_asserts"
       },
       "primary_topic": "arrays",
       "scope_classification": "in_scope",
@@ -2807,7 +2807,7 @@
       "fixture_slug": "0283_move_zeroes",
       "id": "0283",
       "oracle": {
-        "mode": "no_oracle"
+        "mode": "embedded_asserts"
       },
       "primary_topic": "arrays",
       "scope_classification": "in_scope",
@@ -2822,7 +2822,7 @@
       "fixture_slug": "0286_walls_and_gates",
       "id": "0286",
       "oracle": {
-        "mode": "no_oracle"
+        "mode": "embedded_asserts"
       },
       "primary_topic": "arrays",
       "scope_classification": "in_scope",
@@ -2867,7 +2867,7 @@
       "fixture_slug": "0295_find_median_from_data_stream",
       "id": "0295",
       "oracle": {
-        "mode": "no_oracle"
+        "mode": "embedded_asserts"
       },
       "primary_topic": "heap_priority_queue",
       "scope_classification": "in_scope",
@@ -2883,7 +2883,7 @@
       "fixture_slug": "0297_serialize_and_deserialize_binary_tree",
       "id": "0297",
       "oracle": {
-        "mode": "no_oracle"
+        "mode": "embedded_asserts"
       },
       "primary_topic": "arrays",
       "scope_classification": "in_scope",
@@ -2928,7 +2928,7 @@
       "fixture_slug": "0303_range_sum_query_immutable",
       "id": "0303",
       "oracle": {
-        "mode": "no_oracle"
+        "mode": "embedded_asserts"
       },
       "primary_topic": "arrays",
       "scope_classification": "in_scope",
@@ -2943,7 +2943,7 @@
       "fixture_slug": "0304_range_sum_query_2d_immutable",
       "id": "0304",
       "oracle": {
-        "mode": "no_oracle"
+        "mode": "embedded_asserts"
       },
       "primary_topic": "arrays",
       "scope_classification": "in_scope",
@@ -3003,7 +3003,7 @@
       "fixture_slug": "0323_number_of_connected_components_in_an_undirected_graph",
       "id": "0323",
       "oracle": {
-        "mode": "no_oracle"
+        "mode": "embedded_asserts"
       },
       "primary_topic": "arrays",
       "scope_classification": "in_scope",
@@ -3018,7 +3018,7 @@
       "fixture_slug": "0329_longest_increasing_path_in_a_matrix",
       "id": "0329",
       "oracle": {
-        "mode": "no_oracle"
+        "mode": "embedded_asserts"
       },
       "primary_topic": "arrays",
       "scope_classification": "in_scope",
@@ -3033,7 +3033,7 @@
       "fixture_slug": "0332_reconstruct_itinerary",
       "id": "0332",
       "oracle": {
-        "mode": "no_oracle"
+        "mode": "embedded_asserts"
       },
       "primary_topic": "arrays",
       "scope_classification": "in_scope",
@@ -3078,7 +3078,7 @@
       "fixture_slug": "0344_reverse_string",
       "id": "0344",
       "oracle": {
-        "mode": "no_oracle"
+        "mode": "embedded_asserts"
       },
       "primary_topic": "arrays",
       "scope_classification": "in_scope",
@@ -3093,7 +3093,7 @@
       "fixture_slug": "0347_top_k_frequent_elements",
       "id": "0347",
       "oracle": {
-        "mode": "no_oracle"
+        "mode": "embedded_asserts"
       },
       "primary_topic": "arrays",
       "scope_classification": "in_scope",
@@ -3108,7 +3108,7 @@
       "fixture_slug": "0349_intersection_of_two_arrays",
       "id": "0349",
       "oracle": {
-        "mode": "no_oracle"
+        "mode": "embedded_asserts"
       },
       "primary_topic": "arrays",
       "scope_classification": "in_scope",
@@ -3123,7 +3123,7 @@
       "fixture_slug": "0350_intersection_of_two_arrays_ii",
       "id": "0350",
       "oracle": {
-        "mode": "no_oracle"
+        "mode": "embedded_asserts"
       },
       "primary_topic": "arrays",
       "scope_classification": "in_scope",
@@ -3138,7 +3138,7 @@
       "fixture_slug": "0355_design_twitter",
       "id": "0355",
       "oracle": {
-        "mode": "no_oracle"
+        "mode": "embedded_asserts"
       },
       "primary_topic": "arrays",
       "scope_classification": "in_scope",
@@ -3168,7 +3168,7 @@
       "fixture_slug": "0371_sum_of_two_integers",
       "id": "0371",
       "oracle": {
-        "mode": "no_oracle"
+        "mode": "embedded_asserts"
       },
       "primary_topic": "arrays",
       "scope_classification": "in_scope",
@@ -3183,7 +3183,7 @@
       "fixture_slug": "0374_guess_number_higher_or_lower",
       "id": "0374",
       "oracle": {
-        "mode": "no_oracle"
+        "mode": "embedded_asserts"
       },
       "primary_topic": "arrays",
       "scope_classification": "in_scope",
@@ -3213,7 +3213,7 @@
       "fixture_slug": "0380_insert_delete_getrandom_o1",
       "id": "0380",
       "oracle": {
-        "mode": "no_oracle"
+        "mode": "embedded_asserts"
       },
       "primary_topic": "arrays",
       "scope_classification": "in_scope",
@@ -3318,7 +3318,7 @@
       "fixture_slug": "0417_pacific_atlantic_water_flow",
       "id": "0417",
       "oracle": {
-        "mode": "no_oracle"
+        "mode": "embedded_asserts"
       },
       "primary_topic": "arrays",
       "scope_classification": "in_scope",
@@ -3394,7 +3394,7 @@
       "fixture_slug": "0442_find_all_duplicates_in_an_array",
       "id": "0442",
       "oracle": {
-        "mode": "no_oracle"
+        "mode": "embedded_asserts"
       },
       "primary_topic": "arrays",
       "scope_classification": "in_scope",
@@ -3409,7 +3409,7 @@
       "fixture_slug": "0448_find_all_numbers_disappeared_in_an_array",
       "id": "0448",
       "oracle": {
-        "mode": "no_oracle"
+        "mode": "embedded_asserts"
       },
       "primary_topic": "arrays",
       "scope_classification": "in_scope",
@@ -3424,7 +3424,7 @@
       "fixture_slug": "0450_delete_node_in_a_bst",
       "id": "0450",
       "oracle": {
-        "mode": "no_oracle"
+        "mode": "embedded_asserts"
       },
       "primary_topic": "arrays",
       "scope_classification": "in_scope",
@@ -3484,7 +3484,7 @@
       "fixture_slug": "0463_island_perimeter",
       "id": "0463",
       "oracle": {
-        "mode": "no_oracle"
+        "mode": "embedded_asserts"
       },
       "primary_topic": "arrays",
       "scope_classification": "in_scope",
@@ -3499,7 +3499,7 @@
       "fixture_slug": "0473_matchsticks_to_square",
       "id": "0473",
       "oracle": {
-        "mode": "no_oracle"
+        "mode": "embedded_asserts"
       },
       "primary_topic": "arrays",
       "scope_classification": "in_scope",
@@ -3514,7 +3514,7 @@
       "fixture_slug": "0474_ones_and_zeroes",
       "id": "0474",
       "oracle": {
-        "mode": "no_oracle"
+        "mode": "embedded_asserts"
       },
       "primary_topic": "arrays",
       "scope_classification": "in_scope",
@@ -3559,7 +3559,7 @@
       "fixture_slug": "0502_ipo",
       "id": "0502",
       "oracle": {
-        "mode": "no_oracle"
+        "mode": "embedded_asserts"
       },
       "primary_topic": "heap_priority_queue",
       "scope_classification": "in_scope",
@@ -3590,7 +3590,7 @@
       "fixture_slug": "0513_find_bottom_left_tree_value",
       "id": "0513",
       "oracle": {
-        "mode": "no_oracle"
+        "mode": "embedded_asserts"
       },
       "primary_topic": "arrays",
       "scope_classification": "in_scope",
@@ -3666,7 +3666,7 @@
       "fixture_slug": "0535_encode_and_decode_tinyurl",
       "id": "0535",
       "oracle": {
-        "mode": "no_oracle"
+        "mode": "embedded_asserts"
       },
       "primary_topic": "arrays",
       "scope_classification": "in_scope",
@@ -3696,7 +3696,7 @@
       "fixture_slug": "0543_diameter_of_binary_tree",
       "id": "0543",
       "oracle": {
-        "mode": "no_oracle"
+        "mode": "embedded_asserts"
       },
       "primary_topic": "arrays",
       "scope_classification": "in_scope",
@@ -3711,7 +3711,7 @@
       "fixture_slug": "0554_brick_wall",
       "id": "0554",
       "oracle": {
-        "mode": "no_oracle"
+        "mode": "embedded_asserts"
       },
       "primary_topic": "arrays",
       "scope_classification": "in_scope",
@@ -3757,7 +3757,7 @@
       "fixture_slug": "0572_subtree_of_another_tree",
       "id": "0572",
       "oracle": {
-        "mode": "no_oracle"
+        "mode": "embedded_asserts"
       },
       "primary_topic": "arrays",
       "scope_classification": "in_scope",
@@ -3802,7 +3802,7 @@
       "fixture_slug": "0606_construct_string_from_binary_tree",
       "id": "0606",
       "oracle": {
-        "mode": "no_oracle"
+        "mode": "embedded_asserts"
       },
       "primary_topic": "arrays",
       "scope_classification": "in_scope",
@@ -3817,7 +3817,7 @@
       "fixture_slug": "0617_merge_two_binary_trees",
       "id": "0617",
       "oracle": {
-        "mode": "no_oracle"
+        "mode": "embedded_asserts"
       },
       "primary_topic": "arrays",
       "scope_classification": "in_scope",
@@ -3832,7 +3832,7 @@
       "fixture_slug": "0621_task_scheduler",
       "id": "0621",
       "oracle": {
-        "mode": "no_oracle"
+        "mode": "embedded_asserts"
       },
       "primary_topic": "arrays",
       "scope_classification": "in_scope",
@@ -3847,7 +3847,7 @@
       "fixture_slug": "0622_design_circular_queue",
       "id": "0622",
       "oracle": {
-        "mode": "no_oracle"
+        "mode": "embedded_asserts"
       },
       "primary_topic": "arrays",
       "scope_classification": "in_scope",
@@ -3892,7 +3892,7 @@
       "fixture_slug": "0662_maximum_width_of_binary_tree",
       "id": "0662",
       "oracle": {
-        "mode": "no_oracle"
+        "mode": "embedded_asserts"
       },
       "primary_topic": "arrays",
       "scope_classification": "in_scope",
@@ -3922,7 +3922,7 @@
       "fixture_slug": "0669_trim_a_binary_search_tree",
       "id": "0669",
       "oracle": {
-        "mode": "no_oracle"
+        "mode": "embedded_asserts"
       },
       "primary_topic": "arrays",
       "scope_classification": "in_scope",
@@ -3997,7 +3997,7 @@
       "fixture_slug": "0684_redundant_connection",
       "id": "0684",
       "oracle": {
-        "mode": "no_oracle"
+        "mode": "embedded_asserts"
       },
       "primary_topic": "graphs",
       "scope_classification": "in_scope",
@@ -4013,7 +4013,7 @@
       "fixture_slug": "0695_max_area_of_island",
       "id": "0695",
       "oracle": {
-        "mode": "no_oracle"
+        "mode": "embedded_asserts"
       },
       "primary_topic": "arrays",
       "scope_classification": "in_scope",
@@ -4028,7 +4028,7 @@
       "fixture_slug": "0698_partition_to_k_equal_sum_subsets",
       "id": "0698",
       "oracle": {
-        "mode": "no_oracle"
+        "mode": "embedded_asserts"
       },
       "primary_topic": "arrays",
       "scope_classification": "in_scope",
@@ -4043,7 +4043,7 @@
       "fixture_slug": "0701_insert_into_a_binary_search_tree",
       "id": "0701",
       "oracle": {
-        "mode": "no_oracle"
+        "mode": "embedded_asserts"
       },
       "primary_topic": "arrays",
       "scope_classification": "in_scope",
@@ -4058,7 +4058,7 @@
       "fixture_slug": "0703_kth_largest_element_in_a_stream",
       "id": "0703",
       "oracle": {
-        "mode": "no_oracle"
+        "mode": "embedded_asserts"
       },
       "primary_topic": "heap_priority_queue",
       "scope_classification": "in_scope",
@@ -4104,7 +4104,7 @@
       "fixture_slug": "0705_design_hashset",
       "id": "0705",
       "oracle": {
-        "mode": "no_oracle"
+        "mode": "embedded_asserts"
       },
       "primary_topic": "arrays",
       "scope_classification": "in_scope",
@@ -4119,7 +4119,7 @@
       "fixture_slug": "0706_design_hashmap",
       "id": "0706",
       "oracle": {
-        "mode": "no_oracle"
+        "mode": "embedded_asserts"
       },
       "primary_topic": "arrays",
       "scope_classification": "in_scope",
@@ -4134,7 +4134,7 @@
       "fixture_slug": "0707_design_linked_list",
       "id": "0707",
       "oracle": {
-        "mode": "no_oracle"
+        "mode": "embedded_asserts"
       },
       "primary_topic": "arrays",
       "scope_classification": "in_scope",
@@ -4149,7 +4149,7 @@
       "fixture_slug": "0721_accounts_merge",
       "id": "0721",
       "oracle": {
-        "mode": "no_oracle"
+        "mode": "embedded_asserts"
       },
       "primary_topic": "arrays",
       "scope_classification": "in_scope",
@@ -4179,7 +4179,7 @@
       "fixture_slug": "0729_my_calendar_i",
       "id": "0729",
       "oracle": {
-        "mode": "no_oracle"
+        "mode": "embedded_asserts"
       },
       "primary_topic": "arrays",
       "scope_classification": "in_scope",
@@ -4239,7 +4239,7 @@
       "fixture_slug": "0743_network_delay_time",
       "id": "0743",
       "oracle": {
-        "mode": "no_oracle"
+        "mode": "embedded_asserts"
       },
       "primary_topic": "graphs",
       "scope_classification": "in_scope",
@@ -4256,7 +4256,7 @@
       "fixture_slug": "0745_prefix_and_suffix_search",
       "id": "0745",
       "oracle": {
-        "mode": "no_oracle"
+        "mode": "embedded_asserts"
       },
       "primary_topic": "arrays",
       "scope_classification": "in_scope",
@@ -4286,7 +4286,7 @@
       "fixture_slug": "0752_open_the_lock",
       "id": "0752",
       "oracle": {
-        "mode": "no_oracle"
+        "mode": "embedded_asserts"
       },
       "primary_topic": "arrays",
       "scope_classification": "in_scope",
@@ -4316,7 +4316,7 @@
       "fixture_slug": "0767_reorganize_string",
       "id": "0767",
       "oracle": {
-        "mode": "no_oracle"
+        "mode": "embedded_asserts"
       },
       "primary_topic": "arrays",
       "scope_classification": "in_scope",
@@ -4331,7 +4331,7 @@
       "fixture_slug": "0778_swim_in_rising_water",
       "id": "0778",
       "oracle": {
-        "mode": "no_oracle"
+        "mode": "embedded_asserts"
       },
       "primary_topic": "arrays",
       "scope_classification": "in_scope",
@@ -4346,7 +4346,7 @@
       "fixture_slug": "0783_minimum_distance_between_bst_nodes",
       "id": "0783",
       "oracle": {
-        "mode": "no_oracle"
+        "mode": "embedded_asserts"
       },
       "primary_topic": "arrays",
       "scope_classification": "in_scope",
@@ -4361,7 +4361,7 @@
       "fixture_slug": "0785_is_graph_bipartite",
       "id": "0785",
       "oracle": {
-        "mode": "no_oracle"
+        "mode": "embedded_asserts"
       },
       "primary_topic": "arrays",
       "scope_classification": "in_scope",
@@ -4376,7 +4376,7 @@
       "fixture_slug": "0787_cheapest_flights_within_k_stops",
       "id": "0787",
       "oracle": {
-        "mode": "no_oracle"
+        "mode": "embedded_asserts"
       },
       "primary_topic": "arrays",
       "scope_classification": "in_scope",
@@ -4406,7 +4406,7 @@
       "fixture_slug": "0802_find_eventual_safe_states",
       "id": "0802",
       "oracle": {
-        "mode": "no_oracle"
+        "mode": "embedded_asserts"
       },
       "primary_topic": "arrays",
       "scope_classification": "in_scope",
@@ -4421,7 +4421,7 @@
       "fixture_slug": "0838_push_dominoes",
       "id": "0838",
       "oracle": {
-        "mode": "no_oracle"
+        "mode": "embedded_asserts"
       },
       "primary_topic": "arrays",
       "scope_classification": "in_scope",
@@ -4436,7 +4436,7 @@
       "fixture_slug": "0846_hand_of_straights",
       "id": "0846",
       "oracle": {
-        "mode": "no_oracle"
+        "mode": "embedded_asserts"
       },
       "primary_topic": "arrays",
       "scope_classification": "in_scope",
@@ -4466,7 +4466,7 @@
       "fixture_slug": "0862_shortest_subarray_with_sum_at_least_k",
       "id": "0862",
       "oracle": {
-        "mode": "no_oracle"
+        "mode": "embedded_asserts"
       },
       "primary_topic": "arrays",
       "scope_classification": "in_scope",
@@ -4496,7 +4496,7 @@
       "fixture_slug": "0876_middle_of_the_linked_list",
       "id": "0876",
       "oracle": {
-        "mode": "no_oracle"
+        "mode": "embedded_asserts"
       },
       "primary_topic": "arrays",
       "scope_classification": "in_scope",
@@ -4526,7 +4526,7 @@
       "fixture_slug": "0894_all_possible_full_binary_trees",
       "id": "0894",
       "oracle": {
-        "mode": "no_oracle"
+        "mode": "embedded_asserts"
       },
       "primary_topic": "arrays",
       "scope_classification": "in_scope",
@@ -4541,7 +4541,7 @@
       "fixture_slug": "0895_maximum_frequency_stack",
       "id": "0895",
       "oracle": {
-        "mode": "no_oracle"
+        "mode": "embedded_asserts"
       },
       "primary_topic": "arrays",
       "scope_classification": "in_scope",
@@ -4571,7 +4571,7 @@
       "fixture_slug": "0901_online_stock_span",
       "id": "0901",
       "oracle": {
-        "mode": "no_oracle"
+        "mode": "embedded_asserts"
       },
       "primary_topic": "arrays",
       "scope_classification": "in_scope",
@@ -4586,7 +4586,7 @@
       "fixture_slug": "0904_fruit_into_baskets",
       "id": "0904",
       "oracle": {
-        "mode": "no_oracle"
+        "mode": "embedded_asserts"
       },
       "primary_topic": "arrays",
       "scope_classification": "in_scope",
@@ -4601,7 +4601,7 @@
       "fixture_slug": "0909_snakes_and_ladders",
       "id": "0909",
       "oracle": {
-        "mode": "no_oracle"
+        "mode": "embedded_asserts"
       },
       "primary_topic": "arrays",
       "scope_classification": "in_scope",
@@ -4647,7 +4647,7 @@
       "fixture_slug": "0929_unique_email_addresses",
       "id": "0929",
       "oracle": {
-        "mode": "no_oracle"
+        "mode": "embedded_asserts"
       },
       "primary_topic": "arrays",
       "scope_classification": "in_scope",
@@ -4677,7 +4677,7 @@
       "fixture_slug": "0931_minimum_falling_path_sum",
       "id": "0931",
       "oracle": {
-        "mode": "no_oracle"
+        "mode": "embedded_asserts"
       },
       "primary_topic": "arrays",
       "scope_classification": "in_scope",
@@ -4722,7 +4722,7 @@
       "fixture_slug": "0953_verifying_an_alien_dictionary",
       "id": "0953",
       "oracle": {
-        "mode": "no_oracle"
+        "mode": "embedded_asserts"
       },
       "primary_topic": "arrays",
       "scope_classification": "in_scope",
@@ -4737,7 +4737,7 @@
       "fixture_slug": "0973_k_closest_points_to_origin",
       "id": "0973",
       "oracle": {
-        "mode": "no_oracle"
+        "mode": "embedded_asserts"
       },
       "primary_topic": "arrays",
       "scope_classification": "in_scope",
@@ -4782,7 +4782,7 @@
       "fixture_slug": "0981_time_based_key_value_store",
       "id": "0981",
       "oracle": {
-        "mode": "no_oracle"
+        "mode": "embedded_asserts"
       },
       "primary_topic": "arrays",
       "scope_classification": "in_scope",
@@ -4797,7 +4797,7 @@
       "fixture_slug": "0994_rotting_oranges",
       "id": "0994",
       "oracle": {
-        "mode": "no_oracle"
+        "mode": "embedded_asserts"
       },
       "primary_topic": "arrays",
       "scope_classification": "in_scope",
@@ -4842,7 +4842,7 @@
       "fixture_slug": "1020_number_of_enclaves",
       "id": "1020",
       "oracle": {
-        "mode": "no_oracle"
+        "mode": "embedded_asserts"
       },
       "primary_topic": "arrays",
       "scope_classification": "in_scope",
@@ -4872,7 +4872,7 @@
       "fixture_slug": "1046_last_stone_weight",
       "id": "1046",
       "oracle": {
-        "mode": "no_oracle"
+        "mode": "embedded_asserts"
       },
       "primary_topic": "heap_priority_queue",
       "scope_classification": "in_scope",
@@ -4902,7 +4902,7 @@
       "fixture_slug": "1074_number_of_submatrices_that_sum_to_target",
       "id": "1074",
       "oracle": {
-        "mode": "no_oracle"
+        "mode": "embedded_asserts"
       },
       "primary_topic": "arrays",
       "scope_classification": "in_scope",
@@ -4917,7 +4917,7 @@
       "fixture_slug": "1091_shortest_path_in_binary_matrix",
       "id": "1091",
       "oracle": {
-        "mode": "no_oracle"
+        "mode": "embedded_asserts"
       },
       "primary_topic": "arrays",
       "scope_classification": "in_scope",
@@ -4963,7 +4963,7 @@
       "fixture_slug": "1189_maximum_number_of_balloons",
       "id": "1189",
       "oracle": {
-        "mode": "no_oracle"
+        "mode": "embedded_asserts"
       },
       "primary_topic": "arrays",
       "scope_classification": "in_scope",
@@ -4978,7 +4978,7 @@
       "fixture_slug": "1203_sort_items_by_groups_respecting_dependencies",
       "id": "1203",
       "oracle": {
-        "mode": "no_oracle"
+        "mode": "embedded_asserts"
       },
       "primary_topic": "arrays",
       "scope_classification": "in_scope",
@@ -5024,7 +5024,7 @@
       "fixture_slug": "1239_maximum_length_of_a_concatenated_string_with_unique_characters",
       "id": "1239",
       "oracle": {
-        "mode": "no_oracle"
+        "mode": "embedded_asserts"
       },
       "primary_topic": "arrays",
       "scope_classification": "in_scope",
@@ -5039,7 +5039,7 @@
       "fixture_slug": "1254_number_of_closed_islands",
       "id": "1254",
       "oracle": {
-        "mode": "no_oracle"
+        "mode": "embedded_asserts"
       },
       "primary_topic": "arrays",
       "scope_classification": "in_scope",
@@ -5054,7 +5054,7 @@
       "fixture_slug": "1260_shift_2d_grid",
       "id": "1260",
       "oracle": {
-        "mode": "no_oracle"
+        "mode": "embedded_asserts"
       },
       "primary_topic": "arrays",
       "scope_classification": "in_scope",
@@ -5114,7 +5114,7 @@
       "fixture_slug": "1345_jump_game_iv",
       "id": "1345",
       "oracle": {
-        "mode": "no_oracle"
+        "mode": "embedded_asserts"
       },
       "primary_topic": "arrays",
       "scope_classification": "in_scope",
@@ -5129,7 +5129,7 @@
       "fixture_slug": "1383_maximum_performance_of_a_team",
       "id": "1383",
       "oracle": {
-        "mode": "no_oracle"
+        "mode": "embedded_asserts"
       },
       "primary_topic": "arrays",
       "scope_classification": "in_scope",
@@ -5144,7 +5144,7 @@
       "fixture_slug": "1396_design_underground_system",
       "id": "1396",
       "oracle": {
-        "mode": "no_oracle"
+        "mode": "embedded_asserts"
       },
       "primary_topic": "arrays",
       "scope_classification": "in_scope",
@@ -5159,7 +5159,7 @@
       "fixture_slug": "1397_find_all_good_strings",
       "id": "1397",
       "oracle": {
-        "mode": "no_oracle"
+        "mode": "embedded_asserts"
       },
       "primary_topic": "arrays",
       "scope_classification": "in_scope",
@@ -5189,7 +5189,7 @@
       "fixture_slug": "1448_count_good_nodes_in_binary_tree",
       "id": "1448",
       "oracle": {
-        "mode": "no_oracle"
+        "mode": "embedded_asserts"
       },
       "primary_topic": "arrays",
       "scope_classification": "in_scope",
@@ -5220,7 +5220,7 @@
       "fixture_slug": "1461_check_if_a_string_contains_all_binary_codes_of_size_k",
       "id": "1461",
       "oracle": {
-        "mode": "no_oracle"
+        "mode": "embedded_asserts"
       },
       "primary_topic": "arrays",
       "scope_classification": "in_scope",
@@ -5235,7 +5235,7 @@
       "fixture_slug": "1462_course_schedule_iv",
       "id": "1462",
       "oracle": {
-        "mode": "no_oracle"
+        "mode": "embedded_asserts"
       },
       "primary_topic": "arrays",
       "scope_classification": "in_scope",
@@ -5265,7 +5265,7 @@
       "fixture_slug": "1466_reorder_routes_to_make_all_paths_lead_to_the_city_zero",
       "id": "1466",
       "oracle": {
-        "mode": "no_oracle"
+        "mode": "embedded_asserts"
       },
       "primary_topic": "arrays",
       "scope_classification": "in_scope",
@@ -5280,7 +5280,7 @@
       "fixture_slug": "1472_design_browser_history",
       "id": "1472",
       "oracle": {
-        "mode": "no_oracle"
+        "mode": "embedded_asserts"
       },
       "primary_topic": "arrays",
       "scope_classification": "in_scope",
@@ -5310,7 +5310,7 @@
       "fixture_slug": "1481_least_number_of_unique_integers_after_k_removals",
       "id": "1481",
       "oracle": {
-        "mode": "no_oracle"
+        "mode": "embedded_asserts"
       },
       "primary_topic": "arrays",
       "scope_classification": "in_scope",
@@ -5325,7 +5325,7 @@
       "fixture_slug": "1489_find_critical_and_pseudo_critical_edges_in_minimum_spanning_tree",
       "id": "1489",
       "oracle": {
-        "mode": "no_oracle"
+        "mode": "embedded_asserts"
       },
       "primary_topic": "arrays",
       "scope_classification": "in_scope",
@@ -5340,7 +5340,7 @@
       "fixture_slug": "1498_number_of_subsequences_that_satisfy_the_given_sum_condition",
       "id": "1498",
       "oracle": {
-        "mode": "no_oracle"
+        "mode": "embedded_asserts"
       },
       "primary_topic": "arrays",
       "scope_classification": "in_scope",
@@ -5355,7 +5355,7 @@
       "fixture_slug": "1514_path_with_maximum_probability",
       "id": "1514",
       "oracle": {
-        "mode": "no_oracle"
+        "mode": "embedded_asserts"
       },
       "primary_topic": "arrays",
       "scope_classification": "in_scope",
@@ -5400,7 +5400,7 @@
       "fixture_slug": "1582_special_positions_in_a_binary_matrix",
       "id": "1582",
       "oracle": {
-        "mode": "no_oracle"
+        "mode": "embedded_asserts"
       },
       "primary_topic": "arrays",
       "scope_classification": "in_scope",
@@ -5415,7 +5415,7 @@
       "fixture_slug": "1584_min_cost_to_connect_all_points",
       "id": "1584",
       "oracle": {
-        "mode": "no_oracle"
+        "mode": "embedded_asserts"
       },
       "primary_topic": "arrays",
       "scope_classification": "in_scope",
@@ -5430,7 +5430,7 @@
       "fixture_slug": "1603_design_parking_system",
       "id": "1603",
       "oracle": {
-        "mode": "no_oracle"
+        "mode": "embedded_asserts"
       },
       "primary_topic": "arrays",
       "scope_classification": "in_scope",
@@ -5445,7 +5445,7 @@
       "fixture_slug": "1609_even_odd_tree",
       "id": "1609",
       "oracle": {
-        "mode": "no_oracle"
+        "mode": "embedded_asserts"
       },
       "primary_topic": "arrays",
       "scope_classification": "in_scope",
@@ -5460,7 +5460,7 @@
       "fixture_slug": "1631_path_with_minimum_effort",
       "id": "1631",
       "oracle": {
-        "mode": "no_oracle"
+        "mode": "embedded_asserts"
       },
       "primary_topic": "arrays",
       "scope_classification": "in_scope",
@@ -5475,7 +5475,7 @@
       "fixture_slug": "1642_furthest_building_you_can_reach",
       "id": "1642",
       "oracle": {
-        "mode": "no_oracle"
+        "mode": "embedded_asserts"
       },
       "primary_topic": "arrays",
       "scope_classification": "in_scope",
@@ -5505,7 +5505,7 @@
       "fixture_slug": "1669_merge_in_between_linked_lists",
       "id": "1669",
       "oracle": {
-        "mode": "no_oracle"
+        "mode": "embedded_asserts"
       },
       "primary_topic": "arrays",
       "scope_classification": "in_scope",
@@ -5535,7 +5535,7 @@
       "fixture_slug": "1721_swapping_nodes_in_a_linked_list",
       "id": "1721",
       "oracle": {
-        "mode": "no_oracle"
+        "mode": "embedded_asserts"
       },
       "primary_topic": "arrays",
       "scope_classification": "in_scope",
@@ -5627,7 +5627,7 @@
       "fixture_slug": "1834_single_threaded_cpu",
       "id": "1834",
       "oracle": {
-        "mode": "no_oracle"
+        "mode": "embedded_asserts"
       },
       "primary_topic": "arrays",
       "scope_classification": "in_scope",
@@ -5642,7 +5642,7 @@
       "fixture_slug": "1838_frequency_of_the_most_frequent_element",
       "id": "1838",
       "oracle": {
-        "mode": "no_oracle"
+        "mode": "embedded_asserts"
       },
       "primary_topic": "arrays",
       "scope_classification": "in_scope",
@@ -5657,7 +5657,7 @@
       "fixture_slug": "1845_seat_reservation_manager",
       "id": "1845",
       "oracle": {
-        "mode": "no_oracle"
+        "mode": "embedded_asserts"
       },
       "primary_topic": "arrays",
       "scope_classification": "in_scope",
@@ -5687,7 +5687,7 @@
       "fixture_slug": "1851_minimum_interval_to_include_each_query",
       "id": "1851",
       "oracle": {
-        "mode": "no_oracle"
+        "mode": "embedded_asserts"
       },
       "primary_topic": "arrays",
       "scope_classification": "in_scope",
@@ -5702,7 +5702,7 @@
       "fixture_slug": "1888_minimum_number_of_flips_to_make_the_binary_string_alternating",
       "id": "1888",
       "oracle": {
-        "mode": "no_oracle"
+        "mode": "embedded_asserts"
       },
       "primary_topic": "arrays",
       "scope_classification": "in_scope",
@@ -5732,7 +5732,7 @@
       "fixture_slug": "1905_count_sub_islands",
       "id": "1905",
       "oracle": {
-        "mode": "no_oracle"
+        "mode": "embedded_asserts"
       },
       "primary_topic": "arrays",
       "scope_classification": "in_scope",
@@ -5777,7 +5777,7 @@
       "fixture_slug": "1930_unique_length_3_palindromic_subsequences",
       "id": "1930",
       "oracle": {
-        "mode": "no_oracle"
+        "mode": "embedded_asserts"
       },
       "primary_topic": "arrays",
       "scope_classification": "in_scope",
@@ -5792,7 +5792,7 @@
       "fixture_slug": "1958_check_if_move_is_legal",
       "id": "1958",
       "oracle": {
-        "mode": "no_oracle"
+        "mode": "embedded_asserts"
       },
       "primary_topic": "arrays",
       "scope_classification": "in_scope",
@@ -5837,7 +5837,7 @@
       "fixture_slug": "1980_find_unique_binary_string",
       "id": "1980",
       "oracle": {
-        "mode": "no_oracle"
+        "mode": "embedded_asserts"
       },
       "primary_topic": "arrays",
       "scope_classification": "in_scope",
@@ -5867,7 +5867,7 @@
       "fixture_slug": "1985_find_the_kth_largest_integer_in_the_array",
       "id": "1985",
       "oracle": {
-        "mode": "no_oracle"
+        "mode": "embedded_asserts"
       },
       "primary_topic": "arrays",
       "scope_classification": "in_scope",
@@ -5882,7 +5882,7 @@
       "fixture_slug": "2001_number_of_pairs_of_interchangeable_rectangles",
       "id": "2001",
       "oracle": {
-        "mode": "no_oracle"
+        "mode": "embedded_asserts"
       },
       "primary_topic": "arrays",
       "scope_classification": "in_scope",
@@ -5897,7 +5897,7 @@
       "fixture_slug": "2002_maximum_product_of_the_length_of_two_palindromic_subsequences",
       "id": "2002",
       "oracle": {
-        "mode": "no_oracle"
+        "mode": "embedded_asserts"
       },
       "primary_topic": "arrays",
       "scope_classification": "in_scope",
@@ -5912,7 +5912,7 @@
       "fixture_slug": "2013_detect_squares",
       "id": "2013",
       "oracle": {
-        "mode": "no_oracle"
+        "mode": "embedded_asserts"
       },
       "primary_topic": "arrays",
       "scope_classification": "in_scope",
@@ -5927,7 +5927,7 @@
       "fixture_slug": "2017_grid_game",
       "id": "2017",
       "oracle": {
-        "mode": "no_oracle"
+        "mode": "embedded_asserts"
       },
       "primary_topic": "arrays",
       "scope_classification": "in_scope",
@@ -5942,7 +5942,7 @@
       "fixture_slug": "2092_find_all_people_with_secret",
       "id": "2092",
       "oracle": {
-        "mode": "no_oracle"
+        "mode": "embedded_asserts"
       },
       "primary_topic": "arrays",
       "scope_classification": "in_scope",
@@ -5957,7 +5957,7 @@
       "fixture_slug": "2101_detonate_the_maximum_bombs",
       "id": "2101",
       "oracle": {
-        "mode": "no_oracle"
+        "mode": "embedded_asserts"
       },
       "primary_topic": "arrays",
       "scope_classification": "in_scope",
@@ -5972,7 +5972,7 @@
       "fixture_slug": "2130_maximum_twin_sum_of_a_linked_list",
       "id": "2130",
       "oracle": {
-        "mode": "no_oracle"
+        "mode": "embedded_asserts"
       },
       "primary_topic": "arrays",
       "scope_classification": "in_scope",
@@ -5987,7 +5987,7 @@
       "fixture_slug": "2215_find_the_difference_of_two_arrays",
       "id": "2215",
       "oracle": {
-        "mode": "no_oracle"
+        "mode": "embedded_asserts"
       },
       "primary_topic": "arrays",
       "scope_classification": "in_scope",
@@ -6032,7 +6032,7 @@
       "fixture_slug": "2306_naming_a_company",
       "id": "2306",
       "oracle": {
-        "mode": "no_oracle"
+        "mode": "embedded_asserts"
       },
       "primary_topic": "arrays",
       "scope_classification": "in_scope",
@@ -6077,7 +6077,7 @@
       "fixture_slug": "2402_meeting_rooms_iii",
       "id": "2402",
       "oracle": {
-        "mode": "no_oracle"
+        "mode": "embedded_asserts"
       },
       "primary_topic": "arrays",
       "scope_classification": "in_scope",
@@ -6107,7 +6107,7 @@
       "fixture_slug": "2482_difference_between_ones_and_zeros_in_row_and_column",
       "id": "2482",
       "oracle": {
-        "mode": "no_oracle"
+        "mode": "embedded_asserts"
       },
       "primary_topic": "arrays",
       "scope_classification": "in_scope",
@@ -6167,7 +6167,7 @@
       "fixture_slug": "2709_greatest_common_divisor_traversal",
       "id": "2709",
       "oracle": {
-        "mode": "no_oracle"
+        "mode": "embedded_asserts"
       },
       "primary_topic": "arrays",
       "scope_classification": "in_scope",

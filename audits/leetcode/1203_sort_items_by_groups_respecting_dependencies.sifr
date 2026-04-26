@@ -96,4 +96,4 @@ def sortItems(n: int, mut m: int, mut group: list[int], beforeItems: list[list[i
     return result
 
 def main():
-    assert len(topologicalSort([], [], 0)) == 0
+    assert topologicalSort([[0]], [0], 0) == []
