@@ -3,7 +3,7 @@
 These are the available field-id and single-selection-option-id:
 ```
 {
-  "field_id": "PVTSSF_lAHOAKAfcc4BPKkLzg9p4e8",
+  "field_id": "PVTSSF_lADOD7GYsM4BVyfVzhRLtKA",
   "field_name": "Status",
   "options": [
     {
@@ -29,7 +29,7 @@ These are the available field-id and single-selection-option-id:
   ]
 }
 {
-  "field_id": "PVTSSF_lAHOAKAfcc4BPKkLzg9p5HQ",
+  "field_id": "PVTSSF_lADOD7GYsM4BVyfVzhRLtKw",
   "field_name": "Priority",
   "options": [
     {
@@ -47,7 +47,7 @@ These are the available field-id and single-selection-option-id:
   ]
 }
 {
-  "field_id": "PVTSSF_lAHOAKAfcc4BPKkLzg9p5Ik",
+  "field_id": "PVTSSF_lADOD7GYsM4BVyfVzhRLtK0",
   "field_name": "Size",
   "options": [
     {
@@ -73,7 +73,7 @@ These are the available field-id and single-selection-option-id:
   ]
 }
 {
-  "field_id": "PVTSSF_lAHOAKAfcc4BPKkLzg9p5JU",
+  "field_id": "PVTSSF_lADOD7GYsM4BVyfVzhRLtK4",
   "field_name": "Type",
   "options": [
     {
@@ -91,5 +91,5 @@ These are the available field-id and single-selection-option-id:
 If not found, use the following command to get all the single select fields and their options:
 
 ```
-gh project field-list 2 --owner yaseralnajjar --format json | jq '.fields[] | select(.type == "ProjectV2SingleSelectField") | {field_id: .id, field_name: .name, options: .options}'
+gh project field-list 2 --owner sifr-lang --format json | jq '.fields[] | select(.type == "ProjectV2SingleSelectField") | {field_id: .id, field_name: .name, options: .options}'
 ```

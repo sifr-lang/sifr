@@ -32,7 +32,7 @@ Review PR should be focused on the following (review these one step at a time):
 
 To get all project items from GitHub, use this command:
 ```
-gh project item-list 2 --owner yaseralnajjar --format json
+gh project item-list 2 --owner sifr-lang --format json
 ```
 
 ## Reviewing PRs

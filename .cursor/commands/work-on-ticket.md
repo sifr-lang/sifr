@@ -9,7 +9,7 @@ Do not commit changes, and stop execution if there are uncommitted changes.
 
 To get all project items from GitHub, use this command:
 ```
-gh project item-list 2 --owner yaseralnajjar --format json
+gh project item-list 2 --owner sifr-lang --format json
 ```
 
 ## Available field-id and single-selection-option-id
@@ -37,5 +37,5 @@ Check @.cursor/references/available-field-id-and-single-selection-option-id.md
 
 7. Update ticket `Status` into `In review`:
 ```
-gh project item-edit --project-id PVT_kwHOAKAfcc4BPKkL --id <item-id> --field-id <field-id> --single-select-option-id <single-select-option-id>
+gh project item-edit --project-id PVT_kwDOD7GYsM4BVyfV --id <item-id> --field-id <field-id> --single-select-option-id <single-select-option-id>
 ```

@@ -80,7 +80,7 @@ Merged PRs move to Done.
 
 ## GitHub Project Constants
 
-- **Owner**: `yaseralnajjar`
+- **Owner**: `sifr-lang`
 - **Project number**: `2`
-- **Project ID**: `PVT_kwHOAKAfcc4BPKkL`
-- **Repository**: `yaseralnajjar/sifr`
+- **Project ID**: `PVT_kwDOD7GYsM4BVyfV`
+- **Repository**: `sifr-lang/sifr`
