@@ -171,12 +171,12 @@ The checklist at line 86 of the execution tracker still shows wave_30_1e as "in 
 
 **Current:**
 ```markdown
-- [ ] `wave_30_1e` (`io`, `csv`, `os`, `pathlib`, `glob`, `tempfile`, `shutil`) - in progress (implementation merged in https://github.com/yaseralnajjar/sifr/pull/1068; reviewer pass 1 approved; reviewer pass 2 reported structural/doc blockers and remediation is in progress; wave closure cycles pending)
+- [ ] `wave_30_1e` (`io`, `csv`, `os`, `pathlib`, `glob`, `tempfile`, `shutil`) - in progress (implementation merged in https://github.com/sifr-lang/sifr/pull/1068; reviewer pass 1 approved; reviewer pass 2 reported structural/doc blockers and remediation is in progress; wave closure cycles pending)
 ```
 
 **Recommended:**
 ```markdown
-- [x] `wave_30_1e` (`io`, `csv`, `os`, `pathlib`, `glob`, `tempfile`, `shutil`) - complete (implementation merged in https://github.com/yaseralnajjar/sifr/pull/1068; reviewer pass 1 approved; reviewer pass 2 blockers resolved in https://github.com/yaseralnajjar/sifr/pull/1070; wave completion closure and production-grade closure approved)
+- [x] `wave_30_1e` (`io`, `csv`, `os`, `pathlib`, `glob`, `tempfile`, `shutil`) - complete (implementation merged in https://github.com/sifr-lang/sifr/pull/1068; reviewer pass 1 approved; reviewer pass 2 blockers resolved in https://github.com/sifr-lang/sifr/pull/1070; wave completion closure and production-grade closure approved)
 ```
 
 ---

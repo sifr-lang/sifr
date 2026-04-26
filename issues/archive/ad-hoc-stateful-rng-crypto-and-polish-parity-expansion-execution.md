@@ -41,7 +41,7 @@ Loop per wave: Plan -> Implement -> Validate -> Demo -> PR -> External completio
 - [x] Add negative fixture for `SystemRandom` state boundary.
 - [x] Run `cargo test -p sifr -- --skip test_e2e_pass`.
 - [x] Run full gate `$(pwd)/scripts/run_all_tests.sh`.
-- [x] Open PR, review, and merge for this wave (`https://github.com/yaseralnajjar/sifr/pull/1376`).
+- [x] Open PR, review, and merge for this wave (`https://github.com/sifr-lang/sifr/pull/1376`).
 
 ### `wave_psp_rng_2`
 - [x] Expand `hashlib` to bytes-native digest/object APIs (`digest`, `digest_bytes`, `update_bytes`, `new_bytes`).
@@ -110,9 +110,9 @@ Required entry records:
   - unit lane: `cargo test -p sifr -- --skip test_e2e_pass` -> PASS
   - wave gate: `$(pwd)/scripts/run_all_tests.sh` -> PASS (2026-03-21)
 - Merge evidence:
-  - implementation PR: `https://github.com/yaseralnajjar/sifr/pull/1376` (merged 2026-03-21)
+  - implementation PR: `https://github.com/sifr-lang/sifr/pull/1376` (merged 2026-03-21)
   - external review pass 1 artifact: `reviews/phase-ad-hoc-stateful-rng-crypto-and-polish-parity-expansion-review-pass-1.md`
-  - external review pass 1 fixes PR: `https://github.com/yaseralnajjar/sifr/pull/1377` (merged 2026-03-21)
+  - external review pass 1 fixes PR: `https://github.com/sifr-lang/sifr/pull/1377` (merged 2026-03-21)
   - external review pass 2 artifact: `reviews/phase-ad-hoc-stateful-rng-crypto-and-polish-parity-expansion-review-pass-2.md`
   - pass 2 validation result: reviewer output was stale (claimed wave 1 absent) and contradicted merged code/docs in PR `#1376`; no additional code fix was valid from that report
 
@@ -130,9 +130,9 @@ Required entry records:
   - unit/non-pass lane: `cargo test -p sifr -- --skip test_e2e_pass` -> PASS
   - wave gate: `$(pwd)/scripts/run_all_tests.sh` -> PASS (2026-03-21)
 - Merge evidence:
-  - implementation PR: `https://github.com/yaseralnajjar/sifr/pull/1379` (merged 2026-03-21)
+  - implementation PR: `https://github.com/sifr-lang/sifr/pull/1379` (merged 2026-03-21)
   - external review pass 1 artifact: `reviews/phase-ad-hoc-stateful-rng-crypto-and-polish-parity-expansion-wave-psp-rng-2-review-pass-1.md`
-  - external review pass 1 fixes PR: `https://github.com/yaseralnajjar/sifr/pull/1380` (merged 2026-03-21)
+  - external review pass 1 fixes PR: `https://github.com/sifr-lang/sifr/pull/1380` (merged 2026-03-21)
   - external review pass 2 artifact: `reviews/phase-ad-hoc-stateful-rng-crypto-and-polish-parity-expansion-wave-psp-rng-2-review-pass-2.md`
   - pass 2 validation result: reviewer marked wave as production-grade with no additional code changes required
 
@@ -150,9 +150,9 @@ Required entry records:
   - negative boundary: `cargo run -q -p sifr -- check crates/sifr/tests/e2e/fail/phase_psp_struct_0_html_package_parser_unsupported.sifr` -> expected compile failure (PASS)
   - wave gate: `$(pwd)/scripts/run_all_tests.sh` -> PASS (2026-03-21)
 - Merge evidence:
-  - implementation PR: `https://github.com/yaseralnajjar/sifr/pull/1382` (merged 2026-03-21)
+  - implementation PR: `https://github.com/sifr-lang/sifr/pull/1382` (merged 2026-03-21)
   - external review pass 1 artifact: `reviews/phase-ad-hoc-stateful-rng-crypto-and-polish-parity-expansion-wave-psp-rng-3-review-pass-1.md`
-  - pass 1 status PR: `https://github.com/yaseralnajjar/sifr/pull/1383` (merged 2026-03-21)
+  - pass 1 status PR: `https://github.com/sifr-lang/sifr/pull/1383` (merged 2026-03-21)
   - pass 1 validation result: reviewer approved wave scope with no additional code changes required
   - external review pass 2 artifact: `reviews/phase-ad-hoc-stateful-rng-crypto-and-polish-parity-expansion-wave-psp-rng-3-review-pass-2.md`
   - pass 2 validation result: reviewer marked wave as production-grade with no additional code changes required

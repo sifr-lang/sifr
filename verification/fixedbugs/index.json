@@ -3,7 +3,7 @@
   "entries": [
     {
       "id": "FB-0001",
-      "issue": "https://github.com/yaseralnajjar/sifr/pull/898",
+      "issue": "https://github.com/sifr-lang/sifr/pull/898",
       "root_cause_category": "negative-index-mutation-lowering-parity",
       "suite_location": "crates/sifr/tests/e2e/pass/negative_index_mutations.sifr",
       "command": "run",
@@ -12,7 +12,7 @@
     },
     {
       "id": "FB-0002",
-      "issue": "https://github.com/yaseralnajjar/sifr/pull/899",
+      "issue": "https://github.com/sifr-lang/sifr/pull/899",
       "root_cause_category": "unsupported-default-expression-diagnostic-path",
       "suite_location": "crates/sifr/tests/e2e/fail/unsupported_default_expr_call.sifr",
       "command": "check",
@@ -21,7 +21,7 @@
     },
     {
       "id": "FB-0003",
-      "issue": "https://github.com/yaseralnajjar/sifr/pull/913",
+      "issue": "https://github.com/sifr-lang/sifr/pull/913",
       "root_cause_category": "decimal-literal-validation-contract",
       "suite_location": "crates/sifr/tests/e2e/fail/decimal_invalid_literal_string.sifr",
       "command": "check",

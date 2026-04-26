@@ -101,11 +101,11 @@ Validation evidence:
 - Negative path: `cargo run -q -p sifr -- run demos/m21_3_yield_exception_path_coverage_demo/negative_cases/undefined_in_except_yield.sifr` -> exits `1` with `type error: undefined variable: 'missing_value'`.
 
 ## PR Log
-- Part 1: https://github.com/yaseralnajjar/sifr/pull/849
-- Part 2: https://github.com/yaseralnajjar/sifr/pull/850
-- Part 3: https://github.com/yaseralnajjar/sifr/pull/851
-- Review pass 1 remediation: https://github.com/yaseralnajjar/sifr/pull/852
-- Review pass 2 remediation: https://github.com/yaseralnajjar/sifr/pull/853
+- Part 1: https://github.com/sifr-lang/sifr/pull/849
+- Part 2: https://github.com/sifr-lang/sifr/pull/850
+- Part 3: https://github.com/sifr-lang/sifr/pull/851
+- Review pass 1 remediation: https://github.com/sifr-lang/sifr/pull/852
+- Review pass 2 remediation: https://github.com/sifr-lang/sifr/pull/853
 
 ## Reviewer Follow-up
 - External review pass 1 output: `reviews/phase21-review.md` (2026-03-05, approved; advisory notes only)

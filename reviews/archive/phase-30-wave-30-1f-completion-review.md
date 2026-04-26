@@ -22,27 +22,27 @@
 ## Detailed Findings
 
 ### Part 24: `logging`
-- **PR**: https://github.com/yaseralnajjar/sifr/pull/1024
+- **PR**: https://github.com/sifr-lang/sifr/pull/1024
 - **Review files**: `reviews/phase-30-part-24-logging-review.md`, `reviews/phase-30-part-24-logging-review-2.md`
 - **Status**: Complete - All checklist items passed, parity matrix updated
 
 ### Part 25: `time`
-- **PR**: https://github.com/yaseralnajjar/sifr/pull/1027
+- **PR**: https://github.com/sifr-lang/sifr/pull/1027
 - **Review files**: `reviews/phase-30-part-25-time-review.md`, `reviews/phase-30-part-25-time-review-2.md`
 - **Status**: Complete - All checklist items passed, parity matrix updated
 
 ### Part 26: `timeit`
-- **PR**: https://github.com/yaseralnajjar/sifr/pull/1030
+- **PR**: https://github.com/sifr-lang/sifr/pull/1030
 - **Review files**: `reviews/phase-30-part-26-timeit-review.md`, `reviews/phase-30-part-26-timeit-review-2.md`
 - **Status**: Complete - All checklist items passed, parity matrix updated
 
 ### Part 27: `platform`
-- **PR**: https://github.com/yaseralnajjar/sifr/pull/1033
+- **PR**: https://github.com/sifr-lang/sifr/pull/1033
 - **Review files**: `reviews/phase-30-part-27-platform-review.md`, `reviews/phase-30-part-27-platform-review-2.md`, `reviews/phase-30-part-27-platform-review-r2a.md`
 - **Status**: Complete - All checklist items passed, parity matrix updated
 
 ### Part 28: `uuid`
-- **PR**: https://github.com/yaseralnajjar/sifr/pull/1038
+- **PR**: https://github.com/sifr-lang/sifr/pull/1038
 - **Review files**: `reviews/phase-30-part-28-uuid-review.md`, `reviews/phase-30-part-28-uuid-review-2a.md`
 - **Status**: Complete - All checklist items passed, parity matrix updated
 

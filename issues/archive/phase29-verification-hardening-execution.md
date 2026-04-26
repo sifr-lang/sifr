@@ -171,13 +171,13 @@ Validation evidence:
 - Negative path: quarantine metadata file `verification/flake/quarantine.json` is schema-validated; malformed entries or unknown suites fail the hardening gate.
 
 ## PR Log
-- Part 1: merged https://github.com/yaseralnajjar/sifr/pull/920
-- Part 2: merged https://github.com/yaseralnajjar/sifr/pull/921
-- Part 3: merged https://github.com/yaseralnajjar/sifr/pull/922
-- Part 4: merged https://github.com/yaseralnajjar/sifr/pull/923
-- Part 5: merged https://github.com/yaseralnajjar/sifr/pull/924
-- External review pass 1 remediation: merged https://github.com/yaseralnajjar/sifr/pull/926
-- External review pass 2 remediation: merged https://github.com/yaseralnajjar/sifr/pull/927
+- Part 1: merged https://github.com/sifr-lang/sifr/pull/920
+- Part 2: merged https://github.com/sifr-lang/sifr/pull/921
+- Part 3: merged https://github.com/sifr-lang/sifr/pull/922
+- Part 4: merged https://github.com/sifr-lang/sifr/pull/923
+- Part 5: merged https://github.com/sifr-lang/sifr/pull/924
+- External review pass 1 remediation: merged https://github.com/sifr-lang/sifr/pull/926
+- External review pass 2 remediation: merged https://github.com/sifr-lang/sifr/pull/927
 
 ## External Review Passes
 - Reviewer pass 1 request: `reviews/phase-29-review.md` (requested via talk-to-claude external app)

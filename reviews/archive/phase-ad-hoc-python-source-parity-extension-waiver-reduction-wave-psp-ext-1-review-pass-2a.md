@@ -174,7 +174,7 @@ From `issues/ad-hoc-python-source-parity-extension-waiver-reduction-execution.md
 ### 7.2 Wave Progress
 
 - Status: merged ✅
-- Implementation PR: https://github.com/yaseralnajjar/sifr/pull/1254 ✅
+- Implementation PR: https://github.com/sifr-lang/sifr/pull/1254 ✅
 - Validation evidence recorded ✅
 
 ### 7.3 Review Chain

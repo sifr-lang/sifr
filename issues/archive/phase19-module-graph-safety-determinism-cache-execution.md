@@ -68,18 +68,18 @@ Validation evidence:
 - Full suite: `/Users/yaseralnajjar/work/sifr/codebase/scripts/run_all_tests.sh` -> pass.
 
 ## PR Log
-- Part 1: https://github.com/yaseralnajjar/sifr/pull/834
-- Part 2: https://github.com/yaseralnajjar/sifr/pull/835
-- Part 3: https://github.com/yaseralnajjar/sifr/pull/836
+- Part 1: https://github.com/sifr-lang/sifr/pull/834
+- Part 2: https://github.com/sifr-lang/sifr/pull/835
+- Part 3: https://github.com/sifr-lang/sifr/pull/836
 
 ## Reviewer Follow-up
 - External review pass 1 output: `reviews/phase19-review.md`
-- Remediation PR (pass 1): https://github.com/yaseralnajjar/sifr/pull/837
+- Remediation PR (pass 1): https://github.com/sifr-lang/sifr/pull/837
 - Pass-1 triage + actions:
   - Documented that module-graph local dependency extraction intentionally follows Phase 18 import-form semantics (including level-1 relative imports only, excluding unsupported deeper levels).
   - Documented that stdlib cache scope is process-local (`OnceLock`), clarifying deterministic behavior and lifetime.
 - External review pass 2 output: `reviews/phase19-production-grade-review.md`
-- Remediation PR (pass 2): https://github.com/yaseralnajjar/sifr/pull/838
+- Remediation PR (pass 2): https://github.com/sifr-lang/sifr/pull/838
 - Pass-2 triage outcome:
   - Reviewer confirmed production readiness for Phase 19 with no blocking defects.
   - No additional code changes required beyond pass-1 clarifications.

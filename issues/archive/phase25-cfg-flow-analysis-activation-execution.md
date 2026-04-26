@@ -157,12 +157,12 @@ Validation evidence:
 - Negative path: matrix row `negative_diagnostic_stability` asserts repeated diagnostics are byte-identical.
 
 ## PR Log
-- Part 1: https://github.com/yaseralnajjar/sifr/pull/883
-- Part 2: https://github.com/yaseralnajjar/sifr/pull/884
-- Part 3: https://github.com/yaseralnajjar/sifr/pull/885
-- Part 4: https://github.com/yaseralnajjar/sifr/pull/886
-- Part 5: https://github.com/yaseralnajjar/sifr/pull/887
-- Review pass 1 remediation: https://github.com/yaseralnajjar/sifr/pull/889
+- Part 1: https://github.com/sifr-lang/sifr/pull/883
+- Part 2: https://github.com/sifr-lang/sifr/pull/884
+- Part 3: https://github.com/sifr-lang/sifr/pull/885
+- Part 4: https://github.com/sifr-lang/sifr/pull/886
+- Part 5: https://github.com/sifr-lang/sifr/pull/887
+- Review pass 1 remediation: https://github.com/sifr-lang/sifr/pull/889
 
 ## Reviewer Follow-up
 - External review pass 1 output: `reviews/phase25-review.md` (2026-03-06, APPROVED with notes)

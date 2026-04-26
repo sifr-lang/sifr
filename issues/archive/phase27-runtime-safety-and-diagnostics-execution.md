@@ -233,19 +233,19 @@ Validation evidence:
 - Positive path: `/Users/yaseralnajjar/work/sifr/codebase/scripts/run_all_tests.sh` -> pass.
 
 ## PR Log
-- Part 1: https://github.com/yaseralnajjar/sifr/pull/897
-- Part 2: https://github.com/yaseralnajjar/sifr/pull/898
-- Part 3: https://github.com/yaseralnajjar/sifr/pull/899
-- Part 4: https://github.com/yaseralnajjar/sifr/pull/900
-- Part 5: https://github.com/yaseralnajjar/sifr/pull/901
-- Part 6: https://github.com/yaseralnajjar/sifr/pull/902
-- Part 7: https://github.com/yaseralnajjar/sifr/pull/908
+- Part 1: https://github.com/sifr-lang/sifr/pull/897
+- Part 2: https://github.com/sifr-lang/sifr/pull/898
+- Part 3: https://github.com/sifr-lang/sifr/pull/899
+- Part 4: https://github.com/sifr-lang/sifr/pull/900
+- Part 5: https://github.com/sifr-lang/sifr/pull/901
+- Part 6: https://github.com/sifr-lang/sifr/pull/902
+- Part 7: https://github.com/sifr-lang/sifr/pull/908
 
 ## External Review Passes
 - Reviewer pass 1 prompt output: `reviews/phase27-review.md`
-- Review pass 1 remediation PR: https://github.com/yaseralnajjar/sifr/pull/904
+- Review pass 1 remediation PR: https://github.com/sifr-lang/sifr/pull/904
 - Reviewer pass 2 prompt output: `reviews/phase27-production-grade-review.md`
-- Review pass 2 remediation PR: https://github.com/yaseralnajjar/sifr/pull/905
+- Review pass 2 remediation PR: https://github.com/sifr-lang/sifr/pull/905
 - Reviewer pass 3 prompt output: `reviews/phase27-production-grade-review-3.md`
 - Review pass 3 outcome: no additional critical/required fixes identified; no code remediation required
 - Reviewer pass 4 (goal verification 1) prompt output: `reviews/phase27-unwrap-goal-review-1.md`

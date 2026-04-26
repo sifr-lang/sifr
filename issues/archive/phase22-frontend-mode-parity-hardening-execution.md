@@ -136,10 +136,10 @@ Validation evidence:
   - `test` fails with exit `1` and expected frontend type error message on the same fixture family.
 
 ## PR Log
-- Part 1: https://github.com/yaseralnajjar/sifr/pull/856
-- Part 2: https://github.com/yaseralnajjar/sifr/pull/857
-- Part 3: https://github.com/yaseralnajjar/sifr/pull/858
-- Part 4: https://github.com/yaseralnajjar/sifr/pull/859
+- Part 1: https://github.com/sifr-lang/sifr/pull/856
+- Part 2: https://github.com/sifr-lang/sifr/pull/857
+- Part 3: https://github.com/sifr-lang/sifr/pull/858
+- Part 4: https://github.com/sifr-lang/sifr/pull/859
 
 ## Reviewer Follow-up
 - External review pass 1 output: `reviews/phase22-review.md` (2026-03-06, approved)
@@ -147,10 +147,10 @@ Validation evidence:
   - Reviewer approved phase 22 implementation as complete across milestones 22.1-22.4.
   - No blocking defects were identified; no compiler-code remediation was required.
   - Non-blocking future considerations were recorded as advisory notes only.
-- Remediation PR (pass 1): https://github.com/yaseralnajjar/sifr/pull/860
+- Remediation PR (pass 1): https://github.com/sifr-lang/sifr/pull/860
 - External review pass 2 output: `reviews/phase22-production-grade-review.md` (2026-03-06, approved for production)
 - Pass-2 triage outcome:
   - Reviewer confirmed production-grade readiness with no blocking defects.
   - Applied the actionable recommendation by documenting `FrontendDiagnosticStyle` variants inline for long-term contract clarity.
   - Broader matrix-expansion suggestions were retained as future advisory work outside phase 22 scope.
-- Remediation PR (pass 2): https://github.com/yaseralnajjar/sifr/pull/861
+- Remediation PR (pass 2): https://github.com/sifr-lang/sifr/pull/861

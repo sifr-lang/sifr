@@ -18,8 +18,8 @@ Phase plan: `issues/ad-hoc-leetcode-divergence-closure-2026-04-24.md`
 
 Status: merged
 Branch: `ws0-leetcode-corpus-noise-normalization`
-PR: `https://github.com/yaseralnajjar/sifr/pull/1609`
-Merged: `https://github.com/yaseralnajjar/sifr/pull/1609`
+PR: `https://github.com/sifr-lang/sifr/pull/1609`
+Merged: `https://github.com/sifr-lang/sifr/pull/1609`
 
 ### Scope
 
@@ -85,8 +85,8 @@ Local gate:
 
 Status: merged
 Branch: `ws5-architecture-boundary-classification`
-PR: `https://github.com/yaseralnajjar/sifr/pull/1631`
-Merged: `https://github.com/yaseralnajjar/sifr/pull/1631`
+PR: `https://github.com/sifr-lang/sifr/pull/1631`
+Merged: `https://github.com/sifr-lang/sifr/pull/1631`
 
 ### Scope
 
@@ -116,8 +116,8 @@ Local gate:
 
 Status: merged
 Branch: `ws6-final-leetcode-closure`
-PR: `https://github.com/yaseralnajjar/sifr/pull/1632`
-Merged: `https://github.com/yaseralnajjar/sifr/pull/1632`
+PR: `https://github.com/sifr-lang/sifr/pull/1632`
+Merged: `https://github.com/sifr-lang/sifr/pull/1632`
 
 ### Scope
 
@@ -221,8 +221,8 @@ Follow-up issue:
 
 Status: merged
 Branch: `ws1-narrowing-invalidation-design`
-PR: `https://github.com/yaseralnajjar/sifr/pull/1610`
-Merged: `https://github.com/yaseralnajjar/sifr/pull/1610`
+PR: `https://github.com/sifr-lang/sifr/pull/1610`
+Merged: `https://github.com/sifr-lang/sifr/pull/1610`
 
 ### Scope
 
@@ -267,8 +267,8 @@ Local gate:
 
 Status: merged
 Branch: `ws2-s1-heap-stdlib`
-PR: `https://github.com/yaseralnajjar/sifr/pull/1611`
-Merged: `https://github.com/yaseralnajjar/sifr/pull/1611`
+PR: `https://github.com/sifr-lang/sifr/pull/1611`
+Merged: `https://github.com/sifr-lang/sifr/pull/1611`
 
 ### Scope
 
@@ -316,8 +316,8 @@ Local gate:
 
 Status: merged
 Branch: `ws2-s2-dsu-stdlib`
-PR: `https://github.com/yaseralnajjar/sifr/pull/1612`
-Merged: `https://github.com/yaseralnajjar/sifr/pull/1612`
+PR: `https://github.com/sifr-lang/sifr/pull/1612`
+Merged: `https://github.com/sifr-lang/sifr/pull/1612`
 
 ### Scope
 
@@ -378,8 +378,8 @@ Known unrelated validation note:
 
 Status: merged
 Branch: `ws2-s3-deque-consumption`
-PR: `https://github.com/yaseralnajjar/sifr/pull/1613`
-Merged: `https://github.com/yaseralnajjar/sifr/pull/1613`
+PR: `https://github.com/sifr-lang/sifr/pull/1613`
+Merged: `https://github.com/sifr-lang/sifr/pull/1613`
 
 ### Scope
 
@@ -434,8 +434,8 @@ Local gate:
 
 Status: merged
 Branch: `ws2-s4-char-predicate-consumption`
-PR: `https://github.com/yaseralnajjar/sifr/pull/1614`
-Merged: `https://github.com/yaseralnajjar/sifr/pull/1614`
+PR: `https://github.com/sifr-lang/sifr/pull/1614`
+Merged: `https://github.com/sifr-lang/sifr/pull/1614`
 
 ### Scope
 
@@ -481,8 +481,8 @@ Local gate:
 
 Status: merged
 Branch: `ws2-s5-int-parse-consumption`
-PR: `https://github.com/yaseralnajjar/sifr/pull/1615`
-Merged: `https://github.com/yaseralnajjar/sifr/pull/1615`
+PR: `https://github.com/sifr-lang/sifr/pull/1615`
+Merged: `https://github.com/sifr-lang/sifr/pull/1615`
 
 ### Scope
 
@@ -528,8 +528,8 @@ Local gate:
 
 Status: merged; corrected by `move-trie-to-leetcode-helper`
 Branch: `ws2-s6-trie-decision`
-PR: `https://github.com/yaseralnajjar/sifr/pull/1616`
-Merged: `https://github.com/yaseralnajjar/sifr/pull/1616`
+PR: `https://github.com/sifr-lang/sifr/pull/1616`
+Merged: `https://github.com/sifr-lang/sifr/pull/1616`
 
 ### Scope
 
@@ -581,8 +581,8 @@ Local gate:
 
 Status: merged
 Branch: `ws3-b1-fixture-helper-convention`
-PR: `https://github.com/yaseralnajjar/sifr/pull/1617`
-Merged: `https://github.com/yaseralnajjar/sifr/pull/1617`
+PR: `https://github.com/sifr-lang/sifr/pull/1617`
+Merged: `https://github.com/sifr-lang/sifr/pull/1617`
 
 ### Scope
 
@@ -632,8 +632,8 @@ Local gate:
 
 Status: merged
 Branch: `ws4-0211-trie-wildcard-rewrite`
-PR: `https://github.com/yaseralnajjar/sifr/pull/1618`
-Merged: `https://github.com/yaseralnajjar/sifr/pull/1618`
+PR: `https://github.com/sifr-lang/sifr/pull/1618`
+Merged: `https://github.com/sifr-lang/sifr/pull/1618`
 
 ### Scope
 
@@ -680,8 +680,8 @@ Local gate:
 
 Status: merged
 Branch: `ws4-0212-trie-board-search`
-PR: `https://github.com/yaseralnajjar/sifr/pull/1619`
-Merged: `https://github.com/yaseralnajjar/sifr/pull/1619`
+PR: `https://github.com/sifr-lang/sifr/pull/1619`
+Merged: `https://github.com/sifr-lang/sifr/pull/1619`
 
 ### Scope
 
@@ -728,8 +728,8 @@ Local gate:
 
 Status: merged
 Branch: `ws4-0146-recency-design`
-PR: `https://github.com/yaseralnajjar/sifr/pull/1620`
-Merged: `https://github.com/yaseralnajjar/sifr/pull/1620`
+PR: `https://github.com/sifr-lang/sifr/pull/1620`
+Merged: `https://github.com/sifr-lang/sifr/pull/1620`
 
 ### Scope
 
@@ -756,8 +756,8 @@ Local gate:
 
 Status: merged
 Branch: `ws4-0706-hashmap-storage-design`
-PR: `https://github.com/yaseralnajjar/sifr/pull/1621`
-Merged: `https://github.com/yaseralnajjar/sifr/pull/1621`
+PR: `https://github.com/sifr-lang/sifr/pull/1621`
+Merged: `https://github.com/sifr-lang/sifr/pull/1621`
 
 ### Scope
 
@@ -784,8 +784,8 @@ Local gate:
 
 Status: merged
 Branch: `ws4-0706-hashmap-rewrite`
-PR: `https://github.com/yaseralnajjar/sifr/pull/1622`
-Merged: `https://github.com/yaseralnajjar/sifr/pull/1622`
+PR: `https://github.com/sifr-lang/sifr/pull/1622`
+Merged: `https://github.com/sifr-lang/sifr/pull/1622`
 
 ### Scope
 
@@ -833,8 +833,8 @@ Local gate:
 
 Status: merged
 Branch: `ws4-0146-lru-rewrite`
-PR: `https://github.com/yaseralnajjar/sifr/pull/1623`
-Merged: `https://github.com/yaseralnajjar/sifr/pull/1623`
+PR: `https://github.com/sifr-lang/sifr/pull/1623`
+Merged: `https://github.com/sifr-lang/sifr/pull/1623`
 
 ### Scope
 
@@ -882,8 +882,8 @@ Local gate:
 
 Status: merged
 Branch: `ws4-0004-binary-median`
-PR: `https://github.com/yaseralnajjar/sifr/pull/1624`
-Merged: `https://github.com/yaseralnajjar/sifr/pull/1624`
+PR: `https://github.com/sifr-lang/sifr/pull/1624`
+Merged: `https://github.com/sifr-lang/sifr/pull/1624`
 
 ### Scope
 
@@ -934,8 +934,8 @@ Local gate:
 
 Status: merged
 Branch: `ws4-0206-reverse-linked-list`
-PR: `https://github.com/yaseralnajjar/sifr/pull/1625`
-Merged: `https://github.com/yaseralnajjar/sifr/pull/1625`
+PR: `https://github.com/sifr-lang/sifr/pull/1625`
+Merged: `https://github.com/sifr-lang/sifr/pull/1625`
 
 ### Scope
 
@@ -985,8 +985,8 @@ Local gate:
 
 Status: merged
 Branch: `ws4-0024-swap-pairs`
-PR: `https://github.com/yaseralnajjar/sifr/pull/1626`
-Merged: `https://github.com/yaseralnajjar/sifr/pull/1626`
+PR: `https://github.com/sifr-lang/sifr/pull/1626`
+Merged: `https://github.com/sifr-lang/sifr/pull/1626`
 
 ### Scope
 
@@ -1036,8 +1036,8 @@ Local gate:
 
 Status: merged
 Branch: `ws4-0147-insertion-sort-list`
-PR: `https://github.com/yaseralnajjar/sifr/pull/1627`
-Merged: `https://github.com/yaseralnajjar/sifr/pull/1627`
+PR: `https://github.com/sifr-lang/sifr/pull/1627`
+Merged: `https://github.com/sifr-lang/sifr/pull/1627`
 
 ### Scope
 
@@ -1087,8 +1087,8 @@ Local gate:
 
 Status: merged
 Branch: `ws4-0707-linked-list-design`
-PR: `https://github.com/yaseralnajjar/sifr/pull/1628`
-Merged: `https://github.com/yaseralnajjar/sifr/pull/1628`
+PR: `https://github.com/sifr-lang/sifr/pull/1628`
+Merged: `https://github.com/sifr-lang/sifr/pull/1628`
 
 ### Scope
 
@@ -1139,8 +1139,8 @@ Local gate:
 
 Status: merged
 Branch: `ws4-0023-merge-k-lists-heap`
-PR: `https://github.com/yaseralnajjar/sifr/pull/1629`
-Merged: `https://github.com/yaseralnajjar/sifr/pull/1629`
+PR: `https://github.com/sifr-lang/sifr/pull/1629`
+Merged: `https://github.com/sifr-lang/sifr/pull/1629`
 
 ### Scope
 
@@ -1190,7 +1190,7 @@ Local gate:
 
 Status: opened PR
 Branch: `ws4-0148-blocker-note`
-PR: `https://github.com/yaseralnajjar/sifr/pull/1630`
+PR: `https://github.com/sifr-lang/sifr/pull/1630`
 
 ### Scope
 

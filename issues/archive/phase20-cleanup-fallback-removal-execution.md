@@ -2,7 +2,7 @@
 
 Status: completed (2026-03-05)
 Owner: fallback-cleanup execution loop
-Reference PR: https://github.com/yaseralnajjar/sifr/pull/845
+Reference PR: https://github.com/sifr-lang/sifr/pull/845
 
 Loop: Work -> Validate -> PR -> Review -> Merge
 
@@ -26,16 +26,16 @@ Validation evidence:
   - tuple `match` sequence on non-tuple subject -> `tuple pattern requires subject of tuple type...`
 
 ## PR Log
-- Main cleanup: https://github.com/yaseralnajjar/sifr/pull/845
+- Main cleanup: https://github.com/sifr-lang/sifr/pull/845
 
 ## Reviewer Follow-up
 - External review pass 1 output: `reviews/phase20-cleanup-review-2.md`
 - Pass-1 triage:
   - Applied reviewer observation to remove remaining tuple-sequence `match` fallback-to-`Any`.
   - Added regression tests for tuple-subject requirement and tuple-arity mismatch in match patterns.
-- Remediation PR (pass 1): https://github.com/yaseralnajjar/sifr/pull/846
+- Remediation PR (pass 1): https://github.com/sifr-lang/sifr/pull/846
 - External review pass 2 output: `reviews/phase20-cleanup-production-grade-review.md`
 - Pass-2 triage:
   - Reviewer confirmed production-grade readiness with no additional blocking defects.
   - No further compiler-code changes were required after validating pass-2 notes.
-- Remediation PR (pass 2): https://github.com/yaseralnajjar/sifr/pull/847
+- Remediation PR (pass 2): https://github.com/sifr-lang/sifr/pull/847

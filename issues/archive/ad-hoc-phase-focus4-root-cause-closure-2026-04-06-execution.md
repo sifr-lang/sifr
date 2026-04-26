@@ -108,7 +108,7 @@ outside focus-4 scope. Exclude them from focus-4 pass-rate calculations.
   - Reviewer logs:
     - `reviews/focus4-root-cause-closure-review-pass5-wave-cd.md`
   - PR:
-    - `https://github.com/yaseralnajjar/sifr/pull/1577` (merged)
+    - `https://github.com/sifr-lang/sifr/pull/1577` (merged)
 
 - Wave E1 (adaptation): duplicate-solution canonicalization for RF-1 fixtures
   - Canonicalized to one top-level solution per module:
@@ -134,7 +134,7 @@ outside focus-4 scope. Exclude them from focus-4 pass-rate calculations.
   - Reviewer logs:
     - `reviews/focus4-root-cause-closure-review-pass6-wave-e1.md`
   - PR:
-    - `https://github.com/yaseralnajjar/sifr/pull/1580`
+    - `https://github.com/sifr-lang/sifr/pull/1580`
 
 - Wave B1 (compiler): failed-initializer binding seeding + exhaustive if/else branch binding propagation
   - Compiler changes:
@@ -162,7 +162,7 @@ outside focus-4 scope. Exclude them from focus-4 pass-rate calculations.
   - Reviewer logs:
     - `reviews/focus4-root-cause-closure-review-pass7-wave-b1.md`
   - PR:
-    - `https://github.com/yaseralnajjar/sifr/pull/1581`
+    - `https://github.com/sifr-lang/sifr/pull/1581`
 
 - Wave B2 (compiler): suppress return-completeness cascades from failed return expression lowering
   - Compiler changes:
@@ -183,7 +183,7 @@ outside focus-4 scope. Exclude them from focus-4 pass-rate calculations.
   - Reviewer logs:
     - `reviews/focus4-root-cause-closure-review-pass8-wave-b2.md`
   - PR:
-    - `https://github.com/yaseralnajjar/sifr/pull/1582`
+    - `https://github.com/sifr-lang/sifr/pull/1582`
 
 - Wave D2/E2 (adaptation): policy canonicalization for DS-4/DS-5 fixtures
   - Canonicalized tuple-swap/chained-assignment forms into simple assignment targets:
@@ -207,7 +207,7 @@ outside focus-4 scope. Exclude them from focus-4 pass-rate calculations.
   - Reviewer logs:
     - `reviews/focus4-root-cause-closure-review-pass9-wave-de2.md`
   - PR:
-    - `https://github.com/yaseralnajjar/sifr/pull/1583`
+    - `https://github.com/sifr-lang/sifr/pull/1583`
 
 - Wave D3/E3 (adaptation): list-shaped destructuring canonicalization for DS-1/DS-2 fixtures
   - Canonicalized list-based tuple destructuring and list unpacking forms into index-based extraction or tuple-shaped carriers in:
@@ -242,7 +242,7 @@ outside focus-4 scope. Exclude them from focus-4 pass-rate calculations.
   - Reviewer logs:
     - `reviews/focus4-root-cause-closure-review-pass10-wave-de3.md`
   - PR:
-    - `https://github.com/yaseralnajjar/sifr/pull/1584`
+    - `https://github.com/sifr-lang/sifr/pull/1584`
 
 - Wave A1/B3/E4 (compiler + adaptation): AU and RF-3 primary closure sweep
   - Compiler changes:
@@ -284,7 +284,7 @@ outside focus-4 scope. Exclude them from focus-4 pass-rate calculations.
   - Reviewer logs:
     - `reviews/focus4-root-cause-closure-review-pass11-wave-ab3e4.md`
   - PR:
-    - `https://github.com/yaseralnajjar/sifr/pull/1585`
+    - `https://github.com/sifr-lang/sifr/pull/1585`
 
 - Wave F1 (phase reporting closure): full-corpus rerun3 + taxonomy regeneration + delta report
   - Full-corpus rerun artifact:
@@ -312,7 +312,7 @@ outside focus-4 scope. Exclude them from focus-4 pass-rate calculations.
   - Reviewer logs:
     - `reviews/focus4-root-cause-closure-review-pass12-wave-f1.md`
   - PR:
-    - `https://github.com/yaseralnajjar/sifr/pull/1586` (merged)
+    - `https://github.com/sifr-lang/sifr/pull/1586` (merged)
 
 - Wave G1 (convergence closure): multi-workstream residual fixtures canonicalization + full-corpus rerun4
   - Canonicalized convergence fixtures:
@@ -355,4 +355,4 @@ outside focus-4 scope. Exclude them from focus-4 pass-rate calculations.
   - Reviewer logs:
     - `reviews/focus4-root-cause-closure-review-pass13-wave-g1.md`
   - PR:
-    - `https://github.com/yaseralnajjar/sifr/pull/1588` (merged)
+    - `https://github.com/sifr-lang/sifr/pull/1588` (merged)

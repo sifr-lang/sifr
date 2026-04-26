@@ -107,18 +107,18 @@ Validation evidence:
 - Full suite: `/Users/yaseralnajjar/work/sifr/codebase/scripts/run_all_tests.sh` -> pass (includes guardrail gate execution).
 
 ## PR Log
-- Part 1: https://github.com/yaseralnajjar/sifr/pull/839
-- Part 2: https://github.com/yaseralnajjar/sifr/pull/840
-- Part 3: https://github.com/yaseralnajjar/sifr/pull/841
+- Part 1: https://github.com/sifr-lang/sifr/pull/839
+- Part 2: https://github.com/sifr-lang/sifr/pull/840
+- Part 3: https://github.com/sifr-lang/sifr/pull/841
 
 ## Reviewer Follow-up
 - External review pass 1 output: `reviews/phase20-review.md`
 - Pass-1 triage outcome:
   - Reviewer confirmed Phase 20 implementation quality and contract adherence with no blocking defects.
   - Verified CI/local enforcement path: `.github/workflows/local-first-validation.yml` runs `scripts/run_all_tests.sh`, which now executes `scripts/check_hir_maintainability_guardrails.py`.
-- Remediation PR (pass 1): https://github.com/yaseralnajjar/sifr/pull/842
+- Remediation PR (pass 1): https://github.com/sifr-lang/sifr/pull/842
 - External review pass 2 output: `reviews/phase20-production-grade-review.md`
 - Pass-2 triage outcome:
   - Reviewer confirmed phase-20 implementation is production-grade with no blocking defects.
   - No additional compiler-code changes were required after validating reviewer observations.
-- Remediation PR (pass 2): https://github.com/yaseralnajjar/sifr/pull/843
+- Remediation PR (pass 2): https://github.com/sifr-lang/sifr/pull/843

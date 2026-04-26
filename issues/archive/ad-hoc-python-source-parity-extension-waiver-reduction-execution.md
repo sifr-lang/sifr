@@ -63,7 +63,7 @@ Required entry records:
 ### wave_psp_ext_1: Builtin Iterator Re-Closure
 - Status: merged
 - Implementation PR:
-  - `https://github.com/yaseralnajjar/sifr/pull/1254` (merged)
+  - `https://github.com/sifr-lang/sifr/pull/1254` (merged)
 - Validation:
   - positive path: `cargo test -p sifr_hir -- test_map_is_typed_as_iterator --nocapture` -> PASS
   - negative path: `cargo test -p sifr_hir -- test_map_rejects_plain_list_annotation_without_materialization --nocapture` -> PASS
@@ -77,7 +77,7 @@ Required entry records:
 ### wave_psp_ext_2: `itertools` Lazy Surface Closure
 - Status: merged
 - Implementation PR:
-  - `https://github.com/yaseralnajjar/sifr/pull/1256` (merged)
+  - `https://github.com/sifr-lang/sifr/pull/1256` (merged)
 - Validation:
   - positive path: `cargo run -q -p sifr -- run crates/sifr/tests/e2e/pass/cpython_itertools_subset.sifr` -> PASS
   - positive path: `cargo run -q -p sifr -- run crates/sifr/tests/e2e/pass/phase_psp_b2_iterators_functional_randomness.sifr` -> PASS
@@ -96,9 +96,9 @@ Required entry records:
 ### wave_psp_ext_3: Regex and Filesystem Iterator Surfaces
 - Status: merged
 - Implementation PR:
-  - `https://github.com/yaseralnajjar/sifr/pull/1259` (merged)
-  - review closure PR (pass 1): `https://github.com/yaseralnajjar/sifr/pull/1260` (merged)
-  - review closure PR (pass 2): `https://github.com/yaseralnajjar/sifr/pull/1261` (merged)
+  - `https://github.com/sifr-lang/sifr/pull/1259` (merged)
+  - review closure PR (pass 1): `https://github.com/sifr-lang/sifr/pull/1260` (merged)
+  - review closure PR (pass 2): `https://github.com/sifr-lang/sifr/pull/1261` (merged)
 - Validation:
   - positive path: `cargo run -q -p sifr -- run crates/sifr/tests/e2e/pass/cpython_glob_subset.sifr` -> PASS
   - positive path: `cargo run -q -p sifr -- run crates/sifr/tests/e2e/pass/cpython_pathlib_subset.sifr` -> PASS
@@ -116,7 +116,7 @@ Required entry records:
 ### wave_psp_ext_4: Waiver Ledger Reduction and Exit Closure
 - Status: merged
 - Implementation PR:
-  - `https://github.com/yaseralnajjar/sifr/pull/1262` (merged)
+  - `https://github.com/sifr-lang/sifr/pull/1262` (merged)
 - Validation:
   - governance/doc updates:
     - `verification/stdlib/milestone_psp_7_parity_governance_inventory.md`

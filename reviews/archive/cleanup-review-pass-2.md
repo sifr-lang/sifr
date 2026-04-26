@@ -4,7 +4,7 @@
 **Date:** 2026-03-11
 **PR Title:** Clean up internal docs, audits, and duplicate demos
 **Branch:** `codex/cleanup`
-**URL:** https://github.com/yaseralnajjar/sifr/pull/1106
+**URL:** https://github.com/sifr-lang/sifr/pull/1106
 
 ---
 

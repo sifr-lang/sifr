@@ -57,7 +57,7 @@ status: in progress
     - `cargo run -q -p sifr -- check audits/leetcode/0004_median_of_two_sorted_arrays.sifr` -> still failing (`int | None` ternary branches)
     - `cargo run -q -p sifr -- check audits/leetcode/0013_roman_to_integer.sifr` -> still failing (`int | None` dict index arithmetic)
   - PR:
-    - `https://github.com/yaseralnajjar/sifr/pull/1444` (merged)
+    - `https://github.com/sifr-lang/sifr/pull/1444` (merged)
 - 2026-03-29 local iteration (wave-3 slice):
   - compiler changes:
     - `while` lowering now applies condition-based narrowing facts to the loop body before statement lowering
@@ -68,7 +68,7 @@ status: in progress
     - `cargo run -q -p sifr -- check audits/leetcode/0206_reverse_linked_list.sifr` -> attribute-access Optional noise removed; remaining boundary/ownership diagnostics persist
     - `cargo run -q -p sifr -- check audits/leetcode/0024_swap_nodes_in_pairs.sifr` -> attribute-access Optional noise removed; remaining boundary diagnostics persist
   - PR:
-    - `https://github.com/yaseralnajjar/sifr/pull/1446` (merged)
+    - `https://github.com/sifr-lang/sifr/pull/1446` (merged)
 - 2026-03-29 local iteration (wave-4 slice):
   - compiler changes:
     - reassignment for inferred local bindings now supports Optional widening on `None` transitions (`T` <-> `T | None`) without widening explicitly annotated locals or parameters
@@ -81,7 +81,7 @@ status: in progress
     - `cargo run -q -p sifr -- check audits/leetcode/0206_reverse_linked_list.sifr` -> reassignment-flow type mismatches reduced (remaining signature/boundary diagnostics persist)
     - `cargo run -q -p sifr -- check audits/leetcode/0024_swap_nodes_in_pairs.sifr` -> reassignment-flow type mismatches reduced (remaining signature/boundary diagnostics persist)
   - PR:
-    - `https://github.com/yaseralnajjar/sifr/pull/1460` (merged)
+    - `https://github.com/sifr-lang/sifr/pull/1460` (merged)
 - 2026-03-29 local iteration (wave-7 sequence-guard dominance slice):
   - compiler changes:
     - boolean short-circuit lowering now propagates sequence guards per operand:
@@ -114,7 +114,7 @@ status: in progress
       - `0290_word_pattern`: `CHECK_ERROR -> RUN_ERROR` (ownership move-use emitted after check-side Optional gate removal)
     - vs entry baseline: `PASS +16`, `CHECK_ERROR -18`, `RUN_ERROR +2`
   - PR:
-    - `https://github.com/yaseralnajjar/sifr/pull/1472` (merged)
+    - `https://github.com/sifr-lang/sifr/pull/1472` (merged)
 - 2026-03-29 local iteration (wave-8 tuple-unpack flow hygiene slice):
   - compiler changes:
     - tuple-unpack assignment now records len-alias facts from tuple RHS elements
@@ -138,7 +138,7 @@ status: in progress
     - vs wave-7: no status transitions (`PASS/CHECK_ERROR/RUN_ERROR` unchanged)
     - vs entry baseline: `PASS +16`, `CHECK_ERROR -18`, `RUN_ERROR +2`
   - PR:
-    - `https://github.com/yaseralnajjar/sifr/pull/1474` (merged)
+    - `https://github.com/sifr-lang/sifr/pull/1474` (merged)
 - 2026-03-29 local iteration (wave-8b run-stage ownership stabilization slice):
   - root cause:
     - wave-7 removed check-side Optional gates for `0205`/`0290`, exposing an existing codegen ownership bug where non-copy `Name` operands in subscript assignment were moved and then reused by generated Rust (`E0382`)
@@ -168,7 +168,7 @@ status: in progress
       - `0290_word_pattern`: `RUN_ERROR -> PASS`
     - vs entry baseline: `PASS +18`, `CHECK_ERROR -18`, `RUN_ERROR ±0`
   - PR:
-    - `https://github.com/yaseralnajjar/sifr/pull/1477` (merged)
+    - `https://github.com/sifr-lang/sifr/pull/1477` (merged)
 - Validation to record:
   - owning unit tests
   - non-LeetCode e2e regression(s)
@@ -278,7 +278,7 @@ status: in progress
   - closure note:
     - phase remains open; closeout criterion requiring Optional/None no longer be dominant unresolved family is not yet met on the latest rerun
   - PR:
-    - `https://github.com/yaseralnajjar/sifr/pull/1463` (merged)
+    - `https://github.com/sifr-lang/sifr/pull/1463` (merged)
 - 2026-03-29 local iteration (wave-6 residual run-stability slice):
   - residual canonicalization inventory:
     - `0010_regular_expression_matching`
@@ -302,7 +302,7 @@ status: in progress
   - closure note:
     - phase remains open; Optional/None unresolved family size is reduced but still not closed by criterion
   - PR:
-    - `https://github.com/yaseralnajjar/sifr/pull/1464` (merged)
+    - `https://github.com/sifr-lang/sifr/pull/1464` (merged)
 - 2026-03-29 local iteration (wave-9a residual canonicalization batch-1):
   - root cause:
     - selected fixtures depended on unstated non-empty/index-safety problem constraints and therefore failed Sifr Optional checks without explicit local proof
@@ -335,7 +335,7 @@ status: in progress
       - `0540_single_element_in_a_sorted_array`: `CHECK_ERROR -> PASS`
     - vs entry baseline: `PASS +22`, `CHECK_ERROR -22`, `RUN_ERROR ±0`
   - PR:
-    - `https://github.com/yaseralnajjar/sifr/pull/1480` (merged)
+    - `https://github.com/sifr-lang/sifr/pull/1480` (merged)
 - 2026-03-29 local iteration (wave-9b residual canonicalization batch-2):
   - root cause:
     - selected fixtures still encoded unstated index-seed assumptions (`nums[0]`, direct first-element reads) that are invalid under explicit Sifr Optional/index semantics and therefore remained `CHECK_ERROR`
@@ -368,7 +368,7 @@ status: in progress
       - `1800_maximum_ascending_subarray_sum`: `CHECK_ERROR -> PASS`
     - vs entry baseline: `PASS +26`, `CHECK_ERROR -26`, `RUN_ERROR ±0`
   - PR:
-    - `https://github.com/yaseralnajjar/sifr/pull/1482` (merged)
+    - `https://github.com/sifr-lang/sifr/pull/1482` (merged)
 - 2026-03-29 local iteration (wave-9c residual canonicalization batch-3):
   - root cause:
     - a residual DP/index fixture cluster still performed arithmetic and returns on indexed list reads typed as `int | None` without explicit local non-empty/index proof
@@ -401,7 +401,7 @@ status: in progress
       - `0135_candy`: `CHECK_ERROR -> PASS`
     - vs entry baseline: `PASS +30`, `CHECK_ERROR -30`, `RUN_ERROR ±0`
   - PR:
-    - `https://github.com/yaseralnajjar/sifr/pull/1484` (merged)
+    - `https://github.com/sifr-lang/sifr/pull/1484` (merged)
 - 2026-03-29 local iteration (wave-9d residual canonicalization batch-4):
   - root cause:
     - residual DP/sliding-window fixtures still performed arithmetic on Optional-contaminated indexed/helper-return paths (`int | None` in `+`/`-`) without explicit local proof
@@ -434,7 +434,7 @@ status: in progress
       - `1343_number_of_sub_arrays_of_size_k_and_average_greater_than_or_equal_to_threshold`: `CHECK_ERROR -> PASS`
     - vs entry baseline: `PASS +34`, `CHECK_ERROR -34`, `RUN_ERROR ±0`
   - PR:
-    - `https://github.com/yaseralnajjar/sifr/pull/1485` (merged)
+    - `https://github.com/sifr-lang/sifr/pull/1485` (merged)
 - 2026-03-29 local iteration (wave-9e mutability boundary canonicalization batch-5):
   - root cause:
     - a residual fixture cluster mutated list parameters without explicit `mut` boundary declarations; one fixture also used unsupported tuple-swap assignment syntax
@@ -466,7 +466,7 @@ status: in progress
       - `0448_find_all_numbers_disappeared_in_an_array`: `CHECK_ERROR -> PASS`
     - vs entry baseline: `PASS +38`, `CHECK_ERROR -38`, `RUN_ERROR ±0`
   - PR:
-    - `https://github.com/yaseralnajjar/sifr/pull/1486` (merged)
+    - `https://github.com/sifr-lang/sifr/pull/1486` (merged)
 - 2026-03-30 local iteration (wave-R1 run-stage panic-closure compiler slice):
   - root cause:
     - structured statement lowering had parity gaps between top-level and nested block paths, causing production panics for loop bodies that required:
@@ -672,7 +672,7 @@ status: in progress
     - remaining run-error set in probe cohort:
       - `0054`, `0071`, `0349`, `0459`, `0763`
   - PR:
-    - `https://github.com/yaseralnajjar/sifr/pull/1539` (merged)
+    - `https://github.com/sifr-lang/sifr/pull/1539` (merged)
 
 - 2026-03-30 local iteration (wave-R3c container/guard/slice stabilization slice):
   - root cause:
@@ -708,7 +708,7 @@ status: in progress
   - residual ownership after wave-R3c:
     - `0054`, `0763`
   - PR:
-    - `https://github.com/yaseralnajjar/sifr/pull/1541` (merged)
+    - `https://github.com/sifr-lang/sifr/pull/1541` (merged)
 
 - 2026-03-30 local iteration (wave-R3d final residual run-error closure slice):
   - root cause:
@@ -740,7 +740,7 @@ status: in progress
     - run-stage residuals from this lane: none
     - check-stage residuals requiring explicit Optional-safe author intent: `0054`, `0763`
   - PR:
-    - `https://github.com/yaseralnajjar/sifr/pull/1542` (merged)
+    - `https://github.com/sifr-lang/sifr/pull/1542` (merged)
 
 - 2026-03-30 local iteration (wave-R3e residual check-stage canonicalization slice):
   - root cause:
@@ -766,7 +766,7 @@ status: in progress
   - residual ownership after wave-R3e:
     - residual run/check ownership from this lane: none
   - PR:
-    - `https://github.com/yaseralnajjar/sifr/pull/1548` (merged)
+    - `https://github.com/sifr-lang/sifr/pull/1548` (merged)
 
 - Validation to record:
   - post-wave full corpus rerun

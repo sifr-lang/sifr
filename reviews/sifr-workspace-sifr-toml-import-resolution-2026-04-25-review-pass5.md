@@ -9,7 +9,7 @@ Inputs reviewed:
 - `issues/ad-hoc-sifr-workspace-sifr-toml-import-resolution-2026-04-25.md` (phase plan, status: closed)
 - `issues/ad-hoc-sifr-workspace-sifr-toml-import-resolution-2026-04-25-execution.md` (execution checklist, status: closed)
 - `reviews/sifr-workspace-sifr-toml-import-resolution-2026-04-25-review-pass4.md` (pre-merge READY)
-- Local `main` at `b60ff461` representing merged PRs [#1639–#1645](https://github.com/yaseralnajjar/sifr/pulls)
+- Local `main` at `b60ff461` representing merged PRs [#1639–#1645](https://github.com/sifr-lang/sifr/pulls)
 - Spot checks against `crates/sifr/src/main.rs`, `crates/sifr_driver/src/workspace/`, `crates/sifr_driver/src/project/`, `crates/sifr_driver/src/build/`, `crates/sifr_driver/src/test_runner/`, `crates/sifr_driver/src/tests/`, `crates/sifr/tests/verification/project/`, `verification/suites/manifest.json`, `audits/leetcode/`, `internal_docs/sifr_workspace_design.md`, `internal_docs/architecture.md`, `internal_docs/roadmap.md`, `verification/leetcode/`, `scripts/run_all_tests.sh`
 - Local validation re-run: `cargo build --release -p sifr`, `cargo fmt --check`, `cargo clippy --workspace -- -D warnings`, `cargo test -p sifr_driver workspace`, `cargo test -p sifr_driver --lib`, `cargo run -p sifr -- {check,run,emit} audits/leetcode/0021_merge_two_sorted_lists.sifr`
 

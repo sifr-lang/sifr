@@ -176,9 +176,9 @@ Validated reviewer notes and actions:
 - Documentation action: recorded the second reviewer output and phase closeout status.
 
 ## PR Log
-- Part 1: https://github.com/yaseralnajjar/sifr/pull/891
-- Part 2: https://github.com/yaseralnajjar/sifr/pull/892
-- Part 3: https://github.com/yaseralnajjar/sifr/pull/893
-- Part 4: https://github.com/yaseralnajjar/sifr/pull/894
-- External review pass 1: https://github.com/yaseralnajjar/sifr/pull/895
-- External review pass 2: https://github.com/yaseralnajjar/sifr/pull/896
+- Part 1: https://github.com/sifr-lang/sifr/pull/891
+- Part 2: https://github.com/sifr-lang/sifr/pull/892
+- Part 3: https://github.com/sifr-lang/sifr/pull/893
+- Part 4: https://github.com/sifr-lang/sifr/pull/894
+- External review pass 1: https://github.com/sifr-lang/sifr/pull/895
+- External review pass 2: https://github.com/sifr-lang/sifr/pull/896

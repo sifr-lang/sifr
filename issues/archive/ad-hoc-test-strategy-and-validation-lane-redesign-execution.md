@@ -54,7 +54,7 @@ Known architectural entry facts from the planning doc:
 
 ### milestone_test_1: Lane Taxonomy and Policy Redesign
 - Status: complete
-- Implementation PR: https://github.com/yaseralnajjar/sifr/pull/1170
+- Implementation PR: https://github.com/sifr-lang/sifr/pull/1170
 - Implementation target:
   - define checked-in lane metadata for `quick`, `pr`, `nightly`, and `release`
   - make `quick` a true developer lane with representative e2e instead of broad hardening
@@ -76,7 +76,7 @@ Known architectural entry facts from the planning doc:
 
 ### milestone_test_2: Declarative Validation Harness
 - Status: complete
-- Implementation PR: https://github.com/yaseralnajjar/sifr/pull/1172
+- Implementation PR: https://github.com/sifr-lang/sifr/pull/1172
 - Implementation target:
   - replace shell-matrix orchestration with one manifest-driven harness
   - keep top-level scripts as thin wrappers only
@@ -97,7 +97,7 @@ Known architectural entry facts from the planning doc:
 
 ### milestone_test_3: Invariant Downshifting
 - Status: complete
-- Implementation PR: https://github.com/yaseralnajjar/sifr/pull/1175
+- Implementation PR: https://github.com/sifr-lang/sifr/pull/1175
 - Implementation target:
   - move diagnostic/lowering/codegen invariants into cheaper integration or unit coverage where possible
   - keep traceability from removed expensive checks to the new cheaper proof
@@ -117,7 +117,7 @@ Known architectural entry facts from the planning doc:
 
 ### milestone_test_4: Artifact Reuse and Cache Boundary Redesign
 - Status: complete
-- Implementation PR: https://github.com/yaseralnajjar/sifr/pull/1178
+- Implementation PR: https://github.com/sifr-lang/sifr/pull/1178
 - Implementation target:
   - introduce reusable generated-program workspaces and repeat-run cache visibility
   - materially improve unchanged reruns for `run` and `test`
@@ -144,7 +144,7 @@ Known architectural entry facts from the planning doc:
 
 ### milestone_test_5: Hardening Lane Refactor
 - Status: complete
-- Implementation PR: https://github.com/yaseralnajjar/sifr/pull/1180
+- Implementation PR: https://github.com/sifr-lang/sifr/pull/1180
 - Implementation target:
   - preserve broad hardening and determinism coverage while removing it from the default local loop
   - make lane placement explicit rather than script-local
@@ -168,7 +168,7 @@ Known architectural entry facts from the planning doc:
 
 ### milestone_test_6: Throughput and Resource Governance
 - Status: complete
-- Implementation PR: https://github.com/yaseralnajjar/sifr/pull/1183
+- Implementation PR: https://github.com/sifr-lang/sifr/pull/1183
 - Implementation target:
   - report lane timing, cache behavior, fixture/group skew, and memory-related guidance
   - make performance and resource regressions visible from local runs
@@ -203,7 +203,7 @@ Known architectural entry facts from the planning doc:
   - script validation: `scripts/check_e2e_report_determinism.sh` and `scripts/check_e2e_sequential_parallel_equivalence.sh` already exit with an explicit error when `signature` is empty, and the extraction regex only matches `[0-9a-f]+`, so reviewer finding 5 did not expose a real bug in the merged scripts
   - reviewer-artifact preservation: the external review output was recorded verbatim under `reviews/ad-hoc-test-strategy-and-validation-lane-redesign-review-pass-1a.md` for traceability even though no code delta followed from this pass
 - Follow-up PR:
-  - PR `#1185` (`https://github.com/yaseralnajjar/sifr/pull/1185`) records the reviewer artifact and the no-code-change disposition for this pass
+  - PR `#1185` (`https://github.com/sifr-lang/sifr/pull/1185`) records the reviewer artifact and the no-code-change disposition for this pass
 
 ### review_pass_2
 - Reviewer artifact: `reviews/ad-hoc-test-strategy-and-validation-lane-redesign-production-grade-review-pass-2a.md`
@@ -220,7 +220,7 @@ Known architectural entry facts from the planning doc:
   - positive path: `find target/validation_lane_reports -type f -newer /tmp/validation-lane-marker.G1cX7v | sort` -> only `quick.latest.{json,log,time}`, proving `run_all_tests.sh` no longer leaves behind per-run `lane.<profile>.*` capture files once the latest artifacts are written
   - rejected finding validation: `scripts/check_e2e_report_determinism.sh` and `scripts/check_e2e_sequential_parallel_equivalence.sh` only default `PROFILE` before argument parsing; the passed `--profile` value still wins, so the reported “always release” bug was not reproducible
 - Follow-up PR:
-  - PR `#1186` (`https://github.com/yaseralnajjar/sifr/pull/1186`) carries the accepted production-grade review fixes and records the reviewer artifact/disposition
+  - PR `#1186` (`https://github.com/sifr-lang/sifr/pull/1186`) carries the accepted production-grade review fixes and records the reviewer artifact/disposition
 
 ### review_pass_3
 - Reviewer artifact: `reviews/ad-hoc-test-strategy-and-validation-lane-redesign-review-pass-3a.md`
@@ -233,4 +233,4 @@ Known architectural entry facts from the planning doc:
   - disposition validation: the review’s only actionable-looking cache/temp-file concerns were already addressed in review pass 2 (`#1186`), and the remaining comments were enhancement suggestions rather than regressions in the merged phase work
   - closure basis: after three external passes, no unresolved critical or high-severity defects remain against the completed phase scope
 - Follow-up PR:
-  - PR `#1188` (`https://github.com/yaseralnajjar/sifr/pull/1188`) records the reviewer artifact and closes the phase status after the additional external review pass
+  - PR `#1188` (`https://github.com/sifr-lang/sifr/pull/1188`) records the reviewer artifact and closes the phase status after the additional external review pass

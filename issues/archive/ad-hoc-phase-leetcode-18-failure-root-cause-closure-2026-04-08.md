@@ -24,9 +24,9 @@ Closure artifacts:
 
 Merged PR ledger:
 
-- `WS1_codegen_soundness_run_stage`: `https://github.com/yaseralnajjar/sifr/pull/1605`
-- `WS3_canonical_adaptation_sweep`: `https://github.com/yaseralnajjar/sifr/pull/1606`
-- `WS2_field_surface_and_optional_flow_core` + `WS4_closure_and_reclassification`: `https://github.com/yaseralnajjar/sifr/pull/1607`
+- `WS1_codegen_soundness_run_stage`: `https://github.com/sifr-lang/sifr/pull/1605`
+- `WS3_canonical_adaptation_sweep`: `https://github.com/sifr-lang/sifr/pull/1606`
+- `WS2_field_surface_and_optional_flow_core` + `WS4_closure_and_reclassification`: `https://github.com/sifr-lang/sifr/pull/1607`
 
 ## Scope Snapshot
 

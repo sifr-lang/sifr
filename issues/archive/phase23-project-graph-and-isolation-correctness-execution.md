@@ -170,20 +170,20 @@ Validation evidence:
 - Negative path: matrix `reachable_parse_error_contract` row validates `check/build/run/test` failures for reachable parse errors.
 
 ## PR Log
-- Part 1: https://github.com/yaseralnajjar/sifr/pull/863
-- Part 2: https://github.com/yaseralnajjar/sifr/pull/865
-- Part 3: https://github.com/yaseralnajjar/sifr/pull/867
-- Part 4: https://github.com/yaseralnajjar/sifr/pull/869
-- Part 5: https://github.com/yaseralnajjar/sifr/pull/871
+- Part 1: https://github.com/sifr-lang/sifr/pull/863
+- Part 2: https://github.com/sifr-lang/sifr/pull/865
+- Part 3: https://github.com/sifr-lang/sifr/pull/867
+- Part 4: https://github.com/sifr-lang/sifr/pull/869
+- Part 5: https://github.com/sifr-lang/sifr/pull/871
 
 ## Reviewer Follow-up
 - External review pass 1 output: `reviews/phase23-review.md` (2026-03-06, approved)
 - Pass-1 triage outcome:
   - Reviewer approved phase 23 implementation as complete across milestones 23.1-23.5.
   - No blocking defects were identified; no compiler-code remediation was required.
-- Remediation PR (pass 1): https://github.com/yaseralnajjar/sifr/pull/873
+- Remediation PR (pass 1): https://github.com/sifr-lang/sifr/pull/873
 - External review pass 2 output: `reviews/phase23-production-grade-review.md` (2026-03-06, approved for production)
 - Pass-2 triage outcome:
   - Reviewer confirmed production-grade readiness with no blocking defects.
   - Applied actionable hardening: documented multi-level relative import exclusion in closure discovery and added retry-based workspace allocation for collision-proof temp isolation.
-- Remediation PR (pass 2): https://github.com/yaseralnajjar/sifr/pull/874
+- Remediation PR (pass 2): https://github.com/sifr-lang/sifr/pull/874

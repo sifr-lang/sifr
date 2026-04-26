@@ -163,16 +163,16 @@ Validation evidence:
 - Full suite: `/Users/yaseralnajjar/work/sifr/codebase/scripts/run_all_tests.sh` -> pass (407 pass e2e fixtures, 0 failures).
 
 ## PR Log
-- Part 1: merged https://github.com/yaseralnajjar/sifr/pull/910
-- Part 2: merged https://github.com/yaseralnajjar/sifr/pull/911
-- Part 3: merged https://github.com/yaseralnajjar/sifr/pull/912
-- Part 4: merged https://github.com/yaseralnajjar/sifr/pull/913
-- Part 5: merged https://github.com/yaseralnajjar/sifr/pull/914
+- Part 1: merged https://github.com/sifr-lang/sifr/pull/910
+- Part 2: merged https://github.com/sifr-lang/sifr/pull/911
+- Part 3: merged https://github.com/sifr-lang/sifr/pull/912
+- Part 4: merged https://github.com/sifr-lang/sifr/pull/913
+- Part 5: merged https://github.com/sifr-lang/sifr/pull/914
 
 ## External Review Passes
 - Reviewer pass 1 prompt output: `reviews/phase-28-review.md`
-- Reviewer pass 1 remediation PR: merged https://github.com/yaseralnajjar/sifr/pull/915
+- Reviewer pass 1 remediation PR: merged https://github.com/sifr-lang/sifr/pull/915
 - Reviewer pass 2 prompt output: `reviews/phase-28-production-grade-review.md`
-- Reviewer pass 2 remediation PR: merged https://github.com/yaseralnajjar/sifr/pull/916
+- Reviewer pass 2 remediation PR: merged https://github.com/sifr-lang/sifr/pull/916
 - Reviewer pass 3 prompt output: `reviews/phase-28-production-grade-review-2.md`
 - Reviewer pass 3 remediation PR: none required (review concluded production-grade with no remaining issues)

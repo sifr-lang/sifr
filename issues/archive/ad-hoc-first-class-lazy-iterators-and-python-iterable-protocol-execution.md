@@ -66,7 +66,7 @@ Required entry records:
   - wire typing helpers so iterator element extraction is protocol-based
   - update architecture/governance docs to replace eager-lazy waiver baseline
 - Implementation PR:
-  - `https://github.com/yaseralnajjar/sifr/pull/1241` (merged)
+  - `https://github.com/sifr-lang/sifr/pull/1241` (merged)
 - Validation:
   - positive path: `cargo run -q -p sifr -- check demos/ad_hoc_iter_wave1_type_protocol_demo.sifr` -> `no errors found`
   - positive path: `cargo run -q -p sifr -- run demos/ad_hoc_iter_wave1_type_protocol_demo.sifr` -> `12`
@@ -76,7 +76,7 @@ Required entry records:
 ### wave_iter_2: Builtin Protocol Entry and `for` Lowering
 - Status: merged
 - Implementation PR:
-  - `https://github.com/yaseralnajjar/sifr/pull/1242` (merged)
+  - `https://github.com/sifr-lang/sifr/pull/1242` (merged)
 - Validation:
   - positive path: `cargo test -p sifr_hir -- test_for_loop_lowers_through_iter_protocol_call` -> PASS
   - positive path: `cargo test -p sifr_hir -- test_iter_and_next_builtin_protocol_calls_lower` -> PASS
@@ -89,7 +89,7 @@ Required entry records:
 ### wave_iter_3: Generator Rewrite
 - Status: merged
 - Implementation PR:
-  - `https://github.com/yaseralnajjar/sifr/pull/1243` (merged)
+  - `https://github.com/sifr-lang/sifr/pull/1243` (merged)
 - Validation:
   - positive path: `cargo test -p sifr_hir -- test_generator_function_infers_iterator_return_type --nocapture` -> PASS
   - positive path: `cargo test -p sifr_hir -- test_generator_expression_is_typed_as_iterator --nocapture` -> PASS
@@ -104,7 +104,7 @@ Required entry records:
 ### wave_iter_4: Core Builtin Lazy Parity
 - Status: merged
 - Implementation PR:
-  - `https://github.com/yaseralnajjar/sifr/pull/1244` (merged)
+  - `https://github.com/sifr-lang/sifr/pull/1244` (merged)
 - Validation:
   - positive path: `cargo test -p sifr_hir -- test_reversed_enumerate_zip_are_typed_as_iterators --nocapture` -> PASS
   - positive path: `cargo run -q -p sifr -- run crates/sifr/tests/e2e/pass/builtin_enumerate_zip.sifr` -> PASS
@@ -117,7 +117,7 @@ Required entry records:
 ### wave_iter_5: Initial `itertools` Lazy Subset
 - Status: merged
 - Implementation PR:
-  - `https://github.com/yaseralnajjar/sifr/pull/1245` (merged)
+  - `https://github.com/sifr-lang/sifr/pull/1245` (merged)
 - Validation:
   - positive path: `cargo test -p sifr_codegen -- test_generate_rust_generator_conditional_yield_preserves_else_branch --nocapture` -> PASS
   - positive path: `cargo run -q -p sifr -- check demos/ad_hoc_iter_wave5_itertools_lazy_subset_demo.sifr` -> `no errors found`
@@ -135,7 +135,7 @@ Required entry records:
 ### wave_iter_6: Parity Closure, Demo, Governance
 - Status: merged
 - Implementation PR:
-  - `https://github.com/yaseralnajjar/sifr/pull/1247` (merged)
+  - `https://github.com/sifr-lang/sifr/pull/1247` (merged)
 - Validation:
   - positive path: `cargo run -q -p sifr -- check demos/ad_hoc_iter_wave6_parity_closure_demo.sifr` -> `no errors found`
   - positive path: `cargo run -q -p sifr -- run demos/ad_hoc_iter_wave6_parity_closure_demo.sifr` -> `ad_hoc_iter_wave6_parity_closure_demo: ok`

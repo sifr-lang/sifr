@@ -95,21 +95,21 @@ Validation evidence:
 - Full suite: `/Users/yaseralnajjar/work/sifr/codebase/scripts/run_all_tests.sh` -> pass.
 
 ## PR Log
-- Part 1: https://github.com/yaseralnajjar/sifr/pull/818 (merged)
-- Part 2: https://github.com/yaseralnajjar/sifr/pull/819 (merged)
-- Part 3: https://github.com/yaseralnajjar/sifr/pull/820 (merged)
-- Part 4: https://github.com/yaseralnajjar/sifr/pull/831 (merged)
+- Part 1: https://github.com/sifr-lang/sifr/pull/818 (merged)
+- Part 2: https://github.com/sifr-lang/sifr/pull/819 (merged)
+- Part 3: https://github.com/sifr-lang/sifr/pull/820 (merged)
+- Part 4: https://github.com/sifr-lang/sifr/pull/831 (merged)
 
 ## Reviewer Follow-up
 - External review pass 1 output: `reviews/phase18-review.md`
-- Remediation PR (pass 1): https://github.com/yaseralnajjar/sifr/pull/821 (merged)
+- Remediation PR (pass 1): https://github.com/sifr-lang/sifr/pull/821 (merged)
 - Pass-1 triage + actions:
   - Added explicit resolver regression tests for `typing`, `enum`, and package-like `__init__.sifr` imports.
   - Expanded CLI contract docs to cover unsupported package-style auto-detect and parse/read fallback behavior.
 - Validation commands used for pass-1 remediation:
   - `cargo test -q -p sifr test_resolve_compilation_mode_`
 - External review pass 2 output: `reviews/phase18-production-grade-review.md`
-- Remediation PR (pass 2): https://github.com/yaseralnajjar/sifr/pull/822 (merged)
+- Remediation PR (pass 2): https://github.com/sifr-lang/sifr/pull/822 (merged)
 - Pass-2 triage + actions:
   - Added regression test for relative-import project-mode activation (`from .helper import ...` with sibling module).
   - Added regression test for run/build project-mode error consistency via shared `compile_entrypoint`.
@@ -118,7 +118,7 @@ Validation evidence:
   - `cargo test -q -p sifr test_resolve_compilation_mode_`
   - `cargo test -q -p sifr test_compile_entrypoint_error_consistency_for_project_mode`
 - External review pass 3 output: `reviews/phase18-review-2.md`
-- Remediation PR (pass 3): https://github.com/yaseralnajjar/sifr/pull/826
+- Remediation PR (pass 3): https://github.com/sifr-lang/sifr/pull/826
 - Pass-3 remediation summary:
   - Added resolver regression test for relative import without sibling module to enforce single-file fallback.
   - Added resolver regression tests proving local `typing.sifr`/`enum.sifr` files do not activate project mode for stdlib-like imports.
@@ -138,10 +138,10 @@ Validation evidence:
   - `cargo test -q -p sifr test_resolve_compilation_mode_`
   - `/Users/yaseralnajjar/work/sifr/codebase/scripts/run_all_tests.sh`
 - External review pass 5 output: `reviews/phase18-review-3.md`
-- Remediation PR (pass 5): https://github.com/yaseralnajjar/sifr/pull/832
+- Remediation PR (pass 5): https://github.com/sifr-lang/sifr/pull/832
 - Pass-5 triage outcome:
   - No new still-valid gaps; reviewer confirmed milestone `18_4` trigger-matrix coverage and phase-18 quality-contract coverage are complete.
 - External review pass 6 output: `reviews/phase18-production-grade-review-3.md`
-- Remediation PR (pass 6): https://github.com/yaseralnajjar/sifr/pull/833
+- Remediation PR (pass 6): https://github.com/sifr-lang/sifr/pull/833
 - Pass-6 triage outcome:
   - No concrete production-grade defects identified; phase remains production-ready for milestone `18_4`.

@@ -80,7 +80,7 @@ Contract lock for wave progression:
 ### wave_psp_iter_fix_0: Contract Freeze and Governance Lock
 - Status: completed (implementation merged; completion and production-grade review passes approved)
 - Implementation PR:
-  - `#1339` (merged): https://github.com/yaseralnajjar/sifr/pull/1339
+  - `#1339` (merged): https://github.com/sifr-lang/sifr/pull/1339
 - Scope:
   - freeze canonical iteration semantics and permanent divergences
   - update architecture and governance docs before implementation waves begin
@@ -271,8 +271,8 @@ Contract lock for wave progression:
 ### wave_psp_iter_fix_6: `sifr.itertools` and Iterator-Returning Stdlib Closure
 - Status: completed (implementation + local validation complete; completion and production-grade reviews approved)
 - Implementation PRs:
-  - `#1357` (merged): https://github.com/yaseralnajjar/sifr/pull/1357
-  - `#1358` (merged): https://github.com/yaseralnajjar/sifr/pull/1358
+  - `#1357` (merged): https://github.com/sifr-lang/sifr/pull/1357
+  - `#1358` (merged): https://github.com/sifr-lang/sifr/pull/1358
 - Scope:
   - rewrite iterable signatures and buffering semantics where required
   - align iterator-returning stdlib APIs with builtin iterator consumers
@@ -491,7 +491,7 @@ Contract lock for wave progression:
   - `lib/sifr/itertools.sifr` (`count` root-cause remediation: replace unsupported unbounded `yield` loop with bounded-prefix delegation to `count_from`)
   - `verification/stdlib/wave_psp_iter_fix_6_cpython_traceability.md` (expanded mapping and intentional-diff boundary record)
 - Implementation PR:
-  - `https://github.com/yaseralnajjar/sifr/pull/1373` (merged)
+  - `https://github.com/sifr-lang/sifr/pull/1373` (merged)
 - Validation:
   - `cargo run -q -p sifr -- run crates/sifr/tests/e2e/pass/cpython_itertools.sifr` -> PASS
   - `cargo run -q -p sifr -- check crates/sifr/tests/e2e/pass/cpython_itertools_subset.sifr` -> PASS

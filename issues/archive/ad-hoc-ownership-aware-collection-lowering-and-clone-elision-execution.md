@@ -102,7 +102,7 @@ Secondary review paths:
 
 ### wave_clone_0: Architecture Lock, Inventory, and Baseline
 - Status: completed
-- Implementation PR: https://github.com/yaseralnajjar/sifr/pull/1394 (merged)
+- Implementation PR: https://github.com/sifr-lang/sifr/pull/1394 (merged)
 - Scope:
   - capture the generated-code baseline and inventory all targeted clone-heavy patterns
   - lock one canonical ownership-aware planner design before broad edits
@@ -142,7 +142,7 @@ Secondary review paths:
 
 ### wave_clone_1: Iterator and Comprehension Ownership Correction
 - Status: completed
-- Implementation PR: https://github.com/yaseralnajjar/sifr/pull/1395 (merged)
+- Implementation PR: https://github.com/sifr-lang/sifr/pull/1395 (merged)
 - Scope:
   - implement the shared planner in `helpers.rs` or an equivalent focused support module
   - refactor iterator/comprehension lowering to derive decisions from planner output
@@ -191,7 +191,7 @@ Secondary review paths:
 
 ### wave_clone_2: Indexing, Safe Indexing, Slicing, and Star-Unpack Ownership Correction
 - Status: completed
-- Implementation PR: https://github.com/yaseralnajjar/sifr/pull/1398 (merged)
+- Implementation PR: https://github.com/sifr-lang/sifr/pull/1398 (merged)
 - Scope:
   - refactor indexing and safe-indexing extraction to use ownership-aware plans
   - remove `Copy`-element `.clone()` / `.cloned()` in targeted indexing paths
@@ -234,7 +234,7 @@ Secondary review paths:
 
 ### wave_clone_3: Generic Hardening, Regression Lock, and Closure
 - Status: completed
-- Implementation PR: https://github.com/yaseralnajjar/sifr/pull/1402 (merged)
+- Implementation PR: https://github.com/sifr-lang/sifr/pull/1402 (merged)
 - Scope:
   - harden `TypeVar`, `Any`, and union cases under the shared planner
   - ensure no unsound `.copied()` lowering is emitted for conservative types

@@ -55,7 +55,7 @@ Required entry records:
 ### wave_psp_runtime_0: Architecture Lock
 - Status: completed (implementation merged; completion review pass approved)
 - Implementation PR:
-  - `#1317` (merged): https://github.com/yaseralnajjar/sifr/pull/1317
+  - `#1317` (merged): https://github.com/sifr-lang/sifr/pull/1317
 - Scope:
   - lock sealed stream hierarchy and lifecycle-cleanup model for this phase
   - lock explicit permanent divergences (`_pyio` full inheritance, async `Popen`, `dictConfig`/dynamic graphs, thread-order claims, `SpooledTemporaryFile`, string-eval `timeit`, timezone mutation helpers)
@@ -78,7 +78,7 @@ Required entry records:
 ### wave_psp_runtime_1: `io` and In-Memory Stream Hierarchy
 - Status: completed (implementation merged; completion and production-grade external review passes approved)
 - Implementation PR:
-  - `#1320` (merged): https://github.com/yaseralnajjar/sifr/pull/1320
+  - `#1320` (merged): https://github.com/sifr-lang/sifr/pull/1320
 - Scope:
   - add first-class in-memory stream wrappers (`StringIO`, `BytesIO`) with typed cursor/lifecycle APIs
   - add binary-handle entry `open_binary(...) -> Result[BinaryFileHandle, IOError]` while preserving `open(...)` compatibility
@@ -99,8 +99,8 @@ Required entry records:
 ### wave_psp_runtime_2: Tempfile and Archive Object Lifecycles
 - Status: completed (implementation merged; completion and production-grade review passes closed)
 - Implementation PR:
-  - `#1323` (merged): https://github.com/yaseralnajjar/sifr/pull/1323
-  - `#1325` (merged): https://github.com/yaseralnajjar/sifr/pull/1325
+  - `#1323` (merged): https://github.com/sifr-lang/sifr/pull/1323
+  - `#1325` (merged): https://github.com/sifr-lang/sifr/pull/1325
 - Scope:
   - add deterministic lifecycle wrappers (`NamedTemporaryFile`, `TemporaryDirectory`) with explicit `close()/cleanup()` result surfaces and best-effort scope-exit cleanup
   - extend `zipfile` with bytes-backed write/read helpers plus governance surfaces (`is_zipfile`, `ZIP_STORED`, `ZIP_DEFLATED`, `ZipInfo`, `ZipReadHandle`)
@@ -122,7 +122,7 @@ Required entry records:
 ### wave_psp_runtime_3: Logging, Clock, and Timer Object Expansion
 - Status: completed (implementation merged; completion and production-grade review passes approved)
 - Implementation PR:
-  - `#1327` (merged): https://github.com/yaseralnajjar/sifr/pull/1327
+  - `#1327` (merged): https://github.com/sifr-lang/sifr/pull/1327
 - Scope:
   - expand `sifr.logging` with deterministic handler family (`Handler`, `StreamHandler`, `FileHandler`, `NullHandler`) and logger wiring (`add_handler`, `set_stream_handler`, `set_null_handler`, `clear_handler`) under single-process deterministic governance
   - expand `sifr.time` with immutable `struct_time`, explicit `gmtime_struct/localtime_struct`, `mktime`, and stable timezone constants (`TIMEZONE`, `ALTZONE`, `DAYLIGHT`, `TZNAME`)
@@ -147,7 +147,7 @@ Required entry records:
 ### wave_psp_runtime_4: Synchronous Subprocess Boundary Cleanup and Governance Closure
 - Status: completed (implementation merged; completion and production-grade external review passes approved)
 - Implementation PR:
-  - `#1330` (merged): https://github.com/yaseralnajjar/sifr/pull/1330
+  - `#1330` (merged): https://github.com/sifr-lang/sifr/pull/1330
 - Scope:
   - expand `sifr.subprocess` with synchronous subprocess constants (`PIPE`, `STDOUT`, `DEVNULL`) and helper APIs (`check_call`, `check_output`)
   - keep deterministic sync `CompletedProcess` contract (`returncode`, `stdout`, `stderr`) while making non-zero exit behavior explicit through typed `IOError`

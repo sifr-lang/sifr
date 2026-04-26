@@ -119,7 +119,7 @@ Phase exit validation:
     - targeted `sifr run` on `0049`, `0144`, `0145`, `0286`, `0705`, `0973`, `1137`
     - `cargo test -p sifr -- --skip test_e2e_pass`
   - PR:
-    - `https://github.com/yaseralnajjar/sifr/pull/1605` (merged)
+    - `https://github.com/sifr-lang/sifr/pull/1605` (merged)
 
 - Wave `WS3_canonical_adaptation_sweep`
   - Changes:
@@ -129,7 +129,7 @@ Phase exit validation:
     - targeted `sifr run` on `0018`, `0056`, `0230`, `0402`, `0442`, `0543`, `0673`, `0707`, `0721`, `1849`
     - `cargo test -p sifr -- --skip test_e2e_pass`
   - PR:
-    - `https://github.com/yaseralnajjar/sifr/pull/1606` (merged)
+    - `https://github.com/sifr-lang/sifr/pull/1606` (merged)
 
 - Wave `WS2_field_surface_and_optional_flow_core` + `WS4_closure_and_reclassification`
   - Changes:
@@ -142,4 +142,4 @@ Phase exit validation:
     - `scripts/run_all_tests.sh --profile quick`
     - `scripts/run_all_tests.sh`
   - PR:
-    - `https://github.com/yaseralnajjar/sifr/pull/1607` (merged)
+    - `https://github.com/sifr-lang/sifr/pull/1607` (merged)
