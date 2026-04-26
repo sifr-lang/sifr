@@ -33,7 +33,7 @@ Loop per part: Plan -> Implement -> Validate -> Demo -> PR -> Review -> Merge ->
 
 ### milestone_adhoc_1: Canonical Rooted Entrypoint Compilation Plan
 - Status: complete
-- Implementation PR: https://github.com/yaseralnajjar/sifr/pull/1082
+- Implementation PR: https://github.com/sifr-lang/sifr/pull/1082
 - Implementation target:
   - add one rooted-entrypoint driver plan abstraction
   - route both single-file and project build orchestration through it
@@ -51,7 +51,7 @@ Loop per part: Plan -> Implement -> Validate -> Demo -> PR -> Review -> Merge ->
 
 ### milestone_adhoc_2: Multi-Module Dependency Metadata Aggregation
 - Status: complete
-- Implementation PR: https://github.com/yaseralnajjar/sifr/pull/1083
+- Implementation PR: https://github.com/sifr-lang/sifr/pull/1083
 - Implementation target:
   - return aggregate `used_stdlib_modules` and `required_crates` from multi-module codegen
   - thread aggregated metadata through rooted project build planning and test support-module codegen
@@ -70,7 +70,7 @@ Loop per part: Plan -> Implement -> Validate -> Demo -> PR -> Review -> Merge ->
 
 ### milestone_adhoc_3: Canonical Manifest Generation Path
 - Status: complete
-- Implementation PR: https://github.com/yaseralnajjar/sifr/pull/1084
+- Implementation PR: https://github.com/sifr-lang/sifr/pull/1084
 - Implementation target:
   - move Cargo.toml generation into the one shared rooted-entrypoint materialization path
   - drive both single-file and project manifests from aggregated compiler metadata
@@ -89,7 +89,7 @@ Loop per part: Plan -> Implement -> Validate -> Demo -> PR -> Review -> Merge ->
 
 ### milestone_adhoc_4: CLI Contract Preservation and Regression Hardening
 - Status: complete
-- Implementation PR: https://github.com/yaseralnajjar/sifr/pull/1085
+- Implementation PR: https://github.com/sifr-lang/sifr/pull/1085
 - Implementation target:
   - add explicit CLI tests for single-file isolation after the rooted-entrypoint refactor
   - prove non-main entrypoints still bypass project mode
@@ -108,7 +108,7 @@ Loop per part: Plan -> Implement -> Validate -> Demo -> PR -> Review -> Merge ->
 
 ### milestone_adhoc_5: Dependency Closure Regression Matrix
 - Status: complete
-- Implementation PR: https://github.com/yaseralnajjar/sifr/pull/1086
+- Implementation PR: https://github.com/sifr-lang/sifr/pull/1086
 - Implementation target:
   - add regression coverage for reachable support-module stdlib dependencies and unreachable sibling exclusion
   - prove non-main intrinsic-required crates remain included only through reachable closure
@@ -144,7 +144,7 @@ Loop per part: Plan -> Implement -> Validate -> Demo -> PR -> Review -> Merge ->
   - positive path: `cargo test -p sifr_driver rooted_entrypoint -- --nocapture` -> passed (`11 passed, 0 failed`) after removing the dead-store rooted-entrypoint helper plumbing
   - local gate: `scripts/run_all_tests.sh --profile quick` -> passed (`verification ok: variants=64, failures=0, blocking_failures=0, non_blocking_failures=0`)
 - Follow-up PR:
-  - https://github.com/yaseralnajjar/sifr/pull/1087 (merged 2026-03-10)
+  - https://github.com/sifr-lang/sifr/pull/1087 (merged 2026-03-10)
 
 ### review_pass_2
 - Reviewer artifact: `/Users/yaseralnajjar/work/sifr/codebase/reviews/adhoc-entrypoint-review-3.md`
@@ -156,4 +156,4 @@ Loop per part: Plan -> Implement -> Validate -> Demo -> PR -> Review -> Merge ->
 - Validation evidence:
   - reviewer explicitly approved the current `main` state as production-grade for the phase
 - Follow-up PR:
-  - https://github.com/yaseralnajjar/sifr/pull/1088
+  - https://github.com/sifr-lang/sifr/pull/1088

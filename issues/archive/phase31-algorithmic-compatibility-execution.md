@@ -142,7 +142,7 @@ Carry-forward planning:
 - Status:
   - complete (merged on 2026-03-11)
 - Implementation PR:
-  - https://github.com/yaseralnajjar/sifr/pull/1100
+  - https://github.com/sifr-lang/sifr/pull/1100
 - Delivered artifacts:
   - `verification/leetcode/phase31_seed_corpus.json`
   - `verification/leetcode/phase31_corpus_inventory.json`
@@ -183,7 +183,7 @@ Carry-forward planning:
 - Status:
   - complete (merged on 2026-03-11)
 - Implementation PR:
-  - https://github.com/yaseralnajjar/sifr/pull/1101
+  - https://github.com/sifr-lang/sifr/pull/1101
 - Delivered artifacts:
   - `verification/leetcode/phase31_failure_taxonomy.json`
   - `verification/leetcode/phase31_failure_repros.json`
@@ -221,7 +221,7 @@ Carry-forward planning:
 - Status:
   - complete (merged on 2026-03-11)
 - Implementation PR:
-  - https://github.com/yaseralnajjar/sifr/pull/1102
+  - https://github.com/sifr-lang/sifr/pull/1102
 - Delivered artifacts:
   - `verification/leetcode/phase31_remediation_backlog.json`
   - `verification/leetcode/phase31_remediation_backlog.md`
@@ -304,7 +304,7 @@ Carry-forward planning:
 - Status:
   - complete (merged on 2026-03-11; external review sign-off recorded on 2026-03-11)
 - Implementation PR:
-  - https://github.com/yaseralnajjar/sifr/pull/1104
+  - https://github.com/sifr-lang/sifr/pull/1104
 - Delivered artifacts:
   - `verification/leetcode/phase31_scorecard.json`
   - `verification/leetcode/phase31_scorecard.md`

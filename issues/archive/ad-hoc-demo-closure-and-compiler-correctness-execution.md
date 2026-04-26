@@ -58,7 +58,7 @@ Owning phase: `issues/ad-hoc-demo-closure-and-compiler-correctness.md`
 
 status: completed
 
-- PR: `https://github.com/yaseralnajjar/sifr/pull/1435`
+- PR: `https://github.com/sifr-lang/sifr/pull/1435`
 - Validation:
   - `cargo test -p sifr_codegen test_generate_rust_iterator_return_consumes_local_list_binding -- --nocapture`
   - `cargo test -p sifr_codegen test_generate_rust_iterator_return_consumes_owned_param_binding -- --nocapture`
@@ -84,7 +84,7 @@ status: completed
 
 status: completed
 
-- PR: `https://github.com/yaseralnajjar/sifr/pull/1435`
+- PR: `https://github.com/sifr-lang/sifr/pull/1435`
 - Validation:
   - `cargo test -p sifr_codegen test_generate_rust_open_uses_canonical_filehandle_constructor -- --nocapture`
   - `target/debug/sifr run demos/advanced_class_libraries/main.sifr`
@@ -97,7 +97,7 @@ status: completed
 
 status: completed
 
-- PR: `https://github.com/yaseralnajjar/sifr/pull/1435`
+- PR: `https://github.com/sifr-lang/sifr/pull/1435`
 - Validation:
   - `target/debug/sifr run demos/mut_sort/main.sifr`
 - Notes:
@@ -108,7 +108,7 @@ status: completed
 
 status: completed
 
-- PR: `https://github.com/yaseralnajjar/sifr/pull/1435`
+- PR: `https://github.com/sifr-lang/sifr/pull/1435`
 - Validation:
   - `cargo test -p sifr_codegen test_generate_rust_generator_clones_borrowed_params_into_owned_locals_before_calls -- --nocapture`
   - `cargo test -p sifr_codegen test_generate_rust_defaultdict_int_augassign_uses_entry_default -- --nocapture`
@@ -122,7 +122,7 @@ status: completed
 
 status: completed
 
-- PR: `https://github.com/yaseralnajjar/sifr/pull/1435`
+- PR: `https://github.com/sifr-lang/sifr/pull/1435`
 - Validation:
   - `cargo test -p sifr_codegen test_generate_rust_recursive_constructor_argument_wraps_optional_box_field -- --nocapture`
   - `target/debug/sifr run demos/nested_recursive_helpers/main.sifr`
@@ -135,7 +135,7 @@ status: completed
 
 status: completed
 
-- PR: `https://github.com/yaseralnajjar/sifr/pull/1435`
+- PR: `https://github.com/sifr-lang/sifr/pull/1435`
 - Validation:
   - `cargo test -p sifr_codegen test_generate_rust_tuple_field_assignment_emits_mutable_self_receiver -- --nocapture`
   - `target/debug/sifr run demos/tuple_assignment/main.sifr`
@@ -152,5 +152,5 @@ status: completed
   - `demos/mut_sort/main.sifr` was confirmed as a canonical demo adaptation to `own mut`, not a compiler bug.
   - `demos/recursive_records/main.sifr` retained the compiler-side recursive constructor fix, but its final call-site shape was also normalized to explicit option-typed locals to avoid repeated temporary ownership moves.
 - Merged PR links:
-- `https://github.com/yaseralnajjar/sifr/pull/1435`
+- `https://github.com/sifr-lang/sifr/pull/1435`
 - final implementation review: `tmp/claude_phase_final_impl_review.md` (`no actionable findings`)

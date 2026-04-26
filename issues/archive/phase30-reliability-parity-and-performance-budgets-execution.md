@@ -79,12 +79,12 @@ Loop per part: Work -> Validate -> PR -> Review -> Merge -> External review pass
 
 ### milestone_30_4 wave-by-wave plan and status
 - Execution mode: wave-by-wave structural remediation, validation, PR merge, reviewer pass 1, reviewer pass 2, then next wave.
-- [x] `wave_30_1a` (`env`, `bytes`, `base64`, `hashlib`) - implementation merged in https://github.com/yaseralnajjar/sifr/pull/1048; review pass 1 and pass 2 approved; wave completion and wave production-grade closures approved
-- [x] `wave_30_1b` (`math`, `statistics`, `bisect`, `heapq`) - complete (implementation merged in https://github.com/yaseralnajjar/sifr/pull/1053; reviewer pass 1 remediation merged in https://github.com/yaseralnajjar/sifr/pull/1054; reviewer pass 2 approved; wave completion closure and production-grade closure approved)
-- [x] `wave_30_1c` (`string`, `textwrap`, `fnmatch`, `re`) - complete (implementation merged in https://github.com/yaseralnajjar/sifr/pull/1058; reviewer pass 1 and pass 2 approved; wave completion closure and production-grade closure approved)
-- [x] `wave_30_1d` (`collections`, `itertools`, `json`, `datetime`) - complete (implementation merged in https://github.com/yaseralnajjar/sifr/pull/1063; reviewer pass 1 remediation merged in https://github.com/yaseralnajjar/sifr/pull/1064; reviewer pass 2 tracking and supplemental datetime consolidation merged in https://github.com/yaseralnajjar/sifr/pull/1065; wave completion closure merged in https://github.com/yaseralnajjar/sifr/pull/1066; wave production-grade closure approved via external review follow-up)
-- [x] `wave_30_1e` (`io`, `csv`, `os`, `pathlib`, `glob`, `tempfile`, `shutil`) - complete (implementation merged in https://github.com/yaseralnajjar/sifr/pull/1068; reviewer pass 1 approved; reviewer pass 2 blockers resolved in https://github.com/yaseralnajjar/sifr/pull/1070; wave completion closure merged in https://github.com/yaseralnajjar/sifr/pull/1071; wave production-grade closure approved)
-- [x] `wave_30_1f` (`logging`, `time`, `timeit`, `platform`, `uuid`) - complete (implementation merged in https://github.com/yaseralnajjar/sifr/pull/1073; reviewer pass 1 merged in https://github.com/yaseralnajjar/sifr/pull/1074; reviewer pass 2 merged in https://github.com/yaseralnajjar/sifr/pull/1075; wave completion closure merged in https://github.com/yaseralnajjar/sifr/pull/1076; wave production-grade closure approved)
+- [x] `wave_30_1a` (`env`, `bytes`, `base64`, `hashlib`) - implementation merged in https://github.com/sifr-lang/sifr/pull/1048; review pass 1 and pass 2 approved; wave completion and wave production-grade closures approved
+- [x] `wave_30_1b` (`math`, `statistics`, `bisect`, `heapq`) - complete (implementation merged in https://github.com/sifr-lang/sifr/pull/1053; reviewer pass 1 remediation merged in https://github.com/sifr-lang/sifr/pull/1054; reviewer pass 2 approved; wave completion closure and production-grade closure approved)
+- [x] `wave_30_1c` (`string`, `textwrap`, `fnmatch`, `re`) - complete (implementation merged in https://github.com/sifr-lang/sifr/pull/1058; reviewer pass 1 and pass 2 approved; wave completion closure and production-grade closure approved)
+- [x] `wave_30_1d` (`collections`, `itertools`, `json`, `datetime`) - complete (implementation merged in https://github.com/sifr-lang/sifr/pull/1063; reviewer pass 1 remediation merged in https://github.com/sifr-lang/sifr/pull/1064; reviewer pass 2 tracking and supplemental datetime consolidation merged in https://github.com/sifr-lang/sifr/pull/1065; wave completion closure merged in https://github.com/sifr-lang/sifr/pull/1066; wave production-grade closure approved via external review follow-up)
+- [x] `wave_30_1e` (`io`, `csv`, `os`, `pathlib`, `glob`, `tempfile`, `shutil`) - complete (implementation merged in https://github.com/sifr-lang/sifr/pull/1068; reviewer pass 1 approved; reviewer pass 2 blockers resolved in https://github.com/sifr-lang/sifr/pull/1070; wave completion closure merged in https://github.com/sifr-lang/sifr/pull/1071; wave production-grade closure approved)
+- [x] `wave_30_1f` (`logging`, `time`, `timeit`, `platform`, `uuid`) - complete (implementation merged in https://github.com/sifr-lang/sifr/pull/1073; reviewer pass 1 merged in https://github.com/sifr-lang/sifr/pull/1074; reviewer pass 2 merged in https://github.com/sifr-lang/sifr/pull/1075; wave completion closure merged in https://github.com/sifr-lang/sifr/pull/1076; wave production-grade closure approved)
 
 ### Milestone 30_2 Evidence (Complexity and Resource Parity)
 - Canonical patterns + module API-class matrix:
@@ -117,7 +117,7 @@ Loop per part: Work -> Validate -> PR -> Review -> Merge -> External review pass
 ### milestone_30_4 wave_30_1a progress
 status: wave closure complete (review pass 1 + review pass 2 + wave completion closure + wave production-grade closure approved) (2026-03-10)
 
-- Implementation PR: merged https://github.com/yaseralnajjar/sifr/pull/1048
+- Implementation PR: merged https://github.com/sifr-lang/sifr/pull/1048
 - Reviewer pass 1 output: `reviews/phase-30-m30_4-wave-30-1a-review-1.md`
 - Reviewer verdict: all reviewed fixtures are compliant with `audits/stdlib/cpython_parity_fixture_format.md` and production-grade quality for approved scope.
 - Action taken: reviewer notes validated; no additional code remediation required in wave_30_1a scope.
@@ -133,11 +133,11 @@ status: wave closure complete (review pass 1 + review pass 2 + wave completion c
 ### milestone_30_4 wave_30_1b progress
 status: wave closure complete (review pass 1 + review pass 2 + wave completion closure + wave production-grade closure approved) (2026-03-10)
 
-- Implementation PR: merged https://github.com/yaseralnajjar/sifr/pull/1053
+- Implementation PR: merged https://github.com/sifr-lang/sifr/pull/1053
 - Reviewer pass 1 output: `reviews/phase-30-m30_4-wave-30_1b-review-1.md`
 - Reviewer pass 1 verdict: actionable structural blockers due to fragmented legacy `stdlib_*` fixtures in wave scope.
 - Remediation scope: consolidate legacy math/statistics/bisect/heapq `stdlib_*` fixtures into canonical consolidated fixtures and remove superseded fragmented fixtures.
-- Reviewer pass 1 remediation PR: merged https://github.com/yaseralnajjar/sifr/pull/1054
+- Reviewer pass 1 remediation PR: merged https://github.com/sifr-lang/sifr/pull/1054
 - Reviewer pass 2 output: `reviews/phase-30-m30_4-wave-30_1b-review-2.md`
 - Reviewer pass 2 delayed output copy: `reviews/phase-30-m30_4-wave-30_1b-review-2a.md`
 - Reviewer pass 2 verdict: production-grade approved; no additional structural blockers in wave scope.
@@ -151,7 +151,7 @@ status: wave closure complete (review pass 1 + review pass 2 + wave completion c
 ### milestone_30_4 wave_30_1c progress
 status: wave closure complete (review pass 1 + review pass 2 + wave completion closure + wave production-grade closure approved) (2026-03-10)
 
-- Implementation PR: merged https://github.com/yaseralnajjar/sifr/pull/1058
+- Implementation PR: merged https://github.com/sifr-lang/sifr/pull/1058
 - Reviewer pass 1 output: `reviews/phase-30-m30_4-wave-30_1c-review-1.md`
 - Reviewer pass 1 verdict: approved with no blocking remediation items for wave scope.
 - Reviewer pass 2 output: `reviews/phase-30-m30_4-wave-30_1c-review-2.md`
@@ -165,10 +165,10 @@ status: wave closure complete (review pass 1 + review pass 2 + wave completion c
 ### milestone_30_4 wave_30_1d progress
 status: wave closure complete (review pass 1 + review pass 2 + wave completion closure + wave production-grade closure approved) (2026-03-10)
 
-- Implementation PR: merged https://github.com/yaseralnajjar/sifr/pull/1063
+- Implementation PR: merged https://github.com/sifr-lang/sifr/pull/1063
 - Reviewer pass 1 output: `reviews/phase-30-m30_4-wave-30_1d-review-1.md`
 - Reviewer pass 1 verdict: wave fixture structure is deterministic and maintainable, but rule-5 format-extension justification must be explicitly recorded for helper-oriented boolean vectors in this structured-data wave scope.
-- Reviewer pass 1 remediation PR: merged https://github.com/yaseralnajjar/sifr/pull/1064
+- Reviewer pass 1 remediation PR: merged https://github.com/sifr-lang/sifr/pull/1064
 - Reviewer pass 1 remediation actions:
   - documented wave-specific extension rationale in `internal_docs/phases/30_reliability_parity_and_performance_budgets.md` under `wave_30_1d`
   - recorded matching extension rationale in this execution tracker for explicit rule-5 auditability
@@ -190,7 +190,7 @@ status: wave closure complete (review pass 1 + review pass 2 + wave completion c
 ### milestone_30_4 wave_30_1e progress
 status: wave closure complete (review pass 1 + review pass 2 + wave completion closure + wave production-grade closure approved) (2026-03-10)
 
-- Implementation PR: merged https://github.com/yaseralnajjar/sifr/pull/1068
+- Implementation PR: merged https://github.com/sifr-lang/sifr/pull/1068
 - Implementation scope delivered:
   - refactored `cpython_{io,csv,os,pathlib,glob,tempfile,shutil}_subset.sifr` fixtures to keep `main()` orchestration-only with helper-grouped behavior sections
   - refactored `cpython_pathlib.sifr` to helper-organized canonical bool-vector structure for parity reviewability
@@ -200,7 +200,7 @@ status: wave closure complete (review pass 1 + review pass 2 + wave completion c
 - Reviewer pass 1 verdict: approved with no blocking remediation required for wave scope.
 - Reviewer pass 2 output: `reviews/phase-30-m30_4-wave-30_1e-review-2.md`
 - Reviewer pass 2 verdict: structural/doc blockers identified and remediated in follow-up PR.
-- Reviewer pass 2 remediation PR: merged https://github.com/yaseralnajjar/sifr/pull/1070
+- Reviewer pass 2 remediation PR: merged https://github.com/sifr-lang/sifr/pull/1070
 - Reviewer pass 2 remediation actions:
   - refactored `stdlib_glob_consolidated.sifr` into helper-organized `collect_*_actual()` sections with orchestration-only `main()`.
   - added wave_30_1e wave-specific handling notes in `internal_docs/phases/30_reliability_parity_and_performance_budgets.md`.
@@ -218,7 +218,7 @@ status: wave closure complete (review pass 1 + review pass 2 + wave completion c
 ### milestone_30_4 wave_30_1f progress
 status: wave closure complete (review pass 1 + review pass 2 + wave completion closure + wave production-grade closure approved) (2026-03-10)
 
-- Implementation PR: merged https://github.com/yaseralnajjar/sifr/pull/1073
+- Implementation PR: merged https://github.com/sifr-lang/sifr/pull/1073
 - Implementation scope delivered:
   - consolidate legacy `stdlib_{logging,time,timeit,platform,uuid}*.sifr` fixtures into canonical consolidated fixtures
   - refactor `cpython_{logging,time,timeit,platform,uuid}_subset.sifr` into helper-structured orchestration-only `main()` layout
@@ -284,7 +284,7 @@ Validation evidence:
 - Positive path: `cargo test -q -p sifr_codegen lowers_env_intrinsics_via_registry` -> pass.
 - Positive path: `/Users/yaseralnajjar/work/sifr/codebase/scripts/run_all_tests.sh` -> pass (`verification ok: variants=64, failures=0, blocking_failures=0, non_blocking_failures=0`).
 - Negative path: invalid key vectors (`""`, `"A=B"`) in `crates/sifr/tests/e2e/pass/cpython_env_subset.sifr` and `demos/m30_1a_env_parity_demo/main.sifr` validate panic-free no-op/`None` behavior.
-- PR: merged https://github.com/yaseralnajjar/sifr/pull/929
+- PR: merged https://github.com/sifr-lang/sifr/pull/929
 - Review pass 1 note validation: reviewer-mentioned determinism failure (`DET-0002`) was validated as non-reproducible in local gate output for this part; no env-scope remediation required.
 - Review pass 2 remediation: renamed invalid-key fixture vector names for clearer semantics (`invalid_*_lookup_found`) and revalidated module demo + CPython fixture.
 
@@ -312,7 +312,7 @@ Validation evidence:
 - Positive path: `cargo test -q -p sifr_codegen lowers_bytes_intrinsics_via_registry` -> pass.
 - Positive path: `/Users/yaseralnajjar/work/sifr/codebase/scripts/run_all_tests.sh` -> pass (`verification ok: variants=64, failures=0, blocking_failures=0, non_blocking_failures=0`).
 - Negative path: canonical bool vectors in `cpython_bytes_subset.sifr` validate odd-hex and non-ASCII hex parse errors plus decode out-of-range byte rejection (`[300]`).
-- PR: merged https://github.com/yaseralnajjar/sifr/pull/939
+- PR: merged https://github.com/sifr-lang/sifr/pull/939
 - Review pass 1 status: approved with observations; no code remediation required for bytes scope.
 - Review pass 2 status: approved; no code remediation required for bytes scope.
 
@@ -337,7 +337,7 @@ Validation evidence:
 - Positive path: `cargo run -q -p sifr -- run crates/sifr/tests/e2e/pass/cpython_base64_rfc4648_vectors.sifr` -> pass.
 - Positive path: `/Users/yaseralnajjar/work/sifr/codebase/scripts/run_all_tests.sh` -> pass (`verification ok: variants=64, failures=0, blocking_failures=0, non_blocking_failures=0`).
 - Negative path: canonical bool vectors in `cpython_base64_subset.sifr` validate `b64decode` parse-failure signaling for invalid payloads and success-path decode for valid payloads.
-- PR: merged https://github.com/yaseralnajjar/sifr/pull/942
+- PR: merged https://github.com/sifr-lang/sifr/pull/942
 - Review pass 1 status: approved; no code remediation required for base64 scope.
 - Review pass 2 note validation: explicit wrapper-export and re-raise simplification suggestions were validated against current intrinsic lowering and Result typing; no safe production-grade code change was warranted for this module scope.
 
@@ -364,7 +364,7 @@ Validation evidence:
 - Positive path: `cargo run -q -p sifr -- run demos/m30_1a_hashlib_parity_demo/main.sifr` -> expected object-model flow prints.
 - Positive path: `/Users/yaseralnajjar/work/sifr/codebase/scripts/run_all_tests.sh` -> pass (`verification ok: variants=64, failures=0, blocking_failures=0, non_blocking_failures=0`).
 - Negative path: canonical bool vectors in `cpython_hashlib_api_subset.sifr` and `cpython_hashlib_object_model_subset.sifr` validate unsupported constructor/error adaptation (`ValueError`/`HashlibError`) behavior.
-- PR: merged https://github.com/yaseralnajjar/sifr/pull/945
+- PR: merged https://github.com/sifr-lang/sifr/pull/945
 - Review pass 1 status: approved with observations (intrinsic-coverage/safety-test notes); no module-scope code remediation required.
 - Review pass 2 status: approved with same tracked observations; no safe module-scope code remediation required.
 
@@ -392,7 +392,7 @@ Validation evidence:
 - Positive path: `cargo run -q -p sifr -- run demos/m30_1b_math_parity_demo/main.sifr` -> expected numeric parity flow prints.
 - Positive path: `/Users/yaseralnajjar/work/sifr/codebase/scripts/run_all_tests.sh` -> pass (`verification ok: variants=64, failures=0, blocking_failures=0, non_blocking_failures=0`).
 - Negative path: mismatched-dimension `dist(...)` and invalid-tolerance `isclose(...)` semantic checks are asserted in canonical vectors (`cpython_math_semantic_corrections_subset.sifr`, `cpython_math_missing_surface_subset.sifr`).
-- PR: merged https://github.com/yaseralnajjar/sifr/pull/948
+- PR: merged https://github.com/sifr-lang/sifr/pull/948
 - Review pass 1 remediation: added explicit `factorial(-1)` and typed `dist([], [])` semantic coverage in canonical fixture; no module runtime code changes required.
 - Review pass 2 status: approved for production use with optional future enhancements only; no additional module-scope changes required.
 
@@ -420,7 +420,7 @@ Validation evidence:
 - Positive path: `cargo run -q -p sifr -- run crates/sifr/tests/e2e/pass/error_stdlib_statistics.sifr` -> pass.
 - Positive path: `/Users/yaseralnajjar/work/sifr/codebase/scripts/run_all_tests.sh` -> pass (`verification ok: variants=64, failures=0, blocking_failures=0, non_blocking_failures=0`).
 - Negative path: canonical bool vectors in `cpython_statistics_subset.sifr` validate empty/invalid dataset error adaptation for central tendency, spread, harmonic/geometric mean, correlation, and linear-regression paths.
-- PR: merged https://github.com/yaseralnajjar/sifr/pull/951
+- PR: merged https://github.com/sifr-lang/sifr/pull/951
 - Review pass 1 remediation: replaced `mode`/`multimode` O(n²) nested counting with O(n) dictionary counting while preserving deterministic first-seen ordering; revalidated full suite.
 - Review pass 2 status: approved for production use; no additional module-scope code remediation required.
 
@@ -449,7 +449,7 @@ Validation evidence:
 - Positive path: `cargo run -q -p sifr -- run crates/sifr/tests/e2e/pass/stdlib_bisect_generic.sifr` -> pass.
 - Positive path: `/Users/yaseralnajjar/work/sifr/codebase/scripts/run_all_tests.sh` -> pass (`verification ok: variants=64, failures=0, blocking_failures=0, non_blocking_failures=0`).
 - Negative path: no exception/error-path surface is in approved bisect subset; fixture vectors assert boundary safety for empty inputs and duplicate insertion semantics.
-- PR: merged https://github.com/yaseralnajjar/sifr/pull/955
+- PR: merged https://github.com/sifr-lang/sifr/pull/955
 - Review pass 1 status: approved with observations; no module-scope remediation required.
 - Review pass 2 status: approved for production use; no additional module-scope remediation required.
 
@@ -479,7 +479,7 @@ Validation evidence:
 - Positive path: `cargo run -q -p sifr -- run crates/sifr/tests/e2e/pass/heapq_mut_param.sifr` -> pass.
 - Positive path: `/Users/yaseralnajjar/work/sifr/codebase/scripts/run_all_tests.sh` -> pass (`verification ok: variants=64, failures=0, blocking_failures=0, non_blocking_failures=0`).
 - Negative path: canonical bool vectors in `cpython_heapq_subset.sifr` validate empty `heappop`/`heapreplace` safety adaptation (`None`) and non-mutating helper semantics for `heappushpop`.
-- PR: merged https://github.com/yaseralnajjar/sifr/pull/958
+- PR: merged https://github.com/sifr-lang/sifr/pull/958
 - Review pass 1 status: approved with observations; no module-scope remediation required.
 - Review pass 2 remediation: removed unused `_swap` dead code from `lib/sifr/heapq.sifr`; revalidated heapq demo/fixtures and full local suite.
 
@@ -506,7 +506,7 @@ Validation evidence:
 - Positive path: `cargo run -q -p sifr -- run crates/sifr/tests/e2e/pass/stdlib_string_capwords.sifr` -> pass.
 - Positive path: `/Users/yaseralnajjar/work/sifr/codebase/scripts/run_all_tests.sh` -> pass (`verification ok: variants=64, failures=0, blocking_failures=0, non_blocking_failures=0`).
 - Negative path: no exception/error-path surface is in approved `string` subset; canonical vectors validate whitespace normalization semantics for `capwords` across tabs/newlines/carriage returns/vertical tabs/form feeds.
-- PR: merged https://github.com/yaseralnajjar/sifr/pull/963
+- PR: merged https://github.com/sifr-lang/sifr/pull/963
 - Review pass 1 remediation: expanded `string.whitespace`/`printable` to include vertical-tab/form-feed and aligned `capwords` normalization to full CPython whitespace class subset; revalidated demo + full suite.
 - Review pass 2 status: approved for production use with full whitespace parity; no additional module-scope remediation required.
 
@@ -533,7 +533,7 @@ Validation evidence:
 - Positive path: `cargo run -q -p sifr -- run crates/sifr/tests/e2e/pass/edge_case_safety.sifr` -> pass.
 - Positive path: `/Users/yaseralnajjar/work/sifr/codebase/scripts/run_all_tests.sh` -> pass (`verification ok: variants=64, failures=0, blocking_failures=0, non_blocking_failures=0`).
 - Negative path: canonical bool vectors in `cpython_textwrap_subset.sifr` validate width guards for `wrap`/`fill` and safe behavior for empty-input wrapping and non-content line handling in `indent`.
-- PR: merged https://github.com/yaseralnajjar/sifr/pull/967
+- PR: merged https://github.com/sifr-lang/sifr/pull/967
 - Review pass 1 remediation: parity matrix classification corrected to `intentional-diff` for deterministic whitespace normalization contract and `dedent` magic-number sentinel removed; revalidated demo + full suite.
 - Review pass 2 status: approved for production use; no additional module-scope remediation required.
 
@@ -559,7 +559,7 @@ Validation evidence:
 - Positive path: `cargo run -q -p sifr -- run crates/sifr/tests/e2e/pass/stdlib_fnmatch.sifr` -> pass.
 - Positive path: `/Users/yaseralnajjar/work/sifr/codebase/scripts/run_all_tests.sh` -> pass (`verification ok: variants=64, failures=0, blocking_failures=0, non_blocking_failures=0`).
 - Negative path: no exception/error-path surface is in approved `fnmatch` subset; canonical vectors validate mismatch and empty-result behaviors for wildcard patterns.
-- PR: merged https://github.com/yaseralnajjar/sifr/pull/970
+- PR: merged https://github.com/sifr-lang/sifr/pull/970
 - Review pass 1 status: approved (`reviews/phase-30-part-11-fnmatch-review.md`); reviewer findings were validated as either out-of-scope intentional-diff items or pre-existing non-module blockers, so no part-11 code remediation was required.
 - Review pass 2 status: approved (`reviews/phase-30-part-11-fnmatch-review-2.md`); production-grade confirmation reported no blocking issues and no additional module-scope remediation was required.
 
@@ -587,7 +587,7 @@ Validation evidence:
 - Positive path: `cargo run -q -p sifr -- run crates/sifr/tests/e2e/pass/re_flags_ignorecase.sifr` -> pass.
 - Positive path: `/Users/yaseralnajjar/work/sifr/codebase/scripts/run_all_tests.sh` -> pass (`verification ok: variants=64, failures=0, blocking_failures=0, non_blocking_failures=0`).
 - Negative path: canonical bool vectors in `cpython_re_subset.sifr` validate invalid-pattern rejection (`"("`) with panic-free typed `RegexError` handling.
-- PR: merged https://github.com/yaseralnajjar/sifr/pull/974
+- PR: merged https://github.com/sifr-lang/sifr/pull/974
 - Review pass 1 status: approved (`reviews/phase-30-part-12-re-review.md`) with non-blocking observations only; no additional part-12 code remediation was required for approved scope.
 - Review pass 2 status: approved (`reviews/phase-30-part-12-re-review-2.md`) with no blockers; module is production-grade for approved scope with no additional remediation required.
 
@@ -617,7 +617,7 @@ Validation evidence:
 - Positive path: `cargo run -q -p sifr -- run crates/sifr/tests/e2e/pass/stdlib_collections_deque.sifr` -> pass.
 - Positive path: `/Users/yaseralnajjar/work/sifr/codebase/scripts/run_all_tests.sh` -> pass (`verification ok: variants=64, failures=0, blocking_failures=0, non_blocking_failures=0`).
 - Negative path: canonical bool vectors in `cpython_collections_subset.sifr` validate empty deque pop (`None`) and absent-key counter lookups (`0`) with panic-free behavior.
-- PR: merged https://github.com/yaseralnajjar/sifr/pull/981
+- PR: merged https://github.com/sifr-lang/sifr/pull/981
 - Review pass 1 status: approved (`reviews/phase-30-part-13-collections-review.md`) with non-blocking observations only; no additional part-13 code remediation was required for approved scope.
 - Review pass 2 status: approved (`reviews/phase-30-part-13-collections-review-2.md`) with no blockers; module is production-grade for approved scope with no additional remediation required.
 
@@ -645,7 +645,7 @@ Validation evidence:
 - Positive path: `cargo run -q -p sifr -- run crates/sifr/tests/e2e/pass/stdlib_itertools_new.sifr` -> pass.
 - Positive path: `/Users/yaseralnajjar/work/sifr/codebase/scripts/run_all_tests.sh` -> pass (`verification ok: variants=64, failures=0, blocking_failures=0, non_blocking_failures=0`).
 - Negative path: canonical bool vectors in `cpython_itertools_subset.sifr` validate `batched(..., 0)` rejection with panic-free typed `ValueError` behavior.
-- PR: merged https://github.com/yaseralnajjar/sifr/pull/985
+- PR: merged https://github.com/sifr-lang/sifr/pull/985
 - Review pass 1 status: approved (`reviews/phase-30-part-14-itertools-review.md`) with no blocking issues; no additional part-14 remediation was required for approved scope.
 - Review pass 2 status: approved (`reviews/phase-30-part-14-itertools-review-2.md`) with no blockers; module is production-grade for approved scope with no additional remediation required.
 
@@ -671,7 +671,7 @@ Validation evidence:
 - Positive path: `cargo run -q -p sifr -- run crates/sifr/tests/e2e/pass/stdlib_json.sifr` -> pass.
 - Positive path: `/Users/yaseralnajjar/work/sifr/codebase/scripts/run_all_tests.sh` -> pass (`verification ok: variants=64, failures=0, blocking_failures=0, non_blocking_failures=0`).
 - Negative path: canonical bool vectors in `cpython_json_subset.sifr` validate invalid JSON parse rejection (`"{"`, `"tru"`) with panic-free typed `JSONDecodeError` handling.
-- PR: merged https://github.com/yaseralnajjar/sifr/pull/989
+- PR: merged https://github.com/sifr-lang/sifr/pull/989
 - Review pass 1 status: approved (`reviews/phase-30-part-15-json-review.md`); reviewer concern about `unwrap_or_default` was validated as non-blocking because `unwrap_or_default` is panic-free and returns default on serialization failure, so no module-scope remediation was required.
 - Review pass 2 status: approved (`reviews/phase-30-part-15-json-review-2.md`) with no blockers; module is production-grade for approved scope with no additional remediation required.
 
@@ -700,7 +700,7 @@ Validation evidence:
 - Positive path: `cargo run -q -p sifr -- run crates/sifr/tests/e2e/pass/datetime_time_class.sifr` -> pass.
 - Positive path: `/Users/yaseralnajjar/work/sifr/codebase/scripts/run_all_tests.sh` -> pass (`verification ok: variants=64, failures=0, blocking_failures=0, non_blocking_failures=0`).
 - Negative path: canonical bool vectors in `cpython_datetime_subset.sifr` validate out-of-range `from_timestamp(...)` rejection with panic-free typed `ValueError` behavior.
-- PR: merged https://github.com/yaseralnajjar/sifr/pull/993
+- PR: merged https://github.com/sifr-lang/sifr/pull/993
 - Review pass 1 remediation: fixed `datetime.timestamp()` pre-epoch year handling in `lib/sifr/datetime.sifr` and added regression coverage (`1969-12-31T23:59:59 -> -1`) in `cpython_datetime_subset.sifr`; revalidated targeted datetime fixtures and full suite.
 - Review pass 2 status: approved (`reviews/phase-30-part-16-datetime-review-2.md`) with no blockers; module is production-grade for approved scope with no additional remediation required.
 
@@ -732,7 +732,7 @@ Validation evidence:
 - Positive path: `cargo run -q -p sifr -- run crates/sifr/tests/e2e/pass/open_binary_write.sifr` -> pass.
 - Positive path: `/Users/yaseralnajjar/work/sifr/codebase/scripts/run_all_tests.sh` -> pass (`verification ok: variants=64, failures=0, blocking_failures=0, non_blocking_failures=0`).
 - Negative path: canonical bool vectors in `cpython_io_subset.sifr` validate panic-free typed `IOError` adaptation for missing-file open/read and invalid mode rejection.
-- PR: merged https://github.com/yaseralnajjar/sifr/pull/999
+- PR: merged https://github.com/sifr-lang/sifr/pull/999
 - Review pass 1 status: approved (`reviews/phase-30-part-17-io-review.md`) with non-blocking observations only; no additional module-scope remediation was required for approved scope.
 - Review pass 2 status: approved (`reviews/phase-30-part-17-io-review-2.md`) with no blockers; module is production-grade for approved scope with no additional remediation required.
 
@@ -759,7 +759,7 @@ Validation evidence:
 - Positive path: `cargo run -q -p sifr -- run crates/sifr/tests/e2e/pass/csv_reader_file.sifr` -> pass.
 - Positive path: `/Users/yaseralnajjar/work/sifr/codebase/scripts/run_all_tests.sh` -> pass (`verification ok: variants=64, failures=0, blocking_failures=0, non_blocking_failures=0`).
 - Negative path: canonical bool vectors in `cpython_csv_subset.sifr` validate panic-free typed `IOError` adaptation for missing-file path rejection in `reader_from_path`.
-- PR: merged https://github.com/yaseralnajjar/sifr/pull/1002
+- PR: merged https://github.com/sifr-lang/sifr/pull/1002
 - Review pass 1 remediation: optimized `lib/sifr/csv.sifr` root-cause inefficiencies in `reader.__next__`, `writer.writerow`/`writerows`, `DictReader.rows`, and `DictWriter` mutation paths while preserving approved subset semantics; revalidated module demos/fixtures and full suite.
 - Review pass 1 note validation: reviewer flag about `Result` + `raise` pattern was validated as non-blocking for this module because the same safe adaptation pattern is canonical across current stdlib `Result` wrappers in the approved architecture.
 - Review pass 2 status: reviewer raised the same `Result`+`raise` concern (`reviews/phase-30-part-18-csv-review-2.md`); validation confirmed this remains a non-blocking architectural pattern for current stdlib wrappers, and no additional module-scope remediation was required for approved scope.
@@ -787,7 +787,7 @@ Validation evidence:
 - Positive path: `cargo run -q -p sifr -- run crates/sifr/tests/e2e/pass/stdlib_os_intrinsics.sifr` -> pass.
 - Positive path: `/Users/yaseralnajjar/work/sifr/codebase/scripts/run_all_tests.sh` -> pass (`verification ok: variants=64, failures=0, blocking_failures=0, non_blocking_failures=0`).
 - Negative path: canonical bool vectors in `cpython_os_subset.sifr` validate panic-free typed `IOError` adaptation for failing `rmdir`/`chdir` paths.
-- PR: merged https://github.com/yaseralnajjar/sifr/pull/1005
+- PR: merged https://github.com/sifr-lang/sifr/pull/1005
 - Review pass 1 status: approved (`reviews/phase-30-part-19-os-review.md`) with no blocking issues and no additional module-scope remediation required.
 - Review pass 2 status: approved (`reviews/phase-30-part-19-os-review-r2.md`) with no blockers; module is production-grade for approved scope with no additional remediation required.
 
@@ -818,7 +818,7 @@ Validation evidence:
 - Positive path: `/Users/yaseralnajjar/work/sifr/codebase/scripts/run_all_tests.sh` -> pass (`verification ok: variants=64, failures=0, blocking_failures=0, non_blocking_failures=0`).
 - Negative path: canonical bool vectors in `cpython_pathlib_subset.sifr` and `demos/m30_1e_pathlib_parity_demo/main.sifr` validate panic-free typed `IOError` adaptation for missing-path reads.
 - Root-cause fix: `sifr.pathlib` now requests the `regex` crate during codegen dependency synthesis, eliminating unresolved-crate failures when `Path.glob`/`Path.rglob` are used from pathlib modules.
-- PR: merged https://github.com/yaseralnajjar/sifr/pull/1008
+- PR: merged https://github.com/sifr-lang/sifr/pull/1008
 - Review pass 1 status: approved (`reviews/phase-30-part-20-pathlib-review.md`) with no blocking issues; minor observations (`Path.__str__` ergonomics and broader glob metachar support) were validated as out-of-scope for the approved subset and require no additional module-scope remediation.
 - Review pass 2 status: approved (`reviews/phase-30-part-20-pathlib-review-2.md`) with no blockers; production-grade re-review validated no unresolved correctness or safety issues for approved scope.
 
@@ -846,7 +846,7 @@ Validation evidence:
 - Positive path: `/Users/yaseralnajjar/work/sifr/codebase/scripts/run_all_tests.sh` -> pass (`verification ok: variants=64, failures=0, blocking_failures=0, non_blocking_failures=0`).
 - Negative path: canonical bool vectors in `cpython_glob_subset.sifr` and `demos/m30_1e_glob_parity_demo/main.sifr` validate panic-free empty-list behavior for missing directories and unmatched patterns.
 - Root-cause fix: `sifr.glob` now removes silent print fallback, enforces deterministic sorted output, and applies CPython-aligned hidden-file filtering (hidden entries only matched when pattern starts with `.`) for approved wildcard subset; reviewer-raised `pathlib` glob parity gaps were remediated in intrinsic lowering (`?` wildcard conversion, hidden-entry filtering, and missing-directory empty-result behavior) with dedicated regression coverage in `pathlib_glob_semantics.sifr`.
-- PR: merged https://github.com/yaseralnajjar/sifr/pull/1012
+- PR: merged https://github.com/sifr-lang/sifr/pull/1012
 - Review pass 1 status: reviewer raised `pathlib.Path.glob`/`rglob` concerns (`reviews/phase-30-part-21-glob-review.md`); validation confirmed the findings were reproducible and required remediation for production-grade wave closure.
 - Review pass 2 status: blocker report (`reviews/phase-30-part-21-glob-review-2.md`) confirmed `pathlib` glob parity gaps; remediation was applied before closeout.
 - Review pass 3 status: approved after remediation (`reviews/phase-30-part-21-glob-review-3.md`) with no remaining blockers for approved `glob` scope.
@@ -874,7 +874,7 @@ Validation evidence:
 - Negative path: canonical bool vectors in `cpython_tempfile_subset.sifr` and `demos/m30_1e_tempfile_parity_demo/main.sifr` validate panic-free `IOError` propagation for `mkstemp` on missing-parent paths (`<temp-root>/__sifr_*_missing_parent__/...`) without retrying non-collision I/O failures.
 - Root-cause fix: `sifr.tempfile` now uses `_sifr.fs.gettempdir()` for temp-root placement, performs bounded collision retries for `mkstemp`/`mkdtemp`, and retries only on actual collision races (`exists(path)` after failure) while re-raising non-collision `IOError` immediately.
 - Parity governance update: tempfile API-shape divergence (prefix-only args, path-string return surface, no fd tuple, no `suffix`/`dir` options in approved scope) is now explicitly documented as `intentional-diff` in the phase parity matrix.
-- PR: merged https://github.com/yaseralnajjar/sifr/pull/1016
+- PR: merged https://github.com/sifr-lang/sifr/pull/1016
 - Review pass 1 status: reviewer output in `reviews/phase-30-part-22-tempfile-review.md`; validated out-of-scope claims (`suffix`/`dir`/descriptor parity and full object API surface), and applied actionable remediation (negative-path evidence + explicit API-shape intentional-diff documentation).
 - Review pass 2 status: approved (`reviews/phase-30-part-22-tempfile-review-2.md`) with no blocking correctness/safety issues; note about `path + ""` copy was validated as non-actionable because current lowering needs a stable pre-`try` path copy to avoid move-after-try borrow failures.
 
@@ -902,7 +902,7 @@ Validation evidence:
 - Negative path: canonical bool vectors in `cpython_shutil_subset.sifr` and `demos/m30_1e_shutil_parity_demo/main.sifr` validate panic-free typed `IOError` adaptation for missing source/tree paths in `copy`, `move_file`, and `rmtree`.
 - Root-cause fix: `move_file` now lowers to `rename` directly for deterministic single-step move semantics in approved scope, eliminating prior two-step copy/remove partial-state risk.
 - Parity governance update: `verification/stdlib/phase30_parity_matrix.md` now includes explicit `shutil` parity and intentional-diff rows (name adaptation `move_file`, subset option matrix boundary, and `disk_usage` list-shape adaptation).
-- PR: merged https://github.com/yaseralnajjar/sifr/pull/1019
+- PR: merged https://github.com/sifr-lang/sifr/pull/1019
 - Review pass 1 status: approved (`reviews/phase-30-part-23-shutil-review.md`) with no blocking issues; reviewer notes about cross-device rename behavior and re-export visibility were validated as non-blocking and aligned with approved intentional-diff boundaries.
 - Review pass 2 status: approved (`reviews/phase-30-part-23-shutil-review-2.md`) with no blockers; production-grade re-review confirmed no unresolved correctness/safety risk in approved scope.
 
@@ -933,7 +933,7 @@ Validation evidence:
 - Negative path: canonical bool vectors in `cpython_logging_subset.sifr` and `demos/m30_1f_logging_parity_demo/main.sifr` validate panic-free behavior for invalid file targets (no crash, no file creation) while preserving level-filter semantics.
 - Root-cause fix: `log_warn` now emits CPython-aligned `WARNING` label; logging parity coverage was expanded with dedicated CPython-subset fixture and wave demo to lock level/filter/formatter/global-level behavior.
 - Parity governance update: `verification/stdlib/phase30_parity_matrix.md` now includes explicit `logging` parity and intentional-diff rows for approved subset boundaries.
-- PR: merged https://github.com/yaseralnajjar/sifr/pull/1024
+- PR: merged https://github.com/sifr-lang/sifr/pull/1024
 - Review pass 1 status: approved (`reviews/phase-30-part-24-logging-review.md`) with no blockers; reviewer observations about silent handler error swallowing and helper-function scope were validated as intentional within approved panic-free subset boundaries.
 - Review pass 2 status: approved (`reviews/phase-30-part-24-logging-review-2.md`) with no blockers; production-grade re-review confirmed no unresolved correctness/safety risks in approved subset.
 
@@ -963,7 +963,7 @@ Validation evidence:
 - Root-cause fix: `sleep` intrinsic now guards invalid durations and uses panic-free `Duration::from_nanos` lowering; this removes user-triggerable panic paths from negative/invalid sleep inputs.
 - Root-cause fix: `perf_counter`/`monotonic` no longer use call-site-local baseline statics; both now lower through stable epoch-seconds timing to prevent per-call-site reset regressions in parity vectors.
 - Parity governance update: `verification/stdlib/phase30_parity_matrix.md` now includes explicit `time` parity and intentional-diff rows for approved subset boundaries.
-- PR: merged https://github.com/yaseralnajjar/sifr/pull/1027
+- PR: merged https://github.com/sifr-lang/sifr/pull/1027
 - Review pass 1 status: approved (`reviews/phase-30-part-25-time-review.md`) with no blockers; reviewer observations about wall-clock `perf_counter`/`monotonic` behavior and empty-string fallback for out-of-range epochs were validated as documented intentional-diff boundaries for approved subset scope.
 - Review pass 2 status: approved (`reviews/phase-30-part-25-time-review-2.md`) with no blockers; production-grade re-review confirmed no unresolved correctness/safety risks in approved subset.
 
@@ -990,7 +990,7 @@ Validation evidence:
 - Negative path: canonical bool vectors in `cpython_timeit_subset.sifr` and `demos/m30_1f_timeit_parity_demo/main.sifr` validate panic-free handling for zero/negative loop-count inputs and non-negative elapsed outputs.
 - Root-cause fix: elapsed-time calculation in `timeit`/`repeat` now clamps to non-negative values to prevent backward wall-clock drift from producing negative durations in approved subset behavior.
 - Parity governance update: `verification/stdlib/phase30_parity_matrix.md` now includes explicit `timeit` parity and intentional-diff rows for approved subset boundaries.
-- PR: merged https://github.com/yaseralnajjar/sifr/pull/1030
+- PR: merged https://github.com/sifr-lang/sifr/pull/1030
 - Review pass 1 status: approved (`reviews/phase-30-part-26-timeit-review.md`) with no blockers; reviewer observations about wall-clock timer mapping were validated as documented intentional-diff boundaries for approved subset scope.
 - Review pass 2 status: approved (`reviews/phase-30-part-26-timeit-review-2.md`) with no blockers; production-grade re-review confirmed no unresolved correctness/safety risks in approved subset.
 
@@ -1020,7 +1020,7 @@ Validation evidence:
 - Root-cause fix: `platform_system` intrinsic now maps host OS to CPython-style names (`Windows`/`Darwin`/`Linux`) instead of returning raw lowercase `std::env::consts::OS` values.
 - Root-cause fix: `platform_node`, `platform_release`, and `platform_version` no longer rely solely on shell command availability; deterministic non-empty fallbacks prevent empty-string metadata on hosts without `hostname`/`uname`.
 - Parity governance update: `verification/stdlib/phase30_parity_matrix.md` now includes explicit `platform` parity and intentional-diff rows for approved subset boundaries.
-- PR: merged https://github.com/yaseralnajjar/sifr/pull/1033
+- PR: merged https://github.com/sifr-lang/sifr/pull/1033
 - Review pass 1 status: approved (`reviews/phase-30-part-27-platform-review.md`) with no blockers; reviewer observations about `processor()` and command availability were validated as documented intentional-diff boundaries with deterministic fallback behavior.
 - Review pass 2 status: approved (`reviews/phase-30-part-27-platform-review-2.md`) with no blockers; production-grade re-review confirmed no unresolved correctness/safety risks in approved subset.
 
@@ -1074,120 +1074,120 @@ Validation evidence:
 - Negative path:
 
 ## PR Log
-- Part 1 implementation: merged https://github.com/yaseralnajjar/sifr/pull/929
-- Part 1 review pass 1 tracking: merged https://github.com/yaseralnajjar/sifr/pull/930
-- Part 1 review pass 2 remediation + sign-off: merged https://github.com/yaseralnajjar/sifr/pull/931
-- Part 1 closeout log sync: merged https://github.com/yaseralnajjar/sifr/pull/932
-- Wave completion closure cycle: merged https://github.com/yaseralnajjar/sifr/pull/933
-- Wave production-grade closure cycle: merged https://github.com/yaseralnajjar/sifr/pull/934
-- Milestone completion closure cycle: merged https://github.com/yaseralnajjar/sifr/pull/935
-- Milestone production-grade closure cycle: merged https://github.com/yaseralnajjar/sifr/pull/936
-- Phase completion closure cycle: merged https://github.com/yaseralnajjar/sifr/pull/937
-- Part 2 implementation: merged https://github.com/yaseralnajjar/sifr/pull/939
-- Part 2 review pass 1 tracking: merged https://github.com/yaseralnajjar/sifr/pull/940
-- Part 2 review pass 2 tracking: merged https://github.com/yaseralnajjar/sifr/pull/941
-- Phase production-grade closure cycle: merged https://github.com/yaseralnajjar/sifr/pull/938
-- Part 3 implementation: merged https://github.com/yaseralnajjar/sifr/pull/942
-- Part 3 review pass 1 tracking: merged https://github.com/yaseralnajjar/sifr/pull/943
-- Part 3 review pass 2 tracking: merged https://github.com/yaseralnajjar/sifr/pull/944
-- Part 4 implementation: merged https://github.com/yaseralnajjar/sifr/pull/945
-- Part 4 review pass 1 tracking: merged https://github.com/yaseralnajjar/sifr/pull/946
-- Part 4 review pass 2 tracking: merged https://github.com/yaseralnajjar/sifr/pull/947
-- Part 5 implementation: merged https://github.com/yaseralnajjar/sifr/pull/948
-- Part 5 review pass 1 remediation: merged https://github.com/yaseralnajjar/sifr/pull/949
-- Part 5 review pass 2 tracking: merged https://github.com/yaseralnajjar/sifr/pull/950
-- Part 6 implementation: merged https://github.com/yaseralnajjar/sifr/pull/951
-- Part 6 review pass 1 remediation: merged https://github.com/yaseralnajjar/sifr/pull/953
-- Part 6 review pass 2 tracking: merged https://github.com/yaseralnajjar/sifr/pull/954
-- Part 7 implementation: merged https://github.com/yaseralnajjar/sifr/pull/955
-- Part 7 review pass 1 tracking: merged https://github.com/yaseralnajjar/sifr/pull/956
-- Part 7 review pass 2 tracking: merged https://github.com/yaseralnajjar/sifr/pull/957
-- Part 8 implementation: merged https://github.com/yaseralnajjar/sifr/pull/958
-- Part 8 review pass 1 tracking: merged https://github.com/yaseralnajjar/sifr/pull/959
-- Part 8 review pass 2 tracking: merged https://github.com/yaseralnajjar/sifr/pull/960
-- Wave completion closure cycle (wave_30_1b): merged https://github.com/yaseralnajjar/sifr/pull/961
-- Wave production-grade closure cycle (wave_30_1b): merged https://github.com/yaseralnajjar/sifr/pull/962
-- Part 9 implementation: merged https://github.com/yaseralnajjar/sifr/pull/963
-- Part 9 review pass 1 remediation: merged https://github.com/yaseralnajjar/sifr/pull/964
-- Part 9 review pass 2 tracking: merged https://github.com/yaseralnajjar/sifr/pull/965
-- Part 10 implementation: merged https://github.com/yaseralnajjar/sifr/pull/967
-- Part 10 review pass 1 remediation: merged https://github.com/yaseralnajjar/sifr/pull/968
-- Part 11 implementation: merged https://github.com/yaseralnajjar/sifr/pull/970
-- Part 11 review pass 1 tracking: merged https://github.com/yaseralnajjar/sifr/pull/971
-- Part 11 review pass 2 tracking: merged https://github.com/yaseralnajjar/sifr/pull/972
-- Part 12 implementation: merged https://github.com/yaseralnajjar/sifr/pull/974
-- Part 12 review pass 1 tracking: merged https://github.com/yaseralnajjar/sifr/pull/975
-- Part 12 review pass 2 tracking: merged https://github.com/yaseralnajjar/sifr/pull/976
-- Wave completion closure cycle (wave_30_1c): merged https://github.com/yaseralnajjar/sifr/pull/978
-- Wave production-grade closure cycle (wave_30_1c): merged https://github.com/yaseralnajjar/sifr/pull/979
-- Part 13 implementation: merged https://github.com/yaseralnajjar/sifr/pull/981
-- Part 13 review pass 1 tracking: merged https://github.com/yaseralnajjar/sifr/pull/982
-- Part 13 review pass 2 tracking: merged https://github.com/yaseralnajjar/sifr/pull/983
-- Part 14 implementation: merged https://github.com/yaseralnajjar/sifr/pull/985
-- Part 14 review pass 1 tracking: merged https://github.com/yaseralnajjar/sifr/pull/986
-- Part 14 review pass 2 tracking: merged https://github.com/yaseralnajjar/sifr/pull/987
-- Part 15 implementation: merged https://github.com/yaseralnajjar/sifr/pull/989
-- Part 15 review pass 1 tracking: merged https://github.com/yaseralnajjar/sifr/pull/990
-- Part 15 review pass 2 tracking: merged https://github.com/yaseralnajjar/sifr/pull/991
-- Part 16 implementation: merged https://github.com/yaseralnajjar/sifr/pull/993
-- Part 16 review pass 1 remediation: merged https://github.com/yaseralnajjar/sifr/pull/994
-- Part 16 review pass 2 tracking: merged https://github.com/yaseralnajjar/sifr/pull/995
-- Part 10 review pass 2 tracking: merged https://github.com/yaseralnajjar/sifr/pull/969
-- Part 11 closeout log sync: merged https://github.com/yaseralnajjar/sifr/pull/973
-- Part 12 closeout log sync: merged https://github.com/yaseralnajjar/sifr/pull/977
-- Wave closure log sync (wave_30_1c): merged https://github.com/yaseralnajjar/sifr/pull/980
-- Part 13 closeout log sync: merged https://github.com/yaseralnajjar/sifr/pull/984
-- Part 14 closeout log sync: merged https://github.com/yaseralnajjar/sifr/pull/988
-- Part 15 closeout log sync: merged https://github.com/yaseralnajjar/sifr/pull/992
-- Part 16 closeout log sync: merged https://github.com/yaseralnajjar/sifr/pull/996
-- Wave completion closure cycle (wave_30_1d): merged https://github.com/yaseralnajjar/sifr/pull/997
-- Wave production-grade closure cycle (wave_30_1d): merged https://github.com/yaseralnajjar/sifr/pull/998
-- Part 17 implementation: merged https://github.com/yaseralnajjar/sifr/pull/999
-- Part 17 review pass 1 tracking: merged https://github.com/yaseralnajjar/sifr/pull/1000
-- Part 17 review pass 2 tracking: merged https://github.com/yaseralnajjar/sifr/pull/1001
-- Part 18 implementation: merged https://github.com/yaseralnajjar/sifr/pull/1002
-- Part 18 review pass 1 remediation: merged https://github.com/yaseralnajjar/sifr/pull/1003
-- Part 18 review pass 2 tracking: merged https://github.com/yaseralnajjar/sifr/pull/1004
-- Part 19 implementation: merged https://github.com/yaseralnajjar/sifr/pull/1005
-- Part 19 review pass 1 tracking: merged https://github.com/yaseralnajjar/sifr/pull/1006
-- Part 19 review pass 2 tracking: merged https://github.com/yaseralnajjar/sifr/pull/1007
-- Part 20 implementation: merged https://github.com/yaseralnajjar/sifr/pull/1008
-- Part 20 review pass 1 tracking: merged https://github.com/yaseralnajjar/sifr/pull/1009
-- Part 20 review pass 2 tracking: merged https://github.com/yaseralnajjar/sifr/pull/1010
-- Part 21 implementation: merged https://github.com/yaseralnajjar/sifr/pull/1012
-- Part 21 review pass 1 tracking: merged https://github.com/yaseralnajjar/sifr/pull/1013
-- Part 21 review pass 2 remediation + pass 3 approval: merged https://github.com/yaseralnajjar/sifr/pull/1014
-- Part 21 closeout log sync: merged https://github.com/yaseralnajjar/sifr/pull/1015
-- Part 22 implementation: merged https://github.com/yaseralnajjar/sifr/pull/1016
-- Part 22 review pass 1 remediation: merged https://github.com/yaseralnajjar/sifr/pull/1017
-- Part 22 review pass 2 tracking: merged https://github.com/yaseralnajjar/sifr/pull/1018
-- Part 23 implementation: merged https://github.com/yaseralnajjar/sifr/pull/1019
-- Part 23 review pass 1 tracking: merged https://github.com/yaseralnajjar/sifr/pull/1020
-- Part 23 review pass 2 tracking: merged https://github.com/yaseralnajjar/sifr/pull/1021
-- Wave completion closure cycle (wave_30_1e): merged https://github.com/yaseralnajjar/sifr/pull/1022
-- Wave production-grade closure cycle (wave_30_1e): merged https://github.com/yaseralnajjar/sifr/pull/1023
-- Part 24 implementation: merged https://github.com/yaseralnajjar/sifr/pull/1024
-- Part 24 review pass 1 tracking: merged https://github.com/yaseralnajjar/sifr/pull/1025
-- Part 24 review pass 2 tracking: merged https://github.com/yaseralnajjar/sifr/pull/1026
-- Part 25 implementation: merged https://github.com/yaseralnajjar/sifr/pull/1027
-- Part 25 review pass 1 tracking: merged https://github.com/yaseralnajjar/sifr/pull/1028
-- Part 25 review pass 2 tracking: merged https://github.com/yaseralnajjar/sifr/pull/1029
-- Part 26 implementation: merged https://github.com/yaseralnajjar/sifr/pull/1030
-- Part 26 review pass 1 tracking: merged https://github.com/yaseralnajjar/sifr/pull/1031
-- Part 26 review pass 2 tracking: merged https://github.com/yaseralnajjar/sifr/pull/1032
-- Part 27 implementation: merged https://github.com/yaseralnajjar/sifr/pull/1033
-- Part 27 review pass 1 tracking: merged https://github.com/yaseralnajjar/sifr/pull/1034
-- Part 27 review pass 2 tracking: merged https://github.com/yaseralnajjar/sifr/pull/1035
-- Part 28 implementation: merged https://github.com/yaseralnajjar/sifr/pull/1036
-- Part 28 review pass 1 tracking: merged https://github.com/yaseralnajjar/sifr/pull/1037
-- Part 28 review pass 2 tracking: merged https://github.com/yaseralnajjar/sifr/pull/1038
-- Wave completion closure cycle (wave_30_1f): merged https://github.com/yaseralnajjar/sifr/pull/1039
-- Wave production-grade closure cycle (wave_30_1f): merged https://github.com/yaseralnajjar/sifr/pull/1040
-- Milestone completion review cycle (updated): merged https://github.com/yaseralnajjar/sifr/pull/1041
-- Milestone 30_2/30_3 remediation: merged https://github.com/yaseralnajjar/sifr/pull/1042
-- Milestone completion closure cycle (approved rerun): merged https://github.com/yaseralnajjar/sifr/pull/1043
-- Milestone production-grade closure cycle (approved rerun): merged https://github.com/yaseralnajjar/sifr/pull/1044
-- Phase completion closure cycle (approved rerun): merged https://github.com/yaseralnajjar/sifr/pull/1045
+- Part 1 implementation: merged https://github.com/sifr-lang/sifr/pull/929
+- Part 1 review pass 1 tracking: merged https://github.com/sifr-lang/sifr/pull/930
+- Part 1 review pass 2 remediation + sign-off: merged https://github.com/sifr-lang/sifr/pull/931
+- Part 1 closeout log sync: merged https://github.com/sifr-lang/sifr/pull/932
+- Wave completion closure cycle: merged https://github.com/sifr-lang/sifr/pull/933
+- Wave production-grade closure cycle: merged https://github.com/sifr-lang/sifr/pull/934
+- Milestone completion closure cycle: merged https://github.com/sifr-lang/sifr/pull/935
+- Milestone production-grade closure cycle: merged https://github.com/sifr-lang/sifr/pull/936
+- Phase completion closure cycle: merged https://github.com/sifr-lang/sifr/pull/937
+- Part 2 implementation: merged https://github.com/sifr-lang/sifr/pull/939
+- Part 2 review pass 1 tracking: merged https://github.com/sifr-lang/sifr/pull/940
+- Part 2 review pass 2 tracking: merged https://github.com/sifr-lang/sifr/pull/941
+- Phase production-grade closure cycle: merged https://github.com/sifr-lang/sifr/pull/938
+- Part 3 implementation: merged https://github.com/sifr-lang/sifr/pull/942
+- Part 3 review pass 1 tracking: merged https://github.com/sifr-lang/sifr/pull/943
+- Part 3 review pass 2 tracking: merged https://github.com/sifr-lang/sifr/pull/944
+- Part 4 implementation: merged https://github.com/sifr-lang/sifr/pull/945
+- Part 4 review pass 1 tracking: merged https://github.com/sifr-lang/sifr/pull/946
+- Part 4 review pass 2 tracking: merged https://github.com/sifr-lang/sifr/pull/947
+- Part 5 implementation: merged https://github.com/sifr-lang/sifr/pull/948
+- Part 5 review pass 1 remediation: merged https://github.com/sifr-lang/sifr/pull/949
+- Part 5 review pass 2 tracking: merged https://github.com/sifr-lang/sifr/pull/950
+- Part 6 implementation: merged https://github.com/sifr-lang/sifr/pull/951
+- Part 6 review pass 1 remediation: merged https://github.com/sifr-lang/sifr/pull/953
+- Part 6 review pass 2 tracking: merged https://github.com/sifr-lang/sifr/pull/954
+- Part 7 implementation: merged https://github.com/sifr-lang/sifr/pull/955
+- Part 7 review pass 1 tracking: merged https://github.com/sifr-lang/sifr/pull/956
+- Part 7 review pass 2 tracking: merged https://github.com/sifr-lang/sifr/pull/957
+- Part 8 implementation: merged https://github.com/sifr-lang/sifr/pull/958
+- Part 8 review pass 1 tracking: merged https://github.com/sifr-lang/sifr/pull/959
+- Part 8 review pass 2 tracking: merged https://github.com/sifr-lang/sifr/pull/960
+- Wave completion closure cycle (wave_30_1b): merged https://github.com/sifr-lang/sifr/pull/961
+- Wave production-grade closure cycle (wave_30_1b): merged https://github.com/sifr-lang/sifr/pull/962
+- Part 9 implementation: merged https://github.com/sifr-lang/sifr/pull/963
+- Part 9 review pass 1 remediation: merged https://github.com/sifr-lang/sifr/pull/964
+- Part 9 review pass 2 tracking: merged https://github.com/sifr-lang/sifr/pull/965
+- Part 10 implementation: merged https://github.com/sifr-lang/sifr/pull/967
+- Part 10 review pass 1 remediation: merged https://github.com/sifr-lang/sifr/pull/968
+- Part 11 implementation: merged https://github.com/sifr-lang/sifr/pull/970
+- Part 11 review pass 1 tracking: merged https://github.com/sifr-lang/sifr/pull/971
+- Part 11 review pass 2 tracking: merged https://github.com/sifr-lang/sifr/pull/972
+- Part 12 implementation: merged https://github.com/sifr-lang/sifr/pull/974
+- Part 12 review pass 1 tracking: merged https://github.com/sifr-lang/sifr/pull/975
+- Part 12 review pass 2 tracking: merged https://github.com/sifr-lang/sifr/pull/976
+- Wave completion closure cycle (wave_30_1c): merged https://github.com/sifr-lang/sifr/pull/978
+- Wave production-grade closure cycle (wave_30_1c): merged https://github.com/sifr-lang/sifr/pull/979
+- Part 13 implementation: merged https://github.com/sifr-lang/sifr/pull/981
+- Part 13 review pass 1 tracking: merged https://github.com/sifr-lang/sifr/pull/982
+- Part 13 review pass 2 tracking: merged https://github.com/sifr-lang/sifr/pull/983
+- Part 14 implementation: merged https://github.com/sifr-lang/sifr/pull/985
+- Part 14 review pass 1 tracking: merged https://github.com/sifr-lang/sifr/pull/986
+- Part 14 review pass 2 tracking: merged https://github.com/sifr-lang/sifr/pull/987
+- Part 15 implementation: merged https://github.com/sifr-lang/sifr/pull/989
+- Part 15 review pass 1 tracking: merged https://github.com/sifr-lang/sifr/pull/990
+- Part 15 review pass 2 tracking: merged https://github.com/sifr-lang/sifr/pull/991
+- Part 16 implementation: merged https://github.com/sifr-lang/sifr/pull/993
+- Part 16 review pass 1 remediation: merged https://github.com/sifr-lang/sifr/pull/994
+- Part 16 review pass 2 tracking: merged https://github.com/sifr-lang/sifr/pull/995
+- Part 10 review pass 2 tracking: merged https://github.com/sifr-lang/sifr/pull/969
+- Part 11 closeout log sync: merged https://github.com/sifr-lang/sifr/pull/973
+- Part 12 closeout log sync: merged https://github.com/sifr-lang/sifr/pull/977
+- Wave closure log sync (wave_30_1c): merged https://github.com/sifr-lang/sifr/pull/980
+- Part 13 closeout log sync: merged https://github.com/sifr-lang/sifr/pull/984
+- Part 14 closeout log sync: merged https://github.com/sifr-lang/sifr/pull/988
+- Part 15 closeout log sync: merged https://github.com/sifr-lang/sifr/pull/992
+- Part 16 closeout log sync: merged https://github.com/sifr-lang/sifr/pull/996
+- Wave completion closure cycle (wave_30_1d): merged https://github.com/sifr-lang/sifr/pull/997
+- Wave production-grade closure cycle (wave_30_1d): merged https://github.com/sifr-lang/sifr/pull/998
+- Part 17 implementation: merged https://github.com/sifr-lang/sifr/pull/999
+- Part 17 review pass 1 tracking: merged https://github.com/sifr-lang/sifr/pull/1000
+- Part 17 review pass 2 tracking: merged https://github.com/sifr-lang/sifr/pull/1001
+- Part 18 implementation: merged https://github.com/sifr-lang/sifr/pull/1002
+- Part 18 review pass 1 remediation: merged https://github.com/sifr-lang/sifr/pull/1003
+- Part 18 review pass 2 tracking: merged https://github.com/sifr-lang/sifr/pull/1004
+- Part 19 implementation: merged https://github.com/sifr-lang/sifr/pull/1005
+- Part 19 review pass 1 tracking: merged https://github.com/sifr-lang/sifr/pull/1006
+- Part 19 review pass 2 tracking: merged https://github.com/sifr-lang/sifr/pull/1007
+- Part 20 implementation: merged https://github.com/sifr-lang/sifr/pull/1008
+- Part 20 review pass 1 tracking: merged https://github.com/sifr-lang/sifr/pull/1009
+- Part 20 review pass 2 tracking: merged https://github.com/sifr-lang/sifr/pull/1010
+- Part 21 implementation: merged https://github.com/sifr-lang/sifr/pull/1012
+- Part 21 review pass 1 tracking: merged https://github.com/sifr-lang/sifr/pull/1013
+- Part 21 review pass 2 remediation + pass 3 approval: merged https://github.com/sifr-lang/sifr/pull/1014
+- Part 21 closeout log sync: merged https://github.com/sifr-lang/sifr/pull/1015
+- Part 22 implementation: merged https://github.com/sifr-lang/sifr/pull/1016
+- Part 22 review pass 1 remediation: merged https://github.com/sifr-lang/sifr/pull/1017
+- Part 22 review pass 2 tracking: merged https://github.com/sifr-lang/sifr/pull/1018
+- Part 23 implementation: merged https://github.com/sifr-lang/sifr/pull/1019
+- Part 23 review pass 1 tracking: merged https://github.com/sifr-lang/sifr/pull/1020
+- Part 23 review pass 2 tracking: merged https://github.com/sifr-lang/sifr/pull/1021
+- Wave completion closure cycle (wave_30_1e): merged https://github.com/sifr-lang/sifr/pull/1022
+- Wave production-grade closure cycle (wave_30_1e): merged https://github.com/sifr-lang/sifr/pull/1023
+- Part 24 implementation: merged https://github.com/sifr-lang/sifr/pull/1024
+- Part 24 review pass 1 tracking: merged https://github.com/sifr-lang/sifr/pull/1025
+- Part 24 review pass 2 tracking: merged https://github.com/sifr-lang/sifr/pull/1026
+- Part 25 implementation: merged https://github.com/sifr-lang/sifr/pull/1027
+- Part 25 review pass 1 tracking: merged https://github.com/sifr-lang/sifr/pull/1028
+- Part 25 review pass 2 tracking: merged https://github.com/sifr-lang/sifr/pull/1029
+- Part 26 implementation: merged https://github.com/sifr-lang/sifr/pull/1030
+- Part 26 review pass 1 tracking: merged https://github.com/sifr-lang/sifr/pull/1031
+- Part 26 review pass 2 tracking: merged https://github.com/sifr-lang/sifr/pull/1032
+- Part 27 implementation: merged https://github.com/sifr-lang/sifr/pull/1033
+- Part 27 review pass 1 tracking: merged https://github.com/sifr-lang/sifr/pull/1034
+- Part 27 review pass 2 tracking: merged https://github.com/sifr-lang/sifr/pull/1035
+- Part 28 implementation: merged https://github.com/sifr-lang/sifr/pull/1036
+- Part 28 review pass 1 tracking: merged https://github.com/sifr-lang/sifr/pull/1037
+- Part 28 review pass 2 tracking: merged https://github.com/sifr-lang/sifr/pull/1038
+- Wave completion closure cycle (wave_30_1f): merged https://github.com/sifr-lang/sifr/pull/1039
+- Wave production-grade closure cycle (wave_30_1f): merged https://github.com/sifr-lang/sifr/pull/1040
+- Milestone completion review cycle (updated): merged https://github.com/sifr-lang/sifr/pull/1041
+- Milestone 30_2/30_3 remediation: merged https://github.com/sifr-lang/sifr/pull/1042
+- Milestone completion closure cycle (approved rerun): merged https://github.com/sifr-lang/sifr/pull/1043
+- Milestone production-grade closure cycle (approved rerun): merged https://github.com/sifr-lang/sifr/pull/1044
+- Phase completion closure cycle (approved rerun): merged https://github.com/sifr-lang/sifr/pull/1045
 
 ## External Review Passes
 - Reviewer pass 1 request output: `reviews/phase-30-part-1-env-review.md`

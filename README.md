@@ -84,7 +84,7 @@ def main():
 ### Build the compiler
 
 ```bash
-git clone https://github.com/yaseralnajjar/sifr.git
+git clone https://github.com/sifr-lang/sifr.git
 cd sifr
 cargo build --release
 ```
@@ -122,7 +122,7 @@ For stable command-mode behavior and edge-case guarantees, see the [CLI Command 
 Want to see how a Sifr program travels from source text to a native binary?
 The interactive pipeline visualizer walks through every compiler step with a live `factorial` example at each stage.
 
-**[▶ Open the Compiler Pipeline Visualizer](https://htmlpreview.github.io/?https://github.com/yaseralnajjar/sifr/blob/main/internal_docs/compiler_pipeline.html)**
+**[▶ Open the Compiler Pipeline Visualizer](https://htmlpreview.github.io/?https://github.com/sifr-lang/sifr/blob/main/internal_docs/compiler_pipeline.html)**
 
 ## License
 

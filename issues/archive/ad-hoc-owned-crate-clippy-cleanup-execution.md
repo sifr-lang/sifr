@@ -34,7 +34,7 @@ Notes:
 - Source inventory after edits no longer shows wildcard imports or `push_str(&format!(...))` in `sifr_hir`.
 - Targeted validation passed with `cargo clippy -p sifr_hir --message-format short -- -D warnings` and `cargo test -p sifr_hir --lib`.
 - Test-only explicit imports were fixed in `src/lower/expressions.rs` after the unit-test pass surfaced missing symbols.
-- PR: https://github.com/yaseralnajjar/sifr/pull/1099
+- PR: https://github.com/sifr-lang/sifr/pull/1099
 
 ## Part 2: `sifr_codegen`
 
@@ -58,7 +58,7 @@ Notes:
 - Targeted validation passed with `cargo clippy -p sifr_codegen --message-format short -- -D warnings`.
 - Smoke tests passed with `cargo test -p sifr_codegen simple_function_codegen --lib` and `cargo test -p sifr_codegen generate_rust_multi_exports_non_main_items --lib`.
 - Test-only explicit imports were fixed in `src/lib_codegen_tests.rs` after the targeted test run surfaced missing symbols.
-- PR: https://github.com/yaseralnajjar/sifr/pull/1099
+- PR: https://github.com/sifr-lang/sifr/pull/1099
 
 ## Part 3: residual owned crates
 
@@ -83,7 +83,7 @@ Notes:
 - CLI user-path validation passed with:
   - positive: `cargo run -q -p sifr -- check demos/milestone_enums_demo.sifr`
   - negative: `cargo run -q -p sifr -- check demos/milestone_generics_impl_demo.sifr` -> expected frontend type error
-- PR: https://github.com/yaseralnajjar/sifr/pull/1099
+- PR: https://github.com/sifr-lang/sifr/pull/1099
 
 ## Phase-wide Quality Gates
 

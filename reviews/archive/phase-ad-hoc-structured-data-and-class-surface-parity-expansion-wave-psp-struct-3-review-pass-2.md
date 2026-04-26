@@ -241,7 +241,7 @@ None - the implementation is complete and meets all contract requirements for pr
 
 ## References
 
-- Implementation PR: https://github.com/yaseralnajjar/sifr/pull/1278
+- Implementation PR: https://github.com/sifr-lang/sifr/pull/1278
 - Pass 1 Review: `reviews/phase-ad-hoc-structured-data-and-class-surface-parity-expansion-wave-psp-struct-3-review-pass-1.md`
 - Execution Ledger: `issues/ad-hoc-structured-data-and-class-surface-parity-expansion-execution.md`
 - Architecture Lock: `verification/stdlib/phase_psp_struct_architecture_lock.md`

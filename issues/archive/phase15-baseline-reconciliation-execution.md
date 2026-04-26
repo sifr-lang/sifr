@@ -22,7 +22,7 @@ status: done (2026-03-03, PR #793)
 - [x] Tag each finding with owning future phase
 - [x] Run milestone quality checks
 - [x] Run full local suite (waived by user for docs-only phase scope)
-- [x] Open PR, review, and merge (https://github.com/yaseralnajjar/sifr/pull/793)
+- [x] Open PR, review, and merge (https://github.com/sifr-lang/sifr/pull/793)
 - [x] Mark part complete in phase doc and this checklist
 
 ## Part 2: milestone_15_2 Phase Contract Definition
@@ -34,7 +34,7 @@ status: done (2026-03-03, PR #794)
 - [x] Ensure every phase gate maps to at least one concrete validation command
 - [x] Run milestone quality checks
 - [x] Run full local suite (waived by user for docs-only phase scope)
-- [x] Open PR, review, and merge (https://github.com/yaseralnajjar/sifr/pull/794)
+- [x] Open PR, review, and merge (https://github.com/sifr-lang/sifr/pull/794)
 - [x] Mark part complete in phase doc and this checklist
 
 ## Part 3: milestone_15_3 Stakeholder Sign-off Snapshot
@@ -45,17 +45,17 @@ status: done (2026-03-03, PR #795)
 - [x] Update roadmap and phase status to reflect Phase 15 completion
 - [x] Run milestone quality checks
 - [x] Run full local suite (waived by user for docs-only phase scope)
-- [x] Open PR, review, and merge (https://github.com/yaseralnajjar/sifr/pull/795)
+- [x] Open PR, review, and merge (https://github.com/sifr-lang/sifr/pull/795)
 - [x] Mark phase complete in all planning docs
 
 ## PR Log
-- Part 1: https://github.com/yaseralnajjar/sifr/pull/793 (merged)
-- Part 2: https://github.com/yaseralnajjar/sifr/pull/794 (merged)
-- Part 3: https://github.com/yaseralnajjar/sifr/pull/795 (merged)
+- Part 1: https://github.com/sifr-lang/sifr/pull/793 (merged)
+- Part 2: https://github.com/sifr-lang/sifr/pull/794 (merged)
+- Part 3: https://github.com/sifr-lang/sifr/pull/795 (merged)
 
 ## Reviewer Follow-up
 - External review pass 1 output: `reviews/phase15-review.md`
-- Remediation PR (pass 1): https://github.com/yaseralnajjar/sifr/pull/797 (merged)
+- Remediation PR (pass 1): https://github.com/sifr-lang/sifr/pull/797 (merged)
 - External review pass 2 output: `reviews/phase15-production-grade-review.md`
-- Remediation PR (pass 2): https://github.com/yaseralnajjar/sifr/pull/798 (merged)
-- Milestone coverage closure: https://github.com/yaseralnajjar/sifr/pull/799 (merged)
+- Remediation PR (pass 2): https://github.com/sifr-lang/sifr/pull/798 (merged)
+- Milestone coverage closure: https://github.com/sifr-lang/sifr/pull/799 (merged)

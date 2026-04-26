@@ -92,14 +92,14 @@ Validation evidence:
 - Full suite: `/Users/yaseralnajjar/work/sifr/codebase/scripts/run_all_tests.sh` -> pass.
 
 ## PR Log
-- Part 1: https://github.com/yaseralnajjar/sifr/pull/813 (merged)
-- Part 2: https://github.com/yaseralnajjar/sifr/pull/814 (merged)
-- Part 3: https://github.com/yaseralnajjar/sifr/pull/815 (merged)
-- Part 4: https://github.com/yaseralnajjar/sifr/pull/828 (merged)
+- Part 1: https://github.com/sifr-lang/sifr/pull/813 (merged)
+- Part 2: https://github.com/sifr-lang/sifr/pull/814 (merged)
+- Part 3: https://github.com/sifr-lang/sifr/pull/815 (merged)
+- Part 4: https://github.com/sifr-lang/sifr/pull/828 (merged)
 
 ## Reviewer Follow-up
 - External review pass 1 output: `reviews/phase17-review.md`
-- Remediation PR (pass 1): https://github.com/yaseralnajjar/sifr/pull/816 (merged)
+- Remediation PR (pass 1): https://github.com/sifr-lang/sifr/pull/816 (merged)
 - Triage outcome: reviewer findings were based on pre-merge code and were validated as already fixed by PRs #813, #814, and #815.
 - Validation commands used during triage:
   - `cargo test -q -p sifr_driver test_check_only_reports_frontend_phases`
@@ -107,7 +107,7 @@ Validation evidence:
   - `cargo test -q -p sifr_codegen test_generate_rust_test_emits_local_module_import_uses`
   - `cargo test -q -p sifr_codegen test_generate_rust_multi_exports_non_main_items`
 - External review pass 2 output: `reviews/phase17-production-grade-review.md`
-- Remediation PR (pass 2): https://github.com/yaseralnajjar/sifr/pull/817 (merged)
+- Remediation PR (pass 2): https://github.com/sifr-lang/sifr/pull/817 (merged)
 - Pass-2 triage outcome: production-grade review findings were also stale against current `origin/main` and validated as already fixed by PRs #813, #814, #815.
 - Validation commands used during pass-2 triage:
   - `cargo test -q -p sifr_driver test_check_only_reports_frontend_phases`
@@ -115,7 +115,7 @@ Validation evidence:
   - `cargo test -q -p sifr_codegen test_generate_rust_test_emits_local_module_import_uses`
   - `cargo test -q -p sifr_codegen test_generate_rust_multi_exports_non_main_items`
 - External review pass 3 output: `reviews/phase17-review-2.md`
-- Remediation PR (pass 3): https://github.com/yaseralnajjar/sifr/pull/824
+- Remediation PR (pass 3): https://github.com/sifr-lang/sifr/pull/824
 - Pass-3 remediation summary:
   - Scoped generated test-runner `lib.rs` to `cfg(test)` to eliminate non-test build unused-import/dead-code warnings without changing runtime behavior.
   - Added negative-path regression coverage for non-main unknown-module imports and cyclic/no-progress module lowering.
@@ -129,11 +129,11 @@ Validation evidence:
 - Additional verification command:
   - `cargo test -q -p sifr_driver test_compose_test_runner_lib_is_test_scoped`
 - External review pass 5 output: `reviews/phase17-review-3.md`
-- Remediation PR (pass 5): https://github.com/yaseralnajjar/sifr/pull/829
+- Remediation PR (pass 5): https://github.com/sifr-lang/sifr/pull/829
 - Pass-5 remediation summary:
   - Added explicit canonical import-form matrix table under milestone `17_4` to satisfy the quality-contract requirement for documented supported/unsupported/non-activating forms.
 - External review pass 6 output: `reviews/phase17-production-grade-review-3.md`
-- Remediation PR (pass 6): https://github.com/yaseralnajjar/sifr/pull/830
+- Remediation PR (pass 6): https://github.com/sifr-lang/sifr/pull/830
 - Pass-6 remediation summary:
   - Added explicit positive-path coverage for supported level-1 relative imports via `test_collect_project_modules_supports_single_level_relative_import`.
   - Updated milestone `17_4` demo to use supported relative form `from .helper import value`.

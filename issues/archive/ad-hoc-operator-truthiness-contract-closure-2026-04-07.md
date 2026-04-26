@@ -22,9 +22,9 @@ Source taxonomy artifact: `verification/leetcode/full_corpus_failure_taxonomy_20
     - `destructuring_and_assignment_target_surface_gap`: `1 -> 1`
     - `python_stdlib_and_builtin_parity_gap`: `10 -> 10`
 - implementation PRs:
-  - `https://github.com/yaseralnajjar/sifr/pull/1592` (WS1)
-  - `https://github.com/yaseralnajjar/sifr/pull/1593` (WS2)
-  - `https://github.com/yaseralnajjar/sifr/pull/1594` (WS3)
+  - `https://github.com/sifr-lang/sifr/pull/1592` (WS1)
+  - `https://github.com/sifr-lang/sifr/pull/1593` (WS2)
+  - `https://github.com/sifr-lang/sifr/pull/1594` (WS3)
 
 ## Scope
 

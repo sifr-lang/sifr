@@ -14,9 +14,9 @@ resolver = "2"
 [workspace.package]
 edition = "2021"
 rust-version = "1.75"
-homepage = "https://github.com/yaseralnajjar/sifr"
-documentation = "https://github.com/yaseralnajjar/sifr"
-repository = "https://github.com/yaseralnajjar/sifr"
+homepage = "https://github.com/sifr-lang/sifr"
+documentation = "https://github.com/sifr-lang/sifr"
+repository = "https://github.com/sifr-lang/sifr"
 authors = ["Yaser Al-Najjar"]
 license = "MIT"
 

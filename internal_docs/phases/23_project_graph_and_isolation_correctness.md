@@ -53,11 +53,11 @@ Make project and test compilation graph-correct, deterministic, and isolated per
   - Graph/discovery/isolation regressions are automatically caught before merge.
 
 ## Execution Progress
-- 2026-03-06: `milestone_23_1` completed (PR [#863](https://github.com/yaseralnajjar/sifr/pull/863)).
-- 2026-03-06: `milestone_23_2` completed (PR [#865](https://github.com/yaseralnajjar/sifr/pull/865)).
-- 2026-03-06: `milestone_23_3` completed (PR [#867](https://github.com/yaseralnajjar/sifr/pull/867)).
-- 2026-03-06: `milestone_23_4` completed (PR [#869](https://github.com/yaseralnajjar/sifr/pull/869)).
-- 2026-03-06: `milestone_23_5` completed (PR [#871](https://github.com/yaseralnajjar/sifr/pull/871)).
+- 2026-03-06: `milestone_23_1` completed (PR [#863](https://github.com/sifr-lang/sifr/pull/863)).
+- 2026-03-06: `milestone_23_2` completed (PR [#865](https://github.com/sifr-lang/sifr/pull/865)).
+- 2026-03-06: `milestone_23_3` completed (PR [#867](https://github.com/sifr-lang/sifr/pull/867)).
+- 2026-03-06: `milestone_23_4` completed (PR [#869](https://github.com/sifr-lang/sifr/pull/869)).
+- 2026-03-06: `milestone_23_5` completed (PR [#871](https://github.com/sifr-lang/sifr/pull/871)).
 
 ## Quality Contract
 - Entry criteria: Phase 22 is completed and frontend mode parity contract is in place.

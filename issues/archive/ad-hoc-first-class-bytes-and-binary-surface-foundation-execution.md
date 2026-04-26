@@ -56,7 +56,7 @@ Required entry records:
 ### wave_psp_bytes_0: Architecture Lock
 - Status: completed
 - Implementation PR:
-  - `#1291` (merged): https://github.com/yaseralnajjar/sifr/pull/1291
+  - `#1291` (merged): https://github.com/sifr-lang/sifr/pull/1291
 - Scope:
   - lock first-class immutable `bytes` contract and text/binary boundary for this phase
   - classify permanent diffs (`bytearray`, `memoryview`, buffer protocol, implicit coercions, non-UTF-8 codecs)
@@ -77,7 +77,7 @@ Required entry records:
 ### wave_psp_bytes_1: Core `bytes` Type and Compiler Support
 - Status: completed
 - Implementation PR:
-  - `#1294`: https://github.com/yaseralnajjar/sifr/pull/1294
+  - `#1294`: https://github.com/sifr-lang/sifr/pull/1294
 - Scope:
   - add first-class `Type::Bytes` in type-system inference/checking/union ordering
   - lower bytes literals and `bytes()` constructor through HIR/lowering/codegen as immutable sequence values
@@ -96,7 +96,7 @@ Required entry records:
 ### wave_psp_bytes_2: Conversion Surfaces and Compatibility Migration
 - Status: completed
 - Implementation PR:
-  - `#1297` (merged): https://github.com/yaseralnajjar/sifr/pull/1297
+  - `#1297` (merged): https://github.com/sifr-lang/sifr/pull/1297
 - Scope:
   - lower `bytes(size)` to a typed `Result[bytes, ValueError]` intrinsic path
   - lower `bytes.from_ints(list[int])` and `bytes.from_hex(str)` as first-class bytes factory calls
@@ -122,7 +122,7 @@ Required entry records:
 ### wave_psp_bytes_3: Downstream Contract Adoption and Governance Closeout
 - Status: completed
 - Implementation PR:
-  - `#1301` (merged): https://github.com/yaseralnajjar/sifr/pull/1301
+  - `#1301` (merged): https://github.com/sifr-lang/sifr/pull/1301
 - Scope:
   - migrate current shipped `io` binary method boundaries to first-class `bytes` (`FileHandle.read_bytes` / `write_bytes`) while keeping internal intrinsic names stable
   - add explicit wave-3 pass/fail coverage proving downstream binary-carrier contract adoption (`bytes`) and compile-time rejection of stale `list[int]` payload assumptions
@@ -144,7 +144,7 @@ Required entry records:
 ### wave_psp_bytes_4: Raw-Byte Backend and Bytes/List Lowering Separation
 - Status: completed
 - Implementation PR:
-  - `#1311` (merged): https://github.com/yaseralnajjar/sifr/pull/1311
+  - `#1311` (merged): https://github.com/sifr-lang/sifr/pull/1311
 - Scope:
   - move `Type::Bytes` backend storage off widened integer vectors onto raw-byte storage
   - remove bytes-native dependence on generic list lowering where it preserves the widened-storage assumption
@@ -166,7 +166,7 @@ Required entry records:
 ### wave_psp_bytes_5: Successor-Phase and FFI Readiness Closeout
 - Status: completed
 - Implementation PR:
-  - `#1313` (merged): https://github.com/yaseralnajjar/sifr/pull/1313
+  - `#1313` (merged): https://github.com/sifr-lang/sifr/pull/1313
 - Scope:
   - refresh runtime/file-object successor planning to assume raw-byte-backed `bytes`
   - refresh RNG/crypto successor planning to assume raw-byte-backed `bytes`

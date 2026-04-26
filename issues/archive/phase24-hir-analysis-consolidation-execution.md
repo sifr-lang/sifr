@@ -160,13 +160,13 @@ Validation evidence:
 - Negative path: matrix `negative_diagnostic_stability` row asserts repeated failure diagnostics are stable across runs.
 
 ## PR Log
-- Part 1: https://github.com/yaseralnajjar/sifr/pull/875
-- Part 2: https://github.com/yaseralnajjar/sifr/pull/877
-- Part 3: https://github.com/yaseralnajjar/sifr/pull/878
-- Part 4: https://github.com/yaseralnajjar/sifr/pull/879
-- Part 5: https://github.com/yaseralnajjar/sifr/pull/880
-- Review pass 1 remediation: https://github.com/yaseralnajjar/sifr/pull/881
-- Review pass 2 closeout: https://github.com/yaseralnajjar/sifr/pull/882
+- Part 1: https://github.com/sifr-lang/sifr/pull/875
+- Part 2: https://github.com/sifr-lang/sifr/pull/877
+- Part 3: https://github.com/sifr-lang/sifr/pull/878
+- Part 4: https://github.com/sifr-lang/sifr/pull/879
+- Part 5: https://github.com/sifr-lang/sifr/pull/880
+- Review pass 1 remediation: https://github.com/sifr-lang/sifr/pull/881
+- Review pass 2 closeout: https://github.com/sifr-lang/sifr/pull/882
 
 ## Reviewer Follow-up
 - External review pass 1 output: `reviews/phase24-review.md` (2026-03-06, APPROVED with notes)
@@ -178,9 +178,9 @@ Validation evidence:
   - `cargo test -q -p sifr_codegen hir_analysis::traversal::tests::` -> pass.
   - `cargo test -q -p sifr_codegen hir_analysis::queries::tests::` -> pass.
   - `/Users/yaseralnajjar/work/sifr/codebase/scripts/run_all_tests.sh` -> pass.
-- Remediation PR (pass 1): https://github.com/yaseralnajjar/sifr/pull/881
+- Remediation PR (pass 1): https://github.com/sifr-lang/sifr/pull/881
 - External review pass 2 output: `reviews/phase24-production-grade-review.md` (2026-03-06, APPROVED FOR PRODUCTION)
 - Pass 2 reviewer note validation:
   - Reviewed all listed risks/recommendations; all were non-blocking and already covered by current validation/architecture guarantees.
   - No additional correctness or architecture defects were identified requiring code changes in this pass.
-- Remediation PR (pass 2): https://github.com/yaseralnajjar/sifr/pull/882
+- Remediation PR (pass 2): https://github.com/sifr-lang/sifr/pull/882

@@ -3,8 +3,8 @@
 Status: closed
 Owner: ad_hoc_leetcode_divergence_closure_followup
 Source phase: `issues/ad-hoc-leetcode-divergence-closure-2026-04-24.md`
-Source PR: `https://github.com/yaseralnajjar/sifr/pull/1632`
-Merged remediation PR: `https://github.com/yaseralnajjar/sifr/pull/1635`
+Source PR: `https://github.com/sifr-lang/sifr/pull/1632`
+Merged remediation PR: `https://github.com/sifr-lang/sifr/pull/1635`
 Created: 2026-04-25
 
 ## Progress
@@ -19,7 +19,7 @@ Created: 2026-04-25
 - Fixed codegen for constant-index projection of non-Copy fields from optional tuples by cloning the projected field when the tuple is accessed through `Option.as_ref()`.
 - Added `crates/sifr/tests/e2e/pass/optional_tuple_string_projection.sifr`.
 - Full corpus rerun artifact: `verification/leetcode/full_corpus_current_results_20260425_ws6_fallback_remediation.json` with `208 PASS`, `203 NO_ORACLE`, and no `CHECK_ERROR`, `RUN_ERROR`, or `TIMEOUT`.
-- Merged as PR `https://github.com/yaseralnajjar/sifr/pull/1635`.
+- Merged as PR `https://github.com/sifr-lang/sifr/pull/1635`.
 
 ## Problem
 

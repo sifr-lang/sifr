@@ -76,12 +76,12 @@ Validation evidence:
 - Milestone demo: `cargo run -q -p sifr -- run demos/m16_3_ci_parity_smoke_hardening_demo.sifr` -> `m16_3 ci parity + smoke demo: ok`.
 
 ## PR Log
-- Part 1: https://github.com/yaseralnajjar/sifr/pull/806 (merged)
-- Part 2: https://github.com/yaseralnajjar/sifr/pull/807 (merged)
-- Part 3: https://github.com/yaseralnajjar/sifr/pull/808 (merged)
+- Part 1: https://github.com/sifr-lang/sifr/pull/806 (merged)
+- Part 2: https://github.com/sifr-lang/sifr/pull/807 (merged)
+- Part 3: https://github.com/sifr-lang/sifr/pull/808 (merged)
 
 ## Reviewer Follow-up
 - External review pass 1 output: `reviews/phase16-review.md`
-- Remediation PR (pass 1): https://github.com/yaseralnajjar/sifr/pull/810 (merged)
+- Remediation PR (pass 1): https://github.com/sifr-lang/sifr/pull/810 (merged)
 - External review pass 2 output: `reviews/phase16-production-grade-review.md`
-- Remediation PR (pass 2): https://github.com/yaseralnajjar/sifr/pull/811 (merged)
+- Remediation PR (pass 2): https://github.com/sifr-lang/sifr/pull/811 (merged)

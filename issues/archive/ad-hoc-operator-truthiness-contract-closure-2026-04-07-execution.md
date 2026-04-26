@@ -63,17 +63,17 @@ Owning phase doc: `issues/ad-hoc-operator-truthiness-contract-closure-2026-04-07
 - Wave WS1 (simple truthiness canonicalization)
   - Fixtures: `0007`, `0068`, `0416`, `0846`
   - Validation: targeted `check` + `run` all PASS
-  - PR: `https://github.com/yaseralnajjar/sifr/pull/1592` (merged)
+  - PR: `https://github.com/sifr-lang/sifr/pull/1592` (merged)
 
 - Wave WS2 (callable/return contract closure)
   - Fixtures: `0201`, `0371`, `1220`, `0931`, `0162`
   - Validation: targeted `check` + `run` all PASS
-  - PR: `https://github.com/yaseralnajjar/sifr/pull/1593` (merged)
+  - PR: `https://github.com/sifr-lang/sifr/pull/1593` (merged)
 
 - Wave WS3 (structural rewrite closure)
   - Fixtures: `0473`, `0735`, `0973`, `1514`, `0516`
   - Validation: targeted `check` + `run` all PASS
-  - PR: `https://github.com/yaseralnajjar/sifr/pull/1594` (merged)
+  - PR: `https://github.com/sifr-lang/sifr/pull/1594` (merged)
 
 - Wave WS4 (phase close validation/reporting)
   - Scoped confirmation artifact:

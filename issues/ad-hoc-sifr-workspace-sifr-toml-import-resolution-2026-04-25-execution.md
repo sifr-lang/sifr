@@ -19,7 +19,7 @@ Source issue: `issues/sifr-workspace-sifr-toml-import-resolution-2026-04-25.md`
 
 Status: merged
 Branch: ad-hoc/sifr-workspace-ws0
-PR: https://github.com/yaseralnajjar/sifr/pull/1639
+PR: https://github.com/sifr-lang/sifr/pull/1639
 Merged: 2026-04-25
 
 ### Planned Scope
@@ -41,7 +41,7 @@ Merged: 2026-04-25
 
 Status: merged
 Branch: ad-hoc/sifr-workspace-ws1
-PR: https://github.com/yaseralnajjar/sifr/pull/1642
+PR: https://github.com/sifr-lang/sifr/pull/1642
 Merged: 2026-04-25
 
 ### Planned Scope
@@ -61,7 +61,7 @@ Merged: 2026-04-25
 
 Status: merged
 Branch: ad-hoc/sifr-workspace-ws2
-PR: https://github.com/yaseralnajjar/sifr/pull/1640
+PR: https://github.com/sifr-lang/sifr/pull/1640
 Merged: 2026-04-25
 
 ### Planned Scope
@@ -82,7 +82,7 @@ Merged: 2026-04-25
 
 Status: merged
 Branch: ad-hoc/sifr-workspace-ws3
-PR: https://github.com/yaseralnajjar/sifr/pull/1641
+PR: https://github.com/sifr-lang/sifr/pull/1641
 Merged: 2026-04-25
 
 ### Planned Scope
@@ -105,7 +105,7 @@ Merged: 2026-04-25
 
 Status: merged
 Branch: ad-hoc/sifr-workspace-ws4
-PR: https://github.com/yaseralnajjar/sifr/pull/1643
+PR: https://github.com/sifr-lang/sifr/pull/1643
 Merged: 2026-04-25
 
 ### Planned Scope
@@ -126,7 +126,7 @@ Merged: 2026-04-25
 
 Status: merged
 Branch: ad-hoc/sifr-workspace-ws5
-PR: https://github.com/yaseralnajjar/sifr/pull/1644
+PR: https://github.com/sifr-lang/sifr/pull/1644
 Merged: 2026-04-25
 
 ### Planned Scope
@@ -151,7 +151,7 @@ Merged: 2026-04-25
 
 Status: merged
 Branch: ad-hoc/sifr-workspace-ws6
-PR: https://github.com/yaseralnajjar/sifr/pull/1645
+PR: https://github.com/sifr-lang/sifr/pull/1645
 Merged: 2026-04-25
 
 ### Planned Scope

@@ -55,8 +55,8 @@ Required entry records:
 ### wave_psp_struct_0: Architecture Lock
 - Status: completed
 - Implementation PR:
-  - `https://github.com/yaseralnajjar/sifr/pull/1269` (merged)
-  - review closure PR (pass 1): `https://github.com/yaseralnajjar/sifr/pull/1270` (merged)
+  - `https://github.com/sifr-lang/sifr/pull/1269` (merged)
+  - review closure PR (pass 1): `https://github.com/sifr-lang/sifr/pull/1270` (merged)
 - Scope:
   - contract lock for `json`, `datetime`, `uuid`, `csv`, `argparse`, `collections`
   - permanent-diff classification and enforcement fixtures
@@ -76,8 +76,8 @@ Required entry records:
 ### wave_psp_struct_1: Parser and Serialization Surface Expansion
 - Status: completed
 - Implementation PR:
-  - `https://github.com/yaseralnajjar/sifr/pull/1272` (merged)
-  - review closure PR (pass 1): `https://github.com/yaseralnajjar/sifr/pull/1273` (merged)
+  - `https://github.com/sifr-lang/sifr/pull/1272` (merged)
+  - review closure PR (pass 1): `https://github.com/sifr-lang/sifr/pull/1273` (merged)
 - Scope:
   - `json`: add `JSONEncoder`/`JSONDecoder` typed wrapper classes with file and handle load/dump helpers
   - `configparser`: add interpolation-aware `get(..., raw=...)`, `SectionProxy`, and ini write-back surface (`to_ini_string`, `write`)
@@ -93,7 +93,7 @@ Required entry records:
 ### wave_psp_struct_2: Collections and CLI Class-Surface Expansion
 - Status: completed
 - Implementation PR:
-  - `https://github.com/yaseralnajjar/sifr/pull/1275` (merged)
+  - `https://github.com/sifr-lang/sifr/pull/1275` (merged)
 - Scope:
   - `collections`: add `Counter(iterable=...)` constructor parity alongside mapping input, and promote `defaultdict` to an explicit typed class surface (`ensure`, `set`, `has`, `pop`, `clear`, `keys`, `values`, `items`, `len`)
   - `argparse`: add bounded `subparsers`, `nargs` forms (`int`, `?`, `*`, `+`), typed coercion (`str`/`int`/`float`/`bool`) via `add_argument_typed`, and namespace list support (`set_list`/`get_list`)
@@ -107,8 +107,8 @@ Required entry records:
 ### wave_psp_struct_3: UUID and Datetime Expansion
 - Status: completed
 - Implementation PR:
-  - `https://github.com/yaseralnajjar/sifr/pull/1278` (merged)
-  - review closure PR (pass 1): `https://github.com/yaseralnajjar/sifr/pull/1279` (merged)
+  - `https://github.com/sifr-lang/sifr/pull/1278` (merged)
+  - review closure PR (pass 1): `https://github.com/sifr-lang/sifr/pull/1279` (merged)
 - Scope:
   - `uuid`: add typed name-based generation (`uuid3`, `uuid5`) and exported namespace accessors (`NAMESPACE_DNS`, `NAMESPACE_URL`, `NAMESPACE_OID`, `NAMESPACE_X500`)
   - `datetime`: expand fixed-offset timezone surfaces (`UTC`, `utc`, `now(tz=...)`, `from_timestamp(..., tz=...)`, `datetime.astimezone(...)`) with explicit offset-aware ISO/timestamp behavior
@@ -122,8 +122,8 @@ Required entry records:
 ### wave_psp_struct_4: Text-Surface Polish and Governance Closure
 - Status: completed
 - Implementation PR:
-  - `https://github.com/yaseralnajjar/sifr/pull/1281` (merged)
-  - review closure PR (pass 1): `https://github.com/yaseralnajjar/sifr/pull/1282` (merged)
+  - `https://github.com/sifr-lang/sifr/pull/1281` (merged)
+  - review closure PR (pass 1): `https://github.com/sifr-lang/sifr/pull/1282` (merged)
 - Scope:
   - `textwrap`: expand `TextWrapper` adjacent option matrix with bounded deterministic fields (`expand_tabs`, `tabsize`, `replace_whitespace`, `drop_whitespace`, `break_on_hyphens`)
   - `html`: add top-level `escape(s, quote: bool = True)` polish while keeping package-level expansion (`html.parser`) explicitly unsupported

@@ -40,7 +40,7 @@ Loop per part: Plan -> Implement -> Validate -> Demo -> PR -> Review -> Merge ->
 
 ### milestone_driver_1: Public API Spine and Diagnostic Extraction
 - Status: complete
-- Implementation PR: https://github.com/yaseralnajjar/sifr/pull/1089
+- Implementation PR: https://github.com/sifr-lang/sifr/pull/1089
 - Implementation target:
   - reduce `crates/sifr_driver/src/lib.rs` to module wiring plus public re-exports for the stable public API
   - extract diagnostics, compile/public result types, panic-boundary helpers, and crate-root API surface into dedicated modules
@@ -61,7 +61,7 @@ Loop per part: Plan -> Implement -> Validate -> Demo -> PR -> Review -> Merge ->
 
 ### milestone_driver_2: Stdlib Bootstrap Extraction
 - Status: complete
-- Implementation PR: https://github.com/yaseralnajjar/sifr/pull/1090
+- Implementation PR: https://github.com/sifr-lang/sifr/pull/1090
 - Demo target:
   - `cargo run -q -p sifr -- run demos/m_driver_2_stdlib_bootstrap_demo.sifr`
 - Validation target:
@@ -76,7 +76,7 @@ Loop per part: Plan -> Implement -> Validate -> Demo -> PR -> Review -> Merge ->
 
 ### milestone_driver_3: Frontend and Project-Graph Extraction
 - Status: complete
-- Implementation PR: https://github.com/yaseralnajjar/sifr/pull/1091
+- Implementation PR: https://github.com/sifr-lang/sifr/pull/1091
 - Demo target:
   - `cargo run -q -p sifr -- run demos/m_driver_3_frontend_project_graph_demo/main.sifr`
 - Validation target:
@@ -93,7 +93,7 @@ Loop per part: Plan -> Implement -> Validate -> Demo -> PR -> Review -> Merge ->
 
 ### milestone_driver_4: Discovery, Workspace, and Build Orchestration Extraction
 - Status: complete
-- Implementation PR: https://github.com/yaseralnajjar/sifr/pull/1092
+- Implementation PR: https://github.com/sifr-lang/sifr/pull/1092
 - Demo target:
   - `cargo run -q -p sifr -- run demos/m_driver_4_build_orchestration_demo/main.sifr`
 - Validation target:
@@ -111,7 +111,7 @@ Loop per part: Plan -> Implement -> Validate -> Demo -> PR -> Review -> Merge ->
 
 ### milestone_driver_5: Test Runner Extraction
 - Status: complete
-- Implementation PR: https://github.com/yaseralnajjar/sifr/pull/1093
+- Implementation PR: https://github.com/sifr-lang/sifr/pull/1093
 - Demo target:
   - `cargo run -q -p sifr -- test demos/m_driver_5_test_runner_demo`
 - Validation target:
@@ -128,7 +128,7 @@ Loop per part: Plan -> Implement -> Validate -> Demo -> PR -> Review -> Merge ->
 
 ### milestone_driver_6: Test Suite Decomposition and Maintainability Guardrail
 - Status: complete
-- Implementation PR: https://github.com/yaseralnajjar/sifr/pull/1094
+- Implementation PR: https://github.com/sifr-lang/sifr/pull/1094
 - Demo target:
   - `python3 scripts/check_sifr_driver_maintainability_guardrails.py`
 - Validation target:
@@ -158,7 +158,7 @@ Loop per part: Plan -> Implement -> Validate -> Demo -> PR -> Review -> Merge ->
   - positive path: `cargo run -q -p sifr -- test demos/m_driver_5_test_runner_demo` -> executed the demo test runner successfully with `test_import_parity ... ok`
   - local gate: `/Users/yaseralnajjar/work/sifr/codebase/scripts/run_all_tests.sh --profile quick` -> passed (`verification ok: variants=64, failures=0, blocking_failures=0, non_blocking_failures=0`)
 - Follow-up PR:
-  - https://github.com/yaseralnajjar/sifr/pull/1095
+  - https://github.com/sifr-lang/sifr/pull/1095
 
 ### review_pass_2
 - Reviewer artifact:
@@ -172,4 +172,4 @@ Loop per part: Plan -> Implement -> Validate -> Demo -> PR -> Review -> Merge ->
   - positive path: `cargo run -q -p sifr -- test demos/m_driver_5_test_runner_demo` -> executed the demo test runner successfully with `test_import_parity ... ok`
   - local gate: `/Users/yaseralnajjar/work/sifr/codebase/scripts/run_all_tests.sh --profile quick` -> passed (`verification ok: variants=64, failures=0, blocking_failures=0, non_blocking_failures=0`)
 - Follow-up PR:
-  - https://github.com/yaseralnajjar/sifr/pull/1097
+  - https://github.com/sifr-lang/sifr/pull/1097

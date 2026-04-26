@@ -410,8 +410,8 @@ test result: ok. 39 passed; 0 failed
 
 ### PR Links
 
-- Part 1: https://github.com/yaseralnajjar/sifr/pull/883
-- Part 2: https://github.com/yaseralnajjar/sifr/pull/884
-- Part 3: https://github.com/yaseralnajjar/sifr/pull/885
-- Part 4: https://github.com/yaseralnajjar/sifr/pull/886
-- Part 5: https://github.com/yaseralnajjar/sifr/pull/887
+- Part 1: https://github.com/sifr-lang/sifr/pull/883
+- Part 2: https://github.com/sifr-lang/sifr/pull/884
+- Part 3: https://github.com/sifr-lang/sifr/pull/885
+- Part 4: https://github.com/sifr-lang/sifr/pull/886
+- Part 5: https://github.com/sifr-lang/sifr/pull/887

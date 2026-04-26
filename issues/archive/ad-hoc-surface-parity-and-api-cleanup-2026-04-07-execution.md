@@ -107,7 +107,7 @@ Current scoped fixture total: `22`
   - Scope delta:
     - scoped fixtures no longer emit `min()/max() takes 1 or 2 arguments`; residual diagnostics are secondary non-WS1 blockers
   - PR:
-    - `https://github.com/yaseralnajjar/sifr/pull/1596` (merged)
+    - `https://github.com/sifr-lang/sifr/pull/1596` (merged)
 
 - Wave WS2 (membership parity for `range` and compat mapping wrappers)
   - Compiler changes:
@@ -135,7 +135,7 @@ Current scoped fixture total: `22`
     - scoped fixtures no longer emit `range` membership diagnostics
     - compat mapping membership diagnostic (`__compat_defaultdict_list`) is removed
   - PR:
-    - `https://github.com/yaseralnajjar/sifr/pull/1597` (merged)
+    - `https://github.com/sifr-lang/sifr/pull/1597` (merged)
 
 - Wave WS4 (empty-container specialization repair)
   - Compiler changes:
@@ -153,7 +153,7 @@ Current scoped fixture total: `22`
     - `0290_word_pattern` now passes; scoped dict-specialization drift is removed
     - `1345_jump_game_iv` still has residual non-WS4 blockers
   - PR:
-    - `https://github.com/yaseralnajjar/sifr/pull/1598` (merged)
+    - `https://github.com/sifr-lang/sifr/pull/1598` (merged)
 
 - Wave WS3 (iterator consumer stabilization and tuple heap comparability)
   - Compiler changes:
@@ -183,7 +183,7 @@ Current scoped fixture total: `22`
     - `1834_single_threaded_cpu` no longer fails on iterator-consumer parity; residual issues are secondary (`mut` param and `heapq` optional/Any typing flow)
     - `1851_minimum_interval_to_include_each_query` no longer fails on tuple comparability; residual issue is optional arithmetic narrowing
   - PR:
-    - `https://github.com/yaseralnajjar/sifr/pull/1599` (merged)
+    - `https://github.com/sifr-lang/sifr/pull/1599` (merged)
 
 - Wave WS5 + WS6 (codegen defect closure + canonical adaptation sweep)
   - Compiler/codegen closure:
@@ -199,10 +199,10 @@ Current scoped fixture total: `22`
     - `scripts/run_all_tests.sh --profile quick` pass
     - `scripts/run_all_tests.sh` (profile `pr`) pass
   - PR:
-    - `https://github.com/yaseralnajjar/sifr/pull/1600` (merged)
+    - `https://github.com/sifr-lang/sifr/pull/1600` (merged)
 
 - Wave WS7 (documentation closure consistency)
   - Change:
     - parent phase doc updated with merged PR ledger section for WS1-WS6
   - PR:
-    - `https://github.com/yaseralnajjar/sifr/pull/1602` (merged)
+    - `https://github.com/sifr-lang/sifr/pull/1602` (merged)
