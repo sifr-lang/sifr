@@ -5,6 +5,7 @@
 //!   sifr run <file.sifr>      Compile and run
 //!   sifr check <file.sifr>    Type-check only
 //!   sifr emit <file.sifr>     Show generated Rust code
+#![cfg_attr(test, allow(clippy::expect_used, clippy::unwrap_used))]
 use clap::{Parser, Subcommand, ValueEnum};
 use sifr_driver::{
     apply_diagnostic_recovery_limits, build, build_cached_project, build_cached_single_file,

@@ -1,3 +1,5 @@
+#![allow(clippy::expect_used, clippy::unwrap_used)]
+
 #[path = "validation_contracts/mod.rs"]
 mod validation_contracts;
 

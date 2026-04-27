@@ -96,10 +96,10 @@ impl RustEmitter {
                 if matches!(func.as_ref(), RustExpr::Path(path) if path.len() == 1 && path[0] == "Some")
                     && args.len() == 1 =>
             {
-                let inner = args
-                    .into_iter()
-                    .next()
-                    .expect("checked Some(_) argument count");
+                let mut args_iter = args.into_iter();
+                let Some(inner) = args_iter.next() else {
+                    unreachable!("Some(_) call must have exactly one argument");
+                };
                 if Self::is_box_new_call_expr(&inner) {
                     RustExpr::FnCall {
                         func,

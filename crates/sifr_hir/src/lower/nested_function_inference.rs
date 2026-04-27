@@ -770,13 +770,9 @@ fn analyze_stmt(
             }
         }
         Stmt::FunctionDef(func) => {
-            if !states.contains_key(func.name.as_str()) {
+            let Some(state) = states.get(func.name.as_str()).cloned() else {
                 return;
-            }
-            let state = states
-                .get(func.name.as_str())
-                .cloned()
-                .expect("state present");
+            };
             let outer_names = env.vars.keys().cloned().collect::<HashSet<_>>();
             let param_names = state
                 .params

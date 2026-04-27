@@ -953,11 +953,11 @@ pub(super) fn lower_pattern(
                     ..
                 }) = &class_ty
                 {
-                    let found = class_fields
+                    let Some(field_ty) = class_fields
                         .iter()
                         .find(|(n, _)| n == &field_name)
-                        .map(|(_, t)| t.clone());
-                    if found.is_none() {
+                        .map(|(_, t)| t.clone())
+                    else {
                         ctx.error(format!(
                             "class '{}' has no field '{}' — available fields: {}",
                             class_name,
@@ -969,8 +969,8 @@ pub(super) fn lower_pattern(
                                 .join(", ")
                         ));
                         return None;
-                    }
-                    found.unwrap()
+                    };
+                    field_ty
                 } else {
                     Type::Any
                 };
@@ -1903,7 +1903,7 @@ pub(super) fn detect_narrowing_condition(
             if conditions.is_empty() {
                 None
             } else if conditions.len() == 1 {
-                Some(conditions.into_iter().next().unwrap())
+                conditions.into_iter().next()
             } else {
                 Some(NarrowingCondition::And(conditions))
             }
@@ -1918,7 +1918,7 @@ pub(super) fn detect_narrowing_condition(
             if conditions.is_empty() {
                 None
             } else if conditions.len() == 1 {
-                Some(conditions.into_iter().next().unwrap())
+                conditions.into_iter().next()
             } else {
                 Some(NarrowingCondition::Or(conditions))
             }

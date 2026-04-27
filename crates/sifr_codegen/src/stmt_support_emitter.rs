@@ -3800,9 +3800,9 @@ impl RustEmitter {
                 let mut lhs_expr = left.as_ref();
                 let mut lowered_chain: Option<crate::RustExpr> = None;
                 for (idx, op) in ops.iter().enumerate() {
-                    let rhs_expr = comparators
-                        .get(idx)
-                        .expect("compare ops/comparators length should match");
+                    let Some(rhs_expr) = comparators.get(idx) else {
+                        unreachable!("compare ops/comparators lengths checked equal");
+                    };
                     let lowered_op = match op.as_str() {
                         "==" | "!=" | "<" | "<=" | ">" | ">=" => op.clone(),
                         "is" => "==".to_string(),
@@ -5058,9 +5058,9 @@ impl RustEmitter {
                     && args.len() == 1 =>
             {
                 let mut args_iter = args.into_iter();
-                let inner = args_iter
-                    .next()
-                    .expect("checked args.len() == 1 for Some(_) call");
+                let Some(inner) = args_iter.next() else {
+                    unreachable!("Some(_) call must have exactly one argument");
+                };
                 if Self::is_box_new_call_expr_for_ir(&inner) {
                     crate::RustExpr::FnCall {
                         func,
@@ -6337,6 +6337,11 @@ impl RustEmitter {
                 crate::resolve_alias_type_for_plain_call(option_inner_ty),
                 Type::Int | Type::LiteralInt(_) | Type::BigInt | Type::Float
             ) {
+                let Some(zero_literal) =
+                    Self::zero_literal_for_numeric_truthiness_type_for_ir(option_inner_ty)
+                else {
+                    unreachable!("numeric Option truthiness guard must have a zero literal");
+                };
                 return Ok(Some(crate::RustExpr::MethodCall {
                     receiver: Box::new(lowered_option_expr),
                     method: "is_some_and".to_string(),
@@ -6348,12 +6353,7 @@ impl RustEmitter {
                         body: Box::new(crate::RustExpr::BinOp {
                             left: Box::new(crate::RustExpr::Ident("__v".to_string())),
                             op: "!=".to_string(),
-                            right: Box::new(
-                                Self::zero_literal_for_numeric_truthiness_type_for_ir(
-                                    option_inner_ty,
-                                )
-                                .expect("numeric option inner types should map to a zero literal"),
-                            ),
+                            right: Box::new(zero_literal),
                         }),
                         is_move: false,
                     }],

@@ -22,7 +22,14 @@ pub fn make_union(types: Vec<Type>) -> Type {
 
     match members.len() {
         0 => Type::Never,
-        1 => members.into_iter().next().unwrap(),
+        1 => {
+            let mut iter = members.into_iter();
+            if let Some(member) = iter.next() {
+                member
+            } else {
+                unreachable!("single-element union arm must contain one member")
+            }
+        }
         _ => Type::Union(members),
     }
 }
