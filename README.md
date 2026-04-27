@@ -89,6 +89,20 @@ cd sifr
 cargo build --release
 ```
 
+### Restore optional sub-repositories
+
+Some large audit corpora live in separate Git repositories and are cloned back
+into their expected paths when needed. The LeetCode audit corpus lives at
+[`sifr-lang/leetcode`](https://github.com/sifr-lang/leetcode) and is restored to
+`audits/leetcode`.
+
+```bash
+scripts/clone_subrepos.sh
+```
+
+The script is safe to run repeatedly. It clones missing sub-repositories and
+fast-forwards existing clean checkouts.
+
 ### Compile and run a `.sifr` file
 
 ```bash

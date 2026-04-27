@@ -43,11 +43,11 @@ class Phase31LeetCodeTests(unittest.TestCase):
         self.assertEqual(len(inventory), 411)
         self.assertEqual(
             sum(1 for entry in inventory if entry["oracle_mode"] == "embedded_asserts"),
-            208,
+            411,
         )
         self.assertEqual(
             sum(1 for entry in inventory if entry["oracle_mode"] == "no_oracle"),
-            203,
+            0,
         )
 
     def test_runner_classifies_check_error(self) -> None:
