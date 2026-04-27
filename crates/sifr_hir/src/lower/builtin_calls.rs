@@ -731,7 +731,7 @@ pub(super) fn lower_isinstance_call(call: &ExprCall, ctx: &mut LowerCtx) -> Opti
     }
     let arg = lower_expr(&call.arguments.args[0], ctx)?;
     let type_name = match &call.arguments.args[1] {
-        Expr::Name(n) => n.id.clone(),
+        Expr::Name(n) => n.id.to_string(),
         _ => "unknown".to_string(),
     };
     Some(HirExpr::Call {

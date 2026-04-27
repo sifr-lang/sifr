@@ -169,7 +169,7 @@ fn literal_usize(expr: &Expr) -> Option<usize> {
 
 fn sequence_guard_target_name(expr: &Expr) -> Option<String> {
     match expr {
-        Expr::Name(name) => Some(name.id.clone()),
+        Expr::Name(name) => Some(name.id.to_string()),
         Expr::Attribute(attr) => {
             let base = sequence_guard_target_name(attr.value.as_ref())?;
             Some(format!("{base}.{}", attr.attr))

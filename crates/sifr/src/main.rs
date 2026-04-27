@@ -128,7 +128,7 @@ fn has_local_project_imports(file: &Path) -> bool {
         return false;
     };
     let parsed = match parse_module(&source) {
-        Ok(parsed) if parsed.is_valid() => parsed,
+        Ok(parsed) if parsed.has_valid_syntax() => parsed,
         _ => return false,
     };
 

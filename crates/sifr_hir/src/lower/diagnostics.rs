@@ -185,7 +185,7 @@ pub(super) fn collect_enum_variants(class_def: &StmtClassDef) -> Vec<(String, Op
             Stmt::Assign(assign) => {
                 if assign.targets.len() == 1 {
                     if let Expr::Name(name) = &assign.targets[0] {
-                        let variant_name = name.id.clone();
+                        let variant_name = name.id.to_string();
                         // Check if it has an integer value
                         let value = if let Expr::NumberLiteral(num) = assign.value.as_ref() {
                             if let sifr_python_ast::Number::Int(i) = &num.value {
@@ -205,7 +205,7 @@ pub(super) fn collect_enum_variants(class_def: &StmtClassDef) -> Vec<(String, Op
             Stmt::AnnAssign(ann) => {
                 // `RED: int = 1` style
                 if let Expr::Name(name) = ann.target.as_ref() {
-                    let variant_name = name.id.clone();
+                    let variant_name = name.id.to_string();
                     let value = if let Some(val_expr) = &ann.value {
                         if let Expr::NumberLiteral(num) = val_expr.as_ref() {
                             if let sifr_python_ast::Number::Int(i) = &num.value {

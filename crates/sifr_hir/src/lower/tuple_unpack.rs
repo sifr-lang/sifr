@@ -16,7 +16,7 @@ enum TupleAssignTarget {
 
 fn lower_tuple_target(elt: &Expr, ctx: &mut LowerCtx) -> Option<TupleAssignTarget> {
     match elt {
-        Expr::Name(n) => Some(TupleAssignTarget::Name(n.id.clone())),
+        Expr::Name(n) => Some(TupleAssignTarget::Name(n.id.to_string())),
         Expr::Attribute(ExprAttribute { value, attr, .. }) => {
             let Expr::Name(object_name) = value.as_ref() else {
                 ctx.error(
@@ -24,7 +24,7 @@ fn lower_tuple_target(elt: &Expr, ctx: &mut LowerCtx) -> Option<TupleAssignTarge
                 );
                 return None;
             };
-            let object = object_name.id.clone();
+            let object = object_name.id.to_string();
             if !ensure_mutable_parameter_binding(ctx, &object, "mutate through") {
                 return None;
             }
@@ -175,7 +175,7 @@ pub(super) fn lower_star_unpack_assign(
                     return None;
                 }
                 if let Expr::Name(n) = starred.value.as_ref() {
-                    let name = n.id.clone();
+                    let name = n.id.to_string();
                     let star_ty = sifr_type_system::Type::List(Box::new(elem_ty.clone()));
                     ctx.scope.define(name.clone(), star_ty.clone());
                     star = Some((name, star_ty));
@@ -185,7 +185,7 @@ pub(super) fn lower_star_unpack_assign(
                 }
             }
             Expr::Name(n) => {
-                let name = n.id.clone();
+                let name = n.id.to_string();
                 ctx.scope.define(name.clone(), elem_ty.clone());
                 if star.is_none() {
                     before.push((name, elem_ty.clone()));

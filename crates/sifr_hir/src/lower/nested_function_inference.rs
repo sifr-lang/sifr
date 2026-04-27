@@ -291,20 +291,20 @@ fn collect_mutated_parameter_names_in_target(
     match expr {
         Expr::Name(name) => {
             if param_names.contains(name.id.as_str()) {
-                mutated.insert(name.id.clone());
+                mutated.insert(name.id.to_string());
             }
         }
         Expr::Attribute(attr) => {
             if let Expr::Name(name) = attr.value.as_ref() {
                 if param_names.contains(name.id.as_str()) {
-                    mutated.insert(name.id.clone());
+                    mutated.insert(name.id.to_string());
                 }
             }
         }
         Expr::Subscript(sub) => {
             if let Expr::Name(name) = sub.value.as_ref() {
                 if param_names.contains(name.id.as_str()) {
-                    mutated.insert(name.id.clone());
+                    mutated.insert(name.id.to_string());
                 }
             }
             collect_mutated_parameter_names_in_expr(&sub.slice, param_names, mutated);
@@ -345,7 +345,7 @@ fn collect_mutated_parameter_names_in_expr(
                                 | "discard"
                         )
                     {
-                        mutated.insert(name.id.clone());
+                        mutated.insert(name.id.to_string());
                     }
                 }
                 collect_mutated_parameter_names_in_expr(attr.value.as_ref(), param_names, mutated);
@@ -584,7 +584,7 @@ fn collect_assignment_target_names(targets: &[Expr], bindings: &mut HashSet<Stri
     for target in targets {
         match target {
             Expr::Name(name) => {
-                bindings.insert(name.id.clone());
+                bindings.insert(name.id.to_string());
             }
             Expr::Tuple(tuple) => {
                 collect_assignment_target_names(&tuple.elts, bindings);
@@ -828,7 +828,7 @@ fn analyze_assign(
         Expr::Name(name) => {
             let value_ty = infer_expr_type(value, env, states, current_function, ctx);
             if let Some(callee_name) = nested_call_target_name(value, states) {
-                env.bind_call_result(name.id.clone(), value_ty, callee_name);
+                env.bind_call_result(name.id.to_string(), value_ty, callee_name);
             } else {
                 env.bind_var(name.id.as_str(), value_ty);
             }
@@ -883,7 +883,7 @@ fn nested_call_target_name(
     };
     states
         .contains_key(name.id.as_str())
-        .then(|| name.id.clone())
+        .then(|| name.id.to_string())
 }
 
 fn merge_env_types(target: &mut FunctionEnv, source: &FunctionEnv) {

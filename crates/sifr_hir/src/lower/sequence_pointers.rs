@@ -153,7 +153,7 @@ fn len_call_sequence_name(expr: &Expr) -> Option<String> {
     let Expr::Name(sequence_name) = &call.arguments.args[0] else {
         return None;
     };
-    Some(sequence_name.id.clone())
+    Some(sequence_name.id.to_string())
 }
 
 fn literal_int(expr: &Expr) -> Option<i64> {

@@ -397,7 +397,7 @@ pub(crate) fn parse_import_closure_modules(
         let label = discovery_label(&module_name, &path, diagnostic_style);
         let parsed = match parse_module(&source) {
             Ok(parsed) => {
-                if !parsed.is_valid() {
+                if !parsed.has_valid_syntax() {
                     let errors: Vec<CompileError> = parsed
                         .errors()
                         .iter()

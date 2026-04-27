@@ -375,7 +375,7 @@ pub(super) fn collect_class_type(
                 if let Expr::Name(name) = ann.target.as_ref() {
                     let ty = resolve_annotation_expr(&ann.annotation, ctx);
                     let field_idx = fields.len();
-                    fields.push((name.id.clone(), ty));
+                    fields.push((name.id.to_string(), ty));
                     // Collect default value if present (for auto-init default params)
                     if let Some(ref default_expr) = ann.value {
                         if let Some(hir_default) = lower_expr_simple(default_expr) {
@@ -904,7 +904,7 @@ pub(super) fn lower_class(class_def: &StmtClassDef, ctx: &mut LowerCtx) -> Optio
                 .iter()
                 .filter_map(|d| {
                     if let Expr::Name(n) = &d.expression {
-                        let name = n.id.clone();
+                        let name = n.id.to_string();
                         if name != "classmethod" && name != "staticmethod" {
                             Some(name)
                         } else {

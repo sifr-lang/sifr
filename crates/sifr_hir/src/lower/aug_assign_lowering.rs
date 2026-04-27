@@ -35,7 +35,7 @@ pub(super) fn lower_aug_assign(aug: &StmtAugAssign, ctx: &mut LowerCtx) -> Optio
     // Handle augmented assignment on attributes: self.field += val
     if let Expr::Attribute(attr) = aug.target.as_ref() {
         let obj_name = if let Expr::Name(n) = attr.value.as_ref() {
-            n.id.clone()
+            n.id.to_string()
         } else {
             ctx.error("augmented attribute assignment target must be a simple name".to_string());
             return None;
@@ -66,17 +66,17 @@ pub(super) fn lower_aug_assign(aug: &StmtAugAssign, ctx: &mut LowerCtx) -> Optio
                     .map(|info| info.effective_type().clone())
                     .unwrap_or(Type::Unknown);
                 (
-                    n.id.clone(),
+                    n.id.to_string(),
                     None,
                     obj_ty.clone(),
                     HirExpr::Name {
-                        name: n.id.clone(),
+                        name: n.id.to_string(),
                         ty: obj_ty,
                     },
                 )
             } else if let Expr::Attribute(attr) = inner_sub.value.as_ref() {
                 let obj_name = if let Expr::Name(n) = attr.value.as_ref() {
-                    n.id.clone()
+                    n.id.to_string()
                 } else {
                     ctx.error(
                         "augmented subscript assignment target must be a simple name".to_string(),
@@ -169,7 +169,7 @@ pub(super) fn lower_aug_assign(aug: &StmtAugAssign, ctx: &mut LowerCtx) -> Optio
         }
         if let Expr::Attribute(attr) = sub.value.as_ref() {
             let obj_name = if let Expr::Name(n) = attr.value.as_ref() {
-                n.id.clone()
+                n.id.to_string()
             } else {
                 ctx.error(
                     "augmented subscript assignment target must be a simple name".to_string(),
@@ -229,7 +229,7 @@ pub(super) fn lower_aug_assign(aug: &StmtAugAssign, ctx: &mut LowerCtx) -> Optio
             });
         }
         let obj_name = if let Expr::Name(n) = sub.value.as_ref() {
-            n.id.clone()
+            n.id.to_string()
         } else {
             ctx.error("augmented subscript assignment target must be a simple name".to_string());
             return None;
@@ -268,7 +268,7 @@ pub(super) fn lower_aug_assign(aug: &StmtAugAssign, ctx: &mut LowerCtx) -> Optio
         });
     }
     let name = if let Expr::Name(n) = aug.target.as_ref() {
-        n.id.clone()
+        n.id.to_string()
     } else {
         ctx.error("augmented assignment target must be a simple name".to_string());
         return None;

@@ -1,7 +1,7 @@
 use super::expressions::lower_expr;
 use super::LowerCtx;
 use crate::hir_nodes::{HirExpr, HirFStringPart};
-use sifr_python_ast::{ExprFString, FStringElement};
+use sifr_python_ast::{ExprFString, InterpolatedStringElement};
 use sifr_type_system::Type;
 
 pub(super) fn lower_fstring_expr(fstring: &ExprFString, ctx: &mut LowerCtx) -> Option<HirExpr> {
@@ -15,10 +15,10 @@ pub(super) fn lower_fstring_expr(fstring: &ExprFString, ctx: &mut LowerCtx) -> O
             sifr_python_ast::FStringPart::FString(fs) => {
                 for element in &fs.elements {
                     match element {
-                        FStringElement::Literal(lit) => {
+                        InterpolatedStringElement::Literal(lit) => {
                             parts.push(HirFStringPart::Literal(lit.value.to_string()));
                         }
-                        FStringElement::Expression(expr_elem) => {
+                        InterpolatedStringElement::Interpolation(expr_elem) => {
                             let expr = lower_expr(&expr_elem.expression, ctx)?;
                             parts.push(HirFStringPart::Expr(expr));
                         }

@@ -270,7 +270,7 @@ pub(super) fn lower_stmt(
                     let value = lower_expr(&item.context_expr, ctx)?;
                     let var_name = if let Some(ref vars) = item.optional_vars {
                         if let Expr::Name(n) = vars.as_ref() {
-                            n.id.clone()
+                            n.id.to_string()
                         } else {
                             ctx.error("with target must be a simple name".to_string());
                             return None;
@@ -349,7 +349,7 @@ pub(super) fn lower_stmt(
                 let ExceptHandler::ExceptHandler(h) = handler;
                 let error_type = if let Some(ref type_expr) = h.type_ {
                     if let Expr::Name(n) = type_expr.as_ref() {
-                        Some(n.id.clone())
+                        Some(n.id.to_string())
                     } else {
                         None
                     }
@@ -601,7 +601,7 @@ pub(super) fn lower_stmt(
                 .iter()
                 .filter_map(|d| {
                     if let Expr::Name(n) = &d.expression {
-                        let name = n.id.clone();
+                        let name = n.id.to_string();
                         if name != "classmethod" && name != "staticmethod" {
                             Some(name)
                         } else {
@@ -912,7 +912,7 @@ pub(super) fn lower_pattern(
             // Could be a literal or an attribute access like Color.RED
             if let Expr::Attribute(attr) = val_pat.value.as_ref() {
                 let obj_name = if let Expr::Name(n) = attr.value.as_ref() {
-                    n.id.clone()
+                    n.id.to_string()
                 } else {
                     ctx.error("complex attribute pattern not supported".to_string());
                     return None;
@@ -936,7 +936,7 @@ pub(super) fn lower_pattern(
         }
         Pattern::MatchClass(class_pat) => {
             let class_name = if let Expr::Name(n) = class_pat.cls.as_ref() {
-                n.id.clone()
+                n.id.to_string()
             } else {
                 ctx.error("class pattern class name must be a simple name".to_string());
                 return None;
@@ -1091,7 +1091,7 @@ fn invalidate_rebound_binding_facts(ctx: &mut LowerCtx, name: &str) {
 
 pub(super) fn lower_ann_assign(ann: &StmtAnnAssign, ctx: &mut LowerCtx) -> Option<HirStmt> {
     let name = if let Expr::Name(n) = ann.target.as_ref() {
-        n.id.clone()
+        n.id.to_string()
     } else {
         ctx.error("annotated assignment target must be a simple name".to_string());
         return None;
@@ -1217,7 +1217,7 @@ pub(super) fn lower_chained_assign(assign: &StmtAssign, ctx: &mut LowerCtx) -> V
     let targets: Vec<_> = assign.targets.iter().collect();
     for (i, target) in targets.iter().rev().enumerate() {
         if let Expr::Name(n) = target {
-            let name = n.id.clone();
+            let name = n.id.to_string();
             if i == 0 {
                 // First (rightmost) target gets the actual value
                 let existing = ctx.scope.lookup(&name);
@@ -1245,7 +1245,7 @@ pub(super) fn lower_chained_assign(assign: &StmtAssign, ctx: &mut LowerCtx) -> V
             } else {
                 // Subsequent targets get a reference to the previous target
                 let prev_target = match targets.get(targets.len() - i) {
-                    Some(Expr::Name(prev_n)) => prev_n.id.clone(),
+                    Some(Expr::Name(prev_n)) => prev_n.id.to_string(),
                     _ => continue,
                 };
                 let name_expr = HirExpr::Name {
@@ -1347,7 +1347,7 @@ pub(super) fn lower_assign(assign: &StmtAssign, ctx: &mut LowerCtx) -> Option<Hi
     if let Expr::Attribute(attr) = &assign.targets[0] {
         if let Expr::Attribute(inner_attr) = attr.value.as_ref() {
             let obj_name = if let Expr::Name(n) = inner_attr.value.as_ref() {
-                n.id.clone()
+                n.id.to_string()
             } else {
                 ctx.error("attribute assignment target must be a simple name".to_string());
                 return None;
@@ -1371,7 +1371,7 @@ pub(super) fn lower_assign(assign: &StmtAssign, ctx: &mut LowerCtx) -> Option<Hi
             });
         }
         let obj_name = if let Expr::Name(n) = attr.value.as_ref() {
-            n.id.clone()
+            n.id.to_string()
         } else {
             ctx.error("attribute assignment target must be a simple name".to_string());
             return None;
@@ -1395,7 +1395,7 @@ pub(super) fn lower_assign(assign: &StmtAssign, ctx: &mut LowerCtx) -> Option<Hi
         // Handle nested subscript: matrix[i][j] = val
         if let Expr::Subscript(inner_sub) = sub.value.as_ref() {
             let obj_name = if let Expr::Name(n) = inner_sub.value.as_ref() {
-                n.id.clone()
+                n.id.to_string()
             } else {
                 ctx.error("nested subscript assignment target must be a simple name".to_string());
                 return None;
@@ -1426,7 +1426,7 @@ pub(super) fn lower_assign(assign: &StmtAssign, ctx: &mut LowerCtx) -> Option<Hi
         // Handle attribute subscript assignment: self.field[key] = val
         if let Expr::Attribute(attr) = sub.value.as_ref() {
             let obj_name = if let Expr::Name(n) = attr.value.as_ref() {
-                n.id.clone()
+                n.id.to_string()
             } else {
                 ctx.error("subscript assignment target must be a simple name".to_string());
                 return None;
@@ -1451,7 +1451,7 @@ pub(super) fn lower_assign(assign: &StmtAssign, ctx: &mut LowerCtx) -> Option<Hi
             });
         }
         let obj_name = if let Expr::Name(n) = sub.value.as_ref() {
-            n.id.clone()
+            n.id.to_string()
         } else {
             ctx.error("subscript assignment target must be a simple name".to_string());
             return None;
@@ -1482,7 +1482,7 @@ pub(super) fn lower_assign(assign: &StmtAssign, ctx: &mut LowerCtx) -> Option<Hi
     }
 
     let name = if let Expr::Name(n) = &assign.targets[0] {
-        n.id.clone()
+        n.id.to_string()
     } else {
         ctx.error("assignment target must be a simple name".to_string());
         return None;
@@ -1818,7 +1818,7 @@ pub(super) fn detect_narrowing_condition(
             if let Expr::Name(func_name) = call.func.as_ref() {
                 if func_name.id.as_str() == "isinstance" && call.arguments.args.len() == 2 {
                     if let Expr::Name(var) = &call.arguments.args[0] {
-                        let var_name = var.id.clone();
+                        let var_name = var.id.to_string();
                         // Check that the variable exists and has a union/Unknown type
                         if ctx.scope.lookup(&var_name).is_some() {
                             if let Expr::Name(type_name) = &call.arguments.args[1] {
@@ -1847,7 +1847,7 @@ pub(super) fn detect_narrowing_condition(
                         if let (Expr::Name(var), Expr::NoneLiteral(_)) =
                             (cmp.left.as_ref(), &cmp.comparators[0])
                         {
-                            let var_name = var.id.clone();
+                            let var_name = var.id.to_string();
                             if ctx.scope.lookup(&var_name).is_some() {
                                 return Some(NarrowingCondition::IsNone(var_name));
                             }
@@ -1857,7 +1857,7 @@ pub(super) fn detect_narrowing_condition(
                         if let (Expr::Name(var), Expr::NoneLiteral(_)) =
                             (cmp.left.as_ref(), &cmp.comparators[0])
                         {
-                            let var_name = var.id.clone();
+                            let var_name = var.id.to_string();
                             if ctx.scope.lookup(&var_name).is_some() {
                                 return Some(NarrowingCondition::IsNotNone(var_name));
                             }
@@ -1866,7 +1866,7 @@ pub(super) fn detect_narrowing_condition(
                     // x == "value" -> Equality narrowing
                     CmpOp::Eq => {
                         if let Expr::Name(var) = cmp.left.as_ref() {
-                            let var_name = var.id.clone();
+                            let var_name = var.id.to_string();
                             if ctx.scope.lookup(&var_name).is_some() {
                                 if let Some(lit_val) = expr_to_literal_value(&cmp.comparators[0]) {
                                     return Some(NarrowingCondition::Equality(var_name, lit_val));
@@ -1881,7 +1881,7 @@ pub(super) fn detect_narrowing_condition(
         }
         // Simple variable name -> Truthiness narrowing
         Expr::Name(name) => {
-            let var_name = name.id.clone();
+            let var_name = name.id.to_string();
             if ctx.scope.lookup(&var_name).is_some() {
                 Some(NarrowingCondition::Truthiness(var_name))
             } else {
@@ -2055,7 +2055,7 @@ pub(super) fn lower_for(
 
     // Extract the target variable name(s)
     let target_name = match for_stmt.target.as_ref() {
-        Expr::Name(n) => n.id.clone(),
+        Expr::Name(n) => n.id.to_string(),
         Expr::Tuple(tup) => {
             // Tuple unpacking: for i, v in enumerate(lst)
             let names: Vec<String> = tup
@@ -2063,7 +2063,7 @@ pub(super) fn lower_for(
                 .iter()
                 .filter_map(|e| {
                     if let Expr::Name(n) = e {
-                        Some(n.id.clone())
+                        Some(n.id.to_string())
                     } else {
                         None
                     }

@@ -40,7 +40,7 @@ pub(super) fn collect_type_alias_decls(stmts: &[Stmt], ctx: &mut LowerCtx) -> Ve
         }
 
         decls.push(TypeAliasDecl {
-            name: name_expr.id.clone(),
+            name: name_expr.id.to_string(),
             type_params,
             value: type_alias.value.clone(),
             order,
@@ -198,7 +198,7 @@ fn collect_alias_dependencies(
             if alias_names.contains(name.id.as_str())
                 && !local_type_params.contains(name.id.as_str())
             {
-                deps.entry(name.id.clone())
+                deps.entry(name.id.to_string())
                     .and_modify(|existing| *existing &= crosses_boundary)
                     .or_insert(crosses_boundary);
             }
