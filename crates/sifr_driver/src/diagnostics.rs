@@ -120,7 +120,7 @@ impl CompileError {
         }
         if message.starts_with("module ")
             && message.contains(" resolves to file ")
-            && message.contains("package directories are not supported in this phase")
+            && message.contains("package directories are not supported")
         {
             return Some("SIFR-WORKSPACE-0103");
         }

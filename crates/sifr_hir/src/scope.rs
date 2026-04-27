@@ -398,7 +398,7 @@ mod tests {
         assert!(!scope.is_moved("x"));
     }
 
-    // --- M3: Narrowing tests ---
+    // --- Narrowing tests ---
 
     #[test]
     fn test_narrowing() {

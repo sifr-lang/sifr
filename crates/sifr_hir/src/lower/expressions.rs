@@ -5,8 +5,8 @@ use super::builtin_calls::{
     lower_chr_call, lower_defaultdict_constructor_call, lower_dict_constructor_call,
     lower_isinstance_call, lower_len_call, lower_list_constructor_call, lower_ord_call,
     lower_range_call, lower_reveal_type_call, lower_set_constructor_call,
-    lower_tuple_constructor_call, DEFAULTDICT_INT_ALIAS, DEFAULTDICT_LIST_ALIAS,
-    DEFAULTDICT_SET_ALIAS,
+    lower_tuple_constructor_call, reject_zip_keywords_if_present, DEFAULTDICT_INT_ALIAS,
+    DEFAULTDICT_LIST_ALIAS, DEFAULTDICT_SET_ALIAS,
 };
 use super::bytes_methods::{resolve_bytes_method_type, resolve_str_encode_method_type};
 use super::classes::is_hashable_type;
@@ -105,7 +105,7 @@ pub(super) fn lower_number_literal(num: &ExprNumberLiteral) -> Option<HirExpr> {
             Some(HirExpr::IntLiteral(val))
         }
         Number::Float(f) => Some(HirExpr::FloatLiteral(*f)),
-        Number::Complex { .. } => None, // Not supported in M1
+        Number::Complex { .. } => None, // Not supported.
     }
 }
 
@@ -1458,8 +1458,7 @@ pub(super) fn lower_call(call: &ExprCall, ctx: &mut LowerCtx) -> Option<HirExpr>
 
         // zip(*iters) -> iterator of tuples
         if func_name == "zip" {
-            if !call.arguments.keywords.is_empty() {
-                ctx.error("zip() does not accept keyword arguments in this phase".to_string());
+            if reject_zip_keywords_if_present(call, ctx) {
                 return None;
             }
             let mut args = Vec::with_capacity(call.arguments.args.len());
@@ -1517,7 +1516,7 @@ pub(super) fn lower_call(call: &ExprCall, ctx: &mut LowerCtx) -> Option<HirExpr>
     // map(func, iterable) -> iterator
     if func_name == "map" {
         if !call.arguments.keywords.is_empty() {
-            ctx.error("map() does not accept keyword arguments in this phase".to_string());
+            ctx.error("map() does not accept keyword arguments".to_string());
             return None;
         }
         if call.arguments.args.len() < 2 {
@@ -1561,7 +1560,7 @@ pub(super) fn lower_call(call: &ExprCall, ctx: &mut LowerCtx) -> Option<HirExpr>
     }
     if func_name == "filter" {
         if !call.arguments.keywords.is_empty() {
-            ctx.error("filter() does not accept keyword arguments in this phase".to_string());
+            ctx.error("filter() does not accept keyword arguments".to_string());
             return None;
         }
         if call.arguments.args.len() != 2 {

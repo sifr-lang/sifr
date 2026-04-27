@@ -273,7 +273,7 @@ pub fn type_check_binary_op(left: &Type, op: &str, right: &Type) -> Result<Type,
             })
         }
         "**" => {
-            // Decimal-family exponentiation (integral exponents only in this phase)
+            // Decimal-family exponentiation currently accepts integral exponents only.
             if is_decimal_type(left) && is_integral_numeric_type(right) {
                 return Ok(Type::Decimal);
             }

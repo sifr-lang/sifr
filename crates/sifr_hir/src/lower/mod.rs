@@ -777,7 +777,7 @@ fn lower_module_impl(
             }
 
             // Check if this is a stdlib import (sifr.*)
-            // All sifr.* modules are now .sifr files compiled in the stdlib phase.
+            // All sifr.* modules are now compiled from .sifr stdlib sources.
             // Resolve from pre-compiled stdlib modules (via externals).
             if is_absolute_import && module_name.starts_with("sifr.") {
                 // Check if there's a pre-compiled stdlib .sifr module in externals
