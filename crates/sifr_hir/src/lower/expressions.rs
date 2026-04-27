@@ -3441,8 +3441,8 @@ pub(super) fn lower_lambda(lambda: &ExprLambda, ctx: &mut LowerCtx) -> Option<Hi
                 let param_ty = if let Some(ref ann) = param.parameter.annotation {
                     resolve_annotation_expr(ann, ctx)
                 } else {
-                    // Lambda params without annotations: infer as Any for now
-                    // Contextual typing will refine this at call sites
+                    // Unannotated lambda params start as Any and may be refined
+                    // by contextual typing at call sites.
                     Type::Any
                 };
                 ctx.scope.define(param_name.clone(), param_ty.clone());

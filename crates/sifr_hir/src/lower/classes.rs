@@ -409,9 +409,8 @@ pub(super) fn collect_class_type(
                         constructor_locals.insert(param_name.clone(), param_ty.clone());
                         params.push((param_name, param_ty));
                     }
-                    // Constructor returns the class type (registered below)
-                    // We store it as a function for call resolution
-                    let constructor_ft = FunctionType::new(params.clone(), Type::None); // placeholder, updated below
+                    // Constructor return type is registered after field collection.
+                    let constructor_ft = FunctionType::new(params.clone(), Type::None);
                     ctx.functions.insert(class_name.clone(), constructor_ft);
 
                     collect_constructor_self_field_assignments(

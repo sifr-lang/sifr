@@ -1329,7 +1329,7 @@ pub(super) fn resolve_object_field_type(
 
 pub(super) fn lower_assign(assign: &StmtAssign, ctx: &mut LowerCtx) -> Option<HirStmt> {
     if assign.targets.len() != 1 {
-        ctx.error("multiple assignment targets not supported yet".to_string());
+        ctx.error("multiple assignment targets are not supported".to_string());
         return None;
     }
 

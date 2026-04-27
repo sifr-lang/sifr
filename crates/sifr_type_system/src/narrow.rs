@@ -126,8 +126,8 @@ pub fn narrow_type(ty: &Type, condition: &NarrowingCondition, is_true: bool) -> 
                 }
                 result
             } else {
-                // At least one is false: union of each individual false-narrowing
-                // This is an approximation; for now, return the original type
+                // False `and` branches preserve the original type because the
+                // failing condition is not known without path-sensitive unions.
                 ty.clone()
             }
         }

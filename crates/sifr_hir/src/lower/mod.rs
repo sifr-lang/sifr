@@ -502,7 +502,7 @@ fn lower_module_impl(
     ctx.externals = externals.clone();
     // Register built-in functions
     register_builtins(&mut ctx);
-    // Pass 0: Pre-register all class names as forward-reference placeholders.
+    // Pass 0: Pre-register all class names as forward references.
     // This allows function signatures and other classes to reference classes
     // defined later in the file (e.g., ListNode, TreeNode, Node).
     for stmt in stmts {
@@ -554,7 +554,7 @@ fn lower_module_impl(
     predeclare_type_aliases(&alias_decls, &mut ctx);
 
     // First class pass materializes full class shapes before alias resolution so aliases like
-    // `type Shape = Circle | Square` see concrete class fields instead of placeholder shells.
+    // `type Shape = Circle | Square` see concrete class fields.
     for stmt in stmts {
         if let Stmt::ClassDef(class_def) = stmt {
             collect_class_type(class_def, &mut ctx, false);
