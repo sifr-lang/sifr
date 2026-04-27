@@ -1,0 +1,3 @@
+[submodule "third_party/ruff"]
+	path = third_party/ruff
+	url = https://github.com/sifr-lang/ruff.git

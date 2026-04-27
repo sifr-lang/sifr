@@ -107,6 +107,14 @@ LeetCode fixtures live under `audits/leetcode/src`. Historical generated
 LeetCode reports, verification outputs, and old audit notes were removed from
 the lean LeetCode sub-repository and remain recoverable from its git history.
 
+### Restore maintenance submodules
+
+Sifr keeps a fork of Ruff at `third_party/ruff` for parser and AST maintenance.
+
+```bash
+git submodule update --init --recursive third_party/ruff
+```
+
 ### Compile and run a `.sifr` file
 
 ```bash
