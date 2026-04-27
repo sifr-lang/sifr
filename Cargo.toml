@@ -6,7 +6,7 @@ members = [
     "crates/sifr_driver",
     "crates/sifr",
 ]
-exclude = ["tmp", "sifr_output"]
+exclude = ["tmp", "sifr_output", "third_party/ruff"]
 resolver = "2"
 
 [workspace.package]
