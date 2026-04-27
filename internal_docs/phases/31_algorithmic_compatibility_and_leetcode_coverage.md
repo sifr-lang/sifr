@@ -45,13 +45,13 @@ status: complete
   - Timeout and oracle policy are documented and enforced.
   - Baseline pass/fail/timeout metrics are generated.
 - Delivered artifacts:
-  - `verification/leetcode/phase31_seed_corpus.json`
-  - `verification/leetcode/phase31_corpus_inventory.json`
-  - `verification/leetcode/phase31_seed_summary.json`
-  - `internal_docs/verification/phase31_leetcode_corpus_policy.md`
-  - `scripts/build_phase31_leetcode_assets.py`
-  - `scripts/run_phase31_leetcode.py`
-  - `scripts/test_phase31_leetcode.py`
+  - `audits/leetcode/verification/leetcode/phase31_seed_corpus.json`
+  - `audits/leetcode/verification/leetcode/phase31_corpus_inventory.json`
+  - `audits/leetcode/verification/leetcode/phase31_seed_summary.json`
+  - `audits/leetcode/internal_docs/verification/phase31_leetcode_corpus_policy.md`
+  - `audits/leetcode/scripts/build_phase31_leetcode_assets.py`
+  - `audits/leetcode/scripts/run_phase31_leetcode.py`
+  - `audits/leetcode/scripts/test_phase31_leetcode.py`
 - Baseline metrics (2026-03-11 seed run):
   - `case_count=50`
   - `status_counts={CHECK_ERROR: 46, RUN_ERROR: 2, PASS: 2}`
@@ -73,15 +73,15 @@ status: complete
   - Taxonomy report includes frequency and impact ranking.
   - Classification spot-audit accuracy is `>= 90%`.
 - Delivered artifacts:
-  - `verification/leetcode/phase31_failure_taxonomy.json`
-  - `verification/leetcode/phase31_failure_repros.json`
-  - `verification/leetcode/phase31_spot_audit.json`
-  - `verification/leetcode/phase31_spot_audit_cases.json`
-  - `verification/leetcode/phase31_failure_report.md`
-  - `verification/leetcode/phase31_failure_report.md`
-  - `scripts/phase31_leetcode_taxonomy.py`
-  - `scripts/build_phase31_leetcode_taxonomy.py`
-  - `scripts/test_phase31_leetcode_taxonomy.py`
+  - `audits/leetcode/verification/leetcode/phase31_failure_taxonomy.json`
+  - `audits/leetcode/verification/leetcode/phase31_failure_repros.json`
+  - `audits/leetcode/verification/leetcode/phase31_spot_audit.json`
+  - `audits/leetcode/verification/leetcode/phase31_spot_audit_cases.json`
+  - `audits/leetcode/verification/leetcode/phase31_failure_report.md`
+  - `audits/leetcode/verification/leetcode/phase31_failure_report.md`
+  - `audits/leetcode/scripts/phase31_leetcode_taxonomy.py`
+  - `audits/leetcode/scripts/build_phase31_leetcode_taxonomy.py`
+  - `audits/leetcode/scripts/test_phase31_leetcode_taxonomy.py`
 - Baseline taxonomy metrics (2026-03-11 seed run):
   - classified failing seed cases: `48`
   - taxonomy buckets: `12`
@@ -109,12 +109,12 @@ status: complete
   - Plan is approved and linked into roadmap phases.
   - Unresolved `P1` blockers older than 14 days are escalated with explicit owner reassignment or defer decision.
 - Delivered artifacts:
-  - `verification/leetcode/phase31_remediation_backlog.json`
-  - `verification/leetcode/phase31_remediation_backlog.md`
-  - `verification/leetcode/phase31_remediation_backlog.md`
-  - `scripts/phase31_leetcode_remediation.py`
-  - `scripts/build_phase31_leetcode_remediation_backlog.py`
-  - `scripts/test_phase31_leetcode_remediation_backlog.py`
+  - `audits/leetcode/verification/leetcode/phase31_remediation_backlog.json`
+  - `audits/leetcode/verification/leetcode/phase31_remediation_backlog.md`
+  - `audits/leetcode/verification/leetcode/phase31_remediation_backlog.md`
+  - `audits/leetcode/scripts/phase31_leetcode_remediation.py`
+  - `audits/leetcode/scripts/build_phase31_leetcode_remediation_backlog.py`
+  - `audits/leetcode/scripts/test_phase31_leetcode_remediation_backlog.py`
 - Backlog summary (2026-03-11):
   - backlog entries: `12` (one per taxonomy bucket)
   - `P1` items: `6`
@@ -140,9 +140,9 @@ status: complete
   - Pass-rate improvement is measurable against baseline.
   - No regression in previously passing corpus slice.
 - Delivered artifacts:
-  - `verification/leetcode/phase31_seed_results_wave1.json`
-  - `verification/leetcode/phase31_wave1_delta.md`
-  - `verification/leetcode/phase31_wave1_summary.md`
+  - `audits/leetcode/verification/leetcode/phase31_seed_results_wave1.json`
+  - `audits/leetcode/verification/leetcode/phase31_wave1_delta.md`
+  - `audits/leetcode/verification/leetcode/phase31_wave1_summary.md`
   - `crates/sifr/tests/e2e/pass/function_shadowing_builtin_sum.sifr`
   - `crates/sifr/tests/e2e/pass/borrowed_param_shadowing.sifr`
   - `crates/sifr/tests/e2e/pass/tuple_unpack_reassignment.sifr`
@@ -174,12 +174,12 @@ status: complete
   - Open blockers are roadmap-mapped with owners.
   - Phase closure is approved with explicit handoff targets.
 - Delivered artifacts:
-  - `verification/leetcode/phase31_scorecard.json`
-  - `verification/leetcode/phase31_scorecard.md`
-  - `verification/leetcode/phase31_scorecard.md`
-  - `scripts/phase31_leetcode_scorecard.py`
-  - `scripts/build_phase31_leetcode_scorecard.py`
-  - `scripts/test_phase31_leetcode_scorecard.py`
+  - `audits/leetcode/verification/leetcode/phase31_scorecard.json`
+  - `audits/leetcode/verification/leetcode/phase31_scorecard.md`
+  - `audits/leetcode/verification/leetcode/phase31_scorecard.md`
+  - `audits/leetcode/scripts/phase31_leetcode_scorecard.py`
+  - `audits/leetcode/scripts/build_phase31_leetcode_scorecard.py`
+  - `audits/leetcode/scripts/test_phase31_leetcode_scorecard.py`
 - Scorecard summary (2026-03-11):
   - review status: `external_review_approved`
   - baseline status counts: `PASS=2`, `CHECK_ERROR=46`, `RUN_ERROR=2`
@@ -197,26 +197,26 @@ Phase 31 is closed, but its unresolved compatibility backlog now has a concrete 
 Latest closure-track plan (`2026-04-05`):
 - `issues/ad-hoc-codegen-runtime-build-gap-closure-phase-2026-04-05.md` is marked `ready_to_implement` for the live `codegen_runtime_build_gap=58` baseline.
 - Source artifacts:
-  - `verification/leetcode/full_corpus_current_results_20260405_live_rerun1.json`
-  - `verification/leetcode/full_corpus_failure_taxonomy_20260405_live_rerun1.json`
-  - `verification/leetcode/codegen_runtime_build_gap_breakdown_20260405_v3.csv`
+  - `audits/leetcode/verification/leetcode/full_corpus_current_results_20260405_live_rerun1.json`
+  - `audits/leetcode/verification/leetcode/full_corpus_failure_taxonomy_20260405_live_rerun1.json`
+  - `audits/leetcode/verification/leetcode/codegen_runtime_build_gap_breakdown_20260405_v3.csv`
 - External review sign-off for this breakdown/phase basis:
   - `reviews/codegen-runtime-build-gap-root-cause-review-pass3.md` (`READY`)
   - `reviews/codegen-runtime-build-gap-root-cause-review-pass4.md` (`READY`)
 
 Latest execution note (`2026-03-11`):
 - `m31_c_stdlib_module_parity` slice 1 is locally validated and tracked in `issues/phase31-m31c-stdlib-module-parity-execution.md`.
-- Targeted six-case rerun artifact: `verification/leetcode/phase31_m31c_wave1_results.json`.
+- Targeted six-case rerun artifact: `audits/leetcode/verification/leetcode/phase31_m31c_wave1_results.json`.
 - Measured outcome for that slice: `PASS=1`, `CHECK_ERROR=5`, `RUN_ERROR=0`, with `0007_reverse_integer` now passing and `0502_ipo` advanced past the original missing-stdlib blocker.
 
 Ownership/mutability boundary closure update (`2026-04-02`):
 - Analysis and execution ledger: `issues/ownership-mutability-boundary-root-cause-2026-04-02.md`.
-- Targeted post-fix artifact: `verification/leetcode/ownership_mutability_boundary_targeted_results_20260402_post_fix.md`.
-- Full-corpus rerun artifact: `verification/leetcode/full_corpus_current_results_20260402_live_after_ownership_boundary_closure.json`.
-- Post-closure breakdown artifact: `verification/leetcode/ownership_mutability_boundary_breakdown_20260402_live_after_closure.json`.
+- Targeted post-fix artifact: `audits/leetcode/verification/leetcode/ownership_mutability_boundary_targeted_results_20260402_post_fix.md`.
+- Full-corpus rerun artifact: `audits/leetcode/verification/leetcode/full_corpus_current_results_20260402_live_after_ownership_boundary_closure.json`.
+- Post-closure breakdown artifact: `audits/leetcode/verification/leetcode/ownership_mutability_boundary_breakdown_20260402_live_after_closure.json`.
 - Outcome: ownership-category first-diagnostic count reduced to `0` in the corpus rerun; residual failures are secondary non-ownership defects.
-- Secondary check-remediation wave 1 artifact: `verification/leetcode/ownership_mutability_boundary_check_results_20260402_wave1.md` (`24/47` check-pass).
-- Secondary check-remediation wave 2 artifact: `verification/leetcode/ownership_mutability_boundary_check_results_20260402_wave2.md` (`47/47` check-pass).
+- Secondary check-remediation wave 1 artifact: `audits/leetcode/verification/leetcode/ownership_mutability_boundary_check_results_20260402_wave1.md` (`24/47` check-pass).
+- Secondary check-remediation wave 2 artifact: `audits/leetcode/verification/leetcode/ownership_mutability_boundary_check_results_20260402_wave2.md` (`47/47` check-pass).
 
 - Planned follow-up milestones:
   - `m31_a_optional_narrowing_core`
@@ -269,9 +269,9 @@ Ownership/mutability boundary closure update (`2026-04-02`):
 - Full local suite:
   - `/Users/yaseralnajjar/work/sifr/codebase/scripts/run_all_tests.sh`
 - Milestone demos:
-  - `python3 scripts/run_phase31_leetcode.py --manifest verification/leetcode/phase31_demo_corpus.json --output verification/leetcode/phase31_demo_results.json`
+  - `cd audits/leetcode && python3 scripts/run_phase31_leetcode.py --manifest verification/leetcode/phase31_demo_corpus.json --output verification/leetcode/phase31_demo_results.json`
 - LeetCode corpus runner:
-  - `python3 scripts/run_phase31_leetcode.py --manifest verification/leetcode/phase31_seed_corpus.json --output verification/leetcode/phase31_seed_results.json`
+  - `cd audits/leetcode && python3 scripts/run_phase31_leetcode.py --manifest verification/leetcode/phase31_seed_corpus.json --output verification/leetcode/phase31_seed_results.json`
 - Repeat determinism check:
   - run the corpus command twice with identical config and diff outputs.
 
