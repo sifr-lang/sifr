@@ -331,7 +331,7 @@ status: completed
 
 ### 1. PEP 695 Inline Generics
 
-Support `def f[T](x: T) -> T` and `class C[T]` syntax. The AST already parses `type_params` on `StmtFunctionDef` and `StmtClassDef` (`crates/sifr_python_ast/src/nodes.rs`); the lowering layer just needs to wire them through.
+Support `def f[T](x: T) -> T` and `class C[T]` syntax. The AST already parses `type_params` on `StmtFunctionDef` and `StmtClassDef` (`third_party/ruff/crates/ruff_python_ast/src/nodes.rs`); the lowering layer just needs to wire them through.
 
 - In `lower_function` / `extract_function_type`: check `func.type_params` from the AST; if present, register each `TypeParam` name in `ctx.type_vars` and store in `HirFunction.type_params`
 - In `collect_class_type`: check `class_def.type_params`; register type params for the class scope

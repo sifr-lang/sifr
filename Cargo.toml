@@ -1,7 +1,5 @@
 [workspace]
 members = [
-    "crates/sifr_python_ast",
-    "crates/sifr_python_parser",
     "crates/sifr_type_system",
     "crates/sifr_hir",
     "crates/sifr_codegen",
@@ -27,9 +25,11 @@ ruff_source_file = { git = "https://github.com/astral-sh/ruff", tag = "v0.4.10" 
 ruff_python_trivia = { git = "https://github.com/astral-sh/ruff", tag = "v0.4.10" }
 ruff_python_literal = { git = "https://github.com/astral-sh/ruff", tag = "v0.4.10" }
 
-# Vendored forks -- kept for future modification (parser/AST may diverge from Python syntax)
-sifr_python_ast = { path = "crates/sifr_python_ast" }
-sifr_python_parser = { path = "crates/sifr_python_parser" }
+# Parser/AST crates -- maintained in the Ruff fork submodule and imported under Sifr crate aliases.
+ruff_python_ast = { path = "third_party/ruff/crates/ruff_python_ast" }
+ruff_python_parser = { path = "third_party/ruff/crates/ruff_python_parser" }
+sifr_python_ast = { package = "ruff_python_ast", path = "third_party/ruff/crates/ruff_python_ast" }
+sifr_python_parser = { package = "ruff_python_parser", path = "third_party/ruff/crates/ruff_python_parser" }
 
 # Sifr-specific crates
 sifr_type_system = { path = "crates/sifr_type_system" }
@@ -88,14 +88,14 @@ dbg_macro = "warn"
 lto = "thin"
 codegen-units = 16
 
-[profile.release.package.sifr_python_parser]
+[profile.release.package.ruff_python_parser]
 codegen-units = 1
-[profile.release.package.sifr_python_ast]
+[profile.release.package.ruff_python_ast]
 codegen-units = 1
 
 [profile.dev.package.insta]
 opt-level = 3
 [profile.dev.package.similar]
 opt-level = 3
-[profile.dev.package.sifr_python_parser]
+[profile.dev.package.ruff_python_parser]
 opt-level = 1
