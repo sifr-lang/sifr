@@ -216,14 +216,12 @@ flowchart LR
 
 ## Crate Structure (Rust Workspace)
 
-**Hybrid dependency approach:** Infrastructure crates are referenced as git dependencies from ruff v0.4.10 (unmodified). Parser and AST crates are vendored forks that may diverge from Python syntax in future milestones. The Ruff fork at `third_party/ruff` tracks `sifr/v0.4.10-maintenance` as the maintenance reference for comparing and updating those vendored crates.
+**Hybrid dependency approach:** Infrastructure crates are referenced as git dependencies from ruff v0.4.10 (unmodified). Parser and AST crates live in the Ruff fork submodule on `sifr/v0.4.10-maintenance` and are imported through Cargo aliases as `sifr_python_ast` and `sifr_python_parser`.
 
 ```
 sifr/
   Cargo.toml                (workspace root)
   crates/
-    sifr_python_ast/        (vendored fork of ruff_python_ast -- may diverge for sifr syntax)
-    sifr_python_parser/     (vendored fork of ruff_python_parser -- may diverge for sifr syntax)
     sifr_frontend/          (canonical parse/lower/type-check/diagnostics query facade shared by CLI and tooling)
     sifr_hir/               (High-level IR: typed AST after name resolution + type checking)
     sifr_type_system/       (type definitions, inference, checking, subtyping)
@@ -239,6 +237,9 @@ sifr/
 
   third_party/
     ruff/                    (sifr-lang/ruff submodule, branch sifr/v0.4.10-maintenance)
+      crates/
+        ruff_python_ast/      (imported as Cargo dependency alias sifr_python_ast)
+        ruff_python_parser/   (imported as Cargo dependency alias sifr_python_parser)
 ```
 
 New crates added per milestone as needed:
@@ -1016,7 +1017,7 @@ Snapshot testing using the `insta` crate. The compiler produces output that is c
 **Directory structure:**
 
 ```
-crates/sifr_python_parser/
+third_party/ruff/crates/ruff_python_parser/
   resources/
     valid/          # .sifr files that must parse successfully
     invalid/        # .sifr files that must produce parse errors
@@ -1114,7 +1115,7 @@ cargo test                                    # Run all tests (layers 1-3)
 ./scripts/run_all_tests.sh --profile stress  # Legacy alias for `release`
 ./scripts/check_e2e_report_determinism.sh --profile release # Stable e2e report signature across reruns
 ./scripts/run_smoke_fuzz_property.sh         # Opt-in nightly smoke property/fuzz validation
-cargo test -p sifr_python_parser              # Parser snapshots
+cargo test --manifest-path third_party/ruff/Cargo.toml -p ruff_python_parser # Parser snapshots
 cargo test -p sifr_type_system -- mdtest      # Type checker markdown tests
 cargo test -p sifr_codegen                    # Codegen snapshots
 cargo test --test e2e                         # End-to-end tests

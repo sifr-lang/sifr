@@ -30,9 +30,9 @@ Lock one canonical binary carrier (`bytes`), one explicit text/binary boundary, 
 ## Parser/AST Scope Lock (Pre-existing Support)
 
 - Bytes literal parsing and AST nodes are already present:
-  - `crates/sifr_python_parser/src/string.rs`
-  - `crates/sifr_python_parser/src/parser/expression.rs`
-  - `crates/sifr_python_ast/src/nodes.rs`
+  - `third_party/ruff/crates/ruff_python_parser/src/string.rs`
+  - `third_party/ruff/crates/ruff_python_parser/src/parser/expression.rs`
+  - `third_party/ruff/crates/ruff_python_ast/src/nodes.rs`
 - Wave implementation scope therefore starts at type-system, HIR signatures, lowering/codegen, and stdlib/intrinsic migration.
 
 ## CPython Family Mapping (Wave Ownership)

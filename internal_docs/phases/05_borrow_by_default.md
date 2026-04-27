@@ -44,7 +44,7 @@ def consume(own items: list[int]) -> int:    # takes ownership
 
 Add a `convention` field to the `Parameter` AST node.
 
-**Key files:** `crates/sifr_python_parser/src/parser/statement.rs` (parse_parameter), `crates/sifr_python_ast/src/nodes.rs` (Parameter struct)
+**Key files:** `third_party/ruff/crates/ruff_python_parser/src/parser/statement.rs` (parse_parameter), `third_party/ruff/crates/ruff_python_ast/src/nodes.rs` (Parameter struct)
 
 ### 3. HIR: Convention on HirParam
 
@@ -191,7 +191,7 @@ Add parser snapshot tests for `mut`/`own` soft keyword edge cases:
 - `mut`/`own` before untyped parameters -- `def f(mut x)` parses correctly
 - Nested function parameters with conventions -- `def f(mut x: list[int], own y: str)`
 
-**Key files:** `crates/sifr_python_parser/tests/`
+**Key files:** `third_party/ruff/crates/ruff_python_parser/tests/`
 
 ### 4c. Multi-Module Convention Tests
 
