@@ -216,7 +216,7 @@ flowchart LR
 
 ## Crate Structure (Rust Workspace)
 
-**Hybrid dependency approach:** Infrastructure crates are referenced as git dependencies from ruff v0.4.10 (unmodified). Parser and AST crates are vendored forks that may diverge from Python syntax in future milestones. The Ruff fork at `third_party/ruff` is kept as the maintenance reference for comparing and updating those vendored crates.
+**Hybrid dependency approach:** Infrastructure crates are referenced as git dependencies from ruff v0.4.10 (unmodified). Parser and AST crates are vendored forks that may diverge from Python syntax in future milestones. The Ruff fork at `third_party/ruff` tracks `sifr/v0.4.10-maintenance` as the maintenance reference for comparing and updating those vendored crates.
 
 ```
 sifr/
@@ -238,7 +238,7 @@ sifr/
   #   ruff_python_literal     -- literal parsing (string escapes, number formats)
 
   third_party/
-    ruff/                    (sifr-lang/ruff submodule used as the Ruff maintenance reference)
+    ruff/                    (sifr-lang/ruff submodule, branch sifr/v0.4.10-maintenance)
 ```
 
 New crates added per milestone as needed:
