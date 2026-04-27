@@ -372,7 +372,7 @@ pub(super) fn resolve_annotation_expr(expr: &Expr, ctx: &mut LowerCtx) -> Type {
         Expr::Name(name) => {
             // Check type variables first (e.g., T from TypeVar)
             if ctx.type_vars.contains(name.id.as_str()) {
-                return Type::TypeVar(name.id.clone());
+                return Type::TypeVar(name.id.to_string());
             }
             // Check type aliases first
             if let Some(alias_ty) = ctx.scope.lookup_type_alias(&name.id) {
@@ -415,7 +415,7 @@ pub(super) fn resolve_annotation_expr(expr: &Expr, ctx: &mut LowerCtx) -> Type {
         Expr::Subscript(sub) => {
             // Handle generic type annotations: list[int], dict[str, int], tuple[int, str]
             let base_name = if let Expr::Name(n) = sub.value.as_ref() {
-                n.id.clone()
+                n.id.to_string()
             } else {
                 ctx.error("unsupported type annotation base".to_string());
                 return Type::Any;
@@ -811,7 +811,7 @@ pub(super) fn lower_function(func: &StmtFunctionDef, ctx: &mut LowerCtx) -> Opti
         .iter()
         .filter_map(|d| {
             if let Expr::Name(n) = &d.expression {
-                let name = n.id.clone();
+                let name = n.id.to_string();
                 if name != "classmethod" && name != "staticmethod" {
                     Some(name)
                 } else {

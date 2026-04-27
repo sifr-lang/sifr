@@ -32,7 +32,7 @@ pub(super) fn detect_true_sequence_guards(expr: &Expr, ctx: &LowerCtx) -> Vec<Se
             })
             .unwrap_or_default(),
         Expr::Name(name) => vec![SequenceGuard::MinLength {
-            sequence: name.id.clone(),
+            sequence: name.id.to_string(),
             min_len: 1,
         }],
         Expr::Attribute(_) => sequence_guard_target_name(expr)
@@ -93,7 +93,7 @@ pub(super) fn detect_true_sequence_guards(expr: &Expr, ctx: &LowerCtx) -> Vec<Se
                         {
                             return vec![SequenceGuard::IndexVarInRange {
                                 sequence: sequence_name,
-                                index_var: index_name.id.clone(),
+                                index_var: index_name.id.to_string(),
                                 max_offset: 0,
                             }];
                         }
@@ -134,7 +134,7 @@ pub(super) fn detect_false_exit_sequence_guards(expr: &Expr, ctx: &LowerCtx) -> 
             })
             .unwrap_or_default(),
         Expr::Name(name) => vec![SequenceGuard::MinLength {
-            sequence: name.id.clone(),
+            sequence: name.id.to_string(),
             min_len: 1,
         }],
         Expr::Compare(cmp) if cmp.ops.len() == 1 && cmp.comparators.len() == 1 => {
@@ -145,7 +145,7 @@ pub(super) fn detect_false_exit_sequence_guards(expr: &Expr, ctx: &LowerCtx) -> 
                     {
                         return vec![SequenceGuard::IndexVarInRange {
                             sequence: sequence_name,
-                            index_var: index_name.id.clone(),
+                            index_var: index_name.id.to_string(),
                             max_offset: 0,
                         }];
                     }
@@ -154,7 +154,7 @@ pub(super) fn detect_false_exit_sequence_guards(expr: &Expr, ctx: &LowerCtx) -> 
                     {
                         return vec![SequenceGuard::IndexVarInRange {
                             sequence: sequence_name,
-                            index_var: index_name.id.clone(),
+                            index_var: index_name.id.to_string(),
                             max_offset: 0,
                         }];
                     }
@@ -209,7 +209,7 @@ pub(super) fn detect_false_exit_sequence_guards(expr: &Expr, ctx: &LowerCtx) -> 
                     {
                         return vec![SequenceGuard::IndexVarInRange {
                             sequence: sequence_name,
-                            index_var: index_name.id.clone(),
+                            index_var: index_name.id.to_string(),
                             max_offset: 0,
                         }];
                     }
@@ -218,7 +218,7 @@ pub(super) fn detect_false_exit_sequence_guards(expr: &Expr, ctx: &LowerCtx) -> 
                     {
                         return vec![SequenceGuard::IndexVarInRange {
                             sequence: sequence_name,
-                            index_var: index_name.id.clone(),
+                            index_var: index_name.id.to_string(),
                             max_offset: 0,
                         }];
                     }
@@ -610,7 +610,7 @@ impl<'a> Visitor<'a> for SequenceIndexVarCollector<'a> {
                 if sequence_name.id.as_str() == self.sequence
                     && !self.vars.iter().any(|var| var == index_name.id.as_str())
                 {
-                    self.vars.push(index_name.id.clone());
+                    self.vars.push(index_name.id.to_string());
                 }
             }
         }
@@ -663,7 +663,7 @@ fn len_call_sequence_name(expr: &Expr) -> Option<String> {
 
 fn sequence_guard_target_name(expr: &Expr) -> Option<String> {
     match expr {
-        Expr::Name(name) => Some(name.id.clone()),
+        Expr::Name(name) => Some(name.id.to_string()),
         Expr::Attribute(attr) => {
             let base = sequence_guard_target_name(attr.value.as_ref())?;
             Some(format!("{base}.{}", attr.attr))
@@ -699,13 +699,13 @@ fn literal_int(expr: &Expr) -> Option<i64> {
 
 fn index_var_with_nonnegative_offset(expr: &Expr) -> Option<(String, usize)> {
     match expr {
-        Expr::Name(name) => Some((name.id.clone(), 0)),
+        Expr::Name(name) => Some((name.id.to_string(), 0)),
         Expr::BinOp(binop) if matches!(binop.op, Operator::Add) => {
             let Expr::Name(name) = binop.left.as_ref() else {
                 return None;
             };
             let offset = literal_usize(binop.right.as_ref())?;
-            Some((name.id.clone(), offset))
+            Some((name.id.to_string(), offset))
         }
         _ => None,
     }
@@ -737,12 +737,12 @@ fn detect_two_pointer_while_guards(while_stmt: &StmtWhile, ctx: &LowerCtx) -> Ve
     vec![
         SequenceGuard::IndexVarInRange {
             sequence: sequence.clone(),
-            index_var: left_name.id.clone(),
+            index_var: left_name.id.to_string(),
             max_offset: 0,
         },
         SequenceGuard::IndexVarInRange {
             sequence,
-            index_var: right_name.id.clone(),
+            index_var: right_name.id.to_string(),
             max_offset: 0,
         },
     ]

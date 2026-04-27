@@ -50,7 +50,7 @@ Which crate to touch for a given task:
 
 ```
 Source (.sifr)
-  → sifr_python_parser / sifr_python_ast   (vendored from ruff v0.4.10, may diverge)
+  → sifr_python_parser / sifr_python_ast   (Ruff fork submodule, currently based on Ruff 0.15.12)
   → sifr_hir                                (name resolution, type checking, ownership tracking)
   → sifr_codegen                             (HIR → Rust IR → syn AST → prettyplease output)
   → sifr_driver                              (orchestration, rustc invocation)

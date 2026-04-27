@@ -216,7 +216,7 @@ flowchart LR
 
 ## Crate Structure (Rust Workspace)
 
-**Hybrid dependency approach:** Infrastructure crates are referenced as git dependencies from ruff v0.4.10 (unmodified). Parser and AST crates live in the Ruff fork submodule on `sifr/v0.4.10-maintenance` and are imported through Cargo aliases as `sifr_python_ast` and `sifr_python_parser`.
+**Hybrid dependency approach:** Infrastructure crates, parser, and AST crates are referenced from the Ruff fork submodule, currently based on Ruff 0.15.12. Parser and AST crates include the Sifr-specific parameter convention extension and are imported through Cargo aliases as `sifr_python_ast` and `sifr_python_parser`. The effective Rust toolchain floor follows the Ruff submodule crates and is currently Rust 1.93.
 
 ```
 sifr/
@@ -229,14 +229,14 @@ sifr/
     sifr_driver/            (CLI/project orchestration, split into diagnostics.rs + stdlib/ frontend/ project/ build/ test_runner/)
     sifr/                   (CLI binary: sifr build, sifr check, sifr run)
 
-  # Git dependencies from ruff v0.4.10 (not vendored):
+  # Path dependencies from the Ruff fork submodule:
   #   ruff_text_size          -- text span/range utilities
   #   ruff_source_file        -- source file representation, line indexing
   #   ruff_python_trivia      -- whitespace/comment handling
   #   ruff_python_literal     -- literal parsing (string escapes, number formats)
 
   third_party/
-    ruff/                    (sifr-lang/ruff submodule, branch sifr/v0.4.10-maintenance)
+    ruff/                    (sifr-lang/ruff submodule, branch sifr/0.15.12-maintenance)
       crates/
         ruff_python_ast/      (imported as Cargo dependency alias sifr_python_ast)
         ruff_python_parser/   (imported as Cargo dependency alias sifr_python_parser)

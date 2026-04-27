@@ -8,14 +8,14 @@ fn top_level_assigned_name(stmt: &Stmt) -> Option<String> {
     match stmt {
         Stmt::Assign(assign) if assign.targets.len() == 1 => {
             if let Expr::Name(name) = &assign.targets[0] {
-                Some(name.id.clone())
+                Some(name.id.to_string())
             } else {
                 None
             }
         }
         Stmt::AnnAssign(ann) => {
             if let Expr::Name(name) = ann.target.as_ref() {
-                Some(name.id.clone())
+                Some(name.id.to_string())
             } else {
                 None
             }

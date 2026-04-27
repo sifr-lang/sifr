@@ -14,7 +14,7 @@ pub(crate) struct FrontendCompiled {
 pub fn parse_source(source: &str) -> Result<Vec<Stmt>, Vec<CompileError>> {
     match parse_module(source) {
         Ok(parsed) => {
-            if !parsed.is_valid() {
+            if !parsed.has_valid_syntax() {
                 let errors: Vec<CompileError> = parsed
                     .errors()
                     .iter()

@@ -25,7 +25,7 @@ fn compile_stdlib_uncached_impl() -> Result<StdlibCompiled, Vec<CompileError>> {
     for (module_name, source) in STDLIB_FILES {
         let parsed = match parse_module(source) {
             Ok(parsed) => {
-                if !parsed.is_valid() {
+                if !parsed.has_valid_syntax() {
                     let errors: Vec<CompileError> = parsed
                         .errors()
                         .iter()

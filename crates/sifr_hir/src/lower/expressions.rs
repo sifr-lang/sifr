@@ -213,7 +213,7 @@ fn canonicalize_class_surface_type(ty: &Type) -> Type {
 }
 
 pub(super) fn lower_name(name: &ExprName, ctx: &mut LowerCtx) -> Option<HirExpr> {
-    let var_name = name.id.clone();
+    let var_name = name.id.to_string();
 
     // Check if it's a known variable
     if let Some(info) = ctx.scope.lookup(&var_name) {
@@ -584,7 +584,8 @@ pub(super) fn lower_call(call: &ExprCall, ctx: &mut LowerCtx) -> Option<HirExpr>
     let func_name = if let Some(alias) = compat_alias {
         alias
     } else if let Expr::Name(n) = call.func.as_ref() {
-        resolve_bare_python_compat_call_alias(n.id.as_str(), ctx).unwrap_or_else(|| n.id.clone())
+        resolve_bare_python_compat_call_alias(n.id.as_str(), ctx)
+            .unwrap_or_else(|| n.id.to_string())
     } else {
         ctx.error("only simple function calls are supported".to_string());
         return None;
@@ -2332,7 +2333,7 @@ pub(super) fn lower_attribute(attr: &ExprAttribute, ctx: &mut LowerCtx) -> Optio
 
     // Check for enum variant access: Color.RED
     if let Expr::Name(name) = attr.value.as_ref() {
-        let class_name = name.id.clone();
+        let class_name = name.id.to_string();
         if let Some(ty) = ctx.class_types.get(&class_name).cloned() {
             if let Type::Enum { ref variants, .. } = ty {
                 if variants.iter().any(|(v, _)| v == &field_name) {
@@ -2455,7 +2456,7 @@ pub(super) fn lower_method_call(
 
     // Handle ClassName.method() calls (classmethod/staticmethod)
     if let Expr::Name(name) = attr.value.as_ref() {
-        let class_name = name.id.clone();
+        let class_name = name.id.to_string();
         if ctx.class_types.contains_key(&class_name) {
             let method_name = attr.attr.to_string();
             // Lower arguments
@@ -3487,14 +3488,14 @@ pub(super) fn lower_list_comp(comp: &ExprListComp, ctx: &mut LowerCtx) -> Option
         // Process each generator: push scope, define var, lower iter
         for gen in &comp.generators {
             let var_name = match &gen.target {
-                Expr::Name(n) => n.id.clone(),
+                Expr::Name(n) => n.id.to_string(),
                 Expr::Tuple(tup) => {
                     let names: Vec<String> = tup
                         .elts
                         .iter()
                         .filter_map(|e| {
                             if let Expr::Name(n) = e {
-                                Some(n.id.clone())
+                                Some(n.id.to_string())
                             } else {
                                 None
                             }
@@ -3587,7 +3588,7 @@ pub(super) fn lower_set_comp(comp: &ExprSetComp, ctx: &mut LowerCtx) -> Option<H
     let result = (|| {
         for gen in &comp.generators {
             let var_name = if let Expr::Name(n) = &gen.target {
-                n.id.clone()
+                n.id.to_string()
             } else {
                 ctx.error("set comprehension target must be a simple name".to_string());
                 return None;
@@ -3631,14 +3632,14 @@ pub(super) fn lower_dict_comp(comp: &ExprDictComp, ctx: &mut LowerCtx) -> Option
     let result = (|| {
         for gen in &comp.generators {
             let var_name = match &gen.target {
-                Expr::Name(n) => n.id.clone(),
+                Expr::Name(n) => n.id.to_string(),
                 Expr::Tuple(tup) => {
                     let names: Vec<String> = tup
                         .elts
                         .iter()
                         .filter_map(|e| {
                             if let Expr::Name(n) = e {
-                                Some(n.id.clone())
+                                Some(n.id.to_string())
                             } else {
                                 None
                             }
@@ -3713,7 +3714,7 @@ pub(super) fn lower_generator_expr(gen: &ExprGenerator, ctx: &mut LowerCtx) -> O
     let comp = &gen.generators[0];
 
     let var_name = if let Expr::Name(n) = &comp.target {
-        n.id.clone()
+        n.id.to_string()
     } else {
         ctx.error("generator target must be a simple name".to_string());
         return None;
@@ -3774,7 +3775,7 @@ fn lower_iterator_protocol_entry(iter_source_expr: HirExpr, elem_ty: Type) -> Hi
 
 pub(super) fn lower_named_expr(named: &ExprNamed, ctx: &mut LowerCtx) -> Option<HirExpr> {
     let name = if let Expr::Name(n) = named.target.as_ref() {
-        n.id.clone()
+        n.id.to_string()
     } else {
         ctx.error("walrus operator target must be a simple name".to_string());
         return None;

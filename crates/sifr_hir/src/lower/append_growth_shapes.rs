@@ -57,5 +57,5 @@ fn append_target_name(stmts: &[Stmt]) -> Option<String> {
     let Expr::Name(list_name) = attr.value.as_ref() else {
         return None;
     };
-    Some(list_name.id.clone())
+    Some(list_name.id.to_string())
 }

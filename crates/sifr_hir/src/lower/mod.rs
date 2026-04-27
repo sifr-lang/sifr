@@ -238,7 +238,7 @@ fn decode_typevar_constraint(encoded: &str) -> Option<&str> {
 /// `T: Bound` is treated as a hard bound; `T: (A, B)` is treated as constraints.
 fn parse_typevar_bound_expr(expr: &Expr, ctx: &mut LowerCtx) -> Vec<String> {
     match expr {
-        Expr::Name(name) => vec![name.id.clone()],
+        Expr::Name(name) => vec![name.id.to_string()],
         Expr::Tuple(tuple) => {
             let mut specs = Vec::new();
             for elt in &tuple.elts {
@@ -285,7 +285,7 @@ fn parse_typevar_declaration_specs(call: &ExprCall, ctx: &mut LowerCtx) -> Vec<S
             "bound" => {
                 saw_bound = true;
                 match &kw.value {
-                    Expr::Name(name) => specs.push(name.id.clone()),
+                    Expr::Name(name) => specs.push(name.id.to_string()),
                     _ => {
                         ctx.error("TypeVar bound must be a simple type name".to_string());
                     }
@@ -532,10 +532,11 @@ fn lower_module_impl(
                         if let Expr::Name(func_name) = call.func.as_ref() {
                             if func_name.id.as_str() == "TypeVar" {
                                 // Register this name as a type variable
-                                ctx.type_vars.insert(name.id.clone());
+                                ctx.type_vars.insert(name.id.to_string());
                                 let specs = parse_typevar_declaration_specs(call, &mut ctx);
                                 if !specs.is_empty() {
-                                    ctx.declared_type_var_bounds.insert(name.id.clone(), specs);
+                                    ctx.declared_type_var_bounds
+                                        .insert(name.id.to_string(), specs);
                                 }
                             }
                         }
@@ -1084,7 +1085,7 @@ fn lower_module_impl(
     for stmt in stmts {
         if let Stmt::AnnAssign(ann) = stmt {
             if let Expr::Name(name) = ann.target.as_ref() {
-                let var_name = name.id.clone();
+                let var_name = name.id.to_string();
                 let ty = resolve_annotation_expr(&ann.annotation, &mut ctx);
                 if let Some(ref value_expr) = ann.value {
                     if let Some(hir_value) = lower_expr_simple(value_expr) {
@@ -1098,7 +1099,7 @@ fn lower_module_impl(
         if let Stmt::Assign(assign) = stmt {
             if assign.targets.len() == 1 {
                 if let Expr::Name(name) = &assign.targets[0] {
-                    let var_name = name.id.clone();
+                    let var_name = name.id.to_string();
                     // Skip TypeVar declarations (already handled)
                     if ctx.type_vars.contains(&var_name) {
                         continue;
