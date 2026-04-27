@@ -83,6 +83,10 @@ needless_raw_string_hashes = "allow"
 print_stdout = "warn"
 print_stderr = "warn"
 dbg_macro = "warn"
+# Production targets should stay free of unchecked unwrap/expect calls.
+# Test targets allow these while assertion cleanup is handled separately.
+unwrap_used = "warn"
+expect_used = "warn"
 
 [profile.release]
 lto = "thin"

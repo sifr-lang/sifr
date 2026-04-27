@@ -2,6 +2,7 @@
 //!
 //! Defines the type representations, type inference, type checking,
 //! and subtyping rules for the Sifr language.
+#![cfg_attr(test, allow(clippy::expect_used, clippy::unwrap_used))]
 
 mod check;
 pub mod infer;

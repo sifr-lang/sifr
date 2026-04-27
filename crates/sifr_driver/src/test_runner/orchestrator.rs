@@ -123,7 +123,11 @@ pub(crate) fn build_test_runner_project(
         )
         .map_err(|error| vec![error])?;
         all_rust_code.push_str("// Tests from: ");
-        all_rust_code.push_str(&test_file.file_name().unwrap().to_string_lossy());
+        if let Some(file_name) = test_file.file_name() {
+            all_rust_code.push_str(&file_name.to_string_lossy());
+        } else {
+            all_rust_code.push_str(&test_file.display().to_string());
+        }
         all_rust_code.push('\n');
         all_rust_code.push_str(&codegen_result.rust_source);
         all_rust_code.push('\n');

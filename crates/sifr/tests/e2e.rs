@@ -13,6 +13,7 @@
 //! - `SIFR_E2E_RUN_JOBS`: bounded parallel run workers.
 //! - `SIFR_E2E_CARGO_BUILD_JOBS`: cargo jobs per generated group build.
 //! - `SIFR_E2E_DISABLE_CACHE=1` disables cache reuse.
+#![allow(clippy::expect_used, clippy::unwrap_used)]
 
 use serde::{Deserialize, Serialize};
 use std::collections::{BTreeMap, BTreeSet, HashSet};

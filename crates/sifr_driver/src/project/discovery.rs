@@ -253,7 +253,10 @@ fn is_test_module_name(module_name: &str) -> bool {
 pub(crate) fn discover_test_root_modules(test_dir: &Path) -> BTreeMap<String, PathBuf> {
     let mut test_files_by_module = BTreeMap::new();
     for path in discover_project_sifr_files(test_dir) {
-        let module_name = path.file_stem().unwrap().to_string_lossy().to_string();
+        let Some(file_stem) = path.file_stem() else {
+            continue;
+        };
+        let module_name = file_stem.to_string_lossy().to_string();
         if is_test_module_name(&module_name) {
             test_files_by_module.insert(module_name, path);
         }

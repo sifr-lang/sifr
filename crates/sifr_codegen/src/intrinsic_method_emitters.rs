@@ -627,9 +627,9 @@ fn registry_ensure_some_box_inner(expr: RustExpr) -> RustExpr {
             if registry_is_some_ctor(func.as_ref()) && args.len() == 1 =>
         {
             let mut args_iter = args.into_iter();
-            let inner = args_iter
-                .next()
-                .expect("checked args.len() == 1 for Some(_) call");
+            let Some(inner) = args_iter.next() else {
+                unreachable!("Some(_) call must have exactly one argument");
+            };
             if matches!(&inner, RustExpr::FnCall { func, .. } if registry_is_box_new_ctor(func.as_ref()))
             {
                 RustExpr::FnCall {

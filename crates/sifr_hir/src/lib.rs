@@ -4,6 +4,7 @@
 //! - Name resolution (every name reference resolved to a definition)
 //! - Type checking (every expression carries its resolved type)
 //! - Ownership tracking (move vs copy semantics)
+#![cfg_attr(test, allow(clippy::expect_used, clippy::unwrap_used))]
 
 pub mod cfg;
 mod hir_nodes;

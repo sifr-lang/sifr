@@ -1,5 +1,6 @@
 //! Sifr Code Generation: translates typed HIR into Rust source code.
 #![allow(dead_code)]
+#![cfg_attr(test, allow(clippy::expect_used, clippy::unwrap_used))]
 mod rust_ir;
 pub use rust_ir::*;
 mod render;
