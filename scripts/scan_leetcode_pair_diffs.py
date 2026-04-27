@@ -9,7 +9,7 @@ from pathlib import Path
 
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
-LEETCODE_DIR = REPO_ROOT / "audits" / "leetcode"
+LEETCODE_DIR = REPO_ROOT / "audits" / "leetcode" / "src"
 HELPER_PY_FILES = {"run_audit.py", "convert_all.py"}
 
 

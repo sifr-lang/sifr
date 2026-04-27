@@ -4,4 +4,4 @@ version = "0.0.0"
 edition = "2026"
 
 [source]
-roots = ["audits/leetcode", "."]
+roots = ["audits/leetcode/src", "."]

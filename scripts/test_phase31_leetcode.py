@@ -64,7 +64,7 @@ class Phase31LeetCodeTests(unittest.TestCase):
                 {
                     "id": "9999",
                     "fixture_slug": "fake_case",
-                    "sifr_path": "audits/leetcode/0001_two_sum.sifr",
+                    "sifr_path": "audits/leetcode/src/0001_two_sum.sifr",
                     "primary_topic": "arrays",
                     "difficulty": "easy",
                     "scope_classification": "in_scope",
@@ -87,7 +87,7 @@ class Phase31LeetCodeTests(unittest.TestCase):
                 {
                     "id": "9998",
                     "fixture_slug": "fake_case_no_oracle",
-                    "sifr_path": "audits/leetcode/0100_same_tree.sifr",
+                    "sifr_path": "audits/leetcode/src/0100_same_tree.sifr",
                     "primary_topic": "trees",
                     "difficulty": "easy",
                     "scope_classification": "in_scope",
@@ -112,7 +112,7 @@ class Phase31LeetCodeTests(unittest.TestCase):
                 {
                     "id": "9997",
                     "fixture_slug": "fake_case_timeout",
-                    "sifr_path": "audits/leetcode/0001_two_sum.sifr",
+                    "sifr_path": "audits/leetcode/src/0001_two_sum.sifr",
                     "primary_topic": "arrays",
                     "difficulty": "easy",
                     "scope_classification": "in_scope",

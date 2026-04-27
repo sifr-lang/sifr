@@ -18,15 +18,15 @@ edition = "2026"
 
 [workspace]
 resolver = "1"
-members = ["audits/leetcode"]
+members = ["audits/leetcode/src"]
 exclude = ["tmp", "target"]
 
 [source]
-roots = ["audits/leetcode", "."]
+roots = ["audits/leetcode/src", "."]
 
 [[bin]]
 name = "merge-two-sorted-lists"
-path = "audits/leetcode/0021_merge_two_sorted_lists.sifr"
+path = "audits/leetcode/src/0021_merge_two_sorted_lists.sifr"
 
 [dependencies]
 # Reserved for a future package manager.

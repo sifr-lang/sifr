@@ -10,7 +10,7 @@
       },
       "primary_topic": "arrays",
       "scope_classification": "in_scope",
-      "sifr_path": "audit/leetcode/0001_two_sum.sifr",
+      "sifr_path": "audits/leetcode/src/0001_two_sum.sifr",
       "timeout_seconds": 20,
       "topics": [
         "arrays",
@@ -26,7 +26,7 @@
       },
       "primary_topic": "dp",
       "scope_classification": "in_scope",
-      "sifr_path": "audit/leetcode/0070_climbing_stairs.sifr",
+      "sifr_path": "audits/leetcode/src/0070_climbing_stairs.sifr",
       "timeout_seconds": 20,
       "topics": [
         "dp"
@@ -41,7 +41,7 @@
       },
       "primary_topic": "trees",
       "scope_classification": "in_scope",
-      "sifr_path": "audit/leetcode/0100_same_tree.sifr",
+      "sifr_path": "audits/leetcode/src/0100_same_tree.sifr",
       "timeout_seconds": 20,
       "topics": [
         "trees",
@@ -57,7 +57,7 @@
       },
       "primary_topic": "math",
       "scope_classification": "in_scope",
-      "sifr_path": "audit/leetcode/0009_palindrome_number.sifr",
+      "sifr_path": "audits/leetcode/src/0009_palindrome_number.sifr",
       "timeout_seconds": 20,
       "topics": [
         "math"
@@ -72,7 +72,7 @@
       },
       "primary_topic": "math",
       "scope_classification": "in_scope",
-      "sifr_path": "audit/leetcode/0069_sqrtx.sifr",
+      "sifr_path": "audits/leetcode/src/0069_sqrtx.sifr",
       "timeout_seconds": 20,
       "topics": [
         "math",

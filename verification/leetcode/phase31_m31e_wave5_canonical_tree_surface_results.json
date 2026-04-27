@@ -19,7 +19,7 @@
           "command": [
             "target/debug/sifr",
             "check",
-            "audits/leetcode/0100_same_tree.sifr"
+            "audits/leetcode/src/0100_same_tree.sifr"
           ],
           "duration_ms": 330,
           "returncode": 0,
@@ -32,7 +32,7 @@
           "command": [
             "target/debug/sifr",
             "run",
-            "audits/leetcode/0100_same_tree.sifr"
+            "audits/leetcode/src/0100_same_tree.sifr"
           ],
           "duration_ms": 405,
           "returncode": 0,
@@ -58,7 +58,7 @@
           "command": [
             "target/debug/sifr",
             "check",
-            "audits/leetcode/0102_binary_tree_level_order_traversal.sifr"
+            "audits/leetcode/src/0102_binary_tree_level_order_traversal.sifr"
           ],
           "duration_ms": 334,
           "returncode": 0,
@@ -71,7 +71,7 @@
           "command": [
             "target/debug/sifr",
             "run",
-            "audits/leetcode/0102_binary_tree_level_order_traversal.sifr"
+            "audits/leetcode/src/0102_binary_tree_level_order_traversal.sifr"
           ],
           "duration_ms": 1002,
           "returncode": 0,
@@ -97,7 +97,7 @@
           "command": [
             "target/debug/sifr",
             "check",
-            "audits/leetcode/0235_lowest_common_ancestor_of_a_binary_search_tree.sifr"
+            "audits/leetcode/src/0235_lowest_common_ancestor_of_a_binary_search_tree.sifr"
           ],
           "duration_ms": 356,
           "returncode": 0,
@@ -110,7 +110,7 @@
           "command": [
             "target/debug/sifr",
             "run",
-            "audits/leetcode/0235_lowest_common_ancestor_of_a_binary_search_tree.sifr"
+            "audits/leetcode/src/0235_lowest_common_ancestor_of_a_binary_search_tree.sifr"
           ],
           "duration_ms": 920,
           "returncode": 0,

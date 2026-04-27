@@ -17,7 +17,7 @@
       "diagnostic": "type error: cannot index type 'Any' with 'int'",
       "fixture_slug": "0056_merge_intervals",
       "id": "0056",
-      "sifr_path": "audits/leetcode/0056_merge_intervals.sifr",
+      "sifr_path": "audits/leetcode/src/0056_merge_intervals.sifr",
       "status": "CHECK_ERROR",
       "subcategory": null
     },
@@ -26,7 +26,7 @@
       "diagnostic": "type error: '>' not supported between instances of 'Any' and 'int'",
       "fixture_slug": "0084_largest_rectangle_in_histogram",
       "id": "0084",
-      "sifr_path": "audits/leetcode/0084_largest_rectangle_in_histogram.sifr",
+      "sifr_path": "audits/leetcode/src/0084_largest_rectangle_in_histogram.sifr",
       "status": "CHECK_ERROR",
       "subcategory": null
     },
@@ -35,7 +35,7 @@
       "diagnostic": "type error: cannot compare 'list[int]' and 'list[Any]' with ==",
       "fixture_slug": "0144_binary_tree_preorder_traversal",
       "id": "0144",
-      "sifr_path": "audits/leetcode/0144_binary_tree_preorder_traversal.sifr",
+      "sifr_path": "audits/leetcode/src/0144_binary_tree_preorder_traversal.sifr",
       "status": "CHECK_ERROR",
       "subcategory": null
     },
@@ -44,7 +44,7 @@
       "diagnostic": "type error: cannot compare 'list[int]' and 'list[Any]' with ==",
       "fixture_slug": "0145_binary_tree_postorder_traversal",
       "id": "0145",
-      "sifr_path": "audits/leetcode/0145_binary_tree_postorder_traversal.sifr",
+      "sifr_path": "audits/leetcode/src/0145_binary_tree_postorder_traversal.sifr",
       "status": "CHECK_ERROR",
       "subcategory": null
     },
@@ -53,7 +53,7 @@
       "diagnostic": "type error: cannot index type 'Unknown' with 'int'",
       "fixture_slug": "0210_course_schedule_ii",
       "id": "0210",
-      "sifr_path": "audits/leetcode/0210_course_schedule_ii.sifr",
+      "sifr_path": "audits/leetcode/src/0210_course_schedule_ii.sifr",
       "status": "CHECK_ERROR",
       "subcategory": null
     },
@@ -62,7 +62,7 @@
       "diagnostic": "type error: '<' not supported between instances of 'Any' and 'int'",
       "fixture_slug": "0239_sliding_window_maximum",
       "id": "0239",
-      "sifr_path": "audits/leetcode/0239_sliding_window_maximum.sifr",
+      "sifr_path": "audits/leetcode/src/0239_sliding_window_maximum.sifr",
       "status": "CHECK_ERROR",
       "subcategory": null
     },
@@ -71,7 +71,7 @@
       "diagnostic": "type error: cannot index type 'Any' with 'int'",
       "fixture_slug": "0253_meeting_rooms_ii",
       "id": "0253",
-      "sifr_path": "audits/leetcode/0253_meeting_rooms_ii.sifr",
+      "sifr_path": "audits/leetcode/src/0253_meeting_rooms_ii.sifr",
       "status": "CHECK_ERROR",
       "subcategory": null
     },
@@ -80,7 +80,7 @@
       "diagnostic": "type error: argument 1 of callable 'dfs': expected 'dict[str, list[str]]', got 'Unknown'",
       "fixture_slug": "0332_reconstruct_itinerary",
       "id": "0332",
-      "sifr_path": "audits/leetcode/0332_reconstruct_itinerary.sifr",
+      "sifr_path": "audits/leetcode/src/0332_reconstruct_itinerary.sifr",
       "status": "CHECK_ERROR",
       "subcategory": null
     },
@@ -89,7 +89,7 @@
       "diagnostic": "type error: cannot compare 'list[int]' and 'list[Any]' with ==",
       "fixture_slug": "0442_find_all_duplicates_in_an_array",
       "id": "0442",
-      "sifr_path": "audits/leetcode/0442_find_all_duplicates_in_an_array.sifr",
+      "sifr_path": "audits/leetcode/src/0442_find_all_duplicates_in_an_array.sifr",
       "status": "CHECK_ERROR",
       "subcategory": null
     },
@@ -98,7 +98,7 @@
       "diagnostic": "type error: '<' not supported between instances of 'int' and 'Any'",
       "fixture_slug": "0456_132_pattern",
       "id": "0456",
-      "sifr_path": "audits/leetcode/0456_132_pattern.sifr",
+      "sifr_path": "audits/leetcode/src/0456_132_pattern.sifr",
       "status": "CHECK_ERROR",
       "subcategory": null
     },
@@ -107,7 +107,7 @@
       "diagnostic": "type error: '>' not supported between instances of 'int' and 'Any'",
       "fixture_slug": "0739_daily_temperatures",
       "id": "0739",
-      "sifr_path": "audits/leetcode/0739_daily_temperatures.sifr",
+      "sifr_path": "audits/leetcode/src/0739_daily_temperatures.sifr",
       "status": "CHECK_ERROR",
       "subcategory": null
     },
@@ -116,7 +116,7 @@
       "diagnostic": "type error: '<=' not supported between instances of 'int' and 'Any'",
       "fixture_slug": "0862_shortest_subarray_with_sum_at_least_k",
       "id": "0862",
-      "sifr_path": "audits/leetcode/0862_shortest_subarray_with_sum_at_least_k.sifr",
+      "sifr_path": "audits/leetcode/src/0862_shortest_subarray_with_sum_at_least_k.sifr",
       "status": "CHECK_ERROR",
       "subcategory": null
     },
@@ -125,7 +125,7 @@
       "diagnostic": "type error: cannot index type 'Any' with 'int'",
       "fixture_slug": "1029_two_city_scheduling",
       "id": "1029",
-      "sifr_path": "audits/leetcode/1029_two_city_scheduling.sifr",
+      "sifr_path": "audits/leetcode/src/1029_two_city_scheduling.sifr",
       "status": "CHECK_ERROR",
       "subcategory": null
     },
@@ -134,7 +134,7 @@
       "diagnostic": "type error: unsupported operand type(s) for +: 'Any' and 'Any'",
       "fixture_slug": "1137_n_th_tribonacci_number",
       "id": "1137",
-      "sifr_path": "audits/leetcode/1137_n_th_tribonacci_number.sifr",
+      "sifr_path": "audits/leetcode/src/1137_n_th_tribonacci_number.sifr",
       "status": "CHECK_ERROR",
       "subcategory": null
     },
@@ -143,7 +143,7 @@
       "diagnostic": "type error: bad operand type for unary -: 'Any'",
       "fixture_slug": "1288_remove_covered_intervals",
       "id": "1288",
-      "sifr_path": "audits/leetcode/1288_remove_covered_intervals.sifr",
+      "sifr_path": "audits/leetcode/src/1288_remove_covered_intervals.sifr",
       "status": "CHECK_ERROR",
       "subcategory": null
     },
@@ -152,7 +152,7 @@
       "diagnostic": "type error: cannot compare 'list[list[int]]' and 'list[list[Any]]' with ==",
       "fixture_slug": "1489_find_critical_and_pseudo_critical_edges_in_minimum_spanning_tree",
       "id": "1489",
-      "sifr_path": "audits/leetcode/1489_find_critical_and_pseudo_critical_edges_in_minimum_spanning_tree.sifr",
+      "sifr_path": "audits/leetcode/src/1489_find_critical_and_pseudo_critical_edges_in_minimum_spanning_tree.sifr",
       "status": "CHECK_ERROR",
       "subcategory": null
     },
@@ -161,7 +161,7 @@
       "diagnostic": "type error: '<' not supported between instances of 'Any' and 'int'",
       "fixture_slug": "1851_minimum_interval_to_include_each_query",
       "id": "1851",
-      "sifr_path": "audits/leetcode/1851_minimum_interval_to_include_each_query.sifr",
+      "sifr_path": "audits/leetcode/src/1851_minimum_interval_to_include_each_query.sifr",
       "status": "CHECK_ERROR",
       "subcategory": null
     },
@@ -170,7 +170,7 @@
       "diagnostic": "type error: cannot index type 'Unknown' with 'int'",
       "fixture_slug": "2101_detonate_the_maximum_bombs",
       "id": "2101",
-      "sifr_path": "audits/leetcode/2101_detonate_the_maximum_bombs.sifr",
+      "sifr_path": "audits/leetcode/src/2101_detonate_the_maximum_bombs.sifr",
       "status": "CHECK_ERROR",
       "subcategory": null
     },
@@ -179,7 +179,7 @@
       "diagnostic": "type error: argument 1 ('list1') of function 'mergeTwoLists': expected 'ListNode', got 'None'",
       "fixture_slug": "0021_merge_two_sorted_lists",
       "id": "0021",
-      "sifr_path": "audits/leetcode/0021_merge_two_sorted_lists.sifr",
+      "sifr_path": "audits/leetcode/src/0021_merge_two_sorted_lists.sifr",
       "status": "CHECK_ERROR",
       "subcategory": null
     },
@@ -188,7 +188,7 @@
       "diagnostic": "type error: argument 1 ('head') of function 'removeElements': expected 'ListNode', got 'None'",
       "fixture_slug": "0203_remove_linked_list_elements",
       "id": "0203",
-      "sifr_path": "audits/leetcode/0203_remove_linked_list_elements.sifr",
+      "sifr_path": "audits/leetcode/src/0203_remove_linked_list_elements.sifr",
       "status": "CHECK_ERROR",
       "subcategory": null
     },
@@ -197,7 +197,7 @@
       "diagnostic": "type error: argument 1 ('root') of function 'lowestCommonAncestor': expected '\"TreeNode\"', got 'TreeNode'",
       "fixture_slug": "0236_lowest_common_ancestor_of_a_binary_tree",
       "id": "0236",
-      "sifr_path": "audits/leetcode/0236_lowest_common_ancestor_of_a_binary_tree.sifr",
+      "sifr_path": "audits/leetcode/src/0236_lowest_common_ancestor_of_a_binary_tree.sifr",
       "status": "CHECK_ERROR",
       "subcategory": null
     },
@@ -206,7 +206,7 @@
       "diagnostic": "type error: argument 1 ('val') of deque.append(): expected 'T', got 'list[int]'",
       "fixture_slug": "0286_walls_and_gates",
       "id": "0286",
-      "sifr_path": "audits/leetcode/0286_walls_and_gates.sifr",
+      "sifr_path": "audits/leetcode/src/0286_walls_and_gates.sifr",
       "status": "CHECK_ERROR",
       "subcategory": null
     },
@@ -215,7 +215,7 @@
       "diagnostic": "type error: argument 1 ('val') of deque.append(): expected 'T', got 'list[str]'",
       "fixture_slug": "0752_open_the_lock",
       "id": "0752",
-      "sifr_path": "audits/leetcode/0752_open_the_lock.sifr",
+      "sifr_path": "audits/leetcode/src/0752_open_the_lock.sifr",
       "status": "CHECK_ERROR",
       "subcategory": null
     },
@@ -224,7 +224,7 @@
       "diagnostic": "type error: argument 1 ('val') of deque.append(): expected 'T', got 'tuple[int, str]'",
       "fixture_slug": "0838_push_dominoes",
       "id": "0838",
-      "sifr_path": "audits/leetcode/0838_push_dominoes.sifr",
+      "sifr_path": "audits/leetcode/src/0838_push_dominoes.sifr",
       "status": "CHECK_ERROR",
       "subcategory": null
     },
@@ -233,7 +233,7 @@
       "diagnostic": "type error: argument 1 ('val') of deque.append(): expected 'T', got 'list[int]'",
       "fixture_slug": "0909_snakes_and_ladders",
       "id": "0909",
-      "sifr_path": "audits/leetcode/0909_snakes_and_ladders.sifr",
+      "sifr_path": "audits/leetcode/src/0909_snakes_and_ladders.sifr",
       "status": "CHECK_ERROR",
       "subcategory": null
     },
@@ -242,7 +242,7 @@
       "diagnostic": "type error: argument 2 of callable 'Path': expected 'int', got 'float'",
       "fixture_slug": "0931_minimum_falling_path_sum",
       "id": "0931",
-      "sifr_path": "audits/leetcode/0931_minimum_falling_path_sum.sifr",
+      "sifr_path": "audits/leetcode/src/0931_minimum_falling_path_sum.sifr",
       "status": "CHECK_ERROR",
       "subcategory": null
     },
@@ -251,7 +251,7 @@
       "diagnostic": "type error: argument 1 ('val') of deque.append(): expected 'T', got 'tuple[int, int]'",
       "fixture_slug": "0994_rotting_oranges",
       "id": "0994",
-      "sifr_path": "audits/leetcode/0994_rotting_oranges.sifr",
+      "sifr_path": "audits/leetcode/src/0994_rotting_oranges.sifr",
       "status": "CHECK_ERROR",
       "subcategory": null
     },
@@ -260,7 +260,7 @@
       "diagnostic": "type error: argument 2 of callable 'dfs': expected 'int', got 'Result[int, ParseError]'",
       "fixture_slug": "1849_splitting_a_string_into_descending_consecutive_values",
       "id": "1849",
-      "sifr_path": "audits/leetcode/1849_splitting_a_string_into_descending_consecutive_values.sifr",
+      "sifr_path": "audits/leetcode/src/1849_splitting_a_string_into_descending_consecutive_values.sifr",
       "status": "CHECK_ERROR",
       "subcategory": null
     },
@@ -269,7 +269,7 @@
       "diagnostic": "error[E0382]: borrow of moved value: `prefix`",
       "fixture_slug": "0014_longest_common_prefix",
       "id": "0014",
-      "sifr_path": "audits/leetcode/0014_longest_common_prefix.sifr",
+      "sifr_path": "audits/leetcode/src/0014_longest_common_prefix.sifr",
       "status": "RUN_ERROR",
       "subcategory": null
     },
@@ -278,7 +278,7 @@
       "diagnostic": "error[E0382]: borrow of moved value: `prefix`",
       "fixture_slug": "0014_longest_common_prefix_v2",
       "id": "0014",
-      "sifr_path": "audits/leetcode/0014_longest_common_prefix_v2.sifr",
+      "sifr_path": "audits/leetcode/src/0014_longest_common_prefix_v2.sifr",
       "status": "RUN_ERROR",
       "subcategory": null
     },
@@ -287,7 +287,7 @@
       "diagnostic": "error[E0600]: cannot apply unary operator `!` to type `Vec<String>`",
       "fixture_slug": "0020_valid_parentheses",
       "id": "0020",
-      "sifr_path": "audits/leetcode/0020_valid_parentheses.sifr",
+      "sifr_path": "audits/leetcode/src/0020_valid_parentheses.sifr",
       "status": "RUN_ERROR",
       "subcategory": null
     },
@@ -296,7 +296,7 @@
       "diagnostic": "error[E0425]: cannot find value `row` in this scope",
       "fixture_slug": "0051_n_queens",
       "id": "0051",
-      "sifr_path": "audits/leetcode/0051_n_queens.sifr",
+      "sifr_path": "audits/leetcode/src/0051_n_queens.sifr",
       "status": "RUN_ERROR",
       "subcategory": null
     },
@@ -305,7 +305,7 @@
       "diagnostic": "error[E0382]: use of moved value: `word`",
       "fixture_slug": "0127_word_ladder",
       "id": "0127",
-      "sifr_path": "audits/leetcode/0127_word_ladder.sifr",
+      "sifr_path": "audits/leetcode/src/0127_word_ladder.sifr",
       "status": "RUN_ERROR",
       "subcategory": null
     },
@@ -314,7 +314,7 @@
       "diagnostic": "error[E0382]: use of moved value: `ordered`",
       "fixture_slug": "0703_kth_largest_element_in_a_stream",
       "id": "0703",
-      "sifr_path": "audits/leetcode/0703_kth_largest_element_in_a_stream.sifr",
+      "sifr_path": "audits/leetcode/src/0703_kth_largest_element_in_a_stream.sifr",
       "status": "RUN_ERROR",
       "subcategory": null
     },
@@ -323,7 +323,7 @@
       "diagnostic": "error[E0382]: use of moved value: `nums`",
       "fixture_slug": "0912_sort_an_array",
       "id": "0912",
-      "sifr_path": "audits/leetcode/0912_sort_an_array.sifr",
+      "sifr_path": "audits/leetcode/src/0912_sort_an_array.sifr",
       "status": "RUN_ERROR",
       "subcategory": null
     },
@@ -332,7 +332,7 @@
       "diagnostic": "type error: cannot iterate over type 'bool'",
       "fixture_slug": "0241_different_ways_to_add_parentheses",
       "id": "0241",
-      "sifr_path": "audits/leetcode/0241_different_ways_to_add_parentheses.sifr",
+      "sifr_path": "audits/leetcode/src/0241_different_ways_to_add_parentheses.sifr",
       "status": "CHECK_ERROR",
       "subcategory": null
     },
@@ -341,7 +341,7 @@
       "diagnostic": "type error: cannot iterate over type 'str'",
       "fixture_slug": "0269_alien_dictionary",
       "id": "0269",
-      "sifr_path": "audits/leetcode/0269_alien_dictionary.sifr",
+      "sifr_path": "audits/leetcode/src/0269_alien_dictionary.sifr",
       "status": "CHECK_ERROR",
       "subcategory": null
     },
@@ -350,7 +350,7 @@
       "diagnostic": "type error: cannot index type 'list[list[int]]' with 'T'",
       "fixture_slug": "0785_is_graph_bipartite",
       "id": "0785",
-      "sifr_path": "audits/leetcode/0785_is_graph_bipartite.sifr",
+      "sifr_path": "audits/leetcode/src/0785_is_graph_bipartite.sifr",
       "status": "CHECK_ERROR",
       "subcategory": null
     },
@@ -359,7 +359,7 @@
       "diagnostic": "type error: cannot iterate over type 'Iterator[tuple[int, int]]'",
       "fixture_slug": "0853_car_fleet",
       "id": "0853",
-      "sifr_path": "audits/leetcode/0853_car_fleet.sifr",
+      "sifr_path": "audits/leetcode/src/0853_car_fleet.sifr",
       "status": "CHECK_ERROR",
       "subcategory": null
     },
@@ -368,7 +368,7 @@
       "diagnostic": "type error: cannot iterate over type 'Iterator[tuple[int, str]]'",
       "fixture_slug": "0953_verifying_an_alien_dictionary",
       "id": "0953",
-      "sifr_path": "audits/leetcode/0953_verifying_an_alien_dictionary.sifr",
+      "sifr_path": "audits/leetcode/src/0953_verifying_an_alien_dictionary.sifr",
       "status": "CHECK_ERROR",
       "subcategory": null
     },
@@ -377,7 +377,7 @@
       "diagnostic": "type error: cannot iterate over type 'Iterator[tuple[int, list[int]]]'",
       "fixture_slug": "1834_single_threaded_cpu",
       "id": "1834",
-      "sifr_path": "audits/leetcode/1834_single_threaded_cpu.sifr",
+      "sifr_path": "audits/leetcode/src/1834_single_threaded_cpu.sifr",
       "status": "CHECK_ERROR",
       "subcategory": null
     },
@@ -386,7 +386,7 @@
       "diagnostic": "type error: for loop tuple target expects iterable elements of tuple type, got 'list[str]'",
       "fixture_slug": "0012_integer_to_roman",
       "id": "0012",
-      "sifr_path": "audits/leetcode/0012_integer_to_roman.sifr",
+      "sifr_path": "audits/leetcode/src/0012_integer_to_roman.sifr",
       "status": "CHECK_ERROR",
       "subcategory": null
     },
@@ -395,7 +395,7 @@
       "diagnostic": "type error: cannot unpack non-tuple type 'list[int]'",
       "fixture_slug": "0076_minimum_window_substring",
       "id": "0076",
-      "sifr_path": "audits/leetcode/0076_minimum_window_substring.sifr",
+      "sifr_path": "audits/leetcode/src/0076_minimum_window_substring.sifr",
       "status": "CHECK_ERROR",
       "subcategory": null
     },
@@ -404,7 +404,7 @@
       "diagnostic": "type error: tuple unpacking target must be a simple name or attribute",
       "fixture_slug": "0280_wiggle_sort",
       "id": "0280",
-      "sifr_path": "audits/leetcode/0280_wiggle_sort.sifr",
+      "sifr_path": "audits/leetcode/src/0280_wiggle_sort.sifr",
       "status": "CHECK_ERROR",
       "subcategory": null
     },
@@ -413,7 +413,7 @@
       "diagnostic": "type error: tuple unpacking target must be a simple name or attribute",
       "fixture_slug": "0283_move_zeroes",
       "id": "0283",
-      "sifr_path": "audits/leetcode/0283_move_zeroes.sifr",
+      "sifr_path": "audits/leetcode/src/0283_move_zeroes.sifr",
       "status": "CHECK_ERROR",
       "subcategory": null
     },
@@ -422,7 +422,7 @@
       "diagnostic": "type error: for loop tuple target expects iterable elements of tuple type, got 'list[int]'",
       "fixture_slug": "0323_number_of_connected_components_in_an_undirected_graph",
       "id": "0323",
-      "sifr_path": "audits/leetcode/0323_number_of_connected_components_in_an_undirected_graph.sifr",
+      "sifr_path": "audits/leetcode/src/0323_number_of_connected_components_in_an_undirected_graph.sifr",
       "status": "CHECK_ERROR",
       "subcategory": null
     },
@@ -431,7 +431,7 @@
       "diagnostic": "type error: tuple unpacking target must be a simple name or attribute",
       "fixture_slug": "0344_reverse_string",
       "id": "0344",
-      "sifr_path": "audits/leetcode/0344_reverse_string.sifr",
+      "sifr_path": "audits/leetcode/src/0344_reverse_string.sifr",
       "status": "CHECK_ERROR",
       "subcategory": null
     },
@@ -440,7 +440,7 @@
       "diagnostic": "type error: augmented subscript assignment target must be a simple name",
       "fixture_slug": "0516_longest_palindromic_subsequence",
       "id": "0516",
-      "sifr_path": "audits/leetcode/0516_longest_palindromic_subsequence.sifr",
+      "sifr_path": "audits/leetcode/src/0516_longest_palindromic_subsequence.sifr",
       "status": "CHECK_ERROR",
       "subcategory": null
     },
@@ -449,7 +449,7 @@
       "diagnostic": "type error: chained assignment targets must be simple names",
       "fixture_slug": "0622_design_circular_queue",
       "id": "0622",
-      "sifr_path": "audits/leetcode/0622_design_circular_queue.sifr",
+      "sifr_path": "audits/leetcode/src/0622_design_circular_queue.sifr",
       "status": "CHECK_ERROR",
       "subcategory": null
     },
@@ -458,7 +458,7 @@
       "diagnostic": "type error: cannot unpack non-tuple type 'list[int]'",
       "fixture_slug": "0673_number_of_longest_increasing_subsequence",
       "id": "0673",
-      "sifr_path": "audits/leetcode/0673_number_of_longest_increasing_subsequence.sifr",
+      "sifr_path": "audits/leetcode/src/0673_number_of_longest_increasing_subsequence.sifr",
       "status": "CHECK_ERROR",
       "subcategory": null
     },
@@ -467,7 +467,7 @@
       "diagnostic": "type error: attribute assignment target must be a simple name",
       "fixture_slug": "0707_design_linked_list",
       "id": "0707",
-      "sifr_path": "audits/leetcode/0707_design_linked_list.sifr",
+      "sifr_path": "audits/leetcode/src/0707_design_linked_list.sifr",
       "status": "CHECK_ERROR",
       "subcategory": null
     },
@@ -476,7 +476,7 @@
       "diagnostic": "type error: for loop tuple target expects iterable elements of tuple type, got 'list[int]'",
       "fixture_slug": "0787_cheapest_flights_within_k_stops",
       "id": "0787",
-      "sifr_path": "audits/leetcode/0787_cheapest_flights_within_k_stops.sifr",
+      "sifr_path": "audits/leetcode/src/0787_cheapest_flights_within_k_stops.sifr",
       "status": "CHECK_ERROR",
       "subcategory": null
     },
@@ -485,7 +485,7 @@
       "diagnostic": "type error: augmented subscript assignment target must be a simple name",
       "fixture_slug": "0895_maximum_frequency_stack",
       "id": "0895",
-      "sifr_path": "audits/leetcode/0895_maximum_frequency_stack.sifr",
+      "sifr_path": "audits/leetcode/src/0895_maximum_frequency_stack.sifr",
       "status": "CHECK_ERROR",
       "subcategory": null
     },
@@ -494,7 +494,7 @@
       "diagnostic": "type error: cannot unpack non-tuple type 'list[str]'",
       "fixture_slug": "0929_unique_email_addresses",
       "id": "0929",
-      "sifr_path": "audits/leetcode/0929_unique_email_addresses.sifr",
+      "sifr_path": "audits/leetcode/src/0929_unique_email_addresses.sifr",
       "status": "CHECK_ERROR",
       "subcategory": null
     },
@@ -503,7 +503,7 @@
       "diagnostic": "type error: cannot unpack non-tuple type 'T'",
       "fixture_slug": "1091_shortest_path_in_binary_matrix",
       "id": "1091",
-      "sifr_path": "audits/leetcode/1091_shortest_path_in_binary_matrix.sifr",
+      "sifr_path": "audits/leetcode/src/1091_shortest_path_in_binary_matrix.sifr",
       "status": "CHECK_ERROR",
       "subcategory": null
     },
@@ -512,7 +512,7 @@
       "diagnostic": "type error: cannot unpack non-tuple type 'list[int]'",
       "fixture_slug": "1260_shift_2d_grid",
       "id": "1260",
-      "sifr_path": "audits/leetcode/1260_shift_2d_grid.sifr",
+      "sifr_path": "audits/leetcode/src/1260_shift_2d_grid.sifr",
       "status": "CHECK_ERROR",
       "subcategory": null
     },
@@ -521,7 +521,7 @@
       "diagnostic": "type error: augmented subscript assignment target must be a simple name",
       "fixture_slug": "1396_design_underground_system",
       "id": "1396",
-      "sifr_path": "audits/leetcode/1396_design_underground_system.sifr",
+      "sifr_path": "audits/leetcode/src/1396_design_underground_system.sifr",
       "status": "CHECK_ERROR",
       "subcategory": null
     },
@@ -530,7 +530,7 @@
       "diagnostic": "type error: for loop tuple target expects iterable elements of tuple type, got 'list[int]'",
       "fixture_slug": "1462_course_schedule_iv",
       "id": "1462",
-      "sifr_path": "audits/leetcode/1462_course_schedule_iv.sifr",
+      "sifr_path": "audits/leetcode/src/1462_course_schedule_iv.sifr",
       "status": "CHECK_ERROR",
       "subcategory": null
     },
@@ -539,7 +539,7 @@
       "diagnostic": "type error: for loop tuple target expects iterable elements of tuple type, got 'list[int]'",
       "fixture_slug": "1466_reorder_routes_to_make_all_paths_lead_to_the_city_zero",
       "id": "1466",
-      "sifr_path": "audits/leetcode/1466_reorder_routes_to_make_all_paths_lead_to_the_city_zero.sifr",
+      "sifr_path": "audits/leetcode/src/1466_reorder_routes_to_make_all_paths_lead_to_the_city_zero.sifr",
       "status": "CHECK_ERROR",
       "subcategory": null
     },
@@ -548,7 +548,7 @@
       "diagnostic": "type error: attribute assignment target must be a simple name",
       "fixture_slug": "1472_design_browser_history",
       "id": "1472",
-      "sifr_path": "audits/leetcode/1472_design_browser_history.sifr",
+      "sifr_path": "audits/leetcode/src/1472_design_browser_history.sifr",
       "status": "CHECK_ERROR",
       "subcategory": null
     },
@@ -557,7 +557,7 @@
       "diagnostic": "type error: for loop tuple target expects iterable elements of tuple type, got 'list[int]'",
       "fixture_slug": "2001_number_of_pairs_of_interchangeable_rectangles",
       "id": "2001",
-      "sifr_path": "audits/leetcode/2001_number_of_pairs_of_interchangeable_rectangles.sifr",
+      "sifr_path": "audits/leetcode/src/2001_number_of_pairs_of_interchangeable_rectangles.sifr",
       "status": "CHECK_ERROR",
       "subcategory": null
     },
@@ -566,7 +566,7 @@
       "diagnostic": "type error: augmented subscript assignment target must be a simple name",
       "fixture_slug": "2013_detect_squares",
       "id": "2013",
-      "sifr_path": "audits/leetcode/2013_detect_squares.sifr",
+      "sifr_path": "audits/leetcode/src/2013_detect_squares.sifr",
       "status": "CHECK_ERROR",
       "subcategory": null
     },
@@ -575,7 +575,7 @@
       "diagnostic": "type error: augmented subscript assignment target must be a simple name",
       "fixture_slug": "2482_difference_between_ones_and_zeros_in_row_and_column",
       "id": "2482",
-      "sifr_path": "audits/leetcode/2482_difference_between_ones_and_zeros_in_row_and_column.sifr",
+      "sifr_path": "audits/leetcode/src/2482_difference_between_ones_and_zeros_in_row_and_column.sifr",
       "status": "CHECK_ERROR",
       "subcategory": null
     },
@@ -584,7 +584,7 @@
       "diagnostic": "type error: recursive nested function 'dfs' cannot mutate captured state with `nonlocal` yet",
       "fixture_slug": "0543_diameter_of_binary_tree",
       "id": "0543",
-      "sifr_path": "audits/leetcode/0543_diameter_of_binary_tree.sifr",
+      "sifr_path": "audits/leetcode/src/0543_diameter_of_binary_tree.sifr",
       "status": "CHECK_ERROR",
       "subcategory": null
     },
@@ -593,7 +593,7 @@
       "diagnostic": "type error: while condition must be bool or collection/string truthiness, got 'int'",
       "fixture_slug": "0007_reverse_integer",
       "id": "0007",
-      "sifr_path": "audits/leetcode/0007_reverse_integer.sifr",
+      "sifr_path": "audits/leetcode/src/0007_reverse_integer.sifr",
       "status": "CHECK_ERROR",
       "subcategory": null
     },
@@ -602,7 +602,7 @@
       "diagnostic": "type error: if condition must be bool or collection/string truthiness, got 'int'",
       "fixture_slug": "0068_text_justification",
       "id": "0068",
-      "sifr_path": "audits/leetcode/0068_text_justification.sifr",
+      "sifr_path": "audits/leetcode/src/0068_text_justification.sifr",
       "status": "CHECK_ERROR",
       "subcategory": null
     },
@@ -611,7 +611,7 @@
       "diagnostic": "type error: cannot compare 'list[list[int]]' and 'None' with ==",
       "fixture_slug": "0103_binary_tree_zigzag_level_order_traversal",
       "id": "0103",
-      "sifr_path": "audits/leetcode/0103_binary_tree_zigzag_level_order_traversal.sifr",
+      "sifr_path": "audits/leetcode/src/0103_binary_tree_zigzag_level_order_traversal.sifr",
       "status": "CHECK_ERROR",
       "subcategory": null
     },
@@ -620,7 +620,7 @@
       "diagnostic": "type error: 'in' operator not supported for type 'range'",
       "fixture_slug": "0130_surrounded_regions",
       "id": "0130",
-      "sifr_path": "audits/leetcode/0130_surrounded_regions.sifr",
+      "sifr_path": "audits/leetcode/src/0130_surrounded_regions.sifr",
       "status": "CHECK_ERROR",
       "subcategory": null
     },
@@ -629,7 +629,7 @@
       "diagnostic": "type error: 'not in' operator not supported for type 'range'",
       "fixture_slug": "0200_number_of_islands",
       "id": "0200",
-      "sifr_path": "audits/leetcode/0200_number_of_islands.sifr",
+      "sifr_path": "audits/leetcode/src/0200_number_of_islands.sifr",
       "status": "CHECK_ERROR",
       "subcategory": null
     },
@@ -638,7 +638,7 @@
       "diagnostic": "type error: bad operand type for unary not: 'int'",
       "fixture_slug": "0201_bitwise_and_of_numbers_range",
       "id": "0201",
-      "sifr_path": "audits/leetcode/0201_bitwise_and_of_numbers_range.sifr",
+      "sifr_path": "audits/leetcode/src/0201_bitwise_and_of_numbers_range.sifr",
       "status": "CHECK_ERROR",
       "subcategory": null
     },
@@ -647,7 +647,7 @@
       "diagnostic": "type error: 'not in' operator not supported for type 'range'",
       "fixture_slug": "0212_word_search_ii",
       "id": "0212",
-      "sifr_path": "audits/leetcode/0212_word_search_ii.sifr",
+      "sifr_path": "audits/leetcode/src/0212_word_search_ii.sifr",
       "status": "CHECK_ERROR",
       "subcategory": null
     },
@@ -656,7 +656,7 @@
       "diagnostic": "type error: cannot compare 'None' and 'int' with ==",
       "fixture_slug": "0304_range_sum_query_2d_immutable",
       "id": "0304",
-      "sifr_path": "audits/leetcode/0304_range_sum_query_2d_immutable.sifr",
+      "sifr_path": "audits/leetcode/src/0304_range_sum_query_2d_immutable.sifr",
       "status": "CHECK_ERROR",
       "subcategory": null
     },
@@ -665,7 +665,7 @@
       "diagnostic": "type error: '<' not supported between instances of 'bool' and 'int'",
       "fixture_slug": "0371_sum_of_two_integers",
       "id": "0371",
-      "sifr_path": "audits/leetcode/0371_sum_of_two_integers.sifr",
+      "sifr_path": "audits/leetcode/src/0371_sum_of_two_integers.sifr",
       "status": "CHECK_ERROR",
       "subcategory": null
     },
@@ -674,7 +674,7 @@
       "diagnostic": "type error: if condition must be bool or collection/string truthiness, got 'int'",
       "fixture_slug": "0416_partition_equal_subset_sum",
       "id": "0416",
-      "sifr_path": "audits/leetcode/0416_partition_equal_subset_sum.sifr",
+      "sifr_path": "audits/leetcode/src/0416_partition_equal_subset_sum.sifr",
       "status": "CHECK_ERROR",
       "subcategory": null
     },
@@ -683,7 +683,7 @@
       "diagnostic": "type error: cannot compare 'float' and 'int' with !=",
       "fixture_slug": "0473_matchsticks_to_square",
       "id": "0473",
-      "sifr_path": "audits/leetcode/0473_matchsticks_to_square.sifr",
+      "sifr_path": "audits/leetcode/src/0473_matchsticks_to_square.sifr",
       "status": "CHECK_ERROR",
       "subcategory": null
     },
@@ -692,7 +692,7 @@
       "diagnostic": "type error: if condition must be bool or collection/string truthiness, got 'int'",
       "fixture_slug": "0846_hand_of_straights",
       "id": "0846",
-      "sifr_path": "audits/leetcode/0846_hand_of_straights.sifr",
+      "sifr_path": "audits/leetcode/src/0846_hand_of_straights.sifr",
       "status": "CHECK_ERROR",
       "subcategory": null
     },
@@ -701,7 +701,7 @@
       "diagnostic": "type error: cannot compare 'list[list[int]]' and 'list[tuple[int, int]]' with ==",
       "fixture_slug": "0973_k_closest_points_to_origin",
       "id": "0973",
-      "sifr_path": "audits/leetcode/0973_k_closest_points_to_origin.sifr",
+      "sifr_path": "audits/leetcode/src/0973_k_closest_points_to_origin.sifr",
       "status": "CHECK_ERROR",
       "subcategory": null
     },
@@ -710,7 +710,7 @@
       "diagnostic": "type error: cannot compare 'Never' and 'str' with ==",
       "fixture_slug": "1220_count_vowels_permutation",
       "id": "1220",
-      "sifr_path": "audits/leetcode/1220_count_vowels_permutation.sifr",
+      "sifr_path": "audits/leetcode/src/1220_count_vowels_permutation.sifr",
       "status": "CHECK_ERROR",
       "subcategory": null
     },
@@ -719,7 +719,7 @@
       "diagnostic": "type error: 'in' operator not supported for type '__compat_defaultdict_list'",
       "fixture_slug": "1345_jump_game_iv",
       "id": "1345",
-      "sifr_path": "audits/leetcode/1345_jump_game_iv.sifr",
+      "sifr_path": "audits/leetcode/src/1345_jump_game_iv.sifr",
       "status": "CHECK_ERROR",
       "subcategory": null
     },
@@ -728,7 +728,7 @@
       "diagnostic": "type error: cannot compare 'float' and 'int' with ==",
       "fixture_slug": "1514_path_with_maximum_probability",
       "id": "1514",
-      "sifr_path": "audits/leetcode/1514_path_with_maximum_probability.sifr",
+      "sifr_path": "audits/leetcode/src/1514_path_with_maximum_probability.sifr",
       "status": "CHECK_ERROR",
       "subcategory": null
     },
@@ -737,7 +737,7 @@
       "diagnostic": "type error: if expression branches have incompatible types: 'None' and 'str'",
       "fixture_slug": "1980_find_unique_binary_string",
       "id": "1980",
-      "sifr_path": "audits/leetcode/1980_find_unique_binary_string.sifr",
+      "sifr_path": "audits/leetcode/src/1980_find_unique_binary_string.sifr",
       "status": "CHECK_ERROR",
       "subcategory": null
     },
@@ -746,7 +746,7 @@
       "diagnostic": "type error: bad operand type for unary -: 'Result[int, ParseError]'",
       "fixture_slug": "1985_find_the_kth_largest_integer_in_the_array",
       "id": "1985",
-      "sifr_path": "audits/leetcode/1985_find_the_kth_largest_integer_in_the_array.sifr",
+      "sifr_path": "audits/leetcode/src/1985_find_the_kth_largest_integer_in_the_array.sifr",
       "status": "CHECK_ERROR",
       "subcategory": null
     },
@@ -755,7 +755,7 @@
       "diagnostic": "type error: argument 1 ('source') of function '__compat_sifr_collections_Counter': expected 'None | dict[T, int]', got 'list[int]'",
       "fixture_slug": "0047_permutations_ii",
       "id": "0047",
-      "sifr_path": "audits/leetcode/0047_permutations_ii.sifr",
+      "sifr_path": "audits/leetcode/src/0047_permutations_ii.sifr",
       "status": "CHECK_ERROR",
       "subcategory": null
     },
@@ -764,7 +764,7 @@
       "diagnostic": "type error: min() with 2 arguments does not accept optional operands; got 'int | None' and 'int | None' (guard or unwrap first)",
       "fixture_slug": "0057_insert_interval",
       "id": "0057",
-      "sifr_path": "audits/leetcode/0057_insert_interval.sifr",
+      "sifr_path": "audits/leetcode/src/0057_insert_interval.sifr",
       "status": "CHECK_ERROR",
       "subcategory": null
     },
@@ -773,7 +773,7 @@
       "diagnostic": "type error: min() with 2 arguments does not accept optional operands; got 'float | None' and 'float | None' (guard or unwrap first)",
       "fixture_slug": "0064_minimum_path_sum",
       "id": "0064",
-      "sifr_path": "audits/leetcode/0064_minimum_path_sum.sifr",
+      "sifr_path": "audits/leetcode/src/0064_minimum_path_sum.sifr",
       "status": "CHECK_ERROR",
       "subcategory": null
     },
@@ -782,7 +782,7 @@
       "diagnostic": "type error: unsupported operand type(s) for +: 'int | None' and 'int'",
       "fixture_slug": "0105_construct_binary_tree_from_preorder_and_inorder_traversal",
       "id": "0105",
-      "sifr_path": "audits/leetcode/0105_construct_binary_tree_from_preorder_and_inorder_traversal.sifr",
+      "sifr_path": "audits/leetcode/src/0105_construct_binary_tree_from_preorder_and_inorder_traversal.sifr",
       "status": "CHECK_ERROR",
       "subcategory": null
     },
@@ -791,7 +791,7 @@
       "diagnostic": "type error: argument 1 ('val') of function 'TreeNode': expected 'int', got 'int | None'",
       "fixture_slug": "0108_convert_sorted_array_to_binary_search_tree",
       "id": "0108",
-      "sifr_path": "audits/leetcode/0108_convert_sorted_array_to_binary_search_tree.sifr",
+      "sifr_path": "audits/leetcode/src/0108_convert_sorted_array_to_binary_search_tree.sifr",
       "status": "CHECK_ERROR",
       "subcategory": null
     },
@@ -800,7 +800,7 @@
       "diagnostic": "type error: argument 1 of callable 'dfs': expected 'TreeNode', got 'None | TreeNode'",
       "fixture_slug": "0124_binary_tree_maximum_path_sum",
       "id": "0124",
-      "sifr_path": "audits/leetcode/0124_binary_tree_maximum_path_sum.sifr",
+      "sifr_path": "audits/leetcode/src/0124_binary_tree_maximum_path_sum.sifr",
       "status": "CHECK_ERROR",
       "subcategory": null
     },
@@ -809,7 +809,7 @@
       "diagnostic": "type error: argument 1 ('head') of function 'copyRandomList': expected '\"Node\"', got 'None | Node'",
       "fixture_slug": "0138_copy_list_with_random_pointer",
       "id": "0138",
-      "sifr_path": "audits/leetcode/0138_copy_list_with_random_pointer.sifr",
+      "sifr_path": "audits/leetcode/src/0138_copy_list_with_random_pointer.sifr",
       "status": "CHECK_ERROR",
       "subcategory": null
     },
@@ -818,7 +818,7 @@
       "diagnostic": "type error: list subscript assignment value type 'bool | None' is not compatible with list element type 'bool'",
       "fixture_slug": "0139_word_break",
       "id": "0139",
-      "sifr_path": "audits/leetcode/0139_word_break.sifr",
+      "sifr_path": "audits/leetcode/src/0139_word_break.sifr",
       "status": "CHECK_ERROR",
       "subcategory": null
     },
@@ -827,7 +827,7 @@
       "diagnostic": "type error: return type mismatch: expected 'int', got 'Result[int, ParseError] | None'",
       "fixture_slug": "0150_evaluate_reverse_polish_notation",
       "id": "0150",
-      "sifr_path": "audits/leetcode/0150_evaluate_reverse_polish_notation.sifr",
+      "sifr_path": "audits/leetcode/src/0150_evaluate_reverse_polish_notation.sifr",
       "status": "CHECK_ERROR",
       "subcategory": null
     },
@@ -836,7 +836,7 @@
       "diagnostic": "type error: argument 1 of callable 'union': expected 'int', got 'int | None'",
       "fixture_slug": "0261_graph_valid_tree",
       "id": "0261",
-      "sifr_path": "audits/leetcode/0261_graph_valid_tree.sifr",
+      "sifr_path": "audits/leetcode/src/0261_graph_valid_tree.sifr",
       "status": "CHECK_ERROR",
       "subcategory": null
     },
@@ -845,7 +845,7 @@
       "diagnostic": "type error: cannot index type 'list[int]' with 'None | int'",
       "fixture_slug": "0287_find_the_duplicate_number",
       "id": "0287",
-      "sifr_path": "audits/leetcode/0287_find_the_duplicate_number.sifr",
+      "sifr_path": "audits/leetcode/src/0287_find_the_duplicate_number.sifr",
       "status": "CHECK_ERROR",
       "subcategory": null
     },
@@ -854,7 +854,7 @@
       "diagnostic": "type error: argument 3 of callable 'dfs': expected 'int', got 'int | None'",
       "fixture_slug": "0329_longest_increasing_path_in_a_matrix",
       "id": "0329",
-      "sifr_path": "audits/leetcode/0329_longest_increasing_path_in_a_matrix.sifr",
+      "sifr_path": "audits/leetcode/src/0329_longest_increasing_path_in_a_matrix.sifr",
       "status": "CHECK_ERROR",
       "subcategory": null
     },
@@ -863,7 +863,7 @@
       "diagnostic": "type error: cannot unpack non-tuple type 'None | Any'",
       "fixture_slug": "0355_design_twitter",
       "id": "0355",
-      "sifr_path": "audits/leetcode/0355_design_twitter.sifr",
+      "sifr_path": "audits/leetcode/src/0355_design_twitter.sifr",
       "status": "CHECK_ERROR",
       "subcategory": null
     },
@@ -872,7 +872,7 @@
       "diagnostic": "type error: type 'None | str' has no method 'isdigit'",
       "fixture_slug": "0394_decode_string",
       "id": "0394",
-      "sifr_path": "audits/leetcode/0394_decode_string.sifr",
+      "sifr_path": "audits/leetcode/src/0394_decode_string.sifr",
       "status": "CHECK_ERROR",
       "subcategory": null
     },
@@ -881,7 +881,7 @@
       "diagnostic": "type error: '>' not supported between instances of 'Any | None' and 'str'",
       "fixture_slug": "0402_remove_k_digits",
       "id": "0402",
-      "sifr_path": "audits/leetcode/0402_remove_k_digits.sifr",
+      "sifr_path": "audits/leetcode/src/0402_remove_k_digits.sifr",
       "status": "CHECK_ERROR",
       "subcategory": null
     },
@@ -890,7 +890,7 @@
       "diagnostic": "type error: argument 4 of callable 'dfs': expected 'int', got 'int | None'",
       "fixture_slug": "0417_pacific_atlantic_water_flow",
       "id": "0417",
-      "sifr_path": "audits/leetcode/0417_pacific_atlantic_water_flow.sifr",
+      "sifr_path": "audits/leetcode/src/0417_pacific_atlantic_water_flow.sifr",
       "status": "CHECK_ERROR",
       "subcategory": null
     },
@@ -899,7 +899,7 @@
       "diagnostic": "type error: 'in' operator: element type 'str | None' is not compatible with collection element type 'str'",
       "fixture_slug": "0438_find_all_anagrams_in_a_string",
       "id": "0438",
-      "sifr_path": "audits/leetcode/0438_find_all_anagrams_in_a_string.sifr",
+      "sifr_path": "audits/leetcode/src/0438_find_all_anagrams_in_a_string.sifr",
       "status": "CHECK_ERROR",
       "subcategory": null
     },
@@ -908,7 +908,7 @@
       "diagnostic": "type error: '>' not supported between instances of 'int' and 'Any | None'",
       "fixture_slug": "0496_next_greater_element_i",
       "id": "0496",
-      "sifr_path": "audits/leetcode/0496_next_greater_element_i.sifr",
+      "sifr_path": "audits/leetcode/src/0496_next_greater_element_i.sifr",
       "status": "CHECK_ERROR",
       "subcategory": null
     },
@@ -917,7 +917,7 @@
       "diagnostic": "type error: argument 1 ('val') of deque.append(): expected 'T', got 'None | TreeNode'",
       "fixture_slug": "0513_find_bottom_left_tree_value",
       "id": "0513",
-      "sifr_path": "audits/leetcode/0513_find_bottom_left_tree_value.sifr",
+      "sifr_path": "audits/leetcode/src/0513_find_bottom_left_tree_value.sifr",
       "status": "CHECK_ERROR",
       "subcategory": null
     },
@@ -926,7 +926,7 @@
       "diagnostic": "type error: ord() argument must be 'str', got 'str | None'",
       "fixture_slug": "0567_permutation_in_string",
       "id": "0567",
-      "sifr_path": "audits/leetcode/0567_permutation_in_string.sifr",
+      "sifr_path": "audits/leetcode/src/0567_permutation_in_string.sifr",
       "status": "CHECK_ERROR",
       "subcategory": null
     },
@@ -935,7 +935,7 @@
       "diagnostic": "type error: argument 1 ('t') of function 'dfs': expected 'TreeNode', got 'None | TreeNode'",
       "fixture_slug": "0606_construct_string_from_binary_tree",
       "id": "0606",
-      "sifr_path": "audits/leetcode/0606_construct_string_from_binary_tree.sifr",
+      "sifr_path": "audits/leetcode/src/0606_construct_string_from_binary_tree.sifr",
       "status": "CHECK_ERROR",
       "subcategory": null
     },
@@ -944,7 +944,7 @@
       "diagnostic": "type error: argument 1 ('t1') of function 'mergeTrees': expected 'TreeNode', got 'None | TreeNode'",
       "fixture_slug": "0617_merge_two_binary_trees",
       "id": "0617",
-      "sifr_path": "audits/leetcode/0617_merge_two_binary_trees.sifr",
+      "sifr_path": "audits/leetcode/src/0617_merge_two_binary_trees.sifr",
       "status": "CHECK_ERROR",
       "subcategory": null
     },
@@ -953,7 +953,7 @@
       "diagnostic": "type error: list.append() argument type 'tuple[None | TreeNode, int]' is not compatible with list element type 'tuple[TreeNode, int]'",
       "fixture_slug": "0662_maximum_width_of_binary_tree",
       "id": "0662",
-      "sifr_path": "audits/leetcode/0662_maximum_width_of_binary_tree.sifr",
+      "sifr_path": "audits/leetcode/src/0662_maximum_width_of_binary_tree.sifr",
       "status": "CHECK_ERROR",
       "subcategory": null
     },
@@ -962,7 +962,7 @@
       "diagnostic": "type error: '>' not supported between instances of 'Any | None' and 'int'",
       "fixture_slug": "0735_asteroid_collision",
       "id": "0735",
-      "sifr_path": "audits/leetcode/0735_asteroid_collision.sifr",
+      "sifr_path": "audits/leetcode/src/0735_asteroid_collision.sifr",
       "status": "CHECK_ERROR",
       "subcategory": null
     },
@@ -971,7 +971,7 @@
       "diagnostic": "type error: cannot unpack non-tuple type 'None | list[int | None]'",
       "fixture_slug": "0778_swim_in_rising_water",
       "id": "0778",
-      "sifr_path": "audits/leetcode/0778_swim_in_rising_water.sifr",
+      "sifr_path": "audits/leetcode/src/0778_swim_in_rising_water.sifr",
       "status": "CHECK_ERROR",
       "subcategory": null
     },
@@ -980,7 +980,7 @@
       "diagnostic": "type error: cannot iterate over type 'list[int] | None'",
       "fixture_slug": "0802_find_eventual_safe_states",
       "id": "0802",
-      "sifr_path": "audits/leetcode/0802_find_eventual_safe_states.sifr",
+      "sifr_path": "audits/leetcode/src/0802_find_eventual_safe_states.sifr",
       "status": "CHECK_ERROR",
       "subcategory": null
     },
@@ -989,7 +989,7 @@
       "diagnostic": "type error: return type mismatch: expected 'int', got 'int | None'",
       "fixture_slug": "0875_koko_eating_bananas",
       "id": "0875",
-      "sifr_path": "audits/leetcode/0875_koko_eating_bananas.sifr",
+      "sifr_path": "audits/leetcode/src/0875_koko_eating_bananas.sifr",
       "status": "CHECK_ERROR",
       "subcategory": null
     },
@@ -998,7 +998,7 @@
       "diagnostic": "type error: return type mismatch: expected 'list[None | TreeNode]', got 'list[TreeNode]'",
       "fixture_slug": "0894_all_possible_full_binary_trees",
       "id": "0894",
-      "sifr_path": "audits/leetcode/0894_all_possible_full_binary_trees.sifr",
+      "sifr_path": "audits/leetcode/src/0894_all_possible_full_binary_trees.sifr",
       "status": "CHECK_ERROR",
       "subcategory": null
     },
@@ -1007,7 +1007,7 @@
       "diagnostic": "type error: dict subscript assignment key type 'int | None' is not compatible with dict key type 'int'",
       "fixture_slug": "0904_fruit_into_baskets",
       "id": "0904",
-      "sifr_path": "audits/leetcode/0904_fruit_into_baskets.sifr",
+      "sifr_path": "audits/leetcode/src/0904_fruit_into_baskets.sifr",
       "status": "CHECK_ERROR",
       "subcategory": null
     },
@@ -1016,7 +1016,7 @@
       "diagnostic": "type error: abs() argument must be numeric, got 'int | None'",
       "fixture_slug": "0977_squares_of_a_sorted_array",
       "id": "0977",
-      "sifr_path": "audits/leetcode/0977_squares_of_a_sorted_array.sifr",
+      "sifr_path": "audits/leetcode/src/0977_squares_of_a_sorted_array.sifr",
       "status": "CHECK_ERROR",
       "subcategory": null
     },
@@ -1025,7 +1025,7 @@
       "diagnostic": "type error: argument 1 ('items') of function '__compat_sifr_collections_deque': expected 'None | list[T]', got 'Iterator[int]'",
       "fixture_slug": "1203_sort_items_by_groups_respecting_dependencies",
       "id": "1203",
-      "sifr_path": "audits/leetcode/1203_sort_items_by_groups_respecting_dependencies.sifr",
+      "sifr_path": "audits/leetcode/src/1203_sort_items_by_groups_respecting_dependencies.sifr",
       "status": "CHECK_ERROR",
       "subcategory": null
     },
@@ -1034,7 +1034,7 @@
       "diagnostic": "type error: cannot index type 'str' with 'int | None'",
       "fixture_slug": "1397_find_all_good_strings",
       "id": "1397",
-      "sifr_path": "audits/leetcode/1397_find_all_good_strings.sifr",
+      "sifr_path": "audits/leetcode/src/1397_find_all_good_strings.sifr",
       "status": "CHECK_ERROR",
       "subcategory": null
     },
@@ -1043,7 +1043,7 @@
       "diagnostic": "type error: unsupported operand type(s) for -: 'int | None' and 'int | None'",
       "fixture_slug": "1423_maximum_points_you_can_obtain_from_cards",
       "id": "1423",
-      "sifr_path": "audits/leetcode/1423_maximum_points_you_can_obtain_from_cards.sifr",
+      "sifr_path": "audits/leetcode/src/1423_maximum_points_you_can_obtain_from_cards.sifr",
       "status": "CHECK_ERROR",
       "subcategory": null
     },
@@ -1052,7 +1052,7 @@
       "diagnostic": "type error: '<=' not supported between instances of 'Any | None' and 'int'",
       "fixture_slug": "1475_final_prices_with_a_special_discount_in_a_shop",
       "id": "1475",
-      "sifr_path": "audits/leetcode/1475_final_prices_with_a_special_discount_in_a_shop.sifr",
+      "sifr_path": "audits/leetcode/src/1475_final_prices_with_a_special_discount_in_a_shop.sifr",
       "status": "CHECK_ERROR",
       "subcategory": null
     },
@@ -1061,7 +1061,7 @@
       "diagnostic": "type error: cannot unpack non-tuple type 'None | list[int]'",
       "fixture_slug": "1584_min_cost_to_connect_all_points",
       "id": "1584",
-      "sifr_path": "audits/leetcode/1584_min_cost_to_connect_all_points.sifr",
+      "sifr_path": "audits/leetcode/src/1584_min_cost_to_connect_all_points.sifr",
       "status": "CHECK_ERROR",
       "subcategory": null
     },
@@ -1070,7 +1070,7 @@
       "diagnostic": "type error: cannot unpack non-tuple type 'None | tuple[int, int, int]'",
       "fixture_slug": "1631_path_with_minimum_effort",
       "id": "1631",
-      "sifr_path": "audits/leetcode/1631_path_with_minimum_effort.sifr",
+      "sifr_path": "audits/leetcode/src/1631_path_with_minimum_effort.sifr",
       "status": "CHECK_ERROR",
       "subcategory": null
     },
@@ -1079,7 +1079,7 @@
       "diagnostic": "type error: bad operand type for unary -: 'None | Any'",
       "fixture_slug": "1642_furthest_building_you_can_reach",
       "id": "1642",
-      "sifr_path": "audits/leetcode/1642_furthest_building_you_can_reach.sifr",
+      "sifr_path": "audits/leetcode/src/1642_furthest_building_you_can_reach.sifr",
       "status": "CHECK_ERROR",
       "subcategory": null
     },
@@ -1088,7 +1088,7 @@
       "diagnostic": "type error: cannot iterate over type 'Unknown | None'",
       "fixture_slug": "2092_find_all_people_with_secret",
       "id": "2092",
-      "sifr_path": "audits/leetcode/2092_find_all_people_with_secret.sifr",
+      "sifr_path": "audits/leetcode/src/2092_find_all_people_with_secret.sifr",
       "status": "CHECK_ERROR",
       "subcategory": null
     },
@@ -1097,7 +1097,7 @@
       "diagnostic": "type error: cannot iterate over type 'set[Any] | None'",
       "fixture_slug": "2306_naming_a_company",
       "id": "2306",
-      "sifr_path": "audits/leetcode/2306_naming_a_company.sifr",
+      "sifr_path": "audits/leetcode/src/2306_naming_a_company.sifr",
       "status": "CHECK_ERROR",
       "subcategory": null
     },
@@ -1106,7 +1106,7 @@
       "diagnostic": "type error: cannot store borrowed parameter `node`: borrowed parameters cannot escape -- add `own` at the signature boundary or store `node.clone()`",
       "fixture_slug": "0002_add_two_numbers",
       "id": "0002",
-      "sifr_path": "audits/leetcode/0002_add_two_numbers.sifr",
+      "sifr_path": "audits/leetcode/src/0002_add_two_numbers.sifr",
       "status": "CHECK_ERROR",
       "subcategory": "borrowed_parameter_escape_store"
     },
@@ -1115,7 +1115,7 @@
       "diagnostic": "type error: cannot reassign immutable parameter `left`: add `mut` to the parameter declaration",
       "fixture_slug": "0005_longest_palindromic_substring",
       "id": "0005",
-      "sifr_path": "audits/leetcode/0005_longest_palindromic_substring.sifr",
+      "sifr_path": "audits/leetcode/src/0005_longest_palindromic_substring.sifr",
       "status": "CHECK_ERROR",
       "subcategory": "immutable_parameter_reassignment"
     },
@@ -1124,7 +1124,7 @@
       "diagnostic": "type error: cannot return borrowed parameter `s`: borrowed parameters cannot escape -- add `own` at the signature boundary or return `s.clone()`",
       "fixture_slug": "0006_zigzag_conversion",
       "id": "0006",
-      "sifr_path": "audits/leetcode/0006_zigzag_conversion.sifr",
+      "sifr_path": "audits/leetcode/src/0006_zigzag_conversion.sifr",
       "status": "CHECK_ERROR",
       "subcategory": "borrowed_parameter_escape_return"
     },
@@ -1133,7 +1133,7 @@
       "diagnostic": "type error: cannot mutate through immutable parameter `nums`: add `mut` to the parameter declaration",
       "fixture_slug": "0016_3sum_closest",
       "id": "0016",
-      "sifr_path": "audits/leetcode/0016_3sum_closest.sifr",
+      "sifr_path": "audits/leetcode/src/0016_3sum_closest.sifr",
       "status": "CHECK_ERROR",
       "subcategory": "immutable_parameter_mutation"
     },
@@ -1142,7 +1142,7 @@
       "diagnostic": "type error: cannot mutate through immutable parameter `candidates`: add `mut` to the parameter declaration",
       "fixture_slug": "0040_combination_sum_ii",
       "id": "0040",
-      "sifr_path": "audits/leetcode/0040_combination_sum_ii.sifr",
+      "sifr_path": "audits/leetcode/src/0040_combination_sum_ii.sifr",
       "status": "CHECK_ERROR",
       "subcategory": "immutable_parameter_mutation"
     },
@@ -1151,7 +1151,7 @@
       "diagnostic": "type error: cannot mutate through immutable parameter `nums`: add `mut` to the parameter declaration",
       "fixture_slug": "0046_permutations",
       "id": "0046",
-      "sifr_path": "audits/leetcode/0046_permutations.sifr",
+      "sifr_path": "audits/leetcode/src/0046_permutations.sifr",
       "status": "CHECK_ERROR",
       "subcategory": "immutable_parameter_mutation"
     },
@@ -1160,7 +1160,7 @@
       "diagnostic": "type error: cannot mutate through immutable parameter `matrix`: add `mut` to the parameter declaration",
       "fixture_slug": "0048_rotate_image",
       "id": "0048",
-      "sifr_path": "audits/leetcode/0048_rotate_image.sifr",
+      "sifr_path": "audits/leetcode/src/0048_rotate_image.sifr",
       "status": "CHECK_ERROR",
       "subcategory": "immutable_parameter_mutation"
     },
@@ -1169,7 +1169,7 @@
       "diagnostic": "type error: cannot mutate through immutable parameter `digits`: add `mut` to the parameter declaration",
       "fixture_slug": "0066_plus_one",
       "id": "0066",
-      "sifr_path": "audits/leetcode/0066_plus_one.sifr",
+      "sifr_path": "audits/leetcode/src/0066_plus_one.sifr",
       "status": "CHECK_ERROR",
       "subcategory": "immutable_parameter_mutation"
     },
@@ -1178,7 +1178,7 @@
       "diagnostic": "type error: cannot reassign immutable parameter `a`: add `mut` to the parameter declaration",
       "fixture_slug": "0067_add_binary",
       "id": "0067",
-      "sifr_path": "audits/leetcode/0067_add_binary.sifr",
+      "sifr_path": "audits/leetcode/src/0067_add_binary.sifr",
       "status": "CHECK_ERROR",
       "subcategory": "immutable_parameter_reassignment"
     },
@@ -1187,7 +1187,7 @@
       "diagnostic": "type error: cannot mutate through immutable parameter `matrix`: add `mut` to the parameter declaration",
       "fixture_slug": "0073_set_matrix_zeroes",
       "id": "0073",
-      "sifr_path": "audits/leetcode/0073_set_matrix_zeroes.sifr",
+      "sifr_path": "audits/leetcode/src/0073_set_matrix_zeroes.sifr",
       "status": "CHECK_ERROR",
       "subcategory": "immutable_parameter_mutation"
     },
@@ -1196,7 +1196,7 @@
       "diagnostic": "type error: cannot return borrowed parameter `nums`: borrowed parameters cannot escape -- add `own` at the signature boundary or return `nums.clone()`",
       "fixture_slug": "0075_sort_colors",
       "id": "0075",
-      "sifr_path": "audits/leetcode/0075_sort_colors.sifr",
+      "sifr_path": "audits/leetcode/src/0075_sort_colors.sifr",
       "status": "CHECK_ERROR",
       "subcategory": "borrowed_parameter_escape_return"
     },
@@ -1205,7 +1205,7 @@
       "diagnostic": "type error: cannot reassign immutable parameter `head`: add `mut` to the parameter declaration",
       "fixture_slug": "0086_partition_list",
       "id": "0086",
-      "sifr_path": "audits/leetcode/0086_partition_list.sifr",
+      "sifr_path": "audits/leetcode/src/0086_partition_list.sifr",
       "status": "CHECK_ERROR",
       "subcategory": "immutable_parameter_reassignment"
     },
@@ -1214,7 +1214,7 @@
       "diagnostic": "type error: cannot mutate through immutable parameter `nums1`: add `mut` to the parameter declaration",
       "fixture_slug": "0088_merge_sorted_array",
       "id": "0088",
-      "sifr_path": "audits/leetcode/0088_merge_sorted_array.sifr",
+      "sifr_path": "audits/leetcode/src/0088_merge_sorted_array.sifr",
       "status": "CHECK_ERROR",
       "subcategory": "immutable_parameter_mutation"
     },
@@ -1223,7 +1223,7 @@
       "diagnostic": "type error: cannot mutate through immutable parameter `postorder`: add `mut` to the parameter declaration",
       "fixture_slug": "0106_construct_binary_tree_from_inorder_and_postorder_traversal",
       "id": "0106",
-      "sifr_path": "audits/leetcode/0106_construct_binary_tree_from_inorder_and_postorder_traversal.sifr",
+      "sifr_path": "audits/leetcode/src/0106_construct_binary_tree_from_inorder_and_postorder_traversal.sifr",
       "status": "CHECK_ERROR",
       "subcategory": "immutable_parameter_mutation"
     },
@@ -1232,7 +1232,7 @@
       "diagnostic": "type error: cannot store borrowed parameter `node`: borrowed parameters cannot escape -- add `own` at the signature boundary or store `node.clone()`",
       "fixture_slug": "0141_linked_list_cycle",
       "id": "0141",
-      "sifr_path": "audits/leetcode/0141_linked_list_cycle.sifr",
+      "sifr_path": "audits/leetcode/src/0141_linked_list_cycle.sifr",
       "status": "CHECK_ERROR",
       "subcategory": "borrowed_parameter_escape_store"
     },
@@ -1241,7 +1241,7 @@
       "diagnostic": "type error: cannot store borrowed parameter `node`: borrowed parameters cannot escape -- add `own` at the signature boundary or store `node.clone()`",
       "fixture_slug": "0160_intersection_of_two_linked_lists",
       "id": "0160",
-      "sifr_path": "audits/leetcode/0160_intersection_of_two_linked_lists.sifr",
+      "sifr_path": "audits/leetcode/src/0160_intersection_of_two_linked_lists.sifr",
       "status": "CHECK_ERROR",
       "subcategory": "borrowed_parameter_escape_store"
     },
@@ -1250,7 +1250,7 @@
       "diagnostic": "type error: cannot reassign immutable parameter `columnNumber`: add `mut` to the parameter declaration",
       "fixture_slug": "0168_excel_sheet_column_title",
       "id": "0168",
-      "sifr_path": "audits/leetcode/0168_excel_sheet_column_title.sifr",
+      "sifr_path": "audits/leetcode/src/0168_excel_sheet_column_title.sifr",
       "status": "CHECK_ERROR",
       "subcategory": "immutable_parameter_reassignment"
     },
@@ -1259,7 +1259,7 @@
       "diagnostic": "type error: cannot mutate through immutable parameter `nums`: add `mut` to the parameter declaration",
       "fixture_slug": "0179_largest_number",
       "id": "0179",
-      "sifr_path": "audits/leetcode/0179_largest_number.sifr",
+      "sifr_path": "audits/leetcode/src/0179_largest_number.sifr",
       "status": "CHECK_ERROR",
       "subcategory": "immutable_parameter_mutation"
     },
@@ -1268,7 +1268,7 @@
       "diagnostic": "type error: cannot reassign immutable parameter `k`: add `mut` to the parameter declaration",
       "fixture_slug": "0189_rotate_array",
       "id": "0189",
-      "sifr_path": "audits/leetcode/0189_rotate_array.sifr",
+      "sifr_path": "audits/leetcode/src/0189_rotate_array.sifr",
       "status": "CHECK_ERROR",
       "subcategory": "immutable_parameter_reassignment"
     },
@@ -1277,7 +1277,7 @@
       "diagnostic": "type error: cannot reassign immutable parameter `n`: add `mut` to the parameter declaration",
       "fixture_slug": "0191_number_of_1_bits",
       "id": "0191",
-      "sifr_path": "audits/leetcode/0191_number_of_1_bits.sifr",
+      "sifr_path": "audits/leetcode/src/0191_number_of_1_bits.sifr",
       "status": "CHECK_ERROR",
       "subcategory": "immutable_parameter_reassignment"
     },
@@ -1286,7 +1286,7 @@
       "diagnostic": "type error: cannot store borrowed parameter `node`: borrowed parameters cannot escape -- add `own` at the signature boundary or store `node.clone()`",
       "fixture_slug": "0234_palindrome_linked_list",
       "id": "0234",
-      "sifr_path": "audits/leetcode/0234_palindrome_linked_list.sifr",
+      "sifr_path": "audits/leetcode/src/0234_palindrome_linked_list.sifr",
       "status": "CHECK_ERROR",
       "subcategory": "borrowed_parameter_escape_store"
     },
@@ -1295,7 +1295,7 @@
       "diagnostic": "type error: cannot reassign immutable parameter `n`: add `mut` to the parameter declaration",
       "fixture_slug": "0263_ugly_number",
       "id": "0263",
-      "sifr_path": "audits/leetcode/0263_ugly_number.sifr",
+      "sifr_path": "audits/leetcode/src/0263_ugly_number.sifr",
       "status": "CHECK_ERROR",
       "subcategory": "immutable_parameter_reassignment"
     },
@@ -1304,7 +1304,7 @@
       "diagnostic": "type error: cannot mutate through immutable parameter `citations`: add `mut` to the parameter declaration",
       "fixture_slug": "0274_H_index",
       "id": "0274",
-      "sifr_path": "audits/leetcode/0274_H_index.sifr",
+      "sifr_path": "audits/leetcode/src/0274_H_index.sifr",
       "status": "CHECK_ERROR",
       "subcategory": "immutable_parameter_mutation"
     },
@@ -1313,7 +1313,7 @@
       "diagnostic": "type error: cannot reassign immutable parameter `nums`: add `mut` to the parameter declaration",
       "fixture_slug": "0312_burst_balloons",
       "id": "0312",
-      "sifr_path": "audits/leetcode/0312_burst_balloons.sifr",
+      "sifr_path": "audits/leetcode/src/0312_burst_balloons.sifr",
       "status": "CHECK_ERROR",
       "subcategory": "immutable_parameter_reassignment"
     },
@@ -1322,7 +1322,7 @@
       "diagnostic": "type error: cannot mutate through immutable parameter `intervals`: add `mut` to the parameter declaration",
       "fixture_slug": "0435_non_overlapping_intervals",
       "id": "0435",
-      "sifr_path": "audits/leetcode/0435_non_overlapping_intervals.sifr",
+      "sifr_path": "audits/leetcode/src/0435_non_overlapping_intervals.sifr",
       "status": "CHECK_ERROR",
       "subcategory": "immutable_parameter_mutation"
     },
@@ -1331,7 +1331,7 @@
       "diagnostic": "type error: cannot mutate through immutable parameter `points`: add `mut` to the parameter declaration",
       "fixture_slug": "0452_minimum_number_of_arrows_to_burst_balloons",
       "id": "0452",
-      "sifr_path": "audits/leetcode/0452_minimum_number_of_arrows_to_burst_balloons.sifr",
+      "sifr_path": "audits/leetcode/src/0452_minimum_number_of_arrows_to_burst_balloons.sifr",
       "status": "CHECK_ERROR",
       "subcategory": "immutable_parameter_mutation"
     },
@@ -1340,7 +1340,7 @@
       "diagnostic": "type error: cannot mutate through immutable parameter `flowerbed`: add `mut` to the parameter declaration",
       "fixture_slug": "0605_can_place_flowers",
       "id": "0605",
-      "sifr_path": "audits/leetcode/0605_can_place_flowers.sifr",
+      "sifr_path": "audits/leetcode/src/0605_can_place_flowers.sifr",
       "status": "CHECK_ERROR",
       "subcategory": "immutable_parameter_mutation"
     },
@@ -1349,7 +1349,7 @@
       "diagnostic": "type error: cannot mutate through immutable parameter `flowerbed`: add `mut` to the parameter declaration",
       "fixture_slug": "0605_can_place_flowers_v2",
       "id": "0605",
-      "sifr_path": "audits/leetcode/0605_can_place_flowers_v2.sifr",
+      "sifr_path": "audits/leetcode/src/0605_can_place_flowers_v2.sifr",
       "status": "CHECK_ERROR",
       "subcategory": "immutable_parameter_mutation"
     },
@@ -1358,7 +1358,7 @@
       "diagnostic": "type error: cannot mutate through immutable parameter `root`: add `mut` to the parameter declaration",
       "fixture_slug": "0669_trim_a_binary_search_tree",
       "id": "0669",
-      "sifr_path": "audits/leetcode/0669_trim_a_binary_search_tree.sifr",
+      "sifr_path": "audits/leetcode/src/0669_trim_a_binary_search_tree.sifr",
       "status": "CHECK_ERROR",
       "subcategory": "immutable_parameter_mutation"
     },
@@ -1367,7 +1367,7 @@
       "diagnostic": "type error: cannot mutate through immutable parameter `root`: add `mut` to the parameter declaration",
       "fixture_slug": "0701_insert_into_a_binary_search_tree",
       "id": "0701",
-      "sifr_path": "audits/leetcode/0701_insert_into_a_binary_search_tree.sifr",
+      "sifr_path": "audits/leetcode/src/0701_insert_into_a_binary_search_tree.sifr",
       "status": "CHECK_ERROR",
       "subcategory": "immutable_parameter_mutation"
     },
@@ -1376,7 +1376,7 @@
       "diagnostic": "type error: cannot mutate through immutable parameter `people`: add `mut` to the parameter declaration",
       "fixture_slug": "0881_boats_to_save_people",
       "id": "0881",
-      "sifr_path": "audits/leetcode/0881_boats_to_save_people.sifr",
+      "sifr_path": "audits/leetcode/src/0881_boats_to_save_people.sifr",
       "status": "CHECK_ERROR",
       "subcategory": "immutable_parameter_mutation"
     },
@@ -1385,7 +1385,7 @@
       "diagnostic": "type error: cannot mutate through immutable parameter `tokens`: add `mut` to the parameter declaration",
       "fixture_slug": "0948_bag_of_tokens",
       "id": "0948",
-      "sifr_path": "audits/leetcode/0948_bag_of_tokens.sifr",
+      "sifr_path": "audits/leetcode/src/0948_bag_of_tokens.sifr",
       "status": "CHECK_ERROR",
       "subcategory": "immutable_parameter_mutation"
     },
@@ -1394,7 +1394,7 @@
       "diagnostic": "type error: cannot mutate through immutable parameter `grid`: add `mut` to the parameter declaration",
       "fixture_slug": "1020_number_of_enclaves",
       "id": "1020",
-      "sifr_path": "audits/leetcode/1020_number_of_enclaves.sifr",
+      "sifr_path": "audits/leetcode/src/1020_number_of_enclaves.sifr",
       "status": "CHECK_ERROR",
       "subcategory": "immutable_parameter_mutation"
     },
@@ -1403,7 +1403,7 @@
       "diagnostic": "type error: cannot mutate through immutable parameter `grid`: add `mut` to the parameter declaration",
       "fixture_slug": "1254_number_of_closed_islands",
       "id": "1254",
-      "sifr_path": "audits/leetcode/1254_number_of_closed_islands.sifr",
+      "sifr_path": "audits/leetcode/src/1254_number_of_closed_islands.sifr",
       "status": "CHECK_ERROR",
       "subcategory": "immutable_parameter_mutation"
     },
@@ -1412,7 +1412,7 @@
       "diagnostic": "type error: cannot reassign immutable parameter `speed`: add `mut` to the parameter declaration",
       "fixture_slug": "1383_maximum_performance_of_a_team",
       "id": "1383",
-      "sifr_path": "audits/leetcode/1383_maximum_performance_of_a_team.sifr",
+      "sifr_path": "audits/leetcode/src/1383_maximum_performance_of_a_team.sifr",
       "status": "CHECK_ERROR",
       "subcategory": "immutable_parameter_reassignment"
     },
@@ -1421,7 +1421,7 @@
       "diagnostic": "type error: cannot mutate through immutable parameter `nums`: add `mut` to the parameter declaration",
       "fixture_slug": "1498_number_of_subsequences_that_satisfy_the_given_sum_condition",
       "id": "1498",
-      "sifr_path": "audits/leetcode/1498_number_of_subsequences_that_satisfy_the_given_sum_condition.sifr",
+      "sifr_path": "audits/leetcode/src/1498_number_of_subsequences_that_satisfy_the_given_sum_condition.sifr",
       "status": "CHECK_ERROR",
       "subcategory": "immutable_parameter_mutation"
     },
@@ -1430,7 +1430,7 @@
       "diagnostic": "type error: cannot mutate through immutable parameter `students`: add `mut` to the parameter declaration",
       "fixture_slug": "1700_number_of_students_unable_to_eat_lunch",
       "id": "1700",
-      "sifr_path": "audits/leetcode/1700_number_of_students_unable_to_eat_lunch.sifr",
+      "sifr_path": "audits/leetcode/src/1700_number_of_students_unable_to_eat_lunch.sifr",
       "status": "CHECK_ERROR",
       "subcategory": "immutable_parameter_mutation"
     },
@@ -1439,7 +1439,7 @@
       "diagnostic": "type error: cannot mutate through immutable parameter `nums`: add `mut` to the parameter declaration",
       "fixture_slug": "1838_frequency_of_the_most_frequent_element",
       "id": "1838",
-      "sifr_path": "audits/leetcode/1838_frequency_of_the_most_frequent_element.sifr",
+      "sifr_path": "audits/leetcode/src/1838_frequency_of_the_most_frequent_element.sifr",
       "status": "CHECK_ERROR",
       "subcategory": "immutable_parameter_mutation"
     },
@@ -1448,7 +1448,7 @@
       "diagnostic": "type error: cannot reassign immutable parameter `s`: add `mut` to the parameter declaration",
       "fixture_slug": "1888_minimum_number_of_flips_to_make_the_binary_string_alternating",
       "id": "1888",
-      "sifr_path": "audits/leetcode/1888_minimum_number_of_flips_to_make_the_binary_string_alternating.sifr",
+      "sifr_path": "audits/leetcode/src/1888_minimum_number_of_flips_to_make_the_binary_string_alternating.sifr",
       "status": "CHECK_ERROR",
       "subcategory": "immutable_parameter_reassignment"
     },
@@ -1457,7 +1457,7 @@
       "diagnostic": "type error: cannot mutate through immutable parameter `board`: add `mut` to the parameter declaration",
       "fixture_slug": "1958_check_if_move_is_legal",
       "id": "1958",
-      "sifr_path": "audits/leetcode/1958_check_if_move_is_legal.sifr",
+      "sifr_path": "audits/leetcode/src/1958_check_if_move_is_legal.sifr",
       "status": "CHECK_ERROR",
       "subcategory": "immutable_parameter_mutation"
     },
@@ -1466,7 +1466,7 @@
       "diagnostic": "type error: cannot mutate through immutable parameter `nums`: add `mut` to the parameter declaration",
       "fixture_slug": "1968_array_with_elements_not_equal_to_average_of_neighbors",
       "id": "1968",
-      "sifr_path": "audits/leetcode/1968_array_with_elements_not_equal_to_average_of_neighbors.sifr",
+      "sifr_path": "audits/leetcode/src/1968_array_with_elements_not_equal_to_average_of_neighbors.sifr",
       "status": "CHECK_ERROR",
       "subcategory": "immutable_parameter_mutation"
     },
@@ -1475,7 +1475,7 @@
       "diagnostic": "type error: cannot mutate through immutable parameter `nums`: add `mut` to the parameter declaration",
       "fixture_slug": "1984_minimum_difference_between_highest_and_lowest_of_k_scores",
       "id": "1984",
-      "sifr_path": "audits/leetcode/1984_minimum_difference_between_highest_and_lowest_of_k_scores.sifr",
+      "sifr_path": "audits/leetcode/src/1984_minimum_difference_between_highest_and_lowest_of_k_scores.sifr",
       "status": "CHECK_ERROR",
       "subcategory": "immutable_parameter_mutation"
     },
@@ -1484,7 +1484,7 @@
       "diagnostic": "type error: cannot reassign immutable parameter `nums1`: add `mut` to the parameter declaration",
       "fixture_slug": "2215_find_the_difference_of_two_arrays",
       "id": "2215",
-      "sifr_path": "audits/leetcode/2215_find_the_difference_of_two_arrays.sifr",
+      "sifr_path": "audits/leetcode/src/2215_find_the_difference_of_two_arrays.sifr",
       "status": "CHECK_ERROR",
       "subcategory": "immutable_parameter_reassignment"
     },
@@ -1493,7 +1493,7 @@
       "diagnostic": "type error: cannot mutate through immutable parameter `potions`: add `mut` to the parameter declaration",
       "fixture_slug": "2300_successful_pairs_of_spells_and_potions",
       "id": "2300",
-      "sifr_path": "audits/leetcode/2300_successful_pairs_of_spells_and_potions.sifr",
+      "sifr_path": "audits/leetcode/src/2300_successful_pairs_of_spells_and_potions.sifr",
       "status": "CHECK_ERROR",
       "subcategory": "immutable_parameter_mutation"
     },
@@ -1502,7 +1502,7 @@
       "diagnostic": "type error: cannot mutate through immutable parameter `meetings`: add `mut` to the parameter declaration",
       "fixture_slug": "2402_meeting_rooms_iii",
       "id": "2402",
-      "sifr_path": "audits/leetcode/2402_meeting_rooms_iii.sifr",
+      "sifr_path": "audits/leetcode/src/2402_meeting_rooms_iii.sifr",
       "status": "CHECK_ERROR",
       "subcategory": "immutable_parameter_mutation"
     },
@@ -1511,7 +1511,7 @@
       "diagnostic": "type error: cannot mutate through immutable parameter `nums`: add `mut` to the parameter declaration",
       "fixture_slug": "2616_minimize_the_maximum_difference_of_pairs",
       "id": "2616",
-      "sifr_path": "audits/leetcode/2616_minimize_the_maximum_difference_of_pairs.sifr",
+      "sifr_path": "audits/leetcode/src/2616_minimize_the_maximum_difference_of_pairs.sifr",
       "status": "CHECK_ERROR",
       "subcategory": "immutable_parameter_mutation"
     },
@@ -1520,7 +1520,7 @@
       "diagnostic": "type error: cannot mutate through immutable parameter `nums`: add `mut` to the parameter declaration",
       "fixture_slug": "2971_find_polygon_with_the_largest_perimeter",
       "id": "2971",
-      "sifr_path": "audits/leetcode/2971_find_polygon_with_the_largest_perimeter.sifr",
+      "sifr_path": "audits/leetcode/src/2971_find_polygon_with_the_largest_perimeter.sifr",
       "status": "CHECK_ERROR",
       "subcategory": "immutable_parameter_mutation"
     },
@@ -1529,7 +1529,7 @@
       "diagnostic": "type error: min() takes 1 or 2 arguments",
       "fixture_slug": "0072_edit_distance",
       "id": "0072",
-      "sifr_path": "audits/leetcode/0072_edit_distance.sifr",
+      "sifr_path": "audits/leetcode/src/0072_edit_distance.sifr",
       "status": "CHECK_ERROR",
       "subcategory": null
     },
@@ -1538,7 +1538,7 @@
       "diagnostic": "type error: sum() takes exactly 1 argument",
       "fixture_slug": "0079_word_search",
       "id": "0079",
-      "sifr_path": "audits/leetcode/0079_word_search.sifr",
+      "sifr_path": "audits/leetcode/src/0079_word_search.sifr",
       "status": "CHECK_ERROR",
       "subcategory": null
     },
@@ -1547,7 +1547,7 @@
       "diagnostic": "type error: undefined function: 'Counter'",
       "fixture_slug": "0350_intersection_of_two_arrays_ii",
       "id": "0350",
-      "sifr_path": "audits/leetcode/0350_intersection_of_two_arrays_ii.sifr",
+      "sifr_path": "audits/leetcode/src/0350_intersection_of_two_arrays_ii.sifr",
       "status": "CHECK_ERROR",
       "subcategory": null
     },
@@ -1556,7 +1556,7 @@
       "diagnostic": "type error: undefined function: 'Counter'",
       "fixture_slug": "0383_ransom_note",
       "id": "0383",
-      "sifr_path": "audits/leetcode/0383_ransom_note.sifr",
+      "sifr_path": "audits/leetcode/src/0383_ransom_note.sifr",
       "status": "CHECK_ERROR",
       "subcategory": null
     },
@@ -1565,7 +1565,7 @@
       "diagnostic": "type error: undefined function: 'Counter'",
       "fixture_slug": "0767_reorganize_string",
       "id": "0767",
-      "sifr_path": "audits/leetcode/0767_reorganize_string.sifr",
+      "sifr_path": "audits/leetcode/src/0767_reorganize_string.sifr",
       "status": "CHECK_ERROR",
       "subcategory": null
     },
@@ -1574,7 +1574,7 @@
       "diagnostic": "type error: undefined function: 'ceil'",
       "fixture_slug": "1049_last_stone_weight_ii",
       "id": "1049",
-      "sifr_path": "audits/leetcode/1049_last_stone_weight_ii.sifr",
+      "sifr_path": "audits/leetcode/src/1049_last_stone_weight_ii.sifr",
       "status": "CHECK_ERROR",
       "subcategory": null
     },
@@ -1583,7 +1583,7 @@
       "diagnostic": "type error: undefined function: 'Counter'",
       "fixture_slug": "1189_maximum_number_of_balloons",
       "id": "1189",
-      "sifr_path": "audits/leetcode/1189_maximum_number_of_balloons.sifr",
+      "sifr_path": "audits/leetcode/src/1189_maximum_number_of_balloons.sifr",
       "status": "CHECK_ERROR",
       "subcategory": null
     },
@@ -1592,7 +1592,7 @@
       "diagnostic": "type error: str has no method 'rfind'",
       "fixture_slug": "1930_unique_length_3_palindromic_subsequences",
       "id": "1930",
-      "sifr_path": "audits/leetcode/1930_unique_length_3_palindromic_subsequences.sifr",
+      "sifr_path": "audits/leetcode/src/1930_unique_length_3_palindromic_subsequences.sifr",
       "status": "CHECK_ERROR",
       "subcategory": null
     },
@@ -1601,7 +1601,7 @@
       "diagnostic": "type error: max() takes 1 or 2 arguments",
       "fixture_slug": "2002_maximum_product_of_the_length_of_two_palindromic_subsequences",
       "id": "2002",
-      "sifr_path": "audits/leetcode/2002_maximum_product_of_the_length_of_two_palindromic_subsequences.sifr",
+      "sifr_path": "audits/leetcode/src/2002_maximum_product_of_the_length_of_two_palindromic_subsequences.sifr",
       "status": "CHECK_ERROR",
       "subcategory": null
     },
@@ -1610,7 +1610,7 @@
       "diagnostic": "type error: attribute access '.next' is not supported as an expression; use as a method call",
       "fixture_slug": "0019_remove_nth_node_from_end_of_list",
       "id": "0019",
-      "sifr_path": "audits/leetcode/0019_remove_nth_node_from_end_of_list.sifr",
+      "sifr_path": "audits/leetcode/src/0019_remove_nth_node_from_end_of_list.sifr",
       "status": "CHECK_ERROR",
       "subcategory": null
     },
@@ -1619,7 +1619,7 @@
       "diagnostic": "type error: attribute access '.next' is not supported as an expression; use as a method call",
       "fixture_slug": "0025_reverse_nodes_in_k_group",
       "id": "0025",
-      "sifr_path": "audits/leetcode/0025_reverse_nodes_in_k_group.sifr",
+      "sifr_path": "audits/leetcode/src/0025_reverse_nodes_in_k_group.sifr",
       "status": "CHECK_ERROR",
       "subcategory": null
     },
@@ -1628,7 +1628,7 @@
       "diagnostic": "type error: attribute access '.next' is not supported as an expression; use as a method call",
       "fixture_slug": "0061_rotate_list",
       "id": "0061",
-      "sifr_path": "audits/leetcode/0061_rotate_list.sifr",
+      "sifr_path": "audits/leetcode/src/0061_rotate_list.sifr",
       "status": "CHECK_ERROR",
       "subcategory": null
     },
@@ -1637,7 +1637,7 @@
       "diagnostic": "type error: attribute access '.val' is not supported as an expression; use as a method call",
       "fixture_slug": "0083_remove_duplicates_from_sorted_list",
       "id": "0083",
-      "sifr_path": "audits/leetcode/0083_remove_duplicates_from_sorted_list.sifr",
+      "sifr_path": "audits/leetcode/src/0083_remove_duplicates_from_sorted_list.sifr",
       "status": "CHECK_ERROR",
       "subcategory": null
     },
@@ -1646,7 +1646,7 @@
       "diagnostic": "type error: attribute access '.next' is not supported as an expression; use as a method call",
       "fixture_slug": "0092_reverse_linked_list_ii",
       "id": "0092",
-      "sifr_path": "audits/leetcode/0092_reverse_linked_list_ii.sifr",
+      "sifr_path": "audits/leetcode/src/0092_reverse_linked_list_ii.sifr",
       "status": "CHECK_ERROR",
       "subcategory": null
     },
@@ -1655,7 +1655,7 @@
       "diagnostic": "type error: attribute access '.right' is not supported as an expression; use as a method call",
       "fixture_slug": "0094_binary_tree_inorder_traversal",
       "id": "0094",
-      "sifr_path": "audits/leetcode/0094_binary_tree_inorder_traversal.sifr",
+      "sifr_path": "audits/leetcode/src/0094_binary_tree_inorder_traversal.sifr",
       "status": "CHECK_ERROR",
       "subcategory": null
     },
@@ -1664,7 +1664,7 @@
       "diagnostic": "type error: attribute access '.left' is not supported as an expression; use as a method call",
       "fixture_slug": "0101_symmetric_tree",
       "id": "0101",
-      "sifr_path": "audits/leetcode/0101_symmetric_tree.sifr",
+      "sifr_path": "audits/leetcode/src/0101_symmetric_tree.sifr",
       "status": "CHECK_ERROR",
       "subcategory": null
     },
@@ -1673,7 +1673,7 @@
       "diagnostic": "type error: attribute access '.left' is not supported as an expression; use as a method call",
       "fixture_slug": "0112_path_sum",
       "id": "0112",
-      "sifr_path": "audits/leetcode/0112_path_sum.sifr",
+      "sifr_path": "audits/leetcode/src/0112_path_sum.sifr",
       "status": "CHECK_ERROR",
       "subcategory": null
     },
@@ -1682,7 +1682,7 @@
       "diagnostic": "type error: attribute access '.next' is not supported as an expression; use as a method call",
       "fixture_slug": "0143_reorder_list",
       "id": "0143",
-      "sifr_path": "audits/leetcode/0143_reorder_list.sifr",
+      "sifr_path": "audits/leetcode/src/0143_reorder_list.sifr",
       "status": "CHECK_ERROR",
       "subcategory": null
     },
@@ -1691,7 +1691,7 @@
       "diagnostic": "type error: attribute access '.prev' is not supported as an expression; use as a method call",
       "fixture_slug": "0146_lru_cache",
       "id": "0146",
-      "sifr_path": "audits/leetcode/0146_lru_cache.sifr",
+      "sifr_path": "audits/leetcode/src/0146_lru_cache.sifr",
       "status": "CHECK_ERROR",
       "subcategory": null
     },
@@ -1700,7 +1700,7 @@
       "diagnostic": "type error: attribute access '.next' is not supported as an expression; use as a method call",
       "fixture_slug": "0147_insertion_sort_list",
       "id": "0147",
-      "sifr_path": "audits/leetcode/0147_insertion_sort_list.sifr",
+      "sifr_path": "audits/leetcode/src/0147_insertion_sort_list.sifr",
       "status": "CHECK_ERROR",
       "subcategory": null
     },
@@ -1709,7 +1709,7 @@
       "diagnostic": "type error: attribute access '.next' is not supported as an expression; use as a method call",
       "fixture_slug": "0148_sort_list",
       "id": "0148",
-      "sifr_path": "audits/leetcode/0148_sort_list.sifr",
+      "sifr_path": "audits/leetcode/src/0148_sort_list.sifr",
       "status": "CHECK_ERROR",
       "subcategory": null
     },
@@ -1718,7 +1718,7 @@
       "diagnostic": "type error: type 'MinStack' has no field 'minStack'",
       "fixture_slug": "0155_min_stack",
       "id": "0155",
-      "sifr_path": "audits/leetcode/0155_min_stack.sifr",
+      "sifr_path": "audits/leetcode/src/0155_min_stack.sifr",
       "status": "CHECK_ERROR",
       "subcategory": null
     },
@@ -1727,7 +1727,7 @@
       "diagnostic": "type error: attribute access '.left' is not supported as an expression; use as a method call",
       "fixture_slug": "0199_binary_tree_right_side_view",
       "id": "0199",
-      "sifr_path": "audits/leetcode/0199_binary_tree_right_side_view.sifr",
+      "sifr_path": "audits/leetcode/src/0199_binary_tree_right_side_view.sifr",
       "status": "CHECK_ERROR",
       "subcategory": null
     },
@@ -1736,7 +1736,7 @@
       "diagnostic": "type error: type 'Trie' has no field 'root'",
       "fixture_slug": "0208_implement_trie_prefix_tree",
       "id": "0208",
-      "sifr_path": "audits/leetcode/0208_implement_trie_prefix_tree.sifr",
+      "sifr_path": "audits/leetcode/src/0208_implement_trie_prefix_tree.sifr",
       "status": "CHECK_ERROR",
       "subcategory": null
     },
@@ -1745,7 +1745,7 @@
       "diagnostic": "type error: attribute access '.children' is not supported as an expression; use as a method call",
       "fixture_slug": "0211_design_add_and_search_words_data_structure",
       "id": "0211",
-      "sifr_path": "audits/leetcode/0211_design_add_and_search_words_data_structure.sifr",
+      "sifr_path": "audits/leetcode/src/0211_design_add_and_search_words_data_structure.sifr",
       "status": "CHECK_ERROR",
       "subcategory": null
     },
@@ -1754,7 +1754,7 @@
       "diagnostic": "type error: type 'MyStack' has no field 'q'",
       "fixture_slug": "0225_implement_stack_using_queues",
       "id": "0225",
-      "sifr_path": "audits/leetcode/0225_implement_stack_using_queues.sifr",
+      "sifr_path": "audits/leetcode/src/0225_implement_stack_using_queues.sifr",
       "status": "CHECK_ERROR",
       "subcategory": null
     },
@@ -1763,7 +1763,7 @@
       "diagnostic": "type error: type 'MyQueue' has no field 'append_stack'",
       "fixture_slug": "0232_implement_queue_using_stacks",
       "id": "0232",
-      "sifr_path": "audits/leetcode/0232_implement_queue_using_stacks.sifr",
+      "sifr_path": "audits/leetcode/src/0232_implement_queue_using_stacks.sifr",
       "status": "CHECK_ERROR",
       "subcategory": null
     },
@@ -1772,7 +1772,7 @@
       "diagnostic": "type error: attribute access '.left' is not supported as an expression; use as a method call",
       "fixture_slug": "0297_serialize_and_deserialize_binary_tree",
       "id": "0297",
-      "sifr_path": "audits/leetcode/0297_serialize_and_deserialize_binary_tree.sifr",
+      "sifr_path": "audits/leetcode/src/0297_serialize_and_deserialize_binary_tree.sifr",
       "status": "CHECK_ERROR",
       "subcategory": null
     },
@@ -1781,7 +1781,7 @@
       "diagnostic": "type error: type 'NumArray' has no field 'prefix'",
       "fixture_slug": "0303_range_sum_query_immutable",
       "id": "0303",
-      "sifr_path": "audits/leetcode/0303_range_sum_query_immutable.sifr",
+      "sifr_path": "audits/leetcode/src/0303_range_sum_query_immutable.sifr",
       "status": "CHECK_ERROR",
       "subcategory": null
     },
@@ -1790,7 +1790,7 @@
       "diagnostic": "type error: attribute access '.left' is not supported as an expression; use as a method call",
       "fixture_slug": "0450_delete_node_in_a_bst",
       "id": "0450",
-      "sifr_path": "audits/leetcode/0450_delete_node_in_a_bst.sifr",
+      "sifr_path": "audits/leetcode/src/0450_delete_node_in_a_bst.sifr",
       "status": "CHECK_ERROR",
       "subcategory": null
     },
@@ -1799,7 +1799,7 @@
       "diagnostic": "type error: type 'Codec' has no field 'decodeMap'",
       "fixture_slug": "0535_encode_and_decode_tinyurl",
       "id": "0535",
-      "sifr_path": "audits/leetcode/0535_encode_and_decode_tinyurl.sifr",
+      "sifr_path": "audits/leetcode/src/0535_encode_and_decode_tinyurl.sifr",
       "status": "CHECK_ERROR",
       "subcategory": null
     },
@@ -1808,7 +1808,7 @@
       "diagnostic": "type error: attribute access '.val' is not supported as an expression; use as a method call",
       "fixture_slug": "0572_subtree_of_another_tree",
       "id": "0572",
-      "sifr_path": "audits/leetcode/0572_subtree_of_another_tree.sifr",
+      "sifr_path": "audits/leetcode/src/0572_subtree_of_another_tree.sifr",
       "status": "CHECK_ERROR",
       "subcategory": null
     },
@@ -1817,7 +1817,7 @@
       "diagnostic": "type error: type 'MyHashSet' has no field 'hashset'",
       "fixture_slug": "0705_design_hashset",
       "id": "0705",
-      "sifr_path": "audits/leetcode/0705_design_hashset.sifr",
+      "sifr_path": "audits/leetcode/src/0705_design_hashset.sifr",
       "status": "CHECK_ERROR",
       "subcategory": null
     },
@@ -1826,7 +1826,7 @@
       "diagnostic": "type error: type 'MyHashMap' has no field 'map'",
       "fixture_slug": "0706_design_hashmap",
       "id": "0706",
-      "sifr_path": "audits/leetcode/0706_design_hashmap.sifr",
+      "sifr_path": "audits/leetcode/src/0706_design_hashmap.sifr",
       "status": "CHECK_ERROR",
       "subcategory": null
     },
@@ -1835,7 +1835,7 @@
       "diagnostic": "type error: type 'UnionFind' has no field 'par'",
       "fixture_slug": "0721_accounts_merge",
       "id": "0721",
-      "sifr_path": "audits/leetcode/0721_accounts_merge.sifr",
+      "sifr_path": "audits/leetcode/src/0721_accounts_merge.sifr",
       "status": "CHECK_ERROR",
       "subcategory": null
     },
@@ -1844,7 +1844,7 @@
       "diagnostic": "type error: attribute access '.end' is not supported as an expression; use as a method call",
       "fixture_slug": "0729_my_calendar_i",
       "id": "0729",
-      "sifr_path": "audits/leetcode/0729_my_calendar_i.sifr",
+      "sifr_path": "audits/leetcode/src/0729_my_calendar_i.sifr",
       "status": "CHECK_ERROR",
       "subcategory": null
     },
@@ -1853,7 +1853,7 @@
       "diagnostic": "type error: type 'WordFilter' has no field 'root'",
       "fixture_slug": "0745_prefix_and_suffix_search",
       "id": "0745",
-      "sifr_path": "audits/leetcode/0745_prefix_and_suffix_search.sifr",
+      "sifr_path": "audits/leetcode/src/0745_prefix_and_suffix_search.sifr",
       "status": "CHECK_ERROR",
       "subcategory": null
     },
@@ -1862,7 +1862,7 @@
       "diagnostic": "type error: attribute access '.val' is not supported as an expression; use as a method call",
       "fixture_slug": "0783_minimum_distance_between_bst_nodes",
       "id": "0783",
-      "sifr_path": "audits/leetcode/0783_minimum_distance_between_bst_nodes.sifr",
+      "sifr_path": "audits/leetcode/src/0783_minimum_distance_between_bst_nodes.sifr",
       "status": "CHECK_ERROR",
       "subcategory": null
     },
@@ -1871,7 +1871,7 @@
       "diagnostic": "type error: attribute access '.next' is not supported as an expression; use as a method call",
       "fixture_slug": "0876_middle_of_the_linked_list",
       "id": "0876",
-      "sifr_path": "audits/leetcode/0876_middle_of_the_linked_list.sifr",
+      "sifr_path": "audits/leetcode/src/0876_middle_of_the_linked_list.sifr",
       "status": "CHECK_ERROR",
       "subcategory": null
     },
@@ -1880,7 +1880,7 @@
       "diagnostic": "type error: type 'StockSpanner' has no field 'stack'",
       "fixture_slug": "0901_online_stock_span",
       "id": "0901",
-      "sifr_path": "audits/leetcode/0901_online_stock_span.sifr",
+      "sifr_path": "audits/leetcode/src/0901_online_stock_span.sifr",
       "status": "CHECK_ERROR",
       "subcategory": null
     },
@@ -1889,7 +1889,7 @@
       "diagnostic": "type error: type 'TimeMap' has no field 'keyStore'",
       "fixture_slug": "0981_time_based_key_value_store",
       "id": "0981",
-      "sifr_path": "audits/leetcode/0981_time_based_key_value_store.sifr",
+      "sifr_path": "audits/leetcode/src/0981_time_based_key_value_store.sifr",
       "status": "CHECK_ERROR",
       "subcategory": null
     },
@@ -1898,7 +1898,7 @@
       "diagnostic": "type error: type 'ParkingSystem' has no field 'parking'",
       "fixture_slug": "1603_design_parking_system",
       "id": "1603",
-      "sifr_path": "audits/leetcode/1603_design_parking_system.sifr",
+      "sifr_path": "audits/leetcode/src/1603_design_parking_system.sifr",
       "status": "CHECK_ERROR",
       "subcategory": null
     },
@@ -1907,7 +1907,7 @@
       "diagnostic": "type error: attribute access '.left' is not supported as an expression; use as a method call",
       "fixture_slug": "1609_even_odd_tree",
       "id": "1609",
-      "sifr_path": "audits/leetcode/1609_even_odd_tree.sifr",
+      "sifr_path": "audits/leetcode/src/1609_even_odd_tree.sifr",
       "status": "CHECK_ERROR",
       "subcategory": null
     },
@@ -1916,7 +1916,7 @@
       "diagnostic": "type error: attribute access '.next' is not supported as an expression; use as a method call",
       "fixture_slug": "1669_merge_in_between_linked_lists",
       "id": "1669",
-      "sifr_path": "audits/leetcode/1669_merge_in_between_linked_lists.sifr",
+      "sifr_path": "audits/leetcode/src/1669_merge_in_between_linked_lists.sifr",
       "status": "CHECK_ERROR",
       "subcategory": null
     },
@@ -1925,7 +1925,7 @@
       "diagnostic": "type error: attribute access '.next' is not supported as an expression; use as a method call",
       "fixture_slug": "1721_swapping_nodes_in_a_linked_list",
       "id": "1721",
-      "sifr_path": "audits/leetcode/1721_swapping_nodes_in_a_linked_list.sifr",
+      "sifr_path": "audits/leetcode/src/1721_swapping_nodes_in_a_linked_list.sifr",
       "status": "CHECK_ERROR",
       "subcategory": null
     },
@@ -1934,7 +1934,7 @@
       "diagnostic": "type error: type 'SeatManager' has no field 'seats'",
       "fixture_slug": "1845_seat_reservation_manager",
       "id": "1845",
-      "sifr_path": "audits/leetcode/1845_seat_reservation_manager.sifr",
+      "sifr_path": "audits/leetcode/src/1845_seat_reservation_manager.sifr",
       "status": "CHECK_ERROR",
       "subcategory": null
     },
@@ -1943,7 +1943,7 @@
       "diagnostic": "type error: attribute access '.next' is not supported as an expression; use as a method call",
       "fixture_slug": "2130_maximum_twin_sum_of_a_linked_list",
       "id": "2130",
-      "sifr_path": "audits/leetcode/2130_maximum_twin_sum_of_a_linked_list.sifr",
+      "sifr_path": "audits/leetcode/src/2130_maximum_twin_sum_of_a_linked_list.sifr",
       "status": "CHECK_ERROR",
       "subcategory": null
     },
@@ -1952,7 +1952,7 @@
       "diagnostic": "type error: function 'generate' must return a value of type 'list[list[int]]' on all control-flow paths",
       "fixture_slug": "0118_pascals_triangle",
       "id": "0118",
-      "sifr_path": "audits/leetcode/0118_pascals_triangle.sifr",
+      "sifr_path": "audits/leetcode/src/0118_pascals_triangle.sifr",
       "status": "CHECK_ERROR",
       "subcategory": null
     },
@@ -1961,7 +1961,7 @@
       "diagnostic": "type error: function 'findMin' must return a value of type 'int' on all control-flow paths",
       "fixture_slug": "0153_find_minimum_in_rotated_sorted_array",
       "id": "0153",
-      "sifr_path": "audits/leetcode/0153_find_minimum_in_rotated_sorted_array.sifr",
+      "sifr_path": "audits/leetcode/src/0153_find_minimum_in_rotated_sorted_array.sifr",
       "status": "CHECK_ERROR",
       "subcategory": null
     },
@@ -1970,7 +1970,7 @@
       "diagnostic": "type error: function 'findPeakElement' must return a value of type 'int' on all control-flow paths",
       "fixture_slug": "0162_find_peak_element",
       "id": "0162",
-      "sifr_path": "audits/leetcode/0162_find_peak_element.sifr",
+      "sifr_path": "audits/leetcode/src/0162_find_peak_element.sifr",
       "status": "CHECK_ERROR",
       "subcategory": null
     },
@@ -1979,7 +1979,7 @@
       "diagnostic": "type error: function 'twoSum' must return a value of type 'list[int]' on all control-flow paths",
       "fixture_slug": "0167_two_sum_ii_input_array_is_sorted",
       "id": "0167",
-      "sifr_path": "audits/leetcode/0167_two_sum_ii_input_array_is_sorted.sifr",
+      "sifr_path": "audits/leetcode/src/0167_two_sum_ii_input_array_is_sorted.sifr",
       "status": "CHECK_ERROR",
       "subcategory": null
     },
@@ -1988,7 +1988,7 @@
       "diagnostic": "type error: function 'maximalSquare' must return a value of type 'int' on all control-flow paths",
       "fixture_slug": "0221_maximal_square",
       "id": "0221",
-      "sifr_path": "audits/leetcode/0221_maximal_square.sifr",
+      "sifr_path": "audits/leetcode/src/0221_maximal_square.sifr",
       "status": "CHECK_ERROR",
       "subcategory": null
     },
@@ -1997,7 +1997,7 @@
       "diagnostic": "type error: function 'kthSmallest' must return a value of type 'int' on all control-flow paths",
       "fixture_slug": "0230_kth_smallest_element_in_a_bst",
       "id": "0230",
-      "sifr_path": "audits/leetcode/0230_kth_smallest_element_in_a_bst.sifr",
+      "sifr_path": "audits/leetcode/src/0230_kth_smallest_element_in_a_bst.sifr",
       "status": "CHECK_ERROR",
       "subcategory": null
     },
@@ -2006,7 +2006,7 @@
       "diagnostic": "type error: function 'topKFrequent' must return a value of type 'list[int]' on all control-flow paths",
       "fixture_slug": "0347_top_k_frequent_elements",
       "id": "0347",
-      "sifr_path": "audits/leetcode/0347_top_k_frequent_elements.sifr",
+      "sifr_path": "audits/leetcode/src/0347_top_k_frequent_elements.sifr",
       "status": "CHECK_ERROR",
       "subcategory": null
     },
@@ -2015,7 +2015,7 @@
       "diagnostic": "type error: function 'isPerfectSquare' must return a value of type 'bool' on all control-flow paths",
       "fixture_slug": "0367_valid_perfect_square",
       "id": "0367",
-      "sifr_path": "audits/leetcode/0367_valid_perfect_square.sifr",
+      "sifr_path": "audits/leetcode/src/0367_valid_perfect_square.sifr",
       "status": "CHECK_ERROR",
       "subcategory": null
     },
@@ -2024,7 +2024,7 @@
       "diagnostic": "type error: function 'islandPerimeter' must return a value of type 'int' on all control-flow paths",
       "fixture_slug": "0463_island_perimeter",
       "id": "0463",
-      "sifr_path": "audits/leetcode/0463_island_perimeter.sifr",
+      "sifr_path": "audits/leetcode/src/0463_island_perimeter.sifr",
       "status": "CHECK_ERROR",
       "subcategory": null
     },
@@ -2033,7 +2033,7 @@
       "diagnostic": "type error: return type mismatch: expected 'int', got 'Result[int, ParseError]'",
       "fixture_slug": "0682_baseball_game",
       "id": "0682",
-      "sifr_path": "audits/leetcode/0682_baseball_game.sifr",
+      "sifr_path": "audits/leetcode/src/0682_baseball_game.sifr",
       "status": "CHECK_ERROR",
       "subcategory": null
     },
@@ -2042,7 +2042,7 @@
       "diagnostic": "type error: function 'maxSubarraySumCircular' must return a value of type 'int' on all control-flow paths",
       "fixture_slug": "0918_maximum_sum_circular_subarray",
       "id": "0918",
-      "sifr_path": "audits/leetcode/0918_maximum_sum_circular_subarray.sifr",
+      "sifr_path": "audits/leetcode/src/0918_maximum_sum_circular_subarray.sifr",
       "status": "CHECK_ERROR",
       "subcategory": null
     },
@@ -2051,7 +2051,7 @@
       "diagnostic": "type error: function 'diagonalSum' must return a value of type 'int' on all control-flow paths",
       "fixture_slug": "1572_matrix_diagonal_sum",
       "id": "1572",
-      "sifr_path": "audits/leetcode/1572_matrix_diagonal_sum.sifr",
+      "sifr_path": "audits/leetcode/src/1572_matrix_diagonal_sum.sifr",
       "status": "CHECK_ERROR",
       "subcategory": null
     },
@@ -2060,7 +2060,7 @@
       "diagnostic": "type error: function 'canTraverseAllPairs' must return a value of type 'bool' on all control-flow paths",
       "fixture_slug": "2709_greatest_common_divisor_traversal",
       "id": "2709",
-      "sifr_path": "audits/leetcode/2709_greatest_common_divisor_traversal.sifr",
+      "sifr_path": "audits/leetcode/src/2709_greatest_common_divisor_traversal.sifr",
       "status": "CHECK_ERROR",
       "subcategory": null
     },
@@ -2069,7 +2069,7 @@
       "diagnostic": "type error: undefined variable: 's'",
       "fixture_slug": "0018_4sum",
       "id": "0018",
-      "sifr_path": "audits/leetcode/0018_4sum.sifr",
+      "sifr_path": "audits/leetcode/src/0018_4sum.sifr",
       "status": "CHECK_ERROR",
       "subcategory": "undefined_local_name"
     },
@@ -2078,7 +2078,7 @@
       "diagnostic": "type error: duplicate function definition in module: 'groupAnagrams'",
       "fixture_slug": "0049_group_anagrams",
       "id": "0049",
-      "sifr_path": "audits/leetcode/0049_group_anagrams.sifr",
+      "sifr_path": "audits/leetcode/src/0049_group_anagrams.sifr",
       "status": "CHECK_ERROR",
       "subcategory": "duplicate_definition"
     },
@@ -2087,7 +2087,7 @@
       "diagnostic": "type error: undefined variable: 'diff'",
       "fixture_slug": "0134_gas_station",
       "id": "0134",
-      "sifr_path": "audits/leetcode/0134_gas_station.sifr",
+      "sifr_path": "audits/leetcode/src/0134_gas_station.sifr",
       "status": "CHECK_ERROR",
       "subcategory": "undefined_local_name"
     },
@@ -2096,7 +2096,7 @@
       "diagnostic": "type error: undefined variable: 'slope'",
       "fixture_slug": "0149_max_points_on_a_line",
       "id": "0149",
-      "sifr_path": "audits/leetcode/0149_max_points_on_a_line.sifr",
+      "sifr_path": "audits/leetcode/src/0149_max_points_on_a_line.sifr",
       "status": "CHECK_ERROR",
       "subcategory": "undefined_local_name"
     },
@@ -2105,7 +2105,7 @@
       "diagnostic": "type error: duplicate function definition in module: 'isPowerOfTwo'",
       "fixture_slug": "0231_power_of_two",
       "id": "0231",
-      "sifr_path": "audits/leetcode/0231_power_of_two.sifr",
+      "sifr_path": "audits/leetcode/src/0231_power_of_two.sifr",
       "status": "CHECK_ERROR",
       "subcategory": "duplicate_definition"
     },
@@ -2114,7 +2114,7 @@
       "diagnostic": "type error: duplicate function definition in module: 'countBits'",
       "fixture_slug": "0338_counting_bits",
       "id": "0338",
-      "sifr_path": "audits/leetcode/0338_counting_bits.sifr",
+      "sifr_path": "audits/leetcode/src/0338_counting_bits.sifr",
       "status": "CHECK_ERROR",
       "subcategory": "duplicate_definition"
     },
@@ -2123,7 +2123,7 @@
       "diagnostic": "type error: undefined variable: 'mid'",
       "fixture_slug": "0410_split_array_largest_sum",
       "id": "0410",
-      "sifr_path": "audits/leetcode/0410_split_array_largest_sum.sifr",
+      "sifr_path": "audits/leetcode/src/0410_split_array_largest_sum.sifr",
       "status": "CHECK_ERROR",
       "subcategory": "undefined_local_name"
     },
@@ -2132,7 +2132,7 @@
       "diagnostic": "type error: duplicate function definition in module: 'leastInterval'",
       "fixture_slug": "0621_task_scheduler",
       "id": "0621",
-      "sifr_path": "audits/leetcode/0621_task_scheduler.sifr",
+      "sifr_path": "audits/leetcode/src/0621_task_scheduler.sifr",
       "status": "CHECK_ERROR",
       "subcategory": "duplicate_definition"
     },
@@ -2141,7 +2141,7 @@
       "diagnostic": "type error: duplicate function definition in module: 'findClosestElements'",
       "fixture_slug": "0658_find_k_closest_elements",
       "id": "0658",
-      "sifr_path": "audits/leetcode/0658_find_k_closest_elements.sifr",
+      "sifr_path": "audits/leetcode/src/0658_find_k_closest_elements.sifr",
       "status": "CHECK_ERROR",
       "subcategory": "duplicate_definition"
     },
@@ -2150,7 +2150,7 @@
       "diagnostic": "type error: undefined variable: 'cap'",
       "fixture_slug": "1011_capacity_to_ship_packages_within_d_days",
       "id": "1011",
-      "sifr_path": "audits/leetcode/1011_capacity_to_ship_packages_within_d_days.sifr",
+      "sifr_path": "audits/leetcode/src/1011_capacity_to_ship_packages_within_d_days.sifr",
       "status": "CHECK_ERROR",
       "subcategory": "undefined_local_name"
     },
@@ -2159,7 +2159,7 @@
       "diagnostic": "type error: undefined variable: 'cur_sum'",
       "fixture_slug": "1074_number_of_submatrices_that_sum_to_target",
       "id": "1074",
-      "sifr_path": "audits/leetcode/1074_number_of_submatrices_that_sum_to_target.sifr",
+      "sifr_path": "audits/leetcode/src/1074_number_of_submatrices_that_sum_to_target.sifr",
       "status": "CHECK_ERROR",
       "subcategory": "undefined_local_name"
     },
@@ -2168,7 +2168,7 @@
       "diagnostic": "type error: duplicate function definition in module: 'findLeastNumOfUniqueInts'",
       "fixture_slug": "1481_least_number_of_unique_integers_after_k_removals",
       "id": "1481",
-      "sifr_path": "audits/leetcode/1481_least_number_of_unique_integers_after_k_removals.sifr",
+      "sifr_path": "audits/leetcode/src/1481_least_number_of_unique_integers_after_k_removals.sifr",
       "status": "CHECK_ERROR",
       "subcategory": "duplicate_definition"
     },
@@ -2177,7 +2177,7 @@
       "diagnostic": "type error: duplicate function definition in module: 'maximumOddBinaryNumber'",
       "fixture_slug": "2864_maximum_odd_binary_number",
       "id": "2864",
-      "sifr_path": "audits/leetcode/2864_maximum_odd_binary_number.sifr",
+      "sifr_path": "audits/leetcode/src/2864_maximum_odd_binary_number.sifr",
       "status": "CHECK_ERROR",
       "subcategory": "duplicate_definition"
     }

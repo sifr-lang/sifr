@@ -20,9 +20,9 @@ Demonstrate that the first compatibility remediation wave improves the canonical
 ## Canonical Validation Commands
 
 ```bash
-target/release/sifr run audit/leetcode/0069_sqrtx.sifr
-target/release/sifr run audit/leetcode/0151_reverse_words_in_a_string.sifr
-target/release/sifr run audit/leetcode/2235_add_two_integers.sifr
+target/release/sifr run audits/leetcode/src/0069_sqrtx.sifr
+target/release/sifr run audits/leetcode/src/0151_reverse_words_in_a_string.sifr
+target/release/sifr run audits/leetcode/src/2235_add_two_integers.sifr
 python3 scripts/run_phase31_leetcode.py \
   --manifest verification/leetcode/phase31_seed_corpus.json \
   --output verification/leetcode/phase31_seed_results_wave1.json

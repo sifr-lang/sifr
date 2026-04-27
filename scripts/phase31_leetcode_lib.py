@@ -10,7 +10,7 @@ from typing import Any
 
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
-AUDIT_LEETCODE_DIR = REPO_ROOT / "audits" / "leetcode"
+AUDIT_LEETCODE_DIR = REPO_ROOT / "audits" / "leetcode" / "src"
 REQUIRED_TOPICS = (
     "arrays",
     "strings",

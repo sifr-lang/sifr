@@ -2,7 +2,7 @@
 
 Date: 2026-04-09
 Source ranking: `verification/leetcode/leetcode_pair_diff_scan_20260409.json`
-Method: raw line-level diff size between paired `audits/leetcode/*.py` and `audits/leetcode/*.sifr` files
+Method: raw line-level diff size between paired `audits/leetcode/src/*.py` and `audits/leetcode/src/*.sifr` files
 
 ## Scope
 

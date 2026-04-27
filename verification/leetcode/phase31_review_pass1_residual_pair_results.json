@@ -19,7 +19,7 @@
           "command": [
             "target/debug/sifr",
             "check",
-            "audits/leetcode/0001_two_sum.sifr"
+            "audits/leetcode/src/0001_two_sum.sifr"
           ],
           "duration_ms": 329,
           "returncode": 0,
@@ -32,7 +32,7 @@
           "command": [
             "target/debug/sifr",
             "run",
-            "audits/leetcode/0001_two_sum.sifr"
+            "audits/leetcode/src/0001_two_sum.sifr"
           ],
           "duration_ms": 393,
           "returncode": 0,
@@ -58,7 +58,7 @@
           "command": [
             "target/debug/sifr",
             "check",
-            "audits/leetcode/0242_valid_anagram.sifr"
+            "audits/leetcode/src/0242_valid_anagram.sifr"
           ],
           "duration_ms": 330,
           "returncode": 0,
@@ -71,7 +71,7 @@
           "command": [
             "target/debug/sifr",
             "run",
-            "audits/leetcode/0242_valid_anagram.sifr"
+            "audits/leetcode/src/0242_valid_anagram.sifr"
           ],
           "duration_ms": 972,
           "returncode": 0,

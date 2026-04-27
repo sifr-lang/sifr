@@ -19,7 +19,7 @@
           "command": [
             "target/debug/sifr",
             "check",
-            "audits/leetcode/0226_invert_binary_tree.sifr"
+            "audits/leetcode/src/0226_invert_binary_tree.sifr"
           ],
           "duration_ms": 341,
           "returncode": 0,
@@ -32,7 +32,7 @@
           "command": [
             "target/debug/sifr",
             "run",
-            "audits/leetcode/0226_invert_binary_tree.sifr"
+            "audits/leetcode/src/0226_invert_binary_tree.sifr"
           ],
           "duration_ms": 497,
           "returncode": 1,
@@ -58,7 +58,7 @@
           "command": [
             "target/debug/sifr",
             "check",
-            "audits/leetcode/0295_find_median_from_data_stream.sifr"
+            "audits/leetcode/src/0295_find_median_from_data_stream.sifr"
           ],
           "duration_ms": 321,
           "returncode": 0,
@@ -71,7 +71,7 @@
           "command": [
             "target/debug/sifr",
             "run",
-            "audits/leetcode/0295_find_median_from_data_stream.sifr"
+            "audits/leetcode/src/0295_find_median_from_data_stream.sifr"
           ],
           "duration_ms": 587,
           "returncode": 0,
@@ -97,7 +97,7 @@
           "command": [
             "target/debug/sifr",
             "check",
-            "audits/leetcode/0703_kth_largest_element_in_a_stream.sifr"
+            "audits/leetcode/src/0703_kth_largest_element_in_a_stream.sifr"
           ],
           "duration_ms": 353,
           "returncode": 0,
@@ -110,7 +110,7 @@
           "command": [
             "target/debug/sifr",
             "run",
-            "audits/leetcode/0703_kth_largest_element_in_a_stream.sifr"
+            "audits/leetcode/src/0703_kth_largest_element_in_a_stream.sifr"
           ],
           "duration_ms": 597,
           "returncode": 0,
@@ -136,7 +136,7 @@
           "command": [
             "target/debug/sifr",
             "check",
-            "audits/leetcode/0997_find_the_town_judge.sifr"
+            "audits/leetcode/src/0997_find_the_town_judge.sifr"
           ],
           "duration_ms": 357,
           "returncode": 0,
@@ -149,7 +149,7 @@
           "command": [
             "target/debug/sifr",
             "run",
-            "audits/leetcode/0997_find_the_town_judge.sifr"
+            "audits/leetcode/src/0997_find_the_town_judge.sifr"
           ],
           "duration_ms": 607,
           "returncode": 0,
@@ -175,7 +175,7 @@
           "command": [
             "target/debug/sifr",
             "check",
-            "audits/leetcode/1209_remove_all_adjacent_duplicates_in_string_ii.sifr"
+            "audits/leetcode/src/1209_remove_all_adjacent_duplicates_in_string_ii.sifr"
           ],
           "duration_ms": 360,
           "returncode": 0,
@@ -188,7 +188,7 @@
           "command": [
             "target/debug/sifr",
             "run",
-            "audits/leetcode/1209_remove_all_adjacent_duplicates_in_string_ii.sifr"
+            "audits/leetcode/src/1209_remove_all_adjacent_duplicates_in_string_ii.sifr"
           ],
           "duration_ms": 594,
           "returncode": 0,

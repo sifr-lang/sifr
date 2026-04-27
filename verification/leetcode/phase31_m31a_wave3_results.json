@@ -19,7 +19,7 @@
           "command": [
             "target/debug/sifr",
             "check",
-            "audits/leetcode/0003_longest_substring_without_repeating_characters.sifr"
+            "audits/leetcode/src/0003_longest_substring_without_repeating_characters.sifr"
           ],
           "duration_ms": 157,
           "returncode": 0,
@@ -32,7 +32,7 @@
           "command": [
             "target/debug/sifr",
             "run",
-            "audits/leetcode/0003_longest_substring_without_repeating_characters.sifr"
+            "audits/leetcode/src/0003_longest_substring_without_repeating_characters.sifr"
           ],
           "duration_ms": 1257,
           "returncode": 0,
@@ -58,7 +58,7 @@
           "command": [
             "target/debug/sifr",
             "check",
-            "audits/leetcode/0209_minimum_size_subarray_sum.sifr"
+            "audits/leetcode/src/0209_minimum_size_subarray_sum.sifr"
           ],
           "duration_ms": 138,
           "returncode": 1,
@@ -84,7 +84,7 @@
           "command": [
             "target/debug/sifr",
             "check",
-            "audits/leetcode/1456_maximum_number_of_vowels_in_a_substring_of_given_length.sifr"
+            "audits/leetcode/src/1456_maximum_number_of_vowels_in_a_substring_of_given_length.sifr"
           ],
           "duration_ms": 130,
           "returncode": 0,
@@ -97,7 +97,7 @@
           "command": [
             "target/debug/sifr",
             "run",
-            "audits/leetcode/1456_maximum_number_of_vowels_in_a_substring_of_given_length.sifr"
+            "audits/leetcode/src/1456_maximum_number_of_vowels_in_a_substring_of_given_length.sifr"
           ],
           "duration_ms": 847,
           "returncode": 0,

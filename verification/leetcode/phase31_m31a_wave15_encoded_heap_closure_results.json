@@ -19,7 +19,7 @@
           "command": [
             "target/debug/sifr",
             "check",
-            "audits/leetcode/0127_word_ladder.sifr"
+            "audits/leetcode/src/0127_word_ladder.sifr"
           ],
           "duration_ms": 336,
           "returncode": 0,
@@ -32,7 +32,7 @@
           "command": [
             "target/debug/sifr",
             "run",
-            "audits/leetcode/0127_word_ladder.sifr"
+            "audits/leetcode/src/0127_word_ladder.sifr"
           ],
           "duration_ms": 410,
           "returncode": 0,
@@ -58,7 +58,7 @@
           "command": [
             "target/debug/sifr",
             "check",
-            "audits/leetcode/0322_coin_change.sifr"
+            "audits/leetcode/src/0322_coin_change.sifr"
           ],
           "duration_ms": 330,
           "returncode": 0,
@@ -71,7 +71,7 @@
           "command": [
             "target/debug/sifr",
             "run",
-            "audits/leetcode/0322_coin_change.sifr"
+            "audits/leetcode/src/0322_coin_change.sifr"
           ],
           "duration_ms": 411,
           "returncode": 0,
@@ -97,7 +97,7 @@
           "command": [
             "target/debug/sifr",
             "check",
-            "audits/leetcode/0502_ipo.sifr"
+            "audits/leetcode/src/0502_ipo.sifr"
           ],
           "duration_ms": 350,
           "returncode": 0,
@@ -110,7 +110,7 @@
           "command": [
             "target/debug/sifr",
             "run",
-            "audits/leetcode/0502_ipo.sifr"
+            "audits/leetcode/src/0502_ipo.sifr"
           ],
           "duration_ms": 465,
           "returncode": 0,
@@ -136,7 +136,7 @@
           "command": [
             "target/debug/sifr",
             "check",
-            "audits/leetcode/0743_network_delay_time.sifr"
+            "audits/leetcode/src/0743_network_delay_time.sifr"
           ],
           "duration_ms": 344,
           "returncode": 0,
@@ -149,7 +149,7 @@
           "command": [
             "target/debug/sifr",
             "run",
-            "audits/leetcode/0743_network_delay_time.sifr"
+            "audits/leetcode/src/0743_network_delay_time.sifr"
           ],
           "duration_ms": 464,
           "returncode": 0,

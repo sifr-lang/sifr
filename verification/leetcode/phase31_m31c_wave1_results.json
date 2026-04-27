@@ -19,7 +19,7 @@
           "command": [
             "target/debug/sifr",
             "check",
-            "audit/leetcode/0003_longest_substring_without_repeating_characters.sifr"
+            "audits/leetcode/src/0003_longest_substring_without_repeating_characters.sifr"
           ],
           "duration_ms": 665,
           "returncode": 1,
@@ -45,7 +45,7 @@
           "command": [
             "target/debug/sifr",
             "check",
-            "audit/leetcode/0007_reverse_integer.sifr"
+            "audits/leetcode/src/0007_reverse_integer.sifr"
           ],
           "duration_ms": 116,
           "returncode": 0,
@@ -58,7 +58,7 @@
           "command": [
             "target/debug/sifr",
             "run",
-            "audit/leetcode/0007_reverse_integer.sifr"
+            "audits/leetcode/src/0007_reverse_integer.sifr"
           ],
           "duration_ms": 678,
           "returncode": 0,
@@ -84,7 +84,7 @@
           "command": [
             "target/debug/sifr",
             "check",
-            "audit/leetcode/0127_word_ladder.sifr"
+            "audits/leetcode/src/0127_word_ladder.sifr"
           ],
           "duration_ms": 125,
           "returncode": 1,
@@ -110,7 +110,7 @@
           "command": [
             "target/debug/sifr",
             "check",
-            "audit/leetcode/0217_contains_duplicate.sifr"
+            "audits/leetcode/src/0217_contains_duplicate.sifr"
           ],
           "duration_ms": 116,
           "returncode": 1,
@@ -136,7 +136,7 @@
           "command": [
             "target/debug/sifr",
             "check",
-            "audit/leetcode/0502_ipo.sifr"
+            "audits/leetcode/src/0502_ipo.sifr"
           ],
           "duration_ms": 119,
           "returncode": 1,
@@ -162,7 +162,7 @@
           "command": [
             "target/debug/sifr",
             "check",
-            "audit/leetcode/1046_last_stone_weight.sifr"
+            "audits/leetcode/src/1046_last_stone_weight.sifr"
           ],
           "duration_ms": 122,
           "returncode": 1,

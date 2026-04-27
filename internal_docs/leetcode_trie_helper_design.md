@@ -4,7 +4,7 @@ Status: accepted for LeetCode fixture scope
 
 ## Decision
 
-Keep the explicit trie helper in `audits/leetcode/helpers/trie.sifr` instead of adding a public
+Keep the explicit trie helper in `audits/leetcode/src/helpers/trie.sifr` instead of adding a public
 `sifr.trie` stdlib module.
 
 The helper is backed by owned node indices:
