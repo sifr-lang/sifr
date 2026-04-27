@@ -45,3 +45,6 @@ demos/**/*.exe
 
 # Generated snapshot proposals from insta
 *.snap.new
+
+# External sub-repositories restored by scripts/clone_subrepos.sh
+/audits/leetcode/
