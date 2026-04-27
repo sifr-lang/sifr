@@ -9,6 +9,22 @@ pub(super) const DEFAULTDICT_INT_ALIAS: &str = "__compat_defaultdict_int";
 pub(super) const DEFAULTDICT_LIST_ALIAS: &str = "__compat_defaultdict_list";
 pub(super) const DEFAULTDICT_SET_ALIAS: &str = "__compat_defaultdict_set";
 
+pub(super) fn reject_zip_keywords_if_present(call: &ExprCall, ctx: &mut LowerCtx) -> bool {
+    let Some(keyword) = call.arguments.keywords.first() else {
+        return false;
+    };
+    let Some(name) = keyword.arg.as_ref() else {
+        ctx.error("zip() does not support unpacked keyword arguments".to_string());
+        return true;
+    };
+    let message = match name.as_str() {
+        "strict" => "zip() keyword argument 'strict' is not supported".to_string(),
+        other => format!("zip() got an unexpected keyword argument '{other}'"),
+    };
+    ctx.error(message);
+    true
+}
+
 fn iterable_element_type_for_builtin(arg_ty: &Type) -> Option<Type> {
     arg_ty.iterable_element_type().or_else(|| {
         if matches!(arg_ty.resolve_alias(), Type::Any | Type::Unknown) {
@@ -388,7 +404,7 @@ pub(super) fn lower_defaultdict_constructor_call(
     ctx: &mut LowerCtx,
 ) -> Option<HirExpr> {
     if !call.arguments.keywords.is_empty() {
-        ctx.error("defaultdict() does not support keyword arguments in this slice".to_string());
+        ctx.error("defaultdict() does not support keyword arguments".to_string());
         return None;
     }
     if call.arguments.args.is_empty() || call.arguments.args.len() > 2 {

@@ -318,7 +318,7 @@ fn namespace_collision_message(
     parent_path: &Path,
 ) -> String {
     format!(
-        "module '{module_name}' resolves to file '{}' but parent name '{parent_name}' is also a module file '{}'; package directories are not supported in this phase",
+        "module '{module_name}' resolves to file '{}' but parent name '{parent_name}' is also a module file '{}'; package directories are not supported",
         path.display(),
         parent_path.display()
     )

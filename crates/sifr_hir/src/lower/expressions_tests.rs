@@ -207,7 +207,7 @@ fn test_imported_counter_iterable_constructor_remains_unsupported() {
     );
     assert!(
         result.is_err(),
-        "imported sifr.collections.Counter(list[T]) should remain unsupported in this slice"
+        "imported sifr.collections.Counter(list[T]) should remain unsupported"
     );
 }
 
@@ -987,7 +987,7 @@ fn test_iterator_builtins_lower_to_canonical_iterator_call_nodes() {
         if let HirStmt::Let { value, .. } = stmt {
             assert!(
                 !call_uses_legacy_iterator_builtin(value),
-                "legacy iterator builtin call node found in canonical wave2 lowering: {value:?}"
+                "legacy iterator builtin call node found in canonical iterator lowering: {value:?}"
             );
         }
     }
@@ -1298,6 +1298,31 @@ fn test_reversed_enumerate_zip_are_typed_as_iterators() {
 }
 
 #[test]
+fn test_zip_keyword_diagnostics_are_stable() {
+    let strict_result = lower_source(
+        "def main():\n    nums: list[int] = [1, 2]\n    _paired = zip(nums, nums, strict=True)\n",
+    );
+    assert!(strict_result.is_err());
+    let strict_errors = strict_result.unwrap_err();
+    assert!(strict_errors.iter().any(|error| {
+        error
+            .message
+            .contains("zip() keyword argument 'strict' is not supported")
+    }));
+
+    let unexpected_result = lower_source(
+        "def main():\n    nums: list[int] = [1, 2]\n    _paired = zip(nums, nums, bogus=True)\n",
+    );
+    assert!(unexpected_result.is_err());
+    let unexpected_errors = unexpected_result.unwrap_err();
+    assert!(unexpected_errors.iter().any(|error| {
+        error
+            .message
+            .contains("zip() got an unexpected keyword argument 'bogus'")
+    }));
+}
+
+#[test]
 fn test_reversed_rejects_non_reversible_iterator_argument() {
     let result = lower_source(
         "def main():\n    nums: list[int] = [1, 2, 3]\n    it: Iterator[int] = iter(nums)\n    _rev = reversed(it)\n",
@@ -1368,6 +1393,20 @@ fn test_map_rejects_plain_list_annotation_without_materialization() {
 }
 
 #[test]
+fn test_map_rejects_keywords_with_stable_diagnostic() {
+    let result = lower_source(
+        "def add(x: int) -> int:\n    return x + 1\n\ndef main():\n    nums: list[int] = [1, 2]\n    _mapped = map(function=add, iterable=nums)\n",
+    );
+    assert!(result.is_err());
+    let errors = result.unwrap_err();
+    assert!(errors.iter().any(|error| {
+        error
+            .message
+            .contains("map() does not accept keyword arguments")
+    }));
+}
+
+#[test]
 fn test_filter_is_typed_as_iterator() {
     let module = lower_source(
         "def pred(x: int) -> bool:\n    return x % 2 == 0\n\ndef main():\n    nums: list[int] = [1, 2, 3, 4]\n    filtered: Iterator[int] = filter(pred, nums)\n    _vals: list[int] = list(filtered)\n",
@@ -1398,6 +1437,20 @@ fn test_filter_rejects_plain_list_annotation_without_materialization() {
     assert!(errors.iter().any(|e| e
         .message
         .contains("expected 'list[int]', got 'Iterator[int]'")));
+}
+
+#[test]
+fn test_filter_rejects_keywords_with_stable_diagnostic() {
+    let result = lower_source(
+        "def pred(x: int) -> bool:\n    return x > 0\n\ndef main():\n    nums: list[int] = [1, 2]\n    _filtered = filter(function=pred, iterable=nums)\n",
+    );
+    assert!(result.is_err());
+    let errors = result.unwrap_err();
+    assert!(errors.iter().any(|error| {
+        error
+            .message
+            .contains("filter() does not accept keyword arguments")
+    }));
 }
 
 #[test]

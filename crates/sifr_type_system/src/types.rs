@@ -37,7 +37,7 @@ pub enum Type {
     /// Bottom type (function that never returns)
     Never,
 
-    // --- M3: Advanced Type System ---
+    // --- Advanced Type System ---
     /// Union type: value is one of several types (`int | str`)
     /// Members are normalized: flattened, deduplicated, sorted.
     Union(Vec<Type>),
@@ -62,7 +62,7 @@ pub enum Type {
     /// the programmer to prove the type before operating on it.
     Unknown,
 
-    // --- milestone_classes: Basic Classes ---
+    // --- Classes ---
     /// Result type: `Result[T, E]` -> `Result<T, E>` in Rust
     Result(Box<Type>, Box<Type>),
 
@@ -75,7 +75,7 @@ pub enum Type {
         parent_class: Option<String>,
     },
 
-    // --- milestone_protocols: Protocols, Operators, Discriminated Unions ---
+    // --- Protocols, Operators, Discriminated Unions ---
     /// Protocol type: structural interface that maps to Rust `trait`.
     /// Any class with the required methods satisfies the protocol.
     Protocol {
@@ -87,7 +87,7 @@ pub enum Type {
     /// `class Port(int)` -> `struct Port(i64)`
     Newtype { name: String, inner: Box<Type> },
 
-    // --- milestone_generics_impl: Generics ---
+    // --- Generics ---
     /// Type variable: a generic type parameter (e.g., `T` in `def first[T](items: list[T]) -> T`)
     TypeVar(String),
 
@@ -95,7 +95,7 @@ pub enum Type {
     /// Fields: (`parameter_types`, `parameter_conventions`, `return_type`).
     Callable(Vec<Type>, Vec<ParamConvention>, Box<Type>),
 
-    // --- milestone_enums: Enum Types ---
+    // --- Enum Types ---
     /// Enum type: `class Color(Enum): RED = 1; GREEN = 2; BLUE = 3`
     /// Maps to a Rust `#[repr(i64)] enum Color { RED = 1, GREEN = 2, BLUE = 3 }`
     Enum {
@@ -103,7 +103,7 @@ pub enum Type {
         variants: Vec<(String, Option<i64>)>,
     },
 
-    // --- milestone_integer_safety: BigInt ---
+    // --- Integer Safety ---
     /// Arbitrary-precision integer (`bigint` in Sifr, `num_bigint::BigInt` in Rust)
     /// Unlike `int` (i64), `bigint` never overflows — it grows as needed.
     BigInt,
@@ -571,7 +571,7 @@ impl Type {
     /// Returns the Rust type name for code generation.
     ///
     /// For union types, this returns a generated enum name.
-    /// The actual enum definition is emitted by the codegen phase.
+    /// The actual enum definition is emitted during code generation.
     pub fn rust_type(&self) -> String {
         match self {
             Self::Int => "i64".to_string(),
@@ -1627,7 +1627,7 @@ mod tests {
         assert_eq!(compat_defaultdict.contains_element_type(), Some(Type::Str));
     }
 
-    // --- M3: Union type tests ---
+    // --- Union type tests ---
 
     #[test]
     fn test_union_display_name() {

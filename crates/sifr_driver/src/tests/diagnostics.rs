@@ -48,7 +48,7 @@ fn test_workspace_resolution_errors_have_stable_codes_and_urls() {
             "SIFR-WORKSPACE-0102",
         ),
         (
-            "module 'helpers.list_node' resolves to file '/tmp/ws/lib/helpers/list_node.sifr' but parent name 'helpers' is also a module file '/tmp/ws/lib/helpers.sifr'; package directories are not supported in this phase",
+            "module 'helpers.list_node' resolves to file '/tmp/ws/lib/helpers/list_node.sifr' but parent name 'helpers' is also a module file '/tmp/ws/lib/helpers.sifr'; package directories are not supported",
             "SIFR-WORKSPACE-0103",
         ),
     ];
