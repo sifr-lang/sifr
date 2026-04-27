@@ -104,6 +104,9 @@ The script is safe to run repeatedly. It clones missing sub-repositories and
 fast-forwards existing clean checkouts.
 
 LeetCode fixtures live under `audits/leetcode/src`.
+LeetCode-specific corpus scripts, verification artifacts, and audit notes live
+inside that sub-repository under `audits/leetcode/scripts`,
+`audits/leetcode/verification/leetcode`, and `audits/leetcode/internal_docs`.
 
 ### Compile and run a `.sifr` file
 
