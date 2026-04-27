@@ -12,7 +12,7 @@
 - Case count: `53`
 - Statuses: `{'CHECK_ERROR': 53}`
 - Topics: `{'math': 1, 'arrays': 52}`
-- Smallest known repro: `1930` -> `audits/leetcode/1930_unique_length_3_palindromic_subsequences.sifr` (15 lines)
+- Smallest known repro: `1930` -> `audits/leetcode/src/1930_unique_length_3_palindromic_subsequences.sifr` (15 lines)
 - Repro stderr excerpt: `type error: str has no method 'rfind'`
 
 ### type_system.optional_narrowing_and_union_ops
@@ -21,7 +21,7 @@
 - Case count: `29`
 - Statuses: `{'CHECK_ERROR': 29}`
 - Topics: `{'arrays': 29}`
-- Smallest known repro: `0739` -> `audits/leetcode/0739_daily_temperatures.sifr` (17 lines)
+- Smallest known repro: `0739` -> `audits/leetcode/src/0739_daily_temperatures.sifr` (17 lines)
 - Repro stderr excerpt: `Any | None`
 
 ### lowering.destructuring_target_support
@@ -30,7 +30,7 @@
 - Case count: `28`
 - Statuses: `{'CHECK_ERROR': 28}`
 - Topics: `{'arrays': 28}`
-- Smallest known repro: `0280` -> `audits/leetcode/0280_wiggle_sort.sifr` (15 lines)
+- Smallest known repro: `0280` -> `audits/leetcode/src/0280_wiggle_sort.sifr` (15 lines)
 - Repro stderr excerpt: `tuple unpacking target must be a simple name`
 
 ### stdlib.python_module_surface
@@ -39,7 +39,7 @@
 - Case count: `6`
 - Statuses: `{'CHECK_ERROR': 6}`
 - Topics: `{'arrays': 6}`
-- Smallest known repro: `0383` -> `audits/leetcode/0383_ransom_note.sifr` (16 lines)
+- Smallest known repro: `0383` -> `audits/leetcode/src/0383_ransom_note.sifr` (16 lines)
 - Repro stderr excerpt: `undefined function: 'Counter'`
 
 ### codegen.generic_run_failure
@@ -48,7 +48,7 @@
 - Case count: `4`
 - Statuses: `{'RUN_ERROR': 4}`
 - Topics: `{'arrays': 4}`
-- Smallest known repro: `1498` -> `audits/leetcode/1498_number_of_subsequences_that_satisfy_the_given_sum_condition.sifr` (25 lines)
+- Smallest known repro: `1498` -> `audits/leetcode/src/1498_number_of_subsequences_that_satisfy_the_given_sum_condition.sifr` (25 lines)
 - Repro stderr excerpt: `warning: int left shift (<<) with non-constant shift amount may overflow i64 at runtime; consider using bigint`
 
 ### frontend.untyped_any_propagation
@@ -57,7 +57,7 @@
 - Case count: `4`
 - Statuses: `{'CHECK_ERROR': 4}`
 - Topics: `{'arrays': 4}`
-- Smallest known repro: `1851` -> `audits/leetcode/1851_minimum_interval_to_include_each_query.sifr` (22 lines)
+- Smallest known repro: `1851` -> `audits/leetcode/src/1851_minimum_interval_to_include_each_query.sifr` (22 lines)
 - Repro stderr excerpt: `cannot index type 'Any'`
 
 ### frontend.nested_function_annotation_support
@@ -66,7 +66,7 @@
 - Case count: `3`
 - Statuses: `{'CHECK_ERROR': 3}`
 - Topics: `{'arrays': 3}`
-- Smallest known repro: `0118` -> `audits/leetcode/0118_pascals_triangle.sifr` (24 lines)
+- Smallest known repro: `0118` -> `audits/leetcode/src/0118_pascals_triangle.sifr` (24 lines)
 - Repro stderr excerpt: `is missing a type annotation`
 
 ### lowering.attribute_expression_support
@@ -75,7 +75,7 @@
 - Case count: `1`
 - Statuses: `{'CHECK_ERROR': 1}`
 - Topics: `{'arrays': 1}`
-- Smallest known repro: `0230` -> `audits/leetcode/0230_kth_smallest_element_in_a_bst.sifr` (68 lines)
+- Smallest known repro: `0230` -> `audits/leetcode/src/0230_kth_smallest_element_in_a_bst.sifr` (68 lines)
 - Repro stderr excerpt: `attribute access '.`
 
 ### stdlib.python_builtin_signature_surface
@@ -84,7 +84,7 @@
 - Case count: `1`
 - Statuses: `{'CHECK_ERROR': 1}`
 - Topics: `{'arrays': 1}`
-- Smallest known repro: `0079` -> `audits/leetcode/0079_word_search.sifr` (45 lines)
+- Smallest known repro: `0079` -> `audits/leetcode/src/0079_word_search.sifr` (45 lines)
 - Repro stderr excerpt: `sum() takes exactly 1 argument`
 
 ## Spot Audit

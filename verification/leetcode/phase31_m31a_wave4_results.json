@@ -19,7 +19,7 @@
           "command": [
             "target/debug/sifr",
             "check",
-            "audits/leetcode/0209_minimum_size_subarray_sum.sifr"
+            "audits/leetcode/src/0209_minimum_size_subarray_sum.sifr"
           ],
           "duration_ms": 159,
           "returncode": 0,
@@ -32,7 +32,7 @@
           "command": [
             "target/debug/sifr",
             "run",
-            "audits/leetcode/0209_minimum_size_subarray_sum.sifr"
+            "audits/leetcode/src/0209_minimum_size_subarray_sum.sifr"
           ],
           "duration_ms": 914,
           "returncode": 0,

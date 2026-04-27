@@ -4,266 +4,266 @@
   "cases": [
     {
       "fixture_slug": "0002_add_two_numbers",
-      "cmd": "/Users/yaseralnajjar/work/sifr/codebase/target/release/sifr check /Users/yaseralnajjar/work/sifr/codebase/audits/leetcode/0002_add_two_numbers.sifr",
+      "cmd": "/Users/yaseralnajjar/work/sifr/codebase/target/release/sifr check /Users/yaseralnajjar/work/sifr/codebase/audits/leetcode/src/0002_add_two_numbers.sifr",
       "exit_code": 0,
       "stdout": "",
       "stderr": "no errors found\n"
     },
     {
       "fixture_slug": "0046_permutations",
-      "cmd": "/Users/yaseralnajjar/work/sifr/codebase/target/release/sifr check /Users/yaseralnajjar/work/sifr/codebase/audits/leetcode/0046_permutations.sifr",
+      "cmd": "/Users/yaseralnajjar/work/sifr/codebase/target/release/sifr check /Users/yaseralnajjar/work/sifr/codebase/audits/leetcode/src/0046_permutations.sifr",
       "exit_code": 0,
       "stdout": "",
       "stderr": "no errors found\n"
     },
     {
       "fixture_slug": "0047_permutations_ii",
-      "cmd": "/Users/yaseralnajjar/work/sifr/codebase/target/release/sifr check /Users/yaseralnajjar/work/sifr/codebase/audits/leetcode/0047_permutations_ii.sifr",
+      "cmd": "/Users/yaseralnajjar/work/sifr/codebase/target/release/sifr check /Users/yaseralnajjar/work/sifr/codebase/audits/leetcode/src/0047_permutations_ii.sifr",
       "exit_code": 1,
       "stdout": "",
       "stderr": "type error: argument 1 ('source') of function '__compat_sifr_collections_Counter': expected 'None | dict[T, int]', got 'list[int]'\ntype error: for-loop iterable must have a statically-known element type, got 'Any'\ntype error: parameter 'counter' in function 'backtrack' is missing a type annotation and could not be inferred\n"
     },
     {
       "fixture_slug": "0057_insert_interval",
-      "cmd": "/Users/yaseralnajjar/work/sifr/codebase/target/release/sifr check /Users/yaseralnajjar/work/sifr/codebase/audits/leetcode/0057_insert_interval.sifr",
+      "cmd": "/Users/yaseralnajjar/work/sifr/codebase/target/release/sifr check /Users/yaseralnajjar/work/sifr/codebase/audits/leetcode/src/0057_insert_interval.sifr",
       "exit_code": 1,
       "stdout": "",
       "stderr": "type error: min() with 2 arguments does not accept optional operands; got 'int | None' and 'int | None' (guard or unwrap first)\ntype error: parameter 'self' in function 'insert' is missing a type annotation\n"
     },
     {
       "fixture_slug": "0064_minimum_path_sum",
-      "cmd": "/Users/yaseralnajjar/work/sifr/codebase/target/release/sifr check /Users/yaseralnajjar/work/sifr/codebase/audits/leetcode/0064_minimum_path_sum.sifr",
+      "cmd": "/Users/yaseralnajjar/work/sifr/codebase/target/release/sifr check /Users/yaseralnajjar/work/sifr/codebase/audits/leetcode/src/0064_minimum_path_sum.sifr",
       "exit_code": 1,
       "stdout": "",
       "stderr": "type error: min() with 2 arguments does not accept optional operands; got 'float | None' and 'float | None' (guard or unwrap first)\ntype error: min() with 2 arguments does not accept optional operands; got 'float | None' and 'float | None' (guard or unwrap first)\ntype error: return type mismatch: expected 'int', got 'float | None'\n"
     },
     {
       "fixture_slug": "0088_merge_sorted_array",
-      "cmd": "/Users/yaseralnajjar/work/sifr/codebase/target/release/sifr check /Users/yaseralnajjar/work/sifr/codebase/audits/leetcode/0088_merge_sorted_array.sifr",
+      "cmd": "/Users/yaseralnajjar/work/sifr/codebase/target/release/sifr check /Users/yaseralnajjar/work/sifr/codebase/audits/leetcode/src/0088_merge_sorted_array.sifr",
       "exit_code": 0,
       "stdout": "",
       "stderr": "no errors found\n"
     },
     {
       "fixture_slug": "0103_binary_tree_zigzag_level_order_traversal",
-      "cmd": "/Users/yaseralnajjar/work/sifr/codebase/target/release/sifr check /Users/yaseralnajjar/work/sifr/codebase/audits/leetcode/0103_binary_tree_zigzag_level_order_traversal.sifr",
+      "cmd": "/Users/yaseralnajjar/work/sifr/codebase/target/release/sifr check /Users/yaseralnajjar/work/sifr/codebase/audits/leetcode/src/0103_binary_tree_zigzag_level_order_traversal.sifr",
       "exit_code": 1,
       "stdout": "",
       "stderr": "type error: cannot compare 'list[list[int]]' and 'None' with ==\ntype error: function expects return type 'list[list[int]]', but returns nothing\ntype error: list.append() argument type 'None | TreeNode' is not compatible with list element type 'TreeNode'\ntype error: list.append() argument type 'None | TreeNode' is not compatible with list element type 'TreeNode'\n"
     },
     {
       "fixture_slug": "0105_construct_binary_tree_from_preorder_and_inorder_traversal",
-      "cmd": "/Users/yaseralnajjar/work/sifr/codebase/target/release/sifr check /Users/yaseralnajjar/work/sifr/codebase/audits/leetcode/0105_construct_binary_tree_from_preorder_and_inorder_traversal.sifr",
+      "cmd": "/Users/yaseralnajjar/work/sifr/codebase/target/release/sifr check /Users/yaseralnajjar/work/sifr/codebase/audits/leetcode/src/0105_construct_binary_tree_from_preorder_and_inorder_traversal.sifr",
       "exit_code": 1,
       "stdout": "",
       "stderr": "type error: unsupported operand type(s) for +: 'int | None' and 'int'\ntype error: unsupported operand type(s) for +: 'int | None' and 'int'\n"
     },
     {
       "fixture_slug": "0106_construct_binary_tree_from_inorder_and_postorder_traversal",
-      "cmd": "/Users/yaseralnajjar/work/sifr/codebase/target/release/sifr check /Users/yaseralnajjar/work/sifr/codebase/audits/leetcode/0106_construct_binary_tree_from_inorder_and_postorder_traversal.sifr",
+      "cmd": "/Users/yaseralnajjar/work/sifr/codebase/target/release/sifr check /Users/yaseralnajjar/work/sifr/codebase/audits/leetcode/src/0106_construct_binary_tree_from_inorder_and_postorder_traversal.sifr",
       "exit_code": 0,
       "stdout": "",
       "stderr": "no errors found\n"
     },
     {
       "fixture_slug": "0108_convert_sorted_array_to_binary_search_tree",
-      "cmd": "/Users/yaseralnajjar/work/sifr/codebase/target/release/sifr check /Users/yaseralnajjar/work/sifr/codebase/audits/leetcode/0108_convert_sorted_array_to_binary_search_tree.sifr",
+      "cmd": "/Users/yaseralnajjar/work/sifr/codebase/target/release/sifr check /Users/yaseralnajjar/work/sifr/codebase/audits/leetcode/src/0108_convert_sorted_array_to_binary_search_tree.sifr",
       "exit_code": 1,
       "stdout": "",
       "stderr": "type error: argument 1 ('val') of function 'TreeNode': expected 'int', got 'int | None'\n"
     },
     {
       "fixture_slug": "0139_word_break",
-      "cmd": "/Users/yaseralnajjar/work/sifr/codebase/target/release/sifr check /Users/yaseralnajjar/work/sifr/codebase/audits/leetcode/0139_word_break.sifr",
+      "cmd": "/Users/yaseralnajjar/work/sifr/codebase/target/release/sifr check /Users/yaseralnajjar/work/sifr/codebase/audits/leetcode/src/0139_word_break.sifr",
       "exit_code": 1,
       "stdout": "",
       "stderr": "type error: list subscript assignment value type 'bool | None' is not compatible with list element type 'bool'\ntype error: return type mismatch: expected 'bool', got 'bool | None'\n"
     },
     {
       "fixture_slug": "0150_evaluate_reverse_polish_notation",
-      "cmd": "/Users/yaseralnajjar/work/sifr/codebase/target/release/sifr check /Users/yaseralnajjar/work/sifr/codebase/audits/leetcode/0150_evaluate_reverse_polish_notation.sifr",
+      "cmd": "/Users/yaseralnajjar/work/sifr/codebase/target/release/sifr check /Users/yaseralnajjar/work/sifr/codebase/audits/leetcode/src/0150_evaluate_reverse_polish_notation.sifr",
       "exit_code": 1,
       "stdout": "",
       "stderr": "type error: return type mismatch: expected 'int', got 'Result[int, ParseError] | None'\ntype error: unsupported operand type(s) for *: 'Any | None' and 'Any | None'\ntype error: unsupported operand type(s) for +: 'Any | None' and 'Any | None'\ntype error: unsupported operand type(s) for -: 'Any | None' and 'Any | None'\ntype error: unsupported operand type(s) for /: 'float' and 'Any | None'\n"
     },
     {
       "fixture_slug": "0261_graph_valid_tree",
-      "cmd": "/Users/yaseralnajjar/work/sifr/codebase/target/release/sifr check /Users/yaseralnajjar/work/sifr/codebase/audits/leetcode/0261_graph_valid_tree.sifr",
+      "cmd": "/Users/yaseralnajjar/work/sifr/codebase/target/release/sifr check /Users/yaseralnajjar/work/sifr/codebase/audits/leetcode/src/0261_graph_valid_tree.sifr",
       "exit_code": 1,
       "stdout": "",
       "stderr": "type error: argument 1 of callable 'union': expected 'int', got 'int | None'\ntype error: argument 2 of callable 'union': expected 'int', got 'int | None'\ntype error: bad operand type for unary not: 'Any'\ntype error: cannot index type 'list[int]' with 'int | None'\ntype error: cannot reassign immutable parameter `node`: add `mut` to the parameter declaration\ntype error: for-loop iterable must have a statically-known element type, got 'Any'\ntype error: parameter 'edges' in function 'validTree' is missing a type annotation\ntype error: parameter 'n' in function 'validTree' is missing a type annotation\ntype error: range() stop argument must be 'int', got 'Any'\ntype error: undefined variable: 'adj'\n"
     },
     {
       "fixture_slug": "0287_find_the_duplicate_number",
-      "cmd": "/Users/yaseralnajjar/work/sifr/codebase/target/release/sifr check /Users/yaseralnajjar/work/sifr/codebase/audits/leetcode/0287_find_the_duplicate_number.sifr",
+      "cmd": "/Users/yaseralnajjar/work/sifr/codebase/target/release/sifr check /Users/yaseralnajjar/work/sifr/codebase/audits/leetcode/src/0287_find_the_duplicate_number.sifr",
       "exit_code": 1,
       "stdout": "",
       "stderr": "type error: cannot index type 'list[int]' with 'None | int'\ntype error: cannot index type 'list[int]' with 'int | None'\ntype error: function 'findDuplicate' must return a value of type 'int' on all control-flow paths\ntype error: return type mismatch: expected 'int', got 'None | int'\n"
     },
     {
       "fixture_slug": "0304_range_sum_query_2d_immutable",
-      "cmd": "/Users/yaseralnajjar/work/sifr/codebase/target/release/sifr check /Users/yaseralnajjar/work/sifr/codebase/audits/leetcode/0304_range_sum_query_2d_immutable.sifr",
+      "cmd": "/Users/yaseralnajjar/work/sifr/codebase/target/release/sifr check /Users/yaseralnajjar/work/sifr/codebase/audits/leetcode/src/0304_range_sum_query_2d_immutable.sifr",
       "exit_code": 1,
       "stdout": "",
       "stderr": "type error: cannot compare 'None' and 'int' with ==\ntype error: cannot compare 'None' and 'int' with ==\ntype error: cannot compare 'None' and 'int' with ==\ntype error: len() argument must be a string, bytes, list, dict, tuple, set, or sized class, got 'Any'\ntype error: nested subscript assignment target must be a simple name\ntype error: parameter 'col1' in NumMatrix.sumRegion is missing a type annotation\ntype error: parameter 'col1' in NumMatrix.sumRegion is missing a type annotation\ntype error: parameter 'col2' in NumMatrix.sumRegion is missing a type annotation\ntype error: parameter 'col2' in NumMatrix.sumRegion is missing a type annotation\ntype error: parameter 'matrix' in NumMatrix.__init__ is missing a type annotation\ntype error: parameter 'matrix' in NumMatrix.__init__ is missing a type annotation\ntype error: parameter 'row1' in NumMatrix.sumRegion is missing a type annotation\ntype error: parameter 'row1' in NumMatrix.sumRegion is missing a type annotation\ntype error: parameter 'row2' in NumMatrix.sumRegion is missing a type annotation\ntype error: parameter 'row2' in NumMatrix.sumRegion is missing a type annotation\ntype error: type 'NumMatrix' has no field 'sum_'\ntype error: type 'NumMatrix' has no field 'sum_'\ntype error: type 'NumMatrix' has no field 'sum_'\ntype error: undefined variable: 'sum_col2'\ntype error: unsupported operand type(s) for +: 'int' and 'Any'\n"
     },
     {
       "fixture_slug": "0329_longest_increasing_path_in_a_matrix",
-      "cmd": "/Users/yaseralnajjar/work/sifr/codebase/target/release/sifr check /Users/yaseralnajjar/work/sifr/codebase/audits/leetcode/0329_longest_increasing_path_in_a_matrix.sifr",
+      "cmd": "/Users/yaseralnajjar/work/sifr/codebase/target/release/sifr check /Users/yaseralnajjar/work/sifr/codebase/audits/leetcode/src/0329_longest_increasing_path_in_a_matrix.sifr",
       "exit_code": 1,
       "stdout": "",
       "stderr": "type error: argument 3 of callable 'dfs': expected 'int', got 'int | None'\ntype error: argument 3 of callable 'dfs': expected 'int', got 'int | None'\ntype error: argument 3 of callable 'dfs': expected 'int', got 'int | None'\ntype error: argument 3 of callable 'dfs': expected 'int', got 'int | None'\ntype error: return type mismatch: expected 'int', got 'int | None'\n"
     },
     {
       "fixture_slug": "0394_decode_string",
-      "cmd": "/Users/yaseralnajjar/work/sifr/codebase/target/release/sifr check /Users/yaseralnajjar/work/sifr/codebase/audits/leetcode/0394_decode_string.sifr",
+      "cmd": "/Users/yaseralnajjar/work/sifr/codebase/target/release/sifr check /Users/yaseralnajjar/work/sifr/codebase/audits/leetcode/src/0394_decode_string.sifr",
       "exit_code": 1,
       "stdout": "",
       "stderr": "type error: type 'None | str' has no method 'isdigit'\ntype error: unsupported operand type(s) for *: 'Result[int, ParseError]' and 'str'\ntype error: unsupported operand type(s) for +: 'str | None' and 'str'\n"
     },
     {
       "fixture_slug": "0417_pacific_atlantic_water_flow",
-      "cmd": "/Users/yaseralnajjar/work/sifr/codebase/target/release/sifr check /Users/yaseralnajjar/work/sifr/codebase/audits/leetcode/0417_pacific_atlantic_water_flow.sifr",
+      "cmd": "/Users/yaseralnajjar/work/sifr/codebase/target/release/sifr check /Users/yaseralnajjar/work/sifr/codebase/audits/leetcode/src/0417_pacific_atlantic_water_flow.sifr",
       "exit_code": 1,
       "stdout": "",
       "stderr": "type error: argument 4 of callable 'dfs': expected 'int', got 'int | None'\ntype error: argument 4 of callable 'dfs': expected 'int', got 'int | None'\ntype error: argument 4 of callable 'dfs': expected 'int', got 'int | None'\ntype error: argument 4 of callable 'dfs': expected 'int', got 'int | None'\ntype error: argument 4 of callable 'dfs': expected 'int', got 'int | None'\ntype error: ... +3 more similar diagnostics\n"
     },
     {
       "fixture_slug": "0438_find_all_anagrams_in_a_string",
-      "cmd": "/Users/yaseralnajjar/work/sifr/codebase/target/release/sifr check /Users/yaseralnajjar/work/sifr/codebase/audits/leetcode/0438_find_all_anagrams_in_a_string.sifr",
+      "cmd": "/Users/yaseralnajjar/work/sifr/codebase/target/release/sifr check /Users/yaseralnajjar/work/sifr/codebase/audits/leetcode/src/0438_find_all_anagrams_in_a_string.sifr",
       "exit_code": 1,
       "stdout": "",
       "stderr": "type error: 'in' operator: element type 'str | None' is not compatible with collection element type 'str'\ntype error: dict subscript assignment key type 'str | None' is not compatible with dict key type 'str'\n"
     },
     {
       "fixture_slug": "0452_minimum_number_of_arrows_to_burst_balloons",
-      "cmd": "/Users/yaseralnajjar/work/sifr/codebase/target/release/sifr check /Users/yaseralnajjar/work/sifr/codebase/audits/leetcode/0452_minimum_number_of_arrows_to_burst_balloons.sifr",
+      "cmd": "/Users/yaseralnajjar/work/sifr/codebase/target/release/sifr check /Users/yaseralnajjar/work/sifr/codebase/audits/leetcode/src/0452_minimum_number_of_arrows_to_burst_balloons.sifr",
       "exit_code": 0,
       "stdout": "",
       "stderr": "no errors found\n"
     },
     {
       "fixture_slug": "0567_permutation_in_string",
-      "cmd": "/Users/yaseralnajjar/work/sifr/codebase/target/release/sifr check /Users/yaseralnajjar/work/sifr/codebase/audits/leetcode/0567_permutation_in_string.sifr",
+      "cmd": "/Users/yaseralnajjar/work/sifr/codebase/target/release/sifr check /Users/yaseralnajjar/work/sifr/codebase/audits/leetcode/src/0567_permutation_in_string.sifr",
       "exit_code": 1,
       "stdout": "",
       "stderr": "type error: ord() argument must be 'str', got 'str | None'\ntype error: undefined variable: 'index'\ntype error: undefined variable: 'index'\ntype error: undefined variable: 'index'\ntype error: undefined variable: 'index'\ntype error: unsupported operand type(s) for -: 'Result[int, ValueError]' and 'int'\ntype error: unsupported operand type(s) for -: 'Result[int, ValueError]' and 'int'\ntype error: unsupported operand type(s) for -: 'Result[int, ValueError]' and 'int'\n"
     },
     {
       "fixture_slug": "0778_swim_in_rising_water",
-      "cmd": "/Users/yaseralnajjar/work/sifr/codebase/target/release/sifr check /Users/yaseralnajjar/work/sifr/codebase/audits/leetcode/0778_swim_in_rising_water.sifr",
+      "cmd": "/Users/yaseralnajjar/work/sifr/codebase/target/release/sifr check /Users/yaseralnajjar/work/sifr/codebase/audits/leetcode/src/0778_swim_in_rising_water.sifr",
       "exit_code": 1,
       "stdout": "",
       "stderr": "type error: cannot unpack non-tuple type 'None | list[int | None]'\ntype error: for loop tuple target expects iterable elements of tuple type, got 'list[int]'\ntype error: function 'swimInWater' must return a value of type 'int' on all control-flow paths\ntype error: type 'list[int | None]' does not implement protocol 'Comparable' required by type parameter 'T'\ntype error: undefined variable: 'r'\n"
     },
     {
       "fixture_slug": "0802_find_eventual_safe_states",
-      "cmd": "/Users/yaseralnajjar/work/sifr/codebase/target/release/sifr check /Users/yaseralnajjar/work/sifr/codebase/audits/leetcode/0802_find_eventual_safe_states.sifr",
+      "cmd": "/Users/yaseralnajjar/work/sifr/codebase/target/release/sifr check /Users/yaseralnajjar/work/sifr/codebase/audits/leetcode/src/0802_find_eventual_safe_states.sifr",
       "exit_code": 1,
       "stdout": "",
       "stderr": "type error: cannot iterate over type 'list[int] | None'\n"
     },
     {
       "fixture_slug": "0875_koko_eating_bananas",
-      "cmd": "/Users/yaseralnajjar/work/sifr/codebase/target/release/sifr check /Users/yaseralnajjar/work/sifr/codebase/audits/leetcode/0875_koko_eating_bananas.sifr",
+      "cmd": "/Users/yaseralnajjar/work/sifr/codebase/target/release/sifr check /Users/yaseralnajjar/work/sifr/codebase/audits/leetcode/src/0875_koko_eating_bananas.sifr",
       "exit_code": 1,
       "stdout": "",
       "stderr": "type error: return type mismatch: expected 'int', got 'int | None'\ntype error: undefined variable: 'k'\ntype error: undefined variable: 'k'\ntype error: undefined variable: 'k'\ntype error: undefined variable: 'k'\ntype error: unsupported operand type(s) for +: 'int' and 'int | None'\n"
     },
     {
       "fixture_slug": "0881_boats_to_save_people",
-      "cmd": "/Users/yaseralnajjar/work/sifr/codebase/target/release/sifr check /Users/yaseralnajjar/work/sifr/codebase/audits/leetcode/0881_boats_to_save_people.sifr",
+      "cmd": "/Users/yaseralnajjar/work/sifr/codebase/target/release/sifr check /Users/yaseralnajjar/work/sifr/codebase/audits/leetcode/src/0881_boats_to_save_people.sifr",
       "exit_code": 0,
       "stdout": "",
       "stderr": "no errors found\n"
     },
     {
       "fixture_slug": "0904_fruit_into_baskets",
-      "cmd": "/Users/yaseralnajjar/work/sifr/codebase/target/release/sifr check /Users/yaseralnajjar/work/sifr/codebase/audits/leetcode/0904_fruit_into_baskets.sifr",
+      "cmd": "/Users/yaseralnajjar/work/sifr/codebase/target/release/sifr check /Users/yaseralnajjar/work/sifr/codebase/audits/leetcode/src/0904_fruit_into_baskets.sifr",
       "exit_code": 1,
       "stdout": "",
       "stderr": "type error: dict subscript assignment key type 'int | None' is not compatible with dict key type 'int'\n"
     },
     {
       "fixture_slug": "0948_bag_of_tokens",
-      "cmd": "/Users/yaseralnajjar/work/sifr/codebase/target/release/sifr check /Users/yaseralnajjar/work/sifr/codebase/audits/leetcode/0948_bag_of_tokens.sifr",
+      "cmd": "/Users/yaseralnajjar/work/sifr/codebase/target/release/sifr check /Users/yaseralnajjar/work/sifr/codebase/audits/leetcode/src/0948_bag_of_tokens.sifr",
       "exit_code": 0,
       "stdout": "",
       "stderr": "no errors found\n"
     },
     {
       "fixture_slug": "0977_squares_of_a_sorted_array",
-      "cmd": "/Users/yaseralnajjar/work/sifr/codebase/target/release/sifr check /Users/yaseralnajjar/work/sifr/codebase/audits/leetcode/0977_squares_of_a_sorted_array.sifr",
+      "cmd": "/Users/yaseralnajjar/work/sifr/codebase/target/release/sifr check /Users/yaseralnajjar/work/sifr/codebase/audits/leetcode/src/0977_squares_of_a_sorted_array.sifr",
       "exit_code": 1,
       "stdout": "",
       "stderr": "type error: abs() argument must be numeric, got 'int | None'\ntype error: undefined variable: 'left'\n"
     },
     {
       "fixture_slug": "1203_sort_items_by_groups_respecting_dependencies",
-      "cmd": "/Users/yaseralnajjar/work/sifr/codebase/target/release/sifr check /Users/yaseralnajjar/work/sifr/codebase/audits/leetcode/1203_sort_items_by_groups_respecting_dependencies.sifr",
+      "cmd": "/Users/yaseralnajjar/work/sifr/codebase/target/release/sifr check /Users/yaseralnajjar/work/sifr/codebase/audits/leetcode/src/1203_sort_items_by_groups_respecting_dependencies.sifr",
       "exit_code": 1,
       "stdout": "",
       "stderr": "type error: argument 1 ('items') of function '__compat_sifr_collections_deque': expected 'None | list[T]', got 'Iterator[int]'\ntype error: cannot compare 'list[int]' and 'list[Any]' with ==\ntype error: cannot index type 'list[list[Any]]' with 'int | None'\ntype error: cannot index type 'list[list[int]]' with 'T'\ntype error: cannot iterate over type 'list[int] | None'\ntype error: cannot mutate through immutable parameter `group`: add `mut` to the parameter declaration\ntype error: cannot reassign immutable parameter `m`: add `mut` to the parameter declaration\ntype error: for-loop iterable must have a statically-known element type, got 'Any'\ntype error: list.extend() argument must be an iterable with a statically-known element type, got 'list[Any] | None'\ntype error: return type mismatch: expected 'list[int]', got 'list[T]'\ntype error: type 'Any' has no method 'append'\ntype error: while condition must be bool or collection/string truthiness, got 'deque'\n"
     },
     {
       "fixture_slug": "1397_find_all_good_strings",
-      "cmd": "/Users/yaseralnajjar/work/sifr/codebase/target/release/sifr check /Users/yaseralnajjar/work/sifr/codebase/audits/leetcode/1397_find_all_good_strings.sifr",
+      "cmd": "/Users/yaseralnajjar/work/sifr/codebase/target/release/sifr check /Users/yaseralnajjar/work/sifr/codebase/audits/leetcode/src/1397_find_all_good_strings.sifr",
       "exit_code": 1,
       "stdout": "",
       "stderr": "type error: cannot index type 'str' with 'int | None'\ntype error: cannot index type 'str' with 'int | None'\ntype error: function 'findGoodStrings' must return a value of type 'int' on all control-flow paths\ntype error: function 'good' return type could not be inferred deterministically\ntype error: undefined variable: 'arr'\ntype error: undefined variable: 'arr'\ntype error: undefined variable: 'len_a'\ntype error: undefined variable: 'limit'\ntype error: undefined variable: 'ord'\ntype error: undefined variable: 'ord'\ntype error: unsupported operand type(s) for +: 'int | None' and 'int'\ntype error: unsupported operand type(s) for -: 'Any' and 'Any'\ntype error: unsupported operand type(s) for -: 'int | None' and 'int'\n"
     },
     {
       "fixture_slug": "1423_maximum_points_you_can_obtain_from_cards",
-      "cmd": "/Users/yaseralnajjar/work/sifr/codebase/target/release/sifr check /Users/yaseralnajjar/work/sifr/codebase/audits/leetcode/1423_maximum_points_you_can_obtain_from_cards.sifr",
+      "cmd": "/Users/yaseralnajjar/work/sifr/codebase/target/release/sifr check /Users/yaseralnajjar/work/sifr/codebase/audits/leetcode/src/1423_maximum_points_you_can_obtain_from_cards.sifr",
       "exit_code": 1,
       "stdout": "",
       "stderr": "type error: unsupported operand type(s) for -: 'int | None' and 'int | None'\n"
     },
     {
       "fixture_slug": "1498_number_of_subsequences_that_satisfy_the_given_sum_condition",
-      "cmd": "/Users/yaseralnajjar/work/sifr/codebase/target/release/sifr check /Users/yaseralnajjar/work/sifr/codebase/audits/leetcode/1498_number_of_subsequences_that_satisfy_the_given_sum_condition.sifr",
+      "cmd": "/Users/yaseralnajjar/work/sifr/codebase/target/release/sifr check /Users/yaseralnajjar/work/sifr/codebase/audits/leetcode/src/1498_number_of_subsequences_that_satisfy_the_given_sum_condition.sifr",
       "exit_code": 0,
       "stdout": "",
       "stderr": "warning: int left shift (<<) with non-constant shift amount may overflow i64 at runtime; consider using bigint\nno errors found\n"
     },
     {
       "fixture_slug": "1584_min_cost_to_connect_all_points",
-      "cmd": "/Users/yaseralnajjar/work/sifr/codebase/target/release/sifr check /Users/yaseralnajjar/work/sifr/codebase/audits/leetcode/1584_min_cost_to_connect_all_points.sifr",
+      "cmd": "/Users/yaseralnajjar/work/sifr/codebase/target/release/sifr check /Users/yaseralnajjar/work/sifr/codebase/audits/leetcode/src/1584_min_cost_to_connect_all_points.sifr",
       "exit_code": 1,
       "stdout": "",
       "stderr": "type error: cannot unpack non-tuple type 'None | list[int]'\ntype error: cannot unpack non-tuple type 'list[int]'\ntype error: cannot unpack non-tuple type 'list[int]'\ntype error: type 'list[int]' does not implement protocol 'Comparable' required by type parameter 'T'\ntype error: undefined variable: 'cost'\ntype error: undefined variable: 'dist'\ntype error: undefined variable: 'dist'\ntype error: undefined variable: 'i'\ntype error: undefined variable: 'i'\ntype error: undefined variable: 'i'\ntype error: undefined variable: 'x1'\n"
     },
     {
       "fixture_slug": "1631_path_with_minimum_effort",
-      "cmd": "/Users/yaseralnajjar/work/sifr/codebase/target/release/sifr check /Users/yaseralnajjar/work/sifr/codebase/audits/leetcode/1631_path_with_minimum_effort.sifr",
+      "cmd": "/Users/yaseralnajjar/work/sifr/codebase/target/release/sifr check /Users/yaseralnajjar/work/sifr/codebase/audits/leetcode/src/1631_path_with_minimum_effort.sifr",
       "exit_code": 1,
       "stdout": "",
       "stderr": "type error: cannot unpack non-tuple type 'None | tuple[int, int, int]'\ntype error: return type mismatch: expected 'int', got 'float | None'\ntype error: type 'tuple[int, int, int]' does not implement protocol 'Comparable' required by type parameter 'T'\ntype error: undefined variable: 'i'\ntype error: undefined variable: 'i'\ntype error: undefined variable: 'x'\n"
     },
     {
       "fixture_slug": "1700_number_of_students_unable_to_eat_lunch",
-      "cmd": "/Users/yaseralnajjar/work/sifr/codebase/target/release/sifr check /Users/yaseralnajjar/work/sifr/codebase/audits/leetcode/1700_number_of_students_unable_to_eat_lunch.sifr",
+      "cmd": "/Users/yaseralnajjar/work/sifr/codebase/target/release/sifr check /Users/yaseralnajjar/work/sifr/codebase/audits/leetcode/src/1700_number_of_students_unable_to_eat_lunch.sifr",
       "exit_code": 0,
       "stdout": "",
       "stderr": "no errors found\n"
     },
     {
       "fixture_slug": "1838_frequency_of_the_most_frequent_element",
-      "cmd": "/Users/yaseralnajjar/work/sifr/codebase/target/release/sifr check /Users/yaseralnajjar/work/sifr/codebase/audits/leetcode/1838_frequency_of_the_most_frequent_element.sifr",
+      "cmd": "/Users/yaseralnajjar/work/sifr/codebase/target/release/sifr check /Users/yaseralnajjar/work/sifr/codebase/audits/leetcode/src/1838_frequency_of_the_most_frequent_element.sifr",
       "exit_code": 0,
       "stdout": "",
       "stderr": "warning: int multiplication with non-constant operands may overflow i64 at runtime; consider using bigint for large values\nno errors found\n"
     },
     {
       "fixture_slug": "1980_find_unique_binary_string",
-      "cmd": "/Users/yaseralnajjar/work/sifr/codebase/target/release/sifr check /Users/yaseralnajjar/work/sifr/codebase/audits/leetcode/1980_find_unique_binary_string.sifr",
+      "cmd": "/Users/yaseralnajjar/work/sifr/codebase/target/release/sifr check /Users/yaseralnajjar/work/sifr/codebase/audits/leetcode/src/1980_find_unique_binary_string.sifr",
       "exit_code": 1,
       "stdout": "",
       "stderr": "type error: if expression branches have incompatible types: 'None' and 'str'\ntype error: parameter 'cur' in function 'backtrack' is missing a type annotation and could not be inferred\ntype error: return type mismatch: expected 'str', got 'None'\ntype error: subscript assignment is not supported for type 'Any'\n"
     },
     {
       "fixture_slug": "2300_successful_pairs_of_spells_and_potions",
-      "cmd": "/Users/yaseralnajjar/work/sifr/codebase/target/release/sifr check /Users/yaseralnajjar/work/sifr/codebase/audits/leetcode/2300_successful_pairs_of_spells_and_potions.sifr",
+      "cmd": "/Users/yaseralnajjar/work/sifr/codebase/target/release/sifr check /Users/yaseralnajjar/work/sifr/codebase/audits/leetcode/src/2300_successful_pairs_of_spells_and_potions.sifr",
       "exit_code": 0,
       "stdout": "",
       "stderr": "warning: int multiplication with non-constant operands may overflow i64 at runtime; consider using bigint for large values\nno errors found\n"

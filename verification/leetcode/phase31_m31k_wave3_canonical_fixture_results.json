@@ -19,7 +19,7 @@
           "command": [
             "target/debug/sifr",
             "check",
-            "audits/leetcode/0043_multiply_strings.sifr"
+            "audits/leetcode/src/0043_multiply_strings.sifr"
           ],
           "duration_ms": 324,
           "returncode": 0,
@@ -32,7 +32,7 @@
           "command": [
             "target/debug/sifr",
             "run",
-            "audits/leetcode/0043_multiply_strings.sifr"
+            "audits/leetcode/src/0043_multiply_strings.sifr"
           ],
           "duration_ms": 406,
           "returncode": 0,

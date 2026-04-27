@@ -269,7 +269,7 @@
       "fixture_slug": "0007_reverse_integer",
       "id": "0007",
       "primary_topic": "math",
-      "sifr_path": "audits/leetcode/0007_reverse_integer.sifr",
+      "sifr_path": "audits/leetcode/src/0007_reverse_integer.sifr",
       "status": "CHECK_ERROR",
       "stderr_excerpt": "type error: while condition must be bool or collection/string truthiness, got 'int'"
     },
@@ -284,7 +284,7 @@
       "fixture_slug": "0012_integer_to_roman",
       "id": "0012",
       "primary_topic": "arrays",
-      "sifr_path": "audits/leetcode/0012_integer_to_roman.sifr",
+      "sifr_path": "audits/leetcode/src/0012_integer_to_roman.sifr",
       "status": "CHECK_ERROR",
       "stderr_excerpt": "for loop tuple target expects iterable elements of tuple type"
     },
@@ -299,7 +299,7 @@
       "fixture_slug": "0018_4sum",
       "id": "0018",
       "primary_topic": "arrays",
-      "sifr_path": "audits/leetcode/0018_4sum.sifr",
+      "sifr_path": "audits/leetcode/src/0018_4sum.sifr",
       "status": "CHECK_ERROR",
       "stderr_excerpt": "int | None"
     },
@@ -314,7 +314,7 @@
       "fixture_slug": "0049_group_anagrams",
       "id": "0049",
       "primary_topic": "arrays",
-      "sifr_path": "audits/leetcode/0049_group_anagrams.sifr",
+      "sifr_path": "audits/leetcode/src/0049_group_anagrams.sifr",
       "status": "CHECK_ERROR",
       "stderr_excerpt": "type error: duplicate function definition in module: 'groupAnagrams'"
     },
@@ -329,7 +329,7 @@
       "fixture_slug": "0056_merge_intervals",
       "id": "0056",
       "primary_topic": "arrays",
-      "sifr_path": "audits/leetcode/0056_merge_intervals.sifr",
+      "sifr_path": "audits/leetcode/src/0056_merge_intervals.sifr",
       "status": "CHECK_ERROR",
       "stderr_excerpt": "for loop tuple target expects iterable elements of tuple type"
     },
@@ -344,7 +344,7 @@
       "fixture_slug": "0068_text_justification",
       "id": "0068",
       "primary_topic": "arrays",
-      "sifr_path": "audits/leetcode/0068_text_justification.sifr",
+      "sifr_path": "audits/leetcode/src/0068_text_justification.sifr",
       "status": "CHECK_ERROR",
       "stderr_excerpt": "unsupported operand type(s) for +: 'Any'"
     },
@@ -359,7 +359,7 @@
       "fixture_slug": "0072_edit_distance",
       "id": "0072",
       "primary_topic": "arrays",
-      "sifr_path": "audits/leetcode/0072_edit_distance.sifr",
+      "sifr_path": "audits/leetcode/src/0072_edit_distance.sifr",
       "status": "CHECK_ERROR",
       "stderr_excerpt": "type error: min() takes 1 or 2 arguments"
     },
@@ -374,7 +374,7 @@
       "fixture_slug": "0076_minimum_window_substring",
       "id": "0076",
       "primary_topic": "arrays",
-      "sifr_path": "audits/leetcode/0076_minimum_window_substring.sifr",
+      "sifr_path": "audits/leetcode/src/0076_minimum_window_substring.sifr",
       "status": "CHECK_ERROR",
       "stderr_excerpt": "type error: cannot unpack non-tuple type 'list[int]'"
     },
@@ -389,7 +389,7 @@
       "fixture_slug": "0079_word_search",
       "id": "0079",
       "primary_topic": "arrays",
-      "sifr_path": "audits/leetcode/0079_word_search.sifr",
+      "sifr_path": "audits/leetcode/src/0079_word_search.sifr",
       "status": "CHECK_ERROR",
       "stderr_excerpt": "sum() takes exactly 1 argument"
     },
@@ -404,7 +404,7 @@
       "fixture_slug": "0084_largest_rectangle_in_histogram",
       "id": "0084",
       "primary_topic": "arrays",
-      "sifr_path": "audits/leetcode/0084_largest_rectangle_in_histogram.sifr",
+      "sifr_path": "audits/leetcode/src/0084_largest_rectangle_in_histogram.sifr",
       "status": "CHECK_ERROR",
       "stderr_excerpt": "Any | None"
     },
@@ -419,7 +419,7 @@
       "fixture_slug": "0118_pascals_triangle",
       "id": "0118",
       "primary_topic": "arrays",
-      "sifr_path": "audits/leetcode/0118_pascals_triangle.sifr",
+      "sifr_path": "audits/leetcode/src/0118_pascals_triangle.sifr",
       "status": "CHECK_ERROR",
       "stderr_excerpt": "is missing a type annotation"
     },
@@ -434,7 +434,7 @@
       "fixture_slug": "0130_surrounded_regions",
       "id": "0130",
       "primary_topic": "arrays",
-      "sifr_path": "audits/leetcode/0130_surrounded_regions.sifr",
+      "sifr_path": "audits/leetcode/src/0130_surrounded_regions.sifr",
       "status": "CHECK_ERROR",
       "stderr_excerpt": "type error: 'in' operator not supported for type 'range'"
     },
@@ -449,7 +449,7 @@
       "fixture_slug": "0134_gas_station",
       "id": "0134",
       "primary_topic": "arrays",
-      "sifr_path": "audits/leetcode/0134_gas_station_v2.sifr",
+      "sifr_path": "audits/leetcode/src/0134_gas_station_v2.sifr",
       "status": "CHECK_ERROR",
       "stderr_excerpt": "int | None"
     },
@@ -464,7 +464,7 @@
       "fixture_slug": "0144_binary_tree_preorder_traversal",
       "id": "0144",
       "primary_topic": "arrays",
-      "sifr_path": "audits/leetcode/0144_binary_tree_preorder_traversal.sifr",
+      "sifr_path": "audits/leetcode/src/0144_binary_tree_preorder_traversal.sifr",
       "status": "CHECK_ERROR",
       "stderr_excerpt": "type error: cannot compare 'list[int]' and 'list[Any]' with =="
     },
@@ -479,7 +479,7 @@
       "fixture_slug": "0145_binary_tree_postorder_traversal",
       "id": "0145",
       "primary_topic": "arrays",
-      "sifr_path": "audits/leetcode/0145_binary_tree_postorder_traversal.sifr",
+      "sifr_path": "audits/leetcode/src/0145_binary_tree_postorder_traversal.sifr",
       "status": "CHECK_ERROR",
       "stderr_excerpt": "type error: cannot compare 'list[int]' and 'list[Any]' with =="
     },
@@ -494,7 +494,7 @@
       "fixture_slug": "0149_max_points_on_a_line",
       "id": "0149",
       "primary_topic": "arrays",
-      "sifr_path": "audits/leetcode/0149_max_points_on_a_line.sifr",
+      "sifr_path": "audits/leetcode/src/0149_max_points_on_a_line.sifr",
       "status": "CHECK_ERROR",
       "stderr_excerpt": "int | None"
     },
@@ -509,7 +509,7 @@
       "fixture_slug": "0150_evaluate_reverse_polish_notation",
       "id": "0150",
       "primary_topic": "arrays",
-      "sifr_path": "audits/leetcode/0150_evaluate_reverse_polish_notation.sifr",
+      "sifr_path": "audits/leetcode/src/0150_evaluate_reverse_polish_notation.sifr",
       "status": "RUN_ERROR",
       "stderr_excerpt": "warning: int multiplication with non-constant operands may overflow i64 at runtime; consider using bigint for large values"
     },
@@ -524,7 +524,7 @@
       "fixture_slug": "0153_find_minimum_in_rotated_sorted_array",
       "id": "0153",
       "primary_topic": "arrays",
-      "sifr_path": "audits/leetcode/0153_find_minimum_in_rotated_sorted_array.sifr",
+      "sifr_path": "audits/leetcode/src/0153_find_minimum_in_rotated_sorted_array.sifr",
       "status": "CHECK_ERROR",
       "stderr_excerpt": "int | None"
     },
@@ -539,7 +539,7 @@
       "fixture_slug": "0155_min_stack",
       "id": "0155",
       "primary_topic": "arrays",
-      "sifr_path": "audits/leetcode/0155_min_stack.sifr",
+      "sifr_path": "audits/leetcode/src/0155_min_stack.sifr",
       "status": "CHECK_ERROR",
       "stderr_excerpt": "type error: type 'MinStack' has no field 'minStack'"
     },
@@ -554,7 +554,7 @@
       "fixture_slug": "0162_find_peak_element",
       "id": "0162",
       "primary_topic": "arrays",
-      "sifr_path": "audits/leetcode/0162_find_peak_element.sifr",
+      "sifr_path": "audits/leetcode/src/0162_find_peak_element.sifr",
       "status": "CHECK_ERROR",
       "stderr_excerpt": "type error: function 'findPeakElement' must return a value of type 'int' on all control-flow paths"
     },
@@ -569,7 +569,7 @@
       "fixture_slug": "0167_two_sum_ii_input_array_is_sorted",
       "id": "0167",
       "primary_topic": "arrays",
-      "sifr_path": "audits/leetcode/0167_two_sum_ii_input_array_is_sorted.sifr",
+      "sifr_path": "audits/leetcode/src/0167_two_sum_ii_input_array_is_sorted.sifr",
       "status": "CHECK_ERROR",
       "stderr_excerpt": "type error: function 'twoSum' must return a value of type 'list[int]' on all control-flow paths"
     },
@@ -584,7 +584,7 @@
       "fixture_slug": "0200_number_of_islands",
       "id": "0200",
       "primary_topic": "arrays",
-      "sifr_path": "audits/leetcode/0200_number_of_islands.sifr",
+      "sifr_path": "audits/leetcode/src/0200_number_of_islands.sifr",
       "status": "CHECK_ERROR",
       "stderr_excerpt": "for loop tuple target expects iterable elements of tuple type"
     },
@@ -599,7 +599,7 @@
       "fixture_slug": "0201_bitwise_and_of_numbers_range",
       "id": "0201",
       "primary_topic": "arrays",
-      "sifr_path": "audits/leetcode/0201_bitwise_and_of_numbers_range.sifr",
+      "sifr_path": "audits/leetcode/src/0201_bitwise_and_of_numbers_range.sifr",
       "status": "CHECK_ERROR",
       "stderr_excerpt": "type error: bad operand type for unary not: 'int'"
     },
@@ -614,7 +614,7 @@
       "fixture_slug": "0208_implement_trie_prefix_tree",
       "id": "0208",
       "primary_topic": "arrays",
-      "sifr_path": "audits/leetcode/0208_implement_trie_prefix_tree.sifr",
+      "sifr_path": "audits/leetcode/src/0208_implement_trie_prefix_tree.sifr",
       "status": "CHECK_ERROR",
       "stderr_excerpt": "type error: type 'Trie' has no field 'root'"
     },
@@ -629,7 +629,7 @@
       "fixture_slug": "0210_course_schedule_ii",
       "id": "0210",
       "primary_topic": "arrays",
-      "sifr_path": "audits/leetcode/0210_course_schedule_ii.sifr",
+      "sifr_path": "audits/leetcode/src/0210_course_schedule_ii.sifr",
       "status": "CHECK_ERROR",
       "stderr_excerpt": "for loop tuple target expects iterable elements of tuple type"
     },
@@ -644,7 +644,7 @@
       "fixture_slug": "0212_word_search_ii",
       "id": "0212",
       "primary_topic": "arrays",
-      "sifr_path": "audits/leetcode/0212_word_search_ii.sifr",
+      "sifr_path": "audits/leetcode/src/0212_word_search_ii.sifr",
       "status": "CHECK_ERROR",
       "stderr_excerpt": "str | None"
     },
@@ -659,7 +659,7 @@
       "fixture_slug": "0221_maximal_square",
       "id": "0221",
       "primary_topic": "arrays",
-      "sifr_path": "audits/leetcode/0221_maximal_square.sifr",
+      "sifr_path": "audits/leetcode/src/0221_maximal_square.sifr",
       "status": "CHECK_ERROR",
       "stderr_excerpt": "int | None"
     },
@@ -674,7 +674,7 @@
       "fixture_slug": "0225_implement_stack_using_queues",
       "id": "0225",
       "primary_topic": "arrays",
-      "sifr_path": "audits/leetcode/0225_implement_stack_using_queues.sifr",
+      "sifr_path": "audits/leetcode/src/0225_implement_stack_using_queues.sifr",
       "status": "CHECK_ERROR",
       "stderr_excerpt": "type error: type 'MyStack' has no field 'q'"
     },
@@ -689,7 +689,7 @@
       "fixture_slug": "0230_kth_smallest_element_in_a_bst",
       "id": "0230",
       "primary_topic": "arrays",
-      "sifr_path": "audits/leetcode/0230_kth_smallest_element_in_a_bst.sifr",
+      "sifr_path": "audits/leetcode/src/0230_kth_smallest_element_in_a_bst.sifr",
       "status": "CHECK_ERROR",
       "stderr_excerpt": "attribute access '."
     },
@@ -704,7 +704,7 @@
       "fixture_slug": "0231_power_of_two",
       "id": "0231",
       "primary_topic": "arrays",
-      "sifr_path": "audits/leetcode/0231_power_of_two.sifr",
+      "sifr_path": "audits/leetcode/src/0231_power_of_two.sifr",
       "status": "CHECK_ERROR",
       "stderr_excerpt": "type error: duplicate function definition in module: 'isPowerOfTwo'"
     },
@@ -719,7 +719,7 @@
       "fixture_slug": "0232_implement_queue_using_stacks",
       "id": "0232",
       "primary_topic": "arrays",
-      "sifr_path": "audits/leetcode/0232_implement_queue_using_stacks.sifr",
+      "sifr_path": "audits/leetcode/src/0232_implement_queue_using_stacks.sifr",
       "status": "CHECK_ERROR",
       "stderr_excerpt": "type error: type 'MyQueue' has no field 'append_stack'"
     },
@@ -734,7 +734,7 @@
       "fixture_slug": "0239_sliding_window_maximum",
       "id": "0239",
       "primary_topic": "arrays",
-      "sifr_path": "audits/leetcode/0239_sliding_window_maximum.sifr",
+      "sifr_path": "audits/leetcode/src/0239_sliding_window_maximum.sifr",
       "status": "CHECK_ERROR",
       "stderr_excerpt": "type error: '<' not supported between instances of 'Any' and 'int'"
     },
@@ -749,7 +749,7 @@
       "fixture_slug": "0241_different_ways_to_add_parentheses",
       "id": "0241",
       "primary_topic": "arrays",
-      "sifr_path": "audits/leetcode/0241_different_ways_to_add_parentheses.sifr",
+      "sifr_path": "audits/leetcode/src/0241_different_ways_to_add_parentheses.sifr",
       "status": "CHECK_ERROR",
       "stderr_excerpt": "type error: cannot iterate over type 'bool'"
     },
@@ -764,7 +764,7 @@
       "fixture_slug": "0253_meeting_rooms_ii",
       "id": "0253",
       "primary_topic": "arrays",
-      "sifr_path": "audits/leetcode/0253_meeting_rooms_ii.sifr",
+      "sifr_path": "audits/leetcode/src/0253_meeting_rooms_ii.sifr",
       "status": "CHECK_ERROR",
       "stderr_excerpt": "for loop tuple target expects iterable elements of tuple type"
     },
@@ -779,7 +779,7 @@
       "fixture_slug": "0269_alien_dictionary",
       "id": "0269",
       "primary_topic": "arrays",
-      "sifr_path": "audits/leetcode/0269_alien_dictionary.sifr",
+      "sifr_path": "audits/leetcode/src/0269_alien_dictionary.sifr",
       "status": "CHECK_ERROR",
       "stderr_excerpt": "str | None"
     },
@@ -794,7 +794,7 @@
       "fixture_slug": "0280_wiggle_sort",
       "id": "0280",
       "primary_topic": "arrays",
-      "sifr_path": "audits/leetcode/0280_wiggle_sort.sifr",
+      "sifr_path": "audits/leetcode/src/0280_wiggle_sort.sifr",
       "status": "CHECK_ERROR",
       "stderr_excerpt": "tuple unpacking target must be a simple name"
     },
@@ -809,7 +809,7 @@
       "fixture_slug": "0283_move_zeroes",
       "id": "0283",
       "primary_topic": "arrays",
-      "sifr_path": "audits/leetcode/0283_move_zeroes.sifr",
+      "sifr_path": "audits/leetcode/src/0283_move_zeroes.sifr",
       "status": "CHECK_ERROR",
       "stderr_excerpt": "tuple unpacking target must be a simple name"
     },
@@ -824,7 +824,7 @@
       "fixture_slug": "0286_walls_and_gates",
       "id": "0286",
       "primary_topic": "arrays",
-      "sifr_path": "audits/leetcode/0286_walls_and_gates.sifr",
+      "sifr_path": "audits/leetcode/src/0286_walls_and_gates.sifr",
       "status": "CHECK_ERROR",
       "stderr_excerpt": "type error: cannot unpack non-tuple type 'list[int]'"
     },
@@ -839,7 +839,7 @@
       "fixture_slug": "0297_serialize_and_deserialize_binary_tree",
       "id": "0297",
       "primary_topic": "arrays",
-      "sifr_path": "audits/leetcode/0297_serialize_and_deserialize_binary_tree.sifr",
+      "sifr_path": "audits/leetcode/src/0297_serialize_and_deserialize_binary_tree.sifr",
       "status": "RUN_ERROR",
       "stderr_excerpt": "warning: int multiplication with non-constant operands may overflow i64 at runtime; consider using bigint for large values"
     },
@@ -854,7 +854,7 @@
       "fixture_slug": "0303_range_sum_query_immutable",
       "id": "0303",
       "primary_topic": "arrays",
-      "sifr_path": "audits/leetcode/0303_range_sum_query_immutable.sifr",
+      "sifr_path": "audits/leetcode/src/0303_range_sum_query_immutable.sifr",
       "status": "CHECK_ERROR",
       "stderr_excerpt": "type error: type 'NumArray' has no field 'prefix'"
     },
@@ -869,7 +869,7 @@
       "fixture_slug": "0323_number_of_connected_components_in_an_undirected_graph",
       "id": "0323",
       "primary_topic": "arrays",
-      "sifr_path": "audits/leetcode/0323_number_of_connected_components_in_an_undirected_graph.sifr",
+      "sifr_path": "audits/leetcode/src/0323_number_of_connected_components_in_an_undirected_graph.sifr",
       "status": "CHECK_ERROR",
       "stderr_excerpt": "for loop tuple target expects iterable elements of tuple type"
     },
@@ -884,7 +884,7 @@
       "fixture_slug": "0332_reconstruct_itinerary",
       "id": "0332",
       "primary_topic": "arrays",
-      "sifr_path": "audits/leetcode/0332_reconstruct_itinerary.sifr",
+      "sifr_path": "audits/leetcode/src/0332_reconstruct_itinerary.sifr",
       "status": "CHECK_ERROR",
       "stderr_excerpt": "for loop tuple target expects iterable elements of tuple type"
     },
@@ -899,7 +899,7 @@
       "fixture_slug": "0338_counting_bits",
       "id": "0338",
       "primary_topic": "arrays",
-      "sifr_path": "audits/leetcode/0338_counting_bits.sifr",
+      "sifr_path": "audits/leetcode/src/0338_counting_bits.sifr",
       "status": "CHECK_ERROR",
       "stderr_excerpt": "int | None"
     },
@@ -914,7 +914,7 @@
       "fixture_slug": "0344_reverse_string",
       "id": "0344",
       "primary_topic": "arrays",
-      "sifr_path": "audits/leetcode/0344_reverse_string.sifr",
+      "sifr_path": "audits/leetcode/src/0344_reverse_string.sifr",
       "status": "CHECK_ERROR",
       "stderr_excerpt": "tuple unpacking target must be a simple name"
     },
@@ -929,7 +929,7 @@
       "fixture_slug": "0347_top_k_frequent_elements",
       "id": "0347",
       "primary_topic": "arrays",
-      "sifr_path": "audits/leetcode/0347_top_k_frequent_elements.sifr",
+      "sifr_path": "audits/leetcode/src/0347_top_k_frequent_elements.sifr",
       "status": "CHECK_ERROR",
       "stderr_excerpt": "type error: function 'topKFrequent' must return a value of type 'list[int]' on all control-flow paths"
     },
@@ -944,7 +944,7 @@
       "fixture_slug": "0350_intersection_of_two_arrays_ii",
       "id": "0350",
       "primary_topic": "arrays",
-      "sifr_path": "audits/leetcode/0350_intersection_of_two_arrays_ii.sifr",
+      "sifr_path": "audits/leetcode/src/0350_intersection_of_two_arrays_ii.sifr",
       "status": "CHECK_ERROR",
       "stderr_excerpt": "undefined function: 'Counter'"
     },
@@ -959,7 +959,7 @@
       "fixture_slug": "0355_design_twitter",
       "id": "0355",
       "primary_topic": "arrays",
-      "sifr_path": "audits/leetcode/0355_design_twitter.sifr",
+      "sifr_path": "audits/leetcode/src/0355_design_twitter.sifr",
       "status": "CHECK_ERROR",
       "stderr_excerpt": "type error: cannot unpack non-tuple type 'None | Any'"
     },
@@ -974,7 +974,7 @@
       "fixture_slug": "0367_valid_perfect_square",
       "id": "0367",
       "primary_topic": "arrays",
-      "sifr_path": "audits/leetcode/0367_valid_perfect_square.sifr",
+      "sifr_path": "audits/leetcode/src/0367_valid_perfect_square.sifr",
       "status": "CHECK_ERROR",
       "stderr_excerpt": "type error: function 'isPerfectSquare' must return a value of type 'bool' on all control-flow paths"
     },
@@ -989,7 +989,7 @@
       "fixture_slug": "0371_sum_of_two_integers",
       "id": "0371",
       "primary_topic": "arrays",
-      "sifr_path": "audits/leetcode/0371_sum_of_two_integers.sifr",
+      "sifr_path": "audits/leetcode/src/0371_sum_of_two_integers.sifr",
       "status": "CHECK_ERROR",
       "stderr_excerpt": "type error: '<' not supported between instances of 'bool' and 'int'"
     },
@@ -1004,7 +1004,7 @@
       "fixture_slug": "0383_ransom_note",
       "id": "0383",
       "primary_topic": "arrays",
-      "sifr_path": "audits/leetcode/0383_ransom_note.sifr",
+      "sifr_path": "audits/leetcode/src/0383_ransom_note.sifr",
       "status": "CHECK_ERROR",
       "stderr_excerpt": "undefined function: 'Counter'"
     },
@@ -1019,7 +1019,7 @@
       "fixture_slug": "0402_remove_k_digits",
       "id": "0402",
       "primary_topic": "arrays",
-      "sifr_path": "audits/leetcode/0402_remove_k_digits.sifr",
+      "sifr_path": "audits/leetcode/src/0402_remove_k_digits.sifr",
       "status": "CHECK_ERROR",
       "stderr_excerpt": "Any | None"
     },
@@ -1034,7 +1034,7 @@
       "fixture_slug": "0410_split_array_largest_sum",
       "id": "0410",
       "primary_topic": "arrays",
-      "sifr_path": "audits/leetcode/0410_split_array_largest_sum.sifr",
+      "sifr_path": "audits/leetcode/src/0410_split_array_largest_sum.sifr",
       "status": "CHECK_ERROR",
       "stderr_excerpt": "int | None"
     },
@@ -1049,7 +1049,7 @@
       "fixture_slug": "0416_partition_equal_subset_sum",
       "id": "0416",
       "primary_topic": "arrays",
-      "sifr_path": "audits/leetcode/0416_partition_equal_subset_sum.sifr",
+      "sifr_path": "audits/leetcode/src/0416_partition_equal_subset_sum.sifr",
       "status": "CHECK_ERROR",
       "stderr_excerpt": "type error: if condition must be bool or collection/string truthiness, got 'int'"
     },
@@ -1064,7 +1064,7 @@
       "fixture_slug": "0442_find_all_duplicates_in_an_array",
       "id": "0442",
       "primary_topic": "arrays",
-      "sifr_path": "audits/leetcode/0442_find_all_duplicates_in_an_array.sifr",
+      "sifr_path": "audits/leetcode/src/0442_find_all_duplicates_in_an_array.sifr",
       "status": "CHECK_ERROR",
       "stderr_excerpt": "type error: cannot compare 'list[int]' and 'list[Any]' with =="
     },
@@ -1079,7 +1079,7 @@
       "fixture_slug": "0456_132_pattern",
       "id": "0456",
       "primary_topic": "arrays",
-      "sifr_path": "audits/leetcode/0456_132_pattern.sifr",
+      "sifr_path": "audits/leetcode/src/0456_132_pattern.sifr",
       "status": "CHECK_ERROR",
       "stderr_excerpt": "int | None"
     },
@@ -1094,7 +1094,7 @@
       "fixture_slug": "0463_island_perimeter",
       "id": "0463",
       "primary_topic": "arrays",
-      "sifr_path": "audits/leetcode/0463_island_perimeter.sifr",
+      "sifr_path": "audits/leetcode/src/0463_island_perimeter.sifr",
       "status": "CHECK_ERROR",
       "stderr_excerpt": "type error: function 'islandPerimeter' must return a value of type 'int' on all control-flow paths"
     },
@@ -1109,7 +1109,7 @@
       "fixture_slug": "0473_matchsticks_to_square",
       "id": "0473",
       "primary_topic": "arrays",
-      "sifr_path": "audits/leetcode/0473_matchsticks_to_square.sifr",
+      "sifr_path": "audits/leetcode/src/0473_matchsticks_to_square.sifr",
       "status": "CHECK_ERROR",
       "stderr_excerpt": "int | None"
     },
@@ -1124,7 +1124,7 @@
       "fixture_slug": "0496_next_greater_element_i",
       "id": "0496",
       "primary_topic": "arrays",
-      "sifr_path": "audits/leetcode/0496_next_greater_element_i.sifr",
+      "sifr_path": "audits/leetcode/src/0496_next_greater_element_i.sifr",
       "status": "CHECK_ERROR",
       "stderr_excerpt": "Any | None"
     },
@@ -1139,7 +1139,7 @@
       "fixture_slug": "0516_longest_palindromic_subsequence",
       "id": "0516",
       "primary_topic": "arrays",
-      "sifr_path": "audits/leetcode/0516_longest_palindromic_subsequence.sifr",
+      "sifr_path": "audits/leetcode/src/0516_longest_palindromic_subsequence.sifr",
       "status": "CHECK_ERROR",
       "stderr_excerpt": "assignment target must be a simple name"
     },
@@ -1154,7 +1154,7 @@
       "fixture_slug": "0535_encode_and_decode_tinyurl",
       "id": "0535",
       "primary_topic": "arrays",
-      "sifr_path": "audits/leetcode/0535_encode_and_decode_tinyurl.sifr",
+      "sifr_path": "audits/leetcode/src/0535_encode_and_decode_tinyurl.sifr",
       "status": "CHECK_ERROR",
       "stderr_excerpt": "type error: type 'Codec' has no field 'decodeMap'"
     },
@@ -1169,7 +1169,7 @@
       "fixture_slug": "0543_diameter_of_binary_tree",
       "id": "0543",
       "primary_topic": "arrays",
-      "sifr_path": "audits/leetcode/0543_diameter_of_binary_tree.sifr",
+      "sifr_path": "audits/leetcode/src/0543_diameter_of_binary_tree.sifr",
       "status": "CHECK_ERROR",
       "stderr_excerpt": "type error: recursive nested function 'dfs' cannot mutate captured state with `nonlocal` yet"
     },
@@ -1184,7 +1184,7 @@
       "fixture_slug": "0621_task_scheduler",
       "id": "0621",
       "primary_topic": "arrays",
-      "sifr_path": "audits/leetcode/0621_task_scheduler.sifr",
+      "sifr_path": "audits/leetcode/src/0621_task_scheduler.sifr",
       "status": "CHECK_ERROR",
       "stderr_excerpt": "undefined function: 'Counter'"
     },
@@ -1199,7 +1199,7 @@
       "fixture_slug": "0622_design_circular_queue",
       "id": "0622",
       "primary_topic": "arrays",
-      "sifr_path": "audits/leetcode/0622_design_circular_queue.sifr",
+      "sifr_path": "audits/leetcode/src/0622_design_circular_queue.sifr",
       "status": "CHECK_ERROR",
       "stderr_excerpt": "type error: chained assignment targets must be simple names"
     },
@@ -1214,7 +1214,7 @@
       "fixture_slug": "0658_find_k_closest_elements",
       "id": "0658",
       "primary_topic": "arrays",
-      "sifr_path": "audits/leetcode/0658_find_k_closest_elements.sifr",
+      "sifr_path": "audits/leetcode/src/0658_find_k_closest_elements.sifr",
       "status": "CHECK_ERROR",
       "stderr_excerpt": "int | None"
     },
@@ -1229,7 +1229,7 @@
       "fixture_slug": "0673_number_of_longest_increasing_subsequence",
       "id": "0673",
       "primary_topic": "arrays",
-      "sifr_path": "audits/leetcode/0673_number_of_longest_increasing_subsequence.sifr",
+      "sifr_path": "audits/leetcode/src/0673_number_of_longest_increasing_subsequence.sifr",
       "status": "CHECK_ERROR",
       "stderr_excerpt": "type error: cannot unpack non-tuple type 'list[int]'"
     },
@@ -1244,7 +1244,7 @@
       "fixture_slug": "0682_baseball_game",
       "id": "0682",
       "primary_topic": "arrays",
-      "sifr_path": "audits/leetcode/0682_baseball_game.sifr",
+      "sifr_path": "audits/leetcode/src/0682_baseball_game.sifr",
       "status": "CHECK_ERROR",
       "stderr_excerpt": "Any | None"
     },
@@ -1259,7 +1259,7 @@
       "fixture_slug": "0705_design_hashset",
       "id": "0705",
       "primary_topic": "arrays",
-      "sifr_path": "audits/leetcode/0705_design_hashset.sifr",
+      "sifr_path": "audits/leetcode/src/0705_design_hashset.sifr",
       "status": "CHECK_ERROR",
       "stderr_excerpt": "type error: type 'MyHashSet' has no field 'hashset'"
     },
@@ -1274,7 +1274,7 @@
       "fixture_slug": "0706_design_hashmap",
       "id": "0706",
       "primary_topic": "arrays",
-      "sifr_path": "audits/leetcode/0706_design_hashmap.sifr",
+      "sifr_path": "audits/leetcode/src/0706_design_hashmap.sifr",
       "status": "CHECK_ERROR",
       "stderr_excerpt": "type error: type 'MyHashMap' has no field 'map'"
     },
@@ -1289,7 +1289,7 @@
       "fixture_slug": "0707_design_linked_list",
       "id": "0707",
       "primary_topic": "arrays",
-      "sifr_path": "audits/leetcode/0707_design_linked_list.sifr",
+      "sifr_path": "audits/leetcode/src/0707_design_linked_list.sifr",
       "status": "CHECK_ERROR",
       "stderr_excerpt": "assignment target must be a simple name"
     },
@@ -1304,7 +1304,7 @@
       "fixture_slug": "0721_accounts_merge",
       "id": "0721",
       "primary_topic": "arrays",
-      "sifr_path": "audits/leetcode/0721_accounts_merge.sifr",
+      "sifr_path": "audits/leetcode/src/0721_accounts_merge.sifr",
       "status": "CHECK_ERROR",
       "stderr_excerpt": "str | None"
     },
@@ -1319,7 +1319,7 @@
       "fixture_slug": "0735_asteroid_collision",
       "id": "0735",
       "primary_topic": "arrays",
-      "sifr_path": "audits/leetcode/0735_asteroid_collision.sifr",
+      "sifr_path": "audits/leetcode/src/0735_asteroid_collision.sifr",
       "status": "CHECK_ERROR",
       "stderr_excerpt": "Any | None"
     },
@@ -1334,7 +1334,7 @@
       "fixture_slug": "0739_daily_temperatures",
       "id": "0739",
       "primary_topic": "arrays",
-      "sifr_path": "audits/leetcode/0739_daily_temperatures.sifr",
+      "sifr_path": "audits/leetcode/src/0739_daily_temperatures.sifr",
       "status": "CHECK_ERROR",
       "stderr_excerpt": "Any | None"
     },
@@ -1349,7 +1349,7 @@
       "fixture_slug": "0745_prefix_and_suffix_search",
       "id": "0745",
       "primary_topic": "arrays",
-      "sifr_path": "audits/leetcode/0745_prefix_and_suffix_search.sifr",
+      "sifr_path": "audits/leetcode/src/0745_prefix_and_suffix_search.sifr",
       "status": "CHECK_ERROR",
       "stderr_excerpt": "type error: type 'WordFilter' has no field 'root'"
     },
@@ -1364,7 +1364,7 @@
       "fixture_slug": "0752_open_the_lock",
       "id": "0752",
       "primary_topic": "arrays",
-      "sifr_path": "audits/leetcode/0752_open_the_lock.sifr",
+      "sifr_path": "audits/leetcode/src/0752_open_the_lock.sifr",
       "status": "CHECK_ERROR",
       "stderr_excerpt": "type error: cannot unpack non-tuple type 'list[str]'"
     },
@@ -1379,7 +1379,7 @@
       "fixture_slug": "0767_reorganize_string",
       "id": "0767",
       "primary_topic": "arrays",
-      "sifr_path": "audits/leetcode/0767_reorganize_string.sifr",
+      "sifr_path": "audits/leetcode/src/0767_reorganize_string.sifr",
       "status": "CHECK_ERROR",
       "stderr_excerpt": "undefined function: 'Counter'"
     },
@@ -1394,7 +1394,7 @@
       "fixture_slug": "0785_is_graph_bipartite",
       "id": "0785",
       "primary_topic": "arrays",
-      "sifr_path": "audits/leetcode/0785_is_graph_bipartite.sifr",
+      "sifr_path": "audits/leetcode/src/0785_is_graph_bipartite.sifr",
       "status": "CHECK_ERROR",
       "stderr_excerpt": "type error: cannot iterate over type 'list[int] | None'"
     },
@@ -1409,7 +1409,7 @@
       "fixture_slug": "0787_cheapest_flights_within_k_stops",
       "id": "0787",
       "primary_topic": "arrays",
-      "sifr_path": "audits/leetcode/0787_cheapest_flights_within_k_stops.sifr",
+      "sifr_path": "audits/leetcode/src/0787_cheapest_flights_within_k_stops.sifr",
       "status": "CHECK_ERROR",
       "stderr_excerpt": "for loop tuple target expects iterable elements of tuple type"
     },
@@ -1424,7 +1424,7 @@
       "fixture_slug": "0846_hand_of_straights",
       "id": "0846",
       "primary_topic": "arrays",
-      "sifr_path": "audits/leetcode/0846_hand_of_straights.sifr",
+      "sifr_path": "audits/leetcode/src/0846_hand_of_straights.sifr",
       "status": "CHECK_ERROR",
       "stderr_excerpt": "type error: if condition must be bool or collection/string truthiness, got 'int'"
     },
@@ -1439,7 +1439,7 @@
       "fixture_slug": "0853_car_fleet",
       "id": "0853",
       "primary_topic": "arrays",
-      "sifr_path": "audits/leetcode/0853_car_fleet.sifr",
+      "sifr_path": "audits/leetcode/src/0853_car_fleet.sifr",
       "status": "CHECK_ERROR",
       "stderr_excerpt": "type error: cannot iterate over type 'Iterator[tuple[int, int]]'"
     },
@@ -1454,7 +1454,7 @@
       "fixture_slug": "0862_shortest_subarray_with_sum_at_least_k",
       "id": "0862",
       "primary_topic": "arrays",
-      "sifr_path": "audits/leetcode/0862_shortest_subarray_with_sum_at_least_k.sifr",
+      "sifr_path": "audits/leetcode/src/0862_shortest_subarray_with_sum_at_least_k.sifr",
       "status": "CHECK_ERROR",
       "stderr_excerpt": "int | None"
     },
@@ -1469,7 +1469,7 @@
       "fixture_slug": "0895_maximum_frequency_stack",
       "id": "0895",
       "primary_topic": "arrays",
-      "sifr_path": "audits/leetcode/0895_maximum_frequency_stack.sifr",
+      "sifr_path": "audits/leetcode/src/0895_maximum_frequency_stack.sifr",
       "status": "CHECK_ERROR",
       "stderr_excerpt": "assignment target must be a simple name"
     },
@@ -1484,7 +1484,7 @@
       "fixture_slug": "0901_online_stock_span",
       "id": "0901",
       "primary_topic": "arrays",
-      "sifr_path": "audits/leetcode/0901_online_stock_span.sifr",
+      "sifr_path": "audits/leetcode/src/0901_online_stock_span.sifr",
       "status": "CHECK_ERROR",
       "stderr_excerpt": "type error: type 'StockSpanner' has no field 'stack'"
     },
@@ -1499,7 +1499,7 @@
       "fixture_slug": "0909_snakes_and_ladders",
       "id": "0909",
       "primary_topic": "arrays",
-      "sifr_path": "audits/leetcode/0909_snakes_and_ladders.sifr",
+      "sifr_path": "audits/leetcode/src/0909_snakes_and_ladders.sifr",
       "status": "CHECK_ERROR",
       "stderr_excerpt": "type error: cannot unpack non-tuple type 'list[int]'"
     },
@@ -1514,7 +1514,7 @@
       "fixture_slug": "0918_maximum_sum_circular_subarray",
       "id": "0918",
       "primary_topic": "arrays",
-      "sifr_path": "audits/leetcode/0918_maximum_sum_circular_subarray.sifr",
+      "sifr_path": "audits/leetcode/src/0918_maximum_sum_circular_subarray.sifr",
       "status": "CHECK_ERROR",
       "stderr_excerpt": "int | None"
     },
@@ -1529,7 +1529,7 @@
       "fixture_slug": "0929_unique_email_addresses",
       "id": "0929",
       "primary_topic": "arrays",
-      "sifr_path": "audits/leetcode/0929_unique_email_addresses.sifr",
+      "sifr_path": "audits/leetcode/src/0929_unique_email_addresses.sifr",
       "status": "CHECK_ERROR",
       "stderr_excerpt": "type error: cannot unpack non-tuple type 'list[str]'"
     },
@@ -1544,7 +1544,7 @@
       "fixture_slug": "0931_minimum_falling_path_sum",
       "id": "0931",
       "primary_topic": "arrays",
-      "sifr_path": "audits/leetcode/0931_minimum_falling_path_sum.sifr",
+      "sifr_path": "audits/leetcode/src/0931_minimum_falling_path_sum.sifr",
       "status": "CHECK_ERROR",
       "stderr_excerpt": "int | None"
     },
@@ -1559,7 +1559,7 @@
       "fixture_slug": "0953_verifying_an_alien_dictionary",
       "id": "0953",
       "primary_topic": "arrays",
-      "sifr_path": "audits/leetcode/0953_verifying_an_alien_dictionary.sifr",
+      "sifr_path": "audits/leetcode/src/0953_verifying_an_alien_dictionary.sifr",
       "status": "CHECK_ERROR",
       "stderr_excerpt": "type error: cannot iterate over type 'Iterator[tuple[int, str]]'"
     },
@@ -1574,7 +1574,7 @@
       "fixture_slug": "0973_k_closest_points_to_origin",
       "id": "0973",
       "primary_topic": "arrays",
-      "sifr_path": "audits/leetcode/0973_k_closest_points_to_origin.sifr",
+      "sifr_path": "audits/leetcode/src/0973_k_closest_points_to_origin.sifr",
       "status": "CHECK_ERROR",
       "stderr_excerpt": "for loop tuple target expects iterable elements of tuple type"
     },
@@ -1589,7 +1589,7 @@
       "fixture_slug": "0981_time_based_key_value_store",
       "id": "0981",
       "primary_topic": "arrays",
-      "sifr_path": "audits/leetcode/0981_time_based_key_value_store.sifr",
+      "sifr_path": "audits/leetcode/src/0981_time_based_key_value_store.sifr",
       "status": "CHECK_ERROR",
       "stderr_excerpt": "type error: type 'TimeMap' has no field 'keyStore'"
     },
@@ -1604,7 +1604,7 @@
       "fixture_slug": "0994_rotting_oranges",
       "id": "0994",
       "primary_topic": "arrays",
-      "sifr_path": "audits/leetcode/0994_rotting_oranges.sifr",
+      "sifr_path": "audits/leetcode/src/0994_rotting_oranges.sifr",
       "status": "CHECK_ERROR",
       "stderr_excerpt": "for loop tuple target expects iterable elements of tuple type"
     },
@@ -1619,7 +1619,7 @@
       "fixture_slug": "1011_capacity_to_ship_packages_within_d_days",
       "id": "1011",
       "primary_topic": "arrays",
-      "sifr_path": "audits/leetcode/1011_capacity_to_ship_packages_within_d_days.sifr",
+      "sifr_path": "audits/leetcode/src/1011_capacity_to_ship_packages_within_d_days.sifr",
       "status": "CHECK_ERROR",
       "stderr_excerpt": "int | None"
     },
@@ -1634,7 +1634,7 @@
       "fixture_slug": "1029_two_city_scheduling",
       "id": "1029",
       "primary_topic": "arrays",
-      "sifr_path": "audits/leetcode/1029_two_city_scheduling.sifr",
+      "sifr_path": "audits/leetcode/src/1029_two_city_scheduling.sifr",
       "status": "CHECK_ERROR",
       "stderr_excerpt": "for loop tuple target expects iterable elements of tuple type"
     },
@@ -1649,7 +1649,7 @@
       "fixture_slug": "1049_last_stone_weight_ii",
       "id": "1049",
       "primary_topic": "arrays",
-      "sifr_path": "audits/leetcode/1049_last_stone_weight_ii.sifr",
+      "sifr_path": "audits/leetcode/src/1049_last_stone_weight_ii.sifr",
       "status": "CHECK_ERROR",
       "stderr_excerpt": "int | None"
     },
@@ -1664,7 +1664,7 @@
       "fixture_slug": "1074_number_of_submatrices_that_sum_to_target",
       "id": "1074",
       "primary_topic": "arrays",
-      "sifr_path": "audits/leetcode/1074_number_of_submatrices_that_sum_to_target.sifr",
+      "sifr_path": "audits/leetcode/src/1074_number_of_submatrices_that_sum_to_target.sifr",
       "status": "CHECK_ERROR",
       "stderr_excerpt": "int | None"
     },
@@ -1679,7 +1679,7 @@
       "fixture_slug": "1091_shortest_path_in_binary_matrix",
       "id": "1091",
       "primary_topic": "arrays",
-      "sifr_path": "audits/leetcode/1091_shortest_path_in_binary_matrix.sifr",
+      "sifr_path": "audits/leetcode/src/1091_shortest_path_in_binary_matrix.sifr",
       "status": "CHECK_ERROR",
       "stderr_excerpt": "for loop tuple target expects iterable elements of tuple type"
     },
@@ -1694,7 +1694,7 @@
       "fixture_slug": "1137_n_th_tribonacci_number",
       "id": "1137",
       "primary_topic": "arrays",
-      "sifr_path": "audits/leetcode/1137_n_th_tribonacci_number.sifr",
+      "sifr_path": "audits/leetcode/src/1137_n_th_tribonacci_number.sifr",
       "status": "CHECK_ERROR",
       "stderr_excerpt": "unsupported operand type(s) for +: 'Any'"
     },
@@ -1709,7 +1709,7 @@
       "fixture_slug": "1189_maximum_number_of_balloons",
       "id": "1189",
       "primary_topic": "arrays",
-      "sifr_path": "audits/leetcode/1189_maximum_number_of_balloons.sifr",
+      "sifr_path": "audits/leetcode/src/1189_maximum_number_of_balloons.sifr",
       "status": "CHECK_ERROR",
       "stderr_excerpt": "undefined function: 'Counter'"
     },
@@ -1724,7 +1724,7 @@
       "fixture_slug": "1220_count_vowels_permutation",
       "id": "1220",
       "primary_topic": "arrays",
-      "sifr_path": "audits/leetcode/1220_count_vowels_permutation.sifr",
+      "sifr_path": "audits/leetcode/src/1220_count_vowels_permutation.sifr",
       "status": "CHECK_ERROR",
       "stderr_excerpt": "Any | None"
     },
@@ -1739,7 +1739,7 @@
       "fixture_slug": "1260_shift_2d_grid",
       "id": "1260",
       "primary_topic": "arrays",
-      "sifr_path": "audits/leetcode/1260_shift_2d_grid.sifr",
+      "sifr_path": "audits/leetcode/src/1260_shift_2d_grid.sifr",
       "status": "CHECK_ERROR",
       "stderr_excerpt": "type error: cannot unpack non-tuple type 'list[int]'"
     },
@@ -1754,7 +1754,7 @@
       "fixture_slug": "1288_remove_covered_intervals",
       "id": "1288",
       "primary_topic": "arrays",
-      "sifr_path": "audits/leetcode/1288_remove_covered_intervals.sifr",
+      "sifr_path": "audits/leetcode/src/1288_remove_covered_intervals.sifr",
       "status": "CHECK_ERROR",
       "stderr_excerpt": "for loop tuple target expects iterable elements of tuple type"
     },
@@ -1769,7 +1769,7 @@
       "fixture_slug": "1345_jump_game_iv",
       "id": "1345",
       "primary_topic": "arrays",
-      "sifr_path": "audits/leetcode/1345_jump_game_iv.sifr",
+      "sifr_path": "audits/leetcode/src/1345_jump_game_iv.sifr",
       "status": "CHECK_ERROR",
       "stderr_excerpt": "type error: 'in' operator not supported for type '__compat_defaultdict_list'"
     },
@@ -1784,7 +1784,7 @@
       "fixture_slug": "1383_maximum_performance_of_a_team",
       "id": "1383",
       "primary_topic": "arrays",
-      "sifr_path": "audits/leetcode/1383_maximum_performance_of_a_team.sifr",
+      "sifr_path": "audits/leetcode/src/1383_maximum_performance_of_a_team.sifr",
       "status": "RUN_ERROR",
       "stderr_excerpt": "warning: int multiplication with non-constant operands may overflow i64 at runtime; consider using bigint for large values"
     },
@@ -1799,7 +1799,7 @@
       "fixture_slug": "1396_design_underground_system",
       "id": "1396",
       "primary_topic": "arrays",
-      "sifr_path": "audits/leetcode/1396_design_underground_system.sifr",
+      "sifr_path": "audits/leetcode/src/1396_design_underground_system.sifr",
       "status": "CHECK_ERROR",
       "stderr_excerpt": "assignment target must be a simple name"
     },
@@ -1814,7 +1814,7 @@
       "fixture_slug": "1462_course_schedule_iv",
       "id": "1462",
       "primary_topic": "arrays",
-      "sifr_path": "audits/leetcode/1462_course_schedule_iv.sifr",
+      "sifr_path": "audits/leetcode/src/1462_course_schedule_iv.sifr",
       "status": "CHECK_ERROR",
       "stderr_excerpt": "for loop tuple target expects iterable elements of tuple type"
     },
@@ -1829,7 +1829,7 @@
       "fixture_slug": "1466_reorder_routes_to_make_all_paths_lead_to_the_city_zero",
       "id": "1466",
       "primary_topic": "arrays",
-      "sifr_path": "audits/leetcode/1466_reorder_routes_to_make_all_paths_lead_to_the_city_zero.sifr",
+      "sifr_path": "audits/leetcode/src/1466_reorder_routes_to_make_all_paths_lead_to_the_city_zero.sifr",
       "status": "CHECK_ERROR",
       "stderr_excerpt": "for loop tuple target expects iterable elements of tuple type"
     },
@@ -1844,7 +1844,7 @@
       "fixture_slug": "1472_design_browser_history",
       "id": "1472",
       "primary_topic": "arrays",
-      "sifr_path": "audits/leetcode/1472_design_browser_history.sifr",
+      "sifr_path": "audits/leetcode/src/1472_design_browser_history.sifr",
       "status": "CHECK_ERROR",
       "stderr_excerpt": "assignment target must be a simple name"
     },
@@ -1859,7 +1859,7 @@
       "fixture_slug": "1475_final_prices_with_a_special_discount_in_a_shop",
       "id": "1475",
       "primary_topic": "arrays",
-      "sifr_path": "audits/leetcode/1475_final_prices_with_a_special_discount_in_a_shop.sifr",
+      "sifr_path": "audits/leetcode/src/1475_final_prices_with_a_special_discount_in_a_shop.sifr",
       "status": "CHECK_ERROR",
       "stderr_excerpt": "Any | None"
     },
@@ -1874,7 +1874,7 @@
       "fixture_slug": "1481_least_number_of_unique_integers_after_k_removals",
       "id": "1481",
       "primary_topic": "arrays",
-      "sifr_path": "audits/leetcode/1481_least_number_of_unique_integers_after_k_removals.sifr",
+      "sifr_path": "audits/leetcode/src/1481_least_number_of_unique_integers_after_k_removals.sifr",
       "status": "CHECK_ERROR",
       "stderr_excerpt": "undefined function: 'Counter'"
     },
@@ -1889,7 +1889,7 @@
       "fixture_slug": "1489_find_critical_and_pseudo_critical_edges_in_minimum_spanning_tree",
       "id": "1489",
       "primary_topic": "arrays",
-      "sifr_path": "audits/leetcode/1489_find_critical_and_pseudo_critical_edges_in_minimum_spanning_tree.sifr",
+      "sifr_path": "audits/leetcode/src/1489_find_critical_and_pseudo_critical_edges_in_minimum_spanning_tree.sifr",
       "status": "CHECK_ERROR",
       "stderr_excerpt": "for loop tuple target expects iterable elements of tuple type"
     },
@@ -1904,7 +1904,7 @@
       "fixture_slug": "1498_number_of_subsequences_that_satisfy_the_given_sum_condition",
       "id": "1498",
       "primary_topic": "arrays",
-      "sifr_path": "audits/leetcode/1498_number_of_subsequences_that_satisfy_the_given_sum_condition.sifr",
+      "sifr_path": "audits/leetcode/src/1498_number_of_subsequences_that_satisfy_the_given_sum_condition.sifr",
       "status": "RUN_ERROR",
       "stderr_excerpt": "warning: int left shift (<<) with non-constant shift amount may overflow i64 at runtime; consider using bigint"
     },
@@ -1919,7 +1919,7 @@
       "fixture_slug": "1514_path_with_maximum_probability",
       "id": "1514",
       "primary_topic": "arrays",
-      "sifr_path": "audits/leetcode/1514_path_with_maximum_probability.sifr",
+      "sifr_path": "audits/leetcode/src/1514_path_with_maximum_probability.sifr",
       "status": "CHECK_ERROR",
       "stderr_excerpt": "type error: cannot compare 'float' and 'int' with =="
     },
@@ -1934,7 +1934,7 @@
       "fixture_slug": "1572_matrix_diagonal_sum",
       "id": "1572",
       "primary_topic": "arrays",
-      "sifr_path": "audits/leetcode/1572_matrix_diagonal_sum.sifr",
+      "sifr_path": "audits/leetcode/src/1572_matrix_diagonal_sum.sifr",
       "status": "CHECK_ERROR",
       "stderr_excerpt": "is missing a type annotation"
     },
@@ -1949,7 +1949,7 @@
       "fixture_slug": "1603_design_parking_system",
       "id": "1603",
       "primary_topic": "arrays",
-      "sifr_path": "audits/leetcode/1603_design_parking_system.sifr",
+      "sifr_path": "audits/leetcode/src/1603_design_parking_system.sifr",
       "status": "CHECK_ERROR",
       "stderr_excerpt": "type error: type 'ParkingSystem' has no field 'parking'"
     },
@@ -1964,7 +1964,7 @@
       "fixture_slug": "1642_furthest_building_you_can_reach",
       "id": "1642",
       "primary_topic": "arrays",
-      "sifr_path": "audits/leetcode/1642_furthest_building_you_can_reach.sifr",
+      "sifr_path": "audits/leetcode/src/1642_furthest_building_you_can_reach.sifr",
       "status": "CHECK_ERROR",
       "stderr_excerpt": "int | None"
     },
@@ -1979,7 +1979,7 @@
       "fixture_slug": "1834_single_threaded_cpu",
       "id": "1834",
       "primary_topic": "arrays",
-      "sifr_path": "audits/leetcode/1834_single_threaded_cpu.sifr",
+      "sifr_path": "audits/leetcode/src/1834_single_threaded_cpu.sifr",
       "status": "CHECK_ERROR",
       "stderr_excerpt": "type error: cannot iterate over type 'Iterator[tuple[int, list[int]]]'"
     },
@@ -1994,7 +1994,7 @@
       "fixture_slug": "1845_seat_reservation_manager",
       "id": "1845",
       "primary_topic": "arrays",
-      "sifr_path": "audits/leetcode/1845_seat_reservation_manager.sifr",
+      "sifr_path": "audits/leetcode/src/1845_seat_reservation_manager.sifr",
       "status": "CHECK_ERROR",
       "stderr_excerpt": "type error: type 'SeatManager' has no field 'seats'"
     },
@@ -2009,7 +2009,7 @@
       "fixture_slug": "1849_splitting_a_string_into_descending_consecutive_values",
       "id": "1849",
       "primary_topic": "arrays",
-      "sifr_path": "audits/leetcode/1849_splitting_a_string_into_descending_consecutive_values.sifr",
+      "sifr_path": "audits/leetcode/src/1849_splitting_a_string_into_descending_consecutive_values.sifr",
       "status": "CHECK_ERROR",
       "stderr_excerpt": "type error: argument 2 of callable 'dfs': expected 'int', got 'Result[int, ParseError]'"
     },
@@ -2024,7 +2024,7 @@
       "fixture_slug": "1851_minimum_interval_to_include_each_query",
       "id": "1851",
       "primary_topic": "arrays",
-      "sifr_path": "audits/leetcode/1851_minimum_interval_to_include_each_query.sifr",
+      "sifr_path": "audits/leetcode/src/1851_minimum_interval_to_include_each_query.sifr",
       "status": "CHECK_ERROR",
       "stderr_excerpt": "cannot index type 'Any'"
     },
@@ -2039,7 +2039,7 @@
       "fixture_slug": "1930_unique_length_3_palindromic_subsequences",
       "id": "1930",
       "primary_topic": "arrays",
-      "sifr_path": "audits/leetcode/1930_unique_length_3_palindromic_subsequences.sifr",
+      "sifr_path": "audits/leetcode/src/1930_unique_length_3_palindromic_subsequences.sifr",
       "status": "CHECK_ERROR",
       "stderr_excerpt": "type error: str has no method 'rfind'"
     },
@@ -2054,7 +2054,7 @@
       "fixture_slug": "1985_find_the_kth_largest_integer_in_the_array",
       "id": "1985",
       "primary_topic": "arrays",
-      "sifr_path": "audits/leetcode/1985_find_the_kth_largest_integer_in_the_array.sifr",
+      "sifr_path": "audits/leetcode/src/1985_find_the_kth_largest_integer_in_the_array.sifr",
       "status": "CHECK_ERROR",
       "stderr_excerpt": "type error: bad operand type for unary -: 'Result[int, ParseError]'"
     },
@@ -2069,7 +2069,7 @@
       "fixture_slug": "2001_number_of_pairs_of_interchangeable_rectangles",
       "id": "2001",
       "primary_topic": "arrays",
-      "sifr_path": "audits/leetcode/2001_number_of_pairs_of_interchangeable_rectangles.sifr",
+      "sifr_path": "audits/leetcode/src/2001_number_of_pairs_of_interchangeable_rectangles.sifr",
       "status": "CHECK_ERROR",
       "stderr_excerpt": "for loop tuple target expects iterable elements of tuple type"
     },
@@ -2084,7 +2084,7 @@
       "fixture_slug": "2002_maximum_product_of_the_length_of_two_palindromic_subsequences",
       "id": "2002",
       "primary_topic": "arrays",
-      "sifr_path": "audits/leetcode/2002_maximum_product_of_the_length_of_two_palindromic_subsequences.sifr",
+      "sifr_path": "audits/leetcode/src/2002_maximum_product_of_the_length_of_two_palindromic_subsequences.sifr",
       "status": "CHECK_ERROR",
       "stderr_excerpt": "int | None"
     },
@@ -2099,7 +2099,7 @@
       "fixture_slug": "2013_detect_squares",
       "id": "2013",
       "primary_topic": "arrays",
-      "sifr_path": "audits/leetcode/2013_detect_squares.sifr",
+      "sifr_path": "audits/leetcode/src/2013_detect_squares.sifr",
       "status": "CHECK_ERROR",
       "stderr_excerpt": "assignment target must be a simple name"
     },
@@ -2114,7 +2114,7 @@
       "fixture_slug": "2092_find_all_people_with_secret",
       "id": "2092",
       "primary_topic": "arrays",
-      "sifr_path": "audits/leetcode/2092_find_all_people_with_secret.sifr",
+      "sifr_path": "audits/leetcode/src/2092_find_all_people_with_secret.sifr",
       "status": "CHECK_ERROR",
       "stderr_excerpt": "for loop tuple target expects iterable elements of tuple type"
     },
@@ -2129,7 +2129,7 @@
       "fixture_slug": "2101_detonate_the_maximum_bombs",
       "id": "2101",
       "primary_topic": "arrays",
-      "sifr_path": "audits/leetcode/2101_detonate_the_maximum_bombs.sifr",
+      "sifr_path": "audits/leetcode/src/2101_detonate_the_maximum_bombs.sifr",
       "status": "CHECK_ERROR",
       "stderr_excerpt": "got 'Any'"
     },
@@ -2144,7 +2144,7 @@
       "fixture_slug": "2306_naming_a_company",
       "id": "2306",
       "primary_topic": "arrays",
-      "sifr_path": "audits/leetcode/2306_naming_a_company.sifr",
+      "sifr_path": "audits/leetcode/src/2306_naming_a_company.sifr",
       "status": "CHECK_ERROR",
       "stderr_excerpt": "type error: cannot iterate over type 'set[Any] | None'"
     },
@@ -2159,7 +2159,7 @@
       "fixture_slug": "2482_difference_between_ones_and_zeros_in_row_and_column",
       "id": "2482",
       "primary_topic": "arrays",
-      "sifr_path": "audits/leetcode/2482_difference_between_ones_and_zeros_in_row_and_column.sifr",
+      "sifr_path": "audits/leetcode/src/2482_difference_between_ones_and_zeros_in_row_and_column.sifr",
       "status": "CHECK_ERROR",
       "stderr_excerpt": "assignment target must be a simple name"
     },
@@ -2174,7 +2174,7 @@
       "fixture_slug": "2709_greatest_common_divisor_traversal",
       "id": "2709",
       "primary_topic": "arrays",
-      "sifr_path": "audits/leetcode/2709_greatest_common_divisor_traversal.sifr",
+      "sifr_path": "audits/leetcode/src/2709_greatest_common_divisor_traversal.sifr",
       "status": "CHECK_ERROR",
       "stderr_excerpt": "is missing a type annotation"
     },
@@ -2189,7 +2189,7 @@
       "fixture_slug": "2864_maximum_odd_binary_number",
       "id": "2864",
       "primary_topic": "arrays",
-      "sifr_path": "audits/leetcode/2864_maximum_odd_binary_number.sifr",
+      "sifr_path": "audits/leetcode/src/2864_maximum_odd_binary_number.sifr",
       "status": "CHECK_ERROR",
       "stderr_excerpt": "type error: duplicate function definition in module: 'maximumOddBinaryNumber'"
     }

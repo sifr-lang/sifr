@@ -7,643 +7,643 @@
     {
       "fixture_slug": "0001_two_sum",
       "id": "0001",
-      "sifr_path": "audits/leetcode/0001_two_sum.sifr",
+      "sifr_path": "audits/leetcode/src/0001_two_sum.sifr",
       "status": "PASS"
     },
     {
       "fixture_slug": "0003_longest_substring_without_repeating_characters",
       "id": "0003",
-      "sifr_path": "audits/leetcode/0003_longest_substring_without_repeating_characters.sifr",
+      "sifr_path": "audits/leetcode/src/0003_longest_substring_without_repeating_characters.sifr",
       "status": "PASS"
     },
     {
       "fixture_slug": "0004_median_of_two_sorted_arrays",
       "id": "0004",
-      "sifr_path": "audits/leetcode/0004_median_of_two_sorted_arrays.sifr",
+      "sifr_path": "audits/leetcode/src/0004_median_of_two_sorted_arrays.sifr",
       "status": "PASS"
     },
     {
       "fixture_slug": "0007_reverse_integer",
       "id": "0007",
-      "sifr_path": "audits/leetcode/0007_reverse_integer.sifr",
+      "sifr_path": "audits/leetcode/src/0007_reverse_integer.sifr",
       "status": "PASS"
     },
     {
       "fixture_slug": "0009_palindrome_number",
       "id": "0009",
-      "sifr_path": "audits/leetcode/0009_palindrome_number.sifr",
+      "sifr_path": "audits/leetcode/src/0009_palindrome_number.sifr",
       "status": "PASS"
     },
     {
       "fixture_slug": "0011_container_with_most_water",
       "id": "0011",
-      "sifr_path": "audits/leetcode/0011_container_with_most_water.sifr",
+      "sifr_path": "audits/leetcode/src/0011_container_with_most_water.sifr",
       "status": "PASS"
     },
     {
       "fixture_slug": "0013_roman_to_integer",
       "id": "0013",
-      "sifr_path": "audits/leetcode/0013_roman_to_integer.sifr",
+      "sifr_path": "audits/leetcode/src/0013_roman_to_integer.sifr",
       "status": "PASS"
     },
     {
       "fixture_slug": "0014_longest_common_prefix",
       "id": "0014",
-      "sifr_path": "audits/leetcode/0014_longest_common_prefix.sifr",
+      "sifr_path": "audits/leetcode/src/0014_longest_common_prefix.sifr",
       "status": "PASS"
     },
     {
       "fixture_slug": "0014_longest_common_prefix_v2",
       "id": "0014",
-      "sifr_path": "audits/leetcode/0014_longest_common_prefix_v2.sifr",
+      "sifr_path": "audits/leetcode/src/0014_longest_common_prefix_v2.sifr",
       "status": "PASS"
     },
     {
       "fixture_slug": "0015_3sum",
       "id": "0015",
-      "sifr_path": "audits/leetcode/0015_3sum.sifr",
+      "sifr_path": "audits/leetcode/src/0015_3sum.sifr",
       "status": "PASS"
     },
     {
       "fixture_slug": "0017_letter_combinations_of_a_phone_number",
       "id": "0017",
-      "sifr_path": "audits/leetcode/0017_letter_combinations_of_a_phone_number.sifr",
+      "sifr_path": "audits/leetcode/src/0017_letter_combinations_of_a_phone_number.sifr",
       "status": "PASS"
     },
     {
       "fixture_slug": "0023_merge_k_sorted_lists",
       "id": "0023",
-      "sifr_path": "audits/leetcode/0023_merge_k_sorted_lists.sifr",
+      "sifr_path": "audits/leetcode/src/0023_merge_k_sorted_lists.sifr",
       "status": "PASS"
     },
     {
       "fixture_slug": "0024_swap_nodes_in_pairs",
       "id": "0024",
-      "sifr_path": "audits/leetcode/0024_swap_nodes_in_pairs.sifr",
+      "sifr_path": "audits/leetcode/src/0024_swap_nodes_in_pairs.sifr",
       "status": "PASS"
     },
     {
       "fixture_slug": "0035_search_insert_position",
       "id": "0035",
-      "sifr_path": "audits/leetcode/0035_search_insert_position.sifr",
+      "sifr_path": "audits/leetcode/src/0035_search_insert_position.sifr",
       "status": "PASS"
     },
     {
       "fixture_slug": "0036_valid_sudoku",
       "id": "0036",
-      "sifr_path": "audits/leetcode/0036_valid_sudoku.sifr",
+      "sifr_path": "audits/leetcode/src/0036_valid_sudoku.sifr",
       "status": "PASS"
     },
     {
       "fixture_slug": "0039_combination_sum",
       "id": "0039",
-      "sifr_path": "audits/leetcode/0039_combination_sum.sifr",
+      "sifr_path": "audits/leetcode/src/0039_combination_sum.sifr",
       "status": "PASS"
     },
     {
       "fixture_slug": "0042_trapping_rain_water",
       "id": "0042",
-      "sifr_path": "audits/leetcode/0042_trapping_rain_water.sifr",
+      "sifr_path": "audits/leetcode/src/0042_trapping_rain_water.sifr",
       "status": "PASS"
     },
     {
       "fixture_slug": "0043_multiply_strings",
       "id": "0043",
-      "sifr_path": "audits/leetcode/0043_multiply_strings.sifr",
+      "sifr_path": "audits/leetcode/src/0043_multiply_strings.sifr",
       "status": "PASS"
     },
     {
       "fixture_slug": "0045_jump_game_ii",
       "id": "0045",
-      "sifr_path": "audits/leetcode/0045_jump_game_ii.sifr",
+      "sifr_path": "audits/leetcode/src/0045_jump_game_ii.sifr",
       "status": "PASS"
     },
     {
       "fixture_slug": "0045_jump_game_ii_v2",
       "id": "0045",
-      "sifr_path": "audits/leetcode/0045_jump_game_ii_v2.sifr",
+      "sifr_path": "audits/leetcode/src/0045_jump_game_ii_v2.sifr",
       "status": "PASS"
     },
     {
       "fixture_slug": "0050_powx_n",
       "id": "0050",
-      "sifr_path": "audits/leetcode/0050_powx_n.sifr",
+      "sifr_path": "audits/leetcode/src/0050_powx_n.sifr",
       "status": "PASS"
     },
     {
       "fixture_slug": "0052_n_queens_ii",
       "id": "0052",
-      "sifr_path": "audits/leetcode/0052_n_queens_ii.sifr",
+      "sifr_path": "audits/leetcode/src/0052_n_queens_ii.sifr",
       "status": "PASS"
     },
     {
       "fixture_slug": "0053_maximum_subarray",
       "id": "0053",
-      "sifr_path": "audits/leetcode/0053_maximum_subarray.sifr",
+      "sifr_path": "audits/leetcode/src/0053_maximum_subarray.sifr",
       "status": "PASS"
     },
     {
       "fixture_slug": "0053_maximum_subarray_v2",
       "id": "0053",
-      "sifr_path": "audits/leetcode/0053_maximum_subarray_v2.sifr",
+      "sifr_path": "audits/leetcode/src/0053_maximum_subarray_v2.sifr",
       "status": "PASS"
     },
     {
       "fixture_slug": "0055_jump_game",
       "id": "0055",
-      "sifr_path": "audits/leetcode/0055_jump_game.sifr",
+      "sifr_path": "audits/leetcode/src/0055_jump_game.sifr",
       "status": "PASS"
     },
     {
       "fixture_slug": "0055_jump_game_v2",
       "id": "0055",
-      "sifr_path": "audits/leetcode/0055_jump_game_v2.sifr",
+      "sifr_path": "audits/leetcode/src/0055_jump_game_v2.sifr",
       "status": "PASS"
     },
     {
       "fixture_slug": "0058_length_of_last_word",
       "id": "0058",
-      "sifr_path": "audits/leetcode/0058_length_of_last_word.sifr",
+      "sifr_path": "audits/leetcode/src/0058_length_of_last_word.sifr",
       "status": "PASS"
     },
     {
       "fixture_slug": "0058_length_of_last_word_v2",
       "id": "0058",
-      "sifr_path": "audits/leetcode/0058_length_of_last_word_v2.sifr",
+      "sifr_path": "audits/leetcode/src/0058_length_of_last_word_v2.sifr",
       "status": "PASS"
     },
     {
       "fixture_slug": "0069_sqrtx",
       "id": "0069",
-      "sifr_path": "audits/leetcode/0069_sqrtx.sifr",
+      "sifr_path": "audits/leetcode/src/0069_sqrtx.sifr",
       "status": "PASS"
     },
     {
       "fixture_slug": "0070_climbing_stairs",
       "id": "0070",
-      "sifr_path": "audits/leetcode/0070_climbing_stairs.sifr",
+      "sifr_path": "audits/leetcode/src/0070_climbing_stairs.sifr",
       "status": "PASS"
     },
     {
       "fixture_slug": "0078_subsets",
       "id": "0078",
-      "sifr_path": "audits/leetcode/0078_subsets.sifr",
+      "sifr_path": "audits/leetcode/src/0078_subsets.sifr",
       "status": "PASS"
     },
     {
       "fixture_slug": "0090_subsets_ii",
       "id": "0090",
-      "sifr_path": "audits/leetcode/0090_subsets_ii.sifr",
+      "sifr_path": "audits/leetcode/src/0090_subsets_ii.sifr",
       "status": "PASS"
     },
     {
       "fixture_slug": "0100_same_tree",
       "id": "0100",
-      "sifr_path": "audits/leetcode/0100_same_tree.sifr",
+      "sifr_path": "audits/leetcode/src/0100_same_tree.sifr",
       "status": "PASS"
     },
     {
       "fixture_slug": "0102_binary_tree_level_order_traversal",
       "id": "0102",
-      "sifr_path": "audits/leetcode/0102_binary_tree_level_order_traversal.sifr",
+      "sifr_path": "audits/leetcode/src/0102_binary_tree_level_order_traversal.sifr",
       "status": "PASS"
     },
     {
       "fixture_slug": "0104_maximum_depth_of_binary_tree",
       "id": "0104",
-      "sifr_path": "audits/leetcode/0104_maximum_depth_of_binary_tree.sifr",
+      "sifr_path": "audits/leetcode/src/0104_maximum_depth_of_binary_tree.sifr",
       "status": "PASS"
     },
     {
       "fixture_slug": "0110_balanced_binary_tree",
       "id": "0110",
-      "sifr_path": "audits/leetcode/0110_balanced_binary_tree.sifr",
+      "sifr_path": "audits/leetcode/src/0110_balanced_binary_tree.sifr",
       "status": "PASS"
     },
     {
       "fixture_slug": "0115_distinct_subsequences",
       "id": "0115",
-      "sifr_path": "audits/leetcode/0115_distinct_subsequences.sifr",
+      "sifr_path": "audits/leetcode/src/0115_distinct_subsequences.sifr",
       "status": "PASS"
     },
     {
       "fixture_slug": "0121_best_time_to_buy_and_sell_stock_v2",
       "id": "0121",
-      "sifr_path": "audits/leetcode/0121_best_time_to_buy_and_sell_stock_v2.sifr",
+      "sifr_path": "audits/leetcode/src/0121_best_time_to_buy_and_sell_stock_v2.sifr",
       "status": "PASS"
     },
     {
       "fixture_slug": "0127_word_ladder",
       "id": "0127",
-      "sifr_path": "audits/leetcode/0127_word_ladder.sifr",
+      "sifr_path": "audits/leetcode/src/0127_word_ladder.sifr",
       "status": "PASS"
     },
     {
       "fixture_slug": "0128_longest_consecutive_sequence",
       "id": "0128",
-      "sifr_path": "audits/leetcode/0128_longest_consecutive_sequence.sifr",
+      "sifr_path": "audits/leetcode/src/0128_longest_consecutive_sequence.sifr",
       "status": "PASS"
     },
     {
       "fixture_slug": "0133_clone_graph",
       "id": "0133",
-      "sifr_path": "audits/leetcode/0133_clone_graph.sifr",
+      "sifr_path": "audits/leetcode/src/0133_clone_graph.sifr",
       "status": "PASS"
     },
     {
       "fixture_slug": "0134_gas_station_v2",
       "id": "0134",
-      "sifr_path": "audits/leetcode/0134_gas_station_v2.sifr",
+      "sifr_path": "audits/leetcode/src/0134_gas_station_v2.sifr",
       "status": "PASS"
     },
     {
       "fixture_slug": "0136_single_number",
       "id": "0136",
-      "sifr_path": "audits/leetcode/0136_single_number.sifr",
+      "sifr_path": "audits/leetcode/src/0136_single_number.sifr",
       "status": "PASS"
     },
     {
       "fixture_slug": "0151_reverse_words_in_a_string",
       "id": "0151",
-      "sifr_path": "audits/leetcode/0151_reverse_words_in_a_string.sifr",
+      "sifr_path": "audits/leetcode/src/0151_reverse_words_in_a_string.sifr",
       "status": "PASS"
     },
     {
       "fixture_slug": "0152_maximum_product_subarray_v2",
       "id": "0152",
-      "sifr_path": "audits/leetcode/0152_maximum_product_subarray_v2.sifr",
+      "sifr_path": "audits/leetcode/src/0152_maximum_product_subarray_v2.sifr",
       "status": "PASS"
     },
     {
       "fixture_slug": "0169_majority_element_v2",
       "id": "0169",
-      "sifr_path": "audits/leetcode/0169_majority_element_v2.sifr",
+      "sifr_path": "audits/leetcode/src/0169_majority_element_v2.sifr",
       "status": "PASS"
     },
     {
       "fixture_slug": "0190_reverse_bits",
       "id": "0190",
-      "sifr_path": "audits/leetcode/0190_reverse_bits.sifr",
+      "sifr_path": "audits/leetcode/src/0190_reverse_bits.sifr",
       "status": "PASS"
     },
     {
       "fixture_slug": "0198_house_robber",
       "id": "0198",
-      "sifr_path": "audits/leetcode/0198_house_robber.sifr",
+      "sifr_path": "audits/leetcode/src/0198_house_robber.sifr",
       "status": "PASS"
     },
     {
       "fixture_slug": "0198_house_robber_v2",
       "id": "0198",
-      "sifr_path": "audits/leetcode/0198_house_robber_v2.sifr",
+      "sifr_path": "audits/leetcode/src/0198_house_robber_v2.sifr",
       "status": "PASS"
     },
     {
       "fixture_slug": "0206_reverse_linked_list",
       "id": "0206",
-      "sifr_path": "audits/leetcode/0206_reverse_linked_list.sifr",
+      "sifr_path": "audits/leetcode/src/0206_reverse_linked_list.sifr",
       "status": "PASS"
     },
     {
       "fixture_slug": "0207_course_schedule",
       "id": "0207",
-      "sifr_path": "audits/leetcode/0207_course_schedule.sifr",
+      "sifr_path": "audits/leetcode/src/0207_course_schedule.sifr",
       "status": "PASS"
     },
     {
       "fixture_slug": "0209_minimum_size_subarray_sum",
       "id": "0209",
-      "sifr_path": "audits/leetcode/0209_minimum_size_subarray_sum.sifr",
+      "sifr_path": "audits/leetcode/src/0209_minimum_size_subarray_sum.sifr",
       "status": "PASS"
     },
     {
       "fixture_slug": "0215_kth_largest_element_in_an_array",
       "id": "0215",
-      "sifr_path": "audits/leetcode/0215_kth_largest_element_in_an_array.sifr",
+      "sifr_path": "audits/leetcode/src/0215_kth_largest_element_in_an_array.sifr",
       "status": "PASS"
     },
     {
       "fixture_slug": "0217_contains_duplicate",
       "id": "0217",
-      "sifr_path": "audits/leetcode/0217_contains_duplicate.sifr",
+      "sifr_path": "audits/leetcode/src/0217_contains_duplicate.sifr",
       "status": "PASS"
     },
     {
       "fixture_slug": "0219_contains_duplicate_ii",
       "id": "0219",
-      "sifr_path": "audits/leetcode/0219_contains_duplicate_ii.sifr",
+      "sifr_path": "audits/leetcode/src/0219_contains_duplicate_ii.sifr",
       "status": "PASS"
     },
     {
       "fixture_slug": "0226_invert_binary_tree",
       "id": "0226",
-      "sifr_path": "audits/leetcode/0226_invert_binary_tree.sifr",
+      "sifr_path": "audits/leetcode/src/0226_invert_binary_tree.sifr",
       "status": "PASS"
     },
     {
       "fixture_slug": "0235_lowest_common_ancestor_of_a_binary_search_tree",
       "id": "0235",
-      "sifr_path": "audits/leetcode/0235_lowest_common_ancestor_of_a_binary_search_tree.sifr",
+      "sifr_path": "audits/leetcode/src/0235_lowest_common_ancestor_of_a_binary_search_tree.sifr",
       "status": "PASS"
     },
     {
       "fixture_slug": "0238_product_of_array_except_self",
       "id": "0238",
-      "sifr_path": "audits/leetcode/0238_product_of_array_except_self.sifr",
+      "sifr_path": "audits/leetcode/src/0238_product_of_array_except_self.sifr",
       "status": "PASS"
     },
     {
       "fixture_slug": "0238_product_of_array_except_self_v2",
       "id": "0238",
-      "sifr_path": "audits/leetcode/0238_product_of_array_except_self_v2.sifr",
+      "sifr_path": "audits/leetcode/src/0238_product_of_array_except_self_v2.sifr",
       "status": "PASS"
     },
     {
       "fixture_slug": "0242_valid_anagram",
       "id": "0242",
-      "sifr_path": "audits/leetcode/0242_valid_anagram.sifr",
+      "sifr_path": "audits/leetcode/src/0242_valid_anagram.sifr",
       "status": "PASS"
     },
     {
       "fixture_slug": "0268_missing_number",
       "id": "0268",
-      "sifr_path": "audits/leetcode/0268_missing_number.sifr",
+      "sifr_path": "audits/leetcode/src/0268_missing_number.sifr",
       "status": "PASS"
     },
     {
       "fixture_slug": "0278_first_bad_version",
       "id": "0278",
-      "sifr_path": "audits/leetcode/0278_first_bad_version.sifr",
+      "sifr_path": "audits/leetcode/src/0278_first_bad_version.sifr",
       "status": "PASS"
     },
     {
       "fixture_slug": "0295_find_median_from_data_stream",
       "id": "0295",
-      "sifr_path": "audits/leetcode/0295_find_median_from_data_stream.sifr",
+      "sifr_path": "audits/leetcode/src/0295_find_median_from_data_stream.sifr",
       "status": "PASS"
     },
     {
       "fixture_slug": "0300_longest_increasing_subsequence_v2",
       "id": "0300",
-      "sifr_path": "audits/leetcode/0300_longest_increasing_subsequence_v2.sifr",
+      "sifr_path": "audits/leetcode/src/0300_longest_increasing_subsequence_v2.sifr",
       "status": "PASS"
     },
     {
       "fixture_slug": "0322_coin_change",
       "id": "0322",
-      "sifr_path": "audits/leetcode/0322_coin_change.sifr",
+      "sifr_path": "audits/leetcode/src/0322_coin_change.sifr",
       "status": "PASS"
     },
     {
       "fixture_slug": "0334_increasing_triplet_subsequence",
       "id": "0334",
-      "sifr_path": "audits/leetcode/0334_increasing_triplet_subsequence.sifr",
+      "sifr_path": "audits/leetcode/src/0334_increasing_triplet_subsequence.sifr",
       "status": "PASS"
     },
     {
       "fixture_slug": "0374_guess_number_higher_or_lower",
       "id": "0374",
-      "sifr_path": "audits/leetcode/0374_guess_number_higher_or_lower.sifr",
+      "sifr_path": "audits/leetcode/src/0374_guess_number_higher_or_lower.sifr",
       "status": "PASS"
     },
     {
       "fixture_slug": "0380_insert_delete_getrandom_o1",
       "id": "0380",
-      "sifr_path": "audits/leetcode/0380_insert_delete_getrandom_o1.sifr",
+      "sifr_path": "audits/leetcode/src/0380_insert_delete_getrandom_o1.sifr",
       "status": "PASS"
     },
     {
       "fixture_slug": "0392_is_subsequence",
       "id": "0392",
-      "sifr_path": "audits/leetcode/0392_is_subsequence.sifr",
+      "sifr_path": "audits/leetcode/src/0392_is_subsequence.sifr",
       "status": "PASS"
     },
     {
       "fixture_slug": "0424_longest_repeating_character_replacement",
       "id": "0424",
-      "sifr_path": "audits/leetcode/0424_longest_repeating_character_replacement.sifr",
+      "sifr_path": "audits/leetcode/src/0424_longest_repeating_character_replacement.sifr",
       "status": "PASS"
     },
     {
       "fixture_slug": "0474_ones_and_zeroes",
       "id": "0474",
-      "sifr_path": "audits/leetcode/0474_ones_and_zeroes.sifr",
+      "sifr_path": "audits/leetcode/src/0474_ones_and_zeroes.sifr",
       "status": "PASS"
     },
     {
       "fixture_slug": "0494_target_sum",
       "id": "0494",
-      "sifr_path": "audits/leetcode/0494_target_sum.sifr",
+      "sifr_path": "audits/leetcode/src/0494_target_sum.sifr",
       "status": "PASS"
     },
     {
       "fixture_slug": "0502_ipo",
       "id": "0502",
-      "sifr_path": "audits/leetcode/0502_ipo.sifr",
+      "sifr_path": "audits/leetcode/src/0502_ipo.sifr",
       "status": "PASS"
     },
     {
       "fixture_slug": "0509_fibonacci_number",
       "id": "0509",
-      "sifr_path": "audits/leetcode/0509_fibonacci_number.sifr",
+      "sifr_path": "audits/leetcode/src/0509_fibonacci_number.sifr",
       "status": "PASS"
     },
     {
       "fixture_slug": "0518_coin_change_ii",
       "id": "0518",
-      "sifr_path": "audits/leetcode/0518_coin_change_ii.sifr",
+      "sifr_path": "audits/leetcode/src/0518_coin_change_ii.sifr",
       "status": "PASS"
     },
     {
       "fixture_slug": "0523_continuous_subarray_sum",
       "id": "0523",
-      "sifr_path": "audits/leetcode/0523_continuous_subarray_sum.sifr",
+      "sifr_path": "audits/leetcode/src/0523_continuous_subarray_sum.sifr",
       "status": "PASS"
     },
     {
       "fixture_slug": "0560_subarray_sum_equals_k",
       "id": "0560",
-      "sifr_path": "audits/leetcode/0560_subarray_sum_equals_k.sifr",
+      "sifr_path": "audits/leetcode/src/0560_subarray_sum_equals_k.sifr",
       "status": "PASS"
     },
     {
       "fixture_slug": "0684_redundant_connection",
       "id": "0684",
-      "sifr_path": "audits/leetcode/0684_redundant_connection.sifr",
+      "sifr_path": "audits/leetcode/src/0684_redundant_connection.sifr",
       "status": "PASS"
     },
     {
       "fixture_slug": "0695_max_area_of_island",
       "id": "0695",
-      "sifr_path": "audits/leetcode/0695_max_area_of_island.sifr",
+      "sifr_path": "audits/leetcode/src/0695_max_area_of_island.sifr",
       "status": "PASS"
     },
     {
       "fixture_slug": "0703_kth_largest_element_in_a_stream",
       "id": "0703",
-      "sifr_path": "audits/leetcode/0703_kth_largest_element_in_a_stream.sifr",
+      "sifr_path": "audits/leetcode/src/0703_kth_largest_element_in_a_stream.sifr",
       "status": "PASS"
     },
     {
       "fixture_slug": "0704_binary_search",
       "id": "0704",
-      "sifr_path": "audits/leetcode/0704_binary_search.sifr",
+      "sifr_path": "audits/leetcode/src/0704_binary_search.sifr",
       "status": "PASS"
     },
     {
       "fixture_slug": "0704_binary_search_v2",
       "id": "0704",
-      "sifr_path": "audits/leetcode/0704_binary_search_v2.sifr",
+      "sifr_path": "audits/leetcode/src/0704_binary_search_v2.sifr",
       "status": "PASS"
     },
     {
       "fixture_slug": "0724_find_pivot_index",
       "id": "0724",
-      "sifr_path": "audits/leetcode/0724_find_pivot_index.sifr",
+      "sifr_path": "audits/leetcode/src/0724_find_pivot_index.sifr",
       "status": "PASS"
     },
     {
       "fixture_slug": "0743_network_delay_time",
       "id": "0743",
-      "sifr_path": "audits/leetcode/0743_network_delay_time.sifr",
+      "sifr_path": "audits/leetcode/src/0743_network_delay_time.sifr",
       "status": "PASS"
     },
     {
       "fixture_slug": "0746_min_cost_climbing_stairs",
       "id": "0746",
-      "sifr_path": "audits/leetcode/0746_min_cost_climbing_stairs.sifr",
+      "sifr_path": "audits/leetcode/src/0746_min_cost_climbing_stairs.sifr",
       "status": "PASS"
     },
     {
       "fixture_slug": "0896_monotonic_array",
       "id": "0896",
-      "sifr_path": "audits/leetcode/0896_monotonic_array.sifr",
+      "sifr_path": "audits/leetcode/src/0896_monotonic_array.sifr",
       "status": "PASS"
     },
     {
       "fixture_slug": "0912_sort_an_array",
       "id": "0912",
-      "sifr_path": "audits/leetcode/0912_sort_an_array.sifr",
+      "sifr_path": "audits/leetcode/src/0912_sort_an_array.sifr",
       "status": "PASS"
     },
     {
       "fixture_slug": "0930_binary_subarrays_with_sum",
       "id": "0930",
-      "sifr_path": "audits/leetcode/0930_binary_subarrays_with_sum.sifr",
+      "sifr_path": "audits/leetcode/src/0930_binary_subarrays_with_sum.sifr",
       "status": "PASS"
     },
     {
       "fixture_slug": "0997_find_the_town_judge",
       "id": "0997",
-      "sifr_path": "audits/leetcode/0997_find_the_town_judge.sifr",
+      "sifr_path": "audits/leetcode/src/0997_find_the_town_judge.sifr",
       "status": "PASS"
     },
     {
       "fixture_slug": "1046_last_stone_weight",
       "id": "1046",
-      "sifr_path": "audits/leetcode/1046_last_stone_weight.sifr",
+      "sifr_path": "audits/leetcode/src/1046_last_stone_weight.sifr",
       "status": "PASS"
     },
     {
       "fixture_slug": "1143_longest_common_subsequence",
       "id": "1143",
-      "sifr_path": "audits/leetcode/1143_longest_common_subsequence.sifr",
+      "sifr_path": "audits/leetcode/src/1143_longest_common_subsequence.sifr",
       "status": "PASS"
     },
     {
       "fixture_slug": "1209_remove_all_adjacent_duplicates_in_string_ii",
       "id": "1209",
-      "sifr_path": "audits/leetcode/1209_remove_all_adjacent_duplicates_in_string_ii.sifr",
+      "sifr_path": "audits/leetcode/src/1209_remove_all_adjacent_duplicates_in_string_ii.sifr",
       "status": "PASS"
     },
     {
       "fixture_slug": "1299_replace_elements_with_greatest_element_on_right_side",
       "id": "1299",
-      "sifr_path": "audits/leetcode/1299_replace_elements_with_greatest_element_on_right_side.sifr",
+      "sifr_path": "audits/leetcode/src/1299_replace_elements_with_greatest_element_on_right_side.sifr",
       "status": "PASS"
     },
     {
       "fixture_slug": "1456_maximum_number_of_vowels_in_a_substring_of_given_length",
       "id": "1456",
-      "sifr_path": "audits/leetcode/1456_maximum_number_of_vowels_in_a_substring_of_given_length.sifr",
+      "sifr_path": "audits/leetcode/src/1456_maximum_number_of_vowels_in_a_substring_of_given_length.sifr",
       "status": "PASS"
     },
     {
       "fixture_slug": "1464_maximum_product_of_two_elements_in_an_array",
       "id": "1464",
-      "sifr_path": "audits/leetcode/1464_maximum_product_of_two_elements_in_an_array.sifr",
+      "sifr_path": "audits/leetcode/src/1464_maximum_product_of_two_elements_in_an_array.sifr",
       "status": "PASS"
     },
     {
       "fixture_slug": "1523_count_odd_numbers_in_an_interval_range",
       "id": "1523",
-      "sifr_path": "audits/leetcode/1523_count_odd_numbers_in_an_interval_range.sifr",
+      "sifr_path": "audits/leetcode/src/1523_count_odd_numbers_in_an_interval_range.sifr",
       "status": "PASS"
     },
     {
       "fixture_slug": "1750_minimum_length_of_string_after_deleting_similar_ends",
       "id": "1750",
-      "sifr_path": "audits/leetcode/1750_minimum_length_of_string_after_deleting_similar_ends.sifr",
+      "sifr_path": "audits/leetcode/src/1750_minimum_length_of_string_after_deleting_similar_ends.sifr",
       "status": "PASS"
     },
     {
       "fixture_slug": "1768_merge_strings_alternately",
       "id": "1768",
-      "sifr_path": "audits/leetcode/1768_merge_strings_alternately.sifr",
+      "sifr_path": "audits/leetcode/src/1768_merge_strings_alternately.sifr",
       "status": "PASS"
     },
     {
       "fixture_slug": "1768_merge_strings_alternately_v2",
       "id": "1768",
-      "sifr_path": "audits/leetcode/1768_merge_strings_alternately_v2.sifr",
+      "sifr_path": "audits/leetcode/src/1768_merge_strings_alternately_v2.sifr",
       "status": "PASS"
     },
     {
       "fixture_slug": "1822_sign_of_the_product_of_an_array",
       "id": "1822",
-      "sifr_path": "audits/leetcode/1822_sign_of_the_product_of_an_array.sifr",
+      "sifr_path": "audits/leetcode/src/1822_sign_of_the_product_of_an_array.sifr",
       "status": "PASS"
     },
     {
       "fixture_slug": "1899_merge_triplets_to_form_target_triplet",
       "id": "1899",
-      "sifr_path": "audits/leetcode/1899_merge_triplets_to_form_target_triplet.sifr",
+      "sifr_path": "audits/leetcode/src/1899_merge_triplets_to_form_target_triplet.sifr",
       "status": "PASS"
     },
     {
       "fixture_slug": "1929_concatenation_of_array",
       "id": "1929",
-      "sifr_path": "audits/leetcode/1929_concatenation_of_array.sifr",
+      "sifr_path": "audits/leetcode/src/1929_concatenation_of_array.sifr",
       "status": "PASS"
     },
     {
       "fixture_slug": "1929_concatenation_of_array_v2",
       "id": "1929",
-      "sifr_path": "audits/leetcode/1929_concatenation_of_array_v2.sifr",
+      "sifr_path": "audits/leetcode/src/1929_concatenation_of_array_v2.sifr",
       "status": "PASS"
     },
     {
       "fixture_slug": "1963_minimum_number_of_swaps_to_make_the_string_balanced",
       "id": "1963",
-      "sifr_path": "audits/leetcode/1963_minimum_number_of_swaps_to_make_the_string_balanced.sifr",
+      "sifr_path": "audits/leetcode/src/1963_minimum_number_of_swaps_to_make_the_string_balanced.sifr",
       "status": "PASS"
     },
     {
       "fixture_slug": "2235_add_two_integers",
       "id": "2235",
-      "sifr_path": "audits/leetcode/2235_add_two_integers.sifr",
+      "sifr_path": "audits/leetcode/src/2235_add_two_integers.sifr",
       "status": "PASS"
     },
     {
       "fixture_slug": "2405_optimal_partition_of_string",
       "id": "2405",
-      "sifr_path": "audits/leetcode/2405_optimal_partition_of_string.sifr",
+      "sifr_path": "audits/leetcode/src/2405_optimal_partition_of_string.sifr",
       "status": "PASS"
     },
     {
       "fixture_slug": "2483_minimum_penalty_for_a_shop",
       "id": "2483",
-      "sifr_path": "audits/leetcode/2483_minimum_penalty_for_a_shop.sifr",
+      "sifr_path": "audits/leetcode/src/2483_minimum_penalty_for_a_shop.sifr",
       "status": "PASS"
     }
   ],

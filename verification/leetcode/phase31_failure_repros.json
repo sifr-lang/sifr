@@ -7,7 +7,7 @@
       "layer": "codegen",
       "line_count": 25,
       "smallest_known_repro_case_id": "1498",
-      "smallest_known_repro_path": "audits/leetcode/1498_number_of_subsequences_that_satisfy_the_given_sum_condition.sifr",
+      "smallest_known_repro_path": "audits/leetcode/src/1498_number_of_subsequences_that_satisfy_the_given_sum_condition.sifr",
       "stderr_excerpt": "warning: int left shift (<<) with non-constant shift amount may overflow i64 at runtime; consider using bigint",
       "title": "Generic codegen/runtime build failure"
     },
@@ -16,7 +16,7 @@
       "layer": "frontend",
       "line_count": 15,
       "smallest_known_repro_case_id": "1930",
-      "smallest_known_repro_path": "audits/leetcode/1930_unique_length_3_palindromic_subsequences.sifr",
+      "smallest_known_repro_path": "audits/leetcode/src/1930_unique_length_3_palindromic_subsequences.sifr",
       "stderr_excerpt": "type error: str has no method 'rfind'",
       "title": "Generic frontend check failure"
     },
@@ -25,7 +25,7 @@
       "layer": "frontend",
       "line_count": 24,
       "smallest_known_repro_case_id": "0118",
-      "smallest_known_repro_path": "audits/leetcode/0118_pascals_triangle.sifr",
+      "smallest_known_repro_path": "audits/leetcode/src/0118_pascals_triangle.sifr",
       "stderr_excerpt": "is missing a type annotation",
       "title": "Nested function annotation/inference gap"
     },
@@ -34,7 +34,7 @@
       "layer": "frontend",
       "line_count": 22,
       "smallest_known_repro_case_id": "1851",
-      "smallest_known_repro_path": "audits/leetcode/1851_minimum_interval_to_include_each_query.sifr",
+      "smallest_known_repro_path": "audits/leetcode/src/1851_minimum_interval_to_include_each_query.sifr",
       "stderr_excerpt": "cannot index type 'Any'",
       "title": "Untyped Any propagation gap"
     },
@@ -43,7 +43,7 @@
       "layer": "lowering",
       "line_count": 68,
       "smallest_known_repro_case_id": "0230",
-      "smallest_known_repro_path": "audits/leetcode/0230_kth_smallest_element_in_a_bst.sifr",
+      "smallest_known_repro_path": "audits/leetcode/src/0230_kth_smallest_element_in_a_bst.sifr",
       "stderr_excerpt": "attribute access '.",
       "title": "Attribute-expression lowering gap"
     },
@@ -52,7 +52,7 @@
       "layer": "lowering",
       "line_count": 15,
       "smallest_known_repro_case_id": "0280",
-      "smallest_known_repro_path": "audits/leetcode/0280_wiggle_sort.sifr",
+      "smallest_known_repro_path": "audits/leetcode/src/0280_wiggle_sort.sifr",
       "stderr_excerpt": "tuple unpacking target must be a simple name",
       "title": "Destructuring target lowering gap"
     },
@@ -61,7 +61,7 @@
       "layer": "stdlib_runtime",
       "line_count": 45,
       "smallest_known_repro_case_id": "0079",
-      "smallest_known_repro_path": "audits/leetcode/0079_word_search.sifr",
+      "smallest_known_repro_path": "audits/leetcode/src/0079_word_search.sifr",
       "stderr_excerpt": "sum() takes exactly 1 argument",
       "title": "Python builtin signature/parity gap"
     },
@@ -70,7 +70,7 @@
       "layer": "stdlib_runtime",
       "line_count": 16,
       "smallest_known_repro_case_id": "0383",
-      "smallest_known_repro_path": "audits/leetcode/0383_ransom_note.sifr",
+      "smallest_known_repro_path": "audits/leetcode/src/0383_ransom_note.sifr",
       "stderr_excerpt": "undefined function: 'Counter'",
       "title": "Python stdlib/module surface gap"
     },
@@ -79,7 +79,7 @@
       "layer": "type_system",
       "line_count": 17,
       "smallest_known_repro_case_id": "0739",
-      "smallest_known_repro_path": "audits/leetcode/0739_daily_temperatures.sifr",
+      "smallest_known_repro_path": "audits/leetcode/src/0739_daily_temperatures.sifr",
       "stderr_excerpt": "Any | None",
       "title": "Optional narrowing and union-operator gap"
     }

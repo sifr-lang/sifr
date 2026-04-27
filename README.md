@@ -103,6 +103,8 @@ scripts/clone_subrepos.sh
 The script is safe to run repeatedly. It clones missing sub-repositories and
 fast-forwards existing clean checkouts.
 
+LeetCode fixtures live under `audits/leetcode/src`.
+
 ### Compile and run a `.sifr` file
 
 ```bash

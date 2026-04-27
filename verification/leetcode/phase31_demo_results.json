@@ -19,7 +19,7 @@
           "command": [
             "/Users/yaseralnajjar/work/sifr/codebase/target/release/sifr",
             "check",
-            "audit/leetcode/0001_two_sum.sifr"
+            "audits/leetcode/src/0001_two_sum.sifr"
           ],
           "duration_ms": 38,
           "returncode": 1,
@@ -45,7 +45,7 @@
           "command": [
             "/Users/yaseralnajjar/work/sifr/codebase/target/release/sifr",
             "check",
-            "audit/leetcode/0009_palindrome_number.sifr"
+            "audits/leetcode/src/0009_palindrome_number.sifr"
           ],
           "duration_ms": 39,
           "returncode": 0,
@@ -58,7 +58,7 @@
           "command": [
             "/Users/yaseralnajjar/work/sifr/codebase/target/release/sifr",
             "run",
-            "audit/leetcode/0009_palindrome_number.sifr"
+            "audits/leetcode/src/0009_palindrome_number.sifr"
           ],
           "duration_ms": 377,
           "returncode": 0,
@@ -84,7 +84,7 @@
           "command": [
             "/Users/yaseralnajjar/work/sifr/codebase/target/release/sifr",
             "check",
-            "audit/leetcode/0069_sqrtx.sifr"
+            "audits/leetcode/src/0069_sqrtx.sifr"
           ],
           "duration_ms": 36,
           "returncode": 0,
@@ -97,7 +97,7 @@
           "command": [
             "/Users/yaseralnajjar/work/sifr/codebase/target/release/sifr",
             "run",
-            "audit/leetcode/0069_sqrtx.sifr"
+            "audits/leetcode/src/0069_sqrtx.sifr"
           ],
           "duration_ms": 145,
           "returncode": 1,
@@ -123,7 +123,7 @@
           "command": [
             "/Users/yaseralnajjar/work/sifr/codebase/target/release/sifr",
             "check",
-            "audit/leetcode/0070_climbing_stairs.sifr"
+            "audits/leetcode/src/0070_climbing_stairs.sifr"
           ],
           "duration_ms": 37,
           "returncode": 0,
@@ -136,7 +136,7 @@
           "command": [
             "/Users/yaseralnajjar/work/sifr/codebase/target/release/sifr",
             "run",
-            "audit/leetcode/0070_climbing_stairs.sifr"
+            "audits/leetcode/src/0070_climbing_stairs.sifr"
           ],
           "duration_ms": 375,
           "returncode": 0,
@@ -162,7 +162,7 @@
           "command": [
             "/Users/yaseralnajjar/work/sifr/codebase/target/release/sifr",
             "check",
-            "audit/leetcode/0100_same_tree.sifr"
+            "audits/leetcode/src/0100_same_tree.sifr"
           ],
           "duration_ms": 39,
           "returncode": 1,

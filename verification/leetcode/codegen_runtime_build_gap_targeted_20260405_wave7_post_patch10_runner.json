@@ -19,7 +19,7 @@
           "command": [
             "/Users/yaseralnajjar/work/sifr/codebase/target/release/sifr",
             "check",
-            "audits/leetcode/0002_add_two_numbers.sifr"
+            "audits/leetcode/src/0002_add_two_numbers.sifr"
           ],
           "duration_ms": 110,
           "returncode": 0,
@@ -32,7 +32,7 @@
           "command": [
             "/Users/yaseralnajjar/work/sifr/codebase/target/release/sifr",
             "run",
-            "audits/leetcode/0002_add_two_numbers.sifr"
+            "audits/leetcode/src/0002_add_two_numbers.sifr"
           ],
           "duration_ms": 326,
           "returncode": 1,
@@ -58,7 +58,7 @@
           "command": [
             "/Users/yaseralnajjar/work/sifr/codebase/target/release/sifr",
             "check",
-            "audits/leetcode/0006_zigzag_conversion.sifr"
+            "audits/leetcode/src/0006_zigzag_conversion.sifr"
           ],
           "duration_ms": 109,
           "returncode": 0,
@@ -71,7 +71,7 @@
           "command": [
             "/Users/yaseralnajjar/work/sifr/codebase/target/release/sifr",
             "run",
-            "audits/leetcode/0006_zigzag_conversion.sifr"
+            "audits/leetcode/src/0006_zigzag_conversion.sifr"
           ],
           "duration_ms": 188,
           "returncode": 0,
@@ -97,7 +97,7 @@
           "command": [
             "/Users/yaseralnajjar/work/sifr/codebase/target/release/sifr",
             "check",
-            "audits/leetcode/0014_longest_common_prefix.sifr"
+            "audits/leetcode/src/0014_longest_common_prefix.sifr"
           ],
           "duration_ms": 109,
           "returncode": 0,
@@ -110,7 +110,7 @@
           "command": [
             "/Users/yaseralnajjar/work/sifr/codebase/target/release/sifr",
             "run",
-            "audits/leetcode/0014_longest_common_prefix.sifr"
+            "audits/leetcode/src/0014_longest_common_prefix.sifr"
           ],
           "duration_ms": 290,
           "returncode": 1,
@@ -136,7 +136,7 @@
           "command": [
             "/Users/yaseralnajjar/work/sifr/codebase/target/release/sifr",
             "check",
-            "audits/leetcode/0014_longest_common_prefix_v2.sifr"
+            "audits/leetcode/src/0014_longest_common_prefix_v2.sifr"
           ],
           "duration_ms": 234,
           "returncode": 0,
@@ -149,7 +149,7 @@
           "command": [
             "/Users/yaseralnajjar/work/sifr/codebase/target/release/sifr",
             "run",
-            "audits/leetcode/0014_longest_common_prefix_v2.sifr"
+            "audits/leetcode/src/0014_longest_common_prefix_v2.sifr"
           ],
           "duration_ms": 511,
           "returncode": 1,
@@ -175,7 +175,7 @@
           "command": [
             "/Users/yaseralnajjar/work/sifr/codebase/target/release/sifr",
             "check",
-            "audits/leetcode/0019_remove_nth_node_from_end_of_list.sifr"
+            "audits/leetcode/src/0019_remove_nth_node_from_end_of_list.sifr"
           ],
           "duration_ms": 110,
           "returncode": 0,
@@ -188,7 +188,7 @@
           "command": [
             "/Users/yaseralnajjar/work/sifr/codebase/target/release/sifr",
             "run",
-            "audits/leetcode/0019_remove_nth_node_from_end_of_list.sifr"
+            "audits/leetcode/src/0019_remove_nth_node_from_end_of_list.sifr"
           ],
           "duration_ms": 594,
           "returncode": 1,
@@ -214,7 +214,7 @@
           "command": [
             "/Users/yaseralnajjar/work/sifr/codebase/target/release/sifr",
             "check",
-            "audits/leetcode/0020_valid_parentheses.sifr"
+            "audits/leetcode/src/0020_valid_parentheses.sifr"
           ],
           "duration_ms": 111,
           "returncode": 0,
@@ -227,7 +227,7 @@
           "command": [
             "/Users/yaseralnajjar/work/sifr/codebase/target/release/sifr",
             "run",
-            "audits/leetcode/0020_valid_parentheses.sifr"
+            "audits/leetcode/src/0020_valid_parentheses.sifr"
           ],
           "duration_ms": 288,
           "returncode": 1,
@@ -253,7 +253,7 @@
           "command": [
             "/Users/yaseralnajjar/work/sifr/codebase/target/release/sifr",
             "check",
-            "audits/leetcode/0021_merge_two_sorted_lists.sifr"
+            "audits/leetcode/src/0021_merge_two_sorted_lists.sifr"
           ],
           "duration_ms": 105,
           "returncode": 0,
@@ -266,7 +266,7 @@
           "command": [
             "/Users/yaseralnajjar/work/sifr/codebase/target/release/sifr",
             "run",
-            "audits/leetcode/0021_merge_two_sorted_lists.sifr"
+            "audits/leetcode/src/0021_merge_two_sorted_lists.sifr"
           ],
           "duration_ms": 299,
           "returncode": 1,
@@ -292,7 +292,7 @@
           "command": [
             "/Users/yaseralnajjar/work/sifr/codebase/target/release/sifr",
             "check",
-            "audits/leetcode/0025_reverse_nodes_in_k_group.sifr"
+            "audits/leetcode/src/0025_reverse_nodes_in_k_group.sifr"
           ],
           "duration_ms": 111,
           "returncode": 0,
@@ -305,7 +305,7 @@
           "command": [
             "/Users/yaseralnajjar/work/sifr/codebase/target/release/sifr",
             "run",
-            "audits/leetcode/0025_reverse_nodes_in_k_group.sifr"
+            "audits/leetcode/src/0025_reverse_nodes_in_k_group.sifr"
           ],
           "duration_ms": 297,
           "returncode": 1,
@@ -331,7 +331,7 @@
           "command": [
             "/Users/yaseralnajjar/work/sifr/codebase/target/release/sifr",
             "check",
-            "audits/leetcode/0046_permutations.sifr"
+            "audits/leetcode/src/0046_permutations.sifr"
           ],
           "duration_ms": 110,
           "returncode": 0,
@@ -344,7 +344,7 @@
           "command": [
             "/Users/yaseralnajjar/work/sifr/codebase/target/release/sifr",
             "run",
-            "audits/leetcode/0046_permutations.sifr"
+            "audits/leetcode/src/0046_permutations.sifr"
           ],
           "duration_ms": 185,
           "returncode": 0,
@@ -370,7 +370,7 @@
           "command": [
             "/Users/yaseralnajjar/work/sifr/codebase/target/release/sifr",
             "check",
-            "audits/leetcode/0048_rotate_image.sifr"
+            "audits/leetcode/src/0048_rotate_image.sifr"
           ],
           "duration_ms": 110,
           "returncode": 0,
@@ -383,7 +383,7 @@
           "command": [
             "/Users/yaseralnajjar/work/sifr/codebase/target/release/sifr",
             "run",
-            "audits/leetcode/0048_rotate_image.sifr"
+            "audits/leetcode/src/0048_rotate_image.sifr"
           ],
           "duration_ms": 185,
           "returncode": 0,
@@ -409,7 +409,7 @@
           "command": [
             "/Users/yaseralnajjar/work/sifr/codebase/target/release/sifr",
             "check",
-            "audits/leetcode/0051_n_queens.sifr"
+            "audits/leetcode/src/0051_n_queens.sifr"
           ],
           "duration_ms": 110,
           "returncode": 0,
@@ -422,7 +422,7 @@
           "command": [
             "/Users/yaseralnajjar/work/sifr/codebase/target/release/sifr",
             "run",
-            "audits/leetcode/0051_n_queens.sifr"
+            "audits/leetcode/src/0051_n_queens.sifr"
           ],
           "duration_ms": 293,
           "returncode": 1,
@@ -448,7 +448,7 @@
           "command": [
             "/Users/yaseralnajjar/work/sifr/codebase/target/release/sifr",
             "check",
-            "audits/leetcode/0061_rotate_list.sifr"
+            "audits/leetcode/src/0061_rotate_list.sifr"
           ],
           "duration_ms": 109,
           "returncode": 0,
@@ -461,7 +461,7 @@
           "command": [
             "/Users/yaseralnajjar/work/sifr/codebase/target/release/sifr",
             "run",
-            "audits/leetcode/0061_rotate_list.sifr"
+            "audits/leetcode/src/0061_rotate_list.sifr"
           ],
           "duration_ms": 293,
           "returncode": 1,
@@ -487,7 +487,7 @@
           "command": [
             "/Users/yaseralnajjar/work/sifr/codebase/target/release/sifr",
             "check",
-            "audits/leetcode/0083_remove_duplicates_from_sorted_list.sifr"
+            "audits/leetcode/src/0083_remove_duplicates_from_sorted_list.sifr"
           ],
           "duration_ms": 110,
           "returncode": 0,
@@ -500,7 +500,7 @@
           "command": [
             "/Users/yaseralnajjar/work/sifr/codebase/target/release/sifr",
             "run",
-            "audits/leetcode/0083_remove_duplicates_from_sorted_list.sifr"
+            "audits/leetcode/src/0083_remove_duplicates_from_sorted_list.sifr"
           ],
           "duration_ms": 293,
           "returncode": 1,
@@ -526,7 +526,7 @@
           "command": [
             "/Users/yaseralnajjar/work/sifr/codebase/target/release/sifr",
             "check",
-            "audits/leetcode/0086_partition_list.sifr"
+            "audits/leetcode/src/0086_partition_list.sifr"
           ],
           "duration_ms": 109,
           "returncode": 0,
@@ -539,7 +539,7 @@
           "command": [
             "/Users/yaseralnajjar/work/sifr/codebase/target/release/sifr",
             "run",
-            "audits/leetcode/0086_partition_list.sifr"
+            "audits/leetcode/src/0086_partition_list.sifr"
           ],
           "duration_ms": 304,
           "returncode": 1,
@@ -565,7 +565,7 @@
           "command": [
             "/Users/yaseralnajjar/work/sifr/codebase/target/release/sifr",
             "check",
-            "audits/leetcode/0092_reverse_linked_list_ii.sifr"
+            "audits/leetcode/src/0092_reverse_linked_list_ii.sifr"
           ],
           "duration_ms": 109,
           "returncode": 0,
@@ -578,7 +578,7 @@
           "command": [
             "/Users/yaseralnajjar/work/sifr/codebase/target/release/sifr",
             "run",
-            "audits/leetcode/0092_reverse_linked_list_ii.sifr"
+            "audits/leetcode/src/0092_reverse_linked_list_ii.sifr"
           ],
           "duration_ms": 294,
           "returncode": 1,
@@ -604,7 +604,7 @@
           "command": [
             "/Users/yaseralnajjar/work/sifr/codebase/target/release/sifr",
             "check",
-            "audits/leetcode/0101_symmetric_tree.sifr"
+            "audits/leetcode/src/0101_symmetric_tree.sifr"
           ],
           "duration_ms": 111,
           "returncode": 0,
@@ -617,7 +617,7 @@
           "command": [
             "/Users/yaseralnajjar/work/sifr/codebase/target/release/sifr",
             "run",
-            "audits/leetcode/0101_symmetric_tree.sifr"
+            "audits/leetcode/src/0101_symmetric_tree.sifr"
           ],
           "duration_ms": 189,
           "returncode": 0,
@@ -643,7 +643,7 @@
           "command": [
             "/Users/yaseralnajjar/work/sifr/codebase/target/release/sifr",
             "check",
-            "audits/leetcode/0105_construct_binary_tree_from_preorder_and_inorder_traversal.sifr"
+            "audits/leetcode/src/0105_construct_binary_tree_from_preorder_and_inorder_traversal.sifr"
           ],
           "duration_ms": 109,
           "returncode": 0,
@@ -656,7 +656,7 @@
           "command": [
             "/Users/yaseralnajjar/work/sifr/codebase/target/release/sifr",
             "run",
-            "audits/leetcode/0105_construct_binary_tree_from_preorder_and_inorder_traversal.sifr"
+            "audits/leetcode/src/0105_construct_binary_tree_from_preorder_and_inorder_traversal.sifr"
           ],
           "duration_ms": 188,
           "returncode": 0,
@@ -682,7 +682,7 @@
           "command": [
             "/Users/yaseralnajjar/work/sifr/codebase/target/release/sifr",
             "check",
-            "audits/leetcode/0106_construct_binary_tree_from_inorder_and_postorder_traversal.sifr"
+            "audits/leetcode/src/0106_construct_binary_tree_from_inorder_and_postorder_traversal.sifr"
           ],
           "duration_ms": 107,
           "returncode": 0,
@@ -695,7 +695,7 @@
           "command": [
             "/Users/yaseralnajjar/work/sifr/codebase/target/release/sifr",
             "run",
-            "audits/leetcode/0106_construct_binary_tree_from_inorder_and_postorder_traversal.sifr"
+            "audits/leetcode/src/0106_construct_binary_tree_from_inorder_and_postorder_traversal.sifr"
           ],
           "duration_ms": 187,
           "returncode": 0,
@@ -721,7 +721,7 @@
           "command": [
             "/Users/yaseralnajjar/work/sifr/codebase/target/release/sifr",
             "check",
-            "audits/leetcode/0108_convert_sorted_array_to_binary_search_tree.sifr"
+            "audits/leetcode/src/0108_convert_sorted_array_to_binary_search_tree.sifr"
           ],
           "duration_ms": 108,
           "returncode": 0,
@@ -734,7 +734,7 @@
           "command": [
             "/Users/yaseralnajjar/work/sifr/codebase/target/release/sifr",
             "run",
-            "audits/leetcode/0108_convert_sorted_array_to_binary_search_tree.sifr"
+            "audits/leetcode/src/0108_convert_sorted_array_to_binary_search_tree.sifr"
           ],
           "duration_ms": 191,
           "returncode": 0,
@@ -760,7 +760,7 @@
           "command": [
             "/Users/yaseralnajjar/work/sifr/codebase/target/release/sifr",
             "check",
-            "audits/leetcode/0124_binary_tree_maximum_path_sum.sifr"
+            "audits/leetcode/src/0124_binary_tree_maximum_path_sum.sifr"
           ],
           "duration_ms": 111,
           "returncode": 0,
@@ -773,7 +773,7 @@
           "command": [
             "/Users/yaseralnajjar/work/sifr/codebase/target/release/sifr",
             "run",
-            "audits/leetcode/0124_binary_tree_maximum_path_sum.sifr"
+            "audits/leetcode/src/0124_binary_tree_maximum_path_sum.sifr"
           ],
           "duration_ms": 192,
           "returncode": 0,
@@ -799,7 +799,7 @@
           "command": [
             "/Users/yaseralnajjar/work/sifr/codebase/target/release/sifr",
             "check",
-            "audits/leetcode/0127_word_ladder.sifr"
+            "audits/leetcode/src/0127_word_ladder.sifr"
           ],
           "duration_ms": 108,
           "returncode": 0,
@@ -812,7 +812,7 @@
           "command": [
             "/Users/yaseralnajjar/work/sifr/codebase/target/release/sifr",
             "run",
-            "audits/leetcode/0127_word_ladder.sifr"
+            "audits/leetcode/src/0127_word_ladder.sifr"
           ],
           "duration_ms": 293,
           "returncode": 1,
@@ -838,7 +838,7 @@
           "command": [
             "/Users/yaseralnajjar/work/sifr/codebase/target/release/sifr",
             "check",
-            "audits/leetcode/0138_copy_list_with_random_pointer.sifr"
+            "audits/leetcode/src/0138_copy_list_with_random_pointer.sifr"
           ],
           "duration_ms": 109,
           "returncode": 0,
@@ -851,7 +851,7 @@
           "command": [
             "/Users/yaseralnajjar/work/sifr/codebase/target/release/sifr",
             "run",
-            "audits/leetcode/0138_copy_list_with_random_pointer.sifr"
+            "audits/leetcode/src/0138_copy_list_with_random_pointer.sifr"
           ],
           "duration_ms": 185,
           "returncode": 0,
@@ -877,7 +877,7 @@
           "command": [
             "/Users/yaseralnajjar/work/sifr/codebase/target/release/sifr",
             "check",
-            "audits/leetcode/0141_linked_list_cycle.sifr"
+            "audits/leetcode/src/0141_linked_list_cycle.sifr"
           ],
           "duration_ms": 109,
           "returncode": 0,
@@ -890,7 +890,7 @@
           "command": [
             "/Users/yaseralnajjar/work/sifr/codebase/target/release/sifr",
             "run",
-            "audits/leetcode/0141_linked_list_cycle.sifr"
+            "audits/leetcode/src/0141_linked_list_cycle.sifr"
           ],
           "duration_ms": 294,
           "returncode": 1,
@@ -916,7 +916,7 @@
           "command": [
             "/Users/yaseralnajjar/work/sifr/codebase/target/release/sifr",
             "check",
-            "audits/leetcode/0143_reorder_list.sifr"
+            "audits/leetcode/src/0143_reorder_list.sifr"
           ],
           "duration_ms": 109,
           "returncode": 0,
@@ -929,7 +929,7 @@
           "command": [
             "/Users/yaseralnajjar/work/sifr/codebase/target/release/sifr",
             "run",
-            "audits/leetcode/0143_reorder_list.sifr"
+            "audits/leetcode/src/0143_reorder_list.sifr"
           ],
           "duration_ms": 296,
           "returncode": 1,
@@ -955,7 +955,7 @@
           "command": [
             "/Users/yaseralnajjar/work/sifr/codebase/target/release/sifr",
             "check",
-            "audits/leetcode/0147_insertion_sort_list.sifr"
+            "audits/leetcode/src/0147_insertion_sort_list.sifr"
           ],
           "duration_ms": 111,
           "returncode": 0,
@@ -968,7 +968,7 @@
           "command": [
             "/Users/yaseralnajjar/work/sifr/codebase/target/release/sifr",
             "run",
-            "audits/leetcode/0147_insertion_sort_list.sifr"
+            "audits/leetcode/src/0147_insertion_sort_list.sifr"
           ],
           "duration_ms": 298,
           "returncode": 1,
@@ -994,7 +994,7 @@
           "command": [
             "/Users/yaseralnajjar/work/sifr/codebase/target/release/sifr",
             "check",
-            "audits/leetcode/0148_sort_list.sifr"
+            "audits/leetcode/src/0148_sort_list.sifr"
           ],
           "duration_ms": 109,
           "returncode": 0,
@@ -1007,7 +1007,7 @@
           "command": [
             "/Users/yaseralnajjar/work/sifr/codebase/target/release/sifr",
             "run",
-            "audits/leetcode/0148_sort_list.sifr"
+            "audits/leetcode/src/0148_sort_list.sifr"
           ],
           "duration_ms": 298,
           "returncode": 1,
@@ -1033,7 +1033,7 @@
           "command": [
             "/Users/yaseralnajjar/work/sifr/codebase/target/release/sifr",
             "check",
-            "audits/leetcode/0160_intersection_of_two_linked_lists.sifr"
+            "audits/leetcode/src/0160_intersection_of_two_linked_lists.sifr"
           ],
           "duration_ms": 111,
           "returncode": 0,
@@ -1046,7 +1046,7 @@
           "command": [
             "/Users/yaseralnajjar/work/sifr/codebase/target/release/sifr",
             "run",
-            "audits/leetcode/0160_intersection_of_two_linked_lists.sifr"
+            "audits/leetcode/src/0160_intersection_of_two_linked_lists.sifr"
           ],
           "duration_ms": 298,
           "returncode": 1,
@@ -1072,7 +1072,7 @@
           "command": [
             "/Users/yaseralnajjar/work/sifr/codebase/target/release/sifr",
             "check",
-            "audits/leetcode/0189_rotate_array.sifr"
+            "audits/leetcode/src/0189_rotate_array.sifr"
           ],
           "duration_ms": 110,
           "returncode": 0,
@@ -1085,7 +1085,7 @@
           "command": [
             "/Users/yaseralnajjar/work/sifr/codebase/target/release/sifr",
             "run",
-            "audits/leetcode/0189_rotate_array.sifr"
+            "audits/leetcode/src/0189_rotate_array.sifr"
           ],
           "duration_ms": 184,
           "returncode": 0,
@@ -1111,7 +1111,7 @@
           "command": [
             "/Users/yaseralnajjar/work/sifr/codebase/target/release/sifr",
             "check",
-            "audits/leetcode/0203_remove_linked_list_elements.sifr"
+            "audits/leetcode/src/0203_remove_linked_list_elements.sifr"
           ],
           "duration_ms": 106,
           "returncode": 0,
@@ -1124,7 +1124,7 @@
           "command": [
             "/Users/yaseralnajjar/work/sifr/codebase/target/release/sifr",
             "run",
-            "audits/leetcode/0203_remove_linked_list_elements.sifr"
+            "audits/leetcode/src/0203_remove_linked_list_elements.sifr"
           ],
           "duration_ms": 292,
           "returncode": 1,
@@ -1150,7 +1150,7 @@
           "command": [
             "/Users/yaseralnajjar/work/sifr/codebase/target/release/sifr",
             "check",
-            "audits/leetcode/0211_design_add_and_search_words_data_structure.sifr"
+            "audits/leetcode/src/0211_design_add_and_search_words_data_structure.sifr"
           ],
           "duration_ms": 110,
           "returncode": 0,
@@ -1163,7 +1163,7 @@
           "command": [
             "/Users/yaseralnajjar/work/sifr/codebase/target/release/sifr",
             "run",
-            "audits/leetcode/0211_design_add_and_search_words_data_structure.sifr"
+            "audits/leetcode/src/0211_design_add_and_search_words_data_structure.sifr"
           ],
           "duration_ms": 188,
           "returncode": 0,
@@ -1189,7 +1189,7 @@
           "command": [
             "/Users/yaseralnajjar/work/sifr/codebase/target/release/sifr",
             "check",
-            "audits/leetcode/0234_palindrome_linked_list.sifr"
+            "audits/leetcode/src/0234_palindrome_linked_list.sifr"
           ],
           "duration_ms": 112,
           "returncode": 0,
@@ -1202,7 +1202,7 @@
           "command": [
             "/Users/yaseralnajjar/work/sifr/codebase/target/release/sifr",
             "run",
-            "audits/leetcode/0234_palindrome_linked_list.sifr"
+            "audits/leetcode/src/0234_palindrome_linked_list.sifr"
           ],
           "duration_ms": 286,
           "returncode": 1,
@@ -1228,7 +1228,7 @@
           "command": [
             "/Users/yaseralnajjar/work/sifr/codebase/target/release/sifr",
             "check",
-            "audits/leetcode/0304_range_sum_query_2d_immutable.sifr"
+            "audits/leetcode/src/0304_range_sum_query_2d_immutable.sifr"
           ],
           "duration_ms": 109,
           "returncode": 0,
@@ -1241,7 +1241,7 @@
           "command": [
             "/Users/yaseralnajjar/work/sifr/codebase/target/release/sifr",
             "run",
-            "audits/leetcode/0304_range_sum_query_2d_immutable.sifr"
+            "audits/leetcode/src/0304_range_sum_query_2d_immutable.sifr"
           ],
           "duration_ms": 294,
           "returncode": 1,
@@ -1267,7 +1267,7 @@
           "command": [
             "/Users/yaseralnajjar/work/sifr/codebase/target/release/sifr",
             "check",
-            "audits/leetcode/0394_decode_string.sifr"
+            "audits/leetcode/src/0394_decode_string.sifr"
           ],
           "duration_ms": 109,
           "returncode": 0,
@@ -1280,7 +1280,7 @@
           "command": [
             "/Users/yaseralnajjar/work/sifr/codebase/target/release/sifr",
             "run",
-            "audits/leetcode/0394_decode_string.sifr"
+            "audits/leetcode/src/0394_decode_string.sifr"
           ],
           "duration_ms": 297,
           "returncode": 1,
@@ -1306,7 +1306,7 @@
           "command": [
             "/Users/yaseralnajjar/work/sifr/codebase/target/release/sifr",
             "check",
-            "audits/leetcode/0417_pacific_atlantic_water_flow.sifr"
+            "audits/leetcode/src/0417_pacific_atlantic_water_flow.sifr"
           ],
           "duration_ms": 109,
           "returncode": 0,
@@ -1319,7 +1319,7 @@
           "command": [
             "/Users/yaseralnajjar/work/sifr/codebase/target/release/sifr",
             "run",
-            "audits/leetcode/0417_pacific_atlantic_water_flow.sifr"
+            "audits/leetcode/src/0417_pacific_atlantic_water_flow.sifr"
           ],
           "duration_ms": 288,
           "returncode": 1,
@@ -1345,7 +1345,7 @@
           "command": [
             "/Users/yaseralnajjar/work/sifr/codebase/target/release/sifr",
             "check",
-            "audits/leetcode/0435_non_overlapping_intervals.sifr"
+            "audits/leetcode/src/0435_non_overlapping_intervals.sifr"
           ],
           "duration_ms": 109,
           "returncode": 0,
@@ -1358,7 +1358,7 @@
           "command": [
             "/Users/yaseralnajjar/work/sifr/codebase/target/release/sifr",
             "run",
-            "audits/leetcode/0435_non_overlapping_intervals.sifr"
+            "audits/leetcode/src/0435_non_overlapping_intervals.sifr"
           ],
           "duration_ms": 187,
           "returncode": 0,
@@ -1384,7 +1384,7 @@
           "command": [
             "/Users/yaseralnajjar/work/sifr/codebase/target/release/sifr",
             "check",
-            "audits/leetcode/0450_delete_node_in_a_bst.sifr"
+            "audits/leetcode/src/0450_delete_node_in_a_bst.sifr"
           ],
           "duration_ms": 110,
           "returncode": 0,
@@ -1397,7 +1397,7 @@
           "command": [
             "/Users/yaseralnajjar/work/sifr/codebase/target/release/sifr",
             "run",
-            "audits/leetcode/0450_delete_node_in_a_bst.sifr"
+            "audits/leetcode/src/0450_delete_node_in_a_bst.sifr"
           ],
           "duration_ms": 189,
           "returncode": 0,
@@ -1423,7 +1423,7 @@
           "command": [
             "/Users/yaseralnajjar/work/sifr/codebase/target/release/sifr",
             "check",
-            "audits/leetcode/0513_find_bottom_left_tree_value.sifr"
+            "audits/leetcode/src/0513_find_bottom_left_tree_value.sifr"
           ],
           "duration_ms": 113,
           "returncode": 0,
@@ -1436,7 +1436,7 @@
           "command": [
             "/Users/yaseralnajjar/work/sifr/codebase/target/release/sifr",
             "run",
-            "audits/leetcode/0513_find_bottom_left_tree_value.sifr"
+            "audits/leetcode/src/0513_find_bottom_left_tree_value.sifr"
           ],
           "duration_ms": 5539,
           "returncode": 1,
@@ -1462,7 +1462,7 @@
           "command": [
             "/Users/yaseralnajjar/work/sifr/codebase/target/release/sifr",
             "check",
-            "audits/leetcode/0567_permutation_in_string.sifr"
+            "audits/leetcode/src/0567_permutation_in_string.sifr"
           ],
           "duration_ms": 112,
           "returncode": 0,
@@ -1475,7 +1475,7 @@
           "command": [
             "/Users/yaseralnajjar/work/sifr/codebase/target/release/sifr",
             "run",
-            "audits/leetcode/0567_permutation_in_string.sifr"
+            "audits/leetcode/src/0567_permutation_in_string.sifr"
           ],
           "duration_ms": 193,
           "returncode": 0,
@@ -1501,7 +1501,7 @@
           "command": [
             "/Users/yaseralnajjar/work/sifr/codebase/target/release/sifr",
             "check",
-            "audits/leetcode/0572_subtree_of_another_tree.sifr"
+            "audits/leetcode/src/0572_subtree_of_another_tree.sifr"
           ],
           "duration_ms": 109,
           "returncode": 0,
@@ -1514,7 +1514,7 @@
           "command": [
             "/Users/yaseralnajjar/work/sifr/codebase/target/release/sifr",
             "run",
-            "audits/leetcode/0572_subtree_of_another_tree.sifr"
+            "audits/leetcode/src/0572_subtree_of_another_tree.sifr"
           ],
           "duration_ms": 187,
           "returncode": 0,
@@ -1540,7 +1540,7 @@
           "command": [
             "/Users/yaseralnajjar/work/sifr/codebase/target/release/sifr",
             "check",
-            "audits/leetcode/0617_merge_two_binary_trees.sifr"
+            "audits/leetcode/src/0617_merge_two_binary_trees.sifr"
           ],
           "duration_ms": 107,
           "returncode": 0,
@@ -1553,7 +1553,7 @@
           "command": [
             "/Users/yaseralnajjar/work/sifr/codebase/target/release/sifr",
             "run",
-            "audits/leetcode/0617_merge_two_binary_trees.sifr"
+            "audits/leetcode/src/0617_merge_two_binary_trees.sifr"
           ],
           "duration_ms": 189,
           "returncode": 0,
@@ -1579,7 +1579,7 @@
           "command": [
             "/Users/yaseralnajjar/work/sifr/codebase/target/release/sifr",
             "check",
-            "audits/leetcode/0662_maximum_width_of_binary_tree.sifr"
+            "audits/leetcode/src/0662_maximum_width_of_binary_tree.sifr"
           ],
           "duration_ms": 111,
           "returncode": 0,
@@ -1592,7 +1592,7 @@
           "command": [
             "/Users/yaseralnajjar/work/sifr/codebase/target/release/sifr",
             "run",
-            "audits/leetcode/0662_maximum_width_of_binary_tree.sifr"
+            "audits/leetcode/src/0662_maximum_width_of_binary_tree.sifr"
           ],
           "duration_ms": 107,
           "returncode": 3,
@@ -1618,7 +1618,7 @@
           "command": [
             "/Users/yaseralnajjar/work/sifr/codebase/target/release/sifr",
             "check",
-            "audits/leetcode/0669_trim_a_binary_search_tree.sifr"
+            "audits/leetcode/src/0669_trim_a_binary_search_tree.sifr"
           ],
           "duration_ms": 110,
           "returncode": 0,
@@ -1631,7 +1631,7 @@
           "command": [
             "/Users/yaseralnajjar/work/sifr/codebase/target/release/sifr",
             "run",
-            "audits/leetcode/0669_trim_a_binary_search_tree.sifr"
+            "audits/leetcode/src/0669_trim_a_binary_search_tree.sifr"
           ],
           "duration_ms": 298,
           "returncode": 1,
@@ -1657,7 +1657,7 @@
           "command": [
             "/Users/yaseralnajjar/work/sifr/codebase/target/release/sifr",
             "check",
-            "audits/leetcode/0701_insert_into_a_binary_search_tree.sifr"
+            "audits/leetcode/src/0701_insert_into_a_binary_search_tree.sifr"
           ],
           "duration_ms": 111,
           "returncode": 0,
@@ -1670,7 +1670,7 @@
           "command": [
             "/Users/yaseralnajjar/work/sifr/codebase/target/release/sifr",
             "run",
-            "audits/leetcode/0701_insert_into_a_binary_search_tree.sifr"
+            "audits/leetcode/src/0701_insert_into_a_binary_search_tree.sifr"
           ],
           "duration_ms": 196,
           "returncode": 0,
@@ -1696,7 +1696,7 @@
           "command": [
             "/Users/yaseralnajjar/work/sifr/codebase/target/release/sifr",
             "check",
-            "audits/leetcode/0703_kth_largest_element_in_a_stream.sifr"
+            "audits/leetcode/src/0703_kth_largest_element_in_a_stream.sifr"
           ],
           "duration_ms": 111,
           "returncode": 0,
@@ -1709,7 +1709,7 @@
           "command": [
             "/Users/yaseralnajjar/work/sifr/codebase/target/release/sifr",
             "run",
-            "audits/leetcode/0703_kth_largest_element_in_a_stream.sifr"
+            "audits/leetcode/src/0703_kth_largest_element_in_a_stream.sifr"
           ],
           "duration_ms": 298,
           "returncode": 1,
@@ -1735,7 +1735,7 @@
           "command": [
             "/Users/yaseralnajjar/work/sifr/codebase/target/release/sifr",
             "check",
-            "audits/leetcode/0729_my_calendar_i.sifr"
+            "audits/leetcode/src/0729_my_calendar_i.sifr"
           ],
           "duration_ms": 110,
           "returncode": 0,
@@ -1748,7 +1748,7 @@
           "command": [
             "/Users/yaseralnajjar/work/sifr/codebase/target/release/sifr",
             "run",
-            "audits/leetcode/0729_my_calendar_i.sifr"
+            "audits/leetcode/src/0729_my_calendar_i.sifr"
           ],
           "duration_ms": 191,
           "returncode": 0,
@@ -1774,7 +1774,7 @@
           "command": [
             "/Users/yaseralnajjar/work/sifr/codebase/target/release/sifr",
             "check",
-            "audits/leetcode/0783_minimum_distance_between_bst_nodes.sifr"
+            "audits/leetcode/src/0783_minimum_distance_between_bst_nodes.sifr"
           ],
           "duration_ms": 109,
           "returncode": 0,
@@ -1787,7 +1787,7 @@
           "command": [
             "/Users/yaseralnajjar/work/sifr/codebase/target/release/sifr",
             "run",
-            "audits/leetcode/0783_minimum_distance_between_bst_nodes.sifr"
+            "audits/leetcode/src/0783_minimum_distance_between_bst_nodes.sifr"
           ],
           "duration_ms": 214,
           "returncode": 0,
@@ -1813,7 +1813,7 @@
           "command": [
             "/Users/yaseralnajjar/work/sifr/codebase/target/release/sifr",
             "check",
-            "audits/leetcode/0838_push_dominoes.sifr"
+            "audits/leetcode/src/0838_push_dominoes.sifr"
           ],
           "duration_ms": 115,
           "returncode": 0,
@@ -1826,7 +1826,7 @@
           "command": [
             "/Users/yaseralnajjar/work/sifr/codebase/target/release/sifr",
             "run",
-            "audits/leetcode/0838_push_dominoes.sifr"
+            "audits/leetcode/src/0838_push_dominoes.sifr"
           ],
           "duration_ms": 4486,
           "returncode": 1,
@@ -1852,7 +1852,7 @@
           "command": [
             "/Users/yaseralnajjar/work/sifr/codebase/target/release/sifr",
             "check",
-            "audits/leetcode/0876_middle_of_the_linked_list.sifr"
+            "audits/leetcode/src/0876_middle_of_the_linked_list.sifr"
           ],
           "duration_ms": 111,
           "returncode": 0,
@@ -1865,7 +1865,7 @@
           "command": [
             "/Users/yaseralnajjar/work/sifr/codebase/target/release/sifr",
             "run",
-            "audits/leetcode/0876_middle_of_the_linked_list.sifr"
+            "audits/leetcode/src/0876_middle_of_the_linked_list.sifr"
           ],
           "duration_ms": 297,
           "returncode": 1,
@@ -1891,7 +1891,7 @@
           "command": [
             "/Users/yaseralnajjar/work/sifr/codebase/target/release/sifr",
             "check",
-            "audits/leetcode/0894_all_possible_full_binary_trees.sifr"
+            "audits/leetcode/src/0894_all_possible_full_binary_trees.sifr"
           ],
           "duration_ms": 111,
           "returncode": 0,
@@ -1904,7 +1904,7 @@
           "command": [
             "/Users/yaseralnajjar/work/sifr/codebase/target/release/sifr",
             "run",
-            "audits/leetcode/0894_all_possible_full_binary_trees.sifr"
+            "audits/leetcode/src/0894_all_possible_full_binary_trees.sifr"
           ],
           "duration_ms": 191,
           "returncode": 0,
@@ -1930,7 +1930,7 @@
           "command": [
             "/Users/yaseralnajjar/work/sifr/codebase/target/release/sifr",
             "check",
-            "audits/leetcode/0912_sort_an_array.sifr"
+            "audits/leetcode/src/0912_sort_an_array.sifr"
           ],
           "duration_ms": 108,
           "returncode": 0,
@@ -1943,7 +1943,7 @@
           "command": [
             "/Users/yaseralnajjar/work/sifr/codebase/target/release/sifr",
             "run",
-            "audits/leetcode/0912_sort_an_array.sifr"
+            "audits/leetcode/src/0912_sort_an_array.sifr"
           ],
           "duration_ms": 295,
           "returncode": 1,
@@ -1969,7 +1969,7 @@
           "command": [
             "/Users/yaseralnajjar/work/sifr/codebase/target/release/sifr",
             "check",
-            "audits/leetcode/1203_sort_items_by_groups_respecting_dependencies.sifr"
+            "audits/leetcode/src/1203_sort_items_by_groups_respecting_dependencies.sifr"
           ],
           "duration_ms": 111,
           "returncode": 0,
@@ -1982,7 +1982,7 @@
           "command": [
             "/Users/yaseralnajjar/work/sifr/codebase/target/release/sifr",
             "run",
-            "audits/leetcode/1203_sort_items_by_groups_respecting_dependencies.sifr"
+            "audits/leetcode/src/1203_sort_items_by_groups_respecting_dependencies.sifr"
           ],
           "duration_ms": 292,
           "returncode": 1,
@@ -2008,7 +2008,7 @@
           "command": [
             "/Users/yaseralnajjar/work/sifr/codebase/target/release/sifr",
             "check",
-            "audits/leetcode/1609_even_odd_tree.sifr"
+            "audits/leetcode/src/1609_even_odd_tree.sifr"
           ],
           "duration_ms": 112,
           "returncode": 0,
@@ -2021,7 +2021,7 @@
           "command": [
             "/Users/yaseralnajjar/work/sifr/codebase/target/release/sifr",
             "run",
-            "audits/leetcode/1609_even_odd_tree.sifr"
+            "audits/leetcode/src/1609_even_odd_tree.sifr"
           ],
           "duration_ms": 5909,
           "returncode": 1,
@@ -2047,7 +2047,7 @@
           "command": [
             "/Users/yaseralnajjar/work/sifr/codebase/target/release/sifr",
             "check",
-            "audits/leetcode/1669_merge_in_between_linked_lists.sifr"
+            "audits/leetcode/src/1669_merge_in_between_linked_lists.sifr"
           ],
           "duration_ms": 113,
           "returncode": 0,
@@ -2060,7 +2060,7 @@
           "command": [
             "/Users/yaseralnajjar/work/sifr/codebase/target/release/sifr",
             "run",
-            "audits/leetcode/1669_merge_in_between_linked_lists.sifr"
+            "audits/leetcode/src/1669_merge_in_between_linked_lists.sifr"
           ],
           "duration_ms": 303,
           "returncode": 1,
@@ -2086,7 +2086,7 @@
           "command": [
             "/Users/yaseralnajjar/work/sifr/codebase/target/release/sifr",
             "check",
-            "audits/leetcode/1721_swapping_nodes_in_a_linked_list.sifr"
+            "audits/leetcode/src/1721_swapping_nodes_in_a_linked_list.sifr"
           ],
           "duration_ms": 111,
           "returncode": 0,
@@ -2099,7 +2099,7 @@
           "command": [
             "/Users/yaseralnajjar/work/sifr/codebase/target/release/sifr",
             "run",
-            "audits/leetcode/1721_swapping_nodes_in_a_linked_list.sifr"
+            "audits/leetcode/src/1721_swapping_nodes_in_a_linked_list.sifr"
           ],
           "duration_ms": 301,
           "returncode": 1,
@@ -2125,7 +2125,7 @@
           "command": [
             "/Users/yaseralnajjar/work/sifr/codebase/target/release/sifr",
             "check",
-            "audits/leetcode/1958_check_if_move_is_legal.sifr"
+            "audits/leetcode/src/1958_check_if_move_is_legal.sifr"
           ],
           "duration_ms": 111,
           "returncode": 0,
@@ -2138,7 +2138,7 @@
           "command": [
             "/Users/yaseralnajjar/work/sifr/codebase/target/release/sifr",
             "run",
-            "audits/leetcode/1958_check_if_move_is_legal.sifr"
+            "audits/leetcode/src/1958_check_if_move_is_legal.sifr"
           ],
           "duration_ms": 190,
           "returncode": 0,
@@ -2164,7 +2164,7 @@
           "command": [
             "/Users/yaseralnajjar/work/sifr/codebase/target/release/sifr",
             "check",
-            "audits/leetcode/1968_array_with_elements_not_equal_to_average_of_neighbors.sifr"
+            "audits/leetcode/src/1968_array_with_elements_not_equal_to_average_of_neighbors.sifr"
           ],
           "duration_ms": 109,
           "returncode": 0,
@@ -2177,7 +2177,7 @@
           "command": [
             "/Users/yaseralnajjar/work/sifr/codebase/target/release/sifr",
             "run",
-            "audits/leetcode/1968_array_with_elements_not_equal_to_average_of_neighbors.sifr"
+            "audits/leetcode/src/1968_array_with_elements_not_equal_to_average_of_neighbors.sifr"
           ],
           "duration_ms": 189,
           "returncode": 1,
@@ -2203,7 +2203,7 @@
           "command": [
             "/Users/yaseralnajjar/work/sifr/codebase/target/release/sifr",
             "check",
-            "audits/leetcode/2130_maximum_twin_sum_of_a_linked_list.sifr"
+            "audits/leetcode/src/2130_maximum_twin_sum_of_a_linked_list.sifr"
           ],
           "duration_ms": 112,
           "returncode": 0,
@@ -2216,7 +2216,7 @@
           "command": [
             "/Users/yaseralnajjar/work/sifr/codebase/target/release/sifr",
             "run",
-            "audits/leetcode/2130_maximum_twin_sum_of_a_linked_list.sifr"
+            "audits/leetcode/src/2130_maximum_twin_sum_of_a_linked_list.sifr"
           ],
           "duration_ms": 294,
           "returncode": 1,
@@ -2242,7 +2242,7 @@
           "command": [
             "/Users/yaseralnajjar/work/sifr/codebase/target/release/sifr",
             "check",
-            "audits/leetcode/2215_find_the_difference_of_two_arrays.sifr"
+            "audits/leetcode/src/2215_find_the_difference_of_two_arrays.sifr"
           ],
           "duration_ms": 109,
           "returncode": 0,
@@ -2255,7 +2255,7 @@
           "command": [
             "/Users/yaseralnajjar/work/sifr/codebase/target/release/sifr",
             "run",
-            "audits/leetcode/2215_find_the_difference_of_two_arrays.sifr"
+            "audits/leetcode/src/2215_find_the_difference_of_two_arrays.sifr"
           ],
           "duration_ms": 190,
           "returncode": 1,

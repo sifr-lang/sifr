@@ -19,7 +19,7 @@
           "command": [
             "target/debug/sifr",
             "check",
-            "audits/leetcode/0017_letter_combinations_of_a_phone_number.sifr"
+            "audits/leetcode/src/0017_letter_combinations_of_a_phone_number.sifr"
           ],
           "duration_ms": 473,
           "returncode": 0,
@@ -32,7 +32,7 @@
           "command": [
             "target/debug/sifr",
             "run",
-            "audits/leetcode/0017_letter_combinations_of_a_phone_number.sifr"
+            "audits/leetcode/src/0017_letter_combinations_of_a_phone_number.sifr"
           ],
           "duration_ms": 486,
           "returncode": 0,
@@ -58,7 +58,7 @@
           "command": [
             "target/debug/sifr",
             "check",
-            "audits/leetcode/0050_powx_n.sifr"
+            "audits/leetcode/src/0050_powx_n.sifr"
           ],
           "duration_ms": 344,
           "returncode": 0,
@@ -71,7 +71,7 @@
           "command": [
             "target/debug/sifr",
             "run",
-            "audits/leetcode/0050_powx_n.sifr"
+            "audits/leetcode/src/0050_powx_n.sifr"
           ],
           "duration_ms": 417,
           "returncode": 0,
@@ -97,7 +97,7 @@
           "command": [
             "target/debug/sifr",
             "check",
-            "audits/leetcode/0052_n_queens_ii.sifr"
+            "audits/leetcode/src/0052_n_queens_ii.sifr"
           ],
           "duration_ms": 331,
           "returncode": 0,
@@ -110,7 +110,7 @@
           "command": [
             "target/debug/sifr",
             "run",
-            "audits/leetcode/0052_n_queens_ii.sifr"
+            "audits/leetcode/src/0052_n_queens_ii.sifr"
           ],
           "duration_ms": 994,
           "returncode": 0,
@@ -136,7 +136,7 @@
           "command": [
             "target/debug/sifr",
             "check",
-            "audits/leetcode/0078_subsets.sifr"
+            "audits/leetcode/src/0078_subsets.sifr"
           ],
           "duration_ms": 364,
           "returncode": 0,
@@ -149,7 +149,7 @@
           "command": [
             "target/debug/sifr",
             "run",
-            "audits/leetcode/0078_subsets.sifr"
+            "audits/leetcode/src/0078_subsets.sifr"
           ],
           "duration_ms": 390,
           "returncode": 0,
@@ -175,7 +175,7 @@
           "command": [
             "target/debug/sifr",
             "check",
-            "audits/leetcode/0090_subsets_ii.sifr"
+            "audits/leetcode/src/0090_subsets_ii.sifr"
           ],
           "duration_ms": 320,
           "returncode": 0,
@@ -188,7 +188,7 @@
           "command": [
             "target/debug/sifr",
             "run",
-            "audits/leetcode/0090_subsets_ii.sifr"
+            "audits/leetcode/src/0090_subsets_ii.sifr"
           ],
           "duration_ms": 393,
           "returncode": 0,
@@ -214,7 +214,7 @@
           "command": [
             "target/debug/sifr",
             "check",
-            "audits/leetcode/0207_course_schedule.sifr"
+            "audits/leetcode/src/0207_course_schedule.sifr"
           ],
           "duration_ms": 320,
           "returncode": 0,
@@ -227,7 +227,7 @@
           "command": [
             "target/debug/sifr",
             "run",
-            "audits/leetcode/0207_course_schedule.sifr"
+            "audits/leetcode/src/0207_course_schedule.sifr"
           ],
           "duration_ms": 394,
           "returncode": 0,
@@ -253,7 +253,7 @@
           "command": [
             "target/debug/sifr",
             "check",
-            "audits/leetcode/0684_redundant_connection.sifr"
+            "audits/leetcode/src/0684_redundant_connection.sifr"
           ],
           "duration_ms": 320,
           "returncode": 0,
@@ -266,7 +266,7 @@
           "command": [
             "target/debug/sifr",
             "run",
-            "audits/leetcode/0684_redundant_connection.sifr"
+            "audits/leetcode/src/0684_redundant_connection.sifr"
           ],
           "duration_ms": 954,
           "returncode": 0,
@@ -292,7 +292,7 @@
           "command": [
             "target/debug/sifr",
             "check",
-            "audits/leetcode/0912_sort_an_array.sifr"
+            "audits/leetcode/src/0912_sort_an_array.sifr"
           ],
           "duration_ms": 363,
           "returncode": 0,
@@ -305,7 +305,7 @@
           "command": [
             "target/debug/sifr",
             "run",
-            "audits/leetcode/0912_sort_an_array.sifr"
+            "audits/leetcode/src/0912_sort_an_array.sifr"
           ],
           "duration_ms": 389,
           "returncode": 0,

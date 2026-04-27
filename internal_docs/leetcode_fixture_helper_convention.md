@@ -4,8 +4,8 @@ Status: accepted for workspace helper imports
 
 ## Decision
 
-LeetCode audit fixtures may share canonical structural helpers from `audits/leetcode/helpers/`.
-The repository root `sifr.toml` includes `audits/leetcode` as a source root, so non-`main.sifr`
+LeetCode audit fixtures may share canonical structural helpers from `audits/leetcode/src/helpers/`.
+The repository root `sifr.toml` includes `audits/leetcode/src` as a source root, so non-`main.sifr`
 fixtures can import helpers with paths such as:
 
 ```sifr

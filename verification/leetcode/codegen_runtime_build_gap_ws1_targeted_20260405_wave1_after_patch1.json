@@ -11,7 +11,7 @@
   "results": [
     {
       "fixture_slug": "0006_zigzag_conversion",
-      "path": "audits/leetcode/0006_zigzag_conversion.sifr",
+      "path": "audits/leetcode/src/0006_zigzag_conversion.sifr",
       "exit_code": 1,
       "status": "FAIL",
       "rust_error_codes": [
@@ -21,7 +21,7 @@
     },
     {
       "fixture_slug": "0046_permutations",
-      "path": "audits/leetcode/0046_permutations.sifr",
+      "path": "audits/leetcode/src/0046_permutations.sifr",
       "exit_code": 1,
       "status": "FAIL",
       "rust_error_codes": [
@@ -31,7 +31,7 @@
     },
     {
       "fixture_slug": "0048_rotate_image",
-      "path": "audits/leetcode/0048_rotate_image.sifr",
+      "path": "audits/leetcode/src/0048_rotate_image.sifr",
       "exit_code": 1,
       "status": "FAIL",
       "rust_error_codes": [
@@ -41,7 +41,7 @@
     },
     {
       "fixture_slug": "0105_construct_binary_tree_from_preorder_and_inorder_traversal",
-      "path": "audits/leetcode/0105_construct_binary_tree_from_preorder_and_inorder_traversal.sifr",
+      "path": "audits/leetcode/src/0105_construct_binary_tree_from_preorder_and_inorder_traversal.sifr",
       "exit_code": 1,
       "status": "FAIL",
       "rust_error_codes": [
@@ -51,7 +51,7 @@
     },
     {
       "fixture_slug": "0106_construct_binary_tree_from_inorder_and_postorder_traversal",
-      "path": "audits/leetcode/0106_construct_binary_tree_from_inorder_and_postorder_traversal.sifr",
+      "path": "audits/leetcode/src/0106_construct_binary_tree_from_inorder_and_postorder_traversal.sifr",
       "exit_code": 1,
       "status": "FAIL",
       "rust_error_codes": [
@@ -61,7 +61,7 @@
     },
     {
       "fixture_slug": "0108_convert_sorted_array_to_binary_search_tree",
-      "path": "audits/leetcode/0108_convert_sorted_array_to_binary_search_tree.sifr",
+      "path": "audits/leetcode/src/0108_convert_sorted_array_to_binary_search_tree.sifr",
       "exit_code": 1,
       "status": "FAIL",
       "rust_error_codes": [
@@ -71,7 +71,7 @@
     },
     {
       "fixture_slug": "0124_binary_tree_maximum_path_sum",
-      "path": "audits/leetcode/0124_binary_tree_maximum_path_sum.sifr",
+      "path": "audits/leetcode/src/0124_binary_tree_maximum_path_sum.sifr",
       "exit_code": 1,
       "status": "FAIL",
       "rust_error_codes": [
@@ -81,7 +81,7 @@
     },
     {
       "fixture_slug": "0138_copy_list_with_random_pointer",
-      "path": "audits/leetcode/0138_copy_list_with_random_pointer.sifr",
+      "path": "audits/leetcode/src/0138_copy_list_with_random_pointer.sifr",
       "exit_code": 1,
       "status": "FAIL",
       "rust_error_codes": [
@@ -92,7 +92,7 @@
     },
     {
       "fixture_slug": "0189_rotate_array",
-      "path": "audits/leetcode/0189_rotate_array.sifr",
+      "path": "audits/leetcode/src/0189_rotate_array.sifr",
       "exit_code": 0,
       "status": "PASS",
       "rust_error_codes": [],
@@ -100,7 +100,7 @@
     },
     {
       "fixture_slug": "0211_design_add_and_search_words_data_structure",
-      "path": "audits/leetcode/0211_design_add_and_search_words_data_structure.sifr",
+      "path": "audits/leetcode/src/0211_design_add_and_search_words_data_structure.sifr",
       "exit_code": 1,
       "status": "FAIL",
       "rust_error_codes": [],
@@ -108,7 +108,7 @@
     },
     {
       "fixture_slug": "0435_non_overlapping_intervals",
-      "path": "audits/leetcode/0435_non_overlapping_intervals.sifr",
+      "path": "audits/leetcode/src/0435_non_overlapping_intervals.sifr",
       "exit_code": 1,
       "status": "FAIL",
       "rust_error_codes": [
@@ -118,7 +118,7 @@
     },
     {
       "fixture_slug": "0450_delete_node_in_a_bst",
-      "path": "audits/leetcode/0450_delete_node_in_a_bst.sifr",
+      "path": "audits/leetcode/src/0450_delete_node_in_a_bst.sifr",
       "exit_code": 1,
       "status": "FAIL",
       "rust_error_codes": [
@@ -128,7 +128,7 @@
     },
     {
       "fixture_slug": "0567_permutation_in_string",
-      "path": "audits/leetcode/0567_permutation_in_string.sifr",
+      "path": "audits/leetcode/src/0567_permutation_in_string.sifr",
       "exit_code": 1,
       "status": "FAIL",
       "rust_error_codes": [
@@ -138,7 +138,7 @@
     },
     {
       "fixture_slug": "0572_subtree_of_another_tree",
-      "path": "audits/leetcode/0572_subtree_of_another_tree.sifr",
+      "path": "audits/leetcode/src/0572_subtree_of_another_tree.sifr",
       "exit_code": 1,
       "status": "FAIL",
       "rust_error_codes": [
@@ -148,7 +148,7 @@
     },
     {
       "fixture_slug": "0617_merge_two_binary_trees",
-      "path": "audits/leetcode/0617_merge_two_binary_trees.sifr",
+      "path": "audits/leetcode/src/0617_merge_two_binary_trees.sifr",
       "exit_code": 1,
       "status": "FAIL",
       "rust_error_codes": [
@@ -158,7 +158,7 @@
     },
     {
       "fixture_slug": "0701_insert_into_a_binary_search_tree",
-      "path": "audits/leetcode/0701_insert_into_a_binary_search_tree.sifr",
+      "path": "audits/leetcode/src/0701_insert_into_a_binary_search_tree.sifr",
       "exit_code": 1,
       "status": "FAIL",
       "rust_error_codes": [
@@ -168,7 +168,7 @@
     },
     {
       "fixture_slug": "0729_my_calendar_i",
-      "path": "audits/leetcode/0729_my_calendar_i.sifr",
+      "path": "audits/leetcode/src/0729_my_calendar_i.sifr",
       "exit_code": 1,
       "status": "FAIL",
       "rust_error_codes": [
@@ -178,7 +178,7 @@
     },
     {
       "fixture_slug": "0783_minimum_distance_between_bst_nodes",
-      "path": "audits/leetcode/0783_minimum_distance_between_bst_nodes.sifr",
+      "path": "audits/leetcode/src/0783_minimum_distance_between_bst_nodes.sifr",
       "exit_code": 0,
       "status": "PASS",
       "rust_error_codes": [],
@@ -186,7 +186,7 @@
     },
     {
       "fixture_slug": "0894_all_possible_full_binary_trees",
-      "path": "audits/leetcode/0894_all_possible_full_binary_trees.sifr",
+      "path": "audits/leetcode/src/0894_all_possible_full_binary_trees.sifr",
       "exit_code": 1,
       "status": "FAIL",
       "rust_error_codes": [
@@ -198,7 +198,7 @@
     },
     {
       "fixture_slug": "1958_check_if_move_is_legal",
-      "path": "audits/leetcode/1958_check_if_move_is_legal.sifr",
+      "path": "audits/leetcode/src/1958_check_if_move_is_legal.sifr",
       "exit_code": 1,
       "status": "FAIL",
       "rust_error_codes": [

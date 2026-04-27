@@ -19,7 +19,7 @@
           "command": [
             "target/debug/sifr",
             "check",
-            "audits/leetcode/0100_same_tree.sifr"
+            "audits/leetcode/src/0100_same_tree.sifr"
           ],
           "duration_ms": 330,
           "returncode": 0,
@@ -32,7 +32,7 @@
           "command": [
             "target/debug/sifr",
             "run",
-            "audits/leetcode/0100_same_tree.sifr"
+            "audits/leetcode/src/0100_same_tree.sifr"
           ],
           "duration_ms": 395,
           "returncode": 0,
@@ -58,7 +58,7 @@
           "command": [
             "target/debug/sifr",
             "check",
-            "audits/leetcode/0102_binary_tree_level_order_traversal.sifr"
+            "audits/leetcode/src/0102_binary_tree_level_order_traversal.sifr"
           ],
           "duration_ms": 327,
           "returncode": 0,
@@ -71,7 +71,7 @@
           "command": [
             "target/debug/sifr",
             "run",
-            "audits/leetcode/0102_binary_tree_level_order_traversal.sifr"
+            "audits/leetcode/src/0102_binary_tree_level_order_traversal.sifr"
           ],
           "duration_ms": 411,
           "returncode": 0,
@@ -97,7 +97,7 @@
           "command": [
             "target/debug/sifr",
             "check",
-            "audits/leetcode/0110_balanced_binary_tree.sifr"
+            "audits/leetcode/src/0110_balanced_binary_tree.sifr"
           ],
           "duration_ms": 337,
           "returncode": 0,
@@ -110,7 +110,7 @@
           "command": [
             "target/debug/sifr",
             "run",
-            "audits/leetcode/0110_balanced_binary_tree.sifr"
+            "audits/leetcode/src/0110_balanced_binary_tree.sifr"
           ],
           "duration_ms": 408,
           "returncode": 0,
@@ -136,7 +136,7 @@
           "command": [
             "target/debug/sifr",
             "check",
-            "audits/leetcode/0127_word_ladder.sifr"
+            "audits/leetcode/src/0127_word_ladder.sifr"
           ],
           "duration_ms": 322,
           "returncode": 0,
@@ -149,7 +149,7 @@
           "command": [
             "target/debug/sifr",
             "run",
-            "audits/leetcode/0127_word_ladder.sifr"
+            "audits/leetcode/src/0127_word_ladder.sifr"
           ],
           "duration_ms": 650,
           "returncode": 0,
@@ -175,7 +175,7 @@
           "command": [
             "target/debug/sifr",
             "check",
-            "audits/leetcode/0207_course_schedule.sifr"
+            "audits/leetcode/src/0207_course_schedule.sifr"
           ],
           "duration_ms": 361,
           "returncode": 0,
@@ -188,7 +188,7 @@
           "command": [
             "target/debug/sifr",
             "run",
-            "audits/leetcode/0207_course_schedule.sifr"
+            "audits/leetcode/src/0207_course_schedule.sifr"
           ],
           "duration_ms": 398,
           "returncode": 0,
@@ -214,7 +214,7 @@
           "command": [
             "target/debug/sifr",
             "check",
-            "audits/leetcode/0215_kth_largest_element_in_an_array.sifr"
+            "audits/leetcode/src/0215_kth_largest_element_in_an_array.sifr"
           ],
           "duration_ms": 316,
           "returncode": 0,
@@ -227,7 +227,7 @@
           "command": [
             "target/debug/sifr",
             "run",
-            "audits/leetcode/0215_kth_largest_element_in_an_array.sifr"
+            "audits/leetcode/src/0215_kth_largest_element_in_an_array.sifr"
           ],
           "duration_ms": 398,
           "returncode": 0,
@@ -253,7 +253,7 @@
           "command": [
             "target/debug/sifr",
             "check",
-            "audits/leetcode/0226_invert_binary_tree.sifr"
+            "audits/leetcode/src/0226_invert_binary_tree.sifr"
           ],
           "duration_ms": 317,
           "returncode": 0,
@@ -266,7 +266,7 @@
           "command": [
             "target/debug/sifr",
             "run",
-            "audits/leetcode/0226_invert_binary_tree.sifr"
+            "audits/leetcode/src/0226_invert_binary_tree.sifr"
           ],
           "duration_ms": 395,
           "returncode": 0,
@@ -292,7 +292,7 @@
           "command": [
             "target/debug/sifr",
             "check",
-            "audits/leetcode/0235_lowest_common_ancestor_of_a_binary_search_tree.sifr"
+            "audits/leetcode/src/0235_lowest_common_ancestor_of_a_binary_search_tree.sifr"
           ],
           "duration_ms": 318,
           "returncode": 0,
@@ -305,7 +305,7 @@
           "command": [
             "target/debug/sifr",
             "run",
-            "audits/leetcode/0235_lowest_common_ancestor_of_a_binary_search_tree.sifr"
+            "audits/leetcode/src/0235_lowest_common_ancestor_of_a_binary_search_tree.sifr"
           ],
           "duration_ms": 391,
           "returncode": 0,
@@ -331,7 +331,7 @@
           "command": [
             "target/debug/sifr",
             "check",
-            "audits/leetcode/0295_find_median_from_data_stream.sifr"
+            "audits/leetcode/src/0295_find_median_from_data_stream.sifr"
           ],
           "duration_ms": 320,
           "returncode": 0,
@@ -344,7 +344,7 @@
           "command": [
             "target/debug/sifr",
             "run",
-            "audits/leetcode/0295_find_median_from_data_stream.sifr"
+            "audits/leetcode/src/0295_find_median_from_data_stream.sifr"
           ],
           "duration_ms": 402,
           "returncode": 0,
@@ -370,7 +370,7 @@
           "command": [
             "target/debug/sifr",
             "check",
-            "audits/leetcode/0502_ipo.sifr"
+            "audits/leetcode/src/0502_ipo.sifr"
           ],
           "duration_ms": 318,
           "returncode": 0,
@@ -383,7 +383,7 @@
           "command": [
             "target/debug/sifr",
             "run",
-            "audits/leetcode/0502_ipo.sifr"
+            "audits/leetcode/src/0502_ipo.sifr"
           ],
           "duration_ms": 670,
           "returncode": 0,
@@ -409,7 +409,7 @@
           "command": [
             "target/debug/sifr",
             "check",
-            "audits/leetcode/0684_redundant_connection.sifr"
+            "audits/leetcode/src/0684_redundant_connection.sifr"
           ],
           "duration_ms": 357,
           "returncode": 0,
@@ -422,7 +422,7 @@
           "command": [
             "target/debug/sifr",
             "run",
-            "audits/leetcode/0684_redundant_connection.sifr"
+            "audits/leetcode/src/0684_redundant_connection.sifr"
           ],
           "duration_ms": 404,
           "returncode": 0,
@@ -448,7 +448,7 @@
           "command": [
             "target/debug/sifr",
             "check",
-            "audits/leetcode/0703_kth_largest_element_in_a_stream.sifr"
+            "audits/leetcode/src/0703_kth_largest_element_in_a_stream.sifr"
           ],
           "duration_ms": 323,
           "returncode": 0,
@@ -461,7 +461,7 @@
           "command": [
             "target/debug/sifr",
             "run",
-            "audits/leetcode/0703_kth_largest_element_in_a_stream.sifr"
+            "audits/leetcode/src/0703_kth_largest_element_in_a_stream.sifr"
           ],
           "duration_ms": 417,
           "returncode": 0,
@@ -487,7 +487,7 @@
           "command": [
             "target/debug/sifr",
             "check",
-            "audits/leetcode/0743_network_delay_time.sifr"
+            "audits/leetcode/src/0743_network_delay_time.sifr"
           ],
           "duration_ms": 348,
           "returncode": 0,
@@ -500,7 +500,7 @@
           "command": [
             "target/debug/sifr",
             "run",
-            "audits/leetcode/0743_network_delay_time.sifr"
+            "audits/leetcode/src/0743_network_delay_time.sifr"
           ],
           "duration_ms": 691,
           "returncode": 0,
@@ -526,7 +526,7 @@
           "command": [
             "target/debug/sifr",
             "check",
-            "audits/leetcode/1046_last_stone_weight.sifr"
+            "audits/leetcode/src/1046_last_stone_weight.sifr"
           ],
           "duration_ms": 365,
           "returncode": 0,
@@ -539,7 +539,7 @@
           "command": [
             "target/debug/sifr",
             "run",
-            "audits/leetcode/1046_last_stone_weight.sifr"
+            "audits/leetcode/src/1046_last_stone_weight.sifr"
           ],
           "duration_ms": 407,
           "returncode": 0,

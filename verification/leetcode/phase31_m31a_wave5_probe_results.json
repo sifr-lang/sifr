@@ -19,7 +19,7 @@
           "command": [
             "target/debug/sifr",
             "check",
-            "audits/leetcode/0053_maximum_subarray.sifr"
+            "audits/leetcode/src/0053_maximum_subarray.sifr"
           ],
           "duration_ms": 151,
           "returncode": 1,
@@ -45,7 +45,7 @@
           "command": [
             "target/debug/sifr",
             "check",
-            "audits/leetcode/0322_coin_change.sifr"
+            "audits/leetcode/src/0322_coin_change.sifr"
           ],
           "duration_ms": 200,
           "returncode": 1,
@@ -71,7 +71,7 @@
           "command": [
             "target/debug/sifr",
             "check",
-            "audits/leetcode/0746_min_cost_climbing_stairs.sifr"
+            "audits/leetcode/src/0746_min_cost_climbing_stairs.sifr"
           ],
           "duration_ms": 261,
           "returncode": 1,
@@ -97,7 +97,7 @@
           "command": [
             "target/debug/sifr",
             "check",
-            "audits/leetcode/1143_longest_common_subsequence.sifr"
+            "audits/leetcode/src/1143_longest_common_subsequence.sifr"
           ],
           "duration_ms": 219,
           "returncode": 1,

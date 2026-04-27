@@ -4,283 +4,283 @@
   "results": [
     {
       "fixture": "0006_zigzag_conversion",
-      "path": "audits/leetcode/0006_zigzag_conversion.sifr",
+      "path": "audits/leetcode/src/0006_zigzag_conversion.sifr",
       "check_code": 0,
       "check_msg": "no errors found"
     },
     {
       "fixture": "0075_sort_colors",
-      "path": "audits/leetcode/0075_sort_colors.sifr",
+      "path": "audits/leetcode/src/0075_sort_colors.sifr",
       "check_code": 0,
       "check_msg": "no errors found"
     },
     {
       "fixture": "0002_add_two_numbers",
-      "path": "audits/leetcode/0002_add_two_numbers.sifr",
+      "path": "audits/leetcode/src/0002_add_two_numbers.sifr",
       "check_code": 1,
       "check_msg": "type error: return type mismatch: expected 'ListNode', got 'None | ListNode' type error: unsupported operand type(s) for or: 'ListNode' and 'bool' type error: use of moved value: 'dummy'"
     },
     {
       "fixture": "0141_linked_list_cycle",
-      "path": "audits/leetcode/0141_linked_list_cycle.sifr",
+      "path": "audits/leetcode/src/0141_linked_list_cycle.sifr",
       "check_code": 1,
       "check_msg": "type error: unsupported operand type(s) for and: 'ListNode' and 'bool'"
     },
     {
       "fixture": "0160_intersection_of_two_linked_lists",
-      "path": "audits/leetcode/0160_intersection_of_two_linked_lists.sifr",
+      "path": "audits/leetcode/src/0160_intersection_of_two_linked_lists.sifr",
       "check_code": 1,
       "check_msg": "type error: parameter 'self' in function 'getIntersectionNode' is missing a type annotation"
     },
     {
       "fixture": "0234_palindrome_linked_list",
-      "path": "audits/leetcode/0234_palindrome_linked_list.sifr",
+      "path": "audits/leetcode/src/0234_palindrome_linked_list.sifr",
       "check_code": 1,
       "check_msg": "type error: unsupported operand type(s) for and: 'ListNode' and 'bool' type error: use of moved value: 'head' type error: use of moved value: 'head' type error: while condition must be bool or collection/string truthiness, got 'ListNode'"
     },
     {
       "fixture": "0016_3sum_closest",
-      "path": "audits/leetcode/0016_3sum_closest.sifr",
+      "path": "audits/leetcode/src/0016_3sum_closest.sifr",
       "check_code": 1,
       "check_msg": "type error: return type mismatch: expected 'int', got 'float' type error: undefined variable: 'currentGap' type error: unsupported operand type(s) for +: 'int' and 'int | None' type error: unsupported operand type(s) for +: 'int' and 'int | None'"
     },
     {
       "fixture": "0040_combination_sum_ii",
-      "path": "audits/leetcode/0040_combination_sum_ii.sifr",
+      "path": "audits/leetcode/src/0040_combination_sum_ii.sifr",
       "check_code": 0,
       "check_msg": "no errors found"
     },
     {
       "fixture": "0046_permutations",
-      "path": "audits/leetcode/0046_permutations.sifr",
+      "path": "audits/leetcode/src/0046_permutations.sifr",
       "check_code": 1,
       "check_msg": "type error: list.append() argument type 'int | None' is not compatible with list element type 'int' type error: list.append() argument type 'int | None' is not compatible with list element type 'int'"
     },
     {
       "fixture": "0048_rotate_image",
-      "path": "audits/leetcode/0048_rotate_image.sifr",
+      "path": "audits/leetcode/src/0048_rotate_image.sifr",
       "check_code": 0,
       "check_msg": "no errors found"
     },
     {
       "fixture": "0066_plus_one",
-      "path": "audits/leetcode/0066_plus_one.sifr",
+      "path": "audits/leetcode/src/0066_plus_one.sifr",
       "check_code": 0,
       "check_msg": "no errors found"
     },
     {
       "fixture": "0073_set_matrix_zeroes",
-      "path": "audits/leetcode/0073_set_matrix_zeroes.sifr",
+      "path": "audits/leetcode/src/0073_set_matrix_zeroes.sifr",
       "check_code": 0,
       "check_msg": "no errors found"
     },
     {
       "fixture": "0088_merge_sorted_array",
-      "path": "audits/leetcode/0088_merge_sorted_array.sifr",
+      "path": "audits/leetcode/src/0088_merge_sorted_array.sifr",
       "check_code": 1,
       "check_msg": "type error: list subscript assignment value type 'int | None' is not compatible with list element type 'int' type error: list subscript assignment value type 'int | None' is not compatible with list element type 'int' type error: unsupported expression type"
     },
     {
       "fixture": "0106_construct_binary_tree_from_inorder_and_postorder_traversal",
-      "path": "audits/leetcode/0106_construct_binary_tree_from_inorder_and_postorder_traversal.sifr",
+      "path": "audits/leetcode/src/0106_construct_binary_tree_from_inorder_and_postorder_traversal.sifr",
       "check_code": 1,
       "check_msg": "type error: argument 1 ('val') of function 'TreeNode': expected 'int', got 'int | None' type error: function 'buildTreeHelper' return type could not be inferred deterministically type error: undefined variable: 'idx' type error: undefined variable: 'idx' type error: undefined variable: 'inorderIndexMap'"
     },
     {
       "fixture": "0179_largest_number",
-      "path": "audits/leetcode/0179_largest_number.sifr",
+      "path": "audits/leetcode/src/0179_largest_number.sifr",
       "check_code": 1,
       "check_msg": "type error: list subscript assignment value type 'str' is not compatible with list element type 'int' type error: undefined function: 'cmp_to_key'"
     },
     {
       "fixture": "0274_H_index",
-      "path": "audits/leetcode/0274_H_index.sifr",
+      "path": "audits/leetcode/src/0274_H_index.sifr",
       "check_code": 0,
       "check_msg": "no errors found"
     },
     {
       "fixture": "0435_non_overlapping_intervals",
-      "path": "audits/leetcode/0435_non_overlapping_intervals.sifr",
+      "path": "audits/leetcode/src/0435_non_overlapping_intervals.sifr",
       "check_code": 0,
       "check_msg": "no errors found"
     },
     {
       "fixture": "0452_minimum_number_of_arrows_to_burst_balloons",
-      "path": "audits/leetcode/0452_minimum_number_of_arrows_to_burst_balloons.sifr",
+      "path": "audits/leetcode/src/0452_minimum_number_of_arrows_to_burst_balloons.sifr",
       "check_code": 1,
       "check_msg": "type error: min() with 2 arguments does not accept optional operands; got 'int | None' and 'int | None' (guard or unwrap first)"
     },
     {
       "fixture": "0605_can_place_flowers",
-      "path": "audits/leetcode/0605_can_place_flowers.sifr",
+      "path": "audits/leetcode/src/0605_can_place_flowers.sifr",
       "check_code": 0,
       "check_msg": "no errors found"
     },
     {
       "fixture": "0605_can_place_flowers_v2",
-      "path": "audits/leetcode/0605_can_place_flowers_v2.sifr",
+      "path": "audits/leetcode/src/0605_can_place_flowers_v2.sifr",
       "check_code": 0,
       "check_msg": "no errors found"
     },
     {
       "fixture": "0669_trim_a_binary_search_tree",
-      "path": "audits/leetcode/0669_trim_a_binary_search_tree.sifr",
+      "path": "audits/leetcode/src/0669_trim_a_binary_search_tree.sifr",
       "check_code": 0,
       "check_msg": "no errors found"
     },
     {
       "fixture": "0701_insert_into_a_binary_search_tree",
-      "path": "audits/leetcode/0701_insert_into_a_binary_search_tree.sifr",
+      "path": "audits/leetcode/src/0701_insert_into_a_binary_search_tree.sifr",
       "check_code": 0,
       "check_msg": "no errors found"
     },
     {
       "fixture": "0881_boats_to_save_people",
-      "path": "audits/leetcode/0881_boats_to_save_people.sifr",
+      "path": "audits/leetcode/src/0881_boats_to_save_people.sifr",
       "check_code": 1,
       "check_msg": "type error: unsupported operand type(s) for +: 'int | None' and 'int | None'"
     },
     {
       "fixture": "0948_bag_of_tokens",
-      "path": "audits/leetcode/0948_bag_of_tokens.sifr",
+      "path": "audits/leetcode/src/0948_bag_of_tokens.sifr",
       "check_code": 1,
       "check_msg": "type error: unsupported operand type(s) for +: 'int' and 'int | None' type error: unsupported operand type(s) for -: 'int' and 'int | None'"
     },
     {
       "fixture": "1020_number_of_enclaves",
-      "path": "audits/leetcode/1020_number_of_enclaves.sifr",
+      "path": "audits/leetcode/src/1020_number_of_enclaves.sifr",
       "check_code": 0,
       "check_msg": "no errors found"
     },
     {
       "fixture": "1254_number_of_closed_islands",
-      "path": "audits/leetcode/1254_number_of_closed_islands.sifr",
+      "path": "audits/leetcode/src/1254_number_of_closed_islands.sifr",
       "check_code": 0,
       "check_msg": "no errors found"
     },
     {
       "fixture": "1498_number_of_subsequences_that_satisfy_the_given_sum_condition",
-      "path": "audits/leetcode/1498_number_of_subsequences_that_satisfy_the_given_sum_condition.sifr",
+      "path": "audits/leetcode/src/1498_number_of_subsequences_that_satisfy_the_given_sum_condition.sifr",
       "check_code": 1,
       "check_msg": "type error: unsupported operand type(s) for +: 'int | None' and 'int | None'"
     },
     {
       "fixture": "1700_number_of_students_unable_to_eat_lunch",
-      "path": "audits/leetcode/1700_number_of_students_unable_to_eat_lunch.sifr",
+      "path": "audits/leetcode/src/1700_number_of_students_unable_to_eat_lunch.sifr",
       "check_code": 0,
       "check_msg": "no errors found"
     },
     {
       "fixture": "1838_frequency_of_the_most_frequent_element",
-      "path": "audits/leetcode/1838_frequency_of_the_most_frequent_element.sifr",
+      "path": "audits/leetcode/src/1838_frequency_of_the_most_frequent_element.sifr",
       "check_code": 1,
       "check_msg": "type error: unsupported operand type(s) for -: 'int' and 'int | None'"
     },
     {
       "fixture": "1958_check_if_move_is_legal",
-      "path": "audits/leetcode/1958_check_if_move_is_legal.sifr",
+      "path": "audits/leetcode/src/1958_check_if_move_is_legal.sifr",
       "check_code": 0,
       "check_msg": "no errors found"
     },
     {
       "fixture": "1968_array_with_elements_not_equal_to_average_of_neighbors",
-      "path": "audits/leetcode/1968_array_with_elements_not_equal_to_average_of_neighbors.sifr",
+      "path": "audits/leetcode/src/1968_array_with_elements_not_equal_to_average_of_neighbors.sifr",
       "check_code": 0,
       "check_msg": "no errors found"
     },
     {
       "fixture": "1984_minimum_difference_between_highest_and_lowest_of_k_scores",
-      "path": "audits/leetcode/1984_minimum_difference_between_highest_and_lowest_of_k_scores.sifr",
+      "path": "audits/leetcode/src/1984_minimum_difference_between_highest_and_lowest_of_k_scores.sifr",
       "check_code": 1,
       "check_msg": "type error: return type mismatch: expected 'int', got 'float' type error: unsupported operand type(s) for -: 'int' and 'int | None'"
     },
     {
       "fixture": "2300_successful_pairs_of_spells_and_potions",
-      "path": "audits/leetcode/2300_successful_pairs_of_spells_and_potions.sifr",
+      "path": "audits/leetcode/src/2300_successful_pairs_of_spells_and_potions.sifr",
       "check_code": 1,
       "check_msg": "type error: unsupported operand type(s) for *: 'int' and 'int | None'"
     },
     {
       "fixture": "2402_meeting_rooms_iii",
-      "path": "audits/leetcode/2402_meeting_rooms_iii.sifr",
+      "path": "audits/leetcode/src/2402_meeting_rooms_iii.sifr",
       "check_code": 0,
       "check_msg": "no errors found"
     },
     {
       "fixture": "2616_minimize_the_maximum_difference_of_pairs",
-      "path": "audits/leetcode/2616_minimize_the_maximum_difference_of_pairs.sifr",
+      "path": "audits/leetcode/src/2616_minimize_the_maximum_difference_of_pairs.sifr",
       "check_code": 1,
       "check_msg": "type error: function 'minimizeMax' must return a value of type 'int' on all control-flow paths type error: undefined variable: 'left' type error: undefined variable: 'left' type error: unsupported operand type(s) for -: 'int | None' and 'int | None' type error: unsupported operand type(s) for -: 'int | None' and 'int |"
     },
     {
       "fixture": "2971_find_polygon_with_the_largest_perimeter",
-      "path": "audits/leetcode/2971_find_polygon_with_the_largest_perimeter.sifr",
+      "path": "audits/leetcode/src/2971_find_polygon_with_the_largest_perimeter.sifr",
       "check_code": 1,
       "check_msg": "type error: duplicate function definition in module: 'largestPerimeter'"
     },
     {
       "fixture": "0005_longest_palindromic_substring",
-      "path": "audits/leetcode/0005_longest_palindromic_substring.sifr",
+      "path": "audits/leetcode/src/0005_longest_palindromic_substring.sifr",
       "check_code": 1,
       "check_msg": "type error: use of moved value: 's1' type error: use of moved value: 's2'"
     },
     {
       "fixture": "0067_add_binary",
-      "path": "audits/leetcode/0067_add_binary.sifr",
+      "path": "audits/leetcode/src/0067_add_binary.sifr",
       "check_code": 0,
       "check_msg": "no errors found"
     },
     {
       "fixture": "0086_partition_list",
-      "path": "audits/leetcode/0086_partition_list.sifr",
+      "path": "audits/leetcode/src/0086_partition_list.sifr",
       "check_code": 0,
       "check_msg": "no errors found"
     },
     {
       "fixture": "0168_excel_sheet_column_title",
-      "path": "audits/leetcode/0168_excel_sheet_column_title.sifr",
+      "path": "audits/leetcode/src/0168_excel_sheet_column_title.sifr",
       "check_code": 1,
       "check_msg": "type error: unsupported operand type(s) for +: 'str' and 'Result[str, ValueError]'"
     },
     {
       "fixture": "0189_rotate_array",
-      "path": "audits/leetcode/0189_rotate_array.sifr",
+      "path": "audits/leetcode/src/0189_rotate_array.sifr",
       "check_code": 0,
       "check_msg": "no errors found"
     },
     {
       "fixture": "0191_number_of_1_bits",
-      "path": "audits/leetcode/0191_number_of_1_bits.sifr",
+      "path": "audits/leetcode/src/0191_number_of_1_bits.sifr",
       "check_code": 0,
       "check_msg": "no errors found"
     },
     {
       "fixture": "0263_ugly_number",
-      "path": "audits/leetcode/0263_ugly_number.sifr",
+      "path": "audits/leetcode/src/0263_ugly_number.sifr",
       "check_code": 0,
       "check_msg": "no errors found"
     },
     {
       "fixture": "0312_burst_balloons",
-      "path": "audits/leetcode/0312_burst_balloons.sifr",
+      "path": "audits/leetcode/src/0312_burst_balloons.sifr",
       "check_code": 1,
       "check_msg": "type error: undefined variable: 'coins' type error: undefined variable: 'coins' type error: unsupported operand type(s) for *: 'int | None' and 'int | None'"
     },
     {
       "fixture": "1383_maximum_performance_of_a_team",
-      "path": "audits/leetcode/1383_maximum_performance_of_a_team.sifr",
+      "path": "audits/leetcode/src/1383_maximum_performance_of_a_team.sifr",
       "check_code": 0,
       "check_msg": "warning: int multiplication with non-constant operands may overflow i64 at runtime; consider using bigint for large values no errors found"
     },
     {
       "fixture": "1888_minimum_number_of_flips_to_make_the_binary_string_alternating",
-      "path": "audits/leetcode/1888_minimum_number_of_flips_to_make_the_binary_string_alternating.sifr",
+      "path": "audits/leetcode/src/1888_minimum_number_of_flips_to_make_the_binary_string_alternating.sifr",
       "check_code": 1,
       "check_msg": "type error: min() takes 1 or 2 arguments type error: return type mismatch: expected 'int', got 'float'"
     },
     {
       "fixture": "2215_find_the_difference_of_two_arrays",
-      "path": "audits/leetcode/2215_find_the_difference_of_two_arrays.sifr",
+      "path": "audits/leetcode/src/2215_find_the_difference_of_two_arrays.sifr",
       "check_code": 1,
       "check_msg": "type error: duplicate function definition in module: 'findDifference' type error: type mismatch: cannot assign 'set[int]' to variable 'nums1' of type 'list[int]' type error: type mismatch: cannot assign 'set[int]' to variable 'nums2' of type 'list[int]'"
     }
