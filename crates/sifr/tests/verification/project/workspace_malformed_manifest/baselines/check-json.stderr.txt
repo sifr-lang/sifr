@@ -3,7 +3,7 @@
     "code": "SIFR-WORKSPACE-0001",
     "severity": "Error",
     "message": "could not parse sifr.toml at '<WORKSPACE>/crates/sifr/tests/verification/project/workspace_malformed_manifest/sifr.toml': TOML parse error at line 1, column 8\n  |\n1 | [source\n  |        ^\nunclosed table, expected `]`\n",
-    "url": "https://sifr.dev/docs/errors/SIFR-WORKSPACE-0001",
+    "url": "https://sifr.sh/docs/errors/SIFR-WORKSPACE-0001",
     "primary_span": null,
     "related_spans": [],
     "children": [],

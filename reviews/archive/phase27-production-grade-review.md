@@ -57,7 +57,7 @@ pub struct CompilerDiagnostic {
     pub code: String,
     pub severity: Severity,
     pub message: String,
-    pub url: String,                                    // ✓ "https://sifr.dev/docs/errors/<CODE>"
+    pub url: String,                                    // ✓ "https://sifr.sh/docs/errors/<CODE>"
     pub primary_span: Option<DiagnosticSpan>,
     pub related_spans: Vec<RelatedSpan>,
     pub children: Vec<DiagnosticChild>,
@@ -68,7 +68,7 @@ pub struct CompilerDiagnostic {
 
 **Verification**:
 - JSON output correctly serializes all fields
-- URL format: `https://sifr.dev/docs/errors/SIFR-TYPE-0001`
+- URL format: `https://sifr.sh/docs/errors/SIFR-TYPE-0001`
 - Human renderer uses appropriate labels ("type error", "parse error", etc.)
 
 #### Recovery Limits Verification
@@ -216,7 +216,7 @@ $ cargo run -q -p sifr -- --diagnostic-format json check <error-file>
     "code": "SIFR-TYPE-0001",
     "severity": "Error",
     "message": "'break' outside of loop",
-    "url": "https://sifr.dev/docs/errors/SIFR-TYPE-0001",
+    "url": "https://sifr.sh/docs/errors/SIFR-TYPE-0001",
     "primary_span": null,
     "related_spans": [],
     "children": [],

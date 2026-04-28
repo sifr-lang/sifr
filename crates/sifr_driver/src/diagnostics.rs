@@ -146,7 +146,7 @@ impl CompileError {
     pub fn to_diagnostic(&self) -> CompilerDiagnostic {
         let code = self.diagnostic_code().to_string();
         CompilerDiagnostic {
-            url: format!("https://sifr.dev/docs/errors/{code}"),
+            url: format!("https://sifr.sh/docs/errors/{code}"),
             code,
             severity: Self::diagnostic_severity(),
             message: self.message.clone(),

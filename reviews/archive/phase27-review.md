@@ -88,7 +88,7 @@ All tests pass and demos execute correctly per the execution checklist.
   - `help`: Option<String>
   - `suggestions`: Vec<DiagnosticSuggestion>
 - Stable `human` and `json` renderers; `json` is lossless canonical schema rendering
-- Every diagnostic includes `url = "https://sifr.dev/docs/errors/<CODE>"`
+- Every diagnostic includes `url = "https://sifr.sh/docs/errors/<CODE>"`
 
 **Potential Concerns:**
 1. **Span precision** - Primary spans exist but may not always be accurate for all error types (parser vs type-check vs codegen)

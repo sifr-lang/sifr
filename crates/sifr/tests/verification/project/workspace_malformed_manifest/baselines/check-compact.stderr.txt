@@ -5,4 +5,4 @@ error [SIFR-WORKSPACE-0001] could not parse sifr.toml at '<WORKSPACE>/crates/sif
   |        ^
 unclosed table, expected `]`
  (x1)
-  url: https://sifr.dev/docs/errors/SIFR-WORKSPACE-0001
+  url: https://sifr.sh/docs/errors/SIFR-WORKSPACE-0001

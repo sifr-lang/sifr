@@ -12,7 +12,7 @@ fn test_compile_error_to_diagnostic_has_stable_code_and_url() {
     let diag = err.to_diagnostic();
     assert_eq!(diag.code, "SIFR-PARSE-0001");
     assert_eq!(diag.severity, Severity::Error);
-    assert_eq!(diag.url, "https://sifr.dev/docs/errors/SIFR-PARSE-0001");
+    assert_eq!(diag.url, "https://sifr.sh/docs/errors/SIFR-PARSE-0001");
     assert_eq!(diag.message, "unexpected token");
 }
 
@@ -62,7 +62,7 @@ fn test_workspace_resolution_errors_have_stable_codes_and_urls() {
         assert_eq!(diagnostic.code, code);
         assert_eq!(
             diagnostic.url,
-            format!("https://sifr.dev/docs/errors/{code}")
+            format!("https://sifr.sh/docs/errors/{code}")
         );
     }
 }
@@ -75,7 +75,7 @@ fn test_apply_diagnostic_recovery_limits_summarizes_similar_diagnostics() {
             code: "SIFR-TYPE-0001".to_string(),
             severity: Severity::Error,
             message: "type mismatch: expected 'int', got 'str'".to_string(),
-            url: "https://sifr.dev/docs/errors/SIFR-TYPE-0001".to_string(),
+            url: "https://sifr.sh/docs/errors/SIFR-TYPE-0001".to_string(),
             primary_span: Some(DiagnosticSpan {
                 file: Some("main.sifr".to_string()),
                 line: Some(idx + 1),
@@ -103,7 +103,7 @@ fn test_apply_diagnostic_recovery_limits_caps_top_level_diagnostics() {
             code: format!("SIFR-TYPE-{:04}", idx),
             severity: Severity::Error,
             message: format!("error {idx}"),
-            url: "https://sifr.dev/docs/errors/SIFR-TYPE-0001".to_string(),
+            url: "https://sifr.sh/docs/errors/SIFR-TYPE-0001".to_string(),
             primary_span: None,
             related_spans: Vec::new(),
             children: Vec::new(),
