@@ -5,8 +5,8 @@ from sifr.datetime import datetime, UTC, timezone, now, from_timestamp
 
 
 def main() -> None:
-    name_v3 = uuid3(NAMESPACE_DNS(), "sifr.dev")
-    name_v5 = uuid5(NAMESPACE_DNS(), "sifr.dev")
+    name_v3 = uuid3(NAMESPACE_DNS(), "sifr.sh")
+    name_v5 = uuid5(NAMESPACE_DNS(), "sifr.sh")
     assert name_v3.version() == 3
     assert name_v5.version() == 5
 

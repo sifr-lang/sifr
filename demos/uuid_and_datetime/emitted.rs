@@ -726,8 +726,8 @@ impl std::error::Error for ValueError {
 }
 
 fn main() {
-    let mut name_v3: UUID = uuid3(&NAMESPACE_DNS(), &"sifr.dev".to_string());
-    let mut name_v5: UUID = uuid5(&NAMESPACE_DNS(), &"sifr.dev".to_string());
+    let mut name_v3: UUID = uuid3(&NAMESPACE_DNS(), &"sifr.sh".to_string());
+    let mut name_v5: UUID = uuid5(&NAMESPACE_DNS(), &"sifr.sh".to_string());
     assert!(name_v3.version() == (3 as i64));
     assert!(name_v5.version() == (5 as i64));
     let mut utc_now: datetime = now(&Some(UTC()));

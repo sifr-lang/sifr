@@ -596,7 +596,7 @@ This contract is split across three milestones: milestone_imports (multi-file co
 - `**sifr.toml`:** project manifest with `[dependencies]` section specifying version ranges (semver)
 - `**sifr.lock`:** lockfile with exact resolved versions, content hashes (SHA-256), and source URLs. Committed to version control.
 - **Version solver:** PubGrub-based solver (same algorithm as Cargo and uv). Resolves dependency graph with conflict detection.
-- **Registry:** `sifr.dev` package registry (milestone_ecosystem). Before milestone_ecosystem, dependencies are git-only or path-only.
+- **Registry:** `sifr.sh` package registry (milestone_ecosystem). Before milestone_ecosystem, dependencies are git-only or path-only.
 
 ### 5. CI Quality Gates
 
@@ -709,7 +709,7 @@ Sifr compiles to Rust source code, which is then compiled by `rustc`. This creat
 **Contract:**
 
 - **Stable Sifr diagnostic codes:** every top-level Sifr compiler diagnostic has a stable code owned by a specific compiler phase (parser, type checker, borrow checker, codegen). Error codes use `E####` and warning codes use `W####`. `Note` and `Help` entries attach to a parent diagnostic instead of defining separate top-level codes.
-- **Deterministic documentation URL:** every top-level diagnostic exposes `url = "https://sifr.dev/docs/errors/<CODE>"`. This URL is part of the stable contract and must render in `human`, `json`, and `compact` outputs.
+- **Deterministic documentation URL:** every top-level diagnostic exposes `url = "https://sifr.sh/docs/errors/<CODE>"`. This URL is part of the stable contract and must render in `human`, `json`, and `compact` outputs.
 - **Canonical severity enum:** the shared diagnostic model uses exactly four severities matching rustc's user-facing hierarchy:
   - `Error` -- blocks compilation or the active command
   - `Warning` -- non-blocking but actionable
@@ -801,7 +801,7 @@ Sifr's standard library follows a **thin wrapper + FFI** strategy:
 
 - **Thin wrappers (milestone_protocols-milestone_data_processing):** The stdlib provides Pythonic APIs over best-in-class Rust crates. The sifr compiler generates Cargo dependencies automatically. Users write Python-like code; the generated Rust uses `axum`, `polars`, `sqlx`, `tokio`, etc. directly.
 - **Rust FFI (milestone_ffi):** For crates not yet wrapped, users can import Rust crates directly via FFI. This is the escape hatch that gives Sifr access to the entire Rust ecosystem (50,000+ crates on crates.io).
-- **Package ecosystem (milestone_ecosystem):** A package registry (`sifr.dev`) for sharing and reusing Sifr code, with incremental compilation for fast iteration.
+- **Package ecosystem (milestone_ecosystem):** A package registry (`sifr.sh`) for sharing and reusing Sifr code, with incremental compilation for fast iteration.
 - **No reinventing:** Sifr never reimplements what Rust already has. Every stdlib module wraps a proven Rust crate.
 
 ---

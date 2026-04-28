@@ -1273,7 +1273,7 @@ mod tests {
                 code: "SIFR-TYPE-0001".to_string(),
                 severity: Severity::Error,
                 message: "type mismatch: expected 'int', got 'str'".to_string(),
-                url: "https://sifr.dev/docs/errors/SIFR-TYPE-0001".to_string(),
+                url: "https://sifr.sh/docs/errors/SIFR-TYPE-0001".to_string(),
                 primary_span: Some(sifr_driver::DiagnosticSpan {
                     file: Some("main.sifr".to_string()),
                     line: Some(idx + 1),
@@ -1297,7 +1297,7 @@ mod tests {
         assert_eq!(compact.matches("help: ").count(), 1);
         assert_eq!(
             compact
-                .matches("url: https://sifr.dev/docs/errors/SIFR-TYPE-0001")
+                .matches("url: https://sifr.sh/docs/errors/SIFR-TYPE-0001")
                 .count(),
             1
         );
@@ -1312,7 +1312,7 @@ mod tests {
                 code: "SIFR-TYPE-0001".to_string(),
                 severity: Severity::Error,
                 message: "mismatch one".to_string(),
-                url: "https://sifr.dev/docs/errors/SIFR-TYPE-0001".to_string(),
+                url: "https://sifr.sh/docs/errors/SIFR-TYPE-0001".to_string(),
                 primary_span: None,
                 related_spans: Vec::new(),
                 children: Vec::new(),
@@ -1323,7 +1323,7 @@ mod tests {
                 code: "SIFR-TYPE-0001".to_string(),
                 severity: Severity::Error,
                 message: "mismatch one".to_string(),
-                url: "https://sifr.dev/docs/errors/SIFR-TYPE-0001".to_string(),
+                url: "https://sifr.sh/docs/errors/SIFR-TYPE-0001".to_string(),
                 primary_span: None,
                 related_spans: Vec::new(),
                 children: Vec::new(),
@@ -1334,7 +1334,7 @@ mod tests {
                 code: "SIFR-PARSE-0001".to_string(),
                 severity: Severity::Error,
                 message: "parse fail".to_string(),
-                url: "https://sifr.dev/docs/errors/SIFR-PARSE-0001".to_string(),
+                url: "https://sifr.sh/docs/errors/SIFR-PARSE-0001".to_string(),
                 primary_span: None,
                 related_spans: Vec::new(),
                 children: Vec::new(),
@@ -1364,7 +1364,7 @@ mod tests {
                 code: "SIFR-TYPE-0001".to_string(),
                 severity: Severity::Error,
                 message: "type mismatch: expected 'int', got 'str'".to_string(),
-                url: "https://sifr.dev/docs/errors/SIFR-TYPE-0001".to_string(),
+                url: "https://sifr.sh/docs/errors/SIFR-TYPE-0001".to_string(),
                 primary_span: None,
                 related_spans: Vec::new(),
                 children: Vec::new(),
@@ -1376,7 +1376,7 @@ mod tests {
             code: "SIFR-TYPE-0001".to_string(),
             severity: Severity::Error,
             message: "... +3 more similar diagnostics".to_string(),
-            url: "https://sifr.dev/docs/errors/SIFR-TYPE-0001".to_string(),
+            url: "https://sifr.sh/docs/errors/SIFR-TYPE-0001".to_string(),
             primary_span: None,
             related_spans: Vec::new(),
             children: Vec::new(),
@@ -1387,9 +1387,9 @@ mod tests {
         let expected = concat!(
             "summary: 6 error(s), 0 warning(s), 0 note(s), 0 help item(s)\n",
             "error [SIFR-TYPE-0001] type mismatch: expected 'int', got 'str' (x5)\n",
-            "  url: https://sifr.dev/docs/errors/SIFR-TYPE-0001\n",
+            "  url: https://sifr.sh/docs/errors/SIFR-TYPE-0001\n",
             "error [SIFR-TYPE-0001] ... +3 more similar diagnostics (x1)\n",
-            "  url: https://sifr.dev/docs/errors/SIFR-TYPE-0001\n",
+            "  url: https://sifr.sh/docs/errors/SIFR-TYPE-0001\n",
         );
         assert_eq!(render_compact_diagnostics(&diagnostics), expected);
     }
@@ -1401,7 +1401,7 @@ mod tests {
                 code: "SIFR-TYPE-0001".to_string(),
                 severity: Severity::Warning,
                 message: "unused value".to_string(),
-                url: "https://sifr.dev/docs/errors/SIFR-TYPE-0001".to_string(),
+                url: "https://sifr.sh/docs/errors/SIFR-TYPE-0001".to_string(),
                 primary_span: None,
                 related_spans: Vec::new(),
                 children: Vec::new(),
@@ -1412,7 +1412,7 @@ mod tests {
                 code: "SIFR-PARSE-0001".to_string(),
                 severity: Severity::Error,
                 message: "parse failure".to_string(),
-                url: "https://sifr.dev/docs/errors/SIFR-PARSE-0001".to_string(),
+                url: "https://sifr.sh/docs/errors/SIFR-PARSE-0001".to_string(),
                 primary_span: None,
                 related_spans: Vec::new(),
                 children: Vec::new(),
@@ -1423,7 +1423,7 @@ mod tests {
                 code: "SIFR-CODEGEN-0001".to_string(),
                 severity: Severity::Help,
                 message: "consider adding a type annotation".to_string(),
-                url: "https://sifr.dev/docs/errors/SIFR-CODEGEN-0001".to_string(),
+                url: "https://sifr.sh/docs/errors/SIFR-CODEGEN-0001".to_string(),
                 primary_span: None,
                 related_spans: Vec::new(),
                 children: Vec::new(),
@@ -1435,12 +1435,12 @@ mod tests {
         let expected = concat!(
             "summary: 1 error(s), 1 warning(s), 0 note(s), 1 help item(s)\n",
             "error [SIFR-PARSE-0001] parse failure (x1)\n",
-            "  url: https://sifr.dev/docs/errors/SIFR-PARSE-0001\n",
+            "  url: https://sifr.sh/docs/errors/SIFR-PARSE-0001\n",
             "warning [SIFR-TYPE-0001] unused value (x1)\n",
             "  help: remove the assignment\n",
-            "  url: https://sifr.dev/docs/errors/SIFR-TYPE-0001\n",
+            "  url: https://sifr.sh/docs/errors/SIFR-TYPE-0001\n",
             "help [SIFR-CODEGEN-0001] consider adding a type annotation (x1)\n",
-            "  url: https://sifr.dev/docs/errors/SIFR-CODEGEN-0001\n",
+            "  url: https://sifr.sh/docs/errors/SIFR-CODEGEN-0001\n",
         );
         assert_eq!(render_compact_diagnostics(&diagnostics), expected);
     }

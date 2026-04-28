@@ -337,7 +337,7 @@ Depends on both `milestone_web_db` (web framework must exist) and `milestone_typ
 
 ### milestone_ecosystem: Package Ecosystem
 
-- Package registry (`sifr.dev`), incremental compilation, REPL
+- Package registry (`sifr.sh`), incremental compilation, REPL
 
 ---
 

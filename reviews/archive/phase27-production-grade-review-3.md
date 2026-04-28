@@ -64,7 +64,7 @@ This review assesses Phase 27 implementation against the planning documents:
   - `code`: String
   - `severity`: Severity
   - `message`: String
-  - `url`: String (`https://sifr.dev/docs/errors/<CODE>`)
+  - `url`: String (`https://sifr.sh/docs/errors/<CODE>`)
   - `primary_span`: Option<DiagnosticSpan>
   - `related_spans`: Vec<RelatedSpan>
   - `children`: Vec<DiagnosticChild>

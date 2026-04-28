@@ -267,14 +267,14 @@ Scope:
 Diagnostic contract:
 
 - Parse/config:
-  - `SIFR-WORKSPACE-0001`: `could not parse sifr.toml at '<path>': <reason>` with URL `https://sifr.dev/docs/errors/SIFR-WORKSPACE-0001`
-  - `SIFR-WORKSPACE-0002`: `[source].roots entry '<value>' escapes the workspace root via '..'` with URL `https://sifr.dev/docs/errors/SIFR-WORKSPACE-0002`
-  - `SIFR-WORKSPACE-0003`: `[source].roots entry '<value>' is not a directory under the workspace root` with URL `https://sifr.dev/docs/errors/SIFR-WORKSPACE-0003`
-  - `SIFR-WORKSPACE-0004`: `[source].roots entry '<value>' must be a relative non-empty path under the workspace root` with URL `https://sifr.dev/docs/errors/SIFR-WORKSPACE-0004`
+  - `SIFR-WORKSPACE-0001`: `could not parse sifr.toml at '<path>': <reason>` with URL `https://sifr.sh/docs/errors/SIFR-WORKSPACE-0001`
+  - `SIFR-WORKSPACE-0002`: `[source].roots entry '<value>' escapes the workspace root via '..'` with URL `https://sifr.sh/docs/errors/SIFR-WORKSPACE-0002`
+  - `SIFR-WORKSPACE-0003`: `[source].roots entry '<value>' is not a directory under the workspace root` with URL `https://sifr.sh/docs/errors/SIFR-WORKSPACE-0003`
+  - `SIFR-WORKSPACE-0004`: `[source].roots entry '<value>' must be a relative non-empty path under the workspace root` with URL `https://sifr.sh/docs/errors/SIFR-WORKSPACE-0004`
 - Resolution:
-  - `SIFR-WORKSPACE-0101`: `could not resolve import '<module>'; tried entry-relative '<path>' and workspace-relative '<path1>', '<path2>'` with URL `https://sifr.dev/docs/errors/SIFR-WORKSPACE-0101`
-  - `SIFR-WORKSPACE-0102`: `module '<module>' is ambiguous in workspace '<root>': matches '<path1>' and '<path2>'; reorder [source].roots or rename one module to disambiguate` with URL `https://sifr.dev/docs/errors/SIFR-WORKSPACE-0102`
-  - `SIFR-WORKSPACE-0103`: `module '<module>' resolves to file '<path>' but parent name '<parent>' is also a module file '<parent_path>'; package directories are not supported in this phase` with URL `https://sifr.dev/docs/errors/SIFR-WORKSPACE-0103`
+  - `SIFR-WORKSPACE-0101`: `could not resolve import '<module>'; tried entry-relative '<path>' and workspace-relative '<path1>', '<path2>'` with URL `https://sifr.sh/docs/errors/SIFR-WORKSPACE-0101`
+  - `SIFR-WORKSPACE-0102`: `module '<module>' is ambiguous in workspace '<root>': matches '<path1>' and '<path2>'; reorder [source].roots or rename one module to disambiguate` with URL `https://sifr.sh/docs/errors/SIFR-WORKSPACE-0102`
+  - `SIFR-WORKSPACE-0103`: `module '<module>' resolves to file '<path>' but parent name '<parent>' is also a module file '<parent_path>'; package directories are not supported in this phase` with URL `https://sifr.sh/docs/errors/SIFR-WORKSPACE-0103`
 
 Implementation notes:
 
@@ -411,7 +411,7 @@ Milestone quality checks:
 - No fixture/user helper may be added to `crates/sifr_driver/src/stdlib/registry.rs` for this problem.
 - Config code must keep native `sifr.toml` as the source of truth; future compatibility adapters must not hard-code a one-off schema into resolver APIs.
 - Every new diagnostic must be stable, deterministic, and tested.
-- Every new top-level user-facing diagnostic must include a stable code and `https://sifr.dev/docs/errors/<CODE>` URL.
+- Every new top-level user-facing diagnostic must include a stable code and `https://sifr.sh/docs/errors/<CODE>` URL.
 - No user-triggerable compiler panic may be introduced.
 - No data-dependent `.unwrap()` / `.expect()` may be added to generated user runtime paths.
 - Every compiler PR must include targeted positive and negative tests.

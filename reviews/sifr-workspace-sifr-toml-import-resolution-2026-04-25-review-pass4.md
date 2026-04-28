@@ -72,7 +72,7 @@ Pick one in WS0 before the parser is written, otherwise the first WS0 PR will re
 
 ### N2. Source issue diagnostic phrasing has no diagnostic codes / URLs
 
-The source issue's Diagnostics section ([source issue lines 124-135](issues/sifr-workspace-sifr-toml-import-resolution-2026-04-25.md:124)) lists user-facing wording but no `SIFR-WORKSPACE-XXXX` codes or `sifr.dev/docs/errors/<CODE>` URLs. The phase plan WS3 ([phase plan lines 268-275](issues/ad-hoc-sifr-workspace-sifr-toml-import-resolution-2026-04-25.md:268)) assigns codes and URLs cleanly. Mirror those into the source issue (or add a one-line note that the phase plan owns the canonical diagnostic codes) so a reviewer reading only the source issue does not assume codes are unspecified and break the roadmap global rule at line 28.
+The source issue's Diagnostics section ([source issue lines 124-135](issues/sifr-workspace-sifr-toml-import-resolution-2026-04-25.md:124)) lists user-facing wording but no `SIFR-WORKSPACE-XXXX` codes or `sifr.sh/docs/errors/<CODE>` URLs. The phase plan WS3 ([phase plan lines 268-275](issues/ad-hoc-sifr-workspace-sifr-toml-import-resolution-2026-04-25.md:268)) assigns codes and URLs cleanly. Mirror those into the source issue (or add a one-line note that the phase plan owns the canonical diagnostic codes) so a reviewer reading only the source issue does not assume codes are unspecified and break the roadmap global rule at line 28.
 
 ### N3. Source issue's verification fixture tree differs in shape from WS5 pilot
 

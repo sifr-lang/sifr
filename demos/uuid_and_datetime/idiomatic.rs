@@ -71,8 +71,8 @@ fn from_timestamp(seconds: f64, tz: Timezone) -> Result<Datetime, String> {
 }
 
 fn main() {
-    let name_v3 = uuid3(&namespace_dns(), "sifr.dev");
-    let name_v5 = uuid5(&namespace_dns(), "sifr.dev");
+    let name_v3 = uuid3(&namespace_dns(), "sifr.sh");
+    let name_v5 = uuid5(&namespace_dns(), "sifr.sh");
     assert_eq!(name_v3.version(), 3);
     assert_eq!(name_v5.version(), 5);
 

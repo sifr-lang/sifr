@@ -69,7 +69,7 @@ This review assesses Phase 27 implementation against the planning documents:
   - `help`: Option<String> ✓
   - `suggestions`: Vec<DiagnosticSuggestion> ✓
 
-- Diagnostic URL generation (line 663): `https://sifr.dev/docs/errors/<CODE>` ✓
+- Diagnostic URL generation (line 663): `https://sifr.sh/docs/errors/<CODE>` ✓
 
 **Gaps Identified**:
 1. **Related spans not populated**: No code in HIR/lowering populates `related_spans`. This is an implementation gap but not a contract violation.

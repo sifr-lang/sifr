@@ -65,7 +65,7 @@ Phase plan validation contract (lines 67-75) says missing `sources` defaults to 
 
 ### N3. New diagnostics need stable codes and documentation URLs
 
-Roadmap global rule (line 28): "Every top-level user-facing compiler diagnostic must carry a stable code and deterministic documentation URL of the form `https://sifr.dev/docs/errors/<CODE>`." The plan defines diagnostic phrasing for parse, validation, unresolved, and ambiguous import errors (WS3 lines 227-234) but does not assign codes (e.g., `SIFR-WORKSPACE-0001`) or URLs. WS3 acceptance criteria should require:
+Roadmap global rule (line 28): "Every top-level user-facing compiler diagnostic must carry a stable code and deterministic documentation URL of the form `https://sifr.sh/docs/errors/<CODE>`." The plan defines diagnostic phrasing for parse, validation, unresolved, and ambiguous import errors (WS3 lines 227-234) but does not assign codes (e.g., `SIFR-WORKSPACE-0001`) or URLs. WS3 acceptance criteria should require:
 
 - A documented code for each new top-level diagnostic.
 - Snapshot/insta coverage that includes the code and URL string verbatim.
