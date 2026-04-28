@@ -6,12 +6,9 @@ fn arg_expr(args: &[RustExpr], idx: usize) -> RustExpr {
     args[idx].clone()
 }
 
-fn thread_rng_expr() -> RustExpr {
+fn rng_expr() -> RustExpr {
     RustExpr::FnCall {
-        func: Box::new(RustExpr::Path(vec![
-            "rand".to_string(),
-            "thread_rng".to_string(),
-        ])),
+        func: Box::new(RustExpr::Path(vec!["rand".to_string(), "rng".to_string()])),
         args: vec![],
     }
 }
@@ -51,17 +48,17 @@ fn ok_expr(expr: RustExpr) -> RustExpr {
     }
 }
 
-fn gen_range_expr(start: RustExpr, end: RustExpr) -> RustExpr {
+fn random_range_expr(start: RustExpr, end: RustExpr) -> RustExpr {
     RustExpr::FnCall {
         func: Box::new(RustExpr::Path(vec![
             "rand".to_string(),
-            "Rng".to_string(),
-            "gen_range".to_string(),
+            "RngExt".to_string(),
+            "random_range".to_string(),
         ])),
         args: vec![
             RustExpr::Ref {
                 mutable: true,
-                expr: Box::new(thread_rng_expr()),
+                expr: Box::new(rng_expr()),
             },
             RustExpr::Range {
                 start: Box::new(start),
@@ -116,7 +113,7 @@ pub(super) fn lower_random_int(args: &[RustExpr]) -> Option<RustExpr> {
         expr: Some(Box::new(RustExpr::BinOp {
             left: Box::new(RustExpr::Ident("__start".to_string())),
             op: "+".to_string(),
-            right: Box::new(gen_range_expr(
+            right: Box::new(random_range_expr(
                 int(0),
                 RustExpr::BinOp {
                     left: Box::new(RustExpr::BinOp {
@@ -153,7 +150,7 @@ pub(super) fn lower_random_choice(args: &[RustExpr]) -> Option<RustExpr> {
         expr: Some(Box::new(RustExpr::MethodCall {
             receiver: Box::new(RustExpr::Index {
                 expr: Box::new(RustExpr::Ident("items".to_string())),
-                index: Box::new(gen_range_expr(
+                index: Box::new(random_range_expr(
                     int(0),
                     RustExpr::MethodCall {
                         receiver: Box::new(RustExpr::Ident("items".to_string())),
@@ -234,7 +231,7 @@ pub(super) fn lower_random_shuffle(args: &[RustExpr]) -> Option<RustExpr> {
                     },
                     RustExpr::Ref {
                         mutable: true,
-                        expr: Box::new(thread_rng_expr()),
+                        expr: Box::new(rng_expr()),
                     },
                 ],
             }),
@@ -293,8 +290,8 @@ pub(super) fn lower_random_sample(args: &[RustExpr]) -> Option<RustExpr> {
                         func: Box::new(RustExpr::Path(vec![
                             "rand".to_string(),
                             "seq".to_string(),
-                            "SliceRandom".to_string(),
-                            "choose_multiple".to_string(),
+                            "IndexedRandom".to_string(),
+                            "sample".to_string(),
                         ])),
                         args: vec![
                             RustExpr::MethodCall {
@@ -304,7 +301,7 @@ pub(super) fn lower_random_sample(args: &[RustExpr]) -> Option<RustExpr> {
                             },
                             RustExpr::Ref {
                                 mutable: true,
-                                expr: Box::new(thread_rng_expr()),
+                                expr: Box::new(rng_expr()),
                             },
                             RustExpr::Ident("__k".to_string()),
                         ],
@@ -407,7 +404,7 @@ pub(super) fn lower_random_randrange(args: &[RustExpr]) -> Option<RustExpr> {
                         left: Box::new(RustExpr::Ident("__start".to_string())),
                         op: "+".to_string(),
                         right: Box::new(RustExpr::BinOp {
-                            left: Box::new(gen_range_expr(
+                            left: Box::new(random_range_expr(
                                 int(0),
                                 RustExpr::Ident("__n".to_string()),
                             )),
@@ -472,7 +469,7 @@ pub(super) fn lower_random_gauss(args: &[RustExpr]) -> Option<RustExpr> {
                             },
                             RustExpr::Ref {
                                 mutable: true,
-                                expr: Box::new(thread_rng_expr()),
+                                expr: Box::new(rng_expr()),
                             },
                         ],
                     }),

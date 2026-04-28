@@ -3,7 +3,6 @@ error [SIFR-WORKSPACE-0001] could not parse sifr.toml at '<WORKSPACE>/crates/sif
   |
 1 | [source
   |        ^
-invalid table header
-expected `.`, `]`
+unclosed table, expected `]`
  (x1)
   url: https://sifr.dev/docs/errors/SIFR-WORKSPACE-0001

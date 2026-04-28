@@ -115,7 +115,7 @@ impl ZipFile {
                 .map_err(__io_err)?;
             let mut __zip = zip::ZipWriter::new_append(__f)
                 .map_err(|e| IOError::new(e.to_string()))?;
-            let __opts = zip::write::FileOptions::default();
+            let __opts = zip::write::SimpleFileOptions::default();
             __zip
                 .start_file(__name.to_string(), __opts)
                 .map_err(|e| IOError::new(e.to_string()))?;
@@ -140,7 +140,7 @@ impl ZipFile {
                 .map_err(__io_err)?;
             let mut __zip = zip::ZipWriter::new_append(__f)
                 .map_err(|e| IOError::new(e.to_string()))?;
-            let __opts = zip::write::FileOptions::default();
+            let __opts = zip::write::SimpleFileOptions::default();
             __zip
                 .start_file(__name.to_string(), __opts)
                 .map_err(|e| IOError::new(e.to_string()))?;

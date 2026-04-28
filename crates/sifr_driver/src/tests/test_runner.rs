@@ -363,9 +363,9 @@ fn test_generate_test_runner_cargo_toml_includes_required_crates() {
 
     let cargo_toml = generate_test_runner_cargo_toml(&stdlib_modules, &required_crates);
     assert!(cargo_toml.contains("name = \"sifr_tests\""));
-    assert!(cargo_toml.contains("regex = \"1\""));
-    assert!(cargo_toml.contains("rand = \"0.8\""));
-    assert!(cargo_toml.contains("rand_distr = \"0.4\""));
+    assert!(cargo_toml.contains("regex = \"1.12.3\""));
+    assert!(cargo_toml.contains("rand = \"0.10.1\""));
+    assert!(cargo_toml.contains("rand_distr = \"0.6.0\""));
 }
 
 #[test]
@@ -374,10 +374,9 @@ fn test_generate_test_runner_cargo_toml_preserves_stdlib_deps() {
     let required_crates = HashSet::new();
 
     let cargo_toml = generate_test_runner_cargo_toml(&stdlib_modules, &required_crates);
-    assert!(
-        cargo_toml.contains("serde_json = { version = \"1\", features = [\"preserve_order\"] }")
-    );
-    assert!(cargo_toml.contains("serde = { version = \"1\", features = [\"derive\"] }"));
+    assert!(cargo_toml
+        .contains("serde_json = { version = \"1.0.149\", features = [\"preserve_order\"] }"));
+    assert!(cargo_toml.contains("serde = { version = \"1.0.228\", features = [\"derive\"] }"));
 }
 
 #[test]
@@ -386,7 +385,7 @@ fn test_generate_test_runner_cargo_toml_preserves_tomllib_ordering_deps() {
     let required_crates = HashSet::new();
 
     let cargo_toml = generate_test_runner_cargo_toml(&stdlib_modules, &required_crates);
-    assert!(cargo_toml.contains("toml = { version = \"0.8\", features = [\"preserve_order\"] }"));
+    assert!(cargo_toml.contains("toml = { version = \"1.1.2\", features = [\"preserve_order\"] }"));
 }
 
 #[test]

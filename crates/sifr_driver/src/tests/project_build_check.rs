@@ -342,8 +342,8 @@ fn test_build_project_includes_support_module_required_crates_in_manifest() {
 
     let cargo_toml = std::fs::read_to_string(build_out.join("sifr_output").join("Cargo.toml"))
         .expect("cargo manifest should be written");
-    assert!(cargo_toml.contains("num-bigint = \"0.4\""));
-    assert!(cargo_toml.contains("num-traits = \"0.2\""));
+    assert!(cargo_toml.contains("num-bigint = \"0.4.6\""));
+    assert!(cargo_toml.contains("num-traits = \"0.2.19\""));
 
     let _ = std::fs::remove_dir_all(dir);
 }
@@ -375,8 +375,8 @@ fn test_build_project_manifest_ignores_unreachable_required_crates() {
 
     let cargo_toml = std::fs::read_to_string(build_out.join("sifr_output").join("Cargo.toml"))
         .expect("cargo manifest should be written");
-    assert!(!cargo_toml.contains("num-bigint = \"0.4\""));
-    assert!(!cargo_toml.contains("num-traits = \"0.2\""));
+    assert!(!cargo_toml.contains("num-bigint = \"0.4.6\""));
+    assert!(!cargo_toml.contains("num-traits = \"0.2.19\""));
 
     let _ = std::fs::remove_dir_all(dir);
 }
@@ -404,7 +404,7 @@ def render() -> str:\n    try:\n        parsed: TomlValue = loads(\"name = \\\"p
 
     let cargo_toml = std::fs::read_to_string(build_out.join("sifr_output").join("Cargo.toml"))
         .expect("cargo manifest should be written");
-    assert!(cargo_toml.contains("toml = { version = \"0.8\", features = [\"preserve_order\"] }"));
+    assert!(cargo_toml.contains("toml = { version = \"1.1.2\", features = [\"preserve_order\"] }"));
 
     let _ = std::fs::remove_dir_all(dir);
 }
@@ -437,7 +437,7 @@ def unused() -> str:\n    try:\n        parsed: str = loads(\"name = \\\"unused\
 
     let cargo_toml = std::fs::read_to_string(build_out.join("sifr_output").join("Cargo.toml"))
         .expect("cargo manifest should be written");
-    assert!(!cargo_toml.contains("toml = { version = \"0.8\", features = [\"preserve_order\"] }"));
+    assert!(!cargo_toml.contains("toml = { version = \"1.1.2\", features = [\"preserve_order\"] }"));
 
     let _ = std::fs::remove_dir_all(dir);
 }
@@ -470,8 +470,8 @@ def render() -> str:\n    return render_value()\n",
 
     let cargo_toml = std::fs::read_to_string(build_out.join("sifr_output").join("Cargo.toml"))
         .expect("cargo manifest should be written");
-    assert!(cargo_toml.contains("num-bigint = \"0.4\""));
-    assert!(cargo_toml.contains("num-traits = \"0.2\""));
+    assert!(cargo_toml.contains("num-bigint = \"0.4.6\""));
+    assert!(cargo_toml.contains("num-traits = \"0.2.19\""));
 
     let _ = std::fs::remove_dir_all(dir);
 }
@@ -509,8 +509,8 @@ def unused() -> str:\n    return render_value()\n",
 
     let cargo_toml = std::fs::read_to_string(build_out.join("sifr_output").join("Cargo.toml"))
         .expect("cargo manifest should be written");
-    assert!(!cargo_toml.contains("num-bigint = \"0.4\""));
-    assert!(!cargo_toml.contains("num-traits = \"0.2\""));
+    assert!(!cargo_toml.contains("num-bigint = \"0.4.6\""));
+    assert!(!cargo_toml.contains("num-traits = \"0.2.19\""));
 
     let _ = std::fs::remove_dir_all(dir);
 }

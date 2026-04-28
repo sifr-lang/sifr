@@ -469,13 +469,13 @@ fn collect_positive_actual(tmp_path: &String) -> Vec<String> {
     let mut h: HashObject = sha256_obj(&"".to_string());
     h.update(&"a".to_string());
     h.update(&"bc".to_string());
-    actual.push(format!("{}", (h.hexdigest()).as_str() == (format!("{:x}", (<sha2::Sha256 as sha2::Digest>::digest)(("abc".to_string()).as_bytes()))).as_str()));
+    actual.push(format!("{}", (h.hexdigest()).as_str() == ((<sha2::Sha256 as sha2::Digest>::digest)(("abc".to_string()).as_bytes()).iter().map(|__byte| format!("{:02x}", *__byte)).collect::<Vec<String>>().join("".to_string().as_str())).as_str()));
     actual.push(format!("{}", ((h.digest().len() as i64) == (32 as i64)) && (h.digest_bytes() == h.digest())));
     let mut c: HashObject = copy_hash(&h);
     c.update(&"x".to_string());
-    actual.push(format!("{}", (c.hexdigest()).as_str() == (format!("{:x}", (<sha2::Sha256 as sha2::Digest>::digest)(("abcx".to_string()).as_bytes()))).as_str()));
+    actual.push(format!("{}", (c.hexdigest()).as_str() == ((<sha2::Sha256 as sha2::Digest>::digest)(("abcx".to_string()).as_bytes()).iter().map(|__byte| format!("{:02x}", *__byte)).collect::<Vec<String>>().join("".to_string().as_str())).as_str()));
     let mut m: HashObject = md5_obj(&"hello".to_string());
-    actual.push(format!("{}", (m.hexdigest()).as_str() == (format!("{:x}", md5::compute(("hello".to_string()).as_bytes()))).as_str()));
+    actual.push(format!("{}", (m.hexdigest()).as_str() == (md5::compute(("hello".to_string()).as_bytes()).0.iter().map(|__byte| format!("{:02x}", *__byte)).collect::<Vec<String>>().join("".to_string().as_str())).as_str()));
     actual.push(format!("{}", contains(&algorithms_guaranteed(), &"sha256".to_string())));
     actual.push(m.hexdigest());
     let __sifr_try_res: Result<(), HashlibError> = (|| {

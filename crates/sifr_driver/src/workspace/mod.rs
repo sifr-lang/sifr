@@ -62,7 +62,8 @@ fn parse_workspace_config(
 
 fn parse_manifest(manifest_path: &Path, source: &str) -> Result<SifrManifest, Vec<CompileError>> {
     let value = source
-        .parse::<toml::Value>()
+        .parse::<toml::Table>()
+        .map(toml::Value::Table)
         .map_err(|error| vec![parse_manifest_error(manifest_path, error)])?;
 
     let package_name = value

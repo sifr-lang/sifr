@@ -90,7 +90,7 @@ fn _random_suffix() -> String {
     let n: i64 = {
         let __start = 100000 as i64;
         let __end = 999999 as i64;
-        __start + rand::Rng::gen_range(&mut rand::thread_rng(), 0..(__end - __start) + 1)
+        __start + rand::RngExt::random_range(&mut rand::rng(), 0..(__end - __start) + 1)
     };
     return format!("{}", n);
 }
@@ -241,7 +241,7 @@ impl ZipFile {
                 .map_err(__io_err)?;
             let mut __zip = zip::ZipWriter::new_append(__f)
                 .map_err(|e| IOError::new(e.to_string()))?;
-            let __opts = zip::write::FileOptions::default();
+            let __opts = zip::write::SimpleFileOptions::default();
             __zip
                 .start_file(__name.to_string(), __opts)
                 .map_err(|e| IOError::new(e.to_string()))?;
@@ -266,7 +266,7 @@ impl ZipFile {
                 .map_err(__io_err)?;
             let mut __zip = zip::ZipWriter::new_append(__f)
                 .map_err(|e| IOError::new(e.to_string()))?;
-            let __opts = zip::write::FileOptions::default();
+            let __opts = zip::write::SimpleFileOptions::default();
             __zip
                 .start_file(__name.to_string(), __opts)
                 .map_err(|e| IOError::new(e.to_string()))?;

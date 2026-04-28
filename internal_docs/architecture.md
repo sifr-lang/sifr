@@ -216,7 +216,7 @@ flowchart LR
 
 ## Crate Structure (Rust Workspace)
 
-**Hybrid dependency approach:** Infrastructure crates, parser, and AST crates are referenced from the Ruff fork submodule, currently based on Ruff 0.15.12. Parser and AST crates include the Sifr-specific parameter convention extension and are imported through Cargo aliases as `sifr_python_ast` and `sifr_python_parser`. The effective Rust toolchain floor follows the Ruff submodule crates and is currently Rust 1.93.
+**Hybrid dependency approach:** Infrastructure crates, parser, and AST crates are referenced from the Ruff fork submodule, currently based on Ruff 0.15.12. Parser and AST crates include the Sifr-specific parameter convention extension and are imported through Cargo aliases as `sifr_python_ast` and `sifr_python_parser`. The root workspace pins Sifr's direct and generated-runtime support crates to the latest stable releases independently from the excluded Ruff fork, which keeps its own sub-workspace dependency pins. The effective Rust toolchain floor follows the Ruff submodule crates and is currently Rust 1.93.
 
 ```
 sifr/

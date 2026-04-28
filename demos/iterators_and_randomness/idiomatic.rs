@@ -1,5 +1,4 @@
-use rand::seq::SliceRandom;
-use rand::Rng;
+use rand::prelude::{IndexedRandom, SliceRandom};
 use std::fmt::{self, Display};
 
 #[derive(Debug, Clone)]
@@ -68,7 +67,7 @@ fn combinations_of_two(values: &[i64]) -> Vec<Vec<i64>> {
 
 fn choice(values: &[i64]) -> Result<i64, ValueError> {
     values
-        .choose(&mut rand::thread_rng())
+        .choose(&mut rand::rng())
         .copied()
         .ok_or_else(|| ValueError {
             message: "choice from empty sequence".to_string(),
@@ -81,10 +80,10 @@ fn choices(values: &[i64], k: usize) -> Result<Vec<i64>, ValueError> {
             message: "choices from empty sequence".to_string(),
         });
     }
-    let mut rng = rand::thread_rng();
+    let mut rng = rand::rng();
     Ok((0..k)
         .map(|_| {
-            let index = rng.gen_range(0..values.len());
+            let index = rand::RngExt::random_range(&mut rng, 0..values.len());
             values[index]
         })
         .collect())
@@ -96,7 +95,7 @@ fn randrange(stop: i64) -> Result<i64, ValueError> {
             message: "empty randrange".to_string(),
         });
     }
-    Ok(rand::thread_rng().gen_range(0..stop))
+    Ok(rand::RngExt::random_range(&mut rand::rng(), 0..stop))
 }
 
 fn compare_digest(left: &str, right: &str) -> bool {
@@ -112,9 +111,9 @@ fn compare_digest(left: &str, right: &str) -> bool {
 }
 
 fn token_hex(nbytes: usize) -> String {
-    let mut rng = rand::thread_rng();
+    let mut rng = rand::rng();
     (0..nbytes)
-        .map(|_| format!("{:02x}", rng.gen::<u8>()))
+        .map(|_| format!("{:02x}", rand::RngExt::random::<u8>(&mut rng)))
         .collect()
 }
 
@@ -124,10 +123,10 @@ fn randbits(bits: u32) -> Result<i64, ValueError> {
             message: "randbits: number of bits must be <= 62".to_string(),
         });
     }
-    let mut rng = rand::thread_rng();
+    let mut rng = rand::rng();
     let mut value = 0_i64;
     for _ in 0..bits {
-        value = (value << 1) | i64::from(rng.gen_range(0..=1_u8));
+        value = (value << 1) | i64::from(rand::RngExt::random_range(&mut rng, 0..=1_u8));
     }
     Ok(value)
 }
@@ -162,7 +161,7 @@ fn main() {
     println!("callable object direct = {}", doubler.apply(4));
 
     let mut items = vec![1, 2, 3, 4, 5];
-    items.shuffle(&mut rand::thread_rng());
+    items.shuffle(&mut rand::rng());
     println!("shuffle(mut items) len = {}", items.len());
 
     match (choice(&items), choices(&items, 3), randrange(10)) {

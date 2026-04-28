@@ -11,8 +11,8 @@ sifr_python_ast = { workspace = true }
 sifr_python_parser = { workspace = true }
 sifr_type_system = { workspace = true }
 ruff_text_size = { workspace = true }
-rust_decimal = "1"
-bigdecimal = "0.4"
+rust_decimal = "1.41.0"
+bigdecimal = "0.4.10"
 
 [dev-dependencies]
 

@@ -494,11 +494,32 @@ fn infer_dependencies(
     if rust_source.contains("regex::") {
         crates.insert("regex".to_string());
     }
-    if rust_source.contains("rand::thread_rng") {
+    if rust_source.contains("rand::rng") {
         crates.insert("rand".to_string());
     }
     if rust_source.contains("rand_distr::") {
         crates.insert("rand_distr".to_string());
+    }
+    if rust_source.contains("chrono::") {
+        crates.insert("chrono".to_string());
+    }
+    if rust_source.contains("md5::") {
+        crates.insert("md5".to_string());
+    }
+    if rust_source.contains("uuid::") {
+        crates.insert("uuid".to_string());
+    }
+    if rust_source.contains("toml::") {
+        crates.insert("toml".to_string());
+    }
+    if rust_source.contains("flate2::") {
+        crates.insert("flate2".to_string());
+    }
+    if rust_source.contains("zip::") {
+        crates.insert("zip".to_string());
+    }
+    if rust_source.contains("base64::") {
+        crates.insert("base64".to_string());
     }
     if rust_source.contains("sha1::") {
         crates.insert("sha1".to_string());
@@ -883,41 +904,50 @@ fn generate_cargo_toml(
         match module_name.as_str() {
             "sifr.json" | "sifr.collections" | "_sifr.json" | "_sifr.collections" => {
                 deps.insert(
-                    "serde_json = { version = \"1\", features = [\"preserve_order\"] }".to_string(),
+                    "serde_json = { version = \"1.0.149\", features = [\"preserve_order\"] }"
+                        .to_string(),
                 );
-                deps.insert("serde = { version = \"1\", features = [\"derive\"] }".to_string());
+                deps.insert(
+                    "serde = { version = \"1.0.228\", features = [\"derive\"] }".to_string(),
+                );
             }
             "sifr.time" | "_sifr.time" | "sifr.datetime" | "_sifr.datetime" => {
-                deps.insert("chrono = \"0.4\"".to_string());
+                deps.insert("chrono = \"0.4.44\"".to_string());
             }
-            "sifr.random" | "_sifr.crypto" | "sifr.uuid" | "_sifr.uuid" => {
-                deps.insert("rand = \"0.8\"".to_string());
-                deps.insert("rand_distr = \"0.4\"".to_string());
+            "sifr.random" | "_sifr.crypto" => {
+                deps.insert("rand = \"0.10.1\"".to_string());
+                deps.insert("rand_distr = \"0.6.0\"".to_string());
+            }
+            "sifr.uuid" | "_sifr.uuid" => {
+                deps.insert("rand = \"0.10.1\"".to_string());
+                deps.insert(
+                    "uuid = { version = \"1.23.1\", features = [\"v3\", \"v5\"] }".to_string(),
+                );
             }
             "sifr.re" | "_sifr.regex" => {
-                deps.insert("regex = \"1\"".to_string());
+                deps.insert("regex = \"1.12.3\"".to_string());
             }
             "sifr.hash" | "sifr.hashlib" => {
-                deps.insert("sha2 = \"0.10\"".to_string());
-                deps.insert("md5 = \"0.7\"".to_string());
-                deps.insert("sha1 = \"0.10\"".to_string());
-                deps.insert("blake2 = \"0.10\"".to_string());
+                deps.insert("sha2 = \"0.11.0\"".to_string());
+                deps.insert("md5 = \"0.8.0\"".to_string());
+                deps.insert("sha1 = \"0.11.0\"".to_string());
+                deps.insert("blake2 = \"0.10.6\"".to_string());
             }
             "sifr.encoding" | "sifr.base64" => {
-                deps.insert("base64 = \"0.22\"".to_string());
+                deps.insert("base64 = \"0.22.1\"".to_string());
             }
             "sifr.tomllib" | "_sifr.toml" => {
                 deps.insert(
-                    "toml = { version = \"0.8\", features = [\"preserve_order\"] }".to_string(),
+                    "toml = { version = \"1.1.2\", features = [\"preserve_order\"] }".to_string(),
                 );
             }
             "sifr.gzip" | "sifr.zipfile" | "_sifr.compress" => {
-                deps.insert("flate2 = \"1\"".to_string());
-                deps.insert("zip = \"0.6\"".to_string());
+                deps.insert("flate2 = \"1.1.9\"".to_string());
+                deps.insert("zip = \"8.6.0\"".to_string());
             }
             "_bigint" => {
-                deps.insert("num-bigint = \"0.4\"".to_string());
-                deps.insert("num-traits = \"0.2\"".to_string());
+                deps.insert("num-bigint = \"0.4.6\"".to_string());
+                deps.insert("num-traits = \"0.2.19\"".to_string());
             }
             _ => {}
         }
@@ -927,62 +957,70 @@ fn generate_cargo_toml(
         match crate_name.as_str() {
             "serde_json" => {
                 deps.insert(
-                    "serde_json = { version = \"1\", features = [\"preserve_order\"] }".to_string(),
+                    "serde_json = { version = \"1.0.149\", features = [\"preserve_order\"] }"
+                        .to_string(),
                 );
-                deps.insert("serde = { version = \"1\", features = [\"derive\"] }".to_string());
+                deps.insert(
+                    "serde = { version = \"1.0.228\", features = [\"derive\"] }".to_string(),
+                );
             }
             "chrono" => {
-                deps.insert("chrono = \"0.4\"".to_string());
+                deps.insert("chrono = \"0.4.44\"".to_string());
             }
             "rand" => {
-                deps.insert("rand = \"0.8\"".to_string());
+                deps.insert("rand = \"0.10.1\"".to_string());
             }
             "rand_distr" => {
-                deps.insert("rand_distr = \"0.4\"".to_string());
+                deps.insert("rand_distr = \"0.6.0\"".to_string());
             }
             "regex" => {
-                deps.insert("regex = \"1\"".to_string());
+                deps.insert("regex = \"1.12.3\"".to_string());
             }
             "sha2" => {
-                deps.insert("sha2 = \"0.10\"".to_string());
+                deps.insert("sha2 = \"0.11.0\"".to_string());
             }
             "md5" => {
-                deps.insert("md5 = \"0.7\"".to_string());
+                deps.insert("md5 = \"0.8.0\"".to_string());
             }
             "sha1" => {
-                deps.insert("sha1 = \"0.10\"".to_string());
+                deps.insert("sha1 = \"0.11.0\"".to_string());
+            }
+            "uuid" => {
+                deps.insert(
+                    "uuid = { version = \"1.23.1\", features = [\"v3\", \"v5\"] }".to_string(),
+                );
             }
             "blake2" => {
-                deps.insert("blake2 = \"0.10\"".to_string());
+                deps.insert("blake2 = \"0.10.6\"".to_string());
             }
             "base64" => {
-                deps.insert("base64 = \"0.22\"".to_string());
+                deps.insert("base64 = \"0.22.1\"".to_string());
             }
             "toml" => {
                 deps.insert(
-                    "toml = { version = \"0.8\", features = [\"preserve_order\"] }".to_string(),
+                    "toml = { version = \"1.1.2\", features = [\"preserve_order\"] }".to_string(),
                 );
             }
             "flate2" => {
-                deps.insert("flate2 = \"1\"".to_string());
+                deps.insert("flate2 = \"1.1.9\"".to_string());
             }
             "zip" => {
-                deps.insert("zip = \"0.6\"".to_string());
+                deps.insert("zip = \"8.6.0\"".to_string());
             }
             "num-bigint" => {
-                deps.insert("num-bigint = \"0.4\"".to_string());
+                deps.insert("num-bigint = \"0.4.6\"".to_string());
             }
             "num-traits" => {
-                deps.insert("num-traits = \"0.2\"".to_string());
+                deps.insert("num-traits = \"0.2.19\"".to_string());
             }
             "rust_decimal" => {
                 deps.insert(
-                    "rust_decimal = { version = \"1\", features = [\"maths\", \"serde-with-str\"] }".to_string(),
+                    "rust_decimal = { version = \"1.41.0\", features = [\"maths\", \"serde-with-str\"] }".to_string(),
                 );
             }
             "bigdecimal" => {
                 deps.insert(
-                    "bigdecimal = { version = \"0.4\", features = [\"serde\"] }".to_string(),
+                    "bigdecimal = { version = \"0.4.10\", features = [\"serde\"] }".to_string(),
                 );
             }
             _ => {}
@@ -3059,7 +3097,7 @@ fn test_generate_cargo_toml_tomllib_uses_preserve_order_feature() {
     let required_crates = BTreeSet::new();
 
     let cargo_toml = generate_cargo_toml(&stdlib_modules, &required_crates, "sifr_output");
-    assert!(cargo_toml.contains("toml = { version = \"0.8\", features = [\"preserve_order\"] }"));
+    assert!(cargo_toml.contains("toml = { version = \"1.1.2\", features = [\"preserve_order\"] }"));
 }
 
 #[test]
@@ -3068,7 +3106,7 @@ fn test_generate_cargo_toml_required_toml_uses_preserve_order_feature() {
     let required_crates = normalize_dependency_set(vec!["toml".to_string()].into_iter());
 
     let cargo_toml = generate_cargo_toml(&stdlib_modules, &required_crates, "sifr_output");
-    assert!(cargo_toml.contains("toml = { version = \"0.8\", features = [\"preserve_order\"] }"));
+    assert!(cargo_toml.contains("toml = { version = \"1.1.2\", features = [\"preserve_order\"] }"));
 }
 
 fn sample_cache_entry(
