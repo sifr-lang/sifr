@@ -170,7 +170,7 @@ pub(super) fn lower_zip_add_file(args: &[RustExpr]) -> Option<RustExpr> {
                     func: Box::new(RustExpr::Path(vec![
                         "zip".to_string(),
                         "write".to_string(),
-                        "FileOptions".to_string(),
+                        "SimpleFileOptions".to_string(),
                         "default".to_string(),
                     ])),
                     args: vec![],
@@ -290,7 +290,7 @@ pub(super) fn lower_zip_add_file_bytes(args: &[RustExpr]) -> Option<RustExpr> {
                     func: Box::new(RustExpr::Path(vec![
                         "zip".to_string(),
                         "write".to_string(),
-                        "FileOptions".to_string(),
+                        "SimpleFileOptions".to_string(),
                         "default".to_string(),
                     ])),
                     args: vec![],

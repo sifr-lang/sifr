@@ -827,10 +827,10 @@ fn demo_os() {
 fn demo_hashlib() {
     println!("=== hashlib new intrinsics ===");
     let s: String = "hello".to_string();
-    println!("{}", format!("{}{}", "sha224 len = ".to_string(), format!("{}", format!("{:x}", (<sha2::Sha224 as sha2::Digest>::digest)((s).as_bytes())).chars().count() as i64)));
-    println!("{}", format!("{}{}", "sha384 len = ".to_string(), format!("{}", format!("{:x}", (<sha2::Sha384 as sha2::Digest>::digest)((s).as_bytes())).chars().count() as i64)));
-    println!("{}", format!("{}{}", "blake2b len = ".to_string(), format!("{}", format!("{:x}", (<blake2::Blake2b512 as blake2::Digest>::digest)((s).as_bytes())).chars().count() as i64)));
-    println!("{}", format!("{}{}", "blake2s len = ".to_string(), format!("{}", format!("{:x}", (<blake2::Blake2s256 as blake2::Digest>::digest)((s).as_bytes())).chars().count() as i64)));
+    println!("{}", format!("{}{}", "sha224 len = ".to_string(), format!("{}", (<sha2::Sha224 as sha2::Digest>::digest)((s).as_bytes()).iter().map(|__byte| format!("{:02x}", *__byte)).collect::<Vec<String>>().join("".to_string().as_str()).chars().count() as i64)));
+    println!("{}", format!("{}{}", "sha384 len = ".to_string(), format!("{}", (<sha2::Sha384 as sha2::Digest>::digest)((s).as_bytes()).iter().map(|__byte| format!("{:02x}", *__byte)).collect::<Vec<String>>().join("".to_string().as_str()).chars().count() as i64)));
+    println!("{}", format!("{}{}", "blake2b len = ".to_string(), format!("{}", (<blake2::Blake2b512 as blake2::Digest>::digest)((s).as_bytes()).iter().map(|__byte| format!("{:02x}", *__byte)).collect::<Vec<String>>().join("".to_string().as_str()).chars().count() as i64)));
+    println!("{}", format!("{}{}", "blake2s len = ".to_string(), format!("{}", (<blake2::Blake2s256 as blake2::Digest>::digest)((s).as_bytes()).iter().map(|__byte| format!("{:02x}", *__byte)).collect::<Vec<String>>().join("".to_string().as_str()).chars().count() as i64)));
 }
 
 fn demo_platform() {

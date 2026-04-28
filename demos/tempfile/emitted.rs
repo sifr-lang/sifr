@@ -3,7 +3,7 @@ fn _random_suffix() -> String {
     let n: i64 = {
         let __start = 100000 as i64;
         let __end = 999999 as i64;
-        __start + rand::Rng::gen_range(&mut rand::thread_rng(), 0..(__end - __start) + 1)
+        __start + rand::RngExt::random_range(&mut rand::rng(), 0..(__end - __start) + 1)
     };
     return format!("{}", n);
 }

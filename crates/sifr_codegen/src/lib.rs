@@ -835,86 +835,88 @@ edition = "2021"
         match module_name.as_str() {
             "sifr.json" | "sifr.collections" | "_sifr.json" | "_sifr.collections" => {
                 if !deps.contains(
-                    &"serde_json = { version = \"1\", features = [\"preserve_order\"] }"
+                    &"serde_json = { version = \"1.0.149\", features = [\"preserve_order\"] }"
                         .to_string(),
                 ) {
                     deps.push(
-                        "serde_json = { version = \"1\", features = [\"preserve_order\"] }"
+                        "serde_json = { version = \"1.0.149\", features = [\"preserve_order\"] }"
                             .to_string(),
                     );
-                    deps.push("serde = { version = \"1\", features = [\"derive\"] }".to_string());
+                    deps.push(
+                        "serde = { version = \"1.0.228\", features = [\"derive\"] }".to_string(),
+                    );
                 }
             }
             "sifr.time" | "_sifr.time" => {
-                if !deps.contains(&"chrono = \"0.4\"".to_string()) {
-                    deps.push("chrono = \"0.4\"".to_string());
+                if !deps.contains(&"chrono = \"0.4.44\"".to_string()) {
+                    deps.push("chrono = \"0.4.44\"".to_string());
                 }
             }
             "sifr.random" | "_sifr.crypto" => {
-                if !deps.contains(&"rand = \"0.8\"".to_string()) {
-                    deps.push("rand = \"0.8\"".to_string());
+                if !deps.contains(&"rand = \"0.10.1\"".to_string()) {
+                    deps.push("rand = \"0.10.1\"".to_string());
                 }
-                if !deps.contains(&"rand_distr = \"0.4\"".to_string()) {
-                    deps.push("rand_distr = \"0.4\"".to_string());
+                if !deps.contains(&"rand_distr = \"0.6.0\"".to_string()) {
+                    deps.push("rand_distr = \"0.6.0\"".to_string());
                 }
             }
             "sifr.uuid" | "_sifr.uuid" => {
-                if !deps.contains(&"rand = \"0.8\"".to_string()) {
-                    deps.push("rand = \"0.8\"".to_string());
+                if !deps.contains(&"rand = \"0.10.1\"".to_string()) {
+                    deps.push("rand = \"0.10.1\"".to_string());
                 }
                 let uuid_dep =
-                    "uuid = { version = \"1\", features = [\"v3\", \"v5\"] }".to_string();
+                    "uuid = { version = \"1.23.1\", features = [\"v3\", \"v5\"] }".to_string();
                 if !deps.contains(&uuid_dep) {
                     deps.push(uuid_dep);
                 }
             }
             "sifr.re" | "_sifr.regex" => {
-                if !deps.contains(&"regex = \"1\"".to_string()) {
-                    deps.push("regex = \"1\"".to_string());
+                if !deps.contains(&"regex = \"1.12.3\"".to_string()) {
+                    deps.push("regex = \"1.12.3\"".to_string());
                 }
             }
             "sifr.pathlib" => {
-                if !deps.contains(&"regex = \"1\"".to_string()) {
-                    deps.push("regex = \"1\"".to_string());
+                if !deps.contains(&"regex = \"1.12.3\"".to_string()) {
+                    deps.push("regex = \"1.12.3\"".to_string());
                 }
             }
             "sifr.hash" | "sifr.hashlib" => {
-                if !deps.contains(&"sha2 = \"0.10\"".to_string()) {
-                    deps.push("sha2 = \"0.10\"".to_string());
-                    deps.push("md5 = \"0.7\"".to_string());
-                    deps.push("sha1 = \"0.10\"".to_string());
-                    deps.push("blake2 = \"0.10\"".to_string());
+                if !deps.contains(&"sha2 = \"0.11.0\"".to_string()) {
+                    deps.push("sha2 = \"0.11.0\"".to_string());
+                    deps.push("md5 = \"0.8.0\"".to_string());
+                    deps.push("sha1 = \"0.11.0\"".to_string());
+                    deps.push("blake2 = \"0.10.6\"".to_string());
                 }
             }
             "sifr.encoding" | "sifr.base64" => {
-                if !deps.contains(&"base64 = \"0.22\"".to_string()) {
-                    deps.push("base64 = \"0.22\"".to_string());
+                if !deps.contains(&"base64 = \"0.22.1\"".to_string()) {
+                    deps.push("base64 = \"0.22.1\"".to_string());
                 }
             }
             "sifr.tomllib" | "_sifr.toml" => {
                 let toml_dep =
-                    "toml = { version = \"0.8\", features = [\"preserve_order\"] }".to_string();
+                    "toml = { version = \"1.1.2\", features = [\"preserve_order\"] }".to_string();
                 if !deps.contains(&toml_dep) {
                     deps.push(toml_dep);
                 }
             }
             "sifr.datetime" | "_sifr.datetime" => {
-                if !deps.contains(&"chrono = \"0.4\"".to_string()) {
-                    deps.push("chrono = \"0.4\"".to_string());
+                if !deps.contains(&"chrono = \"0.4.44\"".to_string()) {
+                    deps.push("chrono = \"0.4.44\"".to_string());
                 }
             }
             "sifr.gzip" | "sifr.zipfile" | "_sifr.compress" => {
-                if !deps.contains(&"flate2 = \"1\"".to_string()) {
-                    deps.push("flate2 = \"1\"".to_string());
+                if !deps.contains(&"flate2 = \"1.1.9\"".to_string()) {
+                    deps.push("flate2 = \"1.1.9\"".to_string());
                 }
-                if !deps.contains(&"zip = \"0.6\"".to_string()) {
-                    deps.push("zip = \"0.6\"".to_string());
+                if !deps.contains(&"zip = \"8.6.0\"".to_string()) {
+                    deps.push("zip = \"8.6.0\"".to_string());
                 }
             }
             "_bigint" => {
-                if !deps.contains(&"num-bigint = \"0.4\"".to_string()) {
-                    deps.push("num-bigint = \"0.4\"".to_string());
-                    deps.push("num-traits = \"0.2\"".to_string());
+                if !deps.contains(&"num-bigint = \"0.4.6\"".to_string()) {
+                    deps.push("num-bigint = \"0.4.6\"".to_string());
+                    deps.push("num-traits = \"0.2.19\"".to_string());
                 }
             }
             // sifr.io, sifr.env, sifr.os, sifr.math, sifr.test, sifr.bytes, sifr.sys,
@@ -927,114 +929,114 @@ edition = "2021"
         match crate_name.as_str() {
             "serde_json" => {
                 if !deps.contains(
-                    &"serde_json = { version = \"1\", features = [\"preserve_order\"] }"
+                    &"serde_json = { version = \"1.0.149\", features = [\"preserve_order\"] }"
                         .to_string(),
                 ) {
                     deps.push(
-                        "serde_json = { version = \"1\", features = [\"preserve_order\"] }"
+                        "serde_json = { version = \"1.0.149\", features = [\"preserve_order\"] }"
                             .to_string(),
                     );
                 }
                 if !deps
-                    .contains(&"serde = { version = \"1\", features = [\"derive\"] }".to_string())
+                    .contains(&"serde = { version = \"1.0.228\", features = [\"derive\"] }".to_string())
                 {
-                    deps.push("serde = { version = \"1\", features = [\"derive\"] }".to_string());
+                    deps.push("serde = { version = \"1.0.228\", features = [\"derive\"] }".to_string());
                 }
             }
             "chrono" => {
-                if !deps.contains(&"chrono = \"0.4\"".to_string()) {
-                    deps.push("chrono = \"0.4\"".to_string());
+                if !deps.contains(&"chrono = \"0.4.44\"".to_string()) {
+                    deps.push("chrono = \"0.4.44\"".to_string());
                 }
             }
             "rand" => {
-                if !deps.contains(&"rand = \"0.8\"".to_string()) {
-                    deps.push("rand = \"0.8\"".to_string());
+                if !deps.contains(&"rand = \"0.10.1\"".to_string()) {
+                    deps.push("rand = \"0.10.1\"".to_string());
                 }
             }
             "rand_distr" => {
-                if !deps.contains(&"rand_distr = \"0.4\"".to_string()) {
-                    deps.push("rand_distr = \"0.4\"".to_string());
+                if !deps.contains(&"rand_distr = \"0.6.0\"".to_string()) {
+                    deps.push("rand_distr = \"0.6.0\"".to_string());
                 }
             }
             "regex" => {
-                if !deps.contains(&"regex = \"1\"".to_string()) {
-                    deps.push("regex = \"1\"".to_string());
+                if !deps.contains(&"regex = \"1.12.3\"".to_string()) {
+                    deps.push("regex = \"1.12.3\"".to_string());
                 }
             }
             "sha2" => {
-                if !deps.contains(&"sha2 = \"0.10\"".to_string()) {
-                    deps.push("sha2 = \"0.10\"".to_string());
+                if !deps.contains(&"sha2 = \"0.11.0\"".to_string()) {
+                    deps.push("sha2 = \"0.11.0\"".to_string());
                 }
             }
             "md5" => {
-                if !deps.contains(&"md5 = \"0.7\"".to_string()) {
-                    deps.push("md5 = \"0.7\"".to_string());
+                if !deps.contains(&"md5 = \"0.8.0\"".to_string()) {
+                    deps.push("md5 = \"0.8.0\"".to_string());
                 }
             }
             "sha1" => {
-                if !deps.contains(&"sha1 = \"0.10\"".to_string()) {
-                    deps.push("sha1 = \"0.10\"".to_string());
+                if !deps.contains(&"sha1 = \"0.11.0\"".to_string()) {
+                    deps.push("sha1 = \"0.11.0\"".to_string());
                 }
             }
             "uuid" => {
                 let uuid_dep =
-                    "uuid = { version = \"1\", features = [\"v3\", \"v5\"] }".to_string();
+                    "uuid = { version = \"1.23.1\", features = [\"v3\", \"v5\"] }".to_string();
                 if !deps.contains(&uuid_dep) {
                     deps.push(uuid_dep);
                 }
             }
             "blake2" => {
-                if !deps.contains(&"blake2 = \"0.10\"".to_string()) {
-                    deps.push("blake2 = \"0.10\"".to_string());
+                if !deps.contains(&"blake2 = \"0.10.6\"".to_string()) {
+                    deps.push("blake2 = \"0.10.6\"".to_string());
                 }
             }
             "base64" => {
-                if !deps.contains(&"base64 = \"0.22\"".to_string()) {
-                    deps.push("base64 = \"0.22\"".to_string());
+                if !deps.contains(&"base64 = \"0.22.1\"".to_string()) {
+                    deps.push("base64 = \"0.22.1\"".to_string());
                 }
             }
             "toml" => {
                 let toml_dep =
-                    "toml = { version = \"0.8\", features = [\"preserve_order\"] }".to_string();
+                    "toml = { version = \"1.1.2\", features = [\"preserve_order\"] }".to_string();
                 if !deps.contains(&toml_dep) {
                     deps.push(toml_dep);
                 }
             }
             "flate2" => {
-                if !deps.contains(&"flate2 = \"1\"".to_string()) {
-                    deps.push("flate2 = \"1\"".to_string());
+                if !deps.contains(&"flate2 = \"1.1.9\"".to_string()) {
+                    deps.push("flate2 = \"1.1.9\"".to_string());
                 }
             }
             "zip" => {
-                if !deps.contains(&"zip = \"0.6\"".to_string()) {
-                    deps.push("zip = \"0.6\"".to_string());
+                if !deps.contains(&"zip = \"8.6.0\"".to_string()) {
+                    deps.push("zip = \"8.6.0\"".to_string());
                 }
             }
             "num-bigint" => {
-                if !deps.contains(&"num-bigint = \"0.4\"".to_string()) {
-                    deps.push("num-bigint = \"0.4\"".to_string());
+                if !deps.contains(&"num-bigint = \"0.4.6\"".to_string()) {
+                    deps.push("num-bigint = \"0.4.6\"".to_string());
                 }
             }
             "num-traits" => {
-                if !deps.contains(&"num-traits = \"0.2\"".to_string()) {
-                    deps.push("num-traits = \"0.2\"".to_string());
+                if !deps.contains(&"num-traits = \"0.2.19\"".to_string()) {
+                    deps.push("num-traits = \"0.2.19\"".to_string());
                 }
             }
             "rust_decimal" => {
                 if !deps.contains(
-                    &"rust_decimal = { version = \"1\", features = [\"maths\", \"serde-with-str\"] }".to_string(),
+                    &"rust_decimal = { version = \"1.41.0\", features = [\"maths\", \"serde-with-str\"] }".to_string(),
                 ) {
                     deps.push(
-                        "rust_decimal = { version = \"1\", features = [\"maths\", \"serde-with-str\"] }".to_string(),
+                        "rust_decimal = { version = \"1.41.0\", features = [\"maths\", \"serde-with-str\"] }".to_string(),
                     );
                 }
             }
             "bigdecimal" => {
                 if !deps.contains(
-                    &"bigdecimal = { version = \"0.4\", features = [\"serde\"] }".to_string(),
+                    &"bigdecimal = { version = \"0.4.10\", features = [\"serde\"] }".to_string(),
                 ) {
                     deps.push(
-                        "bigdecimal = { version = \"0.4\", features = [\"serde\"] }".to_string(),
+                        "bigdecimal = { version = \"0.4.10\", features = [\"serde\"] }".to_string(),
                     );
                 }
             }

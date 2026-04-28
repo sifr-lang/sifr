@@ -2,6 +2,5 @@ error: could not parse sifr.toml at '<WORKSPACE>/crates/sifr/tests/verification/
   |
 1 | [source
   |        ^
-invalid table header
-expected `.`, `]`
+unclosed table, expected `]`
 

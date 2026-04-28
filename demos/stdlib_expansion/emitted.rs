@@ -628,7 +628,7 @@ fn token_hex(nbytes: i64) -> String {
             let __start = 0 as i64;
             let __end = 15 as i64;
             __start
-                + rand::Rng::gen_range(&mut rand::thread_rng(), 0..(__end - __start) + 1)
+                + rand::RngExt::random_range(&mut rand::rng(), 0..(__end - __start) + 1)
         };
         let ch: Option<String> = {
             let __sifr_index_str = &hex_chars;

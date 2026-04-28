@@ -1,5 +1,6 @@
 //! Hashlib intrinsic lowerers for registry lowering.
 
+use super::digest_format::bytes_to_hex_expr;
 use crate::RustExpr;
 
 fn parenthesized(expr: &RustExpr) -> RustExpr {
@@ -7,18 +8,14 @@ fn parenthesized(expr: &RustExpr) -> RustExpr {
 }
 
 fn digest_hex(digest_path: &str, arg: &RustExpr) -> RustExpr {
-    RustExpr::FormatMacro {
-        name: "format".to_string(),
-        format_str: "{:x}".to_string(),
-        args: vec![RustExpr::FnCall {
-            func: Box::new(RustExpr::Ident(digest_path.to_string())),
-            args: vec![RustExpr::MethodCall {
-                receiver: Box::new(parenthesized(arg)),
-                method: "as_bytes".to_string(),
-                args: vec![],
-            }],
+    bytes_to_hex_expr(RustExpr::FnCall {
+        func: Box::new(RustExpr::Ident(digest_path.to_string())),
+        args: vec![RustExpr::MethodCall {
+            receiver: Box::new(parenthesized(arg)),
+            method: "as_bytes".to_string(),
+            args: vec![],
         }],
-    }
+    })
 }
 
 fn digest_bytes(digest_path: &str, arg: &RustExpr) -> RustExpr {

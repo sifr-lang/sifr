@@ -609,7 +609,7 @@ fn main() {
     let r: i64 = {
     let __start = 1 as i64;
     let __end = 100 as i64;
-    __start + rand::Rng::gen_range(&mut rand::thread_rng(), 0..(__end - __start) + 1)
+    __start + rand::RngExt::random_range(&mut rand::rng(), 0..(__end - __start) + 1)
 };
     println!("Random int [1,100]: {}", r);
     let f: f64 = rand::random::<f64>();
@@ -631,8 +631,8 @@ fn main() {
         println!("regex error: {}", err.message);
     }
     println!("=== sifr.hashlib ===");
-    println!("SHA-256(\'sifr\'): {}", format!("{:x}", (<sha2::Sha256 as sha2::Digest>::digest)(("sifr".to_string()).as_bytes())));
-    println!("MD5(\'sifr\'): {}", format!("{:x}", md5::compute(("sifr".to_string()).as_bytes())));
+    println!("SHA-256(\'sifr\'): {}", (<sha2::Sha256 as sha2::Digest>::digest)(("sifr".to_string()).as_bytes()).iter().map(|__byte| format!("{:02x}", *__byte)).collect::<Vec<String>>().join("".to_string().as_str()));
+    println!("MD5(\'sifr\'): {}", md5::compute(("sifr".to_string()).as_bytes()).0.iter().map(|__byte| format!("{:02x}", *__byte)).collect::<Vec<String>>().join("".to_string().as_str()));
     println!("=== sifr.base64 ===");
     let encoded: String = base64::Engine::encode(&base64::engine::general_purpose::STANDARD, &"Hello, Sifr!".to_string().as_bytes());
     println!("Base64 encode: {}", encoded);

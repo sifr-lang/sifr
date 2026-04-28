@@ -6,6 +6,7 @@ mod bytes;
 mod calendar;
 mod collections;
 mod datetime;
+mod digest_format;
 mod env;
 mod file_handles;
 mod gzip;
@@ -39,7 +40,7 @@ pub(crate) struct LoweredIntrinsic {
 
 fn additional_required_crates(name: &str) -> &'static [&'static str] {
     match name {
-        // random_gauss uses rand_distr::Normal in addition to rand::thread_rng.
+        // random_gauss uses rand_distr::Normal in addition to rand::rng.
         "random_gauss" => &["rand_distr"],
         _ => &[],
     }
@@ -687,7 +688,7 @@ mod tests {
         let rint =
             lower_intrinsic("random_int", &["1".to_string(), "9".to_string()]).expect("random_int");
         assert_eq!(rint.required_crate, Some("rand"));
-        assert!(render_expr(&rint.expr).contains("rand::Rng::gen_range"));
+        assert!(render_expr(&rint.expr).contains("rand::RngExt::random_range"));
 
         let rfloat = lower_intrinsic("random_float", &[]).expect("random_float");
         assert_eq!(rfloat.required_crate, Some("rand"));
@@ -707,7 +708,7 @@ mod tests {
 
         let sample = lower_intrinsic("random_sample", &["vals".to_string(), "3".to_string()])
             .expect("random_sample");
-        assert!(render_expr(&sample.expr).contains("choose_multiple"));
+        assert!(render_expr(&sample.expr).contains("IndexedRandom::sample"));
 
         let randrange = lower_intrinsic(
             "random_randrange",
@@ -888,7 +889,7 @@ mod tests {
     fn lowers_toml_intrinsic_with_dependency_metadata() {
         let parsed = lower_intrinsic("toml_parse", &["payload".to_string()]).expect("toml_parse");
         assert_eq!(parsed.required_crate, Some("toml"));
-        assert!(render_expr(&parsed.expr).contains("parse::<toml::Value>()"));
+        assert!(render_expr(&parsed.expr).contains("parse::<toml::Table>()"));
         assert!(render_expr(&parsed.expr).contains("TOMLDecodeError"));
     }
 

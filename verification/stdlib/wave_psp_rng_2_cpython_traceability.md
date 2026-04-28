@@ -20,11 +20,11 @@ Scope: advanced hash + binary surface expansion for `sifr.hashlib` and `sifr.bas
 
 ## Dependency Audit Note (Wave 2)
 
-- Active generated-runtime hash dependencies in this wave remain:
-  - `sha2 = "0.10"`
-  - `md5 = "0.7"`
-  - `sha1 = "0.10"`
-  - `blake2 = "0.10"`
+- Active generated-runtime hash dependencies in this wave are pinned to:
+  - `sha2 = "0.11.0"`
+  - `md5 = "0.8.0"`
+  - `sha1 = "0.11.0"`
+  - `blake2 = "0.10.6"`
 - No SHA3/SHAKE dependency is currently registered for generated runtime crates in this wave.
 - Outcome: SHA3/SHAKE remains explicitly unsupported and guarded by typed boundaries.
 

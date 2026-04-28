@@ -329,9 +329,13 @@ pub(super) fn lower_toml_parse(args: &[RustExpr]) -> Option<RustExpr> {
         expr: Some(Box::new(RustExpr::MethodCall {
             receiver: Box::new(RustExpr::MethodCall {
                 receiver: Box::new(RustExpr::MethodCall {
-                    receiver: Box::new(RustExpr::Ident("__toml_input".to_string())),
-                    method: "parse::<toml::Value>".to_string(),
-                    args: vec![],
+                    receiver: Box::new(RustExpr::MethodCall {
+                        receiver: Box::new(RustExpr::Ident("__toml_input".to_string())),
+                        method: "parse::<toml::Table>".to_string(),
+                        args: vec![],
+                    }),
+                    method: "map".to_string(),
+                    args: vec![RustExpr::Ident("toml::Value::Table".to_string())],
                 }),
                 method: "map_err".to_string(),
                 args: vec![RustExpr::Closure {

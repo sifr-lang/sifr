@@ -9,9 +9,9 @@ license = { workspace = true }
 [dependencies]
 sifr_hir = { workspace = true }
 sifr_type_system = { workspace = true }
-syn = { version = "2", features = ["full", "visit"] }
-prettyplease = "0.2"
-proc-macro2 = "1"
+syn = { version = "2.0.117", features = ["full", "visit"] }
+prettyplease = "0.2.37"
+proc-macro2 = "1.0.106"
 
 [dev-dependencies]
 sifr_python_parser = { workspace = true }

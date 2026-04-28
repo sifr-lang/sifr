@@ -191,13 +191,13 @@ fn rewrite_zip_with_entry(path: &Path, name: &str, content: &[u8]) -> io::Result
 
     for (existing_name, existing_data) in existing_entries {
         writer
-            .start_file(existing_name, zip::write::FileOptions::default())
+            .start_file(existing_name, zip::write::SimpleFileOptions::default())
             .map_err(|err| io::Error::other(err.to_string()))?;
         writer.write_all(&existing_data)?;
     }
 
     writer
-        .start_file(name.to_string(), zip::write::FileOptions::default())
+        .start_file(name.to_string(), zip::write::SimpleFileOptions::default())
         .map_err(|err| io::Error::other(err.to_string()))?;
     writer.write_all(content)?;
     writer

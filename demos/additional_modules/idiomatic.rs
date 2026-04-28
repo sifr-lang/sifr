@@ -233,12 +233,12 @@ fn rewrite_zip_entry(path: &str, name: &str, content: &[u8]) -> Result<(), IOErr
     let mut writer = zip::ZipWriter::new(temp_file);
     for (entry_name, entry_bytes) in existing_entries {
         writer
-            .start_file(entry_name, zip::write::FileOptions::default())
+            .start_file(entry_name, zip::write::SimpleFileOptions::default())
             .map_err(zip_err)?;
         writer.write_all(&entry_bytes).map_err(IOError::from)?;
     }
     writer
-        .start_file(name, zip::write::FileOptions::default())
+        .start_file(name, zip::write::SimpleFileOptions::default())
         .map_err(zip_err)?;
     writer.write_all(content).map_err(IOError::from)?;
     writer.finish().map_err(zip_err)?;

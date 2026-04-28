@@ -294,7 +294,7 @@ fn main() {
     let result: f64 = (9.0 as f64).sqrt();
     assert!(result == (3.0 as f64));
     assert!(std::f64::consts::PI > (3.14 as f64));
-    let h: String = format!("{:x}", (<sha2::Sha256 as sha2::Digest>::digest)(("hello".to_string()).as_bytes()));
+    let h: String = (<sha2::Sha256 as sha2::Digest>::digest)(("hello".to_string()).as_bytes()).iter().map(|__byte| format!("{:02x}", *__byte)).collect::<Vec<String>>().join("".to_string().as_str());
     assert!((h.chars().count() as i64) == (64 as i64));
     let encoded: String = base64::Engine::encode(&base64::engine::general_purpose::STANDARD, &"Hello!".to_string().as_bytes());
     let __sifr_try_res: Result<(), ParseError> = (|| {

@@ -21,7 +21,12 @@ fn sqrt(value: f64) -> f64 {
 fn sha256(text: &str) -> String {
     let mut hasher = Sha256::new();
     hasher.update(text.as_bytes());
-    format!("{:x}", hasher.finalize())
+    hasher
+        .finalize()
+        .iter()
+        .map(|byte| format!("{byte:02x}"))
+        .collect::<Vec<_>>()
+        .join("")
 }
 
 fn base64_encode(text: &str) -> String {

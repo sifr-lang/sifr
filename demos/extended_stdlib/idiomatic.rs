@@ -103,11 +103,21 @@ fn re_replace(pattern: &str, replacement: &str, text: &str) -> Result<String, Re
 fn sha256(text: &str) -> String {
     let mut hasher = Sha256::new();
     hasher.update(text.as_bytes());
-    format!("{:x}", hasher.finalize())
+    hasher
+        .finalize()
+        .iter()
+        .map(|byte| format!("{byte:02x}"))
+        .collect::<Vec<_>>()
+        .join("")
 }
 
 fn md5_hash(text: &str) -> String {
-    format!("{:x}", md5::compute(text.as_bytes()))
+    md5::compute(text.as_bytes())
+        .0
+        .iter()
+        .map(|byte| format!("{byte:02x}"))
+        .collect::<Vec<_>>()
+        .join("")
 }
 
 fn base64_encode(text: &str) -> String {
