@@ -8,7 +8,7 @@ Sifr is not production-released yet. This phase intentionally does not preserve 
 
 ## Execution Status
 
-Current wave: `milestone_diag_2a` diagnostic registry skeleton.
+Current wave: `milestone_diag_3` diagnostic emission inventory.
 
 - [x] Proposal reviewed through final loop and accepted for implementation.
 - [x] Added `crates/sifr_diagnostics` as the canonical leaf crate for diagnostic codes, source spans/source map, model builders, sink emission, rendering, and JSON schema generation.
@@ -20,7 +20,12 @@ Current wave: `milestone_diag_2a` diagnostic registry skeleton.
 - [x] Added the checked-in diagnostic registry skeleton and registry validation tests.
 - [x] Added generated diagnostic-code docs plus docs drift validation.
 - [x] Claude review for `milestone_diag_2a` completed and all actionable findings addressed. Review rounds: `reviews/semantic-diagnostic-code-taxonomy-diag-2a-review-pass-1.md`, `reviews/semantic-diagnostic-code-taxonomy-diag-2a-review-pass-2.md`.
-- [ ] `milestone_diag_2a` PR opened at https://github.com/sifr-lang/sifr/pull/1668; merge pending.
+- [x] `milestone_diag_2a` PR opened and merged: https://github.com/sifr-lang/sifr/pull/1668.
+- [x] Inventoried raw HIR `ctx.error(...)` call sites, `CompileError` construction paths, `sifr_type_system::TypeError`/`TypeErrorKind` variants, and e2e expectation/baseline code surfaces in `internal_docs/diagnostic_emission_inventory.md`.
+- [x] Assigned each current user-facing diagnostic category to a target family/code and fixture plan in `internal_docs/diagnostic_emission_inventory.md`.
+- [x] Identified wrong-layer diagnostics, related-span/source-map needs, and recovery behavior expectations in `internal_docs/diagnostic_emission_inventory.md`.
+- [x] Claude review for `milestone_diag_3` completed and all actionable findings addressed. Review rounds: `reviews/semantic-diagnostic-code-taxonomy-diag-3-review-pass-1.md`, `reviews/semantic-diagnostic-code-taxonomy-diag-3-review-pass-2.md`.
+- [ ] `milestone_diag_3` PR opened and merged.
 
 Validation evidence for the current wave:
 
@@ -31,6 +36,10 @@ Validation evidence for the current wave:
 - `cargo check --workspace` passed.
 - `cargo clippy -p sifr_diagnostics --all-targets -- -D warnings` passed.
 - `scripts/run_all_tests.sh --profile quick` passed with report signature `e1bf653aaa770517` on the `milestone_diag_2a` branch.
+
+Validation evidence for `milestone_diag_3`:
+
+- `scripts/run_all_tests.sh --profile quick` passed with report signature `e1bf653aaa770517` on the inventory-only branch.
 
 ## Relationship to Existing Roadmap
 
