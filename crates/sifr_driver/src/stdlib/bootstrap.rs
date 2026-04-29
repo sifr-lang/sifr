@@ -61,6 +61,10 @@ fn compile_stdlib_uncached_impl() -> Result<StdlibCompiled, Vec<CompileError>> {
                 let compile_errors: Vec<CompileError> = errors
                     .into_iter()
                     .map(|e| {
+                        // Even if `e.code` is `Some(_)`, stdlib lowering
+                        // failures collapse to bootstrap failures from the
+                        // caller's perspective, not user-facing semantic
+                        // diagnostics.
                         CompileError::with_code(
                             format!("[stdlib:{}] {}", module_name, e.message),
                             CompilePhase::TypeCheck,
