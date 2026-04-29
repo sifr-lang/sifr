@@ -73,6 +73,7 @@ use imports::resolve_imports_early;
 use len_aliases::LenAliasFact;
 use sequence_guards::SequenceGuard;
 use sequence_pointers::SequencePointerFact;
+use sifr_diagnostics::DiagnosticCode;
 use type_aliases::{collect_type_alias_decls, predeclare_type_aliases, resolve_type_aliases};
 use type_var_collection::collect_type_vars;
 use typing_and_functions::{
@@ -81,6 +82,7 @@ use typing_and_functions::{
 /// Errors produced during lowering.
 #[derive(Debug, Clone)]
 pub struct LoweringError {
+    pub code: Option<DiagnosticCode>,
     pub message: String,
     pub line: Option<u32>,
     pub col: Option<u32>,
@@ -208,6 +210,22 @@ impl LowerCtx {
 
     fn error(&mut self, message: String) {
         self.errors.push(LoweringError {
+            code: None,
+            message,
+            line: None,
+            col: None,
+        });
+    }
+
+    // TODO(diag_4a slice 2b): remove this allow when the first domain
+    // migration calls `error_with_code`.
+    #[allow(
+        dead_code,
+        reason = "diag_4a slice 2a adds transport before per-domain HIR call-site migration"
+    )]
+    fn error_with_code(&mut self, code: DiagnosticCode, message: String) {
+        self.errors.push(LoweringError {
+            code: Some(code),
             message,
             line: None,
             col: None,
@@ -224,6 +242,9 @@ impl LowerCtx {
             .find_map(|hints| hints.get(name))
     }
 }
+
+#[cfg(test)]
+mod diagnostic_transport_tests;
 const TYPEVAR_CONSTRAINT_PREFIX: &str = "__constraint__:";
 
 fn encode_typevar_constraint(name: &str) -> String {

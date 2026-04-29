@@ -110,8 +110,9 @@ pub(crate) fn build_test_runner_project(
                     .map(|error| CompileError {
                         message: format!("[{}] {}", test_file.display(), error.message),
                         phase: CompilePhase::TypeCheck,
-                        // Preserves None until HIR LoweringError carries a
-                        // structured code in the next diag_4a slice.
+                        // Forwards `LoweringError.code` faithfully: `None`
+                        // for legacy call sites and `Some(_)` after upcoming
+                        // diag_4a slice-2b migrations.
                         code: error.code,
                     })
                     .collect();
