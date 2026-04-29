@@ -30,7 +30,86 @@ Tooling metadata defaults: `tool_actions` is empty, `fix_all_eligible` is `false
 
 ## Active Codes
 
-No active public diagnostic codes are registered yet.
+| Code | Severity | Summary |
+| --- | --- | --- |
+| [`SIFR-PARSE-0002`](SIFR-PARSE-0002.md) | Error | Expected token or generic parser recovery failure. |
+| [`SIFR-PARSE-0003`](SIFR-PARSE-0003.md) | Error | Lexical or interpolated string parser failure. |
+| [`SIFR-PARSE-0004`](SIFR-PARSE-0004.md) | Error | Indentation or same-line statement layout parser failure. |
+| [`SIFR-PARSE-0005`](SIFR-PARSE-0005.md) | Error | Invalid assignment, delete, starred, or named-expression target syntax. |
+| [`SIFR-PARSE-0006`](SIFR-PARSE-0006.md) | Error | Invalid call argument order or unpacking syntax. |
+| [`SIFR-PARSE-0007`](SIFR-PARSE-0007.md) | Error | Empty or malformed declaration list syntax. |
+| [`SIFR-PARSE-0008`](SIFR-PARSE-0008.md) | Error | Invalid match-pattern syntax. |
+| [`SIFR-PARSE-0009`](SIFR-PARSE-0009.md) | Error | Unsupported parser syntax or interactive-only syntax. |
+| [`SIFR-NAME-0001`](SIFR-NAME-0001.md) | Error | Undefined variable. |
+| [`SIFR-NAME-0002`](SIFR-NAME-0002.md) | Error | Undefined function or callable. |
+| [`SIFR-NAME-0003`](SIFR-NAME-0003.md) | Error | Unknown type or generic type name. |
+| [`SIFR-NAME-0004`](SIFR-NAME-0004.md) | Error | Missing module or class member. |
+| [`SIFR-IMPORT-0001`](SIFR-IMPORT-0001.md) | Error | Forbidden intrinsic import. |
+| [`SIFR-IMPORT-0002`](SIFR-IMPORT-0002.md) | Error | Unknown source module import target. |
+| [`SIFR-TYPE-0002`](SIFR-TYPE-0002.md) | Error | Expected and actual types are incompatible. |
+| [`SIFR-TYPE-0003`](SIFR-TYPE-0003.md) | Error | If-expression or conditional branches have incompatible types. |
+| [`SIFR-TYPE-0004`](SIFR-TYPE-0004.md) | Error | A required type annotation is missing. |
+| [`SIFR-TYPE-0005`](SIFR-TYPE-0005.md) | Error | Unsupported operator or operand types. |
+| [`SIFR-TYPE-0006`](SIFR-TYPE-0006.md) | Error | Int and bigint are mixed without an explicit conversion. |
+| [`SIFR-TYPE-0007`](SIFR-TYPE-0007.md) | Error | Invalid type annotation shape. |
+| [`SIFR-TYPE-0008`](SIFR-TYPE-0008.md) | Error | Container literal elements, keys, or values have conflicting types. |
+| [`SIFR-TYPE-0009`](SIFR-TYPE-0009.md) | Error | Tuple or list unpacking shape mismatch. |
+| [`SIFR-TYPE-0901`](SIFR-TYPE-0901.md) | Warning | Integer arithmetic may overflow at runtime. |
+| [`SIFR-TYPE-0902`](SIFR-TYPE-0902.md) | Note | Reveal the inferred static type of an expression. |
+| [`SIFR-DECIMAL-0001`](SIFR-DECIMAL-0001.md) | Error | Invalid Decimal exact literal. |
+| [`SIFR-DECIMAL-0002`](SIFR-DECIMAL-0002.md) | Error | Invalid BigDecimal exact literal. |
+| [`SIFR-DECIMAL-0003`](SIFR-DECIMAL-0003.md) | Error | Float mixed with a decimal numeric type. |
+| [`SIFR-DECIMAL-0004`](SIFR-DECIMAL-0004.md) | Error | Decimal and BigDecimal mixed in one operation. |
+| [`SIFR-DECIMAL-0005`](SIFR-DECIMAL-0005.md) | Error | Decimal float construction or conversion is forbidden. |
+| [`SIFR-DECIMAL-0006`](SIFR-DECIMAL-0006.md) | Error | BigDecimal float construction or conversion is forbidden. |
+| [`SIFR-DECIMAL-0007`](SIFR-DECIMAL-0007.md) | Error | Decimal scale argument is invalid. |
+| [`SIFR-DECIMAL-0008`](SIFR-DECIMAL-0008.md) | Error | BigDecimal scale or context argument is invalid. |
+| [`SIFR-CALL-0001`](SIFR-CALL-0001.md) | Error | Wrong positional argument count. |
+| [`SIFR-CALL-0002`](SIFR-CALL-0002.md) | Error | Unexpected keyword argument. |
+| [`SIFR-CALL-0003`](SIFR-CALL-0003.md) | Error | Duplicate argument from positional and keyword overlap. |
+| [`SIFR-CALL-0004`](SIFR-CALL-0004.md) | Error | Missing required argument. |
+| [`SIFR-CALL-0005`](SIFR-CALL-0005.md) | Error | Callable arity failure or expression is not callable. |
+| [`SIFR-OWN-0001`](SIFR-OWN-0001.md) | Error | Use after move. |
+| [`SIFR-OWN-0002`](SIFR-OWN-0002.md) | Error | Double mutable borrow. |
+| [`SIFR-OWN-0003`](SIFR-OWN-0003.md) | Error | Borrowed parameter escapes by return or store. |
+| [`SIFR-OWN-0004`](SIFR-OWN-0004.md) | Error | Moved value is reused across loop iterations. |
+| [`SIFR-FLOW-0001`](SIFR-FLOW-0001.md) | Error | Break outside a loop. |
+| [`SIFR-FLOW-0002`](SIFR-FLOW-0002.md) | Error | Continue outside a loop. |
+| [`SIFR-FLOW-0003`](SIFR-FLOW-0003.md) | Error | Invalid nonlocal or nested-function flow. |
+| [`SIFR-FLOW-0901`](SIFR-FLOW-0901.md) | Warning | Unreachable statement ignored during lowering. |
+| [`SIFR-MATCH-0001`](SIFR-MATCH-0001.md) | Error | Non-exhaustive match. |
+| [`SIFR-MATCH-0002`](SIFR-MATCH-0002.md) | Error | Match guard must be bool. |
+| [`SIFR-MATCH-0003`](SIFR-MATCH-0003.md) | Error | Invalid class pattern field. |
+| [`SIFR-PROTO-0001`](SIFR-PROTO-0001.md) | Error | Protocol bound or conformance failure. |
+| [`SIFR-PROTO-0002`](SIFR-PROTO-0002.md) | Error | Invalid iterator or reversible protocol signature. |
+| [`SIFR-PROTO-0003`](SIFR-PROTO-0003.md) | Error | Context-manager protocol is missing. |
+| [`SIFR-PROTO-0004`](SIFR-PROTO-0004.md) | Error | Hashable or comparable protocol is required. |
+| [`SIFR-CLASS-0001`](SIFR-CLASS-0001.md) | Error | Class fields require an initializer or super initializer. |
+| [`SIFR-CLASS-0002`](SIFR-CLASS-0002.md) | Error | Required field declared after a defaulted field. |
+| [`SIFR-CLASS-0003`](SIFR-CLASS-0003.md) | Error | Duplicate enum or class value, or invalid variant. |
+| [`SIFR-CLASS-0004`](SIFR-CLASS-0004.md) | Error | Missing class field or member. |
+| [`SIFR-RESULT-0001`](SIFR-RESULT-0001.md) | Error | Unused Result value. |
+| [`SIFR-RESULT-0002`](SIFR-RESULT-0002.md) | Error | Invalid Result error type. |
+| [`SIFR-RESULT-0003`](SIFR-RESULT-0003.md) | Error | Invalid raise expression. |
+| [`SIFR-STDLIB-0001`](SIFR-STDLIB-0001.md) | Error | Unsupported standard-library constructor, method, or surface. |
+| [`SIFR-STDLIB-0002`](SIFR-STDLIB-0002.md) | Error | Standard-library method or argument type mismatch. |
+| [`SIFR-STDLIB-0003`](SIFR-STDLIB-0003.md) | Error | Embedded standard-library bootstrap failure. |
+| [`SIFR-STDLIB-0004`](SIFR-STDLIB-0004.md) | Error | Standard-library cache build or reuse failure. |
+| [`SIFR-WORKSPACE-0001`](SIFR-WORKSPACE-0001.md) | Error | Malformed workspace manifest. |
+| [`SIFR-WORKSPACE-0002`](SIFR-WORKSPACE-0002.md) | Error | Workspace source root escapes the workspace root. |
+| [`SIFR-WORKSPACE-0003`](SIFR-WORKSPACE-0003.md) | Error | Workspace source root is not a directory. |
+| [`SIFR-WORKSPACE-0004`](SIFR-WORKSPACE-0004.md) | Error | Workspace source root entry has an invalid shape or path. |
+| [`SIFR-WORKSPACE-0101`](SIFR-WORKSPACE-0101.md) | Error | Workspace import target could not be resolved. |
+| [`SIFR-WORKSPACE-0102`](SIFR-WORKSPACE-0102.md) | Error | Workspace import target is ambiguous. |
+| [`SIFR-WORKSPACE-0103`](SIFR-WORKSPACE-0103.md) | Error | Workspace namespace package collision. |
+| [`SIFR-WORKSPACE-0104`](SIFR-WORKSPACE-0104.md) | Error | Workspace import graph contains a cycle. |
+| [`SIFR-CODEGEN-0002`](SIFR-CODEGEN-0002.md) | Error | Code-generation backend or panic-boundary failure. |
+| [`SIFR-BUILD-0002`](SIFR-BUILD-0002.md) | Error | Build file materialization failed. |
+| [`SIFR-BUILD-0003`](SIFR-BUILD-0003.md) | Error | Temporary build workspace creation failed. |
+| [`SIFR-BUILD-0004`](SIFR-BUILD-0004.md) | Error | Cargo manifest generation failed. |
+| [`SIFR-BUILD-0005`](SIFR-BUILD-0005.md) | Error | Rustc or Cargo execution failed. |
+| [`SIFR-BUILD-0006`](SIFR-BUILD-0006.md) | Error | Expected build artifact was not produced. |
+| [`SIFR-INTERNAL-0001`](SIFR-INTERNAL-0001.md) | Error | Unclassified compiler panic after a panic boundary. |
 
 ## Reserved Codes
 
@@ -53,5 +132,13 @@ No active public diagnostic codes are registered yet.
 | `SIFR-CODEGEN-0000` | `CODEGEN` | Reserved family base; not emitted as a diagnostic. |
 | `SIFR-BUILD-0000` | `BUILD` | Reserved family base; not emitted as a diagnostic. |
 | `SIFR-INTERNAL-0000` | `INTERNAL` | Reserved family base; not emitted as a diagnostic. |
-| `SIFR-INTERNAL-0001` | `INTERNAL` | Reserved for unclassified compiler panics after a panic boundary. |
 | `SIFR-INTERNAL-0002` | `INTERNAL` | Reserved for structured recovery-cap omission summaries. |
+
+## Retired Codes
+
+| Code | Family | Summary | Replacement |
+| --- | --- | --- | --- |
+| `SIFR-PARSE-0001` | `PARSE` | Retired opaque parser phase bucket. | `replaced by active PARSE category codes` |
+| `SIFR-TYPE-0001` | `TYPE` | Retired semantic catch-all type-check bucket. | `replaced by active semantic family codes` |
+| `SIFR-CODEGEN-0001` | `CODEGEN` | Retired broad code-generation catch-all. | `replaced by SIFR-CODEGEN-0002 or INTERNAL codes` |
+| `SIFR-BUILD-0001` | `BUILD` | Retired broad build catch-all. | `replaced by active BUILD operation codes` |

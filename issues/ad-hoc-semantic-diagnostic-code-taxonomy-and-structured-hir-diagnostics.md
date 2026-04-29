@@ -8,7 +8,7 @@ Sifr is not production-released yet. This phase intentionally does not preserve 
 
 ## Execution Status
 
-Current wave: `milestone_diag_3` diagnostic emission inventory.
+Current wave: `milestone_diag_2b` diagnostic registry population.
 
 - [x] Proposal reviewed through final loop and accepted for implementation.
 - [x] Added `crates/sifr_diagnostics` as the canonical leaf crate for diagnostic codes, source spans/source map, model builders, sink emission, rendering, and JSON schema generation.
@@ -26,6 +26,11 @@ Current wave: `milestone_diag_3` diagnostic emission inventory.
 - [x] Identified wrong-layer diagnostics, related-span/source-map needs, and recovery behavior expectations in `internal_docs/diagnostic_emission_inventory.md`.
 - [x] Claude review for `milestone_diag_3` completed and all actionable findings addressed. Review rounds: `reviews/semantic-diagnostic-code-taxonomy-diag-3-review-pass-1.md`, `reviews/semantic-diagnostic-code-taxonomy-diag-3-review-pass-2.md`.
 - [x] `milestone_diag_3` PR opened and merged: https://github.com/sifr-lang/sifr/pull/1669.
+- [x] Populated active diagnostic registry entries, retired legacy catch-all codes, and preserved future reservations from the checked-in inventory.
+- [x] Added generated active-code documentation pages and internal registry metadata for owner modules, message templates, declared args, dedupe args, and representative fixture plans.
+- [x] Reviewed existing `SIFR-WORKSPACE-0001..0103` codes against the identity policy and kept them as active precise workspace diagnostics.
+- [x] Claude review for `milestone_diag_2b` completed and all actionable findings addressed. Review rounds: `reviews/semantic-diagnostic-code-taxonomy-diag-2b-review-pass-1.md`, `reviews/semantic-diagnostic-code-taxonomy-diag-2b-review-pass-2.md`, `reviews/semantic-diagnostic-code-taxonomy-diag-2b-review-pass-3.md`.
+- [ ] `milestone_diag_2b` PR opened and merged.
 
 Validation evidence for the current wave:
 
@@ -40,6 +45,15 @@ Validation evidence for the current wave:
 Validation evidence for `milestone_diag_3`:
 
 - `scripts/run_all_tests.sh --profile quick` passed with report signature `e1bf653aaa770517` on the inventory-only branch.
+
+Validation evidence for `milestone_diag_2b`:
+
+- `cargo test -p sifr_diagnostics` passed.
+- `python3 scripts/check_diagnostic_docs_sync.py` passed.
+- `python3 scripts/check_diagnostic_schema_sync.py` passed.
+- `cargo fmt --check -p sifr_diagnostics` passed.
+- `cargo clippy -p sifr_diagnostics --all-targets -- -D warnings` passed.
+- `scripts/run_all_tests.sh --profile quick` passed with report signature `e1bf653aaa770517` on the registry-population branch.
 
 ## Relationship to Existing Roadmap
 
@@ -197,7 +211,7 @@ Existing code renumbering:
 
 | Existing code | New code policy |
 | --- | --- |
-| `SIFR-PARSE-0001` | Reserved meaning only: opaque parser error with no upstream classification. It must not be used when a more specific parser condition is detectable, and guardrails must reject it as a default parser emission code. |
+| `SIFR-PARSE-0001` | Retired as the legacy opaque parser phase bucket. Parser diagnostics use active category codes such as `SIFR-PARSE-0002..0009`; generic upstream recovery context folds into `SIFR-PARSE-0002` with a parser-category JSON arg. |
 | `SIFR-TYPE-0001` | Retired as a public catch-all and never reused. New type diagnostics start at later local codes such as `SIFR-TYPE-0002`. |
 | `SIFR-CODEGEN-0001` | Retired if it is only a broad catch-all; replaced by specific `SIFR-CODEGEN-xxxx` codes assigned from the inventory. Broad unclassified failures use `SIFR-INTERNAL-*`. |
 | `SIFR-BUILD-0001` | Retired if it is only a broad catch-all; replaced by specific `SIFR-BUILD-xxxx` codes assigned from the inventory. Broad unclassified failures use `SIFR-INTERNAL-*`. |
@@ -910,7 +924,7 @@ Scope:
 
 - Map upstream Ruff-fork parser error categories to distinct `SIFR-PARSE-*` codes where the parser exposes a condition category.
 - Replace broad parser emission with category-specific codes for all parser conditions identified in `milestone_diag_3`.
-- Keep `SIFR-PARSE-0001` only for the reserved opaque-parser-error meaning, and guardrail it against use as a default parser code.
+- Keep `SIFR-PARSE-0001` retired; parser diagnostics use category-specific `SIFR-PARSE-0002..0009` codes and a `parser_category` JSON arg for upstream recovery context.
 - Convert common frontend semantic errors to structured diagnostics:
   - Undefined variable/function.
   - Unknown generic type.
@@ -1184,7 +1198,7 @@ Post-1.0 stability begins at the first documented stable Sifr release, expected 
 - Do not map strings to codes after the fact.
 - Do not infer codes from message prefixes.
 - Do not add generic fallback diagnostics for user errors.
-- Do not use `SIFR-PARSE-0001`, `SIFR-CODEGEN-0001`, `SIFR-BUILD-0001`, or any other `0001` code as a family-default catch-all unless the registry gives it a precise, guardrailed meaning.
+- Do not use retired catch-all codes such as `SIFR-PARSE-0001`, `SIFR-CODEGEN-0001`, or `SIFR-BUILD-0001`, and do not add any active non-`INTERNAL` `0001` code as a family-default catch-all.
 - Do not allow spanless HIR diagnostics when the AST node has a source location.
 - Do not keep old baselines as accepted alternatives.
 - Do not add a historical migration layer.

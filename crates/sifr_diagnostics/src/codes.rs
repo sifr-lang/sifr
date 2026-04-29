@@ -7,6 +7,117 @@ pub struct DiagnosticCode {
 }
 
 impl DiagnosticCode {
+    pub const PARSE_EXPECTED_TOKEN_OR_RECOVERY: Self =
+        Self::new("SIFR-PARSE-0002", Severity::Error);
+    pub const PARSE_LEXICAL_OR_STRING: Self = Self::new("SIFR-PARSE-0003", Severity::Error);
+    pub const PARSE_LAYOUT: Self = Self::new("SIFR-PARSE-0004", Severity::Error);
+    pub const PARSE_INVALID_TARGET: Self = Self::new("SIFR-PARSE-0005", Severity::Error);
+    pub const PARSE_INVALID_CALL_ARGUMENTS: Self = Self::new("SIFR-PARSE-0006", Severity::Error);
+    pub const PARSE_MALFORMED_DECLARATION_LIST: Self =
+        Self::new("SIFR-PARSE-0007", Severity::Error);
+    pub const PARSE_INVALID_PATTERN: Self = Self::new("SIFR-PARSE-0008", Severity::Error);
+    pub const PARSE_UNSUPPORTED_SYNTAX: Self = Self::new("SIFR-PARSE-0009", Severity::Error);
+
+    pub const NAME_UNDEFINED_VARIABLE: Self = Self::new("SIFR-NAME-0001", Severity::Error);
+    pub const NAME_UNDEFINED_CALLABLE: Self = Self::new("SIFR-NAME-0002", Severity::Error);
+    pub const NAME_UNKNOWN_TYPE: Self = Self::new("SIFR-NAME-0003", Severity::Error);
+    pub const NAME_MISSING_MODULE_MEMBER: Self = Self::new("SIFR-NAME-0004", Severity::Error);
+
+    pub const IMPORT_FORBIDDEN_INTRINSIC: Self = Self::new("SIFR-IMPORT-0001", Severity::Error);
+    pub const IMPORT_UNKNOWN_SOURCE_MODULE: Self = Self::new("SIFR-IMPORT-0002", Severity::Error);
+
+    pub const TYPE_MISMATCH: Self = Self::new("SIFR-TYPE-0002", Severity::Error);
+    pub const TYPE_IF_BRANCH_MISMATCH: Self = Self::new("SIFR-TYPE-0003", Severity::Error);
+    pub const TYPE_MISSING_ANNOTATION: Self = Self::new("SIFR-TYPE-0004", Severity::Error);
+    pub const TYPE_UNSUPPORTED_OPERATOR: Self = Self::new("SIFR-TYPE-0005", Severity::Error);
+    pub const TYPE_INT_BIGINT_MIXED: Self = Self::new("SIFR-TYPE-0006", Severity::Error);
+    pub const TYPE_INVALID_ANNOTATION: Self = Self::new("SIFR-TYPE-0007", Severity::Error);
+    pub const TYPE_CONTAINER_ELEMENT_CONFLICT: Self = Self::new("SIFR-TYPE-0008", Severity::Error);
+    pub const TYPE_UNPACK_SHAPE_MISMATCH: Self = Self::new("SIFR-TYPE-0009", Severity::Error);
+    pub const TYPE_ARITHMETIC_OVERFLOW_RISK: Self = Self::new("SIFR-TYPE-0901", Severity::Warning);
+    pub const TYPE_REVEAL_TYPE: Self = Self::new("SIFR-TYPE-0902", Severity::Note);
+
+    pub const DECIMAL_INVALID_LITERAL: Self = Self::new("SIFR-DECIMAL-0001", Severity::Error);
+    pub const DECIMAL_BIGDECIMAL_INVALID_LITERAL: Self =
+        Self::new("SIFR-DECIMAL-0002", Severity::Error);
+    pub const DECIMAL_FLOAT_MIXED: Self = Self::new("SIFR-DECIMAL-0003", Severity::Error);
+    pub const DECIMAL_MIXED_WITH_BIGDECIMAL: Self = Self::new("SIFR-DECIMAL-0004", Severity::Error);
+    pub const DECIMAL_FLOAT_CONSTRUCTION_FORBIDDEN: Self =
+        Self::new("SIFR-DECIMAL-0005", Severity::Error);
+    pub const DECIMAL_BIGDECIMAL_FLOAT_CONSTRUCTION_FORBIDDEN: Self =
+        Self::new("SIFR-DECIMAL-0006", Severity::Error);
+    pub const DECIMAL_SCALE_INVALID: Self = Self::new("SIFR-DECIMAL-0007", Severity::Error);
+    pub const DECIMAL_BIGDECIMAL_SCALE_OR_CONTEXT_INVALID: Self =
+        Self::new("SIFR-DECIMAL-0008", Severity::Error);
+
+    pub const CALL_WRONG_POSITIONAL_COUNT: Self = Self::new("SIFR-CALL-0001", Severity::Error);
+    pub const CALL_UNEXPECTED_KEYWORD: Self = Self::new("SIFR-CALL-0002", Severity::Error);
+    pub const CALL_DUPLICATE_ARGUMENT: Self = Self::new("SIFR-CALL-0003", Severity::Error);
+    pub const CALL_MISSING_REQUIRED_ARGUMENT: Self = Self::new("SIFR-CALL-0004", Severity::Error);
+    pub const CALL_NOT_CALLABLE_OR_ARITY: Self = Self::new("SIFR-CALL-0005", Severity::Error);
+
+    pub const OWN_USE_AFTER_MOVE: Self = Self::new("SIFR-OWN-0001", Severity::Error);
+    pub const OWN_DOUBLE_MUTABLE_BORROW: Self = Self::new("SIFR-OWN-0002", Severity::Error);
+    pub const OWN_BORROWED_PARAMETER_ESCAPES: Self = Self::new("SIFR-OWN-0003", Severity::Error);
+    pub const OWN_MOVED_ACROSS_LOOP: Self = Self::new("SIFR-OWN-0004", Severity::Error);
+
+    pub const FLOW_BREAK_OUTSIDE_LOOP: Self = Self::new("SIFR-FLOW-0001", Severity::Error);
+    pub const FLOW_CONTINUE_OUTSIDE_LOOP: Self = Self::new("SIFR-FLOW-0002", Severity::Error);
+    pub const FLOW_INVALID_NONLOCAL: Self = Self::new("SIFR-FLOW-0003", Severity::Error);
+    pub const FLOW_UNREACHABLE_STATEMENT: Self = Self::new("SIFR-FLOW-0901", Severity::Warning);
+
+    pub const MATCH_NON_EXHAUSTIVE: Self = Self::new("SIFR-MATCH-0001", Severity::Error);
+    pub const MATCH_GUARD_NOT_BOOL: Self = Self::new("SIFR-MATCH-0002", Severity::Error);
+    pub const MATCH_INVALID_CLASS_PATTERN_FIELD: Self =
+        Self::new("SIFR-MATCH-0003", Severity::Error);
+
+    pub const PROTO_BOUND_NOT_SATISFIED: Self = Self::new("SIFR-PROTO-0001", Severity::Error);
+    pub const PROTO_INVALID_ITERATOR_SIGNATURE: Self =
+        Self::new("SIFR-PROTO-0002", Severity::Error);
+    pub const PROTO_CONTEXT_MANAGER_MISSING: Self = Self::new("SIFR-PROTO-0003", Severity::Error);
+    pub const PROTO_HASHABLE_OR_COMPARABLE_REQUIRED: Self =
+        Self::new("SIFR-PROTO-0004", Severity::Error);
+
+    pub const CLASS_MISSING_INITIALIZER: Self = Self::new("SIFR-CLASS-0001", Severity::Error);
+    pub const CLASS_REQUIRED_FIELD_AFTER_DEFAULT: Self =
+        Self::new("SIFR-CLASS-0002", Severity::Error);
+    pub const CLASS_DUPLICATE_OR_INVALID_VALUE: Self =
+        Self::new("SIFR-CLASS-0003", Severity::Error);
+    pub const CLASS_MISSING_MEMBER: Self = Self::new("SIFR-CLASS-0004", Severity::Error);
+
+    pub const RESULT_UNUSED_VALUE: Self = Self::new("SIFR-RESULT-0001", Severity::Error);
+    pub const RESULT_INVALID_ERROR_TYPE: Self = Self::new("SIFR-RESULT-0002", Severity::Error);
+    pub const RESULT_INVALID_RAISE: Self = Self::new("SIFR-RESULT-0003", Severity::Error);
+
+    pub const STDLIB_UNSUPPORTED_SURFACE: Self = Self::new("SIFR-STDLIB-0001", Severity::Error);
+    pub const STDLIB_ARGUMENT_TYPE_MISMATCH: Self = Self::new("SIFR-STDLIB-0002", Severity::Error);
+    pub const STDLIB_BOOTSTRAP_FAILURE: Self = Self::new("SIFR-STDLIB-0003", Severity::Error);
+    pub const STDLIB_CACHE_FAILURE: Self = Self::new("SIFR-STDLIB-0004", Severity::Error);
+
+    pub const WORKSPACE_MALFORMED_MANIFEST: Self =
+        Self::new("SIFR-WORKSPACE-0001", Severity::Error);
+    pub const WORKSPACE_SOURCE_ROOT_ESCAPES: Self =
+        Self::new("SIFR-WORKSPACE-0002", Severity::Error);
+    pub const WORKSPACE_SOURCE_ROOT_NOT_DIRECTORY: Self =
+        Self::new("SIFR-WORKSPACE-0003", Severity::Error);
+    pub const WORKSPACE_INVALID_SOURCE_ROOT: Self =
+        Self::new("SIFR-WORKSPACE-0004", Severity::Error);
+    pub const WORKSPACE_UNRESOLVED_IMPORT: Self = Self::new("SIFR-WORKSPACE-0101", Severity::Error);
+    pub const WORKSPACE_AMBIGUOUS_IMPORT: Self = Self::new("SIFR-WORKSPACE-0102", Severity::Error);
+    pub const WORKSPACE_NAMESPACE_COLLISION: Self =
+        Self::new("SIFR-WORKSPACE-0103", Severity::Error);
+    pub const WORKSPACE_IMPORT_CYCLE: Self = Self::new("SIFR-WORKSPACE-0104", Severity::Error);
+
+    pub const CODEGEN_BACKEND_FAILURE: Self = Self::new("SIFR-CODEGEN-0002", Severity::Error);
+
+    pub const BUILD_MATERIALIZATION_FAILURE: Self = Self::new("SIFR-BUILD-0002", Severity::Error);
+    pub const BUILD_TEMP_WORKSPACE_FAILURE: Self = Self::new("SIFR-BUILD-0003", Severity::Error);
+    pub const BUILD_CARGO_MANIFEST_FAILURE: Self = Self::new("SIFR-BUILD-0004", Severity::Error);
+    pub const BUILD_RUSTC_OR_CARGO_FAILURE: Self = Self::new("SIFR-BUILD-0005", Severity::Error);
+    pub const BUILD_ARTIFACT_MISSING: Self = Self::new("SIFR-BUILD-0006", Severity::Error);
+
+    pub const INTERNAL_COMPILER_PANIC: Self = Self::new("SIFR-INTERNAL-0001", Severity::Error);
+
     #[cfg(test)]
     pub(crate) const TEST_INTERNAL_ERROR: Self = Self::new("SIFR-INTERNAL-9998", Severity::Error);
     #[cfg(test)]
@@ -14,7 +125,6 @@ impl DiagnosticCode {
     #[cfg(test)]
     pub(crate) const TEST_SOURCE_ERROR: Self = Self::new("SIFR-NAME-9999", Severity::Error);
 
-    #[cfg(test)]
     const fn new(code: &'static str, declared_severity: Severity) -> Self {
         Self {
             code,
@@ -105,6 +215,7 @@ pub struct DiagnosticRegistryEntry {
     pub summary: &'static str,
     pub state: DiagnosticState,
     pub docs_path: &'static str,
+    pub replacement: Option<&'static str>,
     pub representative_fixture_path: Option<&'static str>,
     pub message_template: Option<&'static str>,
     pub owner_module: Option<&'static str>,
@@ -202,6 +313,64 @@ pub const DIAGNOSTIC_FAMILIES: &[DiagnosticFamily] = &[
     },
 ];
 
+macro_rules! arg {
+    ($name:literal) => {
+        DiagnosticArgDeclaration {
+            name: $name,
+            format: DiagnosticArgFormat::MessageAndJson,
+        }
+    };
+}
+
+macro_rules! json_arg {
+    ($name:literal) => {
+        DiagnosticArgDeclaration {
+            name: $name,
+            format: DiagnosticArgFormat::JsonOnly,
+        }
+    };
+}
+
+macro_rules! active_entry {
+    ($id:literal, $family:literal, $summary:literal, $severity:expr, $fixture:literal, $template:literal, $owner:literal, [$($arg:expr),* $(,)?], [$($dedupe:literal),* $(,)?]) => {
+        DiagnosticRegistryEntry {
+            id: $id,
+            family: $family,
+            summary: $summary,
+            state: DiagnosticState::Active,
+            docs_path: concat!("docs/errors/", $id, ".md"),
+            replacement: None,
+            representative_fixture_path: Some($fixture),
+            message_template: Some($template),
+            owner_module: Some($owner),
+            declared_args: &[$($arg),*],
+            dedupe_args: &[$($dedupe),*],
+            declared_severity: Some($severity),
+            tooling: DiagnosticTooling::DEFAULT,
+        }
+    };
+}
+
+macro_rules! retired_entry {
+    ($id:literal, $family:literal, $summary:literal, $replacement:literal) => {
+        DiagnosticRegistryEntry {
+            id: $id,
+            family: $family,
+            summary: $summary,
+            state: DiagnosticState::Retired,
+            docs_path: "docs/errors/diagnostic-codes.md",
+            replacement: Some($replacement),
+            representative_fixture_path: None,
+            message_template: None,
+            owner_module: None,
+            declared_args: &[],
+            dedupe_args: &[],
+            declared_severity: None,
+            tooling: DiagnosticTooling::DEFAULT,
+        }
+    };
+}
+
 pub const DIAGNOSTIC_REGISTRY: &[DiagnosticRegistryEntry] = &[
     reserved_family_base("SIFR-PARSE-0000", "PARSE"),
     reserved_family_base("SIFR-NAME-0000", "NAME"),
@@ -220,26 +389,903 @@ pub const DIAGNOSTIC_REGISTRY: &[DiagnosticRegistryEntry] = &[
     reserved_family_base("SIFR-CODEGEN-0000", "CODEGEN"),
     reserved_family_base("SIFR-BUILD-0000", "BUILD"),
     reserved_family_base("SIFR-INTERNAL-0000", "INTERNAL"),
-    DiagnosticRegistryEntry {
-        id: "SIFR-INTERNAL-0001",
-        family: "INTERNAL",
-        summary: "Reserved for unclassified compiler panics after a panic boundary.",
-        state: DiagnosticState::Reserved,
-        docs_path: "docs/errors/diagnostic-codes.md#sifr-internal-0001",
-        representative_fixture_path: None,
-        message_template: None,
-        owner_module: Some("compiler panic boundary"),
-        declared_args: &[],
-        dedupe_args: &[],
-        declared_severity: Some(Severity::Error),
-        tooling: DiagnosticTooling::DEFAULT,
-    },
+    retired_entry!(
+        "SIFR-PARSE-0001",
+        "PARSE",
+        "Retired opaque parser phase bucket.",
+        "replaced by active PARSE category codes"
+    ),
+    retired_entry!(
+        "SIFR-TYPE-0001",
+        "TYPE",
+        "Retired semantic catch-all type-check bucket.",
+        "replaced by active semantic family codes"
+    ),
+    retired_entry!(
+        "SIFR-CODEGEN-0001",
+        "CODEGEN",
+        "Retired broad code-generation catch-all.",
+        "replaced by SIFR-CODEGEN-0002 or INTERNAL codes"
+    ),
+    retired_entry!(
+        "SIFR-BUILD-0001",
+        "BUILD",
+        "Retired broad build catch-all.",
+        "replaced by active BUILD operation codes"
+    ),
+    active_entry!(
+        "SIFR-PARSE-0002",
+        "PARSE",
+        "Expected token or generic parser recovery failure.",
+        Severity::Error,
+        "crates/sifr/tests/e2e/fail/parser_expected_token.sifr",
+        "syntax error: expected {expected}",
+        "sifr_driver::frontend::api",
+        [arg!("expected"), json_arg!("parser_category")],
+        ["expected", "parser_category"]
+    ),
+    active_entry!(
+        "SIFR-PARSE-0003",
+        "PARSE",
+        "Lexical or interpolated string parser failure.",
+        Severity::Error,
+        "crates/sifr/tests/e2e/fail/parser_malformed_string.sifr",
+        "lexical error: {reason}",
+        "sifr_driver::frontend::api",
+        [arg!("reason"), json_arg!("parser_category")],
+        ["reason", "parser_category"]
+    ),
+    active_entry!(
+        "SIFR-PARSE-0004",
+        "PARSE",
+        "Indentation or same-line statement layout parser failure.",
+        Severity::Error,
+        "crates/sifr/tests/e2e/fail/parser_invalid_layout.sifr",
+        "invalid source layout: {reason}",
+        "sifr_driver::frontend::api",
+        [arg!("reason"), json_arg!("parser_category")],
+        ["reason", "parser_category"]
+    ),
+    active_entry!(
+        "SIFR-PARSE-0005",
+        "PARSE",
+        "Invalid assignment, delete, starred, or named-expression target syntax.",
+        Severity::Error,
+        "crates/sifr/tests/e2e/fail/parser_invalid_target.sifr",
+        "invalid target syntax: {target_kind}",
+        "sifr_driver::frontend::api",
+        [arg!("target_kind"), json_arg!("parser_category")],
+        ["target_kind", "parser_category"]
+    ),
+    active_entry!(
+        "SIFR-PARSE-0006",
+        "PARSE",
+        "Invalid call argument order or unpacking syntax.",
+        Severity::Error,
+        "crates/sifr/tests/e2e/fail/parser_invalid_call_arguments.sifr",
+        "invalid call argument syntax: {reason}",
+        "sifr_driver::frontend::api",
+        [arg!("reason"), json_arg!("parser_category")],
+        ["reason", "parser_category"]
+    ),
+    active_entry!(
+        "SIFR-PARSE-0007",
+        "PARSE",
+        "Empty or malformed declaration list syntax.",
+        Severity::Error,
+        "crates/sifr/tests/e2e/fail/parser_malformed_declaration_list.sifr",
+        "malformed declaration list: {declaration_kind}",
+        "sifr_driver::frontend::api",
+        [arg!("declaration_kind"), json_arg!("parser_category")],
+        ["declaration_kind", "parser_category"]
+    ),
+    active_entry!(
+        "SIFR-PARSE-0008",
+        "PARSE",
+        "Invalid match-pattern syntax.",
+        Severity::Error,
+        "crates/sifr/tests/e2e/fail/parser_invalid_match_pattern.sifr",
+        "invalid match pattern syntax: {reason}",
+        "sifr_driver::frontend::api",
+        [arg!("reason"), json_arg!("parser_category")],
+        ["reason", "parser_category"]
+    ),
+    active_entry!(
+        "SIFR-PARSE-0009",
+        "PARSE",
+        "Unsupported parser syntax or interactive-only syntax.",
+        Severity::Error,
+        "crates/sifr/tests/e2e/fail/parser_unsupported_syntax.sifr",
+        "unsupported syntax: {syntax_kind}",
+        "sifr_driver::frontend::api",
+        [arg!("syntax_kind"), json_arg!("parser_category")],
+        ["syntax_kind", "parser_category"]
+    ),
+    active_entry!(
+        "SIFR-NAME-0001",
+        "NAME",
+        "Undefined variable.",
+        Severity::Error,
+        "crates/sifr/tests/e2e/fail/undefined_var.sifr",
+        "undefined variable: {name}",
+        "sifr_hir::lower",
+        [arg!("name")],
+        ["name"]
+    ),
+    active_entry!(
+        "SIFR-NAME-0002",
+        "NAME",
+        "Undefined function or callable.",
+        Severity::Error,
+        "crates/sifr/tests/e2e/fail/stdlib_invalid_module.sifr",
+        "undefined function: {name}",
+        "sifr_hir::lower",
+        [arg!("name")],
+        ["name"]
+    ),
+    active_entry!(
+        "SIFR-NAME-0003",
+        "NAME",
+        "Unknown type or generic type name.",
+        Severity::Error,
+        "crates/sifr/tests/e2e/fail/generic_class_missing_type_arg.sifr",
+        "unknown type: {name}",
+        "sifr_hir::lower::typing_and_functions",
+        [arg!("name")],
+        ["name"]
+    ),
+    active_entry!(
+        "SIFR-NAME-0004",
+        "NAME",
+        "Missing module or class member.",
+        Severity::Error,
+        "crates/sifr/tests/e2e/fail/stdlib_missing_function.sifr",
+        "member {member} does not exist on {container}",
+        "sifr_hir::lower",
+        [arg!("member"), arg!("container")],
+        ["member", "container"]
+    ),
+    active_entry!(
+        "SIFR-IMPORT-0001",
+        "IMPORT",
+        "Forbidden intrinsic import.",
+        Severity::Error,
+        "crates/sifr/tests/e2e/fail/stdlib_intrinsic_direct_import.sifr",
+        "cannot import forbidden intrinsic module {module}",
+        "sifr_hir::lower",
+        [arg!("module")],
+        ["module"]
+    ),
+    active_entry!(
+        "SIFR-IMPORT-0002",
+        "IMPORT",
+        "Unknown source module import target.",
+        Severity::Error,
+        "crates/sifr/tests/e2e/fail/import_nonexistent_local.sifr",
+        "unknown import target: {module}",
+        "sifr_hir::lower",
+        [arg!("module")],
+        ["module"]
+    ),
+    active_entry!(
+        "SIFR-TYPE-0002",
+        "TYPE",
+        "Expected and actual types are incompatible.",
+        Severity::Error,
+        "crates/sifr/tests/e2e/fail/type_mismatch.sifr",
+        "type mismatch: expected {expected}, got {actual}",
+        "sifr_hir::lower",
+        [arg!("expected"), arg!("actual")],
+        ["expected", "actual"]
+    ),
+    active_entry!(
+        "SIFR-TYPE-0003",
+        "TYPE",
+        "If-expression or conditional branches have incompatible types.",
+        Severity::Error,
+        "crates/sifr/tests/e2e/fail/ternary_type_mismatch.sifr",
+        "conditional branches have incompatible types: {then_type} and {else_type}",
+        "sifr_hir::lower::if_expression",
+        [arg!("then_type"), arg!("else_type")],
+        ["then_type", "else_type"]
+    ),
+    active_entry!(
+        "SIFR-TYPE-0004",
+        "TYPE",
+        "A required type annotation is missing.",
+        Severity::Error,
+        "crates/sifr/tests/e2e/fail/missing_type_annotation.sifr",
+        "missing type annotation for {name}",
+        "sifr_hir::lower::typing_and_functions",
+        [arg!("name"), json_arg!("declaration_kind")],
+        ["name", "declaration_kind"]
+    ),
+    active_entry!(
+        "SIFR-TYPE-0005",
+        "TYPE",
+        "Unsupported operator or operand types.",
+        Severity::Error,
+        "crates/sifr/tests/e2e/fail/optional_arithmetic_without_narrowing.sifr",
+        "unsupported operator {operator} for {operand_types}",
+        "sifr_type_system",
+        [arg!("operator"), arg!("operand_types")],
+        ["operator", "operand_types"]
+    ),
+    active_entry!(
+        "SIFR-TYPE-0006",
+        "TYPE",
+        "Int and bigint are mixed without an explicit conversion.",
+        Severity::Error,
+        "crates/sifr/tests/e2e/fail/bigint_int_mixed_arithmetic.sifr",
+        "cannot mix int and bigint with operator {operator}",
+        "sifr_type_system",
+        [arg!("operator")],
+        ["operator"]
+    ),
+    active_entry!(
+        "SIFR-TYPE-0007",
+        "TYPE",
+        "Invalid type annotation shape.",
+        Severity::Error,
+        "crates/sifr/tests/e2e/fail/invalid_type_annotation.sifr",
+        "invalid type annotation for {annotation_kind}",
+        "sifr_hir::lower::typing_and_functions",
+        [arg!("annotation_kind")],
+        ["annotation_kind"]
+    ),
+    active_entry!(
+        "SIFR-TYPE-0008",
+        "TYPE",
+        "Container literal elements, keys, or values have conflicting types.",
+        Severity::Error,
+        "crates/sifr/tests/e2e/fail/container_literal_type_conflict.sifr",
+        "container literal has conflicting {element_kind} types: {expected} and {actual}",
+        "sifr_hir::lower::container_literal_specialization",
+        [arg!("element_kind"), arg!("expected"), arg!("actual")],
+        ["element_kind", "expected", "actual"]
+    ),
+    active_entry!(
+        "SIFR-TYPE-0009",
+        "TYPE",
+        "Tuple or list unpacking shape mismatch.",
+        Severity::Error,
+        "crates/sifr/tests/e2e/fail/tuple_dynamic_list_shape.sifr",
+        "cannot unpack {actual_count} value(s) into {expected_count} target(s)",
+        "sifr_hir::lower::tuple_unpack",
+        [arg!("actual_count"), arg!("expected_count")],
+        ["actual_count", "expected_count"]
+    ),
+    active_entry!(
+        "SIFR-TYPE-0901",
+        "TYPE",
+        "Integer arithmetic may overflow at runtime.",
+        Severity::Warning,
+        "crates/sifr/tests/e2e/pass/arithmetic_overflow_warning.sifr",
+        "integer {operation} may overflow at runtime",
+        "sifr_hir::lower::arithmetic_warnings",
+        [arg!("operation")],
+        ["operation"]
+    ),
+    active_entry!(
+        "SIFR-TYPE-0902",
+        "TYPE",
+        "Reveal the inferred static type of an expression.",
+        Severity::Note,
+        "crates/sifr/tests/e2e/pass/reveal_type.sifr",
+        "revealed type is {revealed_type}",
+        "sifr_hir::lower::builtin_calls",
+        [arg!("revealed_type")],
+        ["revealed_type"]
+    ),
+    active_entry!(
+        "SIFR-DECIMAL-0001",
+        "DECIMAL",
+        "Invalid Decimal exact literal.",
+        Severity::Error,
+        "crates/sifr/tests/e2e/fail/decimal_invalid_literal_string.sifr",
+        "invalid Decimal literal: {literal}",
+        "sifr_hir::lower",
+        [arg!("literal")],
+        ["literal"]
+    ),
+    active_entry!(
+        "SIFR-DECIMAL-0002",
+        "DECIMAL",
+        "Invalid BigDecimal exact literal.",
+        Severity::Error,
+        "crates/sifr/tests/e2e/fail/bigdecimal_invalid_literal_string.sifr",
+        "invalid BigDecimal literal: {literal}",
+        "sifr_hir::lower",
+        [arg!("literal")],
+        ["literal"]
+    ),
+    active_entry!(
+        "SIFR-DECIMAL-0003",
+        "DECIMAL",
+        "Float mixed with a decimal numeric type.",
+        Severity::Error,
+        "crates/sifr/tests/e2e/fail/decimal_float_mixed_arithmetic.sifr",
+        "cannot mix float with {decimal_type}",
+        "sifr_type_system",
+        [arg!("decimal_type")],
+        ["decimal_type"]
+    ),
+    active_entry!(
+        "SIFR-DECIMAL-0004",
+        "DECIMAL",
+        "Decimal and BigDecimal mixed in one operation.",
+        Severity::Error,
+        "crates/sifr/tests/e2e/fail/decimal_bigdecimal_mixed_arithmetic.sifr",
+        "cannot mix Decimal and BigDecimal",
+        "sifr_type_system",
+        [],
+        []
+    ),
+    active_entry!(
+        "SIFR-DECIMAL-0005",
+        "DECIMAL",
+        "Decimal float construction or conversion is forbidden.",
+        Severity::Error,
+        "crates/sifr/tests/e2e/fail/decimal_constructor_float.sifr",
+        "Decimal cannot be constructed from float value {value}",
+        "sifr_hir::lower",
+        [arg!("value")],
+        ["value"]
+    ),
+    active_entry!(
+        "SIFR-DECIMAL-0006",
+        "DECIMAL",
+        "BigDecimal float construction or conversion is forbidden.",
+        Severity::Error,
+        "crates/sifr/tests/e2e/fail/bigdecimal_constructor_float.sifr",
+        "BigDecimal cannot be constructed from float value {value}",
+        "sifr_hir::lower",
+        [arg!("value")],
+        ["value"]
+    ),
+    active_entry!(
+        "SIFR-DECIMAL-0007",
+        "DECIMAL",
+        "Decimal scale argument is invalid.",
+        Severity::Error,
+        "crates/sifr/tests/e2e/fail/decimal_round_scale_out_of_range.sifr",
+        "invalid Decimal scale {scale}",
+        "sifr_hir::lower::decimal_methods",
+        [arg!("scale"), json_arg!("operation")],
+        ["scale", "operation"]
+    ),
+    active_entry!(
+        "SIFR-DECIMAL-0008",
+        "DECIMAL",
+        "BigDecimal scale or context argument is invalid.",
+        Severity::Error,
+        "crates/sifr/tests/e2e/fail/bigdecimal_quantize_negative_scale_context.sifr",
+        "invalid BigDecimal {argument}: {value}",
+        "sifr_hir::lower::decimal_methods",
+        [arg!("argument"), arg!("value"), json_arg!("operation")],
+        ["argument", "value", "operation"]
+    ),
+    active_entry!(
+        "SIFR-CALL-0001",
+        "CALL",
+        "Wrong positional argument count.",
+        Severity::Error,
+        "crates/sifr/tests/e2e/fail/stdlib_wrong_arg_count.sifr",
+        "{callable} expects {expected_count} argument(s), got {actual_count}",
+        "sifr_hir::lower",
+        [
+            arg!("callable"),
+            arg!("expected_count"),
+            arg!("actual_count")
+        ],
+        ["callable", "expected_count", "actual_count"]
+    ),
+    active_entry!(
+        "SIFR-CALL-0002",
+        "CALL",
+        "Unexpected keyword argument.",
+        Severity::Error,
+        "crates/sifr/tests/e2e/fail/sorted_unexpected_keyword.sifr",
+        "{callable} got unexpected keyword argument {keyword}",
+        "sifr_hir::lower",
+        [arg!("callable"), arg!("keyword")],
+        ["callable", "keyword"]
+    ),
+    active_entry!(
+        "SIFR-CALL-0003",
+        "CALL",
+        "Duplicate argument from positional and keyword overlap.",
+        Severity::Error,
+        "crates/sifr/tests/e2e/fail/keyword_after_positional_error.sifr",
+        "{callable} got multiple values for argument {argument}",
+        "sifr_hir::lower",
+        [arg!("callable"), arg!("argument")],
+        ["callable", "argument"]
+    ),
+    active_entry!(
+        "SIFR-CALL-0004",
+        "CALL",
+        "Missing required argument.",
+        Severity::Error,
+        "crates/sifr/tests/e2e/fail/missing_keyword_only_arg.sifr",
+        "{callable} missing required argument {argument}",
+        "sifr_hir::lower",
+        [arg!("callable"), arg!("argument")],
+        ["callable", "argument"]
+    ),
+    active_entry!(
+        "SIFR-CALL-0005",
+        "CALL",
+        "Callable arity failure or expression is not callable.",
+        Severity::Error,
+        "crates/sifr/tests/e2e/fail/map_callable_arity_mismatch.sifr",
+        "{callee} is not callable with the provided arguments",
+        "sifr_hir::lower",
+        [arg!("callee")],
+        ["callee"]
+    ),
+    active_entry!(
+        "SIFR-OWN-0001",
+        "OWN",
+        "Use after move.",
+        Severity::Error,
+        "crates/sifr/tests/e2e/fail/use_after_move.sifr",
+        "use of moved value {binding}",
+        "sifr_hir::lower",
+        [arg!("binding")],
+        ["binding"]
+    ),
+    active_entry!(
+        "SIFR-OWN-0002",
+        "OWN",
+        "Double mutable borrow.",
+        Severity::Error,
+        "crates/sifr/tests/e2e/fail/double_mut_borrow.sifr",
+        "cannot borrow {binding} as mutable more than once",
+        "sifr_hir::lower",
+        [arg!("binding")],
+        ["binding"]
+    ),
+    active_entry!(
+        "SIFR-OWN-0003",
+        "OWN",
+        "Borrowed parameter escapes by return or store.",
+        Severity::Error,
+        "crates/sifr/tests/e2e/fail/borrow_escape_return.sifr",
+        "borrowed parameter {binding} escapes",
+        "sifr_hir::lower",
+        [arg!("binding"), json_arg!("escape_kind")],
+        ["binding", "escape_kind"]
+    ),
+    active_entry!(
+        "SIFR-OWN-0004",
+        "OWN",
+        "Moved value is reused across loop iterations.",
+        Severity::Error,
+        "crates/sifr/tests/e2e/fail/use_after_move_loop.sifr",
+        "moved value {binding} is reused across loop iterations",
+        "sifr_hir::lower",
+        [arg!("binding")],
+        ["binding"]
+    ),
+    active_entry!(
+        "SIFR-FLOW-0001",
+        "FLOW",
+        "Break outside a loop.",
+        Severity::Error,
+        "crates/sifr/tests/e2e/fail/break_outside_loop.sifr",
+        "break outside of loop",
+        "sifr_hir::lower::statements",
+        [],
+        []
+    ),
+    active_entry!(
+        "SIFR-FLOW-0002",
+        "FLOW",
+        "Continue outside a loop.",
+        Severity::Error,
+        "crates/sifr/tests/e2e/fail/continue_outside_loop.sifr",
+        "continue outside of loop",
+        "sifr_hir::lower::statements",
+        [],
+        []
+    ),
+    active_entry!(
+        "SIFR-FLOW-0003",
+        "FLOW",
+        "Invalid nonlocal or nested-function flow.",
+        Severity::Error,
+        "crates/sifr/tests/e2e/fail/nested_function_recursive_nonlocal_unsupported.sifr",
+        "invalid nested function flow: {reason}",
+        "sifr_hir::lower",
+        [arg!("reason")],
+        ["reason"]
+    ),
+    active_entry!(
+        "SIFR-FLOW-0901",
+        "FLOW",
+        "Unreachable statement ignored during lowering.",
+        Severity::Warning,
+        "crates/sifr/tests/e2e/fail/unreachable_statement_warning.sifr",
+        "unreachable statement ignored",
+        "sifr_hir::lower::statements",
+        [],
+        []
+    ),
+    active_entry!(
+        "SIFR-MATCH-0001",
+        "MATCH",
+        "Non-exhaustive match.",
+        Severity::Error,
+        "crates/sifr/tests/e2e/fail/enum_match_non_exhaustive.sifr",
+        "non-exhaustive match for {subject_type}",
+        "sifr_hir::lower::statements",
+        [arg!("subject_type")],
+        ["subject_type"]
+    ),
+    active_entry!(
+        "SIFR-MATCH-0002",
+        "MATCH",
+        "Match guard must be bool.",
+        Severity::Error,
+        "crates/sifr/tests/e2e/fail/match_type_mismatch_guard.sifr",
+        "match guard must be bool, got {actual}",
+        "sifr_hir::lower::statements",
+        [arg!("actual")],
+        ["actual"]
+    ),
+    active_entry!(
+        "SIFR-MATCH-0003",
+        "MATCH",
+        "Invalid class pattern field.",
+        Severity::Error,
+        "crates/sifr/tests/e2e/fail/match_invalid_field_name.sifr",
+        "class pattern field {field} does not exist on {class_name}",
+        "sifr_hir::lower::statements",
+        [arg!("field"), arg!("class_name")],
+        ["field", "class_name"]
+    ),
+    active_entry!(
+        "SIFR-PROTO-0001",
+        "PROTO",
+        "Protocol bound or conformance failure.",
+        Severity::Error,
+        "crates/sifr/tests/e2e/fail/generic_bounds_not_satisfied.sifr",
+        "type {actual} does not implement protocol {protocol}",
+        "sifr_hir::lower",
+        [arg!("actual"), arg!("protocol")],
+        ["actual", "protocol"]
+    ),
+    active_entry!(
+        "SIFR-PROTO-0002",
+        "PROTO",
+        "Invalid iterator or reversible protocol signature.",
+        Severity::Error,
+        "crates/sifr/tests/e2e/fail/reversed_iterator_not_reversible.sifr",
+        "invalid {protocol} protocol signature for {type_name}",
+        "sifr_hir::lower::classes",
+        [arg!("protocol"), arg!("type_name")],
+        ["protocol", "type_name"]
+    ),
+    active_entry!(
+        "SIFR-PROTO-0003",
+        "PROTO",
+        "Context-manager protocol is missing.",
+        Severity::Error,
+        "crates/sifr/tests/e2e/fail/with_non_context_manager.sifr",
+        "type {type_name} is not a context manager",
+        "sifr_hir::lower::statements",
+        [arg!("type_name")],
+        ["type_name"]
+    ),
+    active_entry!(
+        "SIFR-PROTO-0004",
+        "PROTO",
+        "Hashable or comparable protocol is required.",
+        Severity::Error,
+        "crates/sifr/tests/e2e/fail/generic_counter_unhashable.sifr",
+        "type {type_name} must satisfy {protocol}",
+        "sifr_hir::lower",
+        [arg!("type_name"), arg!("protocol")],
+        ["type_name", "protocol"]
+    ),
+    active_entry!(
+        "SIFR-CLASS-0001",
+        "CLASS",
+        "Class fields require an initializer or super initializer.",
+        Severity::Error,
+        "crates/sifr/tests/e2e/fail/auto_init_inheritance_missing_super.sifr",
+        "class {class_name} requires an initializer for field {field}",
+        "sifr_hir::lower::classes",
+        [arg!("class_name"), arg!("field")],
+        ["class_name", "field"]
+    ),
+    active_entry!(
+        "SIFR-CLASS-0002",
+        "CLASS",
+        "Required field declared after a defaulted field.",
+        Severity::Error,
+        "crates/sifr/tests/e2e/fail/auto_init_required_after_default.sifr",
+        "required field {field} cannot follow a defaulted field",
+        "sifr_hir::lower::classes",
+        [arg!("field")],
+        ["field"]
+    ),
+    active_entry!(
+        "SIFR-CLASS-0003",
+        "CLASS",
+        "Duplicate enum or class value, or invalid variant.",
+        Severity::Error,
+        "crates/sifr/tests/e2e/fail/enum_duplicate_value.sifr",
+        "duplicate or invalid class value {value}",
+        "sifr_hir::lower::classes",
+        [arg!("value")],
+        ["value"]
+    ),
+    active_entry!(
+        "SIFR-CLASS-0004",
+        "CLASS",
+        "Missing class field or member.",
+        Severity::Error,
+        "crates/sifr/tests/e2e/fail/missing_field.sifr",
+        "class {class_name} has no member {member}",
+        "sifr_hir::lower::classes",
+        [arg!("class_name"), arg!("member")],
+        ["class_name", "member"]
+    ),
+    active_entry!(
+        "SIFR-RESULT-0001",
+        "RESULT",
+        "Unused Result value.",
+        Severity::Error,
+        "crates/sifr/tests/e2e/fail/unused_result.sifr",
+        "unused Result value",
+        "sifr_hir::lower",
+        [],
+        []
+    ),
+    active_entry!(
+        "SIFR-RESULT-0002",
+        "RESULT",
+        "Invalid Result error type.",
+        Severity::Error,
+        "crates/sifr/tests/e2e/fail/error_str_not_allowed.sifr",
+        "invalid Result error type {error_type}",
+        "sifr_hir::lower",
+        [arg!("error_type")],
+        ["error_type"]
+    ),
+    active_entry!(
+        "SIFR-RESULT-0003",
+        "RESULT",
+        "Invalid raise expression.",
+        Severity::Error,
+        "crates/sifr/tests/e2e/fail/error_raise_str.sifr",
+        "invalid raise expression of type {actual}",
+        "sifr_hir::lower::statements",
+        [arg!("actual")],
+        ["actual"]
+    ),
+    active_entry!(
+        "SIFR-STDLIB-0001",
+        "STDLIB",
+        "Unsupported standard-library constructor, method, or surface.",
+        Severity::Error,
+        "crates/sifr/tests/e2e/fail/defaultdict_keyword_constructor_unsupported.sifr",
+        "unsupported standard-library surface {symbol}",
+        "sifr_hir::lower",
+        [arg!("symbol")],
+        ["symbol"]
+    ),
+    active_entry!(
+        "SIFR-STDLIB-0002",
+        "STDLIB",
+        "Standard-library method or argument type mismatch.",
+        Severity::Error,
+        "crates/sifr/tests/e2e/fail/stdlib_wrong_type.sifr",
+        "invalid argument type for {symbol}: expected {expected}, got {actual}",
+        "sifr_hir::lower",
+        [arg!("symbol"), arg!("expected"), arg!("actual")],
+        ["symbol", "expected", "actual"]
+    ),
+    active_entry!(
+        "SIFR-STDLIB-0003",
+        "STDLIB",
+        "Embedded standard-library bootstrap failure.",
+        Severity::Error,
+        "crates/sifr_driver/src/tests/stdlib_exports.rs",
+        "embedded standard library bootstrap failed during {operation}",
+        "sifr_driver::stdlib::bootstrap",
+        [arg!("operation")],
+        ["operation"]
+    ),
+    active_entry!(
+        "SIFR-STDLIB-0004",
+        "STDLIB",
+        "Standard-library cache build or reuse failure.",
+        Severity::Error,
+        "crates/sifr_driver/src/tests/project_build_check.rs",
+        "standard-library cache failed during {operation}",
+        "sifr_driver::stdlib::cache",
+        [arg!("operation")],
+        ["operation"]
+    ),
+    active_entry!(
+        "SIFR-WORKSPACE-0001",
+        "WORKSPACE",
+        "Malformed workspace manifest.",
+        Severity::Error,
+        "crates/sifr/tests/verification/project/workspace_malformed_manifest",
+        "could not parse workspace manifest at {path}: {reason}",
+        "sifr_driver::workspace",
+        [arg!("path"), arg!("reason")],
+        ["path", "reason"]
+    ),
+    active_entry!(
+        "SIFR-WORKSPACE-0002",
+        "WORKSPACE",
+        "Workspace source root escapes the workspace root.",
+        Severity::Error,
+        "crates/sifr_driver/src/tests/discovery_and_workspace.rs",
+        "source root {path} escapes the workspace root",
+        "sifr_driver::workspace",
+        [arg!("path")],
+        ["path"]
+    ),
+    active_entry!(
+        "SIFR-WORKSPACE-0003",
+        "WORKSPACE",
+        "Workspace source root is not a directory.",
+        Severity::Error,
+        "crates/sifr_driver/src/tests/discovery_and_workspace.rs",
+        "source root {path} is not a directory",
+        "sifr_driver::workspace",
+        [arg!("path")],
+        ["path"]
+    ),
+    active_entry!(
+        "SIFR-WORKSPACE-0004",
+        "WORKSPACE",
+        "Workspace source root entry has an invalid shape or path.",
+        Severity::Error,
+        "crates/sifr_driver/src/tests/discovery_and_workspace.rs",
+        "invalid source root entry {entry}",
+        "sifr_driver::workspace",
+        [arg!("entry")],
+        ["entry"]
+    ),
+    active_entry!(
+        "SIFR-WORKSPACE-0101",
+        "WORKSPACE",
+        "Workspace import target could not be resolved.",
+        Severity::Error,
+        "crates/sifr/tests/verification/project/workspace_unresolved_import",
+        "could not resolve import {module}",
+        "sifr_driver::project::discovery",
+        [arg!("module"), json_arg!("searched_paths")],
+        ["module", "searched_paths"]
+    ),
+    active_entry!(
+        "SIFR-WORKSPACE-0102",
+        "WORKSPACE",
+        "Workspace import target is ambiguous.",
+        Severity::Error,
+        "crates/sifr/tests/verification/project/workspace_ambiguous_import",
+        "module {module} is ambiguous in workspace {workspace}",
+        "sifr_driver::project::discovery",
+        [
+            arg!("module"),
+            arg!("workspace"),
+            json_arg!("candidate_paths")
+        ],
+        ["module", "workspace", "candidate_paths"]
+    ),
+    active_entry!(
+        "SIFR-WORKSPACE-0103",
+        "WORKSPACE",
+        "Workspace namespace package collision.",
+        Severity::Error,
+        "crates/sifr_driver/src/tests/discovery_and_workspace.rs",
+        "module {module} collides with namespace path {path}",
+        "sifr_driver::project::discovery",
+        [arg!("module"), arg!("path")],
+        ["module", "path"]
+    ),
+    active_entry!(
+        "SIFR-WORKSPACE-0104",
+        "WORKSPACE",
+        "Workspace import graph contains a cycle.",
+        Severity::Error,
+        "crates/sifr_driver/src/tests/project_graph.rs",
+        "workspace import cycle detected: {cycle}",
+        "sifr_driver::project::compile_order",
+        [arg!("cycle")],
+        ["cycle"]
+    ),
+    active_entry!(
+        "SIFR-CODEGEN-0002",
+        "CODEGEN",
+        "Code-generation backend or panic-boundary failure.",
+        Severity::Error,
+        "crates/sifr_driver/src/tests/panic_boundary.rs::planned_codegen_0002",
+        "code generation failed during {operation}",
+        "sifr_driver::diagnostics",
+        [arg!("operation")],
+        ["operation"]
+    ),
+    active_entry!(
+        "SIFR-BUILD-0002",
+        "BUILD",
+        "Build file materialization failed.",
+        Severity::Error,
+        "crates/sifr_driver/src/tests/project_build_check.rs",
+        "failed to materialize build file {path}",
+        "sifr_driver::build::materialize",
+        [arg!("path")],
+        ["path"]
+    ),
+    active_entry!(
+        "SIFR-BUILD-0003",
+        "BUILD",
+        "Temporary build workspace creation failed.",
+        Severity::Error,
+        "crates/sifr_driver/src/tests/project_build_check.rs",
+        "failed to create temporary build workspace {path}",
+        "sifr_driver::build::workspace",
+        [arg!("path")],
+        ["path"]
+    ),
+    active_entry!(
+        "SIFR-BUILD-0004",
+        "BUILD",
+        "Cargo manifest generation failed.",
+        Severity::Error,
+        "crates/sifr_driver/src/tests/project_build_check.rs",
+        "failed to generate Cargo manifest at {path}",
+        "sifr_driver::build::workspace",
+        [arg!("path")],
+        ["path"]
+    ),
+    active_entry!(
+        "SIFR-BUILD-0005",
+        "BUILD",
+        "Rustc or Cargo execution failed.",
+        Severity::Error,
+        "crates/sifr_driver/src/tests/project_build_check.rs",
+        "{tool} failed with exit status {status}",
+        "sifr_driver::build::workspace",
+        [arg!("tool"), arg!("status")],
+        ["tool", "status"]
+    ),
+    active_entry!(
+        "SIFR-BUILD-0006",
+        "BUILD",
+        "Expected build artifact was not produced.",
+        Severity::Error,
+        "crates/sifr_driver/src/tests/project_build_check.rs",
+        "expected build artifact {path} was not produced",
+        "sifr_driver::build::workspace",
+        [arg!("path")],
+        ["path"]
+    ),
+    active_entry!(
+        "SIFR-INTERNAL-0001",
+        "INTERNAL",
+        "Unclassified compiler panic after a panic boundary.",
+        Severity::Error,
+        "crates/sifr_driver/src/tests/panic_boundary.rs::planned_internal_0001",
+        "internal compiler error",
+        "sifr_driver::diagnostics",
+        [],
+        []
+    ),
     DiagnosticRegistryEntry {
         id: "SIFR-INTERNAL-0002",
         family: "INTERNAL",
         summary: "Reserved for structured recovery-cap omission summaries.",
         state: DiagnosticState::Reserved,
-        docs_path: "docs/errors/diagnostic-codes.md#sifr-internal-0002",
+        docs_path: "docs/errors/diagnostic-codes.md",
+        replacement: None,
         representative_fixture_path: None,
         message_template: None,
         owner_module: Some("diagnostic recovery cap"),
@@ -250,7 +1296,86 @@ pub const DIAGNOSTIC_REGISTRY: &[DiagnosticRegistryEntry] = &[
     },
 ];
 
-pub const ACTIVE_DIAGNOSTIC_CODES: &[DiagnosticCode] = &[];
+pub const ACTIVE_DIAGNOSTIC_CODES: &[DiagnosticCode] = &[
+    DiagnosticCode::PARSE_EXPECTED_TOKEN_OR_RECOVERY,
+    DiagnosticCode::PARSE_LEXICAL_OR_STRING,
+    DiagnosticCode::PARSE_LAYOUT,
+    DiagnosticCode::PARSE_INVALID_TARGET,
+    DiagnosticCode::PARSE_INVALID_CALL_ARGUMENTS,
+    DiagnosticCode::PARSE_MALFORMED_DECLARATION_LIST,
+    DiagnosticCode::PARSE_INVALID_PATTERN,
+    DiagnosticCode::PARSE_UNSUPPORTED_SYNTAX,
+    DiagnosticCode::NAME_UNDEFINED_VARIABLE,
+    DiagnosticCode::NAME_UNDEFINED_CALLABLE,
+    DiagnosticCode::NAME_UNKNOWN_TYPE,
+    DiagnosticCode::NAME_MISSING_MODULE_MEMBER,
+    DiagnosticCode::IMPORT_FORBIDDEN_INTRINSIC,
+    DiagnosticCode::IMPORT_UNKNOWN_SOURCE_MODULE,
+    DiagnosticCode::TYPE_MISMATCH,
+    DiagnosticCode::TYPE_IF_BRANCH_MISMATCH,
+    DiagnosticCode::TYPE_MISSING_ANNOTATION,
+    DiagnosticCode::TYPE_UNSUPPORTED_OPERATOR,
+    DiagnosticCode::TYPE_INT_BIGINT_MIXED,
+    DiagnosticCode::TYPE_INVALID_ANNOTATION,
+    DiagnosticCode::TYPE_CONTAINER_ELEMENT_CONFLICT,
+    DiagnosticCode::TYPE_UNPACK_SHAPE_MISMATCH,
+    DiagnosticCode::TYPE_ARITHMETIC_OVERFLOW_RISK,
+    DiagnosticCode::TYPE_REVEAL_TYPE,
+    DiagnosticCode::DECIMAL_INVALID_LITERAL,
+    DiagnosticCode::DECIMAL_BIGDECIMAL_INVALID_LITERAL,
+    DiagnosticCode::DECIMAL_FLOAT_MIXED,
+    DiagnosticCode::DECIMAL_MIXED_WITH_BIGDECIMAL,
+    DiagnosticCode::DECIMAL_FLOAT_CONSTRUCTION_FORBIDDEN,
+    DiagnosticCode::DECIMAL_BIGDECIMAL_FLOAT_CONSTRUCTION_FORBIDDEN,
+    DiagnosticCode::DECIMAL_SCALE_INVALID,
+    DiagnosticCode::DECIMAL_BIGDECIMAL_SCALE_OR_CONTEXT_INVALID,
+    DiagnosticCode::CALL_WRONG_POSITIONAL_COUNT,
+    DiagnosticCode::CALL_UNEXPECTED_KEYWORD,
+    DiagnosticCode::CALL_DUPLICATE_ARGUMENT,
+    DiagnosticCode::CALL_MISSING_REQUIRED_ARGUMENT,
+    DiagnosticCode::CALL_NOT_CALLABLE_OR_ARITY,
+    DiagnosticCode::OWN_USE_AFTER_MOVE,
+    DiagnosticCode::OWN_DOUBLE_MUTABLE_BORROW,
+    DiagnosticCode::OWN_BORROWED_PARAMETER_ESCAPES,
+    DiagnosticCode::OWN_MOVED_ACROSS_LOOP,
+    DiagnosticCode::FLOW_BREAK_OUTSIDE_LOOP,
+    DiagnosticCode::FLOW_CONTINUE_OUTSIDE_LOOP,
+    DiagnosticCode::FLOW_INVALID_NONLOCAL,
+    DiagnosticCode::FLOW_UNREACHABLE_STATEMENT,
+    DiagnosticCode::MATCH_NON_EXHAUSTIVE,
+    DiagnosticCode::MATCH_GUARD_NOT_BOOL,
+    DiagnosticCode::MATCH_INVALID_CLASS_PATTERN_FIELD,
+    DiagnosticCode::PROTO_BOUND_NOT_SATISFIED,
+    DiagnosticCode::PROTO_INVALID_ITERATOR_SIGNATURE,
+    DiagnosticCode::PROTO_CONTEXT_MANAGER_MISSING,
+    DiagnosticCode::PROTO_HASHABLE_OR_COMPARABLE_REQUIRED,
+    DiagnosticCode::CLASS_MISSING_INITIALIZER,
+    DiagnosticCode::CLASS_REQUIRED_FIELD_AFTER_DEFAULT,
+    DiagnosticCode::CLASS_DUPLICATE_OR_INVALID_VALUE,
+    DiagnosticCode::CLASS_MISSING_MEMBER,
+    DiagnosticCode::RESULT_UNUSED_VALUE,
+    DiagnosticCode::RESULT_INVALID_ERROR_TYPE,
+    DiagnosticCode::RESULT_INVALID_RAISE,
+    DiagnosticCode::STDLIB_UNSUPPORTED_SURFACE,
+    DiagnosticCode::STDLIB_ARGUMENT_TYPE_MISMATCH,
+    DiagnosticCode::STDLIB_BOOTSTRAP_FAILURE,
+    DiagnosticCode::STDLIB_CACHE_FAILURE,
+    DiagnosticCode::WORKSPACE_MALFORMED_MANIFEST,
+    DiagnosticCode::WORKSPACE_SOURCE_ROOT_ESCAPES,
+    DiagnosticCode::WORKSPACE_SOURCE_ROOT_NOT_DIRECTORY,
+    DiagnosticCode::WORKSPACE_INVALID_SOURCE_ROOT,
+    DiagnosticCode::WORKSPACE_UNRESOLVED_IMPORT,
+    DiagnosticCode::WORKSPACE_AMBIGUOUS_IMPORT,
+    DiagnosticCode::WORKSPACE_NAMESPACE_COLLISION,
+    DiagnosticCode::WORKSPACE_IMPORT_CYCLE,
+    DiagnosticCode::CODEGEN_BACKEND_FAILURE,
+    DiagnosticCode::BUILD_MATERIALIZATION_FAILURE,
+    DiagnosticCode::BUILD_TEMP_WORKSPACE_FAILURE,
+    DiagnosticCode::BUILD_CARGO_MANIFEST_FAILURE,
+    DiagnosticCode::BUILD_RUSTC_OR_CARGO_FAILURE,
+    DiagnosticCode::BUILD_ARTIFACT_MISSING,
+    DiagnosticCode::INTERNAL_COMPILER_PANIC,
+];
 
 #[must_use]
 pub fn registry_entry(id: &str) -> Option<&'static DiagnosticRegistryEntry> {
@@ -270,6 +1395,7 @@ const fn reserved_family_base(id: &'static str, family: &'static str) -> Diagnos
         summary: "Reserved family base; not emitted as a diagnostic.",
         state: DiagnosticState::Reserved,
         docs_path: "docs/errors/diagnostic-codes.md",
+        replacement: None,
         representative_fixture_path: None,
         message_template: None,
         owner_module: None,
@@ -333,6 +1459,11 @@ mod tests {
                     assert!(
                         entry.message_template.is_some(),
                         "active diagnostic {} must declare message template",
+                        entry.id
+                    );
+                    assert!(
+                        entry.representative_fixture_path.is_some(),
+                        "active diagnostic {} must declare representative fixture path",
                         entry.id
                     );
                     assert!(
@@ -501,6 +1632,7 @@ mod tests {
             entry.id,
             entry.family,
             entry.docs_path,
+            entry.replacement.unwrap_or_default(),
             entry.summary,
             entry.owner_module.unwrap_or_default(),
             entry.message_template.unwrap_or_default(),
