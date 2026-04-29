@@ -25,7 +25,7 @@ Current wave: `milestone_diag_3` diagnostic emission inventory.
 - [x] Assigned each current user-facing diagnostic category to a target family/code and fixture plan in `internal_docs/diagnostic_emission_inventory.md`.
 - [x] Identified wrong-layer diagnostics, related-span/source-map needs, and recovery behavior expectations in `internal_docs/diagnostic_emission_inventory.md`.
 - [x] Claude review for `milestone_diag_3` completed and all actionable findings addressed. Review rounds: `reviews/semantic-diagnostic-code-taxonomy-diag-3-review-pass-1.md`, `reviews/semantic-diagnostic-code-taxonomy-diag-3-review-pass-2.md`.
-- [ ] `milestone_diag_3` PR opened and merged.
+- [x] `milestone_diag_3` PR opened and merged: https://github.com/sifr-lang/sifr/pull/1669.
 
 Validation evidence for the current wave:
 
