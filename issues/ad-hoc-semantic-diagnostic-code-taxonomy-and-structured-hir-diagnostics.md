@@ -16,7 +16,7 @@ Current wave: `milestone_diag_1` shared diagnostic model.
 - [x] Added checked-in `docs/schemas/diagnostics.schema.json` plus `scripts/check_diagnostic_schema_sync.py`, wired into `scripts/run_all_tests.sh`.
 - [x] Updated `internal_docs/architecture.md`, `internal_docs/phases/27_diagnostics_error_recovery_and_stability_contract.md`, and `internal_docs/roadmap.md` to record this ad-hoc phase as the corrective Phase 27 diagnostic-contract amendment.
 - [x] Claude review for `milestone_diag_1` completed and all actionable findings addressed. Review rounds: `reviews/semantic-diagnostic-code-taxonomy-diag-1-review-pass-1.md`, `reviews/semantic-diagnostic-code-taxonomy-diag-1-review-pass-2.md`, `reviews/semantic-diagnostic-code-taxonomy-diag-1-review-pass-3.md`.
-- [ ] `milestone_diag_1` PR opened and merged.
+- [ ] `milestone_diag_1` PR opened at https://github.com/sifr-lang/sifr/pull/1667; merge pending.
 
 Validation evidence for the current wave:
 
