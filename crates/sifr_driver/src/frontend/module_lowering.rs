@@ -25,14 +25,16 @@ pub(crate) fn lower_frontend_module(
         Err(errors) => {
             let compile_errors: Vec<CompileError> = errors
                 .into_iter()
-                .map(|e| CompileError {
-                    message: match diagnostic_style {
-                        FrontendDiagnosticStyle::Bare => e.message,
-                        FrontendDiagnosticStyle::ModulePrefixed => {
-                            format!("[{}] {}", module_name, e.message)
-                        }
-                    },
-                    phase: CompilePhase::TypeCheck,
+                .map(|e| {
+                    CompileError::new(
+                        match diagnostic_style {
+                            FrontendDiagnosticStyle::Bare => e.message,
+                            FrontendDiagnosticStyle::ModulePrefixed => {
+                                format!("[{}] {}", module_name, e.message)
+                            }
+                        },
+                        CompilePhase::TypeCheck,
+                    )
                 })
                 .collect();
             return Err(compile_errors);

@@ -2,6 +2,7 @@ use super::compile_order::compute_module_compile_order;
 use super::exports::collect_module_exports;
 use crate::diagnostics::{write_stderr_line, CompileError, CompilePhase};
 use crate::frontend::{lower_frontend_module, FrontendDiagnosticStyle, FrontendModuleDiagnostics};
+use sifr_diagnostics::DiagnosticCode;
 use sifr_hir::{ExternalDefs, HirModule, LoweringResult};
 use sifr_python_ast::Stmt;
 use std::collections::HashMap;
@@ -24,10 +25,11 @@ pub(crate) fn compile_frontend_modules(
 
     for module_name in &compile_order {
         let Some(stmts) = parsed_modules.get(module_name.as_str()) else {
-            return Err(vec![CompileError {
-                message: format!("[{module_name}] module was not parsed"),
-                phase: CompilePhase::Build,
-            }]);
+            return Err(vec![CompileError::with_code(
+                format!("[{module_name}] module was not parsed"),
+                CompilePhase::Build,
+                DiagnosticCode::INTERNAL_COMPILER_PANIC,
+            )]);
         };
         let result = lower_frontend_module(module_name, stmts, &external_defs, diagnostic_style)?;
         let LoweringResult {

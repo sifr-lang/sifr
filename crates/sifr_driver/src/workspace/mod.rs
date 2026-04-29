@@ -1,4 +1,5 @@
 use crate::diagnostics::{CompileError, CompilePhase};
+use sifr_diagnostics::DiagnosticCode;
 use std::path::{Component, Path, PathBuf};
 
 const MANIFEST_FILE: &str = "sifr.toml";
@@ -119,7 +120,7 @@ fn validate_source_root(
     if source_root.is_empty() || raw.is_absolute() {
         return Err(vec![source_root_error(
             source_root,
-            "must be a relative non-empty path under the workspace root",
+            SourceRootErrorKind::Invalid,
         )]);
     }
 
@@ -131,13 +132,13 @@ fn validate_source_root(
             Component::ParentDir => {
                 return Err(vec![source_root_error(
                     source_root,
-                    "escapes the workspace root via '..'",
+                    SourceRootErrorKind::Escapes,
                 )]);
             }
             Component::RootDir | Component::Prefix(_) => {
                 return Err(vec![source_root_error(
                     source_root,
-                    "must be a relative non-empty path under the workspace root",
+                    SourceRootErrorKind::Invalid,
                 )]);
             }
         }
@@ -152,31 +153,58 @@ fn validate_source_root(
     if !absolute.is_dir() {
         return Err(vec![source_root_error(
             source_root,
-            "is not a directory under the workspace root",
+            SourceRootErrorKind::NotDirectory,
         )]);
     }
     Ok(relative)
 }
 
 fn parse_manifest_error(path: &Path, reason: impl std::fmt::Display) -> CompileError {
-    CompileError {
-        message: format!(
+    CompileError::with_code(
+        format!(
             "could not parse sifr.toml at '{}': {reason}",
             path.display()
         ),
-        phase: CompilePhase::Build,
-    }
+        CompilePhase::Build,
+        DiagnosticCode::WORKSPACE_MALFORMED_MANIFEST,
+    )
 }
 
 fn parse_manifest_schema_error(path: &Path, reason: &'static str) -> Vec<CompileError> {
     vec![parse_manifest_error(path, reason)]
 }
 
-fn source_root_error(source_root: &str, reason: &'static str) -> CompileError {
-    CompileError {
-        message: format!("[source].roots entry '{source_root}' {reason}"),
-        phase: CompilePhase::Build,
+#[derive(Clone, Copy)]
+enum SourceRootErrorKind {
+    Escapes,
+    Invalid,
+    NotDirectory,
+}
+
+impl SourceRootErrorKind {
+    fn code(self) -> DiagnosticCode {
+        match self {
+            Self::Escapes => DiagnosticCode::WORKSPACE_SOURCE_ROOT_ESCAPES,
+            Self::Invalid => DiagnosticCode::WORKSPACE_INVALID_SOURCE_ROOT,
+            Self::NotDirectory => DiagnosticCode::WORKSPACE_SOURCE_ROOT_NOT_DIRECTORY,
+        }
     }
+
+    fn reason(self) -> &'static str {
+        match self {
+            Self::Escapes => "escapes the workspace root via '..'",
+            Self::Invalid => "must be a relative non-empty path under the workspace root",
+            Self::NotDirectory => "is not a directory under the workspace root",
+        }
+    }
+}
+
+fn source_root_error(source_root: &str, kind: SourceRootErrorKind) -> CompileError {
+    CompileError::with_code(
+        format!("[source].roots entry '{source_root}' {}", kind.reason()),
+        CompilePhase::Build,
+        kind.code(),
+    )
 }
 
 #[cfg(test)]

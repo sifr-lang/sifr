@@ -1,4 +1,5 @@
 use crate::diagnostics::{CompileError, CompilePhase};
+use sifr_diagnostics::DiagnosticCode;
 use sifr_python_ast::Stmt;
 use std::collections::{BTreeMap, BTreeSet, HashMap};
 
@@ -188,10 +189,11 @@ pub(crate) fn compute_module_compile_order(
     let message = format!(
         "module dependency cycle detected: {cycle_render}; import chain: {edge_render}. Break the cycle by moving shared declarations into a separate module."
     );
-    Err(vec![CompileError {
+    Err(vec![CompileError::with_code(
         message,
-        phase: CompilePhase::TypeCheck,
-    }])
+        CompilePhase::Build,
+        DiagnosticCode::WORKSPACE_IMPORT_CYCLE,
+    )])
 }
 
 fn canonicalize_cycle_path(cycle_path: Vec<String>) -> Vec<String> {

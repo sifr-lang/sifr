@@ -8,7 +8,7 @@ Sifr is not production-released yet. This phase intentionally does not preserve 
 
 ## Execution Status
 
-Current wave: `milestone_diag_2b` diagnostic registry population.
+Current wave: `milestone_diag_4a` renderer integration, split into reviewable transport slices.
 
 - [x] Proposal reviewed through final loop and accepted for implementation.
 - [x] Added `crates/sifr_diagnostics` as the canonical leaf crate for diagnostic codes, source spans/source map, model builders, sink emission, rendering, and JSON schema generation.
@@ -31,8 +31,12 @@ Current wave: `milestone_diag_2b` diagnostic registry population.
 - [x] Reviewed existing `SIFR-WORKSPACE-0001..0103` codes against the identity policy and kept them as active precise workspace diagnostics.
 - [x] Claude review for `milestone_diag_2b` completed and all actionable findings addressed. Review rounds: `reviews/semantic-diagnostic-code-taxonomy-diag-2b-review-pass-1.md`, `reviews/semantic-diagnostic-code-taxonomy-diag-2b-review-pass-2.md`, `reviews/semantic-diagnostic-code-taxonomy-diag-2b-review-pass-3.md`.
 - [x] `milestone_diag_2b` PR opened and merged: https://github.com/sifr-lang/sifr/pull/1670.
+- [ ] Started `milestone_diag_4a` slice 1: canonical renderer presentation helpers plus explicit workspace diagnostic identity transport.
+- [ ] Deferred `CompilePhase::TypeCheck => "SIFR-TYPE-0001"` bridge deletion and affected fixture re-keying to `milestone_diag_4a` slice 2, where HIR `LoweringError` transport will carry structured diagnostic codes.
+- [x] Claude pre-implementation review for `milestone_diag_4a` completed: `reviews/semantic-diagnostic-code-taxonomy-diag-4a-preimplementation-review-pass-1.md`.
+- [x] Claude implementation review for `milestone_diag_4a` slice 1 completed and all actionable findings addressed. Review rounds: `reviews/semantic-diagnostic-code-taxonomy-diag-4a-renderer-workspace-review-pass-1.md`, `reviews/semantic-diagnostic-code-taxonomy-diag-4a-renderer-workspace-review-pass-2.md`, `reviews/semantic-diagnostic-code-taxonomy-diag-4a-renderer-workspace-review-pass-3.md`.
 
-Validation evidence for the current wave:
+Validation evidence for `milestone_diag_2a`:
 
 - `cargo test -p sifr_diagnostics` passed.
 - `python3 scripts/check_diagnostic_schema_sync.py` passed.
@@ -53,7 +57,18 @@ Validation evidence for `milestone_diag_2b`:
 - `python3 scripts/check_diagnostic_schema_sync.py` passed.
 - `cargo fmt --check -p sifr_diagnostics` passed.
 - `cargo clippy -p sifr_diagnostics --all-targets -- -D warnings` passed.
-- `scripts/run_all_tests.sh --profile quick` passed with report signature `e1bf653aaa770517` on the registry-population branch.
+- `scripts/run_all_tests.sh --profile quick` passed with report signature `e1bf653aaa770517` on the `milestone_diag_2b` branch.
+
+Validation evidence for current `milestone_diag_4a` slice 1:
+
+- `cargo fmt --check` passed.
+- `python3 scripts/check_diagnostic_schema_sync.py` passed.
+- `python3 scripts/check_diagnostic_docs_sync.py` passed.
+- `cargo test -p sifr_diagnostics` passed.
+- `cargo test -p sifr_driver diagnostics` passed.
+- `cargo test -p sifr --no-run` passed.
+- `cargo clippy -p sifr_diagnostics -p sifr_driver -p sifr -- -D warnings` passed.
+- `scripts/run_all_tests.sh --profile quick` passed with report signature `e1bf653aaa770517` and wall time `79.70s`.
 
 ## Relationship to Existing Roadmap
 

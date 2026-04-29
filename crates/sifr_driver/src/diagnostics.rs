@@ -1,4 +1,5 @@
 use serde::Serialize;
+use sifr_diagnostics::DiagnosticCode;
 use std::any::Any;
 use std::collections::{BTreeMap, HashSet};
 use std::io::Write;
@@ -26,6 +27,7 @@ pub enum CompileResultFull {
 pub struct CompileError {
     pub message: String,
     pub phase: CompilePhase,
+    pub code: Option<DiagnosticCode>,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -93,44 +95,43 @@ pub struct CompilerDiagnostic {
 }
 
 impl CompileError {
-    fn workspace_diagnostic_code(&self) -> Option<&'static str> {
-        if self.phase != CompilePhase::Build {
-            return None;
+    /// Creates a temporary legacy phase-bucket error for unmigrated paths.
+    ///
+    /// Do not use this for workspace diagnostics or any newly migrated emission
+    /// site; those must use [`Self::with_code`] with an active `DiagnosticCode`.
+    #[must_use]
+    pub fn new(message: impl Into<String>, phase: CompilePhase) -> Self {
+        Self {
+            message: message.into(),
+            phase,
+            code: None,
         }
-        let message = self.message.as_str();
-        if message.starts_with("could not parse sifr.toml at ") {
-            return Some("SIFR-WORKSPACE-0001");
+    }
+
+    /// Creates a legacy transport error that already carries canonical identity.
+    #[must_use]
+    pub fn with_code(
+        message: impl Into<String>,
+        phase: CompilePhase,
+        code: DiagnosticCode,
+    ) -> Self {
+        Self {
+            message: message.into(),
+            phase,
+            code: Some(code),
         }
-        if message.starts_with("[source].roots entry ") {
-            if message.contains(" escapes the workspace root via '..'") {
-                return Some("SIFR-WORKSPACE-0002");
-            }
-            if message.contains(" is not a directory under the workspace root") {
-                return Some("SIFR-WORKSPACE-0003");
-            }
-            if message.contains(" must be a relative non-empty path under the workspace root") {
-                return Some("SIFR-WORKSPACE-0004");
-            }
-        }
-        if message.starts_with("could not resolve import ") {
-            return Some("SIFR-WORKSPACE-0101");
-        }
-        if message.starts_with("module ") && message.contains(" is ambiguous in workspace ") {
-            return Some("SIFR-WORKSPACE-0102");
-        }
-        if message.starts_with("module ")
-            && message.contains(" resolves to file ")
-            && message.contains("package directories are not supported")
-        {
-            return Some("SIFR-WORKSPACE-0103");
-        }
-        None
     }
 
     fn diagnostic_code(&self) -> &'static str {
-        if let Some(code) = self.workspace_diagnostic_code() {
-            return code;
+        if let Some(code) = self.code {
+            return code.code();
         }
+        // Transitional legacy bridge for unmigrated non-workspace paths in
+        // diag_4a slice 1. Slice 2 removes the TypeCheck fallback after HIR
+        // LoweringError carries structured DiagnosticCode values and affected
+        // fixtures are re-keyed.
+        // Workspace diagnostics must use `with_code`; this function no longer
+        // infers identity from rendered message text.
         match self.phase {
             CompilePhase::Parse => "SIFR-PARSE-0001",
             CompilePhase::TypeCheck => "SIFR-TYPE-0001",
@@ -259,9 +260,10 @@ pub(crate) fn run_codegen_with_boundary<T>(
     let context = context.into();
     match catch_unwind(AssertUnwindSafe(f)) {
         Ok(value) => Ok(value),
-        Err(payload) => Err(CompileError {
-            message: format!("{context}: {}", panic_payload_message(payload.as_ref())),
-            phase: CompilePhase::Codegen,
-        }),
+        Err(payload) => Err(CompileError::with_code(
+            format!("{context}: {}", panic_payload_message(payload.as_ref())),
+            CompilePhase::Codegen,
+            DiagnosticCode::INTERNAL_COMPILER_PANIC,
+        )),
     }
 }

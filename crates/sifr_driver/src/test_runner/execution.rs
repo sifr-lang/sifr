@@ -3,6 +3,7 @@ use super::orchestrator::GeneratedTestRunnerProject;
 use crate::build::{prepare_cached_artifact, ArtifactCacheReport, PreparedArtifactCache};
 use crate::diagnostics::{write_stderr, write_stderr_line, CompileError, CompilePhase};
 use crate::project::{namespace_module_files, rust_module_file_path};
+use sifr_diagnostics::DiagnosticCode;
 use std::path::Path;
 
 pub(crate) struct TestRunnerExecutionOutcome {
@@ -38,17 +39,19 @@ pub(crate) fn execute_test_runner_project(
     if let PreparedArtifactCache::Miss(_) = &prepared {
         let src_dir = project_dir.join("src");
         std::fs::create_dir_all(&src_dir).map_err(|error| {
-            vec![CompileError {
-                message: format!("failed to create test directory: {error}"),
-                phase: CompilePhase::Build,
-            }]
+            vec![CompileError::with_code(
+                format!("failed to create test directory: {error}"),
+                CompilePhase::Build,
+                DiagnosticCode::BUILD_MATERIALIZATION_FAILURE,
+            )]
         })?;
 
         std::fs::write(project_dir.join("Cargo.toml"), cargo_toml).map_err(|error| {
-            vec![CompileError {
-                message: format!("failed to write Cargo.toml: {error}"),
-                phase: CompilePhase::Build,
-            }]
+            vec![CompileError::with_code(
+                format!("failed to write Cargo.toml: {error}"),
+                CompilePhase::Build,
+                DiagnosticCode::BUILD_CARGO_MANIFEST_FAILURE,
+            )]
         })?;
 
         for module_name in &generated_project.support_module_names {
@@ -57,23 +60,25 @@ pub(crate) fn execute_test_runner_project(
                 let output_path = src_dir.join(&module_path);
                 if let Some(parent) = output_path.parent() {
                     std::fs::create_dir_all(parent).map_err(|error| {
-                        vec![CompileError {
-                            message: format!(
+                        vec![CompileError::with_code(
+                            format!(
                                 "failed to create test support module directory '{}': {error}",
                                 parent.display()
                             ),
-                            phase: CompilePhase::Build,
-                        }]
+                            CompilePhase::Build,
+                            DiagnosticCode::BUILD_MATERIALIZATION_FAILURE,
+                        )]
                     })?;
                 }
                 std::fs::write(&output_path, code).map_err(|error| {
-                    vec![CompileError {
-                        message: format!(
+                    vec![CompileError::with_code(
+                        format!(
                             "failed to write test support module '{}': {error}",
                             output_path.display()
                         ),
-                        phase: CompilePhase::Build,
-                    }]
+                        CompilePhase::Build,
+                        DiagnosticCode::BUILD_MATERIALIZATION_FAILURE,
+                    )]
                 })?;
             }
         }
@@ -82,13 +87,14 @@ pub(crate) fn execute_test_runner_project(
             let output_path = src_dir.join(&namespace_file.path);
             if let Some(parent) = output_path.parent() {
                 std::fs::create_dir_all(parent).map_err(|error| {
-                    vec![CompileError {
-                        message: format!(
+                    vec![CompileError::with_code(
+                        format!(
                             "failed to create test support namespace directory '{}': {error}",
                             parent.display()
                         ),
-                        phase: CompilePhase::Build,
-                    }]
+                        CompilePhase::Build,
+                        DiagnosticCode::BUILD_MATERIALIZATION_FAILURE,
+                    )]
                 })?;
             }
             let mut contents = String::new();
@@ -98,21 +104,23 @@ pub(crate) fn execute_test_runner_project(
                 contents.push_str(";\n");
             }
             std::fs::write(&output_path, contents).map_err(|error| {
-                vec![CompileError {
-                    message: format!(
+                vec![CompileError::with_code(
+                    format!(
                         "failed to write test support namespace '{}': {error}",
                         output_path.display()
                     ),
-                    phase: CompilePhase::Build,
-                }]
+                    CompilePhase::Build,
+                    DiagnosticCode::BUILD_MATERIALIZATION_FAILURE,
+                )]
             })?;
         }
 
         std::fs::write(src_dir.join("lib.rs"), &test_lib).map_err(|error| {
-            vec![CompileError {
-                message: format!("failed to write lib.rs: {error}"),
-                phase: CompilePhase::Build,
-            }]
+            vec![CompileError::with_code(
+                format!("failed to write lib.rs: {error}"),
+                CompilePhase::Build,
+                DiagnosticCode::BUILD_MATERIALIZATION_FAILURE,
+            )]
         })?;
     }
 
@@ -121,10 +129,11 @@ pub(crate) fn execute_test_runner_project(
         .current_dir(&project_dir)
         .output()
         .map_err(|error| {
-            vec![CompileError {
-                message: format!("failed to run cargo test: {error}"),
-                phase: CompilePhase::Build,
-            }]
+            vec![CompileError::with_code(
+                format!("failed to run cargo test: {error}"),
+                CompilePhase::Build,
+                DiagnosticCode::BUILD_RUSTC_OR_CARGO_FAILURE,
+            )]
         })?;
 
     let stdout = String::from_utf8_lossy(&output.stdout);

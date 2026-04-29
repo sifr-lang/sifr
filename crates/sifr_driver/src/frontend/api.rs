@@ -2,6 +2,7 @@ use crate::build::{compile_single_file_entrypoint_with_metadata, compile_single_
 use crate::diagnostics::{CompileError, CompilePhase, CompileResult, CompileResultFull};
 use crate::frontend::module_lowering::emit_frontend_diagnostics;
 use crate::stdlib::StdlibCompiled;
+use sifr_diagnostics::DiagnosticCode;
 use sifr_hir::LoweringResult;
 use sifr_python_ast::Stmt;
 use sifr_python_parser::parse_module;
@@ -15,22 +16,30 @@ pub fn parse_source(source: &str) -> Result<Vec<Stmt>, Vec<CompileError>> {
     match parse_module(source) {
         Ok(parsed) => {
             if !parsed.has_valid_syntax() {
+                // TODO(diag_4a slice 2): classify Ruff parse failures into
+                // the precise active parse-code buckets.
                 let errors: Vec<CompileError> = parsed
                     .errors()
                     .iter()
-                    .map(|e| CompileError {
-                        message: format!("{e}"),
-                        phase: CompilePhase::Parse,
+                    .map(|e| {
+                        CompileError::with_code(
+                            format!("{e}"),
+                            CompilePhase::Parse,
+                            DiagnosticCode::PARSE_EXPECTED_TOKEN_OR_RECOVERY,
+                        )
                     })
                     .collect();
                 return Err(errors);
             }
             Ok(parsed.into_suite())
         }
-        Err(e) => Err(vec![CompileError {
-            message: format!("failed to parse: {e}"),
-            phase: CompilePhase::Parse,
-        }]),
+        // TODO(diag_4a slice 2): classify Ruff parse failures into the
+        // precise active parse-code buckets.
+        Err(e) => Err(vec![CompileError::with_code(
+            format!("failed to parse: {e}"),
+            CompilePhase::Parse,
+            DiagnosticCode::PARSE_EXPECTED_TOKEN_OR_RECOVERY,
+        )]),
     }
 }
 

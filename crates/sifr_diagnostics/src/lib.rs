@@ -12,5 +12,9 @@ pub use model::{
     DiagnosticSuggestion, ErrorEmitted, InternalDiagnostic, RelatedKind, RelatedSpan, Severity,
     SifrDiagnostic, SourceDiagnostic, SuggestionApplicability, SuggestionEdit,
 };
-pub use render::{DiagnosticEnvelope, DiagnosticSpan, DiagnosticSpanLine, RenderedDiagnostic};
+pub use render::{
+    render_compact_envelope, render_human_envelope, render_json_envelope, render_sink_compact,
+    render_sink_human, render_sink_json, DiagnosticEnvelope, DiagnosticSpan, DiagnosticSpanLine,
+    PresentationRenderError, RenderedDiagnostic,
+};
 pub use source_map::{SourceId, SourceMap, SourceMapError, SourceSpan};

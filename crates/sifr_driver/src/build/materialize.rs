@@ -3,6 +3,7 @@ use super::project_codegen::GeneratedBinaryProject;
 use super::{prepare_cached_artifact, CachedArtifactEntry, PreparedArtifactCache};
 use crate::diagnostics::{CompileError, CompilePhase};
 use crate::project::{namespace_module_files, rust_module_file_path};
+use sifr_diagnostics::DiagnosticCode;
 use std::collections::BTreeSet;
 use std::path::{Path, PathBuf};
 use std::process::Command;
@@ -112,11 +113,17 @@ fn materialize_binary_project_at_path(
         .args(["build", "--release"])
         .current_dir(project_path)
         .output()
-        .map_err(|error| vec![build_error(format!("failed to run cargo build: {error}"))])?;
+        .map_err(|error| {
+            vec![cargo_build_error(format!(
+                "failed to run cargo build: {error}"
+            ))]
+        })?;
 
     if !output.status.success() {
         let stderr = String::from_utf8_lossy(&output.stderr);
-        return Err(vec![build_error(format!("cargo build failed:\n{stderr}"))]);
+        return Err(vec![cargo_build_error(format!(
+            "cargo build failed:\n{stderr}"
+        ))]);
     }
     Ok(())
 }
@@ -135,10 +142,19 @@ fn write_project_file(
 }
 
 fn build_error(message: String) -> CompileError {
-    CompileError {
+    CompileError::with_code(
         message,
-        phase: CompilePhase::Build,
-    }
+        CompilePhase::Build,
+        DiagnosticCode::BUILD_MATERIALIZATION_FAILURE,
+    )
+}
+
+fn cargo_build_error(message: String) -> CompileError {
+    CompileError::with_code(
+        message,
+        CompilePhase::Build,
+        DiagnosticCode::BUILD_RUSTC_OR_CARGO_FAILURE,
+    )
 }
 
 fn binary_project_cache_key(
