@@ -102,42 +102,44 @@ Examples:
 
 ## Proposed Diagnostic Families
 
-Use stable code families by semantic domain:
+Use stable code families by semantic domain. The family prefix is the namespace; the four-digit suffix is local to that family and does not reserve or consume a global numeric range.
 
-| Range | Domain |
-| --- | --- |
-| `SIFR-PARSE-0000..0999` | Syntax/parser errors |
-| `SIFR-NAME-1000..1499` | Name resolution, undefined symbols, module member lookup |
-| `SIFR-IMPORT-1500..1799` | Import form and intrinsic import policy errors |
-| `SIFR-TYPE-2000..2499` | Type mismatch, annotation mismatch, union narrowing, generic constraints |
-| `SIFR-DECIMAL-2500..2599` | Decimal and bigdecimal exact numeric diagnostics |
-| `SIFR-CALL-2600..2899` | Arity, keyword, callable shape, argument convention errors |
-| `SIFR-OWN-3000..3499` | Move, borrow, escape, mutability, ownership diagnostics |
-| `SIFR-FLOW-3500..3899` | Break/continue, reachable flow, return completeness |
-| `SIFR-MATCH-3900..4199` | Pattern matching, exhaustiveness, invalid fields, guards |
-| `SIFR-PROTO-4200..4499` | Protocol implementation, iterator, reversible, context-manager contracts |
-| `SIFR-CLASS-4500..4899` | Class fields, constructors, inheritance, auto-init diagnostics |
-| `SIFR-RESULT-4900..5199` | Result/Option handling, unused Result, invalid error types, raise semantics |
-| `SIFR-STDLIB-5200..5599` | Stdlib-specific static API contract errors |
-| `SIFR-STDLIB-5600..5999` | Reserved for future stdlib expansion |
-| `SIFR-WORKSPACE-6000..6499` | Workspace/project discovery and module graph |
-| `SIFR-CODEGEN-7000..7499` | HIR-to-Rust/codegen failures |
-| `SIFR-BUILD-8000..8499` | Rustc/build/materialization failures |
-| `SIFR-INTERNAL-9000..9999` | Internal compiler failures after panic/error boundaries |
+| Family | Local range | Domain |
+| --- | --- | --- |
+| `SIFR-PARSE-*` | `0000..9999` | Syntax/parser errors |
+| `SIFR-NAME-*` | `0000..9999` | Name resolution, undefined symbols, module member lookup |
+| `SIFR-IMPORT-*` | `0000..9999` | Import form and intrinsic import policy errors |
+| `SIFR-TYPE-*` | `0000..9999` | Type mismatch, annotation mismatch, union narrowing, generic constraints |
+| `SIFR-DECIMAL-*` | `0000..9999` | Decimal and bigdecimal exact numeric diagnostics |
+| `SIFR-CALL-*` | `0000..9999` | Arity, keyword, callable shape, argument convention errors |
+| `SIFR-OWN-*` | `0000..9999` | Move, borrow, escape, mutability, ownership diagnostics |
+| `SIFR-FLOW-*` | `0000..9999` | Break/continue, reachable flow, return completeness |
+| `SIFR-MATCH-*` | `0000..9999` | Pattern matching, exhaustiveness, invalid fields, guards |
+| `SIFR-PROTO-*` | `0000..9999` | Protocol implementation, iterator, reversible, context-manager contracts |
+| `SIFR-CLASS-*` | `0000..9999` | Class fields, constructors, inheritance, auto-init diagnostics |
+| `SIFR-RESULT-*` | `0000..9999` | Result/Option handling, unused Result, invalid error types, raise semantics |
+| `SIFR-STDLIB-*` | `0000..9999` | Stdlib-specific static API contract errors |
+| `SIFR-WORKSPACE-*` | `0000..9999` | Workspace/project discovery and module graph |
+| `SIFR-CODEGEN-*` | `0000..9999` | HIR-to-Rust/codegen failures |
+| `SIFR-BUILD-*` | `0000..9999` | Rustc/build/materialization failures |
+| `SIFR-INTERNAL-*` | `0000..9999` | Internal compiler failures after panic/error boundaries |
 
 `SIFR-TYPE-*` should remain only for real type-system failures. It must not be used for imports, ownership, name resolution, class initialization, protocol checks, or stdlib API contract failures unless the category is genuinely type-system-specific.
 
-Numeric gaps between family ranges are reserved for future family allocation. They are not catch-all space for nearby families.
+New families are added by introducing a new `SIFR-<FAMILY>-*` namespace in the registry. This does not require finding unused space in a global `0000..9999` range.
 
-The full diagnostic string is the identity. Numeric ranges are family-local and intentionally human-readable; uniqueness is required for the complete `SIFR-<FAMILY>-dddd` code.
+Family names are uppercase ASCII letters, 3-12 characters, with no digits. Abbreviations should be avoided unless they are part of the initial allowlist: `PARSE`, `NAME`, `IMPORT`, `TYPE`, `DECIMAL`, `CALL`, `OWN`, `FLOW`, `MATCH`, `PROTO`, `CLASS`, `RESULT`, `STDLIB`, `WORKSPACE`, `CODEGEN`, `BUILD`, and `INTERNAL`. New families require a registry PR that adds the family entry, reserves the local `0000` base, and introduces at least one active code with a fixture. Retired families remain documented in the registry; a retired family is never reused for a different domain.
 
-Existing workspace codes such as `SIFR-WORKSPACE-0101` should be renumbered into the new workspace range during this phase. This is an intentional pre-release breaking cleanup, not a compatibility concern.
+The full diagnostic string is the identity. Numeric suffixes are family-local and intentionally human-readable; uniqueness is required only for the complete `SIFR-<FAMILY>-dddd` code.
 
-Numbering convention:
+Existing workspace codes such as `SIFR-WORKSPACE-0101` can remain if they describe the target rule cleanly. They no longer need renumbering merely to fit a global range.
+
+Per-family numbering convention:
 
 - The family base is reserved and not used for an active diagnostic.
-- The first active code in a range is base + 1, for example `SIFR-NAME-1001`.
+- The first active code in a family is usually `0001`, for example `SIFR-NAME-0001`.
 - Reserved and retired codes remain in the registry so the gap is intentional.
+- A family can reserve semantic sub-ranges locally, for example `SIFR-STDLIB-0100..0149` for one stdlib module. These local sub-ranges have no meaning outside that family.
 
 Family ownership rules for overlaps:
 
@@ -145,7 +147,8 @@ Family ownership rules for overlaps:
 - Missing or malformed protocol methods are `SIFR-PROTO-*`; ordinary missing class fields or constructors are `SIFR-CLASS-*`.
 - Generic bound/conformance failures are `SIFR-PROTO-*` when the failure is about satisfying a protocol, and `SIFR-TYPE-*` when the failure is about ordinary type compatibility.
 - Stdlib static API errors are `SIFR-STDLIB-*` only when the rule is specific to a stdlib module contract; ordinary type or call errors inside stdlib calls use `SIFR-TYPE-*` or `SIFR-CALL-*`.
-- Each stdlib module should receive a reserved contiguous sub-range, preferably 50 codes at a time, tracked in the diagnostic registry.
+- Module resolution diagnostics use `SIFR-IMPORT-*` when the failure is about import statement form, imported symbol selection, or import policy. They use `SIFR-WORKSPACE-*` when the failure is about workspace/project layout, module graph construction, package roots, or filesystem discovery.
+- Each stdlib module should receive a reserved contiguous local sub-range, preferably 50 codes at a time, tracked in the diagnostic registry.
 
 Generic examples:
 
@@ -157,24 +160,12 @@ Existing code renumbering:
 
 | Existing code | New code policy |
 | --- | --- |
-| `SIFR-PARSE-0001` | May remain if it is a real parser bucket with a registry entry; split later if parser can distinguish precise parse categories. |
-| `SIFR-TYPE-0001` | Retired as a public catch-all; all semantic diagnostics move to specific families. |
-| `SIFR-CODEGEN-0001` | Retired; replaced by specific `SIFR-CODEGEN-7xxx` codes assigned from the inventory. Broad unclassified failures use `SIFR-INTERNAL-*`. |
-| `SIFR-BUILD-0001` | Retired; replaced by specific `SIFR-BUILD-8xxx` codes assigned from the inventory. Broad unclassified failures use `SIFR-INTERNAL-*`. |
-| `SIFR-WORKSPACE-0001..0103` | Renumbered into `SIFR-WORKSPACE-6001..6499` with no aliases. |
-| Message-embedded `[E25xx]` | Retired; converted to top-level `SIFR-DECIMAL-25xx`. |
-
-Exact workspace renumbering:
-
-| Existing code | New code |
-| --- | --- |
-| `SIFR-WORKSPACE-0001` | `SIFR-WORKSPACE-6001` |
-| `SIFR-WORKSPACE-0002` | `SIFR-WORKSPACE-6002` |
-| `SIFR-WORKSPACE-0003` | `SIFR-WORKSPACE-6003` |
-| `SIFR-WORKSPACE-0004` | `SIFR-WORKSPACE-6004` |
-| `SIFR-WORKSPACE-0101` | `SIFR-WORKSPACE-6101` |
-| `SIFR-WORKSPACE-0102` | `SIFR-WORKSPACE-6102` |
-| `SIFR-WORKSPACE-0103` | `SIFR-WORKSPACE-6103` |
+| `SIFR-PARSE-0001` | Reserved meaning only: opaque parser error with no upstream classification. It must not be used when a more specific parser condition is detectable, and guardrails must reject it as a default parser emission code. |
+| `SIFR-TYPE-0001` | Retired as a public catch-all and never reused. New type diagnostics start at later local codes such as `SIFR-TYPE-0002`. |
+| `SIFR-CODEGEN-0001` | Retired if it is only a broad catch-all; replaced by specific `SIFR-CODEGEN-xxxx` codes assigned from the inventory. Broad unclassified failures use `SIFR-INTERNAL-*`. |
+| `SIFR-BUILD-0001` | Retired if it is only a broad catch-all; replaced by specific `SIFR-BUILD-xxxx` codes assigned from the inventory. Broad unclassified failures use `SIFR-INTERNAL-*`. |
+| `SIFR-WORKSPACE-0001..0103` | Each existing code must be reviewed during registry population. It remains active only if it describes a precise workspace rule; otherwise it is retired and replaced within the `SIFR-WORKSPACE-*` namespace. |
+| Message-embedded `[E25xx]` | Retired; converted to top-level `SIFR-DECIMAL-xxxx` codes. |
 
 ## Documentation URL Policy
 
@@ -184,7 +175,7 @@ Use one canonical URL form:
 https://sifr.sh/docs/errors/<CODE>
 ```
 
-The URL is derived from the code and must not be hand-written at emission sites. Any historical `sifr.dev` references should be updated or removed as part of this phase.
+The URL is derived from the code and must not be hand-written at emission sites. Documentation URLs and filenames use the canonical uppercase code form, for example `https://sifr.sh/docs/errors/SIFR-NAME-0001` and `docs/errors/SIFR-NAME-0001.md`. The URL is case-sensitive; generated filenames must match canonical code casing even on case-insensitive filesystems. Any historical `sifr.dev` references should be updated or removed as part of this phase.
 
 ## Decimal Code Migration
 
@@ -192,14 +183,14 @@ The existing decimal pseudo-code intent should become real top-level diagnostic 
 
 | New code | Meaning |
 | --- | --- |
-| `SIFR-DECIMAL-2501` | Invalid `Decimal(...)` exact literal |
-| `SIFR-DECIMAL-2502` | Invalid `BigDecimal(...)` exact literal |
-| `SIFR-DECIMAL-2503` | Float mixed with decimal numeric type |
-| `SIFR-DECIMAL-2504` | Decimal and bigdecimal mixed arithmetic |
-| `SIFR-DECIMAL-2505` | Decimal float construction/conversion forbidden |
-| `SIFR-DECIMAL-2506` | BigDecimal float construction/conversion forbidden |
-| `SIFR-DECIMAL-2507` | Decimal scale argument invalid |
-| `SIFR-DECIMAL-2508` | Bigdecimal scale/context invalid |
+| `SIFR-DECIMAL-0001` | Invalid `Decimal(...)` exact literal |
+| `SIFR-DECIMAL-0002` | Invalid `BigDecimal(...)` exact literal |
+| `SIFR-DECIMAL-0003` | Float mixed with decimal numeric type |
+| `SIFR-DECIMAL-0004` | Decimal and bigdecimal mixed arithmetic |
+| `SIFR-DECIMAL-0005` | Decimal float construction/conversion forbidden |
+| `SIFR-DECIMAL-0006` | BigDecimal float construction/conversion forbidden |
+| `SIFR-DECIMAL-0007` | Decimal scale argument invalid |
+| `SIFR-DECIMAL-0008` | Bigdecimal scale/context invalid |
 
 The rendered message must not include `[E2501]`-style secondary codes after this migration.
 
@@ -228,7 +219,7 @@ pub struct SourceDiagnostic {
     pub severity: Severity,
     pub message: String,
     pub message_template: &'static str,
-    pub args: BTreeMap<String, serde_json::Value>,
+    pub args: BTreeMap<String, DiagnosticArg>,
     pub primary_span: SourceSpan,
     pub related_spans: Vec<RelatedSpan>,
     pub children: Vec<DiagnosticChild>,
@@ -241,7 +232,7 @@ pub struct InternalDiagnostic {
     pub severity: Severity,
     pub message: String,
     pub message_template: &'static str,
-    pub args: BTreeMap<String, serde_json::Value>,
+    pub args: BTreeMap<String, DiagnosticArg>,
     pub children: Vec<DiagnosticChild>,
     pub help: Option<String>,
 }
@@ -249,6 +240,14 @@ pub struct InternalDiagnostic {
 pub struct DiagnosticChild {
     pub severity: ChildSeverity,
     pub message: String,
+}
+
+pub enum DiagnosticArg {
+    String(String),
+    Signed(i64),
+    Unsigned(u64),
+    Float(f64),
+    Bool(bool),
 }
 
 pub enum ChildSeverity {
@@ -270,8 +269,8 @@ SifrDiagnostic::Source(SourceDiagnostic {
     message: "type mismatch: expected 'int', got 'str'".to_string(),
     message_template: "type mismatch: expected {expected}, got {actual}",
     args: BTreeMap::from([
-        ("expected".to_string(), serde_json::json!("int")),
-        ("actual".to_string(), serde_json::json!("str")),
+        ("expected".to_string(), DiagnosticArg::String("int".to_string())),
+        ("actual".to_string(), DiagnosticArg::String("str".to_string())),
     ]),
     primary_span: span,
     related_spans: Vec::new(),
@@ -281,7 +280,9 @@ SifrDiagnostic::Source(SourceDiagnostic {
 })
 ```
 
-`message_template` uses named braces such as `{expected}` and `{actual}`. Literal braces are escaped as `{{` and `}}`. `args` stores the named dynamic values so JSON consumers can re-render or inspect diagnostics without parsing `message`.
+`message_template` uses named braces such as `{expected}` and `{actual}`. Literal braces are escaped as `{{` and `}}`. `args` stores scalar named dynamic values so JSON consumers can re-render or inspect diagnostics without parsing `message`.
+
+Template syntax is intentionally small: a placeholder is `{<name>}` where `<name>` matches `[a-z][a-z0-9_]*`. Formatting specifiers, positional placeholders, nested placeholders, and whitespace inside braces are not supported. A name may appear multiple times. Registry loading validates that every placeholder has a matching scalar `args` key and that every declared arg is either used in the template or explicitly marked as JSON-only metadata.
 
 JSON output should use a versioned envelope:
 
@@ -382,7 +383,7 @@ Acceptable implementation shapes:
 - Type-checking helpers return `Result<T, SifrDiagnostic>`.
 - Type-checking helpers accept a `DiagnosticSink` and emit `SifrDiagnostic` values directly.
 
-Do not add `impl From<TypeError> for SifrDiagnostic>` as the long-term design. That recreates a hidden classifier layer and conflicts with the no-fallback rule. A short-lived mechanical adapter is acceptable only inside a single migration PR and must be deleted before the milestone is complete.
+Do not add `impl From<TypeError> for SifrDiagnostic` as the long-term design. That recreates a hidden classifier layer and conflicts with the no-fallback rule. A short-lived mechanical adapter is acceptable only inside a single migration PR and must be deleted before the milestone is complete.
 
 ## Diagnostic Builder API
 
@@ -469,7 +470,8 @@ Scope:
 - Add a versioned JSON envelope `{ "version": 1, "diagnostics": [...] }`.
 - Add a checked-in JSON Schema generated from the canonical Rust types, using `schemars` or equivalent.
 - Restrict diagnostic children to `Note` and `Help` through a `ChildSeverity` type.
-- Define the canonical `Severity` enum exactly as `Error | Warning | Note | Help`; internal diagnostics use `Severity::Error`.
+- Define the canonical top-level `Severity` enum exactly as `Error | Warning | Note`; internal diagnostics use `Severity::Error`. Help text is represented through `help` fields or `ChildSeverity::Help`, not as standalone top-level diagnostics.
+- Add the canonical `LoweringOutcome` and `DiagnosticSink` types alongside the existing `LoweringError`. `LoweringError` becomes private transitional plumbing only and is removed from user-facing paths in `milestone_diag_4a`.
 
 Definition of done:
 
@@ -481,13 +483,14 @@ Definition of done:
 - The diagnostic model preserves source byte ranges before line/column rendering.
 - Lossless JSON means round-trip identity for diagnostics, explicit `null` fields where applicable, deny-unknown-fields deserialization for consumed payloads, and a schema-regeneration check.
 - Source diagnostics cannot be constructed without a `SourceSpan`.
+- Top-level diagnostics cannot use `Severity::Help`.
 
 ### milestone_diag_2a: Diagnostic Registry Skeleton
 
 Scope:
 
 - Add a checked-in diagnostic registry.
-- Define code family ranges and initial reserved codes.
+- Define code family namespaces, the per-family local `0000..9999` convention, and initial reserved codes.
 - Define the registry record shape.
 - Make `crates/sifr_diagnostics/src/codes.rs` the source of truth.
 - Add documentation generation from the code registry rather than hand-maintaining divergent docs.
@@ -505,7 +508,7 @@ crates/sifr_diagnostics/src/codes.rs
 
 Definition of done:
 
-- The registry skeleton exists with families, ranges, state machine, and reserved base codes.
+- The registry skeleton exists with families, the per-family numbering convention, state machine, and reserved family bases (`0000` per family).
 - Registry and code constants cannot silently diverge.
 - The registry records `id`, `family`, `summary`, `state` (`Active | Reserved | Retired`), docs path, representative fixture path, message template, and owner module.
 - The docs generator writes `docs/errors/<CODE>.md`, `docs/errors/diagnostic-codes.md`, and `internal_docs/diagnostic_codes.md` from `crates/sifr_diagnostics/src/codes.rs`.
@@ -537,6 +540,7 @@ Scope:
 - Populate active codes from the diagnostic emission inventory.
 - Add docs metadata, message templates, owner modules, and fixture paths for active codes.
 - Mark intentionally future codes as reserved and previously superseded codes as retired.
+- Review each existing `SIFR-WORKSPACE-0001..0103` code against the diagnostic identity policy. Mark any code that fails the policy as retired and replace it with a precise code in the same family.
 
 Definition of done:
 
@@ -544,50 +548,51 @@ Definition of done:
 - Every active registry code has a fixture or is explicitly marked reserved.
 - Every active code has a docs page under `docs/errors/<CODE>.md`; reserved codes are exempt.
 - The registry population matches the checked-in inventory.
+- Every existing workspace code has either an active registry entry with a precise rule and docs page, or a retired registry entry with its replacement code recorded.
 
-### milestone_diag_4: Renderer and Driver Integration
+### milestone_diag_4a: Renderer Integration
 
 Scope:
 
 - Update human, compact, and JSON renderers to consume `SifrDiagnostic`.
-- Split integration into two steps:
-  - `diag_4a`: renderers consume `SifrDiagnostic` while any still-unmigrated legacy path is explicitly temporary and tracked by the inventory.
-  - `diag_4b`: delete phase-to-code public diagnostic mapping after all user-facing diagnostic emitters have migrated.
+- Any still-unmigrated legacy path is explicitly temporary, tracked by the inventory, and blocked from gaining new emission sites.
 - Keep exit-code behavior stable, but base rendering on diagnostic identity.
 - Ensure compact grouping uses `(severity, code, message_template, primary file)`.
-- Convert `CompileError` into either a structured diagnostic wrapper or an internal boundary error that already carries `SifrDiagnostic`.
 - Remove workspace message-prefix code inference such as `message.starts_with("could not resolve import ")`.
-- Retire `CompilePhase` and the phase-derived `Display` label path from public diagnostic rendering.
-- Migrate non-HIR emission surfaces still using phase-derived codes, including parser adapters, workspace/project discovery, build/materialization/rustc diagnostics, codegen boundaries, and test-runner diagnostics.
+- Migrate parser adapters, workspace/project discovery, codegen boundaries, build/materialization/rustc diagnostics, and test-runner diagnostics that are already covered by the inventory into `SifrDiagnostic` transport.
+- Replace user-facing `LoweringError { message, line, col }` paths with `LoweringOutcome` and `DiagnosticSink`.
 
 Definition of done:
 
-- `CompilePhase::TypeCheck => "SIFR-TYPE-0001"` is gone from public diagnostic code assignment.
+- All renderers operate on `SifrDiagnostic` exclusively.
 - Renderers do not parse messages to recover codes.
 - JSON, human, and compact render from the same canonical diagnostics.
+- HIR user-facing diagnostics no longer leave HIR as `LoweringError { message, line, col }`.
 
 ### milestone_diag_5: Test Harness Contract Cleanup
 
 Scope:
 
+- This milestone lands after `milestone_diag_6` so decimal pseudo-code emission has already moved to canonical `SIFR-DECIMAL-*` codes.
 - Update e2e expectation parsing to accept only canonical `SIFR-<FAMILY>-dddd` codes.
 - Remove acceptance of bare `[Edddd]` pseudo-codes.
 - Update failure aggregation and diagnostics comparison to use structured diagnostic codes.
 - Update renderer unit tests so hand-built diagnostics use real new-family codes.
 - Add a negative unit test proving `[E2507]` is rejected as an expectation code.
-- Audit current fail fixtures for bare `[Edddd]` primary expectations before landing this milestone. If any remain, migrate those specific fixtures in the same PR so the suite stays green until decimal migration replaces the old pseudo-codes.
+- Validate fixture-asserted codes against the registry at harness load time, not by regex alone. Unknown codes fail loudly with the unknown code and a closest-match hint.
 
 Definition of done:
 
 - Tests cannot accidentally bless message-embedded pseudo-codes.
-- E2E fail fixtures must assert top-level structured codes.
+- E2E fail fixtures must assert only top-level code strings, never message-embedded pseudo-codes.
 - The harness no longer normalizes or extracts secondary codes from diagnostic messages.
+- No transitional `[Edddd]` expectation remains after this milestone, and this milestone must not introduce new `SIFR-TYPE-0001` expectations to replace decimal pseudo-code expectations.
 
 ### milestone_diag_6: Decimal Diagnostics First Migration
 
 Scope:
 
-- Convert existing decimal pseudo-codes to real top-level `SIFR-DECIMAL-25xx` codes.
+- Convert existing decimal pseudo-codes to real top-level `SIFR-DECIMAL-000x` codes per the Decimal Code Migration table.
 - Remove `[E25xx]` from messages.
 - Update decimal e2e expectations and verification baselines.
 - Replace decimal pseudo-code emission in `sifr_type_system::check`, especially mixed decimal arithmetic checks.
@@ -599,10 +604,13 @@ Definition of done:
 - Existing decimal negative cases preserve message clarity and become structurally identifiable by code.
 - Decimal e2e fixtures and verification baselines are updated in this milestone, not deferred.
 
-### milestone_diag_7: Name, Import, Type, and Call Diagnostics
+### milestone_diag_7: Parser, Name, Import, Type, and Call Diagnostics
 
 Scope:
 
+- Map upstream Ruff-fork parser error categories to distinct `SIFR-PARSE-*` codes where the parser exposes a condition category.
+- Replace broad parser emission with category-specific codes for all parser conditions identified in `milestone_diag_3`.
+- Keep `SIFR-PARSE-0001` only for the reserved opaque-parser-error meaning, and guardrail it against use as a default parser code.
 - Convert common frontend semantic errors to structured diagnostics:
   - Undefined variable/function.
   - Unknown generic type.
@@ -617,11 +625,14 @@ Scope:
   - Unexpected keyword.
   - Duplicate keyword/positional argument.
   - Callable arity mismatch.
+- Retire `sifr_type_system::TypeError` and `TypeErrorKind`. Any short-lived adapter from `TypeError` to `SifrDiagnostic` must be deleted in this milestone.
 
 Definition of done:
 
 - The largest e2e fail categories no longer use `SIFR-TYPE-0001`.
 - Each category has a distinct code and registry entry.
+- Parser diagnostics covered by the inventory use specific `SIFR-PARSE-*` codes rather than a default parser bucket.
+- The type-system adapter path is gone; type-checking code emits or returns canonical diagnostics directly.
 - E2E fixtures and verification baselines touched by this milestone are updated in the same milestone.
 
 ### milestone_diag_8: Ownership, Flow, Match, Class, Protocol, Result, and Stdlib Diagnostics
@@ -646,6 +657,23 @@ Definition of done:
 - No user-facing semantic diagnostic remains in a generic phase bucket.
 - Category names and code families match actual semantics.
 - E2E fixtures and verification baselines touched by this milestone are updated in the same milestone.
+
+### milestone_diag_4b: Phase-Mapping Retirement
+
+Scope:
+
+- Delete `CompilePhase::TypeCheck => "SIFR-TYPE-0001"` and the rest of the phase-derived public diagnostic-code mapping.
+- Retire `CompilePhase` and the phase-derived `Display` label path from public diagnostic rendering.
+- Convert `CompileError` into either a structured diagnostic wrapper or an internal boundary error that already carries `SifrDiagnostic`.
+- Remove transitional `sifr_driver` re-exports of `sifr_diagnostics` types.
+- Migrate any remaining non-HIR emission surface still using phase-derived codes. This milestone is residual cleanup only; new family migrations must not be deferred here.
+
+Definition of done:
+
+- No public diagnostic code is assigned from `CompilePhase`.
+- `CompilePhase` is not a public diagnostic display source.
+- `CompileError` is not a public code source.
+- `sifr_driver` no longer re-exports canonical diagnostic types.
 
 ### milestone_diag_9: Source Span Completion
 
@@ -678,6 +706,7 @@ Scope:
 - Define which diagnostics produce a typed error expression or poisoned binding to prevent cascades.
 - Define deduplication and prioritization in terms of diagnostic code and `message_template`.
 - Ensure follow-on diagnostics do not hide the root cause or flood compact/json output.
+- Define cap-overflow behavior for notes and warnings, including `reveal_type(...)`.
 
 Definition of done:
 
@@ -685,6 +714,7 @@ Definition of done:
 - Multi-error fixtures still report useful independent errors.
 - Cascading diagnostics caused only by earlier invalid expressions are suppressed or demoted by policy.
 - Existing recovery hard limits remain enforced using structured diagnostic identity.
+- A fixture with more than 50 `reveal_type(...)` calls proves the chosen overflow behavior.
 
 ### milestone_diag_11: Guardrails and Baseline Regeneration
 
@@ -729,15 +759,17 @@ flowchart TD
     diag2a --> diag3["diag_3: emission inventory"]
     diag3 --> diag2b["diag_2b: registry population from inventory"]
     diag2b --> diag4a["diag_4a: renderers consume SifrDiagnostic"]
-    diag4a --> diag5["diag_5: test harness contract cleanup"]
-    diag5 --> diag6["diag_6: decimal migration"]
-    diag6 --> diag7["diag_7: name/import/type/call migration"]
+    diag4a --> diag6["diag_6: decimal migration"]
+    diag6 --> diag5["diag_5: test harness contract cleanup"]
+    diag5 --> diag7["diag_7: parser/name/import/type/call migration"]
     diag7 --> diag8["diag_8: ownership/flow/match/class/protocol/result/stdlib migration"]
     diag8 --> diag4b["diag_4b: delete phase-to-code mapping and CompilePhase public path"]
     diag4b --> diag9["diag_9: span completion and related spans"]
     diag9 --> diag10["diag_10: recovery semantics and error tainting"]
     diag10 --> diag11["diag_11: final guardrails and baselines"]
 ```
+
+The sequencing graph is authoritative. `diag_2b` intentionally follows `diag_3` because registry population depends on the completed inventory, and `diag_6` intentionally lands before `diag_5` so test-harness cleanup does not need a transitional `[Edddd]` or `SIFR-TYPE-0001` fixture state.
 
 No migration milestone is complete until its fixtures, verification baselines, and focused tests are green with the new codes. The final guardrail milestone should contain residual cleanup and new enforcement checks, not defer all fixture churn.
 
@@ -747,26 +779,26 @@ Examples of desired code assignment:
 
 | Current message shape | New code |
 | --- | --- |
-| `undefined variable: 'x'` | `SIFR-NAME-1001` |
-| `undefined function: 'foo'` | `SIFR-NAME-1002` |
-| `unknown generic type: 'UnknownType'` | `SIFR-NAME-1003` |
-| `module 'sifr.math' has no member 'nonexistent_func'` | `SIFR-NAME-1004` |
-| `cannot import from '_sifr.io' ...` | `SIFR-IMPORT-1501` |
-| `type mismatch: expected 'int', got 'str'` | `SIFR-TYPE-2001` |
-| `if expression branches have incompatible types...` | `SIFR-TYPE-2002` |
-| `type 'Blob' does not implement protocol 'Comparable'...` | `SIFR-PROTO-4201` |
-| `sqrt() takes at most 1 argument(s), got 2` | `SIFR-CALL-2601` |
-| `got an unexpected keyword argument` | `SIFR-CALL-2602` |
-| `use of moved value: 's'` | `SIFR-OWN-3001` |
-| `cannot borrow ... as mutable more than once` | `SIFR-OWN-3002` |
-| `cannot return borrowed parameter...` | `SIFR-OWN-3003` |
-| `'break' outside of loop` | `SIFR-FLOW-3501` |
-| `'continue' outside of loop` | `SIFR-FLOW-3502` |
-| `non-exhaustive match...` | `SIFR-MATCH-3901` |
-| `match guard must be a bool expression...` | `SIFR-MATCH-3902` |
-| `class has fields but no __init__...` | `SIFR-CLASS-4501` |
-| `unused Result value...` | `SIFR-RESULT-4901` |
-| `` `str` is not a valid error type in Result `` | `SIFR-RESULT-4902` |
+| `undefined variable: 'x'` | `SIFR-NAME-0001` |
+| `undefined function: 'foo'` | `SIFR-NAME-0002` |
+| `unknown generic type: 'UnknownType'` | `SIFR-NAME-0003` |
+| `module 'sifr.math' has no member 'nonexistent_func'` | `SIFR-NAME-0004` |
+| `cannot import from '_sifr.io' ...` | `SIFR-IMPORT-0001` |
+| `type mismatch: expected 'int', got 'str'` | `SIFR-TYPE-0002` |
+| `if expression branches have incompatible types...` | `SIFR-TYPE-0003` |
+| `type 'Blob' does not implement protocol 'Comparable'...` | `SIFR-PROTO-0001` |
+| `sqrt() takes at most 1 argument(s), got 2` | `SIFR-CALL-0001` |
+| `got an unexpected keyword argument` | `SIFR-CALL-0002` |
+| `use of moved value: 's'` | `SIFR-OWN-0001` |
+| `cannot borrow ... as mutable more than once` | `SIFR-OWN-0002` |
+| `cannot return borrowed parameter...` | `SIFR-OWN-0003` |
+| `'break' outside of loop` | `SIFR-FLOW-0001` |
+| `'continue' outside of loop` | `SIFR-FLOW-0002` |
+| `non-exhaustive match...` | `SIFR-MATCH-0001` |
+| `match guard must be a bool expression...` | `SIFR-MATCH-0002` |
+| `class has fields but no __init__...` | `SIFR-CLASS-0001` |
+| `unused Result value...` | `SIFR-RESULT-0001` |
+| `` `str` is not a valid error type in Result `` | `SIFR-RESULT-0002` |
 
 These exact numbers are the proposed starting point. They can be adjusted during `milestone_diag_2b`, but the final registry must be internally consistent and directly implemented without compatibility aliases.
 
@@ -779,7 +811,9 @@ cargo test -p sifr_driver diagnostics
 cargo test -p sifr -- test_e2e_fail
 cargo run -q -p sifr -- --diagnostic-format json check crates/sifr/tests/e2e/fail/type_mismatch.sifr
 cargo run -q -p sifr -- --diagnostic-format compact check crates/sifr/tests/e2e/fail/type_mismatch.sifr
-cargo run -p sifr_diagnostics --bin gen-error-docs
+cargo run -p sifr_diagnostics --bin gen-error-docs -- --check
+python3 scripts/check_diagnostic_docs_sync.py
+python3 scripts/check_diagnostic_code_coverage.py
 ```
 
 Before considering the phase complete:
@@ -790,8 +824,11 @@ scripts/run_all_tests.sh
 cargo clippy --workspace -- -D warnings
 cargo fmt --check
 python3 scripts/check_hir_maintainability_guardrails.py
+python3 scripts/check_diagnostic_docs_sync.py
 python3 scripts/check_diagnostic_code_coverage.py
 ```
+
+The diagnostic docs and coverage checks must be wired into `scripts/run_all_tests.sh` so local validation and CI stay identical.
 
 ## Required Documentation Updates
 
@@ -818,6 +855,7 @@ Post-1.0 stability begins at the first documented stable Sifr release, expected 
 - Do not map strings to codes after the fact.
 - Do not infer codes from message prefixes.
 - Do not add generic fallback diagnostics for user errors.
+- Do not use `SIFR-PARSE-0001`, `SIFR-CODEGEN-0001`, `SIFR-BUILD-0001`, or any other `0001` code as a family-default catch-all unless the registry gives it a precise, guardrailed meaning.
 - Do not allow spanless HIR diagnostics when the AST node has a source location.
 - Do not keep old baselines as accepted alternatives.
 - Do not add a historical migration layer.
@@ -827,13 +865,14 @@ Post-1.0 stability begins at the first documented stable Sifr release, expected 
 - Do not allow an `expect-error` fixture annotation to use a code absent from the registry.
 - Do not construct diagnostic codes with `format!` or raw strings at emission sites.
 - Do not allow `Severity::Error` as a child diagnostic severity.
+- Do not allow top-level `Severity::Help`; help belongs on a parent diagnostic.
 - Do not use `Option<TextRange>` for parser/HIR source diagnostics when a source range exists.
 
 Internal compiler failure boundaries are the only place where a broad code is acceptable. Those diagnostics must use `SIFR-INTERNAL-*`, must not be described as user-fixable, and must not mask a known user-input error that should have a specific code.
 
 Internal code allocation policy:
 
-- `SIFR-INTERNAL-9001` is the stable catch-all for unclassified compiler panics after a panic boundary.
+- `SIFR-INTERNAL-0001` is the stable catch-all for unclassified compiler panics after a panic boundary.
 - Dedicated `SIFR-INTERNAL-*` codes should be added for recurring known internal failure families.
 - Known user-input failures must never be routed through `SIFR-INTERNAL-*`.
 
@@ -841,7 +880,7 @@ Internal code allocation policy:
 
 `reveal_type(...)` output and compiler warnings must not remain as ad hoc stderr strings.
 
-This phase uses one diagnostic stream for errors, warnings, notes, and help:
+This phase uses one diagnostic stream for errors, warnings, and notes. Help remains attached to diagnostics through `help` fields or `ChildSeverity::Help` children:
 
 - `reveal_type(...)` emits a `SifrDiagnostic` with `Severity::Note`.
 - Compiler warnings emit `SifrDiagnostic` values with `Severity::Warning`.
@@ -850,8 +889,9 @@ This phase uses one diagnostic stream for errors, warnings, notes, and help:
 - Warnings do not affect the exit code; invocations with warnings only exit `0`.
 - The 50 top-level recovery cap applies to all top-level diagnostics after severity ordering, while the existing user-error exit behavior remains based on whether any top-level diagnostic has `Severity::Error`.
 - The cap intentionally applies to `reveal_type(...)` notes as well; explicit reveal output is still bounded to avoid unbounded diagnostic floods.
+- When diagnostics are omitted because of the cap, rendering appends one structured `Severity::Note` summary such as `10 additional diagnostics omitted by recovery cap`. For `reveal_type(...)`, the summary must say how many explicit reveal results were omitted rather than silently dropping them.
 
-This aligns with the existing `Severity` enum and removes another side channel from frontend lowering.
+This removes another side channel from frontend lowering while keeping top-level severity small and explicit.
 
 ## Phase Definition of Done
 
