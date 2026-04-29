@@ -7,6 +7,7 @@
 //!   sifr emit <file.sifr>     Show generated Rust code
 #![cfg_attr(test, allow(clippy::expect_used, clippy::unwrap_used))]
 use clap::{Parser, Subcommand, ValueEnum};
+use sifr_diagnostics::DiagnosticCode;
 use sifr_driver::{
     apply_diagnostic_recovery_limits, build, build_cached_project, build_cached_single_file,
     build_project, check, check_project, compile, compile_errors_to_diagnostics, emit_project,
@@ -248,15 +249,16 @@ fn run_with_panic_boundary<T>(
     let context = context.into();
     match catch_unwind(AssertUnwindSafe(f)) {
         Ok(value) => Ok(value),
-        Err(payload) => Err(CompileError {
-            message: format!("{context}: {}", panic_payload_message(payload.as_ref())),
+        Err(payload) => Err(CompileError::with_code(
+            format!("{context}: {}", panic_payload_message(payload.as_ref())),
             phase,
-        }),
+            DiagnosticCode::INTERNAL_COMPILER_PANIC,
+        )),
     }
 }
 
 fn is_internal_compile_error(error: &CompileError) -> bool {
-    error.message.starts_with("internal compiler panic during ")
+    error.code == Some(DiagnosticCode::INTERNAL_COMPILER_PANIC)
 }
 
 fn compile_error_exit_code(errors: &[CompileError]) -> i32 {
@@ -1205,16 +1207,14 @@ mod tests {
 
     #[test]
     fn test_compile_error_exit_code_contract_user_vs_internal() {
-        let user_error = CompileError {
-            message: "type mismatch".to_string(),
-            phase: CompilePhase::TypeCheck,
-        };
+        let user_error = CompileError::new("type mismatch", CompilePhase::TypeCheck);
         assert_eq!(compile_error_exit_code(&[user_error]), EXIT_USER_DIAGNOSTIC);
 
-        let internal_error = CompileError {
-            message: "internal compiler panic during single-file code generation: boom".to_string(),
-            phase: CompilePhase::Codegen,
-        };
+        let internal_error = CompileError::with_code(
+            "internal compiler panic during single-file code generation: boom",
+            CompilePhase::Codegen,
+            DiagnosticCode::INTERNAL_COMPILER_PANIC,
+        );
         assert_eq!(
             compile_error_exit_code(&[internal_error]),
             EXIT_INTERNAL_COMPILER_FAILURE

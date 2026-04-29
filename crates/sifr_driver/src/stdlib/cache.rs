@@ -50,10 +50,10 @@ mod tests {
 
         let first = match get_or_init_stdlib_cache(&cache, || {
             build_calls.fetch_add(1, Ordering::SeqCst);
-            Err(vec![CompileError {
-                message: "sentinel stdlib cache error".to_string(),
-                phase: CompilePhase::Build,
-            }])
+            Err(vec![CompileError::new(
+                "sentinel stdlib cache error",
+                CompilePhase::Build,
+            )])
         }) {
             Ok(_) => panic!("sentinel error should be cached"),
             Err(errors) => errors,

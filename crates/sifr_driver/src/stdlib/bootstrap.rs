@@ -5,6 +5,7 @@ use crate::stdlib::intrinsics::intrinsic_constant_rust_expr;
 use crate::stdlib::registry::STDLIB_FILES;
 use crate::stdlib::types::StdlibCompiled;
 use sifr_codegen::StdlibCode;
+use sifr_diagnostics::DiagnosticCode;
 use sifr_hir::{lower_module_stdlib_with_externals, ExternalDefs, HirParam};
 use sifr_python_parser::parse_module;
 use sifr_type_system::{FunctionType, ParamConvention, Type};
@@ -26,12 +27,17 @@ fn compile_stdlib_uncached_impl() -> Result<StdlibCompiled, Vec<CompileError>> {
         let parsed = match parse_module(source) {
             Ok(parsed) => {
                 if !parsed.has_valid_syntax() {
+                    // TODO(diag_4a slice 2): classify Ruff parse failures
+                    // into the precise active parse-code buckets.
                     let errors: Vec<CompileError> = parsed
                         .errors()
                         .iter()
-                        .map(|e| CompileError {
-                            message: format!("[stdlib:{module_name}] {e}"),
-                            phase: CompilePhase::Parse,
+                        .map(|e| {
+                            CompileError::with_code(
+                                format!("[stdlib:{module_name}] {e}"),
+                                CompilePhase::Parse,
+                                DiagnosticCode::STDLIB_BOOTSTRAP_FAILURE,
+                            )
                         })
                         .collect();
                     return Err(errors);
@@ -39,10 +45,13 @@ fn compile_stdlib_uncached_impl() -> Result<StdlibCompiled, Vec<CompileError>> {
                 parsed
             }
             Err(e) => {
-                return Err(vec![CompileError {
-                    message: format!("[stdlib:{module_name}] failed to parse: {e}"),
-                    phase: CompilePhase::Parse,
-                }]);
+                // TODO(diag_4a slice 2): classify Ruff parse failures into
+                // the precise active parse-code buckets.
+                return Err(vec![CompileError::with_code(
+                    format!("[stdlib:{module_name}] failed to parse: {e}"),
+                    CompilePhase::Parse,
+                    DiagnosticCode::STDLIB_BOOTSTRAP_FAILURE,
+                )]);
             }
         };
 
@@ -51,9 +60,12 @@ fn compile_stdlib_uncached_impl() -> Result<StdlibCompiled, Vec<CompileError>> {
             Err(errors) => {
                 let compile_errors: Vec<CompileError> = errors
                     .into_iter()
-                    .map(|e| CompileError {
-                        message: format!("[stdlib:{}] {}", module_name, e.message),
-                        phase: CompilePhase::TypeCheck,
+                    .map(|e| {
+                        CompileError::with_code(
+                            format!("[stdlib:{}] {}", module_name, e.message),
+                            CompilePhase::TypeCheck,
+                            DiagnosticCode::STDLIB_BOOTSTRAP_FAILURE,
+                        )
                     })
                     .collect();
                 return Err(compile_errors);
@@ -190,6 +202,9 @@ fn compile_stdlib_uncached_impl() -> Result<StdlibCompiled, Vec<CompileError>> {
                 vec![CompileError {
                     message: format!("[stdlib:{module_name}] {}", e.message),
                     phase: e.phase,
+                    // Preserves the internal panic code set by
+                    // run_codegen_with_boundary.
+                    code: e.code,
                 }]
             })?;
             stdlib_code

@@ -14,6 +14,7 @@ use crate::project::{
 use crate::stdlib::{compile_stdlib, StdlibCompiled};
 use crate::workspace::find_workspace_root;
 use sifr_codegen::generate_rust_with_stdlib;
+use sifr_diagnostics::DiagnosticCode;
 use sifr_hir::LoweringResult;
 use std::collections::{BTreeSet, HashMap};
 use std::path::{Path, PathBuf};
@@ -162,13 +163,11 @@ impl RootedEntrypointPlan {
                     .file_stem()
                     .map(|stem| stem.to_string_lossy().to_string())
                 else {
-                    return Err(vec![CompileError {
-                        message: format!(
-                            "invalid project entrypoint path '{}'",
-                            main_file.display()
-                        ),
-                        phase: CompilePhase::Build,
-                    }]);
+                    return Err(vec![CompileError::with_code(
+                        format!("invalid project entrypoint path '{}'", main_file.display()),
+                        CompilePhase::Build,
+                        DiagnosticCode::BUILD_MATERIALIZATION_FAILURE,
+                    )]);
                 };
                 let root_modules = BTreeSet::from([main_module_name.clone()]);
                 let resolver = match find_workspace_root(main_file)? {
@@ -206,20 +205,20 @@ impl RootedEntrypointPlan {
 
     fn into_single_file_frontend(self) -> Result<FrontendCompiled, Vec<CompileError>> {
         if self.shape != RootedEntrypointShape::SingleFile {
-            return Err(vec![CompileError {
-                message:
-                    "internal error: rooted project entrypoint cannot be converted into a single-file frontend result"
-                        .to_string(),
-                phase: CompilePhase::Build,
-            }]);
+            return Err(vec![CompileError::with_code(
+                "internal error: rooted project entrypoint cannot be converted into a single-file frontend result",
+                CompilePhase::Build,
+                DiagnosticCode::INTERNAL_COMPILER_PANIC,
+            )]);
         }
 
         let mut project_lowering = self.project_lowering;
         let main_module = project_lowering.hir_modules.remove("main").ok_or_else(|| {
-            vec![CompileError {
-                message: "internal error: frontend lowering missing 'main' module".to_string(),
-                phase: CompilePhase::TypeCheck,
-            }]
+            vec![CompileError::with_code(
+                "internal error: frontend lowering missing 'main' module",
+                CompilePhase::Build,
+                DiagnosticCode::INTERNAL_COMPILER_PANIC,
+            )]
         })?;
         let main_diag = project_lowering
             .module_diagnostics

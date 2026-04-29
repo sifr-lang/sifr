@@ -9,6 +9,7 @@ use crate::project::{
 };
 use crate::stdlib::compile_stdlib;
 use sifr_codegen::{generate_rust_multi_with_metadata, generate_rust_test};
+use sifr_diagnostics::DiagnosticCode;
 use sifr_hir::HirModule;
 use sifr_python_ast::Stmt;
 use std::collections::{BTreeMap, BTreeSet, HashMap, HashSet};
@@ -85,14 +86,15 @@ pub(crate) fn build_test_runner_project(
 
     for (module_name, test_file) in test_files_by_module {
         let Some(parsed) = test_modules.get(module_name.as_str()) else {
-            return Err(vec![CompileError {
-                message: format!(
+            return Err(vec![CompileError::with_code(
+                format!(
                     "missing parsed test module '{}' from '{}'",
                     module_name,
                     test_file.display()
                 ),
-                phase: CompilePhase::Build,
-            }]);
+                CompilePhase::Build,
+                DiagnosticCode::INTERNAL_COMPILER_PANIC,
+            )]);
         };
 
         let lowering_result = match lower_frontend_module(
@@ -108,6 +110,9 @@ pub(crate) fn build_test_runner_project(
                     .map(|error| CompileError {
                         message: format!("[{}] {}", test_file.display(), error.message),
                         phase: CompilePhase::TypeCheck,
+                        // Preserves None until HIR LoweringError carries a
+                        // structured code in the next diag_4a slice.
+                        code: error.code,
                     })
                     .collect();
                 return Err(compile_errors);

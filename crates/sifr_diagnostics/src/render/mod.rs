@@ -5,6 +5,13 @@ use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 use std::collections::BTreeMap;
 
+mod presentation;
+
+pub use presentation::{
+    render_compact_envelope, render_human_envelope, render_json_envelope, render_sink_compact,
+    render_sink_human, render_sink_json, PresentationRenderError,
+};
+
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize, JsonSchema)]
 #[serde(deny_unknown_fields)]
 pub struct DiagnosticEnvelope {
