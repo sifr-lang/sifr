@@ -30,7 +30,7 @@ Current wave: `milestone_diag_2b` diagnostic registry population.
 - [x] Added generated active-code documentation pages and internal registry metadata for owner modules, message templates, declared args, dedupe args, and representative fixture plans.
 - [x] Reviewed existing `SIFR-WORKSPACE-0001..0103` codes against the identity policy and kept them as active precise workspace diagnostics.
 - [x] Claude review for `milestone_diag_2b` completed and all actionable findings addressed. Review rounds: `reviews/semantic-diagnostic-code-taxonomy-diag-2b-review-pass-1.md`, `reviews/semantic-diagnostic-code-taxonomy-diag-2b-review-pass-2.md`, `reviews/semantic-diagnostic-code-taxonomy-diag-2b-review-pass-3.md`.
-- [ ] `milestone_diag_2b` PR opened and merged.
+- [x] `milestone_diag_2b` PR opened and merged: https://github.com/sifr-lang/sifr/pull/1670.
 
 Validation evidence for the current wave:
 
