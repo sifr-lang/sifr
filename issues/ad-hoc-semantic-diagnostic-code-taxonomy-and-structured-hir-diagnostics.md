@@ -6,6 +6,27 @@ Replace the current phase-level `SIFR-TYPE-0001` diagnostic bucket with a precis
 
 Sifr is not production-released yet. This phase intentionally does not preserve old diagnostic-code compatibility. The goal is the clean target architecture for an elegant language and compiler, not a migration layer around historical behavior.
 
+## Execution Status
+
+Current wave: `milestone_diag_1` shared diagnostic model.
+
+- [x] Proposal reviewed through final loop and accepted for implementation.
+- [x] Added `crates/sifr_diagnostics` as the canonical leaf crate for diagnostic codes, source spans/source map, model builders, sink emission, rendering, and JSON schema generation.
+- [x] Added workspace dependencies so parser-adjacent crates, HIR, type system, codegen, driver, and CLI can depend on the shared diagnostic model without cycles.
+- [x] Added checked-in `docs/schemas/diagnostics.schema.json` plus `scripts/check_diagnostic_schema_sync.py`, wired into `scripts/run_all_tests.sh`.
+- [x] Updated `internal_docs/architecture.md`, `internal_docs/phases/27_diagnostics_error_recovery_and_stability_contract.md`, and `internal_docs/roadmap.md` to record this ad-hoc phase as the corrective Phase 27 diagnostic-contract amendment.
+- [x] Claude review for `milestone_diag_1` completed and all actionable findings addressed. Review rounds: `reviews/semantic-diagnostic-code-taxonomy-diag-1-review-pass-1.md`, `reviews/semantic-diagnostic-code-taxonomy-diag-1-review-pass-2.md`, `reviews/semantic-diagnostic-code-taxonomy-diag-1-review-pass-3.md`.
+- [ ] `milestone_diag_1` PR opened at https://github.com/sifr-lang/sifr/pull/1667; merge pending.
+
+Validation evidence for the current wave:
+
+- `cargo test -p sifr_diagnostics` passed.
+- `python3 scripts/check_diagnostic_schema_sync.py` passed.
+- `cargo fmt --check` passed.
+- `cargo check --workspace` passed.
+- `cargo clippy -p sifr_diagnostics --all-targets -- -D warnings` passed.
+- `scripts/run_all_tests.sh --profile quick` passed.
+
 ## Relationship to Existing Roadmap
 
 This ad-hoc phase is a corrective addendum to Phase 27, especially `milestone_27_4` (structured diagnostic schema quality) and `milestone_27_5` (bounded multi-error recovery).
@@ -91,6 +112,8 @@ Examples:
 - `use after move`, `double mutable borrow`, and `borrowed parameter escape` must be separate ownership codes because the fix strategies differ.
 - `non-exhaustive enum match` and `non-exhaustive union match` may share a code only if the docs, related spans, and fix strategy are intentionally identical; otherwise split them.
 
+The canonical diagnostic identity is the string value `SIFR-<FAMILY>-dddd`, for example `SIFR-TYPE-0002`. Rust constants use descriptive `UPPER_SNAKE_CASE` names such as `DiagnosticCode::TYPE_ASSIGNMENT_MISMATCH`. The constant name encodes the rule, not the number; validation checks that each constant's `code() -> &'static str` accessor returns the registry id. Constants exist only for `Active` codes. `Reserved` and `Retired` codes remain in the registry/docs but have no active emission constant.
+
 ## Non-Goals
 
 - Preserve current `SIFR-TYPE-0001` compatibility.
@@ -175,7 +198,7 @@ Use one canonical URL form:
 https://sifr.sh/docs/errors/<CODE>
 ```
 
-The URL is derived from the code and must not be hand-written at emission sites. Documentation URLs and filenames use the canonical uppercase code form, for example `https://sifr.sh/docs/errors/SIFR-NAME-0001` and `docs/errors/SIFR-NAME-0001.md`. The URL is case-sensitive; generated filenames must match canonical code casing even on case-insensitive filesystems. Any historical `sifr.dev` references should be updated or removed as part of this phase.
+The URL is derived from the code and must not be hand-written at emission sites. Documentation URLs and filenames use the canonical uppercase code form, for example `https://sifr.sh/docs/errors/SIFR-NAME-0001` and `docs/errors/SIFR-NAME-0001.md`. The URL is case-sensitive; generated filenames must match canonical code casing even on case-insensitive filesystems. The docs-sync check must inspect directory entries and compare exact filename strings, not rely only on metadata lookup, so casing-only drift is caught on macOS/APFS. Any historical `sifr.dev` references should be updated or removed as part of this phase.
 
 ## Decimal Code Migration
 
@@ -206,6 +229,20 @@ crates/sifr_diagnostics
 
 Do not place the canonical diagnostic model in `sifr_driver`, `sifr_hir`, or the planned-but-not-yet-present `sifr_frontend` crate.
 
+Keep the new crate decomposed from the start:
+
+```text
+crates/sifr_diagnostics/src/source_map/
+crates/sifr_diagnostics/src/codes/
+crates/sifr_diagnostics/src/model/
+crates/sifr_diagnostics/src/render/
+crates/sifr_diagnostics/src/schema/
+```
+
+This follows the same broad separation used by rustc's `rustc_span` and `rustc_errors` without creating extra Sifr crates prematurely. `source_map` owns source registration and span lookup primitives; `codes` owns the registry and typed code constants; `model` owns diagnostics, children, related spans, and suggestions; `render` owns human/compact/JSON lowering; `schema` owns generated JSON schema output.
+
+`sifr_diagnostics` owns canonical infrastructure only. Domain-specific diagnostic constructors should live in the crate/module that owns the semantic rule, for example parser diagnostics near the parser adapter, type diagnostics near type checking, ownership diagnostics near ownership tracking, and workspace diagnostics near project discovery. Domain helpers may use `DiagnosticCode` constants and model builders from `sifr_diagnostics`, but `sifr_diagnostics` must not become a monolithic semantic helper crate.
+
 The model should distinguish source diagnostics from internal diagnostics so source-originated diagnostics cannot silently omit spans:
 
 ```rust
@@ -215,31 +252,62 @@ pub enum SifrDiagnostic {
 }
 
 pub struct SourceDiagnostic {
-    pub code: DiagnosticCode,
-    pub severity: Severity,
-    pub message: String,
-    pub message_template: &'static str,
-    pub args: BTreeMap<String, DiagnosticArg>,
-    pub primary_span: SourceSpan,
-    pub related_spans: Vec<RelatedSpan>,
-    pub children: Vec<DiagnosticChild>,
-    pub help: Option<String>,
-    pub suggestions: Vec<DiagnosticSuggestion>,
+    pub(crate) code: DiagnosticCode,
+    pub(crate) severity: Severity,
+    pub(crate) message: String,
+    pub(crate) message_template: &'static str,
+    pub(crate) args: BTreeMap<String, DiagnosticArg>,
+    pub(crate) primary_span: SourceSpan,
+    pub(crate) related_spans: Vec<RelatedSpan>,
+    pub(crate) children: Vec<DiagnosticChild>,
+    pub(crate) help: Option<String>,
+    pub(crate) suggestions: Vec<DiagnosticSuggestion>,
 }
 
 pub struct InternalDiagnostic {
-    pub code: DiagnosticCode,
-    pub severity: Severity,
-    pub message: String,
-    pub message_template: &'static str,
-    pub args: BTreeMap<String, DiagnosticArg>,
-    pub children: Vec<DiagnosticChild>,
-    pub help: Option<String>,
+    pub(crate) code: DiagnosticCode,
+    pub(crate) severity: Severity,
+    pub(crate) message: String,
+    pub(crate) message_template: &'static str,
+    pub(crate) args: BTreeMap<String, DiagnosticArg>,
+    pub(crate) children: Vec<DiagnosticChild>,
+    pub(crate) help: Option<String>,
 }
 
 pub struct DiagnosticChild {
     pub severity: ChildSeverity,
     pub message: String,
+}
+
+pub struct RelatedSpan {
+    pub span: SourceSpan,
+    pub label: Option<String>,
+    pub kind: RelatedKind,
+}
+
+pub enum RelatedKind {
+    Label,
+    Note,
+    Origin,
+    ReplacementTarget,
+}
+
+pub struct DiagnosticSuggestion {
+    pub message: String,
+    pub applicability: SuggestionApplicability,
+    pub edits: Vec<SuggestionEdit>,
+}
+
+pub struct SuggestionEdit {
+    pub span: SourceSpan,
+    pub replacement: String,
+}
+
+pub enum SuggestionApplicability {
+    MachineApplicable,
+    MaybeIncorrect,
+    HasPlaceholders,
+    Unspecified,
 }
 
 pub enum DiagnosticArg {
@@ -256,33 +324,41 @@ pub enum ChildSeverity {
 }
 ```
 
+`SourceDiagnostic` and `InternalDiagnostic` are constructed only through `DiagnosticBuilder`; their fields are crate-private to `sifr_diagnostics`. Public read accessors expose `code()`, `severity()`, `message()`, `message_template()`, `args()`, spans, children, help, and suggestions for renderers and tests without exposing struct-literal construction outside the diagnostics crate.
+
+`SifrDiagnostic` itself is `#[must_use]`, non-`Clone`, and consumed by `DiagnosticSink::emit(...)` or `DiagnosticSink::emit_error(...)` unless it is returned to a caller that owns emission. Dropping a constructed diagnostic without emission, return, or explicit test/internal cancellation through `SifrDiagnostic::cancel(self)` is a programmer bug with the same debug/release behavior as dropping a live builder. This prevents `DiagnosticBuilder::build()` from becoming a silent discard escape hatch.
+
 `DiagnosticCode` should be a typed enum or strict newtype with named constants. It must not be a loose string passed around unchecked at arbitrary call sites.
 
+Sifr intentionally does not model TypeScript-style nested coded diagnostic chains. Each top-level `SifrDiagnostic` owns exactly one `DiagnosticCode`. Layered explanation is expressed through `RelatedSpan` values and `DiagnosticChild` values, where children are uncoded `Note`/`Help` messages. This keeps compact grouping, recovery deduplication, and JSON shape one-code-per-diagnostic.
+
+Related spans and children are distinct. `RelatedSpan` with `RelatedKind::Note` carries a source span and optional label, so it points at code. `DiagnosticChild` with `ChildSeverity::Note` carries free text without a span. A note that needs both source location and free explanation should use a related span with a precise label, a child note, or both, depending on which part benefits from source anchoring.
+
+Internal diagnostics do not expose panic backtraces, HIR node ids, or compiler implementation provenance as dedicated JSON fields. Release-mode internal diagnostics use only the canonical `InternalDiagnostic` fields. Debug-only renderers may attach implementation context as `ChildSeverity::Note` children, but that context is not a stable JSON contract.
+
 `message` is the rendered user-facing text. `message_template` is the stable grouping key for recovery and compact rendering. It must not contain dynamic identifiers, type names, counts, paths, or literal values. This prevents compact grouping and recovery limits from depending on incidental user-specific strings.
+
+`message` is rendered by `DiagnosticBuilder::build()` from `message_template` and `args` using one canonical placeholder substitution function. Domain helpers do not pass pre-rendered message strings. This keeps rendered text, template validation, JSON args, and compact grouping tied to one source of truth.
+
+Suggestions are modeled as one logical suggestion with one or more replacement edits. Only `MachineApplicable` suggestions may be auto-applied by future tooling; `MaybeIncorrect`, `HasPlaceholders`, and `Unspecified` require user review. Multipart suggestion emission is not required in `milestone_diag_1`, but the type and JSON schema must support it so the model does not need to change later.
 
 Example:
 
 ```rust
-SifrDiagnostic::Source(SourceDiagnostic {
-    code: DiagnosticCode::TYPE_ASSIGNMENT_MISMATCH,
-    severity: Severity::Error,
-    message: "type mismatch: expected 'int', got 'str'".to_string(),
-    message_template: "type mismatch: expected {expected}, got {actual}",
-    args: BTreeMap::from([
-        ("expected".to_string(), DiagnosticArg::String("int".to_string())),
-        ("actual".to_string(), DiagnosticArg::String("str".to_string())),
-    ]),
-    primary_span: span,
-    related_spans: Vec::new(),
-    children: Vec::new(),
-    help: None,
-    suggestions: Vec::new(),
-})
+DiagnosticBuilder::source(
+    DiagnosticCode::TYPE_ASSIGNMENT_MISMATCH,
+    Severity::Error,
+    span,
+)
+.message_template("type mismatch: expected {expected}, got {actual}")
+.arg("expected", "int")
+.arg("actual", "str")
+.build()
 ```
 
 `message_template` uses named braces such as `{expected}` and `{actual}`. Literal braces are escaped as `{{` and `}}`. `args` stores scalar named dynamic values so JSON consumers can re-render or inspect diagnostics without parsing `message`.
 
-Template syntax is intentionally small: a placeholder is `{<name>}` where `<name>` matches `[a-z][a-z0-9_]*`. Formatting specifiers, positional placeholders, nested placeholders, and whitespace inside braces are not supported. A name may appear multiple times. Registry loading validates that every placeholder has a matching scalar `args` key and that every declared arg is either used in the template or explicitly marked as JSON-only metadata.
+Template syntax is intentionally small: a placeholder is `{<name>}` where `<name>` matches `[a-z][a-z0-9_]*`. Formatting specifiers, positional placeholders, nested placeholders, and whitespace inside braces are not supported. A name may appear multiple times. Registry loading validates that every placeholder has a matching scalar `args` key and that every declared arg is either used in the template or explicitly marked as JSON-only metadata. `DiagnosticArg::Float` values must be finite so JSON output and ordering are deterministic.
 
 JSON output should use a versioned envelope:
 
@@ -316,7 +392,67 @@ pub struct LoweringOutcome {
 
 `LowerCtx::emit(...)` collects diagnostics while lowering continues through recoverable errors. The driver decides whether to continue to codegen by checking whether the accumulated diagnostics contain `Severity::Error`.
 
+The diagnostic sink should also produce an unforgeable proof when an error diagnostic is emitted:
+
+```rust
+#[derive(Copy, Clone, Debug)]
+pub struct ErrorEmitted(());
+
+impl DiagnosticSink {
+    /// Emit a warning or note diagnostic. Severity must be Warning or Note.
+    pub fn emit(&mut self, diag: SifrDiagnostic);
+
+    /// Emit an error diagnostic and return an unforgeable proof.
+    /// Severity must be Error.
+    pub fn emit_error(&mut self, diag: SifrDiagnostic) -> ErrorEmitted {
+        // validates Severity::Error, records the diagnostic, returns the proof
+    }
+}
+```
+
+`ErrorEmitted` is constructible only by `DiagnosticSink::emit_error(...)`. Tainted HIR values, poisoned bindings, and other cascade-suppression values should carry this proof so a later pass cannot create an error placeholder without first emitting a real diagnostic.
+
+`LowerCtx::emit(...)` accepts any `SifrDiagnostic` and dispatches by severity: `Severity::Error` routes to `DiagnosticSink::emit_error(...)` and intentionally discards the proof, while `Severity::Warning` and `Severity::Note` route to `DiagnosticSink::emit(...)`. `LowerCtx::emit_error(...)` returns `ErrorEmitted` and is required when the caller will construct a tainted value, poisoned binding, or any other cascade-suppression value. Cap-omission summary diagnostics are `Severity::Note` diagnostics and are emitted through `DiagnosticSink::emit(...)`.
+
+Diagnostic construction should use a typed builder owned by `sifr_diagnostics`:
+
+```rust
+#[must_use]
+pub struct DiagnosticBuilder {
+    // private fields
+}
+
+impl DiagnosticBuilder {
+    pub fn source(
+        code: DiagnosticCode,
+        severity: Severity,
+        primary_span: SourceSpan,
+    ) -> Self;
+
+    pub fn internal(code: DiagnosticCode, severity: Severity) -> Self;
+    pub fn message_template(self, template: &'static str) -> Self;
+    pub fn arg(self, name: &'static str, value: impl Into<DiagnosticArg>) -> Self;
+    pub fn related(self, span: SourceSpan, kind: RelatedKind, label: Option<String>) -> Self;
+    pub fn child(self, severity: ChildSeverity, message: impl Into<String>) -> Self;
+    pub fn help(self, help: impl Into<String>) -> Self;
+    pub fn suggestion(self, suggestion: DiagnosticSuggestion) -> Self;
+    pub fn build(self) -> SifrDiagnostic;
+    pub fn cancel(self);
+}
+```
+
+`cancel(self)` is the only legal way to discard a builder without building, emitting, or returning a diagnostic, and is limited to tests/internal probes. Dropping a builder without `build`, `emit`, return, or `cancel` follows the diagnostic emission discipline below.
+
 The driver must stop assigning public codes from `CompilePhase`. `CompilePhase` and the phase-derived `Display` implementation should be retired, not preserved as a public diagnostic abstraction.
+
+`CompileError` should not remain a public diagnostic abstraction. The target shape is:
+
+- pass functions that need to short-circuit after an emitted diagnostic return `Result<T, ErrorEmitted>`;
+- canonical diagnostics are read from `DiagnosticSink` or returned through `LoweringOutcome`;
+- the driver/CLI reports the canonical diagnostics directly;
+- any temporary driver abort type is internal, carries `ErrorEmitted`, does not implement user-facing `Display`, and never derives a diagnostic code.
+
+This avoids a second public error wrapper such as `CompileError { diagnostic: SifrDiagnostic }` becoming a hidden code source.
 
 ## Existing Surface Inventory
 
@@ -370,17 +506,17 @@ Expected dependency updates:
 - Re-export diagnostic types from `sifr_driver` only as a temporary internal convenience during the same phase, not as the owning definition. Any re-exports must be removed by `diag_4b`.
 - Do not make `sifr_diagnostics` depend on HIR, codegen, driver, parser, or CLI crates.
 
-`sifr_diagnostics` may depend on `serde` and `ruff_text_size` if spans carry byte ranges. It should not depend on `sifr_python_ast`; AST-specific span extraction belongs in frontend/HIR adapters.
+`sifr_diagnostics` may depend on `serde` and `ruff_text_size` if spans carry byte ranges. The `ruff_text_size` version must be workspace-pinned to the same Ruff generation used by `sifr_python_parser` so a Ruff upgrade cannot silently change diagnostic `TextRange` semantics. `sifr_diagnostics` should not depend on `sifr_python_ast`; AST-specific span extraction belongs in frontend/HIR adapters.
 
 ## Type System Integration
 
 `sifr_type_system` is in scope for this phase.
 
-The existing `TypeError` and `TypeErrorKind` are already a partial typed diagnostic model, but they lack spans, stable public codes, and the canonical renderer schema. They should be retired in favor of direct `SifrDiagnostic` emission from type-system helpers.
+The existing `TypeError` and `TypeErrorKind` are already a partial typed diagnostic model, but they lack spans, stable public codes, and the canonical renderer schema. They should be deleted in favor of direct `SifrDiagnostic` emission from type-system helpers.
 
 Acceptable implementation shapes:
 
-- Type-checking helpers return `Result<T, SifrDiagnostic>`.
+- Type-checking helpers return `Result<T, SifrDiagnostic>` when the caller owns emission, or `Result<T, ErrorEmitted>` when the helper emits into a `DiagnosticSink`.
 - Type-checking helpers accept a `DiagnosticSink` and emit `SifrDiagnostic` values directly.
 
 Do not add `impl From<TypeError> for SifrDiagnostic` as the long-term design. That recreates a hidden classifier layer and conflicts with the no-fallback rule. A short-lived mechanical adapter is acceptable only inside a single migration PR and must be deleted before the milestone is complete.
@@ -390,15 +526,40 @@ Do not add `impl From<TypeError> for SifrDiagnostic` as the long-term design. Th
 HIR lowering should emit diagnostics through typed helpers close to the checker code:
 
 ```rust
-ctx.emit(Diagnostic::undefined_variable(name, span));
-ctx.emit(Diagnostic::type_mismatch(expected, actual, span));
-ctx.emit(Diagnostic::wrong_arg_count(callable, expected, actual, span));
-ctx.emit(Diagnostic::use_after_move(name, span));
-ctx.emit(Diagnostic::borrow_escape_return(name, span));
-ctx.emit(Diagnostic::non_exhaustive_match(subject_type, uncovered, span));
+ctx.emit(sifr_hir::name_resolution::diagnostics::undefined_variable(name, span));
+ctx.emit(sifr_type_system::diagnostics::type_mismatch(expected, actual, span));
+ctx.emit(sifr_hir::calls::diagnostics::wrong_arg_count(callable, expected, actual, span));
+ctx.emit(sifr_hir::ownership::diagnostics::use_after_move(name, span));
+ctx.emit(sifr_hir::ownership::diagnostics::borrow_escape_return(name, span));
+ctx.emit(sifr_hir::pattern_matching::diagnostics::non_exhaustive_match(subject_type, uncovered, span));
 ```
 
 The end state is that a generic `ctx.error(String)` does not exist for user-facing diagnostics. If a helper is missing, the implementation should add the helper and assign the code deliberately.
+
+The examples above are shape examples. The actual helper is owned by the semantic module that knows the rule and recovery behavior. A helper body uses `DiagnosticCode` constants and builders from `sifr_diagnostics`, fills `message_template`, scalar args, primary/related spans, suggestions, and dedupe args, then consumes the builder to produce a `SifrDiagnostic`. Shared helper modules are acceptable only when they remove real duplication inside one diagnostic domain.
+
+`sifr_diagnostics` exposes `DiagnosticBuilder`, `DiagnosticCode` constants, `DiagnosticSink`, source-span primitives, severity/applicability enums, registry metadata, schema, and renderer plumbing. It must not expose cross-domain semantic helpers such as `Diagnostic::type_mismatch(...)` or `Diagnostic::undefined_variable(...)`.
+
+## Diagnostic Emission Discipline
+
+Diagnostic construction should make dropped diagnostics difficult to write accidentally.
+
+Target API properties:
+
+- A diagnostic builder or `Diag` value is `#[must_use]`.
+- It is not `Clone`.
+- It is consumed by `DiagnosticSink::emit(...)`, converted into a returned `SifrDiagnostic`, or explicitly cancelled in tests/internal probes.
+- Dropping a constructed diagnostic without emitting, returning, or cancelling it is a programmer bug. In debug builds this should panic. In release builds it should be surfaced at the nearest compiler error boundary as `SIFR-INTERNAL-*`, not silently ignored and not converted into a user-facing fallback diagnostic.
+
+This borrows rustc's emission discipline without requiring rustc's full diagnostic context architecture.
+
+### Pending Domain Objects
+
+Do not add a general stashed-diagnostic mechanism in this phase. If later context is needed before a diagnostic can be emitted, keep an explicit pending domain object that is not a `SifrDiagnostic` yet, then construct the final diagnostic once all required spans, related spans, args, and recovery metadata are known.
+
+Pending domain objects are domain-crate-owned values, for example `PendingMoveError { name, primary, prior_move }`. They do not flow through `DiagnosticSink`, do not implement `Display` or renderer traits, and cannot surface directly to users. The finalize step constructs one `SifrDiagnostic` and emits or returns it once. Partial finalization is forbidden.
+
+A constructed `SifrDiagnostic` is immutable evidence ready for emission or return, not a partially completed object waiting for later mutation. Invariant checks such as "this path must have emitted an error" should inspect the sink or require an `ErrorEmitted` proof rather than relying on stashed diagnostics.
 
 ## Span Policy
 
@@ -414,6 +575,50 @@ Policy:
 
 Current `primary_span: null` output for frontend semantic errors is incomplete and should be fixed as part of this phase.
 
+## Grouping and Deduplication Keys
+
+Compact grouping and recovery deduplication are separate policies.
+
+Compact grouping is a renderer concern introduced in `milestone_diag_4a`. It groups diagnostics by:
+
+```text
+(severity, code, message_template, primary display file)
+```
+
+Recovery deduplication is a lowering/type-check concern finalized in `milestone_diag_10`. It suppresses duplicate emissions of the same underlying problem and uses:
+
+```text
+(code, message_template, primary SourceSpan range, dedupe args)
+```
+
+`dedupe args` is an explicit subset of `DiagnosticArg` keys declared by the diagnostic helper or registry entry. It must not be inferred by parsing the rendered message.
+
+Both policies use `message_template`, never fully rendered `message`. This follows TypeScript's lesson that a canonical diagnostic head is needed when optional context changes the rendered message but not the underlying problem.
+
+## Diagnostic Ordering Policy
+
+Diagnostic ordering is a separate policy from compact grouping and recovery deduplication.
+
+At the driver or sink-flush boundary, before applying the top-level recovery cap and before rendering human, compact, or JSON output, the compiler should sort the canonical diagnostic stream by a total deterministic key:
+
+```text
+(primary display path, primary byte_start, primary byte_end, severity_rank, diagnostic_kind_rank, code, message_template, args, insertion_order)
+```
+
+Where:
+
+- `primary display path` is the source-map display path, compared lexicographically. Source diagnostics always have a display path; sources such as stdin use a policy-defined display path such as `<stdin>`. Internal diagnostics sort after source diagnostics.
+- `primary byte_start` and `primary byte_end` use the primary source span when present. Diagnostics without source spans sort after diagnostics with source spans for the same display-path bucket.
+- `severity_rank` is `Error`, then `Warning`, then `Note`.
+- `diagnostic_kind_rank` sorts source diagnostics before internal diagnostics when all earlier fields tie.
+- `code` is compared lexicographically on canonical `SIFR-<FAMILY>-dddd` form.
+- `args` are compared as canonical JSON bytes: keys in `BTreeMap` order, values serialized by their JSON representation, and the resulting byte string compared lexicographically. Because `DiagnosticArg::Float` must be finite, the JSON representation is stable.
+- `insertion_order` is a monotonic sequence assigned by `DiagnosticSink` when it accepts a diagnostic. It is an internal tiebreaker and is not serialized in JSON.
+
+JSON, human, and compact renderers consume the same sorted stream. The compact renderer may group after sorting, but it must not reorder diagnostics through hash-map iteration. This keeps fixture baselines, recovery caps, and editor consumers deterministic across machines, module traversal order, and hash seeds.
+
+Sorting and deduplication are separate passes with separate keys. The ordering policy never decides whether two diagnostics are duplicates; recovery deduplication remains the `milestone_diag_10` concern defined above.
+
 ## Source Mapping Architecture
 
 Do not store only line and column in semantic diagnostics. The compiler should preserve byte ranges from the parser and derive line/column at render or serialization boundaries.
@@ -426,6 +631,7 @@ pub struct SourceId; // Opaque, cheaply cloneable implementation detail.
 pub struct SourceSpan {
     pub source_id: SourceId,
     pub range: TextRange,
+    pub lowered_from: Option<Box<SourceSpan>>,
 }
 
 pub struct DiagnosticSpan {
@@ -436,24 +642,49 @@ pub struct DiagnosticSpan {
     pub column: Option<u32>,
     pub end_line: Option<u32>,
     pub end_column: Option<u32>,
+    pub is_primary: bool,
+    pub label: Option<String>,
+    pub lines: Vec<DiagnosticSpanLine>,
+}
+
+pub struct DiagnosticSpanLine {
+    pub text: String,
+    pub highlight_start: u32,
+    pub highlight_end: u32,
 }
 ```
 
-The frontend/driver should own a source map for each compilation unit:
+`SourceSpan` is the internal representation. `DiagnosticSpan` is a render/JSON boundary product derived from `SourceSpan` by the source map.
+
+The frontend/driver should own a source map for each compilation session:
 
 - Source text.
-- Canonical file path when available.
+- Session-local `SourceId`, allocated from a monotonic store so ids remain valid for the entire compilation.
+- Canonical path when available.
+- Display path after diagnostic path-remapping policy. Every registered source must have one; virtual sources use policy-defined display paths such as `<stdin>`.
 - Module name.
-- `SourceId`.
+- Source content hash.
+- Line-start table.
+- Optional normalization table if Sifr ever normalizes source text.
 - Ruff `SourceFile` or equivalent line-index data.
 
 HIR diagnostics should carry `SourceSpan` where possible. The driver should lower `SourceSpan` to serialized `DiagnosticSpan` with line/column and end-line/end-column. This keeps HIR independent from file-system rendering while preserving exact source ranges.
 
 For project compilation, source ids must remain module-specific so imported module diagnostics point at the imported file, not the entrypoint.
 
-Synthesized HIR nodes inherit the `SourceSpan` of their nearest parser-origin ancestor. The parser-to-HIR adapter must guarantee a real source span before lowering emits user-facing diagnostics. Diagnostics that truly have no real source mapping are internal compiler diagnostics and use `SIFR-INTERNAL-*`; do not fabricate a source span.
+Byte offsets are canonical internally and in JSON. For the current Sifr scope, source text is stored verbatim and not normalized, so JSON `byte_start` and `byte_end` are on-disk byte offsets. If source normalization is introduced later, the source map must store a `NormalizedPos`-equivalent table and map JSON byte offsets back to on-disk offsets at the serialization boundary.
+
+JSON lines and columns are 1-based UTF-8 character offsets within the line. Display columns, tab width, and wide-character rendering are human-renderer concerns and must not change the JSON column contract. Span end byte offsets are exclusive; end line/column represent the position immediately after the highlighted range.
+
+Serialized diagnostics use one flat `spans` array per diagnostic. The primary span and related spans are serialized as `DiagnosticSpan` entries with `is_primary` and optional `label` fields, so consumers can render all spans uniformly. `DiagnosticSpan.lines` contains the source text lines needed to render the highlight without re-reading files from disk.
+
+Synthesized HIR nodes inherit the `SourceSpan` of their nearest parser-origin ancestor and may carry `lowered_from` to preserve a lowering-origin chain for desugared constructs. The parser-to-HIR adapter must guarantee a real source span before lowering emits user-facing diagnostics. Diagnostics that truly have no real source mapping are internal compiler diagnostics and use `SIFR-INTERNAL-*`; do not fabricate a source span.
 
 Codegen diagnostics with source mappings are `SourceDiagnostic` values. Codegen failures without a source mapping are treated as internal failures and use `SIFR-INTERNAL-*`, with the codegen context included as a child note where useful.
+
+Diagnostic path display must be policy-driven. Human and JSON output use the source map's display path, not raw absolute paths, unless an explicit diagnostic mode requests absolute paths. This avoids accidental local-path leakage and matches the path-remapping lesson from rustc.
+
+`SourceSpan::new(source_id, range)` should validate the range against the registered source in debug builds. Render/JSON lowering validates every `SourceSpan` against the source map before producing a `DiagnosticSpan` and returns `SIFR-INTERNAL-*` if a compiler bug produced an invalid span in release mode. Span validation tests in `milestone_diag_1` cover both construction and render-boundary validation behavior.
 
 ## Milestones
 
@@ -467,11 +698,17 @@ Scope:
 - Derive documentation URLs from the diagnostic code.
 - Make JSON serialization lossless for the canonical model.
 - Add `SourceId`, `SourceSpan`, and range-preserving span primitives.
+- Add a source-map owner that registers source text once, allocates stable session-local source ids, stores line starts/content hashes/display paths, validates source spans, and lowers spans to JSON/render spans only at output boundaries.
 - Add a versioned JSON envelope `{ "version": 1, "diagnostics": [...] }`.
 - Add a checked-in JSON Schema generated from the canonical Rust types, using `schemars` or equivalent.
 - Restrict diagnostic children to `Note` and `Help` through a `ChildSeverity` type.
-- Define the canonical top-level `Severity` enum exactly as `Error | Warning | Note`; internal diagnostics use `Severity::Error`. Help text is represented through `help` fields or `ChildSeverity::Help`, not as standalone top-level diagnostics.
-- Add the canonical `LoweringOutcome` and `DiagnosticSink` types alongside the existing `LoweringError`. `LoweringError` becomes private transitional plumbing only and is removed from user-facing paths in `milestone_diag_4a`.
+- Define the canonical top-level `Severity` enum exactly as `Error | Warning | Note`. `SIFR-INTERNAL-*` codes carry the severity declared by their registry entry: ICE-class internal diagnostics such as `SIFR-INTERNAL-0001` declare `Error`, while structured compiler-state notes such as `SIFR-INTERNAL-0002` declare `Note`. Help text is represented through `help` fields or `ChildSeverity::Help`, not as standalone top-level diagnostics.
+- Add the canonical `LoweringOutcome` and `DiagnosticSink` types alongside the existing `LoweringError`. `LoweringError` becomes private transitional plumbing only, is removed from user-facing paths in `milestone_diag_4a`, and is fully deleted by residual cleanup in `milestone_diag_11`.
+- Add `DiagnosticBuilder` with the target surface described above, including `source`, `internal`, `message_template`, `arg`, `related`, `child`, `help`, `suggestion`, `build`, and `cancel`.
+- Add `#[must_use]` non-clone diagnostic builder/emission discipline.
+- Add `ErrorEmitted` as an unforgeable proof returned only by `DiagnosticSink::emit_error(...)`.
+- Define `DiagnosticSink::emit(...)` for warnings/notes and `DiagnosticSink::emit_error(...)` for errors, with `LowerCtx` wrappers that make proof-returning emission explicit where tainting needs it.
+- Make `DiagnosticSink` assign a monotonic insertion sequence to every accepted diagnostic for deterministic ordering ties. This sequence is internal and not part of JSON output.
 
 Definition of done:
 
@@ -482,8 +719,19 @@ Definition of done:
 - The diagnostic model includes a stable grouping key distinct from rendered messages.
 - The diagnostic model preserves source byte ranges before line/column rendering.
 - Lossless JSON means round-trip identity for diagnostics, explicit `null` fields where applicable, deny-unknown-fields deserialization for consumed payloads, and a schema-regeneration check.
+- The checked-in JSON Schema has an explicit sync check that fails when generated schema output drifts from the Rust model.
+- `DiagnosticBuilder::cancel(self)` is the only legal non-emitting consumption path and is limited to tests/internal probes.
+- `SifrDiagnostic::cancel(self)` exists only for tests/internal probes and is the only legal non-emitting cancellation path after `build()`.
 - Source diagnostics cannot be constructed without a `SourceSpan`.
 - Top-level diagnostics cannot use `Severity::Help`.
+- Tainted HIR values and poisoned bindings that suppress cascades can carry `ErrorEmitted` rather than an untyped marker.
+- Warning and note diagnostics have a declared sink emission path through `DiagnosticSink::emit(...)`.
+- `DiagnosticSink` records deterministic insertion order for every accepted diagnostic.
+- A unit test proves `DiagnosticBuilder::cancel(self)` consumes a builder without emitting and without tripping debug-mode drop discipline.
+- A unit test proves diagnostics differing only in `args` sort by canonical JSON arg bytes.
+- Add a decidable guardrail, for example `scripts/check_diagnostic_cancel_usage.py`, that rejects `.cancel()` calls in non-test compiler source outside an explicit internal-probe allowlist.
+- JSON spans include byte offsets, 1-based character line/column positions, source snippet lines, primary/related-span labeling, and suggestion applicability.
+- Source-map unit tests cover multibyte UTF-8 columns, multiline spans, zero-length spans, EOF spans, invalid span rejection, and byte/line/column consistency.
 
 ### milestone_diag_2a: Diagnostic Registry Skeleton
 
@@ -509,9 +757,15 @@ crates/sifr_diagnostics/src/codes.rs
 Definition of done:
 
 - The registry skeleton exists with families, the per-family numbering convention, state machine, and reserved family bases (`0000` per family).
+- The registry skeleton reserves `SIFR-INTERNAL-0001` for unclassified compiler panics and `SIFR-INTERNAL-0002` for recovery-cap omission summaries. `SIFR-INTERNAL-0002` remains `Reserved` until activation in `milestone_diag_10`.
 - Registry and code constants cannot silently diverge.
-- The registry records `id`, `family`, `summary`, `state` (`Active | Reserved | Retired`), docs path, representative fixture path, message template, and owner module.
+- The registry records `id`, `family`, `summary`, `state` (`Active | Reserved | Retired`), docs path, representative fixture path, message template, owner module, declared args, dedupe args, and optional tooling metadata.
+- `DiagnosticCode::code() -> &'static str` returns the canonical registry id and is the only accessor used for JSON, docs URLs, sorting, and registry checks.
+- Tooling metadata is optional reservation-only in this phase and has documented defaults: `tool_actions` defaults to empty, `fix_all_eligible` defaults to false, and machine-applicable suggestion availability is derived from emitted suggestion applicability rather than authored manually. No LSP or code-action validation is implemented in this phase.
 - The docs generator writes `docs/errors/<CODE>.md`, `docs/errors/diagnostic-codes.md`, and `internal_docs/diagnostic_codes.md` from `crates/sifr_diagnostics/src/codes.rs`.
+- A build-time validation test in `sifr_diagnostics` checks template placeholders against declared args, JSON-only arg declarations, docs-page presence for active codes, constant/registry sync, canonical code forms, registry state validity, and registry-declared severity constraints.
+- The `milestone_diag_2a` validation test must pass for a skeleton registry with zero active codes. Registry-internal active-code checks such as docs-page presence, template/arg validation, and constant/registry sync become non-vacuous in `milestone_diag_2b` when active entries are populated.
+- Non-test emission-presence checks activate per family in the milestone that migrates that family and are enforced globally in `milestone_diag_11`.
 - CI or local validation can run the generator and fail on drift with `git diff --exit-code`.
 
 ### milestone_diag_3: Diagnostic Emission Inventory
@@ -537,16 +791,18 @@ Definition of done:
 
 Scope:
 
-- Populate active codes from the diagnostic emission inventory.
-- Add docs metadata, message templates, owner modules, and fixture paths for active codes.
+- Populate active registry entries from the diagnostic emission inventory.
+- Add docs metadata, message templates, owner modules, and planned fixture paths for active codes.
 - Mark intentionally future codes as reserved and previously superseded codes as retired.
 - Review each existing `SIFR-WORKSPACE-0001..0103` code against the diagnostic identity policy. Mark any code that fails the policy as retired and replace it with a precise code in the same family.
 
 Definition of done:
 
 - Every emitted code exists in the registry.
-- Every active registry code has a fixture or is explicitly marked reserved.
+- Every active registry code records a representative fixture path; reserved codes are explicitly marked `Reserved` and are exempt. The fixture file itself may land in the milestone that migrates the emitting family.
 - Every active code has a docs page under `docs/errors/<CODE>.md`; reserved codes are exempt.
+- Every active code has a corresponding `DiagnosticCode` constant. Retired codes remain in registry/docs but do not have active code constants and cannot be emitted.
+- Domain diagnostic helpers may exist only for active codes. A future/reserved diagnostic remains a registry reservation without a `DiagnosticCode` constant or helper until the code becomes active.
 - The registry population matches the checked-in inventory.
 - Every existing workspace code has either an active registry entry with a precise rule and docs page, or a retired registry entry with its replacement code recorded.
 
@@ -557,17 +813,30 @@ Scope:
 - Update human, compact, and JSON renderers to consume `SifrDiagnostic`.
 - Any still-unmigrated legacy path is explicitly temporary, tracked by the inventory, and blocked from gaining new emission sites.
 - Keep exit-code behavior stable, but base rendering on diagnostic identity.
-- Ensure compact grouping uses `(severity, code, message_template, primary file)`.
+- Ensure compact grouping uses `(severity, code, message_template, primary display file)`.
+- Ensure all renderers consume the same deterministically sorted canonical post-admission diagnostic stream before compact grouping. Admission is a no-op pass in `milestone_diag_4a`; the 50-cap rule and summary generation activate in `milestone_diag_10`.
 - Remove workspace message-prefix code inference such as `message.starts_with("could not resolve import ")`.
+- Delete `CompilePhase::TypeCheck => "SIFR-TYPE-0001"` in this milestone. Any still-unmigrated TypeCheck path must use an inventory-assigned canonical code through `SifrDiagnostic` transport or fail to compile; it must not fall back to a phase bucket until `milestone_diag_7` or `milestone_diag_8`.
+- Perform the mechanical transport migration of every previously `CompilePhase::TypeCheck`-routed HIR and type-system call site to inventory-assigned `SifrDiagnostic` emission. `milestone_diag_7` and `milestone_diag_8` then refine those migrations with category-specific helpers, related spans, dedupe args, and fixture coverage.
 - Migrate parser adapters, workspace/project discovery, codegen boundaries, build/materialization/rustc diagnostics, and test-runner diagnostics that are already covered by the inventory into `SifrDiagnostic` transport.
 - Replace user-facing `LoweringError { message, line, col }` paths with `LoweringOutcome` and `DiagnosticSink`.
+
+This milestone is expected to land as multiple reviewable PRs:
+
+1. Renderer integration and removal of message-based code inference.
+2. User-facing `LoweringError` replacement with `LoweringOutcome`/`DiagnosticSink`.
+3. Parser, workspace, codegen, build, rustc-boundary, and test-runner transport migration.
+4. `CompilePhase::TypeCheck` deletion plus HIR/type-system mechanical transport migration.
 
 Definition of done:
 
 - All renderers operate on `SifrDiagnostic` exclusively.
 - Renderers do not parse messages to recover codes.
 - JSON, human, and compact render from the same canonical diagnostics.
+- JSON, human, and compact output share the same deterministic ordering policy before format-specific presentation.
 - HIR user-facing diagnostics no longer leave HIR as `LoweringError { message, line, col }`.
+- `CompilePhase::TypeCheck` no longer assigns `SIFR-TYPE-0001` to any diagnostic path.
+- No HIR or type-system call site emits diagnostics through `LowerCtx::error(String)` or any pre-`SifrDiagnostic` transport after this milestone.
 
 ### milestone_diag_5: Test Harness Contract Cleanup
 
@@ -580,12 +849,29 @@ Scope:
 - Update renderer unit tests so hand-built diagnostics use real new-family codes.
 - Add a negative unit test proving `[E2507]` is rejected as an expectation code.
 - Validate fixture-asserted codes against the registry at harness load time, not by regex alone. Unknown codes fail loudly with the unknown code and a closest-match hint.
+- Centralize diagnostic baseline normalization in the test harness. Path normalization and display-path remapping are harness-level policies, not fixture-local regex replacements.
+- Detect duplicate baseline names at harness startup. Two fixtures must not generate the same baseline artifact path.
+- Detect fixture-grammar contradictions at harness load time. Within one fixture, two `expect-error` annotations on overlapping spans must not assert incompatible codes for the same diagnostic location.
+- Declare the expectation grammar precisely:
+
+```text
+expect-error: SIFR-<FAMILY>-dddd
+expect-error[col=<1-based-column>]: SIFR-<FAMILY>-dddd
+```
+
+The `col` qualifier is required only when one source line intentionally expects multiple diagnostics and the code alone is not enough to disambiguate the expected location. Message-substring matchers are not part of the grammar.
+
+- Ensure JSON, compact, and human diagnostic baselines are produced from one sorted-and-capped `Vec<SifrDiagnostic>`.
 
 Definition of done:
 
 - Tests cannot accidentally bless message-embedded pseudo-codes.
 - E2E fail fixtures must assert only top-level code strings, never message-embedded pseudo-codes.
 - The harness no longer normalizes or extracts secondary codes from diagnostic messages.
+- Diagnostic baselines do not depend on absolute local paths, hash-map iteration, or fixture-local regex normalization.
+- Duplicate baseline names and contradictory diagnostic expectations fail loudly before test execution.
+- The expectation grammar accepts canonical top-level codes only and rejects message substrings, unknown forms, and unknown registry codes.
+- A fixture-level test proves JSON, compact, and human renderers consume the same sorted-and-capped diagnostic stream.
 - No transitional `[Edddd]` expectation remains after this milestone, and this milestone must not introduce new `SIFR-TYPE-0001` expectations to replace decimal pseudo-code expectations.
 
 ### milestone_diag_6: Decimal Diagnostics First Migration
@@ -625,14 +911,15 @@ Scope:
   - Unexpected keyword.
   - Duplicate keyword/positional argument.
   - Callable arity mismatch.
-- Retire `sifr_type_system::TypeError` and `TypeErrorKind`. Any short-lived adapter from `TypeError` to `SifrDiagnostic` must be deleted in this milestone.
+- Delete `sifr_type_system::TypeError` and `TypeErrorKind`. Any short-lived adapter from `TypeError` to `SifrDiagnostic` must be deleted in this milestone.
 
 Definition of done:
 
-- The largest e2e fail categories no longer use `SIFR-TYPE-0001`.
+- The largest parser/name/import/type/call e2e fail categories use category-specific helpers and fixtures rather than the mechanical inventory-assigned transport from `milestone_diag_4a`.
 - Each category has a distinct code and registry entry.
 - Parser diagnostics covered by the inventory use specific `SIFR-PARSE-*` codes rather than a default parser bucket.
 - The type-system adapter path is gone; type-checking code emits or returns canonical diagnostics directly.
+- `sifr_type_system::TypeError` and `TypeErrorKind` symbols no longer exist.
 - E2E fixtures and verification baselines touched by this milestone are updated in the same milestone.
 
 ### milestone_diag_8: Ownership, Flow, Match, Class, Protocol, Result, and Stdlib Diagnostics
@@ -656,15 +943,18 @@ Definition of done:
 
 - No user-facing semantic diagnostic remains in a generic phase bucket.
 - Category names and code families match actual semantics.
+- Ownership, flow, match, class, protocol, result, and stdlib diagnostics use domain-specific helpers and fixtures rather than the mechanical inventory-assigned transport from `milestone_diag_4a`.
+- `LoweringError` has no remaining internal semantic-diagnostic callers after this milestone; any leftover symbol is residual cleanup only and cannot carry user-facing diagnostic text.
+- `milestone_diag_9` and `milestone_diag_10` must not introduce new `LoweringError` callers. The residual symbol may be deleted in `milestone_diag_9`, `milestone_diag_10`, or `milestone_diag_11`, but it cannot regain diagnostic ownership.
 - E2E fixtures and verification baselines touched by this milestone are updated in the same milestone.
 
 ### milestone_diag_4b: Phase-Mapping Retirement
 
 Scope:
 
-- Delete `CompilePhase::TypeCheck => "SIFR-TYPE-0001"` and the rest of the phase-derived public diagnostic-code mapping.
+- Delete the remaining phase-derived public diagnostic-code mapping. The `CompilePhase::TypeCheck => "SIFR-TYPE-0001"` arm was already deleted in `milestone_diag_4a`.
 - Retire `CompilePhase` and the phase-derived `Display` label path from public diagnostic rendering.
-- Convert `CompileError` into either a structured diagnostic wrapper or an internal boundary error that already carries `SifrDiagnostic`.
+- Delete `CompileError` as a public diagnostic abstraction. Driver short-circuiting uses `Result<T, ErrorEmitted>` plus the canonical `DiagnosticSink`; any temporary driver abort type is internal, carries `ErrorEmitted`, does not implement user-facing `Display`, and never derives a diagnostic code.
 - Remove transitional `sifr_driver` re-exports of `sifr_diagnostics` types.
 - Migrate any remaining non-HIR emission surface still using phase-derived codes. This milestone is residual cleanup only; new family migrations must not be deferred here.
 
@@ -672,7 +962,7 @@ Definition of done:
 
 - No public diagnostic code is assigned from `CompilePhase`.
 - `CompilePhase` is not a public diagnostic display source.
-- `CompileError` is not a public code source.
+- `CompileError` is not a public code source and no public `CompileError` diagnostic abstraction remains.
 - `sifr_driver` no longer re-exports canonical diagnostic types.
 
 ### milestone_diag_9: Source Span Completion
@@ -704,9 +994,10 @@ Scope:
 
 - Preserve bounded multi-error recovery while moving to structured diagnostics.
 - Define which diagnostics produce a typed error expression or poisoned binding to prevent cascades.
-- Define deduplication and prioritization in terms of diagnostic code and `message_template`.
+- Define recovery deduplication and prioritization in terms of diagnostic code, `message_template`, primary `SourceSpan`, and declared dedupe args.
 - Ensure follow-on diagnostics do not hide the root cause or flood compact/json output.
 - Define cap-overflow behavior for notes and warnings, including `reveal_type(...)`.
+- Activate `SIFR-INTERNAL-0002` for structured recovery-cap omission summaries.
 
 Definition of done:
 
@@ -714,6 +1005,8 @@ Definition of done:
 - Multi-error fixtures still report useful independent errors.
 - Cascading diagnostics caused only by earlier invalid expressions are suppressed or demoted by policy.
 - Existing recovery hard limits remain enforced using structured diagnostic identity.
+- Recovery-cap omission summaries are structured `Severity::Note` diagnostics with `SIFR-INTERNAL-0002`.
+- Recovery deduplication and compact grouping remain separate, explicitly tested policies.
 - A fixture with more than 50 `reveal_type(...)` calls proves the chosen overflow behavior.
 
 ### milestone_diag_11: Guardrails and Baseline Regeneration
@@ -726,6 +1019,7 @@ Scope:
 - Update architecture and phase docs.
 - Add or update `scripts/check_diagnostic_code_coverage.py`.
 - Add registry/docs sync enforcement.
+- Add schema sync enforcement.
 
 Required guardrails:
 
@@ -733,16 +1027,28 @@ Required guardrails:
 - No diagnostic message may begin with or include a message-embedded `[Edddd]` pseudo-code.
 - Every emitted diagnostic code must exist in the registry.
 - Every emitted diagnostic must derive a deterministic docs URL from its code.
-- Every active registry code must have fixture coverage or be explicitly marked reserved.
+- Every active registry code must have representative fixture coverage; reserved codes are explicitly marked `Reserved` and are exempt.
+- Every active registry code must appear through its canonical `DiagnosticCode::...` constant in non-test compiler source outside `sifr_diagnostics` itself. Textual presence is the decidable emission-path check; codes found only in tests or only in the registry crate must be marked `Reserved` or deleted.
+- Retired diagnostic-code docs remain present and are not deleted.
+- Retired diagnostic codes remain in the registry/docs but have no active `DiagnosticCode` constant and cannot be emitted.
 - HIR user diagnostics must not be emitted through raw `ctx.error(String)`.
 - No renderer or driver code may infer diagnostic codes from message prefixes.
 - No compact/recovery grouping may use fully rendered messages when a `message_template` is available.
+- JSON, human, and compact diagnostic outputs must be generated from the shared deterministic ordering policy.
 - Parser/HIR/codegen diagnostics with a source range must serialize non-null primary spans.
+- JSON span tests must prove byte offsets match on-disk byte offsets, columns are 1-based UTF-8 character offsets rather than byte offsets, end byte positions are exclusive, and multibyte characters such as 4-byte emoji preserve distinct byte and character positions.
+- Path-remapping tests must prove human and JSON output use display paths by default and do not leak absolute local paths unless explicitly requested.
 - The e2e harness must reject `[Edddd]` expectation codes.
+- The e2e harness must reject fixture-local diagnostic regex normalization unless a future reviewed issue introduces an explicit exception mechanism.
+- The e2e harness must reject message-substring diagnostic expectations; fixture expectations assert canonical top-level codes only.
+- `.cancel()` on diagnostic builders or diagnostics must not appear in non-test compiler source outside the explicit internal-probe allowlist.
 - The codebase must have no user-facing `LoweringError { message, line, col }` style path.
+- The `LoweringError` symbol does not exist in the workspace after residual cleanup.
+- `sifr_type_system::TypeError` and `TypeErrorKind` symbols do not exist.
 - `crates/sifr/tests/e2e.rs` no longer has `is_message_error_code` or `diagnostic_error_code`.
 - Active registry codes have representative fixture coverage.
 - Active registry codes have generated docs pages.
+- JSON suggestion output must not duplicate replacement edits as `Help` child text. Replacement text lives in `DiagnosticSuggestion::edits`; `Help` children may explain but must not carry literal edit payloads.
 - The JSON schema is checked in and synchronized with the Rust model.
 
 Definition of done:
@@ -769,7 +1075,7 @@ flowchart TD
     diag10 --> diag11["diag_11: final guardrails and baselines"]
 ```
 
-The sequencing graph is authoritative. `diag_2b` intentionally follows `diag_3` because registry population depends on the completed inventory, and `diag_6` intentionally lands before `diag_5` so test-harness cleanup does not need a transitional `[Edddd]` or `SIFR-TYPE-0001` fixture state.
+The sequencing graph is authoritative. `diag_2b` intentionally follows `diag_3` because registry population depends on the completed inventory, and `diag_6` intentionally lands before `diag_5` so test-harness cleanup does not need a transitional `[Edddd]` or `SIFR-TYPE-0001` fixture state. `diag_4a` deletes the `CompilePhase::TypeCheck => "SIFR-TYPE-0001"` public mapping before broad semantic migration, so any missed TypeCheck path becomes a build or validation failure instead of silently using a fallback bucket.
 
 No migration milestone is complete until its fixtures, verification baselines, and focused tests are green with the new codes. The final guardrail milestone should contain residual cleanup and new enforcement checks, not defer all fixture churn.
 
@@ -814,6 +1120,9 @@ cargo run -q -p sifr -- --diagnostic-format compact check crates/sifr/tests/e2e/
 cargo run -p sifr_diagnostics --bin gen-error-docs -- --check
 python3 scripts/check_diagnostic_docs_sync.py
 python3 scripts/check_diagnostic_code_coverage.py
+python3 scripts/check_diagnostic_baseline_hygiene.py
+python3 scripts/check_diagnostic_schema_sync.py
+python3 scripts/check_diagnostic_cancel_usage.py
 ```
 
 Before considering the phase complete:
@@ -826,9 +1135,14 @@ cargo fmt --check
 python3 scripts/check_hir_maintainability_guardrails.py
 python3 scripts/check_diagnostic_docs_sync.py
 python3 scripts/check_diagnostic_code_coverage.py
+python3 scripts/check_diagnostic_baseline_hygiene.py
+python3 scripts/check_diagnostic_schema_sync.py
+python3 scripts/check_diagnostic_cancel_usage.py
 ```
 
-The diagnostic docs and coverage checks must be wired into `scripts/run_all_tests.sh` so local validation and CI stay identical.
+The diagnostic docs, coverage, baseline-hygiene, schema-sync, and cancel-usage checks must be wired into `scripts/run_all_tests.sh` so local validation and CI stay identical.
+
+`scripts/check_diagnostic_code_coverage.py` must enforce decidable registry hygiene rather than attempting whole-program reachability: every emitted code is registered, every `Active` code has fixture proof once its family migration milestone lands, every `Active` code's canonical constant appears in non-test compiler source outside `sifr_diagnostics` once that family migration milestone lands, `Reserved` codes are not required to emit, and `Retired` codes retain docs without active constants. The global form of this check is mandatory in `milestone_diag_11`.
 
 ## Required Documentation Updates
 
@@ -840,6 +1154,7 @@ The diagnostic docs and coverage checks must be wired into `scripts/run_all_test
 | `internal_docs/diagnostic_codes.md` | Generated or synchronized from the registry source of truth. |
 | `docs/errors/diagnostic-codes.md` | Generated or synchronized from the registry source of truth. |
 | `docs/errors/<CODE>.md` | One generated or checked-in page for every active diagnostic code. |
+| `docs/schemas/diagnostics.schema.json` | Generated or synchronized from the canonical Rust diagnostic model. |
 | `issues/ad-hoc-semantic-diagnostic-code-taxonomy-and-structured-hir-diagnostics.md` | Keep milestone status and validation evidence current while work proceeds. |
 
 ## Stability Policy
@@ -862,17 +1177,21 @@ Post-1.0 stability begins at the first documented stable Sifr release, expected 
 - Do not use rendered diagnostic messages as stable machine identity.
 - Do not define public diagnostic types outside `crates/sifr_diagnostics`.
 - Do not add a diagnostic helper without a registry entry in the same PR.
+- Do not add a diagnostic helper or `DiagnosticCode` constant for a `Reserved` or `Retired` code; helpers and constants are active-code-only.
 - Do not allow an `expect-error` fixture annotation to use a code absent from the registry.
 - Do not construct diagnostic codes with `format!` or raw strings at emission sites.
 - Do not allow `Severity::Error` as a child diagnostic severity.
 - Do not allow top-level `Severity::Help`; help belongs on a parent diagnostic.
 - Do not use `Option<TextRange>` for parser/HIR source diagnostics when a source range exists.
+- Do not add fixture-local diagnostic regex normalization as a way to make baselines pass.
+- Do not delete retired diagnostic-code docs.
 
 Internal compiler failure boundaries are the only place where a broad code is acceptable. Those diagnostics must use `SIFR-INTERNAL-*`, must not be described as user-fixable, and must not mask a known user-input error that should have a specific code.
 
 Internal code allocation policy:
 
 - `SIFR-INTERNAL-0001` is the stable catch-all for unclassified compiler panics after a panic boundary.
+- `SIFR-INTERNAL-0002` is reserved for structured recovery-cap omission summaries. It is activated in `milestone_diag_10`.
 - Dedicated `SIFR-INTERNAL-*` codes should be added for recurring known internal failure families.
 - Known user-input failures must never be routed through `SIFR-INTERNAL-*`.
 
@@ -885,11 +1204,13 @@ This phase uses one diagnostic stream for errors, warnings, and notes. Help rema
 - `reveal_type(...)` emits a `SifrDiagnostic` with `Severity::Note`.
 - Compiler warnings emit `SifrDiagnostic` values with `Severity::Warning`.
 - Warnings and notes appear in the same JSON envelope as errors.
-- Warnings and notes participate in compact grouping by `(severity, code, message_template, primary file)`.
+- Warnings and notes participate in compact grouping by `(severity, code, message_template, primary display file)`.
 - Warnings do not affect the exit code; invocations with warnings only exit `0`.
-- The 50 top-level recovery cap applies to all top-level diagnostics after severity ordering, while the existing user-error exit behavior remains based on whether any top-level diagnostic has `Severity::Error`.
+- Exit-code behavior is computed from the unfiltered diagnostic sink before cap omission. Any top-level `Severity::Error` makes the invocation fail even if rendering later omits that diagnostic because of a cap summary.
+- The 50 top-level recovery cap applies to source diagnostics in the canonical path-first sorted stream through a severity-aware admission pass. The driver first sorts once using the Diagnostic Ordering Policy, then admits source errors in canonical order, then source warnings in canonical order, then source notes in canonical order until 50 top-level source diagnostics are admitted. The admitted source diagnostics are rendered in canonical path-first order; renderers do not re-sort.
+- Internal diagnostics are not subject to the source diagnostic recovery cap. They are rendered in addition to the admitted source diagnostics and keep their canonical ordering position after source diagnostics.
 - The cap intentionally applies to `reveal_type(...)` notes as well; explicit reveal output is still bounded to avoid unbounded diagnostic floods.
-- When diagnostics are omitted because of the cap, rendering appends one structured `Severity::Note` summary such as `10 additional diagnostics omitted by recovery cap`. For `reveal_type(...)`, the summary must say how many explicit reveal results were omitted rather than silently dropping them.
+- When diagnostics are omitted because of the cap, the cap-admission step emits structured `Severity::Note` summaries through `DiagnosticSink::emit(...)` using `SIFR-INTERNAL-0002` with omission counts per severity bucket, such as `3 additional errors omitted by recovery cap` and `10 additional reveal_type results omitted by recovery cap`. The driver then performs a final canonical sort over the admitted source diagnostics, internal diagnostics, and cap summaries before rendering. Renderers consume that final sorted stream and do not re-sort. For `reveal_type(...)`, the summary must say how many explicit reveal results were omitted rather than silently dropping them.
 
 This removes another side channel from frontend lowering while keeping top-level severity small and explicit.
 
@@ -905,16 +1226,21 @@ This ad-hoc phase is complete when:
 - Semantic diagnostics have primary spans where source exists.
 - Compact/json/human renderers consume the same canonical diagnostic model.
 - Guardrail tests prevent reintroducing phase-bucket diagnostics.
+- JSON, human, and compact output are deterministic and share the same canonical diagnostic ordering policy.
 - Recovery limits and compact grouping use `message_template`, not rendered text.
 - Workspace, parser, HIR, codegen, build, and internal diagnostics all have explicit typed code assignment.
 - Warnings and `reveal_type` output are structured diagnostics in the canonical diagnostic stream.
 - `sifr_diagnostics` is the only public owner of diagnostic types.
-- `sifr_type_system::TypeError` and `TypeErrorKind` are retired or fully replaced by canonical diagnostics.
+- `sifr_type_system::TypeError`, `TypeErrorKind`, and `LoweringError` symbols are deleted.
+- Public `CompileError` diagnostic abstraction is deleted; driver short-circuiting uses `ErrorEmitted` plus the canonical sink.
 - `CompileError::workspace_diagnostic_code` and all message-prefix code classifiers are deleted.
 - The e2e fixture grammar no longer accepts message pseudo-codes.
 - A JSON Schema and versioned JSON envelope are checked in.
 - Registry/docs synchronization is enforced.
+- Diagnostic schema synchronization is enforced.
 - Active diagnostic-code fixture coverage is enforced.
+- Active diagnostic-code emission coverage and retired-doc retention are enforced.
+- Diagnostic baseline hygiene is enforced, including centralized path normalization and duplicate baseline/expectation detection.
 - Phase 27 status in roadmap/docs reflects this corrective amendment.
 - Full local validation passes.
 
@@ -926,6 +1252,7 @@ This ad-hoc phase is complete when:
 | New taxonomy overfits current messages | Apply the diagnostic identity policy: split by rule/fix/tooling behavior, not by sentence wording. |
 | Spans are deferred too late | Add source-span primitives in `milestone_diag_1`; `milestone_diag_9` only completes remaining coverage. |
 | Compact grouping becomes noisy with dynamic messages | Use `message_template`, not rendered `message`, for grouping and recovery limits. |
+| Diagnostics become nondeterministic across machines or traversal order | Sort the canonical diagnostic stream before applying caps and before all renderers; add baseline-hygiene checks for duplicates and path normalization. |
 | Driver keeps hidden message-prefix classifiers | Add guardrails forbidding renderer/driver code from inferring codes from message text. |
 | Test harness continues accepting pseudo-codes | Clean up e2e expectation parsing before broad fixture migration. |
 | Internal failures get confused with user errors | Restrict broad fallback-like codes to `SIFR-INTERNAL-*` after panic/error boundaries only. |

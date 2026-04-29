@@ -223,6 +223,7 @@ sifr/
   Cargo.toml                (workspace root)
   crates/
     sifr_frontend/          (canonical parse/lower/type-check/diagnostics query facade shared by CLI and tooling)
+    sifr_diagnostics/       (canonical diagnostic codes, source-map spans, model, render schema, and sink)
     sifr_hir/               (High-level IR: typed AST after name resolution + type checking)
     sifr_type_system/       (type definitions, inference, checking, subtyping)
     sifr_codegen/           (Rust source code generation from HIR via structured Rust IR)
@@ -245,6 +246,7 @@ sifr/
 New crates added per milestone as needed:
 
 - milestone_core_stdlib/milestone_ext_collections: `sifr_std` (standard library wrappers, extended collections)
+- Ad-hoc semantic diagnostic taxonomy: `sifr_diagnostics` (shared diagnostic model and schema, introduced before migrating existing emission paths)
 - milestone_ffi: FFI codegen extensions in `sifr_codegen`
 - Phase 35 shared analysis/query architecture: `sifr_frontend` (canonical frontend API and query/database ownership)
 - milestone_dev_tooling: `sifr_lsp` (language server), `sifr_fmt` (formatter), `sifr_lint` (linter)
@@ -704,27 +706,23 @@ Sifr auto-derives common Rust traits for all user-defined types. This is a langu
 
 ### 11. Diagnostic Mapping
 
-Sifr compiles to Rust source code, which is then compiled by `rustc`. This creates a two-stage compilation where errors can originate from either the Sifr compiler or `rustc`. This contract defines how diagnostics are attributed, mapped, and rendered.
+Sifr compiles to Rust source code, which is then compiled by `rustc`. This creates a two-stage compilation where errors can originate from either the Sifr compiler or `rustc`. This contract defines how diagnostics are attributed, mapped, and rendered. The corrective ad-hoc semantic diagnostic taxonomy phase amends the original Phase 27 contract and moves public diagnostic ownership into `crates/sifr_diagnostics`.
 
 **Contract:**
 
-- **Stable Sifr diagnostic codes:** every top-level Sifr compiler diagnostic has a stable code owned by a specific compiler phase (parser, type checker, borrow checker, codegen). Error codes use `E####` and warning codes use `W####`. `Note` and `Help` entries attach to a parent diagnostic instead of defining separate top-level codes.
+- **Stable Sifr diagnostic codes:** every top-level Sifr compiler diagnostic has a stable family-local code of the form `SIFR-<FAMILY>-dddd`, for example `SIFR-NAME-0001`. Families identify the semantic domain, not merely the compiler phase. Historical `E####`/`W####` and message-embedded pseudo-codes are retired.
 - **Deterministic documentation URL:** every top-level diagnostic exposes `url = "https://sifr.sh/docs/errors/<CODE>"`. This URL is part of the stable contract and must render in `human`, `json`, and `compact` outputs.
-- **Canonical severity enum:** the shared diagnostic model uses exactly four severities matching rustc's user-facing hierarchy:
+- **Canonical severity enum:** the shared diagnostic model uses exactly three top-level severities:
   - `Error` -- blocks compilation or the active command
   - `Warning` -- non-blocking but actionable
-  - `Note` -- contextual information attached to a diagnostic
-  - `Help` -- actionable remediation text attached to a diagnostic
-- **Canonical diagnostic object:** parser, lowering, type checking, borrow checking, and codegen all emit one structured `Diagnostic` model with at least: `code`, `severity`, `message`, `url`, `primary_span`, `related_spans`, `children`, `help`, and optional fix suggestions.
-- **Canonical suggestion kinds:** suggestion payloads are structured and not free-form strings only. The shared model must distinguish at least:
-  - `DidYouMean` -- typo or symbol suggestion
-  - `ReplaceText` -- replace span with new text
-  - `InsertText` -- insert text at span/position
-  - `DeleteText` -- remove text for invalid construct
-- **Span mapping:** the codegen phase maintains a mapping from generated Rust line/column positions to original `.sifr` line/column positions. All compiler errors shown to users reference `.sifr` source locations, never generated Rust locations.
+  - `Note` -- contextual top-level information such as `reveal_type(...)` output and recovery-cap summaries
+- **Help and children:** help text is attached through `help` fields or `ChildSeverity::Help`; `Help` is not a top-level diagnostic severity. Diagnostic children are uncoded `Note` or `Help` messages.
+- **Canonical diagnostic object:** target migrated parser, lowering, type checking, borrow checking, and codegen paths must emit `SifrDiagnostic` values from `sifr_diagnostics`. Source diagnostics require a `SourceSpan`; internal diagnostics are reserved for compiler failures without source mapping.
+- **Canonical suggestion model:** suggestion payloads are structured logical suggestions with one or more text replacement edits plus applicability (`MachineApplicable`, `MaybeIncorrect`, `HasPlaceholders`, or `Unspecified`). Replacement text lives in suggestion edits, not duplicated help children.
+- **Span mapping:** semantic diagnostics preserve byte ranges as `SourceSpan` values before rendering. Renderers derive display paths, byte offsets, 1-based UTF-8 character line/column positions, source snippets, and related spans at the source-map boundary. Codegen/rustc diagnostics use `.sifr` source mapping where available; unmapped compiler failures use `SIFR-INTERNAL-*`.
 - `**rustc` error translation:** when `rustc` emits an error on generated code, the driver translates it back to `.sifr` coordinates using the span map. If translation fails (e.g., error in compiler-generated boilerplate), the raw `rustc` error is shown with a note: "This error originated in the Rust compilation step."
 - **Generation vs rendering separation:** semantic phases construct diagnostics; renderer layers convert them to `human`, `json`, and `compact` presentation formats. Output mode selection must not change diagnostic ownership or semantics.
-- **JSON renderer contract:** `json` output is the lossless machine-readable format and must preserve the shared diagnostic model fields without human-only lossy reformatting.
+- **JSON renderer contract:** `json` output uses a versioned envelope `{ "version": 1, "diagnostics": [...] }` and must preserve the shared diagnostic model fields without human-only lossy reformatting. The checked-in schema is generated from `sifr_diagnostics`.
 - **CLI diagnostic-format contract:** the stable renderer flag surface is `--diagnostic-format human|json|compact`. Unknown values fail fast with exit code `2` before semantic compilation work starts.
 - **CLI exit-code contract:** compiler commands return exactly:
   - `0` success (including warning-only outcomes)
@@ -733,7 +731,7 @@ Sifr compiles to Rust source code, which is then compiled by `rustc`. This creat
   - `3` internal compiler failure after panic/error boundary handling
 - **Compact renderer contract:** `compact` is a token-efficient summary format inspired by the grouping/truncation strategy used in the sibling `rtk` repository at `/Users/yaseralnajjar/work/sifr/rtk`, but implemented in Sifr and fully specified here. Implementers can read `rtk` to build or validate the renderer. It must:
   - show a one-line severity summary first
-  - group repeated diagnostics by `(severity, code, canonical message)`
+  - group repeated diagnostics by `(severity, code, message_template, primary display file)`
   - list at most 5 representative locations per group
   - include one bounded help line when present
   - include the documentation URL once per group

@@ -1,5 +1,6 @@
 [workspace]
 members = [
+    "crates/sifr_diagnostics",
     "crates/sifr_type_system",
     "crates/sifr_hir",
     "crates/sifr_codegen",
@@ -32,6 +33,7 @@ sifr_python_ast = { package = "ruff_python_ast", path = "third_party/ruff/crates
 sifr_python_parser = { package = "ruff_python_parser", path = "third_party/ruff/crates/ruff_python_parser" }
 
 # Sifr-specific crates
+sifr_diagnostics = { path = "crates/sifr_diagnostics" }
 sifr_type_system = { path = "crates/sifr_type_system" }
 sifr_hir = { path = "crates/sifr_hir" }
 sifr_codegen = { path = "crates/sifr_codegen" }

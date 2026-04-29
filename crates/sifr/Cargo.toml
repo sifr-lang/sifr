@@ -11,6 +11,8 @@ name = "sifr"
 path = "src/main.rs"
 
 [dependencies]
+# Wired early by milestone_diag_1; compiler emission migration starts in milestone_diag_4a.
+sifr_diagnostics = { workspace = true }
 sifr_driver = { workspace = true }
 sifr_python_ast = { workspace = true }
 sifr_python_parser = { workspace = true }
