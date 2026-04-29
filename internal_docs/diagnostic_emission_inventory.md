@@ -74,7 +74,7 @@ Parser errors originate in the Ruff fork (`sifr_python_parser`, exported from `t
 | `TypeErrorKind::UndefinedFunction` | unresolved callable name | `SIFR-NAME-0002` | `crates/sifr/tests/e2e/fail/stdlib_invalid_module.sifr` |
 | `TypeErrorKind::WrongArgumentCount` | positional arity mismatch | `SIFR-CALL-0001` | `crates/sifr/tests/e2e/fail/stdlib_wrong_arg_count.sifr` |
 | `TypeErrorKind::UseAfterMove` | moved value use | `SIFR-OWN-0001` | `crates/sifr/tests/e2e/fail/use_after_move.sifr` |
-| `TypeErrorKind::MissingTypeAnnotation` | annotation required for inference boundary | `SIFR-TYPE-0004` | fixture pending in `milestone_diag_2b` |
+| `TypeErrorKind::MissingTypeAnnotation` | annotation required for inference boundary | `SIFR-TYPE-0004` | fixture pending in `milestone_diag_7` |
 | `TypeErrorKind::InvalidOperator` | unsupported arithmetic/comparison/unary/bool operator | `SIFR-TYPE-0005` | `crates/sifr/tests/e2e/fail/optional_arithmetic_without_narrowing.sifr` |
 | `TypeErrorKind::InvalidOperator` | int/bigint arithmetic or comparison requires conversion | `SIFR-TYPE-0006` | `crates/sifr/tests/e2e/fail/bigint_int_mixed_arithmetic.sifr`, `crates/sifr/tests/e2e/fail/bigint_int_mixed_comparison.sifr` |
 | `TypeErrorKind::InvalidOperator` | decimal-family mixed arithmetic | `SIFR-DECIMAL-0003`, `SIFR-DECIMAL-0004` | decimal mixed arithmetic fixtures |
@@ -303,11 +303,11 @@ These entries are the proposed active registry population for `milestone_diag_2b
 | `SIFR-TYPE-0001` | retired catch-all | registry only | no active fixture; document retired replacement policy |
 | `SIFR-TYPE-0002` | expected/actual type mismatch | type checking / assignment/call helpers | `crates/sifr/tests/e2e/fail/type_mismatch.sifr` |
 | `SIFR-TYPE-0003` | if/conditional branch type mismatch | `if_expression` lowering | `crates/sifr/tests/e2e/fail/ternary_type_mismatch.sifr` |
-| `SIFR-TYPE-0004` | missing required type annotation/inference boundary | type annotation/inference | fixture pending in `milestone_diag_2b` |
+| `SIFR-TYPE-0004` | missing required type annotation/inference boundary | type annotation/inference | fixture pending in `milestone_diag_7` |
 | `SIFR-TYPE-0005` | unsupported operator or operand types | `sifr_type_system` / HIR expression lowering | `crates/sifr/tests/e2e/fail/optional_arithmetic_without_narrowing.sifr` |
 | `SIFR-TYPE-0006` | int/bigint mixed arithmetic/comparison without conversion | type system numeric checks | bigint mixed arithmetic/comparison fixtures |
-| `SIFR-TYPE-0007` | invalid type annotation shape | type annotation lowering | fixture pending in `milestone_diag_2b` from annotation tests |
-| `SIFR-TYPE-0008` | container literal element/key/value type conflict | container literal specialization | fixture pending in `milestone_diag_2b` |
+| `SIFR-TYPE-0007` | invalid type annotation shape | type annotation lowering | fixture pending in `milestone_diag_7` from annotation tests |
+| `SIFR-TYPE-0008` | container literal element/key/value type conflict | container literal specialization | fixture pending in `milestone_diag_7` |
 | `SIFR-TYPE-0009` | tuple/list unpacking shape mismatch | tuple unpack lowering | `crates/sifr/tests/e2e/fail/tuple_dynamic_list_shape.sifr` |
 | `SIFR-DECIMAL-0001` | `Decimal()` invalid exact literal | decimal constructor lowering | `crates/sifr/tests/e2e/fail/decimal_invalid_literal_string.sifr` |
 | `SIFR-DECIMAL-0002` | `BigDecimal()` invalid or non-literal exact string | decimal constructor lowering | bigdecimal invalid/non-literal fixtures |
