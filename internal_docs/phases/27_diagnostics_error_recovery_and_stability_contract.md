@@ -11,6 +11,7 @@ Deliver production-quality diagnostics with recovery and explicit stability guar
   - [27_runtime_safe_codegen_semantics.md](./27_runtime_safe_codegen_semantics.md) defines milestones `27_1` through `27_3`
   - this file defines milestones `27_4` through `27_6`
 - Milestones are completed in numeric order; this file is not a parallel track.
+- Corrective amendment: the ad-hoc semantic diagnostic code taxonomy and structured HIR diagnostics phase re-closes the diagnostic-code taxonomy and structured HIR diagnostic contract after later review found Phase 27's implementation still used phase-derived buckets, string-oriented HIR diagnostics, message-prefix classifiers, and spanless frontend semantic diagnostics. Phase 27 remains completed historically; the ad-hoc phase is the active prerequisite for future stable-diagnostic work.
 
 ## Milestones
 
@@ -18,17 +19,17 @@ Deliver production-quality diagnostics with recovery and explicit stability guar
 - Scope:
   - Replace the current predominantly string-oriented frontend diagnostic plumbing with the canonical structured diagnostic model defined in `architecture.md`.
   - Introduce one canonical structured diagnostic model shared by parser/lowering/type-check/codegen.
-  - Define the canonical `Severity` enum exactly as `Error | Warning | Note | Help`.
+  - Define the canonical top-level `Severity` enum exactly as `Error | Warning | Note`; help is attached through diagnostic help fields or child help messages.
   - Thread precise spans through frontend/codegen errors.
   - Standardize stable diagnostic codes, related-span labels, help text, deterministic documentation URLs, and structured fix-suggestion fields.
   - Require every top-level diagnostic to expose `url = "https://sifr.sh/docs/errors/<CODE>"`.
   - Define the canonical structured diagnostic schema with at least: `code`, `severity`, `message`, `url`, `primary_span`, `related_spans`, `children`, `help`, and optional structured suggestions.
-  - Define structured suggestion kinds with at least: `DidYouMean`, `ReplaceText`, `InsertText`, `DeleteText`.
+  - Define structured suggestions with applicability and replacement edits rather than renderer-only help text.
   - Define stable diagnostic renderers for `human` and `json` output modes without changing semantic ownership.
   - Require `json` mode to be the lossless machine-readable rendering of the canonical diagnostic schema.
 - Definition of done:
   - Diagnostics include accurate source locations, stable codes, stable URLs, and a stable structured schema consumed by all compiler modes.
-  - The severity enum and structured suggestion kinds are implemented exactly as specified in this phase.
+  - The severity enum and structured suggestion model are implemented exactly as amended by the ad-hoc semantic diagnostic taxonomy phase.
 
 ### milestone_27_5: Bounded Multi-Error Recovery
 - Scope:

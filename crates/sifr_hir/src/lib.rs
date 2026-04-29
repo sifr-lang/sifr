@@ -9,6 +9,7 @@
 pub mod cfg;
 mod hir_nodes;
 mod lower;
+mod lowering_outcome;
 mod scope;
 pub mod stdlib;
 
@@ -17,4 +18,5 @@ pub use lower::{
     lower_module, lower_module_stdlib, lower_module_stdlib_with_externals,
     lower_module_with_externals, ExternalDefs, LoweringError, LoweringResult,
 };
+pub use lowering_outcome::LoweringOutcome;
 pub use scope::{NarrowingSnapshot, Scope};

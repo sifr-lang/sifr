@@ -6,6 +6,27 @@ Replace the current phase-level `SIFR-TYPE-0001` diagnostic bucket with a precis
 
 Sifr is not production-released yet. This phase intentionally does not preserve old diagnostic-code compatibility. The goal is the clean target architecture for an elegant language and compiler, not a migration layer around historical behavior.
 
+## Execution Status
+
+Current wave: `milestone_diag_1` shared diagnostic model.
+
+- [x] Proposal reviewed through final loop and accepted for implementation.
+- [x] Added `crates/sifr_diagnostics` as the canonical leaf crate for diagnostic codes, source spans/source map, model builders, sink emission, rendering, and JSON schema generation.
+- [x] Added workspace dependencies so parser-adjacent crates, HIR, type system, codegen, driver, and CLI can depend on the shared diagnostic model without cycles.
+- [x] Added checked-in `docs/schemas/diagnostics.schema.json` plus `scripts/check_diagnostic_schema_sync.py`, wired into `scripts/run_all_tests.sh`.
+- [x] Updated `internal_docs/architecture.md`, `internal_docs/phases/27_diagnostics_error_recovery_and_stability_contract.md`, and `internal_docs/roadmap.md` to record this ad-hoc phase as the corrective Phase 27 diagnostic-contract amendment.
+- [x] Claude review for `milestone_diag_1` completed and all actionable findings addressed. Review rounds: `reviews/semantic-diagnostic-code-taxonomy-diag-1-review-pass-1.md`, `reviews/semantic-diagnostic-code-taxonomy-diag-1-review-pass-2.md`, `reviews/semantic-diagnostic-code-taxonomy-diag-1-review-pass-3.md`.
+- [ ] `milestone_diag_1` PR opened and merged.
+
+Validation evidence for the current wave:
+
+- `cargo test -p sifr_diagnostics` passed.
+- `python3 scripts/check_diagnostic_schema_sync.py` passed.
+- `cargo fmt --check` passed.
+- `cargo check --workspace` passed.
+- `cargo clippy -p sifr_diagnostics --all-targets -- -D warnings` passed.
+- `scripts/run_all_tests.sh --profile quick` passed.
+
 ## Relationship to Existing Roadmap
 
 This ad-hoc phase is a corrective addendum to Phase 27, especially `milestone_27_4` (structured diagnostic schema quality) and `milestone_27_5` (bounded multi-error recovery).

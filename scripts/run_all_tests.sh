@@ -96,6 +96,12 @@ python3 "${SCRIPT_DIR}/check_hir_maintainability_guardrails.py"
 echo "Running sifr_driver maintainability guardrails"
 python3 "${SCRIPT_DIR}/check_sifr_driver_maintainability_guardrails.py"
 
+echo "Running diagnostic schema sync check"
+python3 "${SCRIPT_DIR}/check_diagnostic_schema_sync.py"
+
+echo "Running sifr_diagnostics tests"
+cargo test -p sifr_diagnostics
+
 echo "Running unit tests and non-pass e2e tests (cargo test -p sifr -- --skip test_e2e_pass)"
 cargo test -p sifr -- --skip test_e2e_pass
 
